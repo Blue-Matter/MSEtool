@@ -52,6 +52,7 @@
 #'                   is generally recommended.
 #' @param silent     Logical. If `FALSE` (default), prints a message describing
 #'                   the active parallel plan.
+#' @param parallel   Logical. Has `parallel` been requested?
 #'
 #' @return All three functions invisibly return a logical scalar:
 #'   - `SetupParallel()` and `DisableParallel()` return `TRUE`

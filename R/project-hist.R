@@ -1,22 +1,25 @@
-
-#' Project a `Hist` Object Across Multiple Management Procedures
+#' Project a Hist Object Across Management Procedures
 #'
-#' Runs the projection loop for all MPs in `MPs`, either sequentially or
-#' in parallel across MPs using `furrr`. Returns a completed `MSE` object
-#' with results for all MPs.
+#' Runs the projection loop for one or more management procedures (MPs),
+#' returning a completed [mse-class] object with projection results for all
+#' MPs.
 #'
-#' @param Hist     `Hist` object containing the conditioned operating model.
-#' @param MPs      Character vector of MP names to project. Default: `NULL`
-#'                 (uses all MPs attached to `Hist`).
-#' @param parallel Logical. Not used.
-#' @param silent   Logical. If `TRUE`, suppresses progress messages.
-#'                 Default: `FALSE`.
-#' @param nSim     Integer or `NULL`. If provided, reduces the number of
-#'                 simulations to `nSim` before projecting. Default: `NULL`
-#'                 (use all simulations).
-#' @param Reduce   Logical. Reserved for future use. Default: `TRUE`.
+#' @param Hist A [hist-class] object containing the conditioned operating
+#'   model and historical dynamics, as returned by [Simulate()].
+#' @param MPs Character vector of MP names to project. If `NULL` (default),
+#'   all MPs attached to `Hist` are used. MP names must correspond to
+#'   functions available in the current environment. See [CheckMPClass()] for
+#'   validation details.
+#' @param parallel Logical. Not currently used. Default `FALSE`. 
+#' @param silent Logical. Suppress progress messages if `TRUE`. Default
+#'   `FALSE`.
+#' @param nSim Integer. If provided, reduces the number of simulations to
+#'   `nSim` before projecting. If `NULL` (default), all simulations in `Hist`
+#'   are used.
+#' @param Reduce Logical. Reserved for future use. Default `TRUE`.
 #'
-#' @return A completed `MSE` object with projection results for all MPs.
+#' @return A [mse-class] object containing projection results for all MPs in
+#'   `MPs`.
 #'
 #' @keywords internal
 Project_hist <- function(Hist,
@@ -54,7 +57,7 @@ Project_hist <- function(Hist,
   
   # ---- Populate Number-at-Age at Beginning of Projection Year ----
   Proj <- CalcFisheryDynamics(Proj, 
-                              Years=c(tail(YearsHist,1)), 
+                              Years=c(utils::tail(YearsHist,1)), 
                               clone=1) 
   
   # ---- Create MSE Object ----
@@ -65,6 +68,13 @@ Project_hist <- function(Hist,
   
   if (!silent) 
     cli::cli_alert('Projecting {.val {nMPs}} MP{?s}')
+  
+  
+  if (!length(Hist@Data)) {
+    cli::cli_alert_warning("No {.val Data} found in this {.cls hist} object. Returning {.val Hist}")
+    return(Hist)
+  }
+  
   
   for (mp in seq_along(MPs)) {
     MPName <- MPs[mp]

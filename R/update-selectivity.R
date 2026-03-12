@@ -166,6 +166,7 @@ Update_Selectivity_Sim <- function(Proj,
                            nArea    = nArea,
                            CalcAtLength = TRUE,
                            silent   = TRUE,
+                           replace  = TRUE,
                            ASKOverride = ALK)
         
         select@MeanAtAge <- set_sim_dimname(select@MeanAtAge, sim) |> 

@@ -17,7 +17,7 @@
 \alias{RelRecFun}
 \alias{RelRecFun<-}
 \alias{SRR<-}
-\title{SRR}
+\title{Stock-Recruit Relationship}
 \usage{
 SRR(
   Pars = list(h = NA),
@@ -67,72 +67,111 @@ RelRecFun(x) <- value
 SRR(x) <- value
 }
 \arguments{
-\item{Pars}{A named list of parameters defining the expected stock–recruit
-curve. Parameter names and interpretation depend on the chosen \code{Model}.}
+\item{Pars}{Named list of parameters defining the expected stock-recruit
+curve. Parameter names and interpretation depend on \code{Model}. See
+\code{\link[=SRRModels]{SRRModels()}} for required parameters for each model. If \code{Pars} is an S4
+object with an \code{SRR} slot (e.g., a \linkS4class{stock} object), that slot is
+returned directly.}
 
-\item{Model}{Character string or function identifying the SRR model used to
-calculate expected recruitment (e.g. \code{"BevertonHolt"}).}
+\item{Model}{Character. Stock-recruit model identifier
+(e.g., \code{"BevertonHolt"}). Default \code{"BevertonHolt"}. See \code{\link[=SRRModels]{SRRModels()}}
+for available models.}
 
-\item{R0}{Numeric value or array giving unfished recruitment.}
+\item{R0}{Numeric scalar or array. Unfished recruitment. Default \code{NULL}.}
 
-\item{SD}{Numeric vector or array giving the standard deviation of recruitment
-deviations in log space. May be:
+\item{SD}{Numeric vector or array. Standard deviation of log-space
+recruitment deviations. May be:
 \itemize{
-\item length 1 (constant across simulations)
-\item length 2 (uniform distribution bounds)
-\item length \code{nSim}.
-}}
+\item length 1: constant across all simulations,
+\item length 2: bounds of a uniform distribution sampled across simulations,
+\item length \code{nSim}: one value per simulation.
+}
 
-\item{AC}{Numeric vector or array giving the lag-1 autocorrelation of recruitment
-deviations. Same structure rules as \code{SD}.}
+Default \code{NULL}, in which case recruitment deviations are deterministic.}
 
-\item{SPFrom}{Character or numeric value indicating the stock to use as the
-spawning production source for this stock. Defaults to the same stock.}
+\item{AC}{Numeric vector or array. Lag-1 autocorrelation of log-space
+recruitment deviations. Follows the same length conventions as \code{SD}.
+Default \code{NULL}.}
 
-\item{TruncSD}{Number of standard deviations used to truncate the lognormal
-distribution of recruitment deviations. Defaults to 2.}
+\item{SPFrom}{Character or numeric. Stock to use as the spawning production
+source for this stock's SRR. Defaults to the same stock (\code{NULL}).}
 
-\item{RecDevInit}{Optional numeric matrix (\verb{nSim × MaxAge}) of recruitment
-deviations for the initial age structure.}
+\item{TruncSD}{Numeric. Number of standard deviations at which to truncate
+the lognormal recruitment deviation distribution. Default \code{2}.}
 
-\item{RecDevHist}{Optional numeric matrix (\verb{nSim × nHistTS}) of recruitment
-deviations for historical time steps.}
+\item{RecDevInit}{Numeric matrix (\verb{nSim × MaxAge}). Recruitment deviations
+for the initial age structure. If \code{NULL} (default), generated internally
+from \code{SD} and \code{AC}.}
 
-\item{RecDevProj}{Optional numeric matrix (\verb{nSim × nProjectionTS}) of recruitment
-deviations for projection time steps.}
+\item{RecDevHist}{Numeric matrix (\verb{nSim × nHistTS}). Recruitment deviations
+for historical time steps. If \code{NULL} (default), generated internally from
+\code{SD} and \code{AC}.}
 
-\item{SpawnTimeFrac}{Numeric value between 0 and 1 giving the fraction of the
-time step when spawning occurs. Defaults to 0 (start of time step).}
+\item{RecDevProj}{Numeric matrix (\verb{nSim × nProjectionTS}). Recruitment
+deviations for projection time steps. If \code{NULL} (default), generated
+internally from \code{SD} and \code{AC}.}
 
-\item{RelRecFun}{Optional function defining relative recruitment.}
+\item{SpawnTimeFrac}{Numeric. Fraction of the time step at which spawning
+occurs (0 = start, 1 = end). Default \code{0}.}
 
-\item{Units}{Numeric scaling factor for recruitment.}
+\item{RelRecFun}{Function. Optional function defining relative recruitment
+as a function of environmental or other covariates. Default \code{NULL}.}
 
-\item{Misc}{Miscellaneous list.}
+\item{Units}{Numeric. Scaling factor applied to recruitment. Default \code{1}.}
+
+\item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
+
+\item{x}{A \linkS4class{srr} object for slot accessors, or a \linkS4class{stock} object
+for \verb{SRR<-}.}
+
+\item{value}{For \verb{SRR<-}: a \linkS4class{srr} object. For slot replacement
+functions: the new value for the corresponding slot.}
 }
 \value{
-A  \linkS4class{srr} object.
+\itemize{
+\item \code{SRR()} returns a \linkS4class{srr} object. If \code{Pars} is an S4 object with an
+\code{SRR} slot, that slot is returned.
+\item \verb{SRR<-} returns \code{x} with the \code{SRR} slot replaced.
+\item Slot accessors return the value of the corresponding slot from \code{x}.
+\item Slot replacement functions return \code{x} with the corresponding slot
+updated.
+}
 }
 \description{
-Construct a \linkS4class{srr} object defining the stock-recruit relationship (SRR)
-associated with a \code{\link[=Stock]{Stock()}}.
+Construct and manipulate a \linkS4class{srr} object defining the stock-recruit
+relationship (SRR) associated with a \code{\link[=Stock]{Stock()}} object. An \code{SRR} object is
+required for all \linkS4class{stock} objects.
 }
 \details{
-The \code{SRR()} constructor defines both the deterministic stock–recruit
-relationship and the stochastic recruitment deviations used in an operating
-model.
+An \linkS4class{srr} object is required for all \linkS4class{stock} objects. It defines
+both the deterministic stock-recruit relationship and the stochastic
+recruitment deviations used in the operating model.
+\subsection{Pass-Through Access}{
 
-See \code{\link[=SRRModels]{SRRModels()}} for a list of supported SRR models.
+If \code{Pars} is an S4 object with an \code{SRR} slot (e.g., a \linkS4class{stock}
+object), \code{SRR()} returns that slot directly rather than constructing a new
+object.
+}
+
+\subsection{Recruitment Deviations}{
 
 Recruitment deviations may be supplied directly via \code{RecDevInit},
-\code{RecDevHist}, and \code{RecDevProj}, or generated internally from \code{SD} and \code{AC}
-during model setup.
+\code{RecDevHist}, and \code{RecDevProj}. If not supplied, they are generated
+internally during model setup from \code{SD} and \code{AC}. If \code{SD} is \code{NULL},
+recruitment is deterministic.
+}
 
-A \code{SRR} object can be attached to a \code{\link[=Stock]{Stock()}} using \code{SRR(Stock) <- MySRR} and
-retrieved using \code{MyLSRR <- SRR(Stock)}
+\subsection{Attaching to a Stock}{
 
-Individual components may be accessed or modified using accessor and
-replacement functions such as \code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}}, and \code{\link[=R0]{R0()}}.
+An \code{SRR} object can be attached to a \code{\link[=Stock]{Stock()}} with
+\code{SRR(Stock) <- MySRR} and retrieved with \code{SRR(Stock)}.
+
+Individual slots may be accessed or modified using \code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}},
+\code{\link[=R0]{R0()}}, \code{\link[=SD]{SD()}}, \code{\link[=AC]{AC()}}, \code{\link[=SPFrom]{SPFrom()}}, \code{\link[=TruncSD]{TruncSD()}}, \code{\link[=RecDevInit]{RecDevInit()}},
+\code{\link[=RecDevHist]{RecDevHist()}}, \code{\link[=RecDevProj]{RecDevProj()}}, \code{\link[=SpawnTimeFrac]{SpawnTimeFrac()}}, and \code{\link[=RelRecFun]{RelRecFun()}}.
+
+See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more details.
+}
 }
 \examples{
 SRRModels()
@@ -149,5 +188,6 @@ plot(SRR)
 # see Examples in `?Length` for other `Pars` configurations
 }
 \seealso{
-\code{\link[=SRRModels]{SRRModels()}}
+\linkS4class{srr}, \code{\link[=Stock]{Stock()}}, \code{\link[=SRRModels]{SRRModels()}}, \code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}},
+\code{\link[=R0]{R0()}}, \code{\link[=RecDevHist]{RecDevHist()}}, \code{\link[=RecDevProj]{RecDevProj()}}, \code{\link[=SpawnTimeFrac]{SpawnTimeFrac()}}
 }

@@ -87,3 +87,5 @@ rename_recursive <- function(object, lookup, dim_name) {
 
 Rename_Stock <- function(object, Stocks) rename_recursive(object, Stocks, "Stock")
 Rename_Fleet <- function(object, Fleets) rename_recursive(object, Fleets, "Fleet")
+# Rename_Year <- function(object, Years) rename_recursive(object, Years, "Year")
+# Rename_Age <- function(object, Years) rename_recursive(object, Ages, "Age")

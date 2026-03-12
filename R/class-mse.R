@@ -47,7 +47,7 @@
 #' @include class-hist.R
 #' @include class-unfished.R
 #' @include class-reference.R
-#' @name mse
+#' @name mse-class
 #' @export
 setClass("mse",
          slots = c(

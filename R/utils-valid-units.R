@@ -1,15 +1,33 @@
 #' Return Valid Units
 #'
-#' Returns the valid units for [Ages()], [Length()], and [Weight()] objects
+#' Returns the valid units for [Ages()], [Length()], and [Weight()] objects.
 #'
-#' @param x Either an [Ages()], [Length()], or [Weight()] object, or a character
-#' string with object class, i.e., one of: `c('ages', 'length', 'weight')` or
-#' `c('Ages', 'Length', 'Weight')`
+#' @param x An [ages-class], [length-class], or [weight-class] object, or a
+#'   character string specifying the class: one of `"ages"`, `"length"`, or
+#'   `"weight"` (case-insensitive). If `NULL`, returns a named list of valid
+#'   units for all three classes. Default `"ages"`.
+#'
+#' @return
+#' - If `x` is `NULL`: a named list with elements `Age`, `Length`, and
+#'   `Weight`, each containing a character vector of valid unit strings.
+#' - If `x` is an [ages-class] object or `"ages"`: a character vector of valid
+#'   age units: `"year"`, `"half-year"`, `"quarter"`, `"month"`, `"week"`.
+#' - If `x` is a [length-class] object or `"length"`: a character vector of
+#'   valid length units: `"mm"`, `"cm"`, `"inch"`.
+#' - If `x` is a [weight-class] object or `"weight"`: a character vector of
+#'   valid weight units: `"g"`, `"kg"`, `"lb"`.
+#' - If no match is found: the string `"No units found"`.
+#'
+#' @seealso [Ages()], [Length()], [Weight()]
+#'
+#' @examples
+#' ValidUnits()           # age units (default)
+#' ValidUnits("length")   # length units
+#' ValidUnits("weight")   # weight units
+#' ValidUnits(NULL)       # all units as a named list
+#' ValidUnits(Ages())     # age units from an ages-class object
 #'
 #' @export
-#' @examples
-#' ValidUnits(Ages())
-#'
 ValidUnits <- function(x='ages') {
   ll <- list()
   ll$Age <- c('year', 'half-year', 'quarter', 'month', 'week')

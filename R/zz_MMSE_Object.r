@@ -10,7 +10,7 @@ setOldClass("multiHist")
 #' simulation conditions and performance of MPs for a multi-stock, multi-fleet operating model.
 #'
 #'
-#' @name MMSE-class
+#' @name MMSE-legacy-class
 #' @docType class
 #' @section Objects from the Class: Objects can be created by calls of the form
 #' \code{new('MMSE', Name, nyears, proyears, nMPs, MPs, nsim, OMtable, Obs,

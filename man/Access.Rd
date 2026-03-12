@@ -15,8 +15,19 @@
 \alias{CVatAge}
 \alias{CVatAge<-}
 \alias{Dist}
+\alias{Dist<-}
+\alias{DiscardsAtAge}
+\alias{DiscardsAtAge<-}
+\alias{DiscardsAtSize}
+\alias{DiscardsAtSize<-}
+\alias{Dynamics}
+\alias{Dynamics<-}
 \alias{Exploitation}
 \alias{Exploitation<-}
+\alias{LandingsAtAge}
+\alias{LandingsAtAge<-}
+\alias{LandingsAtSize}
+\alias{LandingsAtSize<-}
 \alias{LifeHistory}
 \alias{LifeHistory<-}
 \alias{Log}
@@ -64,7 +75,7 @@
 \alias{Value<-}
 \alias{YearLH}
 \alias{YearLH<-}
-\title{Access Slots from a Compatible Object}
+\title{Access and Assign Slots from Compatible S4 Objects}
 \usage{
 AC(x)
 
@@ -92,9 +103,31 @@ CVatAge(x) <- value
 
 Dist(x)
 
+Dist(x) <- value
+
+DiscardsAtAge(x)
+
+DiscardsAtAge(x) <- value
+
+DiscardsAtSize(x)
+
+DiscardsAtSize(x) <- value
+
+Dynamics(x)
+
+Dynamics(x) <- value
+
 Exploitation(x)
 
 Exploitation(x) <- value
+
+LandingsAtAge(x)
+
+LandingsAtAge(x) <- value
+
+LandingsAtSize(x)
+
+LandingsAtSize(x) <- value
 
 LifeHistory(x)
 
@@ -192,15 +225,23 @@ YearLH(x) <- value
 }
 \arguments{
 \item{x}{An S4 object with the corresponding slot.}
+
+\item{value}{The value to assign to the slot}
+
+\item{st}{Integer. Stock index used when \code{x} contains multiple stocks.
+Default \code{1} for \code{nArea()} and \code{NULL} for \code{nAge()} (returns all stocks as
+a list when \code{NULL}).}
 }
 \value{
-The value stored in the named slot of \code{x}.
+\itemize{
+\item Accessor functions return the value stored in the named slot of \code{x}.
+\item Replacement functions return \code{x} with the named slot updated to \code{value}.
+}
 }
 \description{
-Generic accessor functions to retrieve named slots from a compatible S4 object.
-}
-\details{
-These are common to several different S4 classes
+Generic accessor and replacement functions to retrieve and assign named
+slots from compatible S4 objects across the \code{openMSE} package ecosystem.
+Functions work on any S4 object that contains the corresponding slot.
 }
 \examples{
 MyLength <- Length()

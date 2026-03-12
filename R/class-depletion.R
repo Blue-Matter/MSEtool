@@ -6,6 +6,7 @@
 #' @slot Initial   Numeric vector of initial depletion values.
 #' @slot Final     Numeric vector of final depletion values.
 #' @slot Reference Character scalar identifying the reference biomass.
+#' @slot Misc List for internal use.
 #' 
 #' @details
 #' See [Depletion()] for details.

@@ -61,3 +61,4 @@ LoadArgs <- function(fun="Simulate", envir=.GlobalEnv, debug=FALSE) {
   }
   invisible(NULL)
 }
+

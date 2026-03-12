@@ -9,7 +9,7 @@
 #' summed across all fleets for a given fixed F policy over the entire 
 #' projection period. 
 #'
-#' @param Hist `Hist` object containing historical fishery dynamics
+#' @param Hist `hist` class object containing historical fishery dynamics
 #' @param type Character vector; one or both of `Landings` and `Removals`
 #' @param Units Character; either `Biomass` or `Number`
 #' @param silent Logical; if `TRUE`, suppress progress bars
@@ -119,7 +119,7 @@ CalcRefYield <- function(Hist,
 #' or the mean yield per stock.
 #'
 #' @param logScalar Numeric scalar applied to scale historical effort
-#' @param ProjSim Single-simulation subset of the operating model
+#' @param Proj `hist` class object containing historical fishery dynamics
 #' @param HistYears Numeric vector of historical years
 #' @param ProjYears Numeric vector of projection years
 #' @param nFleet Integer number of fleets
@@ -150,7 +150,7 @@ OptRefYield <- function(logScalar,
   # Run fishery dynamics for this sim only
   ProjSim_opt <- CalcFisheryDynamics(Hist = Proj,
                                      Sims = sim,
-                                     Years = c(tail(HistYears, Proj@OM@Seasons), ProjYears),
+                                     Years = c(utils::tail(HistYears, Proj@OM@Seasons), ProjYears),
                                      debug = debug)
   
   # Get total catch summed over age, fleet, area

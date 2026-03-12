@@ -10,3 +10,6 @@
 #' @rdname ExampleObjects
 "ExampleStock"
 
+
+#' @rdname ExampleObjects
+"ExampleFleet"

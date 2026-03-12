@@ -32,5 +32,5 @@ ReduceNSim <- function(object, nSim = NULL) {
     nSim <- nSim(object)
   }
   
-  SubsetSim(object, Sim = 1:nSim)
+  SubsetSim(object, Sims = 1:nSim)
 }

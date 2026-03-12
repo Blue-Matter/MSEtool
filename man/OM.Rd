@@ -42,110 +42,137 @@ OM(
 )
 }
 \arguments{
-\item{Name}{Name of the operating model. Character string.}
+\item{Name}{Character. Name of the operating model. If an S4 object with
+an \code{OM} slot is passed, that slot is returned instead. Default
+\code{"A new OM object"}.}
 
-\item{Agency}{Optional. Name of the agency responsible for management.
-Character string. Supports Markdown.}
+\item{Agency}{Character. Name of the agency responsible for management.
+Supports Markdown. Default \code{""}.}
 
-\item{Author}{Optional. Name(s) of author(s) of the operating model.
-Character vector.}
+\item{Author}{Character vector. Name(s) of the author(s) of the operating
+model. Default \code{""}.}
 
-\item{Email}{Optional. Email address(es) corresponding to \code{Author}.
-Character vector. Supports Markdown.}
+\item{Email}{Character vector. Email address(es) corresponding to \code{Author}.
+Supports Markdown. Default \code{""}.}
 
-\item{Region}{Optional. Name of the geographic region of the fishery.
-Character string.}
+\item{Region}{Character. Name of the geographic region of the fishery.
+Default \code{""}.}
 
-\item{Latitude}{Optional. Latitude (decimal degrees) representing the
-center of \code{Region}. Numeric scalar.}
+\item{Latitude}{Numeric. Latitude (decimal degrees) of the center of
+\code{Region}. Default \code{NULL}.}
 
-\item{Longitude}{Optional. Longitude (decimal degrees) representing the
-center of \code{Region}. Numeric scalar.}
+\item{Longitude}{Numeric. Longitude (decimal degrees) of the center of
+\code{Region}. Default \code{NULL}.}
 
-\item{Sponsor}{Optional. Organization sponsoring development of the
-operating model. Character string. Supports Markdown.}
+\item{Sponsor}{Character. Organization sponsoring development of the
+operating model. Supports Markdown. Default \code{""}.}
 
-\item{nSim}{Number of stochastic simulations. Positive integer.}
+\item{nSim}{Positive integer. Number of stochastic simulations. Default
+\code{48}.}
 
-\item{nYear}{Number of historical years. Numeric scalar.}
+\item{nYear}{Numeric. Number of historical years. Default \code{20}.}
 
-\item{pYear}{Number of projection years. Numeric scalar.}
+\item{pYear}{Numeric. Number of projection years. Default \code{30}.}
 
-\item{CurrentYear}{Final historical year of the operating model.
-Integer scalar.}
+\item{CurrentYear}{Integer. Final historical calendar year of the operating
+model. Default is the current system year.}
 
-\item{Seasons}{Number of seasons per year. Numeric scalar.}
+\item{Seasons}{Integer. Number of seasons per year. Default \code{1}.}
 
-\item{Stock}{A \code{\link[=Stock]{Stock()}} object or list of \code{\link[=Stock]{Stock()}} objects.}
+\item{Stock}{A \linkS4class{stock} object or named list of \linkS4class{stock} objects.
+Default \code{NULL}.}
 
-\item{Fleet}{A hierarchical list of \code{\link[=Fleet]{Fleet()}} objects by stock and fleet.
-Each stock must have the same number of fleets.}
+\item{Fleet}{A hierarchical named list of \linkS4class{fleet} objects indexed by
+stock then fleet. Each stock must have the same number of fleets. Default
+\code{NULL}.}
 
-\item{Obs}{A hierarchical list of \code{\link[=Obs]{Obs()}} objects by stock/complex and fleet.}
+\item{Obs}{A hierarchical named list of \linkS4class{obs} objects indexed by
+stock and fleet. Default \code{NULL}.}
 
-\item{Imp}{A hierarchical list of \code{\link[=Imp]{Imp()}} objects by stock/complex and fleet.}
+\item{Imp}{A hierarchical named list of \linkS4class{imp} objects indexed by
+stock and fleet. Default \code{NULL}.}
 
-\item{Data}{A \code{\link[=Data]{Data()}} object or list of \code{\link[=Data]{Data()}} objects associated with
-the operating model.}
+\item{Data}{A \linkS4class{data} object or list of \linkS4class{data} objects
+associated with the operating model. Default \code{NULL}.}
 
-\item{DataLag}{Integer specifying the number of time steps that data are
-lagged relative to management implementation.}
+\item{DataLag}{Integer. Number of time steps that data are lagged relative
+to management implementation. Default \code{0}.}
 
-\item{CatchFrac}{Optional list controlling catch fraction allocation.}
+\item{CatchFrac}{List. Controls catch fraction allocation among fleets or
+stocks. Default \code{NULL}.}
 
-\item{Allocation}{Optional list controlling fleet or stock allocation.}
+\item{Allocation}{List. Controls effort or catch allocation among fleets or
+stocks. Default \code{NULL}.}
 
-\item{EFactor}{Optional list of effort or exploitation modifiers.}
+\item{EFactor}{List. Effort or exploitation modifiers applied during
+projection. Default \code{NULL}.}
 
-\item{Complexes}{Optional list defining stock complexes for data aggregation
-and management.}
+\item{Complexes}{List. Defines stock complexes for data aggregation and
+management. Default \code{NULL}.}
 
-\item{Herm}{Optional list defining hermaphroditism or movement between stocks.}
+\item{Herm}{List. Defines hermaphroditism or movement between stocks.
+Default \code{NULL}.}
 
-\item{SharePar}{Logical indicating whether key parameters are shared among
-stocks.}
+\item{SharePar}{Logical. Whether key parameters are shared among stocks.
+Default \code{NULL}.}
 
-\item{Relations}{Optional list defining biological or ecological relationships
-among stocks.}
+\item{Relations}{List. Biological or ecological relationships among stocks
+(e.g., predator-prey). Default \code{NULL}.}
 
-\item{Interval}{Management update interval. Numeric scalar or named numeric
-vector.}
+\item{Interval}{Numeric scalar or named numeric vector. Management update
+interval in years. Default \code{1}.}
 
-\item{nReps}{Number of stochastic replicates for management advice.}
+\item{nReps}{Positive integer. Number of stochastic replicates used for
+generating management advice. Default \code{1}.}
 
-\item{pStar}{Percentile applied to stochastic management advice.}
+\item{pStar}{Numeric. Percentile (0–1) applied to stochastic management
+advice. Default \code{0.5}.}
 
-\item{maxF}{Maximum allowable fishing mortality.}
+\item{maxF}{Numeric. Maximum allowable instantaneous fishing mortality.
+Default \code{3}.}
 
-\item{Seed}{Optional random number generator seed.}
+\item{Seed}{Integer. Random number generator seed for reproducibility.
+Default \code{101}.}
 
-\item{Control}{Named list of operating model control settings.}
+\item{Control}{Named list of operating model control settings. If \code{NULL}
+(default), \code{ControlDefault} is used.}
 
-\item{Misc}{List for miscellaneous objects or developer-use components.}
+\item{Misc}{List. Miscellaneous objects or developer-use components.
+Default \code{list()}.}
 
-\item{Source}{Optional character string referencing data sources or
-documentation. Supports Markdown.}
+\item{Source}{Character. References to data sources or documentation.
+Supports Markdown. Default \code{NULL}.}
 }
 \value{
-An \linkS4class{om} object.
+An \linkS4class{om} object, or the \code{OM} slot of \code{Name} if \code{Name} is an
+S4 object with an \code{OM} slot.
 }
 \description{
-Construct and manipulate an \linkS4class{om} object defining the specifications
-of an Operating Model (OM)
+Construct and manipulate an \linkS4class{om} object defining the complete
+specification of an Operating Model (OM) for use in Management Strategy
+Evaluation (MSE).
 }
 \details{
-\subsection{About the \code{OM} Object}{
+The \linkS4class{om} object defines a complete operating model specification for
+use in Management Strategy Evaluation (MSE). See the
+\href{https://docs.openmse.com/}{openMSE Technical Manual} for full details on
+model structure and parameterisation.
+\subsection{Pass-Through Access}{
 
-The \code{OM} object defines a complete operating model specification used in
-Management Strategy Evaluation (MSE). See the \href{https://docs.openmse.com/}{openMSE Technical Manual}
-for more details.
+If \code{Name} is an S4 object with an \code{OM} slot (e.g., a \code{hist-class} or
+\code{mse-class} object), the \code{OM} slot of that object is returned directly
+rather than constructing a new OM.
 }
 
 \subsection{Accessing and Assigning Slots}{
 
-Slots in \linkS4class{om} objects can be accessed or assigned using
-functions matching the slot names (e.g., \code{Agency(om)} or
-\code{Agency(om) <- "DFO"}).
+All slots in \linkS4class{om} objects can be accessed or assigned using
+functions matching the slot names. See \link{OM-accessors} for the full list.
+For example:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{Agency(om)
+Agency(om) <- "DFO"
+}\if{html}{\out{</div>}}
 }
 }
 \examples{
@@ -156,11 +183,6 @@ Agency(om)
 
 }
 \seealso{
-\itemize{
-\item \code{\link[=Stock]{Stock()}}
-\item \code{\link[=Fleet]{Fleet()}}
-\item \code{\link[=Obs]{Obs()}}
-\item \code{\link[=Imp]{Imp()}}
-\item \code{\link[=Data]{Data()}}
-}
+\linkS4class{om}, \code{\link[=Stock]{Stock()}}, \code{\link[=Fleet]{Fleet()}}, \code{\link[=Obs]{Obs()}}, \code{\link[=Imp]{Imp()}}, \code{\link[=Data]{Data()}},
+\link{OM-accessors}, \code{\link[=PopulateOM]{PopulateOM()}}, \code{\link[=RunMSE]{RunMSE()}}
 }

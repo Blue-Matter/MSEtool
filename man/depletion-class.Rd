@@ -19,5 +19,7 @@ See \code{\link[=Depletion]{Depletion()}} for details.
 \item{\code{Final}}{Numeric vector of final depletion values.}
 
 \item{\code{Reference}}{Character scalar identifying the reference biomass.}
+
+\item{\code{Misc}}{List for internal use.}
 }}
 

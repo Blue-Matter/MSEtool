@@ -37,55 +37,121 @@ Species(x)
 Species(x) <- value
 }
 \arguments{
-\item{Name}{Character string. Unique stock name.}
+\item{Name}{Character. Unique stock name, or an S4 object with a \code{Stock}
+slot (e.g., an \linkS4class{om} object) for pass-through access (see \code{Details}).
+Default \code{"New Stock Object"}.}
 
-\item{CommonName}{Common name.}
+\item{CommonName}{Character. Common name of the species. When \code{Name} is an
+S4 object and \code{CommonName} is numeric, it is used as a stock index for
+list-structured \code{Stock} slots (see \code{Details}). Default \code{NULL}.}
 
-\item{Species}{Scientific name.}
+\item{Species}{Character. Scientific name of the species. Default \code{NULL}.}
 
-\item{Ages}{An \code{\link[=Ages]{Ages()}} object.}
+\item{Ages}{An \linkS4class{ages} object. Required. If \code{NULL} (default), an
+empty \linkS4class{ages} object is created via \code{\link[=Ages]{Ages()}}.}
 
-\item{Length}{A \code{\link[=Length]{Length()}} object.}
+\item{Length}{A \linkS4class{length} object. Required. If \code{NULL} (default), an
+empty \linkS4class{length} object is created via \code{\link[=Length]{Length()}}.}
 
-\item{Weight}{A \code{\link[=Weight]{Weight()}} object.}
+\item{Weight}{A \linkS4class{weight} object. Required. If \code{NULL} (default), an
+empty \linkS4class{weight} object is created via \code{\link[=Weight]{Weight()}}.}
 
-\item{NaturalMortality}{A \code{\link[=NaturalMortality]{NaturalMortality()}} object.}
+\item{NaturalMortality}{A \linkS4class{naturalmortality} object. Required. If
+\code{NULL} (default), an empty \linkS4class{naturalmortality} object is created via
+\code{\link[=NaturalMortality]{NaturalMortality()}}.}
 
-\item{Maturity}{A \code{\link[=Maturity]{Maturity()}} object.}
+\item{Maturity}{A \linkS4class{maturity} object. Required. If \code{NULL} (default),
+an empty \linkS4class{maturity} object is created via \code{\link[=Maturity]{Maturity()}}.}
 
-\item{Fecundity}{A \code{\link[=Fecundity]{Fecundity()}} object.}
+\item{Fecundity}{A \linkS4class{fecundity} object. Optional. If \code{NULL}
+(default), an empty \linkS4class{fecundity} object is created via \code{\link[=Fecundity]{Fecundity()}}.}
 
-\item{SRR}{A \code{\link[=SRR]{SRR()}} object.}
+\item{SRR}{A \linkS4class{srr} object. Required. If \code{NULL} (default), an empty
+\linkS4class{srr} object is created via \code{\link[=SRR]{SRR()}}.}
 
-\item{Spatial}{A \code{\link[=Spatial]{Spatial()}} object.}
+\item{Spatial}{A \linkS4class{spatial} object. Optional — only required for
+operating models with explicit spatial structure (\code{nArea > 1}). If \code{NULL}
+(default), an empty \linkS4class{spatial} object is created via \code{\link[=Spatial]{Spatial()}}.}
 
-\item{Depletion}{A \code{\link[=Depletion]{Depletion()}} object.}
+\item{Depletion}{A \linkS4class{depletion} object. If \code{NULL} (default), an empty
+\linkS4class{depletion} object is created via \code{\link[=Depletion]{Depletion()}}. If  \code{Final} is
+specified for the \code{Depletion} object, the model will ignore any existing
+catchability (\code{q}) values (see \linkS4class{catchability}) and optimize \code{q} to
+reach the specified depletion for each simulation.}
 
-\item{Seasons}{Number of seasons in a year.}
+\item{Seasons}{Integer. Number of seasons per year. Default \code{1}.}
 
-\item{Misc}{Miscellaneous list}
+\item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
+
+\item{x}{An S4 object with a \code{Stock} slot, or a \linkS4class{stock} object for
+slot accessors.}
+
+\item{value}{For \verb{Stock<-}: a \linkS4class{stock} object or list of \linkS4class{stock}
+objects. For \verb{CommonName<-} and \verb{Species<-}: a character string.}
 }
 \value{
-A \linkS4class{stock} object.
+\itemize{
+\item \code{Stock()} returns a \linkS4class{stock} object. If \code{Name} is an S4 object with
+a \code{Stock} slot, returns that slot or an indexed element of it.
+\item \verb{Stock<-} returns \code{x} with the \code{Stock} slot replaced.
+\item \code{CommonName()}, \code{Species()} return the corresponding slot from \code{x}.
+\item \verb{CommonName<-}, \verb{Species<-} return \code{x} with the corresponding slot
+updated.
+}
 }
 \description{
-Construct a \linkS4class{stock} object defining the biological and
-population-dynamics properties of a stock used in an operating model.
+Construct and manipulate a \linkS4class{stock} object defining the biological and
+population-dynamics properties of a stock in an operating model.
 }
 \details{
-The \code{Stock} class aggregates age structure, growth, mortality,
-reproduction, recruitment, and optional spatial dynamics into a
-single object.
+The \linkS4class{stock} object aggregates age structure, growth, natural
+mortality, maturity, fecundity, recruitment, and optional spatial dynamics
+into a single object for use in an operating model.
+\subsection{Required Components}{
 
-A \code{Stock} object can be attached to an \code{\link[=OM]{OM()}} using \code{\link[=Stock]{Stock()}} and
-retrieved using \code{\link{Stock<-}}.
+The following components are required for all stocks: \code{\link[=Ages]{Ages()}}, \code{\link[=Length]{Length()}},
+\code{\link[=Weight]{Weight()}}, \code{\link[=NaturalMortality]{NaturalMortality()}}, \code{\link[=Maturity]{Maturity()}}, and \code{\link[=SRR]{SRR()}}. If not
+supplied, empty objects are created automatically with default slots.
 
-Individual components may be accessed or modified using accessor
-and replacement functions such as \code{\link[=Ages]{Ages()}}, \code{\link{Ages<-}}, etc.
+\code{\link[=Fecundity]{Fecundity()}} and \code{\link[=Spatial]{Spatial()}} are optional. If \code{Spatial} is not specified,
+the model assumes a single well-mixed area.
+}
+
+\subsection{Pass-Through Access from an OM}{
+
+When \code{Name} is an S4 object with a \code{Stock} slot (e.g., an \linkS4class{om}
+object), \code{Stock()} acts as an accessor rather than a constructor:
+\itemize{
+\item \code{Stock(om)} returns \code{om@Stock}.
+\item \code{Stock(om, i)} returns \code{om@Stock[[i]]} when the \code{Stock} slot is a list,
+or \code{om@Stock} when it is a single stock.
+}
+
+where \code{i} is passed via the \code{CommonName} argument.
+}
+
+\subsection{Internal Defaults}{
+
+When constructing a new \linkS4class{stock} object, \code{nYear}, \code{pYear}, \code{nSim},
+and \code{CurrentYear} are set to default values (\code{20}, \code{30}, \code{48}, and the
+current system year respectively). These are overridden when the stock is
+added to an \code{\link[=OM]{OM()}}.
+}
+
+\subsection{Attaching to an OM}{
+
+A \code{Stock} object can be attached to an \code{\link[=OM]{OM()}} with
+\code{Stock(om) <- MyStock} and retrieved with \code{Stock(om)}.
+
+Individual slots may be accessed or modified using \code{\link[=Ages]{Ages()}}, \code{\link[=Length]{Length()}},
+\code{\link[=Weight]{Weight()}}, \code{\link[=NaturalMortality]{NaturalMortality()}}, \code{\link[=Maturity]{Maturity()}}, \code{\link[=Fecundity]{Fecundity()}}, \code{\link[=SRR]{SRR()}},
+\code{\link[=Spatial]{Spatial()}}, \code{\link[=Depletion]{Depletion()}}, \code{\link[=CommonName]{CommonName()}}, and \code{\link[=Species]{Species()}}.
 
 See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more details.
 }
+}
 \seealso{
-\code{\link[=Ages]{Ages()}}, \code{\link[=Length]{Length()}}, \code{\link[=Weight]{Weight()}}, \code{\link[=NaturalMortality]{NaturalMortality()}},
-\code{\link[=Maturity]{Maturity()}}, \code{\link[=Fecundity]{Fecundity()}}, \code{\link[=SRR]{SRR()}}, \code{\link[=Spatial]{Spatial()}}, \code{\link[=Depletion]{Depletion()}}
+\linkS4class{stock}, \code{\link[=OM]{OM()}}, \code{\link[=Ages]{Ages()}}, \code{\link[=Length]{Length()}}, \code{\link[=Weight]{Weight()}},
+\code{\link[=NaturalMortality]{NaturalMortality()}}, \code{\link[=Maturity]{Maturity()}}, \code{\link[=Fecundity]{Fecundity()}}, \code{\link[=SRR]{SRR()}}, \code{\link[=Spatial]{Spatial()}},
+\code{\link[=Depletion]{Depletion()}}
 }

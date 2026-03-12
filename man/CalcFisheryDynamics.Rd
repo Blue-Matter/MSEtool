@@ -9,7 +9,6 @@ CalcFisheryDynamics(
   Years = NULL,
   Sims = NULL,
   DoCalcCatch = 1,
-  DoBackCalcEffort = 1,
   IdenticalSim = FALSE,
   debug = 0,
   clone = NULL

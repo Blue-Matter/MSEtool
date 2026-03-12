@@ -11,13 +11,12 @@ StockNames(object)
 FleetNames(object)
 }
 \arguments{
-\item{object}{An \code{\link[=OM]{OM()}}, \code{\link[=Hist]{Hist()}}, \code{\link[=Stock]{Stock()}}, \code{\link[=Fleet]{Fleet()}}, or \link{MSE} object.}
+\item{object}{An \linkS4class{om}, \linkS4class{hist}, \linkS4class{stock}, \linkS4class{fleet}, or \linkS4class{mse} object.}
 }
 \value{
 \itemize{
 \item \code{StockNames()}: a character vector of stock names
-\item \code{FleetNames()}: a character vector of fleet names (always taken
-from the first stock)
+\item \code{FleetNames()}: a character vector of fleet names (always taken from the first stock)
 }
 }
 \description{
@@ -25,7 +24,7 @@ Access Stock or Fleet Names
 }
 \details{
 These functions extract stock or fleet names from objects used in the MSE
-framework, including \code{\link[=OM]{OM()}}, \code{\link[=Hist]{Hist()}}, \code{\link[=Stock]{Stock()}}, \code{\link[=Fleet]{Fleet()}}, and \link{MSE}
+framework, including \linkS4class{om}, \linkS4class{hist}, \linkS4class{stock}, \linkS4class{fleet}, and \linkS4class{mse}
 objects
 
 \strong{StockNames}

@@ -19,17 +19,20 @@
 #' @seealso [mse-class], [Advice()]
 #' @export
 TACs <- function(MSE) {
-  MSE@PPD |>
-    purrr::map(\(DataMP)
-               purrr::map(DataMP, \(DataSim)
-                          purrr::map(DataSim, \(DataStock) DataStock@TAC) |>
-                            List2Array('Stock')
-               ) |> List2Array('Sim')
-    ) |>
-    List2Array('MP') |>
-    array2DF() |>
-    ConvertDF() |>
-    dplyr::mutate(Variable='TAC') |>
-    dplyr::left_join(YearDF(MSE), by='Year') |>
-    dplyr::arrange(Sim, Stock, Year, MP, Period, Value, Variable)
+  
+  cli::cli_abort("Not complete")
+  
+  # MSE@PPD |>
+  #   purrr::map(\(DataMP)
+  #              purrr::map(DataMP, \(DataSim)
+  #                         purrr::map(DataSim, \(DataStock) DataStock@TAC) |>
+  #                           List2Array('Stock')
+  #              ) |> List2Array('Sim')
+  #   ) |>
+  #   List2Array('MP') |>
+  #   array2DF() |>
+  #   ConvertDF() |>
+  #   dplyr::mutate(Variable='TAC') |>
+  #   dplyr::left_join(YearDF(MSE), by='Year') |>
+  #   dplyr::arrange(Sim, Stock, Year, MP, Period, Value, Variable)
 }

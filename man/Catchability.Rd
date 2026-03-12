@@ -28,39 +28,60 @@ qInc(x)
 qInc(x) <- value
 }
 \arguments{
-\item{Efficiency}{Gear efficiency (q).}
+\item{Efficiency}{Numeric or array. Gear or vessel catchability coefficient
+(\code{q}) relating fishing effort to fishing mortality.}
 
-\item{qCV}{Coefficient of variation for catchability.}
+\item{qCV}{Numeric. Coefficient of variation for catchability, used to
+generate stochastic variation in \code{q} across simulations (projection only).}
 
-\item{qInc}{Incremental changes in catchability.}
+\item{qInc}{Numeric. Incremental annual change in catchability, used to
+model trends in gear efficiency over time (projection only).}
 
-\item{Misc}{Miscellaneous metadata.}
+\item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
+
+\item{x}{A \linkS4class{catchability} object, or a \linkS4class{fleet} object for
+\verb{Catchability<-}.}
+
+\item{value}{For \verb{Catchability<-}: a \linkS4class{catchability} object. For slot
+replacement functions: the new value for the corresponding slot.}
 }
 \value{
-An \linkS4class{catchability} object
+\itemize{
+\item \code{Catchability()} returns a \linkS4class{catchability} object. If \code{Efficiency}
+is a \linkS4class{fleet} object, the \code{Catchability} slot of that fleet is
+returned.
+\item \verb{Catchability<-} returns \code{x} with the \code{Catchability} slot replaced.
+\item \code{Efficiency()}, \code{qCV()}, \code{qInc()} return the corresponding slot from \code{x}.
+\item Their replacement forms return \code{x} with the corresponding slot updated.
+}
 }
 \description{
-Construct a \linkS4class{catchability} object defining fishing gear/vessel efficiency
+Construct and manipulate a \linkS4class{catchability} object defining fishing
+gear or vessel efficiency.
 }
 \details{
-The \code{Catchability} objects represents assumptions about the
-efficiency of fishing gear or surveys in capturing fish.
+A \linkS4class{catchability} object represents assumptions about the efficiency
+of fishing gear or surveys in capturing fish. Catchability may be specified
+as fixed values, time-varying arrays, or stochastic processes depending on
+model structure.
 
-Catchability may be specified as fixed values, time-varying
-arrays, or stochastic processes depending on model structure.
+A \code{Catchability} object can be attached to a \code{\link[=Fleet]{Fleet()}} with
+\code{Catchability(Fleet) <- MyCatchability} and retrieved with
+\code{Catchability(Fleet)}.
 
-Individual components may be accessed or modified using
-accessor and replacement functions such as \code{\link[=Efficiency]{Efficiency()}},
-\code{\link[=qCV]{qCV()}}, and \code{\link[=qInc]{qInc()}}.
-
-A \code{Catchability} object can be attached to a \code{\link[=Fleet]{Fleet()}} using \code{Catchability(Fleet) <- MyCatchability} and
-retrieved using \code{MyCatchability <- Catchability(Fleet)}
-
-Individual components may be accessed or modified using accessor and
-replacement functions such as \code{\link[=Efficiency]{Efficiency()}}, \code{\link[=qCV]{qCV()}}, and \code{\link[=qInc]{qInc()}}.
+Individual slots may be accessed or modified using the accessor and
+replacement functions documented here: \code{\link[=Efficiency]{Efficiency()}}, \code{\link[=qCV]{qCV()}}, \code{\link[=qInc]{qInc()}}.
 
 See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more details.
 }
+\examples{
+c <- Catchability(Efficiency = 0.01, qCV = 0.1)
+Efficiency(c)
+Efficiency(c) <- 0.02
+qCV(c)
+qInc(c)
+
+}
 \seealso{
-\code{\link[=Fleet]{Fleet()}}
+\linkS4class{catchability}, \code{\link[=Fleet]{Fleet()}}
 }

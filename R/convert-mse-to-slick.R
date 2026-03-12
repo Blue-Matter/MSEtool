@@ -12,6 +12,7 @@
 #' @return `NULL` invisibly if all checks pass. Otherwise throws an error.
 #' @keywords internal
 SlickChecks <- function(MSE) {
+  MPs <- NULL # CRAN checks 
   CheckClass(MSE, c('mse', 'list'), 'MSE')
   
   if (!requireNamespace("Slick", quietly=TRUE))
@@ -135,6 +136,10 @@ MSE2MPs <- function(MSE) {
 #' @keywords internal
 MSE2Kobe <- function(MSE) {
   SlickChecks(MSE)
+  
+  SB_SBMSY <- F_FMSY <- NULL 
+  
+  cli::cli_abort("Not currently working until `SB_SBMSY` and `F_FMSY` are complete ")
   
   mse_ref <- if (is.list(MSE)) MSE[[1]] else MSE
   nOM     <- if (is.list(MSE)) length(MSE) else 1L

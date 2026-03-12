@@ -13,7 +13,6 @@
 #'   distribution is truncated.
 #' @param Dist Character string, either `"normal"` or `"lognormal"` indicating
 #'   the distribution of size-at-age.
-#' @param AgeClasses Optional numeric vector of age classes. Defaults to `0:(nage-1)`.
 #' @param silent Logical; if `TRUE`, suppress progress bar.
 #' @param type Character; currently only `"Length"` is supported.
 #'

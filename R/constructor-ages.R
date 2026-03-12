@@ -1,40 +1,59 @@
 #' Ages
 #'
 #' Construct and manipulate an [ages-class] object defining the age structure
-#' associated with a [Stock()].
+#' associated with a [stock-class] object.
 #'
-#' @param MaxAge Numeric scalar giving the maximum age. If `PlusGroup == TRUE`,
-#'   this represents the plus group age. In units of `Units`.
-#' @param MinAge Numeric scalar giving the minimum age. In units of `Units`.
-#' @param Units Character string describing the time units (e.g. `"year"`).
-#'   See [ValidUnits()].
-#' @param PlusGroup Logical; whether the maximum age is treated as a plus group.
-#'
+#' @param MaxAge Numeric. Maximum age. If `PlusGroup = TRUE`, this is the plus
+#'   group age. In units of `Units`.
+#' @param MinAge Numeric. Minimum age. In units of `Units`. Default `0`.
+#' @param Units Character. Time units for `MinAge` and `MaxAge`
+#'   (e.g., `"year"`). See [ValidUnits()]. Default `"year"`.
+#' @param PlusGroup Logical. Whether `MaxAge` is treated as a plus group.
+#'   Default `TRUE`.
+#' @param x An [ages-class] object, or a [stock-class] object for `Ages<-`.
+#' @param value For `Ages<-`: an [ages-class] object. For slot replacement
+#'   functions (`MaxAge<-`, `MinAge<-`, `PlusGroup<-`): the new value for
+#'   the corresponding slot.
+#'   
+#'   
 #' @details
-#' The `Ages` class defines the discrete age structure used by a [Stock()]
+#' The `ages` class defines the discrete age structure used by a [stock-class]
 #' object. Age classes are derived from `MinAge`, `MaxAge`, and `Units`.
-#' 
-#' Although `MinAge` and `MaxAge` are defined in the units described in `Units`, 
-#' the resulting age classes are always in units of `year`; i.e., fractional
-#' year values for seasonal models
-#' 
-#' The age classes can be accessed with `Classes(MyAges)`
-#' 
+#'
+#' Although `MinAge` and `MaxAge` are in the units described by `Units`, the
+#' resulting age classes are always in years — i.e., fractional year values
+#' for seasonal models.
+#'
+#' Age classes can be accessed with `Classes(x)`.
+#'
 #' ## Accessing and Assigning Slots
-#' 
+#'
 #' All slots in [ages-class] objects can be accessed or assigned new values
 #' with functions matching the slot names. See `Examples`.
-#' 
 #'
-#' @return An [ages-class] object.
+#' @return
+#' - `Ages()` returns an [ages-class] object. If `MaxAge` is a [stock-class] object,
+#'   the `Ages` slot of that stock is returned.
+#' - `Ages<-` returns `x` with the `Ages` slot replaced.
+#' - `MaxAge()`, `MinAge()`, `PlusGroup()` return the corresponding slot value
+#'   from `x`.
+#' - `MaxAge<-`, `MinAge<-`, `PlusGroup<-` return `x` with the corresponding
+#'   slot updated.
 #'
-#' @seealso [Units()], [`Units<-`], [Classes()]
+#' @seealso [ages-class], [Stock()], [Units()], [Classes()]
+#'
 #' @examples
 #' a <- Ages(MaxAge = 20)
 #' MaxAge(a)
 #' MaxAge(a) <- 10
 #' MaxAge(a)
-#' 
+#'
+#' MinAge(a)
+#' MinAge(a) <- 1
+#'
+#' PlusGroup(a)
+#' PlusGroup(a) <- FALSE
+#'
 #' @export
 Ages <- function(MaxAge,
                  MinAge = 0,
@@ -56,7 +75,6 @@ Ages <- function(MaxAge,
   )
   
   object@Classes <- CalcAgeClasses(object)
-
   methods::validObject(object)
   object
 }

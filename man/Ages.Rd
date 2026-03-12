@@ -28,32 +28,47 @@ PlusGroup(x)
 PlusGroup(x) <- value
 }
 \arguments{
-\item{MaxAge}{Numeric scalar giving the maximum age. If \code{PlusGroup == TRUE},
-this represents the plus group age. In units of \code{Units}.}
+\item{MaxAge}{Numeric. Maximum age. If \code{PlusGroup = TRUE}, this is the plus
+group age. In units of \code{Units}.}
 
-\item{MinAge}{Numeric scalar giving the minimum age. In units of \code{Units}.}
+\item{MinAge}{Numeric. Minimum age. In units of \code{Units}. Default \code{0}.}
 
-\item{Units}{Character string describing the time units (e.g. \code{"year"}).
-See \code{\link[=ValidUnits]{ValidUnits()}}.}
+\item{Units}{Character. Time units for \code{MinAge} and \code{MaxAge}
+(e.g., \code{"year"}). See \code{\link[=ValidUnits]{ValidUnits()}}. Default \code{"year"}.}
 
-\item{PlusGroup}{Logical; whether the maximum age is treated as a plus group.}
+\item{PlusGroup}{Logical. Whether \code{MaxAge} is treated as a plus group.
+Default \code{TRUE}.}
+
+\item{x}{An \linkS4class{ages} object, or a \linkS4class{stock} object for \verb{Ages<-}.}
+
+\item{value}{For \verb{Ages<-}: an \linkS4class{ages} object. For slot replacement
+functions (\verb{MaxAge<-}, \verb{MinAge<-}, \verb{PlusGroup<-}): the new value for
+the corresponding slot.}
 }
 \value{
-An \linkS4class{ages} object.
+\itemize{
+\item \code{Ages()} returns an \linkS4class{ages} object. If \code{MaxAge} is a \linkS4class{stock} object,
+the \code{Ages} slot of that stock is returned.
+\item \verb{Ages<-} returns \code{x} with the \code{Ages} slot replaced.
+\item \code{MaxAge()}, \code{MinAge()}, \code{PlusGroup()} return the corresponding slot value
+from \code{x}.
+\item \verb{MaxAge<-}, \verb{MinAge<-}, \verb{PlusGroup<-} return \code{x} with the corresponding
+slot updated.
+}
 }
 \description{
 Construct and manipulate an \linkS4class{ages} object defining the age structure
-associated with a \code{\link[=Stock]{Stock()}}.
+associated with a \linkS4class{stock} object.
 }
 \details{
-The \code{Ages} class defines the discrete age structure used by a \code{\link[=Stock]{Stock()}}
+The \code{ages} class defines the discrete age structure used by a \linkS4class{stock}
 object. Age classes are derived from \code{MinAge}, \code{MaxAge}, and \code{Units}.
 
-Although \code{MinAge} and \code{MaxAge} are defined in the units described in \code{Units},
-the resulting age classes are always in units of \code{year}; i.e., fractional
-year values for seasonal models
+Although \code{MinAge} and \code{MaxAge} are in the units described by \code{Units}, the
+resulting age classes are always in years — i.e., fractional year values
+for seasonal models.
 
-The age classes can be accessed with \code{Classes(MyAges)}
+Age classes can be accessed with \code{Classes(x)}.
 \subsection{Accessing and Assigning Slots}{
 
 All slots in \linkS4class{ages} objects can be accessed or assigned new values
@@ -66,7 +81,13 @@ MaxAge(a)
 MaxAge(a) <- 10
 MaxAge(a)
 
+MinAge(a)
+MinAge(a) <- 1
+
+PlusGroup(a)
+PlusGroup(a) <- FALSE
+
 }
 \seealso{
-\code{\link[=Units]{Units()}}, \code{\link{Units<-}}, \code{\link[=Classes]{Classes()}}
+\linkS4class{ages}, \code{\link[=Stock]{Stock()}}, \code{\link[=Units]{Units()}}, \code{\link[=Classes]{Classes()}}
 }

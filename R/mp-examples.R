@@ -11,7 +11,7 @@
 # Global TAC
 
 AverageCatch <- function(Data) {
-  LHIndex <- GetYearLH(Data)
+  LHIndex <- LastHistYearInd(Data)
   
   if (any(Data@Landings@Units !='Biomass' &&
           max(Data@Years) <= Data@YearLH)) {
@@ -26,7 +26,7 @@ class(AverageCatch) <- 'mp'
 
 # TAC by Fleet
 AverageCatch_Fleet <- function(Data) {
-  LHIndex <- GetYearLH(Data)
+  LHIndex <- LastHistYearInd(Data)
   
   if (any(Data@Landings@Units !='Biomass' &&
           max(Data@Years) <= Data@YearLH)) {
@@ -41,7 +41,7 @@ class(AverageCatch_Fleet) <- 'mp'
 
 # TAC by Fleet-Area
 AverageCatch_FleetArea <- function(Data) {
-  LHIndex <- GetYearLH(Data)
+  LHIndex <- LastHistYearInd(Data)
   
   if (any(Data@Landings@Units !='Biomass' &&
           max(Data@Years) <= Data@YearLH)) {
@@ -61,15 +61,6 @@ AverageCatch_FleetArea <- function(Data) {
 class(AverageCatch_FleetArea) <- 'mp'
 
 
-# ---- Effort ----
-ConstantEffort <- function(Data) {
-  LHIndex <- GetYearLH(Data)
-  LastEffort <- Data@Effort@Value[LHIndex,]
-  
-  # if (is.null(LastEffort))
-  Advice()
-}
-class(ConstantEffort) <- 'mp'
 
 # Effort by Fleet
 

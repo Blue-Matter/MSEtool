@@ -4,7 +4,7 @@
 #' for a single timestep. Existing data will not be replaced with simulated data
 #' 
 #'
-#' @param Proj A `Hist` object populated with fishery dynamics up to `Year`
+#' @param Proj A `hist` object populated with fishery dynamics up to `Year`
 #' @param Year The 'current' year when the function is being called
 #' @param YearsHist Numeric vector of historical years
 #' @param YearsProj Numeric vector of projection years
@@ -15,7 +15,7 @@
 #'  * `TSIndex <- match(Year, YearsAll) - 1`
 #'  * `DataYear <- YearsAll[TSIndex]`
 #'
-#' @return Updated `Hist` object with `Hist@Data` updated with the simulated data
+#' @return Updated `hist` object with `Hist@Data` updated with the simulated data
 #'
 #' @keywords internal
 GenerateProjectionData <- function(Proj, Year, YearsHist, YearsProj) {

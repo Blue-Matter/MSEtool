@@ -14,7 +14,9 @@ PopulateDiscardMortality(
   CalcAtLength = TRUE,
   seed = NULL,
   silent = FALSE,
-  force = FALSE
+  force = FALSE,
+  replace = FALSE,
+  ASKOverride = NULL
 )
 }
 \arguments{
@@ -40,6 +42,10 @@ age-based arrays.}
 
 \item{force}{Logical; if \code{TRUE}, forces re-population even if digest
 indicates object is current.}
+
+\item{replace}{Used internally.}
+
+\item{ASKOverride}{Used internally.}
 }
 \value{
 A populated \code{\link[=DiscardMortality]{DiscardMortality()}} object.

@@ -272,17 +272,34 @@ PrepHistMisc <- function(Hist, Period=c('Historical', 'Projection')) {
 
 
 
-# Restores Hist@Misc
+#' Restore `@Misc` Slot After a Projection
+#'
+#' Restores the `@Misc` slot of a `hist-class` or `mse-class` object to its
+#' saved state, then re-attaches any named components that were preserved
+#' separately (`Advice`, `Selectivity`, `Retention`, `DiscardMortality`).
+#'
+#' During a projection run, the full `@Misc` contents are stashed in
+#' `@Misc$SAVE` and named components are stored alongside it. This function
+#' reverses that process: it replaces `@Misc` with the stashed contents and
+#' then writes back any non-`NULL` named components so they are not lost.
+#'
+#' @param Hist A `hist-class` or `mse-class` object whose `@Misc$SAVE` slot
+#'   contains the stashed `@Misc` list.
+#'
+#' @return The input object with `@Misc` restored.
+#' @keywords internal
 RestoreHistMisc <- function(Hist) {
-  saveMisc <- Hist@Misc$SAVE
-  saveAdvice <- Hist@Misc$Advice
-    
-  Hist@Misc <- list()
-  if (!is.null(saveMisc))
-    Hist@Misc <- saveMisc
- 
-  if (!is.null(saveAdvice))
-    Hist@Misc$Advice <- saveAdvice 
+  preserved_names <- c('Advice', 'Selectivity', 'Retention', 'DiscardMortality')
+  saved <- purrr::map(
+    c('SAVE', preserved_names),
+    \(nm) Hist@Misc[[nm]]
+  ) |> purrr::set_names(c('SAVE', preserved_names))
   
+  Hist@Misc <- saved$SAVE %||% list()
+  
+  for (nm in preserved_names) {
+    if (!is.null(saved[[nm]]))
+      Hist@Misc[[nm]] <- saved[[nm]]
+  }
   Hist
 }

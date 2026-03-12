@@ -1,44 +1,86 @@
-#' Retention-at-Age, -Length, and -Weight Models
+#' Retention Models
 #'
-#' Functions for generating retention curves for age, length, or weight.
-#' Includes standard logistic, knife-edge, and double-normal models.
+#' Logistic, knife-edge, and double-normal retention-at-age,
+#' retention-at-length, and retention-at-weight models for use in a
+#' [Retention()] object.
 #'
-#' @param Ages Numeric vector of age classes for age-based models.
-#' @param RA50 First age at 50% retention for logistic retention-at-age.
-#' @param RA50_95 Interval between 50% and 95% retention for logistic retention-at-age.
-#' @param Length Numeric vector of length classes for length-based models.
-#' @param RL50 First length at 50% retention for logistic retention-at-length.
-#' @param RL50_95 Interval between 50% and 95% retention for logistic retention-at-length.
-#' @param RW50 First weight at 50% retention for logistic retention-at-weight.
-#' @param RW50_95 Interval between 50% and 95% retention for logistic retention-at-weight.
-#' @param LR5 First length at 5% retention (double-normal).
-#' @param LFR Full-retention length (double-normal).
-#' @param Rmaxlen Retention value at `max(Length)` (double-normal).
-#' @param WR5 First weight at 5% retention (double-normal).
-#' @param WFR Full-retention weight (double-normal).
-#' @param Rmaxweight Retention value at `max(Weight)` (double-normal).
-#' @param RL Knife-edge length threshold.
-#' @param RA Knife-edge age threshold.
-#' @param full Logical; provide a complete table of models (TRUE) or just model names (FALSE).
-#' @param print Logical; print results (TRUE) or return data frame invisibly (FALSE).
+#' @param Ages Numeric vector of age classes.
+#' @param Length Numeric vector of length classes.
+#' @param Weight Numeric vector of weight classes.
+#' @param RA50 Numeric. Age at 50% retention (logistic-at-age).
+#' @param RA50_95 Numeric. Interval between `RA50` and age at 95% retention
+#'   (logistic-at-age).
+#' @param MaxRet Numeric. Maximum (asymptotic) retention. Default `1` (full
+#'   retention). Values less than 1 produce a dome-shaped or partially
+#'   selective retention curve.
+#' @param RL50 Numeric. Length at 50% retention (logistic-at-length).
+#' @param RL50_95 Numeric. Interval between `RL50` and length at 95% retention
+#'   (logistic-at-length).
+#' @param RW50 Numeric. Weight at 50% retention (logistic-at-weight).
+#' @param RW50_95 Numeric. Interval between `RW50` and weight at 95% retention
+#'   (logistic-at-weight).
+#' @param LR5 Numeric. Length at 5% retention (double-normal).
+#' @param LFR Numeric. Length at full retention (double-normal).
+#' @param Rmaxlen Numeric. Retention at `max(Length)` (double-normal). Values
+#'   less than 1 produce a dome-shaped retention curve.
+#' @param WR5 Numeric. Weight at 5% retention (double-normal).
+#' @param WFR Numeric. Weight at full retention (double-normal).
+#' @param Rmaxweight Numeric. Retention at `max(Weight)` (double-normal).
+#'   Values less than 1 produce a dome-shaped retention curve.
+#' @param RL Numeric. Knife-edge length threshold; fish at or above this
+#'   length are fully retained.
+#' @param RA Numeric. Knife-edge age threshold; fish at or above this age are
+#'   fully retained.
+#' @param full Logical. If `TRUE` (default), returns a complete table of
+#'   available models. If `FALSE`, returns model names only.
+#' @param print Logical. If `TRUE` (default), prints results to the console.
+#'   If `FALSE`, returns the data frame invisibly without printing.
 #'
-#' At-length and at-weight schedules are converted internally to at-age using the age-length 
-#' and age-weight key respectively.
-#' 
-#' - **Logistic**: \deqn{R(x) = \frac{1}{1 + \exp(-\ln(19) \frac{x - x_{50}}{x_{95} - x_{50}})}}
-#' - **Knife-edge**: \deqn{R(x) = 0 \text{ if } x < x_{50}, 1 \text{ if } x \ge x_{50}}
-#' - **Double-normal**: combination of ascending and descending half-normal curves.
+#' @details
+#' Three families of retention model are available:
 #'
-#' * `RetentionModels()` prints a list of available retention models.
-#' * `RetentionModelsLength()` prints a list of available retention-at-length models.
-#' * `RetentionModelsAge()` prints a list of available retention-at-age models.
-#' * `RetentionModelsWeight()` prints a list of available retention-at-weight models.
-#' 
+#' - **Logistic**: a standard increasing retention curve parameterised by the
+#' 50% and 95% retention points, with asymptote `MaxRet`:
+#'   \deqn{R(x) = \frac{\texttt{MaxRet}}{1 + \exp\left(-\ln(19) \cdot
+#'                                                       \frac{x - x_{50}}{x_{95} - x_{50}}\right)}}
+#' - **Knife-edge**: full retention at or above a threshold, zero below:
+#'   \deqn{R(x) = \begin{cases} 0 & x < x_t \\ 1 & x \geq x_t \end{cases}}
+#' - **Double-normal**: a combination of ascending and descending half-normal
+#'   curves, producing either asymptotic (`Rmaxlen = 1`) or dome-shaped
+#'   (`Rmaxlen < 1`) retention.
+#'
+#' At-length and at-weight schedules are converted internally to at-age using
+#' the age-length key and age-weight key respectively.
+#'
+#' The available model functions are:
+#' - `RetentionAtAge()`: logistic retention-at-age.
+#' - `RetentionKnifeEdgeAge()`: knife-edge retention-at-age.
+#' - `RetentionAtLength()`: logistic retention-at-length.
+#' - `RetentionKnifeEdgeLength()`: knife-edge retention-at-length.
+#' - `RetentionAtWeight()`: logistic retention-at-weight.
+#' - `DoubleNormalRetention()`: double-normal retention-at-length.
+#' - `DoubleNormalRetentionWeight()`: double-normal retention-at-weight.
+#'
+#' The `RetentionModels*` functions list available models:
+#' - `RetentionModels()`: all retention models.
+#' - `RetentionModelsAge()`: retention-at-age models only.
+#' - `RetentionModelsLength()`: retention-at-length models only.
+#' - `RetentionModelsWeight()`: retention-at-weight models only.
+#'
 #' @return
-#' Numeric vector of retention at each age, length, or weight.  
-#' `RetentionModels()` invisibly returns a data frame describing available models.
+#' - `RetentionAtAge()`, `RetentionKnifeEdgeAge()`, `RetentionAtLength()`,
+#'   `RetentionKnifeEdgeLength()`, `RetentionAtWeight()`,
+#'   `DoubleNormalRetention()`, `DoubleNormalRetentionWeight()`: a numeric
+#'   vector of retention values (0–1) at each age, length, or weight class
+#'   respectively.
+#' - `RetentionModels()`, `RetentionModelsAge()`, `RetentionModelsLength()`,
+#'   `RetentionModelsWeight()`: invisibly returns a data frame (if
+#'   `full = TRUE`) or character vector (if `full = FALSE`) of available
+#'   models. Prints to console if `print = TRUE`.
 #'
-#' @seealso [Ages()], [Length()], [Weight()], [Stock()]
+#' @seealso [Retention()], [Selectivity()], [Ages()], [Length()], [Weight()],
+#'   [Fleet()]
+#'
 #' @example man-examples/models-retention.R
 #'
 #' @name Retention-Models
@@ -48,12 +90,12 @@ NULL
 # Logistic retention
 #' @rdname Retention-Models
 #' @export
-RetentionAtAge <- function(Ages, RA50, RA50_95) {
-  logistic_50_95(Ages, x50 = RA50, x50_95 = RA50_95)
+RetentionAtAge <- function(Ages, RA50, RA50_95, MaxRet = 1) {
+  logistic_50_95(Ages, x50 = RA50, x50_95 = RA50_95, asymp = MaxRet)
 }
 class(RetentionAtAge) <- 'Retention-at-Age-Model'
 
-# Knife-edge retention
+#' Knife-edge retention
 #' @rdname Retention-Models
 #' @export
 RetentionKnifeEdgeAge <- function(Ages, RA) {
@@ -64,8 +106,8 @@ class(RetentionKnifeEdgeAge) <- 'Retention-at-Age-Model'
 # Logistic retention at length
 #' @rdname Retention-Models
 #' @export
-RetentionAtLength <- function(Length, RL50, RL50_95) {
-  logistic_50_95(Length, x50 = RL50, x50_95 = RL50_95)
+RetentionAtLength <- function(Length, RL50, RL50_95, MaxRet = 1) {
+  logistic_50_95(Length, x50 = RL50, x50_95 = RL50_95, asymp = MaxRet)
 }
 class(RetentionAtLength) <- 'Retention-at-Length-Model'
 
@@ -80,8 +122,8 @@ class(RetentionKnifeEdgeLength) <- 'Retention-at-Length-Model'
 # Logistic retention at weight
 #' @rdname Retention-Models
 #' @export
-RetentionAtWeight <- function(Weight, RW50, RW50_95) {
-  logistic_50_95(Weight, x50 = RW50, x50_95 = RW50_95)
+RetentionAtWeight <- function(Weight, RW50, RW50_95, MaxRet = 1) {
+  logistic_50_95(Weight, x50 = RW50, x50_95 = RW50_95, asymp = MaxRet)
 }
 class(RetentionAtWeight) <- 'Retention-at-Weight-Model'
 
@@ -97,7 +139,10 @@ class(DoubleNormalRetention) <- 'Retention-at-Length-Model'
 #' @rdname Retention-Models
 #' @export
 DoubleNormalRetentionWeight <- function(Weight, WR5, WFR, Rmaxweight) {
-  double_normal(Weight, WR5, WFR, Rmaxweight)
+  double_normal(x    = Weight, 
+                x5   = WR5, 
+                xF   = WFR, 
+                xMax = Rmaxweight)
 }
 class(DoubleNormalRetentionWeight) <- 'Retention-at-Weight-Model'
 

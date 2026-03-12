@@ -1,91 +1,104 @@
 #' Create an Operating Model
 #'
-#' Construct and manipulate an [om-class] object defining the specifications
-#' of an Operating Model (OM)
+#' Construct and manipulate an [om-class] object defining the complete
+#' specification of an Operating Model (OM) for use in Management Strategy
+#' Evaluation (MSE).
 #'
-#' @param Name Name of the operating model. Character string.
-#' @param Agency Optional. Name of the agency responsible for management.
-#' Character string. Supports Markdown.
-#' @param Author Optional. Name(s) of author(s) of the operating model.
-#' Character vector.
-#' @param Email Optional. Email address(es) corresponding to `Author`.
-#' Character vector. Supports Markdown.
-#' @param Region Optional. Name of the geographic region of the fishery.
-#' Character string.
-#' @param Latitude Optional. Latitude (decimal degrees) representing the
-#' center of `Region`. Numeric scalar.
-#' @param Longitude Optional. Longitude (decimal degrees) representing the
-#' center of `Region`. Numeric scalar.
-#' @param Sponsor Optional. Organization sponsoring development of the
-#' operating model. Character string. Supports Markdown.
-#'
-#' @param nSim Number of stochastic simulations. Positive integer.
-#' @param nYear Number of historical years. Numeric scalar.
-#' @param pYear Number of projection years. Numeric scalar.
-#' @param CurrentYear Final historical year of the operating model.
-#' Integer scalar.
-#' @param Seasons Number of seasons per year. Numeric scalar.
-#'
-#' @param Stock A [Stock()] object or list of [Stock()] objects.
-#' @param Fleet A hierarchical list of [Fleet()] objects by stock and fleet. 
-#' Each stock must have the same number of fleets.
-#' 
-#' @param Obs A hierarchical list of [Obs()] objects by stock/complex and fleet.
-#' @param Imp A hierarchical list of [Imp()] objects by stock/complex and fleet.
-#'
-#' @param Data A [Data()] object or list of [Data()] objects associated with
-#' the operating model.
-#' @param DataLag Integer specifying the number of time steps that data are
-#' lagged relative to management implementation.
-#'
-#' @param CatchFrac Optional list controlling catch fraction allocation.
-#' @param Allocation Optional list controlling fleet or stock allocation.
-#' @param EFactor Optional list of effort or exploitation modifiers.
-#'
-#' @param Complexes Optional list defining stock complexes for data aggregation
-#' and management.
-#' @param Herm Optional list defining hermaphroditism or movement between stocks.
-#' @param SharePar Logical indicating whether key parameters are shared among
-#' stocks.
-#' @param Relations Optional list defining biological or ecological relationships
-#' among stocks.
-#'
-#' @param Interval Management update interval. Numeric scalar or named numeric
-#' vector.
-#' @param nReps Number of stochastic replicates for management advice.
-#' @param pStar Percentile applied to stochastic management advice.
-#' @param maxF Maximum allowable fishing mortality.
-#' @param Seed Optional random number generator seed.
-#'
-#' @param Control Named list of operating model control settings.
-#' @param Misc List for miscellaneous objects or developer-use components.
-#' @param Source Optional character string referencing data sources or
-#' documentation. Supports Markdown.
+#' @param Name Character. Name of the operating model. If an S4 object with
+#'   an `OM` slot is passed, that slot is returned instead. Default
+#'   `"A new OM object"`.
+#' @param Agency Character. Name of the agency responsible for management.
+#'   Supports Markdown. Default `""`.
+#' @param Author Character vector. Name(s) of the author(s) of the operating
+#'   model. Default `""`.
+#' @param Email Character vector. Email address(es) corresponding to `Author`.
+#'   Supports Markdown. Default `""`.
+#' @param Region Character. Name of the geographic region of the fishery.
+#'   Default `""`.
+#' @param Latitude Numeric. Latitude (decimal degrees) of the center of
+#'   `Region`. Default `NULL`.
+#' @param Longitude Numeric. Longitude (decimal degrees) of the center of
+#'   `Region`. Default `NULL`.
+#' @param Sponsor Character. Organization sponsoring development of the
+#'   operating model. Supports Markdown. Default `""`.
+#' @param nSim Positive integer. Number of stochastic simulations. Default
+#'   `48`.
+#' @param nYear Numeric. Number of historical years. Default `20`.
+#' @param pYear Numeric. Number of projection years. Default `30`.
+#' @param CurrentYear Integer. Final historical calendar year of the operating
+#'   model. Default is the current system year.
+#' @param Seasons Integer. Number of seasons per year. Default `1`.
+#' @param Stock A [stock-class] object or named list of [stock-class] objects.
+#'   Default `NULL`.
+#' @param Fleet A hierarchical named list of [fleet-class] objects indexed by
+#'   stock then fleet. Each stock must have the same number of fleets. Default
+#'   `NULL`.
+#' @param Obs A hierarchical named list of [obs-class] objects indexed by
+#'   stock and fleet. Default `NULL`.
+#' @param Imp A hierarchical named list of [imp-class] objects indexed by
+#'   stock and fleet. Default `NULL`.
+#' @param Data A [data-class] object or list of [data-class] objects
+#'   associated with the operating model. Default `NULL`.
+#' @param DataLag Integer. Number of time steps that data are lagged relative
+#'   to management implementation. Default `0`.
+#' @param CatchFrac List. Controls catch fraction allocation among fleets or
+#'   stocks. Default `NULL`.
+#' @param Allocation List. Controls effort or catch allocation among fleets or
+#'   stocks. Default `NULL`.
+#' @param EFactor List. Effort or exploitation modifiers applied during
+#'   projection. Default `NULL`.
+#' @param Complexes List. Defines stock complexes for data aggregation and
+#'   management. Default `NULL`.
+#' @param Herm List. Defines hermaphroditism or movement between stocks.
+#'   Default `NULL`.
+#' @param SharePar Logical. Whether key parameters are shared among stocks.
+#'   Default `NULL`.
+#' @param Relations List. Biological or ecological relationships among stocks
+#'   (e.g., predator-prey). Default `NULL`.
+#' @param Interval Numeric scalar or named numeric vector. Management update
+#'   interval in years. Default `1`.
+#' @param nReps Positive integer. Number of stochastic replicates used for
+#'   generating management advice. Default `1`.
+#' @param pStar Numeric. Percentile (0–1) applied to stochastic management
+#'   advice. Default `0.5`.
+#' @param maxF Numeric. Maximum allowable instantaneous fishing mortality.
+#'   Default `3`.
+#' @param Seed Integer. Random number generator seed for reproducibility.
+#'   Default `101`.
+#' @param Control Named list of operating model control settings. If `NULL`
+#'   (default), `ControlDefault` is used.
+#' @param Misc List. Miscellaneous objects or developer-use components.
+#'   Default `list()`.
+#' @param Source Character. References to data sources or documentation.
+#'   Supports Markdown. Default `NULL`.
 #'
 #' @details
-#'  
-#' ## About the `OM` Object
-#' 
-#' The `OM` object defines a complete operating model specification used in
-#' Management Strategy Evaluation (MSE). See the [openMSE Technical Manual](https://docs.openmse.com/) 
-#' for more details.
-#' 
+#' The [om-class] object defines a complete operating model specification for
+#' use in Management Strategy Evaluation (MSE). See the
+#' [openMSE Technical Manual](https://docs.openmse.com/) for full details on
+#' model structure and parameterisation.
+#'
+#' ## Pass-Through Access
+#'
+#' If `Name` is an S4 object with an `OM` slot (e.g., a `hist-class` or
+#' `mse-class` object), the `OM` slot of that object is returned directly
+#' rather than constructing a new OM.
+#'
 #' ## Accessing and Assigning Slots
 #'
-#' Slots in [om-class] objects can be accessed or assigned using
-#' functions matching the slot names (e.g., `Agency(om)` or
-#' `Agency(om) <- "DFO"`). 
-#' 
+#' All slots in [om-class] objects can be accessed or assigned using
+#' functions matching the slot names. See [OM-accessors] for the full list.
+#' For example:
+#' ```r
+#' Agency(om)
+#' Agency(om) <- "DFO"
+#' ```
 #'
-#' @return An [om-class] object.
+#' @return An [om-class] object, or the `OM` slot of `Name` if `Name` is an
+#'   S4 object with an `OM` slot.
 #'
-#' @seealso
-#'
-#' * [Stock()]
-#' * [Fleet()]
-#' * [Obs()]
-#' * [Imp()]
-#' * [Data()]
+#' @seealso [om-class], [Stock()], [Fleet()], [Obs()], [Imp()], [Data()],
+#'   [OM-accessors], [PopulateOM()], [RunMSE()]
 #'
 #' @examples
 #' om <- OM()
@@ -187,7 +200,7 @@ OM <- function(Name='A new `OM` object',
   if (!is.null(Control)) {
     .Object@Control <- Control
   } else {
-    .Object@Control <- ControlDefault
+    .Object@Control <- MSEtool::ControlDefault
   }
   
   .Object@Misc <- Misc
@@ -202,22 +215,37 @@ OM <- function(Name='A new `OM` object',
 #' Access and Modify OM Slots
 #'
 #' Accessor and assignment functions for slots in [om-class] objects.
-#'
 #' Each function retrieves or replaces the value of the corresponding slot.
-#' Assignment methods validate input using internal consistency checks.
 #'
-#' For example:
+#' @param x An [om-class] object or a [hist-class] object
+#' @param value The value to assign to the corresponding slot.
 #'
-#' * `Agency(om)` returns the agency name
-#' * `Agency(om) <- "DFO"` updates the agency
+#' @return
+#' - Accessor functions return the value of the named slot.
+#' - Replacement functions return `x` with the named slot updated.
 #'
+#' @examples
+#' om <- OM()
+#' Agency(om)
+#' Agency(om) <- "DFO"
+#'
+#' nSim(om)
+#' nSim(om) <- 100
+#'
+#' @seealso [OM()], [om-class]
 #' @name OM-accessors
 NULL
 
+ishist <- function(x, slot_name) {
+  if (inherits(x,'hist'))
+    x <- x@OM 
+  AccessSlot(x, slot_name)
+}
+
 #' @rdname OM-accessors
 #' @export
-Agency <- function(OM) {
-  AccessSlot(OM, 'Agency')
+Agency <- function(x) {
+  ishist(x, 'Agency')
 }
 
 #' @rdname OM-accessors
@@ -228,8 +256,8 @@ Agency <- function(OM) {
 
 #' @rdname OM-accessors
 #' @export
-Allocation <- function(OM) {
-  AccessSlot(OM, 'Allocation')
+Allocation <- function(x) {
+  ishist(x, 'Allocation')
 }
 
 #' @rdname OM-accessors
@@ -240,8 +268,8 @@ Allocation <- function(OM) {
 
 #' @rdname OM-accessors
 #' @export
-Author <- function(OM) {
-  AccessSlot(OM, 'Author')
+Author <- function(x) {
+  ishist(x, 'Author')
 }
 
 #' @rdname OM-accessors
@@ -252,8 +280,8 @@ Author <- function(OM) {
 
 #' @rdname OM-accessors
 #' @export
-CatchFrac <- function(OM) {
-  AccessSlot(OM, 'CatchFrac')
+CatchFrac <- function(x) {
+  ishist(x, 'CatchFrac')
 }
 
 #' @rdname OM-accessors
@@ -264,8 +292,8 @@ CatchFrac <- function(OM) {
 
 #' @rdname OM-accessors
 #' @export
-Complexes <- function(OM) {
-  AccessSlot(OM, 'Complexes')
+Complexes <- function(x) {
+  ishist(x, 'Complexes')
 }
 
 #' @rdname OM-accessors
@@ -276,8 +304,8 @@ Complexes <- function(OM) {
 
 #' @rdname OM-accessors
 #' @export
-Control <- function(OM) {
-  AccessSlot(OM, 'Control')
+Control <- function(x) {
+  ishist(x, 'Control')
 }
 
 #' @rdname OM-accessors
@@ -288,8 +316,8 @@ Control <- function(OM) {
 
 #' @rdname OM-accessors
 #' @export
-CurrentYear <- function(OM) {
-  AccessSlot(OM, 'CurrentYear')
+CurrentYear <- function(x) {
+  ishist(x, 'CurrentYear')
 }
 
 #' @rdname OM-accessors
@@ -298,11 +326,10 @@ CurrentYear <- function(OM) {
   AssignSlot(x, value, 'CurrentYear')
 }
 
-
 #' @rdname OM-accessors
 #' @export
-DataLag <- function(OM) {
-  AccessSlot(OM, 'DataLag')
+DataLag <- function(x) {
+  ishist(x, 'DataLag')
 }
 
 #' @rdname OM-accessors
@@ -311,32 +338,22 @@ DataLag <- function(OM) {
   AssignSlot(x, value, 'DataLag')
 }
 
+#' @rdname OM-accessors
 #' @export
-Dynamics <- function(OM) {
-  AccessSlot(OM, 'Dynamics')
+EFactor <- function(x) {
+  ishist(x, 'EFactor')
 }
 
 #' @rdname OM-accessors
 #' @export
-`Dynamics<-` <- function(x, value) {
-  AssignSlot(x, value, 'Dynamics')
-}
-
-#' @rdname OM-accessors
-#' @export
-EFactor <- function(OM) {
-  AccessSlot(OM, 'EFactor')
-}
-
-#' @rdname OM-accessors
 `EFactor<-` <- function(x, value) {
   AssignSlot(x, value, 'EFactor')
 }
 
 #' @rdname OM-accessors
 #' @export
-Email <- function(OM) {
-  AccessSlot(OM, 'Email')
+Email <- function(x) {
+  ishist(x, 'Email')
 }
 
 #' @rdname OM-accessors
@@ -345,11 +362,10 @@ Email <- function(OM) {
   AssignSlot(x, value, 'Email')
 }
 
-
 #' @rdname OM-accessors
 #' @export
-Herm <- function(OM) {
-  AccessSlot(OM, 'Herm')
+Herm <- function(x) {
+  ishist(x, 'Herm')
 }
 
 #' @rdname OM-accessors
@@ -360,8 +376,8 @@ Herm <- function(OM) {
 
 #' @rdname OM-accessors
 #' @export
-Interval <- function(OM) {
-  AccessSlot(OM, 'Interval')
+Interval <- function(x) {
+  ishist(x, 'Interval')
 }
 
 #' @rdname OM-accessors
@@ -370,11 +386,10 @@ Interval <- function(OM) {
   AssignSlot(x, value, 'Interval')
 }
 
-
 #' @rdname OM-accessors
 #' @export
-Latitude <- function(OM) {
-  AccessSlot(OM, 'Latitude')
+Latitude <- function(x) {
+  ishist(x, 'Latitude')
 }
 
 #' @rdname OM-accessors
@@ -385,8 +400,8 @@ Latitude <- function(OM) {
 
 #' @rdname OM-accessors
 #' @export
-Longitude <- function(OM) {
-  AccessSlot(OM, 'Longitude')
+Longitude <- function(x) {
+  ishist(x, 'Longitude')
 }
 
 #' @rdname OM-accessors
@@ -397,8 +412,8 @@ Longitude <- function(OM) {
 
 #' @rdname OM-accessors
 #' @export
-maxF <- function(OM) {
-  AccessSlot(OM, 'maxF')
+maxF <- function(x) {
+  ishist(x, 'maxF')
 }
 
 #' @rdname OM-accessors
@@ -409,8 +424,8 @@ maxF <- function(OM) {
 
 #' @rdname OM-accessors
 #' @export
-nReps <- function(OM) {
-  AccessSlot(OM, 'nReps')
+nReps <- function(x) {
+  ishist(x, 'nReps')
 }
 
 #' @rdname OM-accessors
@@ -421,8 +436,8 @@ nReps <- function(OM) {
 
 #' @rdname OM-accessors
 #' @export
-nYear <- function(OM) {
-  AccessSlot(OM, 'nYear')
+nYear <- function(x) {
+  ishist(x, 'nYear')
 }
 
 #' @rdname OM-accessors
@@ -433,8 +448,8 @@ nYear <- function(OM) {
 
 #' @rdname OM-accessors
 #' @export
-pStar <- function(OM) {
-  AccessSlot(OM, 'pStar')
+pStar <- function(x) {
+  ishist(x, 'pStar')
 }
 
 #' @rdname OM-accessors
@@ -443,11 +458,10 @@ pStar <- function(OM) {
   AssignSlot(x, value, 'pStar')
 }
 
-
 #' @rdname OM-accessors
 #' @export
-pYear <- function(OM) {
-  AccessSlot(OM, 'pYear')
+pYear <- function(x) {
+  ishist(x, 'pYear')
 }
 
 #' @rdname OM-accessors
@@ -458,8 +472,8 @@ pYear <- function(OM) {
 
 #' @rdname OM-accessors
 #' @export
-Region <- function(OM) {
-  AccessSlot(OM, 'Region')
+Region <- function(x) {
+  ishist(x, 'Region')
 }
 
 #' @rdname OM-accessors
@@ -468,11 +482,10 @@ Region <- function(OM) {
   AssignSlot(x, value, 'Region')
 }
 
-
 #' @rdname OM-accessors
 #' @export
-Relations <- function(OM) {
-  AccessSlot(OM, 'Relations')
+Relations <- function(x) {
+  ishist(x, 'Relations')
 }
 
 #' @rdname OM-accessors
@@ -483,10 +496,8 @@ Relations <- function(OM) {
 
 #' @rdname OM-accessors
 #' @export
-Seasons <- function(OM) {
-  if (inherits(OM,'hist'))
-      return(OM@OM@Seasons)
-  OM@Seasons
+Seasons <- function(x) {
+  ishist(x, 'Seasons')
 }
 
 #' @rdname OM-accessors
@@ -495,11 +506,10 @@ Seasons <- function(OM) {
   AssignSlot(x, value, 'Seasons')
 }
 
-
 #' @rdname OM-accessors
 #' @export
-SharePar <- function(OM) {
-  AccessSlot(OM, 'SharePar')
+SharePar <- function(x) {
+  ishist(x, 'SharePar')
 }
 
 #' @rdname OM-accessors
@@ -508,12 +518,10 @@ SharePar <- function(OM) {
   AssignSlot(x, value, 'SharePar')
 }
 
-
-
 #' @rdname OM-accessors
 #' @export
-Source <- function(OM) {
-  AccessSlot(OM, 'Source')
+Source <- function(x) {
+  ishist(x, 'Source')
 }
 
 #' @rdname OM-accessors
@@ -524,8 +532,8 @@ Source <- function(OM) {
 
 #' @rdname OM-accessors
 #' @export
-Sponsor <- function(OM) {
-  AccessSlot(OM, 'Sponsor')
+Sponsor <- function(x) {
+  ishist(x, 'Sponsor')
 }
 
 #' @rdname OM-accessors
@@ -533,4 +541,3 @@ Sponsor <- function(OM) {
 `Sponsor<-` <- function(x, value) {
   AssignSlot(x, value, 'Sponsor')
 }
-

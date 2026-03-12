@@ -1,37 +1,89 @@
 #' Fleet
 #'
-#' Construct a [fleet-class] object defining the exploitation characteristics 
-#' of a fleet for stock used in an operating model.
+#' Construct and manipulate a [fleet-class] object defining the exploitation
+#' characteristics of a fleet for a stock in an operating model.
 #'
-#' @param Name Fleet name.
-#' @param Effort An [Effort()] object.
-#' @param Catchability A [Catchability()] object.
-#' @param Selectivity A [Selectivity()] object.
-#' @param Retention A [Retention()] object.
-#' @param DiscardMortality A [DiscardMortality()] object.
-#' @param Closure Spatio-temporal closures.
-#' @param WeightFleet Fleet-specific weight-at-age schedules.
-#' @param BioEconomic A [Bioeconomic()] object.
-#' @param Dynamics Currently not used. Future use for storing fleet dynamics model parameters
-#' @param Misc Miscellaneous list.
+#' @param Name Character. Fleet name, or an [om-class] object for pass-through
+#'   access (see `Details`).
+#' @param Effort An [effort-class] object. Default is an empty [effort-class].
+#' @param Catchability A [catchability-class] object. Default is an empty
+#'   [catchability-class]. When `Name` is an [om-class] object and `Effort` is
+#'   numeric, a numeric value here indexes the fleet within the stock (see
+#'   Details).
+#' @param Selectivity A [selectivity-class] object. Selectivity is required
+#'   for all fleets. Default is an empty [selectivity-class].
+#' @param Retention A [retention-class] object. Optional — if not specified,
+#'   all age and length classes are assumed fully retained. Default is an empty
+#'   [retention-class].
+#' @param DiscardMortality A [discardmortality-class] object. Default is an
+#'   empty [discardmortality-class].
+#' @param Closure Array. Spatio-temporal closure schedule. Default is an empty
+#'   array.
+#' @param WeightFleet Array. Fleet-specific weight-at-age. If not specified,
+#'   the stock-level weight-at-age is used. Default is an empty array.
+#' @param BioEconomic A [bioeconomic-class] object. Not currently used. Default
+#'   is an empty [bioeconomic-class].
+#' @param Dynamics List. Reserved for future use for fleet dynamics model
+#'   parameters. Default `list()`.
+#' @param Misc List. Miscellaneous additional inputs. Default `list()`.
+#' @param x A [fleet-class] object or an [om-class] object for `Fleet<-`.
+#' @param value A [fleet-class] object or named list of [fleet-class] objects
+#'   for `Fleet<-`.
 #'
 #' @details
-#' 
-#' A `Fleet` object describes the fishing characteristics of a fleet for a particular stock 
-#' in an operating model.
-#' 
-#' A `Fleet` object can be attached to an [OM()] using [Fleet()] and
-#' retrieved using [`Fleet<-`].
+#' A [fleet-class] object describes the fishing characteristics of a fleet for
+#' a particular stock in an operating model.
 #'
-#' Individual components may be accessed or modified using accessor
-#' and replacement functions such as [Effort()], [`Effort<-`], etc.
+#' ## Pass-Through Access from an OM
+#'
+#' When `Name` is an [om-class] object, `Fleet()` acts as an accessor rather
+#' than a constructor:
+#'
+#' - `Fleet(om)` returns the full fleet list (`om@Fleet`).
+#' - `Fleet(om, st)` returns all fleets for stock index `st`
+#'   (`om@Fleet[[st]]`).
+#' - `Fleet(om, st, fl)` returns fleet `fl` for stock `st`
+#'   (`om@Fleet[[st]][[fl]]`).
+#'
+#' where `st` and `fl` are passed via the `Effort` and `Catchability`
+#' arguments respectively.
+#'
+#' ## Assigning Fleets to an OM
+#'
+#' A [fleet-class] object or list of [fleet-class] objects can be assigned to
+#' an [om-class] object with `Fleet(om) <- MyFleet`. Stock objects must be
+#' added to the OM before fleets. If a single [fleet-class] object is
+#' assigned, it is applied to all stocks using the fleet name. If a list is
+#' assigned, it must be structured as a stock-indexed list of fleet lists.
+#'
+#' ## Required Components
+#'
+#' [Selectivity()] and [Effort()] are required for all fleets. All other components are
+#' optional and will use default (empty) values if not specified.
+#'
+#' Individual slots may be accessed or modified using [Effort()], [Catchability()],
+#' [Selectivity()], [Retention()], [DiscardMortality()], [Closure()],
+#' [WeightFleet()], and [Bioeconomic()].
 #'
 #' `r TechManLink()`
-#' 
-#' @return A [fleet-class] object.
 #'
-#' @seealso [OM()], [Effort()], [Catchability()], [Selectivity()],
-#' [Retention()], [DiscardMortality()], [BioEconomic()]
+#' @return
+#' - `Fleet()` returns a [fleet-class] object, or if `Name` is an [om-class]
+#'   object, returns the fleet list or a specific fleet from the OM.
+#' - `Fleet<-` returns the [om-class] object `x` with the `Fleet` slot
+#'   updated.
+#' - `Closure()`, `WeightFleet()` return the corresponding slot from the
+#'   [fleet-class] object.
+#' - Their replacement forms return the object with the corresponding slot
+#'   updated.
+#'
+#' @seealso [fleet-class], [OM()], [Effort()], [Catchability()],
+#'   [Selectivity()], [Retention()], [DiscardMortality()], [Bioeconomic()]
+#'
+#' @examples
+#' f <- Fleet(Name = "Trawl")
+#' Selectivity(f)
+#' Effort(f)
 #'
 #' @export
 Fleet <- function(Name = NULL,
@@ -48,17 +100,17 @@ Fleet <- function(Name = NULL,
   
 
   if (inherits(Name, "om")) {
-    if (inherits(Effort, 'effort'))
-      return(Name@Fleet)
     if (inherits(Effort, 'numeric')) {
       if (inherits(Catchability, 'catchability'))
         return(Name@Fleet[[Effort]])
       if (inherits(Catchability, 'numeric'))
         return(Name@Fleet[[Effort]][[Catchability]])
     }
-  }
     
-  
+    if (inherits(Effort, 'effort'))
+      return(Name@Fleet)
+  }
+
   methods::new(
     "fleet",
     Name = Name,
@@ -77,7 +129,7 @@ Fleet <- function(Name = NULL,
 
 #' @rdname Fleet
 #' @export
-Closure <- function(Fleet) {
+Closure <- function(x) {
   AccessSlot(Fleet, 'Closure')
 }
 
@@ -89,7 +141,7 @@ Closure <- function(Fleet) {
 
 #' @rdname Fleet
 #' @export
-WeightFleet <- function(Fleet) {
+WeightFleet <- function(x) {
   AccessSlot(Fleet, 'WeightFleet')
 }
 

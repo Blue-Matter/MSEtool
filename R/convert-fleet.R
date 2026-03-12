@@ -1,6 +1,26 @@
-#' @rdname Convert
-#' @param Fleet A [Fleet-class] object
-#' @export
+#' Convert a Legacy Fleet Object to a New fleet Class
+#'
+#' Converts a legacy [Fleet-legacy-class] object to the current [fleet-class]
+#' by extracting and mapping each component to its corresponding new S4 class.
+#'
+#' @param Fleet A [Fleet-legacy-class] object to convert.
+#' @param silent Logical. If `TRUE`, suppresses progress messages. Default
+#'   `FALSE`.
+#'
+#' @return A [fleet-class] object with `Name`, `Effort`, `Catchability`,
+#'   `Selectivity`, and `Retention` populated. Note that `DiscardMortality`,
+#'   `Closure`, `Targeting`, and `WeightFleet` are not currently converted and
+#'   retain their default values.
+#'
+#' @seealso [Convert()], [ConvertOM()], [ConvertMOM()], [Effort()],
+#'   [Catchability()], [Selectivity()], [Retention()]
+#'
+#' @examples
+#' \dontrun{
+#' Fleetlegacy <- readRDS("MyLegacyFleet.rds")
+#' fleet_new <- ConvertFleet(Fleetlegacy)
+#' }
+#'
 ConvertFleet <- function(Fleet, silent = FALSE) {
   CheckClass(Fleet, "Fleet", "Fleet")
   

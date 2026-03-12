@@ -2,26 +2,23 @@
 #'
 #' @details
 #' These functions extract stock or fleet names from objects used in the MSE
-#' framework, including [OM()], [Hist()], [Stock()], [Fleet()], and [MSE]
+#' framework, including [om-class], [hist-class], [stock-class], [fleet-class], and [mse-class]
 #' objects
 #'
-#' \strong{StockNames}
+#' **StockNames**
 #'
 #' Returns the names of stocks contained in the object.
 #'
-#' \strong{FleetNames}
+#' **FleetNames**
 #'
 #' Returns the names of fleets contained in the object. For objects containing
 #' multiple stocks, a list of character vectors is returned.
 #'
-#' @param object An [OM()], [Hist()], [Stock()], [Fleet()], or [MSE] object.
+#' @param object An [om-class], [hist-class], [stock-class], [fleet-class], or [mse-class] object.
 #'
 #' @return
-#' \itemize{
-#'   \item \code{StockNames()}: a character vector of stock names
-#'   \item \code{FleetNames()}: a character vector of fleet names (always taken 
-#'   from the first stock)
-#' }
+#' * `StockNames()`: a character vector of stock names
+#' * `FleetNames()`: a character vector of fleet names (always taken from the first stock)
 #'
 #'
 #' @examples
@@ -63,11 +60,6 @@ FleetNames <- function(object) {
     }
     if (is.list(object@Fleet)) {
       return(names(object@Fleet[[1]]))
-      # 
-      # if (length(object@Fleet)==1) {
-      #   
-      # }
-      # return(lapply(object@Fleet, names))
     }
   }
   
@@ -78,19 +70,5 @@ FleetNames <- function(object) {
   if (inherits(object, "FleetList")) {
     return(names(object))
   }
-  
   NULL
 }
-
-
-
-#
-# `FleetNames<-` <- function(x, value) {
-#   if (inherits(x, 'om'))
-#     AssignFleetNamesOM(x, value)
-# }
-#
-# AssignFleetNamesOM <- function(OM, value) {
-#
-#
-# }

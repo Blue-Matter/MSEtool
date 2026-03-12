@@ -14,6 +14,10 @@
 \alias{FracOther<-}
 \alias{Arrangement}
 \alias{Arrangement<-}
+\alias{CVDist}
+\alias{CVDist<-}
+\alias{CVStay}
+\alias{CVStay<-}
 \alias{Spatial<-}
 \title{Spatial}
 \usage{
@@ -53,124 +57,150 @@ Arrangement(x)
 
 Arrangement(x) <- value
 
+CVDist(x)
+
+CVDist(x) <- value
+
+CVStay(x)
+
+CVStay(x) <- value
+
 Spatial(x) <- value
 }
 \arguments{
-\item{UnfishedDist}{Numeric or numeric array giving the relative unfished
-biomass distribution over areas.}
+\item{UnfishedDist}{Numeric scalar, vector, or array. Relative unfished
+biomass distribution over areas. If \code{UnfishedDist} is a \linkS4class{stock}
+object, the \code{Spatial} slot of that stock is returned. See \code{Details} for
+required structure by number of areas.}
 
-\item{ProbStaying}{Numeric or numeric array giving the probability of
-remaining in an area.}
+\item{ProbStaying}{Numeric scalar, vector, or array. Probability of
+remaining in an area between time steps. See \code{Details} for required
+structure by number of areas.}
 
-\item{RelativeSize}{Numeric or numeric array giving relative area sizes.}
+\item{RelativeSize}{Numeric scalar, vector, or array. Relative size of each
+area, used for calculating biomass density. If not specified, all areas
+are assumed equal in size. See \code{Details} for required structure by number of
+areas.}
 
-\item{Movement}{Numeric array giving movement probabilities among areas.}
+\item{Movement}{Numeric array. Movement probability matrix with dimensions
+\verb{nSim x nArea x nArea}, with optional additional \code{nAge} and \code{nTS}
+dimensions. Each element gives the probability of moving from the area in
+the first area dimension (row) to the area in the second area dimension
+(column). If provided, \code{UnfishedDist} is overwritten with the asymptotic
+unfished distribution derived from \code{Movement}. Default \code{NULL}.}
 
-\item{FracOther}{Numeric array defining relative movement among areas when
-more than two areas are present.}
+\item{FracOther}{Numeric array. Required for models with more than 2 areas.
+Defines the relative probability of movement among areas, with dimensions
+\verb{nSim x nArea x nArea} plus optional \code{nAge} and \code{nTS} dimensions.
+Diagonal elements (probability of staying) must be set to \code{NA} as they
+are solved from \code{ProbStaying}. Off-diagonal element \verb{[i, j]} gives the
+relative probability of moving from area \code{i} to area \code{j}. Default \code{NULL}.}
 
-\item{Arrangement}{Numeric matrix defining spatial layout (plotting only). Currently not used.}
+\item{Arrangement}{Numeric matrix. Spatial layout of areas for plotting
+purposes only. Not currently used. Default \code{NULL}.}
 
-\item{CVDist}{Logit-scale CV penalty applied to \code{UnfishedDist}.}
+\item{CVDist}{Numeric. Logit-scale coefficient of variation applied to
+\code{UnfishedDist} to generate simulation variability. Default \code{0.1}.}
 
-\item{CVStay}{Logit-scale CV penalty applied to \code{ProbStaying}.}
+\item{CVStay}{Numeric. Logit-scale coefficient of variation applied to
+\code{ProbStaying} to generate simulation variability. Default \code{1}.}
 
-\item{Misc}{Miscellaneous list.}
+\item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
+
+\item{x}{A \linkS4class{spatial} object for slot accessors, or a \linkS4class{stock}
+object for \verb{Spatial<-}.}
+
+\item{value}{For \verb{Spatial<-}: a \linkS4class{spatial} object. For slot
+replacement functions: the new value for the corresponding slot.}
 }
 \value{
-A \linkS4class{spatial} object.
+\itemize{
+\item \code{Spatial()} returns a \linkS4class{spatial} object. If \code{UnfishedDist} is a
+\linkS4class{stock} object, the \code{Spatial} slot of that stock is returned.
+\item \verb{Spatial<-} returns \code{x} with the \code{Spatial} slot replaced.
+\item Slot accessors return the value of the corresponding slot from \code{x}.
+\item Slot replacement functions return \code{x} with the corresponding slot
+updated.
+}
 }
 \description{
-Construct a \linkS4class{spatial} object defining spatial structure and movement
-associated with a \code{\link[=Stock]{Stock()}}.
+Construct and manipulate a \linkS4class{spatial} object defining the spatial
+structure and movement dynamics associated with a \code{\link[=Stock]{Stock()}} object. A
+\code{Spatial} object is only required for operating models with explicit spatial
+structure (\code{nArea > 1}).
 }
 \details{
-The \code{Spatial} constructor creates an object describing the spatial
-distribution and movement dynamics of a stock.
+A \code{Spatial} object is only required for operating models with more than one
+area (\code{nArea > 1}). For single-area models it does not need to be specified.
+\subsection{Two-Area Models}{
 
-It is only required for operating models that have explicit spatial structure.
+For two-area models, \code{UnfishedDist} and \code{ProbStaying} represent the
+unfished biomass fraction and probability of remaining in Area 1
+respectively. The Area 2 values are derived automatically: the unfished
+fraction in Area 2 is \code{1 - UnfishedDist}, and the probability of remaining
+in Area 2 is solved via an optimisation routine that matches the specified
+Area 1 distribution and retention probability.
 
-A \code{Spatial} object can be attached to a \code{\link[=Stock]{Stock()}} using \code{Spatial(Stock) <- MySpatial} and
-retrieved using \code{MySpatial <- Spatial(Stock)}
-
-Individual components may be accessed or modified using accessor and
-replacement functions such as \code{\link[=UnfishedDist]{UnfishedDist()}}, \code{\link[=ProbStaying]{ProbStaying()}}, and \code{\link[=RelativeSize]{RelativeSize()}}.
-
-See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more details.
-\subsection{Two Area}{
-
-For operating models with 2 spatial areas, \code{UnfishedDist} and \code{ProbStaying}
-represent the the fraction of the unfished biomass and the probability of remaining
-in Area 1 respectively.
-
-The fraction of unfished biomass in Area 2 is \code{1-UnfishedDist}. The probability
-of remaining in Area 2 is calculated by an optimization routine
-that solves for the specified fraction in Area 1 and the probability of remaining
-in Area 1.
-
-\code{UnfishedDist} and \code{ProbStaying} can be one of the following:
+\code{UnfishedDist} and \code{ProbStaying} may be specified as:
 \enumerate{
-\item \strong{Numeric length 1}: Constant across all simulations and age classes;
-\item \strong{Numeric length 2}: Lower and upper bounds of a uniform distribution;
-\item \strong{Numeric 3D array}: Dimensions \code{c(nSim, nArea, nAge)}. Movement by age.
-Must sum to 1 across areas for each simulation and age class.
-\item \strong{Numeric 4D array}: Dimensions \code{c(nSim, nArea, nAge, nTS)}. Movement by age and time step.
-Must sum to 1 across areas for each simulation, age class, and time step.
+\item \strong{Numeric length 1}: constant across all simulations and age classes.
+\item \strong{Numeric length 2}: lower and upper bounds of a uniform distribution
+sampled across simulations.
+\item \strong{3D array} \code{c(nSim, nArea, nAge)}: movement varying by age. Must sum
+to 1 across areas within each simulation and age class.
+\item \strong{4D array} \code{c(nSim, nArea, nAge, nTS)}: movement varying by age and
+time step. Must sum to 1 across areas within each simulation, age class,
+and time step.
 }
+
+For arrays, each dimension except \code{nArea} may be length 1 (replicated
+internally) or match \code{nSim}, \code{nAge}, or \code{nTS} respectively.
 }
 
-\subsection{More than Two Areas}{
+\subsection{More Than Two Areas}{
 
-For operating models with more than 2 spatial areas, \code{UnfishedDist} must be a
-numeric array with at least 2 dimensions: \code{nsim} and \code{nArea}. It must sum to 1
-across areas.
+For models with more than two areas, \code{UnfishedDist} must be a numeric array
+with at least dimensions \code{c(nSim, nArea)}, summing to 1 across areas.
+Additional \code{nAge} and \code{nTS} dimensions may be included as described above.
 
-Add additional dimensions for movement by age (\code{c(nSim, nArea, nAge)}) and
-by age and time step (\code{c(nSim, nArea, nAge, nTS)}).
-
-With the exception of \code{nArea}, each dimension can either be length 1 or length corresponding
-to the number of simulations, number of age class, and total number of time steps
-respectively for \code{nSim}, \code{nAge}, and \code{nTS}.
-
-\code{ProbStaying} is the desired probability of staying within each area. The optimization
-routine solves \code{ProbStaying} to find the movement matrix that is closted to the
-specified unfished distribution (\code{UnfishedDist}; see \code{?FitMovement} for details).
-
-\code{FracOther} is required for models with more than 2 areas. It must be a numeric
-array with at least dimensions \code{c(nSim, nArea, nArea)}, with option for \code{nAge}
-and \code{nTS} dimensions as described above.
-
-The diagonal values of \code{FracOther} (within each simulation, age class, and time step)
-represent the probability of remaining in an area and therefore should be set to \code{NA},
-as \code{ProbStaying} is solved as described above.
-
-The off-diagonal values represent, for each row, the relative probability of
-moving from Area in row and column \code{i} to Area in row \code{i} and column \code{j}.
+\code{FracOther} is required for models with more than two areas. It must have
+at least dimensions \code{c(nSim, nArea, nArea)}. Diagonal elements must be set
+to \code{NA} as the probability of staying is solved from \code{ProbStaying}.
+Off-diagonal element \verb{[i, j]} gives the relative probability of moving from
+area \code{i} to area \code{j}.
 }
 
 \subsection{RelativeSize}{
 
-\code{RelativeSize} is used for calculating the density of biomass in each area.
-
-For 2 area models, \code{RelativeSize} is the relative size of Area 1. IT should
-either be a single numeric value, a numeric vector length 2 reperesenting the
-lower and upper bounds of a uniform distribution, or a numeric vector of length \code{nSim}.
-
-For more than 2 areas, \code{RelativeSize} should be a numeric vector length \code{nArea},
-or a numeric matrix with dimensions \code{nSim} by \code{nArea}.
-
-If \code{RelativeSize} is not specified, all areas are assumed to be the same size.
+For two-area models, \code{RelativeSize} is the relative size of Area 1 and may
+be a single numeric value, a length-2 vector of uniform distribution bounds,
+or a numeric vector of length \code{nSim}. For models with more than two areas,
+\code{RelativeSize} should be a numeric vector of length \code{nArea} or a matrix
+with dimensions \verb{nSim x nArea}. If not specified, all areas are assumed
+equal in size.
 }
 
-\subsection{Movement}{
+\subsection{Movement Matrix}{
 
-\code{Movement} is calculated internally from \code{UnfishedDist} and \code{ProbStaying}. If it is
-provided, the asymptotic unfished distribution will be calculated and assigned
-to \code{UnfishedDist} (over-writing any values that are in \code{UnfishedDist}).
-
-\code{Movement} is a numeric array  with dimensions \code{nSim}, \code{nArea}, \code{nArea}, \code{nAge}, and
-\code{nTS}, with each element containing the probability of moving from the first area
-dimension (row in an \code{nArea} by \code{nArea} matrix) to the second area (column in an \code{nArea} by \code{nArea} matrix).
-The last two dimensions \code{nAge} and \code{nTS} are optional.
+\code{Movement} is normally calculated internally from \code{UnfishedDist} and
+\code{ProbStaying}. If supplied directly, the asymptotic unfished distribution
+is derived from \code{Movement} and assigned to \code{UnfishedDist}, overwriting any
+existing values. \code{Movement} must have dimensions \verb{nSim x nArea x nArea},
+with optional additional \code{nAge} and \code{nTS} dimensions.
 }
+
+\subsection{Attaching to a Stock}{
+
+A \code{Spatial} object can be attached to a \code{\link[=Stock]{Stock()}} with
+\code{Spatial(Stock) <- MySpatial} and retrieved with \code{Spatial(Stock)}.
+
+Individual slots may be accessed or modified using \code{\link[=UnfishedDist]{UnfishedDist()}},
+\code{\link[=ProbStaying]{ProbStaying()}}, \code{\link[=RelativeSize]{RelativeSize()}}, \code{\link[=Movement]{Movement()}}, \code{\link[=FracOther]{FracOther()}},
+\code{\link[=Arrangement]{Arrangement()}}, \code{\link[=CVDist]{CVDist()}}, and \code{\link[=CVStay]{CVStay()}}.
+
+See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more details.
+}
+}
+\seealso{
+\linkS4class{spatial}, \code{\link[=Stock]{Stock()}}
 }

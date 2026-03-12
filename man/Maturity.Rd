@@ -25,45 +25,103 @@ Semelparous(x) <- value
 Maturity(x) <- value
 }
 \arguments{
-\item{Pars}{Named list of maturity parameters.}
+\item{Pars}{Named list of maturity parameters corresponding to \code{Model}. See
+\code{\link[=MaturityModels]{MaturityModels()}} for available models and required parameters. If \code{Pars}
+is a \linkS4class{stock} object, the \code{Maturity} slot of that stock is returned
+(see Details). If \code{Pars} is non-empty, \code{Model} is \code{NULL}, and all values
+are non-\code{NA}, the model is inferred automatically via \code{\link[=FindModel]{FindModel()}}.}
 
-\item{Model}{Maturity model name or function}
+\item{Model}{Character or function. Maturity model identifier, or a numeric
+index when \code{Pars} is a list of stocks (see Details). If \code{NULL} (default),
+the model is inferred from \code{Pars} where possible. See \code{\link[=MaturityModels]{MaturityModels()}}
+for available models.}
 
-\item{MeanAtAge}{Mean maturity-at-age array (optional).}
+\item{MeanAtAge}{Numeric array. Mean maturity at age, with named dimensions
+\code{Sim}, \code{Age}, and \code{Year}. Populated automatically during \code{\link[=Populate]{Populate()}} if
+\code{Pars} and \code{Model} are provided. Default \code{NULL}.}
 
-\item{MeanAtLength}{Mean maturity-at-length array (optional).}
+\item{MeanAtLength}{Numeric array. Mean maturity at length, with named
+dimensions \code{Sim}, \code{Length}, and \code{Year}. Default \code{NULL}.}
 
-\item{MeanAtWeight}{Mean maturity-at-weight array (optional).}
+\item{MeanAtWeight}{Numeric array. Mean maturity at weight, with named
+dimensions \code{Sim}, \code{Weight}, and \code{Year}. Default \code{NULL}.}
 
-\item{Classes}{Maturity class mid-points (optional).}
+\item{Classes}{Numeric vector. Age, length, or weight class midpoints.
+Default \code{NULL}.}
 
-\item{Semelparous}{Logical or numeric array indicating semelparity.}
+\item{Semelparous}{Logical or numeric array. If \code{TRUE} or an array of \code{1}s,
+the stock is semelparous (spawns once then dies). Default \code{FALSE}.}
 
-\item{Misc}{Miscellaneous list.}
+\item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
+
+\item{x}{A \linkS4class{maturity} object for slot accessors, or a \linkS4class{stock}
+object for \verb{Maturity<-}.}
+
+\item{value}{For \verb{Maturity<-}: a \linkS4class{maturity} object. For
+\verb{Semelparous<-}: a logical or numeric array.}
 }
 \value{
-A \linkS4class{maturity} object.
+\itemize{
+\item \code{Maturity()} returns a \linkS4class{maturity} object. If \code{Pars} is a
+\linkS4class{stock} object or list of stocks, the corresponding \code{Maturity}
+slot is returned.
+\item \verb{Maturity<-} returns \code{x} with the \code{Maturity} slot replaced.
+\item \code{Semelparous()} returns the \code{Semelparous} slot from \code{x}.
+\item \verb{Semelparous<-} returns \code{x} with the \code{Semelparous} slot updated.
+}
 }
 \description{
-Construct a \linkS4class{maturity} object defining the maturity schedule
-associated with a \code{\link[=Stock]{Stock()}}.
+Construct and manipulate a \linkS4class{maturity} object defining the maturity
+schedule associated with a \code{\link[=Stock]{Stock()}} object. A \code{Maturity} object is
+required for all \linkS4class{stock} objects.
 }
 \details{
-The \code{Maturity} class defines the relationship between age, length, or
-weight and maturity for a \code{\link[=Stock]{Stock()}} object. Maturity schedules may be
-model-based (via \code{Pars} and \code{Model}) or supplied directly as arrays.
+A \linkS4class{maturity} object is required for all \linkS4class{stock} objects. It
+defines the relationship between age, length, or weight and reproductive
+maturity, which is used throughout the operating model for spawning biomass
+and recruitment calculations.
+\subsection{Pass-Through Access from a Stock}{
 
-Printing a \code{Maturity} object provides a concise summary of the specified
-maturity assumptions without printing full arrays.
+When \code{Pars} is a \linkS4class{stock} object, \code{Maturity()} acts as an accessor:
+\itemize{
+\item \code{Maturity(stock)} returns \code{stock@Maturity}.
+\item \code{Maturity(stocklist, i)} returns \code{stocklist[[i]]@Maturity} when \code{Pars}
+is a list of stocks and \code{Model} is a numeric index.
+}
+}
 
-A \code{Maturity} object can be attached to a \code{\link[=Stock]{Stock()}} using \code{Maturity(Stock) <- MyMaturity} and
-retrieved using \code{MyMaturity <- Maturity(Stock)}
+\subsection{Specifying Maturity}{
 
-Individual components may be accessed or modified using accessor and
-replacement functions such as \code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}}, and \code{\link[=MeanAtAge]{MeanAtAge()}}.
+Maturity schedules may be specified in two ways:
+\enumerate{
+\item \strong{Model-based}: provide \code{Pars} and optionally \code{Model}. \code{MeanAtAge}
+is populated automatically during \code{\link[=Populate]{Populate()}}. If \code{Model} is \code{NULL}
+and \code{Pars} is non-empty with no \code{NA} values, the model is inferred via
+\code{\link[=FindModel]{FindModel()}}.
+\item \strong{Direct array}: provide \code{MeanAtAge}, \code{MeanAtLength}, or
+\code{MeanAtWeight} directly with \code{Pars = list()} (default).
+}
+}
+
+\subsection{Semelparity}{
+
+When \code{Semelparous = TRUE}, the stock spawns once and all mature individuals
+die after spawning. This modifies the natural mortality schedule applied
+after the spawning event.
+}
+
+\subsection{Attaching to a Stock}{
+
+A \code{Maturity} object can be attached to a \code{\link[=Stock]{Stock()}} with
+\code{Maturity(Stock) <- MyMaturity} and retrieved with \code{Maturity(Stock)}.
+
+Individual slots may be accessed or modified using \code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}},
+\code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=MeanAtLength]{MeanAtLength()}}, \code{\link[=MeanAtWeight]{MeanAtWeight()}}, \code{\link[=Classes]{Classes()}}, and
+\code{\link[=Semelparous]{Semelparous()}}.
 
 See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more details.
 }
+}
 \seealso{
-\code{\link[=Populate]{Populate()}},\code{\link[=MaturityModels]{MaturityModels()}}
+\linkS4class{maturity}, \code{\link[=Stock]{Stock()}}, \code{\link[=MaturityModels]{MaturityModels()}}
 }

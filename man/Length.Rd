@@ -29,49 +29,101 @@ ALK(x) <- value
 Length(x) <- value
 }
 \arguments{
-\item{Pars}{Named list of growth parameters for models in \code{\link[=LengthModels]{LengthModels()}}}
+\item{Pars}{Named list of growth parameters corresponding to \code{Model}. See
+\code{\link[=LengthModels]{LengthModels()}} for available models and required parameters. If \code{Pars}
+is a \linkS4class{stock} object, the \code{Length} slot of that stock is returned.
+If \code{Pars} is non-empty and \code{Model} is \code{NULL}, the model is inferred
+automatically via \code{\link[=FindModel]{FindModel()}}.}
 
-\item{Model}{Model associated with \code{Pars}}
+\item{Model}{Character. Growth model identifier. If \code{NULL} (default), the
+model is inferred from \code{Pars} where possible. See \code{\link[=LengthModels]{LengthModels()}} for
+available models.}
 
-\item{Units}{Character string giving length units (e.g. \code{"mm"}).}
+\item{Units}{Character. Length units (e.g., \code{"mm"}, \code{"cm"}). See
+\code{\link[=ValidUnits]{ValidUnits()}} for valid options. Default \code{"mm"}.}
 
-\item{MeanAtAge}{Mean length-at-age array (optional).}
+\item{MeanAtAge}{Numeric array. Mean length at age, with named dimensions
+\code{Sim}, \code{Age}, and \code{Year}. If \code{Pars} and \code{Model} are provided, this array
+is populated automatically during \code{\link[=Populate]{Populate()}}. Default \code{NULL}.}
 
-\item{CVatAge}{Coefficient of variation at age.}
+\item{CVatAge}{Numeric. Coefficient of variation of length at age, used to
+generate the length distribution within each age class. Default \code{0.1}.}
 
-\item{Dist}{Character distribution name (e.g. \code{"normal"}).}
+\item{Dist}{Character. Distribution of length-at-age (e.g., \code{"normal"}).
+Default \code{"normal"}.}
 
-\item{TruncSD}{Truncation in standard deviation units.}
+\item{TruncSD}{Numeric. Truncation of the length-at-age distribution in
+standard deviation units. Default \code{2}.}
 
-\item{Timing}{Timing within the time step.}
+\item{Timing}{Numeric. Timing of length measurement within the time step
+(0 = start, 1 = end). Default \code{0}.}
 
-\item{Random}{Random effects array (optional)}
+\item{Random}{Numeric array. Random effects on growth parameters. Default
+\code{NULL}.}
 
-\item{ALK}{Age–length key (optional)}
+\item{ALK}{Numeric array. Age-length key. Default \code{NULL}.}
 
-\item{Classes}{Length class mid-points (optional)}
+\item{Classes}{Numeric vector. Length class midpoints. Default \code{NULL}.}
 
-\item{Misc}{Miscellaneous list.}
+\item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
+
+\item{x}{A \linkS4class{length} object for slot accessors, or a \linkS4class{stock}
+object for \verb{Length<-}.}
+
+\item{value}{For \verb{Length<-}: a \linkS4class{length} object. For \verb{ALK<-}: the new
+age-length key array.}
 }
 \value{
-A \linkS4class{length} object.
+\itemize{
+\item \code{Length()} returns a \linkS4class{length} object. If \code{Pars} is a \linkS4class{stock}
+object, the \code{Length} slot of that stock is returned.
+\item \verb{Length<-} returns \code{x} with the \code{Length} slot replaced.
+\item \code{ALK()} returns the age-length key from \code{x}.
+\item \verb{ALK<-} returns \code{x} with the \code{ALK} slot updated.
+}
 }
 \description{
-Construct a \linkS4class{length} object defining the length-at-age structure
-associated with a \code{\link[=Stock]{Stock()}}.
+Construct and manipulate a \linkS4class{length} object defining the
+length-at-age structure associated with a \code{\link[=Stock]{Stock()}} object. A \code{Length}
+object is required for all \linkS4class{stock} objects.
 }
 \details{
-The \code{Length} class defines the relationship between age and length for a
-\code{\link[=Stock]{Stock()}} object. Length schedules may be model-based (via \code{Pars}
-and \code{Model}) or supplied directly as arrays.
+A \linkS4class{length} object is required for all \linkS4class{stock} objects. It
+defines the relationship between age and length, which is used throughout
+the operating model to convert age-based quantities to length-based
+quantities.
+\subsection{Specifying Length-at-Age}{
 
-A \code{Length} object can be attached to a \code{\link[=Stock]{Stock()}} using \code{Length(Stock) <- MyLength} and
-retrieved using \code{MyLength <- Length(Stock)}
+Length schedules may be specified in two ways:
+\enumerate{
+\item \strong{Model-based}: provide \code{Pars} and optionally \code{Model}. The \code{MeanAtAge}
+array is populated automatically during \code{\link[=Populate]{Populate()}}. If \code{Model} is
+\code{NULL} and \code{Pars} is non-empty with no \code{NA} values, the model is
+inferred via \code{\link[=FindModel]{FindModel()}}.
+\item \strong{Direct array}: provide \code{MeanAtAge} directly with \code{Pars = list()}
+(default). Any existing values in \code{MeanAtAge} will be preserved.
+}
+}
 
-Individual components may be accessed or modified using accessor and
-replacement functions such as \code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}}, and \code{\link[=Units]{Units()}}.
+\subsection{Length Distribution}{
+
+Within each age class, lengths are assumed to follow the distribution
+specified by \code{Dist}, with coefficient of variation \code{CVatAge}, truncated at
+\code{TruncSD} standard deviations. This distribution is used to construct the
+age-length key (\code{ALK}).
+}
+
+\subsection{Attaching to a Stock}{
+
+A \code{Length} object can be attached to a \code{\link[=Stock]{Stock()}} with
+\code{Length(Stock) <- MyLength} and retrieved with \code{Length(Stock)}.
+
+Individual slots may be accessed or modified using \code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}},
+\code{\link[=Units]{Units()}}, \code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=CVatAge]{CVatAge()}}, \code{\link[=Dist]{Dist()}}, \code{\link[=TruncSD]{TruncSD()}}, \code{\link[=Timing]{Timing()}},
+\code{\link[=ALK]{ALK()}}, and \code{\link[=Classes]{Classes()}}.
 
 See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more details.
+}
 }
 \examples{
 
@@ -141,5 +193,7 @@ plot(Length, Ages=Ages(20), type='ASK')
 
 }
 \seealso{
-\code{\link[=Populate]{Populate()}}, \code{\link[=LengthModels]{LengthModels()}}
+\linkS4class{length}, \code{\link[=Stock]{Stock()}}, \code{\link[=LengthModels]{LengthModels()}}, \code{\link[=ValidUnits]{ValidUnits()}},
+\code{\link[=Populate]{Populate()}}, \code{\link[=FindModel]{FindModel()}}, \code{\link[=Weight]{Weight()}}, \code{\link[=Maturity]{Maturity()}}, \code{\link[=Pars]{Pars()}},
+\code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=CVatAge]{CVatAge()}}, \code{\link[=Units]{Units()}}, \code{\link[=ALK]{ALK()}}, \code{\link[=Classes]{Classes()}}
 }

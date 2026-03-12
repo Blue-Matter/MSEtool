@@ -22,6 +22,8 @@ OptRefYield(
 \arguments{
 \item{logScalar}{Numeric scalar applied to scale historical effort}
 
+\item{Proj}{\code{hist} class object containing historical fishery dynamics}
+
 \item{HistYears}{Numeric vector of historical years}
 
 \item{ProjYears}{Numeric vector of projection years}
@@ -33,8 +35,6 @@ OptRefYield(
 \item{type}{Character; either \code{Landings} or \code{Removals}}
 
 \item{opt}{Integer; if 1, return objective for optimization; if 2, return yields}
-
-\item{ProjSim}{Single-simulation subset of the operating model}
 }
 \value{
 Numeric; either negative sum of mean yields (opt=1) or vector of mean yields per stock (opt=2)

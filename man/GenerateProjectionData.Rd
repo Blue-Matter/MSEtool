@@ -7,7 +7,7 @@
 GenerateProjectionData(Proj, Year, YearsHist, YearsProj)
 }
 \arguments{
-\item{Proj}{A \code{Hist} object populated with fishery dynamics up to \code{Year}}
+\item{Proj}{A \code{hist} object populated with fishery dynamics up to \code{Year}}
 
 \item{Year}{The 'current' year when the function is being called}
 
@@ -23,7 +23,7 @@ Generates data up to the time-step before \code{Year}:
 }}
 }
 \value{
-Updated \code{Hist} object with \code{Hist@Data} updated with the simulated data
+Updated \code{hist} object with \code{Hist@Data} updated with the simulated data
 }
 \description{
 Internal wrapper function to generate projection fishery data

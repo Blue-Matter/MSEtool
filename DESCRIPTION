@@ -26,7 +26,15 @@ Imports:
     parallel,
     Rcpp,
     stats,
-    utils
+    utils,
+    Slick,
+    digest,
+    furrr,
+    future,
+    lubridate,
+    patchwork,
+    purrr,
+    rlang
 Suggests:
     boot,
     broom,
@@ -61,7 +69,6 @@ Collate:
     'MSEtool-package.R'
     'Number.R'
     'RcppExports.R'
-    'SProduction.R'
     'calc-advice.R'
     'calc-age-size-key.R'
     'calc-asymptotic-distribution.R'
@@ -126,13 +133,19 @@ Collate:
     'class-unfished.R'
     'zz_Class_definitions.R'
     'class-imp.R'
+    'class-obs-comp.R'
+    'class-obs-indices.R'
+    'class-obs-catch.R'
+    'class-obs-effort.R'
+    'class-obs-exploitation.R'
+    'class-obs-lifehistory.R'
     'class-obs.R'
     'class-om.R'
     'class-hist.R'
     'class-mse.R'
+    'class-obslifehistory.R'
     'class-perrecruit.R'
     'compare-bam.R'
-    'compare-ss3.R'
     'condition-obs-catch.R'
     'condition-obs-index.R'
     'condition-obs.R'
@@ -171,13 +184,11 @@ Collate:
     'convert-stock.R'
     'zz_MOM_object.r'
     'convert.R'
-    'data-helpers.R'
     'data-trim.R'
     'example-objects.R'
     'examples-MPs.R'
     'fct_Biomass.R'
     'fct_CalcMSYRefPoints.R'
-    'fct_CalcPerRecruit.R'
     'find-model.R'
     'fleet-combine.R'
     'generate-data-hist-catch.R'
@@ -193,8 +204,8 @@ Collate:
     'generate-mean-at.R'
     'generate-rec-devs.R'
     'generate-residuals.R'
-    'get-TACs.R'
     'get-catch.R'
+    'helpers-data.R'
     'helpers-mp.R'
     'hist-to-mse.R'
     'import-bam.R'
@@ -248,12 +259,19 @@ Collate:
     'reduce-nSim.R'
     'reduce.R'
     'rename.R'
+    'runMSE.R'
     'show.R'
     'simulate-om.R'
     'simulate.R'
     'subset.R'
+    'todo-CalcPerRecruit.R'
+    'todo-SProduction.R'
+    'todo-compare-ss3.R'
+    'todo-get-TACs.R'
+    'todo-mp-examples.R'
     'todo-plot-schedule.R'
     'todo-plot.R'
+    'todo-utils-access-timeseries.R'
     'unit-conversions.R'
     'update-closure.R'
     'update-discardmortality.R'
@@ -267,7 +285,6 @@ Collate:
     'util-dim.R'
     'util-dimension.R'
     'util-get-metadata.R'
-    'utils-access-timeseries.R'
     'utils-add-year-dimnames.R'
     'utils-advice-null.R'
     'utils-array-operations.R'
@@ -296,6 +313,7 @@ Collate:
     'utils-structure.R'
     'utils-unique-years.R'
     'utils-valid-units.R'
+    'zz-project-Hist.R'
     'zz_ASAP2OM.R'
     'zz_Awatea2OM.R'
     'zz_BAM2OM.R'

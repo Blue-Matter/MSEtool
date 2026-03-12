@@ -46,18 +46,7 @@ GenMeanAtWeight <- function(Model, Pars, Weight) {
   MeanAtWeight
 }
 
-#' Generate mean values for a generic model
-#'
-#' Apply a generic function or named model to parameter arrays, expanding
-#' arguments as necessary to match simulation, year, and area dimensions.
-#'
-#' @param Model A function or the name of a function to apply.
-#' @param Pars A named list of parameter arrays.
-#' @param ... A single additional argument (length 1) to pass to `Model`.
-#'
-#' @return An array of the same dimensions as the input argument, filled
-#'   with results from applying `Model` to `Pars`.
-#'
+
 GenerateMeanatGeneric <- function(Model, Pars, nSim = 5, Years=NULL,  ...) {
   
 

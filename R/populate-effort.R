@@ -3,7 +3,7 @@
 #' Populate an `Effort` object by generating historical effort, 
 #' and populating distribution and targeting across areas and simulation replicates.
 #'
-#' @param Effort An [Effort()] object to populate.
+#' @param Effort An [effort-class] object to populate.
 #' @param HistYears Numeric vector of historical years to populate effort for.
 #' @param nArea Integer. Number of spatial areas.
 #' @param nSim Integer. Number of simulation replicates.
@@ -96,7 +96,7 @@ PopulateTargeting <- function(Targeting, nSim, Years) {
       cli::cli_abort("`Targeting` must be numeric or an array with dimensions: Sim x Year")
     }
     
-    if ((dd[2]!=1 | dd[2]!=length(Years)) & is.null(dnames[['Year']])) {
+    if ((dd[2] != 1 && dd[2] != length(Years)) & is.null(dnames[['Year']])) {
       cli::cli_abort("Year dimension of `Targeting`array must be length 1, length `Years(OM)` or have named dimensions.")
     }
     

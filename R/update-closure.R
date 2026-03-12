@@ -102,7 +102,7 @@ Update_Closure_Sim <- function(Proj,
     NewClosure <- Advice@Closure |>
       AddDimension("Year", Year, pos=1) |> 
       ExtendYears(Years=FutureYears) |>
-      AddDimension("Sim", x, pos=1)
+      AddDimension("Sim", sim, pos=1)
     
     # apply closure to all future time steps
     for (st in stocks) {

@@ -1,10 +1,10 @@
 #' Constructor and Accessor for `Data`
 #'
-#' Creates a new [data] object, or extracts the `Data` or `PPD` slot from
-#' an existing [om], [hist], or [mse] class object.
+#' Creates a new [data-class] object, or extracts the `Data` or `PPD` slot from
+#' an existing [om-class], [hist-class], or [mse-class] class object.
 #'
-#' When `Name` is an [om] or [hist] object, the function returns the
-#' corresponding `@@Data` slot. When `Name` is an [mse] object, the `@@PPD`
+#' When `Name` is an [om-class] or [hist-class] object, the function returns the
+#' corresponding `@@Data` slot. When `Name` is an [mse-class] object, the `@@PPD`
 #' slot is returned instead. Otherwise, a new `data` object is constructed from
 #' the supplied arguments.
 #'
@@ -20,8 +20,8 @@
 #' - `LandingsAtAge`, `DiscardsAtAge`, `LandingsAtSize`, `DiscardsAtSize` → [compdata]
 #' - `Advice` → [advicedata]
 #'
-#' @param Name Either a character string naming the new `Data` object, or an
-#'   existing [om], [hist], or [mse] object from which to extract data.
+#' @param Name Either a character string naming the new [data-class] object, or an
+#'   existing [om-class], [hist-class], or [mse-class] object from which to extract data.
 #'   Defaults to `"New Data Object"`.
 #' @param CommonName Optional character string. Common name of the stock.
 #' @param Species Optional character string. Scientific name of the species.
@@ -38,32 +38,32 @@
 #'   Defaults to `1`.
 #' @param nArea A positive integer giving the number of spatial areas.
 #'   Defaults to `1`.
-#' @param LifeHistory Optional. An object of class `lifehistorydata`. 
-#' @param Exploitation Optional. An object of class `exploitationdata`.
-#' @param Reference Optional. An object of class `referencedata`. 
-#' @param Effort Optional. An object of class `effortdata`. 
-#' @param Landings Optional. An object of class `catchdata` for landed catch.
-#' @param Discards Optional. An object of class `catchdata` for discarded
+#' @param LifeHistory Optional. An object of class [lifehistorydata] . 
+#' @param Exploitation Optional. An object of class [exploitationdata].
+#' @param Reference Optional. An object of class [referencedata]. 
+#' @param Effort Optional. An object of class [effortdata]. 
+#' @param Landings Optional. An object of class [catchdata] for landed catch.
+#' @param Discards Optional. An object of class [catchdata] for discarded
 #'   catch. 
-#' @param CPUE Optional. An object of class `indicesdata` for catch-per-unit-
+#' @param CPUE Optional. An object of class [indicesdata] for catch-per-unit-
 #'   effort indices.
-#' @param Survey Optional. An object of class `indicesdata` for fishery-
+#' @param Survey Optional. An object of class [indicesdata] for fishery-
 #'   independent survey indices. 
-#' @param LandingsAtAge Optional. An object of class `compdata` for age
+#' @param LandingsAtAge Optional. An object of class [compdata] for age
 #'   composition of landings. 
-#' @param DiscardsAtAge Optional. An object of class `compdata` for age
+#' @param DiscardsAtAge Optional. An object of class [compdata] for age
 #'   composition of discards. 
-#' @param LandingsAtSize Optional. An object of class `compdata` for size
+#' @param LandingsAtSize Optional. An object of class [compdata] for size
 #'   composition of landings. 
-#' @param DiscardsAtSize Optional. An object of class `compdata` for size
+#' @param DiscardsAtSize Optional. An object of class [compdata] for size
 #'   composition of discards.
-#' @param Advice Optional. An object of class `advicedata` containing TAC and
+#' @param Advice Optional. An object of class [advicedata] containing TAC and
 #'   related advice. 
 #' @param Misc A named list for any additional user-defined data. Defaults to
 #'   `list()`.
 #'
-#' @return A [data] object, or when `Name` is an [mse] object, a list
-#'   of [data] objects from the `@@PPD` slot.
+#' @return A [data-class] object, or when `Name` is an [mse-class] object, a list
+#'   of [data-class] objects from the `@@PPD` slot.
 #'
 #' @seealso [data-class], [LastTAC()], [LastHistYearInd()], [ProjectionYear()]
 #' @name Data

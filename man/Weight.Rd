@@ -30,52 +30,107 @@ AWK(x) <- value
 Weight(x) <- value
 }
 \arguments{
-\item{Pars}{Named list of parameters for \code{\link[=WeightModels]{WeightModels()}}.}
+\item{Pars}{Named list of growth parameters corresponding to \code{Model}. See
+\code{\link[=WeightModels]{WeightModels()}} for available models and required parameters. If \code{Pars}
+is a \linkS4class{stock} object, the \code{Weight} slot of that stock is returned.
+If \code{Pars} is non-empty, \code{Model} is \code{NULL}, and all values are non-\code{NA},
+the model is inferred automatically via \code{\link[=FindModel]{FindModel()}}.}
 
-\item{Model}{Model associated with \code{Pars}.}
+\item{Model}{Character or function. Weight model identifier. If \code{NULL}
+(default), the model is inferred from \code{Pars} where possible. See
+\code{\link[=WeightModels]{WeightModels()}} for available models.}
 
-\item{Units}{Weight units (e.g. \code{"g"}, \code{"kg"}).}
+\item{Units}{Character. Weight units (e.g., \code{"g"}, \code{"kg"}). See
+\code{\link[=ValidUnits]{ValidUnits()}} for valid options. Default \code{"g"}.}
 
-\item{MeanAtAge}{Mean weight-at-age array (optional).}
+\item{MeanAtAge}{Numeric array. Mean weight at age, with named dimensions
+\code{Sim}, \code{Age}, and \code{Year}. Populated automatically during \code{\link[=Populate]{Populate()}} if
+\code{Pars} and \code{Model} are provided. Default \code{NULL}.}
 
-\item{MeanAtLength}{Mean weight-at-length array (optional).}
+\item{MeanAtLength}{Numeric array. Mean weight at length, with named
+dimensions \code{Sim}, \code{Length}, and \code{Year}. Default \code{NULL}.}
 
-\item{CVatAge}{Coefficient of variation at age (optional).}
+\item{CVatAge}{Numeric. Coefficient of variation of weight at age, used to
+generate the weight distribution within each age class. Default \code{NULL} as
+it is not typically used.}
 
-\item{Dist}{Distribution name (e.g. \code{"lognormal"}).}
+\item{Dist}{Character. Distribution of weight-at-age
+(e.g., \code{"lognormal"}). Default \code{"lognormal"}.}
 
-\item{TruncSD}{Truncation in SD units.}
+\item{TruncSD}{Numeric. Truncation of the weight-at-age distribution in
+standard deviation units. Default \code{2}.}
 
-\item{Timing}{Timing within the time step.}
+\item{Timing}{Numeric. Timing of weight measurement within the time step
+(0 = start, 1 = end). Default \code{0}.}
 
-\item{Random}{Random effects array (optional).}
+\item{Random}{Numeric array. Random effects on weight parameters. Default
+\code{NULL}.}
 
-\item{AWK}{Age–weight key (optional).}
+\item{AWK}{Numeric array. Age-weight key. Default \code{NULL}. Only used if
+\code{CVatAge} is not \code{NULL}.}
 
-\item{Classes}{Weight classes (optional).}
+\item{Classes}{Numeric vector. Weight class midpoints. Default \code{NULL}.}
 
-\item{Misc}{Miscellaneous list.}
+\item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
+
+\item{x}{A \linkS4class{weight} object for slot accessors, or a \linkS4class{stock}
+object for \verb{Weight<-}.}
+
+\item{value}{For \verb{Weight<-}: a \linkS4class{weight} object. For \verb{AWK<-}: the new
+age-weight key array.}
 }
 \value{
-A \linkS4class{weight} object.
+\itemize{
+\item \code{Weight()} returns a \linkS4class{weight} object. If \code{Pars} is a \linkS4class{stock}
+object, the \code{Weight} slot of that stock is returned.
+\item \verb{Weight<-} returns \code{x} with the \code{Weight} slot replaced.
+\item \code{AWK()} returns the age-weight key from \code{x}.
+\item \verb{AWK<-} returns \code{x} with the \code{AWK} slot updated.
+}
 }
 \description{
-Construct a \linkS4class{weight} object defining weight-at-age and
-weight-at-length schedules associated with a \code{\link[=Stock]{Stock()}}.
+Construct and manipulate a \linkS4class{weight} object defining weight-at-age
+and weight-at-length schedules associated with a \code{\link[=Stock]{Stock()}} object. A
+\code{Weight} object is required for all \linkS4class{stock} objects.
 }
 \details{
-The \code{Weight} class defines how weight varies with age and/or length
-in a \code{\link[=Stock]{Stock()}}. Weight schedules may be model-based (via \code{Pars}
-and \code{Model}) or supplied directly as arrays.
+A \linkS4class{weight} object is required for all \linkS4class{stock} objects. It
+defines how weight varies with age and/or length, and is used throughout
+the operating model for biomass calculations and selectivity conversions.
+\subsection{Specifying Weight-at-Age}{
 
-A \code{Weight} object can be attached to a \code{\link[=Stock]{Stock()}} using \code{Weight(Stock) <- MyWeight} and
-retrieved using \code{MyWeight <- Weight(Stock)}
+Weight schedules may be specified in two ways:
+\enumerate{
+\item \strong{Model-based}: provide \code{Pars} and optionally \code{Model}. \code{MeanAtAge}
+is populated automatically during \code{\link[=Populate]{Populate()}}. If \code{Model} is \code{NULL}
+and \code{Pars} is non-empty with no \code{NA} values, the model is inferred via
+\code{\link[=FindModel]{FindModel()}}.
+\item \strong{Direct array}: provide \code{MeanAtAge} or \code{MeanAtLength} directly with
+\code{Pars = list()} (default).
+}
+}
 
-Individual components may be accessed or modified using accessor and
-replacement functions such as \code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}}, and \code{\link[=Units]{Units()}}.
+\subsection{Weight Distribution}{
+
+Within each age class, weights are assumed to follow the distribution
+specified by \code{Dist}, with coefficient of variation \code{CVatAge}, truncated at
+\code{TruncSD} standard deviations. This distribution is used to construct the
+age-weight key (\code{AWK}).
+}
+
+\subsection{Attaching to a Stock}{
+
+A \code{Weight} object can be attached to a \code{\link[=Stock]{Stock()}} with
+\code{Weight(Stock) <- MyWeight} and retrieved with \code{Weight(Stock)}.
+
+Individual slots may be accessed or modified using \code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}},
+\code{\link[=Units]{Units()}}, \code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=MeanAtLength]{MeanAtLength()}}, \code{\link[=CVatAge]{CVatAge()}}, \code{\link[=Dist]{Dist()}},
+\code{\link[=TruncSD]{TruncSD()}}, \code{\link[=Timing]{Timing()}}, \code{\link[=AWK]{AWK()}}, and \code{\link[=Classes]{Classes()}}.
 
 See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more details.
 }
+}
 \seealso{
-\code{\link[=Populate]{Populate()}}, \code{\link[=WeightModels]{WeightModels()}}
+\linkS4class{weight}, \code{\link[=Stock]{Stock()}}, \code{\link[=WeightModels]{WeightModels()}}, \code{\link[=ValidUnits]{ValidUnits()}},
+\code{\link[=Populate]{Populate()}}, \code{\link[=Length]{Length()}}, \code{\link[=Maturity]{Maturity()}}, \code{\link[=Pars]{Pars()}}
 }

@@ -89,7 +89,7 @@ ImportSSReport <- function(SSDir, parallel=FALSE, silent=FALSE, ...) {
     cli::cli_inform("Starting parallel import of {.val {length(SSDir)}} SS3 directories ...")
     RepList <- furrr::future_map(
       SSDir,
-      function(dir) MSEtool:::GetSSRepList(dir, silent = silent, ...),
+      function(dir) GetSSRepList(dir, silent = silent, ...),
       .options = furrr::furrr_options(
         scheduling = Inf,      
         globals = FALSE,
@@ -550,6 +550,9 @@ CalcSSMinAgeClass <- function(replist, YearsList) {
 }
 
 GetSS_Length_at_Age <- function(st, replist, YearsList) {
+  
+  Age_Beg <- Len_Beg <- NULL # CRAN 
+  
   YearsHist <- YearsList$YearsHist
   endgrowth <- dplyr::filter(replist$endgrowth, Sex == st)
 
@@ -586,6 +589,9 @@ GetSS_Length_at_Age <- function(st, replist, YearsList) {
 }
 
 GetSS_LengthCV_at_Age <- function(st, replist, YearsList) {
+  
+  Age_Beg <- SD_Beg <- NULL # CRAN
+  
   YearsHist <- YearsList$YearsHist
   dplyr::filter(replist$endgrowth, Sex == st) |>
     dplyr::select(Age = Age_Beg, SD_Beg, Len_Beg) |>
@@ -647,6 +653,9 @@ GetSS_LengthWeightPars <- function(st, replist) {
 }
 
 GetSS_WeightAtAge <- function(st, replist, YearsList) {
+  
+  Age_Beg <- NULL
+  
   if (!is.null(replist$mean_body_wt)) {
     cli::cli_abort("`replist$mean_body_wt` not currently supported.", .internal = TRUE)
     # TODO - update
@@ -713,6 +722,8 @@ FillValues <- function(Value) {
 }
 
 ConvertSS_M_Seasonal <- function(M_at_age, YearsList, Ages) {
+  
+  AgeAnnual <- NULL # CRAN check hacks
   
   # Convert to seasonal M
   if (YearsList$TimeUnits == "quarter") {
@@ -837,6 +848,8 @@ SS2Maturity <- function(st, RepList, YearsList, Ages) {
 }
 
 GetSS_Fecundity <- function(st, replist, YearsList, Ages) {
+  
+  Age_Beg <- `Mat*Fecund` <- `Mat_F_wtatage` <- NULL
   endgrowth <- replist$endgrowth |> dplyr::filter(Sex == st)
   seas <- unique(endgrowth$Seas)
 
@@ -868,6 +881,9 @@ GetSS_Fecundity <- function(st, replist, YearsList, Ages) {
 }
 
 GetSS_Fecundity_seasonal <- function(st, replist, YearsList, Ages) {
+  
+  Age_Beg <- `Mat*Fecund` <- `Mat_F_wtatage` <- NULL
+  
   endgrowth <- replist$endgrowth |> dplyr::filter(Sex == st)
   if (!is.null(replist$endgrowth[["Mat*Fecund"]])) {
     fec_age <- replist$endgrowth |>
@@ -947,6 +963,7 @@ SS2Depletion <- function(st, RepList, YearsList) {
 }
 
 GetSS_SRRPars <- function(replist) {
+  mainyrs <- NULL # CRAN
   # SRR Model and Parameters
   if (replist$SRRtype == 3 || replist$SRRtype == 6) { # Beverton-Holt SR
     par <- replist$parameters[grepl("steep", rownames(replist$parameters)), ]
@@ -991,6 +1008,9 @@ GetSS_SRRPars <- function(replist) {
 }
 
 GetSS_RecDevs_Early <- function(replist, YearsList, Ages, st) {
+  
+  N1 <- N0 <- Deviation <- NULL # CRAN
+  
   SSAgeClasses <- GetSSAgeClasses(replist)
   YearsHist <- YearsList$YearsHist
   Virg <- replist$natage |>
@@ -1353,6 +1373,7 @@ SS2DiscardMortality <- function(st, fl, RepList, YearsList, Stock) {
 }
 
 GetSS_SelectivityAtAge <- function(st, fl, replist, YearsList, Stock) {
+  Factor <- Sex <- Fleet <- NULL # CRAN
   Ages <- Stock@Ages
   AgeClasses <- Ages@Classes
   SSAgeClasses <- as.character(GetSSAgeClasses(replist))
@@ -1527,6 +1548,9 @@ SS2Retention <- function(st, fl, RepList, YearsList, Selectivity, Stock) {
 
 
 GetSS_EmpiricalWeight <- function(st, fl, replist, YearsList, AgeClasses) {
+  
+  mainyrs <- year <- sex <- fleet <- Age_Beg <- Wt_Mid <- NULL # CRAN
+  
   YearsHist <- YearsList$YearsHist
   Weight_at_Age_array <- NULL
 
@@ -1695,6 +1719,9 @@ ImportSSData <- function(SSDir,
 }
 
 ImportSSData_Catch <- function(replist, silent = FALSE) {
+  
+  dead_bio <- dead_num <- kill_bio <- kill_num <- ret_bio <- ret_num <- NULL
+  
   YearsList <- GetSSYears(replist, pYear = 1)
   YearsHist <- YearsList$YearsHist
   nTS <- length(YearsHist)
@@ -1901,185 +1928,6 @@ ImportSSData_Index <- function(replist, Type = c("CPUE", "Survey")) {
 }
 
 
-# Compare ----
-
-CompareSSNumber <- function(replist, Hist, sim = 1) {
-  if (!inherits(Hist, "hist")) {
-    cli::cli_abort("`Hist` must be class `hist`")
-  }
-
-  mainyrs <- replist$startyr:replist$endyr
-  AgeClasses <- GetSSAgeClasses(replist)
-
-  NumberHist <- Number(Hist) |>
-    dplyr::mutate(Model = "Import") |>
-    dplyr::filter(Sim == sim)
-
-  NumberSS <- replist$natage |>
-    dplyr::filter(Yr %in% mainyrs, `Beg/Mid` == "B") |>
-    dplyr::rename(Year = Yr, Stock = Sex) |>
-    tidyr::pivot_longer(cols = as.character(AgeClasses)) |>
-    dplyr::group_by(Stock, Year, Seas) |>
-    dplyr::summarise(Value = sum(value), Model = "SS3", .groups = "drop")
-
-  NumberSS$Stock <- unique(NumberHist$Stock)[NumberSS$Stock]
-  NumberSS$Year <- NumberHist$Year
-
-  NumberDF <- dplyr::bind_rows(NumberHist, NumberSS)
-
-  p1 <- ggplot(NumberDF, ggplot2::aes(x = Year, y = Value, color = Model)) +
-    ggplot2::facet_grid(~Stock) +
-    ggplot2::geom_line() +
-    ggplot2::theme_bw()
-
-  pDF <- NumberDF |>
-    dplyr::group_by(Stock, Year) |>
-    dplyr::summarise(Mean = mean(Value[Model == "SS3"] / Value[Model != "SS3"]))
-
-  p2 <- ggplot2::ggplot(pDF, ggplot2::aes(x = Year, y = Mean, color = Stock)) +
-    ggplot2::geom_line() +
-    ggplot2::theme_bw() +
-    ggplot2::labs(y = "Ratio SS3/Model")
-
-  print(patchwork::wrap_plots(p1, p2, ncol = 1))
-  invisible(NumberDF)
-}
-
-CompareSSLandings <- function(replist, Hist) {
-  if (!inherits(Hist, "hist")) {
-    cli::cli_abort("`Hist` must be class `hist`")
-  }
-
-  mainyrs <- replist$startyr:replist$endyr
-  AgeClasses <- GetSSAgeClasses(replist$natage)
-
-  HistLandings <- Landings(Hist, byFleet = TRUE) |>
-    dplyr::mutate(Model = "Import") |>
-    dplyr::filter(Sim == 1) |>
-    dplyr::group_by(Year, Fleet, Model) |>
-    dplyr::summarise(Value = sum(Value))
-
-  SS3Landings <- replist$catch |>
-    dplyr::filter(Yr %in% mainyrs) |>
-    dplyr::select(Year = Yr, Fleet, Value = ret_bio) |>
-    dplyr::mutate(Model = "SS3")
-
-
-  SS3Landings$Fleet <- Hist@OM@Fleet[[1]]@Name[SS3Landings$Fleet]
-  SS3Landings$Sim <- 1
-
-  df <- dplyr::bind_rows(
-    HistLandings,
-    SS3Landings
-  ) |>
-    dplyr::group_by(Year, Model, Fleet) |>
-    dplyr::summarise(Value = sum(Value))
-
-  p1 <- ggplot(df, aes(x = Year, y = Value, color = Model, linetype = Model)) +
-    facet_wrap(~Fleet, ncol = 3, scales = "free") +
-    geom_line() +
-    theme_bw()
-
-  pDF <- df |>
-    dplyr::group_by(Fleet, Year) |>
-    dplyr::summarise(Mean = mean(Value[Model == "SS3"] / Value[Model != "SS3"]))
-
-  p2 <- ggplot(pDF, aes(x = Year, y = Mean, color = Fleet)) +
-    geom_line() +
-    theme_bw() +
-    labs(y = "Ratio SS3/Model")
-
-  print(patchwork::wrap_plots(p1, p2, ncol = 1, heights = c(0.8, 0.2)))
-  invisible(df)
-}
-
-
-CompareSSRemovals <- function(replist, Hist) {
-  if (!inherits(Hist, "hist")) {
-    cli::cli_abort("`Hist` must be class `hist`")
-  }
-
-  mainyrs <- replist$startyr:replist$endyr
-  AgeClasses <- GetSSAgeClasses(replist$natage)
-
-  HistRemovals <- Removals(Hist, byFleet = TRUE) |>
-    dplyr::mutate(Model = "Import") |>
-    dplyr::filter(Sim == 1) |>
-    dplyr::group_by(Year, Fleet, Model) |>
-    dplyr::summarise(Value = sum(Value))
-
-  SS3Removals <- replist$catch |> dplyr::filter(Yr %in% mainyrs)
-  if ("dead_bio" %in% names(SS3Removals)) {
-    SS3Removals <- SS3Removals |>
-      dplyr::select(Year = Yr, Fleet, Value = dead_bio) |>
-      dplyr::mutate(Model = "SS3")
-  } else {
-    SS3Removals <- SS3Removals |>
-      dplyr::select(Year = Yr, Fleet, Value = kill_bio) |>
-      dplyr::mutate(Model = "SS3")
-  }
-
-  SS3Removals$Fleet <- Hist@OM@Fleet[[1]]@Name[SS3Removals$Fleet]
-  SS3Removals$Sim <- 1
-
-  df <- dplyr::bind_rows(
-    HistRemovals,
-    SS3Removals
-  ) |>
-    dplyr::group_by(Year, Model, Fleet) |>
-    dplyr::summarise(Value = sum(Value))
-
-  p1 <- ggplot(df, aes(x = Year, y = Value, color = Model, linetype = Model)) +
-    facet_wrap(~Fleet, ncol = 3, scales = "free") +
-    geom_line() +
-    theme_bw()
-
-  pDF <- df |>
-    dplyr::group_by(Fleet, Year) |>
-    dplyr::summarise(Mean = mean(Value[Model == "SS3"] / Value[Model != "SS3"]))
-
-  p2 <- ggplot(pDF, aes(x = Year, y = Mean, color = Fleet)) +
-    geom_line() +
-    theme_bw() +
-    labs(y = "Ratio SS3/Model")
-
-  print(patchwork::wrap_plots(p1, p2, ncol = 1, heights = c(0.8, 0.2)))
-  invisible(df)
-}
-
-
-CompareSSRefPoints <- function(replist, Hist) {
-  refs <- replist$derived_quants |>
-    dplyr::filter(Label %in% c(
-      "Dead_Catch_MSY",
-      "Ret_Catch_MSY",
-      "SSB_MSY",
-      "SPR_MSY"
-    )) |>
-    dplyr::select(Label, Value)
-
-  OM <- data.frame(
-    Variable = c("SBMSY", "SPMSY", "MSYRemovals", "MSYLandings"),
-    OM = c(
-      SBMSY(Hist) |> dplyr::filter(Sim == 1, Year == max(Year)) |> dplyr::pull(Value),
-      SPMSY(Hist) |> dplyr::filter(Sim == 1, Year == max(Year)) |> dplyr::pull(Value),
-      MSY(Hist) |> dplyr::filter(Sim == 1, Year == max(Year)) |> dplyr::pull(Value),
-      MSY(Hist, type = "Landings") |> dplyr::filter(Sim == 1, Year == max(Year)) |> dplyr::pull(Value)
-    )
-  )
-
-  SS <- data.frame(
-    Variable = c("SBMSY", "SPMSY", "MSYRemovals", "MSYLandings"),
-    SS = c(
-      refs |> dplyr::filter(Label == "SSB_MSY") |> dplyr::pull(Value),
-      refs |> dplyr::filter(Label == "SSB_MSY") |> dplyr::pull(Value),
-      refs |> dplyr::filter(Label == "Dead_Catch_MSY") |> dplyr::pull(Value),
-      refs |> dplyr::filter(Label == "Ret_Catch_MSY") |> dplyr::pull(Value)
-    )
-  )
-
-  dplyr::left_join(OM, SS) |> dplyr::mutate("OM/SS" = OM / SS)
-}
 
 # ---- Other Useful Stuff ----
 
@@ -2090,6 +1938,8 @@ DropXXCols <- function(array) {
 
 
 GetSSNatAge <- function(replist, OM, yrs = NULL, sex = 1) {
+  Yr <- Time <- Seas <- NULL # CRAN
+  
   if (is.null(yrs)) {
     yrs <- replist$natage |>
       dplyr::filter(Era == "TIME") |>

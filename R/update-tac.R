@@ -178,10 +178,10 @@ ResolveTACByComplex <- function(AdviceList, LastAdviceList, Complexes,
       }
       
     } else if (length(dd) == 2) {
-      # Fleet × Area TAC 
+      # Fleet x Area TAC 
       if (!all(dd == c(nFleet, length(Proj@OM@Areas)))) # adjust slot name as needed
-        stop("Advice@TAC for complex ", i, " must be nFleet × nArea (", nFleet, " × ", length(Proj@OM@Areas), ")")
-      stop("TAC by Fleet × Area optimization is not yet implemented")
+        stop("Advice@TAC for complex ", i, " must be nFleet x nArea (", nFleet, " x ", length(Proj@OM@Areas), ")")
+      stop("TAC by Fleet x Area optimization is not yet implemented")
       
     } else {
       stop("Advice@TAC for complex ", i, " has unexpected dimensions")

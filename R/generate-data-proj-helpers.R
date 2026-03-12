@@ -70,7 +70,7 @@ resolveCV <- function(Proj, slotname, i, fl, TSIndex, DataObject, DataYear, defa
   if (is.null(previouscv)) 
     return(default)
   
-  previouscv <- previouscv[!is.na(previouscv)] |> tail(1) |> as.numeric()    
+  previouscv <- previouscv[!is.na(previouscv)] |> utils::tail(1) |> as.numeric()    
   previouscv
 }
 

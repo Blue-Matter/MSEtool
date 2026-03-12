@@ -111,7 +111,7 @@
 #' @include class-unfished.R
 #' @include class-timeseries.R
 #' @include class-reference.R
-#' @name hist
+#' @name hist-class
 #' @export
 setClass(
   "hist",

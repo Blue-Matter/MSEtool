@@ -38,7 +38,6 @@ CheckMPDataCompleteness <- function(DataSimList, Complexes) {
   invisible(TRUE)
 }
 
-
 StoreMPAdvice <- function(Proj, Year, AdviceSimList) {
   if (is.null(Proj@Misc$MPAdvice)) {
     Proj@Misc$MPAdvice <- list()
@@ -124,6 +123,25 @@ UnchangedManagement <- function(Current, Previous, slotName) {
 
 
 
+CheckTACEffort <- function(AdviceSimList, Proj, LHInd, FleetNames) {
+  purrr::imap(AdviceSimList, \(AdviceSim, sim) {
+    purrr::map(AdviceSim, \(Advice) {
+      if (is.null(Advice@TAC) && is.null(Advice@Effort)) {
+          lastdist <- abind::adrop(Proj@Distribution[sim, LHInd,,,drop=FALSE], 1:2)
+          lasteff <- array(Proj@Effort[sim, LHInd,], 
+                           dimnames = list(
+                             Fleet=FleetNames)
+                           )  |> AddDimension('Area')
+          Advice@Effort <- ArrayMultiply(lastdist, lasteff)
+      }
+      
+      Advice
+    })
+  })
+  
+}
+
+
 #' Process Mean-At-X Slot for a Selectivity or Retention Object
 #'
 #' Validates and reshapes `MeanAtAge`, `MeanAtLength`, or `MeanAtWeight` slots
@@ -170,9 +188,14 @@ ProcessSelectMeanAt <- function(select, Classes, nArea, type, Year,
     
   } else {
     # vector or 1-D array - validate length then broadcast over areas
-    if (length(Values) != nClass)
+    if (length(Values)==1) {
+        Values <- rep(Values, nClass)
+    }
+     if (length(Values) != nClass ) {
       stop(type, " ", slot_name, " must be length `nClass` (", nClass, ").",
            " Currently: ", length(Values))
+    }
+      
     Values <- array(as.numeric(Values),
                     dim      = c(nClass, 1),
                     dimnames = list(Classes, Area=1)) |>
@@ -184,7 +207,8 @@ ProcessSelectMeanAt <- function(select, Classes, nArea, type, Year,
     AddDimension('Sim', pos=1) |>
     AddDimension('Year', val=Year, pos=3)
   
-  select@Pars <- list()
+  if (type!='DiscardMortality')
+    select@Pars <- list()
   select
 }
 

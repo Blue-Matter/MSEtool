@@ -50,75 +50,58 @@ ArraySubtract <- function(array1, array2) {
   ArrayOperation(array1, array2, `-`)
 }
 
+resolve_dim <- function(dimname, dname1, dname2) {
+  ind1 <- which(names(dname1) == dimname)
+  ind2 <- which(names(dname2) == dimname)
+  if (!length(ind1) || !length(ind2)) return(NULL)
+  list(ind1 = ind1, ind2 = ind2,
+       vals1 = dname1[[ind1]], vals2 = dname2[[ind2]])
+}
+
 #' @rdname ArrayOperations
 #' @export
 ArrayExtend <- function(array1, array2) {
   dnames <- CheckArrays(array1, array2)
-  dname1 <- names(dnames$dname1)
-  dname2 <- names(dnames$dname2)
+  dname1 <- dnames$dname1
+  dname2 <- dnames$dname2
 
-  # Extend Sims
-  sim_ind <- which(dname1 == "Sim")
-  if (length(sim_ind)) {
-    sim_ind_2 <- which(dname1 == "Sim")
-    if (length(dnames$dname1[[sim_ind]])==1 &&
-        length(dnames$dname2[[sim_ind_2]]==1)) {
-      nSim <- 1
-    } else {
-      nSim <- c(dnames$dname1[[sim_ind]], dnames$dname2[[sim_ind_2]]) |>
-        unique() |>
-        length()   
-    }
+  # Sim: extend to max nSim; if both length-1, keep as 1
+  nSim <- local({
+    r <- resolve_dim("Sim", dname1, dname2)
+    if (is.null(r)) return(NULL)
+    n1 <- length(r$vals1); n2 <- length(r$vals2)
+    if (n1 == 1L && n2 == 1L) return(NULL)
+    max(n1, n2)
+  })
   
-  } else {
-    nSim <- NULL
-  }
-
-  # Extend Ages
-  age_ind <- which(dname1 == "Age")
-  if (length(age_ind)) {
-    age_ind_2 <- which(dname1 == "Age")
-    age_1 <- dnames$dname1[[age_ind]]
-    age_2 <- dnames$dname2[[age_ind_2]]
-    
-    if (length(age_1)==length(age_2)) {
-      AgeClasses <- NULL
-    } else {
-      AgeClasses <- c(age_1, age_2) |> unique() |>  as.numeric()
-    }
-  } else {
-    AgeClasses <- NULL
-  }
-
-  # Extends Years
-  year_ind <- which(dname1 == "Year")
-  if (length(year_ind)) {
-    year_ind_2 <- which(dname1 == "Year")
-    Years <- c(dnames$dname1[[year_ind]], dnames$dname2[[year_ind_2]]) |>
-      unique() |>
-      as.numeric()
-  } else {
-    Years <- NULL
-  }
+  # Age: extend to union of age classes if lengths differ
+  AgeClasses <- local({
+    r <- resolve_dim("Age", dname1, dname2)
+    if (is.null(r)) return(NULL)
+    if (length(r$vals1) == length(r$vals2)) return(NULL)
+    c(r$vals1, r$vals2) |> as.numeric() |> unique() |> sort()
+  })
   
-  # Extend Areas 
-  area_ind <- which(dname1 == "Area")
-  if (length(area_ind)) {
-    area_ind_2 <- which(dname1 == "Area")
-    Areas <- c(dnames$dname1[[area_ind]], dnames$dname2[[area_ind]]) |>
-      unique() |>
-      as.numeric()
-  } else {
-    Areas <- NULL
-  }
+  # Year: always union of both sets
+  Years <- local({
+    r <- resolve_dim("Year", dname1, dname2)
+    if (is.null(r)) return(NULL)
+    c(r$vals1, r$vals2) |> as.numeric() |> unique() |> sort()
+  })
   
-  array1 <- Extend(array1, nSim, AgeClasses, Years, Areas)
-  array2 <- Extend(array2, nSim, AgeClasses, Years, Areas)
-
+  # Area: extend to union of areas if lengths differ
+  Areas <- local({
+    r <- resolve_dim("Area", dname1, dname2)
+    if (is.null(r)) return(NULL)
+    if (length(r$vals1) == length(r$vals2)) return(NULL)
+    c(r$vals1, r$vals2) |> as.numeric() |> unique() |> sort()
+  })
+  
   list(
-    array1 = array1,
-    array2 = array2
+    array1 = Extend(array1, nSim, AgeClasses, Years, Areas, backfill = TRUE),
+    array2 = Extend(array2, nSim, AgeClasses, Years, Areas, backfill = TRUE)
   )
+  
 }
 
 ArrayOperation <- function(array1, array2, operation = `*`) {

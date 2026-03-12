@@ -10,7 +10,7 @@
 #' bounds of a uniform distribution from which to sample the parameter.
 #'
 #'
-#' @name MOM-class
+#' @name MOM-legacy-class
 #' @docType class
 #' @section Objects from the Class: Objects can be created by calls of the form
 #' \code{new('MOM', Stock_list, Fleet_list, Obs_list, Imp_list)}.

@@ -54,40 +54,61 @@ Discount(x)
 Discount(x) <- value
 }
 \arguments{
-\item{Revenue}{Revenue array.}
+\item{Revenue}{Array. Revenue by simulation, fleet, and year.}
 
-\item{Cost}{Operating cost per unit of effort.}
+\item{Cost}{Numeric. Operating cost per unit of effort.}
 
-\item{Investment}{Cost of adding effort.}
+\item{Investment}{Numeric. Cost of adding a unit of effort.}
 
-\item{Disinvestment}{Cost of removing effort.}
+\item{Disinvestment}{Numeric. Cost of removing a unit of effort.}
 
-\item{Depreciation}{Depreciation rate of effort units.}
+\item{Depreciation}{Numeric. Depreciation rate of effort units.}
 
-\item{Discount}{Discount factor.}
+\item{Discount}{Numeric. Discount factor applied to future values.}
 
-\item{Misc}{Miscellaneous list.
+\item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
 
-The \code{Bioeconomic} object is not currently used.
+\item{x}{A \linkS4class{bioeconomic} object, or a \linkS4class{fleet} object for
+\verb{Bioeconomic<-}.}
 
-A \code{Bioeconomic} object can be attached to a \code{\link[=Fleet]{Fleet()}} using \code{Bioeconomic(Fleet) <- MyBioeconomic} and
-retrieved using \code{MyBioeconomic <- Bioeconomic(Fleet)}
-
-Individual components may be accessed or modified using accessor and
-replacement functions such as \code{\link[=Revenue]{Revenue()}}, \code{\link[=Cost]{Cost()}}, and \code{\link[=Investment]{Investment()}}.
-
-See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more details.}
+\item{value}{For \verb{Bioeconomic<-}: a \linkS4class{bioeconomic} object. For slot
+replacement functions: the new value for the corresponding slot.}
 }
 \value{
-A \linkS4class{bioeconomic} object.
+\itemize{
+\item \code{Bioeconomic()} returns a \linkS4class{bioeconomic} object. If \code{Revenue} is a
+\linkS4class{fleet} object, the \code{Bioeconomic} slot of that fleet is returned.
+\item \verb{Bioeconomic<-} returns \code{x} with the \code{Bioeconomic} slot replaced.
+\item \code{Revenue()}, \code{Cost()}, \code{Investment()}, \code{Disinvestment()},
+\code{Depreciation()}, \code{Discount()} return the corresponding slot from \code{x}.
+\item Their replacement forms return \code{x} with the corresponding slot updated.
+}
 }
 \description{
-Create a \linkS4class{bioeconomic} object.
+Construct and manipulate a \linkS4class{bioeconomic} object storing revenue, cost,
+and investment dynamics for fleet-level or stock-level bioeconomic analyses.
 }
 \details{
-A \code{Bioeconomic} object stores revenue, cost, and investment dynamics
-used in fleet-level or stock-level bioeconomic analyses.
+A \linkS4class{bioeconomic} object is not currently used by the MSE framework but
+is available for custom analyses.
+
+A \code{Bioeconomic} object can be attached to a \code{\link[=Fleet]{Fleet()}} object with
+\code{Bioeconomic(Fleet) <- MyBioeconomic} and retrieved with
+\code{Bioeconomic(Fleet)}.
+
+Individual slots may be accessed or modified using the accessor and
+replacement functions documented here: \code{\link[=Revenue]{Revenue()}}, \code{\link[=Cost]{Cost()}},
+\code{\link[=Investment]{Investment()}}, \code{\link[=Disinvestment]{Disinvestment()}}, \code{\link[=Depreciation]{Depreciation()}}, \code{\link[=Discount]{Discount()}}.
+
+See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more details.
+}
+\examples{
+b <- Bioeconomic(Cost = 100, Discount = 0.05)
+Cost(b)
+Cost(b) <- 200
+Discount(b)
+
 }
 \seealso{
-\code{\link[=Fleet]{Fleet()}}
+\linkS4class{bioeconomic}, \code{\link[=Fleet]{Fleet()}}
 }

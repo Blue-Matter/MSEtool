@@ -1,35 +1,62 @@
 #' Simulate Operating Model Dynamics
 #'
-#' Simulate historical fishery dynamics, fisheries, and reference points
-#' for an [om-class] or an [OM-class] object 
+#' Simulate historical fishery dynamics and calculate reference points for an
+#' [om-class] or [OM-legacy-class] object. Returns a populated [hist-class]
+#' or [Hist-class] object containing historical population dynamics, fishery
+#' data, and reference points.
 #'
-#' @param OM An [om-class] or an [OM-class] object. If missing, defaults to [ExampleOM]
-#' @param parallel Logical. Should the simulation use parallel processing? Default `FALSE`.
-#' @param silent Logical. Suppress progress messages if `TRUE`. Default `FALSE`.
-#' @param nSim Integer. Number of simulation replicates (used for `om` objects). Default uses all available replicates in `OM`.
-#' @param nsim Integer. Synonym for `nSim`. 
-#' @param DoDynamicUnfished Logical. Simulate dynamic unfished population? Default `TRUE`.
-#' @param DoRefMSY Logical. Calculate MSY reference points? Default `TRUE`.
-#' @param DoRefLandings Logical. Calculate reference landings? Default `TRUE`.
-#' @param DoRefRemovals Logical. Calculate reference removals? Default `FALSE`.
-#' @param DoConditionObs Logical. Condition observation objects on historical data? Default `TRUE`.
-#' @param DoGenerateData Logical. Generate historical data? Default `TRUE`.
-#' @param Reduce Logical. Reduce object size after simulation for memory efficiency? Default `TRUE`.
-#' @param ... Additional arguments passed to the sub-functions. Not currently used. 
+#' @param OM An [om-class] or [OM-legacy-class] object. If `NULL` (default),
+#'   `MSEtool::ExampleOM` is used.
+#' @param parallel Logical. Use parallel processing? Default `FALSE`.
+#' @param silent Logical. Suppress progress messages if `TRUE`. Default
+#'   `FALSE`.
+#' @param nSim Integer. Number of simulation replicates. If `NULL` (default),
+#'   the value in `OM` is used. Only used for [om-class] objects; use `nsim`
+#'   for [OM-legacy-class] objects.
+#' @param nsim Integer. Synonym for `nSim` for [OM-legacy-class] objects. If
+#'   `NULL` (default), `nSim` is used if provided.
+#' @param DoDynamicUnfished Logical. Calculate the dynamic unfished population
+#'   dynamics? Default `TRUE`. Only used for [om-class] objects.
+#' @param DoRefMSY Logical. Calculate MSY-based reference points? Default
+#'   `TRUE`. Only used for [om-class] objects.
+#' @param DoRefLandings Logical. Calculate reference yield based on landings?
+#'   Default `TRUE`. Only used for [om-class] objects.
+#' @param DoRefRemovals Logical. Calculate reference yield based on total
+#'   removals (landings + discards)? Default `FALSE`. Only used for [om-class]
+#'   objects.
+#' @param DoConditionObs Logical. Condition observation model on historical
+#'   fishery data? Default `TRUE`. Only used for [om-class] objects.
+#' @param DoGenerateData Logical. Generate historical fishery data from the
+#'   observation model? Default `TRUE`. Only used for [om-class] objects.
+#' @param Reduce Logical. Reduce object size after simulation for memory
+#'   efficiency? Default `TRUE`. Only used for [om-class] objects.
+#' @param ... Additional arguments passed to sub-functions. Not currently
+#'   used
 #'
+#' @details
+#' `Simulate()` is a dispatcher that calls internal functions `Simulate_om()` (for
+#' [om-class] objects) or `SimulateOM()` (for legacy [OM-legacy-class]
+#' objects) depending on the class of `OM`.
 #'
-#' @return A [hist-class] or a [Hist-class] object
+#' @return
+#' - If `OM` is an [om-class] object: a [hist-class] object.
+#' - If `OM` is an [OM-legacy-class] object: a [Hist-legacy-class] object.
+#'
+#' @seealso [OM()], [RunMSE()]
 #'
 #' @examples
 #' \dontrun{
-#' # Simulate a default test OM object
-#' simOM <- Simulate()
+#' # Simulate using the default example OM
+#' hist <- Simulate()
 #'
-#' # Using additional arguments
-#' simOM <- Simulate(MSEtool::ExampleOM,
-#'                   parallel = TRUE,
-#'                   DoRefLandings = FALSE,
-#'                   DoGenerateData = FALSE)
+#' # Simulate with specific options
+#' hist <- Simulate(
+#'   OM             = MyOM,
+#'   DoRefLandings  = TRUE,
+#'   DoRefRemovals  = FALSE,
+#'   DoGenerateData = FALSE,
+#'   silent         = TRUE
+#' )
 #' }
 #'
 #' @export
@@ -66,9 +93,7 @@ Simulate <- function(OM=NULL,
                   ...)
       
       )
-  
-  
-  
+
   if (!is.null(nSim) && is.null(nsim))
     nsim <- nSim
     

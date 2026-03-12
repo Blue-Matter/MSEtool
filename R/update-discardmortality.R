@@ -29,6 +29,7 @@ Update_DiscardMortality <- function(Proj,
   nSim        <- Proj@OM@nSim
   nStock      <- nStock(Proj)
   nFleet      <- length(FleetNames)
+  nArea       <- length(Areas)
   FutureYears <- YearsProj[YearsProj >= Year]
   
   if (AllAdviceNull(AdviceSimList, 'DiscardMortality'))
@@ -56,8 +57,7 @@ Update_DiscardMortality <- function(Proj,
       AdviceList     = AdviceList,
       LastAdviceList = LastAdviceList,
       nFleet         = nFleet,
-      Complexes      = Proj@OM@Complexes,
-      nArea          = length(Areas),
+      nArea          = nArea,
       FleetNames     = FleetNames
     )
   }
@@ -77,7 +77,6 @@ Update_DiscardMortality <- function(Proj,
 #' @param AdviceList List of `advice` objects for this simulation, one per complex.
 #' @param LastAdviceList Same structure as `AdviceList` for the previous year.
 #' @param nFleet Integer. Number of fleets.
-#' @param Complexes List mapping complex indices to stock indices.
 #' @param nArea Integer. Number of areas.
 #' @param FleetNames Character vector of fleet names.
 #' @return Updated `Proj` object.
@@ -88,9 +87,10 @@ Update_DiscardMortality_Sim <- function(Proj,
                                         AdviceList,
                                         LastAdviceList,
                                         nFleet,
-                                        Complexes,
                                         nArea,
                                         FleetNames) {
+  
+  Complexes <- Proj@OM@Complexes
   
   for (i in seq_along(AdviceList)) {
     stocks         <- Complexes[[i]]
@@ -108,11 +108,31 @@ Update_DiscardMortality_Sim <- function(Proj,
            "`DiscardMortality()` objects of length nFleet (", nFleet, ")")
     
     for (st in stocks) {
-      Ages   <- Proj@OM@Stock[[st]]@Ages
-      Length <- Proj@OM@Stock[[st]]@Length |> SubsetSim(sim) |> SubsetYear(FutureYears)
+      Stock  <- Proj@OM@Stock[[st]]
+      Ages   <- Stock@Ages
+      Length <- Subset(Stock@Length, Sims=sim, Years=FutureYears)
+      Weight <- Subset(Stock@Weight, Sims=sim, Years=FutureYears)
+      Maturity <- Subset(Stock@Maturity, Sims=sim, Years=FutureYears)
+      
+      ALK <- Length@ALK 
+      
+      if (length(Ages)< 50) {
+        # Increases the temporal resolution of `ObjectMeanAtAge` and `ASK`
+        # by linear interpolate Mean length-at-age and CV length-at-age
+        
+        ALK <- CalcAgeSizeKey(MeanAtAge=LinearInterpolate_Age(Length@MeanAtAge),
+                              CVatAge=LinearInterpolate_Age(Length@CVatAge),
+                              Classes=Length@Classes,
+                              TruncSD=Length@TruncSD,
+                              Dist=Length@Dist,
+                              silent=TRUE)
+      }
       
       for (fl in seq_len(nFleet)) {
         dm <- if (is.list(DiscardMortalityList)) DiscardMortalityList[[fl]] else DiscardMortalityList
+        
+        dm <- ProcessSelectMeanAtAge(dm, Ages, nArea, type='DiscardMortality', Year=FutureYears[1])
+        dm <- ProcessSelectMeanAtLength(dm, Length, nArea, type='DiscardMortality', Year=FutureYears[1])
         
         dm <- PopulateDiscardMortality(dm,
                                        Ages  = Ages,
@@ -120,7 +140,9 @@ Update_DiscardMortality_Sim <- function(Proj,
                                        nSim  = 1,
                                        Years = FutureYears,
                                        nArea = nArea,
-                                       silent = TRUE)
+                                       silent = TRUE,
+                                       replace = TRUE,
+                                       ASKOverride = ALK)
         
         dm@MeanAtAge    <- set_sim_dimname(dm@MeanAtAge,    sim) |> ExtendAreas(1:nArea) |> ExtendYears(FutureYears)
         dm@MeanAtLength <- set_sim_dimname(dm@MeanAtLength, sim) |> ExtendAreas(1:nArea) |> ExtendYears(FutureYears)

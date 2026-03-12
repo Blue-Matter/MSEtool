@@ -15,29 +15,73 @@ DiscardMortality(
 DiscardMortality(x) <- value
 }
 \arguments{
-\item{MeanAtAge}{A numeric array of discard mortality at age}
+\item{MeanAtAge}{Numeric array. Mean discard mortality at age, with named
+dimensions \code{Sim}, \code{Age}, and \code{Year}. See \code{Details} section.}
 
-\item{MeanAtLength}{A numeric array of discard mortality at length}
+\item{MeanAtLength}{Numeric array. Mean discard mortality at length, with
+named dimensions \code{Sim}, \code{Length}, and \code{Year}.  See \code{Details} section.}
 
-\item{Classes}{Optional class vector (ages or lengths)}
+\item{Classes}{Numeric vector. Age or length classes corresponding to the
+\code{Age} or \code{Length} dimension of \code{MeanAtAge} or \code{MeanAtLength}. Default
+\code{NULL}.}
 
-\item{Misc}{A list of miscellaneous parameters}
+\item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
+
+\item{x}{A \linkS4class{discardmortality} object, or a \linkS4class{fleet} object for
+\verb{DiscardMortality<-}.}
+
+\item{value}{For \verb{DiscardMortality<-}: a \linkS4class{discardmortality} object.}
 }
 \value{
-A \linkS4class{discardmortality} object
+\itemize{
+\item \code{DiscardMortality()} returns a \linkS4class{discardmortality} object. If
+\code{MeanAtAge} is a \linkS4class{fleet} object, the \code{DiscardMortality} slot of
+that fleet is returned.
+\item \verb{DiscardMortality<-} returns \code{x} with the \code{DiscardMortality} slot
+replaced.
+}
 }
 \description{
-Construct a \linkS4class{discardmortality} object for a \code{\link[=Fleet]{Fleet()}} object.
+Construct and manipulate a \linkS4class{discardmortality} object defining the
+proportion of discarded catch that dies, for use in a \code{\link[=Fleet]{Fleet()}} object.
 }
 \details{
-Discard mortality describes the proportion of catch that is discarded and dies,
-defined either at age or at length.
+Discard mortality describes the proportion of discarded catch that dies,
+defined either at age (\code{MeanAtAge}) or at length (\code{MeanAtLength}). Values
+should be between 0 (all discards survive) and 1 (all discards die).
 
-A \code{DiscardMortality} object can be attached to a \code{\link[=Fleet]{Fleet()}} using \code{DiscardMortality(Fleet) <- MyDiscardMortality} and
-retrieved using \code{MyDiscardMortality <- DiscardMortality(Fleet)}
+Discard Mortality objects are optional. If they are not supplied, the
+model will assume discard mortality is 0 for all age-classes
 
-Individual components may be accessed or modified using accessor and
-replacement functions such as \code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=MeanAtLength]{MeanAtLength()}}, and \code{\link[=Classes]{Classes()}}.
+A \code{DiscardMortality} object can be attached to a \code{\link[=Fleet]{Fleet()}} with
+\code{DiscardMortality(Fleet) <- MyDiscardMortality} and retrieved with
+\code{DiscardMortality(Fleet)}.
+
+Individual slots may be accessed or modified using \code{\link[=MeanAtAge]{MeanAtAge()}},
+\code{\link[=MeanAtLength]{MeanAtLength()}}, and \code{\link[=Classes]{Classes()}}.
+\subsection{Use in \code{Advice()}}{
+
+When  \linkS4class{discardmortality} objects are used in \code{\link[=Advice]{Advice()}} objects, the
+\code{Sim} and \code{Year} dimensions should not be included.
+\itemize{
+\item \code{MeanAtAge} should be either length \code{nAge} or length \code{1} (recycled over age classes).
+\item \code{MeanAtLength} should be either length \code{Classes} or length \code{1} (recycled over length classes).
+\item \code{MeanAtWeight} (if applicalbe) should be either length \code{Classes} or length \code{1} (recycled over weight classes).
+}
+
+If \code{Classes} is not specified, the classes will be taken from the \code{Length} or \code{Weight} object of the
+corresponding stock.
 
 See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more details.
+}
+}
+\examples{
+d <- DiscardMortality()
+MeanAtAge(d)
+Classes(d)
+
+}
+\seealso{
+\linkS4class{discardmortality}, \code{\link[=Fleet]{Fleet()}}, \code{\link[=MeanAtAge]{MeanAtAge()}},
+\code{\link[=MeanAtLength]{MeanAtLength()}}, \code{\link[=Classes]{Classes()}}, \code{\link[=Selectivity]{Selectivity()}}, \code{\link[=Retention]{Retention()}}
 }

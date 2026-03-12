@@ -7,14 +7,35 @@
 ValidUnits(x = "ages")
 }
 \arguments{
-\item{x}{Either an \code{\link[=Ages]{Ages()}}, \code{\link[=Length]{Length()}}, or \code{\link[=Weight]{Weight()}} object, or a character
-string with object class, i.e., one of: \code{c('ages', 'length', 'weight')} or
-\code{c('Ages', 'Length', 'Weight')}}
+\item{x}{An \linkS4class{ages}, \linkS4class{length}, or \linkS4class{weight} object, or a
+character string specifying the class: one of \code{"ages"}, \code{"length"}, or
+\code{"weight"} (case-insensitive). If \code{NULL}, returns a named list of valid
+units for all three classes. Default \code{"ages"}.}
+}
+\value{
+\itemize{
+\item If \code{x} is \code{NULL}: a named list with elements \code{Age}, \code{Length}, and
+\code{Weight}, each containing a character vector of valid unit strings.
+\item If \code{x} is an \linkS4class{ages} object or \code{"ages"}: a character vector of valid
+age units: \code{"year"}, \code{"half-year"}, \code{"quarter"}, \code{"month"}, \code{"week"}.
+\item If \code{x} is a \linkS4class{length} object or \code{"length"}: a character vector of
+valid length units: \code{"mm"}, \code{"cm"}, \code{"inch"}.
+\item If \code{x} is a \linkS4class{weight} object or \code{"weight"}: a character vector of
+valid weight units: \code{"g"}, \code{"kg"}, \code{"lb"}.
+\item If no match is found: the string \code{"No units found"}.
+}
 }
 \description{
-Returns the valid units for \code{\link[=Ages]{Ages()}}, \code{\link[=Length]{Length()}}, and \code{\link[=Weight]{Weight()}} objects
+Returns the valid units for \code{\link[=Ages]{Ages()}}, \code{\link[=Length]{Length()}}, and \code{\link[=Weight]{Weight()}} objects.
 }
 \examples{
-ValidUnits(Ages())
+ValidUnits()           # age units (default)
+ValidUnits("length")   # length units
+ValidUnits("weight")   # weight units
+ValidUnits(NULL)       # all units as a named list
+ValidUnits(Ages())     # age units from an ages-class object
 
+}
+\seealso{
+\code{\link[=Ages]{Ages()}}, \code{\link[=Length]{Length()}}, \code{\link[=Weight]{Weight()}}
 }

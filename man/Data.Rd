@@ -35,8 +35,8 @@ Data(
 )
 }
 \arguments{
-\item{Name}{Either a character string naming the new \code{Data} object, or an
-existing \link{om}, \link{hist}, or \link{mse} object from which to extract data.
+\item{Name}{Either a character string naming the new \linkS4class{data} object, or an
+existing \linkS4class{om}, \linkS4class{hist}, or \linkS4class{mse} object from which to extract data.
 Defaults to \code{"New Data Object"}.}
 
 \item{CommonName}{Optional character string. Common name of the stock.}
@@ -66,54 +66,54 @@ Defaults to \code{1}.}
 \item{nArea}{A positive integer giving the number of spatial areas.
 Defaults to \code{1}.}
 
-\item{LifeHistory}{Optional. An object of class \code{lifehistorydata}.}
+\item{LifeHistory}{Optional. An object of class \link{lifehistorydata} .}
 
-\item{Exploitation}{Optional. An object of class \code{exploitationdata}.}
+\item{Exploitation}{Optional. An object of class \link{exploitationdata}.}
 
-\item{Reference}{Optional. An object of class \code{referencedata}.}
+\item{Reference}{Optional. An object of class \link{referencedata}.}
 
-\item{Effort}{Optional. An object of class \code{effortdata}.}
+\item{Effort}{Optional. An object of class \link{effortdata}.}
 
-\item{Landings}{Optional. An object of class \code{catchdata} for landed catch.}
+\item{Landings}{Optional. An object of class \link{catchdata} for landed catch.}
 
-\item{Discards}{Optional. An object of class \code{catchdata} for discarded
+\item{Discards}{Optional. An object of class \link{catchdata} for discarded
 catch.}
 
-\item{CPUE}{Optional. An object of class \code{indicesdata} for catch-per-unit-
+\item{CPUE}{Optional. An object of class \link{indicesdata} for catch-per-unit-
 effort indices.}
 
-\item{Survey}{Optional. An object of class \code{indicesdata} for fishery-
+\item{Survey}{Optional. An object of class \link{indicesdata} for fishery-
 independent survey indices.}
 
-\item{LandingsAtAge}{Optional. An object of class \code{compdata} for age
+\item{LandingsAtAge}{Optional. An object of class \link{compdata} for age
 composition of landings.}
 
-\item{DiscardsAtAge}{Optional. An object of class \code{compdata} for age
+\item{DiscardsAtAge}{Optional. An object of class \link{compdata} for age
 composition of discards.}
 
-\item{LandingsAtSize}{Optional. An object of class \code{compdata} for size
+\item{LandingsAtSize}{Optional. An object of class \link{compdata} for size
 composition of landings.}
 
-\item{DiscardsAtSize}{Optional. An object of class \code{compdata} for size
+\item{DiscardsAtSize}{Optional. An object of class \link{compdata} for size
 composition of discards.}
 
-\item{Advice}{Optional. An object of class \code{advicedata} containing TAC and
+\item{Advice}{Optional. An object of class \link{advicedata} containing TAC and
 related advice.}
 
 \item{Misc}{A named list for any additional user-defined data. Defaults to
 \code{list()}.}
 }
 \value{
-A \link{data} object, or when \code{Name} is an \link{mse} object, a list
-of \link{data} objects from the \verb{@PPD} slot.
+A \linkS4class{data} object, or when \code{Name} is an \linkS4class{mse} object, a list
+of \linkS4class{data} objects from the \verb{@PPD} slot.
 }
 \description{
-Creates a new \link{data} object, or extracts the \code{Data} or \code{PPD} slot from
-an existing \link{om}, \link{hist}, or \link{mse} class object.
+Creates a new \linkS4class{data} object, or extracts the \code{Data} or \code{PPD} slot from
+an existing \linkS4class{om}, \linkS4class{hist}, or \linkS4class{mse} class object.
 }
 \details{
-When \code{Name} is an \link{om} or \link{hist} object, the function returns the
-corresponding \verb{@Data} slot. When \code{Name} is an \link{mse} object, the \verb{@PPD}
+When \code{Name} is an \linkS4class{om} or \linkS4class{hist} object, the function returns the
+corresponding \verb{@Data} slot. When \code{Name} is an \linkS4class{mse} object, the \verb{@PPD}
 slot is returned instead. Otherwise, a new \code{data} object is constructed from
 the supplied arguments.
 

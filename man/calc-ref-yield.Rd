@@ -13,7 +13,7 @@ CalcRefYield(
 )
 }
 \arguments{
-\item{Hist}{\code{Hist} object containing historical fishery dynamics}
+\item{Hist}{\code{hist} class object containing historical fishery dynamics}
 
 \item{type}{Character vector; one or both of \code{Landings} and \code{Removals}}
 

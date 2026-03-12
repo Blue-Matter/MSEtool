@@ -1,49 +1,48 @@
-
-#' Save an object to disk
+#' Save an Object to Disk
 #'
-#' A wrapper for [saveRDS()] that automatically creates the directory structure
-#' (if needed) and prints a helpful message to the console
+#' A wrapper for [saveRDS()] that automatically creates the required directory
+#' structure and prints a informational message to the console.
 #'
-#' @param object Any object to save to disk
-#' @param path The file path (including file name and extension) for the saved
-#' object. Defaults to [tempfile()].
-#' @param overwrite Logical. Overwrite the file if it already exists?
+#' @param object Any R object to save.
+#' @param path Character. File path including file name and extension (e.g.,
+#'   `"results/my_om.rds"`). If `NULL` (default), a temporary file path is
+#'   generated via [tempfile()].
+#' @param overwrite Logical. If `FALSE` (default), an error is thrown if
+#'   `path` already exists. Set to `TRUE` to overwrite an existing file.
+#' @param ... Additional arguments passed to [saveRDS()].
 #'
-#' @return invisibly returns the full file path of the saved object
+#' @return Invisibly returns the full file path of the saved object.
+#'
+#' @seealso [saveRDS()]
+#'
+#' @examples
+#' x <- list(a = 1, b = 2)
+#' path <- Save(x, path = tempfile(fileext = ".rds"))
+#' path
+#'
 #' @export
 Save <- function(object, path = NULL, overwrite = FALSE, ...) {
-  if (is.null(path)) {
+  if (is.null(path))
     path <- tempfile()
-  }
-
+  
   CreateDir(dirname(path))
-
-  if (file.exists(path) && !overwrite) {
+  
+  if (file.exists(path) && !overwrite)
     cli::cli_abort(
-      c("x"="File {.file {path}} already exists",
-        "i" = "Use `overwrite=TRUE` to overwrite existing file"
-      ),
+      c("x" = "File {.file {path}} already exists.",
+        "i" = "Use `overwrite = TRUE` to overwrite an existing file."),
       call = NULL
     )
-  }
-
+  
   name <- deparse(substitute(object))
-  cli::cli_alert_info("Saving {.val {name}} of class {.val {class(object)}} to {.val {path}}")
-
+  cli::cli_alert_info(
+    "Saving {.val {name}} of class {.cls {class(object)}} to {.val {path}}."
+  )
   saveRDS(object, path, ...)
   invisible(path)
 }
 
-
 CreateDir <- function(path) {
-  paths <- strsplit(path, "/")[[1]]
-  for (i in seq_along(paths)) {
-    dir <- paste0(paths[1:i], collapse = "/")
-    if (i == 1) {
-      dir <- paste0(dir, "/")
-    }
-    if (!dir.exists(dir)) {
-      dir.create(dir)
-    }
-  }
+  if (!dir.exists(path))
+    dir.create(path, recursive = TRUE, showWarnings = FALSE)
 }

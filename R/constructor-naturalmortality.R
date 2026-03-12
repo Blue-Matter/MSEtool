@@ -1,34 +1,72 @@
 #' NaturalMortality
 #'
-#' Construct a [naturalmortality-class()] object defining natural mortality
-#' assumptions for a [Stock()].
+#' Construct and manipulate a [naturalmortality-class] object defining the
+#' natural mortality schedule associated with a [Stock()] object. A
+#' `NaturalMortality` object is required for all [stock-class] objects.
 #'
-#' @param Pars Named list of natural mortality parameters for models in [NaturalMortalityModels()]
-#' @param Model Model associated with `Pars`.
-#' @param Units Time units (e.g. `"year"`).
-#' @param MeanAtAge Mean natural mortality-at-age array (optional).
-#' @param MeanAtLength Mean natural mortality-at-length array (optional).
-#' @param Random Random effects array (optional).
-#' @param Classes Age or length class mid-points (optional).
-#' @param Misc Miscellaneous list.
+#' @param Pars Named list of natural mortality parameters corresponding to
+#'   `Model`. See [NaturalMortalityModels()] for available models and required
+#'   parameters. If `Pars` is a [stock-class] object, the `NaturalMortality`
+#'   slot of that stock is returned. If `Pars` is non-empty, `Model` is
+#'   `NULL`, and all values are non-`NA`, the model is inferred automatically
+#'   via [FindModel()].
+#' @param Model Character or function. Natural mortality model identifier. If
+#'   `NULL` (default), the model is inferred from `Pars` where possible. See
+#'   [NaturalMortalityModels()] for available models.
+#' @param Units Character. Time units for the mortality rate (e.g., `"year"`).
+#'   See [ValidUnits()] for valid options. Default `"year"`.
+#' @param MeanAtAge Numeric array. Mean natural mortality at age, with named
+#'   dimensions `Sim`, `Age`, and `Year`. Populated automatically during
+#'   [Populate()] if `Pars` and `Model` are provided. Default `NULL`.
+#' @param MeanAtLength Numeric array. Mean natural mortality at length, with
+#'   named dimensions `Sim`, `Length`, and `Year`. Default `NULL`.
+#' @param Random Numeric array. Random effects on natural mortality parameters.
+#'   Default `NULL`.
+#' @param Classes Numeric vector. Age or length class midpoints. Default
+#'   `NULL`.
+#' @param Misc List. Miscellaneous additional inputs. Default `list()`.
+#' @param x A [naturalmortality-class] object for slot accessors, or a
+#'   [stock-class] object for `NaturalMortality<-`.
+#' @param value A [naturalmortality-class] object.
 #'
 #' @details
-#' The `NaturalMortality` class defines how natural mortality varies
-#' with age and/or length in a [Stock()]. Mortality schedules may be
-#' model-based (via `Pars` and `Model`) or supplied directly as arrays.
+#' A [naturalmortality-class] object is required for all [stock-class]
+#' objects. It defines how natural mortality varies with age and/or length,
+#' which is used throughout the operating model for population dynamics
+#' calculations.
 #'
-#' A `NaturalMortality` object can be attached to a [Stock()] using `NaturalMortality(Stock) <- MyNaturalMortality` and
-#' retrieved using `MyNaturalMortality <- NaturalMortality(Stock)`
+#' ## Specifying Natural Mortality
 #'
-#' Individual components may be accessed or modified using accessor and
-#' replacement functions such as [Pars()], [Model()], and [Units()].
-#' 
+#' Natural mortality schedules may be specified in two ways:
+#'
+#' 1. **Model-based**: provide `Pars` and optionally `Model`. `MeanAtAge`
+#'    is populated automatically during [Populate()]. If `Model` is `NULL`
+#'    and `Pars` is non-empty with no `NA` values, the model is inferred via
+#'    [FindModel()].
+#' 2. **Direct array**: provide `MeanAtAge` or `MeanAtLength` directly with
+#'    `Pars = list()` (default).
+#'
+#' ## Attaching to a Stock
+#'
+#' A `NaturalMortality` object can be attached to a [Stock()] with
+#' `NaturalMortality(Stock) <- MyNaturalMortality` and retrieved with
+#' `NaturalMortality(Stock)`.
+#'
+#' Individual slots may be accessed or modified using [Pars()], [Model()],
+#' [Units()], [MeanAtAge()], [MeanAtLength()], [Random()], and [Classes()].
+#'
 #' `r TechManLink()`
-#' 
-#' @return A [naturalmortality-class] object.
 #'
-#' @seealso
-#' [Populate()], [NaturalMortalityModels()]
+#' @return
+#' - `NaturalMortality()` returns a [naturalmortality-class] object. If
+#'   `Pars` is a [stock-class] object, the `NaturalMortality` slot of that
+#'   stock is returned.
+#' - `NaturalMortality<-` returns `x` with the `NaturalMortality` slot
+#'   replaced.
+#'
+#' @seealso [naturalmortality-class], [Stock()], [NaturalMortalityModels()],
+#'   [Populate()], [FindModel()], [ValidUnits()], [Length()], [Maturity()],
+#'   [Pars()], [MeanAtAge()], [MeanAtLength()], [Units()], [Classes()]
 #'
 #' @export
 NaturalMortality <- function(Pars = list(),

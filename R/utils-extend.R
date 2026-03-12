@@ -1,53 +1,58 @@
-#' Extend an array
+#' Extend an Array Along Named Dimensions
 #'
-#' Extends an array with named dimensions to include all simulations, ages, and areas
-#'  and any missing years,
-#'
+#' Extends an array with named dimensions to include all simulations, ages,
+#' areas, and any missing years. Can also recurse into S4 objects and lists.
 #'
 #' @param array An [array()] with named dimensions including at least one of
-#' `Sim`, `Year`,  `Age`, or `Area`. Alternatively, an [S4] or a [list()] object, in which
-#' case the function will loop over all slots or elements respectively and extend
-#' any named arrays. Any other objects will be returned unchanged.
-#' @param nSim The total number of simulations. Integer (or NULL to skip)
-#' @param AgeClasses A numeric vector of age classes (or NULL to skip)
-#' @param Years A numeric vector of `Year` values (or NULL to skip)
-#' @param Areas A numeric vector with values 1:`nArea` (or NULL to skip)
-#' @param default Default value for forward filled year values. Default is the same
-#' value as the most recent year
-#' @param debug Logical. Print debug messages?
+#'   `Sim`, `Year`, `Age`, or `Area`. Alternatively, an S4 or [list()] object,
+#'   in which case the function recurses over all slots or elements and extends
+#'   any named arrays. Any other object is returned unchanged.
+#' @param nSim Integer. Total number of simulations, or `NULL` to skip.
+#' @param AgeClasses Numeric vector of age classes, or `NULL` to skip.
+#' @param Years Numeric vector of `Year` values to extend to, or `NULL` to
+#'   skip.
+#' @param Areas Numeric vector of area indices (`1:nArea`), or `NULL` to skip.
+#' @param default Default fill value for forward-filled years. If `NULL`
+#'   (default), the value from the most recent existing year is used.
+#' @param backfill Logical. If `TRUE`, also back-fill years earlier than the
+#'   earliest existing year. Default `FALSE`.
+#' @param debug Logical. If `TRUE`, prints the class of each object as it is
+#'   processed. Default `FALSE`.
+#'
+#' @return The input object with dimensions extended as specified. The return
+#'   type matches the input type (array, S4, or list).
 #'
 #' @details
+#' 
 #' ## ExtendSims
 #'
-#' A `Sim` dimension in an array must have either length `1` or length `nSim`.
-#' If the latter, `ExtendSims` returns the array unchanged. If the former, the names of the
-#' `Sim` dimension is extended to length `nSim` with the values of simulation 1 replicated for
-#' all simulations.
+#' The `Sim` dimension must have length `1` or `nSim`. If length `1`, it is
+#' replicated to length `nSim` with simulation 1 values copied to all
+#' simulations. If already length `nSim`, the array is returned unchanged.
 #'
 #' ## ExtendAges
-#' An `Age` dimension in an array must have either length `1` or length `nAge` for a given stock.
-#' If the latter, `ExtendAges` returns the array unchanged. If the former, the names of the
-#' `Age` dimension is extended to length `nAge` with the values of the first age class replicated for
-#' all age classes.
+#'
+#' The `Age` dimension must have length `1` or `nAge`. If length `1`, it is
+#' replicated to length `nAge` with the first age class copied to all ages.
+#' If already length `nAge`, the array is returned unchanged.
 #'
 #' ## ExtendYears
-#' A `Year` dimension can be any length and include any years in `Years(OM)`.
-#' If the names of the `Year` dimension includes all values in `Years`, the array
-#' will be returned unchanged. Otherwise, the array will be extended to include
-#' all missing values in `Years`.
-#' 
-#' ## ExtendAreas
-#' An `Area` dimension in an array must have either length `1` or length `nArea` for a given OM
-#' If the latter, `ExtendAreas` returns the array unchanged. If the former, the names of the
-#' `Area` dimension is extended to length `nArea` with the values of the first area replicated for
-#' all other areas.
 #'
-#' Values will be back filled or forward filled as necessary to include all `Years`.
-#' If there is seasonality (decimal years), the filled values will match those from the
-#' most recent season.
+#' The `Year` dimension can be any length. If all values in `Years` are already
+#' present, the array is returned unchanged. Otherwise missing years are added
+#' by forward-filling from the most recent existing year, back-filling from the
+#' earliest (if `backfill = TRUE`), or step-filling for years within the
+#' existing range. If any year values are non-integer (decimal), seasonal
+#' matching is used via `ExtendYears_seasonal()`.
+#'
+#' ## ExtendAreas
+#'
+#' The `Area` dimension must have length `1` or `nArea`. If length `1`, it is
+#' replicated to length `nArea` with area 1 values copied to all areas. If
+#' already length `nArea`, the array is returned unchanged.
 #'
 #' @example man-examples/Extend.R
-#'
+#' @seealso [ExtendSims()], [ExtendAges()], [ExtendYears()], [ExtendAreas()]
 #' @export
 Extend <- function(array,
                    nSim = NULL,
@@ -55,43 +60,35 @@ Extend <- function(array,
                    Years = NULL,
                    Areas = NULL,
                    default = NULL,
+                   backfill = FALSE,
                    debug = FALSE) {
-  if (debug) {
+  if (debug) 
     print(class(array))
-  }
   
-  # Recall if not an `array` class object
+  
   if (isS4(array)) {
-    if (inherits(array, "data")) {
-      return(array)
-    }
-    slots <- slotNames(array)
-
-    for (sl in slots) {
-      if (debug) {
-        print(sl)
-      }
-      slot(array, sl) <- Recall(slot(array, sl), nSim, AgeClasses, Years, Areas, default, debug)
+    if (inherits(array, "data")) return(array)
+    for (sl in slotNames(array)) {
+      if (debug) print(sl)
+      slot(array, sl) <- Recall(slot(array, sl), nSim, AgeClasses, Years, Areas, default, backfill, debug)
     }
     return(array)
   }
 
   if (is.list(array)) {
     if (length(array)) {
-      for (i in 1:length(array)) {
-        temp <- Recall(array[[i]], nSim, AgeClasses, Years, Areas, default, debug)
-        if (!is.null(temp)) {
-          array[[i]] <- temp
-        }
+      for (i in seq_along(array)) {
+        temp <- Recall(array[[i]], nSim, AgeClasses, Years, Areas, default, backfill, debug)
+        if (!is.null(temp)) array[[i]] <- temp
       }
-      return(array)
     }
+    return(array)
   }
 
   array |>
     ExtendSims(nSim) |>
     ExtendAges(AgeClasses) |>
-    ExtendYears(Years, default) |>
+    ExtendYears(Years, default, backfill) |>
     ExtendAreas(Areas)
 }
 
@@ -99,67 +96,46 @@ Extend <- function(array,
 #' @export
 #'
 ExtendSims <- function(array, nSim = NULL) {
-  if (is.null(nSim)) {
-    return(array)
-  }
+  if (is.null(nSim)) return(array)
 
-  if (length(nSim) != 1) {
+  if (length(nSim) != 1) 
     cli::cli_abort("`nSim` must be an integer or numeric value of length 1")
-  }
-  # Recall if not an `array` class object
+  
   if (isS4(array)) {
-    if (inherits(array, "data")) {
-      return(array)
-    }
-    slots <- slotNames(array)
-
-    for (sl in slots) {
-      if (debug) {
-        print(sl)
-      }
+    if (inherits(array, "data")) return(array)
+    for (sl in slotNames(array))
       slot(array, sl) <- Recall(slot(array, sl), nSim)
-    }
     return(array)
   }
-
+  
   if (is.list(array)) {
     if (length(array)) {
-      for (i in 1:length(array)) {
+      for (i in seq_along(array)) {
         temp <- Recall(array[[i]], nSim)
-        if (!is.null(temp)) {
-          array[[i]] <- temp
-        }
+        if (!is.null(temp)) array[[i]] <- temp
       }
-      return(array)
     }
+    return(array)
   }
-
+  
   d <- dim(array)
   dn <- dimnames(array)
 
-  if (is.null(dn) || !"Sim" %in% names(dn)) {
-    return(array)
-  }
-
+  if (is.null(dn) || !"Sim" %in% names(dn)) return(array)
+  
   sim_dim <- which(names(dn) == "Sim")
-
   existing_sims <- as.numeric(dn[[sim_dim]])
 
-  if (length(existing_sims) >= nSim) {
-    return(array)
-  }
-  
+  if (length(existing_sims) >= nSim) return(array)
 
-  if (length(existing_sims) != 1) {
-    cli::cli_abort(c("The `Sim` dimension must be either length `nSim` ({.val {nSim}}) or length 1",
-      "x" = "The `Sim` dimension of this array has length {.val {d[sim_dim]}}"
+  if (length(existing_sims) != 1)
+    cli::cli_abort(c(
+      "The `Sim` dimension must be length 1 or `nSim` ({.val {nSim}}).",
+      "x" = "Found length {.val {d[sim_dim]}}."
     ))
-  }
   
-  # replicate Sim = 1 along the Sim dimension
-  idx <- lapply(seq_along(d), function(i) {
-    if (i == sim_dim) rep(1L, nSim) else seq_len(d[i])
-  })
+  idx <- lapply(seq_along(d), \(i)
+                if (i == sim_dim) rep(1L, nSim) else seq_len(d[i]))
   
   OutArray <- do.call(`[`, c(list(array), idx, list(drop = FALSE)))
   dimnames(OutArray)[[sim_dim]] <- as.character(seq_len(nSim))
@@ -170,170 +146,121 @@ ExtendSims <- function(array, nSim = NULL) {
 #' @export
 #'
 ExtendAges <- function(array, AgeClasses = NULL) {
+  if (is.null(AgeClasses)) return(array)
   
-  if (is.null(AgeClasses)) 
-    return(array)
-  
-
-  # Recall if not an `array` class object
   if (isS4(array)) {
-    if (inherits(array, "data")) {
-      return(array)
-    }
-    slots <- slotNames(array)
-
-    for (sl in slots) {
-      if (debug) {
-        print(sl)
-      }
+    if (inherits(array, "data")) return(array)
+    for (sl in slotNames(array))
       slot(array, sl) <- Recall(slot(array, sl), AgeClasses)
-    }
     return(array)
   }
-
+  
   if (is.list(array)) {
     if (length(array)) {
-      for (i in 1:length(array)) {
+      for (i in seq_along(array)) {
         temp <- Recall(array[[i]], AgeClasses)
-        if (!is.null(temp)) {
-          array[[i]] <- temp
-        }
+        if (!is.null(temp)) array[[i]] <- temp
       }
-      return(array)
     }
+    return(array)
   }
-
+  
   nAge <- length(AgeClasses)
-  d <- dim(array)
-  dn <- dimnames(array)
-
-  if (is.null(dn) || !"Age" %in% names(dn)) {
-    return(array)
-  }
-
-  age_dim <- which(names(dn) == "Age")
+  d    <- dim(array)
+  dn   <- dimnames(array)
+  
+  if (is.null(dn) || !"Age" %in% names(dn)) return(array)
+  
+  age_dim       <- which(names(dn) == "Age")
   existing_ages <- as.numeric(dn[[age_dim]])
-
-  if (length(existing_ages) == nAge) {
-    return(array)
-  }
-
-  if (sum(AgeClasses %in% existing_ages) == nAge - 1) {
-    # exception for RecDevInit
-    return(array)
-  }
-
-  if (length(existing_ages) != 1) {
-    cli::cli_abort(c("The `Age` dimension must be either length `nAge` ({.val {nAge}}) or length 1",
-      "x" = "The `Age` dimension of this array has length {.val {d[age_dim]}}"
+  
+  if (length(existing_ages) == nAge) return(array)
+  
+  # Exception for RecDevInit: all but one age class present
+  if (sum(AgeClasses %in% existing_ages) == nAge - 1) return(array)
+  
+  if (length(existing_ages) != 1)
+    cli::cli_abort(c(
+      "The `Age` dimension must be length 1 or `nAge` ({.val {nAge}}).",
+      "x" = "Found length {.val {d[age_dim]}}."
     ))
-  }
-
-  # replicate Age = 1 along the Age dimension
-  idx <- lapply(seq_along(d), function(i) {
-    if (i == age_dim) rep(1L, nAge) else seq_len(d[i])
-  })
+  
+  idx <- lapply(seq_along(d), \(i)
+                if (i == age_dim) rep(1L, nAge) else seq_len(d[i]))
   
   OutArray <- do.call(`[`, c(list(array), idx, list(drop = FALSE)))
   dimnames(OutArray)[[age_dim]] <- as.character(AgeClasses)
   OutArray
-
 }
 
 #' @rdname Extend
 #' @export
 ExtendYears <- function(array, Years = NULL, default = NULL, backfill = FALSE) {
   
-  if (!is.array(array) | is.null(Years)) {
+  if (!is.array(array) | is.null(Years)) 
     return(array)
-  }
-
+  
   d <- dim(array)
   dn <- dimnames(array)
 
-  if (is.null(dn) || !"Year" %in% names(dn)) {
+  if (is.null(dn) || !"Year" %in% names(dn)) 
     return(array)
-  }
-
-  year_dim <- which(names(dn) == "Year")
-  nyear <- d[year_dim]
+  
+  year_dim       <- which(names(dn) == "Year")
+  nyear          <- d[year_dim]
   existing_years <- as.numeric(dn[[year_dim]])
-  fill_years <- unique(Years) |> sort()
-  all_years <- c(existing_years, fill_years) |>
-    unique() |>
-    sort()
+  fill_years     <- sort(unique(Years))
+  all_years      <- sort(unique(c(existing_years, fill_years)))
 
-  if (all(fill_years %in% existing_years)) {
+  if (all(fill_years %in% existing_years)) 
     return(array)
-  }
   
-  fill_years <- all_years[!all_years %in% existing_years]
-  back_years <- fill_years[which(fill_years < min(existing_years))]
-  forward_years <- fill_years[which(fill_years > max(existing_years))]
-  inside_years <- fill_years[!fill_years %in% back_years & !fill_years %in% forward_years]
   
-  if (!backfill) {
+  fill_years    <- all_years[!all_years %in% existing_years]
+  back_years    <- fill_years[fill_years < min(existing_years)]
+  forward_years <- fill_years[fill_years > max(existing_years)]
+  inside_years  <- fill_years[!fill_years %in% back_years & !fill_years %in% forward_years]
+  
+  if (!backfill) 
     all_years <- all_years[!all_years %in% back_years]
-  }
-
+  
   # Create output array
   d[[year_dim]] <- length(all_years)
   dn[[year_dim]] <- all_years
   OutArray <- array(NA, dim = d, dimnames = dn)
   abind::afill(OutArray) <- array # add the existing values
 
-  # Seasonal
-  isSeasonal <- any(all_years %% 1 != 0)
 
-  if (isSeasonal) {
+  # Seasonal
+  if (any(all_years %% 1 != 0))
     return(ExtendYears_seasonal(array, Years, default, backfill = backfill))
-  }
+  
 
   # Forward fill years from most recent existing year
   if (length(forward_years)) {
     MostRecent <- abind::asub(array, nyear, year_dim, drop = FALSE)
-    if (!is.null(default)) {
-      MostRecent[] <- default
-    }
-    Extended <- extend_along_dim(
-      x = MostRecent,
-      along_dim = year_dim,
-      new_index = forward_years
-    )
-    abind::afill(OutArray) <- Extended
+    if (!is.null(default)) MostRecent[] <- default
+    abind::afill(OutArray) <- extend_along_dim(MostRecent, year_dim, forward_years)
   }
-
+  
 
   # Back fill years from first existing year
   if (length(back_years) && backfill) {
     FirstYear <- abind::asub(array, 1, year_dim, drop = FALSE)
-    
-    Extended <- extend_along_dim(
-      x = FirstYear,
-      along_dim = year_dim,
-      new_index = back_years
-    )
-    abind::afill(OutArray) <- Extended
-
+    abind::afill(OutArray) <- extend_along_dim(FirstYear, year_dim, back_years)
   }
-
+  
   # Fill years within existing years
   if (length(inside_years)) {
     interval_index <- findInterval(inside_years, existing_years)
     interval_index[interval_index == 0] <- 1
     interval_index[interval_index > length(existing_years) - 1] <- length(existing_years) - 1
     TimeBlocks <- split(inside_years, interval_index)
-
+    
     for (i in seq_along(TimeBlocks)) {
-      year_ind <- which(existing_years < min(TimeBlocks[[i]])) |> max()
+      year_ind  <- max(which(existing_years < min(TimeBlocks[[i]])))
       FillValue <- abind::asub(array, year_ind, year_dim, drop = FALSE)
-      
-      Extended <- extend_along_dim(
-        x = FillValue,
-        along_dim = year_dim,
-        new_index = TimeBlocks[[i]]
-      )
-      abind::afill(OutArray) <- Extended
+      abind::afill(OutArray) <- extend_along_dim(FillValue, year_dim, TimeBlocks[[i]])
     }
   }
   OutArray
@@ -542,63 +469,46 @@ CheckSeasonExists <- function(most_recent_ind, try_season, existing_years, seaso
 #' @export
 #'
 ExtendAreas <- function(array, Areas = NULL) {
-  if (is.null(Areas)) {
-    return(array)
-  }
+  if (is.null(Areas)) return(array)
   
-  # Recall if not an `array` class object
   if (isS4(array)) {
-    if (inherits(array, "data")) {
-      return(array)
-    }
-    slots <- slotNames(array)
-    
-    for (sl in slots) {
-      if (debug) {
-        print(sl)
-      }
+    if (inherits(array, "data")) return(array)
+    for (sl in slotNames(array))
       slot(array, sl) <- Recall(slot(array, sl), Areas)
-    }
     return(array)
   }
   
   if (is.list(array)) {
     if (length(array)) {
-      for (i in 1:length(array)) {
+      for (i in seq_along(array)) {
         temp <- Recall(array[[i]], Areas)
-        if (!is.null(temp)) {
-          array[[i]] <- temp
-        }
+        if (!is.null(temp)) array[[i]] <- temp
       }
-      return(array)
     }
+    return(array)
   }
   
   nArea <- length(Areas)
-  d <- dim(array)
-  dn <- dimnames(array)
+  d     <- dim(array)
+  dn    <- dimnames(array)
   
-  if (is.null(dn) || !"Area" %in% names(dn)) {
-    return(array)
-  }
+  if (is.null(dn) || !"Area" %in% names(dn)) return(array)
   
-  area_dim <- which(names(dn) == "Area")
+  area_dim       <- which(names(dn) == "Area")
   existing_areas <- as.numeric(dn[[area_dim]])
   
-  if (length(existing_areas) == nArea) {
-    return(array)
-  }
+  if (length(existing_areas) == nArea) return(array)
   
-  if (length(existing_areas) != 1) {
-    cli::cli_abort(c("The `Area` dimension must be either length `Area` ({.val {nArea}}) or length 1",
-                     "x" = "The `nArea` dimension of this array has length {.val {d[area_dim]}}"
+  if (length(existing_areas) != 1)
+    cli::cli_abort(c(
+      "The `Area` dimension must be length 1 or `nArea` ({.val {nArea}}).",
+      "x" = "Found length {.val {d[area_dim]}}."
     ))
-  }
   
   # replicate Area = 1 along the Area dimension
-  idx <- lapply(seq_along(d), function(i) {
-    if (i == area_dim) rep(1L, nArea) else seq_len(d[i])
-  })
+  
+  idx <- lapply(seq_along(d), \(i)
+                if (i == area_dim) rep(1L, nArea) else seq_len(d[i]))
   
   OutArray <- do.call(`[`, c(list(array), idx, list(drop = FALSE)))
   dimnames(OutArray)[[area_dim]] <- as.character(Areas)

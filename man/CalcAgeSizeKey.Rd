@@ -32,8 +32,6 @@ the distribution of size-at-age.}
 \item{silent}{Logical; if \code{TRUE}, suppress progress bar.}
 
 \item{type}{Character; currently only \code{"Length"} is supported.}
-
-\item{AgeClasses}{Optional numeric vector of age classes. Defaults to \code{0:(nage-1)}.}
 }
 \value{
 A 4D array with dimensions \code{Sim}, \code{Age}, \code{Class}, and \code{Year}.

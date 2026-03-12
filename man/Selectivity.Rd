@@ -25,42 +25,128 @@ isRel(x) <- value
 Selectivity(x) <- value
 }
 \arguments{
-\item{Pars}{A named list of selectivity parameters.}
+\item{Pars}{Named list of selectivity parameters passed to \code{Model}. See
+\code{\link[=SelectivityModels]{SelectivityModels()}} for available models and their required parameters.
+If \code{Pars} is a \linkS4class{fleet} object, the \code{Selectivity} slot of that
+fleet is returned. If \code{Pars} and \code{Model} are both provided, they will
+be used to populate \code{MeanAtAge}, overwriting any existing values. To
+preserve user-specified values in \code{MeanAtAge}, set \code{Pars = list()}
+(default).}
 
-\item{Model}{Optional selectivity model identifier. If \code{NULL}, the model
-is inferred from \code{Pars} where possible.}
+\item{Model}{Character. Selectivity model identifier. If \code{NULL} (default),
+the model is inferred from \code{Pars} where possible. See
+\code{\link[=SelectivityModels]{SelectivityModels()}} for available models.}
 
-\item{MeanAtAge}{Optional numeric array of mean selectivity-at-age.}
+\item{MeanAtAge}{Numeric array. Mean selectivity at age, with named
+dimensions \code{Sim}, \code{Age}, and \code{Year}. If \code{MeanAtLength} is provided,
+\code{MeanAtAge} will be calculated from it. Otherwise, \code{MeanAtAge} is used
+directly, and \code{MeanAtLength} is calculated from \code{MeanAtAge} and a
+\code{\link[=Length]{Length()}} object unless \code{MeanAtLength} is already populated. \strong{Note:}
+if \code{Pars} and \code{Model} are both provided, any values supplied here will
+be overwritten.}
 
-\item{MeanAtLength}{Optional numeric array of mean selectivity-at-length.}
+\item{MeanAtLength}{Numeric array. Mean selectivity at length, with named
+dimensions \code{Sim}, \code{Length}, and \code{Year}. If provided, takes precedence
+and \code{MeanAtAge} will be derived from it.}
 
-\item{MeanAtWeight}{Optional numeric array of mean selectivity-at-weight.}
+\item{MeanAtWeight}{Numeric array. Mean selectivity at weight, with named
+dimensions \code{Sim}, \code{Weight}, and \code{Year}. Default \code{NULL}.}
 
-\item{Classes}{Optional vector of class values associated with the
-selectivity.}
+\item{Classes}{Numeric vector. Age or length classes corresponding to the
+\code{Age} or \code{Length} dimension of \code{MeanAtAge} or \code{MeanAtLength}. Default
+\code{NULL}.}
 
-\item{isRel}{Logical indicating whether selectivity parameters are relative to maturity.}
+\item{isRel}{Logical. Whether selectivity parameters are specified relative
+to maturity-at-length (e.g., \code{L50}). Default \code{FALSE}.}
 
-\item{Misc}{Miscellaneous list
+\item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
 
-A \code{Selectivity} object can be attached to a \code{\link[=Fleet]{Fleet()}} using \code{Selectivity(Fleet) <- MySelectivity} and
-retrieved using \code{MySelectivity <- Selectivity(Fleet)}
+\item{x}{A \linkS4class{selectivity} object, or a \linkS4class{fleet} object for
+\verb{Selectivity<-}.}
 
-Individual components may be accessed or modified using accessor and
-replacement functions such as \code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}}, and \code{\link[=Units]{Units()}}.
-
-See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more details.}
+\item{value}{For \verb{Selectivity<-}: a \linkS4class{selectivity} object. For
+\verb{isRel<-}: a logical value.}
 }
 \value{
-An \linkS4class{selectivity} object
+\itemize{
+\item \code{Selectivity()} returns a \linkS4class{selectivity} object. If \code{Pars} is a
+\linkS4class{fleet} object, the \code{Selectivity} slot of that fleet is returned.
+\item \verb{Selectivity<-} returns \code{x} with the \code{Selectivity} slot replaced.
+\item \code{isRel()} returns the \code{isRel} slot of \code{x}.
+\item \verb{isRel<-} returns \code{x} with the \code{isRel} slot updated.
+}
 }
 \description{
-Construct a \linkS4class{selectivity} object for a \code{\link[=Fleet]{Fleet()}} object.
+Construct and manipulate a \linkS4class{selectivity} object defining
+selectivity-at-age or selectivity-at-length for a \code{\link[=Fleet]{Fleet()}} object.
+Selectivity is required for all \linkS4class{fleet} objects.
 }
 \details{
-A \code{Selectivity} object defines selectivity-at-age, length, or weight
-relationships.
+Selectivity is required for all \linkS4class{fleet} objects and defines the
+probability of a fish being caught by the gear as a function of age,
+length, or weight.
+\subsection{Populating MeanAtAge and MeanAtLength}{
+
+The precedence for populating \code{MeanAtAge} is:
+\enumerate{
+\item If \code{Pars} and \code{Model} are both provided, \code{MeanAtAge} is calculated from
+the model and \strong{any existing values in \code{MeanAtAge} are overwritten}. To
+preserve user-specified values in \code{MeanAtAge}, leave \code{Pars = list()}
+(the default).
+\item If \code{MeanAtLength} is provided (and \code{Pars} is empty), \code{MeanAtAge} is
+derived from \code{MeanAtLength}.
+\item Otherwise, \code{MeanAtAge} is used directly and \code{MeanAtLength} is calculated
+from \code{MeanAtAge} and a \code{\link[=Length]{Length()}} object, unless \code{MeanAtLength} is
+already populated.
+}
+}
+
+\subsection{Relative Parameters}{
+
+When \code{isRel = TRUE}, length-based parameters (e.g., \code{L5}, \code{LFS}) are
+interpreted as multiples of the length-at-50\%-maturity (\code{L50}) rather than
+absolute length values.
+}
+
+\subsection{Attaching to a Fleet}{
+
+A \code{Selectivity} object can be attached to a \code{\link[=Fleet]{Fleet()}} with
+\code{Selectivity(Fleet) <- MySelectivity} and retrieved with
+\code{Selectivity(Fleet)}.
+
+Individual slots may be accessed or modified using \code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}},
+\code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=MeanAtLength]{MeanAtLength()}}, \code{\link[=MeanAtWeight]{MeanAtWeight()}}, \code{\link[=Classes]{Classes()}}, and
+\code{\link[=isRel]{isRel()}}.
+}
+
+\subsection{Use in \code{Advice()}}{
+
+When  \linkS4class{selectivity} objects are used in \code{\link[=Advice]{Advice()}} objects, the
+\code{Sim} and \code{Year} dimensions should not be included.
+\itemize{
+\item \code{MeanAtAge} should be either length \code{nAge} or length \code{1} (recycled over age classes).
+\item \code{MeanAtLength} should be either length \code{Classes} or length \code{1} (recycled over length classes).
+\item \code{MeanAtWeight} (if applicalbe) should be either length \code{Classes} or length \code{1} (recycled over weight classes).
+}
+
+If \code{Classes} is not specified, the classes will be taken from the \code{Length} or \code{Weight} object of the
+corresponding stock.
+
+See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more details.
+}
+}
+\examples{
+# Specify via model parameters
+s <- Selectivity(Pars = list(L5 = 10, LFS = 20, Vmaxlen = 1))
+
+# Specify MeanAtAge directly (Pars must be empty to avoid overwriting)
+s2 <- Selectivity(MeanAtAge = my_array)
+
+isRel(s)
+isRel(s) <- TRUE
+
 }
 \seealso{
-\code{\link[=Fleet]{Fleet()}}, \code{\link[=SelectivityModels]{SelectivityModels()}}
+\linkS4class{selectivity}, \code{\link[=Fleet]{Fleet()}}, \code{\link[=SelectivityModels]{SelectivityModels()}},
+\code{\link[=Retention]{Retention()}}, \code{\link[=DiscardMortality]{DiscardMortality()}}
 }

@@ -1,6 +1,23 @@
-#' @rdname Convert
-#' @param Stock A [Stock-class] object
-#' @param silent Logical. Supress messages?
+
+#' Convert a Legacy Stock Object to a New stock Class
+#'
+#' Converts a legacy [Stock-legacy-class] object to the current [stock-class]
+#' by extracting and mapping each component to its corresponding new S4 class.
+#'
+#' @param Stock A [Stock-legacy-class] object to convert.
+#' @param silent Logical. If `TRUE`, suppresses progress messages. Default
+#'   `FALSE`.
+#'
+#' @return A [stock-class] object.
+#'
+#' @seealso [Convert()], [ConvertOM()], [ConvertMOM()]
+#'
+#' @examples
+#' \dontrun{
+#' Stocklegacy <- readRDS("MyLegacyStock.rds")
+#' stock_new <- ConvertStock(Stocklegacy)
+#' }
+#'
 #' @export
 ConvertStock <- function(Stock, silent = FALSE) {
   CheckClass(Stock, "Stock", "Stock")

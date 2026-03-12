@@ -128,7 +128,7 @@ Simulate_om <- function(OM = NULL,
 
 
 GetRefPointYears <- function(OM, HistYears) {
-  return(tail(HistYears, 1))
+  return(utils::tail(HistYears, 1))
   
   # TODO - calculate ref points for seasonal time steps
   

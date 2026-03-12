@@ -17,6 +17,7 @@ PopulateSelectivity(
   seed = NULL,
   silent = FALSE,
   CheckMaxValue = TRUE,
+  replace = FALSE,
   ASKOverride = NULL
 )
 }
@@ -49,6 +50,8 @@ values from age-based arrays.}
 
 \item{CheckMaxValue}{Logical. If \code{TRUE}, ensure selectivity has a maximum
 value of 1 across age classes.}
+
+\item{replace}{Used interally.}
 
 \item{ASKOverride}{Used internally.}
 }

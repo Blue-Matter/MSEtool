@@ -1,6 +1,7 @@
-#' Fecundity Models: Age, Length, and Weight
+#' Fecundity Models
 #'
-#' Logistic fecundity models
+#' Logistic fecundity-at-age, fecundity-at-length, and fecundity-at-weight
+#' models for use in a [Fecundity()] object.
 #'
 #' @param Ages numeric vector of age classes (for age-based models)
 #' @param Length numeric vector of length classes (for length-based models)
@@ -12,37 +13,45 @@
 #' @param W50 weight at 50% maximum fecundity (Logistic-at-Weight)
 #' @param W50_95 interval between `W50` weight at 95% maximum fecundity (Logistic-at-Weight)
 #' @param W50_95 weight at 95% maximum fecundity (Logistic-at-Weight)
+#' @param MaxFec Numeric. Maximum (asymptotic) fecundity. Used as the upper
+#'   asymptote of the logistic curve.
 #' @param full logical; provide a complete table of models (TRUE) or just model names (FALSE)
 #' @param print logical; print results (TRUE) or return data frame invisibly (FALSE)
 #'
-#' * `FecundityModels()` prints the list of available fecundity models
-#' * `FecundityModelsLength()` prints the list of available fecundity-at-length models
-#' * `FecundityModelsAge` prints the list of available fecundity-at-age models
-#' * `FecundityModelsWeight` prints the list of available fecundity-at-weight models
+#' @details
+#' All fecundity models use a logistic 50/95 parameterisation:
 #'
-#' `FecundityModels()` prints the list of available fecundity models.
-#' 
-#' Logistic models produce standard increasing fecundity curves.
-#' - Age-based models return fecundity by age.
-#' - Length-based models return fecundity by length.
-#' - Weight-based models return fecundity by weight.
-#' 
-#' All fecundity models use a logistic 50/95 parameterization:
-#' \deqn{F(x) = \frac{1}{`MaxFec` + \exp\left(-\ln(19) \cdot \frac{x - x_{50}}{x_{95} - x_{50}}\right)}}
+#' \deqn{F(x) = \frac{\texttt{MaxFec}}{1 + \exp\left(-\ln(19) \cdot
+#' \frac{x - x_{50}}{x_{95} - x_{50}}\right)}}
 #'
+#' where \eqn{x_{95} = x_{50} + x_{50\_95}}.
+#'
+#' The available model functions are:
+#' - `FecundityAtAge()`: logistic fecundity as a function of age.
+#' - `FecundityAtLength()`: logistic fecundity as a function of length.
+#' - `FecundityAtWeight()`: logistic fecundity as a function of weight.
+#'
+#' The `FecundityModels*` functions list available models:
+#' - `FecundityModels()`: all fecundity models.
+#' - `FecundityModelsAge()`: fecundity-at-age models only.
+#' - `FecundityModelsLength()`: fecundity-at-length models only.
+#' - `FecundityModelsWeight()`: fecundity-at-weight models only.
 #'
 #' @return
-#' Each function returns a numeric vector of fecundity at each age, length, or weight.
-#' `FecundityModels()` invisibly returns a data frame describing available models.
+#' - `FecundityAtAge()`, `FecundityAtLength()`, `FecundityAtWeight()`: a
+#'   numeric vector of fecundity values at each age, length, or weight class
+#'   respectively.
+#' - `FecundityModels()`, `FecundityModelsAge()`, `FecundityModelsLength()`,
+#'   `FecundityModelsWeight()`: invisibly returns a data frame (if
+#'   `full = TRUE`) or character vector (if `full = FALSE`) of available
+#'   models. Prints to console if `print = TRUE`.
 #'
-#' @seealso [Ages()], [Length()], [Maturity()], [Weight()], [Stock()]
+#' @seealso [Fecundity()], [Maturity()], [Ages()], [Length()], [Weight()],
+#'   [Stock()]
+#'
 #' @example man-examples/models-fecundity.R
 #'
 #' @name Fecundity-Models
-#' @rdname Fecundity-Models
-NULL
-
-#' @rdname Fecundity-Models
 #' @export
 FecundityAtAge <- function(Ages, A50, A50_95, MaxFec) {
   logistic_50_95(Ages, x50 = A50, x50_95 = A50_95, asymp=MaxFec)

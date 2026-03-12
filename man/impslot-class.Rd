@@ -3,26 +3,31 @@
 \docType{class}
 \name{impslot-class}
 \alias{impslot-class}
-\title{Implementation Error Component}
+\title{Implementation Error Slot}
 \description{
-Internal class used to describe implementation uncertainty associated
-with a management control (e.g. TAC, effort, or size regulations).
+Internal class representing implementation uncertainty for a single
+management control (TAC, effort, or size regulations) within an
+\linkS4class{imp} object.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{Mean}}{Numeric array or list of arrays specifying the mean implemented
-value.}
+\item{\code{Mean}}{Numeric array or list of arrays. Mean implemented fraction of
+the management recommendation (e.g. \code{1} = perfect compliance with TAC).}
 
-\item{\code{SD}}{Numeric array or list of arrays specifying implementation
-variability.}
+\item{\code{SD}}{Numeric array or list of arrays. Standard deviation of
+implementation error around \code{Mean}.}
 
-\item{\code{Compliance}}{Numeric array or list of arrays specifying compliance
-rates.}
+\item{\code{Compliance}}{Numeric array or list of arrays. Compliance rate, i.e.
+the proportion of the fleet that adheres to the management control.}
 
-\item{\code{Error}}{Numeric array or list of arrays specifying realized
-implementation error.}
+\item{\code{Error}}{Numeric array or list of arrays. Realised implementation error,
+typically derived from \code{Mean}, \code{SD}, and \code{Compliance} during simulation.}
 
-\item{\code{Misc}}{Miscellaneous additional information.}
+\item{\code{Misc}}{List. Miscellaneous additional information.}
 }}
 
+\seealso{
+\linkS4class{imp}, \code{\link[=Imp]{Imp()}}
+}
+\keyword{internal}

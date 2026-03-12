@@ -360,48 +360,6 @@ LinInterp <- function(x, y, xlev, ascending = FALSE, zeroint = FALSE) {
 }
 
 
-#' Print S4 Slot Sizes
-#'
-#' Iteratively inspects all slots of an S4 object and prints the
-#' memory size of each slot in MB or GB. Recursively checks nested S4 objects.
-#'
-#' @param object An S4 object to inspect.
-#' @param unit Character; "MB" or "GB", default is "MB".
-#' @param indent Character; used internally for recursive indentation.
-#' @param recursive Logical; if TRUE, recursively prints nested S4 slots.
-#'
-#' @return Invisibly returns a named list of slot sizes.
-#'
-#' @keywords internal
-S4_SlotSizes <- function(object, unit = "MB", indent = "", recursive = TRUE) {
-  if (!isS4(object)) {
-    cli::cli_abort("`object` must be an S4 object")
-  }
-  
-  slots <- slotNames(object)
-  slot_sizes <- list()
-  
-  for (s in slots) {
-    val <- slot(object, s)
-    size_bytes <- as.numeric(object.size(val))
-    size_val <- switch(
-      toupper(unit),
-      "GB" = size_bytes / 1024^3,
-      "MB" = size_bytes / 1024^2,
-      cli::cli_abort("`unit` must be 'MB' or 'GB'")
-    )
-    
-    slot_sizes[[s]] <- size_val
-    cat(indent, sprintf("%s (class: %s): %.3f %s\n", s, class(val)[1], size_val, toupper(unit)))
-    
-    # Recursive call for nested S4 objects
-    if (recursive && isS4(val)) {
-      slot_sizes[[s]] <- S4_SlotSizes(val, unit = unit, indent = paste0(indent, "  "), recursive = TRUE)
-    }
-  }
-  
-  invisible(slot_sizes)
-}
 
 
 #' Copy first element along `Sim` dimension to all other elements

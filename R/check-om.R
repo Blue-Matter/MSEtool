@@ -50,6 +50,7 @@ CheckStock <- function(Stock) {
   }
   
   # Required Slots 
+  Missing <- Slot <- NULL # CRAN check hacks
   df <- data.frame(Slot= c('Ages', 'Length', 'Weight', 'NaturalMortality', 'Maturity', 'SRR'),
                    Missing= FALSE)
   
@@ -91,6 +92,7 @@ CheckFleet <- function(Fleet) {
   }
   
   # Required Slots 
+  Missing <- Slot <- NULL # CRAN check hacks
   df <- data.frame(Slot= c('Effort', 'Selectivity'),
                    Missing= FALSE)
   

@@ -9,7 +9,7 @@
 \alias{FecundityModelsLength}
 \alias{FecundityModelsAge}
 \alias{FecundityModelsWeight}
-\title{Fecundity Models: Age, Length, and Weight}
+\title{Fecundity Models}
 \usage{
 FecundityAtAge(Ages, A50, A50_95, MaxFec)
 
@@ -32,6 +32,9 @@ FecundityModelsWeight(full = TRUE, print = TRUE)
 
 \item{A50_95}{interval between \code{A50} and age at 95\% maximum fecundity (Logistic-at-Age)}
 
+\item{MaxFec}{Numeric. Maximum (asymptotic) fecundity. Used as the upper
+asymptote of the logistic curve.}
+
 \item{Length}{numeric vector of length classes (for length-based models)}
 
 \item{L50}{length at 50\% maximum fecundity (Logistic-at-Length)}
@@ -49,13 +52,44 @@ FecundityModelsWeight(full = TRUE, print = TRUE)
 \item{print}{Logical. Print out the results (TRUE) or just return the data.frame (FALSE)?}
 }
 \value{
-Each function returns a numeric vector of fecundity at each age, length, or weight.
-\code{FecundityModels()} invisibly returns a data frame describing available models.
+\itemize{
+\item \code{FecundityAtAge()}, \code{FecundityAtLength()}, \code{FecundityAtWeight()}: a
+numeric vector of fecundity values at each age, length, or weight class
+respectively.
+\item \code{FecundityModels()}, \code{FecundityModelsAge()}, \code{FecundityModelsLength()},
+\code{FecundityModelsWeight()}: invisibly returns a data frame (if
+\code{full = TRUE}) or character vector (if \code{full = FALSE}) of available
+models. Prints to console if \code{print = TRUE}.
+}
 
 Prints to console and invisible data.frame or model names
 }
 \description{
-Logistic fecundity models
+Logistic fecundity-at-age, fecundity-at-length, and fecundity-at-weight
+models for use in a \code{\link[=Fecundity]{Fecundity()}} object.
+}
+\details{
+All fecundity models use a logistic 50/95 parameterisation:
+
+\deqn{F(x) = \frac{\texttt{MaxFec}}{1 + \exp\left(-\ln(19) \cdot
+\frac{x - x_{50}}{x_{95} - x_{50}}\right)}}
+
+where \eqn{x_{95} = x_{50} + x_{50\_95}}.
+
+The available model functions are:
+\itemize{
+\item \code{FecundityAtAge()}: logistic fecundity as a function of age.
+\item \code{FecundityAtLength()}: logistic fecundity as a function of length.
+\item \code{FecundityAtWeight()}: logistic fecundity as a function of weight.
+}
+
+The \verb{FecundityModels*} functions list available models:
+\itemize{
+\item \code{FecundityModels()}: all fecundity models.
+\item \code{FecundityModelsAge()}: fecundity-at-age models only.
+\item \code{FecundityModelsLength()}: fecundity-at-length models only.
+\item \code{FecundityModelsWeight()}: fecundity-at-weight models only.
+}
 }
 \examples{
 Ages <- 0:15
@@ -82,5 +116,6 @@ plot(Weight, F_weight, type = "l", lwd = 2,
      main = "Fecundity-at-Weight")
 }
 \seealso{
-\code{\link[=Ages]{Ages()}}, \code{\link[=Length]{Length()}}, \code{\link[=Maturity]{Maturity()}}, \code{\link[=Weight]{Weight()}}, \code{\link[=Stock]{Stock()}}
+\code{\link[=Fecundity]{Fecundity()}}, \code{\link[=Maturity]{Maturity()}}, \code{\link[=Ages]{Ages()}}, \code{\link[=Length]{Length()}}, \code{\link[=Weight]{Weight()}},
+\code{\link[=Stock]{Stock()}}
 }

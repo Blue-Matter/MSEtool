@@ -18,7 +18,6 @@
 \alias{CurrentYear<-}
 \alias{DataLag}
 \alias{DataLag<-}
-\alias{Dynamics<-}
 \alias{EFactor}
 \alias{EFactor<-}
 \alias{Email}
@@ -55,118 +54,130 @@
 \alias{Sponsor<-}
 \title{Access and Modify OM Slots}
 \usage{
-Agency(OM)
+Agency(x)
 
 Agency(x) <- value
 
-Allocation(OM)
+Allocation(x)
 
 Allocation(x) <- value
 
-Author(OM)
+Author(x)
 
 Author(x) <- value
 
-CatchFrac(OM)
+CatchFrac(x)
 
 CatchFrac(x) <- value
 
-Complexes(OM)
+Complexes(x)
 
 Complexes(x) <- value
 
-Control(OM)
+Control(x)
 
 Control(x) <- value
 
-CurrentYear(OM)
+CurrentYear(x)
 
 CurrentYear(x) <- value
 
-DataLag(OM)
+DataLag(x)
 
 DataLag(x) <- value
 
-Dynamics(x) <- value
-
-EFactor(OM)
+EFactor(x)
 
 EFactor(x) <- value
 
-Email(OM)
+Email(x)
 
 Email(x) <- value
 
-Herm(OM)
+Herm(x)
 
 Herm(x) <- value
 
-Interval(OM)
+Interval(x)
 
 Interval(x) <- value
 
-Latitude(OM)
+Latitude(x)
 
 Latitude(x) <- value
 
-Longitude(OM)
+Longitude(x)
 
 Longitude(x) <- value
 
-maxF(OM)
+maxF(x)
 
 maxF(x) <- value
 
-nReps(OM)
+nReps(x)
 
 nReps(x) <- value
 
-nYear(OM)
+nYear(x)
 
 nYear(x) <- value
 
-pStar(OM)
+pStar(x)
 
 pStar(x) <- value
 
-pYear(OM)
+pYear(x)
 
 pYear(x) <- value
 
-Region(OM)
+Region(x)
 
 Region(x) <- value
 
-Relations(OM)
+Relations(x)
 
 Relations(x) <- value
 
-Seasons(OM)
+Seasons(x)
 
 Seasons(x) <- value
 
-SharePar(OM)
+SharePar(x)
 
 SharePar(x) <- value
 
-Source(OM)
+Source(x)
 
 Source(x) <- value
 
-Sponsor(OM)
+Sponsor(x)
 
 Sponsor(x) <- value
 }
+\arguments{
+\item{x}{An \linkS4class{om} object or a \linkS4class{hist} object}
+
+\item{value}{The value to assign to the corresponding slot.}
+}
+\value{
+\itemize{
+\item Accessor functions return the value of the named slot.
+\item Replacement functions return \code{x} with the named slot updated.
+}
+}
 \description{
 Accessor and assignment functions for slots in \linkS4class{om} objects.
-}
-\details{
 Each function retrieves or replaces the value of the corresponding slot.
-Assignment methods validate input using internal consistency checks.
-
-For example:
-\itemize{
-\item \code{Agency(om)} returns the agency name
-\item \code{Agency(om) <- "DFO"} updates the agency
 }
+\examples{
+om <- OM()
+Agency(om)
+Agency(om) <- "DFO"
+
+nSim(om)
+nSim(om) <- 100
+
+}
+\seealso{
+\code{\link[=OM]{OM()}}, \linkS4class{om}
 }

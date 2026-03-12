@@ -34,37 +34,118 @@ Maximum(x)
 
 Maximum(x) <- value
 }
+\arguments{
+\item{Effort}{Numeric array or data frame. Historical fishing effort. If a
+correctly structured data frame, \code{\link[=GenHistEffort]{GenHistEffort()}} is called to generate
+stochastic effort across simulations. If a \linkS4class{fleet}, \linkS4class{effort},
+\linkS4class{hist}, \linkS4class{obs}, or \linkS4class{mse} object is passed, the \code{Effort}
+slot of that object is returned.
+
+If an array, must have dimensions \verb{Sim x Year} with named dimnames. The
+\code{Year} dimension must match the historical years of the OM.
+
+If a data frame, must be in the format required by \code{\link[=GenHistEffort]{GenHistEffort()}},
+which will generate a \verb{Sim x Year} array stochastically.}
+
+\item{Units}{Character. Units of effort (e.g., \code{"hours"}, \code{"trips"}).
+Default \code{NULL}. Note that effort is converted to fishing mortality via
+gear efficiency (\code{q}) defined in the \linkS4class{catchability} object.}
+
+\item{Distribution}{Numeric array. Fraction of total effort allocated to
+each area. Only used for spatial models (i.e., \code{nArea > 1}). Must have
+dimensions \verb{Sim x Year x Area} with named dimnames, and values must sum
+to 1 over the \code{Area} dimension within each simulation and year. The \code{Sim}
+and \code{Year} dimensions may each be length 1 (replicated internally) or
+match \code{nSim} and the historical years respectively. If \code{NULL} (default),
+spatial allocation is calculated internally from spatial utility
+calculations and fleet behaviour.}
+
+\item{Targeting}{Numeric array. Fleet targeting parameter with dimensions
+\verb{Sim x Year}. The \code{Sim} dimension may be length 1 or match \code{nSim}. The
+\code{Year} dimension must be either length 1 or match the historical years,
+and must have named \code{Year} dimnames if not length 1 or full length.
+Default \code{NULL}, in which case a value of \code{0.8} is used for all
+simulations and years.}
+
+\item{Maximum}{Numeric. Maximum allowable effort. Default \code{NULL}. Not
+currently used.}
+
+\item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
+
+\item{x}{An \linkS4class{effort} object, or a compatible object for \verb{Effort<-}.}
+
+\item{value}{For \verb{Effort<-}: an \linkS4class{effort} object. For slot replacement
+functions: the new value for the corresponding slot.}
+}
 \value{
-An \linkS4class{effort} object
+\itemize{
+\item \code{Effort()} returns an \linkS4class{effort} object. If \code{Effort} is a
+\linkS4class{fleet}, \linkS4class{effort}, \linkS4class{hist}, \linkS4class{obs}, or \linkS4class{mse}
+object, the \code{Effort} slot of that object is returned.
+\item \verb{Effort<-} returns \code{x} with the \code{Effort} slot replaced.
+\item \code{Distribution()}, \code{Targeting()}, \code{Maximum()} return the corresponding
+slot from \code{x}.
+\item Their replacement forms return \code{x} with the corresponding slot updated.
+}
 }
 \description{
-Construct a \linkS4class{effort} object for a \code{\link[=Fleet]{Fleet()}} object.
+Construct and manipulate an \linkS4class{effort} object defining historical
+fishing effort and spatial structure for a \code{\link[=Fleet]{Fleet()}} object.
 }
 \details{
-The \code{Effort} object stores historical fishing effort and
-associated spatial structure for \code{\link[=Fleet]{Fleet()}} object. Effort may be supplied
-directly as an array or generated stochastically from a data frame.
+Effort represents total fishing activity prior to spatial allocation. It is
+converted to fishing mortality via gear efficiency (\code{q}) defined in the
+associated \linkS4class{catchability} object.
+\subsection{Effort Array Structure}{
 
-Effort represents total fishing activity prior to spatial allocation.
+\code{Effort@Effort} must be a numeric array with dimensions \verb{Sim x Year}:
+\itemize{
+\item \code{Sim}: number of simulation replicates, or length 1 (replicated
+internally).
+\item \code{Year}: must match the historical years of the OM with named \code{Year}
+dimnames.
+}
 
-It is only required for spatial operating models.
+Alternatively, a data frame in the format required by \code{\link[=GenHistEffort]{GenHistEffort()}}
+may be supplied, and a stochastic \verb{Sim x Year} array will be generated
+automatically.
+}
 
-When \code{Distribution} is supplied, effort is partitioned explicitly
-across areas. Otherwise, spatial allocation is derived internally
-using spatial utility calculations and fleet behaviour.
+\subsection{Spatial Distribution}{
 
-If \code{Effort} is supplied as a correctly structured \code{data.frame},
-it will be used by \code{\link[=GenHistEffort]{GenHistEffort()}} to generate stochastic
-historical effort.
+\code{Distribution} represents the fraction of effort in each area and is only
+used for spatial models (\code{nArea > 1}). It must have dimensions
+\verb{Sim x Year x Area} and sum to 1 over areas within each simulation and
+year. The \code{Sim} and \code{Year} dimensions may each be length 1 (replicated
+internally). If not specified (default), spatial allocation is derived
+internally from spatial utility calculations and fleet behaviour.
+}
 
-A \code{Effort} object can be attached to a \code{\link[=Fleet]{Fleet()}} using \code{Effort(Fleet) <- MyEffort} and
-retrieved using \code{MyEffort <- Length(Fleet)}
+\subsection{Targeting}{
 
-Individual components may be accessed or modified using accessor and
-replacement functions such as \code{\link[=Effort]{Effort()}}, \code{\link[=Units]{Units()}}, and \code{\link[=Distribution]{Distribution()}}.
+\code{Targeting} is a \verb{Sim x Year} array. The \code{Year} dimension must be length 1
+or match the historical years; if neither, named \code{Year} dimnames are
+required. If not specified, a default value of \code{0.8} is applied to all
+simulations and years.
+}
+
+\subsection{Attaching to a Fleet}{
+
+An \code{Effort} object can be attached to a \code{\link[=Fleet]{Fleet()}} with
+\code{Effort(Fleet) <- MyEffort} and retrieved with \code{Effort(Fleet)}.
+
+Individual slots may be accessed or modified using \code{\link[=Units]{Units()}},
+\code{\link[=Distribution]{Distribution()}}, \code{\link[=Targeting]{Targeting()}}, and \code{\link[=Maximum]{Maximum()}}.
 
 See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more details.
 }
+}
+\examples{
+e <- Effort()
+Units(e)
+Distribution(e)
+
+}
 \seealso{
-\code{\link[=Fleet]{Fleet()}}, \code{\link[=GenHistEffort]{GenHistEffort()}}
+\linkS4class{effort}, \code{\link[=Fleet]{Fleet()}}, \code{\link[=GenHistEffort]{GenHistEffort()}}, \code{\link[=Catchability]{Catchability()}}
 }

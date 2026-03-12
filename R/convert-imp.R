@@ -1,8 +1,26 @@
-#' @rdname Convert
-#' @param Obs An [Imp-class] object#' 
+#' Convert a Legacy Imp Object to a New imp Class
+#'
+#' Converts a legacy [Imp-legacy-class] object to the current [imp-class] by
+#' mapping implementation error parameters to their corresponding new S4 slots.
+#'
+#' @param Imp An [Imp-legacy-class] object to convert.
+#' @param silent Logical. If `TRUE`, suppresses progress messages. Default
+#'   `FALSE`.
+#'
+#' @return An [imp-class] object with `TAC`, `Effort`, and `Size`
+#'   implementation error slots populated.
+#'
+#' @seealso [Convert()], [ConvertOM()], [ConvertMOM()], [ConvertObs()]
+#'
+#' @examples
+#' \dontrun{
+#' Implegacy <- readRDS("MyLegacyImp.rds")
+#' imp_new <- ConvertImp(Implegacy)
+#' }
+#'
 #' @export
 ConvertImp <- function(Imp, silent = FALSE) {
-  CheckClass(Imp, "Imp", "Imp")
+  CheckClass(Imp, c("Imp", 'OM'), "Imp")
   
   if (!silent) {
     cli::cli_alert("Converting object of class {.cls Imp} to class {.cls imp}")

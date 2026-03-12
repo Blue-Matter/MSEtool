@@ -2,7 +2,7 @@
 % Please edit documentation in R/convert-om.R
 \name{ConvertOM}
 \alias{ConvertOM}
-\title{Convert legacy OM object to new OM class}
+\title{Convert Legacy OM Object to New om Class}
 \usage{
 ConvertOM(
   OM,
@@ -14,38 +14,45 @@ ConvertOM(
 )
 }
 \arguments{
-\item{OM}{An \linkS4class{OM} object to convert}
+\item{OM}{An \linkS4class{OM-legacy} object to convert.}
 
-\item{Author}{Character string. Author of the OM object. Optional.}
+\item{Author}{Character. Author of the OM. Default \code{""}.}
 
-\item{CurrentYear}{Numeric. Last historical year of OM. Defaults to
-the current year if missing from \code{OM}.}
+\item{CurrentYear}{Numeric. Last historical calendar year. If \code{NULL}
+(default), taken from \code{OM@CurrentYr}; if that is less than 1000, defaults
+to the current system year.}
 
-\item{Seasons}{Numeric length 1. Number of seasons per year.}
+\item{Seasons}{Integer. Number of seasons per year. Default \code{1}.}
 
-\item{Populate}{Logical. If \code{TRUE}, calls \code{\link[=PopulateOM]{PopulateOM()}} on the converted object.}
+\item{Populate}{Logical. If \code{TRUE} (default), calls \code{\link[=PopulateOM]{PopulateOM()}} on the
+converted object.}
 
-\item{silent}{Logical. Suppress messages if \code{TRUE}.}
+\item{silent}{Logical. If \code{TRUE}, suppresses progress messages. Default
+\code{FALSE}.}
 }
 \value{
-An  \code{om} class object.
+An \linkS4class{om} object.
 }
 \description{
-This function converts an existing legacy \linkS4class{OM} object into the
-current \code{om} S4 class, copying attributes, updating year vectors,
-and optionally populating the object.
+Converts a legacy \linkS4class{OM-legacy} object to the current \linkS4class{om},
+copying attributes, updating year vectors, and optionally populating the
+object via \code{\link[=PopulateOM]{PopulateOM()}}.
 }
 \details{
-\strong{Note}: Maximum length slots (\code{Vmaxlen} and \code{Rmaxlen}) are updated to reflect the
-maximum length class rather than \code{Linf} as was done previously. This will change
-the selectivity/retention curves compared to legacy object if \code{Vmaxlen} or
-\code{Rmaxlen} are < 1. Alternatively, users can set the \code{MeanAtLength} or
-\code{MeanAtAge} arrays directly in the new \code{\link[=Selectivity]{Selectivity()}} and \code{\link[=Retention]{Retention()}} objects.
+Maximum length slots (\code{Vmaxlen} and \code{Rmaxlen}) are updated to reflect the
+maximum length class rather than \code{Linf} as in legacy objects. This changes
+the selectivity and retention curves if \code{Vmaxlen} or \code{Rmaxlen} are less
+than 1. As an alternative, users can set the \code{MeanAtLength} or \code{MeanAtAge}
+arrays directly in the \code{\link[=Selectivity]{Selectivity()}} and \code{\link[=Retention]{Retention()}} objects.
 }
 \examples{
 \dontrun{
-OMlegacy <- LoadOM("MyLegacyOM.rds")
+OMlegacy <- readRDS("MyLegacyOM.rds")
 om_new <- ConvertOM(OMlegacy)
 }
 
+}
+\seealso{
+\code{\link[=Convert]{Convert()}}, \code{\link[=ConvertMOM]{ConvertMOM()}}, \code{\link[=ConvertStock]{ConvertStock()}}, \code{\link[=ConvertFleet]{ConvertFleet()}},
+\code{\link[=ConvertObs]{ConvertObs()}}, \code{\link[=ConvertImp]{ConvertImp()}}, \code{\link[=PopulateOM]{PopulateOM()}}
 }

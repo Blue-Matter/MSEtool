@@ -516,63 +516,63 @@ UpdateSPFrom <- function(OM) {
 ShareParameters <- function(OM) {
   
   return(OM)
-  
-  # TODO
-  
-  
-  if (length(OM@Herm)) {
-    stop('Herm not done yet!')
-    # SexPars$Herm <- checkHerm(SexPars$Herm, maxage, nSim, nyears, proyears)
-  }
-  
-  # TODO - remove SPFrom if it remains in SRR
-  if (!length(OM@SPFrom))
-    return(OM)
-  
-  if (isFALSE(OM@SharePar))
-    return(OM)
-  
-  # sexmatches <- sapply(1:nrow(OM@SPFrom), function(x) 
-  #   paste(OM@SPFrom[x, ], collapse = "_"))
   # 
-  # parcopy <- match(sexmatches, sexmatches)
-  
-  
-  # if (!silent)  {
-  
-  cli::cli_alert_info("You have specified sex-specific dynamics, these parameters will be mirrored across sex types according to `SPFrom(OM)`:")
-  cli::cli_ul()
-  cli::cli_li(OM@SexPars@Misc$Stock)
-  cli::cli_li(OM@SexPars@Misc$Fleet)
-  cli::cli_li('Obs: All parameters')
-  cli::cli_li('Imp: All parameters')
-  cli::cli_end()
+  # # TODO
+  # 
+  # 
+  # if (length(OM@Herm)) {
+  #   stop('Herm not done yet!')
+  #   # SexPars$Herm <- checkHerm(SexPars$Herm, maxage, nSim, nyears, proyears)
   # }
-  
-  
-  for (s in 1:nStock(OM)) {
-    # Stock
-    for (sl in OM@SexPars@Misc$Stock) 
-      slot(OM@Stock[[s]], sl) <- slot(OM@Stock[[parcopy[s]]], sl)
-    
-    for (fl in 1:nFleet(OM)) {
-      # Fleet
-      for (sl in OM@SexPars@Misc$Fleet) 
-        slot(OM@Fleet[[s]][[fl]], sl) <- slot(OM@Fleet[[parcopy[s]]][[fl]], sl)
-      
-      # Obs
-      if (OM@SexPars@Misc$Obs) {
-        for (sl in slotNames(OM@Obs[[s]][[fl]]))
-          slot(OM@Obs[[s]][[fl]], sl) <- slot(OM@Obs[[parcopy[s]]][[fl]], sl)
-      }
-      
-      # Imp
-      if (OM@SexPars@Misc$Imp) {
-        for (sl in slotNames(OM@Imp[[s]][[fl]]))
-          slot(OM@Imp[[s]][[fl]], sl) <- slot(OM@Imp[[parcopy[s]]][[fl]], sl)
-      }
-    }
-  }
-  OM
+  # 
+  # # TODO - remove SPFrom if it remains in SRR
+  # if (!length(OM@SPFrom))
+  #   return(OM)
+  # 
+  # if (isFALSE(OM@SharePar))
+  #   return(OM)
+  # 
+  # # sexmatches <- sapply(1:nrow(OM@SPFrom), function(x) 
+  # #   paste(OM@SPFrom[x, ], collapse = "_"))
+  # # 
+  # # parcopy <- match(sexmatches, sexmatches)
+  # 
+  # 
+  # # if (!silent)  {
+  # 
+  # cli::cli_alert_info("You have specified sex-specific dynamics, these parameters will be mirrored across sex types according to `SPFrom(OM)`:")
+  # cli::cli_ul()
+  # cli::cli_li(OM@SexPars@Misc$Stock)
+  # cli::cli_li(OM@SexPars@Misc$Fleet)
+  # cli::cli_li('Obs: All parameters')
+  # cli::cli_li('Imp: All parameters')
+  # cli::cli_end()
+  # # }
+  # 
+  # 
+  # for (s in 1:nStock(OM)) {
+  #   # Stock
+  #   for (sl in OM@SexPars@Misc$Stock) 
+  #     slot(OM@Stock[[s]], sl) <- slot(OM@Stock[[parcopy[s]]], sl)
+  #   
+  #   for (fl in 1:nFleet(OM)) {
+  #     # Fleet
+  #     for (sl in OM@SexPars@Misc$Fleet) 
+  #       slot(OM@Fleet[[s]][[fl]], sl) <- slot(OM@Fleet[[parcopy[s]]][[fl]], sl)
+  #     
+  #     # Obs
+  #     if (OM@SexPars@Misc$Obs) {
+  #       for (sl in slotNames(OM@Obs[[s]][[fl]]))
+  #         slot(OM@Obs[[s]][[fl]], sl) <- slot(OM@Obs[[parcopy[s]]][[fl]], sl)
+  #     }
+  #     
+  #     # Imp
+  #     if (OM@SexPars@Misc$Imp) {
+  #       for (sl in slotNames(OM@Imp[[s]][[fl]]))
+  #         slot(OM@Imp[[s]][[fl]], sl) <- slot(OM@Imp[[parcopy[s]]][[fl]], sl)
+  #     }
+  #   }
+  # }
+  # OM
 }
 

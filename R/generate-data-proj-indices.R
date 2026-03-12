@@ -66,7 +66,7 @@ GenProjData_Index <- function(x,
     
     # TODO - make this an option
     # currently doesn't simulate index if last five data points were NAs
-    if (all(!is.finite(tail(Value[, fl], 5)))) next
+    if (all(!is.finite(utils::tail(Value[, fl], 5)))) next
     
     if (is.null(IndexObs@Areas)) IndexObs@Areas <- seq_len(nArea)
     

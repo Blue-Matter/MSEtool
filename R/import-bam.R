@@ -180,7 +180,7 @@ GetBAMOutput <- function(Stock='Red Snapper', type=c('rdat', 'dat')) {
 ListBAMStocks <- function(type=c('rdat', 'dat')) {
   type <- match.arg(type)
   type <- paste0(type,'_')
-  d <- data(package = "bamExtras")
+  d <- utils::data(package = "bamExtras")
   nms <- d$results[,3]
   val_nms <- nms[grepl(type, nms)]
   gsub(type, '', val_nms)
@@ -540,6 +540,7 @@ BAM2Fleet <- function(Stock,
   
 
   # Selectivity, Retention, Effort, Catchability 
+  year <- NULL # CRAN check hack
   TimeSeries <- BAMdata$t.series |> dplyr::filter(year %in% HistTS)
   FCols <- paste0('F.', FleetNames)
   chk <- any(!FCols %in% names(TimeSeries))

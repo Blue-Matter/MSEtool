@@ -2,7 +2,7 @@
 % Please edit documentation in R/project-hist.R
 \name{Project_hist}
 \alias{Project_hist}
-\title{Project a \code{Hist} Object Across Multiple Management Procedures}
+\title{Project a Hist Object Across Management Procedures}
 \usage{
 Project_hist(
   Hist,
@@ -14,28 +14,32 @@ Project_hist(
 )
 }
 \arguments{
-\item{Hist}{\code{Hist} object containing the conditioned operating model.}
+\item{Hist}{A \linkS4class{hist} object containing the conditioned operating
+model and historical dynamics, as returned by \code{\link[=Simulate]{Simulate()}}.}
 
-\item{MPs}{Character vector of MP names to project. Default: \code{NULL}
-(uses all MPs attached to \code{Hist}).}
+\item{MPs}{Character vector of MP names to project. If \code{NULL} (default),
+all MPs attached to \code{Hist} are used. MP names must correspond to
+functions available in the current environment. See \code{\link[=CheckMPClass]{CheckMPClass()}} for
+validation details.}
 
-\item{parallel}{Logical. Not used.}
+\item{parallel}{Logical. Not currently used. Default \code{FALSE}.}
 
-\item{silent}{Logical. If \code{TRUE}, suppresses progress messages.
-Default: \code{FALSE}.}
+\item{silent}{Logical. Suppress progress messages if \code{TRUE}. Default
+\code{FALSE}.}
 
-\item{nSim}{Integer or \code{NULL}. If provided, reduces the number of
-simulations to \code{nSim} before projecting. Default: \code{NULL}
-(use all simulations).}
+\item{nSim}{Integer. If provided, reduces the number of simulations to
+\code{nSim} before projecting. If \code{NULL} (default), all simulations in \code{Hist}
+are used.}
 
-\item{Reduce}{Logical. Reserved for future use. Default: \code{TRUE}.}
+\item{Reduce}{Logical. Reserved for future use. Default \code{TRUE}.}
 }
 \value{
-A completed \code{MSE} object with projection results for all MPs.
+A \linkS4class{mse} object containing projection results for all MPs in
+\code{MPs}.
 }
 \description{
-Runs the projection loop for all MPs in \code{MPs}, either sequentially or
-in parallel across MPs using \code{furrr}. Returns a completed \code{MSE} object
-with results for all MPs.
+Runs the projection loop for one or more management procedures (MPs),
+returning a completed \linkS4class{mse} object with projection results for all
+MPs.
 }
 \keyword{internal}

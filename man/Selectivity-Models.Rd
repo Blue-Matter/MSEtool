@@ -13,7 +13,7 @@
 \alias{SelectivityModelsLength}
 \alias{SelectivityModelsAge}
 \alias{SelectivityModelsWeight}
-\title{Selectivity-at-Age, -Length, and -Weight Models}
+\title{Selectivity Models}
 \usage{
 SelectivityAtAge(Ages, SA50, SA50_95)
 
@@ -38,63 +38,106 @@ SelectivityModelsAge(full = TRUE, print = TRUE)
 SelectivityModelsWeight(full = TRUE, print = TRUE)
 }
 \arguments{
-\item{Ages}{Numeric vector of age classes for age-based models.}
+\item{Ages}{Numeric vector of age classes.}
 
-\item{SA50}{First age at 50\% selectivity for logistic selectivity-at-age.}
+\item{SA50}{Numeric. Age at 50\% selectivity (logistic-at-age).}
 
-\item{SA50_95}{Interval between 50\% and 95\% selectivity for logistic selectivity-at-age.}
+\item{SA50_95}{Numeric. Interval between \code{SA50} and age at 95\% selectivity
+(logistic-at-age).}
 
-\item{SA}{Knife-edge age threshold.}
+\item{SA}{Numeric. Knife-edge age threshold; fish at or above this age are
+fully selected.}
 
-\item{Length}{Numeric vector of length classes for length-based models.}
+\item{Length}{Numeric vector of length classes.}
 
-\item{SL50}{First length at 50\% selectivity for logistic selectivity-at-length.}
+\item{SL50}{Numeric. Length at 50\% selectivity (logistic-at-length).}
 
-\item{SL50_95}{Interval between 50\% and 95\% selectivity for logistic selectivity-at-length.}
+\item{SL50_95}{Numeric. Interval between \code{SL50} and length at 95\%
+selectivity (logistic-at-length).}
 
-\item{SL}{Knife-edge length threshold.}
+\item{SL}{Numeric. Knife-edge length threshold; fish at or above this
+length are fully selected.}
 
-\item{SW50}{First weight at 50\% selectivity for logistic selectivity-at-weight.}
+\item{Weight}{Numeric vector of weight classes.}
 
-\item{SW50_95}{Interval between 50\% and 95\% selectivity for logistic selectivity-at-weight.}
+\item{SW50}{Numeric. Weight at 50\% selectivity (logistic-at-weight).}
 
-\item{L5}{First length at 5\% selection (double-normal).}
+\item{SW50_95}{Numeric. Interval between \code{SW50} and weight at 95\%
+selectivity (logistic-at-weight).}
 
-\item{LFS}{Full-selection length (double-normal).}
+\item{L5}{Numeric. Length at 5\% selectivity (double-normal).}
 
-\item{Vmaxlen}{Selection value at \code{max(Length)} (double-normal).}
+\item{LFS}{Numeric. Length at full selectivity (double-normal).}
 
-\item{W5}{First weight at 5\% selection (double-normal).}
+\item{Vmaxlen}{Numeric. Selectivity at \code{max(Length)} (double-normal).
+Values less than 1 produce a dome-shaped selectivity curve.}
 
-\item{WFS}{Full-selection weight (double-normal).}
+\item{W5}{Numeric. Weight at 5\% selectivity (double-normal).}
 
-\item{Vmaxweight}{Selection value at \code{max(Weight)} (double-normal).}
+\item{WFS}{Numeric. Weight at full selectivity (double-normal).}
 
-\item{full}{Logical; provide a complete table of models (TRUE) or just model names (FALSE).}
+\item{Vmaxweight}{Numeric. Selectivity at \code{max(Weight)} (double-normal).
+Values less than 1 produce a dome-shaped selectivity curve.}
 
-\item{print}{Logical; print results (TRUE) or return data frame invisibly (FALSE).
+\item{full}{Logical. If \code{TRUE} (default), returns a complete table of
+available models. If \code{FALSE}, returns model names only.}
 
-at-length and at-weight schedules are converted internally to at-age using the age-length
-age-weight key respectively.
-\itemize{
-\item \strong{Logistic}: \deqn{S(x) = \frac{1}{1 + \exp(-\ln(19) \frac{x - x_{50}}{x_{95} - x_{50}})}}
-\item \strong{Knife-edge}: \deqn{S(x) = 0 \text{ if } x < x_{50}, 1 \text{ if } x \ge x_{50}}
-\item \strong{Double-normal}: combination of ascending and descending half-normal curves.
-}
-\itemize{
-\item \code{SelectivityModels()} prints a list of available selectivity models.
-\item \code{SelectivityModelsLength()} prints a list of available selectivity-at-length models
-\item \code{SelectivityModelsAge()} prints a list of available selectivity-at-age models
-\item \code{SelectivityModelWeight()} prints a list of available selectivity-at-weight models
-}}
+\item{print}{Logical. If \code{TRUE} (default), prints results to the console.
+If \code{FALSE}, returns the data frame invisibly without printing.}
 }
 \value{
-Numeric vector of selectivity at each age, length, or weight.
-\code{SelectivityModels()} invisibly returns a data frame describing available models.
+\itemize{
+\item \code{SelectivityAtAge()}, \code{SelectivityKnifeEdgeAge()},
+\code{SelectivityAtLength()}, \code{SelectivityKnifeEdgeLength()},
+\code{SelectivityAtWeight()}, \code{DoubleNormal()}, \code{DoubleNormalWeight()}: a
+numeric vector of selectivity values (0–1) at each age, length, or weight
+class respectively.
+\item \code{SelectivityModels()}, \code{SelectivityModelsAge()},
+\code{SelectivityModelsLength()}, \code{SelectivityModelsWeight()}: invisibly
+returns a data frame (if \code{full = TRUE}) or character vector (if
+\code{full = FALSE}) of available models. Prints to console if \code{print = TRUE}.
+}
 }
 \description{
-Functions for generating selectivity curves for age, length, or weight.
-Includes standard logistic, knife-edge, and double-normal
+Logistic, knife-edge, and double-normal selectivity-at-age,
+selectivity-at-length, and selectivity-at-weight models for use in a
+\code{\link[=Selectivity]{Selectivity()}} object.
+}
+\details{
+Three families of selectivity model are available:
+\itemize{
+\item \strong{Logistic}: a standard increasing selectivity curve parameterised by
+the 50\% and 95\% selectivity points:
+\deqn{S(x) = \frac{1}{1 + \exp\left(-\ln(19) \cdot
+  \frac{x - x_{50}}{x_{95} - x_{50}}\right)}}
+\item \strong{Knife-edge}: full selectivity at or above a threshold, zero below:
+\deqn{S(x) = \begin{cases} 0 & x < x_t \\ 1 & x \geq x_t \end{cases}}
+\item \strong{Double-normal}: a combination of ascending and descending half-normal
+curves, producing either asymptotic (\code{Vmaxlen = 1}) or dome-shaped
+(\code{Vmaxlen < 1}) selectivity.
+}
+
+At-length and at-weight schedules are converted internally to at-age using
+the age-length key and age-weight key respectively.
+
+The available model functions are:
+\itemize{
+\item \code{SelectivityAtAge()}: logistic selectivity-at-age.
+\item \code{SelectivityKnifeEdgeAge()}: knife-edge selectivity-at-age.
+\item \code{SelectivityAtLength()}: logistic selectivity-at-length.
+\item \code{SelectivityKnifeEdgeLength()}: knife-edge selectivity-at-length.
+\item \code{SelectivityAtWeight()}: logistic selectivity-at-weight.
+\item \code{DoubleNormal()}: double-normal selectivity-at-length.
+\item \code{DoubleNormalWeight()}: double-normal selectivity-at-weight.
+}
+
+The \verb{SelectivityModels*} functions list available models:
+\itemize{
+\item \code{SelectivityModels()}: all selectivity models.
+\item \code{SelectivityModelsAge()}: selectivity-at-age models only.
+\item \code{SelectivityModelsLength()}: selectivity-at-length models only.
+\item \code{SelectivityModelsWeight()}: selectivity-at-weight models only.
+}
 }
 \examples{
 
@@ -140,5 +183,6 @@ legend("bottomright", legend=c("Logistic","Double-Normal"),
        col=c("blue","green"), lwd=2)
 }
 \seealso{
-\code{\link[=Ages]{Ages()}}, \code{\link[=Length]{Length()}}, \code{\link[=Weight]{Weight()}}, \code{\link[=Stock]{Stock()}}
+\code{\link[=Selectivity]{Selectivity()}}, \code{\link[=Retention]{Retention()}}, \code{\link[=Ages]{Ages()}}, \code{\link[=Length]{Length()}}, \code{\link[=Weight]{Weight()}},
+\code{\link[=Fleet]{Fleet()}}
 }

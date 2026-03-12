@@ -22,6 +22,7 @@ ArrayMultiply(array1, array2)
 ArraySubtract(array1, array2)
 
 
+
 # Array with Age, Year 
 array1 <- array(1:20, 
                 dim=c(5,2),
@@ -74,7 +75,7 @@ object <- array(NA,
 value <- array(1:12, 
                dim=c(3,4),
                dimnames=list(Sim=1:3,
-                             Year=c(2022, 2025:2027))
+                             Year=c(2019, 2025:2027))
 )
 
 ArrayFill(object) <- value

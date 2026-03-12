@@ -13,17 +13,17 @@
 \alias{RetentionModelsLength}
 \alias{RetentionModelsAge}
 \alias{RetentionModelsWeight}
-\title{Retention-at-Age, -Length, and -Weight Models}
+\title{Retention Models}
 \usage{
-RetentionAtAge(Ages, RA50, RA50_95)
+RetentionAtAge(Ages, RA50, RA50_95, MaxRet = 1)
 
 RetentionKnifeEdgeAge(Ages, RA)
 
-RetentionAtLength(Length, RL50, RL50_95)
+RetentionAtLength(Length, RL50, RL50_95, MaxRet = 1)
 
 RetentionKnifeEdgeLength(Length, RL)
 
-RetentionAtWeight(Weight, RW50, RW50_95)
+RetentionAtWeight(Weight, RW50, RW50_95, MaxRet = 1)
 
 DoubleNormalRetention(Length, LR5, LFR, Rmaxlen)
 
@@ -38,63 +38,110 @@ RetentionModelsAge(full = TRUE, print = TRUE)
 RetentionModelsWeight(full = TRUE, print = TRUE)
 }
 \arguments{
-\item{Ages}{Numeric vector of age classes for age-based models.}
+\item{Ages}{Numeric vector of age classes.}
 
-\item{RA50}{First age at 50\% retention for logistic retention-at-age.}
+\item{RA50}{Numeric. Age at 50\% retention (logistic-at-age).}
 
-\item{RA50_95}{Interval between 50\% and 95\% retention for logistic retention-at-age.}
+\item{RA50_95}{Numeric. Interval between \code{RA50} and age at 95\% retention
+(logistic-at-age).}
 
-\item{RA}{Knife-edge age threshold.}
+\item{MaxRet}{Numeric. Maximum (asymptotic) retention. Default \code{1} (full
+retention). Values less than 1 produce a dome-shaped or partially
+selective retention curve.}
 
-\item{Length}{Numeric vector of length classes for length-based models.}
+\item{RA}{Numeric. Knife-edge age threshold; fish at or above this age are
+fully retained.}
 
-\item{RL50}{First length at 50\% retention for logistic retention-at-length.}
+\item{Length}{Numeric vector of length classes.}
 
-\item{RL50_95}{Interval between 50\% and 95\% retention for logistic retention-at-length.}
+\item{RL50}{Numeric. Length at 50\% retention (logistic-at-length).}
 
-\item{RL}{Knife-edge length threshold.}
+\item{RL50_95}{Numeric. Interval between \code{RL50} and length at 95\% retention
+(logistic-at-length).}
 
-\item{RW50}{First weight at 50\% retention for logistic retention-at-weight.}
+\item{RL}{Numeric. Knife-edge length threshold; fish at or above this
+length are fully retained.}
 
-\item{RW50_95}{Interval between 50\% and 95\% retention for logistic retention-at-weight.}
+\item{Weight}{Numeric vector of weight classes.}
 
-\item{LR5}{First length at 5\% retention (double-normal).}
+\item{RW50}{Numeric. Weight at 50\% retention (logistic-at-weight).}
 
-\item{LFR}{Full-retention length (double-normal).}
+\item{RW50_95}{Numeric. Interval between \code{RW50} and weight at 95\% retention
+(logistic-at-weight).}
 
-\item{Rmaxlen}{Retention value at \code{max(Length)} (double-normal).}
+\item{LR5}{Numeric. Length at 5\% retention (double-normal).}
 
-\item{WR5}{First weight at 5\% retention (double-normal).}
+\item{LFR}{Numeric. Length at full retention (double-normal).}
 
-\item{WFR}{Full-retention weight (double-normal).}
+\item{Rmaxlen}{Numeric. Retention at \code{max(Length)} (double-normal). Values
+less than 1 produce a dome-shaped retention curve.}
 
-\item{Rmaxweight}{Retention value at \code{max(Weight)} (double-normal).}
+\item{WR5}{Numeric. Weight at 5\% retention (double-normal).}
 
-\item{full}{Logical; provide a complete table of models (TRUE) or just model names (FALSE).}
+\item{WFR}{Numeric. Weight at full retention (double-normal).}
 
-\item{print}{Logical; print results (TRUE) or return data frame invisibly (FALSE).
+\item{Rmaxweight}{Numeric. Retention at \code{max(Weight)} (double-normal).
+Values less than 1 produce a dome-shaped retention curve.}
 
-At-length and at-weight schedules are converted internally to at-age using the age-length
-and age-weight key respectively.
-\itemize{
-\item \strong{Logistic}: \deqn{R(x) = \frac{1}{1 + \exp(-\ln(19) \frac{x - x_{50}}{x_{95} - x_{50}})}}
-\item \strong{Knife-edge}: \deqn{R(x) = 0 \text{ if } x < x_{50}, 1 \text{ if } x \ge x_{50}}
-\item \strong{Double-normal}: combination of ascending and descending half-normal curves.
-}
-\itemize{
-\item \code{RetentionModels()} prints a list of available retention models.
-\item \code{RetentionModelsLength()} prints a list of available retention-at-length models.
-\item \code{RetentionModelsAge()} prints a list of available retention-at-age models.
-\item \code{RetentionModelsWeight()} prints a list of available retention-at-weight models.
-}}
+\item{full}{Logical. If \code{TRUE} (default), returns a complete table of
+available models. If \code{FALSE}, returns model names only.}
+
+\item{print}{Logical. If \code{TRUE} (default), prints results to the console.
+If \code{FALSE}, returns the data frame invisibly without printing.}
 }
 \value{
-Numeric vector of retention at each age, length, or weight.
-\code{RetentionModels()} invisibly returns a data frame describing available models.
+\itemize{
+\item \code{RetentionAtAge()}, \code{RetentionKnifeEdgeAge()}, \code{RetentionAtLength()},
+\code{RetentionKnifeEdgeLength()}, \code{RetentionAtWeight()},
+\code{DoubleNormalRetention()}, \code{DoubleNormalRetentionWeight()}: a numeric
+vector of retention values (0–1) at each age, length, or weight class
+respectively.
+\item \code{RetentionModels()}, \code{RetentionModelsAge()}, \code{RetentionModelsLength()},
+\code{RetentionModelsWeight()}: invisibly returns a data frame (if
+\code{full = TRUE}) or character vector (if \code{full = FALSE}) of available
+models. Prints to console if \code{print = TRUE}.
+}
 }
 \description{
-Functions for generating retention curves for age, length, or weight.
-Includes standard logistic, knife-edge, and double-normal models.
+Logistic, knife-edge, and double-normal retention-at-age,
+retention-at-length, and retention-at-weight models for use in a
+\code{\link[=Retention]{Retention()}} object.
+}
+\details{
+Three families of retention model are available:
+\itemize{
+\item \strong{Logistic}: a standard increasing retention curve parameterised by the
+50\% and 95\% retention points, with asymptote \code{MaxRet}:
+\deqn{R(x) = \frac{\texttt{MaxRet}}{1 + \exp\left(-\ln(19) \cdot
+                                                      \frac{x - x_{50}}{x_{95} - x_{50}}\right)}}
+\item \strong{Knife-edge}: full retention at or above a threshold, zero below:
+\deqn{R(x) = \begin{cases} 0 & x < x_t \\ 1 & x \geq x_t \end{cases}}
+\item \strong{Double-normal}: a combination of ascending and descending half-normal
+curves, producing either asymptotic (\code{Rmaxlen = 1}) or dome-shaped
+(\code{Rmaxlen < 1}) retention.
+}
+
+At-length and at-weight schedules are converted internally to at-age using
+the age-length key and age-weight key respectively.
+
+The available model functions are:
+\itemize{
+\item \code{RetentionAtAge()}: logistic retention-at-age.
+\item \code{RetentionKnifeEdgeAge()}: knife-edge retention-at-age.
+\item \code{RetentionAtLength()}: logistic retention-at-length.
+\item \code{RetentionKnifeEdgeLength()}: knife-edge retention-at-length.
+\item \code{RetentionAtWeight()}: logistic retention-at-weight.
+\item \code{DoubleNormalRetention()}: double-normal retention-at-length.
+\item \code{DoubleNormalRetentionWeight()}: double-normal retention-at-weight.
+}
+
+The \verb{RetentionModels*} functions list available models:
+\itemize{
+\item \code{RetentionModels()}: all retention models.
+\item \code{RetentionModelsAge()}: retention-at-age models only.
+\item \code{RetentionModelsLength()}: retention-at-length models only.
+\item \code{RetentionModelsWeight()}: retention-at-weight models only.
+}
 }
 \examples{
 
@@ -140,5 +187,6 @@ legend("bottomright", legend=c("Logistic","Double-Normal"),
        col=c("blue","green"), lwd=2)
 }
 \seealso{
-\code{\link[=Ages]{Ages()}}, \code{\link[=Length]{Length()}}, \code{\link[=Weight]{Weight()}}, \code{\link[=Stock]{Stock()}}
+\code{\link[=Retention]{Retention()}}, \code{\link[=Selectivity]{Selectivity()}}, \code{\link[=Ages]{Ages()}}, \code{\link[=Length]{Length()}}, \code{\link[=Weight]{Weight()}},
+\code{\link[=Fleet]{Fleet()}}
 }

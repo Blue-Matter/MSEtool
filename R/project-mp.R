@@ -99,6 +99,14 @@ Project_MP <- function(Proj,
                              mp,
                              FleetNames,
                              Areas)
+    
+    # If neither TAC or Effort are set, set Effort = 1
+    # (keep same as last historical time step - matching 
+    #  both seasonal and spatial distributions)
+    AdviceSimList <- CheckTACEffort(AdviceSimList, 
+                                    Proj, 
+                                    LHInd = match(max(YearsHist), YearsAll),
+                                    FleetNames)
 
     # Save MP Advice 
     Proj <- StoreMPAdvice(Proj, Year, AdviceSimList)

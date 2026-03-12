@@ -10,7 +10,7 @@ PopulateMeanAtLength <- function(object,
     return(object)
   
   if (ParsEmpty(object@Pars)) {
-    return(Object)
+    return(object)
   }
   
   if (is.null(object@Model))

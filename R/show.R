@@ -1,4 +1,23 @@
 
+#' Show Methods
+#'
+#' Display a formatted summary of MSEtool S4 objects in the console.
+#'
+#' @param object An S4 object.
+#'
+#' @name show-methods
+#' @aliases show,om-method show,stock-method show,ages-method
+#'   show,length-method show,weight-method show,naturalmortality-method
+#'   show,maturity-method show,fecundity-method show,srr-method
+#'   show,spatial-method show,depletion-method show,fleet-method
+#'   show,effort-method show,catchability-method show,selectivity-method
+#'   show,retention-method show,discardmortality-method show,hist-method
+#'   show,mse-method show,data-method show,advice-method
+#'   show,popdynamics-method
+#' @exportMethod show
+NULL
+
+
 hasSlot <- function(object, slot) {
   slot %in% slotNames(object)
 }
@@ -71,7 +90,8 @@ a_or_an <- function(x) {
 .show_x <- function(x, name=NULL, list_element=FALSE, show_list_element=TRUE) {
   
   if (isS4(x)) {
-    cli::cli_text("`{name}`: {a_or_an(class(x))} {.help {help_topic('MSEtool', paste0(class(x), '-class'))}} Object")
+    help_url <- paste0("ide:help:", help_topic('MSEtool', paste0(tolower(name), '-class')))
+    cli::cli_text("`{name}`: {a_or_an(class(x))} {.href [MSEtool::{tolower(class(x))}-class]({help_url})} object")
     return(invisible(NULL))
     
   }
@@ -199,7 +219,7 @@ cli_fn <- function(fun) {
 .show_array_p <- function(x, p ) {
   
   if (is.null(x) || length(x) == 0) {
-    cli::cli_text("→ {.val {p}}:")
+    cli::cli_text("> {.val {p}}:")
     return(invisible(NULL))
   }
   
@@ -210,17 +230,17 @@ cli_fn <- function(fun) {
   
   if (length(unique_x)==1) {
     cli::cli_text(
-      "→ {.val {p}}: {.val {range_x[1]}}" 
+      "> {.val {p}}: {.val {range_x[1]}}" 
     )
   } else {
     if (is.null(dn)) {
       cli::cli_text(
         
-        "→ {.val {p}}: {.emph { paste(d, collapse=' x ')}  array} {.strong (Dimension names missing)}" 
+        "> {.val {p}}: {.emph { paste(d, collapse=' x ')}  array} {.strong (Dimension names missing)}" 
       )
     } else {
       cli::cli_text(
-        "→ {.val {p}}:  {.emph { paste( paste(d, dn), collapse=' x ')} array}. "
+        "> {.val {p}}:  {.emph { paste( paste(d, dn), collapse=' x ')} array}. "
       )
     }
     
@@ -245,13 +265,13 @@ cli_fn <- function(fun) {
             
           } else if (length(vals)==1) {
             cli::cli_text(
-              "→ {.val {p}}: {.val {(vals)}}"
+              "> {.val {p}}: {.val {(vals)}}"
               
             )
             
           } else if (length(vals)==2) {
             cli::cli_text(
-              "→ {.val {p}}: Uniform Dist. with bounds {.val {range(vals)}}"
+              "> {.val {p}}: Uniform Dist. with bounds {.val {range(vals)}}"
             )
           }
           
@@ -302,7 +322,7 @@ setMethod("show", "om", function(object) {
   
   .show_slot(object, 'nSim')
   
-  if (object@Seasons > 1)
+  if (!is.null(object@Seasons) && object@Seasons > 1)
   .show_slot(object, 'Seasons')
   
   

@@ -11,7 +11,6 @@ Update_DiscardMortality_Sim(
   AdviceList,
   LastAdviceList,
   nFleet,
-  Complexes,
   nArea,
   FleetNames
 )
@@ -28,8 +27,6 @@ Update_DiscardMortality_Sim(
 \item{LastAdviceList}{Same structure as \code{AdviceList} for the previous year.}
 
 \item{nFleet}{Integer. Number of fleets.}
-
-\item{Complexes}{List mapping complex indices to stock indices.}
 
 \item{nArea}{Integer. Number of areas.}
 

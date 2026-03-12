@@ -21,49 +21,79 @@ Simulate(
 )
 }
 \arguments{
-\item{OM}{An \linkS4class{om} or an \link[=om-class]{OM-class} object. If missing, defaults to \link{ExampleOM}}
+\item{OM}{An \linkS4class{om} or \linkS4class{OM-legacy} object. If \code{NULL} (default),
+\code{MSEtool::ExampleOM} is used.}
 
-\item{parallel}{Logical. Should the simulation use parallel processing? Default \code{FALSE}.}
+\item{parallel}{Logical. Use parallel processing? Default \code{FALSE}.}
 
-\item{silent}{Logical. Suppress progress messages if \code{TRUE}. Default \code{FALSE}.}
+\item{silent}{Logical. Suppress progress messages if \code{TRUE}. Default
+\code{FALSE}.}
 
-\item{nSim}{Integer. Number of simulation replicates (used for \code{om} objects). Default uses all available replicates in \code{OM}.}
+\item{nSim}{Integer. Number of simulation replicates. If \code{NULL} (default),
+the value in \code{OM} is used. Only used for \linkS4class{om} objects; use \code{nsim}
+for \linkS4class{OM-legacy} objects.}
 
-\item{nsim}{Integer. Synonym for \code{nSim}.}
+\item{nsim}{Integer. Synonym for \code{nSim} for \linkS4class{OM-legacy} objects. If
+\code{NULL} (default), \code{nSim} is used if provided.}
 
-\item{DoDynamicUnfished}{Logical. Simulate dynamic unfished population? Default \code{TRUE}.}
+\item{DoDynamicUnfished}{Logical. Calculate the dynamic unfished population
+dynamics? Default \code{TRUE}. Only used for \linkS4class{om} objects.}
 
-\item{DoRefMSY}{Logical. Calculate MSY reference points? Default \code{TRUE}.}
+\item{DoRefMSY}{Logical. Calculate MSY-based reference points? Default
+\code{TRUE}. Only used for \linkS4class{om} objects.}
 
-\item{DoRefLandings}{Logical. Calculate reference landings? Default \code{TRUE}.}
+\item{DoRefLandings}{Logical. Calculate reference yield based on landings?
+Default \code{TRUE}. Only used for \linkS4class{om} objects.}
 
-\item{DoRefRemovals}{Logical. Calculate reference removals? Default \code{FALSE}.}
+\item{DoRefRemovals}{Logical. Calculate reference yield based on total
+removals (landings + discards)? Default \code{FALSE}. Only used for \linkS4class{om}
+objects.}
 
-\item{DoConditionObs}{Logical. Condition observation objects on historical data? Default \code{TRUE}.}
+\item{DoConditionObs}{Logical. Condition observation model on historical
+fishery data? Default \code{TRUE}. Only used for \linkS4class{om} objects.}
 
-\item{DoGenerateData}{Logical. Generate historical data? Default \code{TRUE}.}
+\item{DoGenerateData}{Logical. Generate historical fishery data from the
+observation model? Default \code{TRUE}. Only used for \linkS4class{om} objects.}
 
-\item{Reduce}{Logical. Reduce object size after simulation for memory efficiency? Default \code{TRUE}.}
+\item{Reduce}{Logical. Reduce object size after simulation for memory
+efficiency? Default \code{TRUE}. Only used for \linkS4class{om} objects.}
 
-\item{...}{Additional arguments passed to the sub-functions. Not currently used.}
+\item{...}{Additional arguments passed to sub-functions. Not currently
+used}
 }
 \value{
-A \linkS4class{hist} or a \link[=hist-class]{Hist-class} object
+\itemize{
+\item If \code{OM} is an \linkS4class{om} object: a \linkS4class{hist} object.
+\item If \code{OM} is an \linkS4class{OM-legacy} object: a \linkS4class{Hist-legacy} object.
+}
 }
 \description{
-Simulate historical fishery dynamics, fisheries, and reference points
-for an \linkS4class{om} or an \link[=om-class]{OM-class} object
+Simulate historical fishery dynamics and calculate reference points for an
+\linkS4class{om} or \linkS4class{OM-legacy} object. Returns a populated \linkS4class{hist}
+or \link[=hist-class]{Hist-class} object containing historical population dynamics, fishery
+data, and reference points.
+}
+\details{
+\code{Simulate()} is a dispatcher that calls internal functions \code{Simulate_om()} (for
+\linkS4class{om} objects) or \code{SimulateOM()} (for legacy \linkS4class{OM-legacy}
+objects) depending on the class of \code{OM}.
 }
 \examples{
 \dontrun{
-# Simulate a default test OM object
-simOM <- Simulate()
+# Simulate using the default example OM
+hist <- Simulate()
 
-# Using additional arguments
-simOM <- Simulate(MSEtool::ExampleOM,
-                  parallel = TRUE,
-                  DoRefLandings = FALSE,
-                  DoGenerateData = FALSE)
+# Simulate with specific options
+hist <- Simulate(
+  OM             = MyOM,
+  DoRefLandings  = TRUE,
+  DoRefRemovals  = FALSE,
+  DoGenerateData = FALSE,
+  silent         = TRUE
+)
 }
 
+}
+\seealso{
+\code{\link[=OM]{OM()}}, \code{\link[=RunMSE]{RunMSE()}}
 }

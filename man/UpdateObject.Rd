@@ -13,29 +13,22 @@ UpdateSlots(object)
 \item{object}{An S4 object.}
 
 \item{...}{Named objects used to replace existing slots. Names must match
-slot names in \code{object}.}
+slot names in \code{object}. Unrecognised names emit a warning and are ignored.}
 }
 \value{
-The updated S4 object.
+The updated S4 object with all slots valid and any supplied
+replacements applied.
 }
 \description{
-Recursively updates an openMSE S4 object to ensure all slots are valid and optionally
-replaces specified slots with new values.
-}
-\details{
-The function first calls \code{UpdateSlots()} to recursively rebuild any invalid
-or corrupted slots using class defaults. It then replaces slots provided via
-\code{...} with the supplied objects, provided the names match existing slot names.
-\itemize{
-\item Invalid or corrupted slots are reset to their class defaults.
-\item Nested S4 objects are updated recursively.
-\item Named arguments in \code{...} must correspond to slot names.
-\item Unknown slot names are ignored with a warning.
-}
+Recursively updates an openMSE S4 object to ensure all slots are valid, and
+optionally replaces specified slots with new values. \code{\link[=UpdateSlots]{UpdateSlots()}} is
+called first to reset any inaccessible or corrupted slots to their class
+defaults, recursing into nested S4 objects. Named arguments in \code{...} are
+then used to replace slots by name.
 }
 \examples{
 \dontrun{
-  obj <- UpdateObject(obj, Fleet = newFleet)
+obj <- UpdateObject(obj, Fleet=newFleet)
 }
 
 }

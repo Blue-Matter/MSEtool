@@ -33,6 +33,8 @@ is generally recommended.}
 
 \item{silent}{Logical. If \code{FALSE} (default), prints a message describing
 the active parallel plan.}
+
+\item{parallel}{Logical. Has \code{parallel} been requested?}
 }
 \value{
 All three functions invisibly return a logical scalar:

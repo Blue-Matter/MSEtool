@@ -19,42 +19,86 @@ NaturalMortality(
 NaturalMortality(x) <- value
 }
 \arguments{
-\item{Pars}{Named list of natural mortality parameters for models in \code{\link[=NaturalMortalityModels]{NaturalMortalityModels()}}}
+\item{Pars}{Named list of natural mortality parameters corresponding to
+\code{Model}. See \code{\link[=NaturalMortalityModels]{NaturalMortalityModels()}} for available models and required
+parameters. If \code{Pars} is a \linkS4class{stock} object, the \code{NaturalMortality}
+slot of that stock is returned. If \code{Pars} is non-empty, \code{Model} is
+\code{NULL}, and all values are non-\code{NA}, the model is inferred automatically
+via \code{\link[=FindModel]{FindModel()}}.}
 
-\item{Model}{Model associated with \code{Pars}.}
+\item{Model}{Character or function. Natural mortality model identifier. If
+\code{NULL} (default), the model is inferred from \code{Pars} where possible. See
+\code{\link[=NaturalMortalityModels]{NaturalMortalityModels()}} for available models.}
 
-\item{Units}{Time units (e.g. \code{"year"}).}
+\item{Units}{Character. Time units for the mortality rate (e.g., \code{"year"}).
+See \code{\link[=ValidUnits]{ValidUnits()}} for valid options. Default \code{"year"}.}
 
-\item{MeanAtAge}{Mean natural mortality-at-age array (optional).}
+\item{MeanAtAge}{Numeric array. Mean natural mortality at age, with named
+dimensions \code{Sim}, \code{Age}, and \code{Year}. Populated automatically during
+\code{\link[=Populate]{Populate()}} if \code{Pars} and \code{Model} are provided. Default \code{NULL}.}
 
-\item{MeanAtLength}{Mean natural mortality-at-length array (optional).}
+\item{MeanAtLength}{Numeric array. Mean natural mortality at length, with
+named dimensions \code{Sim}, \code{Length}, and \code{Year}. Default \code{NULL}.}
 
-\item{Random}{Random effects array (optional).}
+\item{Random}{Numeric array. Random effects on natural mortality parameters.
+Default \code{NULL}.}
 
-\item{Classes}{Age or length class mid-points (optional).}
+\item{Classes}{Numeric vector. Age or length class midpoints. Default
+\code{NULL}.}
 
-\item{Misc}{Miscellaneous list.}
+\item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
+
+\item{x}{A \linkS4class{naturalmortality} object for slot accessors, or a
+\linkS4class{stock} object for \verb{NaturalMortality<-}.}
+
+\item{value}{A \linkS4class{naturalmortality} object.}
 }
 \value{
-A \linkS4class{naturalmortality} object.
+\itemize{
+\item \code{NaturalMortality()} returns a \linkS4class{naturalmortality} object. If
+\code{Pars} is a \linkS4class{stock} object, the \code{NaturalMortality} slot of that
+stock is returned.
+\item \verb{NaturalMortality<-} returns \code{x} with the \code{NaturalMortality} slot
+replaced.
+}
 }
 \description{
-Construct a \code{\link[=naturalmortality-class]{naturalmortality-class()}} object defining natural mortality
-assumptions for a \code{\link[=Stock]{Stock()}}.
+Construct and manipulate a \linkS4class{naturalmortality} object defining the
+natural mortality schedule associated with a \code{\link[=Stock]{Stock()}} object. A
+\code{NaturalMortality} object is required for all \linkS4class{stock} objects.
 }
 \details{
-The \code{NaturalMortality} class defines how natural mortality varies
-with age and/or length in a \code{\link[=Stock]{Stock()}}. Mortality schedules may be
-model-based (via \code{Pars} and \code{Model}) or supplied directly as arrays.
+A \linkS4class{naturalmortality} object is required for all \linkS4class{stock}
+objects. It defines how natural mortality varies with age and/or length,
+which is used throughout the operating model for population dynamics
+calculations.
+\subsection{Specifying Natural Mortality}{
 
-A \code{NaturalMortality} object can be attached to a \code{\link[=Stock]{Stock()}} using \code{NaturalMortality(Stock) <- MyNaturalMortality} and
-retrieved using \code{MyNaturalMortality <- NaturalMortality(Stock)}
+Natural mortality schedules may be specified in two ways:
+\enumerate{
+\item \strong{Model-based}: provide \code{Pars} and optionally \code{Model}. \code{MeanAtAge}
+is populated automatically during \code{\link[=Populate]{Populate()}}. If \code{Model} is \code{NULL}
+and \code{Pars} is non-empty with no \code{NA} values, the model is inferred via
+\code{\link[=FindModel]{FindModel()}}.
+\item \strong{Direct array}: provide \code{MeanAtAge} or \code{MeanAtLength} directly with
+\code{Pars = list()} (default).
+}
+}
 
-Individual components may be accessed or modified using accessor and
-replacement functions such as \code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}}, and \code{\link[=Units]{Units()}}.
+\subsection{Attaching to a Stock}{
+
+A \code{NaturalMortality} object can be attached to a \code{\link[=Stock]{Stock()}} with
+\code{NaturalMortality(Stock) <- MyNaturalMortality} and retrieved with
+\code{NaturalMortality(Stock)}.
+
+Individual slots may be accessed or modified using \code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}},
+\code{\link[=Units]{Units()}}, \code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=MeanAtLength]{MeanAtLength()}}, \code{\link[=Random]{Random()}}, and \code{\link[=Classes]{Classes()}}.
 
 See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more details.
 }
+}
 \seealso{
-\code{\link[=Populate]{Populate()}}, \code{\link[=NaturalMortalityModels]{NaturalMortalityModels()}}
+\linkS4class{naturalmortality}, \code{\link[=Stock]{Stock()}}, \code{\link[=NaturalMortalityModels]{NaturalMortalityModels()}},
+\code{\link[=Populate]{Populate()}}, \code{\link[=FindModel]{FindModel()}}, \code{\link[=ValidUnits]{ValidUnits()}}, \code{\link[=Length]{Length()}}, \code{\link[=Maturity]{Maturity()}},
+\code{\link[=Pars]{Pars()}}, \code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=MeanAtLength]{MeanAtLength()}}, \code{\link[=Units]{Units()}}, \code{\link[=Classes]{Classes()}}
 }

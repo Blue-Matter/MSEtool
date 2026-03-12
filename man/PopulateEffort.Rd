@@ -7,7 +7,7 @@
 PopulateEffort(Effort, HistYears, nArea = 1, nSim = 5, seed = NULL)
 }
 \arguments{
-\item{Effort}{An \code{\link[=Effort]{Effort()}} object to populate.}
+\item{Effort}{An \linkS4class{effort} object to populate.}
 
 \item{HistYears}{Numeric vector of historical years to populate effort for.}
 

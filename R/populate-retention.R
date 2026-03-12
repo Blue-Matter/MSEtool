@@ -20,6 +20,7 @@
 #' @param silent Logical; if `TRUE`, suppresses informational messages.
 #' @param force Logical; if `TRUE`, forces re-population even if digest 
 #'   indicates object is current.
+#' @param replace Used internally.
 #' @param ASKOverride Used internally. 
 #'
 #' @details
@@ -57,6 +58,7 @@ PopulateRetention <- function(Retention,
                               seed = NULL,
                               silent = FALSE,
                               force = FALSE,
+                              replace = FALSE, 
                               ASKOverride = NULL) {
   
   argList <- list(Ages, Length, Years, nSim, CalcAtLength, seed)
@@ -138,7 +140,7 @@ PopulateRetention <- function(Retention,
     Retention <- MeanAtAge2MeanAtLength(
       object = Retention, 
       Length = Length, 
-      replace = FALSE, 
+      replace = replace, 
       Years = Years,
       ASK = ASKOverride)
   }

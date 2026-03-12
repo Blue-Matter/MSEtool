@@ -16,7 +16,8 @@
 #' @param silent Logical; if `TRUE`, suppresses informational messages.
 #' @param force Logical; if `TRUE`, forces re-population even if digest 
 #'   indicates object is current.
-#'
+#' @param replace Used internally.
+#' @param ASKOverride Used internally.
 #' @details
 #' `PopulateDiscardMortality()` handles population of discard mortality at age 
 #' and optionally at length. Steps include:
@@ -47,7 +48,9 @@ PopulateDiscardMortality <- function(DiscardMortality,
                                      CalcAtLength = TRUE,
                                      seed = NULL,
                                      silent = FALSE,
-                                     force = FALSE) {
+                                     force = FALSE,
+                                     replace = FALSE,
+                                     ASKOverride = NULL) {
   
   argList <- list(Ages, Length, nSim, Years, CalcAtLength, seed)
   
@@ -99,7 +102,10 @@ PopulateDiscardMortality <- function(DiscardMortality,
   DiscardMortality <- MeanAtLength2MeanAtAge(DiscardMortality, Length)
   
   if (CalcAtLength) {
-    DiscardMortality <- MeanAtAge2MeanAtLength(DiscardMortality, Length, replace = FALSE, Years=Years)
+    DiscardMortality <- MeanAtAge2MeanAtLength(DiscardMortality, Length,
+                                               replace = replace, 
+                                               Years=Years,
+                                               ASK = ASKOverride)
   }
   
   # Add Area dimension

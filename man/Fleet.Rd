@@ -23,59 +23,119 @@ Fleet(
   Misc = list()
 )
 
-Closure(Fleet)
+Closure(x)
 
 Closure(x) <- value
 
-WeightFleet(Fleet)
+WeightFleet(x)
 
 WeightFleet(x) <- value
 
 Fleet(x) <- value
 }
 \arguments{
-\item{Name}{Fleet name.}
+\item{Name}{Character. Fleet name, or an \linkS4class{om} object for pass-through
+access (see \code{Details}).}
 
-\item{Effort}{An \code{\link[=Effort]{Effort()}} object.}
+\item{Effort}{An \linkS4class{effort} object. Default is an empty \linkS4class{effort}.}
 
-\item{Catchability}{A \code{\link[=Catchability]{Catchability()}} object.}
+\item{Catchability}{A \linkS4class{catchability} object. Default is an empty
+\linkS4class{catchability}. When \code{Name} is an \linkS4class{om} object and \code{Effort} is
+numeric, a numeric value here indexes the fleet within the stock (see
+Details).}
 
-\item{Selectivity}{A \code{\link[=Selectivity]{Selectivity()}} object.}
+\item{Selectivity}{A \linkS4class{selectivity} object. Selectivity is required
+for all fleets. Default is an empty \linkS4class{selectivity}.}
 
-\item{Retention}{A \code{\link[=Retention]{Retention()}} object.}
+\item{Retention}{A \linkS4class{retention} object. Optional — if not specified,
+all age and length classes are assumed fully retained. Default is an empty
+\linkS4class{retention}.}
 
-\item{DiscardMortality}{A \code{\link[=DiscardMortality]{DiscardMortality()}} object.}
+\item{DiscardMortality}{A \linkS4class{discardmortality} object. Default is an
+empty \linkS4class{discardmortality}.}
 
-\item{Closure}{Spatio-temporal closures.}
+\item{Closure}{Array. Spatio-temporal closure schedule. Default is an empty
+array.}
 
-\item{WeightFleet}{Fleet-specific weight-at-age schedules.}
+\item{WeightFleet}{Array. Fleet-specific weight-at-age. If not specified,
+the stock-level weight-at-age is used. Default is an empty array.}
 
-\item{BioEconomic}{A \code{\link[=Bioeconomic]{Bioeconomic()}} object.}
+\item{BioEconomic}{A \linkS4class{bioeconomic} object. Not currently used. Default
+is an empty \linkS4class{bioeconomic}.}
 
-\item{Dynamics}{Currently not used. Future use for storing fleet dynamics model parameters}
+\item{Dynamics}{List. Reserved for future use for fleet dynamics model
+parameters. Default \code{list()}.}
 
-\item{Misc}{Miscellaneous list.}
+\item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
+
+\item{x}{A \linkS4class{fleet} object or an \linkS4class{om} object for \verb{Fleet<-}.}
+
+\item{value}{A \linkS4class{fleet} object or named list of \linkS4class{fleet} objects
+for \verb{Fleet<-}.}
 }
 \value{
-A \linkS4class{fleet} object.
+\itemize{
+\item \code{Fleet()} returns a \linkS4class{fleet} object, or if \code{Name} is an \linkS4class{om}
+object, returns the fleet list or a specific fleet from the OM.
+\item \verb{Fleet<-} returns the \linkS4class{om} object \code{x} with the \code{Fleet} slot
+updated.
+\item \code{Closure()}, \code{WeightFleet()} return the corresponding slot from the
+\linkS4class{fleet} object.
+\item Their replacement forms return the object with the corresponding slot
+updated.
+}
 }
 \description{
-Construct a \linkS4class{fleet} object defining the exploitation characteristics
-of a fleet for stock used in an operating model.
+Construct and manipulate a \linkS4class{fleet} object defining the exploitation
+characteristics of a fleet for a stock in an operating model.
 }
 \details{
-A \code{Fleet} object describes the fishing characteristics of a fleet for a particular stock
-in an operating model.
+A \linkS4class{fleet} object describes the fishing characteristics of a fleet for
+a particular stock in an operating model.
+\subsection{Pass-Through Access from an OM}{
 
-A \code{Fleet} object can be attached to an \code{\link[=OM]{OM()}} using \code{\link[=Fleet]{Fleet()}} and
-retrieved using \code{\link{Fleet<-}}.
+When \code{Name} is an \linkS4class{om} object, \code{Fleet()} acts as an accessor rather
+than a constructor:
+\itemize{
+\item \code{Fleet(om)} returns the full fleet list (\code{om@Fleet}).
+\item \code{Fleet(om, st)} returns all fleets for stock index \code{st}
+(\code{om@Fleet[[st]]}).
+\item \code{Fleet(om, st, fl)} returns fleet \code{fl} for stock \code{st}
+(\code{om@Fleet[[st]][[fl]]}).
+}
 
-Individual components may be accessed or modified using accessor
-and replacement functions such as \code{\link[=Effort]{Effort()}}, \code{\link{Effort<-}}, etc.
+where \code{st} and \code{fl} are passed via the \code{Effort} and \code{Catchability}
+arguments respectively.
+}
+
+\subsection{Assigning Fleets to an OM}{
+
+A \linkS4class{fleet} object or list of \linkS4class{fleet} objects can be assigned to
+an \linkS4class{om} object with \code{Fleet(om) <- MyFleet}. Stock objects must be
+added to the OM before fleets. If a single \linkS4class{fleet} object is
+assigned, it is applied to all stocks using the fleet name. If a list is
+assigned, it must be structured as a stock-indexed list of fleet lists.
+}
+
+\subsection{Required Components}{
+
+\code{\link[=Selectivity]{Selectivity()}} and \code{\link[=Effort]{Effort()}} are required for all fleets. All other components are
+optional and will use default (empty) values if not specified.
+
+Individual slots may be accessed or modified using \code{\link[=Effort]{Effort()}}, \code{\link[=Catchability]{Catchability()}},
+\code{\link[=Selectivity]{Selectivity()}}, \code{\link[=Retention]{Retention()}}, \code{\link[=DiscardMortality]{DiscardMortality()}}, \code{\link[=Closure]{Closure()}},
+\code{\link[=WeightFleet]{WeightFleet()}}, and \code{\link[=Bioeconomic]{Bioeconomic()}}.
 
 See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more details.
 }
+}
+\examples{
+f <- Fleet(Name = "Trawl")
+Selectivity(f)
+Effort(f)
+
+}
 \seealso{
-\code{\link[=OM]{OM()}}, \code{\link[=Effort]{Effort()}}, \code{\link[=Catchability]{Catchability()}}, \code{\link[=Selectivity]{Selectivity()}},
-\code{\link[=Retention]{Retention()}}, \code{\link[=DiscardMortality]{DiscardMortality()}}, \code{\link[=BioEconomic]{BioEconomic()}}
+\linkS4class{fleet}, \code{\link[=OM]{OM()}}, \code{\link[=Effort]{Effort()}}, \code{\link[=Catchability]{Catchability()}},
+\code{\link[=Selectivity]{Selectivity()}}, \code{\link[=Retention]{Retention()}}, \code{\link[=DiscardMortality]{DiscardMortality()}}, \code{\link[=Bioeconomic]{Bioeconomic()}}
 }

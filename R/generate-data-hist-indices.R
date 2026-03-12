@@ -111,7 +111,8 @@ GenHistData_Indices <- function(x, Data, Hist, HistYears, i, stocks, StockNames,
       } else if (SelectivityAtAge == 'Obs') {
         # SelectivityAtAgeList <- IndexObs@Selectivity
         SelectivityAtAgeList <- purrr::map(IndexObs@Selectivity, \(stock) {
-          stock[x,,TSIndex, drop=FALSE] |>
+          stock <- ArraySubsetYear(stock, HistYears) 
+          stock[x,,, drop=FALSE] |>
             AddDimension('Area') |>
             DropDimension(c('Sim', 'Year')) |>
             ExtendAreas(Areas=1:nArea)

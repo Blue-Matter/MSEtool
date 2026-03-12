@@ -49,19 +49,59 @@ UpdateMSEObject <- function(MSE, Proj, MPName, mp, YearsHist, YearsProj,
   #   as.numeric()
 
   MSE <- AddPPD(MSE, Proj, MPName, YearsHist, YearsProj)    
-  # TODO 
-
-  # MSE <- MSE |> 
-  #   KeepRetention(Proj, mp) |>
-  #   KeepSelectivity(Proj, mp) |> 
-  #   KeepDiscardMortality(Proj, mp) |>
-  #   AddPPD(Proj, mp) |>
-  #   ProcessLogMSE(Proj, mp, MP)
+  
+  MSE <- RecordSelRetDisc(MSE, Proj, MPName, YearsProj)
   
   MSE
-  
-  
-  
+}
+
+
+#' Record Selectivity, Retention, and Discard Mortality
+#' Records changes in selectivity, retention, and discard mortality
+#'   for each fleet and MP relative to the original OM, storing only slots
+#'   where values differ. Returns \code{MSE} unchanged for a given slot if all
+#'   fleet/area comparisons are identical.
+#' @param MSE An MSE object.
+#' @param Proj A projection object containing updated fleet parameters.
+#' @param MPName Character. Name of the management procedure.
+#' @param YearsProj Integer vector of projection year indices to subset.
+#' @return The `MSE` object with `MSE@Misc[["Selectivity"]]`,
+#'    `MSE@Misc[["Retention"]]`, and `MSE@Misc[["DiscardMortality"]]`
+#'   updated for ``MPName`.
+#' @keywords internal
+RecordSelRetDisc <- function(MSE, Proj, MPName, YearsProj) {
+  for (slotname in c('Selectivity', 'Retention', 'DiscardMortality')) {
+    result <- purrr::map2(Proj@OM@Fleet, MSE@OM@Fleet, \(fleetlist, origfleetlist) {
+      
+      purrr::map2(fleetlist, origfleetlist,  \(fleet, origfleet) {
+        
+        obj      <- slot(fleet, slotname)
+        obj_orig <- slot(origfleet, slotname)
+        
+        MeanAtAge    <- obj@MeanAtAge |> SubsetYear(YearsProj) |> ExtendSims(nSim=MSE@OM@nSim)
+        MeanAtLength <- obj@MeanAtLength |> SubsetYear(YearsProj) |> ExtendSims(nSim=MSE@OM@nSim)
+        MeanAtAge_orig    <- obj_orig@MeanAtAge |> SubsetYear(YearsProj) |> ExtendSims(nSim=MSE@OM@nSim)
+        MeanAtLength_orig <- obj_orig@MeanAtLength |> SubsetYear(YearsProj) |> ExtendSims(nSim=MSE@OM@nSim)
+        
+        out <- list()
+        if (!prod(MeanAtAge == MeanAtAge_orig)) out$MeanAtAge <- MeanAtAge
+        
+        if (all(dim(MeanAtLength) == dim(MeanAtLength_orig))) {
+          if (!prod(MeanAtLength == MeanAtLength_orig)) out$MeanAtLength <- MeanAtLength  
+        } else {
+          # different number of classes 
+          out$MeanAtLength <- MeanAtLength
+        }
+        if (!length(out)) return(NULL)
+        out
+      })
+    })
+    # Only record if at least one fleet/area has non-NULL differences
+    all_null <- all(purrr::map_lgl(purrr::list_flatten(result), is.null))
+    if (!all_null)
+      MSE@Misc[[slotname]][[MPName]] <- result
+  }
+  MSE
 }
 
 AddPPD <- function(MSE, Proj, MPName, YearsHist, YearsProj) {

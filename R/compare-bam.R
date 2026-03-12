@@ -25,6 +25,7 @@ ProcessBAMArgs <- function(Stock, OM=NULL) {
 }
 
 PrintPlotBAMRE <- function(Out, name, thresh=0.1) {
+  MARE <- NULL # CRAN
   re <- Out[[name]]$MARE |> 
     dplyr::mutate(MARE=abs(MARE)) |> 
     dplyr::filter(MARE>thresh)
@@ -89,6 +90,7 @@ CompareBAM <- function(Stock, OM=NULL, thresh=0.1) {
 
 
 CalcBAM_MARE <- function(df) {
+  OM <- BAM <- NULL # CRAN check hacks
   MARE <- df |> 
     tidyr::pivot_wider(names_from = Model, values_from = Value) |> 
     dplyr::group_by(Year) |>
@@ -128,6 +130,8 @@ CompareBAM_Number <- function(Stock, OM=NULL) {
 }
 
 CompareBAM_Biomass <- function(Stock, OM=NULL) {
+  
+  Biomass <- year <- NULL # CRAN check hacks
   
   List <- ProcessBAMArgs(Stock, OM)
   Hist <- List$Hist

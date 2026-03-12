@@ -43,7 +43,7 @@ SolveMovement_2_Area <- function(LogitProbs,
   Movement[1,2] <- 1- Movement[1,1]
   Movement[2,1] <- 1- Movement[2,2]
   
-  Distribution <- CalcAsymDist_2_Area(Movement)
+  Distribution <- CalcAsymDist_2Area(Movement)
   
   NLL <- (log(Movement[1,1]) - log(ProbStaying))^2 +
     (log(UnfishedDist) - log(Distribution[1]))^2

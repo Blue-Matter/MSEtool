@@ -2,22 +2,35 @@
 % Please edit documentation in R/utils-save.R
 \name{Save}
 \alias{Save}
-\title{Save an object to disk}
+\title{Save an Object to Disk}
 \usage{
 Save(object, path = NULL, overwrite = FALSE, ...)
 }
 \arguments{
-\item{object}{Any object to save to disk}
+\item{object}{Any R object to save.}
 
-\item{path}{The file path (including file name and extension) for the saved
-object. Defaults to \code{\link[=tempfile]{tempfile()}}.}
+\item{path}{Character. File path including file name and extension (e.g.,
+\code{"results/my_om.rds"}). If \code{NULL} (default), a temporary file path is
+generated via \code{\link[=tempfile]{tempfile()}}.}
 
-\item{overwrite}{Logical. Overwrite the file if it already exists?}
+\item{overwrite}{Logical. If \code{FALSE} (default), an error is thrown if
+\code{path} already exists. Set to \code{TRUE} to overwrite an existing file.}
+
+\item{...}{Additional arguments passed to \code{\link[=saveRDS]{saveRDS()}}.}
 }
 \value{
-invisibly returns the full file path of the saved object
+Invisibly returns the full file path of the saved object.
 }
 \description{
-A wrapper for \code{\link[=saveRDS]{saveRDS()}} that automatically creates the directory structure
-(if needed) and prints a helpful message to the console
+A wrapper for \code{\link[=saveRDS]{saveRDS()}} that automatically creates the required directory
+structure and prints a informational message to the console.
+}
+\examples{
+x <- list(a = 1, b = 2)
+path <- Save(x, path = tempfile(fileext = ".rds"))
+path
+
+}
+\seealso{
+\code{\link[=saveRDS]{saveRDS()}}
 }

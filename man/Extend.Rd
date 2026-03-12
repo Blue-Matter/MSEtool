@@ -6,7 +6,7 @@
 \alias{ExtendAges}
 \alias{ExtendYears}
 \alias{ExtendAreas}
-\title{Extend an array}
+\title{Extend an Array Along Named Dimensions}
 \usage{
 Extend(
   array,
@@ -15,6 +15,7 @@ Extend(
   Years = NULL,
   Areas = NULL,
   default = NULL,
+  backfill = FALSE,
   debug = FALSE
 )
 
@@ -28,62 +29,66 @@ ExtendAreas(array, Areas = NULL)
 }
 \arguments{
 \item{array}{An \code{\link[=array]{array()}} with named dimensions including at least one of
-\code{Sim}, \code{Year},  \code{Age}, or \code{Area}. Alternatively, an \link{S4} or a \code{\link[=list]{list()}} object, in which
-case the function will loop over all slots or elements respectively and extend
-any named arrays. Any other objects will be returned unchanged.}
+\code{Sim}, \code{Year}, \code{Age}, or \code{Area}. Alternatively, an S4 or \code{\link[=list]{list()}} object,
+in which case the function recurses over all slots or elements and extends
+any named arrays. Any other object is returned unchanged.}
 
-\item{nSim}{The total number of simulations. Integer (or NULL to skip)}
+\item{nSim}{Integer. Total number of simulations, or \code{NULL} to skip.}
 
-\item{AgeClasses}{A numeric vector of age classes (or NULL to skip)}
+\item{AgeClasses}{Numeric vector of age classes, or \code{NULL} to skip.}
 
-\item{Years}{A numeric vector of \code{Year} values (or NULL to skip)}
+\item{Years}{Numeric vector of \code{Year} values to extend to, or \code{NULL} to
+skip.}
 
-\item{Areas}{A numeric vector with values 1:\code{nArea} (or NULL to skip)}
+\item{Areas}{Numeric vector of area indices (\code{1:nArea}), or \code{NULL} to skip.}
 
-\item{default}{Default value for forward filled year values. Default is the same
-value as the most recent year}
+\item{default}{Default fill value for forward-filled years. If \code{NULL}
+(default), the value from the most recent existing year is used.}
 
-\item{debug}{Logical. Print debug messages?}
+\item{backfill}{Logical. If \code{TRUE}, also back-fill years earlier than the
+earliest existing year. Default \code{FALSE}.}
+
+\item{debug}{Logical. If \code{TRUE}, prints the class of each object as it is
+processed. Default \code{FALSE}.}
+}
+\value{
+The input object with dimensions extended as specified. The return
+type matches the input type (array, S4, or list).
 }
 \description{
-Extends an array with named dimensions to include all simulations, ages, and areas
-and any missing years,
+Extends an array with named dimensions to include all simulations, ages,
+areas, and any missing years. Can also recurse into S4 objects and lists.
 }
 \details{
 \subsection{ExtendSims}{
 
-A \code{Sim} dimension in an array must have either length \code{1} or length \code{nSim}.
-If the latter, \code{ExtendSims} returns the array unchanged. If the former, the names of the
-\code{Sim} dimension is extended to length \code{nSim} with the values of simulation 1 replicated for
-all simulations.
+The \code{Sim} dimension must have length \code{1} or \code{nSim}. If length \code{1}, it is
+replicated to length \code{nSim} with simulation 1 values copied to all
+simulations. If already length \code{nSim}, the array is returned unchanged.
 }
 
 \subsection{ExtendAges}{
 
-An \code{Age} dimension in an array must have either length \code{1} or length \code{nAge} for a given stock.
-If the latter, \code{ExtendAges} returns the array unchanged. If the former, the names of the
-\code{Age} dimension is extended to length \code{nAge} with the values of the first age class replicated for
-all age classes.
+The \code{Age} dimension must have length \code{1} or \code{nAge}. If length \code{1}, it is
+replicated to length \code{nAge} with the first age class copied to all ages.
+If already length \code{nAge}, the array is returned unchanged.
 }
 
 \subsection{ExtendYears}{
 
-A \code{Year} dimension can be any length and include any years in \code{Years(OM)}.
-If the names of the \code{Year} dimension includes all values in \code{Years}, the array
-will be returned unchanged. Otherwise, the array will be extended to include
-all missing values in \code{Years}.
+The \code{Year} dimension can be any length. If all values in \code{Years} are already
+present, the array is returned unchanged. Otherwise missing years are added
+by forward-filling from the most recent existing year, back-filling from the
+earliest (if \code{backfill = TRUE}), or step-filling for years within the
+existing range. If any year values are non-integer (decimal), seasonal
+matching is used via \code{ExtendYears_seasonal()}.
 }
 
 \subsection{ExtendAreas}{
 
-An \code{Area} dimension in an array must have either length \code{1} or length \code{nArea} for a given OM
-If the latter, \code{ExtendAreas} returns the array unchanged. If the former, the names of the
-\code{Area} dimension is extended to length \code{nArea} with the values of the first area replicated for
-all other areas.
-
-Values will be back filled or forward filled as necessary to include all \code{Years}.
-If there is seasonality (decimal years), the filled values will match those from the
-most recent season.
+The \code{Area} dimension must have length \code{1} or \code{nArea}. If length \code{1}, it is
+replicated to length \code{nArea} with area 1 values copied to all areas. If
+already length \code{nArea}, the array is returned unchanged.
 }
 }
 \examples{
@@ -129,4 +134,7 @@ array <- array(1:8,
 Years <- c(1945.25, 1960, 1975.5)
 ExtendYears(array, Years)
 
+}
+\seealso{
+\code{\link[=ExtendSims]{ExtendSims()}}, \code{\link[=ExtendAges]{ExtendAges()}}, \code{\link[=ExtendYears]{ExtendYears()}}, \code{\link[=ExtendAreas]{ExtendAreas()}}
 }

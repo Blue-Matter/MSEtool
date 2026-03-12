@@ -5,8 +5,10 @@
 #' object. MPs are assigned `class "mp"` so they are recognised by the MSE
 #' framework.
 #'
-#' - `CurrentEffort`: Fixes fishing effort at 1 (i.e. last historical effort)
-#'   for all fleets.
+#' - `StatusQuo`: Fixes fishing effort at 1 (i.e. last historical effort) for 
+#' all fleets, and maintains the spatial distribution of fishing effort from the 
+#' last historical timestep.
+#' - `CurrentEffort`: Alias for `StatusQuo`.
 #' - `CurrentCatch`: Sets the TAC for each fleet to the landings observed in
 #'   the last historical year.
 #'
@@ -18,10 +20,19 @@
 #' @name ExampleMPs
 NULL
 
+
+#' @rdname ExampleMPs
+#' @export
+StatusQuo <- function(Data) {
+  Advice()
+}
+class(StatusQuo) <- 'mp'
+
+
 #' @rdname ExampleMPs
 #' @export
 CurrentEffort <- function(Data) {
-  Advice(Effort=1)
+  StatusQuo(Data)
 }
 class(CurrentEffort) <- 'mp'
 

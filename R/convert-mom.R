@@ -1,4 +1,31 @@
-#' @rdname Convert
+#' Convert Legacy MOM Object to New om Class
+#'
+#' Converts a legacy [MOM-legacy-class] object to the current [om-class], copying
+#' attributes, updating year vectors, and optionally populating the object
+#' via [PopulateOM()].
+#'
+#' @param MOM A [MOM-legacy-class] object to convert.
+#' @param Author Character. Author of the OM. Default `""`.
+#' @param CurrentYear Numeric. Last historical calendar year. If `NULL`
+#'   (default), taken from `MOM@Fleets[[1]][[1]]@CurrentYr`; if that is less
+#'   than 1000, defaults to the current system year.
+#' @param Seasons Integer. Number of seasons per year. Default `1`.
+#' @param Populate Logical. If `TRUE` (default), calls [PopulateOM()] on the
+#'   converted object.
+#' @param silent Logical. If `TRUE`, suppresses progress messages. Default
+#'   `FALSE`.
+#'
+#' @return An [om-class] object.
+#'
+#' @seealso [Convert()], [ConvertOM()], [ConvertStock()], [ConvertFleet()],
+#'   [ConvertObs()], [ConvertImp()], [PopulateOM()]
+#'
+#' @examples
+#' \dontrun{
+#' MOMlegacy <- readRDS("MyLegacyMOM.rds")
+#' om_new <- ConvertMOM(MOMlegacy)
+#' }
+#'
 #' @export
 ConvertMOM <- function(MOM, Author='', 
                        CurrentYear=NULL, 
@@ -66,7 +93,7 @@ ConvertMOM <- function(MOM, Author='',
   FleetNames <- lapply(FleetNames, function(x) gsub("REPLACED -- ", '', x)) |> unlist()
   names(om@Fleet) <- StockNames
   
-  for (st in 1:nStock) {
+  for (st in seq_len(nStock)) {
     # om@Stock[[st]]@Depletion@Final <- NULL #
     om@Fleet[[st]]  <- ConvertToList(MOM2fleet(MOM, st, YearsList))
     names(om@Fleet[[st]]) <- FleetNames
@@ -76,16 +103,16 @@ ConvertMOM <- function(MOM, Author='',
   om@Obs <- MakeNamedList(
     StockNames, MakeNamedList(FleetNames))
   
-  for (st in 1:nStock) {
-    for (fl in 1:nFleet) {
+  for (st in seq_len(nStock)) {
+    for (fl in seq_len(nFleet)) {
       om@Obs[[st]][[fl]] <- ConvertObs(MOM@Obs[[st]][[fl]], silent = TRUE)
     }
   }
 
   if (is.list(MOM@CatchFrac) && length(MOM@CatchFrac)) {
     names(MOM@CatchFrac) <- StockNames
-    for (st in 1:length(MOM@CatchFrac)) {
-      dimnames(MOM@CatchFrac[[st]]) <- list(Sim = 1:MOM@nsim,
+    for (st in seq_along(MOM@CatchFrac)) {
+      dimnames(MOM@CatchFrac[[st]]) <- list(Sim = seq_len(MOM@nsim),
                                             Fleet = FleetNames)
       MOM@CatchFrac[[st]] <- ReduceDims(MOM@CatchFrac[[st]])
     }
@@ -96,7 +123,7 @@ ConvertMOM <- function(MOM, Author='',
     om@EFactor <- MakeNamedList(StockNames(om), 
                                 array(1, dim=c(om@nSim, nFleet(om)),
                                       dimnames = list(
-                                        Sim=1:om@nSim,
+                                        Sim=seq_len(om@nSim),
                                         Fleet=FleetNames(om)
                                       )
                                 ))  
@@ -112,16 +139,17 @@ ConvertMOM <- function(MOM, Author='',
   om
 }
 
+
 MOM2fleet <- function(MOM, st, YearsList) {
   
   nfleets <- length(MOM@Fleets[[1]])
   FleetNames <- names(MOM@Fleets[[1]])
   if (is.null(FleetNames))
-    FleetNames <- paste('Fleet', 1:nfleets)
+    FleetNames <- paste('Fleet', seq_len(nfleets))
   
   FleetList <- list()
   
-  for (fl in 1:nfleets) {
+  for (fl in seq_len(nfleets)) {
     Fleet <- MOM@Fleets[[st]][[fl]]
     cpars <- MOM@cpars[[st]][[fl]]
     Fdisc <- MOM@Stocks[[st]]@Fdisc
@@ -129,20 +157,19 @@ MOM2fleet <- function(MOM, st, YearsList) {
     FleetList[[fl]] <- OM2fleet(Fleet, YearsList, cpars, Fdisc, AgeClasses )
   }
   names(FleetList) <- FleetNames
-  if (nfleets==1) return(FleetList[[1]])
   FleetList
 }
+
 
 MOM2stock <- function(MOM, YearsList=NULL) {
   StockList <- list()
   stocks <- MOM@Stocks
   nstocks <- length(stocks)
   
-  for (st in 1:nstocks) {
+  for (st in seq_len(nstocks)) {
     Stock <- stocks[[st]]
     cpars <- MOM@cpars[[st]][[1]]
     StockList[[st]] <- OM2stock(Stock, cpars, YearsList, nSim=MOM@nsim, MOM@seed)
   }
-  if (nstocks==1) return(StockList[[1]])
   StockList
 }
