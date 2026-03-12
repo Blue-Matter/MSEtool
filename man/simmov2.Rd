@@ -16,7 +16,7 @@ simmov2(
 )
 }
 \arguments{
-\item{OM}{Operating model, an object of class \linkS4class{OM}.}
+\item{OM}{Operating model, an object of class \code{OM}.}
 
 \item{dist}{A vector of fractions of unfished stock in each area. The length of this vector will determine the
 number of areas (\code{nareas}) in the OM.}

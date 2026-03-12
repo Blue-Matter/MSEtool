@@ -3,9 +3,9 @@
 #' 
 #' Converts an OM to a single stock, single fleet MOM.
 #' 
-#' @param ... An \linkS4class{OM}.
+#' @param ... An `OM`.
 #' @param silent Should messages be printed out to the console?
-#' @return A class \linkS4class{MOM} object.
+#' @return A class `MOM` object.
 #' @examples 
 #' MOM <- makeMOM(testOM)
 #' @author Q. Huynh

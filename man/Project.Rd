@@ -38,7 +38,7 @@ correspond to individual MPs to run in parallel. Default \code{FALSE}.}
 \item{Reduce}{Logical. Reserved for future use. Default \code{TRUE}.}
 
 \item{extended}{Logical. If \code{TRUE}, stores full age- and area-structured
-arrays for all years in \code{MSE@Misc$extended}. Only used for \linkS4class{Hist}
+arrays for all years in \code{MSE@Misc$extended}. Only used for \linkS4class{Hist-legacy}
 objects. Substantially increases object size. Default \code{FALSE}.}
 
 \item{checkMPs}{Logical. Validate MP names and availability before
@@ -49,11 +49,11 @@ An \linkS4class{mse} or a \linkS4class{MSE-legacy} object containing projection 
 }
 \description{
 Runs the MSE projection loop for one or more management procedures (MPs)
-and returns a completed \linkS4class{MSE} object. Dispatches to the appropriate
+and returns a completed \linkS4class{MSE-legacy} object. Dispatches to the appropriate
 internal projection engine based on the class of \code{Hist}: \linkS4class{hist}
 objects use the new \code{om}-based engine; \linkS4class{Hist-legacy} objects use the legacy
 engine.
 }
 \seealso{
-\code{\link[=Simulate]{Simulate()}}, \code{\link[=RunMSE]{RunMSE()}}
+\code{\link[=Simulate]{Simulate()}}, \code{\link[=runMSE]{runMSE()}}
 }

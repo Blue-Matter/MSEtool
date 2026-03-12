@@ -22,7 +22,7 @@ getDataList<-function(MSElist,mm){
 
 #' Apply multi Management Procedures (class MMP) to a hierarchical list of Data class objects
 #'
-#' @param DataList A hierarchical list of \linkS4class{Data} objects (Fleets nested in Stocks)
+#' @param DataList A hierarchical list of `Data` objects (Fleets nested in Stocks)
 #' @param MP Name of the MMP to run
 #' @param reps Number of samples
 #' @param nsims Optional. Number of simulations.

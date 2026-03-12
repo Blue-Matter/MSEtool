@@ -58,7 +58,7 @@ plotquant<-function(x,p=c(0.05,0.25,0.75,0.95),yrs,qcol,lcol,addline=T,ablines=N
 #'
 #' @description Plot the projected biomass, fishing, mortality rate and yield for all stocks and MPs
 #'
-#' @param x Object of class \linkS4class{MMSE}. A Multi-OM object created by \code{multiMSE(MOM, ...)}
+#' @param x Object of class `MMSE`. A Multi-OM object created by \code{multiMSE(MOM, ...)}
 #' @param maxcol Integer. The maximum number of columns (MPs) to be plotted in each plot
 #' @param qcol Character, color. The color of the inner percentile range
 #' @param lcol Character, color. The color of the outer percentile range.

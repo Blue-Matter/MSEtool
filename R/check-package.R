@@ -17,8 +17,10 @@
 #' CheckPackage("MSEtool")
 #'
 #' # Needs updating
+#' \dontrun{
 #' CheckPackage("MSEtool", "99")
-#'
+#' }
+#' 
 #' # Update and specify installation path
 #' \dontrun{
 #' CheckPackage("MSEtool", "99", "pak::pgk_install('blue-matter/MSEtool')")

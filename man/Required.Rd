@@ -20,7 +20,7 @@ A function that finds all the MPs and searches the
 function text for slots in the Data object
 }
 \seealso{
-\link{Can} \link{Cant} \link{Needed} \link{MPtype} \linkS4class{Data}
+\link{Can} \link{Cant} \link{Needed} \link{MPtype} \linkS4class{Data-legacy}
 }
 \author{
 T. Carruthers

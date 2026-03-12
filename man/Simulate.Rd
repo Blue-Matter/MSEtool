@@ -95,5 +95,5 @@ hist <- Simulate(
 
 }
 \seealso{
-\code{\link[=OM]{OM()}}, \code{\link[=RunMSE]{RunMSE()}}
+\code{\link[=OM]{OM()}}, \code{\link[=runMSE]{runMSE()}}
 }

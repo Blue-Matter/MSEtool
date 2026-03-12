@@ -876,7 +876,7 @@ runMP <- function(Data, MPs = NA, reps = 100, perc=0.5, chkMPs=FALSE, silent=FAL
 #' 5 reps (this filters out methods that are too slow)
 #' @param MPs Optional list of MP names
 #' @param dev Logical. Run in development mode?
-#' @seealso \link{avail} \linkS4class{Data}
+#' @seealso \link{avail} [Data-legacy-class]
 #' @examples
 #' CanMPs <- Can(MSEtool::Cobia)
 #' CantMPs <- Cant(MSEtool::Cobia)

@@ -8,7 +8,7 @@
 #'
 #' @description Plot the stocks, fleets, catch fractions and relationships in multi operating model object
 #'
-#' @param x Object of class \linkS4class{MOM}. A Multi-OM object created by \code{new('MOM', ...)}
+#' @param x Object of class `MOM`. A Multi-OM object created by \code{new('MOM', ...)}
 #' @param silent Logical. Do you wish to see print outs / warnings?
 #' @param maxsims Integer. What are the maximum number of individual simulations you wish to plot?
 #' @author T.Carruthers

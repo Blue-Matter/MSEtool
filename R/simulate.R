@@ -42,7 +42,7 @@
 #' - If `OM` is an [om-class] object: a [hist-class] object.
 #' - If `OM` is an [OM-legacy-class] object: a [Hist-legacy-class] object.
 #'
-#' @seealso [OM()], [RunMSE()]
+#' @seealso [OM()], [runMSE()]
 #'
 #' @examples
 #' \dontrun{

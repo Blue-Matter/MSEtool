@@ -7,12 +7,12 @@
 makeMOM(..., silent = FALSE)
 }
 \arguments{
-\item{...}{An \linkS4class{OM}.}
+\item{...}{An \code{OM}.}
 
 \item{silent}{Should messages be printed out to the console?}
 }
 \value{
-A class \linkS4class{MOM} object.
+A class \code{MOM} object.
 }
 \description{
 Converts an OM to a single stock, single fleet MOM.

@@ -18,7 +18,7 @@ doRec(MPrec, mod, delta_down, delta_up, TACrng)
 \item{TACrng}{A vector 2 positions long, the minimum and maximum TAC (same units as MPrec).}
 }
 \value{
-n object of class \linkS4class{Rec}.
+n object of class \code{Rec}.
 }
 \description{
 Creates a TAC management recommendation given constraints on how much that can change from previous TAC and contraints on minimum and maximum TAC

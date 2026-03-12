@@ -22,7 +22,7 @@
 #' @param silent Whether to silence messages to the console.
 #' @param ... Additional arguments, including R0 (unfished recruitment), phi0 (unfished spawners per recruit associated with R0 and h for calculating stock recruit parameters),
 #' @details Use a seed for the random number generator to sample future recruitment.
-#' @return An object of class \linkS4class{OM}.
+#' @return An object of class `OM`.
 #' @author T. Carruthers
 #' @export
 #' @seealso \link{Assess2OM}

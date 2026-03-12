@@ -4,7 +4,7 @@
 #' A wrapper function for \link{makemov} used to generate movement matrices for the operating model.
 #' Calculates a movement matrix from user-specified unfished stock biomass fraction in each area and probability of
 #' staying in the area in each time step.
-#' @param OM Operating model, an object of class \linkS4class{OM}.
+#' @param OM Operating model, an object of class `OM`.
 #' @param dist A vector of fractions of unfished stock in each area. The length of this vector will determine the
 #' number of areas (\code{nareas}) in the OM.
 #' @param prob Mean probability of staying across all areas (single value) or a vector of the probability of
@@ -136,7 +136,7 @@ validateTMB <- function(obj) {
 #' A wrapper function for \link{makemov2} used to generate movement matrices for the operating model.
 #' Calculates a movement matrix from user-specified relative movement to other areas and probability of
 #' staying in the area in each time step.
-#' @param OM Operating model, an object of class \linkS4class{OM}.
+#' @param OM Operating model, an object of class `OM`.
 #' @param dist A vector of fractions of unfished stock in each area. The length of this vector will determine the
 #' number of areas (\code{nareas}) in the OM.
 #' @param distE Logit (normal) St.Dev error for sampling desired fraction in each area

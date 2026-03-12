@@ -45,7 +45,7 @@ ASAP2Data(asap, Name = "ASAP assessment")
 \item{silent}{Logical, should progress reporting be printed to the console?}
 }
 \value{
-An operating model \linkS4class{OM} class.
+An operating model \code{OM} class.
 }
 \description{
 Reads a fitted ASAP model and uses the MLE estimates with identical reconstruction among simulations. Future recruitment is

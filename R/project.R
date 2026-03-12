@@ -1,7 +1,7 @@
 #' Project an Operating Model Over the Projection Period
 #'
 #' Runs the MSE projection loop for one or more management procedures (MPs)
-#' and returns a completed [MSE-class] object. Dispatches to the appropriate
+#' and returns a completed [MSE-legacy-class] object. Dispatches to the appropriate
 #' internal projection engine based on the class of `Hist`: [hist-class]
 #' objects use the new `om`-based engine; [Hist-legacy-class] objects use the legacy
 #' engine.
@@ -22,14 +22,14 @@
 #'   (default), all simulations in `Hist` are used.
 #' @param Reduce Logical. Reserved for future use. Default `TRUE`.
 #' @param extended Logical. If `TRUE`, stores full age- and area-structured
-#'   arrays for all years in `MSE@Misc$extended`. Only used for [Hist-class]
+#'   arrays for all years in `MSE@Misc$extended`. Only used for [Hist-legacy-class]
 #'   objects. Substantially increases object size. Default `FALSE`.
 #' @param checkMPs Logical. Validate MP names and availability before
 #'   projecting. Only used for [Hist-legacy-class] objects. Default `FALSE`.
 #'
 #' @return An [mse-class] or a [MSE-legacy-class] object containing projection results for all MPs.
 #'
-#' @seealso [Simulate()], [RunMSE()]
+#' @seealso [Simulate()], [runMSE()]
 #' 
 #' @export
 Project <- function(Hist,

@@ -114,7 +114,7 @@ in the operating model such that the stock-recruit \code{alpha} and \code{beta} 
 }}
 }
 \value{
-An object of class \linkS4class{OM}.
+An object of class \code{OM}.
 }
 \description{
 A function that uses a set of bootstrap estimates of numbers-at-age, fishing mortality rate-at-age, M-at-age,

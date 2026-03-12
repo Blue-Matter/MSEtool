@@ -57,8 +57,8 @@
 #' @param Reduce Logical. Reserved for future use. Default `TRUE`.  `om` and `hist` class only.
 #' @param ... Additional arguments. Reserved for future use.
 #'
-#' @return If `Hist = TRUE`, a [hist-class] or [Hist-class] object containing
-#'   the conditioned historical dynamics. Otherwise, a [MSE-class] object
+#' @return If `Hist = TRUE`, a [hist-class] or [Hist-legacy-class] object containing
+#'   the conditioned historical dynamics. Otherwise, a [MSE-legacy-class] object
 #'   containing projection results for all MPs. If an error occurs during
 #'   [Project()], the historical simulations are returned with a warning.
 #'

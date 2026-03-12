@@ -16,7 +16,7 @@
 #' @param Author Who did the assessment
 #' @param report Logical, should a comparison of biomass reconstruction be produced?
 #' @param silent Logical, should progress reporting be printed to the console?
-#' @return An operating model \linkS4class{OM} class.
+#' @return An operating model `OM` class.
 #' 
 #' @details 
 #' Length at age is not used in ASAP so arbitrary placeholder values are used for length-based parameters. Update

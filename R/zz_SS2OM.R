@@ -281,8 +281,8 @@ SSMOM2OM <- function(MOM, SSdir, gender = 1:2, import_mov = TRUE, seed = 1, sile
 }
 
 #' @rdname SS2MOM
-#' @param x For \code{plot_SS2OM}, an object of either class \linkS4class{OM} or \linkS4class{Hist}.
-#'  For \code{plot_SS2MOM}, an object of either class \linkS4class{MOM} or `multiHist`.
+#' @param x For \code{plot_SS2OM}, an object of either class `OM` or `Hist`.
+#'  For \code{plot_SS2MOM}, an object of either class `MOM` or `multiHist`.
 #' @export
 plot_SS2OM <- function(x, SSdir, gender = 1:2,
                        filename = "SS2OM", dir = tempdir(), open_file = TRUE, silent = FALSE, ...) {

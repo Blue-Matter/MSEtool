@@ -27,7 +27,9 @@ CheckPackage("MadeUp")
 CheckPackage("MSEtool")
 
 # Needs updating
+\dontrun{
 CheckPackage("MSEtool", "99")
+}
 
 # Update and specify installation path
 \dontrun{

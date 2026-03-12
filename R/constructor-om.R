@@ -98,7 +98,7 @@
 #'   S4 object with an `OM` slot.
 #'
 #' @seealso [om-class], [Stock()], [Fleet()], [Obs()], [Imp()], [Data()],
-#'   [OM-accessors], [PopulateOM()], [RunMSE()]
+#'   [OM-accessors], [PopulateOM()], [runMSE()]
 #'
 #' @examples
 #' om <- OM()

@@ -16,7 +16,7 @@
 )
 }
 \arguments{
-\item{x}{Object of class \linkS4class{MMSE}. A Multi-OM object created by \code{multiMSE(MOM, ...)}}
+\item{x}{Object of class \code{MMSE}. A Multi-OM object created by \code{multiMSE(MOM, ...)}}
 
 \item{maxcol}{Integer. The maximum number of columns (MPs) to be plotted in each plot}
 

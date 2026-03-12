@@ -8,7 +8,7 @@
 \S4method{plot}{MOM,missing}(x, silent = TRUE, maxsims = 6)
 }
 \arguments{
-\item{x}{Object of class \linkS4class{MOM}. A Multi-OM object created by \code{new('MOM', ...)}}
+\item{x}{Object of class \code{MOM}. A Multi-OM object created by \code{new('MOM', ...)}}
 
 \item{silent}{Logical. Do you wish to see print outs / warnings?}
 

@@ -1,7 +1,7 @@
 #' Import Stock Synthesis to MOM (2-sex multi-fleet) or OM (single-sex, single-fleet)
 #'
 #' @description Functions that uses the file location or the r4ss output list of a fitted SS3 model including input files to populate the
-#' various slots of an \linkS4class{MOM} or \linkS4class{OM} object. \code{SS2MOM} and \code{SS2OM} mainly populates the Stock and Fleet components
+#' various slots of an `MOM` or `OM` object. \code{SS2MOM} and \code{SS2OM} mainly populates the Stock and Fleet components
 #' components of the operating model. \code{SS2MOM} creates a 2-sex model and multiple fleets with discarding behavior.
 #' \code{SS2OM} returns a single sex (either male, female, or averaged biological parameters) and single fleet (aggregate selectivity and mortality,
 #' no explicit discarding modeled). For either, the user still needs to parameterize most of the observation and
@@ -24,7 +24,7 @@
 #' @param Source Reference to assessment documentation e.g. a url
 #' @param ... Arguments to pass to \link[r4ss]{SS_output}.
 #' @note Currently tested on r4ss version 1.38.1-40.0 and SS 3.30.14.
-#' @return SS2MOM returns an object of class \linkS4class{MOM}. SS2OM returns an object of class \linkS4class{OM}.
+#' @return SS2MOM returns an object of class `MOM`. SS2OM returns an object of class `OM`.
 #' @author Q. Huynh
 #' @export
 #' @seealso \link{SS2Data} \link{SS2DataMOM}

@@ -3115,7 +3115,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 #' Functions for running a multi-stock and/or multi-fleet Management
 #' Strategy Evaluation (closed-loop simulation) for a specified operating model
 #'
-#' @param MOM A multi-fleet multi-stock operating model (class [MSEtool::MOM-class])
+#' @param MOM A multi-fleet multi-stock operating model (class `MOM`)
 #' @param MPs A matrix of methods (nstock x nfleet) (character string) of class MP
 #' @param Hist Should model stop after historical simulations? Returns a list
 #' containing all historical data

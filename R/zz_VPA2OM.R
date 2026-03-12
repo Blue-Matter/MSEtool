@@ -40,7 +40,7 @@
 #' \item \code{spawn_time_frac} The fraction of a year when spawning takes place (e.g., 0.5 is the midpoint of the year)
 #' }
 #' @details Use a seed for the random number generator to sample future recruitment.
-#' @return An object of class \linkS4class{OM}.
+#' @return An object of class `OM`.
 #' @author T. Carruthers
 #' @aliases VPA2OM
 #' @export
@@ -426,7 +426,7 @@ VPA2OM <- Assess2OM
 
 #' Reads bootstrap estimates from a stock assessment model into a multi-fleet operating model.
 #'
-#' @description A function that develops a multiple fleet operating model (\linkS4class{MOM}) and either models a unisex or 2-sex
+#' @description A function that develops a multiple fleet operating model (`MOM`) and either models a unisex or 2-sex
 #' stock from arrays of abundance, fishing mortality, and biological parameters. The user still
 #' needs to parameterize most of the observation and implementation portions of the operating model.
 #' @param Name Character string. The name of the multi-OM.
@@ -434,10 +434,10 @@ VPA2OM <- Assess2OM
 #' @param interval Positive integer. The interval at which management procedures will update the management advice in \link[MSEtool]{multiMSE}, e.g., 1 = annual updates.
 #' @param CurrentYr Positive integer. The current year (e.g., final year of fitting to data)
 #' @param h The steepness of the stock-recruitment curve. Either a single numeric or a length nsim vector.
-#' @param Obs Either a single observation model to be used for all sexes and populations (class \linkS4class{Obs}), or a list where
-#' \code{Obs[[f]]} is the \linkS4class{Obs} object for fleet `f` (identical between sexes).
-#' @param Imp Either a single implementation model to be used for all sexes and populations (class \linkS4class{Imp}), or a list where
-#' \code{Imp[[f]]} is the \linkS4class{Obs} object for fleet `f` (identical between sexes).
+#' @param Obs Either a single observation model to be used for all sexes and populations (class `Obs`), or a list where
+#' \code{Obs[[f]]} is the `Obs` object for fleet `f` (identical between sexes).
+#' @param Imp Either a single implementation model to be used for all sexes and populations (class `Imp`), or a list where
+#' \code{Imp[[f]]} is the `Obs` object for fleet `f` (identical between sexes).
 #' @param naa Numbers-at-age by sex `[first age is age zero]`. Four-dimensional numeric array `[sim, ages, year, p]`. `[p]` indexes the population, where
 #' `[p = 1]` for females and `[p = 2]` for males.
 #' @param faa Fishing mortality rate-at-age by sex and fleet `[first age is age zero]`. Five-dimensional numeric array `[sim, ages, year, p, f]` where `[f]` indexes fishery fleet.
@@ -465,7 +465,7 @@ VPA2OM <- Assess2OM
 #' \item \code{AC} autocorrelation in future recruitment deviates.
 #' }
 #' @details Use a seed for the random number generator to sample future recruitment.
-#' @return An object of class \linkS4class{MOM}.
+#' @return An object of class `MOM`
 #' @author Q. Huynh
 #' @export
 #' @seealso \link{SS2MOM} \link{multiMSE} \link{Assess2OM}

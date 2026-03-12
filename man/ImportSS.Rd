@@ -77,7 +77,7 @@ fleet names are inferred from SS3 output.}
 }
 \value{
 \itemize{
-\item \code{ImportSS()} returns an \linkS4class{OM} object containing stock, fleet, data,
+\item \code{ImportSS()} returns an \linkS4class{om} object containing stock, fleet, data,
 observation, and allocation components derived from the SS3 model.
 \item \code{ImportSSReport()} returns a list of SS3 report objects.
 }

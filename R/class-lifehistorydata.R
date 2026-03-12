@@ -5,23 +5,23 @@
 #' the model and parameters for that process. Used in the `LifeHistory` slot
 #' of a [data-class] object.
 #'
-#' @slot Ages An object of class [ages] defining the age structure of the
+#' @slot Ages An object of class [ages-class] defining the age structure of the
 #'   population (minimum age, maximum age, plus-group).
-#' @slot Length An object of class [length] defining the growth model
+#' @slot Length An object of class [length-class] defining the growth model
 #'   (e.g., von Bertalanffy) and length-at-age parameters.
-#' @slot Weight An object of class [weight] defining the weight-at-age or
+#' @slot Weight An object of class [weight-class] defining the weight-at-age or
 #'   length–weight relationship.
-#' @slot NaturalMortality An object of class [naturalmortality] defining
+#' @slot NaturalMortality An object of class [naturalmortality-class] defining
 #'   natural mortality rates, which may be age-, size-, or time-varying.
-#' @slot Maturity An object of class [maturity] defining maturity-at-age or
+#' @slot Maturity An object of class [maturity-class] defining maturity-at-age or
 #'   maturity-at-length schedules.
-#' @slot Fecundity An object of class [fecundity] defining fecundity-at-age
+#' @slot Fecundity An object of class [fecundity-class] defining fecundity-at-age
 #'   or fecundity-at-length relationships.
-#' @slot SRR An object of class [srr] defining the stock–recruitment
+#' @slot SRR An object of class [srr-class] defining the stock–recruitment
 #'   relationship (e.g., Beverton–Holt, Ricker) and associated parameters.
-#' @slot Spatial An object of class [spatial] defining the spatial structure
+#' @slot Spatial An object of class [spatial-class] defining the spatial structure
 #'   of the population, including movement and area allocation.
-#' @slot Depletion An object of class [depletion] specifying the initial
+#' @slot Depletion An object of class [depletion-class] specifying the initial
 #'   depletion level relative to unfished biomass.
 #' @slot Misc A named list for any additional life-history metadata.
 #'

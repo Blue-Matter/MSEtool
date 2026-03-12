@@ -171,14 +171,14 @@ setGeneric("SubCpars", function(x, ...) standardGeneric("SubCpars"))
 #'
 #' @description Subset the custom parameters of an operating model by simulation and projection years 
 #'
-#' @param x An object of class \linkS4class{OM} or \linkS4class{MOM}
+#' @param x An object of class `OM` or `MOM`
 #' @param sims A logical vector of length \code{x@@nsim} to either retain (TRUE) or remove (FALSE).
 #' Alternatively, a numeric vector indicating which simulations (from 1 to nsim) to keep.
 #' @param proyears If provided, a numeric to reduce the number of projection years (must be less than \code{x@@proyears}).
 #' @param silent Logical to indicate if messages will be reported to console.
 #' @param ... Arguments for method.
 #' @details Useful function for running \link{multiMSE} in batches if running into memory constraints.
-#' @return An object of class \linkS4class{OM} or \linkS4class{MOM} (same class as \code{x}).
+#' @return An object of class `OM` or `MOM` (same class as \code{x}).
 #' @seealso \link{Sub} for MSE objects, \link{SubOM} for OM components.
 #' @author T. Carruthers, Q. Huynh
 #' @export
@@ -575,7 +575,7 @@ plotFun <- function(class = c("MSE", "Data"), msg = TRUE) {
 #' @author T. Carruthers
 #' @return A matrix of MPs and their required data in terms of `slotnames('Data')`,
 #' and broad Data classes for each MP
-#' @seealso \link{Can} \link{Cant} \link{Needed} \link{MPtype} \linkS4class{Data}
+#' @seealso \link{Can} \link{Cant} \link{Needed} \link{MPtype} [Data-legacy-class]
 #' @export
 Required <- function(funcs = NA, noCV=FALSE) {
 

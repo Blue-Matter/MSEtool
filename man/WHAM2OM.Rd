@@ -63,7 +63,7 @@ WHAM2OM(
 \item{...}{Additional arguments, including R0 (unfished recruitment), phi0 (unfished spawners per recruit associated with R0 and h for calculating stock recruit parameters),}
 }
 \value{
-An object of class \linkS4class{OM}.
+An object of class \code{OM}.
 }
 \description{
 Takes a fitted SAM model and samples historical population and fishing dynamics from the MLE fit and variance-covariance matrix.

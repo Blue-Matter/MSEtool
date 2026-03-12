@@ -74,7 +74,7 @@ doIfreq=function(I_hist, I_freq, LHYr, CurYr, Year){
 #' @param delta_down A vector 2 positions long, the minimum and maximum levels of downward change (e.g. when mod < 1) in the recommendation. 
 #' @param delta_up A vector 2 positions long, the minimum and maximum levels of upward change (e.g. when mod > 1) in the recommendation. 
 #' @param TACrng A vector 2 positions long, the minimum and maximum TAC (same units as MPrec).  
-#' @return n object of class \linkS4class{Rec}.
+#' @return n object of class `Rec`.
 #' @author T. Carruthers
 #' @export
 doRec = function(MPrec, mod, delta_down, delta_up, TACrng){ 

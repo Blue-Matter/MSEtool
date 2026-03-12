@@ -86,8 +86,8 @@ data? Passed to \code{\link[=Simulate]{Simulate()}}. Default \code{TRUE}. \code{
 \item{...}{Additional arguments. Reserved for future use.}
 }
 \value{
-If \code{Hist = TRUE}, a \linkS4class{hist} or \link[=hist-class]{Hist-class} object containing
-the conditioned historical dynamics. Otherwise, a \linkS4class{MSE} object
+If \code{Hist = TRUE}, a \linkS4class{hist} or \linkS4class{Hist-legacy} object containing
+the conditioned historical dynamics. Otherwise, a \linkS4class{MSE-legacy} object
 containing projection results for all MPs. If an error occurs during
 \code{\link[=Project]{Project()}}, the historical simulations are returned with a warning.
 }

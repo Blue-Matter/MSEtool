@@ -41,11 +41,11 @@ Assess2MOM(
 
 \item{h}{The steepness of the stock-recruitment curve. Either a single numeric or a length nsim vector.}
 
-\item{Obs}{Either a single observation model to be used for all sexes and populations (class \linkS4class{Obs}), or a list where
-\code{Obs[[f]]} is the \linkS4class{Obs} object for fleet \code{f} (identical between sexes).}
+\item{Obs}{Either a single observation model to be used for all sexes and populations (class \code{Obs}), or a list where
+\code{Obs[[f]]} is the \code{Obs} object for fleet \code{f} (identical between sexes).}
 
-\item{Imp}{Either a single implementation model to be used for all sexes and populations (class \linkS4class{Imp}), or a list where
-\code{Imp[[f]]} is the \linkS4class{Obs} object for fleet \code{f} (identical between sexes).}
+\item{Imp}{Either a single implementation model to be used for all sexes and populations (class \code{Imp}), or a list where
+\code{Imp[[f]]} is the \code{Obs} object for fleet \code{f} (identical between sexes).}
 
 \item{naa}{Numbers-at-age by sex \verb{[first age is age zero]}. Four-dimensional numeric array \verb{[sim, ages, year, p]}. \verb{[p]} indexes the population, where
 \verb{[p = 1]} for females and \verb{[p = 2]} for males.}
@@ -90,10 +90,10 @@ in the operating model such that the stock-recruit \code{alpha} and \code{beta} 
 }}
 }
 \value{
-An object of class \linkS4class{MOM}.
+An object of class \code{MOM}
 }
 \description{
-A function that develops a multiple fleet operating model (\linkS4class{MOM}) and either models a unisex or 2-sex
+A function that develops a multiple fleet operating model (\code{MOM}) and either models a unisex or 2-sex
 stock from arrays of abundance, fishing mortality, and biological parameters. The user still
 needs to parameterize most of the observation and implementation portions of the operating model.
 }

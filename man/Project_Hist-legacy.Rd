@@ -15,7 +15,7 @@ Project_Hist(
 )
 }
 \arguments{
-\item{Hist}{A \linkS4class{Hist}, or \code{multiHist} object.}
+\item{Hist}{A \linkS4class{Hist-legacy}, or \code{multiHist} object.}
 
 \item{MPs}{Character vector of MP names to project. Default \code{NA}.}
 
@@ -39,7 +39,7 @@ A \linkS4class{MSE-legacy} object.
 }
 \description{
 Runs the MSE projection loop for all MPs in \code{MPs} and returns a completed
-\linkS4class{MSE} object. Dispatches to the appropriate projection function based
+\linkS4class{MSE-legacy} object. Dispatches to the appropriate projection function based
 on the class of \code{Hist}: \linkS4class{hist} calls \code{Project_hist()} recursively,
 \code{multiHist} calls \code{ProjectMOM()}, and \linkS4class{Hist-legacy} runs the full
 legacy projection loop.

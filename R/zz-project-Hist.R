@@ -1,12 +1,12 @@
 #' Project a Hist Object Across Management Procedures
 #'
 #' Runs the MSE projection loop for all MPs in `MPs` and returns a completed
-#' [MSE-class] object. Dispatches to the appropriate projection function based
+#' [MSE-legacy-class] object. Dispatches to the appropriate projection function based
 #' on the class of `Hist`: [hist-class] calls `Project_hist()` recursively,
 #' `multiHist` calls `ProjectMOM()`, and [Hist-legacy-class] runs the full
 #' legacy projection loop.
 #'
-#' @param Hist A [Hist-class], or `multiHist` object.
+#' @param Hist A [Hist-legacy-class], or `multiHist` object.
 #' @param MPs Character vector of MP names to project. Default `NA`.
 #' @param parallel Logical or named list controlling parallel MP execution.
 #'   Default `FALSE`.

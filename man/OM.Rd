@@ -184,5 +184,5 @@ Agency(om)
 }
 \seealso{
 \linkS4class{om}, \code{\link[=Stock]{Stock()}}, \code{\link[=Fleet]{Fleet()}}, \code{\link[=Obs]{Obs()}}, \code{\link[=Imp]{Imp()}}, \code{\link[=Data]{Data()}},
-\link{OM-accessors}, \code{\link[=PopulateOM]{PopulateOM()}}, \code{\link[=RunMSE]{RunMSE()}}
+\link{OM-accessors}, \code{\link[=PopulateOM]{PopulateOM()}}, \code{\link[=runMSE]{runMSE()}}
 }

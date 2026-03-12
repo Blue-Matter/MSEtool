@@ -115,8 +115,8 @@ MOM_agg_fleets(MOM)
 
 \item{...}{Arguments to pass to \link[r4ss]{SS_output}.}
 
-\item{x}{For \code{plot_SS2OM}, an object of either class \linkS4class{OM} or \linkS4class{Hist}.
-For \code{plot_SS2MOM}, an object of either class \linkS4class{MOM} or \code{multiHist}.}
+\item{x}{For \code{plot_SS2OM}, an object of either class \code{OM} or \code{Hist}.
+For \code{plot_SS2MOM}, an object of either class \code{MOM} or \code{multiHist}.}
 
 \item{gender}{An integer that indexes the sex for importing life history parameters (1 = usually female, 2 = usually male, 1:2 = mean across both sexes).
 Only used for \code{SS2OM} only in a 2-sex model.}
@@ -143,11 +143,11 @@ to compare against SS output. A markdown report will be generated.}
 \item{MOM}{MOM object}
 }
 \value{
-SS2MOM returns an object of class \linkS4class{MOM}. SS2OM returns an object of class \linkS4class{OM}.
+SS2MOM returns an object of class \code{MOM}. SS2OM returns an object of class \code{OM}.
 }
 \description{
 Functions that uses the file location or the r4ss output list of a fitted SS3 model including input files to populate the
-various slots of an \linkS4class{MOM} or \linkS4class{OM} object. \code{SS2MOM} and \code{SS2OM} mainly populates the Stock and Fleet components
+various slots of an \code{MOM} or \code{OM} object. \code{SS2MOM} and \code{SS2OM} mainly populates the Stock and Fleet components
 components of the operating model. \code{SS2MOM} creates a 2-sex model and multiple fleets with discarding behavior.
 \code{SS2OM} returns a single sex (either male, female, or averaged biological parameters) and single fleet (aggregate selectivity and mortality,
 no explicit discarding modeled). For either, the user still needs to parameterize most of the observation and

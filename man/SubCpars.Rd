@@ -13,7 +13,7 @@ SubCpars(x, ...)
 \S4method{SubCpars}{MOM}(x, sims = 1:x@nsim, proyears = x@proyears, silent = FALSE)
 }
 \arguments{
-\item{x}{An object of class \linkS4class{OM} or \linkS4class{MOM}}
+\item{x}{An object of class \code{OM} or \code{MOM}}
 
 \item{...}{Arguments for method.}
 
@@ -25,7 +25,7 @@ Alternatively, a numeric vector indicating which simulations (from 1 to nsim) to
 \item{silent}{Logical to indicate if messages will be reported to console.}
 }
 \value{
-An object of class \linkS4class{OM} or \linkS4class{MOM} (same class as \code{x}).
+An object of class \code{OM} or \code{MOM} (same class as \code{x}).
 }
 \description{
 Subset the custom parameters of an operating model by simulation and projection years

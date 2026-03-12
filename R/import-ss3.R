@@ -189,7 +189,7 @@ GetSSRepList <- function(SSDir, silent = FALSE, ...) {
 #' @param ... Additional arguments passed to SS3 import functions.
 #'
 #' @return
-#' * `ImportSS()` returns an [OM-class] object containing stock, fleet, data,
+#' * `ImportSS()` returns an [om-class] object containing stock, fleet, data,
 #'   observation, and allocation components derived from the SS3 model.
 #' * `ImportSSReport()` returns a list of SS3 report objects.
 #'

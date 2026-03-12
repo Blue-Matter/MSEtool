@@ -14,7 +14,7 @@ applyMMP(
 )
 }
 \arguments{
-\item{DataList}{A hierarchical list of \linkS4class{Data} objects (Fleets nested in Stocks)}
+\item{DataList}{A hierarchical list of \code{Data} objects (Fleets nested in Stocks)}
 
 \item{MP}{Name of the MMP to run}
 
