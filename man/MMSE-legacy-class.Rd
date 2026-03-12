@@ -3,6 +3,7 @@
 \docType{class}
 \name{MMSE-legacy-class}
 \alias{MMSE-legacy-class}
+\alias{MMSE-class}
 \title{Class \code{'MMSE'}}
 \description{
 A Multi Management Strategy Evaluation object that contains information about

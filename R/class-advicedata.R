@@ -18,6 +18,7 @@
 #' @seealso [data-class], [Data()], [LastTAC()]
 #' @include class-unions.R
 #' @name advicedata
+#' @aliases advicedata-class
 #' @export
 setClass(
   "advicedata",

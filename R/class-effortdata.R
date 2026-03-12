@@ -19,6 +19,7 @@
 #' @seealso [data-class], [Data()]
 #' @include class-unions.R
 #' @name effortdata
+#' @aliases effortdata-class
 #' @export
 setClass(
   "effortdata",

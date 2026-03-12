@@ -3,6 +3,7 @@
 \docType{class}
 \name{catchdata}
 \alias{catchdata}
+\alias{catchdata-class}
 \alias{CatchData}
 \title{\code{catchdata} Class}
 \usage{

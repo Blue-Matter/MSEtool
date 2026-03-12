@@ -3,6 +3,7 @@
 \docType{class}
 \name{advicedata}
 \alias{advicedata}
+\alias{advicedata-class}
 \alias{AdviceData}
 \title{\code{advicedata} Class}
 \usage{

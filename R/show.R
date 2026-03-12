@@ -195,17 +195,26 @@ cli_fn <- function(fun) {
   
   param_names <- names(object@Pars)
   
+  fail <- FALSE
   if (is.null(object@Model) && length(param_names)) {
-    object@Model <- FindModel(object)
-  
+    chk <- try(FindModel(object), silent=TRUE)
+    if (inherits(chk, 'try-error')) {
+      object@Model <- sub("^Error in \\S+ : ", "", as.character(chk))
+      fail <- TRUE
+    } else {
+      object@Model <- chk
+    }
   }
   
   if (is.character(object@Model)) {
-    cli::cli_text("{.var Model}:  {.help {help_topic('MSEtool', object@Model)}}") 
+    if (fail) {
+      cli::cli_text("{.var Model}:  {object@Model}") 
+    } else {
+      cli::cli_text("{.var Model}:  {.help {help_topic('MSEtool', object@Model)}}")   
+    }
+    
     return(invisible(NULL))
   }
-  
-
   
   if (is.function(object@Model)) {
     cli_fn(object@Model)
@@ -265,13 +274,12 @@ cli_fn <- function(fun) {
             
           } else if (length(vals)==1) {
             cli::cli_text(
-              "> {.val {p}}: {.val {(vals)}}"
-              
+              "\u2192 {.val {p}}: {.val {(vals)}}"
             )
             
           } else if (length(vals)==2) {
             cli::cli_text(
-              "> {.val {p}}: Uniform Dist. with bounds {.val {range(vals)}}"
+              "\u2192 {.val {p}}: Uniform Dist. with bounds {.val {range(vals)}}"
             )
           }
           

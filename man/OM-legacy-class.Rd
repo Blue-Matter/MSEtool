@@ -3,6 +3,7 @@
 \docType{class}
 \name{OM-legacy-class}
 \alias{OM-legacy-class}
+\alias{OM-class}
 \title{Class \code{'OM'}}
 \description{
 An object containing all the parameters needed to control the MSE which can

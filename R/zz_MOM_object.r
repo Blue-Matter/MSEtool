@@ -11,6 +11,7 @@
 #'
 #'
 #' @name MOM-legacy-class
+#' @aliases MOM-class
 #' @docType class
 #' @section Objects from the Class: Objects can be created by calls of the form
 #' \code{new('MOM', Stock_list, Fleet_list, Obs_list, Imp_list)}.

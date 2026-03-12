@@ -3,6 +3,7 @@
 \docType{class}
 \name{referencedata}
 \alias{referencedata}
+\alias{referencedata-class}
 \alias{ReferenceData}
 \title{\code{referencedata} Class}
 \usage{

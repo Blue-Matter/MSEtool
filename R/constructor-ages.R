@@ -65,7 +65,10 @@ Ages <- function(MaxAge,
   
   if (inherits(MaxAge, 'stock'))
     return(MaxAge@Ages)
-
+  
+  if (!is.finite(MaxAge))
+    return(new('ages'))
+  
   object <- methods::new(
     "ages",
     MaxAge    = MaxAge,
@@ -73,6 +76,8 @@ Ages <- function(MaxAge,
     Units     = Units,
     PlusGroup = PlusGroup
   )
+  
+
   
   object@Classes <- CalcAgeClasses(object)
   methods::validObject(object)

@@ -30,7 +30,7 @@
 #'   MPs. For legacy `OM` and `Hist` objects only:
 #'   * if `TRUE`, all MPs are run in parallel. 
 #'   * if a named list, names correspond to individual MPs to run in parallel. 
-#'   * pass `"sac"` to use the SAC parallel backend (legacy [OM-legacy-class] only). 
+#'   * pass `"sac"` to use the SAC parallel backend ([OM-legacy-class] only). 
 #'   Default `FALSE`.
 #' @param extended Logical. If `TRUE`, stores full age- and area-structured
 #'   arrays for all years in `MSE@Misc$extended` (legacy only). Substantially increases
@@ -40,7 +40,7 @@
 #' @param nSim Integer. Reduce the number of simulations to `nSim`. Passed to
 #'   both [Simulate()] and [Project()]. If `NULL` (default), all simulations
 #'   are used.
-#' @param nsim Integer. Alternative to `nSim` for legacy [OM-class] objects.
+#' @param nsim Integer. Alternative to `nSim` for [OM-legacy-class] objects.
 #'   Sets `OM@nsim` before simulating. Default `NULL`.
 #' @param DoDynamicUnfished Logical. Calculate dynamic unfished reference
 #'   points? Passed to [Simulate()]. Default `TRUE`. `om` and `hist` class only.

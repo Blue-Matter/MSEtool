@@ -3,6 +3,7 @@
 \docType{class}
 \name{indicesdata}
 \alias{indicesdata}
+\alias{indicesdata-class}
 \alias{IndicesData}
 \title{\code{indicesdata} Class}
 \usage{

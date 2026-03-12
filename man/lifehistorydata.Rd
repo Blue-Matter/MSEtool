@@ -3,6 +3,7 @@
 \docType{class}
 \name{lifehistorydata}
 \alias{lifehistorydata}
+\alias{lifehistorydata-class}
 \alias{LifeHistoryData}
 \title{\code{lifehistorydata} Class}
 \usage{

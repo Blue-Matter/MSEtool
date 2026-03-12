@@ -11,6 +11,7 @@ setOldClass("multiHist")
 #'
 #'
 #' @name MMSE-legacy-class
+#' @aliases MMSE-class
 #' @docType class
 #' @section Objects from the Class: Objects can be created by calls of the form
 #' \code{new('MMSE', Name, nyears, proyears, nMPs, MPs, nsim, OMtable, Obs,

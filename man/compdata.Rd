@@ -3,6 +3,7 @@
 \docType{class}
 \name{compdata}
 \alias{compdata}
+\alias{compdata-class}
 \alias{CompData}
 \title{\code{compdata} Class}
 \usage{

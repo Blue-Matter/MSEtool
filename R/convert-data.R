@@ -302,8 +302,10 @@ Data2CPUE <- function(Data, data, sim) {
   if (all(is.na(Data@CV_Ind)))
     return(data)
   data@CPUE@CV    <- ValorNULL(Data@CV_Ind[sim, ]) |> AddYearFleetArray(data)
-  data@CPUE@Ref   <- Data@Iref[sim]    |> AddFleetArray(data)
-  data@CPUE@RefCV <- Data@CV_Iref[sim] |> AddFleetArray(data)
+  if (!is.na(Data@Iref[sim])) 
+    data@CPUE@Ref   <- Data@Iref[sim] |> AddFleetArray(data)
+  if (!is.na(Data@CV_Iref[sim])) 
+    data@CPUE@RefCV <- Data@CV_Iref[sim] |> AddFleetArray(data)
   
   if (!all(is.na(Data@AddInd))) {
     cli::cli_alert_warning(

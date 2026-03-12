@@ -308,6 +308,7 @@ importslot <- function(name, length=2, Data, Names, numeric=TRUE, essential=TRUE
 #' @keywords classes
 #'
 #' @name Stock-legacy-class
+#' @aliases Stock-class
 #' 
 setClass("Stock", representation(Name = "character",
                                  Common_Name='character',
@@ -408,6 +409,7 @@ setClassUnion(name="char.log", members=c("character", "logical"))
 #' The component of the operating model that controls fishing dynamics
 #'
 #' @name Fleet-legacy-class
+#' @aliases Fleet-class
 #' @docType class
 #' @template Fleet_template
 #'
@@ -569,6 +571,7 @@ NULL
 #' \code{new('Obs')}
 #' 
 #' @name Obs-legacy-class
+#' @aliases Obs-class
 #' @author T. Carruthers and A. Hordyk
 #' @export
 #' @keywords classes
@@ -666,6 +669,7 @@ setMethod("initialize", "Obs", function(.Object, file = NA, dec=c(".", ",")) {
 #' An operating model component that specifies the degree of adherence to management recommendations (Implementation error)
 #'
 #' @name Imp-legacy-class
+#' @aliases Imp-class
 #' @docType class
 #' @slot Name The name of the Implementation error object. Single value. Character string.
 #'
@@ -773,6 +777,7 @@ setMethod("initialize", "Imp", function(.Object, file = NA, dec=c(".", ",")) {
 #' @author T. Carruthers and A. Hordyk
 #'
 #' @name OM-legacy-class
+#' @aliases OM-class
 #' @export
 #' @keywords classes
 #'

@@ -3,6 +3,7 @@
 \docType{class}
 \name{effortdata}
 \alias{effortdata}
+\alias{effortdata-class}
 \alias{EffortData}
 \title{\code{effortdata} Class}
 \usage{

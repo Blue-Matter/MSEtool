@@ -21,6 +21,7 @@
 #' 
 #' @return `CompData()` returns a `compdata` object.
 #' @name compdata
+#' @aliases compdata-class
 #' @export
 setClass(
   "compdata",

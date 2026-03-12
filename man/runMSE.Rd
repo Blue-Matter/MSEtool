@@ -45,7 +45,7 @@ MPs. For legacy \code{OM} and \code{Hist} objects only:
 \itemize{
 \item if \code{TRUE}, all MPs are run in parallel.
 \item if a named list, names correspond to individual MPs to run in parallel.
-\item pass \code{"sac"} to use the SAC parallel backend (legacy \linkS4class{OM-legacy} only).
+\item pass \code{"sac"} to use the SAC parallel backend (\linkS4class{OM-legacy} only).
 Default \code{FALSE}.
 }}
 
@@ -60,7 +60,7 @@ projecting. Default \code{FALSE}. Legacy only.}
 both \code{\link[=Simulate]{Simulate()}} and \code{\link[=Project]{Project()}}. If \code{NULL} (default), all simulations
 are used.}
 
-\item{nsim}{Integer. Alternative to \code{nSim} for legacy \linkS4class{OM} objects.
+\item{nsim}{Integer. Alternative to \code{nSim} for \linkS4class{OM-legacy} objects.
 Sets \code{OM@nsim} before simulating. Default \code{NULL}.}
 
 \item{DoDynamicUnfished}{Logical. Calculate dynamic unfished reference

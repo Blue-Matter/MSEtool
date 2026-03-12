@@ -29,6 +29,7 @@
 #' 
 #' @return `LifeHistoryData()` returns a `lifehistorydata` object.
 #' @name lifehistorydata
+#' @aliases lifehistorydata-class
 #' @seealso [data-class], [Data()]
 #' @include class-unions.R
 #' @include class-stock.R

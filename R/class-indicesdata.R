@@ -29,6 +29,7 @@
 #' @seealso [data-class], [Data()]
 #' @include class-unions.R
 #' @name indicesdata
+#' @aliases indicesdata-class
 #' @export
 setClass(
   "indicesdata",

@@ -3,6 +3,7 @@
 \docType{class}
 \name{MOM-legacy-class}
 \alias{MOM-legacy-class}
+\alias{MOM-class}
 \title{Class \code{'MOM'}}
 \description{
 An object containing all the parameters needed to control a multi-stock, multi-fleet MSE which can

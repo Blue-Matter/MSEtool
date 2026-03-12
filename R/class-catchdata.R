@@ -22,6 +22,7 @@
 #' 
 #' @seealso [data-class], [Data()]
 #' @include class-unions.R
+#' @aliases catchdata-class
 #' @name catchdata
 #' @export
 setClass(

@@ -17,6 +17,7 @@
 #' @seealso [data-class], [Data()], [refpointsMSY-class]
 #' @include class-refpointsMSY.R
 #' @name referencedata
+#' @aliases referencedata-class
 #' @export
 setClass(
   "referencedata",
