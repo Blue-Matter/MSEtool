@@ -18,13 +18,13 @@
 #'   catch-per-unit-effort indices.
 #' @slot Survey An [indicesobs-class] object. Observation error on fishery-
 #'   independent survey indices.
-#' @slot LandingsAtAge An [obs-comp-class] object. Observation error on
+#' @slot LandingsAtAge An [CompObs-class] object. Observation error on
 #'   landed catch-at-age composition.
-#' @slot DiscardsAtAge An [obs-comp-class] object. Observation error on
+#' @slot DiscardsAtAge An [CompObs-class] object. Observation error on
 #'   discarded catch-at-age composition.
-#' @slot LandingsAtSize An [obs-comp-class] object. Observation error on
+#' @slot LandingsAtSize An [CompObs-class] object. Observation error on
 #'   landed catch-at-length composition.
-#' @slot DiscardsAtSize An [obs-comp-class] object. Observation error on
+#' @slot DiscardsAtSize An [CompObs-class] object. Observation error on
 #'   discarded catch-at-length composition.
 #' @slot Misc List. Miscellaneous additional objects.
 #'
@@ -58,10 +58,10 @@ setClass(
     Discards       = "catchobs",
     CPUE           = "indicesobs",
     Survey         = "indicesobs",
-    LandingsAtAge  = "obs-comp",
-    DiscardsAtAge  = "obs-comp",
-    LandingsAtSize = "obs-comp",
-    DiscardsAtSize = "obs-comp",
+    LandingsAtAge  = "CompObs",
+    DiscardsAtAge  = "CompObs",
+    LandingsAtSize = "CompObs",
+    DiscardsAtSize = "CompObs",
     Misc           = "list"
   )
 )

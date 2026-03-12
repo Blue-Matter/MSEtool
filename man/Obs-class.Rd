@@ -64,16 +64,16 @@ catch-per-unit-effort indices.}
 \item{\code{Survey}}{An \linkS4class{indicesobs} object. Observation error on fishery-
 independent survey indices.}
 
-\item{\code{LandingsAtAge}}{An \linkS4class{obs-comp} object. Observation error on
+\item{\code{LandingsAtAge}}{An \linkS4class{CompObs} object. Observation error on
 landed catch-at-age composition.}
 
-\item{\code{DiscardsAtAge}}{An \linkS4class{obs-comp} object. Observation error on
+\item{\code{DiscardsAtAge}}{An \linkS4class{CompObs} object. Observation error on
 discarded catch-at-age composition.}
 
-\item{\code{LandingsAtSize}}{An \linkS4class{obs-comp} object. Observation error on
+\item{\code{LandingsAtSize}}{An \linkS4class{CompObs} object. Observation error on
 landed catch-at-length composition.}
 
-\item{\code{DiscardsAtSize}}{An \linkS4class{obs-comp} object. Observation error on
+\item{\code{DiscardsAtSize}}{An \linkS4class{CompObs} object. Observation error on
 discarded catch-at-length composition.}
 
 \item{\code{Misc}}{List. Miscellaneous additional objects.}

@@ -53,11 +53,11 @@ ConvertObs <- function(Obs, silent = FALSE) {
   obs@CPUE@CV <- Obs@Iobs 
   obs@Survey@CV <- Obs@Iobs
   
-  obs@CAA@SampleSize <- Obs@CAA_nsamp
-  obs@CAA@ESS <- Obs@CAA_ESS
-  
-  obs@CAL@SampleSize <- Obs@CAL_nsamp
-  obs@CAL@ESS <- Obs@CAL_ESS
+  # obs@CAA@SampleSize <- Obs@CAA_nsamp
+  # obs@CAA@ESS <- Obs@CAA_ESS
+  # 
+  # obs@CAL@SampleSize <- Obs@CAL_nsamp
+  # obs@CAL@ESS <- Obs@CAL_ESS
   
   #   # Life History 
   # TODO 

@@ -10,7 +10,7 @@
 #'
 #' @include class-unions.R
 setClass(
-  "obs-comp",
+  "CompObs",
   slots = c(
     SampleSize = "num.array.null",
     ESS        = "num.array.null",
