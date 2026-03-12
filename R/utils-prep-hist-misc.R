@@ -260,16 +260,17 @@ PrepHistMisc <- function(Hist, Period=c('Historical', 'Projection')) {
   })
   CheckDims(Hist@Misc$DiscMortList, 5, 'DiscMortList')
   
-  Hist@Misc <- ExtendYears( Hist@Misc, Years=Years(Hist,Period))
+  Hist@Misc$DiscMortSizeList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
+    purrr::map(FleetList, \(fleet) {
+      fleet@DiscardMortality@MeanAtLength  # Sim, Class, Year, Area
+    }) 
+  })
+  CheckDims(Hist@Misc$DiscMortSizeList, 4, 'DiscMortList')
+  
+  Hist@Misc <- ExtendYears(Hist@Misc, Years=Years(Hist,Period))
   
   Hist
 }
-
-
-
-
-
-
 
 
 #' Restore `@Misc` Slot After a Projection
