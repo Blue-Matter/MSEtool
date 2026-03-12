@@ -167,9 +167,9 @@ nArea(x, st = 1)
 
 nAge(x, st = NULL)
 
-nStock(object)
+nStock(x)
 
-nFleet(object)
+nFleet(x)
 
 Pars(x)
 

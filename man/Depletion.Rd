@@ -32,8 +32,6 @@ One of \code{"B0"} (default) or \code{"BMSY"}.}
 \item{x}{A \code{depletion} object.}
 
 \item{value}{Replacement value.}
-
-\item{Stock}{A \code{\link[=Stock]{Stock()}} object.}
 }
 \value{
 A \linkS4class{depletion} object.

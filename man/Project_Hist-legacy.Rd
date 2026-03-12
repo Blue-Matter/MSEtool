@@ -28,11 +28,6 @@ Default \code{FALSE}.}
 arrays in \code{MSE@Misc$extended}. Default \code{FALSE}.}
 
 \item{checkMPs}{Logical. Validate MPs before projecting. Default \code{FALSE}.}
-
-\item{nSim}{Integer. Reduce simulations to \code{nSim} before projecting.
-Default \code{NULL}.}
-
-\item{Reduce}{Logical. Reserved for future use. Default \code{TRUE}.}
 }
 \value{
 A \linkS4class{MSE-legacy} object.
