@@ -152,6 +152,14 @@ Update_DiscardMortality_Sim <- function(Proj,
         ArrayFill(target@MeanAtLength) <- dm@MeanAtLength
         Proj@OM@Fleet[[st]][[fl]]@DiscardMortality <- target
         
+        ArrayFill(Proj@Misc$DiscMortList[[st]]) <- AddDimension(dm@MeanAtAge,
+                                                                'Fleet', 
+                                                                val=FleetNames[fl],
+                                                                pos=4)
+        
+        ArrayFill(Proj@Misc$DiscMortSizeList[[st]][[fl]]) <- dm@MeanAtLength
+        
+        
       } # end fleet loop
     }   # end stock loop
   }     # end complex loop
