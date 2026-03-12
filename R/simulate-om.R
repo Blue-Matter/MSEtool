@@ -127,15 +127,15 @@ Simulate_om <- function(OM = NULL,
 
 
 
-GetRefPointYears <- function(OM, HistYears) {
-  return(utils::tail(HistYears, 1))
-  
-  # TODO - calculate ref points for seasonal time steps
-  
-  HistYears <- Years(OM, "Historical")
-  RefPointYears <- OM@Control$RefPointYears
-  if (is.null(RefPointYears)) {
-    RefPointYears <- tail(HistYears, OM@Seasons)
-  }
-  RefPointYears
-}
+# GetRefPointYears <- function(OM, HistYears) {
+#   return(utils::tail(HistYears, 1))
+#   
+#   # TODO - calculate ref points for seasonal time steps
+#   
+#   HistYears <- Years(OM, "Historical")
+#   RefPointYears <- OM@Control$RefPointYears
+#   if (is.null(RefPointYears)) {
+#     RefPointYears <- utils::tail(HistYears, OM@Seasons)
+#   }
+#   RefPointYears
+# }

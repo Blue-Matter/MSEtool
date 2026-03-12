@@ -7,7 +7,6 @@
 #' @param Final Numeric final depletion (optional).
 #' @param Reference Character reference biomass used to calculate depletion.
 #'   One of `"B0"` (default) or `"BMSY"`.
-#' @param Stock A [Stock()] object.
 #' @param x A `depletion` object.
 #' @param value Replacement value.
 #'

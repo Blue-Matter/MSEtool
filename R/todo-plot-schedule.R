@@ -25,9 +25,9 @@ plot.Schedule <- function(x, TimeLab='Year', color='Year',
   # TO DO - average over sims
   
   if (nColor<2) {
-    p <- ggplot(x, aes(x=.data[[XVar]], y=Value))
+    p <- ggplot(x, aes(x=ggplot2::.data[[XVar]], y=Value))
   } else {
-    p <- ggplot(x, aes(x=.data[[XVar]], y=Value, color=.data[[color]]))
+    p <- ggplot(x, aes(x=ggplot2::.data[[XVar]], y=Value, color=ggplot2::.data[[color]]))
   }
   
   if (nFleet<=1 & nStock>1 & color!='Stock')
@@ -38,7 +38,7 @@ plot.Schedule <- function(x, TimeLab='Year', color='Year',
   
   if (nFleet>1 & nStock>1) {
     if (color!='Stock' & color!='Fleet') {
-      p <- p + facet_grid(Stock~Fleet)
+      p <- p + ggplot2::facet_grid(Stock~Fleet)
     } else if (color=='Stock') {
       p <- p + facet_wrap(~Fleet)
     } else if (color=='Fleet') {

@@ -359,26 +359,26 @@ nAge <- function(x, st = NULL) {
 
 #' @rdname Access
 #' @export
-nStock <- function(object) {
-  CheckClass(object, c('om', 'hist', 'mse'), 'object')
+nStock <- function(x) {
+  CheckClass(x, c('om', 'hist', 'mse'), 'x')
   
-  if (inherits(object, 'om'))
-    return(length(object@Stock))
+  if (inherits(x, 'om'))
+    return(length(x@Stock))
   
-  if (inherits(object, 'hist'))
-    return(length(object@OM@Stock))
+  if (inherits(x, 'hist'))
+    return(length(x@OM@Stock))
   
-  if (inherits(object, 'mse'))
-    return(length(object@OM@Stock))
+  if (inherits(x, 'mse'))
+    return(length(x@OM@Stock))
 }
 
 #' @rdname Access
 #' @export
-nFleet <- function(object) {
-  CheckClass(object, c('om', 'hist', 'mse', 'data'), 'object')
+nFleet <- function(x) {
+  CheckClass(x, c('om', 'hist', 'mse', 'data'), 'x')
   
-  if (inherits(object, 'om')) {
-    fleet <- object@Fleet
+  if (inherits(x, 'om')) {
+    fleet <- x@Fleet
     if (is.null(fleet))
       return(0)
     if (inherits(fleet, 'fleet'))
@@ -386,23 +386,23 @@ nFleet <- function(object) {
     if (is.list(fleet[[1]]))
       return(length(fleet[[1]]))
     if (isS4(fleet[[1]])) {
-      dd <- dim(object@Fleet[[1]]@Selectivity@MeanAtAge)
+      dd <- dim(x@Fleet[[1]]@Selectivity@MeanAtAge)
       return(dd[3])
     }
   }
   
-  if (inherits(object, 'data')) {
+  if (inherits(x, 'data')) {
     return(
-      lapply(list(object@Landings@Value,
-                  object@Discards@Value,
-                  object@Survey@Value,
-                  object@CPUE@Value,
+      lapply(list(x@Landings@Value,
+                  x@Discards@Value,
+                  x@Survey@Value,
+                  x@CPUE@Value,
                   NULL), ncol) |>
         unlist() |> max()
     )
   }
   
-  return(dim(object@LandingsAtAge[[1]])[[4]])
+  return(dim(x@LandingsAtAge[[1]])[[4]])
 }
 
 #' @rdname Access

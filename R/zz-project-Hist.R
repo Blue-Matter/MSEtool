@@ -14,9 +14,6 @@
 #' @param extended Logical. If `TRUE`, stores full age- and area-structured
 #'   arrays in `MSE@Misc$extended`. Default `FALSE`.
 #' @param checkMPs Logical. Validate MPs before projecting. Default `FALSE`.
-#' @param nSim Integer. Reduce simulations to `nSim` before projecting.
-#'   Default `NULL`.
-#' @param Reduce Logical. Reserved for future use. Default `TRUE`.
 #'
 #' @return A [MSE-legacy-class] object.
 #'

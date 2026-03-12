@@ -1085,6 +1085,8 @@ GetSSBirthSeas <- function(replist) {
 
 GetSS_R0 <- function(st, replist, YearsList) {
   
+  Number <- NULL # cran checks
+  
   AgeClasses <- GetSSAgeClasses(replist)
   birthseas <- GetSSBirthSeas(replist)
 
