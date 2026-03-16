@@ -59,15 +59,15 @@ Ages <- function(MaxAge,
                  MinAge = 0,
                  Units = "year",
                  PlusGroup = TRUE) {
-  
+
   if (missing(MaxAge))
     MaxAge <- numeric()
-  
+
   if (inherits(MaxAge, 'stock'))
     return(MaxAge@Ages)
   
-  if (!is.finite(MaxAge))
-    return(new('ages'))
+  if (length(MaxAge) && is.na(MaxAge)) 
+    MaxAge <- numeric()
   
   object <- methods::new(
     "ages",
@@ -76,8 +76,6 @@ Ages <- function(MaxAge,
     Units     = Units,
     PlusGroup = PlusGroup
   )
-  
-
   
   object@Classes <- CalcAgeClasses(object)
   methods::validObject(object)
