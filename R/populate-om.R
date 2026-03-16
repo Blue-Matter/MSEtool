@@ -151,9 +151,8 @@ PopulateStockList <- function(OM, silent = FALSE, force = FALSE) {
 
 PopulateFleetList <- function(OM, silent = FALSE, force = FALSE) {
   
-  if (is.null(OM@Fleet)) {
+  if (is.null(OM@Fleet)) 
     return(OM)
-  }
   
   StockList <- OM@Stock
   nStocks <- nStock(OM)
