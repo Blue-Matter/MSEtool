@@ -28,9 +28,8 @@
 #' @export
 CalcUnfished_Equilibrium <- function(OM, silent=FALSE) {
   
-  if (inherits(OM,'hist')) {
+  if (inherits(OM,'hist')) 
     OM <- OM@OM
-  }
   
   # Populate OM if neccessary
   OM <- PopulateOM(OM, silent = silent)

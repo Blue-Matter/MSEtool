@@ -84,7 +84,7 @@ CalcUnfishedNumber_seasonal <- function(OM, SP = FALSE) {
     PlusGroup <- Stock@Ages@PlusGroup
     SpawnTimeFrac <- ifelse(SP, Stock@SRR@SpawnTimeFrac, 0)
     SpawnTimeFrac <- rep(SpawnTimeFrac, nSim)[1:nSim]
-    Semelparous <- Stock@Maturity@Semelparous
+    Semelparous <- Extend(Stock@Maturity@Semelparous, nSim, AgeClasses, Years)
 
     # Check if seasonal values vary over years
     GetSeasonBlock2d <- function(x, y, nSeason) {

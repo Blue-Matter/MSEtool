@@ -105,7 +105,7 @@ Simulate_om <- function(OM = NULL,
   
   # ---- Historical Fishery Data ----
   
-  if (DoGenerateData && CheckObs(OM, silent))
+  if (DoGenerateData && CheckObs(Hist@OM, silent))
     Hist <- GenerateHistoricalData(Hist, silent=silent)
     
   # ---- Reduce Dimension Size ----

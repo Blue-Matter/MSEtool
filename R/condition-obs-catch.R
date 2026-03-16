@@ -87,6 +87,7 @@ ConditionObs_Catch <- function(Hist,
     ObservedCatch <- ObservedCatch_Fleet[,fl]
     CatchObs <- slot(Hist@OM@Obs[[i]][[fl]], type)
     Units <- FleetUnits[fl]
+    CatchObs@Units <- FleetUnits[fl]
     
     # Years to use condition the observation error - default all historical
     if (is.null(CatchObs@Years)) CatchObs@Years <- HistYears

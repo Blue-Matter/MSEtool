@@ -104,6 +104,7 @@ ConditionObs_Index <- function(Hist,
     
     Units <- slot(FisheryData,type)@Units[fl]
     if (is.null(Units)) Units <- 'Biomass'
+    Index_Obs@Units <- Units
     
     # multiply N-at-Age by Selectivity-at-Age for each fleet
     # list [stock] - array sim, age, year, area
