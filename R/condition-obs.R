@@ -24,12 +24,16 @@ ConditionObs <- function(Hist, silent=FALSE) {
   if (nData<1) return(Hist)
   Complexes <- Hist@OM@Complexes
   
-  if (!silent) 
-    cli::cli_progress_bar("Conditioning Observation Error for Real Fishery Data: {.val {names(FisheryDataList)}}")
-  
-  
+  nms <- ""  
+  if (!silent)
+    id <- cli::cli_progress_bar(
+      total  = nData,
+      format = "Conditioning Observation Error [{pb_current}/{pb_total}]: {.val {nms}}"
+    )
+
   for (i in seq_along(FisheryDataList)) {
     
+    nms <- names(FisheryDataList)[i]
     stocks <- Complexes[[i]]
     FisheryData <- FisheryDataList[[i]]
     
@@ -39,25 +43,14 @@ ConditionObs <- function(Hist, silent=FALSE) {
     # - CAL
     # - life history
     
-    
     Hist <- ConditionObs_Catch(Hist, FisheryData, HistYears, ProjYears, stocks, i)
-  
-    if (!silent) cli::cli_progress_update()
-    
     Hist <- ConditionObs_Catch(Hist, FisheryData, HistYears, ProjYears, stocks, i, 'Discards')
-    
-    if (!silent) cli::cli_progress_update()
-    
     Hist <- ConditionObs_Index(Hist, FisheryData, HistYears, ProjYears, stocks, i)
-    
-    if (!silent) cli::cli_progress_update()
-    
     Hist <- ConditionObs_Index(Hist, FisheryData, HistYears, ProjYears,  stocks, i, 'Survey')
     
-    if (!silent) cli::cli_progress_update()
-
+    if (!silent) 
+      cli::cli_progress_update(id=id)
   }
-  
   
   if (!silent) 
     cli::cli_alert_success("Conditioned Observation Error for Real Fishery Data: {.val {names(FisheryDataList)}}")
