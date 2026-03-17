@@ -23,79 +23,12 @@ ExtendHist <- function(Hist, Years, silent=FALSE, id=NULL) {
   nArea <- nArea(Hist@OM)
   Areas <- 1:nArea
   
-  if (!silent && is.null(id)) {
+  if (!silent && is.null(id)) 
     id <- cli::cli_progress_bar("Extending `Hist` Object")
-  }
   
-  for (st in 1:nStock) {
-    stock <- Hist@OM@Stock[[st]]
-    AgeClasses <- stock@Ages@Classes
-    
-    for (sl in slotNames(stock)) {
-      if (sl =='SRR') {
-        for (sl2 in slotNames('srr')) {
-          if (sl2 =='RecDevHist')
-            next
-          
-          slot(Hist@OM@Stock[[st]]@SRR,sl2) <- Extend(array=slot(Hist@OM@Stock[[st]]@SRR,sl2), 
-                                                      nSim = NULL, # don't extend sims 
-                                                      AgeClasses = AgeClasses,
-                                                      Years = Years,
-                                                      Areas = Areas)
-          
-        }
-      } else {
-        slot(Hist@OM@Stock[[st]],sl) <- Extend(array=slot(Hist@OM@Stock[[st]],sl), 
-                                               nSim = NULL, # don't extend sims 
-                                               AgeClasses = AgeClasses,
-                                               Years = Years,
-                                               Areas = Areas)
-      }
-    }
-        
-      
-    
+  # Extend OM
+  Hist@OM <- ExtendOM(Hist@OM, Years=Years, silent=silent, id=id)
 
-    
-    if (!silent) {
-      cli::cli_progress_update(id=id)
-    }
-    
-    for (fl in 1:nFleet) {
-      Hist@OM@Fleet[[st]][[fl]] <- Extend(array=Hist@OM@Fleet[[st]][[fl]], 
-                                          nSim = NULL, # don't extend sims 
-                                          AgeClasses = NULL,
-                                          Years = Years,
-                                          Areas = Areas)
-      if (!silent) {
-        cli::cli_progress_update(id=id)
-      }
-    }
-   
-  }
-  
-  for (i in seq_along(Hist@OM@Obs)) {
-    if (!silent) {
-      cli::cli_progress_update(id=id)
-    }
-    Hist@OM@Obs[[i]] <- Extend(Hist@OM@Obs[[i]], 
-                               nSim = NULL, # don't extend sims 
-                               AgeClasses = NULL,
-                               Years = Years,
-                               Areas = Areas)
-  }
-  
-  for (i in seq_along(Hist@OM@Imp)) {
-    if (!silent) {
-      cli::cli_progress_update(id=id)
-    }
-    Hist@OM@Imp[[i]] <- Extend(Hist@OM@Imp[[i]], 
-                               nSim = NULL,  # don't extend sims 
-                               AgeClasses = NULL,
-                               Years = Years,
-                               Areas = Areas)
-  }
-  
   # Extend time series 
   slots <- slotNames('timeseries')
   
