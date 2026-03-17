@@ -21,20 +21,18 @@
 #' @export
 CalcUnfished_Dynamic <- function(Hist, IdenticalHist=NULL, silent=FALSE) {
   
-  if (inherits(Hist,'om')) {
+  if (inherits(Hist,'om')) 
     Hist <- Hist(OM, silent=TRUE)
-  }
   
-  if (EmptyObject(Hist@Unfished@Equilibrium )) {
+  if (EmptyObject(Hist@Unfished@Equilibrium )) 
     Hist@Unfished@Equilibrium <- CalcUnfished_Equilibrium(Hist@OM)
-  }
+  
   
   Hist <- CalcDynamicInitial(Hist)
   
-  if (is.null(Hist@Misc$SAVE)) {
+  if (is.null(Hist@Misc$SAVE)) 
     Hist <- PrepHistMisc(Hist) 
-  }
- 
+  
   Hist_Copy <- Hist 
   nStock <- nStock(Hist)
   nFleet <- nFleet(Hist)
@@ -46,10 +44,9 @@ CalcUnfished_Dynamic <- function(Hist, IdenticalHist=NULL, silent=FALSE) {
   HistYears <- Years(Hist, 'H')
   AllYears <- Years(Hist)
   
-  if (is.null(IdenticalHist)) {
+  if (is.null(IdenticalHist)) 
     IdenticalHist <- IdenticalSims(Hist@OM, ignore='SRR')
-  }
-
+  
   out <- new("popdynamics")
   
   if (IdenticalHist) {
@@ -90,10 +87,10 @@ CalcUnfished_Dynamic <- function(Hist, IdenticalHist=NULL, silent=FALSE) {
   }
   
   out <- CopySlots(unfished, out, slotNames(out))
+  out@Misc <- list()
   
-  if (!silent) {
+  if (!silent) 
     cli::cli_alert_success("Calculated Dynamic Unfished Conditions")
-  }
   
   out
 }
