@@ -215,7 +215,6 @@ ExtendYears <- function(array, Years = NULL, default = NULL, backfill = FALSE) {
   if (all(fill_years %in% existing_years)) 
     return(array)
   
-  
   fill_years    <- all_years[!all_years %in% existing_years]
   back_years    <- fill_years[fill_years < min(existing_years)]
   forward_years <- fill_years[fill_years > max(existing_years)]
@@ -229,8 +228,7 @@ ExtendYears <- function(array, Years = NULL, default = NULL, backfill = FALSE) {
   dn[[year_dim]] <- all_years
   OutArray <- array(NA, dim = d, dimnames = dn)
   abind::afill(OutArray) <- array # add the existing values
-
-
+  
   # Seasonal
   if (any(all_years %% 1 != 0))
     return(ExtendYears_seasonal(array, Years, default, backfill = backfill))
@@ -271,20 +269,19 @@ NoSeasonVals <- function(x) {
 }
 
 ExtendYears_seasonal <- function(array, Years = NULL, default = NULL, backfill = FALSE, tol = 0.01) {
-  if (!is.array(array)) {
+  
+  if (!is.array(array)) 
     cli::cli_abort("`array` must be an array")
-  }
-
-  if (is.null(Years)) {
+  
+  if (is.null(Years)) 
     return(array)
-  }
-
+  
   d <- dim(array)
   dn <- dimnames(array)
 
-  if (is.null(dn) || !"Year" %in% names(dn)) {
+  if (is.null(dn) || !"Year" %in% names(dn)) 
     cli::cli_abort("`array` must have a dimension named 'Year'")
-  }
+  
 
   year_dim <- which(names(dn) == "Year")
   nyear <- d[year_dim]
@@ -294,9 +291,9 @@ ExtendYears_seasonal <- function(array, Years = NULL, default = NULL, backfill =
     unique() |>
     sort()
 
-  if (all(fill_years %in% existing_years)) {
+  if (all(fill_years %in% existing_years)) 
     return(array)
-  }
+  
 
   fill_years <- all_years[!all_years %in% existing_years]
   back_years <- fill_years[which(fill_years < min(existing_years))]
@@ -304,9 +301,8 @@ ExtendYears_seasonal <- function(array, Years = NULL, default = NULL, backfill =
   inside_years <- fill_years[!fill_years %in% back_years & !fill_years %in% forward_years]
   
   
-  if (!backfill) {
+  if (!backfill) 
     all_years <- all_years[!all_years %in% back_years]
-  }
   
   # Create output array
   d[[year_dim]] <- length(all_years)
@@ -432,9 +428,11 @@ ExtendYears_seasonal <- function(array, Years = NULL, default = NULL, backfill =
         for (j in seq_along(season_inside)) {
           season_ind <- which(abs(years_block %% 1 - season_inside[j]) < tol)
           most_recent_ind <- which(abs(season_existing - season_inside[i]) < tol)
-          if (length(existing_years) == 1) {
+          if (length(existing_years) == 1) 
             most_recent_ind <- 1
-          }
+          
+          if (!length(most_recent_ind))
+            most_recent_ind <- 1
           
           CheckSeasonExists(most_recent_ind, season_inside[i], existing_years, season_existing)
           most_recent_ind <- min(most_recent_ind)
