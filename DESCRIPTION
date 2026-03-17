@@ -309,6 +309,7 @@ Collate:
     'utils-prep-hist-misc.R'
     'utils-reverse-list.R'
     'utils-save.R'
+    'utils-slot-sizes.R'
     'utils-startup.R'
     'utils-stocknames.R'
     'utils-structure.R'

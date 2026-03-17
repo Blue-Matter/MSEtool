@@ -16,6 +16,7 @@ Extend(
   Areas = NULL,
   default = NULL,
   backfill = FALSE,
+  maintain_seasonal_pattern = TRUE,
   debug = FALSE
 )
 
@@ -23,7 +24,13 @@ ExtendSims(array, nSim = NULL)
 
 ExtendAges(array, AgeClasses = NULL)
 
-ExtendYears(array, Years = NULL, default = NULL, backfill = FALSE)
+ExtendYears(
+  array,
+  Years = NULL,
+  default = NULL,
+  backfill = FALSE,
+  maintain_seasonal_pattern = TRUE
+)
 
 ExtendAreas(array, Areas = NULL)
 }
@@ -47,6 +54,10 @@ skip.}
 
 \item{backfill}{Logical. If \code{TRUE}, also back-fill years earlier than the
 earliest existing year. Default \code{FALSE}.}
+
+\item{maintain_seasonal_pattern}{Logical. Seasonal models only.
+If \code{TRUE} fills in missing year values by matching those from the closest
+corresponding season (e.g., maintains seasonal recruitment pattern)}
 
 \item{debug}{Logical. If \code{TRUE}, prints the class of each object as it is
 processed. Default \code{FALSE}.}

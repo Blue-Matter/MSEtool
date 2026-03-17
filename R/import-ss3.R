@@ -252,15 +252,12 @@ ImportSS <- function(SSDir,
   OnExit()
   RepList <- ImportSSReport(SSDir, silent, ...)
   nStock <- RepList[[1]]$nsexes
-  nFleet <- RepList[[1]]$nfishfleets
-
-  DotsList <- list(...)
-  if (!is.null(DotsList$nsim)) {
-    nSim <- DotsList$nsim
-  }
-
   YearsList <- GetSSYears(RepList[[1]], pYear)
-
+  nFleet <- RepList[[1]]$nfishfleets
+  
+  DotsList <- list(...)
+  if (!is.null(DotsList$nsim)) nSim <- DotsList$nsim
+  
   if (!silent) {
     cli::cli_h3("Importing OM from {.href [SS3](https://nmfs-ost.github.io/ss3-website/)} Output")
     cli::cli_ul()
@@ -270,10 +267,9 @@ ImportSS <- function(SSDir,
     cli::cli_end()
   }
 
-  if (length(RepList) > 1) {
+  if (length(RepList) > 1) 
     nSim <- length(RepList)
-  }
-
+  
   OM <- OM(
     Name = Name,
     Agency = Agency,
@@ -299,6 +295,7 @@ ImportSS <- function(SSDir,
 
   # Stock
   StockName <- ProcessSS_StockName(StockName, nStock)
+  
   OM@Stock <- purrr::map(seq_along(StockName), \(st) {
     stock <- SS2Stock(st, RepList, YearsList, nSim)
     stock@Name <- StockName[st]
@@ -311,15 +308,16 @@ ImportSS <- function(SSDir,
     format = "Importing Stock Dynamics {cli::pb_bar} {cli::pb_percent}",
     clear = TRUE
   ))
-
+  
   names(OM@Stock) <- StockName
 
   # Fleet
   OM@Fleet <- MakeNamedList(StockName, list())
-  FleetNames <- ProcessSS_FleetNames(FleetNames,
+  
+  FleetNames <- ProcessSS_FleetNames(
+    FleetNames,
     SSFleetNames = unique(RepList[[1]]$catch$Fleet_Name)
   )
-  
   
   for (st in seq_along(OM@Fleet)) {
     FleetList <- purrr::map(seq_along(FleetNames), \(fl) {
@@ -331,7 +329,7 @@ ImportSS <- function(SSDir,
         FleetNames,
         Stock = OM@Stock[[st]]
       )
-      },
+    },
     .progress = list(
       type = "iterator",
       format = "Importing Fleet Dynamics for Stock {.val {StockName[st]}} {cli::pb_bar} {cli::pb_percent}",
@@ -340,11 +338,11 @@ ImportSS <- function(SSDir,
     names(FleetList) <- FleetNames
     OM@Fleet[[st]] <- FleetList
   }
-    
+
   # Data
   OM@Data <- list(ImportSSData(RepList, OM@Name))
   names(OM@Data) <- paste(StockName, collapse = " ")
-
+  
   # Obs
   SurveyNames <- OM@Data[[1]]@Survey@Name
   AllFleetNames <- c(FleetNames, SurveyNames) |> unique()
@@ -1194,11 +1192,34 @@ SS2Fleet <- function(st, fl, RepList, YearsList, FleetNames, Stock) {
   Fleet@Catchability@Efficiency <- SS2Catchability(st, fl, RepList, YearsList)
   Fleet@DiscardMortality <- SS2DiscardMortality(st, fl, RepList, YearsList, Stock)
   Fleet@Selectivity <- SS2Selectivity(st, fl, RepList, YearsList, Stock)
-  Fleet@Retention <- SS2Retention(st, fl, RepList, YearsList,
-    Selectivity = Fleet@Selectivity, Stock
+  Fleet@Retention <- SS2Retention(st, fl, RepList, YearsList, Selectivity = Fleet@Selectivity, Stock
   )
   Fleet@WeightFleet <- SS2WeightFleet(st, fl, RepList, YearsList, AgeClasses)
   Fleet
+}
+
+
+GetSS_ApicalF <- function(st, fl, replist, YearsList) {
+  AgeClasses <- GetSSAgeClasses(replist)
+  
+  FInteract <- replist$fatage |>
+    dplyr::filter(Sex == st, Fleet == fl, Yr %in% YearsList$YearsHist)
+  
+  nMorph <- FInteract$Morph |>
+    unique() |>
+    length()
+  
+  if (nMorph > 1) 
+    cli::cli_abort("More than 1 Morph not currently supported", .internal = TRUE)
+  
+  FInteract <- t(FInteract[, as.character(AgeClasses)])
+  dimnames(FInteract) <- list(
+    Age = AgeClasses,
+    Year = YearsList$YearsHist
+  )
+  
+  FInteractApical <- apply(FInteract, c("Year"), max) * 1 / replist$nseasons
+  FInteractApical
 }
 
 
@@ -1208,36 +1229,26 @@ GetSS_Effort <- function(st, fl, replist, YearsList, type = c("Effort", "q")) {
   # Fishing Effort is proportional to FInteract - ie the fishing mortality on
   # all fish that interact with the gear, including those that are discarded alive
   # ie don't suffer discard mortality
+  FInteractApical <- GetSS_ApicalF(st, fl, replist, YearsList)
 
-  AgeClasses <- GetSSAgeClasses(replist)
-
-  FInteract <- replist$fatage |>
-    dplyr::filter(Sex == st, Fleet == fl, Yr %in% YearsList$YearsHist)
-
-  nMorph <- FInteract$Morph |>
-    unique() |>
-    length()
-
-  if (nMorph > 1) {
-    cli::cli_abort("More than 1 Morph not currently supported", .internal = TRUE)
-  }
-
-  FInteract <- t(FInteract[, as.character(AgeClasses)])
-  dimnames(FInteract) <- list(
-    Age = AgeClasses,
-    Year = YearsList$YearsHist
-  )
-
-  FInteractApical <- apply(FInteract, c("Year"), max) * 1 / replist$nseasons
   FInteractApicalTerminal <- FInteractApical
   FInteractApicalTerminal[] <- 0
+  
+  if (max(FInteractApical) == 0) {
+    if (type == "q") 
+      return(0)
+    
+    return(
+      array(rep(0, length(YearsList$YearsHist)), 
+            dimnames = list(Year=YearsList$YearsHist))
+    )
+  }
 
   ind <- which(FInteractApical > 0) |> max()
   FInteractApicalTerminal[] <- FInteractApical[ind]
-  if (type == "q") {
+  if (type == "q") 
     return(FInteractApical[ind])
-  }
-
+  
   RelEffort <- FInteractApical / FInteractApicalTerminal
   RelEffort <- array(RelEffort, dim = c(length(RelEffort)))
   dimnames(RelEffort) <- list(Year = YearsList$YearsHist)
@@ -1247,7 +1258,7 @@ GetSS_Effort <- function(st, fl, replist, YearsList, type = c("Effort", "q")) {
 
 SS2Effort <- function(st, fl, RepList, YearsList) {
   purrr::map(RepList, \(replist)
-  GetSS_Effort(st, fl, replist, YearsList)) |>
+             GetSS_Effort(st, fl, replist, YearsList)) |>
     List2Array("Sim", pos = 1)
 }
 
@@ -1375,13 +1386,15 @@ SS2DiscardMortality <- function(st, fl, RepList, YearsList, Stock) {
 }
 
 GetSS_SelectivityAtAge <- function(st, fl, replist, YearsList, Stock) {
-  Factor <- Sex <- Fleet <- NULL # CRAN
-  Ages <- Stock@Ages
-  AgeClasses <- Ages@Classes
+  
+  AgeClasses   <- Stock@Ages@Classes
   SSAgeClasses <- as.character(GetSSAgeClasses(replist))
-  YearsHist <- YearsList$YearsHist
-
-  # Selectivity-at-Age data frame
+  YearsHist    <- YearsList$YearsHist
+  nSeas        <- YearsList$Seasons
+  YearsAll     <- c(YearsList$YearsHist, YearsList$YearsProj)
+  
+  year_to_ind <- setNames(seq_along(YearsAll), as.character(YearsAll))
+  
   AgeSel_df <- replist$ageselex |>
     dplyr::filter(
       Fleet == fl,
@@ -1389,79 +1402,57 @@ GetSS_SelectivityAtAge <- function(st, fl, replist, YearsList, Stock) {
       Factor == "Asel2",
       Yr %in% YearsHist
     )
-
-  # Non-Seasonal Model
+  
+  #  Non-seasonal
   if (replist$nseasons == 1) {
     AgeSelect <- AgeSel_df |>
       dplyr::select(dplyr::all_of(SSAgeClasses)) |>
       as.matrix() |>
       t()
-
-    dimnames(AgeSelect) <- list(
-      Age  = AgeClasses,
-      Year = YearsHist
-    )
-
-    # normalize by year
-    return(
-      sweep(AgeSelect, 2, apply(AgeSelect, 2, max), "/")
-    )
+    
+    dimnames(AgeSelect) <- list(Age = AgeClasses, Year = YearsHist)
+    col_max <- apply(AgeSelect, 2, max)
+    return(sweep(AgeSelect, 2, col_max, "/"))
   }
-
-  # Seasonal Model
+  
+  # Seasonal 
   nAge <- length(AgeClasses)
-  nYear <- length(YearsHist)
-  nSeas <- YearsList$Seasons
-
-  MeanAtAge <- matrix(NA_real_,
-    nrow = nAge,
-    ncol = nYear,
-    dimnames = list(
-      Age = AgeClasses,
-      Year = YearsHist
-    )
+  
+  age_vals     <- as.numeric(SSAgeClasses)
+  SeasonalAges <- seq(min(age_vals), max(age_vals) + (nSeas - 1) / nSeas, by = 1 / nSeas)
+  
+  age_ind <- match(SeasonalAges, AgeClasses, nomatch = 0L)
+  valid   <- age_ind > 0L
+  age_ind <- age_ind[valid]
+  
+  MeanAtAge <- matrix(
+    NA_real_,
+    nrow     = nAge,
+    ncol     = length(YearsHist),
+    dimnames = list(Age = AgeClasses, Year = YearsHist)
   )
-
-  # Convert to long format
+  
   AgeSel_long <- AgeSel_df |>
-    tidyr::pivot_longer(dplyr::all_of(SSAgeClasses),
-      names_to = "Age",
+    dplyr::select(Yr, Seas, dplyr::all_of(SSAgeClasses)) |>
+    tidyr::pivot_longer(
+      cols      = dplyr::all_of(SSAgeClasses),
+      names_to  = "Age",
       values_to = "V"
     ) |>
-    dplyr::mutate(Age = as.numeric(Age))
-
-  # Precompute seasonal age grid (same every year)
-  minAge <- min(AgeSel_long$Age)
-  maxAge <- max(AgeSel_long$Age)
-
-  SeasonalAges <- seq(minAge, maxAge + (nSeas - 1) / nSeas, by = 1 / nSeas)
-
-  # Indices map seasonal to integer age
-  age_ind <- match(SeasonalAges,
-    AgeClasses,
-    nomatch = 0
-  )
-
-  valid <- age_ind > 0
-  age_ind <- age_ind[valid]
-
-  YearsAll <- c(YearsList$YearsHist, YearsList$YearsProj)
-  for (yr in unique(AgeSel_long$Yr)) {
-    tmp <- AgeSel_long[AgeSel_long$Yr == yr, ]
-    tmp <- tmp[order(tmp$Age, tmp$Seas), ]
-
-    # Assign seasonal ages
-    tmp$Age <- SeasonalAges[seq_len(nrow(tmp))]
-    tmp <- tmp[valid, ]
-
-    ind1 <- match(yr, YearsAll)
-    ind2 <- match(yr + 1, YearsAll) - 1
-
-    MeanAtAge[age_ind, ind1:ind2] <- tmp$V
+    dplyr::mutate(Age = as.numeric(Age)) |>
+    dplyr::arrange(Yr, Age, Seas)  
+  
+  AgeSel_split <- split(AgeSel_long, AgeSel_long$Yr)
+  
+  for (yr in names(AgeSel_split)) {
+    vals <- AgeSel_split[[yr]]$V[valid]
+    ind1 <- year_to_ind[[yr]]
+    ind2 <- year_to_ind[[as.character(as.integer(yr) + 1L)]] - 1L
+    MeanAtAge[age_ind, ind1:ind2] <- vals
   }
-
-  # normalize by year
-  sweep(MeanAtAge, 2, apply(MeanAtAge, 2, max), "/")
+  
+  col_max <- apply(MeanAtAge, 2, max)
+  sweep(MeanAtAge, 2, col_max, "/")
 }
 
 GetSS_SelectivityAtLength <- function(st, fl, replist, YearsList, Stock) {
@@ -1509,12 +1500,6 @@ SS2Selectivity <- function(st, fl, RepList, YearsList, Stock) {
 }
 
 
-
-
-
-
-
-
 GetSS_RetentionAtLength <- function(st, fl, replist, YearsList) {
   RetainAtLength <- replist$sizeselex[replist$sizeselex$Fleet == fl &
     replist$sizeselex$Sex == st &
@@ -1557,66 +1542,56 @@ GetSS_EmpiricalWeight <- function(st, fl, replist, YearsList, AgeClasses) {
   Weight_at_Age_array <- NULL
 
   if (!inherits(replist$wtatage, "logical")) {
-    if (!is.null(replist$wtatage$Yr)) {
-      wt_at_age_c_df <- replist$wtatage |>
-        dplyr::filter(abs(Yr) %in% mainyrs, Sex == st, Fleet == fl)
-    } else {
-      if (!is.null(replist$wtatage$sex)) {
-        wt_at_age_c_df <- replist$wtatage |>
-          dplyr::filter(abs(year) %in% YearsHist, sex == st, fleet == fl)
-      } else {
-        wt_at_age_c_df <- replist$wtatage |>
-          dplyr::filter(abs(year) %in% YearsHist, Sex == st, Fleet == fl)
-      }
-      wt_at_age_c_df <- wt_at_age_c_df |> dplyr::rename(Yr = year)
-    }
-
+    
+    wt_at_age <- replist$wtatage |>
+      dplyr::rename_with(~ dplyr::case_match(
+        .x,
+        "Yr"   ~ "Year", "year" ~ "Year",
+        "Sex"  ~ "Sex",  "sex"  ~ "Sex",
+        "Fleet"~ "Fleet","fleet"~ "Fleet",
+        "Seas" ~ "Seas", "seas" ~ "Seas",
+        .default = .x
+      ))
+    
+    wt_at_age_c_df <- wt_at_age |>
+      dplyr::filter(abs(Year) %in% YearsHist, Sex == st, Fleet == fl)
+    
     SS_AgeClasses <- suppressWarnings(as.numeric(colnames(wt_at_age_c_df)))
     SS_AgeClasses <- SS_AgeClasses[!is.na(SS_AgeClasses)]
     n_age <- length(SS_AgeClasses)
     
+    seas <- unique(wt_at_age_c_df$Seas)
     
-    seas <- unique(wt_at_age_c_df$seas)
     if (length(seas) > 1) {
       if (YearsList$TimeUnits != "quarter")
-        cli::cli_abort("Only quarterly seasonal models currently supported", .internal=TRUE)
-      
-      if (is.null(wt_at_age_c_df$Year))
-        wt_at_age_c_df$Year <- wt_at_age_c_df$Yr
-      
-      if (is.null(wt_at_age_c_df$Seas))
-        wt_at_age_c_df$Seas <- wt_at_age_c_df$seas
-      
-      df <- wt_at_age_c_df |> dplyr::select(Year, Seas, as.character(SS_AgeClasses)) |>
-        tidyr::pivot_longer(as.character(SS_AgeClasses), names_to = 'Age', values_to = 'Value') |>
-        dplyr::mutate(Age=as.numeric(Age))
+        cli::cli_abort("Only quarterly seasonal models currently supported", .internal = TRUE)
       
       AgeClassesFull <- seq(0, to = max(AgeClasses), by = 1 / 4)
-      Years <- unique(df$Year) |> sort()
+      Years <- sort(unique(wt_at_age_c_df$Year))
       
-      Weight_at_Age_array <- array(NA, 
-                                   dim=c(length(AgeClassesFull),
-                                         length(Years)),
-                                   
-                                   dimnames = list(
-                                     Age=AgeClassesFull,
-                                     Year=Years
-                                   ))
+      df <- wt_at_age_c_df |>
+        dplyr::select(Year, Seas, dplyr::all_of(as.character(SS_AgeClasses))) |>
+        tidyr::pivot_longer(
+          cols      = dplyr::all_of(as.character(SS_AgeClasses)),
+          names_to  = "Age",
+          values_to = "Value"
+        ) |>
+        dplyr::mutate(Age = as.numeric(Age)) |>
+        dplyr::arrange(Year, Age)
+      
+      Weight_at_Age_array <- array(
+        NA,
+        dim      = c(length(AgeClassesFull), length(Years)),
+        dimnames = list(Age = AgeClassesFull, Year = Years)
+      )
       
       for (y in seq_along(Years)) {
-        temp <- df |> dplyr::filter(Year==Years[y]) |> 
-          dplyr::arrange(Age)
-        Weight_at_Age_array[,y] <- temp$Value
+        Weight_at_Age_array[, y] <- df$Value[df$Year == Years[y]]
       }
-    } else {
-      Weight_at_Age_array <- wt_at_age_c_df[, as.character(SS_AgeClasses)] |> t()  
+    
+      dimnames(Weight_at_Age_array) <- list(Age = AgeClassesFull, Year = Years)
     }
-    
-    
   } else {
-    # Wt_Mid used for NPSWO - maybe not general
-    # NPSWO = Sex is combined - always sex 1 ??
-    # not co
     wght <- replist$endgrowth |>
       dplyr::filter(Sex == 1) |>
       dplyr::select(Age_Beg, Wt_Beg, Wt_Mid, Seas) |>
@@ -1647,6 +1622,7 @@ SS2WeightFleet <- function(st, fl, RepList, YearsList, AgeClasses) {
   
   Weight_at_Age_array
 }
+
 
 
 ProcessSurveyObsSelectivity <- function(OM, RepList) {
