@@ -36,7 +36,16 @@ UniqueYears <- function(array) {
       any(round(slice_curr, 4) != round(slice_prev, 4))
     }, logical(1))
   )
+  
+  # Seasonal - causes problems in Extend  
+  # if (any(as.numeric(dnames$Year) %% 1 != 0)) {
+  #   ind <- as.numeric(dnames$Year) %% 1 == 0
+  #   nSeason <- min(which(ind[-1]))
+  #   changed[seq_len(nSeason)] <- TRUE
+  # }
+    
   which(changed)
+
 }
 
 #' Check Whether an Array is Constant Across Years
