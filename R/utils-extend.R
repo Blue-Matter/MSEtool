@@ -16,6 +16,9 @@
 #'   (default), the value from the most recent existing year is used.
 #' @param backfill Logical. If `TRUE`, also back-fill years earlier than the
 #'   earliest existing year. Default `FALSE`.
+#' @param maintain_seasonal_pattern Logical. Seasonal models only. 
+#' If `TRUE` fills in missing year values by matching those from the closest
+#' corresponding season (e.g., maintains seasonal recruitment pattern)
 #' @param debug Logical. If `TRUE`, prints the class of each object as it is
 #'   processed. Default `FALSE`.
 #'
@@ -61,6 +64,7 @@ Extend <- function(array,
                    Areas = NULL,
                    default = NULL,
                    backfill = FALSE,
+                   maintain_seasonal_pattern = TRUE,
                    debug = FALSE) {
   if (debug) 
     print(class(array))
@@ -88,7 +92,7 @@ Extend <- function(array,
   array |>
     ExtendSims(nSim) |>
     ExtendAges(AgeClasses) |>
-    ExtendYears(Years, default, backfill) |>
+    ExtendYears(Years, default, backfill, maintain_seasonal_pattern) |>
     ExtendAreas(Areas)
 }
 
@@ -195,7 +199,9 @@ ExtendAges <- function(array, AgeClasses = NULL) {
 
 #' @rdname Extend
 #' @export
-ExtendYears <- function(array, Years = NULL, default = NULL, backfill = FALSE) {
+ExtendYears <- function(array, Years = NULL, default = NULL,
+                        backfill = FALSE, 
+                        maintain_seasonal_pattern = TRUE) {
   
   if (!is.array(array) | is.null(Years)) 
     return(array)
@@ -231,7 +237,8 @@ ExtendYears <- function(array, Years = NULL, default = NULL, backfill = FALSE) {
   
   # Seasonal
   if (any(all_years %% 1 != 0))
-    return(ExtendYears_seasonal(array, Years, default, backfill = backfill))
+    return(ExtendYears_seasonal(array, Years, default, backfill = backfill,
+                                maintain_seasonal_pattern=maintain_seasonal_pattern))
   
 
   # Forward fill years from most recent existing year
@@ -268,7 +275,8 @@ NoSeasonVals <- function(x) {
   all(abs(x - round(x)) < .Machine$double.eps^0.5)
 }
 
-ExtendYears_seasonal <- function(array, Years = NULL, default = NULL, backfill = FALSE, tol = 0.01) {
+ExtendYears_seasonal <- function(array, Years = NULL, default = NULL, backfill = FALSE, 
+                                 maintain_seasonal_pattern=maintain_seasonal_pattern, tol = 0.01) {
   
   if (!is.array(array)) 
     cli::cli_abort("`array` must be an array")
@@ -294,12 +302,10 @@ ExtendYears_seasonal <- function(array, Years = NULL, default = NULL, backfill =
   if (all(fill_years %in% existing_years)) 
     return(array)
   
-
   fill_years <- all_years[!all_years %in% existing_years]
   back_years <- fill_years[which(fill_years < min(existing_years))]
   forward_years <- fill_years[which(fill_years > max(existing_years))]
   inside_years <- fill_years[!fill_years %in% back_years & !fill_years %in% forward_years]
-  
   
   if (!backfill) 
     all_years <- all_years[!all_years %in% back_years]
@@ -315,7 +321,7 @@ ExtendYears_seasonal <- function(array, Years = NULL, default = NULL, backfill =
   # Forward fill years from most recent existing year
   if (length(forward_years)) {
     season_forward <- (forward_years %% 1) |> unique()
-    if (NoSeasonVals(season_existing)) {
+    if (NoSeasonVals(season_existing) || maintain_seasonal_pattern) {
       # no seasons in provided values - constant over seasons within years
       most_recent_ind <- nyear
       MostRecent <- abind::asub(array, most_recent_ind, year_dim, drop = FALSE)
@@ -362,7 +368,7 @@ ExtendYears_seasonal <- function(array, Years = NULL, default = NULL, backfill =
   # Back fill years from first existing year
   if (length(back_years) && backfill) {
     season_backward <- (back_years %% 1) |> unique()
-    if (NoSeasonVals(season_existing)) {
+    if (NoSeasonVals(season_existing) || maintain_seasonal_pattern) {
       # no seasons in provided values - constant over seasons within years
       MostRecent <- abind::asub(array, 1, year_dim, drop = FALSE)
       if (!is.null(default)) {
@@ -412,7 +418,7 @@ ExtendYears_seasonal <- function(array, Years = NULL, default = NULL, backfill =
       years_block <- TimeBlocks[[i]]
       season_inside <- (years_block %% 1) |> unique()
 
-      if (NoSeasonVals(season_existing)) {
+      if (NoSeasonVals(season_existing) || maintain_seasonal_pattern) {
         # no seasons in provided values - constant over seasons within years
         most_recent_ind <- which(existing_years <  min(years_block)) |> max()
         MostRecent <- abind::asub(array, most_recent_ind, year_dim, drop = FALSE)
@@ -420,8 +426,8 @@ ExtendYears_seasonal <- function(array, Years = NULL, default = NULL, backfill =
           MostRecent[] <- default
         }
         d <- dim(MostRecent)
-        d[[year_dim]] <- length(inside_years)
-        dn[[year_dim]] <- inside_years
+        d[[year_dim]] <- length(years_block)
+        dn[[year_dim]] <- years_block
         abind::afill(OutArray) <- array(MostRecent, dim = d, dimnames = dn)
         
       } else {
