@@ -34,13 +34,12 @@ ReduceDims <- function(array,
                        IncSim = TRUE,
                        IncAge = FALSE,
                        IncYear = FALSE) {
-  if (!IncSim && !IncYear && !IncAge) {
-    return(array)
-  }
   
-  if (!length(array)) {
+  if (!IncSim && !IncYear && !IncAge) 
     return(array)
-  }
+  
+  if (!length(array)) 
+    return(array)
   
   # Recall for S4
   if (isS4(array)) {
@@ -67,9 +66,9 @@ ReduceDims <- function(array,
   }
   
   DN <- dimnames(array)
-  if (is.null(DN)) {
+  if (is.null(DN)) 
     return(array)
-  }
+  
   
   dnm <- names(DN)
   
@@ -81,9 +80,9 @@ ReduceDims <- function(array,
   hasAge <- !is.na(indAge) && IncAge
   hasYear <- !is.na(indYear) && IncYear
   
-  if (!hasSim && !hasAge && !hasYear) {
+  if (!hasSim && !hasAge && !hasYear) 
     return(array)
-  }
+  
   
   idSim <- hasSim && IdenticalSims(array)
   idAge <- hasAge && IdenticalAge(array)
@@ -94,19 +93,19 @@ ReduceDims <- function(array,
   nd <- length(dim(array))
   idx <- vector("list", nd)
   
-  for (k in seq_len(nd)) {
+  for (k in seq_len(nd)) 
     idx[[k]] <- seq_len(dim(array)[k])
-  }
+  
   
   ## ---- Sim ----
-  if (hasSim && idSim) {
+  if (hasSim && idSim) 
     idx[[indSim]] <- 1
-  }
+  
   
   ## ---- Age ----
-  if (hasAge && idAge) {
+  if (hasAge && idAge) 
     idx[[indAge]] <- 1
-  }
+  
   
   ## ---- Year ----
   if (hasYear) {
