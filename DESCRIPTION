@@ -293,6 +293,7 @@ Collate:
     'utils-atsize-to-atage.R'
     'utils-cr2h.R'
     'utils-extend-hist.R'
+    'utils-extend-om.R'
     'utils-extend.R'
     'utils-fill-from-misc.R'
     'utils-helpers.R'
