@@ -2,7 +2,7 @@
 % Please edit documentation in R/subset.R
 \name{Subset}
 \alias{Subset}
-\title{Subset an object by simulation and/or year}
+\title{Subset an object by simulation, year, age, MP, and/or fleet}
 \usage{
 Subset(
   object,
@@ -10,6 +10,7 @@ Subset(
   Years = NULL,
   Ages = NULL,
   MPs = NULL,
+  Fleets = NULL,
   Impute = TRUE
 )
 }
@@ -18,47 +19,45 @@ Subset(
 \itemize{
 \item S4 objects (all slots are recursively subset)
 \item Lists (including \code{StockList}, \code{FleetList}, etc.)
-\item Arrays with a \code{Sim}, \code{Year} and/or \code{Age} dimension
-\item Named numeric vectors
+\item Arrays with a \code{Sim}, \code{Year}, \code{Age}, \code{MP}, and/or \code{Fleet} dimension
+\item Named numeric vectors (for \code{Sim} and \code{Age} dimensions)
 }}
 
-\item{Sims}{Numeric vector of simulation identifiers to retain.
-If \code{NULL}, no subsetting by simulation is performed.}
+\item{Sims}{Numeric vector of simulation indices to retain. \code{NULL} skips.}
 
-\item{Years}{Numeric vector of years to retain.
-If \code{NULL}, no subsetting by year is performed.}
+\item{Years}{Numeric vector of calendar years to retain. \code{NULL} skips.}
 
-\item{Ages}{Numeric vector of age classes to retain.
-If \code{NULL}, no subsetting by age is performed.}
+\item{Ages}{Numeric vector of age classes to retain. \code{NULL} skips.}
 
-\item{MPs}{Numeric vector of MPs to retain.
-If \code{NULL}, no subsetting by MP is performed.}
+\item{MPs}{Integer or character vector of MPs to retain. \code{NULL} skips.}
 
-\item{Impute}{Logical; only relevant when subsetting by \code{Years}.
-If \code{TRUE} (default), years not present in the object may be imputed using the
-nearest available past year.
-If \code{FALSE}, years earlier than the earliest available year are not imputed.
+\item{Fleets}{Character vector of fleets to retain. \code{NULL} skips.}
 
-Subsetting is applied sequentially when multiple dimensions are supplied, allowing users
-to extract consistent subsets across simulations, years, and age classes using a single call.
+\item{Impute}{Logical; only relevant when subsetting by \code{Years}. If \code{TRUE}
+(default), years not present in the object are imputed from the nearest
+available past year. If \code{FALSE}, years earlier than the earliest available
+year are dropped rather than imputed.
 
-For array objects, subsetting is performed along dimensions named
-\code{"Sim"}, \code{"Year"}, and/or \code{"Age"}.
-Year subsetting optionally supports imputation of missing values.
-Age subsetting requires all requested ages to be present.
+Subsetting is applied sequentially when multiple dimensions are supplied,
+allowing consistent extraction across simulations, years, and age classes in
+a single call.
 
-For S4 objects, all slots are recursively subset.
-If a slot named \code{nSim} is present, it is updated to reflect the
-number of retained simulations.}
+For array objects, subsetting is performed along dimensions named \code{"Sim"},
+\code{"Year"}, \code{"Age"}, \code{"MP"}, and/or \code{"Fleet"}. Year subsetting optionally
+supports imputation of missing values. Age subsetting requires all requested
+ages to be present in the array.
+
+For S4 objects, all slots are recursively subset. If a slot named \code{nSim} is
+present it is updated to reflect the number of retained simulations.}
 }
 \value{
-An object of the same class as \code{object}, subset according to \code{Sims}, \code{Years},
-\code{Ages} and/or \code{MPs}.
+An object of the same class as \code{object}, subset according to the
+supplied dimension arguments.
 }
 \description{
-Recursively subsets an object along the \code{Sim}, \code{Year}, and/or \code{Age} dimensions.
-The function operates on arbitrarily nested structures including S4 objects,
-lists, arrays, and named numeric vectors.
+Recursively subsets an object along the \code{Sim}, \code{Year}, \code{Age}, \code{MP}, and/or
+\code{Fleet} dimensions. The function operates on arbitrarily nested structures
+including S4 objects, lists, arrays, and named numeric vectors.
 }
 \examples{
 nSim(ExampleOM) <- 10

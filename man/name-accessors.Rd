@@ -8,10 +8,12 @@
 \usage{
 StockNames(object)
 
-FleetNames(object)
+FleetNames(object, IncSurvey = FALSE)
 }
 \arguments{
 \item{object}{An \linkS4class{om}, \linkS4class{hist}, \linkS4class{stock}, \linkS4class{fleet}, or \linkS4class{mse} object.}
+
+\item{IncSurvey}{Logical. Include names of survey (non-fishing) fleets? Default: FALSE}
 }
 \value{
 \itemize{
