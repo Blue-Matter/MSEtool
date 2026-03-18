@@ -48,27 +48,45 @@ StockNames <- function(object) {
 }
 
 #' @rdname name-accessors
+#' @param IncSurvey Logical. Include names of survey (non-fishing) fleets? Default: FALSE
 #' @export
-FleetNames <- function(object) {
-  if (inherits(object, c("hist", "mse"))) {
-    return(lapply(object@OM@Fleet, names)[[1]])
-  }
+FleetNames <- function(object, IncSurvey = FALSE) {
   
+  if (inherits(object, c("hist", "mse")))
+    return(Recall(object@OM, IncSurvey = IncSurvey))
+  
+  
+
   if (inherits(object, "om")) {
-    if (inherits(object@Fleet, 'fleet')) {
-      return(object@Fleet@Name)
+    
+    if (inherits(object@Fleet, "fleet")) {
+      fleetnames <- object@Fleet@Name
+    } else if (is.list(object@Fleet)) {
+      fleetnames <- names(object@Fleet[[1]])  
+    } else {
+      cli::cli_alert_warning("Unrecognised structure in {.val object@Fleet}; cannot extract fleet names.")
+      return(NULL)
     }
-    if (is.list(object@Fleet)) {
-      return(names(object@Fleet[[1]]))
+    
+    if (IncSurvey && !is.null(object@Data)) {
+      surveynames <- lapply(object@Data, \(st) st@Survey@Name) |>
+        unlist() |> unique()
+      
+      cpuenames <- lapply(object@Data, \(st) st@CPUE@Name) |>
+        unlist() |> unique()
+      
+      fleetnames <- unique(c(fleetnames, surveynames, cpuenames))
     }
+    return(fleetnames)
   }
-  
-  if (inherits(object, "StockList")) {
-    return(lapply(object, names))
-  }
-  
-  if (inherits(object, "FleetList")) {
+ 
+  if (inherits(object, "FleetList"))
     return(names(object))
-  }
-  NULL
+  
+  if (inherits(object, "StockList"))
+    return(lapply(object, names))  
+  
+  cli::cli_alert_warning("No FleetNames method for object of class {.cls {class(object)}}")
+  
+  invisible(NULL)
 }
