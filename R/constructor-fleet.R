@@ -142,7 +142,7 @@ Closure <- function(x) {
 #' @rdname Fleet
 #' @export
 WeightFleet <- function(x) {
-  AccessSlot(Fleet, 'WeightFleet')
+  AccessSlot(x, 'WeightFleet')
 }
 
 #' @rdname Fleet
