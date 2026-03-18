@@ -93,8 +93,7 @@ SubsetSim <- function(object, Sims, debug = FALSE) {
   
     if (!is.null(names(object)) && all(Sims %in% names(object))) 
       return(object[Sims])
-    
-    
+  
     for (i in seq_len(n)) {
       el <- object[[i]]
       if (!is.null(el))
@@ -383,6 +382,12 @@ SubsetFleet <- function(object, Fleets=NULL, debug = FALSE) {
   if (is.list(object)) {
     n <- length(object)
     if (n == 0) return(object)
+    
+    if (!is.null(names(object)) && any(Fleets %in% names(object))) {
+      Fleets <- Fleets[Fleets %in% names(object)]
+      return(object[Fleets])
+    }
+    
     for (i in seq_len(n)) {
       el <- object[[i]]
       if (!is.null(el))
