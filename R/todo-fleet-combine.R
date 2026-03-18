@@ -5,61 +5,72 @@
 #'
 #'
 #' @param OM An [OM()] object.
-#' @param Names A character string with the Name for the new combined fleet,
-#' or a list of names.
-#' @param Fleets A character or numeric vector identifying fleets to combine, or 
-#' a list matching the structure of `Names`
 #' @param silent Logical. Suppress informational messages.
 #'
 #' @return An updated `OM` object with the new fleet added for each stock.
 #'
 #' @export
-CombineFleets <- function(OM, Names, Fleets, silent=FALSE) {
+CombineFleets <- function(OM, FleetList, silent=FALSE) {
   
-  if (!is.list(Names)) {
-    Names <- list(Names)
+  CheckClass(OM)
+  
+  if (!is.list(FleetList)) 
+    cli::cli_abort("`FleetList` must be a list")
+  
+  if (is.null(names(FleetList)))
+    cli::cli_abort("`FleetList` must be a named list")
+  
+  fleetnames <- FleetNames(OM)
+  ind <- as.character(unlist(FleetList)) %in% fleetnames
+  if (any(!ind)) {
+    cli::cli_abort(c('x' = 'Names in `FleetList` do not match `FleetNames(OM)`',
+                     'i' = 'Invalid Fleets: {.val {as.character(unlist(FleetList))[!ind]}}'))
   }
-  
-  if (!is.list(Fleets)) {
-    Fleets <- list(Fleets)
-  }
-  
-  FleetList <- Fleets
-  NamesList <- Names
-  
+
   OM <- Populate(OM, silent=TRUE)
   
   FleetIndList <- purrr::map(FleetList, \(Fleets) resolve_fleet_indices(OM, Fleets))
-  
-  fleetnames <- FleetNames(OM)
-  
+ 
   if (!silent) 
     cli::cli_alert_info("Combining fleets into aggregated fleet:")
+  
+  NamesList <- names(FleetList)
   
   # Combine Fleets
   for (i in seq_along(FleetList)) {
     if (!silent) 
       cli::cli_li(
-        "{.val {fleetnames[FleetIndList[[i]]]}} into new fleet: {.val {Names[[i]]}} "
+        "{.val {FleetList[[i]]}} into new fleet: {.val {NamesList[i]}} "
       )
     
     replaceFleet <- FleetIndList[[i]][1]
     dropFleet <- FleetIndList[[i]][-1]
     FleetInds <- FleetIndList[[i]]
-    Name <- NamesList[[i]]
+    Name <- NamesList[i]
     
     for (st in seq_len(nStock(OM))) {
       OM@Fleet[[st]][[replaceFleet]] <- combine_fleets_stock(OM, st, Name, FleetInds)
       names(OM@Fleet[[st]])[replaceFleet] <- Name 
       
-      # combine Obs
-      
-      # combine Imp 
-      
-   
     }
+    
+    # Data
+    for (i in seq_along(OM@Data)) {
+      
+      # OM@Data[[i]]@Landings@Name
+      # OM@Data[[i]]@Landings@Value
+      # OM@Data[[i]]@Landings@CV
+      
+    }
+    
+    # Obs 
+    
+    # Imb 
+      
   }
-  
+      
+      
+
   DropFleets <- lapply(FleetList, '[', -1) |> unlist()
   for (st in seq_len(nStock(OM))) {
     OM@Fleet[[st]][DropFleets] <- NULL
@@ -152,6 +163,16 @@ combine_fleets_stock <- function(OM, st, Name, FleetInds) {
  
   DiscardMortality(NewFleet) <- DiscardMortality(MeanAtAge = MeanAtAge)
   
+  # WeightFleet 
+  WeightFleetList <- purrr::map(FleetList, WeightFleet)
+  
+  weightedList <- purrr::map2(relFList, WeightFleetList, \(Frel, WF) {
+    Frel <- Frel |> AddDimension("Age", pos = 2)
+    ArrayMultiply(Frel, WF)
+  })
+  
+  WeightFleet(NewFleet) <- Reduce(`+`, weightedList)
+
   NewFleet
 }
 
