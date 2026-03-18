@@ -142,6 +142,8 @@ PlusGroup <- function(x) {
 
 
 CalcAgeClasses <- function(Ages) {
+  if (!length(Ages@Units))
+    return(NULL)
   # always in years 
   if (!length(Ages@MaxAge) || !length(Ages@MinAge))
     return(NULL)
