@@ -36,7 +36,7 @@ Save <- function(object, path = NULL, overwrite = FALSE, ...) {
   
   name <- deparse(substitute(object))
   cli::cli_alert_info(
-    "Saving {.val {name}} of class {.cls {class(object)}} to {.val {path}}."
+    "Saving {.val {name}} of class {.cls {class(object)}} to {.val {path}}"
   )
   saveRDS(object, path, ...)
   invisible(path)
