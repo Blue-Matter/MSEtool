@@ -403,8 +403,13 @@ SubsetFleet <- function(object, Fleets=NULL, debug = FALSE) {
     return(object)
   }
   
-  if (is.character(object) && !is.null(Fleets))
-    return(object[object %in% Fleets])
+  if (is.character(object) && !is.null(Fleets)) {
+    ind <- object %in% Fleets
+    if (any(ind))
+      return(object[ind])
+    return(object)
+  }
+    
   
   object
 }
