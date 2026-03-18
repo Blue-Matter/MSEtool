@@ -212,6 +212,8 @@ CalcTSUnits <- function(Seasons) {
 #' @rdname CalcTSUnits
 #' @export
 CalcSeasons <- function(Units) {
+  if (!length(Units)) return(NULL)
+
   out <- switch(tolower(Units),
                 "year"      = 1L,
                 "half-year" = 2L,
