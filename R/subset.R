@@ -322,8 +322,13 @@ SubsetMP <- function(object, MPs=NULL, debug = FALSE) {
     return(object)
   }
   
-  if (is.character(object)) 
-    object <- object[object %in% MPs]
+  if (is.character(object) && !is.null(MPs)) {
+    ind <- object %in% MPs
+    if (any(ind))
+      return(object[ind])
+    return(object)
+  }
+  
   
   object
 }
