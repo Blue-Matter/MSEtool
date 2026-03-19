@@ -48,7 +48,7 @@ UpdateMSEObject <- function(MSE, Proj, MPName, mp, YearsHist, YearsProj,
   #   unlist() |> 
   #   as.numeric()
 
-  MSE <- AddPPD(MSE, Proj, MPName, YearsHist, YearsProj)    
+  MSE <- AddPPD(MSE, Proj, MPName, YearsHist, YearsProj, mp)    
   
   MSE <- RecordSelRetDisc(MSE, Proj, MPName, YearsProj)
   
@@ -104,11 +104,14 @@ RecordSelRetDisc <- function(MSE, Proj, MPName, YearsProj) {
   MSE
 }
 
-AddPPD <- function(MSE, Proj, MPName, YearsHist, YearsProj) {
+AddPPD <- function(MSE, Proj, MPName, YearsHist, YearsProj, mp) {
   
   PPD <- Proj@Data |> 
     AddYearDimnames(Years=c(YearsHist, YearsProj)) |>
-    AddFleetDimnames(FleetNames = FleetNames(Proj)) |>
+    AddFleetDimnames(FleetNames = FleetNames(Proj))
+  
+  if (mp > 1) 
+    PPD <- PPD |>
     SubsetYear(Years=YearsProj)
   
   MSE@PPD[[MPName]] <- PPD
