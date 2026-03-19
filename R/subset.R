@@ -185,6 +185,12 @@ SubsetYear <- function(object, Years, Impute=TRUE, debug=FALSE) {
     return(object)
   }
   
+  if (is.numeric(object)) {
+    ind <- object %in% Years 
+    if (any(ind))
+      return(object[ind])
+  }
+  
   object
 }
 
