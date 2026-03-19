@@ -13,8 +13,9 @@ GetLastMPAdvice <- function(Proj) {
 }
 
 CalcDataYear <- function(Year, YearsAll, DataLag, Seasons) {
-  TSIndex <- match(Year, YearsAll)
-  YearsAll[TSIndex - (DataLag + Seasons)]
+  nYears <- length(YearsAll)
+  lagYear <- nYears - (DataLag * Seasons)
+  YearsAll[lagYear]
 }
 
 TrimMPData <- function(Proj, DataYear) {
