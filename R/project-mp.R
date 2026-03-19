@@ -66,6 +66,7 @@ Project_MP <- function(Proj,
 
   for (ts in seq_along(YearsProj)) {
     
+ 
     Year <- YearsProj[ts]
     if (!silent) cli::cli_progress_update(extra = list(year = Year))
     
@@ -77,7 +78,7 @@ Project_MP <- function(Proj,
     
     # Data year accounting for lag 
     DataYear <- CalcDataYear(Year     = Year, 
-                             YearsAll = YearsAll, 
+                             YearsAll = Proj@Data[[1]][[1]]@Years, 
                              DataLag  = Proj@OM@DataLag,
                              Seasons  = Proj@OM@Seasons)
       
