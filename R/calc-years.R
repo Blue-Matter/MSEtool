@@ -115,6 +115,8 @@ CalcYears <- function(nYear, pYear, CurrentYear, Seasons=1, Period=NULL) {
 #' @export
 Years <- function(x, Period=NULL) {
   if (isS4(x)) {
+    if (inherits(x, 'data'))
+      return(x@Years)
     if (inherits(x, 'mse') || inherits(x, 'hist'))
       x <- x@OM
     return(CalcYears(x@nYear, x@pYear, x@CurrentYear, x@Seasons, Period))

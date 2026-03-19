@@ -83,7 +83,6 @@ CalcAdvice <- function(MPName, MPfunction, DataSimList, Year, Proj, YearsProj, m
   if (inherits(MPfunction,'mmp')) 
     cli::cli_abort("MP class `mmp` currently not supported", call=NULL)
   
-
   AdviceSimList <- MakeNamedList(1:nSim)
   
   for (sim in seq_along(AdviceSimList)) {
