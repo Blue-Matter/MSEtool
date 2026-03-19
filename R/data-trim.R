@@ -41,7 +41,6 @@ DataTrim <- function(Data, Year) {
   if (Year == max(Data@Years))
     return(Data)
   
-  
   OutYears <- Years[Years <= Year]
   
   OutData <- SubsetYear(Data, OutYears, Impute =FALSE)
