@@ -63,14 +63,14 @@ PopulateLength <- function(Length,
   
   argList <- list(Ages, nSim, Years, ALK, seed)
   
-  if (EmptyObject(Length)) {
-    cli::cli_abort('{.val Length} is required but is currently empty')
-    # return(Length)
-  }
-  
-  if (CheckDigest(Length, argList) & !force) {
+  if (EmptyObject(Length)) 
     return(Length)
-  }
+  
+  # cli::cli_abort('{.val Length} is required but is currently empty')
+  
+  if (CheckDigest(Length, argList) & !force) 
+    return(Length)
+  
   
   SetSeed(seed)
   
@@ -89,19 +89,16 @@ PopulateLength <- function(Length,
     )
   }
   
-  if (is.null(Length@CVatAge)) {
+  if (is.null(Length@CVatAge)) 
     ALK <- FALSE
-  }
   
-  if (!is.null(Length@CVatAge)) {
+  if (!is.null(Length@CVatAge)) 
     Length <- PopulateClasses(Length)
-  }
   
-  if (ALK && !is.null(Length@Classes)) {
+  if (ALK && !is.null(Length@Classes)) 
     Length <- PopulateASK(object = Length, 
                           Ages = Ages, 
                           silent = silent)
-  }
   
   SetDigest(Length, argList)
 }

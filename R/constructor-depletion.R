@@ -69,25 +69,16 @@
 #'
 #' @example man-examples/class-Depletion.R
 #' @export
-Depletion <- function(Initial,
-                      Final,
+Depletion <- function(Initial = NULL,
+                      Final = NULL,
                       Reference = "B0") {
-  
-  
-  
-  if (missing(Initial)) {
-    object <- methods::new("depletion")
-    object@Reference <- Reference
-    return(object)
-  }
   
   if (inherits(Initial, 'stock'))
     return(Initial@Depletion)
   
-  
   methods::new("depletion",
-               Initial = if (missing(Initial)) numeric() else Initial,
-               Final = if (missing(Final))   numeric() else Final,
+               Initial = Initial,
+               Final = Final,
                Reference = Reference)
 }
 

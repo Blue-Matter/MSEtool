@@ -49,27 +49,25 @@ PopulateSRR <- function(SRR,
                         seed = NULL,
                         silent = FALSE) {
   Ages <- DefaultAges(Ages)
-  if (is.null(CurrentYear)) {
-    CurrentYear <- format(Sys.Date(), "%Y") |>
-      as.numeric()
-  }
+  
+  if (is.null(CurrentYear)) 
+    CurrentYear <-  as.numeric(format(Sys.Date(), "%Y"))
   
   Years <- DefaultYears(Years)
   
   argList <- list(Ages, CurrentYear, Years, nSim, seed)
   
   MaxAge <- Ages@MaxAge
-  if (is.null(MaxAge)) {
+  
+  if (is.null(MaxAge)) 
     cli::cli_abort("`MaxAge` cannot be NULL")
-  }
   
-  if (is.null(CurrentYear)) {
+  if (is.null(CurrentYear)) 
     cli::cli_abort("`CurrentYear` cannot be NULL")
-  }
   
-  if (is.null(Years)) {
+
+  if (is.null(Years)) 
     cli::cli_abort("`Years` cannot be NULL")
-  }
   
   if (is.null(nSim)) {
     cli::cli_alert_info("`nSim` not specified. Assuming `nSim=1` and no recruitment process error.")
@@ -82,9 +80,9 @@ PopulateSRR <- function(SRR,
   nHistTS <- length(HistTS)
   nProjTS <- length(ProjTS)
   
-  if (CheckDigest(SRR, argList) | EmptyObject(SRR)) {
+  if (CheckDigest(SRR, argList) | EmptyObject(SRR)) 
     return(SRR)
-  }
+  
   
   SetSeed(seed)
   
@@ -92,17 +90,16 @@ PopulateSRR <- function(SRR,
   SRR@Pars <- StructurePars(Pars = SRR@Pars, nSim, Years)
   SRR@Model <- FindModel(SRR)
   
-  if (is.character(SRR@Model) && is.null(SRR@RelRecFun)) {
-    # Load the Relative Recruitment function
+  # Load the Relative Recruitment function
+  if (is.character(SRR@Model) && is.null(SRR@RelRecFun)) 
     SRR@RelRecFun <- paste(SRR@Model, "RelRec", sep = "_")
-  }
   
   # checks 
   names <- c('R0', 'SD', 'AC')
   defaults <- c(1000, 0.4, 0)
-  for (i in seq_along(names)) {
+  for (i in seq_along(names)) 
     SRR <- CheckSRRPars(SRR, names[i], defaults[i])
-  }
+  
 
   pars <- StructurePars(Pars=list(SRR@R0, SRR@SD, SRR@AC), nSim, Years)
   SRR@R0 <- pars[[1]] 
@@ -174,8 +171,10 @@ PopulateSRR <- function(SRR,
 CheckSRRPars <- function(SRR, name='R0', default=1000) {
   val <- slot(SRR, name)
   if (is.null(val)) {
-    cli::cli_alert_danger('Warning: {.val {name}} is missing in {.val SRR}')
-    cli::cli_alert_info('Using default value: {.val {default}}')
+    if (name !='AC') {
+      cli::cli_alert_danger('Warning: {.val {name}} is missing in {.val SRR}')
+      cli::cli_alert_info('Using default value: {.val {default}}')  
+    }
     slot(SRR, name) <- default
   }
   SRR

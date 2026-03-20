@@ -69,7 +69,6 @@ Extend <- function(array,
   if (debug) 
     print(class(array))
   
-  
   if (isS4(array)) {
     if (inherits(array, "data")) return(array)
     for (sl in slotNames(array)) {
@@ -203,7 +202,7 @@ ExtendYears <- function(array, Years = NULL, default = NULL,
                         backfill = FALSE, 
                         maintain_seasonal_pattern = TRUE) {
   
-  if (!is.array(array) | is.null(Years)) 
+  if (!is.array(array) || is.null(Years) || !length(array)) 
     return(array)
   
   d <- dim(array)

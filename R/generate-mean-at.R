@@ -49,7 +49,6 @@ GenMeanAtWeight <- function(Model, Pars, Weight) {
 
 GenerateMeanatGeneric <- function(Model, Pars, nSim = 5, Years=NULL,  ...) {
   
-
   dots <- list(...)
   if (length(dots) != 1) {
     cli::cli_abort("dots must be length 1", .internal = TRUE)
@@ -64,8 +63,6 @@ GenerateMeanatGeneric <- function(Model, Pars, nSim = 5, Years=NULL,  ...) {
   arg_name <- names(dots)
   arg <- dots[[1]]
   
-
-
   # Convert non-array input to array
   if (!is.array(arg)) {
     par_array <- Pars[[1]]
@@ -101,7 +98,11 @@ GenerateMeanatGeneric <- function(Model, Pars, nSim = 5, Years=NULL,  ...) {
           dd <- dim(p)
           p_sim <- min(sim, dd[1])
           p_year <- min(year, dd[2])
+          if (length(dd)==3) {
+            return(p[p_sim, p_year,])
+          } 
           p[p_sim, p_year]
+          
         })
         )
         array_out[sim, , year] <- do.call(fun, args)

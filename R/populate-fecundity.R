@@ -80,21 +80,22 @@ PopulateFecundity <- function(Fecundity,
     CheckRequiredObject(Maturity, "maturity", "Maturity")
     
     Weight <- PopulateWeight(Weight,
-                             Ages,
-                             Length,
-                             Years,
-                             nSim,
-                             seed,
+                             Ages = Ages,
+                             Length = Length,
+                             Years = Years,
+                             nSim = nSim,
+                             seed = seed,
                              AWK = FALSE
     )
+    
     Maturity <- PopulateMaturity(
       Maturity,
-      Ages,
-      Length,
-      Weight,
-      Years,
-      nSim,
-      seed
+      Ages = Ages,
+      Length = Length,
+      Weight = Weight,
+      Years = Years,
+      nSim = nSim,
+      seed = seed
     )
     
     Fecundity@MeanAtAge <- ArrayMultiply(

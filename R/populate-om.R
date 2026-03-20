@@ -48,30 +48,26 @@ PopulateOM <- function(OM, silent = FALSE, force = FALSE) {
   if (!length(OM@maxF))
     OM@maxF <- 3
 
-  if (EmptyObject(OM)) {
+  if (EmptyObject(OM)) 
     return(OM)
-  }
-
-  if (CheckDigest(OM) & !force) {
+  
+  if (CheckDigest(OM) & !force) 
     return(OM)
-  }
   
   if (!silent)
     cli::cli_alert_info('Populating OM {.val {OM@Name}}')
 
-  if (is.null(OM@Stock)) {
+  if (is.null(OM@Stock)) 
     cli::cli_abort(c(
       "x" = "{.var OM} must have at least one stock",
       "i" = "See {.help MSEtool::OM} and {.help MSEtool::Stock}"
     ))
-  }
-
-  if (is.null(OM@Fleet)) {
+  
+  if (is.null(OM@Fleet)) 
     cli::cli_abort(c(
       "x" = "{.var OM} must have at least one fleet",
       "i" = "See {.help MSEtool::OM} and {.help MSEtool::Fleet}"
     ))
-  }
 
   OM <- OM |>
     PopulateStockList(silent = silent, force = force) |>
@@ -111,10 +107,9 @@ ProcessData <- function(OM) {
 }
 
 PopulateStockList <- function(OM, silent = FALSE, force = FALSE) {
-  if (is.null(OM@Stock)) {
+  if (is.null(OM@Stock)) 
     return(OM)
-  }
-  
+
   nStock <- nStock(OM)
   if (inherits(OM@Stock, 'stock')) {
     StockList <- list(OM@Stock)
@@ -178,11 +173,10 @@ PopulateFleetList <- function(OM, silent = FALSE, force = FALSE) {
   }
 
   nFleetperStock <- lengths(FleetInput)
-  if (length(unique(nFleetperStock)) != 1) {
+  if (length(unique(nFleetperStock)) != 1) 
     cli::cli_abort(
       "All stocks must have the same number of fleets. Currently: {.val {nFleetperStock}}"
     )
-  }
   
   FleetList <- vector("list", nStocks)
   class(FleetList) <- "StockFleetList"

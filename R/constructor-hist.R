@@ -35,9 +35,9 @@ Hist <- function(MSE=NULL) {
 
 OM2Hist <- function(OM, silent) {
   # Create a Hist object from an OM and extend for all Sims and Years
-  if (!silent) {
+  
+  if (!silent) 
     id <- cli::cli_progress_bar("Initializing `Hist` Object")
-  }
   
   # Populate if needed
   OM <- PopulateOM(OM, silent = TRUE)

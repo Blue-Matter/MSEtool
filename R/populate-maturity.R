@@ -68,25 +68,16 @@ PopulateMaturity <- function(Maturity,
   
   argList <- list(Ages, Length, nSim, Years, CalcAtLength, seed)
   
-  if (EmptyObject(Maturity)) {
-    # cli::cli_alert_danger('Warning: {.val Maturity} is required but is currently empty')
+  if (EmptyObject(Maturity)) 
     cli::cli_abort('{.val Maturity} is required but is currently empty')
-    # return(Maturity)
-  }
-  
-  if (CheckDigest(Maturity, argList) & !force) {
+
+  if (CheckDigest(Maturity, argList) & !force) 
     return(Maturity)
-  }
   
   SetSeed(seed)
   
   Maturity@Pars <- StructurePars(Pars = Maturity@Pars, nSim, Years)
   Maturity@Model <- FindModel(Maturity)
-  Maturity <- PopulateMeanAtAge(object = Maturity, 
-                              Ages, 
-                              Years,
-                              Length)
-  
   ModelClass <- getModelClass(Maturity@Model)
   
   if (!is.null(ModelClass)) {
@@ -127,10 +118,8 @@ PopulateMaturity <- function(Maturity,
   Maturity <- MeanAtLength2MeanAtAge(Maturity, Length)
   Maturity <- MeanAtWeight2MeanAtAge(Maturity, Weight)
   
-  if (CalcAtLength) {
+  if (CalcAtLength) 
     Maturity <- MeanAtAge2MeanAtLength(Maturity, Length)
-  }
-  
   
   # Semelparous
   if (inherits(Maturity@Semelparous, "array")) {} else {

@@ -82,10 +82,10 @@ ExtendOM <- function(OM, Years = NULL, nSim = NULL, silent=FALSE, id=NULL) {
     
     for (fl in 1:nFleet) {
       OM@Fleet[[st]][[fl]] <- Extend(array=OM@Fleet[[st]][[fl]], 
-                                          nSim = nSim, 
-                                          AgeClasses = AgeClasses,
-                                          Years = Years,
-                                          Areas = Areas)
+                                     nSim = nSim, 
+                                     AgeClasses = AgeClasses,
+                                     Years = Years,
+                                     Areas = Areas)
       if (!silent) 
         cli::cli_progress_update(id=id)
       

@@ -27,7 +27,7 @@ ExtendHist <- function(Hist, Years, silent=FALSE, id=NULL) {
     id <- cli::cli_progress_bar("Extending `Hist` Object")
   
   # Extend OM
-  Hist@OM <- ExtendOM(Hist@OM, Years=Years, silent=silent, id=id)
+  Hist@OM <- ExtendOM(OM=Hist@OM, Years=Years, silent=silent, id=id)
 
   # Extend time series 
   slots <- slotNames('timeseries')

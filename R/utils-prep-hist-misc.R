@@ -83,7 +83,15 @@ PrepHistMisc <- function(Hist, Period=c('Historical', 'Projection')) {
   
   # Sim, Age, Year
   Hist@Misc$LengthList <- purrr::map(Hist@OM@Stock, \(stock) {
-    stock@Length@MeanAtAge
+    if (!is.null(stock@Length@MeanAtAge))
+      return(stock@Length@MeanAtAge)
+    
+    sims <- seq_len(stock@nSim)
+    years <- Years(stock)
+    
+    # hasn't been specified. Make a dummy array
+    array(0, dim=c(length(sims), 1, length(years)))
+    
   })
   CheckDims(Hist@Misc$LengthList, 3, 'LengthList')
   
@@ -234,7 +242,9 @@ PrepHistMisc <- function(Hist, Period=c('Historical', 'Projection')) {
   
   Hist@Misc$SelSizeList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
     purrr::map(FleetList, \(fleet) {
-      fleet@Selectivity@MeanAtLength # Sim, Age, Year, Area
+      if (!is.null(  fleet@Selectivity@MeanAtLength)) 
+      return(fleet@Selectivity@MeanAtLength) # Sim, Age, Year, Area
+      fleet@Selectivity@MeanAtWeight
     }) 
   })
   CheckDims(Hist@Misc$SelSizeList, 4, 'SelSizeList')
@@ -248,7 +258,10 @@ PrepHistMisc <- function(Hist, Period=c('Historical', 'Projection')) {
   
   Hist@Misc$RetSizeList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
     purrr::map(FleetList, \(fleet) {
-      fleet@Retention@MeanAtLength # Sim, Age, Year, Area
+      if (!is.null(  fleet@Retention@MeanAtLength)) 
+        return(fleet@Retention@MeanAtLength) # Sim, Age, Year, Area
+      fleet@Retention@MeanAtWeight
+      
     }) 
   })
   CheckDims(Hist@Misc$RetSizeList, 4, 'RetSizeList')

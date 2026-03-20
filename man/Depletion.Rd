@@ -9,7 +9,7 @@
 \alias{Depletion<-}
 \title{Depletion}
 \usage{
-Depletion(Initial, Final, Reference = "B0")
+Depletion(Initial = NULL, Final = NULL, Reference = "B0")
 
 Initial(x)
 

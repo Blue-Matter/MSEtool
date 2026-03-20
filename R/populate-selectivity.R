@@ -139,7 +139,7 @@ PopulateSelectivity <- function(Selectivity,
     max1 = TRUE
   )
   
-  if (CalcAtLength) {
+  if (CalcAtLength && is.null(Selectivity@MeanAtWeight)) {
     Selectivity <- MeanAtAge2MeanAtLength(
       object = Selectivity,
       Length = Length,
@@ -149,13 +149,11 @@ PopulateSelectivity <- function(Selectivity,
     )
   }
   
-  if (is.null(Selectivity@MeanAtAge)) {
+  if (is.null(Selectivity@MeanAtAge)) 
     cli::cli_abort("{.var Selectivity} requires values for either `Model` & `Pars` or `MeanAtAge`")
-  }
   
-  if (CheckMaxValue) {
+  if (CheckMaxValue) 
     Selectivity@MeanAtAge <- CheckSelectivityMaximum(Selectivity@MeanAtAge)
-  }
   
   Selectivity@MeanAtLength <- AddDimension(Selectivity@MeanAtLength, "Area")
   Selectivity@MeanAtWeight <- AddDimension(Selectivity@MeanAtWeight, "Area")
