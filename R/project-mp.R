@@ -66,7 +66,6 @@ Project_MP <- function(Proj,
 
   for (ts in seq_along(YearsProj)) {
     
- 
     Year <- YearsProj[ts]
     if (!silent) cli::cli_progress_update(extra = list(year = Year))
     
