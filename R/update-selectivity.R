@@ -133,7 +133,7 @@ Update_Selectivity_Sim <- function(Proj,
       
       ALK <- Length@ALK 
       
-      if (length(Ages)< 50) {
+      if (!is.null(ALK) && length(Ages)< 50) {
         # Increases the temporal resolution of `ObjectMeanAtAge` and `ASK`
         # by linear interpolate Mean length-at-age and CV length-at-age
         
@@ -146,8 +146,6 @@ Update_Selectivity_Sim <- function(Proj,
       }
       
 
-      
-      
       for (fl in seq_along(FleetNames)) {
         select <- if (is.list(SelectList)) SelectList[[fl]] else SelectList
         

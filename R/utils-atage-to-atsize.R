@@ -130,6 +130,9 @@ AtAge2AtSize <- function(object, Length, max1=TRUE, Years=NULL,
   nAge          <- length(AgeClasses)
   LengthCVatAge <- ExtendAges(LengthCVatAge, AgeClasses)
   
+  if (is.null(ASK) && is.null(ASKOverride))
+    return(object)
+  
   # Interpolate to finer age resolution if needed 
   resolved <- ResolveAgeResolution(ObjectMeanAtAge, LengthMeanAtAge,
                                    LengthCVatAge, ASK, Length,
@@ -137,6 +140,7 @@ AtAge2AtSize <- function(object, Length, max1=TRUE, Years=NULL,
   
   ObjectMeanAtAge <- resolved$ObjectMeanAtAge
   ASK             <- resolved$ASK
+ 
   
   # Resolve Sim and Year dimensions
   MeanAtAgeSim <- dimnames(object@MeanAtAge)[['Sim']]

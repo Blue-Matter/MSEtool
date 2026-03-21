@@ -63,9 +63,8 @@ PopulateRetention <- function(Retention,
   
   argList <- list(Ages, Length, Years, nSim, CalcAtLength, seed)
   
-  if (CheckDigest(Retention, argList) & !force) {
+  if (CheckDigest(Retention, argList) & !force) 
     return(Retention)
-  }
   
   # Default: fully retained if object is empty
   if (EmptyObject(Retention)) {
@@ -136,7 +135,7 @@ PopulateRetention <- function(Retention,
   Retention <- MeanAtLength2MeanAtAge(Retention, Length, max1 = FALSE)
   Retention <- MeanAtWeight2MeanAtAge(Retention, Weight, max1 = FALSE)
   
-  if (CalcAtLength) {
+  if (CalcAtLength && !is.null(Length@ALK)) {
     Retention <- MeanAtAge2MeanAtLength(
       object = Retention, 
       Length = Length, 

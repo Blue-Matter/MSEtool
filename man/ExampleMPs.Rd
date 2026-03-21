@@ -2,13 +2,10 @@
 % Please edit documentation in R/examples-MPs.R
 \name{ExampleMPs}
 \alias{ExampleMPs}
-\alias{StatusQuo}
 \alias{CurrentEffort}
 \alias{CurrentCatch}
 \title{Example Management Procedures}
 \usage{
-StatusQuo(Data)
-
 CurrentEffort(Data)
 
 CurrentCatch(Data)
@@ -27,10 +24,9 @@ framework.
 }
 \details{
 \itemize{
-\item \code{StatusQuo}: Fixes fishing effort at 1 (i.e. last historical effort) for
+\item \code{CurrentEffort}: Fixes fishing effort at 1 (i.e. last historical effort) for
 all fleets, and maintains the spatial distribution of fishing effort from the
 last historical timestep.
-\item \code{CurrentEffort}: Alias for \code{StatusQuo}.
 \item \code{CurrentCatch}: Sets the TAC for each fleet to the landings observed in
 the last historical year.
 }
