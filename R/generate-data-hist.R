@@ -29,8 +29,8 @@ GenerateHistoricalData <- function(Hist, silent=FALSE) {
   if (!silent) 
     id <- cli::cli_progress_bar("Generating Historical {.val Data}")
   
-  SimDataList <- purrr::map(1:nSim, \(x)
-                            GenerateHistoricalData_Sim(x,
+  SimDataList <- purrr::map(1:nSim, \(sim)
+                            GenerateHistoricalData_Sim(sim,
                                                        Hist,
                                                        HistYears,
                                                        nArea,
@@ -84,13 +84,11 @@ GenerateHistoricalData <- function(Hist, silent=FALSE) {
 #' Generate Historical Data for a Single Simulation
 #'
 #' Internal function to generate historical data for a single simulation
-#' replicate, including effort, catch (landings and discards), and indices
-#' (CPUE and survey) for each stock complex.
 #'
 #' Applies the appropriate observation bias, error, and selectivity for
 #' each data type and updates metadata such as names, years, and seasons.
 #'
-#' @param x Integer index of the simulation replicate
+#' @param sim Integer index of the simulation 
 #' @param Hist Operating model history object
 #' @param HistYears Numeric vector of historical years
 #' @param nArea Integer number of spatial areas
@@ -103,7 +101,7 @@ GenerateHistoricalData <- function(Hist, silent=FALSE) {
 #'   simulated historical values for effort, catch, and indices
 #'
 #' @keywords internal
-GenerateHistoricalData_Sim <- function(x, Hist, 
+GenerateHistoricalData_Sim <- function(sim, Hist, 
                                        HistYears, 
                                        nArea,
                                        FleetNames,
@@ -133,21 +131,21 @@ GenerateHistoricalData_Sim <- function(x, Hist,
     Data@nArea <- nArea
     
     # Effort 
-    Data@Effort <- GenHistData_Effort(x, Data, Hist, HistYears, i, stocks, FleetNames)
+    Data@Effort <- GenHistData_Effort(sim, Data, Hist, HistYears, i, stocks, FleetNames)
     
     # Landings
-    Data@Landings <- GenHistData_Catch(x, Data, Hist, HistYears, i, stocks, FleetNames)
+    Data@Landings <- GenHistData_Catch(sim, Data, Hist, HistYears, i, stocks, FleetNames)
     
     # Discards
-    Data@Discards <- GenHistData_Catch(x, Data, Hist, HistYears, i, stocks, FleetNames,
+    Data@Discards <- GenHistData_Catch(sim, Data, Hist, HistYears, i, stocks, FleetNames,
                                        type='Discards')
     
     # CPUE
-    Data@CPUE <- GenHistData_Indices(x, Data, Hist, HistYears, i, stocks, StockNames,
+    Data@CPUE <- GenHistData_Indices(sim, Data, Hist, HistYears, i, stocks, StockNames,
                                      nArea)
     
     # Survey
-    Data@Survey <-  GenHistData_Indices(x, Data, Hist, HistYears, i, stocks, StockNames,
+    Data@Survey <-  GenHistData_Indices(sim, Data, Hist, HistYears, i, stocks, StockNames,
                                         nArea, type='Survey')
     
     
@@ -175,7 +173,7 @@ GenerateHistoricalData_Sim <- function(x, Hist,
       Data@YearLH <- Data@Years[length(Data@Years)]
     
     # Add Pop Dyn if specified 
-    Data <- AddPopDyn(Data, Hist, x)
+    Data <- AddPopDyn(Data, Hist, sim)
     
   
     DataList[[i]] <- Data
