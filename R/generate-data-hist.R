@@ -63,14 +63,14 @@ GenerateHistoricalData <- function(Hist, silent=FALSE) {
       for (fl in seq_along(IndexObs)) {
         Hist@OM@Obs[[st]][[fl]]@Survey <- IndexObs[[fl]]
       }
-      SimDataList[[i]][[st]]@Survey@Misc$IndexObs <- NULL
+      Hist@Data[[i]][[st]]@Survey@Misc$IndexObs <- NULL
       
       # CPUE
       IndexObs <- SimDataList[[i]][[st]]@CPUE@Misc$IndexObs
       for (fl in seq_along(IndexObs)) {
         Hist@OM@Obs[[st]][[fl]]@CPUE <- IndexObs[[fl]]
       }
-      SimDataList[[i]][[st]]@CPUE@Misc$IndexObs <- NULL
+      Hist@Data[[i]][[st]]@CPUE@Misc$IndexObs <- NULL
     }
     
   }
