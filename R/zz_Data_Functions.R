@@ -1359,7 +1359,11 @@ Sense <- function(Data, MP, nsense = 6, reps = 100, perc = c(0.05, 0.5, 0.95), p
 #' }
 #' @export
 TAC <- function(Data, MPs = NA, reps = 100, timelimit = 1, checkMP=TRUE, silent=FALSE) {
-  if (!methods::is(Data, "Data")) stop("First argument must be object of class 'Data'", call.=FALSE)
+  
+  if (inherits(Data,'advice'))
+    return(Data@TAC)
+  
+  if (!inherits(Data, "Data")) stop("First argument must be object of class 'Data'", call.=FALSE)
   Data <- updateMSE(Data)
   nm <- deparse(substitute(Data))
   if (checkMP) {
