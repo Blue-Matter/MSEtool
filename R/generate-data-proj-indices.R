@@ -86,7 +86,6 @@ GenProjData_Index <- function(x,
         "`Index@Timing` currently not supported. Calculating from beginning of time step"
       )
     
-    
     SelectivityAtAgeList <- resolveSelectivity(
       Proj, stocks, StockNames, IndexObs, FleetNames, fl, x, TSIndex, nArea
     )

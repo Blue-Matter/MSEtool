@@ -56,12 +56,35 @@ GenerateHistoricalData <- function(Hist, silent=FALSE) {
   }
   
   # update Index Obs 
+  
+  
+  Survey_Efficiency <- purrr::map(SimDataList, \(DataList) {
+    purrr::map(DataList, \(Data) {
+      purrr::map(Data@Survey@Misc$IndexObs, \(fl) {
+        fl@Efficiency
+      })    
+    }) 
+  }) |> ReverseList() |>
+    purrr::map(ReverseList)
+  
+  CPUE_Efficiency <- purrr::map(SimDataList, \(DataList) {
+    purrr::map(DataList, \(Data) {
+      purrr::map(Data@CPUE@Misc$IndexObs, \(fl) {
+        fl@Efficiency
+      })    
+    }) 
+  }) |> ReverseList() |>
+    purrr::map(ReverseList)
+
+
   for (i in seq_along(SimDataList)) {
     for (st in seq_along(SimDataList[[i]])) {
       # Survey
       IndexObs <- SimDataList[[i]][[st]]@Survey@Misc$IndexObs
       for (fl in seq_along(IndexObs)) {
         Hist@OM@Obs[[st]][[fl]]@Survey <- IndexObs[[fl]]
+        Hist@OM@Obs[[st]][[fl]]@Survey@Efficiency <- unlist(Survey_Efficiency[[st]][[fl]])
+        
       }
       Hist@Data[[i]][[st]]@Survey@Misc$IndexObs <- NULL
       
@@ -69,6 +92,8 @@ GenerateHistoricalData <- function(Hist, silent=FALSE) {
       IndexObs <- SimDataList[[i]][[st]]@CPUE@Misc$IndexObs
       for (fl in seq_along(IndexObs)) {
         Hist@OM@Obs[[st]][[fl]]@CPUE <- IndexObs[[fl]]
+        Hist@OM@Obs[[st]][[fl]]@CPUE@Efficiency <- unlist(CPUE_Efficiency[[st]][[fl]])
+        
       }
       Hist@Data[[i]][[st]]@CPUE@Misc$IndexObs <- NULL
     }

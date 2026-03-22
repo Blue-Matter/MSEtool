@@ -44,12 +44,15 @@ resolveValue <- function(Proj, slotname, i, fl, TSIndex, Obs, x, DataYear) {
     }
   }
   
-  obsError <- ArraySubsetYear(Obs@Error, DataYear)[x]
-  obsBias  <- Obs@Bias[x]
+  obsError <- ArraySubsetYear(Obs@Error, DataYear)
+  sim_ind <- min(x, nrow(obsError))
+  obsError <- obsError[sim_ind]
+  
+  sim_ind <- min(x, length(Obs@Bias))
+  obsBias  <- Obs@Bias[sim_ind]
   
   projValue <- slot(Proj, slotname)[x, TSIndex, fl]
   projValue * obsError * obsBias
-  
 }
 
 resolveCV <- function(Proj, slotname, i, fl, TSIndex, DataObject, DataYear, default=0.2) {

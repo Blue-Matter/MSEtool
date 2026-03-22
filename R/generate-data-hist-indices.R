@@ -174,7 +174,7 @@ GenHistData_Indices <- function(sim, Data, Hist, HistYears, i, stocks, StockName
     StIndex <- SimulatedIndexError/mean(SimulatedIndexError, na.rm=TRUE)
     Value[,fl] <- StIndex
     NonNAInd <- which(!is.na(StIndex))
-    IndexObs@Efficiency <- mean(StIndex, na.rm=TRUE)/mean(real_nom_index[NonNAInd], na.rm=TRUE)
+    IndexObs@Efficiency <- mean(StIndex, na.rm=TRUE)/mean(real_nom_index[NonNAInd], na.rm=TRUE)  
     IndexData@Misc$IndexObs[[fl]] <- IndexObs
     
     # Reference Value 
@@ -200,6 +200,8 @@ GenHistData_Indices <- function(sim, Data, Hist, HistYears, i, stocks, StockName
       
     }
   }
+  
+  names(IndexData@Misc$IndexObs) <- FleetNames
   
   IndexData@Value <- Value
   IndexData@CV <- CV
