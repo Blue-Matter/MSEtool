@@ -961,7 +961,7 @@ SS2Depletion <- function(st, RepList, YearsList) {
 }
 
 GetSS_SRRPars <- function(replist) {
-  mainyrs <- NULL # CRAN
+  mainyrs <- NULL  # CRAN
   # SRR Model and Parameters
   if (replist$SRRtype == 3 || replist$SRRtype == 6) { # Beverton-Holt SR
     par <- replist$parameters[grepl("steep", rownames(replist$parameters)), ]
@@ -986,6 +986,17 @@ GetSS_SRRPars <- function(replist) {
     h_out[h_out > 0.999] <- 0.999
     return(list(h = h_out))
   } else {
+    mainyrs <- replist$startyr:replist$endyr
+    if (length(replist$SRRtype) && nchar(replist$SRRtype)<=1) {
+      cli::cli_alert_warning(
+        "`replist$SRRtype` is empty. Assuming {.val Beverton-Holt SRR}"
+      )
+    } else {
+      cli::cli_alert_warning(
+      "`replist$SRRtype` ({replist$SRRtype}) is not supported. Assuming {.val Beverton-Holt SRR}"
+      )
+    }
+    
     if (packageVersion("r4ss") == "1.24") {
       SR_ind <- match(mainyrs, replist$recruit$year)
       SSB <- replist$recruit$spawn_bio[SR_ind]
@@ -995,8 +1006,10 @@ GetSS_SRRPars <- function(replist) {
       SSB <- replist$recruit$SpawnBio[SR_ind]
       SSB0 <- replist$derived_quants[replist$derived_quants$Label == "SSB_Virgin", 2]
     }
+    R0 <- exp(replist$parameters$Value[replist$parameters$Label == "SR_LN(R0)"])
     rec <- replist$recruit$pred_recr[SR_ind] # recruits to age 0
-    SpR0 <- SSB0 / (R0 * ifelse(season_as_years, nseas, 1))
+    
+    SpR0 <- SSB0 / (R0) #  * ifelse(season_as_years, nseas, 1))
     SRrel <- 1
     h_out <- SRopt(1, SSB, rec, SpR0, plot = FALSE, type = ifelse(SRrel == 1, "BH", "Ricker"))
     h_out[h_out < 0.2] <- 0.2
@@ -1590,6 +1603,32 @@ GetSS_EmpiricalWeight <- function(st, fl, replist, YearsList, AgeClasses) {
       }
     
       dimnames(Weight_at_Age_array) <- list(Age = AgeClassesFull, Year = Years)
+    } else {
+      
+      Years <- sort(unique(wt_at_age_c_df$Year))
+      
+      df <- wt_at_age_c_df |>
+        dplyr::select(Year, Seas, dplyr::all_of(as.character(SS_AgeClasses))) |>
+        tidyr::pivot_longer(
+          cols      = dplyr::all_of(as.character(SS_AgeClasses)),
+          names_to  = "Age",
+          values_to = "Value"
+        ) |>
+        dplyr::mutate(Age = as.numeric(Age)) |>
+        dplyr::arrange(Year, Age)
+      
+      Weight_at_Age_array <- array(
+        NA,
+        dim      = c(length(SS_AgeClasses), length(Years)),
+        dimnames = list(Age = SS_AgeClasses, Year = Years)
+      )
+      
+      for (y in seq_along(Years)) {
+        Weight_at_Age_array[, y] <- df$Value[df$Year == Years[y]]
+      }
+      
+      dimnames(Weight_at_Age_array) <- list(Age = SS_AgeClasses, Year = Years)
+      
     }
   } else {
     wght <- replist$endgrowth |>
