@@ -42,12 +42,7 @@
 #' @export
 JoinYear <- function(object1, object2) {
   
-  if (all(is.na(object1)))
-    return(object1)
-  
-  if (!length(object1))
-    return(object1)
-  
+
   if (isS4(object1)) {
     slots <- slotNames(object1)
     for (s in slots) {
@@ -59,6 +54,12 @@ JoinYear <- function(object1, object2) {
     }
     return(object1)
   }
+  
+  if (all(is.na(object1)))
+    return(object1)
+  
+  if (!length(object1))
+    return(object1)
   
   if (is.list(object1)) {
     for (j in seq_along(object1)) {
