@@ -14,7 +14,7 @@
 #' If real index data already exist, or no observation structure is
 #' defined, the existing data are returned unchanged.
 #'
-#' @param x Integer index of the simulation replicate to extract
+#' @param sim Integer index of the simulation replicate to extract
 #' @param Data Fishery data object to populate
 #' @param Hist Operating model history object
 #' @param HistYears Numeric vector of historical years
@@ -30,7 +30,7 @@
 #'   historical index values and CVs
 #'
 #' @keywords internal
-GenHistData_Indices <- function(x, Data, Hist, HistYears, i, stocks, StockNames, 
+GenHistData_Indices <- function(sim, Data, Hist, HistYears, i, stocks, StockNames, 
                                 nArea,
                                 defaultCV=0.2,
                                 type=c('CPUE', 'Survey')) {
@@ -100,7 +100,7 @@ GenHistData_Indices <- function(x, Data, Hist, HistYears, i, stocks, StockNames,
         }
       } else if (SelectivityAtAge == 'SBiomass') {
         for (st in seq_along(stocks)) {
-          maturity_at_age <-  Hist@OM@Stock[[stocks[st]]]@Maturity@MeanAtAge[x,,, drop=FALSE] |>
+          maturity_at_age <-  Hist@OM@Stock[[stocks[st]]]@Maturity@MeanAtAge[sim,,, drop=FALSE] |>
             ArraySubsetYear(HistYears) |>
             abind::adrop(1) |>
             AddDimension('Area') |>
@@ -112,7 +112,7 @@ GenHistData_Indices <- function(x, Data, Hist, HistYears, i, stocks, StockNames,
         # SelectivityAtAgeList <- IndexObs@Selectivity
         SelectivityAtAgeList <- purrr::map(IndexObs@Selectivity, \(stock) {
           stock <- ArraySubsetYear(stock, HistYears) 
-          stock[x,,, drop=FALSE] |>
+          stock[sim,,, drop=FALSE] |>
             AddDimension('Area') |>
             DropDimension(c('Sim', 'Year')) |>
             ExtendAreas(Areas=1:nArea)
@@ -120,7 +120,7 @@ GenHistData_Indices <- function(x, Data, Hist, HistYears, i, stocks, StockNames,
       }
     } else {
       SelectivityAtAgeList <- purrr::map(Hist@OM@Fleet[stocks], \(fleet_list) {
-        fleet_list[[FleetNames[fl]]]@Selectivity@MeanAtAge[x,,,,drop=FALSE] |>
+        fleet_list[[FleetNames[fl]]]@Selectivity@MeanAtAge[sim,,,,drop=FALSE] |>
           ArraySubsetYear(HistYears) |>
           abind::adrop(1)
       }) 
@@ -133,7 +133,7 @@ GenHistData_Indices <- function(x, Data, Hist, HistYears, i, stocks, StockNames,
       IndexObs@Areas <- 1:nArea
     
     Real_Pop_Number_Selected <- purrr::map2(Real_Pop_Number, SelectivityAtAgeList, \(num, sel) {
-      n <- num[x,,, IndexObs@Areas,drop=FALSE] |> ArraySubsetYear(HistYears) |> abind::adrop(1)
+      n <- num[sim,,, IndexObs@Areas,drop=FALSE] |> ArraySubsetYear(HistYears) |> abind::adrop(1)
       s <- sel[,,IndexObs@Areas,drop=FALSE]
       ArrayMultiply(n, sel) |> SumOverArea()
     })
@@ -145,7 +145,7 @@ GenHistData_Indices <- function(x, Data, Hist, HistYears, i, stocks, StockNames,
       
     } else if (Units == 'Biomass') {
       WeightAtAgeList <- purrr::map(Hist@OM@Stock[stocks], \(stock) {
-        stock@Weight@MeanAtAge[x,,, drop=FALSE] |>
+        stock@Weight@MeanAtAge[sim,,, drop=FALSE] |>
           ArraySubsetYear(HistYears) |>
         abind::adrop(1)
       })
@@ -169,7 +169,7 @@ GenHistData_Indices <- function(x, Data, Hist, HistYears, i, stocks, StockNames,
     
     
     # add error 
-    SimulatedIndexError <- real_nom_index *  ArraySubsetYear(IndexObs@Error, HistYears)[x,]
+    SimulatedIndexError <- real_nom_index *  ArraySubsetYear(IndexObs@Error, HistYears)[sim,]
     # mean 1
     StIndex <- SimulatedIndexError/mean(SimulatedIndexError, na.rm=TRUE)
     Value[,fl] <- StIndex
@@ -181,9 +181,23 @@ GenHistData_Indices <- function(x, Data, Hist, HistYears, i, stocks, StockNames,
     if (length(IndexObs@Ref)) {
       # TODO - index ref value if units != Biomass - only does BMSY at the moment
       if (length(Hist@Reference@MSY@BMSY)) {
-        adjust <- mean(real_nom_index/apply(Hist@Biomass[x,i,,drop=FALSE], 'Year', mean, na.rm=TRUE), na.rm=TRUE)
-        IndexData@Ref[fl] <- array(mean(Hist@RefPointsMSY@BMSY[x,i,], na.rm=TRUE) *  adjust *IndexObs@Efficiency)  
+        adjust <- mean(real_nom_index/apply(Hist@Biomass[sim,i,,drop=FALSE], 'Year', mean, na.rm=TRUE), na.rm=TRUE)
+        IndexData@Ref[fl] <- array(mean(Hist@RefPointsMSY@BMSY[sim,i,], na.rm=TRUE) *  adjust *IndexObs@Efficiency) * IndexObs@Ref[sim]
+      } else {
+        # do B0
+        Ref_Dep <- 0.5 # hard coded for now 
+        B0 <- Hist@Unfished@Equilibrium@Biomass[sim,i,,drop=FALSE]
+        Bhist <- Hist@Biomass[sim,i,,drop=FALSE]
+        B_B0 <- ArrayDivide(Bhist, B0) |> apply('Year', mean, na.rm=TRUE)
+        ind <- which.min(abs(B_B0-Ref_Dep))
+        if (!is.null(ind) && length(ind)) {
+          adjust <- mean(real_nom_index/apply(Hist@Biomass[sim,i,,drop=FALSE], 'Year', mean, na.rm=TRUE), na.rm=TRUE)
+          IndexData@Ref[fl] <- array(mean(Hist@Biomass[sim,i, ind], na.rm=TRUE) *  adjust *IndexObs@Efficiency) * IndexObs@Ref[sim]   
+        }
+        
+        
       }
+      
     }
   }
   
