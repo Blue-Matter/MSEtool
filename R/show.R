@@ -87,7 +87,7 @@ a_or_an <- function(x) {
 }
 
 
-.show_x <- function(x, name=NULL, list_element=FALSE, show_list_element=TRUE) {
+.show_x <- function(x, name=NULL, list_element=FALSE, show_list_element=TRUE, digits =3) {
   
   if (isS4(x)) {
     help_url <- paste0("ide:help:", help_topic('MSEtool', paste0(tolower(name), '-class')))
@@ -127,7 +127,7 @@ a_or_an <- function(x) {
   
   if (inherits(x, 'numeric') || inherits(x, 'integer')) {
     if (all(as.integer(x) != x)) {
-      x <- signif(x,3)
+      x <- signif(x, digits =digits )
     }
     cli::cli_text("{.var {name}}:  {.val {x}}")
     return(invisible(NULL))
@@ -164,7 +164,7 @@ a_or_an <- function(x) {
   
 }
 
-.show_slot <- function(object, slot) {
+.show_slot <- function(object, slot, digits=3) {
   if (!hasSlot(object, slot)) {
     return(invisible(NULL))
   }
@@ -180,7 +180,7 @@ a_or_an <- function(x) {
   
   x <- slot(object, slot)
   
-  .show_x(x, slot)
+  .show_x(x, slot, digits=digits)
 }
 
 cli_fn <- function(fun) {
@@ -290,7 +290,7 @@ cli_fn <- function(fun) {
   
 }
 
-.show_object <- function(object, name, ignore='Misc', classonly=FALSE) {
+.show_object <- function(object, name, ignore='Misc', classonly=FALSE, digits=3) {
   cli::cli_h2("A  {.help {help_topic('MSEtool', paste0(tolower(name),'-class'))}} Object")
   
   if (classonly)
@@ -302,7 +302,7 @@ cli_fn <- function(fun) {
   for (sl in slots) {
     if (sl =='Log')
       next
-    .show_slot(object, sl)  
+    .show_slot(object, sl, digits=digits)  
     if (sl %in% c('Model', 'TruncSD')) {
       cli::cli_text("")
     }
@@ -634,7 +634,7 @@ setMethod('show', 'data', function(object) {
 
 
 setMethod('show', 'advice', function(object) {
-  .show_object(object, 'Advice')
+  .show_object(object, 'Advice', digits=10)
 })
 
 
