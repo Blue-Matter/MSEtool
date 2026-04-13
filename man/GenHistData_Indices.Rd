@@ -5,7 +5,7 @@
 \title{Generate Historical Index Data}
 \usage{
 GenHistData_Indices(
-  x,
+  sim,
   Data,
   Hist,
   HistYears,
@@ -18,7 +18,7 @@ GenHistData_Indices(
 )
 }
 \arguments{
-\item{x}{Integer index of the simulation replicate to extract}
+\item{sim}{Integer index of the simulation replicate to extract}
 
 \item{Data}{Fishery data object to populate}
 

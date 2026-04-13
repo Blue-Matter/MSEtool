@@ -5,7 +5,7 @@
 \title{Generate Historical Data for a Single Simulation}
 \usage{
 GenerateHistoricalData_Sim(
-  x,
+  sim,
   Hist,
   HistYears,
   nArea,
@@ -16,7 +16,7 @@ GenerateHistoricalData_Sim(
 )
 }
 \arguments{
-\item{x}{Integer index of the simulation replicate}
+\item{sim}{Integer index of the simulation}
 
 \item{Hist}{Operating model history object}
 
@@ -38,8 +38,6 @@ simulated historical values for effort, catch, and indices
 }
 \description{
 Internal function to generate historical data for a single simulation
-replicate, including effort, catch (landings and discards), and indices
-(CPUE and survey) for each stock complex.
 }
 \details{
 Applies the appropriate observation bias, error, and selectivity for

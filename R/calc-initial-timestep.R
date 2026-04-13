@@ -43,22 +43,33 @@ CalcDynamicInitial <- function(Hist) {
       aperm(c('Sim', 'Age', 'Area'))
 
     nArea <- dim(UnfishedDist)[3]
-    if (nArea>1 & Hist@OM@Seasons>1) {
-      # cli::cli_abort(c("x"="Multi-area seasonal model spatial distribution are not currently supported."), .internal=TRUE)
-      # This code maps out nAge seasons of nAge cohorts prior to season 1, year 1.
-      # An initial vector of nAge season of R0 are multiplied by recdevs and distributed by movement in age class 1
-      # Then these numbers are moved up cohorts according to movement by age
-      InitMovMat = Hist@OM@Stock[[st]]@Spatial@Movement[,,,,1,drop=F] # Movement in first time step [sim, from, to ,age]
-      Hist@Number[[st]][,,1,] <- calc_seas_spat(InitAgeClassRecDevs, UnfishedDist, InitMovMat, Hist@OM@Stock[[st]]@SRR@R0, Seasons(Hist))
+    
+    # if (nArea>1 & Hist@OM@Seasons>1) {
+    #   # cli::cli_abort(c("x"="Multi-area seasonal model spatial distribution are not currently supported."), .internal=TRUE)
+    #   # This code maps out nAge seasons of nAge cohorts prior to season 1, year 1.
+    #   # An initial vector of nAge season of R0 are multiplied by recdevs and distributed by movement in age class 1
+    #   # Then these numbers are moved up cohorts according to movement by age
+    #   InitMovMat = Hist@OM@Stock[[st]]@Spatial@Movement[,,,,1,drop=F] # Movement in first time step [sim, from, to ,age]
+    #   Hist@Number[[st]][,,1,] <- calc_seas_spat(InitAgeClassRecDevs, UnfishedDist, InitMovMat, Hist@OM@Stock[[st]]@SRR@R0, Seasons(Hist))
+    # 
+    # } else {
+    #   # Multiply unfished by initial rec devs and add an Area dimension
+    #   NatAge <- ArrayMultiply(InitAgeClassRecDevs, EquilNumber) |> AddDimension('Area')
+    # 
+    #   # Multiply by UnfishedDist to distribute across areas
+    #   Hist@Number[[st]][,,1,] <- ArrayMultiply(NatAge, UnfishedDist)
+    # }
+    
+    
+    ######### TEMPORARY UNTIL calc_seas_spat works for all cases ###############
+    # Multiply unfished by initial rec devs and add an Area dimension
+    NatAge <- ArrayMultiply(InitAgeClassRecDevs, EquilNumber) |> AddDimension('Area')
+    
+    # Multiply by UnfishedDist to distribute across areas
+    Hist@Number[[st]][,,1,] <- ArrayMultiply(NatAge, UnfishedDist)
 
-    } else {
-      # Multiply unfished by initial rec devs and add an Area dimension
-      NatAge <- ArrayMultiply(InitAgeClassRecDevs, EquilNumber) |> AddDimension('Area')
-
-      # Multiply by UnfishedDist to distribute across areas
-      Hist@Number[[st]][,,1,] <- ArrayMultiply(NatAge, UnfishedDist)
-    }
-
+    ##############################################################################
+    
     ## ---- Fill recruitment for initial time steps if age rec > 0  ----
     RecruitTimeStep <- CalcRecruitment_AgeIndex(Hist, st)
 

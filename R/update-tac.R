@@ -32,6 +32,7 @@ Update_TAC <- function(Proj,
     Proj@OM@Allocation <- Proj@OM@CatchFrac
 
   
+  # tictoc::tic("TAC")
   for (sim in seq_len(Proj@OM@nSim)) {
     
     # tictoc::tic("TAC Sim")
@@ -52,6 +53,7 @@ Update_TAC <- function(Proj,
     
     # tictoc::toc()
   }
+  # tictoc::toc()
   
   Proj
 }

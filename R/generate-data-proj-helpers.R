@@ -129,7 +129,10 @@ resolveSelectivity <- function(Proj, stocks, StockNames, Obs, FleetNames, fl,
     )
   } else {
     purrr::map(Proj@OM@Fleet[stocks], \(fleet_list) {
-      fleet_list[[FleetNames[fl]]]@Selectivity@MeanAtAge[x, , TSIndex, , drop = FALSE] |>
+      sel <- fleet_list[[FleetNames[fl]]]@Selectivity@MeanAtAge
+      dd <- dim(sel)
+      x_sim <- pmin(x, dd[1])
+      sel[x_sim, , TSIndex, , drop = FALSE] |>
         DropDimension(c("Sim", "Year"))
     })
   }

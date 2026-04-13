@@ -55,13 +55,13 @@ GenProjData_Index <- function(x,
   NewValue <- emptyFleetArray(DataYear, IndexData@Name)
   NewCV    <- emptyFleetArray(DataYear, IndexData@Name)
   
-  
   Real_Pop_Number <- purrr::map(Proj@Number[stocks], \(stock_n) {
     stock_n[x, , TSIndex, seq_len(nArea), drop = FALSE] |> abind::adrop(c(1, 3))
   })
   
   for (fl in seq_len(nFleet)) {
     IndexObs <- slot(Proj@OM@Obs[[i]][[FleetIndex[fl]]], type)
+    
     if (EmptyObject(IndexObs)) next
     
     # TODO - make this an option
@@ -87,7 +87,7 @@ GenProjData_Index <- function(x,
       )
     
     SelectivityAtAgeList <- resolveSelectivity(
-      Proj, stocks, StockNames, IndexObs, FleetNames, fl, x, TSIndex, nArea
+      Proj, stocks, StockNames, Obs=IndexObs, FleetNames, fl, x, TSIndex, nArea
     )
     
     IndexAreas <- IndexObs@Areas %||% seq_len(nArea)
@@ -109,7 +109,10 @@ GenProjData_Index <- function(x,
                              
                              Biomass = {
                                WeightAtAgeList <- purrr::map(Proj@OM@Stock[stocks], \(stock) {
-                                 stock@Weight@MeanAtAge[x, , TSIndex, drop = FALSE] |>
+                                 wght <- stock@Weight@MeanAtAge
+                                 dd <- dim(wght)
+                                 x_sim <- pmin(x, dd[1])
+                                 wght[x_sim, , TSIndex, drop = FALSE] |>
                                    DropDimension(c("Sim", "Year"))
                                })
                                purrr::map2(Real_Pop_Number_Selected, WeightAtAgeList, ArrayMultiply) |>

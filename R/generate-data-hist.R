@@ -49,14 +49,13 @@ GenerateHistoricalData <- function(Hist, silent=FALSE) {
     }
   }
 
-  if(prod(identical)) {
+  if (prod(identical)) {
     Hist@Data <- list("1"= SimDataList[[1]])
   } else {
     Hist@Data <- SimDataList
   }
   
   # update Index Obs 
-  
   
   Survey_Efficiency <- purrr::map(SimDataList, \(DataList) {
     purrr::map(DataList, \(Data) {
@@ -81,6 +80,8 @@ GenerateHistoricalData <- function(Hist, silent=FALSE) {
     for (st in seq_along(SimDataList[[i]])) {
       # Survey
       IndexObs <- SimDataList[[i]][[st]]@Survey@Misc$IndexObs
+      if (is.null(IndexObs)) next
+      
       for (fl in seq_along(IndexObs)) {
         Hist@OM@Obs[[st]][[fl]]@Survey <- IndexObs[[fl]]
         Hist@OM@Obs[[st]][[fl]]@Survey@Efficiency <- unlist(Survey_Efficiency[[st]][[fl]])
@@ -90,6 +91,7 @@ GenerateHistoricalData <- function(Hist, silent=FALSE) {
       
       # CPUE
       IndexObs <- SimDataList[[i]][[st]]@CPUE@Misc$IndexObs
+      if (is.null(IndexObs)) next
       for (fl in seq_along(IndexObs)) {
         Hist@OM@Obs[[st]][[fl]]@CPUE <- IndexObs[[fl]]
         Hist@OM@Obs[[st]][[fl]]@CPUE@Efficiency <- unlist(CPUE_Efficiency[[st]][[fl]])

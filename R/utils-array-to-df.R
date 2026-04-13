@@ -110,8 +110,8 @@ ConvertDF <- function(df) {
   
   if ('Year' %in% nms)
     df$Year <- as.numeric(df$Year)
-  if ('Year' %in% nms)
-    df$Year <- as.numeric(df$Year)
+  if ('Area' %in% nms) 
+    df$Area <- as.numeric(df$Area)
   if ('Value' %in% nms)
     df$Value <- as.numeric(df$Value)
   
