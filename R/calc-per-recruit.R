@@ -3,10 +3,13 @@
 
 CalcPerRecruit <- function(Hist, apicalF=0.1, Years=NULL) {
 
-  if (inherits(Hist, 'om'))
-    Hist <- OM2Hist(OM, silent=TRUE)
-
+  if (inherits(Hist, 'om')) {
+    Hist <- OM2Hist(Hist, silent=TRUE)
+  }
+    
   CheckClass(Hist, 'hist', 'Hist')
+  
+  nArea <- nArea(Hist)
 
   if (is.null(Years))
     Years <- utils::tail(Years(Hist@OM, 'Historical'), 1)
@@ -58,7 +61,8 @@ CalcPerRecruit <- function(Hist, apicalF=0.1, Years=NULL) {
       }) |>
       List2Array(pos=4)
     }) |> List2Array('Stock', pos=2) |>
-    DropDimension('Area') # dropping Area dimension!
+    CheckSpatial('Selectivity')
+  
 
   Retention <- purrr::map(StockFleetList, \(FleetList) {
     purrr::map(FleetList, \(Fleet) {
@@ -67,7 +71,7 @@ CalcPerRecruit <- function(Hist, apicalF=0.1, Years=NULL) {
     }) |>
       List2Array(pos=4)
   }) |> List2Array('Stock', pos=2) |>
-    DropDimension('Area') # dropping Area dimension!
+    CheckSpatial('Retention')
 
   DiscardMortality <- purrr::map(StockFleetList, \(FleetList) {
     purrr::map(FleetList, \(Fleet) {
@@ -76,10 +80,11 @@ CalcPerRecruit <- function(Hist, apicalF=0.1, Years=NULL) {
     }) |>
       List2Array(pos=4)
   }) |> List2Array('Stock', pos=2) |>
-    DropDimension('Area') # dropping Area dimension!
+    CheckSpatial('DiscardMortality')
 
 
   FleetNames <- FleetNames(Hist)
+  
   
 }
 

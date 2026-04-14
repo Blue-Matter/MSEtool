@@ -34,6 +34,7 @@ Hist <- function(MSE=NULL) {
 
 
 OM2Hist <- function(OM, silent) {
+
   # Create a Hist object from an OM and extend for all Sims and Years
   
   if (!silent) 
@@ -41,7 +42,7 @@ OM2Hist <- function(OM, silent) {
   
   # Populate if needed
   OM <- PopulateOM(OM, silent = TRUE)
-  
+
   Hist <- new("hist")
   Hist@OM <- OM
   HistYears <- Years(OM, "Historical")

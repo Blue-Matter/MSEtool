@@ -571,7 +571,6 @@ NULL
 #' \code{new('Obs')}
 #' 
 #' @name Obs-legacy-class
-#' @aliases Obs-class
 #' @author T. Carruthers and A. Hordyk
 #' @export
 #' @keywords classes

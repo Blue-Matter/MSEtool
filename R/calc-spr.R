@@ -26,13 +26,14 @@ CalcSPR0 <- function(object, silent = FALSE) {
   if (inherits(object, 'om')) {
     object <- Populate(object, silent=silent)
     Hist <- OM2Hist(OM=object, silent=silent)
-    Hist@Unfished@Equilibrium <- CalcUnfished_Equilibrium(object, silent)
-    
   } else if (inherits(object, 'hist')) {
     Hist <- object
   } else {
     cli::cli_abort("`object` must be class `om` or class `hist`")
   }
+  
+  if (EmptyObject(Hist@Unfished@Equilibrium ))
+    Hist@Unfished@Equilibrium <- CalcUnfished_Equilibrium(Hist, silent)
   
   SP0 <- SP0(Hist)
   R0 <- R0(Hist)

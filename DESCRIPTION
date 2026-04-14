@@ -97,6 +97,7 @@ Collate:
     'check-package.R'
     'check-required-object.R'
     'check-selectivity-maximum.R'
+    'check-spatial-structure.R'
     'check-value.R'
     'class-dynamics.R'
     'class-unions.R'
