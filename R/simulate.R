@@ -71,6 +71,7 @@ Simulate <- function(OM=NULL,
                      DoRefRemovals = FALSE,
                      DoConditionObs = TRUE,
                      DoGenerateData = TRUE,
+                     DoMSYRefs = TRUE,
                      Reduce = TRUE, 
                      ...) {
   
@@ -89,6 +90,7 @@ Simulate <- function(OM=NULL,
                   DoRefRemovals = DoRefRemovals,
                   DoConditionObs = DoConditionObs,
                   DoGenerateData = DoGenerateData,
+                  DoMSYRefs      = DoMSYRefs,
                   Reduce = Reduce, 
                   ...)
       

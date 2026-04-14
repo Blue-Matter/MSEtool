@@ -520,6 +520,55 @@ ExtendAreas <- function(array, Areas = NULL) {
 }
 
 
+ExtendFleets <- function(array, Fleets = NULL) {
+  if (is.null(Fleets)) return(array)
+  
+  if (isS4(array)) {
+    if (inherits(array, "data")) return(array)
+    for (sl in slotNames(array))
+      slot(array, sl) <- Recall(slot(array, sl), Fleets)
+    return(array)
+  }
+  
+  if (is.list(array)) {
+    if (length(array)) {
+      for (i in seq_along(array)) {
+        temp <- Recall(array[[i]], Fleets)
+        if (!is.null(temp)) array[[i]] <- temp
+      }
+    }
+    return(array)
+  }
+  
+  nFleet <- length(Fleets)
+  d     <- dim(array)
+  dn    <- dimnames(array)
+  
+  if (is.null(dn) || !"Fleet" %in% names(dn)) return(array)
+  
+  fleet_dim       <- which(names(dn) == "Fleet")
+  existing_fleets <- as.numeric(dn[[fleet_dim]])
+  
+  if (length(existing_fleets) == nFleet) return(array)
+  
+  if (length(existing_fleets) != 1)
+    cli::cli_abort(c(
+      "The `Fleet` dimension must be length 1 or `nFleet` ({.val {nFleet}}).",
+      "x" = "Found length {.val {d[fleet_dim]}}."
+    ))
+  
+
+  idx <- lapply(seq_along(d), \(i)
+                if (i == fleet_dim) rep(1L, nFleet) else seq_len(d[i]))
+  
+  OutArray <- do.call(`[`, c(list(array), idx, list(drop = FALSE)))
+  dimnames(OutArray)[[fleet_dim]] <- Fleets
+  OutArray
+  
+}
+
+
+
 extend_along_dim <- function(x, along_dim, new_index, dimnames_list = dimnames(x)) {
   
   # Permute so target dimension is first

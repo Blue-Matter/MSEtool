@@ -225,7 +225,7 @@ MSE2Timeseries <- function(MSE,
   Timeseries@Label        <- Label
   Timeseries@Time         <- Years(mse_ref@OM)
   Timeseries@TimeNow      <- max(Years(mse_ref@OM, 'Historical'))
-  Timeseries@TimeLab      <- firstup(mse_ref@OM@TimeUnits)
+  Timeseries@TimeLab      <- firstup(CalcTSUnits(mse_ref@OM@Seasons))
   Timeseries@Target       <- c(NA, NA, NA, 1,   NA)
   Timeseries@Limit        <- c(NA, NA, NA, 0.4,  1)
   

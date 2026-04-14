@@ -16,6 +16,7 @@ Simulate(
   DoRefRemovals = FALSE,
   DoConditionObs = TRUE,
   DoGenerateData = TRUE,
+  DoMSYRefs = TRUE,
   Reduce = TRUE,
   ...
 )

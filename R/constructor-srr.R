@@ -138,8 +138,23 @@ SRR <- function(Pars = list(h = NA),
 #' @rdname SRR
 #' @export
 R0 <- function(x) {
-  CheckClass(x, "srr", "x")
-  x@R0
+  if (inherits(x, 'srr'))
+    return(x@R0)
+  
+  if (inherits(x, 'hist')) {
+    return(purrr::map(x@OM@Stock, \(stock)
+                      ReduceDims(stock@SRR@R0, IncYear = TRUE) 
+    ) |> List2Array("Stock", pos=2)
+    )
+  }
+  if (inherits(x, 'om')) {
+    return(purrr::map(x@Stock, \(stock)
+                      ReduceDims(stock@SRR@R0, IncYear = TRUE) 
+    ) |> List2Array("Stock", pos=2)
+    ) 
+  }
+  
+  
 }
 
 #' @rdname SRR

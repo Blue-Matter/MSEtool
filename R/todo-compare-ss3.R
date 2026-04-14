@@ -22,7 +22,6 @@ CompareSS <- function(SSDir, Hist, sim=1, thresh=0.1, silent=FALSE) {
 }
 
 
-
 CompareSS_Number <- function(RepList, Hist, sim=1) {
   CheckClass(Hist, 'hist', 'Hist')
   replist <- RepList[[sim]]
@@ -56,9 +55,13 @@ CompareSS_Number <- function(RepList, Hist, sim=1) {
     dplyr::select(Year, Value, Stock, Model) |>
     dplyr::arrange(Year)
 
-  p <- ggplot2::ggplot(df, ggplot2::aes(x=Year, y=Value, color=Model)) +
+  p <- ggplot2::ggplot(df, ggplot2::aes(x=Year, y=Value, 
+                                        color=Model, 
+                                        shape=Model,
+                                        linetype=Model)) +
     ggplot2::facet_grid(~Stock) +
     ggplot2::geom_line() +
+    ggplot2::geom_point() +
     ggplot2::expand_limits(y=0) +
     ggplot2::labs(y='Number') +
     theme_bw()
@@ -67,6 +70,58 @@ CompareSS_Number <- function(RepList, Hist, sim=1) {
   invisible(df)
 
 }
+
+
+CompareSS_Biomass <- function(RepList, Hist, sim=1) {
+  CheckClass(Hist, 'hist', 'Hist')
+  replist <- RepList[[sim]]
+  
+  HistYears <- Years(Hist@OM, 'H')
+  
+  OM_Value <- Biomass(Hist, df=TRUE) |> dplyr::mutate(Model='OM') |>
+    dplyr::filter(Sim==sim) |>
+    dplyr::arrange(Stock, Year) |>
+    dplyr::select(Year, Value, Stock, Model)
+  
+  AgeClasses <- GetSSAgeClasses(replist)
+  SS_Value <- replist$natage |>
+    dplyr::filter(Yr%in%HistYears, `Beg/Mid`=='B') |>
+    dplyr::rename(Year=Yr, Stock=Sex) |>
+    tidyr::pivot_longer(cols=as.character(AgeClasses)) |>
+    dplyr::group_by(Stock, Year, Seas) |>
+    dplyr::summarise(Value=sum(value), Model='SS3', .groups='drop')
+  
+  SS_Value$Stock <- dplyr::case_match(SS_Value$Stock,
+                                      1~'Female',
+                                      2~'Male')
+  
+  SS_Value <- SS_Value |>
+    dplyr::select(Stock, Year, Value, Model) |>
+    dplyr::arrange(Stock, Year) |>
+    dplyr::mutate(Year=OM_Value$Year,
+                  Stock=OM_Value$Stock)
+  
+  df <- dplyr::bind_rows(OM_Value, SS_Value) |>
+    dplyr::select(Year, Value, Stock, Model) |>
+    dplyr::arrange(Year)
+  
+  p <- ggplot2::ggplot(df, ggplot2::aes(x=Year, y=Value, 
+                                        color=Model, 
+                                        shape=Model,
+                                        linetype=Model)) +
+    ggplot2::facet_grid(~Stock) +
+    ggplot2::geom_line() +
+    ggplot2::geom_point() +
+    ggplot2::expand_limits(y=0) +
+    ggplot2::labs(y='Number') +
+    theme_bw()
+  
+  print(p)
+  invisible(df)
+  
+}
+
+
 # 
 # 
 # CompareSS_Biomass <- function(RepList, Hist, sim=1) {

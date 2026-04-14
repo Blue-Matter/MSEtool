@@ -1,48 +1,46 @@
-CalcSPR0 <- function(HistSim, Years = NULL) {
-  if (inherits(HistSim, "simlist")) {
-    SimList <- purrr::map(HistSim, CalcSPR0, Years = Years)
-    class(SimList) <- "simlist"
-    return(SimList)
-  } else if (inherits(HistSim, "hist")) {
-    return(CalcSPR0_Hist(HistSim, Years))
-  }
-}
 
-CalcSPR0_Hist <- function(HistSim, Years = NULL) {
-  if (is.null(Years)) {
-    Years <- HistSim@OM@Years
-  }
-
-  SPR0 <- purrr::map(HistSim@OM@Stock, \(stock) CalcSPR0_Stock(stock, Years))
-
-  SPFrom <- purrr::map(HistSim@OM@Stock, \(stock) stock@SRR@SPFrom)
-
-  for (st in seq_along(SPR0)) {
-    if (SPFrom[[st]] != st && SPFrom[[st]] != HistSim@OM@Stock[[st]]@Name) {
-      SPR0[[st]][] <- NA
-    }
-  }
-
-  SPR0 <- List2Array(SPR0, "Stock", "Year") |> t()
-  dimnames(SPR0)[[2]] <- Years
-  HistSim@Reference@SPR0 <- SPR0 |> ReduceDims()
-  HistSim
-}
-
-CalcSPR0_Stock <- function(Stock, Years) {
-  FecundityAtAge <- Stock@Fecundity@MeanAtAge |> ArraySubsetYear(Years)
-  UnfishedSurvival <- CalcUnfishedSurvival(Stock, TRUE, Years)
-
-  BySim <- "Sim" %in% names(dimnames(FecundityAtAge))
-  if (BySim) {
-    SPR0 <- ArrayMultiply(UnfishedSurvival, FecundityAtAge) |> apply(c("Sim", "Year"), sum)
+#' Unfished Spawning Production Per Recruit
+#'
+#' Calculates the unfished spawning production per recruit (SPR0) — the
+#' denominator of the spawning potential ratio — under equilibrium conditions.
+#' SPR0 is computed as the element-wise ratio of unfished spawning production
+#' [SP0()] to unfished recruitment [R0()], with array broadcasting handled by
+#' [ArrayDivide()].
+#'
+#' @param object Either a [om-class] or [hist-class] object. If an [om-class]
+#'   object is provided, the historical dynamics are populated internally via
+#'   [Populate()] and [CalcUnfished_Equilibrium()], which may be
+#'   computationally expensive. If a [hist-class] object is provided (the output
+#'   of [Simulate()]), it is used directly.
+#' @param silent Logical. If `TRUE`, suppresses progress messages during
+#'   population and simulation. Only used when `object` is an [om-class].
+#'   Default is `FALSE`.
+#'
+#' @return An array with dimensions `[Sim, Stock, Year]` containing the
+#'   unfished spawning production per recruit. Dimensions where values are
+#'   identical across simulations or years are collapsed by [ReduceDims()].
+#'
+#' @seealso [SP0()], [R0()], [ArrayDivide()]
+#' @export
+CalcSPR0 <- function(object, silent = FALSE) {
+  if (inherits(object, 'om')) {
+    object <- Populate(object, silent=silent)
+    Hist <- OM2Hist(OM=object, silent=silent)
+    Hist@Unfished@Equilibrium <- CalcUnfished_Equilibrium(object, silent)
+    
+  } else if (inherits(object, 'hist')) {
+    Hist <- object
   } else {
-    SPR0 <- ArrayMultiply(UnfishedSurvival, FecundityAtAge) |>
-      apply("Year", sum) |>
-      array(dimnames = list(Year = Years))
+    cli::cli_abort("`object` must be class `om` or class `hist`")
   }
-  SPR0
+  
+  SP0 <- SP0(Hist)
+  R0 <- R0(Hist)
+  ArrayDivide(SP0,R0) |> ReduceDims()
+
 }
+
+
 
 
 #

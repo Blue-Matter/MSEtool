@@ -9,6 +9,7 @@ Simulate_om <- function(OM = NULL,
                         DoRefRemovals = FALSE,
                         DoConditionObs = TRUE,
                         DoGenerateData = TRUE,
+                        DoMSYRefs = TRUE,
                         Reduce = TRUE,
                         ...) {
   
@@ -62,7 +63,24 @@ Simulate_om <- function(OM = NULL,
   # ---- Add Reference Points if they exist ----
   # won't be re-calculated
   
+  Hist@Reference@SPR0 <- CalcSPR0(Hist)
+  
   # ---- Calculate Reference Points ----
+  if (DoMSYRefs) {
+    # do try Catch
+    
+    
+    Hist@Reference@MSY@FMSY
+   
+    
+    
+    
+    
+  }
+  
+  
+  
+  CalcSPR0_Hist
   # TODO
   
   # SimList <- CalcSPR0(SimList) # unfished spawning per recruit (i.e. fecundity)
