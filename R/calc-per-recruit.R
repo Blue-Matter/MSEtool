@@ -3,16 +3,15 @@
 
 CalcPerRecruit <- function(Hist, apicalF=0.1, Years=NULL) {
 
-  if (inherits(Hist, 'om')) {
+  if (inherits(Hist, 'om')) 
     Hist <- OM2Hist(Hist, silent=TRUE)
-  }
-    
+
   CheckClass(Hist, 'hist', 'Hist')
   
-  nArea <- nArea(Hist)
-
   if (is.null(Years))
     Years <- utils::tail(Years(Hist@OM, 'Historical'), 1)
+  
+  nArea <- nArea(Hist)
 
   StockList <- Hist@OM@Stock
 
@@ -86,6 +85,8 @@ CalcPerRecruit <- function(Hist, apicalF=0.1, Years=NULL) {
   FleetNames <- FleetNames(Hist)
   
   
+  ### 
+  
 }
 
 CalcFleetAllocationF <- function(FleetList, Years) {
@@ -103,7 +104,10 @@ CalcFleetAllocationF <- function(FleetList, Years) {
   ArrayDivide(FDistribution, FDistributionTotal)
 }
 
-# Not correct for complexes with different growth/selectivity curves
+# TODO
+# - Complexes - eg Female & Male
+# - Seasonal - NPSWO
+
 
 CalcPerRecruit_F <- function(apicalF = 0.1,
                              StockFleetAllocation,

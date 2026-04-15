@@ -43,6 +43,8 @@ Biomass <- function(object, df = FALSE) {
   extract_timeseries(object, 'Biomass', df)
 }
 
+
+
 # Biomass
 # SBiomass
 # SProdcution

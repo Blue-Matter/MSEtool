@@ -1,6 +1,5 @@
 #' Extract Numbers at Age
 #'
-#' @description
 #' Extracts numbers-at-age from a [hist-class] or [mse-class] object. When `df = FALSE`
 #' (the default), the raw array slot is returned. When `df = TRUE`, a tidy
 #' `data.frame` of class `number` is returned, with optional aggregation over

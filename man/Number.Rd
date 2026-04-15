@@ -41,7 +41,8 @@ Extracts numbers-at-age from a \linkS4class{hist} or \linkS4class{mse} object. W
 (the default), the raw array slot is returned. When \code{df = TRUE}, a tidy
 \code{data.frame} of class \code{number} is returned, with optional aggregation over
 ages and/or areas.
-
+}
+\details{
 When \code{df=TRUE}, both the historical and projection periods of an \code{mse} object
 are returned, with a \code{Period} column distinguishing them. Historical rows
 will have \code{NA} in the \code{MP} column.

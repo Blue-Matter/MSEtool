@@ -8,13 +8,6 @@
 
 # Hist <- MSE@Hist
 
-#' Extract values from an MSE or Hist object
-#' 
-#' Returns as a data.frame
-#' 
-#' @param MSE An `mse` class or `hist` object
-#' @name Biomass
-NULL 
 
 
 

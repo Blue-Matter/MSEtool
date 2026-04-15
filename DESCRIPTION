@@ -65,7 +65,6 @@ LinkingTo: Rcpp, RcppArmadillo
 BugReports: https://github.com/Blue-Matter/MSEtool/issues
 URL: https://msetool.openmse.com/
 Collate: 
-    'Effort.R'
     'MSEtool-package.R'
     'RcppExports.R'
     'calc-advice.R'
@@ -147,6 +146,7 @@ Collate:
     'class-mse.R'
     'class-obslifehistory.R'
     'class-perrecruit.R'
+    'compare-ss3.R'
     'condition-obs-catch.R'
     'condition-obs-index.R'
     'condition-obs.R'
@@ -271,7 +271,6 @@ Collate:
     'todo-CalcPerRecruit.R'
     'todo-SProduction.R'
     'todo-compare-bam.R'
-    'todo-compare-ss3.R'
     'todo-fleet-combine.R'
     'todo-get-TACs.R'
     'todo-mp-examples.R'
