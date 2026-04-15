@@ -68,7 +68,7 @@ CompareSS_Biomass <- function(SSDir, Hist, sim = 1, silent=FALSE, ...) {
     Hist      = Hist,
     sim       = sim,
     silent    = silent,
-    om_fn     = Number,
+    om_fn     = Biomass,
     ss_table  = "batage",
     y_label   = "Biomass", 
     ...
