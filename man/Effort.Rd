@@ -17,7 +17,8 @@ Effort(
   Distribution = NULL,
   Targeting = NULL,
   Maximum = NULL,
-  Misc = list()
+  Misc = list(),
+  df = FALSE
 )
 
 Effort(x) <- value
@@ -71,6 +72,10 @@ simulations and years.}
 currently used.}
 
 \item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
+
+\item{df}{Logical. Only used when \code{Effort} is a \linkS4class{hist} or an
+\linkS4class{mse} object. If \code{FALSE} (default) the raw \code{Effort} array is returned.
+If \code{TRUE} a tidy \code{data.frame} is returned via \code{\link[=extract_effort]{extract_effort()}}.}
 
 \item{x}{An \linkS4class{effort} object, or a compatible object for \verb{Effort<-}.}
 

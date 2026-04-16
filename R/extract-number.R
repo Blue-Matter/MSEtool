@@ -1,86 +1,93 @@
-#' Extract Numbers at Age
+#' Extract Number-at-Age time series
 #'
-#' Extracts numbers-at-age from a [hist-class] or [mse-class] object. When `df = FALSE`
-#' (the default), the raw array slot is returned. When `df = TRUE`, a tidy
-#' `data.frame` of class `number` is returned, with optional aggregation over
-#' ages and/or areas.
-#'
-#' When `df=TRUE`, both the historical and projection periods of an `mse` object 
-#' are returned, with a `Period` column distinguishing them. Historical rows
-#' will have `NA` in the `MP` column.
-#'
+#' Returns the number of individuals (abundance) from a [hist-class] or
+#' [mse-class] object, either as a list of length [nStock()] or 
+#' a `data.frame`.  
+#' 
 #' @param object A [hist-class] or [mse-class] object.
-#' @param df `logical`. If `FALSE` (default) the raw list of arrays from the `Number` 
-#' slot is returned. If `TRUE` a tidy `data.frame` is returned.
-#' @param byAge `logical`. If `TRUE` results are not summed over age
-#'   classes. Default `FALSE`.
-#' @param byArea `logical`. If `TRUE` results are not summed over areas.
-#'   Default `FALSE`.
+#' @param df Logical. If `FALSE` (default) the raw array slot is returned.
+#'   If `TRUE` a tidy `data.frame` is returned.
+#' @param byAge Logical. If `TRUE` the data frame retains the `Age`
+#'   dimension rather than summing over ages. Ignored when `df = FALSE`.
+#' @param byArea Logical. If `TRUE` the data frame retains the `Area`
+#'   dimension rather than summing over areas. Ignored when `df = FALSE`.
 #'
 #' @return
-#' - When `df = FALSE`: the raw `Number` list.
-#' - When `df = TRUE`: a `data.frame` with columns:
-#'   - `Sim` — simulation index
-#'   - `Year` — calendar year
-#'   - `Stock` — stock name
-#'   - `Period` — `"Historical"` or `"Projection"`
-#'   - `MP` — management procedure name (`NA` for historical rows; for `mse` objects only)
-#'   - `Variable` — always `"Number"`
-#'   - `Units` — units inherited from `Stock@SRR@Units`
-#'   - `Age` — age class (only present when `byAge = TRUE`)
-#'   - `Area` — area index (only present when `byArea = TRUE`)
-#'   - `Value` — numbers at age (or summed over age/area when aggregated)
-#'
-#' @examples
-#' \dontrun{
-#' # Return raw slot
-#' Number(hist_obj)
-#'
-#' # Tidy data.frame, summed over ages and areas
-#' Number(hist_obj, df = TRUE)
-#'
-#' # Retain age structure, sum over areas
-#' Number(hist_obj, df = TRUE, byAge = TRUE)
-#'
-#' # Full historical + projection output from an MSE run
-#' Number(mse_obj, df = TRUE, byAge = TRUE, byArea = TRUE)
-#' }
+#' * `df = FALSE` — the raw `Number` array slot (list of arrays, one per
+#'   stock).
+#' * `df = TRUE` — a `data.frame` (subclass `"number.df"`) with columns
+#'   `Sim`, `Stock`, `Year`, `Period`, `MP` (MSE only), and optionally
+#'   `Age` / `Area`, plus `Value`, `Variable`, and `Units`.
 #'
 #' @export
+#' @seealso [Biomass()], [SBiomass()], [SProduction()]
+#' @examples
+#' Hist <- Simulate(ExampleOM)
+#' Number(Hist, df = TRUE)
+#' Number(Hist, df = TRUE, byAge = TRUE)
+#' Number(Hist, df = TRUE, byAge = TRUE, byArea = TRUE)
 Number <- function(object, df = FALSE, byAge = FALSE, byArea = FALSE) {
-  CheckClass(object, c('hist', 'mse'), 'object')
+  CheckClass(object, c('hist', 'mse', 'timeseries'), 'object')
   
   if (!df)
     return(object@Number)
   
-  if (inherits(object, 'hist')) {
-    return(Number_Hist(object, df = df, byAge = byAge, byArea = byArea))
-  }
+  if (inherits(object, 'hist'))
+    return(extract_number_hist(object, df = df, byAge = byAge, byArea = byArea))
   
-  proj <- Number_MSE(object, df = df, byAge = byAge, byArea = byArea)
+  proj <- extract_number_proj(object, df = df, byAge = byAge, byArea = byArea)
   
-  if (!df) 
-    return(proj)
-
   hist <- number_to_df(
-    number_slot    = object@Hist@Number,
-    OM             = object@OM,
+    number_slot      = object@Hist@Number,
+    OM               = object@OM,
+    period           = "Historical",
+    extra_group_vars = character(0),
+    byAge            = byAge,
+    byArea           = byArea
+  ) |>
+    dplyr::mutate(MP = 'Historical')
+  
+  out <- dplyr::bind_rows(hist, proj)
+  class(out) <- c("number.df", class(out))
+  out
+}
+
+extract_number_hist <- function(Hist, df = FALSE, byAge = FALSE, byArea = FALSE) {
+  
+  if (!df) return(Hist@Number)
+  
+  out <- number_to_df(
+    number_slot    = Hist@Number,
+    OM             = Hist@OM,
     period         = "Historical",
     extra_group_vars = character(0),
     byAge          = byAge,
     byArea         = byArea
   )
   
-  out <- dplyr::bind_rows(hist, proj) |>
-    dplyr::arrange(Sim, Year, Stock, Period, MP)
+  class(out) <- c("number", class(out))
+  out
+}
+
+extract_number_proj <- function(MSE, df = FALSE, byAge = FALSE, byArea = FALSE) {
+  CheckClass(MSE, 'mse', 'MSE')
+  
+  out <- number_to_df(
+    number_slot      = MSE@Number,
+    OM               = MSE@OM,
+    period           = "Projection",
+    extra_group_vars = "MP",
+    byAge            = byAge,
+    byArea           = byArea
+  )
   
   class(out) <- c("number", class(out))
   out
 }
 
-
 number_to_df <- function(number_slot, OM, period, extra_group_vars,
-                          byAge, byArea) {
+                         byAge, byArea) {
+  
   Areas       <- seq_len(nArea(OM))
   years       <- Years(OM, period)
   n_stocks    <- length(number_slot)
@@ -121,42 +128,10 @@ number_to_df <- function(number_slot, OM, period, extra_group_vars,
     stock_list[[i]] <- n
   }
   
-  out <- do.call(rbind, stock_list)
-  ConvertDF(out)
+  do.call(rbind, stock_list) |> 
+    ConvertDF() |> 
+    dplyr::relocate('Sim', 'Stock', 'Year', 'Period') |>
+    dplyr::arrange(Sim, Stock, Year)
+  
 }
 
-
-
-Number_Hist <- function(Hist, df = FALSE, byAge = FALSE, byArea = FALSE) {
-  
-  if (!df) return(Hist@Number)
-  
-  out <- number_to_df(
-    number_slot    = Hist@Number,
-    OM             = Hist@OM,
-    period         = "Historical",
-    extra_group_vars = character(0),
-    byAge          = byAge,
-    byArea         = byArea
-  )
-  
-  class(out) <- c("number", class(out))
-  out
-}
-
-
-Number_MSE <- function(MSE, df = FALSE, byAge = FALSE, byArea = FALSE) {
-  CheckClass(MSE, 'mse', 'MSE')
-  
-  out <- number_to_df(
-    number_slot      = MSE@Number,
-    OM               = MSE@OM,
-    period           = "Projection",
-    extra_group_vars = "MP",
-    byAge            = byAge,
-    byArea           = byArea
-  )
-  
-  class(out) <- c("number", class(out))
-  out
-}

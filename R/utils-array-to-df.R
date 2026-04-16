@@ -112,8 +112,12 @@ ConvertDF <- function(df) {
     df$Year <- as.numeric(df$Year)
   if ('Area' %in% nms) 
     df$Area <- as.numeric(df$Area)
-  if ('Value' %in% nms)
-    df$Value <- as.numeric(df$Value)
+  if ('Value' %in% nms) {
+    chk <- suppressWarnings(as.numeric(df$Value))
+    if (!all(is.na(chk)))
+      df$Value <- chk
+  }
+    
   
   df |> tibble::as_tibble()
 }

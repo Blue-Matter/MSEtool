@@ -19,6 +19,7 @@ CalcDataYear <- function(Year, YearsAll, DataLag, Seasons) {
 }
 
 TrimMPData <- function(Proj, DataYear) {
+  Proj <- AddSimNumber(Proj)
   purrr::map(Proj@Data, \(DataSim) {
     purrr::map(DataSim, \(Data) {
       if (DataYear < Data@YearLH)
@@ -84,6 +85,9 @@ ExtractAdviceLogs <- function(AdviceSimList) {
 }
 
 UpdateAdviceArray <- function(Current, New, Year) {
+  if (!length(New))
+    return(Current)
+  
   New <- AddDimension(New, 'Year', Year, pos = 1)
   if (is.null(Current)) {
     return(New)

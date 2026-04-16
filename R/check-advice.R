@@ -14,7 +14,7 @@ CheckAdvice <- function(Advice, Proj, FleetNames, Areas, sim) {
 
 CheckAdvice_TAC <- function(Advice, Proj, FleetNames, Areas) {
   
-  if (is.null(Advice@TAC))
+  if (is.null(Advice@TAC) || !length(Advice@TAC))
     return(Advice)
   
   nFleet <- length(FleetNames)
@@ -27,9 +27,9 @@ CheckAdvice_TAC <- function(Advice, Proj, FleetNames, Areas) {
     
     return(Advice)
   }
-  
+
   if (length(Advice@TAC)!= 1 && length(Advice@TAC)!=nFleet)
-    stop("If Advice@TAC is numeric vector, itmust be either length 1 or length `nFleet`")
+    stop("If Advice@TAC is numeric vector, it must be either length 1 or length `nFleet`")
  
   Advice@TAC <- as.array(Advice@TAC)
   Advice

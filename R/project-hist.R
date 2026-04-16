@@ -69,11 +69,6 @@ Project_hist <- function(Hist,
   if (!silent) 
     cli::cli_alert('Projecting {.val {nMPs}} MP{?s}')
   
-  # if (!length(Hist@Data)) {
-  #   cli::cli_alert_warning("No {.val Data} found in this {.cls hist} object. Returning {.val Hist}")
-  #   return(Hist)
-  # }
-  
   for (mp in seq_along(MPs)) {
     MPName <- MPs[mp]
     MPfunction <- MSE@MPs[[MPName]]

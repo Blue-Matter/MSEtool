@@ -1,27 +1,5 @@
 
-# Hist <- readRDS("../SALB-MSE/Hist/Stochastic.hist")
-# Data <- Data(Hist)
-# 
-# Data <- Data$`1`$Albacore
-
-
-
-# ---- TAC ----
-
-# Global TAC
-
-AverageCatch <- function(Data) {
-  LHIndex <- LastHistYearInd(Data)
-  
-  if (any(Data@Landings@Units !='Biomass' &&
-          max(Data@Years) <= Data@YearLH)) {
-    cli::cli_alert_warning('TAC is set to average historical landings but some landings units are not "Biomass"')
-  } 
-      
-  newTAC <- rowSums(Data@Landings@Value[1:LHIndex,, drop=FALSE], na.rm=TRUE) |> mean(na.rm=TRUE)
-  Advice(TAC=newTAC)
-}
-class(AverageCatch) <- 'mp'
+# TODO - add these to manual instead of package 
 
 
 # TAC by Fleet
@@ -61,18 +39,5 @@ AverageCatch_FleetArea <- function(Data) {
 class(AverageCatch_FleetArea) <- 'mp'
 
 
-# ---- Effort ----
-ConstantEffort <- function(Data) {
-  LHIndex <- LastHistYearInd(Data)
-  LastEffort <- Data@Effort@Value[LHIndex,]
-  
-  # if (is.null(LastEffort))
-  Advice()
-}
-class(ConstantEffort) <- 'mp'
-
-# Effort by Fleet
-
-# Effort by Fleet-Area
 
 

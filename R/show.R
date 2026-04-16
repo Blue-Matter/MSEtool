@@ -606,12 +606,25 @@ setMethod('show', 'hist', function(object) {
 # ---- MSE ----
 
 setMethod('show', 'mse', function(object) {
-  cli::cli_h2("A {.help MSEtool::MSE} Object")
+  cli::cli_h2("A {.help MSEtool::mse-class} Object")
+  
+  .show_slot(object@OM, 'Name')
+  .show_slot(object@OM, 'nSim')
+  
+  if (!is.null(object@OM@Seasons) && object@OM@Seasons > 1)
+    .show_slot(object@OM, 'Seasons')
+  
+  cli::cli_text('`MPs`: {.val {names(object@MPs)}}')
+  histYears <- Years(object@OM,'H')
+  projYears <- Years(object@OM,'P')
+  
   cli::cli_text("")
   
-  cli::cli_text("Slots:")
-  cli::cli_li(
-    slotNames(object))
+  cli::cli_text("Historical Years: {.val { paste(range(histYears), collapse = ' - ')} ({length(histYears)})}")
+  cli::cli_text("Projection Years: {.val { paste(range(projYears), collapse = ' - ')} ({length(projYears)})}")
+  
+  cli::cli_text("")
+  
 })
 
 

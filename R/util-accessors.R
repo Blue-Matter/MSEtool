@@ -165,6 +165,7 @@ Exploitation <- function(x) {
   AssignSlot(x, value, 'Exploitation')
 }
 
+
 #' @rdname Access
 #' @export
 LandingsAtAge <- function(x) {

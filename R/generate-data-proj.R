@@ -54,6 +54,9 @@ GenerateProjectionData_Sim <- function(x, Proj, DataYear, YearsAll,
                                        StockNames,
                                        FleetNames) {
   
+  if (!length(Proj@Data))
+    return(NULL)
+  
   DataList <- Proj@Data[[x]]
   
   Complexes <- Proj@OM@Complexes

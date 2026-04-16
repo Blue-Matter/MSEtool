@@ -2,64 +2,42 @@
 % Please edit documentation in R/extract-number.R
 \name{Number}
 \alias{Number}
-\title{Extract Numbers at Age}
+\title{Extract Number-at-Age time series}
 \usage{
 Number(object, df = FALSE, byAge = FALSE, byArea = FALSE)
 }
 \arguments{
 \item{object}{A \linkS4class{hist} or \linkS4class{mse} object.}
 
-\item{df}{\code{logical}. If \code{FALSE} (default) the raw list of arrays from the \code{Number}
-slot is returned. If \code{TRUE} a tidy \code{data.frame} is returned.}
+\item{df}{Logical. If \code{FALSE} (default) the raw array slot is returned.
+If \code{TRUE} a tidy \code{data.frame} is returned.}
 
-\item{byAge}{\code{logical}. If \code{TRUE} results are not summed over age
-classes. Default \code{FALSE}.}
+\item{byAge}{Logical. If \code{TRUE} the data frame retains the \code{Age}
+dimension rather than summing over ages. Ignored when \code{df = FALSE}.}
 
-\item{byArea}{\code{logical}. If \code{TRUE} results are not summed over areas.
-Default \code{FALSE}.}
+\item{byArea}{Logical. If \code{TRUE} the data frame retains the \code{Area}
+dimension rather than summing over areas. Ignored when \code{df = FALSE}.}
 }
 \value{
 \itemize{
-\item When \code{df = FALSE}: the raw \code{Number} list.
-\item When \code{df = TRUE}: a \code{data.frame} with columns:
-\itemize{
-\item \code{Sim} — simulation index
-\item \code{Year} — calendar year
-\item \code{Stock} — stock name
-\item \code{Period} — \code{"Historical"} or \code{"Projection"}
-\item \code{MP} — management procedure name (\code{NA} for historical rows; for \code{mse} objects only)
-\item \code{Variable} — always \code{"Number"}
-\item \code{Units} — units inherited from \code{Stock@SRR@Units}
-\item \code{Age} — age class (only present when \code{byAge = TRUE})
-\item \code{Area} — area index (only present when \code{byArea = TRUE})
-\item \code{Value} — numbers at age (or summed over age/area when aggregated)
-}
+\item \code{df = FALSE} — the raw \code{Number} array slot (list of arrays, one per
+stock).
+\item \code{df = TRUE} — a \code{data.frame} (subclass \code{"number.df"}) with columns
+\code{Sim}, \code{Stock}, \code{Year}, \code{Period}, \code{MP} (MSE only), and optionally
+\code{Age} / \code{Area}, plus \code{Value}, \code{Variable}, and \code{Units}.
 }
 }
 \description{
-Extracts numbers-at-age from a \linkS4class{hist} or \linkS4class{mse} object. When \code{df = FALSE}
-(the default), the raw array slot is returned. When \code{df = TRUE}, a tidy
-\code{data.frame} of class \code{number} is returned, with optional aggregation over
-ages and/or areas.
-}
-\details{
-When \code{df=TRUE}, both the historical and projection periods of an \code{mse} object
-are returned, with a \code{Period} column distinguishing them. Historical rows
-will have \code{NA} in the \code{MP} column.
+Returns the number of individuals (abundance) from a \linkS4class{hist} or
+\linkS4class{mse} object, either as a list of length \code{\link[=nStock]{nStock()}} or
+a \code{data.frame}.
 }
 \examples{
-\dontrun{
-# Return raw slot
-Number(hist_obj)
-
-# Tidy data.frame, summed over ages and areas
-Number(hist_obj, df = TRUE)
-
-# Retain age structure, sum over areas
-Number(hist_obj, df = TRUE, byAge = TRUE)
-
-# Full historical + projection output from an MSE run
-Number(mse_obj, df = TRUE, byAge = TRUE, byArea = TRUE)
+Hist <- Simulate(ExampleOM)
+Number(Hist, df = TRUE)
+Number(Hist, df = TRUE, byAge = TRUE)
+Number(Hist, df = TRUE, byAge = TRUE, byArea = TRUE)
 }
-
+\seealso{
+\code{\link[=Biomass]{Biomass()}}, \code{\link[=SBiomass]{SBiomass()}}, \code{\link[=SProduction]{SProduction()}}
 }

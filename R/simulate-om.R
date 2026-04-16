@@ -119,10 +119,12 @@ Simulate_om <- function(OM = NULL,
     Hist <- ConditionObs(Hist, silent)
   
   # ---- Historical Fishery Data ----
-  
-  if (DoGenerateData && CheckObs(Hist@OM, silent))
+  if (DoGenerateData)
     Hist <- GenerateHistoricalData(Hist, silent=silent)
-    
+
+  # Add Simulation Number to Data@Misc 
+  Hist <- AddSimNumber(Hist)
+  
   # ---- Reduce Dimension Size ----
   Hist <- ReduceHist(Hist, Reduce)
   

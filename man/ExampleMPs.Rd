@@ -4,33 +4,57 @@
 \alias{ExampleMPs}
 \alias{CurrentEffort}
 \alias{CurrentCatch}
+\alias{AverageCatch}
 \title{Example Management Procedures}
 \usage{
 CurrentEffort(Data)
 
 CurrentCatch(Data)
+
+AverageCatch(Data)
+
+ExampleMPs()
 }
 \arguments{
 \item{Data}{A \linkS4class{data} object containing historical observations.}
 }
 \value{
-An \linkS4class{advice} object. See \code{\link[=Advice]{Advice()}} for details.
+\itemize{
+\item \code{CurrentEffort}, \code{CurrentCatch}, \code{AverageCatch} — an \linkS4class{advice}
+object; see \code{\link[=Advice]{Advice()}} for constructor details.
+\item \code{ExampleMPs} — a character vector of the example MP names.
+}
 }
 \description{
 Simple management procedures (MPs) designed for testing and demonstration.
-Each function accepts a \linkS4class{data} object and returns an \linkS4class{advice}
+Each MP function accepts a \linkS4class{data} object and returns an \linkS4class{advice}
 object. MPs are assigned \verb{class "mp"} so they are recognised by the MSE
 framework.
 }
 \details{
 \itemize{
-\item \code{CurrentEffort}: Fixes fishing effort at 1 (i.e. last historical effort) for
-all fleets, and maintains the spatial distribution of fishing effort from the
-last historical timestep.
-\item \code{CurrentCatch}: Sets the TAC for each fleet to the landings observed in
-the last historical year.
+\item \code{CurrentEffort}: Fixes fishing effort at 1 (last historical effort) for
+all fleets, maintaining the spatial distribution of effort from the last
+historical timestep. The \code{Data} argument is accepted for framework
+compatibility but is not used.
+\item \code{CurrentCatch}: Sets the TAC for each fleet to the removals observed in
+the last historical year. Returns an empty \linkS4class{advice} object if no
+landings data are available.
+\item \code{AverageCatch}: Sets the TAC to the mean total removals (summed over
+fleets) across all historical years. Returns an empty \linkS4class{advice}
+object if no landings data are available.
+\item \code{ExampleMPs}: Returns a character vector naming all example MPs defined
+in this group, for use in batch testing or MP selection.
 }
+}
+\examples{
+\dontrun{
+MSE <- runMSE(ExampleOM, MPs=ExampleMPs())
+}
+
+
+
 }
 \seealso{
-\code{\link[=Advice]{Advice()}}, \linkS4class{data}, \linkS4class{advice}
+\code{\link[=Advice]{Advice()}}, \code{\link[=CheckCatch]{CheckCatch()}}, \linkS4class{data}, \linkS4class{advice}
 }

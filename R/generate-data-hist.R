@@ -18,6 +18,8 @@
 #' @keywords internal
 GenerateHistoricalData <- function(Hist, silent=FALSE) {
   
+  CheckObs(Hist@OM, silent)
+  
   HistYears <- Years(Hist,'H')
   nSim <- Hist@OM@nSim
   nArea <- nArea(Hist)
