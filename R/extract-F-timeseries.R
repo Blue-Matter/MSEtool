@@ -13,8 +13,8 @@
 #' rows carry `MP = "Historical"`.
 #' 
 #' @param object A [hist-class] or [mse-class] object.
-#' @param df Logical. If `FALSE` (default) the raw array slot is returned.
-#'   If `TRUE` a tidy `data.frame` is returned.
+#' @param df Logical. If `FALSE` the raw array slot is returned.
+#'   If `TRUE` (default)  a tidy `data.frame` is returned.
 #'   
 #' @param byAge Logical. If `TRUE` the data frame retains the `Age`
 #'   dimension (sourced from the `*Area` slots, which always include
@@ -74,7 +74,7 @@
 #' @rdname F_timeseries
 #' @export
 FInteract <- function(object,
-                      df = FALSE,
+                      df = TRUE,
                       byAge = TRUE,
                       byArea = FALSE,
                       byFleet = FALSE,
@@ -94,7 +94,7 @@ FInteract <- function(object,
 #' @name F_timeseries
 #' @export
 FDead <- function(object,
-                  df = FALSE,
+                  df = TRUE,
                   byAge = TRUE,
                   byArea = FALSE,
                   byFleet = FALSE,
@@ -114,7 +114,7 @@ FDead <- function(object,
 #' @name F_timeseries
 #' @export
 FRetain <- function(object,
-                    df = FALSE,
+                    df = TRUE,
                     byAge = TRUE,
                     byArea = FALSE,
                     byFleet = FALSE,

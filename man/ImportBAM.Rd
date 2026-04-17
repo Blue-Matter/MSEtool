@@ -11,6 +11,7 @@ ImportBAM(
   nSim = 48,
   pYear = 30,
   StockName = NULL,
+  Source = NULL,
   DiscMortDF = NULL,
   DiscFleets = NULL,
   DiscSelFleets = NULL,
@@ -34,6 +35,9 @@ elements \code{rdat} and \code{dat}.}
 
 \item{StockName}{Optional character string to override the species name taken
 from the BAM output.}
+
+\item{Source}{Optional. Character string specifying the source (usually
+a link) for the OM.}
 
 \item{DiscMortDF}{Optional data.frame with columns \code{Fleet}, \code{Value}, and
 \code{Year} specifying discard mortality rates by fleet and time block. If
@@ -79,7 +83,7 @@ The \code{DiscMortDF} argument accepts a data.frame with columns:
 \describe{
 \item{Fleet}{Fleet name matching the retain fleet names in the OM.}
 \item{Value}{Discard mortality rate (0--1).}
-\item{Year}{The year \emph{before} which the value takes effect (i.e., the
+\item{Year}{The year which the value takes effect (i.e., the
 value applies to all years after this year).}
 }
 

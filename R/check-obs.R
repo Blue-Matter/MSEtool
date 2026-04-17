@@ -48,6 +48,7 @@ CheckObs <- function(OM, silent=FALSE, Proj=FALSE) {
   }
   
   if (!silent) {
+    cli::cli_text('')
     cli::cli_alert_warning("No Data will be generated for these stocks/fleets")
     cli::cli_text('')
   }

@@ -21,8 +21,8 @@
 #' rows carry `MP = "Historical"`.
 #'
 #' @param object A [hist-class] or [mse-class] object.
-#' @param df Logical. If `FALSE` (default) the raw array slot is returned.
-#'   If `TRUE` a tidy `data.frame` is returned.
+#' @param df Logical. If `FALSE` the raw array slot is returned.
+#'   If `TRUE`  (default) a tidy `data.frame` is returned.
 #' @param byAge Logical. If `TRUE` the data frame retains the `Age`
 #'   dimension. Otherwise values are summed over ages. 
 #'   Mutually exclusive with `bySize`. Ignored when `df = FALSE`.
@@ -69,7 +69,7 @@
 #' @name catch_timeseries
 #' @export
 Interactions <- function(object,
-                         df      = FALSE,
+                         df      = TRUE,
                          byAge   = FALSE,
                          byArea  = FALSE,
                          byFleet = FALSE,
@@ -89,7 +89,7 @@ Interactions <- function(object,
 #' @rdname catch_timeseries
 #' @export
 Landings <- function(object,
-                     df      = FALSE,
+                     df      = TRUE,
                      byAge   = FALSE,
                      bySize  = FALSE,
                      byArea  = FALSE,
@@ -113,7 +113,7 @@ Landings <- function(object,
 #' @rdname catch_timeseries
 #' @export
 Discards <- function(object,
-                     df      = FALSE,
+                     df      = TRUE,
                      byAge   = FALSE,
                      bySize  = FALSE,
                      byArea  = FALSE,

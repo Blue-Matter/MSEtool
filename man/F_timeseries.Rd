@@ -9,7 +9,7 @@
 \usage{
 FInteract(
   object,
-  df = FALSE,
+  df = TRUE,
   byAge = TRUE,
   byArea = FALSE,
   byFleet = FALSE,
@@ -19,7 +19,7 @@ FInteract(
 
 FDead(
   object,
-  df = FALSE,
+  df = TRUE,
   byAge = TRUE,
   byArea = FALSE,
   byFleet = FALSE,
@@ -29,7 +29,7 @@ FDead(
 
 FRetain(
   object,
-  df = FALSE,
+  df = TRUE,
   byAge = TRUE,
   byArea = FALSE,
   byFleet = FALSE,
@@ -40,8 +40,8 @@ FRetain(
 \arguments{
 \item{object}{A \linkS4class{hist} or \linkS4class{mse} object.}
 
-\item{df}{Logical. If \code{FALSE} (default) the raw array slot is returned.
-If \code{TRUE} a tidy \code{data.frame} is returned.}
+\item{df}{Logical. If \code{FALSE} the raw array slot is returned.
+If \code{TRUE} (default)  a tidy \code{data.frame} is returned.}
 
 \item{byAge}{Logical. If \code{TRUE} the data frame retains the \code{Age}
 dimension (sourced from the \verb{*Area} slots, which always include

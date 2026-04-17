@@ -14,6 +14,8 @@
 #' @param pYear Integer. Number of projection years. Default `30`.
 #' @param StockName Optional character string to override the species name taken
 #'   from the BAM output.
+#' @param Source Optional. Character string specifying the source (usually 
+#' a link) for the OM.
 #' @param DiscMortDF Optional data.frame with columns `Fleet`, `Value`, and
 #'   `Year` specifying discard mortality rates by fleet and time block. If
 #'   `NULL`, values are extracted directly from BAM parameters. 
@@ -45,7 +47,7 @@
 #' \describe{
 #'   \item{Fleet}{Fleet name matching the retain fleet names in the OM.}
 #'   \item{Value}{Discard mortality rate (0--1).}
-#'   \item{Year}{The year *before* which the value takes effect (i.e., the
+#'   \item{Year}{The year which the value takes effect (i.e., the
 #'     value applies to all years after this year).}
 #' }
 #'
@@ -59,6 +61,7 @@ ImportBAM <- function(Stock='Red Snapper',
                       nSim=48,
                       pYear=30,
                       StockName=NULL,
+                      Source=NULL,
                       DiscMortDF=NULL,
                       DiscFleets=NULL,
                       DiscSelFleets=NULL,
@@ -82,7 +85,7 @@ ImportBAM <- function(Stock='Red Snapper',
     cli::cli_end()
   }
 
-  OM <- SetupOM_BAM(BAMdata, nSim, pYear)
+  OM <- SetupOM_BAM(BAMdata, nSim, pYear, Source=Source)
   
   OM@Stock <- list()
   class(OM@Stock) <- 'StockList'
@@ -188,13 +191,14 @@ ListBAMStocks <- function(type=c('rdat', 'dat')) {
 
 
 
-SetupOM_BAM <- function(BAMdata, nSim=48, pYear=30) {
+SetupOM_BAM <- function(BAMdata, nSim=48, pYear=30, Source=NULL) {
   HistYears <- BAMdata$parms$styr:BAMdata$parms$endyr
   om <- OM(Name=paste(BAMdata$info$title, BAMdata$info$species),
            nSim=nSim,
            nYear=length(HistYears),
            pYear=pYear,
-           CurrentYear=max(HistYears)
+           CurrentYear=max(HistYears),
+           Source=Source
   )
   
   om@Years <- CalcYears(nYear=om@nYear,

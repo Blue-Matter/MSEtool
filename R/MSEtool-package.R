@@ -10,6 +10,7 @@
 #' @importFrom future multisession
 #' @importFrom future plan
 #' @importFrom future sequential
+#' @importFrom lifecycle deprecated
 #' @importFrom lubridate as_date
 #' @importFrom lubridate date_decimal
 #' @importFrom lubridate decimal_date

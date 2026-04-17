@@ -34,7 +34,8 @@ Imports:
     lubridate,
     patchwork,
     purrr,
-    rlang
+    rlang,
+    lifecycle
 Suggests:
     boot,
     broom,
@@ -147,6 +148,7 @@ Collate:
     'class-mse.R'
     'class-obslifehistory.R'
     'class-perrecruit.R'
+    'compare-bam.R'
     'compare-ss3.R'
     'condition-obs-catch.R'
     'condition-obs-index.R'
@@ -198,6 +200,7 @@ Collate:
     'fct_Biomass.R'
     'fct_CalcMSYRefPoints.R'
     'find-model.R'
+    'fleet-combine.R'
     'generate-data-hist-catch.R'
     'generate-data-hist-effort.R'
     'generate-data-hist-indices.R'
@@ -273,8 +276,6 @@ Collate:
     'subset.R'
     'todo-CalcPerRecruit.R'
     'todo-SProduction.R'
-    'todo-compare-bam.R'
-    'todo-fleet-combine.R'
     'todo-get-TACs.R'
     'todo-mp-examples.R'
     'todo-plot-schedule.R'

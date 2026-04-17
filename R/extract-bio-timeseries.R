@@ -9,8 +9,8 @@
 #' rows carry `MP = "Historical"`.
 #' 
 #' @param object A [hist-class] or [mse-class] object.
-#' @param df Logical. If `FALSE` (default) the raw array slot is returned.
-#'   If `TRUE` a tidy `data.frame` is returned.
+#' @param df Logical. If `FALSE` the raw array slot is returned.
+#'   If `TRUE` (default)  a tidy `data.frame` is returned.
 #' @param byAge Logical. If `TRUE` the data frame retains the `Age`
 #'   dimension. Values are derived by multiplying numbers-at-age by the
 #'   relevant biological schedule before optionally summing over age.
@@ -55,7 +55,7 @@
 #' @seealso [Number()]
 #' @export
 Biomass <- function(object, 
-                    df = FALSE,
+                    df = TRUE,
                     byAge = FALSE, 
                     byArea = FALSE,
                     Reduce  = TRUE,
@@ -75,7 +75,7 @@ Biomass <- function(object,
 #' @rdname bio_timeseries
 #' @export
 SBiomass <- function(object, 
-                     df = FALSE,
+                     df = TRUE,
                      byAge = FALSE, 
                      byArea = FALSE,
                      Reduce  = TRUE,
@@ -93,7 +93,7 @@ SBiomass <- function(object,
 #' @rdname bio_timeseries
 #' @export
 SProduction <- function(object, 
-                        df = FALSE,
+                        df = TRUE,
                         byAge = FALSE, 
                         byArea = FALSE,
                         Reduce  = TRUE,
@@ -150,7 +150,7 @@ SProduction <- function(object,
 
 extract_bio_timeseries <- function(object, 
                                    slot_name = 'Biomass', 
-                                   df = FALSE, 
+                                   df = TRUE, 
                                    byAge = FALSE, 
                                    byArea = FALSE,
                                    Reduce  = TRUE,

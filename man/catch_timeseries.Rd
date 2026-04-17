@@ -9,7 +9,7 @@
 \usage{
 Interactions(
   object,
-  df = FALSE,
+  df = TRUE,
   byAge = FALSE,
   byArea = FALSE,
   byFleet = FALSE,
@@ -19,7 +19,7 @@ Interactions(
 
 Landings(
   object,
-  df = FALSE,
+  df = TRUE,
   byAge = FALSE,
   bySize = FALSE,
   byArea = FALSE,
@@ -30,7 +30,7 @@ Landings(
 
 Discards(
   object,
-  df = FALSE,
+  df = TRUE,
   byAge = FALSE,
   bySize = FALSE,
   byArea = FALSE,
@@ -42,8 +42,8 @@ Discards(
 \arguments{
 \item{object}{A \linkS4class{hist} or \linkS4class{mse} object.}
 
-\item{df}{Logical. If \code{FALSE} (default) the raw array slot is returned.
-If \code{TRUE} a tidy \code{data.frame} is returned.}
+\item{df}{Logical. If \code{FALSE} the raw array slot is returned.
+If \code{TRUE}  (default) a tidy \code{data.frame} is returned.}
 
 \item{byAge}{Logical. If \code{TRUE} the data frame retains the \code{Age}
 dimension. Otherwise values are summed over ages.
