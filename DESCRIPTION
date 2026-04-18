@@ -218,6 +218,7 @@ Collate:
     'helpers-data.R'
     'helpers-mp.R'
     'hist-to-mse.R'
+    'import-bam-data.R'
     'import-bam.R'
     'import-ss3.R'
     'initialize-hist.R'

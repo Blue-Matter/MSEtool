@@ -7,7 +7,17 @@
 \alias{IndicesData}
 \title{\code{indicesdata} Class}
 \usage{
-IndicesData()
+IndicesData(
+  Name = NULL,
+  Value = NULL,
+  CV = NULL,
+  Units = NULL,
+  Ref = NULL,
+  RefCV = NULL,
+  Timing = NULL,
+  Selectivity = NULL,
+  Misc = list()
+)
 }
 \value{
 \code{IndicesData()} returns a \code{indicesdata} object.

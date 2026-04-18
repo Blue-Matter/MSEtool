@@ -144,7 +144,10 @@ ImportBAM <- function(Stock='Red Snapper',
 GetBAMOutput <- function(Stock='Red Snapper', type=c('rdat', 'dat')) {
   type <- match.arg(type)
   
-  if (!inherits(Stock, c('list', 'character')))
+  if (inherits(Stock, 'BAMdata'))
+    return(Stock)
+  
+  if (!is.list(Stock) && !is.character(Stock))
     cli::cli_abort("`Stock` must be a character string matching a stock in `bamExtras` or a list of BAM output objects")
   
   if (inherits(Stock, 'character')) {
@@ -160,7 +163,7 @@ GetBAMOutput <- function(Stock='Red Snapper', type=c('rdat', 'dat')) {
     return(BAMdata)
   }
   
-  if (inherits(Stock, 'list')) {
+  if (is.list(Stock)) {
     nms <- names(Stock)
     if (!all(c('rdat', 'dat') %in% nms)) {
       cli::cli_abort(c('`Stock` is a list but does not appear to be valid BAM output',

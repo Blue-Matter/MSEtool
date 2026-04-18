@@ -48,6 +48,25 @@ setClass(
 
 #' @rdname indicesdata
 #' @export
-IndicesData <- function() {
-  new('indicesdata')
+IndicesData <- function(Name = NULL,
+                        Value = NULL,
+                        CV = NULL, 
+                        Units = NULL, 
+                        Ref = NULL,
+                        RefCV = NULL, 
+                        Timing = NULL,
+                        Selectivity = NULL,
+                        Misc = list()) {
+  obj <- new('indicesdata')
+  obj@Name <- Name
+  obj@Value <- Value
+  obj@CV <- CV
+  obj@Units <- Units
+  obj@Ref <- Ref
+  obj@RefCV <- RefCV
+  obj@Timing <- Timing
+  obj@Selectivity <- Selectivity
+  obj@Misc <- Misc
+  obj
+  
 }
