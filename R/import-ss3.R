@@ -1206,8 +1206,8 @@ SS2Fleet <- function(st, fl, RepList, YearsList, FleetNames, Stock) {
   Fleet@Catchability@Efficiency <- SS2Catchability(st, fl, RepList, YearsList)
   Fleet@DiscardMortality <- SS2DiscardMortality(st, fl, RepList, YearsList, Stock)
   Fleet@Selectivity <- SS2Selectivity(st, fl, RepList, YearsList, Stock)
-  Fleet@Retention <- SS2Retention(st, fl, RepList, YearsList, Selectivity = Fleet@Selectivity, Stock
-  )
+  Fleet@Retention <- SS2Retention(st, fl, RepList, YearsList, 
+                                  Selectivity = Fleet@Selectivity, Stock)
   Fleet@WeightFleet <- SS2WeightFleet(st, fl, RepList, YearsList, AgeClasses)
   Fleet
 }
@@ -1632,13 +1632,14 @@ GetSS_EmpiricalWeight <- function(st, fl, replist, YearsList, AgeClasses) {
       
     }
   } else {
+   
     wght <- replist$endgrowth |>
       dplyr::filter(Sex == 1) |>
       dplyr::select(Age_Beg, Wt_Beg, Wt_Mid, Seas) |>
       dplyr::arrange(Age_Beg) |>
-      dplyr::filter(Age_Beg %in% SS_AgeClasses)
+      dplyr::filter(Age_Beg %in% AgeClasses)
 
-    Weight_at_Age_array <- array(wght$Wt_Mid, dim = c(length(SS_AgeClasses), 1))
+    Weight_at_Age_array <- array(wght$Wt_Mid, dim = c(length(AgeClasses), 1))
   }
 
   if (!is.null(Weight_at_Age_array)) {
