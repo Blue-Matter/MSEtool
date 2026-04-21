@@ -151,7 +151,8 @@ ImportBAM <- function(Stock='Red Snapper',
                         BAMdata,
                         SurveyNames = SurveyNames,
                         UnitsLandings = UnitsLandings,
-                        UnitsDiscards = UnitsDiscards)
+                        UnitsDiscards = UnitsDiscards,
+                        DiscFleets    = DiscFleets)
     
   }
   

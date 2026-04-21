@@ -71,17 +71,26 @@ setClass(
 
 
 #' @rdname imp-class
-#' @param object An [om-class] object, or `NULL` (default) to create a new
-#'   empty [imp-class] object.
 #' @return
-#' - If `object` is an [om-class] object, returns `object@Imp`.
+#' - If `Name` is an [om-class] object, returns `object@Imp`.
 #' - Otherwise returns a new empty [imp-class] object.
 #' @export
-Imp <- function(object = NULL) {
-  if (inherits(object, "om"))
-    return(object@Imp)
+Imp <- function(Name = NULL,
+                TAC    = NULL,
+                Effort = NULL,
+                Size   = NULL,
+                Misc   = list()) {
+  if (inherits(Name, "om"))
+    return(Name@Imp)
   
   .Object <- methods::new("imp")
+  if (!is.null(Name))    .Object@Name   <- Name
+  if (!is.null(TAC))     .Object@TAC    <- TAC
+  if (!is.null(Effort))  .Object@Effort <- Effort
+  if (!is.null(Size))    .Object@Size   <- Size
+  
+  .Object@Misc <- Misc
+  
   methods::validObject(.Object)
   .Object
 }

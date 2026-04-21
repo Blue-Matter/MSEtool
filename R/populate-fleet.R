@@ -36,7 +36,6 @@ PopulateFleet <- function(Fleet,
                           seed = 103,
                           silent = FALSE,
                           force = FALSE) {
-  
   Ages <- Stock@Ages
   Length <- Stock@Length
   Weight <- Stock@Weight

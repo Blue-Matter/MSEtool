@@ -9,7 +9,8 @@ ImportBAMData(
   BAMdata,
   SurveyNames = NULL,
   UnitsLandings = NULL,
-  UnitsDiscards = NULL
+  UnitsDiscards = NULL,
+  DiscFleets = NULL
 )
 }
 \arguments{

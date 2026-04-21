@@ -87,10 +87,14 @@ CombineFleets <- function(OM, FleetList, silent = FALSE) {
       OM@Fleet[[st]][[replaceInd]] <- combine_fleets_stock(OM, st, Name, FleetInds)
       names(OM@Fleet[[st]])[replaceInd] <- Name
     }
-    
-    # TODO: combine Data slots
-    # TODO: combine Obs slots
   }
+  
+  # Combine Data
+  OM <- combine_fleets_data(OM, FleetList, silent)
+  
+  # Combine Obs 
+  OM <- combine_fleets_obs(OM, FleetList, silent)
+  
   
   # Drop the source fleets (all but the first index per group)
   drop_names <- purrr::map(FleetList, \(f) f[-1]) |> unlist()
@@ -101,6 +105,131 @@ CombineFleets <- function(OM, FleetList, silent = FALSE) {
   OM
 }
 
+
+comine_fleets_data_cpue <- function(OM, FleetList, silent=FALSE) {
+  
+  for (st in seq_along(OM@Data)) {
+    data <- OM@Data[[st]]@CPUE
+    
+    if (is.null(data@Value)) next
+    
+    for (fl in seq_along(FleetList)) {
+      combine_fleets <- FleetList[[fl]]
+      
+      ind <- match(combine_fleets, data@Name)
+      if (!length(ind) || any(is.na(ind))) next
+      
+      data@Value[,ind[1]] <- weighted_mean_by_cv(values=data@Value[,ind, drop=FALSE], cvs=data@CV[,ind, drop=FALSE])
+      
+      if (!is.null(data@CV)) {
+        # TODO data@CV[,ind[1]]
+      }
+            data@Value[,ind[-1]][] <- 1E-15
+      colnames(data@Value)[ind[1]] <- names(FleetList)[fl]
+      data@Name[ind[1]] <- names(FleetList)[fl] 
+    }
+    
+    # drop fleet columns
+    drop_ind <- which(colMeans(data@Value) <= 1E-15)
+    if (length(drop_ind)) {
+      data@Value <- data@Value[,-drop_ind, drop=FALSE]
+      data@Name <- data@Name[-drop_ind]  
+    }
+    
+    OM@Data[[st]]@CPUE <- data
+  }
+  
+  OM 
+}
+
+weighted_mean_by_cv <- function(values, cvs) {
+  weights <- 1/cvs
+  out <- rowSums(values * weights, na.rm = TRUE) / rowSums(weights, na.rm = TRUE)
+  out[!is.finite(out)] <- NA
+  out
+}
+
+
+comine_fleets_data_catch <- function(OM,
+                                     FleetList, 
+                                     type=c('Landings', 'Discards'),
+                                     silent=FALSE) {
+  
+  type <- match.arg(type)
+  
+  for (st in seq_along(OM@Data)) {
+    data <- slot(OM@Data[[st]], type)
+    
+    if (is.null(data@Value)) next
+    
+    for (fl in seq_along(FleetList)) {
+      combine_fleets <- FleetList[[fl]]
+  
+      ind <- match(combine_fleets, data@Name)
+      if (!length(ind) || any(is.na(ind))) next
+      
+      all_units <- data@Units[ind]
+      unique_units <- unique(all_units)
+      if (length(unique_units)>1) 
+        cli::cli_abort(c('x'='{.val {type}}: Units must be the same for all combined fleets',
+                         'i'='Units for Fleets {.val {combine_fleets}}: {.val {all_units}}'))
+      
+      # CV weighted by catch 
+      if (!is.null(data@CV)) {
+        # TODO data@CV[,ind[1]]
+      }
+      data@Value[,ind[1]] <- rowSums(data@Value[,ind, drop=FALSE], na.rm=TRUE)
+      data@Value[,ind[-1]][] <- 1E-15
+      colnames(data@Value)[ind[1]] <- names(FleetList)[fl]
+      data@Name[ind[1]] <- names(FleetList)[fl] 
+    }
+    # drop fleet columns
+    drop_ind <- which(colMeans(data@Value) <= 1E-15)
+    if (length(drop_ind)) {
+      data@Value <- data@Value[,-drop_ind, drop=FALSE]
+      data@Name <- data@Name[-drop_ind]  
+    }
+    
+    
+    slot(OM@Data[[st]], type) <- data
+  }
+  OM
+}
+
+combine_fleets_data <- function(OM, FleetList, silent=FALSE) {
+  if (!length(OM@Data)) return(OM)
+  
+  # Effort TODO
+  
+  # Landings
+  OM <- comine_fleets_data_catch(OM, FleetList, type = 'Landings', silent = silent)
+  
+  # Discards 
+  OM <- comine_fleets_data_catch(OM, FleetList, type = 'Discards', silent = silent)
+
+  # CPUE 
+  OM <- comine_fleets_data_cpue(OM, FleetList, silent = silent)
+
+  OM
+}
+
+combine_fleets_obs <- function(OM, FleetList, silent=FALSE) {
+  
+  for (st in seq_along(OM@Obs)) {
+    obs_list <- OM@Obs[[st]]
+    
+    for (fl in seq_along(FleetList)) {
+      new_name <- names(FleetList)[fl]
+      combine_fleets <- FleetList[[fl]]
+      
+      ind <- match(combine_fleets, names(obs_list))
+      names(obs_list)[ind[1]] <- new_name
+      obs_list[ind[-1]] <- NULL
+    }
+    OM@Obs[[st]] <- obs_list
+  }
+  OM
+}
 
 #' Validate that all fleets in a FleetList exist in the OM
 #'

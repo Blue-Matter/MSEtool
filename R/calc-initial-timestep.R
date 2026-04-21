@@ -65,8 +65,28 @@ CalcDynamicInitial <- function(Hist) {
     # Multiply unfished by initial rec devs and add an Area dimension
     NatAge <- ArrayMultiply(InitAgeClassRecDevs, EquilNumber) |> AddDimension('Area')
     
+    # This is used for OMs where the first historical year is not the 
+    # same as the first historical year for this specific stock,
+    # ie where multiple OMs have been combined - see `CombineOMs` 
+    
+    InitYearCal <- Hist@OM@Stock[[st]]@Misc$InitYear 
+    if (is.null(InitYearCal)) {
+      InitYear <- 1
+    } else {
+      HistYears <- Years(Hist,'H')
+      InitYear <- match(InitYearCal, HistYears)
+    }
+    
     # Multiply by UnfishedDist to distribute across areas
-    Hist@Number[[st]][,,1,] <- ArrayMultiply(NatAge, UnfishedDist)
+    Hist@Number[[st]][,,InitYear,] <- ArrayMultiply(NatAge, UnfishedDist)
+    
+    if (InitYear>1) {
+      # backfill with unfished
+      eq_unfished <- EquilNumber |> AddDimension('Year', val=min(HistYears)) |>
+        ExtendYears(Years=HistYears[HistYears<InitYearCal]) |> AddDimension('Area')
+      
+      ArrayFill(Hist@Number[[st]]) <- eq_unfished
+    }
 
     ##############################################################################
     
@@ -75,9 +95,11 @@ CalcDynamicInitial <- function(Hist) {
 
     if (RecruitTimeStep>1) {
       # fill in recruits for initial time steps
-      for (ts in 2:(RecruitTimeStep-1)) {
+      for (ts_ind in 2:(RecruitTimeStep-1)) {
+        ts <- ts_ind + InitYear - 1
         UnfishedDist <- Hist@OM@Stock[[st]]@Spatial@UnfishedDist[,,1,ts,drop=FALSE] |>
           aperm(c('Sim', 'Age', 'Year', 'Area'))
+        
         Recruit <- Hist@OM@Stock[[st]]@SRR@R0[,ts, drop=FALSE] |>
           AddDimension('Area') |>
           AddDimension('Age') |>
@@ -88,9 +110,9 @@ CalcDynamicInitial <- function(Hist) {
 
     # ---- Initial Depletion ----
     InitialDepletion <- Hist@OM@Stock[[st]]@Depletion@Initial
-    if (length(InitialDepletion) && all(InitialDepletion!=1))  {
+    if (length(InitialDepletion) && all(InitialDepletion!=1))  
       Hist <- DoOptInitialDepletion(Hist, st)
-    }
+    
   }
 
   Hist

@@ -5,21 +5,37 @@
 #' names.
 #'
 #' @param object An object of class `om`.
-#' @param Stocks Optional named character vector or named list mapping current
-#'   stock names to new names (e.g. `c('old_name' = 'new_name')`). If `NULL`,
+#' @param Stocks Optional named character vector or named list mapping new
+#'   stock names to current names (e.g. `c('new_name' = 'old_name')`). If `NULL`,
 #'   stock names are unchanged.
-#' @param Fleets Optional named character vector or named list mapping current
-#'   fleet names to new names. If `NULL`, fleet names are unchanged.
+#' @param Fleets Optional named character vector or named list mapping new
+#'   fleet names to current names. If `NULL`, fleet names are unchanged.
 #'
-#' @return The input`OM` object with stock and/or fleet names updated
+#' @return The input `OM` object with stock and/or fleet names updated
 #'   throughout.
 #'
-#' @details
 #' Renaming is applied recursively: list element names, S4 slot names, and the
 #' `Stock` and `Fleet` dimensions of arrays are all updated wherever a match is
 #' found. Names not present in `Stocks` or `Fleets` are left unchanged, so
 #' partial lookups are safe.
 #' 
+#' The lookup arguments use the convention `NewName = OldName`, e.g.:
+#' `Fleets = list(NewFleet = 'OldFleet')`.
+#' 
+#' @examples
+#' OM <- ExampleOM
+#' StockNames(OM)
+#' FleetNames(OM)
+#' 
+#' OM2 <- Rename(OM, 
+#'               Stocks = list('New Stock Name' = 'Example Stock'),
+#'               Fleets = list('New Fleet Name' = 'Example Fleet')
+#' )
+#' 
+#' StockNames(OM2)
+#' FleetNames(OM2)
+#' 
+#' @seealso [Reorder()]
 #' @export
 Rename <- function(object, Stocks=NULL, Fleets=NULL) {
   
@@ -40,10 +56,12 @@ rename_matched <- function(nms, lookup) {
   if (all(lengths(lookup) != 1))
     cli::cli_abort(c("x"='New names must be length 1'))
   
+  old_names <- as.character(unlist(lookup))
+  new_names <- names(lookup)
   
-  ind <- match(nms, names(lookup))
+  ind <- match(nms, old_names)
   hit <- !is.na(ind)
-  nms[hit] <- as.character(unlist(lookup[ind[hit]]))
+  nms[hit] <- new_names[ind[hit]]
   nms
 }
 

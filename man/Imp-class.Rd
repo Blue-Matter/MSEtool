@@ -6,15 +6,11 @@
 \alias{Imp}
 \title{Implementation Error}
 \usage{
-Imp(object = NULL)
-}
-\arguments{
-\item{object}{An \linkS4class{om} object, or \code{NULL} (default) to create a new
-empty \linkS4class{imp} object.}
+Imp(Name = NULL, TAC = NULL, Effort = NULL, Size = NULL, Misc = list())
 }
 \value{
 \itemize{
-\item If \code{object} is an \linkS4class{om} object, returns \code{object@Imp}.
+\item If \code{Name} is an \linkS4class{om} object, returns \code{object@Imp}.
 \item Otherwise returns a new empty \linkS4class{imp} object.
 }
 }

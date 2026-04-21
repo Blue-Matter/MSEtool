@@ -7,22 +7,36 @@
 \alias{Obs<-}
 \title{Observation Model}
 \usage{
-Obs(object = NULL)
+Obs(
+  Name = NULL,
+  LifeHistory = NULL,
+  Exploitation = NULL,
+  Effort = NULL,
+  Landings = NULL,
+  Discards = NULL,
+  CPUE = NULL,
+  Survey = NULL,
+  LandingsAtAge = NULL,
+  DiscardsAtAge = NULL,
+  LandingsAtSize = NULL,
+  DiscardsAtSize = NULL,
+  Misc = list()
+)
 
 Obs(x) <- value
 }
 \arguments{
-\item{object}{An \linkS4class{om} object, or \code{NULL} (default) to create a new
-empty \linkS4class{obs} object.}
-
 \item{x}{An \linkS4class{om} object.}
 
 \item{value}{An \linkS4class{obs} object to assign.}
+
+\item{object}{An \linkS4class{om} object, or \code{NULL} (default) to create a new
+empty \linkS4class{obs} object.}
 }
 \value{
 \itemize{
-\item \code{Obs()}: if \code{object} is an \linkS4class{om} object, returns \code{object@Obs}.
-Otherwise returns a new empty \linkS4class{obs} object.
+\item \code{Obs()}: if \code{Name} is an \linkS4class{om} object, returns \code{Name@Obs}.
+Otherwise returns a new \linkS4class{obs} object.
 \item \verb{Obs<-}: returns \code{x} with the \code{Obs} slot replaced.
 }
 }
@@ -42,7 +56,8 @@ An \linkS4class{obs} object can be attached to an \linkS4class{om} object with
 \section{Slots}{
 
 \describe{
-\item{\code{Name}}{Character. Name of the observation model.}
+\item{\code{Name}}{Character. Name of the observation model. Or an \linkS4class{om} object,
+to return the contents of the \code{Obs} slot.}
 
 \item{\code{LifeHistory}}{An \linkS4class{lifehistoryobs} object. Observation error on
 life-history parameters (e.g., growth, maturity).}

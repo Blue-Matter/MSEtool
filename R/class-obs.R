@@ -4,7 +4,8 @@
 #' from the operating model, including observation error, bias, and sampling
 #' structure for each data type.
 #'
-#' @slot Name Character. Name of the observation model.
+#' @slot Name Character. Name of the observation model. Or an [om-class] object,
+#' to return the contents of the `Obs` slot. 
 #' @slot LifeHistory An [lifehistoryobs-class] object. Observation error on
 #'   life-history parameters (e.g., growth, maturity).
 #' @slot Exploitation An [exploitationobs-class] object. Observation error on
@@ -50,7 +51,7 @@
 setClass(
   "obs",
   slots = c(
-    Name           = "character",
+    Name           = "char.null",
     LifeHistory    = "lifehistoryobs",
     Exploitation   = "exploitationobs",
     Effort         = "effortobs",
@@ -71,15 +72,42 @@ setClass(
 #' @param object An [om-class] object, or `NULL` (default) to create a new
 #'   empty [obs-class] object.
 #' @return
-#' - `Obs()`: if `object` is an [om-class] object, returns `object@Obs`.
-#'   Otherwise returns a new empty [obs-class] object.
+#' - `Obs()`: if `Name` is an [om-class] object, returns `Name@Obs`.
+#'   Otherwise returns a new [obs-class] object.
 #' - `Obs<-`: returns `x` with the `Obs` slot replaced.
 #' @export
-Obs <- function(object = NULL) {
-  if (inherits(object, "om"))
-    return(object@Obs)
+Obs <- function(Name = NULL,
+                LifeHistory    = NULL,
+                Exploitation   = NULL,
+                Effort         = NULL,
+                Landings       = NULL,
+                Discards       = NULL,
+                CPUE           = NULL,
+                Survey         = NULL,
+                LandingsAtAge  = NULL,
+                DiscardsAtAge  = NULL,
+                LandingsAtSize = NULL,
+                DiscardsAtSize = NULL,
+                Misc           = list()) {
+  
+  if (inherits(Name, "om"))
+    return(Name@Obs)
   
   .Object <- methods::new("obs")
+  
+  if (!is.null(Name))           .Object@Name           <- Name
+  if (!is.null(LifeHistory))    .Object@LifeHistory    <- LifeHistory
+  if (!is.null(Exploitation))   .Object@Exploitation   <- Exploitation
+  if (!is.null(Effort))         .Object@Effort         <- Effort
+  if (!is.null(Landings))       .Object@Landings       <- Landings
+  if (!is.null(Discards))       .Object@Discards       <- Discards
+  if (!is.null(CPUE))           .Object@CPUE           <- CPUE
+  if (!is.null(Survey))         .Object@Survey         <- Survey
+  if (!is.null(LandingsAtAge))  .Object@LandingsAtAge  <- LandingsAtAge
+  if (!is.null(DiscardsAtAge))  .Object@DiscardsAtAge  <- DiscardsAtAge
+  if (!is.null(LandingsAtSize)) .Object@LandingsAtSize <- LandingsAtSize
+  if (!is.null(DiscardsAtSize)) .Object@DiscardsAtSize <- DiscardsAtSize
+  
   methods::validObject(.Object)
   .Object
 }

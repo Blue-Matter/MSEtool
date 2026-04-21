@@ -9,25 +9,44 @@ Rename(object, Stocks = NULL, Fleets = NULL)
 \arguments{
 \item{object}{An object of class \code{om}.}
 
-\item{Stocks}{Optional named character vector or named list mapping current
-stock names to new names (e.g. \code{c('old_name' = 'new_name')}). If \code{NULL},
+\item{Stocks}{Optional named character vector or named list mapping new
+stock names to current names (e.g. \code{c('new_name' = 'old_name')}). If \code{NULL},
 stock names are unchanged.}
 
-\item{Fleets}{Optional named character vector or named list mapping current
-fleet names to new names. If \code{NULL}, fleet names are unchanged.}
+\item{Fleets}{Optional named character vector or named list mapping new
+fleet names to current names. If \code{NULL}, fleet names are unchanged.}
 }
 \value{
-The input\code{OM} object with stock and/or fleet names updated
+The input \code{OM} object with stock and/or fleet names updated
 throughout.
+
+Renaming is applied recursively: list element names, S4 slot names, and the
+\code{Stock} and \code{Fleet} dimensions of arrays are all updated wherever a match is
+found. Names not present in \code{Stocks} or \code{Fleets} are left unchanged, so
+partial lookups are safe.
+
+The lookup arguments use the convention \code{NewName = OldName}, e.g.:
+\code{Fleets = list(NewFleet = 'OldFleet')}.
 }
 \description{
 Renames stocks and/or fleets throughout an operating model (OM) object,
 updating all names recursively across S4 slots, lists, and array dimension
 names.
 }
-\details{
-Renaming is applied recursively: list element names, S4 slot names, and the
-\code{Stock} and \code{Fleet} dimensions of arrays are all updated wherever a match is
-found. Names not present in \code{Stocks} or \code{Fleets} are left unchanged, so
-partial lookups are safe.
+\examples{
+OM <- ExampleOM
+StockNames(OM)
+FleetNames(OM)
+
+OM2 <- Rename(OM, 
+              Stocks = list('New Stock Name' = 'Example Stock'),
+              Fleets = list('New Fleet Name' = 'Example Fleet')
+)
+
+StockNames(OM2)
+FleetNames(OM2)
+
+}
+\seealso{
+\code{\link[=Reorder]{Reorder()}}
 }

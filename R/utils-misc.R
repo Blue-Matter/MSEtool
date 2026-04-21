@@ -302,6 +302,9 @@ isNewObject <- function(object) {
     }
     
   }
+  
+  if ('Name' %in% slotNames(object))
+    object@Name <- NULL
 
   identical(object, newobj)
   

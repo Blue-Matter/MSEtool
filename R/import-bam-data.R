@@ -69,7 +69,8 @@ ImportBAMData <- function(OM,
                           BAMdata,
                           SurveyNames = NULL,
                           UnitsLandings = NULL,
-                          UnitsDiscards = NULL) {
+                          UnitsDiscards = NULL,
+                          DiscFleets    = NULL) {
   
   # create new data object 
   OM@Data <- MakeNamedList(StockNames(OM), Data(Name = OM@Stock[[1]]@Name))
@@ -77,6 +78,8 @@ ImportBAMData <- function(OM,
   # Landings & Discards
   OM <- ImportBAM_Catch(OM, BAMdata, Units = UnitsLandings, type = 'Landings') 
   OM <- ImportBAM_Catch(OM, BAMdata, Units = UnitsDiscards, type = 'Discards')
+  if (!is.null(DiscFleets)) 
+    OM@Data[[1]]@Discards <- Rename_Fleet(object=OM@Data[[1]]@Discards, Fleets=as.list(strip_between_periods(DiscFleets)))
   
   # CPUE
   OM <- ImportBAM_CPUE(OM, BAMdata)
@@ -90,6 +93,8 @@ ImportBAMData <- function(OM,
 
   OM
 }
+
+strip_between_periods <- function(x) sub("^[^.]*\\.([^.]*)\\..*$", "\\1", x)
 
 extract_cv <- function(t.series, obs.names) {
   cv.names <- gsub(".ob", "", paste0("cv.", obs.names))
@@ -141,7 +146,8 @@ ImportBAM_Catch <- function(OM, BAMdata, Units, type=c('Landings', 'Discards')) 
   }
   
   fleet.ind <- which(catch.data.names %in% fleet.names)
-  
+  catch.names <- catch.names[fleet.ind]
+  catch.data.names <- catch.data.names[fleet.ind]
   n.catch <- length(catch.names)
   
   if (!n.catch) return(OM)

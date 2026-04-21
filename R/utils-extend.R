@@ -251,6 +251,7 @@ ExtendYears <- function(array, Years = NULL, default = NULL,
   # Back fill years from first existing year
   if (length(back_years) && backfill) {
     FirstYear <- abind::asub(array, 1, year_dim, drop = FALSE)
+    if (!is.null(default)) FirstYear[] <- default
     abind::afill(OutArray) <- extend_along_dim(FirstYear, year_dim, back_years)
   }
   
