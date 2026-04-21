@@ -50,12 +50,14 @@ CurrentCatch <- function(Data) {
   CheckCatch(Data) 
   
   LastHistLandings <- Data@Landings@Value[LastHistYearInd(Data), ]
-  LastHistDiscards <- Data@Discards@Value[LastHistYearInd(Data), ]
-  LastHistRemovals <- LastHistLandings + LastHistDiscards
-    
+  
   if (is.null(LastHistLandings) || !length(LastHistLandings))
     return(Advice())
   
+  LastHistDiscards <- Data@Discards@Value[LastHistYearInd(Data), ]
+  LastHistRemovals <- dplyr::bind_rows(LastHistLandings, LastHistDiscards)
+  LastHistRemovals <- colSums(LastHistRemovals, na.rm=TRUE)
+    
   Advice(TAC=LastHistRemovals)
 }
 class(CurrentCatch) <- 'mp'

@@ -56,13 +56,16 @@ ConditionObs_Index <- function(Hist,
   Sim_Number_List <- Hist@Number[stocks]
   
   for (fl in 1:nFleet) {
-    Index_Obs <- slot(Hist@OM@Obs[[i]][[Indices_Name[fl]]],type)
+    ObsObject <- Hist@OM@Obs[[i]][[Indices_Name[fl]]]
+    if (is.null(ObsObject))
+      cli::cli_abort("No `Obs` object found for {.val {type}} Data: {.val {Indices_Name[fl]}}")
+    
+    Index_Obs <- slot(ObsObject,type)
     
     SelectivityAtAge_Data <- slot(FisheryData, type)@Selectivity[[fl]]
     
     # List of selectivty-at-age by stock for this fleet
     SelectivityAtAgeList <- MakeNamedList(StockNames(Hist@OM)[stocks])
-    
     
     if (is.character(SelectivityAtAge_Data)) {
       for (st in seq_along(stocks)) {
@@ -85,16 +88,24 @@ ConditionObs_Index <- function(Hist,
           
         } else if (SelectivityAtAge_Data == 'Obs') {
           # grab selectivity from `Obs`
-          SelectivityAtAgeList[[st]] <- Index_Obs@Selectivity[[st]] |>  
-            AddDimension("Area") |> 
-            ExtendAreas(Areas) |>
-            ReduceDims() 
+          if (inherits(Index_Obs@Selectivity, 'array')) {
+            SelectivityAtAgeList[[st]] <- Index_Obs@Selectivity |>  
+              AddDimension("Area") |> 
+              ExtendAreas(Areas) |>
+              ReduceDims() 
+          } else if  (inherits(Index_Obs@Selectivity, 'list')) {
+            SelectivityAtAgeList[[st]] <- Index_Obs@Selectivity[[st]] |>  
+              AddDimension("Area") |> 
+              ExtendAreas(Areas) |>
+              ReduceDims() 
+          } 
+          
         } 
       }
     } else {
       # Use fleet selectivity directly (CPUE)
       SelectivityAtAgeList <- purrr::map(Hist@OM@Fleet[stocks], \(stock) {
-        stock[[fl]]@Selectivity@MeanAtAge |>
+        stock[[Indices_Name[fl]]]@Selectivity@MeanAtAge |>
           ArraySubsetYear(HistYears) |> 
           ReduceDims()
       })
@@ -224,12 +235,12 @@ ConditionObs_Index <- function(Hist,
     
     Index_Obs@Stats <- Stats
     
-    if (is.null(Index_Obs@TruncSD)) {
+    if (is.null(Index_Obs@TruncSD)) 
       Index_Obs@TruncSD <- 2
-    }
+    
     
     logProjResids <- GenResiduals(SD = Stats$SD, 
-                                  AC = Stats$SD, 
+                                  AC = Stats$AC, 
                                   Years = ProjYears, 
                                   TruncSD = Index_Obs@TruncSD,
                                   nSeasons = nSeasons, 
@@ -287,7 +298,10 @@ CalcIndexResiduals <- function(ObservedIndex, SimulatedIndex, beta = 1) {
   not_na <- !is.na(StObserved)
   
   # Standardize simulated index using same year mask
-  StSimulated <- SimulatedIndex / mean(SimulatedIndex[, not_na, drop = FALSE], na.rm = TRUE)
+  n_ts <- ncol(SimulatedIndex)
+  StObserved <- StObserved[seq_len(n_ts)]
+  
+  StSimulated <- SimulatedIndex / mean(SimulatedIndex[, not_na[seq_len(n_ts)], drop = FALSE], na.rm = TRUE)
   
   # Compute log residuals
   LogResiduals <- -sweep(log(StSimulated), 2, log(StObserved), FUN = "-")

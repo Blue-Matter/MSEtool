@@ -29,6 +29,22 @@
 #'   
 #' @param RetSelFleets Optional named character vector mapping retain fleet
 #'   names to alternative retention selectivity series.
+#'   
+#' @param incData Logical. Include `Data` in the input? Default = `TRUE`
+#' @param SurveyNames A character vector of user-facing names for survey
+#'   indices detected in `BAMdata`. Must have the same length as the number of
+#'   survey indices found (i.e. indices not matched to any fleet name). Use
+#'   this to override the default names derived from column names. 
+#'   Used by [ImportBAMData()].
+#' @param UnitsLandings A character vector of length equal to the number of
+#'   landings fleets detected. Each element must be one of:
+#'   - `"1000 lb"` — values will be converted from thousands of pounds to kg.
+#'   - `"1000 n"` — values will be multiplied by 1,000 (number in thousands).
+#'   Used by [ImportBAMData()].
+#' @param UnitsDiscards A character vector of length equal to the number of
+#'   discard fleets detected. Accepts the same values as `UnitsLandings`.
+#'   Used by [ImportBAMData()].
+#'     
 #' @param populate Logical. If `TRUE` (default), calls [PopulateOM()] to
 #'   populate the OM after construction.
 #'   
@@ -39,7 +55,6 @@
 #'   a BAM output list of class `BAMdata` (for `type = 'rdat'`).
 #'   `ListBAMStocks()` returns a character vector of available stock names.
 #'
-#' @details
 #' `ImportBAM()` requires the `bamExtras` package, which can be installed with
 #' `pak::pkg_install('nikolaifish/bamExtras')`.
 #'
@@ -55,6 +70,8 @@
 #' should be named character vectors where names are the retain fleet names and
 #' values are the corresponding BAM fleet/selectivity names to use instead of
 #' the defaults.
+#' 
+#' @seealso [ImportBAMData()]
 #'
 #' @export
 ImportBAM <- function(Stock='Red Snapper',     
@@ -66,6 +83,10 @@ ImportBAM <- function(Stock='Red Snapper',
                       DiscFleets=NULL,
                       DiscSelFleets=NULL,
                       RetSelFleets=NULL,
+                      incData = TRUE,
+                      SurveyNames=NULL,
+                      UnitsLandings=NULL,
+                      UnitsDiscards=NULL,
                       populate=TRUE, 
                       silent=FALSE) {
   
@@ -124,7 +145,15 @@ ImportBAM <- function(Stock='Red Snapper',
   
   
   
-  # TODO - Data
+  if (incData) {
+    if (!silent) cli::cli_alert("Importing Data")
+    OM <- ImportBAMData(OM, 
+                        BAMdata,
+                        SurveyNames = SurveyNames,
+                        UnitsLandings = UnitsLandings,
+                        UnitsDiscards = UnitsDiscards)
+    
+  }
   
   if (populate) 
     OM <- PopulateOM(OM, silent = TRUE)

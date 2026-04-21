@@ -188,6 +188,7 @@ CalcResidualStats <- function(LogResiduals, nSeasons=1) {
     }))
     
     res <- res[valid_seasons]
+    res[!is.finite(res)] <- NA
 
     # Compute autocorrelation for each contiguous block of non-NA values
     non_na_idx <- which(!is.na(res))
@@ -199,6 +200,7 @@ CalcResidualStats <- function(LogResiduals, nSeasons=1) {
     }
     
     SD[s] <- sd(res, na.rm = TRUE)
+    
   }
   
   data.frame(Sim = seq_len(nSim), AC = AC, SD = SD, NA_Season=I(NA_Season))

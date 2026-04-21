@@ -6,7 +6,7 @@
 #' 
 #' @slot Name Optional character string. Name of the dataset.
 #' @slot Value Numeric array of observed catch values, with dimensions
-#'   `[nFleet, nYear]`, where `nYear` represents the total number of time steps.
+#'   `[nYear, nFleet]`, where `nYear` represents the total number of time steps.
 #' @slot CV Numeric array of coefficients of variation (CVs) for the catch
 #'   observations, matching the dimensions of `Value`.
 #' @slot Units Optional character string. Units of catch measurement
@@ -39,6 +39,19 @@ setClass(
 
 #' @rdname catchdata
 #' @export
-CatchData <- function() {
-  new('catchdata')
+CatchData <- function(Name = '',
+                      Value = NULL,
+                      CV = NULL,
+                      Units = NULL, 
+                      Ref = NULL,
+                      RefCV = NULL) {
+  obj <- new('catchdata')
+  obj@Name <- Name
+  obj@Value <- Value
+  obj@CV <- CV 
+  obj@Units <- Units
+  obj@Ref <- Ref
+  obj@RefCV <- RefCV
+  obj
+  
 }

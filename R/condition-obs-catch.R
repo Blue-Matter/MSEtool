@@ -33,16 +33,18 @@ ConditionObs_Catch <- function(Hist,
   nFleet <- nFleet(Hist)
   nSim <- nSim(Hist)
   
+  fleetnames <- FleetNames(Hist)
+  
   ObservedCatch_Fleet <- slot(FisheryData, type)@Value |> ArraySubsetYear(Years=HistYears)
   
   if (is.null(ObservedCatch_Fleet)) return(Hist)
   
   # Checks 
-  if (ncol(ObservedCatch_Fleet) != nFleet) {
-    cli::cli_alert_warning('Observed {.val {type}} data not available for all fleets')
-    cli::cli_alert('Not conditioning {.val {type}} observation error for data set {.val {FisheryData@Name}}')
-    return(Hist)
-  }
+  # if (ncol(ObservedCatch_Fleet) != nFleet) {
+  #   cli::cli_alert_warning('Observed {.val {type}} data not available for all fleets')
+  #   cli::cli_alert('Not conditioning {.val {type}} observation error for data set {.val {FisheryData@Name}}')
+  #   return(Hist)
+  # }
   
   
   # catch number [stock] sim, age, year, fleet, area
@@ -76,7 +78,6 @@ ConditionObs_Catch <- function(Hist,
   }) |> List2Array('Stock', pos=2) |>
     apply(c('Sim', 'Year', 'Fleet'), sum)
   
-  
   # Fleet Units 
   FleetUnits <- slot(FisheryData,type)@Units
   if (is.null(FleetUnits)) FleetUnits <- 'Biomass'
@@ -84,8 +85,13 @@ ConditionObs_Catch <- function(Hist,
   
   # Loop over fleets and assign values to `Obs`
   for (fl in 1:nFleet) {
-    ObservedCatch <- ObservedCatch_Fleet[,fl]
-    CatchObs <- slot(Hist@OM@Obs[[i]][[fl]], type)
+    fleet_name <-  fleetnames[fl]
+    fl_ind <- match(fleet_name, colnames(ObservedCatch_Fleet))
+    if (is.na(fl_ind))  next()
+    
+    ObservedCatch <- ObservedCatch_Fleet[,fl_ind]
+    CatchObs <- slot(Hist@OM@Obs[[i]][[fleet_name]], type)
+   
     Units <- FleetUnits[fl]
     CatchObs@Units <- FleetUnits[fl]
     

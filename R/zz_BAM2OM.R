@@ -1,9 +1,4 @@
 
-# convert weight to kg 
-convert_units <- function(rdat) {
-  rdat$a.series$weight <- rdat$a.series$wgt.mt * 1000
-  rdat
-}
 
 #' Import a multi-stock, multi-fleet OM from a BAM object
 #'
@@ -26,7 +21,8 @@ BAM2MOM <- function(rdat, nsim = 48, proyears = 50, interval = 1,
   parms <- rdat[["parms"]]
   
   # Convert all weights to metric (kg)
-  rdat <- convert_units(rdat)
+  rdat$a.series$weight <- rdat$a.series$wgt.mt * 1000
+  
   
   # Grab name of stock
   np <- 1

@@ -7,7 +7,14 @@
 \alias{CatchData}
 \title{\code{catchdata} Class}
 \usage{
-CatchData()
+CatchData(
+  Name = "",
+  Value = NULL,
+  CV = NULL,
+  Units = NULL,
+  Ref = NULL,
+  RefCV = NULL
+)
 }
 \value{
 \code{CatchData()} returns a \code{catchdata} object.
@@ -23,7 +30,7 @@ and \code{Discards} slots of a \linkS4class{data} object.
 \item{\code{Name}}{Optional character string. Name of the dataset.}
 
 \item{\code{Value}}{Numeric array of observed catch values, with dimensions
-\verb{[nFleet, nYear]}, where \code{nYear} represents the total number of time steps.}
+\verb{[nYear, nFleet]}, where \code{nYear} represents the total number of time steps.}
 
 \item{\code{CV}}{Numeric array of coefficients of variation (CVs) for the catch
 observations, matching the dimensions of \code{Value}.}

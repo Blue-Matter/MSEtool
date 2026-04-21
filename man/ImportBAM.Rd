@@ -16,6 +16,10 @@ ImportBAM(
   DiscFleets = NULL,
   DiscSelFleets = NULL,
   RetSelFleets = NULL,
+  incData = TRUE,
+  SurveyNames = NULL,
+  UnitsLandings = NULL,
+  UnitsDiscards = NULL,
   populate = TRUE,
   silent = FALSE
 )
@@ -53,6 +57,26 @@ names to the selectivity series to use for discards.}
 \item{RetSelFleets}{Optional named character vector mapping retain fleet
 names to alternative retention selectivity series.}
 
+\item{incData}{Logical. Include \code{Data} in the input? Default = \code{TRUE}}
+
+\item{SurveyNames}{A character vector of user-facing names for survey
+indices detected in \code{BAMdata}. Must have the same length as the number of
+survey indices found (i.e. indices not matched to any fleet name). Use
+this to override the default names derived from column names.
+Used by \code{\link[=ImportBAMData]{ImportBAMData()}}.}
+
+\item{UnitsLandings}{A character vector of length equal to the number of
+landings fleets detected. Each element must be one of:
+\itemize{
+\item \code{"1000 lb"} — values will be converted from thousands of pounds to kg.
+\item \code{"1000 n"} — values will be multiplied by 1,000 (number in thousands).
+Used by \code{\link[=ImportBAMData]{ImportBAMData()}}.
+}}
+
+\item{UnitsDiscards}{A character vector of length equal to the number of
+discard fleets detected. Accepts the same values as \code{UnitsLandings}.
+Used by \code{\link[=ImportBAMData]{ImportBAMData()}}.}
+
 \item{populate}{Logical. If \code{TRUE} (default), calls \code{\link[=PopulateOM]{PopulateOM()}} to
 populate the OM after construction.}
 
@@ -66,16 +90,7 @@ populate the OM after construction.}
 \code{ImportBAM()} returns a populated OM object. \code{GetBAMOutput()} returns
 a BAM output list of class \code{BAMdata} (for \code{type = 'rdat'}).
 \code{ListBAMStocks()} returns a character vector of available stock names.
-}
-\description{
-Imports output from the Beaufort Assessment Model
-(\href{https://repository.library.noaa.gov/view/noaa/4847}{BAM}) and converts it
-into an operating model (\code{\link[=OM]{OM()}}) object. Stock and fleet objects are populated
-from BAM parameters and time series, including selectivity, retention,
-discard mortality, recruitment deviations, and stock-recruitment
-relationships.
-}
-\details{
+
 \code{ImportBAM()} requires the \code{bamExtras} package, which can be installed with
 \code{pak::pkg_install('nikolaifish/bamExtras')}.
 
@@ -91,4 +106,15 @@ When \code{DiscFleets}, \code{DiscSelFleets}, or \code{RetSelFleets} are provide
 should be named character vectors where names are the retain fleet names and
 values are the corresponding BAM fleet/selectivity names to use instead of
 the defaults.
+}
+\description{
+Imports output from the Beaufort Assessment Model
+(\href{https://repository.library.noaa.gov/view/noaa/4847}{BAM}) and converts it
+into an operating model (\code{\link[=OM]{OM()}}) object. Stock and fleet objects are populated
+from BAM parameters and time series, including selectivity, retention,
+discard mortality, recruitment deviations, and stock-recruitment
+relationships.
+}
+\seealso{
+\code{\link[=ImportBAMData]{ImportBAMData()}}
 }

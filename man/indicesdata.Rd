@@ -14,7 +14,7 @@ IndicesData(
   Units = NULL,
   Ref = NULL,
   RefCV = NULL,
-  Timing = NULL,
+  Timing = 0,
   Selectivity = NULL,
   Misc = list()
 )
@@ -34,7 +34,7 @@ the \code{CPUE} and \code{Survey} slots of a \linkS4class{data} object.
 \item{\code{Name}}{Optional character string. Name of the index.}
 
 \item{\code{Value}}{Numeric array of observed index values, with dimensions
-\verb{[nIndex, nYear]}, where \code{nYear} represents the total number of time steps.}
+\verb{[nYear, nIndex]}, where \code{nYear} represents the total number of time steps.}
 
 \item{\code{CV}}{Numeric array of coefficients of variation (CVs) for the index
 observations, matching the dimensions of \code{Value}.}

@@ -20,7 +20,7 @@
 #' @return Numeric vector of optimized effort per fleet
 #' @keywords internal
 OptEffort <- function(Proj, Year, TSIndex, sim, stocks, TAC_by_Fleet, TACType,
-                      minEffort = 1e-15, tol = 1e-2, maxIter = 50) {
+                      minEffort = 1e-15, tol = 1e-2, maxIter = 200) {
   
   TACType <- match.arg(TACType, c('Removals', 'Landings'))
   

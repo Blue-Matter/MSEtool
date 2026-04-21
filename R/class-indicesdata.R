@@ -7,7 +7,7 @@
 #'
 #' @slot Name Optional character string. Name of the index.
 #' @slot Value Numeric array of observed index values, with dimensions
-#'   `[nIndex, nYear]`, where `nYear` represents the total number of time steps.
+#'   `[nYear, nIndex]`, where `nYear` represents the total number of time steps.
 #' @slot CV Numeric array of coefficients of variation (CVs) for the index
 #'   observations, matching the dimensions of `Value`.
 #' @slot Units Optional character string. Units of the index
@@ -54,7 +54,7 @@ IndicesData <- function(Name = NULL,
                         Units = NULL, 
                         Ref = NULL,
                         RefCV = NULL, 
-                        Timing = NULL,
+                        Timing = 0,
                         Selectivity = NULL,
                         Misc = list()) {
   obj <- new('indicesdata')
