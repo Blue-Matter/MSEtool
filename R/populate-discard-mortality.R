@@ -101,6 +101,10 @@ PopulateDiscardMortality <- function(DiscardMortality,
   
   DiscardMortality <- MeanAtLength2MeanAtAge(DiscardMortality, Length)
   
+  DiscardMortality@MeanAtAge <- AddAtAgeDimnames(DiscardMortality@MeanAtAge, 
+                                          Ages, Years,
+                                          name='DiscardMortality')
+  
   if (CalcAtLength) {
     DiscardMortality <- MeanAtAge2MeanAtLength(DiscardMortality, Length,
                                                replace = replace, 

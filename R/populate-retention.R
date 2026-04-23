@@ -135,6 +135,10 @@ PopulateRetention <- function(Retention,
   Retention <- MeanAtLength2MeanAtAge(Retention, Length, max1 = FALSE)
   Retention <- MeanAtWeight2MeanAtAge(Retention, Weight, max1 = FALSE)
   
+  Retention@MeanAtAge <- AddAtAgeDimnames(Retention@MeanAtAge, 
+                                            Ages, Years,
+                                            name='Retention')
+  
   if (CalcAtLength && !is.null(Length@ALK)) {
     Retention <- MeanAtAge2MeanAtLength(
       object = Retention, 

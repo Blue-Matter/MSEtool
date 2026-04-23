@@ -139,61 +139,9 @@ PopulateSelectivity <- function(Selectivity,
     max1 = TRUE
   )
   
-  # Add dimnames
-  if (!is.null(Selectivity@MeanAtAge)) {
-    dd <- dim(Selectivity@MeanAtAge)
-    AgeClasses <- Ages@Classes
-    nAge <- length(AgeClasses)
-    if (is.null(dd)) {
-      if (length(Selectivity@MeanAtAge) != nAge) 
-        cli::cli_abort(c('x'='If `Selectivity@MeanAtAge` is numeric vector it must be length `nAge`',
-                         'i'='`length(Selectivity@MeanAtAge` = {.val { length(Selectivity@MeanAtAge)}}',
-                         'i'='`nAge` = {.val { nAge}}'
-        )
-        )
-      Selectivity@MeanAtAge <- array(Selectivity@MeanAtAge, dim=c(1,nAge,1),
-                                     dimnames = list(
-                                       Sim=1,
-                                       Age=AgeClasses,
-                                       Year=min(Years)
-                                     ))
-      
-    } else {
-      if (dd[2]!=nAge)
-        cli::cli_abort(c('x'='If `Selectivity@MeanAtAge` is an array, the second dimension must be length `nAge`',
-                         'i'='`dim(Selectivity@MeanAtAge)` = {.val { dim(Selectivity@MeanAtAge)}}',
-                         'i'='`nAge` = {.val { nAge}}')
-        )
-      
-      dnames <- dimnames(Selectivity@MeanAtAge)
-      if (is.null(dnames)) {
-        if (length(dd)==2) {
-          dimnames(Selectivity@MeanAtAge) <- list(
-            Sim=seq_len(dd[1]),
-            Age=AgeClasses
-          )
-          Selectivity@MeanAtAge <- AddDimension(Selectivity@MeanAtAge, 'Year', val=min(Years))
-          
-        } else if (length(dd)==3) {
-          dimnames(Selectivity@MeanAtAge) <- list(
-            Sim=seq_len(dd[1]),
-            Age=AgeClasses,
-            Year=Years[seq_len(dd[3])]
-          )
-          
-        } else if (length(dd)==4) {
-          dimnames(Selectivity@MeanAtAge) <- list(
-            Sim=seq_len(dd[1]),
-            Age=AgeClasses,
-            Year=Years[seq_len(dd[3])],
-            Area=seq_len(dd[4])
-          )
-        }
-      }
-    }
-    
-  }
-  
+  Selectivity@MeanAtAge <- AddAtAgeDimnames(Selectivity@MeanAtAge, 
+                                            Ages, Years,
+                                            name='Selectivity')
   
   if (CalcAtLength && is.null(Selectivity@MeanAtWeight)) {
     Selectivity <- MeanAtAge2MeanAtLength(
@@ -271,4 +219,63 @@ FindL50 <- function(Maturity) {
   }
   
   apply(Maturity@MeanAtLength, c('Sim', 'Year'), FindL50_vec)
+}
+
+
+AddAtAgeDimnames <- function(MeanAtAge, Ages, Years, name='Selectivity') {
+  dd <- dim(MeanAtAge)
+  dnames <- dimnames(MeanAtAge)
+  if (!is.null(dnames)) 
+    return(MeanAtAge)
+  
+  AgeClasses <- Ages@Classes
+  nAge <- length(AgeClasses)
+  
+  if (is.null(dd)) {
+    len <- length(MeanAtAge)
+    if (len != nAge) 
+      cli::cli_abort(c('x'='If `{name}@MeanAtAge` is numeric vector it must be length `nAge`',
+                       'i'='`length({name}@MeanAtAge)` = {.val {len}}',
+                       'i'='`nAge` = {.val {nAge}}'
+      )
+      )
+    
+    MeanAtAge <- array(MeanAtAge, dim=c(1,nAge,1),
+                       dimnames = list(
+                         Sim=1,
+                         Age=AgeClasses,
+                         Year=min(Years)
+                       ))
+    return(MeanAtAge)
+  }
+  
+  if (dd[2]!=nAge)
+    cli::cli_abort(c('x'='If `{name}@MeanAtAge` is an array, the second dimension must be length `nAge`',
+                     'i'='`dim({name}@MeanAtAge)` = {.val { dd}}',
+                     'i'='`nAge` = {.val { nAge}}')
+    )
+  
+  if (length(dd)==2) {
+    dimnames(MeanAtAge) <- list(
+      Sim=seq_len(dd[1]),
+      Age=AgeClasses
+    )
+    MeanAtAge <- AddDimension(MeanAtAge, 'Year', val=min(Years))
+    
+  } else if (length(dd)==3) {
+    dimnames(MeanAtAge) <- list(
+      Sim=seq_len(dd[1]),
+      Age=AgeClasses,
+      Year=Years[seq_len(dd[3])]
+    )
+    
+  } else if (length(dd)==4) {
+    dimnames(MeanAtAge) <- list(
+      Sim=seq_len(dd[1]),
+      Age=AgeClasses,
+      Year=Years[seq_len(dd[3])],
+      Area=seq_len(dd[4])
+    )
+  }
+  MeanAtAge
 }
