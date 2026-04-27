@@ -103,12 +103,11 @@ InitializeTimeSeries <- function(Hist,
   
   if (!isProj) {
     for (fl in seq_len(nFleet(OM))) {
-      Hist@Effort[, , fl] <-
-        ExtendSims(OM@Fleet[[1]][[fl]]@Effort@Effort, nSim)
+      Hist@Effort[, , fl] <- ExtendSims(OM@Fleet[[1]][[fl]]@Effort@Effort, nSim)
       
-      Hist@Distribution[, , fl, ] <-
-        Extend(OM@Fleet[[1]][[fl]]@Effort@Distribution,
-               nSim, NULL, HistYears, Areas)
+      dist <- OM@Fleet[[1]][[fl]]@Effort@Distribution
+      if (!is.null(dist)) 
+        Hist@Distribution[, , fl, ] <- Extend(dist, nSim, NULL, HistYears, Areas)
     }
   }
   

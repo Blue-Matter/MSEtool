@@ -198,106 +198,16 @@ PopulateFleetList <- function(OM, silent = FALSE, force = FALSE) {
     }
   }
   
-  OM@Fleet  <- ProcessFleetEffort(FleetList, silent=TRUE)
-  OM
+  OM@Fleet <- FleetList
+  
+  StandardizeEffort(OM, silent=silent)
 }
 
-ProcessFleetEffort <- function(FleetList, silent=FALSE) {
-  
-  # For any given Fleet, Effort should be the same for all Stocks 
-  # and all areas.
-  # Deviations in Effort assumed to be differences in stock- and/or time-varying
-  # fishing efficiency (catchability)
-  
-  nStock <- length(FleetList)
-  if (nStock == 1) {
-    return(FleetList)
-  }
-  
-  nFleet <- length(FleetList[[1]])
-  if (nFleet == 1) {
-    return(FleetList)
-  }
-  
-  for (fl in seq_len(nFleet)) {
-    Fleet_fl_all_stocks <- purrr::map(FleetList, `[[`, fl)
-    
-    # List of Effort Objects
-    EffortObjectList <- purrr::map(Fleet_fl_all_stocks, slot, 'Effort')
-    qObjectList <- purrr::map(Fleet_fl_all_stocks, slot, 'Catchability')
-    
-    # Check Effort is the same for all 
-    EffortArrayList <- purrr::map(EffortObjectList, slot, "Effort")
-    qArrayList <- purrr::map(qObjectList, slot, "Efficiency")
-    DistArrayList <- purrr::map(EffortObjectList, slot, "Distribution")
-    
-    # Get Effort and Catchability dimensions and expand if needed
-    EffortDims <- purrr::map(EffortArrayList, dim)
-    qDims <- purrr::map(qArrayList, dim)
-    
-    # Sim 
-    EffSim <- vapply(EffortDims, `[`, numeric(1), 1L) |> max()
-    qSim <- vapply(qDims, `[`, numeric(1), 1L) |> max()
-    nSim <- max(c(EffSim, qSim))
-    
-    # Year
-    EffYears <- purrr::map(EffortArrayList, \(stock) {
-      dimnames(stock)[["Year"]]
-    }) |> unlist() |> unique()
-    
-    qYears <- purrr::map(qArrayList, \(stock) {
-      dimnames(stock)[["Year"]]
-    }) |> unlist() |> unique()
-    
-    Years <- c(EffYears, qYears) |> unique() |> as.numeric() |> sort() 
-    
-    EffortArrayList <- purrr::map(EffortArrayList, \(stock) {
-      Extend(stock, nSim, NULL, Years)
-    })
-    qArrayList <- purrr::map(qArrayList, \(stock) {
-      Extend(stock, nSim, NULL, Years)
-    })
-    
-    tol <- 1e-4  
-    # Stock 1 Effort assumed real Effort
-    for (st in 2:nStock) {
-      # Check Distribution - if populated, should be identical across stocks
-      if (!all(dim(DistArrayList[[st]]) == dim(DistArrayList[[1]]))) {
-        cli::cli_abort("Effort Disribution array (`Fleet |> Effort() |> Distribution()`) must be identical across stocks")
-      }
-      dev <- DistArrayList[[st]] - DistArrayList[[1]]
-      
-      if (!any(is.na(dev)) && any(abs(dev) > tol)) {
-        cli::cli_abort("Effort Disribution array (`Fleet |> Effort() |> Distribution()`) must be identical across stocks")
-      }
-      
-      # Check and update effort
-      Effort_nominal <- EffortArrayList[[st]]
-      q_nominal <- qArrayList[[st]]
-      dev <- Effort_nominal - EffortArrayList[[1]]
-      
-      if (any(abs(dev) > tol)) {
-        if (!silent) {
-          cli::cli_alert_warning("Note: `Effort` values for Fleet {.val {fl}} are not the same across stocks")
-          cli::cli_alert("Setting Effort for all Stocks to {.val {names(FleetList)[1]}} (Stock 1) effort and adding deviations to {.val Catchability}")
-        }
-        # Differences in effective effort assumed deviations in efficiency
-        Effort_updated <- Effort_nominal - dev
-        q_updated <- q_nominal
-        ok <- abs(Effort_updated) > tol
-        
-        q_updated[ok] <- (Effort_nominal[ok] * q_nominal[ok]) / Effort_updated[ok]
-        q_updated[!ok] <- q_nominal[!ok]
-        EffortArrayList[[st]] <- Effort_updated
-        qArrayList[[st]] <- q_updated
-      }
-      
-      FleetList[[st]][[fl]]@Effort@Effort <- EffortArrayList[[st]]
-      FleetList[[st]][[fl]]@Catchability@Efficiency <- qArrayList[[st]]
-    }
-  }
-  FleetList
-}
+
+
+
+
+
 
 
 

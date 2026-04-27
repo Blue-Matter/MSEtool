@@ -108,6 +108,7 @@ Simulate_om <- function(OM = NULL,
     if (DoRefLandings) 'Landings',
     if (DoRefRemovals) 'Removals'
   )
+  
   if (length(ref_types) > 0)
     Hist <- CalcRefYield(Hist, type=ref_types, Units='Biomass', silent=silent)
   

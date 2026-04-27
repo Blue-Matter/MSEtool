@@ -8,25 +8,25 @@ CombineOMs <- function(OM_List, Name='Combined OM') {
     cli::cli_abort('`OM_List` must be a list of `OM` objects')
   
   # check nSim
-  nSimList <- purrr::map_int(OM_List, nSim)
+  nSimList <- purrr::map_int(OM_List, \(stock) nSim(stock))
   if (!all(nSimList == nSimList[1]))
     cli::cli_abort("`nSim` must be the same for all OMs")
   
   # check seasons
-  SeasonList <- purrr::map_int(OM_List, Seasons)
+  SeasonList <- purrr::map_int(OM_List, \(stock) Seasons(stock))
   if (!all(SeasonList == SeasonList[1]))
     cli::cli_abort("`Seasons` must be the same for all OMs")
   
   # Check fleet name and order
-  fleetnames <- purrr::map(OM_List, FleetNames)
+  fleetnames <- purrr::map(OM_List, \(stock) FleetNames(stock))
   check_fleet_names_list(fleetnames)
   
   # Populate all OMs
   OM_List <- purrr::map(OM_List, \(OM) PopulateOM(OM, silent=TRUE))
   
   # Get Year range
-  HistYearsList <- purrr::map(OM_List, Years, 'H')
-  ProjYearsList <- purrr::map(OM_List, Years, 'P')
+  HistYearsList <- purrr::map(OM_List, \(stock) Years(stock, 'H'))
+  ProjYearsList <- purrr::map(OM_List, \(stock) Years(stock, 'P'))
   
   HistYears <- unlist(HistYearsList) |> unique() |> sort()
   nYear <- length(HistYears)
@@ -43,9 +43,14 @@ CombineOMs <- function(OM_List, Name='Combined OM') {
   for (slot_name in slots)
     slot(OM_Out, slot_name) <- slot(Ref_OM, slot_name)
   
+  OM_Out@CurrentYear <- max(HistYears)
+  OM_Out@nYear <- nYear
+  OM_Out@pYear <- pYear
+  
   # Loop over OMs and extend years
   for (st in seq_along(OM_List)) {
     OM <- OM_List[[st]]
+    name <- OM@Name
     OM@CurrentYear <- max(HistYears)
     OM@nYear <- nYear
     OM@pYear <- pYear
@@ -53,52 +58,39 @@ CombineOMs <- function(OM_List, Name='Combined OM') {
     ## Stock 
     OM@Stock <- purrr::map(OM@Stock, \(Stock) extend_stock_years(Stock, HistYears, ProjYears))
     
-    ## Fleet 
+    if (is.null(OM_Out@Stock)) {
+      OM_Out@Stock <- OM@Stock
+    } else {
+      OM_Out@Stock <- c(OM_Out@Stock, OM@Stock)
+    }
+    
+    ## Fleet
+    
+    ## Effort & Catchability
+    OM@Fleet[[1]]$cHL@Effort@Effort
+    OM@Fleet[[1]]$cHL@Catchability@Efficiency
+    
+    stop()
+
+    
     OM@Fleet <- purrr::map(OM@Fleet, \(FleetList) {
       purrr::map(FleetList, \(Fleet) {
         extend_fleet_years(Fleet, HistYears, ProjYears)
       })
     })
     
-    # TODO 
-    
-    Hist <- Simulate(OM_List[[st]])
-    Hist2 <- Simulate(OM)
-    
-    LoadArgs(Simulate_om)
-    
-    
-    
-    OM@Stock$`Black Sea Bass`@SRR@RecDevProj |> dimnames()
-    
-    
-    OM@Fleet <- Extend(OM@Fleet, Years=HistYears, backfill = TRUE)
-    OM@Fleet[[1]]$cHL@Effort@Effort
-    
-    OM@Fleet$`Black Sea Bass`$cHL@Closure|> dimnames()
-    OM@Fleet$`Black Sea Bass`$cHL@Selectivity@MeanAtAge[1,,1,1]
-    
-    t <- ExtendYears(OM@Fleet$`Black Sea Bass`$cHL@Selectivity@MeanAtAge, Years=HistYears, backfill = TRUE)
-    dimnames(t)
-    
-    
-    # Generate correlated rec devs
-    
-    # Generate correlated q deviations 
-    
-    # Fill hist effort
-    
-    
-    
-    Hist <- Simulate(OM)
-    
-    
-    Years(OM_List[[st]],'H')
-    Years(OM,'H')
-    
-    
+    if (is.null(OM_Out@Fleet)) {
+      OM_Out@Fleet <- OM@Fleet
+    } else {
+      OM_Out@Fleet <- c(OM_Out@Fleet, OM@Fleet)
+    }
   }
+  OM_Out
+  
 }
+
+
+
 extend_fleet_years <- function(Fleet, HistYears, ProjYears) {
   Fleet@Effort@Effort <- Extend(Fleet@Effort@Effort, Years=HistYears, backfill=TRUE, default=0)
   

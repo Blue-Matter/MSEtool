@@ -277,6 +277,7 @@ Collate:
     'show.R'
     'simulate-om.R'
     'simulate.R'
+    'standardize-effort.R'
     'subset.R'
     'todo-CalcPerRecruit.R'
     'todo-SProduction.R'
