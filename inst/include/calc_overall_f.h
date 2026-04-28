@@ -14,9 +14,9 @@ inline void CalcOverallF(
     Array4D& FInteract,                                     // sim, stock, year, fleet
     Array4D& FDead,                                         // sim, stock, year, fleet
     Array4D& FRetain,                                       // sim, stock, year, fleet
-    const std::vector<Array5D>& InteractAtAge,              // [stock] sim, age, year, fleet, area
-    const std::vector<Array5D>& LandingsAtAge,              // [stock] sim, age, year, fleet, area
-    const std::vector<Array5D>& DiscardsAtAge,              // [stock] sim, age, year, fleet, area
+    const std::vector<Array5D>& FInteractArea,              // [stock] sim, age, year, fleet, area
+    const std::vector<Array5D>& FDeadArea,              // [stock] sim, age, year, fleet, area
+    const std::vector<Array5D>& FRetainArea,              // [stock] sim, age, year, fleet, area
     const std::vector<Array4D>& Number,                     // [stock] sim, age, year, area
     const int nStock,
     const int nFleet,
@@ -24,62 +24,61 @@ inline void CalcOverallF(
 ) {
   
   static constexpr double eps = 1e-12;
-  static constexpr double one_minus_eps = 1.0 - eps;
   
-  std::vector<double> Interact_buf;  // fleet
-  std::vector<double> Land_buf;      // fleet
-  std::vector<double> DeadDisc_buf;  // fleet
-  
+  std::vector<double> apical_interact(nFleet);
+  std::vector<double> apical_dead(nFleet);
+  std::vector<double> apical_retain(nFleet);
   
   for (int st = 0; st < nStock; ++st) {
     
-    const auto& Num_st = Number[st];                  // sim, age, year, area
-    const auto& IAA_st = InteractAtAge[st];           // sim, age, year, fleet, area
-    const auto& LAA_st = LandingsAtAge[st];           // sim, age, year, fleet, area
-    const auto& DAA_st = DiscardsAtAge[st];           // sim, age, year, fleet, area
+    const auto& Num_st = Number[st];          // sim, age, year, area
+    const auto& FIA_st = FInteractArea[st];   // sim, age, year, fleet, area
+    const auto& FDA_st = FDeadArea[st];       // sim, age, year, fleet, area
+    const auto& FRA_st = FRetainArea[st];     // sim, age, year, fleet, area
     
     int nAge = Num_st.dim[1];
     
-    Interact_buf.resize(nFleet);
-    Land_buf.resize(nFleet);
-    DeadDisc_buf.resize(nFleet);
-
     for (int sim : Sims) {
       
-      double N_total = 0.0;
-      std::fill(Interact_buf.begin(), Interact_buf.end(), 0.0);
-      std::fill(Land_buf.begin(),     Land_buf.end(),     0.0);
-      std::fill(DeadDisc_buf.begin(), DeadDisc_buf.end(), 0.0);
+      std::fill(apical_interact.begin(), apical_interact.end(), 0.0);
+      std::fill(apical_dead.begin(),     apical_dead.end(),     0.0);
+      std::fill(apical_retain.begin(),   apical_retain.end(),   0.0);
       
       for (int age = 0; age < nAge; ++age) {
-        for (int ar = 0; ar < nArea; ++ar) {
+        
+        // total N at this age across areas (for weighting)
+        double N_age_total = 0.0;
+        for (int ar = 0; ar < nArea; ++ar)
+          N_age_total += Num_st(sim, age, y, ar);
+        N_age_total = std::max(N_age_total, eps);
+        const double inv_N_age = 1.0 / N_age_total;
+         
+        for (int fl = 0; fl < nFleet; ++fl) {
+           
+          // area-weighted average F-at-age for this fleet
+          double F_interact_age = 0.0;
+          double F_dead_age     = 0.0;
+          double F_retain_age   = 0.0;
           
-          N_total += Num_st(sim, age, y, ar);
-          
-          for (int fl = 0; fl < nFleet; ++fl) {
-            Interact_buf[fl] += IAA_st(sim, age, y, fl, ar);
-            Land_buf[fl]     += LAA_st(sim, age, y, fl, ar);
-            DeadDisc_buf[fl] += DAA_st(sim, age, y, fl, ar);
+          for (int ar = 0; ar < nArea; ++ar) {
+            const double w = Num_st(sim, age, y, ar) * inv_N_age;
+            F_interact_age += w * FIA_st(sim, age, y, fl, ar);
+            F_dead_age     += w * FDA_st(sim, age, y, fl, ar);
+            F_retain_age   += w * FRA_st(sim, age, y, fl, ar);
           }
+          
+          // apical (max over ages)
+          apical_interact[fl] = std::max(apical_interact[fl], F_interact_age);
+          apical_dead[fl]     = std::max(apical_dead[fl],     F_dead_age);
+          apical_retain[fl]   = std::max(apical_retain[fl],   F_retain_age);
         }
-      }     
-      
-      N_total = std::max(N_total, eps);
-      const double inv_N = 1.0 / N_total;
+      } 
       
       for (int fl = 0; fl < nFleet; ++fl) {
-        
-        const double TotalDead = Land_buf[fl] + DeadDisc_buf[fl];
-        
-        const double ratio_interact = std::min(Interact_buf[fl] * inv_N, one_minus_eps);
-        const double ratio_dead     = std::min(TotalDead        * inv_N, one_minus_eps);
-        const double ratio_retain   = std::min(Land_buf[fl]     * inv_N, one_minus_eps);
-         
-        FInteract(sim, st, y, fl) = -std::log(1.0 - ratio_interact);
-        FDead(sim,     st, y, fl) = -std::log(1.0 - ratio_dead);
-        FRetain(sim,   st, y, fl) = -std::log(1.0 - ratio_retain);
+        FInteract(sim, st, y, fl) = apical_interact[fl];
+        FDead    (sim, st, y, fl) = apical_dead[fl];
+        FRetain  (sim, st, y, fl) = apical_retain[fl];
       }
-      
     } // end sim loop
   }   // end stock loop
 } 
