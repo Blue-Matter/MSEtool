@@ -29,8 +29,21 @@ ObjEffort <- function(logEffortVec, Proj, sim, Year, TSIndex, stocks,
 
   CatchByFleet <- CalcCatchByFleet(Temp, sim, stocks, TSIndex, TACType)
   
-  out <- sum((log(TAC_by_Fleet[pos_idx]) - log(CatchByFleet[pos_idx]))^2)
-  out
+  catch <- CatchByFleet[pos_idx]
+  tac   <- TAC_by_Fleet[pos_idx]
+  
+  if (any(!is.finite(catch)) || any(catch <= 0)) {
+    return(sum(log(tac)^2) * 10)
+  }
+  
+  log_resid <- log(tac) - log(catch)
+  ss <- sum(log_resid^2)
+  
+  abs_penalty <- sum(((tac - catch) / tac)^2)
+  ss + 0.01 * abs_penalty
+  
+  # out <- sum((log(TAC_by_Fleet[pos_idx]) - log(CatchByFleet[pos_idx]))^2)
+  # out
 }
 
 #' Extract catch by fleet from a fishery dynamics object

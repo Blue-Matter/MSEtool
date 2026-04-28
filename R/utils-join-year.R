@@ -83,7 +83,9 @@ JoinYear <- function(object1, object2) {
         )) 
       
       YrInd <- which(names(dnames)=='Year')
-      return(abind::abind(object1, object2, along=YrInd) )
+      return(
+        abind::abind(object1, object2, along=YrInd, use.dnns=TRUE)
+            )
       
     }
     return(object1)

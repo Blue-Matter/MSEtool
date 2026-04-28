@@ -20,7 +20,7 @@
 #' @return Numeric vector of optimized effort per fleet
 #' @keywords internal
 OptEffort <- function(Proj, Year, TSIndex, sim, stocks, TAC_by_Fleet, TACType,
-                      minEffort = 1e-15, tol = 1e-2, maxIter = 200) {
+                      minEffort = 1e-15, tol = 1e-2, maxIter = 100) {
   
   TACType <- match.arg(TACType, c('Removals', 'Landings'))
   
@@ -39,14 +39,39 @@ OptEffort <- function(Proj, Year, TSIndex, sim, stocks, TAC_by_Fleet, TACType,
       ObjEffort(logEff, Proj, sim, Year, TSIndex, stocks,
                 TAC_by_Fleet, Effort_final, TACType)
     }
-    upper_bound <- min(max(Effort[pos_idx]) * 1e3, .Machine$double.xmax)
-    opt <- optimize(obj, interval = log(c(minEffort, upper_bound)))
+    
+    tac <- TAC_by_Fleet[pos_idx]
+    
+    catch_at_effort <- function(logEff) {
+      Effort_test <- Effort_final
+      Effort_test[pos_idx] <- Effort_final[pos_idx] * exp(logEff)
+      Proj@Effort[sim, TSIndex, ] <- Effort_test
+      Temp <- CalcFisheryDynamics(Hist = Proj, Years = Year, Sims = sim)
+      CalcCatchByFleet(Temp, sim, stocks, TSIndex, TACType)[pos_idx]
+    }
+    
+    log_lo <- log(minEffort)
+    log_hi <- 0 
+    
+    max_log <- log(1e6)
+    while (catch_at_effort(log_hi) < tac && log_hi < max_log) {
+      log_hi <- log_hi + log(10)
+    }
+    
+    if (catch_at_effort(log_hi) < tac) {
+      Effort[pos_idx] <- Effort_final[pos_idx] * exp(log_hi)
+      return(Effort)
+    }
+    
+    opt <- optimize(obj, interval = c(log_lo, log_hi), tol = 1e-8)
     Effort[pos_idx] <- Effort_final[pos_idx] * exp(opt$minimum)
     return(Effort)
+    
   }
   
   # Multi-fleet: Newton-Raphson 
   converged <- FALSE
+  saturated_flag <- FALSE
   
   for (iter in seq_len(maxIter)) {
     
@@ -70,6 +95,13 @@ OptEffort <- function(Proj, Year, TSIndex, sim, stocks, TAC_by_Fleet, TACType,
     CatchByFleet_pert <- CalcCatchByFleet(Temp_pert, sim, stocks, TSIndex, TACType)
     
     J_diag <- (CatchByFleet_pert[pos_idx] - CatchByFleet[pos_idx]) / deltaF
+    low_gradient <- J_diag < 1e-6
+    saturated    <- any(low_gradient) && any(abs(residual[low_gradient]) > tol)
+    
+    if (any(saturated)) {
+      saturated_flag <- TRUE
+      break
+    }
     J_diag[J_diag <= 0] <- 1e-8
     
     Eff_candidate <- pmax(Effort[pos_idx] + residual / J_diag, minEffort)
@@ -118,7 +150,7 @@ OptEffort <- function(Proj, Year, TSIndex, sim, stocks, TAC_by_Fleet, TACType,
   }
   
   # fallback to optim if derivative solver fails
-  if (!converged) {
+  if (!converged && !saturated_flag) {
     
     # cli::cli_alert_warning(
     #   "OptEffort: Newton-Raphson did not converge after {maxIter} iterations \\

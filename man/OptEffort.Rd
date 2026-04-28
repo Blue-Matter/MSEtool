@@ -14,7 +14,7 @@ OptEffort(
   TACType,
   minEffort = 1e-15,
   tol = 0.01,
-  maxIter = 200
+  maxIter = 100
 )
 }
 \arguments{

@@ -331,6 +331,7 @@ Collate:
     'utils-structure.R'
     'utils-unique-years.R'
     'utils-valid-units.R'
+    'vbiomass.R'
     'zz-project-Hist.R'
     'zz_ASAP2OM.R'
     'zz_Awatea2OM.R'

@@ -31,6 +31,7 @@ Update_TAC <- function(Proj,
   if (is.null(Proj@OM@Allocation) && !is.null(Proj@OM@CatchFrac))
     Proj@OM@Allocation <- Proj@OM@CatchFrac
 
+  # VBiomass <- CalcVBiomass(Proj, Year)
   
   # tictoc::tic("TAC")
   for (sim in seq_len(Proj@OM@nSim)) {
@@ -39,6 +40,7 @@ Update_TAC <- function(Proj,
     
     AdviceList <- AdviceSimList[[sim]]
     LastAdviceList <- LastAdviceSimList[[sim]]
+    # VBiomass_Sim <- VBiomass[sim,,,drop=FALSE] |> DropDimension('Sim')
     
     Proj <- Update_TAC_Sim(
       Proj            = Proj,
@@ -108,6 +110,12 @@ Update_TAC_Sim <- function(Proj,
     TAC_by_Fleet <- TAC_by_Complex[[i]]
     TACType <- AdviceList[[i]]@TACType
     TACType_by_Complex[i] <- TACType
+    
+    # Vbiomass_complex <- VBiomass_Sim[i,]
+    # exceed_vb <- which(TAC_by_Fleet > Vbiomass_complex)
+    # if (length(exceed_vb)) {
+    #   TAC_by_Fleet[exceed_vb] <- Vbiomass_complex[exceed_vb]
+    # }
     
     RequiredEffort[, i] <- OptEffort(
       Proj, Year, TSIndex, sim, stocks, TAC_by_Fleet, TACType

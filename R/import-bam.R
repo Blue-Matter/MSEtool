@@ -668,21 +668,16 @@ BAM2Fleet <- function(Stock,
   
   for (fl in seq_along(RetainFleets)) {
     fleet <- Fleet(Name=RetainFleets[fl])
-    thisFleetEffort <- apicalEffort[,fl, drop=FALSE]
-    thisFleetEffort[] <- thisFleetEffort[,1]/mean(thisFleetEffort[,1])
-    fleet@Effort@Effort <- AddDimension(thisFleetEffort, 'Sim') |>
-      abind::adrop(2) |> aperm(c('Sim', 'Year'))
     
-    q <- mean(apicalEffort[,fl]) / mean(thisFleetEffort[,1]) 
-
-    fleet@Catchability@Efficiency <- array(q, c(1,1),
+    fleet@Catchability@Efficiency <- array(1, c(1,1),
                                            dimnames = list(
                                              Sim = 1,
                                              Year = Years[1]
-                                           )
-    )
+                                           ))
     
-    
+    thisFleetF <- apicalEffort[,fl, drop=FALSE] |> DropDimension('Fleet')
+    fleet@Effort@Effort <- AddDimension(thisFleetF, 'Sim', pos=1) 
+
     fleet@Selectivity@MeanAtAge <- SelectivityAtAge[,,fl, drop=FALSE] |> 
       abind::adrop(3) |>
       AddDimension('Sim') |> 

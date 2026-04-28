@@ -28,6 +28,7 @@ PPD <- function(MSE) {
   HistData <- SubsetYear(MSE@PPD[[1]], Years=HistYears)
   
   ProjDataList <- MSE@PPD[-1]
-  purrr::map(ProjDataList, \(ProjData) JoinYear(HistData, ProjData))
+  ppd_2 <- purrr::map(ProjDataList, \(ProjData) JoinYear(HistData, ProjData))
+  c(MSE@PPD[1], ppd_2)
   
 }
