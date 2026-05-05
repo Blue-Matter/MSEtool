@@ -37,6 +37,10 @@
 #'   
 #' @param Maximum Numeric. Maximum allowable effort. Default `NULL`. Not
 #' currently used.
+#' 
+#' @param Mode Character. Mode for calculation of spatial utility: `Density` (default)
+#'  or `Biomass`. See equations in Technical Manual.
+#' 
 #' @param Misc List. Miscellaneous additional inputs. Default `list()`.
 #' 
 #' @param df Logical. Only used when `Effort` is a [hist-class] or an 
@@ -114,12 +118,20 @@ Effort <- function(Effort       = NULL,
                    Distribution = NULL,
                    Targeting    = NULL,
                    Maximum      = NULL,
+                   Mode         = NULL,
                    Misc         = list(),
                    df           = FALSE) {
   
   if (inherits(Effort, c('fleet', 'effort', 'hist', 'obs', 'mse')))
     return(extract_effort(Effort, df))
   
+  if (is.null(Mode)) {
+    Mode <- 'Density'
+  }
+  
+  if (!Mode %in% c('Biomass', 'Density'))
+    cli::cli_abort("`Mode` must be either `Density` or `Biomass`")
+    
   methods::new(
     "effort",
     Effort       = Effort,
@@ -127,6 +139,7 @@ Effort <- function(Effort       = NULL,
     Distribution = Distribution,
     Targeting    = Targeting,
     Maximum      = Maximum,
+    Mode         = Mode,
     Misc         = Misc
   )
 }
@@ -186,4 +199,20 @@ Maximum <- function(x) {
   x
 }
 
+
+#' @rdname Effort
+#' @export
+Mode <- function(x) {
+  CheckClass(x, "effort", "x")
+  x@Mode
+}
+
+#' @rdname Effort
+#' @export
+`Mode<-` <- function(x, value) {
+  CheckClass(x, "effort", "x")
+  x@Mode <- value
+  methods::validObject(x)
+  x
+}
 

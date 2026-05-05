@@ -26,8 +26,6 @@ inline void CalcRecruitment(
     const int nStock,
     const int nArea) {
   
-  
-  // Checks
   if ((int)Number.size() < nStock ||
       (int)SRR_Pars.size() < nStock ||
       (int)RecDevs.size() < nStock)
@@ -41,6 +39,7 @@ inline void CalcRecruitment(
   // Calculate Recruitment and distribute over areas according to movement
   
   for (int st = 0; st < nStock; ++st) {
+    
     const int model = SRR_Model[st];   
     const int lag  = RecLag[st];  
     const int rec_y     = y + lag;    // year index where recruits appear
@@ -50,9 +49,8 @@ inline void CalcRecruitment(
     Array4D& Num_st = Number[st]; // sim, age, year, area
     
     
-    if (pars_st.size() < 1) {
+    if (pars_st.size() < 1) 
       Rcpp::stop("SRR_Pars[[" + std::to_string(st+1) + " ]] has no parameters");
-    }
     
     if (rec_y >= Num_st.dim[2]) continue;
     
@@ -71,6 +69,16 @@ inline void CalcRecruitment(
     for (int sim : Sims) {
       
       const int sim_num   = sim_index<4>(sim, Num_st, "Number");
+      
+      // Skip if age-0 recruits already populated for rec_y 
+      // Any non-zero value in any area at age 0, rec_y means this sim is done.
+      bool already_populated = false;
+      for (int ar = 0; ar < nArea && !already_populated; ++ar) {
+        if (Num_st(sim_num, 0, rec_y, ar) > 0.0)
+          already_populated = true;
+      }
+      if (already_populated) continue;
+      
       const int sim_prod  = sim_index<3>(sim, SProduction, "SProduction");
       const int sim_sp0   = sim_index<3>(sim, SP0, "SP0");
       const int sim_r0    = sim_index<3>(sim, R0, "R0");
@@ -84,14 +92,6 @@ inline void CalcRecruitment(
       
       // Calculate recruitment
       const double R = EvalSRR(model, SP, sp0, r0, pars_st, sim, y) * dev;
-      
-      // double TEMP = EvalSRR(model, SP, sp0, r0, pars_st, sim, y);
-      // 
-      // Rcpp::Rcout << "SP = " << SP << "\n";
-      // Rcpp::Rcout << "sp0 = " << sp0 << "\n";
-      // Rcpp::Rcout << "r0 = " << r0 << "\n";
-      // Rcpp::Rcout << "dev = " << dev << "\n";
-      // Rcpp::Rcout << "R = " << TEMP << "\n";
       
       // distribute over areas according to RecDist
       for (int area = 0; area < nArea; ++area) {

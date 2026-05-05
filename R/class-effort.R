@@ -10,7 +10,9 @@
 #' @slot Distribution Optional numeric array with dimensions `nSim x nYear x nArea`
 #'     giving the fraction of total effort allocated to each spatial area
 #'  @slot Targeting Numeric array or scalar controlling spatial targeting behavior
-#'  @slot Maximum Numeric array giving the maximum possible fishing effort 
+#'  @slot Maximum Numeric array giving the maximum possible fishing effort. 
+#'  @slot Mode Character. Mode for calculation of spatial utility: `Density` (default)
+#'  or `Biomass`. 
 #'  @slot Misc Miscellaneous list
 #' @include class-unions.R
 #' @name effort-class
@@ -22,6 +24,7 @@ setClass(
     Distribution = "num.array.null",
     Targeting    = "num.array.null",
     Maximum      = "num.array.null",
+    Mode         = 'char.null',
     Misc         = "list"
   )
 )
@@ -30,3 +33,5 @@ setValidity("effort", function(object) {
   # TODO
   TRUE
 })
+
+

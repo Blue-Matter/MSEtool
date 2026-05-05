@@ -24,6 +24,7 @@ inline void CalcArea_F(
     const ConstArrayView4D& q,                        // sim, stock, year, fleet          
     const Array3D& Effort,                            // sim, year, fleet
     const ConstArrayView2D& RelSize,                  // sim, area
+    const ConstArrayView4D& StockTargeting,           // sim, stock, fleet, year   
     const double maxF,
     const int nStock,
     const int nFleet,
@@ -80,6 +81,7 @@ inline void CalcArea_F(
       const int sim_ef  = sim_index<3>(sim, Effort, "Effort");
       const int sim_dist  = sim_index<4>(sim, Distribution, "Distribution");
       const int sim_rs = sim_index<2>(sim, RelSize, "RelSize");
+      const int sim_st = sim_index<4>(sim, StockTargeting, "StockTargeting");
       
       for (int fl = 0; fl < nFleet; ++fl) {
 
@@ -92,8 +94,9 @@ inline void CalcArea_F(
           const double rs = RelSize(sim_rs, ar);
           // Effort density
           const double ed = (rs > 0.0) ? E * Distribution(sim_dist, y, fl, ar) / rs : 0.0;
-          
-          double q_eff = std::min(q_fl * ed, maxF);
+          const double targ = StockTargeting(sim_st, st, fl, y);
+            
+          double q_eff = std::min(q_fl * ed * targ, maxF);          
           if (q_eff <= 0.0) continue;
           
           for (int age = 0; age < nAge; ++age) {

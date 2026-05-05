@@ -4,55 +4,64 @@
 \alias{StandardizeEffort}
 \title{Standardize fishing effort across stocks for each fleet}
 \usage{
-StandardizeEffort(OM, silent = FALSE)
+StandardizeEffort(OM, silent = FALSE, populate = TRUE)
 }
 \arguments{
 \item{OM}{An operating model object (\linkS4class{om}).}
 
 \item{silent}{\code{logical(1)}. If \code{FALSE} (default), emits a warning and
-informational message when effort is found to differ across stocks
-for any fleet. Set to \code{TRUE} to suppress these messages.}
+informational message when effort is found to differ across stocks for
+any fleet. Set to \code{TRUE} to suppress these messages.}
+
+\item{populate}{\code{logical(1)}. Populate \code{OM} at beginning of call? Used internally.}
 }
 \value{
-The input \code{OM} object with updated \code{Fleet} slot. For each fleet
-where effort differed across stocks:
+The input \code{OM} object with:
 \itemize{
-\item \code{Effort@Effort} is set to the mean effort across stocks.
-\item \code{Catchability@Efficiency} is rescaled to conserve effective effort.
+\item \code{Fleet[[st]][[fl]]@Effort@Effort} set to the mean effort across stocks
+for each fleet where effort differed.
+\item \code{OM@StockTargeting} populated with back-calculated targeting
+weights.
 }
 }
 \description{
-For a multi-stock operating model, effort for a given fleet should be
-identical across stocks and areas. When stocks have been specified with
-differing effort trajectories, this function standardizes effort to the
-mean across stocks and absorbs the per-stock deviations into fishing
-efficiency (catchability), preserving effective fishing mortality
-(\code{E * q}).
+For a multi-stock operating model, effort for a given fleet must be
+identical across stocks. When stocks have been specified with differing
+effort trajectories (e.g. derived from stock-specific estimated Fs), this
+function standardizes effort to the mean across stocks and back-calculates
+stock-fleet targeting weights that preserve effective fishing mortality.
 }
 \details{
-For each fleet \code{fl}, the standardized effort is computed as the
-element-wise mean of the effort arrays across all stocks, after first
-extending all arrays to a common set of simulations and years via
-\code{\link[=Extend]{Extend()}}. Each stock's catchability efficiency is then rescaled so
-that:
+For each fleet \code{fl}, the standardized effort is the element-wise mean of
+the effort arrays across all stocks.
 
-\deqn{E_{\text{standard}} \times q_{\text{updated}} =
-      E_{\text{nominal}} \times q_{\text{nominal}}}
+The targeting weight for each stock is then:
 
-Where \code{StandardEffort} is near zero (below tolerance \code{1e-4}), the
-original catchability value is retained unchanged.
+\deqn{
+  \text{Targeting}_{s,i,y} =
+    \frac{E_{\text{nominal},s,i,y}}{E_{\text{standard},i,y}}
+}
 
-The effort \code{Distribution} array must be identical across stocks for
-each fleet; the function errors informatively if this is violated.
+so that effective fishing mortality is conserved:
 
-The function returns \code{OM} unchanged if \code{nStock == 1} or \code{nFleet == 1}.
+\deqn{
+  E_{\text{standard}} \times \text{Targeting}_s \times q_s =
+  E_{\text{nominal},s} \times q_s
+}
+
+Targeting weights are by construction mean-1 across stocks for each
+fleet-year. Where \code{StandardEffort} is near zero (below tolerance \code{1e-4}),
+targeting is set to 1 (neutral).
+
+The effort \code{Distribution} array must be identical across stocks for each
+fleet.
+
+The function returns \code{OM} unchanged if \code{nStock == 1}.
 }
 \examples{
 \dontrun{
-# OM with two stocks whose effort arrays differ slightly
 OM_standardized <- StandardizeEffort(OM, silent = FALSE)
+# Inspect back-calculated targeting
+OM_standardized@StockTargeting@Targeting
 }
-}
-\seealso{
-\code{\link[=Extend]{Extend()}} for array dimension alignment.
 }

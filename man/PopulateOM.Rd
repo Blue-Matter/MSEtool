@@ -4,7 +4,7 @@
 \alias{PopulateOM}
 \title{Populate an Operating Model}
 \usage{
-PopulateOM(OM, silent = FALSE, force = FALSE)
+PopulateOM(OM, silent = FALSE, force = FALSE, standardize_effort = TRUE)
 }
 \arguments{
 \item{OM}{An \code{\link[=OM]{OM()}} object to populate.}
@@ -14,6 +14,8 @@ warnings during population.}
 
 \item{force}{Logical. If \code{TRUE}, force re-population even if the internal
 object digest indicates no changes since the last call.}
+
+\item{standardize_effort.}{Logical. Used internally. Apply \code{\link[=StandardizeEffort]{StandardizeEffort()}}?}
 }
 \value{
 An \code{\link[=OM]{OM()}} object populated with simulation- and time-specific values.

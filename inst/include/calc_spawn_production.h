@@ -68,6 +68,9 @@ inline void CalcSpawnProduction(
     // loop over sims
     for (int sim : Sims) {
       
+      SProduction(sim, st, y) = 0.0;
+      SBiomass(sim, st, y)    = 0.0;
+      
       const int sim_num  = sim_index<4>(sim, Num_st, "Number");
       const int sim_fec  = sim_index<3>(sim, Fec_st, "Fecundity");
       const int sim_mat  = sim_index<3>(sim, Mat_st, "Maturity");
@@ -111,12 +114,26 @@ inline void CalcSpawnProduction(
         for (int age = 0; age < nAge; ++age) {
           const double fec    = Fec_st(sim_fec, age, y);
           const double wt_mat = Wt_st(sim_wt, age, y) * Mat_st(sim_mat, age, y);
+          
+          double tempN = 0;
+        
         
           for (int ar = 0; ar < nArea; ++ar) {
             const double N = Num_st(sim_num, age, y, ar);
+            tempN += N;
             SP += N * fec;
             SB += N * wt_mat;
           }
+          
+          // if (y == 0 && sim == 0) {
+          //   Rcpp::Rcout << "Stock = " << st << "\n";
+          //   Rcpp::Rcout << "N = " << tempN << "\n";
+          //   Rcpp::Rcout << "fec = " << fec << "\n";
+          //   Rcpp::Rcout << "wt_mat = " << wt_mat << "\n";
+          //   Rcpp::Rcout << "SB = " << SB << "\n";
+          //   Rcpp::Rcout << "SP = " << SP << "\n";
+          // }
+          
         }
       } 
       // if (y==0 && sim ==0)
@@ -135,6 +152,7 @@ inline void CalcSpawnProduction(
       Rcpp::stop("SPFrom" + std::to_string(st+1) + " out of range");
     }
     
+
     if (fromSt == st) continue;
     
     for (int sim : Sims) {

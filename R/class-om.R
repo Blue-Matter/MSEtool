@@ -80,6 +80,7 @@
 #' @include class-data.R
 #' @include class-obs.R
 #' @include class-imp.R
+#' @include class-stock-targeting.R
 #' @include zz_Class_definitions.R
 #' @name om-class
 NULL 
@@ -127,6 +128,8 @@ setClass(
     Herm='list.null',
     SharePar='num.log',
     Relations='list.null',
+    
+    StockTargeting = 'stocktargeting',
     
     Interval='numeric',
     nReps='numeric',

@@ -20,7 +20,17 @@ CalcDynamicInitial <- function(Hist) {
 
     RecDevInit <- Hist@OM@Stock[[st]]@SRR@RecDevInit |> ExtendSims(nSim)
     RecDevHist <- Hist@OM@Stock[[st]]@SRR@RecDevHist
-    RecDevHist1 <- RecDevHist[,1, drop=FALSE] |> ExtendSims(nSim)
+    
+    InitYearCal <- Hist@OM@Stock[[st]]@Misc$InitYear 
+    if (is.null(InitYearCal)) {
+      InitYear <- 1
+    } else {
+      HistYears <- Years(Hist,'H')
+      InitYear <- match(InitYearCal, HistYears)
+    }
+    
+    RecDevHist1 <- RecDevHist[,InitYear, drop=FALSE] |> ExtendSims(nSim)
+    
     names(dimnames(RecDevHist1))[2] <- 'Age'
 
     ages <- as.numeric(dimnames(RecDevInit)[['Age']])
@@ -69,13 +79,7 @@ CalcDynamicInitial <- function(Hist) {
     # same as the first historical year for this specific stock,
     # ie where multiple OMs have been combined - see `CombineOMs` 
     
-    InitYearCal <- Hist@OM@Stock[[st]]@Misc$InitYear 
-    if (is.null(InitYearCal)) {
-      InitYear <- 1
-    } else {
-      HistYears <- Years(Hist,'H')
-      InitYear <- match(InitYearCal, HistYears)
-    }
+
     
     # Multiply by UnfishedDist to distribute across areas
     Hist@Number[[st]][,,InitYear,] <- ArrayMultiply(NatAge, UnfishedDist)

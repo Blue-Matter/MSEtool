@@ -14,7 +14,7 @@
 #include "calc_biomass.h"
 #include "calc_catch.h"
 #include "calc_overall_f.h"
-#include "back_calculate_effort.h"
+
 
 using namespace Rcpp;
 
@@ -60,6 +60,7 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
   // Rcpp::S4 Hist = clone ? Rcpp::clone(HistIn) : HistIn;
   
   Rcpp::S4 Hist = clone ? Rcpp::clone(HistIn) : Rcpp::S4(Rf_shallow_duplicate(HistIn));
+  
   // Always ensure Effort and Distribution are independent copies,
   if (!clone) {
     SEXP effort_dup = PROTECT(Rf_duplicate(HistIn.slot("Effort")));
@@ -71,10 +72,6 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
     Hist.slot("Number")       = num_dup;
     
     UNPROTECT(3);
-    
-    // Hist.slot("Effort")       = Rcpp::clone(as<NumericVector>(HistIn.slot("Effort")));
-    // Hist.slot("Distribution") = Rcpp::clone(as<NumericVector>(HistIn.slot("Distribution")));
-    // Hist.slot("Number")         = DeepCloneList(as<List>(HistIn.slot("Number")));
   }
   
   // create HistView object 
@@ -131,9 +128,10 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
                             hv.RetAge,
                             hv.q,
                             hv.Closure,
-                            hv.Targeting,
+                            hv.Spatial_Targeting,
                             hv.Effort,
                             hv.RelSize,
+                            hv.UseDensity,
                             nStock,
                             nFleet,
                             nArea);
@@ -164,6 +162,7 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
                hv.q,
                hv.Effort,
                hv.RelSize,
+               hv.StockTargeting,
                hv.maxF,
                nStock,
                nFleet,
@@ -336,63 +335,6 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
     
     if (debug)
       Rcpp::Rcout << "End CalcOverallF \n";
-    
-    // // Back calculate effort (only needed if maxF constraint is triggered)
-    // if (DoBackCalcEffort)
-    //   BackCalculateEffort(y,
-    //                       Sims,
-    //                       nSim,
-    //                       hv.FInteract,
-    //                       hv.q,
-    //                       hv.Effort,
-    //                       nStock,
-    //                       nFleet);
-    
-    
-  
-    // maxF constraint now applied within each area
-    //
-    // // ---------------------------------------------------------
-    // // Apply global maxF constraint (on FInteract)
-    // // ---------------------------------------------------------
-    // 
-    // if (debug)
-    //   Rcpp::Rcout << "Begin Apply Max F Constraint \n";
-    // 
-    // ApplyMaxF(y,
-    //           Sims,
-    //           nSim,
-    //           hv.FInteractArea,
-    //           hv.FDeadArea,
-    //           hv.FRetainArea,
-    //           hv.SelAge,
-    //           hv.RetAge,
-    //           hv.DiscMort,
-    //           hv.Distribution,
-    //           hv.q,
-    //           hv.Effort,
-    //           hv.RelSize,
-    //           hv.InteractAtAge,
-    //           hv.LandingsAtAge,
-    //           hv.DiscardsAtAge,
-    //           hv.Interactions,
-    //           hv.Landings,
-    //           hv.Discards,
-    //           hv.NaturalMortality,
-    //           hv.Number,
-    //           hv.WeightFleet,
-    //           hv.FInteract,
-    //           hv.FDead,
-    //           hv.FRetain,
-    //           hv.maxF,
-    //           nStock,
-    //           nFleet,
-    //           nArea,
-    //           DoCalcCatch,
-    //           debug);
-    // 
-    // if (debug)
-    //   Rcpp::Rcout << "End Apply Max F Constraint \n";
     
     if (debug) 
       Rcpp::Rcout << "******End Time Step ****\n\n";

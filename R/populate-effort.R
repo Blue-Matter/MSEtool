@@ -76,6 +76,14 @@ PopulateEffort <- function(Effort,
     Years = HistYears
   )
   
+  
+  if (is.null(Effort@Mode)) 
+    Effort@Mode <- 'Density'
+  
+  if (!Effort@Mode %in% c('Biomass', 'Density'))
+    cli::cli_abort("`Mode` must be either `Density` or `Biomass`")
+  
+  
   Effort
 }
 

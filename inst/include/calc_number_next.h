@@ -39,19 +39,18 @@ inline void CalcNumberNext(
   
   for (int st = 0; st < nStock; ++st) {
     
-    auto& Num_st = Number[st];                // sim, age, year, area
-    const auto& Fd = FDeadArea[st];           // sim, age, year, fleet, area
-    const auto& M_st = NaturalMortality[st];  // sim, age, year
-    const auto& Sem_st = Semelparous[st];     // sim, age, year
-    const auto& Mov_st = Movement[st];        // sim, from, to, age, year
+    auto& Num_st       = Number[st];           // sim, age, year, area
+    const auto& Fd     = FDeadArea[st];        // sim, age, year, fleet, area
+    const auto& M_st   = NaturalMortality[st]; // sim, age, year
+    const auto& Sem_st = Semelparous[st];      // sim, age, year
+    const auto& Mov_st = Movement[st];         // sim, from, to, age, year
     
     const int plusgroup_st = static_cast<int>(PlusGroup(st));
     const int nAge = Num_st.dim[1];
     const int nYear = Num_st.dim[2];
     
-    if (y +1 >= nYear) continue; 
+    if (y + 1 >= nYear) continue; 
     
-    // Check movement array dimensions
     if (Mov_st.dim[1] != nArea || Mov_st.dim[2] != nArea)
       Rcpp::stop("Movement array has wrong area dimensions for stock " +
         std::to_string(st + 1));
@@ -61,6 +60,20 @@ inline void CalcNumberNext(
     for (int sim : Sims) {
       
       const int sim_num   = sim_index<4>(sim, Num_st, "Number");
+      
+      // Skip if Number[y+1] is already populated 
+      // Check all age (1+) x area cells — if any are non-zero, skip this sim.
+      // Age 0 is handled by CalcRecruitment so is excluded from the check.
+      bool already_populated = false;
+      for (int age = 1; age < nAge && !already_populated; ++age) {
+        for (int ar = 0; ar < nArea && !already_populated; ++ar) {
+          if (Num_st(sim_num, age, y + 1, ar) > 0.0) {
+            already_populated = true;
+          }
+        }
+      }
+      if (already_populated) continue;
+          
       const int sim_fd    = sim_index<5>(sim, Fd, "FDeadArea");
       const int sim_M     = sim_index<3>(sim, M_st, "NaturalMortality");
       const int sim_sem   = sim_index<3>(sim, Sem_st, "Semelparous");

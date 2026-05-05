@@ -10,6 +10,7 @@
 #'   warnings during population.
 #' @param force Logical. If `TRUE`, force re-population even if the internal
 #'   object digest indicates no changes since the last call.
+#' @param standardize_effort. Logical. Used internally. Apply [StandardizeEffort()]?
 #'
 #' @details
 #' 
@@ -40,19 +41,15 @@
 #' }
 #'
 #' @export
-PopulateOM <- function(OM, silent = FALSE, force = FALSE) {
+PopulateOM <- function(OM, silent = FALSE, force = FALSE, standardize_effort = TRUE) {
   
   CheckClass(OM)
+  
   OM <- UpdateObject(OM)
+  if (!length(OM@maxF)) OM@maxF <- 3
   
-  if (!length(OM@maxF))
-    OM@maxF <- 3
-
-  if (EmptyObject(OM)) 
-    return(OM)
-  
-  if (CheckDigest(OM) & !force) 
-    return(OM)
+  if (EmptyObject(OM)) return(OM)
+  if (CheckDigest(OM) & !force) return(OM)
   
   if (!silent)
     cli::cli_alert_info('Populating OM {.val {OM@Name}}')
@@ -82,6 +79,9 @@ PopulateOM <- function(OM, silent = FALSE, force = FALSE) {
 
   # CheckCatchFrac() |> # TODO - auto-populate CatchFrac if OM@Data exists
   # CheckAllocation()
+  
+  if (standardize_effort)
+    OM <- StandardizeEffort(OM, silent, populate=FALSE)
 
   SetDigest(OM)
 }
@@ -199,16 +199,8 @@ PopulateFleetList <- function(OM, silent = FALSE, force = FALSE) {
   }
   
   OM@Fleet <- FleetList
-  
-  StandardizeEffort(OM, silent=silent)
+  OM
 }
-
-
-
-
-
-
-
 
 
 PopulateComplexes <- function(OM) {

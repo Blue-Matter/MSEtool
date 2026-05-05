@@ -9,6 +9,8 @@
 \alias{Targeting<-}
 \alias{Maximum}
 \alias{Maximum<-}
+\alias{Mode}
+\alias{Mode<-}
 \title{Effort}
 \usage{
 Effort(
@@ -17,6 +19,7 @@ Effort(
   Distribution = NULL,
   Targeting = NULL,
   Maximum = NULL,
+  Mode = NULL,
   Misc = list(),
   df = FALSE
 )
@@ -34,6 +37,10 @@ Targeting(x) <- value
 Maximum(x)
 
 Maximum(x) <- value
+
+Mode(x)
+
+Mode(x) <- value
 }
 \arguments{
 \item{Effort}{Numeric array or data frame. Historical fishing effort. If a
@@ -70,6 +77,9 @@ simulations and years.}
 
 \item{Maximum}{Numeric. Maximum allowable effort. Default \code{NULL}. Not
 currently used.}
+
+\item{Mode}{Character. Mode for calculation of spatial utility: \code{Density} (default)
+or \code{Biomass}. See equations in Technical Manual.}
 
 \item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
 

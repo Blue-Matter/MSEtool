@@ -244,11 +244,14 @@ CalcSeasons <- function(Units) {
 #' @param S4in An S4 object providing source slot values.
 #' @param S4out An S4 object receiving copied slot values.
 #' @param slots A character vector of slot names to copy.
+#' @param ignore slots to ignore
+#' @param reduce logical. Use [ReduceDims()]?
+#' @param ... Additional arguments passed to `ReduceDims`
 #'
 #' @return The modified `S4out` object.
 #'
 #' @keywords internal
-CopySlots <- function(S4in, S4out, slots, ignore='Misc') {
+CopySlots <- function(S4in, S4out, slots, ignore='Misc', reduce=FALSE, ...) {
   
   if (!isS4(S4in)) {
     cli::cli_abort("`S4in` must be an S4 object.")
@@ -287,6 +290,8 @@ CopySlots <- function(S4in, S4out, slots, ignore='Misc') {
   
   for (sl in slots) {
     slot(S4out, sl) <- slot(S4in, sl)
+    if (reduce)
+      slot(S4out, sl) <- ReduceDims(slot(S4out, sl), ...)
   }
   
   S4out

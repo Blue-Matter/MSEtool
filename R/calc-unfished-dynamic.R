@@ -27,7 +27,6 @@ CalcUnfished_Dynamic <- function(Hist, IdenticalHist=NULL, silent=FALSE) {
   if (EmptyObject(Hist@Unfished@Equilibrium )) 
     Hist@Unfished@Equilibrium <- CalcUnfished_Equilibrium(Hist@OM)
   
-  
   Hist <- CalcDynamicInitial(Hist)
   
   if (is.null(Hist@Misc$SAVE)) 
@@ -72,7 +71,7 @@ CalcUnfished_Dynamic <- function(Hist, IdenticalHist=NULL, silent=FALSE) {
     unfished <- CalcFisheryDynamics_(Hist_Copy, 
                                      Years=HistYears,
                                      AllYears=AllYears,
-                                     Sims=1:nSim,
+                                     Sims=seq_len(nSim),
                                      nSim=nSim,
                                      nStock,
                                      nFleet,
@@ -85,8 +84,8 @@ CalcUnfished_Dynamic <- function(Hist, IdenticalHist=NULL, silent=FALSE) {
 
     
   }
-  
-  out <- CopySlots(unfished, out, slotNames(out))
+
+  out <- CopySlots(unfished, out, slotNames(out), reduce=TRUE, IncYear=TRUE)
   out@Misc <- list()
   
   if (!silent) 

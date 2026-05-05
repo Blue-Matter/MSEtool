@@ -21,7 +21,9 @@ See \code{\link[=Effort]{Effort()}} for details.
 \item{\code{Distribution}}{Optional numeric array with dimensions \verb{nSim x nYear x nArea}
 giving the fraction of total effort allocated to each spatial area
 @slot Targeting Numeric array or scalar controlling spatial targeting behavior
-@slot Maximum Numeric array giving the maximum possible fishing effort
+@slot Maximum Numeric array giving the maximum possible fishing effort.
+@slot Mode Character. Mode for calculation of spatial utility: \code{Density} (default)
+or \code{Biomass}.
 @slot Misc Miscellaneous list}
 }}
 

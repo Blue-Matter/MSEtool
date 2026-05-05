@@ -55,6 +55,7 @@ Simulate_om <- function(OM = NULL,
                                                   IdenticalHist = IdenticalHist, 
                                                   silent = silent)
   
+  
   # ---- Optimize for Final Depletion ----
   Hist <- OptFinalDepletion(Hist, silent = silent)
   

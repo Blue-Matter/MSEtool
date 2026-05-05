@@ -140,6 +140,8 @@ OM <- function(Name='A new `OM` object',
                SharePar=NULL,
                Relations=NULL,
                
+               StockTargeting=NULL,
+               
                Interval=1,
                nReps=1,
                pStar=0.5,
@@ -191,6 +193,14 @@ OM <- function(Name='A new `OM` object',
   .Object@Herm <- Herm
   .Object@SharePar <- SharePar
   .Object@Relations <- Relations
+  
+  if (is.null(StockTargeting)) 
+    StockTargeting <- StockTargeting(.Object)
+  
+  .Object@StockTargeting <- StockTargeting
+  
+  
+  
   
   .Object@Interval <- Interval
   .Object@nReps <- nReps

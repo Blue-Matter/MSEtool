@@ -4,7 +4,7 @@
 \alias{CopySlots}
 \title{Copy Slots Between S4 Objects}
 \usage{
-CopySlots(S4in, S4out, slots, ignore = "Misc")
+CopySlots(S4in, S4out, slots, ignore = "Misc", reduce = FALSE, ...)
 }
 \arguments{
 \item{S4in}{An S4 object providing source slot values.}
@@ -12,6 +12,12 @@ CopySlots(S4in, S4out, slots, ignore = "Misc")
 \item{S4out}{An S4 object receiving copied slot values.}
 
 \item{slots}{A character vector of slot names to copy.}
+
+\item{ignore}{slots to ignore}
+
+\item{reduce}{logical. Use \code{\link[=ReduceDims]{ReduceDims()}}?}
+
+\item{...}{Additional arguments passed to \code{ReduceDims}}
 }
 \value{
 The modified \code{S4out} object.

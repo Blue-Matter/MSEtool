@@ -8,103 +8,121 @@ CombineOMs(
   OM_List,
   Name = "Combined OM",
   FillEffort = list(nYears = 3, SD = 0.1, Mean = NULL, Values = NULL),
-  FillEfficiency = list(nYears = 3, SD = 0.1, Mean = NULL, Values = NULL)
+  FillEfficiency = list(nYears = 3, SD = 0.1, Mean = NULL, Values = NULL),
+  silent = FALSE
 )
 }
 \arguments{
-\item{OM_List}{A named list of \linkS4class{om} objects to be combined. Each element
-represents a separate stock. All OMs must share:
+\item{OM_List}{Named list of \code{\linkS4class{om}} objects}
+
+\item{Name}{Character name for the combined OM}
+
+\item{FillEffort}{List controlling effort forward-filling}
+
+\item{FillEfficiency}{List controlling efficiency forward-filling}
+}
+\value{
+An \code{\linkS4class{om}} object with:
+\itemize{
+\item Combined \verb{@Stock} and \verb{@Fleet}
+\item Unified \verb{@nYear} and \verb{@pYear}
+\item \verb{@CurrentYear} set to the latest historical year
+\item Metadata copied from the first OM
+}
+}
+\description{
+Combine multiple \code{\linkS4class{om}} objects into a single unified operating model.
+Each element of \code{OM_List} represents a distinct stock or stock complex
+(e.g., sex-structured populations). The resulting object spans the full union
+of historical and projection years across all inputs.
+}
+\details{
+\subsection{Requirements}{
+
+All operating models must share:
 \itemize{
 \item The same number of simulations (\code{nSim})
 \item The same number of seasons (\code{Seasons})
 \item Identical fleet names in identical order (see \code{\link[=FleetNames]{FleetNames()}})
-}}
-
-\item{Name}{A character string giving the name of the combined OM.
-Defaults to \code{"Combined OM"}.}
-
-\item{FillEffort}{A named list controlling how effort values are forward-filled
-for years that exist in the combined year range but not in an individual OM.
-Elements:
-\describe{
-\item{\code{nYears}}{Integer. Number of trailing historical years to use as the
-reference when computing a fill mean. Defaults to \code{3}.}
-\item{\code{SD}}{Numeric. Log-scale standard deviation of the lognormal noise
-added to filled values. Set to \code{0} for deterministic filling. Automatically
-set to \code{0} for simulations where effort was constant over the reference
-period. Defaults to \code{0.1}.}
-\item{\code{Mean}}{Optional numeric vector of length 1 or \code{nSim}. If supplied,
-overrides the mean computed from reference years. Defaults to \code{NULL}.}
-\item{\code{Values}}{Optional numeric array of dimensions \verb{nSim x n_fill_years}.
-If supplied, these values are used directly and \code{Mean}/\code{SD}/\code{nYears} are
-ignored. Defaults to \code{NULL}.}
-}}
-
-\item{FillEfficiency}{A named list with the same structure as \code{FillEffort},
-controlling forward-filling of catchability efficiency values.}
 }
-\value{
-An \linkS4class{om} object containing all stocks and fleets from \code{OM_List},
-with:
+}
+
+\subsection{Year Handling}{
 \itemize{
-\item \verb{@Stock} set to the concatenated stocks across all input OMs
-\item \verb{@Fleet} set to the concatenated fleets across all input OMs
-\item \verb{@nYear} and \verb{@pYear} reflecting the unified historical and
-projection year ranges
-\item \verb{@CurrentYear} set to the maximum historical year across all OMs
-\item All administrative slots (\code{Agency}, \code{Author}, \code{nSim}, etc.) copied
-from the first OM in \code{OM_List}
+\item Historical years are combined using the \strong{union} across OMs
+\item The final historical year is the \strong{maximum} across all OMs
+\item Projection years include only years strictly greater than the final historical year
+}
+
+Each OM is expanded to the unified year range:
+\itemize{
+\item Missing early years are \strong{back-filled}
+\item Missing later years are \strong{forward-filled}
+}
+
+Forward filling uses \code{FillEffort} and \code{FillEfficiency}.
+}
+
+\subsection{Fill Controls}{
+
+Both \code{FillEffort} and \code{FillEfficiency} accept:
+\itemize{
+\item \code{nYears} \emph{(integer)}: Number of trailing historical years used to compute a reference mean
+\item \code{SD} \emph{(numeric)}: Lognormal standard deviation applied during stochastic filling
+\item \code{Mean} \emph{(numeric)}: Optional override (length 1 or \code{nSim})
+\item \code{Values} \emph{(array)}: Optional \verb{nSim x n_fill_years} matrix used directly
+}
+
+If \code{Values} is supplied, all other parameters are ignored.
+}
+
+\subsection{Processing Steps}{
+\enumerate{
+\item Validate inputs
+\item Standardize each OM using \code{\link[=PopulateOM]{PopulateOM()}}
+\item Construct unified year ranges
+\item Extend all stock and fleet objects
+\item Merge stocks and fleets
+\item Generate correlated recruitment deviations for projection period via
+\code{\link[=GenMultiStockRecDevs]{GenMultiStockRecDevs()}}
+\item Standardize effort across stocks via \code{\link[=StandardizeEffort]{StandardizeEffort()}}
 }
 }
-\description{
-Combines a list of \linkS4class{om} objects into a single \code{om} object. Each OM in
-\code{OM_List} represents a distinct stock or a set of stocks (e.g. female & male).
-All OMs are merged into a unified operating model that spans the full
-historical and projection year range across all input OMs.
+
+\subsection{Metadata Handling}{
+
+Administrative slots are copied from the \strong{first} OM:
+\itemize{
+\item \code{Agency}, \code{Author}, \code{Email}, \code{Region}, \code{Latitude}, \code{Longitude}
+\item \code{Sponsor}, \code{nSim}, \code{Seasons}, \code{DataLag}, \code{Interval}
+\item \code{nReps}, \code{pStar}, \code{maxF}, \code{Seed}, \code{Control}
 }
-\details{
-Before combining, each OM is populated via \code{\link[=PopulateOM]{PopulateOM()}}, and all stock and
-fleet data are extended or back-filled to cover the unified year range.
 
-The combined year range is determined by taking the union of historical years
-across all OMs, sorted in ascending order. Projection years are similarly
-unioned, retaining only years beyond the maximum historical year.
-
-Stock and fleet arrays that do not span the full combined year range are
-extended using \code{\link[=Extend]{Extend()}} and \code{\link[=Subset]{Subset()}}. Years preceding a stock's original
-start year are back-filled; years beyond are forward-filled using the
-\code{FillEffort} / \code{FillEfficiency} parameters.
-
-Administrative metadata (\code{Agency}, \code{Author}, \code{Email}, \code{Region}, \code{Latitude},
-\code{Longitude}, \code{Sponsor}, \code{nSim}, \code{Seasons}, \code{DataLag}, \code{Interval}, \code{nReps},
-\code{pStar}, \code{maxF}, \code{Seed}, \code{Control}) is copied from the \strong{first} OM in
-\code{OM_List}. Ensure this OM carries the correct global settings.
+Ensure the first OM contains the desired global configuration.
+}
 }
 \section{Validation}{
 
-The function will abort with an informative error if:
+The function errors if:
 \itemize{
-\item Any element of \code{OM_List} is not an \linkS4class{om} object
-\item OMs do not share the same \code{nSim}
-\item OMs do not share the same \code{Seasons}
-\item Fleet names are not identical across all OMs
-\item \code{FillEffort$Values} or \code{FillEfficiency$Values} dimensions do not match
-\verb{nSim x n_fill_years}
+\item Any element is not an \code{\linkS4class{om}} object
+\item \code{nSim} or \code{Seasons} differ across OMs
+\item Fleet names are inconsistent
+\item Provided fill values have invalid dimensions
 }
 }
 
 \examples{
 \dontrun{
-# Combine two OMs with matching fleet structures
 combined <- CombineOMs(
   OM_List = list(StockA = om_a, StockB = om_b),
-  Name = "My Combined OM",
-  FillEffort = list(nYears = 5, SD = 0.05, Mean = NULL, Values = NULL),
-  FillEfficiency = list(nYears = 5, SD = 0.05, Mean = NULL, Values = NULL)
+  Name = "Combined OM",
+  FillEffort = list(nYears = 5, SD = 0.05),
+  FillEfficiency = list(nYears = 5, SD = 0.05)
 )
 }
 
 }
 \seealso{
-\code{\link[=PopulateOM]{PopulateOM()}}, \code{\link[=Extend]{Extend()}}, \code{\link[=Subset]{Subset()}}, \linkS4class{om}, \code{\link[=FleetNames]{FleetNames()}}
+\code{\link[=PopulateOM]{PopulateOM()}}, \code{\link[=Extend]{Extend()}}, \code{\link[=Subset]{Subset()}}, \code{\link[=FleetNames]{FleetNames()}}
 }

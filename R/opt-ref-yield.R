@@ -35,7 +35,12 @@ OptRefYield <- function(logScalar,
   
   # Scale historical effort
   scaledEffort <- baseEffort * exp(logScalar)
-  Proj@Effort[sim, ProjYearInd, ] <- scaledEffort
+  dnames <- dimnames(scaledEffort)
+  dnames$Year <- ProjYears[1]
+  dimnames(scaledEffort) <- dnames
+  scaledEffort <- Extend(scaledEffort, Years=ProjYears)
+
+  ArrayFill(Proj@Effort) <- scaledEffort
   
   # Run fishery dynamics for this sim only
   ProjSim_opt <- CalcFisheryDynamics(Hist = Proj,
@@ -57,4 +62,6 @@ OptRefYield <- function(logScalar,
   if (opt == 1) return(-sum(mean_Yield))
   mean_Yield
 }
+
+
 

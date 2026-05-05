@@ -31,6 +31,7 @@ OM(
   Herm = NULL,
   SharePar = NULL,
   Relations = NULL,
+  StockTargeting = NULL,
   Interval = 1,
   nReps = 1,
   pStar = 0.5,
