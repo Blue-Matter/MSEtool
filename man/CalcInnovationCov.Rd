@@ -14,8 +14,10 @@ stationary covariance of the process.}
 coefficients for each stock.}
 }
 \value{
-A numeric covariance matrix(\code{nStock} x \code{nStock}) representing the
-innovation covariance (\eqn{\Sigma_\epsilon}).
+A numeric covariance matrix (\code{nStock} x \code{nStock}) representing the
+innovation covariance (\eqn{\Sigma_\epsilon}). Rows and columns
+corresponding to inactive stocks (zero diagonal in \code{Sigma_Z}) are set
+to zero.
 }
 \description{
 Computes the innovation covariance matrix (\eqn{\Sigma_\epsilon}) for a
@@ -31,8 +33,16 @@ The relationship used is:
 
 where \eqn{\Phi} is a diagonal matrix of autocorrelation coefficients.
 
-The resulting matrix is forced to be symmetric and positive semi-definite
-using eigenvalue truncation.
+Only stocks with positive stationary variance (active stocks) are included
+in the computation. The result is embedded back into a full zero matrix,
+so inactive stocks contribute no innovation variance.
+
+The active submatrix is forced to be symmetric and positive semi-definite.
+If negative eigenvalues are detected, \code{\link[Matrix:nearPD]{Matrix::nearPD()}} is used to find
+the nearest PSD matrix. After correction, the diagonal is capped at the
+theoretical upper bound \eqn{\sigma^2_{Z,i}(1 - \phi_i^2)} to prevent
+\code{\link[Matrix:nearPD]{Matrix::nearPD()}} from inflating innovation variance beyond what is
+consistent with the stationary distribution.
 }
 \examples{
 Sigma_Z <- matrix(c(1, 0.5, 0.5, 1), 2, 2)
@@ -40,4 +50,7 @@ phi <- c(0.7, 0.6)
 
 CalcInnovationCov(Sigma_Z, phi)
 
+}
+\seealso{
+\code{\link[=GenerateStockTargeting]{GenerateStockTargeting()}}, \code{\link[=FitStockTargeting]{FitStockTargeting()}}
 }

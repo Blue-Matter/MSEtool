@@ -4,7 +4,6 @@
 
 #include "array_nd.h"
 
-using Array1D = ArrayND<1>;
 using Array2D = ArrayND<2>;
 using Array3D = ArrayND<3>;
 using Array4D = ArrayND<4>;

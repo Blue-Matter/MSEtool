@@ -4,15 +4,15 @@
 \alias{CheckCatch}
 \title{Check catch data availability and units}
 \usage{
-CheckCatch(Data, slot_name = "Landings", incUnits = TRUE)
+CheckCatch(Data, incUnits = TRUE, slot_names = c("Landings", "Discards"))
 }
 \arguments{
 \item{Data}{A \linkS4class{data} object.}
 
-\item{slot_name}{\code{"Landings"} (default) or \code{"Discards"}.}
-
 \item{incUnits}{Logical. If \code{TRUE} (default) an additional warning is
 issued when any values in \code{slot_name} are not in units of biomass.}
+
+\item{slot_names}{Slots to check. Defaults are \code{Landings} and \code{Discards}}
 }
 \value{
 \code{NULL} invisibly, called for its side-effect warnings.

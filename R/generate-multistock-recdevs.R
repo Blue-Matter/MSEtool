@@ -134,6 +134,14 @@ GenMultiStockRecDevs <- function(OM, TruncSD = 2, silent = FALSE) {
       if (TruncSD > 5) {
         eps_mat <- MASS::mvrnorm(pYear, mu = rep(0, n_stock), Sigma = Sigma_eps)
       } else {
+        
+        Sigma_eps
+        eig <- eigen(Sigma_eps, symmetric = TRUE)
+        if (any(eig$values <= 1e-10)) {
+          Sigma_eps <- Sigma_eps + diag(1e-8, nrow(Sigma_eps))
+        }
+        
+        
         eps_mat <- tmvtnorm::rtmvnorm(
           n     = pYear,
           mean  = rep(0, n_stock),

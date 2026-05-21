@@ -1,8 +1,8 @@
 #' Extract Catch Time Series
 #'
-#' `Interactions()`, `Landings()`, and `Discards()` extract total
-#' interactions (encounters), retained landings, and discards,
-#' respectively, from a [hist-class] or [mse-class] object.
+#' `Interactions()`, `Landings()`, `Discards()`, and `Removals` extract total
+#' interactions (encounters), retained landings, discards, and removals 
+#' (landings + discards) respectively, from a [hist-class] or [mse-class] object.
 #' 
 #' When `byAge = FALSE` or `bySize = FALSE`, the catch data are in units of 
 #' biomass, i.e `N` x `Weight`, where `Weight` is the fleet-specific 
@@ -52,13 +52,14 @@
 #' MSE <- Project(Hist, 'CurrentEffort')
 #' 
 #' # Raw arrays
-#' Interactions(Hist)
-#' Landings(MSE)
+#' Interactions(Hist, df = FALSE)
+#' Landings(MSE, df = FALSE)
 #'
 #' # Tidy data frames — total across fleets, ages, areas
-#' Interactions(Hist, df = TRUE)
-#' Landings(MSE, df = TRUE)
-#' Discards(MSE, df = TRUE)
+#' Interactions(Hist)
+#' Landings(MSE)
+#' Discards(MSE)
+#' Removals(MSE)
 #'
 #' # Retain fleet, age, and area structure
 #' Interactions(Hist, df = TRUE, byFleet = TRUE, byAge = TRUE, byArea = TRUE)
@@ -134,6 +135,53 @@ Discards <- function(object,
                            IncYear   = IncYear)
 }
 
+
+#' @rdname catch_timeseries
+#' @export
+Removals <- function(object,
+                     df      = TRUE,
+                     byAge   = FALSE,
+                     bySize  = FALSE,
+                     byArea  = FALSE,
+                     byFleet = TRUE,
+                     Reduce  = TRUE,
+                     IncYear = FALSE) {
+  if (byAge)  bySize <- FALSE
+  if (bySize) byAge  <- FALSE
+  
+  L <- extract_catch_timeseries(object,
+                           df        = df,
+                           slot_name = 'Landings',
+                           byAge     = byAge,
+                           bySize    = bySize,
+                           byArea    = byArea,
+                           byFleet   = byFleet,
+                           Reduce    = Reduce,
+                           IncYear   = IncYear)
+  
+  D <- extract_catch_timeseries(object,
+                                df        = df,
+                                slot_name = 'Discards',
+                                byAge     = byAge,
+                                bySize    = bySize,
+                                byArea    = byArea,
+                                byFleet   = byFleet,
+                                Reduce    = Reduce,
+                                IncYear   = IncYear)
+  
+  if (!df)
+    return(ArraySum(D,L))
+  
+ R <- dplyr::bind_rows(L, D) 
+ cnames <- colnames(R)
+ cnames <- cnames[!cnames=='Variable']
+ cnames <- cnames[!cnames=='Value']
+ 
+ R |> dplyr::group_by(dplyr::across(dplyr::all_of(cnames))) |>
+   dplyr::summarise(Value = sum(Value, na.rm=TRUE), .groups='drop') |>
+   dplyr::mutate(Variable = 'Removals')
+ 
+}
 
 extract_catch_timeseries <- function(object,
                                      slot_name = 'Interactions',

@@ -11,12 +11,13 @@ to selectivity target individual stocks.
 \section{Slots}{
 
 \describe{
-\item{\code{Mean}}{\code{array[sim, stock, fleet]}. Mean targeting weight in log-space.}
+\item{\code{Mean}}{\code{array[sim, stock, fleet]}. Mean targeting weight.}
 
 \item{\code{Covariance}}{\code{array[sim, stock, stock, fleet]}. Log residual covariance
 matrix of targeting weights per fleet.}
 
-\item{\code{AC}}{\code{array[sim, stock, fleet]}. Lag-1 auto-correlation of log deviations.}
+\item{\code{AC}}{\code{array[sim, stock, fleet]}. Lag-1 auto-correlation of log deviations.
+Currently not used.}
 
 \item{\code{Targeting}}{\code{array[sim, stock, fleet, year]}. Targeting
 deviations. Normal space. Values are mean-1 across stocks for each fleet-year,

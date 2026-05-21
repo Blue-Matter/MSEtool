@@ -27,20 +27,6 @@ inline void CalcSpawnProduction(
     const int nFleet,
     const int nArea) {
 
-  // Checks
-  if ((int)Number.size() < nStock ||
-      (int)Fecundity.size() < nStock ||
-      (int)Maturity.size() < nStock ||
-      (int)Weight.size() < nStock ||
-      (int)NaturalMortality.size() < nStock ||
-      (int)FDeadArea.size() < nStock)
-    Rcpp::stop("Stock-level input list shorter than nStock");
-  
-  check_dims<3>(SBiomass, {nSim, nStock, SBiomass.dim[2]}, "SBiomass", y, 2);
-  check_dims<3>(SProduction, {nSim, nStock, SProduction.dim[2]}, "SProduction", y, 2);
-  check_dims<2>(SpawnTimeFrac, {nSim, nStock}, "SpawnTimeFrac");
-  check_dims<1>(SPFrom, {nStock}, "SPFrom");
-
   // survival buffer: survival(age, area) = exp(-Z * spawnFrac)
   std::vector<double> surv_buf;
   
@@ -56,13 +42,6 @@ inline void CalcSpawnProduction(
     
     const int nAge = Num_st.dim[1];
     
-    check_dims<4>(Num_st, {nSim, nAge, Num_st.dim[2], nArea}, "Number", y, 2);
-    check_dims<3>(Fec_st, {nSim, nAge, Fec_st.dim[2]}, "Fecundity", y, 2);
-    check_dims<3>(Mat_st, {nSim, nAge, Mat_st.dim[2]}, "Maturity", y, 2);
-    check_dims<3>(Wt_st, {nSim, nAge, Wt_st.dim[2]}, "Weight", y, 2);
-    check_dims<3>(M_st, {nSim, nAge, M_st.dim[2]}, "NaturalMortality", y, 2);
-    check_dims<5>(FDA_st, {nSim, nAge, FDA_st.dim[2], nFleet, nArea}, "FDeadArea", y, 2);
-    
     surv_buf.resize(nAge * nArea);
     
     // loop over sims
@@ -71,13 +50,13 @@ inline void CalcSpawnProduction(
       SProduction(sim, st, y) = 0.0;
       SBiomass(sim, st, y)    = 0.0;
       
-      const int sim_num  = sim_index<4>(sim, Num_st, "Number");
-      const int sim_fec  = sim_index<3>(sim, Fec_st, "Fecundity");
-      const int sim_mat  = sim_index<3>(sim, Mat_st, "Maturity");
-      const int sim_wt   = sim_index<3>(sim, Wt_st, "Weight");
-      const int sim_m    = sim_index<3>(sim, M_st, "NaturalMortality");
-      const int sim_fda  = sim_index<5>(sim, FDA_st, "FDeadArea");
-      const int sim_stf  = sim_index<2>(sim, SpawnTimeFrac, "SpawnTimeFrac");
+      const int sim_num  = sim_index<4>(sim, Num_st);
+      const int sim_fec  = sim_index<3>(sim, Fec_st);
+      const int sim_mat  = sim_index<3>(sim, Mat_st);
+      const int sim_wt   = sim_index<3>(sim, Wt_st);
+      const int sim_m    = sim_index<3>(sim, M_st);
+      const int sim_fda  = sim_index<5>(sim, FDA_st);
+      const int sim_stf  = sim_index<2>(sim, SpawnTimeFrac);
       
       const double spawnFrac = SpawnTimeFrac(sim_stf, st);
       const bool   doSurv    = spawnFrac > 0.0;
@@ -115,30 +94,15 @@ inline void CalcSpawnProduction(
           const double fec    = Fec_st(sim_fec, age, y);
           const double wt_mat = Wt_st(sim_wt, age, y) * Mat_st(sim_mat, age, y);
           
-          double tempN = 0;
-        
-        
           for (int ar = 0; ar < nArea; ++ar) {
             const double N = Num_st(sim_num, age, y, ar);
-            tempN += N;
             SP += N * fec;
             SB += N * wt_mat;
           }
           
-          // if (y == 0 && sim == 0) {
-          //   Rcpp::Rcout << "Stock = " << st << "\n";
-          //   Rcpp::Rcout << "N = " << tempN << "\n";
-          //   Rcpp::Rcout << "fec = " << fec << "\n";
-          //   Rcpp::Rcout << "wt_mat = " << wt_mat << "\n";
-          //   Rcpp::Rcout << "SB = " << SB << "\n";
-          //   Rcpp::Rcout << "SP = " << SP << "\n";
-          // }
-          
         }
       } 
-      // if (y==0 && sim ==0)
-      //   Rcpp::Rcout << "SP = " << SP << "\n";
-      
+
       SProduction(sim, st, y) = SP;
       SBiomass(sim, st, y)    = SB;
     } // end sim loop

@@ -5,23 +5,46 @@
 #' (e.g., sex-structured populations). The resulting object spans the full union
 #' of historical and projection years across all inputs.
 #'
-#' ## Requirements
-#' All operating models must share:
-#' - The same number of simulations (`nSim`)
-#' - The same number of seasons (`Seasons`)
-#' - Identical fleet names in identical order (see [FleetNames()])
+#' @param OM_List Named list of [`om-class`] objects. All elements must share
+#'   the same `nSim`, `Seasons`, and fleet names in identical order. See
+#'   [FleetNames()].
+#' @param Name `character(1)`. Name assigned to the combined OM.
+#'   Default `"Combined OM"`
+#' @param FillEffort List controlling effort forward-filling. See `Details`.
+#' @param FillEfficiency List controlling efficiency forward-filling. See `Details`.
+#' @param StandardizeEffort `logical(1)`. If `TRUE` (default), calls
+#'   [StandardizeEffort()] after combining, which equalises effort across
+#'   stocks for each fleet and back-calculates stock targeting weights.
+#' @param silent `logical(1)`. If `TRUE`, suppresses informational messages. Default `FALSE`.
 #'
-#' ## Year Handling
-#' - Historical years are combined using the **union** across OMs
-#' - The final historical year is the **maximum** across all OMs
-#' - Projection years include only years strictly greater than the final historical year
+#' @return An [`om-class`] object with:
+#'   - `@Stock`: concatenation of all stocks across input OMs, in list order.
+#'   - `@Fleet`: concatenation of all fleet lists across input OMs.
+#'   - `@nYear`: length of the unified historical year range.
+#'   - `@pYear`: number of projection years strictly after the latest
+#'     historical year.
+#'   - `@CurrentYear`: the latest historical year across all input OMs.
+#'   - Administrative metadata (`Agency`, `Author`, `nSim`, `Seed`, etc.)
+#'     copied from `OM_List[[1]]`.
+#' 
+#' @details
+#' 
+#' ## Processing steps
 #'
-#' Each OM is expanded to the unified year range:
-#' - Missing early years are **back-filled**
-#' - Missing later years are **forward-filled**
-#'
-#' Forward filling uses `FillEffort` and `FillEfficiency`.
-#'
+#' 1. Validate that all OMs share `nSim`, `Seasons`, and fleet names.
+#' 2. Standardize each OM via [PopulateOM()].
+#' 3. Construct unified historical and projection year ranges: historical years
+#'    are the union across all OMs; projection years are those strictly greater
+#'    than the maximum historical year.
+#' 4. Extend every stock and fleet object to the unified year range.
+#'    Missing early years are back-filled; missing later historical years are
+#'    forward-filled using `FillEffort` and `FillEfficiency`.
+#' 5. Concatenate stocks and fleets.
+#' 6. Generate correlated recruitment deviations for the projection period
+#'    via [GenMultiStockRecDevs()].
+#' 7. Optionally standardize effort across stocks via [StandardizeEffort()],
+#'    which populates `@StockTargeting`
+#'    
 #' ## Fill Controls
 #'
 #' Both `FillEffort` and `FillEfficiency` accept:
@@ -32,47 +55,17 @@
 #' - `Values` *(array)*: Optional `nSim x n_fill_years` matrix used directly  
 #'
 #' If `Values` is supplied, all other parameters are ignored.
-#'
-#' ## Processing Steps
-#'
-#' 1. Validate inputs
-#' 2. Standardize each OM using [PopulateOM()]
-#' 3. Construct unified year ranges
-#' 4. Extend all stock and fleet objects
-#' 5. Merge stocks and fleets
-#' 6. Generate correlated recruitment deviations for projection period via 
-#' [GenMultiStockRecDevs()]
-#' 7. Standardize effort across stocks via [StandardizeEffort()]
 #' 
-#' ## Metadata Handling
+#' ## Metadata
 #'
-#' Administrative slots are copied from the **first** OM:
-#'
-#' - `Agency`, `Author`, `Email`, `Region`, `Latitude`, `Longitude`
-#' - `Sponsor`, `nSim`, `Seasons`, `DataLag`, `Interval`
-#' - `nReps`, `pStar`, `maxF`, `Seed`, `Control`
-#'
-#' Ensure the first OM contains the desired global configuration.
-#'
-#' @param OM_List Named list of [`om-class`] objects
-#' @param Name Character name for the combined OM
-#' @param FillEffort List controlling effort forward-filling
-#' @param FillEfficiency List controlling efficiency forward-filling
-#'
-#' @return An [`om-class`] object with:
-#' - Combined `@Stock` and `@Fleet`
-#' - Unified `@nYear` and `@pYear`
-#' - `@CurrentYear` set to the latest historical year
-#' - Metadata copied from the first OM
-#'
-#' @section Validation:
-#' The function errors if:
-#' - Any element is not an [`om-class`] object
-#' - `nSim` or `Seasons` differ across OMs
-#' - Fleet names are inconsistent
-#' - Provided fill values have invalid dimensions
-#'
-#' @seealso [PopulateOM()], [Extend()], [Subset()], [FleetNames()]
+#' The following slots are copied verbatim from `OM_List[[1]]`:
+#' `Agency`, `Author`, `Email`, `Region`, `Latitude`, `Longitude`,
+#' `Sponsor`, `nSim`, `Seasons`, `DataLag`, `Interval`, `nReps`,
+#' `pStar`, `maxF`, `Seed`, `Control`. Ensure the first OM contains
+#' the desired global configuration.
+#' 
+#' 
+#' @seealso [GenMultiStockRecDevs()], [StandardizeEffort()]
 #'
 #' @examples
 #' \dontrun{
@@ -90,6 +83,7 @@ CombineOMs <- function(
     Name = "Combined OM",
     FillEffort = list(nYears = 3, SD = 0.1, Mean = NULL, Values = NULL),
     FillEfficiency = list(nYears = 3, SD = 0.1, Mean = NULL, Values = NULL),
+    StandardizeEffort = TRUE,
     silent = FALSE) {
   
   ValidateOMList(OM_List)
@@ -115,13 +109,52 @@ CombineOMs <- function(
   
   OM_Out <- CombineStocksFleets(OM_Out, extended)
   
-  OM_Out <- GenMultiStockRecDevs(OM_Out)
+  OM_Out <- CombineStocksData(OM_Out, OM_List)
+
+  OM_Out@EFactor <- purrr::map(OM_List, slot, 'EFactor')
   
-  OM_Out <- StandardizeEffort(OM_Out, silent = TRUE, populate=FALSE)
+  OM_Out <- GenMultiStockRecDevs(OM_Out, silent = silent)
+  
+  if (StandardizeEffort)
+    OM_Out <- StandardizeEffort(OM_Out, populate=FALSE)
   
   OM_Out
   
 }
+
+
+CombineStocksData <- function(OM, OM_List) {
+  HistYears <- Years(OM, 'H')
+  
+  for (i in seq_along(OM_List)) {
+    StockDataList <- OM_List[[i]]@Data
+    for (j in seq_along(StockDataList)) {
+      Data <- StockDataList[[j]]
+      Data <- Extend(Data, 
+                     Years     = HistYears,       
+                     default   = NA, 
+                     backfill  = TRUE, 
+                     skip_data = FALSE)
+      
+      Data@Years <- HistYears
+      Data@YearLH <- max(HistYears)
+      
+      StockDataList[[j]] <- Data
+      
+    }
+    OM_List[[i]]@Data <- StockDataList
+  }
+  
+  OM@Data <- purrr::list_flatten(
+    purrr::map(OM_List, slot, 'Data'),
+    name_spec = '{inner}'
+  )
+  OM
+}
+
+
+
+
 
 ValidateOMList <- function(OM_List) {
   

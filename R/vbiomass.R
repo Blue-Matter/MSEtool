@@ -59,7 +59,7 @@ CalcVBiomass <- function(Hist, Year, type=c('Removals', 'Landings')) {
     function(sel, ret, dm) ArrayMultiply(sel, ret)
   } else {
     # removals = retained + dead discards
-    function(sel, ret, dm) ArrayMultiply(sel, ArrayAdd(ret, ArrayMultiply(1- ret, dm)))
+    function(sel, ret, dm) ArrayMultiply(sel, ArraySum(ret, ArrayMultiply(1- ret, dm)))
   }
   
   

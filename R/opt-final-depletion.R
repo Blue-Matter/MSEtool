@@ -262,13 +262,14 @@ OptimizeCatchability_Multi <- function(HistSim, nStock, nFleet, nArea, YearsHist
         q <- HistSim@OM@Fleet[[st]][[fl]]@Catchability@Efficiency
         relF[fl] <- effort[1,ncol(effort)] * q[1,ncol(q)]
       }
-      HistSim@OM@CatchFrac[[st]] <-   relF/sum(relF)
+      HistSim@OM@CatchFrac[[st]] <- relF/sum(relF)
     }
   }
   
-  CatchFrac <- List2Array(HistSim@OM@CatchFrac, name = 'Stock', pos=2) |>
-    DropDimension('Sim', FALSE)
-  EffortFleet <- array(NA, dim=dim(CatchFrac))
+  CatchFrac <- List2Array(HistSim@OM@CatchFrac, name = 'Stock', dim1 = 'Fleet', pos=2) |>
+    t()
+  
+  EffortFleet <- array(NA, dim=c(nStock, nFleet))
   nTS <- length(YearsHist)
   for (st in 1:nStock) {
     for (fl in 1:nFleet) {

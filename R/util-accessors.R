@@ -202,11 +202,7 @@ LifeHistory <- function(x) {
   AssignSlot(x, value, 'LifeHistory')
 }
 
-#' @rdname Access
-#' @export
-Log <- function(x) {
-  AccessSlot(x, 'Log')
-}
+
 
 #' @rdname Access
 #' @export

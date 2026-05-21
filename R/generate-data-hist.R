@@ -18,7 +18,7 @@
 #' @keywords internal
 GenerateHistoricalData <- function(Hist, silent=FALSE) {
   
-  CheckObs(Hist@OM, silent)
+  Hist <- CheckObs(Hist, silent)
   
   HistYears <- Years(Hist,'H')
   nSim <- Hist@OM@nSim
@@ -29,7 +29,7 @@ GenerateHistoricalData <- function(Hist, silent=FALSE) {
   
   id <- NULL
   if (!silent) 
-    id <- cli::cli_progress_bar("Generating Historical {.val Data}")
+    id <- cli::cli_progress_bar("Generating Historical Data")
   
   SimDataList <- purrr::map(1:nSim, \(sim)
                             GenerateHistoricalData_Sim(sim,
@@ -105,7 +105,7 @@ GenerateHistoricalData <- function(Hist, silent=FALSE) {
   }
   
   if (!silent)
-    cli::cli_alert_success("Generated Historical {.val Data}")
+    cli::cli_alert_success("Generated Historical Data")
  
   Hist
 }

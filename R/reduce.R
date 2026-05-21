@@ -13,7 +13,8 @@
 #'   all ages are identical.
 #' @param IncYear Logical; reduce the `Year`dimension if present and
 #'   all years are identical or by keeping only unique years.
-#'   
+#' @param debug Logical. Print debug messages?
+#'    
 #' @details
 #' Reduction is controlled independently for each supported dimension.
 #' If a dimension is excluded or not present, it is left unchanged.
@@ -31,15 +32,19 @@
 #' @seealso [ReduceNSim()]
 #' @export
 ReduceDims <- function(array,
-                       IncSim = TRUE,
-                       IncAge = FALSE,
-                       IncYear = FALSE) {
+                       IncSim  = TRUE,
+                       IncAge  = FALSE,
+                       IncYear = FALSE,
+                       debug   = FALSE) {
   
   if (!IncSim && !IncYear && !IncAge) 
     return(array)
   
   if (!length(array)) 
     return(array)
+  
+  if (debug)
+    cli::cli_alert_info(class(array))
   
   # Recall for S4
   if (isS4(array)) {
@@ -48,6 +53,8 @@ ReduceDims <- function(array,
     }
     
     for (sl in slotNames(array)) {
+      if (debug)
+        cli::cli_alert('Slot {sl}')
       slot(array, sl) <- Recall(slot(array, sl),IncSim, IncAge, IncYear)
     }
     

@@ -6,7 +6,7 @@
 #' @return Nothing
 #' @export
 DeleteLogs <- function(Dir=file.path(getwd(),'Log')) {
-  cli::cli_inform('Deleting all log files in: {.val {Dir}}')
+  cli::cli_text('Deleting all log files in: {.val {Dir}}')
   
   unlink(Dir, recursive=TRUE, force=TRUE)
   invisible(NULL)

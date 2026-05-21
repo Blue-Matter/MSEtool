@@ -81,7 +81,7 @@ PopulateOM <- function(OM, silent = FALSE, force = FALSE, standardize_effort = T
   # CheckAllocation()
   
   if (standardize_effort)
-    OM <- StandardizeEffort(OM, silent, populate=FALSE)
+    OM <- StandardizeEffort(OM, populate=FALSE)
 
   SetDigest(OM)
 }
@@ -194,6 +194,14 @@ PopulateFleetList <- function(OM, silent = FALSE, force = FALSE) {
         silent = silent,
         force  = force
       )
+      
+      # extract warning logs - only selectivity for now 
+      if (!is.null(FleetList[[st]][[fl]]@Selectivity@Misc$warning)) {
+        warns <- FleetList[[st]][[fl]]@Selectivity@Misc
+        names(warns[[1]])[1] <- paste(FleetList[[st]][[fl]]@Name, names(warns[[1]])[1], sep = ' - ')
+        OM@Log <- c(OM@Log, warns)
+      }
+      
       names(FleetList[[st]])[fl] <- FleetList[[st]][[fl]]@Name
     }
   }

@@ -37,7 +37,14 @@ StockNames <- function(object) {
     if (inherits(object@Stock, 'stock')) 
       return(object@Stock@Name)
       
-    return(names(object@Stock))
+    nms <- names(object@Stock)
+    if (!is.null(nms))
+      return(nms)
+    
+    return(
+      purrr::map_chr(object@Stock, Name)  
+    )
+    
   }
   
   if (inherits(object, "StockList")) {
@@ -55,14 +62,15 @@ FleetNames <- function(object, IncSurvey = FALSE) {
   if (inherits(object, c("hist", "mse")))
     return(Recall(object@OM, IncSurvey = IncSurvey))
   
-  
-
   if (inherits(object, "om")) {
     
     if (inherits(object@Fleet, "fleet")) {
       fleetnames <- object@Fleet@Name
     } else if (is.list(object@Fleet)) {
       fleetnames <- names(object@Fleet[[1]])  
+      if (is.null(fleetnames)) {
+        fleetnames <- purrr::map_chr(object@Fleet[[1]], Name)
+      }
     } else {
       cli::cli_alert_warning("Unrecognised structure in {.val object@Fleet}; cannot extract fleet names.")
       return(NULL)

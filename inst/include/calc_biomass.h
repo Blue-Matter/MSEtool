@@ -25,8 +25,8 @@ inline void CalcBiomass(
     
     for (int sim : Sims) {
       
-      const int sim_num   = sim_index<4>(sim, Num_st, "Number");
-      const int sim_wght  = sim_index<3>(sim, Wght_st, "Weight");
+      const int sim_num   = sim_index<4>(sim, Num_st);
+      const int sim_wght  = sim_index<3>(sim, Wght_st);
       
       double B = 0.0;
       for (int age = 0; age < nAge; ++age) {

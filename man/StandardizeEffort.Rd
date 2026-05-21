@@ -4,64 +4,102 @@
 \alias{StandardizeEffort}
 \title{Standardize fishing effort across stocks for each fleet}
 \usage{
-StandardizeEffort(OM, silent = FALSE, populate = TRUE)
+StandardizeEffort(
+  OM,
+  populate = TRUE,
+  fit_stock_targeting = TRUE,
+  generate_stock_targeting = TRUE
+)
 }
 \arguments{
 \item{OM}{An operating model object (\linkS4class{om}).}
 
-\item{silent}{\code{logical(1)}. If \code{FALSE} (default), emits a warning and
-informational message when effort is found to differ across stocks for
-any fleet. Set to \code{TRUE} to suppress these messages.}
+\item{populate}{\code{logical(1)}. Populate \code{OM} at beginning of call?
+Used internally. Default \code{TRUE}.}
 
-\item{populate}{\code{logical(1)}. Populate \code{OM} at beginning of call? Used internally.}
+\item{fit_stock_targeting}{\code{logical(1)}. Run \code{\link[=FitStockTargeting]{FitStockTargeting()}} after
+standardizing? Default \code{TRUE}.}
+
+\item{generate_stock_targeting}{\code{logical(1)}. Run \code{\link[=GenerateStockTargeting]{GenerateStockTargeting()}}
+after fitting? Default \code{TRUE}. Ignored (with a warning) if
+\code{fit_stock_targeting = FALSE}, since \code{\link[=GenerateStockTargeting]{GenerateStockTargeting()}} requires
+fitted targeting parameters.}
 }
 \value{
 The input \code{OM} object with:
 \itemize{
-\item \code{Fleet[[st]][[fl]]@Effort@Effort} set to the mean effort across stocks
-for each fleet where effort differed.
-\item \code{OM@StockTargeting} populated with back-calculated targeting
-weights.
+\item \code{Fleet[[st]][[fl]]@Effort@Effort} set to the geometric mean effort
+over active stocks for \strong{all stocks} in each fleet where effort differed
+across any stock.
+\item \code{OM@StockTargeting@Targeting} populated with back-calculated targeting
+weights \eqn{\delta_{s,f,t}}. Over active stocks at each time step, the
+weights have geometric mean 1 (equivalently, their logs sum to zero).
+Inactive stocks receive weight 0.
 }
 }
 \description{
 For a multi-stock operating model, effort for a given fleet must be
 identical across stocks. When stocks have been specified with differing
 effort trajectories (e.g. derived from stock-specific estimated Fs), this
-function standardizes effort to the mean across stocks and back-calculates
+function standardizes effort to the geometric mean across \strong{active stocks}
+(those with positive effort) at each time step, and back-calculates
 stock-fleet targeting weights that preserve effective fishing mortality.
 }
 \details{
-For each fleet \code{fl}, the standardized effort is the element-wise mean of
-the effort arrays across all stocks.
+For each fleet \code{fl}, year \code{t}, and simulation \code{i}, the standardized effort
+is the geometric mean of stock-specific effort over stocks with positive
+effort at that time step:
+
+\deqn{
+  E_{f,t} = \exp\!\left(
+    \frac{1}{|\mathcal{A}_{f,t}|}
+    \sum_{s \in \mathcal{A}_{f,t}} \log E_{s,f,t}
+  \right)
+}
+
+where \eqn{\mathcal{A}_{f,t} = \{s : E_{s,f,t} > 0\}} is the set of
+active stocks for fleet \eqn{f} at time \eqn{t}.
 
 The targeting weight for each stock is then:
 
 \deqn{
-  \text{Targeting}_{s,i,y} =
-    \frac{E_{\text{nominal},s,i,y}}{E_{\text{standard},i,y}}
+  \delta_{s,f,t} = \frac{E_{s,f,t}}{E_{f,t}}
 }
 
 so that effective fishing mortality is conserved:
 
 \deqn{
-  E_{\text{standard}} \times \text{Targeting}_s \times q_s =
-  E_{\text{nominal},s} \times q_s
+  E_{f,t} \times \delta_{s,f,t} \times q_{s,f} =
+  E_{s,f,t} \times q_{s,f} = F_{s,f,t}
 }
 
-Targeting weights are by construction mean-1 across stocks for each
-fleet-year. Where \code{StandardEffort} is near zero (below tolerance \code{1e-4}),
-targeting is set to 1 (neutral).
+By construction, the targeting weights have geometric mean 1 over active
+stocks at each time step — equivalently, the log-targeting deviations sum
+to zero:
 
-The effort \code{Distribution} array must be identical across stocks for each
-fleet.
+\deqn{
+  \sum_{s \in \mathcal{A}_{f,t}} \log \delta_{s,f,t} = 0
+}
 
-The function returns \code{OM} unchanged if \code{nStock == 1}.
+Inactive stocks (\eqn{E_{s,f,t} = 0}) receive targeting weight
+\eqn{\delta_{s,f,t} = 0}.
+
+These targeting weights are stored in \code{OM@StockTargeting@Targeting} and
+are subsequently used by \code{\link[=FitStockTargeting]{FitStockTargeting()}} to estimate the historical
+covariance of log-targeting deviations.
+
+If populated, the effort \code{Distribution} array must be identical across stocks
+for each fleet. The function returns \code{OM} unchanged if \code{nStock == 1}
+(any pre-existing \code{StockTargeting} data is also cleared in this case, as
+it is not meaningful for single-stock models).
 }
 \examples{
 \dontrun{
-OM_standardized <- StandardizeEffort(OM, silent = FALSE)
+OM_standardized <- StandardizeEffort(OM)
 # Inspect back-calculated targeting
 OM_standardized@StockTargeting@Targeting
 }
+}
+\seealso{
+\code{\link[=FitStockTargeting]{FitStockTargeting()}}, \code{\link[=GenerateStockTargeting]{GenerateStockTargeting()}}
 }

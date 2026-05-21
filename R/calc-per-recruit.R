@@ -158,7 +158,7 @@ CalcPerRecruit_F <- function(apicalF = 0.1,
   
   stockInd <- which(names(dimnames(FDeadTotal)) == 'Stock')
   FDeadTotalList <- FDeadTotal |> Array2List(stockInd)
-  ZDeadTotalList <- purrr::map2(FDeadTotalList, NaturalMortalityList, ArrayAdd)
+  ZDeadTotalList <- purrr::map2(FDeadTotalList, NaturalMortalityList, ArraySum)
   
   NPRFList <- purrr::pmap(list(NaturalMortalityList, FDeadTotalList, PlusGroupList, SemelparousList),
                           \(NaturalMortality, FishingMortalityAtAge, PlusGroup, Semelparous)

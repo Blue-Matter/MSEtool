@@ -21,7 +21,7 @@ Effort(
   Maximum = NULL,
   Mode = NULL,
   Misc = list(),
-  df = FALSE
+  df = TRUE
 )
 
 Effort(x) <- value
@@ -84,8 +84,8 @@ or \code{Biomass}. See equations in Technical Manual.}
 \item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
 
 \item{df}{Logical. Only used when \code{Effort} is a \linkS4class{hist} or an
-\linkS4class{mse} object. If \code{FALSE} (default) the raw \code{Effort} array is returned.
-If \code{TRUE} a tidy \code{data.frame} is returned via \code{\link[=extract_effort]{extract_effort()}}.}
+\linkS4class{mse} object. If \code{TRUE} (default) a tidy \code{data.frame} is returned.
+If \code{FALSE} the raw \code{Effort} array is returned.}
 
 \item{x}{An \linkS4class{effort} object, or a compatible object for \verb{Effort<-}.}
 

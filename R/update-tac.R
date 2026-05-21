@@ -28,20 +28,11 @@ Update_TAC <- function(Proj,
   if (AllAdviceNull(AdviceSimList, 'TAC'))
     return(Proj)
   
-  if (is.null(Proj@OM@Allocation) && !is.null(Proj@OM@CatchFrac))
-    Proj@OM@Allocation <- Proj@OM@CatchFrac
-
-  # VBiomass <- CalcVBiomass(Proj, Year)
-  
-  # tictoc::tic("TAC")
   for (sim in seq_len(Proj@OM@nSim)) {
-    
-    # tictoc::tic("TAC Sim")
     
     AdviceList <- AdviceSimList[[sim]]
     LastAdviceList <- LastAdviceSimList[[sim]]
-    # VBiomass_Sim <- VBiomass[sim,,,drop=FALSE] |> DropDimension('Sim')
-    
+
     Proj <- Update_TAC_Sim(
       Proj            = Proj,
       sim             = sim,
@@ -49,158 +40,99 @@ Update_TAC <- function(Proj,
       TSIndex         = TSIndex,
       AdviceList      = AdviceList,
       LastAdviceList  = LastAdviceList,
+      StockNames      = StockNames,
       FleetNames      = FleetNames,
       Areas           = Areas
     )
-    
-    # tictoc::toc()
   }
-  # tictoc::toc()
   
   Proj
 }
 
-#' Update effort to achieve TAC for a single simulation
-#'
-#' @param Proj A `Proj` object.
-#' @param sim Integer. Simulation index.
-#' @param Year Integer. Current projection year.
-#' @param TSIndex Integer. Time-step index of `Year` in `c(YearsHist, YearsProj)`.
-#' @param AdviceList List of `advice` objects for this simulation, one per complex.
-#' @param LastAdviceList Same structure as `AdviceList` for the previous year.
-#' @param FleetNames Character vector of fleet names.
-#' @param Areas Integer vector of area indices.
-#' @return Updated `Proj` object.
-#' @keywords internal
-Update_TAC_Sim <- function(Proj,
-                           sim,
-                           Year, 
+
+# TODO 
+# - add lambda_ascale to Fleet or Imp
+# - add n_recent to OM@Control
+# - add Choke to Imp
+
+Update_TAC_Sim <- function(Proj, 
+                           sim, 
+                           Year,
                            TSIndex,
                            AdviceList,
                            LastAdviceList,
-                           FleetNames,
-                           Areas) {
+                           StockNames,
+                           FleetNames, 
+                           Areas,
+                           lambda_scale = 0.001,
+                           n_recent     = 5,
+                           maxEval      = 500) {
   
-  Complexes    <- Proj@OM@Complexes
-  ComplexNames <- names(Complexes)
-  nComplex     <- length(Complexes)
-  nFleet       <- length(FleetNames)
-  nArea        <- length(Areas)
+  Complexes  <- Proj@OM@Complexes
+  nComplex   <- length(Complexes)
+  nFleet_loc <- length(FleetNames)
+  nStock     <- length(StockNames)
   
-  chk <- purrr::map(AdviceList, \(Advice) inherits(Advice, 'advice')) |> unlist()
-  if (any(!chk))
+  chk <- vapply(AdviceList, function(a) inherits(a, 'advice'), logical(1))
+  if (any(!chk)) return(Proj)
+  
+  TAC_by_Complex     <- ResolveTACByComplex(AdviceList, LastAdviceList,
+                                            Complexes, 
+                                            Proj, 
+                                            sim, 
+                                            FleetNames)
+  TACType_by_Complex <- ResolveTACTypeByComplex(AdviceList, Complexes)
+  
+  MaxFleetEffort     <- Proj@Effort[sim, TSIndex,]
+  
+  if (nComplex == 1) {
+    
+    Required_Effort <- OptEffort_singlestock(Proj, 
+                                             Year, 
+                                             TSIndex,
+                                             sim, 
+                                             TAC_by_Complex,
+                                             TACType_by_Complex,
+                                             MaxFleetEffort)
+    
+    Proj@Effort[sim, TSIndex, ] <- Required_Effort
     return(Proj)
-  
-  TAC_by_Complex <- ResolveTACByComplex(
-    AdviceList, LastAdviceList, Complexes, Proj, sim, nFleet
-  )
-  
-  # Compute required effort per fleet x complex 
-  RequiredEffort <- matrix(
-    NA_real_, nrow = nFleet, ncol = nComplex,
-    dimnames = list(Fleet = FleetNames, Complex = ComplexNames)
-  )
-  
-  TACType_by_Complex <- vector("character", nComplex)
-  
-  for (i in seq_len(nComplex)) {
-    if (is.null(TAC_by_Complex[[i]])) next
-    
-    stocks  <- Complexes[[i]]
-    TAC_by_Fleet <- TAC_by_Complex[[i]]
-    TACType <- AdviceList[[i]]@TACType
-    TACType_by_Complex[i] <- TACType
-    
-    # Vbiomass_complex <- VBiomass_Sim[i,]
-    # exceed_vb <- which(TAC_by_Fleet > Vbiomass_complex)
-    # if (length(exceed_vb)) {
-    #   TAC_by_Fleet[exceed_vb] <- Vbiomass_complex[exceed_vb]
-    # }
-    
-    RequiredEffort[, i] <- OptEffort(
-      Proj, Year, TSIndex, sim, stocks, TAC_by_Fleet, TACType
-    )
-    
   }
   
-  # Binding effort = A fleet cannot exceed the effort implied by its most constraining TAC.
-  FleetEffort <- apply(RequiredEffort, 1, function(x) {
-    x <- x[!is.na(x)]
-    if (length(x) == 0) NA_real_ else min(x)
-  })
-  
-  # Constrain if there is an existing effort regulation
-  for (fl in seq_len(nFleet)) {
-    existing <- Proj@Effort[sim, TSIndex, fl]
-    if (!is.na(existing)) {
-      FleetEffort[fl] <- if (is.na(FleetEffort[fl])) existing else min(FleetEffort[fl], existing)
-    }
-  }
+  # Multi-complex 
+  Choke             <- ResolveChokeMatrix(Proj, nFleet_loc, nComplex)
+  UndershootPenalty <- ResolveUndershootPenalty(Proj, nFleet_loc, nComplex)
+  OvershootPenalty  <- ResolveOvershootPenalty(Proj, nFleet_loc, nComplex, Choke)
+  PenaltyMode       <- ResolvePenaltyMode(Proj, nFleet_loc)
+  lambda            <- ResolveLambda(Proj, sim, TSIndex, StockNames, FleetNames, lambda_scale, n_recent)
 
-  Proj@Effort[sim, TSIndex, ] <- FleetEffort
+  result <- OptEffort_multi_stock(
+    Proj               = Proj,
+    Year               = Year,
+    TSIndex            = TSIndex,
+    sim                = sim,
+    StockNames         = StockNames,
+    FleetNames         = FleetNames,
+    TAC_by_Complex     = TAC_by_Complex,
+    TACType_by_Complex = TACType_by_Complex,
+    Choke              = Choke,
+    UndershootPenalty  = UndershootPenalty,
+    OvershootPenalty   = OvershootPenalty,
+    PenaltyMode        = PenaltyMode,
+    lambda             = lambda,
+    n_recent           = n_recent,
+    maxEval            = maxEval
+  )
   
-  if (nComplex == 1) return(Proj)
-  
-  # multi-complex: choke-species effort scaling 
-  stop("Multi-complex TAC not complete!")
-  
+  Proj@Effort[sim, TSIndex, ] <- result$Effort
+  for (fl in seq_len(nFleet_loc))
+    Proj@Misc$StockTargeting[sim, , fl, TSIndex] <- result$Delta[fl, ]
+
   Proj
 }
 
 
-ResolveTACByComplex <- function(AdviceList, LastAdviceList, Complexes,
-                                 Proj, sim, nFleet) {
-  nComplex <- length(Complexes)
-  out <- vector("list", nComplex)
-  
-  for (i in seq_len(nComplex)) {
-    Advice <- AdviceList[[i]]
-    
-    # Fall back to previous advice if current is empty
-    if (EmptyObject(Advice@TAC)) {
-      prev <- LastAdviceList[[i]]
-      if (!is.null(prev) && !EmptyObject(prev@TAC)) {
-        Advice@TAC <- prev@TAC
-      } else {
-        next  # no usable advice for this complex
-      }
-    }
-    
-    TAC <- Advice@TAC
-    dd  <- dim(TAC)
-    
-    if (is.null(dd) || length(dd) == 1) {
-      
-      if (length(TAC) == 1) {
-        if (nFleet == 1) {
-          out[[i]] <- as.numeric(TAC)
-        } else {
-          allocation <- Proj@OM@Allocation[[i]]
-          if (is.null(allocation))
-            stop("Proj@OM@Allocation[[", i, "]] is NULL but TAC is a scalar with nFleet > 1")
-          all_sim  <- min(nrow(allocation), sim)
-          out[[i]] <- as.numeric(TAC) * allocation[all_sim, ]
-        }
-      } else if (length(TAC) == nFleet) {
-        out[[i]] <- as.numeric(TAC)
-      } else {
-        stop("Advice@TAC for complex ", i, " must be length 1 or length nFleet (", nFleet, "); got ", length(TAC))
-      }
-      
-    } else if (length(dd) == 2) {
-      # Fleet x Area TAC 
-      if (!all(dd == c(nFleet, length(Proj@OM@Areas)))) # adjust slot name as needed
-        stop("Advice@TAC for complex ", i, " must be nFleet x nArea (", nFleet, " x ", length(Proj@OM@Areas), ")")
-      stop("TAC by Fleet x Area optimization is not yet implemented")
-      
-    } else {
-      stop("Advice@TAC for complex ", i, " has unexpected dimensions")
-    }
-  }
-  
-  out
-}
 
 
 
-
+ 

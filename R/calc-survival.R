@@ -76,7 +76,7 @@ CalcSurvival <- function(NaturalMortality,
     FishingMortality <- ArrayList[[2]]
   }
   
-  Z        <- ArrayAdd(NaturalMortality, FishingMortality)
+  Z        <- ArraySum(NaturalMortality, FishingMortality)
   Survival <- array(0, dim=dim(NaturalMortality), dimnames=dimnames(NaturalMortality))
   
   Survival[, 1, ] <- exp(-Z[, 1, ] * SpawnTimeFrac)

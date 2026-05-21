@@ -13,6 +13,7 @@
 #include "array_types.h"
 #include "helpers.h"
 
+
 inline void CalcSpatialDistribution(
     const int y,
     const std::vector<int>& Sims,
@@ -32,26 +33,10 @@ inline void CalcSpatialDistribution(
     const int nFleet,
     const int nArea) {
   
-  bool InterFleetComp = 1; // inter-fleet competition flag - currently hard-coded
+  constexpr bool InterFleetComp = true; // inter-fleet competition (hard-coded for now)
   
-  // Checks - TODO - remove once Hist@Misc checks complete 
-  if ((int)Number.size()      < nStock ||
-      (int)WeightFleet.size() < nStock ||
-      (int)SelAge.size()      < nStock ||
-      (int)RetAge.size()      < nStock)
-    Rcpp::stop("Stock-level input list shorter than nStock");
   
-  if ((int)UseDensity.size() < nFleet)
-    Rcpp::stop("UseDensity must have length >= nFleet");
-  
-  check_dims<4>(Distribution,     {nSim, Distribution.dim[1],      nFleet, nArea}, "Distribution",     y, 1);
-  check_dims<4>(q,                 {nSim, nStock, q.dim[2],         nFleet},        "q",                y, 2);
-  check_dims<5>(Closure,           {nSim, nStock, Closure.dim[2],   nFleet, nArea}, "Closure",          y, 2);
-  check_dims<3>(Spatial_Targeting, {nSim, Spatial_Targeting.dim[1], nFleet},        "Spatial_Targeting",y, 1);
-  check_dims<3>(Effort,            {nSim, Effort.dim[1],            nFleet},        "Effort",           y, 1);
-  check_dims<2>(RelSize,           {nSim, nArea},                                   "RelSize");
-  
-  // Single-area
+  // Single area
   if (nArea == 1) {
     for (int sim : Sims)
       for (int fl = 0; fl < nFleet; ++fl)
@@ -59,29 +44,72 @@ inline void CalcSpatialDistribution(
     return;
   }
   
-  const std::array<int, 3> dim3 = {nSim, nFleet, nArea};
-  Array3D B_hat(dim3, 0.0);
-  std::vector<Array3D> B_stock(nStock, Array3D(dim3, 0.0));
+  // ------------------------------------------------------------------
+  const int SFA = nSim * nFleet * nArea;  // total cells per nSim × nFleet × nArea buffer
   
-  // Stage 1 - Raw Exploitable Biomass
+  static thread_local std::vector<double> B_hat_buf;
+  static thread_local std::vector<double> D0_buf;
+  static thread_local std::vector<double> U_buf;
+  static thread_local std::vector<double> U_tilde_buf;
+  static thread_local std::vector<double> weights_buf;
+  
+
+  static thread_local std::vector<double> B_stock_buf;
+  static thread_local bool initialized = false;
+
+  if (!initialized) {
+    B_hat_buf.resize(SFA);
+    D0_buf.resize(SFA);
+    U_buf.resize(SFA);
+    U_tilde_buf.resize(SFA);
+    weights_buf.resize(nArea);
+    B_stock_buf.resize(nStock * SFA);
+    initialized = true;
+  }
+
+
+  auto sfa_idx = [&](int sim, int fl, int ar) -> int {
+    return sim * nFleet * nArea + fl * nArea + ar;
+  }; 
+  auto bst_idx = [&](int st, int sim, int fl, int ar) -> int {
+    return st * SFA + sim * nFleet * nArea + fl * nArea + ar;
+  };
+
+  // Zero only the active Sims
+  for (int sim : Sims) {
+    for (int fl = 0; fl < nFleet; ++fl) {
+      for (int ar = 0; ar < nArea; ++ar) {
+        const int i = sfa_idx(sim, fl, ar);
+        B_hat_buf[i] = 0.0;
+        D0_buf[i]    = 0.0;
+        U_buf[i]     = 0.0;
+        U_tilde_buf[i] = 0.0;
+      }
+    }
+  } 
+  for (int st = 0; st < nStock; ++st)
+    for (int sim : Sims)
+      for (int fl = 0; fl < nFleet; ++fl)
+        for (int ar = 0; ar < nArea; ++ar)
+          B_stock_buf[bst_idx(st, sim, fl, ar)] = 0.0;
+
+
+  // Stage 1 — Raw exploitable biomass B_hat(sim, fl, ar)
+  //           and per-stock B_stock[st](sim, fl, ar)
   for (int st = 0; st < nStock; ++st) {
     const Array4D&          Num_st = Number[st];
     const ConstArrayView4D& Wgt_st = WeightFleet[st];
     const ConstArrayView5D& Sel_st = SelAge[st];
     const ConstArrayView5D& Ret_st = RetAge[st];
     const int nAge = Num_st.dim[1];
-    
-    check_dims<4>(Num_st, {nSim, nAge, Num_st.dim[2], nArea},         "Number",      y, 2);
-    check_dims<4>(Wgt_st, {nSim, nAge, Wgt_st.dim[2], nFleet},        "WeightFleet", y, 2);
-    check_dims<5>(Sel_st, {nSim, nAge, Sel_st.dim[2], nFleet, nArea}, "SelAge",      y, 2);
-    check_dims<5>(Ret_st, {nSim, nAge, Ret_st.dim[2], nFleet, nArea}, "RetAge",      y, 2);
-    
+     
     for (int sim : Sims) {
-      const int sim_cl  = sim_index<5>(sim, Closure, "Closure");
-      const int sim_wgt = sim_index<4>(sim, Wgt_st,  "Wgt_st");
-      const int sim_sel = sim_index<5>(sim, Sel_st,  "Sel_st");
-      const int sim_ret = sim_index<5>(sim, Ret_st,  "Ret_st");
-      const int sim_q   = sim_index<4>(sim, q,       "q");
+      const int sim_num = sim_index<4>(sim, Num_st);
+      const int sim_cl  = sim_index<5>(sim, Closure);
+      const int sim_wgt = sim_index<4>(sim, Wgt_st);
+      const int sim_sel = sim_index<5>(sim, Sel_st);
+      const int sim_ret = sim_index<5>(sim, Ret_st);
+      const int sim_q   = sim_index<4>(sim, q);
     
       for (int fl = 0; fl < nFleet; ++fl) {
         const double q_val = q(sim_q, st, y, fl);
@@ -89,81 +117,79 @@ inline void CalcSpatialDistribution(
       
         for (int ar = 0; ar < nArea; ++ar) {
           if (Closure(sim_cl, st, y, fl, ar) <= 0.0) continue;
-         
+        
           double B_sfra = 0.0;
           for (int age = 0; age < nAge; ++age) {
             B_sfra +=
-              Num_st(sim, age, y, ar)          *
-              Wgt_st(sim_wgt, age, y, fl)      *
-              Sel_st(sim_sel, age, y, fl, ar)  *
+              Num_st(sim_num, age, y, ar)        *
+              Wgt_st(sim_wgt, age, y, fl)        *
+              Sel_st(sim_sel, age, y, fl, ar)    *
               Ret_st(sim_ret, age, y, fl, ar);
           } 
           const double qB = q_val * B_sfra;
-          B_stock[st](sim, fl, ar) = qB;   // store per-stock for pass 2
-          B_hat(sim, fl, ar)      += qB;   // accumulate total
+          B_stock_buf[bst_idx(st, sim, fl, ar)] = qB;
+          B_hat_buf[sfa_idx(sim, fl, ar)]       += qB;
         }
       }
     }
-  } // end stage 1 stock loop 
-  
-  // Optionally convert total B_hat to density
+  } // end stage 1
+   
+  // Optionally convert B_hat to density (divide by relative area size)
   for (int sim : Sims) {
-    const int sim_rs = sim_index<2>(sim, RelSize, "RelSize");
+    const int sim_rs = sim_index<2>(sim, RelSize);
     for (int fl = 0; fl < nFleet; ++fl) {
       if (!UseDensity[fl]) continue;
       for (int ar = 0; ar < nArea; ++ar) {
         const double A = RelSize(sim_rs, ar);
-        B_hat(sim, fl, ar) = (A > 0.0) ? B_hat(sim, fl, ar) / A : 0.0;
+        const int i = sfa_idx(sim, fl, ar);
+        B_hat_buf[i] = (A > 0.0) ? B_hat_buf[i] / A : 0.0;
       }
     }
   }
    
-  // First-pass IFD allocation: D^(0) proportional to total B_hat/density.
-  Array3D D0(dim3, 0.0);
+  
+  // First-pass IFD: D0 proportional to B_hat / density
   for (int sim : Sims) {
     for (int fl = 0; fl < nFleet; ++fl) {
       double total = 0.0;
       for (int ar = 0; ar < nArea; ++ar)
-        total += B_hat(sim, fl, ar);
+        total += B_hat_buf[sfa_idx(sim, fl, ar)];
       if (total <= 0.0) continue;
       const double inv = 1.0 / total;
       for (int ar = 0; ar < nArea; ++ar)
-        D0(sim, fl, ar) = B_hat(sim, fl, ar) * inv;
+        D0_buf[sfa_idx(sim, fl, ar)] = B_hat_buf[sfa_idx(sim, fl, ar)] * inv;
     }
-  } 
-  
-  // Stage 2 - Per-stock depletion-adjusted utility
-  Array3D U(dim3, 0.0);
-  
+  }
+   
+  // Stage 2 — Per-stock depletion-adjusted utility U(sim, fl, ar)
   for (int st = 0; st < nStock; ++st) {
-    
     for (int sim : Sims) {
-      const int sim_q  = sim_index<4>(sim, q,  "q");
-      const int sim_rs = sim_index<2>(sim, RelSize, "RelSize");
+      const int sim_q  = sim_index<4>(sim, q);
+      const int sim_rs = sim_index<2>(sim, RelSize);
       
       for (int fl = 0; fl < nFleet; ++fl) {
         const double q_val = q(sim_q, st, y, fl);
         if (q_val <= 0.0) continue;
-        
+      
         const double E_sf = Effort(sim, y, fl);
         
         for (int ar = 0; ar < nArea; ++ar) {
-          const double B_k = B_stock[st](sim, fl, ar);
+          const double B_k = B_stock_buf[bst_idx(st, sim, fl, ar)];
           if (B_k <= 0.0) continue;
           
-          const double D0_ar = D0(sim, fl, ar);
+          const double D0_ar = D0_buf[sfa_idx(sim, fl, ar)];
           
-          // Per-stock local fishing pressure 
+          // Own-fleet local fishing pressure
           double phi = 0.0;
           if (UseDensity[fl]) {
             const double A = RelSize(sim_rs, ar);
             phi = (A > 0.0) ? q_val * E_sf * D0_ar / A : 0.0;
-          } else { 
+          } else {
             phi = q_val * E_sf * D0_ar;
           }
           
-          // Competitor fleet pressure (one-timestep lag).
-          if (InterFleetComp && y > 0) {
+          // Competitor-fleet pressure (one-timestep lag)
+          if (nFleet > 1 && InterFleetComp && y > 0) {
             for (int fl2 = 0; fl2 < nFleet; ++fl2) {
               if (fl2 == fl) continue;
               const double E_sf2   = Effort(sim, y, fl2);
@@ -176,103 +202,96 @@ inline void CalcSpatialDistribution(
               if (UseDensity[fl]) {
                 const double A = RelSize(sim_rs, ar);
                 phi += (A > 0.0) ? q_val2 * E_sf2 * D_prior / A : 0.0;
-              } else { 
+              } else {
                 phi += q_val2 * E_sf2 * D_prior;
               }
             }
-          } 
+          }
           
           // Depletion discount h(phi) = (1 - exp(-phi)) / phi
           double h = 1.0;
           if (phi > 1e-6) {
             h = (1.0 - std::exp(-phi)) / phi;
-          } else if (phi > 0.0) { 
-            // Third-order Taylor near zero avoids division by very small phi
-            h = 1.0 - phi * 0.5 + (phi * phi) / 6.0;
-          } 
+          } else if (phi > 0.0) {
+            // Third-order Taylor expansion near zero: avoids division by very small phi
+            h = 1.0 - phi * 0.5 + (phi * phi) * (1.0 / 6.0);
+          }
           
-          // Depletion-adjusted stock contribution.
+          // Depletion-adjusted contribution
           double U_k = B_k * h;
           if (UseDensity[fl]) {
             const double A = RelSize(sim_rs, ar);
             U_k = (A > 0.0) ? U_k / A : 0.0;
-          } 
+          }
           
-          U(sim, fl, ar) += U_k; 
+          U_buf[sfa_idx(sim, fl, ar)] += U_k;
         }
       }
     }
-  } // end stage 2 stock loop
+  } // end stage 2
   
-  // Normalise depletion-adjusted utility to IFD shares
-  Array3D U_tilde(dim3, 0.0);
   for (int sim : Sims) {
     for (int fl = 0; fl < nFleet; ++fl) {
       double total_U = 0.0;
       for (int ar = 0; ar < nArea; ++ar)
-        total_U += U(sim, fl, ar);
-      if (total_U <= 0.0) continue;
-      const double inv = 1.0 / total_U;
-      for (int ar = 0; ar < nArea; ++ar)
-        U_tilde(sim, fl, ar) = U(sim, fl, ar) * inv;
-    }
-  }
-  
-  // Stage 3 - Softmax spatial targeting
-  for (int sim : Sims) {
-    for (int fl = 0; fl < nFleet; ++fl) {
-      
-      double total_U = 0.0;
-      for (int ar = 0; ar < nArea; ++ar)
-        total_U += U(sim, fl, ar);
+        total_U += U_buf[sfa_idx(sim, fl, ar)];
       
       if (total_U <= 0.0) {
         for (int ar = 0; ar < nArea; ++ar) {
-          if (std::isnan(Distribution(sim, y, fl, ar))) {
+          if (std::isnan(Distribution(sim, y, fl, ar)))
             Distribution(sim, y, fl, ar) = 0.0;
-          }
         }
-        continue;
+        continue; 
       }
       
-      const int    sim_t  = sim_index<3>(sim, Spatial_Targeting, "Spatial_Targeting");
+      const double inv = 1.0 / total_U;
+      for (int ar = 0; ar < nArea; ++ar)
+        U_tilde_buf[sfa_idx(sim, fl, ar)] = U_buf[sfa_idx(sim, fl, ar)] * inv;
+    }
+  }
+  
+  // Stage 3 — Softmax spatial targeting & write Distribution
+  for (int sim : Sims) {
+    for (int fl = 0; fl < nFleet; ++fl) {
+      
+      double total_U = 0.0;
+      for (int ar = 0; ar < nArea; ++ar)
+        total_U += U_buf[sfa_idx(sim, fl, ar)];
+      if (total_U <= 0.0) continue;
+      
+      const int    sim_t  = sim_index<3>(sim, Spatial_Targeting);
       const double lambda = Spatial_Targeting(sim_t, y, fl);
       
       if (lambda <= 0.0) {
-        // Uniform across open areas
+        // Uniform share across open areas (U > 0 ↔ area accessible)
         int n_open = 0;
-        
         for (int ar = 0; ar < nArea; ++ar) {
-          if (U(sim, fl, ar) > 0.0) {
-            ++n_open;
-          }
+          if (U_buf[sfa_idx(sim, fl, ar)] > 0.0) ++n_open;
         }
         const double share = (n_open > 0) ? 1.0 / n_open : 0.0;
-        
         for (int ar = 0; ar < nArea; ++ar) {
           if (std::isnan(Distribution(sim, y, fl, ar))) {
             Distribution(sim, y, fl, ar) =
-              (U(sim, fl, ar) > 0.0) ? share : 0.0;
+              (U_buf[sfa_idx(sim, fl, ar)] > 0.0) ? share : 0.0;
           }
         }
-        
         continue;
-      }
+      } 
       
-
-      
-      // Log-sum-exp for numerical stability
+      // Softmax with log-sum-exp shift for numerical stability.
       double max_u = 0.0;
       for (int ar = 0; ar < nArea; ++ar)
-        max_u = std::max(max_u, U_tilde(sim, fl, ar));
+        max_u = std::max(max_u, U_tilde_buf[sfa_idx(sim, fl, ar)]);
       
-      std::vector<double> weights(nArea, 0.0);
       double sum_w = 0.0;
       for (int ar = 0; ar < nArea; ++ar) {
-        if (U_tilde(sim, fl, ar) > 0.0) {
-          const double w = std::exp(lambda * (U_tilde(sim, fl, ar) - max_u));
-          weights[ar] = w;
+        const double u = U_tilde_buf[sfa_idx(sim, fl, ar)];
+        if (u > 0.0) {
+          const double w = std::exp(lambda * (u - max_u));
+          weights_buf[ar] = w;
           sum_w += w;
+        } else {
+          weights_buf[ar] = 0.0;
         }
       }
       
@@ -280,15 +299,14 @@ inline void CalcSpatialDistribution(
         const double inv_sum = 1.0 / sum_w;
         for (int ar = 0; ar < nArea; ++ar)
           if (std::isnan(Distribution(sim, y, fl, ar)))
-            Distribution(sim, y, fl, ar) = weights[ar] * inv_sum;
+            Distribution(sim, y, fl, ar) = weights_buf[ar] * inv_sum;
       } else {
         for (int ar = 0; ar < nArea; ++ar)
           if (std::isnan(Distribution(sim, y, fl, ar)))
             Distribution(sim, y, fl, ar) = 0.0;
       }
     }
-  }
-  
+  } // end stage 3
 }
 
 #endif // CALC_SPATIAL_DISTRIBUTION_H

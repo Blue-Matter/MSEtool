@@ -5,6 +5,7 @@
 \alias{Interactions}
 \alias{Landings}
 \alias{Discards}
+\alias{Removals}
 \title{Extract Catch Time Series}
 \usage{
 Interactions(
@@ -29,6 +30,17 @@ Landings(
 )
 
 Discards(
+  object,
+  df = TRUE,
+  byAge = FALSE,
+  bySize = FALSE,
+  byArea = FALSE,
+  byFleet = TRUE,
+  Reduce = TRUE,
+  IncYear = FALSE
+)
+
+Removals(
   object,
   df = TRUE,
   byAge = FALSE,
@@ -77,9 +89,9 @@ Not available for \code{Interactions()}. Ignored when \code{df = FALSE}.}
 }
 }
 \description{
-\code{Interactions()}, \code{Landings()}, and \code{Discards()} extract total
-interactions (encounters), retained landings, and discards,
-respectively, from a \linkS4class{hist} or \linkS4class{mse} object.
+\code{Interactions()}, \code{Landings()}, \code{Discards()}, and \code{Removals} extract total
+interactions (encounters), retained landings, discards, and removals
+(landings + discards) respectively, from a \linkS4class{hist} or \linkS4class{mse} object.
 }
 \details{
 When \code{byAge = FALSE} or \code{bySize = FALSE}, the catch data are in units of
@@ -103,13 +115,14 @@ Hist <- Simulate(ExampleOM)
 MSE <- Project(Hist, 'CurrentEffort')
 
 # Raw arrays
-Interactions(Hist)
-Landings(MSE)
+Interactions(Hist, df = FALSE)
+Landings(MSE, df = FALSE)
 
 # Tidy data frames — total across fleets, ages, areas
-Interactions(Hist, df = TRUE)
-Landings(MSE, df = TRUE)
-Discards(MSE, df = TRUE)
+Interactions(Hist)
+Landings(MSE)
+Discards(MSE)
+Removals(MSE)
 
 # Retain fleet, age, and area structure
 Interactions(Hist, df = TRUE, byFleet = TRUE, byAge = TRUE, byArea = TRUE)

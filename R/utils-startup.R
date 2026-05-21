@@ -29,6 +29,4 @@ StartUp <- function(OM, nSim=NULL, silent=FALSE) {
     PopulateOM(silent = silent) |>
     ReduceNSim(nSim) 
   
-  
-  
 }

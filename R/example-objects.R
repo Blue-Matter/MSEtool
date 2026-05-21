@@ -5,11 +5,29 @@
 #' seriously!
 #' 
 #' @name ExampleObjects
-"ExampleOM"
+NULL
 
 #' @rdname ExampleObjects
 "ExampleStock"
 
+#' @rdname ExampleObjects
+"ExampleStock2"
 
 #' @rdname ExampleObjects
 "ExampleFleet"
+
+#' @rdname ExampleObjects
+"ExampleFleet2"
+
+#' @rdname ExampleObjects
+"ExampleOM"
+
+#' @rdname ExampleObjects
+"ExampleOM2"
+
+#' @rdname ExampleObjects
+"ExampleOM3"
+
+#' @rdname ExampleObjects
+"ExampleOM4"
+

@@ -56,10 +56,13 @@ ConditionObs_Index <- function(Hist,
   Sim_Number_List <- Hist@Number[stocks]
   
   for (fl in 1:nFleet) {
-    ObsObject <- Hist@OM@Obs[[i]][[Indices_Name[fl]]]
-    if (is.null(ObsObject))
-      cli::cli_abort("No `Obs` object found for {.val {type}} Data: {.val {Indices_Name[fl]}}")
     
+    ObsObject <- Hist@OM@Obs[[i]][[Indices_Name[fl]]]
+    if (is.null(ObsObject)) {
+      ObsObject <- Obs(Name = Indices_Name[fl])
+      Hist@OM@Obs[[i]][[Indices_Name[fl]]] <- ObsObject
+    }
+
     Index_Obs <- slot(ObsObject,type)
     
     SelectivityAtAge_Data <- slot(FisheryData, type)@Selectivity[[fl]]
@@ -69,7 +72,7 @@ ConditionObs_Index <- function(Hist,
     
     if (is.character(SelectivityAtAge_Data)) {
       for (st in seq_along(stocks)) {
-        AgeClasses <- Hist@OM@Stock[[st]]@Ages@Classes
+        AgeClasses <- Hist@OM@Stock[[stocks[st]]]@Ages@Classes
         
         if (SelectivityAtAge_Data == 'Biomass') {
           # all age classes selected 
@@ -98,7 +101,21 @@ ConditionObs_Index <- function(Hist,
               AddDimension("Area") |> 
               ExtendAreas(Areas) |>
               ReduceDims() 
-          } 
+          } else {
+            
+            Hist@Log <- list()
+            
+            Hist <- CaptureLog(Hist, 
+                       string =
+                         cli::format_inline("No `Obs` object found for {.val {type}} Data: {.val {Indices_Name[fl]}} \n Assuming selectivity = 1 for all age classes"),
+                       name = 'ConditionObs')
+
+            SelectivityAtAgeList[[st]] <-  array(1, dim=c(1,length(AgeClasses), 1, nArea),
+                                                 dimnames = list(Sim=1,
+                                                                 Age=AgeClasses,
+                                                                 Year=HistYears[1],
+                                                                 Area=Areas)) 
+          }
           
         } 
       }

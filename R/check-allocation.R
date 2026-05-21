@@ -1,38 +1,102 @@
-CheckAllocation <- function(OM) {
-  StockNames <- StockNames(OM)
-  if (length(OM@Allocation)<1) {
-    OM@Allocation <- MakeNamedList(StockNames)
-  }
-  nStock <- nStock(OM)
-  nFleet <- nFleet(OM)
-  nSim <- nSim(OM)
+#' Check and validate fleet allocation for a `hist` object
+#'
+#' Validates the `Allocation` slot in the operating model (OM) of a
+#' `hist` object. If allocation is unspecified, falls back to `CatchFrac`
+#' or derives allocation from the mean of the last five historical years.
+#' Returns the updated `hist` object with a fully-specified, validated
+#' `Allocation` list.
+#'
+#' @param Hist A `hist` object containing operating model data.
+#'
+#' @return The input `hist` object with `hist@OM@Allocation` populated
+#'   and validated for all stocks.
+#'
+#' For each stock, allocation is resolved in this order:
+#'
+#' 1. Use `OM@Allocation` if specified.
+#' 2. Fall back to `OM@CatchFrac` if available.
+#' 3. Derive from the mean relative removals (landings + discards)
+#'    over the last five historical years.
+#'
+#' After resolution, each allocation matrix is validated:
+#'
+#' - Dimensions must be `nSim` × `nFleet`.
+#' - All values must be finite and non-negative.
+#' - Each row must sum to 1 (within a tolerance of `sqrt(.Machine$double.eps)`).
+#'
+#' @keywords internal
+CheckAllocation <- function(Hist) {
   
-  names(OM@Allocation) <- StockNames
+  StockNames <- StockNames(Hist)
+  Allocation <- Hist@OM@Allocation
   
-  if (length(OM@Allocation)!= nStock)
-    cli::cli_abort('`OM@Allocation` must be a list length 0 or length `nStock(OM)` ')
+  if (!length(Allocation)) 
+    Allocation <- MakeNamedList(StockNames)
+  
+  nStock    <- nStock(Hist)
+  nFleet    <- nFleet(Hist)
+  nSim      <- nSim(Hist)
+  HistYears <- Years(Hist,'H')
+  
+  names(Allocation) <- StockNames
+  
+  if (length(Allocation)!= nStock)
+    cli::cli_abort('`Allocation` must be a list length 0 or length `nStock(OM)` ')
   
   for (st in 1:nStock) {
-    AllocationFleet <- OM@Allocation[[st]] 
+    AllocationFleet <- Allocation[[st]] 
     
     if (is.null(AllocationFleet)) {
       
-      if (!is.null(OM@CatchFrac[[st]])) {
-        AllocationFleet <- OM@CatchFrac[[st]]
-        cli::cli(c(
-          cli::cli_alert_info("`Allocation(OM)` has not been specified for Stock {.val {StockNames[st]}}"),
-          cli::cli_alert("Assuming distribution of TAC in projections is the same as `CatchFrac`")
-        ))
+      if (nFleet == 1) {
+        AllocationFleet <- matrix(1, nSim, nFleet)
+        next
+      } 
+      
+      if (!is.null(Hist@OM@CatchFrac[[st]])) {
+        AllocationFleet <- Hist@OM@CatchFrac[[st]]
+        
+        Hist <- CaptureLog(Hist,
+                         string = cli::format_inline(
+                           "`Allocation(OM)` has not been specified for Stock {.val {StockNames[st]}}"
+                           ),
+                         name = "Allocation"
+                         )
+        
+        Hist <- CaptureLog(Hist,
+                         string = cli::format_inline(
+                           "Assuming distribution of TAC in projections is the same as `CatchFrac`"
+                           )
+                         
+        )
+
       } else {
-        AllocationFleet <- matrix(1/nFleet, nSim, nFleet)
-        cli::cli(c(
-          cli::cli_alert_info("`Allocation(OM)` has not been specified for Stock {.val {StockNames[st]}}"),
-          cli::cli_alert("Assuming TAC in projections equally distributed across fleets")
-        ))
+        Hist <- CaptureLog(Hist,
+                              string = cli::format_inline(
+                                "`Allocation(OM)` has not been specified for Stock {.val {StockNames[st]}}"
+                                ),
+                              name = "Allocation"
+        )
+        Hist <- CaptureLog(Hist,
+                              string = cli::format_inline(
+                                "Assuming TAC Allocation in projections is same as mean removals from last 5 historical years"
+                                )
+                              
+        )
+        
+        last_5_years <- utils::tail(seq_len(length(HistYears)), 5)
+        
+        removals <- Hist@Landings[,st,last_5_years, ,drop=FALSE] + 
+          Hist@Discards[,st,last_5_years, ,drop=FALSE]
+        removals <- apply(removals, c('Sim', 'Fleet'), sum)
+        rel_removals <- removals/apply(removals, 'Sim', sum)
+        
+        AllocationFleet <- matrix(rel_removals, nSim, nFleet)
       }
     } 
+    
     dd <- dim(AllocationFleet)
-    if (dd[1]>nSim)
+    if (dd[1] != nSim && dd[1] != 1)
       cli::cli_abort('`OM@Allocation` must be a list length `nStock(OM)` with a `nSim` by `nFleet` matrix  for each stock')
     
     if (dd[2]!=nFleet)
@@ -42,14 +106,19 @@ CheckAllocation <- function(OM) {
       cli::cli_abort('Values in `OM@Allocation` must be positive')
     
     rsum <- rowSums(AllocationFleet)
-    if (any(rsum!=1))
-      cli::cli_abort('Values in `OM@Allocation` sum to 1 across rows')
+    tol  <- sqrt(.Machine$double.eps)
+    if (any(abs(rsum - 1) > tol))
+      cli::cli_abort(
+        c('Values in `OM@Allocation` must sum to 1 across rows',
+          'i' = 'Max deviation: {.val {max(abs(rsum - 1))}}')
+      )
     
     dimnames(AllocationFleet) <- list("Sim"=1:dd[1],
-                                      "Fleet"=FleetNames(OM))
+                                      "Fleet"=FleetNames(Hist@OM))
     
-    OM@Allocation[[st]] <- AllocationFleet
-    
+    Allocation[[st]] <- AllocationFleet
   }
-  OM
+  
+  Hist@OM@Allocation <- Allocation
+  Hist
 }

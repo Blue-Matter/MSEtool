@@ -4,12 +4,15 @@
 \alias{ExampleMPs}
 \alias{CurrentEffort}
 \alias{CurrentCatch}
+\alias{CurrentLandings}
 \alias{AverageCatch}
 \title{Example Management Procedures}
 \usage{
 CurrentEffort(Data)
 
 CurrentCatch(Data)
+
+CurrentLandings(Data)
 
 AverageCatch(Data)
 
@@ -38,6 +41,9 @@ all fleets, maintaining the spatial distribution of effort from the last
 historical timestep. The \code{Data} argument is accepted for framework
 compatibility but is not used.
 \item \code{CurrentCatch}: Sets the TAC for each fleet to the removals observed in
+the last historical year. Returns an empty \linkS4class{advice} object if no
+landings data are available.
+\item \code{CurrentLandings}: Sets the TAC for each fleet to the landings observed in
 the last historical year. Returns an empty \linkS4class{advice} object if no
 landings data are available.
 \item \code{AverageCatch}: Sets the TAC to the mean total removals (summed over

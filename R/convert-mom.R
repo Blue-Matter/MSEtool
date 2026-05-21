@@ -27,7 +27,8 @@
 #' }
 #'
 #' @export
-ConvertMOM <- function(MOM, Author='', 
+ConvertMOM <- function(MOM, 
+                       Author='', 
                        CurrentYear=NULL, 
                        Seasons=1, 
                        Populate=TRUE, 
@@ -97,9 +98,13 @@ ConvertMOM <- function(MOM, Author='',
     # om@Stock[[st]]@Depletion@Final <- NULL #
     om@Fleet[[st]]  <- ConvertToList(MOM2fleet(MOM, st, YearsList))
     names(om@Fleet[[st]]) <- FleetNames
+    
+    if (all(is.finite(om@Fleet[[st]][[1]]@Catchability@Efficiency))) {
+      om@Stock[[st]]@Depletion@Final <- NULL
+    }
+    
   }
-  
-  
+
   om@Obs <- MakeNamedList(
     StockNames, MakeNamedList(FleetNames))
   
@@ -131,8 +136,7 @@ ConvertMOM <- function(MOM, Author='',
     om@EFactor <- MOM@Efactor
   }
   
- 
-  
+
   if (Populate)
     om <- PopulateOM(om, silent=FALSE)
   

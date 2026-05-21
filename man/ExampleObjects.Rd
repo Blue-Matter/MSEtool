@@ -3,23 +3,48 @@
 \docType{data}
 \name{ExampleObjects}
 \alias{ExampleObjects}
-\alias{ExampleOM}
 \alias{ExampleStock}
+\alias{ExampleStock2}
 \alias{ExampleFleet}
+\alias{ExampleFleet2}
+\alias{ExampleOM}
+\alias{ExampleOM2}
+\alias{ExampleOM3}
+\alias{ExampleOM4}
 \title{Example Objects to Testing and Demonstration}
 \format{
-An object of class \code{om} of length 1.
+An object of class \code{stock} of length 1.
 
 An object of class \code{stock} of length 1.
 
 An object of class \code{fleet} of length 1.
+
+An object of class \code{fleet} of length 1.
+
+An object of class \code{om} of length 1.
+
+An object of class \code{om} of length 1.
+
+An object of class \code{om} of length 1.
+
+An object of class \code{om} of length 1.
 }
 \usage{
-ExampleOM
-
 ExampleStock
 
+ExampleStock2
+
 ExampleFleet
+
+ExampleFleet2
+
+ExampleOM
+
+ExampleOM2
+
+ExampleOM3
+
+ExampleOM4
 }
 \description{
 The example objects are included in the package for testing and

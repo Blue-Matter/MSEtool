@@ -19,9 +19,10 @@
 #' @param maintain_seasonal_pattern Logical. Seasonal models only. 
 #' If `TRUE` fills in missing year values by matching those from the closest
 #' corresponding season (e.g., maintains seasonal recruitment pattern)
+#' @param skip_data `logical(1)` Skip any [data-class] objects? Default `TRUE`
 #' @param debug Logical. If `TRUE`, prints the class of each object as it is
 #'   processed. Default `FALSE`.
-#'
+#'   
 #' @return The input object with dimensions extended as specified. The return
 #'   type matches the input type (array, S4, or list).
 #'
@@ -65,15 +66,25 @@ Extend <- function(array,
                    default = NULL,
                    backfill = FALSE,
                    maintain_seasonal_pattern = TRUE,
+                   skip_data = TRUE,
                    debug = FALSE) {
   if (debug) 
     print(class(array))
   
   if (isS4(array)) {
-    if (inherits(array, "data")) return(array)
+    if (skip_data)
+      if (inherits(array, "data")) return(array)
     for (sl in slotNames(array)) {
       if (debug) print(sl)
-      slot(array, sl) <- Recall(slot(array, sl), nSim, AgeClasses, Years, Areas, default, backfill, debug)
+      slot(array, sl) <- Recall(slot(array, sl), 
+                                nSim = nSim, 
+                                AgeClasses = AgeClasses, 
+                                Years = Years, 
+                                Areas = Areas, 
+                                default = default, 
+                                backfill = backfill, 
+                                maintain_seasonal_pattern = maintain_seasonal_pattern,
+                                debug = debug)
     }
     return(array)
   }
@@ -81,7 +92,15 @@ Extend <- function(array,
   if (is.list(array)) {
     if (length(array)) {
       for (i in seq_along(array)) {
-        temp <- Recall(array[[i]], nSim, AgeClasses, Years, Areas, default, backfill, debug)
+        temp <- Recall(array[[i]],                  
+                       nSim = nSim, 
+                       AgeClasses = AgeClasses, 
+                       Years = Years, 
+                       Areas = Areas, 
+                       default = default, 
+                       backfill = backfill, 
+                       maintain_seasonal_pattern = maintain_seasonal_pattern,
+                       debug = debug)
         if (!is.null(temp)) array[[i]] <- temp
       }
     }
@@ -91,7 +110,10 @@ Extend <- function(array,
   array |>
     ExtendSims(nSim) |>
     ExtendAges(AgeClasses) |>
-    ExtendYears(Years, default, backfill, maintain_seasonal_pattern) |>
+    ExtendYears(Years                     = Years, 
+                default                   = default, 
+                backfill                  = backfill, 
+                maintain_seasonal_pattern = maintain_seasonal_pattern) |>
     ExtendAreas(Areas)
 }
 

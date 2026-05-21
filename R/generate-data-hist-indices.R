@@ -120,7 +120,9 @@ GenHistData_Indices <- function(sim, Data, Hist, HistYears, i, stocks, StockName
       }
     } else {
       SelectivityAtAgeList <- purrr::map(Hist@OM@Fleet[stocks], \(fleet_list) {
-        fleet_list[[FleetNames[fl]]]@Selectivity@MeanAtAge[sim,,,,drop=FALSE] |>
+        dd <- dim(  fleet_list[[FleetNames[fl]]]@Selectivity@MeanAtAge)
+        sel_x <- min(dd[1], x)
+        fleet_list[[FleetNames[fl]]]@Selectivity@MeanAtAge[sel_x,,,,drop=FALSE] |>
           ArraySubsetYear(HistYears) |>
           abind::adrop(1)
       }) 
@@ -145,7 +147,10 @@ GenHistData_Indices <- function(sim, Data, Hist, HistYears, i, stocks, StockName
       
     } else if (Units == 'Biomass') {
       WeightAtAgeList <- purrr::map(Hist@OM@Stock[stocks], \(stock) {
-        stock@Weight@MeanAtAge[sim,,, drop=FALSE] |>
+        wght <- stock@Weight@MeanAtAge
+        dd <- dim(wght)
+        wght_x <- min(dd[1], sim)
+        wght[wght_x,,, drop=FALSE] |>
           ArraySubsetYear(HistYears) |>
         abind::adrop(1)
       })

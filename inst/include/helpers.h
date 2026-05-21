@@ -21,55 +21,21 @@ inline std::vector<int>
 
 // Slot2ArrayND: wraps slot SEXP directly — no copy, anchored in ArrayND::x
 inline Array2D Slot2Array2D(Rcpp::S4& obj, const char* slot) {
-  return as_ArrayND<2>(static_cast<SEXP>(obj.slot(slot)), slot);
+  return as_ArrayND<2>(static_cast<SEXP>(obj.slot(slot)));
 }
 inline Array3D Slot2Array3D(Rcpp::S4& obj, const char* slot) {
-  return as_ArrayND<3>(static_cast<SEXP>(obj.slot(slot)), slot);
+  return as_ArrayND<3>(static_cast<SEXP>(obj.slot(slot)));
 }
 inline Array4D Slot2Array4D(Rcpp::S4& obj, const char* slot) {
-  return as_ArrayND<4>(static_cast<SEXP>(obj.slot(slot)), slot);
+  return as_ArrayND<4>(static_cast<SEXP>(obj.slot(slot)));
 }
 inline Array5D Slot2Array5D(Rcpp::S4& obj, const char* slot) {
-  return as_ArrayND<5>(static_cast<SEXP>(obj.slot(slot)), slot);
+  return as_ArrayND<5>(static_cast<SEXP>(obj.slot(slot)));
 }
 
 template <size_t N, class ArrayType>
-inline int broadcast_dim(int x, const ArrayType& arr, int i) {
-  static_assert(N > 0, "broadcast_dim: N must be > 0");
-  const int d = arr.dim[i];
-  if (d == 1)  return 0;
-  if (x < d)   return x;
-  Rcpp::stop("broadcast_dim(): index " + std::to_string(x) +
-    " out of bounds for dimension of size " + std::to_string(d));
-}
-
-template <size_t N, class ArrayType>
-inline int sim_index(int sim, const ArrayType& arr, const char* name) {
-  return broadcast_dim<N>(sim, arr, 0);
-}
-
-template <size_t N, class ArrayType>
-inline void check_dims(const ArrayType& arr,
-                       const std::array<int, N>& expected,
-                       const char* name,
-                       int y = -1,
-                       int t_ind = -1) {
-  static_assert(N > 0, "check_dims: N must be > 0");
-  if (arr.dim[0] != 1 && arr.dim[0] != expected[0])
-    Rcpp::stop(std::string(name) + ": dimension 0 (sim) mismatch: got " +
-      std::to_string(arr.dim[0]) + " expected " + std::to_string(expected[0]));
-  for (size_t i = 1; i < N; ++i) {
-    if (arr.dim[i] != expected[i])
-      Rcpp::stop(std::string(name) + ": dimension " + std::to_string(i) +
-        " mismatch: got " + std::to_string(arr.dim[i]) +
-        " expected " + std::to_string(expected[i]));
-  }
-  if (y >= 0 && t_ind >= 0 && t_ind < static_cast<int>(N)) {
-    if (y >= arr.dim[t_ind])
-      Rcpp::stop(std::string(name) + ": y=" + std::to_string(y) +
-        " out of bounds for dimension " + std::to_string(t_ind) +
-        " of size " + std::to_string(arr.dim[t_ind]));
-  }
+inline int sim_index(int sim, const ArrayType& arr) {
+  return arr.dim[0] == 1 ? 0 : sim;
 }
 
 inline void check_years_argument(SEXP Years, const char* name) {

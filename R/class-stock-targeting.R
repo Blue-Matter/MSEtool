@@ -3,12 +3,13 @@
 #' The `stocktargeting` object defines the properties of a fleet's ability 
 #' to selectivity target individual stocks.
 #'
-#' @slot Mean `array[sim, stock, fleet]`. Mean targeting weight in log-space.
+#' @slot Mean `array[sim, stock, fleet]`. Mean targeting weight.
 #'   
 #' @slot Covariance `array[sim, stock, stock, fleet]`. Log residual covariance
 #'   matrix of targeting weights per fleet.
 #'   
 #' @slot AC `array[sim, stock, fleet]`. Lag-1 auto-correlation of log deviations.
+#' Currently not used.
 #'   
 #' @slot Targeting `array[sim, stock, fleet, year]`. Targeting
 #'   deviations. Normal space. Values are mean-1 across stocks for each fleet-year, 

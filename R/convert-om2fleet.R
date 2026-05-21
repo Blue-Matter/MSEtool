@@ -1,7 +1,6 @@
 OM2fleet <- function(OM, YearsList, cpars=NULL, Fdisc=NULL, AgeClasses=NULL) {
-  if (inherits(OM, 'OM')) {
+  if (inherits(OM, 'OM')) 
     cpars <- OM@cpars
-  }
   
   fleet <- Fleet2Name(OM)
   fleet@Effort <- OM2Effort(OM, cpars, YearsList)
@@ -9,9 +8,9 @@ OM2fleet <- function(OM, YearsList, cpars=NULL, Fdisc=NULL, AgeClasses=NULL) {
   fleet@Catchability <- OM2Catchability(OM, cpars, YearsList) 
   fleet@Selectivity <- OM2Selectivity(OM, cpars, YearsList, AgeClasses)
   fleet@Retention  <- OM2Retention(OM, cpars, YearsList, AgeClasses)
-  fleet@DiscardMortality <- OM2DiscardMortality(OM, cpars, Fdisc, YearsList)
+  fleet@DiscardMortality <- OM2DiscardMortality(OM, cpars, Fdisc, YearsList, AgeClasses)
   fleet@Closure <- OM2Closure(OM, cpars)
-  fleet@WeightFleet <- OM2WeightFleet(OM, cpars)
+  fleet@WeightFleet <- OM2WeightFleet(OM, cpars, YearsList, AgeClasses)
   # BioEco
   
   fleet
@@ -168,12 +167,16 @@ OM2Retention <- function(OM, cpars=list(), YearsList=NULL, AgeClasses=NULL) {
   Retention
 }
 
-OM2DiscardMortality <- function(OM, cpars=list(), Fdisc=NULL, YearsList=NULL) {
+OM2DiscardMortality <- function(OM, cpars=list(), Fdisc=NULL, YearsList=NULL, 
+                                AgeClasses = NULL) {
   DiscardMortality <- DiscardMortality()
   
-  if (inherits(OM, 'OM')) {
+  if (inherits(OM, 'OM')) 
     Fdisc <- OM@Fdisc
-  }
+  
+  if (is.null(AgeClasses) && inherits(OM, 'OM')) {
+    AgeClasses <- GetStockAges(OM)  
+  } 
   
   # TODO - need to convert to an array with correct dimensions
   # requires sampling from uniform for OM@Fdisc
@@ -196,7 +199,7 @@ OM2DiscardMortality <- function(OM, cpars=list(), Fdisc=NULL, YearsList=NULL) {
     return(DiscardMortality)
   }
   if (!is.null(cpars$Fdisc_array1)) {
-    AgeClasses <- GetStockAges(OM)
+
     dd <- dim(cpars[['V']])
     DiscardMortality@MeanAtAge <- array(cpars[['Fdisc_array1']],
                                    dim=dd,
@@ -240,10 +243,11 @@ OM2Closure <- function(OM, cpars=list()) {
   
 }
 
-OM2WeightFleet <- function(OM, cpars=list(), YearsList=NULL) {
-  if (is.null(cpars$Wt_age_C)) {
+OM2WeightFleet <- function(OM, cpars=list(), YearsList=NULL,
+                           AgeClasses = NULL) {
+  if (is.null(cpars$Wt_age_C)) 
     return(NULL)
-  }
+  
   
   if (is.null(YearsList)) {
     Years <- GetOMYears(OM)
@@ -251,8 +255,12 @@ OM2WeightFleet <- function(OM, cpars=list(), YearsList=NULL) {
     Years <- c(YearsList$HistTS, YearsList$ProjTS) 
   }
    
-  AgeClasses <- GetStockAges(OM)
-  array(cpars$Wt_age_C, dim=cpars$Wt_age_C,
+  if (is.null(AgeClasses) && inherits(OM, 'OM')) {
+    AgeClasses <- GetStockAges(OM)  
+  } 
+  
+  array(cpars$Wt_age_C, 
+        dim=dim(cpars$Wt_age_C),
         dimnames = list(
           Sim=1:nrow(cpars$Wt_age_C),
           Age=AgeClasses,

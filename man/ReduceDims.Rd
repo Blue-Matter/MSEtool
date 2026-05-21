@@ -4,7 +4,13 @@
 \alias{ReduceDims}
 \title{Reduce redundant Sim, Year, and Age dimensions in arrays}
 \usage{
-ReduceDims(array, IncSim = TRUE, IncAge = FALSE, IncYear = FALSE)
+ReduceDims(
+  array,
+  IncSim = TRUE,
+  IncAge = FALSE,
+  IncYear = FALSE,
+  debug = FALSE
+)
 }
 \arguments{
 \item{array}{An array, list, or S4 object. For non-array objects, the
@@ -18,6 +24,8 @@ all ages are identical.}
 
 \item{IncYear}{Logical; reduce the \code{Year}dimension if present and
 all years are identical or by keeping only unique years.}
+
+\item{debug}{Logical. Print debug messages?}
 }
 \value{
 An object of the same class as \code{array}, with reduced dimensions

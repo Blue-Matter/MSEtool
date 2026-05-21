@@ -63,9 +63,10 @@ IdenticalSims <- function(object, ignore=NULL, debug=FALSE) {
       mat <- matrix(arr_perm, nrow = dims[sim_dim])
       
       ref <- mat[1, , drop=TRUE]
-      if (any(mat != matrix(ref, nrow=nrow(mat), ncol=ncol(mat), byrow=TRUE))) {
+      ind <- any(mat != matrix(ref, nrow=nrow(mat), ncol=ncol(mat), byrow=TRUE))
+      if (is.na(ind) || ind)
         return(FALSE)
-      }
+      
     }
   }
   

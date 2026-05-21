@@ -52,7 +52,7 @@ ConditionObs_Catch <- function(Hist,
   
   # catch biomass - sim, year, fleet
   Sim_Catch_Biomass <- purrr::map2(Sim_Catch_Number_List, 
-                                   Hist@OM@Fleet,
+                                   Hist@OM@Fleet[stocks],
     \(catch_n_at_age_area, fleetlist) {
       
           FleetWeight <- purrr::map(fleetlist, \(fleet) {
@@ -96,7 +96,7 @@ ConditionObs_Catch <- function(Hist,
     CatchObs@Units <- FleetUnits[fl]
     
     # Years to use condition the observation error - default all historical
-    if (is.null(CatchObs@Years)) CatchObs@Years <- HistYears
+    if (is.null(CatchObs@Years)) CatchObs@Years <- FisheryData@Years
     
     if (Units=='Biomass') {
       SimValue <- Sim_Catch_Biomass[,,fl, drop=FALSE] |> abind::adrop(3)  
@@ -107,9 +107,18 @@ ConditionObs_Catch <- function(Hist,
     
     SimValue <- ArraySubsetYear(SimValue, CatchObs@Years)
     ObsValue <- ArraySubsetYear(ObservedCatch, CatchObs@Years)
-
+    
+    d1 <- dim(SimValue)
+    d2 <- dim(ObsValue)
+    
+    if (is.null(d2)) {
+      ObsValue <- matrix(ObsValue, d1[1], length(ObsValue), byrow=TRUE)
+      dimnames(ObsValue) <- list(Sim = seq_len(d1[1]),
+                                 Year = names(ObservedCatch))
+    }
+      
     # Bias 
-    Bias <- t( t(SimValue) / ObsValue)
+    Bias <- SimValue / ObsValue
     Bias[Bias<0.001] <- NA
     Bias[!is.finite(Bias)] <- NA
     

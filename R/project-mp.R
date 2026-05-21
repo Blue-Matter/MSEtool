@@ -117,13 +117,21 @@ Project_MP <- function(Proj,
     )
     
     # Save Advice@Log to Proj@Log for each sim and stock
-    Proj@Log[[as.character(Year)]] <- ExtractAdviceLogs(AdviceSimList)
+    Proj <- ExtractAdviceLogs(AdviceSimList, Proj, Year)
     
     # Check all failed - 
     # TRUE if every sim/stock has a non-NULL log entry (i.e. all failed)
-    AllSimsFailed <- purrr::map(Proj@Log[[as.character(Year)]], \(sim) {
-      purrr::map(sim, \(i) !is.null(i))
-    }) |> unlist() |> all()
+    CheckList <- purrr::map(Proj@Log$error[[as.character(Year)]], \(sim) {
+      purrr::map(sim, \(i) {
+        !is.null(i)
+      })
+    }) 
+    
+    if (!length(CheckList)) {
+      AllSimsFailed <- FALSE
+    } else {
+      AllSimsFailed <- unlist(CheckList) |> all()
+    }
     
     if (AllSimsFailed) break
     
@@ -170,6 +178,7 @@ Project_MP <- function(Proj,
                       StartTime, EndTime, 
                       Error, ErrorMessage)
   
+
   if (!Error) 
     MSE <- UpdateMSEObject(MSE, 
                            Proj,
@@ -179,6 +188,12 @@ Project_MP <- function(Proj,
                            YearsProj, 
                            StockNames, 
                            FleetNames)
+  
+  if (!is.null(Proj@Log$error)) {
+    log_list <- list(Proj@Log$error)
+    names(log_list) <- MPName
+    MSE@Log$error <- c(MSE@Log$error, log_list)  
+  }
   
   MSE
 }

@@ -30,7 +30,6 @@
 \alias{LandingsAtSize<-}
 \alias{LifeHistory}
 \alias{LifeHistory<-}
-\alias{Log}
 \alias{MeanAtAge}
 \alias{MeanAtAge<-}
 \alias{MeanAtLength}
@@ -132,8 +131,6 @@ LandingsAtSize(x) <- value
 LifeHistory(x)
 
 LifeHistory(x) <- value
-
-Log(x)
 
 MeanAtAge(x)
 

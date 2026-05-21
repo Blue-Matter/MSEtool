@@ -4,14 +4,12 @@
 \alias{CheckSelectivityMaximum}
 \title{Check and Standardise Selectivity-at-Age to a Maximum of 1}
 \usage{
-CheckSelectivityMaximum(MeanAtAge, alert = TRUE)
+CheckSelectivityMaximum(object)
 }
 \arguments{
-\item{MeanAtAge}{Numeric array of selectivity-at-age values. Dimensions
+\item{object}{A \code{Selectivity} object with \code{MeanAtAge} slot a
+n umeric array of selectivity-at-age values. Dimensions
 \verb{Sim × Age × Year} or \verb{Sim × Age × Year × Area}.}
-
-\item{alert}{Logical. If \code{TRUE} (default), emits a warning and lists the
-affected simulations, years, and areas.}
 }
 \value{
 \code{MeanAtAge} with each affected slice rescaled so its maximum

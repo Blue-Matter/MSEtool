@@ -3,7 +3,6 @@
 
 #include <Rcpp.h>
 #include <cmath>
-#include "srr_functions.h"
 #include "array_nd.h"
 #include "array_views.h"
 #include "array_types.h"
@@ -81,7 +80,7 @@ inline double EvalSRR(
   switch (model) {
 
   case SRR_BEVERTON_HOLT: {
-    const int sim_h = sim_index<2>(sim, pars_st[0], "SRR h");
+    const int sim_h = sim_index<2>(sim, pars_st[0]);
     return BevertonHolt_kernel(
       S,
       S0,
@@ -91,7 +90,7 @@ inline double EvalSRR(
   }
 
   case SRR_RICKER: {
-    const int sim_hR = sim_index<2>(sim, pars_st[0], "SRR hR");
+    const int sim_hR = sim_index<2>(sim, pars_st[0]);
     return Ricker_kernel(
       S,
       S0,
@@ -102,7 +101,7 @@ inline double EvalSRR(
 
   
   case SRR_HOCKEY_STICK: {
-    const int sim_Sh = sim_index<2>(sim, pars_st[0], "SRR Shinge");
+    const int sim_Sh = sim_index<2>(sim, pars_st[0]);
     return HockeyStick_kernel(
       S,
       S0,

@@ -7,10 +7,6 @@
 #include "array_types.h"
 #include "array_nd.h"
 
-using Array2D = ArrayND<2>;
-using Array3D = ArrayND<3>;
-using Array4D = ArrayND<4>;
-using Array5D = ArrayND<5>;
 
 // ArrayViewND (mutable)
 
@@ -18,53 +14,57 @@ template <size_t N>
 struct ArrayViewND {
   double* x;
   std::array<int, N> dim;
-  std::string name;
-  Rcpp::NumericVector _anchor;  
+  std::array<int, N> strides;
+  Rcpp::NumericVector _anchor;
   
-  ArrayViewND(Rcpp::NumericVector vec, const std::array<int, N>& dim_,
-              const std::string& nm = "")
-    : x(REAL(vec)), dim(dim_), name(nm), _anchor(vec) {}
-
+  ArrayViewND(Rcpp::NumericVector vec, const std::array<int, N>& dim_)
+    : x(REAL(vec)), dim(dim_), _anchor(vec)
+  {
+    strides[0] = 1;
+    for (size_t d = 1; d < N; ++d) strides[d] = strides[d-1] * dim[d-1];
+  }
+  
   inline double& operator()(const std::array<int, N>& ind) {
-    int flat = 0, stride = 1;
-    for (size_t d = 0; d < N; ++d) { flat += ind[d] * stride; stride *= dim[d]; }
+    int flat = 0;
+    for (size_t d = 0; d < N; ++d) flat += ind[d] * strides[d];
     return x[flat];
   }
-
+  
   template <typename... Args>
   inline double& operator()(Args... args) {
-    static_assert(sizeof...(Args) == N, "Invalid number of indices");
     std::array<int, N> ind{ static_cast<int>(args)... };
     return (*this)(ind);
   }
-}; 
+};
 
-// ConstArrayViewND 
+// ConstArrayViewND
 
 template <size_t N>
 struct ConstArrayViewND {
   const double* x;
   std::array<int, N> dim;
-  std::string name;
-  Rcpp::NumericVector _anchor;  
-
-  ConstArrayViewND(Rcpp::NumericVector vec, const std::array<int, N>& dim_,
-                   const std::string& nm = "")
-    : x(REAL(vec)), dim(dim_), name(nm), _anchor(vec) {}
-
-  inline double operator()(const std::array<int, N>& ind) const {
-    int flat = 0, stride = 1;
-    for (size_t d = 0; d < N; ++d) { flat += ind[d] * stride; stride *= dim[d]; }
+  std::array<int, N> strides;
+  Rcpp::NumericVector _anchor;
+  
+  ConstArrayViewND(Rcpp::NumericVector vec, const std::array<int, N>& dim_)
+    : x(REAL(vec)), dim(dim_), _anchor(vec)
+  {
+    strides[0] = 1;
+    for (size_t d = 1; d < N; ++d) strides[d] = strides[d-1] * dim[d-1];
+  }
+  
+  [[nodiscard]] inline double operator()(const std::array<int, N>& ind) const {
+    int flat = 0;
+    for (size_t d = 0; d < N; ++d) flat += ind[d] * strides[d];
     return x[flat];
   }
-   
+  
   template <typename... Args>
-  inline double operator()(Args... args) const {
-    static_assert(sizeof...(Args) == N, "Invalid number of indices");
+  [[nodiscard]] inline double operator()(Args... args) const {
     std::array<int, N> ind{ static_cast<int>(args)... };
     return (*this)(ind);
   }
-}; 
+};
 
 using ArrayView1D = ArrayViewND<1>;
 using ArrayView2D = ArrayViewND<2>;
@@ -78,87 +78,74 @@ using ConstArrayView3D = ConstArrayViewND<3>;
 using ConstArrayView4D = ConstArrayViewND<4>;
 using ConstArrayView5D = ConstArrayViewND<5>;
 
-// dims_from_sexp 
+// dims_from_sexp
 
 template <size_t N>
-inline std::array<int, N> dims_from_sexp(SEXP sexp, const std::string& name) {
-  SEXP dim_sexp = Rf_getAttrib(sexp, R_DimSymbol);
-  if (Rf_isNull(dim_sexp) || Rf_length(dim_sexp) != static_cast<int>(N))
-    Rcpp::stop("Expected " + std::to_string(N) + "D array for: " + name);
+inline std::array<int, N> dims_from_sexp(SEXP sexp) {
   std::array<int, N> dim;
-  int* d = INTEGER(dim_sexp);
+  int* d = INTEGER(Rf_getAttrib(sexp, R_DimSymbol));
   for (size_t i = 0; i < N; ++i) dim[i] = d[i];
   return dim;
-} 
+}
 
-//  as_ArrayND
+// as_ArrayND
+
 template <size_t N>
-inline ArrayND<N> as_ArrayND(SEXP sexp, const std::string& name = "") {
-  auto dim = dims_from_sexp<N>(sexp, name);
-  return ArrayND<N>(sexp, dim, name);
-} 
+inline ArrayND<N> as_ArrayND(SEXP sexp) {
+  return ArrayND<N>(sexp, dims_from_sexp<N>(sexp));
+}
 
 // as_ConstArrayViewND
-// Single overload taking SEXP only.
 
 template <size_t N>
-inline ConstArrayViewND<N> as_ConstArrayViewND(SEXP sexp, const std::string& name = "") {
-  auto dim = dims_from_sexp<N>(sexp, name);
-  return ConstArrayViewND<N>(Rcpp::NumericVector(sexp), dim, name);
-} 
+inline ConstArrayViewND<N> as_ConstArrayViewND(SEXP sexp) {
+  return ConstArrayViewND<N>(Rcpp::NumericVector(sexp), dims_from_sexp<N>(sexp));
+}
 
-// as_ArrayViewND 
+// as_ArrayViewND
 
 template <size_t N>
-inline ArrayViewND<N> as_ArrayViewND(SEXP sexp, const std::string& name = "") {
-  auto dim = dims_from_sexp<N>(sexp, name);
-  return ArrayViewND<N>(Rcpp::NumericVector(sexp), dim, name);
-} 
+inline ArrayViewND<N> as_ArrayViewND(SEXP sexp) {
+  return ArrayViewND<N>(Rcpp::NumericVector(sexp), dims_from_sexp<N>(sexp));
+}
 
-// GetMisc_ConstArrayView 
+// GetMisc_ConstArrayView
 
 template <size_t N>
 inline ConstArrayViewND<N> GetMisc_ConstArrayView(Rcpp::S4& obj, const char* nm) {
-  const Rcpp::List MiscL = obj.slot("Misc");
-  if (!MiscL.containsElementNamed(nm))
-    Rcpp::stop("Hist@Misc$" + std::string(nm) + " not found");
-  return as_ConstArrayViewND<N>(static_cast<SEXP>(MiscL[nm]), nm);
+  return as_ConstArrayViewND<N>(static_cast<SEXP>(
+      static_cast<const Rcpp::List&>(obj.slot("Misc"))[nm]));
 }
- 
-//  StockList view helpers
+
+// StockList view helpers
 
 template <size_t N>
-inline ConstArrayViewND<N> view_ConstStockListND(const Rcpp::List& L, int st,
-                                                 const std::string& prefix) { 
-  return as_ConstArrayViewND<N>(static_cast<SEXP>(L[st]),
-                                prefix + "_" + std::to_string(st));
-} 
+inline ConstArrayViewND<N> view_ConstStockListND(const Rcpp::List& L, int st) {
+  return as_ConstArrayViewND<N>(static_cast<SEXP>(L[st]));
+}
 
 inline ConstArrayView3D view_ConstStockList3D(const Rcpp::List& L, int st) {
-  return view_ConstStockListND<3>(L, st, "StockList3D");
-} 
+  return view_ConstStockListND<3>(L, st);
+}
 
 inline ConstArrayView4D view_ConstStockList4D(const Rcpp::List& L, int st) {
-  return view_ConstStockListND<4>(L, st, "StockList4D");
-} 
+  return view_ConstStockListND<4>(L, st);
+}
 
 inline ConstArrayView5D view_ConstStockList5D(const Rcpp::List& L, int st) {
-  return view_ConstStockListND<5>(L, st, "StockList5D");
-} 
+  return view_ConstStockListND<5>(L, st);
+}
 
 inline ArrayView3D view_StockList3D(Rcpp::List& L, int st) {
-  return as_ArrayViewND<3>(static_cast<SEXP>(L[st]),
-                           "StockList3D_" + std::to_string(st));
+  return as_ArrayViewND<3>(static_cast<SEXP>(L[st]));
 }
 
 inline ArrayView4D view_StockList4D(Rcpp::List& L, int st) {
-  return as_ArrayViewND<4>(static_cast<SEXP>(L[st]),
-                           "StockList4D_" + std::to_string(st));
+  return as_ArrayViewND<4>(static_cast<SEXP>(L[st]));
 }
 
 inline ArrayView5D view_StockList5D(Rcpp::List& L, int st) {
-  return as_ArrayViewND<5>(static_cast<SEXP>(L[st]),
-                           "StockList5D_" + std::to_string(st));
+  return as_ArrayViewND<5>(static_cast<SEXP>(L[st]));
 }
 
 #endif

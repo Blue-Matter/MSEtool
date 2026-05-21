@@ -49,6 +49,9 @@ Project_hist <- function(Hist,
   # ---- Reduce nSim if provided ----
   Proj <- Hist |> ReduceNSim(nSim)
   
+  # ---- Check Allocation ----
+  Proj <- CheckAllocation(Proj)
+  
   # ---- Add temporary lists and arrays to Hist@Misc ----
   Proj <- PrepHistMisc(Proj)
 
@@ -62,6 +65,8 @@ Project_hist <- function(Hist,
   
   # ---- Create MSE Object ----
   MSE <- Hist2MSE(Proj, MPNames = MPs)
+  SaveLog <- Proj@Log 
+  Proj@Log <- list()
 
   # ---- Project MPs ----
   mp <- 1 # initialise for debugging
@@ -84,12 +89,16 @@ Project_hist <- function(Hist,
     
   }
 
+
   EndTime <- Sys.time()
   elapse_auto <- round(difftime(time1 = EndTime, time2 = StartTime, units = "auto"),2) |> format()
   if (!silent)
     cli::cli_alert_success('Completed {.val Project} for OM {.val {Hist@OM@Name}} ({elapse_auto})') 
   
   MSE <- RestoreHistMisc(MSE)
+  
+  CheckLog(MSE, 'MSE')
+  MSE@Log <- c(SaveLog, MSE@Log)
   
   MSE
 }

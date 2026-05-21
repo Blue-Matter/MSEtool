@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils-array-operations.R
 \name{ArrayOperations}
 \alias{ArrayOperations}
-\alias{ArrayAdd}
+\alias{ArraySum}
 \alias{ArrayDivide}
 \alias{ArrayMultiply}
 \alias{ArraySubtract}
@@ -10,7 +10,7 @@
 \alias{ArrayFill<-}
 \title{Perform Operations on Two Arrays}
 \usage{
-ArrayAdd(array1, array2)
+ArraySum(array1, array2)
 
 ArrayDivide(array1, array2)
 
@@ -41,7 +41,7 @@ Multiply, divide, subtract, or add two arrays together.
 The arrays must have the same named dimensions, but do not need to have
 the same length for each dimension.
 \itemize{
-\item \code{ArrayAdd}: Sum \code{array1} and \code{array2}
+\item \code{ArraySum}: Sum \code{array1} and \code{array2}
 \item \code{ArrayDivide}: Divide \code{array1} by \code{array2}
 \item \code{ArrayMultiply}: Multiply \code{array1} and \code{array2}
 \item \code{ArraySubtract}: Subtract \code{array2} from \code{array1}
@@ -68,7 +68,7 @@ array2 <- array(1:20,
 
 ArrayExtend(array1, array2)
 
-ArrayAdd(array1, array2)
+ArraySum(array1, array2)
 ArrayDivide(array1, array2)
 ArrayMultiply(array1, array2)
 ArraySubtract(array1, array2)
@@ -92,7 +92,7 @@ array2 <- array(1:20,
 
 ArrayExtend(array1, array2)
 
-ArrayAdd(array1, array2)
+ArraySum(array1, array2)
 ArrayDivide(array1, array2)
 ArrayMultiply(array1, array2)
 ArraySubtract(array1, array2)

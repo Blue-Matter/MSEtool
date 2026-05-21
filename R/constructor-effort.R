@@ -44,9 +44,9 @@
 #' @param Misc List. Miscellaneous additional inputs. Default `list()`.
 #' 
 #' @param df Logical. Only used when `Effort` is a [hist-class] or an 
-#' [mse-class] object. If `FALSE` (default) the raw `Effort` array is returned. 
-#' If `TRUE` a tidy `data.frame` is returned via [extract_effort()].
-#'   
+#' [mse-class] object. If `TRUE` (default) a tidy `data.frame` is returned.
+#' If `FALSE` the raw `Effort` array is returned. 
+#' 
 #' @param x An [effort-class] object, or a compatible object for `Effort<-`.
 #' @param value For `Effort<-`: an [effort-class] object. For slot replacement
 #'   functions: the new value for the corresponding slot.
@@ -120,7 +120,7 @@ Effort <- function(Effort       = NULL,
                    Maximum      = NULL,
                    Mode         = NULL,
                    Misc         = list(),
-                   df           = FALSE) {
+                   df           = TRUE) {
   
   if (inherits(Effort, c('fleet', 'effort', 'hist', 'obs', 'mse')))
     return(extract_effort(Effort, df))

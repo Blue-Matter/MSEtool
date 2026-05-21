@@ -6,54 +6,53 @@
 #' combinations without a populated [Obs()] object.
 #'
 #' @param OM An operating model object containing an `@Obs` slot.
-#' @param silent Logical; if `TRUE`, suppresses all output and returns
-#'   invisibly. Default is `FALSE`.
 #'
 #' @return Logical; `TRUE` if all [Obs()] objects are present and non-empty,
 #'   `FALSE` if any are missing or empty.
 #' @keywords internal
-CheckObs <- function(OM, silent=FALSE, Proj=FALSE) {
+CheckObs <- function(OM, Proj=FALSE) {
 
-  if (is.null(OM@Obs)) {
-    if (!silent) {
-      cli::cli_text('')
-      cli::cli_alert_warning(
-        "No {.help MSEtool::Obs} object has been provided in the `OM` object.
-       No Data will be generated.",
-        wrap=TRUE
-      )
-    }
-    return(FALSE)
-  }
+  CheckClass(OM, c('om', 'hist'))
   
-  Empty <- purrr::map(OM@Obs, \(stock)
+  if (inherits(OM,'hist')) {
+    Obs <- OM@OM@Obs
+  } else {
+    Obs <- OM@Obs
+  }
+  if (is.null(Obs)) {
+    OM <- CaptureLog(OM, 
+               string =
+                 cli::format_inline("No {.help MSEtool::Obs} object has been provided in the `OM` object.
+       No Data will be generated."),
+               name = 'GenerateHistoricalData')
+    
+    return(OM)
+  }
+    
+  Empty <- purrr::map(Obs, \(stock)
                       purrr::map(stock, EmptyObject)
   )
   
   if (!any(unlist(Empty)))
-    return(TRUE)
+    return(OM)
   
+  OM <- CaptureLog(OM,
+                   string = cli::format_inline("No {.help MSEtool::Obs} object found for the following: "),
+                   name = 'GenerateHistoricalData')
+            
   for (i in seq_along(Empty)) {
     for (j in seq_along(Empty[[i]])) {
       if (Empty[[i]][[j]]) {
-        if (!silent) {
-          cli::cli_text('')
-          cli::cli_alert_warning("No {.help MSEtool::Obs} object found for the following:")
-          cli::cli_li("Stock: {.val {names(Empty)[i]}} and Fleet: {.val {names(Empty[[i]])[j]}}. ")
-          
-        }
-          
+        OM <- CaptureLog(OM,
+                         string = cli::format_inline("Stock: {.val {names(Empty)[i]}} and Fleet: {.val {names(Empty[[i]])[j]}}.")
+                         )
       }
     }
   }
   
-  if (!silent) {
-    cli::cli_text('')
-    cli::cli_alert_warning("No Data will be generated for these stocks/fleets")
-    cli::cli_text('')
-  }
-    
+  OM <- CaptureLog(OM,
+                   string = cli::format_inline("No Data will be generated for these stocks/fleets.")
+  )
   
-  return(FALSE)
-  
+  OM
 }

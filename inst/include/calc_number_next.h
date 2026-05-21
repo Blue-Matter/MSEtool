@@ -25,15 +25,6 @@ inline void CalcNumberNext(
     const int nFleet,
     const int nArea) {
   
-  // Checks
-  if ((int)Number.size() < nStock ||
-      (int)FDeadArea.size() < nStock ||
-      (int)NaturalMortality.size() < nStock ||
-      (int)Semelparous.size() < nStock ||
-      (int)Movement.size() < nStock)
-    Rcpp::stop("Stock-level input list shorter than nStock");
-  
-  
   std::vector<double> Z_buf;
   std::vector<double> N_to(nArea);
   
@@ -51,15 +42,11 @@ inline void CalcNumberNext(
     
     if (y + 1 >= nYear) continue; 
     
-    if (Mov_st.dim[1] != nArea || Mov_st.dim[2] != nArea)
-      Rcpp::stop("Movement array has wrong area dimensions for stock " +
-        std::to_string(st + 1));
-    
     Z_buf.resize(nAge * nArea);
     
     for (int sim : Sims) {
       
-      const int sim_num   = sim_index<4>(sim, Num_st, "Number");
+      const int sim_num   = sim_index<4>(sim, Num_st);
       
       // Skip if Number[y+1] is already populated 
       // Check all age (1+) x area cells — if any are non-zero, skip this sim.
@@ -74,10 +61,10 @@ inline void CalcNumberNext(
       }
       if (already_populated) continue;
           
-      const int sim_fd    = sim_index<5>(sim, Fd, "FDeadArea");
-      const int sim_M     = sim_index<3>(sim, M_st, "NaturalMortality");
-      const int sim_sem   = sim_index<3>(sim, Sem_st, "Semelparous");
-      const int sim_mov   = sim_index<5>(sim, Mov_st, "Movement");
+      const int sim_fd    = sim_index<5>(sim, Fd);
+      const int sim_M     = sim_index<3>(sim, M_st);
+      const int sim_sem   = sim_index<3>(sim, Sem_st);
+      const int sim_mov   = sim_index<5>(sim, Mov_st);
       
       // Compute Z_buf(age, area) = M(age) + sum_fl F_dead 
       for (int age = 0; age < nAge; ++age) {
@@ -138,16 +125,6 @@ inline void CalcNumberNext(
               N_to[toArea] += Nfrom * p;
               p_sum += p;
             }
-            
-            // TODO in R 
-            // if (std::fabs(p_sum - 1.0) > 1e-8)
-            //   Rcpp::stop(
-            //     "Movement probabilities do not sum to 1 "
-            //     "(stock=" + std::to_string(st + 1) +
-            //       ", sim="  + std::to_string(sim + 1) +
-            //       ", age="  + std::to_string(age + 1) +
-            //       ", from=" + std::to_string(fromArea + 1) + ")"
-            //   );
           }
           for (int toArea = 0; toArea < nArea; ++toArea)
             Num_st(sim_num, age, y + 1, toArea) = N_to[toArea];

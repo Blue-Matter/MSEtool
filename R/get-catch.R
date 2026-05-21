@@ -65,7 +65,7 @@ GetCatch <- function(object,
     } else if (type=='Discards') {
       return(discards)
     } else {
-      return(ArrayAdd(landings, discards))  
+      return(ArraySum(landings, discards))  
     }
   }
   
@@ -98,7 +98,7 @@ GetCatch <- function(object,
     } else if (type=='Discards') {
       return(discards)
     } else {
-      removals <- purrr::map2(landings, discards, ArrayAdd)
+      removals <- purrr::map2(landings, discards, ArraySum)
       return(removals)
     }
   }
@@ -114,6 +114,6 @@ GetCatch <- function(object,
   landings <- List2Array(landings, "Stock", pos=2)
   discards <- List2Array(discards, "Stock", pos=2)
   
-  ArrayAdd(landings, discards)
+  ArraySum(landings, discards)
   
 }

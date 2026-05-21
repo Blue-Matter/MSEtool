@@ -16,7 +16,7 @@ array2 <- array(1:20,
 
 ArrayExtend(array1, array2)
 
-ArrayAdd(array1, array2)
+ArraySum(array1, array2)
 ArrayDivide(array1, array2)
 ArrayMultiply(array1, array2)
 ArraySubtract(array1, array2)
@@ -40,7 +40,7 @@ array2 <- array(1:20,
 
 ArrayExtend(array1, array2)
 
-ArrayAdd(array1, array2)
+ArraySum(array1, array2)
 ArrayDivide(array1, array2)
 ArrayMultiply(array1, array2)
 ArraySubtract(array1, array2)

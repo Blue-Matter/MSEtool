@@ -650,7 +650,7 @@ BAM2Fleet <- function(Stock,
   FDeadDiscard <- ArraySubtract(FDeadatAge, FRetainatAge)
   FDiscardTotal <- ArrayDivide(FDeadDiscard, DiscardMortArray)
   FDiscardTotal[!is.finite(FDiscardTotal)] <- 0
-  FInteractatAge <- ArrayAdd(FRetainatAge, FDiscardTotal)
+  FInteractatAge <- ArraySum(FRetainatAge, FDiscardTotal)
   apicalEffort <- apply(FInteractatAge, 2:3, max, na.rm=TRUE)
 
   FInteractMax <- replicate(nAgeClasses, apply(FInteractatAge, 2:3, max)) |> 

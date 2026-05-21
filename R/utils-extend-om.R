@@ -114,6 +114,7 @@ ExtendOM <- function(OM, Years = NULL, nSim = NULL, silent=FALSE, id=NULL) {
                             Areas = Areas)
     }
   }
+  OM@StockTargeting <- Extend(OM@StockTargeting, nSim=nSim, Years=Years)
   
   
   OM

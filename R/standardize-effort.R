@@ -3,88 +3,131 @@
 #' For a multi-stock operating model, effort for a given fleet must be
 #' identical across stocks. When stocks have been specified with differing
 #' effort trajectories (e.g. derived from stock-specific estimated Fs), this
-#' function standardizes effort to the mean across stocks and back-calculates
+#' function standardizes effort to the geometric mean across **active stocks**
+#' (those with positive effort) at each time step, and back-calculates
 #' stock-fleet targeting weights that preserve effective fishing mortality.
 #'
-#' For each fleet `fl`, the standardized effort is the element-wise mean of
-#' the effort arrays across all stocks. 
-#' 
+#' For each fleet `fl`, year `t`, and simulation `i`, the standardized effort
+#' is the geometric mean of stock-specific effort over stocks with positive
+#' effort at that time step:
+#'
+#' \deqn{
+#'   E_{f,t} = \exp\!\left(
+#'     \frac{1}{|\mathcal{A}_{f,t}|}
+#'     \sum_{s \in \mathcal{A}_{f,t}} \log E_{s,f,t}
+#'   \right)
+#' }
+#'
+#' where \eqn{\mathcal{A}_{f,t} = \{s : E_{s,f,t} > 0\}} is the set of
+#' active stocks for fleet \eqn{f} at time \eqn{t}.
+#'
 #' The targeting weight for each stock is then:
 #'
 #' \deqn{
-#'   \text{Targeting}_{s,i,y} =
-#'     \frac{E_{\text{nominal},s,i,y}}{E_{\text{standard},i,y}}
+#'   \delta_{s,f,t} = \frac{E_{s,f,t}}{E_{f,t}}
 #' }
 #'
 #' so that effective fishing mortality is conserved:
 #'
 #' \deqn{
-#'   E_{\text{standard}} \times \text{Targeting}_s \times q_s =
-#'   E_{\text{nominal},s} \times q_s
+#'   E_{f,t} \times \delta_{s,f,t} \times q_{s,f} =
+#'   E_{s,f,t} \times q_{s,f} = F_{s,f,t}
 #' }
 #'
-#' Targeting weights are by construction mean-1 across stocks for each
-#' fleet-year. Where `StandardEffort` is near zero (below tolerance `1e-4`),
-#' targeting is set to 1 (neutral).
+#' By construction, the targeting weights have geometric mean 1 over active
+#' stocks at each time step — equivalently, the log-targeting deviations sum
+#' to zero:
 #'
-#' The effort `Distribution` array must be identical across stocks for each
-#' fleet.
+#' \deqn{
+#'   \sum_{s \in \mathcal{A}_{f,t}} \log \delta_{s,f,t} = 0
+#' }
 #'
-#' The function returns `OM` unchanged if `nStock == 1`.
+#' Inactive stocks (\eqn{E_{s,f,t} = 0}) receive targeting weight
+#' \eqn{\delta_{s,f,t} = 0}.
 #'
-#' @param OM An operating model object ([om-class]). 
-#' @param silent `logical(1)`. If `FALSE` (default), emits a warning and
-#'   informational message when effort is found to differ across stocks for
-#'   any fleet. Set to `TRUE` to suppress these messages.
-#' @param populate  `logical(1)`. Populate `OM` at beginning of call? Used internally.
+#' These targeting weights are stored in `OM@StockTargeting@Targeting` and
+#' are subsequently used by [FitStockTargeting()] to estimate the historical
+#' covariance of log-targeting deviations.
+#'
+#' If populated, the effort `Distribution` array must be identical across stocks
+#' for each fleet. The function returns `OM` unchanged if `nStock == 1`
+#' (any pre-existing `StockTargeting` data is also cleared in this case, as
+#' it is not meaningful for single-stock models).
+#'
+#' @param OM An operating model object ([om-class]).
+#' @param populate `logical(1)`. Populate `OM` at beginning of call?
+#'   Used internally. Default `TRUE`.
+#' @param fit_stock_targeting `logical(1)`. Run [FitStockTargeting()] after
+#'   standardizing? Default `TRUE`.
+#' @param generate_stock_targeting `logical(1)`. Run [GenerateStockTargeting()]
+#'   after fitting? Default `TRUE`. Ignored (with a warning) if
+#'   `fit_stock_targeting = FALSE`, since [GenerateStockTargeting()] requires
+#'   fitted targeting parameters.
 #'
 #' @return The input `OM` object with:
-#'   - `Fleet[[st]][[fl]]@Effort@Effort` set to the mean effort across stocks
-#'     for each fleet where effort differed.
-#'   - `OM@StockTargeting` populated with back-calculated targeting
-#'     weights.
+#'   - `Fleet[[st]][[fl]]@Effort@Effort` set to the geometric mean effort
+#'     over active stocks for **all stocks** in each fleet where effort differed
+#'     across any stock.
+#'   - `OM@StockTargeting@Targeting` populated with back-calculated targeting
+#'     weights \eqn{\delta_{s,f,t}}. Over active stocks at each time step, the
+#'     weights have geometric mean 1 (equivalently, their logs sum to zero).
+#'     Inactive stocks receive weight 0.
 #'
+#' @seealso [FitStockTargeting()], [GenerateStockTargeting()]
 #'
 #' @examples
 #' \dontrun{
-#' OM_standardized <- StandardizeEffort(OM, silent = FALSE)
+#' OM_standardized <- StandardizeEffort(OM)
 #' # Inspect back-calculated targeting
 #' OM_standardized@StockTargeting@Targeting
 #' }
-StandardizeEffort <- function(OM, silent = FALSE, populate=TRUE) {
+StandardizeEffort <- function(OM,
+                              populate = TRUE,
+                              fit_stock_targeting = TRUE,
+                              generate_stock_targeting = TRUE) {
+  
+  if (!fit_stock_targeting && generate_stock_targeting) {
+    cli::cli_warn(c(
+      "{.arg generate_stock_targeting} is {.val TRUE} but {.arg fit_stock_targeting} is {.val FALSE}.",
+      "i" = "{.fn GenerateStockTargeting} requires fitted targeting parameters; skipping."
+    ))
+    generate_stock_targeting <- FALSE
+  }
   
   if (populate)
-    OM <- PopulateOM(OM, silent=TRUE, standardize_effort=FALSE)
+    OM <- PopulateOM(OM, silent = TRUE, standardize_effort = FALSE)
   
-  n_stock <- nStock(OM)
-  n_fleet <- nFleet(OM)
+  n_stock     <- nStock(OM)
+  n_fleet     <- nFleet(OM)
   fleet_names <- FleetNames(OM)
   
   if (n_stock == 1) {
-    OM@StockTargeting <- neW()
+    OM@StockTargeting <- new('stocktargeting')
     return(OM)
   }
-    
-  FleetList  <- OM@Fleet
-  stock_seq  <- seq_len(n_stock)
-  fleet_seq  <- seq_len(n_fleet)
-  tol        <- 1e-4
   
-  HistYears <- Years(OM,'H')
+  FleetList <- OM@Fleet
+  stock_seq <- seq_len(n_stock)
+  fleet_seq <- seq_len(n_fleet)
+  tol       <- 1e-6
   
-  # Initialise TargetingModel with neutral targeting (all 1s)
-  STarget <- StockTargeting(OM)
+  HistYears <- Years(OM, 'H')
+  n_years   <- length(HistYears)
   
+  STarget <- OM@StockTargeting
+  if (EmptyObject(STarget))
+    STarget <- StockTargeting(OM)
   
   for (fl in fleet_seq) {
     Fleet_fl_all_stocks <- purrr::map(FleetList, `[[`, fl)
     
     EffortObjectList <- purrr::map(Fleet_fl_all_stocks, slot, "Effort")
-    DistArrayList   <- purrr::map(EffortObjectList, slot, "Distribution")
-    EffortArrayList <- purrr::map(EffortObjectList, slot, "Effort")
+    DistArrayList    <- purrr::map(EffortObjectList, slot, "Distribution")
+    EffortArrayList  <- purrr::map(EffortObjectList, slot, "Effort")
     
     # Extend all effort arrays to common dimensions
-    EffortArrayList <- purrr::map(EffortArrayList, Extend, nSim=OM@nSim, NULL, Years=HistYears)
+    EffortArrayList <- purrr::map(EffortArrayList, Extend,
+                                  nSim = OM@nSim, NULL, Years = HistYears)
     
     # Validate Distribution arrays are identical across stocks
     ref_dist <- DistArrayList[[1]]
@@ -104,205 +147,84 @@ StandardizeEffort <- function(OM, silent = FALSE, populate=TRUE) {
       }
     }
     
-    # Standard effort: mean across stocks
-    StandardEffort <- Reduce("+", EffortArrayList) / n_stock
-    
-    # Check if any stock differs meaningfully from the mean
-    anyDiff <- purrr::map_lgl(
-      EffortArrayList, \(E) any(abs(E - StandardEffort) > tol)
+    # Check if any stock differs meaningfully from the first
+    ref_effort <- EffortArrayList[[1]]
+    effort_differs <- purrr::map_lgl(
+      EffortArrayList, \(E) any(abs(E - ref_effort) > tol, na.rm = TRUE)
     )
-    if (!any(anyDiff)) next
     
-    if (!silent) {
-      cli::cli_alert_warning(
-        "Effort values for Fleet {.val {fleet_names[fl]}} differ across stocks."
-      )
-      cli::cli_alert_info(
-        "Standardizing to mean effort across stocks; absorbing deviations into {.val Targeting}."
-      )
-    }
-    
-    ok <- abs(StandardEffort) > tol
-    
-    # Back-calculate targeting weights per stock and store in StockTargeting
-    for (st in stock_seq) {
-      Effort_nominal <- EffortArrayList[[st]]
+    if (!any(effort_differs)) {
+      if (!all(is.na(STarget@Mean[,,fl])))
+        next
       
-      targeting_st <- array(1, dim = dim(StandardEffort))
-      dimnames(targeting_st) <- dimnames(StandardEffort)
-      targeting_st[ok]  <- Effort_nominal[ok] / StandardEffort[ok]
-      targeting_st[!ok] <- 1
+      STarget@Mean[,,fl] <- 1
+      dd <- dim(STarget@Covariance)
+      for (i in seq_len(dd[1])) {
+        STarget@Covariance[i,,,fl] <- diag(1, n_stock, n_stock)
+      }
+      STarget@Targeting[,,fl,] <- 1
       
-      STarget@Targeting[, st, fl, ] <- targeting_st
+      next
     }
     
-    # Update effort for all stocks for this fleet
+    OM <- CaptureLog(OM,
+                     string = cli::format_inline(
+                       "Effort values for Fleet {.val {fleet_names[fl]}} differ across stocks."),
+                     name = 'StandardizeEffort')
+    
+    OM <- CaptureLog(OM,
+                     string = cli::format_inline(
+                       "Standardizing to geometric mean effort over active stocks; absorbing deviations into {.val Targeting}."))
+    
+    # Geometric mean effort over active stocks at each [sim, year] cell.
+    # A stock is active if its effort exceeds tol 
+    log_effort_sum <- array(0, dim = dim(EffortArrayList[[1]]),
+                            dimnames = dimnames(EffortArrayList[[1]]))
+    n_active       <- array(0L, dim = dim(EffortArrayList[[1]]),
+                            dimnames = dimnames(EffortArrayList[[1]]))
+    
     for (st in stock_seq) {
-      FleetList[[st]][[fl]]@Effort@Effort <- StandardEffort
+      E         <- EffortArrayList[[st]]
+      is_active <- E > tol
+      log_effort_sum[is_active] <- log_effort_sum[is_active] + log(E[is_active])
+      n_active[is_active] <- n_active[is_active] + 1L
     }
-  }
-  
-  # Reduce dims
-  for (st in stock_seq) {
-    for (fl in fleet_seq) {
-      FleetList[[st]][[fl]]@Effort@Effort <- ReduceDims(FleetList[[st]][[fl]]@Effort@Effort)
+    
+    # Geometric mean
+    StandardEffort <- array(0, dim = dim(log_effort_sum),
+                            dimnames = dimnames(log_effort_sum))
+    has_active <- n_active > 0L
+    StandardEffort[has_active] <- exp(log_effort_sum[has_active] /
+                                        n_active[has_active])
+    
+    # Back-calculate targeting weights per stock:
+    #   delta_{s,f,t} = E_{s,f,t} / E_{f,t}  (0 for inactive stocks)
+    for (st in stock_seq) {
+      E_st         <- EffortArrayList[[st]]
+      targeting_st <- array(0, dim = dim(StandardEffort),
+                            dimnames = dimnames(StandardEffort))
+      
+      is_active <- E_st > tol & has_active
+      targeting_st[is_active] <- E_st[is_active] / StandardEffort[is_active]
+      
+      STarget@Targeting[, st, fl, seq_len(n_years)] <- targeting_st
+    }
+    
+    # Update effort for all stocks for this fleet to the geometric mean
+    for (st in stock_seq) {
+      FleetList[[st]][[fl]]@Effort@Effort <- ReduceDims(StandardEffort)
     }
   }
   
   OM@Fleet          <- FleetList
   OM@StockTargeting <- ReduceDims(STarget)
   
-  FitStockTargeting(OM)
-}
-
-
-FitStockTargeting <- function(OM, tol=1E-6, active_thresh = 0.1) {
+  if (fit_stock_targeting)
+    OM <- FitStockTargeting(OM)
   
-  if (nStock(OM) == 1)
-    return(OM)
-  
-  STarget <- OM@StockTargeting
-  Targ    <- STarget@Targeting   # [sim, stock, fleet, year]
-  
-  if (
-    !all(is.na(STarget@Mean)) &&
-    !all(is.na(STarget@Covariance)) &&
-    !all(is.na(STarget@AC))
-  )  return(OM) # already populated
-  
-  dims     <- dim(Targ)
-  nSim     <- dims[1]
-  n_stock  <- dims[2]
-  n_fleet  <- dims[3]
-  nYear    <- dims[4]
-  Years <- as.numeric(dimnames(Targ)$Year)
-  
-  stock_names <- StockNames(OM)
-  fleet_names <- FleetNames(OM)
-
-  mu_arr <- array(NA_real_,
-                  dim = c(nSim, n_stock, n_fleet),
-                  dimnames = list(Sim = seq_len(nSim),
-                                  Stock = stock_names,
-                                  Fleet = fleet_names))
-  
-  cov_arr <- array(NA_real_,
-                   dim = c(nSim, n_stock, n_stock, n_fleet),
-                   dimnames = list(Sim = seq_len(nSim),
-                                   Stock = stock_names,
-                                   Stock = stock_names,
-                                   Fleet = fleet_names))
-  
-  ac_arr <- array(NA_real_,
-                  dim = c(nSim, n_stock, n_fleet),
-                  dimnames = list(Sim = seq_len(nSim),
-                                  Stock = stock_names,
-                                  Fleet = fleet_names))
-
-  for (sim in seq_len(OM@nSim)) {
-    for (fl in fleet_seq) {
-      
-      # determine stocks where this fleet is active
-      active_stock <- logical(n_stock)
-      names(active_stock) <- stock_names
-      
-      StdEffort <- OM@Fleet[[1]][[fl]]@Effort@Effort         
-      zero_fishing_years <- which(StdEffort[sim,] <= 0)
-      
-      for (st in seq_len(n_stock)) {
-        x <- StdEffort[sim,] * Targ[sim, st, fl, ]
-        prop_active <- mean(x > tol, na.rm = TRUE)
-        active_stock[st] <- prop_active > active_thresh
-      }
-      
-      active_idx <- which(active_stock)
-      
-      # no active stocks 
-      if (length(active_idx) == 0) {
-        mu_arr[sim, , fl] <- 0
-        cov_arr[sim, , , fl] <- diag(n_stock)
-        ac_arr[sim, , fl] <- 0
-        innov_cov_arr[sim, , , fl] <- diag(n_stock)
-        
-        next
-      }
-      
-      # targeting matrix for active stocks 
-      targ_mat <- array(NA_real_, dim=c(nYear, length(active_idx)),
-                        dimnames = list(
-                          Year = Years,
-                          Stock = stock_names[active_idx]
-                        )
-      )
-                
-      for (j in seq_along(active_idx)) {
-        st <- active_idx[j]
-        x <- Targ[sim, st, fl, ]
-        x[x <= tol] <- NA_real_
-        targ_mat[, j] <- log(x)
-      }
-      targ_mat[zero_fishing_years,] <- NA_real_
-      
-      # mean
-      mu_active <- colMeans(targ_mat, na.rm = TRUE)
-      
-      # covariance
-      complete_rows <- stats::complete.cases(targ_mat)
-      if (sum(complete_rows) < 2) {
-        cli::cli_alert_warning("Insufficient data for Fleet {.val {fleet_names[fl]}}, simulation {sim}. Using identity covariance.")
-      
-        Sigma_active <- diag(n_stock)
-      } else {
-        Sigma_active <- stats::cov(targ_mat[complete_rows, , drop = FALSE])
-      }
-      
-      # autocorrelation 
-      phi_active <- numeric(length(active_idx))
-      
-      for (j in seq_along(active_idx)) {
-        x <- targ_mat[, j]
-        ok <- is.finite(x)
-        x <- x[ok]
-        
-        if (length(x) < 2) {
-          phi_active[j] <- 0
-          next
-        }
-        
-        x1 <- x[-length(x)]
-        x2 <- x[-1]
-        
-        ok2 <- is.finite(x1) & is.finite(x2)
-        
-        if (sum(ok2) < 2 || sum(x1) == 0) {
-          phi_active[j] <- 0
-        } else {
-          phi_active[j] <- stats::cor(x1[ok2], x2[ok2]) # better than acf for short series
-        }
-      }
-      
-      # mean 
-      mu_full <- rep(0, n_stock)
-      mu_full[active_idx] <- mu_active
-      
-      # covar
-      Sigma_full <- diag(n_stock)
-      Sigma_full[active_idx, active_idx] <- Sigma_active
-      
-      # AC
-      phi_full <- rep(0, n_stock)
-      phi_full[active_idx] <- phi_active
-      
-      mu_arr[sim, , fl] <- mu_full
-      cov_arr[sim, , , fl] <- Sigma_full
-      ac_arr[sim, , fl] <- phi_full
-    
-    } # end fleet loop
-  } # end sim loop
-  
-  OM@StockTargeting@Mean <- ReduceDims(mu_arr)
-  OM@StockTargeting@Covariance <- ReduceDims(cov_arr) 
-  OM@StockTargeting@AC <- ReduceDims(ac_arr)
+  # if (fit_stock_targeting && generate_stock_targeting)
+  #   OM <- GenerateStockTargeting(OM, 'Projection')
   
   OM
 }
+

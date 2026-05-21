@@ -157,7 +157,7 @@ PopulateSelectivity <- function(Selectivity,
     cli::cli_abort("{.var Selectivity} requires values for either `Model` & `Pars` or `MeanAtAge`")
   
   if (CheckMaxValue) 
-    Selectivity@MeanAtAge <- CheckSelectivityMaximum(Selectivity@MeanAtAge)
+    Selectivity <- CheckSelectivityMaximum(Selectivity)
   
   Selectivity@MeanAtLength <- AddDimension(Selectivity@MeanAtLength, "Area")
   Selectivity@MeanAtWeight <- AddDimension(Selectivity@MeanAtWeight, "Area")

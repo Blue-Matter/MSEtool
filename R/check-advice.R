@@ -1,16 +1,36 @@
 
-CheckAdvice <- function(Advice, Proj, FleetNames, Areas, sim) {
+CheckAdvice <- function(Advice, Proj, FleetNames, Areas, sim, name) {
   if (inherits(Advice, 'try-error'))
     return(Advice)
  
-  Advice <- CheckAdvice_TAC(Advice, Proj, FleetNames, Areas)
+  Advice <- try(CheckAdvice_TAC(Advice, Proj, FleetNames, Areas), silent=TRUE)
   
-  Advice <- CheckAdvice_Effort(Advice, Proj, FleetNames, Areas, sim)
+  if (!inherits(Advice, 'advice')) {
+    l <- list(Advice)
+    names(l) <- name
+    return(l)
+  }
   
-  Advice <- CheckAdvice_Closure(Advice, Proj, FleetNames, Areas)
+  Advice <- try(CheckAdvice_Effort(Advice, Proj, FleetNames, Areas, sim), silent=TRUE)
   
+  if (!inherits(Advice, 'advice')) {
+    l <- list(Advice)
+    names(l) <- name
+    return(l)
+  }
+  
+  Advice <- try(CheckAdvice_Closure(Advice, Proj, FleetNames, Areas), silent=TRUE)
+  
+  if (!inherits(Advice, 'advice')) {
+    l <- list(Advice)
+    names(l) <- name
+    return(l)
+  }
+  
+
   Advice
 }
+
 
 CheckAdvice_TAC <- function(Advice, Proj, FleetNames, Areas) {
   

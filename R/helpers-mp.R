@@ -59,9 +59,9 @@ ApplyAdviceMiscToData <- function(DataList, AdviceList) {
   })
 }
 
-ExtractAdviceLogs <- function(AdviceSimList) {
+ExtractAdviceLogs <- function(AdviceSimList, Proj, Year) {
   
-  purrr::map(AdviceSimList, \(AdviceList) {
+  out <- purrr::map(AdviceSimList, \(AdviceList) {
     if (inherits(AdviceList, 'try-error'))
       return(AdviceList)
     
@@ -70,6 +70,7 @@ ExtractAdviceLogs <- function(AdviceSimList) {
         log <- Advice@Log
         if (!length(log)) 
           return(NULL)  
+        log
       }
       if (inherits(Advice, 'try-error')) {
         return(as.character(Advice))
@@ -82,6 +83,14 @@ ExtractAdviceLogs <- function(AdviceSimList) {
     })
   })
   
+  if (!length(unlist(out)))
+    return(Proj)
+  
+  if (is.null(Proj@Log$error))
+    Proj@Log$error <- list()
+  
+  Proj@Log$error[[as.character(Year)]] <- out
+  Proj
 }
 
 UpdateAdviceArray <- function(Current, New, Year) {
@@ -131,6 +140,7 @@ UnchangedManagement <- function(Current, Previous, slotName) {
 CheckTACEffort <- function(AdviceSimList, Proj, LHInd, FleetNames) {
   purrr::imap(AdviceSimList, \(AdviceSim, sim) {
     purrr::map(AdviceSim, \(Advice) {
+      if (!inherits(Advice, 'advice')) return(Advice)
       if (is.null(Advice@TAC) && is.null(Advice@Effort)) {
           lastdist <- abind::adrop(Proj@Distribution[sim, LHInd,,,drop=FALSE], 1:2)
           lasteff <- array(Proj@Effort[sim, LHInd,], 

@@ -12,6 +12,9 @@
 #' - `CurrentCatch`: Sets the TAC for each fleet to the removals observed in
 #'   the last historical year. Returns an empty [advice-class] object if no
 #'   landings data are available.
+#' - `CurrentLandings`: Sets the TAC for each fleet to the landings observed in
+#'   the last historical year. Returns an empty [advice-class] object if no
+#'   landings data are available.
 #' - `AverageCatch`: Sets the TAC to the mean total removals (summed over
 #'   fleets) across all historical years. Returns an empty [advice-class]
 #'   object if no landings data are available.
@@ -55,12 +58,30 @@ CurrentCatch <- function(Data) {
     return(Advice())
   
   LastHistDiscards <- Data@Discards@Value[LastHistYearInd(Data), , drop=FALSE]
-  LastHistRemovals <- rbind(LastHistLandings, LastHistDiscards)
+  LastHistRemovals <- dplyr::bind_rows(
+    as.data.frame(LastHistLandings), 
+    as.data.frame(LastHistDiscards)
+  )
   LastHistRemovals <- colSums(LastHistRemovals, na.rm=TRUE)
     
   Advice(TAC=LastHistRemovals)
 }
 class(CurrentCatch) <- 'mp'
+
+#' @rdname ExampleMPs
+#' @export
+CurrentLandings <- function(Data) {
+  CheckCatch(Data, slot_names = 'Landings') 
+  
+  LastHistLandings <- Data@Landings@Value[LastHistYearInd(Data), , drop=FALSE]
+  
+  if (is.null(LastHistLandings) || !length(LastHistLandings))
+    return(Advice())
+  
+  Advice(TAC=colSums(LastHistLandings, na.rm=TRUE),
+         TACType = 'Landings')
+}
+class(CurrentLandings) <- 'mp'
 
 #' @rdname ExampleMPs
 #' @export
@@ -76,7 +97,7 @@ AverageCatch <- function(Data) {
   TotalHistLandings <- rowSums(HistLandings, na.rm=TRUE)
   TotalHistDiscards <- rowSums(HistDiscards, na.rm=TRUE)
   TotalHistRemovals <- TotalHistLandings + TotalHistDiscards
-  Advice(TAC=mean(TotalHistRemovals))
+  Advice(TAC=mean(TotalHistRemovals[TotalHistRemovals!=0]))
 }
 class(AverageCatch) <- 'mp'
 

@@ -19,6 +19,12 @@ Simulate_om <- function(OM = NULL,
   CheckClass(OM)
   OM <- UpdateObject(OM)
 
+  
+  if (!silent) {
+    cli::cli_text('')
+    cli::cli_alert_info(' Starting  {.val Simulate} for OM {.val {OM@Name}}')
+  }
+  
   OM <- StartUp(OM, nSim, silent=silent)
   
   if (is.null(OM@Name) || nchar(OM@Name) < 2)
@@ -27,12 +33,7 @@ Simulate_om <- function(OM = NULL,
   HistYears <- Years(OM, "Historical")
   ProjYears <- Years(OM, "Projection")
   IdenticalHist <- IdenticalSims(OM, ignore='RecDevProj')
-  
-  if (!silent) {
-    cli::cli_text('')
-    cli::cli_alert_info(' Starting  {.val Simulate} for OM {.val {OM@Name}}')
-  }
-    
+
   # ---- Make Hist Object ----
   Hist <- OM2Hist(OM=OM, silent=silent)
 
@@ -97,7 +98,6 @@ Simulate_om <- function(OM = NULL,
   # - FCrash, etc
   # - update for seasonal model
   
-  
   # ---- Historical Population Dynamics ----
   Hist <- CalcFisheryDynamics(Hist, IdenticalSim=IdenticalHist, clone = 1)
   
@@ -127,6 +127,9 @@ Simulate_om <- function(OM = NULL,
   # Add Simulation Number to Data@Misc 
   Hist <- AddSimNumber(Hist)
   
+  # ---- Check Allocation ----
+  Hist <- CheckAllocation(Hist)
+  
   # ---- Reduce Dimension Size ----
   Hist <- ReduceHist(Hist, Reduce)
   
@@ -137,6 +140,9 @@ Simulate_om <- function(OM = NULL,
   if (!silent)
     cli::cli_alert_success('Completed {.val Simulate} for OM {.val {OM@Name}} ({elapsed})')
   
+  Hist@Log <- JoinLog(OM@Log, Hist@Log)
+  
+  CheckLog(Hist)
   SetDigest(Hist)
 }
 

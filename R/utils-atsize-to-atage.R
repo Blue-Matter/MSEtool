@@ -197,7 +197,7 @@ AtSize2AtAge <- function(object, Length, max1=FALSE) {
   )
   
   if (max1)
-    object@MeanAtAge <- CheckSelectivityMaximum(object@MeanAtAge, alert=FALSE)
+    object <- CheckSelectivityMaximum(object)
   
   object
 }

@@ -5,7 +5,7 @@
 #' The arrays must have the same named dimensions, but do not need to have
 #' the same length for each dimension.
 #'
-#'  * `ArrayAdd`: Sum `array1` and `array2`
+#'  * `ArraySum`: Sum `array1` and `array2`
 #'  * `ArrayDivide`: Divide `array1` by `array2`
 #'  * `ArrayMultiply`: Multiply `array1` and `array2`
 #'  * `ArraySubtract`: Subtract `array2` from `array1` 
@@ -25,7 +25,7 @@ NULL
 
 #' @rdname ArrayOperations
 #' @export
-ArrayAdd <- function(array1, array2) {
+ArraySum <- function(array1, array2) {
   ArrayOperation(array1, array2, `+`)
 }
 

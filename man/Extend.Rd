@@ -17,6 +17,7 @@ Extend(
   default = NULL,
   backfill = FALSE,
   maintain_seasonal_pattern = TRUE,
+  skip_data = TRUE,
   debug = FALSE
 )
 
@@ -58,6 +59,8 @@ earliest existing year. Default \code{FALSE}.}
 \item{maintain_seasonal_pattern}{Logical. Seasonal models only.
 If \code{TRUE} fills in missing year values by matching those from the closest
 corresponding season (e.g., maintains seasonal recruitment pattern)}
+
+\item{skip_data}{\code{logical(1)} Skip any \linkS4class{data} objects? Default \code{TRUE}}
 
 \item{debug}{Logical. If \code{TRUE}, prints the class of each object as it is
 processed. Default \code{FALSE}.}

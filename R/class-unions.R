@@ -17,7 +17,7 @@ methods::setClassUnion("missing.char", c("missing", "character"))
 methods::setClassUnion("array.list.null", c("array", "list", "NULL"))
 methods::setClassUnion("array.log.null", c("array", "logical", "NULL"))
 methods::setClassUnion("num.list.null", c("numeric", "list", "NULL"))
-methods::setClassUnion("num.array.null", c("numeric", "array", "NULL"))
+methods::setClassUnion("num.array.null", c("numeric", "array", "NULL", "logical"))
 
 methods::setClassUnion("array.char.null", c("array", "character", "NULL"))
 methods::setClassUnion("char.log.num", c("character", 'logical', 'numeric', "NULL"))

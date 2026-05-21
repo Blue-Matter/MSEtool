@@ -4,13 +4,10 @@
 \alias{CheckObs}
 \title{Check Obs Objects in an Operating Model}
 \usage{
-CheckObs(OM, silent = FALSE, Proj = FALSE)
+CheckObs(OM, Proj = FALSE)
 }
 \arguments{
 \item{OM}{An operating model object containing an \verb{@Obs} slot.}
-
-\item{silent}{Logical; if \code{TRUE}, suppresses all output and returns
-invisibly. Default is \code{FALSE}.}
 }
 \value{
 Logical; \code{TRUE} if all \code{\link[=Obs]{Obs()}} objects are present and non-empty,

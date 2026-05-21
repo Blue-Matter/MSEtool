@@ -95,6 +95,17 @@ CombineFleets <- function(OM, FleetList, silent = FALSE) {
   # Combine Obs 
   OM <- combine_fleets_obs(OM, FleetList, silent)
   
+  # EFactor 
+  stock_names <- StockNames(OM)
+  fleet_names <- FleetNames(OM)
+  n_fleet <- length(fleet_names)
+  OM@EFactor <-  MakeNamedList(stock_names, 
+                               array(1, dim=c(1, n_fleet),
+                                     dimnames = list(
+                                       Sim = 1,
+                                       Fleet = fleet_names
+                                     ))
+  )
   
   # Drop the source fleets (all but the first index per group)
   drop_names <- purrr::map(FleetList, \(f) f[-1]) |> unlist()
@@ -106,10 +117,12 @@ CombineFleets <- function(OM, FleetList, silent = FALSE) {
 }
 
 
-comine_fleets_data_cpue <- function(OM, FleetList, silent=FALSE) {
+comine_fleets_data_cpue <- function(OM, FleetList, type=c('CPUE', 'Survey'), 
+                                    silent=FALSE) {
   
+  type <- match.arg(type)
   for (st in seq_along(OM@Data)) {
-    data <- OM@Data[[st]]@CPUE
+    data <- slot(OM@Data[[st]], type)
     
     if (is.null(data@Value)) next
     
@@ -136,7 +149,7 @@ comine_fleets_data_cpue <- function(OM, FleetList, silent=FALSE) {
       data@Name <- data@Name[-drop_ind]  
     }
     
-    OM@Data[[st]]@CPUE <- data
+    slot(OM@Data[[st]], type) <- data
   }
   
   OM 
@@ -178,6 +191,7 @@ comine_fleets_data_catch <- function(OM,
       if (!is.null(data@CV)) {
         # TODO data@CV[,ind[1]]
       }
+      
       data@Value[,ind[1]] <- rowSums(data@Value[,ind, drop=FALSE], na.rm=TRUE)
       data@Value[,ind[-1]][] <- 1E-15
       colnames(data@Value)[ind[1]] <- names(FleetList)[fl]
@@ -187,6 +201,7 @@ comine_fleets_data_catch <- function(OM,
     drop_ind <- which(colMeans(data@Value) <= 1E-15)
     if (length(drop_ind)) {
       data@Value <- data@Value[,-drop_ind, drop=FALSE]
+      data@Units <- data@Units[-drop_ind]  
       data@Name <- data@Name[-drop_ind]  
     }
     
@@ -201,14 +216,13 @@ combine_fleets_data <- function(OM, FleetList, silent=FALSE) {
   
   # Effort TODO
   
-  # Landings
   OM <- comine_fleets_data_catch(OM, FleetList, type = 'Landings', silent = silent)
   
-  # Discards 
   OM <- comine_fleets_data_catch(OM, FleetList, type = 'Discards', silent = silent)
 
-  # CPUE 
-  OM <- comine_fleets_data_cpue(OM, FleetList, silent = silent)
+  OM <- comine_fleets_data_cpue(OM, FleetList, type='CPUE', silent = silent)
+  
+  OM <- comine_fleets_data_cpue(OM, FleetList, type='Survey', silent = silent)
 
   OM
 }

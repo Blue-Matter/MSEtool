@@ -26,16 +26,6 @@ inline void CalcRecruitment(
     const int nStock,
     const int nArea) {
   
-  if ((int)Number.size() < nStock ||
-      (int)SRR_Pars.size() < nStock ||
-      (int)RecDevs.size() < nStock)
-    Rcpp::stop("Stock-level input list shorter than nStock");
-  
-  check_dims<3>(SProduction, {nSim, nStock, SProduction.dim[2]}, "SProduction", y, 2);
-  check_dims<3>(SP0, {nSim, nStock, SP0.dim[2]}, "SP0", y, 2);
-  check_dims<3>(R0, {nSim, nStock, R0.dim[2]}, "R0", y, 2);
-  check_dims<4>(RecDist, {nSim, nStock, RecDist.dim[2], nArea}, "RecDist", y, 2);
-  
   // Calculate Recruitment and distribute over areas according to movement
   
   for (int st = 0; st < nStock; ++st) {
@@ -68,7 +58,7 @@ inline void CalcRecruitment(
     
     for (int sim : Sims) {
       
-      const int sim_num   = sim_index<4>(sim, Num_st, "Number");
+      const int sim_num   = sim_index<4>(sim, Num_st);
       
       // Skip if age-0 recruits already populated for rec_y 
       // Any non-zero value in any area at age 0, rec_y means this sim is done.
@@ -79,11 +69,11 @@ inline void CalcRecruitment(
       }
       if (already_populated) continue;
       
-      const int sim_prod  = sim_index<3>(sim, SProduction, "SProduction");
-      const int sim_sp0   = sim_index<3>(sim, SP0, "SP0");
-      const int sim_r0    = sim_index<3>(sim, R0, "R0");
-      const int sim_dev   = sim_index<2>(sim, devs, "RecDevs");
-      const int sim_rec   = sim_index<4>(sim, RecDist, "RecDist");
+      const int sim_prod  = sim_index<3>(sim, SProduction);
+      const int sim_sp0   = sim_index<3>(sim, SP0);
+      const int sim_r0    = sim_index<3>(sim, R0);
+      const int sim_dev   = sim_index<2>(sim, devs);
+      const int sim_rec   = sim_index<4>(sim, RecDist);
    
       const double SP = SProduction(sim_prod, st, y); // spawning production this time step
       const double sp0 = SP0(sim_sp0, st, y);

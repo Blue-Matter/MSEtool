@@ -60,15 +60,14 @@ CalcUnfished_Dynamic <- function(Hist, IdenticalHist=NULL, silent=FALSE) {
                                      nArea,
                                      DoCalcCatch=0,
                                      clone=1)
-  
+
     for (sl in slotNames('popdynamics')) {
       if (sl=='Misc') next()
       slot(unfished, sl) <- CopyFirstSim(x=slot(unfished, sl))
-      
     }
-    
+  
   } else {
-    unfished <- CalcFisheryDynamics_(Hist_Copy, 
+    unfished <- CalcFisheryDynamics_(Hist_Copy,
                                      Years=HistYears,
                                      AllYears=AllYears,
                                      Sims=seq_len(nSim),
@@ -78,14 +77,14 @@ CalcUnfished_Dynamic <- function(Hist, IdenticalHist=NULL, silent=FALSE) {
                                      nArea,
                                      DoCalcCatch=0,
                                      clone=1)
-    
-  
-    
 
-    
   }
 
-  out <- CopySlots(unfished, out, slotNames(out), reduce=TRUE, IncYear=TRUE)
+  out <- CopySlots(S4in    = unfished, 
+                   S4out   = out, 
+                   slots   = slotNames(out), 
+                   reduce  = TRUE, 
+                   IncYear = TRUE)
   out@Misc <- list()
   
   if (!silent) 

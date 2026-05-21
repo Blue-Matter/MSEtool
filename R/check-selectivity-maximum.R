@@ -10,15 +10,15 @@
 #' in downstream calculations. If `alert = TRUE`, a warning is emitted
 #' identifying the affected simulations, years, and areas.
 #'
-#' @param MeanAtAge Numeric array of selectivity-at-age values. Dimensions
+#' @param object A `Selectivity` object with `MeanAtAge` slot a 
+#' n umeric array of selectivity-at-age values. Dimensions
 #'   `Sim × Age × Year` or `Sim × Age × Year × Area`.
-#' @param alert Logical. If `TRUE` (default), emits a warning and lists the
-#'   affected simulations, years, and areas.
 #'
 #' @return `MeanAtAge` with each affected slice rescaled so its maximum
 #'   equals 1, with original `dimnames` preserved.
 #' @keywords internal
-CheckSelectivityMaximum <- function(MeanAtAge, alert=TRUE) {
+CheckSelectivityMaximum <- function(object) {
+  MeanAtAge <- object@MeanAtAge
   dnames <- dimnames(MeanAtAge)
   byArea <- !is.null(dnames[['Area']])
   
@@ -27,28 +27,40 @@ CheckSelectivityMaximum <- function(MeanAtAge, alert=TRUE) {
   
   ind <- MaxValues < 0.99 & MaxValues != 0
   if (!any(ind))
-    return(MeanAtAge)
+    return(object)
   
-  if (alert) {
-    cli::cli_alert_warning(
-      "Selectivity-at-Age does not reach a maximum of 1. \\
-       F-at-Age will not correspond with apical F."
-    )
-    cli::cli_alert_warning(
-      "Standardizing to a maximum of 1. Check the selectivity schedule in the OM."
-    )
-    
+  
+  object <- CaptureLog(object,
+             string =
+               cli::format_inline("Selectivity-at-Age does not reach a maximum of 1. \\
+                                  F-at-Age will not correspond with apical F."),
+             name = 'CheckSelectivityMaximum')
+  
+  object <- CaptureLog(object,
+                       string =
+                         cli::format_inline("Standardizing to a maximum of 1. Check the selectivity schedule in the OM.")
+  )
+  
     trunc_vec <- list("vec-trunc"=5)
     sims <- which(apply(ind, 'Sim',  any)) |> cli::cli_vec(trunc_vec)
     yrs  <- which(apply(ind, 'Year', any)) |> cli::cli_vec(trunc_vec)
     
     if (byArea) {
       areas <- which(apply(ind, 'Area', any)) |> cli::cli_vec(trunc_vec)
-      cli::cli_alert('Simulations: {.val {sims}}; Years: {.val {yrs}}; Areas: {.val {areas}}')
+      
+      object <- CaptureLog(object,
+                           string =
+                             cli::format_inline('Simulations: {.val {sims}}; Years: {.val {yrs}}; Areas: {.val {areas}}')
+      )
+      
     } else {
-      cli::cli_alert('Simulations: {.val {sims}}; Years: {.val {yrs}}')
+      object <- CaptureLog(object,
+                           string =
+                             cli::format_inline('Simulations: {.val {sims}}; Years: {.val {yrs}}')
+      )
+      
     }
-  }
+  
   
   # Normalise each Sim x Year (x Area) slice so max == 1.
   # apply() moves the margin dims to position 1, so aperm() restores
@@ -68,5 +80,6 @@ CheckSelectivityMaximum <- function(MeanAtAge, alert=TRUE) {
   }
   
   dimnames(MeanAtAge) <- dnames
-  MeanAtAge
+  object@MeanAtAge <- MeanAtAge
+  object
 }

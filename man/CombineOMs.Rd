@@ -9,25 +9,39 @@ CombineOMs(
   Name = "Combined OM",
   FillEffort = list(nYears = 3, SD = 0.1, Mean = NULL, Values = NULL),
   FillEfficiency = list(nYears = 3, SD = 0.1, Mean = NULL, Values = NULL),
+  StandardizeEffort = TRUE,
   silent = FALSE
 )
 }
 \arguments{
-\item{OM_List}{Named list of \code{\linkS4class{om}} objects}
+\item{OM_List}{Named list of \code{\linkS4class{om}} objects. All elements must share
+the same \code{nSim}, \code{Seasons}, and fleet names in identical order. See
+\code{\link[=FleetNames]{FleetNames()}}.}
 
-\item{Name}{Character name for the combined OM}
+\item{Name}{\code{character(1)}. Name assigned to the combined OM.
+Default \code{"Combined OM"}}
 
-\item{FillEffort}{List controlling effort forward-filling}
+\item{FillEffort}{List controlling effort forward-filling. See \code{Details}.}
 
-\item{FillEfficiency}{List controlling efficiency forward-filling}
+\item{FillEfficiency}{List controlling efficiency forward-filling. See \code{Details}.}
+
+\item{StandardizeEffort}{\code{logical(1)}. If \code{TRUE} (default), calls
+\code{\link[=StandardizeEffort]{StandardizeEffort()}} after combining, which equalises effort across
+stocks for each fleet and back-calculates stock targeting weights.}
+
+\item{silent}{\code{logical(1)}. If \code{TRUE}, suppresses informational messages. Default \code{FALSE}.}
 }
 \value{
 An \code{\linkS4class{om}} object with:
 \itemize{
-\item Combined \verb{@Stock} and \verb{@Fleet}
-\item Unified \verb{@nYear} and \verb{@pYear}
-\item \verb{@CurrentYear} set to the latest historical year
-\item Metadata copied from the first OM
+\item \verb{@Stock}: concatenation of all stocks across input OMs, in list order.
+\item \verb{@Fleet}: concatenation of all fleet lists across input OMs.
+\item \verb{@nYear}: length of the unified historical year range.
+\item \verb{@pYear}: number of projection years strictly after the latest
+historical year.
+\item \verb{@CurrentYear}: the latest historical year across all input OMs.
+\item Administrative metadata (\code{Agency}, \code{Author}, \code{nSim}, \code{Seed}, etc.)
+copied from \code{OM_List[[1]]}.
 }
 }
 \description{
@@ -37,30 +51,22 @@ Each element of \code{OM_List} represents a distinct stock or stock complex
 of historical and projection years across all inputs.
 }
 \details{
-\subsection{Requirements}{
-
-All operating models must share:
-\itemize{
-\item The same number of simulations (\code{nSim})
-\item The same number of seasons (\code{Seasons})
-\item Identical fleet names in identical order (see \code{\link[=FleetNames]{FleetNames()}})
+\subsection{Processing steps}{
+\enumerate{
+\item Validate that all OMs share \code{nSim}, \code{Seasons}, and fleet names.
+\item Standardize each OM via \code{\link[=PopulateOM]{PopulateOM()}}.
+\item Construct unified historical and projection year ranges: historical years
+are the union across all OMs; projection years are those strictly greater
+than the maximum historical year.
+\item Extend every stock and fleet object to the unified year range.
+Missing early years are back-filled; missing later historical years are
+forward-filled using \code{FillEffort} and \code{FillEfficiency}.
+\item Concatenate stocks and fleets.
+\item Generate correlated recruitment deviations for the projection period
+via \code{\link[=GenMultiStockRecDevs]{GenMultiStockRecDevs()}}.
+\item Optionally standardize effort across stocks via \code{\link[=StandardizeEffort]{StandardizeEffort()}},
+which populates \verb{@StockTargeting}
 }
-}
-
-\subsection{Year Handling}{
-\itemize{
-\item Historical years are combined using the \strong{union} across OMs
-\item The final historical year is the \strong{maximum} across all OMs
-\item Projection years include only years strictly greater than the final historical year
-}
-
-Each OM is expanded to the unified year range:
-\itemize{
-\item Missing early years are \strong{back-filled}
-\item Missing later years are \strong{forward-filled}
-}
-
-Forward filling uses \code{FillEffort} and \code{FillEfficiency}.
 }
 
 \subsection{Fill Controls}{
@@ -76,42 +82,15 @@ Both \code{FillEffort} and \code{FillEfficiency} accept:
 If \code{Values} is supplied, all other parameters are ignored.
 }
 
-\subsection{Processing Steps}{
-\enumerate{
-\item Validate inputs
-\item Standardize each OM using \code{\link[=PopulateOM]{PopulateOM()}}
-\item Construct unified year ranges
-\item Extend all stock and fleet objects
-\item Merge stocks and fleets
-\item Generate correlated recruitment deviations for projection period via
-\code{\link[=GenMultiStockRecDevs]{GenMultiStockRecDevs()}}
-\item Standardize effort across stocks via \code{\link[=StandardizeEffort]{StandardizeEffort()}}
-}
-}
+\subsection{Metadata}{
 
-\subsection{Metadata Handling}{
-
-Administrative slots are copied from the \strong{first} OM:
-\itemize{
-\item \code{Agency}, \code{Author}, \code{Email}, \code{Region}, \code{Latitude}, \code{Longitude}
-\item \code{Sponsor}, \code{nSim}, \code{Seasons}, \code{DataLag}, \code{Interval}
-\item \code{nReps}, \code{pStar}, \code{maxF}, \code{Seed}, \code{Control}
-}
-
-Ensure the first OM contains the desired global configuration.
+The following slots are copied verbatim from \code{OM_List[[1]]}:
+\code{Agency}, \code{Author}, \code{Email}, \code{Region}, \code{Latitude}, \code{Longitude},
+\code{Sponsor}, \code{nSim}, \code{Seasons}, \code{DataLag}, \code{Interval}, \code{nReps},
+\code{pStar}, \code{maxF}, \code{Seed}, \code{Control}. Ensure the first OM contains
+the desired global configuration.
 }
 }
-\section{Validation}{
-
-The function errors if:
-\itemize{
-\item Any element is not an \code{\linkS4class{om}} object
-\item \code{nSim} or \code{Seasons} differ across OMs
-\item Fleet names are inconsistent
-\item Provided fill values have invalid dimensions
-}
-}
-
 \examples{
 \dontrun{
 combined <- CombineOMs(
@@ -124,5 +103,5 @@ combined <- CombineOMs(
 
 }
 \seealso{
-\code{\link[=PopulateOM]{PopulateOM()}}, \code{\link[=Extend]{Extend()}}, \code{\link[=Subset]{Subset()}}, \code{\link[=FleetNames]{FleetNames()}}
+\code{\link[=GenMultiStockRecDevs]{GenMultiStockRecDevs()}}, \code{\link[=StandardizeEffort]{StandardizeEffort()}}
 }

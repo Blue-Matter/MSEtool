@@ -62,10 +62,8 @@ GenHistData_Catch <- function(x, Data, Hist, HistYears, i, stocks, FleetNames,
     if (EmptyObject(CatchObs)) 
       next()
   
-    
     if (!is.null(CatchObs@Units))
       CatchData@Units[fl] <- CatchObs@Units
-    
     
     if (CatchData@Units[fl] == "Number") {
       real_catch <- purrr::map(Real_Catch_Number, \(catch_n) {
@@ -77,10 +75,16 @@ GenHistData_Catch <- function(x, Data, Hist, HistYears, i, stocks, FleetNames,
     } else if (CatchData@Units[fl] == "Biomass") {
       real_catch <- purrr::map2(Real_Catch_Number, Hist@OM@Fleet[stocks], 
                                   \(catch_n, fleet_list) {
+                                    fleet_weight <- fleet_list[[fl]]@WeightFleet
+                                    dd <- dim(fleet_weight)
+                                    fl_x <- min(x, dd[1])
                                     
-                                    fleet_weight <- SubsetYear(fleet_list[[fl]]@WeightFleet[x,,,drop=FALSE], HistYears) |>
+                                    fleet_weight <- SubsetYear(fleet_weight[fl_x,,,drop=FALSE], HistYears) |>
                                       abind::adrop(1)
-                                    catch_age <- catch_n[x,,,fl,, drop=FALSE] |> SumOverArea() |>
+                                    
+                                    dd <- dim(catch_n)
+                                    catch_x <- min(x, dd[1])
+                                    catch_age <- catch_n[catch_x,,,fl,, drop=FALSE] |> SumOverArea() |>
                                       DropDimension('Sim') |>
                                       DropDimension('Fleet')
                                     catch_age_biomass <- ArrayMultiply(catch_age, fleet_weight)

@@ -157,7 +157,7 @@ PrepHistMisc <- function(Hist, Period=c('Historical', 'Projection')) {
   # 4D Array: Sim, Stock, Year, Fleet
   Hist@Misc$Catchability <- purrr::map(Hist@OM@Fleet, \(FleetList) {
     purrr::map(FleetList, \(fleet) {
-      fleet@Catchability@Efficiency
+      Extend(fleet@Catchability@Efficiency, nSim = Hist@OM@nSim)
     }) |> List2Array(pos = 3) # Sim, Year, Fleet
   }) |> List2Array(pos = 2, "Stock") # Sim, Stock, Year, Fleet
   
@@ -221,7 +221,14 @@ PrepHistMisc <- function(Hist, Period=c('Historical', 'Projection')) {
   })
   
   # OM-level: StockTargeting 
-  Hist@Misc$StockTargeting <- Hist@OM@StockTargeting@Targeting
+  if (nStock(Hist) == 1 || is.null(Hist@OM@StockTargeting@Targeting)) {
+    # single stock 
+    Hist@Misc$StockTargeting <- StockTargeting(Hist@OM)@Targeting |> ReduceDims()
+    Hist@Misc$StockTargetingFlag <- 0
+  } else {
+    Hist@Misc$StockTargeting <- Hist@OM@StockTargeting@Targeting
+    Hist@Misc$StockTargetingFlag <- 1
+  }
   
   Hist@Misc <- ExtendYears(Hist@Misc, Years=Years(Hist,Period))
   CheckHistMisc(Hist, Period)

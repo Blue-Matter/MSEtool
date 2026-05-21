@@ -28,7 +28,7 @@ ConditionObs <- function(Hist, silent=FALSE) {
   if (!silent)
     id <- cli::cli_progress_bar(
       total  = nData,
-      format = "Conditioning Observation Error [{pb_current}/{pb_total}]: {.val {nms}}"
+      format = "Conditioning Observation Error [{cli::pb_current}/{cli::pb_total}]: {.val {nms}}"
     )
 
   for (i in seq_along(FisheryDataList)) {

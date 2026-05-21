@@ -30,16 +30,16 @@
 #'
 #' @keywords internal
 Apply_MP <- function(Year,
-                    ManagementYears,
-                    LastAdviceSimList,
-                    MPName,
-                    MPfunction,
-                    DataSimList,
-                    Proj,
-                    YearsProj,
-                    mp,
-                    FleetNames,
-                    Areas) {
+                     ManagementYears,
+                     LastAdviceSimList,
+                     MPName,
+                     MPfunction,
+                     DataSimList,
+                     Proj,
+                     YearsProj,
+                     mp,
+                     FleetNames,
+                     Areas) {
   
   if (!Year %in% ManagementYears) return(LastAdviceSimList)
   
@@ -126,21 +126,28 @@ CalcAdvice <- function(MPName, MPfunction, DataSimList, Year, Proj, YearsProj, m
 #' @return A named list of `Advice` objects for each stock/complex.
 #'
 #' @keywords internal
-CalcAdvice_Sim_MP <- function(sim, MPName, 
-                              MPfunction, DataList, 
-                              Year, Proj,
+CalcAdvice_Sim_MP <- function(sim,
+                              MPName, 
+                              MPfunction, 
+                              DataList, 
+                              Year, 
+                              Proj,
                               YearsProj,
-                              mp, FleetNames, 
+                              mp, 
+                              FleetNames, 
                               Areas) {
   
   AdviceList <- MakeNamedList(names(DataList))
   
   # loop over stocks/complexes
+  nms <- names(DataList)
   for (i in seq_along(DataList)) {  
     Data <- DataList[[i]] |> AddPopDyn(Proj, sim, Year, YearsProj, mp)
     
+    Data@Misc$MPName <- MPName
+    Data@Misc$StockName <- names(DataList)[i]
     Advice <- try(MPfunction(Data=Data), silent=TRUE)
-    Advice <- CheckAdvice(Advice, Proj, FleetNames, Areas, sim) 
+    Advice <- CheckAdvice(Advice, Proj, FleetNames, Areas, sim, name=nms[i]) 
     Advice <- Log_MPError(Advice, MPName, Data, Sim=sim, Year)
     AdviceList[[i]] <- Advice
   }

@@ -66,15 +66,15 @@ inline void CalcCatch(
       std::vector<double> Z_age(nAge);
       std::vector<double> N_dead_age(nAge);
       
-      const int sim_num   = sim_index<4>(sim, Num_st,  "Number");
-      const int sim_fi    = sim_index<5>(sim, Fi,      "FInteractArea");
-      const int sim_fd    = sim_index<5>(sim, Fd,      "FDeadArea");
-      const int sim_fr    = sim_index<5>(sim, Fr,      "FRetainArea");
-      const int sim_M     = sim_index<3>(sim, M_st,    "NaturalMortality");
-      const int sim_iaa   = sim_index<5>(sim, IAA_st,  "InteractAtAge");
-      const int sim_laa   = sim_index<5>(sim, LAA_st,  "LandingsAtAge");
-      const int sim_daa   = sim_index<5>(sim, DAA_st,  "DiscardsAtAge");
-      const int sim_fw    = sim_index<4>(sim, FWght_st,"FleetWeight");
+      const int sim_num   = sim_index<4>(sim, Num_st);
+      const int sim_fi    = sim_index<5>(sim, Fi);
+      const int sim_fd    = sim_index<5>(sim, Fd);
+      const int sim_fr    = sim_index<5>(sim, Fr);
+      const int sim_M     = sim_index<3>(sim, M_st);
+      const int sim_iaa   = sim_index<5>(sim, IAA_st);
+      const int sim_laa   = sim_index<5>(sim, LAA_st);
+      const int sim_daa   = sim_index<5>(sim, DAA_st);
+      const int sim_fw    = sim_index<4>(sim, FWght_st);
       
       for (int fl = 0; fl < nFleet; ++fl) {
         Interactions(sim, st, y, fl) = 0.0;

@@ -74,6 +74,8 @@ ImportBAMData <- function(OM,
   
   # create new data object 
   OM@Data <- MakeNamedList(StockNames(OM), Data(Name = OM@Stock[[1]]@Name))
+  OM@Data[[1]]@Years <- Years(OM,'H')
+  OM@Data[[1]]@YearLH <- max(OM@Data[[1]]@Years)
   
   # Landings & Discards
   OM <- ImportBAM_Catch(OM, BAMdata, Units = UnitsLandings, type = 'Landings') 

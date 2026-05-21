@@ -25,26 +25,12 @@ inline void CalcArea_F(
     const Array3D& Effort,                            // sim, year, fleet
     const ConstArrayView2D& RelSize,                  // sim, area
     const ConstArrayView4D& StockTargeting,           // sim, stock, fleet, year   
+    const bool StockTargetingFlag,
     const double maxF,
     const int nStock,
     const int nFleet,
     const int nArea) {
 
-
-  // Checks
-  if ((int)FInteractArea.size() < nStock ||
-      (int)FDeadArea.size() < nStock ||
-      (int)FRetainArea.size() < nStock ||
-      (int)SelAge.size() < nStock ||
-      (int)RetAge.size() < nStock ||
-      (int)DiscMort.size() < nStock)
-    Rcpp::stop("Stock-level input list shorter than nStock");
-  
-  check_dims<4>(Distribution, {nSim, Distribution.dim[1], nFleet, nArea}, "Distribution", y, 1);
-  check_dims<4>(q, {nSim, nStock, q.dim[2], nFleet}, "q", y, 2);
-  check_dims<3>(Effort, {nSim, Effort.dim[1], nFleet}, "Effort", y, 1);
-  check_dims<2>(RelSize, {nSim, nArea}, "RelSize");
-  
 
   // Calc F-at-age 
   for (int st = 0; st < nStock; ++st) {
@@ -59,10 +45,6 @@ inline void CalcArea_F(
     
     const int nAge = Fd.dim[1];
     
-    check_dims<5>(S, {nSim, nAge, S.dim[2], nFleet, nArea}, "SelAge", y, 2);
-    check_dims<5>(R, {nSim, nAge, R.dim[2], nFleet, nArea}, "RetAge", y, 2);
-    check_dims<5>(DM, {nSim, nAge, DM.dim[2], nFleet, nArea}, "DiscMort", y, 2);
-    
     for (int sim : Sims) {
       
       // Zero all F arrays for this sim/year before computing
@@ -74,14 +56,14 @@ inline void CalcArea_F(
             Fr(sim, age, y, fl, ar) = 0.0;
           }
     
-      const int sim_q   = sim_index<4>(sim, q, "q");
-      const int sim_sel = sim_index<5>(sim, S, "S");
-      const int sim_ret = sim_index<5>(sim, R, "R");
-      const int sim_dm  = sim_index<5>(sim, DM, "DiscMort");
-      const int sim_ef  = sim_index<3>(sim, Effort, "Effort");
-      const int sim_dist  = sim_index<4>(sim, Distribution, "Distribution");
-      const int sim_rs = sim_index<2>(sim, RelSize, "RelSize");
-      const int sim_st = sim_index<4>(sim, StockTargeting, "StockTargeting");
+      const int sim_q   = sim_index<4>(sim, q);
+      const int sim_sel = sim_index<5>(sim, S);
+      const int sim_ret = sim_index<5>(sim, R);
+      const int sim_dm  = sim_index<5>(sim, DM);
+      const int sim_ef  = sim_index<3>(sim, Effort);
+      const int sim_dist  = sim_index<4>(sim, Distribution);
+      const int sim_rs = sim_index<2>(sim, RelSize);
+      const int sim_st = sim_index<4>(sim, StockTargeting);
       
       for (int fl = 0; fl < nFleet; ++fl) {
 
@@ -94,7 +76,12 @@ inline void CalcArea_F(
           const double rs = RelSize(sim_rs, ar);
           // Effort density
           const double ed = (rs > 0.0) ? E * Distribution(sim_dist, y, fl, ar) / rs : 0.0;
-          const double targ = StockTargeting(sim_st, st, fl, y);
+          
+          double targ = 1;
+
+          if (StockTargetingFlag) {
+            targ = StockTargeting(sim_st, st, fl, y);
+          }
             
           double q_eff = std::min(q_fl * ed * targ, maxF);          
           if (q_eff <= 0.0) continue;

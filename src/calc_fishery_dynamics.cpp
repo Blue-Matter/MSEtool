@@ -20,14 +20,19 @@ using namespace Rcpp;
 
 // [[Rcpp::export]]
 Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
-                              SEXP Years, // Years to loop over
+                              SEXP Years, 
                               SEXP AllYears,
                               std::vector<int> Sims,
                               const int nSim,
                               const int nStock,
                               const int nFleet,
                               const int nArea,
-                              const int DoCalcCatch=1,        // calculate catch?
+                              const int DoCalcCatch=1,
+                              const int DoCalcSpawnProduction=1,
+                              const int DoCalcRecruitment=1,
+                              const int DoCalcNumberNext=1,
+                              const int DoCalcBiomass=1,
+                              const int DoCalcOverallF=1,       
                               const int debug=0,
                               const int clone=1
 ) {
@@ -163,6 +168,7 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
                hv.Effort,
                hv.RelSize,
                hv.StockTargeting,
+               hv.StockTargetingFlag,
                hv.maxF,
                nStock,
                nFleet,
@@ -171,117 +177,132 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
     if (debug)
       Rcpp::Rcout << "End CalcArea_F \n";
 
-    // ---------------------------------------------------------
-    // Calculate Global Spawning Biomass and Spawning Production
-    // src: inst/include/calc_spawn_production.h
-    // ---------------------------------------------------------
+
     
-    if (debug)
-      Rcpp::Rcout << "Begin CalcSpawnProduction \n";
-
-    CalcSpawnProduction(y,
-                        Sims,
-                        nSim,
-                        hv.SBiomass,
-                        hv.SProduction,
-                        hv.Number,
-                        hv.Fecundity,
-                        hv.Maturity,
-                        hv.Weight,
-                        hv.NaturalMortality,
-                        hv.SpawnTimeFrac,
-                        hv.SPFrom,
-                        hv.FDeadArea,
-                        nStock,
-                        nFleet,
-                        nArea);
-
-    if (debug)
-      Rcpp::Rcout << "End CalcSpawnProduction \n";
+    if (DoCalcSpawnProduction) {
+      
+      // ---------------------------------------------------------
+      // Calculate Global Spawning Biomass and Spawning Production
+      // src: inst/include/calc_spawn_production.h
+      // ---------------------------------------------------------
+      
+      if (debug)
+        Rcpp::Rcout << "Begin CalcSpawnProduction \n";
+      
+      CalcSpawnProduction(y,
+                          Sims,
+                          nSim,
+                          hv.SBiomass,
+                          hv.SProduction,
+                          hv.Number,
+                          hv.Fecundity,
+                          hv.Maturity,
+                          hv.Weight,
+                          hv.NaturalMortality,
+                          hv.SpawnTimeFrac,
+                          hv.SPFrom,
+                          hv.FDeadArea,
+                          nStock,
+                          nFleet,
+                          nArea);
+      
+      if (debug)
+        Rcpp::Rcout << "End CalcSpawnProduction \n";
+    }
     
-    // ---------------------------------------------------------
-    // Calculate Recruitment & Distribute over areas
-    // src: inst/include/calc_recruitment.h
-    // ---------------------------------------------------------
+    if (DoCalcRecruitment) {
+      
+      // ---------------------------------------------------------
+      // Calculate Recruitment & Distribute over areas
+      // src: inst/include/calc_recruitment.h
+      // ---------------------------------------------------------
+      
+      if (debug)
+        Rcpp::Rcout << "Begin CalcRecruitment \n";
+      
+      CalcRecruitment(y,
+                      Sims,
+                      nSim,
+                      hv.Number,
+                      hv.SProduction,
+                      hv.SRR_Pars,
+                      hv.SRR_Model,
+                      hv.RecLag,
+                      hv.RecDevs,
+                      hv.SP0,
+                      hv.R0,
+                      hv.RecDist,
+                      nStock,
+                      nArea);
+      
+      if (debug)
+        Rcpp::Rcout << "End CalcRecruitment \n";
+    }
     
-    if (debug)
-      Rcpp::Rcout << "Begin CalcRecruitment \n";
-
-    CalcRecruitment(y,
-                    Sims,
-                    nSim,
-                    hv.Number,
-                    hv.SProduction,
-                    hv.SRR_Pars,
-                    hv.SRR_Model,
-                    hv.RecLag,
-                    hv.RecDevs,
-                    hv.SP0,
-                    hv.R0,
-                    hv.RecDist,
-                    nStock,
-                    nArea);
-
-    if (debug)
-      Rcpp::Rcout << "End CalcRecruitment \n";
-
-    // ---------------------------------------------------------
-    // Calculate Number at beginning of next time step
-    // src: inst/include/calc_number_next.h
-    // ---------------------------------------------------------
+    if (DoCalcNumberNext) {
+      
+      // ---------------------------------------------------------
+      // Calculate Number at beginning of next time step
+      // src: inst/include/calc_number_next.h
+      // ---------------------------------------------------------
+      
+      if (debug)
+        Rcpp::Rcout << "Begin CalcNumberNext \n";
+      
+      CalcNumberNext(y,
+                     Sims,
+                     nSim,
+                     hv.Number,
+                     hv.FDeadArea,
+                     hv.NaturalMortality,
+                     hv.Semelparous,
+                     hv.PlusGroup,
+                     hv.Movement,
+                     nStock,
+                     nFleet,
+                     nArea);
+      
+      
+      if (debug)
+        Rcpp::Rcout << "End CalcNumberNext \n";
+    }
     
-    if (debug)
-      Rcpp::Rcout << "Begin CalcNumberNext \n";
 
-    CalcNumberNext(y,
-                   Sims,
-                   nSim,
-                   hv.Number,
-                   hv.FDeadArea,
-                   hv.NaturalMortality,
-                   hv.Semelparous,
-                   hv.PlusGroup,
-                   hv.Movement,
-                   nStock,
-                   nFleet,
-                   nArea);
-
-
-    if (debug)
-      Rcpp::Rcout << "End CalcNumberNext \n";
-
-    // ---------------------------------------------------------
-    // Calculate Biomass (this time step)
-    // src: inst/include/calc_biomass.h
-    // ---------------------------------------------------------
+    if (DoCalcBiomass) {
+      
+      // ---------------------------------------------------------
+      // Calculate Biomass (this time step)
+      // src: inst/include/calc_biomass.h
+      // ---------------------------------------------------------
+      
+      
+      if (debug)
+        Rcpp::Rcout << "Begin CalcBiomass \n";
+      
+      CalcBiomass(y,
+                  Sims,
+                  nSim,
+                  hv.Biomass,
+                  hv.Number,
+                  hv.Weight,
+                  nStock,
+                  nArea);
+      
+      if (debug)
+        Rcpp::Rcout << "End CalcBiomass \n";
+    }
     
-    
-    if (debug)
-      Rcpp::Rcout << "Begin CalcBiomass \n";
 
-    CalcBiomass(y,
-                Sims,
-                nSim,
-                hv.Biomass,
-                hv.Number,
-                hv.Weight,
-                nStock,
-                nArea);
-
-    if (debug)
-      Rcpp::Rcout << "End CalcBiomass \n";
-    
-    // ---------------------------------------------------------
-    // Calculate Catch (if applicable)
-    // src: inst/include/calc_catch.h
-    // ---------------------------------------------------------
-  
-    // if (DoCalcCatch) {
+    if (DoCalcCatch) {
+      
+      // ---------------------------------------------------------
+      // Calculate Catch 
+      // src: inst/include/calc_catch.h
+      // ---------------------------------------------------------
       
       // TODO   - calc landings- and discards-at-size
       //        - need to calculate ASK internally
       //        - and first check if sel_len/wght exists
-      
       
       if (debug)
         Rcpp::Rcout << "Begin CalcCatch \n";
@@ -308,33 +329,36 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
       if (debug)
         Rcpp::Rcout << "End CalcCatch \n";
       
-    // }
+    }
     
-    // ---------------------------------------------------------
-    // Calculate overall F (if applicable)
-    // src: inst/include/cacl_overall_f.h
-    // ---------------------------------------------------------
-    
-    if (debug)
-      Rcpp::Rcout << "Begin CalcOverallF \n";
-    
-    CalcOverallF(y,
-                 Sims,
-                 nSim,
-                 hv.FInteract,
-                 hv.FDead,
-                 hv.FRetain,
-                 hv.FInteractArea,
-                 hv.FDeadArea,
-                 hv.FRetainArea,
-                 hv.Number,
-                 nStock,
-                 nFleet,
-                 nArea
-    );
-    
-    if (debug)
-      Rcpp::Rcout << "End CalcOverallF \n";
+    if (DoCalcOverallF) {
+      
+      // ---------------------------------------------------------
+      // Calculate overall F (if applicable)
+      // src: inst/include/cacl_overall_f.h
+      // ---------------------------------------------------------
+      
+      if (debug)
+        Rcpp::Rcout << "Begin CalcOverallF \n";
+      
+      CalcOverallF(y,
+                   Sims,
+                   nSim,
+                   hv.FInteract,
+                   hv.FDead,
+                   hv.FRetain,
+                   hv.FInteractArea,
+                   hv.FDeadArea,
+                   hv.FRetainArea,
+                   hv.Number,
+                   nStock,
+                   nFleet,
+                   nArea
+      );
+      
+      if (debug)
+        Rcpp::Rcout << "End CalcOverallF \n";
+    }
     
     if (debug) 
       Rcpp::Rcout << "******End Time Step ****\n\n";

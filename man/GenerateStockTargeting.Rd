@@ -4,15 +4,21 @@
 \alias{GenerateStockTargeting}
 \title{Generate Stochastic Stock Targeting Trajectories}
 \usage{
-GenerateStockTargeting(OM, Period = c("Historical", "Projection"))
+GenerateStockTargeting(
+  OM,
+  Period = c("Historical", "Projection"),
+  TruncSD = 2,
+  n_recent = 5,
+  seed = 101
+)
 }
 \arguments{
 \item{OM}{An operating model object (\linkS4class{om}) containing a populated
 \verb{@StockTargeting} slot with elements:
 \itemize{
-\item \verb{@Mean} (log-scale mean)
-\item \verb{@AC} (lag-1 autocorrelation)
-\item \verb{@Covariance} (stationary covariance)
+\item \verb{@Mean}: geometric mean targeting weight on the natural scale (from
+\code{\link[=FitStockTargeting]{FitStockTargeting()}} or user defined)
+\item \verb{@Covariance}: stationary covariance matrix of log-targeting deviations
 }}
 
 \item{Period}{Character string specifying which period to simulate:
@@ -20,48 +26,76 @@ GenerateStockTargeting(OM, Period = c("Historical", "Projection"))
 \item \code{"Historical"}: assigns or replaces historical targeting values
 \item \code{"Projection"}: appends simulated projection years
 }}
+
+\item{TruncSD}{\code{numeric(1)}. Number of standard deviations beyond which
+log-deviations are truncated. Prevents extreme targeting values when
+variance is high relative to the historical record length. Default \code{2}.
+Set to \code{Inf} to disable truncation.}
+
+\item{n_recent}{\code{integer(1)}. For \code{Period = "Projection"} only: number of
+recent historical years used to determine whether a stock has been
+continuously inactive at the end of history. A stock with zero targeting
+weight in all \code{n_recent} years is treated as inactive and receives
+\eqn{T_{s,t} = 0} throughout the projection. Default \code{5}.}
+
+\item{seed}{\code{numeric(1)}. Offset added to \code{OM@Seed} for the random number
+generator, ensuring independence from other stochastic processes.
+Default \code{101}.}
 }
 \value{
-The input \code{OM} object with updated \verb{@StockTargeting@Targeting}
+The input \code{OM} object with updated \verb{@StockTargeting@Targeting}.
 
-Targeting is modeled in log-space to ensure positivity:
+Targeting is modelled in log-space as multivariate normal deviations at
+each time step, centred at the bias-corrected historical log-mean:
 
 \deqn{
-  Z_t = \mu + \Phi (Z_{t-1} - \mu) + \epsilon_t
+  \boldsymbol{\delta}_t \sim \mathrm{MVN}(\mathbf{0},\, \Sigma_w)
 }
 
 \deqn{
-  T_t = \exp(Z_t)
+  T_{s,t} = \exp\!\left(\mu_s^* + \delta_{s,t}\right)
 }
 
 where:
 \itemize{
-\item \eqn{\mu} is the mean log-targeting
-\item \eqn{\Phi} is a diagonal matrix of lag-1 autocorrelation coefficients
-\item \eqn{\epsilon_t \sim MVN(0, \Sigma_\epsilon)}
+\item \eqn{T_{s,t}} is the targeting multiplier for stock \eqn{s} at
+time \eqn{t}
+\item \eqn{\delta_{s,t}} is the log-space deviation for stock \eqn{s}
+at time \eqn{t}, drawn from the multivariate normal with mean zero and
+covariance \eqn{\Sigma_w}
+\item \eqn{\Sigma_w} is the stationary covariance matrix of
+log-targeting deviations estimated by \code{\link[=FitStockTargeting]{FitStockTargeting()}}
+\item \eqn{\mu_s^* = \bar{w}_s - \tfrac{1}{2}\sigma^2_{w,s}} is the
+lognormal bias correction for stock \eqn{s}, where \eqn{\bar{w}_s =
+    \log(\texttt{Mean}_s)} is the fitted log-scale mean from
+\code{\link[=FitStockTargeting]{FitStockTargeting()}} and \eqn{\sigma^2_{w,s} = (\Sigma_w)_{ss}} is
+the marginal variance. This ensures \eqn{\mathrm{E}[T_{s,t}] =
+    \exp(\bar{w}_s)}, preserving the historical mean targeting level for
+each stock on the natural scale.
 }
 
-The innovation covariance matrix \eqn{\Sigma_\epsilon} is derived internally
-from the stationary covariance matrix.
-\itemize{
-\item Stocks that are inactive for a given fleet (e.g., dummy fleets with no
-fishing activity) are assigned neutral targeting values of 1.
-\item If the innovation covariance matrix is numerically zero, the process
-reduces to a deterministic AR(1).
-\item For projection simulations, the initial state is taken from the final
-historical year.
-}
+Deviations are truncated to
+\eqn{|\delta_{s,t}| \le \texttt{TruncSD} \times \sigma_{w,s}}
+to guard against extreme values when variance is poorly estimated from
+short historical series. When variance is low, truncation has little effect
+and simulated values stay close to the historical mean, as intended.
+
+Inactive stocks (zero marginal variance or non-finite mean in
+\verb{@StockTargeting@Mean}, or continuously inactive over the last \code{n_recent}
+historical years when \code{Period = "Projection"}) receive \eqn{T_{s,t} = 0}
+throughout.
 }
 \description{
 Simulates stochastic stock-specific targeting multipliers for each fleet
-using a multivariate lognormal AR(1) process.
+using independent multivariate lognormal draws at each time step.
 }
 \examples{
 \dontrun{
 OM <- GenerateStockTargeting(OM, Period = "Projection")
+OM <- GenerateStockTargeting(OM, Period = "Projection", TruncSD = 2, n_recent = 5)
 }
 
 }
 \seealso{
-\code{\link[=CalcInnovationCov]{CalcInnovationCov()}}
+\code{\link[=FitStockTargeting]{FitStockTargeting()}}, \code{\link[=StandardizeEffort]{StandardizeEffort()}}
 }
