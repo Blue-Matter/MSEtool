@@ -121,7 +121,7 @@ GenHistData_Indices <- function(sim, Data, Hist, HistYears, i, stocks, StockName
     } else {
       SelectivityAtAgeList <- purrr::map(Hist@OM@Fleet[stocks], \(fleet_list) {
         dd <- dim(  fleet_list[[FleetNames[fl]]]@Selectivity@MeanAtAge)
-        sel_x <- min(dd[1], x)
+        sel_x <- min(dd[1], sim)
         fleet_list[[FleetNames[fl]]]@Selectivity@MeanAtAge[sel_x,,,,drop=FALSE] |>
           ArraySubsetYear(HistYears) |>
           abind::adrop(1)
