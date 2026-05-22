@@ -32,7 +32,7 @@ CalcUnfishedNumber <- function(OM, SP = FALSE) {
   # R0 for each Stock 
   R0List <- purrr::map(OM@Stock, \(Stock) {
     Stock@SRR@R0 |>
-      AddDimension("Age") |>
+      AddDimension("Age", val =  min(Stock@Ages@Classes)) |>
       aperm(c("Sim", "Age", "Year"))
   })
   
