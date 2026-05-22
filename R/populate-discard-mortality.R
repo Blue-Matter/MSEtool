@@ -141,5 +141,5 @@ PopulateDiscardMortality <- function(DiscardMortality,
     }
   }
   
-  SetDigest(DiscardMortality, argList)
+  SetDigest(SetAgeDimnames(DiscardMortality, Ages), argList)
 }

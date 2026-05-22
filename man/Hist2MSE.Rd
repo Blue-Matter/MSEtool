@@ -7,16 +7,16 @@
 Hist2MSE(Hist, MPNames)
 }
 \arguments{
-\item{Hist}{A populated \linkS4class{hist} object.}
+\item{Hist}{A populated \link[=hist-class]{hist} object.}
 
 \item{MPNames}{Character vector of MP function names to attach to the MSE.}
 }
 \value{
-An \linkS4class{mse} object with historical slots populated and
+An \link[=mse-class]{mse} object with historical slots populated and
 projection arrays initialised, ready for closed-loop simulation.
 }
 \description{
-Constructs a skeleton \linkS4class{mse} object from a completed \linkS4class{hist}
+Constructs a skeleton \link[=mse-class]{mse} object from a completed \link[=hist-class]{hist}
 object by copying the operating model, unfished reference state, reference
 points, and historical time-series slots via \code{\link[=CopyTimeseriesSlots]{CopyTimeseriesSlots()}}. MP
 functions are attached via \code{\link[=Add_MP_Functions]{Add_MP_Functions()}} and projection-period

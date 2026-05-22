@@ -6,7 +6,7 @@
 \title{\code{hist} Class}
 \description{
 The \code{hist} class stores the complete historical time-series generated from
-an \linkS4class{om} object. It extends the \linkS4class{timeseries} with the originating
+an \link[=om-class]{om} object. It extends the \link[=timeseries-class]{timeseries} with the originating
 operating model, unfished reference states, biological reference points, and
 associated observational data. Objects of this class are typically created
 by running \code{\link[=Simulate]{Simulate()}}, and
@@ -15,10 +15,10 @@ serve as the starting point for forward projections in the MSE.
 \section{Slots}{
 
 \describe{
-\item{\code{OM}}{The \linkS4class{om} object used to generate the historical time-series.}
+\item{\code{OM}}{The \link[=om-class]{om} object used to generate the historical time-series.}
 
-\item{\code{Unfished}}{An \linkS4class{unfished} object containing two
-\linkS4class{popdynamics} sub-objects:
+\item{\code{Unfished}}{An \link[=unfished-class]{unfished} object containing two
+\link[=popdynamics-class]{popdynamics} sub-objects:
 \itemize{
 \item \code{Equilibrium}: Unfished equilibrium population dynamics, used as the
 baseline for computing biological reference points such as B0 and SSB0.
@@ -27,16 +27,16 @@ counterfactual population in the absence of fishing over the historical
 period.
 }}
 
-\item{\code{Reference}}{A \linkS4class{reference} object containing biological and
+\item{\code{Reference}}{A \link[=reference-class]{reference} object containing biological and
 management reference points.}
 
-\item{\code{Data}}{A nested named list of \linkS4class{data} objects containing historical
+\item{\code{Data}}{A nested named list of \link[=data-class]{data} objects containing historical
 observations generated during the spool-up phase. The list has two levels:
 \itemize{
 \item \strong{Level 1} (\code{nSim} elements, or length 1 if all simulations are
 identical): one entry per simulation.
-\item \strong{Level 2} (one entry per stock or stock complex defined in the \linkS4class{om}):
-a \linkS4class{data} object holding the observations for that stock/complex.
+\item \strong{Level 2} (one entry per stock or stock complex defined in the \link[=om-class]{om}):
+a \link[=data-class]{data} object holding the observations for that stock/complex.
 }}
 
 \item{\code{Log}}{Internal named list storing diagnostics, warnings, and
@@ -113,6 +113,6 @@ fish, as a list by stock. Each element has dimensions
 }}
 
 \seealso{
-\linkS4class{om}, \linkS4class{unfished}, \linkS4class{reference}, \linkS4class{timeseries},
-\linkS4class{data}, \linkS4class{popdynamics}
+\link[=om-class]{om}, \link[=unfished-class]{unfished}, \link[=reference-class]{reference}, \link[=timeseries-class]{timeseries},
+\link[=data-class]{data}, \link[=popdynamics-class]{popdynamics}
 }

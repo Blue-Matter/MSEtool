@@ -14,7 +14,7 @@ ConvertOM(
 )
 }
 \arguments{
-\item{OM}{An \linkS4class{OM-legacy} object to convert.}
+\item{OM}{An \link[=OM-legacy-class]{OM-legacy} object to convert.}
 
 \item{Author}{Character. Author of the OM. Default \code{""}.}
 
@@ -31,10 +31,10 @@ converted object.}
 \code{FALSE}.}
 }
 \value{
-An \linkS4class{om} object.
+An \link[=om-class]{om} object.
 }
 \description{
-Converts a legacy \linkS4class{OM-legacy} object to the current \linkS4class{om},
+Converts a legacy \link[=OM-legacy-class]{OM-legacy} object to the current \link[=om-class]{om},
 copying attributes, updating year vectors, and optionally populating the
 object via \code{\link[=PopulateOM]{PopulateOM()}}.
 }

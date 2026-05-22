@@ -7,16 +7,16 @@
 ConvertStock(Stock, silent = FALSE)
 }
 \arguments{
-\item{Stock}{A \linkS4class{Stock-legacy} object to convert.}
+\item{Stock}{A \link[=Stock-legacy-class]{Stock-legacy} object to convert.}
 
 \item{silent}{Logical. If \code{TRUE}, suppresses progress messages. Default
 \code{FALSE}.}
 }
 \value{
-A \linkS4class{stock} object.
+A \link[=stock-class]{stock} object.
 }
 \description{
-Converts a legacy \linkS4class{Stock-legacy} object to the current \linkS4class{stock}
+Converts a legacy \link[=Stock-legacy-class]{Stock-legacy} object to the current \link[=stock-class]{stock}
 by extracting and mapping each component to its corresponding new S4 class.
 }
 \examples{

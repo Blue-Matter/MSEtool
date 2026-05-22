@@ -7,7 +7,7 @@
 Add_MP_Functions(MSE, MPNames)
 }
 \arguments{
-\item{MSE}{An \linkS4class{mse} object.}
+\item{MSE}{An \link[=mse-class]{mse} object.}
 
 \item{MPNames}{Character vector of MP function names.}
 }

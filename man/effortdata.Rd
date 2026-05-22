@@ -14,7 +14,7 @@ EffortData()
 }
 \description{
 Stores time series observations of fishing effort, including optional
-observation uncertainty. Used in the \code{Effort} slot of a \linkS4class{data} object.
+observation uncertainty. Used in the \code{Effort} slot of a \link[=data-class]{data} object.
 }
 \section{Slots}{
 
@@ -34,5 +34,5 @@ observations, matching the dimensions of \code{Value}.}
 }}
 
 \seealso{
-\linkS4class{data}, \code{\link[=Data]{Data()}}
+\link[=data-class]{data}, \code{\link[=Data]{Data()}}
 }

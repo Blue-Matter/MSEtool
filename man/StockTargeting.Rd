@@ -7,7 +7,7 @@
 StockTargeting(OM)
 }
 \arguments{
-\item{OM}{An \linkS4class{om} object}
+\item{OM}{An \link[=om-class]{om} object}
 }
 \value{
 A \code{stocktargeting} object with:

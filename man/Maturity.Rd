@@ -27,7 +27,7 @@ Maturity(x) <- value
 \arguments{
 \item{Pars}{Named list of maturity parameters corresponding to \code{Model}. See
 \code{\link[=MaturityModels]{MaturityModels()}} for available models and required parameters. If \code{Pars}
-is a \linkS4class{stock} object, the \code{Maturity} slot of that stock is returned
+is a \link[=stock-class]{stock} object, the \code{Maturity} slot of that stock is returned
 (see Details). If \code{Pars} is non-empty, \code{Model} is \code{NULL}, and all values
 are non-\code{NA}, the model is inferred automatically via \code{\link[=FindModel]{FindModel()}}.}
 
@@ -54,16 +54,16 @@ the stock is semelparous (spawns once then dies). Default \code{FALSE}.}
 
 \item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
 
-\item{x}{A \linkS4class{maturity} object for slot accessors, or a \linkS4class{stock}
+\item{x}{A \link[=maturity-class]{maturity} object for slot accessors, or a \link[=stock-class]{stock}
 object for \verb{Maturity<-}.}
 
-\item{value}{For \verb{Maturity<-}: a \linkS4class{maturity} object. For
+\item{value}{For \verb{Maturity<-}: a \link[=maturity-class]{maturity} object. For
 \verb{Semelparous<-}: a logical or numeric array.}
 }
 \value{
 \itemize{
-\item \code{Maturity()} returns a \linkS4class{maturity} object. If \code{Pars} is a
-\linkS4class{stock} object or list of stocks, the corresponding \code{Maturity}
+\item \code{Maturity()} returns a \link[=maturity-class]{maturity} object. If \code{Pars} is a
+\link[=stock-class]{stock} object or list of stocks, the corresponding \code{Maturity}
 slot is returned.
 \item \verb{Maturity<-} returns \code{x} with the \code{Maturity} slot replaced.
 \item \code{Semelparous()} returns the \code{Semelparous} slot from \code{x}.
@@ -71,18 +71,18 @@ slot is returned.
 }
 }
 \description{
-Construct and manipulate a \linkS4class{maturity} object defining the maturity
+Construct and manipulate a \link[=maturity-class]{maturity} object defining the maturity
 schedule associated with a \code{\link[=Stock]{Stock()}} object. A \code{Maturity} object is
-required for all \linkS4class{stock} objects.
+required for all \link[=stock-class]{stock} objects.
 }
 \details{
-A \linkS4class{maturity} object is required for all \linkS4class{stock} objects. It
+A \link[=maturity-class]{maturity} object is required for all \link[=stock-class]{stock} objects. It
 defines the relationship between age, length, or weight and reproductive
 maturity, which is used throughout the operating model for spawning biomass
 and recruitment calculations.
 \subsection{Pass-Through Access from a Stock}{
 
-When \code{Pars} is a \linkS4class{stock} object, \code{Maturity()} acts as an accessor:
+When \code{Pars} is a \link[=stock-class]{stock} object, \code{Maturity()} acts as an accessor:
 \itemize{
 \item \code{Maturity(stock)} returns \code{stock@Maturity}.
 \item \code{Maturity(stocklist, i)} returns \code{stocklist[[i]]@Maturity} when \code{Pars}
@@ -123,5 +123,5 @@ See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more deta
 }
 }
 \seealso{
-\linkS4class{maturity}, \code{\link[=Stock]{Stock()}}, \code{\link[=MaturityModels]{MaturityModels()}}
+\link[=maturity-class]{maturity}, \code{\link[=Stock]{Stock()}}, \code{\link[=MaturityModels]{MaturityModels()}}
 }

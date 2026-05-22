@@ -39,15 +39,15 @@ group age. In units of \code{Units}.}
 \item{PlusGroup}{Logical. Whether \code{MaxAge} is treated as a plus group.
 Default \code{TRUE}.}
 
-\item{x}{An \linkS4class{ages} object, or a \linkS4class{stock} object for \verb{Ages<-}.}
+\item{x}{An \link[=ages-class]{ages} object, or a \link[=stock-class]{stock} object for \verb{Ages<-}.}
 
-\item{value}{For \verb{Ages<-}: an \linkS4class{ages} object. For slot replacement
+\item{value}{For \verb{Ages<-}: an \link[=ages-class]{ages} object. For slot replacement
 functions (\verb{MaxAge<-}, \verb{MinAge<-}, \verb{PlusGroup<-}): the new value for
 the corresponding slot.}
 }
 \value{
 \itemize{
-\item \code{Ages()} returns an \linkS4class{ages} object. If \code{MaxAge} is a \linkS4class{stock} object,
+\item \code{Ages()} returns an \link[=ages-class]{ages} object. If \code{MaxAge} is a \link[=stock-class]{stock} object,
 the \code{Ages} slot of that stock is returned.
 \item \verb{Ages<-} returns \code{x} with the \code{Ages} slot replaced.
 \item \code{MaxAge()}, \code{MinAge()}, \code{PlusGroup()} return the corresponding slot value
@@ -57,11 +57,11 @@ slot updated.
 }
 }
 \description{
-Construct and manipulate an \linkS4class{ages} object defining the age structure
-associated with a \linkS4class{stock} object.
+Construct and manipulate an \link[=ages-class]{ages} object defining the age structure
+associated with a \link[=stock-class]{stock} object.
 }
 \details{
-The \code{ages} class defines the discrete age structure used by a \linkS4class{stock}
+The \code{ages} class defines the discrete age structure used by a \link[=stock-class]{stock}
 object. Age classes are derived from \code{MinAge}, \code{MaxAge}, and \code{Units}.
 
 Although \code{MinAge} and \code{MaxAge} are in the units described by \code{Units}, the
@@ -71,7 +71,7 @@ for seasonal models.
 Age classes can be accessed with \code{Classes(x)}.
 \subsection{Accessing and Assigning Slots}{
 
-All slots in \linkS4class{ages} objects can be accessed or assigned new values
+All slots in \link[=ages-class]{ages} objects can be accessed or assigned new values
 with functions matching the slot names. See \code{Examples}.
 }
 }
@@ -89,5 +89,5 @@ PlusGroup(a) <- FALSE
 
 }
 \seealso{
-\linkS4class{ages}, \code{\link[=Stock]{Stock()}}, \code{\link[=Units]{Units()}}, \code{\link[=Classes]{Classes()}}
+\link[=ages-class]{ages}, \code{\link[=Stock]{Stock()}}, \code{\link[=Units]{Units()}}, \code{\link[=Classes]{Classes()}}
 }

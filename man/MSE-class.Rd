@@ -6,32 +6,32 @@
 \title{\code{mse} Class}
 \description{
 The \code{mse} class stores the complete results of a Management Strategy
-Evaluation. It extends \linkS4class{timeseries} with the operating model,
+Evaluation. It extends \link[=timeseries-class]{timeseries} with the operating model,
 management procedures, unfished reference states, biological reference
 points, and the historical time-series used to initialize the projections.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{OM}}{The \linkS4class{om} object used as the operating model.}
+\item{\code{OM}}{The \link[=om-class]{om} object used as the operating model.}
 
 \item{\code{MPs}}{Named list of management procedures evaluated in the MSE. Each
 element corresponds to one MP applied across all simulations.}
 
-\item{\code{Unfished}}{An \linkS4class{unfished} object containing unfished equilibrium
-and dynamic reference trajectories. See \linkS4class{unfished} for details.}
+\item{\code{Unfished}}{An \link[=unfished-class]{unfished} object containing unfished equilibrium
+and dynamic reference trajectories. See \link[=unfished-class]{unfished} for details.}
 
-\item{\code{Reference}}{A \linkS4class{reference} object containing biological and
+\item{\code{Reference}}{A \link[=reference-class]{reference} object containing biological and
 management reference points derived from the historical period. See
-\linkS4class{reference} for details.}
+\link[=reference-class]{reference} for details.}
 
-\item{\code{Hist}}{A \linkS4class{timeseries} object containing the historical
+\item{\code{Hist}}{A \link[=timeseries-class]{timeseries} object containing the historical
 time-series of population and fishery dynamics used to initialize the MSE
-projections. Typed as \linkS4class{timeseries} rather than \linkS4class{hist} because
+projections. Typed as \link[=timeseries-class]{timeseries} rather than \link[=hist-class]{hist} because
 slots such as \code{OM}, \code{Unfished}, and \code{Reference} are already present
-directly on the \code{mse} object, making a full \linkS4class{hist} object redundant.
+directly on the \code{mse} object, making a full \link[=hist-class]{hist} object redundant.
 Use \code{\link[=Hist]{Hist()}} to access this slot. For the full standalone historical
-object, see \linkS4class{hist}.}
+object, see \link[=hist-class]{hist}.}
 
 \item{\code{PPD}}{List containing posterior predictive distribution outputs and
 diagnostics generated during the MSE.}
@@ -42,13 +42,13 @@ Not intended for direct user access.}
 \item{\code{Misc}}{Named list for carrying arbitrary additional objects alongside
 the MSE results.
 
-The \code{mse} class inherits all time-series slots from \linkS4class{timeseries},
-covering the projection period. See \linkS4class{timeseries} for full slot
+The \code{mse} class inherits all time-series slots from \link[=timeseries-class]{timeseries},
+covering the projection period. See \link[=timeseries-class]{timeseries} for full slot
 descriptions including \code{Number}, \code{Biomass}, \code{Landings}, \code{Discards},
 \code{Effort}, and fishing mortality arrays.}
 }}
 
 \seealso{
-\linkS4class{hist}, \linkS4class{timeseries}, \linkS4class{om}, \linkS4class{unfished},
-\linkS4class{reference}, \code{\link[=Hist]{Hist()}}, \code{\link[=Advice]{Advice()}}
+\link[=hist-class]{hist}, \link[=timeseries-class]{timeseries}, \link[=om-class]{om}, \link[=unfished-class]{unfished},
+\link[=reference-class]{reference}, \code{\link[=Hist]{Hist()}}, \code{\link[=Advice]{Advice()}}
 }

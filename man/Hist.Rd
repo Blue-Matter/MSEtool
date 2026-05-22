@@ -7,29 +7,29 @@
 Hist(MSE = NULL)
 }
 \arguments{
-\item{MSE}{An \linkS4class{mse} object. If \code{NULL} (default), an empty \linkS4class{hist}
+\item{MSE}{An \link[=mse-class]{mse} object. If \code{NULL} (default), an empty \link[=hist-class]{hist}
 object is returned.}
 }
 \value{
-When \code{MSE} is supplied, a \linkS4class{timeseries} object extracted from
-the \code{Hist} slot of the \linkS4class{mse} object. Note this is a
-\linkS4class{timeseries} and not a \linkS4class{hist} — slots such as \code{OM},
-\code{Unfished}, and \code{Reference} are stored directly on the parent \linkS4class{mse}
-object to avoid duplication. When \code{MSE = NULL}, an empty \linkS4class{hist}
+When \code{MSE} is supplied, a \link[=timeseries-class]{timeseries} object extracted from
+the \code{Hist} slot of the \link[=mse-class]{mse} object. Note this is a
+\link[=timeseries-class]{timeseries} and not a \link[=hist-class]{hist} — slots such as \code{OM},
+\code{Unfished}, and \code{Reference} are stored directly on the parent \link[=mse-class]{mse}
+object to avoid duplication. When \code{MSE = NULL}, an empty \link[=hist-class]{hist}
 object is returned.
 }
 \description{
-The \linkS4class{hist} object stores the complete historical time-series generated
+The \link[=hist-class]{hist} object stores the complete historical time-series generated
 during a MSE spool-up, including population dynamics, exploitation history,
-reference points, and observational data. See \linkS4class{hist} for full
+reference points, and observational data. See \link[=hist-class]{hist} for full
 documentation of all slots.
 }
 \details{
 Users do not typically need to create or manipulate \code{hist} objects directly —
 they are generated automatically as part of \code{\link[=Simulate]{Simulate()}} and stored in the
-\code{Hist} slot of the resulting \linkS4class{mse} object. \code{Hist()} is provided to
+\code{Hist} slot of the resulting \link[=mse-class]{mse} object. \code{Hist()} is provided to
 extract that slot when needed.
 }
 \seealso{
-\linkS4class{hist}, \linkS4class{mse}, \linkS4class{timeseries}, \code{\link[=Simulate]{Simulate()}}
+\link[=hist-class]{hist}, \link[=mse-class]{mse}, \link[=timeseries-class]{timeseries}, \code{\link[=Simulate]{Simulate()}}
 }

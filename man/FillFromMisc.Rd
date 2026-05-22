@@ -7,7 +7,7 @@
 FillFromMisc(Hist)
 }
 \arguments{
-\item{Hist}{A \linkS4class{hist} object with a populated \code{OM} slot.}
+\item{Hist}{A \link[=hist-class]{hist} object with a populated \code{OM} slot.}
 }
 \value{
 \code{Hist} with any recognised slots overwritten by values found in

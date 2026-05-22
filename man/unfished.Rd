@@ -17,7 +17,7 @@ SP0(Hist, type = c("Equilibrium", "Dynamic"), Reduce = TRUE)
 N0(Hist, type = c("Equilibrium", "Dynamic"), Reduce = TRUE)
 }
 \arguments{
-\item{Hist}{A \linkS4class{hist} object; the output of \code{\link[=Simulate]{Simulate()}}, containing
+\item{Hist}{A \link[=hist-class]{hist} object; the output of \code{\link[=Simulate]{Simulate()}}, containing
 the simulated historical fishery dynamics.}
 
 \item{type}{Character. One of \code{'Equilibrium'} or \code{'Dynamic'}; partial
@@ -48,7 +48,7 @@ The \code{Sim} and \code{Year} dimensions are collapsed by \code{\link[=ReduceDi
 }
 }
 \description{
-Extract unfished reference point quantities from a \linkS4class{hist} object.
+Extract unfished reference point quantities from a \link[=hist-class]{hist} object.
 \code{B0()} returns total biomass, \code{SB0()} spawning biomass, \code{SP0()} spawning
 production, and \code{N0()} numbers-at-age. All functions support both
 equilibrium and dynamic unfished calculations (see \code{type} argument).

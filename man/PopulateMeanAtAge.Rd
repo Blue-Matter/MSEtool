@@ -10,7 +10,7 @@ PopulateMeanAtAge(object, Ages = NULL, Years = NULL, Length = NULL)
 \item{object}{An S4 object with slots \code{MeanAtAge}, \code{Model}, and \code{Pars}, and
 optionally \code{Timing} and \code{Classes}.}
 
-\item{Ages}{An \linkS4class{ages} object supplying age class labels and count.
+\item{Ages}{An \link[=ages-class]{ages} object supplying age class labels and count.
 Required when the model uses age-based inputs or when promoting a numeric
 vector.}
 

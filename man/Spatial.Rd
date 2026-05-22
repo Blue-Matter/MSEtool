@@ -69,7 +69,7 @@ Spatial(x) <- value
 }
 \arguments{
 \item{UnfishedDist}{Numeric scalar, vector, or array. Relative unfished
-biomass distribution over areas. If \code{UnfishedDist} is a \linkS4class{stock}
+biomass distribution over areas. If \code{UnfishedDist} is a \link[=stock-class]{stock}
 object, the \code{Spatial} slot of that stock is returned. See \code{Details} for
 required structure by number of areas.}
 
@@ -107,16 +107,16 @@ purposes only. Not currently used. Default \code{NULL}.}
 
 \item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
 
-\item{x}{A \linkS4class{spatial} object for slot accessors, or a \linkS4class{stock}
+\item{x}{A \link[=spatial-class]{spatial} object for slot accessors, or a \link[=stock-class]{stock}
 object for \verb{Spatial<-}.}
 
-\item{value}{For \verb{Spatial<-}: a \linkS4class{spatial} object. For slot
+\item{value}{For \verb{Spatial<-}: a \link[=spatial-class]{spatial} object. For slot
 replacement functions: the new value for the corresponding slot.}
 }
 \value{
 \itemize{
-\item \code{Spatial()} returns a \linkS4class{spatial} object. If \code{UnfishedDist} is a
-\linkS4class{stock} object, the \code{Spatial} slot of that stock is returned.
+\item \code{Spatial()} returns a \link[=spatial-class]{spatial} object. If \code{UnfishedDist} is a
+\link[=stock-class]{stock} object, the \code{Spatial} slot of that stock is returned.
 \item \verb{Spatial<-} returns \code{x} with the \code{Spatial} slot replaced.
 \item Slot accessors return the value of the corresponding slot from \code{x}.
 \item Slot replacement functions return \code{x} with the corresponding slot
@@ -124,7 +124,7 @@ updated.
 }
 }
 \description{
-Construct and manipulate a \linkS4class{spatial} object defining the spatial
+Construct and manipulate a \link[=spatial-class]{spatial} object defining the spatial
 structure and movement dynamics associated with a \code{\link[=Stock]{Stock()}} object. A
 \code{Spatial} object is only required for operating models with explicit spatial
 structure (\code{nArea > 1}).
@@ -202,5 +202,5 @@ See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more deta
 }
 }
 \seealso{
-\linkS4class{spatial}, \code{\link[=Stock]{Stock()}}
+\link[=spatial-class]{spatial}, \code{\link[=Stock]{Stock()}}
 }

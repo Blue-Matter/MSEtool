@@ -10,7 +10,7 @@ CalcUnfishedDist(Spatial, Ages = NULL, Years = NULL)
 \item{Spatial}{A \code{\link[=Spatial]{Spatial()}} object with a populated \code{Movement} slot. The
 \code{Movement} array must have dimensions \verb{Sim × FromArea × ToArea × Age × Year}.}
 
-\item{Ages}{An \linkS4class{ages} object supplying age class labels. If \code{NULL}
+\item{Ages}{An \link[=ages-class]{ages} object supplying age class labels. If \code{NULL}
 (default), \code{\link[=DefaultAges]{DefaultAges()}} is used.}
 
 \item{Years}{Numeric vector of year labels. If \code{NULL} (default),

@@ -12,7 +12,7 @@ CalcUnfished_Equilibrium(OM, silent = FALSE)
 \item{silent}{Logical; if \code{TRUE}, suppress messages during calculation.}
 }
 \value{
-A \linkS4class{popdynamics} object containing equilibrium unfished
+A \link[=popdynamics-class]{popdynamics} object containing equilibrium unfished
 \code{Number}, \code{Biomass}, \code{SBiomass}, and \code{SProduction} arrays with
 dimensions \verb{Sim × Stock × Year}.
 }

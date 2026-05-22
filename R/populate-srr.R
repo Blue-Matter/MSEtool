@@ -165,7 +165,7 @@ PopulateSRR <- function(SRR,
     Sim = 1:nrow(SRR@RecDevProj),
     Year = ProjTS
   )
-  SetDigest(SRR, argList)
+  SetDigest(SetAgeDimnames(SRR, Ages), argList)
 }
 
 CheckSRRPars <- function(SRR, name='R0', default=1000) {

@@ -7,15 +7,15 @@
 MSE2Kobe(MSE)
 }
 \arguments{
-\item{MSE}{An \linkS4class{mse} object or a named list of \linkS4class{mse} objects.}
+\item{MSE}{An \link[=mse-class]{mse} object or a named list of \link[=mse-class]{mse} objects.}
 }
 \value{
-A \code{\link[Slick:Kobe-methods]{Slick::Kobe()}} object with \code{Value} array of dimensions
+A \code{\link[Slick:Kobe]{Slick::Kobe()}} object with \code{Value} array of dimensions
 \verb{Sim × OM × MP × PI × Year}, where \code{PI} contains SB/SBMSY (index 1)
 and F/FMSY (index 2).
 }
 \description{
-Constructs a \code{\link[Slick:Kobe-methods]{Slick::Kobe()}} object containing SB/SBMSY and F/FMSY
+Constructs a \code{\link[Slick:Kobe]{Slick::Kobe()}} object containing SB/SBMSY and F/FMSY
 time series for the projection period, for use in the Slick Kobe plot.
 The Kobe plot compares MP performance with respect to biomass (x-axis)
 and fishing mortality (y-axis) relative to MSY-based reference points.

@@ -27,22 +27,22 @@ named dimensions \code{Sim}, \code{Length}, and \code{Year}.  See \code{Details}
 
 \item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
 
-\item{x}{A \linkS4class{discardmortality} object, or a \linkS4class{fleet} object for
+\item{x}{A \link[=discardmortality-class]{discardmortality} object, or a \link[=fleet-class]{fleet} object for
 \verb{DiscardMortality<-}.}
 
-\item{value}{For \verb{DiscardMortality<-}: a \linkS4class{discardmortality} object.}
+\item{value}{For \verb{DiscardMortality<-}: a \link[=discardmortality-class]{discardmortality} object.}
 }
 \value{
 \itemize{
-\item \code{DiscardMortality()} returns a \linkS4class{discardmortality} object. If
-\code{MeanAtAge} is a \linkS4class{fleet} object, the \code{DiscardMortality} slot of
+\item \code{DiscardMortality()} returns a \link[=discardmortality-class]{discardmortality} object. If
+\code{MeanAtAge} is a \link[=fleet-class]{fleet} object, the \code{DiscardMortality} slot of
 that fleet is returned.
 \item \verb{DiscardMortality<-} returns \code{x} with the \code{DiscardMortality} slot
 replaced.
 }
 }
 \description{
-Construct and manipulate a \linkS4class{discardmortality} object defining the
+Construct and manipulate a \link[=discardmortality-class]{discardmortality} object defining the
 proportion of discarded catch that dies, for use in a \code{\link[=Fleet]{Fleet()}} object.
 }
 \details{
@@ -61,7 +61,7 @@ Individual slots may be accessed or modified using \code{\link[=MeanAtAge]{MeanA
 \code{\link[=MeanAtLength]{MeanAtLength()}}, and \code{\link[=Classes]{Classes()}}.
 \subsection{Use in \code{Advice()}}{
 
-When  \linkS4class{discardmortality} objects are used in \code{\link[=Advice]{Advice()}} objects, the
+When  \link[=discardmortality-class]{discardmortality} objects are used in \code{\link[=Advice]{Advice()}} objects, the
 \code{Sim} and \code{Year} dimensions should not be included.
 \itemize{
 \item \code{MeanAtAge} should be either length \code{nAge} or length \code{1} (recycled over age classes).
@@ -82,6 +82,6 @@ Classes(d)
 
 }
 \seealso{
-\linkS4class{discardmortality}, \code{\link[=Fleet]{Fleet()}}, \code{\link[=MeanAtAge]{MeanAtAge()}},
+\link[=discardmortality-class]{discardmortality}, \code{\link[=Fleet]{Fleet()}}, \code{\link[=MeanAtAge]{MeanAtAge()}},
 \code{\link[=MeanAtLength]{MeanAtLength()}}, \code{\link[=Classes]{Classes()}}, \code{\link[=Selectivity]{Selectivity()}}, \code{\link[=Retention]{Retention()}}
 }

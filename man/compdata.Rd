@@ -15,7 +15,7 @@ CompData()
 \description{
 Stores age or size composition observations of catch or survey samples.
 Used in the \code{LandingsAtAge}, \code{DiscardsAtAge}, \code{LandingsAtSize}, and
-\code{DiscardsAtSize} slots of a \linkS4class{data} object.
+\code{DiscardsAtSize} slots of a \link[=data-class]{data} object.
 }
 \section{Slots}{
 
@@ -37,5 +37,5 @@ midpoints in the appropriate length unit).}
 }}
 
 \seealso{
-\linkS4class{data}, \code{\link[=Data]{Data()}}
+\link[=data-class]{data}, \code{\link[=Data]{Data()}}
 }

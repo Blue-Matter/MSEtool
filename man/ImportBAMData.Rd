@@ -42,16 +42,16 @@ landings fleets detected. Each element must be one of:
 discard fleets detected. Accepts the same values as \code{UnitsLandings}.}
 }
 \value{
-The \code{OM} object with the \code{Data} slot populated with a \linkS4class{data}
+The \code{OM} object with the \code{Data} slot populated with a \link[=data-class]{data}
 object with:
 \itemize{
-\item \verb{@CPUE} — an \linkS4class{indicesdata} object with fleet-matched CPUE
+\item \verb{@CPUE} — an \link[=indicesdata-class]{indicesdata} object with fleet-matched CPUE
 indices and CVs.
-\item \verb{@Survey} — an \linkS4class{indicesdata} object with non-fleet survey
+\item \verb{@Survey} — an \link[=indicesdata-class]{indicesdata} object with non-fleet survey
 indices and CVs.
-\item \verb{@Landings} — a \linkS4class{catchdata} object with landings by fleet,
+\item \verb{@Landings} — a \link[=catchdata-class]{catchdata} object with landings by fleet,
 converted to metric units.
-\item \verb{@Discards} — a \linkS4class{catchdata} object with discards by fleet,
+\item \verb{@Discards} — a \link[=catchdata-class]{catchdata} object with discards by fleet,
 converted to metric units.
 }
 
@@ -69,7 +69,7 @@ no conversion and an empty \code{Units} string for that fleet.
 Age and length composition data are not yet imported (TODO).
 }
 \description{
-Populates a \linkS4class{data} object with observed time-series data (CPUE,
+Populates a \link[=data-class]{data} object with observed time-series data (CPUE,
 survey indices, landings, and discards) extracted from a BAM stock
 assessment.
 }

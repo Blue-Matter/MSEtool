@@ -31,7 +31,7 @@ Length(x) <- value
 \arguments{
 \item{Pars}{Named list of growth parameters corresponding to \code{Model}. See
 \code{\link[=LengthModels]{LengthModels()}} for available models and required parameters. If \code{Pars}
-is a \linkS4class{stock} object, the \code{Length} slot of that stock is returned.
+is a \link[=stock-class]{stock} object, the \code{Length} slot of that stock is returned.
 If \code{Pars} is non-empty and \code{Model} is \code{NULL}, the model is inferred
 automatically via \code{\link[=FindModel]{FindModel()}}.}
 
@@ -67,15 +67,15 @@ standard deviation units. Default \code{2}.}
 
 \item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
 
-\item{x}{A \linkS4class{length} object for slot accessors, or a \linkS4class{stock}
+\item{x}{A \link[=length-class]{length} object for slot accessors, or a \link[=stock-class]{stock}
 object for \verb{Length<-}.}
 
-\item{value}{For \verb{Length<-}: a \linkS4class{length} object. For \verb{ALK<-}: the new
+\item{value}{For \verb{Length<-}: a \link[=length-class]{length} object. For \verb{ALK<-}: the new
 age-length key array.}
 }
 \value{
 \itemize{
-\item \code{Length()} returns a \linkS4class{length} object. If \code{Pars} is a \linkS4class{stock}
+\item \code{Length()} returns a \link[=length-class]{length} object. If \code{Pars} is a \link[=stock-class]{stock}
 object, the \code{Length} slot of that stock is returned.
 \item \verb{Length<-} returns \code{x} with the \code{Length} slot replaced.
 \item \code{ALK()} returns the age-length key from \code{x}.
@@ -83,12 +83,12 @@ object, the \code{Length} slot of that stock is returned.
 }
 }
 \description{
-Construct and manipulate a \linkS4class{length} object defining the
+Construct and manipulate a \link[=length-class]{length} object defining the
 length-at-age structure associated with a \code{\link[=Stock]{Stock()}} object. A \code{Length}
-object is required for all \linkS4class{stock} objects.
+object is required for all \link[=stock-class]{stock} objects.
 }
 \details{
-A \linkS4class{length} object is required for all \linkS4class{stock} objects. It
+A \link[=length-class]{length} object is required for all \link[=stock-class]{stock} objects. It
 defines the relationship between age and length, which is used throughout
 the operating model to convert age-based quantities to length-based
 quantities.
@@ -193,7 +193,7 @@ plot(Length, Ages=Ages(20), type='ASK')
 
 }
 \seealso{
-\linkS4class{length}, \code{\link[=Stock]{Stock()}}, \code{\link[=LengthModels]{LengthModels()}}, \code{\link[=ValidUnits]{ValidUnits()}},
+\link[=length-class]{length}, \code{\link[=Stock]{Stock()}}, \code{\link[=LengthModels]{LengthModels()}}, \code{\link[=ValidUnits]{ValidUnits()}},
 \code{\link[=Populate]{Populate()}}, \code{\link[=FindModel]{FindModel()}}, \code{\link[=Weight]{Weight()}}, \code{\link[=Maturity]{Maturity()}}, \code{\link[=Pars]{Pars()}},
 \code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=CVatAge]{CVatAge()}}, \code{\link[=Units]{Units()}}, \code{\link[=ALK]{ALK()}}, \code{\link[=Classes]{Classes()}}
 }

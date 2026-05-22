@@ -7,20 +7,20 @@
 ConvertObs(Obs, silent = FALSE)
 }
 \arguments{
-\item{Obs}{An \linkS4class{Obs-legacy} object to convert.}
+\item{Obs}{An \link[=Obs-legacy-class]{Obs-legacy} object to convert.}
 
 \item{silent}{Logical. If \code{TRUE}, suppresses progress messages. Default
 \code{FALSE}.}
 }
 \value{
-An \linkS4class{obs} object.
+An \link[=obs-class]{obs} object.
 }
 \description{
-Converts a legacy \linkS4class{Obs-legacy} object to the current \linkS4class{obs} by
+Converts a legacy \link[=Obs-legacy-class]{Obs-legacy} object to the current \link[=obs-class]{obs} by
 mapping observation error parameters to their corresponding new S4 slots.
 }
 \details{
-Not all slots from \linkS4class{Obs-legacy} are represented in \linkS4class{obs}. The
+Not all slots from \link[=Obs-legacy-class]{Obs-legacy} are represented in \link[=obs-class]{obs}. The
 following legacy slots are not currently converted and are silently dropped:
 \itemize{
 \item Life history bias CVs: \code{Linfbiascv}, \code{t0biascv}, \code{Kbiascv},

@@ -14,7 +14,7 @@ AdviceData()
 }
 \description{
 Stores management advice outputs generated during a model run or provided
-as input. Used in the \code{Advice} slot of a \linkS4class{data} object and accessed
+as input. Used in the \code{Advice} slot of a \link[=data-class]{data} object and accessed
 by \code{\link[=LastTAC]{LastTAC()}} when retrieving the most recent catch limit.
 }
 \section{Slots}{
@@ -33,5 +33,5 @@ harvest control rule outputs, reference point comparisons).
 }}
 
 \seealso{
-\linkS4class{data}, \code{\link[=Data]{Data()}}, \code{\link[=LastTAC]{LastTAC()}}
+\link[=data-class]{data}, \code{\link[=Data]{Data()}}, \code{\link[=LastTAC]{LastTAC()}}
 }

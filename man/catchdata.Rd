@@ -22,7 +22,7 @@ CatchData(
 \description{
 Stores time series observations of landed or discarded catch, including
 optional observation uncertainty and reference values. Used in the \code{Landings}
-and \code{Discards} slots of a \linkS4class{data} object.
+and \code{Discards} slots of a \link[=data-class]{data} object.
 }
 \section{Slots}{
 
@@ -48,5 +48,5 @@ dimensions of \code{Ref}.
 }}
 
 \seealso{
-\linkS4class{data}, \code{\link[=Data]{Data()}}
+\link[=data-class]{data}, \code{\link[=Data]{Data()}}
 }

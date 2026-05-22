@@ -7,7 +7,7 @@
 FitStockTargeting(OM, tol = 1e-06, active_thresh = 0.1)
 }
 \arguments{
-\item{OM}{An operating model object (\linkS4class{om}) with a populated
+\item{OM}{An operating model object (\link[=om-class]{om}) with a populated
 \verb{@StockTargeting@Targeting} array of dimension
 \verb{[nSim, nStock, nFleet, nYearHist]}, as produced by
 \code{\link[=StandardizeEffort]{StandardizeEffort()}}.}

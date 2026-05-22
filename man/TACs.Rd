@@ -7,7 +7,7 @@
 TACs(MSE)
 }
 \arguments{
-\item{MSE}{An \linkS4class{mse} object.}
+\item{MSE}{An \link[=mse-class]{mse} object.}
 }
 \value{
 A data frame with columns:
@@ -24,9 +24,9 @@ A data frame with columns:
 \description{
 Extracts the total allowable catch (TAC) recommendations issued by each
 management procedure (MP) in each simulation, year, and stock from the
-\code{PPD} slot of an \linkS4class{mse} object. Returns a tidy data frame suitable
+\code{PPD} slot of an \link[=mse-class]{mse} object. Returns a tidy data frame suitable
 for plotting and performance indicator calculations.
 }
 \seealso{
-\linkS4class{mse}, \code{\link[=Advice]{Advice()}}
+\link[=mse-class]{mse}, \code{\link[=Advice]{Advice()}}
 }

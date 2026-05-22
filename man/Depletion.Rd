@@ -34,10 +34,10 @@ One of \code{"B0"} (default) or \code{"BMSY"}.}
 \item{value}{Replacement value.}
 }
 \value{
-A \linkS4class{depletion} object.
+A \link[=depletion-class]{depletion} object.
 }
 \description{
-Construct and manipulate a \linkS4class{depletion} object defining depletion assumptions
+Construct and manipulate a \link[=depletion-class]{depletion} object defining depletion assumptions
 for a \code{\link[=Stock]{Stock()}} object.
 }
 \details{

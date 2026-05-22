@@ -155,7 +155,7 @@ Sponsor(x)
 Sponsor(x) <- value
 }
 \arguments{
-\item{x}{An \linkS4class{om} object or a \linkS4class{hist} object}
+\item{x}{An \link[=om-class]{om} object or a \link[=hist-class]{hist} object}
 
 \item{value}{The value to assign to the corresponding slot.}
 }
@@ -166,7 +166,7 @@ Sponsor(x) <- value
 }
 }
 \description{
-Accessor and assignment functions for slots in \linkS4class{om} objects.
+Accessor and assignment functions for slots in \link[=om-class]{om} objects.
 Each function retrieves or replaces the value of the corresponding slot.
 }
 \examples{
@@ -179,5 +179,5 @@ nSim(om) <- 100
 
 }
 \seealso{
-\code{\link[=OM]{OM()}}, \linkS4class{om}
+\code{\link[=OM]{OM()}}, \link[=om-class]{om}
 }

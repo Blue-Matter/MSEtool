@@ -23,7 +23,7 @@ class labels and inputs to the model.}
 \item{Years}{Numeric vector of year labels used to assign the \code{Year}
 dimension of the output array.}
 
-\item{Ages}{An \linkS4class{ages} object. Not used directly but checked to
+\item{Ages}{An \link[=ages-class]{ages} object. Not used directly but checked to
 determine whether the model is age-based, in which case the function
 returns early.}
 

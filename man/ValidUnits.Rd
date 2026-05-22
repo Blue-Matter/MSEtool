@@ -7,7 +7,7 @@
 ValidUnits(x = "ages")
 }
 \arguments{
-\item{x}{An \linkS4class{ages}, \linkS4class{length}, or \linkS4class{weight} object, or a
+\item{x}{An \link[=ages-class]{ages}, \link[=length-class]{length}, or \link[=weight-class]{weight} object, or a
 character string specifying the class: one of \code{"ages"}, \code{"length"}, or
 \code{"weight"} (case-insensitive). If \code{NULL}, returns a named list of valid
 units for all three classes. Default \code{"ages"}.}
@@ -16,11 +16,11 @@ units for all three classes. Default \code{"ages"}.}
 \itemize{
 \item If \code{x} is \code{NULL}: a named list with elements \code{Age}, \code{Length}, and
 \code{Weight}, each containing a character vector of valid unit strings.
-\item If \code{x} is an \linkS4class{ages} object or \code{"ages"}: a character vector of valid
+\item If \code{x} is an \link[=ages-class]{ages} object or \code{"ages"}: a character vector of valid
 age units: \code{"year"}, \code{"half-year"}, \code{"quarter"}, \code{"month"}, \code{"week"}.
-\item If \code{x} is a \linkS4class{length} object or \code{"length"}: a character vector of
+\item If \code{x} is a \link[=length-class]{length} object or \code{"length"}: a character vector of
 valid length units: \code{"mm"}, \code{"cm"}, \code{"inch"}.
-\item If \code{x} is a \linkS4class{weight} object or \code{"weight"}: a character vector of
+\item If \code{x} is a \link[=weight-class]{weight} object or \code{"weight"}: a character vector of
 valid weight units: \code{"g"}, \code{"kg"}, \code{"lb"}.
 \item If no match is found: the string \code{"No units found"}.
 }

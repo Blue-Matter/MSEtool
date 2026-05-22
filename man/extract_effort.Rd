@@ -7,20 +7,20 @@
 extract_effort(object, df = FALSE)
 }
 \arguments{
-\item{object}{A \linkS4class{fleet}, \linkS4class{effort}, \linkS4class{hist}, \linkS4class{obs},
-or \linkS4class{mse} object.}
+\item{object}{A \link[=fleet-class]{fleet}, \link[=effort-class]{effort}, \link[=hist-class]{hist}, \link[=obs-class]{obs},
+or \link[=mse-class]{mse} object.}
 
 \item{df}{Logical. If \code{FALSE} (default) the raw \code{Effort} array slot is
 returned. If \code{TRUE} a tidy \code{data.frame} with columns \code{Sim}, \code{Year},
 \code{Value}, and \code{Variable = "Effort"} is returned. Note that \code{df = TRUE} is
-only supported for \linkS4class{hist} and \linkS4class{mse} objects; for
-\linkS4class{fleet}, \linkS4class{effort}, and \linkS4class{obs} objects the array is
+only supported for \link[=hist-class]{hist} and \link[=mse-class]{mse} objects; for
+\link[=fleet-class]{fleet}, \link[=effort-class]{effort}, and \link[=obs-class]{obs} objects the array is
 always returned regardless of \code{df}.}
 }
 \value{
 A numeric array (\code{df = FALSE}), or a \code{data.frame} (\code{df = TRUE})
 with columns \code{Sim}, \code{Year}, \code{Fleet}, \code{Value}, and \code{Variable} and in case
-of \linkS4class{mse} objects, a column \code{MP}.
+of \link[=mse-class]{mse} objects, a column \code{MP}.
 
 \itemize{
 \item \code{df = FALSE} — the raw \code{Effort} slot (usually an array)
@@ -29,8 +29,8 @@ of \linkS4class{mse} objects, a column \code{MP}.
 }
 }
 \description{
-Retrieves the \code{Effort} slot from a \linkS4class{fleet}, \linkS4class{effort},
-\linkS4class{obs}, or \linkS4class{mse} object, optionally converting it to a tidy
+Retrieves the \code{Effort} slot from a \link[=fleet-class]{fleet}, \link[=effort-class]{effort},
+\link[=obs-class]{obs}, or \link[=mse-class]{mse} object, optionally converting it to a tidy
 \code{data.frame}. Users should typically call \code{Effort(object, df = TRUE)}
 rather than this function directly.
 }

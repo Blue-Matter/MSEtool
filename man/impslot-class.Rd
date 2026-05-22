@@ -7,7 +7,7 @@
 \description{
 Internal class representing implementation uncertainty for a single
 management control (TAC, effort, or size regulations) within an
-\linkS4class{imp} object.
+\link[=imp-class]{imp} object.
 }
 \section{Slots}{
 
@@ -28,6 +28,6 @@ typically derived from \code{Mean}, \code{SD}, and \code{Compliance} during simu
 }}
 
 \seealso{
-\linkS4class{imp}, \code{\link[=Imp]{Imp()}}
+\link[=imp-class]{imp}, \code{\link[=Imp]{Imp()}}
 }
 \keyword{internal}

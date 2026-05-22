@@ -15,7 +15,7 @@ Project_Hist(
 )
 }
 \arguments{
-\item{Hist}{A \linkS4class{Hist-legacy}, or \code{multiHist} object.}
+\item{Hist}{A \link[=Hist-legacy-class]{Hist-legacy}, or \code{multiHist} object.}
 
 \item{MPs}{Character vector of MP names to project. Default \code{NA}.}
 
@@ -30,13 +30,13 @@ arrays in \code{MSE@Misc$extended}. Default \code{FALSE}.}
 \item{checkMPs}{Logical. Validate MPs before projecting. Default \code{FALSE}.}
 }
 \value{
-A \linkS4class{MSE-legacy} object.
+A \link[=MSE-legacy-class]{MSE-legacy} object.
 }
 \description{
 Runs the MSE projection loop for all MPs in \code{MPs} and returns a completed
-\linkS4class{MSE-legacy} object. Dispatches to the appropriate projection function based
-on the class of \code{Hist}: \linkS4class{hist} calls \code{Project_hist()} recursively,
-\code{multiHist} calls \code{ProjectMOM()}, and \linkS4class{Hist-legacy} runs the full
+\link[=MSE-legacy-class]{MSE-legacy} object. Dispatches to the appropriate projection function based
+on the class of \code{Hist}: \link[=hist-class]{hist} calls \code{Project_hist()} recursively,
+\code{multiHist} calls \code{ProjectMOM()}, and \link[=Hist-legacy-class]{Hist-legacy} runs the full
 legacy projection loop.
 }
 \keyword{internal}

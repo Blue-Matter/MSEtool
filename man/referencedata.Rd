@@ -14,10 +14,10 @@ ReferenceData()
 }
 \description{
 Stores biological and management reference points by extending
-\linkS4class{refpointsMSY}. Used in the \code{Reference} slot of a \linkS4class{data} object.
+\link[=refpointsMSY-class]{refpointsMSY}. Used in the \code{Reference} slot of a \link[=data-class]{data} object.
 }
 \details{
-This class inherits all slots from \linkS4class{refpointsMSY} (e.g., MSY, FMSY,
+This class inherits all slots from \link[=refpointsMSY-class]{refpointsMSY} (e.g., MSY, FMSY,
 BMSY) and appends a \code{Misc} slot for any additional reference point data not
 covered by the parent class.
 }
@@ -25,11 +25,11 @@ covered by the parent class.
 
 \describe{
 \item{\code{Misc}}{A named list for any additional reference point metadata not
-covered by the inherited \linkS4class{refpointsMSY} slots.
+covered by the inherited \link[=refpointsMSY-class]{refpointsMSY} slots.
 
 \code{ReferenceData()} creates a new \code{referencedata} object.}
 }}
 
 \seealso{
-\linkS4class{data}, \code{\link[=Data]{Data()}}, \linkS4class{refpointsMSY}
+\link[=data-class]{data}, \code{\link[=Data]{Data()}}, \link[=refpointsMSY-class]{refpointsMSY}
 }

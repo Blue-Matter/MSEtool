@@ -149,6 +149,5 @@ PopulateMaturity <- function(Maturity,
     )
   }
   
-  SetDigest(Maturity, argList)
-  
+  SetDigest(SetAgeDimnames(Maturity, Ages), argList)
 }

@@ -12,7 +12,7 @@ StandardizeEffort(
 )
 }
 \arguments{
-\item{OM}{An operating model object (\linkS4class{om}).}
+\item{OM}{An operating model object (\link[=om-class]{om}).}
 
 \item{populate}{\code{logical(1)}. Populate \code{OM} at beginning of call?
 Used internally. Default \code{TRUE}.}

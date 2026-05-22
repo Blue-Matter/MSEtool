@@ -70,7 +70,7 @@ SRR(x) <- value
 \item{Pars}{Named list of parameters defining the expected stock-recruit
 curve. Parameter names and interpretation depend on \code{Model}. See
 \code{\link[=SRRModels]{SRRModels()}} for required parameters for each model. If \code{Pars} is an S4
-object with an \code{SRR} slot (e.g., a \linkS4class{stock} object), that slot is
+object with an \code{SRR} slot (e.g., a \link[=stock-class]{stock} object), that slot is
 returned directly.}
 
 \item{Model}{Character. Stock-recruit model identifier
@@ -121,15 +121,15 @@ as a function of environmental or other covariates. Default \code{NULL}.}
 
 \item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
 
-\item{x}{A \linkS4class{srr} object for slot accessors, or a \linkS4class{stock} object
+\item{x}{A \link[=srr-class]{srr} object for slot accessors, or a \link[=stock-class]{stock} object
 for \verb{SRR<-}.}
 
-\item{value}{For \verb{SRR<-}: a \linkS4class{srr} object. For slot replacement
+\item{value}{For \verb{SRR<-}: a \link[=srr-class]{srr} object. For slot replacement
 functions: the new value for the corresponding slot.}
 }
 \value{
 \itemize{
-\item \code{SRR()} returns a \linkS4class{srr} object. If \code{Pars} is an S4 object with an
+\item \code{SRR()} returns a \link[=srr-class]{srr} object. If \code{Pars} is an S4 object with an
 \code{SRR} slot, that slot is returned.
 \item \verb{SRR<-} returns \code{x} with the \code{SRR} slot replaced.
 \item Slot accessors return the value of the corresponding slot from \code{x}.
@@ -138,17 +138,17 @@ updated.
 }
 }
 \description{
-Construct and manipulate a \linkS4class{srr} object defining the stock-recruit
+Construct and manipulate a \link[=srr-class]{srr} object defining the stock-recruit
 relationship (SRR) associated with a \code{\link[=Stock]{Stock()}} object. An \code{SRR} object is
-required for all \linkS4class{stock} objects.
+required for all \link[=stock-class]{stock} objects.
 }
 \details{
-An \linkS4class{srr} object is required for all \linkS4class{stock} objects. It defines
+An \link[=srr-class]{srr} object is required for all \link[=stock-class]{stock} objects. It defines
 both the deterministic stock-recruit relationship and the stochastic
 recruitment deviations used in the operating model.
 \subsection{Pass-Through Access}{
 
-If \code{Pars} is an S4 object with an \code{SRR} slot (e.g., a \linkS4class{stock}
+If \code{Pars} is an S4 object with an \code{SRR} slot (e.g., a \link[=stock-class]{stock}
 object), \code{SRR()} returns that slot directly rather than constructing a new
 object.
 }
@@ -188,6 +188,6 @@ plot(SRR)
 # see Examples in `?Length` for other `Pars` configurations
 }
 \seealso{
-\linkS4class{srr}, \code{\link[=Stock]{Stock()}}, \code{\link[=SRRModels]{SRRModels()}}, \code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}},
+\link[=srr-class]{srr}, \code{\link[=Stock]{Stock()}}, \code{\link[=SRRModels]{SRRModels()}}, \code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}},
 \code{\link[=R0]{R0()}}, \code{\link[=RecDevHist]{RecDevHist()}}, \code{\link[=RecDevProj]{RecDevProj()}}, \code{\link[=SpawnTimeFrac]{SpawnTimeFrac()}}
 }

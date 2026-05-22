@@ -158,5 +158,5 @@ PopulateWeight <- function(Weight,
     Weight <- PopulateASK(Weight, Ages, silent, type = "Weight")
   }
   
-  SetDigest(Weight, argList)
+  SetDigest(SetAgeDimnames(Weight, Ages), argList)
 }

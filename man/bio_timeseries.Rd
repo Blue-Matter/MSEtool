@@ -35,7 +35,7 @@ SProduction(
 )
 }
 \arguments{
-\item{object}{A \linkS4class{hist} or \linkS4class{mse} object.}
+\item{object}{A \link[=hist-class]{hist} or \link[=mse-class]{mse} object.}
 
 \item{df}{Logical. If \code{FALSE} the raw array slot is returned.
 If \code{TRUE} (default)  a tidy \code{data.frame} is returned.}
@@ -66,10 +66,10 @@ plus \code{Value}, \code{Variable}, and \code{Units}.
 \description{
 \code{Biomass()}, \code{SBiomass()}, and \code{SProduction()} extract total biomass,
 spawning biomass, and spawning production, respectively, from a
-\linkS4class{hist} or \linkS4class{mse} object.
+\link[=hist-class]{hist} or \link[=mse-class]{mse} object.
 }
 \details{
-When applied to an \linkS4class{mse} object the historical and projection
+When applied to an \link[=mse-class]{mse} object the historical and projection
 periods are row-bound and labelled via the \code{Period} column; historical
 rows carry \code{MP = "Historical"}.
 }

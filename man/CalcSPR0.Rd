@@ -7,14 +7,14 @@
 CalcSPR0(object, silent = FALSE)
 }
 \arguments{
-\item{object}{Either a \linkS4class{om} or \linkS4class{hist} object. If an \linkS4class{om}
+\item{object}{Either a \link[=om-class]{om} or \link[=hist-class]{hist} object. If an \link[=om-class]{om}
 object is provided, the historical dynamics are populated internally via
 \code{\link[=Populate]{Populate()}} and \code{\link[=CalcUnfished_Equilibrium]{CalcUnfished_Equilibrium()}}, which may be
-computationally expensive. If a \linkS4class{hist} object is provided (the output
+computationally expensive. If a \link[=hist-class]{hist} object is provided (the output
 of \code{\link[=Simulate]{Simulate()}}), it is used directly.}
 
 \item{silent}{Logical. If \code{TRUE}, suppresses progress messages during
-population and simulation. Only used when \code{object} is an \linkS4class{om}.
+population and simulation. Only used when \code{object} is an \link[=om-class]{om}.
 Default is \code{FALSE}.}
 }
 \value{

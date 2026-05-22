@@ -7,7 +7,7 @@
 GenMultiStockRecDevs(OM, TruncSD = 2, silent = FALSE)
 }
 \arguments{
-\item{OM}{An operating model object of class \linkS4class{om}.}
+\item{OM}{An operating model object of class \link[=om-class]{om}.}
 
 \item{TruncSD}{Numeric scalar. Number of standard deviations at which to
 truncate the innovation distribution. Defaults to \code{2}.}

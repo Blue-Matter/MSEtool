@@ -14,7 +14,7 @@ CombineOMs(
 )
 }
 \arguments{
-\item{OM_List}{Named list of \code{\linkS4class{om}} objects. All elements must share
+\item{OM_List}{Named list of \code{\link[=om-class]{om}} objects. All elements must share
 the same \code{nSim}, \code{Seasons}, and fleet names in identical order. See
 \code{\link[=FleetNames]{FleetNames()}}.}
 
@@ -32,7 +32,7 @@ stocks for each fleet and back-calculates stock targeting weights.}
 \item{silent}{\code{logical(1)}. If \code{TRUE}, suppresses informational messages. Default \code{FALSE}.}
 }
 \value{
-An \code{\linkS4class{om}} object with:
+An \code{\link[=om-class]{om}} object with:
 \itemize{
 \item \verb{@Stock}: concatenation of all stocks across input OMs, in list order.
 \item \verb{@Fleet}: concatenation of all fleet lists across input OMs.
@@ -45,7 +45,7 @@ copied from \code{OM_List[[1]]}.
 }
 }
 \description{
-Combine multiple \code{\linkS4class{om}} objects into a single unified operating model.
+Combine multiple \code{\link[=om-class]{om}} objects into a single unified operating model.
 Each element of \code{OM_List} represents a distinct stock or stock complex
 (e.g., sex-structured populations). The resulting object spans the full union
 of historical and projection years across all inputs.

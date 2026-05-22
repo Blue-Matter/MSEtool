@@ -32,7 +32,7 @@ Weight(x) <- value
 \arguments{
 \item{Pars}{Named list of growth parameters corresponding to \code{Model}. See
 \code{\link[=WeightModels]{WeightModels()}} for available models and required parameters. If \code{Pars}
-is a \linkS4class{stock} object, the \code{Weight} slot of that stock is returned.
+is a \link[=stock-class]{stock} object, the \code{Weight} slot of that stock is returned.
 If \code{Pars} is non-empty, \code{Model} is \code{NULL}, and all values are non-\code{NA},
 the model is inferred automatically via \code{\link[=FindModel]{FindModel()}}.}
 
@@ -73,15 +73,15 @@ standard deviation units. Default \code{2}.}
 
 \item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
 
-\item{x}{A \linkS4class{weight} object for slot accessors, or a \linkS4class{stock}
+\item{x}{A \link[=weight-class]{weight} object for slot accessors, or a \link[=stock-class]{stock}
 object for \verb{Weight<-}.}
 
-\item{value}{For \verb{Weight<-}: a \linkS4class{weight} object. For \verb{AWK<-}: the new
+\item{value}{For \verb{Weight<-}: a \link[=weight-class]{weight} object. For \verb{AWK<-}: the new
 age-weight key array.}
 }
 \value{
 \itemize{
-\item \code{Weight()} returns a \linkS4class{weight} object. If \code{Pars} is a \linkS4class{stock}
+\item \code{Weight()} returns a \link[=weight-class]{weight} object. If \code{Pars} is a \link[=stock-class]{stock}
 object, the \code{Weight} slot of that stock is returned.
 \item \verb{Weight<-} returns \code{x} with the \code{Weight} slot replaced.
 \item \code{AWK()} returns the age-weight key from \code{x}.
@@ -89,12 +89,12 @@ object, the \code{Weight} slot of that stock is returned.
 }
 }
 \description{
-Construct and manipulate a \linkS4class{weight} object defining weight-at-age
+Construct and manipulate a \link[=weight-class]{weight} object defining weight-at-age
 and weight-at-length schedules associated with a \code{\link[=Stock]{Stock()}} object. A
-\code{Weight} object is required for all \linkS4class{stock} objects.
+\code{Weight} object is required for all \link[=stock-class]{stock} objects.
 }
 \details{
-A \linkS4class{weight} object is required for all \linkS4class{stock} objects. It
+A \link[=weight-class]{weight} object is required for all \link[=stock-class]{stock} objects. It
 defines how weight varies with age and/or length, and is used throughout
 the operating model for biomass calculations and selectivity conversions.
 \subsection{Specifying Weight-at-Age}{
@@ -131,6 +131,6 @@ See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more deta
 }
 }
 \seealso{
-\linkS4class{weight}, \code{\link[=Stock]{Stock()}}, \code{\link[=WeightModels]{WeightModels()}}, \code{\link[=ValidUnits]{ValidUnits()}},
+\link[=weight-class]{weight}, \code{\link[=Stock]{Stock()}}, \code{\link[=WeightModels]{WeightModels()}}, \code{\link[=ValidUnits]{ValidUnits()}},
 \code{\link[=Populate]{Populate()}}, \code{\link[=Length]{Length()}}, \code{\link[=Maturity]{Maturity()}}, \code{\link[=Pars]{Pars()}}
 }

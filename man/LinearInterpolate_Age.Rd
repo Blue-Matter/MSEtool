@@ -20,7 +20,7 @@ classes, with age labels rounded to 5 decimal places.
 }
 \description{
 Increases the resolution of the \code{Age} dimension of \code{array} by linearly
-interpolating between existing age classes using \code{\link[stats:approxfun]{stats::approx()}}. All
+interpolating between existing age classes using \code{\link[stats:approx]{stats::approx()}}. All
 other dimensions are preserved. The output is permuted back to match the
 original dimension order.
 }

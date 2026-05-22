@@ -15,10 +15,10 @@ fleet. Must not already exist in \code{OM}.}
 \item{Fleet}{Optional. An object of class \code{fleet}. If \code{NULL} (default), an
 empty \code{fleet} object is created with \code{Name = FleetName}.}
 
-\item{Obs}{Optional. An \linkS4class{obs} object. If \code{NULL} (default), an
+\item{Obs}{Optional. An \link[=obs-class]{obs} object. If \code{NULL} (default), an
 empty \code{obs} object is created with \code{Name = FleetName}.}
 
-\item{Imp}{Optional. An \linkS4class{imp} object. If \code{NULL} (default), an
+\item{Imp}{Optional. An \link[=imp-class]{imp} object. If \code{NULL} (default), an
 empty \code{imp} object is created with \code{Name = FleetName}}
 }
 \value{
@@ -26,8 +26,8 @@ The \code{om} object with the new fleet appended to \code{OM@Fleet} and
 \code{OM@Obs} for every stock.
 }
 \description{
-Adds a new fleet to an \linkS4class{om} object, appending a
-\linkS4class{fleet}, an \linkS4class{obs}, and an \linkS4class{imp} object for every
+Adds a new fleet to an \link[=om-class]{om} object, appending a
+\link[=fleet-class]{fleet}, an \link[=obs-class]{obs}, and an \link[=imp-class]{imp} object for every
 stock in the OM.
 }
 \examples{

@@ -16,7 +16,7 @@ Project(
 )
 }
 \arguments{
-\item{Hist}{A \linkS4class{hist} or \linkS4class{Hist-legacy} object containing the
+\item{Hist}{A \link[=hist-class]{hist} or \link[=Hist-legacy-class]{Hist-legacy} object containing the
 conditioned operating model and historical dynamics, as returned by
 \code{\link[=Simulate]{Simulate()}}.}
 
@@ -32,26 +32,26 @@ correspond to individual MPs to run in parallel. Default \code{FALSE}.}
 \code{FALSE}.}
 
 \item{nSim}{Integer. If provided, reduces the number of simulations to
-\code{nSim} before projecting. Only used for \linkS4class{hist} objects. If \code{NULL}
+\code{nSim} before projecting. Only used for \link[=hist-class]{hist} objects. If \code{NULL}
 (default), all simulations in \code{Hist} are used.}
 
 \item{Reduce}{Logical. Reserved for future use. Default \code{TRUE}.}
 
 \item{extended}{Logical. If \code{TRUE}, stores full age- and area-structured
-arrays for all years in \code{MSE@Misc$extended}. Only used for \linkS4class{Hist-legacy}
+arrays for all years in \code{MSE@Misc$extended}. Only used for \link[=Hist-legacy-class]{Hist-legacy}
 objects. Substantially increases object size. Default \code{FALSE}.}
 
 \item{checkMPs}{Logical. Validate MP names and availability before
-projecting. Only used for \linkS4class{Hist-legacy} objects. Default \code{FALSE}.}
+projecting. Only used for \link[=Hist-legacy-class]{Hist-legacy} objects. Default \code{FALSE}.}
 }
 \value{
-An \linkS4class{mse} or a \linkS4class{MSE-legacy} object containing projection results for all MPs.
+An \link[=mse-class]{mse} or a \link[=MSE-legacy-class]{MSE-legacy} object containing projection results for all MPs.
 }
 \description{
 Runs the MSE projection loop for one or more management procedures (MPs)
-and returns a completed \linkS4class{MSE-legacy} object. Dispatches to the appropriate
-internal projection engine based on the class of \code{Hist}: \linkS4class{hist}
-objects use the new \code{om}-based engine; \linkS4class{Hist-legacy} objects use the legacy
+and returns a completed \link[=MSE-legacy-class]{MSE-legacy} object. Dispatches to the appropriate
+internal projection engine based on the class of \code{Hist}: \link[=hist-class]{hist}
+objects use the new \code{om}-based engine; \link[=Hist-legacy-class]{Hist-legacy} objects use the legacy
 engine.
 }
 \seealso{

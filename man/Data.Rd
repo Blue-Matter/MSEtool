@@ -35,8 +35,8 @@ Data(
 )
 }
 \arguments{
-\item{Name}{Either a character string naming the new \linkS4class{data} object, or an
-existing \linkS4class{om}, \linkS4class{hist}, or \linkS4class{mse} object from which to extract data.
+\item{Name}{Either a character string naming the new \link[=data-class]{data} object, or an
+existing \link[=om-class]{om}, \link[=hist-class]{hist}, or \link[=mse-class]{mse} object from which to extract data.
 Defaults to \code{"New Data Object"}.}
 
 \item{CommonName}{Optional character string. Common name of the stock.}
@@ -104,16 +104,16 @@ related advice.}
 \code{list()}.}
 }
 \value{
-A \linkS4class{data} object, or when \code{Name} is an \linkS4class{mse} object, a list
-of \linkS4class{data} objects from the \verb{@PPD} slot.
+A \link[=data-class]{data} object, or when \code{Name} is an \link[=mse-class]{mse} object, a list
+of \link[=data-class]{data} objects from the \verb{@PPD} slot.
 }
 \description{
-Creates a new \linkS4class{data} object, or extracts the \code{Data} or \code{PPD} slot from
-an existing \linkS4class{om}, \linkS4class{hist}, or \linkS4class{mse} class object.
+Creates a new \link[=data-class]{data} object, or extracts the \code{Data} or \code{PPD} slot from
+an existing \link[=om-class]{om}, \link[=hist-class]{hist}, or \link[=mse-class]{mse} class object.
 }
 \details{
-When \code{Name} is an \linkS4class{om} or \linkS4class{hist} object, the function returns the
-corresponding \verb{@Data} slot. When \code{Name} is an \linkS4class{mse} object, the \verb{@PPD}
+When \code{Name} is an \link[=om-class]{om} or \link[=hist-class]{hist} object, the function returns the
+corresponding \verb{@Data} slot. When \code{Name} is an \link[=mse-class]{mse} object, the \verb{@PPD}
 slot is returned instead. Otherwise, a new \code{data} object is constructed from
 the supplied arguments.
 
@@ -131,5 +131,5 @@ the appropriate class is initialised automatically:
 }
 }
 \seealso{
-\linkS4class{data}, \code{\link[=LastTAC]{LastTAC()}}, \code{\link[=LastHistYearInd]{LastHistYearInd()}}, \code{\link[=ProjectionYear]{ProjectionYear()}}
+\link[=data-class]{data}, \code{\link[=LastTAC]{LastTAC()}}, \code{\link[=LastHistYearInd]{LastHistYearInd()}}, \code{\link[=ProjectionYear]{ProjectionYear()}}
 }

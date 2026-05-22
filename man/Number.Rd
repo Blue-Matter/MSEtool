@@ -7,7 +7,7 @@
 Number(object, df = FALSE, byAge = FALSE, byArea = FALSE)
 }
 \arguments{
-\item{object}{A \linkS4class{hist} or \linkS4class{mse} object.}
+\item{object}{A \link[=hist-class]{hist} or \link[=mse-class]{mse} object.}
 
 \item{df}{Logical. If \code{FALSE} (default) the raw array slot is returned.
 If \code{TRUE} a tidy \code{data.frame} is returned.}
@@ -28,8 +28,8 @@ stock).
 }
 }
 \description{
-Returns the number of individuals (abundance) from a \linkS4class{hist} or
-\linkS4class{mse} object, either as a list of length \code{\link[=nStock]{nStock()}} or
+Returns the number of individuals (abundance) from a \link[=hist-class]{hist} or
+\link[=mse-class]{mse} object, either as a list of length \code{\link[=nStock]{nStock()}} or
 a \code{data.frame}.
 }
 \examples{

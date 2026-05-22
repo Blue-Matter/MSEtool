@@ -7,7 +7,7 @@
 CheckCatch(Data, incUnits = TRUE, slot_names = c("Landings", "Discards"))
 }
 \arguments{
-\item{Data}{A \linkS4class{data} object.}
+\item{Data}{A \link[=data-class]{data} object.}
 
 \item{incUnits}{Logical. If \code{TRUE} (default) an additional warning is
 issued when any values in \code{slot_name} are not in units of biomass.}

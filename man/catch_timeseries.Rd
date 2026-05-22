@@ -52,7 +52,7 @@ Removals(
 )
 }
 \arguments{
-\item{object}{A \linkS4class{hist} or \linkS4class{mse} object.}
+\item{object}{A \link[=hist-class]{hist} or \link[=mse-class]{mse} object.}
 
 \item{df}{Logical. If \code{FALSE} the raw array slot is returned.
 If \code{TRUE}  (default) a tidy \code{data.frame} is returned.}
@@ -91,7 +91,7 @@ Not available for \code{Interactions()}. Ignored when \code{df = FALSE}.}
 \description{
 \code{Interactions()}, \code{Landings()}, \code{Discards()}, and \code{Removals} extract total
 interactions (encounters), retained landings, discards, and removals
-(landings + discards) respectively, from a \linkS4class{hist} or \linkS4class{mse} object.
+(landings + discards) respectively, from a \link[=hist-class]{hist} or \link[=mse-class]{mse} object.
 }
 \details{
 When \code{byAge = FALSE} or \code{bySize = FALSE}, the catch data are in units of
@@ -106,7 +106,7 @@ When \code{byArea = TRUE} the values are always in units of numbers.
 Future versions of this function may allow users to specify the units (i.e \code{N}
 or \code{B} for the catch data).
 
-When applied to an \linkS4class{mse} object the historical and projection
+When applied to an \link[=mse-class]{mse} object the historical and projection
 periods are row-bound and labelled via the \code{Period} column; historical
 rows carry \code{MP = "Historical"}.
 }

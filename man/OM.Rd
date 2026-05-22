@@ -80,20 +80,20 @@ model. Default is the current system year.}
 
 \item{Seasons}{Integer. Number of seasons per year. Default \code{1}.}
 
-\item{Stock}{A \linkS4class{stock} object or named list of \linkS4class{stock} objects.
+\item{Stock}{A \link[=stock-class]{stock} object or named list of \link[=stock-class]{stock} objects.
 Default \code{NULL}.}
 
-\item{Fleet}{A hierarchical named list of \linkS4class{fleet} objects indexed by
+\item{Fleet}{A hierarchical named list of \link[=fleet-class]{fleet} objects indexed by
 stock then fleet. Each stock must have the same number of fleets. Default
 \code{NULL}.}
 
-\item{Obs}{A hierarchical named list of \linkS4class{obs} objects indexed by
+\item{Obs}{A hierarchical named list of \link[=obs-class]{obs} objects indexed by
 stock and fleet. Default \code{NULL}.}
 
-\item{Imp}{A hierarchical named list of \linkS4class{imp} objects indexed by
+\item{Imp}{A hierarchical named list of \link[=imp-class]{imp} objects indexed by
 stock and fleet. Default \code{NULL}.}
 
-\item{Data}{A \linkS4class{data} object or list of \linkS4class{data} objects
+\item{Data}{A \link[=data-class]{data} object or list of \link[=data-class]{data} objects
 associated with the operating model. Default \code{NULL}.}
 
 \item{DataLag}{Integer. Number of time steps that data are lagged relative
@@ -145,16 +145,16 @@ Default \code{list()}.}
 Supports Markdown. Default \code{NULL}.}
 }
 \value{
-An \linkS4class{om} object, or the \code{OM} slot of \code{Name} if \code{Name} is an
+An \link[=om-class]{om} object, or the \code{OM} slot of \code{Name} if \code{Name} is an
 S4 object with an \code{OM} slot.
 }
 \description{
-Construct and manipulate an \linkS4class{om} object defining the complete
+Construct and manipulate an \link[=om-class]{om} object defining the complete
 specification of an Operating Model (OM) for use in Management Strategy
 Evaluation (MSE).
 }
 \details{
-The \linkS4class{om} object defines a complete operating model specification for
+The \link[=om-class]{om} object defines a complete operating model specification for
 use in Management Strategy Evaluation (MSE). See the
 \href{https://docs.openmse.com/}{openMSE Technical Manual} for full details on
 model structure and parameterisation.
@@ -167,7 +167,7 @@ rather than constructing a new OM.
 
 \subsection{Accessing and Assigning Slots}{
 
-All slots in \linkS4class{om} objects can be accessed or assigned using
+All slots in \link[=om-class]{om} objects can be accessed or assigned using
 functions matching the slot names. See \link{OM-accessors} for the full list.
 For example:
 
@@ -184,6 +184,6 @@ Agency(om)
 
 }
 \seealso{
-\linkS4class{om}, \code{\link[=Stock]{Stock()}}, \code{\link[=Fleet]{Fleet()}}, \code{\link[=Obs]{Obs()}}, \code{\link[=Imp]{Imp()}}, \code{\link[=Data]{Data()}},
+\link[=om-class]{om}, \code{\link[=Stock]{Stock()}}, \code{\link[=Fleet]{Fleet()}}, \code{\link[=Obs]{Obs()}}, \code{\link[=Imp]{Imp()}}, \code{\link[=Data]{Data()}},
 \link{OM-accessors}, \code{\link[=PopulateOM]{PopulateOM()}}, \code{\link[=runMSE]{runMSE()}}
 }

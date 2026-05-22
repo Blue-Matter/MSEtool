@@ -13,7 +13,7 @@ GenerateStockTargeting(
 )
 }
 \arguments{
-\item{OM}{An operating model object (\linkS4class{om}) containing a populated
+\item{OM}{An operating model object (\link[=om-class]{om}) containing a populated
 \verb{@StockTargeting} slot with elements:
 \itemize{
 \item \verb{@Mean}: geometric mean targeting weight on the natural scale (from

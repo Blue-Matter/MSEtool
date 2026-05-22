@@ -7,19 +7,19 @@
 ConvertFleet(Fleet, silent = FALSE)
 }
 \arguments{
-\item{Fleet}{A \linkS4class{Fleet-legacy} object to convert.}
+\item{Fleet}{A \link[=Fleet-legacy-class]{Fleet-legacy} object to convert.}
 
 \item{silent}{Logical. If \code{TRUE}, suppresses progress messages. Default
 \code{FALSE}.}
 }
 \value{
-A \linkS4class{fleet} object with \code{Name}, \code{Effort}, \code{Catchability},
+A \link[=fleet-class]{fleet} object with \code{Name}, \code{Effort}, \code{Catchability},
 \code{Selectivity}, and \code{Retention} populated. Note that \code{DiscardMortality},
 \code{Closure}, \code{Targeting}, and \code{WeightFleet} are not currently converted and
 retain their default values.
 }
 \description{
-Converts a legacy \linkS4class{Fleet-legacy} object to the current \linkS4class{fleet}
+Converts a legacy \link[=Fleet-legacy-class]{Fleet-legacy} object to the current \link[=fleet-class]{fleet}
 by extracting and mapping each component to its corresponding new S4 class.
 }
 \examples{

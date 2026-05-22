@@ -7,12 +7,12 @@
 UpdateSelRet(OM, om)
 }
 \arguments{
-\item{OM}{An \linkS4class{OM-legacy} object.}
+\item{OM}{An \link[=OM-legacy-class]{OM-legacy} object.}
 
-\item{om}{An \linkS4class{om} object being constructed by \code{\link[=ConvertOM]{ConvertOM()}}.}
+\item{om}{An \link[=om-class]{om} object being constructed by \code{\link[=ConvertOM]{ConvertOM()}}.}
 }
 \value{
-The \linkS4class{om} object \code{om} with updated selectivity and retention
+The \link[=om-class]{om} object \code{om} with updated selectivity and retention
 parameters.
 }
 \description{

@@ -39,16 +39,16 @@ model trends in gear efficiency over time (projection only).}
 
 \item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
 
-\item{x}{A \linkS4class{catchability} object, or a \linkS4class{fleet} object for
+\item{x}{A \link[=catchability-class]{catchability} object, or a \link[=fleet-class]{fleet} object for
 \verb{Catchability<-}.}
 
-\item{value}{For \verb{Catchability<-}: a \linkS4class{catchability} object. For slot
+\item{value}{For \verb{Catchability<-}: a \link[=catchability-class]{catchability} object. For slot
 replacement functions: the new value for the corresponding slot.}
 }
 \value{
 \itemize{
-\item \code{Catchability()} returns a \linkS4class{catchability} object. If \code{Efficiency}
-is a \linkS4class{fleet} object, the \code{Catchability} slot of that fleet is
+\item \code{Catchability()} returns a \link[=catchability-class]{catchability} object. If \code{Efficiency}
+is a \link[=fleet-class]{fleet} object, the \code{Catchability} slot of that fleet is
 returned.
 \item \verb{Catchability<-} returns \code{x} with the \code{Catchability} slot replaced.
 \item \code{Efficiency()}, \code{qCV()}, \code{qInc()} return the corresponding slot from \code{x}.
@@ -56,11 +56,11 @@ returned.
 }
 }
 \description{
-Construct and manipulate a \linkS4class{catchability} object defining fishing
+Construct and manipulate a \link[=catchability-class]{catchability} object defining fishing
 gear or vessel efficiency.
 }
 \details{
-A \linkS4class{catchability} object represents assumptions about the efficiency
+A \link[=catchability-class]{catchability} object represents assumptions about the efficiency
 of fishing gear or surveys in capturing fish. Catchability may be specified
 as fixed values, time-varying arrays, or stochastic processes depending on
 model structure.
@@ -83,5 +83,5 @@ qInc(c)
 
 }
 \seealso{
-\linkS4class{catchability}, \code{\link[=Fleet]{Fleet()}}
+\link[=catchability-class]{catchability}, \code{\link[=Fleet]{Fleet()}}
 }

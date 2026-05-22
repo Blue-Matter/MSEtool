@@ -113,7 +113,7 @@ PopulateSpatial <- function(Spatial,
   Spatial <- CalcUnfishedDist(Spatial, Ages, Years)
   Spatial <- ProcessRelativeSize(Spatial, nSim)
   
-  SetDigest(Spatial, argList)
+  SetDigest(SetAgeDimnames(Spatial, Ages), argList)
 }
 
 

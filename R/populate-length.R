@@ -81,7 +81,7 @@ PopulateLength <- function(Length,
   Length@CVatAge <- StructureCV(Length@CVatAge, nSim)
   dd <- dim(Length@CVatAge)
   
-  if (is.null(dimnames(Length@CVatAge))) {
+  if (is.null(dimnames(Length@CVatAge)) && !is.null(Length@CVatAge)) {
     dimnames(Length@CVatAge) <- list(
       Sim = (1:nSim)[1:dd[1]],
       Age = Ages@Classes[1:dd[2]],
@@ -95,10 +95,15 @@ PopulateLength <- function(Length,
   if (!is.null(Length@CVatAge)) 
     Length <- PopulateClasses(Length)
   
+  
   if (ALK && !is.null(Length@Classes)) 
     Length <- PopulateASK(object = Length, 
                           Ages = Ages, 
                           silent = silent)
   
-  SetDigest(Length, argList)
+  SetDigest(SetAgeDimnames(Length, Ages), argList)
 }
+
+
+
+

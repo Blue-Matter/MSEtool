@@ -42,10 +42,10 @@ of such objects. See \code{Details}}
 \item{Misc}{Miscellaneous list.}
 }
 \value{
-An \linkS4class{advice} object.
+An \link[=advice-class]{advice} object.
 }
 \description{
-Construct an \linkS4class{advice} object defining management advice returned by a
+Construct an \link[=advice-class]{advice} object defining management advice returned by a
 management procedure.
 }
 \details{

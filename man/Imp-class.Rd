@@ -10,22 +10,22 @@ Imp(Name = NULL, TAC = NULL, Effort = NULL, Size = NULL, Misc = list())
 }
 \value{
 \itemize{
-\item If \code{Name} is an \linkS4class{om} object, returns \code{object@Imp}.
-\item Otherwise returns a new empty \linkS4class{imp} object.
+\item If \code{Name} is an \link[=om-class]{om} object, returns \code{object@Imp}.
+\item Otherwise returns a new empty \link[=imp-class]{imp} object.
 }
 }
 \description{
-The \linkS4class{imp} defines implementation error associated with management
+The \link[=imp-class]{imp} defines implementation error associated with management
 advice, controlling how management recommendations (TAC, effort, and size
 limits) are imperfectly applied in the operating model.
 }
 \details{
-Each of the \code{TAC}, \code{Effort}, and \code{Size} slots is an \linkS4class{impslot} object
+Each of the \code{TAC}, \code{Effort}, and \code{Size} slots is an \link[=impslot-class]{impslot} object
 containing \code{Mean}, \code{SD}, \code{Compliance}, and \code{Error} arrays that together
 describe how imperfectly the corresponding management control is
 implemented across simulations.
 
-An \linkS4class{imp} object can be attached to an \linkS4class{om} object and
+An \link[=imp-class]{imp} object can be attached to an \link[=om-class]{om} object and
 retrieved with \code{Imp(om)}.
 }
 \section{Slots}{
@@ -33,18 +33,18 @@ retrieved with \code{Imp(om)}.
 \describe{
 \item{\code{Name}}{Character. Name of the implementation error model.}
 
-\item{\code{TAC}}{An \linkS4class{impslot} object. Implementation error associated with
+\item{\code{TAC}}{An \link[=impslot-class]{impslot} object. Implementation error associated with
 total allowable catch (TAC) recommendations.}
 
-\item{\code{Effort}}{An \linkS4class{impslot} object. Implementation error associated
+\item{\code{Effort}}{An \link[=impslot-class]{impslot} object. Implementation error associated
 with effort-based controls.}
 
-\item{\code{Size}}{An \linkS4class{impslot} object. Implementation error associated with
+\item{\code{Size}}{An \link[=impslot-class]{impslot} object. Implementation error associated with
 size-based regulations (e.g. minimum landing size).}
 
 \item{\code{Misc}}{List. Miscellaneous additional objects.}
 }}
 
 \seealso{
-\code{\link[=Imp]{Imp()}}, \linkS4class{impslot}, \code{\link[=OM]{OM()}}, \code{\link[=Advice]{Advice()}}, \code{\link[=ConvertImp]{ConvertImp()}}
+\code{\link[=Imp]{Imp()}}, \link[=impslot-class]{impslot}, \code{\link[=OM]{OM()}}, \code{\link[=Advice]{Advice()}}, \code{\link[=ConvertImp]{ConvertImp()}}
 }

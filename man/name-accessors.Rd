@@ -11,7 +11,7 @@ StockNames(object)
 FleetNames(object, IncSurvey = FALSE)
 }
 \arguments{
-\item{object}{An \linkS4class{om}, \linkS4class{hist}, \linkS4class{stock}, \linkS4class{fleet}, or \linkS4class{mse} object.}
+\item{object}{An \link[=om-class]{om}, \link[=hist-class]{hist}, \link[=stock-class]{stock}, \link[=fleet-class]{fleet}, or \link[=mse-class]{mse} object.}
 
 \item{IncSurvey}{Logical. Include names of survey (non-fishing) fleets? Default: FALSE}
 }
@@ -26,7 +26,7 @@ Access Stock or Fleet Names
 }
 \details{
 These functions extract stock or fleet names from objects used in the MSE
-framework, including \linkS4class{om}, \linkS4class{hist}, \linkS4class{stock}, \linkS4class{fleet}, and \linkS4class{mse}
+framework, including \link[=om-class]{om}, \link[=hist-class]{hist}, \link[=stock-class]{stock}, \link[=fleet-class]{fleet}, and \link[=mse-class]{mse}
 objects
 
 \strong{StockNames}

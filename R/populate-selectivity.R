@@ -200,7 +200,7 @@ PopulateSelectivity <- function(Selectivity,
     }
   }
   
-  SetDigest(Selectivity, argList)
+  SetDigest(SetAgeDimnames(Selectivity, Ages), argList)
 }
 
 FindL50_vec <- function(prob_vec) {

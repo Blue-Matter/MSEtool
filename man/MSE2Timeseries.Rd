@@ -11,10 +11,10 @@ MSE2Timeseries(
 )
 }
 \arguments{
-\item{MSE}{An \linkS4class{mse} object or a named list of \linkS4class{mse} objects.}
+\item{MSE}{An \link[=mse-class]{mse} object or a named list of \link[=mse-class]{mse} objects.}
 
 \item{Code}{Character vector of performance indicator codes. Must
-correspond to functions that accept an \linkS4class{mse} object and return a
+correspond to functions that accept an \link[=mse-class]{mse} object and return a
 tidy data frame with columns \code{Sim}, \code{Year}, \code{MP}, \code{Period}, and \code{Value}.
 Default \code{c('SBiomass', 'apicalF', 'Landings', 'SB_SBMSY', 'F_FMSY')}.}
 
@@ -23,12 +23,12 @@ indicator, matched by position to \code{Code}. Default
 \code{c('Spawning Biomass', 'Fishing Mortality', 'Landings', 'SB/SBMSY', 'F/FMSY')}.}
 }
 \value{
-A \code{\link[Slick:Timeseries-methods]{Slick::Timeseries()}} object with \code{Value} array of dimensions
+A \code{\link[Slick:Timeseries]{Slick::Timeseries()}} object with \code{Value} array of dimensions
 \verb{Sim × OM × MP × PI × Year}, spanning both historical and projection
 periods.
 }
 \description{
-Constructs a \code{\link[Slick:Timeseries-methods]{Slick::Timeseries()}} object containing historical and
+Constructs a \code{\link[Slick:Timeseries]{Slick::Timeseries()}} object containing historical and
 projection time series for a set of performance indicators, for use in the
 Slick time series plot. By default includes spawning biomass, fishing
 mortality, landings, SB/SBMSY, and F/FMSY.

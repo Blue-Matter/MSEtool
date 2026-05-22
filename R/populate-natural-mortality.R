@@ -108,5 +108,6 @@ PopulateNaturalMortality <- function(NaturalMortality,
   
   NaturalMortality <- PopulateRandom(NaturalMortality)
   
-  SetDigest(NaturalMortality, argList)
+  SetDigest(SetAgeDimnames(NaturalMortality, Ages), argList)
+  
 }

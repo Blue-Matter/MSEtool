@@ -7,13 +7,13 @@
 MSE2MPs(MSE)
 }
 \arguments{
-\item{MSE}{An \linkS4class{mse} object.}
+\item{MSE}{An \link[=mse-class]{mse} object.}
 }
 \value{
-A \code{\link[Slick:MPs-methods]{Slick::MPs()}} object.
+A \code{\link[Slick:MPs]{Slick::MPs()}} object.
 }
 \description{
-Constructs a \code{\link[Slick:MPs-methods]{Slick::MPs()}} object from an \linkS4class{mse} object, populating
+Constructs a \code{\link[Slick:MPs]{Slick::MPs()}} object from an \link[=mse-class]{mse} object, populating
 MP codes, labels, and default display colours.
 }
 \keyword{internal}

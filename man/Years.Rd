@@ -22,7 +22,7 @@ Years(x, Period = NULL)
 \item{Period}{Character or \code{NULL}. Controls which time steps are returned.
 See Details.}
 
-\item{x}{An \linkS4class{om}, \linkS4class{hist}, or \linkS4class{mse} object, or a list of
+\item{x}{An \link[=om-class]{om}, \link[=hist-class]{hist}, or \link[=mse-class]{mse} object, or a list of
 such objects. (\code{Years()} only.)}
 }
 \value{
@@ -36,8 +36,8 @@ Two related functions for working with historical and projection time steps:
 \itemize{
 \item \code{CalcYears()} generates a numeric vector of time step values from
 explicit parameters.
-\item \code{Years()} extracts time step values from an \linkS4class{om}, \linkS4class{hist}, or
-\linkS4class{mse} object, or a list of such objects, by delegating to
+\item \code{Years()} extracts time step values from an \link[=om-class]{om}, \link[=hist-class]{hist}, or
+\link[=mse-class]{mse} object, or a list of such objects, by delegating to
 \code{CalcYears()}.
 }
 
@@ -71,5 +71,5 @@ CalcYears(nYear=20, pYear=10, CurrentYear=2026, Period="H")
 
 }
 \seealso{
-\code{\link[=CalcTSUnits]{CalcTSUnits()}}, \linkS4class{om}
+\code{\link[=CalcTSUnits]{CalcTSUnits()}}, \link[=om-class]{om}
 }

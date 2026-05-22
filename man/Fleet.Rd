@@ -34,25 +34,25 @@ WeightFleet(x) <- value
 Fleet(x) <- value
 }
 \arguments{
-\item{Name}{Character. Fleet name, or an \linkS4class{om} object for pass-through
+\item{Name}{Character. Fleet name, or an \link[=om-class]{om} object for pass-through
 access (see \code{Details}).}
 
-\item{Effort}{An \linkS4class{effort} object. Default is an empty \linkS4class{effort}.}
+\item{Effort}{An \link[=effort-class]{effort} object. Default is an empty \link[=effort-class]{effort}.}
 
-\item{Catchability}{A \linkS4class{catchability} object. Default is an empty
-\linkS4class{catchability}. When \code{Name} is an \linkS4class{om} object and \code{Effort} is
+\item{Catchability}{A \link[=catchability-class]{catchability} object. Default is an empty
+\link[=catchability-class]{catchability}. When \code{Name} is an \link[=om-class]{om} object and \code{Effort} is
 numeric, a numeric value here indexes the fleet within the stock (see
 Details).}
 
-\item{Selectivity}{A \linkS4class{selectivity} object. Selectivity is required
-for all fleets. Default is an empty \linkS4class{selectivity}.}
+\item{Selectivity}{A \link[=selectivity-class]{selectivity} object. Selectivity is required
+for all fleets. Default is an empty \link[=selectivity-class]{selectivity}.}
 
-\item{Retention}{A \linkS4class{retention} object. Optional — if not specified,
+\item{Retention}{A \link[=retention-class]{retention} object. Optional — if not specified,
 all age and length classes are assumed fully retained. Default is an empty
-\linkS4class{retention}.}
+\link[=retention-class]{retention}.}
 
-\item{DiscardMortality}{A \linkS4class{discardmortality} object. Default is an
-empty \linkS4class{discardmortality}.}
+\item{DiscardMortality}{A \link[=discardmortality-class]{discardmortality} object. Default is an
+empty \link[=discardmortality-class]{discardmortality}.}
 
 \item{Closure}{Array. Spatio-temporal closure schedule. Default is an empty
 array.}
@@ -60,41 +60,41 @@ array.}
 \item{WeightFleet}{Array. Fleet-specific weight-at-age. If not specified,
 the stock-level weight-at-age is used. Default is an empty array.}
 
-\item{BioEconomic}{A \linkS4class{bioeconomic} object. Not currently used. Default
-is an empty \linkS4class{bioeconomic}.}
+\item{BioEconomic}{A \link[=bioeconomic-class]{bioeconomic} object. Not currently used. Default
+is an empty \link[=bioeconomic-class]{bioeconomic}.}
 
 \item{Dynamics}{List. Reserved for future use for fleet dynamics model
 parameters. Default \code{list()}.}
 
 \item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
 
-\item{x}{A \linkS4class{fleet} object or an \linkS4class{om} object for \verb{Fleet<-}.}
+\item{x}{A \link[=fleet-class]{fleet} object or an \link[=om-class]{om} object for \verb{Fleet<-}.}
 
-\item{value}{A \linkS4class{fleet} object or named list of \linkS4class{fleet} objects
+\item{value}{A \link[=fleet-class]{fleet} object or named list of \link[=fleet-class]{fleet} objects
 for \verb{Fleet<-}.}
 }
 \value{
 \itemize{
-\item \code{Fleet()} returns a \linkS4class{fleet} object, or if \code{Name} is an \linkS4class{om}
+\item \code{Fleet()} returns a \link[=fleet-class]{fleet} object, or if \code{Name} is an \link[=om-class]{om}
 object, returns the fleet list or a specific fleet from the OM.
-\item \verb{Fleet<-} returns the \linkS4class{om} object \code{x} with the \code{Fleet} slot
+\item \verb{Fleet<-} returns the \link[=om-class]{om} object \code{x} with the \code{Fleet} slot
 updated.
 \item \code{Closure()}, \code{WeightFleet()} return the corresponding slot from the
-\linkS4class{fleet} object.
+\link[=fleet-class]{fleet} object.
 \item Their replacement forms return the object with the corresponding slot
 updated.
 }
 }
 \description{
-Construct and manipulate a \linkS4class{fleet} object defining the exploitation
+Construct and manipulate a \link[=fleet-class]{fleet} object defining the exploitation
 characteristics of a fleet for a stock in an operating model.
 }
 \details{
-A \linkS4class{fleet} object describes the fishing characteristics of a fleet for
+A \link[=fleet-class]{fleet} object describes the fishing characteristics of a fleet for
 a particular stock in an operating model.
 \subsection{Pass-Through Access from an OM}{
 
-When \code{Name} is an \linkS4class{om} object, \code{Fleet()} acts as an accessor rather
+When \code{Name} is an \link[=om-class]{om} object, \code{Fleet()} acts as an accessor rather
 than a constructor:
 \itemize{
 \item \code{Fleet(om)} returns the full fleet list (\code{om@Fleet}).
@@ -110,9 +110,9 @@ arguments respectively.
 
 \subsection{Assigning Fleets to an OM}{
 
-A \linkS4class{fleet} object or list of \linkS4class{fleet} objects can be assigned to
-an \linkS4class{om} object with \code{Fleet(om) <- MyFleet}. Stock objects must be
-added to the OM before fleets. If a single \linkS4class{fleet} object is
+A \link[=fleet-class]{fleet} object or list of \link[=fleet-class]{fleet} objects can be assigned to
+an \link[=om-class]{om} object with \code{Fleet(om) <- MyFleet}. Stock objects must be
+added to the OM before fleets. If a single \link[=fleet-class]{fleet} object is
 assigned, it is applied to all stocks using the fleet name. If a list is
 assigned, it must be structured as a stock-indexed list of fleet lists.
 }
@@ -136,6 +136,6 @@ Effort(f)
 
 }
 \seealso{
-\linkS4class{fleet}, \code{\link[=OM]{OM()}}, \code{\link[=Effort]{Effort()}}, \code{\link[=Catchability]{Catchability()}},
+\link[=fleet-class]{fleet}, \code{\link[=OM]{OM()}}, \code{\link[=Effort]{Effort()}}, \code{\link[=Catchability]{Catchability()}},
 \code{\link[=Selectivity]{Selectivity()}}, \code{\link[=Retention]{Retention()}}, \code{\link[=DiscardMortality]{DiscardMortality()}}, \code{\link[=Bioeconomic]{Bioeconomic()}}
 }

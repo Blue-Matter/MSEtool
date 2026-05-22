@@ -60,7 +60,7 @@ historical year
 }}
 \section{Required Data}{
 
-See \linkS4class{Data-legacy} for information on the \code{Data} object \cr
+See \link[=Data-legacy-class]{Data-legacy} for information on the \code{Data} object \cr
 }
 
 \examples{

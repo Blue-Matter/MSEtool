@@ -66,5 +66,5 @@ CantMPs <- Cant(MSEtool::Cobia)
 Needs <- Needed(MSEtool::Cobia)
 }
 \seealso{
-\link{avail} \linkS4class{Data-legacy}
+\link{avail} \link[=Data-legacy-class]{Data-legacy}
 }

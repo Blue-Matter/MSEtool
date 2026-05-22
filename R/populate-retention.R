@@ -190,5 +190,5 @@ PopulateRetention <- function(Retention,
     }
   }
   
-  SetDigest(Retention, argList)
+  SetDigest(SetAgeDimnames(Retention, Ages), argList)
 }

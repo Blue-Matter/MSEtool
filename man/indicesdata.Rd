@@ -26,7 +26,7 @@ IndicesData(
 Stores abundance or biomass index observations from fishery-dependent
 (CPUE) or fishery-independent (Survey) sources, including observation
 uncertainty, reference values, timing, and selectivity mapping. Used in
-the \code{CPUE} and \code{Survey} slots of a \linkS4class{data} object.
+the \code{CPUE} and \code{Survey} slots of a \link[=data-class]{data} object.
 }
 \section{Slots}{
 
@@ -60,5 +60,5 @@ to a fleet selectivity or defining an independent selectivity curve.}
 }}
 
 \seealso{
-\linkS4class{data}, \code{\link[=Data]{Data()}}
+\link[=data-class]{data}, \code{\link[=Data]{Data()}}
 }

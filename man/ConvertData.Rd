@@ -7,7 +7,7 @@
 ConvertData(Data, Seasons = 1, sim = 1, silent = FALSE)
 }
 \arguments{
-\item{Data}{A \linkS4class{Data-legacy} object to convert.}
+\item{Data}{A \link[=Data-legacy-class]{Data-legacy} object to convert.}
 
 \item{Seasons}{Integer. Number of seasons per year. Default \code{1}.}
 
@@ -18,17 +18,17 @@ Default \code{1}.}
 \code{FALSE}.}
 }
 \value{
-A \linkS4class{data} object populated from simulation \code{sim} of \code{Data}.
+A \link[=data-class]{data} object populated from simulation \code{sim} of \code{Data}.
 }
 \description{
-Converts a legacy \linkS4class{Data-legacy} object to the current \linkS4class{data}
+Converts a legacy \link[=Data-legacy-class]{Data-legacy} object to the current \link[=data-class]{data}
 for a single simulation, mapping observations, life history parameters, and
 advice to their corresponding new S4 slots.
 }
 \details{
 Legacy \code{Data} objects do not distinguish between landings and discards.
 \code{Data@Cat} is mapped to \code{Landings} only; \code{Discards} will be empty in the
-resulting \linkS4class{data} object. If \code{Data@Cat} represents total removals,
+resulting \link[=data-class]{data} object. If \code{Data@Cat} represents total removals,
 the \code{Discards} slot must be populated manually after conversion.
 
 The following legacy slots are not currently converted and are silently

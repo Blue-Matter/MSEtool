@@ -26,22 +26,22 @@ Obs(
 Obs(x) <- value
 }
 \arguments{
-\item{x}{An \linkS4class{om} object.}
+\item{x}{An \link[=om-class]{om} object.}
 
-\item{value}{An \linkS4class{obs} object to assign.}
+\item{value}{An \link[=obs-class]{obs} object to assign.}
 
-\item{object}{An \linkS4class{om} object, or \code{NULL} (default) to create a new
-empty \linkS4class{obs} object.}
+\item{object}{An \link[=om-class]{om} object, or \code{NULL} (default) to create a new
+empty \link[=obs-class]{obs} object.}
 }
 \value{
 \itemize{
-\item \code{Obs()}: if \code{Name} is an \linkS4class{om} object, returns \code{Name@Obs}.
-Otherwise returns a new \linkS4class{obs} object.
+\item \code{Obs()}: if \code{Name} is an \link[=om-class]{om} object, returns \code{Name@Obs}.
+Otherwise returns a new \link[=obs-class]{obs} object.
 \item \verb{Obs<-}: returns \code{x} with the \code{Obs} slot replaced.
 }
 }
 \description{
-The \linkS4class{obs} defines the observation model used to generate observed data
+The \link[=obs-class]{obs} defines the observation model used to generate observed data
 from the operating model, including observation error, bias, and sampling
 structure for each data type.
 }
@@ -50,45 +50,45 @@ Each slot corresponds to a distinct data type and contains an observation
 model sub-object defining the error structure (bias, CV, sample size, etc.)
 for that data type. Sub-objects are defined in their respective class files.
 
-An \linkS4class{obs} object can be attached to an \linkS4class{om} object with
+An \link[=obs-class]{obs} object can be attached to an \link[=om-class]{om} object with
 \code{Obs(om) <- MyObs} and retrieved with \code{Obs(om)}.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{Name}}{Character. Name of the observation model. Or an \linkS4class{om} object,
+\item{\code{Name}}{Character. Name of the observation model. Or an \link[=om-class]{om} object,
 to return the contents of the \code{Obs} slot.}
 
-\item{\code{LifeHistory}}{An \linkS4class{lifehistoryobs} object. Observation error on
+\item{\code{LifeHistory}}{An \link[=lifehistoryobs-class]{lifehistoryobs} object. Observation error on
 life-history parameters (e.g., growth, maturity).}
 
-\item{\code{Exploitation}}{An \linkS4class{exploitationobs} object. Observation error on
+\item{\code{Exploitation}}{An \link[=exploitationobs-class]{exploitationobs} object. Observation error on
 exploitation processes (e.g., fishing mortality, selectivity).}
 
-\item{\code{Effort}}{An \linkS4class{effortobs} object. Observation error on effort data.}
+\item{\code{Effort}}{An \link[=effortobs-class]{effortobs} object. Observation error on effort data.}
 
-\item{\code{Landings}}{An \linkS4class{catchobs} object. Observation error on landed
+\item{\code{Landings}}{An \link[=catchobs-class]{catchobs} object. Observation error on landed
 catch.}
 
-\item{\code{Discards}}{An \linkS4class{catchobs} object. Observation error on discarded
+\item{\code{Discards}}{An \link[=catchobs-class]{catchobs} object. Observation error on discarded
 catch.}
 
-\item{\code{CPUE}}{An \linkS4class{indicesobs} object. Observation error on
+\item{\code{CPUE}}{An \link[=indicesobs-class]{indicesobs} object. Observation error on
 catch-per-unit-effort indices.}
 
-\item{\code{Survey}}{An \linkS4class{indicesobs} object. Observation error on fishery-
+\item{\code{Survey}}{An \link[=indicesobs-class]{indicesobs} object. Observation error on fishery-
 independent survey indices.}
 
-\item{\code{LandingsAtAge}}{An \linkS4class{CompObs} object. Observation error on
+\item{\code{LandingsAtAge}}{An \link[=CompObs-class]{CompObs} object. Observation error on
 landed catch-at-age composition.}
 
-\item{\code{DiscardsAtAge}}{An \linkS4class{CompObs} object. Observation error on
+\item{\code{DiscardsAtAge}}{An \link[=CompObs-class]{CompObs} object. Observation error on
 discarded catch-at-age composition.}
 
-\item{\code{LandingsAtSize}}{An \linkS4class{CompObs} object. Observation error on
+\item{\code{LandingsAtSize}}{An \link[=CompObs-class]{CompObs} object. Observation error on
 landed catch-at-length composition.}
 
-\item{\code{DiscardsAtSize}}{An \linkS4class{CompObs} object. Observation error on
+\item{\code{DiscardsAtSize}}{An \link[=CompObs-class]{CompObs} object. Observation error on
 discarded catch-at-length composition.}
 
 \item{\code{Misc}}{List. Miscellaneous additional objects.}

@@ -7,30 +7,30 @@
 MSE2Slick(MSE)
 }
 \arguments{
-\item{MSE}{An \linkS4class{mse} object or a named list of \linkS4class{mse} objects,
+\item{MSE}{An \link[=mse-class]{mse} object or a named list of \link[=mse-class]{mse} objects,
 where each element represents a different OM. All objects in the list
 must have identical MPs, number of simulations, and number of time steps.}
 }
 \value{
-A \code{\link[Slick:Slick-class]{Slick::Slick()}} object ready for use with \code{\link[Slick:App]{Slick::App()}}.
+A \code{\link[Slick:Slick]{Slick::Slick()}} object ready for use with \code{\link[Slick:App]{Slick::App()}}.
 }
 \description{
-Converts an \linkS4class{mse} object (or a list of \linkS4class{mse} objects) into a
-\code{\link[Slick:Slick-class]{Slick::Slick()}} data object for interactive visualization in the
+Converts an \link[=mse-class]{mse} object (or a list of \link[=mse-class]{mse} objects) into a
+\code{\link[Slick:Slick]{Slick::Slick()}} data object for interactive visualization in the
 \href{https://shiny.bluematterscience.com/app/slick}{Slick App}.
 }
 \details{
-A \code{\link[Slick:Slick-class]{Slick::Slick()}} object is a standardized data structure containing MSE
+A \code{\link[Slick:Slick]{Slick::Slick()}} object is a standardized data structure containing MSE
 results, MP metadata, and performance indicators. It can be passed directly
 to \code{\link[Slick:App]{Slick::App()}} for interactive exploration, or saved and uploaded to the
 online Slick App.
 
 When \code{MSE} is a list, each element should represent a different Operating
-Model (OM) hypothesis tested with the same set of MPs. All \linkS4class{mse}
+Model (OM) hypothesis tested with the same set of MPs. All \link[=mse-class]{mse}
 objects in the list must have identical MPs, number of simulations, and
 number of time steps.
 
-The resulting \code{\link[Slick:Slick-class]{Slick::Slick()}} object includes:
+The resulting \code{\link[Slick:Slick]{Slick::Slick()}} object includes:
 \itemize{
 \item \strong{MPs}: management procedure codes, labels, and display colours.
 \item \strong{Kobe}: SB/SBMSY and F/FMSY time series for the Kobe plot.
@@ -50,5 +50,5 @@ Slick::App(slick=Slick)
 
 }
 \seealso{
-\code{\link[Slick:Slick-class]{Slick::Slick()}}, \code{\link[Slick:App]{Slick::App()}}, \linkS4class{mse}
+\code{\link[Slick:Slick]{Slick::Slick()}}, \code{\link[Slick:App]{Slick::App()}}, \link[=mse-class]{mse}
 }

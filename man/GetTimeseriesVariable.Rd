@@ -8,10 +8,10 @@ GetTimeseriesVariable(Var, MSE)
 }
 \arguments{
 \item{Var}{Character string. Name of a function that accepts an
-\linkS4class{mse} object and returns a tidy data frame with columns \code{Sim},
+\link[=mse-class]{mse} object and returns a tidy data frame with columns \code{Sim},
 \code{Year}, \code{MP}, \code{Period}, and \code{Value}.}
 
-\item{MSE}{An \linkS4class{mse} object.}
+\item{MSE}{An \link[=mse-class]{mse} object.}
 }
 \value{
 A numeric array with dimensions \verb{Sim × MP × Year}.

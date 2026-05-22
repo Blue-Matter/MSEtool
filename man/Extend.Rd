@@ -60,7 +60,7 @@ earliest existing year. Default \code{FALSE}.}
 If \code{TRUE} fills in missing year values by matching those from the closest
 corresponding season (e.g., maintains seasonal recruitment pattern)}
 
-\item{skip_data}{\code{logical(1)} Skip any \linkS4class{data} objects? Default \code{TRUE}}
+\item{skip_data}{\code{logical(1)} Skip any \link[=data-class]{data} objects? Default \code{TRUE}}
 
 \item{debug}{Logical. If \code{TRUE}, prints the class of each object as it is
 processed. Default \code{FALSE}.}

@@ -45,8 +45,8 @@ Mode(x) <- value
 \arguments{
 \item{Effort}{Numeric array or data frame. Historical fishing effort. If a
 correctly structured data frame, \code{\link[=GenHistEffort]{GenHistEffort()}} is called to generate
-stochastic effort across simulations. If a \linkS4class{fleet}, \linkS4class{effort},
-\linkS4class{hist}, \linkS4class{obs}, or \linkS4class{mse} object is passed, the \code{Effort}
+stochastic effort across simulations. If a \link[=fleet-class]{fleet}, \link[=effort-class]{effort},
+\link[=hist-class]{hist}, \link[=obs-class]{obs}, or \link[=mse-class]{mse} object is passed, the \code{Effort}
 slot of that object is returned.
 
 If an array, must have dimensions \verb{Sim x Year} with named dimnames. The
@@ -57,7 +57,7 @@ which will generate a \verb{Sim x Year} array stochastically.}
 
 \item{Units}{Character. Units of effort (e.g., \code{"hours"}, \code{"trips"}).
 Default \code{NULL}. Note that effort is converted to fishing mortality via
-gear efficiency (\code{q}) defined in the \linkS4class{catchability} object.}
+gear efficiency (\code{q}) defined in the \link[=catchability-class]{catchability} object.}
 
 \item{Distribution}{Numeric array. Fraction of total effort allocated to
 each area. Only used for spatial models (i.e., \code{nArea > 1}). Must have
@@ -83,19 +83,19 @@ or \code{Biomass}. See equations in Technical Manual.}
 
 \item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
 
-\item{df}{Logical. Only used when \code{Effort} is a \linkS4class{hist} or an
-\linkS4class{mse} object. If \code{TRUE} (default) a tidy \code{data.frame} is returned.
+\item{df}{Logical. Only used when \code{Effort} is a \link[=hist-class]{hist} or an
+\link[=mse-class]{mse} object. If \code{TRUE} (default) a tidy \code{data.frame} is returned.
 If \code{FALSE} the raw \code{Effort} array is returned.}
 
-\item{x}{An \linkS4class{effort} object, or a compatible object for \verb{Effort<-}.}
+\item{x}{An \link[=effort-class]{effort} object, or a compatible object for \verb{Effort<-}.}
 
-\item{value}{For \verb{Effort<-}: an \linkS4class{effort} object. For slot replacement
+\item{value}{For \verb{Effort<-}: an \link[=effort-class]{effort} object. For slot replacement
 functions: the new value for the corresponding slot.}
 }
 \value{
 \itemize{
-\item \code{Effort()} returns an \linkS4class{effort} object. If \code{Effort} is a
-\linkS4class{fleet}, \linkS4class{effort}, \linkS4class{hist}, \linkS4class{obs}, or \linkS4class{mse}
+\item \code{Effort()} returns an \link[=effort-class]{effort} object. If \code{Effort} is a
+\link[=fleet-class]{fleet}, \link[=effort-class]{effort}, \link[=hist-class]{hist}, \link[=obs-class]{obs}, or \link[=mse-class]{mse}
 object, the \code{Effort} slot of that object is returned.
 \item \verb{Effort<-} returns \code{x} with the \code{Effort} slot replaced.
 \item \code{Distribution()}, \code{Targeting()}, \code{Maximum()} return the corresponding
@@ -104,13 +104,13 @@ slot from \code{x}.
 }
 }
 \description{
-Construct and manipulate an \linkS4class{effort} object defining historical
+Construct and manipulate an \link[=effort-class]{effort} object defining historical
 fishing effort and spatial structure for a \code{\link[=Fleet]{Fleet()}} object.
 }
 \details{
 Effort represents total fishing activity prior to spatial allocation. It is
 converted to fishing mortality via gear efficiency (\code{q}) defined in the
-associated \linkS4class{catchability} object.
+associated \link[=catchability-class]{catchability} object.
 \subsection{Effort Array Structure}{
 
 \code{Effort@Effort} must be a numeric array with dimensions \verb{Sim x Year}:
@@ -162,5 +162,5 @@ Distribution(e)
 
 }
 \seealso{
-\linkS4class{effort}, \code{\link[=Fleet]{Fleet()}}, \code{\link[=GenHistEffort]{GenHistEffort()}}, \code{\link[=Catchability]{Catchability()}}
+\link[=effort-class]{effort}, \code{\link[=Fleet]{Fleet()}}, \code{\link[=GenHistEffort]{GenHistEffort()}}, \code{\link[=Catchability]{Catchability()}}
 }

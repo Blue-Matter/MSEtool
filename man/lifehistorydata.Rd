@@ -16,36 +16,36 @@ LifeHistoryData()
 Groups the biological life-history components required to describe
 population dynamics. Each slot holds a dedicated sub-object defining
 the model and parameters for that process. Used in the \code{LifeHistory} slot
-of a \linkS4class{data} object.
+of a \link[=data-class]{data} object.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{Ages}}{An object of class \linkS4class{ages} defining the age structure of the
+\item{\code{Ages}}{An object of class \link[=ages-class]{ages} defining the age structure of the
 population (minimum age, maximum age, plus-group).}
 
-\item{\code{Length}}{An object of class \linkS4class{length} defining the growth model
+\item{\code{Length}}{An object of class \link[=length-class]{length} defining the growth model
 (e.g., von Bertalanffy) and length-at-age parameters.}
 
-\item{\code{Weight}}{An object of class \linkS4class{weight} defining the weight-at-age or
+\item{\code{Weight}}{An object of class \link[=weight-class]{weight} defining the weight-at-age or
 length–weight relationship.}
 
-\item{\code{NaturalMortality}}{An object of class \linkS4class{naturalmortality} defining
+\item{\code{NaturalMortality}}{An object of class \link[=naturalmortality-class]{naturalmortality} defining
 natural mortality rates, which may be age-, size-, or time-varying.}
 
-\item{\code{Maturity}}{An object of class \linkS4class{maturity} defining maturity-at-age or
+\item{\code{Maturity}}{An object of class \link[=maturity-class]{maturity} defining maturity-at-age or
 maturity-at-length schedules.}
 
-\item{\code{Fecundity}}{An object of class \linkS4class{fecundity} defining fecundity-at-age
+\item{\code{Fecundity}}{An object of class \link[=fecundity-class]{fecundity} defining fecundity-at-age
 or fecundity-at-length relationships.}
 
-\item{\code{SRR}}{An object of class \linkS4class{srr} defining the stock–recruitment
+\item{\code{SRR}}{An object of class \link[=srr-class]{srr} defining the stock–recruitment
 relationship (e.g., Beverton–Holt, Ricker) and associated parameters.}
 
-\item{\code{Spatial}}{An object of class \linkS4class{spatial} defining the spatial structure
+\item{\code{Spatial}}{An object of class \link[=spatial-class]{spatial} defining the spatial structure
 of the population, including movement and area allocation.}
 
-\item{\code{Depletion}}{An object of class \linkS4class{depletion} specifying the initial
+\item{\code{Depletion}}{An object of class \link[=depletion-class]{depletion} specifying the initial
 depletion level relative to unfished biomass.}
 
 \item{\code{Misc}}{A named list for any additional life-history metadata.
@@ -54,5 +54,5 @@ depletion level relative to unfished biomass.}
 }}
 
 \seealso{
-\linkS4class{data}, \code{\link[=Data]{Data()}}
+\link[=data-class]{data}, \code{\link[=Data]{Data()}}
 }

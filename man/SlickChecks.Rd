@@ -7,16 +7,16 @@
 SlickChecks(MSE)
 }
 \arguments{
-\item{MSE}{An \linkS4class{mse} object or a named list of \linkS4class{mse} objects.}
+\item{MSE}{An \link[=mse-class]{mse} object or a named list of \link[=mse-class]{mse} objects.}
 }
 \value{
 \code{NULL} invisibly if all checks pass. Otherwise throws an error.
 }
 \description{
-Checks that \code{MSE} is a valid \linkS4class{mse} object or list of \linkS4class{mse}
-objects for conversion to a \code{\link[Slick:Slick-class]{Slick::Slick()}} object. Aborts with an
+Checks that \code{MSE} is a valid \link[=mse-class]{mse} object or list of \link[=mse-class]{mse}
+objects for conversion to a \code{\link[Slick:Slick]{Slick::Slick()}} object. Aborts with an
 informative message if the \code{Slick} package is not installed, or if a list
-of \linkS4class{mse} objects has inconsistent simulations, MPs, or time steps.
+of \link[=mse-class]{mse} objects has inconsistent simulations, MPs, or time steps.
 Also aborts if any object contains multiple stocks, which are not currently
 supported.
 }

@@ -185,5 +185,5 @@ PopulateFecundity <- function(Fecundity,
     )
   }
   
-  SetDigest(Fecundity, argList)
+  SetDigest(SetAgeDimnames(Fecundity, Ages), argList)
 }

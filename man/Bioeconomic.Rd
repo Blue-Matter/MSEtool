@@ -68,16 +68,16 @@ Discount(x) <- value
 
 \item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
 
-\item{x}{A \linkS4class{bioeconomic} object, or a \linkS4class{fleet} object for
+\item{x}{A \link[=bioeconomic-class]{bioeconomic} object, or a \link[=fleet-class]{fleet} object for
 \verb{Bioeconomic<-}.}
 
-\item{value}{For \verb{Bioeconomic<-}: a \linkS4class{bioeconomic} object. For slot
+\item{value}{For \verb{Bioeconomic<-}: a \link[=bioeconomic-class]{bioeconomic} object. For slot
 replacement functions: the new value for the corresponding slot.}
 }
 \value{
 \itemize{
-\item \code{Bioeconomic()} returns a \linkS4class{bioeconomic} object. If \code{Revenue} is a
-\linkS4class{fleet} object, the \code{Bioeconomic} slot of that fleet is returned.
+\item \code{Bioeconomic()} returns a \link[=bioeconomic-class]{bioeconomic} object. If \code{Revenue} is a
+\link[=fleet-class]{fleet} object, the \code{Bioeconomic} slot of that fleet is returned.
 \item \verb{Bioeconomic<-} returns \code{x} with the \code{Bioeconomic} slot replaced.
 \item \code{Revenue()}, \code{Cost()}, \code{Investment()}, \code{Disinvestment()},
 \code{Depreciation()}, \code{Discount()} return the corresponding slot from \code{x}.
@@ -85,11 +85,11 @@ replacement functions: the new value for the corresponding slot.}
 }
 }
 \description{
-Construct and manipulate a \linkS4class{bioeconomic} object storing revenue, cost,
+Construct and manipulate a \link[=bioeconomic-class]{bioeconomic} object storing revenue, cost,
 and investment dynamics for fleet-level or stock-level bioeconomic analyses.
 }
 \details{
-A \linkS4class{bioeconomic} object is not currently used by the MSE framework but
+A \link[=bioeconomic-class]{bioeconomic} object is not currently used by the MSE framework but
 is available for custom analyses.
 
 A \code{Bioeconomic} object can be attached to a \code{\link[=Fleet]{Fleet()}} object with
@@ -110,5 +110,5 @@ Discount(b)
 
 }
 \seealso{
-\linkS4class{bioeconomic}, \code{\link[=Fleet]{Fleet()}}
+\link[=bioeconomic-class]{bioeconomic}, \code{\link[=Fleet]{Fleet()}}
 }

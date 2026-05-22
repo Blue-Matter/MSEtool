@@ -101,7 +101,7 @@ lower if some fish are discarded and survive.}
 documentation. Supports Markdown.
 \subsection{Accessing and Assigning Slots}{
 
-Slots in \linkS4class{om} objects can be accessed or assigned using
+Slots in \link[=om-class]{om} objects can be accessed or assigned using
 functions matching the slot names (e.g., \code{Agency(om)} or
 \code{Agency(om) <- "DFO"}).
 }}

@@ -7,17 +7,17 @@
 ConvertImp(Imp, silent = FALSE)
 }
 \arguments{
-\item{Imp}{An \linkS4class{Imp-legacy} object to convert.}
+\item{Imp}{An \link[=Imp-legacy-class]{Imp-legacy} object to convert.}
 
 \item{silent}{Logical. If \code{TRUE}, suppresses progress messages. Default
 \code{FALSE}.}
 }
 \value{
-An \linkS4class{imp} object with \code{TAC}, \code{Effort}, and \code{Size}
+An \link[=imp-class]{imp} object with \code{TAC}, \code{Effort}, and \code{Size}
 implementation error slots populated.
 }
 \description{
-Converts a legacy \linkS4class{Imp-legacy} object to the current \linkS4class{imp} by
+Converts a legacy \link[=Imp-legacy-class]{Imp-legacy} object to the current \link[=imp-class]{imp} by
 mapping implementation error parameters to their corresponding new S4 slots.
 }
 \examples{

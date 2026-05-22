@@ -7,7 +7,7 @@
 Misc2Hist(Hist, sl = "Biomass")
 }
 \arguments{
-\item{Hist}{A \linkS4class{hist} object.}
+\item{Hist}{A \link[=hist-class]{hist} object.}
 
 \item{sl}{Character string. Name of the slot to populate. Must be a valid
 slot of both \code{Hist} and a key in \code{Hist@OM@Misc}.}

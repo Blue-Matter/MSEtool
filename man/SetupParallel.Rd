@@ -99,5 +99,5 @@ DisableParallel()                      # restore sequential execution
 
 }
 \seealso{
-\code{\link[future:plan]{future::plan()}}, \code{\link[future:re-exports]{future::availableCores()}}, \code{\link[furrr:future_map]{furrr::future_map()}}
+\code{\link[future:plan]{future::plan()}}, \code{\link[future:availableCores]{future::availableCores()}}, \code{\link[furrr:future_map]{furrr::future_map()}}
 }

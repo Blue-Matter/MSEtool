@@ -140,5 +140,8 @@ PopulateFleet <- function(Fleet,
     Fleet@WeightFleet <- Weight@MeanAtAge
   }
   
+  Fleet@WeightFleet <- SetAgeDimnames(Fleet@WeightFleet, Ages)
+  
+  
   SetDigest(Fleet, argList)
 }

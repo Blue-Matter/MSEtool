@@ -23,8 +23,8 @@ Dynamic(unfished)
 \value{
 \itemize{
 \item \code{Unfished()} returns an \code{unfished} object
-\item \code{Equilibrium()} returns a \linkS4class{popdynamics} object
-\item \code{Dynamic()} returns a \linkS4class{popdynamics} object
+\item \code{Equilibrium()} returns a \link[=popdynamics-class]{popdynamics} object
+\item \code{Dynamic()} returns a \link[=popdynamics-class]{popdynamics} object
 }
 }
 \description{
@@ -43,10 +43,10 @@ Three accessor functions are provided:
 
 \describe{
 \item{\code{Equilibrium}}{Unfished equilibrium population dynamics.
-A \linkS4class{popdynamics} object.}
+A \link[=popdynamics-class]{popdynamics} object.}
 
 \item{\code{Dynamic}}{Unfished dynamic population dynamics.
-A \linkS4class{popdynamics} object.}
+A \link[=popdynamics-class]{popdynamics} object.}
 
 \item{\code{Misc}}{Miscellaneous list for additional outputs.}
 }}
@@ -60,5 +60,5 @@ dyn  <- Dynamic(unf)
 
 }
 \seealso{
-\linkS4class{popdynamics}
+\link[=popdynamics-class]{popdynamics}
 }

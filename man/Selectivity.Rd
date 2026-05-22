@@ -27,7 +27,7 @@ Selectivity(x) <- value
 \arguments{
 \item{Pars}{Named list of selectivity parameters passed to \code{Model}. See
 \code{\link[=SelectivityModels]{SelectivityModels()}} for available models and their required parameters.
-If \code{Pars} is a \linkS4class{fleet} object, the \code{Selectivity} slot of that
+If \code{Pars} is a \link[=fleet-class]{fleet} object, the \code{Selectivity} slot of that
 fleet is returned. If \code{Pars} and \code{Model} are both provided, they will
 be used to populate \code{MeanAtAge}, overwriting any existing values. To
 preserve user-specified values in \code{MeanAtAge}, set \code{Pars = list()}
@@ -61,28 +61,28 @@ to maturity-at-length (e.g., \code{L50}). Default \code{FALSE}.}
 
 \item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
 
-\item{x}{A \linkS4class{selectivity} object, or a \linkS4class{fleet} object for
+\item{x}{A \link[=selectivity-class]{selectivity} object, or a \link[=fleet-class]{fleet} object for
 \verb{Selectivity<-}.}
 
-\item{value}{For \verb{Selectivity<-}: a \linkS4class{selectivity} object. For
+\item{value}{For \verb{Selectivity<-}: a \link[=selectivity-class]{selectivity} object. For
 \verb{isRel<-}: a logical value.}
 }
 \value{
 \itemize{
-\item \code{Selectivity()} returns a \linkS4class{selectivity} object. If \code{Pars} is a
-\linkS4class{fleet} object, the \code{Selectivity} slot of that fleet is returned.
+\item \code{Selectivity()} returns a \link[=selectivity-class]{selectivity} object. If \code{Pars} is a
+\link[=fleet-class]{fleet} object, the \code{Selectivity} slot of that fleet is returned.
 \item \verb{Selectivity<-} returns \code{x} with the \code{Selectivity} slot replaced.
 \item \code{isRel()} returns the \code{isRel} slot of \code{x}.
 \item \verb{isRel<-} returns \code{x} with the \code{isRel} slot updated.
 }
 }
 \description{
-Construct and manipulate a \linkS4class{selectivity} object defining
+Construct and manipulate a \link[=selectivity-class]{selectivity} object defining
 selectivity-at-age or selectivity-at-length for a \code{\link[=Fleet]{Fleet()}} object.
-Selectivity is required for all \linkS4class{fleet} objects.
+Selectivity is required for all \link[=fleet-class]{fleet} objects.
 }
 \details{
-Selectivity is required for all \linkS4class{fleet} objects and defines the
+Selectivity is required for all \link[=fleet-class]{fleet} objects and defines the
 probability of a fish being caught by the gear as a function of age,
 length, or weight.
 \subsection{Populating MeanAtAge and MeanAtLength}{
@@ -121,7 +121,7 @@ Individual slots may be accessed or modified using \code{\link[=Pars]{Pars()}}, 
 
 \subsection{Use in \code{Advice()}}{
 
-When  \linkS4class{selectivity} objects are used in \code{\link[=Advice]{Advice()}} objects, the
+When  \link[=selectivity-class]{selectivity} objects are used in \code{\link[=Advice]{Advice()}} objects, the
 \code{Sim} and \code{Year} dimensions should not be included.
 \itemize{
 \item \code{MeanAtAge} should be either length \code{nAge} or length \code{1} (recycled over age classes).
@@ -147,6 +147,6 @@ isRel(s) <- TRUE
 
 }
 \seealso{
-\linkS4class{selectivity}, \code{\link[=Fleet]{Fleet()}}, \code{\link[=SelectivityModels]{SelectivityModels()}},
+\link[=selectivity-class]{selectivity}, \code{\link[=Fleet]{Fleet()}}, \code{\link[=SelectivityModels]{SelectivityModels()}},
 \code{\link[=Retention]{Retention()}}, \code{\link[=DiscardMortality]{DiscardMortality()}}
 }

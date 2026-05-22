@@ -7,14 +7,14 @@
 PPD(MSE)
 }
 \arguments{
-\item{MSE}{An object of class \linkS4class{mse}.}
+\item{MSE}{An object of class \link[=mse-class]{mse}.}
 }
 \value{
-A named list of PPD (\linkS4class{data} objects) for
+A named list of PPD (\link[=data-class]{data} objects) for
 each simulation, MP, and stock/complex.
 }
 \description{
-Extracts the projected data objects from an \linkS4class{mse} object.
+Extracts the projected data objects from an \link[=mse-class]{mse} object.
 }
 \details{
 To avoid duplication, historical data are stored only for the first MP.
@@ -22,5 +22,5 @@ To avoid duplication, historical data are stored only for the first MP.
 those data to the other (projection only) data objects stored in \code{MSE@PPD}
 }
 \seealso{
-\code{\link[=JoinYear]{JoinYear()}}, \code{\link[=Years]{Years()}}, \linkS4class{mse}
+\code{\link[=JoinYear]{JoinYear()}}, \code{\link[=Years]{Years()}}, \link[=mse-class]{mse}
 }

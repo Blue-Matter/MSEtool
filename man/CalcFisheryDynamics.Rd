@@ -20,7 +20,7 @@ CalcFisheryDynamics(
 )
 }
 \arguments{
-\item{Hist}{A \linkS4class{hist} object.}
+\item{Hist}{A \link[=hist-class]{hist} object.}
 
 \item{Years}{Numeric vector of years to calculate dynamics over. Defaults to
 historical years from \code{Hist@OM}.}

@@ -38,7 +38,7 @@ FRetain(
 )
 }
 \arguments{
-\item{object}{A \linkS4class{hist} or \linkS4class{mse} object.}
+\item{object}{A \link[=hist-class]{hist} or \link[=mse-class]{mse} object.}
 
 \item{df}{Logical. If \code{FALSE} the raw array slot is returned.
 If \code{TRUE} (default)  a tidy \code{data.frame} is returned.}
@@ -74,14 +74,14 @@ and/or \code{Fleet}, plus \code{Value} and \code{Variable}.
 \description{
 \code{FInteract()}, \code{FDead()}, and \code{FRetain()} extract fishing mortality for
 interactions (encounters), killed, and retained fish
-respectively, from a \linkS4class{hist} or \linkS4class{mse} object.
+respectively, from a \link[=hist-class]{hist} or \link[=mse-class]{mse} object.
 }
 \details{
 When \code{byAge = FALSE} the apical (maximum over ages) fishing mortality
 rate is returned. When \code{byAge = TRUE} the full age-structured array is
 retained; \code{byArea} is always included when \code{byAge = TRUE}.
 
-When applied to an \linkS4class{mse} object the historical and projection
+When applied to an \link[=mse-class]{mse} object the historical and projection
 periods are row-bound and labelled via the \code{Period} column; historical
 rows carry \code{MP = "Historical"}.
 }

@@ -7,12 +7,12 @@
 SolveForVmaxlen(om, type = c("Selectivity", "Retention"))
 }
 \arguments{
-\item{om}{An \linkS4class{om} object.}
+\item{om}{An \link[=om-class]{om} object.}
 
 \item{type}{Character. One of \code{"Selectivity"} or \code{"Retention"}.}
 }
 \value{
-The \linkS4class{om} object with updated \code{Vmaxlen} or \code{Rmaxlen} parameters
+The \link[=om-class]{om} object with updated \code{Vmaxlen} or \code{Rmaxlen} parameters
 for all stock-fleet combinations.
 }
 \description{

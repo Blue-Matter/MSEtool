@@ -7,16 +7,16 @@
 CopyTimeseriesSlots(MSE, Hist)
 }
 \arguments{
-\item{MSE}{An \linkS4class{mse} object whose \code{Hist} slot will be populated.}
+\item{MSE}{An \link[=mse-class]{mse} object whose \code{Hist} slot will be populated.}
 
-\item{Hist}{A populated \linkS4class{hist} object.}
+\item{Hist}{A populated \link[=hist-class]{hist} object.}
 }
 \value{
 \code{MSE} with \code{MSE@Hist} slots populated and subsetted to the
 historical period.
 }
 \description{
-Copies each slot from the \linkS4class{timeseries} inherited by \code{Hist} into the
+Copies each slot from the \link[=timeseries-class]{timeseries} inherited by \code{Hist} into the
 corresponding slot of \code{MSE@Hist}, subsetting each array to the historical
 years only via \code{SubsetYear}.
 }

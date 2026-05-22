@@ -25,14 +25,14 @@ runMSE(
 )
 }
 \arguments{
-\item{OM}{An \linkS4class{om}, \linkS4class{OM-legacy}, \linkS4class{hist}, or \linkS4class{Hist-legacy} object.
+\item{OM}{An \link[=om-class]{om}, \link[=OM-legacy-class]{OM-legacy}, \link[=hist-class]{hist}, or \link[=Hist-legacy-class]{Hist-legacy} object.
 If \code{NULL} (default), uses \link{ExampleOM}.}
 
 \item{MPs}{Character vector of MP names to project. MPs must be functions
 available in the current environment. If \code{NULL} (default), projects
 \code{c("CurrentEffort", "CurrentCatch")}.}
 
-\item{Hist}{Logical. If \code{TRUE}, returns the \linkS4class{hist} or \linkS4class{Hist-legacy}
+\item{Hist}{Logical. If \code{TRUE}, returns the \link[=hist-class]{hist} or \link[=Hist-legacy-class]{Hist-legacy}
 object from \code{\link[=Simulate]{Simulate()}} without running forward projections. Useful for
 inspecting historical dynamics or saving the conditioned OM for later use
 with \code{\link[=Project]{Project()}}. Default \code{FALSE}.}
@@ -45,7 +45,7 @@ MPs. For legacy \code{OM} and \code{Hist} objects only:
 \itemize{
 \item if \code{TRUE}, all MPs are run in parallel.
 \item if a named list, names correspond to individual MPs to run in parallel.
-\item pass \code{"sac"} to use the SAC parallel backend (\linkS4class{OM-legacy} only).
+\item pass \code{"sac"} to use the SAC parallel backend (\link[=OM-legacy-class]{OM-legacy} only).
 Default \code{FALSE}.
 }}
 
@@ -60,7 +60,7 @@ projecting. Default \code{FALSE}. Legacy only.}
 both \code{\link[=Simulate]{Simulate()}} and \code{\link[=Project]{Project()}}. If \code{NULL} (default), all simulations
 are used.}
 
-\item{nsim}{Integer. Alternative to \code{nSim} for \linkS4class{OM-legacy} objects.
+\item{nsim}{Integer. Alternative to \code{nSim} for \link[=OM-legacy-class]{OM-legacy} objects.
 Sets \code{OM@nsim} before simulating. Default \code{NULL}.}
 
 \item{DoDynamicUnfished}{Logical. Calculate dynamic unfished reference
@@ -86,8 +86,8 @@ data? Passed to \code{\link[=Simulate]{Simulate()}}. Default \code{TRUE}. \code{
 \item{...}{Additional arguments. Reserved for future use.}
 }
 \value{
-If \code{Hist = TRUE}, a \linkS4class{hist} or \linkS4class{Hist-legacy} object containing
-the conditioned historical dynamics. Otherwise, a \linkS4class{MSE-legacy} object
+If \code{Hist = TRUE}, a \link[=hist-class]{hist} or \link[=Hist-legacy-class]{Hist-legacy} object containing
+the conditioned historical dynamics. Otherwise, a \link[=MSE-legacy-class]{MSE-legacy} object
 containing projection results for all MPs. If an error occurs during
 \code{\link[=Project]{Project()}}, the historical simulations are returned with a warning.
 }
@@ -98,8 +98,8 @@ more management procedures (MPs) with \code{\link[=Project]{Project()}}, returni
 \code{MSE} object.
 }
 \details{
-Accepts either an operating model (\linkS4class{om} or \linkS4class{OM-legacy}) or a
-pre-conditioned historical object (\linkS4class{hist} or \linkS4class{Hist-legacy}).
+Accepts either an operating model (\link[=om-class]{om} or \link[=OM-legacy-class]{OM-legacy}) or a
+pre-conditioned historical object (\link[=hist-class]{hist} or \link[=Hist-legacy-class]{Hist-legacy}).
 
 When a historical object is provided, \code{\link[=Simulate]{Simulate()}} is skipped and the existing
 historical dynamics are used directly, saving computation time when

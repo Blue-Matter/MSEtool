@@ -23,6 +23,7 @@ Useful links:
 
 Authors:
 \itemize{
+  \item Adrian Hordyk \email{adrian@bluematterscience.com}
   \item Quang Huynh \email{quang@bluematterscience.com}
   \item Tom Carruthers \email{tom@bluematterscience.com}
 }

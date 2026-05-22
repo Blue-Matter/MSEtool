@@ -22,7 +22,7 @@ Simulate(
 )
 }
 \arguments{
-\item{OM}{An \linkS4class{om} or \linkS4class{OM-legacy} object. If \code{NULL} (default),
+\item{OM}{An \link[=om-class]{om} or \link[=OM-legacy-class]{OM-legacy} object. If \code{NULL} (default),
 \code{MSEtool::ExampleOM} is used.}
 
 \item{parallel}{Logical. Use parallel processing? Default \code{FALSE}.}
@@ -31,52 +31,52 @@ Simulate(
 \code{FALSE}.}
 
 \item{nSim}{Integer. Number of simulation replicates. If \code{NULL} (default),
-the value in \code{OM} is used. Only used for \linkS4class{om} objects; use \code{nsim}
-for \linkS4class{OM-legacy} objects.}
+the value in \code{OM} is used. Only used for \link[=om-class]{om} objects; use \code{nsim}
+for \link[=OM-legacy-class]{OM-legacy} objects.}
 
-\item{nsim}{Integer. Synonym for \code{nSim} for \linkS4class{OM-legacy} objects. If
+\item{nsim}{Integer. Synonym for \code{nSim} for \link[=OM-legacy-class]{OM-legacy} objects. If
 \code{NULL} (default), \code{nSim} is used if provided.}
 
 \item{DoDynamicUnfished}{Logical. Calculate the dynamic unfished population
-dynamics? Default \code{TRUE}. Only used for \linkS4class{om} objects.}
+dynamics? Default \code{TRUE}. Only used for \link[=om-class]{om} objects.}
 
 \item{DoRefMSY}{Logical. Calculate MSY-based reference points? Default
-\code{TRUE}. Only used for \linkS4class{om} objects.}
+\code{TRUE}. Only used for \link[=om-class]{om} objects.}
 
 \item{DoRefLandings}{Logical. Calculate reference yield based on landings?
-Default \code{TRUE}. Only used for \linkS4class{om} objects.}
+Default \code{TRUE}. Only used for \link[=om-class]{om} objects.}
 
 \item{DoRefRemovals}{Logical. Calculate reference yield based on total
-removals (landings + discards)? Default \code{FALSE}. Only used for \linkS4class{om}
+removals (landings + discards)? Default \code{FALSE}. Only used for \link[=om-class]{om}
 objects.}
 
 \item{DoConditionObs}{Logical. Condition observation model on historical
-fishery data? Default \code{TRUE}. Only used for \linkS4class{om} objects.}
+fishery data? Default \code{TRUE}. Only used for \link[=om-class]{om} objects.}
 
 \item{DoGenerateData}{Logical. Generate historical fishery data from the
-observation model? Default \code{TRUE}. Only used for \linkS4class{om} objects.}
+observation model? Default \code{TRUE}. Only used for \link[=om-class]{om} objects.}
 
 \item{Reduce}{Logical. Reduce object size after simulation for memory
-efficiency? Default \code{TRUE}. Only used for \linkS4class{om} objects.}
+efficiency? Default \code{TRUE}. Only used for \link[=om-class]{om} objects.}
 
 \item{...}{Additional arguments passed to sub-functions. Not currently
 used}
 }
 \value{
 \itemize{
-\item If \code{OM} is an \linkS4class{om} object: a \linkS4class{hist} object.
-\item If \code{OM} is an \linkS4class{OM-legacy} object: a \linkS4class{Hist-legacy} object.
+\item If \code{OM} is an \link[=om-class]{om} object: a \link[=hist-class]{hist} object.
+\item If \code{OM} is an \link[=OM-legacy-class]{OM-legacy} object: a \link[=Hist-legacy-class]{Hist-legacy} object.
 }
 }
 \description{
 Simulate historical fishery dynamics and calculate reference points for an
-\linkS4class{om} or \linkS4class{OM-legacy} object. Returns a populated \linkS4class{hist}
+\link[=om-class]{om} or \link[=OM-legacy-class]{OM-legacy} object. Returns a populated \link[=hist-class]{hist}
 or \link[=hist-class]{Hist-class} object containing historical population dynamics, fishery
 data, and reference points.
 }
 \details{
 \code{Simulate()} is a dispatcher that calls internal functions \code{Simulate_om()} (for
-\linkS4class{om} objects) or \code{SimulateOM()} (for legacy \linkS4class{OM-legacy}
+\link[=om-class]{om} objects) or \code{SimulateOM()} (for legacy \link[=OM-legacy-class]{OM-legacy}
 objects) depending on the class of \code{OM}.
 }
 \examples{

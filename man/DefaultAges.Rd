@@ -10,13 +10,13 @@ DefaultAges(Ages = NULL)
 DefaultYears(Years = NULL)
 }
 \arguments{
-\item{Ages}{An \linkS4class{ages} object, or \code{NULL} (default).}
+\item{Ages}{An \link[=ages-class]{ages} object, or \code{NULL} (default).}
 
 \item{Years}{Numeric vector of years, or \code{NULL} (default).}
 }
 \value{
 \itemize{
-\item \code{DefaultAges()}: an \linkS4class{ages} object.
+\item \code{DefaultAges()}: an \link[=ages-class]{ages} object.
 \item \code{DefaultYears()}: a numeric vector of integer years.
 }
 }
@@ -28,7 +28,7 @@ throughout the package without requiring callers to always supply them.
 \details{
 \itemize{
 \item \code{DefaultAges()}: returns \code{Ages} unchanged if supplied, otherwise creates
-an \linkS4class{ages} object with \code{MaxAge = 10} via \code{\link[=Ages]{Ages()}}.
+an \link[=ages-class]{ages} object with \code{MaxAge = 10} via \code{\link[=Ages]{Ages()}}.
 \item \code{DefaultYears()}: returns \code{Years} unchanged if supplied, otherwise
 generates an annual sequence from 1950 to five years beyond the current
 calendar year.
@@ -40,5 +40,5 @@ DefaultYears()
 
 }
 \seealso{
-\code{\link[=Ages]{Ages()}}, \linkS4class{ages}
+\code{\link[=Ages]{Ages()}}, \link[=ages-class]{ages}
 }

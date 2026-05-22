@@ -21,7 +21,7 @@ NaturalMortality(x) <- value
 \arguments{
 \item{Pars}{Named list of natural mortality parameters corresponding to
 \code{Model}. See \code{\link[=NaturalMortalityModels]{NaturalMortalityModels()}} for available models and required
-parameters. If \code{Pars} is a \linkS4class{stock} object, the \code{NaturalMortality}
+parameters. If \code{Pars} is a \link[=stock-class]{stock} object, the \code{NaturalMortality}
 slot of that stock is returned. If \code{Pars} is non-empty, \code{Model} is
 \code{NULL}, and all values are non-\code{NA}, the model is inferred automatically
 via \code{\link[=FindModel]{FindModel()}}.}
@@ -48,27 +48,27 @@ Default \code{NULL}.}
 
 \item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
 
-\item{x}{A \linkS4class{naturalmortality} object for slot accessors, or a
-\linkS4class{stock} object for \verb{NaturalMortality<-}.}
+\item{x}{A \link[=naturalmortality-class]{naturalmortality} object for slot accessors, or a
+\link[=stock-class]{stock} object for \verb{NaturalMortality<-}.}
 
-\item{value}{A \linkS4class{naturalmortality} object.}
+\item{value}{A \link[=naturalmortality-class]{naturalmortality} object.}
 }
 \value{
 \itemize{
-\item \code{NaturalMortality()} returns a \linkS4class{naturalmortality} object. If
-\code{Pars} is a \linkS4class{stock} object, the \code{NaturalMortality} slot of that
+\item \code{NaturalMortality()} returns a \link[=naturalmortality-class]{naturalmortality} object. If
+\code{Pars} is a \link[=stock-class]{stock} object, the \code{NaturalMortality} slot of that
 stock is returned.
 \item \verb{NaturalMortality<-} returns \code{x} with the \code{NaturalMortality} slot
 replaced.
 }
 }
 \description{
-Construct and manipulate a \linkS4class{naturalmortality} object defining the
+Construct and manipulate a \link[=naturalmortality-class]{naturalmortality} object defining the
 natural mortality schedule associated with a \code{\link[=Stock]{Stock()}} object. A
-\code{NaturalMortality} object is required for all \linkS4class{stock} objects.
+\code{NaturalMortality} object is required for all \link[=stock-class]{stock} objects.
 }
 \details{
-A \linkS4class{naturalmortality} object is required for all \linkS4class{stock}
+A \link[=naturalmortality-class]{naturalmortality} object is required for all \link[=stock-class]{stock}
 objects. It defines how natural mortality varies with age and/or length,
 which is used throughout the operating model for population dynamics
 calculations.
@@ -98,7 +98,7 @@ See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more deta
 }
 }
 \seealso{
-\linkS4class{naturalmortality}, \code{\link[=Stock]{Stock()}}, \code{\link[=NaturalMortalityModels]{NaturalMortalityModels()}},
+\link[=naturalmortality-class]{naturalmortality}, \code{\link[=Stock]{Stock()}}, \code{\link[=NaturalMortalityModels]{NaturalMortalityModels()}},
 \code{\link[=Populate]{Populate()}}, \code{\link[=FindModel]{FindModel()}}, \code{\link[=ValidUnits]{ValidUnits()}}, \code{\link[=Length]{Length()}}, \code{\link[=Maturity]{Maturity()}},
 \code{\link[=Pars]{Pars()}}, \code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=MeanAtLength]{MeanAtLength()}}, \code{\link[=Units]{Units()}}, \code{\link[=Classes]{Classes()}}
 }

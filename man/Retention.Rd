@@ -21,7 +21,7 @@ Retention(x) <- value
 \arguments{
 \item{Pars}{Named list of retention parameters passed to \code{Model}. See
 \code{\link[=RetentionModels]{RetentionModels()}} for available models and their required parameters.
-If \code{Pars} is a \linkS4class{fleet} object, the \code{Retention} slot of that fleet
+If \code{Pars} is a \link[=fleet-class]{fleet} object, the \code{Retention} slot of that fleet
 is returned. If \code{Pars} and \code{Model} are both provided, they will be used
 to populate \code{MeanAtAge}, overwriting any existing values. To preserve
 user-specified values in \code{MeanAtAge}, set \code{Pars = list()} (default).}
@@ -54,26 +54,26 @@ to maturity-at-length (e.g., \code{L50}). Default \code{FALSE}.}
 
 \item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
 
-\item{x}{A \linkS4class{retention} object, or a \linkS4class{fleet} object for
+\item{x}{A \link[=retention-class]{retention} object, or a \link[=fleet-class]{fleet} object for
 \verb{Retention<-}.}
 
-\item{value}{For \verb{Retention<-}: a \linkS4class{retention} object.}
+\item{value}{For \verb{Retention<-}: a \link[=retention-class]{retention} object.}
 }
 \value{
 \itemize{
-\item \code{Retention()} returns a \linkS4class{retention} object. If \code{Pars} is a
-\linkS4class{fleet} object, the \code{Retention} slot of that fleet is returned.
+\item \code{Retention()} returns a \link[=retention-class]{retention} object. If \code{Pars} is a
+\link[=fleet-class]{fleet} object, the \code{Retention} slot of that fleet is returned.
 \item \verb{Retention<-} returns \code{x} with the \code{Retention} slot replaced.
 }
 }
 \description{
-Construct and manipulate a \linkS4class{retention} object defining
+Construct and manipulate a \link[=retention-class]{retention} object defining
 retention-at-age or retention-at-length for a \code{\link[=Fleet]{Fleet()}} object. Retention
-is optional for \linkS4class{fleet} objects. If not specified, the model assumes
+is optional for \link[=fleet-class]{fleet} objects. If not specified, the model assumes
 that all age and length classes are fully retained.
 }
 \details{
-Retention is optional for all \linkS4class{fleet} objects. If not specified, the
+Retention is optional for all \link[=fleet-class]{fleet} objects. If not specified, the
 model assumes that all age and length classes are fully retained (i.e.,
 retention = 1 for all classes).
 \subsection{Populating MeanAtAge and MeanAtLength}{
@@ -110,7 +110,7 @@ Individual slots may be accessed or modified using \code{\link[=Pars]{Pars()}}, 
 
 \subsection{Use in \code{Advice()}}{
 
-When  \linkS4class{retention} objects are used in \code{\link[=Advice]{Advice()}} objects, the
+When  \link[=retention-class]{retention} objects are used in \code{\link[=Advice]{Advice()}} objects, the
 \code{Sim} and \code{Year} dimensions should not be included.
 \itemize{
 \item \code{MeanAtAge} should be either length \code{nAge} or length \code{1} (recycled over age classes).
@@ -136,6 +136,6 @@ r3 <- Retention()
 
 }
 \seealso{
-\linkS4class{retention}, \code{\link[=Fleet]{Fleet()}}, \code{\link[=RetentionModels]{RetentionModels()}},
+\link[=retention-class]{retention}, \code{\link[=Fleet]{Fleet()}}, \code{\link[=RetentionModels]{RetentionModels()}},
 \code{\link[=Selectivity]{Selectivity()}}, \code{\link[=DiscardMortality]{DiscardMortality()}}
 }

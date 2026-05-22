@@ -7,9 +7,9 @@
 Convert(x, ...)
 }
 \arguments{
-\item{x}{A legacy S4 object of class \linkS4class{OM-legacy}, \linkS4class{MOM-legacy},
-\linkS4class{Stock-legacy}, \linkS4class{Fleet-legacy}, \linkS4class{Obs-legacy},
-\linkS4class{Imp-legacy}, or \linkS4class{Data-legacy}.}
+\item{x}{A legacy S4 object of class \link[=OM-legacy-class]{OM-legacy}, \link[=MOM-legacy-class]{MOM-legacy},
+\link[=Stock-legacy-class]{Stock-legacy}, \link[=Fleet-legacy-class]{Fleet-legacy}, \link[=Obs-legacy-class]{Obs-legacy},
+\link[=Imp-legacy-class]{Imp-legacy}, or \link[=Data-legacy-class]{Data-legacy}.}
 
 \item{...}{Additional named arguments passed to the underlying conversion
 function (\code{\link[=ConvertOM]{ConvertOM()}}, \code{\link[=ConvertMOM]{ConvertMOM()}}, \code{\link[=ConvertStock]{ConvertStock()}},
@@ -18,13 +18,13 @@ function (\code{\link[=ConvertOM]{ConvertOM()}}, \code{\link[=ConvertMOM]{Conver
 \value{
 A new S4 object of the corresponding updated class:
 \itemize{
-\item \linkS4class{OM-legacy} → \linkS4class{om}
-\item \linkS4class{MOM-legacy} → \linkS4class{om}
-\item \linkS4class{Stock-legacy} → \linkS4class{stock}
-\item \linkS4class{Fleet-legacy} → \linkS4class{fleet}
-\item \linkS4class{Obs-legacy} → \linkS4class{obs}
-\item \linkS4class{Imp-legacy} → \linkS4class{imp}
-\item \linkS4class{Data-legacy} → \linkS4class{data}
+\item \link[=OM-legacy-class]{OM-legacy} → \link[=om-class]{om}
+\item \link[=MOM-legacy-class]{MOM-legacy} → \link[=om-class]{om}
+\item \link[=Stock-legacy-class]{Stock-legacy} → \link[=stock-class]{stock}
+\item \link[=Fleet-legacy-class]{Fleet-legacy} → \link[=fleet-class]{fleet}
+\item \link[=Obs-legacy-class]{Obs-legacy} → \link[=obs-class]{obs}
+\item \link[=Imp-legacy-class]{Imp-legacy} → \link[=imp-class]{imp}
+\item \link[=Data-legacy-class]{Data-legacy} → \link[=data-class]{data}
 }
 }
 \description{
@@ -33,12 +33,12 @@ representations. Dispatches to the appropriate conversion function based on
 the class of \code{x}.
 }
 \details{
-Not all slots from \linkS4class{Obs-legacy} objects exist in the new \linkS4class{obs}
+Not all slots from \link[=Obs-legacy-class]{Obs-legacy} objects exist in the new \link[=obs-class]{obs}
 objects. Slots without a direct equivalent are silently dropped.
 
 Legacy \code{Data} objects do not contain discard data. It is assumed that
 \code{Data@Cat} represents landings only, with no discards. If \code{Data@Cat}
-represents total removals, the resulting \linkS4class{data} object must be
+represents total removals, the resulting \link[=data-class]{data} object must be
 updated manually after conversion.
 }
 \examples{

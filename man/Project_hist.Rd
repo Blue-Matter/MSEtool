@@ -14,7 +14,7 @@ Project_hist(
 )
 }
 \arguments{
-\item{Hist}{A \linkS4class{hist} object containing the conditioned operating
+\item{Hist}{A \link[=hist-class]{hist} object containing the conditioned operating
 model and historical dynamics, as returned by \code{\link[=Simulate]{Simulate()}}.}
 
 \item{MPs}{Character vector of MP names to project. If \code{NULL} (default),
@@ -34,12 +34,12 @@ are used.}
 \item{Reduce}{Logical. Reserved for future use. Default \code{TRUE}.}
 }
 \value{
-A \linkS4class{mse} object containing projection results for all MPs in
+A \link[=mse-class]{mse} object containing projection results for all MPs in
 \code{MPs}.
 }
 \description{
 Runs the projection loop for one or more management procedures (MPs),
-returning a completed \linkS4class{mse} object with projection results for all
+returning a completed \link[=mse-class]{mse} object with projection results for all
 MPs.
 }
 \keyword{internal}

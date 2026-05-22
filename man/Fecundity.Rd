@@ -33,10 +33,10 @@ Fecundity(
 \item{Misc}{Miscellaneous list.}
 }
 \value{
-A valid \linkS4class{fecundity} object.
+A valid \link[=fecundity-class]{fecundity} object.
 }
 \description{
-Construct a \linkS4class{fecundity} object defining the length-at-age structure
+Construct a \link[=fecundity-class]{fecundity} object defining the length-at-age structure
 associated with a \code{\link[=Stock]{Stock()}}.
 }
 \details{
