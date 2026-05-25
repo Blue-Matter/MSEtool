@@ -10,7 +10,8 @@
 #' @param nSim Integer. Number of simulation replicates.
 #' @param seed Integer. Random seed used for stochastic generation.
 #' @param silent Logical. If `TRUE`, suppress informational messages.
-#'
+#' @param force Logical. If `TRUE`, force re-population even if the object
+#'   digest is unchanged.
 #' @details
 #' `PopulateSRR()` handles population of stock-recruitment parameters. Steps
 #' include:
@@ -45,9 +46,10 @@ PopulateSRR <- function(SRR,
                         Ages = NULL,
                         CurrentYear = NULL,
                         Years = NULL,
-                        nSim = NULL,
+                        nSim = 5,
                         seed = NULL,
-                        silent = FALSE) {
+                        silent = FALSE,
+                        force = FALSE) {
   Ages <- DefaultAges(Ages)
   
   if (is.null(CurrentYear)) 
@@ -80,9 +82,8 @@ PopulateSRR <- function(SRR,
   nHistTS <- length(HistTS)
   nProjTS <- length(ProjTS)
   
-  if (CheckDigest(SRR, argList) | EmptyObject(SRR)) 
+  if ((CheckDigest(SRR, argList) && !force) | EmptyObject(SRR)) 
     return(SRR)
-  
   
   SetSeed(seed)
   
@@ -165,7 +166,7 @@ PopulateSRR <- function(SRR,
     Sim = 1:nrow(SRR@RecDevProj),
     Year = ProjTS
   )
-  SetDigest(SetAgeDimnames(SRR, Ages), argList)
+  SetDigest(SRR, argList)
 }
 
 CheckSRRPars <- function(SRR, name='R0', default=1000) {
