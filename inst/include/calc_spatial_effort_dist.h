@@ -45,26 +45,19 @@ inline void CalcSpatialDistribution(
   }
   
 
-  const int SFA  = nSim * nFleet * nArea;  // total cells per nSim x nFleet x nArea 
-  const int BSFA = nStock * SFA;           // total cells for per-stock 
-
-  static thread_local std::vector<double> B_hat_buf;
-  static thread_local std::vector<double> D0_buf;
-  static thread_local std::vector<double> U_buf;
-  static thread_local std::vector<double> U_tilde_buf;
-  static thread_local std::vector<double> weights_buf;
-  static thread_local std::vector<double> B_stock_buf;
+  const int SFA  = nSim * nFleet * nArea;
+  const int BSFA = nStock * SFA;
   
-  if ((int)B_hat_buf.size()   != SFA)  B_hat_buf.assign(SFA,  0.0);
-  if ((int)D0_buf.size()      != SFA)  D0_buf.assign(SFA,     0.0);
-  if ((int)U_buf.size()       != SFA)  U_buf.assign(SFA,      0.0);
-  if ((int)U_tilde_buf.size() != SFA)  U_tilde_buf.assign(SFA,0.0);
-  if ((int)weights_buf.size() != nArea) weights_buf.assign(nArea, 0.0);
-  if ((int)B_stock_buf.size() != BSFA) B_stock_buf.assign(BSFA, 0.0);
-
+  std::vector<double> B_hat_buf(SFA,  0.0);
+  std::vector<double> D0_buf(SFA,     0.0);
+  std::vector<double> U_buf(SFA,      0.0);
+  std::vector<double> U_tilde_buf(SFA,0.0);
+  std::vector<double> weights_buf(nArea, 0.0);
+  std::vector<double> B_stock_buf(BSFA, 0.0);
+  
   auto sfa_idx = [&](int sim, int fl, int ar) -> int {
     return sim * nFleet * nArea + fl * nArea + ar;
-  }; 
+  };
   auto bst_idx = [&](int st, int sim, int fl, int ar) -> int {
     return st * SFA + sim * nFleet * nArea + fl * nArea + ar;
   };

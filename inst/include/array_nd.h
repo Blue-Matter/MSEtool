@@ -51,7 +51,7 @@ struct ArrayND {
   inline int map0(int i) const { return (dim[0] == 1 ? 0 : i); }
   
   inline int idx(const std::array<int, N>& ind) const {
-    int offset = map0(ind[0]);                  // handles sim broadcast
+    int offset = map0(ind[0]);  
     for (size_t k = 1; k < N; ++k)
       offset += ind[k] * strides[k];
     return offset;
