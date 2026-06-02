@@ -74,13 +74,14 @@ ConvertObs <- function(Obs, silent = FALSE) {
   obs@CPUE@CV   <- Obs@Iobs
   obs@Survey@CV <- Obs@Iobs
   
-  # --- Not yet implemented ---
+
   # Composition slots 
-  # obs@LandingsAtAge@SampleSize <- Obs@CAA_nsamp
-  # obs@LandingsAtAge@ESS        <- Obs@CAA_ESS
-  # obs@LandingsAtSize@SampleSize <- Obs@CAL_nsamp
-  # obs@LandingsAtSize@ESS        <- Obs@CAL_ESS
-  #
+  obs@LandingsAtAge@SampleSize  <- Obs@CAA_nsamp
+  obs@LandingsAtAge@ESS         <- Obs@CAA_ESS
+  obs@LandingsAtSize@SampleSize <- Obs@CAL_nsamp
+  obs@LandingsAtSize@ESS        <- Obs@CAL_ESS
+  
+  
   # Life-history bias CVs 
   # Obs@Linfbiascv, Obs@t0biascv, Obs@Kbiascv, Obs@LenMbiascv, Obs@Mbiascv
   #

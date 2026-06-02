@@ -358,12 +358,11 @@ process_mov <- function(mov, nage = 1, nts = 1) {
 
 OM2Depletion <- function(OM, cpars = list()) {
   Depletion <- Stock2Depletion(OM)
-  if (!length(cpars)) {
+  if (!length(cpars)) 
     return(Depletion)
-  }
-  if (!is.null(cpars$initD)) {
+  
+  if (!is.null(cpars$initD)) 
     Depletion@Initial <- cpars$initD  
-  }
   
   if (!is.null(cpars[["D"]])) {
     Depletion@Final <- NULL # don't use Stock2Depletion if D exists in cpars

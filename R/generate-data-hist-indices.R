@@ -100,7 +100,10 @@ GenHistData_Indices <- function(sim, Data, Hist, HistYears, i, stocks, StockName
         }
       } else if (SelectivityAtAge == 'SBiomass') {
         for (st in seq_along(stocks)) {
-          maturity_at_age <-  Hist@OM@Stock[[stocks[st]]]@Maturity@MeanAtAge[sim,,, drop=FALSE] |>
+          mat <- Hist@OM@Stock[[stocks[st]]]@Maturity@MeanAtAge
+          dd <- dim(mat)
+          mat_x <- min(dd[1], sim)
+          maturity_at_age <-  mat[mat_x,,, drop=FALSE] |>
             ArraySubsetYear(HistYears) |>
             abind::adrop(1) |>
             AddDimension('Area') |>

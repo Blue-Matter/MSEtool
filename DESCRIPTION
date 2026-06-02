@@ -377,6 +377,7 @@ Collate:
     'utils-logs-delete.R'
     'utils-man.R'
     'utils-misc.R'
+    'utils-msy-accessors.R'
     'utils-parallel.R'
     'utils-prep-hist-misc.R'
     'utils-recycle-fleets.R'

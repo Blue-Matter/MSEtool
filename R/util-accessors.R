@@ -191,12 +191,6 @@ Exploitation <- function(x) {
   AssignSlot(x, value, 'Exploitation')
 }
 
-#' @rdname Access
-#' @export
-FMSY <- function(x) {
-  AccessSlot(x, 'FMSY')
-}
-
 
 #' @rdname Access
 #' @export
@@ -303,23 +297,7 @@ Model <- function(x) {
   AccessSlot(x, 'Model')
 }
 
-#' @rdname Access
-#' @export
-MSY <- function(x) {
-  AccessSlot(x, 'MSY')
-}
 
-#' @rdname Access
-#' @export
-MSYDiscards <- function(x) {
-  AccessSlot(x, 'MSYDiscards')
-}
-
-#' @rdname Access
-#' @export
-MSYLandings <- function(x) {
-  AccessSlot(x, 'MSYLandings')
-}
 
 #' @rdname Access
 #' @export

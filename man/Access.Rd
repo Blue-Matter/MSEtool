@@ -28,7 +28,6 @@
 \alias{Error<-}
 \alias{Exploitation}
 \alias{Exploitation<-}
-\alias{FMSY}
 \alias{LandingsAtAge}
 \alias{LandingsAtAge<-}
 \alias{LandingsAtSize}
@@ -46,9 +45,6 @@
 \alias{Misc}
 \alias{Misc<-}
 \alias{Model}
-\alias{MSY}
-\alias{MSYDiscards}
-\alias{MSYLandings}
 \alias{Model<-}
 \alias{Name}
 \alias{Name<-}
@@ -139,8 +135,6 @@ Exploitation(x)
 
 Exploitation(x) <- value
 
-FMSY(x)
-
 LandingsAtAge(x)
 
 LandingsAtAge(x) <- value
@@ -174,12 +168,6 @@ Misc(x)
 Misc(x) <- value
 
 Model(x)
-
-MSY(x)
-
-MSYDiscards(x)
-
-MSYLandings(x)
 
 Model(x) <- value
 
