@@ -9,7 +9,7 @@ PopulateWeight(
   Ages = NULL,
   Length = NULL,
   Years = NULL,
-  nSim = NULL,
+  nSim = 5,
   AWK = FALSE,
   CalcAtLength = FALSE,
   seed = NULL,

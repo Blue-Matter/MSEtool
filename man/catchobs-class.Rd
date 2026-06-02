@@ -3,23 +3,57 @@
 \docType{class}
 \name{catchobs-class}
 \alias{catchobs-class}
-\title{Catch Observation Component}
+\title{The \code{catchobs} S4 Class}
 \description{
-Internal class describing observation error associated with catch data.
+Defines the observation error structure for landed or discarded catch data.
+Used in the \code{Landings} and \code{Discards} slots of an \link[=obs-class]{obs} object.
+Objects are typically created via \code{\link[=CatchObs]{CatchObs()}}, which documents all
+parameters in detail.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{CV}}{Coefficient of variation.}
+\item{\code{CV}}{\code{numeric} or \code{NULL}. Coefficient of variation of catch observation
+error. See \code{\link[=CatchObs]{CatchObs()}}.}
 
-\item{\code{Error}}{Realized observation error.}
+\item{\code{Error}}{\code{numeric} array or \code{NULL}. Realised lognormal observation error
+multipliers (\verb{nSim x nYear}). Populated internally during conditioning or
+simulation; see \code{\link[=CatchObs]{CatchObs()}}.}
 
-\item{\code{Bias}}{Observation bias.}
+\item{\code{Bias}}{\code{numeric} or \code{NULL}. Multiplicative observation bias. See
+\code{\link[=CatchObs]{CatchObs()}}.}
 
-\item{\code{Years}}{Observation years.}
+\item{\code{Years}}{\code{numeric} or \code{NULL}. Calendar years over which the observation
+error is conditioned. See \code{\link[=CatchObs]{CatchObs()}}.}
 
-\item{\code{Ref}}{Reference values.}
+\item{\code{Units}}{\code{character} or \code{NULL}. Units of catch (\code{"Biomass"} or
+\code{"Number"}). See \code{\link[=CatchObs]{CatchObs()}}.}
 
-\item{\code{Misc}}{Miscellaneous additional information.}
+\item{\code{Ref}}{\code{numeric} array or \code{NULL}. Reference catch values, one per
+simulation. See \code{\link[=CatchObs]{CatchObs()}}.}
+
+\item{\code{Misc}}{\code{list}. Miscellaneous additional objects.}
 }}
 
+\seealso{
+\itemize{
+\item \code{\link[=CatchObs]{CatchObs()}} for the constructor and full parameter documentation.
+\item \link[=obs-class]{obs} for the enclosing observation model object.
+}
+
+Other obs:
+\code{\link[=CatchObs]{CatchObs()}},
+\code{\link[=CompObs]{CompObs()}},
+\code{\link[=EffortObs]{EffortObs()}},
+\code{\link[=ExploitationObs]{ExploitationObs()}},
+\code{\link[=IndicesObs]{IndicesObs()}},
+\code{\link[=LifeHistoryObs]{LifeHistoryObs()}},
+\code{\link[=Obs]{Obs()}},
+\code{\link{compobs-class}},
+\code{\link{effortobs-class}},
+\code{\link{exploitationobs-class}},
+\code{\link{indicesobs-class}},
+\code{\link{lifehistoryobs-class}},
+\code{\link{obs-class}}
+}
+\concept{obs}

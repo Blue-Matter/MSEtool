@@ -3,6 +3,7 @@
 \docType{class}
 \name{Obs-legacy-class}
 \alias{Obs-legacy-class}
+\alias{Obs-class}
 \title{Class \code{'Obs'}}
 \description{
 An operating model component that controls the observation model
@@ -253,4 +254,3 @@ showClass('Obs')
 \author{
 T. Carruthers and A. Hordyk
 }
-\keyword{classes}

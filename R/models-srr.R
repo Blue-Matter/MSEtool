@@ -68,7 +68,7 @@
 #'     and invisibly returns the result. If `print = FALSE`, returns a character vector
 #'     or data frame describing the available models.
 #' 
-#' @example man-examples/SRR_Models.R
+#' @example man-examples/models-srr.R
 #' 
 #' @seealso [SRR()]
 #'
@@ -103,8 +103,6 @@ BevertonHolt <- function(S, S0, R0, h) {
   BevertonHolt_cpp(S, S0, R0, h)
 }
 class(BevertonHolt) <- "SRR-Model"
-
-
 
 
 #' @rdname SRRModels

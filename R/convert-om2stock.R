@@ -4,26 +4,31 @@ OM2stock <- function(OM,
                      nSim, 
                      seed = NULL) {
   
-  if (inherits(OM, 'OM')) {
+  if (inherits(OM, 'OM')) 
     cpars <- OM@cpars
-  }
   
   CurrentYear <- YearsList$CurrentYear
-  nYear <- YearsList$nYear
-  pYear <- YearsList$pYear
+  nYear       <- YearsList$nYear
+  pYear       <- YearsList$pYear
+  Seasons     <- YearsList$Seasons
   
-  stock <- Stock2Name(OM)
-  stock@Ages <- Stock2Ages(OM)
-  stock@Years <- c(YearsList$HistTS, YearsList$ProjTS)
-  stock@Seasons <- YearsList$Seasons
-  stock@Length <- OM2Length(OM, cpars = cpars, Years= stock@Years, nSim)
-  stock@Weight <- OM2Weight(OM, cpars = cpars, Years=stock@Years)
-  stock@NaturalMortality <- OM2NaturalMortality(OM, cpars, Years=stock@Years, nSim)
-  stock@Maturity <- OM2Maturity(OM, cpars, Years=stock@Years, nSim)
-  stock@Fecundity <- OM2Fecundity(OM, cpars, Years=stock@Years, nSim)
-  stock@SRR <- OM2SRR(OM, cpars, YearsList=YearsList, nSim)
-  stock@Spatial <- OM2Spatial(OM, cpars)
-  stock@Depletion <- OM2Depletion(OM, cpars)
+  stock                  <- Stock2Name(OM)
+  stock@Ages             <- Stock2Ages(OM, Seasons = Seasons)
+  stock@Years            <- c(YearsList$HistTS, YearsList$ProjTS)
+  stock@Seasons          <- YearsList$Seasons
+  stock@Length           <- OM2Length(OM, cpars = cpars, Years= stock@Years, 
+                                      nSim = nSim, Seasons = Seasons)
+  stock@Weight           <- OM2Weight(OM, cpars = cpars, Years=stock@Years)
+  stock@NaturalMortality <- OM2NaturalMortality(OM, cpars, Years=stock@Years,
+                                                nSim = nSim, Seasons = Seasons)
+  stock@Maturity         <- OM2Maturity(OM, cpars, Years=stock@Years, 
+                                        nSim = nSim, Seasons = Seasons)
+  stock@Fecundity        <- OM2Fecundity(OM, cpars, Years=stock@Years, 
+                                         nSim = nSim, Seasons = Seasons)
+  stock@SRR              <- OM2SRR(OM, cpars, YearsList=YearsList, 
+                                   nSim = nSim, Seasons = Seasons)
+  stock@Spatial          <- OM2Spatial(OM, cpars)
+  stock@Depletion        <- OM2Depletion(OM, cpars)
   
   PopulateStock(Stock = stock, 
                 nYear = nYear,
@@ -53,85 +58,74 @@ GetOMYears <- function(OM, Period = NULL) {
   c(HistYears, ProjYears)
 }
 
-GetStockAges <- function(Stock) {
+GetStockAges <- function(Stock, Seasons = 1) {
   CheckClass(Stock, "Stock", "Stock")
-  0:Stock@maxage
+  (0:Stock@maxage)/Seasons
 }
 
-OM2Length <- function(OM, cpars = list(), Years=NULL, nSim=NULL) {
+OM2Length <- function(OM, cpars = list(), Years=NULL, nSim=NULL, Seasons = 1) {
   Length <- Stock2Length(OM)
-  if (!length(cpars)) {
-    return(Length)
-  }
   
-  if (is.null(Years)) {
+  if (!length(cpars)) 
+    return(Length)
+  
+  if (is.null(Years)) 
     Years <- GetOMYears(OM)
-  } 
-    
+  
   if (is.null(nSim))
     nSim <- OM@nsim
 
   # MeanAtAge
   if (!is.null(cpars$Len_age)) {
-    Length@MeanAtAge <- cpars$Len_age
-    dimnames(Length@MeanAtAge) <- list(
-      Sim = 1:nSim,
-      Age = GetStockAges(OM),
-      Year = Years
-    )
-    Length@MeanAtAge <- ReduceDims(Length@MeanAtAge)
- 
+    Length <- SetSlotDimNames(Length, 'MeanAtAge', cpars$Len_age,
+                              Sims  = seq_len(nSim),
+                              Ages  = GetStockAges(OM, Seasons),
+                              Years = Years)
   }
-
+  
   # CVatAge
   if (!is.null(cpars$LenCV)) {
-    Length@CVatAge <- array(cpars$LenCV, dim = c(length(cpars$LenCV), 1, 1))
-    dimnames(Length@CVatAge) <- list(
-      Sim = 1:nSim,
-      Age = GetStockAges(OM)[1],
-      Year = Years[1]
-    )
-    Length@CVatAge <- ReduceDims(Length@CVatAge)
+    val <- array(cpars$LenCV, dim = c(length(cpars$LenCV), 1, 1))
+    Length <- SetSlotDimNames(Length, 'CVatAge', val,
+                              Sims  = seq_len(nSim),
+                              Ages  = GetStockAges(OM, Seasons),
+                              Years = Years)
   }
 
   # Classes
+  if (!is.null(OM@cpars$CAL_binsmid))
+    Length@Classes <- OM@cpars$CAL_binsmid
 
 
   # Pars
-  if (!is.null(cpars$Linf)) {
+  if (!is.null(cpars$Linf)) 
     Length@Pars$Linf <- cpars$Linf
-  }
-
-  if (!is.null(cpars$K)) {
+  
+  if (!is.null(cpars$K)) 
     Length@Pars$K <- cpars$K
-  }
-
-  if (!is.null(cpars$t0)) {
+  
+  if (!is.null(cpars$t0)) 
     Length@Pars$t0 <- cpars$t0
-  }
-
-  if (!is.null(Length@MeanAtAge)) {
+  
+  if (!is.null(Length@MeanAtAge)) 
     Length@Pars <- list()
     Length@Model <- NULL
-  }
   
   Length
 }
 
 OM2Weight <- function(OM, cpars = list(), Years=NULL) {
   Weight <- Stock2Weight(OM)
-  if (!length(cpars)) {
-    return(Weight)
-  }
-
   
-  if (!is.null(cpars[["a"]])) {
+  if (!length(cpars)) 
+    return(Weight)
+  
+  if (!is.null(cpars[["a"]])) 
     Weight@Pars$alpha <- cpars[["a"]]
-  }
 
-  if (!is.null(cpars[["b"]])) {
+  if (!is.null(cpars[["b"]])) 
     Weight@Pars$beta <- cpars[["b"]]
-  }
+  
   if (!is.null(Weight@MeanAtAge)) {
     Weight@Pars <- list()
     Weight@Model <- NULL
@@ -140,11 +134,11 @@ OM2Weight <- function(OM, cpars = list(), Years=NULL) {
   Weight
 }
 
-OM2NaturalMortality <- function(OM, cpars = list(), Years=NULL, nSim=NULL) {
+OM2NaturalMortality <- function(OM, cpars = list(), Years=NULL, nSim=NULL, Seasons = 1) {
   NaturalMortality <- Stock2NaturalMortality(OM)
-  if (!length(cpars)) {
+  if (!length(cpars)) 
     return(NaturalMortality)
-  }
+  
 
   if (is.null(Years))
     Years <- GetOMYears(OM)
@@ -153,15 +147,10 @@ OM2NaturalMortality <- function(OM, cpars = list(), Years=NULL, nSim=NULL) {
     nSim <- OM@nsim
   
   if (!is.null(cpars$M_ageArray)) {
-    NaturalMortality@MeanAtAge <- array(cpars$M_ageArray,
-      dim = dim(cpars$M_ageArray),
-      dimnames = list(
-        Sim = 1:nSim,
-        Age = GetStockAges(OM),
-        Year = Years
-      )
-    ) |>
-      ReduceDims()
+    NaturalMortality <- SetSlotDimNames(NaturalMortality, 'MeanAtAge', cpars$M_ageArray,
+                              Sims  = seq_len(nSim),
+                              Ages  = GetStockAges(OM, Seasons),
+                              Years = Years)
   }
   if (!is.null(NaturalMortality@MeanAtAge)) {
     NaturalMortality@Pars <- list()
@@ -171,12 +160,12 @@ OM2NaturalMortality <- function(OM, cpars = list(), Years=NULL, nSim=NULL) {
   NaturalMortality
 }
 
-OM2Maturity <- function(OM, cpars = list(), Years=NULL, nSim=NULL) {
+OM2Maturity <- function(OM, cpars = list(), Years=NULL, nSim=NULL, Seasons = 1) {
   Maturity <- Stock2Maturity(OM)
-  if (!length(cpars)) {
-    return(Maturity)
-  }
   
+  if (!length(cpars)) 
+    return(Maturity)
+
   if (is.null(Years))
     Years <- GetOMYears(OM)
   
@@ -184,15 +173,10 @@ OM2Maturity <- function(OM, cpars = list(), Years=NULL, nSim=NULL) {
     nSim <- OM@nsim
   
   if (!is.null(cpars$Mat_age)) {
-    Maturity@MeanAtAge <- array(cpars$Mat_age,
-      dim = dim(cpars$Mat_age),
-      dimnames = list(
-        Sim = 1:nSim,
-        Age = GetStockAges(OM),
-        Year = Years
-      )
-    ) |>
-      ReduceDims()
+    Maturity <- SetSlotDimNames(Maturity, 'MeanAtAge', cpars$Mat_age,
+                                        Sims  = seq_len(nSim),
+                                        Ages  = GetStockAges(OM, Seasons),
+                                        Years = Years)
   }
   if (!is.null(Maturity@MeanAtAge)) {
     Maturity@Pars <- list()
@@ -202,7 +186,7 @@ OM2Maturity <- function(OM, cpars = list(), Years=NULL, nSim=NULL) {
   Maturity
 }
 
-OM2Fecundity <- function(OM, cpars = list(), Years=NULL, nSim=NULL) {
+OM2Fecundity <- function(OM, cpars = list(), Years=NULL, nSim=NULL, Seasons = 1) {
   Fecundity <- Stock2Fecundity(OM)
   
   if (is.null(Years))
@@ -212,15 +196,10 @@ OM2Fecundity <- function(OM, cpars = list(), Years=NULL, nSim=NULL) {
     nSim <- OM@nsim
   
   if (!is.null(cpars$Fec_age)) {
-    Fecundity@MeanAtAge <- array(cpars$Fec_age,
-      dim = dim(cpars$Fec_age),
-      dimnames = list(
-        Sim = 1:nSim,
-        Age = GetStockAges(OM),
-        Year = Years
-      )
-    ) |>
-      ReduceDims()
+    Fecundity <- SetSlotDimNames(Fecundity, 'MeanAtAge', cpars$Fec_age,
+                                Sims  = seq_len(nSim),
+                                Ages  = GetStockAges(OM, Seasons),
+                                Years = Years)
   }
   
   if (!is.null(Fecundity@MeanAtAge)) {
@@ -231,18 +210,20 @@ OM2Fecundity <- function(OM, cpars = list(), Years=NULL, nSim=NULL) {
   Fecundity
 }
 
-OM2SRR <- function(OM, cpars = list(), YearsList=NULL, nSim=NULL) {
+OM2SRR <- function(OM, cpars = list(), YearsList=NULL, nSim=NULL, Seasons = 1) {
   SRR <- Stock2SRR(OM)
-  if (!length(cpars)) {
+  if (!length(cpars)) 
     return(SRR)
-  }
   
   if (is.null(nSim))
     nSim <- OM@nsim
-  
 
   if (!is.null(cpars$hs)) {
-    SRR@Pars$h <- cpars$hs
+    if (SRR@Model == 'Ricker') {
+      SRR@Pars$hR <- cpars$hs
+    } else {
+      SRR@Pars$h <- cpars$hs  
+    }
   }
 
   if (is.null(YearsList)) {
@@ -283,11 +264,10 @@ OM2SRR <- function(OM, cpars = list(), YearsList=NULL, nSim=NULL) {
     nYear <- length(HistYears)
  
     proyears <- length(ProjYears)
-    AgesClasses <- GetStockAges(OM)
-    maxage <- max(AgesClasses)
+    AgesClasses <- GetStockAges(OM, Seasons)
+    n_age <- length(AgesClasses)
     
-
-    init_age_classes <- perr_y[, maxage:1]
+    init_age_classes <- perr_y[, (n_age-1):1]
     SRR@RecDevInit <- array(init_age_classes,
       dim = dim(init_age_classes),
       dimnames = list(
@@ -296,7 +276,7 @@ OM2SRR <- function(OM, cpars = list(), YearsList=NULL, nSim=NULL) {
       )
     ) |> ReduceDims()
 
-    hist_yrs <- perr_y[, (maxage + 1):(nYear + maxage)]
+    hist_yrs <- perr_y[, (n_age):(nYear + n_age-1)]
     SRR@RecDevHist <- array(hist_yrs,
       dim = dim(hist_yrs),
       dimnames = list(
@@ -305,7 +285,7 @@ OM2SRR <- function(OM, cpars = list(), YearsList=NULL, nSim=NULL) {
       )
     ) |> ReduceDims()
 
-    pro_yrs <- perr_y[, (nYear + maxage + 1):(nYear + maxage + proyears)]
+    pro_yrs <- perr_y[, (nYear + n_age):(nYear + n_age - 1 + proyears)]
     SRR@RecDevProj <- array(pro_yrs,
       dim = dim(pro_yrs),
       dimnames = list(

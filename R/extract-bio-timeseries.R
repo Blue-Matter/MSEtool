@@ -30,7 +30,7 @@
 #'   plus `Value`, `Variable`, and `Units`.
 #'
 #' @examples
-#' Hist <- Simulate(ExampleOM)
+#' Hist <- Simulate(SingleStockOM)
 #' MSE <- Project(Hist, 'CurrentEffort')
 #' 
 #' # Raw array

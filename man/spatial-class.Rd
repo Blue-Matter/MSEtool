@@ -3,37 +3,90 @@
 \docType{class}
 \name{spatial-class}
 \alias{spatial-class}
-\title{Spatial Class}
+\title{The \code{spatial} S4 Class}
 \description{
-An S4 class defining the spatial structure and movement dynamics associated
-with a \code{\link[=Stock]{Stock()}} object.
+Defines the spatial structure and movement dynamics for a \link[=stock-class]{stock}
+object. Objects are typically created via \code{\link[=Spatial]{Spatial()}}, which documents all
+parameters and validates inputs. This object is optional — leave it empty
+for non-spatial (single-area) models; see \emph{Default Behaviour} in
+\code{\link[=Spatial]{Spatial()}}.
 }
 \details{
-See \code{\link[=Spatial]{Spatial()}} for details.
+Direct construction via \code{\link[methods:new]{methods::new()}} is not recommended; use \code{\link[=Spatial]{Spatial()}}
+instead, which validates inputs and handles dimension expansion.
+
+For non-spatial (single-area) models, leave the \code{Spatial} slot of
+\link[=stock-class]{stock} empty. \code{\link[=Populate]{Populate()}} creates a default single-area structure
+automatically.
+
+The movement matrix is fitted by numerical optimisation to simultaneously
+reproduce the target \code{UnfishedDist} and \code{ProbStaying}. For multi-area
+models, \code{CVDist} and \code{CVStay} control the relative weight given to each
+target in the objective function.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{UnfishedDist}}{Numeric or numeric array giving the relative unfished
-biomass distribution over areas.}
+\item{\code{UnfishedDist}}{\code{numeric}, \code{array}, or \code{NULL}. Relative unfished biomass
+distribution across areas. After \code{\link[=Populate]{Populate()}}, a named array with
+dimensions \verb{Sim × Area × Age × Year}. For two-area models, specifies the
+fraction in Area 1; the Area 2 fraction is derived as \code{1 - UnfishedDist}.
+For multi-area models, values must sum to 1 across areas. See \code{\link[=Spatial]{Spatial()}}
+for accepted input formats.}
 
-\item{\code{ProbStaying}}{Numeric or numeric array giving the probability of
-remaining in an area.}
+\item{\code{ProbStaying}}{\code{numeric} or \code{array}. Probability of remaining in an area
+between time steps. After \code{\link[=Populate]{Populate()}}, a named array with dimensions
+\verb{Sim × Area × Age × Year}. For two-area models, specifies Area 1 only;
+the Area 2 value is solved internally. See \code{\link[=Spatial]{Spatial()}} for accepted input
+formats.}
 
-\item{\code{RelativeSize}}{Numeric or numeric array giving relative area sizes.}
+\item{\code{RelativeSize}}{\code{numeric}, \code{array}, or \code{character(1)}. Relative size of
+each area, used to compute biomass density. After \code{\link[=Populate]{Populate()}}, a named
+\verb{Sim × Area} array. The special value \code{"EqualDensity"} sets
+\code{RelativeSize} equal to the mean \code{UnfishedDist} across ages and years,
+producing constant density across areas. When \code{NULL}, all areas are
+assumed equal in size (\code{1/nArea} each).}
 
-\item{\code{Movement}}{Numeric array giving movement probabilities among areas.}
+\item{\code{Movement}}{\code{array} or \code{NULL}. Movement probability matrix with named
+dimensions \verb{Sim × FromArea × ToArea × Age × Year}. Row \verb{[i, ]} gives the
+probabilities of moving from area \code{i} to each other area; rows sum to 1.
+Populated automatically during \code{\link[=Populate]{Populate()}} from \code{UnfishedDist},
+\code{ProbStaying}, and optionally \code{FracOther}. May also be supplied directly,
+in which case the asymptotic unfished distribution is derived from
+\code{Movement} and assigned to \code{UnfishedDist}.}
 
-\item{\code{FracOther}}{Numeric array defining relative movement among areas when
-more than two areas are present.}
+\item{\code{FracOther}}{\code{array} or \code{NULL}. Required for models with more than two
+areas. Named array with dimensions \verb{Sim × FromArea × ToArea × Age × Year}. Diagonal elements must be \code{NA} (probability of staying is taken
+from \code{ProbStaying}). Off-diagonal element \verb{[i, j]} gives the relative
+probability of moving from area \code{i} to area \code{j}. Used as a penalty-weight
+matrix during movement optimisation.}
 
-\item{\code{Arrangement}}{Numeric matrix defining the spatial layout of areas for
-plotting purposes.}
+\item{\code{Arrangement}}{\code{array} or \code{NULL}. Spatial layout of areas for plotting
+purposes. Reserved for future use; currently stored but not applied.}
 
-\item{\code{CVDist}}{Logit-scale CV penalty applied to \code{UnfishedDist}.}
+\item{\code{CVDist}}{\code{numeric(1)}. Standard deviation of the log-scale penalty on
+the difference between the optimised asymptotic distribution and the
+target \code{UnfishedDist} during multi-area movement optimisation. Larger
+values allow the fitted movement matrix to deviate more from the target
+distribution. Has no effect for two-area models. Default \code{0.1}.}
 
-\item{\code{CVStay}}{Logit-scale CV penalty applied to \code{ProbStaying}.}
+\item{\code{CVStay}}{\code{numeric(1)}. Standard deviation of the logit-scale penalty on
+the difference between the optimised diagonal (staying probability) and
+the target \code{ProbStaying} during multi-area movement optimisation. Larger
+values allow more deviation from the target staying probability. Has no
+effect for two-area models. Default \code{1}.}
 
-\item{\code{Misc}}{Miscellaneous list for user-defined information.}
+\item{\code{Misc}}{\code{list}. Used internally.}
 }}
 
+\seealso{
+\itemize{
+\item \code{\link[=Spatial]{Spatial()}} for the constructor and accessor functions.
+\item \code{\link[=Populate]{Populate()}} for array population and movement matrix fitting.
+\item \code{\link[=Stock]{Stock()}} for the enclosing stock constructor.
+}
+
+Other spatial:
+\code{\link[=Spatial]{Spatial()}}
+}
+\concept{spatial}

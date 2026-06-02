@@ -1,0 +1,45 @@
+#' Logit and Inverse Logit (Sigmoid) Functions
+#'
+#' `logit()` transforms a probability to the log-odds scale. `ilogit()` is its
+#' inverse — the sigmoid function — mapping any real number back to \[0, 1\].
+#'
+#' @param p A numeric vector of probabilities. Values must be in the open
+#'   interval (0, 1); `NaN` is returned for values outside this range.
+#' @param x A numeric vector of real-valued log-odds.
+#'
+#' @return
+#' - `logit(p)` returns a numeric vector of log-odds in (-Inf, Inf).
+#' - `ilogit(x)` returns a numeric vector of probabilities in (0, 1).
+#'
+#' @details
+#' The two functions are mutual inverses:
+#'
+#' \deqn{\text{logit}(p) = \log\!\left(\frac{p}{1-p}\right)}
+#' \deqn{\text{ilogit}(x) = \frac{1}{1 + e^{-x}}}
+#'
+#' so that `ilogit(logit(p)) == p` and `logit(ilogit(x)) == x` (up to
+#' floating-point precision).
+#'
+#' @examples
+#' logit(0.5)   # 0
+#' logit(0.9)   # ~2.197
+#'
+#' ilogit(0)    # 0.5
+#' ilogit(2)    # ~0.880
+#'
+#' # Round-trip
+#' p <- c(0.1, 0.5, 0.9)
+#' all.equal(p, ilogit(logit(p)))  # TRUE
+#'
+#' @name logit
+#' @aliases ilogit
+#' @export 
+logit <- function(p) {
+  log(p / (1 - p))
+}
+
+#' @rdname logit
+#' @export 
+ilogit <- function(x) {
+  1 / (1 + exp(-x))
+}

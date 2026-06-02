@@ -10,7 +10,7 @@ PopulateMaturity(
   Length = NULL,
   Weight = NULL,
   Years = NULL,
-  nSim = NULL,
+  nSim = 5,
   seed = NULL,
   silent = FALSE,
   CalcAtLength = FALSE,

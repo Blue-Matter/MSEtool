@@ -18,7 +18,7 @@ Fleet(
   DiscardMortality = new("discardmortality"),
   Closure = array(),
   WeightFleet = array(),
-  BioEconomic = new("bioeconomic"),
+  Bioeconomic = new("bioeconomic"),
   Dynamics = list(),
   Misc = list()
 )
@@ -34,34 +34,52 @@ WeightFleet(x) <- value
 Fleet(x) <- value
 }
 \arguments{
-\item{Name}{Character. Fleet name, or an \link[=om-class]{om} object for pass-through
-access (see \code{Details}).}
+\item{Name}{Character or \code{NULL}. Fleet name, or an \link[=om-class]{om} object for
+pass-through access (see Details).}
 
-\item{Effort}{An \link[=effort-class]{effort} object. Default is an empty \link[=effort-class]{effort}.}
+\item{Effort}{An \link[=effort-class]{effort} object defining historical fishing effort,
+spatial distribution, and targeting. See \code{\link[=Effort]{Effort()}} for full
+documentation. Default is an empty \link[=effort-class]{effort}. When \code{Name} is an
+\link[=om-class]{om} object, a numeric value here indexes the stock within the OM
+(see Details).}
 
-\item{Catchability}{A \link[=catchability-class]{catchability} object. Default is an empty
-\link[=catchability-class]{catchability}. When \code{Name} is an \link[=om-class]{om} object and \code{Effort} is
-numeric, a numeric value here indexes the fleet within the stock (see
-Details).}
+\item{Catchability}{A \link[=catchability-class]{catchability} object defining gear efficiency
+and optional projected-year stochasticity or trends. See \code{\link[=Catchability]{Catchability()}}
+for full documentation. Default is an empty \link[=catchability-class]{catchability}. When
+\code{Name} is an \link[=om-class]{om} object and \code{Effort} is numeric, a numeric value
+here further indexes the fleet within the stock (see Details).}
 
-\item{Selectivity}{A \link[=selectivity-class]{selectivity} object. Selectivity is required
-for all fleets. Default is an empty \link[=selectivity-class]{selectivity}.}
+\item{Selectivity}{A \link[=selectivity-class]{selectivity} object defining
+selectivity-at-age, -at-length, or -at-weight. Required for all fleets.
+See \code{\link[=Selectivity]{Selectivity()}} for full documentation. Default is an empty
+\link[=selectivity-class]{selectivity}.}
 
-\item{Retention}{A \link[=retention-class]{retention} object. Optional — if not specified,
-all age and length classes are assumed fully retained. Default is an empty
+\item{Retention}{A \link[=retention-class]{retention} object defining retention-at-age,
+-at-length, or -at-weight. Optional. If not specified, all age and length
+classes are assumed fully retained during \code{\link[=PopulateFleet]{PopulateFleet()}}. See
+\code{\link[=Retention]{Retention()}} for full documentation. Default is an empty
 \link[=retention-class]{retention}.}
 
-\item{DiscardMortality}{A \link[=discardmortality-class]{discardmortality} object. Default is an
-empty \link[=discardmortality-class]{discardmortality}.}
+\item{DiscardMortality}{A \link[=discardmortality-class]{discardmortality} object defining the
+proportion of discarded catch that dies. Optional. If not specified,
+discard mortality is set to 0 (all discards survive) during
+\code{\link[=PopulateFleet]{PopulateFleet()}}. See \code{\link[=DiscardMortality]{DiscardMortality()}} for full documentation.
+Default is an empty \link[=discardmortality-class]{discardmortality}.}
 
-\item{Closure}{Array. Spatio-temporal closure schedule. Default is an empty
-array.}
+\item{Closure}{Numeric array or \code{NULL}. Spatio-temporal closure schedule
+with dimensions \verb{Sim x Year x Area}. Values of 1 indicate an open area;
+0 indicates a closed area. The \code{Sim} and \code{Year} dimensions may be length
+1 (replicated internally). Default is an empty array; if not specified,
+\code{\link[=PopulateClosure]{PopulateClosure()}} sets all areas to open (1) across all simulations and
+years.}
 
-\item{WeightFleet}{Array. Fleet-specific weight-at-age. If not specified,
-the stock-level weight-at-age is used. Default is an empty array.}
+\item{WeightFleet}{Numeric array or \code{NA}. Fleet-specific weight-at-age
+(\verb{Sim x Age x Year}). Used in fleet-level biomass calculations. If \code{NA}
+(default), \code{\link[=PopulateFleet]{PopulateFleet()}} sets \code{WeightFleet} equal to the stock
+weight-at-age array.}
 
-\item{BioEconomic}{A \link[=bioeconomic-class]{bioeconomic} object. Not currently used. Default
-is an empty \link[=bioeconomic-class]{bioeconomic}.}
+\item{Bioeconomic}{A \link[=bioeconomic-class]{bioeconomic} object. Not currently used.
+Default is an empty \link[=bioeconomic-class]{bioeconomic}.}
 
 \item{Dynamics}{List. Reserved for future use for fleet dynamics model
 parameters. Default \code{list()}.}
@@ -75,14 +93,13 @@ for \verb{Fleet<-}.}
 }
 \value{
 \itemize{
-\item \code{Fleet()} returns a \link[=fleet-class]{fleet} object, or if \code{Name} is an \link[=om-class]{om}
+\item \code{Fleet()} returns a \link[=fleet-class]{fleet} object. If \code{Name} is an \link[=om-class]{om}
 object, returns the fleet list or a specific fleet from the OM.
 \item \verb{Fleet<-} returns the \link[=om-class]{om} object \code{x} with the \code{Fleet} slot
 updated.
-\item \code{Closure()}, \code{WeightFleet()} return the corresponding slot from the
-\link[=fleet-class]{fleet} object.
-\item Their replacement forms return the object with the corresponding slot
-updated.
+\item \code{Closure()} and \code{WeightFleet()} return the corresponding slot from the
+\link[=fleet-class]{fleet} object \code{x}.
+\item Their replacement forms return \code{x} with the corresponding slot updated.
 }
 }
 \description{
@@ -91,7 +108,22 @@ characteristics of a fleet for a stock in an operating model.
 }
 \details{
 A \link[=fleet-class]{fleet} object describes the fishing characteristics of a fleet for
-a particular stock in an operating model.
+a particular stock in an operating model, including effort dynamics,
+catchability, selectivity, retention, discard mortality, and spatial
+closures.
+\subsection{Required and Optional Components}{
+
+\code{\link[=Selectivity]{Selectivity()}} and \code{\link[=Effort]{Effort()}} are required for all fleets. All other
+components are optional and will use default values if not specified:
+\itemize{
+\item \code{\link[=Catchability]{Catchability()}}: defaults to efficiency = 1 across all years.
+\item \code{\link[=Retention]{Retention()}}: defaults to full retention for all age and length classes.
+\item \code{\link[=DiscardMortality]{DiscardMortality()}}: defaults to 0 (all discards survive).
+\item \code{Closure}: defaults to 1 (all areas open) across all simulations and years.
+\item \code{WeightFleet}: defaults to the stock weight-at-age array.
+}
+}
+
 \subsection{Pass-Through Access from an OM}{
 
 When \code{Name} is an \link[=om-class]{om} object, \code{Fleet()} acts as an accessor rather
@@ -99,43 +131,68 @@ than a constructor:
 \itemize{
 \item \code{Fleet(om)} returns the full fleet list (\code{om@Fleet}).
 \item \code{Fleet(om, st)} returns all fleets for stock index \code{st}
-(\code{om@Fleet[[st]]}).
+(\code{om@Fleet[[st]]}), where \code{st} is passed via the \code{Effort} argument.
 \item \code{Fleet(om, st, fl)} returns fleet \code{fl} for stock \code{st}
-(\code{om@Fleet[[st]][[fl]]}).
+(\code{om@Fleet[[st]][[fl]]}), where \code{fl} is passed via the \code{Catchability}
+argument.
 }
-
-where \code{st} and \code{fl} are passed via the \code{Effort} and \code{Catchability}
-arguments respectively.
 }
 
 \subsection{Assigning Fleets to an OM}{
 
-A \link[=fleet-class]{fleet} object or list of \link[=fleet-class]{fleet} objects can be assigned to
-an \link[=om-class]{om} object with \code{Fleet(om) <- MyFleet}. Stock objects must be
-added to the OM before fleets. If a single \link[=fleet-class]{fleet} object is
-assigned, it is applied to all stocks using the fleet name. If a list is
-assigned, it must be structured as a stock-indexed list of fleet lists.
+\code{\link[=Stock]{Stock()}} objects must be added to the OM before fleets. A single
+\link[=fleet-class]{fleet} object assigned with \code{Fleet(om) <- MyFleet} is applied to all
+stocks using the fleet name. A list must be structured as a stock-indexed
+list of fleet lists.
 }
 
-\subsection{Required Components}{
+\subsection{Bookkeeping Slots}{
 
-\code{\link[=Selectivity]{Selectivity()}} and \code{\link[=Effort]{Effort()}} are required for all fleets. All other components are
-optional and will use default (empty) values if not specified.
+The slots \code{nYear}, \code{pYear}, \code{nSim}, \code{CurrentYear}, \code{Years}, and \code{Seasons}
+are inherited from the paired \link[=stock-class]{stock} object automatically when
+\code{\link[=PopulateFleet]{PopulateFleet()}} is called and do not need to be set manually.
+}
 
-Individual slots may be accessed or modified using \code{\link[=Effort]{Effort()}}, \code{\link[=Catchability]{Catchability()}},
-\code{\link[=Selectivity]{Selectivity()}}, \code{\link[=Retention]{Retention()}}, \code{\link[=DiscardMortality]{DiscardMortality()}}, \code{\link[=Closure]{Closure()}},
-\code{\link[=WeightFleet]{WeightFleet()}}, and \code{\link[=Bioeconomic]{Bioeconomic()}}.
+\subsection{Closure Array}{
 
-See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more details.
+\code{Closure} has dimensions \verb{Sim x Year x Area}. The \code{Sim} and \code{Year}
+dimensions may be length 1 (replicated internally by \code{\link[=PopulateClosure]{PopulateClosure()}}).
+If the array is empty or \code{NULL}, all areas are set to open (1) across all
+simulations and years. Dimension names for \code{Sim}, \code{Year}, and \code{Area} are
+added automatically if missing.
+
+Individual slots may be accessed or modified using \code{\link[=Effort]{Effort()}},
+\code{\link[=Catchability]{Catchability()}}, \code{\link[=Selectivity]{Selectivity()}}, \code{\link[=Retention]{Retention()}}, \code{\link[=DiscardMortality]{DiscardMortality()}},
+\code{\link[=Closure]{Closure()}}, \code{\link[=WeightFleet]{WeightFleet()}}, and \code{\link[=Bioeconomic]{Bioeconomic()}}.
 }
 }
 \examples{
-f <- Fleet(Name = "Trawl")
-Selectivity(f)
-Effort(f)
+# See man-examples/class-Fleet.R
 
 }
 \seealso{
-\link[=fleet-class]{fleet}, \code{\link[=OM]{OM()}}, \code{\link[=Effort]{Effort()}}, \code{\link[=Catchability]{Catchability()}},
-\code{\link[=Selectivity]{Selectivity()}}, \code{\link[=Retention]{Retention()}}, \code{\link[=DiscardMortality]{DiscardMortality()}}, \code{\link[=Bioeconomic]{Bioeconomic()}}
+\itemize{
+\item \link[=fleet-class]{fleet} for the class definition and slot-level documentation.
+\item \code{\link[=OM]{OM()}} for the operating model constructor.
+\item \code{\link[=Effort]{Effort()}}, \code{\link[=Catchability]{Catchability()}}, \code{\link[=Selectivity]{Selectivity()}}, \code{\link[=Retention]{Retention()}},
+\code{\link[=DiscardMortality]{DiscardMortality()}} for sub-object constructors.
+\item \code{\link[=PopulateFleet]{PopulateFleet()}} for how fleet components are expanded across
+simulations and years.
 }
+
+Other fleet:
+\code{\link[=Bioeconomic]{Bioeconomic()}},
+\code{\link[=Catchability]{Catchability()}},
+\code{\link[=DiscardMortality]{DiscardMortality()}},
+\code{\link[=Effort]{Effort()}},
+\code{\link[=Retention]{Retention()}},
+\code{\link[=Selectivity]{Selectivity()}},
+\code{\link{bioeconomic-class}},
+\code{\link{catchability-class}},
+\code{\link{discardmortality-class}},
+\code{\link{effort-class}},
+\code{\link{fleet-class}},
+\code{\link{retention-class}},
+\code{\link{selectivity-class}}
+}
+\concept{fleet}

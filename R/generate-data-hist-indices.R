@@ -88,9 +88,9 @@ GenHistData_Indices <- function(sim, Data, Hist, HistYears, i, stocks, StockName
     if (is.character(SelectivityAtAge)) {
       if (SelectivityAtAge == 'Biomass') {
         for (st in seq_along(stocks)) {
-          AgeClasses <- Hist@OM@Stock[[st]]@Ages@Classes
+          AgeClasses <- Hist@OM@Stock[[stocks[st]]]@Ages@Classes
           
-          SelectivityAtAgeList[[st]] <- array(1, c(length(AgeClasses), 1,1),
+          SelectivityAtAgeList[[st]] <- array(1, c(length(AgeClasses), 1, nArea),
                                               dimnames = list(
                                                 Age = AgeClasses,
                                                 Year = HistYears[1],

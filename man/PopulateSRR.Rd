@@ -9,9 +9,10 @@ PopulateSRR(
   Ages = NULL,
   CurrentYear = NULL,
   Years = NULL,
-  nSim = NULL,
+  nSim = 5,
   seed = NULL,
-  silent = FALSE
+  silent = FALSE,
+  force = FALSE
 )
 }
 \arguments{
@@ -28,6 +29,9 @@ PopulateSRR(
 \item{seed}{Integer. Random seed used for stochastic generation.}
 
 \item{silent}{Logical. If \code{TRUE}, suppress informational messages.}
+
+\item{force}{Logical. If \code{TRUE}, force re-population even if the object
+digest is unchanged.}
 }
 \value{
 A populated \code{\link[=SRR]{SRR()}} object.

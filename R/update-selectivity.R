@@ -41,9 +41,9 @@ Update_Selectivity <- function(Proj,
   for (st in seq_len(nStock)) {
     for (fl in seq_len(nFleet)) {
       target <- slot(Proj@OM@Fleet[[st]][[fl]], type)
-      target@MeanAtAge    <- Extend(target@MeanAtAge,    nSim = nSim, NULL, FutureYears)
-      target@MeanAtLength <- Extend(target@MeanAtLength, nSim = nSim, NULL, FutureYears)
-      target@MeanAtWeight <- Extend(target@MeanAtWeight, nSim = nSim, NULL, FutureYears)
+      target@MeanAtAge    <- Extend(target@MeanAtAge,    nSim = nSim, Years = FutureYears)
+      target@MeanAtLength <- Extend(target@MeanAtLength, nSim = nSim, Years = FutureYears)
+      target@MeanAtWeight <- Extend(target@MeanAtWeight, nSim = nSim, Years = FutureYears)
       slot(Proj@OM@Fleet[[st]][[fl]], type) <- target
     }
   }

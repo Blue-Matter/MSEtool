@@ -201,4 +201,3 @@ taken to define the stock object. Single value. Character string.}
 \author{
 T. Carruthers and A. Hordyk
 }
-\keyword{classes}

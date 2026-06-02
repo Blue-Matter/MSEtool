@@ -3,23 +3,54 @@
 \docType{class}
 \name{effortobs-class}
 \alias{effortobs-class}
-\title{Effort Observation Component}
+\title{The \code{effortobs} S4 Class}
 \description{
-Internal class describing observation error associated with effort data.
+Defines the observation error structure for fishing effort data. Used in the
+\code{Effort} slot of an \link[=obs-class]{obs} object. Objects are typically created via
+\code{\link[=EffortObs]{EffortObs()}}, which documents all parameters in detail.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{CV}}{Coefficient of variation.}
+\item{\code{CV}}{\code{numeric} or \code{NULL}. Coefficient of variation of effort observation
+error. See \code{\link[=EffortObs]{EffortObs()}}.}
 
-\item{\code{Error}}{Realized observation error.}
+\item{\code{Error}}{\code{numeric} array or \code{NULL}. Realised lognormal observation error
+multipliers (\verb{nSim x nYear}). Populated internally during simulation;
+see \code{\link[=EffortObs]{EffortObs()}}.}
 
-\item{\code{Bias}}{Observation bias.}
+\item{\code{Bias}}{\code{numeric} or \code{NULL}. Multiplicative observation bias. See
+\code{\link[=EffortObs]{EffortObs()}}.}
 
-\item{\code{Years}}{Observation years.}
+\item{\code{Years}}{\code{numeric} or \code{NULL}. Calendar years over which the observation
+error applies. See \code{\link[=EffortObs]{EffortObs()}}.}
 
-\item{\code{Ref}}{Reference values.}
+\item{\code{Units}}{\code{character} or \code{NULL}. Units of fishing effort
+(e.g., \code{"hours"}, \code{"trips"}). See \code{\link[=EffortObs]{EffortObs()}}.}
 
-\item{\code{Misc}}{Miscellaneous additional information.}
+\item{\code{Ref}}{\code{numeric} array or \code{NULL}. Reference effort values, one per
+simulation. See \code{\link[=EffortObs]{EffortObs()}}.}
+
+\item{\code{Misc}}{\code{list}. Miscellaneous additional objects.}
 }}
 
+\seealso{
+\code{\link[=EffortObs]{EffortObs()}} for the constructor and full parameter documentation.
+\link[=obs-class]{obs} for the enclosing observation model object.
+
+Other obs:
+\code{\link[=CatchObs]{CatchObs()}},
+\code{\link[=CompObs]{CompObs()}},
+\code{\link[=EffortObs]{EffortObs()}},
+\code{\link[=ExploitationObs]{ExploitationObs()}},
+\code{\link[=IndicesObs]{IndicesObs()}},
+\code{\link[=LifeHistoryObs]{LifeHistoryObs()}},
+\code{\link[=Obs]{Obs()}},
+\code{\link{catchobs-class}},
+\code{\link{compobs-class}},
+\code{\link{exploitationobs-class}},
+\code{\link{indicesobs-class}},
+\code{\link{lifehistoryobs-class}},
+\code{\link{obs-class}}
+}
+\concept{obs}

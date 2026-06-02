@@ -2,12 +2,14 @@
 % Please edit documentation in R/convert-obs.R
 \name{ConvertObs}
 \alias{ConvertObs}
-\title{Convert a Legacy Obs Object to a New obs Class}
+\title{Convert a Legacy Obs Object to the Current \code{obs} Class}
 \usage{
 ConvertObs(Obs, silent = FALSE)
 }
 \arguments{
-\item{Obs}{An \link[=Obs-legacy-class]{Obs-legacy} object to convert.}
+\item{Obs}{An \link[=Obs-legacy-class]{Obs-legacy} object to convert. An \link[=om-class]{om} object
+with a legacy \code{Obs} slot is also accepted, in which case the \code{Obs} slot
+is extracted and converted.}
 
 \item{silent}{Logical. If \code{TRUE}, suppresses progress messages. Default
 \code{FALSE}.}
@@ -17,29 +19,50 @@ An \link[=obs-class]{obs} object.
 }
 \description{
 Converts a legacy \link[=Obs-legacy-class]{Obs-legacy} object to the current \link[=obs-class]{obs} by
-mapping observation error parameters to their corresponding new S4 slots.
+mapping observation error parameters to their corresponding sub-object slots.
 }
 \details{
-Not all slots from \link[=Obs-legacy-class]{Obs-legacy} are represented in \link[=obs-class]{obs}. The
-following legacy slots are not currently converted and are silently dropped:
+\subsection{Slot Mapping}{
+
+The following legacy slots are mapped to their current equivalents:\tabular{ll}{
+   Legacy slot \tab New slot \cr
+   \code{Eobs} \tab \code{Effort@CV} \cr
+   \code{Ebiascv} \tab \code{Effort@Bias} \cr
+   \code{Cobs} \tab \code{Landings@CV} and \code{Discards@CV} \cr
+   \code{Cbiascv} \tab \code{Landings@Bias} and \code{Discards@Bias} \cr
+   \code{Iobs} \tab \code{CPUE@CV} and \code{Survey@CV} \cr
+}
+
+
+Note that \code{Discards@CV} and \code{Discards@Bias} are set to the same values as
+\code{Landings} (\code{Cobs} and \code{Cbiascv}) because legacy objects do not distinguish
+between landings and discards observation error.
+}
+
+\subsection{Slots Not Yet Converted}{
+
+The following legacy slots do not have a corresponding slot in the current
+\link[=obs-class]{obs} and are silently dropped. They will be mapped once the
+\link[=lifehistoryobs-class]{lifehistoryobs} and \link[=exploitationobs-class]{exploitationobs} placeholders are fully
+implemented:
 \itemize{
-\item Life history bias CVs: \code{Linfbiascv}, \code{t0biascv}, \code{Kbiascv},
+\item Life-history bias CVs: \code{Linfbiascv}, \code{t0biascv}, \code{Kbiascv},
 \code{LenMbiascv}, \code{Mbiascv}
 \item Selectivity bias CVs: \code{LFCbiascv}, \code{LFSbiascv}
 \item Reference point bias CVs: \code{FMSY_Mbiascv}, \code{BMSY_B0biascv}
+\item Composition data: \code{CAA_nsamp}, \code{CAA_ESS}, \code{CAL_nsamp}, \code{CAL_ESS}
+(mapped to \code{LandingsAtAge} and \code{LandingsAtSize} once implemented)
 }
-
-Note that \code{Discards@CV} and \code{Discards@Bias} are set to the same values as
-\code{Landings} (\code{Cobs} and \code{Cbiascv}) as legacy objects do not distinguish
-between landings and discards observation error.
+}
 }
 \examples{
 \dontrun{
-Obslegacy <- readRDS("MyLegacyObs.rds")
-obs_new <- ConvertObs(Obslegacy)
+obs_legacy <- readRDS("MyLegacyObs.rds")
+obs_new <- ConvertObs(obs_legacy)
 }
 
 }
 \seealso{
-\code{\link[=Convert]{Convert()}}, \code{\link[=ConvertOM]{ConvertOM()}}, \code{\link[=ConvertMOM]{ConvertMOM()}}, \code{\link[=ConvertImp]{ConvertImp()}}
+\code{\link[=Convert]{Convert()}}, \code{\link[=ConvertOM]{ConvertOM()}}, \code{\link[=ConvertMOM]{ConvertMOM()}}, \code{\link[=ConvertImp]{ConvertImp()}} for
+related legacy conversion functions.
 }

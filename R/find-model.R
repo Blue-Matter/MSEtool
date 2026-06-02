@@ -10,7 +10,7 @@
 #' @keywords internal
 FindModels <- function(ModelClass) {
   objects_name <- ls.str("package:MSEtool", mode = "function")
-  objects <- lapply(objects_name, get, envir=rlang::ns_env('MSEtool'))
+  objects <- lapply(objects_name, get, envir=asNamespace('MSEtool'))
   objects_class <- lapply(objects, class)
   objects_class <- unlist(lapply(objects_class, '[[', 1))
   ind <- which(objects_class%in%ModelClass)
@@ -116,8 +116,10 @@ CheckPars <- function(Pars) {
 #' supply a custom function to `Model`.
 #'
 #' @param object An S4 object with slots `Model` and `Pars`.
-#'
+#' 
+#' @importFrom rlang caller_call
 #' @return Does not return. Always throws an error via [cli::cli_abort()].
+#' 
 #' @keywords internal
 CheckModel <- function(object) {
   if (inherits(object, "srr")) {

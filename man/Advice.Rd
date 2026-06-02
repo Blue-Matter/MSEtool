@@ -6,9 +6,10 @@
 \usage{
 Advice(
   TAC = NULL,
-  TACType = c("Removals", "Landings"),
+  TACType = "Removals",
+  TACUnit = "Biomass",
   Effort = NULL,
-  EffType = c("Rel", "Abs"),
+  EffType = "Rel",
   Closure = NULL,
   Selectivity = NULL,
   Retention = NULL,
@@ -20,13 +21,20 @@ Advice(
 \arguments{
 \item{TAC}{Numeric vector or matrix specifying total allowable catch. See \code{Details}}
 
-\item{TACType}{Character. Does the TAC refer to \code{"Removals"} (default) or \code{"Landings"}.}
+\item{TACType}{Character. Does the TAC refer to \code{"Removals"} (default) or
+\code{"Landings"}. Either length 1 (applied to all fleets) or a character
+vector of length \code{nFleet}.}
+
+\item{TACUnit}{Character. Units in which the TAC is expressed: \code{"Biomass"}
+(default) or \code{"Number"}. Either length 1 (applied to all fleets) or a
+character vector of length \code{nFleet}.}
 
 \item{Effort}{Numeric vector or matrix specifying relative or absolute fishing effort. See \code{Details}}
 
-\item{EffType}{Character string specifying effort interpretation:
-\code{"Rel"} for relative to the last historical year, or \code{"Abs"} for absolute
-effort units (in units of \code{\link[=Effort]{Effort()}}). Default is \code{"Rel"}.}
+\item{EffType}{Character. Effort interpretation: \code{"Rel"} for relative to
+the last historical year, or \code{"Abs"} for absolute effort units (in units
+of \code{\link[=Effort]{Effort()}}). Either length 1 (applied to all fleets) or a character
+vector of length \code{nFleet}. Default is \code{"Rel"}.}
 
 \item{Closure}{Numeric vector or array specifying spatial closures. See \code{Details}}
 
@@ -74,31 +82,35 @@ There are several options for populating the slots in an \code{Advice} object:
 
 \subsection{TAC}{
 
-Total allowable catch units of \code{Biomass}.
+Total allowable catch in units of \code{"Biomass"} (default) or \code{"Number"}
+(see \code{TACUnit}). \code{TACType} and \code{TACUnit} are each either length 1
+(applied uniformly across all fleets) or a character vector of length
+\code{nFleet} specifying per-fleet values.
 \itemize{
 \item single numeric value: global TAC distributed across
 the stocks and fleets in the \code{\link[=Data]{Data()}} object according to \code{Allocation(OM)}.
 \item numeric vector length \code{nFleet}: fleet-specific TAC.
-\item numeric matrix: Fleet- and Area-specific TAC. Must have \code{nFleet}
-rows and \code{nArea} columns.
 }
 }
 
 \subsection{Effort}{
 
 Either in absolute units corresponding with fleet-specific effort
-(\code{EffType}=\code{"Abs"}), or relative to the effort in the last historical year
-(\code{EffType}=\code{"Rel"}; default).
+(\code{EffType = "Abs"}), or relative to the effort in the last historical year
+(\code{EffType = "Rel"}; default). \code{EffType} is either length 1 (applied
+uniformly across all fleets) or a character vector of length \code{nFleet}
+specifying per-fleet values.
 
-Unless \code{Effort} is specified by \code{Area}, the spatial distribution of fishing
-effort is calculated internally (see \href{https://docs.openmse.com/}{Technical Manual})
+Note that when \code{Effort} is supplied as a matrix (fleet × area), it is
+always treated as absolute regardless of \code{EffType}.
 \itemize{
 \item single numeric value:
 \itemize{
 \item If \code{EffType}=\code{"Rel"}: Effort relative to last historical year, applied to all
 fleets. E.g., if \code{Effort=0.5}, effort for all fleets will be set to half
 the effort in the last historical year.
-\item If \code{EffType}=\code{"Abs"}: the total effort (summed over fleets; Note all
+\item If \code{EffType}=\code{"Abs"}: the total effort (summed over fleets unless provide
+as a length \code{nFleet} vector); Note all
 fleets in the OM must have the same units for \code{Effort}) and
 distributed over fleets following the same distribution as the last
 historical year
@@ -106,9 +118,6 @@ historical year
 \item numeric vector length \code{nFleet}: Fleet-specific relative or absolute Effort.
 \item numeric matrix: Fleet- and Area-specific relative or absolute Effort. Must have \code{nFleet}
 rows and \code{nArea} columns.
-
-If \code{Effort} is a matrix, it will be treated as absolute; i.e., \code{EffType}
-will be ignored.
 }
 }
 

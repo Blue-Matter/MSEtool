@@ -15,7 +15,7 @@ warnings during population.}
 \item{force}{Logical. If \code{TRUE}, force re-population even if the internal
 object digest indicates no changes since the last call.}
 
-\item{standardize_effort.}{Logical. Used internally. Apply \code{\link[=StandardizeEffort]{StandardizeEffort()}}?}
+\item{standardize_effort}{Logical. Used internally. Apply \code{\link[=StandardizeEffort]{StandardizeEffort()}}?}
 }
 \value{
 An \code{\link[=OM]{OM()}} object populated with simulation- and time-specific values.

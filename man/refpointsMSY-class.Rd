@@ -3,30 +3,43 @@
 \docType{class}
 \name{refpointsMSY-class}
 \alias{refpointsMSY-class}
-\alias{refpointsMSY}
-\title{\code{refpointsMSY} Class}
+\title{The \code{refpointsMSY} S4 Class}
 \description{
-Stores MSY-based biological reference points across simulations.
-All slots are arrays or numerics with a \code{Sim} dimension unless otherwise
-noted.
+An S4 class storing MSY-based biological reference points. Produced
+internally during reference point calculations and not intended to be
+modified directly by users.
+}
+\details{
+\subsection{Reference point calculations}{
+
+MSY reference points are derived from the per-recruit quantities in a
+\link[=perrecruit-class]{perrecruit} object by identifying the apical fishing mortality
+that maximises total removals, accounting for the stock-recruitment
+relationship. All slots share the same \verb{Sim × Stock × Year} dimensions,
+where the \code{Year} dimension reflects the year(s) for which biological and
+fishery parameters were evaluated.
+}
 }
 \section{Slots}{
 
 \describe{
-\item{\code{FMSY}}{Fishing mortality rate at MSY.}
+\item{\code{FMSY}}{Fishing mortality rate at MSY (\verb{Sim × Stock × Year}).}
 
-\item{\code{BMSY}}{Total biomass at MSY.}
+\item{\code{BMSY}}{Total biomass at MSY (\verb{Sim × Stock × Year}).}
 
-\item{\code{SBMSY}}{Spawning biomass at MSY.}
+\item{\code{SBMSY}}{Spawning biomass at MSY (\verb{Sim × Stock × Year}).}
 
-\item{\code{SPMSY}}{Spawning production at MSY.}
+\item{\code{SPMSY}}{Spawning production at MSY (\verb{Sim × Stock × Year}).}
 
-\item{\code{SPRMSY}}{Spawning potential ratio at MSY.}
+\item{\code{SPRMSY}}{Spawning potential ratio at MSY (\verb{Sim × Stock × Year}).}
 
-\item{\code{MSY}}{Maximum sustainable yield (removals).}
+\item{\code{MSYLandings}}{Landed catch at MSY (\verb{Sim × Stock × Year}).}
 
-\item{\code{MSYLandings}}{Landed catch at MSY.}
+\item{\code{MSYDiscards}}{Dead discards at MSY (\verb{Sim × Stock × Year}).}
 
-\item{\code{Misc}}{Miscellaneous list for additional outputs.}
+\item{\code{Misc}}{List reserved for internal use.}
 }}
 
+\seealso{
+\link[=perrecruit-class]{perrecruit}
+}

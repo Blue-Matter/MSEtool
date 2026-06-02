@@ -54,6 +54,7 @@ PopulateSpatial <- function(Spatial,
   
   Ages  <- DefaultAges(Ages)
   Years <- DefaultYears(Years)
+  nSim  <- Get_nSim(Spatial, nSim)
   
   argList <- list(Ages, Years, nSim, seed)
   

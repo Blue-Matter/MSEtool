@@ -13,6 +13,7 @@ OptEffort_multi_stock(
   FleetNames,
   TAC_by_Complex,
   TACType_by_Complex,
+  TACUnit_by_Complex,
   Choke,
   UndershootPenalty,
   OvershootPenalty,
@@ -73,8 +74,6 @@ optimisers and used as the feasibility tolerance in bisection.}
 
 \item{maxEval}{Integer (default \code{500}). Maximum function evaluations
 allowed across the BFGS and Nelder-Mead phases combined..}
-
-\item{nStock}{Integer. Total number of stocks in the model.}
 }
 \value{
 A named list with elements:

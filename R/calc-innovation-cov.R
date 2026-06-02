@@ -42,11 +42,15 @@
 #' phi <- c(0.7, 0.6)
 #'
 #' CalcInnovationCov(Sigma_Z, phi)
+#' 
 #'
 #' @seealso [GenerateStockTargeting()], [FitStockTargeting()]
 #' 
 #' @export
 CalcInnovationCov <- function(Sigma_Z, phi) {
+  
+  CheckPackage('MASS')
+  
   n <- length(phi)
   phi <- pmin(pmax(phi, -0.999), 0.999)
   Phi <- diag(phi, n)

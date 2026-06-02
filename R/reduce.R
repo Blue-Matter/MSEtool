@@ -76,7 +76,6 @@ ReduceDims <- function(array,
   if (is.null(DN)) 
     return(array)
   
-  
   dnm <- names(DN)
   
   indSim <- match("Sim", dnm)
@@ -89,7 +88,6 @@ ReduceDims <- function(array,
   
   if (!hasSim && !hasAge && !hasYear) 
     return(array)
-  
   
   idSim <- hasSim && IdenticalSims(array)
   idAge <- hasAge && IdenticalAge(array)

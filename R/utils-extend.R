@@ -1,7 +1,8 @@
 #' Extend an Array Along Named Dimensions
 #'
 #' Extends an array with named dimensions to include all simulations, ages,
-#' areas, and any missing years. Can also recurse into S4 objects and lists.
+#' size classes, areas, and any missing years. Can also recurse into 
+#' S4 objects and lists.
 #'
 #' @param array An [array()] with named dimensions including at least one of
 #'   `Sim`, `Year`, `Age`, or `Area`. Alternatively, an S4 or [list()] object,
@@ -9,6 +10,8 @@
 #'   any named arrays. Any other object is returned unchanged.
 #' @param nSim Integer. Total number of simulations, or `NULL` to skip.
 #' @param AgeClasses Numeric vector of age classes, or `NULL` to skip.
+#' @param Classes Numeric vector of size classes (length or weight bins), or
+#'   `NULL` to skip. 
 #' @param Years Numeric vector of `Year` values to extend to, or `NULL` to
 #'   skip.
 #' @param Areas Numeric vector of area indices (`1:nArea`), or `NULL` to skip.
@@ -40,6 +43,12 @@
 #' replicated to length `nAge` with the first age class copied to all ages.
 #' If already length `nAge`, the array is returned unchanged.
 #'
+#' ## ExtendClasses
+#'
+#' The `Class` dimension must have length `1` or `nClass`. If length `1`, it
+#' is replicated to length `nClass` with class 1 values copied to all classes.
+#' If already length `nClass`, the array is returned unchanged.
+#' 
 #' ## ExtendYears
 #'
 #' The `Year` dimension can be any length. If all values in `Years` are already
@@ -56,19 +65,21 @@
 #' already length `nArea`, the array is returned unchanged.
 #'
 #' @example man-examples/Extend.R
-#' @seealso [ExtendSims()], [ExtendAges()], [ExtendYears()], [ExtendAreas()]
+#' @seealso [ExtendSims()], [ExtendAges()], [ExtendClasses()], 
+#' [ExtendYears()], [ExtendAreas()]
 #' @export
 Extend <- function(array,
-                   nSim = NULL,
+                   nSim       = NULL,
                    AgeClasses = NULL,
-                   Years = NULL,
-                   Areas = NULL,
-                   default = NULL,
-                   backfill = FALSE,
+                   Classes    = NULL,
+                   Years      = NULL,
+                   Areas      = NULL,
+                   default    = NULL,
+                   backfill   = FALSE,
                    maintain_seasonal_pattern = TRUE,
-                   skip_data = TRUE,
-                   debug = FALSE) {
-  if (debug) 
+                   skip_data  = TRUE,
+                   debug      = FALSE) {
+  if (debug)
     print(class(array))
   
   if (isS4(array)) {
@@ -76,15 +87,16 @@ Extend <- function(array,
       if (inherits(array, "data")) return(array)
     for (sl in slotNames(array)) {
       if (debug) print(sl)
-      slot(array, sl) <- Recall(slot(array, sl), 
-                                nSim = nSim, 
-                                AgeClasses = AgeClasses, 
-                                Years = Years, 
-                                Areas = Areas, 
-                                default = default, 
-                                backfill = backfill, 
+      slot(array, sl) <- Recall(slot(array, sl),
+                                nSim       = nSim,
+                                AgeClasses = AgeClasses,
+                                Classes    = Classes,
+                                Years      = Years,
+                                Areas      = Areas,
+                                default    = default,
+                                backfill   = backfill,
                                 maintain_seasonal_pattern = maintain_seasonal_pattern,
-                                debug = debug)
+                                debug      = debug)
     }
     return(array)
   }
@@ -92,27 +104,29 @@ Extend <- function(array,
   if (is.list(array)) {
     if (length(array)) {
       for (i in seq_along(array)) {
-        temp <- Recall(array[[i]],                  
-                       nSim = nSim, 
-                       AgeClasses = AgeClasses, 
-                       Years = Years, 
-                       Areas = Areas, 
-                       default = default, 
-                       backfill = backfill, 
+        temp <- Recall(array[[i]],
+                       nSim       = nSim,
+                       AgeClasses = AgeClasses,
+                       Classes    = Classes,
+                       Years      = Years,
+                       Areas      = Areas,
+                       default    = default,
+                       backfill   = backfill,
                        maintain_seasonal_pattern = maintain_seasonal_pattern,
-                       debug = debug)
+                       debug      = debug)
         if (!is.null(temp)) array[[i]] <- temp
       }
     }
     return(array)
   }
-
+  
   array |>
     ExtendSims(nSim) |>
     ExtendAges(AgeClasses) |>
-    ExtendYears(Years                     = Years, 
-                default                   = default, 
-                backfill                  = backfill, 
+    ExtendClasses(Classes) |>
+    ExtendYears(Years                     = Years,
+                default                   = default,
+                backfill                  = backfill,
                 maintain_seasonal_pattern = maintain_seasonal_pattern) |>
     ExtendAreas(Areas)
 }
@@ -215,6 +229,53 @@ ExtendAges <- function(array, AgeClasses = NULL) {
   
   OutArray <- do.call(`[`, c(list(array), idx, list(drop = FALSE)))
   dimnames(OutArray)[[age_dim]] <- as.character(AgeClasses)
+  OutArray
+}
+
+#' @rdname Extend
+#' @export
+ExtendClasses <- function(array, Classes = NULL) {
+  if (is.null(Classes)) return(array)
+  
+  if (isS4(array)) {
+    if (inherits(array, "data")) return(array)
+    for (sl in slotNames(array))
+      slot(array, sl) <- Recall(slot(array, sl), Classes)
+    return(array)
+  }
+  
+  if (is.list(array)) {
+    if (length(array)) {
+      for (i in seq_along(array)) {
+        temp <- Recall(array[[i]], Classes)
+        if (!is.null(temp)) array[[i]] <- temp
+      }
+    }
+    return(array)
+  }
+  
+  nClass <- length(Classes)
+  d      <- dim(array)
+  dn     <- dimnames(array)
+  
+  if (is.null(dn) || !"Class" %in% names(dn)) return(array)
+  
+  class_dim        <- which(names(dn) == "Class")
+  existing_classes <- as.numeric(dn[[class_dim]])
+  
+  if (length(existing_classes) == nClass) return(array)
+  
+  if (length(existing_classes) != 1)
+    cli::cli_abort(c(
+      "The `Class` dimension must be length 1 or `nClass` ({.val {nClass}}).",
+      "x" = "Found length {.val {d[class_dim]}}."
+    ))
+  
+  idx <- lapply(seq_along(d), \(i)
+                if (i == class_dim) rep(1L, nClass) else seq_len(d[i]))
+  
+  OutArray <- do.call(`[`, c(list(array), idx, list(drop = FALSE)))
+  dimnames(OutArray)[[class_dim]] <- as.character(Classes)
   OutArray
 }
 
@@ -589,6 +650,55 @@ ExtendFleets <- function(array, Fleets = NULL) {
   OutArray
   
 }
+
+
+ExtendStocks <- function(array, Stocks = NULL) {
+  if (is.null(Stocks)) return(array)
+  
+  if (isS4(array)) {
+    if (inherits(array, "data")) return(array)
+    for (sl in slotNames(array))
+      slot(array, sl) <- Recall(slot(array, sl), Stocks)
+    return(array)
+  }
+  
+  if (is.list(array)) {
+    if (length(array)) {
+      for (i in seq_along(array)) {
+        temp <- Recall(array[[i]], Stocks)
+        if (!is.null(temp)) array[[i]] <- temp
+      }
+    }
+    return(array)
+  }
+  
+  nStock <- length(Stocks)
+  d      <- dim(array)
+  dn     <- dimnames(array)
+  
+  if (is.null(dn) || !"Stock" %in% names(dn)) return(array)
+  
+  stock_dim       <- which(names(dn) == "Stock")
+  existing_stocks <- as.numeric(dn[[stock_dim]])
+  
+  if (length(existing_stocks) == nStock) return(array)
+  
+  if (length(existing_stocks) != 1)
+    cli::cli_abort(c(
+      "The `Stock` dimension must be length 1 or `nStock` ({.val {nStock}}).",
+      "x" = "Found length {.val {d[stock_dim]}}."
+    ))
+  
+  
+  idx <- lapply(seq_along(d), \(i)
+                if (i == stock_dim) rep(1L, nStock) else seq_len(d[i]))
+  
+  OutArray <- do.call(`[`, c(list(array), idx, list(drop = FALSE)))
+  dimnames(OutArray)[[stock_dim]] <- Stocks
+  OutArray
+  
+}
+
 
 
 

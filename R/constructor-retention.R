@@ -1,123 +1,145 @@
 #' Retention
 #'
 #' Construct and manipulate a [retention-class] object defining
-#' retention-at-age or retention-at-length for a [Fleet()] object. Retention
-#' is optional for [fleet-class] objects. If not specified, the model assumes
-#' that all age and length classes are fully retained.
+#' retention-at-age, retention-at-length, or retention-at-weight for a
+#' [Fleet()] object. Retention is optional; if not specified, all age and
+#' length classes are assumed fully retained.
 #'
-#' @param Pars Named list of retention parameters passed to `Model`. See
-#'   [RetentionModels()] for available models and their required parameters.
+#' @param Pars Named list of retention parameters passed to the retention
+#'   model function. Parameter names must match the arguments of the chosen
+#'   model (see [RetentionModels()]). Each element may be a scalar, vector, or
+#'   array; see [Specifying Biological and Fleet
+#'   Schedules][populating-schedules] for accepted formats. Default `list()`
+#'   (empty).
+#'
+#'   If `Pars` and `Model` are both provided, `MeanAtAge` is computed from the
+#'   model and any values already in `MeanAtAge` are overwritten. To preserve
+#'   a user-specified `MeanAtAge`, leave `Pars = list()` (the default).
+#'
 #'   If `Pars` is a [fleet-class] object, the `Retention` slot of that fleet
-#'   is returned. If `Pars` and `Model` are both provided, they will be used
-#'   to populate `MeanAtAge`, overwriting any existing values. To preserve
-#'   user-specified values in `MeanAtAge`, set `Pars = list()` (default).
-#' @param Model Character. Retention model identifier. If `NULL` (default),
-#'   the model is inferred from `Pars` where possible. See
-#'   [RetentionModels()] for available models. 
-#' @param MeanAtAge Numeric array. Mean retention at age, with named
-#'   dimensions `Sim`, `Age`, and `Year`. If `MeanAtLength` is provided,
-#'   `MeanAtAge` will be calculated from it. Otherwise, `MeanAtAge` is used
-#'   directly, and `MeanAtLength` is calculated from `MeanAtAge` and a
-#'   [Length()] object unless `MeanAtLength` is already populated. **Note:**
-#'   if `Pars` and `Model` are both provided, any values supplied here will
-#'   be overwritten.
-#' @param MeanAtLength Numeric array. Mean retention at length, with named
-#'   dimensions `Sim`, `Length`, and `Year`. If provided, takes precedence
-#'   and `MeanAtAge` will be derived from it.
-#' @param MeanAtWeight Numeric array. Mean retention at weight, with named
-#'   dimensions `Sim`, `Weight`, and `Year`. Default `NULL`.
-#' @param Classes Numeric vector. Age or length classes corresponding to the
-#'   `Age` or `Length` dimension of `MeanAtAge` or `MeanAtLength`. Default
-#'   `NULL`.
-#' @param isRel Logical. Whether retention parameters are specified relative
-#'   to maturity-at-length (e.g., `L50`). Default `FALSE`.
+#'   is returned.
+#'
+#' @param Model Character or function or `NULL`. Retention model identifier.
+#'   If `NULL` (default), the model is inferred automatically from the names
+#'   in `Pars` via [FindModel()]. May also be supplied as a custom R function
+#'   with arguments matching those in `Pars`. See [RetentionModels()] for
+#'   built-in options.
+#' @param MeanAtAge Numeric array or `NULL`. Mean retention-at-age with
+#'   dimensions `Sim x Age x Year` (area dimension added during population).
+#'   Used directly when `Pars` is empty and `MeanAtLength` is not supplied.
+#'   See [Specifying Biological and Fleet Schedules][populating-schedules] for
+#'   accepted array formats. **Note:** if `Pars` and `Model` are both
+#'   provided, any values supplied here will be overwritten during population.
+#' @param MeanAtLength Numeric array or `NULL`. Mean retention-at-length with
+#'   dimensions `Sim x Length x Year`. If provided and `Pars` is empty, takes
+#'   precedence over `MeanAtAge`; `MeanAtAge` is derived from it via the
+#'   age-length key.
+#' @param MeanAtWeight Numeric array or `NULL`. Mean retention-at-weight with
+#'   dimensions `Sim x Weight x Year`. Default `NULL`.
+#' @param Classes Numeric vector or `NULL`. Length or weight class midpoints
+#'   corresponding to the second dimension of `MeanAtLength` or
+#'   `MeanAtWeight`. Default `NULL`.
+#' @param isRel Logical. If `TRUE`, length-based parameters (e.g., `LR5`,
+#'   `LFR`) are interpreted as multiples of the length-at-50%-maturity
+#'   (`L50`) of the paired stock rather than absolute length values. A
+#'   [Maturity()] object must be available to [PopulateRetention()] for
+#'   scaling to occur. Default `FALSE`.
 #' @param Misc List. Miscellaneous additional inputs. Default `list()`.
 #' @param x A [retention-class] object, or a [fleet-class] object for
 #'   `Retention<-`.
 #' @param value For `Retention<-`: a [retention-class] object.
 #'
 #' @details
-#' Retention is optional for all [fleet-class] objects. If not specified, the
-#' model assumes that all age and length classes are fully retained (i.e.,
-#' retention = 1 for all classes).
+#' Retention is optional for all [fleet-class] objects. It defines the
+#' probability that a selected fish is retained, on a scale from 0 to 1.
+#' Fish that are selected but not retained are treated as discards, and their
+#' fate is determined by [DiscardMortality()].
 #'
-#' ## Populating MeanAtAge and MeanAtLength
+#' When no [retention-class] object is supplied, [PopulateRetention()] sets
+#' full retention (1) for all age and length classes.
 #'
-#' The precedence for populating `MeanAtAge` is:
+#' ## Specifying Retention
 #'
-#' 1. If `Pars` and `Model` are both provided, `MeanAtAge` is calculated from
-#'    the model and **any existing values in `MeanAtAge` are overwritten**. To
-#'    preserve user-specified values in `MeanAtAge`, leave `Pars = list()`
-#'    (the default).
-#' 2. If `MeanAtLength` is provided (and `Pars` is empty), `MeanAtAge` is
-#'    derived from `MeanAtLength`.
-#' 3. Otherwise, `MeanAtAge` is used directly and `MeanAtLength` is calculated
-#'    from `MeanAtAge` and a [Length()] object, unless `MeanAtLength` is
-#'    already populated.
+#' There are two ways to specify retention:
+#'
+#' **Model-based** (recommended): supply `Pars` as a named list whose element
+#' names match the arguments of a built-in or custom model function. The model
+#' is resolved automatically unless `Model` is specified explicitly. See
+#' [RetentionModels()] for available models and their required parameters, and
+#' [Specifying Biological and Fleet Schedules][populating-schedules] for how
+#' parameter values are structured across simulations and years.
+#'
+#' Available model families are: logistic (at-age, at-length, at-weight, with
+#' optional `MaxRet` asymptote), knife-edge (at-age, at-length), and
+#' double-normal (at-length, at-weight). At-length and at-weight schedules are
+#' converted to at-age internally using the age-length or age-weight key.
+#'
+#' **Direct array**: leave `Pars = list()` and supply `MeanAtAge`,
+#' `MeanAtLength`, or `MeanAtWeight` directly. If `MeanAtLength` is provided,
+#' it takes precedence and `MeanAtAge` is derived from it. If only `MeanAtAge`
+#' is provided, `MeanAtLength` is calculated from it unless already populated.
+#'
+#' These two approaches are mutually exclusive: if `Pars` is non-empty and
+#' `Model` can be resolved, any values in `MeanAtAge` will be overwritten.
 #'
 #' ## Relative Parameters
 #'
 #' When `isRel = TRUE`, length-based parameters (e.g., `LR5`, `LFR`) are
-#' interpreted as multiples of the length-at-50%-maturity (`L50`) rather than
-#' absolute length values.
+#' scaled by the maturity `L50` of the paired stock before the retention curve
+#' is computed.
 #'
 #' ## Attaching to a Fleet
 #'
-#' A `Retention` object can be attached to a [Fleet()] with
+#' A [retention-class] object can be attached to a [Fleet()] with
 #' `Retention(Fleet) <- MyRetention` and retrieved with `Retention(Fleet)`.
 #'
 #' Individual slots may be accessed or modified using [Pars()], [Model()],
 #' [MeanAtAge()], [MeanAtLength()], [MeanAtWeight()], and [Classes()].
 #'
-#' `r  AdviceArrayInfo('retention')`
-#' 
-#' `r TechManLink()`
-#'
 #' @return
 #' - `Retention()` returns a [retention-class] object. If `Pars` is a
 #'   [fleet-class] object, the `Retention` slot of that fleet is returned.
-#' - `Retention<-` returns `x` with the `Retention` slot replaced.
+#' - `Retention<-` returns `x` with the `Retention` slot replaced by `value`.
 #'
-#' @seealso [retention-class], [Fleet()], [RetentionModels()],
-#'   [Selectivity()], [DiscardMortality()]
+#' @seealso
+#' - [retention-class] for the class definition and slot-level documentation.
+#' - [RetentionModels()] for available model functions and their parameters.
+#' - [Fleet()] for the enclosing fleet constructor.
+#' - [Selectivity()], [DiscardMortality()] for related fleet components.
+#' - [Specifying Biological and Fleet Schedules][populating-schedules] for how
+#'   `Pars`, `Model`, and `MeanAt*` arrays are structured.
+#' - [PopulateRetention()] for population details.
+#'
+#' @family fleet
 #'
 #' @examples
-#' # Specify via model parameters
-#' r <- Retention(Pars = list(LR5 = 10, LFR = 20, Rmaxlen = 1))
-#'
-#' # Specify MeanAtAge directly (Pars must be empty to avoid overwriting)
-#' r2 <- Retention(MeanAtAge = my_array)
-#'
-#' # Default: full retention for all classes
-#' r3 <- Retention()
+#' # See man-examples/class-Retention.R
 #'
 #' @export
-Retention <- function(Pars = list(),
-                      Model = NULL,
-                      MeanAtAge = NULL,
+Retention <- function(Pars         = list(),
+                      Model        = NULL,
+                      MeanAtAge    = NULL,
                       MeanAtLength = NULL,
                       MeanAtWeight = NULL,
-                      Classes = NULL,
-                      isRel = FALSE,
-                      Misc = list()) {
+                      Classes      = NULL,
+                      isRel        = FALSE,
+                      Misc         = list()) {
   
-  ## Fleet pass-through
   if (methods::is(Pars, "fleet"))
     return(Pars@Retention)
   
   object <- methods::new(
     "retention",
-    Pars = Pars,
-    Model = Model,
-    isRel = isRel,
-    MeanAtAge = MeanAtAge,
+    Pars         = Pars,
+    Model        = Model,
+    isRel        = isRel,
+    MeanAtAge    = MeanAtAge,
     MeanAtLength = MeanAtLength,
     MeanAtWeight = MeanAtWeight,
-    Classes = Classes,
-    Misc = Misc
+    Classes      = Classes,
+    Misc         = Misc
   )
   object
-
 }
 
 #' @rdname Retention

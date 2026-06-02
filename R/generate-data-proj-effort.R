@@ -1,17 +1,74 @@
-
-#' Generate Projected Effort Data for a Stock/Complex
+#' Generate Projected Effort Data
 #'
-#' Appends a new year of observed effort data (`Value` and `CV`) to the existing
-#' effort data object for a given simulation and stock/complex.
+#' Internal function to append one year of simulated observed effort to an
+#' existing [effortdata-class] object during the projection period.
 #'
-#' @param x Integer. Simulation index.
-#' @param Proj A `Hist` object used in the projection
+#' @param x Integer index of the simulation replicate.
+#' @param Proj A `hist` class object used in the projection.
 #' @param DataYear Numeric. The calendar year to generate data for.
-#' @param YearsAll Numeric vector. All calendar years in the historical
-#'  and projection years.
-#' @param i Integer. Stock/complex index.
+#' @param YearsAll Numeric vector of all calendar years spanning the
+#'   historical and projection periods.
+#' @param i Integer index of the stock complex.
 #'
-#' @return The updated `Effort` data object.
+#' @details
+#'
+#' ## Early Exit Conditions
+#'
+#' The function returns `EffortData` unchanged in two cases:
+#'
+#' - **No effort data exist**: `Proj@Data[[x]][[i]]@Effort` is empty
+#'   (`EmptyObject(EffortData)`). Effort was not simulated historically,
+#'   so projection data are not generated.
+#' - **Year already present**: `DataYear` is already a row in
+#'   `EffortData@Value`, indicating this year has been appended previously.
+#'
+#' ## Observation Error Model
+#'
+#' For each fleet with a non-empty [EffortObs()] object and a populated
+#' `Error` array, observed effort for `DataYear` is generated as:
+#'
+#' \deqn{\tilde{E}_{t} = E_{t} \cdot b \cdot \varepsilon_{t}}
+#'
+#' - \eqn{E_{t}} — true OM effort in year \eqn{t}, resolved via
+#'   `resolveValue()` using `TSIndex` to locate `DataYear` in `YearsAll`
+#' - \eqn{b} — multiplicative bias for replicate `x` (`effortobs@Bias[x]`);
+#'   see [EffortObs()]
+#' - \eqn{\varepsilon_{t}} — lognormal error multiplier for replicate `x`,
+#'   year \eqn{t} (`effortobs@Error[x, t]`); see [EffortObs()]
+#'
+#' CVs for the new year are resolved via `resolveCV()`, which looks up the
+#' fleet- and year-specific CV from the existing [effortdata-class] object.
+#'
+#' ## Obs Structure
+#'
+#' Observation parameters are accessed via:
+#'
+#' ```r
+#' Proj@OM@Obs[[i]][[fl]]@Effort  # returns an effortobs object
+#' ```
+#'
+#' where `i` is the stock complex index and `fl` the fleet index. The relevant
+#' [EffortObs()] slots are:
+#'
+#' - `@Bias[x]`: per-replicate multiplicative bias
+#' - `@Error[x, t]`: per-replicate, per-year lognormal error multiplier
+#'
+#' See [obs-class] and [EffortObs()] for full slot documentation.
+#'
+#' ## Appending
+#'
+#' The new year's `Value` and `CV` arrays (dimensions `[1 x nFleet]`) are
+#' bound to the existing arrays along the year dimension using
+#' `abind::abind(..., along = 1)`, preserving dimension names.
+#'
+#' @return An [effortdata-class] object with `DataYear` appended to `@Value`
+#'   and `@CV`:
+#'
+#' - `@Value`: `[nYear+1 x nFleet]` array of observed effort
+#' - `@CV`: `[nYear+1 x nFleet]` array of CVs
+#'
+#' @seealso [EffortObs()], [EffortData()], [effortdata-class], [obs-class],
+#'   [GenHistData_Effort()]
 #' @keywords internal
 GenProjData_Effort <- function(x, Proj, DataYear, YearsAll, i) {
   

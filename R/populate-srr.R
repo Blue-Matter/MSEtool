@@ -50,7 +50,10 @@ PopulateSRR <- function(SRR,
                         seed = NULL,
                         silent = FALSE,
                         force = FALSE) {
-  Ages <- DefaultAges(Ages)
+  
+  Ages  <- DefaultAges(Ages)
+  Years <- DefaultYears(Years)
+  nSim  <- Get_nSim(SRR, nSim)
   
   if (is.null(CurrentYear)) 
     CurrentYear <-  as.numeric(format(Sys.Date(), "%Y"))

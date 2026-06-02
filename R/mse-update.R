@@ -2,17 +2,20 @@ UpdateMSEObject <- function(MSE, Proj, MPName, mp, YearsHist, YearsProj,
                             StockNames, FleetNames) {
   
   YearsAll <- c(YearsHist, YearsProj)
-  nStock <- length(StockNames)
+  nStock   <- length(StockNames)
+  nFleet   <- length(FleetNames) 
   
-  for (st in 1:nStock) {
+  for (st in seq_len(nStock)) {
     MSE@Number[[st]][,,,,mp] <- Proj@Number[[st]] |> SubsetYear(YearsProj)
   
     MSE@InteractAtAge[[st]][,,,,,mp] <- Proj@InteractAtAge[[st]] |> SubsetYear(YearsProj)
     MSE@LandingsAtAge[[st]][,,,,,mp] <- Proj@LandingsAtAge[[st]] |> SubsetYear(YearsProj)
     MSE@DiscardsAtAge[[st]][,,,,,mp] <- Proj@DiscardsAtAge[[st]] |> SubsetYear(YearsProj)
     
-    # MSE@LandingsAtSize[[st]][,,,,,mp] <- Proj@LandingsAtSize[[st]] |> SubsetYear(YearsProj)
-    # MSE@DiscardsAtSize[[st]][,,,,,mp] <- Proj@LandingsAtSize[[st]] |> SubsetYear(YearsProj)
+    for (fl in seq_len(nFleet)) {
+      MSE@LandingsAtSize[[st]][[fl]][,,,,mp] <- Proj@LandingsAtSize[[st]][[fl]] |> SubsetYear(YearsProj)
+      MSE@DiscardsAtSize[[st]][[fl]][,,,,mp] <- Proj@LandingsAtSize[[st]][[fl]] |> SubsetYear(YearsProj)  
+    }
     
     MSE@FInteractArea[[st]][,,,,,mp] <- Proj@FInteractArea[[st]] |> SubsetYear(YearsProj)
     MSE@FDeadArea[[st]][,,,,,mp] <- Proj@FDeadArea[[st]] |> SubsetYear(YearsProj)

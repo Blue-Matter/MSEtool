@@ -5,7 +5,7 @@
 \alias{ALK}
 \alias{ALK<-}
 \alias{Length<-}
-\title{Length}
+\title{Length Constructor and Accessors}
 \usage{
 Length(
   Pars = list(),
@@ -29,171 +29,262 @@ ALK(x) <- value
 Length(x) <- value
 }
 \arguments{
-\item{Pars}{Named list of growth parameters corresponding to \code{Model}. See
-\code{\link[=LengthModels]{LengthModels()}} for available models and required parameters. If \code{Pars}
-is a \link[=stock-class]{stock} object, the \code{Length} slot of that stock is returned.
-If \code{Pars} is non-empty and \code{Model} is \code{NULL}, the model is inferred
-automatically via \code{\link[=FindModel]{FindModel()}}.}
+\item{Pars}{\code{list}. Named list of growth parameters. Element names must
+match the arguments of a built-in growth model (see \code{\link[=LengthModels]{LengthModels()}}).
+When \code{Pars} is non-empty and \code{Model} is \code{NULL}, the model is inferred
+automatically by \code{\link[=FindModel]{FindModel()}}. When \code{Pars} is a \link[=stock-class]{stock} object,
+\code{Length()} acts as a pass-through accessor and returns \code{x@Length}.
+See \emph{Specifying the Length-at-Age} and
+\link[=populating-schedules]{Specifying Biological and Fleet Schedules} for the full
+set of accepted input formats. Default \code{list()}.}
 
-\item{Model}{Character. Growth model identifier. If \code{NULL} (default), the
-model is inferred from \code{Pars} where possible. See \code{\link[=LengthModels]{LengthModels()}} for
-available models.}
+\item{Model}{\code{character(1)} or \code{function}. Growth model identifier. When
+\code{NULL} (default), the model is inferred from \code{Pars} via \code{\link[=FindModel]{FindModel()}}.
+May be set to a character string naming a built-in model or to a custom
+R function — see \link[=populating-schedules]{Specifying Biological and Fleet Schedules}.}
 
-\item{Units}{Character. Length units (e.g., \code{"mm"}, \code{"cm"}). See
-\code{\link[=ValidUnits]{ValidUnits()}} for valid options. Default \code{"mm"}.}
+\item{Units}{\code{character(1)}. Physical unit of length measurements. Must be
+one of the strings returned by \code{\link[=ValidUnits]{ValidUnits()}} (e.g., \code{"mm"}, \code{"cm"}).
+Default \code{"mm"}.}
 
-\item{MeanAtAge}{Numeric array. Mean length at age, with named dimensions
-\code{Sim}, \code{Age}, and \code{Year}. If \code{Pars} and \code{Model} are provided, this array
-is populated automatically during \code{\link[=Populate]{Populate()}}. Default \code{NULL}.}
+\item{MeanAtAge}{\code{array} or \code{NULL}. Mean length at age with named dimensions
+\verb{Sim × Age × Year}. Supply directly when bypassing the model-based
+approach (\code{Pars = list()}). Only the years at which values \emph{change} need
+to be included; \code{\link[=Extend]{Extend()}} fills the remainder. When \code{Pars} contains a
+matched model, any values here are \strong{overwritten} during \code{\link[=Populate]{Populate()}}.
+A numeric vector of length \code{nAge} is also accepted and is promoted to a
+\verb{1 × nAge × 1} array automatically. Default \code{NULL}.}
 
-\item{CVatAge}{Numeric. Coefficient of variation of length at age, used to
-generate the length distribution within each age class. Default \code{0.1}.}
+\item{CVatAge}{\code{numeric(1)}, length-2 bounds vector, or \code{array}. Coefficient
+of variation of length-at-age within each age class, used to parameterise
+the within-age-class length distribution and to build the age-length key
+(\code{ALK}). A length-2 vector is treated as \code{Uniform(lower, upper)} bounds
+sampled once per simulation. Default \code{0.1}.}
 
-\item{Dist}{Character. Distribution of length-at-age (e.g., \code{"normal"}).
-Default \code{"normal"}.}
+\item{Dist}{\code{character(1)}. Parametric distribution for length-at-age
+variability. Options are: \code{"normal"} (default) and \code{"lognormal"}).}
 
-\item{TruncSD}{Numeric. Truncation of the length-at-age distribution in
-standard deviation units. Default \code{2}.}
+\item{TruncSD}{\code{numeric(1)}. Number of standard deviations at which the
+length distribution is truncated, preventing unrealistic tails in the
+\code{ALK}. Default \code{2}.}
 
-\item{Timing}{Numeric. Timing of length measurement within the time step
-(0 = start, 1 = end). Default \code{0}.}
+\item{Timing}{\code{numeric(1)}. Fractional position within the time step at
+which length is measured: \code{0} = start of step, \code{1} = end of step.
+Shifts age class midpoints before computing the \code{ALK}. Relevant for
+seasonal models where growth occurs within a step. Default \code{0}.}
 
-\item{Random}{Numeric array. Random effects on growth parameters. Default
+\item{Random}{\code{array} or \code{NULL}. Simulation- and year-specific random
+multipliers applied to growth parameters, enabling inter-annual or
+among-simulation variation in growth. Currently stored but not applied.
+Default \code{NULL}.}
+
+\item{ALK}{\code{array} or \code{NULL}. Age-length key giving the probability that an
+individual of a given age belongs to each length class
+(\verb{Sim × Age × Class × Year}). Populated automatically during \code{\link[=Populate]{Populate()}}
+from \code{MeanAtAge}, \code{CVatAge}, \code{Dist}, and \code{TruncSD}; supply directly only
+when overriding the computed key. Default \code{NULL}.}
+
+\item{Classes}{\code{numeric} or \code{NULL}. Length class midpoints in units of
+\code{Units}. Populated automatically during \code{\link[=Populate]{Populate()}} if \code{NULL}. Default
 \code{NULL}.}
 
-\item{ALK}{Numeric array. Age-length key. Default \code{NULL}.}
-
-\item{Classes}{Numeric vector. Length class midpoints. Default \code{NULL}.}
-
-\item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
+\item{Misc}{\code{list}. Used internally. Default \code{list()}.}
 
 \item{x}{A \link[=length-class]{length} object for slot accessors, or a \link[=stock-class]{stock}
 object for \verb{Length<-}.}
 
-\item{value}{For \verb{Length<-}: a \link[=length-class]{length} object. For \verb{ALK<-}: the new
-age-length key array.}
+\item{value}{For \verb{Length<-}: a \link[=length-class]{length} object. For \verb{ALK<-}: a
+replacement age-length key array.}
 }
 \value{
 \itemize{
-\item \code{Length()} returns a \link[=length-class]{length} object. If \code{Pars} is a \link[=stock-class]{stock}
-object, the \code{Length} slot of that stock is returned.
-\item \verb{Length<-} returns \code{x} with the \code{Length} slot replaced.
-\item \code{ALK()} returns the age-length key from \code{x}.
-\item \verb{ALK<-} returns \code{x} with the \code{ALK} slot updated.
+\item \code{Length()} returns a \link[=length-class]{length} object. If \code{Pars} is a \link[=stock-class]{stock},
+returns \code{x@Length}.
+\item \verb{Length<-} returns the \link[=stock-class]{stock} \code{x} with the \code{Length} slot replaced by
+\code{value} and the object re-validated.
+\item \code{ALK()} returns the age-length key array from \code{x}.
+\item \verb{ALK<-} returns \code{x} with the \code{ALK} slot updated and the object
+re-validated.
 }
 }
 \description{
-Construct and manipulate a \link[=length-class]{length} object defining the
-length-at-age structure associated with a \code{\link[=Stock]{Stock()}} object. A \code{Length}
-object is required for all \link[=stock-class]{stock} objects.
+Construct a \link[=length-class]{length} object defining the length-at-age schedule for a
+\link[=stock-class]{stock}, or access and replace the \code{Length} slot of a \link[=stock-class]{stock}
+and its individual slots. A \code{Length} object is required for all
+\link[=stock-class]{stock} objects.
 }
 \details{
-A \link[=length-class]{length} object is required for all \link[=stock-class]{stock} objects. It
-defines the relationship between age and length, which is used throughout
-the operating model to convert age-based quantities to length-based
-quantities.
 \subsection{Specifying Length-at-Age}{
 
-Length schedules may be specified in two ways:
+There are two ways to define the length schedule:
 \enumerate{
-\item \strong{Model-based}: provide \code{Pars} and optionally \code{Model}. The \code{MeanAtAge}
-array is populated automatically during \code{\link[=Populate]{Populate()}}. If \code{Model} is
-\code{NULL} and \code{Pars} is non-empty with no \code{NA} values, the model is
-inferred via \code{\link[=FindModel]{FindModel()}}.
-\item \strong{Direct array}: provide \code{MeanAtAge} directly with \code{Pars = list()}
-(default). Any existing values in \code{MeanAtAge} will be preserved.
-}
-}
-
-\subsection{Length Distribution}{
-
-Within each age class, lengths are assumed to follow the distribution
-specified by \code{Dist}, with coefficient of variation \code{CVatAge}, truncated at
-\code{TruncSD} standard deviations. This distribution is used to construct the
-age-length key (\code{ALK}).
+\item \strong{Model-based} (recommended): supply \code{Pars} with the named parameters
+for your chosen growth model (e.g., \code{list(Linf = 80, K = 0.2, t0 = -0.5)} for von Bertalanffy). If \code{Model} is \code{NULL} and the parameter
+names uniquely identify a model, \code{\link[=FindModel]{FindModel()}} sets \code{Model}
+automatically. The \code{MeanAtAge} array and \code{ALK} are then populated by
+\code{\link[=Populate]{Populate()}} when the stock is added to an \code{\link[=OM]{OM()}}.
+\item \strong{Direct array}: supply \code{MeanAtAge} with \code{Pars = list()}. Any values
+already present in \code{MeanAtAge} are preserved and are not overwritten
+during \code{\link[=Populate]{Populate()}}.
 }
 
-\subsection{Attaching to a Stock}{
+See \link[=populating-schedules]{Specifying Biological and Fleet Schedules} for more details.
+}
 
-A \code{Length} object can be attached to a \code{\link[=Stock]{Stock()}} with
-\code{Length(Stock) <- MyLength} and retrieved with \code{Length(Stock)}.
+\subsection{Length Distribution and the ALK}{
 
-Individual slots may be accessed or modified using \code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}},
-\code{\link[=Units]{Units()}}, \code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=CVatAge]{CVatAge()}}, \code{\link[=Dist]{Dist()}}, \code{\link[=TruncSD]{TruncSD()}}, \code{\link[=Timing]{Timing()}},
-\code{\link[=ALK]{ALK()}}, and \code{\link[=Classes]{Classes()}}.
+Within each age class, lengths follow the distribution given by \code{Dist},
+centred on \code{MeanAtAge} with spread \code{CVatAge}, truncated at \code{TruncSD}
+standard deviations. These parameters are used to build the age-length key
+(\code{ALK}), which maps age-structured abundance to length-structured
+quantities throughout the operating model. Retrieve the computed key with
+\code{ALK(x)}.
+}
 
-See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more details.
+\subsection{Pass-Through Access from a Stock}{
+
+When \code{Pars} is a \link[=stock-class]{stock} object, \code{Length()} returns the \code{Length}
+slot directly:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{Length(my_stock)           # returns my_stock@Length
+Length(my_stock) <- my_L   # replaces my_stock@Length
+}\if{html}{\out{</div>}}
+}
+
+\subsection{Slot Accessors}{
+
+Individual slots can be read or replaced using generic functions matching
+their names. All replacement functions re-validate the object:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{Pars(len)         <- list(Linf = 80, K = 0.2, t0 = -0.5)
+Model(len)        <- "vonBert"
+Units(len)        <- "cm"
+MeanAtAge(len)    <- my_array
+CVatAge(len)      <- 0.08
+Dist(len)         <- "normal"
+TruncSD(len)      <- 3
+Timing(len)       <- 0
+ALK(len)          <- my_alk
+Classes(len)      <- seq(5, 80, by = 5)
+}\if{html}{\out{</div>}}
 }
 }
 \examples{
-
-# Use a built-in growth model
+# See LengthModels() for all available built-in growth models and the
+# parameter names required for each.
 LengthModels()
 
-## Constant over simulations and time
-# Populate the object (usually done internally; see `?Populate`)
-Length(Pars=list(Linf=100, K=0.2, t0=-0.1)) |>
-  Populate(Ages(20))
+# ---- Model-based specification ----
 
+## Constant parameters (scalar) — same value for every simulation and year
+len <- Length(Pars = list(Linf = 100, K = 0.2, t0 = -0.1))
 
-Length <- Populate(Length, Ages(20))
-MeanAtAge(Length)
+## Stochastic across simulations — Linf and K drawn from Uniform(lower, upper)
+## once per simulation; t0 fixed at -0.1 in all simulations
+len <- Length(Pars = list(Linf = c(90, 110),
+                          K    = c(0.15, 0.25),
+                          t0   = -0.1))
 
-PopulateLength()
+## Inter-annual random walk on Linf — log-normal with 5\% CV
+## LinfSD is removed from Pars after use
+len <- Length(Pars = list(Linf    = c(90, 110),
+                          LinfSD  = 0.05,
+                          K       = c(0.15, 0.25),
+                          t0      = -0.1))
 
-plot(Length)
+## Time-varying parameters with named change-point arrays
+## Only the years where values change need to be supplied; Extend() fills
+## all intermediate and future years by forward-filling automatically.
+nSim <- 48
+## Linf increases in 2010 (two change points: 1990 and 2010)
+Linf_arr <- array(
+  c(rep(80, nSim), rep(90, nSim)),
+  dim      = c(nSim, 2),
+  dimnames = list(Sim = seq_len(nSim), Year = c(1990, 2010))
+)
+len <- Length(Pars = list(Linf = Linf_arr,
+                          K    = c(0.15, 0.25),
+                          t0   = -0.1))
 
-## Uniform distributed over simulations, constant over time
-Length <- Length(Pars=list(Linf=c(90,100),
-                             K=c(0.15,0.2),
-                             t0=-0.1))
+## Combine stochastic (across sims) and time-varying (across years):
+## Linf is drawn per simulation AND changes in 2010
+Linf_sim   <- runif(nSim, 80, 100)
+Linf_arr2  <- array(
+  c(Linf_sim, Linf_sim * 1.1),        # 10\% increase from 2010 onward
+  dim      = c(nSim, 2),
+  dimnames = list(Sim = seq_len(nSim), Year = c(1990, 2010))
+)
+len <- Length(Pars = list(Linf = Linf_arr2,
+                          K    = c(0.15, 0.25),
+                          t0   = -0.1))
 
-# Log-normally distributed over time with 5\% CV on Linf
-Length <- Length(Pars=list(Linf=c(90,100),
-                             LinfSD=0.05,
-                             K=c(0.15,0.2),
-                             t0=-0.1))
+# ---- Direct array specification ----
 
-# Time-varying parameters
-# Linf - uniformly distributed over simulations, normally distributed over time
-nTS <- 30
-nsim <- 10
+## Supply MeanAtAge directly (Pars left empty).
+## A plain numeric vector of length nAge is accepted; it is treated as a
+## single simulation, single year and replicated by Extend() as needed.
+ages   <- 0:20
+len_aa <- Length(MeanAtAge = 100 * (1 - exp(-0.2 * (ages + 0.5))))
 
-Linf_mu <- runif(nsim, 50, 100)
-Linf_sd <- 0.1 * Linf_mu
+## Named Sim × Age × Year array — two change-point years, single simulation.
+## Extend() replicates Sim = 1 to all nSim simulations automatically.
+maa <- array(
+  c(100 * (1 - exp(-0.2 * (ages + 0.5))),   # 1990 schedule
+    110 * (1 - exp(-0.2 * (ages + 0.5)))),   # 2010 schedule (Linf increased)
+  dim      = c(1, length(ages), 2),
+  dimnames = list(Sim = 1, Age = ages, Year = c(1990, 2010))
+)
+len_arr <- Length(MeanAtAge = maa)
 
-Length <- Length(Pars=list(Linf=matrix(rnorm(nTS,Linf_mu,Linf_sd),
-                                       nsim, nTS),
-                             K=c(0.15,0.2),
-                             t0=-0.1))
+# ---- Custom length class midpoints ----
 
-# Change points in time-varying parameters
-Length <- Length(Pars=list(
-  Linf=matrix(rnorm(3, 100, 10),
-              nrow=1, ncol=3), # single simulation, 3 time steps
-  K=c(0.15,0.2), # uniform distribution
-  t0=-0.1) # single value
-  )
+## By default, Classes and the ALK are populated automatically during
+## Populate(). 
+# Supply Classes explicitly to override the default bin width.
+len_cls <- Length(
+  Pars    = list(Linf = 100, K = 0.2, t0 = -0.1),
+  Classes = seq(from = 2.5, by = 5, length.out = 26)
+)
 
-attributes(Length)$TimeSteps <- c(1980, 2000, 2020)
+# ---- Slot accessors ----
 
+len <- Length(Pars = list(Linf = 100, K = 0.2, t0 = -0.1))
 
-# Manually specify `MeanAtAge`, constant over sims and time
+## Read slots
+MeanAtAge(len)            # NULL until Populate() is called
+CVatAge(len)
+Units(len)
 
-MeanAtAge <- vonBert(0:20, 100, 0.1, 0)
+## Replace slots
+Units(len)   <- "cm"
+CVatAge(len) <- 0.08
+TruncSD(len) <- 3
 
-Length <- Length(MeanAtAge=MeanAtAge)
+# ---- Attaching to a Stock ----
 
-# Classes & Age-Size Key
+stk <- Stock(Name = "Example stock", Ages = Ages(MaxAge = 20))
+Length(stk) <- Length(Pars = list(Linf = 100, K = 0.2, t0 = -0.1))
+Length(stk)
 
-Length <- Length(Pars=list(Linf=100, K=0.2, t0=-0.1),
-                   Classes=seq(from=2.5, by=2.5, to=130))
+# ---- Populate ----
 
-plot(Length, Ages=Ages(20), type='ASK')
+## The final populated object (typically done internally)
+pop_len <- Populate(Length(stk))
+pop_len
 
+MeanAtAge(pop_len)
 }
 \seealso{
-\link[=length-class]{length}, \code{\link[=Stock]{Stock()}}, \code{\link[=LengthModels]{LengthModels()}}, \code{\link[=ValidUnits]{ValidUnits()}},
-\code{\link[=Populate]{Populate()}}, \code{\link[=FindModel]{FindModel()}}, \code{\link[=Weight]{Weight()}}, \code{\link[=Maturity]{Maturity()}}, \code{\link[=Pars]{Pars()}},
-\code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=CVatAge]{CVatAge()}}, \code{\link[=Units]{Units()}}, \code{\link[=ALK]{ALK()}}, \code{\link[=Classes]{Classes()}}
+\itemize{
+\item \link[=length-class]{length} for the class definition and slot-level documentation.
+\item \code{\link[=LengthModels]{LengthModels()}} for available growth models and required parameter sets.
+\item \code{\link[=ValidUnits]{ValidUnits()}} for accepted unit strings.
+\item \code{\link[=FindModel]{FindModel()}} for automatic model inference.
+\item \code{\link[=Populate]{Populate()}} for array population.
+\item \code{\link[=Stock]{Stock()}} for the enclosing stock constructor.
 }
+
+Other length:
+\code{\link{length-class}}
+}
+\concept{length}

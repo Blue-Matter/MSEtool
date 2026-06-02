@@ -2,111 +2,146 @@
 % Please edit documentation in R/class-om.R
 \name{om-class}
 \alias{om-class}
-\title{\code{OM} Object}
+\title{The \code{om} S4 Class}
 \description{
-The \code{om} class defines an operating model. See \code{\link[=OM]{OM()}} for more details.
+The \link[=om-class]{om} defines a complete operating model (OM) specification for
+use in Management Strategy Evaluation (MSE).
+}
+\details{
+Direct construction via \code{\link[methods:new]{methods::new()}} is not recommended; use \code{\link[=OM]{OM()}}
+instead, which populates defaults, derives \code{Years}, and initialises
+\code{StockTargeting} automatically.
+
+All slots can be accessed or replaced using functions matching the slot
+name. See \link{OM-accessors} for the full list. Slots belonging to sub-objects
+(\code{Stock}, \code{Fleet}, \code{Obs}, \code{Imp}, \code{Data}) are accessed via their own
+constructors, which also serve as pass-through accessors when called with
+an \link[=om-class]{om} argument.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{Name}}{Name of the operating model. Character string.}
+\item{\code{Name}}{Character. Name of the operating model. See \code{\link[=OM]{OM()}}.}
 
-\item{\code{Agency}}{Optional. Name of the agency responsible for management.
-Character string. Supports Markdown.}
+\item{\code{Agency}}{Character. Name of the agency responsible for management.
+Supports Markdown. See \code{\link[=OM]{OM()}}.}
 
-\item{\code{Author}}{Optional. Name(s) of author(s) of the operating model.
-Character vector.}
+\item{\code{Author}}{Character vector. Name(s) of the author(s). See \code{\link[=OM]{OM()}}.}
 
-\item{\code{Email}}{Optional. Email address(es) corresponding to \code{Author}.
-Character vector. Supports Markdown.}
+\item{\code{Email}}{Character vector. Email address(es) corresponding to \code{Author}.
+Supports Markdown. See \code{\link[=OM]{OM()}}.}
 
-\item{\code{Region}}{Optional. Name of the geographic region of the fishery.
-Character string.}
+\item{\code{Region}}{Character. Name of the geographic region of the fishery.
+See \code{\link[=OM]{OM()}}.}
 
-\item{\code{Latitude}}{Optional. Latitude (decimal degrees) representing the
-center of \code{Region}. Numeric scalar.}
+\item{\code{Latitude}}{Numeric. Latitude (decimal degrees) of the centre of
+\code{Region}. See \code{\link[=OM]{OM()}}.}
 
-\item{\code{Longitude}}{Optional. Longitude (decimal degrees) representing the
-center of \code{Region}. Numeric scalar.}
+\item{\code{Longitude}}{Numeric. Longitude (decimal degrees) of the centre of
+\code{Region}. See \code{\link[=OM]{OM()}}.}
 
-\item{\code{Sponsor}}{Optional. Organization sponsoring development of the
-operating model. Character string. Supports Markdown.}
+\item{\code{Sponsor}}{Character. Organisation sponsoring development of the
+operating model. Supports Markdown. See \code{\link[=OM]{OM()}}.}
 
-\item{\code{nSim}}{Number of stochastic simulations. Positive integer.}
+\item{\code{nSim}}{Positive integer. Number of stochastic simulations. See \code{\link[=OM]{OM()}}.}
 
-\item{\code{nYear}}{Number of historical years. Numeric scalar.}
+\item{\code{nYear}}{Numeric. Number of historical years. See \code{\link[=OM]{OM()}}.}
 
-\item{\code{pYear}}{Number of projection years. Numeric scalar.}
+\item{\code{pYear}}{Numeric. Number of projection years. See \code{\link[=OM]{OM()}}.}
 
-\item{\code{CurrentYear}}{Final historical year of the operating model.
-Integer scalar.}
+\item{\code{CurrentYear}}{Integer. Final historical calendar year. See \code{\link[=OM]{OM()}}.}
 
-\item{\code{Seasons}}{Number of seasons per year. Numeric scalar.}
+\item{\code{Seasons}}{Integer. Number of seasons per year. See \code{\link[=OM]{OM()}}.}
 
-\item{\code{Years}}{Vector of model years (including seasonal resolution if
-applicable). Numeric.}
+\item{\code{Years}}{Numeric vector. Model time steps (including seasonal resolution
+if applicable). Derived from \code{nYear}, \code{pYear}, \code{CurrentYear}, and
+\code{Seasons} via \code{\link[=CalcYears]{CalcYears()}}. Read-only; see \code{\link[=Years]{Years()}}.}
 
-\item{\code{Stock}}{A \code{\link[=Stock]{Stock()}} object or list of \code{\link[=Stock]{Stock()}} objects.}
+\item{\code{Stock}}{A \link[=stock-class]{stock} object or named list of \link[=stock-class]{stock} objects.
+See \code{\link[=Stock]{Stock()}}.}
 
-\item{\code{Fleet}}{A hierarchical list of \code{\link[=Fleet]{Fleet()}} objects by stock and fleet.
-Each stock must have the same number of fleets.}
+\item{\code{Fleet}}{A hierarchical named list of \link[=fleet-class]{fleet} objects indexed by
+stock then fleet. Each stock must have the same number of fleets.
+See \code{\link[=Fleet]{Fleet()}}.}
 
-\item{\code{Obs}}{A hierarchical list of \code{\link[=Obs]{Obs()}} objects by stock/complex and fleet.}
+\item{\code{Obs}}{A hierarchical named list of \link[=obs-class]{obs} objects indexed by stock
+and fleet. See \code{\link[=Obs]{Obs()}}.}
 
-\item{\code{Imp}}{A hierarchical list of \code{\link[=Imp]{Imp()}} objects by stock/complex and fleet.}
+\item{\code{Imp}}{A hierarchical named list of \link[=imp-class]{imp} objects indexed by stock
+and fleet. See \code{\link[=Imp]{Imp()}}.}
 
-\item{\code{Data}}{A \code{\link[=Data]{Data()}} object or list of \code{\link[=Data]{Data()}} objects associated with
-the operating model.}
+\item{\code{Data}}{A \link[=data-class]{data} object or list of \link[=data-class]{data} objects associated
+with the operating model. See \code{\link[=Data]{Data()}}.}
 
-\item{\code{DataLag}}{Integer specifying the number of time steps that data are
-lagged relative to management implementation.}
+\item{\code{DataLag}}{Integer. Number of time steps that data are lagged relative
+to management implementation. See \code{\link[=OM]{OM()}}.}
 
-\item{\code{CatchFrac}}{Optional list controlling catch fraction allocation.}
+\item{\code{CatchFrac}}{List. Controls catch fraction allocation among fleets or
+stocks. See \code{\link[=OM]{OM()}}.}
 
-\item{\code{Allocation}}{Optional list controlling fleet or stock allocation.}
+\item{\code{Allocation}}{List. Controls effort or catch allocation among fleets or
+stocks. See \code{\link[=OM]{OM()}}.}
 
-\item{\code{EFactor}}{Optional list of effort or exploitation modifiers.}
+\item{\code{EFactor}}{List. Effort or exploitation modifiers applied during
+projection. See \code{\link[=OM]{OM()}}.}
 
-\item{\code{Complexes}}{Optional list defining stock complexes for data aggregation
-and management.}
+\item{\code{Complexes}}{List. Defines stock complexes for data aggregation and
+management. See \code{\link[=OM]{OM()}}.}
 
-\item{\code{Herm}}{Optional list defining hermaphroditism or movement between stocks.}
+\item{\code{Herm}}{List. Defines hermaphroditism or movement between stocks.
+See \code{\link[=OM]{OM()}}.}
 
-\item{\code{SharePar}}{Logical indicating whether key parameters are shared among
-stocks.}
+\item{\code{SharePar}}{Logical. Whether key parameters are shared among stocks.
+See \code{\link[=OM]{OM()}}.}
 
-\item{\code{Relations}}{Optional list defining biological or ecological relationships
-among stocks.}
+\item{\code{Relations}}{List. Biological or ecological relationships among stocks.
+See \code{\link[=OM]{OM()}}.}
 
-\item{\code{Interval}}{Management update interval. Numeric scalar or named numeric
-vector.}
+\item{\code{StockTargeting}}{A \link[=stocktargeting-class]{stocktargeting} object. Defines fleet-level
+stock targeting weights and deviations. Initialised automatically by
+\code{\link[=OM]{OM()}} via \code{\link[=StockTargeting]{StockTargeting()}}.}
 
-\item{\code{nReps}}{Number of stochastic replicates for management advice.}
+\item{\code{Interval}}{Numeric scalar or named numeric vector. Management update
+interval in years. See \code{\link[=OM]{OM()}}.}
 
-\item{\code{pStar}}{Percentile applied to stochastic management advice.}
+\item{\code{nReps}}{Positive integer. Number of stochastic replicates for
+management advice. See \code{\link[=OM]{OM()}}.}
 
-\item{\code{maxF}}{Maximum allowable fishing mortality. Applies to nominal fishing mortality
-for fish that interact with the fishing gear, although actual effective F might be
-lower if some fish are discarded and survive.}
+\item{\code{pStar}}{Numeric. Percentile applied to stochastic management advice.
+See \code{\link[=OM]{OM()}}.}
 
-\item{\code{Seed}}{Optional random number generator seed.}
+\item{\code{maxF}}{Numeric. Maximum allowable instantaneous fishing mortality.
+See \code{\link[=OM]{OM()}}.}
 
-\item{\code{Control}}{Named list of operating model control settings.}
+\item{\code{Seed}}{Integer. Random number generator seed. See \code{\link[=OM]{OM()}}.}
 
-\item{\code{Misc}}{List for miscellaneous objects or developer-use components.}
+\item{\code{Control}}{Named list of operating model control settings. See \code{\link[=OM]{OM()}}.}
 
-\item{\code{Log}}{List used internally to store diagnostic or runtime information.}
+\item{\code{Misc}}{List. Miscellaneous objects or developer-use components.}
 
-\item{\code{Source}}{Optional character string referencing data sources or
-documentation. Supports Markdown.
-\subsection{Accessing and Assigning Slots}{
+\item{\code{Log}}{List. Internal diagnostic and runtime information. See \code{\link[=Log]{Log()}}.}
 
-Slots in \link[=om-class]{om} objects can be accessed or assigned using
-functions matching the slot names (e.g., \code{Agency(om)} or
-\code{Agency(om) <- "DFO"}).
-}}
+\item{\code{Source}}{Character. References to data sources or documentation.
+Supports Markdown. See \code{\link[=OM]{OM()}}.}
 }}
 
 \seealso{
-\code{\link[=OM]{OM()}}, \code{\link[=Stock]{Stock()}}, \code{\link[=Fleet]{Fleet()}}, \code{\link[=Obs]{Obs()}}, \code{\link[=Imp]{Imp()}}
+\itemize{
+\item \code{\link[=OM]{OM()}} for the constructor and \link{OM-accessors} for slot accessors.
+\item \code{\link[=Stock]{Stock()}}, \code{\link[=Fleet]{Fleet()}}, \code{\link[=Obs]{Obs()}}, \code{\link[=Imp]{Imp()}}, \code{\link[=Data]{Data()}} for sub-object
+constructors and their pass-through accessors.
+\item \code{\link[=Years]{Years()}}, \code{\link[=CalcYears]{CalcYears()}} for the derived time-step vector.
+\item \code{\link[=StockTargeting]{StockTargeting()}} for the stock targeting sub-object.
+\item \code{\link[=Log]{Log()}} for accessing runtime diagnostics.
+\item \code{\link[=runMSE]{runMSE()}}, \code{\link[=PopulateOM]{PopulateOM()}} for downstream use of the operating model.
 }
+
+Other om:
+\code{\link{ComplexOM}},
+\code{\link{MultiStockOM}},
+\code{\link[=OM]{OM()}},
+\code{\link{OM-accessors}},
+\code{\link{SingleStockOM}},
+\code{\link{TwoFleetOM}}
+}
+\concept{om}

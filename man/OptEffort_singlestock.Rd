@@ -11,6 +11,7 @@ OptEffort_singlestock(
   sim,
   TAC_by_Complex,
   TACType_by_Complex,
+  TACUnit_by_Complex,
   MaxFleetEffort = NULL,
   minEffort = 1e-08,
   tol = 0.001,

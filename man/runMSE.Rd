@@ -15,18 +15,18 @@ runMSE(
   nSim = NULL,
   nsim = NULL,
   DoDynamicUnfished = TRUE,
-  DoRefMSY = TRUE,
   DoRefLandings = TRUE,
   DoRefRemovals = FALSE,
   DoConditionObs = TRUE,
   DoGenerateData = TRUE,
+  DoMSYRefs = TRUE,
   Reduce = TRUE,
   ...
 )
 }
 \arguments{
 \item{OM}{An \link[=om-class]{om}, \link[=OM-legacy-class]{OM-legacy}, \link[=hist-class]{hist}, or \link[=Hist-legacy-class]{Hist-legacy} object.
-If \code{NULL} (default), uses \link{ExampleOM}.}
+If \code{NULL} (default), uses \link{SingleStockOM}.}
 
 \item{MPs}{Character vector of MP names to project. MPs must be functions
 available in the current environment. If \code{NULL} (default), projects
@@ -66,9 +66,6 @@ Sets \code{OM@nsim} before simulating. Default \code{NULL}.}
 \item{DoDynamicUnfished}{Logical. Calculate dynamic unfished reference
 points? Passed to \code{\link[=Simulate]{Simulate()}}. Default \code{TRUE}. \code{om} and \code{hist} class only.}
 
-\item{DoRefMSY}{Logical. Calculate MSY-based reference points? Passed to
-\code{\link[=Simulate]{Simulate()}}. Default \code{TRUE}. \code{om} and \code{hist} class only.}
-
 \item{DoRefLandings}{Logical. Calculate landings-based reference points?
 Passed to \code{\link[=Simulate]{Simulate()}}. Default \code{TRUE}. \code{om} and \code{hist} class only.}
 
@@ -80,6 +77,9 @@ data? Passed to \code{\link[=Simulate]{Simulate()}}. Default \code{TRUE}. \code{
 
 \item{DoGenerateData}{Logical. Generate observed data for MPs? Passed to
 \code{\link[=Simulate]{Simulate()}}. Default \code{TRUE}.  \code{om} and \code{hist} class only.}
+
+\item{DoMSYRefs}{Logical. Calculate MSY-based reference points? Passed to
+\code{\link[=Simulate]{Simulate()}}. Default \code{TRUE}. \code{om} and \code{hist} class only.}
 
 \item{Reduce}{Logical. Reserved for future use. Default \code{TRUE}.  \code{om} and \code{hist} class only.}
 
@@ -105,7 +105,7 @@ When a historical object is provided, \code{\link[=Simulate]{Simulate()}} is ski
 historical dynamics are used directly, saving computation time when
 projecting new MPs.
 
-If \code{OM = NULL}, uses \link{ExampleOM} and projects example MPs \link{CurrentEffort} and
+If \code{OM = NULL}, uses \link{SingleStockOM} and projects example MPs \link{CurrentEffort} and
 \link{CurrentCatch} as a quick demonstration.
 }
 \seealso{

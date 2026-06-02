@@ -54,9 +54,12 @@ PopulateDiscardMortality <- function(DiscardMortality,
   
   argList <- list(Ages, Length, nSim, Years, CalcAtLength, seed)
   
-  if (CheckDigest(DiscardMortality, argList) & !force) {
+  Ages  <- DefaultAges(Ages)
+  Years <- DefaultYears(Years)
+  nSim  <- Get_nSim(DiscardMortality, nSim)
+  
+  if (CheckDigest(DiscardMortality, argList) & !force) 
     return(DiscardMortality)
-  }
   
   # Default: no discard mortality if object is empty
   if (EmptyObject(DiscardMortality)) {
@@ -81,65 +84,23 @@ PopulateDiscardMortality <- function(DiscardMortality,
   
   SetSeed(seed)
   
-  AgeClasses <- Ages@Classes
-  nAge <- length(AgeClasses)
-  
-  if (!is.null(DiscardMortality@MeanAtAge)) {
-    if (!is.array(DiscardMortality@MeanAtAge)) {
-      if (!length(DiscardMortality@MeanAtAge)==1 &&
-          !length(DiscardMortality@MeanAtAge)==nAge)
-        cli::cli_abort("If `MeanAtAge(DiscardMortality)` is numeric vector, it must be length 1 or length `nAge`")
-      
-      DiscardMortality@MeanAtAge <- array(DiscardMortality@MeanAtAge, dim=c(1, nAge, 1),
-            dimnames=list(Sim = 1,
-                          Age=AgeClasses,
-                          Year=Years[1]))
-    }
-    
-  }
- 
-  
   DiscardMortality <- MeanAtLength2MeanAtAge(DiscardMortality, Length)
   
-  DiscardMortality@MeanAtAge <- AddAtAgeDimnames(DiscardMortality@MeanAtAge, 
-                                          Ages, Years,
-                                          name='DiscardMortality')
+  DiscardMortality <- AddAtAgeDimnames(DiscardMortality, Ages, Years)
   
-  if (CalcAtLength) {
+  if (CalcAtLength) 
     DiscardMortality <- MeanAtAge2MeanAtLength(DiscardMortality, Length,
                                                replace = replace, 
                                                Years=Years,
                                                ASK = ASKOverride)
-  }
   
   # Add Area dimension
   DiscardMortality@MeanAtLength <- AddDimension(DiscardMortality@MeanAtLength, "Area")
   DiscardMortality@MeanAtAge <- AddDimension(DiscardMortality@MeanAtAge, "Area")
   
   # Add dimension names if missing
-  if (is.null(dimnames(DiscardMortality@MeanAtLength))) {
-    dd <- dim(DiscardMortality@MeanAtLength)
-    if (!is.null(dd)) {
-      dimnames(DiscardMortality@MeanAtLength) <- list(
-        Sim = 1:dd[1],
-        Class = DiscardMortality@Classes,
-        Year = Years[1:dd[3]],
-        Area = 1:dd[4]
-      )
-    }
-  }
-  
-  if (is.null(dimnames(DiscardMortality@MeanAtAge))) {
-    dd <- dim(DiscardMortality@MeanAtAge)
-    if (!is.null(dd)) {
-      dimnames(DiscardMortality@MeanAtAge) <- list(
-        Sim = 1:dd[1],
-        Age = Ages@Classes[1:dd[2]],
-        Year = Years[1:dd[3]],
-        Area = 1:dd[4]
-      )
-    }
-  }
+  DiscardMortality <- AddAtAgeDimnames(DiscardMortality, Ages, Years)
+  DiscardMortality <- AddAtLengthDimnames(DiscardMortality, Years)
   
   SetDigest(SetAgeDimnames(DiscardMortality, Ages), argList)
 }

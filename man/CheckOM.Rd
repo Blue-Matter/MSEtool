@@ -20,5 +20,5 @@ The OM object with default values (if needed)
 Check OM object is complete
 }
 \examples{
-ExampleOM <- CheckOM(ExampleOM)
+SingleStockOM <- CheckOM(SingleStockOM)
 }

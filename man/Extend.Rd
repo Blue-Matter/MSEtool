@@ -4,6 +4,7 @@
 \alias{Extend}
 \alias{ExtendSims}
 \alias{ExtendAges}
+\alias{ExtendClasses}
 \alias{ExtendYears}
 \alias{ExtendAreas}
 \title{Extend an Array Along Named Dimensions}
@@ -12,6 +13,7 @@ Extend(
   array,
   nSim = NULL,
   AgeClasses = NULL,
+  Classes = NULL,
   Years = NULL,
   Areas = NULL,
   default = NULL,
@@ -24,6 +26,8 @@ Extend(
 ExtendSims(array, nSim = NULL)
 
 ExtendAges(array, AgeClasses = NULL)
+
+ExtendClasses(array, Classes = NULL)
 
 ExtendYears(
   array,
@@ -44,6 +48,9 @@ any named arrays. Any other object is returned unchanged.}
 \item{nSim}{Integer. Total number of simulations, or \code{NULL} to skip.}
 
 \item{AgeClasses}{Numeric vector of age classes, or \code{NULL} to skip.}
+
+\item{Classes}{Numeric vector of size classes (length or weight bins), or
+\code{NULL} to skip.}
 
 \item{Years}{Numeric vector of \code{Year} values to extend to, or \code{NULL} to
 skip.}
@@ -71,7 +78,8 @@ type matches the input type (array, S4, or list).
 }
 \description{
 Extends an array with named dimensions to include all simulations, ages,
-areas, and any missing years. Can also recurse into S4 objects and lists.
+size classes, areas, and any missing years. Can also recurse into
+S4 objects and lists.
 }
 \details{
 \subsection{ExtendSims}{
@@ -86,6 +94,13 @@ simulations. If already length \code{nSim}, the array is returned unchanged.
 The \code{Age} dimension must have length \code{1} or \code{nAge}. If length \code{1}, it is
 replicated to length \code{nAge} with the first age class copied to all ages.
 If already length \code{nAge}, the array is returned unchanged.
+}
+
+\subsection{ExtendClasses}{
+
+The \code{Class} dimension must have length \code{1} or \code{nClass}. If length \code{1}, it
+is replicated to length \code{nClass} with class 1 values copied to all classes.
+If already length \code{nClass}, the array is returned unchanged.
 }
 
 \subsection{ExtendYears}{
@@ -150,5 +165,6 @@ ExtendYears(array, Years)
 
 }
 \seealso{
-\code{\link[=ExtendSims]{ExtendSims()}}, \code{\link[=ExtendAges]{ExtendAges()}}, \code{\link[=ExtendYears]{ExtendYears()}}, \code{\link[=ExtendAreas]{ExtendAreas()}}
+\code{\link[=ExtendSims]{ExtendSims()}}, \code{\link[=ExtendAges]{ExtendAges()}}, \code{\link[=ExtendClasses]{ExtendClasses()}},
+\code{\link[=ExtendYears]{ExtendYears()}}, \code{\link[=ExtendAreas]{ExtendAreas()}}
 }

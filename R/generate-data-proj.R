@@ -33,10 +33,10 @@ GenerateProjectionData <- function(Proj, Year, YearsHist, YearsProj) {
   # replicate if only 1 sim for historical
   if (length(Proj@Data) == 1) {
     Proj@Data <- replicate(nSim, Proj@Data)
-    names(Proj@Data) <- 1:nSim
+    names(Proj@Data) <- seq_len(nSim)
   }
   
-  SimDataList <- purrr::map(1:nSim, \(x)
+  SimDataList <- purrr::map(seq_len(nSim), \(x)
                             GenerateProjectionData_Sim(x, 
                                                        Proj, 
                                                        DataYear, 
@@ -44,7 +44,7 @@ GenerateProjectionData <- function(Proj, Year, YearsHist, YearsProj) {
                                                        StockNames,
                                                        FleetNames)
   )
-  names(SimDataList) <- 1:nSim
+  names(SimDataList) <- seq_len(nSim)
   
   Proj@Data <- SimDataList
   Proj
@@ -65,59 +65,48 @@ GenerateProjectionData_Sim <- function(x, Proj, DataYear, YearsAll,
     Data <- DataList[[i]]
                      
     stocks <- Complexes[[i]]
-    if (max(Data@Years) >= DataYear) # data already exists for this time step
-      next()
+    
+    # data already exists for this time step
+    if (max(Data@Years) >= DataYear)  next
   
     if (!DataYear %in% Data@Years) 
       Data@Years <- c(Data@Years, DataYear)
     
-    Data@Effort <- GenProjData_Effort(x, 
-                                      Proj, 
-                                      DataYear, 
-                                      YearsAll, 
-                                      i)
+    # TODO
+    # Data@LifeHistory 
+    # Data@Exploitation
     
-    Data@Landings <- GenProjData_Catch(x,
-                                       Proj, 
-                                       DataYear,
-                                       YearsAll,
-                                       i,
-                                       stocks,
-                                       type='Landings')
+    Data@Effort         <- GenProjData_Effort(x, Proj, DataYear, YearsAll, i)
     
-    Data@Discards <- GenProjData_Catch(x,
-                                       Proj, 
-                                       DataYear,
-                                       YearsAll,
-                                       i,
-                                       stocks,
-                                       type='Discards')
+    Data@Landings       <- GenProjData_Catch(x, Proj, DataYear, YearsAll, i,
+                                             stocks, type = 'Landings')
     
-    Data@CPUE <- GenProjData_Index(x,
-                                   Proj,
-                                   DataYear,
-                                   YearsAll,
-                                   i,
-                                   stocks,
-                                   StockNames,
-                                   FleetNames,
-                                   type='CPUE')
+    Data@Discards       <- GenProjData_Catch(x, Proj, DataYear, YearsAll, i,
+                                             stocks, type = 'Discards')
     
-    Data@Survey <- GenProjData_Index(x,
-                                     Proj,
-                                     DataYear,
-                                     YearsAll,
-                                     i,
-                                     stocks,
-                                     StockNames,
-                                     FleetNames,
-                                     type='Survey')
+    Data@CPUE           <- GenProjData_Index(x, Proj, DataYear, YearsAll, i,
+                                             stocks, StockNames, FleetNames,
+                                             type = 'CPUE')
     
-    # CAA - TODO
+    Data@Survey         <- GenProjData_Index(x, Proj, DataYear, YearsAll, i,
+                                             stocks, StockNames, FleetNames,
+                                             type = 'Survey')
     
-    # CAL - TODO
+    Data@LandingsAtAge  <- GenProjData_AgeComp(x, Proj, DataYear, YearsAll, i,
+                                               stocks,
+                                               type = 'LandingsAtAge')
     
-    # Life-History - TODO
+    Data@DiscardsAtAge  <- GenProjData_AgeComp(x, Proj, DataYear, YearsAll, i,
+                                               stocks,
+                                               type = 'DiscardsAtAge')
+    
+    Data@LandingsAtSize <- GenProjData_SizeComp(x, Proj, DataYear, YearsAll, i,
+                                                stocks,
+                                                type = 'LandingsAtSize')
+    
+    Data@DiscardsAtSize <- GenProjData_SizeComp(x, Proj, DataYear, YearsAll, i,
+                                                stocks,
+                                                type = 'DiscardsAtSize')
     
     DataList[[i]] <- Data
     

@@ -64,6 +64,8 @@ ConditionObs_Index <- function(Hist,
     }
 
     Index_Obs <- slot(ObsObject,type)
+    ObservedIndex <- Indices_Value[,fl]
+    if (all(is.na(ObservedIndex))) next
     
     SelectivityAtAge_Data <- slot(FisheryData, type)@Selectivity[[fl]]
     
@@ -127,9 +129,7 @@ ConditionObs_Index <- function(Hist,
           ReduceDims()
       })
     }
-      
-    ObservedIndex <- Indices_Value[,fl]
-    
+
     Units <- slot(FisheryData,type)@Units[fl]
     if (is.null(Units)) Units <- 'Biomass'
     Index_Obs@Units <- Units

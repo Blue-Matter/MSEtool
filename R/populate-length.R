@@ -58,8 +58,9 @@ PopulateLength <- function(Length,
                            seed = NULL,
                            silent = FALSE,
                            force = FALSE) {
-  Ages <- DefaultAges(Ages)
+  Ages  <- DefaultAges(Ages)
   Years <- DefaultYears(Years)
+  nSim  <- Get_nSim(Length, nSim)
   
   argList <- list(Ages, nSim, Years, ALK, seed)
   
@@ -95,12 +96,14 @@ PopulateLength <- function(Length,
   if (!is.null(Length@CVatAge)) 
     Length <- PopulateClasses(Length)
   
+  Length <- AddAtAgeDimnames(Length, Ages, Years)
   
   if (ALK && !is.null(Length@Classes)) 
     Length <- PopulateASK(object = Length, 
                           Ages = Ages, 
                           silent = silent)
   
+
   SetDigest(SetAgeDimnames(Length, Ages), argList)
 }
 

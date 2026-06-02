@@ -4,9 +4,11 @@
 \alias{catch_timeseries}
 \alias{Interactions}
 \alias{Landings}
+\alias{Landings<-}
 \alias{Discards}
+\alias{Discards<-}
 \alias{Removals}
-\title{Extract Catch Time Series}
+\title{Extract or Assign Catch Time Series}
 \usage{
 Interactions(
   object,
@@ -29,6 +31,8 @@ Landings(
   IncYear = FALSE
 )
 
+Landings(x) <- value
+
 Discards(
   object,
   df = TRUE,
@@ -39,6 +43,8 @@ Discards(
   Reduce = TRUE,
   IncYear = FALSE
 )
+
+Discards(x) <- value
 
 Removals(
   object,
@@ -52,82 +58,115 @@ Removals(
 )
 }
 \arguments{
-\item{object}{A \link[=hist-class]{hist} or \link[=mse-class]{mse} object.}
+\item{object}{A \link[=hist-class]{hist}, \link[=mse-class]{mse}, \link[=obs-class]{obs}, or \link[=data-class]{data}
+object.}
 
-\item{df}{Logical. If \code{FALSE} the raw array slot is returned.
-If \code{TRUE}  (default) a tidy \code{data.frame} is returned.}
+\item{df}{Logical. Applies to \link[=hist-class]{hist} and \link[=mse-class]{mse} objects only.
+If \code{FALSE} the raw array slot is returned. If \code{TRUE} (default) a tidy
+\code{data.frame} is returned. Ignored for \link[=obs-class]{obs} and \link[=data-class]{data}
+objects.}
 
-\item{byAge}{Logical. If \code{TRUE} the data frame retains the \code{Age}
-dimension. Otherwise values are summed over ages.
-Mutually exclusive with \code{bySize}. Ignored when \code{df = FALSE}.}
+\item{byAge}{Logical. If \code{TRUE} the data frame retains the \code{Age} dimension.
+Otherwise values are summed over ages. Mutually exclusive with \code{bySize}.
+Applies to \link[=hist-class]{hist} and \link[=mse-class]{mse} objects only.}
 
 \item{byArea}{Logical. If \code{TRUE} the data frame retains the \code{Area}
-dimension. Otherwise values are summed over areas. Ignored when \code{df = FALSE}.}
+dimension. Otherwise values are summed over areas. Applies to
+\link[=hist-class]{hist} and \link[=mse-class]{mse} objects only.}
 
-\item{byFleet}{Logical. If \code{TRUE} (default for \code{Landings} and
-\code{Discards}) the data frame retains the \code{Fleet} dimension. Otherwise
-values are summed over fleets. Ignored when \code{df = FALSE}.}
+\item{byFleet}{Logical. If \code{TRUE} (default for \code{Landings()} and
+\code{Discards()}) the data frame retains the \code{Fleet} dimension. Otherwise
+values are summed over fleets. Applies to \link[=hist-class]{hist} and \link[=mse-class]{mse}
+objects only.}
 
 \item{Reduce}{Logical. If \code{TRUE} (default) simulation dimensions are
-reduced using  \code{\link[=ReduceDims]{ReduceDims()}} before conversion to a data frame.}
+reduced using \code{\link[=ReduceDims]{ReduceDims()}} before conversion to a data frame. Applies
+to \link[=hist-class]{hist} and \link[=mse-class]{mse} objects only.}
 
-\item{IncYear}{Logical. Passed to \code{\link[=ReduceDims]{ReduceDims()}}; controls whether the
-year dimension is retained during reduction. Default \code{FALSE}.}
+\item{IncYear}{Logical. Passed to \code{\link[=ReduceDims]{ReduceDims()}}; controls whether the year
+dimension is retained during reduction. Default \code{FALSE}. Applies to
+\link[=hist-class]{hist} and \link[=mse-class]{mse} objects only.}
 
 \item{bySize}{Logical. If \code{TRUE} the data frame retains the \code{Size}
 (length-bin) dimension using the \verb{*AtSize} slots. Otherwise values are
-summed over size classes. Mutually exclusive with \code{byAge}.
-Not available for \code{Interactions()}. Ignored when \code{df = FALSE}.}
+summed over size classes. Mutually exclusive with \code{byAge}. Not available
+for \code{Interactions()}. Applies to \link[=hist-class]{hist} and \link[=mse-class]{mse} objects
+only.}
+
+\item{x}{An \link[=obs-class]{obs} or \link[=data-class]{data} object.}
+
+\item{value}{A \link[=catchobs-class]{catchobs} object (when \code{x} is \link[=obs-class]{obs}) or a
+\link[=catchdata-class]{catchdata} object (when \code{x} is \link[=data-class]{data}) to assign.}
 }
 \value{
 \itemize{
-\item \code{df = FALSE} — the raw array slot (\code{Interactions}, \code{Landings}, or
-\code{Discards}).
-\item \code{df = TRUE} — a tidy \code{data.frame} with columns \code{Sim}, \code{Stock},
-\code{Year}, \code{Period}, \code{MP} (MSE only), and optionally \code{Age}, \code{Size},
-\code{Area}, and/or \code{Fleet}, plus \code{Value} and \code{Variable}.
+\item For \link[=obs-class]{obs}: the \link[=catchobs-class]{catchobs} object stored in the \code{Landings} or
+\code{Discards} slot.
+\item For \link[=data-class]{data}: the \link[=catchdata-class]{catchdata} object stored in the \code{Landings}
+or \code{Discards} slot.
+\item For \link[=hist-class]{hist} or \link[=mse-class]{mse} with \code{df = FALSE}: the raw array slot
+(\code{Interactions}, \code{Landings}, or \code{Discards}).
+\item For \link[=hist-class]{hist} or \link[=mse-class]{mse} with \code{df = TRUE}: a tidy \code{data.frame}
+with columns \code{Sim}, \code{Stock}, \code{Year}, \code{Period}, \code{MP} (MSE only), and
+optionally \code{Age}, \code{Size}, \code{Area}, and/or \code{Fleet}, plus \code{Value} and
+\code{Variable}.
+\item Assignment forms return \code{x} with the named slot replaced by \code{value}.
 }
 }
 \description{
-\code{Interactions()}, \code{Landings()}, \code{Discards()}, and \code{Removals} extract total
-interactions (encounters), retained landings, discards, and removals
-(landings + discards) respectively, from a \link[=hist-class]{hist} or \link[=mse-class]{mse} object.
+\code{Interactions()}, \code{Landings()}, \code{Discards()}, and \code{Removals()} extract
+total interactions (encounters), retained landings, discards, and removals
+(landings + discards) respectively.
 }
 \details{
-When \code{byAge = FALSE} or \code{bySize = FALSE}, the catch data are in units of
-biomass, i.e \code{N} x \code{Weight}, where \code{Weight} is the fleet-specific
-weight-at-age schedules provided in \code{WeightFleet} in the \code{\link[=Fleet]{Fleet()}} object.
+When called on a \link[=hist-class]{hist} or \link[=mse-class]{mse} object, the functions return
+simulated catch arrays or tidy data frames as described below.
 
-When \code{byAge = TRUE} or \code{bySize = TRUE} the values are in units of
-numbers (abundance).
+When called on an \link[=obs-class]{obs} object, the functions return the
+corresponding \link[=catchobs-class]{catchobs} slot directly (the observation error
+structure, not simulated values). When called on a \link[=data-class]{data} object,
+they return the corresponding \link[=catchdata-class]{catchdata} slot directly (the observed
+or simulated values). In both cases no data frame conversion is performed,
+regardless of any \code{df} argument.
 
+The assignment forms \verb{Landings<-} and \verb{Discards<-} replace the
+corresponding slot of an \link[=obs-class]{obs} or \link[=data-class]{data} object.
+
+When \code{byAge = FALSE} or \code{bySize = FALSE} for \link[=hist-class]{hist} or \link[=mse-class]{mse}
+objects, the catch data are in units of biomass (\verb{N x Weight}), where
+\code{Weight} is the fleet-specific weight-at-age schedule from \code{\link[=Fleet]{Fleet()}}.
+When \code{byAge = TRUE} or \code{bySize = TRUE} the values are in units of numbers.
 When \code{byArea = TRUE} the values are always in units of numbers.
 
-Future versions of this function may allow users to specify the units (i.e \code{N}
-or \code{B} for the catch data).
-
-When applied to an \link[=mse-class]{mse} object the historical and projection
-periods are row-bound and labelled via the \code{Period} column; historical
-rows carry \code{MP = "Historical"}.
+When applied to an \link[=mse-class]{mse} object the historical and projection periods
+are row-bound and labelled via the \code{Period} column; historical rows carry
+\code{MP = "Historical"}.
 }
 \examples{
-Hist <- Simulate(ExampleOM)
+Hist <- Simulate(SingleStockOM)
 MSE <- Project(Hist, 'CurrentEffort')
 
-# Raw arrays
+# Raw arrays from Hist / MSE
 Interactions(Hist, df = FALSE)
 Landings(MSE, df = FALSE)
 
-# Tidy data frames — total across fleets, ages, areas
+# Tidy data frames
 Interactions(Hist)
 Landings(MSE)
 Discards(MSE)
 Removals(MSE)
 
 # Retain fleet, age, and area structure
-Interactions(Hist, df = TRUE, byFleet = TRUE, byAge = TRUE, byArea = TRUE)
-Landings(MSE, df = TRUE, byFleet = TRUE, byAge = TRUE,  byArea = TRUE)
-Landings(MSE, df = TRUE, byFleet = TRUE, bySize = TRUE, byArea = TRUE)
-Discards(MSE, df = TRUE, byFleet = TRUE, byAge = TRUE,  byArea = TRUE)
+Landings(MSE, byFleet = TRUE, byAge = TRUE, byArea = TRUE)
+Discards(MSE, byFleet = TRUE, bySize = TRUE)
+
+# Direct slot access for obs and data objects
+obs <- Obs(Landings = CatchObs(CV = 0.2))
+Landings(obs)
+Landings(obs) <- CatchObs(CV = 0.3)
+
+dat <- Data(Landings = CatchData(Value = matrix(100, 1, 1)))
+Landings(dat)
+Landings(dat) <- CatchData()
 
 }

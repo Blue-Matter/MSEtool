@@ -9,7 +9,7 @@ PopulateNaturalMortality(
   Ages = NULL,
   Length = NULL,
   Years = NULL,
-  nSim = NULL,
+  nSim = 5,
   CalcAtLength = FALSE,
   seed = NULL,
   silent = FALSE,

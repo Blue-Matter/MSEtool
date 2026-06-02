@@ -98,16 +98,17 @@ Update_Effort_Sim <- function(Proj,
     if (!inherits(Advice, "advice"))                              next
     if (is.null(Advice@Effort))                                   next
     
+    # Scalar effort expanded to nFleet (skip if already a matrix)
     if (!is.array(Advice@Effort) && length(Advice@Effort)==1) 
       Advice@Effort <- rep(Advice@Effort,nFleet)[seq_len(nFleet)]
-    
-    # if (UnchangedManagement(Advice, AdvicePrevious, "Effort"))    next
-    
-    # Convert from Relative to Absolute Effort
+
+    # Convert relative fleets to absolute 
     Advice <- Convert_Effort_Abs(Proj, sim, Advice, YearsHist, nFleet)
       
     # Distribute Effort over Areas if specified in MP 
-    temp <- Distribute_Effort_Area(Proj, sim, TSIndex, Advice, nFleet, nArea, FleetNames, YearsHist, YearsProj)
+    temp <- Distribute_Effort_Area(Proj, sim, TSIndex, Advice, nFleet,
+                                   nArea, FleetNames, 
+                                   YearsHist, YearsProj)
     Distribution[[i]] <- temp$Distribution
     AdviceList[[i]] <- temp$Advice
   }
@@ -216,14 +217,22 @@ Convert_Effort_Abs <- function(Proj,
                                YearsHist,
                                nFleet) {
   
-  if (Advice@EffType == 'Abs') return(Advice)
-  
-  if (length(dim(Advice@Effort)) >1)
+  if (is.array(Advice@Effort) && length(dim(Advice@Effort)) > 1)
     return(Advice)
   
-  LastHistEffort <- Proj@Effort[sim, length(YearsHist), ]
-  Advice@Effort <- rep(Advice@Effort, nFleet)[seq_len(nFleet)]
-  Advice@Effort  <- Advice@Effort * LastHistEffort 
+  # Recycle EffType to nFleet
+  eff_type <- recycle_to_fleets(Advice@EffType, nFleet, 'EffType')
+  
+  if (all(eff_type == 'Abs')) 
+    return(Advice)
+  
+  LastHistEffort <- Proj@Effort[sim, length(YearsHist), ]   
+  effort         <- rep(Advice@Effort, nFleet)[seq_len(nFleet)]
+  
+  rel_idx          <- eff_type == 'Rel'
+  effort[rel_idx]  <- effort[rel_idx] * LastHistEffort[rel_idx]
+ 
+  Advice@Effort <- effort
   Advice
 }
 

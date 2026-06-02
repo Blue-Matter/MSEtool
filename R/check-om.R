@@ -8,7 +8,7 @@
 #' @export
 #'
 #' @examples
-#' ExampleOM <- CheckOM(ExampleOM)
+#' SingleStockOM <- CheckOM(SingleStockOM)
 CheckOM <- function(OM, msg=TRUE, stop_if_missing=TRUE) {
   CheckClass(OM, c('OM', 'om'))
   

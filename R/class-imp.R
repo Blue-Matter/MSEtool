@@ -1,33 +1,4 @@
-#' Implementation Error Slot
-#'
-#' Internal class representing implementation uncertainty for a single
-#' management control (TAC, effort, or size regulations) within an
-#' [imp-class] object.
-#'
-#' @slot Mean Numeric array or list of arrays. Mean implemented fraction of
-#'   the management recommendation (e.g. `1` = perfect compliance with TAC).
-#' @slot SD Numeric array or list of arrays. Standard deviation of
-#'   implementation error around `Mean`.
-#' @slot Compliance Numeric array or list of arrays. Compliance rate, i.e.
-#'   the proportion of the fleet that adheres to the management control.
-#' @slot Error Numeric array or list of arrays. Realised implementation error,
-#'   typically derived from `Mean`, `SD`, and `Compliance` during simulation.
-#' @slot Misc List. Miscellaneous additional information.
-#'
-#' @seealso [imp-class], [Imp()]
-#'
-#' @include class-unions.R
-#' @keywords internal
-setClass(
-  "impslot",
-  slots = c(
-    Mean       = "num.array.list",
-    SD         = "num.array.list",
-    Compliance = "num.array.list",
-    Error      = "num.array.list",
-    Misc       = "list"
-  )
-)
+
 
 #' Implementation Error
 #'
@@ -36,26 +7,42 @@ setClass(
 #' limits) are imperfectly applied in the operating model.
 #'
 #' @slot Name Character. Name of the implementation error model.
-#' @slot TAC An [impslot-class] object. Implementation error associated with
-#'   total allowable catch (TAC) recommendations.
-#' @slot Effort An [impslot-class] object. Implementation error associated
-#'   with effort-based controls.
-#' @slot Size An [impslot-class] object. Implementation error associated with
-#'   size-based regulations (e.g. minimum landing size).
+#'   See [Imp()].
+#' @slot TAC An [impslot-class] object. Implementation error for total
+#'   allowable catch recommendations. See [Imp()].
+#' @slot Effort An [impslot-class] object. Implementation error for
+#'   effort-based controls. See [Imp()].
+#' @slot Size An [impslot-class] object. Implementation error for size-based
+#'   regulations. See [Imp()].
 #' @slot Misc List. Miscellaneous additional objects.
 #'
 #' @details
 #' Each of the `TAC`, `Effort`, and `Size` slots is an [impslot-class] object
 #' containing `Mean`, `SD`, `Compliance`, and `Error` arrays that together
-#' describe how imperfectly the corresponding management control is
-#' implemented across simulations.
+#' describe how imperfectly the corresponding management control is implemented
+#' across simulations.
 #'
 #' An [imp-class] object can be attached to an [om-class] object and
 #' retrieved with `Imp(om)`.
 #'
-#' @seealso [Imp()], [impslot-class], [OM()], [Advice()], [ConvertImp()]
+#' Direct construction via [methods::new()] is not recommended; use [Imp()]
+#' instead, which initialises all sub-objects automatically.
+#'
+#' @note
+#' The [imp-class] is currently a placeholder. The class interface is
+#' subject to change.
+#'
+#' @seealso
+#' - [Imp()] for the constructor and accessor.
+#' - [ImpSlot()] for the sub-object constructor and slot-level accessors.
+#' - [OM()] for the operating model constructor.
+#' - [Advice()] for the advice object connected to implementation.
+#' - [ConvertImp()] for converting legacy implementation objects.
+#'
+#' @family imp
 #'
 #' @include class-unions.R
+#' @include class-imp-slot.R
 #' @name imp-class
 #' @export
 setClass(
@@ -70,33 +57,8 @@ setClass(
 )
 
 
-#' @rdname imp-class
-#' @return
-#' - If `Name` is an [om-class] object, returns `object@Imp`.
-#' - Otherwise returns a new empty [imp-class] object.
-#' @export
-Imp <- function(Name = NULL,
-                TAC    = NULL,
-                Effort = NULL,
-                Size   = NULL,
-                Misc   = list()) {
-  if (inherits(Name, "om"))
-    return(Name@Imp)
-  
-  .Object <- methods::new("imp")
-  if (!is.null(Name))    .Object@Name   <- Name
-  if (!is.null(TAC))     .Object@TAC    <- TAC
-  if (!is.null(Effort))  .Object@Effort <- Effort
-  if (!is.null(Size))    .Object@Size   <- Size
-  
-  .Object@Misc <- Misc
-  
-  methods::validObject(.Object)
-  .Object
-}
-
 setValidity("imp", function(object) {
-  # TODO: structural and dimensional checks
+  # TODO
   TRUE
 })
 

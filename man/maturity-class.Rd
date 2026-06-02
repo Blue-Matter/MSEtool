@@ -3,30 +3,89 @@
 \docType{class}
 \name{maturity-class}
 \alias{maturity-class}
-\title{Maturity Class}
+\title{The \code{maturity} S4 Class}
 \description{
-An S4 class representing the maturity schedule for a \code{\link[=Stock]{Stock()}} object.
+Defines the maturity schedule for a \link[=stock-class]{stock} object. Maturity may be
+expressed as a function of age, length, or weight. Objects are typically
+created via \code{\link[=Maturity]{Maturity()}}, which documents all parameters, validates inputs,
+and infers the maturity model automatically when possible.
 }
 \details{
-See \code{\link[=Maturity]{Maturity()}} for details.
+Direct construction via \code{\link[methods:new]{methods::new()}} is not recommended; use
+\code{\link[=Maturity]{Maturity()}} instead, which handles model inference and object validation.
+
+Only one of \code{MeanAtAge}, \code{MeanAtLength}, or \code{MeanAtWeight} need be
+populated; \code{MeanAtAge} takes precedence if more than one is present.
+
+After \code{\link[=Populate]{Populate()}}, \code{Semelparous} is always a \verb{Sim × Age × Year} array.
+Do not test \code{Semelparous(mat) == TRUE} on a populated object; check
+\code{any(Semelparous(mat) > 0)} instead.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{Pars}}{Named list of model parameters (e.g. L50, L50_95)}
+\item{\code{Pars}}{\code{list}. Named list of maturity model parameters whose names
+correspond to those expected by \code{Model}. See \code{\link[=MaturityModels]{MaturityModels()}} for
+parameter sets and
+\link[=populating-schedules]{Specifying Biological and Fleet Schedules} for
+accepted input formats.}
 
-\item{\code{Model}}{Character or function identifying the maturity model}
+\item{\code{Model}}{\code{function} or \code{character(1)}. Maturity model identifier,
+matched to one of \code{\link[=MaturityModels]{MaturityModels()}}. Set automatically by \code{\link[=FindModel]{FindModel()}}
+when \code{Pars} is supplied without an explicit model.}
 
-\item{\code{MeanAtAge}}{Numeric array of maturity-at-age}
+\item{\code{MeanAtAge}}{\code{array}. Mean maturity-at-age with named dimensions \code{Sim},
+\code{Age}, and \code{Year}. Values range from 0 (immature) to 1 (fully mature).
+Populated automatically by \code{\link[=Populate]{Populate()}} when \code{Pars} and \code{Model} are set;
+may also be supplied directly when \code{Pars} is empty. When \code{Pars} contains
+a matched model, any existing values are overwritten.
+See \link[=populating-schedules]{Specifying Biological and Fleet Schedules}.}
 
-\item{\code{MeanAtLength}}{Numeric array of maturity-at-length (optional).}
+\item{\code{MeanAtLength}}{\code{array}. Mean maturity-at-length with named dimensions
+\code{Sim}, \code{Length}, and \code{Year}. Populated automatically when an at-length
+maturity model is used, or may be supplied directly. Converted to
+\code{MeanAtAge} via the \code{ALK} during \code{\link[=Populate]{Populate()}} when \code{MeanAtAge} is not
+already populated.
+See \link[=populating-schedules]{Specifying Biological and Fleet Schedules}.}
 
-\item{\code{MeanAtWeight}}{Numeric array of maturity-at-weight (optional).}
+\item{\code{MeanAtWeight}}{\code{array}. Mean maturity-at-weight with named dimensions
+\code{Sim}, \code{Weight}, and \code{Year}. Populated automatically when an at-weight
+maturity model is used, or may be supplied directly. Converted to
+\code{MeanAtAge} via the \code{AWK} during \code{\link[=Populate]{Populate()}} when \code{MeanAtAge} is not
+already populated. Requires a populated \link[=weight-class]{weight} object with a
+non-\code{NULL} \code{CVatAge} slot (so that the \code{AWK} exists).
+See \link[=populating-schedules]{Specifying Biological and Fleet Schedules}.}
 
-\item{\code{Classes}}{Optional numeric vector defining maturity classes}
+\item{\code{Classes}}{\code{numeric}. Age, length, or weight class midpoints
+corresponding to the \verb{MeanAt*} array in use.}
 
-\item{\code{Semelparous}}{Logical or array indicating semelparity}
+\item{\code{Semelparous}}{\code{logical} or \code{array}. Controls post-spawning mortality.
+Before \code{\link[=Populate]{Populate()}}, a scalar \code{TRUE} or \code{FALSE}. After \code{\link[=Populate]{Populate()}}, always
+a \verb{Sim × Age × Year} array where each cell gives the fraction of
+individuals at that age dying immediately after spawning. The default
+(\code{FALSE}) sets all cells to 0 (no post-spawn mortality). \code{TRUE} sets
+the array equal to \code{MeanAtAge}, so that post-spawn mortality tracks the
+maturity ogive — fully mature fish die with probability 1, fish on the
+ogive die proportionally, and immature fish are unaffected. A custom
+array may also be supplied directly. See \code{\link[=Maturity]{Maturity()}} for details.}
 
-\item{\code{Misc}}{Miscellaneous list.}
+\item{\code{Misc}}{\code{list}. Used internally.}
 }}
 
+\seealso{
+\itemize{
+\item \code{\link[=Maturity]{Maturity()}} for the constructor and accessor functions.
+\item \code{\link[=MaturityModels]{MaturityModels()}} for available maturity models and their required
+parameters.
+\item \code{\link[=Populate]{Populate()}} for array population.
+\item \code{\link[=FindModel]{FindModel()}} for automatic model inference.
+\item \code{\link[=Semelparous]{Semelparous()}} to retrieve or set the post-spawn mortality array.
+\item \code{\link[=Length]{Length()}} and \code{\link[=Weight]{Weight()}} for the companion schedules required by at-length and at-weight maturity models.
+\item \link[=populating-schedules]{Specifying Biological and Fleet Schedules} for the
+full description of how \code{Pars}, \code{Model}, and \verb{MeanAt*} arrays interact.
+}
+
+Other maturity:
+\code{\link[=Maturity]{Maturity()}}
+}
+\concept{maturity}

@@ -33,7 +33,7 @@ match is found. The full set of names must be provided — partial reordering
 is not supported.
 }
 \examples{
-OM <- AddFleet(ExampleOM, 'DummyFleet')
+OM <- AddFleet(SingleStockOM, 'DummyFleet')
 FleetNames(OM)
 
 OM2 <- Reorder(OM, Fleets = rev(FleetNames(OM)))

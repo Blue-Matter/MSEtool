@@ -3,7 +3,7 @@
 \docType{class}
 \name{data-class}
 \alias{data-class}
-\title{\code{data} Class}
+\title{The \code{data} S4 Class}
 \description{
 The \code{data} class stores observed or simulated fishery data used by an
 \code{\link[=OM]{OM()}} object. Data may include life-history information, exploitation
@@ -45,43 +45,43 @@ supplied to \code{\link[=Data]{Data()}}.}
 
 \item{\code{nArea}}{Positive integer. Number of spatial areas. Defaults to \code{1}.}
 
-\item{\code{LifeHistory}}{An object of class \link{lifehistorydata} containing
+\item{\code{LifeHistory}}{An object of class \link[=lifehistorydata-class]{lifehistorydata} containing
 biological parameters such as growth, maturity, and natural mortality.}
 
-\item{\code{Exploitation}}{An object of class \link{exploitationdata} containing
+\item{\code{Exploitation}}{An object of class \link[=exploitationdata-class]{exploitationdata} containing
 selectivity, retention, and discard mortality parameters.}
 
-\item{\code{Reference}}{An object of class \link{referencedata} containing biological
+\item{\code{Reference}}{An object of class \link[=referencedata-class]{referencedata} containing biological
 reference points such as unfished biomass and MSY-based quantities.}
 
-\item{\code{Effort}}{An object of class \link{effortdata} containing fishing effort
+\item{\code{Effort}}{An object of class \link[=effortdata-class]{effortdata} containing fishing effort
 time series.}
 
-\item{\code{Landings}}{An object of class \link{catchdata} containing landed catch
+\item{\code{Landings}}{An object of class \link[=catchdata-class]{catchdata} containing landed catch
 time series.}
 
-\item{\code{Discards}}{An object of class \link{catchdata} containing discarded catch
+\item{\code{Discards}}{An object of class \link[=catchdata-class]{catchdata} containing discarded catch
 time series.}
 
-\item{\code{CPUE}}{An object of class \link{indicesdata} containing catch-per-unit-effort
+\item{\code{CPUE}}{An object of class \link[=indicesdata-class]{indicesdata} containing catch-per-unit-effort
 indices.}
 
-\item{\code{Survey}}{An object of class \link{indicesdata} containing fishery-independent
+\item{\code{Survey}}{An object of class \link[=indicesdata-class]{indicesdata} containing fishery-independent
 survey indices.}
 
-\item{\code{LandingsAtAge}}{An object of class \link{compdata} containing age composition
+\item{\code{LandingsAtAge}}{An object of class \link[=compdata-class]{compdata} containing age composition
 of landed catch.}
 
-\item{\code{DiscardsAtAge}}{An object of class \link{compdata} containing age composition
+\item{\code{DiscardsAtAge}}{An object of class \link[=compdata-class]{compdata} containing age composition
 of discarded catch.}
 
-\item{\code{LandingsAtSize}}{An object of class \link{compdata} containing size
+\item{\code{LandingsAtSize}}{An object of class \link[=compdata-class]{compdata} containing size
 composition of landed catch.}
 
-\item{\code{DiscardsAtSize}}{An object of class \link{compdata} containing size
+\item{\code{DiscardsAtSize}}{An object of class \link[=compdata-class]{compdata} containing size
 composition of discarded catch.}
 
-\item{\code{Advice}}{An object of class \link{advicedata} containing TAC recommendations
+\item{\code{Advice}}{An object of class \link[=advicedata-class]{advicedata} containing TAC recommendations
 and related management advice.}
 
 \item{\code{Misc}}{A named list for any additional user-defined data. Defaults to

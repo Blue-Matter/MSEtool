@@ -5,7 +5,7 @@
 \alias{AWK}
 \alias{AWK<-}
 \alias{Weight<-}
-\title{Weight}
+\title{Weight Constructor and Accessors}
 \usage{
 Weight(
   Pars = list(),
@@ -30,107 +30,296 @@ AWK(x) <- value
 Weight(x) <- value
 }
 \arguments{
-\item{Pars}{Named list of growth parameters corresponding to \code{Model}. See
-\code{\link[=WeightModels]{WeightModels()}} for available models and required parameters. If \code{Pars}
-is a \link[=stock-class]{stock} object, the \code{Weight} slot of that stock is returned.
-If \code{Pars} is non-empty, \code{Model} is \code{NULL}, and all values are non-\code{NA},
-the model is inferred automatically via \code{\link[=FindModel]{FindModel()}}.}
+\item{Pars}{\code{list}. Named list of allometric parameters. Element names must
+match the arguments of a built-in weight model (see \code{\link[=WeightModels]{WeightModels()}}).
+When \code{Pars} is non-empty and \code{Model} is \code{NULL}, the model is inferred
+automatically by \code{\link[=FindModel]{FindModel()}}. When \code{Pars} is a \link[=stock-class]{stock} object,
+\code{Weight()} acts as a pass-through accessor and returns \code{x@Weight}.
+See \emph{Specifying Weight-at-Age} and
+\link[=populating-schedules]{Specifying Biological and Fleet Schedules} for the
+full set of accepted input formats. Default \code{list()}.}
 
-\item{Model}{Character or function. Weight model identifier. If \code{NULL}
-(default), the model is inferred from \code{Pars} where possible. See
-\code{\link[=WeightModels]{WeightModels()}} for available models.}
+\item{Model}{\code{character(1)} or \code{function}. Weight model identifier. When
+\code{NULL} (default), the model is inferred from \code{Pars} via \code{\link[=FindModel]{FindModel()}}.
+May be set to a character string naming a built-in model or to a custom
+R function — see \link[=populating-schedules]{Specifying Biological and Fleet Schedules}.}
 
-\item{Units}{Character. Weight units (e.g., \code{"g"}, \code{"kg"}). See
-\code{\link[=ValidUnits]{ValidUnits()}} for valid options. Default \code{"g"}.}
+\item{Units}{\code{character(1)}. Physical unit of weight measurements. Must be
+one of the strings returned by \code{\link[=ValidUnits]{ValidUnits()}} (e.g., \code{"g"}, \code{"kg"}).
+Default \code{"g"}.}
 
-\item{MeanAtAge}{Numeric array. Mean weight at age, with named dimensions
-\code{Sim}, \code{Age}, and \code{Year}. Populated automatically during \code{\link[=Populate]{Populate()}} if
-\code{Pars} and \code{Model} are provided. Default \code{NULL}.}
+\item{MeanAtAge}{\code{array} or \code{NULL}. Mean weight at age with named dimensions
+\verb{Sim × Age × Year}. Supply directly when bypassing the model-based
+approach (\code{Pars = list()}). Only the years at which values \emph{change} need
+to be included; \code{\link[=Extend]{Extend()}} fills the remainder. When \code{Pars} contains a
+matched model, any values here are \strong{overwritten} during \code{\link[=Populate]{Populate()}}.
+A numeric vector of length \code{nAge} is also accepted and is promoted to a
+\verb{1 × nAge × 1} array automatically. Default \code{NULL}.}
 
-\item{MeanAtLength}{Numeric array. Mean weight at length, with named
-dimensions \code{Sim}, \code{Length}, and \code{Year}. Default \code{NULL}.}
+\item{MeanAtLength}{\code{array} or \code{NULL}. Mean weight at length with named
+dimensions \verb{Sim × Length × Year}. Populated automatically during
+\code{\link[=Populate]{Populate()}} when an at-length weight model is used (see \emph{At-Length
+Models}); may also be supplied directly. When \code{MeanAtLength} is populated
+and \code{MeanAtAge} is not, \code{\link[=Populate]{Populate()}} converts it to \code{MeanAtAge} via the
+age-length key (\code{ALK}) from a \link[=length-class]{length} object. Default \code{NULL}.}
 
-\item{CVatAge}{Numeric. Coefficient of variation of weight at age, used to
-generate the weight distribution within each age class. Default \code{NULL} as
-it is not typically used.}
+\item{CVatAge}{\code{numeric(1)}, length-2 bounds vector, \code{array}, or \code{NULL}.
+Coefficient of variation of weight-at-age, used to parameterise the
+within-age-class weight distribution and to build the age-weight key
+(\code{AWK}). A length-2 vector is treated as \code{Uniform(lower, upper)} bounds
+sampled once per simulation. When \code{NULL} (default), no \code{AWK} is
+constructed; for most models weight variability is propagated through the
+\code{ALK} and a length-weight relationship rather than through \code{CVatAge}
+directly.}
 
-\item{Dist}{Character. Distribution of weight-at-age
-(e.g., \code{"lognormal"}). Default \code{"lognormal"}.}
+\item{Dist}{\code{character(1)}. Parametric distribution for weight-at-age
+variability. Options are \code{"lognormal"} (default) and \code{"normal"}.}
 
-\item{TruncSD}{Numeric. Truncation of the weight-at-age distribution in
-standard deviation units. Default \code{2}.}
+\item{TruncSD}{\code{numeric(1)}. Number of standard deviations at which the
+weight distribution is truncated. Default \code{2}.}
 
-\item{Timing}{Numeric. Timing of weight measurement within the time step
-(0 = start, 1 = end). Default \code{0}.}
+\item{Timing}{\code{numeric(1)}. Fractional position within the time step at
+which weight is measured: \code{0} = start of step, \code{1} = end of step.
+Default \code{0}.}
 
-\item{Random}{Numeric array. Random effects on weight parameters. Default
-\code{NULL}.}
+\item{Random}{\code{array} or \code{NULL}. Simulation- and year-specific random
+multipliers applied to weight parameters. Currently stored but not
+applied. Default \code{NULL}.}
 
-\item{AWK}{Numeric array. Age-weight key. Default \code{NULL}. Only used if
-\code{CVatAge} is not \code{NULL}.}
+\item{AWK}{\code{array} or \code{NULL}. Age-weight key giving the probability that an
+individual of a given age belongs to each weight class
+(\verb{Sim × Age × Class × Year}). Only populated during \code{\link[=Populate]{Populate()}} when
+\code{CVatAge} is non-\code{NULL}; supply directly only when overriding the
+computed key. Default \code{NULL}.}
 
-\item{Classes}{Numeric vector. Weight class midpoints. Default \code{NULL}.}
+\item{Classes}{\code{numeric} or \code{NULL}. Weight class midpoints in units of
+\code{Units}. Populated automatically during \code{\link[=Populate]{Populate()}} when \code{CVatAge} is
+non-\code{NULL} and \code{Classes} is \code{NULL}. Default \code{NULL}.}
 
-\item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
+\item{Misc}{\code{list}. Used internally. Default \code{list()}.}
 
 \item{x}{A \link[=weight-class]{weight} object for slot accessors, or a \link[=stock-class]{stock}
 object for \verb{Weight<-}.}
 
-\item{value}{For \verb{Weight<-}: a \link[=weight-class]{weight} object. For \verb{AWK<-}: the new
-age-weight key array.}
+\item{value}{For \verb{Weight<-}: a \link[=weight-class]{weight} object. For \verb{AWK<-}: a
+replacement age-weight key array.}
 }
 \value{
 \itemize{
-\item \code{Weight()} returns a \link[=weight-class]{weight} object. If \code{Pars} is a \link[=stock-class]{stock}
-object, the \code{Weight} slot of that stock is returned.
-\item \verb{Weight<-} returns \code{x} with the \code{Weight} slot replaced.
-\item \code{AWK()} returns the age-weight key from \code{x}.
-\item \verb{AWK<-} returns \code{x} with the \code{AWK} slot updated.
+\item \code{Weight()} returns a \link[=weight-class]{weight} object. If \code{Pars} is a \link[=stock-class]{stock},
+returns \code{x@Weight}.
+\item \verb{Weight<-} returns the \link[=stock-class]{stock} \code{x} with the \code{Weight} slot replaced
+and the object re-validated.
+\item \code{AWK()} returns the age-weight key array from \code{x}.
+\item \verb{AWK<-} returns \code{x} with the \code{AWK} slot updated and the object
+re-validated.
 }
 }
 \description{
-Construct and manipulate a \link[=weight-class]{weight} object defining weight-at-age
-and weight-at-length schedules associated with a \code{\link[=Stock]{Stock()}} object. A
-\code{Weight} object is required for all \link[=stock-class]{stock} objects.
+Construct a \link[=weight-class]{weight} object defining the weight-at-age and
+weight-at-length schedules for a \link[=stock-class]{stock}, or access and replace the
+\code{Weight} slot of a \link[=stock-class]{stock} and its individual slots. A \code{Weight}
+object is required for all \link[=stock-class]{stock} objects.
 }
 \details{
-A \link[=weight-class]{weight} object is required for all \link[=stock-class]{stock} objects. It
-defines how weight varies with age and/or length, and is used throughout
-the operating model for biomass calculations and selectivity conversions.
 \subsection{Specifying Weight-at-Age}{
 
-Weight schedules may be specified in two ways:
-\enumerate{
-\item \strong{Model-based}: provide \code{Pars} and optionally \code{Model}. \code{MeanAtAge}
-is populated automatically during \code{\link[=Populate]{Populate()}}. If \code{Model} is \code{NULL}
-and \code{Pars} is non-empty with no \code{NA} values, the model is inferred via
-\code{\link[=FindModel]{FindModel()}}.
-\item \strong{Direct array}: provide \code{MeanAtAge} or \code{MeanAtLength} directly with
-\code{Pars = list()} (default).
+There are two ways to define the weight schedule:
+
+\strong{Model-based} (recommended): supply \code{Pars} with named parameters matching
+a built-in model (see \code{\link[=WeightModels]{WeightModels()}}). If \code{Model = NULL} and the parameter
+names uniquely match a model, \code{\link[=FindModel]{FindModel()}} resolves the model
+automatically. \code{MeanAtAge} is then populated by \code{\link[=Populate]{Populate()}} when the stock
+is added to an \code{\link[=OM]{OM()}}:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{# Power-law length-weight — model inferred from Pars names
+wt <- Weight(Pars = list(a = 0.01, b = 3.0))
+
+# Stochastic a across simulations
+wt <- Weight(Pars = list(a = c(0.008, 0.012), b = 3.0))
+
+# Time-varying a (increases in 2010; Extend() fills the rest)
+a_arr <- array(c(0.01, 0.012), dim = c(1, 2),
+               dimnames = list(Sim = 1, Year = c(1990, 2010)))
+wt <- Weight(Pars = list(a = a_arr, b = 3.0))
+
+# Inter-annual random walk on a (log-normal, SD = 0.1)
+wt <- Weight(Pars = list(a = 0.01, aSD = 0.1, b = 3.0))
+}\if{html}{\out{</div>}}
+
+\strong{Direct array}: supply \code{MeanAtAge} (or \code{MeanAtLength}) with
+\code{Pars = list()}. Values are preserved during \code{\link[=Populate]{Populate()}}:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{ages  <- 0:20
+wt_aa <- Weight(MeanAtAge = 0.01 * (100 * (1 - exp(-0.2 * ages)))^3)
+}\if{html}{\out{</div>}}
+
+See \link[=populating-schedules]{Specifying Biological and Fleet Schedules} for full
+details on input formats and the rules that govern how \code{Pars}, \code{Model}, and
+\verb{MeanAt*} arrays interact.
+}
+
+\subsection{At-Length Weight Models}{
+
+Some built-in weight models (those whose class contains \code{"at-Length"}) take
+a \link[=length-class]{length} object as input and produce \code{MeanAtLength} rather than
+\code{MeanAtAge} directly. In this case a populated \code{\link[=Length]{Length()}} object must be
+passed to \code{\link[=Populate]{Populate()}}. The resulting \code{MeanAtLength} is then converted to
+\code{MeanAtAge} automatically via the age-length key (\code{ALK}). The same
+conversion applies when \code{MeanAtLength} is supplied directly by the user.
+}
+
+\subsection{The Age-Weight Key}{
+
+The \code{AWK} is only constructed when \code{CVatAge} is non-\code{NULL}. For most
+operating models weight variability is captured through the \code{ALK} and a
+length-weight relationship, so \code{CVatAge} is typically left at its default
+of \code{NULL}.
+}
+
+\subsection{Pass-Through Access from a Stock}{
+
+When \code{Pars} is a \link[=stock-class]{stock} object, \code{Weight()} returns the \code{Weight}
+slot directly:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{Weight(my_stock)           # returns my_stock@Weight
+Weight(my_stock) <- my_wt  # replaces my_stock@Weight
+}\if{html}{\out{</div>}}
+}
+
+\subsection{Slot Accessors}{
+
+Individual slots can be read or replaced using generic functions matching
+their names. All replacement functions re-validate the object:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{Pars(wt)          <- list(a = 0.01, b = 3.0)
+Model(wt)         <- "LengthWeight"
+Units(wt)         <- "kg"
+MeanAtAge(wt)     <- my_array
+MeanAtLength(wt)  <- my_length_array
+CVatAge(wt)       <- 0.1
+Dist(wt)          <- "lognormal"
+TruncSD(wt)       <- 3
+Timing(wt)        <- 0
+AWK(wt)           <- my_awk
+Classes(wt)       <- seq(0, 5, by = 0.5)
+}\if{html}{\out{</div>}}
 }
 }
+\examples{
+# See WeightModels() for all available built-in weight models and the
+# parameter names required for each.
+WeightModels()
 
-\subsection{Weight Distribution}{
+# ---- Model-based specification ----
 
-Within each age class, weights are assumed to follow the distribution
-specified by \code{Dist}, with coefficient of variation \code{CVatAge}, truncated at
-\code{TruncSD} standard deviations. This distribution is used to construct the
-age-weight key (\code{AWK}).
-}
+## Constant parameters (scalar) — same value for every simulation and year
+wt <- Weight(Pars = list(a = 0.01, b = 3.0))
 
-\subsection{Attaching to a Stock}{
+## Stochastic across simulations — a drawn from Uniform(lower, upper)
+## once per simulation; b fixed in all simulations
+wt <- Weight(Pars = list(a = c(0.008, 0.012), b = 3.0))
 
-A \code{Weight} object can be attached to a \code{\link[=Stock]{Stock()}} with
-\code{Weight(Stock) <- MyWeight} and retrieved with \code{Weight(Stock)}.
+## Inter-annual random walk on a — log-normal with 10\% CV
+## aSD is removed from Pars after use
+wt <- Weight(Pars = list(a    = c(0.008, 0.012),
+                         aSD  = 0.1,
+                         b    = 3.0))
 
-Individual slots may be accessed or modified using \code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}},
-\code{\link[=Units]{Units()}}, \code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=MeanAtLength]{MeanAtLength()}}, \code{\link[=CVatAge]{CVatAge()}}, \code{\link[=Dist]{Dist()}},
-\code{\link[=TruncSD]{TruncSD()}}, \code{\link[=Timing]{Timing()}}, \code{\link[=AWK]{AWK()}}, and \code{\link[=Classes]{Classes()}}.
+## Time-varying parameters with named change-point arrays
+## Only the years where values change need to be supplied; Extend() fills
+## all intermediate and future years by forward-filling automatically.
+nSim <- 48
 
-See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more details.
-}
+## a increases in 2010 (two change points: 1990 and 2010)
+a_arr <- array(
+  c(rep(0.01, nSim), rep(0.012, nSim)),
+  dim      = c(nSim, 2),
+  dimnames = list(Sim = seq_len(nSim), Year = c(1990, 2010))
+)
+wt <- Weight(Pars = list(a = a_arr, b = 3.0))
+
+## Combine stochastic (across sims) and time-varying (across years):
+## a is drawn per simulation AND increases in 2010
+a_sim  <- runif(nSim, 0.008, 0.012)
+a_arr2 <- array(
+  c(a_sim, a_sim * 1.2),              # 20\% increase from 2010 onward
+  dim      = c(nSim, 2),
+  dimnames = list(Sim = seq_len(nSim), Year = c(1990, 2010))
+)
+wt <- Weight(Pars = list(a = a_arr2, b = 3.0))
+
+# ---- Direct array specification ----
+
+## Supply MeanAtAge directly (Pars left empty).
+## A plain numeric vector of length nAge is accepted; it is treated as a
+## single simulation, single year and replicated by Extend() as needed.
+ages  <- 0:20
+Linf  <- 100; K <- 0.2; t0 <- -0.1; a <- 0.01; b <- 3
+wt_aa <- Weight(MeanAtAge = a * (Linf * (1 - exp(-K * (ages - t0))))^b)
+
+## Named Sim x Age x Year array — two change-point years, single simulation.
+## Extend() replicates Sim = 1 to all nSim simulations automatically.
+maa <- array(
+  c(a * (Linf       * (1 - exp(-K * (ages - t0))))^b,   # 1990 schedule
+    a * (Linf * 1.1 * (1 - exp(-K * (ages - t0))))^b),  # 2010 (Linf up 10\%)
+  dim      = c(1, length(ages), 2),
+  dimnames = list(Sim = 1, Age = ages, Year = c(1990, 2010))
+)
+wt_arr <- Weight(MeanAtAge = maa)
+
+## Supply MeanAtLength directly — converted to MeanAtAge via the ALK
+## during Populate() when a Length object is provided.
+lens      <- seq(5, 120, by = 5)
+wt_al <- Weight(
+  MeanAtLength = array(
+    a * lens^b,
+    dim      = c(1, length(lens), 1),
+    dimnames = list(Sim = 1, Length = lens, Year = 1990)
+  )
+)
+
+# ---- Slot accessors ----
+
+wt <- Weight(Pars = list(a = 0.01, b = 3.0))
+
+## Read slots
+MeanAtAge(wt)     # NULL until Populate() is called
+MeanAtLength(wt)  # NULL until Populate() is called (at-length models only)
+CVatAge(wt)       # NULL by default; AWK is only built when non-NULL
+Units(wt)
+
+## Replace slots
+Units(wt)   <- "kg"
+TruncSD(wt) <- 3
+
+# ---- Attaching to a Stock ----
+
+stk <- Stock(Name = "Example stock", Ages = Ages(MaxAge = 20))
+Weight(stk) <- Weight(Pars = list(a = 0.01, b = 3.0))
+Weight(stk)
+
+# ---- Populate ----
+
+## The final populated object (typically done internally).
+## An at-length model requires a populated Length object.
+pop_wt <- Populate(Weight(stk), Ages = Ages(MaxAge = 20))
+pop_wt
 }
 \seealso{
-\link[=weight-class]{weight}, \code{\link[=Stock]{Stock()}}, \code{\link[=WeightModels]{WeightModels()}}, \code{\link[=ValidUnits]{ValidUnits()}},
-\code{\link[=Populate]{Populate()}}, \code{\link[=Length]{Length()}}, \code{\link[=Maturity]{Maturity()}}, \code{\link[=Pars]{Pars()}}
+\itemize{
+\item \link[=weight-class]{weight} for the class definition and slot-level documentation.
+\item \code{\link[=WeightModels]{WeightModels()}} for available weight models and required parameter
+sets.
+\item \code{\link[=ValidUnits]{ValidUnits()}} for accepted unit strings.
+\item \code{\link[=FindModel]{FindModel()}} for automatic model inference.
+\item \code{\link[=Populate]{Populate()}} for array population.
+\item \code{\link[=Stock]{Stock()}} for the enclosing stock constructor.
+\item \code{\link[=Length]{Length()}} for the companion length schedule, required when using
+at-length weight models.
 }
+
+Other weight:
+\code{\link{weight-class}}
+}
+\concept{weight}

@@ -63,13 +63,14 @@ PopulateFecundity <- function(Fecundity,
                               Weight = NULL,
                               Maturity = NULL,
                               Years = NULL,
-                              nSim = NULL,
+                              nSim = 5,
                               seed = NULL,
                               silent = FALSE,
                               CalcAtLength = FALSE,
                               force = FALSE) {
-  Ages <- DefaultAges(Ages)
+  Ages  <- DefaultAges(Ages)
   Years <- DefaultYears(Years)
+  nSim  <- Get_nSim(Fecundity, nSim)
   
   argList <- list(Ages, Length, Weight, Maturity, nSim, Years, CalcAtLength, seed)
   
@@ -106,13 +107,8 @@ PopulateFecundity <- function(Fecundity,
     return(SetDigest(Fecundity, argList))
   }
   
-  if (EmptyObject(Fecundity)) {
+  if (CheckDigest(Fecundity, argList) & !force) 
     return(Fecundity)
-  }
-  
-  if (CheckDigest(Fecundity, argList) & !force) {
-    return(Fecundity)
-  }
   
   SetSeed(seed)
   
@@ -157,6 +153,12 @@ PopulateFecundity <- function(Fecundity,
   ModelClass <- getModelClass(Fecundity@Model)
   if (!is.null(ModelClass)) {
     if (grepl("at-Length", getModelClass(Fecundity@Model))) {
+      CheckRequiredObject(Length, "length", "Length")
+      Length <- PopulateLength(Length, 
+                               Ages = Ages, 
+                               Years = Years, 
+                               nSim = nSim)
+      
       Fecundity <- PopulateMeanAtLength(
         object = Fecundity, 
         Length = Length, 
@@ -171,19 +173,13 @@ PopulateFecundity <- function(Fecundity,
   }
   
   Fecundity <- MeanAtLength2MeanAtAge(Fecundity, Length)
+
+  Fecundity <- AddAtAgeDimnames(Fecundity, Ages, Years)
   
-  if (CalcAtLength) {
+  if (CalcAtLength) 
     Fecundity <- MeanAtAge2MeanAtLength(Fecundity, Length)
-  }
   
-  if (is.null(dimnames(Fecundity@MeanAtAge))) {
-    dd <- dim(Fecundity@MeanAtAge)
-    dimnames(Fecundity@MeanAtAge) <- list(
-      Sim=1:dd[1],
-      Age=Ages@Classes[1:dd[2]],
-      Year=Years[1:dd[3]]
-    )
-  }
+  Fecundity <- AddAtLengthDimnames(Fecundity, Years, 'Fecundity')
   
   SetDigest(SetAgeDimnames(Fecundity, Ages), argList)
 }

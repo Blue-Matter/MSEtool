@@ -102,7 +102,7 @@ StandardizeEffort <- function(OM,
   fleet_names <- FleetNames(OM)
   
   if (n_stock == 1) {
-    OM@StockTargeting <- new('stocktargeting')
+    OM@StockTargeting <- StockTargeting(OM)
     return(OM)
   }
   

@@ -2,7 +2,8 @@
 % Please edit documentation in R/constructor-fecundity.R
 \name{Fecundity}
 \alias{Fecundity}
-\title{Fecundity}
+\alias{Fecundity<-}
+\title{Fecundity Constructor and Accessors}
 \usage{
 Fecundity(
   Pars = list(),
@@ -14,72 +15,316 @@ Fecundity(
   Timing = NULL,
   Misc = list()
 )
+
+Fecundity(x) <- value
 }
 \arguments{
-\item{Pars}{List of fecundity model parameters (see \code{\link[=FecundityModels]{FecundityModels()}})..}
+\item{Pars}{\code{list}. Named list of fecundity parameters. Element names must
+match the arguments of a built-in fecundity model (see \code{\link[=FecundityModels]{FecundityModels()}}).
+When \code{Pars} is non-empty and \code{Model} is \code{NULL}, the model is inferred
+automatically by \code{\link[=FindModel]{FindModel()}}. When \code{Pars} is a \link[=stock-class]{stock} object,
+\code{Fecundity()} acts as a pass-through accessor and returns \code{x@Fecundity}.
+See also
+\link[=populating-schedules]{Specifying Biological and Fleet Schedules} for the
+full set of accepted input formats. Default \code{list()}.}
 
-\item{Model}{Character string or function identifying the fecundity model.}
+\item{Model}{\code{character(1)} or \code{function}. Fecundity model identifier. When
+\code{NULL} (default), the model is inferred from \code{Pars} via \code{\link[=FindModel]{FindModel()}}.
+May be set to a character string naming a built-in model or to a custom
+R function — see
+\link[=populating-schedules]{Specifying Biological and Fleet Schedules}.}
 
-\item{Units}{Character string giving fecundity units.}
+\item{Units}{\code{character(1)}. Unit of reproductive output (e.g., \code{"eggs"}).
+Sets the unit of the \code{SProduction} slot in \link[=hist-class]{hist} output objects.
+Default \code{"eggs"}.}
 
-\item{MeanAtAge}{Numeric array giving fecundity-at-age.}
+\item{MeanAtAge}{\code{array} or \code{NULL}. Mean fecundity-at-age with named
+dimensions \verb{Sim × Age × Year}. Supply directly when bypassing the
+model-based approach (\code{Pars = list()}). Only the years at which values
+\emph{change} need to be included; \code{\link[=Extend]{Extend()}} fills the remainder. When \code{Pars}
+contains a matched model, any values here are \strong{overwritten} during
+\code{\link[=Populate]{Populate()}}. A numeric vector of length \code{nAge} is also accepted and
+promoted to a \verb{1 × nAge × 1} array automatically. Default \code{NULL}.}
 
-\item{MeanAtLength}{Numeric array giving fecundity-at-length.}
+\item{MeanAtLength}{\code{array} or \code{NULL}. Mean fecundity-at-length with named
+dimensions \verb{Sim × Length × Year}. Populated automatically during
+\code{\link[=Populate]{Populate()}} when an at-length fecundity model is used; may also be
+supplied directly. When \code{MeanAtLength} is populated and \code{MeanAtAge} is
+not, \code{\link[=Populate]{Populate()}} converts it to \code{MeanAtAge} via the age-length key
+(\code{ALK}) from a \link[=length-class]{length} object. Default \code{NULL}.}
 
-\item{Classes}{Numeric vector of age or length classes.}
+\item{Classes}{\code{numeric} or \code{NULL}. Age or length class midpoints
+corresponding to the \verb{MeanAt*} array in use. Default \code{NULL}.}
 
-\item{Timing}{Numeric array giving timing of fecundity.}
+\item{Timing}{\code{array} or \code{NULL}. Reserved for future use. Intended to
+represent the timing of spawning within the time step. Currently stored
+but not applied; spawning timing is controlled by \code{\link[=SRR]{SRR()}}. Default \code{NULL}.}
 
-\item{Misc}{Miscellaneous list.}
+\item{Misc}{\code{list}. Used internally. Default \code{list()}.}
+
+\item{x}{A \link[=fecundity-class]{fecundity} object for slot accessors, or a \link[=stock-class]{stock}
+object for \verb{Fecundity<-}.}
+
+\item{value}{For \verb{Fecundity<-}: a \link[=fecundity-class]{fecundity} object.}
 }
 \value{
-A valid \link[=fecundity-class]{fecundity} object.
+\itemize{
+\item \code{Fecundity()} returns a \link[=fecundity-class]{fecundity} object. If \code{Pars} is a
+\link[=stock-class]{stock}, returns \code{x@Fecundity}.
+\item \verb{Fecundity<-} returns the \link[=stock-class]{stock} \code{x} with the \code{Fecundity} slot
+replaced and the object re-validated.
+}
 }
 \description{
-Construct a \link[=fecundity-class]{fecundity} object defining the length-at-age structure
-associated with a \code{\link[=Stock]{Stock()}}.
+Construct a \link[=fecundity-class]{fecundity} object defining the fecundity schedule for a
+\link[=stock-class]{stock}, or access and replace the \code{Fecundity} slot of a \link[=stock-class]{stock}
+and its individual slots. \code{Fecundity} is optional — see \emph{Default Behaviour}
+below.
 }
 \details{
-The \code{Fecundity()} constructor creates a \code{\link[=Fecundity]{Fecundity()}} object describing
-reproductive output as a function of age or length.
+\subsection{Default Behaviour When Omitted}{
 
-Fecundity is optional.
+\code{Fecundity} is optional. When this object is empty (the default), \code{\link[=Populate]{Populate()}}
+computes spawning production (\code{SProduction} in \link[=hist-class]{hist} output) as
+mature weight-at-age — the product of \code{Weight@MeanAtAge} and
+\code{Maturity@MeanAtAge}. In this case \code{SProduction} equals spawning biomass
+(\code{SBiomass}) and both slots carry the same values.
 
-A \code{Fecundity} object can be attached to a \code{\link[=Stock]{Stock()}} using \code{Fecundity(Stock) <- MyFecundity} and
-retrieved using \code{MyFecundity <- Fecundity(Stock)}
+When this object is populated, \code{SProduction} is computed in the units of
+\code{Units} (e.g. eggs per individual multiplied through maturity), allowing
+reproductive output to differ from biomass. This is relevant for species
+where egg production is not proportional to body weight — for example,
+batch-spawning fish or species with strongly size-dependent clutch size.
+}
 
-Individual components may be accessed or modified using accessor and
-replacement functions such as \code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}}, and \code{\link[=Units]{Units()}}.
+\subsection{Specifying Fecundity}{
 
-See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more details.
+There are two ways to define the fecundity schedule; see
+\link[=populating-schedules]{Specifying Biological and Fleet Schedules} for full
+details on input formats and the rules that govern how \code{Pars}, \code{Model}, and
+\verb{MeanAt*} arrays interact.
+
+\strong{Model-based} (recommended): supply \code{Pars} with named parameters matching
+a built-in model (see \code{\link[=FecundityModels]{FecundityModels()}}). If \code{Model = NULL} and the
+parameter names uniquely match a model, \code{\link[=FindModel]{FindModel()}} resolves the model
+automatically. \code{MeanAtAge} is then populated by \code{\link[=Populate]{Populate()}} when the stock
+is added to an \code{\link[=OM]{OM()}}:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{# Egg production proportional to weight — model inferred from Pars names
+fec <- Fecundity(Pars = list(a = 1000, b = 3.0))
+
+# Stochastic a across simulations
+fec <- Fecundity(Pars = list(a = c(800, 1200), b = 3.0))
+
+# Time-varying a (increases in 2010; Extend() fills the rest)
+a_arr <- array(c(1000, 1200), dim = c(1, 2),
+               dimnames = list(Sim = 1, Year = c(1990, 2010)))
+fec <- Fecundity(Pars = list(a = a_arr, b = 3.0))
+
+# Inter-annual random walk on a (log-normal, SD = 0.1)
+fec <- Fecundity(Pars = list(a = c(800, 1200), aSD = 0.1, b = 3.0))
+}\if{html}{\out{</div>}}
+
+\strong{Direct array}: supply \code{MeanAtAge} (or \code{MeanAtLength}) with
+\code{Pars = list()}. Values are preserved during \code{\link[=Populate]{Populate()}}:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{ages  <- 0:20
+fec_aa <- Fecundity(
+  MeanAtAge = array(
+    1000 * seq(0, 1, length.out = length(ages))^2,
+    dim      = c(1, length(ages), 1),
+    dimnames = list(Sim = 1, Age = ages, Year = 1990)
+  )
+)
+}\if{html}{\out{</div>}}
+}
+
+\subsection{At-Length Models}{
+
+Models whose class contains \code{"at-Length"} produce \code{MeanAtLength}, which is
+converted to \code{MeanAtAge} via the \code{ALK} — a populated \code{\link[=Length]{Length()}} object must
+be passed to \code{\link[=Populate]{Populate()}}.
+}
+
+\subsection{Pass-Through Access from a Stock}{
+
+When \code{Pars} is a \link[=stock-class]{stock} object, \code{Fecundity()} returns the \code{Fecundity}
+slot directly:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{Fecundity(my_stock)             # returns my_stock@Fecundity
+Fecundity(my_stock) <- my_fec   # replaces my_stock@Fecundity
+}\if{html}{\out{</div>}}
+}
+
+\subsection{Slot Accessors}{
+
+Individual slots can be read or replaced using generic functions matching
+their names. All replacement functions re-validate the object:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{Pars(fec)          <- list(a = 1000, b = 3.0)
+Model(fec)         <- "EggProduction"
+Units(fec)         <- "eggs"
+MeanAtAge(fec)     <- my_array
+MeanAtLength(fec)  <- my_length_array
+Classes(fec)       <- 0:20
+}\if{html}{\out{</div>}}
+}
 }
 \examples{
-
+# See FecundityModels() for all available built-in fecundity models and the
+# parameter names required for each. All models use a logistic 50/95
+# parameterisation with an asymptote of MaxFec.
 FecundityModels()
 
-# Fecundity-at-Age-Model
-Fecundity <- Fecundity(Pars=list(A50=3, A50_95=4, MaxFec=1E6))
-Model(Fecundity)
+# ---- Default behaviour (Fecundity omitted) ----
 
-# Populate the object (usually done internally; see `?Populate`)
-Fecundity <- Populate(Fecundity, Ages=Ages(20))
+## When Fecundity is left empty, Populate() computes SProduction as mature
+## weight-at-age (Weight@MeanAtAge * Maturity@MeanAtAge), so SProduction
+## equals SBiomass. This is appropriate for most species.
+stk <- Stock(Name = "Example stock", Ages = Ages(MaxAge = 20))
+Fecundity(stk)    # empty fecundity-class object
 
-plot(Fecundity)
+# ---- Model-based specification — age-based ----
 
-# Fecundity-at-Length-Model
-Fecundity <- Fecundity(Pars=list(L50=50, L50_95=10, MaxFec=1E6))
-Model(Fecundity)
+## FecundityAtAge: logistic fecundity-at-age
+## A50     = age at 50\% maximum fecundity
+## A50_95  = age interval from 50\% to 95\% maximum fecundity
+## MaxFec  = asymptotic (maximum) fecundity
 
-# Populate the object (usually done internally; see `?Populate`)
-Fecundity <- Populate(Fecundity,
-                      Ages=Ages(20),
-                      Length=Length(Pars=list(Linf=100, K=0.1, t0=0)))
+## Constant parameters — same value for every simulation and year
+fec <- Fecundity(Pars = list(A50 = 4, A50_95 = 2, MaxFec = 1e6))
+
+## Stochastic A50 across simulations — drawn from Uniform(lower, upper)
+fec <- Fecundity(Pars = list(A50    = c(3, 5),
+                             A50_95 = 2,
+                             MaxFec = 1e6))
 
 
-plot(Fecundity)
+## Time-varying MaxFec with named change-point arrays
+## Only the years where values change need to be supplied; Extend() fills
+## all intermediate and future years by forward-filling automatically.
+nSim <- 48
 
-# see Examples in `?Length` for other `Pars` configurations
+mf_arr <- array(
+  c(rep(1e6, nSim), rep(1.2e6, nSim)),   # MaxFec increases in 2010
+  dim      = c(nSim, 2),
+  dimnames = list(Sim = seq_len(nSim), Year = c(1990, 2010))
+)
+fec <- Fecundity(Pars = list(A50    = c(3, 5),
+                             A50_95 = 2,
+                             MaxFec = mf_arr))
+
+
+# ---- Model-based specification — length-based ----
+
+## FecundityAtLength: logistic fecundity-at-length
+## L50     = length at 50\% maximum fecundity
+## L50_95  = length interval from 50\% to 95\% maximum fecundity
+fec_l <- Fecundity(Pars = list(L50    = 40,
+                               L50_95 = 8,
+                               MaxFec = 1e6))
+
+## Stochastic L50 and time-varying MaxFec combined
+L50_sim <- runif(nSim, 35, 45)
+fec_l2  <- Fecundity(Pars = list(L50    = L50_sim,
+                                 L50_95 = 8,
+                                 MaxFec = mf_arr))
+
+# ---- Model-based specification — weight-based ----
+
+## FecundityAtWeight: logistic fecundity-at-weight
+## W50     = weight at 50\% maximum fecundity
+## W50_95  = weight interval from 50\% to 95\% maximum fecundity
+fec_w <- Fecundity(Pars = list(W50    = 2.0,
+                               W50_95 = 0.5,
+                               MaxFec = 1e6))
+
+# ---- Direct array specification ----
+
+## Supply MeanAtAge directly (Pars left empty).
+## A plain numeric vector of length nAge is accepted; treated as a single
+## simulation, single year and replicated by Extend() as needed.
+ages   <- 0:20
+fec_aa <- Fecundity(
+  MeanAtAge = logistic_50_95(ages, x50 = 4, x50_95 = 2, asymp = 1e6)
+)
+
+
+## Named Sim x Age x Year array — two change-point years, single simulation.
+## Extend() replicates Sim = 1 to all nSim simulations automatically.
+maa <- array(
+  c(logistic_50_95(ages, x50 = 4,   x50_95 = 2, asymp = 1e6),  # 1990
+    logistic_50_95(ages, x50 = 4.5, x50_95 = 2, asymp = 1.2e6)),# 2010
+  dim      = c(1, length(ages), 2),
+  dimnames = list(Sim = 1, Age = ages, Year = c(1990, 2010))
+)
+fec_arr <- Fecundity(MeanAtAge = maa)
+
+## Supply MeanAtLength directly — converted to MeanAtAge via the ALK
+## during Populate() when a Length object is provided.
+lens   <- seq(5, 120, by = 5)
+fec_al <- Fecundity(
+  MeanAtLength = array(
+    logistic_50_95(lens, x50 = 40, x50_95 = 8, asymp = 1e6),
+    dim      = c(1, length(lens), 1),
+    dimnames = list(Sim = 1, Length = lens, Year = 1990)
+  )
+)
+
+# ---- Slot accessors ----
+
+fec <- Fecundity(Pars = list(L50 = 40, L50_95 = 8, MaxFec = 1e6))
+
+## Read slots
+MeanAtAge(fec)     # NULL until Populate() is called
+MeanAtLength(fec)  # NULL unless an at-length model or direct array is used
+Units(fec)
+
+## Replace slots
+Units(fec)         <- "eggs"
+Classes(fec)       <- seq(5, 120, by = 5)
+
+# ---- Attaching to a Stock ----
+
+Fecundity(stk) <- Fecundity(Pars = list(L50 = 40, L50_95 = 8, MaxFec = 1e6))
+Fecundity(stk)
+
+# ---- Populate ----
+
+## The final populated object (typically done internally).
+## When Fecundity is populated, SProduction differs from SBiomass.
+## At-length models require a populated Length object passed to Populate().
+pop_fec <- Populate(Fecundity(stk), 
+                    Ages   = Ages(MaxAge = 20),
+                    Length = Length(Pars = 
+                                      list(
+                                        Linf = 100, 
+                                        K = 0.2, 
+                                        t0 = -0.1
+                                      )
+                    )
+)
+pop_fec
+
+MeanAtLength(pop_fec)
+MeanAtAge(pop_fec)
 }
 \seealso{
-\code{\link[=Populate]{Populate()}}, \code{\link[=FecundityModels]{FecundityModels()}}
+\itemize{
+\item \link[=fecundity-class]{fecundity} for the class definition and slot-level documentation.
+\item \code{\link[=FecundityModels]{FecundityModels()}} for available models and required parameter sets.
+\item \code{\link[=ValidUnits]{ValidUnits()}} for accepted unit strings.
+\item \code{\link[=FindModel]{FindModel()}} for automatic model inference.
+\item \code{\link[=Populate]{Populate()}} for array population.
+\item \code{\link[=Stock]{Stock()}} for the enclosing stock constructor.
+\item \code{\link[=Length]{Length()}} for the companion length schedule, required when using
+at-length fecundity models.
+\item \code{\link[=Weight]{Weight()}} and \code{\link[=Maturity]{Maturity()}} for the schedules used in the default
+spawning biomass calculation.
+\item \code{\link[=SRR]{SRR()}} for spawning timing within the time step.
 }
+
+Other fecundity:
+\code{\link{fecundity-class}}
+}
+\concept{fecundity}

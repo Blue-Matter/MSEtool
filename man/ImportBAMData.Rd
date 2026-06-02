@@ -14,78 +14,101 @@ ImportBAMData(
 )
 }
 \arguments{
-\item{OM}{An operating model object. The stock name is taken from
-\code{OM@Stock[[1]]@Name}, and fleet names are derived via \code{\link[=FleetNames]{FleetNames()}}.}
+\item{OM}{An \link[=om-class]{om} object.}
 
-\item{BAMdata}{A named list produced by the \code{BAMextras} package containing
-BAM assessment output for a single stock. Expected to contain at minimum:
-\itemize{
-\item \verb{$t.series} — a data frame with a \code{year} column and columns for
-observed indices (\verb{U.*}), CVs (\verb{cv.*}), landings (\verb{L.*}), and
-discards (\verb{D.*}).
-\item \verb{$sel.age} — a named list of selectivity-at-age vectors.
-}}
+\item{BAMdata}{A named list returned by \code{\link[=GetBAMOutput]{GetBAMOutput()}} or directly
+from the \code{bamExtras} pacakge.}
 
 \item{SurveyNames}{A character vector of user-facing names for survey
-indices detected in \code{BAMdata}. Must have the same length as the number of
-survey indices found (i.e. indices not matched to any fleet name). Use
-this to override the default names derived from column names.}
+indices detected in \code{BAMdata} (i.e. \verb{U.*} columns not matched to any
+fleet name, excluding discard indices). Must have the same length as the
+number of such surveys detected. If \code{NULL}, names are derived from the
+BAM column names directly.}
 
-\item{UnitsLandings}{A character vector of length equal to the number of
-landings fleets detected. Each element must be one of:
+\item{UnitsLandings}{A named character vector or list mapping fleet names to
+unit strings. Names must be a subset of \code{\link[=FleetNames]{FleetNames()}}; fleets not present
+are assigned \code{NA} units with no conversion applied. Supported unit strings:
 \itemize{
-\item \code{"1000 lb"} — values will be converted from thousands of pounds to kg.
-\item \code{"1000 n"} — values will be multiplied by 1,000 (number in thousands).
+\item \code{"1000 lb"}: converts from thousands of pounds to kg.
+\item \code{"1000 n"}: multiplies by 1,000 (numbers in thousands).
+If \code{NULL}, \code{"1000 lb"} is assumed for all detected landings fleets with a
+warning.
 }}
 
-\item{UnitsDiscards}{A character vector of length equal to the number of
-discard fleets detected. Accepts the same values as \code{UnitsLandings}.}
+\item{UnitsDiscards}{A named character vector or list following the same
+convention as \code{UnitsLandings}, applied to discard columns (\verb{D.*}).}
+
+\item{DiscFleets}{A character vector of BAM discard column name stubs used
+to rename discard fleets after import. Names are expected in the form
+\code{"F.FleetName.D"}, from which the middle component (e.g. \code{"FleetName"})
+is extracted and used as the fleet label. If \code{NULL}, no renaming is
+applied.}
 }
 \value{
-The \code{OM} object with the \code{Data} slot populated with a \link[=data-class]{data}
-object with:
+The \code{OM} object with two slots updated:
 \itemize{
-\item \verb{@CPUE} — an \link[=indicesdata-class]{indicesdata} object with fleet-matched CPUE
+\item \code{OM@Data[[1]]}: a \link[=data-class]{data} object containing:
+\itemize{
+\item \verb{@CPUE}: an \link[=indicesdata-class]{indicesdata} object with fleet-matched CPUE
 indices and CVs.
-\item \verb{@Survey} — an \link[=indicesdata-class]{indicesdata} object with non-fleet survey
-indices and CVs.
-\item \verb{@Landings} — a \link[=catchdata-class]{catchdata} object with landings by fleet,
-converted to metric units.
-\item \verb{@Discards} — a \link[=catchdata-class]{catchdata} object with discards by fleet,
-converted to metric units.
+\item \verb{@Survey}: an \link[=indicesdata-class]{indicesdata} object with unmatched (non-fleet)
+survey indices and CVs.
+\item \verb{@Landings}: a \link[=catchdata-class]{catchdata} object with landings by fleet,
+converted to metric units where specified.
+\item \verb{@Discards}: a \link[=catchdata-class]{catchdata} object with discards by fleet,
+converted to metric units where specified.
 }
-
-Fleet matching is performed by searching for fleet names (from
-\code{\link[=FleetNames]{FleetNames()}}) within the \verb{U.*} observed-index column names of
-\code{BAMdata$t.series}. Columns matched to a fleet are treated as CPUE;
-unmatched \verb{U.*} columns are treated as independent survey indices.
-Discard fleet CPUE columns (those containing \code{.D.}) are excluded from the
-CPUE object.
-
-Unit conversion for landings and discards is applied fleet-by-fleet based
-on \code{UnitsLandings} and \code{UnitsDiscards}. Unrecognised unit strings result in
-no conversion and an empty \code{Units} string for that fleet.
-
-Age and length composition data are not yet imported (TODO).
+\item \code{OM@Obs[[1]]}: updated with a named \link[=obs-class]{obs} entry for each survey,
+containing the selectivity-at-age schedule matched from \code{BAMdata$sel.age}.
+If no matching selectivity is found for a survey, full selection across
+all age classes is assumed and a warning is issued.
+}
 }
 \description{
-Populates a \link[=data-class]{data} object with observed time-series data (CPUE,
-survey indices, landings, and discards) extracted from a BAM stock
-assessment.
+Populates the \code{Data} and \code{Obs} slots of an \link[=om-class]{om} object with observed
+time-series data extracted from a BAM stock assessment. Landings, discards,
+fleet CPUE indices, and independent survey indices are imported and stored in
+the appropriate \link[=data-class]{data} sub-objects. Survey selectivity schedules are
+stored in the corresponding \link[=obs-class]{obs} objects so that the data object holds
+the observed values and the obs object records how those data were generated.
+}
+\details{
+\subsection{Fleet matching}{
+
+Fleet CPUE columns are identified by searching \verb{U.*} column names in
+\code{BAMdata$t.series} for strings matching \code{\link[=FleetNames]{FleetNames()}}. Matched columns are
+stored in \verb{@CPUE}; unmatched \verb{U.*} columns (excluding those containing
+\code{.D.}, which are discard CPUE) are stored in \verb{@Survey}.
+}
+
+\subsection{Unit conversion}{
+
+Conversion is applied fleet-by-fleet using \code{UnitsLandings} and
+\code{UnitsDiscards}. Fleets present in the OM but absent from the units argument
+receive \code{NA} units and their values are left unconverted.
+}
+
+\subsection{Age and length composition}{
+
+Composition data are not yet imported. Planned sources are
+\verb{BAMdata$comp.mats$*age*} (age composition) and
+\code{BAMdata$comp.mats$lcomp.*.ob} (length composition).
+}
 }
 \examples{
 \dontrun{
-bam <- BAMextras::readBAM("mystock.rdat")
-dat <- ImportBAMData(
+bam <- GetBAMOutput('Red Snapper')
+OM <- ImportBAMData(
   OM            = myOM,
   BAMdata       = bam,
   SurveyNames   = c("VideoSurvey", "TrawlSurvey"),
-  UnitsLandings = c("1000 lb", "1000 lb"),
-  UnitsDiscards = c("1000 n")
+  UnitsLandings = c(CommFleet = "1000 lb", RecFleet = "1000 lb"),
+  UnitsDiscards = c(CommFleet = "1000 n"),
+  DiscFleets    = c("F.CommFleet.D", "F.RecFleet.D")
 )
 }
 
 }
 \seealso{
-\code{\link[=FleetNames]{FleetNames()}}, \code{\link[=Data]{Data()}}, \code{\link[=IndicesData]{IndicesData()}}, \code{\link[=CatchData]{CatchData()}}
+\code{\link[=GetBAMOutput]{GetBAMOutput()}}, \code{\link[=Data]{Data()}}, \code{\link[=IndicesData]{IndicesData()}}, \code{\link[=CatchData]{CatchData()}}, \code{\link[=Obs]{Obs()}}
 }

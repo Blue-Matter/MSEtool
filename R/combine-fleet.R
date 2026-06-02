@@ -3,7 +3,6 @@
 # - Combine Data
 # - Combine Obs
 
-#' `r lifecycle::badge("experimental")`
 #' Combine Multiple Fleets into a Single Fleet
 #'
 #' Combines several fleets into a new aggregated fleet within an Operating

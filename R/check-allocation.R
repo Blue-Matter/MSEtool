@@ -34,16 +34,18 @@ CheckAllocation <- function(Hist) {
     Allocation <- MakeNamedList(StockNames)
   
   nStock    <- nStock(Hist)
+  nComplex  <- length(Hist@OM@Complexes)
   nFleet    <- nFleet(Hist)
   nSim      <- nSim(Hist)
   HistYears <- Years(Hist,'H')
   
-  names(Allocation) <- StockNames
+  ComplexNames      <- names(Hist@OM@Complexes)
+  names(Allocation) <- ComplexNames
   
-  if (length(Allocation)!= nStock)
-    cli::cli_abort('`Allocation` must be a list length 0 or length `nStock(OM)` ')
+  if (length(Allocation)!= nComplex)
+    cli::cli_abort('`Allocation` must be a list length 0 or length `nComplex(OM)` ')
   
-  for (st in 1:nStock) {
+  for (st in 1:nComplex) {
     AllocationFleet <- Allocation[[st]] 
     
     if (is.null(AllocationFleet)) {
@@ -58,7 +60,7 @@ CheckAllocation <- function(Hist) {
         
         Hist <- CaptureLog(Hist,
                          string = cli::format_inline(
-                           "`Allocation(OM)` has not been specified for Stock {.val {StockNames[st]}}"
+                           "`Allocation(OM)` has not been specified for Complex {.val {ComplexNames[st]}}"
                            ),
                          name = "Allocation"
                          )
@@ -73,7 +75,7 @@ CheckAllocation <- function(Hist) {
       } else {
         Hist <- CaptureLog(Hist,
                               string = cli::format_inline(
-                                "`Allocation(OM)` has not been specified for Stock {.val {StockNames[st]}}"
+                                "`Allocation(OM)` has not been specified for Complex {.val {ComplexNames[st]}}"
                                 ),
                               name = "Allocation"
         )
@@ -97,10 +99,10 @@ CheckAllocation <- function(Hist) {
     
     dd <- dim(AllocationFleet)
     if (dd[1] != nSim && dd[1] != 1)
-      cli::cli_abort('`OM@Allocation` must be a list length `nStock(OM)` with a `nSim` by `nFleet` matrix  for each stock')
+      cli::cli_abort('`OM@Allocation` must be a list length `nComplex(OM)` with a `nSim` by `nFleet` matrix  for each stock')
     
     if (dd[2]!=nFleet)
-      cli::cli_abort('`OM@Allocation` must be a list length `nStock(OM)` with a `nSim` by `nFleet` matrix  for each stock')
+      cli::cli_abort('`OM@Allocation` must be a list length `nComplex(OM)` with a `nSim` by `nFleet` matrix  for each stock')
     
     if (any(AllocationFleet<0) || any(!is.finite(AllocationFleet)))
       cli::cli_abort('Values in `OM@Allocation` must be positive')

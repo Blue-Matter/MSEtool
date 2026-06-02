@@ -3,59 +3,90 @@
 \docType{class}
 \name{perrecruit-class}
 \alias{perrecruit-class}
-\title{Per-Recruit Object}
+\title{The \code{perrecruit} S4 Class}
 \description{
-An S4 class for storing per-recruit quantities evaluated across fishing
-mortality levels. The \code{perrecruit} object contains numbers-per-recruit,
-spawning-per-recruit, biomass-per-recruit, and yield-related quantities,
-optionally stratified by simulation, stock, year, and fishing mortality.
+An S4 class storing per-recruit quantities evaluated across a vector of
+apical fishing mortality values. Produced internally by \code{\link[=CalcPerRecruit]{CalcPerRecruit()}}
+during reference point and equilibrium calculations.
 }
 \details{
-Objects of this class are typically produced internally during reference
-point or equilibrium calculations and are not intended to be modified
-directly by users.
+\subsection{Spawning numbers-per-recruit}{
+
+When \code{SpawnTimeFrac > 0} for any stock, \code{NPRF_SP} differs from \code{NPRF}:
+survival to the spawn date is computed as
+\deqn{N \cdot \exp(-Z \cdot \texttt{SpawnTimeFrac})}
+so that \code{SPR}, \code{SBiomass}, and \code{SProduction} reflect abundance at the time
+of spawning rather than at the start of the year. When \code{SpawnTimeFrac = 0}
+for all stocks, \code{NPRF_SP} is not populated.
+}
+
+\subsection{SPFrom}{
+
+When stocks share a spawning component (e.g. a complex), the \code{SPFrom} slot
+of each stock's \code{\link[=SRR]{SRR()}} determines which stock's \code{SPRF} is used when
+computing relative \code{SPR}. This is handled upstream in \code{\link[=CalcPerRecruit]{CalcPerRecruit()}}
+before the \code{SPRF} and \code{SPR0} slots are populated.
+}
+
+\subsection{Relationships between slots}{
+
+\deqn{\texttt{SPR} = \texttt{SPRF} / \texttt{SPR0}}
+\deqn{\texttt{SBiomass} = \sum_a \texttt{NPRF\_SP}_a \cdot W_a \cdot m_a}
+\deqn{\texttt{SProduction} = \sum_a \texttt{NPRF\_SP}_a \cdot f_a}
+where \eqn{W_a}, \eqn{m_a}, and \eqn{f_a} are weight, maturity, and
+fecundity at age respectively.
+}
 }
 \section{Slots}{
 
 \describe{
-\item{\code{apicalF}}{Apical fishing mortality value used for per-recruit evaluation.}
+\item{\code{apicalF}}{Numeric vector of apical fishing mortality values at
+which per-recruit quantities were evaluated. Length \code{nF}.}
 
 \item{\code{NPR0}}{Numbers-per-recruit at unfished conditions.
-A list by stock or an array with dimensions \code{Sim}, \code{Age}, \code{Year}.}
+Array (\verb{Sim × Age × Year}) or a list by stock.}
 
-\item{\code{NPR0_SP}}{Spawning numbers-per-recruit at unfished conditions.
-A list by stock or an array with dimensions \code{Sim}, \code{Age}, \code{Year}.}
+\item{\code{NPR0_SP}}{Spawning numbers-per-recruit at unfished conditions,
+accounting for \code{SpawnTimeFrac}. Array (\verb{Sim × Age × Year}) or a list by
+stock. Equal to \code{NPR0} when \code{SpawnTimeFrac} is zero for all stocks.}
 
 \item{\code{NPRF}}{Numbers-per-recruit at fishing mortality.
-A list by stock or an array with dimensions \code{Sim}, \code{Age}, \code{Year}, \code{F}.}
+Array (\verb{Sim × Age × Year × F}) or a list by stock,
+where the \code{F} dimension has length \code{nF}.}
 
-\item{\code{NPRF_SP}}{Spawning numbers-per-recruit at fishing mortality.
-A list by stock or an array with dimensions \code{Sim}, \code{Age}, \code{Year}, \code{F}.}
+\item{\code{NPRF_SP}}{Spawning numbers-per-recruit at fishing mortality,
+accounting for \code{SpawnTimeFrac}. Array (\verb{Sim × Age × Year × F}) or a list
+by stock. Populated only when \code{SpawnTimeFrac > 0} for any stock;
+otherwise \code{NULL}.}
 
 \item{\code{SPR0}}{Spawning-per-recruit at unfished conditions.
-Array with dimensions \code{Sim}, \code{Stock}, \code{Year}, \code{F}.}
+Array (\verb{Sim × Stock × Year}).}
 
 \item{\code{SPRF}}{Spawning-per-recruit at fishing mortality.
-Array with dimensions \code{Sim}, \code{Stock}, \code{Year}, \code{F}.}
+Array (\verb{Sim × Stock × Year × F}).}
 
-\item{\code{SPR}}{Spawning-per-recruit relative to unfished conditions.
-Array with dimensions \code{Sim}, \code{Stock}, \code{Year}, \code{F}.}
+\item{\code{SPR}}{Spawning-per-recruit relative to unfished, i.e.
+\code{SPRF / SPR0}. Array (\verb{Sim × Stock × Year × F}).}
 
-\item{\code{Biomass}}{Biomass-per-recruit.
-Array with dimensions \code{Sim}, \code{Stock}, \code{Year}, \code{F}.}
+\item{\code{Biomass}}{Total biomass-per-recruit.
+Array (\verb{Sim × Stock × Year × F}).}
 
 \item{\code{SBiomass}}{Spawning biomass-per-recruit.
-Array with dimensions \code{Sim}, \code{Stock}, \code{Year}, \code{F}.}
+Array (\verb{Sim × Stock × Year × F}).}
 
-\item{\code{SProduction}}{Spawning production-per-recruit.
-Array with dimensions \code{Sim}, \code{Stock}, \code{Year}, \code{F}.}
+\item{\code{SProduction}}{Spawning production-per-recruit, computed from
+fecundity-at-age rather than weight × maturity.
+Array (\verb{Sim × Stock × Year × F}).}
 
-\item{\code{Removals}}{Total removals-per-recruit.
-Array with dimensions \code{Sim}, \code{Stock}, \code{Year}, \code{F}.}
+\item{\code{Removals}}{Total removals-per-recruit (landings + dead discards),
+summed over fleets. Array (\verb{Sim × Stock × Year × F}).}
 
-\item{\code{Landings}}{Landings-per-recruit.
-Array with dimensions \code{Sim}, \code{Stock}, \code{Year}, \code{F}.}
+\item{\code{Landings}}{Landings-per-recruit, summed over fleets.
+Array (\verb{Sim × Stock × Year × F}).}
 
-\item{\code{Misc}}{Additional miscellaneous information.}
+\item{\code{Misc}}{List reserved for internal use.}
 }}
 
+\seealso{
+\code{\link[=CalcPerRecruit]{CalcPerRecruit()}}
+}

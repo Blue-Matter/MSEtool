@@ -1,3 +1,5 @@
+# TODO - document
+
 #' Reference Points Object
 #'
 #' The `reference` class stores biological and management reference points
@@ -24,15 +26,9 @@
 #'
 #' @slot SPRcrash List or array of spawning potential ratio at collapse.
 #'
-#' @slot MGT List or array of maximum generation time reference points.
+#' @slot MGT List or array of mean generation time reference points.
 #'
-#' @slot BLow List or array defining lower biomass reference points.
-#'
-#' @slot Equilibrium An object describing equilibrium
-#' population dynamics at reference conditions.
-#'
-#' @slot Dynamic A n object describing dynamic population
-#' trajectories used to compute reference points.
+#' @slot BLow List or array defining the B-Low biomass reference points.
 #'
 #' @slot Misc Miscellaneous list for additional reference quantities or
 #' diagnostics.
@@ -46,8 +42,8 @@ setClass("reference",
          slots = c(
            SPR0          = "array.list.null",
            MSY           = "refpointsMSY",
-           Landings   = "array.list.null",
-           Removals   = "array.list.null",
+           Landings      = "array.list.null",
+           Removals      = "array.list.null",
            
            F01           = "array.list.null",
            FMax          = "array.list.null",
@@ -55,9 +51,6 @@ setClass("reference",
            SPRcrash      = "array.list.null",
            MGT           = "array.list.null",
            BLow          = "array.list.null",
-           
-           Equilibrium   = "popdynamics",
-           Dynamic       = "popdynamics",
            
            Misc          = "list"
          )

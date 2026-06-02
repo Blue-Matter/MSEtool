@@ -1,14 +1,23 @@
-#' Catchability Class
+#' The `catchability` S4 Class
 #'
-#' The `catchability` class defines catchability assumptions, including 
-#' optional stochastic or incremental changes to gear efficiency over time.
-#' 
-#' See [Catchability()] for details.
+#' Defines gear or vessel efficiency for use in a [fleet-class] object.
+#' Objects are typically created via the [Catchability()] constructor, which
+#' documents all parameters in detail.
 #'
-#' @slot Efficiency Gear efficiency (q).
-#' @slot qCV Coefficient of variation for catchability.
-#' @slot qInc Incremental changes in catchability.
-#' @slot Misc Miscellaneous list.
+#' @slot Efficiency `numeric`, array, or `NULL`. Gear efficiency (`q`).
+#'   See [Catchability()].
+#' @slot qCV `numeric` or `NULL`. Coefficient of variation for stochastic
+#'   variation in catchability during projected years. See [Catchability()].
+#' @slot qInc `numeric` or `NULL`. Annual percentage increase in catchability
+#'   during projected years. See [Catchability()].
+#' @slot Misc `list`. Miscellaneous additional inputs. Used internally.
+#'
+#' @seealso 
+#' - [Catchability()] for the constructor and full parameter
+#'   documentation. 
+#' - [fleet-class] for the enclosing fleet object.
+#'
+#' @family fleet
 #'
 #' @include class-unions.R
 #' @name catchability-class

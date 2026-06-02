@@ -1,170 +1,130 @@
-
-
-
-PopulateIndexObs <- function(Index, nSim, HistYears, ProjYears) {
-  if (EmptyObject(Index)) {
-    return(Index)
-  }
+#' Populate an Obs Object
+#'
+#' Populate an [obs-class] object by expanding observation error parameters
+#' across simulation replicates and years, generating stochastic error arrays,
+#' and applying default values where slots are unspecified.
+#'
+#' @param Obs An [obs-class] object to populate.
+#' @param HistYears Integer vector. Calendar years of the historical period.
+#' @param ProjYears Integer vector. Calendar years of the projection period.
+#' @param nSim Integer. Number of simulation replicates.
+#' @param AgeBins Numeric vector. Age class values used to name
+#'   the `Bin` dimension of populated age-composition arrays. Required when
+#'   `Obs@LandingsAtAge` or `Obs@DiscardsAtAge` is non-empty.
+#' @param SizeBins Numeric vector. Length class midpoints, used to name the
+#'   `Bin` dimension of populated size-composition arrays. Required when
+#'   `Obs@LandingsAtSize` or `Obs@DiscardsAtSize` is non-empty.
+#'
+#' @details
+#' `PopulateObs()` coordinates population of all observation error components
+#' of an [obs-class] object, calling a dedicated sub-function for each slot:
+#'
+#' * Effort observation error via [PopulateEffortObs()]
+#' * Landed catch observation error via [PopulateCatchObs()]
+#' * Discarded catch observation error via [PopulateCatchObs()]
+#' * CPUE index observation error via [PopulateIndexObs()]
+#' * Survey index observation error via [PopulateIndexObs()]
+#' * Landed catch-at-age composition error via [PopulateCompObs()]
+#' * Discarded catch-at-age composition error via [PopulateCompObs()]
+#' * Landed catch-at-size composition error via [PopulateCompObs()]
+#' * Discarded catch-at-size composition error via [PopulateCompObs()]
+#'
+#' Slots for `LifeHistory` and `Exploitation` observation error are reserved
+#' for future implementation and are not populated.
+#'
+#' If a slot contains an empty object (as determined by [EmptyObject()]), it
+#' is returned unchanged. See the individual sub-function documentation for
+#' details on expansion rules, default values, and accepted input forms.
+#'
+#' @return A populated [obs-class] object.
+#'
+#' @seealso
+#' [Populate()], [PopulateEffortObs()], [PopulateCatchObs()],
+#' [PopulateIndexObs()], [PopulateCompObs()]
+#'
+#' @export
+PopulateObs <- function(Obs,
+                        HistYears,
+                        ProjYears,
+                        nSim,
+                        AgeBins  = NULL,
+                        SizeBins = NULL) {
   
-  Index@CV <- PopulateObsCV(Index@CV, nSim)
-  Index@Error <- PopulateObsError(Index, nSim, c(HistYears, ProjYears))
-  Index@Beta # TODO - currently not implemented
-  Index@Ref <- PopulateObsRef(Index@Ref, nSim)
-
-  if (length(Index@Years) < 1) {
-    Index@Years <- HistYears
-  }
-
-  # TODO implement AC if specified
-  if (!is.null(Index@AC)) {}
-
-  Index@Selectivity
-  Index@Type
-  Index@Efficiency
-  Index
-}
-
-PopulateEffortObs <- function(Effort, nSim, HistYears, ProjYears) {
-  if (EmptyObject(Effort)) {
-    return(Effort)
-  }
-  Effort@CV <- PopulateObsCV(Effort@CV, nSim)
-  Effort@Error <- PopulateObsError(Effort, nSim, c(HistYears, ProjYears))
-  Effort@Bias <- PopulateObsBias(Effort, nSim)
-
-  Effort
-}
-
-PopulateCatchObs <- function(Catch, nSim, HistYears, ProjYears) {
-  if (EmptyObject(Catch)) {
-    return(Catch)
-  }
-
-  Catch@CV <- PopulateObsCV(Catch@CV, nSim)
-  Catch@Error <- PopulateObsError(Catch, nSim, c(HistYears, ProjYears))
-  Catch@Bias <- PopulateObsBias(Catch, nSim)
-  Catch@Ref <- PopulateObsRef(Catch@Ref, nSim)
+  CheckClass(Obs, "obs", "Obs")
   
-  Catch
-}
-
-PopulateObsRef <- function(Ref, nSim) {
-  if (!length(Ref)) 
-    return(Ref)
+  # TODO: LifeHistory observation error 
+  # TODO: Exploitation observation error
   
-  if (!is.null(dimnames(Ref)))  
-    return(Ref[1:nSim])
-  
-  if (nSim != 2 && length(Ref) == nSim) 
-    return(Ref)
-  
-
-  CV <- StructurePars(list(Ref), nSim)[[1]] |>
-    ExtendSims(nSim) |>
-    DropDimension("Year", FALSE)
-
-  Error <- array(
-    rlnorm(
-      nSim,
-      mconv(1, CV),
-      sdconv(1, CV)
-    ),
-    nSim
+  Obs@Effort <- PopulateEffortObs(
+    Effort    = Obs@Effort,
+    nSim      = nSim,
+    HistYears = HistYears,
+    ProjYears = ProjYears
   )
-
-  dimnames(Error) <- list(Sim = 1:nSim)
-  Error
-}
-
-PopulateObsCV <- function(CV, nSim) {
-  if (!length(CV)) return(CV)
-  if (!is.null(dimnames(CV))) return(CV[seq_len(nSim)])
   
-  StructurePars(list(CV), nSim)[[1]] |>
-    ExtendSims(nSim) |>
-    DropDimension("Year", warn = FALSE)
-}
-
-
-PopulateObsError <- function(object, nSim, Years) {
-  nTS <- length(Years)
-  if (length(object@Error) < 1) {
-    if (is.null(object@CV)) {
-      return(object@Error)
-    }
-    Error <- array(
-      rlnorm(
-        nTS * nSim,
-        mconv(1, rep(object@CV, nTS)),
-        sdconv(1, rep(object@CV, nTS))
-      ),
-      c(nSim, nTS)
-    )
-
-    dimnames(Error) <- list(
-      Sim = 1:nSim,
-      Year = Years
-    )
-    object@Error <- Error
-  } else {
-    if (!inherits(object@Error, "array")) {
-      cli::cli_abort("`object@Error` must be an array with `nSim` rows and `nTS` columns")
-    }
-
-    chk1 <- nrow(object@Error) != nSim
-
-    if (chk1 & nrow(object@Error) > nSim) {
-      object@Error <- object@Error[1:nSim, ]
-      chk1 <- !chk1
-    }
-
-
-    chk2 <- ncol(object@Error) != length(Years)
-    if (chk1 & chk2) {
-      cli::cli_abort("`object@Error` must be an array with `nSim` rows and `nTS` columns")
-    }
-    if (chk1 & !chk2) {
-      cli::cli_abort("`object@Error` must be an array with `nSim` rows")
-    }
-
-    if (!chk1 & chk2) {
-      cli::cli_abort("`object@Error` must be an array with `nTS` columns")
-    }
-
-    dimnames(object@Error) <- list(
-      Sim = 1:nSim,
-      Year = Years
-    )
-  }
-  object@Error
-}
-
-PopulateObsBias <- function(object, nSim) {
-  if (length(object@Bias) < 1) {
-    object@Bias <- array(1, dim = nSim, dimnames = list(Sim = 1:nSim))
-    return(object@Bias)
-  }
-
-  if (any(object@Bias <= 0)) {
-    cli::cli_abort("`Bias` must be positive values")
-  }
-
-  if (length(object@Bias) != nSim) {
-    object@Bias <- array(rlnorm(nSim, mconv(1, object@Bias), sdconv(1, object@Bias)),
-      dim = nSim,
-      dimnames = list(Sim = 1:nSim)
-    )
-    return(object@Bias)
-  }
-
-  if (length(object@Bias) > nSim) {
-    object@Bias <- object@Bias[1:nSim]
-  }
-
-  if (length(object@Bias) == nSim) {
-    object@Bias <- array(object@Bias, dim = nSim, dimnames = list(Sim = 1:nSim))
-    return(object@Bias)
-  }
-  cli::cli_abort("`Catch@Bias` must be length 1, 2, or `nSim`")
-  object@Bias
+  Obs@Landings <- PopulateCatchObs(
+    Catch     = Obs@Landings,
+    nSim      = nSim,
+    HistYears = HistYears,
+    ProjYears = ProjYears
+  )
+  
+  Obs@Discards <- PopulateCatchObs(
+    Catch     = Obs@Discards,
+    nSim      = nSim,
+    HistYears = HistYears,
+    ProjYears = ProjYears
+  )
+  
+  Obs@CPUE <- PopulateIndexObs(
+    Index     = Obs@CPUE,
+    nSim      = nSim,
+    HistYears = HistYears,
+    ProjYears = ProjYears
+  )
+  
+  Obs@Survey <- PopulateIndexObs(
+    Index     = Obs@Survey,
+    nSim      = nSim,
+    HistYears = HistYears,
+    ProjYears = ProjYears
+  )
+  
+  Obs@LandingsAtAge <- PopulateCompObs(
+    Comp      = Obs@LandingsAtAge,
+    nSim      = nSim,
+    HistYears = HistYears,
+    ProjYears = ProjYears,
+    Bins      = AgeBins,
+    BinName   = "Age"
+  )
+  
+  Obs@DiscardsAtAge <- PopulateCompObs(
+    Comp      = Obs@DiscardsAtAge,
+    nSim      = nSim,
+    HistYears = HistYears,
+    ProjYears = ProjYears,
+    Bins      = AgeBins,
+    BinName   = "Age"
+  )
+  
+  Obs@LandingsAtSize <- PopulateCompObs(
+    Comp      = Obs@LandingsAtSize,
+    nSim      = nSim,
+    HistYears = HistYears,
+    ProjYears = ProjYears,
+    Bins      = SizeBins,
+    BinName   = "Size"
+  )
+  
+  Obs@DiscardsAtSize <- PopulateCompObs(
+    Comp      = Obs@DiscardsAtSize,
+    nSim      = nSim,
+    HistYears = HistYears,
+    ProjYears = ProjYears,
+    Bins      = SizeBins,
+    BinName   = "Size"
+  )
+  
+  ReduceDims(Obs, IncYear = TRUE)
 }

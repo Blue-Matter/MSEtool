@@ -36,15 +36,29 @@ AC <- function(x) {
 
 #' @rdname Access
 #' @export
-BioEconomic <- function(x) {
-  AccessSlot(x, 'BioEconomic')
+Beta <- function(x) {
+  AccessSlot(x, 'Beta')
 }
 
 #' @rdname Access
 #' @export
-`BioEconomic<-` <- function(x, value) {
-  AssignSlot(x, value, 'BioEconomic')
+`Beta<-` <- function(x, value) {
+  AssignSlot(x, value, 'Beta')
 }
+
+#' @rdname Access
+#' @export
+Bias <- function(x) {
+  AccessSlot(x, 'Bias')
+}
+
+#' @rdname Access
+#' @export
+`Bias<-` <- function(x, value) {
+  AssignSlot(x, value, 'Bias')
+}
+
+
 
 #' @rdname Access
 #' @export
@@ -67,6 +81,18 @@ Classes <- function(x) {
 #' @export
 `Classes<-` <- function(x, value) {
   AssignSlot(x, value, 'Classes')
+}
+
+#' @rdname Access
+#' @export
+Compliance <- function(x) {
+  AccessSlot(x, 'Compliance')
+}
+
+#' @rdname Access
+#' @export
+`Compliance<-` <- function(x, value) {
+  AssignSlot(x, value, 'Compliance')
 }
 
 #' @rdname Access
@@ -143,14 +169,14 @@ DiscardsAtSize <- function(x) {
 
 #' @rdname Access
 #' @export
-Dynamics <- function(x) {
-  AccessSlot(x, 'Dynamics')
+Error <- function(x) {
+  AccessSlot(x, 'Error')
 }
 
 #' @rdname Access
 #' @export
-`Dynamics<-` <- function(x, value) {
-  AssignSlot(x, value, 'Dynamics')
+`Error<-` <- function(x, value) {
+  AssignSlot(x, value, 'Error')
 }
 
 #' @rdname Access
@@ -163,6 +189,12 @@ Exploitation <- function(x) {
 #' @export
 `Exploitation<-` <- function(x, value) {
   AssignSlot(x, value, 'Exploitation')
+}
+
+#' @rdname Access
+#' @export
+FMSY <- function(x) {
+  AccessSlot(x, 'FMSY')
 }
 
 
@@ -202,6 +234,19 @@ LifeHistory <- function(x) {
   AssignSlot(x, value, 'LifeHistory')
 }
 
+
+
+#' @rdname Access
+#' @export
+Mean <- function(x) {
+  AccessSlot(x, 'Mean')
+}
+
+#' @rdname Access
+#' @export
+`Mean<-` <- function(x, value) {
+  AssignSlot(x, value, 'Mean')
+}
 
 
 #' @rdname Access
@@ -256,6 +301,24 @@ Misc <- function(x) {
 #' @export
 Model <- function(x) {
   AccessSlot(x, 'Model')
+}
+
+#' @rdname Access
+#' @export
+MSY <- function(x) {
+  AccessSlot(x, 'MSY')
+}
+
+#' @rdname Access
+#' @export
+MSYDiscards <- function(x) {
+  AccessSlot(x, 'MSYDiscards')
+}
+
+#' @rdname Access
+#' @export
+MSYLandings <- function(x) {
+  AccessSlot(x, 'MSYLandings')
 }
 
 #' @rdname Access
@@ -352,6 +415,21 @@ nAge <- function(x, st = NULL) {
   
   if (inherits(x, 'stock'))
     return(length(x@Ages@Classes))
+}
+
+#' @rdname Access
+#' @export
+nComplex <- function(x) {
+  CheckClass(x, c('om', 'hist', 'mse'), 'x')
+  
+  if (inherits(x, 'om'))
+    return(length(x@Complexes))
+  
+  if (inherits(x, 'hist'))
+    return(length(x@OM@Complexes))
+  
+  if (inherits(x, 'mse'))
+    return(length(x@OM@Complexes))
 }
 
 #' @rdname Access
@@ -470,14 +548,14 @@ Reference <- function(x) {
 
 #' @rdname Access
 #' @export
-Seed <- function(x) {
-  AccessSlot(x, 'Seed')
+Size <- function(x) {
+  AccessSlot(x, 'Size')
 }
 
 #' @rdname Access
 #' @export
-`Seed<-` <- function(x, value) {
-  AssignSlot(x, value, 'Seed')
+`Size<-` <- function(x, value) {
+  AssignSlot(x, value, 'Size')
 }
 
 #' @rdname Access

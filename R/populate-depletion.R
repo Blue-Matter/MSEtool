@@ -29,14 +29,14 @@
 #'
 #' @export
 PopulateDepletion <- function(Depletion,
-                              nSim = NULL,
+                              nSim = 5,
                               seed = NULL,
                               silent = FALSE) {
   argList <- list(nSim, seed)
+  nSim    <- Get_nSim(Depletion, nSim)
   
-  if (CheckDigest(Depletion, argList) | EmptyObject(Depletion)) {
+  if (CheckDigest(Depletion, argList) | EmptyObject(Depletion)) 
     return(Depletion)
-  }
   
   SetSeed(seed)
   

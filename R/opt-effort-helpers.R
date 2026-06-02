@@ -8,16 +8,20 @@ WriteStateToProj <- function(Proj, sim, TSIndex, Effort, Delta = NULL) {
 }
 
 
-OptSingleFleetCatch <- function(log_scale, Effort_base, Proj, sim, TSIndex, Year, TACType_by_Complex,
+OptSingleFleetCatch <- function(log_scale, Effort_base, Proj, sim, TSIndex,
+                                Year, TACType_by_Complex, TACUnit_by_Complex,
                                 fl) {
   Eff <- Effort_base
   Eff[fl] <- Effort_base[fl] * exp(log_scale)
   Proj <- WriteStateToProj(Proj, sim, TSIndex, Effort = Eff)
-  CalcFleetCatch(Proj, sim, TSIndex, Year, TACType_by_Complex)[1,fl]
+  CalcFleetCatch(Proj, sim, TSIndex, Year, TACType_by_Complex,
+                 TACUnit_by_Complex)[1,fl]
 }
 
 
-CalcFleetCatch <- function(Proj, sim, TSIndex, Year, TACType_by_Complex) {
+CalcFleetCatch <- function(Proj, sim, TSIndex, Year, 
+                           TACType_by_Complex,
+                           TACUnit_by_Complex ) {
   
   Temp <- CalcFisheryDynamics(Proj, 
                            Years=Year, 
@@ -28,24 +32,48 @@ CalcFleetCatch <- function(Proj, sim, TSIndex, Year, TACType_by_Complex) {
                            DoCalcBiomass = 0,
                            DoCalcOverallF = 0)
   
-  CatchMatrix(Temp, sim, TSIndex, TACType_by_Complex)
+  CatchMatrix(Temp, sim, TSIndex, TACType_by_Complex, TACUnit_by_Complex)
 }
 
 
-CatchMatrix <- function(Temp, sim, TSIndex, TACType_by_Complex) {
+CatchMatrix <- function(Temp, sim, TSIndex, TACType_by_Complex, TACUnit_by_Complex) {
+  
   Complexes <- Temp@OM@Complexes
   nComplex  <- length(Complexes)
   nFleet    <- dim(Temp@Landings)[4]
   mat       <- matrix(0, nrow = nComplex, ncol = nFleet)
+  
   for (i in seq_len(nComplex)) {
-    stocks    <- Complexes[[i]]
-    catch_raw <- if (TACType_by_Complex[i] == "Removals") {
-      Temp@Landings[sim, stocks, TSIndex, , drop = FALSE] + Temp@Discards[sim, stocks, TSIndex, , drop = FALSE]
-    } else {
-      Temp@Landings[sim, stocks, TSIndex, , drop = FALSE]
+    stocks   <- Complexes[[i]]
+    tac_type <- TACType_by_Complex[[i]]   # length nFleet
+    tac_unit <- TACUnit_by_Complex[[i]]   # length nFleet
+    
+    for (fl in seq_len(nFleet)) {
+      
+      if (tac_unit[fl] == 'Biomass') {
+        landings <- Temp@Landings[sim, stocks, TSIndex, fl, drop = FALSE]
+        discards <- Temp@Discards[sim, stocks, TSIndex, fl, drop = FALSE]
+      } else {
+        landings <- purrr::map(Temp@LandingsAtAge, \(stock) {
+          stock[sim, , TSIndex, fl, ,drop = FALSE] |>
+          SumOverAge() |> SumOverArea()
+        }) |> List2Array('Stock') |> SumOverStock()
+        
+        discards <- purrr::map(Temp@DiscardsAtAge, \(stock) {
+          stock[sim, , TSIndex, fl, ,drop = FALSE] |>
+            SumOverAge() |> SumOverArea()
+        }) |> List2Array('Stock') |> SumOverStock()
+
+      }
+      
+      if (tac_type[fl] == "Removals") {
+        catch_val <- landings + discards
+      } else {
+        catch_val <- landings
+      }
+      
+      mat[i, fl] <- catch_val
     }
-    catch_raw <- catch_raw |> DropDimension('Sim') |> DropDimension('Year')
-    mat[i, ] <- if (length(stocks) == 1L) as.numeric(catch_raw) else colSums(catch_raw)
   }
   mat
 }
@@ -174,6 +202,7 @@ OptEffort_ms_objective <- function(
     Complexes,
     TACType_by_Complex,
     TAC_by_Complex,
+    TACUnit_by_Complex,
     OvershootPenalty,
     UndershootPenalty,
     Effort_prev,
@@ -187,6 +216,8 @@ OptEffort_ms_objective <- function(
     fixed_logeff = NULL
     ) {
   
+  
+  nComplex <- length(Complexes)
   
   # TAC miss penalty (proportional squared deviations)
   # plus ridge penalty on year-to-year log_delta change.
@@ -209,7 +240,7 @@ OptEffort_ms_objective <- function(
                                  DoCalcNumberNext = 0,
                                  DoCalcBiomass = 0,
                                  DoCalcOverallF = 0)
-  cm <- CatchMatrix(Temp, sim, TSIndex, TACType_by_Complex)
+  cm <- CatchMatrix(Temp, sim, TSIndex, TACType_by_Complex, TACUnit_by_Complex)
   
   # TAC penalty: sum of squared proportional deviations across all relevant
   # complexes for each fleet

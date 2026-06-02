@@ -3,6 +3,7 @@
 \name{SumOverAge}
 \alias{SumOverAge}
 \alias{SumOverArea}
+\alias{SumOverClass}
 \alias{SumOverFleet}
 \alias{SumOverStock}
 \alias{SumOverYear}
@@ -11,6 +12,8 @@
 SumOverAge(x)
 
 SumOverArea(x)
+
+SumOverClass(x)
 
 SumOverFleet(x)
 
@@ -39,6 +42,7 @@ dimension names), the \strong{last dimension} of the array is summed by default.
 \itemize{
 \item \code{SumOverAge()} – sum over the \code{"Age"} dimension
 \item \code{SumOverArea()} – sum over the \code{"Area"} dimension
+\item \code{SumOverClass()} – sum over the \code{"Class"} dimension
 \item \code{SumOverFleet()} – sum over the \code{"Fleet"} dimension
 \item \code{SumOverStock()} – sum over the \code{"Stock"} dimension
 \item \code{SumOverYear()} – sum over the \code{"Year"} dimension

@@ -3,15 +3,6 @@
 \docType{methods}
 \name{initialize-methods}
 \alias{initialize-methods}
-\alias{initialize,Data-method}
-\alias{initialize,Fleet-method}
-\alias{initialize,MSE-method}
-\alias{initialize,Obs-method}
-\alias{initialize,OM-method}
-\alias{initialize,Stock-method}
-\alias{initialize}
-\alias{initialize,Fease-method}
-\alias{initialize,DLM_general-method}
 \title{~~ Methods for Function \code{initialize} ~~}
 \description{
 ~~ Methods for Function \code{initialize} ~~

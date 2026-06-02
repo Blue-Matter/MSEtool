@@ -39,7 +39,7 @@ Returns the names of fleets contained in the object. For objects containing
 multiple stocks, a list of character vectors is returned.
 }
 \examples{
-StockNames(ExampleOM)
-FleetNames(ExampleOM)
+StockNames(SingleStockOM)
+FleetNames(SingleStockOM)
 
 }

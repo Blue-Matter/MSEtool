@@ -1,24 +1,15 @@
 #' @importFrom abind abind
-#' @importFrom dplyr %>%  all_of arrange bind_rows filter group_by left_join mutate pull select summarize
-#' summarise
-#' @importFrom ggplot2 aes element_blank expand_limits facet_wrap geom_boxplot geom_line
-#' ggplot ggplotGrob geom_rect geom_point guides guide_legend labs theme theme_bw theme_classic xlim ylim xlab ylab
-#' @importFrom graphics abline arrows axis axTicks barplot boxplot contour grid hist
-#' identify layout legend
-#'  lines matplot mtext par plot plot.new points polygon segments text title text
+#' @importFrom dplyr %>%  all_of arrange bind_rows filter group_by left_join mutate pull select summarize  summarise
+#' @importFrom ggplot2 aes element_blank expand_limits facet_wrap geom_boxplot geom_line ggplot ggplotGrob geom_rect geom_point guides guide_legend labs theme theme_bw theme_classic xlim ylim xlab ylab
+#' @importFrom graphics abline arrows axis axTicks barplot boxplot contour grid hist identify layout legend lines matplot mtext par plot plot.new points polygon segments text title text
 #' @importFrom grDevices col2rgb colorRampPalette dev.new dev.off jpeg gray png rainbow rgb xy.coords
 #' @importFrom grid unit.c unit grid.newpage grid.draw
 #' @importFrom methods formalArgs getClassDef getSlots .hasSlot is new show slot slot<- slotNames
 #' @importFrom parallel detectCores
 #' @importFrom Rcpp evalCpp
-#' @importFrom snowfall sfClusterEval sfInit sfExportAll sfIsRunning sfExport
-#' sfSapply sfLibrary
-#' @importFrom stats acf aggregate approx coef cor dbeta density dnorm dlnorm lm loess
-#' loess.smooth nls setNames simulate SSasympOff weighted.mean
-#' median nlm nlminb optim optimise optimize plogis pnorm predict qnorm qlnorm quantile rbeta
-#' rlnorm rmultinom rnorm runif sd window
-#' @importFrom utils  browseURL capture.output combn find flush.console packageVersion txtProgressBar setTxtProgressBar
-#' ls.str lsf.str read.csv read.csv2
+#' @importFrom snowfall sfClusterEval sfInit sfExportAll sfIsRunning sfExport sfSapply sfLibrary
+#' @importFrom stats acf aggregate approx coef cor dbeta density dnorm dlnorm lm loess loess.smooth nls setNames simulate SSasympOff weighted.mean median nlm nlminb optim optimise optimize plogis pnorm predict qnorm qlnorm quantile rbeta rlnorm rmultinom rnorm runif sd window
+#' @importFrom utils  browseURL capture.output combn find flush.console packageVersion txtProgressBar setTxtProgressBar ls.str lsf.str read.csv read.csv2
 #'
 NULL
 

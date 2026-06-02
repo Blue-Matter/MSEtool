@@ -419,9 +419,13 @@ setMethod("tinyErr", signature(x = "OM"),
 #' @return A data.frame with MP names, management type (e.g "Input", "Output") and management recommendations returned by the MP
 #' (e.g, TAC (total allowable catch), TAE (total allowable effort), SL (size-selectivity), and/or or Spatial)
 #' @export
-#' @seealso \link{Required}
+#' @seealso [Required()]
 #' @examples
+#' \dontrun{
+#' library(openMSE)
 #' MPtype(c("AvC", "curE", "matlenlim", "MRreal", "FMSYref"))
+#' }
+#' 
 #'
 MPtype <- function(MPs=NA) {
   if(methods::is(MPs, "MP")) stop("MPs must be characters")

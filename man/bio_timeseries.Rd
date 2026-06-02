@@ -74,7 +74,7 @@ periods are row-bound and labelled via the \code{Period} column; historical
 rows carry \code{MP = "Historical"}.
 }
 \examples{
-Hist <- Simulate(ExampleOM)
+Hist <- Simulate(SingleStockOM)
 MSE <- Project(Hist, 'CurrentEffort')
 
 # Raw array

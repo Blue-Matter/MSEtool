@@ -2,8 +2,7 @@
 % Please edit documentation in R/combine-fleet.R
 \name{CombineFleets}
 \alias{CombineFleets}
-\title{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
-Combine Multiple Fleets into a Single Fleet}
+\title{Combine Multiple Fleets into a Single Fleet}
 \usage{
 CombineFleets(OM, FleetList, silent = FALSE)
 }

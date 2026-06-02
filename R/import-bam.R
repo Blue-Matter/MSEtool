@@ -149,7 +149,7 @@ ImportBAM <- function(Stock='Red Snapper',
     if (!silent) cli::cli_alert("Importing Data")
     OM <- ImportBAMData(OM, 
                         BAMdata,
-                        SurveyNames = SurveyNames,
+                        SurveyNames   = SurveyNames,
                         UnitsLandings = UnitsLandings,
                         UnitsDiscards = UnitsDiscards,
                         DiscFleets    = DiscFleets)
@@ -524,16 +524,6 @@ GetBAMDiscardMortality <- function(Stock, Years, RetainFleets, DiscardFleets, OM
   DiscardMortArray
 }
 
-FixFleetNames <- function(FleetNames) {
-  ind <- which(startsWith(FleetNames, 'D.'))
-  if (length(ind)) {
-    for (i in ind) {
-      FleetNames[i] <- gsub('^D.', '',   FleetNames[i])
-      FleetNames[i] <- paste0( FleetNames[i], '.D')
-    }
-  }
-  gsub('^L.', '', FleetNames) |> as.character()
-}
 
 
 BAM2Fleet <- function(Stock, 
@@ -548,19 +538,14 @@ BAM2Fleet <- function(Stock,
   Years <- Years(OM)
   
   # Combines Retention and Discard fleets 
-  FleetNames <- names(BAMdata$parms)[grepl("F.prop", names(BAMdata$parms))] |>
-    vapply(function(x) strsplit(x, "F.prop.")[[1]][2], character(1)) |>
-    as.character()
+  FleetNamesList <- GetBAMFleetNames(BAMdata)
+  FleetNames     <- FleetNamesList$FleetNames
+  FleetNamesOrig <- FleetNamesList$FleetNamesOrig
+  RetainFleets  <- FleetNamesList$RetainFleets
+  DiscardFleets  <- FleetNamesList$DiscardFleets
   
-  FleetNamesOrig <- FleetNames
-  
-  FleetNames <- FixFleetNames(FleetNames)
-  DiscardFleets <- as.character(FleetNames[endsWith(FleetNames, '.D')])
-  
-  if (is.null(DiscardFleets) || !length(DiscardFleets)) 
-    DiscardFleets <- as.character(FleetNames[startsWith(FleetNames, 'D.')])
 
-  RetainFleets <- FleetNames[!FleetNames %in% DiscardFleets] |> as.character()
+
   
   nFleet <- length(RetainFleets)
   HistTS <- Years[Years<=OM@Stock[[1]]@CurrentYear]
@@ -698,5 +683,81 @@ BAM2Fleet <- function(Stock,
   FleetList
 }
 
+
+#' Get and Fix BAM Fleet Names
+#'
+#' [GetBAMFleetNames()] extracts and classifies fleet names from a BAM stock
+#' assessment, separating retained (landings) fleets from discard fleets.
+#' [FixFleetNames()] is a helper that standardises raw BAM fleet name strings
+#' by stripping leading `"L."` prefixes and converting leading `"D."` prefixes
+#' to trailing `".D"` suffixes.
+#'
+#' @param Stock A character string matching a stock name available in
+#'   `bamExtras` (e.g., `'Red Snapper'`), or a list of BAM output objects
+#'   containing elements `rdat` and `dat`.
+#' @param FleetNames A character vector of raw fleet name strings as extracted
+#'   from BAM output.
+#'
+#' @return
+#'
+#' [GetBAMFleetNames()] returns a named list with four elements:
+#'   - `$FleetNames`: character vector of all fleet names, cleaned via
+#'     [FixFleetNames()].
+#'   - `$RetainFleets`: character vector of landings (retained catch) fleets,
+#'     i.e. all fleets not classified as discard fleets.
+#'   - `$DiscardFleets`: character vector of discard fleets, identified as
+#'     those ending in `".D"` or, if none found, starting with `"D."`.
+#'   - `$FleetNamesOrig`: character vector of original fleet names as they
+#'     appear in `BAMdata$parms`, before cleaning.
+#'
+#' [FixFleetNames()] returns a character vector the same length as
+#' `FleetNames` with standardised names.
+#'
+#' @seealso [GetBAMOutput()]
+#'
+#' @examples
+#' \dontrun{
+#' GetBAMFleetNames('Red Snapper')
+#' }
+#'
+#' FixFleetNames(c('L.cHL', 'D.rHB', 'cPT'))
+#'
+#' @name BAMFleetNames
+#' @export
+GetBAMFleetNames <- function(Stock) {
+  BAMdata <- GetBAMOutput(Stock)
+  FleetNamesOrig <- names(BAMdata$parms)[grepl("F.prop", names(BAMdata$parms))] |>
+    vapply(function(x) strsplit(x, "F.prop.")[[1]][2], character(1)) |>
+    as.character()
+  
+  FleetNames <- FixFleetNames(FleetNamesOrig)
+  
+  DiscardFleets <- as.character(FleetNames[endsWith(FleetNames, '.D')])
+  
+  if (is.null(DiscardFleets) || !length(DiscardFleets)) 
+    DiscardFleets <- as.character(FleetNames[startsWith(FleetNames, 'D.')])
+  
+  RetainFleets <- FleetNames[!FleetNames %in% DiscardFleets] |> as.character()
+  
+  
+  list(FleetNames = FleetNames, 
+       RetainFleets = RetainFleets,
+       DiscardFleets = DiscardFleets,
+       FleetNamesOrig = FleetNamesOrig)
+}
+
+
+#' @rdname BAMFleetNames
+#' @export
+FixFleetNames <- function(FleetNames) {
+  ind <- which(startsWith(FleetNames, 'D.'))
+  if (length(ind)) {
+    for (i in ind) {
+      FleetNames[i] <- gsub('^D.', '',   FleetNames[i])
+      FleetNames[i] <- paste0( FleetNames[i], '.D')
+    }
+  }
+  gsub('^L.', '', FleetNames) |> as.character()
+}
 
 

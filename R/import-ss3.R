@@ -50,6 +50,7 @@ ImportSSReport <- function(SSDir, parallel=FALSE, silent=FALSE, ...) {
   if (length(SSDir) == 1L) {
     RepList <- list(GetSSRepList(SSDir, silent = silent, ...))
     names(RepList) <- "1"
+    class(RepList) <- 'RepList'
     return(RepList)
   }
   
@@ -1401,6 +1402,8 @@ SS2DiscardMortality <- function(st, fl, RepList, YearsList, Stock) {
 
 GetSS_SelectivityAtAge <- function(st, fl, replist, YearsList, Stock) {
   
+  Factor <- NULL # CRAN checks
+  
   AgeClasses   <- Stock@Ages@Classes
   SSAgeClasses <- as.character(GetSSAgeClasses(replist))
   YearsHist    <- YearsList$YearsHist
@@ -2017,14 +2020,63 @@ GetSSNatAge <- function(replist, OM, yrs = NULL, sex = 1) {
 }
 
 
-
-SS_Diagnostic_Check <- function(replist) {
+#' Extract Reference Points from Stock Synthesis Output
+#'
+#' Reads biological reference points from one or more Stock Synthesis (SS3)
+#' model outputs and returns the requested quantities from the
+#' `derived_quants` table.
+#'
+#' @param SSDir One of:
+#'   - A character string giving the path to an SS3 output directory,
+#'     passed to [ImportSSReport()].
+#'   - A `RepList` object returned by [ImportSSReport()].
+#'   - A plain list in `RepList` format, i.e. `RepList[[1]]`.
+#' @param Labels Character vector of `derived_quants` labels to extract.
+#'   Defaults to a standard set of F, catch, and biomass reference points:
+#'
+#'   - `"annF_F01"`, `"Dead_Catch_F01"` — F0.1 fishing mortality and dead catch.
+#'   - `"SSB_SPR"`, `"annF_SPR"`, `"Dead_Catch_SPR"` — SSB, F, and dead catch
+#'     at the SPR target.
+#'   - `"SSB_MSY"`, `"SPR_MSY"`, `"annF_MSY"`, `"Dead_Catch_MSY"`,
+#'     `"Ret_Catch_MSY"` — SSB, SPR, F, dead catch, and retained catch at MSY.
+#'
+#' @return If `SSDir` contains a single model, a data frame with columns:
+#'
+#'   - `Label` — the `derived_quants` label.
+#'   - `Value` — the point estimate.
+#'   - `StdDev` — the standard deviation.
+#'
+#'   If `SSDir` contains multiple models, a list of such data frames, one
+#'   per model.
+#'
+#' @seealso [ImportSSReport()]
+#' @export
+ExtractSSRefPoints <- function(SSDir, Labels = c("annF_F01",
+                                                 "Dead_Catch_F01",
+                                                 "SSB_SPR",
+                                                 "annF_SPR",
+                                                 "Dead_Catch_SPR",
+                                                 "SSB_MSY",
+                                                 "SPR_MSY",
+                                                 "annF_MSY",
+                                                 "Dead_Catch_MSY",
+                                                 "Ret_Catch_MSY")) {
+  if (is.character(SSDir)) {
+    RepList <- ImportSSReport(SSDir)
+  } else if (inherits(SSDir, 'RepList')) {
+    RepList <- SSDir
+  } else if (is.list(SSDir)) {
+    RepList <- list(SSDir)
+  } else {
+    cli::cli_abort(c('x'='`SSDir` must be a path to SS3 output or a `RepList` object returned by `ImportSSReport`'))
+  }
   
-  SSAgeClasses <- GetSSAgeClasses(replist)
+  out <- purrr::map(RepList, \(replist) {
+    replist$derived_quants |> dplyr::filter(Label %in% Labels) |>
+      dplyr::select(Label, Value, StdDev)
+  })
   
-  # apical F exists
-  df <- replist$fatage |> dplyr::select(as.character(SSAgeClasses))
-  
-  
+  if (length(out) == 1)
+    return(out[[1]])
+  out
 }
-

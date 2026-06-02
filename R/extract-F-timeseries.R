@@ -43,7 +43,7 @@
 #'   and/or `Fleet`, plus `Value` and `Variable`.
 #'
 #' @examples
-#' Hist <- Simulate(ExampleOM)
+#' Hist <- Simulate(SingleStockOM)
 #' MSE <- Project(Hist, 'CurrentEffort')
 #' 
 #' # Raw array slots

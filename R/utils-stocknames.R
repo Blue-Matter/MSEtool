@@ -22,8 +22,8 @@
 #'
 #'
 #' @examples
-#' StockNames(ExampleOM)
-#' FleetNames(ExampleOM)
+#' StockNames(SingleStockOM)
+#' FleetNames(SingleStockOM)
 #'
 #' @name name-accessors
 #' @rdname name-accessors

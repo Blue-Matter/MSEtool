@@ -7,7 +7,7 @@
 \alias{Final}
 \alias{Final<-}
 \alias{Depletion<-}
-\title{Depletion}
+\title{Depletion Constructor and Accessors}
 \usage{
 Depletion(Initial = NULL, Final = NULL, Reference = "B0")
 
@@ -22,109 +22,224 @@ Final(x) <- value
 Depletion(x) <- value
 }
 \arguments{
-\item{Initial}{Numeric initial depletion (optional).}
+\item{Initial}{\code{numeric} or \code{NULL}. Depletion relative to \code{Reference} at
+the start of the historical period. Accepted formats:
+\itemize{
+\item \code{NULL} (default): stock is assumed unfished at the start of the
+historical period. No adjustment to recruitment deviations.
+\item Scalar: same depletion for all simulations.
+\item Length-2 bounds vector: depletion sampled from \code{Uniform(lower, upper)}
+independently for each simulation.
+\item Length-\code{nSim} vector: one value per simulation.
+When provided, early historical recruitment deviations are adjusted so
+that biomass relative to \code{Reference} in the first time step matches the
+specified value. When \code{Initial} is a \link[=stock-class]{stock} object, \code{Depletion()}
+acts as a pass-through accessor and returns \code{x@Depletion}.
+}}
 
-\item{Final}{Numeric final depletion (optional).}
+\item{Final}{\code{numeric} or \code{NULL}. Target depletion relative to \code{Reference}
+in the terminal historical time step. Accepts the same formats as
+\code{Initial}. When populated, the \code{Efficiency} parameter in \code{\link[=Catchability]{Catchability()}}
+is optimised to achieve this depletion level, overwriting any existing
+\code{Efficiency} values. When \code{NULL} (default), no optimisation occurs and
+\code{\link[=Catchability]{Catchability()}} must be populated directly with valid values.}
 
-\item{Reference}{Character reference biomass used to calculate depletion.
-One of \code{"B0"} (default) or \code{"BMSY"}.}
+\item{Reference}{\code{character(1)}. Reference biomass used to scale depletion.
+Currently implemented options:
+\itemize{
+\item \code{"B0"} (default): total unfished equilibrium biomass.
+\item \code{"SB0"}: spawning biomass at unfished equilibrium.
+The options \code{"BMSY"}, \code{"SBMSY"}, \code{"SP0"}, and \code{"SPMSY"} are reserved for
+future use and currently pass validation but are not implemented.
+}}
 
-\item{x}{A \code{depletion} object.}
+\item{x}{A \link[=depletion-class]{depletion} object for slot accessors, or a \link[=stock-class]{stock}
+object for \verb{Depletion<-}.}
 
-\item{value}{Replacement value.}
+\item{value}{For \verb{Depletion<-}: a \link[=depletion-class]{depletion} object. For \verb{Initial<-}
+and \verb{Final<-}: a numeric scalar, length-2 bounds vector, or
+length-\code{nSim} vector.}
 }
 \value{
-A \link[=depletion-class]{depletion} object.
+\itemize{
+\item \code{Depletion()} returns a \link[=depletion-class]{depletion} object. If \code{Initial} is a
+\link[=stock-class]{stock}, returns \code{x@Depletion}.
+\item \verb{Depletion<-} returns the \link[=stock-class]{stock} \code{x} with the \code{Depletion} slot
+replaced and the object re-validated.
+\item \code{Initial()} and \code{Final()} return the value of the corresponding slot
+from \code{x} (a \code{nSim}-length array after \code{\link[=Populate]{Populate()}}, or \code{NULL}).
+\item \verb{Initial<-} and \verb{Final<-} return \code{x} with the named slot updated and the
+object re-validated.
+}
 }
 \description{
-Construct and manipulate a \link[=depletion-class]{depletion} object defining depletion assumptions
-for a \code{\link[=Stock]{Stock()}} object.
+Construct a \link[=depletion-class]{depletion} object defining the initial and/or final
+depletion assumptions for a \link[=stock-class]{stock}, or access and replace the
+\code{Depletion} slot of a \link[=stock-class]{stock} and its individual slots. \code{Depletion}
+is optional — see \emph{Default Behaviour} below.
 }
 \details{
-The \code{Depletion} class defines the depletion state of a \code{\link[=Stock]{Stock()}} at the
-beginning and end of the historical period.
+\subsection{Default Behaviour When Omitted}{
 
-It is optional and only required if users wish to manually set the depletion
-for a given \code{\link[=Stock]{Stock()}} object in the initial or terminal historical year.
+\code{Depletion} is optional. When both \code{Initial} and \code{Final} are \code{NULL} (the
+default), the object has no effect on model behaviour:
+\itemize{
+\item The stock is assumed unfished at the start of the historical period.
+\item Depletion in the terminal year is determined by the interaction between
+\code{\link[=Stock]{Stock()}} and \code{\link[=Fleet]{Fleet()}} parameters; \code{\link[=Catchability]{Catchability()}} must be populated
+directly in this case.
+}
+}
 
-Printing a \code{Depletion} object provides a concise summary of the specified
-initial and final depletion assumptions.
-\subsection{Initial}{
+\subsection{Initial Depletion}{
 
-If \code{Initial} is not supplied, the stock is assumed to be unfished at the
-beginning of the historical period.
-
-When \code{Initial} is provided, model initialization adjusts early recruitment
+When \code{Initial} is supplied, the operating model adjusts early recruitment
 deviations so that biomass relative to \code{Reference} in the first time step
-matches the specified value.
+matches the target. Values must be in (0, 1]:
 
-Valid inputs:
-\itemize{
-\item numeric length 1: constant over all simulations
-\item numeric length \code{nSim}: simulation-specific values
-\item numeric length 2: lower and upper bounds of a uniform distribution from
-which \code{nSim} values will be sampled
-}
-}
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{# Fixed initial depletion across all simulations
+dep <- Depletion(Initial = 0.8)
 
-\subsection{Final}{
+# Stochastic initial depletion — sampled from Uniform(0.6, 0.9)
+dep <- Depletion(Initial = c(0.6, 0.9))
 
-If \code{Final} is not supplied, depletion in the terminal year is determined by
-the interaction between \code{\link[=Stock]{Stock()}} and \code{\link[=Fleet]{Fleet()}} parameters used to simulate
-the historical fishery. In this case, \code{\link[=Catchability]{Catchability()}} must be populated.
-
-If \code{Final} is supplied, the model optimizes \code{Efficiency} in the
-\code{\link[=Catchability]{Catchability()}} object (ignoring existing values) to force the model to
-achieve the specified depletion level, if possible.
-
-Valid inputs for \code{Final} match those for \code{Initial}.
+# One value per simulation
+dep <- Depletion(Initial = runif(48, 0.6, 0.9))
+}\if{html}{\out{</div>}}
 }
 
-\subsection{Reference}{
+\subsection{Final Depletion}{
 
-\code{Reference} defines the biomass used to scale depletion:
-\itemize{
-\item \code{"B0"}: equilibrium unfished biomass (default)
-\item \code{"BMSY"}: equilibrium biomass at maximum sustainable yield
-}
+When \code{Final} is supplied, the operating model optimises \code{Efficiency} in
+\code{\link[=Catchability]{Catchability()}} so that depletion in the terminal historical year matches
+the target. Any existing \code{Efficiency} values are overwritten. When \code{Final}
+is \code{NULL}, \code{Efficiency} is used as supplied:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{# Force terminal depletion to 0.4 relative to B0
+dep <- Depletion(Final = 0.4)
+
+# Stochastic terminal depletion
+dep <- Depletion(Final = c(0.3, 0.5))
+
+# Both initial and final depletion specified
+dep <- Depletion(Initial = 0.9, Final = 0.4)
+
+# Relative to spawning biomass at unfished equilibrium
+dep <- Depletion(Final = 0.4, Reference = "SB0")
+}\if{html}{\out{</div>}}
 }
 
-\subsection{Accessors and assignment}{
-\itemize{
-\item \code{GetDepletion()} / \code{SetDepletion()} retrieve or assign the \code{Depletion}
-component of a \code{\link[=Stock]{Stock()}} object.
-\item \code{Initial()}, \code{Final()}, and \code{Reference()} access individual components of a
-\code{depletion} object.
-\item Replacement functions (e.g. \verb{Initial<-}) update the corresponding component
-and validate the object.
+\subsection{Pass-Through Access from a Stock}{
+
+When \code{Initial} is a \link[=stock-class]{stock} object, \code{Depletion()} returns the
+\code{Depletion} slot directly:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{Depletion(my_stock)             # returns my_stock@Depletion
+Depletion(my_stock) <- my_dep   # replaces my_stock@Depletion
+}\if{html}{\out{</div>}}
 }
+
+\subsection{Slot Accessors}{
+
+Individual slots can be read or replaced using generic functions matching
+their names. All replacement functions re-validate the object:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{Initial(dep)   <- 0.8
+Final(dep)     <- 0.4
+}\if{html}{\out{</div>}}
 }
 }
 \examples{
 
-# Empty `Depletion` object
-myDep <- Depletion()
+# ---- Default behaviour (Depletion omitted) ----
 
-# Set Initial depletion
-#
-# Note: Populate() is usually called internally. Included here for demonstrating final object.
+## When Initial and Final are both NULL (the default), the object has no
+## effect: stock starts unfished and terminal depletion is determined by
+## the Fleet and Catchability parameters.
+dep <- Depletion()
+dep
 
-## Case 1: Constant over simulations
-myDep <- Depletion(Initial=0.8) |> Populate()
-Initial(myDep)
+# ---- Initial depletion ----
 
-# equivalent:
-Initial(myDep) <- 0.1
-Populate(myDep)
+## Fixed initial depletion — same value for every simulation
+dep <- Depletion(Initial = 0.8)
 
-## Case 2: `nSim` values
-Depletion(Initial=c(0.6, 0.7, 0.8, 0.9, 1)) |> Populate(nSim=5)
+## Stochastic initial depletion — sampled from Uniform(0.6, 0.9)
+## once per simulation
+dep <- Depletion(Initial = c(0.6, 0.9))
 
+## One value per simulation (nSim = 48)
+nSim <- 48
+dep  <- Depletion(Initial = runif(nSim, 0.6, 0.9))
 
-## Case 3: Stochastic sample from uniform distribution
-Depletion(Initial=c(0.6, 0.9)) |> Populate(nSim=30)
+# ---- Final depletion ----
+
+## Force terminal-year depletion to 0.4 relative to B0.
+## Catchability Efficiency is optimised to achieve this, overwriting any
+## existing Efficiency values.
+dep <- Depletion(Final = 0.4)
+
+## Stochastic terminal depletion
+dep <- Depletion(Final = c(0.3, 0.5))
+
+# ---- Both initial and final ----
+
+dep <- Depletion(Initial = 0.9, Final = 0.4)
+
+# ---- Reference biomass ----
+
+## Default: relative to total unfished biomass (B0)
+dep <- Depletion(Final = 0.4, Reference = "B0")
+
+## Relative to spawning biomass at unfished equilibrium (SB0)
+dep <- Depletion(Final = 0.4, Reference = "SB0")
+
+## "BMSY", "SBMSY", "SP0", and "SPMSY" pass validation but are reserved
+## for future use and not currently implemented.
+
+# ---- Slot accessors ----
+
+dep <- Depletion(Initial = 0.8, Final = 0.4)
+
+## Read slots
+Initial(dep)    # 0.8 before Populate(); nSim-length array after
+Final(dep)      # 0.4 before Populate(); nSim-length array after
+
+## Replace slots
+Initial(dep) <- c(0.7, 0.9)   # now stochastic
+Final(dep)   <- 0.3
+
+# ---- Attaching to a Stock ----
+
+stk <- Stock(Name = "Example stock", Ages = Ages(MaxAge = 20))
+Depletion(stk) <- Depletion(Initial = c(0.7, 0.8), 
+                            Final = c(0.4, 0.6)
+)
+Depletion(stk)
+
+## Pass-through access
+Depletion(stk)           # returns stk@Depletion
+Initial(Depletion(stk))  # initial depletion from the stock
+
+# ---- Populate ----
+
+## After Populate(), Initial and Final are nSim-length arrays (or NULL if
+## not specified). Population is typically done internally.
+pop_dep <- Populate(Depletion(stk), nSim = 48)
+Initial(pop_dep)   # 48-element array
+Final(pop_dep)     # 48-element array
 
 }
 \seealso{
-\code{\link[=Populate]{Populate()}}
+\itemize{
+\item \link[=depletion-class]{depletion} for the class definition and slot-level documentation.
+\item \code{\link[=Catchability]{Catchability()}} for the fleet catchability object whose \code{Efficiency}
+parameter is optimised when \code{Final} is populated.
+\item \code{\link[=Populate]{Populate()}} for array population.
+\item \code{\link[=Stock]{Stock()}} for the enclosing stock constructor.
 }
+
+Other depletion:
+\code{\link{depletion-class}}
+}
+\concept{depletion}

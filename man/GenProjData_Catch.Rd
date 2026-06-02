@@ -2,7 +2,7 @@
 % Please edit documentation in R/generate-data-proj-catch.R
 \name{GenProjData_Catch}
 \alias{GenProjData_Catch}
-\title{Generate Projected Catch Data for a Stock}
+\title{Generate Projected Catch Data}
 \usage{
 GenProjData_Catch(
   x,
@@ -15,26 +15,110 @@ GenProjData_Catch(
 )
 }
 \arguments{
-\item{x}{Integer. Simulation index.}
+\item{x}{Integer index of the simulation replicate.}
 
-\item{Proj}{A \code{Hist} object used in the projection}
+\item{Proj}{A \code{hist} class object used in the projection.}
 
 \item{DataYear}{Numeric. The calendar year to generate data for.}
 
-\item{YearsAll}{Numeric vector. All calendar years in the historical
-and projection years.}
+\item{YearsAll}{Numeric vector of all calendar years spanning the
+historical and projection periods.}
 
-\item{i}{Integer. Stock/complex index.}
+\item{i}{Integer index of the stock complex.}
 
-\item{stocks}{Integer vector. Stock indices used to subset catch-at-age arrays.}
+\item{stocks}{Integer vector of stock indices used to subset catch-at-age
+arrays.}
 
-\item{type}{Character. One of \code{"Landings"} or \code{"Discards"}.}
+\item{type}{Character. Either \code{"Landings"} or \code{"Discards"}.}
 }
 \value{
-The updated \code{Landings} or \code{Discards} object.
+A \link[=catchdata-class]{catchdata} object with \code{DataYear} appended to \verb{@Value}
+and \verb{@CV}:
+\itemize{
+\item \verb{@Value}: \verb{[nYear+1 x nFleet]} array of observed catch
+\item \verb{@CV}: \verb{[nYear+1 x nFleet]} array of CVs
+}
 }
 \description{
-Appends a new year of observed catch data (\code{Value} and \code{CV}) to the existing
-landings or discards data object for a given simulation and stock/complex.
+Internal function to append one year of simulated observed catch to an
+existing \link[=catchdata-class]{catchdata} object during the projection period.
+}
+\details{
+\subsection{Early Exit Conditions}{
+
+The function returns \code{CatchData} unchanged in two cases:
+\itemize{
+\item \strong{No catch data exist}: \code{slot(Proj@Data[[x]][[i]], type)} is empty
+(\code{EmptyObject(CatchData)}). Catch was not simulated historically, so
+projection data are not generated.
+\item \strong{Year already present}: \code{DataYear} is already a row in
+\code{CatchData@Value}, indicating this year has been appended previously.
+}
+}
+
+\subsection{True Catch Aggregation}{
+
+Catch-at-age for \code{DataYear} is extracted from \code{Proj@LandingsAtAge} or
+\code{Proj@DiscardsAtAge} (selected by \code{type}) for each stock in \code{stocks},
+dropping the simulation and time dimensions. Per-fleet aggregation then
+depends on \code{CatchData@Units[fl]}:
+\itemize{
+\item \code{"Number"}: summed over age and area via \code{resolveCatchNumber()}.
+\item \code{"Biomass"}: multiplied by \code{WeightFleet} before summing over age and
+area via \code{resolveCatchBiomass()}.
+}
+}
+
+\subsection{Value Resolution}{
+
+For each fleet, the new observed value is resolved in order of precedence:
+\itemize{
+\item \strong{OM data present}: if \code{Proj@OM@Data[[i]]} contains a pre-computed value
+for \code{type} at \code{TSIndex}, it is used directly without applying observation
+error.
+\item \strong{Stochastic}: otherwise, the aggregated true catch is multiplied by
+bias and error from the \code{\link[=CatchObs]{CatchObs()}} object:
+}
+
+\deqn{\tilde{C}_{t} = C_{t} \cdot b \cdot \varepsilon_{t}}
+\itemize{
+\item \eqn{C_{t}} — true aggregated catch for \code{DataYear}
+\item \eqn{b} — multiplicative bias for replicate \code{x} (\code{catchobs@Bias[x]});
+see \code{\link[=CatchObs]{CatchObs()}}
+\item \eqn{\varepsilon_{t}} — lognormal error multiplier for replicate \code{x},
+year \eqn{t} (\code{catchobs@Error[x, t]}); see \code{\link[=CatchObs]{CatchObs()}}
+}
+
+CVs for the new year are resolved via \code{resolveCV()}, which looks up the
+fleet- and year-specific CV from the existing \link[=catchdata-class]{catchdata} object.
+}
+
+\subsection{Obs Structure}{
+
+Observation parameters are accessed via:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{Proj@OM@Obs[[i]][[fl]]  # obs object; slot selected by `type`
+}\if{html}{\out{</div>}}
+
+where \code{i} is the stock complex index and \code{fl} the fleet index. The relevant
+\code{\link[=CatchObs]{CatchObs()}} slots are:
+\itemize{
+\item \verb{@Bias[x]}: per-replicate multiplicative bias
+\item \verb{@Error[x, t]}: per-replicate, per-year lognormal error multiplier
+}
+
+See \link[=obs-class]{obs} and \code{\link[=CatchObs]{CatchObs()}} for full slot documentation.
+}
+
+\subsection{Appending}{
+
+The new year's \code{Value} and \code{CV} arrays (dimensions \verb{[1 x nFleet]}) are
+bound to the existing arrays along the year dimension using
+\code{abind::abind(..., along = 1)}, preserving dimension names.
+}
+}
+\seealso{
+\code{\link[=CatchObs]{CatchObs()}}, \code{\link[=CatchData]{CatchData()}}, \link[=catchdata-class]{catchdata}, \link[=obs-class]{obs},
+\code{\link[=GenHistData_Catch]{GenHistData_Catch()}}, \code{\link[=GenProjData_Effort]{GenProjData_Effort()}}
 }
 \keyword{internal}

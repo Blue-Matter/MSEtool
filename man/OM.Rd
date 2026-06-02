@@ -2,10 +2,10 @@
 % Please edit documentation in R/constructor-om.R
 \name{OM}
 \alias{OM}
-\title{Create an Operating Model}
+\title{OM Constructor and Accessor}
 \usage{
 OM(
-  Name = "A new `OM` object",
+  Name = "A new OM object",
   Agency = "",
   Author = "",
   Email = "",
@@ -43,9 +43,12 @@ OM(
 )
 }
 \arguments{
-\item{Name}{Character. Name of the operating model. If an S4 object with
-an \code{OM} slot is passed, that slot is returned instead. Default
-\code{"A new OM object"}.}
+\item{Name}{Character. Name of the operating model. Default
+\code{"A new OM object"}.
+
+If \code{Name} is an S4 object with an \code{OM} slot (e.g. a \link[=hist-class]{hist} or
+\link[=mse-class]{mse} object), \code{OM()} returns that slot directly rather than
+constructing a new object. See \emph{Pass-Through Access} in Details.}
 
 \item{Agency}{Character. Name of the agency responsible for management.
 Supports Markdown. Default \code{""}.}
@@ -59,13 +62,13 @@ Supports Markdown. Default \code{""}.}
 \item{Region}{Character. Name of the geographic region of the fishery.
 Default \code{""}.}
 
-\item{Latitude}{Numeric. Latitude (decimal degrees) of the center of
+\item{Latitude}{Numeric. Latitude (decimal degrees) of the centre of
 \code{Region}. Default \code{NULL}.}
 
-\item{Longitude}{Numeric. Longitude (decimal degrees) of the center of
+\item{Longitude}{Numeric. Longitude (decimal degrees) of the centre of
 \code{Region}. Default \code{NULL}.}
 
-\item{Sponsor}{Character. Organization sponsoring development of the
+\item{Sponsor}{Character. Organisation sponsoring development of the
 operating model. Supports Markdown. Default \code{""}.}
 
 \item{nSim}{Positive integer. Number of stochastic simulations. Default
@@ -81,20 +84,23 @@ model. Default is the current system year.}
 \item{Seasons}{Integer. Number of seasons per year. Default \code{1}.}
 
 \item{Stock}{A \link[=stock-class]{stock} object or named list of \link[=stock-class]{stock} objects.
-Default \code{NULL}.}
+Default \code{NULL}. See \code{\link[=Stock]{Stock()}} for construction and pass-through access.}
 
 \item{Fleet}{A hierarchical named list of \link[=fleet-class]{fleet} objects indexed by
 stock then fleet. Each stock must have the same number of fleets. Default
-\code{NULL}.}
+\code{NULL}. See \code{\link[=Fleet]{Fleet()}} for construction and pass-through access.}
 
 \item{Obs}{A hierarchical named list of \link[=obs-class]{obs} objects indexed by
-stock and fleet. Default \code{NULL}.}
+stock and fleet. Default \code{NULL}. See \code{\link[=Obs]{Obs()}} for construction and
+pass-through access.}
 
 \item{Imp}{A hierarchical named list of \link[=imp-class]{imp} objects indexed by
-stock and fleet. Default \code{NULL}.}
+stock and fleet. Default \code{NULL}. See \code{\link[=Imp]{Imp()}} for construction and
+pass-through access.}
 
 \item{Data}{A \link[=data-class]{data} object or list of \link[=data-class]{data} objects
-associated with the operating model. Default \code{NULL}.}
+associated with the operating model. Default \code{NULL}. See \code{\link[=Data]{Data()}} for
+construction and pass-through access.}
 
 \item{DataLag}{Integer. Number of time steps that data are lagged relative
 to management implementation. Default \code{0}.}
@@ -118,7 +124,11 @@ Default \code{NULL}.}
 Default \code{NULL}.}
 
 \item{Relations}{List. Biological or ecological relationships among stocks
-(e.g., predator-prey). Default \code{NULL}.}
+(e.g. predator-prey). Default \code{NULL}. Currently not used.}
+
+\item{StockTargeting}{A \link[=stocktargeting-class]{stocktargeting} object. Defines fleet-level
+stock targeting weights and deviations. Populated internally.
+See \code{\link[=StockTargeting]{StockTargeting()}}.}
 
 \item{Interval}{Numeric scalar or named numeric vector. Management update
 interval in years. Default \code{1}.}
@@ -126,16 +136,18 @@ interval in years. Default \code{1}.}
 \item{nReps}{Positive integer. Number of stochastic replicates used for
 generating management advice. Default \code{1}.}
 
-\item{pStar}{Numeric. Percentile (0–1) applied to stochastic management
-advice. Default \code{0.5}.}
+\item{pStar}{Numeric in \eqn{[0, 1]}. Percentile applied to stochastic
+management advice. Default \code{0.5}.}
 
 \item{maxF}{Numeric. Maximum allowable instantaneous fishing mortality.
-Default \code{3}.}
+Applies to nominal fishing mortality for fish that interact with the
+fishing gear; actual effective F may be lower if some fish are discarded
+and survive. Default \code{3}.}
 
 \item{Seed}{Integer. Random number generator seed for reproducibility.
 Default \code{101}.}
 
-\item{Control}{Named list of operating model control settings. If \code{NULL}
+\item{Control}{Named list of operating model control settings. When \code{NULL}
 (default), \code{ControlDefault} is used.}
 
 \item{Misc}{List. Miscellaneous objects or developer-use components.
@@ -145,31 +157,65 @@ Default \code{list()}.}
 Supports Markdown. Default \code{NULL}.}
 }
 \value{
-An \link[=om-class]{om} object, or the \code{OM} slot of \code{Name} if \code{Name} is an
-S4 object with an \code{OM} slot.
+\itemize{
+\item \code{OM()} returns a new \link[=om-class]{om} object when \code{Name} is a character string
+or \code{NULL}.
+\item \code{OM()} returns \code{Name@OM} (an \link[=om-class]{om} object) when \code{Name} is an S4
+object with an \code{OM} slot.
+}
 }
 \description{
-Construct and manipulate an \link[=om-class]{om} object defining the complete
-specification of an Operating Model (OM) for use in Management Strategy
-Evaluation (MSE).
+Construct an \link[=om-class]{om} object defining the complete specification of an
+operating model (OM) for use in Management Strategy Evaluation (MSE), or
+extract the \code{OM} slot from an enclosing object.
 }
 \details{
-The \link[=om-class]{om} object defines a complete operating model specification for
-use in Management Strategy Evaluation (MSE). See the
-\href{https://docs.openmse.com/}{openMSE Technical Manual} for full details on
-model structure and parameterisation.
 \subsection{Pass-Through Access}{
 
-If \code{Name} is an S4 object with an \code{OM} slot (e.g., a \code{hist-class} or
-\code{mse-class} object), the \code{OM} slot of that object is returned directly
-rather than constructing a new OM.
+When \code{Name} is an S4 object with an \code{OM} slot, \code{OM()} returns that slot
+directly rather than constructing a new object. This allows a consistent
+interface for both construction and retrieval:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{om  <- OM(hist_obj)    # extract from hist or mse
+OM(hist_obj)           # same
+}\if{html}{\out{</div>}}
+}
+
+\subsection{Derived Slots}{
+
+The \code{Years} slot is not a constructor parameter. It is derived
+automatically from \code{nYear}, \code{pYear}, \code{CurrentYear}, and \code{Seasons} via
+\code{\link[=CalcYears]{CalcYears()}} and is read-only. Use \code{\link[=Years]{Years()}} to extract it from a
+constructed object.
+}
+
+\subsection{StockTargeting Initialisation}{
+
+The \code{StockTargeting} slot is initialised automatically by \code{\link[=StockTargeting]{StockTargeting()}}
+when \code{Stock} and \code{Fleet} are provided. It is not a user-facing parameter
+and should not be set directly in most workflows.
+}
+
+\subsection{Sub-Object Slots}{
+
+\code{Stock}, \code{Fleet}, \code{Obs}, \code{Imp}, and \code{Data} each have dedicated constructor
+functions that also act as pass-through accessors when called with an
+\link[=om-class]{om} argument. Replacement is handled by the corresponding
+replacement functions in each constructor file:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{Stock(om)  <- Stock("MyStock", ...)
+Fleet(om)  <- list(s1 = list(f1 = Fleet("MyFleet", ...)))
+Obs(om)    <- Obs("MyObs", ...)
+Imp(om)    <- Imp("MyImp", ...)
+Data(om)   <- Data(...)
+}\if{html}{\out{</div>}}
 }
 
 \subsection{Accessing and Assigning Slots}{
 
-All slots in \link[=om-class]{om} objects can be accessed or assigned using
-functions matching the slot names. See \link{OM-accessors} for the full list.
-For example:
+All remaining slots in \link[=om-class]{om} objects can be accessed or assigned
+using functions matching the slot names. See \link{OM-accessors} for the full
+list:
 
 \if{html}{\out{<div class="sourceCode r">}}\preformatted{Agency(om)
 Agency(om) <- "DFO"
@@ -180,10 +226,32 @@ Agency(om) <- "DFO"
 om <- OM()
 Agency(om)
 Agency(om) <- "DFO"
-Agency(om)
+
+nSim(om)
+nSim(om) <- 100
+
+Years(om)
 
 }
 \seealso{
-\link[=om-class]{om}, \code{\link[=Stock]{Stock()}}, \code{\link[=Fleet]{Fleet()}}, \code{\link[=Obs]{Obs()}}, \code{\link[=Imp]{Imp()}}, \code{\link[=Data]{Data()}},
-\link{OM-accessors}, \code{\link[=PopulateOM]{PopulateOM()}}, \code{\link[=runMSE]{runMSE()}}
+\itemize{
+\item \link[=om-class]{om} for the class definition.
+\item \link{OM-accessors} for slot accessor and replacement functions.
+\item \code{\link[=Stock]{Stock()}}, \code{\link[=Fleet]{Fleet()}}, \code{\link[=Obs]{Obs()}}, \code{\link[=Imp]{Imp()}}, \code{\link[=Data]{Data()}} for sub-object
+constructors and their pass-through accessors.
+\item \code{\link[=Years]{Years()}}, \code{\link[=CalcYears]{CalcYears()}} for the derived time-step vector.
+\item \code{\link[=StockTargeting]{StockTargeting()}} for the stock targeting sub-object.
+\item \code{\link[=Log]{Log()}} for accessing runtime diagnostics.
+\item \code{\link[=PopulateOM]{PopulateOM()}}, \code{\link[=runMSE]{runMSE()}} for downstream use of the operating model.
+\item \code{\link[=ConvertOM]{ConvertOM()}}, \code{\link[=ConvertMOM]{ConvertMOM()}} for converting legacy objects.
 }
+
+Other om:
+\code{\link{ComplexOM}},
+\code{\link{MultiStockOM}},
+\code{\link{OM-accessors}},
+\code{\link{SingleStockOM}},
+\code{\link{TwoFleetOM}},
+\code{\link{om-class}}
+}
+\concept{om}

@@ -33,7 +33,7 @@ Returns the number of individuals (abundance) from a \link[=hist-class]{hist} or
 a \code{data.frame}.
 }
 \examples{
-Hist <- Simulate(ExampleOM)
+Hist <- Simulate(SingleStockOM)
 Number(Hist, df = TRUE)
 Number(Hist, df = TRUE, byAge = TRUE)
 Number(Hist, df = TRUE, byAge = TRUE, byArea = TRUE)

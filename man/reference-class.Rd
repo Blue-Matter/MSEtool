@@ -32,15 +32,9 @@ such as FMSY, BMSY, and MSY.}
 
 \item{\code{SPRcrash}}{List or array of spawning potential ratio at collapse.}
 
-\item{\code{MGT}}{List or array of maximum generation time reference points.}
+\item{\code{MGT}}{List or array of mean generation time reference points.}
 
-\item{\code{BLow}}{List or array defining lower biomass reference points.}
-
-\item{\code{Equilibrium}}{An object describing equilibrium
-population dynamics at reference conditions.}
-
-\item{\code{Dynamic}}{A n object describing dynamic population
-trajectories used to compute reference points.}
+\item{\code{BLow}}{List or array defining the B-Low biomass reference points.}
 
 \item{\code{Misc}}{Miscellaneous list for additional reference quantities or
 diagnostics.}

@@ -13,7 +13,7 @@ Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 Depends: 
-    R (>= 4.1.0),
+    R (>= 4.2.0),
     snowfall
 Imports:
     abind,
@@ -26,15 +26,12 @@ Imports:
     Rcpp,
     stats,
     utils,
-    Slick,
     digest,
     furrr,
     future,
     lubridate,
-    patchwork,
     purrr,
-    rlang,
-    lifecycle
+    rlang
 Suggests:
     boot,
     broom,
@@ -46,6 +43,7 @@ Suggests:
     knitr,
     ggrepel,
     gridExtra,
+    Matrix,
     MASS,
     mvtnorm,
     openxlsx,
@@ -57,9 +55,12 @@ Suggests:
     rfishbase,
     rmarkdown,
     shiny,
+    Slick,
     testthat,
+    tibble,
     tidyr,
     TMB,
+    tmvtnorm,
     usethis
 LinkingTo: Rcpp, RcppArmadillo
 BugReports: https://github.com/Blue-Matter/MSEtool/issues
@@ -71,17 +72,19 @@ Collate:
     'calc-advice.R'
     'calc-age-size-key.R'
     'calc-asymptotic-distribution.R'
+    'calc-catch-at-size.R'
+    'calc-conditioned-key.R'
     'calc-fishery-dynamics.R'
     'calc-initial-timestep.R'
     'calc-innovation-cov.R'
     'calc-max-effort.R'
     'calc-mice.R'
-    'calc-msy-refpoints.R'
     'calc-per-recruit.R'
+    'calc-ref-msy.R'
     'calc-ref-yield.R'
     'calc-seasonal-spatial.R'
     'calc-spatial-movement.R'
-    'calc-spr.R'
+    'calc-spr0.R'
     'calc-survival-unfished.R'
     'calc-survival.R'
     'calc-unfished-distribution.R'
@@ -108,15 +111,15 @@ Collate:
     'class-retention.R'
     'class-selectivity.R'
     'class-advice.R'
-    'class-advicedata.R'
     'class-ages.R'
     'class-bioeconomic.R'
     'class-catchability.R'
-    'class-catchdata.R'
-    'class-compdata.R'
-    'class-refpointsMSY.R'
-    'class-referencedata.R'
-    'class-exploitationdata.R'
+    'class-data-advice.R'
+    'class-data-catch.R'
+    'class-data-comp.R'
+    'class-data-effort.R'
+    'class-data-exploitation.R'
+    'class-data-indices.R'
     'class-depletion.R'
     'class-spatial.R'
     'class-srr.R'
@@ -126,9 +129,9 @@ Collate:
     'class-weight.R'
     'class-length.R'
     'class-stock.R'
-    'class-lifehistorydata.R'
-    'class-indicesdata.R'
-    'class-effortdata.R'
+    'class-data-lifehistory.R'
+    'class-refpointsMSY.R'
+    'class-data-reference.R'
     'class-data.R'
     'class-effort.R'
     'class-fleet.R'
@@ -138,6 +141,7 @@ Collate:
     'class-unfished.R'
     'zz_Class_definitions.R'
     'class-stock-targeting.R'
+    'class-imp-slot.R'
     'class-imp.R'
     'class-obs-comp.R'
     'class-obs-indices.R'
@@ -149,19 +153,24 @@ Collate:
     'class-om.R'
     'class-hist.R'
     'class-mse.R'
-    'class-obslifehistory.R'
     'class-perrecruit.R'
     'combine-fleet.R'
     'combine-om.R'
     'compare-bam.R'
     'compare-ss3.R'
     'condition-obs-catch.R'
+    'condition-obs-comp.R'
     'condition-obs-index.R'
     'condition-obs.R'
     'constructor-advice.R'
     'constructor-ages.R'
     'constructor-bioeconomic.R'
     'constructor-catchability.R'
+    'constructor-data-catch.R'
+    'generate-data-hist-sizecomp.R'
+    'constructor-data-comp.R'
+    'constructor-data-effort.R'
+    'constructor-data-indices.R'
     'constructor-data.R'
     'constructor-depletion.R'
     'constructor-discardmortality.R'
@@ -169,14 +178,25 @@ Collate:
     'constructor-fecundity.R'
     'constructor-fleet.R'
     'constructor-hist.R'
+    'constructor-imp-slot.R'
+    'constructor-imp.R'
     'constructor-length.R'
     'constructor-maturity.R'
     'constructor-naturalmortality.R'
+    'constructor-obs-catch.R'
+    'constructor-obs-comp.R'
+    'constructor-obs-effort.R'
+    'constructor-obs-exploitation.R'
+    'constructor-obs-indices.R'
+    'constructor-obs-lifehistory.R'
+    'constructor-obs.R'
     'constructor-om.R'
+    'constructor-ref-MSY.R'
     'constructor-retention.R'
     'constructor-selectivity.R'
     'constructor-spatial.R'
     'constructor-srr.R'
+    'constructor-stock-targeting.R'
     'constructor-stock.R'
     'constructor-weight.R'
     'convert-data.R'
@@ -194,7 +214,20 @@ Collate:
     'zz_MOM_object.r'
     'convert.R'
     'data-trim.R'
+    'example-fleet-asymp.R'
+    'example-fleet-dome.R'
     'example-objects.R'
+    'example-obs-age-structured.R'
+    'example-obs-catch-survey.R'
+    'example-obs-comm-fleet.R'
+    'example-obs-data-rich.R'
+    'example-obs-length-structured.R'
+    'example-om-complex.R'
+    'example-om-multistock.R'
+    'example-om-singlestock.R'
+    'example-om-two-fleet.R'
+    'example-stock-albacore.R'
+    'example-stock-butterfish.R'
     'examples-MPs.R'
     'extract-F-timeseries.R'
     'extract-bio-timeseries.R'
@@ -202,18 +235,20 @@ Collate:
     'extract-effort.R'
     'extract-number.R'
     'extract-unfished.R'
-    'fct_Biomass.R'
     'fct_CalcMSYRefPoints.R'
     'find-model.R'
     'fit-stock-targeting.R'
+    'generate-data-hist-agecomp.R'
     'generate-data-hist-catch.R'
     'generate-data-hist-effort.R'
     'generate-data-hist-indices.R'
     'generate-data-hist.R'
+    'generate-data-proj-agecomp.R'
     'generate-data-proj-catch.R'
     'generate-data-proj-effort.R'
     'generate-data-proj-helpers.R'
     'generate-data-proj-indices.R'
+    'generate-data-proj-sizecomp.R'
     'generate-data-proj.R'
     'generate-hist-effort.R'
     'generate-mean-at.R'
@@ -229,6 +264,7 @@ Collate:
     'import-bam.R'
     'import-ss3.R'
     'initialize-hist.R'
+    'man-populating-schedules.R'
     'models-fecundity.R'
     'models-length.R'
     'models-maturity.R'
@@ -259,6 +295,11 @@ Collate:
     'populate-mean-at-length.R'
     'populate-mean-at-weight.R'
     'populate-natural-mortality.R'
+    'populate-obs-catch.R'
+    'populate-obs-comp.R'
+    'populate-obs-effort.R'
+    'populate-obs-helpers.R'
+    'populate-obs-index.R'
     'populate-obs.R'
     'populate-om.R'
     'populate-random.R'
@@ -301,25 +342,30 @@ Collate:
     'update-tac-helpers.R'
     'update-tac.R'
     'util-accessors.R'
+    'util-add-dimension.R'
     'util-add-sim-number.R'
     'util-array-create.R'
     'util-convert-to-list.R'
     'util-dim.R'
-    'util-dimension.R'
     'util-get-metadata.R'
     'utils-add-autocorrelation.R'
+    'utils-add-dimnames.R'
     'utils-add-year-dimnames.R'
     'utils-advice-null.R'
     'utils-array-operations.R'
     'utils-array-to-df.R'
     'utils-atage-to-atsize.R'
     'utils-atsize-to-atage.R'
+    'utils-calc-ageclasses.R'
     'utils-check-hist-misc.R'
     'utils-cr2h.R'
+    'utils-dirichlet-multinomial.R'
+    'utils-empty-object.R'
     'utils-extend-hist.R'
     'utils-extend-om.R'
     'utils-extend.R'
     'utils-fill-from-misc.R'
+    'utils-get_nSim.R'
     'utils-helpers.R'
     'utils-identical-age.R'
     'utils-identical-sim.R'
@@ -333,6 +379,7 @@ Collate:
     'utils-misc.R'
     'utils-parallel.R'
     'utils-prep-hist-misc.R'
+    'utils-recycle-fleets.R'
     'utils-reverse-list.R'
     'utils-save.R'
     'utils-set-age-dimnames.R'
@@ -340,6 +387,7 @@ Collate:
     'utils-startup.R'
     'utils-stocknames.R'
     'utils-structure.R'
+    'utils-transformation.R'
     'utils-unique-years.R'
     'utils-valid-units.R'
     'vbiomass.R'

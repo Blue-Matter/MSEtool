@@ -73,8 +73,6 @@
 #' OM <- GenerateStockTargeting(OM, Period = "Projection", TruncSD = 2, n_recent = 5)
 #' }
 #'
-#' @importFrom MASS mvrnorm
-#'
 #' @seealso [FitStockTargeting()], [StandardizeEffort()]
 #'
 #' @export
@@ -83,6 +81,8 @@ GenerateStockTargeting <- function(OM,
                                    TruncSD = 2,
                                    n_recent = 5,
                                    seed = 101) {
+  
+  CheckPackage('MASS')
   
   Period <- match.arg(Period)
   SetSeed(OM@Seed + seed)

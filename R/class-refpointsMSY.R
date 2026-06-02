@@ -1,21 +1,31 @@
-#' `refpointsMSY` Class
+#' The `refpointsMSY` S4 Class
 #'
-#' Stores MSY-based biological reference points across simulations.
-#' All slots are arrays or numerics with a `Sim` dimension unless otherwise
-#' noted.
+#' An S4 class storing MSY-based biological reference points. Produced
+#' internally during reference point calculations and not intended to be
+#' modified directly by users.
 #'
-#' @slot FMSY        Fishing mortality rate at MSY.
-#' @slot BMSY        Total biomass at MSY.
-#' @slot SBMSY       Spawning biomass at MSY.
-#' @slot SPMSY       Spawning production at MSY.
-#' @slot SPRMSY      Spawning potential ratio at MSY.
-#' @slot MSY         Maximum sustainable yield (removals).
-#' @slot MSYLandings Landed catch at MSY.
-#' @slot Misc        Miscellaneous list for additional outputs.
+#' @slot FMSY        Fishing mortality rate at MSY (`Sim × Stock × Year`).
+#' @slot BMSY        Total biomass at MSY (`Sim × Stock × Year`).
+#' @slot SBMSY       Spawning biomass at MSY (`Sim × Stock × Year`).
+#' @slot SPMSY       Spawning production at MSY (`Sim × Stock × Year`).
+#' @slot SPRMSY      Spawning potential ratio at MSY (`Sim × Stock × Year`).
+#' @slot MSYLandings Landed catch at MSY (`Sim × Stock × Year`).
+#' @slot MSYDiscards Dead discards at MSY (`Sim × Stock × Year`).
+#' @slot Misc        List reserved for internal use.
+#'
+#' @details
+#' ## Reference point calculations
+#' MSY reference points are derived from the per-recruit quantities in a
+#' [perrecruit-class] object by identifying the apical fishing mortality
+#' that maximises total removals, accounting for the stock-recruitment
+#' relationship. All slots share the same `Sim × Stock × Year` dimensions,
+#' where the `Year` dimension reflects the year(s) for which biological and
+#' fishery parameters were evaluated.
+#'
+#' @seealso [perrecruit-class]
 #' @include class-unions.R
 #' @export
 #' @name refpointsMSY-class
-#' @aliases refpointsMSY
 setClass("refpointsMSY",
          slots = c(
            FMSY        = "num.array.null",
@@ -23,8 +33,8 @@ setClass("refpointsMSY",
            SBMSY       = "num.array.null",
            SPMSY       = "num.array.null",
            SPRMSY      = "num.array.null",
-           MSY         = "num.array.null",
            MSYLandings = "num.array.null",
+           MSYDiscards = "num.array.null",
            Misc        = "list"
          )
 )

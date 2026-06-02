@@ -26,6 +26,8 @@ ProcessBAMArgs <- function(Stock, OM=NULL) {
 
 PrintPlotBAMRE <- function(Out, name, plot=FALSE, thresh=0.5) {
   MARE <- NULL # CRAN
+  if (is.null(Out[[name]]))
+    return(invisible(NULL))
   re <- Out[[name]]$MARE |>
     dplyr::mutate(MARE=abs(MARE)) |>
     dplyr::filter(MARE>thresh)
@@ -34,18 +36,23 @@ PrintPlotBAMRE <- function(Out, name, plot=FALSE, thresh=0.5) {
   
   if (exMARE) {
     cli::cli_alert_warning('{.val {name}:} Some Absolute Relative Error > {thresh}%')
-    print(re) 
+    # print(re) 
   }
   
   if (exMARE || plot) {
+    has_fleet <- 'Fleet' %in% names(Out[[name]]$df)
+    
     p <- ggplot2::ggplot(Out[[name]]$df, 
                          ggplot2::aes(x=Year, y=Value, color=Model, linetype=Model, shape=Model)) +
-      ggplot2::geom_line() +
-      ggplot2::geom_point() +
-      ggplot2::labs(x='Year', y=name, title = Out$Stock) +
+      ggplot2::geom_line(na.rm = TRUE) +
+      ggplot2::geom_point(na.rm = TRUE) +
+      ggplot2::labs(x='Year', y=name, title=Out$Stock) +
       ggplot2::expand_limits(y=0) +
       ggplot2::theme_bw()
     
+    if (has_fleet)
+      p <- p + ggplot2::facet_wrap(~Fleet, scales = 'free_y')
+
     print(p)
   }
 
@@ -61,8 +68,9 @@ PrintPlotBAMRE <- function(Out, name, plot=FALSE, thresh=0.5) {
 #'
 #' Compares key population time series between BAM output and a simulated
 #' operating model (OM), reporting the mean absolute relative error (MARE) for
-#' recruits, total numbers, and total biomass. Series with MARE exceeding
-#' `thresh` are printed and plotted automatically.
+#' recruits, total numbers, total biomass, and landings and discards by fleet.
+#' 
+#'  Series with MARE exceeding `thresh` are plotted automatically.
 #'
 #' @param Stock Character string matching a stock in `bamExtras`, a list of BAM
 #'   output objects containing elements `rdat` and `dat`, or an object of class
@@ -73,7 +81,7 @@ PrintPlotBAMRE <- function(Out, name, plot=FALSE, thresh=0.5) {
 #' If `plot=FALSE` (default) the plots will only be printed if `MARE>thresh`
 #' in some years.
 #' @param thresh Numeric. MARE threshold (as a percentage) above which a
-#'   comparison is flagged, printed, and plotted. Default `0.5%`.
+#'   comparison is flagged, printed, and plotted. Default `1%`.
 #'
 #' @return Invisibly returns a named list with elements `Stock`, `Recruits`,
 #'   `Number`, and `Biomass`. Each of `Recruits`, `Number`, and `Biomass` is a
@@ -82,12 +90,12 @@ PrintPlotBAMRE <- function(Out, name, plot=FALSE, thresh=0.5) {
 #'
 #' @seealso [ImportBAM()], [GetBAMOutput()]
 #' @export
-CompareBAM <- function(Stock, OM = NULL, plot = FALSE, thresh = 0.5) {
+CompareBAM <- function(Stock, OM = NULL, plot = FALSE, thresh = 1) {
   
-  cli::cli_text("Comparing population dynamics between BAM Model {.val {OM@Name}} and {.val OM}  ")
-
   List <- ProcessBAMArgs(Stock, OM)
   Hist <- List$Hist
+  OM   <- Hist@OM
+  cli::cli_text("Comparing population dynamics between BAM Model {.val {OM@Name}} and {.val OM}  ")  
   BAMdata <- List$BAMdata
 
   Out <- list()
@@ -95,10 +103,14 @@ CompareBAM <- function(Stock, OM = NULL, plot = FALSE, thresh = 0.5) {
   Out$Recruits <- CompareBAM_Recruits(BAMdata, Hist)
   Out$Number <- CompareBAM_Number(BAMdata, Hist)
   Out$Biomass <- CompareBAM_Biomass(BAMdata, Hist)
-
-  PrintPlotBAMRE(Out, 'Recruits', thresh, plot=plot)
-  PrintPlotBAMRE(Out, 'Number', thresh, plot=plot)
-  PrintPlotBAMRE(Out, 'Biomass', thresh, plot=plot)
+  Out$Landings <- CompareBAM_Landings(BAMdata, Hist)
+  Out$Discards <- CompareBAM_Discards(BAMdata, Hist)
+  
+  PrintPlotBAMRE(Out, 'Recruits', thresh, plot = plot)
+  PrintPlotBAMRE(Out, 'Number', thresh, plot = plot)
+  PrintPlotBAMRE(Out, 'Biomass', thresh, plot = plot)
+  PrintPlotBAMRE(Out, 'Landings', thresh, plot = plot)
+  PrintPlotBAMRE(Out, 'Discards', thresh, plot = plot)
 
   invisible(Out)
 }
@@ -106,14 +118,15 @@ CompareBAM <- function(Stock, OM = NULL, plot = FALSE, thresh = 0.5) {
 
 CalcBAM_MARE <- function(df) {
   OM <- BAM <- NULL # CRAN check hacks
-  MARE <- df |>
+  
+  group_vars <- intersect(c("Year", "Fleet"), names(df))
+  
+  df |>
     tidyr::pivot_wider(names_from = Model, values_from = Value) |>
-    dplyr::group_by(Year) |>
-    dplyr::summarise(MARE=abs((OM-BAM)/BAM)*100, .groups='drop')
-  list(df=df, MARE=MARE)
-
+    dplyr::group_by(dplyr::across(dplyr::all_of(group_vars))) |>
+    dplyr::summarise(MARE = abs((OM - BAM) / BAM) * 100, .groups = "drop") |>
+    list(df = df, MARE = _)
 }
-
 
 CompareBAM_Number <- function(Stock, OM=NULL) {
 
@@ -143,6 +156,7 @@ CompareBAM_Number <- function(Stock, OM=NULL) {
 
   CalcBAM_MARE(df)
 }
+
 
 CompareBAM_Biomass <- function(Stock, OM=NULL) {
 
@@ -205,6 +219,95 @@ CompareBAM_Recruits <- function(Stock, OM=NULL) {
 
 }
 
+CompareBAM_Landings <- function(Stock, OM = NULL) {
+  
+  Variable <- NULL # CRAN checks
+  
+  List <- ProcessBAMArgs(Stock, OM)
+  Hist <- List$Hist
+  BAMdata <- List$BAMdata
+  
+  BAM_Landings <- purrr::map(Hist@Data[[1]], \(data) {
+    data@Landings@Value 
+  }) |> List2Array(name = 'Stock') |> 
+    Array2DF() |>
+    dplyr::mutate(Model = 'BAM', Variable = 'Landings')
+  
+  BAM_Units <- data.frame(Fleet  = Hist@Data[[1]][[1]]@Landings@Name,
+                          Units  = as.character(Hist@Data[[1]][[1]]@Landings@Units))
+                                             
+  BAM_Landings <- dplyr::left_join(BAM_Landings, BAM_Units, by = dplyr::join_by(Fleet))
+  
+  OM_Landings_Biomass <- Landings(Hist, byFleet = TRUE) |>
+    dplyr::mutate(Model='OM')
+  
+  OM_Landings_Number <- Landings(Hist, byFleet = TRUE, byAge = TRUE) |>
+    dplyr::mutate(Model='OM') |>
+    dplyr::group_by(Sim, Year, Fleet, Variable, Model) |>
+    dplyr::summarise(Value = sum(Value), .groups = 'drop')
+  
+  biomass_fleets <- BAM_Units$Fleet[BAM_Units$Units == 'Biomass']
+  number_fleets  <- BAM_Units$Fleet[BAM_Units$Units == 'Number']
+  
+  OM_Landings <- dplyr::bind_rows(
+    dplyr::filter(OM_Landings_Biomass, Fleet %in% biomass_fleets),
+    dplyr::filter(OM_Landings_Number,  Fleet %in% number_fleets)
+  ) |>
+    dplyr::left_join(BAM_Units, by = 'Fleet')
+  
+  df <- dplyr::bind_rows(OM_Landings, BAM_Landings) |>
+    dplyr::select(Year, Value, Model, Fleet) |>
+    dplyr::arrange(Year)
+  
+  CalcBAM_MARE(df)
+}
+
+CompareBAM_Discards <- function(Stock, OM = NULL) {
+  
+  Variable <- NULL # CRAN checks
+  
+  List <- ProcessBAMArgs(Stock, OM)
+  Hist <- List$Hist
+  BAMdata <- List$BAMdata
+  
+  BAM_Discards <- purrr::map(Hist@Data[[1]], \(data) {
+    data@Discards@Value 
+  }) 
+  if (is.null(BAM_Discards[[1]])) 
+    return(NULL)
+    
+  BAM_Discards <- BAM_Discards |> List2Array(name = 'Stock') |> 
+    Array2DF() |>
+    dplyr::mutate(Model = 'BAM', Variable = 'Discards')
+  
+  BAM_Units <- data.frame(Fleet  = Hist@Data[[1]][[1]]@Discards@Name,
+                          Units = as.character(Hist@Data[[1]][[1]]@Discards@Units))
+  
+  BAM_Discards <- dplyr::left_join(BAM_Discards, BAM_Units, by = dplyr::join_by(Fleet))
+  
+  OM_Discards_Biomass <- Discards(Hist, byFleet = TRUE) |>
+    dplyr::mutate(Model='OM')
+  
+  OM_Discards_Number <- Discards(Hist, byFleet = TRUE, byAge = TRUE) |>
+    dplyr::mutate(Model='OM') |>
+    dplyr::group_by(Sim, Year, Fleet, Variable, Model) |>
+    dplyr::summarise(Value = sum(Value), .groups = 'drop')
+  
+  biomass_fleets <- BAM_Units$Fleet[BAM_Units$Units == 'Biomass']
+  number_fleets  <- BAM_Units$Fleet[BAM_Units$Units == 'Number']
+  
+  OM_Discards <- dplyr::bind_rows(
+    dplyr::filter(OM_Discards_Biomass, Fleet %in% biomass_fleets),
+    dplyr::filter(OM_Discards_Number,  Fleet %in% number_fleets)
+  ) |>
+    dplyr::left_join(BAM_Units, by = 'Fleet')
+  
+  df <- dplyr::bind_rows(OM_Discards, BAM_Discards) |>
+    dplyr::select(Year, Value, Model, Fleet) |>
+    dplyr::arrange(Year)
+  
+  CalcBAM_MARE(df)
+}
 
 
 

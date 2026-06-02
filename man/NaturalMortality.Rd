@@ -3,7 +3,7 @@
 \name{NaturalMortality}
 \alias{NaturalMortality}
 \alias{NaturalMortality<-}
-\title{NaturalMortality}
+\title{NaturalMortality Constructor and Accessors}
 \usage{
 NaturalMortality(
   Pars = list(),
@@ -19,86 +19,270 @@ NaturalMortality(
 NaturalMortality(x) <- value
 }
 \arguments{
-\item{Pars}{Named list of natural mortality parameters corresponding to
-\code{Model}. See \code{\link[=NaturalMortalityModels]{NaturalMortalityModels()}} for available models and required
-parameters. If \code{Pars} is a \link[=stock-class]{stock} object, the \code{NaturalMortality}
-slot of that stock is returned. If \code{Pars} is non-empty, \code{Model} is
-\code{NULL}, and all values are non-\code{NA}, the model is inferred automatically
-via \code{\link[=FindModel]{FindModel()}}.}
+\item{Pars}{\code{list}. Named list of natural mortality parameters. Element
+names must match the arguments of a built-in mortality model (see
+\code{\link[=NaturalMortalityModels]{NaturalMortalityModels()}}). When \code{Pars} is non-empty and \code{Model} is
+\code{NULL}, the model is inferred automatically by \code{\link[=FindModel]{FindModel()}}. When \code{Pars}
+is a \link[=stock-class]{stock} object, \code{NaturalMortality()} acts as a pass-through
+accessor and returns \code{x@NaturalMortality}. See also
+\link[=populating-schedules]{Specifying Biological and Fleet Schedules} for the
+full set of accepted input formats. Default \code{list()}.}
 
-\item{Model}{Character or function. Natural mortality model identifier. If
-\code{NULL} (default), the model is inferred from \code{Pars} where possible. See
-\code{\link[=NaturalMortalityModels]{NaturalMortalityModels()}} for available models.}
+\item{Model}{\code{character(1)} or \code{function}. Natural mortality model
+identifier. When \code{NULL} (default), the model is inferred from \code{Pars} via
+\code{\link[=FindModel]{FindModel()}}. May be set to a character string naming a built-in model or
+to a custom R function — see
+\link[=populating-schedules]{Specifying Biological and Fleet Schedules}.}
 
-\item{Units}{Character. Time units for the mortality rate (e.g., \code{"year"}).
-See \code{\link[=ValidUnits]{ValidUnits()}} for valid options. Default \code{"year"}.}
+\item{Units}{\code{character(1)}. Time unit in which mortality rates are
+expressed. Must be one of the strings returned by \code{\link[=ValidUnits]{ValidUnits()}} (e.g.,
+\code{"year"} for instantaneous annual mortality). For seasonal models, set
+\code{Units} to match the season length so that within-step rates are scaled
+correctly during \code{\link[=Populate]{Populate()}}. Default \code{"year"}.}
 
-\item{MeanAtAge}{Numeric array. Mean natural mortality at age, with named
-dimensions \code{Sim}, \code{Age}, and \code{Year}. Populated automatically during
-\code{\link[=Populate]{Populate()}} if \code{Pars} and \code{Model} are provided. Default \code{NULL}.}
+\item{MeanAtAge}{\code{array} or \code{NULL}. Mean instantaneous natural mortality at
+age with named dimensions \verb{Sim × Age × Year}. Supply directly when
+bypassing the model-based approach (\code{Pars = list()}). Only the years at
+which values \emph{change} need to be included; \code{\link[=Extend]{Extend()}} fills the remainder.
+When \code{Pars} contains a matched model, any values here are \strong{overwritten}
+during \code{\link[=Populate]{Populate()}}. A numeric vector of length \code{nAge} is also accepted
+and promoted to a \verb{1 × nAge × 1} array automatically. Default \code{NULL}.}
 
-\item{MeanAtLength}{Numeric array. Mean natural mortality at length, with
-named dimensions \code{Sim}, \code{Length}, and \code{Year}. Default \code{NULL}.}
+\item{MeanAtLength}{\code{array} or \code{NULL}. Mean natural mortality at length with
+named dimensions \verb{Sim × Length × Year}. Populated automatically during
+\code{\link[=Populate]{Populate()}} when an at-length mortality model is used; may also be
+supplied directly. When \code{MeanAtLength} is populated and \code{MeanAtAge} is
+not, \code{\link[=Populate]{Populate()}} converts it to \code{MeanAtAge} via the age-length key
+(\code{ALK}) from a \link[=length-class]{length} object. Default \code{NULL}.}
 
-\item{Random}{Numeric array. Random effects on natural mortality parameters.
-Default \code{NULL}.}
+\item{Random}{\code{array} or \code{NULL}. Reserved for future use. Intended to hold
+simulation- and year-specific multipliers that add stochastic variation
+around the average mortality schedule in \code{MeanAtAge}. Currently stored
+but not applied during \code{\link[=Populate]{Populate()}}. Default \code{NULL}.}
 
-\item{Classes}{Numeric vector. Age or length class midpoints. Default
-\code{NULL}.}
+\item{Classes}{\code{numeric} or \code{NULL}. Age or length class midpoints
+corresponding to the \verb{MeanAt*} array in use. Default \code{NULL}.}
 
-\item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
+\item{Misc}{\code{list}. Used internally. Default \code{list()}.}
 
 \item{x}{A \link[=naturalmortality-class]{naturalmortality} object for slot accessors, or a
 \link[=stock-class]{stock} object for \verb{NaturalMortality<-}.}
 
-\item{value}{A \link[=naturalmortality-class]{naturalmortality} object.}
+\item{value}{For \verb{NaturalMortality<-}: a \link[=naturalmortality-class]{naturalmortality} object.}
 }
 \value{
 \itemize{
-\item \code{NaturalMortality()} returns a \link[=naturalmortality-class]{naturalmortality} object. If
-\code{Pars} is a \link[=stock-class]{stock} object, the \code{NaturalMortality} slot of that
-stock is returned.
-\item \verb{NaturalMortality<-} returns \code{x} with the \code{NaturalMortality} slot
-replaced.
+\item \code{NaturalMortality()} returns a \link[=naturalmortality-class]{naturalmortality} object. If \code{Pars}
+is a \link[=stock-class]{stock}, returns \code{x@NaturalMortality}.
+\item \verb{NaturalMortality<-} returns the \link[=stock-class]{stock} \code{x} with the
+\code{NaturalMortality} slot replaced and the object re-validated.
 }
 }
 \description{
-Construct and manipulate a \link[=naturalmortality-class]{naturalmortality} object defining the
-natural mortality schedule associated with a \code{\link[=Stock]{Stock()}} object. A
-\code{NaturalMortality} object is required for all \link[=stock-class]{stock} objects.
+Construct a \link[=naturalmortality-class]{naturalmortality} object defining the natural mortality
+schedule for a \link[=stock-class]{stock}, or access and replace the \code{NaturalMortality}
+slot of a \link[=stock-class]{stock} and its individual slots. A \code{NaturalMortality}
+object is required for all \link[=stock-class]{stock} objects.
 }
 \details{
-A \link[=naturalmortality-class]{naturalmortality} object is required for all \link[=stock-class]{stock}
-objects. It defines how natural mortality varies with age and/or length,
-which is used throughout the operating model for population dynamics
-calculations.
 \subsection{Specifying Natural Mortality}{
 
-Natural mortality schedules may be specified in two ways:
-\enumerate{
-\item \strong{Model-based}: provide \code{Pars} and optionally \code{Model}. \code{MeanAtAge}
-is populated automatically during \code{\link[=Populate]{Populate()}}. If \code{Model} is \code{NULL}
-and \code{Pars} is non-empty with no \code{NA} values, the model is inferred via
-\code{\link[=FindModel]{FindModel()}}.
-\item \strong{Direct array}: provide \code{MeanAtAge} or \code{MeanAtLength} directly with
-\code{Pars = list()} (default).
+There are two ways to define the mortality schedule; see
+\link[=populating-schedules]{Specifying Biological and Fleet Schedules} for full
+details on input formats and the rules that govern how \code{Pars}, \code{Model}, and
+\verb{MeanAt*} arrays interact.
+
+\strong{Model-based} (recommended): supply \code{Pars} with named parameters matching
+a built-in model (see \code{\link[=NaturalMortalityModels]{NaturalMortalityModels()}}). If \code{Model = NULL} and
+the parameter names uniquely match a model, \code{\link[=FindModel]{FindModel()}} resolves the
+model automatically. \code{MeanAtAge} is then populated by \code{\link[=Populate]{Populate()}} when the
+stock is added to an \code{\link[=OM]{OM()}}:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{# Constant M — model inferred from Pars names
+nm <- NaturalMortality(Pars = list(M = 0.2))
+
+# Stochastic M across simulations
+nm <- NaturalMortality(Pars = list(M = c(0.1, 0.3)))
+
+# Time-varying M (increases in 2010; Extend() fills the rest)
+M_arr <- array(c(0.2, 0.3), dim = c(1, 2),
+               dimnames = list(Sim = 1, Year = c(1990, 2010)))
+nm <- NaturalMortality(Pars = list(M = M_arr))
+
+# Inter-annual random walk on M (log-normal, SD = 0.1)
+nm <- NaturalMortality(Pars = list(M = c(0.1, 0.3), MSD = 0.1))
+}\if{html}{\out{</div>}}
+
+\strong{Direct array}: supply \code{MeanAtAge} (or \code{MeanAtLength}) with
+\code{Pars = list()}. Values are preserved during \code{\link[=Populate]{Populate()}}:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{ages  <- 0:20
+# Age-varying M declining from 0.5 at age 0 to 0.1 at the plus group
+nm_aa <- NaturalMortality(
+  MeanAtAge = array(
+    seq(0.5, 0.1, length.out = length(ages)),
+    dim      = c(1, length(ages), 1),
+    dimnames = list(Sim = 1, Age = ages, Year = 1990)
+  )
+)
+}\if{html}{\out{</div>}}
+}
+
+\subsection{Units and Seasonal Models}{
+
+Rates in \code{MeanAtAge} are instantaneous mortality values (\emph{M}) expressed
+over the period defined by \code{Units}. The default \code{Units = "year"} means
+annual \emph{M}. For seasonal models, set \code{Ages@Units} to the season length (e.g.,
+\code{"quarter"} for quarterly steps) and make sure the rate parameters (e.g., M and K)
+are in the same temporal units.
+}
+
+\subsection{At-Length Models}{
+
+Models whose class contains \code{"at-Length"} produce \code{MeanAtLength}, which is
+converted to \code{MeanAtAge} via the \code{ALK} — a populated \code{\link[=Length]{Length()}} object must
+be passed to \code{\link[=Populate]{Populate()}}. The same conversion applies when \code{MeanAtLength}
+is supplied directly by the user.
+}
+
+\subsection{Pass-Through Access from a Stock}{
+
+When \code{Pars} is a \link[=stock-class]{stock} object, \code{NaturalMortality()} returns the
+\code{NaturalMortality} slot directly:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{NaturalMortality(my_stock)           # returns my_stock@NaturalMortality
+NaturalMortality(my_stock) <- my_M   # replaces it
+}\if{html}{\out{</div>}}
+}
+
+\subsection{Slot Accessors}{
+
+Individual slots can be read or replaced using generic functions matching
+their names. All replacement functions re-validate the object:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{Pars(nm)          <- list(M = 0.2)
+Model(nm)         <- "Constant"
+Units(nm)         <- "year"
+MeanAtAge(nm)     <- my_array
+MeanAtLength(nm)  <- my_length_array
+Classes(nm)       <- 0:20
+}\if{html}{\out{</div>}}
 }
 }
+\examples{
+# See NaturalMortalityModels() for all available built-in natural mortality
+# models and the parameter names required for each.
+NaturalMortalityModels()
 
-\subsection{Attaching to a Stock}{
+# ---- Model-based specification ----
 
-A \code{NaturalMortality} object can be attached to a \code{\link[=Stock]{Stock()}} with
-\code{NaturalMortality(Stock) <- MyNaturalMortality} and retrieved with
-\code{NaturalMortality(Stock)}.
+## Constant M (scalar) — same value for every simulation and year
+nm <- NaturalMortality(Pars = list(M = 0.2))
 
-Individual slots may be accessed or modified using \code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}},
-\code{\link[=Units]{Units()}}, \code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=MeanAtLength]{MeanAtLength()}}, \code{\link[=Random]{Random()}}, and \code{\link[=Classes]{Classes()}}.
+## Stochastic across simulations — M drawn from Uniform(lower, upper)
+## once per simulation
+nm <- NaturalMortality(Pars = list(M = c(0.1, 0.3)))
 
-See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more details.
-}
+## Inter-annual random walk on M — log-normal with 10\% CV
+## MSD is removed from Pars after use
+nm <- NaturalMortality(Pars = list(M   = c(0.1, 0.3),
+                                   Msd = 0.1))
+
+## Time-varying M with named change-point arrays
+## Only the years where values change need to be supplied; Extend() fills
+## all intermediate and future years by forward-filling automatically.
+nSim <- 48
+
+## M increases in 2010 (two change points: 1990 and 2010)
+M_arr <- array(
+  c(rep(0.2, nSim), rep(0.3, nSim)),
+  dim      = c(nSim, 2),
+  dimnames = list(Sim = seq_len(nSim), Year = c(1990, 2010))
+)
+nm <- NaturalMortality(Pars = list(M = M_arr))
+
+## Combine stochastic (across sims) and time-varying (across years)
+M_sim  <- runif(nSim, 0.1, 0.3)
+M_arr2 <- array(
+  c(M_sim, M_sim * 1.2),              # 20\% increase from 2010 onward
+  dim      = c(nSim, 2),
+  dimnames = list(Sim = seq_len(nSim), Year = c(1990, 2010))
+)
+nm <- NaturalMortality(Pars = list(M = M_arr2))
+
+# ---- Direct array specification ----
+
+## Supply MeanAtAge directly (Pars left empty).
+## A plain numeric vector of length nAge is accepted; treated as a single
+## simulation, single year and replicated by Extend() as needed.
+ages  <- 0:20
+nm_aa <- NaturalMortality(
+  MeanAtAge = seq(0.5, 0.1, length.out = length(ages))
+)
+
+## Named Sim x Age x Year array — age-varying M that shifts in 2010.
+## Extend() replicates Sim = 1 to all nSim simulations automatically.
+maa <- array(
+  c(seq(0.5, 0.1, length.out = length(ages)),   # 1990 schedule
+    seq(0.6, 0.15, length.out = length(ages))),  # 2010 schedule (M higher)
+  dim      = c(1, length(ages), 2),
+  dimnames = list(Sim = 1, Age = ages, Year = c(1990, 2010))
+)
+nm_arr <- NaturalMortality(MeanAtAge = maa)
+
+## Supply MeanAtLength directly — converted to MeanAtAge via the ALK
+## during Populate() when a Length object is provided.
+lens  <- seq(5, 120, by = 5)
+nm_al <- NaturalMortality(
+  MeanAtLength = array(
+    0.4 * exp(-0.02 * lens),          # M declining with length
+    dim      = c(1, length(lens), 1),
+    dimnames = list(Sim = 1, Length = lens, Year = 1990)
+  )
+)
+
+# ---- Slot accessors ----
+
+nm <- NaturalMortality(Pars = list(M = 0.2))
+
+## Read slots
+MeanAtAge(nm)     # NULL until Populate() is called
+Units(nm)
+
+## Replace slots
+Units(nm)  <- "quarter"
+Classes(nm) <- 0:20
+
+# ---- Attaching to a Stock ----
+
+stk <- Stock(Name = "Example stock", Ages = Ages(MaxAge = 20))
+NaturalMortality(stk) <- NaturalMortality(Pars = list(M = 0.2))
+NaturalMortality(stk)
+
+# ---- Populate ----
+
+## The final populated object (typically done internally).
+## At-length models require a populated Length object passed to Populate().
+pop_nm <- Populate(NaturalMortality(stk), Ages = Ages(MaxAge = 20))
+pop_nm
+
+MeanAtAge(pop_nm)
 }
 \seealso{
-\link[=naturalmortality-class]{naturalmortality}, \code{\link[=Stock]{Stock()}}, \code{\link[=NaturalMortalityModels]{NaturalMortalityModels()}},
-\code{\link[=Populate]{Populate()}}, \code{\link[=FindModel]{FindModel()}}, \code{\link[=ValidUnits]{ValidUnits()}}, \code{\link[=Length]{Length()}}, \code{\link[=Maturity]{Maturity()}},
-\code{\link[=Pars]{Pars()}}, \code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=MeanAtLength]{MeanAtLength()}}, \code{\link[=Units]{Units()}}, \code{\link[=Classes]{Classes()}}
+\itemize{
+\item \link[=naturalmortality-class]{naturalmortality} for the class definition and slot-level
+documentation.
+\item \code{\link[=NaturalMortalityModels]{NaturalMortalityModels()}} for available models and required parameter
+sets.
+\item \code{\link[=ValidUnits]{ValidUnits()}} for accepted unit strings.
+\item \code{\link[=FindModel]{FindModel()}} for automatic model inference.
+\item \code{\link[=Populate]{Populate()}} for array population.
+\item \code{\link[=Stock]{Stock()}} for the enclosing stock constructor.
+\item \code{\link[=Length]{Length()}} for the companion length schedule, required when using
+at-length mortality models.
 }
+
+Other naturalmortality:
+\code{\link{naturalmortality-class}}
+}
+\concept{naturalmortality}

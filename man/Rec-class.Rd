@@ -47,4 +47,3 @@ An object for storing the MP recommendations
 \author{
 A. Hordyk
 }
-\keyword{classes}

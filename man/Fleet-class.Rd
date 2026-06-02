@@ -3,51 +3,88 @@
 \docType{class}
 \name{fleet-class}
 \alias{fleet-class}
-\title{Fleet Class}
+\title{The \code{fleet} S4 Class}
 \description{
-The \code{fleet} class defines fishing fleet structure, effort dynamics,
-selectivity, retention, discard mortality, and bioeconomic information.
-}
-\details{
-See \code{\link[=Fleet]{Fleet()}} for details.
+Defines the fishing characteristics of a fleet for use in an operating
+model. Objects are typically created via the \code{\link[=Fleet]{Fleet()}} constructor, which
+documents all parameters in detail.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{Name}}{Fleet name.}
+\item{\code{Name}}{\code{character} or \code{NULL}. Unique fleet identifier.}
 
-\item{\code{Effort}}{\code{\link[=Effort]{Effort()}} object.}
+\item{\code{Effort}}{An \link[=effort-class]{effort} object defining historical fishing effort,
+spatial distribution, and targeting behaviour. See \code{\link[=Effort]{Effort()}}.}
 
-\item{\code{Catchability}}{\code{\link[=Catchability]{Catchability()}} object.}
+\item{\code{Catchability}}{A \link[=catchability-class]{catchability} object defining gear efficiency
+and optional projected-year trends or stochasticity. See \code{\link[=Catchability]{Catchability()}}.}
 
-\item{\code{Selectivity}}{\code{\link[=Selectivity]{Selectivity()}} object.}
+\item{\code{Selectivity}}{A \link[=selectivity-class]{selectivity} object defining selectivity-at-age,
+-at-length, or -at-weight. Required for all fleets. See \code{\link[=Selectivity]{Selectivity()}}.}
 
-\item{\code{Retention}}{\code{\link[=Retention]{Retention()}} object.}
+\item{\code{Retention}}{A \link[=retention-class]{retention} object defining retention-at-age,
+-at-length, or -at-weight. Optional; defaults to full retention if not
+supplied. See \code{\link[=Retention]{Retention()}}.}
 
-\item{\code{DiscardMortality}}{\code{\link[=DiscardMortality]{DiscardMortality()}} object.}
+\item{\code{DiscardMortality}}{A \link[=discardmortality-class]{discardmortality} object defining the
+proportion of discarded catch that dies. Optional; defaults to 0 (all
+discards survive) if not supplied. See \code{\link[=DiscardMortality]{DiscardMortality()}}.}
 
-\item{\code{Closure}}{Spatial or temporal closures.}
+\item{\code{Closure}}{\code{numeric} array or \code{NULL}. Spatio-temporal closure schedule
+with dimensions \verb{Sim x Year x Area}. Values of 1 indicate an open area;
+0 indicates a closed area. Defaults to 1 (all areas open) if not
+supplied. See \code{\link[=Fleet]{Fleet()}}.}
 
-\item{\code{WeightFleet}}{Fleet-specific weights.}
+\item{\code{WeightFleet}}{\code{numeric} array or \code{NULL}. Fleet-specific weight-at-age
+(\verb{Sim x Age x Year}). If \code{NA}, set to the stock weight-at-age during
+\code{\link[=PopulateFleet]{PopulateFleet()}}. See \code{\link[=Fleet]{Fleet()}}.}
 
-\item{\code{BioEconomic}}{\code{\link[=Bioeconomic]{Bioeconomic()}} object.}
+\item{\code{Bioeconomic}}{A \link[=bioeconomic-class]{bioeconomic} object. Not currently used.}
 
-\item{\code{Avoidance}}{numeric value that determines how strictly a fleet stops fishing when TAC is reached (multi-stock models only)}
+\item{\code{Dynamics}}{List. Reserved for future use for fleet dynamics model
+parameters. Default \code{list()}. Not currently used.#'}
 
-\item{\code{Dexterity}}{numeric value that determines how precisly a fleet can target fish once TAC is reached. Controls how much overcatch is discarded as dead.}
+\item{\code{nYear}}{\code{numeric} or \code{NULL}. Number of years. Inherited from the paired
+\link[=stock-class]{stock} during \code{\link[=PopulateFleet]{PopulateFleet()}}.}
 
-\item{\code{nYear}}{Number of years.}
+\item{\code{pYear}}{\code{numeric} or \code{NULL}. Number of projection years. Inherited from
+the paired \link[=stock-class]{stock} during \code{\link[=PopulateFleet]{PopulateFleet()}}.}
 
-\item{\code{pYear}}{Projection year.}
+\item{\code{nSim}}{\code{numeric} or \code{NULL}. Number of simulation replicates. Inherited
+from the paired \link[=stock-class]{stock} during \code{\link[=PopulateFleet]{PopulateFleet()}}.}
 
-\item{\code{nSim}}{Number of simulations.}
+\item{\code{CurrentYear}}{\code{numeric} or \code{NULL}. Current calendar year. Inherited
+from the paired \link[=stock-class]{stock} during \code{\link[=PopulateFleet]{PopulateFleet()}}.}
 
-\item{\code{CurrentYear}}{Current year index.}
+\item{\code{Years}}{\code{numeric} or \code{NULL}. Full year vector (historical and
+projected). Inherited from the paired \link[=stock-class]{stock} during
+\code{\link[=PopulateFleet]{PopulateFleet()}}.}
 
-\item{\code{Years}}{Year vector.}
+\item{\code{Seasons}}{\code{numeric} or \code{NULL}. Number of seasons. Inherited from the paired
+\link[=stock-class]{stock} during \code{\link[=PopulateFleet]{PopulateFleet()}}.}
 
-\item{\code{Seasons}}{Season vector.}
-
-\item{\code{Misc}}{Miscellaneous list.}
+\item{\code{Misc}}{\code{list}. Miscellaneous additional inputs.}
 }}
 
+\seealso{
+\code{\link[=Fleet]{Fleet()}} for the constructor and full parameter documentation.
+\code{\link[=Effort]{Effort()}}, \code{\link[=Catchability]{Catchability()}}, \code{\link[=Selectivity]{Selectivity()}}, \code{\link[=Retention]{Retention()}},
+\code{\link[=DiscardMortality]{DiscardMortality()}} for sub-object constructors.
+
+Other fleet:
+\code{\link[=Bioeconomic]{Bioeconomic()}},
+\code{\link[=Catchability]{Catchability()}},
+\code{\link[=DiscardMortality]{DiscardMortality()}},
+\code{\link[=Effort]{Effort()}},
+\code{\link[=Fleet]{Fleet()}},
+\code{\link[=Retention]{Retention()}},
+\code{\link[=Selectivity]{Selectivity()}},
+\code{\link{bioeconomic-class}},
+\code{\link{catchability-class}},
+\code{\link{discardmortality-class}},
+\code{\link{effort-class}},
+\code{\link{retention-class}},
+\code{\link{selectivity-class}}
+}
+\concept{fleet}

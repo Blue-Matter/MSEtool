@@ -16,12 +16,20 @@ entries and options for each slot.
 \describe{
 \item{\code{TAC}}{Numeric vector or numeric array specifying total allowable catch (currently always in biomass).}
 
-\item{\code{TACType}}{Character. Does the TAC refer to \code{"Removals"} (default) or \code{"Landings"}.}
+\item{\code{TACType}}{Character. Does the TAC refer to \code{"Removals"} (default) or
+\code{"Landings"}. Either length 1 (applied to all fleets) or a character
+vector of length \code{nFleet}.}
+
+\item{\code{TACUnit}}{Character. Units of the TAC: \code{"Biomass"} (default) or
+\code{"Number"}. Either length 1 (applied to all fleets) or a character
+vector of length \code{nFleet}.}
 
 \item{\code{Effort}}{Numeric vector array specifying relative or absolute fishing effort.}
 
-\item{\code{EffType}}{Character. Are effort regulations relative to last historical year (\code{"Rel"}) or
-absolute (\code{"Abs"}; in units of \code{\link[=Effort]{Effort()}}). Default is \code{"Abs"}.}
+\item{\code{EffType}}{Character. Are effort regulations relative to last historical
+year (\code{"Rel"}) or absolute (\code{"Abs"}; in units of \code{\link[=Effort]{Effort()}}). Either
+length 1 (applied to all fleets) or a character vector of length \code{nFleet}.
+Default is \code{"Rel"}.}
 
 \item{\code{Closure}}{Numeric vector or array specifying spatial closures.}
 

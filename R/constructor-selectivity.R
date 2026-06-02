@@ -1,36 +1,48 @@
 #' Selectivity
 #'
 #' Construct and manipulate a [selectivity-class] object defining
-#' selectivity-at-age or selectivity-at-length for a [Fleet()] object.
-#' Selectivity is required for all [fleet-class] objects.
+#' selectivity-at-age, selectivity-at-length, or selectivity-at-weight for a
+#' [Fleet()] object. Selectivity is required for all fleets.
 #'
-#' @param Pars Named list of selectivity parameters passed to `Model`. See
-#'   [SelectivityModels()] for available models and their required parameters.
+#' @param Pars Named list of selectivity parameters passed to the selectivity
+#'   model function. Parameter names must match the arguments of the chosen
+#'   model (see [SelectivityModels()]). Each element may be a scalar, vector,
+#'   or array; see [Specifying Biological and Fleet
+#'   Schedules][populating-schedules] for accepted formats. Default `list()`
+#'   (empty).
+#'
+#'   If `Pars` and `Model` are both provided, `MeanAtAge` is computed from the
+#'   model and any values already in `MeanAtAge` are overwritten. To preserve
+#'   a user-specified `MeanAtAge`, leave `Pars = list()` (the default).
+#'
 #'   If `Pars` is a [fleet-class] object, the `Selectivity` slot of that
-#'   fleet is returned. If `Pars` and `Model` are both provided, they will
-#'   be used to populate `MeanAtAge`, overwriting any existing values. To
-#'   preserve user-specified values in `MeanAtAge`, set `Pars = list()`
-#'   (default).
-#' @param Model Character. Selectivity model identifier. If `NULL` (default),
-#'   the model is inferred from `Pars` where possible. See
-#'   [SelectivityModels()] for available models. 
-#' @param MeanAtAge Numeric array. Mean selectivity at age, with named
-#'   dimensions `Sim`, `Age`, and `Year`. If `MeanAtLength` is provided,
-#'   `MeanAtAge` will be calculated from it. Otherwise, `MeanAtAge` is used
-#'   directly, and `MeanAtLength` is calculated from `MeanAtAge` and a
-#'   [Length()] object unless `MeanAtLength` is already populated. **Note:**
-#'   if `Pars` and `Model` are both provided, any values supplied here will
-#'   be overwritten.
-#' @param MeanAtLength Numeric array. Mean selectivity at length, with named
-#'   dimensions `Sim`, `Length`, and `Year`. If provided, takes precedence
-#'   and `MeanAtAge` will be derived from it.
-#' @param MeanAtWeight Numeric array. Mean selectivity at weight, with named
-#'   dimensions `Sim`, `Weight`, and `Year`. Default `NULL`.
-#' @param Classes Numeric vector. Age or length classes corresponding to the
-#'   `Age` or `Length` dimension of `MeanAtAge` or `MeanAtLength`. Default
-#'   `NULL`.
-#' @param isRel Logical. Whether selectivity parameters are specified relative
-#'   to maturity-at-length (e.g., `L50`). Default `FALSE`.
+#'   fleet is returned.
+#'
+#' @param Model Character or function or `NULL`. Selectivity model identifier.
+#'   If `NULL` (default), the model is inferred automatically from the names
+#'   in `Pars` via [FindModel()]. May also be supplied as a custom R function
+#'   with arguments matching those in `Pars`. See [SelectivityModels()] for
+#'   built-in options.
+#' @param MeanAtAge Numeric array or `NULL`. Mean selectivity-at-age with
+#'   dimensions `Sim x Age x Year` (area dimension added during population).
+#'   Used directly when `Pars` is empty and `MeanAtLength` is not supplied.
+#'   See [Specifying Biological and Fleet Schedules][populating-schedules] for
+#'   accepted array formats. **Note:** if `Pars` and `Model` are both
+#'   provided, any values supplied here will be overwritten during population.
+#' @param MeanAtLength Numeric array or `NULL`. Mean selectivity-at-length
+#'   with dimensions `Sim x Length x Year`. If provided and `Pars` is empty,
+#'   takes precedence over `MeanAtAge`; `MeanAtAge` is derived from it via the
+#'   age-length key.
+#' @param MeanAtWeight Numeric array or `NULL`. Mean selectivity-at-weight
+#'   with dimensions `Sim x Weight x Year`. Default `NULL`.
+#' @param Classes Numeric vector or `NULL`. Length or weight class midpoints
+#'   corresponding to the second dimension of `MeanAtLength` or
+#'   `MeanAtWeight`. Default `NULL`.
+#' @param isRel Logical. If `TRUE`, length-based parameters (e.g., `L5`,
+#'   `LFS`) are interpreted as multiples of the length-at-50%-maturity
+#'   (`L50`) of the paired stock rather than absolute length values. A
+#'   [Maturity()] object must be available to [PopulateSelectivity()] for
+#'   scaling to occur. Default `FALSE`.
 #' @param Misc List. Miscellaneous additional inputs. Default `list()`.
 #' @param x A [selectivity-class] object, or a [fleet-class] object for
 #'   `Selectivity<-`.
@@ -38,33 +50,46 @@
 #'   `isRel<-`: a logical value.
 #'
 #' @details
-#' Selectivity is required for all [fleet-class] objects and defines the
-#' probability of a fish being caught by the gear as a function of age,
-#' length, or weight.
+#' Selectivity is required for all [fleet-class] objects. It defines the
+#' probability that a fish of a given age, length, or weight is caught by the
+#' gear, on a scale from 0 to 1.
 #'
-#' ## Populating MeanAtAge and MeanAtLength
+#' ## Specifying Selectivity
 #'
-#' The precedence for populating `MeanAtAge` is:
+#' There are two ways to specify selectivity:
 #'
-#' 1. If `Pars` and `Model` are both provided, `MeanAtAge` is calculated from
-#'    the model and **any existing values in `MeanAtAge` are overwritten**. To
-#'    preserve user-specified values in `MeanAtAge`, leave `Pars = list()`
-#'    (the default).
-#' 2. If `MeanAtLength` is provided (and `Pars` is empty), `MeanAtAge` is
-#'    derived from `MeanAtLength`.
-#' 3. Otherwise, `MeanAtAge` is used directly and `MeanAtLength` is calculated
-#'    from `MeanAtAge` and a [Length()] object, unless `MeanAtLength` is
-#'    already populated.
+#' **Model-based** (recommended): supply `Pars` as a named list whose element
+#' names match the arguments of a built-in or custom model function. The model
+#' is resolved automatically unless `Model` is specified explicitly. See
+#' [SelectivityModels()] for available models and their required parameters,
+#' and [Specifying Biological and Fleet Schedules][populating-schedules] for
+#' how parameter values are structured across simulations and years.
+#'
+#' Available model families are: logistic (at-age, at-length, at-weight),
+#' knife-edge (at-age, at-length), and double-normal (at-length, at-weight).
+#' At-length and at-weight schedules are converted to at-age internally using
+#' the age-length or age-weight key.
+#'
+#' **Direct array**: leave `Pars = list()` and supply `MeanAtAge`,
+#' `MeanAtLength`, or `MeanAtWeight` directly. If `MeanAtLength` is provided,
+#' it takes precedence and `MeanAtAge` is derived from it. If only `MeanAtAge`
+#' is provided, `MeanAtLength` is calculated from it unless already populated.
+#'
+#' These two approaches are mutually exclusive: if `Pars` is non-empty and
+#' `Model` can be resolved, any values in `MeanAtAge` will be overwritten.
 #'
 #' ## Relative Parameters
 #'
 #' When `isRel = TRUE`, length-based parameters (e.g., `L5`, `LFS`) are
-#' interpreted as multiples of the length-at-50%-maturity (`L50`) rather than
-#' absolute length values.
+#' scaled by the maturity `L50` of the paired stock before the selectivity
+#' curve is computed. This allows selectivity to be expressed as a fraction of
+#' the length at 50% maturity rather than an absolute length, which is useful
+#' when the same fleet configuration is applied across stocks with different
+#' growth characteristics.
 #'
 #' ## Attaching to a Fleet
 #'
-#' A `Selectivity` object can be attached to a [Fleet()] with
+#' A [selectivity-class] object can be attached to a [Fleet()] with
 #' `Selectivity(Fleet) <- MySelectivity` and retrieved with
 #' `Selectivity(Fleet)`.
 #'
@@ -72,57 +97,54 @@
 #' [MeanAtAge()], [MeanAtLength()], [MeanAtWeight()], [Classes()], and
 #' [isRel()].
 #'
-#' `r  AdviceArrayInfo('selectivity')`
-#' 
-#' `r TechManLink()`
-#'
 #' @return
 #' - `Selectivity()` returns a [selectivity-class] object. If `Pars` is a
 #'   [fleet-class] object, the `Selectivity` slot of that fleet is returned.
-#' - `Selectivity<-` returns `x` with the `Selectivity` slot replaced.
-#' - `isRel()` returns the `isRel` slot of `x`.
+#' - `Selectivity<-` returns `x` with the `Selectivity` slot replaced by
+#'   `value`.
+#' - `isRel()` returns the `isRel` slot from `x`.
 #' - `isRel<-` returns `x` with the `isRel` slot updated.
 #'
-#' @seealso [selectivity-class], [Fleet()], [SelectivityModels()],
-#'   [Retention()], [DiscardMortality()]
+#' @seealso
+#' - [selectivity-class] for the class definition and slot-level
+#'   documentation.
+#' - [SelectivityModels()] for available model functions and their parameters.
+#' - [Fleet()] for the enclosing fleet constructor.
+#' - [Retention()], [DiscardMortality()] for related fleet components.
+#' - [Specifying Biological and Fleet Schedules][populating-schedules] for how
+#'   `Pars`, `Model`, and `MeanAt*` arrays are structured.
+#' - [PopulateSelectivity()] for population details.
+#'
+#' @family fleet
 #'
 #' @examples
-#' # Specify via model parameters
-#' s <- Selectivity(Pars = list(L5 = 10, LFS = 20, Vmaxlen = 1))
-#'
-#' # Specify MeanAtAge directly (Pars must be empty to avoid overwriting)
-#' s2 <- Selectivity(MeanAtAge = my_array)
-#'
-#' isRel(s)
-#' isRel(s) <- TRUE
+#' # See man-examples/class-Selectivity.R
 #'
 #' @export
-Selectivity <- function(Pars = list(),
-                        Model = NULL,
-                        MeanAtAge = NULL,
+Selectivity <- function(Pars         = list(),
+                        Model        = NULL,
+                        MeanAtAge    = NULL,
                         MeanAtLength = NULL,
                         MeanAtWeight = NULL,
-                        Classes = NULL,
-                        isRel = FALSE,
-                        Misc = list()) {
+                        Classes      = NULL,
+                        isRel        = FALSE,
+                        Misc         = list()) {
   
-
   if (methods::is(Pars, "fleet"))
     return(Pars@Selectivity)
   
   methods::new(
     "selectivity",
-    Pars = Pars,
-    Model = Model,
-    isRel = isRel,
-    MeanAtAge = MeanAtAge,
+    Pars         = Pars,
+    Model        = Model,
+    isRel        = isRel,
+    MeanAtAge    = MeanAtAge,
     MeanAtLength = MeanAtLength,
     MeanAtWeight = MeanAtWeight,
-    Classes = Classes,
-    Misc = Misc
+    Classes      = Classes,
+    Misc         = Misc
   )
 }
-
 
 
 #' @rdname Selectivity

@@ -4,7 +4,7 @@
 \alias{CompareBAM}
 \title{Compare BAM and OM Output}
 \usage{
-CompareBAM(Stock, OM = NULL, plot = FALSE, thresh = 0.5)
+CompareBAM(Stock, OM = NULL, plot = FALSE, thresh = 1)
 }
 \arguments{
 \item{Stock}{Character string matching a stock in \code{bamExtras}, a list of BAM
@@ -19,7 +19,7 @@ If \code{plot=FALSE} (default) the plots will only be printed if \code{MARE>thre
 in some years.}
 
 \item{thresh}{Numeric. MARE threshold (as a percentage) above which a
-comparison is flagged, printed, and plotted. Default \verb{0.5\%}.}
+comparison is flagged, printed, and plotted. Default \verb{1\%}.}
 }
 \value{
 Invisibly returns a named list with elements \code{Stock}, \code{Recruits},
@@ -30,8 +30,10 @@ year) and \code{MARE} (absolute relative error by year).
 \description{
 Compares key population time series between BAM output and a simulated
 operating model (OM), reporting the mean absolute relative error (MARE) for
-recruits, total numbers, and total biomass. Series with MARE exceeding
-\code{thresh} are printed and plotted automatically.
+recruits, total numbers, total biomass, and landings and discards by fleet.
+}
+\details{
+Series with MARE exceeding \code{thresh} are plotted automatically.
 }
 \seealso{
 \code{\link[=ImportBAM]{ImportBAM()}}, \code{\link[=GetBAMOutput]{GetBAMOutput()}}

@@ -2,12 +2,16 @@
 % Please edit documentation in R/convert-stock.R
 \name{ConvertStock}
 \alias{ConvertStock}
-\title{Convert a Legacy Stock Object to a New stock Class}
+\title{Convert a Legacy Stock Object to the Current \code{stock} Class}
 \usage{
-ConvertStock(Stock, silent = FALSE)
+ConvertStock(Stock, Seasons = 1, silent = FALSE)
 }
 \arguments{
-\item{Stock}{A \link[=Stock-legacy-class]{Stock-legacy} object to convert.}
+\item{Stock}{A \link[=Stock-legacy-class]{Stock-legacy} object to convert. An \link[=OM-legacy-class]{OM-legacy}
+object with a legacy \code{Stock} slot is also accepted, in which case the
+\code{Stock} slot is extracted and converted.}
+
+\item{Seasons}{Numeric. Number of seasons in a year. Default \code{1}.}
 
 \item{silent}{Logical. If \code{TRUE}, suppresses progress messages. Default
 \code{FALSE}.}
@@ -17,15 +21,57 @@ A \link[=stock-class]{stock} object.
 }
 \description{
 Converts a legacy \link[=Stock-legacy-class]{Stock-legacy} object to the current \link[=stock-class]{stock}
-by extracting and mapping each component to its corresponding new S4 class.
+by mapping each component to its corresponding new S4 sub-object.
+}
+\details{
+\subsection{Slot Mapping}{
+
+The following legacy slots are mapped to their current equivalents:\tabular{ll}{
+   Legacy slot \tab New location \cr
+   \code{Name}, \code{Common_Name}, \code{Species} \tab \code{stock@Name}, \verb{@CommonName}, \verb{@Species} \cr
+   \code{maxage} \tab \code{Ages@MaxAge} (via \code{\link[=Ages]{Ages()}}, \code{MinAge = 0}) \cr
+   \code{Linf}, \code{K}, \code{t0}, \code{Linfsd}, \code{Ksd}, \code{LenCV} \tab \code{Length@Pars}, \verb{@CVatAge} \cr
+   \code{a}, \code{b} \tab \code{Weight@Pars$alpha}, \verb{@Pars$beta} \cr
+   \code{M}, \code{Msd} \tab \code{NaturalMortality@Pars} \cr
+   \code{L50}, \code{L50_95} \tab \code{Maturity@Pars}, \verb{@Model = MaturityAtLength} \cr
+   \code{ageM}, \code{age95} \tab \code{Maturity@Pars}, \verb{@Model = MaturityAtAge} (used only when \code{L50} is absent) \cr
+   \code{h} \tab \code{SRR@Pars$h} \cr
+   \code{R0} \tab \code{SRR@R0} \cr
+   \code{Perr} \tab \code{SRR@SD} \cr
+   \code{AC} \tab \code{SRR@AC} \cr
+   \code{SRrel} \tab \code{SRR@Model} (\code{1} → \code{"BevertonHolt"}, \code{2} → \code{"Ricker"}) \cr
+   \code{Size_area_1} \tab \code{Spatial@RelativeSize} \cr
+   \code{Prob_staying} \tab \code{Spatial@ProbStaying} \cr
+   \code{Frac_area_1} \tab \code{Spatial@UnfishedDist} \cr
+   \code{D} \tab \code{Depletion@Final} \cr
+}
+
+}
+
+\subsection{Maturity Priority}{
+
+When both length-based (\code{L50}, \code{L50_95}) and age-based (\code{ageM}, \code{age95})
+maturity parameters are present, the length-based parameters take priority
+and \code{Model} is set to \link{MaturityAtLength}. Age-based parameters are used
+only when \code{L50} is absent or \code{NULL}.
+}
+
+\subsection{Spatial Structure}{
+
+If all three spatial parameters (\code{Size_area_1}, \code{Prob_staying},
+\code{Frac_area_1}) equal \code{0.5}, an empty \link[=spatial-class]{spatial} object is returned.
+This is treated by the model as a single well-mixed area with no spatial
+structure.
+}
 }
 \examples{
 \dontrun{
-Stocklegacy <- readRDS("MyLegacyStock.rds")
-stock_new <- ConvertStock(Stocklegacy)
+stock_legacy <- readRDS("MyLegacyStock.rds")
+stock_new <- ConvertStock(stock_legacy)
 }
 
 }
 \seealso{
-\code{\link[=Convert]{Convert()}}, \code{\link[=ConvertOM]{ConvertOM()}}, \code{\link[=ConvertMOM]{ConvertMOM()}}
+\code{\link[=Convert]{Convert()}}, \code{\link[=ConvertOM]{ConvertOM()}}, \code{\link[=ConvertMOM]{ConvertMOM()}}, \code{\link[=ConvertFleet]{ConvertFleet()}},
+\code{\link[=ConvertObs]{ConvertObs()}}, \code{\link[=ConvertImp]{ConvertImp()}}
 }

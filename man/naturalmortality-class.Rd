@@ -3,31 +3,82 @@
 \docType{class}
 \name{naturalmortality-class}
 \alias{naturalmortality-class}
-\title{NaturalMortality Class}
+\title{The \code{naturalmortality} S4 Class}
 \description{
-An S4 class representing natural mortality assumptions associated
-with a \code{\link[=Stock]{Stock()}} object.
+Defines the natural mortality schedule for a \link[=stock-class]{stock} object. Mortality
+may be expressed as a function of age or length, and may vary across
+simulations and years. Objects are typically created via
+\code{\link[=NaturalMortality]{NaturalMortality()}}, which documents all parameters, validates inputs, and
+infers the mortality model automatically when possible.
 }
 \details{
-See \code{\link[=NaturalMortality]{NaturalMortality()}} for details.
+Direct construction via \code{\link[methods:new]{methods::new()}} is not recommended; use
+\code{\link[=NaturalMortality]{NaturalMortality()}} instead, which handles model inference and object
+validation.
+
+Rates in \code{MeanAtAge} are instantaneous mortality values (\emph{M}) expressed
+over the period defined by \code{Units}. For seasonal models, set \code{Units} to
+match the season length so that within-step rates are scaled correctly
+during \code{\link[=Populate]{Populate()}}.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{Pars}}{Named list of natural mortality parameters.}
+\item{\code{Pars}}{\code{list}. Named list of natural mortality parameters whose names
+correspond to those expected by \code{Model}. See \code{\link[=NaturalMortalityModels]{NaturalMortalityModels()}}
+for parameter sets and
+\link[=populating-schedules]{Specifying Biological and Fleet Schedules} for
+accepted input formats.}
 
-\item{\code{Model}}{Model identifier associated with \code{Pars}.}
+\item{\code{Model}}{\code{function} or \code{character(1)}. Natural mortality model
+identifier, matched to one of \code{\link[=NaturalMortalityModels]{NaturalMortalityModels()}}. Set
+automatically by \code{\link[=FindModel]{FindModel()}} when \code{Pars} is supplied without an
+explicit model.}
 
-\item{\code{Units}}{Time units (e.g. \code{"year"}).}
+\item{\code{Units}}{\code{character(1)}. Time unit in which mortality rates are
+expressed (e.g., \code{"year"} for instantaneous annual mortality). Must be
+accepted by \code{\link[=ValidUnits]{ValidUnits()}} and match those used in \code{\link[=Ages]{Ages()}}.}
 
-\item{\code{MeanAtAge}}{Mean natural mortality-at-age array (optional).}
+\item{\code{MeanAtAge}}{\code{array}. Mean instantaneous natural mortality at age with
+named dimensions \code{Sim}, \code{Age}, and \code{Year}. Populated automatically by
+\code{\link[=Populate]{Populate()}} when \code{Pars} and \code{Model} are set; may also be supplied
+directly when \code{Pars} is empty. When \code{Pars} contains a matched model, any
+existing values are overwritten.
+See \link[=populating-schedules]{Specifying Biological and Fleet Schedules}.}
 
-\item{\code{MeanAtLength}}{Mean natural mortality-at-length array (optional).}
+\item{\code{MeanAtLength}}{\code{array}. Mean natural mortality at length with named
+dimensions \code{Sim}, \code{Length}, and \code{Year}. Populated automatically when an
+at-length mortality model is used, or may be supplied directly. Converted
+to \code{MeanAtAge} via the \code{ALK} during \code{\link[=Populate]{Populate()}} when \code{MeanAtAge} is not
+already populated.
+See \link[=populating-schedules]{Specifying Biological and Fleet Schedules}.}
 
-\item{\code{Random}}{Random effects array (optional).}
+\item{\code{Random}}{\code{array}. Reserved for future use. Intended to hold
+simulation- and year-specific multipliers that add stochastic variation
+around the average mortality schedule in \code{MeanAtAge}. Currently stored
+but not applied during \code{\link[=Populate]{Populate()}}.}
 
-\item{\code{Classes}}{Age or length class midpoints (optional).}
+\item{\code{Classes}}{\code{numeric}. Age or length class midpoints corresponding to the
+\verb{MeanAt*} array in use.}
 
-\item{\code{Misc}}{Miscellaneous list.}
+\item{\code{Misc}}{\code{list}. Used internally.}
 }}
 
+\seealso{
+\itemize{
+\item \code{\link[=NaturalMortality]{NaturalMortality()}} for the constructor and accessor functions.
+\item \code{\link[=NaturalMortalityModels]{NaturalMortalityModels()}} for available models and their required
+parameters.
+\item \code{\link[=ValidUnits]{ValidUnits()}} for accepted unit strings.
+\item \code{\link[=Populate]{Populate()}} for array population.
+\item \code{\link[=FindModel]{FindModel()}} for automatic model inference.
+\item \code{\link[=Length]{Length()}} for the companion length schedule, required when using
+at-length mortality models.
+\item \link[=populating-schedules]{Specifying Biological and Fleet Schedules} for the
+full description of how \code{Pars}, \code{Model}, and \verb{MeanAt*} arrays interact.
+}
+
+Other naturalmortality:
+\code{\link[=NaturalMortality]{NaturalMortality()}}
+}
+\concept{naturalmortality}

@@ -31,22 +31,20 @@ GenerateHistoricalData <- function(Hist, silent=FALSE) {
   if (!silent) 
     id <- cli::cli_progress_bar("Generating Historical Data")
   
-  SimDataList <- purrr::map(1:nSim, \(sim)
+  SimDataList <- purrr::map(seq_len(nSim), \(sim)
                             GenerateHistoricalData_Sim(sim,
                                                        Hist,
                                                        HistYears,
                                                        nArea,
                                                        FleetNames,
                                                        StockNames, 
-                                                       silent, id)
-                            )
-  names(SimDataList) <- 1:nSim
+                                                       silent, id))
+  names(SimDataList) <- seq_len(nSim)
   
- 
   # Check if all `nSim` data objects are identical and if so, only return sim 1
   identical <- rep(TRUE, nSim)
   if (nSim>1) {
-    for (sim in 2:nSim) {
+    for (sim in seq(2, nSim)) {
       identical[sim] <- IdenticalS4(SimDataList[[1]], SimDataList[[sim]])
     }
   }
@@ -130,7 +128,8 @@ GenerateHistoricalData <- function(Hist, silent=FALSE) {
 #'   simulated historical values for effort, catch, and indices
 #'
 #' @keywords internal
-GenerateHistoricalData_Sim <- function(sim, Hist, 
+GenerateHistoricalData_Sim <- function(sim, 
+                                       Hist, 
                                        HistYears, 
                                        nArea,
                                        FleetNames,
@@ -138,7 +137,6 @@ GenerateHistoricalData_Sim <- function(sim, Hist,
                                        silent=FALSE, 
                                        id=NULL) {
   
-  OM <- Hist@OM
   Complexes <- Hist@OM@Complexes
   
   if (!is.null(Hist@OM@Data)) {
@@ -159,36 +157,48 @@ GenerateHistoricalData_Sim <- function(sim, Hist,
     Data <- DataList[[i]]
     Data@nArea <- nArea
     
-    # Effort 
-    Data@Effort <- GenHistData_Effort(sim, Data, Hist, HistYears, i, stocks, FleetNames)
+    # TODO
+    # Data@LifeHistory 
     
-    # Landings
-    Data@Landings <- GenHistData_Catch(sim, Data, Hist, HistYears, i, stocks, FleetNames)
+    # TODO
+    # Data@Exploitation 
     
-    # Discards
-    Data@Discards <- GenHistData_Catch(sim, Data, Hist, HistYears, i, stocks, FleetNames,
-                                       type='Discards')
-    
-    # CPUE
-    Data@CPUE <- GenHistData_Indices(sim, Data, Hist, HistYears, i, stocks, StockNames,
-                                     nArea)
-    
-    # Survey
-    Data@Survey <-  GenHistData_Indices(sim, Data, Hist, HistYears, i, stocks, StockNames,
-                                        nArea, type='Survey')
-    
-    
+    Data@Effort         <- GenHistData_Effort(sim, Data, Hist, HistYears, i, 
+                                              stocks, FleetNames)
 
+    Data@Landings       <- GenHistData_Catch(sim, Data, Hist, HistYears, i,
+                                             stocks, FleetNames,
+                                             type = 'Landings')
     
-    # CAA - TODO
+    Data@Discards       <- GenHistData_Catch(sim, Data, Hist, HistYears, i, 
+                                             stocks, FleetNames, 
+                                             type = 'Discards')
     
-    # CAL - TODO
+    Data@CPUE           <- GenHistData_Indices(sim, Data, Hist, HistYears, i, 
+                                               stocks, StockNames, nArea,
+                                               type = 'CPUE')
     
-    # Life-History - TODO
+    Data@Survey         <- GenHistData_Indices(sim, Data, Hist, HistYears, i, 
+                                                stocks, StockNames, nArea, 
+                                                type = 'Survey')
     
-  
+    Data@LandingsAtAge  <- GenHistData_AgeComp(sim, Data, Hist, HistYears, i,
+                                               stocks, FleetNames,
+                                               type = 'LandingsAtAge')
+    
+    Data@DiscardsAtAge  <- GenHistData_AgeComp(sim, Data, Hist, HistYears, i,
+                                              stocks, FleetNames,
+                                              type = 'DiscardsAtAge')
+    
+    Data@LandingsAtSize <- GenHistData_SizeComp(sim, Data, Hist, HistYears, i,
+                                               stocks, FleetNames,
+                                               type = 'LandingsAtSize')
+    
+    Data@DiscardsAtSize <- GenHistData_SizeComp(sim, Data, Hist, HistYears, i,
+                                                stocks, FleetNames,
+                                                type = 'DiscardsAtSize')
+    
     # Metadata
-    
     if (is.null(Data@Name)) 
       Data@Name <- purrr::map(Hist@OM@Stock[stocks], slot, 'Name') |> unlist() |> paste(collapse='-')
     
@@ -204,10 +214,8 @@ GenerateHistoricalData_Sim <- function(sim, Hist,
     # Add Pop Dyn if specified 
     Data <- AddPopDyn(Data, Hist, sim)
     
-  
     DataList[[i]] <- Data
   }
   
   DataList
-  
 }

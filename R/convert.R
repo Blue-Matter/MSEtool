@@ -59,5 +59,8 @@ Convert <- function(x, ...) {
   if (inherits(x, 'Data'))
     return(ConvertData(x, ...))
   
+  cli::cli_alert_info('No `Convert*` function found for object of class {.val {class(x)}}')
+  cli::cli_alert('Returning object unchanged')
+  x
 } 
 

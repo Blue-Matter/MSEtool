@@ -3,97 +3,107 @@
 \docType{class}
 \name{obs-class}
 \alias{obs-class}
-\alias{Obs}
-\alias{Obs<-}
-\title{Observation Model}
-\usage{
-Obs(
-  Name = NULL,
-  LifeHistory = NULL,
-  Exploitation = NULL,
-  Effort = NULL,
-  Landings = NULL,
-  Discards = NULL,
-  CPUE = NULL,
-  Survey = NULL,
-  LandingsAtAge = NULL,
-  DiscardsAtAge = NULL,
-  LandingsAtSize = NULL,
-  DiscardsAtSize = NULL,
-  Misc = list()
-)
-
-Obs(x) <- value
-}
-\arguments{
-\item{x}{An \link[=om-class]{om} object.}
-
-\item{value}{An \link[=obs-class]{obs} object to assign.}
-
-\item{object}{An \link[=om-class]{om} object, or \code{NULL} (default) to create a new
-empty \link[=obs-class]{obs} object.}
-}
-\value{
-\itemize{
-\item \code{Obs()}: if \code{Name} is an \link[=om-class]{om} object, returns \code{Name@Obs}.
-Otherwise returns a new \link[=obs-class]{obs} object.
-\item \verb{Obs<-}: returns \code{x} with the \code{Obs} slot replaced.
-}
-}
+\title{The \code{obs} S4 Class}
 \description{
-The \link[=obs-class]{obs} defines the observation model used to generate observed data
-from the operating model, including observation error, bias, and sampling
-structure for each data type.
+Defines the observation error structure applied to each data type in the
+operating model. Each slot contains a sub-object specifying bias, CV, and
+sampling structure for one category of observed data. Objects are typically
+created via the \code{\link[=Obs]{Obs()}} constructor, which documents all parameters in
+detail.
 }
 \details{
-Each slot corresponds to a distinct data type and contains an observation
-model sub-object defining the error structure (bias, CV, sample size, etc.)
-for that data type. Sub-objects are defined in their respective class files.
+An \code{obs} object defines how each data type is observed, i.e., the error
+structure (CV, bias, selectivity).
+Observed values are held in \link[=data-class]{data} objects stored in \code{OM@Data}, \code{Hist@Data},
+and \code{MSE@PPD}.
 
-An \link[=obs-class]{obs} object can be attached to an \link[=om-class]{om} object with
-\code{Obs(om) <- MyObs} and retrieved with \code{Obs(om)}.
+\code{OM@Obs} is a two-level named list indexed first by stock complex, then by
+fleet or index name:
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{OM@Obs[[stock_complex]][[fleet_name]]  →  obs-class object
+}\if{html}{\out{</div>}}
+
+Stock complexes aggregate stocks whose data are reported together (e.g.,
+combined landings across species). This indexing mirrors \code{OM@Data}.
+
+The slots \code{Effort}, \code{Landings}, \code{Discards}, \code{CPUE}, \code{Survey},
+\code{LandingsAtAge}, \code{DiscardsAtAge}, \code{LandingsAtSize}, and \code{DiscardsAtSize}
+are populated with empty sub-objects by \code{\link[=Obs]{Obs()}} when not supplied. The
+\code{LifeHistory} and \code{Exploitation} slots are reserved for future use and are
+not currently populated during model runs; see \code{\link[=LifeHistoryObs]{LifeHistoryObs()}} and
+\code{\link[=ExploitationObs]{ExploitationObs()}}.
+
+Direct construction via \code{\link[methods:new]{methods::new()}} is not recommended; use \code{\link[=Obs]{Obs()}}
+instead, which initialises all sub-objects automatically.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{Name}}{Character. Name of the observation model. Or an \link[=om-class]{om} object,
-to return the contents of the \code{Obs} slot.}
+\item{\code{Name}}{\code{character} or \code{NULL}. Unique identifier for this observation
+model. See \code{\link[=Obs]{Obs()}}.}
 
-\item{\code{LifeHistory}}{An \link[=lifehistoryobs-class]{lifehistoryobs} object. Observation error on
-life-history parameters (e.g., growth, maturity).}
+\item{\code{LifeHistory}}{A \link[=lifehistoryobs-class]{lifehistoryobs} object. Observation error on
+life-history parameters (growth, maturity, natural mortality, etc.).
+See \code{\link[=LifeHistoryObs]{LifeHistoryObs()}}.}
 
 \item{\code{Exploitation}}{An \link[=exploitationobs-class]{exploitationobs} object. Observation error on
-exploitation processes (e.g., fishing mortality, selectivity).}
+exploitation processes (selectivity, retention, discard mortality).
+See \code{\link[=ExploitationObs]{ExploitationObs()}}.}
 
-\item{\code{Effort}}{An \link[=effortobs-class]{effortobs} object. Observation error on effort data.}
+\item{\code{Effort}}{An \link[=effortobs-class]{effortobs} object. Observation error on fishing
+effort. See \code{\link[=EffortObs]{EffortObs()}}.}
 
-\item{\code{Landings}}{An \link[=catchobs-class]{catchobs} object. Observation error on landed
-catch.}
+\item{\code{Landings}}{A \link[=catchobs-class]{catchobs} object. Observation error on landed
+catch. See \code{\link[=CatchObs]{CatchObs()}}.}
 
-\item{\code{Discards}}{An \link[=catchobs-class]{catchobs} object. Observation error on discarded
-catch.}
+\item{\code{Discards}}{A \link[=catchobs-class]{catchobs} object. Observation error on discarded
+catch. See \code{\link[=CatchObs]{CatchObs()}}.}
 
 \item{\code{CPUE}}{An \link[=indicesobs-class]{indicesobs} object. Observation error on
-catch-per-unit-effort indices.}
+catch-per-unit-effort indices. See \code{\link[=IndicesObs]{IndicesObs()}}.}
 
-\item{\code{Survey}}{An \link[=indicesobs-class]{indicesobs} object. Observation error on fishery-
-independent survey indices.}
+\item{\code{Survey}}{An \link[=indicesobs-class]{indicesobs} object. Observation error on
+fishery-independent survey indices. See \code{\link[=IndicesObs]{IndicesObs()}}.}
 
-\item{\code{LandingsAtAge}}{An \link[=CompObs-class]{CompObs} object. Observation error on
-landed catch-at-age composition.}
+\item{\code{LandingsAtAge}}{A \link[=compobs-class]{compobs} object. Observation error on
+landed catch-at-age composition. See \code{\link[=CompObs]{CompObs()}}.}
 
-\item{\code{DiscardsAtAge}}{An \link[=CompObs-class]{CompObs} object. Observation error on
-discarded catch-at-age composition.}
+\item{\code{DiscardsAtAge}}{A \link[=compobs-class]{compobs} object. Observation error on
+discarded catch-at-age composition. See \code{\link[=CompObs]{CompObs()}}.}
 
-\item{\code{LandingsAtSize}}{An \link[=CompObs-class]{CompObs} object. Observation error on
-landed catch-at-length composition.}
+\item{\code{LandingsAtSize}}{A \link[=compobs-class]{compobs} object. Observation error on
+landed catch-at-length composition. See \code{\link[=CompObs]{CompObs()}}.}
 
-\item{\code{DiscardsAtSize}}{An \link[=CompObs-class]{CompObs} object. Observation error on
-discarded catch-at-length composition.}
+\item{\code{DiscardsAtSize}}{A \link[=compobs-class]{compobs} object. Observation error on
+discarded catch-at-length composition. See \code{\link[=CompObs]{CompObs()}}.}
 
-\item{\code{Misc}}{List. Miscellaneous additional objects.}
+\item{\code{Misc}}{\code{list}. Miscellaneous additional objects.}
 }}
 
 \seealso{
-\code{\link[=Obs]{Obs()}}, \code{\link[=OM]{OM()}}, \code{\link[=ConvertObs]{ConvertObs()}}
+\itemize{
+\item \code{\link[=Obs]{Obs()}} for the constructor and accessor.
+\item \code{\link[=CatchObs]{CatchObs()}}, \code{\link[=EffortObs]{EffortObs()}}, \code{\link[=IndicesObs]{IndicesObs()}}, \code{\link[=CompObs]{CompObs()}} for
+sub-object constructors.
+\item \code{\link[=LifeHistoryObs]{LifeHistoryObs()}}, \code{\link[=ExploitationObs]{ExploitationObs()}} for placeholder sub-objects.
+\item \link[=data-class]{data} and \code{\link[=Data]{Data()}} for the complementary observed-values object.
+\item \code{\link[=OM]{OM()}} for the operating model constructor.
+\item \code{\link[=ConvertObs]{ConvertObs()}} for converting legacy \link[=Obs-legacy-class]{Obs-legacy} objects.
 }
+
+Other obs:
+\code{\link[=CatchObs]{CatchObs()}},
+\code{\link[=CompObs]{CompObs()}},
+\code{\link[=EffortObs]{EffortObs()}},
+\code{\link[=ExploitationObs]{ExploitationObs()}},
+\code{\link[=IndicesObs]{IndicesObs()}},
+\code{\link[=LifeHistoryObs]{LifeHistoryObs()}},
+\code{\link[=Obs]{Obs()}},
+\code{\link{catchobs-class}},
+\code{\link{compobs-class}},
+\code{\link{effortobs-class}},
+\code{\link{exploitationobs-class}},
+\code{\link{indicesobs-class}},
+\code{\link{lifehistoryobs-class}}
+}
+\concept{obs}

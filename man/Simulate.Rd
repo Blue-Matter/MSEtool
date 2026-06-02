@@ -11,7 +11,6 @@ Simulate(
   nSim = NULL,
   nsim = NULL,
   DoDynamicUnfished = TRUE,
-  DoRefMSY = TRUE,
   DoRefLandings = TRUE,
   DoRefRemovals = FALSE,
   DoConditionObs = TRUE,
@@ -23,7 +22,7 @@ Simulate(
 }
 \arguments{
 \item{OM}{An \link[=om-class]{om} or \link[=OM-legacy-class]{OM-legacy} object. If \code{NULL} (default),
-\code{MSEtool::ExampleOM} is used.}
+\code{MSEtool::SingleStockOM} is used.}
 
 \item{parallel}{Logical. Use parallel processing? Default \code{FALSE}.}
 
@@ -40,9 +39,6 @@ for \link[=OM-legacy-class]{OM-legacy} objects.}
 \item{DoDynamicUnfished}{Logical. Calculate the dynamic unfished population
 dynamics? Default \code{TRUE}. Only used for \link[=om-class]{om} objects.}
 
-\item{DoRefMSY}{Logical. Calculate MSY-based reference points? Default
-\code{TRUE}. Only used for \link[=om-class]{om} objects.}
-
 \item{DoRefLandings}{Logical. Calculate reference yield based on landings?
 Default \code{TRUE}. Only used for \link[=om-class]{om} objects.}
 
@@ -55,6 +51,9 @@ fishery data? Default \code{TRUE}. Only used for \link[=om-class]{om} objects.}
 
 \item{DoGenerateData}{Logical. Generate historical fishery data from the
 observation model? Default \code{TRUE}. Only used for \link[=om-class]{om} objects.}
+
+\item{DoMSYRefs}{Logical. Calculate MSY-based reference points? Passed to
+\code{\link[=Simulate]{Simulate()}}. Default \code{TRUE}. \code{om} and \code{hist} class only.}
 
 \item{Reduce}{Logical. Reduce object size after simulation for memory
 efficiency? Default \code{TRUE}. Only used for \link[=om-class]{om} objects.}

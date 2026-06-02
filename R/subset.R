@@ -1,7 +1,7 @@
 #' Subset an object by simulation, year, age, MP, and/or fleet
 #'
 #' Recursively subsets an object along the `Sim`, `Year`, `Age`, `MP`, and/or
-#' `Fleet` dimensions. The function operates on arbitrarily nested structures
+#' `Fleet` & `Stock` dimensions. The function operates on arbitrarily nested structures
 #' including S4 objects, lists, arrays, and named numeric vectors.
 #'
 #' @param object An object to be subset. Supported types include:
@@ -15,6 +15,7 @@
 #' @param Ages   Numeric vector of age classes to retain. `NULL` skips.
 #' @param MPs    Integer or character vector of MPs to retain. `NULL` skips.
 #' @param Fleets Character vector of fleets to retain. `NULL` skips.
+#' @param Stocks Character vector of stocks to retain. `NULL` skips.
 #' @param Impute Logical; only relevant when subsetting by `Years`. If `TRUE`
 #'   (default), years not present in the object are imputed from the nearest
 #'   available past year. If `FALSE`, years earlier than the earliest available
@@ -24,13 +25,6 @@
 #' allowing consistent extraction across simulations, years, and age classes in
 #' a single call.
 #' 
-#' For array objects, subsetting is performed along dimensions named `"Sim"`,
-#' `"Year"`, `"Age"`, `"MP"`, and/or `"Fleet"`. Year subsetting optionally
-#' supports imputation of missing values. Age subsetting requires all requested
-#' ages to be present in the array.
-#'
-#' For S4 objects, all slots are recursively subset. If a slot named `nSim` is
-#' present it is updated to reflect the number of retained simulations.
 #'
 #' @return An object of the same class as `object`, subset according to the
 #'   supplied dimension arguments.
@@ -43,6 +37,7 @@ Subset <- function(object,
                    Ages   = NULL,
                    MPs    = NULL,
                    Fleets = NULL,
+                   Stocks = NULL,
                    Impute = TRUE) {
   
   populated <- try(Populate(object), silent = TRUE)
@@ -55,6 +50,7 @@ Subset <- function(object,
   if (!is.null(Ages))   object <- SubsetAge(object, Ages)
   if (!is.null(MPs))    object <- SubsetMP(object, MPs)
   if (!is.null(Fleets)) object <- SubsetFleet(object, Fleets)
+  if (!is.null(Stocks)) object <- SubsetStock(object, Stocks)
   
   object
 }
@@ -106,9 +102,12 @@ SubsetSim <- function(object, Sims, debug = FALSE) {
     dnames <- dimnames(object)
     if (!is.null(dnames) && "Sim" %in% names(dnames)) {
       SimVals <- as.numeric(dnames$Sim)
-      
-      if (max(SimVals) >= max(Sims)) 
+      if (max(SimVals) >= max(Sims)) {
         object <- ArraySubsetSim(object, Sims)
+      } else {
+        dimnames(object)$Sim <- Sims
+      }
+        
     }
     return(object)
   }
@@ -198,7 +197,6 @@ ArraySubsetYear<- function(array, Years = NULL, Impute = TRUE) {
   
   if (is.null(Years)) return(array)
 
-  
   Years <- as.numeric(Years)
   DN <- dimnames(array)
   if (is.null(DN)) return(array)
@@ -216,7 +214,6 @@ ArraySubsetYear<- function(array, Years = NULL, Impute = TRUE) {
   if (!Impute && length(TSexist)) 
     TSimpute <- TSimpute[TSimpute >= min(YearVals)]
   
-    
   if (length(TSimpute)) {
     array <- ExtendYears(array, TSimpute)
     YearVals <- as.numeric(dimnames(array)[[TSind]])
@@ -456,4 +453,86 @@ ArraySubsetFleet <- function(array, Fleets=NULL) {
   do.call(`[`, c(list(array), .make_dim_index(sel, array, FleetInd),
                  list(drop = FALSE)))
   
+}
+
+SubsetStock <- function(object, Stocks=NULL, debug=FALSE) {
+  
+  if (debug) cli::cli_alert('Class {.val {class(object)}}')
+  
+  if (isS4(object)) {
+    if (debug) cli::cli_alert("S4 Object")
+    slots <- slotNames(object)
+    for (s in slots) {
+      if (debug) cli::cli_alert("Slot {.val {s}}")
+      val <- slot(object, s)
+      if (!is.null(val))
+        slot(object, s) <- Recall(val, Stocks, debug)
+    }
+    return(object)
+  }
+  
+  if (is.list(object)) {
+    n <- length(object)
+    if (n == 0) return(object)
+    
+    if (!is.null(names(object)) && any(Stocks %in% names(object))) {
+      Stocks <- Stocks[Stocks %in% names(object)]
+      return(object[Stocks])
+    }
+    
+    for (i in seq_len(n)) {
+      el <- object[[i]]
+      if (!is.null(el))
+        object[[i]] <- Recall(el, Stocks, debug)
+    }
+    return(object)
+  }
+  
+  if (is.array(object)) {
+    dnames <- dimnames(object)
+    if (!is.null(dnames) && "Stock" %in% names(dnames))
+      object <- ArraySubsetStock(object, Stocks)
+    return(object)
+  }
+  
+  if (is.character(object) && !is.null(Stocks)) {
+    ind <- object %in% Stocks
+    if (any(ind))
+      return(object[ind])
+    return(object)
+  }
+  
+  object
+}
+
+ArraySubsetStock <- function(array, Stocks=NULL) {
+  
+  if (is.null(Stocks)) return(array)
+  
+  DN <- dimnames(array)
+  if (is.null(DN)) return(array)
+  
+  StockInd <- match("Stock", names(DN))
+  if (is.na(StockInd))
+    cli::cli_abort("`Stock` dimension not found in this array", .internal = TRUE)
+  
+  StockNames <- DN[[StockInd]]
+  
+  if (is.numeric(Stocks)) {
+    StockVals <- as.integer(Stocks)
+  } else if (is.character(Stocks)) {
+    StockVals <- match(Stocks, StockNames)
+    if (any(is.na(StockVals))) {
+      bad <- Stocks[is.na(StockVals)]
+      cli::cli_abort("Stock(s) {.val {bad}} not found in this array")
+    }
+  } else {
+    cli::cli_abort("`Stocks` must be numeric or character, not {.cls {class(Stocks)}}")
+  }
+  
+  StockVals <- StockVals[StockVals %in% seq_along(StockNames)]
+  sel <- seq_along(StockNames) %in% StockVals
+  
+  do.call(`[`, c(list(array), .make_dim_index(sel, array, StockInd),
+                 list(drop = FALSE)))
 }

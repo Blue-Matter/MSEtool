@@ -3,17 +3,7 @@
 \docType{class}
 \name{imp-class}
 \alias{imp-class}
-\alias{Imp}
 \title{Implementation Error}
-\usage{
-Imp(Name = NULL, TAC = NULL, Effort = NULL, Size = NULL, Misc = list())
-}
-\value{
-\itemize{
-\item If \code{Name} is an \link[=om-class]{om} object, returns \code{object@Imp}.
-\item Otherwise returns a new empty \link[=imp-class]{imp} object.
-}
-}
 \description{
 The \link[=imp-class]{imp} defines implementation error associated with management
 advice, controlling how management recommendations (TAC, effort, and size
@@ -22,29 +12,49 @@ limits) are imperfectly applied in the operating model.
 \details{
 Each of the \code{TAC}, \code{Effort}, and \code{Size} slots is an \link[=impslot-class]{impslot} object
 containing \code{Mean}, \code{SD}, \code{Compliance}, and \code{Error} arrays that together
-describe how imperfectly the corresponding management control is
-implemented across simulations.
+describe how imperfectly the corresponding management control is implemented
+across simulations.
 
 An \link[=imp-class]{imp} object can be attached to an \link[=om-class]{om} object and
 retrieved with \code{Imp(om)}.
+
+Direct construction via \code{\link[methods:new]{methods::new()}} is not recommended; use \code{\link[=Imp]{Imp()}}
+instead, which initialises all sub-objects automatically.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{Name}}{Character. Name of the implementation error model.}
+\item{\code{Name}}{Character. Name of the implementation error model.
+See \code{\link[=Imp]{Imp()}}.}
 
-\item{\code{TAC}}{An \link[=impslot-class]{impslot} object. Implementation error associated with
-total allowable catch (TAC) recommendations.}
+\item{\code{TAC}}{An \link[=impslot-class]{impslot} object. Implementation error for total
+allowable catch recommendations. See \code{\link[=Imp]{Imp()}}.}
 
-\item{\code{Effort}}{An \link[=impslot-class]{impslot} object. Implementation error associated
-with effort-based controls.}
+\item{\code{Effort}}{An \link[=impslot-class]{impslot} object. Implementation error for
+effort-based controls. See \code{\link[=Imp]{Imp()}}.}
 
-\item{\code{Size}}{An \link[=impslot-class]{impslot} object. Implementation error associated with
-size-based regulations (e.g. minimum landing size).}
+\item{\code{Size}}{An \link[=impslot-class]{impslot} object. Implementation error for size-based
+regulations. See \code{\link[=Imp]{Imp()}}.}
 
 \item{\code{Misc}}{List. Miscellaneous additional objects.}
 }}
 
-\seealso{
-\code{\link[=Imp]{Imp()}}, \link[=impslot-class]{impslot}, \code{\link[=OM]{OM()}}, \code{\link[=Advice]{Advice()}}, \code{\link[=ConvertImp]{ConvertImp()}}
+\note{
+The \link[=imp-class]{imp} is currently a placeholder. The class interface is
+subject to change.
 }
+\seealso{
+\itemize{
+\item \code{\link[=Imp]{Imp()}} for the constructor and accessor.
+\item \code{\link[=ImpSlot]{ImpSlot()}} for the sub-object constructor and slot-level accessors.
+\item \code{\link[=OM]{OM()}} for the operating model constructor.
+\item \code{\link[=Advice]{Advice()}} for the advice object connected to implementation.
+\item \code{\link[=ConvertImp]{ConvertImp()}} for converting legacy implementation objects.
+}
+
+Other imp:
+\code{\link[=Imp]{Imp()}},
+\code{\link[=ImpSlot]{ImpSlot()}},
+\code{\link{impslot-class}}
+}
+\concept{imp}

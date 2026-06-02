@@ -56,4 +56,3 @@ the data inputs is used.}
 \author{
 T. Carruthers and A. Hordyk
 }
-\keyword{classes}

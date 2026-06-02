@@ -34,6 +34,11 @@
 #' * [PopulateSelectivity()]
 #' * [PopulateRetention()]
 #' * [PopulateDiscardMortality()]
+#' * [PopulateObs()]
+#' * [PopulateEffortObs()]
+#' * [PopulateCatchObs()]
+#' * [PopulateIndexObs()]
+#' * [PopulateCompObs()]
 #'
 #' Each `Populate*()` function has its own documentation detailing which named
 #' arguments it accepts. Users should consult the specific `Populate*()` help
@@ -68,9 +73,12 @@ Populate <- function(object, ...) {
   
   object <- UpdateObject(object)
   
+  # ---- OM ----
   if (inherits(object, "om")) {
     return(PopulateOM(OM = object, ...))
   }
+  
+  # ---- Stock ----
   
   if (inherits(object, "stock")) {
     return(PopulateStock(Stock = object, ...))
@@ -108,6 +116,8 @@ Populate <- function(object, ...) {
     return(PopulateDepletion(Depletion = object, ...))
   }
   
+  # ---- Fleet ----
+  
   if (inherits(object, "fleet")) {
     return(PopulateFleet(Fleet = object, ...))
   }
@@ -131,6 +141,29 @@ Populate <- function(object, ...) {
   if (inherits(object, "discardmortality")) {
     return(PopulateDiscardMortality(DiscardMortality = object, ...))
   }
+  
+  # ---- Obs ----
+  
+  if (inherits(object, "compobs")) {
+    return(PopulateCompObs(Comp = object, ...))
+  }
+  
+  if (inherits(object, "obs")) {
+    return(PopulateObs(Obs = object, ...))
+  }
+  
+  if (inherits(object, "effortobs")) {
+    return(PopulateEffortObs(Effort = object, ...))
+  }
+  
+  if (inherits(object, "catchobs")) {
+    return(PopulateCatchObs(Catch = object, ...))
+  }
+  
+  if (inherits(object, "indicesobs")) {
+    return(PopulateIndexObs(Index = object, ...))
+  }
+  
   
   cli::cli_abort(
     c("x" = "Cannot populate object of class {.cls {class(object)}}.")

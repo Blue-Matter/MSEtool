@@ -1,99 +1,135 @@
-#' Stock
+#' Stock Constructor and Accessors
 #'
-#' Construct and manipulate a [stock-class] object defining the biological and
-#' population-dynamics properties of a stock in an operating model.
+#' Construct a [stock-class] object defining the biological and
+#' population-dynamics properties of a stock, or access and replace the `Stock`
+#' slot of an enclosing S4 object (e.g., an [om-class] object).
 #'
-#' @param Name Character. Unique stock name, or an S4 object with a `Stock`
-#'   slot (e.g., an [om-class] object) for pass-through access (see `Details`).
-#'   Default `"New Stock Object"`.
-#' @param CommonName Character. Common name of the species. When `Name` is an
-#'   S4 object and `CommonName` is numeric, it is used as a stock index for
-#'   list-structured `Stock` slots (see `Details`). Default `NULL`.
-#' @param Species Character. Scientific name of the species. Default `NULL`.
-#' @param Ages An [ages-class] object. Required. If `NULL` (default), an
-#'   empty [ages-class] object is created via [Ages()].
-#' @param Length A [length-class] object. Required. If `NULL` (default), an
-#'   empty [length-class] object is created via [Length()].
-#' @param Weight A [weight-class] object. Required. If `NULL` (default), an
-#'   empty [weight-class] object is created via [Weight()].
-#' @param NaturalMortality A [naturalmortality-class] object. Required. If
-#'   `NULL` (default), an empty [naturalmortality-class] object is created via
-#'   [NaturalMortality()].
-#' @param Maturity A [maturity-class] object. Required. If `NULL` (default),
-#'   an empty [maturity-class] object is created via [Maturity()].
-#' @param Fecundity A [fecundity-class] object. Optional. If `NULL`
-#'   (default), an empty [fecundity-class] object is created via [Fecundity()].
-#' @param SRR A [srr-class] object. Required. If `NULL` (default), an empty
-#'   [srr-class] object is created via [SRR()].
-#' @param Spatial A [spatial-class] object. Optional — only required for
-#'   operating models with explicit spatial structure (`nArea > 1`). If `NULL`
-#'   (default), an empty [spatial-class] object is created via [Spatial()].
-#' @param Depletion A [depletion-class] object. If `NULL` (default), an empty
-#'   [depletion-class] object is created via [Depletion()]. If  `Final` is 
-#'   specified for the `Depletion` object, the model will ignore any existing
-#'   catchability (`q`) values (see [catchability-class]) and optimize `q` to
-#'   reach the specified depletion for each simulation. 
-#' @param Seasons Integer. Number of seasons per year. Default `1`.
-#' @param Misc List. Miscellaneous additional inputs. Default `list()`.
-#' @param x An S4 object with a `Stock` slot, or a [stock-class] object for
-#'   slot accessors.
-#' @param value For `Stock<-`: a [stock-class] object or list of [stock-class]
-#'   objects. For `CommonName<-` and `Species<-`: a character string.
+#' @param Name `character(1)`. Unique stock identifier used throughout model
+#'   output. Alternatively, an S4 object that contains a `Stock` slot (e.g.,
+#'   an [om-class] object), in which case `Stock()` acts as a pass-through
+#'   accessor — see *Pass-Through Access*. Default `"New Stock Object"`.
+#' @param CommonName `character(1)`. Common name of the species (e.g.,
+#'   `"Atlantic cod"`). When `Name` is an S4 object and `CommonName` is
+#'   `numeric`, it is treated as a list index for multi-stock `Stock` slots —
+#'   see *Pass-Through Access*. Default `NULL`.
+#' @param Species `character(1)`. Scientific (Latin) name of the species (e.g.,
+#'   `"Gadus morhua"`). Default `NULL`.
+#'   
+#' @param Ages An [ages-class] object defining the age structure and plus-group
+#'   age. If `NULL` (default), an empty [ages-class] is created via [Ages()].
+#'   
+#' @param Length A [length-class] object specifying the length-at-age growth
+#'   schedule. If `NULL` (default), created via [Length()].
+#'   
+#' @param Weight A [weight-class] object specifying the weight-at-age and
+#'   weight-at-length schedules. If `NULL` (default), created via [Weight()].
+#'  
+#' @param NaturalMortality A [naturalmortality-class] object specifying natural
+#'   mortality rate(s), optionally age- or length-varying. If `NULL` (default),
+#'   created via [NaturalMortality()]. 
+#'   
+#' @param Maturity A [maturity-class] object specifying the maturity schedule
+#'   as a function of age, length, or weight. If `NULL` (default), created via
+#'   [Maturity()]. 
+#'   
+#' @param Fecundity A [fecundity-class] object specifying egg production as a
+#'   function of age or length. Optional. When `NULL` (default), spawning
+#'   production (`SProduction`) equals spawning biomass (`SBiomass`, i.e.
+#'   mature weight-at-age). When populated, `SProduction` is in the units of
+#'   the `Fecundity` object (e.g. eggs). If `NULL` (default), created via 
+#'   [Fecundity()].
+#'   
+#' @param SRR A [srr-class] object specifying the stock-recruitment
+#'   relationship and recruitment variability. Created via [SRR()]
+#'   
+#' @param Spatial A [spatial-class] object specifying spatial structure and
+#'   movement dynamics. Optional — leave empty for single-area (non-spatial)
+#'   models. If `NULL` (default), created via [Spatial()].
+#'   
+#' @param Depletion A [depletion-class] object specifying depletion assumptions
+#'   at the start (`Initial`) and/or end (`Final`) of the historical period,
+#'   relative to a reference biomass (default `"B0"`). When `Final` is
+#'   specified, `Efficiency` in [Catchability()] is optimised to achieve the
+#'   target terminal depletion, overwriting any existing values. If `NULL`
+#'   (default), created via [Depletion()].
+#'   
+#' @param Seasons `integer(1)`. Number of seasons per calendar year. Use
+#'   values greater than `1` for within-year dynamics (e.g., `4` for quarterly
+#'   seasons). Default `1`. Must match the time units set in [Ages()].
+#'   
+#' @param Misc `list`. Used internally. Default `list()`.
+#' @param x A [stock-class] object, or an S4 object with a `Stock` slot, for
+#'   use with accessor and replacement functions.
+#' @param value For `Stock<-`: a [stock-class] object, or a list of
+#'   [stock-class] objects for multi-stock operating models. For `CommonName<-`
+#'   and `Species<-`: a `character(1)` string.
 #'
 #' @details
-#' The [stock-class] object aggregates age structure, growth, natural
-#' mortality, maturity, fecundity, recruitment, and optional spatial dynamics
-#' into a single object for use in an operating model.
+#' ## Object Structure
 #'
-#' ## Required Components
+#' A [stock-class] object aggregates all biological components needed to
+#' simulate stock dynamics: 
+#' - age structure ([Ages()]); 
+#' - somatic growth ([Length()], [Weight()]); 
+#' - survival ([NaturalMortality()]); 
+#' - reproduction ([Maturity()], [Fecundity()], [SRR()]);
+#' - initial conditions ([Depletion()]);
+#' - and optional spatial structure ([Spatial()]).
 #'
-#' The following components are required for all stocks: [Ages()], [Length()],
-#' [Weight()], [NaturalMortality()], [Maturity()], and [SRR()]. If not
-#' supplied, empty objects are created automatically with default slots. 
+#' ## Required vs Optional Components
 #'
-#' [Fecundity()] and [Spatial()] are optional. If `Spatial` is not specified,
-#' the model assumes a single well-mixed area.
+#' [Ages()], [Length()], [Weight()], [NaturalMortality()], [Maturity()], and
+#' [SRR()] are required. If any are omitted, empty objects
+#' with default slots are created automatically, but the model will not run
+#' until the required parameters within each sub-object are populated.
 #'
-#' ## Pass-Through Access from an OM
+#' [Fecundity()] and [Spatial()] are optional. Omitting [Fecundity()] causes
+#' `SProduction` to equal `SBiomass`. Omitting [Spatial()] implies a single
+#' well-mixed area.
 #'
-#' When `Name` is an S4 object with a `Stock` slot (e.g., an [om-class]
-#' object), `Stock()` acts as an accessor rather than a constructor:
+#' [Depletion()] is also optional. Omitting it (or leaving both `Initial` and
+#' `Final` as `NULL`) means the stock starts unfished and terminal depletion is
+#' determined by the [Fleet()] and [Catchability()] parameters.
+#'
+#' ## Pass-Through Access from an Enclosing Object
+#'
+#' When `Name` is an S4 object with a `Stock` slot (e.g., an [om-class]),
+#' `Stock()` returns the slot rather than constructing a new object:
 #'
 #' - `Stock(om)` returns `om@Stock`.
-#' - `Stock(om, i)` returns `om@Stock[[i]]` when the `Stock` slot is a list,
-#'   or `om@Stock` when it is a single stock.
+#' - `Stock(om, i)` returns `om@Stock[[i]]` when `om@Stock` is a list
+#'   (multi-stock model), or `om@Stock` when it is a single [stock-class].
 #'
-#' where `i` is passed via the `CommonName` argument.
+#' The index `i` is passed via the `CommonName` argument.
 #'
-#' ## Internal Defaults
+#' ## Bookkeeping Slots
 #'
-#' When constructing a new [stock-class] object, `nYear`, `pYear`, `nSim`,
-#' and `CurrentYear` are set to default values (`20`, `30`, `48`, and the
-#' current system year respectively). These are overridden when the stock is
-#' added to an [OM()].
-#'
-#' ## Attaching to an OM
-#'
-#' A `Stock` object can be attached to an [OM()] with
-#' `Stock(om) <- MyStock` and retrieved with `Stock(om)`.
-#'
-#' Individual slots may be accessed or modified using [Ages()], [Length()],
-#' [Weight()], [NaturalMortality()], [Maturity()], [Fecundity()], [SRR()],
-#' [Spatial()], [Depletion()], [CommonName()], and [Species()].
-#'
-#' `r TechManLink()`
+#' The slots `nYear`, `pYear`, `nSim`, `CurrentYear`, and `Years` are
+#' initialised to working defaults (`20`, `30`, `48`, the current calendar
+#' year, and the corresponding year vector). These are overwritten automatically
+#' when the stock is attached to an [OM()], so they need not be set manually.
 #'
 #' @return
 #' - `Stock()` returns a [stock-class] object. If `Name` is an S4 object with
-#'   a `Stock` slot, returns that slot or an indexed element of it.
-#' - `Stock<-` returns `x` with the `Stock` slot replaced.
-#' - `CommonName()`, `Species()` return the corresponding slot from `x`.
-#' - `CommonName<-`, `Species<-` return `x` with the corresponding slot
-#'   updated.
+#'   a `Stock` slot, returns that slot (or an indexed element for list-valued
+#'   slots).
+#' - `Stock<-` returns `x` with the `Stock` slot replaced by `value`.
+#' - `CommonName()` and `Species()` return a `character(1)` string from the
+#'   corresponding slot of `x`.
+#' - `CommonName<-` and `Species<-` return `x` with the named slot updated.
 #'
-#' @seealso [stock-class], [OM()], [Ages()], [Length()], [Weight()],
-#'   [NaturalMortality()], [Maturity()], [Fecundity()], [SRR()], [Spatial()],
-#'   [Depletion()]
+#' @seealso
+#' - [stock-class] for the class definition and slot-level documentation.
+#' - [OM()] for the operating model constructor.
+#' - [Ages()], [Length()], [Weight()], [NaturalMortality()], [Maturity()],
+#'   [Fecundity()], [SRR()], [Spatial()], [Depletion()] for the sub-object
+#'   constructors.
+#' - [Specifying Biological and Fleet Schedules][populating-schedules] for how
+#'   `Pars`, `Model`, and `MeanAt*` arrays are specified across sub-objects.
+#'
+#' @family stock
+#'
+#' @example man-examples/class-Stock.R
 #'
 #' @export
 Stock <- function(Name = "New Stock Object",
@@ -112,9 +148,9 @@ Stock <- function(Name = "New Stock Object",
                   Misc = list()) {
   
   
-  if (!inherits(Name, 'character')) {
-    if (!'Stock' %in% slotNames(Name))
-      cli::cli_abort(c('x'='No slot {.val Stock} found in object class {.cls {class(Name)}}'))
+  if (!inherits(Name, "character")) {
+    if (!"Stock" %in% slotNames(Name))
+      cli::cli_abort(c("x" = "No slot {.val Stock} found in object class {.cls {class(Name)}}"))
     stock <- Name@Stock
     
     if (is.numeric(CommonName) && is.list(stock))
@@ -127,54 +163,44 @@ Stock <- function(Name = "New Stock Object",
   }
 
   
-  if (is.null(Ages))  
-    Ages <- Ages()
-  if (is.null(Length))
-    Length <- Length()
-  if (is.null(Weight))
-    Weight <- Weight()
-  if (is.null(NaturalMortality)) 
-    NaturalMortality <- NaturalMortality()
-  if (is.null(Maturity)) 
-    Maturity <- Maturity()
-  if (is.null(Fecundity)) 
-    Fecundity <- Fecundity()
-  if (is.null(SRR))         
-    SRR <- SRR()
-  if (is.null(Spatial))
-    Spatial <- Spatial()
-  if (is.null(Depletion))
-    Depletion <- Depletion()
+  if (is.null(Ages))             Ages             <- Ages()
+  if (is.null(Length))           Length           <- Length()
+  if (is.null(Weight))           Weight           <- Weight()
+  if (is.null(NaturalMortality)) NaturalMortality <- NaturalMortality()
+  if (is.null(Maturity))         Maturity         <- Maturity()
+  if (is.null(Fecundity))        Fecundity        <- Fecundity()
+  if (is.null(SRR))              SRR              <- SRR()
+  if (is.null(Spatial))          Spatial          <- Spatial()
+  if (is.null(Depletion))        Depletion        <- Depletion()
   
   # Defaults
-  nYear <- 20
-  pYear <- 30
-  nSim <- 48
-  
+  nYear       <- 20
+  pYear       <- 30
+  nSim        <- 48
   CurrentYear <- as.numeric(format(Sys.Date(), "%Y"))
  
   object <- methods::new(
     "stock",
-    Name = Name,
-    CommonName = CommonName,
-    Species = Species,
-    Ages = Ages,
-    Length = Length,
-    Weight = Weight,
+    Name             = Name,
+    CommonName       = CommonName,
+    Species          = Species,
+    Ages             = Ages,
+    Length           = Length,
+    Weight           = Weight,
     NaturalMortality = NaturalMortality,
-    Maturity = Maturity,
-    Fecundity = Fecundity,
-    SRR = SRR,
-    Spatial = Spatial,
-    Depletion = Depletion,
-    nYear = nYear,
-    pYear = pYear,
-    nSim = nSim,
-    CurrentYear = CurrentYear,
-    Seasons = Seasons,
-    Years = CalcYears(nYear, pYear, CurrentYear, Seasons),
-    Misc = Misc,
-    Log = list()
+    Maturity         = Maturity,
+    Fecundity        = Fecundity,
+    SRR              = SRR,
+    Spatial          = Spatial,
+    Depletion        = Depletion,
+    nYear            = nYear,
+    pYear            = pYear,
+    nSim             = nSim,
+    CurrentYear      = CurrentYear,
+    Seasons          = Seasons,
+    Years            = CalcYears(nYear, pYear, CurrentYear, Seasons),
+    Misc             = Misc,
+    Log              = list()
   )
   
   methods::validObject(object)
@@ -185,6 +211,37 @@ Stock <- function(Name = "New Stock Object",
 #' @rdname Stock
 #' @export
 `Stock<-` <- function(x, value) {
+  CheckClass(x, 'om', 'x')
+  
+  if (inherits(value, 'stock')) {
+    l <- list(value)
+    names(l) <- value@Name
+    x@Stock <- l
+    return(x)
+  }
+  
+  if (inherits(value, 'list')) {
+    cls <- purrr::map_chr(value, class)
+    chk <- cls == 'stock'
+    if (any(!chk)) 
+      cli::cli_abort(c(
+        'x' = 'All elements of `value` must be an {.help MSEtool::Stock} object',
+        'i' = 'Current classes of `value` are: {.val {cls}}'
+      ))
+      
+    
+    nms <- purrr::map_chr(value, Name)
+    if (length(unique(nms)) != length(nms)) {
+      cli::cli_abort(c(
+        'x' = 'Stocks must have unique names `Name(Stock)`',
+        'i' = 'Current names of stocks in `value` are: {.val {nms}}'
+      ))
+    }
+    names(value) <- nms
+    x@Stock <- value
+    return(x)
+  }
+  
   AssignSlot(x, value, 'Stock')
 }
 

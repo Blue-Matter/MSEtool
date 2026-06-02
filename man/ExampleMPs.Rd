@@ -55,7 +55,7 @@ in this group, for use in batch testing or MP selection.
 }
 \examples{
 \dontrun{
-MSE <- runMSE(ExampleOM, MPs=ExampleMPs())
+MSE <- runMSE(SingleStockOM, MPs=ExampleMPs())
 }
 
 

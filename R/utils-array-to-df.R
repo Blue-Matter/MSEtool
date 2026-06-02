@@ -18,7 +18,7 @@
 #'   element and one column per dimension plus a `Value` column.
 #' * `DF2Array()` returns a named `array` whose dimensions and dimnames are
 #'   derived from the unique values of the dimension columns in `DF`.
-#'
+#'   
 #' @examples
 #' # Round-trip: array -> data frame -> array
 #' a <- array(1:24, dim = c(2, 3, 4),
@@ -95,29 +95,20 @@ ArrangeDF <- function(df) {
 
 ConvertDF <- function(df) {
   nms <- colnames(df)
-  if ('Sim' %in% nms)
-    df$Sim <- as.numeric(df$Sim)
-  if ('Age' %in% nms)
-    df$Age <- as.numeric(df$Age)
-  if ('Class' %in% nms)
-    df$Class <- as.numeric(df$Class)
-  if ('Stock' %in% nms)
-    df$Stock <- MakeFactor(df$Stock)
-  if ('Fleet' %in% nms)
-    df$Fleet <- MakeFactor(df$Fleet)
-  # if ('MP' %in% nms)
-  #   df$MP <- MakeFactor(df$MP)
-  
-  if ('Year' %in% nms)
-    df$Year <- as.numeric(df$Year)
-  if ('Area' %in% nms) 
-    df$Area <- as.numeric(df$Area)
+  if ('Sim'   %in% nms) df$Sim   <- as.numeric(df$Sim)
+  if ('Age'   %in% nms) df$Age   <- as.numeric(df$Age)
+  if ('Class' %in% nms) df$Class <- as.numeric(df$Class)
+  if ('Stock' %in% nms) df$Stock <- MakeFactor(df$Stock)
+  if ('Fleet' %in% nms) df$Fleet <- MakeFactor(df$Fleet)
+  if ('Year'  %in% nms) df$Year  <- as.numeric(df$Year)
+  if ('Area'  %in% nms) df$Area  <- as.numeric(df$Area)
   if ('Value' %in% nms) {
     chk <- suppressWarnings(as.numeric(df$Value))
-    if (!all(is.na(chk)))
-      df$Value <- chk
+    if (!all(is.na(chk))) df$Value <- chk
   }
-    
   
-  df |> tibble::as_tibble()
+  if (requireNamespace('tibble', quietly = TRUE)) {
+    return(tibble::as_tibble(df))
+  }
+  df
 }

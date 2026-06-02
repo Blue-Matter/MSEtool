@@ -11,6 +11,7 @@ Subset(
   Ages = NULL,
   MPs = NULL,
   Fleets = NULL,
+  Stocks = NULL,
   Impute = TRUE
 )
 }
@@ -33,6 +34,8 @@ Subset(
 
 \item{Fleets}{Character vector of fleets to retain. \code{NULL} skips.}
 
+\item{Stocks}{Character vector of stocks to retain. \code{NULL} skips.}
+
 \item{Impute}{Logical; only relevant when subsetting by \code{Years}. If \code{TRUE}
 (default), years not present in the object are imputed from the nearest
 available past year. If \code{FALSE}, years earlier than the earliest available
@@ -40,15 +43,7 @@ year are dropped rather than imputed.
 
 Subsetting is applied sequentially when multiple dimensions are supplied,
 allowing consistent extraction across simulations, years, and age classes in
-a single call.
-
-For array objects, subsetting is performed along dimensions named \code{"Sim"},
-\code{"Year"}, \code{"Age"}, \code{"MP"}, and/or \code{"Fleet"}. Year subsetting optionally
-supports imputation of missing values. Age subsetting requires all requested
-ages to be present in the array.
-
-For S4 objects, all slots are recursively subset. If a slot named \code{nSim} is
-present it is updated to reflect the number of retained simulations.}
+a single call.}
 }
 \value{
 An object of the same class as \code{object}, subset according to the
@@ -56,12 +51,12 @@ supplied dimension arguments.
 }
 \description{
 Recursively subsets an object along the \code{Sim}, \code{Year}, \code{Age}, \code{MP}, and/or
-\code{Fleet} dimensions. The function operates on arbitrarily nested structures
+\code{Fleet} & \code{Stock} dimensions. The function operates on arbitrarily nested structures
 including S4 objects, lists, arrays, and named numeric vectors.
 }
 \examples{
-nSim(ExampleOM) <- 10
-OM <- Populate(ExampleOM)
+nSim(SingleStockOM) <- 10
+OM <- Populate(SingleStockOM)
 
 # Subset Sims and Years
 RecDevs <- OM |>

@@ -82,8 +82,8 @@ GenerateMeanatGeneric <- function(Model, Pars, nSim = 5, Years=NULL,  ...) {
     years  <- if (length(years)) years else NULL
     areas  <- if (length(areas)) areas else NULL
     
-    Pars <- purrr::map(Pars, \(par) Extend(par, nsim, NULL, years, areas))
-    arg_array <- Extend(arg, nsim, NULL, years, areas)
+    Pars <- purrr::map(Pars, \(par) Extend(par, nSim = nsim, Years = years, Areas = areas))
+    arg_array <- Extend(arg, nSim = nsim, Years = years, Areas = areas)
     dim_out <- dim(arg_array)
     array_out <- array(NA, dim = dim_out, dimnames = dimnames(arg_array))
   }

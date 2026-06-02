@@ -1,71 +1,99 @@
-#' Extract Catch Time Series
+#' Extract or Assign Catch Time Series
 #'
-#' `Interactions()`, `Landings()`, `Discards()`, and `Removals` extract total
-#' interactions (encounters), retained landings, discards, and removals 
-#' (landings + discards) respectively, from a [hist-class] or [mse-class] object.
-#' 
-#' When `byAge = FALSE` or `bySize = FALSE`, the catch data are in units of 
-#' biomass, i.e `N` x `Weight`, where `Weight` is the fleet-specific 
-#' weight-at-age schedules provided in `WeightFleet` in the [Fleet()] object. 
-#' 
-#' When `byAge = TRUE` or `bySize = TRUE` the values are in units of 
-#' numbers (abundance). 
-#' 
-#' When `byArea = TRUE` the values are always in units of numbers. 
-#' 
-#' Future versions of this function may allow users to specify the units (i.e `N`
-#' or `B` for the catch data).
-#' 
-#' When applied to an [mse-class] object the historical and projection
-#' periods are row-bound and labelled via the `Period` column; historical
-#' rows carry `MP = "Historical"`.
+#' `Interactions()`, `Landings()`, `Discards()`, and `Removals()` extract
+#' total interactions (encounters), retained landings, discards, and removals
+#' (landings + discards) respectively.
 #'
-#' @param object A [hist-class] or [mse-class] object.
-#' @param df Logical. If `FALSE` the raw array slot is returned.
-#'   If `TRUE`  (default) a tidy `data.frame` is returned.
-#' @param byAge Logical. If `TRUE` the data frame retains the `Age`
-#'   dimension. Otherwise values are summed over ages. 
-#'   Mutually exclusive with `bySize`. Ignored when `df = FALSE`.
+#' When called on a [hist-class] or [mse-class] object, the functions return
+#' simulated catch arrays or tidy data frames as described below.
+#'
+#' When called on an [obs-class] object, the functions return the
+#' corresponding [catchobs-class] slot directly (the observation error
+#' structure, not simulated values). When called on a [data-class] object,
+#' they return the corresponding [catchdata-class] slot directly (the observed 
+#' or simulated values). In both cases no data frame conversion is performed,
+#' regardless of any `df` argument.
+#'
+#' The assignment forms `Landings<-` and `Discards<-` replace the
+#' corresponding slot of an [obs-class] or [data-class] object.
+#'
+#' When `byAge = FALSE` or `bySize = FALSE` for [hist-class] or [mse-class]
+#' objects, the catch data are in units of biomass (`N x Weight`), where
+#' `Weight` is the fleet-specific weight-at-age schedule from [Fleet()].
+#' When `byAge = TRUE` or `bySize = TRUE` the values are in units of numbers.
+#' When `byArea = TRUE` the values are always in units of numbers.
+#'
+#' When applied to an [mse-class] object the historical and projection periods
+#' are row-bound and labelled via the `Period` column; historical rows carry
+#' `MP = "Historical"`.
+#'
+#' @param object A [hist-class], [mse-class], [obs-class], or [data-class]
+#'   object.
+#' @param df Logical. Applies to [hist-class] and [mse-class] objects only.
+#'   If `FALSE` the raw array slot is returned. If `TRUE` (default) a tidy
+#'   `data.frame` is returned. Ignored for [obs-class] and [data-class]
+#'   objects.
+#' @param byAge Logical. If `TRUE` the data frame retains the `Age` dimension.
+#'   Otherwise values are summed over ages. Mutually exclusive with `bySize`.
+#'   Applies to [hist-class] and [mse-class] objects only.
 #' @param bySize Logical. If `TRUE` the data frame retains the `Size`
 #'   (length-bin) dimension using the `*AtSize` slots. Otherwise values are
-#'   summed over size classes. Mutually exclusive with `byAge`. 
-#'   Not available for `Interactions()`. Ignored when `df = FALSE`.
+#'   summed over size classes. Mutually exclusive with `byAge`. Not available
+#'   for `Interactions()`. Applies to [hist-class] and [mse-class] objects
+#'   only.
 #' @param byArea Logical. If `TRUE` the data frame retains the `Area`
-#'   dimension. Otherwise values are summed over areas. Ignored when `df = FALSE`.
-#' @param byFleet Logical. If `TRUE` (default for `Landings` and
-#'   `Discards`) the data frame retains the `Fleet` dimension. Otherwise
-#'   values are summed over fleets. Ignored when `df = FALSE`.
+#'   dimension. Otherwise values are summed over areas. Applies to
+#'   [hist-class] and [mse-class] objects only.
+#' @param byFleet Logical. If `TRUE` (default for `Landings()` and
+#'   `Discards()`) the data frame retains the `Fleet` dimension. Otherwise
+#'   values are summed over fleets. Applies to [hist-class] and [mse-class]
+#'   objects only.
 #' @param Reduce Logical. If `TRUE` (default) simulation dimensions are
-#'   reduced using  [ReduceDims()] before conversion to a data frame.
-#' @param IncYear Logical. Passed to [ReduceDims()]; controls whether the
-#'   year dimension is retained during reduction. Default `FALSE`.
+#'   reduced using [ReduceDims()] before conversion to a data frame. Applies
+#'   to [hist-class] and [mse-class] objects only.
+#' @param IncYear Logical. Passed to [ReduceDims()]; controls whether the year
+#'   dimension is retained during reduction. Default `FALSE`. Applies to
+#'   [hist-class] and [mse-class] objects only.
 #'
 #' @return
-#' * `df = FALSE` — the raw array slot (`Interactions`, `Landings`, or
-#'   `Discards`).
-#' * `df = TRUE` — a tidy `data.frame` with columns `Sim`, `Stock`,
-#'   `Year`, `Period`, `MP` (MSE only), and optionally `Age`, `Size`,
-#'   `Area`, and/or `Fleet`, plus `Value` and `Variable`.
+#' - For [obs-class]: the [catchobs-class] object stored in the `Landings` or
+#'   `Discards` slot.
+#' - For [data-class]: the [catchdata-class] object stored in the `Landings`
+#'   or `Discards` slot.
+#' - For [hist-class] or [mse-class] with `df = FALSE`: the raw array slot
+#'   (`Interactions`, `Landings`, or `Discards`).
+#' - For [hist-class] or [mse-class] with `df = TRUE`: a tidy `data.frame`
+#'   with columns `Sim`, `Stock`, `Year`, `Period`, `MP` (MSE only), and
+#'   optionally `Age`, `Size`, `Area`, and/or `Fleet`, plus `Value` and
+#'   `Variable`.
+#' - Assignment forms return `x` with the named slot replaced by `value`.
 #'
 #' @examples
-#' Hist <- Simulate(ExampleOM)
+#' Hist <- Simulate(SingleStockOM)
 #' MSE <- Project(Hist, 'CurrentEffort')
-#' 
-#' # Raw arrays
+#'
+#' # Raw arrays from Hist / MSE
 #' Interactions(Hist, df = FALSE)
 #' Landings(MSE, df = FALSE)
 #'
-#' # Tidy data frames — total across fleets, ages, areas
+#' # Tidy data frames
 #' Interactions(Hist)
 #' Landings(MSE)
 #' Discards(MSE)
 #' Removals(MSE)
 #'
 #' # Retain fleet, age, and area structure
-#' Interactions(Hist, df = TRUE, byFleet = TRUE, byAge = TRUE, byArea = TRUE)
-#' Landings(MSE, df = TRUE, byFleet = TRUE, byAge = TRUE,  byArea = TRUE)
-#' Landings(MSE, df = TRUE, byFleet = TRUE, bySize = TRUE, byArea = TRUE)
-#' Discards(MSE, df = TRUE, byFleet = TRUE, byAge = TRUE,  byArea = TRUE)
+#' Landings(MSE, byFleet = TRUE, byAge = TRUE, byArea = TRUE)
+#' Discards(MSE, byFleet = TRUE, bySize = TRUE)
+#'
+#' # Direct slot access for obs and data objects
+#' obs <- Obs(Landings = CatchObs(CV = 0.2))
+#' Landings(obs)
+#' Landings(obs) <- CatchObs(CV = 0.3)
+#'
+#' dat <- Data(Landings = CatchData(Value = matrix(100, 1, 1)))
+#' Landings(dat)
+#' Landings(dat) <- CatchData()
 #'
 #' @name catch_timeseries
 #' @export
@@ -97,6 +125,10 @@ Landings <- function(object,
                      byFleet = TRUE,
                      Reduce  = TRUE,
                      IncYear = FALSE) {
+  
+  if (inherits(object, c('obs', 'data')))
+    return(object@Landings)
+  
   if (byAge)  bySize <- FALSE
   if (bySize) byAge  <- FALSE
   
@@ -112,6 +144,18 @@ Landings <- function(object,
 }
 
 #' @rdname catch_timeseries
+#' @param x An [obs-class] or [data-class] object.
+#' @param value A [catchobs-class] object (when `x` is [obs-class]) or a
+#'   [catchdata-class] object (when `x` is [data-class]) to assign.
+#' @export
+`Landings<-` <- function(x, value) {
+  CheckClass(x, c('obs', 'data'), 'x')
+  x@Landings <- value
+  methods::validObject(x)
+  x
+}
+
+#' @rdname catch_timeseries
 #' @export
 Discards <- function(object,
                      df      = TRUE,
@@ -121,6 +165,10 @@ Discards <- function(object,
                      byFleet = TRUE,
                      Reduce  = TRUE,
                      IncYear = FALSE) {
+  
+  if (inherits(object, c('obs', 'data')))
+    return(object@Discards)
+  
   if (byAge)  bySize <- FALSE
   if (bySize) byAge  <- FALSE
   
@@ -135,6 +183,15 @@ Discards <- function(object,
                            IncYear   = IncYear)
 }
 
+
+#' @rdname catch_timeseries
+#' @export
+`Discards<-` <- function(x, value) {
+  CheckClass(x, c('obs', 'data'), 'x')
+  x@Discards <- value
+  methods::validObject(x)
+  x
+}
 
 #' @rdname catch_timeseries
 #' @export

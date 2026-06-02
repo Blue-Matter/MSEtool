@@ -19,14 +19,23 @@
 \alias{show,selectivity-method}
 \alias{show,retention-method}
 \alias{show,discardmortality-method}
+\alias{show,obs-method}
+\alias{show,lifehistoryobs-method}
+\alias{show,exploitationobs-method}
+\alias{show,effortobs-method}
+\alias{show,catchobs-method}
+\alias{show,indicesobs-method}
+\alias{show,compobs-method}
 \alias{show,hist-method}
 \alias{show,mse-method}
 \alias{show,data-method}
 \alias{show,advice-method}
 \alias{show,popdynamics-method}
+\alias{show,perrecruit-method}
+\alias{show,refpointsMSY-method}
 \title{Show Methods}
 \arguments{
-\item{object}{An S4 object.}
+\item{object}{An S4 object of the relevant class.}
 }
 \description{
 Display a formatted summary of MSEtool S4 objects in the console.

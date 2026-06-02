@@ -4,103 +4,73 @@
 \alias{OM-accessors}
 \alias{Agency}
 \alias{Agency<-}
-\alias{Allocation}
-\alias{Allocation<-}
 \alias{Author}
 \alias{Author<-}
-\alias{CatchFrac}
-\alias{CatchFrac<-}
-\alias{Complexes}
-\alias{Complexes<-}
-\alias{Control}
-\alias{Control<-}
-\alias{CurrentYear}
-\alias{CurrentYear<-}
-\alias{DataLag}
-\alias{DataLag<-}
-\alias{EFactor}
-\alias{EFactor<-}
 \alias{Email}
 \alias{Email<-}
-\alias{Herm}
-\alias{Herm<-}
-\alias{Interval}
-\alias{Interval<-}
+\alias{Region}
+\alias{Region<-}
 \alias{Latitude}
 \alias{Latitude<-}
 \alias{Longitude}
 \alias{Longitude<-}
-\alias{maxF}
-\alias{maxF<-}
-\alias{nReps}
-\alias{nReps<-}
-\alias{nYear}
-\alias{nYear<-}
-\alias{pStar}
-\alias{pStar<-}
-\alias{pYear}
-\alias{pYear<-}
-\alias{Region}
-\alias{Region<-}
-\alias{Relations}
-\alias{Relations<-}
-\alias{Seasons}
-\alias{Seasons<-}
-\alias{SharePar}
-\alias{SharePar<-}
-\alias{Source}
-\alias{Source<-}
 \alias{Sponsor}
 \alias{Sponsor<-}
+\alias{Source}
+\alias{Source<-}
+\alias{nYear}
+\alias{nYear<-}
+\alias{pYear}
+\alias{pYear<-}
+\alias{CurrentYear}
+\alias{CurrentYear<-}
+\alias{Seasons}
+\alias{Seasons<-}
+\alias{DataLag}
+\alias{DataLag<-}
+\alias{CatchFrac}
+\alias{CatchFrac<-}
+\alias{Allocation}
+\alias{Allocation<-}
+\alias{EFactor}
+\alias{EFactor<-}
+\alias{Complexes}
+\alias{Complexes<-}
+\alias{Herm}
+\alias{Herm<-}
+\alias{SharePar}
+\alias{SharePar<-}
+\alias{Relations}
+\alias{Relations<-}
+\alias{Interval}
+\alias{Interval<-}
+\alias{nReps}
+\alias{nReps<-}
+\alias{pStar}
+\alias{pStar<-}
+\alias{maxF}
+\alias{maxF<-}
+\alias{Seed}
+\alias{Seed<-}
+\alias{Control}
+\alias{Control<-}
 \title{Access and Modify OM Slots}
 \usage{
 Agency(x)
 
 Agency(x) <- value
 
-Allocation(x)
-
-Allocation(x) <- value
-
 Author(x)
 
 Author(x) <- value
-
-CatchFrac(x)
-
-CatchFrac(x) <- value
-
-Complexes(x)
-
-Complexes(x) <- value
-
-Control(x)
-
-Control(x) <- value
-
-CurrentYear(x)
-
-CurrentYear(x) <- value
-
-DataLag(x)
-
-DataLag(x) <- value
-
-EFactor(x)
-
-EFactor(x) <- value
 
 Email(x)
 
 Email(x) <- value
 
-Herm(x)
+Region(x)
 
-Herm(x) <- value
-
-Interval(x)
-
-Interval(x) <- value
+Region(x) <- value
 
 Latitude(x)
 
@@ -110,54 +80,90 @@ Longitude(x)
 
 Longitude(x) <- value
 
-maxF(x)
+Sponsor(x)
 
-maxF(x) <- value
-
-nReps(x)
-
-nReps(x) <- value
-
-nYear(x)
-
-nYear(x) <- value
-
-pStar(x)
-
-pStar(x) <- value
-
-pYear(x)
-
-pYear(x) <- value
-
-Region(x)
-
-Region(x) <- value
-
-Relations(x)
-
-Relations(x) <- value
-
-Seasons(x)
-
-Seasons(x) <- value
-
-SharePar(x)
-
-SharePar(x) <- value
+Sponsor(x) <- value
 
 Source(x)
 
 Source(x) <- value
 
-Sponsor(x)
+nYear(x)
 
-Sponsor(x) <- value
+nYear(x) <- value
+
+pYear(x)
+
+pYear(x) <- value
+
+CurrentYear(x)
+
+CurrentYear(x) <- value
+
+Seasons(x)
+
+Seasons(x) <- value
+
+DataLag(x)
+
+DataLag(x) <- value
+
+CatchFrac(x)
+
+CatchFrac(x) <- value
+
+Allocation(x)
+
+Allocation(x) <- value
+
+EFactor(x)
+
+EFactor(x) <- value
+
+Complexes(x)
+
+Complexes(x) <- value
+
+Herm(x)
+
+Herm(x) <- value
+
+SharePar(x)
+
+SharePar(x) <- value
+
+Relations(x)
+
+Relations(x) <- value
+
+Interval(x)
+
+Interval(x) <- value
+
+nReps(x)
+
+nReps(x) <- value
+
+pStar(x)
+
+pStar(x) <- value
+
+maxF(x)
+
+maxF(x) <- value
+
+Seed(x)
+
+Seed(x) <- value
+
+Control(x)
+
+Control(x) <- value
 }
 \arguments{
-\item{x}{An \link[=om-class]{om} object or a \link[=hist-class]{hist} object}
+\item{x}{An \link[=om-class]{om}, \link[=hist-class]{hist}, or \link[=mse-class]{mse} object.}
 
-\item{value}{The value to assign to the corresponding slot.}
+\item{value}{Replacement value for the corresponding slot.}
 }
 \value{
 \itemize{
@@ -166,18 +172,55 @@ Sponsor(x) <- value
 }
 }
 \description{
-Accessor and assignment functions for slots in \link[=om-class]{om} objects.
+Accessor and replacement functions for slots in \link[=om-class]{om} objects.
 Each function retrieves or replaces the value of the corresponding slot.
+All accessors also accept \link[=hist-class]{hist} and \link[=mse-class]{mse} objects, extracting
+the embedded \code{OM} slot transparently.
+}
+\details{
+\subsection{Sub-Object Slots}{
+
+The \code{Stock}, \code{Fleet}, \code{Obs}, \code{Imp}, and \code{Data} slots are accessed and
+replaced via their own constructor functions, which act as pass-through
+accessors when called with an \link[=om-class]{om} argument. They are not listed
+here. See \code{\link[=Stock]{Stock()}}, \code{\link[=Fleet]{Fleet()}}, \code{\link[=Obs]{Obs()}}, \code{\link[=Imp]{Imp()}}, \code{\link[=Data]{Data()}}.
+}
+
+\subsection{Read-Only Slots}{
+
+\code{Years} is derived automatically from \code{nYear}, \code{pYear}, \code{CurrentYear}, and
+\code{Seasons} and is read-only. Use \code{\link[=Years]{Years()}} to extract it.
+}
 }
 \examples{
 om <- OM()
+
 Agency(om)
 Agency(om) <- "DFO"
 
 nSim(om)
 nSim(om) <- 100
 
+maxF(om)
+maxF(om) <- 5
+
 }
 \seealso{
-\code{\link[=OM]{OM()}}, \link[=om-class]{om}
+\itemize{
+\item \code{\link[=OM]{OM()}} for the constructor.
+\item \link[=om-class]{om} for the class definition.
+\item \code{\link[=Stock]{Stock()}}, \code{\link[=Fleet]{Fleet()}}, \code{\link[=Obs]{Obs()}}, \code{\link[=Imp]{Imp()}}, \code{\link[=Data]{Data()}} for sub-object
+pass-through accessors.
+\item \code{\link[=Years]{Years()}} for the read-only time-step vector.
+\item \code{\link[=Log]{Log()}} for runtime diagnostics.
 }
+
+Other om:
+\code{\link{ComplexOM}},
+\code{\link{MultiStockOM}},
+\code{\link[=OM]{OM()}},
+\code{\link{SingleStockOM}},
+\code{\link{TwoFleetOM}},
+\code{\link{om-class}}
+}
+\concept{om}

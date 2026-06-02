@@ -53,14 +53,15 @@ PopulateNaturalMortality <- function(NaturalMortality,
                                      Ages = NULL,
                                      Length = NULL,
                                      Years = NULL,
-                                     nSim = NULL,
+                                     nSim = 5,
                                      CalcAtLength = FALSE,
                                      seed = NULL,
                                      silent = FALSE,
                                      force = FALSE) {
   
-  Ages <- DefaultAges(Ages)
+  Ages  <- DefaultAges(Ages)
   Years <- DefaultYears(Years)
+  nSim  <- Get_nSim(NaturalMortality, nSim)
   
   argList <- list(Ages, Length, nSim, Years, CalcAtLength, seed)
   

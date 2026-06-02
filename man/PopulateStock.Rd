@@ -9,7 +9,7 @@ PopulateStock(
   nYear,
   pYear,
   CurrentYear = NULL,
-  nSim = NULL,
+  nSim = 5,
   Seasons = 1,
   ALK = TRUE,
   AWK = TRUE,

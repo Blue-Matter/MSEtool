@@ -97,7 +97,9 @@ Project_hist <- function(Hist,
   
   MSE <- RestoreHistMisc(MSE)
   
-  CheckLog(MSE, 'MSE')
+  # TODO  CheckLog(MSE, 'MSE')
+  # - change from Warnings only to Notes/Assumptions 
+  
   MSE@Log <- c(SaveLog, MSE@Log)
   
   MSE

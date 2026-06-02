@@ -17,6 +17,8 @@
 #' @param full Logical. Provide a complete table (TRUE) or just the model names (FALSE)?
 #' @param print Logical. Print out the results (TRUE) or just return the data.frame (FALSE)?
 #'
+#' @details
+#' 
 #' `LengthModels()` prints the list of models and parameters to the console
 #'
 #' - **von Bertalanffy**: \deqn{L(a) = L_\infty (1 - e^{-K (a - t_0)})}

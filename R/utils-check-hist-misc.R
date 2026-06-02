@@ -61,7 +61,7 @@ CheckHistMisc <- function(Hist, Period = c('Historical', 'Projection')) {
       add_err(name, ": dim[1] (Sim) = ", dd[1L],
               "; must be 1 (broadcast) or nSim (", nSim, ")")
     
-    # dim[2..N]: must match exactly — no broadcasting on non-Sim dimensions
+    # dim[2..N]: must match exactly: no broadcasting on non-Sim dimensions
     if (ndim > 1L) {
       bad <- which(!dd[-1L] >= expected[-1L]) + 1L   # shift back to original index
       if (length(bad) > 0)
@@ -131,7 +131,7 @@ CheckHistMisc <- function(Hist, Period = c('Historical', 'Projection')) {
             paste(missing_objects, collapse = ", "))
   flush_errors("required Misc keys")
   
-  # 1: scalars----
+  # scalars
   if (!is.numeric(Misc$maxF) || length(Misc$maxF) != 1L ||
       !is.finite(Misc$maxF) || Misc$maxF <= 0)
     add_err("Hist@Misc$maxF: must be a single finite positive number, got ", Misc$maxF)
@@ -142,7 +142,7 @@ CheckHistMisc <- function(Hist, Period = c('Historical', 'Projection')) {
   
   flush_errors("scalars")
   
-  # 2: 1D vectors ----
+  # 1D vectors 
   
   # SPFrom: length nStock, values in [1, nStock]
   if (!is.numeric(Misc$SPFrom) || length(Misc$SPFrom) != nStock)
@@ -191,9 +191,9 @@ CheckHistMisc <- function(Hist, Period = c('Historical', 'Projection')) {
   
   flush_errors("1D vectors")
   
-  # 3: 2D Misc arrays ----
+  # 2D Misc arrays
   
-  # RelSize: (sim, area) — each row must sum to 1
+  # RelSize: (sim, area)  each row must sum to 1
   check_array(Misc$RelSize, "Hist@Misc$RelSize", c(nSim, nArea))
   check_values(Misc$RelSize, "Hist@Misc$RelSize", allow_neg = FALSE)
   if (is.numeric(Misc$RelSize) && !is.null(dim(Misc$RelSize))) {
@@ -203,14 +203,14 @@ CheckHistMisc <- function(Hist, Period = c('Historical', 'Projection')) {
               "bad sim row(s): ", paste(bad_rows, collapse = ","))
   }
   
-  # SpawnTimeFrac: (sim, stock) — values in [0, 1]
+  # SpawnTimeFrac: (sim, stock)  values in [0, 1]
   check_array(Misc$SpawnTimeFrac, "Hist@Misc$SpawnTimeFrac", c(nSim, nStock))
   check_values(Misc$SpawnTimeFrac, "Hist@Misc$SpawnTimeFrac",
                allow_neg = FALSE, range = c(0, 1))
   
   flush_errors("2D Misc arrays")
   
-  # 4: 3D Misc arrays ----
+  # 3D Misc arrays 
   
   # SP0: (sim, stock, year)
   check_array(Misc$SP0, "Hist@Misc$SP0", c(nSim, nStock, nyears), Years)
@@ -228,14 +228,14 @@ CheckHistMisc <- function(Hist, Period = c('Historical', 'Projection')) {
   
   flush_errors("3D Misc arrays")
   
-  # 5: 4D Misc arrays ----
+  # 4D Misc arrays 
   
   # Catchability (q): (sim, stock, year, fleet)
   check_array(Misc$Catchability, "Hist@Misc$Catchability",
               c(nSim, nStock, nyears, nFleet), Years)
   check_values(Misc$Catchability, "Hist@Misc$Catchability", allow_neg = FALSE)
   
-  # RecDist: (sim, stock, year, area) — area proportions must sum to 1
+  # RecDist: (sim, stock, year, area)  area proportions must sum to 1
   check_array(Misc$RecDist, "Hist@Misc$RecDist",
               c(nSim, nStock, nyears, nArea), Years)
   check_values(Misc$RecDist, "Hist@Misc$RecDist", allow_neg = FALSE)
@@ -246,7 +246,7 @@ CheckHistMisc <- function(Hist, Period = c('Historical', 'Projection')) {
               "(sim, stock, year); ", n_bad, " combination(s) out of range")
   }
   
-  # StockTargeting: (sim, stock, fleet, year) — C++ indexes (sim_st, st, fl, y)
+  # StockTargeting: (sim, stock, fleet, year)  C++ indexes (sim_st, st, fl, y)
   if (isTRUE(Misc$StockTargetingFlag) || identical(Misc$StockTargetingFlag, 1)) {
     check_array(Misc$StockTargeting, "Hist@Misc$StockTargeting",
                 c(nSim, nStock, nFleet, nyears), Years)
@@ -259,15 +259,15 @@ CheckHistMisc <- function(Hist, Period = c('Historical', 'Projection')) {
         add_err("Hist@Misc$StockTargeting: dim name order is [",
                 paste(names(dn), collapse = ", "), "]",
                 "; C++ expects [", paste(expected_order, collapse = ", "), "]",
-                " — check for transposed array")
+                " - check for transposed array")
     }
   }
   
   flush_errors("4D Misc arrays")
   
-  # 6: 5D Misc arrays ----
+  # 5D Misc arrays 
   
-  # Closure: (sim, stock, year, fleet, area) — values must be 0 or 1
+  # Closure: (sim, stock, year, fleet, area)  values must be 0 or 1
   check_array(Misc$Closure, "Hist@Misc$Closure",
               c(nSim, nStock, nyears, nFleet, nArea), Years)
   if (is.numeric(Misc$Closure) &&
@@ -276,7 +276,7 @@ CheckHistMisc <- function(Hist, Period = c('Historical', 'Projection')) {
   
   flush_errors("5D Misc arrays")
   
-  # 7: per-stock biological lists ----
+  # per-stock biological lists 
   
   for (lnm in c("LengthList", "WeightList", "NaturalMortalityList",
                 "MaturityList", "SemelparousList", "FecundityList")) {
@@ -318,7 +318,7 @@ CheckHistMisc <- function(Hist, Period = c('Historical', 'Projection')) {
   
   flush_errors("stock biological lists")
   
-  # 8: SRR ----
+  # SRR 
   
   # SRR_Pars: list[nStock] of list[nPar] of 2D arrays (sim, year)
   check_stock_list(Misc$SRR_Pars, "Hist@Misc$SRR_Pars", function(pars_st, st) {
@@ -359,7 +359,7 @@ CheckHistMisc <- function(Hist, Period = c('Historical', 'Projection')) {
   
   flush_errors("SRR")
   
-  # 9: fleet lists ----
+  # fleet lists
   
   # WeightFleetList: list[nStock] of 4D (sim, age, year, fleet)
   check_stock_list(Misc$WeightFleetList, "Hist@Misc$WeightFleetList",
@@ -370,7 +370,7 @@ CheckHistMisc <- function(Hist, Period = c('Historical', 'Projection')) {
                      check_values(arr, nm, allow_neg = FALSE)
                    })
   
-  # SelAgeList: list[nStock] of 5D (sim, age, year, fleet, area) — [0, 1]
+  # SelAgeList: list[nStock] of 5D (sim, age, year, fleet, area)  [0, 1]
   check_stock_list(Misc$SelAgeList, "Hist@Misc$SelAgeList", function(arr, st) {
     nages <- nAge(Hist@OM@Stock[[st]])
     nm    <- paste0("Hist@Misc$SelAgeList[[", st, "]]")
@@ -378,7 +378,7 @@ CheckHistMisc <- function(Hist, Period = c('Historical', 'Projection')) {
     check_values(arr, nm, allow_neg = FALSE, range = c(0, 1))
   })
   
-  # RetAgeList: list[nStock] of 5D (sim, age, year, fleet, area) — [0, 1]
+  # RetAgeList: list[nStock] of 5D (sim, age, year, fleet, area)  [0, 1]
   check_stock_list(Misc$RetAgeList, "Hist@Misc$RetAgeList", function(arr, st) {
     nages <- nAge(Hist@OM@Stock[[st]])
     nm    <- paste0("Hist@Misc$RetAgeList[[", st, "]]")
@@ -386,7 +386,7 @@ CheckHistMisc <- function(Hist, Period = c('Historical', 'Projection')) {
     check_values(arr, nm, allow_neg = FALSE, range = c(0, 1))
   })
   
-  # DiscMortList: list[nStock] of 5D (sim, age, year, fleet, area) — [0, 1]
+  # DiscMortList: list[nStock] of 5D (sim, age, year, fleet, area)  [0, 1]
   check_stock_list(Misc$DiscMortList, "Hist@Misc$DiscMortList", function(arr, st) {
     nages <- nAge(Hist@OM@Stock[[st]])
     nm    <- paste0("Hist@Misc$DiscMortList[[", st, "]]")
@@ -421,7 +421,7 @@ CheckHistMisc <- function(Hist, Period = c('Historical', 'Projection')) {
   
   flush_errors("fleet lists")
   
-  # 10: Hist slots accessed directly by C++ ----
+  # Hist slots accessed directly by C++ 
 
   get_slot <- function(slot_name) {
     tryCatch(
@@ -437,7 +437,7 @@ CheckHistMisc <- function(Hist, Period = c('Historical', 'Projection')) {
       check_array(arr, paste0("Hist@", sn), c(nSim, nStock, nyears), Years)
   }
   
-  # Effort: (sim, year, fleet) — non-negative, no Inf
+  # Effort: (sim, year, fleet)  non-negative, no Inf
   Effort <- get_slot("Effort")
   if (!is.null(Effort)) {
     check_array(Effort, "Hist@Effort", c(nSim, nyears, nFleet), Years)
@@ -531,7 +531,7 @@ CheckHistMisc <- function(Hist, Period = c('Historical', 'Projection')) {
   
   flush_errors("Hist slots")
   
-  # 11: cross-array consistency ----
+  # cross-array consistency 
   
   # Age dimension (dim[2]) must be consistent across all arrays for each stock
   for (st in seq_len(nStock)) {

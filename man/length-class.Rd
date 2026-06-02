@@ -3,38 +3,77 @@
 \docType{class}
 \name{length-class}
 \alias{length-class}
-\title{Length Class}
+\title{The \code{length} S4 Class}
 \description{
-An S4 class representing the length-at-age structure for a \code{\link[=Stock]{Stock()}} object.
+Defines the length-at-age schedule for a \link[=stock-class]{stock} object. Objects are
+typically created via \code{\link[=Length]{Length()}}, which documents all parameters, validates
+inputs, and infers the growth model automatically when possible.
 }
 \details{
-See \code{\link[=Length]{Length()}} for details.
+Direct construction via \code{\link[methods:new]{methods::new()}} is not recommended; use \code{\link[=Length]{Length()}}
+instead, which handles model inference and object validation.
+
+The \code{ALK} slot is derived from \code{MeanAtAge}, \code{CVatAge}, \code{Dist}, and
+\code{TruncSD} during \code{\link[=Populate]{Populate()}} and should not be set manually.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{Pars}}{Named list of growth parameters for models in \code{\link[=LengthModels]{LengthModels()}}}
+\item{\code{Pars}}{\code{list}. Named list of growth parameters whose names correspond to
+those expected by \code{Model}. See \code{\link[=LengthModels]{LengthModels()}} for parameter sets and
+\link[=populating-schedules]{Specifying Biological and Fleet Schedules} for
+accepted input formats.}
 
-\item{\code{Model}}{Model associated with \code{Pars}}
+\item{\code{Model}}{\code{function} or \code{character(1)}. Growth model identifier, matched
+to one of \code{\link[=LengthModels]{LengthModels()}}. Set automatically by \code{\link[=FindModel]{FindModel()}} when \code{Pars}
+is supplied without an explicit model.}
 
-\item{\code{Units}}{Length units}
+\item{\code{Units}}{\code{character(1)}. Physical unit of the length measurements (e.g.,
+\code{"mm"}, \code{"cm"}). Must be accepted by \code{\link[=ValidUnits]{ValidUnits()}}.}
 
-\item{\code{MeanAtAge}}{Mean length-at-age array}
+\item{\code{MeanAtAge}}{\code{array}. Mean length at age with named dimensions \code{Sim},
+\code{Age}, and \code{Year}. Populated automatically by \code{\link[=Populate]{Populate()}} when \code{Pars}
+and \code{Model} are set; may also be supplied directly when \code{Pars} is empty.
+When \code{Pars} contains a matched model, any existing values are overwritten.
+See \link[=populating-schedules]{Specifying Biological and Fleet Schedules}.}
 
-\item{\code{CVatAge}}{Coefficient of variation at age}
+\item{\code{CVatAge}}{\code{array} or \code{numeric}. Coefficient of variation of
+length-at-age, used to generate the within-age-class length distribution.}
 
-\item{\code{Dist}}{Distribution name}
+\item{\code{Dist}}{\code{character(1)}. Parametric distribution used for length-at-age
+variability (e.g., \code{"normal"}).}
 
-\item{\code{TruncSD}}{Truncation in SD units}
+\item{\code{TruncSD}}{\code{array} or \code{numeric}. Number of standard deviations at which
+the length distribution is truncated.}
 
-\item{\code{Timing}}{Timing within time step}
+\item{\code{Timing}}{\code{array} or \code{numeric}. Fractional position within the time step
+at which length is measured (\code{0} = start, \code{1} = end).}
 
-\item{\code{Random}}{Random effects}
+\item{\code{Random}}{\code{array}. Random effects on growth parameters across simulations
+or years.}
 
-\item{\code{ALK}}{Age–length key}
+\item{\code{ALK}}{\code{array}. Age-length key: the probability of belonging to each
+length class given age, derived from \code{MeanAtAge}, \code{CVatAge}, \code{Dist}, and
+\code{TruncSD}. Populated automatically; use \code{\link[=ALK]{ALK()}} to retrieve.}
 
-\item{\code{Classes}}{Length classes}
+\item{\code{Classes}}{\code{numeric}. Length class midpoints in units of \code{Units}.}
 
-\item{\code{Misc}}{Miscellaneous list}
+\item{\code{Misc}}{\code{list}. Used internally.}
 }}
 
+\seealso{
+\itemize{
+\item \code{\link[=Length]{Length()}} for the constructor and accessor functions.
+\item \code{\link[=LengthModels]{LengthModels()}} for available growth models and their required #'   parameters.
+\item \code{\link[=ValidUnits]{ValidUnits()}} for accepted unit strings.
+\item \code{\link[=Populate]{Populate()}} for array population.
+\item \code{\link[=FindModel]{FindModel()}} for automatic model inference.
+\item \code{\link[=ALK]{ALK()}} to retrieve the age-length key.
+\link[=populating-schedules]{Specifying Biological and Fleet Schedules} for the
+full description of how \code{Pars}, \code{Model}, and \code{MeanAtAge} interact.
+}
+
+Other length:
+\code{\link[=Length]{Length()}}
+}
+\concept{length}

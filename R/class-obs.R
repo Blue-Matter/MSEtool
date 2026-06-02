@@ -1,44 +1,76 @@
-#' Observation Model
+methods::setClassUnion(name="compobs.CompObs", members=c('compobs', 'CompObs'))
+
+#' The `obs` S4 Class
 #'
-#' The [obs-class] defines the observation model used to generate observed data
-#' from the operating model, including observation error, bias, and sampling
-#' structure for each data type.
+#' Defines the observation error structure applied to each data type in the
+#' operating model. Each slot contains a sub-object specifying bias, CV, and
+#' sampling structure for one category of observed data. Objects are typically
+#' created via the [Obs()] constructor, which documents all parameters in
+#' detail.
 #'
-#' @slot Name Character. Name of the observation model. Or an [om-class] object,
-#' to return the contents of the `Obs` slot. 
-#' @slot LifeHistory An [lifehistoryobs-class] object. Observation error on
-#'   life-history parameters (e.g., growth, maturity).
+#' @slot Name `character` or `NULL`. Unique identifier for this observation
+#'   model. See [Obs()].
+#' @slot LifeHistory A [lifehistoryobs-class] object. Observation error on
+#'   life-history parameters (growth, maturity, natural mortality, etc.).
+#'   See [LifeHistoryObs()].
 #' @slot Exploitation An [exploitationobs-class] object. Observation error on
-#'   exploitation processes (e.g., fishing mortality, selectivity).
-#' @slot Effort An [effortobs-class] object. Observation error on effort data.
-#' @slot Landings An [catchobs-class] object. Observation error on landed
-#'   catch.
-#' @slot Discards An [catchobs-class] object. Observation error on discarded
-#'   catch.
+#'   exploitation processes (selectivity, retention, discard mortality).
+#'   See [ExploitationObs()].
+#' @slot Effort An [effortobs-class] object. Observation error on fishing
+#'   effort. See [EffortObs()].
+#' @slot Landings A [catchobs-class] object. Observation error on landed
+#'   catch. See [CatchObs()].
+#' @slot Discards A [catchobs-class] object. Observation error on discarded
+#'   catch. See [CatchObs()].
 #' @slot CPUE An [indicesobs-class] object. Observation error on
-#'   catch-per-unit-effort indices.
-#' @slot Survey An [indicesobs-class] object. Observation error on fishery-
-#'   independent survey indices.
-#' @slot LandingsAtAge An [CompObs-class] object. Observation error on
-#'   landed catch-at-age composition.
-#' @slot DiscardsAtAge An [CompObs-class] object. Observation error on
-#'   discarded catch-at-age composition.
-#' @slot LandingsAtSize An [CompObs-class] object. Observation error on
-#'   landed catch-at-length composition.
-#' @slot DiscardsAtSize An [CompObs-class] object. Observation error on
-#'   discarded catch-at-length composition.
-#' @slot Misc List. Miscellaneous additional objects.
+#'   catch-per-unit-effort indices. See [IndicesObs()].
+#' @slot Survey An [indicesobs-class] object. Observation error on
+#'   fishery-independent survey indices. See [IndicesObs()].
+#' @slot LandingsAtAge A [compobs-class] object. Observation error on
+#'   landed catch-at-age composition. See [CompObs()].
+#' @slot DiscardsAtAge A [compobs-class] object. Observation error on
+#'   discarded catch-at-age composition. See [CompObs()].
+#' @slot LandingsAtSize A [compobs-class] object. Observation error on
+#'   landed catch-at-length composition. See [CompObs()].
+#' @slot DiscardsAtSize A [compobs-class] object. Observation error on
+#'   discarded catch-at-length composition. See [CompObs()].
+#' @slot Misc `list`. Miscellaneous additional objects.
 #'
 #' @details
-#' Each slot corresponds to a distinct data type and contains an observation
-#' model sub-object defining the error structure (bias, CV, sample size, etc.)
-#' for that data type. Sub-objects are defined in their respective class files.
+#' An `obs` object defines how each data type is observed, i.e., the error
+#' structure (CV, bias, selectivity).  
+#' Observed values are held in [data-class] objects stored in `OM@Data`, `Hist@Data`,
+#' and `MSE@PPD`.
 #'
-#' An [obs-class] object can be attached to an [om-class] object with
-#' `Obs(om) <- MyObs` and retrieved with `Obs(om)`.
+#' `OM@Obs` is a two-level named list indexed first by stock complex, then by
+#' fleet or index name:
+#' ```
+#' OM@Obs[[stock_complex]][[fleet_name]]  →  obs-class object
+#' ```
+#' Stock complexes aggregate stocks whose data are reported together (e.g.,
+#' combined landings across species). This indexing mirrors `OM@Data`.
 #'
-#' @seealso [Obs()], [OM()], [ConvertObs()]
-#' 
+#' The slots `Effort`, `Landings`, `Discards`, `CPUE`, `Survey`,
+#' `LandingsAtAge`, `DiscardsAtAge`, `LandingsAtSize`, and `DiscardsAtSize`
+#' are populated with empty sub-objects by [Obs()] when not supplied. The
+#' `LifeHistory` and `Exploitation` slots are reserved for future use and are
+#' not currently populated during model runs; see [LifeHistoryObs()] and
+#' [ExploitationObs()].
+#'
+#' Direct construction via [methods::new()] is not recommended; use [Obs()]
+#' instead, which initialises all sub-objects automatically.
+#'
+#' @seealso
+#' - [Obs()] for the constructor and accessor.
+#' - [CatchObs()], [EffortObs()], [IndicesObs()], [CompObs()] for
+#'   sub-object constructors.
+#' - [LifeHistoryObs()], [ExploitationObs()] for placeholder sub-objects.
+#' - [data-class] and [Data()] for the complementary observed-values object.
+#' - [OM()] for the operating model constructor.
+#' - [ConvertObs()] for converting legacy [Obs-legacy-class] objects.
+#'
+#' @family obs
+#'
 #' @include class-unions.R
 #' @include class-obs-lifehistory.R
 #' @include class-obs-exploitation.R
@@ -47,7 +79,7 @@
 #' @include class-obs-indices.R
 #' @include class-obs-comp.R
 #' @name obs-class
-#' @export
+#' @rdname obs-class
 setClass(
   "obs",
   slots = c(
@@ -59,71 +91,18 @@ setClass(
     Discards       = "catchobs",
     CPUE           = "indicesobs",
     Survey         = "indicesobs",
-    LandingsAtAge  = "CompObs",
-    DiscardsAtAge  = "CompObs",
-    LandingsAtSize = "CompObs",
-    DiscardsAtSize = "CompObs",
+    LandingsAtAge  = "compobs.CompObs",
+    DiscardsAtAge  = "compobs.CompObs",
+    LandingsAtSize = "compobs.CompObs",
+    DiscardsAtSize = "compobs.CompObs",
     Misc           = "list"
   )
 )
 
-
-#' @rdname obs-class
-#' @param object An [om-class] object, or `NULL` (default) to create a new
-#'   empty [obs-class] object.
-#' @return
-#' - `Obs()`: if `Name` is an [om-class] object, returns `Name@Obs`.
-#'   Otherwise returns a new [obs-class] object.
-#' - `Obs<-`: returns `x` with the `Obs` slot replaced.
-#' @export
-Obs <- function(Name = NULL,
-                LifeHistory    = NULL,
-                Exploitation   = NULL,
-                Effort         = NULL,
-                Landings       = NULL,
-                Discards       = NULL,
-                CPUE           = NULL,
-                Survey         = NULL,
-                LandingsAtAge  = NULL,
-                DiscardsAtAge  = NULL,
-                LandingsAtSize = NULL,
-                DiscardsAtSize = NULL,
-                Misc           = list()) {
-  
-  if (inherits(Name, "om"))
-    return(Name@Obs)
-  
-  .Object <- methods::new("obs")
-  
-  if (!is.null(Name))           .Object@Name           <- Name
-  if (!is.null(LifeHistory))    .Object@LifeHistory    <- LifeHistory
-  if (!is.null(Exploitation))   .Object@Exploitation   <- Exploitation
-  if (!is.null(Effort))         .Object@Effort         <- Effort
-  if (!is.null(Landings))       .Object@Landings       <- Landings
-  if (!is.null(Discards))       .Object@Discards       <- Discards
-  if (!is.null(CPUE))           .Object@CPUE           <- CPUE
-  if (!is.null(Survey))         .Object@Survey         <- Survey
-  if (!is.null(LandingsAtAge))  .Object@LandingsAtAge  <- LandingsAtAge
-  if (!is.null(DiscardsAtAge))  .Object@DiscardsAtAge  <- DiscardsAtAge
-  if (!is.null(LandingsAtSize)) .Object@LandingsAtSize <- LandingsAtSize
-  if (!is.null(DiscardsAtSize)) .Object@DiscardsAtSize <- DiscardsAtSize
-  
-  methods::validObject(.Object)
-  .Object
-}
-
-
 setValidity("obs", function(object) {
-  # TODO: structural checks
+  # TODO
   TRUE
 })
 
 
-#' @rdname obs-class
-#' @param x An [om-class] object.
-#' @param value An [obs-class] object to assign.
-#' @export
-`Obs<-` <- function(x, value) {
-  x@Obs <- value
-  x
-}
+

@@ -3,112 +3,163 @@
 #' Construct and manipulate an [effort-class] object defining historical
 #' fishing effort and spatial structure for a [Fleet()] object.
 #'
-#' @param Effort Numeric array or data frame. Historical fishing effort. If a
-#'   correctly structured data frame, [GenHistEffort()] is called to generate
-#'   stochastic effort across simulations. If a [fleet-class], [effort-class],
-#'   [hist-class], [obs-class], or [mse-class] object is passed, the `Effort`
-#'   slot of that object is returned. 
-#'   
-#'   If an array, must have dimensions `Sim x Year` with named dimnames. The
-#'   `Year` dimension must match the historical years of the OM.
+#' @param Effort Numeric array, data frame, or `NULL`. Historical fishing
+#'   effort. Accepted forms:
+#'   - `NULL` (default): creates an empty [effort-class] object; no effort is
+#'     populated by [PopulateEffort()].
+#'   - Numeric array with dimensions `Sim x Year` and named dimnames. The
+#'     `Year` dimension must match the historical years of the OM.
+#'   - Data frame in the format required by [GenHistEffort()]; a stochastic
+#'     `Sim x Year` array is generated automatically during population.
 #'
-#'   If a data frame, must be in the format required by [GenHistEffort()],
-#'   which will generate a `Sim x Year` array stochastically.
-#'   
-#' @param Units Character. Units of effort (e.g., `"hours"`, `"trips"`).
-#'   Default `NULL`. Note that effort is converted to fishing mortality via
-#'   gear efficiency (`q`) defined in the [catchability-class] object.
-#'   
-#' @param Distribution Numeric array. Fraction of total effort allocated to
-#'   each area. Only used for spatial models (i.e., `nArea > 1`). Must have
-#'   dimensions `Sim x Year x Area` with named dimnames, and values must sum
-#'   to 1 over the `Area` dimension within each simulation and year. The `Sim`
-#'   and `Year` dimensions may each be length 1 (replicated internally) or
-#'   match `nSim` and the historical years respectively. If `NULL` (default),
-#'   spatial allocation is calculated internally from spatial utility
-#'   calculations and fleet behaviour.
-#'   
-#' @param Targeting Numeric array. Fleet targeting parameter with dimensions
-#'   `Sim x Year`. The `Sim` dimension may be length 1 or match `nSim`. The
-#'   `Year` dimension must be either length 1 or match the historical years,
-#'   and must have named `Year` dimnames if not length 1 or full length.
-#'   Default `NULL`, in which case a value of `0.8` is used for all
-#'   simulations and years.
-#'   
-#' @param Maximum Numeric. Maximum allowable effort. Default `NULL`. Not
-#' currently used.
-#' 
-#' @param Mode Character. Mode for calculation of spatial utility: `Density` (default)
-#'  or `Biomass`. See equations in Technical Manual.
-#' 
+#'   If `Effort` is a [fleet-class], [effort-class], [hist-class],
+#'   [obs-class], or [mse-class] object, the `Effort` slot of that object is
+#'   extracted and returned (see Details).
+#'
+#' @param Units Character or `NULL`. Units of fishing effort (e.g.,
+#'   `"hours"`, `"trips"`). Default `NULL`. Note that effort is converted to
+#'   fishing mortality via gear efficiency (`q`) defined in the associated
+#'   [catchability-class] object.
+#' @param Distribution Numeric array or `NULL`. Fraction of total effort
+#'   allocated to each spatial area. Used only for spatial models
+#'   (`nArea > 1`). Must have dimensions `Sim x Year x Area` with named
+#'   dimnames, and values must sum to 1 over the `Area` dimension within each
+#'   simulation and year. The `Sim` and `Year` dimensions may each be length 1
+#'   (replicated internally) or match `nSim` and the historical years
+#'   respectively. Default `NULL`; if not specified, [PopulateEffort()]
+#'   initialises all cells to `NA` and the internal spatial allocation
+#'   algorithm fills them (see Details). Any cells set to a non-`NA` numeric
+#'   value are treated as fixed overrides and are not modified by the
+#'   algorithm.
+#' @param Targeting Numeric array or `NULL`. Spatial targeting concentration
+#'   parameter (`lambda >= 0`) with dimensions `Sim x Year`. The `Sim`
+#'   dimension may be length 1 or match `nSim`. The `Year` dimension must be
+#'   length 1, match the historical years, or have named `Year` dimnames.
+#'   Default `NULL`; a value of `0.8` is applied to all simulations and years
+#'   during [PopulateEffort()]. See Details for how this parameter controls
+#'   the concentration of effort across areas.
+#' @param Maximum Numeric array or `NULL`. Maximum allowable effort. Default
+#'   `NULL`. Not currently used.
+#' @param Mode Character or `NULL`. Controls whether spatial utility is
+#'   calculated per unit area or as raw biomass. `"Density"` (default) divides
+#'   exploitable biomass by the relative area size (`RelSize`) before computing
+#'   utility, so fleets are attracted to areas with high biomass concentration
+#'   regardless of area size. `"Biomass"` uses raw exploitable biomass, so
+#'   larger areas are intrinsically more attractive. See the Technical Manual
+#'   for equations.
 #' @param Misc List. Miscellaneous additional inputs. Default `list()`.
-#' 
-#' @param df Logical. Only used when `Effort` is a [hist-class] or an 
-#' [mse-class] object. If `TRUE` (default) a tidy `data.frame` is returned.
-#' If `FALSE` the raw `Effort` array is returned. 
-#' 
-#' @param x An [effort-class] object, or a compatible object for `Effort<-`.
-#' @param value For `Effort<-`: an [effort-class] object. For slot replacement
-#'   functions: the new value for the corresponding slot.
+#' @param df Logical. Only used when `Effort` is a [hist-class] or
+#'   [mse-class] object. If `TRUE` (default), a tidy `data.frame` is
+#'   returned. If `FALSE`, the raw `Effort` array is returned.
+#' @param x An [effort-class] object for accessor and replacement functions.
+#' @param value The replacement value for the corresponding slot.
 #'
 #' @details
-#' Effort represents total fishing activity prior to spatial allocation. It is
-#' converted to fishing mortality via gear efficiency (`q`) defined in the
-#' associated [catchability-class] object.
+#' An [effort-class] object defines total fleet fishing activity prior to
+#' spatial allocation. Effort is converted to fishing mortality via gear
+#' efficiency (`q`) in the associated [catchability-class] object.
 #'
-#' ## Effort Array Structure
+#' ## Effort Array Format
 #'
-#' `Effort@Effort` must be a numeric array with dimensions `Sim x Year`:
-#' - `Sim`: number of simulation replicates, or length 1 (replicated
-#'    internally).
-#' - `Year`: must match the historical years of the OM with named `Year`
-#'    dimnames.
+#' When supplied as a numeric array, `Effort` must have dimensions `Sim x
+#' Year` with named dimnames. The `Sim` dimension may be length 1 (replicated
+#' internally by [PopulateEffort()]). The `Year` dimension must match the
+#' historical years of the OM exactly.
 #'
-#' Alternatively, a data frame in the format required by [GenHistEffort()]
-#' may be supplied, and a stochastic `Sim x Year` array will be generated
-#' automatically.
+#' When supplied as a data frame, the format must meet the requirements of
+#' [GenHistEffort()], which generates a stochastic `Sim x Year` array during
+#' population. The `Units` slot is set to `"unitless"` automatically in this
+#' case.
 #'
 #' ## Spatial Distribution
 #'
-#' `Distribution` represents the fraction of effort in each area and is only
-#' used for spatial models (`nArea > 1`). It must have dimensions
-#' `Sim x Year x Area` and sum to 1 over areas within each simulation and
-#' year. The `Sim` and `Year` dimensions may each be length 1 (replicated
-#' internally). If not specified (default), spatial allocation is derived
-#' internally from spatial utility calculations and fleet behaviour.
+#' `Distribution` is only used for spatial models (`nArea > 1`). It must sum
+#' to 1 over the `Area` dimension within each simulation and year. The `Sim`
+#' and `Year` dimensions may be length 1 (replicated internally). When not
+#' specified (default), [PopulateEffort()] initialises all cells to `NA`.
+#'
+#' At runtime, the spatial allocation algorithm only fills cells that remain
+#' `NA` — any non-`NA` values supplied in `Distribution` are left unchanged
+#' and act as fixed overrides for those simulation-year-area combinations.
+#'
+#' ## Spatial Utility and Effort Allocation
+#'
+#' When `Distribution` cells are `NA`, effort allocation across areas is
+#' determined internally at each timestep by a two-stage algorithm:
+#'
+#' **Stage 1 — Exploitable biomass.** For each fleet and area, raw exploitable
+#' biomass is computed as the sum over ages of abundance × weight ×
+#' selectivity × retention, scaled by catchability (`q`). When
+#' `Mode = "Density"` (default), this biomass is divided by the relative area
+#' size (`RelSize`) to give biomass density; when `Mode = "Biomass"`, raw
+#' biomass is used. An initial effort distribution (`D0`) is set proportional
+#' to these values.
+#'
+#' **Stage 2 — Depletion-adjusted utility.** A depletion discount
+#' `h(phi) = (1 - exp(-phi)) / phi` is applied, where `phi` is the local
+#' fishing pressure (own-fleet effort × `q` × `D0` in the area, plus a
+#' one-timestep-lagged contribution from competing fleets). This discounts
+#' utility in heavily fished areas, approximating an ideal free distribution
+#' under depletion.
+#'
+#' **Stage 3 — Softmax targeting.** The depletion-adjusted utilities are
+#' normalised and passed through a softmax function with concentration
+#' parameter `lambda` (`Targeting`). The resulting probabilities are written
+#' to `Distribution`.
 #'
 #' ## Targeting
 #'
-#' `Targeting` is a `Sim x Year` array. The `Year` dimension must be length 1
-#' or match the historical years; if neither, named `Year` dimnames are
-#' required. If not specified, a default value of `0.8` is applied to all
-#' simulations and years.
+#' `Targeting` (lambda) is a non-negative concentration parameter controlling
+#' how strongly effort is concentrated in high-utility areas. At `lambda = 0`,
+#' effort is distributed uniformly across all accessible areas regardless of
+#' their relative utility. As `lambda` increases, effort becomes progressively
+#' more concentrated in the highest-utility area. The default value of `0.8`
+#' produces moderate concentration — broadly consistent with opportunistic
+#' targeting behaviour where fleets favour productive areas but do not
+#' exclusively fish the single best one. Values around `0.5` approach near-uniform
+#' allocation; values above `2`–`3` produce strongly directed behaviour where
+#' most effort concentrates in the top one or two areas. The parameter is
+#' open-ended with no fixed upper bound, but very large values (e.g. `> 5`)
+#' effectively collapse all effort to the single highest-utility area in most
+#' configurations.
+#'
+#' ## Pass-Through Extraction
+#'
+#' When `Effort` is a [fleet-class], [effort-class], [hist-class],
+#' [obs-class], or [mse-class] object, `Effort()` returns the `Effort` slot
+#' of that object rather than constructing a new one. For [hist-class] and
+#' [mse-class] objects, the `df` argument controls whether a tidy
+#' `data.frame` (`TRUE`) or the raw array (`FALSE`) is returned.
 #'
 #' ## Attaching to a Fleet
 #'
-#' An `Effort` object can be attached to a [Fleet()] with
+#' An [effort-class] object can be attached to a [Fleet()] with
 #' `Effort(Fleet) <- MyEffort` and retrieved with `Effort(Fleet)`.
 #'
-#' Individual slots may be accessed or modified using [Units()],
-#' [Distribution()], [Targeting()], and [Maximum()].
-#'
-#' `r TechManLink()`
 #'
 #' @return
 #' - `Effort()` returns an [effort-class] object. If `Effort` is a
 #'   [fleet-class], [effort-class], [hist-class], [obs-class], or [mse-class]
-#'   object, the `Effort` slot of that object is returned.
-#' - `Effort<-` returns `x` with the `Effort` slot replaced.
-#' - `Distribution()`, `Targeting()`, `Maximum()` return the corresponding
-#'   slot from `x`.
+#'   object, the `Effort` slot of that object is returned (as a `data.frame`
+#'   or array for [hist-class] and [mse-class] depending on `df`).
+#' - `Effort<-` returns `x` with the `Effort` slot replaced by `value`.
+#' - `Distribution()`, `Targeting()`, `Maximum()`, `Mode()` return the
+#'   corresponding slot from the [effort-class] object `x`.
 #' - Their replacement forms return `x` with the corresponding slot updated.
 #'
-#' @seealso [effort-class], [Fleet()], [GenHistEffort()], [Catchability()]
+#' @seealso
+#' - [effort-class] for the class definition and slot-level documentation.
+#' - [Fleet()] for the enclosing fleet constructor.
+#' - [GenHistEffort()] for the data frame format used to generate stochastic
+#'   historical effort.
+#' - [Catchability()] for the gear efficiency that converts effort to fishing
+#'   mortality.
+#' - [PopulateEffort()] for how effort, distribution, and targeting arrays are
+#'   expanded across simulations and years.
 #'
-#' @examples
-#' e <- Effort()
-#' Units(e)
-#' Distribution(e)
+#' @family fleet
+#'
+#' @example man-examples/class-Effort.R
 #'
 #' @include class-unions.R
 #' @name Effort
@@ -122,7 +173,7 @@ Effort <- function(Effort       = NULL,
                    Misc         = list(),
                    df           = TRUE) {
   
-  if (inherits(Effort, c('fleet', 'effort', 'hist', 'obs', 'mse')))
+  if (inherits(Effort, c('fleet', 'effort', 'hist', 'obs', 'imp', 'mse')))
     return(extract_effort(Effort, df))
   
   if (is.null(Mode)) {

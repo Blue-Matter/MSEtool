@@ -1,65 +1,103 @@
-
-# Use a built-in growth model
+# See LengthModels() for all available built-in growth models and the
+# parameter names required for each.
 LengthModels()
 
-## Constant over simulations and time
-# Populate the object (usually done internally; see `?Populate`)
-Length(Pars=list(Linf=100, K=0.2, t0=-0.1)) |>
-  Populate(Ages(20))
+# ---- Model-based specification ----
 
+## Constant parameters (scalar) — same value for every simulation and year
+len <- Length(Pars = list(Linf = 100, K = 0.2, t0 = -0.1))
 
-Length <- Populate(Length, Ages(20))
-MeanAtAge(Length)
+## Stochastic across simulations — Linf and K drawn from Uniform(lower, upper)
+## once per simulation; t0 fixed at -0.1 in all simulations
+len <- Length(Pars = list(Linf = c(90, 110),
+                          K    = c(0.15, 0.25),
+                          t0   = -0.1))
 
-PopulateLength()
+## Inter-annual random walk on Linf — log-normal with 5% CV
+## LinfSD is removed from Pars after use
+len <- Length(Pars = list(Linf    = c(90, 110),
+                          LinfSD  = 0.05,
+                          K       = c(0.15, 0.25),
+                          t0      = -0.1))
 
-plot(Length)
+## Time-varying parameters with named change-point arrays
+## Only the years where values change need to be supplied; Extend() fills
+## all intermediate and future years by forward-filling automatically.
+nSim <- 48
+## Linf increases in 2010 (two change points: 1990 and 2010)
+Linf_arr <- array(
+  c(rep(80, nSim), rep(90, nSim)),
+  dim      = c(nSim, 2),
+  dimnames = list(Sim = seq_len(nSim), Year = c(1990, 2010))
+)
+len <- Length(Pars = list(Linf = Linf_arr,
+                          K    = c(0.15, 0.25),
+                          t0   = -0.1))
 
-## Uniform distributed over simulations, constant over time
-Length <- Length(Pars=list(Linf=c(90,100),
-                             K=c(0.15,0.2),
-                             t0=-0.1))
+## Combine stochastic (across sims) and time-varying (across years):
+## Linf is drawn per simulation AND changes in 2010
+Linf_sim   <- runif(nSim, 80, 100)
+Linf_arr2  <- array(
+  c(Linf_sim, Linf_sim * 1.1),        # 10% increase from 2010 onward
+  dim      = c(nSim, 2),
+  dimnames = list(Sim = seq_len(nSim), Year = c(1990, 2010))
+)
+len <- Length(Pars = list(Linf = Linf_arr2,
+                          K    = c(0.15, 0.25),
+                          t0   = -0.1))
 
-# Log-normally distributed over time with 5% CV on Linf
-Length <- Length(Pars=list(Linf=c(90,100),
-                             LinfSD=0.05,
-                             K=c(0.15,0.2),
-                             t0=-0.1))
+# ---- Direct array specification ----
 
-# Time-varying parameters
-# Linf - uniformly distributed over simulations, normally distributed over time
-nTS <- 30
-nsim <- 10
+## Supply MeanAtAge directly (Pars left empty).
+## A plain numeric vector of length nAge is accepted; it is treated as a
+## single simulation, single year and replicated by Extend() as needed.
+ages   <- 0:20
+len_aa <- Length(MeanAtAge = 100 * (1 - exp(-0.2 * (ages + 0.5))))
 
-Linf_mu <- runif(nsim, 50, 100)
-Linf_sd <- 0.1 * Linf_mu
+## Named Sim × Age × Year array — two change-point years, single simulation.
+## Extend() replicates Sim = 1 to all nSim simulations automatically.
+maa <- array(
+  c(100 * (1 - exp(-0.2 * (ages + 0.5))),   # 1990 schedule
+    110 * (1 - exp(-0.2 * (ages + 0.5)))),   # 2010 schedule (Linf increased)
+  dim      = c(1, length(ages), 2),
+  dimnames = list(Sim = 1, Age = ages, Year = c(1990, 2010))
+)
+len_arr <- Length(MeanAtAge = maa)
 
-Length <- Length(Pars=list(Linf=matrix(rnorm(nTS,Linf_mu,Linf_sd),
-                                       nsim, nTS),
-                             K=c(0.15,0.2),
-                             t0=-0.1))
+# ---- Custom length class midpoints ----
 
-# Change points in time-varying parameters
-Length <- Length(Pars=list(
-  Linf=matrix(rnorm(3, 100, 10),
-              nrow=1, ncol=3), # single simulation, 3 time steps
-  K=c(0.15,0.2), # uniform distribution
-  t0=-0.1) # single value
-  )
+## By default, Classes and the ALK are populated automatically during
+## Populate(). 
+# Supply Classes explicitly to override the default bin width.
+len_cls <- Length(
+  Pars    = list(Linf = 100, K = 0.2, t0 = -0.1),
+  Classes = seq(from = 2.5, by = 5, length.out = 26)
+)
 
-attributes(Length)$TimeSteps <- c(1980, 2000, 2020)
+# ---- Slot accessors ----
 
+len <- Length(Pars = list(Linf = 100, K = 0.2, t0 = -0.1))
 
-# Manually specify `MeanAtAge`, constant over sims and time
+## Read slots
+MeanAtAge(len)            # NULL until Populate() is called
+CVatAge(len)
+Units(len)
 
-MeanAtAge <- vonBert(0:20, 100, 0.1, 0)
+## Replace slots
+Units(len)   <- "cm"
+CVatAge(len) <- 0.08
+TruncSD(len) <- 3
 
-Length <- Length(MeanAtAge=MeanAtAge)
+# ---- Attaching to a Stock ----
 
-# Classes & Age-Size Key
+stk <- Stock(Name = "Example stock", Ages = Ages(MaxAge = 20))
+Length(stk) <- Length(Pars = list(Linf = 100, K = 0.2, t0 = -0.1))
+Length(stk)
 
-Length <- Length(Pars=list(Linf=100, K=0.2, t0=-0.1),
-                   Classes=seq(from=2.5, by=2.5, to=130))
+# ---- Populate ----
 
-plot(Length, Ages=Ages(20), type='ASK')
+## The final populated object (typically done internally)
+pop_len <- Populate(Length(stk))
+pop_len
 
+MeanAtAge(pop_len)

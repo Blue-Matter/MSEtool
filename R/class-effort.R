@@ -1,19 +1,28 @@
-#' Effort Class
+#' The `effort` S4 Class
 #'
-#' The `effort` class stores historical fishing effort and associated
-#' spatial effort structure for a [Fleet()] object.
-#' 
-#' See [Effort()] for details.
-#' 
-#' @slot Effort Numeric array of fishing effort 
-#' @slot Units Optional character string describing the units of effort
-#' @slot Distribution Optional numeric array with dimensions `nSim x nYear x nArea`
-#'     giving the fraction of total effort allocated to each spatial area
-#'  @slot Targeting Numeric array or scalar controlling spatial targeting behavior
-#'  @slot Maximum Numeric array giving the maximum possible fishing effort. 
-#'  @slot Mode Character. Mode for calculation of spatial utility: `Density` (default)
-#'  or `Biomass`. 
-#'  @slot Misc Miscellaneous list
+#' Defines historical fishing effort and associated spatial structure for use
+#' in a [fleet-class] object. Objects are typically created via the [Effort()]
+#' constructor, which documents all parameters in detail.
+#'
+#' @slot Effort `numeric` array, data frame, or `NULL`. Historical fishing
+#'   effort. See [Effort()] for accepted formats.
+#' @slot Units `character` or `NULL`. Units of fishing effort (e.g.,
+#'   `"hours"`, `"trips"`). See [Effort()].
+#' @slot Distribution `numeric` array or `NULL`. Fraction of total effort
+#'   allocated to each spatial area (`Sim x Year x Area`). See [Effort()].
+#' @slot Targeting `numeric` array or `NULL`. Fleet targeting parameter
+#'   (`Sim x Year`). See [Effort()].
+#' @slot Maximum `numeric` array or `NULL`. Maximum allowable effort. See
+#'   [Effort()].
+#' @slot Mode `character` or `NULL`. Spatial utility calculation mode:
+#'   `"Density"` (default) or `"Biomass"`. See [Effort()].
+#' @slot Misc `list`. Miscellaneous additional inputs.
+#'
+#' @seealso [Effort()] for the constructor and full parameter documentation.
+#'   [fleet-class] for the enclosing fleet object.
+#'
+#' @family fleet
+#'
 #' @include class-unions.R
 #' @name effort-class
 setClass(

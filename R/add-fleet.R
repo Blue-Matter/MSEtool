@@ -16,7 +16,7 @@
 #' @return The `om` object with the new fleet appended to `OM@Fleet` and
 #'   `OM@Obs` for every stock.
 #' @examples
-#' OM <- ExampleOM
+#' OM <- SingleStockOM
 #' FleetNames(OM)
 #' OM2 <- AddFleet(OM, 'DummyFleet')
 #' FleetNames(OM2)

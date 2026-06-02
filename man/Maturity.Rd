@@ -5,7 +5,7 @@
 \alias{Semelparous}
 \alias{Semelparous<-}
 \alias{Maturity<-}
-\title{Maturity}
+\title{Maturity Constructor and Accessors}
 \usage{
 Maturity(
   Pars = list(),
@@ -25,103 +25,364 @@ Semelparous(x) <- value
 Maturity(x) <- value
 }
 \arguments{
-\item{Pars}{Named list of maturity parameters corresponding to \code{Model}. See
-\code{\link[=MaturityModels]{MaturityModels()}} for available models and required parameters. If \code{Pars}
-is a \link[=stock-class]{stock} object, the \code{Maturity} slot of that stock is returned
-(see Details). If \code{Pars} is non-empty, \code{Model} is \code{NULL}, and all values
-are non-\code{NA}, the model is inferred automatically via \code{\link[=FindModel]{FindModel()}}.}
+\item{Pars}{\code{list}. Named list of maturity parameters. Element names must
+match the arguments of a built-in maturity model (see \code{\link[=MaturityModels]{MaturityModels()}}).
+When \code{Pars} is non-empty and \code{Model} is \code{NULL}, the model is inferred
+automatically by \code{\link[=FindModel]{FindModel()}}. When \code{Pars} is a \link[=stock-class]{stock} object,
+\code{Maturity()} acts as a pass-through accessor and returns \code{x@Maturity};
+when \code{Pars} is a list of \link[=stock-class]{stock} objects, \code{Model} is treated as an
+integer index selecting which stock's \code{Maturity} slot to return — see
+\emph{Pass-Through Access}. See also
+\link[=populating-schedules]{Specifying Biological and Fleet Schedules} for the
+full set of accepted input formats. Default \code{list()}.}
 
-\item{Model}{Character or function. Maturity model identifier, or a numeric
-index when \code{Pars} is a list of stocks (see Details). If \code{NULL} (default),
-the model is inferred from \code{Pars} where possible. See \code{\link[=MaturityModels]{MaturityModels()}}
-for available models.}
+\item{Model}{\code{character(1)}, \code{function}, or \code{integer(1)}. Maturity model
+identifier. When \code{NULL} (default), the model is inferred from \code{Pars} via
+\code{\link[=FindModel]{FindModel()}}. May be set to a character string naming a built-in model or
+to a custom R function. When \code{Pars} is a list of \link[=stock-class]{stock} objects,
+\code{Model} is an integer index — see \emph{Pass-Through Access} and
+\link[=populating-schedules]{Specifying Biological and Fleet Schedules}.}
 
-\item{MeanAtAge}{Numeric array. Mean maturity at age, with named dimensions
-\code{Sim}, \code{Age}, and \code{Year}. Populated automatically during \code{\link[=Populate]{Populate()}} if
-\code{Pars} and \code{Model} are provided. Default \code{NULL}.}
+\item{MeanAtAge}{\code{array} or \code{NULL}. Mean maturity-at-age with named
+dimensions \verb{Sim × Age × Year}. Values should range from 0 (immature) to 1
+(fully mature). Supply directly when bypassing the model-based approach
+(\code{Pars = list()}). Only the years at which values \emph{change} need to be
+included; \code{\link[=Extend]{Extend()}} fills the remainder. When \code{Pars} contains a matched
+model, any values here are \strong{overwritten} during \code{\link[=Populate]{Populate()}}. A numeric
+vector of length \code{nAge} is also accepted and promoted to a \verb{1 × nAge × 1}
+array automatically. Default \code{NULL}.}
 
-\item{MeanAtLength}{Numeric array. Mean maturity at length, with named
-dimensions \code{Sim}, \code{Length}, and \code{Year}. Default \code{NULL}.}
+\item{MeanAtLength}{\code{array} or \code{NULL}. Mean maturity-at-length with named
+dimensions \verb{Sim × Length × Year}. Populated automatically during
+\code{\link[=Populate]{Populate()}} when an at-length maturity model is used; may also be
+supplied directly. When \code{MeanAtLength} is populated and \code{MeanAtAge} is
+not, \code{\link[=Populate]{Populate()}} converts it to \code{MeanAtAge} via the age-length key
+(\code{ALK}) from a \link[=length-class]{length} object. Default \code{NULL}.}
 
-\item{MeanAtWeight}{Numeric array. Mean maturity at weight, with named
-dimensions \code{Sim}, \code{Weight}, and \code{Year}. Default \code{NULL}.}
+\item{MeanAtWeight}{\code{array} or \code{NULL}. Mean maturity-at-weight with named
+dimensions \verb{Sim × Weight × Year}. Populated automatically during
+\code{\link[=Populate]{Populate()}} when an at-weight maturity model is used; may also be
+supplied directly. When \code{MeanAtWeight} is populated and \code{MeanAtAge} is
+not, \code{\link[=Populate]{Populate()}} converts it to \code{MeanAtAge} via the age-weight key
+(\code{AWK}) from a \link[=weight-class]{weight} object. Requires a populated \link[=weight-class]{weight}
+with a non-\code{NULL} \code{CVatAge} slot so that the \code{AWK} exists. Default \code{NULL}.}
 
-\item{Classes}{Numeric vector. Age, length, or weight class midpoints.
-Default \code{NULL}.}
+\item{Classes}{\code{numeric} or \code{NULL}. Age, length, or weight class midpoints
+corresponding to the \verb{MeanAt*} array in use. Default \code{NULL}.}
 
-\item{Semelparous}{Logical or numeric array. If \code{TRUE} or an array of \code{1}s,
-the stock is semelparous (spawns once then dies). Default \code{FALSE}.}
+\item{Semelparous}{\code{logical(1)} or \code{array}. Controls post-spawning
+mortality. \code{FALSE} (default) disables post-spawn mortality. \code{TRUE} sets
+post-spawn mortality equal to the maturity ogive after \code{\link[=Populate]{Populate()}} — see
+\emph{Semelparity} for full details. A custom \verb{Sim × Age × Year} array may
+also be supplied directly to specify age- and time-varying post-spawn
+mortality that differs from the maturity schedule.}
 
-\item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
+\item{Misc}{\code{list}. Named list of optional user-defined inputs stored on the
+object and passed through to custom model functions. Default \code{list()}.}
 
 \item{x}{A \link[=maturity-class]{maturity} object for slot accessors, or a \link[=stock-class]{stock}
 object for \verb{Maturity<-}.}
 
 \item{value}{For \verb{Maturity<-}: a \link[=maturity-class]{maturity} object. For
-\verb{Semelparous<-}: a logical or numeric array.}
+\verb{Semelparous<-}: a \code{logical(1)} or a \verb{Sim × Age × Year} array.}
 }
 \value{
 \itemize{
 \item \code{Maturity()} returns a \link[=maturity-class]{maturity} object. If \code{Pars} is a
-\link[=stock-class]{stock} object or list of stocks, the corresponding \code{Maturity}
-slot is returned.
-\item \verb{Maturity<-} returns \code{x} with the \code{Maturity} slot replaced.
-\item \code{Semelparous()} returns the \code{Semelparous} slot from \code{x}.
-\item \verb{Semelparous<-} returns \code{x} with the \code{Semelparous} slot updated.
+\link[=stock-class]{stock}, returns \code{x@Maturity}. If \code{Pars} is a list of stocks,
+returns \code{Pars[[Model]]@Maturity}.
+\item \verb{Maturity<-} returns the \link[=stock-class]{stock} \code{x} with the \code{Maturity} slot
+replaced and the object re-validated.
+\item \code{Semelparous()} returns the \code{Semelparous} slot from \code{x} (a scalar before
+\code{\link[=Populate]{Populate()}}, a \verb{Sim × Age × Year} array after).
+\item \verb{Semelparous<-} returns \code{x} with the \code{Semelparous} slot updated and the
+object re-validated.
 }
 }
 \description{
-Construct and manipulate a \link[=maturity-class]{maturity} object defining the maturity
-schedule associated with a \code{\link[=Stock]{Stock()}} object. A \code{Maturity} object is
-required for all \link[=stock-class]{stock} objects.
+Construct a \link[=maturity-class]{maturity} object defining the maturity schedule for a
+\link[=stock-class]{stock}, or access and replace the \code{Maturity} slot of a \link[=stock-class]{stock}
+and its individual slots. A \code{Maturity} object is required for all
+\link[=stock-class]{stock} objects.
 }
 \details{
-A \link[=maturity-class]{maturity} object is required for all \link[=stock-class]{stock} objects. It
-defines the relationship between age, length, or weight and reproductive
-maturity, which is used throughout the operating model for spawning biomass
-and recruitment calculations.
-\subsection{Pass-Through Access from a Stock}{
-
-When \code{Pars} is a \link[=stock-class]{stock} object, \code{Maturity()} acts as an accessor:
-\itemize{
-\item \code{Maturity(stock)} returns \code{stock@Maturity}.
-\item \code{Maturity(stocklist, i)} returns \code{stocklist[[i]]@Maturity} when \code{Pars}
-is a list of stocks and \code{Model} is a numeric index.
-}
-}
-
 \subsection{Specifying Maturity}{
 
-Maturity schedules may be specified in two ways:
-\enumerate{
-\item \strong{Model-based}: provide \code{Pars} and optionally \code{Model}. \code{MeanAtAge}
-is populated automatically during \code{\link[=Populate]{Populate()}}. If \code{Model} is \code{NULL}
-and \code{Pars} is non-empty with no \code{NA} values, the model is inferred via
-\code{\link[=FindModel]{FindModel()}}.
-\item \strong{Direct array}: provide \code{MeanAtAge}, \code{MeanAtLength}, or
-\code{MeanAtWeight} directly with \code{Pars = list()} (default).
-}
+There are two ways to define the maturity schedule; see
+\link[=populating-schedules]{Specifying Biological and Fleet Schedules} for full
+details on input formats and the rules that govern how \code{Pars}, \code{Model}, and
+\verb{MeanAt*} arrays interact.
+
+\strong{Model-based} (recommended): supply \code{Pars} with named parameters matching
+a built-in model (see \code{\link[=MaturityModels]{MaturityModels()}}). If \code{Model = NULL} and the
+parameter names uniquely match a model, \code{\link[=FindModel]{FindModel()}} resolves the model
+automatically. The relevant \verb{MeanAt*} array is then populated by
+\code{\link[=Populate]{Populate()}} when the stock is added to an \code{\link[=OM]{OM()}}:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{# Logistic length-based ogive — model inferred from Pars names
+mat <- Maturity(Pars = list(L50 = 40, L50_95 = 8))
+
+# Stochastic L50 across simulations
+mat <- Maturity(Pars = list(L50 = c(35, 45), L50_95 = 8))
+
+# Time-varying L50 (shifts in 2010; Extend() fills the rest)
+L50_arr <- array(c(40, 45), dim = c(1, 2),
+                 dimnames = list(Sim = 1, Year = c(1990, 2010)))
+mat <- Maturity(Pars = list(L50 = L50_arr, L50_95 = 8))
+
+# Inter-annual random walk on L50 (log-normal, SD = 0.05)
+mat <- Maturity(Pars = list(L50 = c(35, 45), L50SD = 0.05, L50_95 = 8))
+}\if{html}{\out{</div>}}
+
+\strong{Direct array}: supply any of \code{MeanAtAge}, \code{MeanAtLength}, or
+\code{MeanAtWeight} with \code{Pars = list()}. \code{MeanAtAge} takes precedence if more
+than one is populated:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{ages   <- 0:20
+mat_aa <- Maturity(MeanAtAge = 1 / (1 + exp(-0.5 * (ages - 5))))
+
+lens   <- seq(5, 120, by = 5)
+mat_al <- Maturity(
+  MeanAtLength = array(
+    1 / (1 + exp(-log(19) * (lens - 40) / 8)),
+    dim      = c(1, length(lens), 1),
+    dimnames = list(Sim = 1, Length = lens, Year = 1990)
+  )
+)
+}\if{html}{\out{</div>}}
 }
 
 \subsection{Semelparity}{
 
-When \code{Semelparous = TRUE}, the stock spawns once and all mature individuals
-die after spawning. This modifies the natural mortality schedule applied
-after the spawning event.
+Post-spawning mortality is controlled by the \code{Semelparous} slot, which
+after \code{\link[=Populate]{Populate()}} is always a \verb{Sim × Age × Year} array. Each cell gives
+the fraction of individuals at that age dying immediately after spawning.
+This mortality is applied as a multiplier \code{(1 - Semelparous)} on top of
+standard \code{exp(-Z)} survival — it is an \emph{additional} source of mortality,
+not a substitute for natural mortality.
+
+The default (\code{Semelparous = FALSE}) sets all cells to 0: no post-spawn
+mortality, appropriate for iteroparous species.
+
+Setting \code{Semelparous = TRUE} sets the array equal to \code{MeanAtAge} after
+population:
+\itemize{
+\item Fully mature ages (maturity ≈ 1): post-spawn survival ≈ 0 — complete
+die-off.
+\item Ages on the maturity ogive (0 < maturity < 1): proportional post-spawn
+mortality.
+\item Immature ages (maturity ≈ 0): post-spawn survival ≈ 1 — unaffected.
 }
 
-\subsection{Attaching to a Stock}{
+This assumption — that the post-spawn mortality schedule equals the maturity
+ogive — is appropriate for obligate semelparous species such as Pacific
+salmon, where all maturing individuals spawn once and die. For species with
+partial semelparity, or where post-spawn mortality affects only older or
+larger mature fish, supply a custom \verb{Sim × Age × Year} array directly:
 
-A \code{Maturity} object can be attached to a \code{\link[=Stock]{Stock()}} with
-\code{Maturity(Stock) <- MyMaturity} and retrieved with \code{Maturity(Stock)}.
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{ages <- 0:20
+# Post-spawn mortality applies only to ages >= 5, ramping from 0 to 0.8
+sem_arr <- array(
+  pmin(pmax((ages - 5) / 10, 0), 0.8),
+  dim      = c(1, length(ages), 1),
+  dimnames = list(Sim = 1, Age = ages, Year = 1990)
+)
+mat <- Maturity(Pars = list(L50 = 40, L50_95 = 8), Semelparous = sem_arr)
+}\if{html}{\out{</div>}}
 
-Individual slots may be accessed or modified using \code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}},
-\code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=MeanAtLength]{MeanAtLength()}}, \code{\link[=MeanAtWeight]{MeanAtWeight()}}, \code{\link[=Classes]{Classes()}}, and
-\code{\link[=Semelparous]{Semelparous()}}.
-
-See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more details.
+Note: after \code{\link[=Populate]{Populate()}}, \code{Semelparous} is always an array.
 }
+
+\subsection{At-Length and At-Weight Models}{
+
+Models whose class contains \code{"at-Length"} produce \code{MeanAtLength}, which is
+converted to \code{MeanAtAge} via the \code{ALK} — a populated \code{\link[=Length]{Length()}} object must
+be passed to \code{\link[=Populate]{Populate()}}. Models whose class contains \code{"at-Weight"} produce
+\code{MeanAtWeight}, converted via the \code{AWK} — a populated \code{\link[=Weight]{Weight()}} object
+with non-\code{NULL} \code{CVatAge} (so the \code{AWK} exists) must be passed to
+\code{\link[=Populate]{Populate()}}. At-weight maturity models are rare in practice.
+
+The same conversions apply when \code{MeanAtLength} or \code{MeanAtWeight} are
+supplied directly by the user.
+}
+
+\subsection{Pass-Through Access from a Stock}{
+
+When \code{Pars} is a \link[=stock-class]{stock} object, \code{Maturity()} returns the \code{Maturity}
+slot directly:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{Maturity(my_stock)             # returns my_stock@Maturity
+Maturity(my_stock) <- my_mat   # replaces my_stock@Maturity
+}\if{html}{\out{</div>}}
+
+When \code{Pars} is a list of \link[=stock-class]{stock} objects, \code{Model} is an integer index
+selecting which stock's slot to return:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{Maturity(stock_list, 2)   # returns stock_list[[2]]@Maturity
+}\if{html}{\out{</div>}}
+}
+
+\subsection{Slot Accessors}{
+
+Individual slots can be read or replaced using generic functions matching
+their names. All replacement functions re-validate the object:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{Pars(mat)            <- list(L50 = 40, L50_95 = 8)
+Model(mat)           <- "LogisticLength"
+MeanAtAge(mat)       <- my_array
+MeanAtLength(mat)    <- my_length_array
+MeanAtWeight(mat)    <- my_weight_array
+Semelparous(mat)     <- TRUE
+Classes(mat)         <- seq(0, 80, by = 5)
+}\if{html}{\out{</div>}}
+}
+}
+\examples{
+# See MaturityModels() for all available built-in maturity models and the
+# parameter names required for each.
+MaturityModels()
+
+# ---- Model-based specification ----
+
+## Constant parameters (scalar) — same value for every simulation and year
+mat <- Maturity(Pars = list(L50 = 40, L50_95 = 8))
+
+## Stochastic across simulations — L50 drawn from Uniform(lower, upper)
+## once per simulation; L50_95 fixed in all simulations
+mat <- Maturity(Pars = list(L50    = c(35, 45),
+                            L50_95 = 8))
+
+## Inter-annual random walk on L50 — log-normal with 5\% CV
+## L50SD is removed from Pars after use
+mat <- Maturity(Pars = list(L50    = c(35, 45),
+                            L50SD  = 0.05,
+                            L50_95 = 8))
+
+## Time-varying parameters with named change-point arrays
+## Only the years where values change need to be supplied; Extend() fills
+## all intermediate and future years by forward-filling automatically.
+nSim <- 48
+
+## L50 shifts in 2010 (two change points: 1990 and 2010)
+L50_arr <- array(
+  c(rep(40, nSim), rep(45, nSim)),
+  dim      = c(nSim, 2),
+  dimnames = list(Sim = seq_len(nSim), Year = c(1990, 2010))
+)
+mat <- Maturity(Pars = list(L50    = L50_arr,
+                            L50_95 = 8))
+
+## Combine stochastic (across sims) and time-varying (across years)
+L50_sim  <- runif(nSim, 35, 45)
+L50_arr2 <- array(
+  c(L50_sim, L50_sim * 1.1),          # 10\% increase from 2010 onward
+  dim      = c(nSim, 2),
+  dimnames = list(Sim = seq_len(nSim), Year = c(1990, 2010))
+)
+mat <- Maturity(Pars = list(L50    = L50_arr2,
+                            L50_95 = 8))
+
+# ---- Direct array specification ----
+
+## Supply MeanAtAge directly (Pars left empty).
+## A plain numeric vector of length nAge is accepted; treated as a single
+## simulation, single year and replicated by Extend() as needed.
+ages   <- 0:20
+mat_aa <- Maturity(MeanAtAge = 1 / (1 + exp(-0.5 * (ages - 5))))
+
+## Named Sim x Age x Year array — two change-point years, single simulation
+maa <- array(
+  c(1 / (1 + exp(-0.5 * (ages - 5))),    # 1990 ogive
+    1 / (1 + exp(-0.5 * (ages - 7)))),   # 2010 ogive (L50 shifted later)
+  dim      = c(1, length(ages), 2),
+  dimnames = list(Sim = 1, Age = ages, Year = c(1990, 2010))
+)
+mat_arr <- Maturity(MeanAtAge = maa)
+
+## Supply MeanAtLength directly — converted to MeanAtAge via the ALK
+## during Populate() when a Length object is provided.
+lens   <- seq(5, 120, by = 5)
+mat_al <- Maturity(
+  MeanAtLength = array(
+    1 / (1 + exp(-log(19) * (lens - 40) / 8)),
+    dim      = c(1, length(lens), 1),
+    dimnames = list(Sim = 1, Length = lens, Year = 1990)
+  )
+)
+
+# ---- Semelparity ----
+
+## Semelparous = TRUE: post-spawn mortality equals the maturity ogive.
+## Fully mature fish die with probability 1; fish on the ogive die
+## proportionally; immature fish are unaffected.
+## Appropriate for obligate semelparous species (e.g. Pacific salmon).
+mat_sem <- Maturity(Pars = list(L50 = 40, L50_95 = 8), Semelparous = TRUE)
+
+## Custom post-spawn mortality array — partial semelparity by age.
+## Here mortality ramps from 0 at age 5 to 0.8 at age 15, then is
+## constant. This differs from the maturity ogive and must be supplied
+## as a named array.
+sem_arr <- array(
+  pmin(pmax((ages - 5) / 10, 0), 0.8),
+  dim      = c(1, length(ages), 1),
+  dimnames = list(Sim = 1, Age = ages, Year = 1990)
+)
+mat_psem <- Maturity(Pars = list(L50 = 40, L50_95 = 8), Semelparous = sem_arr)
+
+## After Populate(), Semelparous is always an array — do not test == TRUE.
+## Use any(Semelparous(mat) > 0) to check whether post-spawn mortality
+## is active on a populated object.
+
+# ---- Slot accessors ----
+
+mat <- Maturity(Pars = list(L50 = 40, L50_95 = 8))
+
+## Read slots
+MeanAtAge(mat)      # NULL until Populate() is called
+MeanAtLength(mat)   # NULL unless an at-length model or direct array is used
+Semelparous(mat)    # scalar FALSE before Populate(); array after
+
+## Replace slots
+Semelparous(mat) <- TRUE
+Classes(mat)     <- seq(0, 80, by = 5)
+
+# ---- Attaching to a Stock ----
+
+stk <- Stock(Name = "Example stock", Ages = Ages(MaxAge = 20))
+Maturity(stk) <- Maturity(Pars = list(L50 = 40, L50_95 = 8))
+Maturity(stk)
+
+# ---- Populate ----
+
+## The final populated object (typically done internally).
+## At-length models require a Length object passed to Populate().
+pop_mat <- Populate(Maturity(stk), 
+                    Ages = Ages(MaxAge = 20),
+                    Length = Length(Pars = 
+                                      list(
+                                        Linf = 100, 
+                                        K = 0.2, 
+                                        t0 = -0.1
+                                        )
+                                    )
+)
+pop_mat
 }
 \seealso{
-\link[=maturity-class]{maturity}, \code{\link[=Stock]{Stock()}}, \code{\link[=MaturityModels]{MaturityModels()}}
+\itemize{
+\item \link[=maturity-class]{maturity} for the class definition and slot-level documentation.
+\item \code{\link[=MaturityModels]{MaturityModels()}} for available maturity models and required parameter
+sets.
+\item \code{\link[=FindModel]{FindModel()}} for automatic model inference.
+\item \code{\link[=Populate]{Populate()}} for array population.
+\item \code{\link[=Stock]{Stock()}} for the enclosing stock constructor.
+\item \code{\link[=Length]{Length()}} for the companion length schedule, required when using
+at-length maturity models.
+\item \code{\link[=Weight]{Weight()}} for the companion weight schedule, required when using
+at-weight maturity models.
 }
+
+Other maturity:
+\code{\link{maturity-class}}
+}
+\concept{maturity}

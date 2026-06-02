@@ -3,31 +3,84 @@
 \docType{class}
 \name{fecundity-class}
 \alias{fecundity-class}
-\title{Fecundity Class}
+\title{The \code{fecundity} S4 Class}
 \description{
-An S4 class defining fecundity-at-age or fecundity-at-length relationships
-associated with a \code{\link[=Stock]{Stock()}} object.
+Defines the fecundity schedule for a \link[=stock-class]{stock} object, expressed as
+reproductive output per individual as a function of age or length. This
+object is optional — see \emph{Default Behaviour} in \code{\link[=Fecundity]{Fecundity()}} for what
+happens when it is omitted. Objects are typically created via \code{\link[=Fecundity]{Fecundity()}},
+which documents all parameters, validates inputs, and infers the fecundity
+model automatically when possible.
 }
 \details{
-See \code{\link[=Fecundity]{Fecundity()}} for details.
+Direct construction via \code{\link[methods:new]{methods::new()}} is not recommended; use
+\code{\link[=Fecundity]{Fecundity()}} instead, which handles model inference and object validation.
+
+This object is optional. When empty, \code{\link[=Populate]{Populate()}} computes spawning
+production (\code{SProduction}) as mature weight-at-age (i.e. identical to
+spawning biomass, \code{SBiomass}). When populated, \code{SProduction} is in the
+units of this object (e.g. eggs per individual), allowing reproductive
+output to differ from biomass — relevant for species where egg production
+is not proportional to weight.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{Pars}}{List of model parameters defining fecundity.}
+\item{\code{Pars}}{\code{list}. Named list of fecundity model parameters whose names
+correspond to those expected by \code{Model}. See \code{\link[=FecundityModels]{FecundityModels()}} for
+parameter sets and
+\link[=populating-schedules]{Specifying Biological and Fleet Schedules} for
+accepted input formats.}
 
-\item{\code{Model}}{Character string or function identifying the fecundity model.}
+\item{\code{Model}}{\code{function} or \code{character(1)}. Fecundity model identifier,
+matched to one of \code{\link[=FecundityModels]{FecundityModels()}}. Set automatically by \code{\link[=FindModel]{FindModel()}}
+when \code{Pars} is supplied without an explicit model.}
 
-\item{\code{Units}}{Character string giving units of fecundity (e.g. "eggs").}
+\item{\code{Units}}{\code{character(1)}. Unit of reproductive output (e.g., \code{"eggs"}).
+Determines the unit of the \code{SProduction} slot in \link[=hist-class]{hist} objects.
+When this object is empty, \code{SProduction} defaults to spawning biomass
+and \code{Units} is irrelevant.}
 
-\item{\code{MeanAtAge}}{Numeric array giving mean fecundity-at-age.}
+\item{\code{MeanAtAge}}{\code{array}. Mean fecundity-at-age with named dimensions \code{Sim},
+\code{Age}, and \code{Year}. Populated automatically by \code{\link[=Populate]{Populate()}} when \code{Pars}
+and \code{Model} are set; may also be supplied directly when \code{Pars} is empty.
+When \code{Pars} contains a matched model, any existing values are overwritten.
+See \link[=populating-schedules]{Specifying Biological and Fleet Schedules}.}
 
-\item{\code{MeanAtLength}}{Numeric array giving mean fecundity-at-length.}
+\item{\code{MeanAtLength}}{\code{array}. Mean fecundity-at-length with named dimensions
+\code{Sim}, \code{Length}, and \code{Year}. Populated automatically when an at-length
+fecundity model is used, or may be supplied directly. Converted to
+\code{MeanAtAge} via the \code{ALK} during \code{\link[=Populate]{Populate()}} when \code{MeanAtAge} is not
+already populated.
+See \link[=populating-schedules]{Specifying Biological and Fleet Schedules}.}
 
-\item{\code{Classes}}{Numeric vector giving age or length classes.}
+\item{\code{Classes}}{\code{numeric}. Age or length class midpoints corresponding to the
+\verb{MeanAt*} array in use.}
 
-\item{\code{Timing}}{Numeric array giving timing of fecundity within the year.}
+\item{\code{Timing}}{\code{array} or \code{numeric}. Reserved for future use. Intended to
+represent the timing of spawning within the time step. Currently stored
+but not applied; spawning timing is controlled by \code{\link[=SRR]{SRR()}}.}
 
-\item{\code{Misc}}{Miscellaneous list}
+\item{\code{Misc}}{\code{list}. Used internally.}
 }}
 
+\seealso{
+\itemize{
+\item \code{\link[=Fecundity]{Fecundity()}} for the constructor and accessor functions.
+\item \code{\link[=FecundityModels]{FecundityModels()}} for available models and their required parameters.
+\item \code{\link[=ValidUnits]{ValidUnits()}} for accepted unit strings.
+\item \code{\link[=Populate]{Populate()}} for array population.
+\item \code{\link[=FindModel]{FindModel()}} for automatic model inference.
+\item \code{\link[=Length]{Length()}} and \code{\link[=Weight]{Weight()}} for the companion schedules used in the
+default spawning biomass calculation and at-length fecundity models.
+\item \code{\link[=Maturity]{Maturity()}} for the maturity schedule multiplied through fecundity
+during population.
+\item \code{\link[=SRR]{SRR()}} for spawning timing within the time step.
+\item \link[=populating-schedules]{Specifying Biological and Fleet Schedules} for the
+full description of how \code{Pars}, \code{Model}, and \verb{MeanAt*} arrays interact.
+}
+
+Other fecundity:
+\code{\link[=Fecundity]{Fecundity()}}
+}
+\concept{fecundity}

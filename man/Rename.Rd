@@ -34,7 +34,7 @@ updating all names recursively across S4 slots, lists, and array dimension
 names.
 }
 \examples{
-OM <- ExampleOM
+OM <- SingleStockOM
 StockNames(OM)
 FleetNames(OM)
 

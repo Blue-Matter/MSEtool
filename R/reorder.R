@@ -22,7 +22,7 @@
 #' is not supported.
 #'
 #' @examples
-#' OM <- AddFleet(ExampleOM, 'DummyFleet')
+#' OM <- AddFleet(SingleStockOM, 'DummyFleet')
 #' FleetNames(OM)
 #' 
 #' OM2 <- Reorder(OM, Fleets = rev(FleetNames(OM)))

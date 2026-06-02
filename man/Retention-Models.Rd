@@ -158,10 +158,9 @@ ret_weight_log <- RetentionAtWeight(weights, RW50 = 5, RW50_95 = 2)
 ret_age_ke    <- RetentionKnifeEdgeAge(ages, RA = 4)
 ret_length_ke <- RetentionKnifeEdgeLength(lengths, RL = 50)
 
-
 # ---- Double-Normal Retention ----
-ret_dn_length <- DoubleNormalRetention(lengths, R5 = 20, RFS = 50, Rmaxlen = 0.8)
-ret_dn_weight <- DoubleNormalRetentionWeight(weights, RW5 = 1, RWFS = 5, Rmaxweight = 0.8)
+ret_dn_length <- DoubleNormalRetention(lengths, LR5 = 20, LFR = 50, Rmaxlen = 0.8)
+ret_dn_weight <- DoubleNormalRetentionWeight(weights, WR5 = 1, WFR = 5, Rmaxweight = 0.8)
 
 
 # ---- Plots ----

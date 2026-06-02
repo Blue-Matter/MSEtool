@@ -1,5 +1,5 @@
-nSim(ExampleOM) <- 10
-OM <- Populate(ExampleOM)
+nSim(SingleStockOM) <- 10
+OM <- Populate(SingleStockOM)
 
 # Subset Sims and Years
 RecDevs <- OM |>

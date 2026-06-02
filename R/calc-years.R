@@ -92,6 +92,7 @@ CalcYears <- function(nYear, pYear, CurrentYear, Seasons=1, Period=NULL) {
       "day"       = "1 day"
     )
     to_decimal <- function(start_yr, end_yr) {
+      end_yr <- round(end_yr)
       seq(
         lubridate::ymd(paste0(start_yr, '-01-01')),
         lubridate::ymd(paste0(end_yr,   '-12-31')),
@@ -99,7 +100,8 @@ CalcYears <- function(nYear, pYear, CurrentYear, Seasons=1, Period=NULL) {
       ) |> lubridate::decimal_date() |> round(4)
     }
     hist <- to_decimal(CurrentYear - nYear + 1, CurrentYear)
-    proj <- if (CalcProj) to_decimal(CurrentYear + 1, CurrentYear + pYear)
+    proj <- if (CalcProj) to_decimal(start_yr = CurrentYear + 1, end_yr = CurrentYear + pYear)
+    proj <- proj[seq_len(pYear * Seasons)]
   }
   
 

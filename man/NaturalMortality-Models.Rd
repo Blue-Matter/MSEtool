@@ -62,8 +62,6 @@ Weight <- seq(1, 50, 5)
 
 M_age <- MortalityAtAge(Ages, M = 0.2)
 
-M_length_allo <- MortalityAtLength(Length, Mref = 0.3, Lref = 50, c = -0.2)
-
 M_length_lor <- LorenzenMortalityLength(Length, Mref = 0.3, Lref = 50)
 
 M_weight_lor <- LorenzenMortalityWeight(Weight, Mref = 0.3, Wref = 20)
@@ -74,11 +72,9 @@ plot(Ages, M_age, type = "l", lwd = 2, col = "blue",
      ylim=c(0,0.25))
 
 # Plot M-at-length
-plot(Length, M_length_allo, type = "l", lwd = 2, col = "green", 
-     xlab = "Length", ylab = "M", main = "Allometric M-at-Length",
+plot(Length, M_length_lor, type = "l", lwd = 2, col = "green", 
+     xlab = "Length", ylab = "M", main = "Lorenzen M-at-Length",
      ylim=c(0, 0.5))
-lines(Length, M_length_lor, col = "red", lwd = 2)
-legend("topright", legend = c("Allometric", "Lorenzen"), col = c("green", "red"), lwd = 2)
 
 # Plot M-at-weight
 plot(Weight, M_weight_lor, type = "l", lwd = 2, col = "purple", 

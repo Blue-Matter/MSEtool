@@ -2,34 +2,86 @@
 % Please edit documentation in R/convert-fleet.R
 \name{ConvertFleet}
 \alias{ConvertFleet}
-\title{Convert a Legacy Fleet Object to a New fleet Class}
+\title{Convert a Legacy Fleet Object to the Current \code{fleet} Class}
 \usage{
 ConvertFleet(Fleet, silent = FALSE)
 }
 \arguments{
-\item{Fleet}{A \link[=Fleet-legacy-class]{Fleet-legacy} object to convert.}
+\item{Fleet}{A \link[=Fleet-legacy-class]{Fleet-legacy} object to convert. An \link[=OM-legacy-class]{OM-legacy}
+object with a legacy \code{Fleet} slot is also accepted, in which case the
+\code{Fleet} slot is extracted and converted.}
 
 \item{silent}{Logical. If \code{TRUE}, suppresses progress messages. Default
 \code{FALSE}.}
 }
 \value{
-A \link[=fleet-class]{fleet} object with \code{Name}, \code{Effort}, \code{Catchability},
-\code{Selectivity}, and \code{Retention} populated. Note that \code{DiscardMortality},
-\code{Closure}, \code{Targeting}, and \code{WeightFleet} are not currently converted and
-retain their default values.
+A \link[=fleet-class]{fleet} object.
 }
 \description{
 Converts a legacy \link[=Fleet-legacy-class]{Fleet-legacy} object to the current \link[=fleet-class]{fleet}
-by extracting and mapping each component to its corresponding new S4 class.
+by mapping each component to its corresponding new S4 sub-object.
+}
+\details{
+\subsection{Slot Mapping}{
+
+The following legacy slots are mapped to their current equivalents:\tabular{ll}{
+   Legacy slot \tab New location \cr
+   \code{Name} \tab \code{fleet@Name} \cr
+   \code{EffYears}, \code{EffLower}, \code{EffUpper}, \code{Esd} \tab \code{Effort@Effort} (data frame) \cr
+   \code{qcv}, \code{qinc} \tab \code{Catchability@qCV}, \verb{@qInc} \cr
+   \code{L5}, \code{LFS}, \code{Vmaxlen} \tab \code{Selectivity@Pars}, \verb{@Model = DoubleNormal} \cr
+   \code{LR5}, \code{LFR}, \code{Rmaxlen} \tab \code{Retention@Pars}, \verb{@Model = DoubleNormalRetention} \cr
+}
+
+}
+
+\subsection{Effort}{
+
+Historical effort is constructed as a data frame with columns \code{Year},
+\code{Lower}, \code{Upper}, and \code{CV}, passed to \code{\link[=Effort]{Effort()}}. The legacy \code{Esd} slot
+contains a two-element vector of lower and upper bounds for a uniform
+distribution of effort variability. Only \code{Esd[1]} is currently used as a
+scalar CV; \code{Esd[2]} is silently dropped.
+}
+
+\subsection{Selectivity}{
+
+\code{L5}, \code{LFS}, and \code{Vmaxlen} map to the \code{\link[=DoubleNormal]{DoubleNormal()}} double-normal
+selectivity-at-length model. \code{Vmaxlen < 1} produces a dome-shaped
+selectivity curve. See \code{\link[=SelectivityModels]{SelectivityModels()}} for the full set of available
+selectivity models.
+}
+
+\subsection{Retention}{
+
+\code{LR5}, \code{LFR}, and \code{Rmaxlen} map to the \code{\link[=DoubleNormalRetention]{DoubleNormalRetention()}}
+double-normal retention-at-length model. \code{Rmaxlen < 1} produces a
+dome-shaped retention curve. See \code{\link[=RetentionModels]{RetentionModels()}} for the full set of
+available retention models.
+}
+
+\subsection{Slots Not Converted}{
+
+The following slots have no equivalent in the legacy \link[=Fleet-legacy-class]{Fleet-legacy}
+and retain their default values in the converted object:
+\itemize{
+\item \code{DiscardMortality}: new functionality; no legacy equivalent.
+\item \code{Closure}: new functionality; no legacy equivalent.
+\item \code{Targeting}: new functionality; no legacy equivalent.
+\item \code{WeightFleet}: new functionality; no legacy equivalent.
+}
+}
 }
 \examples{
 \dontrun{
-Fleetlegacy <- readRDS("MyLegacyFleet.rds")
-fleet_new <- ConvertFleet(Fleetlegacy)
+fleet_legacy <- readRDS("MyLegacyFleet.rds")
+fleet_new <- ConvertFleet(fleet_legacy)
 }
 
 }
 \seealso{
-\code{\link[=Convert]{Convert()}}, \code{\link[=ConvertOM]{ConvertOM()}}, \code{\link[=ConvertMOM]{ConvertMOM()}}, \code{\link[=Effort]{Effort()}},
-\code{\link[=Catchability]{Catchability()}}, \code{\link[=Selectivity]{Selectivity()}}, \code{\link[=Retention]{Retention()}}
+\code{\link[=Convert]{Convert()}}, \code{\link[=ConvertOM]{ConvertOM()}}, \code{\link[=ConvertMOM]{ConvertMOM()}}, \code{\link[=ConvertStock]{ConvertStock()}},
+\code{\link[=ConvertObs]{ConvertObs()}}, \code{\link[=ConvertImp]{ConvertImp()}}, \code{\link[=Effort]{Effort()}}, \code{\link[=Catchability]{Catchability()}},
+\code{\link[=Selectivity]{Selectivity()}}, \code{\link[=Retention]{Retention()}}, \code{\link[=SelectivityModels]{SelectivityModels()}},
+\code{\link[=RetentionModels]{RetentionModels()}}
 }

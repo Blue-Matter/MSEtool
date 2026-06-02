@@ -54,12 +54,16 @@ ResolveTACByComplex <- function(AdviceList, LastAdviceList, Complexes,
   out
 }
 
-ResolveTACTypeByComplex <- function(AdviceList, Complexes) {
-  TACType_by_Complex <- vector("character", length(Complexes))
-  for (i in seq_along(Complexes)) {
-    TACType_by_Complex[i] <- AdviceList[[i]]@TACType
-  }
-  TACType_by_Complex
+ResolveTACTypeByComplex <- function(AdviceList, Complexes, nFleet) {
+  lapply(seq_along(Complexes), function(i) {
+    recycle_to_fleets(AdviceList[[i]]@TACType, nFleet, 'TACType')
+  })
+}
+
+ResolveTACUnitByComplex <- function(AdviceList, Complexes, nFleet) {
+  lapply(seq_along(Complexes), function(i) {
+    recycle_to_fleets(AdviceList[[i]]@TACUnit, nFleet, 'TACUnit')
+  })
 }
 
 ResolveChokeMatrix <- function(Proj, nFleet, nComplex) {

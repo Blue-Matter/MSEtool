@@ -26,7 +26,7 @@
 #' @keywords internal
 extract_effort <- function(object, df=FALSE) {
   
-  if (inherits(object, c('fleet', 'effort', 'obs')) || !df)
+  if (inherits(object, c('fleet', 'effort', 'obs', 'imp')) || !df)
     return(object@Effort)
   
 

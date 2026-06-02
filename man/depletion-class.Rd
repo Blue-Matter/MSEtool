@@ -3,23 +3,58 @@
 \docType{class}
 \name{depletion-class}
 \alias{depletion-class}
-\title{Depletion class}
+\title{The \code{depletion} S4 Class}
 \description{
-An S4 class representing initial and/or final depletion relative to
-a reference biomass for a \code{\link[=Stock]{Stock()}} object.
+Defines the initial and final depletion assumptions for a \link[=stock-class]{stock}
+object, expressed relative to a reference biomass. Objects are typically
+created via \code{\link[=Depletion]{Depletion()}}, which documents all parameters and validates
+inputs. This object is optional — see \emph{Default Behaviour} in \code{\link[=Depletion]{Depletion()}}
+for what happens when it is omitted.
 }
 \details{
-See \code{\link[=Depletion]{Depletion()}} for details.
+Direct construction via \code{\link[methods:new]{methods::new()}} is not recommended; use
+\code{\link[=Depletion]{Depletion()}} instead, which validates inputs.
+
+Both \code{Initial} and \code{Final} may remain \code{NULL} after \code{\link[=Populate]{Populate()}} — \code{NULL}
+indicates the slot is not in use rather than an uninitialised state. When
+both are \code{NULL}, the \code{depletion} object has no effect on model behaviour.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{Initial}}{Numeric vector of initial depletion values.}
+\item{\code{Initial}}{\code{array} or \code{NULL}. Depletion relative to \code{Reference} in the
+first historical time step, as a \code{nSim}-length array after \code{\link[=Populate]{Populate()}}.
+Before population, may be \code{NULL} (stock assumed dynamic unfished at the start of
+the historical period), a scalar, a length-2 bounds vector, or a
+length-\code{nSim} vector. See \code{\link[=Depletion]{Depletion()}} for full details.}
 
-\item{\code{Final}}{Numeric vector of final depletion values.}
+\item{\code{Final}}{\code{array} or \code{NULL}. Target depletion relative to \code{Reference} in
+the terminal historical time step, as a \code{nSim}-length array after
+\code{\link[=Populate]{Populate()}}. When populated, the \code{Efficiency} parameter in
+\code{\link[=Catchability]{Catchability()}} is optimised to achieve this depletion level, overwriting
+any existing \code{Efficiency} values. When \code{NULL}, no optimisation occurs and
+\code{\link[=Catchability]{Catchability()}} must be populated directly. See \code{\link[=Depletion]{Depletion()}} for full
+details.}
 
-\item{\code{Reference}}{Character scalar identifying the reference biomass.}
+\item{\code{Reference}}{\code{character(1)}. Reference biomass used to scale depletion
+values. Currently implemented options are \code{"B0"} (total unfished biomass,
+default) and \code{"SB0"} (spawning biomass at unfished equilibrium). The
+options \code{"BMSY"}, \code{"SBMSY"}, \code{"SP0"}, and \code{"SPMSY"} are accepted by the
+validator but are reserved for future use.}
 
-\item{\code{Misc}}{List for internal use.}
+\item{\code{Misc}}{\code{list}. Used internally.}
 }}
 
+\seealso{
+\itemize{
+\item \code{\link[=Depletion]{Depletion()}} for the constructor and accessor functions.
+\item \code{\link[=Catchability]{Catchability()}} for the fleet catchability object whose \code{Efficiency}
+parameter is optimised when \code{Final} is populated.
+\item \code{\link[=Populate]{Populate()}} for array population.
+\item \code{\link[=Stock]{Stock()}} for the enclosing stock constructor.
+}
+
+Other depletion:
+\code{\link[=Depletion]{Depletion()}}
+}
+\concept{depletion}

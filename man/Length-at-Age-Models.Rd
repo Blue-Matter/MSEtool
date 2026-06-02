@@ -44,15 +44,7 @@ LengthModels(full = TRUE, print = TRUE)
 
 \item{full}{Logical. Provide a complete table (TRUE) or just the model names (FALSE)?}
 
-\item{print}{Logical. Print out the results (TRUE) or just return the data.frame (FALSE)?
-
-\code{LengthModels()} prints the list of models and parameters to the console
-\itemize{
-\item \strong{von Bertalanffy}: \deqn{L(a) = L_\infty (1 - e^{-K (a - t_0)})}
-\item \strong{Brody}: \deqn{L(a) = L_\infty - (L_\infty - L_0) e^{-K a}}
-\item \strong{Gompertz}: \deqn{L(a) = L_\infty \exp(-\exp(-g (a - a)))}
-\item \strong{Schnute}: flexible formula depending on parameters \code{a} and \code{b}
-}}
+\item{print}{Logical. Print out the results (TRUE) or just return the data.frame (FALSE)?}
 }
 \value{
 \itemize{
@@ -63,6 +55,15 @@ containing the models
 }
 \description{
 Length-at-age (LAA) growth models
+}
+\details{
+\code{LengthModels()} prints the list of models and parameters to the console
+\itemize{
+\item \strong{von Bertalanffy}: \deqn{L(a) = L_\infty (1 - e^{-K (a - t_0)})}
+\item \strong{Brody}: \deqn{L(a) = L_\infty - (L_\infty - L_0) e^{-K a}}
+\item \strong{Gompertz}: \deqn{L(a) = L_\infty \exp(-\exp(-g (a - a)))}
+\item \strong{Schnute}: flexible formula depending on parameters \code{a} and \code{b}
+}
 }
 \examples{
 

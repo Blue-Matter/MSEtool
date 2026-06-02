@@ -50,6 +50,7 @@ phi <- c(0.7, 0.6)
 
 CalcInnovationCov(Sigma_Z, phi)
 
+
 }
 \seealso{
 \code{\link[=GenerateStockTargeting]{GenerateStockTargeting()}}, \code{\link[=FitStockTargeting]{FitStockTargeting()}}

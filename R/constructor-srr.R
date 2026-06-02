@@ -1,93 +1,208 @@
-#' Stock-Recruit Relationship
+#' SRR Constructor and Accessors
 #'
-#' Construct and manipulate a [srr-class] object defining the stock-recruit
-#' relationship (SRR) associated with a [Stock()] object. An `SRR` object is
+#' Construct a [srr-class] object defining the stock-recruitment relationship
+#' and recruitment variability for a [stock-class], or access and replace the
+#' `SRR` slot of a [stock-class] and its individual slots. An `SRR` object is
 #' required for all [stock-class] objects.
 #'
-#' @param Pars Named list of parameters defining the expected stock-recruit
-#'   curve. Parameter names and interpretation depend on `Model`. See
-#'   [SRRModels()] for required parameters for each model. If `Pars` is an S4
-#'   object with an `SRR` slot (e.g., a [stock-class] object), that slot is
-#'   returned directly.
-#' @param Model Character. Stock-recruit model identifier
-#'   (e.g., `"BevertonHolt"`). Default `"BevertonHolt"`. See [SRRModels()]
-#'   for available models.
-#' @param R0 Numeric scalar or array. Unfished recruitment. Default `NULL`.
-#' @param SD Numeric vector or array. Standard deviation of log-space
-#'   recruitment deviations. May be:
-#'   - length 1: constant across all simulations,
-#'   - length 2: bounds of a uniform distribution sampled across simulations,
-#'   - length `nSim`: one value per simulation.
-#'
-#'   Default `NULL`, in which case recruitment deviations are deterministic.
-#' @param AC Numeric vector or array. Lag-1 autocorrelation of log-space
-#'   recruitment deviations. Follows the same length conventions as `SD`.
-#'   Default `NULL`.
-#' @param SPFrom Character or numeric. Stock to use as the spawning production
-#'   source for this stock's SRR. Defaults to the same stock (`NULL`).
-#' @param TruncSD Numeric. Number of standard deviations at which to truncate
-#'   the lognormal recruitment deviation distribution. Default `2`.
-#' @param RecDevInit Numeric matrix (`nSim × MaxAge`). Recruitment deviations
-#'   for the initial age structure. If `NULL` (default), generated internally
-#'   from `SD` and `AC`.
-#' @param RecDevHist Numeric matrix (`nSim × nHistTS`). Recruitment deviations
-#'   for historical time steps. If `NULL` (default), generated internally from
-#'   `SD` and `AC`.
-#' @param RecDevProj Numeric matrix (`nSim × nProjectionTS`). Recruitment
-#'   deviations for projection time steps. If `NULL` (default), generated
-#'   internally from `SD` and `AC`.
-#' @param SpawnTimeFrac Numeric. Fraction of the time step at which spawning
-#'   occurs (0 = start, 1 = end). Default `0`.
-#' @param RelRecFun Function. Optional function defining relative recruitment
-#'   as a function of environmental or other covariates. Default `NULL`.
-#' @param Units Numeric. Scaling factor applied to recruitment. Default `1`.
-#' @param Misc List. Miscellaneous additional inputs. Default `list()`.
+#' @param Pars `list`. Named list containing the steepness parameter for the
+#'   chosen SRR model. `R0` is never placed in `Pars` — it has its own
+#'   dedicated slot. The required name depends on `Model`:
+#'   - `BevertonHolt`: `list(h = ...)` where `0.2 < h < 1`.
+#'   - `Ricker`: `list(hR = ...)`.
+#'   - `HockeyStick`: `list(Shinge = ...)` where `0 < Shinge <= 1`.
+#'   When `Pars` is a non-list S4 object with an `SRR` slot (e.g., a
+#'   [stock-class]), `SRR()` acts as a pass-through accessor and returns that
+#'   slot. See [Specifying Biological and Fleet Schedules][populating-schedules]
+#'   for accepted input formats (scalar, bounds vector, `nSim`-length vector).
+#'   Default `list(h = NA)`.
+#' @param Model `character(1)` or `function`. SRR model identifier. Must match
+#'   one of the models listed in [SRRModels()], or be a custom R function.
+#'   Default `"BevertonHolt"`.
+#' @param R0 `numeric` or `NULL`. Unfished equilibrium recruitment. May be:
+#'   - A scalar: same value for all simulations.
+#'   - A length-2 bounds vector: sampled from `Uniform(lower, upper)` once per
+#'     simulation.
+#'   - A length-`nSim` vector: one value per simulation.
+#'   Interpreted in units of `Units`. Default `NULL`.
+#' @param SD `numeric` or `NULL`. Log-space standard deviation of recruitment
+#'   deviations. Follows the same length conventions as `R0`. Currently fixed
+#'   across years (time-varying `SD` is not yet supported). When `NULL`,
+#'   recruitment is deterministic (no process error). Default `NULL`.
+#' @param AC `numeric` or `NULL`. Lag-1 autocorrelation of log-space
+#'   recruitment deviations. Follows the same length conventions as `R0`.
+#'   Currently fixed across years. Defaults to `0` (no autocorrelation) when
+#'   `NULL`. Default `NULL`.
+#' @param SPFrom `character(1)` or `numeric(1)`. Stock whose spawning
+#'   production drives this stock's recruitment. Specify by stock name
+#'   (`character`) or 1-based integer index (`numeric`). Defaults to self
+#'   (the stock recruits from its own spawning production). Relevant only in
+#'   multi-stock operating models. Default `NULL`.
+#' @param TruncSD `numeric(1)`. Number of standard deviations at which the
+#'   log-normal recruitment deviation distribution is truncated. Default `2`.
+#' @param RecDevInit `matrix` or `NULL`. Pre-specified recruitment deviations
+#'   (`Sim × Age`) for initialising the historical age structure, covering all
+#'   age classes except the minimum age (whose deviation is the first column
+#'   of `RecDevHist`). If `NULL` (default), generated internally from `SD`
+#'   and `AC` during [Populate()].
+#' @param RecDevHist `matrix` or `NULL`. Pre-specified recruitment deviations
+#'   (`Sim × nHistTS`) for historical time steps. The first column corresponds
+#'   to the minimum age class in the initial year. If `NULL` (default),
+#'   generated internally from `SD` and `AC`.
+#' @param RecDevProj `matrix` or `NULL`. Pre-specified recruitment deviations
+#'   (`Sim × nProjTS`) for projection time steps. If `NULL` (default),
+#'   generated internally from `SD` and `AC`.
+#' @param SpawnTimeFrac `numeric(1)`. Fraction of the time step elapsed before
+#'   spawning occurs. Determines how much mortality (`exp(-Z × SpawnTimeFrac)`)
+#'   is applied to the population before spawning numbers are counted:
+#'   - `0` (default): spawning at the start of the step; no mortality applied
+#'     before spawning.
+#'   - `0.5`: spawning mid-step; half of annual Z applied before spawning.
+#'   - `1`: spawning at the end of the step; full within-step Z applied before
+#'     spawning.
+#'   Default `0`.
+#' @param RelRecFun `function`, `character(1)`, or `NULL`. Relative recruitment
+#'   function giving equilibrium recruitment relative to `R0` as a function of
+#'   spawning-per-recruit (SPR). For built-in models, set automatically during
+#'   [Populate()] (e.g., `"BevertonHolt_RelRec"` when `Model =
+#'   "BevertonHolt"`). For custom SRR models, must be supplied with signature
+#'   `function(Pars, SPR)`. Default `NULL`.
+#' @param Units `numeric(1)`. Scaling factor for recruitment. `1` (default)
+#'   means `R0` is in absolute numbers of fish; `1000` means `R0` is in
+#'   thousands of fish. Does not affect internal calculations — used only to
+#'   set the interpretation of numbers in [hist-class] output. Default `1`.
+#' @param Misc `list`. Used internally. Default `list()`.
 #' @param x A [srr-class] object for slot accessors, or a [stock-class] object
 #'   for `SRR<-`.
 #' @param value For `SRR<-`: a [srr-class] object. For slot replacement
-#'   functions: the new value for the corresponding slot.
+#'   functions: the replacement value for the corresponding slot.
 #'
 #' @details
-#' An [srr-class] object is required for all [stock-class] objects. It defines
-#' both the deterministic stock-recruit relationship and the stochastic
-#' recruitment deviations used in the operating model.
+#' ## Specifying the SRR
 #'
-#' ## Pass-Through Access
+#' The SRR is defined by three components:
 #'
-#' If `Pars` is an S4 object with an `SRR` slot (e.g., a [stock-class]
-#' object), `SRR()` returns that slot directly rather than constructing a new
-#' object.
+#' 1. **The deterministic curve**: `Model` and `Pars` (steepness only; `R0`
+#'    goes in its own slot). See [SRRModels()] for available models:
 #'
-#' ## Recruitment Deviations
+#' ```r
+#' # Beverton-Holt with fixed steepness
+#' srr <- SRR(Pars = list(h = 0.7), R0 = 1000)
 #'
-#' Recruitment deviations may be supplied directly via `RecDevInit`,
-#' `RecDevHist`, and `RecDevProj`. If not supplied, they are generated
-#' internally during model setup from `SD` and `AC`. If `SD` is `NULL`,
-#' recruitment is deterministic.
+#' # Beverton-Holt with stochastic steepness across simulations
+#' srr <- SRR(Pars = list(h = c(0.6, 0.9)), R0 = 1000)
 #'
-#' ## Attaching to a Stock
+#' # Ricker
+#' srr <- SRR(Pars = list(hR = 0.7), Model = "Ricker", R0 = 1000)
 #'
-#' An `SRR` object can be attached to a [Stock()] with
-#' `SRR(Stock) <- MySRR` and retrieved with `SRR(Stock)`.
+#' # Hockey-stick
+#' srr <- SRR(Pars = list(Shinge = 0.3), Model = "HockeyStick", R0 = 1000)
+#' ```
 #'
-#' Individual slots may be accessed or modified using [Pars()], [Model()],
-#' [R0()], [SD()], [AC()], [SPFrom()], [TruncSD()], [RecDevInit()],
-#' [RecDevHist()], [RecDevProj()], [SpawnTimeFrac()], and [RelRecFun()].
+#' 2. **Process error**: `SD` and `AC` control the magnitude and
+#'    autocorrelation of log-space recruitment deviations. Both are currently
+#'    fixed across years:
 #'
-#' `r TechManLink()`
+#' ```r
+#' # Stochastic recruitment: SD = 0.4, no autocorrelation
+#' srr <- SRR(Pars = list(h = 0.7), R0 = 1000, SD = 0.4)
+#'
+#' # Stochastic recruitment: SD drawn from Uniform(0.3, 0.6), AC = 0.4
+#' srr <- SRR(Pars = list(h = 0.7), R0 = 1000,
+#'            SD = c(0.3, 0.6), AC = 0.4)
+#' ```
+#'
+#' 3. **Recruitment deviations** (`RecDevInit`, `RecDevHist`, `RecDevProj`):
+#'    generated automatically from `SD` and `AC` during [Populate()] when
+#'    `NULL`. Supply directly to condition the operating model on observed
+#'    recruitment indices or to reproduce a specific stochastic trajectory.
+#'
+#' ## Custom SRR Models
+#'
+#' A custom SRR function may be passed to `Model`. It must accept `S`, `S0`,
+#' `R0`, and any named parameters in `Pars` as arguments. A matching
+#' `RelRecFun` with signature `function(Pars, SPR)` must also be supplied:
+#'
+#' ```r
+#' my_srr <- function(S, S0, R0, h) {
+#'   # custom Beverton-Holt variant
+#'   4 * h * R0 * S / (S0 * (1 - h) + S * (5 * h - 1))
+#' }
+#' my_rrf <- function(Pars, SPR) {
+#'   h <- Pars$h
+#'   CR <- 4 * h / (1 - h)
+#'   pmax((CR * SPR - 1) / ((CR - 1) * SPR), 0)
+#' }
+#' srr <- SRR(Pars = list(h = 0.7), Model = my_srr,
+#'            R0 = 1000, RelRecFun = my_rrf)
+#' ```
+#'
+#' ## Spawning Production Source (`SPFrom`)
+#'
+#' In multi-stock models, one stock's recruitment may be driven by another
+#' stock's spawning production. Specify by stock name or 1-based index:
+#'
+#' ```r
+#' # Stock 2 recruits based on stock 1's spawning production
+#' srr2 <- SRR(Pars = list(h = 0.7), R0 = 500, SPFrom = 1)
+#' # equivalently by name:
+#' srr2 <- SRR(Pars = list(h = 0.7), R0 = 500, SPFrom = "Stock1")
+#' ```
+#'
+#' ## Pass-Through Access from a Stock
+#'
+#' When `Pars` is a non-list S4 object with an `SRR` slot, `SRR()` returns
+#' that slot directly:
+#'
+#' ```r
+#' SRR(my_stock)           # returns my_stock@SRR
+#' SRR(my_stock) <- my_srr # replaces my_stock@SRR
+#' ```
+#'
+#' ## Slot Accessors
+#'
+#' Individual slots can be read or replaced using generic functions matching
+#' their names. All replacement functions re-validate the object:
+#'
+#' ```r
+#' Pars(srr)          <- list(h = 0.8)
+#' Model(srr)         <- "Ricker"
+#' R0(srr)            <- 5000
+#' SD(srr)            <- 0.4
+#' AC(srr)            <- 0.3
+#' TruncSD(srr)       <- 2
+#' SpawnTimeFrac(srr) <- 0.5
+#' SPFrom(srr)        <- 1
+#' RelRecFun(srr)     <- "Ricker_RelRec"
+#' RecDevHist(srr)    <- my_hist_matrix
+#' RecDevProj(srr)    <- my_proj_matrix
+#' RecDevInit(srr)    <- my_init_matrix
+#' ```
 #'
 #' @return
-#' - `SRR()` returns a [srr-class] object. If `Pars` is an S4 object with an
-#'   `SRR` slot, that slot is returned.
-#' - `SRR<-` returns `x` with the `SRR` slot replaced.
-#' - Slot accessors return the value of the corresponding slot from `x`.
-#' - Slot replacement functions return `x` with the corresponding slot
-#'   updated.
+#' - `SRR()` returns a [srr-class] object. If `Pars` is a non-list S4 object
+#'   with an `SRR` slot, returns that slot.
+#' - `SRR<-` returns the [stock-class] `x` with the `SRR` slot replaced and
+#'   the object re-validated.
+#' - `R0()`, `SPFrom()`, `RecDevInit()`, `RecDevHist()`, `RecDevProj()`,
+#'   `SpawnTimeFrac()`, `RelRecFun()` return the value of the corresponding
+#'   slot from `x`.
+#' - All replacement variants return `x` with the named slot updated and the
+#'   object re-validated.
 #'
-#' @seealso [srr-class], [Stock()], [SRRModels()], [Pars()], [Model()],
-#'   [R0()], [RecDevHist()], [RecDevProj()], [SpawnTimeFrac()]
+#' @seealso
+#' - [srr-class] for the class definition and slot-level documentation.
+#' - [SRRModels()] for available stock-recruitment models and their required
+#'   parameters.
+#' - [Populate()] for array population.
+#' - [Stock()] for the enclosing stock constructor.
+#' - [Fecundity()] for the spawning production used as input to the SRR.
+#' - [Specifying Biological and Fleet Schedules][populating-schedules] for
+#'   accepted `Pars`, `R0`, `SD`, and `AC` input formats.
 #'
-#' @example man-examples/SRR-class.R
+#' @family srr
+#'
+#' @example man-examples/class-SRR.R
 #'
 #' @export
 SRR <- function(Pars = list(h = NA),
@@ -114,20 +229,20 @@ SRR <- function(Pars = list(h = NA),
 
   obj <- methods::new(
     "srr",
-    Pars = Pars,
-    Model = Model,
-    R0 = R0,
-    SD = SD,
-    AC = AC,
-    SPFrom = SPFrom,
-    TruncSD = TruncSD,
-    RecDevInit = RecDevInit,
-    RecDevHist = RecDevHist,
-    RecDevProj = RecDevProj,
+    Pars          = Pars,
+    Model         = Model,
+    R0            = R0,
+    SD            = SD,
+    AC            = AC,
+    SPFrom        = SPFrom,
+    TruncSD       = TruncSD,
+    RecDevInit    = RecDevInit,
+    RecDevHist    = RecDevHist,
+    RecDevProj    = RecDevProj,
     SpawnTimeFrac = SpawnTimeFrac,
-    RelRecFun = RelRecFun,
-    Units = Units,
-    Misc = Misc
+    RelRecFun     = RelRecFun,
+    Units         = Units,
+    Misc          = Misc
   )
   
   methods::validObject(obj)

@@ -61,6 +61,7 @@ sumOverDim <- function(x, dimName) {
 #' ## Exported functions
 #' * `SumOverAge()` – sum over the `"Age"` dimension
 #' * `SumOverArea()` – sum over the `"Area"` dimension
+#' * `SumOverClass()` – sum over the `"Class"` dimension
 #' * `SumOverFleet()` – sum over the `"Fleet"` dimension
 #' * `SumOverStock()` – sum over the `"Stock"` dimension
 #' * `SumOverYear()` – sum over the `"Year"` dimension
@@ -83,6 +84,12 @@ SumOverAge <- function(x) {
 #' @export
 SumOverArea <- function(x) {
   sumOverDim(x, dimName = "Area")
+}
+
+#' @rdname SumOverDim
+#' @export
+SumOverClass <- function(x) {
+  sumOverDim(x, dimName = "Class")
 }
 
 #' @rdname SumOverDim

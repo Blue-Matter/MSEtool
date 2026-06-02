@@ -120,6 +120,6 @@ ProcessSemelparous <- function(Semelparous, nSim=NULL, AgeClasses=NULL, Years=NU
       dimnames = list(Sim=seq_len(nSim), Age=AgeClasses, Year=Years)
     )
   }
-  Semelparous |> Extend(nSim, AgeClasses, Years)
+  Semelparous |> Extend(nSim = nSim, AgeClasses = AgeClasses, Years = Years)
 }
 

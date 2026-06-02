@@ -23,12 +23,20 @@ methods::setClassUnion(
 #'
 #' @slot TAC Numeric vector or numeric array specifying total allowable catch (currently always in biomass).
 #' 
-#' @slot TACType Character. Does the TAC refer to `"Removals"` (default) or `"Landings"`.
+#' @slot TACType Character. Does the TAC refer to `"Removals"` (default) or
+#'   `"Landings"`. Either length 1 (applied to all fleets) or a character
+#'   vector of length `nFleet`.
+#'
+#' @slot TACUnit Character. Units of the TAC: `"Biomass"` (default) or
+#'   `"Number"`. Either length 1 (applied to all fleets) or a character
+#'   vector of length `nFleet`.
 #' 
 #' @slot Effort Numeric vector array specifying relative or absolute fishing effort.
 #' 
-#' @slot EffType Character. Are effort regulations relative to last historical year (`"Rel"`) or
-#' absolute (`"Abs"`; in units of [Effort()]). Default is `"Abs"`.
+#' @slot EffType Character. Are effort regulations relative to last historical
+#'   year (`"Rel"`) or absolute (`"Abs"`; in units of [Effort()]). Either
+#'   length 1 (applied to all fleets) or a character vector of length `nFleet`.
+#'   Default is `"Rel"`.
 #'
 #' @slot Closure Numeric vector or array specifying spatial closures.
 #'
@@ -57,9 +65,9 @@ methods::setClassUnion(
 setClass("advice",
          slots = c(TAC = "num.array.null",
                    TACType = 'char.null',
+                   TACUnit = 'char.null',
                    Effort = "num.array.null",
                    EffType = 'char.null',
-                   
                    Closure = "num.array.null",
                    Selectivity = "selectivity.list",
                    Retention = "retention.list",
@@ -71,6 +79,25 @@ setClass("advice",
 
 
 setValidity("advice", function(object) {
-  # TODO
-  TRUE
+  errors <- character()
+  
+  valid_TACType <- c("Removals", "Landings")
+  if (!is.null(object@TACType) && !all(object@TACType %in% valid_TACType))
+    errors <- c(errors,
+                paste0("`TACType` must contain only: ",
+                       paste(valid_TACType, collapse = ", ")))
+  
+  valid_TACUnit <- c("Biomass", "Number")
+  if (!is.null(object@TACUnit) && !all(object@TACUnit %in% valid_TACUnit))
+    errors <- c(errors,
+                paste0("`TACUnit` must contain only: ",
+                       paste(valid_TACUnit, collapse = ", ")))
+  
+  valid_EffType <- c("Rel", "Abs")
+  if (!is.null(object@EffType) && !all(object@EffType %in% valid_EffType))
+    errors <- c(errors,
+                paste0("`EffType` must contain only: ",
+                       paste(valid_EffType, collapse = ", ")))
+  
+  if (length(errors)) errors else TRUE
 })

@@ -35,18 +35,16 @@
 #'
 #' @export
 ConvertOM <- function(OM,
-                      Author = '',
+                      Author      = '',
                       CurrentYear = NULL,
-                      Seasons = 1,
-                      Populate = TRUE,
-                      silent = FALSE) {
+                      Seasons     = 1,
+                      Populate    = TRUE,
+                      silent      = FALSE) {
   
- 
   CheckClass(OM, c('OM'), 'OM')
   
-  if (!silent) {
+  if (!silent) 
     cli::cli_alert('Converting object of class {.cls OM} to class {.cls om}')
-  }
   
   # Initialize new OM object
   om <- OM()
@@ -85,7 +83,6 @@ ConvertOM <- function(OM,
   )
   
   # Prepare years list for stock/fleet conversion
-  
   YearsList <- list(
     HistTS    = Years(om, 'Historical'),
     ProjTS    = Years(om, 'Projection'),
@@ -280,8 +277,7 @@ SolveForVmaxlen <- function(om, type=c('Selectivity', 'Retention')) {
     )
     
     Linf <- om@Stock[[st]]@Length@Pars$Linf 
-    if (is.null(Linf))
-      next()
+    if (is.null(Linf))  next
     dd <- prod(dim(Linf)) * nFleet
     
     for (fl in seq_len(nFleet)) {
@@ -311,16 +307,13 @@ SolveForVmaxlen <- function(om, type=c('Selectivity', 'Retention')) {
       
       
       L5 <- slot(om@Fleet[[st]][[fl]], type)@Pars[[Var_L5]]
-      if (is.null(L5))
-        next()
       
+      if (is.null(L5)) next
       
       LFS <- slot(om@Fleet[[st]][[fl]], type)@Pars[[Var_LFR]]
       Vmaxlen <- slot(om@Fleet[[st]][[fl]], type)@Pars[[Var_Vmax]]
       
-      
-      if (all(L5==0) && all(LFS==0))
-        next()
+      if (all(L5==0) && all(LFS==0)) next
         
       df <- rbind(dim(Linf),
                   dim(L5),
@@ -333,7 +326,7 @@ SolveForVmaxlen <- function(om, type=c('Selectivity', 'Retention')) {
                         dimnames(LFS)$Year,
                         dimnames(Vmaxlen)$Year
       )
-      Years <- YearsList[[which.max(df[,2])]]                      
+      Years <- as.numeric(YearsList[[which.max(df[,2])]])
       
       Linf <- Linf |> Extend(nsim, Years=Years)
       L5 <- L5 |> Extend(nsim, Years=Years)
@@ -410,3 +403,27 @@ optForVmaxLen <- function(logitTrial, l5, lfs, linf, vmaxlen) {
   (sel[length(sel)] - vmaxlen)^2
 }
 
+
+SetSlotDimNames <- function(object, slot_name, value, Sims, Ages, Years, 
+                            reduce = TRUE, inc_year = TRUE) {
+  
+  dd <- dim(value)
+  
+  if (length(dd) != 3L)
+    cli::cli_abort(
+      c('x' = 'Expected a 3D array for slot {.field {slot_name}}, got {length(dd)}D'),
+      .internal = TRUE
+    )
+  
+  dimnames(value) <- list(
+    Sim  = Sims[seq_len(dd[1])],
+    Age  = Ages[seq_len(dd[2])],
+    Year = Years[seq_len(dd[3])]
+  )
+  
+  if (reduce)
+    value <- ReduceDims(value, IncYear = inc_year)
+  
+  slot(object, slot_name) <- value
+  object
+}

@@ -3,43 +3,111 @@
 \docType{class}
 \name{srr-class}
 \alias{srr-class}
-\title{SRR Class}
+\title{The \code{srr} S4 Class}
 \description{
-An S4 class defining stock–recruitment relationships and recruitment
-variability for a \code{\link[=Stock]{Stock()}} object.
+Defines the stock-recruitment relationship (SRR) and recruitment variability
+for a \link[=stock-class]{stock} object. Objects are typically created via \code{\link[=SRR]{SRR()}}, which
+documents all parameters and validates inputs. An \code{srr} object is required
+for all \link[=stock-class]{stock} objects.
 }
 \details{
-See \code{\link[=SRR]{SRR()}} for details.
+Direct construction via \code{\link[methods:new]{methods::new()}} is not recommended; use \code{\link[=SRR]{SRR()}}
+instead, which validates inputs and sets sensible defaults.
+
+Recruitment deviations are generated in log-space with standard deviation
+\code{SD} and lag-1 autocorrelation \code{AC}, truncated at \code{TruncSD} standard
+deviations. \code{SD} and \code{AC} are currently fixed across years; time-varying
+process variance is not yet supported.
+
+\code{RecDevInit}, \code{RecDevHist}, and \code{RecDevProj} may be supplied directly to
+override the internally generated deviations — for example, to condition
+the operating model on observed recruitment indices.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{Pars}}{Named list of parameters defining the stock–recruit model.}
+\item{\code{Pars}}{\code{list}. Named list containing the steepness parameter for the
+chosen SRR model. For \code{BevertonHolt}: \code{list(h = ...)}. For \code{Ricker}:
+\code{list(hR = ...)}. For \code{HockeyStick}: \code{list(Shinge = ...)}. \code{R0} is never
+placed in \code{Pars}; it has its own dedicated slot. See \code{\link[=SRRModels]{SRRModels()}} and
+\link[=populating-schedules]{Specifying Biological and Fleet Schedules} for
+accepted input formats.}
 
-\item{\code{Model}}{Character string or function identifying the SRR model.}
+\item{\code{Model}}{\code{function} or \code{character(1)}. SRR model identifier. Defaults
+to \code{"BevertonHolt"}. See \code{\link[=SRRModels]{SRRModels()}} for available models.}
 
-\item{\code{R0}}{Unfished recruitment.}
+\item{\code{R0}}{\code{array} or \code{numeric}. Unfished equilibrium recruitment. May be a
+scalar (same across all simulations), a length-2 bounds vector (sampled
+from \code{Uniform(lower, upper)} once per simulation), or a length-\code{nSim}
+vector. Interpreted in units of \code{Units} (e.g., \code{Units = 1000} means R0
+is in thousands of fish). Does not affect internal calculations — used
+only to set the scale of numbers in \link[=hist-class]{hist} output.}
 
-\item{\code{SD}}{Standard deviation of recruitment deviations.}
+\item{\code{SD}}{\code{array} or \code{numeric}. Log-space standard deviation of recruitment
+deviations. May be a scalar, length-2 bounds vector, or length-\code{nSim}
+vector. Fixed across years (currently not time-varying). When \code{NULL},
+recruitment is deterministic.}
 
-\item{\code{AC}}{Autocorrelation of recruitment deviations.}
+\item{\code{AC}}{\code{array} or \code{numeric}. Lag-1 autocorrelation of log-space
+recruitment deviations. Follows the same length conventions as \code{SD}.
+Fixed across years (currently not time-varying). Defaults to \code{0}
+(no autocorrelation) when \code{NULL}.}
 
-\item{\code{SPFrom}}{Spawning biomass source used by the SRR.}
+\item{\code{SPFrom}}{\code{character(1)} or \code{numeric(1)}. Identifies which stock's
+spawning production drives this stock's recruitment. Defaults to self
+(stock recruits from its own spawning production). For multi-stock models,
+may be a stock name (\code{character}) or 1-based integer index (\code{numeric}).}
 
-\item{\code{TruncSD}}{Truncation (in SD units) of recruitment deviations.}
+\item{\code{TruncSD}}{\code{numeric(1)}. Number of standard deviations at which the
+log-normal recruitment deviation distribution is truncated. Default \code{2}.}
 
-\item{\code{RecDevInit}}{Recruitment deviations for initial age structure.}
+\item{\code{RecDevInit}}{\code{matrix}. Recruitment deviations (\verb{Sim × Age}) used to
+initialise the historical age structure. Covers all age classes except the
+minimum age, whose deviation appears as the first entry of \code{RecDevHist}.
+Generated automatically during \code{\link[=Populate]{Populate()}} from \code{SD} and \code{AC} if \code{NULL}.}
 
-\item{\code{RecDevHist}}{Recruitment deviations for historical time steps.}
+\item{\code{RecDevHist}}{\code{matrix}. Recruitment deviations (\verb{Sim × nHistTS}) for
+historical time steps. The first column corresponds to the minimum age
+class in the initial year. Generated automatically if \code{NULL}.}
 
-\item{\code{RecDevProj}}{Recruitment deviations for projection time steps.}
+\item{\code{RecDevProj}}{\code{matrix}. Recruitment deviations (\verb{Sim × nProjTS}) for
+projection time steps. Generated automatically if \code{NULL}.}
 
-\item{\code{SpawnTimeFrac}}{Fraction of the time step when spawning occurs.}
+\item{\code{SpawnTimeFrac}}{\code{numeric(1)}. Fraction of the time step elapsed before
+spawning occurs. Controls how much mortality is applied to the population
+before spawning numbers are counted: numbers at spawning are
+\verb{N × exp(-Z × SpawnTimeFrac)}. \code{0} = spawning at the start of the step
+(no mortality applied first); \code{1} = spawning at the end of the step (full
+within-step Z applied first). Default \code{0}.}
 
-\item{\code{RelRecFun}}{Optional relative recruitment function.}
+\item{\code{RelRecFun}}{\code{function} or \code{character(1)}. Relative recruitment function
+giving equilibrium recruitment relative to \code{R0} as a function of
+spawning-per-recruit (SPR). For built-in models, set automatically to
+\code{paste0(Model, "_RelRec")} (e.g., \code{"BevertonHolt_RelRec"}) during
+\code{\link[=Populate]{Populate()}}. For custom SRR models, must be supplied by the user with
+signature \verb{function(Pars, SPR)}.}
 
-\item{\code{Units}}{Scaling factor for recruitment.}
+\item{\code{Units}}{\code{numeric(1)}. Scaling factor for recruitment. \code{Units = 1}
+(default) means \code{R0} is in absolute numbers of fish. \code{Units = 1000} means
+\code{R0} is in thousands of fish. Does not affect internal calculations — used
+only to set the interpretation of numbers in \link[=hist-class]{hist} output.}
 
-\item{\code{Misc}}{Miscellaneous list.}
+\item{\code{Misc}}{\code{list}. Used internally.}
 }}
 
+\seealso{
+\itemize{
+\item \code{\link[=SRR]{SRR()}} for the constructor and accessor functions.
+\item \code{\link[=SRRModels]{SRRModels()}} for available stock-recruitment models and their required
+parameters.
+\item \code{\link[=Populate]{Populate()}} for array population.
+\item \code{\link[=Stock]{Stock()}} for the enclosing stock constructor.
+\item \code{\link[=Fecundity]{Fecundity()}} for the spawning production used as input to the SRR.
+\item \link[=populating-schedules]{Specifying Biological and Fleet Schedules} for
+accepted \code{Pars} input formats.
+}
+
+Other srr:
+\code{\link[=SRR]{SRR()}}
+}
+\concept{srr}

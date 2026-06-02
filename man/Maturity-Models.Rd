@@ -66,6 +66,7 @@ Logistic models produce standard increasing maturity curves.
 }
 
 All maturity models use a logistic 50/95 parameterization:
+
 \deqn{M(x) = \frac{1}{1 + \exp\left(-\ln(19) \cdot \frac{x - x_{50}}{x_{95} - x_{50}}\right)}}
 
 at-length and at-weight schedules are converted internally to at-age using the age-length

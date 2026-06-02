@@ -6,7 +6,7 @@
 #' data, and reference points.
 #'
 #' @param OM An [om-class] or [OM-legacy-class] object. If `NULL` (default),
-#'   `MSEtool::ExampleOM` is used.
+#'   `MSEtool::SingleStockOM` is used.
 #' @param parallel Logical. Use parallel processing? Default `FALSE`.
 #' @param silent Logical. Suppress progress messages if `TRUE`. Default
 #'   `FALSE`.
@@ -17,8 +17,6 @@
 #'   `NULL` (default), `nSim` is used if provided.
 #' @param DoDynamicUnfished Logical. Calculate the dynamic unfished population
 #'   dynamics? Default `TRUE`. Only used for [om-class] objects.
-#' @param DoRefMSY Logical. Calculate MSY-based reference points? Default
-#'   `TRUE`. Only used for [om-class] objects.
 #' @param DoRefLandings Logical. Calculate reference yield based on landings?
 #'   Default `TRUE`. Only used for [om-class] objects.
 #' @param DoRefRemovals Logical. Calculate reference yield based on total
@@ -28,6 +26,8 @@
 #'   fishery data? Default `TRUE`. Only used for [om-class] objects.
 #' @param DoGenerateData Logical. Generate historical fishery data from the
 #'   observation model? Default `TRUE`. Only used for [om-class] objects.
+#' @param DoMSYRefs Logical. Calculate MSY-based reference points? Passed to
+#'   [Simulate()]. Default `TRUE`. `om` and `hist` class only.
 #' @param Reduce Logical. Reduce object size after simulation for memory
 #'   efficiency? Default `TRUE`. Only used for [om-class] objects.
 #' @param ... Additional arguments passed to sub-functions. Not currently
@@ -66,7 +66,6 @@ Simulate <- function(OM=NULL,
                      nSim = NULL,
                      nsim = NULL,
                      DoDynamicUnfished = TRUE,
-                     DoRefMSY = TRUE,
                      DoRefLandings = TRUE,
                      DoRefRemovals = FALSE,
                      DoConditionObs = TRUE,
@@ -76,7 +75,7 @@ Simulate <- function(OM=NULL,
                      ...) {
   
   if (is.null(OM))
-    OM <- MSEtool::ExampleOM
+    OM <- MSEtool::SingleStockOM
   
   if (inherits(OM, 'om'))
     return(
@@ -85,7 +84,6 @@ Simulate <- function(OM=NULL,
                   silent = silent,
                   nSim = nSim,
                   DoDynamicUnfished = DoDynamicUnfished,
-                  DoRefMSY = DoRefMSY,
                   DoRefLandings = DoRefLandings,
                   DoRefRemovals = DoRefRemovals,
                   DoConditionObs = DoConditionObs,

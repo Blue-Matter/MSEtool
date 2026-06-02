@@ -3,30 +3,53 @@
 \docType{class}
 \name{ages-class}
 \alias{ages-class}
-\title{Ages class}
+\title{The \code{ages} S4 Class}
 \description{
-An S4 class representing the age structure for a \code{\link[=Stock]{Stock()}} object.
+Defines the discrete age structure of a \link[=stock-class]{stock} object. Objects are
+typically created via \code{\link[=Ages]{Ages()}}, which documents all parameters and validates
+inputs.
 }
 \details{
-See \code{\link[=Ages]{Ages()}} for details.
+An object is considered uninitialised when \code{MaxAge} or \code{MinAge} is
+\code{numeric(0)}.
+
+Validity is enforced on non-empty objects: \code{MaxAge} and \code{MinAge} must be
+finite scalars, \code{MinAge} must be non-negative, \code{MaxAge >= MinAge}, and
+\code{Units} must be a scalar string accepted by \code{\link[=ValidUnits]{ValidUnits()}}.
+
+Direct construction via \code{\link[methods:new]{methods::new()}} is not recommended; use \code{\link[=Ages]{Ages()}}
+instead, which populates \code{Classes} automatically.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{MaxAge}}{Numeric scalar giving the maximum age. If \code{PlusGroup == TRUE},
-this represents the plus group age.}
+\item{\code{MaxAge}}{\code{numeric(1)}. Maximum age in units of \code{Units}. When
+\code{PlusGroup = TRUE}, fish older than this age are pooled into the plus
+group.}
 
-\item{\code{MinAge}}{Numeric scalar giving the minimum age.}
+\item{\code{MinAge}}{\code{numeric(1)}. Minimum (youngest) age class in units of
+\code{Units}. Must be non-negative and less than or equal to \code{MaxAge}.}
 
-\item{\code{Units}}{Character string describing the time units used in the definition
-of \code{MaxAge} and \code{MinAge} (e.g. \code{"year"}).}
+\item{\code{Units}}{\code{character(1)}. Time unit for \code{MinAge} and \code{MaxAge}. Must be
+one of the values returned by \code{\link[=ValidUnits]{ValidUnits()}} (e.g., \code{"year"}).}
 
-\item{\code{PlusGroup}}{Logical; indicates whether the maximum age is treated
-as a plus group.}
+\item{\code{PlusGroup}}{\code{logical(1)}. If \code{TRUE}, \code{MaxAge} is treated as an
+open-ended plus group that accumulates all fish at or beyond that age.}
 
-\item{\code{Classes}}{Numeric vector of age classes expressed in years}
+\item{\code{Classes}}{\code{numeric}. Vector of age classes in years, derived
+automatically from \code{MinAge}, \code{MaxAge}, and \code{Units} by \code{\link[=CalcAgeClasses]{CalcAgeClasses()}}.
+Not intended to be set directly; use \code{\link[=Ages]{Ages()}} to trigger recalculation.}
 }}
 
 \seealso{
+\itemize{
+\item \code{\link[=Ages]{Ages()}} for the constructor and slot-accessor functions.
+\item \link[=stock-class]{stock} for the enclosing object.
+\item \code{\link[=ValidUnits]{ValidUnits()}} for accepted unit strings.
+\item \code{\link[=Classes]{Classes()}} to retrieve the computed age-class vector.
+}
+
+Other ages:
 \code{\link[=Ages]{Ages()}}
 }
+\concept{ages}

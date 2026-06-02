@@ -3,17 +3,40 @@
 #'
 #' Display a formatted summary of MSEtool S4 objects in the console.
 #'
-#' @param object An S4 object.
+#' @param object An S4 object of the relevant class.
 #'
 #' @name show-methods
-#' @aliases show,om-method show,stock-method show,ages-method
-#'   show,length-method show,weight-method show,naturalmortality-method
-#'   show,maturity-method show,fecundity-method show,srr-method
-#'   show,spatial-method show,depletion-method show,fleet-method
-#'   show,effort-method show,catchability-method show,selectivity-method
-#'   show,retention-method show,discardmortality-method show,hist-method
-#'   show,mse-method show,data-method show,advice-method
-#'   show,popdynamics-method
+#' @aliases show,om-method
+#' @aliases show,stock-method
+#' @aliases show,ages-method
+#' @aliases show,length-method
+#' @aliases show,weight-method
+#' @aliases show,naturalmortality-method
+#' @aliases show,maturity-method
+#' @aliases show,fecundity-method
+#' @aliases show,srr-method
+#' @aliases show,spatial-method
+#' @aliases show,depletion-method
+#' @aliases show,fleet-method
+#' @aliases show,effort-method
+#' @aliases show,catchability-method
+#' @aliases show,selectivity-method
+#' @aliases show,retention-method
+#' @aliases show,discardmortality-method
+#' @aliases show,obs-method
+#' @aliases show,lifehistoryobs-method
+#' @aliases show,exploitationobs-method
+#' @aliases show,effortobs-method
+#' @aliases show,catchobs-method
+#' @aliases show,indicesobs-method
+#' @aliases show,compobs-method
+#' @aliases show,hist-method
+#' @aliases show,mse-method
+#' @aliases show,data-method
+#' @aliases show,advice-method
+#' @aliases show,popdynamics-method
+#' @aliases show,perrecruit-method
+#' @aliases show,refpointsMSY-method
 #' @exportMethod show
 NULL
 
@@ -126,7 +149,7 @@ a_or_an <- function(x) {
   }
   
   if (inherits(x, 'numeric') || inherits(x, 'integer')) {
-    if (all(as.integer(x) != x)) {
+    if (all(as.integer(x) != x, na.rm = TRUE)) {
       x <- signif(x, digits =digits )
     }
     cli::cli_text("{.var {name}}:  {.val {x}}")
@@ -354,14 +377,14 @@ setMethod("show", "om", function(object) {
     cli::cli_text("Stocks: {.emph None specified}")
   } else {
     stockNames <- StockNames(object)  
-    cli::cli_text("Stocks: {.val {stockNames}}")
+    cli::cli_text("Stock{?s}: {.val {stockNames}}")
   }
   
   if (is.null(object@Fleet)) {
     cli::cli_text("Fleets: {.emph None specified}")
   } else {
     fleetNames <- FleetNames(object)  
-    cli::cli_text("Fleets: {.val {fleetNames}}")
+    cli::cli_text("Fleet{?s}: {.val {fleetNames}}")
   }
   
   if (!is.null(object@Stock)) {
@@ -526,7 +549,7 @@ setMethod('show', 'fleet', function(object) {
     if (isNewObject(slot(object, name))) {
       cli::cli_text("`{name}`: {.emph not specified}")
     } else {
-      cli::cli_text("`{name}`: {a_or_an(name)} {.help {help_topic('MSEtool', paste0(tolower(name), '-class'))}} Object")
+      cli::cli_text("`{name}`: {a_or_an(name)} {.help {help_topic('MSEtool', name)}} Object")
     }
   }
   
@@ -555,6 +578,92 @@ setMethod("show", "discardmortality", function(object) {
   .show_object(object, 'DiscardMortality')
 })
 
+# ---- Obs ----
+
+setMethod('show', 'obs', function(object) {
+  cli::cli_h2("An {.help MSEtool::obs-class} Object")
+  
+  .show_slot(object, 'Name')
+  
+  cli::cli_text("")
+  
+  slot_constructor <- c(
+    LifeHistory    = 'LifeHistoryObs',
+    Exploitation   = 'ExploitationObs',
+    Effort         = 'EffortObs',
+    Landings       = 'CatchObs',
+    Discards       = 'CatchObs',
+    CPUE           = 'IndicesObs',
+    Survey         = 'IndicesObs',
+    LandingsAtAge  = 'CompObs',
+    DiscardsAtAge  = 'CompObs',
+    LandingsAtSize = 'CompObs',
+    DiscardsAtSize = 'CompObs'
+  )
+  
+  for (name in names(slot_constructor)) {
+    constructor <- slot_constructor[[name]]
+    if (isNewObject(slot(object, name))) {
+      cli::cli_text("`{name}`: {.emph not specified}")
+    } else {
+      cli::cli_text("`{name}`: {a_or_an(constructor)} {.help {help_topic('MSEtool', constructor)}} Object")
+    }
+  }
+})
+
+
+# TODO
+setMethod('show', 'lifehistoryobs', function(object) {
+  cli::cli_h2("A {.help MSEtool::lifehistoryobs-class} Object")
+  cli::cli_text("{.emph Note: This class is a placeholder and is not currently populated.}")
+  cli::cli_text("")
+  
+  slots <- c('Ages', 'Length', 'Weight', 'NaturalMortality', 
+             'Maturity', 'Fecundity', 'SRR', 'Spatial', 'Depletion')
+  
+  for (name in slots) {
+    x <- slot(object, name)
+    if (length(x) == 0) {
+      cli::cli_text("{.var {name}}: {.emph not specified}")
+    } else {
+      cli::cli_text("{.var {name}}: {.val list length {length(x)}}")
+    }
+  }
+})
+
+# TODO
+setMethod('show', 'exploitationobs', function(object) {
+  cli::cli_h2("An {.help MSEtool::exploitationobs-class} Object")
+  cli::cli_text("{.emph Note: This class is a placeholder and is not currently populated.}")
+  cli::cli_text("")
+  
+  slots <- c('Selectivity', 'Retention', 'DiscardMortality')
+  
+  for (name in slots) {
+    x <- slot(object, name)
+    if (length(x) == 0) {
+      cli::cli_text("{.var {name}}: {.emph not specified}")
+    } else {
+      cli::cli_text("{.var {name}}: {.val list length {length(x)}}")
+    }
+  }
+})
+
+setMethod('show', 'effortobs', function(object) {
+  .show_object(object, 'effortobs')
+})
+
+setMethod('show', 'catchobs', function(object) {
+  .show_object(object, 'catchobs')
+})
+
+setMethod('show', 'indicesobs', function(object) {
+  .show_object(object, 'indicesobs')
+})
+
+setMethod('show', 'compobs', function(object) {
+  .show_object(object, 'compobs')
+})
 
 # ---- Hist ----
 
@@ -575,9 +684,11 @@ setMethod('show', 'hist', function(object) {
   
   for (sl in slots2) {
     if (sl == 'Data') {
+      # TODO
       next
     }
     if (sl == 'Log') {
+      # TODO
       next
     }
     if (sl == 'Misc') {
@@ -651,6 +762,17 @@ setMethod('show', 'advice', function(object) {
 })
 
 
+# ---- per-recruit ----
+setMethod('show', 'perrecruit', function(object) {
+  .show_object(object, 'perrecruit')
+  
+})
+
+# ---- per-recruit ----
+setMethod('show', 'refpointsMSY', function(object) {
+  .show_object(object, 'refpointsMSY')
+  
+})
 
 # ---- popdynamics ----
 

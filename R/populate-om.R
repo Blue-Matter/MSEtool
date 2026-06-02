@@ -10,7 +10,7 @@
 #'   warnings during population.
 #' @param force Logical. If `TRUE`, force re-population even if the internal
 #'   object digest indicates no changes since the last call.
-#' @param standardize_effort. Logical. Used internally. Apply [StandardizeEffort()]?
+#' @param standardize_effort Logical. Used internally. Apply [StandardizeEffort()]?
 #'
 #' @details
 #' 
@@ -51,9 +51,6 @@ PopulateOM <- function(OM, silent = FALSE, force = FALSE, standardize_effort = T
   if (EmptyObject(OM)) return(OM)
   if (CheckDigest(OM) & !force) return(OM)
   
-  if (!silent)
-    cli::cli_alert_info('Populating OM {.val {OM@Name}}')
-
   if (is.null(OM@Stock)) 
     cli::cli_abort(c(
       "x" = "{.var OM} must have at least one stock",
@@ -83,6 +80,9 @@ PopulateOM <- function(OM, silent = FALSE, force = FALSE, standardize_effort = T
   if (standardize_effort)
     OM <- StandardizeEffort(OM, populate=FALSE)
 
+  if (!silent)
+    cli::cli_alert_success('Populated OM {.val {OM@Name}}')
+  
   SetDigest(OM)
 }
 
@@ -285,115 +285,105 @@ PopulateImpList <- function(OM, silent = FALSE) {
 }
 
 PopulateObsList <- function(OM, silent = FALSE) {
-  Complexes <- Complexes(OM)
+  Complexes    <- Complexes(OM)
+  nComplex     <- length(Complexes)
   ComplexNames <- names(Complexes)
+  
   FleetNames <- FleetNames(OM)
-  nFleet <- length(FleetNames)
-
+  nFleet     <- length(FleetNames)
+  if (is.null(FleetNames) || nFleet < 1) return(OM)
+  
+  # Empty object — initialise with fleet-only obs for conditioning
   if (EmptyObject(OM@Obs)) {
-    # initialize Obs object for conditioning
-    if (is.null(FleetNames)) {
-      return(OM)
-    }
-
-    OM@Obs <- MakeNamedList(
-      ComplexNames,
-      MakeNamedList(FleetNames, new("obs"))
-    )
+    OM@Obs <- MakeNamedList(ComplexNames, MakeNamedList(FleetNames, new("obs")))
     return(OM)
   }
-
-  # Recycles over both stocks and fleets
-  if (inherits(OM@Obs, "obs")) {
+  
+  # Single obs object — replicate over complexes and fleets
+  if (inherits(OM@Obs, "obs"))
     OM@Obs <- MakeNamedList(ComplexNames, MakeNamedList(FleetNames, OM@Obs))
+  
+  # Validate complex length
+  if (length(OM@Obs) != nComplex)
+    cli::cli_abort(c(
+      'x' = "`OM@Obs` must be length `length(Complexes(OM))` ({nComplex})",
+      'i' = "Currently length {.val {length(OM@Obs)}}"
+    ))
+  
+  # Validate each complex has at least nFleet elements
+  complex_lengths <- purrr::map_int(OM@Obs, length)
+  if (any(complex_lengths < nFleet))
+    cli::cli_abort(c(
+      'x' = 'Each element of `OM@Obs` must have at least `nFleet(OM)` ({nFleet}) element{?s}',
+      'i' = 'Currently length {.val {complex_lengths}}'
+    ))
+  
+  # Validate all elements are obs objects
+  cls <- purrr::map(OM@Obs, \(st) purrr::map_chr(st, class)) |> unlist()
+  if (any(cls != 'obs'))
+    cli::cli_abort(c(
+      'x' = 'Each element of `OM@Obs[[st]][[fl]]` must be a {.help MSEtool::Obs} object',
+      'i' = 'Currently class {.val {cls}}'
+    ))
+  
+  # Validate survey names: elements beyond nFleet must be explicitly named
+  # and all names within each complex must be unique
+  for (st in seq_len(nComplex)) {
+    obs_names  <- names(OM@Obs[[st]])
+    nSurvey    <- length(OM@Obs[[st]]) - nFleet
+    
+    if (nSurvey > 0) {
+      survey_names <- obs_names[seq(nFleet + 1, length(obs_names))]
+      
+      if (any(is.null(survey_names)) || any(nchar(survey_names) == 0))
+        cli::cli_abort(c(
+          'x' = 'Survey `Obs` objects in complex {.val {ComplexNames[[st]]}} must be explicitly named',
+          'i' = 'Provide unique names for elements {nFleet + 1} to {length(obs_names)}'
+        ))
+      
+      if (anyDuplicated(obs_names))
+        cli::cli_abort(c(
+          'x' = 'All names in `OM@Obs[[{st}]]` must be unique across fleets and surveys',
+          'i' = 'Duplicated name{?s}: {.val {obs_names[duplicated(obs_names)]}}'
+        ))
+    }
   }
-
-  if (!is.list(OM@Obs)) {
-    cli::cli_abort("`OM@Obs` must be a list or an object of class `obs`")
-  }
-
-  # Prep Obs List
-  nComplex <- length(ComplexNames)
-  nFleets <- nFleet(OM)
+  
+  # Build populated obs list, preserving fleet + survey structure per complex
   ObsList <- vector("list", nComplex)
-  names(ObsList) <- names(Complexes)
-
-  for (st in 1:nComplex) {
-    ObsList[[st]] <- vector("list", nFleet)
-    names(ObsList[[st]]) <- FleetNames
-    if (isS4(OM@Obs)) {
-      ObsList[[st]] <- list(OM@Obs)
-      next()
-    }
-
-    if (inherits(OM@Obs[[st]], "list")) {
-      ObsList[[st]] <- OM@Obs[[st]]
-      next()
-    }
-
-    for (fl in 1:nFleets) {
-      if (length(OM@Obs) < st) {
-        if (length(OM@Obs) > 1) {
-          cli::cli_abort("`OM@Obs` must be a list length 1 or length `nStock` ({.val {nStocks}})")
-        }
-        ObsList[[st]][[fl]] <- OM@Obs[[1]][[fl]]
-      } else {
-        ObsList[[st]][[fl]] <- OM@Obs[[st]][[fl]]
-      }
-    }
-  }
-
-  HistYears <- Years(OM, "H")
-  ProjYears <- Years(OM, "P")
-
-  for (st in 1:length(ObsList)) {
-    for (fl in 1:length(ObsList[[1]])) {
+  names(ObsList) <- ComplexNames
+  
+  for (st in seq_len(nComplex)) {
+    obs_names     <- names(OM@Obs[[st]])
+    nObs          <- length(obs_names)
+    ObsList[[st]] <- vector("list", nObs)
+    names(ObsList[[st]]) <- obs_names
+    
+    AgeClasses <- OM@Stock[[st]]@Ages@Classes
+    
+    for (fl in seq_len(nObs)) {
       SetSeed(OM@Seed + st + fl)
-
-      ObsList[[st]][[fl]]@Effort <- PopulateEffortObs(
-        Effort = ObsList[[st]][[fl]]@Effort,
-        nSim = OM@nSim,
-        HistYears,
-        ProjYears
-      )
-
-      ObsList[[st]][[fl]]@Landings <- PopulateCatchObs(
-        Catch = ObsList[[st]][[fl]]@Landings,
-        nSim = OM@nSim,
-        HistYears,
-        ProjYears
-      )
-
-      ObsList[[st]][[fl]]@Discards <- PopulateCatchObs(
-        Catch = ObsList[[st]][[fl]]@Discards,
-        nSim = OM@nSim,
-        HistYears,
-        ProjYears
-      )
-
-      ObsList[[st]][[fl]]@CPUE <- PopulateIndexObs(
-        Index = ObsList[[st]][[fl]]@CPUE,
-        nSim = OM@nSim,
-        HistYears,
-        ProjYears
-      )
-
-      ObsList[[st]][[fl]]@Survey <- PopulateIndexObs(
-        Index = ObsList[[st]][[fl]]@Survey,
-        nSim = OM@nSim,
-        HistYears,
-        ProjYears
-      )
-
-      # OM@Obs[[st]][[fl]]@CAA
-
-      # OM@Obs[[st]][[fl]]@CAL
+      
+      # Fleet obs use fleet-specific size classes; survey obs use NULL
+      SizeClasses <- if (fl <= nFleet) {
+        OM@Fleet[[st]][[fl]]@Selectivity@Classes
+      } else {
+        NULL
+      }
+      
+      ObsList[[st]][[fl]] <- PopulateObs(Obs       = OM@Obs[[st]][[fl]],
+                                         HistYears = Years(OM, "H"),
+                                         ProjYears = Years(OM, "P"),
+                                         nSim      = OM@nSim,
+                                         AgeBins   = AgeClasses,
+                                         SizeBins  = SizeClasses)
     }
   }
-
+  
   OM@Obs <- ObsList
   OM
 }
+
 
 UpdateSPFrom <- function(OM) {
   stocknames <- StockNames(OM) 

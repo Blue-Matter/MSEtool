@@ -30,5 +30,4 @@ methods::setClassUnion("num.array.df", c("numeric", "array", "data.frame", "NULL
 methods::setClassUnion("fun.char", c("function", "character", "list", "NULL"))
 methods::setClassUnion("num.Date", c("numeric", "Date", "POSIXct", "character", "NULL"))
 
-methods::setClassUnion("dynamics.list", c("dynamics", "list"))
 

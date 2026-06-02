@@ -1,0 +1,285 @@
+#' Calculate MSY Reference Points
+#'
+#' Computes maximum sustainable yield (MSY) biological reference points for
+#' all complexes in a [hist-class] or [om-class] object by identifying the
+#' apical fishing mortality that maximises total yield, accounting for the
+#' stock-recruitment relationship. Results are stored in
+#' `Hist@Reference@MSY` and the updated [hist-class] object is returned.
+#'
+#' @param Hist  A [hist-class] or [om-class] object. If an `om` is supplied
+#'   it is first converted to a `hist` object.
+#' @param Years Integer vector of years for which reference points are
+#'   evaluated. Biological and fishery parameters are subset to these years. 
+#'   If `NULL` (default), the final
+#'   historical year is used.
+#' @param type  Character. Whether MSY is defined in terms of total removals
+#'   (landings plus dead discards) or landings only. One of `'Removals'`
+#'   (default) or `'Landings'`.
+#' @param silent Logical. If `TRUE`, suppresses progress messages. Default
+#'   `FALSE`.
+#'
+#' @return The input [hist-class] object with `Hist@Reference@MSY` populated
+#'   as a [refpointsMSY-class] object. Slots in the returned object:
+#'
+#'   - `FMSY` — apical fishing mortality at MSY (`Sim × Complex × Year`).
+#'   - `BMSY` — total biomass at MSY (`Sim × Stock × Year`).
+#'   - `SBMSY` — spawning biomass at MSY (`Sim × Stock × Year`).
+#'   - `SPMSY` — spawning production at MSY (`Sim × Stock × Year`).
+#'   - `SPRMSY` — spawning potential ratio at MSY (`Sim × Stock × Year`).
+#'   - `MSYLandings` — landed catch at MSY (`Sim × Stock × Year`).
+#'   - `MSYDiscards` — dead discards at MSY (`Sim × Stock × Year`).
+#'
+#' @details
+#'
+#' ## Complexes
+#' Reference points are calculated separately for each complex defined in
+#' `Hist@OM@Complexes`. Within each complex:
+#'
+#' - `FMSY` is the single apical fishing mortality maximising total yield
+#'   across all stocks in the complex.
+#' - Fleet-specific F is distributed according to effort-weighted
+#'   catchability and selectivity.
+#' - Stock-level quantities (`BMSY`, `SBMSY`, etc.) are reported for each
+#'   stock evaluated at the complex-level `FMSY`.
+#'
+#' ## Optimisation
+#' For each simulation and year, [optimize()] searches for the apical F
+#' maximising total yield on the log-F scale over `[1e-5, maxF]`
+#'
+#' ## SPR0
+#' If `Hist@Reference@SPR0` has not yet been computed it is calculated via
+#' [CalcSPR0()] before reference point calculations begin.
+#'
+#' @seealso [CalcPerRecruit()], [CalcSPR0()], [refpointsMSY-class],
+#'   
+#' @export
+CalcRefMSY <- function(Hist, Years = NULL, type = c('Removals', 'Landings'),
+                       silent = FALSE) {
+
+  type <- match.arg(type)
+  CheckClass(Hist, c('om', 'hist'))
+  
+  if (inherits(Hist, 'om'))
+    Hist <- OM2Hist(Hist, silent=TRUE)
+
+  CheckClass(Hist, 'hist', 'Hist')
+  
+  if (is.null(Years))
+    Years <- utils::tail(Years(Hist@OM, 'Historical'), 1)
+  
+  if (is.null(Hist@Reference@SPR0))
+    Hist@Reference@SPR0 <- CalcSPR0(Hist, silent=TRUE)
+  
+  Hist <- InitMSYRefPoints(Hist, Years)
+  
+  StockNames <- StockNames(Hist)
+  
+  complexes <- Complexes(Hist)
+
+  for (i in seq_along(complexes)) {
+    Hist <- CalcRefMSY_Complex(Hist,
+                               complex_stocks = StockNames[complexes[[i]]],
+                               complex_name   = names(complexes)[i],
+                               Years          = Years,
+                               type           = type,
+                               silent         = silent)
+  }
+  Hist
+}
+
+CalcRefMSY_Complex <- function(Hist, complex_stocks, complex_name, Years, type, silent = FALSE) {
+  
+  StockList <- Hist@OM@Stock[complex_stocks]
+  FleetList <- Hist@OM@Fleet[complex_stocks]
+  
+  nSim          <- nSim(Hist)
+  IdenticalHist <- IdenticalSims(Hist@OM, ignore='RecDevProj')
+  
+  SPR0_Full_List <- Array2List(Hist@Reference@SPR0) |> SubsetStock(Stocks = complex_stocks)
+  
+  logApicalFRange <- log(c(1E-5, Hist@OM@maxF))
+  
+  MSYRefPoints <- Hist@Reference@MSY
+  
+  if (IdenticalHist) {
+    if (!silent)
+      cli::cli_progress_message("Calculating MSY reference points: {.val {complex_name}}")
+    
+    StockList_sim <- Subset(StockList,      Sims = 1)
+    FleetList_sim <- Subset(FleetList,      Sims = 1)
+    SPR0_List_sim <- Subset(SPR0_Full_List, Sims = 1)
+    
+    results_sim1 <- purrr::map(seq_along(Years), \(ts) {
+      
+      inputs <- PrepPerRecruitInputs(StockList_sim, FleetList_sim,
+                                     SPR0_List_sim, Years[ts])
+      
+      opt <- optimize(
+        OptCalcRefMSY_Sims,
+        logApicalFRange,
+        inputs       = inputs,
+        complex_name = complex_name,
+        type         = type,
+        option       = 1
+      )
+      
+      OptCalcRefMSY_Sims(
+        logApicalF   = opt$minimum,
+        inputs       = inputs,
+        complex_name = complex_name,
+        type         = type,
+        option       = 2
+      )
+    })
+    
+    for (sl in setdiff(slotNames(MSYRefPoints), 'Misc')) {
+      arr <- slot(MSYRefPoints, sl)
+      if (is.null(arr)) next
+      for (ts in seq_along(Years)) {
+        val <- slot(results_sim1[[ts]], sl)
+        if (!is.null(val))
+          ArrayFill(arr) <- val
+      }
+      slot(MSYRefPoints, sl) <- arr
+    }
+    
+    if (!silent)
+      cli::cli_alert_success("Calculated MSY Reference Points")
+    
+    Hist@Reference@MSY <- ReduceDims(MSYRefPoints)
+    return(Hist)
+  }
+  
+  if (!silent) {
+    id <- cli::cli_progress_bar(
+      name   = paste0("Calculating MSY reference points: ", complex_name),
+      total  = nSim,
+      format = "{cli::pb_name} {cli::pb_bar} {cli::pb_current}/{cli::pb_total} sims | {cli::pb_elapsed}"
+    )
+  }
+  
+  # TODO: parallel option - furrr::future_map(seq_len(nSim), \(sim) { 
+  results_by_sim <- purrr::map(seq_len(nSim), \(sim) {
+    
+    StockList_sim  <- Subset(StockList,      Sims = sim)
+    FleetList_sim  <- Subset(FleetList,      Sims = sim)
+    SPR0_List_sim  <- Subset(SPR0_Full_List, Sims = sim)
+    
+    result <- purrr::map(seq_along(Years), \(ts) {
+      
+      inputs <- PrepPerRecruitInputs(StockList_sim, FleetList_sim,
+                                     SPR0_List_sim, Years[ts])
+      
+      opt <- optimize(
+        OptCalcRefMSY_Sims,
+        logApicalFRange,
+        inputs       = inputs,
+        complex_name = complex_name,
+        type         = type,
+        option       = 1
+      )
+      
+      OptCalcRefMSY_Sims(
+        logApicalF   = opt$minimum,
+        inputs       = inputs,
+        complex_name = complex_name,
+        type         = type,
+        option       = 2
+      )
+    })
+    if (!silent) cli::cli_progress_update(id = id)
+    result
+  })
+  
+  for (sl in setdiff(slotNames(MSYRefPoints), 'Misc')) {
+    arr <- slot(MSYRefPoints, sl)
+    if (is.null(arr)) next
+    for (sim in seq_len(nSim))
+      for (ts in seq_along(Years)) {
+        val <- slot(results_by_sim[[sim]][[ts]], sl)
+        if (!is.null(val))
+          ArrayFill(arr) <- val
+      }
+    slot(MSYRefPoints, sl) <- arr
+  }
+
+  if (!silent)
+    cli::cli_alert_success("Calculated MSY Reference Points")
+  
+  Hist@Reference@MSY <- ReduceDims(MSYRefPoints)
+  Hist
+}
+
+
+
+OptCalcRefMSY_Sims <- function(logApicalF, inputs, complex_name,
+                               type = c('Removals', 'Landings'),
+                               option = 1) {
+  type <- match.arg(type)
+  
+  if (length(logApicalF) > 1) {
+    cli::cli_alert_danger(
+      '{.var logApicalF} must be length 1. Using first value {.val {logApicalF[1]}}')
+    logApicalF <- logApicalF[1]
+  }
+  apicalF <- exp(logApicalF)
+  
+  PerRecruit <- CalcPerRecruit_F(
+    apicalF              = apicalF,
+    StockFleetAllocation = inputs$StockFleetAllocation,
+    NaturalMortalityList = inputs$NaturalMortalityList,
+    PlusGroupList        = inputs$PlusGroupList,
+    MaturityList         = inputs$MaturityList,
+    SemelparousList      = inputs$SemelparousList,
+    WeightList           = inputs$WeightList,
+    SpawnTimeFracList    = inputs$SpawnTimeFracList,
+    SPFrom               = inputs$SPFrom,
+    SPR0List             = inputs$SPR0List,
+    FecundityList        = inputs$FecundityList,
+    WeightFleetList      = inputs$WeightFleetList,
+    Selectivity          = inputs$Selectivity,
+    Retention            = inputs$Retention,
+    DiscardMortality     = inputs$DiscardMortality,
+    FleetNames           = inputs$FleetNames,
+    Years                = inputs$Years
+  )
+  
+  SPRList <- PerRecruit@SPR |> Array2List('Stock')
+  RelRecruits <- purrr::pmap(
+    list(inputs$RecParsList, SPRList, inputs$RelRecFunList),
+    \(RecPars, SPR, RelRecFun) {
+      rr <- RelRecFun(Pars = RecPars, SPR = SPR[1])
+      rr[rr < 0] <- 0
+      rr
+    }) |>
+    List2Array('Stock') |> aperm(c('Sim', 'Stock', 'Year'))
+  
+  Recruits <- ArrayMultiply(inputs$R0, RelRecruits) |> AddDimension("F")
+  Removals <- ArrayMultiply(PerRecruit@Removals, Recruits) |> DropDimension("F")
+  Landings <- ArrayMultiply(PerRecruit@Landings, Recruits) |> DropDimension("F")
+  
+  if (option == 1) {
+    if (type == 'Removals') return(-SumOverStock(Removals))
+    return(-SumOverStock(Landings))
+  }
+  
+  Biomass     <- ArrayMultiply(PerRecruit@Biomass,     Recruits) |> DropDimension("F")
+  SBiomass    <- ArrayMultiply(PerRecruit@SBiomass,    Recruits) |> DropDimension("F")
+  SProduction <- ArrayMultiply(PerRecruit@SProduction, Recruits) |> DropDimension("F")
+  SPR         <- PerRecruit@SPR |> DropDimension("F") |> aperm(c('Sim', 'Stock', 'Year'))
+  Discards    <- ArraySubtract(Removals, Landings)
+  
+  FMSY <- array(apicalF, dim(Biomass), dimnames = dimnames(Biomass)) |>
+    DropDimension('Stock', warn = FALSE) |>
+    AddDimension('Stock', complex_name, pos = 2)
+  
+  MSYRefPoints             <- new("refpointsMSY")
+  MSYRefPoints@FMSY        <- FMSY
+  MSYRefPoints@BMSY        <- Biomass
+  MSYRefPoints@SBMSY       <- SBiomass
+  MSYRefPoints@SPMSY       <- SProduction
+  MSYRefPoints@SPRMSY      <- SPR
+  MSYRefPoints@MSYLandings <- Landings
+  MSYRefPoints@MSYDiscards <- Discards
+  MSYRefPoints
+}

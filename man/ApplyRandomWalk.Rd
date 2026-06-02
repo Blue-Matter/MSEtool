@@ -4,7 +4,7 @@
 \alias{ApplyRandomWalk}
 \title{Apply a Log-Normal Random Walk to Time-Varying Parameters}
 \usage{
-ApplyRandomWalk(Pars)
+ApplyRandomWalk(Pars, Years)
 }
 \arguments{
 \item{Pars}{Named list of structured parameter arrays (output of

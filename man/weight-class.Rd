@@ -3,40 +3,91 @@
 \docType{class}
 \name{weight-class}
 \alias{weight-class}
-\title{Weight Class}
+\title{The \code{weight} S4 Class}
 \description{
-An S4 class representing the weight-at-age and -at-length structure for a \code{\link[=Stock]{Stock()}} object.
+Defines the weight-at-age and weight-at-length schedules for a
+\link[=stock-class]{stock} object. Objects are typically created via \code{\link[=Weight]{Weight()}}, which
+documents all parameters, validates inputs, and infers the model
+automatically when possible.
 }
 \details{
-See \code{\link[=Weight]{Weight()}} for details.
+Direct construction via \code{\link[methods:new]{methods::new()}} is not recommended; use \code{\link[=Weight]{Weight()}}
+instead, which handles model inference and object validation.
+
+The \code{AWK} slot is only populated during \code{\link[=Populate]{Populate()}} when \code{CVatAge} is
+non-\code{NULL}. For most applications weight variability is propagated through
+the age-length key (\code{ALK}, see \code{\link[=Length]{Length()}}) and a length-weight relationship
+rather than directly through an age-weight distribution.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{Pars}}{Named list of parameters for \code{\link[=WeightModels]{WeightModels()}}}
+\item{\code{Pars}}{\code{list}. Named list of parameters whose names
+correspond to those expected by \code{Model}. See \code{\link[=WeightModels]{WeightModels()}} for
+parameter sets and
+\link[=populating-schedules]{Specifying Biological and Fleet Schedules} for
+accepted input formats.}
 
-\item{\code{Model}}{Model associated with \code{Pars}}
+\item{\code{Model}}{\code{function} or \code{character(1)}. Weight model identifier, matched
+to one of \code{\link[=WeightModels]{WeightModels()}}. Set automatically by \code{\link[=FindModel]{FindModel()}} when \code{Pars}
+is supplied without an explicit model.}
 
-\item{\code{Units}}{Weight units}
+\item{\code{Units}}{\code{character(1)}. Physical unit of the weight measurements (e.g.,
+\code{"g"}, \code{"kg"}). Must be accepted by \code{\link[=ValidUnits]{ValidUnits()}}.}
 
-\item{\code{MeanAtAge}}{Mean weight-at-age array}
+\item{\code{MeanAtAge}}{\code{array}. Mean weight at age with named dimensions \code{Sim},
+\code{Age}, and \code{Year}. Populated automatically by \code{\link[=Populate]{Populate()}} when \code{Pars}
+and \code{Model} are set; may also be supplied directly when \code{Pars} is empty.
+When \code{Pars} contains a matched model, any existing values are overwritten.
+See \link[=populating-schedules]{Specifying Biological and Fleet Schedules}.}
 
-\item{\code{MeanAtLength}}{Mean weight-at-length array}
+\item{\code{MeanAtLength}}{\code{array}. Mean weight at length with named dimensions
+\code{Sim}, \code{Length}, and \code{Year}. Populated automatically when an at-length
+weight model is used, or may be supplied directly. Converted to
+\code{MeanAtAge} via the \code{ALK} during \code{\link[=Populate]{Populate()}} when \code{MeanAtAge} is not
+already populated. See \link[=populating-schedules]{Specifying Biological and Fleet Schedules}.}
 
-\item{\code{CVatAge}}{Coefficient of variation at age}
+\item{\code{CVatAge}}{\code{array} or \code{numeric}. Coefficient of variation of
+weight-at-age, used to generate the within-age-class weight distribution
+and to build the age-weight key (\code{AWK}). \code{NULL} by default; the \code{AWK} is
+only constructed when this slot is populated.}
 
-\item{\code{Dist}}{Distribution name}
+\item{\code{Dist}}{\code{character(1)}. Parametric distribution used for weight-at-age
+variability (e.g., \code{"lognormal"}).}
 
-\item{\code{TruncSD}}{Truncation in SD units}
+\item{\code{TruncSD}}{\code{array} or \code{numeric}. Number of standard deviations at which
+the weight distribution is truncated.}
 
-\item{\code{Timing}}{Timing within time step}
+\item{\code{Timing}}{\code{array} or \code{numeric}. Fractional position within the time step
+at which weight is measured (\code{0} = start, \code{1} = end).}
 
-\item{\code{Random}}{Random effects}
+\item{\code{Random}}{\code{array}. Random effects on weight parameters across simulations
+or years.}
 
-\item{\code{AWK}}{Age–weight key}
+\item{\code{AWK}}{\code{array}. Age-weight key: the probability of belonging to each
+weight class given age, derived from \code{MeanAtAge}, \code{CVatAge}, \code{Dist}, and
+\code{TruncSD}. Only populated when \code{CVatAge} is non-\code{NULL}; use \code{\link[=AWK]{AWK()}} to
+retrieve.}
 
-\item{\code{Classes}}{Weight classes}
+\item{\code{Classes}}{\code{numeric}. Weight class midpoints in units of \code{Units}.}
 
-\item{\code{Misc}}{Miscellaneous list}
+\item{\code{Misc}}{\code{list}. Used internally.}
 }}
 
+\seealso{
+\itemize{
+\item \code{\link[=Weight]{Weight()}} for the constructor and accessor functions.
+\item \code{\link[=WeightModels]{WeightModels()}} for available models and their required parameters.
+\item \code{\link[=ValidUnits]{ValidUnits()}} for accepted unit strings.
+\item \code{\link[=Populate]{Populate()}} for array population.
+\item \code{\link[=FindModel]{FindModel()}} for automatic model inference.
+\item \code{\link[=AWK]{AWK()}} to retrieve the age-weight key.
+\item \code{\link[=Length]{Length()}} for the companion length schedule, required when using at-length weight models.
+\item \link[=populating-schedules]{Specifying Biological and Fleet Schedules} for the
+full description of how \code{Pars}, \code{Model}, and \verb{MeanAt*} arrays interact.
+}
+
+Other weight:
+\code{\link[=Weight]{Weight()}}
+}
+\concept{weight}

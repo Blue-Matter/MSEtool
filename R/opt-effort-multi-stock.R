@@ -12,7 +12,6 @@
 #' @param TSIndex    Integer. Time-step index into `Proj` arrays for the current
 #'   year. `TSIndex - 1` is used to initialise the warm start.
 #' @param sim        Integer. Simulation replicate index.
-#' @param nStock     Integer. Total number of stocks in the model.
 #' @param TAC_by_Complex Named list of length `nComplex`. Each element is a
 #'   length-`nFleet` numeric vector of TAC values (one per fleet) for that
 #'   complex, or `NULL` if no TAC applies to that complex.
@@ -64,6 +63,7 @@ OptEffort_multi_stock <- function(Proj,
                                   FleetNames,
                                   TAC_by_Complex,
                                   TACType_by_Complex,
+                                  TACUnit_by_Complex,
                                   Choke,
                                   UndershootPenalty,
                                   OvershootPenalty,
@@ -130,8 +130,9 @@ OptEffort_multi_stock <- function(Proj,
     TSIndex            = TSIndex,
     Year               = Year,
     Complexes          = Complexes,
-    TACType_by_Complex = TACType_by_Complex,
     TAC_by_Complex     = TAC_by_Complex,
+    TACType_by_Complex = TACType_by_Complex,
+    TACUnit_by_Complex = TACUnit_by_Complex,
     OvershootPenalty   = OvershootPenalty,
     UndershootPenalty  = UndershootPenalty,
     Effort_prev        = Effort_prev,

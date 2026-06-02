@@ -61,7 +61,7 @@ PopulateStock <- function(Stock,
                           nYear,
                           pYear,
                           CurrentYear = NULL,
-                          nSim = NULL,
+                          nSim = 5,
                           Seasons = 1,
                           ALK = TRUE,
                           AWK = TRUE,
@@ -172,7 +172,8 @@ PopulateStock <- function(Stock,
     Years = Years,
     nSim = nSim,
     seed = seed + 6,
-    silent = silent
+    silent = silent,
+    force = force
   )
   
   Stock@Spatial <- PopulateSpatial(
@@ -181,7 +182,8 @@ PopulateStock <- function(Stock,
     Years = Years,
     nSim = nSim,
     seed = seed + 7,
-    silent = silent
+    silent = silent,
+    force = force
   )
   
   Stock@Depletion <- PopulateDepletion(

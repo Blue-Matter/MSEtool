@@ -3,31 +3,62 @@
 \docType{class}
 \name{selectivity-class}
 \alias{selectivity-class}
-\title{Selectivity Class}
+\title{The \code{selectivity} S4 Class}
 \description{
-The \code{selectivity} class defines how fishing or survey selectivity
-varies with age, length, or weight.
-}
-\details{
-See \code{\link[=Selectivity]{Selectivity()}} for details.
+Defines selectivity-at-age, selectivity-at-length, or
+selectivity-at-weight for use in a \link[=fleet-class]{fleet} object. Selectivity is
+required for all fleets. Objects are typically created via the
+\code{\link[=Selectivity]{Selectivity()}} constructor, which documents all parameters in detail.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{Pars}}{Named list of selectivity parameters.}
+\item{\code{Pars}}{\code{list}. Named list of selectivity parameters passed to \code{Model}.
+See \code{\link[=Selectivity]{Selectivity()}} and \code{\link[=SelectivityModels]{SelectivityModels()}}.}
 
-\item{\code{Model}}{Selectivity model identifier.}
+\item{\code{Model}}{\code{function} or \code{character} or \code{NULL}. Selectivity model
+identifier or function. See \code{\link[=SelectivityModels]{SelectivityModels()}}.}
 
-\item{\code{isRel}}{Logical or numeric indicator of relative selectivity.}
+\item{\code{isRel}}{\code{logical}, \code{numeric}, or \code{character}. Whether length-based
+parameters are expressed relative to maturity \code{L50}. See \code{\link[=Selectivity]{Selectivity()}}.}
 
-\item{\code{MeanAtAge}}{Mean selectivity-at-age array.}
+\item{\code{MeanAtAge}}{\code{numeric} array or \code{NULL}. Mean selectivity-at-age
+(\verb{Sim x Age x Year x Area}). See \code{\link[=Selectivity]{Selectivity()}}.}
 
-\item{\code{MeanAtLength}}{Mean selectivity-at-length array.}
+\item{\code{MeanAtLength}}{\code{numeric} array or \code{NULL}. Mean selectivity-at-length
+(\verb{Sim x Length x Year x Area}). See \code{\link[=Selectivity]{Selectivity()}}.}
 
-\item{\code{MeanAtWeight}}{Mean selectivity-at-weight array.}
+\item{\code{MeanAtWeight}}{\code{numeric} array or \code{NULL}. Mean selectivity-at-weight
+(\verb{Sim x Weight x Year x Area}). See \code{\link[=Selectivity]{Selectivity()}}.}
 
-\item{\code{Classes}}{Class mid-points (length, or weight).}
+\item{\code{Classes}}{\code{numeric} or \code{NULL}. Length or weight class midpoints
+corresponding to the second dimension of \code{MeanAtLength} or
+\code{MeanAtWeight}.}
 
-\item{\code{Misc}}{Miscellaneous list.}
+\item{\code{Misc}}{\code{list}. Miscellaneous additional inputs. Used internally.}
 }}
 
+\seealso{
+\itemize{
+\item \code{\link[=Selectivity]{Selectivity()}} for the constructor and full parameter
+documentation.
+\item \code{\link[=SelectivityModels]{SelectivityModels()}} for available model functions.
+\item \link[=fleet-class]{fleet} for the enclosing fleet object.
+}
+
+Other fleet:
+\code{\link[=Bioeconomic]{Bioeconomic()}},
+\code{\link[=Catchability]{Catchability()}},
+\code{\link[=DiscardMortality]{DiscardMortality()}},
+\code{\link[=Effort]{Effort()}},
+\code{\link[=Fleet]{Fleet()}},
+\code{\link[=Retention]{Retention()}},
+\code{\link[=Selectivity]{Selectivity()}},
+\code{\link{bioeconomic-class}},
+\code{\link{catchability-class}},
+\code{\link{discardmortality-class}},
+\code{\link{effort-class}},
+\code{\link{fleet-class}},
+\code{\link{retention-class}}
+}
+\concept{fleet}

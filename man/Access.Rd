@@ -4,10 +4,14 @@
 \alias{Access}
 \alias{AC}
 \alias{AC<-}
-\alias{BioEconomic}
-\alias{BioEconomic<-}
+\alias{Beta}
+\alias{Beta<-}
+\alias{Bias}
+\alias{Bias<-}
 \alias{Classes}
 \alias{Classes<-}
+\alias{Compliance}
+\alias{Compliance<-}
 \alias{CPUE}
 \alias{CPUE<-}
 \alias{CV}
@@ -20,16 +24,19 @@
 \alias{DiscardsAtAge<-}
 \alias{DiscardsAtSize}
 \alias{DiscardsAtSize<-}
-\alias{Dynamics}
-\alias{Dynamics<-}
+\alias{Error}
+\alias{Error<-}
 \alias{Exploitation}
 \alias{Exploitation<-}
+\alias{FMSY}
 \alias{LandingsAtAge}
 \alias{LandingsAtAge<-}
 \alias{LandingsAtSize}
 \alias{LandingsAtSize<-}
 \alias{LifeHistory}
 \alias{LifeHistory<-}
+\alias{Mean}
+\alias{Mean<-}
 \alias{MeanAtAge}
 \alias{MeanAtAge<-}
 \alias{MeanAtLength}
@@ -39,6 +46,9 @@
 \alias{Misc}
 \alias{Misc<-}
 \alias{Model}
+\alias{MSY}
+\alias{MSYDiscards}
+\alias{MSYLandings}
 \alias{Model<-}
 \alias{Name}
 \alias{Name<-}
@@ -46,6 +56,7 @@
 \alias{nSim<-}
 \alias{nArea}
 \alias{nAge}
+\alias{nComplex}
 \alias{nStock}
 \alias{nFleet}
 \alias{Pars}
@@ -59,8 +70,8 @@
 \alias{RefCV<-}
 \alias{Reference}
 \alias{Reference<-}
-\alias{Seed}
-\alias{Seed<-}
+\alias{Size}
+\alias{Size<-}
 \alias{SD}
 \alias{SD<-}
 \alias{Survey}
@@ -80,13 +91,21 @@ AC(x)
 
 AC(x) <- value
 
-BioEconomic(x)
+Beta(x)
 
-BioEconomic(x) <- value
+Beta(x) <- value
+
+Bias(x)
+
+Bias(x) <- value
 
 Classes(x)
 
 Classes(x) <- value
+
+Compliance(x)
+
+Compliance(x) <- value
 
 CPUE(x)
 
@@ -112,13 +131,15 @@ DiscardsAtSize(x)
 
 DiscardsAtSize(x) <- value
 
-Dynamics(x)
+Error(x)
 
-Dynamics(x) <- value
+Error(x) <- value
 
 Exploitation(x)
 
 Exploitation(x) <- value
+
+FMSY(x)
 
 LandingsAtAge(x)
 
@@ -131,6 +152,10 @@ LandingsAtSize(x) <- value
 LifeHistory(x)
 
 LifeHistory(x) <- value
+
+Mean(x)
+
+Mean(x) <- value
 
 MeanAtAge(x)
 
@@ -150,6 +175,12 @@ Misc(x) <- value
 
 Model(x)
 
+MSY(x)
+
+MSYDiscards(x)
+
+MSYLandings(x)
+
 Model(x) <- value
 
 Name(x)
@@ -163,6 +194,8 @@ nSim(x) <- value
 nArea(x, st = 1)
 
 nAge(x, st = NULL)
+
+nComplex(x)
 
 nStock(x)
 
@@ -190,9 +223,9 @@ Reference(x)
 
 Reference(x) <- value
 
-Seed(x)
+Size(x)
 
-Seed(x) <- value
+Size(x) <- value
 
 SD(x)
 

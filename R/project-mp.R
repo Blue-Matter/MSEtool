@@ -1,6 +1,6 @@
 
 # TODO
-# - apply BioEconomic to Effort
+# - apply Bioeconomic to Effort
 # - improve multi-stock TAC Effort allocation and optimization
 
 #' Project a `Hist` Object for a Single Management Procedure
@@ -68,7 +68,7 @@ Project_MP <- function(Proj,
     
     Year <- YearsProj[ts]
     if (!silent) cli::cli_progress_update(extra = list(year = Year))
-    
+
     # Simulate data for the previous time step 
     Proj <- GenerateProjectionData(Proj, Year, YearsHist, YearsProj)
       
@@ -169,6 +169,9 @@ Project_MP <- function(Proj,
     
     # Simulate Pop Dynamics for this Time Step
     Proj <- CalcFisheryDynamics(Proj, Year, clone=1)
+    
+    # Compute Catch & Discards at Size for this Time Step
+    Proj <- CalcCatchAtSize(Proj, Years = Year)
    
   }
   

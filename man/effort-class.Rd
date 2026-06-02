@@ -3,27 +3,53 @@
 \docType{class}
 \name{effort-class}
 \alias{effort-class}
-\title{Effort Class}
+\title{The \code{effort} S4 Class}
 \description{
-The \code{effort} class stores historical fishing effort and associated
-spatial effort structure for a \code{\link[=Fleet]{Fleet()}} object.
-}
-\details{
-See \code{\link[=Effort]{Effort()}} for details.
+Defines historical fishing effort and associated spatial structure for use
+in a \link[=fleet-class]{fleet} object. Objects are typically created via the \code{\link[=Effort]{Effort()}}
+constructor, which documents all parameters in detail.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{Effort}}{Numeric array of fishing effort}
+\item{\code{Effort}}{\code{numeric} array, data frame, or \code{NULL}. Historical fishing
+effort. See \code{\link[=Effort]{Effort()}} for accepted formats.}
 
-\item{\code{Units}}{Optional character string describing the units of effort}
+\item{\code{Units}}{\code{character} or \code{NULL}. Units of fishing effort (e.g.,
+\code{"hours"}, \code{"trips"}). See \code{\link[=Effort]{Effort()}}.}
 
-\item{\code{Distribution}}{Optional numeric array with dimensions \verb{nSim x nYear x nArea}
-giving the fraction of total effort allocated to each spatial area
-@slot Targeting Numeric array or scalar controlling spatial targeting behavior
-@slot Maximum Numeric array giving the maximum possible fishing effort.
-@slot Mode Character. Mode for calculation of spatial utility: \code{Density} (default)
-or \code{Biomass}.
-@slot Misc Miscellaneous list}
+\item{\code{Distribution}}{\code{numeric} array or \code{NULL}. Fraction of total effort
+allocated to each spatial area (\verb{Sim x Year x Area}). See \code{\link[=Effort]{Effort()}}.}
+
+\item{\code{Targeting}}{\code{numeric} array or \code{NULL}. Fleet targeting parameter
+(\verb{Sim x Year}). See \code{\link[=Effort]{Effort()}}.}
+
+\item{\code{Maximum}}{\code{numeric} array or \code{NULL}. Maximum allowable effort. See
+\code{\link[=Effort]{Effort()}}.}
+
+\item{\code{Mode}}{\code{character} or \code{NULL}. Spatial utility calculation mode:
+\code{"Density"} (default) or \code{"Biomass"}. See \code{\link[=Effort]{Effort()}}.}
+
+\item{\code{Misc}}{\code{list}. Miscellaneous additional inputs.}
 }}
 
+\seealso{
+\code{\link[=Effort]{Effort()}} for the constructor and full parameter documentation.
+\link[=fleet-class]{fleet} for the enclosing fleet object.
+
+Other fleet:
+\code{\link[=Bioeconomic]{Bioeconomic()}},
+\code{\link[=Catchability]{Catchability()}},
+\code{\link[=DiscardMortality]{DiscardMortality()}},
+\code{\link[=Effort]{Effort()}},
+\code{\link[=Fleet]{Fleet()}},
+\code{\link[=Retention]{Retention()}},
+\code{\link[=Selectivity]{Selectivity()}},
+\code{\link{bioeconomic-class}},
+\code{\link{catchability-class}},
+\code{\link{discardmortality-class}},
+\code{\link{fleet-class}},
+\code{\link{retention-class}},
+\code{\link{selectivity-class}}
+}
+\concept{fleet}

@@ -231,7 +231,7 @@ CalcUnfishedRefs <- function(x, ageM, N0_a, SSN0_a, SSB0_a, B0_a, VB0_a, SSBpRa,
 }
 
 
-CalcMSYRefs <- function(x, MSY_y, FMSY_y, SSBMSY_y, BMSY_y, VBMSY_y, ageM, nyears) {
+CalcMSYRefs_legacy <- function(x, MSY_y, FMSY_y, SSBMSY_y, BMSY_y, VBMSY_y, ageM, nyears) {
   n.yrs <- ceiling(ageM[x,nyears]) # MSY ref points averaged over these years
   nyears1 <- dim(ageM)[2]
   minY <- floor(n.yrs/2)

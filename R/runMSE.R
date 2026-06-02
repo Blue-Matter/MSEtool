@@ -12,11 +12,11 @@
 #' historical dynamics are used directly, saving computation time when
 #' projecting new MPs.
 #'
-#' If `OM = NULL`, uses [ExampleOM] and projects example MPs [CurrentEffort] and 
+#' If `OM = NULL`, uses [SingleStockOM] and projects example MPs [CurrentEffort] and 
 #' [CurrentCatch] as a quick demonstration. 
 #'
 #' @param OM An [om-class], [OM-legacy-class], [hist-class], or [Hist-legacy-class] object.
-#'   If `NULL` (default), uses [ExampleOM].
+#'   If `NULL` (default), uses [SingleStockOM].
 #' @param MPs Character vector of MP names to project. MPs must be functions
 #'   available in the current environment. If `NULL` (default), projects
 #'   `c("CurrentEffort", "CurrentCatch")`.
@@ -44,8 +44,6 @@
 #'   Sets `OM@nsim` before simulating. Default `NULL`.
 #' @param DoDynamicUnfished Logical. Calculate dynamic unfished reference
 #'   points? Passed to [Simulate()]. Default `TRUE`. `om` and `hist` class only.
-#' @param DoRefMSY Logical. Calculate MSY-based reference points? Passed to
-#'   [Simulate()]. Default `TRUE`. `om` and `hist` class only.
 #' @param DoRefLandings Logical. Calculate landings-based reference points?
 #'   Passed to [Simulate()]. Default `TRUE`. `om` and `hist` class only.
 #' @param DoRefRemovals Logical. Calculate removals-based reference points?
@@ -54,6 +52,8 @@
 #'   data? Passed to [Simulate()]. Default `TRUE`. `om` and `hist` class only.
 #' @param DoGenerateData Logical. Generate observed data for MPs? Passed to
 #'   [Simulate()]. Default `TRUE`.  `om` and `hist` class only.
+#' @param DoMSYRefs Logical. Calculate MSY-based reference points? Passed to
+#'   [Simulate()]. Default `TRUE`. `om` and `hist` class only.
 #' @param Reduce Logical. Reserved for future use. Default `TRUE`.  `om` and `hist` class only.
 #' @param ... Additional arguments. Reserved for future use.
 #'
@@ -75,17 +75,17 @@ runMSE <- function(OM = NULL,
                    nSim = NULL,
                    nsim = NULL, 
                    DoDynamicUnfished = TRUE, 
-                   DoRefMSY = TRUE,
                    DoRefLandings = TRUE, 
                    DoRefRemovals = FALSE, 
                    DoConditionObs = TRUE,
                    DoGenerateData = TRUE, 
+                   DoMSYRefs      = TRUE,
                    Reduce = TRUE, ...) {
   
   # ---- Initial Checks and Setup ----
   
   if (is.null(OM))
-    OM <- MSEtool::ExampleOM
+    OM <- MSEtool::SingleStockOM
   
   if (is.null(MPs))
     MPs <- c('CurrentEffort', 'CurrentCatch')
@@ -121,17 +121,17 @@ runMSE <- function(OM = NULL,
   # ---- Run Historical Simulations ----
   if (is_new_om || is_leg_om) {
     HistSims <- Simulate(OM, 
-                         parallel = parallel, 
-                         silent = silent, 
-                         nSim = nSim, 
-                         nsim = nsim, 
+                         parallel          = parallel, 
+                         silent            = silent, 
+                         nSim              = nSim, 
+                         nsim              = nsim, 
                          DoDynamicUnfished = DoDynamicUnfished,
-                         DoRefMSY = DoRefMSY, 
-                         DoRefLandings = DoRefLandings, 
-                         DoRefRemovals = DoRefRemovals,
-                         DoConditionObs = DoConditionObs, 
-                         DoGenerateData = DoGenerateData, 
-                         Reduce = Reduce)
+                         DoRefLandings     = DoRefLandings, 
+                         DoRefRemovals     = DoRefRemovals,
+                         DoConditionObs    = DoConditionObs, 
+                         DoGenerateData    = DoGenerateData, 
+                         DoMSYRefs         = DoMSYRefs,
+                         Reduce            = Reduce)
     
   } else {
     # hist or Hist passed directly - use as-is
@@ -144,8 +144,7 @@ runMSE <- function(OM = NULL,
   }
   
   # ---- Run Forward Projections ----
-  if (!silent) cli::cli_alert("Running forward projections.")
-  
+
   MSEout <- try(
     Project(Hist     = HistSims,
             MPs      = MPs,

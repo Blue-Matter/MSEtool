@@ -4,7 +4,6 @@ Simulate_om <- function(OM = NULL,
                         silent = FALSE,
                         nSim = NULL,
                         DoDynamicUnfished = TRUE,
-                        DoRefMSY = TRUE,
                         DoRefLandings = TRUE,
                         DoRefRemovals = FALSE,
                         DoConditionObs = TRUE,
@@ -19,7 +18,6 @@ Simulate_om <- function(OM = NULL,
   CheckClass(OM)
   OM <- UpdateObject(OM)
 
-  
   if (!silent) {
     cli::cli_text('')
     cli::cli_alert_info(' Starting  {.val Simulate} for OM {.val {OM@Name}}')
@@ -56,42 +54,19 @@ Simulate_om <- function(OM = NULL,
                                                   IdenticalHist = IdenticalHist, 
                                                   silent = silent)
   
-  
   # ---- Optimize for Final Depletion ----
   Hist <- OptFinalDepletion(Hist, silent = silent)
   
   # TODO - check that depletion converged on specified values
   
-  # ---- Add Reference Points if they exist ----
-  # won't be re-calculated
+  # ---- Calculate Reference Points ----
+  # TODO - add options for MSY type and years
   
+  # TODO Add Reference Points if they ae passed in via OM 
   Hist@Reference@SPR0 <- CalcSPR0(Hist)
   
-  # ---- Calculate Reference Points ----
-  # if (DoMSYRefs) {
-  #   # do try Catch
-  #   
-  #   
-  #   Hist@Reference@MSY@FMSY
-  #  
-  #   
-  #   
-  #   
-  #   
-  # }
-  
-  # TODO
-  
-  # SimList <- CalcSPR0(SimList) # unfished spawning per recruit (i.e. fecundity)
-  # 
-  # if (inherits(Reference$MSY, "refpointsMSY")) {
-  #   Hist@Reference@MSY <- Reference$MSY
-  # } else {
-  #   RefPointYears <- GetRefPointYears(OM, HistYears) # historical time steps to calculate ref points
-  #   if (!inherits(Reference, "logical")) {
-  #     SimList <- CalcMSYRefPoints(SimList, RefPointYears, Reference$MSY)
-  #   }
-  # }
+  if (DoMSYRefs) 
+    Hist <- CalcRefMSY(Hist)
   
   # TODO
   # - Per-Recruit Curves
@@ -104,6 +79,9 @@ Simulate_om <- function(OM = NULL,
   if (!silent)
     cli::cli_alert_success("Simulated Historical Fishery")
 
+  # ---- Compute Catch & Discards at Size ----
+  Hist <- CalcCatchAtSize(Hist, Years = HistYears)
+  
   # ---- Reference Yield ----
   ref_types <- c(
     if (DoRefLandings) 'Landings',
@@ -115,7 +93,7 @@ Simulate_om <- function(OM = NULL,
   
   # ---- Restore Hist@Misc ----
   Hist <- RestoreHistMisc(Hist)
-
+  
   # ---- Condition Observation Object on Real Fishery Data ----
   if (DoConditionObs) 
     Hist <- ConditionObs(Hist, silent)
@@ -142,7 +120,9 @@ Simulate_om <- function(OM = NULL,
   
   Hist@Log <- JoinLog(OM@Log, Hist@Log)
   
-  CheckLog(Hist)
+  # TODO CheckLog(Hist)
+  # - change from Warnings only to Notes/Assumptions 
+  
   SetDigest(Hist)
 }
 

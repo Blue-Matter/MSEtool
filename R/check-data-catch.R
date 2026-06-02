@@ -31,15 +31,15 @@ CheckCatch <- function(Data, incUnits = TRUE, slot_names = c('Landings', 'Discar
   if (max(Data@Years) > Data@YearLH || Data@Misc$Sim > 1)
     return(invisible(NULL)) # warnings only the first projection year
   
-  
-    # Check errors for each slot
+
+  # Check errors for each slot
   value_errors <- sapply(slot_names, function(s) is.null(slot(Data, s)@Value))
   unit_errors  <- sapply(slot_names, function(s) {
     obj <- slot(Data, s)
     !is.null(obj@Units) && any(obj@Units != 'Biomass') && incUnits
   })
   
-  if (!any(value_errors) && !any(unit_errors))
+  if (!any(value_errors, na.rm = TRUE) && !any(unit_errors, na.rm = TRUE))
     return(invisible(NULL))
   
   if (!is.null(Data@Misc$StockName))

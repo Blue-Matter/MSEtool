@@ -64,7 +64,7 @@ ArrayExtend <- function(array1, array2) {
   dnames <- CheckArrays(array1, array2)
   dname1 <- dnames$dname1
   dname2 <- dnames$dname2
-
+  
   # Sim: extend to max nSim; if both length-1, keep as 1
   nSim <- local({
     r <- resolve_dim("Sim", dname1, dname2)
@@ -77,6 +77,14 @@ ArrayExtend <- function(array1, array2) {
   # Age: extend to union of age classes if lengths differ
   AgeClasses <- local({
     r <- resolve_dim("Age", dname1, dname2)
+    if (is.null(r)) return(NULL)
+    if (length(r$vals1) == length(r$vals2)) return(NULL)
+    c(r$vals1, r$vals2) |> as.numeric() |> unique() |> sort()
+  })
+  
+  # Classes: extend to union of size classes if lengths differ
+  Classes <- local({
+    r <- resolve_dim("Class", dname1, dname2)
     if (is.null(r)) return(NULL)
     if (length(r$vals1) == length(r$vals2)) return(NULL)
     c(r$vals1, r$vals2) |> as.numeric() |> unique() |> sort()
@@ -98,10 +106,21 @@ ArrayExtend <- function(array1, array2) {
   })
   
   list(
-    array1 = Extend(array1, nSim, AgeClasses, Years, Areas, backfill = TRUE),
-    array2 = Extend(array2, nSim, AgeClasses, Years, Areas, backfill = TRUE)
+    array1 = Extend(array1,
+                    nSim       = nSim,
+                    AgeClasses = AgeClasses,
+                    Classes    = Classes,
+                    Years      = Years,
+                    Areas      = Areas,
+                    backfill   = TRUE),
+    array2 = Extend(array2,
+                    nSim       = nSim,
+                    AgeClasses = AgeClasses,
+                    Classes    = Classes,
+                    Years      = Years,
+                    Areas      = Areas,
+                    backfill   = TRUE)
   )
-  
 }
 
 ArrayOperation <- function(array1, array2, operation = `*`) {

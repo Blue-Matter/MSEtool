@@ -11,14 +11,14 @@
 #' All slot arguments default to `NULL`, in which case an empty sub-object of
 #' the appropriate class is initialised automatically:
 #'
-#' - `LifeHistory` → [lifehistorydata]
-#' - `Exploitation` → [exploitationdata]
-#' - `Reference` → [referencedata]
-#' - `Effort` → [effortdata]
-#' - `Landings`, `Discards` → [catchdata]
-#' - `CPUE`, `Survey` → [indicesdata]
-#' - `LandingsAtAge`, `DiscardsAtAge`, `LandingsAtSize`, `DiscardsAtSize` → [compdata]
-#' - `Advice` → [advicedata]
+#' - `LifeHistory` → [lifehistorydata-class]
+#' - `Exploitation` → [exploitationdata-class]
+#' - `Reference` → [referencedata-class]
+#' - `Effort` → [effortdata-class]
+#' - `Landings`, `Discards` → [catchdata-class]
+#' - `CPUE`, `Survey` → [indicesdata-class]
+#' - `LandingsAtAge`, `DiscardsAtAge`, `LandingsAtSize`, `DiscardsAtSize` → [compdata-class]
+#' - `Advice` → [advicedata-class]
 #'
 #' @param Name Either a character string naming the new [data-class] object, or an
 #'   existing [om-class], [hist-class], or [mse-class] object from which to extract data.
@@ -38,26 +38,26 @@
 #'   Defaults to `1`.
 #' @param nArea A positive integer giving the number of spatial areas.
 #'   Defaults to `1`.
-#' @param LifeHistory Optional. An object of class [lifehistorydata] . 
-#' @param Exploitation Optional. An object of class [exploitationdata].
-#' @param Reference Optional. An object of class [referencedata]. 
-#' @param Effort Optional. An object of class [effortdata]. 
-#' @param Landings Optional. An object of class [catchdata] for landed catch.
-#' @param Discards Optional. An object of class [catchdata] for discarded
+#' @param LifeHistory Optional. An object of class [lifehistorydata-class] . 
+#' @param Exploitation Optional. An object of class [exploitationdata-class].
+#' @param Reference Optional. An object of class [referencedata-class]. 
+#' @param Effort Optional. An object of class [effortdata-class]. 
+#' @param Landings Optional. An object of class [catchdata-class] for landed catch.
+#' @param Discards Optional. An object of class [catchdata-class] for discarded
 #'   catch. 
-#' @param CPUE Optional. An object of class [indicesdata] for catch-per-unit-
+#' @param CPUE Optional. An object of class [indicesdata-class] for catch-per-unit-
 #'   effort indices.
-#' @param Survey Optional. An object of class [indicesdata] for fishery-
+#' @param Survey Optional. An object of class [indicesdata-class] for fishery-
 #'   independent survey indices. 
-#' @param LandingsAtAge Optional. An object of class [compdata] for age
+#' @param LandingsAtAge Optional. An object of class [compdata-class] for age
 #'   composition of landings. 
-#' @param DiscardsAtAge Optional. An object of class [compdata] for age
+#' @param DiscardsAtAge Optional. An object of class [compdata-class] for age
 #'   composition of discards. 
-#' @param LandingsAtSize Optional. An object of class [compdata] for size
+#' @param LandingsAtSize Optional. An object of class [compdata-class] for size
 #'   composition of landings. 
-#' @param DiscardsAtSize Optional. An object of class [compdata] for size
+#' @param DiscardsAtSize Optional. An object of class [compdata-class] for size
 #'   composition of discards.
-#' @param Advice Optional. An object of class [advicedata] containing TAC and
+#' @param Advice Optional. An object of class [advicedata-class] containing TAC and
 #'   related advice. 
 #' @param Misc A named list for any additional user-defined data. Defaults to
 #'   `list()`.

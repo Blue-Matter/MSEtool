@@ -46,6 +46,11 @@ The following methods may be called depending on the class of \code{object}:
 \item \code{\link[=PopulateSelectivity]{PopulateSelectivity()}}
 \item \code{\link[=PopulateRetention]{PopulateRetention()}}
 \item \code{\link[=PopulateDiscardMortality]{PopulateDiscardMortality()}}
+\item \code{\link[=PopulateObs]{PopulateObs()}}
+\item \code{\link[=PopulateEffortObs]{PopulateEffortObs()}}
+\item \code{\link[=PopulateCatchObs]{PopulateCatchObs()}}
+\item \code{\link[=PopulateIndexObs]{PopulateIndexObs()}}
+\item \code{\link[=PopulateCompObs]{PopulateCompObs()}}
 }
 
 Each \verb{Populate*()} function has its own documentation detailing which named

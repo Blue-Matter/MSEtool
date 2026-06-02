@@ -378,7 +378,7 @@ SimulateOM <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NU
   }
   
   # --- MSY reference points ----
-  MSYRefPoints <- sapply(1:nsim, CalcMSYRefs, MSY_y=MSY_y, FMSY_y=FMSY_y,
+  MSYRefPoints <- sapply(1:nsim, CalcMSYRefs_legacy, MSY_y=MSY_y, FMSY_y=FMSY_y,
                          SSBMSY_y=SSBMSY_y, BMSY_y=BMSY_y, VBMSY_y=VBMSY_y,
                          ageM=StockPars$ageM, nyears=nyears)
   

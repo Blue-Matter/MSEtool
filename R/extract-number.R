@@ -22,7 +22,7 @@
 #' @export
 #' @seealso [Biomass()], [SBiomass()], [SProduction()]
 #' @examples
-#' Hist <- Simulate(ExampleOM)
+#' Hist <- Simulate(SingleStockOM)
 #' Number(Hist, df = TRUE)
 #' Number(Hist, df = TRUE, byAge = TRUE)
 #' Number(Hist, df = TRUE, byAge = TRUE, byArea = TRUE)
@@ -87,6 +87,9 @@ extract_number_proj <- function(MSE, df = FALSE, byAge = FALSE, byArea = FALSE) 
 
 number_to_df <- function(number_slot, OM, period, extra_group_vars,
                          byAge, byArea) {
+  
+  Area <- NULL # CRAN checks
+  
   
   Areas       <- seq_len(nArea(OM))
   years       <- Years(OM, period)

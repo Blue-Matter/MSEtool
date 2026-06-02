@@ -9,7 +9,7 @@
 \alias{MinAge<-}
 \alias{PlusGroup}
 \alias{PlusGroup<-}
-\title{Ages}
+\title{Ages Constructor and Accessors}
 \usage{
 Ages(MaxAge, MinAge = 0, Units = "year", PlusGroup = TRUE)
 
@@ -28,58 +28,113 @@ PlusGroup(x)
 PlusGroup(x) <- value
 }
 \arguments{
-\item{MaxAge}{Numeric. Maximum age. If \code{PlusGroup = TRUE}, this is the plus
-group age. In units of \code{Units}.}
+\item{MaxAge}{\code{numeric(1)}. Maximum age in units of \code{Units}. When
+\code{PlusGroup = TRUE} (the default), fish at or older than this age are
+pooled into an open-ended plus group. Required for a non-empty object;
+if omitted the constructor returns an uninitialised \link[=ages-class]{ages} suitable
+for placeholder use inside a \link[=stock-class]{stock}. Alternatively, a
+\link[=stock-class]{stock} object, in which case \code{Ages()} returns \code{x@Ages} directly —
+see \emph{Pass-Through Access}.}
 
-\item{MinAge}{Numeric. Minimum age. In units of \code{Units}. Default \code{0}.}
+\item{MinAge}{\code{numeric(1)}. Minimum (youngest) age class in units of
+\code{Units}. Must be non-negative and less than or equal to \code{MaxAge}. Default
+\code{0}.}
 
-\item{Units}{Character. Time units for \code{MinAge} and \code{MaxAge}
-(e.g., \code{"year"}). See \code{\link[=ValidUnits]{ValidUnits()}}. Default \code{"year"}.}
+\item{Units}{\code{character(1)}. Time unit for \code{MinAge} and \code{MaxAge}. Must be
+one of the strings returned by \code{\link[=ValidUnits]{ValidUnits()}} (e.g., \code{"year"},
+\code{"month"}). Default \code{"year"}.}
 
-\item{PlusGroup}{Logical. Whether \code{MaxAge} is treated as a plus group.
-Default \code{TRUE}.}
+\item{PlusGroup}{\code{logical(1)}. If \code{TRUE}, \code{MaxAge} is an open-ended plus
+group that accumulates all fish at or beyond that age. If \code{FALSE}, the
+age classes terminate at exactly \code{MaxAge} with no pooling. Default \code{TRUE}.}
 
-\item{x}{An \link[=ages-class]{ages} object, or a \link[=stock-class]{stock} object for \verb{Ages<-}.}
+\item{x}{An \link[=ages-class]{ages} object for slot accessors (\code{MaxAge()},
+\code{MinAge()}, \code{PlusGroup()}), or a \link[=stock-class]{stock} object for \verb{Ages<-}.}
 
-\item{value}{For \verb{Ages<-}: an \link[=ages-class]{ages} object. For slot replacement
-functions (\verb{MaxAge<-}, \verb{MinAge<-}, \verb{PlusGroup<-}): the new value for
-the corresponding slot.}
+\item{value}{For \verb{Ages<-}: an \link[=ages-class]{ages} object. For \verb{MaxAge<-},
+\verb{MinAge<-}, \verb{PlusGroup<-}: the replacement value for the corresponding
+slot (see \emph{Slot Accessors}).}
 }
 \value{
-\itemize{
-\item \code{Ages()} returns an \link[=ages-class]{ages} object. If \code{MaxAge} is a \link[=stock-class]{stock} object,
-the \code{Ages} slot of that stock is returned.
-\item \verb{Ages<-} returns \code{x} with the \code{Ages} slot replaced.
-\item \code{MaxAge()}, \code{MinAge()}, \code{PlusGroup()} return the corresponding slot value
-from \code{x}.
-\item \verb{MaxAge<-}, \verb{MinAge<-}, \verb{PlusGroup<-} return \code{x} with the corresponding
-slot updated.
-}
+\code{Ages()} returns an \link[=ages-class]{ages} object. If \code{MaxAge} is a \link[=stock-class]{stock},
+returns \code{x@Ages}.
+
+\verb{Ages<-} returns the \link[=stock-class]{stock} \code{x} with the \code{Ages} slot replaced by
+\code{value} and the object re-validated.
+
+\code{MaxAge()}, \code{MinAge()}, \code{PlusGroup()} return the value of the corresponding
+slot from \code{x}.
+
+\verb{MaxAge<-}, \verb{MinAge<-}, \verb{PlusGroup<-} return \code{x} with the named slot
+updated and the object re-validated.
 }
 \description{
-Construct and manipulate an \link[=ages-class]{ages} object defining the age structure
-associated with a \link[=stock-class]{stock} object.
+Construct an \link[=ages-class]{ages} object defining the discrete age structure of a
+\link[=stock-class]{stock}, or access and replace the \code{Ages} slot of a \link[=stock-class]{stock}
+object and its individual slots.
 }
 \details{
-The \code{ages} class defines the discrete age structure used by a \link[=stock-class]{stock}
-object. Age classes are derived from \code{MinAge}, \code{MaxAge}, and \code{Units}.
+\subsection{Age Class Calculation}{
 
-Although \code{MinAge} and \code{MaxAge} are in the units described by \code{Units}, the
-resulting age classes are always in years — i.e., fractional year values
-for seasonal models.
+The \code{Classes} slot — a numeric vector of age classes expressed in years —
+is derived automatically from \code{MinAge}, \code{MaxAge}, and \code{Units} via
+\code{\link[=CalcAgeClasses]{CalcAgeClasses()}} and cannot be set directly. For seasonal models
+(\code{Units != "year"}), fractional year values are produced (e.g., \code{0},
+\code{0.25}, \code{0.5}, … for quarterly seasons with \code{MinAge = 0}). Retrieve the
+computed vector with \code{Classes(x)}.
+}
 
-Age classes can be accessed with \code{Classes(x)}.
-\subsection{Accessing and Assigning Slots}{
+\subsection{Plus Group}{
 
-All slots in \link[=ages-class]{ages} objects can be accessed or assigned new values
-with functions matching the slot names. See \code{Examples}.
+When \code{PlusGroup = TRUE}, the final age class absorbs all individuals at or
+beyond \code{MaxAge}. Mortality, growth, and selectivity at the plus-group age
+represent the average for that pooled cohort. Setting \code{PlusGroup = FALSE}
+treats \code{MaxAge} as an exact terminal age with no accumulation.
+}
+
+\subsection{Uninitialised Objects}{
+
+Calling \code{Ages()} without \code{MaxAge} returns an object with empty \code{MaxAge} and
+\code{MinAge} slots (\code{numeric(0)}). Validity checks are skipped for uninitialised
+objects, so they can be stored as placeholders inside a \link[=stock-class]{stock} before
+parameters are specified. The model will not run until \code{MaxAge} is supplied.
+}
+
+\subsection{Pass-Through Access from a Stock}{
+
+When \code{MaxAge} is a \link[=stock-class]{stock} object, \code{Ages()} acts as an accessor:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{Ages(my_stock)          # returns my_stock@Ages
+Ages(my_stock) <- a     # replaces my_stock@Ages with ages-class object `a`
+}\if{html}{\out{</div>}}
+}
+
+\subsection{Slot Accessors}{
+
+Individual slots can be read or replaced using functions that match the slot
+names. All replacement functions re-validate the object after assignment:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{MaxAge(a)        <- 20
+MinAge(a)        <- 1
+PlusGroup(a)     <- FALSE
+}\if{html}{\out{</div>}}
 }
 }
 \examples{
+# Basic construction
 a <- Ages(MaxAge = 20)
+a
+
+# Seasonal model: quarterly age classes
+a_qtr <- Ages(MaxAge = 20, Units = "quarter")
+Classes(a_qtr)
+
+# No plus group
+a_exact <- Ages(MaxAge = 20, PlusGroup = FALSE)
+
+# Slot accessors
 MaxAge(a)
-MaxAge(a) <- 10
-MaxAge(a)
+MaxAge(a) <- 25
 
 MinAge(a)
 MinAge(a) <- 1
@@ -87,7 +142,18 @@ MinAge(a) <- 1
 PlusGroup(a)
 PlusGroup(a) <- FALSE
 
+# Pass-through access from a stock
+s <- Stock(Name = "Cod", Ages = Ages(MaxAge = 15))
+Ages(s)
+Ages(s) <- Ages(MaxAge = 20)
+
 }
 \seealso{
-\link[=ages-class]{ages}, \code{\link[=Stock]{Stock()}}, \code{\link[=Units]{Units()}}, \code{\link[=Classes]{Classes()}}
+\link[=ages-class]{ages} for the class definition and slot-level documentation.
+\code{\link[=Stock]{Stock()}} for the enclosing stock constructor. \code{\link[=ValidUnits]{ValidUnits()}} for accepted
+unit strings. \code{\link[=Classes]{Classes()}} to retrieve the derived age-class vector.
+
+Other ages:
+\code{\link{ages-class}}
 }
+\concept{ages}

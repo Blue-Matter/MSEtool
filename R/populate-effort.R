@@ -40,6 +40,8 @@ PopulateEffort <- function(Effort,
   
   SetSeed(seed)
   
+  nSim  <- Get_nSim(Effort, nSim)
+  
   if (is.null(Effort@Effort)) {
     return(Effort)
   }

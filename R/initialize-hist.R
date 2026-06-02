@@ -114,7 +114,8 @@ InitializeTimeSeries <- function(Hist,
       
       dist <- OM@Fleet[[1]][[fl]]@Effort@Distribution
       if (!is.null(dist)) 
-        Hist@Distribution[, , fl, ] <- Extend(dist, nSim, NULL, HistYears, Areas)
+        Hist@Distribution[, , fl, ] <- Extend(dist, 
+                                              nSim = nSim, Years = HistYears, Areas = Areas)
     }
   }
   

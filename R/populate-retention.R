@@ -63,6 +63,10 @@ PopulateRetention <- function(Retention,
   
   argList <- list(Ages, Length, Years, nSim, CalcAtLength, seed)
   
+  Ages  <- DefaultAges(Ages)
+  Years <- DefaultYears(Years)
+  nSim  <- Get_nSim(Retention, nSim)
+  
   if (CheckDigest(Retention, argList) & !force) 
     return(Retention)
   
@@ -134,10 +138,7 @@ PopulateRetention <- function(Retention,
   
   Retention <- MeanAtLength2MeanAtAge(Retention, Length, max1 = FALSE)
   Retention <- MeanAtWeight2MeanAtAge(Retention, Weight, max1 = FALSE)
-  
-  Retention@MeanAtAge <- AddAtAgeDimnames(Retention@MeanAtAge, 
-                                            Ages, Years,
-                                            name='Retention')
+  Retention <- AddAtAgeDimnames(Retention, Ages, Years)
   
   if (CalcAtLength && !is.null(Length@ALK)) {
     Retention <- MeanAtAge2MeanAtLength(
@@ -151,44 +152,12 @@ PopulateRetention <- function(Retention,
   # Add Area dimension
   Retention@MeanAtLength <- AddDimension(Retention@MeanAtLength, "Area")
   Retention@MeanAtWeight <- AddDimension(Retention@MeanAtWeight, "Area")
-  Retention@MeanAtAge <- AddDimension(Retention@MeanAtAge, "Area")
+  Retention@MeanAtAge    <- AddDimension(Retention@MeanAtAge, "Area")
   
   # Add dimension names if missing
-  if (is.null(dimnames(Retention@MeanAtLength))) {
-    dd <- dim(Retention@MeanAtLength)
-    if (!is.null(dd)) {
-      dimnames(Retention@MeanAtLength) <- list(
-        Sim = 1:dd[1],
-        Class = Retention@Classes,
-        Year = Years[1:dd[3]],
-        Area = 1:dd[4]
-      )
-    }
-  }
-  
-  if (is.null(dimnames(Retention@MeanAtWeight))) {
-    dd <- dim(Retention@MeanAtWeight)
-    if (!is.null(dd)) {
-      dimnames(Retention@MeanAtWeight) <- list(
-        Sim = 1:dd[1],
-        Class = Retention@Classes,
-        Year = Years[1:dd[3]],
-        Area = 1:dd[4]
-      )
-    }
-  }
-  
-  if (is.null(dimnames(Retention@MeanAtAge))) {
-    dd <- dim(Retention@MeanAtAge)
-    if (!is.null(dd)) {
-      dimnames(Retention@MeanAtAge) <- list(
-        Sim = 1:dd[1],
-        Age = Ages@Classes[1:dd[2]],
-        Year = Years[1:dd[3]],
-        Area = 1:dd[4]
-      )
-    }
-  }
+  Retention <- AddAtAgeDimnames(Retention, Ages, Years)
+  Retention <- AddAtLengthDimnames(Retention, Years)
+  Retention <- AddAtWeightDimnames(Retention, Years)
   
   SetDigest(SetAgeDimnames(Retention, Ages), argList)
 }

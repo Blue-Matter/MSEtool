@@ -1,5 +1,5 @@
 
-#' `data` Class
+#' The `data` S4 Class
 #'
 #' The `data` class stores observed or simulated fishery data used by an
 #' [OM()] object. Data may include life-history information, exploitation
@@ -26,36 +26,36 @@
 #' @slot Seasons Positive integer. Number of seasons per year. Defaults to `1`.
 #' @slot nArea Positive integer. Number of spatial areas. Defaults to `1`.
 #'
-#' @slot LifeHistory An object of class [lifehistorydata] containing
+#' @slot LifeHistory An object of class [lifehistorydata-class] containing
 #'   biological parameters such as growth, maturity, and natural mortality.
-#' @slot Exploitation An object of class [exploitationdata] containing
+#' @slot Exploitation An object of class [exploitationdata-class] containing
 #'   selectivity, retention, and discard mortality parameters.
-#' @slot Reference An object of class [referencedata] containing biological
+#' @slot Reference An object of class [referencedata-class] containing biological
 #'   reference points such as unfished biomass and MSY-based quantities.
 #'
-#' @slot Effort An object of class [effortdata] containing fishing effort
+#' @slot Effort An object of class [effortdata-class] containing fishing effort
 #'   time series.
 #'
-#' @slot Landings An object of class [catchdata] containing landed catch
+#' @slot Landings An object of class [catchdata-class] containing landed catch
 #'   time series.
-#' @slot Discards An object of class [catchdata] containing discarded catch
+#' @slot Discards An object of class [catchdata-class] containing discarded catch
 #'   time series.
 #'
-#' @slot CPUE An object of class [indicesdata] containing catch-per-unit-effort
+#' @slot CPUE An object of class [indicesdata-class] containing catch-per-unit-effort
 #'   indices.
-#' @slot Survey An object of class [indicesdata] containing fishery-independent
+#' @slot Survey An object of class [indicesdata-class] containing fishery-independent
 #'   survey indices.
 #'
-#' @slot LandingsAtAge An object of class [compdata] containing age composition
+#' @slot LandingsAtAge An object of class [compdata-class] containing age composition
 #'   of landed catch.
-#' @slot DiscardsAtAge An object of class [compdata] containing age composition
+#' @slot DiscardsAtAge An object of class [compdata-class] containing age composition
 #'   of discarded catch.
-#' @slot LandingsAtSize An object of class [compdata] containing size
+#' @slot LandingsAtSize An object of class [compdata-class] containing size
 #'   composition of landed catch.
-#' @slot DiscardsAtSize An object of class [compdata] containing size
+#' @slot DiscardsAtSize An object of class [compdata-class] containing size
 #'   composition of discarded catch.
 #'
-#' @slot Advice An object of class [advicedata] containing TAC recommendations
+#' @slot Advice An object of class [advicedata-class] containing TAC recommendations
 #'   and related management advice.
 #'
 #' @slot Misc A named list for any additional user-defined data. Defaults to
@@ -63,14 +63,14 @@
 #' @slot Log Internal named list used for diagnostic and audit logging.
 #'
 #' @seealso [Data()]
-#' @include class-catchdata.R
-#' @include class-effortdata.R
-#' @include class-indicesdata.R
-#' @include class-compdata.R
-#' @include class-lifehistorydata.R
-#' @include class-exploitationdata.R
-#' @include class-referencedata.R
-#' @include class-advicedata.R
+#' @include class-data-catch.R
+#' @include class-data-effort.R
+#' @include class-data-indices.R
+#' @include class-data-comp.R
+#' @include class-data-lifehistory.R
+#' @include class-data-exploitation.R
+#' @include class-data-reference.R
+#' @include class-data-advice.R
 #' @name data-class
 #' @export
 setClass(

@@ -17,7 +17,7 @@
 \alias{RelRecFun}
 \alias{RelRecFun<-}
 \alias{SRR<-}
-\title{Stock-Recruit Relationship}
+\title{SRR Constructor and Accessors}
 \usage{
 SRR(
   Pars = list(h = NA),
@@ -67,127 +67,357 @@ RelRecFun(x) <- value
 SRR(x) <- value
 }
 \arguments{
-\item{Pars}{Named list of parameters defining the expected stock-recruit
-curve. Parameter names and interpretation depend on \code{Model}. See
-\code{\link[=SRRModels]{SRRModels()}} for required parameters for each model. If \code{Pars} is an S4
-object with an \code{SRR} slot (e.g., a \link[=stock-class]{stock} object), that slot is
-returned directly.}
-
-\item{Model}{Character. Stock-recruit model identifier
-(e.g., \code{"BevertonHolt"}). Default \code{"BevertonHolt"}. See \code{\link[=SRRModels]{SRRModels()}}
-for available models.}
-
-\item{R0}{Numeric scalar or array. Unfished recruitment. Default \code{NULL}.}
-
-\item{SD}{Numeric vector or array. Standard deviation of log-space
-recruitment deviations. May be:
+\item{Pars}{\code{list}. Named list containing the steepness parameter for the
+chosen SRR model. \code{R0} is never placed in \code{Pars} — it has its own
+dedicated slot. The required name depends on \code{Model}:
 \itemize{
-\item length 1: constant across all simulations,
-\item length 2: bounds of a uniform distribution sampled across simulations,
-\item length \code{nSim}: one value per simulation.
-}
+\item \code{BevertonHolt}: \code{list(h = ...)} where \verb{0.2 < h < 1}.
+\item \code{Ricker}: \code{list(hR = ...)}.
+\item \code{HockeyStick}: \code{list(Shinge = ...)} where \verb{0 < Shinge <= 1}.
+When \code{Pars} is a non-list S4 object with an \code{SRR} slot (e.g., a
+\link[=stock-class]{stock}), \code{SRR()} acts as a pass-through accessor and returns that
+slot. See \link[=populating-schedules]{Specifying Biological and Fleet Schedules}
+for accepted input formats (scalar, bounds vector, \code{nSim}-length vector).
+Default \code{list(h = NA)}.
+}}
 
-Default \code{NULL}, in which case recruitment deviations are deterministic.}
+\item{Model}{\code{character(1)} or \code{function}. SRR model identifier. Must match
+one of the models listed in \code{\link[=SRRModels]{SRRModels()}}, or be a custom R function.
+Default \code{"BevertonHolt"}.}
 
-\item{AC}{Numeric vector or array. Lag-1 autocorrelation of log-space
-recruitment deviations. Follows the same length conventions as \code{SD}.
-Default \code{NULL}.}
+\item{R0}{\code{numeric} or \code{NULL}. Unfished equilibrium recruitment. May be:
+\itemize{
+\item A scalar: same value for all simulations.
+\item A length-2 bounds vector: sampled from \code{Uniform(lower, upper)} once per
+simulation.
+\item A length-\code{nSim} vector: one value per simulation.
+Interpreted in units of \code{Units}. Default \code{NULL}.
+}}
 
-\item{SPFrom}{Character or numeric. Stock to use as the spawning production
-source for this stock's SRR. Defaults to the same stock (\code{NULL}).}
+\item{SD}{\code{numeric} or \code{NULL}. Log-space standard deviation of recruitment
+deviations. Follows the same length conventions as \code{R0}. Currently fixed
+across years (time-varying \code{SD} is not yet supported). When \code{NULL},
+recruitment is deterministic (no process error). Default \code{NULL}.}
 
-\item{TruncSD}{Numeric. Number of standard deviations at which to truncate
-the lognormal recruitment deviation distribution. Default \code{2}.}
+\item{AC}{\code{numeric} or \code{NULL}. Lag-1 autocorrelation of log-space
+recruitment deviations. Follows the same length conventions as \code{R0}.
+Currently fixed across years. Defaults to \code{0} (no autocorrelation) when
+\code{NULL}. Default \code{NULL}.}
 
-\item{RecDevInit}{Numeric matrix (\verb{nSim × MaxAge}). Recruitment deviations
-for the initial age structure. If \code{NULL} (default), generated internally
-from \code{SD} and \code{AC}.}
+\item{SPFrom}{\code{character(1)} or \code{numeric(1)}. Stock whose spawning
+production drives this stock's recruitment. Specify by stock name
+(\code{character}) or 1-based integer index (\code{numeric}). Defaults to self
+(the stock recruits from its own spawning production). Relevant only in
+multi-stock operating models. Default \code{NULL}.}
 
-\item{RecDevHist}{Numeric matrix (\verb{nSim × nHistTS}). Recruitment deviations
-for historical time steps. If \code{NULL} (default), generated internally from
-\code{SD} and \code{AC}.}
+\item{TruncSD}{\code{numeric(1)}. Number of standard deviations at which the
+log-normal recruitment deviation distribution is truncated. Default \code{2}.}
 
-\item{RecDevProj}{Numeric matrix (\verb{nSim × nProjectionTS}). Recruitment
-deviations for projection time steps. If \code{NULL} (default), generated
-internally from \code{SD} and \code{AC}.}
+\item{RecDevInit}{\code{matrix} or \code{NULL}. Pre-specified recruitment deviations
+(\verb{Sim × Age}) for initialising the historical age structure, covering all
+age classes except the minimum age (whose deviation is the first column
+of \code{RecDevHist}). If \code{NULL} (default), generated internally from \code{SD}
+and \code{AC} during \code{\link[=Populate]{Populate()}}.}
 
-\item{SpawnTimeFrac}{Numeric. Fraction of the time step at which spawning
-occurs (0 = start, 1 = end). Default \code{0}.}
+\item{RecDevHist}{\code{matrix} or \code{NULL}. Pre-specified recruitment deviations
+(\verb{Sim × nHistTS}) for historical time steps. The first column corresponds
+to the minimum age class in the initial year. If \code{NULL} (default),
+generated internally from \code{SD} and \code{AC}.}
 
-\item{RelRecFun}{Function. Optional function defining relative recruitment
-as a function of environmental or other covariates. Default \code{NULL}.}
+\item{RecDevProj}{\code{matrix} or \code{NULL}. Pre-specified recruitment deviations
+(\verb{Sim × nProjTS}) for projection time steps. If \code{NULL} (default),
+generated internally from \code{SD} and \code{AC}.}
 
-\item{Units}{Numeric. Scaling factor applied to recruitment. Default \code{1}.}
+\item{SpawnTimeFrac}{\code{numeric(1)}. Fraction of the time step elapsed before
+spawning occurs. Determines how much mortality (\verb{exp(-Z × SpawnTimeFrac)})
+is applied to the population before spawning numbers are counted:
+\itemize{
+\item \code{0} (default): spawning at the start of the step; no mortality applied
+before spawning.
+\item \code{0.5}: spawning mid-step; half of annual Z applied before spawning.
+\item \code{1}: spawning at the end of the step; full within-step Z applied before
+spawning.
+Default \code{0}.
+}}
 
-\item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
+\item{RelRecFun}{\code{function}, \code{character(1)}, or \code{NULL}. Relative recruitment
+function giving equilibrium recruitment relative to \code{R0} as a function of
+spawning-per-recruit (SPR). For built-in models, set automatically during
+\code{\link[=Populate]{Populate()}} (e.g., \code{"BevertonHolt_RelRec"} when \code{Model = "BevertonHolt"}). For custom SRR models, must be supplied with signature
+\verb{function(Pars, SPR)}. Default \code{NULL}.}
+
+\item{Units}{\code{numeric(1)}. Scaling factor for recruitment. \code{1} (default)
+means \code{R0} is in absolute numbers of fish; \code{1000} means \code{R0} is in
+thousands of fish. Does not affect internal calculations — used only to
+set the interpretation of numbers in \link[=hist-class]{hist} output. Default \code{1}.}
+
+\item{Misc}{\code{list}. Used internally. Default \code{list()}.}
 
 \item{x}{A \link[=srr-class]{srr} object for slot accessors, or a \link[=stock-class]{stock} object
 for \verb{SRR<-}.}
 
 \item{value}{For \verb{SRR<-}: a \link[=srr-class]{srr} object. For slot replacement
-functions: the new value for the corresponding slot.}
+functions: the replacement value for the corresponding slot.}
 }
 \value{
 \itemize{
-\item \code{SRR()} returns a \link[=srr-class]{srr} object. If \code{Pars} is an S4 object with an
-\code{SRR} slot, that slot is returned.
-\item \verb{SRR<-} returns \code{x} with the \code{SRR} slot replaced.
-\item Slot accessors return the value of the corresponding slot from \code{x}.
-\item Slot replacement functions return \code{x} with the corresponding slot
-updated.
+\item \code{SRR()} returns a \link[=srr-class]{srr} object. If \code{Pars} is a non-list S4 object
+with an \code{SRR} slot, returns that slot.
+\item \verb{SRR<-} returns the \link[=stock-class]{stock} \code{x} with the \code{SRR} slot replaced and
+the object re-validated.
+\item \code{R0()}, \code{SPFrom()}, \code{RecDevInit()}, \code{RecDevHist()}, \code{RecDevProj()},
+\code{SpawnTimeFrac()}, \code{RelRecFun()} return the value of the corresponding
+slot from \code{x}.
+\item All replacement variants return \code{x} with the named slot updated and the
+object re-validated.
 }
 }
 \description{
-Construct and manipulate a \link[=srr-class]{srr} object defining the stock-recruit
-relationship (SRR) associated with a \code{\link[=Stock]{Stock()}} object. An \code{SRR} object is
+Construct a \link[=srr-class]{srr} object defining the stock-recruitment relationship
+and recruitment variability for a \link[=stock-class]{stock}, or access and replace the
+\code{SRR} slot of a \link[=stock-class]{stock} and its individual slots. An \code{SRR} object is
 required for all \link[=stock-class]{stock} objects.
 }
 \details{
-An \link[=srr-class]{srr} object is required for all \link[=stock-class]{stock} objects. It defines
-both the deterministic stock-recruit relationship and the stochastic
-recruitment deviations used in the operating model.
-\subsection{Pass-Through Access}{
+\subsection{Specifying the SRR}{
 
-If \code{Pars} is an S4 object with an \code{SRR} slot (e.g., a \link[=stock-class]{stock}
-object), \code{SRR()} returns that slot directly rather than constructing a new
-object.
+The SRR is defined by three components:
+\enumerate{
+\item \strong{The deterministic curve}: \code{Model} and \code{Pars} (steepness only; \code{R0}
+goes in its own slot). See \code{\link[=SRRModels]{SRRModels()}} for available models:
 }
 
-\subsection{Recruitment Deviations}{
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{# Beverton-Holt with fixed steepness
+srr <- SRR(Pars = list(h = 0.7), R0 = 1000)
 
-Recruitment deviations may be supplied directly via \code{RecDevInit},
-\code{RecDevHist}, and \code{RecDevProj}. If not supplied, they are generated
-internally during model setup from \code{SD} and \code{AC}. If \code{SD} is \code{NULL},
-recruitment is deterministic.
+# Beverton-Holt with stochastic steepness across simulations
+srr <- SRR(Pars = list(h = c(0.6, 0.9)), R0 = 1000)
+
+# Ricker
+srr <- SRR(Pars = list(hR = 0.7), Model = "Ricker", R0 = 1000)
+
+# Hockey-stick
+srr <- SRR(Pars = list(Shinge = 0.3), Model = "HockeyStick", R0 = 1000)
+}\if{html}{\out{</div>}}
+\enumerate{
+\item \strong{Process error}: \code{SD} and \code{AC} control the magnitude and
+autocorrelation of log-space recruitment deviations. Both are currently
+fixed across years:
 }
 
-\subsection{Attaching to a Stock}{
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{# Stochastic recruitment: SD = 0.4, no autocorrelation
+srr <- SRR(Pars = list(h = 0.7), R0 = 1000, SD = 0.4)
 
-An \code{SRR} object can be attached to a \code{\link[=Stock]{Stock()}} with
-\code{SRR(Stock) <- MySRR} and retrieved with \code{SRR(Stock)}.
+# Stochastic recruitment: SD drawn from Uniform(0.3, 0.6), AC = 0.4
+srr <- SRR(Pars = list(h = 0.7), R0 = 1000,
+           SD = c(0.3, 0.6), AC = 0.4)
+}\if{html}{\out{</div>}}
+\enumerate{
+\item \strong{Recruitment deviations} (\code{RecDevInit}, \code{RecDevHist}, \code{RecDevProj}):
+generated automatically from \code{SD} and \code{AC} during \code{\link[=Populate]{Populate()}} when
+\code{NULL}. Supply directly to condition the operating model on observed
+recruitment indices or to reproduce a specific stochastic trajectory.
+}
+}
 
-Individual slots may be accessed or modified using \code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}},
-\code{\link[=R0]{R0()}}, \code{\link[=SD]{SD()}}, \code{\link[=AC]{AC()}}, \code{\link[=SPFrom]{SPFrom()}}, \code{\link[=TruncSD]{TruncSD()}}, \code{\link[=RecDevInit]{RecDevInit()}},
-\code{\link[=RecDevHist]{RecDevHist()}}, \code{\link[=RecDevProj]{RecDevProj()}}, \code{\link[=SpawnTimeFrac]{SpawnTimeFrac()}}, and \code{\link[=RelRecFun]{RelRecFun()}}.
+\subsection{Custom SRR Models}{
 
-See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more details.
+A custom SRR function may be passed to \code{Model}. It must accept \code{S}, \code{S0},
+\code{R0}, and any named parameters in \code{Pars} as arguments. A matching
+\code{RelRecFun} with signature \verb{function(Pars, SPR)} must also be supplied:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{my_srr <- function(S, S0, R0, h) \{
+  # custom Beverton-Holt variant
+  4 * h * R0 * S / (S0 * (1 - h) + S * (5 * h - 1))
+\}
+my_rrf <- function(Pars, SPR) \{
+  h <- Pars$h
+  CR <- 4 * h / (1 - h)
+  pmax((CR * SPR - 1) / ((CR - 1) * SPR), 0)
+\}
+srr <- SRR(Pars = list(h = 0.7), Model = my_srr,
+           R0 = 1000, RelRecFun = my_rrf)
+}\if{html}{\out{</div>}}
+}
+
+\subsection{Spawning Production Source (\code{SPFrom})}{
+
+In multi-stock models, one stock's recruitment may be driven by another
+stock's spawning production. Specify by stock name or 1-based index:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{# Stock 2 recruits based on stock 1's spawning production
+srr2 <- SRR(Pars = list(h = 0.7), R0 = 500, SPFrom = 1)
+# equivalently by name:
+srr2 <- SRR(Pars = list(h = 0.7), R0 = 500, SPFrom = "Stock1")
+}\if{html}{\out{</div>}}
+}
+
+\subsection{Pass-Through Access from a Stock}{
+
+When \code{Pars} is a non-list S4 object with an \code{SRR} slot, \code{SRR()} returns
+that slot directly:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{SRR(my_stock)           # returns my_stock@SRR
+SRR(my_stock) <- my_srr # replaces my_stock@SRR
+}\if{html}{\out{</div>}}
+}
+
+\subsection{Slot Accessors}{
+
+Individual slots can be read or replaced using generic functions matching
+their names. All replacement functions re-validate the object:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{Pars(srr)          <- list(h = 0.8)
+Model(srr)         <- "Ricker"
+R0(srr)            <- 5000
+SD(srr)            <- 0.4
+AC(srr)            <- 0.3
+TruncSD(srr)       <- 2
+SpawnTimeFrac(srr) <- 0.5
+SPFrom(srr)        <- 1
+RelRecFun(srr)     <- "Ricker_RelRec"
+RecDevHist(srr)    <- my_hist_matrix
+RecDevProj(srr)    <- my_proj_matrix
+RecDevInit(srr)    <- my_init_matrix
+}\if{html}{\out{</div>}}
 }
 }
 \examples{
+# See SRRModels() for all available stock-recruitment models and their
+# required parameters. Note: R0 always goes in its own slot, not in Pars.
 SRRModels()
 
+# ---- Beverton-Holt (default) ----
 
-# Beverton-Holt Model
-SRR <- SRR(Pars=list(R0=1e5, h=0.6), SD=0.6, AC=0.1)
+## Fixed steepness, deterministic recruitment
+srr <- SRR(Pars = list(h = 0.7), R0 = 1000)
 
-# Populate the object (usually done internally; see `?Populate`)
-SRR <- Populate(SRR, MaxAge=10, nHistTS=20, nProjTS=5, nsim=2)
+## Stochastic steepness — h drawn from Uniform(0.6, 0.9) once per simulation
+srr <- SRR(Pars = list(h = c(0.6, 0.9)), R0 = 1000)
 
-plot(SRR)
+## Stochastic R0 across simulations
+srr <- SRR(Pars = list(h = 0.7), R0 = c(500, 2000))
 
-# see Examples in `?Length` for other `Pars` configurations
+## Add recruitment process error: SD = 0.4, no autocorrelation
+srr <- SRR(Pars = list(h = 0.7), R0 = 1000, SD = 0.4)
+
+## SD drawn from Uniform(0.3, 0.6), with lag-1 autocorrelation
+srr <- SRR(Pars = list(h = 0.7), R0 = 1000,
+           SD = c(0.3, 0.6), AC = 0.4)
+
+## R0 in thousands of fish (Units = 1000)
+## Does not affect calculations — sets interpretation of numbers in output
+srr <- SRR(Pars = list(h = 0.7), R0 = 5, Units = 1000)
+
+# ---- Ricker ----
+
+srr_r <- SRR(Pars  = list(hR = 0.7),
+             Model = "Ricker",
+             R0    = 1000,
+             SD    = 0.4)
+
+# ---- Hockey-stick ----
+
+## Shinge is the hinge point relative to S0 (0 < Shinge <= 1)
+srr_hs <- SRR(Pars  = list(Shinge = 0.3),
+              Model = "HockeyStick",
+              R0    = 1000,
+              SD    = 0.4)
+
+# ---- Spawning timing ----
+
+## SpawnTimeFrac = 0 (default): spawning at start of step, no pre-spawn Z
+## SpawnTimeFrac = 0.5:         mid-step spawning, exp(-0.5 * Z) applied first
+## SpawnTimeFrac = 1:           end-of-step spawning, full exp(-Z) applied first
+srr_mid <- SRR(Pars = list(h = 0.7), R0 = 1000, SpawnTimeFrac = 0.5)
+
+# ---- Pre-specified recruitment deviations ----
+
+## Supply RecDevHist directly to condition on observed recruitment.
+## Dimensions: nSim x nHistTS. Values are multiplicative deviations
+## in log-space (mean-zero lognormal deviates).
+nSim    <- 48
+nHistTS <- 50
+hist_devs <- matrix(rnorm(nSim * nHistTS, 0, 0.4),
+                    nrow = nSim, ncol = nHistTS)
+dimnames(hist_devs) <- list(
+  Sim  = seq_len(nSim),
+  Year = seq(1970, by = 1, length.out = nHistTS)  
+)
+srr_cond <- SRR(Pars       = list(h = 0.7),
+                R0         = 1000,
+                SD         = 0.4,
+                RecDevHist = hist_devs)
+
+# ---- Multi-stock: SPFrom ----
+
+## Stock 2 recruits based on stock 1's spawning production.
+## Specify by 1-based index or by stock name.
+srr_s2 <- SRR(Pars   = list(h = 0.7),
+              R0     = 500,
+              SPFrom = 1)          
+
+# ---- Custom SRR model ----
+
+## A custom model must accept S, S0, R0, and any named Pars.
+## A matching RelRecFun with signature function(Pars, SPR) must also be given.
+my_srr <- function(S, S0, R0, h) {
+  4 * h * R0 * S / (S0 * (1 - h) + S * (5 * h - 1))
+}
+my_rrf <- function(Pars, SPR) {
+  h  <- Pars$h
+  CR <- 4 * h / (1 - h)
+  pmax((CR * SPR - 1) / ((CR - 1) * SPR), 0)
+}
+srr_custom <- SRR(Pars       = list(h = 0.7),
+                  Model      = my_srr,
+                  R0         = 1000,
+                  SD         = 0.4,
+                  RelRecFun  = my_rrf)
+
+# ---- Slot accessors ----
+
+srr <- SRR(Pars = list(h = 0.7), R0 = 1000, SD = 0.4, AC = 0.3)
+
+## Read slots
+Pars(srr)
+R0(srr)
+SD(srr)
+AC(srr)
+SpawnTimeFrac(srr)
+RelRecFun(srr)      # NULL until Populate() is called for built-in models
+
+## Replace slots
+R0(srr)            <- 2000
+SD(srr)            <- 0.5
+SpawnTimeFrac(srr) <- 0.5
+
+# ---- Attaching to a Stock ----
+
+stk <- Stock(Name = "Example stock", Ages = Ages(MaxAge = 20))
+SRR(stk) <- SRR(Pars = list(h = 0.7), R0 = 1000, SD = 0.4)
+SRR(stk)
+
+# ---- Populate ----
+
+## The final populated object (typically done internally).
+## RecDevHist, RecDevProj, and RecDevInit are generated from SD and AC.
+pop_srr <- Populate(SRR(stk), Ages = Ages(MaxAge = 20))
+pop_srr
 }
 \seealso{
-\link[=srr-class]{srr}, \code{\link[=Stock]{Stock()}}, \code{\link[=SRRModels]{SRRModels()}}, \code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}},
-\code{\link[=R0]{R0()}}, \code{\link[=RecDevHist]{RecDevHist()}}, \code{\link[=RecDevProj]{RecDevProj()}}, \code{\link[=SpawnTimeFrac]{SpawnTimeFrac()}}
+\itemize{
+\item \link[=srr-class]{srr} for the class definition and slot-level documentation.
+\item \code{\link[=SRRModels]{SRRModels()}} for available stock-recruitment models and their required
+parameters.
+\item \code{\link[=Populate]{Populate()}} for array population.
+\item \code{\link[=Stock]{Stock()}} for the enclosing stock constructor.
+\item \code{\link[=Fecundity]{Fecundity()}} for the spawning production used as input to the SRR.
+\item \link[=populating-schedules]{Specifying Biological and Fleet Schedules} for
+accepted \code{Pars}, \code{R0}, \code{SD}, and \code{AC} input formats.
 }
+
+Other srr:
+\code{\link{srr-class}}
+}
+\concept{srr}

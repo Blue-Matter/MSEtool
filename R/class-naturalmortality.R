@@ -1,18 +1,66 @@
-#' NaturalMortality Class
+#' The `naturalmortality` S4 Class
 #'
-#' An S4 class representing natural mortality assumptions associated
-#' with a [Stock()] object.
-#' 
-#' See [NaturalMortality()] for details.
-#' 
-#' @slot Pars Named list of natural mortality parameters.
-#' @slot Model Model identifier associated with `Pars`.
-#' @slot Units Time units (e.g. `"year"`).
-#' @slot MeanAtAge Mean natural mortality-at-age array (optional).
-#' @slot MeanAtLength Mean natural mortality-at-length array (optional).
-#' @slot Random Random effects array (optional).
-#' @slot Classes Age or length class midpoints (optional).
-#' @slot Misc Miscellaneous list.
+#' Defines the natural mortality schedule for a [stock-class] object. Mortality
+#' may be expressed as a function of age or length, and may vary across
+#' simulations and years. Objects are typically created via
+#' [NaturalMortality()], which documents all parameters, validates inputs, and
+#' infers the mortality model automatically when possible.
+#'
+#' @slot Pars `list`. Named list of natural mortality parameters whose names
+#'   correspond to those expected by `Model`. See [NaturalMortalityModels()]
+#'   for parameter sets and
+#'   [Specifying Biological and Fleet Schedules][populating-schedules] for
+#'   accepted input formats.
+#' @slot Model `function` or `character(1)`. Natural mortality model
+#'   identifier, matched to one of [NaturalMortalityModels()]. Set
+#'   automatically by [FindModel()] when `Pars` is supplied without an
+#'   explicit model.
+#' @slot Units `character(1)`. Time unit in which mortality rates are
+#'   expressed (e.g., `"year"` for instantaneous annual mortality). Must be
+#'   accepted by [ValidUnits()] and match those used in [Ages()].
+#' @slot MeanAtAge `array`. Mean instantaneous natural mortality at age with
+#'   named dimensions `Sim`, `Age`, and `Year`. Populated automatically by
+#'   [Populate()] when `Pars` and `Model` are set; may also be supplied
+#'   directly when `Pars` is empty. When `Pars` contains a matched model, any
+#'   existing values are overwritten.
+#'   See [Specifying Biological and Fleet Schedules][populating-schedules].
+#' @slot MeanAtLength `array`. Mean natural mortality at length with named
+#'   dimensions `Sim`, `Length`, and `Year`. Populated automatically when an
+#'   at-length mortality model is used, or may be supplied directly. Converted
+#'   to `MeanAtAge` via the `ALK` during [Populate()] when `MeanAtAge` is not
+#'   already populated.
+#'   See [Specifying Biological and Fleet Schedules][populating-schedules].
+#' @slot Random `array`. Reserved for future use. Intended to hold
+#'   simulation- and year-specific multipliers that add stochastic variation
+#'   around the average mortality schedule in `MeanAtAge`. Currently stored
+#'   but not applied during [Populate()].
+#' @slot Classes `numeric`. Age or length class midpoints corresponding to the
+#'   `MeanAt*` array in use.
+#' @slot Misc `list`. Used internally.
+#'
+#' @details
+#' Direct construction via [methods::new()] is not recommended; use
+#' [NaturalMortality()] instead, which handles model inference and object
+#' validation.
+#'
+#' Rates in `MeanAtAge` are instantaneous mortality values (*M*) expressed
+#' over the period defined by `Units`. For seasonal models, set `Units` to
+#' match the season length so that within-step rates are scaled correctly
+#' during [Populate()].
+#'
+#' @seealso
+#' - [NaturalMortality()] for the constructor and accessor functions.
+#' - [NaturalMortalityModels()] for available models and their required
+#'   parameters.
+#' - [ValidUnits()] for accepted unit strings.
+#' - [Populate()] for array population.
+#' - [FindModel()] for automatic model inference.
+#' - [Length()] for the companion length schedule, required when using
+#'   at-length mortality models.
+#' - [Specifying Biological and Fleet Schedules][populating-schedules] for the
+#'   full description of how `Pars`, `Model`, and `MeanAt*` arrays interact.
+#'
+#' @family naturalmortality
 #'
 #' @export
 #' @include class-unions.R

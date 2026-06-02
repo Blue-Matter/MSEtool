@@ -17,9 +17,13 @@ A data.frame with MP names, management type (e.g "Input", "Output") and manageme
 Management Procedure Type
 }
 \examples{
+\dontrun{
+library(openMSE)
 MPtype(c("AvC", "curE", "matlenlim", "MRreal", "FMSYref"))
+}
+
 
 }
 \seealso{
-\link{Required}
+\code{\link[=Required]{Required()}}
 }

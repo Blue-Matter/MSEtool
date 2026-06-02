@@ -3,6 +3,7 @@
 \docType{class}
 \name{Data-legacy-class}
 \alias{Data-legacy-class}
+\alias{Data-class}
 \title{Class \code{'Data'}}
 \description{
 An object for storing fishery data for analysis
@@ -221,4 +222,3 @@ newdata<-new('Data')
 \author{
 T. Carruthers and A. Hordyk
 }
-\keyword{classes}

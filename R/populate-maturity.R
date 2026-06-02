@@ -57,14 +57,15 @@ PopulateMaturity <- function(Maturity,
                              Length = NULL,
                              Weight = NULL,
                              Years = NULL,
-                             nSim = NULL,
+                             nSim = 5,
                              seed = NULL,
                              silent = FALSE,
                              CalcAtLength = FALSE,
                              force = FALSE) {
   
-  Ages <- DefaultAges(Ages)
+  Ages  <- DefaultAges(Ages)
   Years <- DefaultYears(Years)
+  nSim  <- Get_nSim(Maturity, nSim)
   
   argList <- list(Ages, Length, nSim, Years, CalcAtLength, seed)
   
@@ -122,7 +123,9 @@ PopulateMaturity <- function(Maturity,
     Maturity <- MeanAtAge2MeanAtLength(Maturity, Length)
   
   # Semelparous
-  if (inherits(Maturity@Semelparous, "array")) {} else {
+  if (inherits(Maturity@Semelparous, "array")) {
+    
+  } else {
     if (Maturity@Semelparous) {
       Maturity@Semelparous <- Maturity@MeanAtAge
     } else {
@@ -131,14 +134,7 @@ PopulateMaturity <- function(Maturity,
     }
   }
   
-  if (is.null(dimnames(Maturity@MeanAtAge))) {
-    dd <- dim(Maturity@MeanAtAge)
-    dimnames(Maturity@MeanAtAge) <- list(
-      Sim=1:dd[1],
-      Age=Ages@Classes[1:dd[2]],
-      Year=Years[1:dd[3]]
-    )
-  }
+  Maturity <- AddAtAgeDimnames(Maturity, Ages, Years)
   
   if (is.null(dimnames(Maturity@Semelparous))) {
     dd <- dim(Maturity@Semelparous)

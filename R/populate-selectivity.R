@@ -74,6 +74,8 @@ PopulateSelectivity <- function(Selectivity,
     Ages, Length, Weight, Years, nArea, nSim, CalcAtLength, seed
   )
   
+  nSim  <- Get_nSim(Selectivity, nSim)
+  
   if (EmptyObject(Selectivity)) 
     cli::cli_abort('{.val Selectivity} is required but is currently empty')
 
@@ -95,7 +97,10 @@ PopulateSelectivity <- function(Selectivity,
     if (Selectivity@isRel) {
       CheckRequiredObject(Maturity, "maturity", "Maturity")
       L50 <- FindL50(Maturity)
-      Selectivity@Pars$L5 <- ArrayMultiply(Selectivity@Pars$L5, L50)
+      if (!is.null(dimnames(Selectivity@Pars$L5)$Area)) 
+        L50 <- AddDimension(L50, 'Area')
+        
+      Selectivity@Pars$L5 <- ArrayMultiply(Selectivity@Pars$L5, L50)  
       Selectivity@Pars$LFS <- ArrayMultiply(Selectivity@Pars$LFS, L50)
       Selectivity@isRel <- FALSE
     }
@@ -139,9 +144,7 @@ PopulateSelectivity <- function(Selectivity,
     max1 = TRUE
   )
   
-  Selectivity@MeanAtAge <- AddAtAgeDimnames(Selectivity@MeanAtAge, 
-                                            Ages, Years,
-                                            name='Selectivity')
+  Selectivity <- AddAtAgeDimnames(Selectivity, Ages, Years)
   
   if (CalcAtLength && is.null(Selectivity@MeanAtWeight)) {
     Selectivity <- MeanAtAge2MeanAtLength(
@@ -161,44 +164,13 @@ PopulateSelectivity <- function(Selectivity,
   
   Selectivity@MeanAtLength <- AddDimension(Selectivity@MeanAtLength, "Area")
   Selectivity@MeanAtWeight <- AddDimension(Selectivity@MeanAtWeight, "Area")
-  Selectivity@MeanAtAge <- AddDimension(Selectivity@MeanAtAge, "Area")
+  Selectivity@MeanAtAge    <- AddDimension(Selectivity@MeanAtAge, "Area")
   
   # Add dimension names if missing
-  if (is.null(dimnames(Selectivity@MeanAtLength))) {
-    dd <- dim(Selectivity@MeanAtLength)
-    if (!is.null(dd)) {
-      dimnames(Selectivity@MeanAtLength) <- list(
-        Sim = 1:dd[1],
-        Class = Selectivity@Classes,
-        Year = Years[1:dd[3]],
-        Area = 1:dd[4]
-      )
-    }
-  }
-  
-  if (is.null(dimnames(Selectivity@MeanAtWeight))) {
-    dd <- dim(Selectivity@MeanAtWeight)
-    if (!is.null(dd)) {
-      dimnames(Selectivity@MeanAtWeight) <- list(
-        Sim = 1:dd[1],
-        Class = Selectivity@Classes,
-        Year = Years[1:dd[3]],
-        Area = 1:dd[4]
-      )
-    }
-  }
-  
-  if (is.null(dimnames(Selectivity@MeanAtAge))) {
-    dd <- dim(Selectivity@MeanAtAge)
-    if (!is.null(dd)) {
-      dimnames(Selectivity@MeanAtAge) <- list(
-        Sim = 1:dd[1],
-        Age = Ages@Classes[1:dd[2]],
-        Year = Years[1:dd[3]],
-        Area = 1:dd[4]
-      )
-    }
-  }
+  Selectivity <- AddAtAgeDimnames(Selectivity, Ages, Years)
+  Selectivity <- AddAtLengthDimnames(Selectivity, Years)
+  Selectivity <- AddAtWeightDimnames(Selectivity, Years)
+
   
   SetDigest(SetAgeDimnames(Selectivity, Ages), argList)
 }
@@ -221,61 +193,3 @@ FindL50 <- function(Maturity) {
   apply(Maturity@MeanAtLength, c('Sim', 'Year'), FindL50_vec)
 }
 
-
-AddAtAgeDimnames <- function(MeanAtAge, Ages, Years, name='Selectivity') {
-  dd <- dim(MeanAtAge)
-  dnames <- dimnames(MeanAtAge)
-  if (!is.null(dnames)) 
-    return(MeanAtAge)
-  
-  AgeClasses <- Ages@Classes
-  nAge <- length(AgeClasses)
-  
-  if (is.null(dd)) {
-    len <- length(MeanAtAge)
-    if (len != nAge) 
-      cli::cli_abort(c('x'='If `{name}@MeanAtAge` is numeric vector it must be length `nAge`',
-                       'i'='`length({name}@MeanAtAge)` = {.val {len}}',
-                       'i'='`nAge` = {.val {nAge}}'
-      )
-      )
-    
-    MeanAtAge <- array(MeanAtAge, dim=c(1,nAge,1),
-                       dimnames = list(
-                         Sim=1,
-                         Age=AgeClasses,
-                         Year=min(Years)
-                       ))
-    return(MeanAtAge)
-  }
-  
-  if (dd[2]!=nAge)
-    cli::cli_abort(c('x'='If `{name}@MeanAtAge` is an array, the second dimension must be length `nAge`',
-                     'i'='`dim({name}@MeanAtAge)` = {.val { dd}}',
-                     'i'='`nAge` = {.val { nAge}}')
-    )
-  
-  if (length(dd)==2) {
-    dimnames(MeanAtAge) <- list(
-      Sim=seq_len(dd[1]),
-      Age=AgeClasses
-    )
-    MeanAtAge <- AddDimension(MeanAtAge, 'Year', val=min(Years))
-    
-  } else if (length(dd)==3) {
-    dimnames(MeanAtAge) <- list(
-      Sim=seq_len(dd[1]),
-      Age=AgeClasses,
-      Year=Years[seq_len(dd[3])]
-    )
-    
-  } else if (length(dd)==4) {
-    dimnames(MeanAtAge) <- list(
-      Sim=seq_len(dd[1]),
-      Age=AgeClasses,
-      Year=Years[seq_len(dd[3])],
-      Area=seq_len(dd[4])
-    )
-  }
-  MeanAtAge
-}

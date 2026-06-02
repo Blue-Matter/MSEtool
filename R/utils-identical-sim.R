@@ -13,10 +13,9 @@
 #' @keywords internal
 IdenticalSims <- function(object, ignore=NULL, debug=FALSE) {
   
-  if (debug) {
+  if (debug) 
     print(class(object))
-  }
-
+  
   # S4 objects 
   if (isS4(object)) {
     for (s in slotNames(object)) {
@@ -57,16 +56,19 @@ IdenticalSims <- function(object, ignore=NULL, debug=FALSE) {
       if (dims[sim_dim]==1)
         return(TRUE)
       
-      perm <- c(sim_dim, setdiff(seq_along(dims), sim_dim))
-      arr_perm <- aperm(object, perm)
+      perm    <- c(sim_dim, setdiff(seq_along(dims), sim_dim))
+      mat     <- matrix(aperm(object, perm), nrow = dims[sim_dim])
       
-      mat <- matrix(arr_perm, nrow = dims[sim_dim])
+      ref <- mat[1, , drop = TRUE]
       
-      ref <- mat[1, , drop=TRUE]
-      ind <- any(mat != matrix(ref, nrow=nrow(mat), ncol=ncol(mat), byrow=TRUE))
-      if (is.na(ind) || ind)
+      col_na    <- colSums(!is.na(mat)) == 0L          
+      col_equal <- colSums(mat != matrix(ref, nrow = nrow(mat),
+                                         ncol = ncol(mat),
+                                         byrow = TRUE),
+                           na.rm = TRUE) == 0L         
+      
+      if (!all(col_na | col_equal))
         return(FALSE)
-      
     }
   }
   

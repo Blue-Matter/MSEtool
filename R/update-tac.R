@@ -77,11 +77,9 @@ Update_TAC_Sim <- function(Proj,
   if (any(!chk)) return(Proj)
   
   TAC_by_Complex     <- ResolveTACByComplex(AdviceList, LastAdviceList,
-                                            Complexes, 
-                                            Proj, 
-                                            sim, 
-                                            FleetNames)
-  TACType_by_Complex <- ResolveTACTypeByComplex(AdviceList, Complexes)
+                                            Complexes, Proj, sim, FleetNames)
+  TACType_by_Complex <- ResolveTACTypeByComplex(AdviceList, Complexes, nFleet_loc)
+  TACUnit_by_Complex <- ResolveTACUnitByComplex(AdviceList, Complexes, nFleet_loc)
   
   MaxFleetEffort     <- Proj@Effort[sim, TSIndex,]
   
@@ -93,6 +91,7 @@ Update_TAC_Sim <- function(Proj,
                                              sim, 
                                              TAC_by_Complex,
                                              TACType_by_Complex,
+                                             TACUnit_by_Complex,
                                              MaxFleetEffort)
     
     Proj@Effort[sim, TSIndex, ] <- Required_Effort
@@ -115,6 +114,7 @@ Update_TAC_Sim <- function(Proj,
     FleetNames         = FleetNames,
     TAC_by_Complex     = TAC_by_Complex,
     TACType_by_Complex = TACType_by_Complex,
+    TACUnit_by_Complex = TACUnit_by_Complex,
     Choke              = Choke,
     UndershootPenalty  = UndershootPenalty,
     OvershootPenalty   = OvershootPenalty,

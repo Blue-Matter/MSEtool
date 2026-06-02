@@ -15,15 +15,34 @@ DiscardMortality(
 DiscardMortality(x) <- value
 }
 \arguments{
-\item{MeanAtAge}{Numeric array. Mean discard mortality at age, with named
-dimensions \code{Sim}, \code{Age}, and \code{Year}. See \code{Details} section.}
+\item{MeanAtAge}{Numeric, numeric vector, or array, or \code{NULL}. Mean discard
+mortality at age. Values must be between 0 (all discards survive) and 1
+(all discards die). Accepted forms:
+\itemize{
+\item \code{NULL} (default): creates an empty \link[=discardmortality-class]{discardmortality} object.
+\code{\link[=PopulateDiscardMortality]{PopulateDiscardMortality()}} sets discard mortality to 0 for all age
+and length classes.
+\item Scalar: constant mortality applied to all ages. Wrapped internally to a
+\verb{1 x nAge x 1} array.
+\item Numeric vector of length \code{nAge}: mortality specified per age class.
+Wrapped internally to a \verb{1 x nAge x 1} array.
+\item Numeric array with dimensions \verb{Sim x Age x Year} and named dimnames.
+}
 
-\item{MeanAtLength}{Numeric array. Mean discard mortality at length, with
-named dimensions \code{Sim}, \code{Length}, and \code{Year}.  See \code{Details} section.}
+If \code{MeanAtAge} is a \link[=fleet-class]{fleet} object, the \code{DiscardMortality} slot of
+that fleet is returned.
 
-\item{Classes}{Numeric vector. Age or length classes corresponding to the
-\code{Age} or \code{Length} dimension of \code{MeanAtAge} or \code{MeanAtLength}. Default
-\code{NULL}.}
+Unlike \code{\link[=Selectivity]{Selectivity()}} and \code{\link[=Retention]{Retention()}}, \code{DiscardMortality} does not
+support model-based population via \code{Pars} and \code{Model}. Values must be
+supplied directly as arrays or derived from \code{MeanAtLength}.}
+
+\item{MeanAtLength}{Numeric array or \code{NULL}. Mean discard mortality at
+length with dimensions \verb{Sim x Length x Year}. If provided, takes
+precedence over \code{MeanAtAge}; \code{MeanAtAge} is derived from it via the
+age-length key during \code{\link[=PopulateDiscardMortality]{PopulateDiscardMortality()}}.}
+
+\item{Classes}{Numeric vector or \code{NULL}. Length class midpoints
+corresponding to the second dimension of \code{MeanAtLength}. Default \code{NULL}.}
 
 \item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
 
@@ -38,50 +57,72 @@ named dimensions \code{Sim}, \code{Length}, and \code{Year}.  See \code{Details}
 \code{MeanAtAge} is a \link[=fleet-class]{fleet} object, the \code{DiscardMortality} slot of
 that fleet is returned.
 \item \verb{DiscardMortality<-} returns \code{x} with the \code{DiscardMortality} slot
-replaced.
+replaced by \code{value}.
 }
 }
 \description{
 Construct and manipulate a \link[=discardmortality-class]{discardmortality} object defining the
 proportion of discarded catch that dies, for use in a \code{\link[=Fleet]{Fleet()}} object.
+Discard mortality is optional; if not specified, all discarded fish are
+assumed to survive.
 }
 \details{
-Discard mortality describes the proportion of discarded catch that dies,
-defined either at age (\code{MeanAtAge}) or at length (\code{MeanAtLength}). Values
-should be between 0 (all discards survive) and 1 (all discards die).
+Discard mortality defines the proportion of discarded catch that dies.
+Fish that are selected but not retained (as defined by \code{\link[=Retention]{Retention()}}) are
+treated as discards; \code{DiscardMortality} determines how many of those fish
+die as a result of the capture-and-release process.
 
-Discard Mortality objects are optional. If they are not supplied, the
-model will assume discard mortality is 0 for all age-classes
+Unlike \code{\link[=Selectivity]{Selectivity()}} and \code{\link[=Retention]{Retention()}}, discard mortality does not
+support model-based population via \code{Pars} and \code{Model}. Values must be
+supplied directly as \code{MeanAtAge} or \code{MeanAtLength} arrays. If neither is
+supplied, \code{\link[=PopulateDiscardMortality]{PopulateDiscardMortality()}} defaults to 0 (all discards survive)
+for all age and length classes.
+\subsection{Array Format}{
 
-A \code{DiscardMortality} object can be attached to a \code{\link[=Fleet]{Fleet()}} with
+\code{MeanAtAge} may be a scalar, a vector of length \code{nAge}, or a full
+\verb{Sim x Age x Year} array. Scalars and vectors are wrapped internally to
+arrays with a single simulation and year, then extended to cover all
+simulations and years during population. If \code{MeanAtLength} is supplied, it
+takes precedence and \code{MeanAtAge} is derived from it using the age-length
+key.
+}
+
+\subsection{Attaching to a Fleet}{
+
+A \link[=discardmortality-class]{discardmortality} object can be attached to a \code{\link[=Fleet]{Fleet()}} with
 \code{DiscardMortality(Fleet) <- MyDiscardMortality} and retrieved with
 \code{DiscardMortality(Fleet)}.
 
 Individual slots may be accessed or modified using \code{\link[=MeanAtAge]{MeanAtAge()}},
 \code{\link[=MeanAtLength]{MeanAtLength()}}, and \code{\link[=Classes]{Classes()}}.
-\subsection{Use in \code{Advice()}}{
-
-When  \link[=discardmortality-class]{discardmortality} objects are used in \code{\link[=Advice]{Advice()}} objects, the
-\code{Sim} and \code{Year} dimensions should not be included.
-\itemize{
-\item \code{MeanAtAge} should be either length \code{nAge} or length \code{1} (recycled over age classes).
-\item \code{MeanAtLength} should be either length \code{Classes} or length \code{1} (recycled over length classes).
-\item \code{MeanAtWeight} (if applicalbe) should be either length \code{Classes} or length \code{1} (recycled over weight classes).
-}
-
-If \code{Classes} is not specified, the classes will be taken from the \code{Length} or \code{Weight} object of the
-corresponding stock.
-
-See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more details.
 }
 }
 \examples{
-d <- DiscardMortality()
-MeanAtAge(d)
-Classes(d)
+# See man-examples/class-DiscardMortality.R
 
 }
 \seealso{
-\link[=discardmortality-class]{discardmortality}, \code{\link[=Fleet]{Fleet()}}, \code{\link[=MeanAtAge]{MeanAtAge()}},
-\code{\link[=MeanAtLength]{MeanAtLength()}}, \code{\link[=Classes]{Classes()}}, \code{\link[=Selectivity]{Selectivity()}}, \code{\link[=Retention]{Retention()}}
+\itemize{
+\item \link[=discardmortality-class]{discardmortality} for the class definition and slot-level
+documentation.
+\item \code{\link[=Fleet]{Fleet()}} for the enclosing fleet constructor.
+\item \code{\link[=Selectivity]{Selectivity()}}, \code{\link[=Retention]{Retention()}} for related fleet components.
+\item \code{\link[=PopulateDiscardMortality]{PopulateDiscardMortality()}} for population details.
 }
+
+Other fleet:
+\code{\link[=Bioeconomic]{Bioeconomic()}},
+\code{\link[=Catchability]{Catchability()}},
+\code{\link[=Effort]{Effort()}},
+\code{\link[=Fleet]{Fleet()}},
+\code{\link[=Retention]{Retention()}},
+\code{\link[=Selectivity]{Selectivity()}},
+\code{\link{bioeconomic-class}},
+\code{\link{catchability-class}},
+\code{\link{discardmortality-class}},
+\code{\link{effort-class}},
+\code{\link{fleet-class}},
+\code{\link{retention-class}},
+\code{\link{selectivity-class}}
+}
+\concept{fleet}

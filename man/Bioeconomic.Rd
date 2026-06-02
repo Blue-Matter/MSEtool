@@ -54,17 +54,23 @@ Discount(x)
 Discount(x) <- value
 }
 \arguments{
-\item{Revenue}{Array. Revenue by simulation, fleet, and year.}
+\item{Revenue}{Numeric array or \code{NULL}. Revenue by simulation, fleet, and
+year. Default \code{NULL}.}
 
-\item{Cost}{Numeric. Operating cost per unit of effort.}
+\item{Cost}{Numeric or \code{NULL}. Operating cost per unit of effort. Default
+\code{NULL}.}
 
-\item{Investment}{Numeric. Cost of adding a unit of effort.}
+\item{Investment}{Numeric or \code{NULL}. Cost of adding a unit of effort.
+Default \code{NULL}.}
 
-\item{Disinvestment}{Numeric. Cost of removing a unit of effort.}
+\item{Disinvestment}{Numeric or \code{NULL}. Cost of removing a unit of effort.
+Default \code{NULL}.}
 
-\item{Depreciation}{Numeric. Depreciation rate of effort units.}
+\item{Depreciation}{Numeric or \code{NULL}. Depreciation rate of effort units.
+Default \code{NULL}.}
 
-\item{Discount}{Numeric. Discount factor applied to future values.}
+\item{Discount}{Numeric or \code{NULL}. Discount factor applied to future values.
+Default \code{NULL}.}
 
 \item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
 
@@ -78,7 +84,8 @@ replacement functions: the new value for the corresponding slot.}
 \itemize{
 \item \code{Bioeconomic()} returns a \link[=bioeconomic-class]{bioeconomic} object. If \code{Revenue} is a
 \link[=fleet-class]{fleet} object, the \code{Bioeconomic} slot of that fleet is returned.
-\item \verb{Bioeconomic<-} returns \code{x} with the \code{Bioeconomic} slot replaced.
+\item \verb{Bioeconomic<-} returns \code{x} with the \code{Bioeconomic} slot replaced by
+\code{value}.
 \item \code{Revenue()}, \code{Cost()}, \code{Investment()}, \code{Disinvestment()},
 \code{Depreciation()}, \code{Discount()} return the corresponding slot from \code{x}.
 \item Their replacement forms return \code{x} with the corresponding slot updated.
@@ -89,18 +96,25 @@ Construct and manipulate a \link[=bioeconomic-class]{bioeconomic} object storing
 and investment dynamics for fleet-level or stock-level bioeconomic analyses.
 }
 \details{
-A \link[=bioeconomic-class]{bioeconomic} object is not currently used by the MSE framework but
-is available for custom analyses.
+\strong{Note:} The \link[=bioeconomic-class]{bioeconomic} is not currently used by the MSE
+framework. It is included for future development and is available for
+custom analyses outside the standard model loop.
 
-A \code{Bioeconomic} object can be attached to a \code{\link[=Fleet]{Fleet()}} object with
+A \link[=bioeconomic-class]{bioeconomic} object stores parameters and outputs for fleet-level
+bioeconomic modelling, including revenue, effort costs, and discounting.
+All slots are optional and default to \code{NULL}.
+
+This class is not currently used by the MSE framework. It is included for
+future development.
+\subsection{Attaching to a Fleet}{
+
+A \link[=bioeconomic-class]{bioeconomic} object can be attached to a \code{\link[=Fleet]{Fleet()}} with
 \code{Bioeconomic(Fleet) <- MyBioeconomic} and retrieved with
 \code{Bioeconomic(Fleet)}.
 
-Individual slots may be accessed or modified using the accessor and
-replacement functions documented here: \code{\link[=Revenue]{Revenue()}}, \code{\link[=Cost]{Cost()}},
-\code{\link[=Investment]{Investment()}}, \code{\link[=Disinvestment]{Disinvestment()}}, \code{\link[=Depreciation]{Depreciation()}}, \code{\link[=Discount]{Discount()}}.
-
-See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more details.
+Individual slots may be accessed or modified using \code{\link[=Revenue]{Revenue()}}, \code{\link[=Cost]{Cost()}},
+\code{\link[=Investment]{Investment()}}, \code{\link[=Disinvestment]{Disinvestment()}}, \code{\link[=Depreciation]{Depreciation()}}, and \code{\link[=Discount]{Discount()}}.
+}
 }
 \examples{
 b <- Bioeconomic(Cost = 100, Discount = 0.05)
@@ -108,7 +122,33 @@ Cost(b)
 Cost(b) <- 200
 Discount(b)
 
+# Attach to a Fleet
+f <- Fleet(Name = "Trawl")
+Bioeconomic(f) <- Bioeconomic(Cost = 100, Investment = 500, Discount = 0.05)
+Cost(Bioeconomic(f))
+Discount(Bioeconomic(f))
+
 }
 \seealso{
-\link[=bioeconomic-class]{bioeconomic}, \code{\link[=Fleet]{Fleet()}}
+\itemize{
+\item \link[=bioeconomic-class]{bioeconomic} for the class definition and slot-level
+documentation.
+\item \code{\link[=Fleet]{Fleet()}} for the enclosing fleet constructor.
 }
+
+Other fleet:
+\code{\link[=Catchability]{Catchability()}},
+\code{\link[=DiscardMortality]{DiscardMortality()}},
+\code{\link[=Effort]{Effort()}},
+\code{\link[=Fleet]{Fleet()}},
+\code{\link[=Retention]{Retention()}},
+\code{\link[=Selectivity]{Selectivity()}},
+\code{\link{bioeconomic-class}},
+\code{\link{catchability-class}},
+\code{\link{discardmortality-class}},
+\code{\link{effort-class}},
+\code{\link{fleet-class}},
+\code{\link{retention-class}},
+\code{\link{selectivity-class}}
+}
+\concept{fleet}

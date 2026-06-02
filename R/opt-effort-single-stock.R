@@ -71,6 +71,7 @@ OptEffort_singlestock <- function(Proj,
                                   sim,
                                   TAC_by_Complex,
                                   TACType_by_Complex,
+                                  TACUnit_by_Complex,
                                   MaxFleetEffort = NULL,
                                   minEffort     = 1e-8,
                                   tol           = 1e-3,
@@ -123,7 +124,7 @@ OptEffort_singlestock <- function(Proj,
     
     catch_fl <- function(log_scale) {
       OptSingleFleetCatch(log_scale, Effort_base, Proj, sim, TSIndex,
-                          Year, TACType_by_Complex, fl)
+                          Year, TACType_by_Complex, TACUnit_by_Complex, fl)
     }
     
     log_lo  <- log(minEffort)
@@ -171,7 +172,8 @@ OptEffort_singlestock <- function(Proj,
   
   residual_fn <- function(Effort_vec) {
     Proj     <- WriteStateToProj(Proj, sim, TSIndex, Effort = Effort_vec)
-    CatchMat <- CalcFleetCatch(Proj, sim, TSIndex, Year, TACType_by_Complex)[1, ]
+    CatchMat <- CalcFleetCatch(Proj, sim, TSIndex, Year, TACType_by_Complex,
+                               TACUnit_by_Complex)[1, ]
     (BindingTAC - CatchMat)[pos_idx]
   }
   

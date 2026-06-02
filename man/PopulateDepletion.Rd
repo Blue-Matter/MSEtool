@@ -4,7 +4,7 @@
 \alias{PopulateDepletion}
 \title{Populate a Depletion Object}
 \usage{
-PopulateDepletion(Depletion, nSim = NULL, seed = NULL, silent = FALSE)
+PopulateDepletion(Depletion, nSim = 5, seed = NULL, silent = FALSE)
 }
 \arguments{
 \item{Depletion}{A \code{\link[=Depletion]{Depletion()}} object to populate.}

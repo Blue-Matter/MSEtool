@@ -29,15 +29,8 @@ aperm <- function(a, perm, ...) {
   base::aperm(a, perm, ...)
 }
 
-# Transformations -----
 
-logit <- function(p) {
-  log(p / (1 - p))
-}
 
-ilogit <- function(x) {
-  1 / (1 + exp(-x))
-}
 
 # ---- Distributions -----
 
@@ -185,12 +178,12 @@ StartMessages <- function(OM, messages = "default") {
       matrix(1, nSim(OM), nFleet(OM))
     })
     if (nFleet(OM) > 1) {
-      if (isTRUE(msg$alert)) {
-        cli::cli(c(
-          cli::cli_alert_info("`EFactor(OM)` not specified"),
-          cli::cli_alert("Setting `EFactor(OM)` to current effort for all fleets")
-        ))
-      }
+      # if (isTRUE(msg$alert)) {
+      #   cli::cli(c(
+      #     cli::cli_alert_info("`EFactor(OM)` not specified"),
+      #     cli::cli_alert("Setting `EFactor(OM)` to current effort for all fleets")
+      #   ))
+      # }
     }
   }
 
@@ -279,61 +272,6 @@ CheckDigest <- function(object, argList = list()) {
   FALSE
 }
 
-isNewObject <- function(object) {
-  if (!isS4(object)) 
-    return(FALSE)
-  
-  cl <- class(object)
-  if (inherits(object, 'naturalmortality')) {
-    newobj <- NaturalMortality()
-  } else   if (inherits(object, 'srr')) {
-    newobj <- SRR()
-  } else   if (inherits(object, 'om')) {
-    newobj <- OM()
-  } else   if (inherits(object, 'discardmortality')) {
-      newobj <- DiscardMortality()
-  } else {
-    chk <- try(get(firstup(cl)), silent=TRUE)
-    
-    if (inherits(chk, 'try-error')) {
-      newobj <- new(class(object))
-    } else {
-      newobj <- get(firstup(cl))()
-    }
-    
-  }
-  
-  if ('Name' %in% slotNames(object))
-    object@Name <- NULL
-
-  identical(object, newobj)
-  
-}
-
-EmptyObject <- function(object) {
-  if (isS4(object)) {
-    if (isNewObject(object)) {
-      return(TRUE)
-    }
-
-    sltnms <- slotNames(object)
-    empty <- rep(TRUE, length(sltnms))
-    for (i in seq_along(sltnms)) {
-      sl <- sltnms[i]
-      val <- slot(object, sl)
-      if (inherits(val, "function")) {
-        next()
-      }
-      if (isS4(val)) {
-        empty[i] <- Recall(val)
-      } else {
-        empty[i] <- is.null(val) || length(val) == 0 || all(is.na(val))
-      }
-    }
-    return(as.logical(prod(empty)))
-  }
-  as.logical(length(object) < 1 | all(is.na(object)))
-}
 
 
 ValorNULL <- function(Value) {

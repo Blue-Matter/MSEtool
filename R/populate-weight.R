@@ -58,15 +58,16 @@ PopulateWeight <- function(Weight,
                            Ages = NULL,
                            Length = NULL,
                            Years = NULL,
-                           nSim = NULL,
+                           nSim = 5,
                            AWK = FALSE,
                            CalcAtLength = FALSE,
                            seed = NULL,
                            silent = FALSE,
                            force = FALSE) {
   
-  Ages <- DefaultAges(Ages)
+  Ages  <- DefaultAges(Ages)
   Years <- DefaultYears(Years)
+  nSim  <- Get_nSim(Weight, nSim)
   
   argList <- list(
     Ages, Length, nSim, Years, AWK,
@@ -144,14 +145,7 @@ PopulateWeight <- function(Weight,
     AWK <- FALSE
   }
   
-  if (is.null(dimnames(Weight@MeanAtAge))) {
-    dd <- dim(Weight@MeanAtAge)
-    dimnames(Weight@MeanAtAge) <- list(
-      Sim=1:dd[1],
-      Age=Ages@Classes[1:dd[2]],
-      Year=Years[1:dd[3]]
-    )
-  }
+  Weight <- AddAtAgeDimnames(Weight, Ages, Years)
   
   if (AWK) {
     Weight <- PopulateClasses(Weight)

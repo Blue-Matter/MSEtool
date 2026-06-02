@@ -31,7 +31,7 @@ Adds a new fleet to an \link[=om-class]{om} object, appending a
 stock in the OM.
 }
 \examples{
-OM <- ExampleOM
+OM <- SingleStockOM
 FleetNames(OM)
 OM2 <- AddFleet(OM, 'DummyFleet')
 FleetNames(OM2)

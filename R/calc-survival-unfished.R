@@ -46,7 +46,7 @@ CalcUnfishedSurvivalStockList <- function(StockList, SP = FALSE, Years = NULL, E
 CalcUnfishedSurvivalStock <- function(Stock, SP = FALSE, Years = NULL, Extend = TRUE) {
   
   NaturalMortality <- Stock@NaturalMortality@MeanAtAge |>
-    Extend(nSim=Stock@nSim, AgeClasses=Stock@Ages@Classes, Years) |>
+    Extend(nSim=Stock@nSim, AgeClasses=Stock@Ages@Classes, Years = Years) |>
     ArraySubsetYear(Years)
   
   PlusGroup <- Stock@Ages@PlusGroup
@@ -60,7 +60,7 @@ CalcUnfishedSurvivalStock <- function(Stock, SP = FALSE, Years = NULL, Extend = 
   
 
   if (Extend) {
-    Survival <- Survival |> Extend(Stock@nSim, Stock@Ages@Classes, Years)
+    Survival <- Survival |> Extend(Stock@nSim, Stock@Ages@Classes, Years = Years)
   }
   Survival
 }

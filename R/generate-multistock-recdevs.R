@@ -44,9 +44,10 @@
 #' deviations themselves.
 #'
 #' @seealso [CalcInnovationCov()], [AddAutoCorrelation()]
-#'
 #' @export
 GenMultiStockRecDevs <- function(OM, TruncSD = 2, silent = FALSE) {
+  
+  CheckPackage('tmvtnorm')
   
   CheckClass(OM)
   set.seed(OM@Seed)

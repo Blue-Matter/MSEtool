@@ -3,23 +3,47 @@
 \docType{class}
 \name{catchability-class}
 \alias{catchability-class}
-\title{Catchability Class}
+\title{The \code{catchability} S4 Class}
 \description{
-The \code{catchability} class defines catchability assumptions, including
-optional stochastic or incremental changes to gear efficiency over time.
-}
-\details{
-See \code{\link[=Catchability]{Catchability()}} for details.
+Defines gear or vessel efficiency for use in a \link[=fleet-class]{fleet} object.
+Objects are typically created via the \code{\link[=Catchability]{Catchability()}} constructor, which
+documents all parameters in detail.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{Efficiency}}{Gear efficiency (q).}
+\item{\code{Efficiency}}{\code{numeric}, array, or \code{NULL}. Gear efficiency (\code{q}).
+See \code{\link[=Catchability]{Catchability()}}.}
 
-\item{\code{qCV}}{Coefficient of variation for catchability.}
+\item{\code{qCV}}{\code{numeric} or \code{NULL}. Coefficient of variation for stochastic
+variation in catchability during projected years. See \code{\link[=Catchability]{Catchability()}}.}
 
-\item{\code{qInc}}{Incremental changes in catchability.}
+\item{\code{qInc}}{\code{numeric} or \code{NULL}. Annual percentage increase in catchability
+during projected years. See \code{\link[=Catchability]{Catchability()}}.}
 
-\item{\code{Misc}}{Miscellaneous list.}
+\item{\code{Misc}}{\code{list}. Miscellaneous additional inputs. Used internally.}
 }}
 
+\seealso{
+\itemize{
+\item \code{\link[=Catchability]{Catchability()}} for the constructor and full parameter
+documentation.
+\item \link[=fleet-class]{fleet} for the enclosing fleet object.
+}
+
+Other fleet:
+\code{\link[=Bioeconomic]{Bioeconomic()}},
+\code{\link[=Catchability]{Catchability()}},
+\code{\link[=DiscardMortality]{DiscardMortality()}},
+\code{\link[=Effort]{Effort()}},
+\code{\link[=Fleet]{Fleet()}},
+\code{\link[=Retention]{Retention()}},
+\code{\link[=Selectivity]{Selectivity()}},
+\code{\link{bioeconomic-class}},
+\code{\link{discardmortality-class}},
+\code{\link{effort-class}},
+\code{\link{fleet-class}},
+\code{\link{retention-class}},
+\code{\link{selectivity-class}}
+}
+\concept{fleet}

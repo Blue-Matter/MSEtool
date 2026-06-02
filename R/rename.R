@@ -23,7 +23,7 @@
 #' `Fleets = list(NewFleet = 'OldFleet')`.
 #' 
 #' @examples
-#' OM <- ExampleOM
+#' OM <- SingleStockOM
 #' StockNames(OM)
 #' FleetNames(OM)
 #' 

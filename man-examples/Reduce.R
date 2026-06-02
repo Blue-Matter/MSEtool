@@ -1,2 +1,2 @@
-nSim(ExampleOM) <- 30
-OM <- Populate(ExampleOM)
+nSim(SingleStockOM) <- 30
+OM <- Populate(SingleStockOM)

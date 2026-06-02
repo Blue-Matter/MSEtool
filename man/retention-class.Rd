@@ -3,31 +3,63 @@
 \docType{class}
 \name{retention-class}
 \alias{retention-class}
-\title{Retention Class}
+\title{The \code{retention} S4 Class}
 \description{
-The \code{retention} class defines how fishing or survey retention
-varies with age, length, or weight.
-}
-\details{
-See \code{\link[=Retention]{Retention()}} for details.
+Defines retention-at-age, retention-at-length, or retention-at-weight for
+use in a \link[=fleet-class]{fleet} object. Retention is optional; if not specified, all
+age and length classes are assumed fully retained. Objects are typically
+created via the \code{\link[=Retention]{Retention()}} constructor, which documents all parameters
+in detail.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{Pars}}{Named list of retention parameters.}
+\item{\code{Pars}}{\code{list}. Named list of retention parameters passed to \code{Model}.
+See \code{\link[=Retention]{Retention()}} and \code{\link[=RetentionModels]{RetentionModels()}}.}
 
-\item{\code{Model}}{Retention model identifier.}
+\item{\code{Model}}{\code{function} or \code{character} or \code{NULL}. Retention model identifier
+or function. See \code{\link[=RetentionModels]{RetentionModels()}}.}
 
-\item{\code{isRel}}{Logical or numeric indicator of relative retention.}
+\item{\code{isRel}}{\code{logical}, \code{numeric}, or \code{character}. Whether length-based
+parameters are expressed relative to maturity \code{L50}. See \code{\link[=Retention]{Retention()}}.}
 
-\item{\code{MeanAtAge}}{Mean retention-at-age array.}
+\item{\code{MeanAtAge}}{\code{numeric} array or \code{NULL}. Mean retention-at-age
+(\verb{Sim x Age x Year x Area}). See \code{\link[=Retention]{Retention()}}.}
 
-\item{\code{MeanAtLength}}{Mean retention-at-length array.}
+\item{\code{MeanAtLength}}{\code{numeric} array or \code{NULL}. Mean retention-at-length
+(\verb{Sim x Length x Year x Area}). See \code{\link[=Retention]{Retention()}}.}
 
-\item{\code{MeanAtWeight}}{Mean retention-at-weight array.}
+\item{\code{MeanAtWeight}}{\code{numeric} array or \code{NULL}. Mean retention-at-weight
+(\verb{Sim x Weight x Year x Area}). See \code{\link[=Retention]{Retention()}}.}
 
-\item{\code{Classes}}{Class boundaries (age, length, or weight).}
+\item{\code{Classes}}{\code{numeric} or \code{NULL}. Length or weight class midpoints
+corresponding to the second dimension of \code{MeanAtLength} or
+\code{MeanAtWeight}.}
 
-\item{\code{Misc}}{Miscellaneous list.}
+\item{\code{Misc}}{\code{list}. Miscellaneous additional inputs. For internal use.}
 }}
 
+\seealso{
+\itemize{
+\item \code{\link[=Retention]{Retention()}} for the constructor and full parameter
+documentation.
+\item \code{\link[=RetentionModels]{RetentionModels()}} for available model functions.
+\item \link[=fleet-class]{fleet} for the enclosing fleet object.
+}
+
+Other fleet:
+\code{\link[=Bioeconomic]{Bioeconomic()}},
+\code{\link[=Catchability]{Catchability()}},
+\code{\link[=DiscardMortality]{DiscardMortality()}},
+\code{\link[=Effort]{Effort()}},
+\code{\link[=Fleet]{Fleet()}},
+\code{\link[=Retention]{Retention()}},
+\code{\link[=Selectivity]{Selectivity()}},
+\code{\link{bioeconomic-class}},
+\code{\link{catchability-class}},
+\code{\link{discardmortality-class}},
+\code{\link{effort-class}},
+\code{\link{fleet-class}},
+\code{\link{selectivity-class}}
+}
+\concept{fleet}

@@ -66,38 +66,38 @@ Defaults to \code{1}.}
 \item{nArea}{A positive integer giving the number of spatial areas.
 Defaults to \code{1}.}
 
-\item{LifeHistory}{Optional. An object of class \link{lifehistorydata} .}
+\item{LifeHistory}{Optional. An object of class \link[=lifehistorydata-class]{lifehistorydata} .}
 
-\item{Exploitation}{Optional. An object of class \link{exploitationdata}.}
+\item{Exploitation}{Optional. An object of class \link[=exploitationdata-class]{exploitationdata}.}
 
-\item{Reference}{Optional. An object of class \link{referencedata}.}
+\item{Reference}{Optional. An object of class \link[=referencedata-class]{referencedata}.}
 
-\item{Effort}{Optional. An object of class \link{effortdata}.}
+\item{Effort}{Optional. An object of class \link[=effortdata-class]{effortdata}.}
 
-\item{Landings}{Optional. An object of class \link{catchdata} for landed catch.}
+\item{Landings}{Optional. An object of class \link[=catchdata-class]{catchdata} for landed catch.}
 
-\item{Discards}{Optional. An object of class \link{catchdata} for discarded
+\item{Discards}{Optional. An object of class \link[=catchdata-class]{catchdata} for discarded
 catch.}
 
-\item{CPUE}{Optional. An object of class \link{indicesdata} for catch-per-unit-
+\item{CPUE}{Optional. An object of class \link[=indicesdata-class]{indicesdata} for catch-per-unit-
 effort indices.}
 
-\item{Survey}{Optional. An object of class \link{indicesdata} for fishery-
+\item{Survey}{Optional. An object of class \link[=indicesdata-class]{indicesdata} for fishery-
 independent survey indices.}
 
-\item{LandingsAtAge}{Optional. An object of class \link{compdata} for age
+\item{LandingsAtAge}{Optional. An object of class \link[=compdata-class]{compdata} for age
 composition of landings.}
 
-\item{DiscardsAtAge}{Optional. An object of class \link{compdata} for age
+\item{DiscardsAtAge}{Optional. An object of class \link[=compdata-class]{compdata} for age
 composition of discards.}
 
-\item{LandingsAtSize}{Optional. An object of class \link{compdata} for size
+\item{LandingsAtSize}{Optional. An object of class \link[=compdata-class]{compdata} for size
 composition of landings.}
 
-\item{DiscardsAtSize}{Optional. An object of class \link{compdata} for size
+\item{DiscardsAtSize}{Optional. An object of class \link[=compdata-class]{compdata} for size
 composition of discards.}
 
-\item{Advice}{Optional. An object of class \link{advicedata} containing TAC and
+\item{Advice}{Optional. An object of class \link[=advicedata-class]{advicedata} containing TAC and
 related advice.}
 
 \item{Misc}{A named list for any additional user-defined data. Defaults to
@@ -120,14 +120,14 @@ the supplied arguments.
 All slot arguments default to \code{NULL}, in which case an empty sub-object of
 the appropriate class is initialised automatically:
 \itemize{
-\item \code{LifeHistory} → \link{lifehistorydata}
-\item \code{Exploitation} → \link{exploitationdata}
-\item \code{Reference} → \link{referencedata}
-\item \code{Effort} → \link{effortdata}
-\item \code{Landings}, \code{Discards} → \link{catchdata}
-\item \code{CPUE}, \code{Survey} → \link{indicesdata}
-\item \code{LandingsAtAge}, \code{DiscardsAtAge}, \code{LandingsAtSize}, \code{DiscardsAtSize} → \link{compdata}
-\item \code{Advice} → \link{advicedata}
+\item \code{LifeHistory} → \link[=lifehistorydata-class]{lifehistorydata}
+\item \code{Exploitation} → \link[=exploitationdata-class]{exploitationdata}
+\item \code{Reference} → \link[=referencedata-class]{referencedata}
+\item \code{Effort} → \link[=effortdata-class]{effortdata}
+\item \code{Landings}, \code{Discards} → \link[=catchdata-class]{catchdata}
+\item \code{CPUE}, \code{Survey} → \link[=indicesdata-class]{indicesdata}
+\item \code{LandingsAtAge}, \code{DiscardsAtAge}, \code{LandingsAtSize}, \code{DiscardsAtSize} → \link[=compdata-class]{compdata}
+\item \code{Advice} → \link[=advicedata-class]{advicedata}
 }
 }
 \seealso{

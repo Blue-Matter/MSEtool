@@ -30,7 +30,7 @@
 #' 
 #' @examples
 #' \dontrun{
-#' MSE <- runMSE(ExampleOM, MPs=ExampleMPs())
+#' MSE <- runMSE(SingleStockOM, MPs=ExampleMPs())
 #' }
 #' 
 #' 

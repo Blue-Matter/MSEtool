@@ -83,4 +83,3 @@ showClass('Imp')
 \author{
 T. Carruthers and A. Hordyk
 }
-\keyword{classes}

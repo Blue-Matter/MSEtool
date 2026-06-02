@@ -6,11 +6,15 @@
 PrepHistMisc <- function(Hist, Period=c('Historical', 'Projection')) {
   Period <- match.arg(Period)
   
-  saveMisc <- Hist@Misc
-  Hist@Misc <- list()
+  YearVec        <- Years(Hist, Period)
+  saveMisc       <- Hist@Misc
+  Hist@Misc      <- list()
   Hist@Misc$SAVE <- saveMisc
   
-  nStock <- nStock(Hist)
+  stock_names <- StockNames(Hist)
+  nStock      <- length(stock_names)
+  fleet_names <- FleetNames(Hist)
+  nFleet      <- length(fleet_names)
   
   Hist@Misc$maxF <- Hist@OM@maxF
 
@@ -223,14 +227,23 @@ PrepHistMisc <- function(Hist, Period=c('Historical', 'Projection')) {
   # OM-level: StockTargeting 
   if (nStock(Hist) == 1 || is.null(Hist@OM@StockTargeting@Targeting)) {
     # single stock 
-    Hist@Misc$StockTargeting <- StockTargeting(Hist@OM)@Targeting |> ReduceDims()
+    
+    Hist@Misc$StockTargeting <- array(1, 
+                                      dim = c(1, 1, nFleet, 1),
+                                      dimnames = list(
+                                        Sim   = 1,
+                                        Stock = stock_names,
+                                        Fleet = fleet_names,
+                                        Year  = YearVec[1]
+                                        
+                                      ))
     Hist@Misc$StockTargetingFlag <- 0
   } else {
     Hist@Misc$StockTargeting <- Hist@OM@StockTargeting@Targeting
     Hist@Misc$StockTargetingFlag <- 1
   }
   
-  Hist@Misc <- ExtendYears(Hist@Misc, Years=Years(Hist,Period))
+  Hist@Misc <- ExtendYears(Hist@Misc, Years=YearVec)
   CheckHistMisc(Hist, Period)
   Hist
 }

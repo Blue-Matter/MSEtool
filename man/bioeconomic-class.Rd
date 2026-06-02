@@ -3,29 +3,57 @@
 \docType{class}
 \name{bioeconomic-class}
 \alias{bioeconomic-class}
-\title{Bioeconomic Class}
+\title{The \code{bioeconomic} S4 Class}
 \description{
-The \code{bioeconomic} class stores revenue, cost, and investment information
-associated with a \code{\link[=Fleet]{Fleet()}} and a \code{\link[=Stock]{Stock()}}.
+Stores revenue, cost, and investment dynamics for fleet-level or stock-level
+bioeconomic analyses. Objects are typically created via the \code{\link[=Bioeconomic]{Bioeconomic()}}
+constructor, which documents all parameters in detail.
 }
 \details{
-See \code{\link[=Bioeconomic]{Bioeconomic()}} for details.
+\strong{Note:} The \link[=bioeconomic-class]{bioeconomic} is not currently used by the MSE
+framework. It is included for future development.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{Revenue}}{Revenue array}
+\item{\code{Revenue}}{\code{numeric} array or \code{NULL}. Revenue by simulation, fleet, and
+year. See \code{\link[=Bioeconomic]{Bioeconomic()}}.}
 
-\item{\code{Cost}}{Operating cost per unit of effort.}
+\item{\code{Cost}}{\code{numeric} or \code{NULL}. Operating cost per unit of effort. See
+\code{\link[=Bioeconomic]{Bioeconomic()}}.}
 
-\item{\code{Investment}}{Cost of adding a new unit of effort.}
+\item{\code{Investment}}{\code{numeric} or \code{NULL}. Cost of adding a unit of effort. See
+\code{\link[=Bioeconomic]{Bioeconomic()}}.}
 
-\item{\code{Disinvestment}}{Cost of removing a unit of effort.}
+\item{\code{Disinvestment}}{\code{numeric} or \code{NULL}. Cost of removing a unit of effort.
+See \code{\link[=Bioeconomic]{Bioeconomic()}}.}
 
-\item{\code{Depreciation}}{Depreciation rate of effort units.}
+\item{\code{Depreciation}}{\code{numeric} or \code{NULL}. Depreciation rate of effort units.
+See \code{\link[=Bioeconomic]{Bioeconomic()}}.}
 
-\item{\code{Discount}}{Discount factor.}
+\item{\code{Discount}}{\code{numeric} or \code{NULL}. Discount factor applied to future
+values. See \code{\link[=Bioeconomic]{Bioeconomic()}}.}
 
-\item{\code{Misc}}{Miscellaneous list.}
+\item{\code{Misc}}{\code{list}. Miscellaneous additional inputs.}
 }}
 
+\seealso{
+\code{\link[=Bioeconomic]{Bioeconomic()}} for the constructor and full parameter
+documentation. \link[=fleet-class]{fleet} for the enclosing fleet object.
+
+Other fleet:
+\code{\link[=Bioeconomic]{Bioeconomic()}},
+\code{\link[=Catchability]{Catchability()}},
+\code{\link[=DiscardMortality]{DiscardMortality()}},
+\code{\link[=Effort]{Effort()}},
+\code{\link[=Fleet]{Fleet()}},
+\code{\link[=Retention]{Retention()}},
+\code{\link[=Selectivity]{Selectivity()}},
+\code{\link{catchability-class}},
+\code{\link{discardmortality-class}},
+\code{\link{effort-class}},
+\code{\link{fleet-class}},
+\code{\link{retention-class}},
+\code{\link{selectivity-class}}
+}
+\concept{fleet}

@@ -21,7 +21,8 @@ ConditionObs <- function(Hist, silent=FALSE) {
   FisheryDataList <- Hist@OM@Data
   nData <- length(FisheryDataList)
   
-  if (nData<1) return(Hist)
+  if (nData < 1) return(Hist)
+  
   Complexes <- Hist@OM@Complexes
   
   nms <- ""  
@@ -39,14 +40,32 @@ ConditionObs <- function(Hist, silent=FALSE) {
     
     # TODO 
     # - Effort
-    # - CAA
-    # - CAL
     # - life history
+    # - exploitation
     
-    Hist <- ConditionObs_Catch(Hist, FisheryData, HistYears, ProjYears, stocks, i)
-    Hist <- ConditionObs_Catch(Hist, FisheryData, HistYears, ProjYears, stocks, i, 'Discards')
-    Hist <- ConditionObs_Index(Hist, FisheryData, HistYears, ProjYears, stocks, i)
-    Hist <- ConditionObs_Index(Hist, FisheryData, HistYears, ProjYears,  stocks, i, 'Survey')
+    Hist <- ConditionObs_Catch(Hist, FisheryData, HistYears, ProjYears, stocks,
+                               i, type = 'Landings')
+    
+    Hist <- ConditionObs_Catch(Hist, FisheryData, HistYears, ProjYears, stocks, i,
+                               type = 'Discards')
+    
+    Hist <- ConditionObs_Index(Hist, FisheryData, HistYears, ProjYears, stocks, 
+                               i, type = 'CPUE')
+    
+    Hist <- ConditionObs_Index(Hist, FisheryData, HistYears, ProjYears,  stocks, 
+                               i, type = 'Survey')
+    
+    Hist <- ConditionObs_Comp(Hist, FisheryData, HistYears, ProjYears,  stocks, 
+                              i, type = 'LandingsAtAge')
+    
+    Hist <- ConditionObs_Comp(Hist, FisheryData, HistYears, ProjYears,  stocks, 
+                              i, type = 'DiscardsAtAge')
+    
+    Hist <- ConditionObs_Comp(Hist, FisheryData, HistYears, ProjYears,  stocks, 
+                              i, type = 'LandingsAtSize')
+    
+    Hist <- ConditionObs_Comp(Hist, FisheryData, HistYears, ProjYears,  stocks, 
+                              i, type = 'DiscardsAtSize')
     
     if (!silent) 
       cli::cli_progress_update(id=id)

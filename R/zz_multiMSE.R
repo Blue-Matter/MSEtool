@@ -784,7 +784,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     StockPars[[p]]$VB0_y <- sapply(MSYrefsYr, function(x) x["VB", ]/x["VB_VB0", ]) %>% t()
 
     # --- MSY reference points ----
-    MSYRefPoints <- sapply(1:nsim, CalcMSYRefs,
+    MSYRefPoints <- sapply(1:nsim, CalcMSYRefs_legacy,
                            MSY_y=StockPars[[p]]$MSY_y,
                            FMSY_y= StockPars[[p]]$FMSY_y,
                            SSBMSY_y=StockPars[[p]]$SSBMSY_y,

@@ -90,8 +90,9 @@ FitStockTargeting <- function(OM, tol = 1e-6, active_thresh = 0.1) {
   
   for (sim in seq_len(nSim)) {
     for (fl in seq_len(n_fleet)) {
+      dd <- dim(Targ)
       
-      targ_mat <- t(Targ[sim, , fl, ])  # [nYear x nStock]
+      targ_mat <- t(Targ[min(c(dd[1], sim)), , fl, ])  # [nYear x nStock]
       
       # Active stocks for covariance estimation:
       # positive targeting in strictly more than active_thresh proportion of years.

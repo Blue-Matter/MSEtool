@@ -3,31 +3,88 @@
 \docType{class}
 \name{indicesobs-class}
 \alias{indicesobs-class}
-\title{Index Observation Component}
+\title{The \code{indicesobs} S4 Class}
 \description{
-Internal class describing observation error associated with abundance indices.
+Defines the observation error structure for abundance or biomass indices
+(CPUE or survey). Used in the \code{CPUE} and \code{Survey} slots of an \link[=obs-class]{obs}
+object. Objects are typically created via \code{\link[=IndicesObs]{IndicesObs()}}, which documents
+all parameters in detail.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{CV}}{Coefficient of variation.}
+\item{\code{CV}}{\code{numeric} or \code{NULL}. Coefficient of variation of index observation
+error. See \code{\link[=IndicesObs]{IndicesObs()}}.}
 
-\item{\code{Error}}{Realized observation error.}
+\item{\code{Error}}{\code{numeric} array or \code{NULL}. Lognormal observation error
+multipliers (\verb{nSim x nYear}). May be supplied directly via \code{\link[=IndicesObs]{IndicesObs()}},
+generated stochastically from \code{CV}, or
+estimated from real data during \code{\link[=ConditionObs]{ConditionObs()}}. See \code{\link[=IndicesObs]{IndicesObs()}}.}
 
-\item{\code{Beta}}{Observation bias parameters.}
+\item{\code{Beta}}{\code{numeric} array or \code{NULL}. Hyperstability/hyperdepletion
+parameter. Reserved for future use; currently not implemented. See
+\code{\link[=IndicesObs]{IndicesObs()}}.}
 
-\item{\code{AC}}{Autocorrelation parameters.}
+\item{\code{AC}}{\code{numeric} array or \code{NULL}. Lag-1 autocorrelation of index
+residuals, one value per simulation. When supplied by the user, overrides
+the value estimated during conditioning. See \code{\link[=IndicesObs]{IndicesObs()}}.}
 
-\item{\code{Years}}{Observation years.}
+\item{\code{Years}}{\code{numeric} or \code{NULL}. Calendar years over which the observation
+error is conditioned. See \code{\link[=IndicesObs]{IndicesObs()}}.}
 
-\item{\code{Selectivity}}{Observation selectivity definition.}
+\item{\code{Areas}}{\code{numeric} or \code{NULL}. Integer indices of the spatial areas
+contributing to this index. See \code{\link[=IndicesObs]{IndicesObs()}}.}
 
-\item{\code{Type}}{Index type.}
+\item{\code{Units}}{\code{character} or \code{NULL}. Units of the index (\code{"Biomass"},
+\code{"Number"}, or \code{"Recruitment"}). See \code{\link[=IndicesObs]{IndicesObs()}}.}
 
-\item{\code{Ref}}{Reference values.}
+\item{\code{Selectivity}}{\code{array}, \code{character}, \code{numeric}, or \code{list}. Selectivity
+specification for this index. See \code{\link[=IndicesObs]{IndicesObs()}}.}
 
-\item{\code{Efficiency}}{Catchability.}
+\item{\code{Type}}{\code{character}. Index type identifier. See \code{\link[=IndicesObs]{IndicesObs()}}.}
 
-\item{\code{Misc}}{Miscellaneous additional information.}
+\item{\code{Ref}}{\code{numeric} array or \code{NULL}. Reference index value, one per
+simulation. See \code{\link[=IndicesObs]{IndicesObs()}}.}
+
+\item{\code{Efficiency}}{\code{numeric} array or \code{NULL}. Catchability coefficient \code{q}
+relating the nominal index to the population quantity. Calculated
+internally during conditioning as the ratio of mean observed index to
+mean simulated index; not set by the user.}
+
+\item{\code{TruncSD}}{\code{numeric(1)} or \code{NULL}. Number of standard deviations at
+which to truncate the lognormal residual distribution when generating
+projection errors. Default \code{2}. See \code{\link[=IndicesObs]{IndicesObs()}}.}
+
+\item{\code{Stats}}{\code{data.frame} or \code{NULL}. Residual statistics computed during
+conditioning by \code{\link[=CalcResidualStats]{CalcResidualStats()}}. Contains columns \code{Sim}, \code{AC}
+(weighted lag-1 autocorrelation), \code{SD} (standard deviation), and
+\code{NA_Season} (a list-column of seasons with no observations). Populated
+internally; not set by the user.}
+
+\item{\code{Misc}}{\code{list}. Miscellaneous additional objects.}
 }}
 
+\seealso{
+\itemize{
+\item \code{\link[=IndicesObs]{IndicesObs()}} for the constructor and full parameter
+documentation.
+\item \link[=obs-class]{obs} for the enclosing observation model object.
+\item \code{\link[=CalcResidualStats]{CalcResidualStats()}} for how \code{Stats} is computed.
+}
+
+Other obs:
+\code{\link[=CatchObs]{CatchObs()}},
+\code{\link[=CompObs]{CompObs()}},
+\code{\link[=EffortObs]{EffortObs()}},
+\code{\link[=ExploitationObs]{ExploitationObs()}},
+\code{\link[=IndicesObs]{IndicesObs()}},
+\code{\link[=LifeHistoryObs]{LifeHistoryObs()}},
+\code{\link[=Obs]{Obs()}},
+\code{\link{catchobs-class}},
+\code{\link{compobs-class}},
+\code{\link{effortobs-class}},
+\code{\link{exploitationobs-class}},
+\code{\link{lifehistoryobs-class}},
+\code{\link{obs-class}}
+}
+\concept{obs}

@@ -33,4 +33,3 @@ Used internally
 \author{
 A. Hordyk
 }
-\keyword{classes}

@@ -1,31 +1,56 @@
-#' Ages class
+#' The `ages` S4 Class
 #'
-#' An S4 class representing the age structure for a [Stock()] object.
-#' 
-#' See [Ages()] for details.
+#' Defines the discrete age structure of a [stock-class] object. Objects are
+#' typically created via [Ages()], which documents all parameters and validates
+#' inputs.
 #'
-#' @slot MaxAge Numeric scalar giving the maximum age. If `PlusGroup == TRUE`,
-#'   this represents the plus group age.
-#' @slot MinAge  Numeric scalar giving the minimum age.
-#' @slot Units Character string describing the time units used in the definition
-#' of `MaxAge` and `MinAge` (e.g. `"year"`).
-#' @slot PlusGroup Logical; indicates whether the maximum age is treated
-#'   as a plus group.
-#' @slot Classes Numeric vector of age classes expressed in years
-#' @export
+#' @slot MaxAge `numeric(1)`. Maximum age in units of `Units`. When
+#'   `PlusGroup = TRUE`, fish older than this age are pooled into the plus
+#'   group.
+#' @slot MinAge `numeric(1)`. Minimum (youngest) age class in units of
+#'   `Units`. Must be non-negative and less than or equal to `MaxAge`.
+#' @slot Units `character(1)`. Time unit for `MinAge` and `MaxAge`. Must be
+#'   one of the values returned by [ValidUnits()] (e.g., `"year"`).
+#' @slot PlusGroup `logical(1)`. If `TRUE`, `MaxAge` is treated as an
+#'   open-ended plus group that accumulates all fish at or beyond that age.
+#' @slot Classes `numeric`. Vector of age classes in years, derived
+#'   automatically from `MinAge`, `MaxAge`, and `Units` by [CalcAgeClasses()].
+#'   Not intended to be set directly; use [Ages()] to trigger recalculation.
+#'
+#' @details
+#' An object is considered uninitialised when `MaxAge` or `MinAge` is
+#' `numeric(0)`. 
+#'
+#' Validity is enforced on non-empty objects: `MaxAge` and `MinAge` must be
+#' finite scalars, `MinAge` must be non-negative, `MaxAge >= MinAge`, and
+#' `Units` must be a scalar string accepted by [ValidUnits()].
+#'
+#' Direct construction via [methods::new()] is not recommended; use [Ages()]
+#' instead, which populates `Classes` automatically.
+#'
+#' @seealso 
+#' - [Ages()] for the constructor and slot-accessor functions.
+#' - [stock-class] for the enclosing object.
+#' - [ValidUnits()] for accepted unit strings. 
+#' - [Classes()] to retrieve the computed age-class vector.
+#'
+#' @family ages
+#'
 #' @include class-unions.R
+#' @export
 #' @rdname ages-class
-#' @seealso [Ages()]
-setClass('ages',
-         slots=c(MaxAge='numeric',
-                 MinAge='numeric',
-                 Units='character',
-                 PlusGroup='logical',
-                 Classes='num.null')
-         
+setClass(
+  "ages",
+  slots = c(
+    MaxAge    = "numeric",
+    MinAge    = "numeric",
+    Units     = "character",
+    PlusGroup = "logical",
+    Classes   = "num.null"
+  )
 )
 
-setValidity('ages', function(object) {
+setValidity("ages", function(object) {
   
   if (!length(object@MaxAge) || !length(object@MinAge))
     return(TRUE)
@@ -54,7 +79,7 @@ setValidity('ages', function(object) {
     if (!is.character(object@Units))
       return("`Units` must be a character string")
     
-    if (!object@Units %in%  ValidUnits())
+    if (!object@Units %in% ValidUnits())
       return("Invalid `Units`. See `ValidUnits()`")
   }
   TRUE

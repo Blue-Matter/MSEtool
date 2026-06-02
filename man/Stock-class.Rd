@@ -3,55 +3,97 @@
 \docType{class}
 \name{stock-class}
 \alias{stock-class}
-\title{Stock Class}
+\title{The \code{stock} S4 Class}
 \description{
-The \code{stock} class defines the biological and population-dynamics
-properties of a stock used in an operating model.
+Defines the biological and population-dynamics properties of a stock for use
+in an operating model. Objects are typically created via \code{\link[=Stock]{Stock()}}, which
+documents all parameters in detail and initialises sub-objects automatically.
 }
 \details{
-See \code{\link[=Stock]{Stock()}} for details.
+This class is the central biological object in the operating model framework.
+The bookkeeping slots \code{nYear}, \code{pYear}, \code{nSim}, \code{CurrentYear}, and \code{Years}
+are populated with working defaults by \code{\link[=Stock]{Stock()}} and overridden automatically
+when the stock is attached to an \code{\link[=OM]{OM()}}; they need not be set manually.
+
+Direct construction via \code{\link[methods:new]{methods::new()}} is not recommended; use \code{\link[=Stock]{Stock()}}
+instead, which validates inputs and initialises all sub-objects.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{Name}}{Character string. Unique stock name.}
+\item{\code{Name}}{\code{character}. Unique stock identifier.}
 
-\item{\code{CommonName}}{Character string. Common name.}
+\item{\code{CommonName}}{\code{character}. Common name of the species.}
 
-\item{\code{Species}}{Character string. Scientific name.}
+\item{\code{Species}}{\code{character}. Scientific (Latin) name of the species.}
 
-\item{\code{Ages}}{An \code{\link[=Ages]{Ages()}} object.}
+\item{\code{Ages}}{An \link[=ages-class]{ages} object defining the age structure. See \code{\link[=Ages]{Ages()}}.}
 
-\item{\code{Length}}{A \code{\link[=Length]{Length()}} object.}
+\item{\code{Length}}{A \link[=length-class]{length} object defining the length-at-age schedule.
+See \code{\link[=Length]{Length()}}.}
 
-\item{\code{Weight}}{A \code{\link[=Weight]{Weight()}} object.}
+\item{\code{Weight}}{A \link[=weight-class]{weight} object defining the weight-at-age and
+weight-at-length schedules. See \code{\link[=Weight]{Weight()}}.}
 
-\item{\code{NaturalMortality}}{A \code{\link[=NaturalMortality]{NaturalMortality()}} object.}
+\item{\code{NaturalMortality}}{A \link[=naturalmortality-class]{naturalmortality} object defining the
+natural mortality schedule. See \code{\link[=NaturalMortality]{NaturalMortality()}}.}
 
-\item{\code{Maturity}}{A \code{\link[=Maturity]{Maturity()}} object.}
+\item{\code{Maturity}}{A \link[=maturity-class]{maturity} object defining the maturity schedule.
+See \code{\link[=Maturity]{Maturity()}}.}
 
-\item{\code{Fecundity}}{A \code{\link[=Fecundity]{Fecundity()}} object.}
+\item{\code{Fecundity}}{A \link[=fecundity-class]{fecundity} object defining egg production as a
+function of age or length. Optional — when empty, spawning production
+(\code{SProduction}) equals spawning biomass (\code{SBiomass}). See \code{\link[=Fecundity]{Fecundity()}}.}
 
-\item{\code{SRR}}{A \code{\link[=SRR]{SRR()}} object.}
+\item{\code{SRR}}{A \link[=srr-class]{srr} object defining the stock-recruitment relationship
+and recruitment variability. See \code{\link[=SRR]{SRR()}} and \code{\link[=SRRModels]{SRRModels()}}.}
 
-\item{\code{Spatial}}{A \code{\link[=Spatial]{Spatial()}} object.}
+\item{\code{Spatial}}{A \link[=spatial-class]{spatial} object defining spatial structure and
+movement dynamics. Optional — when empty, a single well-mixed area is
+assumed. See \code{\link[=Spatial]{Spatial()}}.}
 
-\item{\code{Depletion}}{A \code{\link[=Depletion]{Depletion()}} object.}
+\item{\code{Depletion}}{A \link[=depletion-class]{depletion} object defining depletion assumptions
+at the start (\code{Initial}) and/or end (\code{Final}) of the historical period.
+Optional — when empty, the stock starts unfished and terminal depletion
+is determined by the \code{\link[=Fleet]{Fleet()}} and \code{\link[=Catchability]{Catchability()}} parameters.
+See \code{\link[=Depletion]{Depletion()}}.}
 
-\item{\code{nYear}}{Number of historical years.}
+\item{\code{nYear}}{\code{numeric(1)}. Number of historical years. Initialised to \code{20}
+by \code{\link[=Stock]{Stock()}} and overridden when attached to an \code{\link[=OM]{OM()}}.}
 
-\item{\code{pYear}}{Number of projection years.}
+\item{\code{pYear}}{\code{numeric(1)}. Number of projection years. Initialised to \code{30}
+by \code{\link[=Stock]{Stock()}} and overridden when attached to an \code{\link[=OM]{OM()}}.}
 
-\item{\code{nSim}}{Number of simulations.}
+\item{\code{nSim}}{\code{numeric(1)}. Number of stochastic simulations. Initialised to
+\code{48} by \code{\link[=Stock]{Stock()}} and overridden when attached to an \code{\link[=OM]{OM()}}.}
 
-\item{\code{CurrentYear}}{Final historical year.}
+\item{\code{CurrentYear}}{\code{numeric(1)}. Final calendar year of the historical
+period. Initialised to the current system year by \code{\link[=Stock]{Stock()}} and
+overridden when attached to an \code{\link[=OM]{OM()}}.}
 
-\item{\code{Years}}{Numeric vector of model years.}
+\item{\code{Years}}{\code{numeric}. Vector of all model years (historical + projection),
+derived from \code{nYear}, \code{pYear}, \code{CurrentYear}, and \code{Seasons}. Overridden
+when attached to an \code{\link[=OM]{OM()}}.}
 
-\item{\code{Seasons}}{Number of seasons.}
+\item{\code{Seasons}}{\code{numeric(1)}. Number of seasons per calendar year.}
 
-\item{\code{Misc}}{Miscellaneous list.}
+\item{\code{Misc}}{\code{list}. Used internally.}
 
-\item{\code{Log}}{List. Internal use.}
+\item{\code{Log}}{\code{list}. Internal log. Not intended for direct user access.}
 }}
 
+\seealso{
+\itemize{
+\item \code{\link[=Stock]{Stock()}} for the constructor and accessor functions.
+\item \code{\link[=Ages]{Ages()}}, \code{\link[=Length]{Length()}}, \code{\link[=Weight]{Weight()}}, \code{\link[=NaturalMortality]{NaturalMortality()}}, \code{\link[=Maturity]{Maturity()}},
+\code{\link[=Fecundity]{Fecundity()}}, \code{\link[=SRR]{SRR()}}, \code{\link[=Spatial]{Spatial()}}, \code{\link[=Depletion]{Depletion()}} for the sub-object
+constructors.
+\item \code{\link[=OM]{OM()}} for the operating model constructor.
+\item \link[=populating-schedules]{Specifying Biological and Fleet Schedules} for how
+\code{Pars}, \code{Model}, and \verb{MeanAt*} arrays are specified across sub-objects.
+}
+
+Other stock:
+\code{\link[=Stock]{Stock()}}
+}
+\concept{stock}

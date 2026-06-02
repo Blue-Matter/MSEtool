@@ -5,13 +5,20 @@
 #'
 #' @param TAC Numeric vector or matrix specifying total allowable catch. See `Details`
 #'
-#' @param TACType Character. Does the TAC refer to `"Removals"` (default) or `"Landings"`.
-#' 
+#' @param TACType Character. Does the TAC refer to `"Removals"` (default) or
+#'   `"Landings"`. Either length 1 (applied to all fleets) or a character
+#'   vector of length `nFleet`.
+#'
+#' @param TACUnit Character. Units in which the TAC is expressed: `"Biomass"`
+#'   (default) or `"Number"`. Either length 1 (applied to all fleets) or a
+#'   character vector of length `nFleet`.
+#'    
 #' @param Effort Numeric vector or matrix specifying relative or absolute fishing effort. See `Details`
 #'
-#' @param EffType Character string specifying effort interpretation:
-#' `"Rel"` for relative to the last historical year, or `"Abs"` for absolute
-#' effort units (in units of [Effort()]). Default is `"Rel"`.
+#' @param EffType Character. Effort interpretation: `"Rel"` for relative to
+#'   the last historical year, or `"Abs"` for absolute effort units (in units
+#'   of [Effort()]). Either length 1 (applied to all fleets) or a character
+#'   vector of length `nFleet`. Default is `"Rel"`.
 #'
 #' @param Closure Numeric vector or array specifying spatial closures. See `Details`
 #'
@@ -53,33 +60,35 @@
 #'
 #' ## TAC
 #'
-#' Total allowable catch units of `Biomass`.
+#' Total allowable catch in units of `"Biomass"` (default) or `"Number"`
+#' (see `TACUnit`). `TACType` and `TACUnit` are each either length 1
+#' (applied uniformly across all fleets) or a character vector of length
+#' `nFleet` specifying per-fleet values.
 #'
 #'  * single numeric value: global TAC distributed across
 #' the stocks and fleets in the [Data()] object according to `Allocation(OM)`.
 #'
 #'  * numeric vector length `nFleet`: fleet-specific TAC.
 #'
-#'  * numeric matrix: Fleet- and Area-specific TAC. Must have `nFleet`
-#' rows and `nArea` columns.
-#'    
 #' ## Effort
-#' 
-#' Either in absolute units corresponding with fleet-specific effort
-#' (`EffType`=`"Abs"`), or relative to the effort in the last historical year
-#' (`EffType`=`"Rel"`; default).
 #'
-#' Unless `Effort` is specified by `Area`, the spatial distribution of fishing
-#' effort is calculated internally (see [Technical
-#' Manual](https://docs.openmse.com/)) 
-#' 
+#' Either in absolute units corresponding with fleet-specific effort
+#' (`EffType = "Abs"`), or relative to the effort in the last historical year
+#' (`EffType = "Rel"`; default). `EffType` is either length 1 (applied
+#' uniformly across all fleets) or a character vector of length `nFleet`
+#' specifying per-fleet values.
+#'
+#' Note that when `Effort` is supplied as a matrix (fleet × area), it is
+#' always treated as absolute regardless of `EffType`.
+#'
 #' * single numeric value: 
 #' 
 #'    * If `EffType`=`"Rel"`: Effort relative to last historical year, applied to all
 #'    fleets. E.g., if `Effort=0.5`, effort for all fleets will be set to half 
 #'    the effort in the last historical year. 
 #'  
-#'    * If `EffType`=`"Abs"`: the total effort (summed over fleets; Note all
+#'    * If `EffType`=`"Abs"`: the total effort (summed over fleets unless provide
+#'    as a length `nFleet` vector); Note all
 #'    fleets in the OM must have the same units for `Effort`) and 
 #'    distributed over fleets following the same distribution as the last 
 #'    historical year   
@@ -88,9 +97,6 @@
 #'
 #' * numeric matrix: Fleet- and Area-specific relative or absolute Effort. Must have `nFleet`
 #' rows and `nArea` columns.  
-#' 
-#'   If `Effort` is a matrix, it will be treated as absolute; i.e., `EffType`  
-#'   will be ignored.
 #' 
 #' ## Closure
 #' 
@@ -196,20 +202,31 @@
 #'   Effort = c(1, 0.8),
 #'   EffType = "Rel"
 #' )
-Advice <- function(TAC = NULL,
-                   TACType = c('Removals', 'Landings'),
-                   Effort = NULL,
-                   EffType = c('Rel', 'Abs'),
-                   Closure = NULL,
-                   Selectivity = NULL,
-                   Retention = NULL,
+Advice <- function(TAC              = NULL,
+                   TACType          = 'Removals',
+                   TACUnit          = 'Biomass',  
+                   Effort           = NULL,
+                   EffType          = 'Rel', 
+                   Closure          = NULL,
+                   Selectivity      = NULL,
+                   Retention        = NULL,
                    DiscardMortality = NULL,
-                   ApicalF = NULL,
-                   Misc = list()) {
+                   ApicalF          = NULL,
+                   Misc             = list()) {
   
-  TACType <- match.arg(TACType, c('Removals', 'Landings'))
-  EffType <- match.arg(EffType, c('Rel', 'Abs'))
+  match_arg_vec <- function(x, choices, arg_name) {
+    bad <- !x %in% choices
+    if (any(bad))
+      cli::cli_abort(
+        c("{.arg {arg_name}} must be one of {.val {choices}}.",
+          x = "Invalid value{?s}: {.val {unique(x[bad])}}")
+      )
+    x
+  }
   
+  TACType <- match_arg_vec(TACType, c('Removals', 'Landings'), 'TACType')
+  TACUnit <- match_arg_vec(TACUnit, c('Biomass', 'Number'), 'TACUnit')  
+  EffType <- match_arg_vec(EffType, c('Rel', 'Abs'), 'EffType')
   
   if (!is.null(TAC) && !is.numeric(TAC))
     cli::cli_abort("`TAC` must be numeric")
@@ -237,17 +254,18 @@ Advice <- function(TAC = NULL,
   
   
   methods::new("advice",
-               TAC = TAC,
-               TACType = TACType,
-               Effort = Effort,
-               EffType = EffType,
-               Closure = Closure,
-               Selectivity = Selectivity,
-               Retention = Retention,
+               TAC              = TAC,
+               TACType          = TACType,
+               TACUnit          = TACUnit,
+               Effort           = Effort,
+               EffType          = EffType,
+               Closure          = Closure,
+               Selectivity      = Selectivity,
+               Retention        = Retention,
                DiscardMortality = DiscardMortality,
-               ApicalF = ApicalF,
-               Misc = Misc,
-               Log = list())
+               ApicalF          = ApicalF,
+               Misc             = Misc,
+               Log              = list())
 }
 
 

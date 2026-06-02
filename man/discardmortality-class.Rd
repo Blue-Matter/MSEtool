@@ -3,21 +3,52 @@
 \docType{class}
 \name{discardmortality-class}
 \alias{discardmortality-class}
-\title{DiscardMortality Object}
+\title{The \code{discardmortality} S4 Class}
 \description{
-Discard mortality describes the proportion of catch that is discarded and dies,
-defined either at age or at length.
-}
-\details{
-See \code{\link[=DiscardMortality]{DiscardMortality()}} for details.
+Defines the proportion of discarded catch that dies, at age or at length,
+for use in a \link[=fleet-class]{fleet} object. Discard mortality is optional; if not
+specified, all discarded fish are assumed to survive. Objects are typically
+created via the \code{\link[=DiscardMortality]{DiscardMortality()}} constructor, which documents all
+parameters in detail.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{MeanAtAge}}{Mean selectivity-at-age array.}
+\item{\code{MeanAtAge}}{\code{numeric} array or \code{NULL}. Mean discard mortality-at-age
+(\verb{Sim x Age x Year x Area}). Values between 0 (all discards survive) and
+1 (all discards die). See \code{\link[=DiscardMortality]{DiscardMortality()}}.}
 
-\item{\code{MeanAtLength}}{Mean selectivity-at-length array.}
+\item{\code{MeanAtLength}}{\code{numeric} array or \code{NULL}. Mean discard
+mortality-at-length (\verb{Sim x Length x Year x Area}). See
+\code{\link[=DiscardMortality]{DiscardMortality()}}.}
 
-\item{\code{Classes}}{Length class mid-points}
+\item{\code{Classes}}{\code{numeric} or \code{NULL}. Length class midpoints corresponding to
+the second dimension of \code{MeanAtLength}.}
+
+\item{\code{Misc}}{\code{list}. Miscellaneous additional inputs. Used internally.}
 }}
 
+\seealso{
+\itemize{
+\item \code{\link[=DiscardMortality]{DiscardMortality()}} for the constructor and full parameter
+documentation.
+\item \link[=fleet-class]{fleet} for the enclosing fleet object.
+\item \code{\link[=Selectivity]{Selectivity()}}, \code{\link[=Retention]{Retention()}} for related fleet components.
+}
+
+Other fleet:
+\code{\link[=Bioeconomic]{Bioeconomic()}},
+\code{\link[=Catchability]{Catchability()}},
+\code{\link[=DiscardMortality]{DiscardMortality()}},
+\code{\link[=Effort]{Effort()}},
+\code{\link[=Fleet]{Fleet()}},
+\code{\link[=Retention]{Retention()}},
+\code{\link[=Selectivity]{Selectivity()}},
+\code{\link{bioeconomic-class}},
+\code{\link{catchability-class}},
+\code{\link{effort-class}},
+\code{\link{fleet-class}},
+\code{\link{retention-class}},
+\code{\link{selectivity-class}}
+}
+\concept{fleet}

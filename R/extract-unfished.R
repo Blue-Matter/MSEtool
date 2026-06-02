@@ -32,7 +32,7 @@
 #'
 #' @seealso [ReduceDims()] for details on dimension collapsing.
 #'
-#' @name unfished
+#' @name extract-unfished
 NULL
 
 .unfished_slot <- function(Hist, type, slot_name, Reduce) {
@@ -49,22 +49,22 @@ NULL
 }
 
 #' @export
-#' @rdname unfished
+#' @rdname extract-unfished
 B0  <- function(Hist, type=c('Equilibrium','Dynamic'), Reduce=TRUE) 
   .unfished_slot(Hist, type, 'Biomass', Reduce)
 
 #' @export
-#' @rdname unfished
+#' @rdname extract-unfished
 SB0 <- function(Hist, type=c('Equilibrium','Dynamic'), Reduce=TRUE) 
   .unfished_slot(Hist, type, 'SBiomass', Reduce)
 
 #' @export
-#' @rdname unfished
+#' @rdname extract-unfished
 SP0 <- function(Hist, type=c('Equilibrium','Dynamic'), Reduce=TRUE) 
   .unfished_slot(Hist, type, 'SProduction', Reduce)
 
 #' @export
-#' @rdname unfished
+#' @rdname extract-unfished
 N0 <- function(Hist, type=c('Equilibrium','Dynamic'), Reduce=TRUE) 
   .unfished_slot(Hist, type, 'Number', Reduce)
 

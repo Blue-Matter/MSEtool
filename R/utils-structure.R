@@ -26,7 +26,7 @@ StructurePars <- function(Pars, nSim=NULL, Years=NULL, nArea=NULL) {
   )
   
   if (is.null(nArea))
-    Pars <- ApplyRandomWalk(Pars)
+    Pars <- ApplyRandomWalk(Pars, Years)
   
   ExtendPars(Pars)
 }
@@ -67,7 +67,12 @@ StructurePars_ <- function(Par, nSim=NULL, Years=NULL, nArea=NULL) {
         'i' = 'Provide number of simulations to the `nSim` argument.'
       ))
     val <- if (nSim == 1) mean(Par) else stats::runif(nSim, Par[1], Par[2])
-    Par <- array(val, dim=c(length(val), 1))
+    if (is.null(nArea)) {
+      Par <- array(val, dim=c(length(val), 1))
+    } else {
+      Par <- array(val, dim=c(length(val), 1, 1))  
+    }
+    
     return(NameParDimensions(Par, nSim, Years, nArea))
   }
   
@@ -96,18 +101,18 @@ StructurePars_ <- function(Par, nSim=NULL, Years=NULL, nArea=NULL) {
 #' @return `Pars` with random walks applied to matched parameters and all
 #'   `*SD` entries removed.
 #' @keywords internal
-ApplyRandomWalk <- function(Pars) {
+ApplyRandomWalk <- function(Pars, Years) {
   detect_sd <- which(substrRight(tolower(names(Pars)), 2) == 'sd')
   if (!length(detect_sd))
     return(Pars)
   
   for (i in detect_sd) {
+   
     nm_sd   <- names(Pars)[i]
     nm_par  <- strsplit(nm_sd, split="(?<=.)(?=.{2}$)", perl=TRUE)[[1]][1]
     par_ind <- match(nm_par, names(Pars))
     
     dnames <- dimnames(Pars[[par_ind]])
-    Years  <- as.numeric(dnames[['Year']])
     nSim   <- length(dnames[['Sim']])
     
     Pars[[par_ind]] <- RandomWalk(

@@ -19,38 +19,49 @@ Retention(
 Retention(x) <- value
 }
 \arguments{
-\item{Pars}{Named list of retention parameters passed to \code{Model}. See
-\code{\link[=RetentionModels]{RetentionModels()}} for available models and their required parameters.
+\item{Pars}{Named list of retention parameters passed to the retention
+model function. Parameter names must match the arguments of the chosen
+model (see \code{\link[=RetentionModels]{RetentionModels()}}). Each element may be a scalar, vector, or
+array; see \link[=populating-schedules]{Specifying Biological and Fleet Schedules} for accepted formats. Default \code{list()}
+(empty).
+
+If \code{Pars} and \code{Model} are both provided, \code{MeanAtAge} is computed from the
+model and any values already in \code{MeanAtAge} are overwritten. To preserve
+a user-specified \code{MeanAtAge}, leave \code{Pars = list()} (the default).
+
 If \code{Pars} is a \link[=fleet-class]{fleet} object, the \code{Retention} slot of that fleet
-is returned. If \code{Pars} and \code{Model} are both provided, they will be used
-to populate \code{MeanAtAge}, overwriting any existing values. To preserve
-user-specified values in \code{MeanAtAge}, set \code{Pars = list()} (default).}
+is returned.}
 
-\item{Model}{Character. Retention model identifier. If \code{NULL} (default),
-the model is inferred from \code{Pars} where possible. See
-\code{\link[=RetentionModels]{RetentionModels()}} for available models.}
+\item{Model}{Character or function or \code{NULL}. Retention model identifier.
+If \code{NULL} (default), the model is inferred automatically from the names
+in \code{Pars} via \code{\link[=FindModel]{FindModel()}}. May also be supplied as a custom R function
+with arguments matching those in \code{Pars}. See \code{\link[=RetentionModels]{RetentionModels()}} for
+built-in options.}
 
-\item{MeanAtAge}{Numeric array. Mean retention at age, with named
-dimensions \code{Sim}, \code{Age}, and \code{Year}. If \code{MeanAtLength} is provided,
-\code{MeanAtAge} will be calculated from it. Otherwise, \code{MeanAtAge} is used
-directly, and \code{MeanAtLength} is calculated from \code{MeanAtAge} and a
-\code{\link[=Length]{Length()}} object unless \code{MeanAtLength} is already populated. \strong{Note:}
-if \code{Pars} and \code{Model} are both provided, any values supplied here will
-be overwritten.}
+\item{MeanAtAge}{Numeric array or \code{NULL}. Mean retention-at-age with
+dimensions \verb{Sim x Age x Year} (area dimension added during population).
+Used directly when \code{Pars} is empty and \code{MeanAtLength} is not supplied.
+See \link[=populating-schedules]{Specifying Biological and Fleet Schedules} for
+accepted array formats. \strong{Note:} if \code{Pars} and \code{Model} are both
+provided, any values supplied here will be overwritten during population.}
 
-\item{MeanAtLength}{Numeric array. Mean retention at length, with named
-dimensions \code{Sim}, \code{Length}, and \code{Year}. If provided, takes precedence
-and \code{MeanAtAge} will be derived from it.}
+\item{MeanAtLength}{Numeric array or \code{NULL}. Mean retention-at-length with
+dimensions \verb{Sim x Length x Year}. If provided and \code{Pars} is empty, takes
+precedence over \code{MeanAtAge}; \code{MeanAtAge} is derived from it via the
+age-length key.}
 
-\item{MeanAtWeight}{Numeric array. Mean retention at weight, with named
-dimensions \code{Sim}, \code{Weight}, and \code{Year}. Default \code{NULL}.}
+\item{MeanAtWeight}{Numeric array or \code{NULL}. Mean retention-at-weight with
+dimensions \verb{Sim x Weight x Year}. Default \code{NULL}.}
 
-\item{Classes}{Numeric vector. Age or length classes corresponding to the
-\code{Age} or \code{Length} dimension of \code{MeanAtAge} or \code{MeanAtLength}. Default
-\code{NULL}.}
+\item{Classes}{Numeric vector or \code{NULL}. Length or weight class midpoints
+corresponding to the second dimension of \code{MeanAtLength} or
+\code{MeanAtWeight}. Default \code{NULL}.}
 
-\item{isRel}{Logical. Whether retention parameters are specified relative
-to maturity-at-length (e.g., \code{L50}). Default \code{FALSE}.}
+\item{isRel}{Logical. If \code{TRUE}, length-based parameters (e.g., \code{LR5},
+\code{LFR}) are interpreted as multiples of the length-at-50\%-maturity
+(\code{L50}) of the paired stock rather than absolute length values. A
+\code{\link[=Maturity]{Maturity()}} object must be available to \code{\link[=PopulateRetention]{PopulateRetention()}} for
+scaling to occur. Default \code{FALSE}.}
 
 \item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
 
@@ -63,79 +74,92 @@ to maturity-at-length (e.g., \code{L50}). Default \code{FALSE}.}
 \itemize{
 \item \code{Retention()} returns a \link[=retention-class]{retention} object. If \code{Pars} is a
 \link[=fleet-class]{fleet} object, the \code{Retention} slot of that fleet is returned.
-\item \verb{Retention<-} returns \code{x} with the \code{Retention} slot replaced.
+\item \verb{Retention<-} returns \code{x} with the \code{Retention} slot replaced by \code{value}.
 }
 }
 \description{
 Construct and manipulate a \link[=retention-class]{retention} object defining
-retention-at-age or retention-at-length for a \code{\link[=Fleet]{Fleet()}} object. Retention
-is optional for \link[=fleet-class]{fleet} objects. If not specified, the model assumes
-that all age and length classes are fully retained.
+retention-at-age, retention-at-length, or retention-at-weight for a
+\code{\link[=Fleet]{Fleet()}} object. Retention is optional; if not specified, all age and
+length classes are assumed fully retained.
 }
 \details{
-Retention is optional for all \link[=fleet-class]{fleet} objects. If not specified, the
-model assumes that all age and length classes are fully retained (i.e.,
-retention = 1 for all classes).
-\subsection{Populating MeanAtAge and MeanAtLength}{
+Retention is optional for all \link[=fleet-class]{fleet} objects. It defines the
+probability that a selected fish is retained, on a scale from 0 to 1.
+Fish that are selected but not retained are treated as discards, and their
+fate is determined by \code{\link[=DiscardMortality]{DiscardMortality()}}.
 
-The precedence for populating \code{MeanAtAge} is:
-\enumerate{
-\item If \code{Pars} and \code{Model} are both provided, \code{MeanAtAge} is calculated from
-the model and \strong{any existing values in \code{MeanAtAge} are overwritten}. To
-preserve user-specified values in \code{MeanAtAge}, leave \code{Pars = list()}
-(the default).
-\item If \code{MeanAtLength} is provided (and \code{Pars} is empty), \code{MeanAtAge} is
-derived from \code{MeanAtLength}.
-\item Otherwise, \code{MeanAtAge} is used directly and \code{MeanAtLength} is calculated
-from \code{MeanAtAge} and a \code{\link[=Length]{Length()}} object, unless \code{MeanAtLength} is
-already populated.
-}
+When no \link[=retention-class]{retention} object is supplied, \code{\link[=PopulateRetention]{PopulateRetention()}} sets
+full retention (1) for all age and length classes.
+\subsection{Specifying Retention}{
+
+There are two ways to specify retention:
+
+\strong{Model-based} (recommended): supply \code{Pars} as a named list whose element
+names match the arguments of a built-in or custom model function. The model
+is resolved automatically unless \code{Model} is specified explicitly. See
+\code{\link[=RetentionModels]{RetentionModels()}} for available models and their required parameters, and
+\link[=populating-schedules]{Specifying Biological and Fleet Schedules} for how
+parameter values are structured across simulations and years.
+
+Available model families are: logistic (at-age, at-length, at-weight, with
+optional \code{MaxRet} asymptote), knife-edge (at-age, at-length), and
+double-normal (at-length, at-weight). At-length and at-weight schedules are
+converted to at-age internally using the age-length or age-weight key.
+
+\strong{Direct array}: leave \code{Pars = list()} and supply \code{MeanAtAge},
+\code{MeanAtLength}, or \code{MeanAtWeight} directly. If \code{MeanAtLength} is provided,
+it takes precedence and \code{MeanAtAge} is derived from it. If only \code{MeanAtAge}
+is provided, \code{MeanAtLength} is calculated from it unless already populated.
+
+These two approaches are mutually exclusive: if \code{Pars} is non-empty and
+\code{Model} can be resolved, any values in \code{MeanAtAge} will be overwritten.
 }
 
 \subsection{Relative Parameters}{
 
 When \code{isRel = TRUE}, length-based parameters (e.g., \code{LR5}, \code{LFR}) are
-interpreted as multiples of the length-at-50\%-maturity (\code{L50}) rather than
-absolute length values.
+scaled by the maturity \code{L50} of the paired stock before the retention curve
+is computed.
 }
 
 \subsection{Attaching to a Fleet}{
 
-A \code{Retention} object can be attached to a \code{\link[=Fleet]{Fleet()}} with
+A \link[=retention-class]{retention} object can be attached to a \code{\link[=Fleet]{Fleet()}} with
 \code{Retention(Fleet) <- MyRetention} and retrieved with \code{Retention(Fleet)}.
 
 Individual slots may be accessed or modified using \code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}},
 \code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=MeanAtLength]{MeanAtLength()}}, \code{\link[=MeanAtWeight]{MeanAtWeight()}}, and \code{\link[=Classes]{Classes()}}.
 }
-
-\subsection{Use in \code{Advice()}}{
-
-When  \link[=retention-class]{retention} objects are used in \code{\link[=Advice]{Advice()}} objects, the
-\code{Sim} and \code{Year} dimensions should not be included.
-\itemize{
-\item \code{MeanAtAge} should be either length \code{nAge} or length \code{1} (recycled over age classes).
-\item \code{MeanAtLength} should be either length \code{Classes} or length \code{1} (recycled over length classes).
-\item \code{MeanAtWeight} (if applicalbe) should be either length \code{Classes} or length \code{1} (recycled over weight classes).
-}
-
-If \code{Classes} is not specified, the classes will be taken from the \code{Length} or \code{Weight} object of the
-corresponding stock.
-
-See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more details.
-}
 }
 \examples{
-# Specify via model parameters
-r <- Retention(Pars = list(LR5 = 10, LFR = 20, Rmaxlen = 1))
-
-# Specify MeanAtAge directly (Pars must be empty to avoid overwriting)
-r2 <- Retention(MeanAtAge = my_array)
-
-# Default: full retention for all classes
-r3 <- Retention()
+# See man-examples/class-Retention.R
 
 }
 \seealso{
-\link[=retention-class]{retention}, \code{\link[=Fleet]{Fleet()}}, \code{\link[=RetentionModels]{RetentionModels()}},
-\code{\link[=Selectivity]{Selectivity()}}, \code{\link[=DiscardMortality]{DiscardMortality()}}
+\itemize{
+\item \link[=retention-class]{retention} for the class definition and slot-level documentation.
+\item \code{\link[=RetentionModels]{RetentionModels()}} for available model functions and their parameters.
+\item \code{\link[=Fleet]{Fleet()}} for the enclosing fleet constructor.
+\item \code{\link[=Selectivity]{Selectivity()}}, \code{\link[=DiscardMortality]{DiscardMortality()}} for related fleet components.
+\item \link[=populating-schedules]{Specifying Biological and Fleet Schedules} for how
+\code{Pars}, \code{Model}, and \verb{MeanAt*} arrays are structured.
+\item \code{\link[=PopulateRetention]{PopulateRetention()}} for population details.
 }
+
+Other fleet:
+\code{\link[=Bioeconomic]{Bioeconomic()}},
+\code{\link[=Catchability]{Catchability()}},
+\code{\link[=DiscardMortality]{DiscardMortality()}},
+\code{\link[=Effort]{Effort()}},
+\code{\link[=Fleet]{Fleet()}},
+\code{\link[=Selectivity]{Selectivity()}},
+\code{\link{bioeconomic-class}},
+\code{\link{catchability-class}},
+\code{\link{discardmortality-class}},
+\code{\link{effort-class}},
+\code{\link{fleet-class}},
+\code{\link{retention-class}},
+\code{\link{selectivity-class}}
+}
+\concept{fleet}

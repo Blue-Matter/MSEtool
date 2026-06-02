@@ -20,7 +20,7 @@ of simulations to \code{nSim}
 }
 \examples{
 
-OM <- Populate(ExampleOM)
+OM <- Populate(SingleStockOM)
 nSim(OM)
 OM |> Stock(1) |> Length() |> MeanAtAge() |> dim()
 

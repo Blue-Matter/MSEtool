@@ -87,12 +87,15 @@ ConditionObs_Catch <- function(Hist,
   for (fl in 1:nFleet) {
     fleet_name <-  fleetnames[fl]
     fl_ind <- match(fleet_name, colnames(ObservedCatch_Fleet))
-    if (is.na(fl_ind))  next()
+    if (is.na(fl_ind)) next
     
     ObservedCatch <- ObservedCatch_Fleet[,fl_ind]
+    if (all(is.na(ObservedCatch))) next
     CatchObs <- slot(Hist@OM@Obs[[i]][[fleet_name]], type)
    
     Units <- FleetUnits[fl]
+    if (is.na(Units))
+      Units <- 'Biomass'
     CatchObs@Units <- FleetUnits[fl]
     
     # Years to use condition the observation error - default all historical

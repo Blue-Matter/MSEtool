@@ -17,39 +17,114 @@ GenHistData_Catch(
 )
 }
 \arguments{
-\item{x}{Integer index of the simulation replicate to extract}
+\item{x}{Integer index of the simulation replicate.}
 
-\item{Data}{Fishery data object to populate}
+\item{Data}{Existing \code{data} object from \code{OM@Data}.}
 
-\item{Hist}{Operating model history object}
+\item{Hist}{A \code{hist} class object.}
 
-\item{HistYears}{Numeric vector of historical years}
+\item{HistYears}{Numeric vector of historical years.}
 
-\item{i}{Integer index of observed data set}
+\item{i}{Integer index of the stock complex.}
 
-\item{stocks}{Integer vector of stock indices in the complex}
+\item{stocks}{Integer vector of stock indices in the complex.}
 
-\item{FleetNames}{Character vector of fleet names}
+\item{FleetNames}{Character vector of fleet names.}
 
-\item{defaultCV}{Numeric default coefficient of variation applied
-when no fleet-specific CV is provided}
+\item{defaultCV}{Numeric default coefficient of variation applied when no
+fleet-specific CV is provided. Default \code{0.2}.}
 
-\item{type}{Character, either \code{Landings} or \code{Discards}}
+\item{type}{Character. Either \code{"Landings"} or \code{"Discards"}.}
 }
 \value{
-An object of class \code{catchdata} containing simulated historical
-catch values and CVs
+A \link[=catchdata-class]{catchdata} object with:
+\itemize{
+\item \verb{@Name}: character vector of fleet names
+\item \verb{@Value}: \verb{[nYear x nFleet]} array of observed catch
+\item \verb{@CV}: \verb{[nYear x nFleet]} array initialised to \code{defaultCV}
+\item \verb{@Units}: per-fleet units, from \code{\link[=CatchObs]{CatchObs()}} \verb{@Units} where defined,
+otherwise \code{"Biomass"}
+}
 }
 \description{
-Internal function to generate simulated historical catch data
-(landings or discards) when real observations are not available.
+Internal function to generate simulated historical fleet catch (landings or
+discards) when real observations are not available.
 }
 \details{
-Uses conditioned observation objects to apply fleet-specific bias
-and observation error to simulated catch in number or biomass,
-aggregated over age and area.
+\subsection{Early Exit Conditions}{
 
-If real catch data already exist, or no observation structure is
-defined, the existing data are returned unchanged.
+The function returns \code{slot(Data, type)} unchanged in two cases:
+\itemize{
+\item \strong{Real data exist}: \code{slot(Data, type)} is already populated
+(\code{!EmptyObject(slot(Data, type))}).
+\item \strong{No observation structure defined}: every fleet's \code{\link[=CatchObs]{CatchObs()}} object
+is a default (unconditioned) object, as determined by \code{isNewObject()}.
+}
+}
+
+\subsection{True Catch Aggregation}{
+
+Before applying observation error, true catch is aggregated from
+\code{Hist@LandingsAtAge} or \code{Hist@DiscardsAtAge} (selected by \code{type}) across
+stocks, ages, and areas for replicate \code{x}. The aggregation unit depends on
+\code{CatchObs@Units} for each fleet:
+\itemize{
+\item \code{"Number"}: catch-at-age is summed over age and area, then summed over
+stocks within the complex.
+\item \code{"Biomass"}: catch-at-age is multiplied by \code{WeightFleet} before summing
+over age and area, then summed over stocks within the complex.
+}
+
+Any value of \code{Units} other than \code{"Number"} or \code{"Biomass"} raises an error.
+Units default to \code{"Biomass"} unless specified in the \code{\link[=CatchObs]{CatchObs()}} object.
+}
+
+\subsection{Observation Error Model}{
+
+For each fleet with a non-empty \code{\link[=CatchObs]{CatchObs()}} object, observed catch is
+generated as:
+
+\deqn{\tilde{C}_{t} = C_{t} \cdot b \cdot \varepsilon_{t}}
+\itemize{
+\item \eqn{C_{t}} — true aggregated catch in year \eqn{t} (see above)
+\item \eqn{b} — multiplicative bias for replicate \code{x} (\code{catchobs@Bias[x]});
+see \code{\link[=CatchObs]{CatchObs()}}
+\item \eqn{\varepsilon_{t}} — lognormal error multiplier for replicate \code{x},
+year \eqn{t} (\code{catchobs@Error[x, t]}); see \code{\link[=CatchObs]{CatchObs()}}
+}
+
+The \code{Error} array is subset to \code{HistYears} only before multiplication,
+dropping any years outside the historical period.
+}
+
+\subsection{CV Handling}{
+
+CVs are initialised to \code{defaultCV} for all fleets and years. Fleet-specific
+CVs from the \code{\link[=CatchObs]{CatchObs()}} object are not currently applied here; \code{defaultCV}
+serves as the working assumption for downstream MPs.
+}
+
+\subsection{Obs Structure}{
+
+Observation parameters are accessed via:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{Hist@OM@Obs[[i]][[fl]]  # obs object; slot selected by `type`
+}\if{html}{\out{</div>}}
+
+where \code{i} is the stock complex index and \code{fl} the fleet index. The relevant
+\code{\link[=CatchObs]{CatchObs()}} slots are:
+\itemize{
+\item \verb{@Bias[x]}: per-replicate multiplicative bias
+\item \verb{@Error[x, t]}: per-replicate, per-year lognormal error multiplier
+\item \verb{@Units}: catch units (\code{"Biomass"} or \code{"Number"}), propagated to the
+output \link[=catchdata-class]{catchdata}
+}
+
+See \link[=obs-class]{obs} and \code{\link[=CatchObs]{CatchObs()}} for full slot documentation.
+}
+}
+\seealso{
+\code{\link[=CatchObs]{CatchObs()}}, \code{\link[=CatchData]{CatchData()}}, \link[=catchdata-class]{catchdata}, \link[=obs-class]{obs},
+\code{\link[=GenHistData_Effort]{GenHistData_Effort()}}
 }
 \keyword{internal}

@@ -1,38 +1,85 @@
-#' Convert a Legacy Fleet Object to a New fleet Class
+#' Convert a Legacy Fleet Object to the Current `fleet` Class
 #'
 #' Converts a legacy [Fleet-legacy-class] object to the current [fleet-class]
-#' by extracting and mapping each component to its corresponding new S4 class.
+#' by mapping each component to its corresponding new S4 sub-object.
 #'
-#' @param Fleet A [Fleet-legacy-class] object to convert.
+#' @param Fleet A [Fleet-legacy-class] object to convert. An [OM-legacy-class]
+#'   object with a legacy `Fleet` slot is also accepted, in which case the
+#'   `Fleet` slot is extracted and converted.
 #' @param silent Logical. If `TRUE`, suppresses progress messages. Default
 #'   `FALSE`.
 #'
-#' @return A [fleet-class] object with `Name`, `Effort`, `Catchability`,
-#'   `Selectivity`, and `Retention` populated. Note that `DiscardMortality`,
-#'   `Closure`, `Targeting`, and `WeightFleet` are not currently converted and
-#'   retain their default values.
+#' @details
+#' ## Slot Mapping
 #'
-#' @seealso [Convert()], [ConvertOM()], [ConvertMOM()], [Effort()],
-#'   [Catchability()], [Selectivity()], [Retention()]
+#' The following legacy slots are mapped to their current equivalents:
+#'
+#' | Legacy slot | New location |
+#' |---|---|
+#' | `Name` | `fleet@Name` |
+#' | `EffYears`, `EffLower`, `EffUpper`, `Esd` | `Effort@Effort` (data frame) |
+#' | `qcv`, `qinc` | `Catchability@qCV`, `@qInc` |
+#' | `L5`, `LFS`, `Vmaxlen` | `Selectivity@Pars`, `@Model = DoubleNormal` |
+#' | `LR5`, `LFR`, `Rmaxlen` | `Retention@Pars`, `@Model = DoubleNormalRetention` |
+#'
+#' ## Effort
+#'
+#' Historical effort is constructed as a data frame with columns `Year`,
+#' `Lower`, `Upper`, and `CV`, passed to [Effort()]. The legacy `Esd` slot
+#' contains a two-element vector of lower and upper bounds for a uniform
+#' distribution of effort variability. Only `Esd[1]` is currently used as a
+#' scalar CV; `Esd[2]` is silently dropped. 
+#'
+#' ## Selectivity
+#'
+#' `L5`, `LFS`, and `Vmaxlen` map to the [DoubleNormal()] double-normal
+#' selectivity-at-length model. `Vmaxlen < 1` produces a dome-shaped
+#' selectivity curve. See [SelectivityModels()] for the full set of available
+#' selectivity models.
+#'
+#' ## Retention
+#'
+#' `LR5`, `LFR`, and `Rmaxlen` map to the [DoubleNormalRetention()]
+#' double-normal retention-at-length model. `Rmaxlen < 1` produces a
+#' dome-shaped retention curve. See [RetentionModels()] for the full set of
+#' available retention models.
+#'
+#' ## Slots Not Converted
+#'
+#' The following slots have no equivalent in the legacy [Fleet-legacy-class]
+#' and retain their default values in the converted object:
+#'
+#' - `DiscardMortality`: new functionality; no legacy equivalent.
+#' - `Closure`: new functionality; no legacy equivalent.
+#' - `Targeting`: new functionality; no legacy equivalent.
+#' - `WeightFleet`: new functionality; no legacy equivalent.
+#'
+#' @return A [fleet-class] object.
+#'
+#' @seealso [Convert()], [ConvertOM()], [ConvertMOM()], [ConvertStock()],
+#'   [ConvertObs()], [ConvertImp()], [Effort()], [Catchability()],
+#'   [Selectivity()], [Retention()], [SelectivityModels()],
+#'   [RetentionModels()]
 #'
 #' @examples
 #' \dontrun{
-#' Fleetlegacy <- readRDS("MyLegacyFleet.rds")
-#' fleet_new <- ConvertFleet(Fleetlegacy)
+#' fleet_legacy <- readRDS("MyLegacyFleet.rds")
+#' fleet_new <- ConvertFleet(fleet_legacy)
 #' }
 #'
+#' @export
 ConvertFleet <- function(Fleet, silent = FALSE) {
-  CheckClass(Fleet, "Fleet", "Fleet")
+  CheckClass(Fleet, c("Fleet", "OM"), "Fleet")
   
-  if (!silent) {
+  if (!silent)
     cli::cli_alert("Converting object of class {.cls Fleet} to class {.cls fleet}")
-  }
   
-  fleet <- Fleet2Name(Fleet)
-  fleet@Effort <- Fleet2Effort(Fleet)
-  fleet@Catchability <- Fleet2Catchability(Fleet)
-  fleet@Selectivity <- Fleet2Selectivity(Fleet)
-  fleet@Retention <- Fleet2Retention(Fleet)
+  fleet               <- Fleet2Name(Fleet)
+  fleet@Effort        <- Fleet2Effort(Fleet)
+  fleet@Catchability  <- Fleet2Catchability(Fleet)
+  fleet@Selectivity   <- Fleet2Selectivity(Fleet)
+  fleet@Retention     <- Fleet2Retention(Fleet)
+  # Not converted:
   # fleet@DiscardMortality
   # fleet@Closure
   # fleet@Targeting

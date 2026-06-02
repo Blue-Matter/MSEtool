@@ -28,60 +28,135 @@ qInc(x)
 qInc(x) <- value
 }
 \arguments{
-\item{Efficiency}{Numeric or array. Gear or vessel catchability coefficient
-(\code{q}) relating fishing effort to fishing mortality.}
+\item{Efficiency}{Numeric, array, or \code{NULL}. Gear or vessel catchability
+coefficient (\code{q}) relating fishing effort to fishing mortality
+(encounters, see \code{\link[=Interactions]{Interactions()}}). Accepted  forms:
+\itemize{
+\item \code{NULL} (default): creates an empty \link[=catchability-class]{catchability} object.
+\code{\link[=PopulateCatchability]{PopulateCatchability()}} initialises \code{Efficiency} to 1 across all
+simulations and years.
+\item Scalar numeric (e.g. \code{0.01}): constant efficiency applied across all
+simulations and years.
+\item Numeric array with dimensions \verb{Sim x Year} and named dimnames. The
+\code{Sim} dimension may be length 1 (replicated internally) or match
+\code{nSim}. The \code{Year} dimension may be length 1 or span a subset of years;
+\code{\link[=PopulateCatchability]{PopulateCatchability()}} extends it to cover all historical and
+projected years.
+}
 
-\item{qCV}{Numeric. Coefficient of variation for catchability, used to
-generate stochastic variation in \code{q} across simulations (projection only).}
+If \code{Efficiency} is a \link[=fleet-class]{fleet} object, the \code{Catchability} slot of
+that fleet is returned (see Details).}
 
-\item{qInc}{Numeric. Incremental annual change in catchability, used to
-model trends in gear efficiency over time (projection only).}
+\item{qCV}{Numeric or \code{NULL}. Coefficient of variation for lognormal
+stochastic variation in catchability. Applied to projected years only
+(see Details). Default \code{NULL}. Included primarily for backwards
+compatibility; users may find it simpler to supply a fully specified
+\code{Efficiency} array directly.}
+
+\item{qInc}{Numeric or \code{NULL}. Annual percentage increase in catchability
+(e.g. \code{2} = 2\% per year; negative values indicate declining efficiency).
+Applied to projected years only (see Details). Default \code{NULL}. Included
+primarily for backwards compatibility; users may find it simpler to
+supply a fully specified \code{Efficiency} array directly.}
 
 \item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
 
-\item{x}{A \link[=catchability-class]{catchability} object, or a \link[=fleet-class]{fleet} object for
-\verb{Catchability<-}.}
+\item{x}{A \link[=catchability-class]{catchability} object for accessor and replacement
+functions.}
 
-\item{value}{For \verb{Catchability<-}: a \link[=catchability-class]{catchability} object. For slot
-replacement functions: the new value for the corresponding slot.}
+\item{value}{The replacement value for the corresponding slot.}
 }
 \value{
 \itemize{
 \item \code{Catchability()} returns a \link[=catchability-class]{catchability} object. If \code{Efficiency}
 is a \link[=fleet-class]{fleet} object, the \code{Catchability} slot of that fleet is
 returned.
-\item \verb{Catchability<-} returns \code{x} with the \code{Catchability} slot replaced.
-\item \code{Efficiency()}, \code{qCV()}, \code{qInc()} return the corresponding slot from \code{x}.
+\item \verb{Catchability<-} returns \code{x} with the \code{Catchability} slot replaced by
+\code{value}.
+\item \code{Efficiency()}, \code{qCV()}, \code{qInc()} return the corresponding slot from
+the \link[=catchability-class]{catchability} object \code{x}.
 \item Their replacement forms return \code{x} with the corresponding slot updated.
 }
 }
 \description{
 Construct and manipulate a \link[=catchability-class]{catchability} object defining fishing
-gear or vessel efficiency.
+gear or vessel efficiency for a \code{\link[=Fleet]{Fleet()}} object.
 }
 \details{
-A \link[=catchability-class]{catchability} object represents assumptions about the efficiency
-of fishing gear or surveys in capturing fish. Catchability may be specified
-as fixed values, time-varying arrays, or stochastic processes depending on
-model structure.
+A \link[=catchability-class]{catchability} object defines the efficiency with which a fleet
+converts fishing effort into fishing mortality (encounters, see \code{\link[=Interactions]{Interactions()}}).
+A constant scalar is sufficient for most applications;
+time-varying or simulation-varying efficiency can be specified via a full
+\verb{Sim x Year} array.
+\subsection{Efficiency Array Format}{
 
-A \code{Catchability} object can be attached to a \code{\link[=Fleet]{Fleet()}} with
+When supplied as a scalar, \code{Efficiency} is wrapped internally into a
+\verb{1 x 1} array and replicated across all simulations and years during
+\code{\link[=PopulateCatchability]{PopulateCatchability()}}, producing constant efficiency. When supplied as
+an array, the \code{Sim} dimension may be length 1 or match \code{nSim}, and the
+\code{Year} dimension is extended to cover all historical and projected years
+if it does not already do so.
+
+When \code{Efficiency} is \code{NULL}, \code{\link[=PopulateCatchability]{PopulateCatchability()}} initialises it to
+1 across all simulations and years, equivalent to supplying
+\code{Efficiency = 1}.
+}
+
+\subsection{Projected-Year Adjustments: \code{qInc} and \code{qCV}}{
+
+\code{qInc} and \code{qCV} modify efficiency in projected years only and have no
+effect on historical years.
+
+\code{qInc} specifies a percentage annual increase compounded over projection
+years: efficiency in projection year index \code{t} is scaled by
+\code{(1 + qInc / 100)^t}. Negative values model declining gear efficiency
+over the projection period.
+
+\code{qCV} introduces lognormal inter-annual variation in efficiency during
+projection years. Each projected year's efficiency is multiplied by a
+mean-1 lognormal deviate with the specified coefficient of variation.
+
+Both parameters are included primarily for backwards compatibility. For
+most applications, supplying a fully specified \code{Efficiency} array gives
+more direct control over time-varying catchability across both historical
+and projected periods.
+}
+
+\subsection{Attaching to a Fleet}{
+
+A \link[=catchability-class]{catchability} object can be attached to a \code{\link[=Fleet]{Fleet()}} with
 \code{Catchability(Fleet) <- MyCatchability} and retrieved with
 \code{Catchability(Fleet)}.
-
-Individual slots may be accessed or modified using the accessor and
-replacement functions documented here: \code{\link[=Efficiency]{Efficiency()}}, \code{\link[=qCV]{qCV()}}, \code{\link[=qInc]{qInc()}}.
-
-See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more details.
+}
 }
 \examples{
-c <- Catchability(Efficiency = 0.01, qCV = 0.1)
-Efficiency(c)
-Efficiency(c) <- 0.02
-qCV(c)
-qInc(c)
+# See man-examples/class-Catchability.R
 
 }
 \seealso{
-\link[=catchability-class]{catchability}, \code{\link[=Fleet]{Fleet()}}
+\itemize{
+\item \link[=catchability-class]{catchability} for the class definition and slot-level
+documentation.
+\item \code{\link[=Fleet]{Fleet()}} for the enclosing fleet constructor.
+\item \code{\link[=Effort]{Effort()}} for the effort object that is scaled by efficiency to produce
+fishing mortality.
+\item \code{\link[=PopulateCatchability]{PopulateCatchability()}} for how efficiency arrays are extended and
+stochastic adjustments are applied.
 }
+
+Other fleet:
+\code{\link[=Bioeconomic]{Bioeconomic()}},
+\code{\link[=DiscardMortality]{DiscardMortality()}},
+\code{\link[=Effort]{Effort()}},
+\code{\link[=Fleet]{Fleet()}},
+\code{\link[=Retention]{Retention()}},
+\code{\link[=Selectivity]{Selectivity()}},
+\code{\link{bioeconomic-class}},
+\code{\link{catchability-class}},
+\code{\link{discardmortality-class}},
+\code{\link{effort-class}},
+\code{\link{fleet-class}},
+\code{\link{retention-class}},
+\code{\link{selectivity-class}}
+}
+\concept{fleet}
