@@ -47,12 +47,15 @@ CheckCatch <- function(Data, incUnits = TRUE, slot_names = c('Landings', 'Discar
   
   if (any(value_errors)) {
     affected <- slot_names[value_errors]
-    cli::cli_alert_warning(
-      'No {.val {affected}} data available for: {.val {Data@Name}}'
-    )
-    cli::cli_alert_warning(
-      'If this data is used to set TAC, the MP will likely use {.val CurrentEffort} instead'
-    )
+    if (length(affected)>1) {
+      cli::cli_alert_warning(
+        'No {.val {affected}} data available for: {.val {Data@Name}}'
+      )
+      cli::cli_alert_warning(
+        'If this data is used to set TAC, the MP will likely use {.val CurrentEffort} instead'
+      )
+    }
+
   }
   
   if (any(unit_errors)) {

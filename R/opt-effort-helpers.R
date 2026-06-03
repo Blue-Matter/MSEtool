@@ -72,7 +72,7 @@ CatchMatrix <- function(Temp, sim, TSIndex, TACType_by_Complex, TACUnit_by_Compl
         catch_val <- landings
       }
       
-      mat[i, fl] <- catch_val
+      mat[i, fl] <- SumOverStock(catch_val)
     }
   }
   mat
