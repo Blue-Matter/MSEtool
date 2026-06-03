@@ -30,17 +30,16 @@ CheckAllocation <- function(Hist) {
   StockNames <- StockNames(Hist)
   Allocation <- Hist@OM@Allocation
   
-  if (!length(Allocation)) 
-    Allocation <- MakeNamedList(StockNames)
-  
   nStock    <- nStock(Hist)
   nComplex  <- length(Hist@OM@Complexes)
   nFleet    <- nFleet(Hist)
   nSim      <- nSim(Hist)
   HistYears <- Years(Hist,'H')
   
-  ComplexNames      <- names(Hist@OM@Complexes)
-  names(Allocation) <- ComplexNames
+  ComplexNames  <- names(Hist@OM@Complexes)
+  
+  if (!length(Allocation)) 
+    Allocation <- MakeNamedList(ComplexNames)
   
   if (length(Allocation)!= nComplex)
     cli::cli_abort('`Allocation` must be a list length 0 or length `nComplex(OM)` ')
