@@ -114,7 +114,7 @@ PopulateObs <- function(Obs,
     HistYears = HistYears,
     ProjYears = ProjYears,
     Bins      = SizeBins,
-    BinName   = "Size"
+    BinName   = "Class"
   )
   
   Obs@DiscardsAtSize <- PopulateCompObs(
@@ -123,7 +123,7 @@ PopulateObs <- function(Obs,
     HistYears = HistYears,
     ProjYears = ProjYears,
     Bins      = SizeBins,
-    BinName   = "Size"
+    BinName   = "Class"
   )
   
   ReduceDims(Obs, IncYear = TRUE)

@@ -354,12 +354,11 @@ PopulateObsList <- function(OM, silent = FALSE) {
   names(ObsList) <- ComplexNames
   
   for (st in seq_len(nComplex)) {
-    obs_names     <- names(OM@Obs[[st]])
-    nObs          <- length(obs_names)
-    ObsList[[st]] <- vector("list", nObs)
+    obs_names            <- names(OM@Obs[[st]])
+    nObs                 <- length(obs_names)
+    ObsList[[st]]        <- vector("list", nObs)
     names(ObsList[[st]]) <- obs_names
-    
-    AgeClasses <- OM@Stock[[st]]@Ages@Classes
+    AgeClasses           <- OM@Stock[[st]]@Ages@Classes
     
     for (fl in seq_len(nObs)) {
       SetSeed(OM@Seed + st + fl)

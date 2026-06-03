@@ -17,7 +17,7 @@
 #'   name it in the populated `Shift` array. `NULL` is accepted only when
 #'   [EmptyObject()] returns `TRUE` for `Comp`.
 #' @param BinName Character scalar. Name used for the bin dimension in
-#'   populated arrays, typically `"Age"` or `"Size"`.
+#'   populated arrays, typically `"Age"` or `"Class"`.
 #'
 #' @details
 #' If [EmptyObject()] returns `TRUE` for `Comp` (i.e. `SampleSize` is
@@ -77,7 +77,7 @@ PopulateCompObs <- function(Comp,
                             HistYears,
                             ProjYears,
                             Bins    = NULL,
-                            BinName = "Bin") {
+                            BinName = "Class") {
   CheckClass(Comp, "compobs", "Comp")
   
   if (EmptyObject(Comp))

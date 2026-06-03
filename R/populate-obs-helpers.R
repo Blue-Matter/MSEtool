@@ -363,6 +363,15 @@ PopulateObsScalar <- function(x, nSim, Years, label = "value") {
     )
   }
   
+  if (length(x) == 1) {
+    vals <- x
+    return(array(
+      rep(vals, nYear),
+      dim      = c(nSim, nYear),
+      dimnames = list(Sim = seq_len(nSim), Year = Years)
+    ))
+  }
+  
   if (length(x) == 2) {
     vals <- runif(nSim, min = x[1], max = x[2])
     return(array(
