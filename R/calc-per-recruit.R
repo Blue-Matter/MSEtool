@@ -191,12 +191,12 @@ CalcPerRecruit_F <- function(apicalF = 0.1, ...) {
   PRList <- purrr::map(apicalF, \(F) CalcPerRecruit_F_scalar(F, ...))
   
   
-  PerRecruit <- new('perrecruit')
+  PerRecruit             <- new('perrecruit')
   PerRecruit@apicalF     <- apicalF
-  PerRecruit@SPR0        <- PRList[[1]]@SPR0  # F-invariant
-  PerRecruit@NPRF        <- purrr::map(PRList, \(pr) pr@NPRF)      |> List2Array('F')
+  PerRecruit@SPR0        <- PRList[[1]]@SPR0 
+  PerRecruit@NPRF        <- purrr::map(PRList, \(pr) pr@NPRF) |> List2Array('F')
   if (!is.null(PRList[[1]]@NPRF_SP)) {
-    PerRecruit@NPRF_SP   <- purrr::map(PRList, \(pr) pr@NPRF_SP)   |> List2Array('F')
+    PerRecruit@NPRF_SP   <- purrr::map(PRList, \(pr) pr@NPRF_SP)|> List2Array('F')
   } else {
     PerRecruit@NPRF_SP   <- NULL  
   }
@@ -239,6 +239,7 @@ CalcPerRecruit_F_scalar <- function(apicalF = 0.1,
   FDead <- FRetain + FDiscardDead
   FDeadTotal <- SumOverFleet(FDead)
   ActualApicalF <- apply(FDeadTotal, setdnames('Year'), max) 
+
 
   if (apicalF>0 & any(abs(ActualApicalF/apicalF - 1) > 1E-2)) {
     # adjust for retention and discard mortality & different selectivity patterns by fleet
@@ -304,7 +305,6 @@ CalcPerRecruit_F_scalar <- function(apicalF = 0.1,
     List2Array('Stock') |>
     ArraySubsetYear(Years)
 
-
   # Removals and Landings
   stockInd <- which(names(dimnames(FDead)) == 'Stock')
   FDeadList <- FDead |> Array2List(stockInd)
@@ -328,11 +328,13 @@ CalcPerRecruit_F_scalar <- function(apicalF = 0.1,
 
   stockInd <- which(names(dimnames(FRetain)) == 'Stock')
   FRetainList <- FRetain |> Array2List(stockInd)
+  
   FishingRetainList <- purrr::map2(FRetainList, ZDeadTotalList, \(FRetain, ZDeadTotal) {
     ZDeadTotalFleet <- AddDimension(ZDeadTotal, 'Fleet') |> ExtendFleets(Fleets=FleetNames)
     ArrayDivide(FRetain, ZDeadTotalFleet)
   })
   names(FishingRetainList) <- names(NaturalMortalityList)
+
 
   Landings <- purrr::pmap(list(FishingRetainList, NDeadList, WeightFleetList), \(FishingRetain, NDead, WeightFleet) {
     NDeadFleet <- AddDimension(NDead, 'Fleet') |> ExtendFleets(Fleets=FleetNames)

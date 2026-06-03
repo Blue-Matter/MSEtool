@@ -105,6 +105,11 @@ SubsetSim <- function(object, Sims, debug = FALSE) {
       if (max(SimVals) >= max(Sims)) {
         object <- ArraySubsetSim(object, Sims)
       } else {
+        existing_sims <- dimnames(object)$Sim
+        if (any(Sims > existing_sims)) {
+          object <- ExtendSims(object, nSim = max(Sims))
+          object <- Recall(object, Sims = Sims, debug = debug)
+        }
         dimnames(object)$Sim <- Sims
       }
         
@@ -130,23 +135,30 @@ ArraySubsetSim <- function(array, Sims=NULL) {
   if (is.null(DN) || !"Sim" %in% names(DN)) 
     cli::cli_abort("`Sim` dimension not found in this array")
   
-
   SimVals <- as.numeric(DN$Sim)
  
   if (any(Sims > max(SimVals))) {
     if (max(SimVals)==1) {
-      return(ExtendSims(array, max(Sims)))
+      if (length(Sims) == 1) {
+        DN$Sim <- Sims 
+        dimnames(array) <- DN
+        return(array)
+      } else {
+        return(
+          ExtendSims(array, max(Sims)) 
+        )
+      }
     } else {
       Sims <- seq_len(max(SimVals))
     }
   }
   
   idx <- SimVals %in% Sims
-  idx <- SimVals %in% Sims
   out <- do.call(`[`, c(list(array), .make_dim_index(idx, array, 1L),
                         list(drop = FALSE)))
-  dimnames(out)$Sim <- seq_along(dimnames(out)$Sim)
-  
+  # dimnames(out)$Sim <- seq_along(dimnames(out)$Sim)
+  dimnames(out)$Sim <- Sims # need this so that it maintains the correct sim names
+   
   out
 }
 

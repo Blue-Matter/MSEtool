@@ -93,7 +93,12 @@ CalcRefMSY_Complex <- function(Hist, complex_stocks, complex_name, Years, type, 
   FleetList <- Hist@OM@Fleet[complex_stocks]
   
   nSim          <- nSim(Hist)
-  IdenticalHist <- IdenticalSims(Hist@OM, ignore='RecDevProj')
+  IdenticalHist <- IdenticalSims(Hist@OM, ignore=c('RecDevInit', 
+                                                   'RecDevHist', 
+                                                   'RecDevProj',
+                                                   'Allocation',
+                                                   'Obs',
+                                                   'Data'))
   
   SPR0_Full_List <- Array2List(Hist@Reference@SPR0) |> SubsetStock(Stocks = complex_stocks)
   
@@ -167,8 +172,10 @@ CalcRefMSY_Complex <- function(Hist, complex_stocks, complex_name, Years, type, 
     
     result <- purrr::map(seq_along(Years), \(ts) {
       
-      inputs <- PrepPerRecruitInputs(StockList_sim, FleetList_sim,
-                                     SPR0_List_sim, Years[ts])
+      inputs <- PrepPerRecruitInputs(StockList_sim, 
+                                     FleetList_sim,
+                                     SPR0_List_sim, 
+                                     Years[ts])
       
       opt <- optimize(
         OptCalcRefMSY_Sims,
@@ -194,12 +201,15 @@ CalcRefMSY_Complex <- function(Hist, complex_stocks, complex_name, Years, type, 
   for (sl in setdiff(slotNames(MSYRefPoints), 'Misc')) {
     arr <- slot(MSYRefPoints, sl)
     if (is.null(arr)) next
-    for (sim in seq_len(nSim))
+    
+    for (sim in seq_len(nSim)) {
       for (ts in seq_along(Years)) {
         val <- slot(results_by_sim[[sim]][[ts]], sl)
         if (!is.null(val))
           ArrayFill(arr) <- val
       }
+    }
+      
     slot(MSYRefPoints, sl) <- arr
   }
 

@@ -76,6 +76,85 @@ IdenticalSims <- function(object, ignore=NULL, debug=FALSE) {
 }
 
 
+#' Identify slots in an S4 object that vary across 'Sim' slices
+#'
+#' Recursively inspects S4 objects, lists, and arrays to find all slots
+#' (or named list elements) that contain values varying along the "Sim"
+#' dimension. Complements [IdenticalSims()].
+#'
+#' @param object An S4 object, list, or array to inspect.
+#' @param ignore Character vector of slot names to skip.
+#' @param path Character; internal use — tracks the slot path for reporting.
+#'
+#' @return A character vector of dot-separated slot paths that vary across
+#'   simulations (e.g. `"Fleet@Effort"`, `"Stock@Growth@Linf"`).
+#'   Returns an empty character vector if nothing varies.
+#'
+#' @keywords internal
+VaryingSims <- function(object, ignore = NULL, path = NULL) {
+  
+  varying <- character(0)
+  
+  # S4 objects
+  if (isS4(object)) {
+    for (s in slotNames(object)) {
+      if (!is.null(ignore) && s %in% ignore) next
+      
+      val      <- slot(object, s)
+      new_path <- if (is.null(path)) s else paste(path, s, sep = "@")
+      
+      if (!is.null(val)) {
+        varying <- c(varying, VaryingSims(val, ignore = ignore, path = new_path))
+      }
+    }
+    return(varying)
+  }
+  
+  # Lists
+  if (is.list(object)) {
+    if (length(object) == 0) return(varying)
+    nms <- names(object)
+    for (i in seq_along(object)) {
+      el       <- object[[i]]
+      tag      <- if (!is.null(nms) && nzchar(nms[i])) nms[i] else paste0("[[", i, "]]")
+      new_path <- if (is.null(path)) tag else paste(path, tag, sep = "$")
+      if (!is.null(el)) {
+        varying <- c(varying, VaryingSims(el, ignore = ignore, path = new_path))
+      }
+    }
+    return(varying)
+  }
+  
+  # Arrays
+  if (is.array(object)) {
+    dnames  <- dimnames(object)
+    if (!is.null(dnames) && "Sim" %in% names(dnames)) {
+      if (all(is.na(object))) return(varying)
+      
+      sim_dim <- which(names(dnames) == "Sim")
+      dims    <- dim(object)
+      if (dims[sim_dim] == 1) return(varying)
+      
+      perm <- c(sim_dim, setdiff(seq_along(dims), sim_dim))
+      mat  <- matrix(aperm(object, perm), nrow = dims[sim_dim])
+      ref  <- mat[1, , drop = TRUE]
+      
+      col_na    <- colSums(!is.na(mat)) == 0L
+      col_equal <- colSums(
+        mat != matrix(ref, nrow = nrow(mat), ncol = ncol(mat), byrow = TRUE),
+        na.rm = TRUE
+      ) == 0L
+      
+      if (!all(col_na | col_equal)) {
+        varying <- c(varying, path)
+      }
+    }
+    return(varying)
+  }
+  
+  varying
+}
+
 
 
 
