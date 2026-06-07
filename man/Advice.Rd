@@ -2,7 +2,7 @@
 % Please edit documentation in R/constructor-advice.R
 \name{Advice}
 \alias{Advice}
-\title{Management Advice}
+\title{Management Advice Constructor and Accessors}
 \usage{
 Advice(
   TAC = NULL,
@@ -15,11 +15,15 @@ Advice(
   Retention = NULL,
   DiscardMortality = NULL,
   ApicalF = NULL,
+  Limit = NULL,
+  LimitType = "angler",
+  ClosureMode = "discard",
   Misc = list()
 )
 }
 \arguments{
-\item{TAC}{Numeric vector or matrix specifying total allowable catch. See \code{Details}}
+\item{TAC}{Numeric vector or matrix specifying total allowable catch.
+See \code{Details}}
 
 \item{TACType}{Character. Does the TAC refer to \code{"Removals"} (default) or
 \code{"Landings"}. Either length 1 (applied to all fleets) or a character
@@ -29,7 +33,8 @@ vector of length \code{nFleet}.}
 (default) or \code{"Number"}. Either length 1 (applied to all fleets) or a
 character vector of length \code{nFleet}.}
 
-\item{Effort}{Numeric vector or matrix specifying relative or absolute fishing effort. See \code{Details}}
+\item{Effort}{Numeric vector or matrix specifying relative or absolute
+fishing effort. See \code{Details}}
 
 \item{EffType}{Character. Effort interpretation: \code{"Rel"} for relative to
 the last historical year, or \code{"Abs"} for absolute effort units (in units
@@ -47,7 +52,44 @@ of such objects. See \code{Details}}
 
 \item{ApicalF}{Numeric array specifying target apical fishing mortality. Not currently used}
 
-\item{Misc}{Miscellaneous list.}
+\item{LimitType}{Character or \code{NULL}. Whether \code{BagLimit} is a per-angler or
+per-vessel regulation. Either length 1 (applied to all fleets) or a
+character vector of length \code{nFleet}. Valid values:
+\itemize{
+\item \code{"angler"} (default): limit is per angler per trip; the fleet-level
+retention cap is \eqn{B_f \cdot A_f(t) \cdot T_f(t)}, where
+\eqn{A_f(t)} is mean anglers per trip (\code{\link[=AnglerPerTrip]{AnglerPerTrip()}}) and
+\eqn{T_f(t)} is the number of trips (\code{\link[=TripsScalar]{TripsScalar()}}).
+\item \code{"boat"}: limit is per vessel per trip; the fleet-level retention cap
+is \eqn{B_f \cdot T_f(t)}, and \code{\link[=AnglerPerTrip]{AnglerPerTrip()}} is not used.
+}}
+
+\item{ClosureMode}{Character or \code{NULL}. Determines how the OM handles catch
+that exceeds the bag limit. Either length 1 (applied to all fleets) or a
+character vector of length \code{nFleet}. Valid values:
+\itemize{
+\item \code{"discard"} (default): catch exceeding the bag limit is converted to
+discards; discard mortality is applied via the fleet's
+\code{\link[=DiscardMortality]{DiscardMortality()}} object.
+\item \code{"stop"}: effort is reduced so that projected catch does not exceed the
+bag limit retention cap; no additional discards are generated beyond the
+baseline discard rate from non-retention of undersized fish.
+}}
+
+\item{Misc}{Miscellaneous list. Will be passed to \code{Data@Misc} in following
+time steps.}
+
+\item{BagLimit}{Numeric vector or \code{NULL}. Aggregate bag limit in fish per
+angler per trip (when \code{LimitType = "angler"}) or fish per vessel per
+trip (when \code{LimitType = "boat"}). Accepted forms:
+\itemize{
+\item \code{NULL} (default): no bag limit regulation is active for any fleet.
+\item Single numeric value: the same limit applied to all fleets.
+\item Numeric vector of length \code{nFleet}: fleet-specific bag limits.
+}
+
+The bag limit regulation persists across time steps until a new
+\code{\link[=Advice]{Advice()}} object is returned by the MP. See Details.}
 }
 \value{
 An \link[=advice-class]{advice} object.
@@ -61,10 +103,10 @@ management procedure.
 management procedure. All slots are optional; any regulation not supplied
 will remain unchanged from the previous time step.
 
-The management regulations in an \code{Advice} object will be applied in the year/time-step
-that the \code{Advice} object is produced (i.e., when the MP is run) and will
-apply to all future time-steps until a new \code{Advice} object is returned by an
-MP.
+The management regulations in an \code{Advice} object will be applied in the
+year/time-step that the \code{Advice} object is produced (i.e., when the MP is run)
+and will apply to all future time-steps until a new \code{Advice} object is
+returned by an MP.
 
 The \code{Closure}, \code{Selectivity}, \code{Retention}, and \code{DiscardMortality} regulations
 (if any) are applied first before calculating the fishing mortality corresponding
@@ -110,14 +152,12 @@ always treated as absolute regardless of \code{EffType}.
 fleets. E.g., if \code{Effort=0.5}, effort for all fleets will be set to half
 the effort in the last historical year.
 \item If \code{EffType}=\code{"Abs"}: the total effort (summed over fleets unless provide
-as a length \code{nFleet} vector); Note all
-fleets in the OM must have the same units for \code{Effort}) and
-distributed over fleets following the same distribution as the last
-historical year
+as a length \code{nFleet} vector); Note that in this case all fleets in the OM must
+have the same units for \code{Effort}).
 }
 \item numeric vector length \code{nFleet}: Fleet-specific relative or absolute Effort.
-\item numeric matrix: Fleet- and Area-specific relative or absolute Effort. Must have \code{nFleet}
-rows and \code{nArea} columns.
+\item numeric matrix: Fleet- and Area-specific relative or absolute Effort.
+Must have \code{nFleet} rows and \code{nArea} columns.
 }
 }
 
@@ -152,6 +192,19 @@ Same as described for \code{Selectivity}, but for \code{\link[=Retention]{Retent
 Same as described for \code{Selectivity}, but for \code{\link[=DiscardMortality]{DiscardMortality()}} objects.
 }
 
+\subsection{Bag Limit}{
+
+\code{BagLimit}, \code{LimitType}, and \code{ClosureMode} together define a bag-limit
+regulation. The bag limit caps the number of fish an angler (or vessel)
+may retain per trip for either a single species or across all species
+within a complex.
+
+When \code{ClosureMode = "discard"}, catch exceeding the retention cap is
+converted to discards and discard mortality is applied via the fleet's
+\code{\link[=DiscardMortality]{DiscardMortality()}} object. When \code{ClosureMode = "stop"}, effort is
+reduced to prevent exceedance and no additional discards are generated.
+}
+
 \subsection{ApicalF}{
 
 Not currently used.
@@ -160,7 +213,8 @@ Not currently used.
 \subsection{Misc}{
 
 A list of miscellaneous information that needs to be stored and accessed by
-the MP in future timesteps.
+the MP in future timesteps. Contents of \code{Advice@Misc} will be available in
+the \code{Data@Misc} slot in subsequent time steps.
 }
 
 \subsection{Populating Selectivity, Retention, and Discard Mortality Objects}{
@@ -222,7 +276,28 @@ Advice(
   Effort = c(1, 0.8),
   EffType = "Rel"
 )
+# Bag limit: 5 fish per angler per trip, discard excess
+Advice(
+  Limit       = 5,
+  LimitType   = "angler",
+  ClosureMode = "discard"
+)
+
+# Fleet-specific bag limits
+Advice(
+  Limit       = c(5, 10),
+  LimitType   = "angler",
+  ClosureMode = "discard"
+)
+
 }
 \seealso{
-\code{\link[=Selectivity]{Selectivity()}}, \code{\link[=Retention]{Retention()}}, \code{\link[=DiscardMortality]{DiscardMortality()}}
+\itemize{
+\item \link[=advice-class]{advice} for the class definition and slot-level documentation.
+\item \code{\link[=Selectivity]{Selectivity()}}, \code{\link[=Retention]{Retention()}}, \code{\link[=DiscardMortality]{DiscardMortality()}} for gear regulation
+sub-objects.
+\item \code{\link[=TripsScalar]{TripsScalar()}}, \code{\link[=AnglerPerTrip]{AnglerPerTrip()}} for the effort-to-trips and
+angler-scaling parameters consumed by the bag limit model.
+\item \code{\link[=Theta]{Theta()}} for the within-trip catch overdispersion parameter.
+}
 }

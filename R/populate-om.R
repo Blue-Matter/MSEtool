@@ -73,10 +73,6 @@ PopulateOM <- function(OM, silent = FALSE, force = FALSE, standardize_effort = T
     UpdateSPFrom() |>   # TODO
     ShareParameters() |> # TODO
     StartMessages()
-
-  # CheckCatchFrac() |> # TODO - auto-populate CatchFrac if OM@Data exists
-  # CheckAllocation()
-  
   if (standardize_effort)
     OM <- StandardizeEffort(OM, populate=FALSE)
 

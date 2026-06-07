@@ -32,7 +32,7 @@ CalcSPR0 <- function(OM, silent = FALSE) {
     cli::cli_abort("`OM` must be class `om` or class `hist`")
   }
   
-  if (EmptyObject(Hist@Unfished@Equilibrium ))
+  if (EmptyObject(Hist@Unfished@Equilibrium))
     Hist@Unfished@Equilibrium <- CalcUnfished_Equilibrium(Hist, silent)
   
   SP0 <- SP0(Hist)

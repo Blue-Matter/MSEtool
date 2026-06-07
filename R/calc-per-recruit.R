@@ -101,47 +101,25 @@ CalcPerRecruit_StockList <- function(StockList, FleetList, apicalF=0.1, Years, S
   inputs <- PrepPerRecruitInputs(StockList, FleetList, SPR0List, Years)
   
   PR <- CalcPerRecruit_F(
-    apicalF              = apicalF,
-    StockFleetAllocation = inputs$StockFleetAllocation,
-    NaturalMortalityList = inputs$NaturalMortalityList,
-    PlusGroupList        = inputs$PlusGroupList,
-    MaturityList         = inputs$MaturityList,
-    SemelparousList      = inputs$SemelparousList,
-    WeightList           = inputs$WeightList,
-    SpawnTimeFracList    = inputs$SpawnTimeFracList,
-    SPFrom               = inputs$SPFrom,
-    SPR0List             = inputs$SPR0List,
-    FecundityList        = inputs$FecundityList,
-    WeightFleetList      = inputs$WeightFleetList,
-    Selectivity          = inputs$Selectivity,
-    Retention            = inputs$Retention,
-    DiscardMortality     = inputs$DiscardMortality,
-    FleetNames           = inputs$FleetNames,
-    Years                = Years
+    apicalF                   = apicalF,
+    StockFleetAllocation      = inputs$StockFleetAllocation,
+    NaturalMortalityList      = inputs$NaturalMortalityList,
+    PlusGroupList             = inputs$PlusGroupList,
+    MaturityList              = inputs$MaturityList,
+    SemelparousList           = inputs$SemelparousList,
+    WeightList                = inputs$WeightList,
+    SpawnTimeFracList         = inputs$SpawnTimeFracList,
+    SPFrom                    = inputs$SPFrom,
+    SPR0List                  = inputs$SPR0List,
+    FecundityList             = inputs$FecundityList,
+    WeightFleetList           = inputs$WeightFleetList,
+    SelectivityFleetList      = inputs$SelectivityFleetList,
+    RetentionFleetList        = inputs$RetentionFleetList,
+    DiscardMortalityFleetList = inputs$DiscardMortalityFleetList,
+    FleetNames                = inputs$FleetNames,
+    Years                     = Years
   )
   
-  IsSpawnTimeFrac <- any(unlist(inputs$SpawnTimeFracList) != 0)
-  
-  NPR0List <- purrr::pmap(
-    list(inputs$NaturalMortalityList, inputs$PlusGroupList, inputs$SemelparousList),
-    \(NaturalMortality, PlusGroup, Semelparous)
-    CalcSurvival(NaturalMortality, FishingMortality = NULL, PlusGroup,
-                 SpawnTimeFrac = 0, Semelparous)
-  )
-  
-  if (IsSpawnTimeFrac) {
-    NPR0_SPList <- purrr::pmap(
-      list(inputs$NaturalMortalityList, inputs$PlusGroupList,
-           inputs$SemelparousList, inputs$SpawnTimeFracList),
-      \(NaturalMortality, PlusGroup, Semelparous, SpawnTimeFrac)
-      CalcSurvival(NaturalMortality, FishingMortality = NULL, PlusGroup,
-                   SpawnTimeFrac, Semelparous)
-    )
-  } else {
-    NPR0_SPList <- NPR0List
-  }
-  PR@NPR0    <- NPR0List |> List2Array("Stock", pos=2)
-  PR@NPR0_SP <- if (IsSpawnTimeFrac) NPR0_SPList |> List2Array("Stock", pos=2) else NULL
   PR
 }
 
@@ -186,20 +164,53 @@ CalcFleetAllocationF <- function(FleetList, Years) {
   ArrayDivide(FDistribution, FDistributionTotal)
 }
 
-CalcPerRecruit_F <- function(apicalF = 0.1, ...) {
+CalcPerRecruit_F <- function(apicalF = 0.1, spr_threshold = 0.001, ...) {
   names(apicalF) <- as.character(apicalF)
-  PRList <- purrr::map(apicalF, \(F) CalcPerRecruit_F_scalar(F, ...))
   
+  PRList    <- vector('list', length(apicalF))
+  names(PRList) <- names(apicalF)
+  collapsed <- FALSE
   
+  for (i in seq_along(apicalF)) {
+    if (collapsed) {
+      PRList[[i]] <- PRList[[i-1]] 
+    } else {
+      PRList[[i]] <- CalcPerRecruit_F_scalar(apicalF[i], ...)
+      if (!is.null(PRList[[i]]@SPR) && min(PRList[[i]]@SPR, na.rm=TRUE) < spr_threshold)
+        collapsed <- TRUE
+    }
+  }
+  
+  # zero-fill all F steps at and beyond the collapse point
+  zero_fill <- \(arr) { arr[] <- 0; arr }
+  if (collapsed) {
+    first_collapsed <- which(
+      purrr::map_lgl(PRList, \(pr) 
+                     !is.null(pr@SPR) && min(pr@SPR, na.rm=TRUE) < spr_threshold)
+    )[1]
+    for (i in seq(first_collapsed, length(apicalF))) {
+      pr <- PRList[[i]]
+      pr@NPRF        <- zero_fill(pr@NPRF)
+      pr@NPRF_SP     <- zero_fill(pr@NPRF_SP)
+      pr@SPRF        <- zero_fill(pr@SPRF)
+      pr@SPR         <- zero_fill(pr@SPR)
+      pr@Biomass     <- zero_fill(pr@Biomass)
+      pr@SBiomass    <- zero_fill(pr@SBiomass)
+      pr@SProduction <- zero_fill(pr@SProduction)
+      pr@Removals    <- zero_fill(pr@Removals)
+      pr@Landings    <- zero_fill(pr@Landings)
+      PRList[[i]]    <- pr
+    }
+  }
+
   PerRecruit             <- new('perrecruit')
   PerRecruit@apicalF     <- apicalF
+  
+  PerRecruit@NPR0        <- PRList[[1]]@NPR0
+  PerRecruit@NPR0_SP     <- PRList[[1]]@NPR0_SP
   PerRecruit@SPR0        <- PRList[[1]]@SPR0 
   PerRecruit@NPRF        <- purrr::map(PRList, \(pr) pr@NPRF) |> List2Array('F')
-  if (!is.null(PRList[[1]]@NPRF_SP)) {
-    PerRecruit@NPRF_SP   <- purrr::map(PRList, \(pr) pr@NPRF_SP)|> List2Array('F')
-  } else {
-    PerRecruit@NPRF_SP   <- NULL  
-  }
+  PerRecruit@NPRF_SP     <- purrr::map(PRList, \(pr) pr@NPRF_SP)|> List2Array('F')
   PerRecruit@SPRF        <- purrr::map(PRList, \(pr) pr@SPRF)        |> List2Array('F')
   PerRecruit@SPR         <- purrr::map(PRList, \(pr) pr@SPR)         |> List2Array('F')
   PerRecruit@Biomass     <- purrr::map(PRList, \(pr) pr@Biomass)     |> List2Array('F')
@@ -223,154 +234,250 @@ CalcPerRecruit_F_scalar <- function(apicalF = 0.1,
                                     SPR0List,
                                     FecundityList,
                                     WeightFleetList,
-                                    Selectivity,
-                                    Retention,
-                                    DiscardMortality,
+                                    SelectivityFleetList,
+                                    RetentionFleetList,
+                                    DiscardMortalityFleetList,
                                     FleetNames,
                                     Years) {
 
-  apicalFAge <- apicalF * StockFleetAllocation  |>
-    AddDimension("Age", pos=3)
-
-  FInteract <- ArrayMultiply(apicalFAge, Selectivity)
-  FRetain <- ArrayMultiply(FInteract, Retention)
-  FDiscardTotal <- ArraySubtract(FInteract, FRetain)
-  FDiscardDead <- ArrayMultiply(FDiscardTotal, DiscardMortality)
-  FDead <- FRetain + FDiscardDead
-  FDeadTotal <- SumOverFleet(FDead)
-  ActualApicalF <- apply(FDeadTotal, setdnames('Year'), max) 
-
-
-  if (apicalF>0 & any(abs(ActualApicalF/apicalF - 1) > 1E-2)) {
-    # adjust for retention and discard mortality & different selectivity patterns by fleet
-    apicalFSimTS <- array(apicalF, dim=dim(ActualApicalF), dimnames=dimnames(ActualApicalF))
+  apicalFAge     <- apicalF * StockFleetAllocation |>
+    AddDimension("Age", pos = 3)
+  apicalFAgeList <- Array2List(apicalFAge)
+  
+  FInteractList     <- purrr::map2(apicalFAgeList, SelectivityFleetList, ArrayMultiply)
+  FRetainList       <- purrr::map2(FInteractList, RetentionFleetList, ArrayMultiply)
+  FDiscardTotalList <- purrr::map2(FInteractList, FRetainList, ArraySubtract)
+  FDiscardDeadList  <- purrr::map2(FDiscardTotalList, DiscardMortalityFleetList, ArrayMultiply)
+  FDeadList         <- purrr::map2(FRetainList, FDiscardDeadList, ArraySum)
+  FDeadTotalList    <- purrr::map(FDeadList, SumOverFleet)
+  
+  # max F over ages per stock (Sim x Stock x Year), then max over stocks
+  ActualApicalFByStock <- purrr::map(
+    FDeadTotalList,
+    \(FDeadTotal) apply(FDeadTotal, setdnames(c('Sim', 'Year')), max)
+  ) |>
+    List2Array('Stock', pos = 2)
+  
+  ActualApicalF <- apply(ActualApicalFByStock, c('Sim', 'Year'), max)
+  
+  if (apicalF > 0 && any(abs(ActualApicalF / apicalF - 1) > 1E-2)) {
+    # single scalar adjustment based on the controlling stock
+    # (the one producing max F across the complex)
+    apicalFSimTS <- array(
+      apicalF,
+      dim      = dim(ActualApicalF),
+      dimnames = dimnames(ActualApicalF)
+    )
     
-    adjust <- ArrayDivide(apicalFSimTS, ActualApicalF)
-    adjust <- adjust |> 
-      AddDimension("Stock", pos=2) |>
-      AddDimension("Age", pos=3) |>
-      AddDimension("Fleet", pos=5) |>
-      ExtendFleets(Fleets=FleetNames) |>
-      ExtendStocks(Stocks=names(NaturalMortalityList))
+    adjust <- ArrayDivide(apicalFSimTS, ActualApicalF) |>  # Sim x Year
+      AddDimension("Stock", pos = 2) |>
+      AddDimension("Age",   pos = 3) |>
+      AddDimension("Fleet", pos = 5) |>
+      ExtendFleets(Fleets = FleetNames) |>
+      ExtendStocks(Stocks = names(NaturalMortalityList))
     
-    FInteract <- ArrayMultiply(adjust, FInteract)
+    FInteractList <- purrr::map2(FInteractList,Array2List(adjust, 'Stock'),
+      ArrayMultiply)
     
-    FRetain <- ArrayMultiply(FInteract, Retention)
-    FDiscardTotal <- ArraySubtract(FInteract, FRetain)
-    FDiscardDead <- ArrayMultiply(FDiscardTotal, DiscardMortality)
-    FDead <- FRetain + FDiscardDead
-    FDeadTotal <- SumOverFleet(FDead)
-    ActualApicalF <- apply(FDeadTotal, setdnames('Year'), max)
+    FRetainList       <- purrr::map2(FInteractList, RetentionFleetList,
+                                     ArrayMultiply)
+    FDiscardTotalList <- purrr::map2(FInteractList, FRetainList, 
+                                     ArraySubtract)
+    FDiscardDeadList  <- purrr::map2(
+      FDiscardTotalList, DiscardMortalityFleetList, ArrayMultiply
+    )
+    FDeadList         <- purrr::map2(FRetainList, FDiscardDeadList, ArraySum)
+    FDeadTotalList    <- purrr::map(FDeadList, SumOverFleet)
   }
-
-  stockInd <- which(names(dimnames(FDeadTotal)) == 'Stock')
-  FDeadTotalList <- FDeadTotal |> Array2List(stockInd)
-  ZDeadTotalList <- purrr::map2(FDeadTotalList, NaturalMortalityList, ArraySum)
-
-  NPRFList <- purrr::pmap(list(NaturalMortalityList, FDeadTotalList, PlusGroupList, SemelparousList),
-                          \(NaturalMortality, FishingMortalityAtAge, PlusGroup, Semelparous)
-                          CalcSurvival(NaturalMortality,
-                                       FishingMortalityAtAge,
-                                       PlusGroup,
-                                       SpawnTimeFrac=0,
-                                       Semelparous)
+  
+  ZDeadTotalList <- purrr::map2(
+    FDeadTotalList, NaturalMortalityList, ArraySum
+  )
+  
+  NPR0List <- purrr::pmap(
+    list(
+      NaturalMortalityList, PlusGroupList, SemelparousList
+    ),
+    \(NaturalMortality, PlusGroup, Semelparous)
+    CalcSurvival(
+      NaturalMortality, FishingMortality  = NULL,
+      PlusGroup, SpawnTimeFrac = 0, Semelparous
+    )
+  )
+  
+  NPRFList <- purrr::pmap(
+    list(
+      NaturalMortalityList, FDeadTotalList,
+      PlusGroupList, SemelparousList
+    ),
+    \(NaturalMortality, FishingMortality, PlusGroup, Semelparous)
+    CalcSurvival(
+      NaturalMortality, FishingMortality,
+      PlusGroup, SpawnTimeFrac = 0, Semelparous
+    )
   )
 
   IsSpawnTimeFrac <- any(unlist(SpawnTimeFracList)!=0)
   if (IsSpawnTimeFrac) {
-    # per recruit spawning
-    NPRF_SPList <- purrr::pmap(list(NaturalMortalityList, FDeadTotalList, PlusGroupList, SemelparousList, SpawnTimeFracList),
-                               \(NaturalMortality, FishingMortalityAtAge, PlusGroup, Semelparous, SpawnTimeFrac)
-                               CalcSurvival(NaturalMortality,
-                                            FishingMortalityAtAge,
-                                            PlusGroup,
-                                            SpawnTimeFrac,
-                                            Semelparous)
+    
+    NPR0_SPList <- purrr::pmap(
+      list(
+        NaturalMortalityList, PlusGroupList,SemelparousList, SpawnTimeFracList),
+      \(NaturalMortality, PlusGroup, Semelparous, SpawnTimeFrac)
+      CalcSurvival(
+        NaturalMortality, FishingMortality = NULL,
+        PlusGroup, SpawnTimeFrac, Semelparous
+      )
+    )
+    
+    NPRF_SPList <- purrr::pmap(
+      list(
+        NaturalMortalityList, FDeadTotalList, PlusGroupList,
+        SemelparousList, SpawnTimeFracList
+      ),
+      \(NaturalMortality, FishingMortality,
+        PlusGroup, Semelparous, SpawnTimeFrac)
+      CalcSurvival(
+        NaturalMortality, FishingMortality,
+        PlusGroup, SpawnTimeFrac, Semelparous
+      )
     )
   } else {
+    NPR0_SPList <- NPR0List
     NPRF_SPList <- NPRFList
   }
 
   # SPR
-  SPRFList <- purrr::map2(NPRF_SPList, FecundityList, \(NPRF_SP, Fecundity) {
-    SPRF <- ArrayMultiply(NPRF_SP, Fecundity) |> SumOverAge()
-    if (!is.array(SPRF))
-      SPRF <- array(SPRF, length(SPRF), dimnames = list(Year=Years))
-    SPRF
-  })
+  SPRFList <- purrr::map2(
+    NPRF_SPList, FecundityList,
+    \(NPRF_SP, Fecundity) {
+      SPRF <- ArrayMultiply(NPRF_SP, Fecundity) |> SumOverAge()
+      if (!is.array(SPRF))
+        SPRF <- array(SPRF, length(SPRF), dimnames = list(Year = Years))
+      SPRF
+    }
+  )
+  SPRFList         <- SPRFList[SPFrom]
+  names(SPRFList)  <- names(NPRFList)
 
-  SPRFList <- SPRFList[SPFrom]
-  names(SPRFList) <- names(NPRFList)
-  SPR <- purrr::map2(SPRFList, SPR0List, \(SPRF, SPR0) ArrayDivide(SPRF, SPR0)) |>
+  # ---------------------- DEBUG ----------------------
+  NPR0_SPList$`Small Pacific JFS`
+  NPRF_SPList$`Small Pacific JFS`
+  
+  inputs$SPR0List
+  
+  SPR0List$`Small Pacific JFS`
+  SPRFList$`Small Pacific JFS`
+  
+  
+  stop("DEBUG COMMENT BLOCK")
+  
+  # -------------------- END DEBUG --------------------
+  
+  SPR <- purrr::map2(SPRFList, SPR0List, \(SPRF, SPR0) 
+                     ArrayDivide(SPRF, SPR0)) |>
     List2Array('Stock') |>
     ArraySubsetYear(Years)
-
-  # Removals and Landings
-  stockInd <- which(names(dimnames(FDead)) == 'Stock')
-  FDeadList <- FDead |> Array2List(stockInd)
-  FishingDeadList <- purrr::map2(FDeadList, ZDeadTotalList, \(FDead, ZDeadTotal) {
-    ZDeadTotalFleet <- AddDimension(ZDeadTotal, 'Fleet') |> ExtendFleets(Fleets=FleetNames)
-    ArrayDivide(FDead, ZDeadTotalFleet)
-  })
-  names(FishingDeadList) <- names(NaturalMortalityList)
-
-  NDeadList <- purrr::map2(NPRFList, ZDeadTotalList, \(NPRF, ZDeadTotal)
-                           ArrayMultiply(NPRF, (1-exp(-ZDeadTotal))))
-
-
-  Removals <- purrr::pmap(list(FishingDeadList, NDeadList, WeightFleetList), \(FishingDead, NDead, WeightFleet) {
-    NDeadFleet <- AddDimension(NDead, 'Fleet') |> ExtendFleets(Fleets=FleetNames)
-    removals <- ArrayMultiply(FishingDead, NDeadFleet) |> ArrayMultiply(WeightFleet) |>
-      SumOverFleet() |> SumOverAge()
-    removals
-  }) |>
-    List2Array('Stock', pos=2)
-
-  stockInd <- which(names(dimnames(FRetain)) == 'Stock')
-  FRetainList <- FRetain |> Array2List(stockInd)
   
-  FishingRetainList <- purrr::map2(FRetainList, ZDeadTotalList, \(FRetain, ZDeadTotal) {
-    ZDeadTotalFleet <- AddDimension(ZDeadTotal, 'Fleet') |> ExtendFleets(Fleets=FleetNames)
-    ArrayDivide(FRetain, ZDeadTotalFleet)
-  })
+  # Removals
+  FishingDeadList <- purrr::map2(
+    FDeadList, ZDeadTotalList,
+    \(FDead, ZDeadTotal) {
+      ZDeadTotalFleet <- AddDimension(ZDeadTotal, 'Fleet') |>
+        ExtendFleets(Fleets = FleetNames)
+      ArrayDivide(FDead, ZDeadTotalFleet)
+    }
+  )
+  names(FishingDeadList) <- names(NaturalMortalityList)
+  
+  NDeadList <- purrr::map2(
+    NPRFList, ZDeadTotalList,
+    \(NPRF, ZDeadTotal) ArrayMultiply(NPRF, (1 - exp(-ZDeadTotal)))
+  )
+  
+  Removals <- purrr::pmap(
+    list(FishingDeadList, NDeadList, WeightFleetList),
+    \(FishingDead, NDead, WeightFleet) {
+      NDeadFleet <- AddDimension(NDead, 'Fleet') |>
+        ExtendFleets(Fleets = FleetNames)
+      ArrayMultiply(FishingDead, NDeadFleet) |>
+        ArrayMultiply(WeightFleet) |>
+        SumOverFleet() |>
+        SumOverAge()
+    }
+  ) |>
+    List2Array('Stock', pos = 2)
+  
+  # Landings
+  FishingRetainList <- purrr::map2(
+    FRetainList, ZDeadTotalList,
+    \(FRetain, ZDeadTotal) {
+      ZDeadTotalFleet <- AddDimension(ZDeadTotal, 'Fleet') |>
+        ExtendFleets(Fleets = FleetNames)
+      ArrayDivide(FRetain, ZDeadTotalFleet)
+    }
+  )
   names(FishingRetainList) <- names(NaturalMortalityList)
-
-
-  Landings <- purrr::pmap(list(FishingRetainList, NDeadList, WeightFleetList), \(FishingRetain, NDead, WeightFleet) {
-    NDeadFleet <- AddDimension(NDead, 'Fleet') |> ExtendFleets(Fleets=FleetNames)
-    removals <- ArrayMultiply(FishingRetain, NDeadFleet) |> ArrayMultiply(WeightFleet) |>
-      SumOverFleet() |> SumOverAge()
-    removals
-  }) |> List2Array('Stock', pos=2)
-
-  Biomass <- purrr::map2(NPRFList, WeightList, \(NPRF, Weight) {
-    ArrayMultiply(NPRF, Weight) |> SumOverAge()
-  }) |> List2Array("Stock", pos=2)
-
-  SBiomass <- purrr::pmap(list(NPRF_SPList, WeightList, MaturityList), \(NPRF_SP, Weight, Maturity) {
-    ArrayMultiply(NPRF_SP, Weight) |> ArrayMultiply(Maturity) |> SumOverAge()
-  }) |> List2Array("Stock", pos=2)
-
-  SProduction <- purrr::map2(NPRF_SPList,FecundityList, \(NPRF_SP, Fecundity) {
-    ArrayMultiply(NPRF_SP, Fecundity) |> SumOverAge()
-  }) |> List2Array("Stock", pos=2)
-
-
-  PerRecruit <- new('perrecruit')
-  PerRecruit@SPR0 <- SPR0List |> List2Array("Stock", pos=2)
-  PerRecruit@apicalF <- apicalF
-  PerRecruit@NPRF <- NPRFList |> List2Array("Stock", pos=2)
-  if (IsSpawnTimeFrac)
-    PerRecruit@NPRF_SP <- NPRF_SPList |> List2Array("Stock", pos=2)
-  PerRecruit@SPRF <- SPRFList |>  List2Array("Stock", pos=2)
-  PerRecruit@SPR <- SPR
-  PerRecruit@Biomass <- Biomass
-  PerRecruit@SBiomass <- SBiomass
+  
+  Landings <- purrr::pmap(
+    list(FishingRetainList, NDeadList, WeightFleetList),
+    \(FishingRetain, NDead, WeightFleet) {
+      NDeadFleet <- AddDimension(NDead, 'Fleet') |>
+        ExtendFleets(Fleets = FleetNames)
+      ArrayMultiply(FishingRetain, NDeadFleet) |>
+        ArrayMultiply(WeightFleet) |>
+        SumOverFleet() |>
+        SumOverAge()
+    }
+  ) |>
+    List2Array('Stock', pos = 2)
+  
+  # Biomass, Spawning Biomass, and Spawning Production
+  Biomass <- purrr::map2(
+    NPRFList, WeightList,
+    \(NPRF, Weight) ArrayMultiply(NPRF, Weight) |> SumOverAge()
+  ) |>
+    List2Array("Stock", pos = 2)
+  
+  SBiomass <- purrr::pmap(
+    list(NPRF_SPList, WeightList, MaturityList),
+    \(NPRF_SP, Weight, Maturity)
+    ArrayMultiply(NPRF_SP, Weight) |>
+      ArrayMultiply(Maturity) |>
+      SumOverAge()
+  ) |>
+    List2Array("Stock", pos = 2)
+  
+  SProduction <- purrr::map2(
+    NPRF_SPList, FecundityList,
+    \(NPRF_SP, Fecundity) ArrayMultiply(NPRF_SP, Fecundity) |> SumOverAge()
+  ) |>
+    List2Array("Stock", pos = 2)
+  
+  NPR0    <- purrr::map(NPR0List, SumOverAge) |> List2Array("Stock", pos = 2)
+  NPRF    <- purrr::map(NPRFList, SumOverAge) |> List2Array("Stock", pos = 2)
+  
+  NPR0_SP <- purrr::map(NPR0_SPList, SumOverAge) |> List2Array("Stock", pos = 2)
+  NPRF_SP <- purrr::map(NPRF_SPList, SumOverAge) |> List2Array("Stock", pos = 2)
+  
+  SPR0    <- SPR0List |> List2Array("Stock", pos = 2)
+  SPRF    <- SPRFList |> List2Array("Stock", pos = 2)
+  
+  PerRecruit             <- new('perrecruit')
+  PerRecruit@NPR0        <- NPR0
+  PerRecruit@NPR0_SP     <- if (IsSpawnTimeFrac) NPR0_SP else NPR0
+  PerRecruit@apicalF     <- apicalF
+  PerRecruit@SPR0        <- SPR0
+  PerRecruit@NPRF        <- NPRF
+  PerRecruit@NPRF_SP     <- if (IsSpawnTimeFrac) NPRF_SP else NPRF
+  PerRecruit@SPRF        <- SPRF
+  PerRecruit@SPR         <- SPR
+  PerRecruit@Biomass     <- Biomass
+  PerRecruit@SBiomass    <- SBiomass
   PerRecruit@SProduction <- SProduction
-  PerRecruit@Removals <- Removals
-  PerRecruit@Landings <- Landings
+  PerRecruit@Removals    <- Removals
+  PerRecruit@Landings    <- Landings
   PerRecruit
-
 }
 
 
@@ -415,20 +522,23 @@ PrepPerRecruitInputs <- function(StockList, FleetList, SPR0List, Years) {
       List2Array(pos = 4)
   })
   
-  Selectivity <- purrr::map(FleetList, \(fl) {
+  SelectivityFleetList <- purrr::map(FleetList, \(fl) {
     purrr::map(fl, \(Fleet) Fleet@Selectivity@MeanAtAge |> ArraySubsetYear(Years)) |>
-      List2Array(pos = 4)
-  }) |> List2Array('Stock', pos = 2) |> CheckSpatial('Selectivity')
+      List2Array(pos = 4) |>
+      CheckSpatial('Selectivity')
+  })
   
-  Retention <- purrr::map(FleetList, \(fl) {
+  RetentionFleetList <- purrr::map(FleetList, \(fl) {
     purrr::map(fl, \(Fleet) Fleet@Retention@MeanAtAge |> ArraySubsetYear(Years)) |>
-      List2Array(pos = 4)
-  }) |> List2Array('Stock', pos = 2) |> CheckSpatial('Retention')
+      List2Array(pos = 4) |> 
+      CheckSpatial('Retention')
+  }) 
   
-  DiscardMortality <- purrr::map(FleetList, \(fl) {
+  DiscardMortalityFleetList <- purrr::map(FleetList, \(fl) {
     purrr::map(fl, \(Fleet) Fleet@DiscardMortality@MeanAtAge |> ArraySubsetYear(Years)) |>
-      List2Array(pos = 4)
-  }) |> List2Array('Stock', pos = 2) |> CheckSpatial('DiscardMortality')
+      List2Array(pos = 4) |> 
+      CheckSpatial('DiscardMortality')
+  }) 
   
   # SRR quantities needed for MSY recruitment scaling
   RecParsList <- purrr::map2(StockList, SPR0List, \(Stock, SPR0) {
@@ -458,25 +568,25 @@ PrepPerRecruitInputs <- function(StockList, FleetList, SPR0List, Years) {
   })
   
   list(
-    NaturalMortalityList = NaturalMortalityList,
-    PlusGroupList        = PlusGroupList,
-    MaturityList         = MaturityList,
-    SemelparousList      = SemelparousList,
-    WeightList           = WeightList,
-    SpawnTimeFracList    = SpawnTimeFracList,
-    FecundityList        = FecundityList,
-    SPFrom               = SPFrom,
-    SPR0List             = SPR0List,
-    StockFleetAllocation = StockFleetAllocation,
-    WeightFleetList      = WeightFleetList,
-    Selectivity          = Selectivity,
-    Retention            = Retention,
-    DiscardMortality     = DiscardMortality,
-    RecParsList          = RecParsList,
-    R0                   = R0,
-    RelRecFunList        = RelRecFunList,
-    FleetNames           = FleetNames,
-    Years                = Years
+    NaturalMortalityList      = NaturalMortalityList,
+    PlusGroupList             = PlusGroupList,
+    MaturityList              = MaturityList,
+    SemelparousList           = SemelparousList,
+    WeightList                = WeightList,
+    SpawnTimeFracList         = SpawnTimeFracList,
+    FecundityList             = FecundityList,
+    SPFrom                    = SPFrom,
+    SPR0List                  = SPR0List,
+    StockFleetAllocation      = StockFleetAllocation,
+    WeightFleetList           = WeightFleetList,
+    SelectivityFleetList      = SelectivityFleetList,
+    RetentionFleetList        = RetentionFleetList,
+    DiscardMortalityFleetList = DiscardMortalityFleetList,
+    RecParsList               = RecParsList,
+    R0                        = R0,
+    RelRecFunList             = RelRecFunList,
+    FleetNames                = FleetNames,
+    Years                     = Years
   )
 }
 

@@ -16,19 +16,35 @@ constructor, which documents all parameters in detail.
 effort. See \code{\link[=Effort]{Effort()}} for accepted formats.}
 
 \item{\code{Units}}{\code{character} or \code{NULL}. Units of fishing effort (e.g.,
-\code{"hours"}, \code{"trips"}). See \code{\link[=Effort]{Effort()}}.}
+\code{"hours"}, \code{"trips"}). When \code{Units = "trips"} the effort array is already
+on the absolute trips scale and \code{\link[=TripsScalar]{TripsScalar()}} is ignored by bag-limit
+management procedures. See \code{\link[=Effort]{Effort()}}.}
 
 \item{\code{Distribution}}{\code{numeric} array or \code{NULL}. Fraction of total effort
 allocated to each spatial area (\verb{Sim x Year x Area}). See \code{\link[=Effort]{Effort()}}.}
 
-\item{\code{Targeting}}{\code{numeric} array or \code{NULL}. Fleet targeting parameter
-(\verb{Sim x Year}). See \code{\link[=Effort]{Effort()}}.}
+\item{\code{Targeting}}{\code{numeric} array or \code{NULL}. Fleet targeting concentration
+parameter (\verb{Sim x Year}). See \code{\link[=Effort]{Effort()}}.}
 
 \item{\code{Maximum}}{\code{numeric} array or \code{NULL}. Maximum allowable effort. See
 \code{\link[=Effort]{Effort()}}.}
 
 \item{\code{Mode}}{\code{character} or \code{NULL}. Spatial utility calculation mode:
 \code{"Density"} (default) or \code{"Biomass"}. See \code{\link[=Effort]{Effort()}}.}
+
+\item{\code{TripsScalar}}{\code{numeric} array or \code{NULL}. Time-varying scalar
+\eqn{\alpha_f(t)} converting the effort index to absolute angler trip
+counts via \eqn{T_f(t) = \alpha_f(t) \cdot E_f(t)} (\verb{Sim x Year}).
+The \code{Year} dimension may be length 1 (replicated internally) or span the
+full model time series. Required by bag-limit management procedures when
+\code{Units != "trips"}. Ignored when \code{Units = "trips"}. See \code{\link[=Effort]{Effort()}}.}
+
+\item{\code{AnglerPerTrip}}{\code{numeric} array or \code{NULL}. Mean number of anglers per
+trip (\verb{Sim x Year}). Used by bag-limit management procedures to convert
+a per-angler bag limit to a fleet-level retention cap via
+\eqn{C^{\text{bag}}_f(t) = B_f \cdot A_f(t) \cdot T_f(t)}, where
+\eqn{B_f} is the bag limit (fish per angler per trip) and \eqn{T_f(t)}
+is the number of trips. See \code{\link[=Effort]{Effort()}}.}
 
 \item{\code{Misc}}{\code{list}. Miscellaneous additional inputs.}
 }}

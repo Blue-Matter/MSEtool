@@ -11,7 +11,11 @@
 \alias{Maximum<-}
 \alias{Mode}
 \alias{Mode<-}
-\title{Effort}
+\alias{TripsScalar}
+\alias{TripsScalar<-}
+\alias{AnglerPerTrip}
+\alias{AnglerPerTrip<-}
+\title{Effort Constructor and Accessors}
 \usage{
 Effort(
   Effort = NULL,
@@ -20,6 +24,8 @@ Effort(
   Targeting = NULL,
   Maximum = NULL,
   Mode = NULL,
+  TripsScalar = NULL,
+  AnglerPerTrip = NULL,
   Misc = list(),
   df = TRUE
 )
@@ -41,6 +47,14 @@ Maximum(x) <- value
 Mode(x)
 
 Mode(x) <- value
+
+TripsScalar(x)
+
+TripsScalar(x) <- value
+
+AnglerPerTrip(x)
+
+AnglerPerTrip(x) <- value
 }
 \arguments{
 \item{Effort}{Numeric array, data frame, or \code{NULL}. Historical fishing
@@ -61,7 +75,9 @@ extracted and returned (see Details).}
 \item{Units}{Character or \code{NULL}. Units of fishing effort (e.g.,
 \code{"hours"}, \code{"trips"}). Default \code{NULL}. Note that effort is converted to
 fishing mortality via gear efficiency (\code{q}) defined in the associated
-\link[=catchability-class]{catchability} object.}
+\link[=catchability-class]{catchability} object. When \code{Units = "trips"} the effort array is
+already on the absolute trips scale and \code{TripsScalar} is ignored by
+bag-limit management procedures.}
 
 \item{Distribution}{Numeric array or \code{NULL}. Fraction of total effort
 allocated to each spatial area. Used only for spatial models
@@ -94,6 +110,25 @@ regardless of area size. \code{"Biomass"} uses raw exploitable biomass, so
 larger areas are intrinsically more attractive. See the Technical Manual
 for equations.}
 
+\item{TripsScalar}{Numeric array or \code{NULL}. Time-varying scalar
+\eqn{\alpha_f(t)} converting the effort index to absolute angler trip
+counts via \eqn{T_f(t) = \alpha_f(t) \cdot E_f(t)}. Must have dimensions
+\verb{Sim x Year} with named dimnames. The \code{Sim} dimension may be length 1
+(replicated internally). The \code{Year} dimension may be length 1 (replicated
+internally) or span the full model time series; values for projection
+years beyond the historical period are typically held constant at the last
+historical value or extended by the analyst prior to use. Default \code{NULL}.
+Required by bag-limit management procedures when \code{Units != "trips"}.
+Ignored when \code{Units = "trips"}. See Details.}
+
+\item{AnglerPerTrip}{Numeric array or \code{NULL}. Mean number of anglers per
+trip. Must have dimensions \verb{Sim x Year} with named dimnames. The \code{Sim}
+dimension may be length 1 (replicated internally). The \code{Year} dimension
+may be length 1 (replicated internally) if the value does not vary over
+time, or span the full model time series if it does. Used by bag-limit
+management procedures to scale a per-angler bag limit to a fleet-level
+retention cap. Default \code{NULL}. See Details.}
+
 \item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
 
 \item{df}{Logical. Only used when \code{Effort} is a \link[=hist-class]{hist} or
@@ -111,8 +146,9 @@ returned. If \code{FALSE}, the raw \code{Effort} array is returned.}
 object, the \code{Effort} slot of that object is returned (as a \code{data.frame}
 or array for \link[=hist-class]{hist} and \link[=mse-class]{mse} depending on \code{df}).
 \item \verb{Effort<-} returns \code{x} with the \code{Effort} slot replaced by \code{value}.
-\item \code{Distribution()}, \code{Targeting()}, \code{Maximum()}, \code{Mode()} return the
-corresponding slot from the \link[=effort-class]{effort} object \code{x}.
+\item \code{Distribution()}, \code{Targeting()}, \code{Maximum()}, \code{Mode()},
+\code{TripsScalar()}, \code{AnglerPerTrip()} return the corresponding slot from
+the \link[=effort-class]{effort} object \code{x}.
 \item Their replacement forms return \code{x} with the corresponding slot updated.
 }
 }
@@ -126,7 +162,8 @@ spatial allocation. Effort is converted to fishing mortality via gear
 efficiency (\code{q}) in the associated \link[=catchability-class]{catchability} object.
 \subsection{Effort Array Format}{
 
-When supplied as a numeric array, \code{Effort} must have dimensions \verb{Sim x Year} with named dimnames. The \code{Sim} dimension may be length 1 (replicated
+When supplied as a numeric array, \code{Effort} must have dimensions \verb{Sim x Year}
+with named dimnames. The \code{Sim} dimension may be length 1 (replicated
 internally by \code{\link[=PopulateEffort]{PopulateEffort()}}). The \code{Year} dimension must match the
 historical years of the OM exactly.
 
@@ -143,9 +180,10 @@ to 1 over the \code{Area} dimension within each simulation and year. The \code{S
 and \code{Year} dimensions may be length 1 (replicated internally). When not
 specified (default), \code{\link[=PopulateEffort]{PopulateEffort()}} initialises all cells to \code{NA}.
 
-At runtime, the spatial allocation algorithm only fills cells that remain
-\code{NA} — any non-\code{NA} values supplied in \code{Distribution} are left unchanged
-and act as fixed overrides for those simulation-year-area combinations.
+In \code{\link[=Simulate]{Simulate()}} and \code{\link[=Project]{Project()}}, the spatial allocation algorithm only
+fills cells that remain  \code{NA}; any non-\code{NA} values supplied in \code{Distribution}
+are left unchanged and act as fixed overrides for those
+simulation-year-area combinations.
 }
 
 \subsection{Spatial Utility and Effort Allocation}{
@@ -158,8 +196,7 @@ biomass is computed as the sum over ages of abundance × weight ×
 selectivity × retention, scaled by catchability (\code{q}). When
 \code{Mode = "Density"} (default), this biomass is divided by the relative area
 size (\code{RelSize}) to give biomass density; when \code{Mode = "Biomass"}, raw
-biomass is used. An initial effort distribution (\code{D0}) is set proportional
-to these values.
+biomass is used.
 
 \strong{Stage 2 — Depletion-adjusted utility.} A depletion discount
 \code{h(phi) = (1 - exp(-phi)) / phi} is applied, where \code{phi} is the local
@@ -181,14 +218,36 @@ how strongly effort is concentrated in high-utility areas. At \code{lambda = 0},
 effort is distributed uniformly across all accessible areas regardless of
 their relative utility. As \code{lambda} increases, effort becomes progressively
 more concentrated in the highest-utility area. The default value of \code{0.8}
-produces moderate concentration — broadly consistent with opportunistic
+produces moderate concentration, broadly consistent with opportunistic
 targeting behaviour where fleets favour productive areas but do not
-exclusively fish the single best one. Values around \code{0.5} approach near-uniform
-allocation; values above \code{2}–\code{3} produce strongly directed behaviour where
-most effort concentrates in the top one or two areas. The parameter is
-open-ended with no fixed upper bound, but very large values (e.g. \verb{> 5})
-effectively collapse all effort to the single highest-utility area in most
-configurations.
+exclusively fish the single best one.
+
+Values around \code{0.5} approach near-uniform allocation; values above \code{2}–\code{3}
+produce strongly directed behaviour where most effort concentrates in the
+top one or two areas. The parameter is open-ended with no fixed upper bound,
+but very large values (e.g. \verb{> 5}) effectively collapse all effort to the
+single highest-utility area in most configurations.
+}
+
+\subsection{Effort-to-Trips Conversion and Angler Scaling}{
+
+Bag-limit management procedures require the effort index to be expressed as
+absolute angler trip counts. When \code{Units = "trips"} the effort array is
+already on the trips scale and no conversion is needed.
+
+When the bag limit is defined per angler (the default), \code{AnglerPerTrip}
+provides the mean number of anglers per trip \eqn{A_f(t)}, such that the
+fleet-level retention cap is:
+
+\deqn{C^{\text{bag}}_f(t) = B_f \cdot A_f(t) \cdot T_f(t)}
+
+where \eqn{B_f} is the bag limit in fish per angler per trip. The \code{Year}
+dimension of \code{AnglerPerTrip} may be length 1 if the value is assumed
+constant over time; it is replicated internally to match the full model
+time series.
+
+When the bag limit is defined per vessel (boat limit), \code{AnglerPerTrip} is
+not used.
 }
 
 \subsection{Pass-Through Extraction}{

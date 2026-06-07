@@ -1,9 +1,10 @@
-#' Management Advice 
+#' Management Advice Constructor and Accessors
 #'
 #' Construct an [advice-class] object defining management advice returned by a
 #' management procedure.
 #'
-#' @param TAC Numeric vector or matrix specifying total allowable catch. See `Details`
+#' @param TAC Numeric vector or matrix specifying total allowable catch.
+#'  See `Details`
 #'
 #' @param TACType Character. Does the TAC refer to `"Removals"` (default) or
 #'   `"Landings"`. Either length 1 (applied to all fleets) or a character
@@ -13,7 +14,8 @@
 #'   (default) or `"Number"`. Either length 1 (applied to all fleets) or a
 #'   character vector of length `nFleet`.
 #'    
-#' @param Effort Numeric vector or matrix specifying relative or absolute fishing effort. See `Details`
+#' @param Effort Numeric vector or matrix specifying relative or absolute 
+#' fishing effort. See `Details`
 #'
 #' @param EffType Character. Effort interpretation: `"Rel"` for relative to
 #'   the last historical year, or `"Abs"` for absolute effort units (in units
@@ -31,7 +33,52 @@
 #'
 #' @param ApicalF Numeric array specifying target apical fishing mortality. Not currently used
 #'
-#' @param Misc Miscellaneous list.
+#' @param BagLimit Numeric vector or `NULL`. Aggregate bag limit in fish per
+#'   angler per trip (when `LimitType = "angler"`) or fish per vessel per
+#'   trip (when `LimitType = "boat"`). Accepted forms:
+#'   - `NULL` (default): no bag limit regulation is active for any fleet.
+#'   - Single numeric value: the same limit applied to all fleets.
+#'   - Numeric vector of length `nFleet`: fleet-specific bag limits. `NA`
+#'     for a given fleet position means no aggregate limit applies to that
+#'     fleet.
+#'
+#'   The bag limit regulation persists across time steps until a new
+#'   [Advice()] object is returned by the MP. See Details.
+#'
+#' @param SpeciesLimit Numeric matrix or `NULL`. Species-specific bag limits
+#'   (fish per angler or vessel per trip) within a complex. Accepted forms:
+#'   - `NULL` (default): no species-specific limits are active.
+#'   - Numeric matrix with dimensions `nFleet x nStock`: fleet- and
+#'     species-specific limits. `NA` in a given fleet-stock position means
+#'     no species-specific limit applies to that fleet-stock combination.
+#'
+#'   `SpeciesLimit` operates simultaneously with `BagLimit` — a trip is
+#'   constrained whenever either limit is reached first. The regulation
+#'   persists across time steps until a new [Advice()] object is returned
+#'   by the MP. See Details.
+#'
+#' @param LimitType Character or `NULL`. Whether `BagLimit` and `SpeciesLimit`
+#'   are per-angler or per-vessel regulations. Either length 1 (applied to all
+#'   fleets) or a character vector of length `nFleet`. Valid values:
+#'   - `"angler"` (default): limits are per angler per trip; the fleet-level
+#'     retention cap is \eqn{B_f \cdot A_{f,t} \cdot T_{f,t}}, where
+#'     \eqn{A_{f,t}} is mean anglers per trip ([AnglerPerTrip()]) and
+#'     \eqn{T_{f,t}} is the number of trips ([TripsScalar()]).
+#'   - `"boat"`: limits are per vessel per trip; the fleet-level retention cap
+#'     is \eqn{B_f \cdot T_{f,t)}}, and [AnglerPerTrip()] is not used.
+#'
+#' @param ClosureMode Character or `NULL`. Determines how the OM handles catch
+#'   that exceeds the bag limit. Either length 1 (applied to all fleets) or a
+#'   character vector of length `nFleet`. Valid values:
+#'   - `"discard"` (default): catch exceeding the bag limit is converted to
+#'     discards; discard mortality is applied via the fleet's
+#'     [DiscardMortality()] object.
+#'   - `"stop"`: effort is reduced so that projected catch does not exceed the
+#'     bag limit retention cap; no additional discards are generated beyond the
+#'     baseline discard rate from non-retention of undersized fish.
+#'
+#' @param Misc Miscellaneous list. Will be passed to `Data@Misc` in following
+#'   time steps.
 #' 
 #' @details
 #'
@@ -39,10 +86,10 @@
 #' management procedure. All slots are optional; any regulation not supplied
 #' will remain unchanged from the previous time step.
 #' 
-#' The management regulations in an `Advice` object will be applied in the year/time-step
-#' that the `Advice` object is produced (i.e., when the MP is run) and will 
-#' apply to all future time-steps until a new `Advice` object is returned by an
-#' MP.
+#' The management regulations in an `Advice` object will be applied in the 
+#' year/time-step that the `Advice` object is produced (i.e., when the MP is run)
+#' and will apply to all future time-steps until a new `Advice` object is 
+#' returned by an MP.
 #' 
 #' The `Closure`, `Selectivity`, `Retention`, and `DiscardMortality` regulations
 #' (if any) are applied first before calculating the fishing mortality corresponding
@@ -78,7 +125,7 @@
 #' uniformly across all fleets) or a character vector of length `nFleet`
 #' specifying per-fleet values.
 #'
-#' Note that when `Effort` is supplied as a matrix (fleet × area), it is
+#' Note that when `Effort` is supplied as a matrix (fleet x area), it is
 #' always treated as absolute regardless of `EffType`.
 #'
 #' * single numeric value: 
@@ -88,15 +135,13 @@
 #'    the effort in the last historical year. 
 #'  
 #'    * If `EffType`=`"Abs"`: the total effort (summed over fleets unless provide
-#'    as a length `nFleet` vector); Note all
-#'    fleets in the OM must have the same units for `Effort`) and 
-#'    distributed over fleets following the same distribution as the last 
-#'    historical year   
+#'    as a length `nFleet` vector); Note that in this case all fleets in the OM must 
+#'    have the same units for `Effort`).
 #'
 #' * numeric vector length `nFleet`: Fleet-specific relative or absolute Effort. 
 #'
-#' * numeric matrix: Fleet- and Area-specific relative or absolute Effort. Must have `nFleet`
-#' rows and `nArea` columns.  
+#' * numeric matrix: Fleet- and Area-specific relative or absolute Effort. 
+#' Must have `nFleet` rows and `nArea` columns.  
 #' 
 #' ## Closure
 #' 
@@ -125,16 +170,36 @@
 #' 
 #' Same as described for `Selectivity`, but for [DiscardMortality()] objects.
 #' 
+#' ## Bag Limit
+#'
+#' `BagLimit`, `SpeciesLimit`, `LimitType`, and `ClosureMode` together define
+#' a bag-limit regulation. The bag limit caps the number of fish an angler
+#' (or vessel) may retain per trip for either a single species or across all
+#' species within a complex.
+#'
+#' `BagLimit` sets an aggregate limit across all species in the complex.
+#' 
+#' `SpeciesLimit` sets species-specific limits within the complex. Both may
+#' be active simultaneously, a trip is constrained whenever either limit is
+#' reached first. `NA` in a fleet position of `BagLimit`, or in a fleet-stock
+#' position of `SpeciesLimit`, means no limit applies for that fleet or
+#' fleet-stock combination respectively.
+#'
+#' When `ClosureMode = "discard"`, catch exceeding the retention cap is
+#' converted to discards and discard mortality is applied via the fleet's
+#' [DiscardMortality()] object. When `ClosureMode = "stop"`, effort is
+#' reduced to prevent exceeding the bag limit and no additional discards are 
+#' generated.
+#'
 #' ## ApicalF
-#' 
-#' Not currently used. 
-#' 
+#'
+#' Not currently used.
+#'
 #' ## Misc
-#' 
-#' A list of miscellaneous information that needs to be stored and accessed by 
-#' the MP in future timesteps. 
-#' 
-# 'Contents of Advice@Misc will be available in the Data@Misc slot in subsequent time steps
+#'
+#' A list of miscellaneous information that needs to be stored and accessed by
+#' the MP in future timesteps. Contents of `Advice@Misc` will be available in
+#' the `Data@Misc` slot in subsequent time steps.
 #' 
 #' ## Populating Selectivity, Retention, and Discard Mortality Objects
 #' 
@@ -145,7 +210,6 @@
 #'  If values are provided for these slots in the `Advice` object,
 #'  the new regulations/specifications will apply to all future time steps
 #'  until modified again by the `MP`.
-#'  
 #'  
 #'  Values can be set for these objects in the following ways:
 #'  
@@ -187,10 +251,15 @@
 #'   `Pars` should be a named list of parameters, where each parameter can be either
 #'   a single numeric value, or a numeric vector length `nArea` for area-specific schedules.
 #'  
-#'
 #' @return An [advice-class] object.
 #'
-#' @seealso [Selectivity()], [Retention()], [DiscardMortality()]
+#' @seealso
+#' - [advice-class] for the class definition and slot-level documentation.
+#' - [Selectivity()], [Retention()], [DiscardMortality()] for gear regulation
+#'   sub-objects.
+#' - [TripsScalar()], [AnglerPerTrip()] for the effort-to-trips and
+#'   angler-scaling parameters consumed by the bag limit model.
+#' - [Theta()] for the within-trip catch overdispersion parameter.
 #'
 #' @rdname Advice
 #' @export
@@ -199,19 +268,48 @@
 #' Advice(TAC = 1000)
 #'
 #' Advice(
-#'   Effort = c(1, 0.8),
+#'   Effort  = c(1, 0.8),
 #'   EffType = "Rel"
+#' )
+#'
+#' # Aggregate bag limit: 10 fish per angler per trip, discard excess
+#' Advice(
+#'   BagLimit    = 10,
+#'   LimitType   = "angler",
+#'   ClosureMode = "discard"
+#' )
+#'
+#' # Aggregate limit with a species-specific sub-limit 
+#' # (2-fish sub-limit for stock 1)
+#' Advice(
+#'   BagLimit     = 10,
+#'   SpeciesLimit = matrix(c(2, NA, NA, NA), nrow = 1, ncol = 4),
+#'   LimitType    = "angler",
+#'   ClosureMode  = "discard"
+#' )
+#'
+#' # Fleet-specific TAC & aggregate bag limits; no TAC for fleet 1, 
+#' # no bag limit for fleet 2
+#' Advice(
+#'   TAC         = c(NA, 1000)
+#'   BagLimit    = c(10, NA),
+#'   LimitType   = "angler",
+#'   ClosureMode = "discard"
 #' )
 Advice <- function(TAC              = NULL,
                    TACType          = 'Removals',
-                   TACUnit          = 'Biomass',  
+                   TACUnit          = 'Biomass',
                    Effort           = NULL,
-                   EffType          = 'Rel', 
+                   EffType          = 'Rel',
                    Closure          = NULL,
                    Selectivity      = NULL,
                    Retention        = NULL,
                    DiscardMortality = NULL,
                    ApicalF          = NULL,
+                   BagLimit         = NULL,
+                   SpeciesLimit     = NULL,
+                   LimitType        = 'angler',
+                   ClosureMode      = 'discard',
                    Misc             = list()) {
   
   match_arg_vec <- function(x, choices, arg_name) {
@@ -224,9 +322,11 @@ Advice <- function(TAC              = NULL,
     x
   }
   
-  TACType <- match_arg_vec(TACType, c('Removals', 'Landings'), 'TACType')
-  TACUnit <- match_arg_vec(TACUnit, c('Biomass', 'Number'), 'TACUnit')  
-  EffType <- match_arg_vec(EffType, c('Rel', 'Abs'), 'EffType')
+  TACType     <- match_arg_vec(TACType,     c('Removals', 'Landings'),  'TACType')
+  TACUnit     <- match_arg_vec(TACUnit,     c('Biomass',  'Number'),    'TACUnit')
+  EffType     <- match_arg_vec(EffType,     c('Rel',      'Abs'),       'EffType')
+  LimitType   <- match_arg_vec(LimitType,   c('angler',   'boat'),      'LimitType')
+  ClosureMode <- match_arg_vec(ClosureMode, c('discard',  'stop'),      'ClosureMode')
   
   if (!is.null(TAC) && !is.numeric(TAC))
     cli::cli_abort("`TAC` must be numeric")
@@ -237,35 +337,59 @@ Advice <- function(TAC              = NULL,
   if (!is.null(Closure) && !is.numeric(Closure))
     cli::cli_abort("`Closure` must be numeric")
   
+  if (!is.null(BagLimit) && !is.numeric(BagLimit))
+    cli::cli_abort("`BagLimit` must be numeric")
+  
+  if (!is.null(BagLimit) && any(BagLimit < 0, na.rm = TRUE))
+    cli::cli_abort("`BagLimit` must be non-negative")
+  
+  if (!is.null(SpeciesLimit) && !is.numeric(SpeciesLimit))
+    cli::cli_abort("`SpeciesLimit` must be numeric")
+  
+  if (!is.null(SpeciesLimit) && !is.matrix(SpeciesLimit))
+    cli::cli_abort("`SpeciesLimit` must be a matrix with dimensions `nFleet x nStock`")
+  
+  if (!is.null(SpeciesLimit) && any(SpeciesLimit < 0, na.rm = TRUE))
+    cli::cli_abort("`SpeciesLimit` must be non-negative")
+  
   if (!is.null(Selectivity) && !is.list(Selectivity) &&
       !inherits(Selectivity, 'selectivity'))
-    cli::cli_abort("`Selectivity` must be {.help MSEtool::Selectivity} object or a list of `Selectivity` objects ")
+    cli::cli_abort(
+      "`Selectivity` must be a {.help MSEtool::Selectivity} object or a list of `Selectivity` objects"
+    )
   
   if (!is.null(Retention) && !is.list(Retention) &&
       !inherits(Retention, 'retention'))
-    cli::cli_abort("`Retention` must be {.help MSEtool::Retention} object or a list of `Retention` objects ")
+    cli::cli_abort(
+      "`Retention` must be a {.help MSEtool::Retention} object or a list of `Retention` objects"
+    )
   
   if (!is.null(DiscardMortality) && !is.list(DiscardMortality) &&
       !inherits(DiscardMortality, 'discardmortality'))
-    cli::cli_abort("`DiscardMortality` must be {.help MSEtool::DiscardMortality} object or a list of `DiscardMortality` objects ")
+    cli::cli_abort(
+      "`DiscardMortality` must be a {.help MSEtool::DiscardMortality} object or a list of `DiscardMortality` objects"
+    )
   
   if (!is.null(Misc) && !is.list(Misc))
     cli::cli_abort("`Misc` must be a list")
   
-  
-  methods::new("advice",
-               TAC              = TAC,
-               TACType          = TACType,
-               TACUnit          = TACUnit,
-               Effort           = Effort,
-               EffType          = EffType,
-               Closure          = Closure,
-               Selectivity      = Selectivity,
-               Retention        = Retention,
-               DiscardMortality = DiscardMortality,
-               ApicalF          = ApicalF,
-               Misc             = Misc,
-               Log              = list())
+  methods::new(
+    "advice",
+    TAC              = TAC,
+    TACType          = TACType,
+    TACUnit          = TACUnit,
+    Effort           = Effort,
+    EffType          = EffType,
+    Closure          = Closure,
+    Selectivity      = Selectivity,
+    Retention        = Retention,
+    DiscardMortality = DiscardMortality,
+    ApicalF          = ApicalF,
+    BagLimit         = BagLimit,
+    SpeciesLimit     = SpeciesLimit,
+    LimitType        = LimitType,
+    ClosureMode      = ClosureMode,
+    Misc             = Misc,
+    Log              = list()
+  )
 }
-
-

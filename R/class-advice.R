@@ -13,44 +13,74 @@ methods::setClassUnion(
   members = c("discardmortality", "list", 'NULL')
 )
 
-#' `Advice` Object
+#' The `advice` S4 Class
 #'
 #' The `advice` class defines management advice produced by a management
 #' procedure. Advice may include output controls (e.g. total allowable catch),
 #' input controls (e.g. effort), spatial controls (closures), gear effects,
-#' or direct fishing mortality targets. See [Advice()] for details on valid 
-#' entries and options for each slot. 
-#'
-#' @slot TAC Numeric vector or numeric array specifying total allowable catch (currently always in biomass).
+#' direct fishing mortality rates, or bag-limit regulations. See [Advice()]
+#' for details on valid entries and options for each slot.
 #' 
+#' @slot TAC Numeric vector length `1` or numeric length `nFleet` specifying 
+#' total allowable catch in units of `TACUnit`.
+#'
 #' @slot TACType Character. Does the TAC refer to `"Removals"` (default) or
-#'   `"Landings"`. Either length 1 (applied to all fleets) or a character
+#'   `"Landings"`. Either length `1` (applied to all fleets) or a character
 #'   vector of length `nFleet`.
 #'
 #' @slot TACUnit Character. Units of the TAC: `"Biomass"` (default) or
 #'   `"Number"`. Either length 1 (applied to all fleets) or a character
 #'   vector of length `nFleet`.
 #' 
-#' @slot Effort Numeric vector array specifying relative or absolute fishing effort.
-#' 
+#' @slot Effort Numeric vector length `1` or numeric length `nFleet` specifying 
+#' relative or absolute fishing effort (in units of `Fleet@Effort@Effort`). Can
+#' also be a matrix with dimensions `nFleet` x `nArea` to set area-specific 
+#' effort limits.
+#'
 #' @slot EffType Character. Are effort regulations relative to last historical
 #'   year (`"Rel"`) or absolute (`"Abs"`; in units of [Effort()]). Either
 #'   length 1 (applied to all fleets) or a character vector of length `nFleet`.
 #'   Default is `"Rel"`.
 #'
-#' @slot Closure Numeric vector or array specifying spatial closures.
+#' @slot Closure Numeric vector length `nArea` or array with dimensions `nFleet` 
+#' x `nArea` specifyin an area open (`1`; default) or closed (`0`) to fishing.
 #'
-#' @slot Selectivity A [Selectivity()] object or an `nFleet` long list of [Selectivity()] objects
-#' defining gear selectivity prescribed by the `MP`
+#' @slot Selectivity A [Selectivity()] object or an `nFleet` long list 
+#' of [Selectivity()] objects defining gear selectivity prescribed by the `MP`
 #'
-#' @slot Retention A [Retention()] object or an `nFleet` long list of [Retention()] objects
-#' defining retention prescribed by the `MP`
+#' @slot Retention A [Retention()] object or an `nFleet` long list 
+#' of [Retention()] objects  defining retention prescribed by the `MP`
 #'
 #' @slot DiscardMortality A [DiscardMortality()] object or an `nFleet` long 
 #'  list of [DiscardMortality()] objects defining discard mortality set in the `MP`
 #'
-#' @slot ApicalF Numeric array specifying target apical fishing mortality. Not currently used
+#' @slot ApicalF Numeric array specifying target apical fishing mortality.
+#'  Not currently used
 #'
+#' @slot BagLimit Numeric vector or `NULL`. Aggregate bag limit in fish per
+#'   angler per trip (when `LimitType = "angler"`) or fish per vessel per
+#'   trip (when `LimitType = "boat"`). Either length 1 (applied to all
+#'   fleets) or a numeric vector of length `nFleet` for fleet-specific limits.
+#'   `NULL` (default) means no bag limit regulation is active. `NA` for a
+#'   given fleet position means no aggregate limit applies to that fleet.
+#'   See [Advice()].
+#'
+#' @slot SpeciesLimit Numeric matrix or `NULL`. Species-specific bag limits
+#'   (fish per angler or vessel per trip) within a complex, with dimensions
+#'   `nFleet x nStock`. See [Advice()].
+#'
+#' @slot LimitType Character or `NULL`. Specifies whether `BagLimit` and
+#'   `SpeciesLimit` are per-angler (`"angler"`; default) or per-vessel
+#'   (`"boat"`) regulations. Either length 1 (applied to all fleets) or a
+#'   character vector of length `nFleet`. See [Advice()].
+#'
+#' @slot ClosureMode Character or `NULL`. Determines how the OM handles catch
+#'   that exceeds the bag limit: `"discard"` (default) converts excess catch
+#'   to discards, with discard mortality applied via the fleet's
+#'   [DiscardMortality()] object; `"stop"` reduces effort to prevent the
+#'   limit from being exceeded. Either length 1 (applied to all fleets) or a
+#'   character vector of length `nFleet`. See [Advice()].
+#'   
 #' @slot Misc Miscellaneous list. Will be passed to `Data@Misc` in following time steps.
 #'
 #' @slot Log List used internally to store diagnostics
@@ -63,18 +93,24 @@ methods::setClassUnion(
 #' @include class-retention.R
 #' @include class-discardmortality.R
 setClass("advice",
-         slots = c(TAC = "num.array.null",
-                   TACType = 'char.null',
-                   TACUnit = 'char.null',
-                   Effort = "num.array.null",
-                   EffType = 'char.null',
-                   Closure = "num.array.null",
-                   Selectivity = "selectivity.list",
-                   Retention = "retention.list",
-                   DiscardMortality = "discardmortality.list",
-                   ApicalF = "num.array.null",
-                   Misc = "list",
-                   Log = "list")
+         slots = c(
+           TAC              = "num.array.null",
+           TACType          = "char.null",
+           TACUnit          = "char.null",
+           Effort           = "num.array.null",
+           EffType          = "char.null",
+           Closure          = "num.array.null",
+           Selectivity      = "selectivity.list",
+           Retention        = "retention.list",
+           DiscardMortality = "discardmortality.list",
+           ApicalF          = "num.array.null",
+           BagLimit         = "num.array.null",
+           SpeciesLimit     = "num.array.null",
+           LimitType        = "char.null",
+           ClosureMode      = "char.null",
+           Misc             = "list",
+           Log              = "list"
+         )
 )
 
 
@@ -98,6 +134,24 @@ setValidity("advice", function(object) {
     errors <- c(errors,
                 paste0("`EffType` must contain only: ",
                        paste(valid_EffType, collapse = ", ")))
+  
+  valid_LimitType <- c("angler", "boat")
+  if (!is.null(object@LimitType) && !all(object@LimitType %in% valid_LimitType))
+    errors <- c(errors,
+                paste0("`LimitType` must contain only: ",
+                       paste(valid_LimitType, collapse = ", ")))
+  
+  valid_ClosureMode <- c("discard", "stop")
+  if (!is.null(object@ClosureMode) && !all(object@ClosureMode %in% valid_ClosureMode))
+    errors <- c(errors,
+                paste0("`ClosureMode` must contain only: ",
+                       paste(valid_ClosureMode, collapse = ", ")))
+  
+  if (!is.null(object@BagLimit) && any(object@BagLimit < 0, na.rm = TRUE))
+    errors <- c(errors, "`BagLimit` must be non-negative")
+  
+  if (!is.null(object@SpeciesLimit) && any(object@SpeciesLimit < 0, na.rm = TRUE))
+    errors <- c(errors, "`SpeciesLimit` must be non-negative")
   
   if (length(errors)) errors else TRUE
 })

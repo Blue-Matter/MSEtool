@@ -34,8 +34,8 @@ ConditionObs <- function(Hist, silent=FALSE) {
 
   for (i in seq_along(FisheryDataList)) {
     
-    nms <- names(FisheryDataList)[i]
-    stocks <- Complexes[[i]]
+    nms         <- names(FisheryDataList)[i]
+    stocks      <- Complexes[[i]]
     FisheryData <- FisheryDataList[[i]]
     
     # TODO 

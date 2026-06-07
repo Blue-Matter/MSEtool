@@ -110,5 +110,5 @@ OM <- ImportBAMData(
 
 }
 \seealso{
-\code{\link[=GetBAMOutput]{GetBAMOutput()}}, \code{\link[=Data]{Data()}}, \code{\link[=IndicesData]{IndicesData()}}, \code{\link[=CatchData]{CatchData()}}, \code{\link[=Obs]{Obs()}}
+\code{\link[=GetBAMOutput]{GetBAMOutput()}}, \code{\link[=Data]{Data()}}, \code{\link[=CatchData]{CatchData()}}, \code{\link[=Obs]{Obs()}}
 }

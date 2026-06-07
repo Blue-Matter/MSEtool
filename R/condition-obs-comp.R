@@ -2,8 +2,8 @@
 #'
 #' Internal function to condition [compobs-class] observation error parameters
 #' from observed age or size composition data. Populates `Shift` (per-bin
-#' log-concentration residual) and `ESS` (effective sample size) for each
-#' fleet where observed composition data are available.
+#' log-concentration residual), `ESS` (effective sample size), and
+#' `SampleSize` for each fleet where observed composition data are available.
 #'
 #' @param Hist A [Hist()] object populated with historical fishery dynamics.
 #' @param FisheryData A [Data()] object containing real fishery composition
@@ -16,15 +16,6 @@
 #'   `"LandingsAtSize"`, or `"DiscardsAtSize"`.
 #'
 #' @details
-#' ## Early Exit Conditions
-#'
-#' The function returns `Hist` unchanged if:
-#'
-#' - The relevant [compdata-class] slot of `FisheryData` is empty or has no
-#'   `Value` array.
-#' - A fleet has no matching column in the observed data, or its [compobs-class]
-#'   object is a default unconditioned object (as determined by `isNewObject()`),
-#'   or `SampleSize` is `NULL`.
 #'
 #' ## OM-Predicted Compositions
 #'
@@ -42,63 +33,10 @@
 #' Predicted proportions \eqn{\hat{p}_{s,t,b}} are computed by normalising
 #' within each simulation and year.
 #'
-#' ## Conditioned Parameters
+#' @return `Hist` with `SampleSize`, `Shift`, and `ESS` populated in the
+#'   relevant [compobs-class] slots of `Hist@OM@Obs[[i]]` for each fleet
+#'   where observed composition data are available.
 #'
-#' ### `Shift` per-bin log-concentration residual
-#'
-#' For each simulation `s`, fleet, and conditioning year `t`, the
-#' log-concentration residual for bin \eqn{b} is:
-#'
-#' \deqn{r_{s,t,b} = \log(p^{\mathrm{obs}}_{t,b}) - \log(\hat{p}_{s,t,b})}
-#'
-#' where \eqn{p^{\mathrm{obs}}_{t,b}} is the observed proportion (identical
-#' across simulations) and \eqn{\hat{p}_{s,t,b}} is the OM-predicted
-#' proportion for simulation `s`. `Shift` is set to \eqn{r_{s,t,b}} directly
-#' for each conditioning year, giving a `[nSim x nYear x nBin]` array.
-#'
-#' For projection years, the shift from the last conditioning year is held
-#' constant. **This assumes that the compositional bias structure observed in
-#' the final conditioning year persists unchanged into projection years.** If
-#' the bias is driven by a time-varying process (e.g. gear change, spatial
-#' shift), this assumption may not hold. The `Shift` slot can be overwritten
-#' directly after conditioning if a different projection assumption is
-#' preferred.
-#'
-#' ### `ESS` effective sample size
-#'
-#' `ESS` is estimated per simulation and year using the chi-square effective N:
-#'
-#' \deqn{\mathrm{ESS}_{s,t} = \frac{1}{\displaystyle\sum_b
-#'   \frac{(p^{\mathrm{obs}}_{t,b} - \hat{p}_{s,t,b})^2}{\hat{p}_{s,t,b}}}}
-#'
-#' The result is stored as a `[nSim x nYear]` array. Years with no valid
-#' observed or predicted compositions are set to `NA`. Non-finite estimates
-#' (e.g. where all predicted catch is zero) fall back to `1`.
-#'
-#' For projection years, the ESS from the last conditioning year is held
-#' constant. **This carries the same assumption as `Shift`: that the
-#' observation error structure of the final conditioning year is representative
-#' of future years.** The `ESS` slot can be overwritten directly after
-#' conditioning if a different assumption is preferred.
-#'
-#' ### `Theta` not conditioned
-#'
-#' `Theta` is not estimated because it is not separately identifiable from
-#' `ESS` given only observed composition proportions — both parameters control
-#' overdispersion relative to the multinomial. **Conditioning implicitly
-#' assumes `Theta = 1`, i.e. that all overdispersion is absorbed into `ESS`.**
-#' If a different value is preferred, it can be set directly after conditioning:
-#'
-#' ```r
-#' LandingsAtAge(Hist@OM@Obs[[i]][[fl]])@Theta <- 0.5
-#' ```
-#'
-#' @return `Hist` with `Shift` and `ESS` populated in the relevant
-#'   [compobs-class] slots of `Hist@OM@Obs[[i]]` for each fleet where
-#'   observed composition data are available.
-#'
-#' @seealso [CompObs()], [compobs-class], [compdata-class],
-#'   [ConditionObs_Catch()], [GenHistData_AgeComp()], [GenHistData_SizeComp()]
 #' @keywords internal
 ConditionObs_Comp <- function(Hist,
                               FisheryData,
@@ -154,7 +92,6 @@ ConditionObs_Comp <- function(Hist,
   }
   
   nBin <- length(BinNames)
-  
 
   # Fleet loop
   for (fl in seq_len(nFleet)) {
@@ -164,7 +101,6 @@ ConditionObs_Comp <- function(Hist,
     if (is.na(fl_obs_ind)) next
     
     CompObs <- slot(Hist@OM@Obs[[i]][[fleet_name]], type)
-    if (isNewObject(CompObs) || is.null(CompObs@SampleSize)) next
     
     # Years to condition on
     CondYears  <- if (!is.null(CompObs@Years)) CompObs@Years else HistYears
@@ -183,6 +119,8 @@ ConditionObs_Comp <- function(Hist,
     valid_yrs <- which(ObsTotals > 0 & !is.na(ObsTotals))
     if (length(valid_yrs) == 0) next
     
+    CompObs@SampleSize <- ObsTotals
+    
     # Observed proportions 
     ObsProp     <- ObsCounts / ObsTotals
     ObsProp[ObsTotals == 0 | is.na(ObsTotals), ] <- NA
@@ -193,22 +131,19 @@ ConditionObs_Comp <- function(Hist,
       
     # OM-predicted catch for this fleet over conditioning years
     yr_ind_pred  <- match(as.character(CondYears), dimnames(PredCatch)[[3]])
-    PredCatch_fl <- drop(PredCatch[, , yr_ind_pred, fl, drop = FALSE])
-    if (length(dim(PredCatch_fl)) == 2)
-      PredCatch_fl <- array(PredCatch_fl, dim = c(dim(PredCatch_fl), 1),
-                            dimnames = c(dimnames(PredCatch_fl), list(Year = CondYears)))
+    PredCatch_fl <- abind::adrop(PredCatch[, , yr_ind_pred, fl, drop = FALSE], 4)
     
     # Predicted proportions [nSim x nBin x nCondYear]
-    PredTotals   <- apply(PredCatch_fl, c(1, 3), sum)
+    PredTotals   <- apply(PredCatch_fl, c(1,3), sum)
     PredTotals[PredTotals <= 0 | !is.finite(PredTotals)] <- NA
-    PredProp     <- sweep(PredCatch_fl, c(1, 3), PredTotals, '/')
+    PredProp     <- sweep(PredCatch_fl, c(1,3), PredTotals, '/')
     PredPropSafe <- pmax(PredProp, 1e-8)
-    
-
+  
     # Shift: log(obs_prop[t,b]) - log(pred_prop[s,t,b])
     # Conditioning years: computed per year.
     # Projection years: last conditioning year held constant.
     logObsExp <- log(ObsPropSafe)
+    logObsExp <- ExtendSims(logObsExp, nSim = nSim)
     
     # Residuals 
     Resid <- logObsExp - log(PredPropSafe)
@@ -246,20 +181,26 @@ ConditionObs_Comp <- function(Hist,
     
     CompObs@Shift <- ShiftArray
 
-    # ESS: harmonic mean over conditioning years of chi-square effective N
-
+    # ESS
     ObsPropExp <- AddDimension(ObsProp, 'Sim', pos = 1) |>
-      ExtendSims(nSim = nSim) |> aperm(c(1,3,2))
+      ExtendSims(nSim = nSim) |> aperm(c(1, 3, 2))
     
-    # Chi-square term per bin [nSim x nBin x nCondYear], sum over bins
-    ChiSqSum <- apply((ObsPropExp - PredProp)^2 / PredPropSafe, c(1, 3), 
-                      sum, na.rm = TRUE)
+    HN_num <- apply(PredProp * (1 - PredProp), c(1, 3), sum, na.rm = TRUE)
+    HN_den <- apply((ObsPropExp - PredProp)^2, c(1, 3), sum, na.rm = TRUE)
     
-    NHat <- 1 / ChiSqSum
+    NHat <- HN_num / HN_den
     NHat[!is.finite(NHat) | NHat <= 0] <- NA
     
+    # Cap ESS at observed sample size 
+    SampleSizeMat <- matrix(
+      rep(ObsTotals, each = nSim),
+      nrow = nSim,
+      ncol = nCondYears
+    )
+    NHat <- pmin(NHat, SampleSizeMat, na.rm = FALSE)
+    
     ESSArray <- array(
-      NA,
+      NA_real_,
       dim      = c(nSim, nYearsAll),
       dimnames = list(Sim  = seq_len(nSim),
                       Year = YearsAll)

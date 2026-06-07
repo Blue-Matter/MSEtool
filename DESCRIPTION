@@ -18,26 +18,27 @@ Depends:
 Imports:
     abind,
     cli,
-    dplyr,
-    methods,
-    grDevices,
-    ggplot2,
-    parallel,
-    Rcpp,
-    stats,
-    utils,
     digest,
-    furrr,
-    future,
+    dplyr,
+    ggplot2,
+    grDevices,
     lubridate,
+    methods,
+    parallel,
     purrr,
-    rlang
+    Rcpp,
+    rlang,
+    stats,
+    tidyr,
+    utils
 Suggests:
     boot,
     broom,
     covr,
     crayon,
     DT,
+    furrr,
+    future,
     fmsb,
     kableExtra,
     knitr,
@@ -74,13 +75,14 @@ Collate:
     'calc-asymptotic-distribution.R'
     'calc-catch-at-size.R'
     'calc-conditioned-key.R'
+    'calc-equilibrium.R'
     'calc-fishery-dynamics.R'
     'calc-initial-timestep.R'
     'calc-innovation-cov.R'
     'calc-max-effort.R'
     'calc-mice.R'
+    'calc-msy.R'
     'calc-per-recruit.R'
-    'calc-ref-msy.R'
     'calc-ref-yield.R'
     'calc-seasonal-spatial.R'
     'calc-spatial-movement.R'
@@ -134,6 +136,7 @@ Collate:
     'class-data-reference.R'
     'class-data.R'
     'class-effort.R'
+    'class-equilibrium.R'
     'class-fleet.R'
     'class-popdynamics.R'
     'class-reference.R'
@@ -262,6 +265,8 @@ Collate:
     'hist-to-mse.R'
     'import-bam-data.R'
     'import-bam.R'
+    'import-ss3-data.R'
+    'import-ss3-report.R'
     'import-ss3.R'
     'initialize-hist.R'
     'man-populating-schedules.R'

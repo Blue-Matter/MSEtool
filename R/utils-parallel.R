@@ -77,6 +77,7 @@ SetupParallel <- function(workers = future::availableCores(),
                           max_workers = c("physical", "logical"),
                           silent = FALSE) {
   
+  CheckPackage('future')
   backend <- match.arg(backend)
   max_workers <- match.arg(max_workers)
   

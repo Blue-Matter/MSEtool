@@ -3,13 +3,6 @@
 
 ## usethis namespace: start
 #' @importFrom digest digest
-#' @importFrom furrr furrr_options
-#' @importFrom furrr future_map
-#' @importFrom future availableCores
-#' @importFrom future multicore
-#' @importFrom future multisession
-#' @importFrom future plan
-#' @importFrom future sequential
 #' @importFrom lubridate as_date
 #' @importFrom lubridate date_decimal
 #' @importFrom lubridate decimal_date

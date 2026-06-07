@@ -1,4 +1,4 @@
-#' Effort
+#' Effort Constructor and Accessors
 #'
 #' Construct and manipulate an [effort-class] object defining historical
 #' fishing effort and spatial structure for a [Fleet()] object.
@@ -19,7 +19,10 @@
 #' @param Units Character or `NULL`. Units of fishing effort (e.g.,
 #'   `"hours"`, `"trips"`). Default `NULL`. Note that effort is converted to
 #'   fishing mortality via gear efficiency (`q`) defined in the associated
-#'   [catchability-class] object.
+#'   [catchability-class] object. When `Units = "trips"` the effort array is
+#'   already on the absolute trips scale and `TripsScalar` is ignored by
+#'   bag-limit management procedures.
+#'   
 #' @param Distribution Numeric array or `NULL`. Fraction of total effort
 #'   allocated to each spatial area. Used only for spatial models
 #'   (`nArea > 1`). Must have dimensions `Sim x Year x Area` with named
@@ -31,6 +34,7 @@
 #'   algorithm fills them (see Details). Any cells set to a non-`NA` numeric
 #'   value are treated as fixed overrides and are not modified by the
 #'   algorithm.
+#'   
 #' @param Targeting Numeric array or `NULL`. Spatial targeting concentration
 #'   parameter (`lambda >= 0`) with dimensions `Sim x Year`. The `Sim`
 #'   dimension may be length 1 or match `nSim`. The `Year` dimension must be
@@ -38,8 +42,10 @@
 #'   Default `NULL`; a value of `0.8` is applied to all simulations and years
 #'   during [PopulateEffort()]. See Details for how this parameter controls
 #'   the concentration of effort across areas.
+#'   
 #' @param Maximum Numeric array or `NULL`. Maximum allowable effort. Default
 #'   `NULL`. Not currently used.
+#'   
 #' @param Mode Character or `NULL`. Controls whether spatial utility is
 #'   calculated per unit area or as raw biomass. `"Density"` (default) divides
 #'   exploitable biomass by the relative area size (`RelSize`) before computing
@@ -47,10 +53,32 @@
 #'   regardless of area size. `"Biomass"` uses raw exploitable biomass, so
 #'   larger areas are intrinsically more attractive. See the Technical Manual
 #'   for equations.
+#'   
+#' @param TripsScalar Numeric array or `NULL`. Time-varying scalar
+#'   \eqn{\alpha_f(t)} converting the effort index to absolute angler trip
+#'   counts via \eqn{T_f(t) = \alpha_f(t) \cdot E_f(t)}. Must have dimensions
+#'   `Sim x Year` with named dimnames. The `Sim` dimension may be length 1
+#'   (replicated internally). The `Year` dimension may be length 1 (replicated
+#'   internally) or span the full model time series; values for projection
+#'   years beyond the historical period are typically held constant at the last
+#'   historical value or extended by the analyst prior to use. Default `NULL`.
+#'   Required by bag-limit management procedures when `Units != "trips"`.
+#'   Ignored when `Units = "trips"`. See Details.
+#'   
+#' @param AnglerPerTrip Numeric array or `NULL`. Mean number of anglers per
+#'   trip. Must have dimensions `Sim x Year` with named dimnames. The `Sim`
+#'   dimension may be length 1 (replicated internally). The `Year` dimension
+#'   may be length 1 (replicated internally) if the value does not vary over
+#'   time, or span the full model time series if it does. Used by bag-limit
+#'   management procedures to scale a per-angler bag limit to a fleet-level
+#'   retention cap. Default `NULL`. See Details.
+#'   
 #' @param Misc List. Miscellaneous additional inputs. Default `list()`.
+#' 
 #' @param df Logical. Only used when `Effort` is a [hist-class] or
 #'   [mse-class] object. If `TRUE` (default), a tidy `data.frame` is
 #'   returned. If `FALSE`, the raw `Effort` array is returned.
+#'   
 #' @param x An [effort-class] object for accessor and replacement functions.
 #' @param value The replacement value for the corresponding slot.
 #'
@@ -61,8 +89,8 @@
 #'
 #' ## Effort Array Format
 #'
-#' When supplied as a numeric array, `Effort` must have dimensions `Sim x
-#' Year` with named dimnames. The `Sim` dimension may be length 1 (replicated
+#' When supplied as a numeric array, `Effort` must have dimensions `Sim x Year` 
+#' with named dimnames. The `Sim` dimension may be length 1 (replicated
 #' internally by [PopulateEffort()]). The `Year` dimension must match the
 #' historical years of the OM exactly.
 #'
@@ -78,9 +106,10 @@
 #' and `Year` dimensions may be length 1 (replicated internally). When not
 #' specified (default), [PopulateEffort()] initialises all cells to `NA`.
 #'
-#' At runtime, the spatial allocation algorithm only fills cells that remain
-#' `NA` — any non-`NA` values supplied in `Distribution` are left unchanged
-#' and act as fixed overrides for those simulation-year-area combinations.
+#' In [Simulate()] and [Project()], the spatial allocation algorithm only 
+#' fills cells that remain  `NA`; any non-`NA` values supplied in `Distribution`
+#' are left unchanged and act as fixed overrides for those 
+#' simulation-year-area combinations.
 #'
 #' ## Spatial Utility and Effort Allocation
 #'
@@ -92,8 +121,7 @@
 #' selectivity × retention, scaled by catchability (`q`). When
 #' `Mode = "Density"` (default), this biomass is divided by the relative area
 #' size (`RelSize`) to give biomass density; when `Mode = "Biomass"`, raw
-#' biomass is used. An initial effort distribution (`D0`) is set proportional
-#' to these values.
+#' biomass is used. 
 #'
 #' **Stage 2 — Depletion-adjusted utility.** A depletion discount
 #' `h(phi) = (1 - exp(-phi)) / phi` is applied, where `phi` is the local
@@ -114,14 +142,35 @@
 #' effort is distributed uniformly across all accessible areas regardless of
 #' their relative utility. As `lambda` increases, effort becomes progressively
 #' more concentrated in the highest-utility area. The default value of `0.8`
-#' produces moderate concentration — broadly consistent with opportunistic
+#' produces moderate concentration, broadly consistent with opportunistic
 #' targeting behaviour where fleets favour productive areas but do not
-#' exclusively fish the single best one. Values around `0.5` approach near-uniform
-#' allocation; values above `2`–`3` produce strongly directed behaviour where
-#' most effort concentrates in the top one or two areas. The parameter is
-#' open-ended with no fixed upper bound, but very large values (e.g. `> 5`)
-#' effectively collapse all effort to the single highest-utility area in most
-#' configurations.
+#' exclusively fish the single best one. 
+#' 
+#' Values around `0.5` approach near-uniform allocation; values above `2`–`3` 
+#' produce strongly directed behaviour where most effort concentrates in the 
+#' top one or two areas. The parameter is open-ended with no fixed upper bound,
+#' but very large values (e.g. `> 5`) effectively collapse all effort to the 
+#' single highest-utility area in most configurations.
+#'
+#' ## Effort-to-Trips Conversion and Angler Scaling
+#'
+#' Bag-limit management procedures require the effort index to be expressed as
+#' absolute angler trip counts. When `Units = "trips"` the effort array is
+#' already on the trips scale and no conversion is needed. 
+#'
+#' When the bag limit is defined per angler (the default), `AnglerPerTrip`
+#' provides the mean number of anglers per trip \eqn{A_f(t)}, such that the
+#' fleet-level retention cap is:
+#'
+#' \deqn{C^{\text{bag}}_f(t) = B_f \cdot A_f(t) \cdot T_f(t)}
+#'
+#' where \eqn{B_f} is the bag limit in fish per angler per trip. The `Year`
+#' dimension of `AnglerPerTrip` may be length 1 if the value is assumed
+#' constant over time; it is replicated internally to match the full model
+#' time series. 
+#' 
+#' When the bag limit is defined per vessel (boat limit), `AnglerPerTrip` is 
+#' not used.
 #'
 #' ## Pass-Through Extraction
 #'
@@ -136,15 +185,15 @@
 #' An [effort-class] object can be attached to a [Fleet()] with
 #' `Effort(Fleet) <- MyEffort` and retrieved with `Effort(Fleet)`.
 #'
-#'
 #' @return
 #' - `Effort()` returns an [effort-class] object. If `Effort` is a
 #'   [fleet-class], [effort-class], [hist-class], [obs-class], or [mse-class]
 #'   object, the `Effort` slot of that object is returned (as a `data.frame`
 #'   or array for [hist-class] and [mse-class] depending on `df`).
 #' - `Effort<-` returns `x` with the `Effort` slot replaced by `value`.
-#' - `Distribution()`, `Targeting()`, `Maximum()`, `Mode()` return the
-#'   corresponding slot from the [effort-class] object `x`.
+#' - `Distribution()`, `Targeting()`, `Maximum()`, `Mode()`,
+#'   `TripsScalar()`, `AnglerPerTrip()` return the corresponding slot from
+#'   the [effort-class] object `x`.
 #' - Their replacement forms return `x` with the corresponding slot updated.
 #'
 #' @seealso
@@ -164,14 +213,16 @@
 #' @include class-unions.R
 #' @name Effort
 #' @export
-Effort <- function(Effort       = NULL,
-                   Units        = NULL,
-                   Distribution = NULL,
-                   Targeting    = NULL,
-                   Maximum      = NULL,
-                   Mode         = NULL,
-                   Misc         = list(),
-                   df           = TRUE) {
+Effort <- function(Effort         = NULL,
+                   Units          = NULL,
+                   Distribution   = NULL,
+                   Targeting      = NULL,
+                   Maximum        = NULL,
+                   Mode           = NULL,
+                   TripsScalar    = NULL,
+                   AnglerPerTrip  = NULL,
+                   Misc           = list(),
+                   df             = TRUE) {
   
   if (inherits(Effort, c('fleet', 'effort', 'hist', 'obs', 'imp', 'mse')))
     return(extract_effort(Effort, df))
@@ -182,25 +233,25 @@ Effort <- function(Effort       = NULL,
   
   if (!Mode %in% c('Biomass', 'Density'))
     cli::cli_abort("`Mode` must be either `Density` or `Biomass`")
-    
+  
   methods::new(
     "effort",
-    Effort       = Effort,
-    Units        = Units,
-    Distribution = Distribution,
-    Targeting    = Targeting,
-    Maximum      = Maximum,
-    Mode         = Mode,
-    Misc         = Misc
+    Effort        = Effort,
+    Units         = Units,
+    Distribution  = Distribution,
+    Targeting     = Targeting,
+    Maximum       = Maximum,
+    Mode          = Mode,
+    TripsScalar   = TripsScalar,
+    AnglerPerTrip = AnglerPerTrip,
+    Misc          = Misc
   )
 }
-
 #' @rdname Effort
 #' @export
 `Effort<-` <- function(x, value) {
-  AssignSlot(x,value,'Effort')
+  AssignSlot(x, value, 'Effort')
 }
-
 
 #' @rdname Effort
 #' @export
@@ -250,7 +301,6 @@ Maximum <- function(x) {
   x
 }
 
-
 #' @rdname Effort
 #' @export
 Mode <- function(x) {
@@ -267,3 +317,34 @@ Mode <- function(x) {
   x
 }
 
+#' @rdname Effort
+#' @export
+TripsScalar <- function(x) {
+  CheckClass(x, "effort", "x")
+  x@TripsScalar
+}
+
+#' @rdname Effort
+#' @export
+`TripsScalar<-` <- function(x, value) {
+  CheckClass(x, "effort", "x")
+  x@TripsScalar <- value
+  methods::validObject(x)
+  x
+}
+
+#' @rdname Effort
+#' @export
+AnglerPerTrip <- function(x) {
+  CheckClass(x, "effort", "x")
+  x@AnglerPerTrip
+}
+
+#' @rdname Effort
+#' @export
+`AnglerPerTrip<-` <- function(x, value) {
+  CheckClass(x, "effort", "x")
+  x@AnglerPerTrip <- value
+  methods::validObject(x)
+  x
+}

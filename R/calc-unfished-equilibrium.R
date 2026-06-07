@@ -66,7 +66,6 @@ CalcUnfished_Equilibrium <- function(OM, silent=FALSE) {
     aperm(c('Sim', 'Stock', 'Year')) |>
     ReduceDims()
   
-  
   # SProduction 
   FecundityAtAge <- purrr::map(OM@Stock, \(x) {
     x@Fecundity@MeanAtAge 

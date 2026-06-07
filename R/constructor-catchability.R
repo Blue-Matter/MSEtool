@@ -1,4 +1,4 @@
-#' Catchability
+#' Catchability Constructor and Accessors
 #'
 #' Construct and manipulate a [catchability-class] object defining fishing
 #' gear or vessel efficiency for a [Fleet()] object.
@@ -25,22 +25,40 @@
 #'   (see Details). Default `NULL`. Included primarily for backwards
 #'   compatibility; users may find it simpler to supply a fully specified
 #'   `Efficiency` array directly.
+#'   
 #' @param qInc Numeric or `NULL`. Annual percentage increase in catchability
 #'   (e.g. `2` = 2% per year; negative values indicate declining efficiency).
 #'   Applied to projected years only (see Details). Default `NULL`. Included
 #'   primarily for backwards compatibility; users may find it simpler to
 #'   supply a fully specified `Efficiency` array directly.
+#'   
+#' @param Theta Numeric, array, or `NULL`. Overdispersion parameter
+#'   \eqn{\theta} of the negative binomial within-trip catch distribution.
+#'   Accepted forms:
+#'   - `NULL` (default): `Theta` is not populated; bag-limit management
+#'     procedures will error if `Theta` is required and not supplied.
+#'   - Scalar numeric (e.g. `1.2`): constant overdispersion applied across
+#'     all simulations.
+#'   - Numeric vector length 2. Treated as lower and upper bounds of a 
+#'     uniform distribution.
+#'   - Numeric vector length `nSim`.
+#'     
 #' @param Misc List. Miscellaneous additional inputs. Default `list()`.
+#' 
 #' @param x A [catchability-class] object for accessor and replacement
 #'   functions.
 #' @param value The replacement value for the corresponding slot.
 #'
 #' @details
+#' 
 #' A [catchability-class] object defines the efficiency with which a fleet
-#' converts fishing effort into fishing mortality (encounters, see [Interactions()]). 
-#' A constant scalar is sufficient for most applications; 
+#' converts fishing effort into fishing mortality (encounters/interactions, see
+#' [Interactions()]). 
+#' 
+#' A constant scalar is sufficient for most applications;
 #' time-varying or simulation-varying efficiency can be specified via a full
-#'  `Sim x Year` array.
+#' `Sim x Year` array.
+#' 
 #'
 #' ## Efficiency Array Format
 #'
@@ -73,6 +91,41 @@
 #' most applications, supplying a fully specified `Efficiency` array gives
 #' more direct control over time-varying catchability across both historical
 #' and projected periods.
+#'
+#' ## Within-Trip Overdispersion: `Theta`
+#'
+#' `Theta` (\eqn{\theta}) parameterises the negative binomial distribution
+#' used by bag-limit management procedures to model within-trip catch counts:
+#'
+#' \deqn{n_{f,s}(t) \sim \text{NegBin}(\mu_{f,s}(t),\; \theta_{f,s})}
+#'
+#' where \eqn{\mu_{f,s}(t)} is the mean catch per trip at time \eqn{t},
+#' computed internally by the OM from the unfished equilibrium catch and
+#' current depletion (assuming \eqn{\gamma = 1}; see Note). The variance of
+#' within-trip catch is:
+#'
+#' \deqn{\text{Var}(n_{f,s}) = \mu_{f,s} + \frac{\mu_{f,s}^2}{\theta_{f,s}}}
+#'
+#' It determines the fraction of trips that catch at or above the bag
+#' limit at any given mean catch rate, and therefore how strongly the
+#' regulation constrains total retention as stock abundance changes. `Theta`
+#' is a fixed property of the fleet-stock pair and has no `Year` dimension.
+#' 
+#' `Theta` does not have a `Year` dimension. Overdispersion is treated as a fixed
+#' behavioural property of the fleet-stock pair that does not vary over
+#' time. 
+#' 
+#' Smaller values (e.g. 0.5–2) produce high trip-to-trip variability
+#' with many zero-catch trips and occasional large catches, typical of
+#' recreational marine fisheries. 
+#' 
+#' Larger values approach the Poisson distribution. 
+#' Only required when a bag-limit management procedure isactive for this 
+#' fleet-stock combination. 
+#'   
+#' When trip-level creel data are available, `Theta` is estimated by maximum
+#' likelihood fitting of the negative binomial to observed per-trip counts.
+#' In the absence of creel data, `Theta` must be assumed.
 #'
 #' ## Attaching to a Fleet
 #'
@@ -181,4 +234,19 @@ qInc <- function(x) {
 }
 
 
+#' @rdname Catchability
+#' @export
+Theta <- function(x) {
+  CheckClass(x, "catchability", "x")
+  x@Theta
+}
+
+#' @rdname Catchability
+#' @export
+`Theta<-` <- function(x, value) {
+  CheckClass(x, "catchability", "x")
+  x@Theta <- value
+  methods::validObject(x)
+  x
+}
 

@@ -21,13 +21,18 @@ variation in catchability during projected years. See \code{\link[=Catchability]
 \item{\code{qInc}}{\code{numeric} or \code{NULL}. Annual percentage increase in catchability
 during projected years. See \code{\link[=Catchability]{Catchability()}}.}
 
+\item{\code{Theta}}{\code{numeric}, array, or \code{NULL}. Overdispersion parameter
+\eqn{\theta} of the negative binomial within-trip catch distribution
+(\code{Sim}). Used by bag-limit management procedures to compute the
+probability that a single trip catches at or above the bag limit.
+See \code{\link[=Catchability]{Catchability()}}.}
+
 \item{\code{Misc}}{\code{list}. Miscellaneous additional inputs. Used internally.}
 }}
 
 \seealso{
 \itemize{
-\item \code{\link[=Catchability]{Catchability()}} for the constructor and full parameter
-documentation.
+\item \code{\link[=Catchability]{Catchability()}} for the constructor and full parameter documentation.
 \item \link[=fleet-class]{fleet} for the enclosing fleet object.
 }
 

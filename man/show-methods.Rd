@@ -33,6 +33,7 @@
 \alias{show,popdynamics-method}
 \alias{show,perrecruit-method}
 \alias{show,refpointsMSY-method}
+\alias{show,equilibrium-method}
 \title{Show Methods}
 \arguments{
 \item{object}{An S4 object of the relevant class.}

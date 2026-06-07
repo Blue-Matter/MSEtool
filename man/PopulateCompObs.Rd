@@ -4,7 +4,14 @@
 \alias{PopulateCompObs}
 \title{Populate Composition Observation Error}
 \usage{
-PopulateCompObs(Comp, nSim, HistYears, ProjYears, Bins = NULL, BinName = "Bin")
+PopulateCompObs(
+  Comp,
+  nSim,
+  HistYears,
+  ProjYears,
+  Bins = NULL,
+  BinName = "Class"
+)
 }
 \arguments{
 \item{Comp}{A \link[=compobs-class]{compobs} object. Used for landed catch-at-age
@@ -25,7 +32,7 @@ name it in the populated \code{Shift} array. \code{NULL} is accepted only when
 \code{\link[=EmptyObject]{EmptyObject()}} returns \code{TRUE} for \code{Comp}.}
 
 \item{BinName}{Character scalar. Name used for the bin dimension in
-populated arrays, typically \code{"Age"} or \code{"Size"}.}
+populated arrays, typically \code{"Age"} or \code{"Class"}.}
 }
 \value{
 A populated \link[=compobs-class]{compobs} object.

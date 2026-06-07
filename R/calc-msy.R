@@ -18,16 +18,6 @@
 #' @param silent Logical. If `TRUE`, suppresses progress messages. Default
 #'   `FALSE`.
 #'
-#' @return The input [hist-class] object with `Hist@Reference@MSY` populated
-#'   as a [refpointsMSY-class] object. Slots in the returned object:
-#'
-#'   - `FMSY` — apical fishing mortality at MSY (`Sim × Complex × Year`).
-#'   - `BMSY` — total biomass at MSY (`Sim × Stock × Year`).
-#'   - `SBMSY` — spawning biomass at MSY (`Sim × Stock × Year`).
-#'   - `SPMSY` — spawning production at MSY (`Sim × Stock × Year`).
-#'   - `SPRMSY` — spawning potential ratio at MSY (`Sim × Stock × Year`).
-#'   - `MSYLandings` — landed catch at MSY (`Sim × Stock × Year`).
-#'   - `MSYDiscards` — dead discards at MSY (`Sim × Stock × Year`).
 #'
 #' @details
 #'
@@ -41,20 +31,16 @@
 #'   catchability and selectivity.
 #' - Stock-level quantities (`BMSY`, `SBMSY`, etc.) are reported for each
 #'   stock evaluated at the complex-level `FMSY`.
-#'
-#' ## Optimisation
-#' For each simulation and year, [optimize()] searches for the apical F
-#' maximising total yield on the log-F scale over `[1e-5, maxF]`
-#'
-#' ## SPR0
-#' If `Hist@Reference@SPR0` has not yet been computed it is calculated via
-#' [CalcSPR0()] before reference point calculations begin.
+#' 
+#' @return An a [refpointsMSY-class] object. 
 #'
 #' @seealso [CalcPerRecruit()], [CalcSPR0()], [refpointsMSY-class],
 #'   
 #' @export
-CalcRefMSY <- function(Hist, Years = NULL, type = c('Removals', 'Landings'),
-                       silent = FALSE) {
+CalcMSY <- function(Hist, 
+                    Years = NULL, 
+                    type = c('Removals', 'Landings'),
+                    silent = FALSE) {
 
   type <- match.arg(type)
   CheckClass(Hist, c('om', 'hist'))
@@ -84,7 +70,7 @@ CalcRefMSY <- function(Hist, Years = NULL, type = c('Removals', 'Landings'),
                                type           = type,
                                silent         = silent)
   }
-  Hist
+  Hist@Reference@MSY
 }
 
 CalcRefMSY_Complex <- function(Hist, complex_stocks, complex_name, Years, type, silent = FALSE) {
@@ -235,60 +221,56 @@ OptCalcRefMSY_Sims <- function(logApicalF, inputs, complex_name,
   apicalF <- exp(logApicalF)
   
   PerRecruit <- CalcPerRecruit_F(
-    apicalF              = apicalF,
-    StockFleetAllocation = inputs$StockFleetAllocation,
-    NaturalMortalityList = inputs$NaturalMortalityList,
-    PlusGroupList        = inputs$PlusGroupList,
-    MaturityList         = inputs$MaturityList,
-    SemelparousList      = inputs$SemelparousList,
-    WeightList           = inputs$WeightList,
-    SpawnTimeFracList    = inputs$SpawnTimeFracList,
-    SPFrom               = inputs$SPFrom,
-    SPR0List             = inputs$SPR0List,
-    FecundityList        = inputs$FecundityList,
-    WeightFleetList      = inputs$WeightFleetList,
-    Selectivity          = inputs$Selectivity,
-    Retention            = inputs$Retention,
-    DiscardMortality     = inputs$DiscardMortality,
-    FleetNames           = inputs$FleetNames,
-    Years                = inputs$Years
+    apicalF                   = apicalF,
+    StockFleetAllocation      = inputs$StockFleetAllocation,
+    NaturalMortalityList      = inputs$NaturalMortalityList,
+    PlusGroupList             = inputs$PlusGroupList,
+    MaturityList              = inputs$MaturityList,
+    SemelparousList           = inputs$SemelparousList,
+    WeightList                = inputs$WeightList,
+    SpawnTimeFracList         = inputs$SpawnTimeFracList,
+    SPFrom                    = inputs$SPFrom,
+    SPR0List                  = inputs$SPR0List,
+    FecundityList             = inputs$FecundityList,
+    WeightFleetList           = inputs$WeightFleetList,
+    SelectivityFleetList      = inputs$SelectivityFleetList,
+    RetentionFleetList        = inputs$RetentionFleetList,
+    DiscardMortalityFleetList = inputs$DiscardMortalityFleetList,
+    FleetNames                = inputs$FleetNames,
+    Years                     = inputs$Years
   )
   
-  SPRList <- PerRecruit@SPR |> Array2List('Stock')
-  RelRecruits <- purrr::pmap(
-    list(inputs$RecParsList, SPRList, inputs$RelRecFunList),
-    \(RecPars, SPR, RelRecFun) {
-      rr <- RelRecFun(Pars = RecPars, SPR = SPR[1])
-      rr[rr < 0] <- 0
-      rr
-    }) |>
-    List2Array('Stock') |> aperm(c('Sim', 'Stock', 'Year'))
-  
-  Recruits <- ArrayMultiply(inputs$R0, RelRecruits) |> AddDimension("F")
-  Removals <- ArrayMultiply(PerRecruit@Removals, Recruits) |> DropDimension("F")
-  Landings <- ArrayMultiply(PerRecruit@Landings, Recruits) |> DropDimension("F")
-  
+
   if (option == 1) {
-    if (type == 'Removals') return(-SumOverStock(Removals))
-    return(-SumOverStock(Landings))
+    Eq <- CalcEquilibrium_internal(PerRecruit, inputs)
+    Removals <- Eq@Removals |> DropDimension("F")
+    Landings <- Eq@Landings |> DropDimension("F")
+  
+    if (type == 'Removals') {
+      Catch <- SumOverStock(Removals)
+    } else {
+      Catch <- SumOverStock(Landings)
+    }
+    return(-Catch)
   }
   
-  Biomass     <- ArrayMultiply(PerRecruit@Biomass,     Recruits) |> DropDimension("F")
-  SBiomass    <- ArrayMultiply(PerRecruit@SBiomass,    Recruits) |> DropDimension("F")
-  SProduction <- ArrayMultiply(PerRecruit@SProduction, Recruits) |> DropDimension("F")
-  SPR         <- PerRecruit@SPR |> DropDimension("F") |> aperm(c('Sim', 'Stock', 'Year'))
-  Discards    <- ArraySubtract(Removals, Landings)
-  
-  FMSY <- array(apicalF, dim(Biomass), dimnames = dimnames(Biomass)) |>
+  Eq <- CalcEquilibrium_internal(PerRecruit, inputs)
+
+  Removals <- Eq@Removals |> DropDimension("F")
+  Landings <- Eq@Landings |> DropDimension("F")
+  Discards <- ArraySubtract(Removals, Landings)
+
+  FMSY <- array(apicalF, dim(Eq@Biomass |> DropDimension("F")),
+                dimnames = dimnames(Eq@Biomass |> DropDimension("F"))) |>
     DropDimension('Stock', warn = FALSE) |>
     AddDimension('Stock', complex_name, pos = 2)
-  
+
   MSYRefPoints             <- new("refpointsMSY")
   MSYRefPoints@FMSY        <- FMSY
-  MSYRefPoints@BMSY        <- Biomass
-  MSYRefPoints@SBMSY       <- SBiomass
-  MSYRefPoints@SPMSY       <- SProduction
-  MSYRefPoints@SPRMSY      <- SPR
+  MSYRefPoints@BMSY        <- Eq@Biomass     |> DropDimension("F")
+  MSYRefPoints@SBMSY       <- Eq@SBiomass    |> DropDimension("F")
+  MSYRefPoints@SPMSY       <- Eq@SProduction |> DropDimension("F")
+  MSYRefPoints@SPRMSY      <- Eq@SPR         |> DropDimension("F") |> aperm(c('Sim', 'Stock', 'Year'))
   MSYRefPoints@MSYLandings <- Landings
   MSYRefPoints@MSYDiscards <- Discards
   MSYRefPoints

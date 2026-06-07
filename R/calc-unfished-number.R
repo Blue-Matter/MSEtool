@@ -53,7 +53,7 @@ IsSeasonalRecruitment <- function(OM) {
   }) |>
     List2Array("Stock") |>
     aperm(c("Sim", "Stock", "Year")) |>
-    ReduceDims()
+    ReduceDims(IncYear = TRUE)
   
   dim(R0Array)[[3]] > 1
 }

@@ -34,7 +34,7 @@ MSYDiscards(Hist)
 \value{
 A numeric array with dimensions \verb{Sim × Stock × Year}, except
 \code{FMSY()} which returns \verb{Sim × Complex × Year}. Returns \code{NULL} if the
-slot has not yet been populated (i.e. \code{\link[=CalcRefMSY]{CalcRefMSY()}} has not been run).
+slot has not yet been populated (i.e. \code{\link[=CalcMSY]{CalcMSY()}} has not been run).
 }
 \description{
 Accessor functions for MSY-based biological reference points stored in
@@ -54,10 +54,7 @@ level (\verb{Sim × Complex × Year}).
 \item \code{MSYLandings()}: landed catch at MSY.
 \item \code{MSYDiscards()}: dead discards at MSY.
 }
-
-Reference points are populated by \code{\link[=CalcRefMSY]{CalcRefMSY()}} and stored in
-\code{Hist@Reference@MSY} as a \link[=refpointsMSY-class]{refpointsMSY} object.
 }
 \seealso{
-\code{\link[=CalcRefMSY]{CalcRefMSY()}}, \link[=refpointsMSY-class]{refpointsMSY}
+\code{\link[=CalcMSY]{CalcMSY()}}, \link[=refpointsMSY-class]{refpointsMSY}
 }

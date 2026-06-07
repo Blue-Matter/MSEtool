@@ -3,18 +3,19 @@
 \docType{class}
 \name{advice-class}
 \alias{advice-class}
-\title{\code{Advice} Object}
+\title{The \code{advice} S4 Class}
 \description{
 The \code{advice} class defines management advice produced by a management
 procedure. Advice may include output controls (e.g. total allowable catch),
 input controls (e.g. effort), spatial controls (closures), gear effects,
-or direct fishing mortality targets. See \code{\link[=Advice]{Advice()}} for details on valid
-entries and options for each slot.
+direct fishing mortality targets, or bag-limit regulations. See \code{\link[=Advice]{Advice()}}
+for details on valid entries and options for each slot.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{TAC}}{Numeric vector or numeric array specifying total allowable catch (currently always in biomass).}
+\item{\code{TAC}}{Numeric vector length \code{1} or numeric length \code{nFleet} specifying
+total allowable catch in units of \code{TACUnit}.}
 
 \item{\code{TACType}}{Character. Does the TAC refer to \code{"Removals"} (default) or
 \code{"Landings"}. Either length 1 (applied to all fleets) or a character
@@ -24,25 +25,48 @@ vector of length \code{nFleet}.}
 \code{"Number"}. Either length 1 (applied to all fleets) or a character
 vector of length \code{nFleet}.}
 
-\item{\code{Effort}}{Numeric vector array specifying relative or absolute fishing effort.}
+\item{\code{Effort}}{Numeric vector length \code{1} or numeric length \code{nFleet} specifying
+relative or absolute fishing effort (in units of \code{Fleet@Effort@Effort}). Can
+also be a matrix with dimensions \code{nFleet} x \code{nArea} to set area-specific
+effort limits.}
 
 \item{\code{EffType}}{Character. Are effort regulations relative to last historical
 year (\code{"Rel"}) or absolute (\code{"Abs"}; in units of \code{\link[=Effort]{Effort()}}). Either
 length 1 (applied to all fleets) or a character vector of length \code{nFleet}.
 Default is \code{"Rel"}.}
 
-\item{\code{Closure}}{Numeric vector or array specifying spatial closures.}
+\item{\code{Closure}}{Numeric vector length \code{nArea} or array with dimensions \code{nFleet}
+x \code{nArea} specifyin an area open (\code{1}; default) or closed (\code{0}) to fishing.}
 
-\item{\code{Selectivity}}{A \code{\link[=Selectivity]{Selectivity()}} object or an \code{nFleet} long list of \code{\link[=Selectivity]{Selectivity()}} objects
-defining gear selectivity prescribed by the \code{MP}}
+\item{\code{Selectivity}}{A \code{\link[=Selectivity]{Selectivity()}} object or an \code{nFleet} long list
+of \code{\link[=Selectivity]{Selectivity()}} objects defining gear selectivity prescribed by the \code{MP}}
 
-\item{\code{Retention}}{A \code{\link[=Retention]{Retention()}} object or an \code{nFleet} long list of \code{\link[=Retention]{Retention()}} objects
-defining retention prescribed by the \code{MP}}
+\item{\code{Retention}}{A \code{\link[=Retention]{Retention()}} object or an \code{nFleet} long list
+of \code{\link[=Retention]{Retention()}} objects  defining retention prescribed by the \code{MP}}
 
 \item{\code{DiscardMortality}}{A \code{\link[=DiscardMortality]{DiscardMortality()}} object or an \code{nFleet} long
 list of \code{\link[=DiscardMortality]{DiscardMortality()}} objects defining discard mortality set in the \code{MP}}
 
-\item{\code{ApicalF}}{Numeric array specifying target apical fishing mortality. Not currently used}
+\item{\code{ApicalF}}{Numeric array specifying target apical fishing mortality.
+Not currently used}
+
+\item{\code{BagLimit}}{Numeric vector or \code{NULL}. Aggregate bag limit in fish per
+angler per trip (when \code{LimitType = "angler"}) or fish per vessel per
+trip (when \code{LimitType = "boat"}). Either length 1 (applied to all
+fleets) or a numeric vector of length \code{nFleet} for fleet-specific limits.
+\code{NULL} (default) means no bag limit regulation is active. See \code{\link[=Advice]{Advice()}}.}
+
+\item{\code{LimitType}}{Character or \code{NULL}. Specifies whether \code{BagLimit} is a
+per-angler (\code{"angler"}; default) or per-vessel (\code{"boat"}) regulation.
+Either length 1 (applied to all fleets) or a character vector of length
+\code{nFleet}. See \code{\link[=Advice]{Advice()}}.}
+
+\item{\code{ClosureMode}}{Character or \code{NULL}. Determines how the OM handles catch
+that exceeds the bag limit: \code{"discard"} (default) converts excess catch
+to discards, with discard mortality applied via the fleet's
+\code{\link[=DiscardMortality]{DiscardMortality()}} object; \code{"stop"} reduces effort to prevent the
+limit from being exceeded. Either length 1 (applied to all fleets) or a
+character vector of length \code{nFleet}. See \code{\link[=Advice]{Advice()}}.}
 
 \item{\code{Misc}}{Miscellaneous list. Will be passed to \code{Data@Misc} in following time steps.}
 

@@ -64,7 +64,7 @@
 #' `BAMdata$comp.mats$*age*` (age composition) and
 #' `BAMdata$comp.mats$lcomp.*.ob` (length composition).
 #'
-#' @seealso [GetBAMOutput()], [Data()], [IndicesData()], [CatchData()], [Obs()]
+#' @seealso [GetBAMOutput()], [Data()], [CatchData()], [Obs()]
 #'
 #' @examples
 #' \dontrun{

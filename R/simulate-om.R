@@ -66,7 +66,7 @@ Simulate_om <- function(OM = NULL,
   Hist@Reference@SPR0 <- CalcSPR0(Hist)
   
   if (DoMSYRefs) 
-    Hist <- CalcRefMSY(Hist)
+    Hist@Reference@MSY <- CalcMSY(Hist)
   
   # TODO
   # - Per-Recruit Curves
@@ -75,12 +75,10 @@ Simulate_om <- function(OM = NULL,
   
   # ---- Historical Population Dynamics ----
   Hist <- CalcFisheryDynamics(Hist, IdenticalSim=IdenticalHist, clone = 1)
+  Hist <- CalcCatchAtSize(Hist, Years = HistYears)
   
   if (!silent)
     cli::cli_alert_success("Simulated Historical Fishery")
-
-  # ---- Compute Catch & Discards at Size ----
-  Hist <- CalcCatchAtSize(Hist, Years = HistYears)
   
   # ---- Reference Yield ----
   ref_types <- c(

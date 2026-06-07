@@ -37,6 +37,7 @@
 #' @aliases show,popdynamics-method
 #' @aliases show,perrecruit-method
 #' @aliases show,refpointsMSY-method
+#' @aliases show,equilibrium-method
 #' @exportMethod show
 NULL
 
@@ -768,11 +769,18 @@ setMethod('show', 'perrecruit', function(object) {
   
 })
 
-# ---- per-recruit ----
+# ---- refpointsMSY ----
 setMethod('show', 'refpointsMSY', function(object) {
   .show_object(object, 'refpointsMSY')
   
 })
+
+# ---- equilibrium ----
+setMethod('show', 'equilibrium', function(object) {
+  .show_object(object, 'equilibrium')
+  
+})
+
 
 # ---- popdynamics ----
 

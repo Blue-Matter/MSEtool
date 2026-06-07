@@ -10,11 +10,15 @@
 #'   variation in catchability during projected years. See [Catchability()].
 #' @slot qInc `numeric` or `NULL`. Annual percentage increase in catchability
 #'   during projected years. See [Catchability()].
+#' @slot Theta `numeric`, array, or `NULL`. Overdispersion parameter
+#'   \eqn{\theta} of the negative binomial within-trip catch distribution
+#'   (`Sim`). Used by bag-limit management procedures to compute the
+#'   probability that a single trip catches at or above the bag limit. 
+#'   See [Catchability()].
 #' @slot Misc `list`. Miscellaneous additional inputs. Used internally.
 #'
-#' @seealso 
-#' - [Catchability()] for the constructor and full parameter
-#'   documentation. 
+#' @seealso
+#' - [Catchability()] for the constructor and full parameter documentation.
 #' - [fleet-class] for the enclosing fleet object.
 #'
 #' @family fleet
@@ -25,13 +29,17 @@ setClass(
   "catchability",
   slots = c(
     Efficiency = "num.array.null",
-    qCV = "num.array.null",
-    qInc = "num.array.null",
-    Misc = "list"
+    qCV        = "num.array.null",
+    qInc       = "num.array.null",
+    Theta      = "num.array.null",
+    Misc       = "list"
   )
 )
 
 setValidity("catchability", function(object) {
   # TODO: dimension and non-negativity checks
+  # TODO: depletion-dependent catchability (gamma != 1) not yet implemented.
+  #   Currently the bag-limit model assumes catch rates scale proportionally
+  #   with abundance (gamma = 1).
   TRUE
 })
