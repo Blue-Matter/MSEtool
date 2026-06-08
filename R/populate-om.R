@@ -73,6 +73,7 @@ PopulateOM <- function(OM, silent = FALSE, force = FALSE, standardize_effort = T
     UpdateSPFrom() |>   # TODO
     ShareParameters() |> # TODO
     StartMessages()
+  
   if (standardize_effort)
     OM <- StandardizeEffort(OM, populate=FALSE)
 

@@ -115,6 +115,7 @@ StandardizeEffort <- function(OM,
   n_years   <- length(HistYears)
   
   STarget <- OM@StockTargeting
+  
   if (EmptyObject(STarget))
     STarget <- StockTargeting(OM)
   
@@ -207,7 +208,8 @@ StandardizeEffort <- function(OM,
       is_active <- E_st > tol & has_active
       targeting_st[is_active] <- E_st[is_active] / StandardEffort[is_active]
       
-      STarget@Targeting[, st, fl, seq_len(n_years)] <- ReduceDims(targeting_st)
+      sims <- dimnames(STarget@Targeting)$Sim |> as.numeric()
+      STarget@Targeting[, st, fl, seq_len(n_years)] <- SubsetSim(targeting_st,Sims = sims)
     }
     
     # Update effort for all stocks for this fleet to the geometric mean

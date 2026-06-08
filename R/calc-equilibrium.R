@@ -10,10 +10,7 @@
 #'   
 #' @param apicalF Numeric vector of apical fishing mortality values at which
 #'   equilibrium quantities are evaluated. If `NULL` (default), a
-#'   log-spaced sequence of 30 values is generated automatically, spanning
-#'   from `0.001 × max(M)` to `2 × max(M)` with zero prepended, where
-#'   `max(M)` is the maximum natural mortality across all stocks and
-#'   complexes in scope. 
+#'   log-spaced sequence of 50 values is generated automatically. 
 #'   
 #' @param Years  Numeric years for which equilibrium quantities are
 #'   evaluated. Biological and fishery parameters are subset to this year.
@@ -87,10 +84,12 @@ CalcEquilibrium <- function(OM,
       ) |> unlist() |> max()
     }) |> unlist() |> max()
     
-    apicalF <- c(0, exp(seq(from       = log(0.01 * maxM),
-                            to         = log(2 * maxM),
-                            length.out = 50))) |>
-      round(3)
+    apicalF <- c(0,
+                 exp(seq(log(0.01  * maxM), log(0.25  * maxM), length.out = 20)),
+                 exp(seq(log(0.25  * maxM), log(1.25  * maxM), length.out = 30)),
+                 exp(seq(log(1.25  * maxM), log(2   * maxM), length.out = 20))) |>
+      unique() |> sort()
+
   }
   
   EqByComplex <- purrr::map(complexes, \(stockInd) {

@@ -102,7 +102,7 @@ SubsetSim <- function(object, Sims, debug = FALSE) {
     dnames <- dimnames(object)
     if (!is.null(dnames) && "Sim" %in% names(dnames)) {
       SimVals <- as.numeric(dnames$Sim)
-      if (max(SimVals) >= max(Sims)) {
+      if (max(SimVals) > max(Sims)) {
         object <- ArraySubsetSim(object, Sims)
       } else {
         existing_sims <- dimnames(object)$Sim

@@ -102,6 +102,7 @@ ConvertDF <- function(df) {
   if ('Fleet' %in% nms) df$Fleet <- MakeFactor(df$Fleet)
   if ('Year'  %in% nms) df$Year  <- as.numeric(df$Year)
   if ('Area'  %in% nms) df$Area  <- as.numeric(df$Area)
+  if ('F'   %in% nms)   df$F   <- as.numeric(df$F)
   if ('Value' %in% nms) {
     chk <- suppressWarnings(as.numeric(df$Value))
     if (!all(is.na(chk))) df$Value <- chk

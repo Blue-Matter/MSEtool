@@ -125,8 +125,27 @@ Retention <- function(Pars         = list(),
                       isRel        = FALSE,
                       Misc         = list()) {
   
-  if (methods::is(Pars, "fleet"))
+  if (inherits(Pars, "fleet"))
     return(Pars@Retention)
+  
+  if (inherits(Pars, "om"))
+    return(purrr::map(Pars@Fleet, \(FleetList)
+                      purrr::map(FleetList, \(fleet) fleet@Retention)
+    ))
+  
+  if (inherits(Pars, "StockFleetList"))
+    return(purrr::map(Pars, \(FleetList)
+                      purrr::map(FleetList, \(fleet) fleet@Retention)
+    ))
+  
+  if (inherits(Pars, "FleetList"))
+    return(purrr::map(Pars, \(fleet) fleet@Retention))
+  
+  if (!inherits(Pars, 'list'))
+    cli::cli_abort(c(
+      'x' = '`Pars` must be a list',
+      'i' = 'Currently as {.cls {class(Pars)}} object'
+    ))
   
   object <- methods::new(
     "retention",
@@ -145,7 +164,7 @@ Retention <- function(Pars         = list(),
 #' @rdname Retention
 #' @export
 `Retention<-` <- function(x,value) {
-  AssignSlot(x, value, 'Retention')
+  assign_fleet_slot(x, value, "Retention", "retention")
 }
 
 

@@ -504,7 +504,9 @@ PrepPerRecruitInputs <- function(StockList, FleetList, SPR0List, Years) {
   ) |> List2Array('Stock', pos = 2)
   
   WeightFleetList <- purrr::map(FleetList, \(fl) {
-    purrr::map(fl, \(Fleet) Fleet@WeightFleet |> ArraySubsetYear(Years)) |>
+    purrr::map(fl, \(Fleet) {
+      Fleet@WeightFleet |> ArraySubsetYear(Years)
+    }) |>
       List2Array(pos = 4)
   })
   

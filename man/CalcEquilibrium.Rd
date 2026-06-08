@@ -12,10 +12,7 @@ object is supplied, \code{Hist@OM} is used.}
 
 \item{apicalF}{Numeric vector of apical fishing mortality values at which
 equilibrium quantities are evaluated. If \code{NULL} (default), a
-log-spaced sequence of 30 values is generated automatically, spanning
-from \verb{0.001 × max(M)} to \verb{2 × max(M)} with zero prepended, where
-\code{max(M)} is the maximum natural mortality across all stocks and
-complexes in scope.}
+log-spaced sequence of 50 values is generated automatically.}
 
 \item{Years}{Numeric years for which equilibrium quantities are
 evaluated. Biological and fishery parameters are subset to this year.

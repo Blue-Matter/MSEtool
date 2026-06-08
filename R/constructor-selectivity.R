@@ -130,9 +130,28 @@ Selectivity <- function(Pars         = list(),
                         isRel        = FALSE,
                         Misc         = list()) {
   
-  if (methods::is(Pars, "fleet"))
+  if (inherits(Pars, "fleet"))
     return(Pars@Selectivity)
   
+  if (inherits(Pars, "om"))
+    return(purrr::map(Pars@Fleet, \(FleetList)
+                      purrr::map(FleetList, \(fleet) fleet@Selectivity)
+    ))
+  
+  if (inherits(Pars, "StockFleetList"))
+    return(purrr::map(Pars, \(FleetList)
+                      purrr::map(FleetList, \(fleet) fleet@Selectivity)
+    ))
+  
+  if (inherits(Pars, "FleetList"))
+    return(purrr::map(Pars, \(fleet) fleet@Selectivity))
+    
+  if (!inherits(Pars, 'list'))
+    cli::cli_abort(c(
+      'x' = '`Pars` must be a list',
+      'i' = 'Currently as {.cls {class(Pars)}} object'
+    ))
+    
   methods::new(
     "selectivity",
     Pars         = Pars,
@@ -166,7 +185,7 @@ isRel <- function(x) {
 #' @rdname Selectivity
 #' @export
 `Selectivity<-`<- function(x,value) {
-  AssignSlot(x, value, 'Selectivity')
+  assign_fleet_slot(x, value, "Selectivity", "selectivity")
 }
 
 

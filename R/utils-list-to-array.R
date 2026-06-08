@@ -41,18 +41,15 @@
 #' @export
 List2Array <- function(x, name = "Fleet", dim1='Sim', pos = NULL) {
   # Pass-through
-  if (is.array(x)) {
+  if (is.array(x)) 
     return(x)
-  }
   
-  if (!length(x)) {
+  if (!length(x)) 
     return(NULL)
-  }
-  
+
   # Ensure names exist for new dimension
-  if (is.null(names(x))) {
+  if (is.null(names(x))) 
     names(x) <- seq_along(x)
-  }
   
   first <- x[[1]]
   
@@ -72,18 +69,33 @@ List2Array <- function(x, name = "Fleet", dim1='Sim', pos = NULL) {
   } else {  ## list of arrays 
     d  <- dim(first)
     dn <- dimnames(first)
-    if (is.null(dn)) {
+    
+    if (is.null(dn)) 
       cli::cli_abort("arrays must have named dimensions")
-    }
+    
+    dnames  <- purrr::map(x, dimnames)
+    sims    <- purrr::map(dnames, 'Sim')  |> unlist() |> unique() |> as.numeric() |> sort()
+    years   <- purrr::map(dnames, 'Year') |> unlist() |> unique() |> as.numeric() |> sort()
+    areas   <- purrr::map(dnames, 'Area') |> unlist() |> unique() |> as.numeric() |> sort()
+    
+    if (length(sims) && name != 'Sim')  x <- purrr::map(x, SubsetSim,  Sims = sims)
+    if (length(years)) x <- purrr::map(x, ExtendYears, Years = years)
+    if (length(areas)) x <- purrr::map(x, ExtendAreas, Areas = areas)
+    
+    first <- x[[1]]
+    d     <- dim(first)
+    dn    <- dimnames(first)
+    
+    conformable <- purrr::map_lgl(x, \(a) identical(dim(a), d))
+    if (!all(conformable))
+      cli::cli_abort("all arrays in `x` must have identical dimensions")
     
     out <- array(
       unlist(x, use.names = FALSE),
-      dim = c(d, length(x))
+      dim      = c(d, length(x)),
+      dimnames = c(dn, list(names(x)))
     )
-    
-    dn <- c(dn, list(names(x)))
-    names(dn)[length(dn)] <- name
-    dimnames(out) <- dn
+    names(dimnames(out))[length(dim(out))] <- name
   }
   
   ##  reordering 

@@ -35,7 +35,14 @@ CompareSS <- function(SSDir, Hist, sim = 1, silent = FALSE, ...) {
   
   CheckClass(Hist, c('hist', 'om'), 'Hist')
   if (inherits(Hist, 'om'))
-    Hist <- Simulate(Hist, silent = silent)
+    Hist <- Simulate(Hist, 
+                     DoDynamicUnfished = FALSE,
+                     DoRefLandings     = FALSE,
+                     DoRefRemovals     = FALSE,
+                     DoConditionObs    = FALSE,
+                     DoGenerateData    = FALSE,
+                     DoMSYRefs         = FALSE,
+                     silent = silent)
   
   CompareSS_Number(RepList, Hist, sim)
   CompareSS_Biomass(RepList, Hist, sim)

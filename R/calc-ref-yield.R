@@ -19,32 +19,31 @@
 #'
 #' @keywords internal
 CalcRefYield <- function(Hist, 
-                         type=c('Landings', 'Removals'),
-                         Units=c("Biomass", 'Number'),
-                         silent=FALSE) {
+                         type   = c('Landings', 'Removals'),
+                         Units  = c("Biomass", 'Number'),
+                         silent = FALSE) {
   
-  type <- match.arg(type, c('Landings', 'Removals'), several.ok=TRUE)
+  type  <- match.arg(type, c('Landings', 'Removals'), several.ok=TRUE)
   Units <- match.arg(Units, c("Biomass", 'Number'))
   
-  HistYears <- Years(Hist,'H')
-  ProjYears <- Years(Hist,'P')
-  AllYears <- c(HistYears, ProjYears)
-  nSim <- Hist@OM@nSim
+  HistYears  <- Years(Hist,'H')
+  ProjYears  <- Years(Hist,'P')
+  AllYears   <- c(HistYears, ProjYears)
+  nSim       <- Hist@OM@nSim
   StockNames <- StockNames(Hist)
-  nStock <- length(StockNames)
-  nFleet <- nFleet(Hist)
+  nStock     <- length(StockNames)
+  nFleet     <- nFleet(Hist)
   
   # Extend Year dimensions to include ProjYears
-  Proj <- Hist
+  Proj          <- Hist
   Proj@OM@Stock <- Extend(Proj@OM@Stock, Years=AllYears)
   Proj@OM@Fleet <- Extend(Proj@OM@Fleet, Years=AllYears)
-  Proj@Misc <- Extend(Proj@Misc, Years=AllYears)
+  Proj@Misc     <- Extend(Proj@Misc, Years=AllYears)
   
-  for (sl in slotNames('timeseries')) {
+  for (sl in slotNames('timeseries')) 
     slot(Proj,sl) <- Extend(slot(Proj,sl), Years=AllYears, default=0) 
-  }
   
-  ProjYearInd <- match(ProjYears, AllYears)
+  ProjYearInd    <- match(ProjYears, AllYears)
   LastHistEffort <- Proj@Effort[, ProjYearInd[1]-1, , drop = FALSE]
   
   # List length nSim, each with a Hist object with 1 sim
@@ -74,9 +73,6 @@ CalcRefYield <- function(Hist,
                     debug = 0,
                     opt = 1)
       }, interval = log(c(1e-5, 10)))
-      
-      DoOpt
-      
       
       # Get final yield using optimized scalar
       RefYield[[sim]] <- OptRefYield(DoOpt$minimum,

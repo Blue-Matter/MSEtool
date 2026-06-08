@@ -46,10 +46,15 @@ corresponding to the second dimension of \code{MeanAtLength}. Default \code{NULL
 
 \item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
 
-\item{x}{A \link[=discardmortality-class]{discardmortality} object, or a \link[=fleet-class]{fleet} object for
+\item{x}{A \link[=discardmortality-class]{discardmortality} object, or a \link[=fleet-class]{fleet},
+\code{FleetList}, \code{StockFleetList}, or \link[=om-class]{om} object for
 \verb{DiscardMortality<-}.}
 
-\item{value}{For \verb{DiscardMortality<-}: a \link[=discardmortality-class]{discardmortality} object.}
+\item{value}{For \verb{DiscardMortality<-}: a \link[=discardmortality-class]{discardmortality} object
+when \code{x} is a \link[=fleet-class]{fleet}; a flat list of \link[=discardmortality-class]{discardmortality}
+objects when \code{x} is a \code{FleetList}; a nested stock-fleet list of
+\link[=discardmortality-class]{discardmortality} objects when \code{x} is a \code{StockFleetList} or
+\link[=om-class]{om}.}
 }
 \value{
 \itemize{
@@ -57,7 +62,10 @@ corresponding to the second dimension of \code{MeanAtLength}. Default \code{NULL
 \code{MeanAtAge} is a \link[=fleet-class]{fleet} object, the \code{DiscardMortality} slot of
 that fleet is returned.
 \item \verb{DiscardMortality<-} returns \code{x} with the \code{DiscardMortality} slot
-replaced by \code{value}.
+replaced by \code{value}. When \code{x} is an \link[=om-class]{om} or \code{StockFleetList},
+each fleet's slot is updated from the corresponding element of the
+nested list \code{value}. When \code{x} is a \code{FleetList}, each fleet's slot is
+updated from the corresponding element of the flat list \code{value}.
 }
 }
 \description{

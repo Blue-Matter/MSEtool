@@ -370,7 +370,11 @@ combine_fleets_stock <- function(OM, st, Name, FleetInds) {
   })
   FInteract <- Reduce(`+`, FInteract_list)   # aggregate F-at-age
   
-  Selectivity(NewFleet) <- Selectivity(MeanAtAge = standardize_F(FInteract))
+  # TODO - at length
+  
+  Selectivity(NewFleet) <- Selectivity(
+    MeanAtAge    = standardize_F(FInteract))
+
   
   FRetain_list <- purrr::map2(FInteract_list, FleetList, \(Fint, fleet)
                               ArrayMultiply(Fint, fleet@Retention@MeanAtAge)
