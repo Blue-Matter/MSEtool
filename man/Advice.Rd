@@ -15,7 +15,8 @@ Advice(
   Retention = NULL,
   DiscardMortality = NULL,
   ApicalF = NULL,
-  Limit = NULL,
+  BagLimit = NULL,
+  SpeciesLimit = NULL,
   LimitType = "angler",
   ClosureMode = "discard",
   Misc = list()
@@ -52,16 +53,44 @@ of such objects. See \code{Details}}
 
 \item{ApicalF}{Numeric array specifying target apical fishing mortality. Not currently used}
 
-\item{LimitType}{Character or \code{NULL}. Whether \code{BagLimit} is a per-angler or
-per-vessel regulation. Either length 1 (applied to all fleets) or a
-character vector of length \code{nFleet}. Valid values:
+\item{BagLimit}{Numeric vector or \code{NULL}. Aggregate bag limit in fish per
+angler per trip (when \code{LimitType = "angler"}) or fish per vessel per
+trip (when \code{LimitType = "boat"}). Accepted forms:
 \itemize{
-\item \code{"angler"} (default): limit is per angler per trip; the fleet-level
-retention cap is \eqn{B_f \cdot A_f(t) \cdot T_f(t)}, where
-\eqn{A_f(t)} is mean anglers per trip (\code{\link[=AnglerPerTrip]{AnglerPerTrip()}}) and
-\eqn{T_f(t)} is the number of trips (\code{\link[=TripsScalar]{TripsScalar()}}).
-\item \code{"boat"}: limit is per vessel per trip; the fleet-level retention cap
-is \eqn{B_f \cdot T_f(t)}, and \code{\link[=AnglerPerTrip]{AnglerPerTrip()}} is not used.
+\item \code{NULL} (default): no bag limit regulation is active for any fleet.
+\item Single numeric value: the same limit applied to all fleets.
+\item Numeric vector of length \code{nFleet}: fleet-specific bag limits. \code{NA}
+for a given fleet position means no aggregate limit applies to that
+fleet.
+}
+
+The bag limit regulation persists across time steps until a new
+\code{\link[=Advice]{Advice()}} object is returned by the MP. See Details.}
+
+\item{SpeciesLimit}{Numeric matrix or \code{NULL}. Species-specific bag limits
+(fish per angler or vessel per trip) within a complex. Accepted forms:
+\itemize{
+\item \code{NULL} (default): no species-specific limits are active.
+\item Numeric matrix with dimensions \verb{nFleet x nStock}: fleet- and
+species-specific limits. \code{NA} in a given fleet-stock position means
+no species-specific limit applies to that fleet-stock combination.
+}
+
+\code{SpeciesLimit} operates simultaneously with \code{BagLimit} — a trip is
+constrained whenever either limit is reached first. The regulation
+persists across time steps until a new \code{\link[=Advice]{Advice()}} object is returned
+by the MP. See Details.}
+
+\item{LimitType}{Character or \code{NULL}. Whether \code{BagLimit} and \code{SpeciesLimit}
+are per-angler or per-vessel regulations. Either length 1 (applied to all
+fleets) or a character vector of length \code{nFleet}. Valid values:
+\itemize{
+\item \code{"angler"} (default): limits are per angler per trip; the fleet-level
+retention cap is \eqn{B_f \cdot A_{f,t} \cdot T_{f,t}}, where
+\eqn{A_{f,t}} is mean anglers per trip (\code{\link[=AnglerPerTrip]{AnglerPerTrip()}}) and
+\eqn{T_{f,t}} is the number of trips (\code{\link[=TripsScalar]{TripsScalar()}}).
+\item \code{"boat"}: limits are per vessel per trip; the fleet-level retention cap
+is \eqn{B_f \cdot T_{f,t)}}, and \code{\link[=AnglerPerTrip]{AnglerPerTrip()}} is not used.
 }}
 
 \item{ClosureMode}{Character or \code{NULL}. Determines how the OM handles catch
@@ -78,18 +107,6 @@ baseline discard rate from non-retention of undersized fish.
 
 \item{Misc}{Miscellaneous list. Will be passed to \code{Data@Misc} in following
 time steps.}
-
-\item{BagLimit}{Numeric vector or \code{NULL}. Aggregate bag limit in fish per
-angler per trip (when \code{LimitType = "angler"}) or fish per vessel per
-trip (when \code{LimitType = "boat"}). Accepted forms:
-\itemize{
-\item \code{NULL} (default): no bag limit regulation is active for any fleet.
-\item Single numeric value: the same limit applied to all fleets.
-\item Numeric vector of length \code{nFleet}: fleet-specific bag limits.
-}
-
-The bag limit regulation persists across time steps until a new
-\code{\link[=Advice]{Advice()}} object is returned by the MP. See Details.}
 }
 \value{
 An \link[=advice-class]{advice} object.
@@ -143,7 +160,7 @@ Either in absolute units corresponding with fleet-specific effort
 uniformly across all fleets) or a character vector of length \code{nFleet}
 specifying per-fleet values.
 
-Note that when \code{Effort} is supplied as a matrix (fleet × area), it is
+Note that when \code{Effort} is supplied as a matrix (fleet x area), it is
 always treated as absolute regardless of \code{EffType}.
 \itemize{
 \item single numeric value:
@@ -194,15 +211,24 @@ Same as described for \code{Selectivity}, but for \code{\link[=DiscardMortality]
 
 \subsection{Bag Limit}{
 
-\code{BagLimit}, \code{LimitType}, and \code{ClosureMode} together define a bag-limit
-regulation. The bag limit caps the number of fish an angler (or vessel)
-may retain per trip for either a single species or across all species
-within a complex.
+\code{BagLimit}, \code{SpeciesLimit}, \code{LimitType}, and \code{ClosureMode} together define
+a bag-limit regulation. The bag limit caps the number of fish an angler
+(or vessel) may retain per trip for either a single species or across all
+species within a complex.
+
+\code{BagLimit} sets an aggregate limit across all species in the complex.
+
+\code{SpeciesLimit} sets species-specific limits within the complex. Both may
+be active simultaneously, a trip is constrained whenever either limit is
+reached first. \code{NA} in a fleet position of \code{BagLimit}, or in a fleet-stock
+position of \code{SpeciesLimit}, means no limit applies for that fleet or
+fleet-stock combination respectively.
 
 When \code{ClosureMode = "discard"}, catch exceeding the retention cap is
 converted to discards and discard mortality is applied via the fleet's
 \code{\link[=DiscardMortality]{DiscardMortality()}} object. When \code{ClosureMode = "stop"}, effort is
-reduced to prevent exceedance and no additional discards are generated.
+reduced to prevent exceeding the bag limit and no additional discards are
+generated.
 }
 
 \subsection{ApicalF}{
@@ -273,23 +299,34 @@ a single numeric value, or a numeric vector length \code{nArea} for area-specifi
 Advice(TAC = 1000)
 
 Advice(
-  Effort = c(1, 0.8),
+  Effort  = c(1, 0.8),
   EffType = "Rel"
 )
-# Bag limit: 5 fish per angler per trip, discard excess
+
+# Aggregate bag limit: 10 fish per angler per trip, discard excess
 Advice(
-  Limit       = 5,
+  BagLimit    = 10,
   LimitType   = "angler",
   ClosureMode = "discard"
 )
 
-# Fleet-specific bag limits
+# Aggregate limit with a species-specific sub-limit 
+# (2-fish sub-limit for stock 1)
 Advice(
-  Limit       = c(5, 10),
+  BagLimit     = 10,
+  SpeciesLimit = matrix(c(2, NA, NA, NA), nrow = 1, ncol = 4),
+  LimitType    = "angler",
+  ClosureMode  = "discard"
+)
+
+# Fleet-specific TAC & aggregate bag limits; no TAC for fleet 1, 
+# no bag limit for fleet 2
+Advice(
+  TAC         = c(NA, 1000)
+  BagLimit    = c(10, NA),
   LimitType   = "angler",
   ClosureMode = "discard"
 )
-
 }
 \seealso{
 \itemize{

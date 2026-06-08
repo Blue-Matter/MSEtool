@@ -8,7 +8,7 @@
 The \code{advice} class defines management advice produced by a management
 procedure. Advice may include output controls (e.g. total allowable catch),
 input controls (e.g. effort), spatial controls (closures), gear effects,
-direct fishing mortality targets, or bag-limit regulations. See \code{\link[=Advice]{Advice()}}
+direct fishing mortality rates, or bag-limit regulations. See \code{\link[=Advice]{Advice()}}
 for details on valid entries and options for each slot.
 }
 \section{Slots}{
@@ -18,7 +18,7 @@ for details on valid entries and options for each slot.
 total allowable catch in units of \code{TACUnit}.}
 
 \item{\code{TACType}}{Character. Does the TAC refer to \code{"Removals"} (default) or
-\code{"Landings"}. Either length 1 (applied to all fleets) or a character
+\code{"Landings"}. Either length \code{1} (applied to all fleets) or a character
 vector of length \code{nFleet}.}
 
 \item{\code{TACUnit}}{Character. Units of the TAC: \code{"Biomass"} (default) or
@@ -54,12 +54,18 @@ Not currently used}
 angler per trip (when \code{LimitType = "angler"}) or fish per vessel per
 trip (when \code{LimitType = "boat"}). Either length 1 (applied to all
 fleets) or a numeric vector of length \code{nFleet} for fleet-specific limits.
-\code{NULL} (default) means no bag limit regulation is active. See \code{\link[=Advice]{Advice()}}.}
+\code{NULL} (default) means no bag limit regulation is active. \code{NA} for a
+given fleet position means no aggregate limit applies to that fleet.
+See \code{\link[=Advice]{Advice()}}.}
 
-\item{\code{LimitType}}{Character or \code{NULL}. Specifies whether \code{BagLimit} is a
-per-angler (\code{"angler"}; default) or per-vessel (\code{"boat"}) regulation.
-Either length 1 (applied to all fleets) or a character vector of length
-\code{nFleet}. See \code{\link[=Advice]{Advice()}}.}
+\item{\code{SpeciesLimit}}{Numeric matrix or \code{NULL}. Species-specific bag limits
+(fish per angler or vessel per trip) within a complex, with dimensions
+\verb{nFleet x nStock}. See \code{\link[=Advice]{Advice()}}.}
+
+\item{\code{LimitType}}{Character or \code{NULL}. Specifies whether \code{BagLimit} and
+\code{SpeciesLimit} are per-angler (\code{"angler"}; default) or per-vessel
+(\code{"boat"}) regulations. Either length 1 (applied to all fleets) or a
+character vector of length \code{nFleet}. See \code{\link[=Advice]{Advice()}}.}
 
 \item{\code{ClosureMode}}{Character or \code{NULL}. Determines how the OM handles catch
 that exceeds the bag limit: \code{"discard"} (default) converts excess catch

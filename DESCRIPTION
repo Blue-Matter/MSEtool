@@ -396,6 +396,7 @@ Collate:
     'utils-transformation.R'
     'utils-unique-years.R'
     'utils-valid-units.R'
+    'utils-wrapped-normal.R'
     'vbiomass.R'
     'zz-project-Hist.R'
     'zz_ASAP2OM.R'
@@ -461,3 +462,4 @@ Collate:
     'zz_spatial_targ_opt.R'
     'zz_utils.R'
 Config/roxygen2/version: 8.0.0
+RoxygenNote: 7.3.3
