@@ -207,7 +207,7 @@ StandardizeEffort <- function(OM,
       is_active <- E_st > tol & has_active
       targeting_st[is_active] <- E_st[is_active] / StandardEffort[is_active]
       
-      STarget@Targeting[, st, fl, seq_len(n_years)] <- targeting_st
+      STarget@Targeting[, st, fl, seq_len(n_years)] <- ReduceDims(targeting_st)
     }
     
     # Update effort for all stocks for this fleet to the geometric mean

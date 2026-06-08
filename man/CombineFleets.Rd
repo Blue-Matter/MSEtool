@@ -55,12 +55,6 @@ instantaneous-rate scale)
 \strong{WeightFleet} (age-specific F-weighted average)
 \deqn{W_{combined}(a) = \frac{\sum_f F_{combined,f}(a)\cdot W_f(a)}{F_{combined}(a)}}
 }
-
-\subsection{Limitations}{
-
-Combination of \code{Data} and \code{Obs} slots is not yet implemented; these are
-carried over unchanged from the original OM.
-}
 }
 \description{
 Combines several fleets into a new aggregated fleet within an Operating

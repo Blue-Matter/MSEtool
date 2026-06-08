@@ -38,6 +38,7 @@
 #' @aliases show,perrecruit-method
 #' @aliases show,refpointsMSY-method
 #' @aliases show,equilibrium-method
+#' @aliases show,stocktargeting-method
 #' @exportMethod show
 NULL
 
@@ -780,6 +781,13 @@ setMethod('show', 'equilibrium', function(object) {
   .show_object(object, 'equilibrium')
   
 })
+
+# ---- stocktargeting ----
+setMethod('show', 'stocktargeting', function(object) {
+  .show_object(object, 'stocktargeting')
+  
+})
+
 
 
 # ---- popdynamics ----

@@ -55,9 +55,6 @@
 #' **WeightFleet** (age-specific F-weighted average)
 #' \deqn{W_{combined}(a) = \frac{\sum_f F_{combined,f}(a)\cdot W_f(a)}{F_{combined}(a)}}
 #' 
-#' ## Limitations
-#' Combination of `Data` and `Obs` slots is not yet implemented; these are
-#' carried over unchanged from the original OM.
 #'
 #' @export
 CombineFleets <- function(OM, FleetList, silent = FALSE) {
@@ -86,7 +83,17 @@ CombineFleets <- function(OM, FleetList, silent = FALSE) {
       OM@Fleet[[st]][[replaceInd]] <- combine_fleets_stock(OM, st, Name, FleetInds)
       names(OM@Fleet[[st]])[replaceInd] <- Name
     }
+    
+    # Combine Allocation 
+    OM@Allocation <- purrr::map(OM@Allocation, \(allocate) {
+      purrr::imap(FleetIndList, \(fleet_ind, idx)
+                  allocate[,fleet_ind, drop=FALSE] |> SumOverFleet()
+      ) |> List2Array()
+    })
   }
+  
+  # Combine stock targeting
+  OM <- combine_fleets_targeting(OM, FleetList, FleetIndList, silent)
   
   # Combine Data
   OM <- combine_fleets_data(OM, FleetList, silent)
@@ -116,7 +123,7 @@ CombineFleets <- function(OM, FleetList, silent = FALSE) {
 }
 
 
-comine_fleets_data_cpue <- function(OM, FleetList, type=c('CPUE', 'Survey'), 
+combine_fleets_data_cpue <- function(OM, FleetList, type=c('CPUE', 'Survey'), 
                                     silent=FALSE) {
   
   type <- match.arg(type)
@@ -125,27 +132,33 @@ comine_fleets_data_cpue <- function(OM, FleetList, type=c('CPUE', 'Survey'),
     
     if (is.null(data@Value)) next
     
+    drop_ind <- integer(0)
+    
     for (fl in seq_along(FleetList)) {
       combine_fleets <- FleetList[[fl]]
       
       ind <- match(combine_fleets, data@Name)
-      if (!length(ind) || any(is.na(ind))) next
+      if (!length(ind) || all(is.na(ind))) next
       
-      data@Value[,ind[1]] <- weighted_mean_by_cv(values=data@Value[,ind, drop=FALSE], cvs=data@CV[,ind, drop=FALSE])
+      data@Value[,ind[1]] <- weighted_mean_by_cv(
+        values=data@Value[,ind, drop=FALSE], 
+        cvs=data@CV[,ind, drop=FALSE]
+        )
       
       if (!is.null(data@CV)) {
         # TODO data@CV[,ind[1]]
       }
-            data@Value[,ind[-1]][] <- 1E-15
+      
       colnames(data@Value)[ind[1]] <- names(FleetList)[fl]
       data@Name[ind[1]] <- names(FleetList)[fl] 
+      drop_ind <- c(drop_ind, ind[-1])
     }
     
     # drop fleet columns
-    drop_ind <- which(colMeans(data@Value) <= 1E-15)
     if (length(drop_ind)) {
+      drop_ind   <- sort(unique(drop_ind))
       data@Value <- data@Value[,-drop_ind, drop=FALSE]
-      data@Name <- data@Name[-drop_ind]  
+      data@Name  <- data@Name[-drop_ind]  
     }
     
     slot(OM@Data[[st]], type) <- data
@@ -162,7 +175,7 @@ weighted_mean_by_cv <- function(values, cvs) {
 }
 
 
-comine_fleets_data_catch <- function(OM,
+combine_fleets_data_catch <- function(OM,
                                      FleetList, 
                                      type=c('Landings', 'Discards'),
                                      silent=FALSE) {
@@ -215,13 +228,13 @@ combine_fleets_data <- function(OM, FleetList, silent=FALSE) {
   
   # Effort TODO
   
-  OM <- comine_fleets_data_catch(OM, FleetList, type = 'Landings', silent = silent)
+  OM <- combine_fleets_data_catch(OM, FleetList, type = 'Landings', silent = silent)
   
-  OM <- comine_fleets_data_catch(OM, FleetList, type = 'Discards', silent = silent)
+  OM <- combine_fleets_data_catch(OM, FleetList, type = 'Discards', silent = silent)
 
-  OM <- comine_fleets_data_cpue(OM, FleetList, type='CPUE', silent = silent)
+  OM <- combine_fleets_data_cpue(OM, FleetList, type='CPUE', silent = silent)
   
-  OM <- comine_fleets_data_cpue(OM, FleetList, type='Survey', silent = silent)
+  OM <- combine_fleets_data_cpue(OM, FleetList, type='Survey', silent = silent)
 
   OM
 }
@@ -382,6 +395,122 @@ combine_fleets_stock <- function(OM, st, Name, FleetInds) {
     DropDimension('Area')
   
   NewFleet
+}
+
+
+#' Combine stocktargeting slots after fleet aggregation
+#'
+#' Updates `OM@StockTargeting` so that the combined fleet's targeting
+#' parameters reflect an apical-F-weighted average of the source fleets'
+#' parameters. 
+#'
+#' The combined targeting deviation for stock `s` at time `t` is:
+#'
+#' \deqn{\tau_{s,\text{comb},t} =
+#'   \frac{\sum_f F^{apical}_{s,f,t} \cdot \tau_{s,f,t}}{\sum_f F^{apical}_{s,f,t}}}
+#'
+#' and analogously for `Mean` and `Covariance`.
+#'
+#' If `OM@StockTargeting` is uninitialised (all `NA`), the function returns
+#' `OM` unchanged.
+#'
+#' @param OM An [OM()] object (already populated and with fleet slots updated).
+#' @param FleetList A named list of character vectors as passed to [CombineFleets()].
+#' @param FleetIndList A named list of integer vectors; the resolved fleet
+#'   indices corresponding to `FleetList`.
+#' @param silent `logical(1)`. Suppresses messages when `TRUE`.
+#'
+#' @return Updated `OM` object with `@StockTargeting` reflecting the combined
+#'   fleet structure.
+#'
+#' @keywords internal
+combine_fleets_targeting <- function(OM, FleetList, FleetIndList, silent = FALSE) {
+  
+  ST <- OM@StockTargeting
+  if (all(is.na(ST@Targeting))) return(OM)
+  
+  nStock <- nStock(OM)
+  
+  for (i in seq_along(FleetList)) {
+    replaceInd <- FleetIndList[[i]][1]
+    FleetInds  <- FleetIndList[[i]]
+    
+    # Apical F per fleet, per stock: [nSim, nStock, nYear]
+    apicalF_list <- purrr::map(FleetInds, \(fl) {
+      slices <- purrr::map(seq_len(nStock), \(st) {
+        fleet <- OM@Fleet[[st]][[fl]]
+        apF   <- ArrayMultiply(fleet@Effort@Effort, fleet@Catchability@Efficiency)
+        AddDimension(apF, "Stock", pos = 2)             
+      })
+      abind::abind(slices, along = 2, use.dnns = TRUE)                  
+    })
+    
+    totalApicalF <- Reduce(`+`, apicalF_list)           
+    
+    targeting_combined <- Reduce(`+`,
+                                 purrr::map2(apicalF_list, FleetInds, \(apF, fl) {
+                                   tau <- ST@Targeting[, , fl, , drop=FALSE] |> DropDimension('Fleet')
+                                   ArrayMultiply(tau, apF)
+                                 })
+    )
+    ST@Targeting[, , replaceInd, ] <- ArrayDivide(targeting_combined, totalApicalF)
+    
+    
+    meanF_list <- purrr::map(apicalF_list, \(apF) {
+      # apply over Year dim (dim 3), keep [nSim, nStock]
+      apply(apF, c(1, 2), mean)   # [nSim, nStock] - check orientation
+    })
+    # apply(X, c(1,2), mean) on [nSim, nStock, nYear] returns [nSim, nStock] correctly
+    totalMeanF <- Reduce(`+`, meanF_list)               # [nSim, nStock]
+    
+    mean_combined <- Reduce(`+`,
+                            purrr::map2(meanF_list, FleetInds, \(mF, fl) {
+                              mu <- ST@Mean[, , fl, drop = FALSE]             # [nSim, nStock, 1] - preserve dims
+                              mu <- drop(mu)                                  # [nSim, nStock]
+                              mu * mF                                         # element-wise, both [nSim, nStock]
+                            })
+    )
+    ST@Mean[, , replaceInd] <- ArrayDivide(mean_combined, totalMeanF)
+    
+    make_outer_weight <- function(mF) {
+      nSim_  <- nrow(mF)
+      w <- array(0,
+                 dim      = c(nSim_, nStock, nStock),
+                 dimnames = list(Sim     = rownames(mF),
+                                 Stock_i = dimnames(ST@Covariance)[[2]],
+                                 Stock_j = dimnames(ST@Covariance)[[3]]))
+      # vectorised: outer product per sim via sweep
+      for (sim in seq_len(nSim_))
+        w[sim, , ] <- outer(mF[sim, ], mF[sim, ], \(a, b) sqrt(a * b))
+      w
+    }
+    
+    meanF_list_cov  <- purrr::map(meanF_list, make_outer_weight)
+    totalCovWeight  <- Reduce(`+`, meanF_list_cov)      # [nSim, nStock_i, nStock_j]
+    
+    cov_combined <- Reduce(`+`,
+                           purrr::map2(meanF_list_cov, FleetInds, \(w, fl) {
+                             cov_fl <- ST@Covariance[, , , fl, drop = FALSE] |> DropDimension('Fleet') 
+                             names(dimnames(cov_fl)) <- c('Sim', 'Stock_i', 'Stock_j')
+                             cov_fl * w
+                           })
+    )
+    ST@Covariance[, , , replaceInd] <- ArrayDivide(cov_combined, totalCovWeight)
+  }
+  
+  # Drop source fleet indices (all but first per group), highest index first
+  # to avoid index shifting
+  drop_inds <- purrr::map(FleetIndList, \(inds) inds[-1]) |>
+    unlist() |> sort(decreasing = TRUE)
+  
+  for (ind in drop_inds) {
+    ST@Targeting  <- ST@Targeting[,  , -ind,  , drop = FALSE]
+    ST@Mean       <- ST@Mean[,       , -ind,    drop = FALSE]
+    ST@Covariance <- ST@Covariance[, , , -ind,  drop = FALSE]
+  }
+  
+  OM@StockTargeting <- ST
+  OM
 }
 
 
