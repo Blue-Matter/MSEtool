@@ -360,20 +360,6 @@ CalcPerRecruit_F_scalar <- function(apicalF = 0.1,
   SPRFList         <- SPRFList[SPFrom]
   names(SPRFList)  <- names(NPRFList)
 
-  # ---------------------- DEBUG ----------------------
-  NPR0_SPList$`Small Pacific JFS`
-  NPRF_SPList$`Small Pacific JFS`
-  
-  inputs$SPR0List
-  
-  SPR0List$`Small Pacific JFS`
-  SPRFList$`Small Pacific JFS`
-  
-  
-  stop("DEBUG COMMENT BLOCK")
-  
-  # -------------------- END DEBUG --------------------
-  
   SPR <- purrr::map2(SPRFList, SPR0List, \(SPRF, SPR0) 
                      ArrayDivide(SPRF, SPR0)) |>
     List2Array('Stock') |>
