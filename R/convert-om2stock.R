@@ -93,8 +93,8 @@ OM2Length <- function(OM, cpars = list(), Years=NULL, nSim=NULL, Seasons = 1) {
   }
 
   # Classes
-  if (!is.null(OM@cpars$CAL_binsmid))
-    Length@Classes <- OM@cpars$CAL_binsmid
+  if (!is.null(cpars$CAL_binsmid))
+    Length@Classes <- cpars$CAL_binsmid
 
 
   # Pars
