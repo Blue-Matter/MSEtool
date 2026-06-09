@@ -73,7 +73,8 @@ CalcMSY <- function(Hist,
   Hist@Reference@MSY
 }
 
-CalcRefMSY_Complex <- function(Hist, complex_stocks, complex_name, Years, type, silent = FALSE) {
+CalcRefMSY_Complex <- function(Hist, complex_stocks, complex_name, Years, 
+                               type, silent = FALSE) {
   
   StockList <- Hist@OM@Stock[complex_stocks]
   FleetList <- Hist@OM@Fleet[complex_stocks]
@@ -86,7 +87,8 @@ CalcRefMSY_Complex <- function(Hist, complex_stocks, complex_name, Years, type, 
                                                    'Obs',
                                                    'Data'))
   
-  SPR0_Full_List <- Array2List(Hist@Reference@SPR0) |> SubsetStock(Stocks = complex_stocks)
+  SPR0_Full_List <- Array2List(Hist@Reference@SPR0) |>
+    SubsetStock(Stocks = complex_stocks)
   
   logApicalFRange <- log(c(1E-5, Hist@OM@maxF))
   
@@ -152,17 +154,17 @@ CalcRefMSY_Complex <- function(Hist, complex_stocks, complex_name, Years, type, 
   # TODO: parallel option - furrr::future_map(seq_len(nSim), \(sim) { 
   results_by_sim <- purrr::map(seq_len(nSim), \(sim) {
     
-    StockList_sim  <- Subset(StockList,      Sims = sim)
-    FleetList_sim  <- Subset(FleetList,      Sims = sim)
-    SPR0_List_sim  <- Subset(SPR0_Full_List, Sims = sim)
-  
+    StockList_sim  <- SubsetSim(StockList,      Sims = sim, keep_sim_name = TRUE)
+    FleetList_sim  <- SubsetSim(FleetList,      Sims = sim, keep_sim_name = TRUE)
+    SPR0_List_sim  <- SubsetSim(SPR0_Full_List, Sims = sim, keep_sim_name = TRUE)
+
     result <- purrr::map(seq_along(Years), \(ts) {
       
       inputs <- PrepPerRecruitInputs(StockList_sim, 
                                      FleetList_sim,
                                      SPR0_List_sim, 
                                      Years[ts])
-      
+    
       opt <- optimize(
         OptCalcRefMSY_Sims,
         logApicalFRange,

@@ -70,8 +70,7 @@ PopulateStock <- function(Stock,
                           force = FALSE,
                           CalcAtLength = FALSE) {
   
-  if (is.null(seed)) 
-    seed <- 102
+  if (is.null(seed))  seed <- 102
   
   argList <- list(seed, ALK, AWK, nYear, pYear, CurrentYear, nSim)
   
@@ -125,7 +124,7 @@ PopulateStock <- function(Stock,
     force = force,
     CalcAtLength = FALSE
   )
-  
+
   Stock@NaturalMortality <- PopulateNaturalMortality(
     NaturalMortality = Stock@NaturalMortality,
     Ages = Stock@Ages,

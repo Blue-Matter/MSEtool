@@ -63,7 +63,7 @@ Subset <- function(object,
   idx
 }
 
-SubsetSim <- function(object, Sims, debug = FALSE) {
+SubsetSim <- function(object, Sims, keep_sim_name = FALSE, debug = FALSE) {
   
   if (debug)  cli::cli_alert("Class {.val {class(object)}}")
   
@@ -74,7 +74,7 @@ SubsetSim <- function(object, Sims, debug = FALSE) {
       if (debug) cli::cli_alert("Slot {.val {s}}")
       val <- slot(object, s)
       if (!is.null(val))
-        slot(object, s) <- Recall(val, Sims, debug)
+        slot(object, s) <- Recall(val, Sims, keep_sim_name, debug)
     }
     
     if ("nSim" %in% slots) 
@@ -93,7 +93,7 @@ SubsetSim <- function(object, Sims, debug = FALSE) {
     for (i in seq_len(n)) {
       el <- object[[i]]
       if (!is.null(el))
-        object[[i]] <- Recall(el, Sims, debug)
+        object[[i]] <- Recall(el, Sims, keep_sim_name, debug)
     }
     return(object)
   }
@@ -102,15 +102,15 @@ SubsetSim <- function(object, Sims, debug = FALSE) {
     dnames <- dimnames(object)
     if (!is.null(dnames) && "Sim" %in% names(dnames)) {
       SimVals <- as.numeric(dnames$Sim)
+      
       if (max(SimVals) > max(Sims)) {
-        object <- ArraySubsetSim(object, Sims)
+        object <- ArraySubsetSim(object, Sims, keep_sim_name = keep_sim_name)
       } else {
-        existing_sims <- dimnames(object)$Sim
-        if (any(Sims > existing_sims)) {
-          object <- ExtendSims(object, nSim = max(Sims))
-          object <- ArraySubsetSim(object, Sims = Sims)
+        existing_sims <- as.numeric(dimnames(object)$Sim)
+        if (any(Sims > max(existing_sims))) {
+          object <- ExtendSims(object, nSim = length(Sims))
         }
-        dimnames(object)$Sim <- Sims
+        object <- ArraySubsetSim(object, Sims = Sims, keep_sim_name = keep_sim_name)
       }
         
     }
@@ -125,7 +125,7 @@ SubsetSim <- function(object, Sims, debug = FALSE) {
   object
 }
 
-ArraySubsetSim <- function(array, Sims=NULL) {
+ArraySubsetSim <- function(array, Sims = NULL, keep_sim_name = FALSE) {
   CheckClass(array, 'array', 'array')
   CheckClass(Sims, c('numeric', 'integer'), 'Sims')
   
@@ -140,7 +140,12 @@ ArraySubsetSim <- function(array, Sims=NULL) {
   if (any(Sims > max(SimVals))) {
     if (max(SimVals)==1) {
       if (length(Sims) == 1) {
-        DN$Sim <- Sims 
+        if (keep_sim_name) {
+          DN$Sim <- Sims 
+        } else {
+          DN$Sim <- seq_along(Sims) 
+        }
+    
         dimnames(array) <- DN
         return(array)
       } else {
@@ -156,8 +161,11 @@ ArraySubsetSim <- function(array, Sims=NULL) {
   idx <- SimVals %in% Sims
   out <- do.call(`[`, c(list(array), .make_dim_index(idx, array, 1L),
                         list(drop = FALSE)))
-  # dimnames(out)$Sim <- seq_along(dimnames(out)$Sim)
-  dimnames(out)$Sim <- Sims # need this so that it maintains the correct sim names
+  if (!keep_sim_name) {
+    dimnames(out)$Sim <- seq_along(dimnames(out)$Sim)
+  } else {
+    dimnames(out)$Sim <- Sims # keep the name of the actual sim
+  }
    
   out
 }

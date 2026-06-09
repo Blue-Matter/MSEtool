@@ -78,7 +78,10 @@ List2Array <- function(x, name = "Fleet", dim1='Sim', pos = NULL) {
     years   <- purrr::map(dnames, 'Year') |> unlist() |> unique() |> as.numeric() |> sort()
     areas   <- purrr::map(dnames, 'Area') |> unlist() |> unique() |> as.numeric() |> sort()
     
-    if (length(sims) && name != 'Sim')  x <- purrr::map(x, SubsetSim,  Sims = sims)
+    if (length(sims) && name != 'Sim')  x <- purrr::map(x, 
+                                                        SubsetSim, 
+                                                        Sims = sims,
+                                                        keep_sim_name = TRUE)
     if (length(years)) x <- purrr::map(x, ExtendYears, Years = years)
     if (length(areas)) x <- purrr::map(x, ExtendAreas, Areas = areas)
     
