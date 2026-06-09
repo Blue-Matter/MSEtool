@@ -108,7 +108,7 @@ SubsetSim <- function(object, Sims, debug = FALSE) {
         existing_sims <- dimnames(object)$Sim
         if (any(Sims > existing_sims)) {
           object <- ExtendSims(object, nSim = max(Sims))
-          object <- Recall(object, Sims = Sims, debug = debug)
+          object <- ArraySubsetSim(object, Sims = Sims)
         }
         dimnames(object)$Sim <- Sims
       }
