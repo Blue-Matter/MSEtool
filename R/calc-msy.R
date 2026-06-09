@@ -155,18 +155,7 @@ CalcRefMSY_Complex <- function(Hist, complex_stocks, complex_name, Years, type, 
     StockList_sim  <- Subset(StockList,      Sims = sim)
     FleetList_sim  <- Subset(FleetList,      Sims = sim)
     SPR0_List_sim  <- Subset(SPR0_Full_List, Sims = sim)
-    
-    
-    purrr::map(FleetList_sim, \(stock) {
-      purrr::map(stock, \(fleet)
-                 dimnames(fleet@WeightFleet)$Sim
-                 )
-    })
-    
-    
-    inputs$WeightFleetList
-      
-    
+  
     result <- purrr::map(seq_along(Years), \(ts) {
       
       inputs <- PrepPerRecruitInputs(StockList_sim, 
