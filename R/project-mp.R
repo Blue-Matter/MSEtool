@@ -36,11 +36,11 @@ Project_MP <- function(Proj,
                        silent=FALSE) {
   
   ManagementYears <- CalcManagementYears(YearsProj, Proj@OM@Interval)
-  YearsAll   <- c(YearsHist, YearsProj)
-  StockNames <- StockNames(MSE)
-  FleetNames <- FleetNames(MSE)
-  Areas      <- 1:nArea(Proj)
-  StartTime  <- Sys.time()
+  YearsAll        <- c(YearsHist, YearsProj)
+  StockNames      <- StockNames(MSE)
+  FleetNames      <- FleetNames(MSE)
+  Areas           <- 1:nArea(Proj)
+  StartTime       <- Sys.time()  
   
   # initialise for debugging convenience
   Year <- YearsProj[1]; ts <- 1
