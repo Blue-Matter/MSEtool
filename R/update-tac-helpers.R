@@ -55,7 +55,7 @@ ResolveTACByComplex <- function(AdviceList, LastAdviceList, Complexes,
 }
 
 ResolveTACTypeByComplex <- function(AdviceList, Complexes, nFleet) {
-  if (is.null(AdviceList[[i]]@TACType))
+  if (is.null(AdviceList[[1]]@TACType))
     AdviceList[[i]]@TACType <- 'Removals'
   
   lapply(seq_along(Complexes), function(i) {
@@ -64,7 +64,7 @@ ResolveTACTypeByComplex <- function(AdviceList, Complexes, nFleet) {
 }
 
 ResolveTACUnitByComplex <- function(AdviceList, Complexes, nFleet) {
-  if (is.null(AdviceList[[i]]@TACUnit))
+  if (is.null(AdviceList[[1]]@TACUnit))
     AdviceList[[i]]@TACUnit <- 'Biomass'
   
   lapply(seq_along(Complexes), function(i) {
