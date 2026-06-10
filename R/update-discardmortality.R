@@ -39,8 +39,10 @@ Update_DiscardMortality <- function(Proj,
   for (st in seq_len(nStock)) {
     for (fl in seq_len(nFleet)) {
       target <- Proj@OM@Fleet[[st]][[fl]]@DiscardMortality
-      target@MeanAtAge    <- Extend(target@MeanAtAge,    nSim = nSim, NULL, FutureYears, Areas)
-      target@MeanAtLength <- Extend(target@MeanAtLength, nSim = nSim, NULL, FutureYears, Areas)
+      target@MeanAtAge    <- Extend(target@MeanAtAge,    nSim = nSim, 
+                                    Years = FutureYears, Areas = Areas)
+      target@MeanAtLength <- Extend(target@MeanAtLength, nSim = nSim, 
+                                    Years = FutureYears, Areas = Areas)
       Proj@OM@Fleet[[st]][[fl]]@DiscardMortality <- target
     }
   }
@@ -108,11 +110,11 @@ Update_DiscardMortality_Sim <- function(Proj,
            "`DiscardMortality()` objects of length nFleet (", nFleet, ")")
     
     for (st in stocks) {
-      Stock  <- Proj@OM@Stock[[st]]
-      Ages   <- Stock@Ages
-      Length <- Subset(Stock@Length, Sims=sim, Years=FutureYears)
-      Weight <- Subset(Stock@Weight, Sims=sim, Years=FutureYears)
-      Maturity <- Subset(Stock@Maturity, Sims=sim, Years=FutureYears)
+      Stock    <- Proj@OM@Stock[[st]]
+      Ages     <- Stock@Ages
+      Length   <- Subset(Stock@Length,     Sims = sim, Years = FutureYears)
+      Weight   <- Subset(Stock@Weight,     Sims = sim, Years = FutureYears)
+      Maturity <- Subset(Stock@Maturity, Sims = sim, Years = FutureYears)
       
       ALK <- Length@ALK 
       
@@ -120,19 +122,24 @@ Update_DiscardMortality_Sim <- function(Proj,
         # Increases the temporal resolution of `ObjectMeanAtAge` and `ASK`
         # by linear interpolate Mean length-at-age and CV length-at-age
         
-        ALK <- CalcAgeSizeKey(MeanAtAge=LinearInterpolate_Age(Length@MeanAtAge),
-                              CVatAge=LinearInterpolate_Age(Length@CVatAge),
-                              Classes=Length@Classes,
-                              TruncSD=Length@TruncSD,
-                              Dist=Length@Dist,
-                              silent=TRUE)
+        ALK <- CalcAgeSizeKey(MeanAtAge = LinearInterpolate_Age(Length@MeanAtAge),
+                              CVatAge   = LinearInterpolate_Age(Length@CVatAge),
+                              Classes   = Length@Classes,
+                              TruncSD   = Length@TruncSD,
+                              Dist      = Length@Dist,
+                              silent    = TRUE)
       }
       
       for (fl in seq_len(nFleet)) {
         dm <- if (is.list(DiscardMortalityList)) DiscardMortalityList[[fl]] else DiscardMortalityList
         
-        dm <- ProcessSelectMeanAtAge(dm, Ages, nArea, type='DiscardMortality', Year=FutureYears[1])
-        dm <- ProcessSelectMeanAtLength(dm, Length, nArea, type='DiscardMortality', Year=FutureYears[1])
+        dm <- ProcessSelectMeanAtAge(dm, Ages, nArea,
+                                     type = 'DiscardMortality', 
+                                     Year = FutureYears[1])
+        
+        dm <- ProcessSelectMeanAtLength(dm, Length, nArea, 
+                                        type = 'DiscardMortality', 
+                                        Year = FutureYears[1])
         
         dm <- PopulateDiscardMortality(dm,
                                        Ages  = Ages,
