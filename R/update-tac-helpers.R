@@ -55,12 +55,18 @@ ResolveTACByComplex <- function(AdviceList, LastAdviceList, Complexes,
 }
 
 ResolveTACTypeByComplex <- function(AdviceList, Complexes, nFleet) {
+  if (is.null(AdviceList[[i]]@TACType))
+    AdviceList[[i]]@TACType <- 'Removals'
+  
   lapply(seq_along(Complexes), function(i) {
     recycle_to_fleets(AdviceList[[i]]@TACType, nFleet, 'TACType')
   })
 }
 
 ResolveTACUnitByComplex <- function(AdviceList, Complexes, nFleet) {
+  if (is.null(AdviceList[[i]]@TACUnit))
+    AdviceList[[i]]@TACUnit <- 'Biomass'
+  
   lapply(seq_along(Complexes), function(i) {
     recycle_to_fleets(AdviceList[[i]]@TACUnit, nFleet, 'TACUnit')
   })
