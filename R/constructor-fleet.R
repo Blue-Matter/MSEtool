@@ -167,6 +167,9 @@ Fleet <- function(Name = NULL,
 #' @rdname Fleet
 #' @export
 Closure <- function(x) {
+  if (isFleetOrList(x))
+    return(ExtractFleetSlot(x, 'Closure'))
+  
   AccessSlot(x, 'Closure')
 }
 
@@ -179,6 +182,8 @@ Closure <- function(x) {
 #' @rdname Fleet
 #' @export
 WeightFleet <- function(x) {
+  if (isFleetOrList(x))
+    return(ExtractFleetSlot(x, 'WeightFleet'))
   AccessSlot(x, 'WeightFleet')
 }
 

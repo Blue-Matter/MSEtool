@@ -79,8 +79,8 @@ Bioeconomic <- function(Revenue       = NULL,
                         Discount      = NULL,
                         Misc          = list()) {
   
-  if (methods::is(Revenue, "fleet"))
-    return(Revenue@Bioeconomic)
+  if (isFleetOrList(Revenue))
+    return(ExtractFleetSlot(Revenue, 'Bioeconomic'))
   
   methods::new(
     "bioeconomic",
@@ -97,7 +97,7 @@ Bioeconomic <- function(Revenue       = NULL,
 #' @rdname Bioeconomic
 #' @export
 `Bioeconomic<-` <- function(x, value) {
-  AssignSlot(x, value, 'Bioeconomic')
+  AssignFleetSlot(x, value, 'Bioeconomic')
 }
 
 #' @rdname Bioeconomic

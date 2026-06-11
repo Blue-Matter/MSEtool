@@ -163,8 +163,11 @@ NaturalMortality <- function(Pars = list(),
                              Classes = NULL,
                              Misc = list()) {
   
-  if (inherits(Pars, 'stock'))
-    return(Pars@NaturalMortality)
+  if (isStockOrList(Pars)) 
+    return(ExtractStockSlot(Pars, "NaturalMortality"))
+  
+  if (is.null(Pars))
+    return(NULL)
   
   object <- methods::new(
     "naturalmortality",
@@ -193,6 +196,5 @@ NaturalMortality <- function(Pars = list(),
 #' @rdname NaturalMortality
 #' @export
 `NaturalMortality<-` <- function(x, value) {
-  CheckClass(x, "stock", "x")
-  AssignSlot(x, value, 'NaturalMortality')
+  AssignSlotRecursive(x, value, 'NaturalMortality')
 }

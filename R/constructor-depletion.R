@@ -130,8 +130,8 @@ Depletion <- function(Initial = NULL,
                       Final = NULL,
                       Reference = "B0") {
   
-  if (inherits(Initial, 'stock'))
-    return(Initial@Depletion)
+  if (isStockOrList(Initial)) 
+    return(ExtractStockSlot(Initial, "Depletion"))
   
   methods::new("depletion",
                Initial   = Initial,
@@ -179,8 +179,5 @@ Final <- function(x) {
 #' @rdname Depletion
 #' @export
 `Depletion<-`<- function(x, value) {
-  CheckClass(x, "stock", "x")
-  x@Depletion <- value
-  methods::validObject(x)
-  x
+  AssignSlotRecursive(x, value, 'Depletion')
 }

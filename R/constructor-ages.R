@@ -125,12 +125,12 @@ Ages <- function(MaxAge,
 
   if (missing(MaxAge))
     MaxAge <- numeric()
-
-  if (inherits(MaxAge, 'stock'))
-    return(MaxAge@Ages)
   
-  if (inherits(MaxAge, 'om'))
-    return(purrr::map(MaxAge@Stock, \(stock) stock@Ages))
+  if (isStockOrList(MaxAge)) 
+    return(ExtractStockSlot(MaxAge, 'Ages'))
+  
+  if (is.null(MaxAge))
+    return(NULL)
   
   if (length(MaxAge) && is.na(MaxAge)) 
     MaxAge <- numeric()
@@ -151,11 +151,7 @@ Ages <- function(MaxAge,
 #' @rdname Ages
 #' @export
 `Ages<-` <- function(x, value) {
-  CheckClass(x, "stock", "x")
-  CheckClass(value, "ages", "value")
-  x@Ages <- value
-  methods::validObject(x)
-  x
+  AssignSlotRecursive(x, value, 'Ages')
 }
 
 #' @rdname Ages

@@ -221,9 +221,8 @@ Spatial <- function(UnfishedDist = NULL,
                     CVStay = 1,
                     Misc = list()) {
   
-  
-  if (inherits(UnfishedDist, 'stock'))
-    return(UnfishedDist@Spatial)
+  if (isStockOrList(UnfishedDist)) 
+    return(ExtractStockSlot(UnfishedDist, "Spatial"))
   
   object <- methods::new(
     "spatial",
@@ -378,10 +377,7 @@ CVStay <- function(x) {
 #' @rdname Spatial
 #' @export
 `Spatial<-` <- function(x, value) {
-  CheckClass(x, "stock", "x")
-  x@Spatial <- value
-  methods::validObject(x)
-  x
+  AssignSlotRecursive(x, value, 'Spatial')
 }
 
 

@@ -98,27 +98,8 @@ DiscardMortality <- function(MeanAtAge    = NULL,
                              Classes      = NULL,
                              Misc         = list()) {
   
-  if (inherits(MeanAtAge, "fleet"))
-    return(MeanAtAge@DiscardMortality)
-  
-  if (inherits(MeanAtAge, "om"))
-    return(purrr::map(MeanAtAge@Fleet, \(FleetList)
-                      purrr::map(FleetList, \(fleet) fleet@DiscardMortality)
-    ))
-  
-  if (inherits(MeanAtAge, "StockFleetList"))
-    return(purrr::map(MeanAtAge, \(FleetList)
-                      purrr::map(FleetList, \(fleet) fleet@DiscardMortality)
-    ))
-  
-  if (inherits(MeanAtAge, "FleetList"))
-    return(purrr::map(MeanAtAge, \(fleet) fleet@DiscardMortality))
-  
-  if (!is.numeric(MeanAtAge) && !is.null(MeanAtAge))
-    cli::cli_abort(c(
-      'x' = '`MeanAtAge` must be `numeric`',
-      'i' = 'Currently as {.cls {class(MeanAtAge)}} object'
-    ))
+  if (isFleetOrList(MeanAtAge))
+    return(ExtractFleetSlot(MeanAtAge, 'DiscardMortality'))
   
   methods::new(
     "discardmortality",
@@ -133,71 +114,6 @@ DiscardMortality <- function(MeanAtAge    = NULL,
 #' @rdname DiscardMortality
 #' @export
 `DiscardMortality<-` <- function(x, value) {
-  assign_fleet_slot(x, value, "DiscardMortality", "discardmortality")
+  AssignFleetSlot(x, value, 'DiscardMortality')
 }
   
-assign_fleet_slot <- function(x, value, slot_name, class_name) {
-  
-  if (inherits(x, "fleet") && inherits(value, class_name)) {
-    slot(x, slot_name) <- value
-    return(x)
-  }
-  
-  if (inherits(x, "om") || inherits(x, "StockFleetList")) {
-    fleet_list <- if (inherits(x, "om")) x@Fleet else x
-    
-    if (!is.list(value) || length(value) != length(fleet_list))
-      cli::cli_abort(c(
-        "x" = "`value` must be a list of length {length(fleet_list)} to match the number of stocks",
-        "i" = "`value` has length {length(value)}"
-      ))
-    
-    for (st in seq_along(fleet_list)) {
-      if (!is.list(value[[st]]) || length(value[[st]]) != length(fleet_list[[st]]))
-        cli::cli_abort(c(
-          "x" = "`value[[{st}]]` must be a list of length {length(fleet_list[[st]])} to match the number of fleets for stock {st}",
-          "i" = "`value[[{st}]]` has length {length(value[[st]])}"
-        ))
-      
-      for (fl in seq_along(fleet_list[[st]])) {
-        if (!inherits(value[[st]][[fl]], class_name))
-          cli::cli_abort(c(
-            "x" = "`value[[{st}]][[{fl}]]` must be a {.cls {class_name}} object",
-            "i" = "Got {.cls {class(value[[st]][[fl]])}}"
-          ))
-        if (inherits(x, "om")) {
-          slot(x@Fleet[[st]][[fl]], slot_name) <- value[[st]][[fl]]
-        } else {
-          slot(x[[st]][[fl]], slot_name) <- value[[st]][[fl]]
-        }
-      }
-    }
-    return(x)
-  }
-  
-  if (inherits(x, "FleetList")) {
-    if (!is.list(value) || length(value) != length(x))
-      cli::cli_abort(c(
-        "x" = "`value` must be a list of length {length(x)} to match the number of fleets",
-        "i" = "`value` has length {length(value)}"
-      ))
-    
-    for (fl in seq_along(x)) {
-      if (!inherits(value[[fl]], class_name))
-        cli::cli_abort(c(
-          "x" = "`value[[{fl}]]` must be a {.cls {class_name}} object",
-          "i" = "Got {.cls {class(value[[fl]])}}"
-        ))
-      slot(x[[fl]], slot_name) <- value[[fl]]
-    }
-    return(x)
-  }
-  
-  if (!inherits(value, class_name))
-    cli::cli_abort(c(
-      "x" = "`value` must be a {.cls {class_name}} object",
-      "i" = "Got {.cls {class(value)}}"
-    ))
-  
-  AssignSlot(x, value, slot_name)
-}

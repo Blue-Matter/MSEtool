@@ -165,9 +165,14 @@ Fecundity <- function(Pars = list(),
                       Timing = NULL,
                       Misc = list()) {
   
+  if (isStockOrList(Pars)) 
+    return(ExtractStockSlot(Pars, "Fecundity"))
   
-  if (inherits(Pars, "stock"))
-    return(Pars@Fecundity)
+  if (is.null(Pars))
+    return(NULL)
+  
+  if (is.null(Pars))
+    return(NULL)
   
   object <- methods::new(
     "fecundity",
@@ -195,8 +200,7 @@ Fecundity <- function(Pars = list(),
 #' @rdname Fecundity
 #' @export
 `Fecundity<-` <- function(x, value) {
-  CheckClass(x, "stock", "x")
-  AssignSlot(x, value, 'Fecundity')
+  AssignSlotRecursive(x, value, 'Fecundity')
 }
 
 

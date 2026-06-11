@@ -224,6 +224,9 @@ Effort <- function(Effort         = NULL,
                    Misc           = list(),
                    df             = TRUE) {
   
+  if (isFleetOrList(Effort))
+    return(ExtractFleetSlot(Effort, 'Effort'))
+  
   if (inherits(Effort, c('fleet', 'effort', 'hist', 'obs', 'imp', 'mse')))
     return(extract_effort(Effort, df))
   

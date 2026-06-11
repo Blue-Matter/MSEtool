@@ -191,10 +191,9 @@
 #'
 #' @return
 #' - `Maturity()` returns a [maturity-class] object. If `Pars` is a
-#'   [stock-class], returns `x@Maturity`. If `Pars` is a list of stocks,
-#'   returns `Pars[[Model]]@Maturity`.
+#'   [stock-class], returns `x@Maturity`.
 #' - `Maturity<-` returns the [stock-class] `x` with the `Maturity` slot
-#'   replaced and the object re-validated.
+#'   replaced
 #' - `Semelparous()` returns the `Semelparous` slot from `x` (a scalar before
 #'   [Populate()], a `Sim × Age × Year` array after).
 #' - `Semelparous<-` returns `x` with the `Semelparous` slot updated and the
@@ -226,12 +225,11 @@ Maturity <- function(Pars = list(),
                      Semelparous = FALSE,
                      Misc = list()) {
   
-  if (inherits(Pars, 'stock')) {
-    if (inherits(Model, 'numeric') || is.list(Pars)) {
-      return(Pars[[Model]]@Maturity)
-    }
-    return(Pars@Maturity)
-  }
+  if (isStockOrList(Pars)) 
+    return(ExtractStockSlot(Pars, "Maturity"))
+  
+  if (is.null(Pars))
+    return(NULL)
   
   object <- methods::new(
     "maturity",
@@ -277,8 +275,5 @@ Semelparous <- function(x) {
 #' @rdname Maturity
 #' @export
 `Maturity<-` <- function(x, value) {
-  CheckClass(x, "stock", "x")
-  x@Maturity <- value
-  methods::validObject(x)
-  x
+  AssignSlotRecursive(x, value, 'Maturity')
 }

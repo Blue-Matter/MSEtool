@@ -163,9 +163,9 @@ Catchability <- function(Efficiency = NULL,
                          qInc       = NULL,
                          Misc       = list()) {
   
-  if (inherits(Efficiency, 'fleet'))
-    return(Efficiency@Catchability)
-  
+  if (isFleetOrList(Efficiency))
+    return(ExtractFleetSlot(Efficiency, 'Catchability'))
+    
   object <- methods::new(
     "catchability",
     Efficiency = Efficiency,
@@ -182,7 +182,7 @@ Catchability <- function(Efficiency = NULL,
 #' @rdname Catchability
 #' @export
 `Catchability<-` <- function(x, value) {
-  AssignSlot(x, value, 'Catchability')
+  AssignFleetSlot(x, value, 'Catchability')
 }
 
 #' @rdname Catchability

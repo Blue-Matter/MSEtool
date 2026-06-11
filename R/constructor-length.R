@@ -149,8 +149,11 @@ Length <- function(Pars = list(),
                    Classes = NULL,
                    Misc = list()) {
   
-  if (inherits(Pars, 'stock'))
-    return(Pars@Length)
+  if (isStockOrList(Pars)) 
+    return(ExtractStockSlot(Pars, "Length"))
+  
+  if (is.null(Pars))
+    return(NULL)
   
   object <- methods::new(
     "length",
@@ -178,6 +181,12 @@ Length <- function(Pars = list(),
   object
 }
 
+#' @rdname Length
+#' @export
+`Length<-` <- function(x, value) {
+  AssignSlotRecursive(x, value, 'Length')
+}
+
 
 
 #' @rdname Length
@@ -196,11 +205,6 @@ ALK <- function(x) {
   x
 }
 
-#' @rdname Length
-#' @export
-`Length<-` <- function(x, value) {
-  CheckClass(x, "stock", "x")
-  AssignSlot(x, value, 'Length')
-}
+
 
 

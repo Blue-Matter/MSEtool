@@ -220,13 +220,12 @@ SRR <- function(Pars = list(h = NA),
                 Units = 1,
                 Misc = list()) {
   
-  if (!inherits(Pars, 'list')) {
-    if (!'SRR' %in% slotNames(Pars))
-      cli::cli_abort(c('x'='No slot {.val SRR} found in object class {.cls {class(Pars)}}'))
-    return(Pars@SRR)
-  }
+  if (isStockOrList(Pars)) 
+    return(ExtractStockSlot(Pars, "SRR"))
   
-
+  if (is.null(Pars))
+    return(NULL)
+  
   obj <- methods::new(
     "srr",
     Pars          = Pars,
@@ -381,10 +380,7 @@ RelRecFun <- function(x) {
 #' @rdname SRR
 #' @export
 `SRR<-` <- function(x, value) {
-  CheckClass(x, "stock", "x")
-  x@SRR <- value
-  methods::validObject(x)
-  x
+  AssignSlotRecursive(x, value, 'SRR')
 }
 
 

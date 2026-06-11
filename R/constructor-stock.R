@@ -211,60 +211,29 @@ Stock <- function(Name = "New Stock Object",
 #' @rdname Stock
 #' @export
 `Stock<-` <- function(x, value) {
-  CheckClass(x, 'om', 'x')
-  
-  if (inherits(value, 'stock')) {
-    l <- list(value)
-    names(l) <- value@Name
-    x@Stock <- l
-    return(x)
-  }
-  
-  if (inherits(value, 'list')) {
-    cls <- purrr::map_chr(value, class)
-    chk <- cls == 'stock'
-    if (any(!chk)) 
-      cli::cli_abort(c(
-        'x' = 'All elements of `value` must be an {.help MSEtool::Stock} object',
-        'i' = 'Current classes of `value` are: {.val {cls}}'
-      ))
-      
-    
-    nms <- purrr::map_chr(value, Name)
-    if (length(unique(nms)) != length(nms)) {
-      cli::cli_abort(c(
-        'x' = 'Stocks must have unique names `Name(Stock)`',
-        'i' = 'Current names of stocks in `value` are: {.val {nms}}'
-      ))
-    }
-    names(value) <- nms
-    x@Stock <- value
-    return(x)
-  }
-  
-  AssignSlot(x, value, 'Stock')
+  AssignSlotRecursive(x, value, 'Stock')
 }
 
 #' @rdname Stock
 #' @export
 CommonName <- function(x) {
-  AccessSlot(x, 'CommonName')
+  AccessSlotRecursive(x, 'CommonName')
 }
 
 #' @rdname Stock
 #' @export
 `CommonName<-` <- function(x, value) {
-  AssignSlot(x, value, 'CommonName')
+  AssignSlotRecursive(x, value, 'CommonName')
 }
 
 #' @rdname Stock
 #' @export
 Species <- function(x) {
-  AccessSlot(x, 'Species')
+  AccessSlotRecursive(x, 'Species')
 }
 
 #' @rdname Stock
 #' @export
 `Species<-` <- function(x, value) {
-  AssignSlot(x, value, 'Species')
+  AssignSlotRecursive(x, value, 'Species')
 }

@@ -188,8 +188,11 @@ Weight <- function(Pars = list(),
                    Classes = NULL,
                    Misc = list()) {
   
-  if (inherits(Pars, 'stock'))
-    return(Pars@Weight)
+  if (isStockOrList(Pars)) 
+    return(ExtractStockSlot(Pars, "Weight"))
+  
+  if (is.null(Pars))
+    return(NULL)
   
   object <- methods::new(
     "weight",
@@ -218,6 +221,13 @@ Weight <- function(Pars = list(),
   object
 }
 
+#' @rdname Weight
+#' @export
+`Weight<-` <- function(x, value) {
+  AssignSlotRecursive(x, value, 'Weight')
+}
+
+
 
 #' @rdname Weight
 #' @export
@@ -235,12 +245,6 @@ AWK <- function(x) {
   x
 }
 
-#' @rdname Weight
-#' @export
-`Weight<-` <- function(x, value) {
-  CheckClass(x, "stock", "x")
-  AssignSlot(x, value, 'Weight')
-}
 
 
 
