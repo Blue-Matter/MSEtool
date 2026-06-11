@@ -195,9 +195,11 @@ ProcessSelectMeanAt <- function(select, Classes, nArea, type, Year,
   if (is.array(Values) && length(dim(Values)) == 2) {
     dd <- dim(Values)
     if (!all(dd == c(nClass, nArea)))
-      stop(type, " ", slot_name, " array should have `nClass` (", nClass,
-           ") rows and `nArea` (", nArea, ") columns.",
-           " Current dimensions: ", paste(dd, collapse=' x '))
+      cli::cli_abort(c(
+        "{type} {slot_name} array has incorrect dimensions.",
+        "x" = "Expected {nClass} rows ({.field nClass}) and {nArea} columns ({.field nArea}).",
+        "i" = "Current dimensions: {paste(dd, collapse = ' x ')}."
+      ))
     dimnames(Values) <- dim_names
     Values <- ExtendAreas(Values, seq_len(nArea))
     
@@ -207,8 +209,8 @@ ProcessSelectMeanAt <- function(select, Classes, nArea, type, Year,
         Values <- rep(Values, nClass)
     }
      if (length(Values) != nClass ) {
-      stop(type, " ", slot_name, " must be length `nClass` (", nClass, ").",
-           " Currently: ", length(Values))
+       # cli::cli_warn("{type}@{slot_name} must be length `nClass` ({.val {nClass}}). Currently: {.val {length(Values)}}")
+       Values <- rep(Values, nClass)[seq_len(nClass)]
     }
       
     Values <- array(as.numeric(Values),
@@ -231,6 +233,8 @@ ProcessSelectMeanAt <- function(select, Classes, nArea, type, Year,
 #' @param Ages An `ages` object with a `@Classes` slot.
 #' @keywords internal
 ProcessSelectMeanAtAge <- function(select, Ages, nArea, type, Year) {
+  
+  
   ProcessSelectMeanAt(select,
                       Classes   = Ages@Classes,
                       nArea     = nArea,

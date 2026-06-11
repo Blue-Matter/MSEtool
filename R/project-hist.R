@@ -60,8 +60,8 @@ Project_hist <- function(Hist,
   
   # ---- Populate Number-at-Age at Beginning of Projection Year ----
   Proj <- CalcFisheryDynamics(Proj, 
-                              Years=c(utils::tail(YearsHist,1)), 
-                              clone=1) 
+                              Years = c(utils::tail(YearsHist,1)), 
+                              clone = 1) 
   
   # ---- Create MSE Object ----
   MSE <- Hist2MSE(Proj, MPNames = MPs)

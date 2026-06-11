@@ -116,50 +116,92 @@ Update_DiscardMortality_Sim <- function(Proj,
       Weight   <- Subset(Stock@Weight,   Sims = sim, Years = FutureYears)
       Maturity <- Subset(Stock@Maturity, Sims = sim, Years = FutureYears)
   
-      ALK     <- Length@ALK 
-      Classes <- Advice@DiscardMortality@Classes
+      ReComputeALKList <- vector('list', length(DiscardMortalityList))
       
-      if (is.null(Classes)) {
-        Classes <- Length@Classes
+      if (is.list(DiscardMortalityList)) {
+        ClassesList <- purrr::map(DiscardMortalityList, slot, 'Classes') 
       } else {
-        Length@ALK <- CalcAgeSizeKey(MeanAtAge = Length@MeanAtAge,
-                                     CVatAge   = Length@CVatAge,
-                                     Classes   = Classes,
-                                     TruncSD   = Length@TruncSD,
-                                     Dist      = Length@Dist,
-                                     silent    = TRUE)
+        ClassesList <- list(DiscardMortalityList@Classes)
       }
-
-      Length@Classes <- Classes
-  
       
-      if (length(Ages@Classes)< 50) {
-        # Increases the temporal resolution of `ObjectMeanAtAge` and `ASK`
-        # by linear interpolate Mean length-at-age and CV length-at-age
+      for (fl in seq_along(ClassesList)) {
+        if (is.null(ClassesList[[fl]])) 
+          ClassesList[[fl]]  <- Length@Classes
         
-        ALK <- CalcAgeSizeKey(MeanAtAge = LinearInterpolate_Age(Length@MeanAtAge),
-                                       CVatAge   = LinearInterpolate_Age(Length@CVatAge),
-                                       Classes   = Length@Classes,
-                                       TruncSD   = Length@TruncSD,
-                                       Dist      = Length@Dist,
-                                       silent    = TRUE)
+        ReComputeALKList[[fl]] <- !setequal(Length@Classes, ClassesList[[fl]])
       }
       
+      all_same <- all(sapply(ReComputeALKList[-1], identical, ReComputeALKList[[1]]))
+      if (all_same) ReComputeALKList <- list(ReComputeALKList[[1]])
+      
+      all_same <- all(sapply(ClassesList[-1], identical, ClassesList[[1]])) &&
+        all(sapply(ClassesList, setequal, Length@Classes))
+      
+      if (all_same) ClassesList <- list(ClassesList[[1]])
+      
+      LinIntAge <- length(Ages@Classes) < 50
 
       for (fl in seq_len(nFleet)) {
         dm <- if (is.list(DiscardMortalityList)) DiscardMortalityList[[fl]] else DiscardMortalityList
+        
+        FleetLength  <- Length 
+        Classes      <- ClassesList[[min(length(ClassesList), fl)]]
+        ReComputeALK <- ReComputeALKList[[min(length(ReComputeALKList), fl)]]
+        if (fl == 1) {
+          # Get ALK using Length@Classes
+          if (LinIntAge) {
+            # Increases the temporal resolution of `ObjectMeanAtAge` and `ASK`
+            # by linear interpolate Mean length-at-age and CV length-at-age
+            ALK_1 <- CalcAgeSizeKey(MeanAtAge=LinearInterpolate_Age(Length@MeanAtAge),
+                                    CVatAge=LinearInterpolate_Age(Length@CVatAge),
+                                    Classes=Length@Classes,
+                                    TruncSD=Length@TruncSD,
+                                    Dist=Length@Dist,
+                                    silent=TRUE)
+          } else {
+            ALK_1 <- Length@ALK
+          }
+        }
+        
+        if (ReComputeALK) {
+          if (LinIntAge) {
+            ALK <- CalcAgeSizeKey(MeanAtAge=LinearInterpolate_Age(Length@MeanAtAge),
+                                  CVatAge=LinearInterpolate_Age(Length@CVatAge),
+                                  Classes=Classes,
+                                  TruncSD=Length@TruncSD,
+                                  Dist=Length@Dist,
+                                  silent=TRUE)
+          } else {
+            ALK <- CalcAgeSizeKey(MeanAtAge=Length@MeanAtAge,
+                                  CVatAge=Length@CVatAge,
+                                  Classes=Classes,
+                                  TruncSD=Length@TruncSD,
+                                  Dist=Length@Dist,
+                                  silent=TRUE)
+          }
+          FleetLength@ALK <- CalcAgeSizeKey(MeanAtAge = Length@MeanAtAge,
+                                            CVatAge   = Length@CVatAge,
+                                            Classes   = Classes,
+                                            TruncSD   = Length@TruncSD,
+                                            Dist      = Length@Dist,
+                                            silent    = TRUE)
+        } else {
+          ALK <- ALK_1
+        }
+        
+        FleetLength@Classes <- Classes
         
         dm <- ProcessSelectMeanAtAge(dm, Ages, nArea,
                                      type = 'DiscardMortality', 
                                      Year = FutureYears[1])
         
-        dm <- ProcessSelectMeanAtLength(dm, Length, nArea, 
+        dm <- ProcessSelectMeanAtLength(dm, FleetLength, nArea, 
                                         type = 'DiscardMortality', 
                                         Year = FutureYears[1])
         
         dm <- PopulateDiscardMortality(dm,
                                        Ages  = Ages,
-                                       Length = Length,
+                                       Length = FleetLength,
                                        nSim  = 1,
                                        Years = FutureYears,
                                        nArea = nArea,

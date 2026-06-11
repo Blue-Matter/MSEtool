@@ -210,6 +210,10 @@ SubsetYear <- function(object, Years, Impute=TRUE, debug=FALSE) {
       if (any(ind))
         return(object[ind])
     }
+    
+    if (any(is.na(object)))
+      return(object)
+    
     if (all(object > 1000) && all(object < 3000)) {
       ind <- object %in% Years 
       if (any(ind))

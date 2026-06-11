@@ -58,13 +58,10 @@ CurrentCatch <- function(Data) {
     return(Advice())
   
   LastHistDiscards <- Data@Discards@Value[LastHistYearInd(Data), , drop=FALSE]
-  LastHistRemovals <- dplyr::bind_rows(
-    as.data.frame(LastHistLandings), 
-    as.data.frame(LastHistDiscards)
-  )
-  LastHistRemovals <- colSums(LastHistRemovals, na.rm=TRUE)
-    
-  Advice(TAC=LastHistRemovals)
+  
+  LastHistRemovals <- as.vector(replace(LastHistLandings, is.na(LastHistLandings), 0) +
+                                  replace(LastHistDiscards,  is.na(LastHistDiscards),  0))
+  Advice(TAC = LastHistRemovals)
 }
 class(CurrentCatch) <- 'mp'
 
