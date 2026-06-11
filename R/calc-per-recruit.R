@@ -175,12 +175,13 @@ CalcPerRecruit_F <- function(apicalF = 0.1, spr_threshold = 0.001, ...) {
     if (collapsed) {
       PRList[[i]] <- PRList[[i-1]] 
     } else {
-      PRList[[i]] <- CalcPerRecruit_F_scalar(apicalF[i], ...)
+      PRList[[i]] <- CalcPerRecruit_F_scalar(apicalF = apicalF[i], ...)
       if (!is.null(PRList[[i]]@SPR) && min(PRList[[i]]@SPR, na.rm=TRUE) < spr_threshold)
         collapsed <- TRUE
     }
   }
   
+
   # zero-fill all F steps at and beyond the collapse point
   zero_fill <- \(arr) { arr[] <- 0; arr }
   if (collapsed) {
