@@ -147,7 +147,7 @@ GenProjData_AgeComp <- function(x, Proj, DataYear, YearsAll, i, stocks,
         1
       }
       
-      true_n  <- CatchAtAge_yr[fl, ]
+      true_n  <- CatchAtAge_yr[, fl]
       total_n <- sum(true_n, na.rm = TRUE)
       if (is.na(total_n) || total_n == 0) next
       
