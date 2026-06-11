@@ -2,9 +2,9 @@
 % Please edit documentation in R/constructor-length.R
 \name{Length}
 \alias{Length}
+\alias{Length<-}
 \alias{ALK}
 \alias{ALK<-}
-\alias{Length<-}
 \title{Length Constructor and Accessors}
 \usage{
 Length(
@@ -22,11 +22,11 @@ Length(
   Misc = list()
 )
 
+Length(x) <- value
+
 ALK(x)
 
 ALK(x) <- value
-
-Length(x) <- value
 }
 \arguments{
 \item{Pars}{\code{list}. Named list of growth parameters. Element names must

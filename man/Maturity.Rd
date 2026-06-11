@@ -89,10 +89,9 @@ object for \verb{Maturity<-}.}
 \value{
 \itemize{
 \item \code{Maturity()} returns a \link[=maturity-class]{maturity} object. If \code{Pars} is a
-\link[=stock-class]{stock}, returns \code{x@Maturity}. If \code{Pars} is a list of stocks,
-returns \code{Pars[[Model]]@Maturity}.
+\link[=stock-class]{stock}, returns \code{x@Maturity}.
 \item \verb{Maturity<-} returns the \link[=stock-class]{stock} \code{x} with the \code{Maturity} slot
-replaced and the object re-validated.
+replaced
 \item \code{Semelparous()} returns the \code{Semelparous} slot from \code{x} (a scalar before
 \code{\link[=Populate]{Populate()}}, a \verb{Sim × Age × Year} array after).
 \item \verb{Semelparous<-} returns \code{x} with the \code{Semelparous} slot updated and the

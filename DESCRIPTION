@@ -370,6 +370,7 @@ Collate:
     'utils-extend-om.R'
     'utils-extend.R'
     'utils-fill-from-misc.R'
+    'utils-fleet-passthrough-helpers.R'
     'utils-get_nSim.R'
     'utils-helpers.R'
     'utils-identical-age.R'

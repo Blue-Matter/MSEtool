@@ -2,9 +2,9 @@
 % Please edit documentation in R/constructor-weight.R
 \name{Weight}
 \alias{Weight}
+\alias{Weight<-}
 \alias{AWK}
 \alias{AWK<-}
-\alias{Weight<-}
 \title{Weight Constructor and Accessors}
 \usage{
 Weight(
@@ -23,11 +23,11 @@ Weight(
   Misc = list()
 )
 
+Weight(x) <- value
+
 AWK(x)
 
 AWK(x) <- value
-
-Weight(x) <- value
 }
 \arguments{
 \item{Pars}{\code{list}. Named list of allometric parameters. Element names must
