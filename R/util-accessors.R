@@ -310,13 +310,21 @@ Model <- function(x) {
 Name <- function(x) {
   if (inherits(x, 'mse'))
     x <- x@OM
+  
+  if (is.list(x))
+    return(purrr::map(x, Name))
+  
   AccessSlot(x, 'Name')
 }
 
 #' @rdname Access
 #' @export
 `Name<-` <- function(x, value) {
-  AssignSlot(x, value, 'Name')
+  if (inherits(x, 'mse')) {
+    x@OM <- AssignSlotRecursive(x@OM, value, 'Name')  
+    return(x)
+  }
+  AssignSlotRecursive(x, value, 'Name')  
 }
 
 #' @rdname Access
@@ -617,17 +625,8 @@ YearLH <- function(x) {
 
 # ---- Helpers ----
 
-#' Access a Named Slot from an S4 Object
-#'
-#' Internal helper that retrieves a named slot from an S4 object, with
-#' informative errors if `x` is not S4 or the slot does not exist.
-#'
-#' @param x An S4 object.
-#' @param slotname Character. Name of the slot to retrieve.
-#'
-#' @return The value stored in `slot(x, slotname)`.
-#' @keywords internal
 AccessSlot <- function(x, slotname) {
+  if (is.null(x)) return(NULL)
   CheckClass(slotname, 'character', 'slotname')
   if (!isS4(x))
     cli::cli_abort("{.arg x} is not an S4 object.")
@@ -636,20 +635,13 @@ AccessSlot <- function(x, slotname) {
   slot(x, slotname)
 }
 
-#' Assign a Value to a Named Slot of an S4 Object
-#'
-#' Internal helper that assigns a value to a named slot of an S4 object and
-#' validates the result. Emits a warning and returns `NULL` invisibly if the
-#' slot does not exist.
-#'
-#' @param x An S4 object.
-#' @param value The value to assign.
-#' @param slot Character. Name of the slot to assign to.
-#'
-#' @return `x` with the named slot set to `value`, after
-#'   [methods::validObject()] is called. Returns `NULL` invisibly if the slot
-#'   is not found.
-#' @keywords internal
+AccessSlotRecursive <- function(x, SlotName) {
+  if (is.list(x))
+    return(purrr::map(x, \(xi) AccessSlotRecursive(xi, SlotName)))
+  AccessSlot(x, SlotName)
+}
+
+
 AssignSlot <- function(x, value, slot) {
   if (!slot %in% slotNames(x)) {
     cli::cli_alert_warning(
@@ -660,4 +652,117 @@ AssignSlot <- function(x, value, slot) {
   slot(x, slot) <- value
   methods::validObject(x)
   x
+}
+
+AssignSlotRecursive <- function(x, value, SlotName) {
+  if (is.list(x)) {
+    if (!is.list(value) || length(value) != length(x))
+      cli::cli_abort(c(
+        "x" = "`value` must be a list of length {length(x)}",
+        "i" = "`value` has length {length(value)}"
+      ))
+    return(purrr::map2(x, value, \(xi, vi) AssignSlotRecursive(xi, vi, SlotName)))
+  }
+  AssignSlot(x, value, SlotName)
+}
+
+isStockList <- function(x) {
+  is.list(x) && length(x) > 0 &&
+    all(vapply(x, inherits, logical(1), what = 'stock'))
+}
+
+isStockOrList <- function(x) {
+  inherits(x, 'stock') ||
+    inherits(x, 'om')    ||
+    isStockList(x)
+}
+
+
+isFleetList <- function(x) {
+  is.list(x) && length(x) > 0 &&
+    all(vapply(x, inherits, logical(1), what = 'fleet'))
+}
+
+isStockFleetList <- function(x) {
+  is.list(x) && length(x) > 0 &&
+    all(vapply(x, isFleetList, logical(1)))
+}
+
+isFleetOrList <- function(x) {
+  inherits(x, 'fleet') ||
+    inherits(x, 'om')    ||
+    isFleetList(x)        ||
+    isStockFleetList(x)
+}
+
+
+ExtractStockSlot <- function(x, SlotName) {
+  if (inherits(x, 'stock'))
+    return(slot(x, SlotName))
+  
+  if (inherits(x, 'om')) {
+    out <- purrr::map(x@Stock, slot, SlotName)
+    if (!length(out))
+      return(NULL)
+    
+    class(out) <- 'StockList'
+    return(out)
+  }
+  
+  if (isStockList(x)) {
+    out <- purrr::map(x, slot, SlotName)
+    if (!length(out))
+      return(NULL)
+    class(out) <- 'StockList'
+    return(out)
+  }
+  
+  NULL
+}
+
+ExtractFleetSlot <- function(x, SlotName) {
+  if (inherits(x, 'fleet'))
+    return(slot(x, SlotName))
+  
+  if (inherits(x, 'om')) {
+    out <- purrr::map(x@Fleet, \(FleetList) {
+      fl <- purrr::map(FleetList, slot, SlotName)
+      class(fl) <- 'FleetList'
+      fl
+    })
+    if (!length(out))
+      return(NULL)
+    class(out) <- 'StockFleetList'
+    return(out)
+  }
+  
+  if (isStockFleetList(x)) {
+    out <- purrr::map(x, \(FleetList) {
+      fl <- purrr::map(FleetList, slot, SlotName)
+      class(fl) <- 'FleetList'
+      fl
+    })
+    if (!length(out))
+      return(NULL)
+    class(out) <- 'StockFleetList'
+    return(out)
+  }
+  
+  if (isFleetList(x)) {
+    out <- purrr::map(x, slot, SlotName)
+    if (!length(out))
+      return(NULL)
+    class(out) <- 'FleetList'
+    return(out)
+  }
+  
+  NULL
+}
+
+AssignFleetSlot <- function(x, value, SlotName) {
+  if (inherits(x, 'om')) {
+    x@Fleet <- AssignSlotRecursive(x@Fleet, value, SlotName)
+    return(x)
+  }
+  AssignSlotRecursive(x, value, SlotName)
 }
