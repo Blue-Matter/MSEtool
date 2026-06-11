@@ -205,9 +205,17 @@ SubsetYear <- function(object, Years, Impute=TRUE, debug=FALSE) {
   }
   
   if (is.numeric(object)) {
-    ind <- object %in% Years 
-    if (any(ind))
-      return(object[ind])
+    if (!is.null(names(object))) {
+      ind <- which(names(object) %in% Years)
+      if (any(ind))
+        return(object[ind])
+    }
+    if (all(object > 1000) && all(object < 3000)) {
+      ind <- object %in% Years 
+      if (any(ind))
+        return(object[ind])  
+    }
+    
   }
   
   object
