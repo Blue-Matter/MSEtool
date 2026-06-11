@@ -125,52 +125,96 @@ Update_Selectivity_Sim <- function(Proj,
            "`", type, "()` objects of length nFleet (", nFleet, ")")
     
     for (st in stocks) {
-      Stock  <- Proj@OM@Stock[[st]]
-      Ages   <- Stock@Ages
-      Length <- Subset(Stock@Length, Sims=sim, Years=FutureYears)
-      Weight <- Subset(Stock@Weight, Sims=sim, Years=FutureYears)
+      Stock    <- Proj@OM@Stock[[st]]
+      Ages     <- Stock@Ages
+      Length   <- Subset(Stock@Length,   Sims=sim, Years=FutureYears)
+      Weight   <- Subset(Stock@Weight,   Sims=sim, Years=FutureYears)
       Maturity <- Subset(Stock@Maturity, Sims=sim, Years=FutureYears)
       
-      ALK <- Length@ALK 
-      Classes <- Advice@DiscardMortality@Classes
+      ReComputeALKList <- vector('list', length(SelectList))
       
-      if (is.null(Classes)) {
-        Classes <- Length@Classes
+      if (is.list(SelectList)) {
+        ClassesList <- purrr::map(SelectList, slot, 'Classes') 
       } else {
-        Length@ALK <- CalcAgeSizeKey(MeanAtAge = Length@MeanAtAge,
-                                     CVatAge   = Length@CVatAge,
-                                     Classes   = Classes,
-                                     TruncSD   = Length@TruncSD,
-                                     Dist      = Length@Dist,
-                                     silent    = TRUE)
+        ClassesList <- list(SelectList@Classes)
       }
       
-      Length@Classes <- Classes
-      
-      if (!is.null(ALK) && length(Ages)< 50) {
-        # Increases the temporal resolution of `ObjectMeanAtAge` and `ASK`
-        # by linear interpolate Mean length-at-age and CV length-at-age
-        
-        ALK <- CalcAgeSizeKey(MeanAtAge=LinearInterpolate_Age(Length@MeanAtAge),
-                              CVatAge=LinearInterpolate_Age(Length@CVatAge),
-                              Classes=Length@Classes,
-                              TruncSD=Length@TruncSD,
-                              Dist=Length@Dist,
-                              silent=TRUE)
+      for (fl in seq_along(ClassesList)) {
+        if (is.null(ClassesList[[fl]])) 
+          ClassesList[[fl]]  <- Length@Classes
+         
+        ReComputeALKList[[fl]] <- !setequal(Length@Classes, ClassesList[[fl]])
       }
       
-
+      all_same <- all(sapply(ReComputeALKList[-1], identical, ReComputeALKList[[1]]))
+      if (all_same) ReComputeALKList <- list(ReComputeALKList[[1]])
+      
+      all_same <- all(sapply(ClassesList[-1], identical, ClassesList[[1]]))
+      if (all_same) ClassesList <- list(ClassesList[[1]])
+    
+      LinIntAge <- length(Ages@Classes) < 50
+      
       for (fl in seq_along(FleetNames)) {
         select <- if (is.list(SelectList)) SelectList[[fl]] else SelectList
         
+        # Compute ALK with new size classes and finer temporal resolution
+        FleetLength  <- Length 
+        Classes      <- ClassesList[[min(length(ClassesList), fl)]]
+        ReComputeALK <- ReComputeALKList[[min(length(ReComputeALKList), fl)]]
+        if (fl == 1) {
+          # Get ALK using Length@Classes
+          if (LinIntAge) {
+            # Increases the temporal resolution of `ObjectMeanAtAge` and `ASK`
+            # by linear interpolate Mean length-at-age and CV length-at-age
+            ALK_1 <- CalcAgeSizeKey(MeanAtAge=LinearInterpolate_Age(Length@MeanAtAge),
+                                  CVatAge=LinearInterpolate_Age(Length@CVatAge),
+                                  Classes=Length@Classes,
+                                  TruncSD=Length@TruncSD,
+                                  Dist=Length@Dist,
+                                  silent=TRUE)
+          } else {
+            ALK_1 <- Length@ALK
+          }
+        }
+        
+        if (ReComputeALK) {
+          if (LinIntAge) {
+            ALK <- CalcAgeSizeKey(MeanAtAge=LinearInterpolate_Age(Length@MeanAtAge),
+                                    CVatAge=LinearInterpolate_Age(Length@CVatAge),
+                                    Classes=Classes,
+                                    TruncSD=Length@TruncSD,
+                                    Dist=Length@Dist,
+                                    silent=TRUE)
+          } else {
+            ALK <- CalcAgeSizeKey(MeanAtAge=Length@MeanAtAge,
+                                  CVatAge=Length@CVatAge,
+                                  Classes=Classes,
+                                  TruncSD=Length@TruncSD,
+                                  Dist=Length@Dist,
+                                  silent=TRUE)
+          }
+          FleetLength@ALK <- CalcAgeSizeKey(MeanAtAge = Length@MeanAtAge,
+                                       CVatAge   = Length@CVatAge,
+                                       Classes   = Classes,
+                                       TruncSD   = Length@TruncSD,
+                                       Dist      = Length@Dist,
+                                       silent    = TRUE)
+          
+          
+        } else {
+          ALK <- ALK_1
+        }
+        
+        FleetLength@Classes <- Classes
+        
         # Reshape mean-at-x slots to [nClass, nArea] then add Sim/Year dims
         select <- ProcessSelectMeanAtAge(select,    Ages,   nArea, type, Year=FutureYears[1])
-        select <- ProcessSelectMeanAtLength(select, Length, nArea, type, Year=FutureYears[1])
+        select <- ProcessSelectMeanAtLength(select, FleetLength, nArea, type, Year=FutureYears[1])
         select <- ProcessSelectMeanAtWeight(select, Weight, nArea, type, Year=FutureYears[1])
         
         select <- populate(select,
                            Ages     = Ages,
-                           Length   = Length,
+                           Length   = FleetLength,
                            Weight   = Weight,
                            Maturity = Maturity,
                            nSim     = 1,
