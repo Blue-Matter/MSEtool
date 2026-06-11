@@ -112,24 +112,40 @@ Update_DiscardMortality_Sim <- function(Proj,
     for (st in stocks) {
       Stock    <- Proj@OM@Stock[[st]]
       Ages     <- Stock@Ages
-      Length   <- Subset(Stock@Length,     Sims = sim, Years = FutureYears)
-      Weight   <- Subset(Stock@Weight,     Sims = sim, Years = FutureYears)
+      Length   <- Subset(Stock@Length,   Sims = sim, Years = FutureYears)
+      Weight   <- Subset(Stock@Weight,   Sims = sim, Years = FutureYears)
       Maturity <- Subset(Stock@Maturity, Sims = sim, Years = FutureYears)
+  
+      ALK     <- Length@ALK 
+      Classes <- Advice@DiscardMortality@Classes
       
-      ALK <- Length@ALK 
+      if (is.null(Classes)) {
+        Classes <- Length@Classes
+      } else {
+        Length@ALK <- CalcAgeSizeKey(MeanAtAge = Length@MeanAtAge,
+                                     CVatAge   = Length@CVatAge,
+                                     Classes   = Classes,
+                                     TruncSD   = Length@TruncSD,
+                                     Dist      = Length@Dist,
+                                     silent    = TRUE)
+      }
+
+      Length@Classes <- Classes
+  
       
-      if (length(Ages)< 50) {
+      if (length(Ages@Classes)< 50) {
         # Increases the temporal resolution of `ObjectMeanAtAge` and `ASK`
         # by linear interpolate Mean length-at-age and CV length-at-age
         
         ALK <- CalcAgeSizeKey(MeanAtAge = LinearInterpolate_Age(Length@MeanAtAge),
-                              CVatAge   = LinearInterpolate_Age(Length@CVatAge),
-                              Classes   = Length@Classes,
-                              TruncSD   = Length@TruncSD,
-                              Dist      = Length@Dist,
-                              silent    = TRUE)
+                                       CVatAge   = LinearInterpolate_Age(Length@CVatAge),
+                                       Classes   = Length@Classes,
+                                       TruncSD   = Length@TruncSD,
+                                       Dist      = Length@Dist,
+                                       silent    = TRUE)
       }
       
+
       for (fl in seq_len(nFleet)) {
         dm <- if (is.list(DiscardMortalityList)) DiscardMortalityList[[fl]] else DiscardMortalityList
         
