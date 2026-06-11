@@ -132,6 +132,20 @@ Update_Selectivity_Sim <- function(Proj,
       Maturity <- Subset(Stock@Maturity, Sims=sim, Years=FutureYears)
       
       ALK <- Length@ALK 
+      Classes <- Advice@DiscardMortality@Classes
+      
+      if (is.null(Classes)) {
+        Classes <- Length@Classes
+      } else {
+        Length@ALK <- CalcAgeSizeKey(MeanAtAge = Length@MeanAtAge,
+                                     CVatAge   = Length@CVatAge,
+                                     Classes   = Classes,
+                                     TruncSD   = Length@TruncSD,
+                                     Dist      = Length@Dist,
+                                     silent    = TRUE)
+      }
+      
+      Length@Classes <- Classes
       
       if (!is.null(ALK) && length(Ages)< 50) {
         # Increases the temporal resolution of `ObjectMeanAtAge` and `ASK`
