@@ -1,18 +1,16 @@
 library(MSEtool)
 
+## ---- complex-create-om ----
 ComplexOM <- OM(
-  "Stock Complex - Single Fleet",
+  Name      = "Stock Complex - Single Fleet",
   nSim      = 8,
   nYear     = 20,
   pYear     = 30,
-  Complexes = list(Stock_Complex = 1:2)
+  Stock     = list(AlbacoreExStock, ButterfishExStock),
+  Fleet     = AsympExFleet,
+  Obs       = AgeStructuredObs,
+  Complexes = list(StockComplex = 1:2)
 )
 
-Stock(ComplexOM) <- list(AlbacoreExStock, ButterfishExStock)
-
-Fleet(ComplexOM) <- AsympExFleet
-
-Obs(ComplexOM) <- AgeStructuredObs
-
+## ---- save object ----
 usethis::use_data(ComplexOM, overwrite = TRUE)
-

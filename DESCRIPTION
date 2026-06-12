@@ -381,6 +381,7 @@ Collate:
     'utils-log-mp-error.R'
     'utils-log.R'
     'utils-logs-delete.R'
+    'utils-make-named-list.R'
     'utils-man.R'
     'utils-misc.R'
     'utils-msy-accessors.R'

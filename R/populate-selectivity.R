@@ -75,6 +75,7 @@ PopulateSelectivity <- function(Selectivity,
   )
   
   nSim  <- Get_nSim(Selectivity, nSim)
+  Years <- DefaultYears(Years)
   
   if (EmptyObject(Selectivity)) 
     cli::cli_abort('{.val Selectivity} is required but is currently empty')
@@ -96,6 +97,7 @@ PopulateSelectivity <- function(Selectivity,
   if (!is.null(ModelClass)) {
     if (Selectivity@isRel) {
       CheckRequiredObject(Maturity, "maturity", "Maturity")
+      Maturity <- PopulateMaturity(Maturity, Ages, Length, Weight, Years, nSim)
       L50 <- FindL50(Maturity)
       if (!is.null(dimnames(Selectivity@Pars$L5)$Area)) 
         L50 <- AddDimension(L50, 'Area')
@@ -106,6 +108,7 @@ PopulateSelectivity <- function(Selectivity,
     }
     
     if (grepl("at-Length", ModelClass)) {
+      Length <- PopulateLength(Length, Ages, Years, nSim)
       Selectivity <- PopulateMeanAtLength(
         object = Selectivity,
         Length = Length,
@@ -115,6 +118,8 @@ PopulateSelectivity <- function(Selectivity,
         silent = silent
       )
     } else if (grepl("at-Weight", ModelClass)) {
+      Weight <- PopulateWeight(Weight, Ages, Length,Years, nSim)
+      
       Selectivity <- PopulateMeanAtWeight(
         object = Selectivity,
         Weight = Weight,

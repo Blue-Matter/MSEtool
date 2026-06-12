@@ -1,5 +1,6 @@
 library(MSEtool)
 
+## ---- length-structured-create-obs ----
 LengthStructuredObs <- Obs("LengthStructuredObs")
 
 Landings(LengthStructuredObs) <- CatchObs(
@@ -11,7 +12,6 @@ Discards(LengthStructuredObs) <- CatchObs(
   CV   = c(0.15, 0.25),
   Bias = c(0.95, 1.05)
 )
-
 
 Survey(LengthStructuredObs) <- IndicesObs(
   CV          = c(0.15, 0.30),
@@ -25,12 +25,11 @@ LandingsAtSize(LengthStructuredObs) <- CompObs(
   Theta      = c(0.5, 1.0)
 )
 
-
 DiscardsAtSize(LengthStructuredObs) <- CompObs(
   SampleSize = c(150, 300),
   ESS        = c(40,   80),
   Theta      = c(0.4,  0.8)
 )
 
+## ---- save object ----
 usethis::use_data(LengthStructuredObs, overwrite = TRUE)
-

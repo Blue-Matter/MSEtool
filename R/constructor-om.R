@@ -232,6 +232,13 @@ OM <- function(Name        = "A new OM object",
   .Object@Seasons     <- Seasons
   .Object@Years       <- CalcYears(nYear, pYear, CurrentYear, Seasons)
   
+  Stock     <- if (!is.null(Stock)) ToNamedList(Stock, 'stock') else NULL
+  stock_nms <- names(Stock)
+  Fleet     <- ToNestedList(Fleet, 'fleet', stock_nms)
+  fleet_nms <- if (!is.null(Fleet)) purrr::map(Fleet, names) else NULL
+  Obs       <- ToNestedList(Obs,   'obs',   stock_nms, fleet_nms)
+  Imp       <- ToNestedList(Imp,   'imp',   stock_nms, fleet_nms)
+                          
   .Object@Stock       <- Stock
   .Object@Fleet       <- Fleet
   .Object@Obs         <- Obs
@@ -321,18 +328,8 @@ OM <- function(Name        = "A new OM object",
 #' @name OM-accessors
 NULL
 
-# ---- Internal helper ---------------------------------------------------------
 
-# Redirects hist-class and mse-class objects to their embedded OM before
-# slot access.
-ishist <- function(x, slot_name) {
-  if (inherits(x, "hist") || inherits(x, "mse"))
-    x <- x@OM
-  AccessSlot(x, slot_name)
-}
-
-
-# ---- Metadata ----------------------------------------------------------------
+# ---- Metadata ----
 
 #' @rdname OM-accessors
 #' @export
@@ -399,7 +396,7 @@ Source <- function(x) ishist(x, "Source")
 `Source<-` <- function(x, value) AssignSlot(x, value, "Source")
 
 
-# ---- Simulation dimensions ---------------------------------------------------
+# ---- Simulation dimensions ----
 
 #' @rdname OM-accessors
 #' @export
@@ -434,7 +431,7 @@ Seasons <- function(x) ishist(x, "Seasons")
 `Seasons<-` <- function(x, value) AssignSlot(x, value, "Seasons")
 
 
-# ---- Data lag and allocation -------------------------------------------------
+# ---- Data lag and allocation ----
 
 #' @rdname OM-accessors
 #' @export
@@ -469,7 +466,7 @@ EFactor <- function(x) ishist(x, "EFactor")
 `EFactor<-` <- function(x, value) AssignSlot(x, value, "EFactor")
 
 
-# ---- Multi-stock structure ---------------------------------------------------
+# ---- Multi-stock structure ----
 
 #' @rdname OM-accessors
 #' @export
@@ -504,7 +501,7 @@ Relations <- function(x) ishist(x, "Relations")
 `Relations<-` <- function(x, value) AssignSlot(x, value, "Relations")
 
 
-# ---- Management parameters ---------------------------------------------------
+# ---- Management parameters ----
 
 #' @rdname OM-accessors
 #' @export
@@ -553,3 +550,43 @@ Control <- function(x) ishist(x, "Control")
 #' @rdname OM-accessors
 #' @export
 `Control<-` <- function(x, value) AssignSlot(x, value, "Control")
+
+
+# ---- Helpers ----
+
+ishist <- function(x, slot_name) {
+  if (inherits(x, "hist") || inherits(x, "mse"))
+    x <- x@OM
+  AccessSlot(x, slot_name)
+}
+
+ToNamedList <- function(x, cls) {
+  if (inherits(x, cls))
+    return(setNames(list(x), x@Name))
+  if (is.null(names(x)) || any(names(x) == ""))
+    names(x) <- purrr::map_chr(x, ~ .x@Name)
+  x
+}
+
+ToNestedList <- function(x, cls, stock_nms, fleet_nms = NULL) {
+  if (is.null(x)) return(NULL)
+  
+  is_flat <- inherits(x, cls) ||
+    (is.list(x) && all(purrr::map_lgl(x, ~ inherits(.x, cls))))
+  
+  if (is_flat) {
+    x <- ToNamedList(x, cls)
+    return(purrr::map(setNames(nm = stock_nms), ~ x))
+  }
+  
+  if (is.null(names(x))) names(x) <- stock_nms[seq_along(x)]
+  
+  purrr::imap(x, function(inner, stk) {
+    if (inherits(inner, cls))
+      inner <- setNames(list(inner), inner@Name)
+    if (is.null(names(inner)) || any(names(inner) == ""))
+      names(inner) <- (fleet_nms[[stk]] %||% purrr::map_chr(inner, ~ .x@Name))[seq_along(inner)]
+    inner
+  })
+}
+

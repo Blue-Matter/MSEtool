@@ -14,7 +14,8 @@
 #'
 #' @return The `Proj` object.
 #' @keywords internal
-CheckMSERun <- function(Proj, MSE, MPName, StartTime, EndTime, Error, ErrorMessage) {
+CheckMSERun <- function(Proj, MSE, MPName, StartTime, EndTime, Error, ErrorMessage,
+                        silent = FALSE) {
   
   elapsed_secs <- as.numeric(round(difftime(EndTime, StartTime, units='secs'), 2))
   elapsed_auto <- format(round(difftime(EndTime, StartTime, units='auto'), 2))
@@ -36,10 +37,12 @@ CheckMSERun <- function(Proj, MSE, MPName, StartTime, EndTime, Error, ErrorMessa
 
   if (!nFailed) {
     # Success - include elapsed time only if run took more than 5 seconds
-    if (elapsed_secs > 5) {
-      cli::cli_alert_success('{.val {MPName}} ({elapsed_auto})')
-    } else {
-      cli::cli_alert_success('{.val {MPName}}')
+    if (!silent) {
+      if (elapsed_secs > 5) {
+        cli::cli_alert_success('{.val {MPName}} ({elapsed_auto})')
+      } else {
+        cli::cli_alert_success('{.val {MPName}}')
+      }
     }
     return(Proj)
   }

@@ -1,5 +1,6 @@
 library(MSEtool)
 
+## ---- catch-survey-create-obs ----
 CatchAndSurveyObs <- Obs("CatchAndSurveyObs")
 
 Landings(CatchAndSurveyObs) <- CatchObs(
@@ -13,5 +14,5 @@ Survey(CatchAndSurveyObs) <- IndicesObs(
   AC          = c(0.0,  0.2)
 )
 
-
+## ---- save object ----
 usethis::use_data(CatchAndSurveyObs, overwrite = TRUE)

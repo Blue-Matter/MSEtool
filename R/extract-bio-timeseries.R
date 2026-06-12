@@ -292,7 +292,19 @@ extract_bio_timeseries <- function(object,
 
 
 
-# ---- Helper Functions ----
+# ---- Relative Values ----
+# 
+# B_B0
+# 
+# B_BMSY
+# 
+# SB_SB0
+# 
+# SB_SBMSY
+# 
+# SP_SP0
+# 
+# SP_SPMSY 
 
 
 

@@ -149,7 +149,7 @@ Landings <- function(object,
 #'   [catchdata-class] object (when `x` is [data-class]) to assign.
 #' @export
 `Landings<-` <- function(x, value) {
-  CheckClass(x, c('obs', 'data'), 'x')
+  CheckClass(x, c('obs', 'data', 'hist', 'mse'), 'x')
   x@Landings <- value
   methods::validObject(x)
   x
@@ -187,7 +187,7 @@ Discards <- function(object,
 #' @rdname catch_timeseries
 #' @export
 `Discards<-` <- function(x, value) {
-  CheckClass(x, c('obs', 'data'), 'x')
+  CheckClass(x, c('obs', 'data', 'hist', 'mse'), 'x')
   x@Discards <- value
   methods::validObject(x)
   x

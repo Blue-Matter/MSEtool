@@ -66,7 +66,7 @@ Simulate_om <- function(OM = NULL,
   Hist@Reference@SPR0 <- CalcSPR0(Hist)
   
   if (DoMSYRefs) 
-    Hist@Reference@MSY <- CalcMSY(Hist)
+    Hist@Reference@MSY <- CalcMSY(Hist, silent = silent)
   
   # TODO
   # - Per-Recruit Curves

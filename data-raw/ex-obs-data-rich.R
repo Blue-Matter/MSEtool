@@ -1,5 +1,6 @@
 library(MSEtool)
 
+## ---- data-rich-create-obs ----
 DataRichObs <- Obs("DataRichObs")
 
 Landings(DataRichObs) <- CatchObs(
@@ -52,4 +53,5 @@ DiscardsAtSize(DataRichObs) <- CompObs(
   Theta      = c(0.5, 0.9)
 )
 
+## ---- save object ----
 usethis::use_data(DataRichObs, overwrite = TRUE)

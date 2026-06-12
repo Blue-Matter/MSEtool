@@ -179,7 +179,8 @@ Project_MP <- function(Proj,
   
   Proj <- CheckMSERun(Proj, MSE, MPName, 
                       StartTime, EndTime, 
-                      Error, ErrorMessage)
+                      Error, ErrorMessage,
+                      silent = silent)
   
 
   if (!Error) 

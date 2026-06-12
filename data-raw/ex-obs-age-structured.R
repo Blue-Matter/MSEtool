@@ -1,5 +1,6 @@
 library(MSEtool)
 
+## ---- age-structured-create-obs ----
 AgeStructuredObs <- Obs("AgeStructuredObs")
 
 Landings(AgeStructuredObs) <- CatchObs(
@@ -30,4 +31,5 @@ DiscardsAtAge(AgeStructuredObs) <- CompObs(
   Theta      = c(0.4,  0.8)
 )
 
+## ---- save object ----
 usethis::use_data(AgeStructuredObs, overwrite = TRUE)

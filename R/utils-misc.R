@@ -249,16 +249,7 @@ SetDigest <- function(object, argList = list()) {
 }
 
 
-MakeNamedList <- function(names, values = NULL) {
-  l <- vector("list", length(names))
-  names(l) <- names
-  if (!is.null(values)) {
-    for (i in 1:length(l)) {
-      l[[i]] <- values
-    }
-  }
-  l
-}
+
 
 CheckDigest <- function(object, argList = list()) {
   if (is.null(attributes(object)$digest)) {
