@@ -237,6 +237,7 @@ Collate:
     'extract-catch-timeseries.R'
     'extract-effort.R'
     'extract-number.R'
+    'extract-relative.R'
     'extract-unfished.R'
     'fct_CalcMSYRefPoints.R'
     'find-model.R'

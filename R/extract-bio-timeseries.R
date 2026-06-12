@@ -108,7 +108,7 @@ SProduction <- function(object,
                      IncYear = IncYear)
 }
 
-.get_at_age <- function(OM, slot_name = 'Weight', byArea, isMSE) {
+.get_at_age <- function(OM, slot_name = 'Weight', byArea, isMSE, MP_Names) {
   purrr::map(OM@Stock, \(stock) {
     
     out <- slot(stock,slot_name)@MeanAtAge
@@ -116,7 +116,7 @@ SProduction <- function(object,
       out <- AddDimension(out, 'Area', pos=4)
     
     if (isMSE)
-      out <- AddDimension(out, 'MP')
+      out <- AddDimension(out, 'MP', val = MP_Names)
     
     out
   })
@@ -209,6 +209,11 @@ extract_bio_timeseries <- function(object,
                                     IncYear = FALSE) {
   
   isMSE <- inherits(object, 'mse')
+  if (isMSE) {
+    MP_Names <- names(myMSE@MPs)
+  } else {
+    MP_Names <- NULL
+  }
   # units <- .get_units(OM, slot_name)
   
   if (byAge || byArea) {
@@ -218,9 +223,9 @@ extract_bio_timeseries <- function(object,
     if (!byArea) 
       number <- purrr::map(number, SumOverArea)
     
-    weight <- .get_at_age(OM, 'Weight', byArea, isMSE)
-    maturity <- .get_at_age(OM, 'Maturity', byArea, isMSE)
-    fecundity <- .get_at_age(OM, 'Fecundity', byArea, isMSE)
+    weight <- .get_at_age(OM, 'Weight', byArea, isMSE, MP_Names)
+    maturity <- .get_at_age(OM, 'Maturity', byArea, isMSE, MP_Names)
+    fecundity <- .get_at_age(OM, 'Fecundity', byArea, isMSE, MP_Names)
     
     if (slot_name == 'Biomass') {
       arrayList <- purrr::map2(number, weight, ArrayMultiply) 
@@ -246,8 +251,6 @@ extract_bio_timeseries <- function(object,
        #  dplyr::left_join(units, by='Stock') |>
         ConvertDF() |>
         dplyr::arrange(Sim, Stock, Year) 
-      
-      
     )
   } 
   
@@ -292,19 +295,7 @@ extract_bio_timeseries <- function(object,
 
 
 
-# ---- Relative Values ----
-# 
-# B_B0
-# 
-# B_BMSY
-# 
-# SB_SB0
-# 
-# SB_SBMSY
-# 
-# SP_SP0
-# 
-# SP_SPMSY 
+# Relative reference point functions (B_B0, SB_SB0, etc.) live in extract-relative.R
 
 
 

@@ -4,7 +4,16 @@
 \alias{CheckMSERun}
 \title{Check MSE Run Status and Log Failures}
 \usage{
-CheckMSERun(Proj, MSE, MPName, StartTime, EndTime, Error, ErrorMessage)
+CheckMSERun(
+  Proj,
+  MSE,
+  MPName,
+  StartTime,
+  EndTime,
+  Error,
+  ErrorMessage,
+  silent = FALSE
+)
 }
 \arguments{
 \item{Proj}{A \code{Hist} object .}
