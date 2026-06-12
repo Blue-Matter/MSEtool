@@ -206,16 +206,18 @@ ProcessSelectMeanAt <- function(select, Classes, nArea, type, Year,
   } else {
     # vector or 1-D array - validate length then broadcast over areas
     if (length(Values)==1) {
-        Values <- rep(Values, nClass)
+      Values <- rep(Values, nClass)
     }
-     if (length(Values) != nClass ) {
-       # cli::cli_warn("{type}@{slot_name} must be length `nClass` ({.val {nClass}}). Currently: {.val {length(Values)}}")
-       Values <- rep(Values, nClass)[seq_len(nClass)]
+    if (length(Values) != nClass ) {
+      cli::cli_abort(c('x' = "{type}@{slot_name} must be length `nClass` ({.val {nClass}})",
+                       'i' = "Currently: {.val {length(Values)}}")
+      )
+      # Values <- rep(Values, nClass)[seq_len(nClass)]
     }
       
     Values <- array(as.numeric(Values),
                     dim      = c(nClass, 1),
-                    dimnames = list(Classes, Area=1)) |>
+                    dimnames = list(Classes, Area = 1)) |>
       ExtendAreas(seq_len(nArea))
     names(dimnames(Values))[1] <- dim_name
   }
