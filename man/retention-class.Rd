@@ -27,14 +27,20 @@ parameters are expressed relative to maturity \code{L50}. See \code{\link[=Reten
 (\verb{Sim x Age x Year x Area}). See \code{\link[=Retention]{Retention()}}.}
 
 \item{\code{MeanAtLength}}{\code{numeric} array or \code{NULL}. Mean retention-at-length
-(\verb{Sim x Length x Year x Area}). See \code{\link[=Retention]{Retention()}}.}
+(\verb{Sim x Length x Year x Area}). Values are evaluated at the midpoint of
+each bin (halfway between consecutive lower bounds); the \code{Class} dimension
+is labelled by bin lower bounds (see \code{Classes}). See \code{\link[=Retention]{Retention()}}.}
 
 \item{\code{MeanAtWeight}}{\code{numeric} array or \code{NULL}. Mean retention-at-weight
-(\verb{Sim x Weight x Year x Area}). See \code{\link[=Retention]{Retention()}}.}
+(\verb{Sim x Weight x Year x Area}). Values are evaluated at the midpoint of
+each bin; the \code{Class} dimension is labelled by bin lower bounds (see
+\code{Classes}). See \code{\link[=Retention]{Retention()}}.}
 
 \item{\code{Classes}}{\code{numeric} or \code{NULL}. Lower bounds of length or weight bins
 corresponding to the second dimension of \code{MeanAtLength} or \code{MeanAtWeight}.
-Bin \code{k} spans \verb{[Classes[k], Classes[k+1])}; the final bin is open-ended.}
+Bin \code{k} spans \verb{[Classes[k], Classes[k+1])}; the final bin is open-ended.
+Values in \code{MeanAtLength}/\code{MeanAtWeight} are evaluated at bin midpoints,
+not at these lower bounds.}
 
 \item{\code{Misc}}{\code{list}. Miscellaneous additional inputs. For internal use.}
 }}

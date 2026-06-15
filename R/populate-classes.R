@@ -16,6 +16,22 @@
 #'
 #' @return `object` with `object@Classes` populated if it was previously empty.
 #' @keywords internal
+PopulateClasses <- function(object) {
+  if (!EmptyObject(object@Classes))
+    return(object)
+  
+  MaxBin <- CalcMaxBin(
+    MeanAtAge = object@MeanAtAge,
+    CVatAge   = object@CVatAge,
+    TruncSD   = object@TruncSD,
+    dist      = object@Dist
+  )
+  
+  bins           <- round(seq(0, to=MaxBin, length.out=40), 2)
+  object@Classes <- bins[-length(bins)]
+  object
+}
+
 #' Compute Bin Midpoints from Lower Bounds
 #'
 #' Given a vector of bin lower bounds (as stored in `object@Classes`), returns
@@ -27,22 +43,6 @@
 #'
 #' @return Numeric vector of bin midpoints, same length as `Classes`.
 #' @keywords internal
-PopulateClasses <- function(object) {
-  if (!EmptyObject(object@Classes))
-    return(object)
-
-  MaxBin <- CalcMaxBin(
-    MeanAtAge = object@MeanAtAge,
-    CVatAge   = object@CVatAge,
-    TruncSD   = object@TruncSD,
-    dist      = object@Dist
-  )
-
-  bins           <- round(seq(0, to=MaxBin, length.out=40), 2)
-  object@Classes <- bins[-length(bins)]
-  object
-}
-
 ClassMidpoints <- function(Classes) {
   n <- length(Classes)
   if (n == 1L) return(Classes)

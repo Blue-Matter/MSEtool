@@ -48,9 +48,11 @@ See \link[=populating-schedules]{Specifying Biological and Fleet Schedules}.}
 
 \item{\code{MeanAtLength}}{\code{array}. Mean natural mortality at length with named
 dimensions \code{Sim}, \code{Length}, and \code{Year}. Populated automatically when an
-at-length mortality model is used, or may be supplied directly. Converted
-to \code{MeanAtAge} via the \code{ALK} during \code{\link[=Populate]{Populate()}} when \code{MeanAtAge} is not
-already populated.
+at-length mortality model is used, or may be supplied directly. Values are
+evaluated at the midpoint of each bin (halfway between consecutive lower
+bounds); the \code{Class} dimension is labelled by bin lower bounds (see
+\code{Classes}). Converted to \code{MeanAtAge} via the \code{ALK} during \code{\link[=Populate]{Populate()}}
+when \code{MeanAtAge} is not already populated.
 See \link[=populating-schedules]{Specifying Biological and Fleet Schedules}.}
 
 \item{\code{Random}}{\code{array}. Reserved for future use. Intended to hold
@@ -60,7 +62,9 @@ but not applied during \code{\link[=Populate]{Populate()}}.}
 
 \item{\code{Classes}}{\code{numeric}. Age classes (in years) or lower bounds of length
 bins, corresponding to the \verb{MeanAt*} array in use. For length bins, bin
-\code{k} spans \verb{[Classes[k], Classes[k+1])}; the final bin is open-ended.}
+\code{k} spans \verb{[Classes[k], Classes[k+1])}; the final bin is open-ended.
+Values in \code{MeanAtLength} are evaluated at bin midpoints, not at these
+lower bounds.}
 
 \item{\code{Misc}}{\code{list}. Used internally.}
 }}

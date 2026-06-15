@@ -43,9 +43,11 @@ See \link[=populating-schedules]{Specifying Biological and Fleet Schedules}.}
 
 \item{\code{MeanAtLength}}{\code{array}. Mean weight at length with named dimensions
 \code{Sim}, \code{Length}, and \code{Year}. Populated automatically when an at-length
-weight model is used, or may be supplied directly. Converted to
-\code{MeanAtAge} via the \code{ALK} during \code{\link[=Populate]{Populate()}} when \code{MeanAtAge} is not
-already populated. See \link[=populating-schedules]{Specifying Biological and Fleet Schedules}.}
+weight model is used, or may be supplied directly. Values are evaluated at
+the midpoint of each bin (halfway between consecutive lower bounds); the
+\code{Class} dimension is labelled by bin lower bounds (see \code{Classes}).
+Converted to \code{MeanAtAge} via the \code{ALK} during \code{\link[=Populate]{Populate()}} when \code{MeanAtAge}
+is not already populated. See \link[=populating-schedules]{Specifying Biological and Fleet Schedules}.}
 
 \item{\code{CVatAge}}{\code{array} or \code{numeric}. Coefficient of variation of
 weight-at-age, used to generate the within-age-class weight distribution
@@ -70,7 +72,9 @@ weight class given age, derived from \code{MeanAtAge}, \code{CVatAge}, \code{Dis
 retrieve.}
 
 \item{\code{Classes}}{\code{numeric}. Lower bounds of weight bins in units of \code{Units}.
-Bin \code{k} spans \verb{[Classes[k], Classes[k+1])}; the final bin is open-ended.}
+Bin \code{k} spans \verb{[Classes[k], Classes[k+1])}; the final bin is open-ended.
+Values in \code{MeanAtLength} are evaluated at bin midpoints, not at these
+lower bounds.}
 
 \item{\code{Misc}}{\code{list}. Used internally.}
 }}
