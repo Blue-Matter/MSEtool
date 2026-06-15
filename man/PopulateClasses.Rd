@@ -9,13 +9,9 @@ PopulateClasses(object)
 \arguments{
 \item{object}{A \code{\link[=Length]{Length()}} or \code{\link[=Weight]{Weight()}} object with slots \code{Classes},
 \code{MeanAtAge}, \code{CVatAge}, \code{TruncSD}, and \code{Dist}.}
-
-\item{Classes}{Numeric vector of strictly increasing bin lower bounds.}
 }
 \value{
 \code{object} with \code{object@Classes} populated if it was previously empty.
-
-Numeric vector of bin midpoints, same length as \code{Classes}.
 }
 \description{
 If \code{object@Classes} is empty, calculates a default set of size class
@@ -30,44 +26,4 @@ lower bound of each bin; the upper bound of each bin is the lower bound of
 the next, and the final bin is open-ended (captures all values above its
 lower bound).
 }
-\keyword{(as}
-\keyword{1}
-\keyword{Bin}
-\keyword{Bounds}
-\keyword{Compute}
-\keyword{For}
-\keyword{Given}
-\keyword{Lower}
-\keyword{Midpoints}
-\keyword{`object@Classes`),}
-\keyword{a}
-\keyword{as}
-\keyword{average}
-\keyword{bin}
-\keyword{bin,}
-\keyword{bin.}
-\keyword{bins}
-\keyword{bounds}
-\keyword{bounds.}
-\keyword{consecutive}
-\keyword{each}
-\keyword{extrapolated}
-\keyword{final}
-\keyword{from}
-\keyword{in}
 \keyword{internal}
-\keyword{is}
-\keyword{lower}
-\keyword{midpoint}
-\keyword{n-1}
-\keyword{of}
-\keyword{open-ended}
-\keyword{preceding}
-\keyword{returns}
-\keyword{same}
-\keyword{stored}
-\keyword{the}
-\keyword{to}
-\keyword{using}
-\keyword{vector}
-\keyword{width}
