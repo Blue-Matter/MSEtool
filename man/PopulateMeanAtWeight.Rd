@@ -17,8 +17,9 @@ PopulateMeanAtWeight(
 \item{object}{An S4 object with slots \code{MeanAtWeight}, \code{Model}, \code{Pars}, and
 \code{Classes}.}
 
-\item{Weight}{A \code{\link[=Weight]{Weight()}} object supplying \code{Classes} used as the size
-class labels and inputs to the model.}
+\item{Weight}{A \code{\link[=Weight]{Weight()}} object supplying \code{Classes} (lower bounds of weight
+bins) used as size class labels. The model is evaluated at bin midpoints
+derived from these lower bounds.}
 
 \item{Years}{Numeric vector of year labels used to assign the \code{Year}
 dimension of the output array.}

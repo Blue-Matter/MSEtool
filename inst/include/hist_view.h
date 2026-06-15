@@ -175,14 +175,17 @@ inline HistView::HistView(Rcpp::S4& Hist, int nSim_, int nStock_, int nFleet_, i
   // Fleet misc
   const Rcpp::List WeightFleetList = Misc["WeightFleetList"];
   const Rcpp::List SelAgeList      = Misc["SelAgeList"];
-  const Rcpp::List SelSizeList     = Misc["SelSizeList"];
   const Rcpp::List RetAgeList      = Misc["RetAgeList"];
-  const Rcpp::List RetSizeList     = Misc["RetSizeList"];
   const Rcpp::List DiscMortList    = Misc["DiscMortList"];
+  WeightFleet.reserve(nStock); 
+  SelAge.reserve(     nStock);
+  RetAge.reserve(     nStock);      
+  DiscMort.reserve(   nStock);
   
-  WeightFleet.reserve(nStock); SelAge.reserve(nStock);
-  RetAge.reserve(nStock);      DiscMort.reserve(nStock);
-  SelSize.reserve(nStock);     RetSize.reserve(nStock);
+  // const Rcpp::List SelSizeList     = Misc["SelSizeList"];
+  // const Rcpp::List RetSizeList     = Misc["RetSizeList"];
+  // SelSize.reserve(    nStock);     
+  // RetSize.reserve(    nStock);
   
   for (int st = 0; st < nStock; ++st) {
     WeightFleet.emplace_back(view_ConstStockList4D(WeightFleetList, st));
@@ -190,17 +193,17 @@ inline HistView::HistView(Rcpp::S4& Hist, int nSim_, int nStock_, int nFleet_, i
     RetAge.emplace_back(     view_ConstStockList5D(RetAgeList,      st));
     DiscMort.emplace_back(   view_ConstStockList5D(DiscMortList,    st));
     
-    const Rcpp::List SS = SelSizeList[st];
-    const Rcpp::List RS = RetSizeList[st];
+    // const Rcpp::List SS = SelSizeList[st];
+    // const Rcpp::List RS = RetSizeList[st];
     
-    std::vector<ConstArrayView4D> ss, rs;
-    ss.reserve(nFleet); rs.reserve(nFleet);
-    for (int fl = 0; fl < nFleet; ++fl) {
-      ss.emplace_back(as_ConstArrayViewND<4>(SS[fl]));
-      rs.emplace_back(as_ConstArrayViewND<4>(RS[fl]));
-    }
-    SelSize.emplace_back(std::move(ss));
-    RetSize.emplace_back(std::move(rs));
+    // std::vector<ConstArrayView4D> ss, rs;
+    // ss.reserve(nFleet); rs.reserve(nFleet);
+    // for (int fl = 0; fl < nFleet; ++fl) {
+    //   ss.emplace_back(as_ConstArrayViewND<4>(SS[fl]));
+    //   rs.emplace_back(as_ConstArrayViewND<4>(RS[fl]));
+    // }
+    // SelSize.emplace_back(std::move(ss));
+    // RetSize.emplace_back(std::move(rs));
   }
   
   maxF = Rcpp::as<double>(Misc["maxF"]);

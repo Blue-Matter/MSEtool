@@ -55,6 +55,7 @@ PopulateSRR <- function(SRR,
   Years <- DefaultYears(Years)
   nSim  <- Get_nSim(SRR, nSim)
   
+  
   if (is.null(CurrentYear)) 
     CurrentYear <-  as.numeric(format(Sys.Date(), "%Y"))
   
@@ -91,7 +92,7 @@ PopulateSRR <- function(SRR,
   SetSeed(seed)
   
   # TODO - should add some checks here to make sure parameters/model are ok
-  SRR@Pars <- StructurePars(Pars = SRR@Pars, nSim, Years)
+  SRR@Pars  <- StructurePars(Pars = SRR@Pars, nSim, Years)
   SRR@Model <- FindModel(SRR)
   
   # Load the Relative Recruitment function
@@ -105,7 +106,7 @@ PopulateSRR <- function(SRR,
     SRR <- CheckSRRPars(SRR, names[i], defaults[i])
   
 
-  pars <- StructurePars(Pars=list(SRR@R0, SRR@SD, SRR@AC), nSim, Years)
+  pars   <- StructurePars(Pars = list(SRR@R0, SRR@SD, SRR@AC), nSim, Years)
   SRR@R0 <- pars[[1]] 
   SRR@SD <- pars[[2]][, 1, drop = FALSE] # only one time step for now
   SRR@AC <- pars[[3]][, 1, drop = FALSE] # only one time step for now

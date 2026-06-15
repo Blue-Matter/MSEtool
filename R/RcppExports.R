@@ -33,12 +33,12 @@ Ref_int_cpp <- function(F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V
     .Call(`_MSEtool_Ref_int_cpp`, F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, Wt_at_Age_C, relRfun, SRRpars, maxage, plusgroup, spawn_time_frac)
 }
 
-calcVatAge <- function(len_at_age, len_aa_sd, sel_at_length, n_age, nyears, proyears, CAL_binsmid) {
-    .Call(`_MSEtool_calcVatAge`, len_at_age, len_aa_sd, sel_at_length, n_age, nyears, proyears, CAL_binsmid)
-}
-
 CalcAgeSizeKey_ <- function(MeanAtAge, SDatAge, Classes, TruncSD, Dist) {
     .Call(`_MSEtool_CalcAgeSizeKey_`, MeanAtAge, SDatAge, Classes, TruncSD, Dist)
+}
+
+calcVatAge <- function(len_at_age, len_aa_sd, sel_at_length, n_age, nyears, proyears, CAL_binsmid) {
+    .Call(`_MSEtool_calcVatAge`, len_at_age, len_aa_sd, sel_at_length, n_age, nyears, proyears, CAL_binsmid)
 }
 
 CalcFisheryDynamics_ <- function(HistIn, Years, AllYears, Sims, nSim, nStock, nFleet, nArea, DoCalcCatch = 1L, DoCalcSpawnProduction = 1L, DoCalcRecruitment = 1L, DoCalcNumberNext = 1L, DoCalcBiomass = 1L, DoCalcOverallF = 1L, debug = 0L, clone = 1L) {

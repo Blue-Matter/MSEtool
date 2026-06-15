@@ -56,8 +56,9 @@ already populated. Requires a populated \link[=weight-class]{weight} object with
 non-\code{NULL} \code{CVatAge} slot (so that the \code{AWK} exists).
 See \link[=populating-schedules]{Specifying Biological and Fleet Schedules}.}
 
-\item{\code{Classes}}{\code{numeric}. Age, length, or weight class midpoints
-corresponding to the \verb{MeanAt*} array in use.}
+\item{\code{Classes}}{\code{numeric}. Age classes (in years) or lower bounds of length
+or weight bins, corresponding to the \verb{MeanAt*} array in use. For size
+bins, bin \code{k} spans \verb{[Classes[k], Classes[k+1])}; the final bin is open-ended.}
 
 \item{\code{Semelparous}}{\code{logical} or \code{array}. Controls post-spawning mortality.
 Before \code{\link[=Populate]{Populate()}}, a scalar \code{TRUE} or \code{FALSE}. After \code{\link[=Populate]{Populate()}}, always

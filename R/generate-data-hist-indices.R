@@ -32,8 +32,8 @@
 #' @keywords internal
 GenHistData_Indices <- function(sim, Data, Hist, HistYears, i, stocks, StockNames, 
                                 nArea,
-                                defaultCV=0.2,
-                                type=c('CPUE', 'Survey')) {
+                                defaultCV = 0.2,
+                                type = c('CPUE', 'Survey')) {
   
   type <- match.arg(type, c('CPUE', 'Survey'))
   
@@ -82,7 +82,7 @@ GenHistData_Indices <- function(sim, Data, Hist, HistYears, i, stocks, StockName
     Units <- IndexData@Units[fl]
     
     # Get selectivity-at-age for this index 
-    SelectivityAtAge <- IndexObs@Selectivity
+    SelectivityAtAge     <- IndexObs@Selectivity
     SelectivityAtAgeList <- MakeNamedList(StockNames[stocks])
     
     if (is.character(SelectivityAtAge)) {

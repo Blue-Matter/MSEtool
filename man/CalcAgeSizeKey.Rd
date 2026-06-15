@@ -10,8 +10,7 @@ CalcAgeSizeKey(
   Classes,
   TruncSD = 2,
   Dist = c("normal", "lognormal"),
-  silent = FALSE,
-  type = "Length"
+  silent = FALSE
 )
 }
 \arguments{
@@ -21,7 +20,8 @@ a \code{\link[=Length]{Length()}} object.}
 \item{CVatAge}{Numeric vector, matrix, or 3D array of coefficient of variation (CV)
 at age. Same structure as \code{MeanAtAge}.}
 
-\item{Classes}{Numeric vector of midpoints of size classes for the age-size key.}
+\item{Classes}{Numeric vector of lower bounds of size classes. Must be strictly
+increasing and non-negative. Bins need not be equal width.}
 
 \item{TruncSD}{Numeric value for the number of standard deviations at which the
 distribution is truncated.}
@@ -30,8 +30,6 @@ distribution is truncated.}
 the distribution of size-at-age.}
 
 \item{silent}{Logical; if \code{TRUE}, suppress progress bar.}
-
-\item{type}{Character; currently only \code{"Length"} is supported.}
 }
 \value{
 A 4D array with dimensions \code{Sim}, \code{Age}, \code{Class}, and \code{Year}.
@@ -40,6 +38,10 @@ A 4D array with dimensions \code{Sim}, \code{Age}, \code{Class}, and \code{Year}
 Generates an Age-Size key given mean and standard deviation of size-at-age. The size-at-age
 can be normally or log-normally distributed. By default the distribution is truncated at 2
 standard deviations.
+}
+\details{
+Each bin \code{k} spans \verb{[Classes[k], Classes[k+1])}. The final bin captures all
+probability above \code{Classes[nClass]}. Bins need not be equal width.
 }
 \examples{
 

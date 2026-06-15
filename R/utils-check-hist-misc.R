@@ -13,7 +13,6 @@ CheckHistMisc <- function(Hist, Period = c('Historical', 'Projection')) {
   
   Misc <- Hist@Misc
   
-
   # error accumulator environment
   .err <- new.env(parent = emptyenv())
   .err$msgs <- character(0)
@@ -122,9 +121,10 @@ CheckHistMisc <- function(Hist, Period = c('Historical', 'Projection')) {
     "SP0", "R0", "RecDist",
     "Catchability", "Closure", "Spatial_Targeting",
     "StockTargeting", "StockTargetingFlag",
-    "WeightFleetList", "SelAgeList", "RetAgeList", "DiscMortList",
-    "SelSizeList", "RetSizeList", "DiscMortSizeList"
-  )
+    "WeightFleetList", "SelAgeList", "RetAgeList", "DiscMortList")
+  
+    # "SelSizeList", "RetSizeList", "DiscMortSizeList"
+  
   missing_objects <- setdiff(required_objects, names(Misc))
   if (length(missing_objects) > 0)
     add_err("Hist@Misc is missing required element(s): ",
@@ -282,6 +282,14 @@ CheckHistMisc <- function(Hist, Period = c('Historical', 'Projection')) {
                 "MaturityList", "SemelparousList", "FecundityList")) {
     check_stock_list(Misc[[lnm]], paste0("Hist@Misc$", lnm), function(arr, st) {
       nages <- nAge(Hist@OM@Stock[[st]])
+      if (lnm == 'LengthList') {
+        # Length-at-age is technically optional
+        if (dim(arr)[2] == 1)
+          nages <- 1
+        if (dim(arr)[3] == 1)
+          nyears <- 1
+      }
+      
       nm    <- paste0("Hist@Misc$", lnm, "[[", st, "]]")
       check_array(arr, nm, c(nSim, nages, nyears), Years)
     })
@@ -292,14 +300,6 @@ CheckHistMisc <- function(Hist, Period = c('Historical', 'Projection')) {
                    function(arr, st)
                      check_values(arr, paste0("Hist@Misc$NaturalMortalityList[[", st, "]]"),
                                   allow_neg = FALSE))
-  
-  # Semelparous: values 0 or 1
-  check_stock_list(Misc$SemelparousList, "Hist@Misc$SemelparousList",
-                   function(arr, st) {
-                     nm <- paste0("Hist@Misc$SemelparousList[[", st, "]]")
-                     if (is.numeric(arr) && !all(arr %in% c(0, 1), na.rm = TRUE))
-                       add_err(nm, ": values must be 0 or 1")
-                   })
   
   # MovementList: (sim, fromArea, toArea, age, year)
   # from-area rows must sum to 1 across to-areas
@@ -396,28 +396,31 @@ CheckHistMisc <- function(Hist, Period = c('Historical', 'Projection')) {
   
   # SelSizeList / RetSizeList / DiscMortSizeList:
   # list[nStock] of list[nFleet] of 4D (sim, class, year, area)
-  for (lnm in c("SelSizeList", "RetSizeList", "DiscMortSizeList")) {
-    check_stock_list(Misc[[lnm]], paste0("Hist@Misc$", lnm),
-                     function(fleet_lst, st) {
-                       nm_st <- paste0("Hist@Misc$", lnm, "[[", st, "]]")
-                       if (!is.list(fleet_lst)) {
-                         add_err(nm_st, ": must be a list (one per fleet), got ", class(fleet_lst))
-                         return(invisible(NULL))
-                       }
-                       if (length(fleet_lst) != nFleet)
-                         add_err(nm_st, ": length = ", length(fleet_lst),
-                                 ", expected nFleet = ", nFleet)
-                       for (fl in seq_len(min(length(fleet_lst), nFleet))) {
-                         arr <- fleet_lst[[fl]]
-                         nm  <- paste0(nm_st, "[[", fl, "]]")
-                         if (is.null(arr) || !is.numeric(arr)) {
-                           add_err(nm, ": must be a numeric array"); next
-                         }
-                         nclass <- dim(arr)[2L]
-                         check_array(arr, nm, c(nSim, nclass, nyears, nArea), Years)
-                       }
-                     })
-  }
+  
+  # these aren't used in C++
+  
+  # for (lnm in c("SelSizeList", "RetSizeList", "DiscMortSizeList")) {
+  #   check_stock_list(Misc[[lnm]], paste0("Hist@Misc$", lnm),
+  #                    function(fleet_lst, st) {
+  #                      nm_st <- paste0("Hist@Misc$", lnm, "[[", st, "]]")
+  #                      if (!is.list(fleet_lst)) {
+  #                        add_err(nm_st, ": must be a list (one per fleet), got ", class(fleet_lst))
+  #                        return(invisible(NULL))
+  #                      }
+  #                      if (length(fleet_lst) != nFleet)
+  #                        add_err(nm_st, ": length = ", length(fleet_lst),
+  #                                ", expected nFleet = ", nFleet)
+  #                      for (fl in seq_len(min(length(fleet_lst), nFleet))) {
+  #                        arr <- fleet_lst[[fl]]
+  #                        nm  <- paste0(nm_st, "[[", fl, "]]")
+  #                        if (is.null(arr) || !is.numeric(arr)) {
+  #                          add_err(nm, ": must be a numeric array"); next
+  #                        }
+  #                        nclass <- dim(arr)[2L]
+  #                        check_array(arr, nm, c(nSim, nclass, nyears, nArea), Years)
+  #                      }
+  #                    })
+  # }
   
   flush_errors("fleet lists")
   

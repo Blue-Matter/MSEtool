@@ -77,21 +77,21 @@ PopulateMaturity <- function(Maturity,
   
   SetSeed(seed)
   
-  Maturity@Pars <- StructurePars(Pars = Maturity@Pars, nSim, Years)
+  Maturity@Pars  <- StructurePars(Pars = Maturity@Pars, nSim, Years)
   Maturity@Model <- FindModel(Maturity)
-  ModelClass <- getModelClass(Maturity@Model)
+  ModelClass     <- getModelClass(Maturity@Model)
   
   if (!is.null(ModelClass)) {
     if (grepl("at-Length", getModelClass(Maturity@Model))) {
       CheckRequiredObject(Length, "length", "Length")
       CheckRequiredObject(Ages, "ages", "Ages")
       Length <- PopulateLength(Length, 
-                               Ages = Ages, 
-                               Years = Years, 
-                               nSim = nSim,
-                               ALK = TRUE,
-                               seed = seed,
-                               silent = silent)
+                               Ages   = Ages, 
+                               Years  = Years, 
+                               nSim   = nSim,
+                               ALK    = TRUE,
+                               seed   = seed,
+                               silent  = silent)
       
       Maturity <- PopulateMeanAtLength(
         object = Maturity, 

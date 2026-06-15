@@ -72,15 +72,14 @@ PopulateLength <- function(Length,
   if (CheckDigest(Length, argList) & !force) 
     return(Length)
   
-  
   SetSeed(seed)
   
-  Length@Pars <- StructurePars(Pars = Length@Pars, nSim, Years)
-  Length@Model <- FindModel(Length)
-  Length <- PopulateMeanAtAge(Length, Ages, Years)
-  Length <- PopulateRandom(Length)
+  Length@Pars   <- StructurePars(Pars = Length@Pars, nSim, Years)
+  Length@Model   <- FindModel(Length)
+  Length         <- PopulateMeanAtAge(Length, Ages, Years)
+  Length         <- PopulateRandom(Length)
   Length@CVatAge <- StructureCV(Length@CVatAge, nSim)
-  dd <- dim(Length@CVatAge)
+  dd             <- dim(Length@CVatAge)
   
   if (is.null(dimnames(Length@CVatAge)) && !is.null(Length@CVatAge)) {
     dimnames(Length@CVatAge) <- list(

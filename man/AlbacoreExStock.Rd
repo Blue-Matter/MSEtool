@@ -142,7 +142,7 @@ PopulatedStock <- PopulateStock(
 
 }
 \seealso{
-\link{ButterfishExStock}, \code{\link[=Stock]{Stock()}}, \code{\link[=PopulateStock]{PopulateStock()}}, \code{\link[=Populate]{Populate()}},
-\link[=stock-class]{stock}
+\link{ButterfishExStock}, \code{\link[=SeasonalSpatialExStock]{SeasonalSpatialExStock()}}, \code{\link[=Stock]{Stock()}},
+\code{\link[=PopulateStock]{PopulateStock()}}, \code{\link[=Populate]{Populate()}}, \link[=stock-class]{stock}
 }
 \keyword{datasets}

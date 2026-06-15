@@ -244,12 +244,10 @@ CheckUnfishedDist <- function(Spatial, Ages, Years, nSim) {
   
   # Check it sums to 1 over areas
   Chk <- apply(Spatial@UnfishedDist, c('Sim', 'Age', 'Year'), sum)
-  if (any(Chk!=1)) {
+  if (any(abs(Chk - 1) > 1e-8)) 
     cli::cli_abort("`UnfishedDist(Spatial)` does not sum to 1 over areas. Are all values < 1?")
-  }
   
   Spatial
-  
 }
 
 
@@ -259,17 +257,9 @@ ProcessUnfishedDist <- function(Spatial,
                                 Years=NULL, 
                                 nSim=5) {
   
-  if (is.array(Spatial@UnfishedDist)) {
-    
-    
-    
-    
+  if (is.array(Spatial@UnfishedDist)) 
     return(CheckUnfishedDist(Spatial, Ages, Years, nSim))
-    
-    
-  } 
-  
-  
+
   if (is.numeric(Spatial@UnfishedDist)) {
     # 2 Area Model
     # Numeric - Constant over Age & Time

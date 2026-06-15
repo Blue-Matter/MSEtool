@@ -21,19 +21,26 @@
 #'   See [Specifying Biological and Fleet Schedules][populating-schedules].
 #' @slot MeanAtLength `array`. Mean maturity-at-length with named dimensions
 #'   `Sim`, `Length`, and `Year`. Populated automatically when an at-length
-#'   maturity model is used, or may be supplied directly. Converted to
-#'   `MeanAtAge` via the `ALK` during [Populate()] when `MeanAtAge` is not
-#'   already populated.
+#'   maturity model is used, or may be supplied directly. Values are evaluated
+#'   at the midpoint of each bin (halfway between consecutive lower bounds);
+#'   the `Class` dimension is labelled by bin lower bounds (see `Classes`).
+#'   Converted to `MeanAtAge` via the `ALK` during [Populate()] when `MeanAtAge`
+#'   is not already populated.
 #'   See [Specifying Biological and Fleet Schedules][populating-schedules].
 #' @slot MeanAtWeight `array`. Mean maturity-at-weight with named dimensions
 #'   `Sim`, `Weight`, and `Year`. Populated automatically when an at-weight
-#'   maturity model is used, or may be supplied directly. Converted to
-#'   `MeanAtAge` via the `AWK` during [Populate()] when `MeanAtAge` is not
-#'   already populated. Requires a populated [weight-class] object with a
-#'   non-`NULL` `CVatAge` slot (so that the `AWK` exists).
+#'   maturity model is used, or may be supplied directly. Values are evaluated
+#'   at the midpoint of each bin; the `Class` dimension is labelled by bin lower
+#'   bounds (see `Classes`). Converted to `MeanAtAge` via the `AWK` during
+#'   [Populate()] when `MeanAtAge` is not already populated. Requires a
+#'   populated [weight-class] object with a non-`NULL` `CVatAge` slot (so that
+#'   the `AWK` exists).
 #'   See [Specifying Biological and Fleet Schedules][populating-schedules].
-#' @slot Classes `numeric`. Age, length, or weight class midpoints
-#'   corresponding to the `MeanAt*` array in use.
+#' @slot Classes `numeric`. Age classes (in years) or lower bounds of length
+#'   or weight bins, corresponding to the `MeanAt*` array in use. For size
+#'   bins, bin `k` spans `[Classes[k], Classes[k+1])`; the final bin is open-ended.
+#'   Values in `MeanAtLength`/`MeanAtWeight` are evaluated at bin midpoints,
+#'   not at these lower bounds.
 #' @slot Semelparous `logical` or `array`. Controls post-spawning mortality.
 #'   Before [Populate()], a scalar `TRUE` or `FALSE`. After [Populate()], always
 #'   a `Sim × Age × Year` array where each cell gives the fraction of

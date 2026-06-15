@@ -21,27 +21,25 @@ across the year.}
 wrapping. Default \code{5} is sufficient for any reasonable \code{sigma}.}
 }
 \value{
-A numeric vector of unnormalised density values of length
-\code{n_seasons}. Normalise with \verb{/ sum(...)} to obtain season proportions.
+A numeric vector of normalised density values of length
+\code{n_seasons}.
 }
 \description{
-Evaluates a wrapped normal distribution over a circular seasonal domain,
-suitable for specifying seasonal recruitment patterns in models with
-\code{Seasons > 1}.
+Creates a wrapped normal distribution to represent a seasonal recruitment
+patterns in models with \code{Seasons > 1}.
 }
 \examples{
 # Monthly model: peak recruitment March/April, moderate spread
-pi_raw <- WrappedNormal(n_seasons = 12, mu = 3.5, sigma = 1.5)
-pi_m   <- pi_raw / sum(pi_raw)
+pi_m <- WrappedNormal(n_seasons = 12, mu = 3.5, sigma = 1.5)
 names(pi_m) <- month.abb
 
 # Narrow spread — recruitment concentrated in 1-2 seasons
-pi_raw <- WrappedNormal(n_seasons = 12, mu = 3.5, sigma = 0.5)
+pi_m <- WrappedNormal(n_seasons = 12, mu = 3.5, sigma = 0.5)
 
 # Wide spread — recruitment across most of the year
-pi_raw <- WrappedNormal(n_seasons = 12, mu = 3.5, sigma = 3)
+pi_m <- WrappedNormal(n_seasons = 12, mu = 3.5, sigma = 3)
 
 # Quarterly model: peak in Q1
-pi_raw <- WrappedNormal(n_seasons = 4, mu = 1.5, sigma = 0.8)
+pi_m <- WrappedNormal(n_seasons = 4, mu = 1.5, sigma = 0.8)
 
 }

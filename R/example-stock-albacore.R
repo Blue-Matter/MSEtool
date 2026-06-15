@@ -100,8 +100,8 @@
 #' for each simulation from the uniform prior, setting the initial conditions
 #' of the operating model.
 #'
-#' @seealso [ButterfishExStock], [Stock()], [PopulateStock()], [Populate()],
-#'   [stock-class]
+#' @seealso [ButterfishExStock], [SeasonalSpatialExStock()], [Stock()], 
+#' [PopulateStock()], [Populate()], [stock-class]
 #'
 #' @examples
 #' AlbacoreExStock

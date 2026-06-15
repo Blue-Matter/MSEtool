@@ -11,6 +11,10 @@ SingleStockOM <- OM(
   Obs    = AgeStructuredObs
 )
 
+## ---- save object ----
+usethis::use_data(SingleStockOM, overwrite = TRUE)
+
+
 ## ---- singlestock-assignment ----
 Stock(SingleStockOM) <- AlbacoreExStock
 Fleet(SingleStockOM) <- AsympExFleet
@@ -20,7 +24,4 @@ Obs(SingleStockOM)   <- AgeStructuredObs
 Stock(SingleStockOM) <- list(AlbacoreExStock)
 Fleet(SingleStockOM) <- list(list(AsympExFleet))
 Obs(SingleStockOM)   <- list(list(AgeStructuredObs))
-
-## ---- save object ----
-usethis::use_data(SingleStockOM, overwrite = TRUE)
 

@@ -8,9 +8,10 @@
 #' @slot Name `character` or `NULL`. Fleet names, length `nFleet`.
 #' @slot Value `array` or `NULL`. Composition counts with dimensions
 #'   `[nYear x nFleet x nClass]`. See [CompData()].
-#' @slot Classes `numeric` or `NULL`. Class midpoints — ages in years for
-#'   age compositions, or bin midpoints in the appropriate length unit for
-#'   size compositions. See [CompData()].
+#' @slot Classes `numeric` or `NULL`. Class values — ages in years for age
+#'   compositions, or lower bounds of size bins in the appropriate unit for
+#'   size compositions. For size bins, bin `k` spans `[Classes[k], Classes[k+1])`.
+#'   See [CompData()].
 #' @slot Units `character` or `NULL`. Units of the class variable
 #'   (e.g., `"years"`, `"cm"`, `"mm"`). See [CompData()].
 #' @slot Log `list`. Named list used for diagnostic and audit logging.

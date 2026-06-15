@@ -176,10 +176,10 @@ NameParDimensions <- function(Par, nSim=NULL, Years=NULL, nArea=NULL) {
   
   dd <- dim(Par)
   
-  if (dd[2] > 1 && dd[2] != length(Years))
-    cli::cli_abort(
-      '`Year` dimension length must be 1 or equal to `length(Years)`.'
-    )
+  # if (dd[2] > 1 && dd[2] != length(Years))
+  #   cli::cli_abort(
+  #     '`Year` dimension length must be 1 or equal to `length(Years)`.'
+  #   )
   
   dimnames(Par) <- if (length(dd) < 3) {
     list(Sim  = seq_len(nSim)[seq_len(dd[1])],

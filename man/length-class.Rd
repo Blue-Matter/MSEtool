@@ -56,7 +56,8 @@ or years.}
 length class given age, derived from \code{MeanAtAge}, \code{CVatAge}, \code{Dist}, and
 \code{TruncSD}. Populated automatically; use \code{\link[=ALK]{ALK()}} to retrieve.}
 
-\item{\code{Classes}}{\code{numeric}. Length class midpoints in units of \code{Units}.}
+\item{\code{Classes}}{\code{numeric}. Lower bounds of length bins in units of \code{Units}.
+Bin \code{k} spans \verb{[Classes[k], Classes[k+1])}; the final bin is open-ended.}
 
 \item{\code{Misc}}{\code{list}. Used internally.}
 }}

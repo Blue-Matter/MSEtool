@@ -31,7 +31,8 @@
 #' @slot ALK `array`. Age-length key: the probability of belonging to each
 #'   length class given age, derived from `MeanAtAge`, `CVatAge`, `Dist`, and
 #'   `TruncSD`. Populated automatically; use [ALK()] to retrieve.
-#' @slot Classes `numeric`. Length class midpoints in units of `Units`.
+#' @slot Classes `numeric`. Lower bounds of length bins in units of `Units`.
+#'   Bin `k` spans `[Classes[k], Classes[k+1])`; the final bin is open-ended.
 #' @slot Misc `list`. Used internally.
 #'
 #' @details

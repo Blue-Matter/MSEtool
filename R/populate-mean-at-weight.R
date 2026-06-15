@@ -11,8 +11,9 @@
 #'
 #' @param object An S4 object with slots `MeanAtWeight`, `Model`, `Pars`, and
 #'   `Classes`.
-#' @param Weight A [Weight()] object supplying `Classes` used as the size
-#'   class labels and inputs to the model.
+#' @param Weight A [Weight()] object supplying `Classes` (lower bounds of weight
+#'   bins) used as size class labels. The model is evaluated at bin midpoints
+#'   derived from these lower bounds.
 #' @param Years Numeric vector of year labels used to assign the `Year`
 #'   dimension of the output array.
 #' @param Ages An [ages-class] object. Not used directly but checked to
@@ -45,14 +46,14 @@ PopulateMeanAtWeight <- function(object, Weight=NULL, Years=NULL,
   object@MeanAtWeight <- GenMeanAtWeight(
     Model  = object@Model,
     Pars   = object@Pars,
-    Weight = Weight@Classes
+    Weight = ClassMidpoints(Weight@Classes)
   )
   object@Classes <- Weight@Classes
-  
+
   dd     <- dim(object@MeanAtWeight)
   nDims  <- length(dd)
   Years_ <- Years[seq_len(dd[3])]
-  
+
   dimnames(object@MeanAtWeight) <- if (nDims == 3) {
     list(
       Sim   = seq_len(dd[1]),

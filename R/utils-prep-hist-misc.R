@@ -3,7 +3,7 @@
 
 # This prepares arrays for easy access in the C++ code
 # temporary elements of Misc are removed later
-PrepHistMisc <- function(Hist, Period=c('Historical', 'Projection')) {
+PrepHistMisc <- function(Hist, Period = c('Historical', 'Projection')) {
   Period <- match.arg(Period)
   
   YearVec        <- Years(Hist, Period)
@@ -56,12 +56,9 @@ PrepHistMisc <- function(Hist, Period=c('Historical', 'Projection')) {
   Hist@Misc$LengthList <- purrr::map(Hist@OM@Stock, \(stock) {
     if (!is.null(stock@Length@MeanAtAge))
       return(stock@Length@MeanAtAge)
-    
-    sims <- seq_len(stock@nSim)
-    years <- Years(stock)
-    
+
     # hasn't been specified. Make a dummy array
-    array(0, dim=c(length(sims), 1, length(years)))
+    array(0, dim=c(1, 1, 1))
     
   })
  
@@ -190,13 +187,13 @@ PrepHistMisc <- function(Hist, Period=c('Historical', 'Projection')) {
     }) |> List2Array(pos = 4) # Sim, Age, Year, Fleet, Area
   })
   
-  Hist@Misc$SelSizeList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
-    purrr::map(FleetList, \(fleet) {
-      if (!is.null(  fleet@Selectivity@MeanAtLength)) 
-      return(fleet@Selectivity@MeanAtLength) # Sim, Age, Year, Area
-      fleet@Selectivity@MeanAtWeight
-    }) 
-  })
+  # Hist@Misc$SelSizeList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
+  #   purrr::map(FleetList, \(fleet) {
+  #     if (!is.null(  fleet@Selectivity@MeanAtLength)) 
+  #     return(fleet@Selectivity@MeanAtLength) # Sim, Age, Year, Area
+  #     fleet@Selectivity@MeanAtWeight
+  #   }) 
+  # })
   
   Hist@Misc$RetAgeList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
     purrr::map(FleetList, \(fleet) {
@@ -204,13 +201,13 @@ PrepHistMisc <- function(Hist, Period=c('Historical', 'Projection')) {
     }) |> List2Array(pos = 4) # Sim, Age, Year, Fleet, Area
   })
   
-  Hist@Misc$RetSizeList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
-    purrr::map(FleetList, \(fleet) {
-      if (!is.null(  fleet@Retention@MeanAtLength)) 
-        return(fleet@Retention@MeanAtLength) # Sim, Age, Year, Area
-      fleet@Retention@MeanAtWeight
-    }) 
-  })
+  # Hist@Misc$RetSizeList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
+  #   purrr::map(FleetList, \(fleet) {
+  #     if (!is.null(  fleet@Retention@MeanAtLength)) 
+  #       return(fleet@Retention@MeanAtLength) # Sim, Age, Year, Area
+  #     fleet@Retention@MeanAtWeight
+  #   }) 
+  # })
   
   Hist@Misc$DiscMortList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
     purrr::map(FleetList, \(fleet) {
@@ -218,11 +215,11 @@ PrepHistMisc <- function(Hist, Period=c('Historical', 'Projection')) {
     }) |> List2Array(pos = 4) # Sim, Age, Year, Fleet, Area
   })
   
-  Hist@Misc$DiscMortSizeList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
-    purrr::map(FleetList, \(fleet) {
-      fleet@DiscardMortality@MeanAtLength  # Sim, Class, Year, Area
-    }) 
-  })
+  # Hist@Misc$DiscMortSizeList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
+  #   purrr::map(FleetList, \(fleet) {
+  #     fleet@DiscardMortality@MeanAtLength  # Sim, Class, Year, Area
+  #   }) 
+  # })
   
   # OM-level: StockTargeting 
   if (nStock(Hist) == 1 || is.null(Hist@OM@StockTargeting@Targeting)) {

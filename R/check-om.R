@@ -51,8 +51,12 @@ CheckStock <- function(Stock) {
   
   # Required Slots 
   Missing <- Slot <- NULL # CRAN check hacks
-  df <- data.frame(Slot= c('Ages', 'Length', 'Weight', 'NaturalMortality', 'Maturity', 'SRR'),
-                   Missing= FALSE)
+  df <- data.frame(Slot    = c('Ages',
+                               'Weight', 
+                               'NaturalMortality',
+                               'Maturity', 
+                               'SRR'),
+                   Missing = FALSE)
   
   for (i in seq_len(nrow(df))) {
     if (EmptyObject(slot(Stock, df$Slot[i])))

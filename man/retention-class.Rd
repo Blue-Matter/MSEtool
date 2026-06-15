@@ -32,9 +32,9 @@ parameters are expressed relative to maturity \code{L50}. See \code{\link[=Reten
 \item{\code{MeanAtWeight}}{\code{numeric} array or \code{NULL}. Mean retention-at-weight
 (\verb{Sim x Weight x Year x Area}). See \code{\link[=Retention]{Retention()}}.}
 
-\item{\code{Classes}}{\code{numeric} or \code{NULL}. Length or weight class midpoints
-corresponding to the second dimension of \code{MeanAtLength} or
-\code{MeanAtWeight}.}
+\item{\code{Classes}}{\code{numeric} or \code{NULL}. Lower bounds of length or weight bins
+corresponding to the second dimension of \code{MeanAtLength} or \code{MeanAtWeight}.
+Bin \code{k} spans \verb{[Classes[k], Classes[k+1])}; the final bin is open-ended.}
 
 \item{\code{Misc}}{\code{list}. Miscellaneous additional inputs. For internal use.}
 }}

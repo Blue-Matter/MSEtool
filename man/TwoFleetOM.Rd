@@ -94,6 +94,7 @@ Other om:
 \code{\link{MultiStockOM}},
 \code{\link[=OM]{OM()}},
 \code{\link{OM-accessors}},
+\code{\link{SeasonalSpatialOM}},
 \code{\link{SingleStockOM}},
 \code{\link{om-class}}
 }

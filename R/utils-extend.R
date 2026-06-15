@@ -398,13 +398,12 @@ ExtendYears_seasonal <- function(array, Years = NULL, default = NULL, backfill =
   dn[[year_dim]] <- all_years
   OutArray <- array(NA, dim = d, dimnames = dn)
   abind::afill(OutArray) <- array # add the existing values
-
-
+  
   season_existing <- existing_years %% 1
   # Forward fill years from most recent existing year
   if (length(forward_years)) {
     season_forward <- (forward_years %% 1) |> unique()
-    if (NoSeasonVals(season_existing) || maintain_seasonal_pattern) {
+    if (NoSeasonVals(season_existing) || !maintain_seasonal_pattern) {
       # no seasons in provided values - constant over seasons within years
       most_recent_ind <- nyear
       MostRecent <- abind::asub(array, most_recent_ind, year_dim, drop = FALSE)

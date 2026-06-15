@@ -58,8 +58,9 @@ simulation- and year-specific multipliers that add stochastic variation
 around the average mortality schedule in \code{MeanAtAge}. Currently stored
 but not applied during \code{\link[=Populate]{Populate()}}.}
 
-\item{\code{Classes}}{\code{numeric}. Age or length class midpoints corresponding to the
-\verb{MeanAt*} array in use.}
+\item{\code{Classes}}{\code{numeric}. Age classes (in years) or lower bounds of length
+bins, corresponding to the \verb{MeanAt*} array in use. For length bins, bin
+\code{k} spans \verb{[Classes[k], Classes[k+1])}; the final bin is open-ended.}
 
 \item{\code{Misc}}{\code{list}. Used internally.}
 }}

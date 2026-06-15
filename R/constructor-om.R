@@ -570,17 +570,25 @@ ToNamedList <- function(x, cls) {
 
 ToNestedList <- function(x, cls, stock_nms, fleet_nms = NULL) {
   if (is.null(x)) return(NULL)
-  
+
   is_flat <- inherits(x, cls) ||
     (is.list(x) && all(purrr::map_lgl(x, ~ inherits(.x, cls))))
-  
+
   if (is_flat) {
-    x <- ToNamedList(x, cls)
-    return(purrr::map(setNames(nm = stock_nms), ~ x))
+    if (inherits(x, cls)) x <- list(x)
+
+    return(purrr::map(setNames(nm = stock_nms), function(stk) {
+      flt_nms <- fleet_nms[[stk]]
+      if (!is.null(flt_nms) && length(x) == 1) {
+        setNames(rep(x, length(flt_nms)), flt_nms)
+      } else {
+        setNames(x, purrr::map_chr(x, ~ .x@Name))
+      }
+    }))
   }
-  
+
   if (is.null(names(x))) names(x) <- stock_nms[seq_along(x)]
-  
+
   purrr::imap(x, function(inner, stk) {
     if (inherits(inner, cls))
       inner <- setNames(list(inner), inner@Name)

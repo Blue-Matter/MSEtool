@@ -8,9 +8,9 @@ PopulateASK(object, Ages = NULL, silent = FALSE, type = "Length")
 }
 \arguments{
 \item{object}{A \code{\link[=Length]{Length()}} or \code{\link[=Weight]{Weight()}} object with slots \code{MeanAtAge},
-\code{CVatAge}, \code{Classes}, \code{TruncSD}, and \code{Dist}.}
+\code{CVatAge}, \code{Classes} (lower bounds of size bins), \code{TruncSD}, and \code{Dist}.}
 
-\item{Ages}{An \link[=ages-class]{ages} object supplying age class midpoints. Required.}
+\item{Ages}{An \link[=ages-class]{ages} object supplying age class values. Required.}
 
 \item{silent}{Logical. If \code{TRUE}, suppresses messages from
 \code{\link[=CalcAgeSizeKey]{CalcAgeSizeKey()}}. Default \code{FALSE}.}

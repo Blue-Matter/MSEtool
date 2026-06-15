@@ -17,9 +17,10 @@ created via \code{\link[=CompData]{CompData()}}, which documents all parameters 
 \item{\code{Value}}{\code{array} or \code{NULL}. Composition counts with dimensions
 \verb{[nYear x nFleet x nClass]}. See \code{\link[=CompData]{CompData()}}.}
 
-\item{\code{Classes}}{\code{numeric} or \code{NULL}. Class midpoints — ages in years for
-age compositions, or bin midpoints in the appropriate length unit for
-size compositions. See \code{\link[=CompData]{CompData()}}.}
+\item{\code{Classes}}{\code{numeric} or \code{NULL}. Class values — ages in years for age
+compositions, or lower bounds of size bins in the appropriate unit for
+size compositions. For size bins, bin \code{k} spans \verb{[Classes[k], Classes[k+1])}.
+See \code{\link[=CompData]{CompData()}}.}
 
 \item{\code{Units}}{\code{character} or \code{NULL}. Units of the class variable
 (e.g., \code{"years"}, \code{"cm"}, \code{"mm"}). See \code{\link[=CompData]{CompData()}}.}

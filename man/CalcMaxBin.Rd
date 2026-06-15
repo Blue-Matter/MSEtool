@@ -26,7 +26,7 @@ all simulations, ages, and years.
 Computes the upper bound of the size class range by finding the maximum
 expected size across all simulations and ages, extended to \code{TruncSD}
 standard deviations above the mean. Used by \code{\link[=PopulateClasses]{PopulateClasses()}} to set
-default size class midpoints.
+default size class lower bounds.
 }
 \details{
 For the normal distribution the upper bound is:

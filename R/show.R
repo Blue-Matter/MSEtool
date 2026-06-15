@@ -422,8 +422,6 @@ setMethod("show", "om", function(object) {
         names(MissingFleet[[1]]) <- fleetNames
         
       }
-     
-      
       if ( lapply(MissingFleet, lapply, length)|> unlist() |> max() != 0) {
         cli::cli_text('')
         cli::cli_alert_danger('Missing Required Slots:')

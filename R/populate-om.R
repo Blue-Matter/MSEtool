@@ -11,6 +11,7 @@
 #' @param force Logical. If `TRUE`, force re-population even if the internal
 #'   object digest indicates no changes since the last call.
 #' @param standardize_effort Logical. Used internally. Apply [StandardizeEffort()]?
+#' @param adjust_fecundity  Logical. Used internally. Apply [AdjustSeasonalFecundity()]?
 #'
 #' @details
 #' 
@@ -41,7 +42,10 @@
 #' }
 #'
 #' @export
-PopulateOM <- function(OM, silent = FALSE, force = FALSE, standardize_effort = TRUE) {
+PopulateOM <- function(OM, silent = FALSE, 
+                       force = FALSE, 
+                       standardize_effort = TRUE,
+                       adjust_fecundity = TRUE) {
   
   CheckClass(OM)
   
@@ -73,6 +77,9 @@ PopulateOM <- function(OM, silent = FALSE, force = FALSE, standardize_effort = T
     UpdateSPFrom() |>   # TODO
     ShareParameters() |> # TODO
     StartMessages()
+  
+  if (adjust_fecundity) 
+    OM <- AdjustSeasonalFecundity(OM, silent = silent) 
   
   if (standardize_effort)
     OM <- StandardizeEffort(OM, populate=FALSE)

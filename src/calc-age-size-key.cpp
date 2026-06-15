@@ -37,15 +37,13 @@ Rcpp::NumericVector CalcAgeSizeKey_(
   Rcpp::NumericVector mu(nAge);
   Rcpp::NumericVector sd(nAge);
   Rcpp::NumericVector classLower(nClass);
-  
-  // ---- Class lower bounds
-  const double By = Classes[1] - Classes[0];
-  if (!std::isfinite(By) || By <= 0.0) {
-    Rcpp::stop("Classes must be increasing and evenly spaced");
-  }
-  
+
+  // ---- Classes are lower bounds of each bin; validate they are increasing
   for (int k = 0; k < nClass; ++k) {
-    double cl = Classes[k] - 0.5 * By;
+    if (k > 0 && Classes[k] <= Classes[k - 1]) {
+      Rcpp::stop("Classes must be strictly increasing");
+    }
+    double cl = Classes[k];
     if (is_lognormal) {
       cl = std::log(cl);
     }

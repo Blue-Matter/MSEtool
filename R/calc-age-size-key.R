@@ -4,17 +4,20 @@
 #' can be normally or log-normally distributed. By default the distribution is truncated at 2
 #' standard deviations.
 #'
+#' Each bin `k` spans `[Classes[k], Classes[k+1])`. The final bin captures all
+#' probability above `Classes[nClass]`. Bins need not be equal width.
+#'
 #' @param MeanAtAge Numeric vector, matrix, or 3D array of mean size-at-age, or
 #'  a [Length()] object.
 #' @param CVatAge Numeric vector, matrix, or 3D array of coefficient of variation (CV)
 #'   at age. Same structure as `MeanAtAge`.
-#' @param Classes Numeric vector of midpoints of size classes for the age-size key.
+#' @param Classes Numeric vector of lower bounds of size classes. Must be strictly
+#'   increasing and non-negative. Bins need not be equal width.
 #' @param TruncSD Numeric value for the number of standard deviations at which the
 #'   distribution is truncated.
 #' @param Dist Character string, either `"normal"` or `"lognormal"` indicating
 #'   the distribution of size-at-age.
 #' @param silent Logical; if `TRUE`, suppress progress bar.
-#' @param type Character; currently only `"Length"` is supported.
 #'
 #' @return A 4D array with dimensions `Sim`, `Age`, `Class`, and `Year`.
 #'
@@ -25,8 +28,7 @@ CalcAgeSizeKey <- function(MeanAtAge,
                            Classes,
                            TruncSD = 2,
                            Dist = c("normal", "lognormal"),
-                           silent = FALSE,
-                           type = "Length") {
+                           silent = FALSE) {
   
   Dist <- match.arg(Dist, c("normal", "lognormal"))
 

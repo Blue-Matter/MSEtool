@@ -69,7 +69,8 @@ weight class given age, derived from \code{MeanAtAge}, \code{CVatAge}, \code{Dis
 \code{TruncSD}. Only populated when \code{CVatAge} is non-\code{NULL}; use \code{\link[=AWK]{AWK()}} to
 retrieve.}
 
-\item{\code{Classes}}{\code{numeric}. Weight class midpoints in units of \code{Units}.}
+\item{\code{Classes}}{\code{numeric}. Lower bounds of weight bins in units of \code{Units}.
+Bin \code{k} spans \verb{[Classes[k], Classes[k+1])}; the final bin is open-ended.}
 
 \item{\code{Misc}}{\code{list}. Used internally.}
 }}

@@ -8,8 +8,8 @@
 #' `type = "Length"`) or `object@AWK` (if `type = "Weight"`).
 #'
 #' @param object A [Length()] or [Weight()] object with slots `MeanAtAge`,
-#'   `CVatAge`, `Classes`, `TruncSD`, and `Dist`.
-#' @param Ages An [ages-class] object supplying age class midpoints. Required.
+#'   `CVatAge`, `Classes` (lower bounds of size bins), `TruncSD`, and `Dist`.
+#' @param Ages An [ages-class] object supplying age class values. Required.
 #' @param silent Logical. If `TRUE`, suppresses messages from
 #'   [CalcAgeSizeKey()]. Default `FALSE`.
 #' @param type Character. One of `"Length"` (default) or `"Weight"`,

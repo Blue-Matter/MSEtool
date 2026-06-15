@@ -54,8 +54,9 @@ fecundity model is used, or may be supplied directly. Converted to
 already populated.
 See \link[=populating-schedules]{Specifying Biological and Fleet Schedules}.}
 
-\item{\code{Classes}}{\code{numeric}. Age or length class midpoints corresponding to the
-\verb{MeanAt*} array in use.}
+\item{\code{Classes}}{\code{numeric}. Age classes (in years) or lower bounds of length
+bins, corresponding to the \verb{MeanAt*} array in use. For length bins, bin
+\code{k} spans \verb{[Classes[k], Classes[k+1])}; the final bin is open-ended.}
 
 \item{\code{Timing}}{\code{array} or \code{numeric}. Reserved for future use. Intended to
 represent the timing of spawning within the time step. Currently stored

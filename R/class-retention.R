@@ -15,12 +15,18 @@
 #' @slot MeanAtAge `numeric` array or `NULL`. Mean retention-at-age
 #'   (`Sim x Age x Year x Area`). See [Retention()].
 #' @slot MeanAtLength `numeric` array or `NULL`. Mean retention-at-length
-#'   (`Sim x Length x Year x Area`). See [Retention()].
+#'   (`Sim x Length x Year x Area`). Values are evaluated at the midpoint of
+#'   each bin (halfway between consecutive lower bounds); the `Class` dimension
+#'   is labelled by bin lower bounds (see `Classes`). See [Retention()].
 #' @slot MeanAtWeight `numeric` array or `NULL`. Mean retention-at-weight
-#'   (`Sim x Weight x Year x Area`). See [Retention()].
-#' @slot Classes `numeric` or `NULL`. Length or weight class midpoints
-#'   corresponding to the second dimension of `MeanAtLength` or
-#'   `MeanAtWeight`.
+#'   (`Sim x Weight x Year x Area`). Values are evaluated at the midpoint of
+#'   each bin; the `Class` dimension is labelled by bin lower bounds (see
+#'   `Classes`). See [Retention()].
+#' @slot Classes `numeric` or `NULL`. Lower bounds of length or weight bins
+#'   corresponding to the second dimension of `MeanAtLength` or `MeanAtWeight`.
+#'   Bin `k` spans `[Classes[k], Classes[k+1])`; the final bin is open-ended.
+#'   Values in `MeanAtLength`/`MeanAtWeight` are evaluated at bin midpoints,
+#'   not at these lower bounds.
 #' @slot Misc `list`. Miscellaneous additional inputs. For internal use.
 #'
 #' @seealso 

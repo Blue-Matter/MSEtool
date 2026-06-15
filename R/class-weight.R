@@ -22,9 +22,11 @@
 #'   See [Specifying Biological and Fleet Schedules][populating-schedules].
 #' @slot MeanAtLength `array`. Mean weight at length with named dimensions
 #'   `Sim`, `Length`, and `Year`. Populated automatically when an at-length
-#'   weight model is used, or may be supplied directly. Converted to
-#'   `MeanAtAge` via the `ALK` during [Populate()] when `MeanAtAge` is not
-#'   already populated. See [Specifying Biological and Fleet
+#'   weight model is used, or may be supplied directly. Values are evaluated at
+#'   the midpoint of each bin (halfway between consecutive lower bounds); the
+#'   `Class` dimension is labelled by bin lower bounds (see `Classes`).
+#'   Converted to `MeanAtAge` via the `ALK` during [Populate()] when `MeanAtAge`
+#'   is not already populated. See [Specifying Biological and Fleet
 #'   Schedules][populating-schedules].
 #' @slot CVatAge `array` or `numeric`. Coefficient of variation of
 #'   weight-at-age, used to generate the within-age-class weight distribution
@@ -42,7 +44,10 @@
 #'   weight class given age, derived from `MeanAtAge`, `CVatAge`, `Dist`, and
 #'   `TruncSD`. Only populated when `CVatAge` is non-`NULL`; use [AWK()] to
 #'   retrieve.
-#' @slot Classes `numeric`. Weight class midpoints in units of `Units`.
+#' @slot Classes `numeric`. Lower bounds of weight bins in units of `Units`.
+#'   Bin `k` spans `[Classes[k], Classes[k+1])`; the final bin is open-ended.
+#'   Values in `MeanAtLength` are evaluated at bin midpoints, not at these
+#'   lower bounds.
 #' @slot Misc `list`. Used internally.
 #'
 #' @details

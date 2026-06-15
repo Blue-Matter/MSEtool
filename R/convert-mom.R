@@ -158,7 +158,7 @@ MOM2fleet <- function(MOM, st, YearsList) {
     cpars <- MOM@cpars[[st]][[fl]]
     Fdisc <- MOM@Stocks[[st]]@Fdisc
     AgeClasses <- GetStockAges(MOM@Stocks[[st]])
-    FleetList[[fl]] <- OM2fleet(Fleet, YearsList, cpars, Fdisc, AgeClasses )
+    FleetList[[fl]] <- OM2fleet(Fleet, YearsList, cpars, Fdisc, AgeClasses)
   }
   names(FleetList) <- FleetNames
   FleetList

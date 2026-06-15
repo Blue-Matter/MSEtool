@@ -219,6 +219,7 @@ Other om:
 \code{\link{ComplexOM}},
 \code{\link{MultiStockOM}},
 \code{\link[=OM]{OM()}},
+\code{\link{SeasonalSpatialOM}},
 \code{\link{SingleStockOM}},
 \code{\link{TwoFleetOM}},
 \code{\link{om-class}}

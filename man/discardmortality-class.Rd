@@ -22,8 +22,9 @@ parameters in detail.
 mortality-at-length (\verb{Sim x Length x Year x Area}). See
 \code{\link[=DiscardMortality]{DiscardMortality()}}.}
 
-\item{\code{Classes}}{\code{numeric} or \code{NULL}. Length class midpoints corresponding to
-the second dimension of \code{MeanAtLength}.}
+\item{\code{Classes}}{\code{numeric} or \code{NULL}. Lower bounds of length bins corresponding
+to the second dimension of \code{MeanAtLength}. Bin \code{k} spans
+\verb{[Classes[k], Classes[k+1])}; the final bin is open-ended.}
 
 \item{\code{Misc}}{\code{list}. Miscellaneous additional inputs. Used internally.}
 }}

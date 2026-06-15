@@ -1,15 +1,15 @@
 
-Simulate_om <- function(OM = NULL,
-                        parallel = FALSE,
-                        silent = FALSE,
-                        nSim = NULL,
+Simulate_om <- function(OM                = NULL,
+                        parallel          = FALSE,
+                        silent            = FALSE,
+                        nSim              = NULL,
                         DoDynamicUnfished = TRUE,
-                        DoRefLandings = TRUE,
-                        DoRefRemovals = FALSE,
-                        DoConditionObs = TRUE,
-                        DoGenerateData = TRUE,
-                        DoMSYRefs = TRUE,
-                        Reduce = TRUE,
+                        DoRefLandings     = TRUE,
+                        DoRefRemovals     = FALSE,
+                        DoConditionObs    = TRUE,
+                        DoGenerateData    = TRUE,
+                        DoMSYRefs         = TRUE,
+                        Reduce            = TRUE,
                         ...) {
   
   # ---- Initial Checks and Setup ----
@@ -45,7 +45,7 @@ Simulate_om <- function(OM = NULL,
   Hist <- CalcDynamicInitial(Hist)
   
   # ---- Add temporary lists and arrays to Hist@Misc ----
-  # use for easy acces in C++  - removed later
+  # use for access in C++  - removed later
   Hist <- PrepHistMisc(Hist) 
   
   # ---- Calculate Unfished Equilibrium and Dynamic ----
