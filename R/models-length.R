@@ -8,11 +8,9 @@
 #' @param t0 theoretical age at zero length (von Bertalanffy)
 #' @param L0 length at age 0 (Brody)
 #' @param g growth rate parameter (Gompertz)
-#' @param a age at inflection (Gompertz) or Schnute shape parameter
-#' @param y0 length at age t0 (Schnute)
-#' @param y1 length at age t1 (Schnute)
-#' @param t1 second reference age (Schnute)
-#' @param b growth shape parameter (Schnute)
+#' @param a age at inflection (Gompertz)
+#' @param d Richards shape parameter. `d = 1` recovers von Bertalanffy; `d < 1`
+#'   gives faster early growth; `d > 1` gives slower early growth.
 #'
 #' @param full Logical. Provide a complete table (TRUE) or just the model names (FALSE)?
 #' @param print Logical. Print out the results (TRUE) or just return the data.frame (FALSE)?
@@ -24,7 +22,7 @@
 #' - **von Bertalanffy**: \deqn{L(a) = L_\infty (1 - e^{-K (a - t_0)})}
 #' - **Brody**: \deqn{L(a) = L_\infty - (L_\infty - L_0) e^{-K a}}
 #' - **Gompertz**: \deqn{L(a) = L_\infty \exp(-\exp(-g (a - a)))}
-#' - **Schnute**: flexible formula depending on parameters `a` and `b`
+#' - **Richards**: \deqn{L(a) = L_\infty \left(1 - e^{-K(a - t_0)}\right)^{1/d}}
 #'
 #' @return
 #' * `LengthModels()` invisibly returns a data frame
@@ -72,20 +70,12 @@ class(Gompertz) <- "Length-at-Age-Model"
 
 #' @name Length-at-Age-Models
 #' @export
-Schnute <- function(Ages, y0, y1, t0, t1, a, b) {
-  LAA <- if (a != 0 & b != 0) {
-    y0 + (y1 - y0) * ((1 - exp(-a * (Ages - t0))) / (1 - exp(-a * (t1 - t0))))^b
-  } else if (a == 0 & b != 0) {
-    y0 + (y1 - y0) * ((Ages - t0) / (t1 - t0))^b
-  } else if (a != 0 & b == 0) {
-    y0 + (y1 - y0) * log(1 + a * (Ages - t0)) / log(1 + a * (t1 - t0))
-  } else { # a == 0 & b == 0
-    y0 + (y1 - y0) * (Ages - t0) / (t1 - t0)
-  }
+Richards <- function(Ages, Linf, K, t0 = 0, d = 1) {
+  LAA <- Linf * (1 - exp(-K * (Ages - t0)))^(1 / d)
   LAA[LAA < 0] <- 0
   LAA
 }
-class(Schnute) <- "Length-at-Age-Model"
+class(Richards) <- "Length-at-Age-Model"
 
 
 
