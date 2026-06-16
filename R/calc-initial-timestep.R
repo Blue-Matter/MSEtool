@@ -1,8 +1,9 @@
 #' Initialize dynamic population state in Hist
 #'
 #' Internal helper that constructs the initial age–area population structure
-#' in a [Hist()] object by applying recruitment deviations, spatial
-#' distribution, and optional initial depletion.
+#' in a [Hist()] object by applying recruitment deviations to the equilibrium
+#' unfished numbers-at-age (which already carry the spatial distribution) and
+#' optionally applying initial depletion.
 #'
 #' @param Hist A [Hist()] object with initialized unfished equilibrium state.
 #'
@@ -16,7 +17,8 @@ CalcDynamicInitial <- function(Hist) {
   for (st in 1:nStock(Hist)) {
 
     ## ---- Calculate dynamic age structure (multiply by rec devs) ----
-    EquilNumber <- abind::adrop(Hist@Unfished@Equilibrium@Number[[st]][,,1, drop=FALSE], 3)
+    # Sim x Age x Area (year dim dropped; area distribution already applied)
+    EquilNumber <- abind::adrop(Hist@Unfished@Equilibrium@Number[[st]][,,1,, drop=FALSE], 3)
 
     RecDevInit <- Hist@OM@Stock[[st]]@SRR@RecDevInit |> ExtendSims(nSim)
     RecDevHist <- Hist@OM@Stock[[st]]@SRR@RecDevHist
@@ -49,51 +51,21 @@ CalcDynamicInitial <- function(Hist) {
 
 
     ## ---- Distribute across areas ----
-    UnfishedDist <- abind::adrop(Hist@OM@Stock[[st]]@Spatial@UnfishedDist[,,,1,drop=FALSE], 4) |>
-      aperm(c('Sim', 'Age', 'Area'))
+    # EquilNumber is Sim x Age x Area (area distribution already included in
+    # Equilibrium@Number). Rec devs broadcast across areas via ArrayMultiply.
+    # See `CombineOMs` for cases where InitYear > 1.
+    Hist@Number[[st]][,,InitYear,] <- ArrayMultiply(
+      AddDimension(InitAgeClassRecDevs, 'Area'),
+      EquilNumber)
 
-    nArea <- dim(UnfishedDist)[3]
-    
-    # if (nArea>1 & Hist@OM@Seasons>1) {
-    #   # cli::cli_abort(c("x"="Multi-area seasonal model spatial distribution are not currently supported."), .internal=TRUE)
-    #   # This code maps out nAge seasons of nAge cohorts prior to season 1, year 1.
-    #   # An initial vector of nAge season of R0 are multiplied by recdevs and distributed by movement in age class 1
-    #   # Then these numbers are moved up cohorts according to movement by age
-    #   InitMovMat = Hist@OM@Stock[[st]]@Spatial@Movement[,,,,1,drop=F] # Movement in first time step [sim, from, to ,age]
-    #   Hist@Number[[st]][,,1,] <- calc_seas_spat(InitAgeClassRecDevs, UnfishedDist, InitMovMat, Hist@OM@Stock[[st]]@SRR@R0, Seasons(Hist))
-    # 
-    # } else {
-    #   # Multiply unfished by initial rec devs and add an Area dimension
-    #   NatAge <- ArrayMultiply(InitAgeClassRecDevs, EquilNumber) |> AddDimension('Area')
-    # 
-    #   # Multiply by UnfishedDist to distribute across areas
-    #   Hist@Number[[st]][,,1,] <- ArrayMultiply(NatAge, UnfishedDist)
-    # }
-    
-    
-    ######### TEMPORARY UNTIL calc_seas_spat works for all cases ###############
-    # Multiply unfished by initial rec devs and add an Area dimension
-    NatAge <- ArrayMultiply(InitAgeClassRecDevs, EquilNumber) |> AddDimension('Area')
-    
-    # This is used for OMs where the first historical year is not the 
-    # same as the first historical year for this specific stock,
-    # ie where multiple OMs have been combined - see `CombineOMs` 
-    
-
-    
-    # Multiply by UnfishedDist to distribute across areas
-    Hist@Number[[st]][,,InitYear,] <- ArrayMultiply(NatAge, UnfishedDist)
-    
     if (InitYear>1) {
-      # backfill with unfished
+      # backfill with unfished (EquilNumber already Sim x Age x Area)
       eq_unfished <- EquilNumber |> AddDimension('Year', val=min(HistYears)) |>
-        ExtendYears(Years=HistYears[HistYears<InitYearCal]) |> AddDimension('Area')
-      
+        ExtendYears(Years=HistYears[HistYears<InitYearCal])
+
       ArrayFill(Hist@Number[[st]]) <- eq_unfished
     }
 
-    ##############################################################################
-    
     ## ---- Fill recruitment for initial time steps if age rec > 0  ----
     RecruitTimeStep <- CalcRecruitment_AgeIndex(Hist, st)
 

@@ -9,6 +9,7 @@ SolveMovement_Multi_Area(
   UnfishedDist,
   ProbStaying,
   FracOther,
+  UnfishedDistNext = NULL,
   CVDist = 0.1,
   CVStay = 1
 )
@@ -26,9 +27,16 @@ area.}
 \item{FracOther}{\code{matrix}. Square matrix of relative off-diagonal movement
 probabilities. Diagonal elements must be \code{NA}.}
 
+\item{UnfishedDistNext}{\code{numeric(nArea)} or \code{NULL}. Target unfished
+distribution for the \strong{next} age class. When supplied, a one-step penalty
+replaces the asymptotic-distribution penalty: \code{UnfishedDist \%*\% M} should
+equal \code{UnfishedDistNext}. When \code{NULL} (plus-group or age-invariant
+movement), the asymptotic distribution of \code{M} is penalised against
+\code{UnfishedDist} instead.}
+
 \item{CVDist}{\code{numeric(1)}. Standard deviation of the log-scale normal
 penalty on the distribution. Larger values allow greater deviation from
-\code{UnfishedDist}. Default \code{0.1}.}
+the target. Default \code{0.1}.}
 
 \item{CVStay}{\code{numeric(1)}. Standard deviation of the logit-scale normal
 penalty on the staying probabilities. Larger values allow greater
@@ -46,20 +54,27 @@ deviation of the staying probabilities from \code{ProbStaying} (controlled by
 \code{CVStay}).
 }
 \details{
-The objective is:
+When \code{UnfishedDistNext} is \code{NULL}, the distribution objective is:
 
 \deqn{
   -\sum_i \log \mathcal{N}\!\left(\log \pi_i \mid \log u_i,\,
   \sigma_{\text{dist}}^2\right)
+}
+
+where \eqn{\pi_i} is the implied asymptotic distribution. When
+\code{UnfishedDistNext} is supplied, it is replaced by:
+
+\deqn{
+  -\sum_i \log \mathcal{N}\!\left(\log(\boldsymbol{u}_a \mathbf{M})_i
+  \mid \log u_{a+1,i},\, \sigma_{\text{dist}}^2\right)
+}
+
+In both cases the staying-probability penalty is:
+
+\deqn{
   -\sum_i \log \mathcal{N}\!\left(\text{logit}(m_{ii}) \mid
   \text{logit}(p_i),\, \sigma_{\text{stay}}^2\right)
 }
-
-where \eqn{\pi_i} is the implied asymptotic distribution (from
-\code{\link[=CalcAsymDist]{CalcAsymDist()}}), \eqn{u_i} is \code{UnfishedDist[i]}, \eqn{m_{ii}} is the
-fitted staying probability in area \eqn{i}, \eqn{p_i} is \code{ProbStaying[i]},
-\eqn{\sigma_{\text{dist}}} is \code{CVDist}, and \eqn{\sigma_{\text{stay}}} is
-\code{CVStay}.
 }
 \seealso{
 \code{\link[=FitMovement_Multi_Area]{FitMovement_Multi_Area()}}, \code{\link[=MarkovFrac]{MarkovFrac()}}, \code{\link[=CalcAsymDist]{CalcAsymDist()}}

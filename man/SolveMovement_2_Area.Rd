@@ -4,16 +4,28 @@
 \alias{SolveMovement_2_Area}
 \title{Objective Function for Two-Area Movement Optimisation}
 \usage{
-SolveMovement_2_Area(LogitProbs, UnfishedDist, ProbStaying)
+SolveMovement_2_Area(
+  LogitProbs,
+  UnfishedDist,
+  ProbStaying,
+  UnfishedDistNext = NULL
+)
 }
 \arguments{
 \item{LogitProbs}{\code{numeric(2)}. Logit-transformed staying probabilities for
 Area 1 and Area 2. The off-diagonal entries are set to
 \code{1 - ilogit(LogitProbs)}.}
 
-\item{UnfishedDist}{\code{numeric(1)}. Target unfished fraction in Area 1.}
+\item{UnfishedDist}{\code{numeric(2)}. Target unfished distribution across areas
+for the current age class.}
 
 \item{ProbStaying}{\code{numeric(1)}. Target probability of remaining in Area 1.}
+
+\item{UnfishedDistNext}{\code{numeric(2)} or \code{NULL}. Target unfished distribution
+for the \strong{next} age class. When supplied, a one-step penalty is used:
+\code{UnfishedDist \%*\% M} should equal \code{UnfishedDistNext}. When \code{NULL}
+(plus-group or age-invariant movement), the asymptotic distribution of \code{M}
+is compared to \code{UnfishedDist} instead.}
 }
 \value{
 \code{numeric(1)}. The value of the objective (to be minimised).
@@ -21,8 +33,8 @@ Area 1 and Area 2. The off-diagonal entries are set to
 \description{
 Computes the least-squares objective used by \code{\link[=FitMovement_2_Area]{FitMovement_2_Area()}}.
 Penalties are applied in log space to deviations of the fitted staying
-probability from \code{ProbStaying} and of the implied asymptotic area
-distribution from \code{UnfishedDist}.
+probability from \code{ProbStaying} and of the implied area distribution from the
+target.
 }
 \seealso{
 \code{\link[=FitMovement_2_Area]{FitMovement_2_Area()}}, \code{\link[=CalcAsymDist_2Area]{CalcAsymDist_2Area()}}

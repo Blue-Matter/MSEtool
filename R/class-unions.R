@@ -1,5 +1,3 @@
-#' @include class-dynamics.R
-
 # Custom Class Unions
 
 methods::setClassUnion("char.null", c("character", "NULL"))
@@ -26,8 +24,6 @@ methods::setClassUnion("array.char.num.list", c("array", "character", "numeric",
 methods::setClassUnion("num.array.list", c("numeric", "array", "list", "NULL"))
 methods::setClassUnion("num.array.df", c("numeric", "array", "data.frame", "NULL"))
 
-
 methods::setClassUnion("fun.char", c("function", "character", "list", "NULL"))
 methods::setClassUnion("num.Date", c("numeric", "Date", "POSIXct", "character", "NULL"))
-
 

@@ -53,9 +53,9 @@ FitMovement <-  function(Spatial, sim=1, age=1, year=1) {
 #'
 #' Fits a `2 × 2` row-stochastic movement matrix for a single simulation, age,
 #' and year by minimising a least-squares objective in logit space. The
-#' objective penalises deviations of the optimised diagonal (staying
-#' probability) from `ProbStaying` and deviations of the implied asymptotic
-#' distribution from `UnfishedDist`, both in log space.
+#' objective penalises deviations of the fitted staying probability from
+#' `ProbStaying` and deviations of the implied area distribution from the
+#' target, both in log space.
 #'
 #' @param Spatial A [spatial-class] object with populated `UnfishedDist` and
 #'   `ProbStaying` slots (named `Sim × Area × Age × Year` arrays).
@@ -66,18 +66,19 @@ FitMovement <-  function(Spatial, sim=1, age=1, year=1) {
 #' @details
 #' Optimisation is performed with [stats::optim()] using the `"L-BFGS-B"`
 #' method. The two free parameters are the logit-transformed diagonal entries
-#' (staying probabilities for Area 1 and Area 2). The off-diagonal entries are
-#' derived as `1 - diagonal`. The objective is:
+#' (staying probabilities for Area 1 and Area 2).
 #'
-#' \deqn{
-#'   \bigl(\log m_{11} - \log p_{\text{stay}}\bigr)^2 +
-#'   \bigl(\log \pi_1 - \log u_1\bigr)^2
-#' }
+#' When `UnfishedDist` has more than one age class and `age` is not the last
+#' age class (plus group), a one-step objective is used: the penalty is on
+#' the deviation of `UnfishedDist[age] %*% M` from `UnfishedDist[age + 1]`.
+#' This ensures the fitted matrix correctly maps the current age's equilibrium
+#' distribution to the next age's in a single time step, consistent with how
+#' the movement matrix is applied in the population dynamics.
 #'
-#' where \eqn{m_{11}} is the fitted staying probability in Area 1,
-#' \eqn{p_{\text{stay}}} is the target from `ProbStaying`,
-#' \eqn{\pi_1} is the asymptotic distribution in Area 1 (computed by
-#' [CalcAsymDist_2Area()]), and \eqn{u_1} is the target from `UnfishedDist`.
+#' For the plus group (`age == nAge`) and for age-invariant movement
+#' (`nAge == 1`), the objective falls back to penalising the deviation of the
+#' asymptotic (stationary) distribution from `UnfishedDist[age]`, since
+#' fish in the plus group apply the same movement matrix repeatedly.
 #'
 #' Dimension indices are clamped to the size of each slot's array, so a slot
 #' with a singleton dimension is treated as constant across that index.
@@ -85,27 +86,40 @@ FitMovement <-  function(Spatial, sim=1, age=1, year=1) {
 #' @return A `2 × 2` numeric matrix with rows summing to 1.
 #'
 #' @seealso [FitMovement()], [FitMovement_Multi_Area()], [MarkovFrac()],
-#'   [CalcAsymDist_2Area()]
+#'   [CalcAsymDist_2Area()], [SolveMovement_2_Area()]
 #'
 #' @keywords internal
 FitMovement_2_Area <- function(Spatial, sim=1, age=1, year=1) {
-  
+
   PS_dim <- dim(Spatial@ProbStaying)
   PS_sim <- min(sim, PS_dim[1])
   PS_age <- min(age, PS_dim[3])
   PS_year <- min(year, PS_dim[4])
-  
-  UD_dim <- dim(Spatial@UnfishedDist)
-  UD_sim <- min(sim, UD_dim[1])
-  UD_age <- min(age, UD_dim[3])
+
+  UD_dim  <- dim(Spatial@UnfishedDist)
+  UD_sim  <- min(sim, UD_dim[1])
+  UD_age  <- min(age, UD_dim[3])
   UD_year <- min(year, UD_dim[4])
-  
-  optMovement <- stats::optim(logit(rep(Spatial@ProbStaying[PS_sim, 1, PS_age, PS_year], 2)),
-                              SolveMovement_2_Area,
-                              UnfishedDist = Spatial@UnfishedDist[UD_sim,1,UD_age,UD_year],
-                              ProbStaying= Spatial@ProbStaying[PS_sim, 1, PS_age, PS_year],
-                              method = "L-BFGS-B")
-  
+  nAgeUD  <- UD_dim[3]
+
+  UnfishedDist <- Spatial@UnfishedDist[UD_sim, , UD_age, UD_year]
+
+  # One-step objective for non-plus-group ages with age-varying distribution
+  UnfishedDistNext <- if (nAgeUD > 1L && age < nAgeUD) {
+    Spatial@UnfishedDist[UD_sim, , age + 1L, UD_year]
+  } else {
+    NULL
+  }
+
+  optMovement <- stats::optim(
+    logit(rep(Spatial@ProbStaying[PS_sim, 1, PS_age, PS_year], 2)),
+    SolveMovement_2_Area,
+    UnfishedDist     = UnfishedDist,
+    ProbStaying      = Spatial@ProbStaying[PS_sim, 1, PS_age, PS_year],
+    UnfishedDistNext = UnfishedDistNext,
+    method = "L-BFGS-B"
+  )
+
   MarkovFrac(LogitProbs=optMovement$par)
 }
 
@@ -113,14 +127,20 @@ FitMovement_2_Area <- function(Spatial, sim=1, age=1, year=1) {
 #'
 #' Computes the least-squares objective used by [FitMovement_2_Area()].
 #' Penalties are applied in log space to deviations of the fitted staying
-#' probability from `ProbStaying` and of the implied asymptotic area
-#' distribution from `UnfishedDist`.
+#' probability from `ProbStaying` and of the implied area distribution from the
+#' target.
 #'
 #' @param LogitProbs `numeric(2)`. Logit-transformed staying probabilities for
 #'   Area 1 and Area 2. The off-diagonal entries are set to
 #'   `1 - ilogit(LogitProbs)`.
-#' @param UnfishedDist `numeric(1)`. Target unfished fraction in Area 1.
+#' @param UnfishedDist `numeric(2)`. Target unfished distribution across areas
+#'   for the current age class.
 #' @param ProbStaying `numeric(1)`. Target probability of remaining in Area 1.
+#' @param UnfishedDistNext `numeric(2)` or `NULL`. Target unfished distribution
+#'   for the **next** age class. When supplied, a one-step penalty is used:
+#'   `UnfishedDist %*% M` should equal `UnfishedDistNext`. When `NULL`
+#'   (plus-group or age-invariant movement), the asymptotic distribution of `M`
+#'   is compared to `UnfishedDist` instead.
 #'
 #' @return `numeric(1)`. The value of the objective (to be minimised).
 #'
@@ -128,17 +148,25 @@ FitMovement_2_Area <- function(Spatial, sim=1, age=1, year=1) {
 #'
 #' @keywords internal
 SolveMovement_2_Area <- function(LogitProbs,
-                               UnfishedDist,
-                               ProbStaying) {
-  Movement <- matrix(0, 2,2)
+                                 UnfishedDist,
+                                 ProbStaying,
+                                 UnfishedDistNext = NULL) {
+  Movement <- matrix(0, 2, 2)
   diag(Movement) <- ilogit(LogitProbs)
-  Movement[1,2] <- 1- Movement[1,1]
-  Movement[2,1] <- 1- Movement[2,2]
-  
-  Distribution <- CalcAsymDist_2Area(Movement)
-  
-  NLL <- (log(Movement[1,1]) - log(ProbStaying))^2 +
-    (log(UnfishedDist) - log(Distribution[1]))^2
+  Movement[1, 2] <- 1 - Movement[1, 1]
+  Movement[2, 1] <- 1 - Movement[2, 2]
+
+  if (!is.null(UnfishedDistNext)) {
+    # One-step objective: UnfishedDist %*% M should equal UnfishedDistNext
+    Projected <- as.vector(UnfishedDist %*% Movement)
+    dist_penalty <- sum((log(Projected) - log(UnfishedDistNext))^2)
+  } else {
+    # Asymptotic objective for plus-group / age-invariant movement
+    Distribution <- CalcAsymDist_2Area(Movement)
+    dist_penalty <- (log(UnfishedDist[1]) - log(Distribution[1]))^2
+  }
+
+  NLL <- (log(Movement[1, 1]) - log(ProbStaying))^2 + dist_penalty
   NLL
 }
 
@@ -214,36 +242,48 @@ MarkovFrac <- function(LogitProbs, FracOther=NULL, tol = 1e-10){
 #'
 #' @keywords internal
 FitMovement_Multi_Area <- function(Spatial, sim=1, age=1, year=1) {
-  
+
   PS_dim <- dim(Spatial@ProbStaying)
   PS_sim <- min(sim, PS_dim[1])
   PS_age <- min(age, PS_dim[3])
   PS_year <- min(year, PS_dim[4])
-  
-  UD_dim <- dim(Spatial@UnfishedDist)
-  UD_sim <- min(sim, UD_dim[1])
-  UD_age <- min(age, UD_dim[3])
+
+  UD_dim  <- dim(Spatial@UnfishedDist)
+  UD_sim  <- min(sim, UD_dim[1])
+  UD_age  <- min(age, UD_dim[3])
   UD_year <- min(year, UD_dim[4])
-  
-  FO_dim <- dim(Spatial@FracOther)
-  FO_sim <- min(sim, FO_dim[1])
-  FO_age <- min(age, FO_dim[4])
+  nAgeUD  <- UD_dim[3]
+
+  FO_dim  <- dim(Spatial@FracOther)
+  FO_sim  <- min(sim, FO_dim[1])
+  FO_age  <- min(age, FO_dim[4])
   FO_year <- min(year, FO_dim[5])
-  
+
   nArea <- UD_dim[2]
-  
-  optMovement <- stats::nlminb(rep(0, nArea),
-                               SolveMovement_Multi_Area,
-                               UnfishedDist = Spatial@UnfishedDist[UD_sim, , UD_age, UD_year],
-                               ProbStaying = Spatial@ProbStaying[PS_sim,, PS_age, PS_year],
-                               FracOther = Spatial@FracOther[FO_sim,,, FO_age, FO_year],
-                               CVDist = Spatial@CVDist,
-                               CVStay=Spatial@CVStay,
-                               control = list(iter.max = 5e3, eval.max = 1e4))
-  
-  MarkovFrac(LogitProbs=optMovement$par,
-             FracOther = Spatial@FracOther[FO_sim,,, FO_age, FO_year])
-  
+
+  UnfishedDist <- Spatial@UnfishedDist[UD_sim, , UD_age, UD_year]
+
+  # One-step objective for non-plus-group ages with age-varying distribution
+  UnfishedDistNext <- if (nAgeUD > 1L && age < nAgeUD) {
+    Spatial@UnfishedDist[UD_sim, , age + 1L, UD_year]
+  } else {
+    NULL
+  }
+
+  optMovement <- stats::nlminb(
+    rep(0, nArea),
+    SolveMovement_Multi_Area,
+    UnfishedDist     = UnfishedDist,
+    ProbStaying      = Spatial@ProbStaying[PS_sim, , PS_age, PS_year],
+    FracOther        = Spatial@FracOther[FO_sim, , , FO_age, FO_year],
+    UnfishedDistNext = UnfishedDistNext,
+    CVDist           = Spatial@CVDist,
+    CVStay           = Spatial@CVStay,
+    control = list(iter.max = 5e3, eval.max = 1e4)
+  )
+
+  MarkovFrac(LogitProbs = optMovement$par,
+             FracOther  = Spatial@FracOther[FO_sim, , , FO_age, FO_year])
 }
 
 #' Objective Function for Multi-Area Movement Optimisation
@@ -265,41 +305,63 @@ FitMovement_Multi_Area <- function(Spatial, sim=1, age=1, year=1) {
 #'   probabilities. Diagonal elements must be `NA`.
 #' @param CVDist `numeric(1)`. Standard deviation of the log-scale normal
 #'   penalty on the distribution. Larger values allow greater deviation from
-#'   `UnfishedDist`. Default `0.1`.
+#'   the target. Default `0.1`.
 #' @param CVStay `numeric(1)`. Standard deviation of the logit-scale normal
 #'   penalty on the staying probabilities. Larger values allow greater
 #'   deviation from `ProbStaying`. Default `1`.
+#' @param UnfishedDistNext `numeric(nArea)` or `NULL`. Target unfished
+#'   distribution for the **next** age class. When supplied, a one-step penalty
+#'   replaces the asymptotic-distribution penalty: `UnfishedDist %*% M` should
+#'   equal `UnfishedDistNext`. When `NULL` (plus-group or age-invariant
+#'   movement), the asymptotic distribution of `M` is penalised against
+#'   `UnfishedDist` instead.
 #'
 #' @details
-#' The objective is:
+#' When `UnfishedDistNext` is `NULL`, the distribution objective is:
 #'
 #' \deqn{
 #'   -\sum_i \log \mathcal{N}\!\left(\log \pi_i \mid \log u_i,\,
 #'   \sigma_{\text{dist}}^2\right)
+#' }
+#'
+#' where \eqn{\pi_i} is the implied asymptotic distribution. When
+#' `UnfishedDistNext` is supplied, it is replaced by:
+#'
+#' \deqn{
+#'   -\sum_i \log \mathcal{N}\!\left(\log(\boldsymbol{u}_a \mathbf{M})_i
+#'   \mid \log u_{a+1,i},\, \sigma_{\text{dist}}^2\right)
+#' }
+#'
+#' In both cases the staying-probability penalty is:
+#'
+#' \deqn{
 #'   -\sum_i \log \mathcal{N}\!\left(\text{logit}(m_{ii}) \mid
 #'   \text{logit}(p_i),\, \sigma_{\text{stay}}^2\right)
 #' }
-#'
-#' where \eqn{\pi_i} is the implied asymptotic distribution (from
-#' [CalcAsymDist()]), \eqn{u_i} is `UnfishedDist[i]`, \eqn{m_{ii}} is the
-#' fitted staying probability in area \eqn{i}, \eqn{p_i} is `ProbStaying[i]`,
-#' \eqn{\sigma_{\text{dist}}} is `CVDist`, and \eqn{\sigma_{\text{stay}}} is
-#' `CVStay`.
 #'
 #' @return `numeric(1)`. The value of the objective (to be minimised).
 #'
 #' @seealso [FitMovement_Multi_Area()], [MarkovFrac()], [CalcAsymDist()]
 #'
 #' @keywords internal
-SolveMovement_Multi_Area <- function(LogitProbs, 
-                                     UnfishedDist, 
-                                     ProbStaying, 
-                                     FracOther, 
-                                     CVDist=0.1, 
-                                     CVStay=1) {
+SolveMovement_Multi_Area <- function(LogitProbs,
+                                     UnfishedDist,
+                                     ProbStaying,
+                                     FracOther,
+                                     UnfishedDistNext = NULL,
+                                     CVDist = 0.1,
+                                     CVStay = 1) {
   Movement <- MarkovFrac(LogitProbs, FracOther)
-  Distribution <- CalcAsymDist(Movement)
-  nll_dist <- dnorm(log(Distribution), log(UnfishedDist), CVDist, TRUE)
+
+  if (!is.null(UnfishedDistNext)) {
+    # One-step objective: UnfishedDist %*% M should equal UnfishedDistNext
+    Projected <- as.vector(UnfishedDist %*% Movement)
+    nll_dist <- dnorm(log(Projected), log(UnfishedDistNext), CVDist, TRUE)
+  } else {
+    Distribution <- CalcAsymDist(Movement)
+    nll_dist <- dnorm(log(Distribution), log(UnfishedDist), CVDist, TRUE)
+  }
+
   nll_stay <- dnorm(LogitProbs, logit(ProbStaying), CVStay, TRUE)
   -sum(c(nll_dist, nll_stay))
 }

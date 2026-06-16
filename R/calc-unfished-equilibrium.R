@@ -19,9 +19,10 @@
 #' @param OM An [OM()] or [Hist()] object.
 #' @param silent Logical; if `TRUE`, suppress messages during calculation.
 #'
-#' @return A [popdynamics-class] object containing equilibrium unfished
-#'   `Number`, `Biomass`, `SBiomass`, and `SProduction` arrays with
-#'   dimensions `Sim × Stock × Year`.
+#' @return A [popdynamics-class] object. `Number` is a list of length `nStock`,
+#'   each element an array with dimensions `Sim × Age × Year × Area`. `Biomass`,
+#'   `SBiomass`, and `SProduction` are arrays with dimensions `Sim × Stock × Year`
+#'   (summed over ages and areas).
 #'
 #' @seealso [CalcUnfished_Dynamic()]
 #'
@@ -37,9 +38,17 @@ CalcUnfished_Equilibrium <- function(OM, silent=FALSE) {
   # New `popdynamics` object that will be return
   EquilibriumUnfished <- new('popdynamics')
   
-  # Calculate unfished Number-at-Age
+  # Calculate unfished Number-at-Age and distribute across areas
   UnfishedNumberAtAge <- CalcUnfishedNumber(OM)
-  EquilibriumUnfished@Number <- UnfishedNumberAtAge |> ReduceDims()
+  EquilibriumUnfished@Number <- purrr::map2(
+    UnfishedNumberAtAge,
+    OM@Stock,
+    \(N, Stock) {
+      UD <- Stock@Spatial@UnfishedDist |>
+        aperm(c('Sim', 'Age', 'Year', 'Area'))
+      ArrayMultiply(N |> AddDimension('Area'), UD) |> ReduceDims()
+    }
+  )
   
   # Calculate unfished Spawning Number-at-Age (only different if SpawnFrac > 0)
   UnfishedSpawnNumberAtAge <- CalcUnfishedNumber(OM, SP=TRUE) |> ReduceDims()

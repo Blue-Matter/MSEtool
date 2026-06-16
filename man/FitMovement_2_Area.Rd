@@ -22,31 +22,32 @@ A \verb{2 × 2} numeric matrix with rows summing to 1.
 \description{
 Fits a \verb{2 × 2} row-stochastic movement matrix for a single simulation, age,
 and year by minimising a least-squares objective in logit space. The
-objective penalises deviations of the optimised diagonal (staying
-probability) from \code{ProbStaying} and deviations of the implied asymptotic
-distribution from \code{UnfishedDist}, both in log space.
+objective penalises deviations of the fitted staying probability from
+\code{ProbStaying} and deviations of the implied area distribution from the
+target, both in log space.
 }
 \details{
 Optimisation is performed with \code{\link[stats:optim]{stats::optim()}} using the \code{"L-BFGS-B"}
 method. The two free parameters are the logit-transformed diagonal entries
-(staying probabilities for Area 1 and Area 2). The off-diagonal entries are
-derived as \code{1 - diagonal}. The objective is:
+(staying probabilities for Area 1 and Area 2).
 
-\deqn{
-  \bigl(\log m_{11} - \log p_{\text{stay}}\bigr)^2 +
-  \bigl(\log \pi_1 - \log u_1\bigr)^2
-}
+When \code{UnfishedDist} has more than one age class and \code{age} is not the last
+age class (plus group), a one-step objective is used: the penalty is on
+the deviation of \code{UnfishedDist[age] \%*\% M} from \code{UnfishedDist[age + 1]}.
+This ensures the fitted matrix correctly maps the current age's equilibrium
+distribution to the next age's in a single time step, consistent with how
+the movement matrix is applied in the population dynamics.
 
-where \eqn{m_{11}} is the fitted staying probability in Area 1,
-\eqn{p_{\text{stay}}} is the target from \code{ProbStaying},
-\eqn{\pi_1} is the asymptotic distribution in Area 1 (computed by
-\code{\link[=CalcAsymDist_2Area]{CalcAsymDist_2Area()}}), and \eqn{u_1} is the target from \code{UnfishedDist}.
+For the plus group (\code{age == nAge}) and for age-invariant movement
+(\code{nAge == 1}), the objective falls back to penalising the deviation of the
+asymptotic (stationary) distribution from \code{UnfishedDist[age]}, since
+fish in the plus group apply the same movement matrix repeatedly.
 
 Dimension indices are clamped to the size of each slot's array, so a slot
 with a singleton dimension is treated as constant across that index.
 }
 \seealso{
 \code{\link[=FitMovement]{FitMovement()}}, \code{\link[=FitMovement_Multi_Area]{FitMovement_Multi_Area()}}, \code{\link[=MarkovFrac]{MarkovFrac()}},
-\code{\link[=CalcAsymDist_2Area]{CalcAsymDist_2Area()}}
+\code{\link[=CalcAsymDist_2Area]{CalcAsymDist_2Area()}}, \code{\link[=SolveMovement_2_Area]{SolveMovement_2_Area()}}
 }
 \keyword{internal}

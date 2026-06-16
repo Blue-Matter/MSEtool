@@ -18,20 +18,30 @@ CalcUnfishedDist(Spatial, Ages = NULL, Years = NULL)
 }
 \value{
 \code{Spatial} with \code{Spatial@UnfishedDist} populated as a named
-\verb{Sim × Area × Age × Year} array, where each \code{Area} vector gives the
-stationary probability of occupying each area under unfished conditions.
+\verb{Sim × Area × Age × Year} array.
 }
 \description{
-Computes the asymptotic unfished spatial distribution for each simulation,
-age class, and year by applying \code{\link[=CalcAsymDist]{CalcAsymDist()}} to each \verb{nArea × nArea}
-slice of \code{Spatial@Movement}. The result is stored in
+Computes the unfished spatial distribution for each simulation, age class,
+and year from \code{Spatial@Movement}. The result is stored in
 \code{Spatial@UnfishedDist}.
 }
 \details{
 For a single-area model, all values are set to 1. For multi-area models,
-the stationary distribution of the movement matrix is computed for each
-\verb{Sim × Age × Year} combination using \code{\link[=CalcAsymDist]{CalcAsymDist()}}.
+two modes are available:
+\itemize{
+\item \strong{Age-invariant movement} (\code{Movement} Age dimension = 1): the stationary
+(asymptotic) distribution of the single movement matrix is computed and
+applied uniformly across all age classes using \code{\link[=CalcAsymDist]{CalcAsymDist()}}.
+\item \strong{Age-varying movement} (\code{Movement} Age dimension > 1): a sequential
+chain propagates the analyst-specified recruit distribution forward through
+age classes. For age $a$:
+\deqn{\boldsymbol{\pi}_a = \boldsymbol{\pi}_{a-1} \mathbf{M}_{a-1}}
+The plus-group distribution is computed as the stationary distribution of
+\code{M[nAge]}, since fish remain in that age class across multiple time steps.
+The starting point $\boldsymbol{\pi}_1$ is taken from the recruit
+distribution already stored in \code{Spatial@UnfishedDist[, , 1, ]}.
+}
 }
 \seealso{
-\code{\link[=CalcAsymDist]{CalcAsymDist()}}, \code{\link[=Spatial]{Spatial()}}
+\code{\link[=CalcAsymDist]{CalcAsymDist()}}, \code{\link[=FitMovement]{FitMovement()}}, \code{\link[=Spatial]{Spatial()}}
 }

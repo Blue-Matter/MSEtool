@@ -110,7 +110,7 @@ PopulateSpatial <- function(Spatial,
       }
     }
   }
-  
+
   Spatial <- CalcUnfishedDist(Spatial, Ages, Years)
   Spatial <- ProcessRelativeSize(Spatial, nSim)
   
