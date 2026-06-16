@@ -9,6 +9,9 @@ purrr::map(stocks, source)
 
 purrr::map(fleets, source)
 
+# rebuild because fleets code uses Populate on some stocks
+purrr::map(stocks, source)
+
 purrr::map(obs, source)
 
 purrr::map(oms, source)

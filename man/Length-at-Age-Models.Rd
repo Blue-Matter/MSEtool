@@ -5,7 +5,7 @@
 \alias{vonBert}
 \alias{Brody}
 \alias{Gompertz}
-\alias{Schnute}
+\alias{Richards}
 \alias{LengthModels}
 \title{Length-at-Age Growth Models}
 \usage{
@@ -15,7 +15,7 @@ Brody(Ages, L0, Linf, K)
 
 Gompertz(Ages, Linf, g, a)
 
-Schnute(Ages, y0, y1, t0, t1, a, b)
+Richards(Ages, Linf, K, t0 = 0, d = 1)
 
 LengthModels(full = TRUE, print = TRUE)
 }
@@ -32,15 +32,10 @@ LengthModels(full = TRUE, print = TRUE)
 
 \item{g}{growth rate parameter (Gompertz)}
 
-\item{a}{age at inflection (Gompertz) or Schnute shape parameter}
+\item{a}{age at inflection (Gompertz)}
 
-\item{y0}{length at age t0 (Schnute)}
-
-\item{y1}{length at age t1 (Schnute)}
-
-\item{t1}{second reference age (Schnute)}
-
-\item{b}{growth shape parameter (Schnute)}
+\item{d}{Richards shape parameter. \code{d = 1} recovers von Bertalanffy; \code{d < 1}
+gives faster early growth; \code{d > 1} gives slower early growth.}
 
 \item{full}{Logical. Provide a complete table (TRUE) or just the model names (FALSE)?}
 
@@ -62,7 +57,7 @@ Length-at-age (LAA) growth models
 \item \strong{von Bertalanffy}: \deqn{L(a) = L_\infty (1 - e^{-K (a - t_0)})}
 \item \strong{Brody}: \deqn{L(a) = L_\infty - (L_\infty - L_0) e^{-K a}}
 \item \strong{Gompertz}: \deqn{L(a) = L_\infty \exp(-\exp(-g (a - a)))}
-\item \strong{Schnute}: flexible formula depending on parameters \code{a} and \code{b}
+\item \strong{Richards}: \deqn{L(a) = L_\infty \left(1 - e^{-K(a - t_0)}\right)^{1/d}}
 }
 }
 \examples{

@@ -31,8 +31,7 @@ PopulateASK <- function(object, Ages=NULL, silent=FALSE, type='Length') {
     Classes   = object@Classes,
     TruncSD   = object@TruncSD,
     Dist      = object@Dist,
-    silent    = silent,
-    type      = type
+    silent    = silent
   )
   
   if (is.null(dimnames(ASK))) {
