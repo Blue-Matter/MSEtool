@@ -29,7 +29,7 @@ is not proportional to weight.
 \item{\code{Pars}}{\code{list}. Named list of fecundity model parameters whose names
 correspond to those expected by \code{Model}. See \code{\link[=FecundityModels]{FecundityModels()}} for
 parameter sets and
-\link[=populating-schedules]{Specifying Biological and Fleet Schedules} for
+\href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for
 accepted input formats.}
 
 \item{\code{Model}}{\code{function} or \code{character(1)}. Fecundity model identifier,
@@ -45,7 +45,7 @@ and \code{Units} is irrelevant.}
 \code{Age}, and \code{Year}. Populated automatically by \code{\link[=Populate]{Populate()}} when \code{Pars}
 and \code{Model} are set; may also be supplied directly when \code{Pars} is empty.
 When \code{Pars} contains a matched model, any existing values are overwritten.
-See \link[=populating-schedules]{Specifying Biological and Fleet Schedules}.}
+See \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules}.}
 
 \item{\code{MeanAtLength}}{\code{array}. Mean fecundity-at-length with named dimensions
 \code{Sim}, \code{Length}, and \code{Year}. Populated automatically when an at-length
@@ -54,7 +54,7 @@ at the midpoint of each bin (halfway between consecutive lower bounds);
 the \code{Class} dimension is labelled by bin lower bounds (see \code{Classes}).
 Converted to \code{MeanAtAge} via the \code{ALK} during \code{\link[=Populate]{Populate()}} when \code{MeanAtAge}
 is not already populated.
-See \link[=populating-schedules]{Specifying Biological and Fleet Schedules}.}
+See \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules}.}
 
 \item{\code{Classes}}{\code{numeric}. Age classes (in years) or lower bounds of length
 bins, corresponding to the \verb{MeanAt*} array in use. For length bins, bin
@@ -81,7 +81,7 @@ default spawning biomass calculation and at-length fecundity models.
 \item \code{\link[=Maturity]{Maturity()}} for the maturity schedule multiplied through fecundity
 during population.
 \item \code{\link[=SRR]{SRR()}} for spawning timing within the time step.
-\item \link[=populating-schedules]{Specifying Biological and Fleet Schedules} for the
+\item \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for the
 full description of how \code{Pars}, \code{Model}, and \verb{MeanAt*} arrays interact.
 }
 

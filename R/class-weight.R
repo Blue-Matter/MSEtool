@@ -8,7 +8,7 @@
 #' @slot Pars `list`. Named list of parameters whose names
 #'   correspond to those expected by `Model`. See [WeightModels()] for
 #'   parameter sets and
-#'   [Specifying Biological and Fleet Schedules][populating-schedules] for
+#'   [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for
 #'   accepted input formats.
 #' @slot Model `function` or `character(1)`. Weight model identifier, matched
 #'   to one of [WeightModels()]. Set automatically by [FindModel()] when `Pars`
@@ -19,15 +19,14 @@
 #'   `Age`, and `Year`. Populated automatically by [Populate()] when `Pars`
 #'   and `Model` are set; may also be supplied directly when `Pars` is empty.
 #'   When `Pars` contains a matched model, any existing values are overwritten.
-#'   See [Specifying Biological and Fleet Schedules][populating-schedules].
+#'   See [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html).
 #' @slot MeanAtLength `array`. Mean weight at length with named dimensions
 #'   `Sim`, `Length`, and `Year`. Populated automatically when an at-length
 #'   weight model is used, or may be supplied directly. Values are evaluated at
 #'   the midpoint of each bin (halfway between consecutive lower bounds); the
 #'   `Class` dimension is labelled by bin lower bounds (see `Classes`).
 #'   Converted to `MeanAtAge` via the `ALK` during [Populate()] when `MeanAtAge`
-#'   is not already populated. See [Specifying Biological and Fleet
-#'   Schedules][populating-schedules].
+#'   is not already populated. See [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html).
 #' @slot CVatAge `array` or `numeric`. Coefficient of variation of
 #'   weight-at-age, used to generate the within-age-class weight distribution
 #'   and to build the age-weight key (`AWK`). `NULL` by default; the `AWK` is
@@ -67,7 +66,7 @@
 #'  - [FindModel()] for automatic model inference. 
 #'  - [AWK()] to retrieve the age-weight key. 
 #'  - [Length()] for the companion length schedule, required when using at-length weight models.
-#'  - [Specifying Biological and Fleet Schedules][populating-schedules] for the
+#'  - [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for the
 #'   full description of how `Pars`, `Model`, and `MeanAt*` arrays interact.
 #'
 #' @family weight

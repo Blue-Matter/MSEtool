@@ -13,7 +13,7 @@
 #'   - `HockeyStick`: `list(Shinge = ...)` where `0 < Shinge <= 1`.
 #'   When `Pars` is a non-list S4 object with an `SRR` slot (e.g., a
 #'   [stock-class]), `SRR()` acts as a pass-through accessor and returns that
-#'   slot. See [Specifying Biological and Fleet Schedules][populating-schedules]
+#'   slot. See [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html)
 #'   for accepted input formats (scalar, bounds vector, `nSim`-length vector).
 #'   Default `list(h = NA)`.
 #' @param Model `character(1)` or `function`. SRR model identifier. Must match
@@ -197,7 +197,7 @@
 #' - [Populate()] for array population.
 #' - [Stock()] for the enclosing stock constructor.
 #' - [Fecundity()] for the spawning production used as input to the SRR.
-#' - [Specifying Biological and Fleet Schedules][populating-schedules] for
+#' - [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for
 #'   accepted `Pars`, `R0`, `SD`, and `AC` input formats.
 #'
 #' @family srr
@@ -257,13 +257,13 @@ R0 <- function(x) {
   
   if (inherits(x, 'hist')) {
     return(purrr::map(x@OM@Stock, \(stock)
-                      ReduceDims(stock@SRR@R0, IncYear = TRUE) 
+                      ReduceDims(stock@SRR@R0) 
     ) |> List2Array("Stock", pos=2)
     )
   }
   if (inherits(x, 'om')) {
     return(purrr::map(x@Stock, \(stock)
-                      ReduceDims(stock@SRR@R0, IncYear = TRUE) 
+                      ReduceDims(stock@SRR@R0) 
     ) |> List2Array("Stock", pos=2)
     ) 
   }

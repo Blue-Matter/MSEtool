@@ -45,7 +45,7 @@ NULL
     slot(Hist@Unfished@Dynamic, slot_name)
   }
   
-  if (Reduce) ReduceDims(obj, IncYear = TRUE) else obj
+  if (Reduce) ReduceDims(obj, IncYear = FALSE) else obj
 }
 
 #' @export

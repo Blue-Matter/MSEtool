@@ -27,7 +27,7 @@ during \code{\link[=Populate]{Populate()}}.
 \item{\code{Pars}}{\code{list}. Named list of natural mortality parameters whose names
 correspond to those expected by \code{Model}. See \code{\link[=NaturalMortalityModels]{NaturalMortalityModels()}}
 for parameter sets and
-\link[=populating-schedules]{Specifying Biological and Fleet Schedules} for
+\href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for
 accepted input formats.}
 
 \item{\code{Model}}{\code{function} or \code{character(1)}. Natural mortality model
@@ -44,7 +44,7 @@ named dimensions \code{Sim}, \code{Age}, and \code{Year}. Populated automaticall
 \code{\link[=Populate]{Populate()}} when \code{Pars} and \code{Model} are set; may also be supplied
 directly when \code{Pars} is empty. When \code{Pars} contains a matched model, any
 existing values are overwritten.
-See \link[=populating-schedules]{Specifying Biological and Fleet Schedules}.}
+See \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules}.}
 
 \item{\code{MeanAtLength}}{\code{array}. Mean natural mortality at length with named
 dimensions \code{Sim}, \code{Length}, and \code{Year}. Populated automatically when an
@@ -53,7 +53,7 @@ evaluated at the midpoint of each bin (halfway between consecutive lower
 bounds); the \code{Class} dimension is labelled by bin lower bounds (see
 \code{Classes}). Converted to \code{MeanAtAge} via the \code{ALK} during \code{\link[=Populate]{Populate()}}
 when \code{MeanAtAge} is not already populated.
-See \link[=populating-schedules]{Specifying Biological and Fleet Schedules}.}
+See \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules}.}
 
 \item{\code{Random}}{\code{array}. Reserved for future use. Intended to hold
 simulation- and year-specific multipliers that add stochastic variation
@@ -79,7 +79,7 @@ parameters.
 \item \code{\link[=FindModel]{FindModel()}} for automatic model inference.
 \item \code{\link[=Length]{Length()}} for the companion length schedule, required when using
 at-length mortality models.
-\item \link[=populating-schedules]{Specifying Biological and Fleet Schedules} for the
+\item \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for the
 full description of how \code{Pars}, \code{Model}, and \verb{MeanAt*} arrays interact.
 }
 

@@ -247,7 +247,7 @@ Years(stk_seasonal, 'H')
 \item \code{\link[=Ages]{Ages()}}, \code{\link[=Length]{Length()}}, \code{\link[=Weight]{Weight()}}, \code{\link[=NaturalMortality]{NaturalMortality()}}, \code{\link[=Maturity]{Maturity()}},
 \code{\link[=Fecundity]{Fecundity()}}, \code{\link[=SRR]{SRR()}}, \code{\link[=Spatial]{Spatial()}}, \code{\link[=Depletion]{Depletion()}} for the sub-object
 constructors.
-\item \link[=populating-schedules]{Specifying Biological and Fleet Schedules} for how
+\item \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for how
 \code{Pars}, \code{Model}, and \verb{MeanAt*} arrays are specified across sub-objects.
 }
 

@@ -9,7 +9,7 @@
 #'   chosen SRR model. For `BevertonHolt`: `list(h = ...)`. For `Ricker`:
 #'   `list(hR = ...)`. For `HockeyStick`: `list(Shinge = ...)`. `R0` is never
 #'   placed in `Pars`; it has its own dedicated slot. See [SRRModels()] and
-#'   [Specifying Biological and Fleet Schedules][populating-schedules] for
+#'   [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for
 #'   accepted input formats.
 #' @slot Model `function` or `character(1)`. SRR model identifier. Defaults
 #'   to `"BevertonHolt"`. See [SRRModels()] for available models.
@@ -80,7 +80,7 @@
 #' - [Populate()] for array population.
 #' - [Stock()] for the enclosing stock constructor.
 #' - [Fecundity()] for the spawning production used as input to the SRR.
-#' - [Specifying Biological and Fleet Schedules][populating-schedules] for
+#' - [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for
 #'   accepted `Pars` input formats.
 #'
 #' @family srr

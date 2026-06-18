@@ -21,7 +21,7 @@ The \code{ALK} slot is derived from \code{MeanAtAge}, \code{CVatAge}, \code{Dist
 \describe{
 \item{\code{Pars}}{\code{list}. Named list of growth parameters whose names correspond to
 those expected by \code{Model}. See \code{\link[=LengthModels]{LengthModels()}} for parameter sets and
-\link[=populating-schedules]{Specifying Biological and Fleet Schedules} for
+\href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for
 accepted input formats.}
 
 \item{\code{Model}}{\code{function} or \code{character(1)}. Growth model identifier, matched
@@ -35,7 +35,7 @@ is supplied without an explicit model.}
 \code{Age}, and \code{Year}. Populated automatically by \code{\link[=Populate]{Populate()}} when \code{Pars}
 and \code{Model} are set; may also be supplied directly when \code{Pars} is empty.
 When \code{Pars} contains a matched model, any existing values are overwritten.
-See \link[=populating-schedules]{Specifying Biological and Fleet Schedules}.}
+See \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules}.}
 
 \item{\code{CVatAge}}{\code{array} or \code{numeric}. Coefficient of variation of
 length-at-age, used to generate the within-age-class length distribution.}
@@ -70,7 +70,7 @@ Bin \code{k} spans \verb{[Classes[k], Classes[k+1])}; the final bin is open-ende
 \item \code{\link[=Populate]{Populate()}} for array population.
 \item \code{\link[=FindModel]{FindModel()}} for automatic model inference.
 \item \code{\link[=ALK]{ALK()}} to retrieve the age-length key.
-\link[=populating-schedules]{Specifying Biological and Fleet Schedules} for the
+\href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for the
 full description of how \code{Pars}, \code{Model}, and \code{MeanAtAge} interact.
 }
 

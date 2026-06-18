@@ -57,6 +57,9 @@ The function returns \code{Data@Effort} unchanged in two cases:
 \item \strong{No observation structure defined}: every fleet's \code{\link[=EffortObs]{EffortObs()}} object
 is a default (unconditioned) object, as determined by \code{isNewObject()}.
 }
+
+Fleets without an \code{\link[=EffortObs]{EffortObs()}} object receive \code{NA} effort values; only
+fleets with a configured \code{\link[=EffortObs]{EffortObs()}} have simulated effort generated.
 }
 
 \subsection{Observation Error Model}{

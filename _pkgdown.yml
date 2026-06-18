@@ -13,7 +13,9 @@ reference:
     on these objects.
 
 - subtitle: Stock
+  desc: The top-level `stock` class and its sub-component slot classes.
   contents:
+  - stock-class
   - ages-class
   - depletion-class
   - fecundity-class
@@ -22,27 +24,28 @@ reference:
   - naturalmortality-class
   - spatial-class
   - srr-class
-  - stock-class
   - weight-class
 
 - subtitle: Fleet
+  desc: The top-level `fleet` class and its sub-component slot classes.
   contents:
+  - fleet-class
   - catchability-class
   - discardmortality-class
   - effort-class
-  - fleet-class
   - retention-class
   - selectivity-class
 
 - subtitle: Observation
+  desc: The top-level `obs` class and its sub-component slot classes.
   contents:
+  - obs-class
   - catchobs-class
   - CompObs-class
   - effortobs-class
   - exploitationobs-class
   - indicesobs-class
   - lifehistoryobs-class
-  - obs-class
 
 - subtitle: Implementation
   contents:
@@ -50,30 +53,32 @@ reference:
 
 - subtitle: OM, Hist, & MSE
   contents:
+  - om-class
   - hist-class
   - mse-class
-  - om-class
 
 - subtitle: Data
+  desc: The top-level `data` class and its sub-component slot classes.
   contents:
-  - advicedata
-  - catchdata
-  - compdata
   - data-class
-  - effortdata
-  - exploitationdata
-  - indicesdata
-  - lifehistorydata
-  - referencedata
+  - advicedata-class
+  - catchdata-class
+  - compdata-class
+  - effortdata-class
+  - exploitationdata-class
+  - indicesdata-class
+  - lifehistorydata-class
+  - referencedata-class
 
 - subtitle: Advice
   contents:
   - advice-class
 
 - subtitle: Other
+  desc: Internal result and output classes produced during simulation.
   contents:
   - bioeconomic-class
-  - dynamics-class
+  - equilibrium-class
   - perrecruit-class
   - popdynamics-class
   - reference-class
@@ -84,6 +89,9 @@ reference:
 
 
 - title: Constructors and Accessors
+  desc: >
+    Functions to construct and access slots of S4 objects. Setter functions
+    (e.g. `Ages<-`) are documented alongside their getter in the same help page.
 
 - subtitle: Stock
   contents:
@@ -109,15 +117,26 @@ reference:
   - Retention
   - Selectivity
 
+- subtitle: Observation
+  contents:
+  - Obs
+  - CatchObs
+  - CompObs
+  - EffortObs
+  - ExploitationObs
+  - IndicesObs
+  - LifeHistoryObs
+
 - subtitle: Implementation
   contents:
   - Imp
+  - ImpSlot
 
 - subtitle: OM
   contents:
   - OM
   - OM-accessors
-  - StockNames
+  - name-accessors
 
 - subtitle: Hist
   contents:
@@ -128,6 +147,12 @@ reference:
   - Data
   - DataHelpers
   - DataTrim
+  - CatchData
+  - CompData
+  - EffortData
+  - ExploitationData
+  - LifeHistoryData
+  - ReferenceData
 
 - subtitle: Advice
   contents:
@@ -135,17 +160,22 @@ reference:
 
 - subtitle: Extract Time Series
   contents:
-  - Biomass
-  - FInteract
-  - Interactions
+  - bio_timeseries
+  - catch_timeseries
+  - F_timeseries
+  - extract_effort
+  - extract-unfished
   - Number
+  - Interactions
 
-- subtitle: Miscellaneous
+- subtitle: Miscellaneous Slot Access
   contents:
   - Access
+  - Bioeconomic
 
 
 - title: Combine and Subset Objects
+  desc: Combine or subset OM, Fleet, and related objects.
   contents:
   - AddFleet
   - CombineFleets
@@ -154,11 +184,13 @@ reference:
 
 
 - title: Example Objects & Functions
+  desc: Ready-to-use example stocks, fleets, and operating models for getting started and testing.
 
 - subtitle: Stocks
   contents:
   - AlbacoreExStock
   - ButterfishExStock
+  - SeasonalSpatialExStock
 
 - subtitle: Fleets
   contents:
@@ -171,85 +203,63 @@ reference:
   - TwoFleetOM
   - MultiStockOM
   - ComplexOM
-  
+  - SeasonalSpatialOM
+
 - subtitle: Management Procedures
   contents:
   - ExampleMPs
 
 
 - title: Models
+  desc: Statistical models for life-history schedules, selectivity, retention, natural mortality, and stock-recruit relationships.
+
+- subtitle: Length-at-Age
   contents:
-  - FecundityModels
+  - Length-at-Age-Models
   - LengthModels
-  - MaturityModels
-  - NaturalMortalityModels
-  - RetentionModels
-  - SelectivityModels
-  - SRRModels
+
+- subtitle: Weight
+  contents:
+  - Weight-Models
   - WeightModels
 
-
-- title: Multi-Stock Models
+- subtitle: Maturity
   contents:
-  - FitStockTargeting
-  - GenMultiStockRecDevs
-  - GenerateStockTargeting
-  - StandardizeEffort
-  - StockTargeting
+  - Maturity-Models
+  - MaturityModels
 
-
-- title: Import OMs
-
-- subtitle: Beaufort Assessment Model (BAM)
+- subtitle: Fecundity
   contents:
-  - CompareBAM
-  - ImportBAM
-  - ImportBAMData
+  - Fecundity-Models
+  - FecundityModels
 
-- subtitle: Stock Synthesis 3 (SS3)
+- subtitle: Natural Mortality
   contents:
-  - CompareSS
-  - ImportSS
-  - ImportSSReport
+  - NaturalMortality-Models
+  - NaturalMortalityModels
 
-
-- title: Convert
-  desc: Convert legacy class objects to new classes introduced in `v4.0`
+- subtitle: Selectivity
   contents:
-  - Convert
-  - ConvertData
-  - ConvertFleet
-  - ConvertImp
-  - ConvertMOM
-  - ConvertObs
-  - ConvertOM
-  - ConvertStock
+  - Selectivity-Models
+  - SelectivityModels
 
-
-- title: Simulate & Project
+- subtitle: Retention
   contents:
-  - Project
-  - runMSE
-  - Simulate
+  - Retention-Models
+  - RetentionModels
+
+- subtitle: Stock-Recruit
+  contents:
+  - SRRModels
+
+- subtitle: Model Helpers
+  contents:
+  - model-helpers
+  - GenMeanAtLength
 
 
 - title: Population Dynamics
-
-- subtitle: Spatial
-  contents:
-  - CalcAsymDist
-  - CalcUnfishedDist
-  - FitMovement
-
-- subtitle: Age-Length Key
-  contents:
-  - CalcAgeClasses
-  - CalcAgeSizeKey
-
-- subtitle: Per-Recruit
-  contents:
-  - CalcSPR0
-  - CalcSurvival
+  desc: Functions for calculating unfished state, survival, per-recruit quantities, age-length keys, and spatial distribution.
 
 - subtitle: Unfished
   contents:
@@ -258,8 +268,95 @@ reference:
   - CalcUnfishedNumber
   - CalcUnfishedSurvival
 
+- subtitle: Per-Recruit & Survival
+  contents:
+  - CalcSPR0
+  - CalcSurvival
+
+- subtitle: Equilibrium
+  contents:
+  - CalcEquilibrium
+
+- subtitle: Age-Length Key
+  contents:
+  - CalcAgeClasses
+  - CalcAgeSizeKey
+
+- subtitle: Spatial
+  contents:
+  - CalcAsymDist
+  - CalcAsymptoticDist
+  - CalcUnfishedDist
+  - FitMovement
+
+- subtitle: Seasonal
+  contents:
+  - AdjustSeasonalFecundity
+  - SetSeasonalR0
+  - WrappedNormal
+
+
+- title: Reference Points
+  desc: Functions for calculating and accessing MSY, per-recruit, and unfished reference points.
+  contents:
+  - CalcMSY
+  - CalcPerRecruit
+  - MSY-accessors
+  - relative_ref
+  - CalcInnovationCov
+  - CalcResidualStats
+
+
+- title: Simulate & Project
+  desc: Run the operating model over the historical and projection periods, with or without management procedures.
+  contents:
+  - runMSE
+  - Simulate
+  - Project
+  - SimulateMOM
+  - ProjectMOM
+
+
+- title: Generate Observation Data
+  desc: >
+    Condition observation error and generate historical and projected fishery data
+    from the operating model.
+
+- subtitle: Condition Observation Error
+  contents:
+  - ConditionObs
+  - ConditionObs_Catch
+  - ConditionObs_Comp
+  - ConditionObs_Effort
+  - ConditionObs_Index
+
+- subtitle: Observation Models
+  contents:
+  - AgeStructuredObs
+  - CatchAndSurveyObs
+  - CommercialFleetObs
+  - DataRichObs
+  - LengthStructuredObs
+
+- subtitle: Generate Historical Data
+  contents:
+  - GenHistData_AgeComp
+  - GenHistData_Catch
+  - GenHistData_Indices
+  - GenHistData_SizeComp
+  - GenHistData_Effort
+
+- subtitle: Generate Projection Data
+  contents:
+  - GenProjData_AgeComp
+  - GenProjData_Catch
+  - GenProjData_Effort
+  - GenProjData_Index
+  - GenProjData_SizeComp
+
 
 - title: Populate
+  desc: Functions to populate OM and component S4 object slots from parameter objects.
 
 - subtitle: General
   contents:
@@ -292,77 +389,168 @@ reference:
   - PopulateRetention
   - PopulateSelectivity
 
+- subtitle: Observation
+  contents:
+  - PopulateCatchObs
+  - PopulateCompObs
+  - PopulateEffortObs
+  - PopulateIndexObs
+  - PopulateObs
+  - populate-obs-helpers
+
+
+- title: Multi-Stock Models
+  desc: Functions for multi-stock and multi-fleet operating models, including effort standardization and stock targeting.
+  contents:
+  - FitStockTargeting
+  - GenMultiStockRecDevs
+  - GenerateStockTargeting
+  - StandardizeEffort
+  - StockTargeting
+
+
+- title: Import OMs
+  desc: Import operating model parameters from stock assessment software.
+
+- subtitle: Beaufort Assessment Model (BAM)
+  contents:
+  - BAMFleetNames
+  - CompareBAM
+  - ImportBAM
+  - ImportBAMData
+
+- subtitle: Stock Synthesis 3 (SS3)
+  contents:
+  - CompareSS
+  - ImportSS
+  - ImportSSData
+  - ImportSSReport
+  - GetSSRefPoints
+
+
+- title: Convert
+  desc: Convert legacy class objects to new classes introduced in `v4.0`.
+  contents:
+  - Convert
+  - ConvertData
+  - ConvertFleet
+  - ConvertImp
+  - ConvertMOM
+  - ConvertObs
+  - ConvertOM
+  - ConvertStock
+
 
 - title: Array Operations
+  desc: Functions for creating, reshaping, and reducing named multi-dimensional arrays.
   contents:
+  - dimension-utils
+  - array_df_conversion
+  - list-array-conversion
   - AddDimension
   - Array2DF
   - ArrayOperations
   - Extend
   - List2Array
   - ReduceDims
+  - SumOverAge
+
 
 - title: Auto-Correlation Helpers
+  desc: Functions to add auto-correlated noise to parameter vectors.
   contents:
   - AddAutoCorrelation
   - ApplyAC
 
+
 - title: Conversions and Transformations
+  desc: Unit conversions, parameter transformations, and statistical distribution helpers.
   contents:
   - CR2h
+  - hconv
   - logit
-  - SumOverAge
   - unit-conversions
+  - alphaconv
+  - sdconv
+  - SumOverAge
+  - sample_steepness2
+  - trlnorm
+  - calcMean
+  - calcProb
+  - cv
+  - rDirichletMultinomial
+
 
 - title: Defaults
+  desc: Functions to set default parameter values.
   contents:
   - DefaultAges
 
+
 - title: Log
+  desc: Logging utilities.
   contents:
   - DeleteLogs
   - Log
 
+
 - title: Other Helpers
+  desc: Miscellaneous helper functions for checking, sampling, and manipulating objects.
   contents:
   - CheckCatch
+  - CheckOM
+  - CheckMSERun
   - CheckPackage
   - dim
+  - EmptyObject
   - GenResiduals
   - GetMetaData
+  - isNewObject
   - JoinYear
   - LoadArgs
+  - MakeNamedList
+  - NAor0
+  - OneRep
   - PPD
   - ReduceNSim
   - Rename
   - Reorder
   - S4SlotSizes
+  - SampleCpars
+  - SampleFleetPars
+  - SampleImpPars
+  - SampleObsPars
+  - SampleStockPars
   - Save
   - UpdateObject
+  - CSRA
+
 
 - title: Parallel Processing
+  desc: Set up and manage parallel processing for MSE simulations.
   contents:
   - SetupParallel
 
+
+- title: Performance Metrics
+  desc: Built-in performance metrics for evaluating MSE results.
+  contents:
+  - PerformanceMetric
+  - TACs
+
+
 - title: Slick
+  desc: Export MSE results to the Slick interactive viewer.
   contents:
   - MSE2Slick
 
+
 - title: Time Steps
+  desc: Functions for working with time step units and year indexing.
   contents:
   - CalcTSUnits
   - ValidUnits
   - Years
-
-- title: TO BE SORTED
-  contents:
-  - Bioeconomic
-  - CalcAgeSizeKey
-  - CalcInnovationCov
-  - CalcResidualStats
-  - GenMeanAtLength
-  - TACs
-  - unfished
 
 
 - title: Legacy Classes & Functions
@@ -389,7 +577,6 @@ reference:
 
 - subtitle: Legacy OM Functions
   contents:
-  - OM-legacy-class
   - OMdoc
   - testOM
 
@@ -451,6 +638,7 @@ reference:
   - Fease
   - Input
   - MPtype
+  - MPurl
   - RealFease
   - Required
   - runInMP
@@ -475,15 +663,10 @@ reference:
   - runCOSEWIC
   - setup
 
-- subtitle: Evaluate MSE Results
-  contents:
-  - PerformanceMetric
-
 - subtitle: General and Diagnostic Functions
   contents:
   - Converge
   - Dom
-  - MSE-legacy-class
   - summary,MSE-method
   - VOI
   - VOI2
@@ -544,7 +727,6 @@ reference:
 
 - subtitle: Legacy OM Functions
   contents:
-  - CheckOM
   - MSEextra
   - Replace
   - SubCpars
@@ -563,7 +745,6 @@ reference:
   - doHCR
   - doIfreq
   - doRec
-  - MPtype
   - smoothy
 
 - subtitle: Legacy MSE Functions
@@ -585,7 +766,6 @@ reference:
   - cparscheck
   - getmov2
   - getsel
-  - hconv
   - movestockCPP
   - MSYCalcs
   - simCAA
@@ -651,3 +831,4 @@ reference:
   - StockDescription
   - Taxa_Table
   - TEG
+  - optMSY_eq

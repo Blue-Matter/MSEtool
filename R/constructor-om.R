@@ -234,10 +234,30 @@ OM <- function(Name        = "A new OM object",
   
   Stock     <- if (!is.null(Stock)) ToNamedList(Stock, 'stock') else NULL
   stock_nms <- names(Stock)
+  compx_nms <- names(Complexes)
+  if (is.null(compx_nms))
+    compx_nms <- stock_nms
+  
   Fleet     <- ToNestedList(Fleet, 'fleet', stock_nms)
   fleet_nms <- if (!is.null(Fleet)) purrr::map(Fleet, names) else NULL
-  Obs       <- ToNestedList(Obs,   'obs',   stock_nms, fleet_nms)
-  Imp       <- ToNestedList(Imp,   'imp',   stock_nms, fleet_nms)
+
+  # Obs/Imp are indexed by complex, not stock. When Complexes is explicit,
+  # map each complex to the fleet names of its first stock. Full validation of
+  # Complexes (names, index coverage) happens in PopulateComplexes(); here we
+  # are permissive so that stocks/obs/complexes can be added incrementally.
+  obs_fleet_nms <- if (!is.null(Complexes) && !is.null(fleet_nms) && length(stock_nms) > 0) {
+    purrr::map(setNames(nm = compx_nms), function(cx) {
+      first_stk_idx <- Complexes[[cx]][1]
+      stk_nm        <- if (!is.null(first_stk_idx) && first_stk_idx <= length(stock_nms))
+                         stock_nms[[first_stk_idx]] else NULL
+      if (is.null(stk_nm)) NULL else fleet_nms[[stk_nm]]
+    })
+  } else {
+    fleet_nms
+  }
+
+  Obs       <- ToNestedList(Obs,   'obs',   compx_nms, obs_fleet_nms)
+  Imp       <- ToNestedList(Imp,   'imp',   compx_nms, obs_fleet_nms)
                           
   .Object@Stock       <- Stock
   .Object@Fleet       <- Fleet

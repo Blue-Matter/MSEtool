@@ -11,12 +11,12 @@
 #'   automatically by [FindModel()]. When `Pars` is a [stock-class] object,
 #'   `Length()` acts as a pass-through accessor and returns `x@Length`.
 #'   See *Specifying the Length-at-Age* and 
-#'   [Specifying Biological and Fleet Schedules][populating-schedules] for the full
+#'   [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for the full
 #'   set of accepted input formats. Default `list()`.
 #' @param Model `character(1)` or `function`. Growth model identifier. When
 #'   `NULL` (default), the model is inferred from `Pars` via [FindModel()].
 #'   May be set to a character string naming a built-in model or to a custom
-#'   R function — see [Specifying Biological and Fleet Schedules][populating-schedules].
+#'   R function — see [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html).
 #' @param Units `character(1)`. Physical unit of length measurements. Must be
 #'   one of the strings returned by [ValidUnits()] (e.g., `"mm"`, `"cm"`).
 #'   Default `"mm"`.
@@ -75,7 +75,7 @@
 #'    already present in `MeanAtAge` are preserved and are not overwritten
 #'    during [Populate()].
 #'
-#' See [Specifying Biological and Fleet Schedules][populating-schedules] for more details.
+#' See [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for more details.
 #'   
 #' ## Length Distribution and the ALK
 #'

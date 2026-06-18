@@ -1,12 +1,14 @@
-#' Biomass Relative to Reference Points
+#' Biomass and Fishing Mortality Relative to Reference Points
 #'
-#' Extract time series of biomass, spawning biomass, or spawning production
-#' expressed as a fraction of an unfished or MSY reference level.
+#' Extract time series of biomass, spawning biomass, spawning production, or
+#' fishing mortality expressed as a fraction of an unfished or MSY reference
+#' level.
 #'
 #' `B_B0()`, `SB_SB0()`, and `SP_SP0()` divide the time series by the
 #' corresponding unfished level (`type = 'Equilibrium'` or `'Dynamic'`).
 #' `B_BMSY()`, `SB_SBMSY()`, and `SP_SPMSY()` divide by the corresponding
-#' MSY reference point.
+#' MSY reference point. `F_FMSY()` divides total apical fishing mortality
+#' (summed over fleets) by `FMSY`.
 #'
 #' When applied to an [mse-class] object the historical and projection periods
 #' are row-bound and labelled via the `Period` column; historical rows carry
@@ -36,14 +38,16 @@
 #' Hist <- Simulate(SingleStockOM)
 #' B_B0(Hist)
 #' SB_SB0(Hist, type = 'Dynamic')
+#' F_FMSY(Hist)
 #'
 #' MSE <- Project(Hist, 'CurrentEffort')
 #' B_BMSY(MSE, df = TRUE)
 #' SB_SBMSY(MSE, df = TRUE)
 #' SP_SPMSY(MSE, df = TRUE)
+#' F_FMSY(MSE, df = TRUE)
 #'
 #' @name relative_ref
-#' @seealso [Biomass()], [B0()], [BMSY()]
+#' @seealso [Biomass()], [B0()], [BMSY()], [FDead()], [FMSY()]
 #' @export
 B_B0 <- function(object,
                  type    = c('Equilibrium', 'Dynamic'),
@@ -134,6 +138,64 @@ SP_SPMSY <- function(object,
                    type       = NULL,
                    df = df, Reduce = Reduce, IncYear = IncYear,
                    var_name   = 'SP_SPMSY')
+}
+
+#' @rdname relative_ref
+#' @export
+F_FMSY <- function(object,
+                   df      = TRUE,
+                   Reduce  = TRUE,
+                   IncYear = FALSE) {
+  CheckClass(object, c('hist', 'mse'), 'object')
+
+  fmsy_arr <- object@Reference@MSY@FMSY
+  .check_ref_populated(fmsy_arr, 'MSY', 'Reference@MSY@FMSY', 'F_FMSY')
+
+  if (!df) {
+    f_arr         <- SumOverFleet(slot(object, 'FDead'))
+    target_years  <- dimnames(f_arr)[['Year']]
+    denom_aligned <- .align_denom_years(fmsy_arr, target_years)
+    return(ArrayDivide(f_arr, denom_aligned))
+  }
+
+  if (inherits(object, 'hist')) {
+    out <- .compute_F_FMSY(object, fmsy_arr, Reduce, IncYear)
+    class(out) <- c('ffmsy.df', class(out))
+    return(out)
+  }
+
+  # MSE: bind historical and projection periods
+  hist_df <- .compute_F_FMSY(object@Hist, fmsy_arr, Reduce, IncYear) |>
+    dplyr::mutate(MP = 'Historical')
+  proj_df <- .compute_F_FMSY(object, fmsy_arr, Reduce, IncYear)
+
+  out <- dplyr::bind_rows(hist_df, proj_df)
+  class(out) <- c('ffmsy.df', class(out))
+  out
+}
+
+.compute_F_FMSY <- function(object, fmsy_arr, Reduce, IncYear) {
+  isMSE <- inherits(object, 'mse')
+
+  f_arr <- SumOverFleet(slot(object, 'FDead'))
+
+  if (isMSE) {
+    MP_names <- dimnames(f_arr)[['MP']]
+    fmsy_arr <- AddDimension(fmsy_arr, name = 'MP', val = MP_names)
+  }
+
+  target_years  <- dimnames(f_arr)[['Year']]
+  denom_aligned <- .align_denom_years(fmsy_arr, target_years)
+  ratio         <- ArrayDivide(f_arr, denom_aligned)
+
+  if (Reduce)
+    ratio <- ReduceDims(ratio, IncYear = IncYear)
+
+  Array2DF(ratio) |>
+    dplyr::mutate(Variable = 'F_FMSY',
+                  Period   = ifelse(isMSE, 'Projection', 'Historical')) |>
+    dplyr::relocate('Sim', 'Stock', 'Year', 'Period') |>
+    dplyr::arrange(Sim, Stock, Year)
 }
 
 

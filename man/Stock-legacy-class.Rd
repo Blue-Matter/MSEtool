@@ -3,7 +3,6 @@
 \docType{class}
 \name{Stock-legacy-class}
 \alias{Stock-legacy-class}
-\alias{Stock-class}
 \title{Class \code{'Stock'}}
 \description{
 An operating model component that specifies the parameters of the population

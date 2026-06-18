@@ -12,9 +12,10 @@ CalcUnfished_Equilibrium(OM, silent = FALSE)
 \item{silent}{Logical; if \code{TRUE}, suppress messages during calculation.}
 }
 \value{
-A \link[=popdynamics-class]{popdynamics} object containing equilibrium unfished
-\code{Number}, \code{Biomass}, \code{SBiomass}, and \code{SProduction} arrays with
-dimensions \verb{Sim × Stock × Year}.
+A \link[=popdynamics-class]{popdynamics} object. \code{Number} is a list of length \code{nStock},
+each element an array with dimensions \verb{Sim × Age × Year × Area}. \code{Biomass},
+\code{SBiomass}, and \code{SProduction} are arrays with dimensions \verb{Sim × Stock × Year}
+(summed over ages and areas).
 }
 \description{
 Calculate equilibrium unfished population quantities for all \code{\link[=Stock]{Stock()}}

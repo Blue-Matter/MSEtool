@@ -76,7 +76,7 @@ dedicated slot. The required name depends on \code{Model}:
 \item \code{HockeyStick}: \code{list(Shinge = ...)} where \verb{0 < Shinge <= 1}.
 When \code{Pars} is a non-list S4 object with an \code{SRR} slot (e.g., a
 \link[=stock-class]{stock}), \code{SRR()} acts as a pass-through accessor and returns that
-slot. See \link[=populating-schedules]{Specifying Biological and Fleet Schedules}
+slot. See \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules}
 for accepted input formats (scalar, bounds vector, \code{nSim}-length vector).
 Default \code{list(h = NA)}.
 }}
@@ -413,7 +413,7 @@ parameters.
 \item \code{\link[=Populate]{Populate()}} for array population.
 \item \code{\link[=Stock]{Stock()}} for the enclosing stock constructor.
 \item \code{\link[=Fecundity]{Fecundity()}} for the spawning production used as input to the SRR.
-\item \link[=populating-schedules]{Specifying Biological and Fleet Schedules} for
+\item \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for
 accepted \code{Pars}, \code{R0}, \code{SD}, and \code{AC} input formats.
 }
 

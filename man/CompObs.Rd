@@ -24,7 +24,7 @@ for this data type entirely. Accepted input forms:
 from which one value per simulation is drawn, constant across years.
 \item Named matrix with dimensions \code{Sim} and/or \code{Year}: specifying values at
 change-point years, expanded to \verb{[nSim x nYear]} by
-\code{\link[=PopulateCompObs]{PopulateCompObs()}}. See \href{populating-schedules}{Specifying Biological and Fleet Schedules}
+\code{\link[=PopulateCompObs]{PopulateCompObs()}}. See \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules}
 for the full matrix input convention.
 }}
 

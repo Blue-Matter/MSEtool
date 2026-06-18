@@ -3,7 +3,6 @@
 \docType{class}
 \name{Fleet-legacy-class}
 \alias{Fleet-legacy-class}
-\alias{Fleet-class}
 \title{Class \code{'Fleet'}}
 \description{
 The component of the operating model that controls fishing dynamics

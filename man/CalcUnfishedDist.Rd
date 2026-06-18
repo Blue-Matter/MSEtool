@@ -34,11 +34,11 @@ two modes are available:
 applied uniformly across all age classes using \code{\link[=CalcAsymDist]{CalcAsymDist()}}.
 \item \strong{Age-varying movement} (\code{Movement} Age dimension > 1): a sequential
 chain propagates the analyst-specified recruit distribution forward through
-age classes. For age $a$:
+age classes. For age \eqn{a}:
 \deqn{\boldsymbol{\pi}_a = \boldsymbol{\pi}_{a-1} \mathbf{M}_{a-1}}
 The plus-group distribution is computed as the stationary distribution of
 \code{M[nAge]}, since fish remain in that age class across multiple time steps.
-The starting point $\boldsymbol{\pi}_1$ is taken from the recruit
+The starting point \eqn{\boldsymbol{\pi}_1} is taken from the recruit
 distribution already stored in \code{Spatial@UnfishedDist[, , 1, ]}.
 }
 }

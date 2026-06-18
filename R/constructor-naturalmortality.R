@@ -11,13 +11,13 @@
 #'   `NULL`, the model is inferred automatically by [FindModel()]. When `Pars`
 #'   is a [stock-class] object, `NaturalMortality()` acts as a pass-through
 #'   accessor and returns `x@NaturalMortality`. See also
-#'   [Specifying Biological and Fleet Schedules][populating-schedules] for the
+#'   [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for the
 #'   full set of accepted input formats. Default `list()`.
 #' @param Model `character(1)` or `function`. Natural mortality model
 #'   identifier. When `NULL` (default), the model is inferred from `Pars` via
 #'   [FindModel()]. May be set to a character string naming a built-in model or
 #'   to a custom R function — see
-#'   [Specifying Biological and Fleet Schedules][populating-schedules].
+#'   [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html).
 #' @param Units `character(1)`. Time unit in which mortality rates are
 #'   expressed. Must be one of the strings returned by [ValidUnits()] (e.g.,
 #'   `"year"` for instantaneous annual mortality). For seasonal models, set
@@ -51,7 +51,7 @@
 #' ## Specifying Natural Mortality
 #'
 #' There are two ways to define the mortality schedule; see
-#' [Specifying Biological and Fleet Schedules][populating-schedules] for full
+#' [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for full
 #' details on input formats and the rules that govern how `Pars`, `Model`, and
 #' `MeanAt*` arrays interact.
 #'

@@ -14,7 +14,8 @@ The modified \code{\link[=Hist]{Hist()}} object.
 }
 \description{
 Internal helper that constructs the initial age–area population structure
-in a \code{\link[=Hist]{Hist()}} object by applying recruitment deviations, spatial
-distribution, and optional initial depletion.
+in a \code{\link[=Hist]{Hist()}} object by applying recruitment deviations to the equilibrium
+unfished numbers-at-age (which already carry the spatial distribution) and
+optionally applying initial depletion.
 }
 \keyword{internal}

@@ -7,33 +7,69 @@
 
 [![CRAN
 status](https://www.r-pkg.org/badges/version/MSEtool)](https://CRAN.R-project.org/package=MSEtool)
-[![R build
-status](https://github.com/Blue-Matter/MSEtool/workflows/R-CMD-check/badge.svg)](https://github.com/Blue-Matter/MSEtool/actions)
-[![](https://img.shields.io/badge/devel%20version-3.6.1-blue.svg)](https://github.com/blue-matter/MSEtool)
-
+[![R-CMD-check](https://github.com/Blue-Matter/MSEtool/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Blue-Matter/MSEtool/actions/workflows/R-CMD-check.yaml)
+[![](https://img.shields.io/badge/devel%20version-3.7.6-blue.svg)](https://github.com/blue-matter/MSEtool)
 <!-- badges: end -->
 
-The Management Strategy Evaluation toolkit (`MSEtool`) is the core
-package in the `openMSE` collection of packages. It contains the core
-functions for constructing operating models, simulating fishery
-dynamics, and evaluating the effectiveness of alternative management
-strategies using closed-loop simulation testing.
+`MSEtool` is the core package in the [openMSE](https://openMSE.com)
+collection of R packages for fisheries management strategy evaluation
+(MSE). It provides a complete framework for building operating models,
+simulating fishery dynamics, and testing the performance of alternative
+management procedures using closed-loop simulation.
 
-You can learn more about the `openMSE` packages at the [openMSE
-documentation site](https://openMSE.com).
+## Key Features
+
+- **Modular operating model structure**: stock biology, fleet dynamics,
+  observation error, and implementation error are each defined as
+  independent S4 objects, making it easy to mix, match, and reuse
+  components across operating models
+- **Stochastic simulation**: all parameters support uncertainty through
+  distributions and inter-annual variability, propagated across
+  user-defined simulation replicates
+- **Multi-stock and multi-fleet support**: operating models can
+  represent complex fishery systems with multiple interacting stocks and
+  fleets, including spatial structure and seasonal dynamics
+- **Flexible management advice**: management procedures can return any
+  combination of output controls, input controls, spatial controls, and
+  gear regulations
+- **User-defined management procedures**: MPs are plain R functions that
+  accept a `data` object and return an `advice` object
+- **Real and simulated data**: operating models can be conditioned on
+  real fishery data, and the same `data` object structure is used for
+  both observed and simulated data. MPs developed and tested in MSE work
+  directly in applied management
+- **Import from stock assessments**: populate operating models directly
+  from stock assessment output (e.g., Stock Synthesis 3 (SS3) & Beaufort
+  Assessment Model (BAM))
+- **Closed-loop MSE**: management procedures are applied to simulated
+  fishery data, with the resulting advice fed back into the population
+  dynamics each year over a multi-year projection period
+- **Slick integration**: export MSE results to
+  [Slick](https://slick.bluematterscience.com/) for interactive
+  exploration of management procedure performance across operating
+  models and performance metrics
 
 ## Installation
 
-You can install the released version of MSEtool from
-[CRAN](https://CRAN.R-project.org) with:
+Install the released version from [CRAN](https://CRAN.R-project.org):
 
 ``` r
 install.packages("MSEtool")
 ```
 
-And the development version from [GitHub](https://github.com/) with:
+Or the development version from GitHub:
 
 ``` r
-# install.packages("devtools")
-devtools::install_github("Blue-Matter/MSEtool")
+# install.packages("pak")
+pak::pak("Blue-Matter/MSEtool")
 ```
+
+## Documentation
+
+- **[openMSE.com](https://openMSE.com)**: general information about the
+  openMSE framework
+- **[docs.openMSE.com](https://docs.openMSE.com)**: technical manual
+  with worked examples covering operating model construction,
+  simulation, and MSE analysis
+- **[msetool.openmse.com](https://msetool.openmse.com)**: full function
+  reference for `MSEtool`

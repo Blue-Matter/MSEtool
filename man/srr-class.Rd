@@ -30,7 +30,7 @@ the operating model on observed recruitment indices.
 chosen SRR model. For \code{BevertonHolt}: \code{list(h = ...)}. For \code{Ricker}:
 \code{list(hR = ...)}. For \code{HockeyStick}: \code{list(Shinge = ...)}. \code{R0} is never
 placed in \code{Pars}; it has its own dedicated slot. See \code{\link[=SRRModels]{SRRModels()}} and
-\link[=populating-schedules]{Specifying Biological and Fleet Schedules} for
+\href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for
 accepted input formats.}
 
 \item{\code{Model}}{\code{function} or \code{character(1)}. SRR model identifier. Defaults
@@ -103,7 +103,7 @@ parameters.
 \item \code{\link[=Populate]{Populate()}} for array population.
 \item \code{\link[=Stock]{Stock()}} for the enclosing stock constructor.
 \item \code{\link[=Fecundity]{Fecundity()}} for the spawning production used as input to the SRR.
-\item \link[=populating-schedules]{Specifying Biological and Fleet Schedules} for
+\item \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for
 accepted \code{Pars} input formats.
 }
 

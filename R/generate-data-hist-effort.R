@@ -24,6 +24,9 @@
 #' - **No observation structure defined**: every fleet's [EffortObs()] object
 #'   is a default (unconditioned) object, as determined by `isNewObject()`.
 #'
+#' Fleets without an [EffortObs()] object receive `NA` effort values; only
+#' fleets with a configured [EffortObs()] have simulated effort generated.
+#'
 #' ## Observation Error Model
 #'
 #' For each fleet with a non-empty [EffortObs()] object, observed effort
@@ -97,18 +100,16 @@ GenHistData_Effort <- function(x, Data, Hist, HistYears, i, stocks, FleetNames, 
                  dimnames = list(Year = HistYears, Fleet = FleetNames))
   CV      <- Value
   CV[]    <- defaultCV
-  Value[] <- Hist@Effort[x,,]
-  
-  # Loop over fleets and apply observation error
+  # Loop over fleets and apply observation error — only fleets with EffortObs get values
   for (fl in seq_len(nFleet)) {
     EffortObs <- Hist@OM@Obs[[i]][[fl]]@Effort
     if (EmptyObject(EffortObs))
       next()
-    
+
     if (!is.null(EffortObs@Units))
       EffortData@Units[fl] <- EffortObs@Units
-    
-    Value[, fl] <- Value[, fl] *
+
+    Value[, fl] <- Hist@Effort[x, , fl] *
       EffortObs@Bias[x] *
       ArraySubsetYear(EffortObs@Error, HistYears)[x, ]
   }

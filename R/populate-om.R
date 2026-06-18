@@ -78,8 +78,8 @@ PopulateOM <- function(OM, silent = FALSE,
     ShareParameters() |> # TODO
     StartMessages()
   
-  if (adjust_fecundity) 
-    OM <- AdjustSeasonalFecundity(OM, silent = silent) 
+  if (adjust_fecundity)
+    OM <- AdjustSeasonalFecundity(OM, silent = silent)
   
   if (standardize_effort)
     OM <- StandardizeEffort(OM, populate=FALSE)
@@ -217,10 +217,51 @@ PopulateFleetList <- function(OM, silent = FALSE, force = FALSE) {
 
 PopulateComplexes <- function(OM) {
   if (length(OM@Complexes) > 0) {
+    # Validate the user-supplied Complexes before proceeding.
+    cx   <- OM@Complexes
+    nStk <- nStock(OM)
+
+    # Must be a fully named list.
+    cx_nms <- names(cx)
+    if (is.null(cx_nms) || any(cx_nms == "")) {
+      bad <- which(is.null(cx_nms) | cx_nms == "")
+      cli::cli_abort(c(
+        "x" = "`OM@Complexes` must be a fully named list.",
+        "i" = "Element{?s} {bad} {?is/are} unnamed."
+      ))
+    }
+
+    # All index values must be integers in 1:nStock.
+    all_idx <- unlist(cx)
+    if (!is.numeric(all_idx) || any(all_idx != as.integer(all_idx))) {
+      cli::cli_abort(c(
+        "x" = "All values in `OM@Complexes` must be integer stock indices.",
+        "i" = "Found non-integer value{?s}: {.val {unique(all_idx[all_idx != as.integer(all_idx)])}}."
+      ))
+    }
+    all_idx <- as.integer(all_idx)
+    if (any(all_idx < 1L) || any(all_idx > nStk)) {
+      bad_idx <- sort(unique(all_idx[all_idx < 1L | all_idx > nStk]))
+      cli::cli_abort(c(
+        "x" = "`OM@Complexes` contains stock {?index/indices} out of range.",
+        "i" = "`OM` has {nStk} stock{?s} (indices 1:{nStk}); found {.val {bad_idx}}."
+      ))
+    }
+
+    # Every stock must belong to exactly one complex.
+    if (length(all_idx) != nStk || !setequal(all_idx, seq_len(nStk))) {
+      missing_idx <- setdiff(seq_len(nStk), all_idx)
+      dup_idx     <- all_idx[duplicated(all_idx)]
+      msgs <- character(0)
+      if (length(missing_idx))
+        msgs <- c(msgs, "i" = "Stock {?index/indices} not assigned to any complex: {.val {missing_idx}}.")
+      if (length(dup_idx))
+        msgs <- c(msgs, "i" = "Stock {?index/indices} assigned to more than one complex: {.val {unique(dup_idx)}}.")
+      cli::cli_abort(c("x" = "Every stock must belong to exactly one complex.", msgs))
+    }
+
     return(OM)
   }
-
-  # TODO validation for Complexes
 
   if (nStock(OM) == 1) {
     OM@Complexes <- MakeNamedList(StockNames(OM), 1)
@@ -254,33 +295,57 @@ PopulateComplexes <- function(OM) {
 }
 
 PopulateImpList <- function(OM, silent = FALSE) {
-  nStocks <- nStock(OM)
-  nFleets <- nFleet(OM)
-  ImpList <- MakeNamedList(
-    StockNames(OM),
-    MakeNamedList(
-      FleetNames(OM),
-      new("imp")
-    )
-  )
+  Complexes    <- Complexes(OM)
+  nComplex     <- length(Complexes)
+  ComplexNames <- names(Complexes)
 
-  if (length(OM@Imp)) {
-    for (st in 1:nStocks) {
-      for (fl in 1:nFleets) {
-        if (isS4(OM@Imp)) {
-          Imp <- OM@Imp
-        } else {
-          if (length(OM@Imp) < st) {
-            if (length(OM@Imp) > 1) {
-              cli::cli_abort("`OM@Imp` must be a list length 1 or length `nStock` ({.val {nStocks}})")
-            }
-            Imp <- OM@Imp[[1]][[fl]]
-          } else {
-            Imp <- OM@Imp[[st]][[fl]]
-          }
-        }
-        ImpList[[st]][[fl]] <- Imp
-      }
+  FleetNames <- FleetNames(OM)
+  nFleet     <- length(FleetNames)
+  if (is.null(FleetNames) || nFleet < 1) return(OM)
+
+  # Empty object — initialise with default imp for each complex and fleet
+  if (EmptyObject(OM@Imp)) {
+    OM@Imp <- MakeNamedList(ComplexNames, MakeNamedList(FleetNames, new("imp")))
+    return(OM)
+  }
+
+  # Single imp object — replicate over complexes and fleets
+  if (inherits(OM@Imp, "imp"))
+    OM@Imp <- MakeNamedList(ComplexNames, MakeNamedList(FleetNames, OM@Imp))
+
+  # Validate complex length
+  if (length(OM@Imp) != nComplex)
+    cli::cli_abort(c(
+      "x" = "`OM@Imp` must be length `length(Complexes(OM))` ({nComplex})",
+      "i" = "Currently length {.val {length(OM@Imp)}}"
+    ))
+
+  # Validate each complex has at least nFleet elements
+  complex_lengths <- purrr::map_int(OM@Imp, length)
+  if (any(complex_lengths < nFleet))
+    cli::cli_abort(c(
+      "x" = "Each element of `OM@Imp` must have at least `nFleet(OM)` ({nFleet}) element{?s}",
+      "i" = "Currently length {.val {complex_lengths}}"
+    ))
+
+  # Validate all elements are imp objects
+  cls <- purrr::map(OM@Imp, \(cx) purrr::map_chr(cx, class)) |> unlist()
+  if (any(cls != "imp"))
+    cli::cli_abort(c(
+      "x" = "Each element of `OM@Imp[[cx]][[fl]]` must be a {.help MSEtool::Imp} object",
+      "i" = "Currently class {.val {cls}}"
+    ))
+
+  # Build populated imp list indexed by complex then fleet
+  ImpList <- vector("list", nComplex)
+  names(ImpList) <- ComplexNames
+
+  for (cx in seq_len(nComplex)) {
+    imp_nms          <- names(OM@Imp[[cx]])
+    ImpList[[cx]]    <- vector("list", nFleet)
+    names(ImpList[[cx]]) <- FleetNames
+    for (fl in seq_len(nFleet)) {
+      ImpList[[cx]][[fl]] <- OM@Imp[[cx]][[fl]]
     }
   }
 

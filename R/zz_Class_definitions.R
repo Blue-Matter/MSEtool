@@ -305,7 +305,6 @@ importslot <- function(name, length=2, Data, Names, numeric=TRUE, essential=TRUE
 #' @export
 #'
 #' @name Stock-legacy-class
-#' @aliases Stock-class
 setClass("Stock", representation(Name = "character",
                                  Common_Name='character',
                                  Species="character",
@@ -406,7 +405,6 @@ setClassUnion(name="char.log", members=c("character", "logical"))
 #'
 #' @name Fleet-legacy-class
 #' @template Fleet_template
-#' @aliases Fleet-class
 #'
 #' @section Creating Object:
 #' Objects can be created by calls of the form \code{new('Fleet')}
@@ -560,7 +558,6 @@ NULL
 #' \code{new('Obs')}
 #' 
 #' @name Obs-legacy-class
-#' @aliases Obs-class
 #' @author T. Carruthers and A. Hordyk
 #' @export
 #' @examples
@@ -664,7 +661,6 @@ setMethod("initialize", "Obs", function(.Object, file = NA, dec=c(".", ",")) {
 #' \code{new('Imp')}#'
 #'
 #' @name Imp-legacy-class
-#' @aliases Imp-class
 #' @author T. Carruthers and A. Hordyk
 #' @export
 #' @examples

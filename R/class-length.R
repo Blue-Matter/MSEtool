@@ -6,7 +6,7 @@
 #'
 #' @slot Pars `list`. Named list of growth parameters whose names correspond to
 #'   those expected by `Model`. See [LengthModels()] for parameter sets and
-#'   [Specifying Biological and Fleet Schedules][populating-schedules] for
+#'   [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for
 #'   accepted input formats.
 #' @slot Model `function` or `character(1)`. Growth model identifier, matched
 #'   to one of [LengthModels()]. Set automatically by [FindModel()] when `Pars`
@@ -17,7 +17,7 @@
 #'   `Age`, and `Year`. Populated automatically by [Populate()] when `Pars`
 #'   and `Model` are set; may also be supplied directly when `Pars` is empty.
 #'   When `Pars` contains a matched model, any existing values are overwritten.
-#'   See [Specifying Biological and Fleet Schedules][populating-schedules].
+#'   See [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html).
 #' @slot CVatAge `array` or `numeric`. Coefficient of variation of
 #'   length-at-age, used to generate the within-age-class length distribution.
 #' @slot Dist `character(1)`. Parametric distribution used for length-at-age
@@ -49,7 +49,7 @@
 #'  - [Populate()] for array population. 
 #'  - [FindModel()] for automatic model inference.
 #'   -  [ALK()] to retrieve the age-length key.
-#'   [Specifying Biological and Fleet Schedules][populating-schedules] for the
+#'   [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for the
 #'   full description of how `Pars`, `Model`, and `MeanAtAge` interact.
 #'
 #' @family length

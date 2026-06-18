@@ -263,39 +263,7 @@
 #'
 #' @rdname Advice
 #' @export
-#' 
-#' @examples
-#' Advice(TAC = 1000)
-#'
-#' Advice(
-#'   Effort  = c(1, 0.8),
-#'   EffType = "Rel"
-#' )
-#'
-#' # Aggregate bag limit: 10 fish per angler per trip, discard excess
-#' Advice(
-#'   BagLimit    = 10,
-#'   LimitType   = "angler",
-#'   ClosureMode = "discard"
-#' )
-#'
-#' # Aggregate limit with a species-specific sub-limit 
-#' # (2-fish sub-limit for stock 1)
-#' Advice(
-#'   BagLimit     = 10,
-#'   SpeciesLimit = matrix(c(2, NA, NA, NA), nrow = 1, ncol = 4),
-#'   LimitType    = "angler",
-#'   ClosureMode  = "discard"
-#' )
-#'
-#' # Fleet-specific TAC & aggregate bag limits; no TAC for fleet 1, 
-#' # no bag limit for fleet 2
-#' Advice(
-#'   TAC         = c(NA, 1000)
-#'   BagLimit    = c(10, NA),
-#'   LimitType   = "angler",
-#'   ClosureMode = "discard"
-#' )
+#' @example man-examples/class-Advice.R
 Advice <- function(TAC              = NULL,
                    TACType          = 'Removals',
                    TACUnit          = 'Biomass',

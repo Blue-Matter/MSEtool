@@ -13,7 +13,7 @@
 #'     from which one value per simulation is drawn, constant across years.
 #'   - Named matrix with dimensions `Sim` and/or `Year`: specifying values at
 #'     change-point years, expanded to `[nSim x nYear]` by
-#'     [PopulateCompObs()]. See [Specifying Biological and Fleet Schedules](populating-schedules) 
+#'     [PopulateCompObs()]. See [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) 
 #'     for the full matrix input convention.
 #'
 #' @param ESS `numeric` or `NULL`. Effective sample size, which scales the

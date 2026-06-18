@@ -25,14 +25,14 @@ When \code{Pars} is non-empty and \code{Model} is \code{NULL}, the model is infe
 automatically by \code{\link[=FindModel]{FindModel()}}. When \code{Pars} is a \link[=stock-class]{stock} object,
 \code{Fecundity()} acts as a pass-through accessor and returns \code{x@Fecundity}.
 See also
-\link[=populating-schedules]{Specifying Biological and Fleet Schedules} for the
+\href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for the
 full set of accepted input formats. Default \code{list()}.}
 
 \item{Model}{\code{character(1)} or \code{function}. Fecundity model identifier. When
 \code{NULL} (default), the model is inferred from \code{Pars} via \code{\link[=FindModel]{FindModel()}}.
 May be set to a character string naming a built-in model or to a custom
 R function — see
-\link[=populating-schedules]{Specifying Biological and Fleet Schedules}.}
+\href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules}.}
 
 \item{Units}{\code{character(1)}. Unit of reproductive output (e.g., \code{"eggs"}).
 Sets the unit of the \code{SProduction} slot in \link[=hist-class]{hist} output objects.
@@ -100,7 +100,7 @@ batch-spawning fish or species with strongly size-dependent clutch size.
 \subsection{Specifying Fecundity}{
 
 There are two ways to define the fecundity schedule; see
-\link[=populating-schedules]{Specifying Biological and Fleet Schedules} for full
+\href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for full
 details on input formats and the rules that govern how \code{Pars}, \code{Model}, and
 \verb{MeanAt*} arrays interact.
 

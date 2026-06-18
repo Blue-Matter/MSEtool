@@ -25,14 +25,14 @@ names must match the arguments of a built-in mortality model (see
 \code{NULL}, the model is inferred automatically by \code{\link[=FindModel]{FindModel()}}. When \code{Pars}
 is a \link[=stock-class]{stock} object, \code{NaturalMortality()} acts as a pass-through
 accessor and returns \code{x@NaturalMortality}. See also
-\link[=populating-schedules]{Specifying Biological and Fleet Schedules} for the
+\href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for the
 full set of accepted input formats. Default \code{list()}.}
 
 \item{Model}{\code{character(1)} or \code{function}. Natural mortality model
 identifier. When \code{NULL} (default), the model is inferred from \code{Pars} via
 \code{\link[=FindModel]{FindModel()}}. May be set to a character string naming a built-in model or
 to a custom R function — see
-\link[=populating-schedules]{Specifying Biological and Fleet Schedules}.}
+\href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules}.}
 
 \item{Units}{\code{character(1)}. Time unit in which mortality rates are
 expressed. Must be one of the strings returned by \code{\link[=ValidUnits]{ValidUnits()}} (e.g.,
@@ -88,7 +88,7 @@ object is required for all \link[=stock-class]{stock} objects.
 \subsection{Specifying Natural Mortality}{
 
 There are two ways to define the mortality schedule; see
-\link[=populating-schedules]{Specifying Biological and Fleet Schedules} for full
+\href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for full
 details on input formats and the rules that govern how \code{Pars}, \code{Model}, and
 \verb{MeanAt*} arrays interact.
 

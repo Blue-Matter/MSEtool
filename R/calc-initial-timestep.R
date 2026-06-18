@@ -70,17 +70,18 @@ CalcDynamicInitial <- function(Hist) {
     RecruitTimeStep <- CalcRecruitment_AgeIndex(Hist, st)
 
     if (RecruitTimeStep>1) {
-      # fill in recruits for initial time steps
-      for (ts_ind in 2:(RecruitTimeStep-1)) {
+      for (ts_ind in seq_len(RecruitTimeStep - 1) + 1) {
         ts <- ts_ind + InitYear - 1
         UnfishedDist <- Hist@OM@Stock[[st]]@Spatial@UnfishedDist[,,1,ts,drop=FALSE] |>
           aperm(c('Sim', 'Age', 'Year', 'Area'))
-        
-        Recruit <- Hist@OM@Stock[[st]]@SRR@R0[,ts, drop=FALSE] |>
+      
+        Recruit <- ArrayMultiply(Hist@OM@Stock[[st]]@SRR@R0[, ts, drop=FALSE],
+                                 RecDevHist[, ts, drop=FALSE]) |> 
+          ExtendSims(nSim) |>
           AddDimension('Area') |>
-          AddDimension('Age') |>
-          aperm(c('Sim', 'Age', 'Year', 'Area'))
-        Hist@Number[[st]][,1,ts,] <-  ArrayMultiply(Recruit, UnfishedDist)
+          AddDimension('Age', pos =2) 
+          
+        Hist@Number[[st]][,1,ts,] <- ArrayMultiply(Recruit, UnfishedDist)
       }
     }
 
@@ -221,12 +222,12 @@ CalcRecruitment_AgeIndex <- function(OM, st=NULL) {
   if (!is.null(st)) {
     Stock <- OM@Stock[[st]]
     PreRecruit <- seq(0, by=1/Stock@Seasons, to=min(Stock@Ages@Classes))
-    return(length(PreRecruit)-1)
+    return(length(PreRecruit))
   }
   
   purrr::map(OM@Stock, \(Stock) {
     PreRecruit <- seq(0, by=1/Stock@Seasons, to=min(Stock@Ages@Classes))
-    length(PreRecruit)-1
+    length(PreRecruit)
   }) |> 
     List2Array('Stock') |>
     DropDimension('Sim')

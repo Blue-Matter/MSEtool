@@ -25,7 +25,7 @@ rather than directly through an age-weight distribution.
 \item{\code{Pars}}{\code{list}. Named list of parameters whose names
 correspond to those expected by \code{Model}. See \code{\link[=WeightModels]{WeightModels()}} for
 parameter sets and
-\link[=populating-schedules]{Specifying Biological and Fleet Schedules} for
+\href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for
 accepted input formats.}
 
 \item{\code{Model}}{\code{function} or \code{character(1)}. Weight model identifier, matched
@@ -39,7 +39,7 @@ is supplied without an explicit model.}
 \code{Age}, and \code{Year}. Populated automatically by \code{\link[=Populate]{Populate()}} when \code{Pars}
 and \code{Model} are set; may also be supplied directly when \code{Pars} is empty.
 When \code{Pars} contains a matched model, any existing values are overwritten.
-See \link[=populating-schedules]{Specifying Biological and Fleet Schedules}.}
+See \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules}.}
 
 \item{\code{MeanAtLength}}{\code{array}. Mean weight at length with named dimensions
 \code{Sim}, \code{Length}, and \code{Year}. Populated automatically when an at-length
@@ -47,7 +47,7 @@ weight model is used, or may be supplied directly. Values are evaluated at
 the midpoint of each bin (halfway between consecutive lower bounds); the
 \code{Class} dimension is labelled by bin lower bounds (see \code{Classes}).
 Converted to \code{MeanAtAge} via the \code{ALK} during \code{\link[=Populate]{Populate()}} when \code{MeanAtAge}
-is not already populated. See \link[=populating-schedules]{Specifying Biological and Fleet Schedules}.}
+is not already populated. See \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules}.}
 
 \item{\code{CVatAge}}{\code{array} or \code{numeric}. Coefficient of variation of
 weight-at-age, used to generate the within-age-class weight distribution
@@ -88,7 +88,7 @@ lower bounds.}
 \item \code{\link[=FindModel]{FindModel()}} for automatic model inference.
 \item \code{\link[=AWK]{AWK()}} to retrieve the age-weight key.
 \item \code{\link[=Length]{Length()}} for the companion length schedule, required when using at-length weight models.
-\item \link[=populating-schedules]{Specifying Biological and Fleet Schedules} for the
+\item \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for the
 full description of how \code{Pars}, \code{Model}, and \verb{MeanAt*} arrays interact.
 }
 

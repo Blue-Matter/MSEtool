@@ -8,8 +8,7 @@
 #' @param Pars Named list of retention parameters passed to the retention
 #'   model function. Parameter names must match the arguments of the chosen
 #'   model (see [RetentionModels()]). Each element may be a scalar, vector, or
-#'   array; see [Specifying Biological and Fleet
-#'   Schedules][populating-schedules] for accepted formats. Default `list()`
+#'   array; see [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for accepted formats. Default `list()`
 #'   (empty).
 #'
 #'   If `Pars` and `Model` are both provided, `MeanAtAge` is computed from the
@@ -27,7 +26,7 @@
 #' @param MeanAtAge Numeric array or `NULL`. Mean retention-at-age with
 #'   dimensions `Sim x Age x Year` (area dimension added during population).
 #'   Used directly when `Pars` is empty and `MeanAtLength` is not supplied.
-#'   See [Specifying Biological and Fleet Schedules][populating-schedules] for
+#'   See [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for
 #'   accepted array formats. **Note:** if `Pars` and `Model` are both
 #'   provided, any values supplied here will be overwritten during population.
 #' @param MeanAtLength Numeric array or `NULL`. Mean retention-at-length with
@@ -66,7 +65,7 @@
 #' names match the arguments of a built-in or custom model function. The model
 #' is resolved automatically unless `Model` is specified explicitly. See
 #' [RetentionModels()] for available models and their required parameters, and
-#' [Specifying Biological and Fleet Schedules][populating-schedules] for how
+#' [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for how
 #' parameter values are structured across simulations and years.
 #'
 #' Available model families are: logistic (at-age, at-length, at-weight, with
@@ -106,7 +105,7 @@
 #' - [RetentionModels()] for available model functions and their parameters.
 #' - [Fleet()] for the enclosing fleet constructor.
 #' - [Selectivity()], [DiscardMortality()] for related fleet components.
-#' - [Specifying Biological and Fleet Schedules][populating-schedules] for how
+#' - [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for how
 #'   `Pars`, `Model`, and `MeanAt*` arrays are structured.
 #' - [PopulateRetention()] for population details.
 #'

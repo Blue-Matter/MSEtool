@@ -89,7 +89,7 @@ when attached to an \code{\link[=OM]{OM()}}.}
 \code{\link[=Fecundity]{Fecundity()}}, \code{\link[=SRR]{SRR()}}, \code{\link[=Spatial]{Spatial()}}, \code{\link[=Depletion]{Depletion()}} for the sub-object
 constructors.
 \item \code{\link[=OM]{OM()}} for the operating model constructor.
-\item \link[=populating-schedules]{Specifying Biological and Fleet Schedules} for how
+\item \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for how
 \code{Pars}, \code{Model}, and \verb{MeanAt*} arrays are specified across sub-objects.
 }
 

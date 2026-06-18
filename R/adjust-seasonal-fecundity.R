@@ -60,11 +60,14 @@ AdjustSeasonalFecundity <- function(OM, silent = FALSE) {
 
   for (st in seq_along(OM@Stock)) {
     Stock <- OM@Stock[[st]]
+    
+    if (!is.null(Stock@SRR@SPFrom) && Stock@SRR@SPFrom != Stock@Name)
+      next
+    
     nSim  <- Stock@nSim
     R0    <- Stock@SRR@R0 |> Extend(nSim  = nSim(OM),
                                     Years = HistYears)
 
-    # Quick uniformity screen on year 1
     pi_y1      <- R0[, 1:n_seasons, drop = FALSE]
     pi_y1_norm <- pi_y1 / rowSums(pi_y1)
     if (all(apply(pi_y1_norm, 1, function(x) diff(range(x))) < .Machine$double.eps^0.5)) {
@@ -75,39 +78,41 @@ AdjustSeasonalFecundity <- function(OM, silent = FALSE) {
     Stock@Fecundity@MeanAtAge <- Extend(Stock@Fecundity@MeanAtAge,
                                         nSim  = nSim(OM),
                                         Years = HistYears)
-    Fec   <- Stock@Fecundity@MeanAtAge  
-
-    # Unscaled SP at each time step: sim x year
+    Fec         <- Stock@Fecundity@MeanAtAge
+    recruit_lag <- round(min(Stock@Ages@Classes) * n_seasons)
     SP_unscaled <- ArrayMultiply(N_age, Fec) |> SumOverAge()
-    
+
     for (y in seq_len(nYear)) {
       year_idx <- ((y - 1) * n_seasons + 1):(y * n_seasons)
 
-      # Seasonal proportions pi_m: sim x n_seasons
-      R0_annual_y <- rowSums(R0[, year_idx, drop = FALSE])
-      pi_m_y      <- R0[, year_idx, drop = FALSE] / R0_annual_y
+      # Shift season indices forward by lag (circular within year) to get the
+      # recruitment timestep driven by spawning at each season in year y
+      lagged_ts <- ((y - 1) * n_seasons) + ((year_idx - 1 + recruit_lag) %% n_seasons) + 1
 
-      # Normalised SP shares: sim x n_seasons
+      R0_annual_y <- rowSums(R0[, lagged_ts, drop = FALSE])
+      pi_m_y      <- R0[, lagged_ts, drop = FALSE] / R0_annual_y
+
       SP_season_y <- SP_unscaled[, year_idx, drop = FALSE]
-      SP_shares_y <- SP_season_y / rowSums(SP_season_y)
+      SP_total_y  <- rowSums(SP_season_y)
 
-      # Solve phi_m and rescale so peak season = 1
+      if (all(SP_total_y < .Machine$double.eps)) next
+
+      SP_shares_y <- SP_season_y / SP_total_y
+
       phi_m_y <- pi_m_y / SP_shares_y
-      phi_m_y <- phi_m_y / apply(phi_m_y, 1, max)
+      phi_m_y[is.nan(phi_m_y)] <- 0
 
-      # Warn only when a season with near-zero SP is asked to carry non-trivial
-      # recruitment — a sign the life history cannot support that pattern
+      phi_max          <- apply(phi_m_y, 1, max)
+      phi_max[phi_max == 0] <- 1
+      phi_m_y          <- phi_m_y / phi_max
+
       if (!silent) {
         if (any(SP_shares_y < 1e-6 & pi_m_y > 0.01))
           cli::cli_alert_warning(
-            "Stock {st} ({CommonName(Stock)}) year {y}: one or more seasons \\
-            have near-zero spawning production but non-trivial target \\
-            recruitment. The seasonal pattern may be incompatible with this \\
-            life history."
+            "Stock {st} ({CommonName(Stock)}) year {y}: one or more seasons have near-zero spawning production but non-trivial target recruitment. The seasonal pattern may be incompatible with this  life history."
           )
       }
 
-      # Apply phi_m to fecundity — vectorised over sims
       for (m in seq_len(n_seasons)) {
         t_m <- year_idx[m]
         Stock@Fecundity@MeanAtAge[, , t_m] <-

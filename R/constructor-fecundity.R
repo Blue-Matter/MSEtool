@@ -11,13 +11,13 @@
 #'   automatically by [FindModel()]. When `Pars` is a [stock-class] object,
 #'   `Fecundity()` acts as a pass-through accessor and returns `x@Fecundity`.
 #'   See also
-#'   [Specifying Biological and Fleet Schedules][populating-schedules] for the
+#'   [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for the
 #'   full set of accepted input formats. Default `list()`.
 #' @param Model `character(1)` or `function`. Fecundity model identifier. When
 #'   `NULL` (default), the model is inferred from `Pars` via [FindModel()].
 #'   May be set to a character string naming a built-in model or to a custom
 #'   R function — see
-#'   [Specifying Biological and Fleet Schedules][populating-schedules].
+#'   [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html).
 #' @param Units `character(1)`. Unit of reproductive output (e.g., `"eggs"`).
 #'   Sets the unit of the `SProduction` slot in [hist-class] output objects.
 #'   Default `"eggs"`.
@@ -62,7 +62,7 @@
 #' ## Specifying Fecundity
 #'
 #' There are two ways to define the fecundity schedule; see
-#' [Specifying Biological and Fleet Schedules][populating-schedules] for full
+#' [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for full
 #' details on input formats and the rules that govern how `Pars`, `Model`, and
 #' `MeanAt*` arrays interact.
 #'

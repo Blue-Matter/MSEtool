@@ -22,7 +22,7 @@ Retention(x) <- value
 \item{Pars}{Named list of retention parameters passed to the retention
 model function. Parameter names must match the arguments of the chosen
 model (see \code{\link[=RetentionModels]{RetentionModels()}}). Each element may be a scalar, vector, or
-array; see \link[=populating-schedules]{Specifying Biological and Fleet Schedules} for accepted formats. Default \code{list()}
+array; see \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for accepted formats. Default \code{list()}
 (empty).
 
 If \code{Pars} and \code{Model} are both provided, \code{MeanAtAge} is computed from the
@@ -41,7 +41,7 @@ built-in options.}
 \item{MeanAtAge}{Numeric array or \code{NULL}. Mean retention-at-age with
 dimensions \verb{Sim x Age x Year} (area dimension added during population).
 Used directly when \code{Pars} is empty and \code{MeanAtLength} is not supplied.
-See \link[=populating-schedules]{Specifying Biological and Fleet Schedules} for
+See \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for
 accepted array formats. \strong{Note:} if \code{Pars} and \code{Model} are both
 provided, any values supplied here will be overwritten during population.}
 
@@ -99,7 +99,7 @@ There are two ways to specify retention:
 names match the arguments of a built-in or custom model function. The model
 is resolved automatically unless \code{Model} is specified explicitly. See
 \code{\link[=RetentionModels]{RetentionModels()}} for available models and their required parameters, and
-\link[=populating-schedules]{Specifying Biological and Fleet Schedules} for how
+\href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for how
 parameter values are structured across simulations and years.
 
 Available model families are: logistic (at-age, at-length, at-weight, with
@@ -142,7 +142,7 @@ Individual slots may be accessed or modified using \code{\link[=Pars]{Pars()}}, 
 \item \code{\link[=RetentionModels]{RetentionModels()}} for available model functions and their parameters.
 \item \code{\link[=Fleet]{Fleet()}} for the enclosing fleet constructor.
 \item \code{\link[=Selectivity]{Selectivity()}}, \code{\link[=DiscardMortality]{DiscardMortality()}} for related fleet components.
-\item \link[=populating-schedules]{Specifying Biological and Fleet Schedules} for how
+\item \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for how
 \code{Pars}, \code{Model}, and \verb{MeanAt*} arrays are structured.
 \item \code{\link[=PopulateRetention]{PopulateRetention()}} for population details.
 }

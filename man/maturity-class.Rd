@@ -27,7 +27,7 @@ Do not test \code{Semelparous(mat) == TRUE} on a populated object; check
 \item{\code{Pars}}{\code{list}. Named list of maturity model parameters whose names
 correspond to those expected by \code{Model}. See \code{\link[=MaturityModels]{MaturityModels()}} for
 parameter sets and
-\link[=populating-schedules]{Specifying Biological and Fleet Schedules} for
+\href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for
 accepted input formats.}
 
 \item{\code{Model}}{\code{function} or \code{character(1)}. Maturity model identifier,
@@ -39,7 +39,7 @@ when \code{Pars} is supplied without an explicit model.}
 Populated automatically by \code{\link[=Populate]{Populate()}} when \code{Pars} and \code{Model} are set;
 may also be supplied directly when \code{Pars} is empty. When \code{Pars} contains
 a matched model, any existing values are overwritten.
-See \link[=populating-schedules]{Specifying Biological and Fleet Schedules}.}
+See \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules}.}
 
 \item{\code{MeanAtLength}}{\code{array}. Mean maturity-at-length with named dimensions
 \code{Sim}, \code{Length}, and \code{Year}. Populated automatically when an at-length
@@ -48,7 +48,7 @@ at the midpoint of each bin (halfway between consecutive lower bounds);
 the \code{Class} dimension is labelled by bin lower bounds (see \code{Classes}).
 Converted to \code{MeanAtAge} via the \code{ALK} during \code{\link[=Populate]{Populate()}} when \code{MeanAtAge}
 is not already populated.
-See \link[=populating-schedules]{Specifying Biological and Fleet Schedules}.}
+See \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules}.}
 
 \item{\code{MeanAtWeight}}{\code{array}. Mean maturity-at-weight with named dimensions
 \code{Sim}, \code{Weight}, and \code{Year}. Populated automatically when an at-weight
@@ -58,7 +58,7 @@ bounds (see \code{Classes}). Converted to \code{MeanAtAge} via the \code{AWK} du
 \code{\link[=Populate]{Populate()}} when \code{MeanAtAge} is not already populated. Requires a
 populated \link[=weight-class]{weight} object with a non-\code{NULL} \code{CVatAge} slot (so that
 the \code{AWK} exists).
-See \link[=populating-schedules]{Specifying Biological and Fleet Schedules}.}
+See \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules}.}
 
 \item{\code{Classes}}{\code{numeric}. Age classes (in years) or lower bounds of length
 or weight bins, corresponding to the \verb{MeanAt*} array in use. For size
@@ -88,7 +88,7 @@ parameters.
 \item \code{\link[=FindModel]{FindModel()}} for automatic model inference.
 \item \code{\link[=Semelparous]{Semelparous()}} to retrieve or set the post-spawn mortality array.
 \item \code{\link[=Length]{Length()}} and \code{\link[=Weight]{Weight()}} for the companion schedules required by at-length and at-weight maturity models.
-\item \link[=populating-schedules]{Specifying Biological and Fleet Schedules} for the
+\item \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for the
 full description of how \code{Pars}, \code{Model}, and \verb{MeanAt*} arrays interact.
 }
 

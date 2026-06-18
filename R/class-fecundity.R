@@ -10,7 +10,7 @@
 #' @slot Pars `list`. Named list of fecundity model parameters whose names
 #'   correspond to those expected by `Model`. See [FecundityModels()] for
 #'   parameter sets and
-#'   [Specifying Biological and Fleet Schedules][populating-schedules] for
+#'   [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for
 #'   accepted input formats.
 #' @slot Model `function` or `character(1)`. Fecundity model identifier,
 #'   matched to one of [FecundityModels()]. Set automatically by [FindModel()]
@@ -23,7 +23,7 @@
 #'   `Age`, and `Year`. Populated automatically by [Populate()] when `Pars`
 #'   and `Model` are set; may also be supplied directly when `Pars` is empty.
 #'   When `Pars` contains a matched model, any existing values are overwritten.
-#'   See [Specifying Biological and Fleet Schedules][populating-schedules].
+#'   See [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html).
 #' @slot MeanAtLength `array`. Mean fecundity-at-length with named dimensions
 #'   `Sim`, `Length`, and `Year`. Populated automatically when an at-length
 #'   fecundity model is used, or may be supplied directly. Values are evaluated
@@ -31,7 +31,7 @@
 #'   the `Class` dimension is labelled by bin lower bounds (see `Classes`).
 #'   Converted to `MeanAtAge` via the `ALK` during [Populate()] when `MeanAtAge`
 #'   is not already populated.
-#'   See [Specifying Biological and Fleet Schedules][populating-schedules].
+#'   See [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html).
 #' @slot Classes `numeric`. Age classes (in years) or lower bounds of length
 #'   bins, corresponding to the `MeanAt*` array in use. For length bins, bin
 #'   `k` spans `[Classes[k], Classes[k+1])`; the final bin is open-ended.
@@ -64,7 +64,7 @@
 #' - [Maturity()] for the maturity schedule multiplied through fecundity
 #'   during population.
 #' - [SRR()] for spawning timing within the time step.
-#' - [Specifying Biological and Fleet Schedules][populating-schedules] for the
+#' - [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for the
 #'   full description of how `Pars`, `Model`, and `MeanAt*` arrays interact.
 #'
 #' @family fecundity

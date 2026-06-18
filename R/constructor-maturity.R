@@ -13,14 +13,14 @@
 #'   when `Pars` is a list of [stock-class] objects, `Model` is treated as an
 #'   integer index selecting which stock's `Maturity` slot to return — see
 #'   *Pass-Through Access*. See also
-#'   [Specifying Biological and Fleet Schedules][populating-schedules] for the
+#'   [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for the
 #'   full set of accepted input formats. Default `list()`.
 #' @param Model `character(1)`, `function`, or `integer(1)`. Maturity model
 #'   identifier. When `NULL` (default), the model is inferred from `Pars` via
 #'   [FindModel()]. May be set to a character string naming a built-in model or
 #'   to a custom R function. When `Pars` is a list of [stock-class] objects,
 #'   `Model` is an integer index — see *Pass-Through Access* and
-#'   [Specifying Biological and Fleet Schedules][populating-schedules].
+#'   [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html).
 #' @param MeanAtAge `array` or `NULL`. Mean maturity-at-age with named
 #'   dimensions `Sim × Age × Year`. Values should range from 0 (immature) to 1
 #'   (fully mature). Supply directly when bypassing the model-based approach
@@ -61,7 +61,7 @@
 #' ## Specifying Maturity
 #'
 #' There are two ways to define the maturity schedule; see
-#' [Specifying Biological and Fleet Schedules][populating-schedules] for full
+#' [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for full
 #' details on input formats and the rules that govern how `Pars`, `Model`, and
 #' `MeanAt*` arrays interact.
 #'

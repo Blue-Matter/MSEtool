@@ -33,7 +33,7 @@ automatically by \code{\link[=FindModel]{FindModel()}}. When \code{Pars} is a \l
 when \code{Pars} is a list of \link[=stock-class]{stock} objects, \code{Model} is treated as an
 integer index selecting which stock's \code{Maturity} slot to return — see
 \emph{Pass-Through Access}. See also
-\link[=populating-schedules]{Specifying Biological and Fleet Schedules} for the
+\href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for the
 full set of accepted input formats. Default \code{list()}.}
 
 \item{Model}{\code{character(1)}, \code{function}, or \code{integer(1)}. Maturity model
@@ -41,7 +41,7 @@ identifier. When \code{NULL} (default), the model is inferred from \code{Pars} v
 \code{\link[=FindModel]{FindModel()}}. May be set to a character string naming a built-in model or
 to a custom R function. When \code{Pars} is a list of \link[=stock-class]{stock} objects,
 \code{Model} is an integer index — see \emph{Pass-Through Access} and
-\link[=populating-schedules]{Specifying Biological and Fleet Schedules}.}
+\href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules}.}
 
 \item{MeanAtAge}{\code{array} or \code{NULL}. Mean maturity-at-age with named
 dimensions \verb{Sim × Age × Year}. Values should range from 0 (immature) to 1
@@ -108,7 +108,7 @@ and its individual slots. A \code{Maturity} object is required for all
 \subsection{Specifying Maturity}{
 
 There are two ways to define the maturity schedule; see
-\link[=populating-schedules]{Specifying Biological and Fleet Schedules} for full
+\href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for full
 details on input formats and the rules that govern how \code{Pars}, \code{Model}, and
 \verb{MeanAt*} arrays interact.
 

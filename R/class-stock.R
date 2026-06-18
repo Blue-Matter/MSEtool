@@ -60,7 +60,7 @@
 #'   [Fecundity()], [SRR()], [Spatial()], [Depletion()] for the sub-object
 #'   constructors.
 #' - [OM()] for the operating model constructor.
-#' - [Specifying Biological and Fleet Schedules][populating-schedules] for how
+#' - [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for how
 #'   `Pars`, `Model`, and `MeanAt*` arrays are specified across sub-objects.
 #'
 #' @family stock

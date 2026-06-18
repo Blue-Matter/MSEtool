@@ -9,7 +9,7 @@
 #' @slot Pars `list`. Named list of natural mortality parameters whose names
 #'   correspond to those expected by `Model`. See [NaturalMortalityModels()]
 #'   for parameter sets and
-#'   [Specifying Biological and Fleet Schedules][populating-schedules] for
+#'   [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for
 #'   accepted input formats.
 #' @slot Model `function` or `character(1)`. Natural mortality model
 #'   identifier, matched to one of [NaturalMortalityModels()]. Set
@@ -23,7 +23,7 @@
 #'   [Populate()] when `Pars` and `Model` are set; may also be supplied
 #'   directly when `Pars` is empty. When `Pars` contains a matched model, any
 #'   existing values are overwritten.
-#'   See [Specifying Biological and Fleet Schedules][populating-schedules].
+#'   See [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html).
 #' @slot MeanAtLength `array`. Mean natural mortality at length with named
 #'   dimensions `Sim`, `Length`, and `Year`. Populated automatically when an
 #'   at-length mortality model is used, or may be supplied directly. Values are
@@ -31,7 +31,7 @@
 #'   bounds); the `Class` dimension is labelled by bin lower bounds (see
 #'   `Classes`). Converted to `MeanAtAge` via the `ALK` during [Populate()]
 #'   when `MeanAtAge` is not already populated.
-#'   See [Specifying Biological and Fleet Schedules][populating-schedules].
+#'   See [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html).
 #' @slot Random `array`. Reserved for future use. Intended to hold
 #'   simulation- and year-specific multipliers that add stochastic variation
 #'   around the average mortality schedule in `MeanAtAge`. Currently stored
@@ -62,7 +62,7 @@
 #' - [FindModel()] for automatic model inference.
 #' - [Length()] for the companion length schedule, required when using
 #'   at-length mortality models.
-#' - [Specifying Biological and Fleet Schedules][populating-schedules] for the
+#' - [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for the
 #'   full description of how `Pars`, `Model`, and `MeanAt*` arrays interact.
 #'
 #' @family naturalmortality

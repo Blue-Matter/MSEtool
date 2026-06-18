@@ -8,7 +8,8 @@
 \alias{B_BMSY}
 \alias{SB_SBMSY}
 \alias{SP_SPMSY}
-\title{Biomass Relative to Reference Points}
+\alias{F_FMSY}
+\title{Biomass and Fishing Mortality Relative to Reference Points}
 \usage{
 B_B0(
   object,
@@ -39,6 +40,8 @@ B_BMSY(object, df = TRUE, Reduce = TRUE, IncYear = FALSE)
 SB_SBMSY(object, df = TRUE, Reduce = TRUE, IncYear = FALSE)
 
 SP_SPMSY(object, df = TRUE, Reduce = TRUE, IncYear = FALSE)
+
+F_FMSY(object, df = TRUE, Reduce = TRUE, IncYear = FALSE)
 }
 \arguments{
 \item{object}{A \link[=hist-class]{hist} or \link[=mse-class]{mse} object.}
@@ -64,14 +67,16 @@ year dimension is retained during reduction. Default \code{FALSE}.}
 }
 }
 \description{
-Extract time series of biomass, spawning biomass, or spawning production
-expressed as a fraction of an unfished or MSY reference level.
+Extract time series of biomass, spawning biomass, spawning production, or
+fishing mortality expressed as a fraction of an unfished or MSY reference
+level.
 }
 \details{
 \code{B_B0()}, \code{SB_SB0()}, and \code{SP_SP0()} divide the time series by the
 corresponding unfished level (\code{type = 'Equilibrium'} or \code{'Dynamic'}).
 \code{B_BMSY()}, \code{SB_SBMSY()}, and \code{SP_SPMSY()} divide by the corresponding
-MSY reference point.
+MSY reference point. \code{F_FMSY()} divides total apical fishing mortality
+(summed over fleets) by \code{FMSY}.
 
 When applied to an \link[=mse-class]{mse} object the historical and projection periods
 are row-bound and labelled via the \code{Period} column; historical rows carry
@@ -85,13 +90,15 @@ historical reference value (forward fill).
 Hist <- Simulate(SingleStockOM)
 B_B0(Hist)
 SB_SB0(Hist, type = 'Dynamic')
+F_FMSY(Hist)
 
 MSE <- Project(Hist, 'CurrentEffort')
 B_BMSY(MSE, df = TRUE)
 SB_SBMSY(MSE, df = TRUE)
 SP_SPMSY(MSE, df = TRUE)
+F_FMSY(MSE, df = TRUE)
 
 }
 \seealso{
-\code{\link[=Biomass]{Biomass()}}, \code{\link[=B0]{B0()}}, \code{\link[=BMSY]{BMSY()}}
+\code{\link[=Biomass]{Biomass()}}, \code{\link[=B0]{B0()}}, \code{\link[=BMSY]{BMSY()}}, \code{\link[=FDead]{FDead()}}, \code{\link[=FMSY]{FMSY()}}
 }

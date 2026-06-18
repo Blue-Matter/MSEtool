@@ -36,13 +36,13 @@ When \code{Pars} is non-empty and \code{Model} is \code{NULL}, the model is infe
 automatically by \code{\link[=FindModel]{FindModel()}}. When \code{Pars} is a \link[=stock-class]{stock} object,
 \code{Weight()} acts as a pass-through accessor and returns \code{x@Weight}.
 See \emph{Specifying Weight-at-Age} and
-\link[=populating-schedules]{Specifying Biological and Fleet Schedules} for the
+\href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for the
 full set of accepted input formats. Default \code{list()}.}
 
 \item{Model}{\code{character(1)} or \code{function}. Weight model identifier. When
 \code{NULL} (default), the model is inferred from \code{Pars} via \code{\link[=FindModel]{FindModel()}}.
 May be set to a character string naming a built-in model or to a custom
-R function — see \link[=populating-schedules]{Specifying Biological and Fleet Schedules}.}
+R function — see \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules}.}
 
 \item{Units}{\code{character(1)}. Physical unit of weight measurements. Must be
 one of the strings returned by \code{\link[=ValidUnits]{ValidUnits()}} (e.g., \code{"g"}, \code{"kg"}).
@@ -154,7 +154,7 @@ wt <- Weight(Pars = list(a = 0.01, aSD = 0.1, b = 3.0))
 wt_aa <- Weight(MeanAtAge = 0.01 * (100 * (1 - exp(-0.2 * ages)))^3)
 }\if{html}{\out{</div>}}
 
-See \link[=populating-schedules]{Specifying Biological and Fleet Schedules} for full
+See \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for full
 details on input formats and the rules that govern how \code{Pars}, \code{Model}, and
 \verb{MeanAt*} arrays interact.
 }

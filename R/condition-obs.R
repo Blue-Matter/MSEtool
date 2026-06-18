@@ -38,11 +38,12 @@ ConditionObs <- function(Hist, silent=FALSE) {
     stocks      <- Complexes[[i]]
     FisheryData <- FisheryDataList[[i]]
     
-    # TODO 
-    # - Effort
+    # TODO
     # - life history
     # - exploitation
-    
+
+    Hist <- ConditionObs_Effort(Hist, FisheryData, HistYears, ProjYears, stocks, i)
+
     Hist <- ConditionObs_Catch(Hist, FisheryData, HistYears, ProjYears, stocks,
                                i, type = 'Landings')
     

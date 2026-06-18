@@ -8,7 +8,7 @@
 #' @slot Pars `list`. Named list of maturity model parameters whose names
 #'   correspond to those expected by `Model`. See [MaturityModels()] for
 #'   parameter sets and
-#'   [Specifying Biological and Fleet Schedules][populating-schedules] for
+#'   [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for
 #'   accepted input formats.
 #' @slot Model `function` or `character(1)`. Maturity model identifier,
 #'   matched to one of [MaturityModels()]. Set automatically by [FindModel()]
@@ -18,7 +18,7 @@
 #'   Populated automatically by [Populate()] when `Pars` and `Model` are set;
 #'   may also be supplied directly when `Pars` is empty. When `Pars` contains
 #'   a matched model, any existing values are overwritten.
-#'   See [Specifying Biological and Fleet Schedules][populating-schedules].
+#'   See [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html).
 #' @slot MeanAtLength `array`. Mean maturity-at-length with named dimensions
 #'   `Sim`, `Length`, and `Year`. Populated automatically when an at-length
 #'   maturity model is used, or may be supplied directly. Values are evaluated
@@ -26,7 +26,7 @@
 #'   the `Class` dimension is labelled by bin lower bounds (see `Classes`).
 #'   Converted to `MeanAtAge` via the `ALK` during [Populate()] when `MeanAtAge`
 #'   is not already populated.
-#'   See [Specifying Biological and Fleet Schedules][populating-schedules].
+#'   See [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html).
 #' @slot MeanAtWeight `array`. Mean maturity-at-weight with named dimensions
 #'   `Sim`, `Weight`, and `Year`. Populated automatically when an at-weight
 #'   maturity model is used, or may be supplied directly. Values are evaluated
@@ -35,7 +35,7 @@
 #'   [Populate()] when `MeanAtAge` is not already populated. Requires a
 #'   populated [weight-class] object with a non-`NULL` `CVatAge` slot (so that
 #'   the `AWK` exists).
-#'   See [Specifying Biological and Fleet Schedules][populating-schedules].
+#'   See [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html).
 #' @slot Classes `numeric`. Age classes (in years) or lower bounds of length
 #'   or weight bins, corresponding to the `MeanAt*` array in use. For size
 #'   bins, bin `k` spans `[Classes[k], Classes[k+1])`; the final bin is open-ended.
@@ -71,7 +71,7 @@
 #' - [FindModel()] for automatic model inference. 
 #' - [Semelparous()] to retrieve or set the post-spawn mortality array. 
 #' - [Length()] and [Weight()] for the companion schedules required by at-length and at-weight maturity models.
-#' - [Specifying Biological and Fleet Schedules][populating-schedules] for the
+#' - [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for the
 #'   full description of how `Pars`, `Model`, and `MeanAt*` arrays interact.
 #'
 #' @family maturity

@@ -34,10 +34,23 @@ CalcSPR0 <- function(OM, silent = FALSE) {
   
   if (EmptyObject(Hist@Unfished@Equilibrium))
     Hist@Unfished@Equilibrium <- CalcUnfished_Equilibrium(Hist, silent)
-  
-  SP0 <- SP0(Hist)
-  R0 <- R0(Hist)
-  ArrayDivide(SP0,R0) |> ReduceDims()
+
+  SP0 <- SP0(Hist, Reduce = FALSE)
+  R0  <- R0(Hist)
+
+  # SPR0[t] = SP0[t-lag] / R0[t]: the spawning that produced each recruit cohort
+  # divided by the number of recruits. For equilibrium (stationary seasonal
+  # pattern), circular shift is correct.
+  nT <- dim(SP0)[3]
+  for (st in seq_along(Hist@OM@Stock)) {
+    lag <- round(min(Hist@OM@Stock[[st]]@Ages@Classes) * Hist@OM@Stock[[st]]@Seasons)
+    if (lag > 0) {
+      idx <- ((seq_len(nT) - 1L - lag) %% nT) + 1L
+      SP0[, st, ] <- SP0[, st, idx]
+    }
+  }
+
+  ArrayDivide(SP0, R0) |> ReduceDims()
 
 }
 

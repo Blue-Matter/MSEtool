@@ -35,13 +35,13 @@ When \code{Pars} is non-empty and \code{Model} is \code{NULL}, the model is infe
 automatically by \code{\link[=FindModel]{FindModel()}}. When \code{Pars} is a \link[=stock-class]{stock} object,
 \code{Length()} acts as a pass-through accessor and returns \code{x@Length}.
 See \emph{Specifying the Length-at-Age} and
-\link[=populating-schedules]{Specifying Biological and Fleet Schedules} for the full
+\href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for the full
 set of accepted input formats. Default \code{list()}.}
 
 \item{Model}{\code{character(1)} or \code{function}. Growth model identifier. When
 \code{NULL} (default), the model is inferred from \code{Pars} via \code{\link[=FindModel]{FindModel()}}.
 May be set to a character string naming a built-in model or to a custom
-R function — see \link[=populating-schedules]{Specifying Biological and Fleet Schedules}.}
+R function — see \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules}.}
 
 \item{Units}{\code{character(1)}. Physical unit of length measurements. Must be
 one of the strings returned by \code{\link[=ValidUnits]{ValidUnits()}} (e.g., \code{"mm"}, \code{"cm"}).
@@ -128,7 +128,7 @@ already present in \code{MeanAtAge} are preserved and are not overwritten
 during \code{\link[=Populate]{Populate()}}.
 }
 
-See \link[=populating-schedules]{Specifying Biological and Fleet Schedules} for more details.
+See \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for more details.
 }
 
 \subsection{Length Distribution and the ALK}{
