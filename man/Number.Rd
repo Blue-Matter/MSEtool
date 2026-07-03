@@ -4,13 +4,13 @@
 \alias{Number}
 \title{Extract Number-at-Age time series}
 \usage{
-Number(object, df = FALSE, byAge = FALSE, byArea = FALSE)
+Number(object, df = TRUE, byAge = FALSE, byArea = FALSE)
 }
 \arguments{
 \item{object}{A \link[=hist-class]{hist} or \link[=mse-class]{mse} object.}
 
 \item{df}{Logical. If \code{FALSE} (default) the raw array slot is returned.
-If \code{TRUE} a tidy \code{data.frame} is returned.}
+If \code{TRUE} (default) a tidy \code{data.frame} is returned.}
 
 \item{byAge}{Logical. If \code{TRUE} the data frame retains the \code{Age}
 dimension rather than summing over ages. Ignored when \code{df = FALSE}.}
@@ -34,9 +34,9 @@ a \code{data.frame}.
 }
 \examples{
 Hist <- Simulate(SingleStockOM)
-Number(Hist, df = TRUE)
-Number(Hist, df = TRUE, byAge = TRUE)
-Number(Hist, df = TRUE, byAge = TRUE, byArea = TRUE)
+Number(Hist)
+Number(Hist, byAge = TRUE)
+Number(Hist, byAge = TRUE, byArea = TRUE)
 }
 \seealso{
 \code{\link[=Biomass]{Biomass()}}, \code{\link[=SBiomass]{SBiomass()}}, \code{\link[=SProduction]{SProduction()}}

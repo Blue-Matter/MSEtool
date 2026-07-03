@@ -14,6 +14,8 @@
 \alias{RecDevProj<-}
 \alias{SpawnTimeFrac}
 \alias{SpawnTimeFrac<-}
+\alias{SpawnLag}
+\alias{SpawnLag<-}
 \alias{RelRecFun}
 \alias{RelRecFun<-}
 \alias{SRR<-}
@@ -31,6 +33,7 @@ SRR(
   RecDevHist = NULL,
   RecDevProj = NULL,
   SpawnTimeFrac = 0,
+  SpawnLag = NULL,
   RelRecFun = NULL,
   Units = 1,
   Misc = list()
@@ -59,6 +62,10 @@ RecDevProj(x) <- value
 SpawnTimeFrac(x)
 
 SpawnTimeFrac(x) <- value
+
+SpawnLag(x)
+
+SpawnLag(x) <- value
 
 RelRecFun(x)
 
@@ -139,6 +146,13 @@ before spawning.
 spawning.
 Default \code{0}.
 }}
+
+\item{SpawnLag}{\code{numeric(1)} or \code{NULL}. Number of timesteps between the
+spawning production evaluation and recruitment. When \code{NULL} (default), the
+lag is derived automatically from \code{min(Ages@Classes) * Seasons}. Set
+explicitly when the spawn season differs from what \code{min(Ages@Classes)}
+implies (e.g. SS3 models where \code{Spawn_month} and \code{birthseas} are
+decoupled). Default \code{NULL}.}
 
 \item{RelRecFun}{\code{function}, \code{character(1)}, or \code{NULL}. Relative recruitment
 function giving equilibrium recruitment relative to \code{R0} as a function of

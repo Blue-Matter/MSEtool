@@ -77,8 +77,8 @@
 #'   and survive. Default `3`.
 #' @param Seed Integer. Random number generator seed for reproducibility.
 #'   Default `101`.
-#' @param Control Named list of operating model control settings. When `NULL`
-#'   (default), `ControlDefault` is used.
+#' @param Control Named list of internal operating model control settings.
+#'   Default `list()`.
 #' @param Misc List. Miscellaneous objects or developer-use components.
 #'   Default `list()`.
 #' @param Source Character. References to data sources or documentation.
@@ -286,7 +286,7 @@ OM <- function(Name        = "A new OM object",
   .Object@maxF        <- maxF
   .Object@Seed        <- Seed
   
-  .Object@Control     <- if (!is.null(Control)) Control else MSEtool::ControlDefault
+  .Object@Control     <- if (!is.null(Control)) Control else list()
   
   .Object@Misc        <- Misc
   .Object@Source      <- Source

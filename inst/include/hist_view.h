@@ -51,7 +51,7 @@ struct HistView {
   std::vector<std::vector<ConstArrayView4D>> SelSize, RetSize;
   
   double maxF;
-  
+
   HistView(Rcpp::S4& Hist, int nSim_, int nStock_, int nFleet_, int nArea_);
 }; 
 
@@ -207,7 +207,7 @@ inline HistView::HistView(Rcpp::S4& Hist, int nSim_, int nStock_, int nFleet_, i
   }
   
   maxF = Rcpp::as<double>(Misc["maxF"]);
-  
+
   UseDensity         = Rcpp::as<std::vector<bool>>(Misc["Mode"]);
   StockTargetingFlag = Rcpp::as<bool>(Misc["StockTargetingFlag"]);
 }

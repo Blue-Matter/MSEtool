@@ -50,9 +50,13 @@ CalcMSY <- function(Hist,
 
   CheckClass(Hist, 'hist', 'Hist')
   
-  if (is.null(Years))
+  nSeason <- Hist@OM@Seasons
+
+  if (is.null(Years)) {
     Years <- utils::tail(Years(Hist@OM, 'Historical'), 1)
-  
+    if (nSeason > 1L) Years <- unique(floor(Years))
+  }
+
   if (is.null(Hist@Reference@SPR0))
     Hist@Reference@SPR0 <- CalcSPR0(Hist, silent=TRUE)
   
@@ -239,7 +243,10 @@ OptCalcRefMSY_Sims <- function(logApicalF, inputs, complex_name,
     RetentionFleetList        = inputs$RetentionFleetList,
     DiscardMortalityFleetList = inputs$DiscardMortalityFleetList,
     FleetNames                = inputs$FleetNames,
-    Years                     = inputs$Years
+    Years                     = inputs$Years,
+    nSeason                   = inputs$nSeason,
+    SeasonalWeightsList       = inputs$SeasonalWeightsList,
+    CalendarYears             = inputs$CalendarYears
   )
   
 
@@ -262,7 +269,14 @@ OptCalcRefMSY_Sims <- function(logApicalF, inputs, complex_name,
   Landings <- Eq@Landings |> DropDimension("F")
   Discards <- ArraySubtract(Removals, Landings)
 
-  FMSY <- array(apicalF, dim(Eq@Biomass |> DropDimension("F")),
+  # Report annual apical F for seasonal models (sum of seasonal rates at the
+  # apical age); fall back to the raw scalar for annual models.
+  fmsy_val <- if (!is.null(PerRecruit@Misc$F_annual_apical)) {
+    PerRecruit@Misc$F_annual_apical[[1L]]   # nCalYears=1 for MSY; [Sim] vector
+  } else {
+    apicalF
+  }
+  FMSY <- array(fmsy_val, dim(Eq@Biomass |> DropDimension("F")),
                 dimnames = dimnames(Eq@Biomass |> DropDimension("F"))) |>
     DropDimension('Stock', warn = FALSE) |>
     AddDimension('Stock', complex_name, pos = 2)

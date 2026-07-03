@@ -135,7 +135,7 @@ CheckHistMisc <- function(Hist, Period = c('Historical', 'Projection')) {
   if (!is.numeric(Misc$maxF) || length(Misc$maxF) != 1L ||
       !is.finite(Misc$maxF) || Misc$maxF <= 0)
     add_err("Hist@Misc$maxF: must be a single finite positive number, got ", Misc$maxF)
-  
+
   if (!is.logical(Misc$StockTargetingFlag) &&
       !Misc$StockTargetingFlag %in% c(0, 1))
     add_err("Hist@Misc$StockTargetingFlag: must be logical or 0/1")
@@ -207,7 +207,7 @@ CheckHistMisc <- function(Hist, Period = c('Historical', 'Projection')) {
   check_array(Misc$SpawnTimeFrac, "Hist@Misc$SpawnTimeFrac", c(nSim, nStock))
   check_values(Misc$SpawnTimeFrac, "Hist@Misc$SpawnTimeFrac",
                allow_neg = FALSE, range = c(0, 1))
-  
+
   flush_errors("2D Misc arrays")
   
   # 3D Misc arrays 

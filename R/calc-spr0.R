@@ -43,7 +43,12 @@ CalcSPR0 <- function(OM, silent = FALSE) {
   # pattern), circular shift is correct.
   nT <- dim(SP0)[3]
   for (st in seq_along(Hist@OM@Stock)) {
-    lag <- round(min(Hist@OM@Stock[[st]]@Ages@Classes) * Hist@OM@Stock[[st]]@Seasons)
+    stock <- Hist@OM@Stock[[st]]
+    lag <- if (!is.null(stock@SRR@SpawnLag)) {
+      as.integer(round(stock@SRR@SpawnLag))
+    } else {
+      round(min(stock@Ages@Classes) * stock@Seasons)
+    }
     if (lag > 0) {
       idx <- ((seq_len(nT) - 1L - lag) %% nT) + 1L
       SP0[, st, ] <- SP0[, st, idx]

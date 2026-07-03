@@ -48,6 +48,13 @@
 #'   `N × exp(-Z × SpawnTimeFrac)`. `0` = spawning at the start of the step
 #'   (no mortality applied first); `1` = spawning at the end of the step (full
 #'   within-step Z applied first). Default `0`.
+#' @slot SpawnLag `numeric(1)` or `NULL`. Number of timesteps between the
+#'   spawning production evaluation and recruitment (first appearance of the
+#'   youngest age class). When `NULL` (default), the lag is derived
+#'   automatically from `min(Ages@Classes)` and `Seasons` as
+#'   `round(min(Ages@Classes) * Seasons)`. Set explicitly when the spawn season
+#'   differs from what `min(Ages@Classes)` implies — for example, in SS3 models
+#'   where `Spawn_month` and `birthseas` are decoupled.
 #' @slot RelRecFun `function` or `character(1)`. Relative recruitment function
 #'   giving equilibrium recruitment relative to `R0` as a function of
 #'   spawning-per-recruit (SPR). For built-in models, set automatically to
@@ -101,6 +108,7 @@ setClass(
     RecDevHist    = "num.array.list",
     RecDevProj    = "num.array.list",
     SpawnTimeFrac = "numeric",
+    SpawnLag      = "num.null",
     RelRecFun     = "fun.char",
     Units         = "numeric",
     Misc          = "list"

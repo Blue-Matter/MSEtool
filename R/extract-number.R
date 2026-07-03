@@ -6,7 +6,7 @@
 #' 
 #' @param object A [hist-class] or [mse-class] object.
 #' @param df Logical. If `FALSE` (default) the raw array slot is returned.
-#'   If `TRUE` a tidy `data.frame` is returned.
+#'   If `TRUE` (default) a tidy `data.frame` is returned.
 #' @param byAge Logical. If `TRUE` the data frame retains the `Age`
 #'   dimension rather than summing over ages. Ignored when `df = FALSE`.
 #' @param byArea Logical. If `TRUE` the data frame retains the `Area`
@@ -23,10 +23,10 @@
 #' @seealso [Biomass()], [SBiomass()], [SProduction()]
 #' @examples
 #' Hist <- Simulate(SingleStockOM)
-#' Number(Hist, df = TRUE)
-#' Number(Hist, df = TRUE, byAge = TRUE)
-#' Number(Hist, df = TRUE, byAge = TRUE, byArea = TRUE)
-Number <- function(object, df = FALSE, byAge = FALSE, byArea = FALSE) {
+#' Number(Hist)
+#' Number(Hist, byAge = TRUE)
+#' Number(Hist, byAge = TRUE, byArea = TRUE)
+Number <- function(object, df = TRUE, byAge = FALSE, byArea = FALSE) {
   CheckClass(object, c('hist', 'mse', 'timeseries'), 'object')
   
   if (!df)

@@ -147,8 +147,8 @@ and survive. Default \code{3}.}
 \item{Seed}{Integer. Random number generator seed for reproducibility.
 Default \code{101}.}
 
-\item{Control}{Named list of operating model control settings. When \code{NULL}
-(default), \code{ControlDefault} is used.}
+\item{Control}{Named list of internal operating model control settings.
+Default \code{list()}.}
 
 \item{Misc}{List. Miscellaneous objects or developer-use components.
 Default \code{list()}.}

@@ -151,7 +151,7 @@ PopulateSelectivity <- function(Selectivity,
   
   Selectivity <- AddAtAgeDimnames(Selectivity, Ages, Years)
   
-  if (CalcAtLength && is.null(Selectivity@MeanAtWeight)) {
+  if (CalcAtLength && is.null(Selectivity@MeanAtWeight) && !is.null(Length@ALK)) {
     Selectivity <- MeanAtAge2MeanAtLength(
       object = Selectivity,
       Length = Length,

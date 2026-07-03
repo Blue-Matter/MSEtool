@@ -62,9 +62,13 @@ CalcEquilibrium <- function(OM,
   
   OM <- Populate(OM, silent = TRUE)
   
-  if (is.null(Years))
+  nSeason <- OM@Seasons
+
+  if (is.null(Years)) {
     Years <- utils::tail(Years(OM, 'Historical'), 1)
-  
+    if (nSeason > 1L) Years <- unique(floor(Years))
+  }
+
   SPR0 <- CalcSPR0(OM, silent = TRUE) |> SubsetYear(Years = Years)
   
   SPR0List <- Array2List(SPR0)
@@ -118,7 +122,10 @@ CalcEquilibrium <- function(OM,
       RetentionFleetList        = inputs$RetentionFleetList,
       DiscardMortalityFleetList = inputs$DiscardMortalityFleetList,
       FleetNames                = inputs$FleetNames,
-      Years                     = Years
+      Years                     = inputs$Years,
+      nSeason                   = inputs$nSeason,
+      SeasonalWeightsList       = inputs$SeasonalWeightsList,
+      CalendarYears             = inputs$CalendarYears
     )
     
     CalcEquilibrium_internal(PerRecruit, inputs)
@@ -188,12 +195,21 @@ CalcEquilibrium_internal <- function(PerRecruit, inputs) {
   Eq@SPR         <- PerRecruit@SPR
   Eq@RelRecruits <- RelRecruits
   Eq@Recruits    <- Recruits
-  Eq@Number      <- ArrayMultiply(PerRecruit@NPRF, Recruits) 
-  Eq@Biomass     <- ArrayMultiply(PerRecruit@Biomass, Recruits)
-  Eq@SBiomass    <- ArrayMultiply(PerRecruit@SBiomass, Recruits)
+  Eq@Number      <- ArrayMultiply(PerRecruit@NPRF, Recruits)
   Eq@SProduction <- ArrayMultiply(PerRecruit@SProduction, Recruits)
   Eq@Removals    <- ArrayMultiply(PerRecruit@Removals, Recruits)
   Eq@Landings    <- ArrayMultiply(PerRecruit@Landings, Recruits)
+
+  # For seasonal models, B^PR and SB^PR sum over S seasonal age classes per
+  # calendar year, giving S × (mean seasonal snapshot biomass per recruit).
+  # Dividing by nSeason converts to a single-snapshot-equivalent, directly
+  # comparable to annual-model BMSY/SBMSY. SProduction (fecundity-weighted)
+  # is a flow aggregated over the year and does not need this correction.
+  nSeason <- inputs$nSeason %||% 1L
+  B_PR  <- if (nSeason > 1L) PerRecruit@Biomass  / nSeason else PerRecruit@Biomass
+  SB_PR <- if (nSeason > 1L) PerRecruit@SBiomass / nSeason else PerRecruit@SBiomass
+  Eq@Biomass  <- ArrayMultiply(B_PR,  Recruits)
+  Eq@SBiomass <- ArrayMultiply(SB_PR, Recruits)
   Eq
 }
 

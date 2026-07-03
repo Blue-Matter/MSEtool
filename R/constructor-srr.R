@@ -61,6 +61,12 @@
 #'   - `1`: spawning at the end of the step; full within-step Z applied before
 #'     spawning.
 #'   Default `0`.
+#' @param SpawnLag `numeric(1)` or `NULL`. Number of timesteps between the
+#'   spawning production evaluation and recruitment. When `NULL` (default), the
+#'   lag is derived automatically from `min(Ages@Classes) * Seasons`. Set
+#'   explicitly when the spawn season differs from what `min(Ages@Classes)`
+#'   implies (e.g. SS3 models where `Spawn_month` and `birthseas` are
+#'   decoupled). Default `NULL`.
 #' @param RelRecFun `function`, `character(1)`, or `NULL`. Relative recruitment
 #'   function giving equilibrium recruitment relative to `R0` as a function of
 #'   spawning-per-recruit (SPR). For built-in models, set automatically during
@@ -216,6 +222,7 @@ SRR <- function(Pars = list(h = NA),
                 RecDevHist = NULL,
                 RecDevProj = NULL,
                 SpawnTimeFrac = 0,
+                SpawnLag = NULL,
                 RelRecFun = NULL,
                 Units = 1,
                 Misc = list()) {
@@ -239,6 +246,7 @@ SRR <- function(Pars = list(h = NA),
     RecDevHist    = RecDevHist,
     RecDevProj    = RecDevProj,
     SpawnTimeFrac = SpawnTimeFrac,
+    SpawnLag      = SpawnLag,
     RelRecFun     = RelRecFun,
     Units         = Units,
     Misc          = Misc
@@ -357,6 +365,22 @@ SpawnTimeFrac <- function(x) {
 `SpawnTimeFrac<-` <- function(x, value) {
   CheckClass(x, "srr", "x")
   x@SpawnTimeFrac <- value
+  methods::validObject(x)
+  x
+}
+
+#' @rdname SRR
+#' @export
+SpawnLag <- function(x) {
+  CheckClass(x, "srr", "x")
+  x@SpawnLag
+}
+
+#' @rdname SRR
+#' @export
+`SpawnLag<-` <- function(x, value) {
+  CheckClass(x, "srr", "x")
+  x@SpawnLag <- value
   methods::validObject(x)
   x
 }

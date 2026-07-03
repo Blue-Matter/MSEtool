@@ -79,7 +79,11 @@ AdjustSeasonalFecundity <- function(OM, silent = FALSE) {
                                         nSim  = nSim(OM),
                                         Years = HistYears)
     Fec         <- Stock@Fecundity@MeanAtAge
-    recruit_lag <- round(min(Stock@Ages@Classes) * n_seasons)
+    recruit_lag <- if (!is.null(Stock@SRR@SpawnLag)) {
+      as.integer(round(Stock@SRR@SpawnLag))
+    } else {
+      round(min(Stock@Ages@Classes) * n_seasons)
+    }
     SP_unscaled <- ArrayMultiply(N_age, Fec) |> SumOverAge()
 
     for (y in seq_len(nYear)) {

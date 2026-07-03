@@ -33,12 +33,17 @@ OptRefYield <- function(logScalar,
                         debug = 0,
                         opt = 1) {
   
-  # Scale historical effort
+  # Scale historical effort and tile the seasonal pattern across projection years.
+  # baseEffort has nSeason time steps (the last complete historical year); for
+  # annual models nSeason == 1, so this reduces to the previous behaviour.
   scaledEffort <- baseEffort * exp(logScalar)
-  dnames <- dimnames(scaledEffort)
-  dnames$Year <- ProjYears[1]
+  nSeason_eff  <- dim(scaledEffort)[2]          # time steps in one seasonal cycle
+  nProjTS      <- length(ProjYears)
+  tile_idx     <- rep(seq_len(nSeason_eff), ceiling(nProjTS / nSeason_eff))[seq_len(nProjTS)]
+  scaledEffort <- scaledEffort[, tile_idx, , drop = FALSE]
+  dnames       <- dimnames(scaledEffort)
+  dnames[[2]]  <- as.character(ProjYears)
   dimnames(scaledEffort) <- dnames
-  scaledEffort <- Extend(scaledEffort, Years=ProjYears)
 
   ArrayFill(Proj@Effort) <- scaledEffort
   

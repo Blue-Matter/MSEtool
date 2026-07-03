@@ -302,7 +302,7 @@ ImportSSData_AtSize <- function(replist, silent = FALSE) {
   FishFleets    <- which(replist$IsFishFleet)
   FleetNames    <- unique(replist$catch$Fleet_Name)[FishFleets]
   nFleet        <- length(FishFleets)
-  LengthClasses <- GetSSLengthClasses(replist)  # midpoints
+  LengthClasses <- GetSSLengthClasses(replist) 
   nLength       <- length(LengthClasses)
   
   if (YearsList$Seasons > 1) {
@@ -331,21 +331,21 @@ ImportSSData_AtSize <- function(replist, silent = FALSE) {
   LenDB$N     <- if (nsamp_in_valid) LenDB$Nsamp_in else LenDB$Nsamp_adj
   LenDB$Count <- LenDB$Obs * LenDB$N
   
-  # Midpoints: use Lbin_mid if populated, otherwise compute from lbins
-  lbin_mid_valid <- !is.null(LenDB$Lbin_mid) && 
+  # Midpoints: use Lbin_mid if populated, otherwise compute from lbins.
+  # `lbins` gives lower bin edges, so bin widths are derived per-bin via
+  # diff() rather than assumed constant - this supports unequal-width bins.
+  # The final bin's width is assumed equal to the preceding bin's width,
+  # since lbins only gives lower edges (no upper edge for the last bin).
+  lbin_mid_valid <- !is.null(LenDB$Lbin_mid) &&
     length(unique(LenDB$Lbin_mid)) > 1
-  
+
   if (lbin_mid_valid) {
     LenDB$BinMid <- LenDB$Lbin_mid
   } else {
     lbins   <- replist$lbins
-    bydiffs <- diff(lbins)
-    if (length(unique(bydiffs)) > 1)
-      cli::cli_abort(
-        "`ImportSSData_AtSize`: unequal length bin widths are not currently supported."
-      )
-    by           <- bydiffs[1]
-    lmids        <- seq(lbins[1] + 0.5 * by, by = by, length.out = length(lbins))
+    widths  <- diff(lbins)
+    widths  <- c(widths, widths[length(widths)])
+    lmids   <- lbins + widths / 2
     LenDB$BinMid <- lmids[match(LenDB$Bin, lbins)]
   }
 
@@ -358,15 +358,21 @@ ImportSSData_AtSize <- function(replist, silent = FALSE) {
       dimnames = list(Year = YearsHist, Length = LengthClasses)
     )
     if (!nrow(df)) return(mat)
-    
+
     agg <- df |>
       dplyr::summarise(Count = sum(Count), .by = c(Yr, BinMid))
-    
-    yr_ind  <- match(agg$Yr,     YearsHist)
-    bin_ind <- match(agg$BinMid, LengthClasses)
-    
+
+    yr_ind <- match(agg$Yr, YearsHist)
+
+    # Classify each sample's bin midpoint into the population length-class
+    # bin (lower bounds, ascending) whose range contains it, rather than
+    # requiring an exact value match - population bins may have unequal
+    # widths and need not align exactly with the data bins.
+    bin_ind <- findInterval(agg$BinMid, LengthClasses)
+    bin_ind[bin_ind < 1 | bin_ind > nLength] <- NA
+
     valid <- !is.na(yr_ind) & !is.na(bin_ind)
-    
+
     mat[cbind(yr_ind[valid], bin_ind[valid])] <- agg$Count[valid]
     mat
   }

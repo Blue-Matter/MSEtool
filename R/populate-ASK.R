@@ -19,9 +19,9 @@
 #'   array of dimensions `Sim × Age × Class × Year`.
 #' @keywords internal
 PopulateASK <- function(object, Ages=NULL, silent=FALSE, type='Length') {
-  
+
   CheckRequiredObject(Ages, 'ages', 'Ages')
-  
+
   if ('Timing' %in% slotNames(object))
     Ages@Classes <- Ages@Classes + object@Timing
   

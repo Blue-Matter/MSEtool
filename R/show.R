@@ -765,35 +765,33 @@ setMethod('show', 'advice', function(object) {
 # ---- per-recruit ----
 setMethod('show', 'perrecruit', function(object) {
   .show_object(object, 'perrecruit')
-  
 })
 
 # ---- refpointsMSY ----
 setMethod('show', 'refpointsMSY', function(object) {
   .show_object(object, 'refpointsMSY')
-  
 })
 
 # ---- equilibrium ----
 setMethod('show', 'equilibrium', function(object) {
   .show_object(object, 'equilibrium')
-  
 })
+
+# ---- reference ----
+setMethod('show', 'reference', function(object) {
+  .show_object(object, 'reference')
+})
+
 
 # ---- stocktargeting ----
 setMethod('show', 'stocktargeting', function(object) {
   .show_object(object, 'stocktargeting')
-  
 })
 
 
-
 # ---- popdynamics ----
-
-
 setMethod('show', 'popdynamics', function(object) {
   .show_object(object, 'popdynamics')
-  
 })
 
 

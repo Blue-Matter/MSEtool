@@ -43,8 +43,15 @@ CalcRefYield <- function(Hist,
   for (sl in slotNames('timeseries')) 
     slot(Proj,sl) <- Extend(slot(Proj,sl), Years=AllYears, default=0) 
   
-  ProjYearInd    <- match(ProjYears, AllYears)
-  LastHistEffort <- Proj@Effort[, ProjYearInd[1]-1, , drop = FALSE]
+  ProjYearInd <- match(ProjYears, AllYears)
+  nSeason     <- Hist@OM@Seasons
+
+  # For seasonal models use the last complete calendar year (nSeason time steps)
+  # so the seasonal effort pattern is preserved when tiled across the projection.
+  # For annual models this reduces to the single last historical time step.
+  lastHistIdx     <- ProjYearInd[1] - 1L
+  firstLastYearIdx <- lastHistIdx - nSeason + 1L
+  LastHistEffort  <- Proj@Effort[, firstLastYearIdx:lastHistIdx, , drop = FALSE]
   
   # List length nSim, each with a Hist object with 1 sim
   

@@ -10,12 +10,7 @@ Simulate(
   silent = FALSE,
   nSim = NULL,
   nsim = NULL,
-  DoDynamicUnfished = TRUE,
-  DoRefLandings = TRUE,
-  DoRefRemovals = FALSE,
-  DoConditionObs = TRUE,
-  DoGenerateData = TRUE,
-  DoMSYRefs = TRUE,
+  control = SimControl(),
   Reduce = TRUE,
   ...
 )
@@ -36,24 +31,9 @@ for \link[=OM-legacy-class]{OM-legacy} objects.}
 \item{nsim}{Integer. Synonym for \code{nSim} for \link[=OM-legacy-class]{OM-legacy} objects. If
 \code{NULL} (default), \code{nSim} is used if provided.}
 
-\item{DoDynamicUnfished}{Logical. Calculate the dynamic unfished population
-dynamics? Default \code{TRUE}. Only used for \link[=om-class]{om} objects.}
-
-\item{DoRefLandings}{Logical. Calculate reference yield based on landings?
-Default \code{TRUE}. Only used for \link[=om-class]{om} objects.}
-
-\item{DoRefRemovals}{Logical. Calculate reference yield based on total
-removals (landings + discards)? Default \code{FALSE}. Only used for \link[=om-class]{om}
-objects.}
-
-\item{DoConditionObs}{Logical. Condition observation model on historical
-fishery data? Default \code{TRUE}. Only used for \link[=om-class]{om} objects.}
-
-\item{DoGenerateData}{Logical. Generate historical fishery data from the
-observation model? Default \code{TRUE}. Only used for \link[=om-class]{om} objects.}
-
-\item{DoMSYRefs}{Logical. Calculate MSY-based reference points? Passed to
-\code{\link[=Simulate]{Simulate()}}. Default \code{TRUE}. \code{om} and \code{hist} class only.}
+\item{control}{A \code{\link[=SimControl]{SimControl()}} object controlling which optional
+calculations are performed. Only used for \link[=om-class]{om} objects. Default
+\code{SimControl()}.}
 
 \item{Reduce}{Logical. Reduce object size after simulation for memory
 efficiency? Default \code{TRUE}. Only used for \link[=om-class]{om} objects.}
@@ -85,11 +65,9 @@ hist <- Simulate()
 
 # Simulate with specific options
 hist <- Simulate(
-  OM             = MyOM,
-  DoRefLandings  = TRUE,
-  DoRefRemovals  = FALSE,
-  DoGenerateData = FALSE,
-  silent         = TRUE
+  OM      = MyOM,
+  control = SimControl(RefLandings = TRUE, GenerateData = FALSE),
+  silent  = TRUE
 )
 }
 

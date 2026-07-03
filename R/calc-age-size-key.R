@@ -34,11 +34,11 @@ CalcAgeSizeKey <- function(MeanAtAge,
 
   if (inherits(MeanAtAge, "length")) {
     LengthObject <- MeanAtAge
-    MeanAtAge <- LengthObject@MeanAtAge
-    CVatAge <- LengthObject@CVatAge
-    Classes <- LengthObject@Classes
-    TruncSD <- LengthObject@TruncSD
-    Dist <- LengthObject@Dist
+    MeanAtAge    <- LengthObject@MeanAtAge
+    CVatAge      <- LengthObject@CVatAge
+    Classes      <- LengthObject@Classes
+    TruncSD      <- LengthObject@TruncSD
+    Dist         <- LengthObject@Dist
   }
   
   # Checks

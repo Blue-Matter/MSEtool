@@ -80,6 +80,14 @@ before spawning numbers are counted: numbers at spawning are
 (no mortality applied first); \code{1} = spawning at the end of the step (full
 within-step Z applied first). Default \code{0}.}
 
+\item{\code{SpawnLag}}{\code{numeric(1)} or \code{NULL}. Number of timesteps between the
+spawning production evaluation and recruitment (first appearance of the
+youngest age class). When \code{NULL} (default), the lag is derived
+automatically from \code{min(Ages@Classes)} and \code{Seasons} as
+\code{round(min(Ages@Classes) * Seasons)}. Set explicitly when the spawn season
+differs from what \code{min(Ages@Classes)} implies — for example, in SS3 models
+where \code{Spawn_month} and \code{birthseas} are decoupled.}
+
 \item{\code{RelRecFun}}{\code{function} or \code{character(1)}. Relative recruitment function
 giving equilibrium recruitment relative to \code{R0} as a function of
 spawning-per-recruit (SPR). For built-in models, set automatically to

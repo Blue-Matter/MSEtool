@@ -74,7 +74,7 @@ PopulateLength <- function(Length,
   
   SetSeed(seed)
   
-  Length@Pars   <- StructurePars(Pars = Length@Pars, nSim, Years)
+  Length@Pars    <- StructurePars(Pars = Length@Pars, nSim, Years)
   Length@Model   <- FindModel(Length)
   Length         <- PopulateMeanAtAge(Length, Ages, Years)
   Length         <- PopulateRandom(Length)
@@ -97,12 +97,12 @@ PopulateLength <- function(Length,
   
   Length <- AddAtAgeDimnames(Length, Ages, Years)
   
-  if (ALK && !is.null(Length@Classes)) 
+  if (ALK && !is.null(Length@Classes) && is.null(Length@ALK))  {
     Length <- PopulateASK(object = Length, 
-                          Ages = Ages, 
+                          Ages   = Ages, 
                           silent = silent)
-  
-
+  }
+    
   SetDigest(SetAgeDimnames(Length, Ages), argList)
 }
 

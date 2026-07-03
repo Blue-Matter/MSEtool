@@ -99,7 +99,7 @@ inline void CalcNumberNext(
         const int age    = nAge - 1;
         const double Sem = Sem_st(sim_sem, age, y);
         const double survive = 1.0 - Sem;
-        
+
         for (int ar = 0; ar < nArea; ++ar) {
           Num_st(sim_num, age, y + 1, ar) +=
             Num_st(sim_num, age, y, ar)

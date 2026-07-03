@@ -80,24 +80,26 @@ GenerateHistoricalData <- function(Hist, silent=FALSE) {
     for (st in seq_along(SimDataList[[i]])) {
       # Survey
       IndexObs <- SimDataList[[i]][[st]]@Survey@Misc$IndexObs
-      if (is.null(IndexObs)) next
-      
-      for (fl in seq_along(IndexObs)) {
-        Hist@OM@Obs[[st]][[fl]]@Survey <- IndexObs[[fl]]
-        Hist@OM@Obs[[st]][[fl]]@Survey@Efficiency <- unlist(Survey_Efficiency[[st]][[fl]])
-        
+      if (!is.null(IndexObs)) {
+        for (fl in seq_along(IndexObs)) {
+          Hist@OM@Obs[[st]][[fl]]@Survey <- IndexObs[[fl]]
+          Hist@OM@Obs[[st]][[fl]]@Survey@Efficiency <- unlist(Survey_Efficiency[[st]][[fl]])
+        }
+        Hist@Data[[i]][[st]]@Survey@Misc$IndexObs <- NULL
       }
-      Hist@Data[[i]][[st]]@Survey@Misc$IndexObs <- NULL
+  
+      
       
       # CPUE
       IndexObs <- SimDataList[[i]][[st]]@CPUE@Misc$IndexObs
-      if (is.null(IndexObs)) next
-      for (fl in seq_along(IndexObs)) {
-        Hist@OM@Obs[[st]][[fl]]@CPUE <- IndexObs[[fl]]
-        Hist@OM@Obs[[st]][[fl]]@CPUE@Efficiency <- unlist(CPUE_Efficiency[[st]][[fl]])
-        
+      if (!is.null(IndexObs)) {
+        for (fl in seq_along(IndexObs)) {
+          Hist@OM@Obs[[st]][[fl]]@CPUE <- IndexObs[[fl]]
+          Hist@OM@Obs[[st]][[fl]]@CPUE@Efficiency <- unlist(CPUE_Efficiency[[st]][[fl]])
+          
+        }
+        Hist@Data[[i]][[st]]@CPUE@Misc$IndexObs <- NULL
       }
-      Hist@Data[[i]][[st]]@CPUE@Misc$IndexObs <- NULL
     }
     
   }

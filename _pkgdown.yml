@@ -790,7 +790,6 @@ reference:
 - title: internal
   contents:
   - CheckDuplicate
-  - ControlDefault
   - DataDescription
   - DataDir
   - DLMDataDir

@@ -15,19 +15,9 @@
 #'   for [OM-legacy-class] objects.
 #' @param nsim Integer. Synonym for `nSim` for [OM-legacy-class] objects. If
 #'   `NULL` (default), `nSim` is used if provided.
-#' @param DoDynamicUnfished Logical. Calculate the dynamic unfished population
-#'   dynamics? Default `TRUE`. Only used for [om-class] objects.
-#' @param DoRefLandings Logical. Calculate reference yield based on landings?
-#'   Default `TRUE`. Only used for [om-class] objects.
-#' @param DoRefRemovals Logical. Calculate reference yield based on total
-#'   removals (landings + discards)? Default `FALSE`. Only used for [om-class]
-#'   objects.
-#' @param DoConditionObs Logical. Condition observation model on historical
-#'   fishery data? Default `TRUE`. Only used for [om-class] objects.
-#' @param DoGenerateData Logical. Generate historical fishery data from the
-#'   observation model? Default `TRUE`. Only used for [om-class] objects.
-#' @param DoMSYRefs Logical. Calculate MSY-based reference points? Passed to
-#'   [Simulate()]. Default `TRUE`. `om` and `hist` class only.
+#' @param control A [SimControl()] object controlling which optional
+#'   calculations are performed. Only used for [om-class] objects. Default
+#'   `SimControl()`.
 #' @param Reduce Logical. Reduce object size after simulation for memory
 #'   efficiency? Default `TRUE`. Only used for [om-class] objects.
 #' @param ... Additional arguments passed to sub-functions. Not currently
@@ -51,55 +41,41 @@
 #'
 #' # Simulate with specific options
 #' hist <- Simulate(
-#'   OM             = MyOM,
-#'   DoRefLandings  = TRUE,
-#'   DoRefRemovals  = FALSE,
-#'   DoGenerateData = FALSE,
-#'   silent         = TRUE
+#'   OM      = MyOM,
+#'   control = SimControl(RefLandings = TRUE, GenerateData = FALSE),
+#'   silent  = TRUE
 #' )
 #' }
 #'
 #' @export
-Simulate <- function(OM=NULL, 
+Simulate <- function(OM       = NULL,
                      parallel = FALSE,
-                     silent = FALSE,
-                     nSim = NULL,
-                     nsim = NULL,
-                     DoDynamicUnfished = TRUE,
-                     DoRefLandings = TRUE,
-                     DoRefRemovals = FALSE,
-                     DoConditionObs = TRUE,
-                     DoGenerateData = TRUE,
-                     DoMSYRefs = TRUE,
-                     Reduce = TRUE, 
+                     silent   = FALSE,
+                     nSim     = NULL,
+                     nsim     = NULL,
+                     control  = SimControl(),
+                     Reduce   = TRUE,
                      ...) {
-  
+
   if (is.null(OM))
     OM <- MSEtool::SingleStockOM
-  
+
   if (inherits(OM, 'om'))
     return(
-      Simulate_om(OM = OM,
+      Simulate_om(OM       = OM,
                   parallel = parallel,
-                  silent = silent,
-                  nSim = nSim,
-                  DoDynamicUnfished = DoDynamicUnfished,
-                  DoRefLandings = DoRefLandings,
-                  DoRefRemovals = DoRefRemovals,
-                  DoConditionObs = DoConditionObs,
-                  DoGenerateData = DoGenerateData,
-                  DoMSYRefs      = DoMSYRefs,
-                  Reduce = Reduce, 
+                  silent   = silent,
+                  nSim     = nSim,
+                  control  = control,
+                  Reduce   = Reduce,
                   ...)
-      
-      )
+    )
 
   if (!is.null(nSim) && is.null(nsim))
     nsim <- nSim
-    
-  SimulateOM(OM = OM,
+
+  SimulateOM(OM       = OM,
              parallel = parallel,
-             silent = silent,
-             nsim = nsim
-             )
+             silent   = silent,
+             nsim     = nsim)
 }

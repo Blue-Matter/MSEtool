@@ -29,7 +29,7 @@ PrepHistMisc <- function(Hist, Period = c('Historical', 'Projection')) {
   Hist@Misc$PlusGroup <- purrr::map(Hist@OM@Stock, \(stock) {
     stock@Ages@PlusGroup
   }) |> unlist() |> as.numeric() |> array(dim=nStock(Hist), dimnames = list(Stock=StockNames(Hist)))
-  
+
   Hist@Misc$Mode <- purrr::map_int(Hist@OM@Fleet[[1]], \(fleet) {
     mode <- fleet@Effort@Mode
     if (mode == 'Density') return(1)
@@ -37,8 +37,7 @@ PrepHistMisc <- function(Hist, Period = c('Historical', 'Projection')) {
     })
   
   ## ---- 2D Array ----
-  
-  # Sim, Year - must be the same for all stocks
+  # Sim, Year 
   Hist@Misc$RelSize <- Hist@OM@Stock[[1]]@Spatial@RelativeSize
   
   # Sim Stock
@@ -94,8 +93,10 @@ PrepHistMisc <- function(Hist, Period = c('Historical', 'Projection')) {
   
   ## ---- SRR ----
   
-  # Calculate recruitment lag 
+  # Calculate recruitment lag
   Hist@Misc$RecLag <- purrr::map(Hist@OM@Stock, \(stock) {
+    if (!is.null(stock@SRR@SpawnLag))
+      return(as.integer(round(stock@SRR@SpawnLag)))
     MinAge <- min(stock@Ages@Classes)
     MaxAge <- max(stock@Ages@Classes)
     nSeasons <- stock@Seasons
