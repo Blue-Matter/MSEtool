@@ -48,6 +48,7 @@ ConditionObs_Comp <- function(Hist,
                                        'LandingsAtSize', 'DiscardsAtSize')) {
   
   type       <- match.arg(type)
+  
   isAtAge    <- type %in% c('LandingsAtAge', 'DiscardsAtAge')
   nSim       <- nSim(Hist)
   nHistTS    <- length(HistYears)
@@ -119,8 +120,9 @@ ConditionObs_Comp <- function(Hist,
     valid_yrs <- which(ObsTotals > 0 & !is.na(ObsTotals))
     if (length(valid_yrs) == 0) next
     
-    CompObs@SampleSize <- ObsTotals
-    
+    CompObs@SampleSize <- matrix(ObsTotals, 1, length(ObsTotals))
+    dimnames(CompObs@SampleSize) <- list(Sim = 1,
+                                         Year = names(ObsTotals))
     # Observed proportions 
     ObsProp     <- ObsCounts / ObsTotals
     ObsProp[ObsTotals == 0 | is.na(ObsTotals), ] <- NA

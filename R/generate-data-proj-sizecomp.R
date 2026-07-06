@@ -116,7 +116,7 @@ GenProjData_SizeComp <- function(x, Proj, DataYear, YearsAll, i, stocks,
                     dimnames = list(Year  = DataYear,
                                     Fleet = FleetNames,
                                     Size  = SizeClasses))
-  
+
   for (fl in seq_len(nFleet)) {
     Obs <- slot(Proj@OM@Obs[[i]][[fl]], type)
     if (EmptyObject(Obs) || is.null(Obs@SampleSize)) next
@@ -156,7 +156,7 @@ GenProjData_SizeComp <- function(x, Proj, DataYear, YearsAll, i, stocks,
       
       shift_b <- if (!is.null(Obs@Shift)) {
         sim_sh <- min(x, dim(Obs@Shift)[1])
-        ArraySubsetYear(Obs@Shift, DataYear)[sim_sh, ]
+        abind::adrop(ArraySubsetYear(Obs@Shift, DataYear)[sim_sh, ,,drop=FALSE],1)
       } else {
         rep(0, nSize)
       }
