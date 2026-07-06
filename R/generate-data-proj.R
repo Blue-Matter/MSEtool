@@ -62,8 +62,7 @@ GenerateProjectionData_Sim <- function(x, Proj, DataYear, YearsAll,
   Complexes <- Proj@OM@Complexes
   
   for (i in seq_along(Complexes)) {
-    Data <- DataList[[i]]
-                     
+    Data   <- DataList[[i]]
     stocks <- Complexes[[i]]
     
     # data already exists for this time step
