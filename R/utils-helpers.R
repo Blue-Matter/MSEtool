@@ -355,6 +355,9 @@ LinInterp <- function(x, y, xlev, ascending = FALSE, zeroint = FALSE) {
     y_out <- y
   }
   
+  if (length(x_out) == 1)
+    return(y_out)
+  
   # Warn if xlev is outside the range
   if (any(xlev < min(x_out))) {
     cli::cli_warn(c("Some `xlev` values are less than min(x).",
