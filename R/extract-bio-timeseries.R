@@ -210,7 +210,7 @@ extract_bio_timeseries <- function(object,
   
   isMSE <- inherits(object, 'mse')
   if (isMSE) {
-    MP_Names <- names(myMSE@MPs)
+    MP_Names <- names(object@MPs)
   } else {
     MP_Names <- NULL
   }
