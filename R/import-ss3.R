@@ -614,6 +614,12 @@ GetSS_M_at_age <- function(st, replist, YearsList, Ages) {
   
   if (!is.null(replist$Natural_Mortality)) {
     
+    if (is.null(replist$Natural_Mortality$`Beg/Mid`))
+      replist$Natural_Mortality$`Beg/Mid` <- 'B'
+    
+    if (is.null(replist$Natural_Mortality$Era))
+      replist$Natural_Mortality$Era <- 'TIME'
+    
     M_at_ageDF <- replist$Natural_Mortality |>
       dplyr::filter(Sex==st, 
                     `Beg/Mid`=='B',
@@ -630,12 +636,11 @@ GetSS_M_at_age <- function(st, replist, YearsList, Ages) {
     
     dimnames(M_at_age) <- list(
       Age = AgeClasses,
-      Year = YearsList$YearsHist
+      Year = YearsList$YearsHist[seq_len(ncol(M_at_age))]
     )
     
-    if (YearsList$TimeUnits == "year") {
+    if (YearsList$TimeUnits == "year") 
       return(M_at_age)
-    }
     
     return(
       ConvertSS_M_Seasonal(M_at_age, YearsList, Ages)

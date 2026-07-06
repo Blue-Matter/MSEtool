@@ -324,18 +324,6 @@ ImportSSData_AtSize <- function(replist, silent = FALSE) {
   LenDB$N     <- if (nsamp_in_valid) LenDB$Nsamp_in else LenDB$Nsamp_adj
   LenDB$Count <- LenDB$Obs * LenDB$N
   
-  
-  nsamp_in_valid <- !is.null(LenDB$Nsamp_in) && 
-    any(LenDB$Nsamp_in > 1, na.rm = TRUE)
-  
-  LenDB$N     <- if (nsamp_in_valid) LenDB$Nsamp_in else LenDB$Nsamp_adj
-  LenDB$Count <- LenDB$Obs * LenDB$N
-  
-  # Midpoints: use Lbin_mid if populated, otherwise compute from lbins.
-  # `lbins` gives lower bin edges, so bin widths are derived per-bin via
-  # diff() rather than assumed constant - this supports unequal-width bins.
-  # The final bin's width is assumed equal to the preceding bin's width,
-  # since lbins only gives lower edges (no upper edge for the last bin).
   lbin_mid_valid <- !is.null(LenDB$Lbin_mid) &&
     length(unique(LenDB$Lbin_mid)) > 1
 
@@ -349,13 +337,12 @@ ImportSSData_AtSize <- function(replist, silent = FALSE) {
     LenDB$BinMid <- lmids[match(LenDB$Bin, lbins)]
   }
 
-  # Helper: aggregate counts within year x bin
   make_length_matrix <- function(df) {
     mat <- matrix(
       NA_real_,
       nrow     = nTS,
       ncol     = nLength,
-      dimnames = list(Year = YearsHist, Length = LengthClasses)
+      dimnames = list(Year = YearsHist, Class = LengthClasses)
     )
     if (!nrow(df)) return(mat)
 
@@ -364,10 +351,6 @@ ImportSSData_AtSize <- function(replist, silent = FALSE) {
 
     yr_ind <- match(agg$Yr, YearsHist)
 
-    # Classify each sample's bin midpoint into the population length-class
-    # bin (lower bounds, ascending) whose range contains it, rather than
-    # requiring an exact value match - population bins may have unequal
-    # widths and need not align exactly with the data bins.
     bin_ind <- findInterval(agg$BinMid, LengthClasses)
     bin_ind[bin_ind < 1 | bin_ind > nLength] <- NA
 
@@ -383,7 +366,7 @@ ImportSSData_AtSize <- function(replist, silent = FALSE) {
     dimnames = list(
       Year   = YearsHist,
       Fleet  = FleetNames,
-      Length = LengthClasses
+      Class = LengthClasses
     )
   )
     
@@ -405,11 +388,6 @@ ImportSSData_AtSize <- function(replist, silent = FALSE) {
         dplyr::filter(fleet_db, Part == 1)
       )
     } else if (any(parts == 2)) {
-      # if (!silent)
-      #   cli::cli_alert_warning(
-      #     "Fleet {.val {FleetNames[fl]}}: only total length composition \\
-      #      (Part == 2) available; storing in Landings, Discards left NA."
-      #   )
       LandingsArr[, fl, ] <- make_length_matrix(
         dplyr::filter(fleet_db, Part == 2)
       )
