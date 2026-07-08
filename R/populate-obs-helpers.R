@@ -229,9 +229,9 @@ PopulateObsBias <- function(object, nSim) {
   cls <- class(object)
   
   if (length(object@Bias) < 1)
-    return(array(1, dim = nSim, dimnames = list(Sim = seq_len(nSim))))
+    return(array(0, dim = nSim, dimnames = list(Sim = seq_len(nSim))))
   
-  if (any(object@Bias <= 0))
+  if (any(object@Bias < 0))
     cli::cli_abort(
       c("x" = "`{cls}@Bias` must contain positive values.",
         "i" = "`Bias` is a multiplicative scalar on the natural scale.")
