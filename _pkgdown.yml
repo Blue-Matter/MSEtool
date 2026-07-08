@@ -299,6 +299,7 @@ reference:
 - title: Reference Points
   desc: Functions for calculating and accessing MSY, per-recruit, and unfished reference points.
   contents:
+  - CalcMGT
   - CalcMSY
   - CalcPerRecruit
   - MSY-accessors
@@ -313,8 +314,17 @@ reference:
   - runMSE
   - Simulate
   - Project
+  - SimControl
   - SimulateMOM
   - ProjectMOM
+
+
+- title: Plotting
+  desc: >
+    Plot the simulated dynamics of `hist` and `mse` objects: numbers, biomass,
+    spawning biomass, spawning production, landings, discards, and removals.
+  contents:
+  - plot_hist
 
 
 - title: Generate Observation Data
@@ -361,7 +371,6 @@ reference:
 - subtitle: General
   contents:
   - Populate
-  - populating-schedules
 
 - subtitle: OM
   contents:
@@ -790,6 +799,7 @@ reference:
 - title: internal
   contents:
   - CheckDuplicate
+  - ChkYrs
   - DataDescription
   - DataDir
   - DLMDataDir
