@@ -15,7 +15,7 @@ Simulate_om <- function(OM       = NULL,
 
   if (!silent) {
     cli::cli_text('')
-    cli::cli_alert_info(' Starting  {.val Simulate} for OM {.val {OM@Name}}')
+    cli::cli_alert_info(' Starting  `Simulate` for OM {.val {OM@Name}}')
   }
 
   OM <- StartUp(OM, nSim, silent=silent)
@@ -106,7 +106,7 @@ Simulate_om <- function(OM       = NULL,
 
   elapsed <- round(difftime(Sys.time(), StartTime, units='auto'), 2) |> format()
   if (!silent)
-    cli::cli_alert_success('Completed {.val Simulate} for OM {.val {OM@Name}} ({elapsed})')
+    cli::cli_alert_success('Completed `Simulate` for OM {.val {OM@Name}} ({elapsed})')
 
   Hist@Log <- JoinLog(OM@Log, Hist@Log)
 
