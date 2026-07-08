@@ -4,7 +4,11 @@
 #' simulated numbers, biomass, spawning biomass, spawning production,
 #' landings, discards, and removals over time.
 #'
-#' @param object A [hist-class] or [mse-class] object.
+#' @param object A [hist-class] or [mse-class] object. `PlotLandings()` and
+#'   `PlotDiscards()` also accept a [data-class] object (e.g.
+#'   `Hist@Data[[1]][[1]]`), in which case a single observed timeseries is
+#'   plotted per fleet with no ribbon/faceting arguments applied; see
+#'   [plot_data] for the full set of `data`-class plotting functions.
 #' @param byStock Logical. Facet by stock? Default (`NULL`) facets
 #'   automatically when `object` has more than one stock.
 #' @param byFleet Logical. Facet by fleet? Default (`NULL`) facets
@@ -275,6 +279,9 @@ PlotLandings <- function(object,
                          IncHist       = TRUE,
                          byMP          = FALSE,
                          AggregateYear = FALSE) {
+  if (inherits(object, 'data'))
+    return(.plot_data_ts(object, 'Landings', 'Landings'))
+
   if (is.null(free_y)) free_y <- TRUE
   .plot_catch(object, slot_name = 'Landings', ylab = 'Landings',
              byStock = byStock, byFleet = byFleet, probs = probs,
@@ -294,6 +301,9 @@ PlotDiscards <- function(object,
                          IncHist       = TRUE,
                          byMP          = FALSE,
                          AggregateYear = FALSE) {
+  if (inherits(object, 'data'))
+    return(.plot_data_ts(object, 'Discards', 'Discards'))
+
   if (is.null(free_y)) free_y <- TRUE
   .plot_catch(object, slot_name = 'Discards', ylab = 'Discards',
              byStock = byStock, byFleet = byFleet, probs = probs,

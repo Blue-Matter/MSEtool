@@ -287,6 +287,7 @@ Collate:
     'opt-effort-single-stock.R'
     'opt-final-depletion.R'
     'opt-ref-yield.R'
+    'plot-data.R'
     'plot-hist.R'
     'populate-ASK.R'
     'populate-catchability.R'

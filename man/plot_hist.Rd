@@ -125,7 +125,11 @@ PlotDynamics(
 )
 }
 \arguments{
-\item{object}{A \link[=hist-class]{hist} or \link[=mse-class]{mse} object.}
+\item{object}{A \link[=hist-class]{hist} or \link[=mse-class]{mse} object. \code{PlotLandings()} and
+\code{PlotDiscards()} also accept a \link[=data-class]{data} object (e.g.
+\code{Hist@Data[[1]][[1]]}), in which case a single observed timeseries is
+plotted per fleet with no ribbon/faceting arguments applied; see
+\link{plot_data} for the full set of \code{data}-class plotting functions.}
 
 \item{byStock}{Logical. Facet by stock? Default (\code{NULL}) facets
 automatically when \code{object} has more than one stock.}
