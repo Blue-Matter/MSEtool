@@ -42,7 +42,8 @@
 #' }
 #'
 #' @export
-PopulateOM <- function(OM, silent = FALSE, 
+PopulateOM <- function(OM, 
+                       silent = FALSE, 
                        force = FALSE, 
                        standardize_effort = TRUE,
                        adjust_fecundity = TRUE) {
