@@ -40,7 +40,7 @@ PopulateCatchObs <- function(Catch, nSim, HistYears, ProjYears) {
     return(Catch)
   
   Catch@CV    <- PopulateObsCV(Catch@CV, nSim)
-  Catch@Error <- PopulateObsError(Catch, nSim, c(HistYears, ProjYears))
+  Catch@Error <- PopulateObsError(Catch, nSim, Years = c(HistYears, ProjYears))
   Catch@Bias  <- PopulateObsBias(Catch, nSim)
   Catch@Ref   <- PopulateObsRef(Catch@Ref, nSim)
   Catch

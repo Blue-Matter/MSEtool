@@ -198,8 +198,8 @@ PopulateObsError <- function(object, nSim, Years) {
     nr <- nSim
   }
   
-  chk_sim  <- nr != nSim
-  chk_year <- nc != nTS
+  chk_sim  <- nr != nSim && nr != 1
+  chk_year <- nc != nTS  && nc != 1
   
   if (chk_sim && chk_year)
     cli::cli_abort(
@@ -219,7 +219,7 @@ PopulateObsError <- function(object, nSim, Years) {
         "i" = "Expected {nTS} year columns; got {nc}.")
     )
   
-  dimnames(object@Error) <- list(Sim = seq_len(nSim), Year = Years)
+  dimnames(object@Error) <- list(Sim = seq_len(nr), Year = Years[seq_len(nc)])
   object@Error
 }
 
