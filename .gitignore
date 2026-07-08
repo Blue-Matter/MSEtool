@@ -11,10 +11,8 @@ src/*.so
 src/*.dll 
  
 
-src-i386/*.*
-src-x64/*.*
-
 *_cache/
 *_files/
 docs
 .positai
+*_snaps/
