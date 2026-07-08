@@ -136,8 +136,6 @@ GenProjData_Catch <- function(x,
       error <- ArraySubsetYear(Obs@Error, DataYear)[x]
       bias  <- Obs@Bias[x]
       
-      
-      
       NewValue[, fl] <- switch(CatchData@Units[fl],
                                Number  = resolveCatchNumber(Real_Catch_Number, fl) * error * bias,
                                Biomass = resolveCatchBiomass(Proj, stocks, x, TSIndex, fl, nArea,

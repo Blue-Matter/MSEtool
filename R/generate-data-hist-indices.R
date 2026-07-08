@@ -144,7 +144,7 @@ GenHistData_Indices <- function(sim, Data, Hist, HistYears, i, stocks, StockName
     })
     
     if (Units=='Number') {
-      real_nom_index <- purrr::map(Real_Pop_Number_Selected,SumOverAge) |>
+      real_nom_index <- purrr::map(Real_Pop_Number_Selected, SumOverAge) |>
         List2Array('Stock') |>
         apply('Year', sum)
       
@@ -158,6 +158,7 @@ GenHistData_Indices <- function(sim, Data, Hist, HistYears, i, stocks, StockName
         abind::adrop(1)
       })
       real_nom_index <- purrr::map2(Real_Pop_Number_Selected, WeightAtAgeList, ArrayMultiply) |>
+        purrr::map(SumOverAge) |>
         List2Array('Stock') |>
         apply('Year', sum)
       

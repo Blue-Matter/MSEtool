@@ -93,7 +93,7 @@ resolveCatchBiomass <- function(Proj, stocks, x, TSIndex, fl, nArea, Real_Catch_
       abind::adrop(c(1, 3), one.d.array = TRUE) |>
       AddDimension("Area") |>
       ExtendAreas(1:nArea)
-    ArrayMultiply(catch_fleet, fleetwght)
+    ArrayMultiply(catch_fleet, fleetwght) |> SumOverAge()
   }) |>
     List2Array("Stock") |>
     sum()

@@ -56,7 +56,6 @@ GenerateHistoricalData <- function(Hist, silent=FALSE) {
   }
   
   # update Index Obs 
-  
   Survey_Efficiency <- purrr::map(SimDataList, \(DataList) {
     purrr::map(DataList, \(Data) {
       purrr::map(Data@Survey@Misc$IndexObs, \(fl) {
@@ -82,20 +81,20 @@ GenerateHistoricalData <- function(Hist, silent=FALSE) {
       IndexObs <- SimDataList[[i]][[st]]@Survey@Misc$IndexObs
       if (!is.null(IndexObs)) {
         for (fl in seq_along(IndexObs)) {
-          Hist@OM@Obs[[st]][[fl]]@Survey <- IndexObs[[fl]]
-          Hist@OM@Obs[[st]][[fl]]@Survey@Efficiency <- unlist(Survey_Efficiency[[st]][[fl]])
+          fl_ind <- match(names(IndexObs)[fl], FleetNames)
+          Hist@OM@Obs[[st]][[fl_ind]]@Survey <- IndexObs[[fl]]
+          Hist@OM@Obs[[st]][[fl_ind]]@Survey@Efficiency <- unlist(Survey_Efficiency[[st]][[fl]])
         }
         Hist@Data[[i]][[st]]@Survey@Misc$IndexObs <- NULL
       }
   
-      
-      
       # CPUE
       IndexObs <- SimDataList[[i]][[st]]@CPUE@Misc$IndexObs
       if (!is.null(IndexObs)) {
         for (fl in seq_along(IndexObs)) {
-          Hist@OM@Obs[[st]][[fl]]@CPUE <- IndexObs[[fl]]
-          Hist@OM@Obs[[st]][[fl]]@CPUE@Efficiency <- unlist(CPUE_Efficiency[[st]][[fl]])
+          fl_ind <- match(names(IndexObs)[fl], FleetNames)
+          Hist@OM@Obs[[st]][[fl_ind]]@CPUE <- IndexObs[[fl]]
+          Hist@OM@Obs[[st]][[fl_ind]]@CPUE@Efficiency <- unlist(CPUE_Efficiency[[st]][[fl]])
           
         }
         Hist@Data[[i]][[st]]@CPUE@Misc$IndexObs <- NULL

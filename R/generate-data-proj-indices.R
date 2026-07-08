@@ -116,6 +116,7 @@ GenProjData_Index <- function(x,
                                    DropDimension(c("Sim", "Year"))
                                })
                                purrr::map2(Real_Pop_Number_Selected, WeightAtAgeList, ArrayMultiply) |>
+                                 purrr::map(sum) |>
                                  List2Array("Stock") |>
                                  sum()
                              },

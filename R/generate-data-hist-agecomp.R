@@ -101,8 +101,14 @@ GenHistData_AgeComp <- function(x, Data, Hist, HistYears, i, stocks, FleetNames,
     catch_n[sim_x,,,,,drop=FALSE] |>
       SumOverArea() |>
       DropDimension('Sim')
-  }) |> List2Array('Stock') |>
-    SumOverStock()
+  })
+  
+  ageclasses <- purrr::map(CatchAtAge, \(st) as.numeric(dimnames(st)$Age))
+ 
+  if (length(CatchAtAge)>1 && ! all(duplicated(ageclasses)[-1])) {
+    CatchAtAge <- align_age_dim(CatchAtAge)
+  }
+  CatchAtAge <- CatchAtAge |> List2Array('Stock') |> SumOverStock()
   
   CatchAtAge <- SubsetYear(CatchAtAge, HistYears)
   
@@ -172,4 +178,28 @@ GenHistData_AgeComp <- function(x, Data, Hist, HistYears, i, stocks, FleetNames,
   CompData@Classes <- AgeClasses
   CompData@Units   <- 'years'
   CompData
+}
+
+align_age_dim <- function(arr_list, dim_name = "Age") {
+  
+  all_ages <- sort(unique(as.numeric(unlist(
+    lapply(arr_list, function(a) dimnames(a)[[dim_name]])
+  ))))
+  all_ages_chr <- as.character(all_ages)
+  
+  lapply(arr_list, function(a) {
+    dn <- dimnames(a)
+    dim_idx <- which(names(dn) == dim_name)
+    new_dim <- dim(a)
+    new_dim[dim_idx] <- length(all_ages_chr)
+    
+    new_dn <- dn
+    new_dn[[dim_idx]] <- all_ages_chr
+    new_arr <- array(0, dim = new_dim, dimnames = new_dn)
+    
+    idx <- vector("list", length(dim(a)))
+    for (i in seq_along(idx)) idx[[i]] <- TRUE  
+    idx[[dim_idx]] <- dn[[dim_idx]] 
+    do.call(`[<-`, c(list(new_arr), idx, list(value = a)))
+  })
 }

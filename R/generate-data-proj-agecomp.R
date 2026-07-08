@@ -107,8 +107,14 @@ GenProjData_AgeComp <- function(x, Proj, DataYear, YearsAll, i, stocks,
     catch_n[sim_x,, TSIndex,,,drop=FALSE] |>
       abind::adrop(drop = c(1, 3)) |>
       SumOverArea()
-  }) |> List2Array('Stock') |>
-    SumOverStock()
+  }) 
+  
+  ageclasses <- purrr::map(CatchAtAge_yr, \(st) as.numeric(dimnames(st)$Age))
+  
+  if (length(CatchAtAge_yr)>1 && ! all(duplicated(ageclasses)[-1])) {
+    CatchAtAge_yr <- align_age_dim(CatchAtAge_yr)
+  }
+  CatchAtAge_yr <- CatchAtAge_yr |> List2Array('Stock') |> SumOverStock()
   
   NewValue <- array(NA_real_,
                     dim      = c(1L, nFleet, nAge),
