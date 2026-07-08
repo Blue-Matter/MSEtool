@@ -327,8 +327,6 @@ CalcPerRecruit_F <- function(apicalF = 0.1, spr_threshold = 0.001, ...) {
     }
   }
   
-  TEMP <<- PRList
-
   # zero-fill all F steps at and beyond the collapse point
   zero_fill <- \(arr) { arr[] <- 0; arr }
   if (collapsed) {
@@ -533,7 +531,8 @@ CalcPerRecruit_F_scalar <- function(apicalF = 0.1,
       SPRF
     }
   )
-  SPRFList         <- SPRFList[SPFrom]
+  if (length(SPRFList)> 1)
+    SPRFList         <- SPRFList[SPFrom]
   names(SPRFList)  <- names(NPRFList)
 
   SPR <- purrr::map2(SPRFList, SPR0List, \(SPRF, SPR0) 
@@ -876,17 +875,13 @@ PrepPerRecruitInputs <- function(StockList, FleetList, SPR0List, Years) {
 
   FleetNames <- names(FleetList[[1]])
 
-  # Seasonal expansion: resolve Years to the full set of seasonal time steps
-  # for each requested calendar year. Always snap to integer calendar years —
-  # passing a decimal time step (e.g. 2025.25) is not meaningful for reference
-  # points, which require a complete calendar year of seasonal parameters.
   M_ref  <- StockList[[1]]@NaturalMortality@MeanAtAge
   all_ts <- as.numeric(dimnames(M_ref)[['Year']])
 
   if (!is.null(all_ts)) {
     nSeason_model <- as.integer(round(length(all_ts) / length(unique(floor(all_ts)))))
     if (nSeason_model > 1L) {
-      # Seasonal model: snap any decimal years to their calendar year and expand
+      
       cal_yrs_req <- unique(floor(Years))
       Years_expanded <- all_ts[floor(all_ts) %in% cal_yrs_req]
       if (length(Years_expanded) == 0L)
@@ -897,14 +892,13 @@ PrepPerRecruitInputs <- function(StockList, FleetList, SPR0List, Years) {
                         "i" = "Snapping to calendar year(s): {.val {cal_yrs_req}}."))
       Years <- Years_expanded
     } else {
-      # Annual model: subset to valid years
+      
       seasonal_ts <- all_ts[floor(all_ts) %in% floor(Years)]
       if (length(seasonal_ts) >= length(Years))
         Years <- seasonal_ts
     }
   }
 
-  # nSeason: number of seasonal time steps per calendar year
   cal_years <- unique(floor(Years))
   nSeason   <- as.integer(length(Years) / length(cal_years))
 
@@ -968,9 +962,7 @@ PrepPerRecruitInputs <- function(StockList, FleetList, SPR0List, Years) {
   
   # SRR quantities needed for MSY recruitment scaling
   # For seasonal models, collapse to annual R0 and SPR0 for the equilibrium
-  # scaling — RelRecFun receives a pre-normalised SPR ratio so SPR0 is only
-  # stored for reference; R0 must be the annual total so that
-  # absolute-equilibrium numbers are on an annual scale.
+  # scaling
   R0SeasonalList <- purrr::map(StockList, \(Stock)
     Stock@SRR@R0 |> ArraySubsetYear(Years)   # [Sim, Year(nSeason)]
   )
@@ -1046,9 +1038,10 @@ PrepPerRecruitInputs <- function(StockList, FleetList, SPR0List, Years) {
       Pars
     })
   }
-
-  RecParsList <- RecParsList[SPFrom]
-  names(RecParsList) <- names(SPFrom)
+  if (length(RecParsList)> 1) {
+    RecParsList <- RecParsList[SPFrom]
+    names(RecParsList) <- names(SPFrom)
+  }
 
   RelRecFunList <- purrr::map(StockList, \(Stock) {
     if (!is.null(Stock@SRR@Model) && inherits(Stock@SRR@Model, 'character')) {
