@@ -974,7 +974,6 @@ setMethod("initialize", "OM", function(.Object, Stock=NULL, Fleet=MSEtool::Gener
 #' @slot OM The `OM` object (without cpars)
 #' @slot Misc A list for additional information
 #' @name Hist-legacy-class
-#' @aliases Hist-class
 #' @author A. Hordyk
 setClass("Hist", representation(
   Data = 'Data',
@@ -996,7 +995,6 @@ setClass("Hist", representation(
 #'
 #'
 #' @name MSE-legacy-class
-#' @aliases MSE-class
 #' @template MSE_template
 #'
 #'
