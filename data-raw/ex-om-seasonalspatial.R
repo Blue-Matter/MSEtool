@@ -5,7 +5,7 @@ SeasonalSpatialOM <- OM(
   Name    = "Seasonal Spatial - Single Fleet",
   nSim    = 8,
   nYear   = 20,
-  pYear   = 30,
+  pYear   = 10,
   Seasons = 12,
   Stock   = SeasonalSpatialExStock,
   Fleet   = DomeExFleet,

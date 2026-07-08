@@ -13,7 +13,7 @@
 #' - **`Name`**: `"Seasonal Spatial - Single Fleet"`.
 #' - **`nSim`**: `8`. Number of stochastic simulations.
 #' - **`nYear`**: `20`. Number of historical years.
-#' - **`pYear`**: `30`. Number of projection years.
+#' - **`pYear`**: `10`. Number of projection years.
 #' - **`Seasons`**: `12`. Monthly time steps within each calendar year.
 #'   Must match `SeasonalSpatialExStock@Ages@Units = "month"`.
 #' - **`Stock`**: [SeasonalSpatialExStock]. A single [stock-class] object.
