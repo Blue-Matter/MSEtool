@@ -164,9 +164,10 @@ GenHistData_Catch <- function(x, Data, Hist, HistYears, i, stocks, FleetNames,
       )
     }
     
+    error_sim <- min(x, nrow(CatchObs@Error))
     Value[, fl] <- real_catch *
       CatchObs@Bias[x] *
-      ArraySubsetYear(CatchObs@Error, HistYears)[x, ]
+      ArraySubsetYear(CatchObs@Error, HistYears)[error_sim, ]
   }
   
   CatchData@Value <- Value
