@@ -18,9 +18,10 @@ PlotNumber(
   probs = c(0.05, 0.95),
   nsim = 0,
   Years = NULL,
-  free_y = TRUE,
+  free_y = NULL,
   IncHist = TRUE,
-  byMP = FALSE
+  byMP = FALSE,
+  Season = NULL
 )
 
 PlotBiomass(
@@ -29,9 +30,12 @@ PlotBiomass(
   probs = c(0.05, 0.95),
   nsim = 0,
   Years = NULL,
-  free_y = TRUE,
+  free_y = NULL,
   IncHist = TRUE,
-  byMP = FALSE
+  byMP = FALSE,
+  relative = c("none", "B0", "BMSY"),
+  type = c("Equilibrium", "Dynamic"),
+  Season = NULL
 )
 
 PlotSBiomass(
@@ -41,9 +45,12 @@ PlotSBiomass(
   probs = c(0.05, 0.95),
   nsim = 0,
   Years = NULL,
-  free_y = TRUE,
+  free_y = NULL,
   IncHist = TRUE,
-  byMP = FALSE
+  byMP = FALSE,
+  relative = c("none", "B0", "BMSY"),
+  type = c("Equilibrium", "Dynamic"),
+  Season = NULL
 )
 
 PlotSProduction(
@@ -53,9 +60,12 @@ PlotSProduction(
   probs = c(0.05, 0.95),
   nsim = 0,
   Years = NULL,
-  free_y = TRUE,
+  free_y = NULL,
   IncHist = TRUE,
-  byMP = FALSE
+  byMP = FALSE,
+  relative = c("none", "B0", "BMSY"),
+  type = c("Equilibrium", "Dynamic"),
+  Season = NULL
 )
 
 PlotLandings(
@@ -65,9 +75,10 @@ PlotLandings(
   probs = c(0.05, 0.95),
   nsim = 0,
   Years = NULL,
-  free_y = TRUE,
+  free_y = NULL,
   IncHist = TRUE,
-  byMP = FALSE
+  byMP = FALSE,
+  AggregateYear = FALSE
 )
 
 PlotDiscards(
@@ -77,9 +88,10 @@ PlotDiscards(
   probs = c(0.05, 0.95),
   nsim = 0,
   Years = NULL,
-  free_y = TRUE,
+  free_y = NULL,
   IncHist = TRUE,
-  byMP = FALSE
+  byMP = FALSE,
+  AggregateYear = FALSE
 )
 
 PlotRemovals(
@@ -89,9 +101,10 @@ PlotRemovals(
   probs = c(0.05, 0.95),
   nsim = 0,
   Years = NULL,
-  free_y = TRUE,
+  free_y = NULL,
   IncHist = TRUE,
-  byMP = FALSE
+  byMP = FALSE,
+  AggregateYear = FALSE
 )
 
 PlotDynamics(
@@ -103,8 +116,12 @@ PlotDynamics(
   probs = c(0.05, 0.95),
   nsim = 0,
   Years = NULL,
-  free_y = TRUE,
-  IncHist = TRUE
+  free_y = NULL,
+  IncHist = TRUE,
+  relative = c("none", "B0", "BMSY"),
+  type = c("Equilibrium", "Dynamic"),
+  Season = NULL,
+  AggregateYear = FALSE
 )
 }
 \arguments{
@@ -124,7 +141,10 @@ overlay as thin lines, in addition to the median/ribbon. Default \code{0}
 years before plotting.}
 
 \item{free_y}{Logical. When faceting by stock and/or fleet, let each
-panel's y-axis scale independently. Default \code{TRUE}.}
+panel's y-axis scale independently. Default (\code{NULL}) is \code{TRUE}, except
+for \code{PlotBiomass()}/\code{PlotSBiomass()}/\code{PlotSProduction()} with
+\code{relative != "none"}, where it defaults to \code{FALSE} (ratios are already
+on a comparable scale across stocks).}
 
 \item{IncHist}{Logical. For \link[=mse-class]{mse} objects, include the historical
 period? \code{FALSE} is a shortcut for subsetting \code{Years} to the projection
@@ -136,6 +156,27 @@ by MP instead of coloring by MP. Only takes effect when \code{byStock} and
 \code{byFleet} are not \emph{both} already faceting (i.e. there is a free facet
 dimension); otherwise MP falls back to color. Default \code{FALSE}.}
 
+\item{Season}{Integer. For seasonal models (\code{OM@Seasons > 1}), restrict
+\code{PlotNumber()}/\code{PlotBiomass()}/\code{PlotSBiomass()}/\code{PlotSProduction()} to a
+single season (1 = the first timestep of each year), giving one
+snapshot per year instead of the full sub-annual sawtooth. These are
+point-in-time quantities, so no season should be summed/averaged to get
+an annual value the way \code{Landings()}/\code{Discards()} can. Default \code{NULL}
+(no filtering). Ignored for non-seasonal models.}
+
+\item{relative}{Character. For \code{PlotBiomass()}, \code{PlotSBiomass()}, and
+\code{PlotSProduction()}: plot absolute values (\code{"none"}, default), or
+relative to unfished (\code{"B0"}, via \code{\link[=B_B0]{B_B0()}}/\code{\link[=SB_SB0]{SB_SB0()}}/\code{\link[=SP_SP0]{SP_SP0()}}) or to
+the MSY reference point (\code{"BMSY"}, via
+\code{\link[=B_BMSY]{B_BMSY()}}/\code{\link[=SB_SBMSY]{SB_SBMSY()}}/\code{\link[=SP_SPMSY]{SP_SPMSY()}}). When \code{relative != "none"} and
+there is more than one stock, \code{byStock = FALSE} is not allowed (ratios
+cannot be meaningfully summed across stocks) and faceting by stock is
+used instead, with a message.}
+
+\item{type}{Character. One of \code{"Equilibrium"} or \code{"Dynamic"}. Which
+unfished baseline to use when \code{relative = "B0"}; see \code{\link[=B_B0]{B_B0()}}. Ignored
+otherwise.}
+
 \item{byFemale}{Logical. See Details. Only applies to
 \code{PlotSBiomass()}/\code{PlotSProduction()}.}
 
@@ -143,6 +184,12 @@ dimension); otherwise MP falls back to color. Default \code{FALSE}.}
 automatically when \code{object} has more than one fleet, except in
 \code{PlotDynamics()}/\code{plot()} where it defaults to \code{FALSE}. Only applies to
 \code{PlotLandings()}/\code{PlotDiscards()}/\code{PlotRemovals()}.}
+
+\item{AggregateYear}{Logical. For seasonal models, sum
+\code{PlotLandings()}/\code{PlotDiscards()}/\code{PlotRemovals()} sub-annual values
+into whole-year totals, unlike \code{Season} above (these are flows, so
+summing across a year is valid, unlike the point-in-time state
+variables). Default \code{FALSE}. Ignored for non-seasonal models.}
 }
 \value{
 A \code{ggplot} object (a \code{patchwork} object for \code{PlotDynamics()}).
@@ -191,6 +238,10 @@ contribution to the total. If a complex has more than one stock and no
 single stock can be unambiguously identified as female, faceting by
 stock is used instead and a message is printed.
 
+\code{PlotBiomass()}, \code{PlotSBiomass()}, and \code{PlotSProduction()} can plot values
+relative to unfished or MSY reference points instead of absolute values;
+see \code{relative} and \code{type} above.
+
 \code{PlotDynamics()} arranges \code{PlotNumber()}, \code{PlotBiomass()},
 \code{PlotSBiomass()}, \code{PlotSProduction()}, \code{PlotLandings()}, and
 \code{PlotDiscards()} into a single figure with \code{\link[patchwork:wrap_plots]{patchwork::wrap_plots()}}.
@@ -209,6 +260,8 @@ MSE <- Project(Hist, ExampleMPs())
 PlotBiomass(MSE)
 PlotBiomass(MSE, IncHist = FALSE)
 PlotBiomass(MSE, byMP = TRUE)
+PlotBiomass(MSE, relative = 'BMSY')
+PlotSBiomass(MSE, relative = 'B0', type = 'Dynamic')
 PlotRemovals(MSE)
 PlotDynamics(MSE)
 
@@ -222,5 +275,5 @@ PlotDynamics(MHist)
 }
 \seealso{
 \code{\link[=Number]{Number()}}, \code{\link[=Biomass]{Biomass()}}, \code{\link[=SBiomass]{SBiomass()}}, \code{\link[=SProduction]{SProduction()}},
-\code{\link[=Landings]{Landings()}}, \code{\link[=Discards]{Discards()}}, \code{\link[=Removals]{Removals()}}
+\code{\link[=Landings]{Landings()}}, \code{\link[=Discards]{Discards()}}, \code{\link[=Removals]{Removals()}}, \code{\link[=B_B0]{B_B0()}}, \code{\link[=B_BMSY]{B_BMSY()}}
 }

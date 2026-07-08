@@ -25,11 +25,37 @@
 #' @param Years Optional numeric vector. Subset the time series to these
 #'   years before plotting.
 #' @param free_y Logical. When faceting by stock and/or fleet, let each
-#'   panel's y-axis scale independently. Default `TRUE`.
+#'   panel's y-axis scale independently. Default (`NULL`) is `TRUE`, except
+#'   for `PlotBiomass()`/`PlotSBiomass()`/`PlotSProduction()` with
+#'   `relative != "none"`, where it defaults to `FALSE` (ratios are already
+#'   on a comparable scale across stocks).
 #' @param IncHist Logical. For [mse-class] objects, include the historical
 #'   period? `FALSE` is a shortcut for subsetting `Years` to the projection
 #'   period only, while still starting each MP's line from the last
 #'   historical value. Default `TRUE`. No effect for [hist-class] objects.
+#' @param relative Character. For `PlotBiomass()`, `PlotSBiomass()`, and
+#'   `PlotSProduction()`: plot absolute values (`"none"`, default), or
+#'   relative to unfished (`"B0"`, via [B_B0()]/[SB_SB0()]/[SP_SP0()]) or to
+#'   the MSY reference point (`"BMSY"`, via
+#'   [B_BMSY()]/[SB_SBMSY()]/[SP_SPMSY()]). When `relative != "none"` and
+#'   there is more than one stock, `byStock = FALSE` is not allowed (ratios
+#'   cannot be meaningfully summed across stocks) and faceting by stock is
+#'   used instead, with a message.
+#' @param type Character. One of `"Equilibrium"` or `"Dynamic"`. Which
+#'   unfished baseline to use when `relative = "B0"`; see [B_B0()]. Ignored
+#'   otherwise.
+#' @param Season Integer. For seasonal models (`OM@Seasons > 1`), restrict
+#'   `PlotNumber()`/`PlotBiomass()`/`PlotSBiomass()`/`PlotSProduction()` to a
+#'   single season (1 = the first timestep of each year), giving one
+#'   snapshot per year instead of the full sub-annual sawtooth. These are
+#'   point-in-time quantities, so no season should be summed/averaged to get
+#'   an annual value the way `Landings()`/`Discards()` can. Default `NULL`
+#'   (no filtering). Ignored for non-seasonal models.
+#' @param AggregateYear Logical. For seasonal models, sum
+#'   `PlotLandings()`/`PlotDiscards()`/`PlotRemovals()` sub-annual values
+#'   into whole-year totals, unlike `Season` above (these are flows, so
+#'   summing across a year is valid, unlike the point-in-time state
+#'   variables). Default `FALSE`. Ignored for non-seasonal models.
 #'
 #' @details
 #' Each function extracts the relevant time series with the corresponding
@@ -70,6 +96,10 @@
 #' single stock can be unambiguously identified as female, faceting by
 #' stock is used instead and a message is printed.
 #'
+#' `PlotBiomass()`, `PlotSBiomass()`, and `PlotSProduction()` can plot values
+#' relative to unfished or MSY reference points instead of absolute values;
+#' see `relative` and `type` above.
+#'
 #' `PlotDynamics()` arranges `PlotNumber()`, `PlotBiomass()`,
 #' `PlotSBiomass()`, `PlotSProduction()`, `PlotLandings()`, and
 #' `PlotDiscards()` into a single figure with [patchwork::wrap_plots()].
@@ -90,6 +120,8 @@
 #' PlotBiomass(MSE)
 #' PlotBiomass(MSE, IncHist = FALSE)
 #' PlotBiomass(MSE, byMP = TRUE)
+#' PlotBiomass(MSE, relative = 'BMSY')
+#' PlotSBiomass(MSE, relative = 'B0', type = 'Dynamic')
 #' PlotRemovals(MSE)
 #' PlotDynamics(MSE)
 #'
@@ -102,7 +134,7 @@
 #'
 #' @name plot_hist
 #' @seealso [Number()], [Biomass()], [SBiomass()], [SProduction()],
-#'   [Landings()], [Discards()], [Removals()]
+#'   [Landings()], [Discards()], [Removals()], [B_B0()], [B_BMSY()]
 #' @include class-hist.R
 #' @include class-mse.R
 NULL
@@ -114,15 +146,18 @@ PlotNumber <- function(object,
                        probs   = c(0.05, 0.95),
                        nsim    = 0,
                        Years   = NULL,
-                       free_y  = TRUE,
+                       free_y  = NULL,
                        IncHist = TRUE,
-                       byMP    = FALSE) {
+                       byMP    = FALSE,
+                       Season  = NULL) {
   CheckClass(object, c('hist', 'mse'), 'object')
   if (is.null(byStock)) byStock <- nStock(object) > 1
+  if (is.null(free_y))  free_y  <- TRUE
 
   df <- Number(object, df = TRUE) |>
     .bridge_mp_gap() |>
     .drop_historical(IncHist) |>
+    .filter_season(Season, object) |>
     .filter_years(Years)
   if (!byStock)
     df <- .sum_over_stock(df)
@@ -135,25 +170,48 @@ PlotNumber <- function(object,
 #' @rdname plot_hist
 #' @export
 PlotBiomass <- function(object,
-                        byStock = NULL,
-                        probs   = c(0.05, 0.95),
-                        nsim    = 0,
-                        Years   = NULL,
-                        free_y  = TRUE,
-                        IncHist = TRUE,
-                        byMP    = FALSE) {
+                        byStock  = NULL,
+                        probs    = c(0.05, 0.95),
+                        nsim     = 0,
+                        Years    = NULL,
+                        free_y   = NULL,
+                        IncHist  = TRUE,
+                        byMP     = FALSE,
+                        relative = c('none', 'B0', 'BMSY'),
+                        type     = c('Equilibrium', 'Dynamic'),
+                        Season   = NULL) {
+  relative <- match.arg(relative)
+  type     <- match.arg(type)
   CheckClass(object, c('hist', 'mse'), 'object')
   if (is.null(byStock)) byStock <- nStock(object) > 1
+  if (is.null(free_y))  free_y  <- relative == 'none'
 
-  df <- Biomass(object, df = TRUE) |>
+  if (relative != 'none' && !byStock && nStock(object) > 1) {
+    cli::cli_alert_info(
+      "Relative time series (`relative = '{relative}'`) cannot be meaningfully summed across stocks; faceting by stock instead."
+    )
+    byStock <- TRUE
+  }
+
+  if (relative == 'none') {
+    df <- Biomass(object, df = TRUE)
+  } else {
+    extractArgs <- list(object = object, df = TRUE)
+    if (relative == 'B0') extractArgs$type <- type
+    df <- do.call(.relative_fn_name('Biomass', relative), extractArgs)
+  }
+  ylab <- if (relative == 'none') 'Biomass' else .relative_ylab('Biomass', relative)
+
+  df <- df |>
     .bridge_mp_gap() |>
     .drop_historical(IncHist) |>
+    .filter_season(Season, object) |>
     .filter_years(Years)
   if (!byStock)
     df <- .sum_over_stock(df)
 
   .build_ts_plot(df, byStock = byStock, byFleet = FALSE,
-                ylab = 'Biomass', probs = probs, nsim = nsim, free_y = free_y,
+                ylab = ylab, probs = probs, nsim = nsim, free_y = free_y,
                 colorVar = 'MP', byMP = byMP)
 }
 
@@ -165,13 +223,20 @@ PlotSBiomass <- function(object,
                          probs    = c(0.05, 0.95),
                          nsim     = 0,
                          Years    = NULL,
-                         free_y   = TRUE,
+                         free_y   = NULL,
                          IncHist  = TRUE,
-                         byMP     = FALSE) {
+                         byMP     = FALSE,
+                         relative = c('none', 'B0', 'BMSY'),
+                         type     = c('Equilibrium', 'Dynamic'),
+                         Season   = NULL) {
+  relative <- match.arg(relative)
+  type     <- match.arg(type)
+  if (is.null(free_y)) free_y <- relative == 'none'
   .plot_spawning(object, slot_name = 'SBiomass', ylab = 'Spawning Biomass',
                 byStock = byStock, byFemale = byFemale, probs = probs,
                 nsim = nsim, Years = Years, free_y = free_y,
-                IncHist = IncHist, byMP = byMP)
+                IncHist = IncHist, byMP = byMP,
+                relative = relative, type = type, Season = Season)
 }
 
 #' @rdname plot_hist
@@ -182,66 +247,83 @@ PlotSProduction <- function(object,
                             probs    = c(0.05, 0.95),
                             nsim     = 0,
                             Years    = NULL,
-                            free_y   = TRUE,
+                            free_y   = NULL,
                             IncHist  = TRUE,
-                            byMP     = FALSE) {
+                            byMP     = FALSE,
+                            relative = c('none', 'B0', 'BMSY'),
+                            type     = c('Equilibrium', 'Dynamic'),
+                            Season   = NULL) {
+  relative <- match.arg(relative)
+  type     <- match.arg(type)
+  if (is.null(free_y)) free_y <- relative == 'none'
   .plot_spawning(object, slot_name = 'SProduction', ylab = 'Spawning Production',
                 byStock = byStock, byFemale = byFemale, probs = probs,
                 nsim = nsim, Years = Years, free_y = free_y,
-                IncHist = IncHist, byMP = byMP)
+                IncHist = IncHist, byMP = byMP,
+                relative = relative, type = type, Season = Season)
 }
 
 #' @rdname plot_hist
 #' @export
 PlotLandings <- function(object,
-                         byStock = NULL,
-                         byFleet = NULL,
-                         probs   = c(0.05, 0.95),
-                         nsim    = 0,
-                         Years   = NULL,
-                         free_y  = TRUE,
-                         IncHist = TRUE,
-                         byMP    = FALSE) {
+                         byStock       = NULL,
+                         byFleet       = NULL,
+                         probs         = c(0.05, 0.95),
+                         nsim          = 0,
+                         Years         = NULL,
+                         free_y        = NULL,
+                         IncHist       = TRUE,
+                         byMP          = FALSE,
+                         AggregateYear = FALSE) {
+  if (is.null(free_y)) free_y <- TRUE
   .plot_catch(object, slot_name = 'Landings', ylab = 'Landings',
              byStock = byStock, byFleet = byFleet, probs = probs,
              nsim = nsim, Years = Years, free_y = free_y,
-             IncHist = IncHist, byMP = byMP)
+             IncHist = IncHist, byMP = byMP, AggregateYear = AggregateYear)
 }
 
 #' @rdname plot_hist
 #' @export
 PlotDiscards <- function(object,
-                         byStock = NULL,
-                         byFleet = NULL,
-                         probs   = c(0.05, 0.95),
-                         nsim    = 0,
-                         Years   = NULL,
-                         free_y  = TRUE,
-                         IncHist = TRUE,
-                         byMP    = FALSE) {
+                         byStock       = NULL,
+                         byFleet       = NULL,
+                         probs         = c(0.05, 0.95),
+                         nsim          = 0,
+                         Years         = NULL,
+                         free_y        = NULL,
+                         IncHist       = TRUE,
+                         byMP          = FALSE,
+                         AggregateYear = FALSE) {
+  if (is.null(free_y)) free_y <- TRUE
   .plot_catch(object, slot_name = 'Discards', ylab = 'Discards',
              byStock = byStock, byFleet = byFleet, probs = probs,
              nsim = nsim, Years = Years, free_y = free_y,
-             IncHist = IncHist, byMP = byMP)
+             IncHist = IncHist, byMP = byMP, AggregateYear = AggregateYear)
 }
 
 #' @rdname plot_hist
 #' @export
 PlotRemovals <- function(object,
-                         byStock = NULL,
-                         byFleet = NULL,
-                         probs   = c(0.05, 0.95),
-                         nsim    = 0,
-                         Years   = NULL,
-                         free_y  = TRUE,
-                         IncHist = TRUE,
-                         byMP    = FALSE) {
+                         byStock       = NULL,
+                         byFleet       = NULL,
+                         probs         = c(0.05, 0.95),
+                         nsim          = 0,
+                         Years         = NULL,
+                         free_y        = NULL,
+                         IncHist       = TRUE,
+                         byMP          = FALSE,
+                         AggregateYear = FALSE) {
   CheckClass(object, c('hist', 'mse'), 'object')
   if (is.null(byStock)) byStock <- nStock(object) > 1
   if (is.null(byFleet)) byFleet <- nFleet(object) > 1
+  if (is.null(free_y))  free_y  <- TRUE
 
-  L <- Landings(object, df = TRUE, byFleet = TRUE) |> .bridge_mp_gap()
-  D <- Discards(object, df = TRUE, byFleet = TRUE) |> .bridge_mp_gap()
+  L <- Landings(object, df = TRUE, byFleet = TRUE) |>
+    .aggregate_year(AggregateYear, object) |>
+    .bridge_mp_gap()
+  D <- Discards(object, df = TRUE, byFleet = TRUE) |>
+    .aggregate_year(AggregateYear, object) |>
+    .bridge_mp_gap()
   df <- dplyr::bind_rows(L, D) |>
     .drop_historical(IncHist) |>
     .filter_years(Years)
@@ -263,27 +345,36 @@ PlotRemovals <- function(object,
 #' @rdname plot_hist
 #' @export
 PlotDynamics <- function(object,
-                         byStock  = NULL,
-                         byFleet  = FALSE,
-                         byFemale = TRUE,
-                         byMP     = FALSE,
-                         probs    = c(0.05, 0.95),
-                         nsim     = 0,
-                         Years    = NULL,
-                         free_y   = TRUE,
-                         IncHist  = TRUE) {
+                         byStock       = NULL,
+                         byFleet       = FALSE,
+                         byFemale      = TRUE,
+                         byMP          = FALSE,
+                         probs         = c(0.05, 0.95),
+                         nsim          = 0,
+                         Years         = NULL,
+                         free_y        = NULL,
+                         IncHist       = TRUE,
+                         relative      = c('none', 'B0', 'BMSY'),
+                         type          = c('Equilibrium', 'Dynamic'),
+                         Season        = NULL,
+                         AggregateYear = FALSE) {
+  relative <- match.arg(relative)
+  type     <- match.arg(type)
   CheckClass(object, c('hist', 'mse'), 'object')
 
   common <- list(object = object, byStock = byStock, byMP = byMP, probs = probs,
                  nsim = nsim, Years = Years, free_y = free_y, IncHist = IncHist)
+  relArgs    <- list(relative = relative, type = type)
+  seasonArgs <- list(Season = Season)
+  aggArgs    <- list(byFleet = byFleet, AggregateYear = AggregateYear)
 
   panels <- list(
-    do.call(PlotNumber,      common),
-    do.call(PlotBiomass,     common),
-    do.call(PlotSBiomass,    c(common, list(byFemale = byFemale))),
-    do.call(PlotSProduction, c(common, list(byFemale = byFemale))),
-    do.call(PlotLandings,    c(common, list(byFleet = byFleet))),
-    do.call(PlotDiscards,    c(common, list(byFleet = byFleet)))
+    do.call(PlotNumber,      c(common, seasonArgs)),
+    do.call(PlotBiomass,     c(common, relArgs, seasonArgs)),
+    do.call(PlotSBiomass,    c(common, relArgs, seasonArgs, list(byFemale = byFemale))),
+    do.call(PlotSProduction, c(common, relArgs, seasonArgs, list(byFemale = byFemale))),
+    do.call(PlotLandings,    c(common, aggArgs)),
+    do.call(PlotDiscards,    c(common, aggArgs))
   )
 
   patchwork::wrap_plots(panels, ncol = 2) +
@@ -310,6 +401,49 @@ setMethod('plot', 'mse', function(x, y, ...) {
   if (IncHist || !'MP' %in% colnames(df))
     return(df)
   dplyr::filter(df, .data$MP != 'Historical')
+}
+
+# Keep only the rows belonging to one season of a seasonal model. Season is
+# determined positionally within the full ordered Year sequence for the
+# object (season 1 = the first timestep, then cycling every `OM@Seasons`
+# steps), not from the decimal fraction of Year directly -- leap years
+# shift that fraction slightly from year to year even for the same season.
+# No-op for non-seasonal models (`OM@Seasons` <= 1) or when Season = NULL.
+.filter_season <- function(df, Season, object) {
+  if (is.null(Season))
+    return(df)
+
+  nSeason <- object@OM@Seasons
+  if (is.null(nSeason) || nSeason <= 1)
+    return(df)
+
+  all_years  <- Years(object)
+  season_idx <- ((seq_along(all_years) - 1) %% nSeason) + 1
+  keep_years <- all_years[season_idx == Season]
+
+  dplyr::filter(df, .data$Year %in% keep_years)
+}
+
+# Sum sub-annual (seasonal) rows into whole-year totals -- valid for flow
+# variables (Landings/Discards) unlike the snapshot state variables handled
+# by `.filter_season()`. Must run *before* `.bridge_mp_gap()`, otherwise the
+# synthetic boundary bridge row would be double-counted in the sum. No-op
+# for non-seasonal models or AggregateYear = FALSE.
+.aggregate_year <- function(df, AggregateYear, object) {
+  if (!isTRUE(AggregateYear))
+    return(df)
+
+  nSeason <- object@OM@Seasons
+  if (is.null(nSeason) || nSeason <= 1)
+    return(df)
+
+  df$Year <- floor(df$Year)
+
+  cnames     <- colnames(df)
+  group_vars <- cnames[!cnames %in% 'Value']
+  df |>
+    dplyr::group_by(dplyr::across(dplyr::all_of(group_vars))) |>
+    dplyr::summarise(Value = sum(.data$Value), .groups = 'drop')
 }
 
 .sum_over_stock <- function(df) {
@@ -358,13 +492,31 @@ setMethod('plot', 'mse', function(x, y, ...) {
 }
 
 .plot_spawning <- function(object, slot_name, ylab, byStock, byFemale,
-                          probs, nsim, Years, free_y, IncHist, byMP) {
+                          probs, nsim, Years, free_y, IncHist, byMP,
+                          relative, type, Season) {
   CheckClass(object, c('hist', 'mse'), 'object')
   if (is.null(byStock)) byStock <- nStock(object) > 1
 
-  df <- do.call(slot_name, list(object = object, df = TRUE)) |>
+  if (relative != 'none' && !byStock && nStock(object) > 1) {
+    cli::cli_alert_info(
+      "Relative time series (`relative = '{relative}'`) cannot be meaningfully summed across stocks; faceting by stock instead."
+    )
+    byStock <- TRUE
+  }
+
+  if (relative == 'none') {
+    df <- do.call(slot_name, list(object = object, df = TRUE))
+  } else {
+    extractArgs <- list(object = object, df = TRUE)
+    if (relative == 'B0') extractArgs$type <- type
+    df <- do.call(.relative_fn_name(slot_name, relative), extractArgs)
+  }
+  ylab <- if (relative == 'none') ylab else .relative_ylab(ylab, relative)
+
+  df <- df |>
     .bridge_mp_gap() |>
     .drop_historical(IncHist) |>
+    .filter_season(Season, object) |>
     .filter_years(Years)
 
   if (!byStock) {
@@ -391,12 +543,13 @@ setMethod('plot', 'mse', function(x, y, ...) {
 }
 
 .plot_catch <- function(object, slot_name, ylab, byStock, byFleet,
-                       probs, nsim, Years, free_y, IncHist, byMP) {
+                       probs, nsim, Years, free_y, IncHist, byMP, AggregateYear) {
   CheckClass(object, c('hist', 'mse'), 'object')
   if (is.null(byStock)) byStock <- nStock(object) > 1
   if (is.null(byFleet)) byFleet <- nFleet(object) > 1
 
   df <- do.call(slot_name, list(object = object, df = TRUE, byFleet = TRUE)) |>
+    .aggregate_year(AggregateYear, object) |>
     .bridge_mp_gap() |>
     .drop_historical(IncHist) |>
     .filter_years(Years)
@@ -466,6 +619,26 @@ setMethod('plot', 'mse', function(x, y, ...) {
     labels[frac] <- format(lubridate::date_decimal(breaks[frac]), '%Y-%m')
 
   labels
+}
+
+# Map a base variable ('Biomass'/'SBiomass'/'SProduction') and a `relative`
+# choice to the corresponding relative_ref extractor function name.
+.relative_fn_name <- function(slot_name, relative) {
+  switch(slot_name,
+    Biomass     = if (relative == 'B0') 'B_B0'   else 'B_BMSY',
+    SBiomass    = if (relative == 'B0') 'SB_SB0'  else 'SB_SBMSY',
+    SProduction = if (relative == 'B0') 'SP_SP0'  else 'SP_SPMSY'
+  )
+}
+
+.relative_ylab <- function(ylab, relative) {
+  abbr <- switch(ylab,
+    'Biomass'             = 'B',
+    'Spawning Biomass'    = 'SB',
+    'Spawning Production' = 'SP',
+    ylab
+  )
+  if (relative == 'B0') paste0(abbr, '/', abbr, '0') else paste0(abbr, '/', abbr, 'MSY')
 }
 
 .gg_hue_pal <- function(n) {
