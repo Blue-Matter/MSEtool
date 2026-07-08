@@ -10,7 +10,7 @@ An \link[=om-class]{om} object with the following slots populated:
 \item \strong{\code{Name}}: \code{"Seasonal Spatial - Single Fleet"}.
 \item \strong{\code{nSim}}: \code{8}. Number of stochastic simulations.
 \item \strong{\code{nYear}}: \code{20}. Number of historical years.
-\item \strong{\code{pYear}}: \code{30}. Number of projection years.
+\item \strong{\code{pYear}}: \code{10}. Number of projection years.
 \item \strong{\code{Seasons}}: \code{12}. Monthly time steps within each calendar year.
 Must match \code{SeasonalSpatialExStock@Ages@Units = "month"}.
 \item \strong{\code{Stock}}: \link{SeasonalSpatialExStock}. A single \link[=stock-class]{stock} object.
