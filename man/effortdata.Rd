@@ -72,8 +72,10 @@ from the operating model history.
 Other data:
 \code{\link[=CatchData]{CatchData()}},
 \code{\link[=CompData]{CompData()}},
+\code{\link[=IndicesData]{IndicesData()}},
 \code{\link{catchdata-class}},
 \code{\link{compdata-class}},
-\code{\link{effortdata-class}}
+\code{\link{effortdata-class}},
+\code{\link{indicesdata-class}}
 }
 \concept{data}

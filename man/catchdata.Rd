@@ -80,8 +80,10 @@ cd <- CatchData(Name  = fleets,
 Other data:
 \code{\link[=CompData]{CompData()}},
 \code{\link[=EffortData]{EffortData()}},
+\code{\link[=IndicesData]{IndicesData()}},
 \code{\link{catchdata-class}},
 \code{\link{compdata-class}},
-\code{\link{effortdata-class}}
+\code{\link{effortdata-class}},
+\code{\link{indicesdata-class}}
 }
 \concept{data}

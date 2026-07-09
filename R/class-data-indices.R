@@ -3,33 +3,35 @@
 #' Stores abundance or biomass index observations from fishery-dependent
 #' (CPUE) or fishery-independent (Survey) sources, including observation
 #' uncertainty, reference values, timing, and selectivity mapping. Used in
-#' the `CPUE` and `Survey` slots of a [data-class] object.
+#' the `CPUE` and `Survey` slots of a [data-class] object. Objects are
+#' typically created via [IndicesData()], which documents all parameters in
+#' detail.
 #'
-#' @slot Name Optional character string. Name of the index.
-#' @slot Value Numeric array of observed index values, with dimensions
-#'   `[nYear, nIndex]`, where `nYear` represents the total number of time steps.
-#' @slot CV Numeric array of coefficients of variation (CVs) for the index
-#'   observations, matching the dimensions of `Value`.
-#' @slot Units Optional character string. Units of the index
-#'   (e.g., `"kg/trip"`, `"numbers/tow"`).
-#' @slot Ref Numeric vector of length `nIndex` giving a reference value for
-#'   each index (e.g., a historical mean or target level).
-#' @slot RefCV Numeric array of CVs for the reference values, matching the
-#'   dimensions of `Ref`.
-#' @slot Timing Numeric vector of length `nIndex` giving the within-year
-#'   timing of each observation as a fraction of the year (0–1).
+#' @slot Name `character` or `NULL`. Name of the index. See [IndicesData()].
+#' @slot Value `array` or `NULL`. Observed index values with dimensions
+#'   `[nYear x nIndex]`. See [IndicesData()].
+#' @slot CV `array` or `NULL`. Coefficients of variation for the index
+#'   observations, matching the dimensions of `Value`. See [IndicesData()].
+#' @slot Units `character` or `NULL`. Units of the index (e.g., `"kg/trip"`,
+#'   `"numbers/tow"`). See [IndicesData()].
+#' @slot Ref `numeric` or `NULL`. Reference value for each index (e.g., a
+#'   historical mean or target level). See [IndicesData()].
+#' @slot RefCV `array` or `NULL`. Coefficients of variation for the reference
+#'   values, matching the dimensions of `Ref`. See [IndicesData()].
+#' @slot Timing `numeric`. Within-year timing of each observation as a
+#'   fraction of the year (0-1). See [IndicesData()].
 #' @slot Selectivity An array or character specification mapping each index
 #'   to a fleet selectivity or defining an independent selectivity curve.
+#'   See [IndicesData()].
 #' @slot Misc A named list for any additional index-level metadata.
 #'
-#' `IndicesData()` creates a new `indicesdata` object. 
-#' 
-#' @return `IndicesData()` returns a `indicesdata` object.
-#' 
-#' @seealso [data-class], [Data()]
+#' @seealso [IndicesData()] for the constructor and full parameter
+#'   documentation. [data-class] for the enclosing data object.
+#'
+#' @family data
+#'
 #' @include class-unions.R
 #' @name indicesdata-class
-#' @export
 setClass(
   "indicesdata",
   slots = c(
@@ -44,27 +46,3 @@ setClass(
     Misc        = "list"
   )
 )
-
-
-IndicesData <- function(Name = NULL,
-                        Value = NULL,
-                        CV = NULL, 
-                        Units = NULL, 
-                        Ref = NULL,
-                        RefCV = NULL, 
-                        Timing = 0,
-                        Selectivity = NULL,
-                        Misc = list()) {
-  obj <- new('indicesdata')
-  obj@Name <- Name
-  obj@Value <- Value
-  obj@CV <- CV
-  obj@Units <- Units
-  obj@Ref <- Ref
-  obj@RefCV <- RefCV
-  obj@Timing <- Timing
-  obj@Selectivity <- Selectivity
-  obj@Misc <- Misc
-  obj
-  
-}

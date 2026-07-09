@@ -53,5 +53,5 @@ LastHistYearInd <- function(Data) {
 #'
 #' @export
 ProjectionYear <- function(Data) {
-  length(Data@Years[Data@Years > Data@YearLH]) + 1
+  length(Data@Years[Data@Years >= Data@YearLH + 1])
 }

@@ -209,8 +209,8 @@ GenerateHistoricalData_Sim <- function(sim,
     if (is.null(Data@Seasons)) 
       Data@Seasons <- Hist@OM@Seasons
     
-    if (is.null(Data@YearLH)) 
-      Data@YearLH <- Data@Years[length(Data@Years)]
+    if (is.null(Data@YearLH))
+      Data@YearLH <- floor(Data@Years[length(Data@Years)])
     
     # Add Pop Dyn if specified 
     Data <- AddPopDyn(Data, Hist, sim)

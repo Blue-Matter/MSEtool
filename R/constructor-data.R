@@ -32,8 +32,10 @@
 #' @param Latitude Optional numeric. Latitude of the stock.
 #' @param Longitude Optional numeric. Longitude of the stock.
 #' @param Years Vector of calendar years covered by the data. **Required**
-#' @param YearLH The last historical year; separates the
-#'   historical period from the projection period. Defaults to `max(Years)`.
+#' @param YearLH The last historical calendar year; always a whole integer,
+#'   even when `Seasons > 1` and `Years` holds sub-annual decimal steps.
+#'   Separates the historical period from the projection period. Defaults to
+#'   `floor(max(Years))`.
 #' @param Seasons A positive integer giving the number of seasons per year.
 #'   Defaults to `1`.
 #' @param nArea A positive integer giving the number of spatial areas.
@@ -61,9 +63,13 @@
 #'   related advice. 
 #' @param Misc A named list for any additional user-defined data. Defaults to
 #'   `list()`.
+#' @param x An [om-class] object, for use with `Data<-`.
+#' @param value A [data-class] object, or a list of [data-class] objects for
+#'   multi-stock operating models, to assign to the `Data` slot.
 #'
 #' @return A [data-class] object, or when `Name` is an [mse-class] object, a list
-#'   of [data-class] objects from the `@@PPD` slot.
+#'   of [data-class] objects from the `@@PPD` slot. `Data<-` returns `x` with
+#'   the `Data` slot replaced by `value`.
 #'
 #' @seealso [data-class], [LastTAC()], [LastHistYearInd()], [ProjectionYear()]
 #' @name Data
@@ -145,7 +151,7 @@ Data <- function(Name = 'New Data Object',
     Advice <- new('advicedata')
   
   if (!is.null(Years) && is.null(YearLH))
-    YearLH <- max(Years)
+    YearLH <- floor(max(Years))
   
   object <- methods::new(
     "data",
@@ -186,4 +192,10 @@ Data <- function(Name = 'New Data Object',
   
   methods::validObject(object)
   object
+}
+
+#' @rdname Data
+#' @export
+`Data<-` <- function(x, value) {
+  AssignSlotRecursive(x, value, 'Data')
 }

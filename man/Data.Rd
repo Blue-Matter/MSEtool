@@ -2,6 +2,7 @@
 % Please edit documentation in R/constructor-data.R
 \name{Data}
 \alias{Data}
+\alias{Data<-}
 \title{Constructor and Accessor for \code{Data}}
 \usage{
 Data(
@@ -33,6 +34,8 @@ Data(
   Advice = NULL,
   Misc = list()
 )
+
+Data(x) <- value
 }
 \arguments{
 \item{Name}{Either a character string naming the new \link[=data-class]{data} object, or an
@@ -57,8 +60,10 @@ Defaults to \code{"New Data Object"}.}
 
 \item{Years}{Vector of calendar years covered by the data. \strong{Required}}
 
-\item{YearLH}{The last historical year; separates the
-historical period from the projection period. Defaults to \code{max(Years)}.}
+\item{YearLH}{The last historical calendar year; always a whole integer,
+even when \code{Seasons > 1} and \code{Years} holds sub-annual decimal steps.
+Separates the historical period from the projection period. Defaults to
+\code{floor(max(Years))}.}
 
 \item{Seasons}{A positive integer giving the number of seasons per year.
 Defaults to \code{1}.}
@@ -102,10 +107,16 @@ related advice.}
 
 \item{Misc}{A named list for any additional user-defined data. Defaults to
 \code{list()}.}
+
+\item{x}{An \link[=om-class]{om} object, for use with \verb{Data<-}.}
+
+\item{value}{A \link[=data-class]{data} object, or a list of \link[=data-class]{data} objects for
+multi-stock operating models, to assign to the \code{Data} slot.}
 }
 \value{
 A \link[=data-class]{data} object, or when \code{Name} is an \link[=mse-class]{mse} object, a list
-of \link[=data-class]{data} objects from the \verb{@PPD} slot.
+of \link[=data-class]{data} objects from the \verb{@PPD} slot. \verb{Data<-} returns \code{x} with
+the \code{Data} slot replaced by \code{value}.
 }
 \description{
 Creates a new \link[=data-class]{data} object, or extracts the \code{Data} or \code{PPD} slot from

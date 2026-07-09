@@ -40,7 +40,9 @@ Other data:
 \code{\link[=CatchData]{CatchData()}},
 \code{\link[=CompData]{CompData()}},
 \code{\link[=EffortData]{EffortData()}},
+\code{\link[=IndicesData]{IndicesData()}},
 \code{\link{catchdata-class}},
-\code{\link{effortdata-class}}
+\code{\link{effortdata-class}},
+\code{\link{indicesdata-class}}
 }
 \concept{data}

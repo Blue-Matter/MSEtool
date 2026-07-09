@@ -4,46 +4,55 @@
 \name{indicesdata-class}
 \alias{indicesdata-class}
 \title{The \code{indicesdata} S4 Class}
-\value{
-\code{IndicesData()} returns a \code{indicesdata} object.
-}
 \description{
 Stores abundance or biomass index observations from fishery-dependent
 (CPUE) or fishery-independent (Survey) sources, including observation
 uncertainty, reference values, timing, and selectivity mapping. Used in
-the \code{CPUE} and \code{Survey} slots of a \link[=data-class]{data} object.
+the \code{CPUE} and \code{Survey} slots of a \link[=data-class]{data} object. Objects are
+typically created via \code{\link[=IndicesData]{IndicesData()}}, which documents all parameters in
+detail.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{Name}}{Optional character string. Name of the index.}
+\item{\code{Name}}{\code{character} or \code{NULL}. Name of the index. See \code{\link[=IndicesData]{IndicesData()}}.}
 
-\item{\code{Value}}{Numeric array of observed index values, with dimensions
-\verb{[nYear, nIndex]}, where \code{nYear} represents the total number of time steps.}
+\item{\code{Value}}{\code{array} or \code{NULL}. Observed index values with dimensions
+\verb{[nYear x nIndex]}. See \code{\link[=IndicesData]{IndicesData()}}.}
 
-\item{\code{CV}}{Numeric array of coefficients of variation (CVs) for the index
-observations, matching the dimensions of \code{Value}.}
+\item{\code{CV}}{\code{array} or \code{NULL}. Coefficients of variation for the index
+observations, matching the dimensions of \code{Value}. See \code{\link[=IndicesData]{IndicesData()}}.}
 
-\item{\code{Units}}{Optional character string. Units of the index
-(e.g., \code{"kg/trip"}, \code{"numbers/tow"}).}
+\item{\code{Units}}{\code{character} or \code{NULL}. Units of the index (e.g., \code{"kg/trip"},
+\code{"numbers/tow"}). See \code{\link[=IndicesData]{IndicesData()}}.}
 
-\item{\code{Ref}}{Numeric vector of length \code{nIndex} giving a reference value for
-each index (e.g., a historical mean or target level).}
+\item{\code{Ref}}{\code{numeric} or \code{NULL}. Reference value for each index (e.g., a
+historical mean or target level). See \code{\link[=IndicesData]{IndicesData()}}.}
 
-\item{\code{RefCV}}{Numeric array of CVs for the reference values, matching the
-dimensions of \code{Ref}.}
+\item{\code{RefCV}}{\code{array} or \code{NULL}. Coefficients of variation for the reference
+values, matching the dimensions of \code{Ref}. See \code{\link[=IndicesData]{IndicesData()}}.}
 
-\item{\code{Timing}}{Numeric vector of length \code{nIndex} giving the within-year
-timing of each observation as a fraction of the year (0–1).}
+\item{\code{Timing}}{\code{numeric}. Within-year timing of each observation as a
+fraction of the year (0-1). See \code{\link[=IndicesData]{IndicesData()}}.}
 
 \item{\code{Selectivity}}{An array or character specification mapping each index
-to a fleet selectivity or defining an independent selectivity curve.}
+to a fleet selectivity or defining an independent selectivity curve.
+See \code{\link[=IndicesData]{IndicesData()}}.}
 
-\item{\code{Misc}}{A named list for any additional index-level metadata.
-
-\code{IndicesData()} creates a new \code{indicesdata} object.}
+\item{\code{Misc}}{A named list for any additional index-level metadata.}
 }}
 
 \seealso{
-\link[=data-class]{data}, \code{\link[=Data]{Data()}}
+\code{\link[=IndicesData]{IndicesData()}} for the constructor and full parameter
+documentation. \link[=data-class]{data} for the enclosing data object.
+
+Other data:
+\code{\link[=CatchData]{CatchData()}},
+\code{\link[=CompData]{CompData()}},
+\code{\link[=EffortData]{EffortData()}},
+\code{\link[=IndicesData]{IndicesData()}},
+\code{\link{catchdata-class}},
+\code{\link{compdata-class}},
+\code{\link{effortdata-class}}
 }
+\concept{data}

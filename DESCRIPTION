@@ -175,6 +175,7 @@ Collate:
     'generate-data-hist-sizecomp.R'
     'constructor-data-comp.R'
     'constructor-data-effort.R'
+    'constructor-data-indices.R'
     'constructor-data.R'
     'constructor-depletion.R'
     'constructor-discardmortality.R'

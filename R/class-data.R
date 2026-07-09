@@ -20,9 +20,10 @@
 #' @slot Longitude Optional numeric. Longitude of the stock in decimal degrees.
 #'
 #' @slot Years Numeric vector of calendar years covered by the data.
-#' @slot YearLH Numeric. The last historical year, separating the historical
-#'   period from the projection period. Defaults to `max(Years)` when not
-#'   supplied to [Data()].
+#' @slot YearLH Numeric. The last historical calendar year (always a whole
+#'   integer, even when `Seasons > 1` and `Years` holds sub-annual decimal
+#'   steps), separating the historical period from the projection period.
+#'   Defaults to `floor(max(Years))` when not supplied to [Data()].
 #' @slot Seasons Positive integer. Number of seasons per year. Defaults to `1`.
 #' @slot nArea Positive integer. Number of spatial areas. Defaults to `1`.
 #'
