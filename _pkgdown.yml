@@ -323,8 +323,11 @@ reference:
   desc: >
     Plot the simulated dynamics of `hist` and `mse` objects: numbers, biomass,
     spawning biomass, spawning production, landings, discards, and removals.
+    Plot the observed fishery timeseries of a `data` object: landings,
+    discards, effort, CPUE, and survey indices.
   contents:
   - plot_hist
+  - plot_data
 
 
 - title: Generate Observation Data
