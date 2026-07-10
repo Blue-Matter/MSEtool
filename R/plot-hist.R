@@ -6,15 +6,19 @@
 #'
 #' @param object A [hist-class] or [mse-class] object. `PlotLandings()` and
 #'   `PlotDiscards()` also accept a [data-class] object (e.g.
-#'   `Hist@Data[[1]][[1]]`), in which case a single observed timeseries is
-#'   plotted per fleet with no ribbon/faceting arguments applied; see
-#'   [plot_data] for the full set of `data`-class plotting functions.
+#'   `Hist@Data[[1]][[1]]`), in which case a single observed timeseries
+#'   (no ribbon) is plotted, with `byFleet` and `AggregateYear` applied as
+#'   described in [plot_data]; other arguments (`byStock`, `probs`, `nsim`,
+#'   `Years`, `free_y`, `IncHist`, `byMP`) have no effect in that case.
 #' @param byStock Logical. Facet by stock? Default (`NULL`) facets
 #'   automatically when `object` has more than one stock.
 #' @param byFleet Logical. Facet by fleet? Default (`NULL`) facets
 #'   automatically when `object` has more than one fleet, except in
 #'   `PlotDynamics()`/`plot()` where it defaults to `FALSE`. Only applies to
-#'   `PlotLandings()`/`PlotDiscards()`/`PlotRemovals()`.
+#'   `PlotLandings()`/`PlotDiscards()`/`PlotRemovals()`. When `object` is a
+#'   [data-class] object, `byFleet` instead follows the three-state
+#'   `NULL`/`TRUE`/`FALSE` behavior described in [plot_data] (default `NULL`
+#'   colors by fleet rather than auto-faceting).
 #' @param byFemale Logical. See Details. Only applies to
 #'   `PlotSBiomass()`/`PlotSProduction()`.
 #' @param byMP Logical. For [mse-class] objects with more than one MP, facet
@@ -60,6 +64,15 @@
 #'   into whole-year totals, unlike `Season` above (these are flows, so
 #'   summing across a year is valid, unlike the point-in-time state
 #'   variables). Default `FALSE`. Ignored for non-seasonal models.
+#' @param Stocks Character or numeric vector. Restrict the plot to specific
+#'   stocks, either by name (matching [StockNames()]) or by index. Default
+#'   `NULL` (all stocks). `byStock` and, for `PlotSBiomass()`/
+#'   `PlotSProduction()`, the automatic `byFemale` stock selection (see
+#'   Details) are evaluated against this selection rather than the full set
+#'   of stocks in `object` -- e.g. `Stocks = "Female"` with `byStock = FALSE`
+#'   plots that one stock's series without needing `byFemale` to guess at it,
+#'   and providing `Stocks` explicitly disables the automatic `byFemale`
+#'   complex-matching logic in favor of summing exactly the stocks selected.
 #'
 #' @details
 #' Each function extracts the relevant time series with the corresponding
@@ -134,6 +147,11 @@
 #' PlotLandings(MHist, byStock = TRUE, byFleet = TRUE)
 #' PlotDynamics(MHist)
 #'
+#' # restrict to specific stocks, by name or index
+#' PlotSBiomass(MHist, Stocks = 'Female')
+#' PlotSBiomass(MHist, Stocks = 1)
+#' PlotBiomass(MHist, Stocks = c('Stock1', 'Stock2'), byStock = TRUE)
+#'
 #' }
 #'
 #' @name plot_hist
@@ -153,12 +171,15 @@ PlotNumber <- function(object,
                        free_y  = NULL,
                        IncHist = TRUE,
                        byMP    = FALSE,
-                       Season  = NULL) {
+                       Season  = NULL,
+                       Stocks  = NULL) {
   CheckClass(object, c('hist', 'mse'), 'object')
-  if (is.null(byStock)) byStock <- nStock(object) > 1
+  stockNames <- .resolve_stocks(object, Stocks)
+  if (is.null(byStock)) byStock <- .nSelStock(object, stockNames) > 1
   if (is.null(free_y))  free_y  <- TRUE
 
   df <- Number(object, df = TRUE) |>
+    .filter_stock(stockNames) |>
     .bridge_mp_gap() |>
     .drop_historical(IncHist) |>
     .filter_season(Season, object) |>
@@ -183,14 +204,17 @@ PlotBiomass <- function(object,
                         byMP     = FALSE,
                         relative = c('none', 'B0', 'BMSY'),
                         type     = c('Equilibrium', 'Dynamic'),
-                        Season   = NULL) {
+                        Season   = NULL,
+                        Stocks   = NULL) {
   relative <- match.arg(relative)
   type     <- match.arg(type)
   CheckClass(object, c('hist', 'mse'), 'object')
-  if (is.null(byStock)) byStock <- nStock(object) > 1
+  stockNames <- .resolve_stocks(object, Stocks)
+  nSel <- .nSelStock(object, stockNames)
+  if (is.null(byStock)) byStock <- nSel > 1
   if (is.null(free_y))  free_y  <- relative == 'none'
 
-  if (relative != 'none' && !byStock && nStock(object) > 1) {
+  if (relative != 'none' && !byStock && nSel > 1) {
     cli::cli_alert_info(
       "Relative time series (`relative = '{relative}'`) cannot be meaningfully summed across stocks; faceting by stock instead."
     )
@@ -207,6 +231,7 @@ PlotBiomass <- function(object,
   ylab <- if (relative == 'none') 'Biomass' else .relative_ylab('Biomass', relative)
 
   df <- df |>
+    .filter_stock(stockNames) |>
     .bridge_mp_gap() |>
     .drop_historical(IncHist) |>
     .filter_season(Season, object) |>
@@ -232,7 +257,8 @@ PlotSBiomass <- function(object,
                          byMP     = FALSE,
                          relative = c('none', 'B0', 'BMSY'),
                          type     = c('Equilibrium', 'Dynamic'),
-                         Season   = NULL) {
+                         Season   = NULL,
+                         Stocks   = NULL) {
   relative <- match.arg(relative)
   type     <- match.arg(type)
   if (is.null(free_y)) free_y <- relative == 'none'
@@ -240,7 +266,7 @@ PlotSBiomass <- function(object,
                 byStock = byStock, byFemale = byFemale, probs = probs,
                 nsim = nsim, Years = Years, free_y = free_y,
                 IncHist = IncHist, byMP = byMP,
-                relative = relative, type = type, Season = Season)
+                relative = relative, type = type, Season = Season, Stocks = Stocks)
 }
 
 #' @rdname plot_hist
@@ -256,7 +282,8 @@ PlotSProduction <- function(object,
                             byMP     = FALSE,
                             relative = c('none', 'B0', 'BMSY'),
                             type     = c('Equilibrium', 'Dynamic'),
-                            Season   = NULL) {
+                            Season   = NULL,
+                            Stocks   = NULL) {
   relative <- match.arg(relative)
   type     <- match.arg(type)
   if (is.null(free_y)) free_y <- relative == 'none'
@@ -264,7 +291,7 @@ PlotSProduction <- function(object,
                 byStock = byStock, byFemale = byFemale, probs = probs,
                 nsim = nsim, Years = Years, free_y = free_y,
                 IncHist = IncHist, byMP = byMP,
-                relative = relative, type = type, Season = Season)
+                relative = relative, type = type, Season = Season, Stocks = Stocks)
 }
 
 #' @rdname plot_hist
@@ -278,15 +305,18 @@ PlotLandings <- function(object,
                          free_y        = NULL,
                          IncHist       = TRUE,
                          byMP          = FALSE,
-                         AggregateYear = FALSE) {
+                         AggregateYear = FALSE,
+                         Stocks        = NULL) {
   if (inherits(object, 'data'))
-    return(.plot_data_ts(object, 'Landings', 'Landings'))
+    return(.plot_data_ts(object, 'Landings', 'Landings', byFleet = byFleet,
+                         AggregateYear = AggregateYear))
 
   if (is.null(free_y)) free_y <- TRUE
   .plot_catch(object, slot_name = 'Landings', ylab = 'Landings',
              byStock = byStock, byFleet = byFleet, probs = probs,
              nsim = nsim, Years = Years, free_y = free_y,
-             IncHist = IncHist, byMP = byMP, AggregateYear = AggregateYear)
+             IncHist = IncHist, byMP = byMP, AggregateYear = AggregateYear,
+             Stocks = Stocks)
 }
 
 #' @rdname plot_hist
@@ -300,15 +330,18 @@ PlotDiscards <- function(object,
                          free_y        = NULL,
                          IncHist       = TRUE,
                          byMP          = FALSE,
-                         AggregateYear = FALSE) {
+                         AggregateYear = FALSE,
+                         Stocks        = NULL) {
   if (inherits(object, 'data'))
-    return(.plot_data_ts(object, 'Discards', 'Discards'))
+    return(.plot_data_ts(object, 'Discards', 'Discards', byFleet = byFleet,
+                         AggregateYear = AggregateYear))
 
   if (is.null(free_y)) free_y <- TRUE
   .plot_catch(object, slot_name = 'Discards', ylab = 'Discards',
              byStock = byStock, byFleet = byFleet, probs = probs,
              nsim = nsim, Years = Years, free_y = free_y,
-             IncHist = IncHist, byMP = byMP, AggregateYear = AggregateYear)
+             IncHist = IncHist, byMP = byMP, AggregateYear = AggregateYear,
+             Stocks = Stocks)
 }
 
 #' @rdname plot_hist
@@ -322,16 +355,20 @@ PlotRemovals <- function(object,
                          free_y        = NULL,
                          IncHist       = TRUE,
                          byMP          = FALSE,
-                         AggregateYear = FALSE) {
+                         AggregateYear = FALSE,
+                         Stocks        = NULL) {
   CheckClass(object, c('hist', 'mse'), 'object')
-  if (is.null(byStock)) byStock <- nStock(object) > 1
+  stockNames <- .resolve_stocks(object, Stocks)
+  if (is.null(byStock)) byStock <- .nSelStock(object, stockNames) > 1
   if (is.null(byFleet)) byFleet <- nFleet(object) > 1
   if (is.null(free_y))  free_y  <- TRUE
 
   L <- Landings(object, df = TRUE, byFleet = TRUE) |>
+    .filter_stock(stockNames) |>
     .aggregate_year(AggregateYear, object) |>
     .bridge_mp_gap()
   D <- Discards(object, df = TRUE, byFleet = TRUE) |>
+    .filter_stock(stockNames) |>
     .aggregate_year(AggregateYear, object) |>
     .bridge_mp_gap()
   df <- dplyr::bind_rows(L, D) |>
@@ -367,13 +404,15 @@ PlotDynamics <- function(object,
                          relative      = c('none', 'B0', 'BMSY'),
                          type          = c('Equilibrium', 'Dynamic'),
                          Season        = NULL,
-                         AggregateYear = FALSE) {
+                         AggregateYear = FALSE,
+                         Stocks        = NULL) {
   relative <- match.arg(relative)
   type     <- match.arg(type)
   CheckClass(object, c('hist', 'mse'), 'object')
 
   common <- list(object = object, byStock = byStock, byMP = byMP, probs = probs,
-                 nsim = nsim, Years = Years, free_y = free_y, IncHist = IncHist)
+                 nsim = nsim, Years = Years, free_y = free_y, IncHist = IncHist,
+                 Stocks = Stocks)
   relArgs    <- list(relative = relative, type = type)
   seasonArgs <- list(Season = Season)
   aggArgs    <- list(byFleet = byFleet, AggregateYear = AggregateYear)
@@ -413,12 +452,7 @@ setMethod('plot', 'mse', function(x, y, ...) {
   dplyr::filter(df, .data$MP != 'Historical')
 }
 
-# Keep only the rows belonging to one season of a seasonal model. Season is
-# determined positionally within the full ordered Year sequence for the
-# object (season 1 = the first timestep, then cycling every `OM@Seasons`
-# steps), not from the decimal fraction of Year directly -- leap years
-# shift that fraction slightly from year to year even for the same season.
-# No-op for non-seasonal models (`OM@Seasons` <= 1) or when Season = NULL.
+
 .filter_season <- function(df, Season, object) {
   if (is.null(Season))
     return(df)
@@ -434,11 +468,7 @@ setMethod('plot', 'mse', function(x, y, ...) {
   dplyr::filter(df, .data$Year %in% keep_years)
 }
 
-# Sum sub-annual (seasonal) rows into whole-year totals -- valid for flow
-# variables (Landings/Discards) unlike the snapshot state variables handled
-# by `.filter_season()`. Must run *before* `.bridge_mp_gap()`, otherwise the
-# synthetic boundary bridge row would be double-counted in the sum. No-op
-# for non-seasonal models or AggregateYear = FALSE.
+
 .aggregate_year <- function(df, AggregateYear, object) {
   if (!isTRUE(AggregateYear))
     return(df)
@@ -454,6 +484,48 @@ setMethod('plot', 'mse', function(x, y, ...) {
   df |>
     dplyr::group_by(dplyr::across(dplyr::all_of(group_vars))) |>
     dplyr::summarise(Value = sum(.data$Value), .groups = 'drop')
+}
+
+
+.resolve_stocks <- function(object, Stocks) {
+  if (is.null(Stocks))
+    return(NULL)
+
+  allNames <- StockNames(object)
+  n        <- length(allNames)
+
+  if (is.numeric(Stocks)) {
+    idx <- as.integer(Stocks)
+    bad <- idx[is.na(idx) | idx < 1 | idx > n]
+    if (length(bad))
+      cli::cli_abort(
+        "`Stocks` index {.val {bad}} out of range; `object` has {n} stock{?s}."
+      )
+    return(allNames[idx])
+  }
+
+  if (is.character(Stocks)) {
+    bad <- Stocks[!Stocks %in% allNames]
+    if (length(bad))
+      cli::cli_abort(c(
+        "{.val {bad}} {?is/are} not a valid stock name.",
+        "i" = "Available stocks: {.val {allNames}}."
+      ))
+    return(Stocks)
+  }
+
+  cli::cli_abort("`Stocks` must be a character vector of stock names or a numeric vector of stock indices.")
+}
+
+.filter_stock <- function(df, stockNames) {
+  if (is.null(stockNames) || !'Stock' %in% colnames(df))
+    return(df)
+  dplyr::filter(df, as.character(.data$Stock) %in% stockNames)
+}
+
+
+.nSelStock <- function(object, stockNames) {
+  if (is.null(stockNames)) nStock(object) else length(stockNames)
 }
 
 .sum_over_stock <- function(df) {
@@ -474,9 +546,7 @@ setMethod('plot', 'mse', function(x, y, ...) {
     dplyr::mutate(Fleet = 'Total')
 }
 
-# Identify, for each complex, the single stock (if any) that should stand in
-# for the complex's spawning total: the only stock when a complex has one,
-# or the unambiguous "female"-named stock when it has more than one.
+
 .female_stock_names <- function(OM) {
   complexes   <- OM@Complexes
   stock_names <- StockNames(OM)
@@ -503,11 +573,13 @@ setMethod('plot', 'mse', function(x, y, ...) {
 
 .plot_spawning <- function(object, slot_name, ylab, byStock, byFemale,
                           probs, nsim, Years, free_y, IncHist, byMP,
-                          relative, type, Season) {
+                          relative, type, Season, Stocks = NULL) {
   CheckClass(object, c('hist', 'mse'), 'object')
-  if (is.null(byStock)) byStock <- nStock(object) > 1
+  stockNames <- .resolve_stocks(object, Stocks)
+  nSel <- .nSelStock(object, stockNames)
+  if (is.null(byStock)) byStock <- nSel > 1
 
-  if (relative != 'none' && !byStock && nStock(object) > 1) {
+  if (relative != 'none' && !byStock && nSel > 1) {
     cli::cli_alert_info(
       "Relative time series (`relative = '{relative}'`) cannot be meaningfully summed across stocks; faceting by stock instead."
     )
@@ -524,13 +596,14 @@ setMethod('plot', 'mse', function(x, y, ...) {
   ylab <- if (relative == 'none') ylab else .relative_ylab(ylab, relative)
 
   df <- df |>
+    .filter_stock(stockNames) |>
     .bridge_mp_gap() |>
     .drop_historical(IncHist) |>
     .filter_season(Season, object) |>
     .filter_years(Years)
 
   if (!byStock) {
-    if (byFemale && nStock(object) > 1) {
+    if (is.null(stockNames) && byFemale && nSel > 1) {
       female <- .female_stock_names(object@OM)
       if (female$ambiguous) {
         cli::cli_alert_info(
@@ -553,12 +626,15 @@ setMethod('plot', 'mse', function(x, y, ...) {
 }
 
 .plot_catch <- function(object, slot_name, ylab, byStock, byFleet,
-                       probs, nsim, Years, free_y, IncHist, byMP, AggregateYear) {
+                       probs, nsim, Years, free_y, IncHist, byMP, AggregateYear,
+                       Stocks = NULL) {
   CheckClass(object, c('hist', 'mse'), 'object')
-  if (is.null(byStock)) byStock <- nStock(object) > 1
+  stockNames <- .resolve_stocks(object, Stocks)
+  if (is.null(byStock)) byStock <- .nSelStock(object, stockNames) > 1
   if (is.null(byFleet)) byFleet <- nFleet(object) > 1
 
   df <- do.call(slot_name, list(object = object, df = TRUE, byFleet = TRUE)) |>
+    .filter_stock(stockNames) |>
     .aggregate_year(AggregateYear, object) |>
     .bridge_mp_gap() |>
     .drop_historical(IncHist) |>
@@ -574,9 +650,7 @@ setMethod('plot', 'mse', function(x, y, ...) {
                 colorVar = 'MP', byMP = byMP)
 }
 
-# Duplicate the last historical year's rows into each MP's projection
-# series, so the line continues without a gap at the historical/projection
-# boundary.
+
 .bridge_mp_gap <- function(df) {
   if (!'MP' %in% colnames(df))
     return(df)
@@ -631,8 +705,7 @@ setMethod('plot', 'mse', function(x, y, ...) {
   labels
 }
 
-# Map a base variable ('Biomass'/'SBiomass'/'SProduction') and a `relative`
-# choice to the corresponding relative_ref extractor function name.
+
 .relative_fn_name <- function(slot_name, relative) {
   switch(slot_name,
     Biomass     = if (relative == 'B0') 'B_B0'   else 'B_BMSY',
@@ -702,7 +775,8 @@ setMethod('plot', 'mse', function(x, y, ...) {
   groupCols  <- c(if (hasColor) colorVar, if (hasLinetype) linetypeVar)
   summ$.group <- if (length(groupCols)) interaction(summ[groupCols], drop = TRUE) else 1
 
-  p <- ggplot2::ggplot(summ, ggplot2::aes(x = .data$Year))
+  p <- ggplot2::ggplot(summ, ggplot2::aes(x = .data$Year)) +
+    ggplot2::expand_limits(y = c(0, 1))
 
   if (nsim > 0) {
     simIDs <- sort(unique(df$Sim))
@@ -790,7 +864,6 @@ setMethod('plot', 'mse', function(x, y, ...) {
                  fill     = if (hasColor) colorVar else NULL,
                  linetype = if (hasLinetype) linetypeVar else NULL)
 
-  # Individual sim lines are hard to see against a full background grid.
   if (nsim > 0)
     p <- p + ggplot2::theme(panel.grid = ggplot2::element_blank())
 

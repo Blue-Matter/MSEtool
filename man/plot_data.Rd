@@ -8,16 +8,35 @@
 \alias{PlotData}
 \title{Plot Observed Fishery Data}
 \usage{
-PlotEffort(object)
+PlotEffort(object, byFleet = NULL, AggregateYear = FALSE)
 
-PlotCPUE(object)
+PlotCPUE(object, byFleet = NULL, Season = NULL)
 
-PlotSurvey(object)
+PlotSurvey(object, byFleet = NULL, Season = NULL)
 
-PlotData(object)
+PlotData(object, byFleet = NULL, AggregateYear = FALSE, Season = NULL)
 }
 \arguments{
 \item{object}{A \link[=data-class]{data} object.}
+
+\item{byFleet}{Logical. Controls how multiple fleets are displayed.
+Default (\code{NULL}) draws every fleet as its own colored line in a single
+panel. \code{TRUE} facets by fleet instead (one panel per fleet). \code{FALSE}
+sums across fleets and draws a single total line. No effect when the
+slot has only one fleet.}
+
+\item{AggregateYear}{Logical. For seasonal data (\code{object@Seasons > 1}),
+sum \code{PlotLandings()}/\code{PlotDiscards()}/\code{PlotEffort()} sub-annual values
+into whole-year totals, since these are flow quantities. Default
+\code{FALSE}. Ignored for non-seasonal data and by \code{PlotCPUE()}/
+\code{PlotSurvey()} (see \code{Season}).}
+
+\item{Season}{Integer. For seasonal data (\code{object@Seasons > 1}), restrict
+\code{PlotCPUE()}/\code{PlotSurvey()} to a single season (1 = the first timestep
+of each year), giving one snapshot per year instead of the full
+sub-annual series. Default \code{NULL} (no filtering). Ignored for
+non-seasonal data and by \code{PlotLandings()}/\code{PlotDiscards()}/
+\code{PlotEffort()} (see \code{AggregateYear}).}
 }
 \value{
 A \code{ggplot} object (a \code{patchwork} object for \code{PlotData()}), or
@@ -59,6 +78,9 @@ PlotEffort(dat)
 PlotCPUE(dat)
 PlotSurvey(dat)
 PlotData(dat)
+
+PlotLandings(dat, byFleet = TRUE)
+PlotLandings(dat, byFleet = FALSE)
 }
 
 }

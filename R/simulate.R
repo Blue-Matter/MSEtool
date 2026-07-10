@@ -7,7 +7,9 @@
 #'
 #' @param OM An [om-class] or [OM-legacy-class] object. If `NULL` (default),
 #'   `MSEtool::SingleStockOM` is used.
-#' @param parallel Logical. Use parallel processing? Default `FALSE`.
+#' @param parallel Logical. Use parallel processing for MSY reference point
+#'   calculation (see [CalcMSY()])? Requires a `future` plan established by
+#'   [SetupParallel()]. Only used for [om-class] objects. Default `FALSE`.
 #' @param silent Logical. Suppress progress messages if `TRUE`. Default
 #'   `FALSE`.
 #' @param nSim Integer. Number of simulation replicates. If `NULL` (default),

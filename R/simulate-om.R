@@ -58,7 +58,7 @@ Simulate_om <- function(OM       = NULL,
   Hist@Reference@SPR0 <- CalcSPR0(Hist)
 
   if (control$MSYRefs)
-    Hist@Reference@MSY <- CalcMSY(Hist, silent = silent)
+    Hist@Reference@MSY <- CalcMSY(Hist, parallel = parallel, silent = silent)
 
   # TODO
   # - Per-Recruit Curves

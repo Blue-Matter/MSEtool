@@ -4,7 +4,13 @@
 \alias{CalcMSY}
 \title{Calculate MSY Reference Points}
 \usage{
-CalcMSY(Hist, Years = NULL, type = c("Removals", "Landings"), silent = FALSE)
+CalcMSY(
+  Hist,
+  Years = NULL,
+  type = c("Removals", "Landings"),
+  parallel = FALSE,
+  silent = FALSE
+)
 }
 \arguments{
 \item{Hist}{A \link[=hist-class]{hist} or \link[=om-class]{om} object. If an \code{om} is supplied
@@ -18,6 +24,11 @@ historical year is used.}
 \item{type}{Character. Whether MSY is defined in terms of total removals
 (landings plus dead discards) or landings only. One of \code{'Removals'}
 (default) or \code{'Landings'}.}
+
+\item{parallel}{Logical. If \code{TRUE}, calculates reference points across
+simulations in parallel using a \code{future} plan established by
+\code{\link[=SetupParallel]{SetupParallel()}}. Falls back to sequential execution with a warning if
+no parallel plan is active. Default \code{FALSE}.}
 
 \item{silent}{Logical. If \code{TRUE}, suppresses progress messages. Default
 \code{FALSE}.}
@@ -49,4 +60,5 @@ stock evaluated at the complex-level \code{FMSY}.
 }
 \seealso{
 \code{\link[=CalcPerRecruit]{CalcPerRecruit()}}, \code{\link[=CalcSPR0]{CalcSPR0()}}, \link[=refpointsMSY-class]{refpointsMSY},
+\code{\link[=SetupParallel]{SetupParallel()}}
 }

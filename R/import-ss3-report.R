@@ -94,7 +94,9 @@ ImportSSReport <- function(SSDir, parallel=FALSE, silent=FALSE, ...) {
     CheckPackage('furrr')
     RepList <- furrr::future_map(
       SSDir,
-      function(dir) GetSSRepList(dir, silent = silent, ...),
+      GetSSRepList,
+      silent = silent,
+      ...,
       .options = furrr::furrr_options(
         scheduling = Inf,
         globals     = FALSE,

@@ -15,6 +15,10 @@
 #' @param type  Character. Whether MSY is defined in terms of total removals
 #'   (landings plus dead discards) or landings only. One of `'Removals'`
 #'   (default) or `'Landings'`.
+#' @param parallel Logical. If `TRUE`, calculates reference points across
+#'   simulations in parallel using a `future` plan established by
+#'   [SetupParallel()]. Falls back to sequential execution with a warning if
+#'   no parallel plan is active. Default `FALSE`.
 #' @param silent Logical. If `TRUE`, suppresses progress messages. Default
 #'   `FALSE`.
 #'
@@ -35,11 +39,13 @@
 #' @return An a [refpointsMSY-class] object. 
 #'
 #' @seealso [CalcPerRecruit()], [CalcSPR0()], [refpointsMSY-class],
-#'   
+#'   [SetupParallel()]
+#'
 #' @export
-CalcMSY <- function(Hist, 
-                    Years = NULL, 
+CalcMSY <- function(Hist,
+                    Years = NULL,
                     type = c('Removals', 'Landings'),
+                    parallel = FALSE,
                     silent = FALSE) {
 
   type <- match.arg(type)
@@ -72,13 +78,14 @@ CalcMSY <- function(Hist,
                                complex_name   = names(complexes)[i],
                                Years          = Years,
                                type           = type,
+                               parallel       = parallel,
                                silent         = silent)
   }
   Hist@Reference@MSY
 }
 
-CalcRefMSY_Complex <- function(Hist, complex_stocks, complex_name, Years, 
-                               type, silent = FALSE) {
+CalcRefMSY_Complex <- function(Hist, complex_stocks, complex_name, Years,
+                               type, parallel = FALSE, silent = FALSE) {
   
   StockList <- Hist@OM@Stock[complex_stocks]
   FleetList <- Hist@OM@Fleet[complex_stocks]
@@ -147,28 +154,18 @@ CalcRefMSY_Complex <- function(Hist, complex_stocks, complex_name, Years,
     return(Hist)
   }
   
-  if (!silent) {
-    id <- cli::cli_progress_bar(
-      name   = paste0("Calculating MSY reference points: ", complex_name),
-      total  = nSim,
-      format = "{cli::pb_name} {cli::pb_bar} {cli::pb_current}/{cli::pb_total} sims | {cli::pb_elapsed}"
-    )
-  }
-  
-  # TODO: parallel option - furrr::future_map(seq_len(nSim), \(sim) { 
-  results_by_sim <- purrr::map(seq_len(nSim), \(sim) {
-    
+  CalcRefMSY_Sim <- function(sim) {
     StockList_sim  <- SubsetSim(StockList,      Sims = sim, keep_sim_name = TRUE)
     FleetList_sim  <- SubsetSim(FleetList,      Sims = sim, keep_sim_name = TRUE)
     SPR0_List_sim  <- SubsetSim(SPR0_Full_List, Sims = sim, keep_sim_name = TRUE)
 
-    result <- purrr::map(seq_along(Years), \(ts) {
-      
-      inputs <- PrepPerRecruitInputs(StockList_sim, 
+    purrr::map(seq_along(Years), \(ts) {
+
+      inputs <- PrepPerRecruitInputs(StockList_sim,
                                      FleetList_sim,
-                                     SPR0_List_sim, 
+                                     SPR0_List_sim,
                                      Years[ts])
-    
+
       opt <- optimize(
         OptCalcRefMSY_Sims,
         logApicalFRange,
@@ -177,7 +174,7 @@ CalcRefMSY_Complex <- function(Hist, complex_stocks, complex_name, Years,
         type         = type,
         option       = 1
       )
-      
+
       OptCalcRefMSY_Sims(
         logApicalF   = opt$minimum,
         inputs       = inputs,
@@ -186,10 +183,43 @@ CalcRefMSY_Complex <- function(Hist, complex_stocks, complex_name, Years,
         option       = 2
       )
     })
-    if (!silent) cli::cli_progress_update(id = id)
-    result
-  })
-  
+  }
+
+  parallel <- CheckParallel(parallel)
+
+  if (!parallel) {
+    if (!silent) {
+      id <- cli::cli_progress_bar(
+        name   = paste0("Calculating MSY reference points: ", complex_name),
+        total  = nSim,
+        format = "{cli::pb_name} {cli::pb_bar} {cli::pb_current}/{cli::pb_total} sims | {cli::pb_elapsed}"
+      )
+    }
+
+    results_by_sim <- purrr::map(seq_len(nSim), \(sim) {
+      result <- CalcRefMSY_Sim(sim)
+      if (!silent) cli::cli_progress_update(id = id)
+      result
+    })
+  } else {
+    if (!silent)
+      cli::cli_inform(
+        "Calculating MSY reference points: {.val {complex_name}} \\
+         ({.val {nSim}} simulation{?s}, parallel) ..."
+      )
+    CheckPackage('furrr')
+    results_by_sim <- furrr::future_map(
+      seq_len(nSim),
+      CalcRefMSY_Sim,
+      .options = furrr::furrr_options(
+        globals  = c('StockList', 'FleetList', 'SPR0_Full_List', 'Years',
+                     'complex_name', 'type', 'logApicalFRange'),
+        packages = "MSEtool",
+        seed     = 101
+      )
+    )
+  }
+
   for (sl in setdiff(slotNames(MSYRefPoints), 'Misc')) {
     arr <- slot(MSYRefPoints, sl)
     if (is.null(arr)) next

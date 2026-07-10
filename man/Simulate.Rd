@@ -19,7 +19,9 @@ Simulate(
 \item{OM}{An \link[=om-class]{om} or \link[=OM-legacy-class]{OM-legacy} object. If \code{NULL} (default),
 \code{MSEtool::SingleStockOM} is used.}
 
-\item{parallel}{Logical. Use parallel processing? Default \code{FALSE}.}
+\item{parallel}{Logical. Use parallel processing for MSY reference point
+calculation (see \code{\link[=CalcMSY]{CalcMSY()}})? Requires a \code{future} plan established by
+\code{\link[=SetupParallel]{SetupParallel()}}. Only used for \link[=om-class]{om} objects. Default \code{FALSE}.}
 
 \item{silent}{Logical. Suppress progress messages if \code{TRUE}. Default
 \code{FALSE}.}

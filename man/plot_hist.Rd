@@ -21,7 +21,8 @@ PlotNumber(
   free_y = NULL,
   IncHist = TRUE,
   byMP = FALSE,
-  Season = NULL
+  Season = NULL,
+  Stocks = NULL
 )
 
 PlotBiomass(
@@ -35,7 +36,8 @@ PlotBiomass(
   byMP = FALSE,
   relative = c("none", "B0", "BMSY"),
   type = c("Equilibrium", "Dynamic"),
-  Season = NULL
+  Season = NULL,
+  Stocks = NULL
 )
 
 PlotSBiomass(
@@ -50,7 +52,8 @@ PlotSBiomass(
   byMP = FALSE,
   relative = c("none", "B0", "BMSY"),
   type = c("Equilibrium", "Dynamic"),
-  Season = NULL
+  Season = NULL,
+  Stocks = NULL
 )
 
 PlotSProduction(
@@ -65,7 +68,8 @@ PlotSProduction(
   byMP = FALSE,
   relative = c("none", "B0", "BMSY"),
   type = c("Equilibrium", "Dynamic"),
-  Season = NULL
+  Season = NULL,
+  Stocks = NULL
 )
 
 PlotLandings(
@@ -78,7 +82,8 @@ PlotLandings(
   free_y = NULL,
   IncHist = TRUE,
   byMP = FALSE,
-  AggregateYear = FALSE
+  AggregateYear = FALSE,
+  Stocks = NULL
 )
 
 PlotDiscards(
@@ -91,7 +96,8 @@ PlotDiscards(
   free_y = NULL,
   IncHist = TRUE,
   byMP = FALSE,
-  AggregateYear = FALSE
+  AggregateYear = FALSE,
+  Stocks = NULL
 )
 
 PlotRemovals(
@@ -104,7 +110,8 @@ PlotRemovals(
   free_y = NULL,
   IncHist = TRUE,
   byMP = FALSE,
-  AggregateYear = FALSE
+  AggregateYear = FALSE,
+  Stocks = NULL
 )
 
 PlotDynamics(
@@ -121,15 +128,17 @@ PlotDynamics(
   relative = c("none", "B0", "BMSY"),
   type = c("Equilibrium", "Dynamic"),
   Season = NULL,
-  AggregateYear = FALSE
+  AggregateYear = FALSE,
+  Stocks = NULL
 )
 }
 \arguments{
 \item{object}{A \link[=hist-class]{hist} or \link[=mse-class]{mse} object. \code{PlotLandings()} and
 \code{PlotDiscards()} also accept a \link[=data-class]{data} object (e.g.
-\code{Hist@Data[[1]][[1]]}), in which case a single observed timeseries is
-plotted per fleet with no ribbon/faceting arguments applied; see
-\link{plot_data} for the full set of \code{data}-class plotting functions.}
+\code{Hist@Data[[1]][[1]]}), in which case a single observed timeseries
+(no ribbon) is plotted, with \code{byFleet} and \code{AggregateYear} applied as
+described in \link{plot_data}; other arguments (\code{byStock}, \code{probs}, \code{nsim},
+\code{Years}, \code{free_y}, \code{IncHist}, \code{byMP}) have no effect in that case.}
 
 \item{byStock}{Logical. Facet by stock? Default (\code{NULL}) facets
 automatically when \code{object} has more than one stock.}
@@ -168,6 +177,16 @@ point-in-time quantities, so no season should be summed/averaged to get
 an annual value the way \code{Landings()}/\code{Discards()} can. Default \code{NULL}
 (no filtering). Ignored for non-seasonal models.}
 
+\item{Stocks}{Character or numeric vector. Restrict the plot to specific
+stocks, either by name (matching \code{\link[=StockNames]{StockNames()}}) or by index. Default
+\code{NULL} (all stocks). \code{byStock} and, for \code{PlotSBiomass()}/
+\code{PlotSProduction()}, the automatic \code{byFemale} stock selection (see
+Details) are evaluated against this selection rather than the full set
+of stocks in \code{object} -- e.g. \code{Stocks = "Female"} with \code{byStock = FALSE}
+plots that one stock's series without needing \code{byFemale} to guess at it,
+and providing \code{Stocks} explicitly disables the automatic \code{byFemale}
+complex-matching logic in favor of summing exactly the stocks selected.}
+
 \item{relative}{Character. For \code{PlotBiomass()}, \code{PlotSBiomass()}, and
 \code{PlotSProduction()}: plot absolute values (\code{"none"}, default), or
 relative to unfished (\code{"B0"}, via \code{\link[=B_B0]{B_B0()}}/\code{\link[=SB_SB0]{SB_SB0()}}/\code{\link[=SP_SP0]{SP_SP0()}}) or to
@@ -187,7 +206,10 @@ otherwise.}
 \item{byFleet}{Logical. Facet by fleet? Default (\code{NULL}) facets
 automatically when \code{object} has more than one fleet, except in
 \code{PlotDynamics()}/\code{plot()} where it defaults to \code{FALSE}. Only applies to
-\code{PlotLandings()}/\code{PlotDiscards()}/\code{PlotRemovals()}.}
+\code{PlotLandings()}/\code{PlotDiscards()}/\code{PlotRemovals()}. When \code{object} is a
+\link[=data-class]{data} object, \code{byFleet} instead follows the three-state
+\code{NULL}/\code{TRUE}/\code{FALSE} behavior described in \link{plot_data} (default \code{NULL}
+colors by fleet rather than auto-faceting).}
 
 \item{AggregateYear}{Logical. For seasonal models, sum
 \code{PlotLandings()}/\code{PlotDiscards()}/\code{PlotRemovals()} sub-annual values
@@ -273,6 +295,11 @@ MHist <- Simulate(MultiStockOM)
 PlotSBiomass(MHist, byStock = TRUE)
 PlotLandings(MHist, byStock = TRUE, byFleet = TRUE)
 PlotDynamics(MHist)
+
+# restrict to specific stocks, by name or index
+PlotSBiomass(MHist, Stocks = 'Female')
+PlotSBiomass(MHist, Stocks = 1)
+PlotBiomass(MHist, Stocks = c('Stock1', 'Stock2'), byStock = TRUE)
 
 }
 
