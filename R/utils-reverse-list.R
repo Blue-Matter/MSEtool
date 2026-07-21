@@ -14,7 +14,7 @@
 #' @references
 #' Adapted from <https://stackoverflow.com/questions/15263146>
 #' @keywords internal
-ReverseList <- function(ls) {
+.ReverseList <- function(ls) {
   if (all(vapply(ls, is.null, logical(1))))
     return(ls)
   
