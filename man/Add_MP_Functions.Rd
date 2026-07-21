@@ -17,7 +17,9 @@ functions named by their original names.
 }
 \description{
 Validates that all names in \code{MPNames} correspond to functions of class
-\code{"mp"} via \code{\link[=CheckMPClass]{CheckMPClass()}}, then wraps each in a self-contained
-environment via \code{\link[=MakeSelfContained]{MakeSelfContained()}} and stores them in \code{MSE@MPs}.
+\code{"mp"}, \code{"mmp"}, or a legacy (DLMtool/SAMtool) \code{"MP"} via \code{\link[=.CheckMPClass]{.CheckMPClass()}},
+wraps any legacy \code{"MP"} functions via \code{\link[=.WrapLegacyMP]{.WrapLegacyMP()}} so they can be
+called by the new pipeline, then wraps each in a self-contained
+environment via \code{\link[=.MakeSelfContained]{.MakeSelfContained()}} and stores them in \code{MSE@MPs}.
 }
 \keyword{internal}

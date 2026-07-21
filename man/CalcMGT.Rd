@@ -19,8 +19,9 @@ integer calendar years; all seasons within each year are used automatically.}
 \value{
 An array with dimensions \verb{[Sim, Stock, Year]} containing MGT in
 years. Dimensions where values are identical across simulations or years
-are collapsed by \code{\link[=ReduceDims]{ReduceDims()}}. The result is also stored in
-\code{Hist@Reference@MGT} when a \link[=hist-class]{hist} object is supplied or produced.
+are collapsed by \code{\link[=ReduceDims]{ReduceDims()}}. Like \code{\link[=CalcSPR0]{CalcSPR0()}} and \code{\link[=CalcMSY]{CalcMSY()}},
+\code{CalcMGT()} does not itself store the result -- assign it to
+\code{Hist@Reference@MGT} if needed.
 }
 \description{
 Calculates the mean generation time (MGT), defined as the mean age of a

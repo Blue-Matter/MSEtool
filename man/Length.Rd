@@ -32,14 +32,14 @@ ALK(x) <- value
 \item{Pars}{\code{list}. Named list of growth parameters. Element names must
 match the arguments of a built-in growth model (see \code{\link[=LengthModels]{LengthModels()}}).
 When \code{Pars} is non-empty and \code{Model} is \code{NULL}, the model is inferred
-automatically by \code{\link[=FindModel]{FindModel()}}. When \code{Pars} is a \link[=stock-class]{stock} object,
+automatically by \code{\link[=.FindModel]{.FindModel()}}. When \code{Pars} is a \link[=stock-class]{stock} object,
 \code{Length()} acts as a pass-through accessor and returns \code{x@Length}.
 See \emph{Specifying the Length-at-Age} and
 \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for the full
 set of accepted input formats. Default \code{list()}.}
 
 \item{Model}{\code{character(1)} or \code{function}. Growth model identifier. When
-\code{NULL} (default), the model is inferred from \code{Pars} via \code{\link[=FindModel]{FindModel()}}.
+\code{NULL} (default), the model is inferred from \code{Pars} via \code{\link[=.FindModel]{.FindModel()}}.
 May be set to a character string naming a built-in model or to a custom
 R function — see \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules}.}
 
@@ -120,7 +120,7 @@ There are two ways to define the length schedule:
 \enumerate{
 \item \strong{Model-based} (recommended): supply \code{Pars} with the named parameters
 for your chosen growth model (e.g., \code{list(Linf = 80, K = 0.2, t0 = -0.5)} for von Bertalanffy). If \code{Model} is \code{NULL} and the parameter
-names uniquely identify a model, \code{\link[=FindModel]{FindModel()}} sets \code{Model}
+names uniquely identify a model, \code{\link[=.FindModel]{.FindModel()}} sets \code{Model}
 automatically. The \code{MeanAtAge} array and \code{ALK} are then populated by
 \code{\link[=Populate]{Populate()}} when the stock is added to an \code{\link[=OM]{OM()}}.
 \item \strong{Direct array}: supply \code{MeanAtAge} with \code{Pars = list()}. Any values
@@ -279,7 +279,7 @@ MeanAtAge(pop_len)
 \item \link[=length-class]{length} for the class definition and slot-level documentation.
 \item \code{\link[=LengthModels]{LengthModels()}} for available growth models and required parameter sets.
 \item \code{\link[=ValidUnits]{ValidUnits()}} for accepted unit strings.
-\item \code{\link[=FindModel]{FindModel()}} for automatic model inference.
+\item \code{\link[=.FindModel]{.FindModel()}} for automatic model inference.
 \item \code{\link[=Populate]{Populate()}} for array population.
 \item \code{\link[=Stock]{Stock()}} for the enclosing stock constructor.
 }

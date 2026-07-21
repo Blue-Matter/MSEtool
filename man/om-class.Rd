@@ -104,11 +104,22 @@ stock targeting weights and deviations. Initialised automatically by
 \item{\code{Interval}}{Numeric scalar or named numeric vector. Management update
 interval in years. See \code{\link[=OM]{OM()}}.}
 
+\item{\code{MPStartYear}}{Numeric or \code{NULL}. First calendar year in which MPs are
+applied. Projection years before \code{MPStartYear} are "interim" years -
+the MP is not called, and advice is instead built from \code{InterimAdvice}
+(falling back to freezing effort at the last historical level where no
+matching entry exists). \code{NULL} (default) means MPs start in the first
+projection year, matching prior behaviour. See \code{\link[=OM]{OM()}}.}
+
+\item{\code{InterimAdvice}}{A \code{data.frame} or \code{NULL}. Analyst-supplied fixed or
+stochastic TAC/Effort values for interim years (before \code{MPStartYear}).
+See \code{\link[=OM]{OM()}} for the required columns.}
+
 \item{\code{nReps}}{Positive integer. Number of stochastic replicates for
-management advice. See \code{\link[=OM]{OM()}}.}
+management advice. See \code{\link[=OM]{OM()}}. Not currently used.}
 
 \item{\code{pStar}}{Numeric. Percentile applied to stochastic management advice.
-See \code{\link[=OM]{OM()}}.}
+See \code{\link[=OM]{OM()}}. Not currently used.}
 
 \item{\code{maxF}}{Numeric. Maximum allowable instantaneous fishing mortality.
 See \code{\link[=OM]{OM()}}.}

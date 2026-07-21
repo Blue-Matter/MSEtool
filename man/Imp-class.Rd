@@ -10,10 +10,18 @@ advice, controlling how management recommendations (TAC, effort, and size
 limits) are imperfectly applied in the operating model.
 }
 \details{
-Each of the \code{TAC}, \code{Effort}, and \code{Size} slots is an \link[=impslot-class]{impslot} object
-containing \code{Mean}, \code{SD}, \code{Compliance}, and \code{Error} arrays that together
-describe how imperfectly the corresponding management control is implemented
-across simulations.
+\code{TAC} and \code{Effort} each use \code{Mean}/\code{SD}/\code{Error}: a multiplicative bias and
+its stochastic realisation applied to the advised TAC/effort. \code{Size}
+instead uses only \code{Compliance}: the
+fraction of the fleet that adopts a newly-advised size-based regulation
+(a change to \code{Advice@Retention} and/or \code{Advice@Selectivity}) in the year it
+changes, with the remainder of the fleet continuing under the prior
+(status-quo) Retention/Selectivity curve -- see \code{\link[=Update_Selectivity_Sim]{Update_Selectivity_Sim()}}.
+A generic \code{Mean}/\code{SD} multiplicative bias doesn't generalise across
+retention/selectivity model parameterisations (some \code{Pars} are lengths,
+some are proportions like \code{Vmaxlen}/\code{MaxRet}), so \code{Size@Mean}/\code{SD}/\code{Error}
+are left structurally present for class uniformity with \code{TAC}/\code{Effort} but
+are \strong{not consumed} anywhere.
 
 An \link[=imp-class]{imp} object can be attached to an \link[=om-class]{om} object and
 retrieved with \code{Imp(om)}.
@@ -24,25 +32,22 @@ instead, which initialises all sub-objects automatically.
 \section{Slots}{
 
 \describe{
-\item{\code{Name}}{Character. Name of the implementation error model.
+\item{\code{Name}}{\code{character} or \code{NULL}. Name of the implementation error model.
 See \code{\link[=Imp]{Imp()}}.}
 
 \item{\code{TAC}}{An \link[=impslot-class]{impslot} object. Implementation error for total
-allowable catch recommendations. See \code{\link[=Imp]{Imp()}}.}
+allowable catch recommendations, via \code{Mean}/\code{SD}/\code{Error}. See \code{\link[=Imp]{Imp()}}.}
 
 \item{\code{Effort}}{An \link[=impslot-class]{impslot} object. Implementation error for
-effort-based controls. See \code{\link[=Imp]{Imp()}}.}
+effort-based controls, via \code{Mean}/\code{SD}/\code{Error}. See \code{\link[=Imp]{Imp()}}.}
 
 \item{\code{Size}}{An \link[=impslot-class]{impslot} object. Implementation error for size-based
-regulations. See \code{\link[=Imp]{Imp()}}.}
+regulations (minimum legal size etc.), via \code{Compliance} only. See
+\code{\link[=Imp]{Imp()}}.}
 
 \item{\code{Misc}}{List. Miscellaneous additional objects.}
 }}
 
-\note{
-The \link[=imp-class]{imp} is currently a placeholder. The class interface is
-subject to change.
-}
 \seealso{
 \itemize{
 \item \code{\link[=Imp]{Imp()}} for the constructor and accessor.
@@ -53,8 +58,12 @@ subject to change.
 }
 
 Other imp:
+\code{\link{FullComplianceImp}},
 \code{\link[=Imp]{Imp()}},
 \code{\link[=ImpSlot]{ImpSlot()}},
+\code{\link{OverageImp}},
+\code{\link{PartialSizeComplianceImp}},
+\code{\link{UnderageImp}},
 \code{\link{impslot-class}}
 }
 \concept{imp}

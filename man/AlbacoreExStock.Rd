@@ -70,7 +70,7 @@ See also \code{\link[=WeightModels]{WeightModels()}}.
 
 \code{\link[=PopulateNaturalMortality]{PopulateNaturalMortality()}} samples \code{M} for each simulation from the
 uniform bounds and expands the result into a natural mortality-at-age array.
-Stochastic annual deviates are added via \code{PopulateRandom()}.
+Stochastic annual deviates are added via \code{.PopulateRandom()}.
 
 See also \code{\link[=NaturalMortalityModels]{NaturalMortalityModels()}}.
 }

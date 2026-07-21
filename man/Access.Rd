@@ -4,10 +4,14 @@
 \alias{Access}
 \alias{AC}
 \alias{AC<-}
+\alias{Areas}
+\alias{Areas<-}
 \alias{Beta}
 \alias{Beta<-}
 \alias{Bias}
 \alias{Bias<-}
+\alias{Caption}
+\alias{Caption<-}
 \alias{Classes}
 \alias{Classes<-}
 \alias{Compliance}
@@ -24,6 +28,8 @@
 \alias{DiscardsAtAge<-}
 \alias{DiscardsAtSize}
 \alias{DiscardsAtSize<-}
+\alias{ESS}
+\alias{ESS<-}
 \alias{Error}
 \alias{Error<-}
 \alias{Exploitation}
@@ -44,6 +50,8 @@
 \alias{MeanAtWeight<-}
 \alias{Misc}
 \alias{Misc<-}
+\alias{MPs}
+\alias{MPs<-}
 \alias{Model}
 \alias{Model<-}
 \alias{Name}
@@ -59,6 +67,8 @@
 \alias{Pars<-}
 \alias{Period}
 \alias{Period<-}
+\alias{Prob}
+\alias{Prob<-}
 \alias{Random}
 \alias{Ref}
 \alias{Ref<-}
@@ -66,15 +76,25 @@
 \alias{RefCV<-}
 \alias{Reference}
 \alias{Reference<-}
+\alias{SampleSize}
+\alias{SampleSize<-}
 \alias{Size}
 \alias{Size<-}
 \alias{SD}
 \alias{SD<-}
+\alias{Stat}
+\alias{Stat<-}
+\alias{Shift}
+\alias{Shift<-}
+\alias{Stats}
+\alias{Stats<-}
 \alias{Survey}
 \alias{Survey<-}
 \alias{Timing}
 \alias{TruncSD}
 \alias{TruncSD<-}
+\alias{Type}
+\alias{Type<-}
 \alias{Units}
 \alias{Units<-}
 \alias{Value}
@@ -87,6 +107,10 @@ AC(x)
 
 AC(x) <- value
 
+Areas(x)
+
+Areas(x) <- value
+
 Beta(x)
 
 Beta(x) <- value
@@ -94,6 +118,10 @@ Beta(x) <- value
 Bias(x)
 
 Bias(x) <- value
+
+Caption(x)
+
+Caption(x) <- value
 
 Classes(x)
 
@@ -126,6 +154,10 @@ DiscardsAtAge(x) <- value
 DiscardsAtSize(x)
 
 DiscardsAtSize(x) <- value
+
+ESS(x)
+
+ESS(x) <- value
 
 Error(x)
 
@@ -167,6 +199,10 @@ Misc(x)
 
 Misc(x) <- value
 
+MPs(x)
+
+MPs(x) <- value
+
 Model(x)
 
 Model(x) <- value
@@ -197,6 +233,10 @@ Period(x)
 
 Period(x) <- value
 
+Prob(x)
+
+Prob(x) <- value
+
 Random(x)
 
 Ref(x)
@@ -211,6 +251,10 @@ Reference(x)
 
 Reference(x) <- value
 
+SampleSize(x)
+
+SampleSize(x) <- value
+
 Size(x)
 
 Size(x) <- value
@@ -218,6 +262,18 @@ Size(x) <- value
 SD(x)
 
 SD(x) <- value
+
+Stat(x)
+
+Stat(x) <- value
+
+Shift(x)
+
+Shift(x) <- value
+
+Stats(x)
+
+Stats(x) <- value
 
 Survey(x)
 
@@ -228,6 +284,10 @@ Timing(x)
 TruncSD(x)
 
 TruncSD(x) <- value
+
+Type(x)
+
+Type(x) <- value
 
 Units(x)
 

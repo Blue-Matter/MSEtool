@@ -4,22 +4,28 @@
 \alias{Log}
 \title{Display Log Warnings}
 \usage{
-Log(object)
+Log(object, type = NULL)
 }
 \arguments{
 \item{object}{An S4 object with a \code{Log} slot}
+
+\item{type}{Character vector. Restrict the printed sections to one or
+more of \code{'assumption'}, \code{'warning'}, \code{'error'}. Default \code{NULL} prints
+all sections.}
 }
 \value{
 Invisibly returns \code{NULL}. Called for its side effect of printing
 warnings to the console.
 }
 \description{
-Prints any warnings stored in the \code{Log} slot of an S4 object to the console
-using \code{cli} formatting.
+Prints any messages stored in the \code{Log} slot of an S4 object to the
+console using \code{cli} formatting, grouped into assumption, warning, and
+error sections.
 }
 \examples{
 \dontrun{
   Log(my_object)
+  Log(my_object, type = 'error')
 }
 
 }

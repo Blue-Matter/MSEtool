@@ -10,7 +10,7 @@ FitStockTargeting(OM, tol = 1e-06, active_thresh = 0.1)
 \item{OM}{An operating model object (\link[=om-class]{om}) with a populated
 \verb{@StockTargeting@Targeting} array of dimension
 \verb{[nSim, nStock, nFleet, nYearHist]}, as produced by
-\code{\link[=StandardizeEffort]{StandardizeEffort()}}.}
+\code{\link[=.StandardizeEffort]{.StandardizeEffort()}}.}
 
 \item{tol}{\code{numeric(1)}. Tolerance below which targeting values are treated
 as zero for the purpose of covariance estimation. Default \code{1e-6}.}
@@ -27,7 +27,7 @@ The input \code{OM} object with the following slots populated:
 exponentiated to the natural scale. Array of dimension
 \verb{[nSim, nStock, nFleet]}. Values are approximately 1 for active stocks
 (close to zero on the log scale by the sum-to-zero construction of
-\code{\link[=StandardizeEffort]{StandardizeEffort()}}, but not guaranteed to be exactly 1) and exactly
+\code{\link[=.StandardizeEffort]{.StandardizeEffort()}}, but not guaranteed to be exactly 1) and exactly
 1 for inactive stocks (neutral, log-deviation fixed at zero).
 \item \verb{@StockTargeting@Covariance}: stationary covariance matrix of
 log-targeting deviations, array of dimension
@@ -38,7 +38,7 @@ are zero.
 \description{
 Estimates the covariance of log-targeting deviations from historical
 targeting weights stored in \code{OM@StockTargeting@Targeting}, as produced
-by \code{\link[=StandardizeEffort]{StandardizeEffort()}}.
+by \code{\link[=.StandardizeEffort]{.StandardizeEffort()}}.
 }
 \details{
 For each simulation, fleet, and year, the fleet-level log-effort is the
@@ -69,5 +69,5 @@ The function returns \code{OM} unchanged if \verb{@Mean} and \verb{@Covariance} 
 already fully populated, or if \code{nStock == 1}.
 }
 \seealso{
-\code{\link[=StandardizeEffort]{StandardizeEffort()}}, \code{\link[=GenerateStockTargeting]{GenerateStockTargeting()}}
+\code{\link[=.StandardizeEffort]{.StandardizeEffort()}}, \code{\link[=GenerateStockTargeting]{GenerateStockTargeting()}}
 }

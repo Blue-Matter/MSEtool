@@ -22,6 +22,11 @@ ImportSS(
   FleetNames = NULL,
   Interval = 1,
   DataLag = 0,
+  MPStartYear = NULL,
+  InterimAdvice = NULL,
+  LengthUnits = "cm",
+  WeightUnits = "kg",
+  R0Units = 1,
   silent = FALSE,
   Populate = TRUE,
   ...
@@ -67,6 +72,32 @@ fleet names are inferred from SS3 output.}
 \item{Interval}{Integer specifying the number of years between management actions.}
 
 \item{DataLag}{Integer specifying the observation lag in years.}
+
+\item{MPStartYear}{Numeric or \code{NULL}. First calendar year in which MPs are
+applied; see \code{\link[=OM]{OM()}}/\link[=om-class]{om}. Default \code{NULL}.}
+
+\item{InterimAdvice}{A \code{data.frame} or \code{NULL}. Fixed or stochastic
+TAC/Effort values for years before \code{MPStartYear}; see \code{\link[=OM]{OM()}}/\link[=om-class]{om}.
+Default \code{NULL}.}
+
+\item{LengthUnits}{Character string giving the physical unit of length
+measurements in the SS3 model (e.g., \code{"cm"}, \code{"mm"}, \code{"inch"}; see
+\code{\link[=ValidUnits]{ValidUnits()}}). SS3/\code{r4ss} output does not report this, so it cannot be
+inferred; \code{"cm"} is the near-universal SS3 convention. Override if the
+source model used different units. Default \code{"cm"}.}
+
+\item{WeightUnits}{Character string giving the physical unit of weight
+measurements in the SS3 model (e.g., \code{"kg"}, \code{"g"}, \code{"lb"}; see
+\code{\link[=ValidUnits]{ValidUnits()}}). Not reported by SS3/\code{r4ss}; \code{"kg"} is the conventional
+pairing with \code{LengthUnits = "cm"} (SS3's \code{WtLen1}/\code{WtLen2} growth
+parameters are calibrated for cm/kg allometry). Override if the source
+model used different units. Default \code{"kg"}.}
+
+\item{R0Units}{Numeric scaling factor for unfished recruitment (\code{R0}) and
+related numbers-at-age quantities; see \code{Units} in \link[=srr-class]{srr}. SS3 does
+not export the numeric scale of its population numbers (e.g. individuals
+vs. thousands) as metadata, so this cannot be inferred and must be
+supplied by the user if not \code{1} (absolute numbers of fish). Default \code{1}.}
 
 \item{silent}{Logical; if \code{TRUE}, suppress informational output during import.}
 

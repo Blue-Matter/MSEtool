@@ -47,7 +47,7 @@ Dimension indices are clamped to the size of each slot's array, so a slot
 with a singleton dimension is treated as constant across that index.
 }
 \seealso{
-\code{\link[=FitMovement]{FitMovement()}}, \code{\link[=FitMovement_Multi_Area]{FitMovement_Multi_Area()}}, \code{\link[=MarkovFrac]{MarkovFrac()}},
+\code{\link[=FitMovement]{FitMovement()}}, \code{\link[=FitMovement_Multi_Area]{FitMovement_Multi_Area()}}, \code{\link[=.MarkovFrac]{.MarkovFrac()}},
 \code{\link[=CalcAsymDist_2Area]{CalcAsymDist_2Area()}}, \code{\link[=SolveMovement_2_Area]{SolveMovement_2_Area()}}
 }
 \keyword{internal}

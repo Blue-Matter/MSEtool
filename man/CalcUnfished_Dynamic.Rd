@@ -11,7 +11,7 @@ CalcUnfished_Dynamic(Hist, IdenticalHist = NULL, silent = FALSE)
 
 \item{IdenticalHist}{Logical; if \code{TRUE}, assumes all simulations are identical
 and calculates only a single simulation. If \code{NULL} (default), determined
-automatically via \code{IdenticalSims()}.}
+automatically via \code{.IdenticalSims()}.}
 
 \item{silent}{Logical; if \code{TRUE}, suppress messages during calculation.}
 }

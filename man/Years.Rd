@@ -3,11 +3,14 @@
 \name{Years}
 \alias{Years}
 \alias{CalcYears}
+\alias{Years<-}
 \title{Calculate or Extract Time Step Values}
 \usage{
 CalcYears(nYear, pYear, CurrentYear, Seasons = 1, Period = NULL)
 
 Years(x, Period = NULL)
+
+Years(x) <- value
 }
 \arguments{
 \item{nYear}{Integer. Number of historical time steps.}

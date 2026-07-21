@@ -64,7 +64,8 @@ dropping the simulation and time dimensions. Per-fleet aggregation then
 depends on \code{CatchData@Units[fl]}:
 \itemize{
 \item \code{"Number"}: summed over age and area via \code{resolveCatchNumber()}.
-\item \code{"Biomass"}: multiplied by \code{WeightFleet} before summing over age and
+\item \code{"Biomass"}: multiplied by \code{WeightFleetRetained} (\code{type = "Landings"}) or
+\code{WeightFleetSelected} (\code{type = "Discards"}) before summing over age and
 area via \code{resolveCatchBiomass()}.
 }
 }
@@ -93,7 +94,7 @@ CVs for the new year are resolved via \code{resolveCV()}, which looks up the
 fleet- and year-specific CV from the existing \link[=catchdata-class]{catchdata} object.
 }
 
-\subsection{Obs Structure}{
+\subsection{Obs .Structure}{
 
 Observation parameters are accessed via:
 

@@ -46,6 +46,13 @@ a per-angler bag limit to a fleet-level retention cap via
 \eqn{B_f} is the bag limit (fish per angler per trip) and \eqn{T_f(t)}
 is the number of trips. See \code{\link[=Effort]{Effort()}}.}
 
+\item{\code{Theta}}{\code{numeric} array or \code{NULL}. Overdispersion parameter
+\eqn{\theta} of the negative binomial within-trip catch distribution
+(\verb{Sim x Year}). The \code{Year} dimension may be length 1 (replicated
+internally) or span the full model time series. Used by bag-limit
+management procedures to model the distribution of retained catch
+across trips at a given mean catch rate. See \code{\link[=Effort]{Effort()}}.}
+
 \item{\code{Misc}}{\code{list}. Miscellaneous additional inputs.}
 }}
 

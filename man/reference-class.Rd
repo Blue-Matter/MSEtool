@@ -28,6 +28,12 @@ such as FMSY, BMSY, and MSY.}
 
 \item{\code{FMax}}{List or array of fishing mortality at maximum yield-per-recruit.}
 
+\item{\code{FSPR}}{List or array of fishing mortality at user-specified
+spawning-potential-ratio targets, with a \code{Target} dimension.}
+
+\item{\code{FMed}}{List or array of fishing mortality at the empirical replacement
+line (median historical recruits-per-spawner).}
+
 \item{\code{FCrash}}{List or array of fishing mortality leading to population collapse.}
 
 \item{\code{SPRcrash}}{List or array of spawning potential ratio at collapse.}

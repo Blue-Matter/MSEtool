@@ -24,8 +24,9 @@ during population (see Details).
 \item \code{DiscardMortality}: An empty \code{\link[=DiscardMortality]{DiscardMortality()}} object. Discard mortality
 is assumed to be 0.
 \item \code{Closure}: \code{NULL}. No spatial or temporal closures defined.
-\item \code{WeightFleet}: \code{NA}. Fleet-specific weight-at-age is set to the stock
-weight-at-age during population (see Details).
+\item \code{WeightFleetRetained}, \code{WeightFleetSelected}: \code{NA}. Computed from
+selectivity, retention, and the stock's weight-at-length during
+population (see Details).
 \item \code{Bioeconomic}: An empty \code{\link[=Bioeconomic]{Bioeconomic()}} object.
 \item \code{nYear}, \code{pYear}, \code{nSim}, \code{CurrentYear}, \code{Years}, \code{Seasons}: Inherited
 from the paired \code{\link[=Stock]{Stock()}} object by \code{\link[=PopulateFleet]{PopulateFleet()}}.
@@ -95,9 +96,11 @@ temporal closures; all areas are open to fishing in all years.
 
 \subsection{Fleet Weight-at-Age}{
 
-Because \code{WeightFleet} is \code{NA}, \code{\link[=PopulateFleet]{PopulateFleet()}} sets it equal to the
-stock mean weight-at-age array, so fleet-level biomass calculations use
-the same weight schedule as the stock.
+Because \code{WeightFleetRetained}/\code{WeightFleetSelected} are \code{NA},
+\code{\link[=PopulateFleet]{PopulateFleet()}} computes them from selectivity, retention, and the
+stock's weight-at-length, so fleet-level landings/discards biomass
+calculations reflect the fleet's own selectivity and retention pattern
+rather than the stock's unselected mean weight-at-age.
 }
 }
 \examples{

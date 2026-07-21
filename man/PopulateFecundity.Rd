@@ -63,7 +63,7 @@ Steps include:
 \item Generating mean fecundity at age, or at length if applicable
 \item Converting between mean-at-length and mean-at-age
 \item Multiplying by maturity to represent egg production of mature individuals
-\item Adding stochastic variation via \code{PopulateRandom()}
+\item Adding stochastic variation via \code{.PopulateRandom()}
 }
 }
 \examples{

@@ -19,7 +19,7 @@ model and historical dynamics, as returned by \code{\link[=Simulate]{Simulate()}
 
 \item{MPs}{Character vector of MP names to project. If \code{NULL} (default),
 all MPs attached to \code{Hist} are used. MP names must correspond to
-functions available in the current environment. See \code{\link[=CheckMPClass]{CheckMPClass()}} for
+functions available in the current environment. See \code{\link[=.CheckMPClass]{.CheckMPClass()}} for
 validation details.}
 
 \item{parallel}{Logical. Not currently used. Default \code{FALSE}.}

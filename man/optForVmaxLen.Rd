@@ -23,9 +23,9 @@ at \code{Linf}.
 }
 \description{
 Computes the squared difference between the double-normal selectivity at
-\code{Linf} and the target \code{vmaxlen}, used by \code{\link[=VmaxLenOpt]{VmaxLenOpt()}} via \code{\link[stats:optimize]{stats::optimize()}}.
+\code{Linf} and the target \code{vmaxlen}, used by \code{\link[=.VmaxLenOpt]{.VmaxLenOpt()}} via \code{\link[stats:optimize]{stats::optimize()}}.
 }
 \seealso{
-\code{\link[=VmaxLenOpt]{VmaxLenOpt()}}, \code{\link[=SolveForVmaxlen]{SolveForVmaxlen()}}
+\code{\link[=.VmaxLenOpt]{.VmaxLenOpt()}}, \code{\link[=.SolveForVmaxlen]{.SolveForVmaxlen()}}
 }
 \keyword{internal}

@@ -59,9 +59,10 @@ historically, so projection data are not generated.
 Catch-at-size for \code{DataYear} is extracted from \code{Proj@LandingsAtSize} or
 \code{Proj@DiscardsAtSize} (selected by \code{type}) for each stock in \code{stocks} at
 time step \code{TSIndex}, dropping the simulation and time dimensions. The
-result is summed over stocks and areas, retaining the fleet and size
-dimensions, then normalised to proportions \eqn{\mathbf{q}} within each
-fleet.
+result is summed over stocks and areas, computed independently for each
+fleet since fleets are not required to share a size-class grid (see
+\link[=compdata-class]{compdata}), then normalised to proportions \eqn{\mathbf{q}} within
+each fleet.
 }
 
 \subsection{Value Resolution}{
@@ -86,7 +87,7 @@ and a Dirichlet-Multinomial sample of size \code{SampleSize} is drawn via
 }
 }
 
-\subsection{Obs Structure}{
+\subsection{Obs .Structure}{
 
 Observation parameters are accessed via:
 
@@ -107,9 +108,12 @@ See \link[=obs-class]{obs} and \code{\link[=CompObs]{CompObs()}} for full slot d
 
 \subsection{Appending}{
 
-The new year's \code{Value} array (dimensions \verb{[1 x nFleet x nSize]}) is bound
-to the existing array along the year dimension using
-\code{abind::abind(..., along = 1)}, preserving dimension names.
+The new year's \code{Value} array (dimensions \verb{[1 x nFleet x nSize]}, \code{nSize}
+being the existing object's class-dimension width -- see
+\link[=compdata-class]{compdata}) is bound to the existing array along the year
+dimension using \code{abind::abind(..., along = 1)}, preserving dimension
+names. Each fleet is only filled up to its own class count
+(\code{length(CompData@Classes[[fl]])}); any padding beyond that stays \code{NA}.
 }
 }
 \seealso{

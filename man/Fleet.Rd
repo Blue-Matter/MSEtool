@@ -4,8 +4,10 @@
 \alias{Fleet}
 \alias{Closure}
 \alias{Closure<-}
-\alias{WeightFleet}
-\alias{WeightFleet<-}
+\alias{WeightFleetRetained}
+\alias{WeightFleetRetained<-}
+\alias{WeightFleetSelected}
+\alias{WeightFleetSelected<-}
 \alias{Fleet<-}
 \title{Fleet}
 \usage{
@@ -17,7 +19,8 @@ Fleet(
   Retention = new("retention"),
   DiscardMortality = new("discardmortality"),
   Closure = array(),
-  WeightFleet = array(),
+  WeightFleetRetained = array(),
+  WeightFleetSelected = array(),
   Bioeconomic = new("bioeconomic"),
   Dynamics = list(),
   Misc = list()
@@ -27,9 +30,13 @@ Closure(x)
 
 Closure(x) <- value
 
-WeightFleet(x)
+WeightFleetRetained(x)
 
-WeightFleet(x) <- value
+WeightFleetRetained(x) <- value
+
+WeightFleetSelected(x)
+
+WeightFleetSelected(x) <- value
 
 Fleet(x) <- value
 }
@@ -73,10 +80,17 @@ with dimensions \verb{Sim x Year x Area}. Values of 1 indicate an open area;
 \code{\link[=PopulateClosure]{PopulateClosure()}} sets all areas to open (1) across all simulations and
 years.}
 
-\item{WeightFleet}{Numeric array or \code{NA}. Fleet-specific weight-at-age
-(\verb{Sim x Age x Year}). Used in fleet-level biomass calculations. If \code{NA}
-(default), \code{\link[=PopulateFleet]{PopulateFleet()}} sets \code{WeightFleet} equal to the stock
-weight-at-age array.}
+\item{WeightFleetRetained}{Numeric array or \code{NA}. Mean weight-at-age of fish
+retained (landed) by this fleet (\verb{Sim x Age x Year}), selectivity- and
+retention-weighted. Used to convert landed numbers-at-age to landed
+biomass. If \code{NA} (default), \code{\link[=PopulateFleet]{PopulateFleet()}} computes it from
+selectivity, retention, and the stock's weight-at-length. Accessed via
+\code{\link[=WeightFleetRetained]{WeightFleetRetained()}}.}
+
+\item{WeightFleetSelected}{Numeric array or \code{NA}. Mean weight-at-age of fish
+selected (encountered, before retention) by this fleet (\verb{Sim x Age x Year}), selectivity-weighted only. Combined with \code{WeightFleetRetained} to
+compute discards biomass. If \code{NA} (default), \code{\link[=PopulateFleet]{PopulateFleet()}} computes it
+from selectivity and the stock's weight-at-length.}
 
 \item{Bioeconomic}{A \link[=bioeconomic-class]{bioeconomic} object. Not currently used.
 Default is an empty \link[=bioeconomic-class]{bioeconomic}.}
@@ -97,7 +111,8 @@ for \verb{Fleet<-}.}
 object, returns the fleet list or a specific fleet from the OM.
 \item \verb{Fleet<-} returns the \link[=om-class]{om} object \code{x} with the \code{Fleet} slot
 updated.
-\item \code{Closure()} and \code{WeightFleet()} return the corresponding slot from the
+\item \code{Closure()}, \code{WeightFleetRetained()}, and \code{WeightFleetSelected()} return
+the corresponding slot from the
 \link[=fleet-class]{fleet} object \code{x}.
 \item Their replacement forms return \code{x} with the corresponding slot updated.
 }
@@ -120,7 +135,8 @@ components are optional and will use default values if not specified:
 \item \code{\link[=Retention]{Retention()}}: defaults to full retention for all age and length classes.
 \item \code{\link[=DiscardMortality]{DiscardMortality()}}: defaults to 0 (all discards survive).
 \item \code{Closure}: defaults to 1 (all areas open) across all simulations and years.
-\item \code{WeightFleet}: defaults to the stock weight-at-age array.
+\item \code{WeightFleetRetained}/\code{WeightFleetSelected}: computed from selectivity,
+retention, and the stock's weight-at-length.
 }
 }
 
@@ -163,7 +179,8 @@ added automatically if missing.
 
 Individual slots may be accessed or modified using \code{\link[=Effort]{Effort()}},
 \code{\link[=Catchability]{Catchability()}}, \code{\link[=Selectivity]{Selectivity()}}, \code{\link[=Retention]{Retention()}}, \code{\link[=DiscardMortality]{DiscardMortality()}},
-\code{\link[=Closure]{Closure()}}, \code{\link[=WeightFleet]{WeightFleet()}}, and \code{\link[=Bioeconomic]{Bioeconomic()}}.
+\code{\link[=Closure]{Closure()}}, \code{\link[=WeightFleetRetained]{WeightFleetRetained()}}, \code{\link[=WeightFleetSelected]{WeightFleetSelected()}}, and
+\code{\link[=Bioeconomic]{Bioeconomic()}}.
 }
 }
 \examples{

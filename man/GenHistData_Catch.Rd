@@ -71,7 +71,9 @@ stocks, ages, and areas for replicate \code{x}. The aggregation unit depends on
 \itemize{
 \item \code{"Number"}: catch-at-age is summed over age and area, then summed over
 stocks within the complex.
-\item \code{"Biomass"}: catch-at-age is multiplied by \code{WeightFleet} before summing
+\item \code{"Biomass"}: catch-at-age is multiplied by \code{WeightFleetRetained}
+(\code{type = "Landings"}) or \code{WeightFleetSelected} (\code{type = "Discards"})
+before summing
 over age and area, then summed over stocks within the complex.
 }
 
@@ -104,7 +106,7 @@ CVs from the \code{\link[=CatchObs]{CatchObs()}} object are not currently applie
 serves as the working assumption for downstream MPs.
 }
 
-\subsection{Obs Structure}{
+\subsection{Obs .Structure}{
 
 Observation parameters are accessed via:
 

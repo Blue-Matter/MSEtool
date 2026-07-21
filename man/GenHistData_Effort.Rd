@@ -87,7 +87,7 @@ CVs from the \code{\link[=EffortObs]{EffortObs()}} object are not currently appl
 \code{defaultCV} serves as the working assumption for downstream MPs.
 }
 
-\subsection{Obs Structure}{
+\subsection{Obs .Structure}{
 
 Observation parameters are accessed via:
 

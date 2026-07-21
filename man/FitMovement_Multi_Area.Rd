@@ -35,10 +35,10 @@ indices for each slot are clamped to the slot's array size, so singleton
 dimensions are treated as constant.
 
 The relative movement structure among areas is fixed by \code{FracOther} and
-passed to \code{\link[=MarkovFrac]{MarkovFrac()}} to construct the full matrix at each iteration.
+passed to \code{\link[=.MarkovFrac]{.MarkovFrac()}} to construct the full matrix at each iteration.
 }
 \seealso{
 \code{\link[=FitMovement]{FitMovement()}}, \code{\link[=FitMovement_2_Area]{FitMovement_2_Area()}}, \code{\link[=SolveMovement_Multi_Area]{SolveMovement_Multi_Area()}},
-\code{\link[=MarkovFrac]{MarkovFrac()}}, \code{\link[=CalcAsymDist]{CalcAsymDist()}}
+\code{\link[=.MarkovFrac]{.MarkovFrac()}}, \code{\link[=CalcAsymDist]{CalcAsymDist()}}
 }
 \keyword{internal}

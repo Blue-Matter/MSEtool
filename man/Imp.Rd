@@ -2,9 +2,18 @@
 % Please edit documentation in R/constructor-imp.R
 \name{Imp}
 \alias{Imp}
+\alias{Imp<-}
+\alias{TACImp}
+\alias{TACImp<-}
 \title{Imp Constructor and Accessor}
 \usage{
 Imp(Name = NULL, TAC = NULL, Effort = NULL, Size = NULL, Misc = list())
+
+Imp(x) <- value
+
+TACImp(x)
+
+TACImp(x) <- value
 }
 \arguments{
 \item{Name}{\code{character(1)} or an S4 object. Unique identifier for this
@@ -22,10 +31,20 @@ error for effort-based controls. When \code{NULL}, an empty \link[=impslot-class
 created via \code{\link[=ImpSlot]{ImpSlot()}}.}
 
 \item{Size}{An \link[=impslot-class]{impslot} object, or \code{NULL} (default). Implementation
-error for size-based regulations (e.g. minimum landing size). When \code{NULL},
-an empty \link[=impslot-class]{impslot} is created via \code{\link[=ImpSlot]{ImpSlot()}}.}
+error for size-based regulations (e.g. minimum landing size), via its
+\code{Compliance} slot only (see Details). When \code{NULL}, an empty
+\link[=impslot-class]{impslot} is created via \code{\link[=ImpSlot]{ImpSlot()}}.}
 
 \item{Misc}{List. Miscellaneous additional objects. Default \code{list()}.}
+
+\item{x}{An \link[=om-class]{om} object, for \verb{Imp<-}; an \link[=imp-class]{imp} object, for
+\code{TACImp()}/\verb{TACImp<-}.}
+
+\item{value}{For \verb{Imp<-}: a single \link[=imp-class]{imp} object (replicated across
+every complex/fleet), a flat list of \link[=imp-class]{imp} objects of length
+\code{nFleet} (replicated across every complex), or a nested list
+\verb{[[complex]][[fleet]]} of \link[=imp-class]{imp} objects. For \verb{TACImp<-}: an
+\link[=impslot-class]{impslot} object to assign to the \code{TAC} slot.}
 }
 \value{
 \itemize{
@@ -34,9 +53,11 @@ character string.
 \item \code{Imp()} returns \code{Name@Imp} (an \link[=imp-class]{imp} object) when \code{Name} is an
 \link[=om-class]{om} object.
 \item \verb{Imp<-} returns \code{x} with the \code{Imp} slot replaced.
-\item \code{TAC()}, \code{EffortImp()}, \code{SizeImp()} return the corresponding
-\link[=impslot-class]{impslot} slot from an \link[=imp-class]{imp} object \code{x}.
-\item \verb{TAC<-}, \verb{EffortImp<-}, \verb{SizeImp<-} return \code{x} with the named slot
+\item \code{TACImp()}, \code{Effort()}, \code{Size()} return the corresponding
+\link[=impslot-class]{impslot} slot from an \link[=imp-class]{imp} object \code{x}. (\code{TAC()} is not
+used for this purpose because it is already defined elsewhere in the
+package as a function for running MPs against a \link[=data-class]{data} object.)
+\item \verb{TACImp<-}, \verb{Effort<-}, \verb{Size<-} return \code{x} with the named slot
 replaced.
 }
 }
@@ -64,9 +85,24 @@ object is created automatically so that the returned \link[=imp-class]{imp} obje
 always fully populated and valid.
 }
 
-\subsection{Placeholder status}{
+\subsection{What is consumed during simulation}{
 
-The \link[=imp-class]{imp} is currently a placeholder. The class interface is subject to change.
+\code{TAC@Mean}/\code{SD}/\code{Error} and \code{Effort@Mean}/\code{SD}/\code{Error} are applied as a
+multiplicative implementation-error factor to the advised TAC/effort
+before effort-solving (\code{Error} is generated from \code{Mean}/\code{SD} if not
+supplied directly -- see \code{\link[=.PopulateImpSlot]{.PopulateImpSlot()}}). \code{TAC@Compliance} and
+\code{Effort@Compliance} (\verb{[Fleet x Complex]}, in \verb{[0, 1]}) govern how a
+fleet reconciles competing TAC/effort recommendations across multiple
+stocks or complexes -- meaningless (and not consulted) for a
+single-stock/single-complex OM, since there is nothing to reconcile
+against.
+
+\code{Size@Compliance} (in \verb{[0, 1]}) is the fraction of the fleet that adopts a
+newly-advised size-based regulation (a change to \code{Advice@Retention}
+and/or \code{Advice@Selectivity}) in the year it changes; the remaining
+\code{1 - Compliance} fraction continues under the prior curve. Missing/\code{NA}
+defaults to \code{1} (full, immediate adoption). See
+\code{\link[=Update_Selectivity_Sim]{Update_Selectivity_Sim()}}. \code{Size@Mean}/\code{SD}/\code{Error} are not consumed.
 }
 }
 \seealso{
@@ -74,13 +110,19 @@ The \link[=imp-class]{imp} is currently a placeholder. The class interface is su
 \item \link[=imp-class]{imp} for the class definition.
 \item \link[=impslot-class]{impslot} and \code{\link[=ImpSlot]{ImpSlot()}} for the sub-object constructor and
 slot-level accessors.
+\item \code{\link[=TACImp]{TACImp()}}, \code{\link[=Effort]{Effort()}}, \code{\link[=Size]{Size()}} for extracting the \code{TAC}, \code{Effort},
+and \code{Size} sub-objects from an \link[=imp-class]{imp} object.
 \item \code{\link[=OM]{OM()}} for the operating model constructor.
 \item \code{\link[=Advice]{Advice()}} for the advice object connected to implementation.
 \item \code{\link[=ConvertImp]{ConvertImp()}} for converting legacy implementation objects.
 }
 
 Other imp:
+\code{\link{FullComplianceImp}},
 \code{\link[=ImpSlot]{ImpSlot()}},
+\code{\link{OverageImp}},
+\code{\link{PartialSizeComplianceImp}},
+\code{\link{UnderageImp}},
 \code{\link{imp-class}},
 \code{\link{impslot-class}}
 }

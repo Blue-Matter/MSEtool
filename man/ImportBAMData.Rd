@@ -36,13 +36,21 @@ warning.
 }}
 
 \item{UnitsDiscards}{A named character vector or list following the same
-convention as \code{UnitsLandings}, applied to discard columns (\verb{D.*}).}
+convention as \code{UnitsLandings}, applied to discard columns (\verb{D.*}). When
+\code{DiscFleets} is supplied, names here must be the final (retained-fleet)
+names it maps to, not the raw BAM discard stub - see \code{DiscFleets}.}
 
-\item{DiscFleets}{A character vector of BAM discard column name stubs used
-to rename discard fleets after import. Names are expected in the form
-\code{"F.FleetName.D"}, from which the middle component (e.g. \code{"FleetName"})
-is extracted and used as the fleet label. If \code{NULL}, no renaming is
-applied.}
+\item{DiscFleets}{A named character vector mapping final fleet names (i.e.
+names appearing in \code{\link[=FleetNames]{FleetNames()}}) to raw BAM discard column stubs, in
+the form \code{FinalName = "F.RawStub.D"} (the middle component, \code{"RawStub"},
+is extracted and matched against detected \verb{D.*} columns). Used when a
+BAM assessment's discard columns use a different fleet code than the
+corresponding retained fleet (e.g. a discard-only code distinct from the
+landings code) - matching raw discard columns are remapped to their
+final fleet name before import, so \code{UnitsDiscards} and the resulting
+\verb{@Discards} data are keyed by final fleet names throughout, consistently
+with \verb{@Landings}. If \code{NULL} (default), discard columns are matched
+directly against \code{\link[=FleetNames]{FleetNames()}} with no remapping.}
 }
 \value{
 The \code{OM} object with two slots updated:
@@ -85,14 +93,23 @@ stored in \verb{@CPUE}; unmatched \verb{U.*} columns (excluding those containing
 
 Conversion is applied fleet-by-fleet using \code{UnitsLandings} and
 \code{UnitsDiscards}. Fleets present in the OM but absent from the units argument
-receive \code{NA} units and their values are left unconverted.
+receive \code{NA} units and their values are left unconverted. For discards,
+any raw BAM column stub named in \code{DiscFleets} is remapped to its final
+fleet name before this matching happens (see \code{DiscFleets}).
 }
 
 \subsection{Age and length composition}{
 
 Composition data are not yet imported. Planned sources are
 \verb{BAMdata$comp.mats$*age*} (age composition) and
-\code{BAMdata$comp.mats$lcomp.*.ob} (length composition).
+\code{BAMdata$comp.mats$lcomp.*.ob} (length composition). When implemented,
+length composition must follow the \link[=compdata-class]{compdata} convention used by
+\code{LandingsAtSize}/\code{DiscardsAtSize}: \code{Classes} is a named list, one vector
+per fleet, since fleets are not required to share a length-bin grid (see
+\code{ImportSSData_AtSize()} in \code{import-ss3-data.R} for a worked example, and
+\link[=compdata-class]{compdata} for the fleet-relative-position convention on \code{Value}'s
+Class dimension). Age composition can keep the flat shared \code{Classes}
+vector, since ages are shared across fleets.
 }
 }
 \examples{

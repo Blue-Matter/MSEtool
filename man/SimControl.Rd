@@ -8,9 +8,12 @@ SimControl(
   DynamicUnfished = TRUE,
   RefLandings = FALSE,
   RefRemovals = FALSE,
-  ConditionObs = TRUE,
+  .ConditionObs = TRUE,
   GenerateData = TRUE,
   MSYRefs = TRUE,
+  RefPoints = TRUE,
+  MGT = TRUE,
+  BLow = FALSE,
   ...
 )
 }
@@ -24,13 +27,31 @@ Computationally expensive. Default \code{FALSE}.}
 \item{RefRemovals}{Logical. Calculate reference yield based on total
 removals (landings + discards)? Default \code{FALSE}.}
 
-\item{ConditionObs}{Logical. Condition the observation model on historical
+\item{.ConditionObs}{Logical. Condition the observation model on historical
 fishery data? Default \code{TRUE}.}
 
 \item{GenerateData}{Logical. Generate historical fishery data from the
 observation model? Default \code{TRUE}.}
 
-\item{MSYRefs}{Logical. Calculate MSY-based reference points? Default \code{TRUE}.}
+\item{MSYRefs}{Logical. Calculate MSY-based reference points (see
+\code{\link[=CalcMSY]{CalcMSY()}})? Numerically optimizes apical F per simulation, so cost
+scales with \code{nSim}; use \code{parallel = TRUE} in \code{\link[=Simulate]{Simulate()}} for large
+\code{nSim}. Default \code{TRUE}.}
+
+\item{RefPoints}{Logical. Calculate F0.1, Fmax, Fx\%SPR, Fmed, Fcrash and
+SPRcrash reference points (see \code{\link[=CalcRefPoints]{CalcRefPoints()}})? Cheap relative to
+\code{MSYRefs} -- evaluated once on a shared per-recruit grid, fully
+vectorized across simulations, with no per-simulation numerical search.
+Default \code{TRUE}.}
+
+\item{MGT}{Logical. Calculate mean generation time (see \code{\link[=CalcMGT]{CalcMGT()}})?
+A closed-form, fully vectorized calculation -- negligible cost. Default
+\code{TRUE}.}
+
+\item{BLow}{Logical. Calculate the \code{BLow} rebuilding reference point (see
+\code{\link[=CalcBLow]{CalcBLow()}})? Substantially more expensive than the other reference
+points -- a full population projection plus a numerical search, repeated
+per simulation and stock. Default \code{FALSE}.}
 
 \item{...}{Additional named arguments. Any unrecognised names trigger a
 warning.}
@@ -53,7 +74,11 @@ SimControl(MSYRefs = FALSE)
 # Calculate reference yield based on landings
 SimControl(RefLandings = TRUE)
 
+# Also calculate the (expensive) BLow rebuilding reference point
+SimControl(BLow = TRUE)
+
 }
 \seealso{
-\code{\link[=Simulate]{Simulate()}}
+\code{\link[=Simulate]{Simulate()}}, \code{\link[=CalcRefPoints]{CalcRefPoints()}}, \code{\link[=CalcMSY]{CalcMSY()}}, \code{\link[=CalcMGT]{CalcMGT()}},
+\code{\link[=CalcBLow]{CalcBLow()}}
 }

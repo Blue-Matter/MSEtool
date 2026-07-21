@@ -62,7 +62,7 @@ CVs for the new year are resolved via \code{resolveCV()}, which looks up the
 fleet- and year-specific CV from the existing \link[=effortdata-class]{effortdata} object.
 }
 
-\subsection{Obs Structure}{
+\subsection{Obs .Structure}{
 
 Observation parameters are accessed via:
 

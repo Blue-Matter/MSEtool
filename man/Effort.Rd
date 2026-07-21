@@ -15,6 +15,8 @@
 \alias{TripsScalar<-}
 \alias{AnglerPerTrip}
 \alias{AnglerPerTrip<-}
+\alias{Theta}
+\alias{Theta<-}
 \title{Effort Constructor and Accessors}
 \usage{
 Effort(
@@ -26,6 +28,7 @@ Effort(
   Mode = NULL,
   TripsScalar = NULL,
   AnglerPerTrip = NULL,
+  Theta = NULL,
   Misc = list(),
   df = TRUE
 )
@@ -55,6 +58,10 @@ TripsScalar(x) <- value
 AnglerPerTrip(x)
 
 AnglerPerTrip(x) <- value
+
+Theta(x)
+
+Theta(x) <- value
 }
 \arguments{
 \item{Effort}{Numeric array, data frame, or \code{NULL}. Historical fishing
@@ -129,6 +136,30 @@ time, or span the full model time series if it does. Used by bag-limit
 management procedures to scale a per-angler bag limit to a fleet-level
 retention cap. Default \code{NULL}. See Details.}
 
+\item{Theta}{Numeric, numeric array, or \code{NULL}. Overdispersion parameter
+\eqn{\theta} of the negative binomial within-trip catch distribution.
+Accepted forms:
+\itemize{
+\item \code{NULL} (default): \code{Theta} is not populated; bag-limit management
+procedures will error if \code{Theta} is required and not supplied.
+\item Scalar numeric (e.g. \code{1.2}): constant overdispersion applied across
+all simulations and years.
+\item Numeric vector length 2. Treated as lower and upper bounds of a
+uniform distribution, sampled once per simulation and held constant
+across years.
+\item Numeric vector length \code{nSim}. One value per simulation, held
+constant across years.
+\item Numeric array with dimensions \verb{Sim x Year} and named dimnames, for
+\code{Theta} that varies over time. The \code{Sim} dimension may be length 1
+(replicated internally). The \code{Year} dimension may be length 1
+(replicated internally) or span the full model time series.
+}
+
+In every form other than a full \verb{Sim x Year} array, the resolved value
+is stored with a \code{Year} dimension of length 1, named with the first
+historical year, and is replicated across all historical and
+projection years during \code{\link[=Simulate]{Simulate()}}.}
+
 \item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
 
 \item{df}{Logical. Only used when \code{Effort} is a \link[=hist-class]{hist} or
@@ -147,8 +178,8 @@ object, the \code{Effort} slot of that object is returned (as a \code{data.frame
 or array for \link[=hist-class]{hist} and \link[=mse-class]{mse} depending on \code{df}).
 \item \verb{Effort<-} returns \code{x} with the \code{Effort} slot replaced by \code{value}.
 \item \code{Distribution()}, \code{Targeting()}, \code{Maximum()}, \code{Mode()},
-\code{TripsScalar()}, \code{AnglerPerTrip()} return the corresponding slot from
-the \link[=effort-class]{effort} object \code{x}.
+\code{TripsScalar()}, \code{AnglerPerTrip()}, \code{Theta()} return the corresponding
+slot from the \link[=effort-class]{effort} object \code{x}.
 \item Their replacement forms return \code{x} with the corresponding slot updated.
 }
 }
@@ -248,6 +279,50 @@ time series.
 
 When the bag limit is defined per vessel (boat limit), \code{AnglerPerTrip} is
 not used.
+}
+
+\subsection{Within-Trip Overdispersion: \code{Theta}}{
+
+\code{Theta} (\eqn{\theta}) parameterises the negative binomial distribution
+used by bag-limit management procedures to model within-trip catch counts:
+
+\deqn{n_{f}(t) \sim \text{NegBin}(\mu_{f}(t),\; \theta_{f}(t))}
+
+where \eqn{\mu_{f}(t)} is the mean per-trip catch at time \eqn{t} that
+clears all other retention rules (size limits, discard mortality, etc.)
+\itemize{
+\item i.e. what would be kept absent any bag limit. The bag limit itself
+then truncates \eqn{n_{f}(t)} at the cap; \eqn{\mu_{f}(t)} is the
+input to that truncation, not its output. The variance of within-trip
+catch (before truncation) is:
+}
+
+\deqn{\text{Var}(n_{f}) = \mu_{f} + \frac{\mu_{f}^2}{\theta_{f}(t)}}
+
+It determines the fraction of trips that catch at or above the bag
+limit at any given mean catch rate, and therefore how strongly the
+regulation constrains total retention as stock abundance changes.
+
+Smaller values (e.g. 0.5-2) produce high trip-to-trip variability with
+many zero-catch trips and occasional large catches, typical of
+recreational marine fisheries. Larger values approach the Poisson
+distribution. Only required when a bag-limit management procedure is
+active for this fleet.
+
+The \code{Year} dimension of \code{Theta} may be length 1 if the value is assumed
+constant over time (the typical case, absent creel data suggesting
+otherwise); it is replicated internally to match the full model time
+series. A time-varying \code{Theta} can be supplied directly as a \verb{Sim x Year}
+array, e.g. to represent a hypothesis that within-trip catch variability
+changes with stock depletion.
+
+When trip-level creel data are available, \code{Theta} is estimated by
+maximum likelihood fitting of the negative binomial to observed
+per-trip counts. In the absence of creel data, \code{Theta} must be assumed
+\itemize{
+\item e.g. a single plausible value, or a range sampled across simulations
+to test management performance against this uncertainty.
+}
 }
 
 \subsection{Pass-Through Extraction}{

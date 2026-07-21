@@ -8,6 +8,7 @@ Apply_MP(
   Year,
   ManagementYears,
   LastAdviceSimList,
+  LastAggBagLimitSimList,
   MPName,
   MPfunction,
   DataSimList,
@@ -22,16 +23,24 @@ Apply_MP(
 \item{Year}{Integer. Current projection year.}
 
 \item{ManagementYears}{Integer vector. Years in which the MP is applied,
-as computed by \code{CalcManagementYears}.}
+as computed by \code{.CalcManagementYears}.}
 
 \item{LastAdviceSimList}{Nested list of \code{Advice} objects from the most
+recent management year. Returned unchanged in
+non-management years.}
+
+\item{LastAggBagLimitSimList}{Nested list of \code{aggbaglimit} objects (one
+list per sim, possibly empty) from the most
 recent management year. Returned unchanged in
 non-management years.}
 
 \item{MPName}{Character. Name of the management procedure.}
 
 \item{MPfunction}{Function. The MP to apply; must accept a \code{Data}
-object and return an \code{Advice} object.}
+object and return an \code{Advice} object (or, for
+\code{mmp}-class MPs, a \code{DataList} and return an
+\code{AdviceList}/\code{AggregateBagLimit} structure - see
+\code{\link[=CalcAdvice_Sim_MMP]{CalcAdvice_Sim_MMP()}}).}
 
 \item{DataSimList}{Nested list of \code{Data} objects, one per sim and
 stock, trimmed to the current data year.}
@@ -48,14 +57,15 @@ model state.}
 \item{Areas}{Integer vector. Area indices.}
 }
 \value{
-A nested list of \code{Advice} objects — either newly computed by
-\code{CalcAdvice} if \code{Year} is a management year, or \code{LastAdviceSimList}
-carried forward otherwise.
+A list with elements \code{AdviceSimList} (nested list of \code{Advice}
+objects) and \code{AggBagLimitSimList} (nested list of \code{aggbaglimit}
+objects) - either newly computed by \code{.CalcAdvice} if \code{Year} is a
+management year, or both carried forward unchanged otherwise.
 }
 \description{
 Checks whether \code{Year} falls in a scheduled management year. If not,
 the previous advice is carried forward unchanged. If so, the MP is
-applied via \code{\link[=CalcAdvice]{CalcAdvice()}} and a new nested list of \code{Advice} objects
+applied via \code{\link[=.CalcAdvice]{.CalcAdvice()}} and a new nested list of \code{Advice} objects
 is returned.
 }
 \keyword{internal}

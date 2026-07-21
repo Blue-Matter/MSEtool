@@ -22,9 +22,11 @@ Default \code{NULL}.}
 \code{SampleSize} within each year and fleet — see \code{\link[=CompObs]{CompObs()}} for the
 simulation model. Default \code{NULL}.}
 
-\item{Classes}{\code{numeric} or \code{NULL}. Class midpoints — ages in years for
-age compositions, or bin midpoints in the appropriate length unit for
-size compositions. Length \code{nClass}. Default \code{NULL}.}
+\item{Classes}{\code{numeric}, \code{list}, or \code{NULL}. For age compositions, a
+numeric vector of class values shared by every fleet, length matching
+\code{dim(Value)[3]}. For size compositions, a \code{list} of numeric vectors,
+one per fleet (named to match \code{Name}), since fleets are not required to
+share a size-class grid -- see \link[=compdata-class]{compdata}. Default \code{NULL}.}
 
 \item{Units}{\code{character} or \code{NULL}. Units of the class variable
 (e.g., \code{"years"}, \code{"cm"}, \code{"mm"}). Default \code{NULL}.}
@@ -60,8 +62,13 @@ simulation model that generates \code{Value} is defined in \code{\link[=CompObs]
 
 \if{html}{\out{<div class="sourceCode r">}}\preformatted{LandingsAtAge(data)  <- CompData(Value = myArray, Classes = ages)
 DiscardsAtAge(data)  <- CompData(Value = myArray, Classes = ages)
-LandingsAtSize(data) <- CompData(Value = myArray, Classes = bins)
-DiscardsAtSize(data) <- CompData(Value = myArray, Classes = bins)
+
+# Size compositions: Classes is a list, one vector per fleet, since
+# fleets need not share a size-class grid.
+LandingsAtSize(data) <- CompData(Value = myPaddedArray,
+                                 Classes = list(Trawl = bins1, Longline = bins2))
+DiscardsAtSize(data) <- CompData(Value = myPaddedArray,
+                                 Classes = list(Trawl = bins1, Longline = bins2))
 }\if{html}{\out{</div>}}
 }
 }

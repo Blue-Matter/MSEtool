@@ -86,7 +86,7 @@ and a Dirichlet-Multinomial sample of size \code{SampleSize} is drawn via
 }
 }
 
-\subsection{Obs Structure}{
+\subsection{Obs .Structure}{
 
 Observation parameters are accessed via:
 

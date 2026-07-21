@@ -4,7 +4,16 @@
 \alias{CompareBAM}
 \title{Compare BAM and OM Output}
 \usage{
-CompareBAM(Stock, OM = NULL, plot = FALSE, thresh = 1)
+CompareBAM(
+  Stock,
+  OM = NULL,
+  plot = FALSE,
+  thresh = 1,
+  save_plots = TRUE,
+  outdir = "figures/diagnostics/BAM",
+  width = NULL,
+  height = NULL
+)
 }
 \arguments{
 \item{Stock}{Character string matching a stock in \code{bamExtras}, a list of BAM
@@ -20,12 +29,28 @@ in some years.}
 
 \item{thresh}{Numeric. MARE threshold (as a percentage) above which a
 comparison is flagged, printed, and plotted. Default \verb{1\%}.}
+
+\item{save_plots}{Logical. If \code{TRUE} (default), diagnostic plots are
+written as PNG files to \code{file.path(outdir, Stock)}, independently of
+whether they are also printed to the active device (see \code{plot}).}
+
+\item{outdir}{Character. Base directory for saved plots. Defaults to
+\code{"figures/diagnostics/BAM"}.}
+
+\item{width, height}{Numeric. Width/height (inches) passed to
+\code{\link[ggplot2:ggsave]{ggplot2::ggsave()}}. If \code{NULL} (default), each plot is sized
+automatically from its number of facet panels: \code{Recruits}, \code{Number}, and
+\code{Biomass} (single-panel) use 6 x 4; \code{Landings}/\code{Discards}, which facet by
+fleet, scale up accordingly. Set either to a number to use that fixed
+size for every saved plot instead.}
 }
 \value{
 Invisibly returns a named list with elements \code{Stock}, \code{Recruits},
-\code{Number}, and \code{Biomass}. Each of \code{Recruits}, \code{Number}, and \code{Biomass} is a
-list with elements \code{df} (long-format data.frame of OM and BAM values by
-year) and \code{MARE} (absolute relative error by year).
+\code{Number}, \code{Biomass}, \code{Landings}, and \code{Discards}. Each of these (other
+than \code{Stock}) is a list with elements \code{df} (long-format data.frame of OM
+and BAM values by year), \code{MARE} (absolute relative error by year), and
+\code{plot} (the \code{ggplot} diagnostic plot, if generated - see \code{plot},
+\code{thresh}, and \code{save_plots}).
 }
 \description{
 Compares key population time series between BAM output and a simulated

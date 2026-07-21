@@ -2,55 +2,81 @@
 % Please edit documentation in R/convert-data.R
 \name{ConvertData}
 \alias{ConvertData}
-\title{Convert a Legacy Data Object to a New data Class}
+\title{Convert Between Legacy \code{Data} and New \code{data} Classes}
 \usage{
-ConvertData(Data, Seasons = 1, sim = 1, silent = FALSE)
+ConvertData(x, Seasons = 1, sim = 1, silent = FALSE)
 }
 \arguments{
-\item{Data}{A \link[=Data-legacy-class]{Data-legacy} object to convert.}
+\item{x}{A \link[=Data-legacy-class]{Data-legacy} object, a \link[=data-class]{data} object, or a \code{list}
+of \link[=data-class]{data} objects (one per simulation, to be combined into a
+single multi-sim legacy \code{Data} object via \code{\link[=joinData]{joinData()}}).}
 
-\item{Seasons}{Integer. Number of seasons per year. Default \code{1}.}
+\item{Seasons}{Integer. Number of seasons per year. Only used when
+converting legacy \code{Data} -> \code{data}. Default \code{1}.}
 
 \item{sim}{Integer. Simulation index to extract from the legacy object.
-Default \code{1}.}
+Only used when converting legacy \code{Data} -> \code{data}. Default \code{1}.}
 
 \item{silent}{Logical. If \code{TRUE}, suppresses progress messages. Default
 \code{FALSE}.}
 }
 \value{
-A \link[=data-class]{data} object populated from simulation \code{sim} of \code{Data}.
+\itemize{
+\item Legacy \code{Data} -> \code{data}: a \link[=data-class]{data} object populated from
+simulation \code{sim} of \code{x}.
+\item \code{data} (or list of \code{data}) -> legacy \code{Data}: a \link[=Data-legacy-class]{Data-legacy}
+object with \code{nsim} equal to \code{1} (single \code{data} object) or
+\code{length(x)} (list of \code{data} objects).
+}
 }
 \description{
-Converts a legacy \link[=Data-legacy-class]{Data-legacy} object to the current \link[=data-class]{data}
-for a single simulation, mapping observations, life history parameters, and
-advice to their corresponding new S4 slots.
+Converts a legacy \link[=Data-legacy-class]{Data-legacy} object to the current \link[=data-class]{data},
+or a \link[=data-class]{data} object (or list of \link[=data-class]{data} objects, one per
+simulation) to a legacy \link[=Data-legacy-class]{Data-legacy} object. Direction is
+determined automatically from the class of \code{x}.
 }
 \details{
+\subsection{Legacy \code{Data} -> \code{data}}{
+
 Legacy \code{Data} objects do not distinguish between landings and discards.
 \code{Data@Cat} is mapped to \code{Landings} only; \code{Discards} will be empty in the
 resulting \link[=data-class]{data} object. If \code{Data@Cat} represents total removals,
 the \code{Discards} slot must be populated manually after conversion.
 
-The following legacy slots are not currently converted and are silently
-dropped:
-\itemize{
-\item Additional indices: \code{SpInd}, \code{VInd}, \code{AddInd}, \code{AddIndType}, \code{AddIndV},
-\code{AddIunits} (a warning is emitted if \code{AddInd} is non-empty)
-\item Mean lengths: \code{ML}, \code{Lc}, \code{Lbar}
-\item Abundance: \code{Abun}, \code{SpAbun}
-\item Reference points: \code{FMSY_M}, \code{BMSY_B0}, \code{Bref}, \code{Iref}
-\item Recruitment: \code{Rec}
-\item Average catch/depletion: \code{AvC}, \code{Dt}
-\item Ref slot: \code{Ref}, \code{Ref_type}
+\code{Ind}, \code{SpInd}, \code{VInd}, and every column of \code{AddInd} are folded into one
+multi-column \code{data@CPUE} (there is no fishery-dependent/-independent
+distinction in legacy \code{Data}); the tracked biomass component (total,
+spawning, vulnerable) is recorded in \code{CPUE@Misc$IndexType}. \code{data@Survey}
+is intentionally left empty. \code{FMSY_M} is converted to an absolute
+\code{Reference@FMSY} via \code{FMSY_M * Mort}. Slots with no structural equivalent
+anywhere in \code{data} (\code{ML}, \code{Lc}, \code{Lbar}, \code{Abun}, \code{SpAbun}, \code{BMSY_B0},
+\code{Bref}, \code{Rec}, \code{AvC}, \code{Dt}, \code{Ref}, \code{Ref_type}) are stashed under
+\code{data@Misc}/\code{data@Reference@Misc} rather than dropped.
+}
+
+\subsection{\code{data} -> Legacy \code{Data}}{
+
+A \link[=data-class]{data} object holds a single realization (no \code{Sim} dimension), so
+the result always has \code{nsim = 1} - callers of a legacy MP must use
+\code{x = 1}. Multi-fleet time series and composition data are aggregated to
+the single-fleet legacy shape (landings + discards summed across fleets
+for \code{Cat}; effort summed across fleets; age/size composition summed
+across fleets, with size-composition bins rebinned onto a common grid
+first). When multiple \code{CPUE}/\code{Survey} indices are present, one is
+selected for \code{Data@Ind} (\code{Survey} preferred over \code{CPUE}, then most
+complete, then longest span). Slots with no equivalent in \code{data} (see
+\code{Data@Misc$UnmappedSlots} on the result) are left \code{NA}. Every lossy or
+approximated mapping is recorded in \code{Data@Log} (see \code{\link[=Log]{Log()}}).
 }
 }
 \examples{
 \dontrun{
 Datalegacy <- readRDS("MyLegacyData.rds")
 data_new <- ConvertData(Datalegacy, sim = 1)
+Data_again <- ConvertData(data_new)
 }
 
 }
 \seealso{
-\code{\link[=Convert]{Convert()}}, \code{\link[=ConvertOM]{ConvertOM()}}, \code{\link[=ConvertMOM]{ConvertMOM()}}
+\code{\link[=Convert]{Convert()}}, \code{\link[=ConvertOM]{ConvertOM()}}, \code{\link[=ConvertMOM]{ConvertMOM()}}, \code{\link[=joinData]{joinData()}}
 }

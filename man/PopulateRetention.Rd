@@ -10,6 +10,7 @@ PopulateRetention(
   Length = NULL,
   Weight = NULL,
   Maturity = NULL,
+  Selectivity = NULL,
   nSim = 5,
   Years = NULL,
   nArea = 1,
@@ -34,6 +35,14 @@ on weight-at-age.}
 
 \item{Maturity}{A \code{\link[=Maturity]{Maturity()}} object. Required if the retention model uses
 relative selectivity.}
+
+\item{Selectivity}{A populated \code{\link[=Selectivity]{Selectivity()}} object. Optional, but
+recommended whenever the retention model is defined at length or weight:
+used to weight the age-length key when collapsing retention-at-length (or
+-weight) to retention-at-age, so that the result reflects the length
+distribution of fish the fleet actually catches at each age rather than
+the unconditional population length distribution at age. Ignored for
+retention models defined directly at age.}
 
 \item{nSim}{Integer. Number of simulation replicates.}
 
@@ -69,7 +78,7 @@ at-length, or retention-at-weight. Steps include:
 \item Resolving the retention model class
 \item Generating mean retention at age, length, or weight as appropriate
 \item Converting between mean-at-length/weight and mean-at-age
-\item Adding stochastic variation via \code{PopulateRandom()}
+\item Adding stochastic variation via \code{.PopulateRandom()}
 \item Adding an 'Area' dimension and setting dimension names
 }
 }

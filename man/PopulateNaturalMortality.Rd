@@ -55,7 +55,7 @@ and years. Steps include:
 \item Resolving the mortality model class
 \item Generating mean natural mortality at age or at length
 \item Converting between mean-at-length and mean-at-age if necessary
-\item Adding stochastic variation via \code{PopulateRandom()}
+\item Adding stochastic variation via \code{.PopulateRandom()}
 }
 }
 \examples{

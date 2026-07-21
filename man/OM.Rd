@@ -33,6 +33,8 @@ OM(
   Relations = NULL,
   StockTargeting = NULL,
   Interval = 1,
+  MPStartYear = NULL,
+  InterimAdvice = NULL,
   nReps = 1,
   pStar = 0.5,
   maxF = 3,
@@ -133,11 +135,18 @@ See \code{\link[=StockTargeting]{StockTargeting()}}.}
 \item{Interval}{Numeric scalar or named numeric vector. Management update
 interval in years. Default \code{1}.}
 
+\item{MPStartYear}{Numeric or \code{NULL}. First calendar year in which MPs are
+applied - see \emph{Interim Advice} in Details. Default \code{NULL}.}
+
+\item{InterimAdvice}{A \code{data.frame} or \code{NULL}. Fixed or stochastic
+TAC/Effort values for years before \code{MPStartYear} - see \emph{Interim Advice}
+in Details. Default \code{NULL}.}
+
 \item{nReps}{Positive integer. Number of stochastic replicates used for
-generating management advice. Default \code{1}.}
+generating management advice. Default \code{1}. Not currently used.}
 
 \item{pStar}{Numeric in \eqn{[0, 1]}. Percentile applied to stochastic
-management advice. Default \code{0.5}.}
+management advice. Default \code{0.5}. Not currently used.}
 
 \item{maxF}{Numeric. Maximum allowable instantaneous fishing mortality.
 Applies to nominal fishing mortality for fish that interact with the
@@ -187,6 +196,50 @@ The \code{Years} slot is not a constructor parameter. It is derived
 automatically from \code{nYear}, \code{pYear}, \code{CurrentYear}, and \code{Seasons} via
 \code{\link[=CalcYears]{CalcYears()}} and is read-only. Use \code{\link[=Years]{Years()}} to extract it from a
 constructed object.
+}
+
+\subsection{Interim Advice}{
+
+When the historical period ends before MPs should actually start being
+applied (e.g. the OM is conditioned on data to 2024 but MPs will not be
+implemented until 2028), set \code{MPStartYear} to the first calendar year MPs
+should run. Projection years before \code{MPStartYear} are "interim" years:
+the MP is not called, \code{Imp} (implementation error) is bypassed since these
+values represent actual/plausible realised catch or effort rather than a
+management recommendation, and advice is instead taken from
+\code{InterimAdvice}.
+
+\code{InterimAdvice} is a \code{data.frame} with one row per Year x Stock x
+(optionally Fleet), with columns:
+\itemize{
+\item \code{Year}: calendar year, in \verb{[first projection year, MPStartYear - 1]}.
+\item \code{Stock}: stock (or complex) name. Optional when the OM has a single
+stock/complex, in which case every row applies to it; required when
+there is more than one.
+\item \code{Fleet}: optional; fleet name, or \code{NA} to apply as a stock total (TAC,
+allocated across fleets the same way MP-supplied TAC is) or an identical
+value across fleets (Effort).
+\item \code{Type}: \code{"TAC"} or \code{"Effort"}.
+\item \code{Mean}: point estimate, natural scale. Must be \verb{>= 0} (e.g. \code{0} for a
+fleet with no historical catch, maintained as a closure in interim
+years). A row with \code{Mean == 0} is always deterministic -- a lognormal
+draw cannot be centred at \code{0} -- regardless of \code{SD}.
+\item \code{SD}: optional; natural-scale SD for a lognormal draw (sampled once per
+simulation, per row). \code{NA}/\code{0} (default), or \code{Mean == 0}, gives a fixed,
+deterministic value. If supplied, must be \verb{>= 0}, and must be \code{NA}/\code{0}
+wherever \code{Mean == 0}.
+\item \code{TACType}, \code{TACUnit}: as in \code{\link[=Advice]{Advice()}}; only used for \code{"TAC"} rows.
+\item \code{EffType}: as in \code{\link[=Advice]{Advice()}}; only used for \code{"Effort"} rows.
+}
+
+Any Year x Stock combination with no matching row falls back to freezing
+effort at the last historical level (the same default used when an MP
+itself returns no TAC/Effort).
+
+For seasonal OMs (\code{Seasons > 1}), the annual \code{Mean} for a row is spread
+across seasons using that stock/fleet's own seasonal shape from the last
+historical year (Landings for TAC rows, Effort for Effort rows), so a
+historical seasonal pattern is retained rather than flattened.
 }
 
 \subsection{StockTargeting Initialisation}{

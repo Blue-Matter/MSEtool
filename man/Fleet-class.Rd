@@ -36,9 +36,20 @@ with dimensions \verb{Sim x Year x Area}. Values of 1 indicate an open area;
 0 indicates a closed area. Defaults to 1 (all areas open) if not
 supplied. See \code{\link[=Fleet]{Fleet()}}.}
 
-\item{\code{WeightFleet}}{\code{numeric} array or \code{NULL}. Fleet-specific weight-at-age
-(\verb{Sim x Age x Year}). If \code{NA}, set to the stock weight-at-age during
-\code{\link[=PopulateFleet]{PopulateFleet()}}. See \code{\link[=Fleet]{Fleet()}}.}
+\item{\code{WeightFleetRetained}}{\code{numeric} array or \code{NULL}. Mean weight-at-age of
+fish \emph{retained} (landed) by this fleet (\verb{Sim x Age x Year}) --
+selectivity- and retention-weighted. Used to convert landed numbers-at-age
+to landed biomass. If \code{NA}, computed from selectivity, retention, and the
+stock's weight-at-length during \code{\link[=PopulateFleet]{PopulateFleet()}}. Exposed via the
+\code{WeightFleet()}/\code{`WeightFleet<-`()} accessors. See \code{\link[=Fleet]{Fleet()}}.}
+
+\item{\code{WeightFleetSelected}}{\code{numeric} array or \code{NULL}. Mean weight-at-age of
+fish \emph{selected} (encountered/caught, before retention) by this fleet
+(\verb{Sim x Age x Year}) -- selectivity-weighted only, not retention-weighted.
+Combined with \code{WeightFleetRetained} to compute discards biomass as the
+residual between selected and retained biomass. If \code{NA}, computed from
+selectivity and the stock's weight-at-length during \code{\link[=PopulateFleet]{PopulateFleet()}}.
+See \code{\link[=Fleet]{Fleet()}}.}
 
 \item{\code{Bioeconomic}}{A \link[=bioeconomic-class]{bioeconomic} object. Not currently used.}
 

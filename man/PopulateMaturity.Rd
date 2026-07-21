@@ -58,7 +58,7 @@ for a stock. Steps include:
 \item Resolving the maturity model class
 \item Generating mean maturity at age, at length, or at weight as appropriate
 \item Converting between mean-at-length/weight and mean-at-age
-\item Adding stochastic variation via \code{PopulateRandom()}
+\item Adding stochastic variation via \code{.PopulateRandom()}
 \item Setting semelparous array if applicable
 }
 }

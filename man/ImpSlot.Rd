@@ -16,17 +16,25 @@ default.}
 deviation of implementation error around \code{Mean}. When \code{NULL}, the slot is
 left at its class default.}
 
-\item{Compliance}{Numeric array or list of arrays, or \code{NULL} (default).
-Compliance rate, i.e. the proportion of the fleet that adheres to the
-management control. Values should be in \eqn{[0, 1]}. When \code{NULL}, the
-slot is left at its class default.}
+\item{Compliance}{Numeric matrix \verb{[Fleet x Complex]}, or \code{NULL} (default).
+Meaning depends on which control (\code{TAC}, \code{Effort}, or \code{Size}) this
+\code{impslot} is attached to (see Details). For \code{TAC}/\code{Effort}, only
+meaningful for multi-stock/multi-complex OMs, where it governs how
+a fleet reconciles competing TAC or effort recommendations across
+stocks -- not consulted at all for a single-stock/single-complex OM,
+since there is nothing to reconcile against. For \code{Size}, it is the
+fraction of the fleet adopting a newly-advised size regulation. Values
+should be in \eqn{[0, 1]}. When \code{NULL}, that fleet/complex pair falls
+back to the framework's default behaviour (today's default multi-stock
+reconciliation for \code{TAC}/\code{Effort}; full/immediate adoption for \code{Size}).}
 
 \item{Error}{Numeric array or list of arrays, or \code{NULL} (default). Realised
-implementation error. When supplied directly, \code{Mean}, \code{SD}, and
-\code{Compliance} are stored but \code{Error} is not re-derived from them during
-simulation — the user-supplied values are used as-is. When \code{NULL}, \code{Error}
-is stochastically generated from \code{Mean}, \code{SD}, and \code{Compliance} at
-simulation time.}
+implementation error, a per simulation/year multiplicative factor
+applied to the advised TAC or effort before effort-solving. When
+supplied directly, \code{Mean} and \code{SD} are stored but \code{Error} is not
+re-derived from them during simulation -- the user-supplied values are
+used as-is. When \code{NULL}, \code{Error} is stochastically generated from
+\code{Mean} and \code{SD} at simulation time (see \code{\link[=.PopulateImpSlot]{.PopulateImpSlot()}}).}
 
 \item{Misc}{List. Miscellaneous additional objects. Default \code{list()}.}
 }
@@ -44,29 +52,28 @@ Construct an \link[=impslot-class]{impslot} object representing implementation u
 for a single management control, or access and replace individual slots.
 }
 \details{
-\subsection{Mean, SD, and Compliance}{
+\subsection{Mean, SD, and Error}{
 
-\code{Mean} and \code{SD} together parameterise a lognormal (or other distributional)
-implementation error applied to the management recommendation each
-simulation year. \code{Compliance} scales the effective error by the fraction of
-the fleet that actually adheres to the control; the remainder is assumed to
-operate without constraint.
+\code{Mean} and \code{SD} together parameterise a lognormal distribution for
+\code{Error}, a general implementation-error multiplier applied to the
+advised TAC/effort regardless of how many stocks are in the OM (e.g.
+\code{Mean = 0.9} models a fleet that implements 90\% of the recommended TAC
+on average). See \code{\link[=.PopulateImpSlot]{.PopulateImpSlot()}} for exactly how \code{Mean}/\code{SD} expand
+to \code{Error}.
 }
 
-\subsection{Error}{
+\subsection{Compliance}{
 
-If \code{Error} is supplied, it is stored directly in the slot and used during
-simulation without further stochastic derivation. This is useful for
-conditioning on historically observed deviations or for deterministic
-sensitivity runs. If \code{Error} is \code{NULL} (the default), it is generated from
-\code{Mean}, \code{SD}, and \code{Compliance} at simulation time.
-}
-
-\subsection{Placeholder status}{
-
-The \link[=impslot-class]{impslot} and its enclosing \link[=imp-class]{imp} are currently placeholders.
-Dimensional requirements and validation rules will be formalised in a future
-release.
+\code{Compliance} is a separate, distinct concept from \code{Mean}/\code{SD}/\code{Error}: it
+governs multi-stock reconciliation specifically (see
+\code{\link[=OptEffort_multi_stock]{OptEffort_multi_stock()}}), not general
+over/under-implementation. \code{Compliance -> 0} reproduces the framework's
+default soft balancing across competing stock TACs; \code{Compliance -> 1}
+approaches a hard choke (this stock's TAC must not be exceeded). For
+effort-based advice, \code{Compliance} inflates a stock's effort ceiling by
+\code{1/Compliance} before the fleet's effort is resolved as the minimum
+across stocks, so lower compliance lets the fleet exceed that stock's
+recommended effort.
 }
 }
 \examples{
@@ -84,12 +91,16 @@ sl <- ImpSlot(Error = array(rnorm(100, 1, 0.05), dim = c(10, 10)))
 \itemize{
 \item \link[=impslot-class]{impslot} for the class definition.
 \item \code{\link[=Imp]{Imp()}} for the enclosing constructor and accessor.
-\item \code{\link[=TAC]{TAC()}}, \code{\link[=Effort]{Effort()}}, \code{\link[=Size]{Size()}} for slot-level accessors on
+\item \code{\link[=TACImp]{TACImp()}}, \code{\link[=Effort]{Effort()}}, \code{\link[=Size]{Size()}} for slot-level accessors on
 \link[=imp-class]{imp} objects.
 }
 
 Other imp:
+\code{\link{FullComplianceImp}},
 \code{\link[=Imp]{Imp()}},
+\code{\link{OverageImp}},
+\code{\link{PartialSizeComplianceImp}},
+\code{\link{UnderageImp}},
 \code{\link{imp-class}},
 \code{\link{impslot-class}}
 }

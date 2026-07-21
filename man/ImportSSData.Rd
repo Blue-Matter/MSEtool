@@ -9,6 +9,7 @@ ImportSSData(
   Name = "Imported by ImportSSData",
   CommonName = "",
   Species = "",
+  LengthUnits = "cm",
   silent = FALSE,
   ...
 )
@@ -22,6 +23,11 @@ ImportSSData(
 \item{CommonName}{Character; common name of the species}
 
 \item{Species}{Character; scientific name of the species}
+
+\item{LengthUnits}{Character string giving the physical unit of length
+composition bins (e.g., \code{"cm"}, \code{"mm"}, \code{"inch"}; see \code{\link[=ValidUnits]{ValidUnits()}}).
+Not reported by SS3/\code{r4ss}; \code{"cm"} is the near-universal SS3 convention.
+Default \code{"cm"}.}
 
 \item{silent}{Logical; suppress progress messages (default FALSE)}
 

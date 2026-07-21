@@ -85,6 +85,18 @@ are row-bound and labelled via the \code{Period} column; historical rows carry
 For the projection period of an \link[=mse-class]{mse} object the denominator is
 extended to cover projection years by repeating the last available
 historical reference value (forward fill).
+
+\code{FMSY} is a single "apical fishing mortality" optimised jointly across all
+stocks in a complex (see \code{\link[=CalcMSY]{CalcMSY()}}) -- there is no separate \code{FMSY} for an
+individual stock within a multi-stock complex. \code{F_FMSY()} therefore reports
+its ratio at the \emph{complex} level (\code{OM@Complexes}), not the stock level: the
+numerator is the controlling (maximum) realised apical F across the stocks
+in each complex -- the same quantity \code{\link[=CalcMSY]{CalcMSY()}} itself optimises against
+-- divided by that complex's \code{FMSY}. For a complex containing a single
+stock this is identical to the stock's own F/FMSY. The \code{Stock} column of
+the returned \code{data.frame} (and dimension of the \code{df = FALSE} array) holds
+complex names, matching the convention already used for \code{FMSY} in
+\link[=refpointsMSY-class]{refpointsMSY}.
 }
 \examples{
 Hist <- Simulate(SingleStockOM)

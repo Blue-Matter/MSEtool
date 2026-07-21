@@ -13,17 +13,18 @@ An \link[=om-class]{om} object with the following slots populated:
 \item \strong{\code{pYear}}: \code{30}. Number of projection years.
 \item \strong{\code{Stock}}: a length-2 list of \verb{[[AlbacoreExStock, ButterfishExStock]]}.
 \item \strong{\code{Fleet}}: a length-2 list, each containing a length-1 list of
-\link{AsympExFleet}. Structure is \verb{[[stock]][[fleet]]}. Both stocks are
+\link{AsympExFleet}. .Structure is \verb{[[stock]][[fleet]]}. Both stocks are
 fished by the same fleet type.
 \item \strong{\code{Obs}}: a length-1 list containing a length-1 list of
-\link{AgeStructuredObs}. Structure is \verb{[[complex]][[fleet]]}. A single
+\link{AgeStructuredObs}. .Structure is \verb{[[complex]][[fleet]]}. A single
 observation model applies to the whole complex, since data are
 aggregated across both stocks before being observed.
 \item \strong{\code{Complexes}}: \code{list(Stock_Complex = 1:2)}. Both stocks are assigned
 to a single complex named \code{"Stock_Complex"}, so data and management
 advice are aggregated across stocks 1 and 2.
-\item \strong{\code{Imp}}: \code{NULL}. Implementation error is not specified; the \code{Imp}
-slot retains its class default. See \code{\link[=Imp]{Imp()}} for details.
+\item \strong{\code{Imp}}: a length-1 list containing a length-1 list of
+\link{FullComplianceImp}. .Structure is \verb{[[complex]][[fleet]]}. Perfect TAC/
+effort implementation and full immediate size-regulation compliance.
 }
 }
 \usage{
@@ -76,9 +77,14 @@ and discarded fish. See \link{AgeStructuredObs} for full parameter details.
 
 \subsection{Implementation Error}{
 
-The \code{Imp} slot is \code{NULL}. The \link[=imp-class]{imp} is currently a placeholder and
-implementation error is not applied during simulation. See \code{\link[=Imp]{Imp()}} for
-details.
+\link{FullComplianceImp} models perfect implementation: \code{TAC@Mean = 1}/
+\code{SD = 0} and \code{Effort@Mean = 1}/\code{SD = 0} mean realised TAC/effort always
+equal advice exactly, and
+\code{Size@Compliance = 1} means any size-regulation advice (a change to
+\code{Advice@Retention}/\code{Advice@Selectivity}) is adopted immediately by the
+whole fleet (see \code{\link[=Update_Selectivity_Sim]{Update_Selectivity_Sim()}}). See \code{\link[=Imp]{Imp()}} for details,
+and \link{OverageImp}, \link{UnderageImp}, \link{PartialSizeComplianceImp} for
+contrasting examples.
 }
 }
 \examples{
@@ -93,8 +99,8 @@ Hist <- runMSE(ComplexOM, MPs = ExampleMPs())
 }
 \seealso{
 \link{SingleStockOM}, \link{TwoFleetOM}, \link{MultiStockOM} for structural variants.
-\link{AlbacoreExStock}, \link{ButterfishExStock}, \link{AsympExFleet}, \link{AgeStructuredObs}
-for the component objects.
+\link{AlbacoreExStock}, \link{ButterfishExStock}, \link{AsympExFleet}, \link{AgeStructuredObs},
+\link{FullComplianceImp} for the component objects.
 \code{\link[=OM]{OM()}}, \link[=om-class]{om}, \code{\link[=runMSE]{runMSE()}}, \code{\link[=PopulateOM]{PopulateOM()}}, \code{\link[=ExampleMPs]{ExampleMPs()}}
 
 Other om:

@@ -11,7 +11,7 @@ PopulateWeight(
   Years = NULL,
   nSim = 5,
   AWK = FALSE,
-  CalcAtLength = FALSE,
+  CalcAtLength = TRUE,
   seed = NULL,
   silent = FALSE,
   force = FALSE

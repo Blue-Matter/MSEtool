@@ -28,7 +28,7 @@ Converts one element of a \code{Pars} list to a named \verb{Sim × Year} (or
 \details{
 \itemize{
 \item If already an array, dimension names are assigned via
-\code{\link[=NameParDimensions]{NameParDimensions()}} if missing.
+\code{\link[=.NameParDimensions]{.NameParDimensions()}} if missing.
 \item If length 2 (and \code{nSim != 2}), treated as uniform bounds and sampled
 via \code{\link[stats:runif]{stats::runif()}}. When \code{nSim == 1} the midpoint is used.
 \item Otherwise, values are recycled or truncated to \code{nSim} and wrapped in a

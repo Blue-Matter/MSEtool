@@ -9,8 +9,6 @@
 \alias{qCV<-}
 \alias{qInc}
 \alias{qInc<-}
-\alias{Theta}
-\alias{Theta<-}
 \title{Catchability Constructor and Accessors}
 \usage{
 Catchability(Efficiency = NULL, qCV = NULL, qInc = NULL, Misc = list())
@@ -28,10 +26,6 @@ qCV(x) <- value
 qInc(x)
 
 qInc(x) <- value
-
-Theta(x)
-
-Theta(x) <- value
 }
 \arguments{
 \item{Efficiency}{Numeric, array, or \code{NULL}. Gear or vessel catchability
@@ -71,19 +65,6 @@ supply a fully specified \code{Efficiency} array directly.}
 functions.}
 
 \item{value}{The replacement value for the corresponding slot.}
-
-\item{Theta}{Numeric, array, or \code{NULL}. Overdispersion parameter
-\eqn{\theta} of the negative binomial within-trip catch distribution.
-Accepted forms:
-\itemize{
-\item \code{NULL} (default): \code{Theta} is not populated; bag-limit management
-procedures will error if \code{Theta} is required and not supplied.
-\item Scalar numeric (e.g. \code{1.2}): constant overdispersion applied across
-all simulations.
-\item Numeric vector length 2. Treated as lower and upper bounds of a
-uniform distribution.
-\item Numeric vector length \code{nSim}.
-}}
 }
 \value{
 \itemize{
@@ -141,42 +122,6 @@ Both parameters are included primarily for backwards compatibility. For
 most applications, supplying a fully specified \code{Efficiency} array gives
 more direct control over time-varying catchability across both historical
 and projected periods.
-}
-
-\subsection{Within-Trip Overdispersion: \code{Theta}}{
-
-\code{Theta} (\eqn{\theta}) parameterises the negative binomial distribution
-used by bag-limit management procedures to model within-trip catch counts:
-
-\deqn{n_{f,s}(t) \sim \text{NegBin}(\mu_{f,s}(t),\; \theta_{f,s})}
-
-where \eqn{\mu_{f,s}(t)} is the mean catch per trip at time \eqn{t},
-computed internally by the OM from the unfished equilibrium catch and
-current depletion (assuming \eqn{\gamma = 1}; see Note). The variance of
-within-trip catch is:
-
-\deqn{\text{Var}(n_{f,s}) = \mu_{f,s} + \frac{\mu_{f,s}^2}{\theta_{f,s}}}
-
-It determines the fraction of trips that catch at or above the bag
-limit at any given mean catch rate, and therefore how strongly the
-regulation constrains total retention as stock abundance changes. \code{Theta}
-is a fixed property of the fleet-stock pair and has no \code{Year} dimension.
-
-\code{Theta} does not have a \code{Year} dimension. Overdispersion is treated as a fixed
-behavioural property of the fleet-stock pair that does not vary over
-time.
-
-Smaller values (e.g. 0.5–2) produce high trip-to-trip variability
-with many zero-catch trips and occasional large catches, typical of
-recreational marine fisheries.
-
-Larger values approach the Poisson distribution.
-Only required when a bag-limit management procedure isactive for this
-fleet-stock combination.
-
-When trip-level creel data are available, \code{Theta} is estimated by maximum
-likelihood fitting of the negative binomial to observed per-trip counts.
-In the absence of creel data, \code{Theta} must be assumed.
 }
 
 \subsection{Attaching to a Fleet}{

@@ -118,7 +118,7 @@ population-dynamics properties of a stock, or access and replace the \code{Stock
 slot of an enclosing S4 object (e.g., an \link[=om-class]{om} object).
 }
 \details{
-\subsection{Object Structure}{
+\subsection{Object .Structure}{
 
 A \link[=stock-class]{stock} object aggregates all biological components needed to
 simulate stock dynamics:

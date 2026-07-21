@@ -54,7 +54,11 @@ over areas and stocks.
 \item \strong{\verb{*AtSize}}: extracted from \code{Hist@LandingsAtSize} or
 \code{Hist@DiscardsAtSize} (nested list \verb{[stock][fleet]}, each
 \verb{[nSim x nClass x nYear x nArea]}), summed over areas and stocks,
-assembled over fleets.
+computed independently for each fleet since fleets are not required to
+share a size-class grid (see \link[=compdata-class]{compdata}). If a fleet's observed
+and OM-predicted size classes don't have matching counts, this is
+treated as a mismatch between \code{FisheryData} and the operating model and
+raises an error rather than silently comparing mismatched bins.
 }
 
 Predicted proportions \eqn{\hat{p}_{s,t,b}} are computed by normalising

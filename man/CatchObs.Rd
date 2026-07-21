@@ -23,12 +23,12 @@ supplied directly.
 \item Length-1 scalar: a single CV applied uniformly across all simulations
 and years when generating the \code{Error} array internally.
 \item Length-2 vector \code{c(mean, sd)}: \code{CV} is itself drawn stochastically —
-a unique CV per simulation is generated via \code{\link[=StructurePars]{StructurePars()}} before
+a unique CV per simulation is generated via \code{\link[=.StructurePars]{.StructurePars()}} before
 being used to generate the \code{Error} array.
 \item Length-\code{nSim} named array: used directly, one CV per simulation.
 }
 
-When conditioning on real data via \code{\link[=ConditionObs]{ConditionObs()}}, \code{CV} is replaced by
+When conditioning on real data via \code{\link[=.ConditionObs]{.ConditionObs()}}, \code{CV} is replaced by
 the simulation-specific standard deviation of historical log-residuals.}
 
 \item{Bias}{\code{numeric} or \code{NULL}. Multiplicative observation bias. Accepted
@@ -42,7 +42,7 @@ unique bias is drawn per simulation as
 simulation.
 }
 
-When conditioning on real data via \code{\link[=ConditionObs]{ConditionObs()}}, \code{Bias} is replaced
+When conditioning on real data via \code{\link[=.ConditionObs]{.ConditionObs()}}, \code{Bias} is replaced
 by the mean ratio of simulated to observed catch across historical years,
 per simulation.}
 
@@ -52,7 +52,7 @@ error multipliers with dimensions \verb{nSim x nYear} and named dimnames
 ignored for error generation. Values should be positive multipliers
 centred near 1. Default \code{NULL}, in which case \code{Error} is generated from
 \code{CV} internally. When conditioning on real data via
-\code{\link[=ConditionObs]{ConditionObs()}}, any user-supplied \code{Error} is replaced.}
+\code{\link[=.ConditionObs]{.ConditionObs()}}, any user-supplied \code{Error} is replaced.}
 
 \item{Years}{\code{numeric} vector or \code{NULL}. Calendar years over which to
 condition the observation error when real catch data are provided. When
@@ -99,7 +99,7 @@ of precedence:
 \item \strong{Stochastic from \code{CV}}: if \code{Error} is \code{NULL} and \code{CV} is specified,
 Internally the model generates a lognormal array where each cell is
 \code{rlnorm(1, mconv(1, CV[sim]), sdconv(1, CV[sim]))}.
-\item \strong{Conditioned from real data}: \code{\link[=ConditionObs]{ConditionObs()}} estimates \code{CV}, \code{Bias},
+\item \strong{Conditioned from real data}: \code{\link[=.ConditionObs]{.ConditionObs()}} estimates \code{CV}, \code{Bias},
 and \code{Error} from historical residuals; any user-supplied values are
 replaced.
 }
@@ -114,7 +114,7 @@ length-\code{nSim} input is used directly.
 
 \subsection{Conditioning on Real Data}{
 
-When real catch data are provided (via \code{OM@Data}) and \code{\link[=ConditionObs]{ConditionObs()}} is
+When real catch data are provided (via \code{OM@Data}) and \code{\link[=.ConditionObs]{.ConditionObs()}} is
 run, \code{CV} and \code{Bias} are estimated from the historical residuals between
 simulated and observed catch, and \code{Error} is populated to cover both
 historical and projection years. Any user-supplied \code{CV}, \code{Bias}, and \code{Error}
@@ -156,7 +156,7 @@ Discards(obs)
 \itemize{
 \item \link[=catchobs-class]{catchobs} for the class definition.
 \item \code{\link[=Obs]{Obs()}} for the enclosing observation model constructor.
-\item \code{\link[=ConditionObs]{ConditionObs()}} for how these slots are estimated from real data.
+\item \code{\link[=.ConditionObs]{.ConditionObs()}} for how these slots are estimated from real data.
 }
 
 Other obs:

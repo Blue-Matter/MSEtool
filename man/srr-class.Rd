@@ -38,10 +38,17 @@ to \code{"BevertonHolt"}. See \code{\link[=SRRModels]{SRRModels()}} for availabl
 
 \item{\code{R0}}{\code{array} or \code{numeric}. Unfished equilibrium recruitment. May be a
 scalar (same across all simulations), a length-2 bounds vector (sampled
-from \code{Uniform(lower, upper)} once per simulation), or a length-\code{nSim}
-vector. Interpreted in units of \code{Units} (e.g., \code{Units = 1000} means R0
-is in thousands of fish). Does not affect internal calculations — used
-only to set the scale of numbers in \link[=hist-class]{hist} output.}
+from \code{Uniform(lower, upper)} once per simulation), a length-\code{nSim}
+vector, or a \verb{Sim x Year} array for a deliberately time-varying R0 (e.g.
+to model a regime shift in carrying capacity). Interpreted in units of
+\code{Units} (e.g., \code{Units = 1000} means R0 is in thousands of fish). A
+constant R0 only sets the absolute scale of numbers in \link[=hist-class]{hist}
+output and does not otherwise affect population dynamics. A
+time-varying R0 does affect dynamics: the spawning production per
+recruit implied by steepness is fixed at its initial-year value (so
+time-varying life-history parameters like \code{M} don't cause it to drift),
+but \code{R0} itself is read for the current year, so a change in \code{R0}
+immediately rescales the stock-recruitment curve from that year on.}
 
 \item{\code{SD}}{\code{array} or \code{numeric}. Log-space standard deviation of recruitment
 deviations. May be a scalar, length-2 bounds vector, or length-\code{nSim}

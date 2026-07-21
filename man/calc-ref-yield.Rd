@@ -2,10 +2,10 @@
 % Please edit documentation in R/calc-ref-yield.R
 \name{calc-ref-yield}
 \alias{calc-ref-yield}
-\alias{CalcRefYield}
+\alias{.CalcRefYield}
 \title{Calculate Reference Yield}
 \usage{
-CalcRefYield(
+.CalcRefYield(
   Hist,
   type = c("Landings", "Removals"),
   Units = c("Biomass", "Number"),

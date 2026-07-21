@@ -63,7 +63,7 @@ steps. This stock should be paired with an \code{\link[=OM]{OM()}} with \code{Se
 standard deviation 1.5 months, creating a sharply seasonal pulse.
 }
 
-\subsection{Spatial Structure}{
+\subsection{Spatial .Structure}{
 
 The three areas represent a linear inshore-to-offshore gradient:\tabular{clc}{
    Area \tab Habitat \tab Relative size \cr
@@ -103,7 +103,7 @@ See also \code{\link[=WeightModels]{WeightModels()}}.
 
 \code{\link[=PopulateNaturalMortality]{PopulateNaturalMortality()}} expands the fixed \code{M} into a constant
 natural mortality-at-age array. Stochastic annual deviates are added
-via \code{PopulateRandom()} using \code{SD} and \code{AC} from the \code{SRR} slot.
+via \code{.PopulateRandom()} using \code{SD} and \code{AC} from the \code{SRR} slot.
 
 See also \code{\link[=NaturalMortalityModels]{NaturalMortalityModels()}}.
 }

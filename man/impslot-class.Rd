@@ -12,7 +12,7 @@ management control (TAC, effort, or size regulations) within an
 \details{
 \code{impslot} objects are not intended to be constructed directly via
 \code{\link[methods:new]{methods::new()}}. Use \code{\link[=ImpSlot]{ImpSlot()}} to create a new object, and
-attach it to an \link[=imp-class]{imp} object via \code{\link[=TAC]{TAC()}}, \code{\link[=Effort]{Effort()}}, or
+attach it to an \link[=imp-class]{imp} object via \code{\link[=TACImp]{TACImp()}}, \code{\link[=Effort]{Effort()}}, or
 \code{\link[=Size]{Size()}}.
 }
 \section{Slots}{
@@ -24,8 +24,12 @@ the management recommendation. See \code{\link[=ImpSlot]{ImpSlot()}}.}
 \item{\code{SD}}{Numeric array or list of arrays. Standard deviation of
 implementation error around \code{Mean}. See \code{\link[=ImpSlot]{ImpSlot()}}.}
 
-\item{\code{Compliance}}{Numeric array or list of arrays. Compliance rate across
-the fleet. See \code{\link[=ImpSlot]{ImpSlot()}}.}
+\item{\code{Compliance}}{Numeric matrix \verb{[Fleet x Complex]}. Meaning is
+context-dependent on which \link[=imp-class]{imp} control this \code{impslot} belongs
+to: for \code{TAC}/\code{Effort}, governs multi-stock reconciliation (not
+consulted for a single-stock/complex OM); for \code{Size}, is the fraction of
+the fleet adopting a newly-advised size regulation (see \code{\link[=Imp]{Imp()}}). See
+\code{\link[=ImpSlot]{ImpSlot()}}.}
 
 \item{\code{Error}}{Numeric array or list of arrays. Realised implementation error,
 typically derived from \code{Mean}, \code{SD}, and \code{Compliance} during simulation.
@@ -42,8 +46,12 @@ See \code{\link[=ImpSlot]{ImpSlot()}}.}
 }
 
 Other imp:
+\code{\link{FullComplianceImp}},
 \code{\link[=Imp]{Imp()}},
 \code{\link[=ImpSlot]{ImpSlot()}},
+\code{\link{OverageImp}},
+\code{\link{PartialSizeComplianceImp}},
+\code{\link{UnderageImp}},
 \code{\link{imp-class}}
 }
 \concept{imp}

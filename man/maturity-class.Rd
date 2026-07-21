@@ -31,7 +31,7 @@ parameter sets and
 accepted input formats.}
 
 \item{\code{Model}}{\code{function} or \code{character(1)}. Maturity model identifier,
-matched to one of \code{\link[=MaturityModels]{MaturityModels()}}. Set automatically by \code{\link[=FindModel]{FindModel()}}
+matched to one of \code{\link[=MaturityModels]{MaturityModels()}}. Set automatically by \code{\link[=.FindModel]{.FindModel()}}
 when \code{Pars} is supplied without an explicit model.}
 
 \item{\code{MeanAtAge}}{\code{array}. Mean maturity-at-age with named dimensions \code{Sim},
@@ -85,7 +85,7 @@ array may also be supplied directly. See \code{\link[=Maturity]{Maturity()}} for
 \item \code{\link[=MaturityModels]{MaturityModels()}} for available maturity models and their required
 parameters.
 \item \code{\link[=Populate]{Populate()}} for array population.
-\item \code{\link[=FindModel]{FindModel()}} for automatic model inference.
+\item \code{\link[=.FindModel]{.FindModel()}} for automatic model inference.
 \item \code{\link[=Semelparous]{Semelparous()}} to retrieve or set the post-spawn mortality array.
 \item \code{\link[=Length]{Length()}} and \code{\link[=Weight]{Weight()}} for the companion schedules required by at-length and at-weight maturity models.
 \item \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for the

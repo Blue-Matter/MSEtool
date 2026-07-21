@@ -23,7 +23,7 @@ supplied directly.
 \item Length-1 scalar: a single CV applied uniformly across all simulations
 and years when generating the \code{Error} array internally.
 \item Length-2 vector \code{c(mean, sd)}: \code{CV} is itself drawn stochastically —
-a unique CV per simulation is generated via \code{\link[=StructurePars]{StructurePars()}} before
+a unique CV per simulation is generated via \code{\link[=.StructurePars]{.StructurePars()}} before
 being used to generate the \code{Error} array.
 \item Length-\code{nSim} named array: used directly, one CV per simulation.
 }}

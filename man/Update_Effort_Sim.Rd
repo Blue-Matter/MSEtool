@@ -13,8 +13,12 @@ Update_Effort_Sim(
   AdviceList,
   LastAdviceList,
   FleetNames,
+  StockNames,
   Complexes,
-  Areas
+  Areas,
+  lambda_scale = 0.001,
+  n_recent = 5,
+  maxEval = 500
 )
 }
 \arguments{
@@ -34,6 +38,8 @@ Update_Effort_Sim(
 
 \item{FleetNames}{Character vector of fleet names.}
 
+\item{StockNames}{Character vector of stock names.}
+
 \item{Complexes}{List mapping complex indices to stock indices.}
 
 \item{Areas}{Integer vector of area indices.}
@@ -44,8 +50,10 @@ Updated \code{Proj} object.
 \description{
 Converts effort advice to absolute values, optionally distributes it over
 areas, then writes the minimum prescribed effort across complexes into
-\code{Proj@Effort} and \code{Proj@Distribution} for all future time steps.
-Skips complexes where management is unchanged, effort is \code{NULL}, or the
-advice object is not of class \code{"advice"}.
+\code{Proj@Effort} and \code{Proj@Distribution} for all future time steps. Skips
+complexes where management is unchanged, effort is \code{NULL}, or the advice
+object is not of class \code{"advice"}. For multi-stock OMs, also
+(re)optimises each fleet's stock-specific targeting weights for the
+current year at this fixed effort - see \code{\link[=OptTargeting_multi_stock]{OptTargeting_multi_stock()}}.
 }
 \keyword{internal}

@@ -56,7 +56,7 @@ and \code{Model} is set to \link{MaturityAtLength}. Age-based parameters are use
 only when \code{L50} is absent or \code{NULL}.
 }
 
-\subsection{Spatial Structure}{
+\subsection{Spatial .Structure}{
 
 If all three spatial parameters (\code{Size_area_1}, \code{Prob_staying},
 \code{Frac_area_1}) equal \code{0.5}, an empty \link[=spatial-class]{spatial} object is returned.

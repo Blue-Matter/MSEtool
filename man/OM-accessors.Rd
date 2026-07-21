@@ -44,6 +44,10 @@
 \alias{Relations<-}
 \alias{Interval}
 \alias{Interval<-}
+\alias{MPStartYear}
+\alias{MPStartYear<-}
+\alias{InterimAdvice}
+\alias{InterimAdvice<-}
 \alias{nReps}
 \alias{nReps<-}
 \alias{pStar}
@@ -139,6 +143,14 @@ Relations(x) <- value
 Interval(x)
 
 Interval(x) <- value
+
+MPStartYear(x)
+
+MPStartYear(x) <- value
+
+InterimAdvice(x)
+
+InterimAdvice(x) <- value
 
 nReps(x)
 

@@ -25,7 +25,7 @@ those expected by \code{Model}. See \code{\link[=LengthModels]{LengthModels()}} 
 accepted input formats.}
 
 \item{\code{Model}}{\code{function} or \code{character(1)}. Growth model identifier, matched
-to one of \code{\link[=LengthModels]{LengthModels()}}. Set automatically by \code{\link[=FindModel]{FindModel()}} when \code{Pars}
+to one of \code{\link[=LengthModels]{LengthModels()}}. Set automatically by \code{\link[=.FindModel]{.FindModel()}} when \code{Pars}
 is supplied without an explicit model.}
 
 \item{\code{Units}}{\code{character(1)}. Physical unit of the length measurements (e.g.,
@@ -68,7 +68,7 @@ Bin \code{k} spans \verb{[Classes[k], Classes[k+1])}; the final bin is open-ende
 \item \code{\link[=LengthModels]{LengthModels()}} for available growth models and their required #'   parameters.
 \item \code{\link[=ValidUnits]{ValidUnits()}} for accepted unit strings.
 \item \code{\link[=Populate]{Populate()}} for array population.
-\item \code{\link[=FindModel]{FindModel()}} for automatic model inference.
+\item \code{\link[=.FindModel]{.FindModel()}} for automatic model inference.
 \item \code{\link[=ALK]{ALK()}} to retrieve the age-length key.
 \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for the
 full description of how \code{Pars}, \code{Model}, and \code{MeanAtAge} interact.

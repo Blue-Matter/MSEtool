@@ -13,7 +13,7 @@ An \link[=om-class]{om} object with the following slots populated:
 \item \strong{\code{pYear}}: \code{30}. Number of projection years.
 \item \strong{\code{Stock}}: a length-2 list of \verb{[[AlbacoreExStock, ButterfishExStock]]}.
 \item \strong{\code{Fleet}}: a length-2 list, each containing a length-2 list of
-\verb{[[AsympExFleet, DomeExFleet]]}. Structure is \verb{[[stock]][[fleet]]}.
+\verb{[[AsympExFleet, DomeExFleet]]}. .Structure is \verb{[[stock]][[fleet]]}.
 Both stocks are fished by the same two fleet types.
 \item \strong{\code{Obs}}: a length-2 list with structure \verb{[[stock]][[fleet]]}:
 \itemize{
@@ -21,8 +21,9 @@ Both stocks are fished by the same two fleet types.
 \item \link{ButterfishExStock}: \verb{[[CatchAndSurveyObs, LengthStructuredObs]]}
 }
 \item \strong{\code{Complexes}}: \code{NULL}. Stocks are managed independently.
-\item \strong{\code{Imp}}: \code{NULL}. Implementation error is not specified; the \code{Imp}
-slot retains its class default. See \code{\link[=Imp]{Imp()}} for details.
+\item \strong{\code{Imp}}: a length-2 list with structure \verb{[[stock]][[fleet]]}, each
+entry \link{FullComplianceImp}. Perfect TAC/effort implementation and full
+immediate size-regulation compliance, for both stocks and fleets.
 }
 }
 \usage{
@@ -83,9 +84,14 @@ and discarded fish.
 
 \subsection{Implementation Error}{
 
-The \code{Imp} slot is \code{NULL}. The \link[=imp-class]{imp} is currently a placeholder and
-implementation error is not applied during simulation. See \code{\link[=Imp]{Imp()}} for
-details.
+\link{FullComplianceImp} models perfect implementation: \code{TAC@Mean = 1}/
+\code{SD = 0} and \code{Effort@Mean = 1}/\code{SD = 0} mean realised TAC/effort always
+equal advice exactly, and
+\code{Size@Compliance = 1} means any size-regulation advice (a change to
+\code{Advice@Retention}/\code{Advice@Selectivity}) is adopted immediately by the
+whole fleet (see \code{\link[=Update_Selectivity_Sim]{Update_Selectivity_Sim()}}). See \code{\link[=Imp]{Imp()}} for details,
+and \link{OverageImp}, \link{UnderageImp}, \link{PartialSizeComplianceImp} for
+contrasting examples.
 }
 }
 \examples{
@@ -102,7 +108,7 @@ Hist <- runMSE(MultiStockOM, MPs = ExampleMPs())
 \link{SingleStockOM}, \link{TwoFleetOM}, \link{ComplexOM} for simpler structural variants.
 \link{AlbacoreExStock}, \link{ButterfishExStock}, \link{AsympExFleet}, \link{DomeExFleet},
 \link{AgeStructuredObs}, \link{CommercialFleetObs}, \link{CatchAndSurveyObs},
-\link{LengthStructuredObs} for the component objects.
+\link{LengthStructuredObs}, \link{FullComplianceImp} for the component objects.
 \code{\link[=OM]{OM()}}, \link[=om-class]{om}, \code{\link[=runMSE]{runMSE()}}, \code{\link[=PopulateOM]{PopulateOM()}}, \code{\link[=ExampleMPs]{ExampleMPs()}}
 
 Other om:

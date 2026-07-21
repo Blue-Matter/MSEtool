@@ -17,8 +17,8 @@ If \code{st} is provided, a single integer. Otherwise, an array of
 recruitment age indices with a \code{Stock} dimension.
 }
 \description{
-Returns the number of leading pre-recruit timesteps - those with no valid
-recruitment lag back to timestep 1 - for each stock in an \code{om} or \code{hist}
-class object, based on the seasonal time step and minimum age class.
+Returns the number of pre-recruit age classes (i.e. the age index at which
+recruitment occurs) for each stock in an \code{om} or \code{hist} class object. Pre-recruit
+classes are determined by the seasonal time step and the minimum age class.
 }
 \keyword{internal}

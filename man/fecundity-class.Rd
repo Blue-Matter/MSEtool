@@ -33,7 +33,7 @@ parameter sets and
 accepted input formats.}
 
 \item{\code{Model}}{\code{function} or \code{character(1)}. Fecundity model identifier,
-matched to one of \code{\link[=FecundityModels]{FecundityModels()}}. Set automatically by \code{\link[=FindModel]{FindModel()}}
+matched to one of \code{\link[=FecundityModels]{FecundityModels()}}. Set automatically by \code{\link[=.FindModel]{.FindModel()}}
 when \code{Pars} is supplied without an explicit model.}
 
 \item{\code{Units}}{\code{character(1)}. Unit of reproductive output (e.g., \code{"eggs"}).
@@ -75,7 +75,7 @@ but not applied; spawning timing is controlled by \code{\link[=SRR]{SRR()}}.}
 \item \code{\link[=FecundityModels]{FecundityModels()}} for available models and their required parameters.
 \item \code{\link[=ValidUnits]{ValidUnits()}} for accepted unit strings.
 \item \code{\link[=Populate]{Populate()}} for array population.
-\item \code{\link[=FindModel]{FindModel()}} for automatic model inference.
+\item \code{\link[=.FindModel]{.FindModel()}} for automatic model inference.
 \item \code{\link[=Length]{Length()}} and \code{\link[=Weight]{Weight()}} for the companion schedules used in the
 default spawning biomass calculation and at-length fecundity models.
 \item \code{\link[=Maturity]{Maturity()}} for the maturity schedule multiplied through fecundity

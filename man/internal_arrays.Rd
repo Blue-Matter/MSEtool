@@ -2,44 +2,48 @@
 % Please edit documentation in R/util-array-create.R
 \name{internal_arrays}
 \alias{internal_arrays}
-\alias{ArraySimStockAgeTimeArea}
-\alias{ArraySimAge}
-\alias{ListArraySimAge}
-\alias{ArraySimAgeTime}
-\alias{ListArraySimAgeTime}
-\alias{ArraySimAgeTimeArea}
-\alias{ListArraySimAgeTimeArea}
-\alias{ArraySimAgeTimeFleet}
-\alias{ListArraySimAgeTimeFleet}
-\alias{ArraySimAgeTimeFleetArea}
-\alias{ListArraySimAgeTimeFleetArea}
-\alias{ArraySimClassYearArea}
-\alias{ListArraySimClassTimeFleetArea}
-\alias{ArraySimAgeTimeMPArea}
-\alias{ListArraySimAgeTimeAreaMP}
-\alias{ArraySimAgeTimeFleetAreaMP}
-\alias{ListArraySimAgeTimeFleetAreaMP}
-\alias{ArraySimClassYearAreaMP}
-\alias{ListArraySimClassTimeFleetAreaMP}
-\alias{ArraySimStockTimeMP}
-\alias{ArraySimStockTimeFleetMP}
-\alias{ArraySimAgeTimeFleetMP}
-\alias{ListArraySimAgeTimeFleetMP}
-\alias{ListArraySimTimeFleetAreaMP}
+\alias{.ArraySimStockAgeTimeArea}
+\alias{.ArraySimAge}
+\alias{.ListArraySimAge}
+\alias{.ArraySimAgeTime}
+\alias{.ListArraySimAgeTime}
+\alias{.ArraySimAgeTimeArea}
+\alias{.ListArraySimAgeTimeArea}
+\alias{.ArraySimAgeTimeFleet}
+\alias{.ListArraySimAgeTimeFleet}
+\alias{.ArraySimAgeTimeFleetArea}
+\alias{.ListArraySimAgeTimeFleetArea}
+\alias{.ArraySimClassYearArea}
+\alias{.ListArraySimClassTimeFleetArea}
+\alias{.ArraySimAgeTimeMPArea}
+\alias{.ListArraySimAgeTimeAreaMP}
+\alias{.ArraySimAgeTimeFleetAreaMP}
+\alias{.ListArraySimAgeTimeFleetAreaMP}
+\alias{.ArraySimClassYearAreaMP}
+\alias{.ListArraySimClassTimeFleetAreaMP}
+\alias{.ArraySimStockTimeMP}
+\alias{.ArraySimStockTimeFleetMP}
+\alias{.ArraySimAgeTimeFleetMP}
+\alias{.ListArraySimAgeTimeFleetMP}
+\alias{.ListArraySimTimeFleetAreaMP}
 \title{Construct simulation arrays over common OM dimensions}
 \usage{
-ArraySimStockAgeTimeArea(Sims, Stocks, Ages, Years, Areas, default = 0)
+.ArraySimStockAgeTimeArea(Sims, Stocks, Ages, Years, Areas, default = 0)
 
-ArraySimAge(
+.ArraySimAge(
   OM,
   Period = c("Historical", "Projection", "All"),
   stock = 1,
   default = 0
 )
 
-ListArraySimAge(OM, Period = c("Historical", "Projection", "All"), default = 0)
+.ListArraySimAge(
+  OM,
+  Period = c("Historical", "Projection", "All"),
+  default = 0
+)
 
-ArraySimAgeTime(
+.ArraySimAgeTime(
   OM,
   Period = c("Historical", "Projection", "All"),
   stock = 1,
@@ -47,14 +51,14 @@ ArraySimAgeTime(
   Years = NULL
 )
 
-ListArraySimAgeTime(
+.ListArraySimAgeTime(
   OM,
   Period = c("Historical", "Projection", "All"),
   default = 0,
   Years = NULL
 )
 
-ArraySimAgeTimeArea(
+.ArraySimAgeTimeArea(
   OM,
   Period = c("Historical", "Projection", "All"),
   stock = 1,
@@ -62,14 +66,14 @@ ArraySimAgeTimeArea(
   Years = NULL
 )
 
-ListArraySimAgeTimeArea(
+.ListArraySimAgeTimeArea(
   OM,
   Period = c("Historical", "Projection", "All"),
   default = 0,
   Years = NULL
 )
 
-ArraySimAgeTimeFleet(
+.ArraySimAgeTimeFleet(
   OM,
   Period = c("Historical", "Projection", "All"),
   stock = 1,
@@ -77,14 +81,14 @@ ArraySimAgeTimeFleet(
   Years = NULL
 )
 
-ListArraySimAgeTimeFleet(
+.ListArraySimAgeTimeFleet(
   OM,
   Period = c("Historical", "Projection", "All"),
   default = 0,
   Years = NULL
 )
 
-ArraySimAgeTimeFleetArea(
+.ArraySimAgeTimeFleetArea(
   OM,
   Period = c("Historical", "Projection", "All"),
   stock = 1,
@@ -92,91 +96,30 @@ ArraySimAgeTimeFleetArea(
   Years = NULL
 )
 
-ListArraySimAgeTimeFleetArea(
+.ListArraySimAgeTimeFleetArea(
   OM,
   Period = c("Historical", "Projection", "All"),
   default = 0,
   Years = NULL
 )
 
-ArraySimClassYearArea(
+.ArraySimClassYearArea(
   OM,
   Period = c("Historical", "Projection", "All"),
-  stock = 1,
-  fleet = 1,
-  default = 0,
-  Years = NULL
-)
-
-ListArraySimClassTimeFleetArea(
-  OM,
-  Period = c("Historical", "Projection", "All"),
-  default = 0,
-  Years = NULL
-)
-
-ArraySimAgeTimeMPArea(
-  OM,
-  Period = c("Historical", "Projection", "All"),
-  MPs = NULL,
-  stock = 1,
-  default = 0,
-  Years = NULL
-)
-
-ListArraySimAgeTimeAreaMP(
-  OM,
-  Period = c("Historical", "Projection", "All"),
-  MPs = NULL,
-  default = 0,
-  Years = NULL
-)
-
-ArraySimAgeTimeFleetAreaMP(
-  OM,
-  Period = c("Historical", "Projection", "All"),
-  MPs = NULL,
-  stock = 1,
-  default = 0,
-  Years = NULL
-)
-
-ListArraySimAgeTimeFleetAreaMP(
-  OM,
-  Period = c("Historical", "Projection", "All"),
-  MPs = NULL,
-  default = 0,
-  Years = NULL
-)
-
-ArraySimClassYearAreaMP(
-  OM,
-  Period = c("Historical", "Projection", "All"),
-  MPs = NULL,
   stock = 1,
   fleet = 1,
   default = 0,
   Years = NULL
 )
 
-ListArraySimClassTimeFleetAreaMP(
+.ListArraySimClassTimeFleetArea(
   OM,
   Period = c("Historical", "Projection", "All"),
-  MPs = NULL,
   default = 0,
   Years = NULL
 )
 
-ArraySimStockTimeMP(
-  OM,
-  Period = c("Historical", "Projection", "All"),
-  MPs = NULL,
-  stock = 1,
-  default = 0,
-  Years = NULL
-)
-
-ArraySimStockTimeFleetMP(
+.ArraySimAgeTimeMPArea(
   OM,
   Period = c("Historical", "Projection", "All"),
   MPs = NULL,
@@ -185,7 +128,15 @@ ArraySimStockTimeFleetMP(
   Years = NULL
 )
 
-ArraySimAgeTimeFleetMP(
+.ListArraySimAgeTimeAreaMP(
+  OM,
+  Period = c("Historical", "Projection", "All"),
+  MPs = NULL,
+  default = 0,
+  Years = NULL
+)
+
+.ArraySimAgeTimeFleetAreaMP(
   OM,
   Period = c("Historical", "Projection", "All"),
   MPs = NULL,
@@ -194,7 +145,7 @@ ArraySimAgeTimeFleetMP(
   Years = NULL
 )
 
-ListArraySimAgeTimeFleetMP(
+.ListArraySimAgeTimeFleetAreaMP(
   OM,
   Period = c("Historical", "Projection", "All"),
   MPs = NULL,
@@ -202,7 +153,60 @@ ListArraySimAgeTimeFleetMP(
   Years = NULL
 )
 
-ListArraySimTimeFleetAreaMP(
+.ArraySimClassYearAreaMP(
+  OM,
+  Period = c("Historical", "Projection", "All"),
+  MPs = NULL,
+  stock = 1,
+  fleet = 1,
+  default = 0,
+  Years = NULL
+)
+
+.ListArraySimClassTimeFleetAreaMP(
+  OM,
+  Period = c("Historical", "Projection", "All"),
+  MPs = NULL,
+  default = 0,
+  Years = NULL
+)
+
+.ArraySimStockTimeMP(
+  OM,
+  Period = c("Historical", "Projection", "All"),
+  MPs = NULL,
+  stock = 1,
+  default = 0,
+  Years = NULL
+)
+
+.ArraySimStockTimeFleetMP(
+  OM,
+  Period = c("Historical", "Projection", "All"),
+  MPs = NULL,
+  stock = 1,
+  default = 0,
+  Years = NULL
+)
+
+.ArraySimAgeTimeFleetMP(
+  OM,
+  Period = c("Historical", "Projection", "All"),
+  MPs = NULL,
+  stock = 1,
+  default = 0,
+  Years = NULL
+)
+
+.ListArraySimAgeTimeFleetMP(
+  OM,
+  Period = c("Historical", "Projection", "All"),
+  MPs = NULL,
+  default = 0,
+  Years = NULL
+)
+
+.ListArraySimTimeFleetAreaMP(
   OM,
   Period = c("Historical", "Projection", "All"),
   MPs = NULL,

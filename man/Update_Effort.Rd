@@ -33,8 +33,9 @@ Update_Effort(
 
 \item{FleetNames}{Character vector of fleet names.}
 
-\item{StockNames}{Character vector of stock names (unused here, kept for
-consistent \code{update_funs} signature).}
+\item{StockNames}{Character vector of stock names. Used to (re)optimise
+stock-specific targeting weights for multi-stock OMs - see
+\code{\link[=OptTargeting_multi_stock]{OptTargeting_multi_stock()}}.}
 }
 \value{
 Updated \code{Proj} object.

@@ -88,7 +88,7 @@ replicates and years.
 \subsection{PopulateObsCV}{
 
 Expands a CV value to a named \verb{[nSim]} vector following the standard
-\code{StructurePars} + \code{ExtendSims} convention. If \code{CV} already has dimnames
+\code{.StructurePars} + \code{ExtendSims} convention. If \code{CV} already has dimnames
 (i.e. it has been previously populated), it is trimmed to \code{nSim} and
 returned unchanged.
 }
@@ -174,7 +174,7 @@ used throughout the operating model. Accepted inputs:
 \item Named array with correct dimensions: trimmed to \code{nSim} and returned.
 \item Length-2 vector \code{c(lower, upper)}: \code{nSim} values drawn from
 \code{Uniform(lower, upper)}, held constant across years.
-\item Scalar or change-point matrix: expanded via \code{StructurePars} +
+\item Scalar or change-point matrix: expanded via \code{.StructurePars} +
 \code{ExtendSims} + \code{ExtendYears}.
 }
 }

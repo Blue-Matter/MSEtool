@@ -77,7 +77,10 @@ dimension. Otherwise values are summed over areas. Applies to
 \item{byFleet}{Logical. If \code{TRUE} (default for \code{Landings()} and
 \code{Discards()}) the data frame retains the \code{Fleet} dimension. Otherwise
 values are summed over fleets. Applies to \link[=hist-class]{hist} and \link[=mse-class]{mse}
-objects only.}
+objects only. When \code{bySize = TRUE}, fleets are not required to share a
+size-class grid (see \link[=compdata-class]{compdata}); \code{byFleet = FALSE} raises an
+error if a stock's fleets don't all share the exact same classes,
+rather than silently summing incompatible bins.}
 
 \item{Reduce}{Logical. If \code{TRUE} (default) simulation dimensions are
 reduced using \code{\link[=ReduceDims]{ReduceDims()}} before conversion to a data frame. Applies
@@ -102,8 +105,11 @@ only.}
 \itemize{
 \item For \link[=obs-class]{obs}: the \link[=catchobs-class]{catchobs} object stored in the \code{Landings} or
 \code{Discards} slot.
-\item For \link[=data-class]{data}: the \link[=catchdata-class]{catchdata} object stored in the \code{Landings}
-or \code{Discards} slot.
+\item For \link[=data-class]{data} with \code{byAge = FALSE} and \code{bySize = FALSE}: the
+\link[=catchdata-class]{catchdata} object stored in the \code{Landings} or \code{Discards} slot.
+\item For \link[=data-class]{data} with \code{byAge = TRUE} or \code{bySize = TRUE}: a tidy
+\code{data.frame} with columns \code{Year}, \code{Fleet}, \code{Age} or \code{Class}, \code{Value},
+and \code{Variable}.
 \item For \link[=hist-class]{hist} or \link[=mse-class]{mse} with \code{df = FALSE}: the raw array slot
 (\code{Interactions}, \code{Landings}, or \code{Discards}).
 \item For \link[=hist-class]{hist} or \link[=mse-class]{mse} with \code{df = TRUE}: a tidy \code{data.frame}
@@ -122,12 +128,22 @@ total interactions (encounters), retained landings, discards, and removals
 When called on a \link[=hist-class]{hist} or \link[=mse-class]{mse} object, the functions return
 simulated catch arrays or tidy data frames as described below.
 
-When called on an \link[=obs-class]{obs} object, the functions return the
-corresponding \link[=catchobs-class]{catchobs} slot directly (the observation error
-structure, not simulated values). When called on a \link[=data-class]{data} object,
-they return the corresponding \link[=catchdata-class]{catchdata} slot directly (the observed
-or simulated values). In both cases no data frame conversion is performed,
-regardless of any \code{df} argument.
+When called on an \link[=obs-class]{obs} object, \code{Landings()}/\code{Discards()} always
+return the corresponding \link[=catchobs-class]{catchobs} slot directly (the observation
+error structure, not simulated values), regardless of any other argument.
+
+When called on a \link[=data-class]{data} object, \code{Landings()}/\code{Discards()} return the
+corresponding \link[=catchdata-class]{catchdata} slot directly (the observed or simulated
+values) when neither \code{byAge} nor \code{bySize} is \code{TRUE}. When \code{byAge = TRUE}
+or \code{bySize = TRUE}, they instead return a tidy \code{data.frame} built from the
+corresponding \verb{*AtAge}/\verb{*AtSize} \link[=compdata-class]{compdata} slot, with columns
+\code{Year}, \code{Fleet}, \code{Age} or \code{Class}, \code{Value}, and \code{Variable} (no \code{Sim},
+\code{Stock}, \code{Period}, or \code{MP}, since a \code{data} object is a single
+realization); \code{df} is not meaningful in that case and is ignored. For
+\verb{*AtSize}, fleets are not required to share a size-class grid (see
+\link[=compdata-class]{compdata}); \code{byFleet = FALSE} raises an error if the object's
+fleets don't all share the exact same classes, the same as for
+\link[=hist-class]{hist}/\link[=mse-class]{mse} objects.
 
 The assignment forms \verb{Landings<-} and \verb{Discards<-} replace the
 corresponding slot of an \link[=obs-class]{obs} or \link[=data-class]{data} object.

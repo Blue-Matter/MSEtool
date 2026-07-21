@@ -30,7 +30,10 @@ periods).
 \code{JoinYear} recurses through the structure of \code{object1} and \code{object2}
 in parallel, dispatching on the type of each element:
 \itemize{
-\item \strong{S4 objects} — each slot is processed recursively via \code{Recall()}.
+\item \strong{S4 objects} — each slot is processed recursively via \code{Recall()}. If
+a slot is \code{NULL} on \code{object1} but populated on \code{object2} (e.g. \code{Advice}
+during the historical period, before any MP has run), the joined
+result is \code{object2}'s value rather than \code{NULL}.
 \item \strong{Lists} — each element is processed recursively via \code{Recall()}.
 \item \strong{Named arrays with a \code{"Year"} dimension} — joined along the year
 axis using \code{\link[abind:abind]{abind::abind()}}. An error is thrown if years are not

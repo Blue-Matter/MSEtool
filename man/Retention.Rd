@@ -34,7 +34,7 @@ is returned.}
 
 \item{Model}{Character or function or \code{NULL}. Retention model identifier.
 If \code{NULL} (default), the model is inferred automatically from the names
-in \code{Pars} via \code{\link[=FindModel]{FindModel()}}. May also be supplied as a custom R function
+in \code{Pars} via \code{\link[=.FindModel]{.FindModel()}}. May also be supplied as a custom R function
 with arguments matching those in \code{Pars}. See \code{\link[=RetentionModels]{RetentionModels()}} for
 built-in options.}
 

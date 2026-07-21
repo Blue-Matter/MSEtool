@@ -68,7 +68,8 @@ and retain their default values in the converted object:
 \item \code{DiscardMortality}: new functionality; no legacy equivalent.
 \item \code{Closure}: new functionality; no legacy equivalent.
 \item \code{Targeting}: new functionality; no legacy equivalent.
-\item \code{WeightFleet}: new functionality; no legacy equivalent.
+\item \code{WeightFleetRetained}/\code{WeightFleetSelected}: new functionality; no legacy
+equivalent.
 }
 }
 }

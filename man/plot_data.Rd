@@ -2,19 +2,25 @@
 % Please edit documentation in R/plot-data.R
 \name{plot_data}
 \alias{plot_data}
-\alias{PlotEffort}
 \alias{PlotCPUE}
 \alias{PlotSurvey}
 \alias{PlotData}
+\alias{plot,data,ANY-method}
 \title{Plot Observed Fishery Data}
 \usage{
-PlotEffort(object, byFleet = NULL, AggregateYear = FALSE)
+PlotCPUE(object, byFleet = NULL, Season = NULL, units = TRUE)
 
-PlotCPUE(object, byFleet = NULL, Season = NULL)
+PlotSurvey(object, byFleet = NULL, Season = NULL, units = TRUE)
 
-PlotSurvey(object, byFleet = NULL, Season = NULL)
+PlotData(
+  object,
+  byFleet = NULL,
+  AggregateYear = FALSE,
+  Season = NULL,
+  units = TRUE
+)
 
-PlotData(object, byFleet = NULL, AggregateYear = FALSE, Season = NULL)
+\S4method{plot}{data,ANY}(x, y, ...)
 }
 \arguments{
 \item{object}{A \link[=data-class]{data} object.}
@@ -25,18 +31,29 @@ panel. \code{TRUE} facets by fleet instead (one panel per fleet). \code{FALSE}
 sums across fleets and draws a single total line. No effect when the
 slot has only one fleet.}
 
-\item{AggregateYear}{Logical. For seasonal data (\code{object@Seasons > 1}),
-sum \code{PlotLandings()}/\code{PlotDiscards()}/\code{PlotEffort()} sub-annual values
-into whole-year totals, since these are flow quantities. Default
-\code{FALSE}. Ignored for non-seasonal data and by \code{PlotCPUE()}/
-\code{PlotSurvey()} (see \code{Season}).}
-
 \item{Season}{Integer. For seasonal data (\code{object@Seasons > 1}), restrict
 \code{PlotCPUE()}/\code{PlotSurvey()} to a single season (1 = the first timestep
 of each year), giving one snapshot per year instead of the full
 sub-annual series. Default \code{NULL} (no filtering). Ignored for
 non-seasonal data and by \code{PlotLandings()}/\code{PlotDiscards()}/
 \code{PlotEffort()} (see \code{AggregateYear}).}
+
+\item{units}{Logical or a character unit string. \code{TRUE} (default) labels
+the y-axis with the slot's own \code{Units} (e.g. \code{object@CPUE@Units},
+\code{"kg/trip"}) when it's set. \code{FALSE} suppresses the unit label. For
+\code{PlotLandings()}/\code{PlotDiscards()} only, \code{object@Landings@Units}/
+\code{object@Discards@Units} is a mass unit, so a character string (\code{"kg"},
+\code{"t"}, \code{"lb"}, etc.) both relabels the axis \emph{and} rescales the plotted
+values into that unit; requesting a character unit for \code{PlotCPUE()}/
+\code{PlotSurvey()} is an error, since those \code{Units} (e.g. \code{"kg/trip"})
+aren't in a recognized conversion table. No effect on \code{PlotEffort()},
+which has no unit concept for a single \code{data-class} object.}
+
+\item{AggregateYear}{Logical. For seasonal data (\code{object@Seasons > 1}),
+sum \code{PlotLandings()}/\code{PlotDiscards()}/\code{PlotEffort()} sub-annual values
+into whole-year totals, since these are flow quantities. Default
+\code{FALSE}. Ignored for non-seasonal data and by \code{PlotCPUE()}/
+\code{PlotSurvey()} (see \code{Season}).}
 }
 \value{
 A \code{ggplot} object (a \code{patchwork} object for \code{PlotData()}), or
@@ -51,10 +68,10 @@ functions draw a single line per fleet or index rather than a
 median/ribbon summary.
 }
 \details{
-\code{PlotEffort()}, \code{PlotCPUE()}, and \code{PlotSurvey()} plot the \code{Effort}, \code{CPUE},
-and \code{Survey} slots respectively. \code{PlotLandings()} and \code{PlotDiscards()}
-(see \link{plot_hist}) also accept a \link[=data-class]{data} object and are documented
-here for that case.
+\code{PlotCPUE()} and \code{PlotSurvey()} plot the \code{CPUE} and \code{Survey} slots
+respectively. \code{PlotLandings()}, \code{PlotDiscards()}, and \code{PlotEffort()} (see
+\link{plot_hist}) also accept a \link[=data-class]{data} object and are documented here for
+that case.
 
 If the relevant slot is not populated (\code{NULL}, e.g. no survey configured
 for this OM), the function prints an informational message and returns

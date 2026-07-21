@@ -18,6 +18,7 @@ OptEffort_multi_stock(
   UndershootPenalty,
   OvershootPenalty,
   PenaltyMode,
+  MaxFleetEffort = NULL,
   lambda = NULL,
   n_recent = 5,
   minEffort = 1e-08,
@@ -30,7 +31,7 @@ OptEffort_multi_stock(
 operating model settings, and stock/fleet dimensions.}
 
 \item{Year}{Integer. The simulation year index passed to
-\code{\link[=CalcFisheryDynamics]{CalcFisheryDynamics()}}.}
+\code{\link[=.CalcFisheryDynamics]{.CalcFisheryDynamics()}}.}
 
 \item{TSIndex}{Integer. Time-step index into \code{Proj} arrays for the current
 year. \code{TSIndex - 1} is used to initialise the warm start.}
@@ -57,6 +58,10 @@ multiplier internally.}
 
 \item{PenaltyMode}{Character vector of length \code{nFleet}. Currently accepted
 for future extensibility; not used in the current implementation.}
+
+\item{MaxFleetEffort}{Numeric vector of length \code{nFleet}, or \code{NULL}
+(default). Per-fleet effort ceiling, applied throughout optimisation and
+to the final result. \code{NA} entries impose no ceiling.}
 
 \item{lambda}{Numeric vector of length \code{nFleet} (or scalar, recycled), or
 \code{NULL} (default \code{1} for all fleets). Ridge penalty weight controlling

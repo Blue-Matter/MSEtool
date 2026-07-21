@@ -15,15 +15,26 @@ created via \code{\link[=CompData]{CompData()}}, which documents all parameters 
 \item{\code{Name}}{\code{character} or \code{NULL}. Fleet names, length \code{nFleet}.}
 
 \item{\code{Value}}{\code{array} or \code{NULL}. Composition counts with dimensions
-\verb{[nYear x nFleet x nClass]}. See \code{\link[=CompData]{CompData()}}.}
+\verb{[nYear x nFleet x nClass]}. For age compositions the third dimension
+indexes a class grid shared by every fleet (see \code{Classes}). For size
+compositions the third dimension is a \emph{fleet-relative position}, not a
+shared bin: fleets are not required to use the same size-class grid, so
+\code{nClass} is the largest class count among the object's fleets, and a
+fleet with fewer classes has unused (\code{NA}) cells at the end of its
+slice. See \code{\link[=CompData]{CompData()}}.}
 
-\item{\code{Classes}}{\code{numeric} or \code{NULL}. Class values — ages in years for age
-compositions, or lower bounds of size bins in the appropriate unit for
-size compositions. For size bins, bin \code{k} spans \verb{[Classes[k], Classes[k+1])}.
-See \code{\link[=CompData]{CompData()}}.}
+\item{\code{Classes}}{\code{numeric}, \code{list}, or \code{NULL}. For age compositions, a
+numeric vector of class values (ages in years) shared by every fleet,
+length matching \code{dim(Value)[3]}. For size compositions, a \code{list} of
+numeric vectors, one per fleet (named to match \code{Name}), each giving
+that fleet's own lower bounds of size bins in the appropriate unit; bin
+\code{k} of fleet \code{fl} spans \verb{[Classes[[fl]][k], Classes[[fl]][k+1])}, and
+\code{length(Classes[[fl]])} may be less than \code{dim(Value)[3]} (the unused
+tail of that fleet's slice in \code{Value}). See \code{\link[=CompData]{CompData()}}.}
 
 \item{\code{Units}}{\code{character} or \code{NULL}. Units of the class variable
-(e.g., \code{"years"}, \code{"cm"}, \code{"mm"}). See \code{\link[=CompData]{CompData()}}.}
+(e.g., \code{"years"}, \code{"cm"}, \code{"mm"}), shared by every fleet. See
+\code{\link[=CompData]{CompData()}}.}
 
 \item{\code{Log}}{\code{list}. Named list used for diagnostic and audit logging.}
 

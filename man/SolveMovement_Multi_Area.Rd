@@ -16,7 +16,7 @@ SolveMovement_Multi_Area(
 }
 \arguments{
 \item{LogitProbs}{\code{numeric(nArea)}. Logit-transformed staying probabilities,
-one per area. The full movement matrix is constructed via \code{\link[=MarkovFrac]{MarkovFrac()}}.}
+one per area. The full movement matrix is constructed via \code{\link[=.MarkovFrac]{.MarkovFrac()}}.}
 
 \item{UnfishedDist}{\code{numeric(nArea)}. Target unfished distribution across
 areas. Must sum to 1.}
@@ -77,6 +77,6 @@ In both cases the staying-probability penalty is:
 }
 }
 \seealso{
-\code{\link[=FitMovement_Multi_Area]{FitMovement_Multi_Area()}}, \code{\link[=MarkovFrac]{MarkovFrac()}}, \code{\link[=CalcAsymDist]{CalcAsymDist()}}
+\code{\link[=FitMovement_Multi_Area]{FitMovement_Multi_Area()}}, \code{\link[=.MarkovFrac]{.MarkovFrac()}}, \code{\link[=CalcAsymDist]{CalcAsymDist()}}
 }
 \keyword{internal}

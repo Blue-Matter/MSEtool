@@ -52,8 +52,11 @@ instantaneous-rate scale)
   -\frac{\sum_f F_{combined,f}(a)\cdot(-\log(1-d_f(a)))}{F_{combined}(a)}
 \right)}
 
-\strong{WeightFleet} (age-specific F-weighted average)
-\deqn{W_{combined}(a) = \frac{\sum_f F_{combined,f}(a)\cdot W_f(a)}{F_{combined}(a)}}
+\strong{WeightFleetSelected} (age-specific interaction-F-weighted average)
+\deqn{W^{sel}_{combined}(a) = \frac{\sum_f F_{combined,f}(a)\cdot W^{sel}_f(a)}{F_{combined}(a)}}
+
+\strong{WeightFleetRetained} (age-specific retained-F-weighted average)
+\deqn{W^{ret}_{combined}(a) = \frac{\sum_f F^{retain}_{combined,f}(a)\cdot W^{ret}_f(a)}{F^{retain}_{combined}(a)}}
 }
 }
 \description{

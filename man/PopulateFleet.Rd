@@ -32,7 +32,11 @@ retention, discard mortality, and spatial closures for a fleet.
 \item Populates fleet catchability for historical and projected years.
 \item Populates selectivity and retention objects.
 \item Populates discard mortality and spatial closures.
-\item Initializes fleet-specific weight-at-age if not already defined.
+\item Initializes \code{WeightFleetRetained} and \code{WeightFleetSelected} if not
+already defined, by weighting the stock's weight-at-length by
+selectivity-at-length (\code{WeightFleetSelected}) or by
+selectivity-at-length times retention-at-length (\code{WeightFleetRetained})
+over the age-length distribution -- see \code{\link[=.CalcFleetWeightAtAge]{.CalcFleetWeightAtAge()}}.
 }
 }
 \examples{

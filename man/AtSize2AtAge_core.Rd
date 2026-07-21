@@ -43,7 +43,7 @@ If \code{FALSE}, uses slice 1 for all simulations.}
 \code{MeanAtAge} array with all values filled.
 }
 \description{
-Internal function called by \code{AtSize2AtAge}. Multiplies \code{MeanAtSize} through
+Internal function called by \code{.AtSize2AtAge}. Multiplies \code{MeanAtSize} through
 the transpose of the Age-Size Key for each simulation, year, and optionally
 area. By the time this is called, \code{MeanAtSize} and \code{ASK} are already
 extended to consistent \code{nSim} and \code{Years} dimensions.

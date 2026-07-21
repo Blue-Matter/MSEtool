@@ -8,7 +8,19 @@
 \alias{CompareSS_Discards}
 \title{Compare SS3 and OM fishery dynamics}
 \usage{
-CompareSS(SSDir, Hist, sim = 1, silent = FALSE, ...)
+CompareSS(
+  SSDir,
+  Hist,
+  sim = 1,
+  plot = FALSE,
+  thresh = 1,
+  save_plots = FALSE,
+  outdir = "figures/diagnostics/SS3",
+  width = NULL,
+  height = NULL,
+  silent = FALSE,
+  ...
+)
 
 CompareSS_Number(SSDir, Hist, sim = 1, silent = FALSE, ...)
 
@@ -30,6 +42,24 @@ comparison.}
 element and the OM simulation row. Default \code{1}. Only used where
 \code{\link[=ImportSSReport]{ImportSSReport()}} is applied to multiple SS3 output directories.}
 
+\item{plot}{Logical. Plot the timeseries for the \code{OM} and \code{SS3} output? If
+\code{plot = FALSE} (default) the plots are only printed if MARE exceeds
+\code{thresh} in some years -- see \code{\link[=CompareBAM]{CompareBAM()}} for the same convention.}
+
+\item{thresh}{Numeric. Mean absolute relative error (MARE, as a
+percentage) threshold above which a series is flagged and plotted.
+Default \code{1}.}
+
+\item{save_plots}{Logical. If \code{TRUE}, diagnostic plots are written as PNG
+files to \code{file.path(outdir, Stock)}. Default \code{FALSE}.}
+
+\item{outdir}{Character. Base directory for saved plots. Defaults to
+\code{"figures/diagnostics/SS3"}.}
+
+\item{width, height}{Numeric. Width/height (inches) passed to
+\code{\link[ggplot2:ggsave]{ggplot2::ggsave()}}. If \code{NULL} (default), sized automatically from the
+number of facet panels -- see \code{\link[=CompareBAM]{CompareBAM()}}.}
+
 \item{silent}{Logical. Passed to \code{\link[=ImportSSReport]{ImportSSReport()}} and \code{\link[=Simulate]{Simulate()}} to
 suppress console output. Default \code{FALSE}.}
 
@@ -37,7 +67,10 @@ suppress console output. Default \code{FALSE}.}
 }
 \value{
 \itemize{
-\item \code{CompareSS()} returns \code{NULL} invisibly (called for its side-effects).
+\item \code{CompareSS()} invisibly returns a named list with elements \code{Stock},
+\code{Recruits}, \code{Number}, \code{Biomass}, \code{Landings}, and \code{Discards}, each (other
+than \code{Stock}) a list with elements \code{df}, \code{MARE}, and \code{plot} -- the same
+shape as \code{\link[=CompareBAM]{CompareBAM()}}.
 \item \code{CompareSS_Number()} and \code{CompareSS_Biomass()} each print a \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}}
 object and return the combined \code{data.frame} of OM and SS3 values invisibly,
 with columns \code{Year}, \code{Value}, \code{Stock}, and \code{Model}.
@@ -61,5 +94,5 @@ models.
 }
 \seealso{
 \code{\link[=ImportSSReport]{ImportSSReport()}}, \code{\link[=Simulate]{Simulate()}}, \code{\link[=Number]{Number()}}, \code{\link[=Biomass]{Biomass()}},
-\code{\link[=Landings]{Landings()}}, \code{\link[=Discards]{Discards()}}
+\code{\link[=Landings]{Landings()}}, \code{\link[=Discards]{Discards()}}, \code{\link[=CompareBAM]{CompareBAM()}}
 }

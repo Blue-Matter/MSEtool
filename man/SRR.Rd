@@ -92,12 +92,16 @@ Default \code{list(h = NA)}.
 one of the models listed in \code{\link[=SRRModels]{SRRModels()}}, or be a custom R function.
 Default \code{"BevertonHolt"}.}
 
-\item{R0}{\code{numeric} or \code{NULL}. Unfished equilibrium recruitment. May be:
+\item{R0}{\code{numeric}, \code{array}, or \code{NULL}. Unfished equilibrium recruitment.
+May be:
 \itemize{
-\item A scalar: same value for all simulations.
+\item A scalar: same value for all simulations and years.
 \item A length-2 bounds vector: sampled from \code{Uniform(lower, upper)} once per
 simulation.
-\item A length-\code{nSim} vector: one value per simulation.
+\item A length-\code{nSim} vector: one value per simulation, constant over years.
+\item A \verb{Sim x Year} array: deliberately time-varying, e.g. to model a
+regime shift in carrying capacity. See \link[=srr-class]{srr} for how this
+differs from a constant \code{R0}.
 Interpreted in units of \code{Units}. Default \code{NULL}.
 }}
 

@@ -20,6 +20,8 @@ ImportBAM(
   SurveyNames = NULL,
   UnitsLandings = NULL,
   UnitsDiscards = NULL,
+  MPStartYear = NULL,
+  InterimAdvice = NULL,
   populate = TRUE,
   silent = FALSE
 )
@@ -76,6 +78,13 @@ Used by \code{\link[=ImportBAMData]{ImportBAMData()}}.
 \item{UnitsDiscards}{A character vector of length equal to the number of
 discard fleets detected. Accepts the same values as \code{UnitsLandings}.
 Used by \code{\link[=ImportBAMData]{ImportBAMData()}}.}
+
+\item{MPStartYear}{Numeric or \code{NULL}. First calendar year in which MPs are
+applied; see \code{\link[=OM]{OM()}}/\link[=om-class]{om}. Default \code{NULL}.}
+
+\item{InterimAdvice}{A \code{data.frame} or \code{NULL}. Fixed or stochastic
+TAC/Effort values for years before \code{MPStartYear}; see \code{\link[=OM]{OM()}}/\link[=om-class]{om}.
+Default \code{NULL}.}
 
 \item{populate}{Logical. If \code{TRUE} (default), calls \code{\link[=PopulateOM]{PopulateOM()}} to
 populate the OM after construction.}

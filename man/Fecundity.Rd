@@ -22,14 +22,14 @@ Fecundity(x) <- value
 \item{Pars}{\code{list}. Named list of fecundity parameters. Element names must
 match the arguments of a built-in fecundity model (see \code{\link[=FecundityModels]{FecundityModels()}}).
 When \code{Pars} is non-empty and \code{Model} is \code{NULL}, the model is inferred
-automatically by \code{\link[=FindModel]{FindModel()}}. When \code{Pars} is a \link[=stock-class]{stock} object,
+automatically by \code{\link[=.FindModel]{.FindModel()}}. When \code{Pars} is a \link[=stock-class]{stock} object,
 \code{Fecundity()} acts as a pass-through accessor and returns \code{x@Fecundity}.
 See also
 \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for the
 full set of accepted input formats. Default \code{list()}.}
 
 \item{Model}{\code{character(1)} or \code{function}. Fecundity model identifier. When
-\code{NULL} (default), the model is inferred from \code{Pars} via \code{\link[=FindModel]{FindModel()}}.
+\code{NULL} (default), the model is inferred from \code{Pars} via \code{\link[=.FindModel]{.FindModel()}}.
 May be set to a character string naming a built-in model or to a custom
 R function — see
 \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules}.}
@@ -106,7 +106,7 @@ details on input formats and the rules that govern how \code{Pars}, \code{Model}
 
 \strong{Model-based} (recommended): supply \code{Pars} with named parameters matching
 a built-in model (see \code{\link[=FecundityModels]{FecundityModels()}}). If \code{Model = NULL} and the
-parameter names uniquely match a model, \code{\link[=FindModel]{FindModel()}} resolves the model
+parameter names uniquely match a model, \code{\link[=.FindModel]{.FindModel()}} resolves the model
 automatically. \code{MeanAtAge} is then populated by \code{\link[=Populate]{Populate()}} when the stock
 is added to an \code{\link[=OM]{OM()}}:
 
@@ -314,7 +314,7 @@ MeanAtAge(pop_fec)
 \item \link[=fecundity-class]{fecundity} for the class definition and slot-level documentation.
 \item \code{\link[=FecundityModels]{FecundityModels()}} for available models and required parameter sets.
 \item \code{\link[=ValidUnits]{ValidUnits()}} for accepted unit strings.
-\item \code{\link[=FindModel]{FindModel()}} for automatic model inference.
+\item \code{\link[=.FindModel]{.FindModel()}} for automatic model inference.
 \item \code{\link[=Populate]{Populate()}} for array population.
 \item \code{\link[=Stock]{Stock()}} for the enclosing stock constructor.
 \item \code{\link[=Length]{Length()}} for the companion length schedule, required when using

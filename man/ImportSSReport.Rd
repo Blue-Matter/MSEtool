@@ -15,7 +15,7 @@ ImportSSReport(SSDir, parallel = FALSE, silent = FALSE, ...)
 \item{silent}{Logical; suppress progress messages (default FALSE)}
 
 \item{...}{Additional arguments passed to \code{r4ss::SS_output} and
-\code{GetSSRepList}}
+\code{.GetSSRepList}}
 }
 \value{
 A named \code{RepList} object: a list of parsed \code{r4ss::SS_output} lists,

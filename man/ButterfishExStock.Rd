@@ -79,7 +79,7 @@ mean weight-at-age. An age–weight key is optionally constructed when
 
 \code{\link[=PopulateNaturalMortality]{PopulateNaturalMortality()}} samples \code{M} for each simulation from the
 uniform prior and expands the result into a natural mortality-at-age array.
-Stochastic annual deviates are added via \code{PopulateRandom()}. The high \code{M}
+Stochastic annual deviates are added via \code{.PopulateRandom()}. The high \code{M}
 range (0.7–0.9 yr^-1^) is consistent with the short lifespan of this species.
 }
 
