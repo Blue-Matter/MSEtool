@@ -18,7 +18,7 @@
 matching. Defaults to common auxiliary arguments such as \code{"Ages"},
 \code{"Length"}, \code{"Weight"}, etc.}
 
-\item{doCheck}{Logical. If \code{TRUE} (default), calls \code{\link[=.CheckModel]{.CheckModel()}} and
+\item{doCheck}{Logical. If \code{TRUE} (default), calls \code{.CheckModel()} and
 throws an informative error when no matching model is found.}
 }
 \value{

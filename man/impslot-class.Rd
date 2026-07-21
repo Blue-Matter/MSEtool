@@ -24,11 +24,10 @@ the management recommendation. See \code{\link[=ImpSlot]{ImpSlot()}}.}
 \item{\code{SD}}{Numeric array or list of arrays. Standard deviation of
 implementation error around \code{Mean}. See \code{\link[=ImpSlot]{ImpSlot()}}.}
 
-\item{\code{Compliance}}{Numeric matrix \verb{[Fleet x Complex]}. Meaning is
-context-dependent on which \link[=imp-class]{imp} control this \code{impslot} belongs
-to: for \code{TAC}/\code{Effort}, governs multi-stock reconciliation (not
-consulted for a single-stock/complex OM); for \code{Size}, is the fraction of
-the fleet adopting a newly-advised size regulation (see \code{\link[=Imp]{Imp()}}). See
+\item{\code{Compliance}}{Numeric array or list of arrays, populated to \verb{[Sim x Year]} by \code{\link[=PopulateImpSlot]{PopulateImpSlot()}}. Meaning is context-dependent on which
+\link[=imp-class]{imp} control this \code{impslot} belongs to: for \code{TAC}/\code{Effort},
+governs multi-stock reconciliation; for \code{Size}, is the fraction of the fleet
+adopting a newly-advised size regulation (see \code{\link[=Imp]{Imp()}}). See
 \code{\link[=ImpSlot]{ImpSlot()}}.}
 
 \item{\code{Error}}{Numeric array or list of arrays. Realised implementation error,

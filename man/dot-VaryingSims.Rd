@@ -21,6 +21,6 @@ Returns an empty character vector if nothing varies.
 \description{
 Recursively inspects S4 objects, lists, and arrays to find all slots
 (or named list elements) that contain values varying along the "Sim"
-dimension. Complements \code{\link[=.IdenticalSims]{.IdenticalSims()}}.
+dimension. Complements \code{.IdenticalSims()}.
 }
 \keyword{internal}

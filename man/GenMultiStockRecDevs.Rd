@@ -57,5 +57,5 @@ Truncation is applied to the innovation term \eqn{\epsilon_t}, not the
 deviations themselves.
 }
 \seealso{
-\code{\link[=CalcInnovationCov]{CalcInnovationCov()}}, \code{\link[=.AddAutoCorrelation]{.AddAutoCorrelation()}}
+\code{\link[=CalcInnovationCov]{CalcInnovationCov()}}, \code{.AddAutoCorrelation()}
 }

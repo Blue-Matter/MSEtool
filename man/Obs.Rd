@@ -144,11 +144,6 @@ obs <- Obs(
   Landings = CatchObs(CV = 0.2, Bias = 1.0),
   CPUE     = IndicesObs(CV = 0.3)
 )
-
-# Pass-through: extract Obs from an OM
-# Obs(my_om)
-
-
 }
 \seealso{
 \itemize{

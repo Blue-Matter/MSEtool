@@ -26,7 +26,7 @@ Default \code{"Combined OM"}}
 \item{FillEfficiency}{List controlling efficiency forward-filling. See \code{Details}.}
 
 \item{.StandardizeEffort}{\code{logical(1)}. If \code{TRUE} (default), calls
-\code{\link[=.StandardizeEffort]{.StandardizeEffort()}} after combining, which equalises effort across
+\code{.StandardizeEffort()} after combining, which equalises effort across
 stocks for each fleet and back-calculates stock targeting weights.}
 
 \item{silent}{\code{logical(1)}. If \code{TRUE}, suppresses informational messages. Default \code{FALSE}.}
@@ -64,7 +64,7 @@ forward-filled using \code{FillEffort} and \code{FillEfficiency}.
 \item Concatenate stocks and fleets.
 \item Generate correlated recruitment deviations for the projection period
 via \code{\link[=GenMultiStockRecDevs]{GenMultiStockRecDevs()}}.
-\item Optionally standardize effort across stocks via \code{\link[=.StandardizeEffort]{.StandardizeEffort()}},
+\item Optionally standardize effort across stocks via \code{.StandardizeEffort()},
 which populates \verb{@StockTargeting}
 }
 }
@@ -103,5 +103,5 @@ combined <- CombineOMs(
 
 }
 \seealso{
-\code{\link[=GenMultiStockRecDevs]{GenMultiStockRecDevs()}}, \code{\link[=.StandardizeEffort]{.StandardizeEffort()}}
+\code{\link[=GenMultiStockRecDevs]{GenMultiStockRecDevs()}}, \code{.StandardizeEffort()}
 }

@@ -17,13 +17,13 @@ An \link[=advice-class]{advice} object.
 }
 \description{
 Maps the slots of a legacy \link[=Rec-class]{Rec} recommendation (returned by a
-\code{class(fn) <- "MP"} management procedure, see \code{\link[=.WrapLegacyMP]{.WrapLegacyMP()}}) onto the
+\code{class(fn) <- "MP"} management procedure, see \code{.WrapLegacyMP()}) onto the
 equivalent \link[=advice-class]{advice} slots used by the new MP framework. Only slots
 the legacy MP actually populated are set; everything else remains \code{NULL}
 (unchanged from the previous timestep), matching \code{Rec}'s own "only some
 slots set" behaviour. \code{Rec@Fdisc}/\code{Rec@DR} (discard mortality) have no
 mapping in v1 and are recorded as an assumption if set. Any \code{Log} entries
-recorded on \code{LegacyData} (e.g. by \code{\link[=Convert]{Convert()}}/\code{data2Data()}) are folded
+recorded on \code{LegacyData} (e.g. by \code{\link[=Convert]{Convert()}}/\code{.ConvertDataToLegacy()}) are folded
 into the returned \code{Advice@Log}.
 }
 \keyword{internal}

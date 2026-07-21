@@ -74,7 +74,7 @@ populate \code{Prob}/\code{Mean}.
 PMs involving spawning biomass/production (\code{PM_SBSBMSY}, \code{PM_SBSBlim},
 \code{PM_Safety}, \code{PM_Status}, \code{PM_Rebuild}) automatically restrict to the
 spawning ("female") stock(s) of each sex-structured complex, identified by
-stock name (see \code{.female_stock_names()}) with a fallback to each stock's
+stock name (see \code{.FemaleStockNames()}) with a fallback to each stock's
 \code{SRR@SPFrom} self-reference where the name match is ambiguous.
 
 Yield-based PMs (\code{PM_Yield}, \code{PM_RelYield}, \code{PM_AAVY}) sum landings+discards

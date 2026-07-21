@@ -18,22 +18,17 @@ Checks if a required package and (if applicable) package version are installed
 and if not, provides an error with installation instructions
 }
 \examples{
-# Not installed
-\dontrun{
-CheckPackage("MadeUp")
-}
-
 # Already installed
 CheckPackage("MSEtool")
 
-# Needs updating
 \dontrun{
+# Not installed
+CheckPackage("MadeUp")
+
+# Needs updating
 CheckPackage("MSEtool", "99")
-}
 
 # Update and specify installation path
-\dontrun{
 CheckPackage("MSEtool", "99", "pak::pgk_install('blue-matter/MSEtool')")
 }
-
 }

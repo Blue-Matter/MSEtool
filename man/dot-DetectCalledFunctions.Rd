@@ -22,7 +22,7 @@ A character vector of unique helper function names.
 Recursively scans the body of \code{MP} and any detected helper functions,
 returning the names of all user-defined functions reachable from \code{MP} that
 are not part of the MSEtool namespace or base R. Used by
-\code{\link[=.MakeSelfContained]{.MakeSelfContained()}} to identify functions that must be copied into the
+\code{.MakeSelfContained()} to identify functions that must be copied into the
 MP's self-contained environment.
 }
 \keyword{internal}

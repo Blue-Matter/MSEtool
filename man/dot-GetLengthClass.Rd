@@ -20,9 +20,9 @@ closest to \code{RefValue} for each simulation and time step.
 \description{
 Finds the length class in a \code{MeanAtLength} array that most closely
 corresponds to a given reference value (e.g., 0.5 for length-at-50\%-maturity).
-Called internally by \code{\link[=.UpdateSelRet]{.UpdateSelRet()}}.
+Called internally by \code{.UpdateSelRet()}.
 }
 \seealso{
-\code{\link[=.UpdateSelRet]{.UpdateSelRet()}}, \code{\link[=ConvertOM]{ConvertOM()}}
+\code{.UpdateSelRet()}, \code{\link[=ConvertOM]{ConvertOM()}}
 }
 \keyword{internal}

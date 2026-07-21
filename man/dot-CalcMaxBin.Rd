@@ -25,7 +25,7 @@ all simulations, ages, and years.
 \description{
 Computes the upper bound of the size class range by finding the maximum
 expected size across all simulations and ages, extended to \code{TruncSD}
-standard deviations above the mean. Used by \code{\link[=.PopulateClasses]{.PopulateClasses()}} to set
+standard deviations above the mean. Used by \code{.PopulateClasses()} to set
 default size class lower bounds.
 }
 \details{

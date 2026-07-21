@@ -16,7 +16,7 @@
 \description{
 If \code{object@Classes} is empty, calculates a default set of size class
 lower bounds spanning from 0 to the maximum expected size. The upper bound is
-determined by \code{\link[=.CalcMaxBin]{.CalcMaxBin()}} using the object's mean-at-age, CV-at-age,
+determined by \code{.CalcMaxBin()} using the object's mean-at-age, CV-at-age,
 truncation SD, and distribution. Returns \code{object} unchanged if \code{Classes} is
 already populated.
 }

@@ -323,10 +323,6 @@ srr <- SRR(Pars = list(h = 0.7), R0 = 1000, SD = 0.4)
 srr <- SRR(Pars = list(h = 0.7), R0 = 1000,
            SD = c(0.3, 0.6), AC = 0.4)
 
-## R0 in thousands of fish (Units = 1000)
-## Does not affect calculations — sets interpretation of numbers in output
-srr <- SRR(Pars = list(h = 0.7), R0 = 5, Units = 1000)
-
 # ---- Ricker ----
 
 srr_r <- SRR(Pars  = list(hR = 0.7),

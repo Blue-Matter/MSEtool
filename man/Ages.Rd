@@ -135,18 +135,12 @@ a_exact <- Ages(MaxAge = 20, PlusGroup = FALSE)
 # Slot accessors
 MaxAge(a)
 MaxAge(a) <- 25
-
-MinAge(a)
-MinAge(a) <- 1
-
-PlusGroup(a)
 PlusGroup(a) <- FALSE
 
 # Pass-through access from a stock
 s <- Stock(Name = "Cod", Ages = Ages(MaxAge = 15))
 Ages(s)
 Ages(s) <- Ages(MaxAge = 20)
-
 }
 \seealso{
 \link[=ages-class]{ages} for the class definition and slot-level documentation.

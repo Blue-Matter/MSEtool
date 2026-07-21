@@ -90,8 +90,9 @@ always fully populated and valid.
 \code{TAC@Mean}/\code{SD}/\code{Error} and \code{Effort@Mean}/\code{SD}/\code{Error} are applied as a
 multiplicative implementation-error factor to the advised TAC/effort
 before effort-solving (\code{Error} is generated from \code{Mean}/\code{SD} if not
-supplied directly -- see \code{\link[=.PopulateImpSlot]{.PopulateImpSlot()}}). \code{TAC@Compliance} and
-\code{Effort@Compliance} (\verb{[Fleet x Complex]}, in \verb{[0, 1]}) govern how a
+supplied directly -- see \code{\link[=PopulateImpSlot]{PopulateImpSlot()}}). \code{TAC@Compliance} and
+\code{Effort@Compliance} (\verb{[Sim x Year]} within each fleet/complex's
+\code{impslot}, in \verb{[0, 1]}) govern how a
 fleet reconciles competing TAC/effort recommendations across multiple
 stocks or complexes -- meaningless (and not consulted) for a
 single-stock/single-complex OM, since there is nothing to reconcile
@@ -102,7 +103,7 @@ newly-advised size-based regulation (a change to \code{Advice@Retention}
 and/or \code{Advice@Selectivity}) in the year it changes; the remaining
 \code{1 - Compliance} fraction continues under the prior curve. Missing/\code{NA}
 defaults to \code{1} (full, immediate adoption). See
-\code{\link[=Update_Selectivity_Sim]{Update_Selectivity_Sim()}}. \code{Size@Mean}/\code{SD}/\code{Error} are not consumed.
+\code{.UpdateSelectivitySim()}. \code{Size@Mean}/\code{SD}/\code{Error} are not consumed.
 }
 }
 \seealso{

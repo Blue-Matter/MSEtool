@@ -35,7 +35,8 @@ correspond to individual MPs to run in parallel. Default \code{FALSE}.}
 \code{nSim} before projecting. Only used for \link[=hist-class]{hist} objects. If \code{NULL}
 (default), all simulations in \code{Hist} are used.}
 
-\item{Reduce}{Logical. Reserved for future use. Default \code{TRUE}.}
+\item{Reduce}{Logical. Reduce object size after simulation for memory
+efficiency? Default \code{TRUE}. See \code{\link[=ReduceDims]{ReduceDims()}}. Only for  \link[=hist-class]{hist} objects.}
 
 \item{extended}{Logical. If \code{TRUE}, stores full age- and area-structured
 arrays for all years in \code{MSE@Misc$extended}. Only used for \link[=Hist-legacy-class]{Hist-legacy}

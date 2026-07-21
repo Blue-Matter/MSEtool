@@ -106,7 +106,7 @@ Composition data are not yet imported. Planned sources are
 length composition must follow the \link[=compdata-class]{compdata} convention used by
 \code{LandingsAtSize}/\code{DiscardsAtSize}: \code{Classes} is a named list, one vector
 per fleet, since fleets are not required to share a length-bin grid (see
-\code{ImportSSData_AtSize()} in \code{import-ss3-data.R} for a worked example, and
+\code{.ImportSSDataAtSize()} in \code{import-ss3-data.R} for a worked example, and
 \link[=compdata-class]{compdata} for the fleet-relative-position convention on \code{Value}'s
 Class dimension). Age composition can keep the flat shared \code{Classes}
 vector, since ages are shared across fleets.

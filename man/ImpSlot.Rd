@@ -16,25 +16,18 @@ default.}
 deviation of implementation error around \code{Mean}. When \code{NULL}, the slot is
 left at its class default.}
 
-\item{Compliance}{Numeric matrix \verb{[Fleet x Complex]}, or \code{NULL} (default).
-Meaning depends on which control (\code{TAC}, \code{Effort}, or \code{Size}) this
-\code{impslot} is attached to (see Details). For \code{TAC}/\code{Effort}, only
-meaningful for multi-stock/multi-complex OMs, where it governs how
-a fleet reconciles competing TAC or effort recommendations across
-stocks -- not consulted at all for a single-stock/single-complex OM,
-since there is nothing to reconcile against. For \code{Size}, it is the
-fraction of the fleet adopting a newly-advised size regulation. Values
-should be in \eqn{[0, 1]}. When \code{NULL}, that fleet/complex pair falls
-back to the framework's default behaviour (today's default multi-stock
-reconciliation for \code{TAC}/\code{Effort}; full/immediate adoption for \code{Size}).}
+\item{Compliance}{Scalar, length-2 uniform bounds \code{c(lower, upper)}, a
+\verb{[Sim x Year]} array, or \code{NULL} (default). Meaning depends on which
+control (\code{TAC}, \code{Effort}, or \code{Size}) this \code{impslot} is attached to (see
+Details). Values should be in \eqn{[0, 1]}.}
 
 \item{Error}{Numeric array or list of arrays, or \code{NULL} (default). Realised
 implementation error, a per simulation/year multiplicative factor
 applied to the advised TAC or effort before effort-solving. When
 supplied directly, \code{Mean} and \code{SD} are stored but \code{Error} is not
-re-derived from them during simulation -- the user-supplied values are
-used as-is. When \code{NULL}, \code{Error} is stochastically generated from
-\code{Mean} and \code{SD} at simulation time (see \code{\link[=.PopulateImpSlot]{.PopulateImpSlot()}}).}
+re-derived from them during simulation. When \code{NULL}, \code{Error} is
+stochastically generated from
+\code{Mean} and \code{SD} at simulation time (see \code{\link[=PopulateImpSlot]{PopulateImpSlot()}}).}
 
 \item{Misc}{List. Miscellaneous additional objects. Default \code{list()}.}
 }
@@ -58,22 +51,18 @@ for a single management control, or access and replace individual slots.
 \code{Error}, a general implementation-error multiplier applied to the
 advised TAC/effort regardless of how many stocks are in the OM (e.g.
 \code{Mean = 0.9} models a fleet that implements 90\% of the recommended TAC
-on average). See \code{\link[=.PopulateImpSlot]{.PopulateImpSlot()}} for exactly how \code{Mean}/\code{SD} expand
+on average). See \code{\link[=PopulateImpSlot]{PopulateImpSlot()}} for exactly how \code{Mean}/\code{SD} expand
 to \code{Error}.
 }
 
 \subsection{Compliance}{
 
-\code{Compliance} is a separate, distinct concept from \code{Mean}/\code{SD}/\code{Error}: it
-governs multi-stock reconciliation specifically (see
-\code{\link[=OptEffort_multi_stock]{OptEffort_multi_stock()}}), not general
-over/under-implementation. \code{Compliance -> 0} reproduces the framework's
-default soft balancing across competing stock TACs; \code{Compliance -> 1}
-approaches a hard choke (this stock's TAC must not be exceeded). For
-effort-based advice, \code{Compliance} inflates a stock's effort ceiling by
-\code{1/Compliance} before the fleet's effort is resolved as the minimum
-across stocks, so lower compliance lets the fleet exceed that stock's
-recommended effort.
+For \code{TAC}/\code{Effort}, only meaningful for multi-stock/multi-complex OMs,
+where it governs how a fleet reconciles competing TAC or effort
+recommendations across stocks.
+
+For \code{Size}, it is the fraction of the fleet adopting a newly-advised size
+regulation.
 }
 }
 \examples{

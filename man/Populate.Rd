@@ -51,6 +51,7 @@ The following methods may be called depending on the class of \code{object}:
 \item \code{\link[=PopulateCatchObs]{PopulateCatchObs()}}
 \item \code{\link[=PopulateIndexObs]{PopulateIndexObs()}}
 \item \code{\link[=PopulateCompObs]{PopulateCompObs()}}
+\item \code{\link[=PopulateImp]{PopulateImp()}}
 }
 
 Each \verb{Populate*()} function has its own documentation detailing which named
@@ -64,19 +65,9 @@ descriptions.
 OM <- Populate(OM)
 
 # Populate a stock with specific arguments
-Stock <- Populate(
-  Stock,
-  nYear = 40,
-  pYear = 20,
-  nSim = 100
-)
+Stock <- Populate(Stock, nYear = 40, pYear = 20, nSim = 100)
 
 # Populate a fleet using an already-populated stock
-Fleet <- Populate(
-  Fleet,
-  Stock = Stock,
-  nSim = 100
-)
+Fleet <- Populate(Fleet, Stock = Stock, nSim = 100)
 }
-
 }

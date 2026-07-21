@@ -29,6 +29,6 @@ across destination areas according to \code{FracOther}. When \code{FracOther} is
 probability evenly split.
 }
 \seealso{
-\code{\link[=FitMovement_2_Area]{FitMovement_2_Area()}}, \code{\link[=FitMovement_Multi_Area]{FitMovement_Multi_Area()}}
+\code{.FitMovement2Area()}, \code{.FitMovementMultiArea()}
 }
 \keyword{internal}

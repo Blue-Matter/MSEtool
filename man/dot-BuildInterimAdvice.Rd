@@ -20,10 +20,10 @@ sub-annual \code{Seasons}).}
 }
 \value{
 A list with elements \code{AdviceSimList} and \code{AggBagLimitSimList},
-matching the return shape of \code{\link[=.CalcAdvice]{.CalcAdvice()}}.
+matching the return shape of \code{.CalcAdvice()}.
 }
 \description{
-Called by \code{\link[=Apply_MP]{Apply_MP()}} in place of running the MP for projection years
+Called by \code{.ApplyMP()} in place of running the MP for projection years
 before \code{Proj@OM@MPStartYear}. Builds an \code{Advice} object for each
 sim/stock from \code{Proj@OM@InterimAdvice}, falling back to an empty \code{advice}
 object (which is then filled by freezing effort at the

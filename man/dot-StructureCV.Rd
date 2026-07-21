@@ -17,15 +17,15 @@ length-2 bounds vector.}
 An array with dimensions \verb{nSim × nage × nTS}.
 }
 \description{
-Convenience wrapper around \code{\link[=.Structure]{.Structure()}} for CV-at-age values. Handles
+Convenience wrapper around \code{.Structure()} for CV-at-age values. Handles
 three input forms:
 }
 \details{
 \itemize{
-\item Scalar: passed directly to \code{\link[=.Structure]{.Structure()}}.
+\item Scalar: passed directly to \code{.Structure()}.
 \item Length-2 vector: treated as uniform bounds, first converted via
-\code{\link[=StructurePars_]{StructurePars_()}} before structuring.
-\item Array or longer vector: passed directly to \code{\link[=.Structure]{.Structure()}}.
+\code{.StructurePar()} before structuring.
+\item Array or longer vector: passed directly to \code{.Structure()}.
 }
 }
 \keyword{internal}

@@ -13,7 +13,7 @@
 Does not return. Always throws an error via \code{\link[cli:cli_abort]{cli::cli_abort()}}.
 }
 \description{
-Called by \code{\link[=.FindModel]{.FindModel()}} when parameter names in \code{object@Pars} do not match
+Called by \code{.FindModel()} when parameter names in \code{object@Pars} do not match
 any candidate model. Constructs an error message directing the user to the
 relevant \verb{*Models()} function or advising them to set \code{Pars = NULL} or
 supply a custom function to \code{Model}.

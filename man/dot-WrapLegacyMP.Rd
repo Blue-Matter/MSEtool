@@ -25,11 +25,11 @@ object with \code{nsim = 1} via \code{\link[=Convert]{Convert()}}, calls \code{M
 \code{reps = 1} (a single draw, since \code{advice@TAC}/\code{advice@Effort} expect a
 single value rather than the distribution over \code{reps} legacy MPs use to
 express implementation uncertainty), then maps the returned \code{Rec} onto an
-\code{advice} object via \code{\link[=.Rec2Advice]{.Rec2Advice()}}.
+\code{advice} object via \code{.Rec2Advice()}.
 
 If \code{MP} needs a \code{Data} slot that \code{\link[=Convert]{Convert()}} could not populate from the
 source \code{data} object (see \code{Data@Misc$UnmappedSlots}), the call to \code{MP}
 will typically error; this is caught by the caller
-(\code{\link[=CalcAdvice_Sim_MP]{CalcAdvice_Sim_MP()}}) and logged rather than aborting the run.
+(\code{.CalcAdviceSimMP()}) and logged rather than aborting the run.
 }
 \keyword{internal}

@@ -21,6 +21,6 @@ to the maximum length bin rather than \code{Linf}, as was done in legacy objects
 Called internally by \code{\link[=ConvertOM]{ConvertOM()}}.
 }
 \seealso{
-\code{\link[=ConvertOM]{ConvertOM()}}, \code{\link[=.VmaxLenOpt]{.VmaxLenOpt()}}, \code{\link[=Selectivity]{Selectivity()}}, \code{\link[=Retention]{Retention()}}
+\code{\link[=ConvertOM]{ConvertOM()}}, \code{.VmaxLenOpt()}, \code{\link[=Selectivity]{Selectivity()}}, \code{\link[=Retention]{Retention()}}
 }
 \keyword{internal}

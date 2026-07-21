@@ -36,7 +36,7 @@ retention, discard mortality, and spatial closures for a fleet.
 already defined, by weighting the stock's weight-at-length by
 selectivity-at-length (\code{WeightFleetSelected}) or by
 selectivity-at-length times retention-at-length (\code{WeightFleetRetained})
-over the age-length distribution -- see \code{\link[=.CalcFleetWeightAtAge]{.CalcFleetWeightAtAge()}}.
+over the age-length distribution -- see \code{.CalcFleetWeightAtAge()}.
 }
 }
 \examples{

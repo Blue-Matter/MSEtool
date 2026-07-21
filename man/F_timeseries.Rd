@@ -91,27 +91,17 @@ MSE <- Project(Hist, 'CurrentEffort')
 
 # Raw array slots
 FInteract(Hist)
-FDead(Hist)
+FDead(MSE)
 FRetain(MSE)
 
-# Age-structured F (area always included)
+# Age-structured F, as a tidy data frame (area always included)
 FInteract(Hist, df = TRUE)
 FDead(MSE, df = TRUE)
-FRetain(MSE, df = TRUE)
 
-# Retain fleet dimension
+# Apical F (max over ages)
+FDead(MSE, df = TRUE, byAge = FALSE)
+
+# Retain fleet and area dimensions
 FDead(MSE, df = TRUE, byFleet = TRUE)
-
-# Apical F (max over ages) as a tidy data frame
-FInteract(Hist, df = TRUE, byAge = FALSE)
-FDead(MSE,      df = TRUE, byAge = FALSE)
-FRetain(MSE,    df = TRUE, byAge = FALSE)
-
-# Age + Fleet
-FDead(MSE, df = TRUE, byFleet = TRUE)
-
-# Area only (apical F per area)
-FDead(MSE, df = TRUE, byAge = FALSE, byArea = TRUE)
 FDead(MSE, df = TRUE, byAge = FALSE, byArea = TRUE, byFleet = TRUE)
-
 }

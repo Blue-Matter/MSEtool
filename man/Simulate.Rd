@@ -12,6 +12,7 @@ Simulate(
   nsim = NULL,
   control = SimControl(),
   Reduce = TRUE,
+  refpointsMSY = NULL,
   ...
 )
 }
@@ -38,7 +39,17 @@ calculations are performed. Only used for \link[=om-class]{om} objects. Default
 \code{SimControl()}.}
 
 \item{Reduce}{Logical. Reduce object size after simulation for memory
-efficiency? Default \code{TRUE}. Only used for \link[=om-class]{om} objects.}
+efficiency? Default \code{TRUE}. See \code{\link[=ReduceDims]{ReduceDims()}}.}
+
+\item{refpointsMSY}{A pre-calculated \link[=refpointsMSY-class]{refpointsMSY} object (e.g.
+from a previous \code{\link[=Simulate]{Simulate()}} or \code{\link[=CalcMSY]{CalcMSY()}} call), or \code{NULL} (default).
+If supplied, it is used directly as \code{Hist@Reference@MSY} and the
+(expensive) MSY reference point calculation is skipped -- \code{control}'s
+\code{MSYRefs} setting is ignored in this case. Only valid if it was
+calculated for an \code{OM} with the same \code{nSim}, stock/complex names, and
+reference year as the \code{OM} supplied here; an incompatible object throws
+an error rather than being silently ignored. Only used for \link[=om-class]{om}
+objects.}
 
 \item{...}{Additional arguments passed to sub-functions. Not currently
 used}
@@ -56,7 +67,7 @@ or \link[=hist-class]{Hist-class} object containing historical population dynami
 data, and reference points.
 }
 \details{
-\code{Simulate()} is a dispatcher that calls internal functions \code{Simulate_om()} (for
+\code{Simulate()} is a dispatcher that calls internal functions \code{.SimulateOM()} (for
 \link[=om-class]{om} objects) or \code{SimulateOM()} (for legacy \link[=OM-legacy-class]{OM-legacy}
 objects) depending on the class of \code{OM}.
 }

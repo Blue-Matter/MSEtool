@@ -9,7 +9,7 @@
 \arguments{
 \item{Pars}{Named list of parameter values. Each element may be a scalar,
 a length-2 uniform bounds vector, an \code{nSim}-length vector, or an
-existing array. See \code{\link[=StructurePars_]{StructurePars_()}} for full conversion rules.}
+existing array. See \code{.StructurePar()} for full conversion rules.}
 
 \item{nSim}{Integer. Number of simulations. Required unless all elements
 of \code{Pars} are already arrays.}
@@ -25,8 +25,8 @@ A named list of arrays, each with dimensions \verb{Sim × Year} or
 }
 \description{
 Each element is converted to a named \verb{Sim × Year} (or \verb{Sim × Year × Area}) array via
-\code{\link[=StructurePars_]{StructurePars_()}}, a random walk is applied to any parameter paired with
+\code{.StructurePar()}, a random walk is applied to any parameter paired with
 an \verb{*SD} entry (unless \code{nArea} is supplied), and all arrays are extended to
-consistent dimensions via \code{\link[=.ExtendPars]{.ExtendPars()}}.
+consistent dimensions via \code{.ExtendPars()}.
 }
 \keyword{internal}

@@ -107,11 +107,22 @@ construction and pass-through access.}
 \item{DataLag}{Integer. Number of time steps that data are lagged relative
 to management implementation. Default \code{0}.}
 
-\item{CatchFrac}{List. Controls catch fraction allocation among fleets or
-stocks. Default \code{NULL}.}
+\item{CatchFrac}{List. Named list of length 0 or \code{nStock(OM)}. Each
+element is an \code{nSim} by \code{nFleet} matrix (or a single row recycled
+across sims) giving the fraction of catch taken by each fleet, with
+rows summing to 1. Only used when there is more than one fleet and a
+historical \code{Depletion@Final} target is set for at least one stock, in
+which case it is the target fleet split that catchability is
+calibrated to reproduce. If left unspecified for a stock, it is
+derived from relative Effort times Catchability in the final
+historical year. Default \code{NULL}.}
 
-\item{Allocation}{List. Controls effort or catch allocation among fleets or
-stocks. Default \code{NULL}.}
+\item{Allocation}{List. Named list of length 0 or the number of stock
+complexes. Each element is an \code{nSim} by \code{nFleet} matrix, with rows
+summing to 1, controlling how the TAC is split among fleets during
+projection. If unspecified it falls back to \code{CatchFrac}, and then to
+the mean of removals over the last five historical years. Default
+\code{NULL}.}
 
 \item{EFactor}{List. Effort or exploitation modifiers applied during
 projection. Default \code{NULL}.}

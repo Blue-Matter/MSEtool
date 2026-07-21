@@ -8,7 +8,7 @@
 }
 \arguments{
 \item{Pars}{Named list of structured parameter arrays (output of
-\code{\link[=StructurePars_]{StructurePars_()}}).}
+\code{.StructurePar()}).}
 }
 \value{
 \code{Pars} with random walks applied to matched parameters and all

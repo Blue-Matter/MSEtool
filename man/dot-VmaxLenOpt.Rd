@@ -22,9 +22,9 @@ Numeric. The optimised \code{Vmaxlen} value on the probability scale
 \description{
 Finds the \code{Vmaxlen} value (on the logit scale) that reproduces the original
 selectivity at the maximum length bin (\code{Linf}) under the double-normal curve.
-Called internally by \code{\link[=.SolveForVmaxlen]{.SolveForVmaxlen()}}.
+Called internally by \code{.SolveForVmaxlen()}.
 }
 \seealso{
-\code{\link[=.SolveForVmaxlen]{.SolveForVmaxlen()}}, \code{\link[=optForVmaxLen]{optForVmaxLen()}}
+\code{.SolveForVmaxlen()}, \code{.OptForVmaxLen()}
 }
 \keyword{internal}

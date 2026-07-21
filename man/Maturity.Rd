@@ -28,7 +28,7 @@ Maturity(x) <- value
 \item{Pars}{\code{list}. Named list of maturity parameters. Element names must
 match the arguments of a built-in maturity model (see \code{\link[=MaturityModels]{MaturityModels()}}).
 When \code{Pars} is non-empty and \code{Model} is \code{NULL}, the model is inferred
-automatically by \code{\link[=.FindModel]{.FindModel()}}. When \code{Pars} is a \link[=stock-class]{stock} object,
+automatically by \code{.FindModel()}. When \code{Pars} is a \link[=stock-class]{stock} object,
 \code{Maturity()} acts as a pass-through accessor and returns \code{x@Maturity};
 when \code{Pars} is a list of \link[=stock-class]{stock} objects, \code{Model} is treated as an
 integer index selecting which stock's \code{Maturity} slot to return — see
@@ -38,7 +38,7 @@ full set of accepted input formats. Default \code{list()}.}
 
 \item{Model}{\code{character(1)}, \code{function}, or \code{integer(1)}. Maturity model
 identifier. When \code{NULL} (default), the model is inferred from \code{Pars} via
-\code{\link[=.FindModel]{.FindModel()}}. May be set to a character string naming a built-in model or
+\code{.FindModel()}. May be set to a character string naming a built-in model or
 to a custom R function. When \code{Pars} is a list of \link[=stock-class]{stock} objects,
 \code{Model} is an integer index — see \emph{Pass-Through Access} and
 \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules}.}
@@ -114,7 +114,7 @@ details on input formats and the rules that govern how \code{Pars}, \code{Model}
 
 \strong{Model-based} (recommended): supply \code{Pars} with named parameters matching
 a built-in model (see \code{\link[=MaturityModels]{MaturityModels()}}). If \code{Model = NULL} and the
-parameter names uniquely match a model, \code{\link[=.FindModel]{.FindModel()}} resolves the model
+parameter names uniquely match a model, \code{.FindModel()} resolves the model
 automatically. The relevant \verb{MeanAt*} array is then populated by
 \code{\link[=Populate]{Populate()}} when the stock is added to an \code{\link[=OM]{OM()}}:
 
@@ -271,16 +271,6 @@ L50_arr <- array(
 mat <- Maturity(Pars = list(L50    = L50_arr,
                             L50_95 = 8))
 
-## Combine stochastic (across sims) and time-varying (across years)
-L50_sim  <- runif(nSim, 35, 45)
-L50_arr2 <- array(
-  c(L50_sim, L50_sim * 1.1),          # 10\% increase from 2010 onward
-  dim      = c(nSim, 2),
-  dimnames = list(Sim = seq_len(nSim), Year = c(1990, 2010))
-)
-mat <- Maturity(Pars = list(L50    = L50_arr2,
-                            L50_95 = 8))
-
 # ---- Direct array specification ----
 
 ## Supply MeanAtAge directly (Pars left empty).
@@ -355,15 +345,9 @@ Maturity(stk)
 
 ## The final populated object (typically done internally).
 ## At-length models require a Length object passed to Populate().
-pop_mat <- Populate(Maturity(stk), 
-                    Ages = Ages(MaxAge = 20),
-                    Length = Length(Pars = 
-                                      list(
-                                        Linf = 100, 
-                                        K = 0.2, 
-                                        t0 = -0.1
-                                        )
-                                    )
+pop_mat <- Populate(Maturity(stk),
+                    Ages   = Ages(MaxAge = 20),
+                    Length = Length(Pars = list(Linf = 100, K = 0.2, t0 = -0.1))
 )
 pop_mat
 }
@@ -372,7 +356,7 @@ pop_mat
 \item \link[=maturity-class]{maturity} for the class definition and slot-level documentation.
 \item \code{\link[=MaturityModels]{MaturityModels()}} for available maturity models and required parameter
 sets.
-\item \code{\link[=.FindModel]{.FindModel()}} for automatic model inference.
+\item \code{.FindModel()} for automatic model inference.
 \item \code{\link[=Populate]{Populate()}} for array population.
 \item \code{\link[=Stock]{Stock()}} for the enclosing stock constructor.
 \item \code{\link[=Length]{Length()}} for the companion length schedule, required when using

@@ -13,6 +13,6 @@ lognormal draw cannot be centred at \code{0}. Other stochastic rows are drawn
 from a lognormal distribution seeded from \code{OM@Seed} plus the row's
 identifying key, so the same value is reproducibly reused across every
 season of the same calendar year, without needing to thread state back
-out of \code{\link[=Apply_MP]{Apply_MP()}}.
+out of \code{.ApplyMP()}.
 }
 \keyword{internal}

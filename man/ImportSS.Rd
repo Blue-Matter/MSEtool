@@ -155,8 +155,6 @@ reps <- ImportSSReport(ss_dir)
 OM <- ImportSS(
   SSDir = reps,
   Name = "Example SS3 Import",
-  Author = "A. Scientist",
-  Region = "Example Region",
   StockName = "ExampleStock",
   FleetNames = c("Commercial", "Recreational")
 )

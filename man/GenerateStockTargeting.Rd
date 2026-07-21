@@ -97,5 +97,5 @@ OM <- GenerateStockTargeting(OM, Period = "Projection", TruncSD = 2, n_recent = 
 
 }
 \seealso{
-\code{\link[=FitStockTargeting]{FitStockTargeting()}}, \code{\link[=.StandardizeEffort]{.StandardizeEffort()}}
+\code{\link[=FitStockTargeting]{FitStockTargeting()}}, \code{.StandardizeEffort()}
 }

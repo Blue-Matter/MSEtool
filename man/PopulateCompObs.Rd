@@ -75,7 +75,7 @@ change-point years.
 }
 
 In conditioning mode, \code{ESS}, \code{Theta}, and \code{Shift} are populated internally
-by \code{\link[=ConditionObs_Comp]{ConditionObs_Comp()}} and should not be set by the user.
+by \code{.ConditionObsComp()} and should not be set by the user.
 \subsection{Composition generation model}{
 
 After population, the fully-expanded slots are used by the simulation
@@ -93,5 +93,5 @@ OM-predicted composition vector for a given simulation, year, and fleet:
 }
 }
 \seealso{
-\code{\link[=CompObs]{CompObs()}}, \link[=compobs-class]{compobs}, \code{\link[=PopulateObs]{PopulateObs()}}, \code{\link[=ConditionObs_Comp]{ConditionObs_Comp()}}
+\code{\link[=CompObs]{CompObs()}}, \link[=compobs-class]{compobs}, \code{\link[=PopulateObs]{PopulateObs()}}, \code{.ConditionObsComp()}
 }

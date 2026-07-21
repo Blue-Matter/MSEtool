@@ -162,10 +162,6 @@ are row-bound and labelled via the \code{Period} column; historical rows carry
 Hist <- Simulate(SingleStockOM)
 MSE <- Project(Hist, 'CurrentEffort')
 
-# Raw arrays from Hist / MSE
-Interactions(Hist, df = FALSE)
-Landings(MSE, df = FALSE)
-
 # Tidy data frames
 Interactions(Hist)
 Landings(MSE)
@@ -174,15 +170,9 @@ Removals(MSE)
 
 # Retain fleet, age, and area structure
 Landings(MSE, byFleet = TRUE, byAge = TRUE, byArea = TRUE)
-Discards(MSE, byFleet = TRUE, bySize = TRUE)
 
 # Direct slot access for obs and data objects
 obs <- Obs(Landings = CatchObs(CV = 0.2))
 Landings(obs)
 Landings(obs) <- CatchObs(CV = 0.3)
-
-dat <- Data(Landings = CatchData(Value = matrix(100, 1, 1)))
-Landings(dat)
-Landings(dat) <- CatchData()
-
 }

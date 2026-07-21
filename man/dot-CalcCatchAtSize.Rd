@@ -14,7 +14,7 @@
 
 \item{sel_mode}{Character. One of \code{"length"} (default) or \code{"age"}. Controls
 whether the Age-Size Key is conditioned on size-selectivity before
-projection. See \code{\link[=.ConditionAgeSizeKey]{.ConditionAgeSizeKey()}} for details.}
+projection. See \code{.ConditionAgeSizeKey()} for details.}
 }
 \value{
 \code{Hist} with \code{Hist@LandingsAtSize[[stock]][[fleet]]} and
@@ -32,6 +32,6 @@ length-based selectivity on the size composition of catch. Under
 \code{sel_mode = "age"}, the population Age-Size Key is used unchanged.
 }
 \seealso{
-\code{\link[=.ConditionAgeSizeKey]{.ConditionAgeSizeKey()}}
+\code{.ConditionAgeSizeKey()}
 }
 \keyword{internal}

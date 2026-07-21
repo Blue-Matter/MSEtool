@@ -17,7 +17,7 @@ Retrieves each function named in \code{MPs} and aborts with an informative error
 listing all invalid MPs if any is not one of the native (\code{"mp"}/\code{"mmp"}) or
 legacy DLMtool/SAMtool (\code{"MP"}/\code{"MMP"}) management-procedure classes. Used
 as an upfront validation step before running an MSE. Legacy \code{"MP"}
-functions are wrapped for the new pipeline by \code{\link[=.WrapLegacyMP]{.WrapLegacyMP()}} inside
-\code{\link[=Add_MP_Functions]{Add_MP_Functions()}}.
+functions are wrapped for the new pipeline by \code{.WrapLegacyMP()} inside
+\code{.AddMPFunctions()}.
 }
 \keyword{internal}

@@ -76,11 +76,22 @@ with the operating model. See \code{\link[=Data]{Data()}}.}
 \item{\code{DataLag}}{Integer. Number of time steps that data are lagged relative
 to management implementation. See \code{\link[=OM]{OM()}}.}
 
-\item{\code{CatchFrac}}{List. Controls catch fraction allocation among fleets or
-stocks. See \code{\link[=OM]{OM()}}.}
+\item{\code{CatchFrac}}{List. Named list of length 0 or \code{nStock(OM)}. Each element
+is an \code{nSim} by \code{nFleet} matrix (or a single row recycled across sims)
+giving the fraction of catch taken by each fleet, with rows summing to
+\enumerate{
+\item Only used when there is more than one fleet and a historical
+\code{Depletion@Final} target is set for at least one stock, in which case
+it is the target fleet split that catchability is calibrated to
+reproduce. If left unspecified for a stock, it is derived from relative
+Effort times Catchability in the final historical year. See \code{\link[=OM]{OM()}}.
+}}
 
-\item{\code{Allocation}}{List. Controls effort or catch allocation among fleets or
-stocks. See \code{\link[=OM]{OM()}}.}
+\item{\code{Allocation}}{List. Named list of length 0 or the number of stock
+complexes. Each element is an \code{nSim} by \code{nFleet} matrix, with rows
+summing to 1, controlling how the TAC is split among fleets during
+projection. If unspecified it falls back to \code{CatchFrac}, and then to
+the mean of removals over the last five historical years. See \code{\link[=OM]{OM()}}.}
 
 \item{\code{EFactor}}{List. Effort or exploitation modifiers applied during
 projection. See \code{\link[=OM]{OM()}}.}

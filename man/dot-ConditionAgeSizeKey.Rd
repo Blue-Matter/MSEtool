@@ -31,6 +31,6 @@ that selectivity acts on age and the within-age size distribution is
 irrelevant to catch composition.
 }
 \seealso{
-\code{\link[=.CalcCatchAtSize]{.CalcCatchAtSize()}}
+\code{.CalcCatchAtSize()}
 }
 \keyword{internal}

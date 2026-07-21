@@ -32,7 +32,7 @@ accepted input formats.}
 
 \item{\code{Model}}{\code{function} or \code{character(1)}. Natural mortality model
 identifier, matched to one of \code{\link[=NaturalMortalityModels]{NaturalMortalityModels()}}. Set
-automatically by \code{\link[=.FindModel]{.FindModel()}} when \code{Pars} is supplied without an
+automatically by \code{.FindModel()} when \code{Pars} is supplied without an
 explicit model.}
 
 \item{\code{Units}}{\code{character(1)}. Time unit in which mortality rates are
@@ -76,7 +76,7 @@ lower bounds.}
 parameters.
 \item \code{\link[=ValidUnits]{ValidUnits()}} for accepted unit strings.
 \item \code{\link[=Populate]{Populate()}} for array population.
-\item \code{\link[=.FindModel]{.FindModel()}} for automatic model inference.
+\item \code{.FindModel()} for automatic model inference.
 \item \code{\link[=Length]{Length()}} for the companion length schedule, required when using
 at-length mortality models.
 \item \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for the

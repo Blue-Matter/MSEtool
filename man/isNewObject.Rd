@@ -17,10 +17,10 @@ supplied name alone does not cause the object to be considered non-default.
 The default instance is obtained as follows:
 \itemize{
 \item For a small set of classes whose constructors do not follow the standard
-\code{firstup(class)()} naming convention (\code{naturalmortality}, \code{srr}, \code{om},
+\code{.FirstUp(class)()} naming convention (\code{naturalmortality}, \code{srr}, \code{om},
 \code{discardmortality}), the appropriate constructor is called directly.
 \item For all other classes, the constructor is looked up as
-\code{get(firstup(class))}. If no such constructor exists, \code{new(class)} is
+\code{get(.FirstUp(class))}. If no such constructor exists, \code{new(class)} is
 used as a fallback.
 }}
 }

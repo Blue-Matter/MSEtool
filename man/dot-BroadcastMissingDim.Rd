@@ -9,6 +9,6 @@
 \description{
 Appends \code{dim_name} (with levels \code{dim_vals}) as the last dimension of
 \code{arr}, repeating \code{arr}'s existing values across every level. Used by
-\code{\link[=.ReconcileAdviceShapes]{.ReconcileAdviceShapes()}}; see its documentation for why.
+\code{.ReconcileAdviceShapes()}; see its documentation for why.
 }
 \keyword{internal}

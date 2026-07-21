@@ -443,39 +443,21 @@ panels that accept it. \code{byStock} is forwarded as-is, including the
 \dontrun{
 Hist <- Simulate(SingleStockOM)
 PlotBiomass(Hist)
-PlotLandings(Hist, nsim = 10)
-PlotRemovals(Hist)
-PlotInteractions(Hist)
-PlotEffort(Hist)
-PlotF(Hist)
 PlotF(Hist, relative = 'FMSY')
-PlotVBiomass(Hist)
+PlotDynamics(Hist)
 
 MSE <- Project(Hist, ExampleMPs())
-PlotBiomass(MSE)
-PlotBiomass(MSE, IncHist = FALSE)
 PlotBiomass(MSE, byMP = TRUE)
-PlotBiomass(MSE, relative = 'BMSY')
-PlotSBiomass(MSE, relative = 'B0', type = 'Dynamic')
-PlotRemovals(MSE)
-PlotEffort(MSE, byMP = TRUE)
-PlotF(MSE, what = 'FRetain', byMP = TRUE)
 PlotF(MSE, relative = 'FMSY')
-PlotVBiomass(MSE, VBType = 'Landings', byMP = TRUE)
 PlotDynamics(MSE)
 
 MHist <- Simulate(MultiStockOM)
 PlotSBiomass(MHist, byStock = TRUE)
 PlotLandings(MHist, byStock = TRUE, byFleet = TRUE)
-PlotDynamics(MHist)
 
 # restrict to specific stocks, by name or index
 PlotSBiomass(MHist, Stocks = 'Female')
-PlotSBiomass(MHist, Stocks = 1)
-PlotBiomass(MHist, Stocks = c('Stock1', 'Stock2'), byStock = TRUE)
-
 }
-
 }
 \seealso{
 \code{\link[=Number]{Number()}}, \code{\link[=Biomass]{Biomass()}}, \code{\link[=SBiomass]{SBiomass()}}, \code{\link[=SProduction]{SProduction()}},
