@@ -25,7 +25,7 @@ Save <- function(object, path = NULL, overwrite = FALSE, ...) {
   if (is.null(path))
     path <- tempfile()
   
-  CreateDir(dirname(path))
+  .CreateDir(dirname(path))
   
   if (file.exists(path) && !overwrite)
     cli::cli_abort(
@@ -42,7 +42,7 @@ Save <- function(object, path = NULL, overwrite = FALSE, ...) {
   invisible(path)
 }
 
-CreateDir <- function(path) {
+.CreateDir <- function(path) {
   if (!dir.exists(path))
     dir.create(path, recursive = TRUE, showWarnings = FALSE)
 }
