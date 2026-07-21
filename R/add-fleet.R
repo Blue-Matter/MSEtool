@@ -24,9 +24,9 @@
 #' @export
 AddFleet <- function(OM, FleetName, Fleet=NULL, Obs=NULL, Imp=NULL) {
   
-  CheckClass(OM)
+  .CheckClass(OM)
   OM <- Populate(OM, silent=TRUE)
-  CheckClass(FleetName, 'character', 'FleetName')
+  .CheckClass(FleetName, 'character', 'FleetName')
   
   if (length(FleetName)!=1)
     cli::cli_abort('`FleetName` must be length 1')
@@ -40,9 +40,9 @@ AddFleet <- function(OM, FleetName, Fleet=NULL, Obs=NULL, Imp=NULL) {
   if (is.null(Fleet)) 
     Fleet <- Fleet(Name=FleetName) # empty `fleet-class` object
     
-  Fleet <- Fleet |> Add_Dummy_Effort(OM) |> Add_Dummy_Selectivity(OM)
+  Fleet <- Fleet |> .AddDummyEffort(OM) |> .AddDummySelectivity(OM)
     
-  CheckClass(Fleet, 'fleet', 'Fleet')
+  .CheckClass(Fleet, 'fleet', 'Fleet')
   
   newFleet <- list(Fleet)
   names(newFleet) <- FleetName
@@ -54,7 +54,7 @@ AddFleet <- function(OM, FleetName, Fleet=NULL, Obs=NULL, Imp=NULL) {
   if (is.null(Obs))
     Obs <- Obs(Name=FleetName) # empty `obs-class` object
   
-  CheckClass(Obs, 'obs', 'Obs') 
+  .CheckClass(Obs, 'obs', 'Obs') 
   
   newObs <- list(Obs)
   names(newObs) <- FleetName
@@ -65,7 +65,7 @@ AddFleet <- function(OM, FleetName, Fleet=NULL, Obs=NULL, Imp=NULL) {
   if (is.null(Imp))
     Imp <- Imp(Name=FleetName) # empty `imp-class` object
   
-  CheckClass(Imp, 'imp', 'Imp') 
+  .CheckClass(Imp, 'imp', 'Imp') 
   
   newImp <- list(Imp)
   names(newImp) <- FleetName
@@ -76,7 +76,7 @@ AddFleet <- function(OM, FleetName, Fleet=NULL, Obs=NULL, Imp=NULL) {
   OM
 }
 
-Add_Dummy_Effort <- function(Fleet, OM) {
+.AddDummyEffort <- function(Fleet, OM) {
   if (!EmptyObject(Fleet@Effort))
     return(Fleet)
   
@@ -93,7 +93,7 @@ Add_Dummy_Effort <- function(Fleet, OM) {
   Fleet
 }
 
-Add_Dummy_Selectivity <- function(Fleet, OM) {
+.AddDummySelectivity <- function(Fleet, OM) {
   if (!EmptyObject(Fleet@Selectivity))
     return(Fleet)
   
