@@ -42,7 +42,7 @@ AdjustSeasonalFecundity <- function(OM, silent = FALSE) {
   if (OM@Seasons == 1L)
     return(OM)
 
-  if (!IsSeasonalRecruitment(OM))
+  if (!.IsSeasonalRecruitment(OM))
     return(OM)
 
   OM <- PopulateOM(OM,
