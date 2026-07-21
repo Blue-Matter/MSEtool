@@ -3,18 +3,25 @@
 #'
 #' Checks whether `Year` falls in a scheduled management year. If not,
 #' the previous advice is carried forward unchanged. If so, the MP is
-#' applied via [CalcAdvice()] and a new nested list of `Advice` objects
+#' applied via `.CalcAdvice()` and a new nested list of `Advice` objects
 #' is returned.
 #'
 #' @param Year              Integer. Current projection year.
 #' @param ManagementYears   Integer vector. Years in which the MP is applied,
-#'                          as computed by `CalcManagementYears`.
+#'                          as computed by `.CalcManagementYears`.
 #' @param LastAdviceSimList Nested list of `Advice` objects from the most
+#'                          recent management year. Returned unchanged in
+#'                          non-management years.
+#' @param LastAggBagLimitSimList Nested list of `aggbaglimit` objects (one
+#'                          list per sim, possibly empty) from the most
 #'                          recent management year. Returned unchanged in
 #'                          non-management years.
 #' @param MPName            Character. Name of the management procedure.
 #' @param MPfunction        Function. The MP to apply; must accept a `Data`
-#'                          object and return an `Advice` object.
+#'                          object and return an `Advice` object (or, for
+#'                          `mmp`-class MPs, a `DataList` and return an
+#'                          `AdviceList`/`AggregateBagLimit` structure - see
+#'                          `.CalcAdviceSimMMP()`).
 #' @param DataSimList       Nested list of `Data` objects, one per sim and
 #'                          stock, trimmed to the current data year.
 #' @param Proj              `Hist` object containing the current operating
@@ -24,14 +31,16 @@
 #' @param FleetNames        Character vector. Fleet names.
 #' @param Areas             Integer vector. Area indices.
 #'
-#' @return A nested list of `Advice` objects — either newly computed by
-#'   `CalcAdvice` if `Year` is a management year, or `LastAdviceSimList`
-#'   carried forward otherwise.
+#' @return A list with elements `AdviceSimList` (nested list of `Advice`
+#'   objects) and `AggBagLimitSimList` (nested list of `aggbaglimit`
+#'   objects) - either newly computed by `.CalcAdvice` if `Year` is a
+#'   management year, or both carried forward unchanged otherwise.
 #'
 #' @keywords internal
-Apply_MP <- function(Year,
+.ApplyMP <- function(Year,
                      ManagementYears,
                      LastAdviceSimList,
+                     LastAggBagLimitSimList,
                      MPName,
                      MPfunction,
                      DataSimList,
@@ -40,10 +49,16 @@ Apply_MP <- function(Year,
                      mp,
                      FleetNames,
                      Areas) {
-  
-  if (!Year %in% ManagementYears) return(LastAdviceSimList)
-  
-  CalcAdvice(
+
+  MPStartYear <- Proj@OM@MPStartYear
+  if (!is.null(MPStartYear) && floor(Year) < MPStartYear)
+    return(.BuildInterimAdvice(Proj, Year, YearsProj, FleetNames, Areas))
+
+  if (!Year %in% ManagementYears)
+    return(list(AdviceSimList      = LastAdviceSimList,
+                AggBagLimitSimList = LastAggBagLimitSimList))
+
+  .CalcAdvice(
     MPName,
     MPfunction,
     DataSimList,
@@ -68,42 +83,67 @@ Apply_MP <- function(Year,
 #' @param Proj `Hist` object containing population dynamics up to `Year`-1
 #' @param YearsProj Numeric vector of projected years
 #'
-#' @return A list of length `length(DataSimList)`, each element containing
-#'   a named list of `Advice` objects for the stocks/complexes.
+#' @return A list with elements `AdviceSimList` (a list of length
+#'   `length(DataSimList)`, each element a named list of `Advice` objects
+#'   for the stocks/complexes) and `AggBagLimitSimList` (a list of the same
+#'   length, each element a list of `aggbaglimit` objects returned by an
+#'   `mmp`-class MP, or `NULL`).
 #'
 #' @keywords internal
-#' 
-CalcAdvice <- function(MPName, MPfunction, DataSimList, Year, Proj, YearsProj, mp,
+#'
+.CalcAdvice <- function(MPName, MPfunction, DataSimList, Year, Proj, YearsProj, mp,
                        FleetNames, Areas) {
   nSim <- length(DataSimList)
-  
-  if (nSim != Proj@OM@nSim) 
+
+  if (nSim != Proj@OM@nSim)
     cli::cli_abort("Mismatch in number of simulations", .internal=TRUE)
-  
-  if (inherits(MPfunction,'mmp')) 
-    cli::cli_abort("MP class `mmp` currently not supported", call=NULL)
-  
-  AdviceSimList <- MakeNamedList(1:nSim)
-  
+
+  is_mmp <- inherits(MPfunction, 'mmp')
+
+  AdviceSimList      <- MakeNamedList(1:nSim)
+  AggBagLimitSimList <- MakeNamedList(1:nSim)
+
   for (sim in seq_along(AdviceSimList)) {
-    DataList  <- DataSimList[[sim]]
-    AdviceSimList[[sim]] <- try(
-      CalcAdvice_Sim_MP(sim = sim, 
-                        MPName = MPName, 
-                        MPfunction = MPfunction, 
-                        DataList = DataList,
-                        Year = Year, 
-                        Proj = Proj,
-                        YearsProj = YearsProj,
-                        mp = mp,
-                        FleetNames = FleetNames, 
-                        Areas = Areas),
-      silent=TRUE
-    )
-    
+    DataList <- DataSimList[[sim]]
+
+    if (is_mmp) {
+      result <- try(
+        .CalcAdviceSimMMP(sim = sim,
+                          MPName = MPName,
+                          MPfunction = MPfunction,
+                          DataList = DataList,
+                          Year = Year,
+                          Proj = Proj,
+                          YearsProj = YearsProj,
+                          mp = mp,
+                          FleetNames = FleetNames,
+                          Areas = Areas),
+        silent = TRUE
+      )
+      if (inherits(result, 'try-error')) {
+        AdviceSimList[[sim]] <- result
+      } else {
+        AdviceSimList[[sim]]      <- result$AdviceList
+        AggBagLimitSimList[[sim]] <- result$AggBagLimit
+      }
+    } else {
+      AdviceSimList[[sim]] <- try(
+        .CalcAdviceSimMP(sim = sim,
+                          MPName = MPName,
+                          MPfunction = MPfunction,
+                          DataList = DataList,
+                          Year = Year,
+                          Proj = Proj,
+                          YearsProj = YearsProj,
+                          mp = mp,
+                          FleetNames = FleetNames,
+                          Areas = Areas),
+        silent=TRUE
+      )
+    }
   }
-  AdviceSimList
-  
+
+  list(AdviceSimList = AdviceSimList, AggBagLimitSimList = AggBagLimitSimList)
 }
 
 #' Calculate MP Advice for a Single Simulation
@@ -126,7 +166,7 @@ CalcAdvice <- function(MPName, MPfunction, DataSimList, Year, Proj, YearsProj, m
 #' @return A named list of `Advice` objects for each stock/complex.
 #'
 #' @keywords internal
-CalcAdvice_Sim_MP <- function(sim,
+.CalcAdviceSimMP <- function(sim,
                               MPName, 
                               MPfunction, 
                               DataList, 
@@ -142,16 +182,94 @@ CalcAdvice_Sim_MP <- function(sim,
   # loop over stocks/complexes
   nms <- names(DataList)
   for (i in seq_along(DataList)) {  
-    Data <- DataList[[i]] |> AddPopDyn(Proj, sim, Year, YearsProj, mp)
+    Data <- DataList[[i]] |> .AddPopDyn(Proj, sim, Year, YearsProj, mp)
     
     Data@Misc$MPName <- MPName
     Data@Misc$StockName <- names(DataList)[i]
     Advice <- try(MPfunction(Data=Data), silent=TRUE)
-    Advice <- CheckAdvice(Advice, Proj, FleetNames, Areas, sim, name=nms[i]) 
-    Advice <- Log_MPError(Advice, MPName, Data, Sim=sim, Year)
+    Advice <- .CheckAdvice(Advice, Proj, FleetNames, Areas, sim, name=nms[i])
+    Advice <- .LogMPError(Advice, MPName, Data, Sim=sim, Year)
     AdviceList[[i]] <- Advice
   }
   AdviceList
+}
+
+#' Calculate MP Advice for a Single Simulation, `mmp`-Class MPs
+#'
+#' Runs an `mmp`-class management procedure for a single simulation. Unlike
+#' `.CalcAdviceSimMP()`, the MP function is called once, with `Data`
+#' objects for every stock/complex passed together as `DataList`, so the MP
+#' can coordinate advice across stocks (e.g. an aggregate bag limit).
+#'
+#' The MP function must return either:
+#' - a bare named list of `Advice` objects (one per stock/complex, same
+#'   names as `DataList`) - i.e. everything an ordinary MP could express,
+#'   just computed jointly; or
+#' - `list(Advice = <the same named list>, AggregateBagLimit = <a list of
+#'   `AggregateBagLimit()` objects, or NULL>)` when at least one aggregate
+#'   bag limit is being declared.
+#'
+#' @inheritParams .CalcAdviceSimMP
+#'
+#' @return A list with elements `AdviceList` (a named list of `Advice`
+#'   objects, one per stock/complex) and `AggBagLimit` (a list of
+#'   `aggbaglimit` objects, or `NULL`).
+#'
+#' @keywords internal
+.CalcAdviceSimMMP <- function(sim,
+                               MPName,
+                               MPfunction,
+                               DataList,
+                               Year,
+                               Proj,
+                               YearsProj,
+                               mp,
+                               FleetNames,
+                               Areas) {
+
+  nms <- names(DataList)
+
+  DataList <- purrr::imap(DataList, \(Data, nm) {
+    Data <- Data |> .AddPopDyn(Proj, sim, Year, YearsProj, mp)
+    Data@Misc$MPName    <- MPName
+    Data@Misc$StockName <- nm
+    Data
+  })
+
+  result <- MPfunction(DataList = DataList)
+
+  is_bare <- is.list(result) && length(result) &&
+    all(vapply(result, inherits, logical(1), what = "advice"))
+
+  if (is_bare) {
+    AdviceList  <- result
+    AggBagLimit <- NULL
+  } else if (is.list(result) && "Advice" %in% names(result)) {
+    AdviceList  <- result$Advice
+    AggBagLimit <- result$AggregateBagLimit
+  } else {
+    cli::cli_abort(
+      c("`mmp` function {.val {MPName}} returned an unrecognised structure.",
+        "i" = "Must return either a named list of `Advice` objects, or ",
+        "i" = "`list(Advice = <named list of Advice objects>, AggregateBagLimit = <list, optional>)`."),
+      call = NULL
+    )
+  }
+
+  if (!is.list(AdviceList) || !setequal(names(AdviceList), nms))
+    cli::cli_abort(
+      "`mmp` function {.val {MPName}} must return `Advice` for exactly the stocks/complexes it was given",
+      call = NULL
+    )
+
+  AdviceList <- AdviceList[nms]
+
+  AdviceList <- purrr::imap(AdviceList, \(Advice, nm) {
+    Advice <- .CheckAdvice(Advice, Proj, FleetNames, Areas, sim, name = nm)
+    .LogMPError(Advice, MPName, DataList[[nm]], Sim = sim, Year)
+  })
+
+  list(AdviceList = AdviceList, AggBagLimit = AggBagLimit)
 }
 
 #' Add Population Dynamics Data to a Data Object
@@ -175,7 +293,7 @@ CalcAdvice_Sim_MP <- function(sim,
 #' @return The `Data` object, with `Data@Misc$DataOM` populated if
 #'   `OM@Control$DataOM` is set, otherwise unchanged.
 #' @keywords internal
-AddPopDyn <- function(Data, Hist, sim, Year=NULL, Years=NULL, mp=1) {
+.AddPopDyn <- function(Data, Hist, sim, Year=NULL, Years=NULL, mp=1) {
   
   if (!length(Hist@OM@Control$DataOM))
     return(Data)
@@ -186,7 +304,7 @@ AddPopDyn <- function(Data, Hist, sim, Year=NULL, Years=NULL, mp=1) {
   
   if (isTRUE(Hist@OM@Control$DataOM)) {
     # Add all slots
-    Data@Misc$DataOM <- SubsetSim(Hist, sim)
+    Data@Misc$DataOM <- .SubsetSim(Hist, sim)
     
   } else if (is.list(Hist@OM@Control$DataOM)) {
     # Add named subset of slots
@@ -198,7 +316,7 @@ AddPopDyn <- function(Data, Hist, sim, Year=NULL, Years=NULL, mp=1) {
         if (warn_once)
           cli::cli_alert_warning("{.val {nm}} is not a valid slot name for `Hist`. Ignoring.")
       } else {
-        slot(Data@Misc$DataOM, nm) <- slot(Hist, nm) |> SubsetSim(Sims=sim)
+        slot(Data@Misc$DataOM, nm) <- slot(Hist, nm) |> .SubsetSim(Sims=sim)
       }
     }
     
@@ -206,4 +324,3 @@ AddPopDyn <- function(Data, Hist, sim, Year=NULL, Years=NULL, mp=1) {
   
   Data
 }
-
