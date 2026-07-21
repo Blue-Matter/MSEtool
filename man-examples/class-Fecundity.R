@@ -51,12 +51,6 @@ fec_l <- Fecundity(Pars = list(L50    = 40,
                                L50_95 = 8,
                                MaxFec = 1e6))
 
-## Stochastic L50 and time-varying MaxFec combined
-L50_sim <- runif(nSim, 35, 45)
-fec_l2  <- Fecundity(Pars = list(L50    = L50_sim,
-                                 L50_95 = 8,
-                                 MaxFec = mf_arr))
-
 # ---- Model-based specification — weight-based ----
 
 ## FecundityAtWeight: logistic fecundity-at-weight
@@ -121,15 +115,9 @@ Fecundity(stk)
 ## The final populated object (typically done internally).
 ## When Fecundity is populated, SProduction differs from SBiomass.
 ## At-length models require a populated Length object passed to Populate().
-pop_fec <- Populate(Fecundity(stk), 
+pop_fec <- Populate(Fecundity(stk),
                     Ages   = Ages(MaxAge = 20),
-                    Length = Length(Pars = 
-                                      list(
-                                        Linf = 100, 
-                                        K = 0.2, 
-                                        t0 = -0.1
-                                      )
-                    )
+                    Length = Length(Pars = list(Linf = 100, K = 0.2, t0 = -0.1))
 )
 pop_fec
 

@@ -16,43 +16,16 @@ sp <- Spatial(UnfishedDist = 0.3,
               RelativeSize = 0.4)
 sp <- Populate(sp, Ages = Ages(MaxAge = 5), nSim = 1)
 UnfishedDist(sp)   # asymptotic distribution: Sim x Area x Age x Year
-ProbStaying(sp)
 Movement(sp)       # fitted movement matrix: Sim x FromArea x ToArea x Age x Year
-RelativeSize(sp)
 
 # ---- Two-area model — stochastic across simulations ----
 
 ## Length-2 vectors are sampled from Uniform(lower, upper) once per simulation.
-nSim <- 48
 sp_stoch <- Spatial(UnfishedDist = c(0.2, 0.4),
                     ProbStaying  = c(0.5, 0.8),
                     RelativeSize = c(0.3, 0.5))
-sp_stoch <- Populate(sp_stoch, Ages = Ages(MaxAge = 5), nSim = nSim)
+sp_stoch <- Populate(sp_stoch, Ages = Ages(MaxAge = 5), nSim = 48)
 UnfishedDist(sp_stoch)   # nSim x 2 x Age x Year
-Movement(sp_stoch)
-
-# ---- Two-area model — age-varying movement ----
-
-## Supply a named Sim x Area x Age array for UnfishedDist.
-## Movement is fitted independently for each age class.
-ages <- Ages(MaxAge = 5)
-nage <- nAge(ages)
-
-## Fish progressively move to Area 2 with age — ud must sum to 1 across areas
-frac2 <- seq(0.1, 0.9, length.out = nage)
-ud <- array(NA, dim = c(1, 2, nage),
-            dimnames = list(Sim = 1, Area = 1:2, Age = ages@Classes))
-ud[, 1, ] <- 1 - frac2   # Area 1 fraction by age
-ud[, 2, ] <- frac2        # Area 2 fraction by age
-sp_age <- Spatial(UnfishedDist = ud, ProbStaying = 0.95)
-sp_age <- Populate(sp_age, Ages = ages, nSim = 1)
-
-## Asymptotic distribution by age
-UnfishedDist(sp_age)[1, , , 1]
-
-## Movement matrix for youngest and oldest age class
-Movement(sp_age)[1, , , 1, 1]   # youngest
-Movement(sp_age)[1, , , nage, 1] # oldest
 
 # ---- Three-area model — fixed parameters ----
 
@@ -60,7 +33,6 @@ Movement(sp_age)[1, , , nage, 1] # oldest
 ## Diagonal elements must be NA; off-diagonal [i,j] is the relative
 ## probability of moving from area i to area j (normalised internally).
 nArea <- 3
-
 ud <- matrix(c(0.5, 0.2, 0.3), nrow = 1, ncol = nArea)
 
 fo <- array(NA, dim = c(1, nArea, nArea))
@@ -75,13 +47,12 @@ sp3 <- Spatial(UnfishedDist = ud,
 sp3 <- Populate(sp3, Ages = Ages(MaxAge = 5), nSim = 1)
 UnfishedDist(sp3)[1, , , 1]
 Movement(sp3)[1, , , 1, 1]
-RelativeSize(sp3)
 
-# ---- Three-area model — age-varying movement ----
+# ---- Age-varying movement (3-area) ----
 
-## UnfishedDist as a Sim x Area x Age array.
+## Supply a named Sim x Area x Age array for UnfishedDist; movement is
+## fitted independently for each age class.
 nage <- nAge(Ages(MaxAge = 5))
-
 ud3 <- array(NA, dim = c(1, nArea, nage))
 ud3[, , 1] <- c(0.95, 0.045, 0.005)
 ud3[, , 2] <- c(0.75, 0.20,  0.05 )
@@ -90,9 +61,7 @@ ud3[, , 4] <- c(0.30, 0.50,  0.20 )
 ud3[, , 5] <- c(0.10, 0.50,  0.40 )
 ud3[, , 6] <- c(0.01, 0.20,  0.79 )
 
-sp3_age <- Spatial(UnfishedDist = ud3,
-                   ProbStaying  = 0.05,
-                   FracOther    = fo)
+sp3_age <- Spatial(UnfishedDist = ud3, ProbStaying = 0.05, FracOther = fo)
 sp3_age <- Populate(sp3_age, Ages = Ages(MaxAge = 5), nSim = 1)
 
 ## Asymptotic distribution and movement at youngest and oldest age class
@@ -124,12 +93,7 @@ RelativeSize(sp_ed)   # equals mean UnfishedDist
 
 # ---- Slot accessors ----
 
-sp <- Spatial(UnfishedDist = 0.3, ProbStaying = 0.6, RelativeSize = 0.4)
-
 ## Read slots
-UnfishedDist(sp)
-ProbStaying(sp)
-RelativeSize(sp)
 CVDist(sp)
 CVStay(sp)
 

@@ -34,18 +34,6 @@ len <- Length(Pars = list(Linf = Linf_arr,
                           K    = c(0.15, 0.25),
                           t0   = -0.1))
 
-## Combine stochastic (across sims) and time-varying (across years):
-## Linf is drawn per simulation AND changes in 2010
-Linf_sim   <- runif(nSim, 80, 100)
-Linf_arr2  <- array(
-  c(Linf_sim, Linf_sim * 1.1),        # 10% increase from 2010 onward
-  dim      = c(nSim, 2),
-  dimnames = list(Sim = seq_len(nSim), Year = c(1990, 2010))
-)
-len <- Length(Pars = list(Linf = Linf_arr2,
-                          K    = c(0.15, 0.25),
-                          t0   = -0.1))
-
 # ---- Direct array specification ----
 
 ## Supply MeanAtAge directly (Pars left empty).

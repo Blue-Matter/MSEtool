@@ -30,16 +30,6 @@ a_arr <- array(
 )
 wt <- Weight(Pars = list(a = a_arr, b = 3.0))
 
-## Combine stochastic (across sims) and time-varying (across years):
-## a is drawn per simulation AND increases in 2010
-a_sim  <- runif(nSim, 0.008, 0.012)
-a_arr2 <- array(
-  c(a_sim, a_sim * 1.2),              # 20% increase from 2010 onward
-  dim      = c(nSim, 2),
-  dimnames = list(Sim = seq_len(nSim), Year = c(1990, 2010))
-)
-wt <- Weight(Pars = list(a = a_arr2, b = 3.0))
-
 # ---- Direct array specification ----
 
 ## Supply MeanAtAge directly (Pars left empty).

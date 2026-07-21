@@ -32,16 +32,6 @@ L50_arr <- array(
 mat <- Maturity(Pars = list(L50    = L50_arr,
                             L50_95 = 8))
 
-## Combine stochastic (across sims) and time-varying (across years)
-L50_sim  <- runif(nSim, 35, 45)
-L50_arr2 <- array(
-  c(L50_sim, L50_sim * 1.1),          # 10% increase from 2010 onward
-  dim      = c(nSim, 2),
-  dimnames = list(Sim = seq_len(nSim), Year = c(1990, 2010))
-)
-mat <- Maturity(Pars = list(L50    = L50_arr2,
-                            L50_95 = 8))
-
 # ---- Direct array specification ----
 
 ## Supply MeanAtAge directly (Pars left empty).
@@ -116,14 +106,8 @@ Maturity(stk)
 
 ## The final populated object (typically done internally).
 ## At-length models require a Length object passed to Populate().
-pop_mat <- Populate(Maturity(stk), 
-                    Ages = Ages(MaxAge = 20),
-                    Length = Length(Pars = 
-                                      list(
-                                        Linf = 100, 
-                                        K = 0.2, 
-                                        t0 = -0.1
-                                        )
-                                    )
+pop_mat <- Populate(Maturity(stk),
+                    Ages   = Ages(MaxAge = 20),
+                    Length = Length(Pars = list(Linf = 100, K = 0.2, t0 = -0.1))
 )
 pop_mat

@@ -13,15 +13,12 @@ hist_years <- 2000:2024
 proj_years <- 2025:2034
 nSim       <- 48
 
-cq_scalar <- Catchability(Efficiency = 0.01)
+pop <- function(cq, ...) {
+  Populate(cq, nSim = nSim, HistYears = hist_years, ProjYears = proj_years, ...)
+}
 
-cq_scalar_pop <- Populate(
-  cq_scalar,
-  nSim      = nSim,
-  HistYears = hist_years,
-  ProjYears = proj_years
-)
-Efficiency(cq_scalar_pop)
+cq_scalar <- Catchability(Efficiency = 0.01)
+Efficiency(pop(cq_scalar))
 
 ## ---- Time-varying efficiency (array) ----
 # A Sim x Year array allows efficiency to vary across years and simulations.
@@ -32,16 +29,8 @@ eff_array <- array(
   dim      = c(1, length(hist_years)),
   dimnames = list(Sim = 1, Year = hist_years)
 )
-
 cq_array <- Catchability(Efficiency = eff_array)
-
-cq_array_pop <- Populate(
-  cq_array,
-  nSim      = nSim,
-  HistYears = hist_years,
-  ProjYears = proj_years
-)
-Efficiency(cq_array_pop)
+Efficiency(pop(cq_array))
 
 ## ---- Projected-year trend with qInc ----
 # qInc applies a compounded annual percentage change to efficiency in
@@ -50,44 +39,16 @@ Efficiency(cq_array_pop)
 # is scaled by (1 + 2/100)^t relative to the terminal historical value.
 # Negative values model declining efficiency (e.g. gear deterioration).
 cq_inc <- Catchability(Efficiency = 0.01, qInc = 2)
-
-cq_inc_pop <- Populate(
-  cq_inc,
-  nSim      = nSim,
-  HistYears = hist_years,
-  ProjYears = proj_years
-)
-Efficiency(cq_inc_pop)  # efficiency rises in proj_years; hist_years unchanged
+Efficiency(pop(cq_inc))  # efficiency rises in proj_years; hist_years unchanged
 
 ## ---- Projected-year stochasticity with qCV ----
 # qCV introduces lognormal inter-annual variation in efficiency during
-# projected years only. Each projected year's efficiency is multiplied by
-# a mean-1 lognormal deviate with the specified coefficient of variation.
-# Historical efficiency is unaffected.
-# Note: for most applications, supplying a fully specified Efficiency array
-# gives more direct control than using qInc or qCV.
+# projected years only, via a mean-1 lognormal deviate with the specified
+# coefficient of variation. Historical efficiency is unaffected.
+# For most applications, a fully specified Efficiency array gives more
+# direct control than using qInc or qCV. The two can also be combined.
 cq_cv <- Catchability(Efficiency = 0.01, qCV = 0.1)
-
-cq_cv_pop <- Populate(
-  cq_cv,
-  nSim      = nSim,
-  HistYears = hist_years,
-  ProjYears = proj_years,
-  seed      = 42
-)
-Efficiency(cq_cv_pop)  # stochastic variation in proj_years; hist_years constant
-
-## ---- Combined trend and stochasticity ----
-cq_both <- Catchability(Efficiency = 0.01, qInc = 2, qCV = 0.1)
-
-cq_both_pop <- Populate(
-  cq_both,
-  nSim      = nSim,
-  HistYears = hist_years,
-  ProjYears = proj_years,
-  seed      = 42
-)
-Efficiency(cq_both_pop)
+Efficiency(pop(cq_cv, seed = 42))  # stochastic in proj_years; hist_years constant
 
 ## ---- Accessor and replacement functions ----
 cq <- Catchability(Efficiency = 0.01, qCV = 0.1, qInc = 1)
@@ -97,14 +58,9 @@ qCV(cq)
 qInc(cq)
 
 Efficiency(cq) <- 0.02
-Efficiency(cq)
-
-qInc(cq) <- -1   # declining efficiency in projection
-qInc(cq)
+qInc(cq)       <- -1   # declining efficiency in projection
 
 ## ---- Attaching to a Fleet object ----
 f <- Fleet(Name = "Trawl")
 Catchability(f) <- Catchability(Efficiency = 0.01)
-Catchability(f)
 f |> Catchability() |> Efficiency()
-

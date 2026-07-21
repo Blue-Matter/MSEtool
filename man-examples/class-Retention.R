@@ -70,11 +70,8 @@ ret_array <- array(
 r_direct <- Retention(MeanAtAge = ret_array)
 MeanAtAge(r_direct)
 
-## ---- Attaching to a Fleet object ----
+## ---- Attaching to / extracting from a Fleet object ----
 f <- Fleet(Name = "Trawl")
 Retention(f) <- Retention(Pars = list(LR5 = 15, LFR = 28, Rmaxlen = 1))
-Retention(f)
-
-## ---- Extracting Retention from a Fleet ----
 Retention(f)
 

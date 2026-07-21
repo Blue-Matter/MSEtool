@@ -67,13 +67,10 @@ isRel(s)
 isRel(s) <- TRUE
 isRel(s)
 
-## ---- Attaching to a Fleet object ----
+## ---- Attaching to / extracting from a Fleet object ----
+# Passing a fleet object as the first argument returns its Selectivity slot.
 f <- Fleet(Name = "Trawl")
 Selectivity(f) <- Selectivity(Pars = list(L5 = 20, LFS = 35, Vmaxlen = 1))
 Selectivity(f)
 isRel(Selectivity(f))
-
-## ---- Extracting Selectivity from a Fleet ----
-# Passing a fleet object as the first argument returns its Selectivity slot.
-Selectivity(f)
 

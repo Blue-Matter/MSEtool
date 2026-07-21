@@ -29,15 +29,6 @@ M_arr <- array(
 )
 nm <- NaturalMortality(Pars = list(M = M_arr))
 
-## Combine stochastic (across sims) and time-varying (across years)
-M_sim  <- runif(nSim, 0.1, 0.3)
-M_arr2 <- array(
-  c(M_sim, M_sim * 1.2),              # 20% increase from 2010 onward
-  dim      = c(nSim, 2),
-  dimnames = list(Sim = seq_len(nSim), Year = c(1990, 2010))
-)
-nm <- NaturalMortality(Pars = list(M = M_arr2))
-
 # ---- Direct array specification ----
 
 ## Supply MeanAtAge directly (Pars left empty).
