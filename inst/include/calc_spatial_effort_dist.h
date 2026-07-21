@@ -20,7 +20,7 @@ inline void CalcSpatialDistribution(
     const int nSim,
     Array4D& Distribution,                                // sim, year, fleet, area
     const std::vector<Array4D>& Number,                   // [stock] sim, age, year, area
-    const std::vector<ConstArrayView4D>& WeightFleet,     // [stock] sim, age, year, fleet
+    const std::vector<ConstArrayView4D>& WeightFleetRetained,     // [stock] sim, age, year, fleet
     const std::vector<ConstArrayView5D>& SelAge,          // [stock] sim, age, year, fleet, area
     const std::vector<ConstArrayView5D>& RetAge,          // [stock] sim, age, year, fleet, area
     const ConstArrayView4D& q,                            // sim, stock, year, fleet
@@ -85,7 +85,7 @@ inline void CalcSpatialDistribution(
   //           and per-stock B_stock[st](sim, fl, ar)
   for (int st = 0; st < nStock; ++st) {
     const Array4D&          Num_st = Number[st];
-    const ConstArrayView4D& Wgt_st = WeightFleet[st];
+    const ConstArrayView4D& Wgt_st = WeightFleetRetained[st];
     const ConstArrayView5D& Sel_st = SelAge[st];
     const ConstArrayView5D& Ret_st = RetAge[st];
     const int nAge = Num_st.dim[1];

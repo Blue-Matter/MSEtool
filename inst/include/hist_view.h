@@ -46,7 +46,7 @@ struct HistView {
   std::vector<ConstArrayView2D> RecDevs;
   std::vector<int> RecLag, SRR_Model;
   
-  std::vector<ConstArrayView4D> WeightFleet;
+  std::vector<ConstArrayView4D> WeightFleetRetained, WeightFleetSelected;
   std::vector<ConstArrayView5D> SelAge, RetAge, DiscMort;
   std::vector<std::vector<ConstArrayView4D>> SelSize, RetSize;
   
@@ -173,22 +173,25 @@ inline HistView::HistView(Rcpp::S4& Hist, int nSim_, int nStock_, int nFleet_, i
   }
   
   // Fleet misc
-  const Rcpp::List WeightFleetList = Misc["WeightFleetList"];
+  const Rcpp::List WeightFleetRetainedList = Misc["WeightFleetRetainedList"];
+  const Rcpp::List WeightFleetSelectedList = Misc["WeightFleetSelectedList"];
   const Rcpp::List SelAgeList      = Misc["SelAgeList"];
   const Rcpp::List RetAgeList      = Misc["RetAgeList"];
   const Rcpp::List DiscMortList    = Misc["DiscMortList"];
-  WeightFleet.reserve(nStock); 
+  WeightFleetRetained.reserve(nStock);
+  WeightFleetSelected.reserve(nStock);
   SelAge.reserve(     nStock);
-  RetAge.reserve(     nStock);      
+  RetAge.reserve(     nStock);
   DiscMort.reserve(   nStock);
-  
+
   // const Rcpp::List SelSizeList     = Misc["SelSizeList"];
   // const Rcpp::List RetSizeList     = Misc["RetSizeList"];
-  // SelSize.reserve(    nStock);     
+  // SelSize.reserve(    nStock);
   // RetSize.reserve(    nStock);
-  
+
   for (int st = 0; st < nStock; ++st) {
-    WeightFleet.emplace_back(view_ConstStockList4D(WeightFleetList, st));
+    WeightFleetRetained.emplace_back(view_ConstStockList4D(WeightFleetRetainedList, st));
+    WeightFleetSelected.emplace_back(view_ConstStockList4D(WeightFleetSelectedList, st));
     SelAge.emplace_back(     view_ConstStockList5D(SelAgeList,      st));
     RetAge.emplace_back(     view_ConstStockList5D(RetAgeList,      st));
     DiscMort.emplace_back(   view_ConstStockList5D(DiscMortList,    st));
