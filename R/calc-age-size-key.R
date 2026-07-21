@@ -56,7 +56,7 @@ CalcAgeSizeKey <- function(MeanAtAge,
     cli::cli_abort("`TruncSD` < 0 ")
   }
 
-  MeanAtAge <- Structure(MeanAtAge)
+  MeanAtAge <- .Structure(MeanAtAge)
   SDatAge <- ArrayMultiply(MeanAtAge, CVatAge)
 
   dim_MeanAtAge <- dim(MeanAtAge)
@@ -65,7 +65,7 @@ CalcAgeSizeKey <- function(MeanAtAge,
 
   if (dim_MeanAtAge[2] != dim_SDatAge[2]) {
     if (dim_SDatAge[2] == 1) {
-      SDatAge <- Structure(replicate(nage, SDatAge))
+      SDatAge <- .Structure(replicate(nage, SDatAge))
     } else {
       cli::cli_abort("`dim(MeanAtAge)[2] != dim(SDatAge)[2]`")
     }
@@ -127,5 +127,3 @@ CalcAgeSizeKey <- function(MeanAtAge,
   
   List2Array(ASKList, "Sim", pos=1) 
 }
-
-
