@@ -19,9 +19,9 @@
 #'   (age class) sums to 1 over `Class`, representing the size distribution
 #'   of caught fish of that age.
 #'
-#' @seealso [CalcCatchAtSize()]
+#' @seealso `.CalcCatchAtSize()`
 #' @keywords internal
-ConditionAgeSizeKey <- function(key, selectivity, sel_mode = c("length", "age")) {
+.ConditionAgeSizeKey <- function(key, selectivity, sel_mode = c("length", "age")) {
   sel_mode <- match.arg(sel_mode)
   
   if (sel_mode == "age" || is.null(selectivity)) return(key)

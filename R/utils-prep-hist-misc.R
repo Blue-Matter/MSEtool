@@ -3,7 +3,7 @@
 
 # This prepares arrays for easy access in the C++ code
 # temporary elements of Misc are removed later
-PrepHistMisc <- function(Hist, Period = c('Historical', 'Projection')) {
+.PrepHistMisc <- function(Hist, Period = c('Historical', 'Projection')) {
   Period <- match.arg(Period)
   
   YearVec        <- Years(Hist, Period)
@@ -136,22 +136,55 @@ PrepHistMisc <- function(Hist, Period = c('Historical', 'Projection')) {
   }
   Hist@Misc$SRR_Model <- as.numeric(Hist@Misc$SRR_Model)
 
-  # Unfished Spawning Production
-  Hist@Misc$SP0 <- Hist@Unfished@Equilibrium@SProduction
-  
-  
+  # Unfished Recruitment (R0)
   R0_list <- purrr::map(Hist@OM@Stock, \(stock){
-    stock@SRR@R0  
+    stock@SRR@R0
   })
   nSim_R0 <- lapply(R0_list, dim) |> lapply('[',1) |> unlist() |> max()
   Hist@Misc$R0 <- purrr::map(R0_list, \(st) ExtendSims(st, nSim_R0)) |>
     List2Array('Stock', pos=2)
-  
+
+  # Unfished Spawning Production: SP0(y) = phi0_ref(season) x R0(y + RecLag).
+  # phi0_ref is frozen at its first-year value per season (so alpha/beta
+  # implied by a constant steepness don't drift under time-varying M/growth/
+  # maturity), broadcast via ExtendYears(maintain_seasonal_pattern=TRUE)
+  # rather than a flat slice since R0/phi0_ref can be zero in non-spawning
+  # seasons. R0 is shifted forward by RecLag before pairing with SP0's season
+  # (R0's nonzero season is birthseas, SP0's is the spawning season, offset
+  # by RecLag) -- otherwise phi0_ref divides by R0's zero spawn-season value
+  # and SP0 collapses to zero exactly where C++ CalcRecruitment() evaluates it.
+  RawSP0 <- Hist@Unfished@Equilibrium@SProduction |> ExtendSims(nSim = nSim(Hist))
+  SP0Dim <- which(names(dimnames(RawSP0)) == 'Year')
+  R0Dim  <- which(names(dimnames(Hist@Misc$R0)) == 'Year')
+
+  AllYears <- as.numeric(dimnames(RawSP0)[[SP0Dim]])
+  Yr1Ind   <- which(floor(AllYears) == floor(min(AllYears)))
+
+  # Size the shift off R0's own Year axis -- it need not match RawSP0's
+  # Year axis length (e.g. if the unfished equilibrium is only computed
+  # over the historical period while R0 spans historical + projection).
+  nYearR0   <- dim(Hist@Misc$R0)[R0Dim]
+  R0Shifted <- Hist@Misc$R0
+  for (st in seq_len(nStock(Hist))) {
+    lag <- Hist@Misc$RecLag[st]
+    if (lag == 0) next
+    shiftInd <- pmin(seq_len(nYearR0) + lag, nYearR0)
+    R0Shifted[, st, ] <- Hist@Misc$R0[, st, shiftInd]
+  }
+
+  SP0Yr1      <- abind::asub(RawSP0,    Yr1Ind, SP0Dim, drop = FALSE)
+  R0Yr1       <- abind::asub(R0Shifted, Yr1Ind, R0Dim,  drop = FALSE)
+  Phi0RefSeed <- ArrayDivide(SP0Yr1, R0Yr1)
+
+  Phi0RefFull <- ExtendYears(Phi0RefSeed, Years = AllYears,
+                             maintain_seasonal_pattern = TRUE)
+  Hist@Misc$SP0 <- ArrayMultiply(Phi0RefFull, R0Shifted)
+
   # Unfished distribution
   Hist@Misc$RecDist <- purrr::map(Hist@OM@Stock, \(stock) {
     abind::adrop(stock@Spatial@UnfishedDist[,,1,, drop=FALSE], 3) 
   }) |> List2Array("Stock", pos=2) |>
-    aperm(c('Sim', 'Stock', 'Year', 'Area'))
+    .Aperm(c('Sim', 'Stock', 'Year', 'Area'))
   
   
   # ---- Fleet ----
@@ -176,12 +209,19 @@ PrepHistMisc <- function(Hist, Period = c('Historical', 'Projection')) {
   }) |> List2Array(pos = 3) # Sim, Year, Fleet
   
   ##  ---- Lists - length nStock ---- 
-  Hist@Misc$WeightFleetList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
+  Hist@Misc$WeightFleetRetainedList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
     purrr::map(FleetList, \(fleet) {
-      fleet@WeightFleet
+      fleet@WeightFleetRetained
     }) |> List2Array(pos = 4) # Sim, Age, Year, Fleet
   })
-  
+
+  Hist@Misc$WeightFleetSelectedList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
+    purrr::map(FleetList, \(fleet) {
+      fleet@WeightFleetSelected
+    }) |> List2Array(pos = 4) # Sim, Age, Year, Fleet
+  })
+
+
   Hist@Misc$SelAgeList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
     purrr::map(FleetList, \(fleet) {
       fleet@Selectivity@MeanAtAge
@@ -242,7 +282,7 @@ PrepHistMisc <- function(Hist, Period = c('Historical', 'Projection')) {
   }
   
   Hist@Misc <- ExtendYears(Hist@Misc, Years=YearVec)
-  CheckHistMisc(Hist, Period)
+  .CheckHistMisc(Hist, Period)
   Hist
 }
 
@@ -263,7 +303,7 @@ PrepHistMisc <- function(Hist, Period = c('Historical', 'Projection')) {
 #'
 #' @return The input object with `@Misc` restored.
 #' @keywords internal
-RestoreHistMisc <- function(Hist) {
+.RestoreHistMisc <- function(Hist) {
   preserved_names <- c('Advice', 'Selectivity', 'Retention', 'DiscardMortality')
   saved <- purrr::map(
     c('SAVE', preserved_names),

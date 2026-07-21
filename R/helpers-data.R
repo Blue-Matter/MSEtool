@@ -21,7 +21,7 @@ NULL
 #'
 #' @export
 LastTAC <- function(Data) {
-  CheckClass(Data, 'data', 'Data')
+  .CheckClass(Data, 'data', 'Data')
   LastTAC <- utils::tail(Data@Advice@TAC[!is.na(Data@Advice@TAC)], 1) |> as.numeric()
   if (length(LastTAC) < 1)
     LastTAC <- sum(utils::tail(Data@Landings@Value, 1) + utils::tail(Data@Discards@Value, 1))
@@ -39,7 +39,7 @@ LastTAC <- function(Data) {
 #'
 #' @export
 LastHistYearInd <- function(Data) {
-  CheckClass(Data, 'data', 'Data')
+  .CheckClass(Data, 'data', 'Data')
   which.max(Data@Years[Data@Years < Data@YearLH + 1])
 }
 

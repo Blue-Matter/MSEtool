@@ -16,7 +16,7 @@
 #' @return A modified `Hist` object with all relevant components extended
 #'   to include the specified years.
 #' @keywords internal
-ExtendHist <- function(Hist, Years, silent=FALSE, id=NULL) {
+.ExtendHist <- function(Hist, Years, silent=FALSE, id=NULL) {
   nStock <- nStock(Hist@OM)
   nFleet <- nFleet(Hist)
   nSim <- Hist@OM@nSim
@@ -27,7 +27,7 @@ ExtendHist <- function(Hist, Years, silent=FALSE, id=NULL) {
     id <- cli::cli_progress_bar("Extending `Hist` Object")
   
   # Extend OM
-  Hist@OM <- ExtendOM(OM=Hist@OM, Years=Years, silent=silent, id=id)
+  Hist@OM <- .ExtendOM(OM=Hist@OM, Years=Years, silent=silent, id=id)
 
   # Extend time series 
   slots <- slotNames('timeseries')
@@ -55,6 +55,4 @@ ExtendHist <- function(Hist, Years, silent=FALSE, id=NULL) {
   
   Hist
 }
-
-
 

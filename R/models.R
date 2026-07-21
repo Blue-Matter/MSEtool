@@ -104,7 +104,7 @@ logistic_50_95 <- function(x, x50, x50_95, asymp = 1) {
   asymp / (1 + exp(-log(19) / x50_95 * (x - x50)))
 }
 
-PrintModelTable <- function(models, print=TRUE, Independent=NULL) {
+.PrintModelTable <- function(models, print=TRUE, Independent=NULL) {
   df <- list()
   Independent <- c(Independent, slotNames('stock'), slotNames('fleet'))
   for (i in seq_along(models)) {
@@ -131,14 +131,13 @@ PrintModelTable <- function(models, print=TRUE, Independent=NULL) {
   do.call('rbind', df)
 }
 
-ReturnModels <- function(ModelClass, full=TRUE, print=TRUE, Independent='Independent') {
-  models <- FindModels(ModelClass)
+.ReturnModels <- function(ModelClass, full=TRUE, print=TRUE, Independent='Independent') {
+  models <- .FindModels(ModelClass)
   if (!full)
     return(models)
 
-  df <- PrintModelTable(models, print, Independent)
+  df <- .PrintModelTable(models, print, Independent)
   if (!print)
     return(df)
   invisible(df)
 }
-

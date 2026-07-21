@@ -42,10 +42,19 @@
 #' @slot DataLag Integer. Number of time steps that data are lagged relative
 #'   to management implementation. See [OM()].
 #'
-#' @slot CatchFrac List. Controls catch fraction allocation among fleets or
-#'   stocks. See [OM()].
-#' @slot Allocation List. Controls effort or catch allocation among fleets or
-#'   stocks. See [OM()].
+#' @slot CatchFrac List. Named list of length 0 or `nStock(OM)`. Each element
+#'   is an `nSim` by `nFleet` matrix (or a single row recycled across sims)
+#'   giving the fraction of catch taken by each fleet, with rows summing to
+#'   1. Only used when there is more than one fleet and a historical
+#'   `Depletion@Final` target is set for at least one stock, in which case
+#'   it is the target fleet split that catchability is calibrated to
+#'   reproduce. If left unspecified for a stock, it is derived from relative
+#'   Effort times Catchability in the final historical year. See [OM()].
+#' @slot Allocation List. Named list of length 0 or the number of stock
+#'   complexes. Each element is an `nSim` by `nFleet` matrix, with rows
+#'   summing to 1, controlling how the TAC is split among fleets during
+#'   projection. If unspecified it falls back to `CatchFrac`, and then to
+#'   the mean of removals over the last five historical years. See [OM()].
 #' @slot EFactor List. Effort or exploitation modifiers applied during
 #'   projection. See [OM()].
 #'
@@ -64,10 +73,19 @@
 #'
 #' @slot Interval Numeric scalar or named numeric vector. Management update
 #'   interval in years. See [OM()].
+#' @slot MPStartYear Numeric or `NULL`. First calendar year in which MPs are
+#'   applied. Projection years before `MPStartYear` are "interim" years -
+#'   the MP is not called, and advice is instead built from `InterimAdvice`
+#'   (falling back to freezing effort at the last historical level where no
+#'   matching entry exists). `NULL` (default) means MPs start in the first
+#'   projection year, matching prior behaviour. See [OM()].
+#' @slot InterimAdvice A `data.frame` or `NULL`. Analyst-supplied fixed or
+#'   stochastic TAC/Effort values for interim years (before `MPStartYear`).
+#'   See [OM()] for the required columns.
 #' @slot nReps Positive integer. Number of stochastic replicates for
-#'   management advice. See [OM()].
+#'   management advice. See [OM()]. Not currently used.
 #' @slot pStar Numeric. Percentile applied to stochastic management advice.
-#'   See [OM()].
+#'   See [OM()]. Not currently used.
 #' @slot maxF Numeric. Maximum allowable instantaneous fishing mortality.
 #'   See [OM()].
 #' @slot Seed Integer. Random number generator seed. See [OM()].
@@ -155,6 +173,8 @@ setClass(
     StockTargeting = 'stocktargeting',
     
     Interval='numeric',
+    MPStartYear='num.null',
+    InterimAdvice='df.null',
     nReps='numeric',
     pStar='numeric',
     maxF='numeric',
@@ -169,6 +189,42 @@ setClass(
 )
 
 setValidity("om", function(object) {
-  # TODO: structural consistency checks
-  TRUE
+  errors <- character()
+
+  if (!is.null(object@MPStartYear)) {
+    if (length(object@MPStartYear) != 1)
+      errors <- c(errors, "`MPStartYear` must be a single numeric year")
+    if (!is.null(object@CurrentYear) && object@MPStartYear <= object@CurrentYear)
+      errors <- c(errors, "`MPStartYear` must be after `CurrentYear`")
+  }
+
+  if (!is.null(object@InterimAdvice)) {
+    required_cols <- c("Year", "Type", "Mean")
+    if (length(object@Stock) > 1)
+      required_cols <- c(required_cols, "Stock")
+    missing_cols  <- setdiff(required_cols, names(object@InterimAdvice))
+    if (length(missing_cols))
+      errors <- c(errors, paste0(
+        "`InterimAdvice` is missing required column(s): ",
+        paste(missing_cols, collapse = ", ")
+      ))
+    if (!length(missing_cols) && !all(object@InterimAdvice$Type %in% c("TAC", "Effort")))
+      errors <- c(errors, "`InterimAdvice$Type` must be `\"TAC\"` or `\"Effort\"`")
+
+    if (!length(missing_cols)) {
+      mean_vals <- object@InterimAdvice$Mean
+      if (any(is.na(mean_vals) | mean_vals < 0))
+        errors <- c(errors, "`InterimAdvice$Mean` must be `>= 0` (natural-scale TAC/Effort values); found `NA` or negative value(s)")
+
+      if ("SD" %in% names(object@InterimAdvice)) {
+        sd_vals <- object@InterimAdvice$SD
+        if (any(!is.na(sd_vals) & sd_vals < 0))
+          errors <- c(errors, "`InterimAdvice$SD` must be `NA`, `0`, or positive; found negative value(s)")
+        if (any(!is.na(mean_vals) & mean_vals == 0 & !is.na(sd_vals) & sd_vals > 0))
+          errors <- c(errors, "`InterimAdvice$Mean` is `0` for some row(s) with `SD > 0`; a lognormal draw cannot be centred at `0` -- use `SD = NA`/`0` for a deterministic closure instead")
+      }
+    }
+  }
+
+  if (length(errors)) errors else TRUE
 })

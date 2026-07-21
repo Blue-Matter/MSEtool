@@ -6,7 +6,7 @@
 #' @param parallel Logical; whether to use parallel processing (default FALSE)
 #' @param silent Logical; suppress progress messages (default FALSE)
 #' @param ... Additional arguments passed to `r4ss::SS_output` and
-#'   `GetSSRepList`
+#'   `.GetSSRepList`
 #'
 #' @return A named `RepList` object: a list of parsed `r4ss::SS_output` lists,
 #'   one per SS3 directory, with integer-character names (`"1"`, `"2"`, ...)
@@ -14,7 +14,7 @@
 #' @seealso [ImportSS()], [SetupParallel()], [DisableParallel()]
 #' @export
 ImportSSReport <- function(SSDir, parallel=FALSE, silent=FALSE, ...) {
-  OnExit()
+  .OnExit()
   CheckPackage("r4ss", '1.52.1', "pak::pkg_install('r4ss/r4ss')")
   
   # SSDir is already a list 
@@ -46,7 +46,7 @@ ImportSSReport <- function(SSDir, parallel=FALSE, silent=FALSE, ...) {
   
   ## single directory
   if (length(SSDir) == 1L) {
-    RepList        <- list(GetSSRepList(SSDir, silent = silent, ...))
+    RepList        <- list(.GetSSRepList(SSDir, silent = silent, ...))
     names(RepList) <- "1"
     class(RepList) <- 'RepList'
     return(RepList)
@@ -76,7 +76,7 @@ ImportSSReport <- function(SSDir, parallel=FALSE, silent=FALSE, ...) {
   if (!parallel) {
     RepList <- purrr::map(
       SSDir,
-      GetSSRepList,
+      .GetSSRepList,
       silent = silent,
       ...,
       .progress = list(
@@ -94,7 +94,7 @@ ImportSSReport <- function(SSDir, parallel=FALSE, silent=FALSE, ...) {
     CheckPackage('furrr')
     RepList <- furrr::future_map(
       SSDir,
-      GetSSRepList,
+      .GetSSRepList,
       silent = silent,
       ...,
       .options = furrr::furrr_options(
@@ -113,7 +113,7 @@ ImportSSReport <- function(SSDir, parallel=FALSE, silent=FALSE, ...) {
   
 }
 
-GetSSRepList <- function(SSDir, silent = FALSE, ...) {
+.GetSSRepList <- function(SSDir, silent = FALSE, ...) {
   
   dots            <- list(dir = SSDir, ...)
   dots$covar      <- dots$covar       %||% FALSE

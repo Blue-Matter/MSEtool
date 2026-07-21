@@ -27,7 +27,7 @@
 #' * Resolving the maturity model class
 #' * Generating mean maturity at age, at length, or at weight as appropriate
 #' * Converting between mean-at-length/weight and mean-at-age
-#' * Adding stochastic variation via `PopulateRandom()`
+#' * Adding stochastic variation via `.PopulateRandom()`
 #' * Setting semelparous array if applicable
 #'
 #'
@@ -65,26 +65,26 @@ PopulateMaturity <- function(Maturity,
   
   Ages  <- DefaultAges(Ages)
   Years <- DefaultYears(Years)
-  nSim  <- Get_nSim(Maturity, nSim)
+  nSim  <- .GetNSim(Maturity, nSim)
   
   argList <- list(Ages, Length, nSim, Years, CalcAtLength, seed)
   
   if (EmptyObject(Maturity)) 
     cli::cli_abort('{.val Maturity} is required but is currently empty')
 
-  if (CheckDigest(Maturity, argList) & !force) 
+  if (.CheckDigest(Maturity, argList) & !force) 
     return(Maturity)
   
-  SetSeed(seed)
+  .SetSeed(seed)
   
-  Maturity@Pars  <- StructurePars(Pars = Maturity@Pars, nSim, Years)
-  Maturity@Model <- FindModel(Maturity)
-  ModelClass     <- getModelClass(Maturity@Model)
+  Maturity@Pars  <- .StructurePars(Pars = Maturity@Pars, nSim, Years)
+  Maturity@Model <- .FindModel(Maturity)
+  ModelClass     <- .GetModelClass(Maturity@Model)
   
   if (!is.null(ModelClass)) {
-    if (grepl("at-Length", getModelClass(Maturity@Model))) {
-      CheckRequiredObject(Length, "length", "Length")
-      CheckRequiredObject(Ages, "ages", "Ages")
+    if (grepl("at-Length", .GetModelClass(Maturity@Model))) {
+      .CheckRequiredObject(Length, "length", "Length")
+      .CheckRequiredObject(Ages, "ages", "Ages")
       Length <- PopulateLength(Length, 
                                Ages   = Ages, 
                                Years  = Years, 
@@ -93,7 +93,7 @@ PopulateMaturity <- function(Maturity,
                                seed   = seed,
                                silent  = silent)
       
-      Maturity <- PopulateMeanAtLength(
+      Maturity <- .PopulateMeanAtLength(
         object = Maturity, 
         Length = Length, 
         Years = Years, 
@@ -102,8 +102,8 @@ PopulateMaturity <- function(Maturity,
         silent = silent
       )
       
-    } else if (grepl("at-Weight", getModelClass(Maturity@Model))) {
-      Maturity <- PopulateMeanAtWeight(
+    } else if (grepl("at-Weight", .GetModelClass(Maturity@Model))) {
+      Maturity <- .PopulateMeanAtWeight(
         object = Maturity, 
         Weight = Weight, 
         Years  = Years, 
@@ -112,15 +112,15 @@ PopulateMaturity <- function(Maturity,
         silent = silent
       )
     } else {
-      Maturity <- PopulateMeanAtAge(Maturity, Ages, Years)
+      Maturity <- .PopulateMeanAtAge(Maturity, Ages, Years)
     }
   }
   
-  Maturity <- MeanAtLength2MeanAtAge(Maturity, Length)
-  Maturity <- MeanAtWeight2MeanAtAge(Maturity, Weight)
+  Maturity <- .MeanAtLength2MeanAtAge(Maturity, Length)
+  Maturity <- .MeanAtWeight2MeanAtAge(Maturity, Weight)
   
   if (CalcAtLength) 
-    Maturity <- MeanAtAge2MeanAtLength(Maturity, Length)
+    Maturity <- .MeanAtAge2MeanAtLength(Maturity, Length)
   
   # Semelparous
   if (inherits(Maturity@Semelparous, "array")) {
@@ -134,7 +134,7 @@ PopulateMaturity <- function(Maturity,
     }
   }
   
-  Maturity <- AddAtAgeDimnames(Maturity, Ages, Years)
+  Maturity <- .AddAtAgeDimnames(Maturity, Ages, Years)
   
   if (is.null(dimnames(Maturity@Semelparous))) {
     dd <- dim(Maturity@Semelparous)
@@ -145,5 +145,5 @@ PopulateMaturity <- function(Maturity,
     )
   }
   
-  SetDigest(SetAgeDimnames(Maturity, Ages), argList)
+  .SetDigest(.SetAgeDimnames(Maturity, Ages), argList)
 }

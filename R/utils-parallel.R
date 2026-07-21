@@ -81,7 +81,7 @@ SetupParallel <- function(workers = future::availableCores(),
   backend <- match.arg(backend)
   max_workers <- match.arg(max_workers)
   
-  plan <- ResolveFuturePlan(
+  plan <- .ResolveFuturePlan(
     backend = backend,
     workers = workers,
     max_workers = max_workers
@@ -128,7 +128,7 @@ CheckParallel <- function(parallel) {
 }
 
 
-ResolveFuturePlan <- function(backend, workers, max_workers) {
+.ResolveFuturePlan <- function(backend, workers, max_workers) {
   
   if (backend == "sequential") {
     return(list(
@@ -139,10 +139,10 @@ ResolveFuturePlan <- function(backend, workers, max_workers) {
   }
   
   if (backend == "auto") {
-    backend <- if (IsWindows()) "multisession" else "multisession"
+    backend <- if (.IsWindows()) "multisession" else "multisession"
   }
   
-  if (backend == "multicore" && IsWindows()) {
+  if (backend == "multicore" && .IsWindows()) {
     cli::cli_abort(
       "`future::multicore` is not supported on Windows. Use `multisession` instead."
     )
@@ -167,8 +167,6 @@ ResolveFuturePlan <- function(backend, workers, max_workers) {
   )
 }
 
-IsWindows <- function() {
+.IsWindows <- function() {
   .Platform$OS.type == "windows"
 }
-
-

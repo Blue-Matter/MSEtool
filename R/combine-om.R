@@ -12,8 +12,8 @@
 #'   Default `"Combined OM"`
 #' @param FillEffort List controlling effort forward-filling. See `Details`.
 #' @param FillEfficiency List controlling efficiency forward-filling. See `Details`.
-#' @param StandardizeEffort `logical(1)`. If `TRUE` (default), calls
-#'   [StandardizeEffort()] after combining, which equalises effort across
+#' @param .StandardizeEffort `logical(1)`. If `TRUE` (default), calls
+#'   `.StandardizeEffort()` after combining, which equalises effort across
 #'   stocks for each fleet and back-calculates stock targeting weights.
 #' @param silent `logical(1)`. If `TRUE`, suppresses informational messages. Default `FALSE`.
 #'
@@ -42,7 +42,7 @@
 #' 5. Concatenate stocks and fleets.
 #' 6. Generate correlated recruitment deviations for the projection period
 #'    via [GenMultiStockRecDevs()].
-#' 7. Optionally standardize effort across stocks via [StandardizeEffort()],
+#' 7. Optionally standardize effort across stocks via `.StandardizeEffort()`,
 #'    which populates `@StockTargeting`
 #'    
 #' ## Fill Controls
@@ -65,7 +65,7 @@
 #' the desired global configuration.
 #' 
 #' 
-#' @seealso [GenMultiStockRecDevs()], [StandardizeEffort()]
+#' @seealso [GenMultiStockRecDevs()], `.StandardizeEffort()`
 #'
 #' @examples
 #' \dontrun{
@@ -83,23 +83,23 @@ CombineOMs <- function(
     Name = "Combined OM",
     FillEffort = list(nYears = 3, SD = 0.1, Mean = NULL, Values = NULL),
     FillEfficiency = list(nYears = 3, SD = 0.1, Mean = NULL, Values = NULL),
-    StandardizeEffort = TRUE,
+    .StandardizeEffort = TRUE,
     silent = FALSE) {
   
-  ValidateOMList(OM_List)
+  .ValidateOMList(OM_List)
   
   OM_List <- purrr::map(OM_List, \(OM) UpdateObject(OM) |> 
                           PopulateOM(silent = TRUE, standardize_effort = FALSE)
                         )
   
-  yrs <- GetUnifiedYears(OM_List)
+  yrs <- .GetUnifiedYears(OM_List)
   HistYears <- yrs$HistYears
   ProjYears <- yrs$ProjYears
   
-  OM_Out <- InitializeCombinedOM(OM_List[[1]], Name, HistYears, ProjYears)
+  OM_Out <- .InitializeCombinedOM(OM_List[[1]], Name, HistYears, ProjYears)
   
   extended <- purrr::map(OM_List, \(OM) 
-                         OM_Extend(OM, 
+                         .OMExtend(OM, 
                                    HistYears = HistYears,
                                    ProjYears = ProjYears,
                                    FillEffort = FillEffort,
@@ -107,23 +107,23 @@ CombineOMs <- function(
                          )
   )
   
-  OM_Out <- CombineStocksFleets(OM_Out, extended)
+  OM_Out <- .CombineStocksFleets(OM_Out, extended)
   
-  OM_Out <- CombineStocksData(OM_Out, OM_List)
+  OM_Out <- .CombineStocksData(OM_Out, OM_List)
 
   OM_Out@EFactor <- purrr::map(OM_List, slot, 'EFactor')
   
   OM_Out <- GenMultiStockRecDevs(OM_Out, silent = silent)
   
-  if (StandardizeEffort)
-    OM_Out <- StandardizeEffort(OM_Out, populate=FALSE)
+  if (.StandardizeEffort)
+    OM_Out <- .StandardizeEffort(OM_Out, populate=FALSE)
   
   OM_Out
   
 }
 
 
-CombineStocksData <- function(OM, OM_List) {
+.CombineStocksData <- function(OM, OM_List) {
   HistYears <- Years(OM, 'H')
   
   for (i in seq_along(OM_List)) {
@@ -156,7 +156,7 @@ CombineStocksData <- function(OM, OM_List) {
 
 
 
-ValidateOMList <- function(OM_List) {
+.ValidateOMList <- function(OM_List) {
   
   if (!all(purrr::map_lgl(OM_List, inherits, "om"))) {
     cli::cli_abort("`OM_List` must contain only `om` objects")
@@ -172,10 +172,10 @@ ValidateOMList <- function(OM_List) {
     cli::cli_abort("All OMs must have identical `Seasons`")
   }
   
-  ValidateFleetNames(purrr::map(OM_List, FleetNames))
+  .ValidateFleetNames(purrr::map(OM_List, FleetNames))
 }
   
-ValidateFleetNames <- function(x, label='FleetNames') {
+.ValidateFleetNames <- function(x, label='FleetNames') {
   if (length(x) < 2) return(invisible(TRUE))
   ref <- x[[1]]
   ref_name <- names(x)[1]
@@ -191,7 +191,7 @@ ValidateFleetNames <- function(x, label='FleetNames') {
   invisible(TRUE)
 }
 
-GetUnifiedYears <- function(OM_List) {
+.GetUnifiedYears <- function(OM_List) {
   
   HistYears <- purrr::map(OM_List, Years, "H") |>
     unlist() |> unique() |> sort()
@@ -204,7 +204,7 @@ GetUnifiedYears <- function(OM_List) {
   list(HistYears = HistYears, ProjYears = ProjYears)
 }
 
-InitializeCombinedOM <- function(RefOM, Name, HistYears, ProjYears) {
+.InitializeCombinedOM <- function(RefOM, Name, HistYears, ProjYears) {
   
   OM_Out <- OM(Name = Name)
   
@@ -214,7 +214,7 @@ InitializeCombinedOM <- function(RefOM, Name, HistYears, ProjYears) {
     "pStar", "maxF", "Seed", "Control"
   )
   
-  OM_Out <- CopySlots(RefOM, OM_Out, copy_slots)
+  OM_Out <- .CopySlots(RefOM, OM_Out, copy_slots)
   
   OM_Out@CurrentYear <- max(HistYears)
   OM_Out@nYear <- length(HistYears)
@@ -223,13 +223,13 @@ InitializeCombinedOM <- function(RefOM, Name, HistYears, ProjYears) {
   OM_Out
 }
 
-OM_Extend <- function(OM, HistYears, ProjYears, FillEffort, FillEfficiency) {
+.OMExtend <- function(OM, HistYears, ProjYears, FillEffort, FillEfficiency) {
   
   OM@CurrentYear <- max(HistYears)
   OM@nYear <- length(HistYears)
   OM@pYear <- length(ProjYears)
   
-  OM@Stock <- purrr::map(OM@Stock, ExtendStockYears,
+  OM@Stock <- purrr::map(OM@Stock, .ExtendStockYears,
                          HistYears = HistYears,
                          ProjYears = ProjYears)
   
@@ -237,7 +237,7 @@ OM_Extend <- function(OM, HistYears, ProjYears, FillEffort, FillEfficiency) {
     OM@Fleet,
     ~ purrr::map(
       .x,
-      ExtendFleetYears,
+      .ExtendFleetYears,
       HistYears = HistYears,
       ProjYears = ProjYears,
       nSim = nSim(OM),
@@ -249,7 +249,7 @@ OM_Extend <- function(OM, HistYears, ProjYears, FillEffort, FillEfficiency) {
   OM
 }
 
-CombineStocksFleets <- function(OM_Out, OM_List) {
+.CombineStocksFleets <- function(OM_Out, OM_List) {
   
   
   StockList <- purrr::map(OM_List, \(OM) Stock(OM))
@@ -262,15 +262,15 @@ CombineStocksFleets <- function(OM_Out, OM_List) {
   OM_Out
 }
 
-ExtendFleetYears <- function(Fleet, HistYears, ProjYears, nSim, FillEffort, FillEfficiency) {
+.ExtendFleetYears <- function(Fleet, HistYears, ProjYears, nSim, FillEffort, FillEfficiency) {
   
-  Fleet@Effort@Effort <- ForwardFillArray(Fleet@Effort@Effort, HistYears, FillEffort, nSim)
+  Fleet@Effort@Effort <- .ForwardFillArray(Fleet@Effort@Effort, HistYears, FillEffort, nSim)
   Fleet@Effort@Effort <- Extend(Fleet@Effort@Effort, Years = HistYears, backfill = TRUE, default = 0)
   
   Fleet@Effort@Distribution <- Extend(Fleet@Effort@Distribution, Years = HistYears, backfill = TRUE) |>
     ReduceDims(IncYear = TRUE)
   
-  Fleet@Catchability@Efficiency <- ForwardFillArray(Fleet@Catchability@Efficiency, HistYears, FillEfficiency, nSim)
+  Fleet@Catchability@Efficiency <- .ForwardFillArray(Fleet@Catchability@Efficiency, HistYears, FillEfficiency, nSim)
   Fleet@Catchability@Efficiency <- Extend(Fleet@Catchability@Efficiency, Years = HistYears, backfill = TRUE, default = 0)
   
   Fleet@Effort@Targeting <- Extend(Fleet@Effort@Targeting,
@@ -283,13 +283,15 @@ ExtendFleetYears <- function(Fleet, HistYears, ProjYears, nSim, FillEffort, Fill
   Fleet@Closure <- Extend(Fleet@Closure, Years=HistYears, backfill=TRUE) |>
     ReduceDims(IncYear=TRUE)
   
-  Fleet@WeightFleet <- Extend(Fleet@WeightFleet, Years=HistYears, backfill=TRUE) |>
+  Fleet@WeightFleetRetained <- Extend(Fleet@WeightFleetRetained, Years=HistYears, backfill=TRUE) |>
     ReduceDims(IncYear=TRUE)
-  
+  Fleet@WeightFleetSelected <- Extend(Fleet@WeightFleetSelected, Years=HistYears, backfill=TRUE) |>
+    ReduceDims(IncYear=TRUE)
+
   Fleet
 }
 
-ExtendStockYears <- function(Stock, HistYears, ProjYears) {
+.ExtendStockYears <- function(Stock, HistYears, ProjYears) {
   
   slots <- c("Length", "Weight", "NaturalMortality", "Maturity", "Fecundity", "Spatial")
   
@@ -298,7 +300,7 @@ ExtendStockYears <- function(Stock, HistYears, ProjYears) {
       ReduceDims(IncYear = TRUE)
   }
   
-  Stock <- ExtendSRRYears(Stock, HistYears, ProjYears)
+  Stock <- .ExtendSRRYears(Stock, HistYears, ProjYears)
   
   Stock@nYear <- length(HistYears)
   Stock@Years <- c(HistYears, ProjYears)
@@ -308,7 +310,7 @@ ExtendStockYears <- function(Stock, HistYears, ProjYears) {
   Stock
 }
 
-ExtendSRRYears <- function(Stock, HistYears, ProjYears) {
+.ExtendSRRYears <- function(Stock, HistYears, ProjYears) {
   
   dummy <- NA
   
@@ -341,7 +343,7 @@ ExtendSRRYears <- function(Stock, HistYears, ProjYears) {
   # Forward fill
   if (length(forward_years)) {
     
-    RecDevHist <- SimulateRecDevAR1(
+    RecDevHist <- .SimulateRecDevAR1(
       RecDevHist = RecDevHist,
       forward_years = forward_years,
       HistYears = HistYears,
@@ -356,7 +358,7 @@ ExtendSRRYears <- function(Stock, HistYears, ProjYears) {
   Stock
 }
 
-SimulateRecDevAR1 <- function(RecDevHist, forward_years, HistYears, Stock) {
+.SimulateRecDevAR1 <- function(RecDevHist, forward_years, HistYears, Stock) {
   
   n_forward <- length(forward_years)
   nSim <- Stock@nSim
@@ -384,7 +386,7 @@ SimulateRecDevAR1 <- function(RecDevHist, forward_years, HistYears, Stock) {
   RecDevHist <- Extend(RecDevHist, nSim = nSim, Years=forward_years, default=NA)
   
   logrecdev <- array(
-    rtnorm(nSim * n_forward, 
+    .Rtnorm(nSim * n_forward, 
            mu = mu, 
            sigma = sd, 
            lower = lower, 
@@ -408,7 +410,7 @@ SimulateRecDevAR1 <- function(RecDevHist, forward_years, HistYears, Stock) {
   RecDevHist
 }
 
-ForwardFillArray <- function(array, HistYears, FillList, nSim) {
+.ForwardFillArray <- function(array, HistYears, FillList, nSim) {
   
   array_years <- dimnames(array)[["Year"]]
   fill_years <- HistYears[HistYears > max(array_years)]
@@ -440,18 +442,16 @@ ForwardFillArray <- function(array, HistYears, FillList, nSim) {
     )
   }
   
-  ValidateFillValues(Values, nSim, n_fill)
+  .ValidateFillValues(Values, nSim, n_fill)
   
   dimnames(Values) <- list(Sim = seq_len(nSim), Year = fill_years)
   
   abind::abind(array, Values, use.dnns = TRUE)
 }
 
-ValidateFillValues <- function(Values, nSim, nFill) {
+.ValidateFillValues <- function(Values, nSim, nFill) {
   dd <- dim(Values)
   if (is.null(dd) || dd[1] != nSim || dd[2] != nFill) {
     cli::cli_abort("Fill values must have dimensions `nSim x n_fill_years`")
   }
 }
-
-

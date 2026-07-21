@@ -26,7 +26,7 @@
 #' * Resolving the mortality model class
 #' * Generating mean natural mortality at age or at length
 #' * Converting between mean-at-length and mean-at-age if necessary
-#' * Adding stochastic variation via `PopulateRandom()`
+#' * Adding stochastic variation via `.PopulateRandom()`
 #'
 #'
 #' @return
@@ -61,7 +61,7 @@ PopulateNaturalMortality <- function(NaturalMortality,
   
   Ages  <- DefaultAges(Ages)
   Years <- DefaultYears(Years)
-  nSim  <- Get_nSim(NaturalMortality, nSim)
+  nSim  <- .GetNSim(NaturalMortality, nSim)
   
   argList <- list(Ages, Length, nSim, Years, CalcAtLength, seed)
   
@@ -70,22 +70,22 @@ PopulateNaturalMortality <- function(NaturalMortality,
     return(NaturalMortality)
   }
   
-  if (CheckDigest(NaturalMortality, argList) & !force) {
+  if (.CheckDigest(NaturalMortality, argList) & !force) {
     return(NaturalMortality)
   }
   
-  SetSeed(seed)
+  .SetSeed(seed)
   
-  NaturalMortality@Pars <- StructurePars(Pars = NaturalMortality@Pars, nSim, Years)
-  NaturalMortality@Model <- FindModel(NaturalMortality)
-  NaturalMortality <- PopulateMeanAtAge(object = NaturalMortality, 
+  NaturalMortality@Pars <- .StructurePars(Pars = NaturalMortality@Pars, nSim, Years)
+  NaturalMortality@Model <- .FindModel(NaturalMortality)
+  NaturalMortality <- .PopulateMeanAtAge(object = NaturalMortality, 
                                         Ages= Ages, 
                                         Years = Years)
   
-  ModelClass <- getModelClass(NaturalMortality@Model)
+  ModelClass <- .GetModelClass(NaturalMortality@Model)
   if (!is.null(ModelClass)) {
-    if (grepl("at-Length", getModelClass(NaturalMortality@Model))) {
-      NaturalMortality <- PopulateMeanAtLength(
+    if (grepl("at-Length", .GetModelClass(NaturalMortality@Model))) {
+      NaturalMortality <- .PopulateMeanAtLength(
         object = NaturalMortality, 
         Length = Length, 
         Years = Years, 
@@ -94,21 +94,21 @@ PopulateNaturalMortality <- function(NaturalMortality,
         silent = silent
       )
     } else {
-      NaturalMortality <- PopulateMeanAtAge(
+      NaturalMortality <- .PopulateMeanAtAge(
         object = NaturalMortality, 
         Ages= Ages, 
         Years = Years)
     }
   }
   
-  NaturalMortality <- MeanAtLength2MeanAtAge(NaturalMortality, Length)
+  NaturalMortality <- .MeanAtLength2MeanAtAge(NaturalMortality, Length)
   if (CalcAtLength) {
-    NaturalMortality <- MeanAtAge2MeanAtLength(NaturalMortality, Length)
+    NaturalMortality <- .MeanAtAge2MeanAtLength(NaturalMortality, Length)
   }
   
   
-  NaturalMortality <- PopulateRandom(NaturalMortality)
+  NaturalMortality <- .PopulateRandom(NaturalMortality)
   
-  SetDigest(SetAgeDimnames(NaturalMortality, Ages), argList)
+  .SetDigest(.SetAgeDimnames(NaturalMortality, Ages), argList)
   
 }

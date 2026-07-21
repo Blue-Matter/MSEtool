@@ -65,7 +65,7 @@
 #'   and `Species<-`: a `character(1)` string.
 #'
 #' @details
-#' ## Object Structure
+#' ## Object .Structure
 #'
 #' A [stock-class] object aggregates all biological components needed to
 #' simulate stock dynamics: 
@@ -211,29 +211,29 @@ Stock <- function(Name = "New Stock Object",
 #' @rdname Stock
 #' @export
 `Stock<-` <- function(x, value) {
-  AssignSlotRecursive(x, value, 'Stock')
+  .AssignSlotRecursive(x, value, 'Stock')
 }
 
 #' @rdname Stock
 #' @export
 CommonName <- function(x) {
-  AccessSlotRecursive(x, 'CommonName')
+  .AccessSlotRecursive(x, 'CommonName')
 }
 
 #' @rdname Stock
 #' @export
 `CommonName<-` <- function(x, value) {
-  AssignSlotRecursive(x, value, 'CommonName')
+  .AssignSlotRecursive(x, value, 'CommonName')
 }
 
 #' @rdname Stock
 #' @export
 Species <- function(x) {
-  AccessSlotRecursive(x, 'Species')
+  .AccessSlotRecursive(x, 'Species')
 }
 
 #' @rdname Stock
 #' @export
 `Species<-` <- function(x, value) {
-  AssignSlotRecursive(x, value, 'Species')
+  .AssignSlotRecursive(x, value, 'Species')
 }

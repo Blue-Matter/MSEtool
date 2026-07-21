@@ -36,7 +36,7 @@ Array2DF <- function(array) {
   if (!inherits(array, c('matrix', 'array'))) 
     cli::cli_abort('`array` in not class `matrix` or `array`')
   
-  array2DF(array) |> ConvertDF()
+  array2DF(array) |> .ConvertDF() |> .ArrangeDF()
 }
 
 #' @rdname array_df_conversion
@@ -61,45 +61,22 @@ DF2Array <- function(DF) {
   array(df$Value, dim=Dim, dimnames=DimNames)
 }
 
-MakeFactor <- function(x) {
+.MakeFactor <- function(x) {
   factor(x, ordered = TRUE, levels=unique(x))
 }
 
-ArrangeDF <- function(df) {
-  
-  cnames <- colnames(df)
-  colInd <- c('Sim', 'Year', 'Age') %in% cnames
-  
-  if (prod(colInd))
-    return(
-      df |> dplyr::arrange(Sim, Year, Age)
-    )
-  
-  if (prod(colInd[1:2]))
-    return(
-      df |> dplyr::arrange(Sim, Year)
-    )
-  
-  if (prod(colInd[c(1,3)]))
-    return(
-      df |> dplyr::arrange(Sim, Age)
-    )
-  
-  if (prod(colInd[c(2,3)]))
-    return(
-      df |> dplyr::arrange(Year, Age)
-    )
-  
-  df
+.ArrangeDF <- function(df) {
+  priority <- c('Sim', 'Stock', 'Fleet', 'Year', 'Age', 'Area')
+  df |> dplyr::arrange(dplyr::across(dplyr::any_of(priority)))
 }
 
-ConvertDF <- function(df) {
+.ConvertDF <- function(df) {
   nms <- colnames(df)
   if ('Sim'   %in% nms) df$Sim   <- as.numeric(df$Sim)
   if ('Age'   %in% nms) df$Age   <- as.numeric(df$Age)
   if ('Class' %in% nms) df$Class <- as.numeric(df$Class)
-  if ('Stock' %in% nms) df$Stock <- MakeFactor(df$Stock)
-  if ('Fleet' %in% nms) df$Fleet <- MakeFactor(df$Fleet)
+  if ('Stock' %in% nms) df$Stock <- .MakeFactor(df$Stock)
+  if ('Fleet' %in% nms) df$Fleet <- .MakeFactor(df$Fleet)
   if ('Year'  %in% nms) df$Year  <- as.numeric(df$Year)
   if ('Area'  %in% nms) df$Area  <- as.numeric(df$Area)
   if ('F'   %in% nms)   df$F   <- as.numeric(df$F)

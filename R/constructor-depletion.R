@@ -130,8 +130,8 @@ Depletion <- function(Initial = NULL,
                       Final = NULL,
                       Reference = "B0") {
   
-  if (isStockOrList(Initial)) 
-    return(ExtractStockSlot(Initial, "Depletion"))
+  if (.IsStockOrList(Initial)) 
+    return(.ExtractStockSlot(Initial, "Depletion"))
   
   methods::new("depletion",
                Initial   = Initial,
@@ -144,7 +144,7 @@ Depletion <- function(Initial = NULL,
 #' @rdname Depletion
 #' @export
 Initial <- function(x) {
-  CheckClass(x, "depletion", "Depletion")
+  .CheckClass(x, "depletion", "Depletion")
   x@Initial
 }
 
@@ -152,7 +152,7 @@ Initial <- function(x) {
 #' @rdname Depletion
 #' @export
 `Initial<-` <- function(x, value) {
-  CheckClass(x, "depletion", "Depletion")
+  .CheckClass(x, "depletion", "Depletion")
   x@Initial <- value
   methods::validObject(x)
   x
@@ -162,7 +162,7 @@ Initial <- function(x) {
 #' @rdname Depletion
 #' @export
 Final <- function(x) {
-  CheckClass(x, "depletion", "Depletion")
+  .CheckClass(x, "depletion", "Depletion")
   x@Final
 }
 
@@ -170,7 +170,7 @@ Final <- function(x) {
 #' @rdname Depletion
 #' @export
 `Final<-` <- function(x, value) {
-  CheckClass(x, "depletion", "Depletion")
+  .CheckClass(x, "depletion", "Depletion")
   x@Final <- value
   methods::validObject(x)
   x
@@ -179,5 +179,5 @@ Final <- function(x) {
 #' @rdname Depletion
 #' @export
 `Depletion<-`<- function(x, value) {
-  AssignSlotRecursive(x, value, 'Depletion')
+  .AssignSlotRecursive(x, value, 'Depletion')
 }

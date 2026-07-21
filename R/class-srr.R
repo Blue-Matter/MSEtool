@@ -15,10 +15,17 @@
 #'   to `"BevertonHolt"`. See [SRRModels()] for available models.
 #' @slot R0 `array` or `numeric`. Unfished equilibrium recruitment. May be a
 #'   scalar (same across all simulations), a length-2 bounds vector (sampled
-#'   from `Uniform(lower, upper)` once per simulation), or a length-`nSim`
-#'   vector. Interpreted in units of `Units` (e.g., `Units = 1000` means R0
-#'   is in thousands of fish). Does not affect internal calculations — used
-#'   only to set the scale of numbers in [hist-class] output.
+#'   from `Uniform(lower, upper)` once per simulation), a length-`nSim`
+#'   vector, or a `Sim x Year` array for a deliberately time-varying R0 (e.g.
+#'   to model a regime shift in carrying capacity). Interpreted in units of
+#'   `Units` (e.g., `Units = 1000` means R0 is in thousands of fish). A
+#'   constant R0 only sets the absolute scale of numbers in [hist-class]
+#'   output and does not otherwise affect population dynamics. A
+#'   time-varying R0 does affect dynamics: the spawning production per
+#'   recruit implied by steepness is fixed at its initial-year value (so
+#'   time-varying life-history parameters like `M` don't cause it to drift),
+#'   but `R0` itself is read for the current year, so a change in `R0`
+#'   immediately rescales the stock-recruitment curve from that year on.
 #' @slot SD `array` or `numeric`. Log-space standard deviation of recruitment
 #'   deviations. May be a scalar, length-2 bounds vector, or length-`nSim`
 #'   vector. Fixed across years (currently not time-varying). When `NULL`,

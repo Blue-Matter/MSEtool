@@ -13,7 +13,7 @@
 #'   [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for
 #'   accepted input formats.
 #' @slot Model `function` or `character(1)`. Fecundity model identifier,
-#'   matched to one of [FecundityModels()]. Set automatically by [FindModel()]
+#'   matched to one of [FecundityModels()]. Set automatically by `.FindModel()`
 #'   when `Pars` is supplied without an explicit model.
 #' @slot Units `character(1)`. Unit of reproductive output (e.g., `"eggs"`).
 #'   Determines the unit of the `SProduction` slot in [hist-class] objects.
@@ -58,7 +58,7 @@
 #' - [FecundityModels()] for available models and their required parameters.
 #' - [ValidUnits()] for accepted unit strings.
 #' - [Populate()] for array population.
-#' - [FindModel()] for automatic model inference.
+#' - `.FindModel()` for automatic model inference.
 #' - [Length()] and [Weight()] for the companion schedules used in the
 #'   default spawning biomass calculation and at-length fecundity models.
 #' - [Maturity()] for the maturity schedule multiplied through fecundity
@@ -87,5 +87,7 @@ setClass(
 
 
 setValidity("fecundity", function(object) {
+  chk <- tryCatch(.CheckPars(object@Pars), error=function(e) e)
+  if (inherits(chk, "error")) return(conditionMessage(chk))
   TRUE
 })

@@ -51,7 +51,7 @@ GenResiduals <- function(SD,
   upper_mat <- matrix(upper, nrow = nSim, ncol = nYear)
   
   # Generate residuals
-  LogResid <- rtnorm(nSim * nYear, 
+  LogResid <- .Rtnorm(nSim * nYear, 
                 as.vector(mu_mat),
                 as.vector(SD_mat),
                 as.vector(lower_mat), 
@@ -68,7 +68,7 @@ GenResiduals <- function(SD,
     cli::cli_abort("`NA_Season` must be a length {.val nSim ({nSim})}")
   
   for (s in seq_along(NA_Season)) {
-    NA_ind <- expand_seasons(NA_seas = NA_Season[[s]], 
+    NA_ind <- .ExpandSeasons(NA_seas = NA_Season[[s]], 
                              nSeasons = nSeasons, 
                              nYear = nYear)
     
@@ -77,7 +77,7 @@ GenResiduals <- function(SD,
   arr
 }
 
-expand_seasons <- function(NA_seas, nSeasons, nYear) {
+.ExpandSeasons <- function(NA_seas, nSeasons, nYear) {
   rep(seq(0, nYear / nSeasons - 1) * nSeasons, each = length(NA_seas)) + rep(NA_seas, times = nYear / nSeasons)
 }
 
@@ -205,6 +205,5 @@ CalcResidualStats <- function(LogResiduals, nSeasons=1) {
   
   data.frame(Sim = seq_len(nSim), AC = AC, SD = SD, NA_Season=I(NA_Season))
 }
-
 
 

@@ -84,7 +84,7 @@ class(FecundityAtWeight) <- "Fecundity-at-Weight-Model"
 #' @return Prints to console and invisible data.frame or model names
 #' @export
 FecundityModels <- function(full = TRUE, print = TRUE) {
-  ReturnModels(
+  .ReturnModels(
     ModelClass = c(
       "Fecundity-at-Age-Model",
       "Fecundity-at-Length-Model",
@@ -97,7 +97,7 @@ FecundityModels <- function(full = TRUE, print = TRUE) {
 #' @rdname Fecundity-Models
 #' @export
 FecundityModelsLength <- function(full = TRUE, print = TRUE) {
-  ReturnModels(
+  .ReturnModels(
     ModelClass = c("Fecundity-at-Length-Model"),
     full, print
   )
@@ -106,7 +106,7 @@ FecundityModelsLength <- function(full = TRUE, print = TRUE) {
 #' @rdname Fecundity-Models
 #' @export
 FecundityModelsAge <- function(full = TRUE, print = TRUE) {
-  ReturnModels(
+  .ReturnModels(
     ModelClass = c("Fecundity-at-Age-Model"),
     full, print
   )
@@ -115,9 +115,8 @@ FecundityModelsAge <- function(full = TRUE, print = TRUE) {
 #' @rdname Fecundity-Models
 #' @export
 FecundityModelsWeight <- function(full = TRUE, print = TRUE) {
-  ReturnModels(
+  .ReturnModels(
     ModelClass = c("Fecundity-at-Weight-Model"),
     full, print
   )
 }
-

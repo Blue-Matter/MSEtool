@@ -28,7 +28,7 @@ dim <- function(x) {
 }
 
 
-setdnames <- function(dnames, BySim=TRUE) {
+.SetDnames <- function(dnames, BySim=TRUE) {
   if (BySim & !"Sim" %in% dnames) 
     dnames <- c('Sim', dnames)
   dnames

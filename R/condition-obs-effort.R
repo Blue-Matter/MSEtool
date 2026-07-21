@@ -16,7 +16,7 @@
 #' @param i Integer index of the observed data set.
 #'
 #' @keywords internal
-ConditionObs_Effort <- function(Hist,
+.ConditionObsEffort <- function(Hist,
                                 FisheryData,
                                 HistYears,
                                 ProjYears,
@@ -30,12 +30,12 @@ ConditionObs_Effort <- function(Hist,
 
   fleetnames <- FleetNames(Hist)
 
-  ObservedEffort_Fleet <- FisheryData@Effort@Value |> ArraySubsetYear(Years = HistYears)
+  ObservedEffort_Fleet <- FisheryData@Effort@Value |> .ArraySubsetYear(Years = HistYears)
 
   if (is.null(ObservedEffort_Fleet)) return(Hist)
 
   # Simulated effort: Sim x Year x Fleet -> subset to hist years
-  SimEffort_All <- ArraySubsetYear(Hist@Effort, HistYears)   # Sim x Year x Fleet
+  SimEffort_All <- .ArraySubsetYear(Hist@Effort, HistYears)   # Sim x Year x Fleet
 
   for (fl in seq_len(nFleet)) {
 
@@ -54,8 +54,8 @@ ConditionObs_Effort <- function(Hist,
     SimValue <- SimEffort_All[, , fl, drop = FALSE] |> abind::adrop(3)  # Sim x Year
     SimValue[SimValue < 0] <- 0
 
-    SimValue      <- ArraySubsetYear(SimValue,      EffortObs@Years)
-    ObsValue      <- ArraySubsetYear(ObservedEffort, EffortObs@Years)
+    SimValue      <- .ArraySubsetYear(SimValue,      EffortObs@Years)
+    ObsValue      <- .ArraySubsetYear(ObservedEffort, EffortObs@Years)
 
     d1 <- dim(SimValue)
     d2 <- dim(ObsValue)

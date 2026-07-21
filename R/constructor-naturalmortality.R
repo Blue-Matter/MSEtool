@@ -8,14 +8,14 @@
 #' @param Pars `list`. Named list of natural mortality parameters. Element
 #'   names must match the arguments of a built-in mortality model (see
 #'   [NaturalMortalityModels()]). When `Pars` is non-empty and `Model` is
-#'   `NULL`, the model is inferred automatically by [FindModel()]. When `Pars`
+#'   `NULL`, the model is inferred automatically by `.FindModel()`. When `Pars`
 #'   is a [stock-class] object, `NaturalMortality()` acts as a pass-through
 #'   accessor and returns `x@NaturalMortality`. See also
 #'   [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for the
 #'   full set of accepted input formats. Default `list()`.
 #' @param Model `character(1)` or `function`. Natural mortality model
 #'   identifier. When `NULL` (default), the model is inferred from `Pars` via
-#'   [FindModel()]. May be set to a character string naming a built-in model or
+#'   `.FindModel()`. May be set to a character string naming a built-in model or
 #'   to a custom R function — see
 #'   [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html).
 #' @param Units `character(1)`. Time unit in which mortality rates are
@@ -57,7 +57,7 @@
 #'
 #' **Model-based** (recommended): supply `Pars` with named parameters matching
 #' a built-in model (see [NaturalMortalityModels()]). If `Model = NULL` and
-#' the parameter names uniquely match a model, [FindModel()] resolves the
+#' the parameter names uniquely match a model, `.FindModel()` resolves the
 #' model automatically. `MeanAtAge` is then populated by [Populate()] when the
 #' stock is added to an [OM()]:
 #'
@@ -143,7 +143,7 @@
 #' - [NaturalMortalityModels()] for available models and required parameter
 #'   sets.
 #' - [ValidUnits()] for accepted unit strings.
-#' - [FindModel()] for automatic model inference.
+#' - `.FindModel()` for automatic model inference.
 #' - [Populate()] for array population.
 #' - [Stock()] for the enclosing stock constructor.
 #' - [Length()] for the companion length schedule, required when using
@@ -163,8 +163,8 @@ NaturalMortality <- function(Pars = list(),
                              Classes = NULL,
                              Misc = list()) {
   
-  if (isStockOrList(Pars)) 
-    return(ExtractStockSlot(Pars, "NaturalMortality"))
+  if (.IsStockOrList(Pars)) 
+    return(.ExtractStockSlot(Pars, "NaturalMortality"))
   
   if (is.null(Pars))
     return(NULL)
@@ -185,7 +185,7 @@ NaturalMortality <- function(Pars = list(),
       !is.null(names(Pars)) &&
       all(!is.na(unlist(Pars))) &&
       is.null(Model)) {
-    object@Model <- FindModel(object)
+    object@Model <- .FindModel(object)
   }
   
   methods::validObject(object)
@@ -196,5 +196,5 @@ NaturalMortality <- function(Pars = list(),
 #' @rdname NaturalMortality
 #' @export
 `NaturalMortality<-` <- function(x, value) {
-  AssignSlotRecursive(x, value, 'NaturalMortality')
+  .AssignSlotRecursive(x, value, 'NaturalMortality')
 }

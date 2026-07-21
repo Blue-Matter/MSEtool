@@ -14,26 +14,30 @@
 #'
 #' @return The `Proj` object.
 #' @keywords internal
-CheckMSERun <- function(Proj, MSE, MPName, StartTime, EndTime, Error, ErrorMessage,
+.CheckMSERun <- function(Proj, MSE, MPName, StartTime, EndTime, Error, ErrorMessage,
                         silent = FALSE) {
-  
+
   elapsed_secs <- as.numeric(round(difftime(EndTime, StartTime, units='secs'), 2))
   elapsed_auto <- format(round(difftime(EndTime, StartTime, units='auto'), 2))
-  
+
   # MP-level error - report and return early
   if (Error) {
     cli::cli_alert_warning('{.val {MPName}} failed:')
     cli::cli_alert_danger(as.character(ErrorMessage))
-    Proj@Log$error <- as.character(ErrorMessage)
     return(Proj)
   }
-  
-  # Check for simulation-level failures via Log
-  FailedLog <- ReverseList(Proj@Log$error)
 
-  CheckFailed <- purrr::map_int(FailedLog, length)
+  # Check for simulation-level failures via Log - entries are tagged with
+  # `sim` directly, so the failed sims are whichever appear here at all
+  ErrorEntries <- Proj@Log$error
+  SimsFailed <- ErrorEntries |>
+    purrr::map('sim') |>
+    purrr::compact() |>
+    unlist() |>
+    unique() |>
+    sort()
 
-  nFailed <- length(CheckFailed)
+  nFailed <- length(SimsFailed)
 
   if (!nFailed) {
     # Success - include elapsed time only if run took more than 5 seconds
@@ -56,7 +60,7 @@ CheckMSERun <- function(Proj, MSE, MPName, StartTime, EndTime, Error, ErrorMessa
   } else {
     cli::cli_alert_warning(
       c('x'='WARNING: {.val {MPName}} failed for {.val {nFailed}}
-           simulation{?s}: {.val {Failed}}.{cli::qty(nFailed)}
+           simulation{?s}: {.val {SimsFailed}}.{cli::qty(nFailed)}
            `MSE` object not updated for {?this/these} simulation{?s}.')
     )
   }
@@ -71,13 +75,18 @@ CheckMSERun <- function(Proj, MSE, MPName, StartTime, EndTime, Error, ErrorMessa
                                       '.log'))
   file.create(logFile)
 
-  for (i in seq_along(CheckFailed)) {
-    cat(paste0('MP: ', MPName), file=logFile, sep='\n', append=TRUE)
-    nms <- names(FailedLog[[i]])
-    for (j in seq_along(nms)) {
-      cat(nms[j], file=logFile, sep='\n', append=TRUE)
-      msgs <- unlist(FailedLog[[i]][[j]], recursive = TRUE)
-      cat(msgs, file=logFile, sep='\n', append=TRUE)
+  cat(paste0('MP: ', MPName), file=logFile, sep='\n', append=TRUE)
+  for (sim in SimsFailed) {
+    cat(paste0('Simulation: ', sim), file=logFile, sep='\n', append=TRUE)
+    SimEntries <- Filter(\(e) identical(e$sim, sim), ErrorEntries)
+    for (entry in SimEntries) {
+      label <- paste(Filter(nzchar, c(
+        if (!is.null(entry$year)) paste0('Year: ', entry$year),
+        entry$name
+      )), collapse = ' | ')
+      if (nzchar(label))
+        cat(label, file=logFile, sep='\n', append=TRUE)
+      cat(entry$message, file=logFile, sep='\n', append=TRUE)
     }
   }
 

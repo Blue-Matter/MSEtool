@@ -33,15 +33,15 @@ PopulateDepletion <- function(Depletion,
                               seed = NULL,
                               silent = FALSE) {
   argList <- list(nSim, seed)
-  nSim    <- Get_nSim(Depletion, nSim)
+  nSim    <- .GetNSim(Depletion, nSim)
   
-  if (CheckDigest(Depletion, argList) | EmptyObject(Depletion)) 
+  if (.CheckDigest(Depletion, argList) | EmptyObject(Depletion)) 
     return(Depletion)
   
-  SetSeed(seed)
+  .SetSeed(seed)
   
-  Depletion@Initial <- PopulateInitial(Depletion@Initial, nSim)
-  Depletion@Final <- PopulateInitial(Depletion@Final, nSim, "Final")
+  Depletion@Initial <- .PopulateInitial(Depletion@Initial, nSim)
+  Depletion@Final <- .PopulateInitial(Depletion@Final, nSim, "Final")
   
   validReference <- c("B0", "BMSY", "SB0", "SBMSY")
   if (!Depletion@Reference %in% validReference) {
@@ -49,11 +49,11 @@ PopulateDepletion <- function(Depletion,
                      "x" = "Currently {.val {Depletion@Reference}}. Must be one of: {.val {validReference}}"
     ))
   }
-  SetDigest(Depletion, argList)
+  .SetDigest(Depletion, argList)
 }
 
 
-PopulateInitial <- function(Initial, nSim = NA, name = "Initial") {
+.PopulateInitial <- function(Initial, nSim = NA, name = "Initial") {
   if (length(Initial) < 1) {
     return(Initial)
   }

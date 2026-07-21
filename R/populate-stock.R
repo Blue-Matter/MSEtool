@@ -77,7 +77,7 @@ PopulateStock <- function(Stock,
   if (EmptyObject(Stock)) 
     return(Stock)
   
-  if (CheckDigest(Stock, argList) & !force) 
+  if (.CheckDigest(Stock, argList) & !force) 
     return(Stock)
   
   if (is.null(CurrentYear)) 
@@ -89,7 +89,7 @@ PopulateStock <- function(Stock,
   Stock@nSim <- nSim
   Stock@Seasons <- Seasons
   
-  SetSeed(seed)
+  .SetSeed(seed)
   
   Stock@Years <- CalcYears(
     nYear = Stock@nYear,
@@ -192,5 +192,5 @@ PopulateStock <- function(Stock,
     silent = silent
   )
   
-  SetDigest(Stock, argList)
+  .SetDigest(Stock, argList)
 }

@@ -11,9 +11,9 @@
 #'
 #' @return `NULL` invisibly if all checks pass. Otherwise throws an error.
 #' @keywords internal
-SlickChecks <- function(MSE) {
+.SlickChecks <- function(MSE) {
   MPs <- NULL # CRAN checks 
-  CheckClass(MSE, c('mse', 'list'), 'MSE')
+  .CheckClass(MSE, c('mse', 'list'), 'MSE')
   
   if (!requireNamespace("Slick", quietly=TRUE))
     cli::cli_abort(c(
@@ -23,7 +23,7 @@ SlickChecks <- function(MSE) {
     ))
   
   if (inherits(MSE, 'list')) {
-    purrr::walk(MSE, SlickChecks)
+    purrr::walk(MSE, .SlickChecks)
     
     if (length(unique(nSim(MSE))) != 1)
       cli::cli_abort(
@@ -89,15 +89,15 @@ SlickChecks <- function(MSE) {
 #' @seealso [Slick::Slick()], [Slick::App()], [mse-class]
 #' @export
 MSE2Slick <- function(MSE) {
-  SlickChecks(MSE)
+  .SlickChecks(MSE)
   
   mse_ref <- if (is.list(MSE)) MSE[[1]] else MSE
   
   Slick         <- Slick::Slick()
   Slick@Title   <- mse_ref@OM@Name
-  Slick@MPs     <- MSE2MPs(mse_ref)
-  Slick@Kobe    <- MSE2Kobe(MSE)
-  Slick@Timeseries <- MSE2Timeseries(MSE)
+  Slick@MPs     <- .MSE2MPs(mse_ref)
+  Slick@Kobe    <- .MSE2Kobe(MSE)
+  Slick@Timeseries <- .MSE2Timeseries(MSE)
   Slick
 }
 
@@ -111,8 +111,8 @@ MSE2Slick <- function(MSE) {
 #'
 #' @return A [Slick::MPs()] object.
 #' @keywords internal
-MSE2MPs <- function(MSE) {
-  SlickChecks(MSE)
+.MSE2MPs <- function(MSE) {
+  .SlickChecks(MSE)
   
   MPs        <- Slick::MPs()
   MPs@Code   <- names(MSE@MPs)
@@ -134,8 +134,8 @@ MSE2MPs <- function(MSE) {
 #'   `Sim × OM × MP × PI × Year`, where `PI` contains SB/SBMSY (index 1)
 #'   and F/FMSY (index 2).
 #' @keywords internal
-MSE2Kobe <- function(MSE) {
-  SlickChecks(MSE)
+.MSE2Kobe <- function(MSE) {
+  .SlickChecks(MSE)
   
   SB_SBMSY <- F_FMSY <- NULL 
   
@@ -152,7 +152,7 @@ MSE2Kobe <- function(MSE) {
     'Fishing mortality (F) relative to F at maximum sustainable yield (FMSY)'
   )
   Kobe@Time    <- Years(mse_ref@OM, 'Projection')
-  Kobe@TimeLab <- firstup(mse_ref@OM@TimeUnits)
+  Kobe@TimeLab <- .FirstUp(mse_ref@OM@TimeUnits)
   Kobe@Target  <- rep(1, 2)
   
   MPs_names    <- names(mse_ref@MPs)
@@ -210,12 +210,12 @@ MSE2Kobe <- function(MSE) {
 #'   `Sim × OM × MP × PI × Year`, spanning both historical and projection
 #'   periods.
 #' @keywords internal
-MSE2Timeseries <- function(MSE,
+.MSE2Timeseries <- function(MSE,
                            Code  = c('SBiomass', 'apicalF', 'Landings',
                                      'SB_SBMSY', 'F_FMSY'),
                            Label = c('Spawning Biomass', 'Fishing Mortality',
                                      'Landings', 'SB/SBMSY', 'F/FMSY')) {
-  SlickChecks(MSE)
+  .SlickChecks(MSE)
   
   mse_ref <- if (is.list(MSE)) MSE[[1]] else MSE
   nOM     <- if (is.list(MSE)) length(MSE) else 1L
@@ -225,7 +225,7 @@ MSE2Timeseries <- function(MSE,
   Timeseries@Label        <- Label
   Timeseries@Time         <- Years(mse_ref@OM)
   Timeseries@TimeNow      <- max(Years(mse_ref@OM, 'Historical'))
-  Timeseries@TimeLab      <- firstup(CalcTSUnits(mse_ref@OM@Seasons))
+  Timeseries@TimeLab      <- .FirstUp(CalcTSUnits(mse_ref@OM@Seasons))
   Timeseries@Target       <- c(NA, NA, NA, 1,   NA)
   Timeseries@Limit        <- c(NA, NA, NA, 0.4,  1)
   
@@ -239,7 +239,7 @@ MSE2Timeseries <- function(MSE,
   for (om in seq_len(nOM)) {
     mse <- if (is.list(MSE)) MSE[[om]] else MSE
     for (i in seq_along(Code)) {
-      Timeseries@Value[, om, , i, ] <- GetTimeseriesVariable(Code[i], mse)
+      Timeseries@Value[, om, , i, ] <- .GetTimeseriesVariable(Code[i], mse)
     }
   }
   Timeseries
@@ -259,7 +259,7 @@ MSE2Timeseries <- function(MSE,
 #'
 #' @return A numeric array with dimensions `Sim × MP × Year`.
 #' @keywords internal
-GetTimeseriesVariable <- function(Var, MSE) {
+.GetTimeseriesVariable <- function(Var, MSE) {
   nsim <- MSE@OM@nSim
   nMP  <- length(MSE@MPs)
   nTS  <- length(Years(MSE@OM))
@@ -293,4 +293,3 @@ GetTimeseriesVariable <- function(Var, MSE) {
   }
   Array
 }
-

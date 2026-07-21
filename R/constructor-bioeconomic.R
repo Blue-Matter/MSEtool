@@ -79,8 +79,8 @@ Bioeconomic <- function(Revenue       = NULL,
                         Discount      = NULL,
                         Misc          = list()) {
   
-  if (isFleetOrList(Revenue))
-    return(ExtractFleetSlot(Revenue, 'Bioeconomic'))
+  if (.IsFleetOrList(Revenue))
+    return(.ExtractFleetSlot(Revenue, 'Bioeconomic'))
   
   methods::new(
     "bioeconomic",
@@ -97,20 +97,20 @@ Bioeconomic <- function(Revenue       = NULL,
 #' @rdname Bioeconomic
 #' @export
 `Bioeconomic<-` <- function(x, value) {
-  AssignFleetSlot(x, value, 'Bioeconomic')
+  .AssignFleetSlot(x, value, 'Bioeconomic')
 }
 
 #' @rdname Bioeconomic
 #' @export
 Revenue <- function(x) {
-  CheckClass(x, "bioeconomic", "x")
+  .CheckClass(x, "bioeconomic", "x")
   x@Revenue
 }
 
 #' @rdname Bioeconomic
 #' @export
 `Revenue<-` <- function(x, value) {
-  CheckClass(x, "bioeconomic", "x")
+  .CheckClass(x, "bioeconomic", "x")
   x@Revenue <- value
   methods::validObject(x)
   x
@@ -119,14 +119,14 @@ Revenue <- function(x) {
 #' @rdname Bioeconomic
 #' @export
 Cost <- function(x) {
-  CheckClass(x, "bioeconomic", "x")
+  .CheckClass(x, "bioeconomic", "x")
   x@Cost
 }
 
 #' @rdname Bioeconomic
 #' @export
 `Cost<-` <- function(x, value) {
-  CheckClass(x, "bioeconomic", "x")
+  .CheckClass(x, "bioeconomic", "x")
   x@Cost <- value
   methods::validObject(x)
   x
@@ -135,14 +135,14 @@ Cost <- function(x) {
 #' @rdname Bioeconomic
 #' @export
 Investment <- function(x) {
-  CheckClass(x, "bioeconomic", "x")
+  .CheckClass(x, "bioeconomic", "x")
   x@Investment
 }
 
 #' @rdname Bioeconomic
 #' @export
 `Investment<-` <- function(x, value) {
-  CheckClass(x, "bioeconomic", "x")
+  .CheckClass(x, "bioeconomic", "x")
   x@Investment <- value
   methods::validObject(x)
   x
@@ -151,14 +151,14 @@ Investment <- function(x) {
 #' @rdname Bioeconomic
 #' @export
 Disinvestment <- function(x) {
-  CheckClass(x, "bioeconomic", "x")
+  .CheckClass(x, "bioeconomic", "x")
   x@Disinvestment
 }
 
 #' @rdname Bioeconomic
 #' @export
 `Disinvestment<-` <- function(x, value) {
-  CheckClass(x, "bioeconomic", "x")
+  .CheckClass(x, "bioeconomic", "x")
   x@Disinvestment <- value
   methods::validObject(x)
   x
@@ -167,14 +167,14 @@ Disinvestment <- function(x) {
 #' @rdname Bioeconomic
 #' @export
 Depreciation <- function(x) {
-  CheckClass(x, "bioeconomic", "x")
+  .CheckClass(x, "bioeconomic", "x")
   x@Depreciation
 }
 
 #' @rdname Bioeconomic
 #' @export
 `Depreciation<-` <- function(x, value) {
-  CheckClass(x, "bioeconomic", "x")
+  .CheckClass(x, "bioeconomic", "x")
   x@Depreciation <- value
   methods::validObject(x)
   x
@@ -183,14 +183,14 @@ Depreciation <- function(x) {
 #' @rdname Bioeconomic
 #' @export
 Discount <- function(x) {
-  CheckClass(x, "bioeconomic", "x")
+  .CheckClass(x, "bioeconomic", "x")
   x@Discount
 }
 
 #' @rdname Bioeconomic
 #' @export
 `Discount<-` <- function(x, value) {
-  CheckClass(x, "bioeconomic", "x")
+  .CheckClass(x, "bioeconomic", "x")
   x@Discount <- value
   methods::validObject(x)
   x

@@ -19,11 +19,15 @@
 #' @param Model `character(1)` or `function`. SRR model identifier. Must match
 #'   one of the models listed in [SRRModels()], or be a custom R function.
 #'   Default `"BevertonHolt"`.
-#' @param R0 `numeric` or `NULL`. Unfished equilibrium recruitment. May be:
-#'   - A scalar: same value for all simulations.
+#' @param R0 `numeric`, `array`, or `NULL`. Unfished equilibrium recruitment.
+#'   May be:
+#'   - A scalar: same value for all simulations and years.
 #'   - A length-2 bounds vector: sampled from `Uniform(lower, upper)` once per
 #'     simulation.
-#'   - A length-`nSim` vector: one value per simulation.
+#'   - A length-`nSim` vector: one value per simulation, constant over years.
+#'   - A `Sim x Year` array: deliberately time-varying, e.g. to model a
+#'     regime shift in carrying capacity. See [srr-class] for how this
+#'     differs from a constant `R0`.
 #'   Interpreted in units of `Units`. Default `NULL`.
 #' @param SD `numeric` or `NULL`. Log-space standard deviation of recruitment
 #'   deviations. Follows the same length conventions as `R0`. Currently fixed
@@ -227,8 +231,8 @@ SRR <- function(Pars = list(h = NA),
                 Units = 1,
                 Misc = list()) {
   
-  if (isStockOrList(Pars)) 
-    return(ExtractStockSlot(Pars, "SRR"))
+  if (.IsStockOrList(Pars)) 
+    return(.ExtractStockSlot(Pars, "SRR"))
   
   if (is.null(Pars))
     return(NULL)
@@ -282,7 +286,7 @@ R0 <- function(x) {
 #' @rdname SRR
 #' @export
 `R0<-` <- function(x, value) {
-  CheckClass(x, "srr", "x")
+  .CheckClass(x, "srr", "x")
   x@R0 <- value
   methods::validObject(x)
   x
@@ -292,14 +296,14 @@ R0 <- function(x) {
 #' @rdname SRR
 #' @export
 SPFrom <- function(x) {
-  CheckClass(x, "srr", "x")
+  .CheckClass(x, "srr", "x")
   x@SPFrom
 }
 
 #' @rdname SRR
 #' @export
 `SPFrom<-` <- function(x, value) {
-  CheckClass(x, "srr", "x")
+  .CheckClass(x, "srr", "x")
   x@SPFrom <- value
   methods::validObject(x)
   x
@@ -308,14 +312,14 @@ SPFrom <- function(x) {
 #' @rdname SRR
 #' @export
 RecDevInit <- function(x) {
-  CheckClass(x, "srr", "x")
+  .CheckClass(x, "srr", "x")
   x@RecDevInit
 }
 
 #' @rdname SRR
 #' @export
 `RecDevInit<-` <- function(x, value) {
-  CheckClass(x, "srr", "x")
+  .CheckClass(x, "srr", "x")
   x@RecDevInit <- value
   methods::validObject(x)
   x
@@ -324,14 +328,14 @@ RecDevInit <- function(x) {
 #' @rdname SRR
 #' @export
 RecDevHist <- function(x) {
-  CheckClass(x, "srr", "x")
+  .CheckClass(x, "srr", "x")
   x@RecDevHist
 }
 
 #' @rdname SRR
 #' @export
 `RecDevHist<-` <- function(x, value) {
-  CheckClass(x, "srr", "x")
+  .CheckClass(x, "srr", "x")
   x@RecDevHist <- value
   methods::validObject(x)
   x
@@ -340,14 +344,14 @@ RecDevHist <- function(x) {
 #' @rdname SRR
 #' @export
 RecDevProj <- function(x) {
-  CheckClass(x, "srr", "x")
+  .CheckClass(x, "srr", "x")
   x@RecDevProj
 }
 
 #' @rdname SRR
 #' @export
 `RecDevProj<-` <- function(x, value) {
-  CheckClass(x, "srr", "x")
+  .CheckClass(x, "srr", "x")
   x@RecDevProj <- value
   methods::validObject(x)
   x
@@ -356,14 +360,14 @@ RecDevProj <- function(x) {
 #' @rdname SRR
 #' @export
 SpawnTimeFrac <- function(x) {
-  CheckClass(x, "srr", "x")
+  .CheckClass(x, "srr", "x")
   x@SpawnTimeFrac
 }
 
 #' @rdname SRR
 #' @export
 `SpawnTimeFrac<-` <- function(x, value) {
-  CheckClass(x, "srr", "x")
+  .CheckClass(x, "srr", "x")
   x@SpawnTimeFrac <- value
   methods::validObject(x)
   x
@@ -372,14 +376,14 @@ SpawnTimeFrac <- function(x) {
 #' @rdname SRR
 #' @export
 SpawnLag <- function(x) {
-  CheckClass(x, "srr", "x")
+  .CheckClass(x, "srr", "x")
   x@SpawnLag
 }
 
 #' @rdname SRR
 #' @export
 `SpawnLag<-` <- function(x, value) {
-  CheckClass(x, "srr", "x")
+  .CheckClass(x, "srr", "x")
   x@SpawnLag <- value
   methods::validObject(x)
   x
@@ -388,14 +392,14 @@ SpawnLag <- function(x) {
 #' @rdname SRR
 #' @export
 RelRecFun <- function(x) {
-  CheckClass(x, "srr", "x")
+  .CheckClass(x, "srr", "x")
   x@RelRecFun
 }
 
 #' @rdname SRR
 #' @export
 `RelRecFun<-` <- function(x, value) {
-  CheckClass(x, "srr", "x")
+  .CheckClass(x, "srr", "x")
   x@RelRecFun <- value
   methods::validObject(x)
   x
@@ -404,10 +408,8 @@ RelRecFun <- function(x) {
 #' @rdname SRR
 #' @export
 `SRR<-` <- function(x, value) {
-  AssignSlotRecursive(x, value, 'SRR')
+  .AssignSlotRecursive(x, value, 'SRR')
 }
-
-
 
 
 

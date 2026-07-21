@@ -58,7 +58,7 @@ CalcEquilibrium <- function(OM,
                             Complex = NULL) {
   
   if (inherits(OM, 'hist')) OM <- OM@OM
-  CheckClass(OM, 'om', 'OM')
+  .CheckClass(OM, 'om', 'OM')
   
   OM <- Populate(OM, silent = TRUE)
   
@@ -69,7 +69,7 @@ CalcEquilibrium <- function(OM,
     if (nSeason > 1L) Years <- unique(floor(Years))
   }
 
-  SPR0 <- CalcSPR0(OM, silent = TRUE) |> SubsetYear(Years = Years)
+  SPR0 <- CalcSPR0(OM, silent = TRUE) |> .SubsetYear(Years = Years)
   
   SPR0List <- Array2List(SPR0)
   
@@ -83,7 +83,7 @@ CalcEquilibrium <- function(OM,
     maxM <- purrr::map(complexes, \(stockInd) {
       purrr::map(OM@Stock[stockInd], \(stock)
                  stock@NaturalMortality@MeanAtAge |>
-                   ArraySubsetYear(Years) |>
+                   .ArraySubsetYear(Years) |>
                    max()
       ) |> unlist() |> max()
     }) |> unlist() |> max()
@@ -98,14 +98,14 @@ CalcEquilibrium <- function(OM,
   
   EqByComplex <- purrr::map(complexes, \(stockInd) {
     
-    inputs <- PrepPerRecruitInputs(
+    inputs <- .PrepPerRecruitInputs(
       StockList = OM@Stock[stockInd],
       FleetList = OM@Fleet[stockInd],
       SPR0List  = SPR0List[stockInd],
       Years     = Years
     )
     
-    PerRecruit <- CalcPerRecruit_F(
+    PerRecruit <- .CalcPerRecruitF(
       apicalF                   = apicalF,
       StockFleetAllocation      = inputs$StockFleetAllocation,
       NaturalMortalityList      = inputs$NaturalMortalityList,
@@ -117,7 +117,8 @@ CalcEquilibrium <- function(OM,
       SPFrom                    = inputs$SPFrom,
       SPR0List                  = inputs$SPR0List,
       FecundityList             = inputs$FecundityList,
-      WeightFleetList           = inputs$WeightFleetList,
+      WeightFleetRetainedList   = inputs$WeightFleetRetainedList,
+      WeightFleetSelectedList   = inputs$WeightFleetSelectedList,
       SelectivityFleetList      = inputs$SelectivityFleetList,
       RetentionFleetList        = inputs$RetentionFleetList,
       DiscardMortalityFleetList = inputs$DiscardMortalityFleetList,
@@ -128,27 +129,27 @@ CalcEquilibrium <- function(OM,
       CalendarYears             = inputs$CalendarYears
     )
     
-    CalcEquilibrium_internal(PerRecruit, inputs)
+    .CalcEquilibriumInternal(PerRecruit, inputs)
   })
   
   # assemble across complexes
   Eq <- new('equilibrium')
   Eq@apicalF     <- apicalF
-  Eq@SPR0        <- purrr::map(EqByComplex, \(e) e@SPR0)        |> JoinStockArrays(StockNames)
-  Eq@SPR         <- purrr::map(EqByComplex, \(e) e@SPR)         |> JoinStockArrays(StockNames)
-  Eq@RelRecruits <- purrr::map(EqByComplex, \(e) e@RelRecruits) |> JoinStockArrays(StockNames)
-  Eq@Recruits    <- purrr::map(EqByComplex, \(e) e@Recruits)    |> JoinStockArrays(StockNames)
-  Eq@Number      <- purrr::map(EqByComplex, \(e) e@Number)      |> JoinStockArrays(StockNames)
-  Eq@Biomass     <- purrr::map(EqByComplex, \(e) e@Biomass)     |> JoinStockArrays(StockNames)
-  Eq@SBiomass    <- purrr::map(EqByComplex, \(e) e@SBiomass)    |> JoinStockArrays(StockNames)
-  Eq@SProduction <- purrr::map(EqByComplex, \(e) e@SProduction) |> JoinStockArrays(StockNames)
-  Eq@Removals    <- purrr::map(EqByComplex, \(e) e@Removals)    |> JoinStockArrays(StockNames)
-  Eq@Landings    <- purrr::map(EqByComplex, \(e) e@Landings)    |> JoinStockArrays(StockNames)
+  Eq@SPR0        <- purrr::map(EqByComplex, \(e) e@SPR0)        |> .JoinStockArrays(StockNames)
+  Eq@SPR         <- purrr::map(EqByComplex, \(e) e@SPR)         |> .JoinStockArrays(StockNames)
+  Eq@RelRecruits <- purrr::map(EqByComplex, \(e) e@RelRecruits) |> .JoinStockArrays(StockNames)
+  Eq@Recruits    <- purrr::map(EqByComplex, \(e) e@Recruits)    |> .JoinStockArrays(StockNames)
+  Eq@Number      <- purrr::map(EqByComplex, \(e) e@Number)      |> .JoinStockArrays(StockNames)
+  Eq@Biomass     <- purrr::map(EqByComplex, \(e) e@Biomass)     |> .JoinStockArrays(StockNames)
+  Eq@SBiomass    <- purrr::map(EqByComplex, \(e) e@SBiomass)    |> .JoinStockArrays(StockNames)
+  Eq@SProduction <- purrr::map(EqByComplex, \(e) e@SProduction) |> .JoinStockArrays(StockNames)
+  Eq@Removals    <- purrr::map(EqByComplex, \(e) e@Removals)    |> .JoinStockArrays(StockNames)
+  Eq@Landings    <- purrr::map(EqByComplex, \(e) e@Landings)    |> .JoinStockArrays(StockNames)
   Eq
 }
 
 
-CalcEquilibrium_internal <- function(PerRecruit, inputs) {
+.CalcEquilibriumInternal <- function(PerRecruit, inputs) {
   
   SPRList <- PerRecruit@SPR |> Array2List('Stock')
   
@@ -184,7 +185,7 @@ CalcEquilibrium_internal <- function(PerRecruit, inputs) {
                             F    = dimnames(SPR)[['F']]))
     }) |>
     List2Array('Stock') |>
-    aperm(c('Sim', 'Stock', 'Year', 'F'))
+    .Aperm(c('Sim', 'Stock', 'Year', 'F'))
   
   R0_f <- AddDimension(inputs$R0, 'F', val = PerRecruit@apicalF) 
   Recruits <- ArrayMultiply(R0_f, RelRecruits)
@@ -212,4 +213,3 @@ CalcEquilibrium_internal <- function(PerRecruit, inputs) {
   Eq@SBiomass <- ArrayMultiply(SB_PR, Recruits)
   Eq
 }
-

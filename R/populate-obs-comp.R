@@ -50,7 +50,7 @@
 #' * Full `[nSim x nYear x nBin]` array.
 #'
 #' In conditioning mode, `ESS`, `Theta`, and `Shift` are populated internally
-#' by [ConditionObs_Comp()] and should not be set by the user.
+#' by `.ConditionObsComp()` and should not be set by the user.
 #'
 #' ## Composition generation model
 #'
@@ -69,7 +69,7 @@
 #' @return A populated [compobs-class] object.
 #'
 #' @seealso
-#' [CompObs()], [compobs-class], [PopulateObs()], [ConditionObs_Comp()]
+#' [CompObs()], [compobs-class], [PopulateObs()], `.ConditionObsComp()`
 #'
 #' @export
 PopulateCompObs <- function(Comp,
@@ -78,7 +78,7 @@ PopulateCompObs <- function(Comp,
                             ProjYears,
                             Bins    = NULL,
                             BinName = "Class") {
-  CheckClass(Comp, "compobs", "Comp")
+  .CheckClass(Comp, "compobs", "Comp")
   
   if (EmptyObject(Comp))
     return(Comp)
@@ -147,7 +147,5 @@ PopulateCompObs <- function(Comp,
   }
   Comp
 }
-
-
 
 

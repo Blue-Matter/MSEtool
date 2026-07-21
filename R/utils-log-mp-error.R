@@ -16,7 +16,7 @@
 #' Returns `NULL` if `MPAdvice` is a valid advice object.
 #'
 #' @keywords internal
-Log_MPError <- function(Advice, MPName, Data, Sim, Year) {
+.LogMPError <- function(Advice, MPName, Data, Sim, Year) {
   if (inherits(Advice, 'advice')) return(Advice)
     
   if (!inherits(Advice, 'try-error')) {

@@ -32,9 +32,10 @@
 #' dropping the simulation and time dimensions. Per-fleet aggregation then
 #' depends on `CatchData@Units[fl]`:
 #'
-#' - `"Number"`: summed over age and area via `resolveCatchNumber()`.
-#' - `"Biomass"`: multiplied by `WeightFleet` before summing over age and
-#'   area via `resolveCatchBiomass()`.
+#' - `"Number"`: summed over age and area via `.ResolveCatchNumber()`.
+#' - `"Biomass"`: multiplied by `WeightFleetRetained` (`type = "Landings"`) or
+#'   `WeightFleetSelected` (`type = "Discards"`) before summing over age and
+#'   area via `.ResolveCatchBiomass()`.
 #'
 #' ## Value Resolution
 #'
@@ -54,10 +55,10 @@
 #'   - \eqn{\varepsilon_{t}} — lognormal error multiplier for replicate `x`,
 #'     year \eqn{t} (`catchobs@Error[x, t]`); see [CatchObs()]
 #'
-#' CVs for the new year are resolved via `resolveCV()`, which looks up the
+#' CVs for the new year are resolved via `.ResolveCV()`, which looks up the
 #' fleet- and year-specific CV from the existing [catchdata-class] object.
 #'
-#' ## Obs Structure
+#' ## Obs .Structure
 #'
 #' Observation parameters are accessed via:
 #'
@@ -86,9 +87,9 @@
 #' - `@CV`: `[nYear+1 x nFleet]` array of CVs
 #'
 #' @seealso [CatchObs()], [CatchData()], [catchdata-class], [obs-class],
-#'   [GenHistData_Catch()], [GenProjData_Effort()]
+#'   `.GenHistDataCatch()`, `.GenProjDataEffort()`
 #' @keywords internal
-GenProjData_Catch <- function(x,
+.GenProjDataCatch <- function(x,
                               Proj,
                               DataYear,
                               YearsAll,
@@ -108,9 +109,9 @@ GenProjData_Catch <- function(x,
   nArea      <- nArea(Proj)
   Value      <- CatchData@Value
   CV         <- CatchData@CV
-  FleetNames <- resolveFleetNames(CatchData)
+  FleetNames <- .ResolveFleetNames(CatchData)
   nFleet     <- length(FleetNames)
-  CatchData  <- resolveUnits(CatchData, nFleet)
+  CatchData  <- .ResolveUnits(CatchData, nFleet)
   
   Real_Catch_Number <- purrr::map(slot(Proj, paste0(type, 'AtAge'))[stocks],
                                   \(catch_n) {
@@ -118,8 +119,8 @@ GenProjData_Catch <- function(x,
                                       abind::adrop(drop = c(1, 3))
                                   })
   
-  NewValue <- emptyFleetArray(DataYear, FleetNames)
-  NewCV    <- emptyFleetArray(DataYear, FleetNames)
+  NewValue <- .EmptyFleetArray(DataYear, FleetNames)
+  NewCV    <- .EmptyFleetArray(DataYear, FleetNames)
   
   for (fl in seq_len(nFleet)) {
     Obs <- slot(Proj@OM@Obs[[i]][[fl]], type)
@@ -133,17 +134,17 @@ GenProjData_Catch <- function(x,
     if (hasOMVal) {
       NewValue[, fl] <- slot(omData, type)@Value[TSIndex, fl]
     } else {
-      error <- ArraySubsetYear(Obs@Error, DataYear)[x]
+      error <- .ArraySubsetYear(Obs@Error, DataYear)[x]
       bias  <- Obs@Bias[x]
       
       NewValue[, fl] <- switch(CatchData@Units[fl],
-                               Number  = resolveCatchNumber(Real_Catch_Number, fl) * error * bias,
-                               Biomass = resolveCatchBiomass(Proj, stocks, x, TSIndex, fl, nArea,
-                                                             Real_Catch_Number) * error * bias
+                               Number  = .ResolveCatchNumber(Real_Catch_Number, fl) * error * bias,
+                               Biomass = .ResolveCatchBiomass(Proj, stocks, x, TSIndex, fl, nArea,
+                                                             Real_Catch_Number, type = type) * error * bias
       )
     }
     
-    NewCV[, fl] <- resolveCV(Proj, type, i, fl, TSIndex, CatchData, DataYear)
+    NewCV[, fl] <- .ResolveCV(Proj, type, i, fl, TSIndex, CatchData, DataYear)
   }
   
   CatchData@Value <- abind::abind(Value, NewValue, along = 1, use.dnns = TRUE)

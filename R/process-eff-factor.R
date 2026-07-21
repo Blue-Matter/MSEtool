@@ -1,4 +1,4 @@
-ProcessEFactor <- function(OM) {
+.ProcessEFactor <- function(OM) {
   if (!length(OM@EFactor)) {
     FleetNames <- FleetNames(OM)
     if (is.list(FleetNames))

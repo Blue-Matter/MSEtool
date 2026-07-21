@@ -16,8 +16,8 @@
 #' @return An initialized [OM()] object.
 #'
 #' @keywords internal
-StartUp <- function(OM, nSim=NULL, silent=FALSE) {
-  CheckClass(OM)
+.StartUp <- function(OM, nSim=NULL, silent=FALSE) {
+  .CheckClass(OM)
      
   if (!is.null(OM@Herm)) 
     stop('Herm not done yet!')

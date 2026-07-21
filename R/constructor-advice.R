@@ -33,32 +33,26 @@
 #'
 #' @param ApicalF Numeric array specifying target apical fishing mortality. Not currently used
 #'
-#' @param BagLimit Numeric vector or `NULL`. Aggregate bag limit in fish per
-#'   angler per trip (when `LimitType = "angler"`) or fish per vessel per
-#'   trip (when `LimitType = "boat"`). Accepted forms:
+#' @param BagLimit Numeric vector or `NULL`. Bag limit in fish per angler per
+#'   trip (when `LimitType = "angler"`) or fish per vessel per trip (when
+#'   `LimitType = "boat"`), for this stock's catch by each fleet. Accepted
+#'   forms:
 #'   - `NULL` (default): no bag limit regulation is active for any fleet.
 #'   - Single numeric value: the same limit applied to all fleets.
 #'   - Numeric vector of length `nFleet`: fleet-specific bag limits. `NA`
-#'     for a given fleet position means no aggregate limit applies to that
-#'     fleet.
+#'     for a given fleet position means no limit applies to that fleet.
 #'
 #'   The bag limit regulation persists across time steps until a new
 #'   [Advice()] object is returned by the MP. See Details.
 #'
-#' @param SpeciesLimit Numeric matrix or `NULL`. Species-specific bag limits
-#'   (fish per angler or vessel per trip) within a complex. Accepted forms:
-#'   - `NULL` (default): no species-specific limits are active.
-#'   - Numeric matrix with dimensions `nFleet x nStock`: fleet- and
-#'     species-specific limits. `NA` in a given fleet-stock position means
-#'     no species-specific limit applies to that fleet-stock combination.
+#'   An aggregate bag limit pooling catch across several stocks for one
+#'   fleet is declared separately via `AggregateBagLimit()`, available to
+#'   `mmp`-class management procedures. A stock's own `BagLimit` then acts
+#'   as an optional species-specific sub-cap within that pooled limit for
+#'   any stock included in the group.
 #'
-#'   `SpeciesLimit` operates simultaneously with `BagLimit` — a trip is
-#'   constrained whenever either limit is reached first. The regulation
-#'   persists across time steps until a new [Advice()] object is returned
-#'   by the MP. See Details.
-#'
-#' @param LimitType Character or `NULL`. Whether `BagLimit` and `SpeciesLimit`
-#'   are per-angler or per-vessel regulations. Either length 1 (applied to all
+#' @param LimitType Character or `NULL`. Whether `BagLimit` is a per-angler
+#'   or per-vessel regulation. Either length 1 (applied to all
 #'   fleets) or a character vector of length `nFleet`. Valid values:
 #'   - `"angler"` (default): limits are per angler per trip; the fleet-level
 #'     retention cap is \eqn{B_f \cdot A_{f,t} \cdot T_{f,t}}, where
@@ -172,24 +166,22 @@
 #' 
 #' ## Bag Limit
 #'
-#' `BagLimit`, `SpeciesLimit`, `LimitType`, and `ClosureMode` together define
-#' a bag-limit regulation. The bag limit caps the number of fish an angler
-#' (or vessel) may retain per trip for either a single species or across all
-#' species within a complex.
-#'
-#' `BagLimit` sets an aggregate limit across all species in the complex.
-#' 
-#' `SpeciesLimit` sets species-specific limits within the complex. Both may
-#' be active simultaneously, a trip is constrained whenever either limit is
-#' reached first. `NA` in a fleet position of `BagLimit`, or in a fleet-stock
-#' position of `SpeciesLimit`, means no limit applies for that fleet or
-#' fleet-stock combination respectively.
+#' `BagLimit`, `LimitType`, and `ClosureMode` together define a bag-limit
+#' regulation for this stock's catch by each fleet: the number of fish an
+#' angler (or vessel) may retain per trip. `NA` in a fleet position of
+#' `BagLimit` means no limit applies for that fleet.
 #'
 #' When `ClosureMode = "discard"`, catch exceeding the retention cap is
 #' converted to discards and discard mortality is applied via the fleet's
 #' [DiscardMortality()] object. When `ClosureMode = "stop"`, effort is
-#' reduced to prevent exceeding the bag limit and no additional discards are 
+#' reduced to prevent exceeding the bag limit and no additional discards are
 #' generated.
+#'
+#' A bag limit pooling catch across several stocks for one fleet (rather
+#' than a single stock's own catch) is declared separately via
+#' `AggregateBagLimit()`, available to `mmp`-class management procedures. A
+#' stock's own `BagLimit` may still be set for any stock included in such a
+#' group, acting as a species-specific sub-cap within the pooled limit.
 #'
 #' ## ApicalF
 #'
@@ -251,7 +243,18 @@
 #'   `Pars` should be a named list of parameters, where each parameter can be either
 #'   a single numeric value, or a numeric vector length `nArea` for area-specific schedules.
 #'  
-#' @return An [advice-class] object.
+#' @param x An [advice-class] object, for the accessor and replacement
+#'   functions below.
+#' @param value The replacement value, for the replacement functions below.
+#'
+#' @return
+#' - `Advice()` returns an [advice-class] object.
+#' - `TAC()`, `TACType()`, `TACUnit()`, `Effort()`, `EffType()`, `Closure()`,
+#'   `Selectivity()`, `Retention()`, `DiscardMortality()`, `ApicalF()`,
+#'   `BagLimit()`, `LimitType()`, `ClosureMode()`, `Misc()` return the
+#'   corresponding slot from an [advice-class] object `x`.
+#' - Their replacement forms (e.g. `TAC<-`) return `x` with the corresponding
+#'   slot updated.
 #'
 #' @seealso
 #' - [advice-class] for the class definition and slot-level documentation.
@@ -275,7 +278,6 @@ Advice <- function(TAC              = NULL,
                    DiscardMortality = NULL,
                    ApicalF          = NULL,
                    BagLimit         = NULL,
-                   SpeciesLimit     = NULL,
                    LimitType        = 'angler',
                    ClosureMode      = 'discard',
                    Misc             = list()) {
@@ -310,16 +312,7 @@ Advice <- function(TAC              = NULL,
   
   if (!is.null(BagLimit) && any(BagLimit < 0, na.rm = TRUE))
     cli::cli_abort("`BagLimit` must be non-negative")
-  
-  if (!is.null(SpeciesLimit) && !is.numeric(SpeciesLimit))
-    cli::cli_abort("`SpeciesLimit` must be numeric")
-  
-  if (!is.null(SpeciesLimit) && !is.matrix(SpeciesLimit))
-    cli::cli_abort("`SpeciesLimit` must be a matrix with dimensions `nFleet x nStock`")
-  
-  if (!is.null(SpeciesLimit) && any(SpeciesLimit < 0, na.rm = TRUE))
-    cli::cli_abort("`SpeciesLimit` must be non-negative")
-  
+
   if (!is.null(Selectivity) && !is.list(Selectivity) &&
       !inherits(Selectivity, 'selectivity'))
     cli::cli_abort(
@@ -354,10 +347,99 @@ Advice <- function(TAC              = NULL,
     DiscardMortality = DiscardMortality,
     ApicalF          = ApicalF,
     BagLimit         = BagLimit,
-    SpeciesLimit     = SpeciesLimit,
     LimitType        = LimitType,
     ClosureMode      = ClosureMode,
     Misc             = Misc,
     Log              = list()
   )
+}
+
+#' @rdname Advice
+#' @export
+`TAC<-` <- function(x, value) {
+  .AssignSlot(x, value, 'TAC')
+}
+
+#' @rdname Advice
+#' @export
+TACType <- function(x) {
+  .AccessSlot(x, 'TACType')
+}
+
+#' @rdname Advice
+#' @export
+`TACType<-` <- function(x, value) {
+  .AssignSlot(x, value, 'TACType')
+}
+
+#' @rdname Advice
+#' @export
+TACUnit <- function(x) {
+  .AccessSlot(x, 'TACUnit')
+}
+
+#' @rdname Advice
+#' @export
+`TACUnit<-` <- function(x, value) {
+  .AssignSlot(x, value, 'TACUnit')
+}
+
+#' @rdname Advice
+#' @export
+EffType <- function(x) {
+  .AccessSlot(x, 'EffType')
+}
+
+#' @rdname Advice
+#' @export
+`EffType<-` <- function(x, value) {
+  .AssignSlot(x, value, 'EffType')
+}
+
+#' @rdname Advice
+#' @export
+ApicalF <- function(x) {
+  .AccessSlot(x, 'ApicalF')
+}
+
+#' @rdname Advice
+#' @export
+`ApicalF<-` <- function(x, value) {
+  .AssignSlot(x, value, 'ApicalF')
+}
+
+#' @rdname Advice
+#' @export
+BagLimit <- function(x) {
+  .AccessSlot(x, 'BagLimit')
+}
+
+#' @rdname Advice
+#' @export
+`BagLimit<-` <- function(x, value) {
+  .AssignSlot(x, value, 'BagLimit')
+}
+
+#' @rdname Advice
+#' @export
+LimitType <- function(x) {
+  .AccessSlot(x, 'LimitType')
+}
+
+#' @rdname Advice
+#' @export
+`LimitType<-` <- function(x, value) {
+  .AssignSlot(x, value, 'LimitType')
+}
+
+#' @rdname Advice
+#' @export
+ClosureMode <- function(x) {
+  .AccessSlot(x, 'ClosureMode')
+}
+
+#' @rdname Advice
+#' @export
+`ClosureMode<-` <- function(x, value) {
+  .AssignSlot(x, value, 'ClosureMode')
 }

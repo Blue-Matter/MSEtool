@@ -78,7 +78,7 @@ UpdateSlots <- function(object) {
     if (inherits(current, 'try-error')) next
     
     updated <- if (isS4(current))    UpdateSlots(current)   else
-      if (is.list(current)) update_list(current)   else
+      if (is.list(current)) .UpdateList(current)   else
         current
     
     if (!identical(current, updated))
@@ -89,9 +89,9 @@ UpdateSlots <- function(object) {
  
 }
 
-any_missing_slots <- function(x) {
+.AnyMissingSlots <- function(x) {
   if (is.list(x))
-    return(any(vapply(x, any_missing_slots, logical(1))))
+    return(any(vapply(x, .AnyMissingSlots, logical(1))))
   
   if (!isS4(x))
     return(FALSE)
@@ -100,22 +100,21 @@ any_missing_slots <- function(x) {
     current <- try(slot(x, sl), silent=TRUE)
     if (inherits(current, 'try-error'))
       return(TRUE)
-    if (isS4(current)  && any_missing_slots(current)) return(TRUE)
-    if (is.list(current) && any_missing_slots(current)) return(TRUE)
+    if (isS4(current)  && .AnyMissingSlots(current)) return(TRUE)
+    if (is.list(current) && .AnyMissingSlots(current)) return(TRUE)
   }
   FALSE
 }
 
-update_list <- function(lst) {
+.UpdateList <- function(lst) {
   if (!is.list(lst))         return(lst)
-  if (!any_missing_slots(lst)) return(lst)
+  if (!.AnyMissingSlots(lst)) return(lst)
   
   updated        <- lapply(lst, \(x) {
-    if (is.list(x)) return(update_list(x))
+    if (is.list(x)) return(.UpdateList(x))
     if (isS4(x))    return(UpdateSlots(x))
     x
   })
   names(updated) <- names(lst)
   updated
 }
-

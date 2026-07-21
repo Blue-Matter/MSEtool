@@ -107,4 +107,3 @@ setValidity("stock", function(object) {
   # TODO: structural consistency checks
   TRUE
 })
-

@@ -20,7 +20,7 @@
 #'
 #' @param Model Character or function or `NULL`. Retention model identifier.
 #'   If `NULL` (default), the model is inferred automatically from the names
-#'   in `Pars` via [FindModel()]. May also be supplied as a custom R function
+#'   in `Pars` via `.FindModel()`. May also be supplied as a custom R function
 #'   with arguments matching those in `Pars`. See [RetentionModels()] for
 #'   built-in options.
 #' @param MeanAtAge Numeric array or `NULL`. Mean retention-at-age with
@@ -111,8 +111,7 @@
 #'
 #' @family fleet
 #'
-#' @examples
-#' # See man-examples/class-Retention.R
+#' @example man-examples/class-Retention.R
 #'
 #' @export
 Retention <- function(Pars         = list(),
@@ -124,9 +123,12 @@ Retention <- function(Pars         = list(),
                       isRel        = FALSE,
                       Misc         = list()) {
   
-  if (isFleetOrList(Pars))
-    return(ExtractFleetSlot(Pars, 'Retention'))
-  
+  if (.IsFleetOrList(Pars))
+    return(.ExtractFleetSlot(Pars, 'Retention'))
+
+  if (inherits(Pars, 'advice'))
+    return(.AccessSlot(Pars, 'Retention'))
+
   if (!inherits(Pars, 'list'))
     cli::cli_abort(c(
       'x' = '`Pars` must be a list',
@@ -150,9 +152,7 @@ Retention <- function(Pars         = list(),
 #' @rdname Retention
 #' @export
 `Retention<-` <- function(x,value) {
-  AssignFleetSlot(x, value, 'Retention')
+  .AssignFleetSlot(x, value, 'Retention')
 }
-
-
 
 

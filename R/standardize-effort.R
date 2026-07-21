@@ -77,11 +77,11 @@
 #'
 #' @examples
 #' \dontrun{
-#' OM_standardized <- StandardizeEffort(OM)
+#' OM_standardized <- .StandardizeEffort(OM)
 #' # Inspect back-calculated targeting
 #' OM_standardized@StockTargeting@Targeting
 #' }
-StandardizeEffort <- function(OM,
+.StandardizeEffort <- function(OM,
                               populate = TRUE,
                               fit_stock_targeting = TRUE,
                               generate_stock_targeting = TRUE) {
@@ -168,14 +168,16 @@ StandardizeEffort <- function(OM,
       next
     }
     
-    OM <- CaptureLog(OM,
+    OM <- .CaptureLog(OM,
                      string = cli::format_inline(
                        "Effort values for Fleet {.val {fleet_names[fl]}} differ across stocks."),
-                     name = 'StandardizeEffort')
-    
-    OM <- CaptureLog(OM,
+                     name = '.StandardizeEffort',
+                     type = 'assumption')
+
+    OM <- .CaptureLog(OM,
                      string = cli::format_inline(
-                       "Standardizing to geometric mean effort over active stocks; absorbing deviations into {.val Targeting}."))
+                       "Standardizing to geometric mean effort over active stocks; absorbing deviations into {.val Targeting}."),
+                     type = 'assumption')
     
     # Geometric mean effort over active stocks at each [sim, year] cell.
     # A stock is active if its effort exceeds tol 
@@ -209,7 +211,7 @@ StandardizeEffort <- function(OM,
       targeting_st[is_active] <- E_st[is_active] / StandardEffort[is_active]
       
       sims <- dimnames(STarget@Targeting)$Sim |> as.numeric()
-      STarget@Targeting[, st, fl, seq_len(n_years)] <- SubsetSim(targeting_st,Sims = sims)
+      STarget@Targeting[, st, fl, seq_len(n_years)] <- .SubsetSim(targeting_st,Sims = sims)
     }
     
     # Update effort for all stocks for this fleet to the geometric mean
@@ -229,4 +231,3 @@ StandardizeEffort <- function(OM,
   
   OM
 }
-

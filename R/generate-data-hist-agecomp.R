@@ -48,7 +48,7 @@
 #' - `Theta`: defaults to `1` if `NULL`, recovering a near-multinomial draw
 #' - `Shift`: defaults to zero for all bins if `NULL`, applying no tilt
 #'
-#' ## Obs Structure
+#' ## Obs .Structure
 #'
 #' Observation parameters are accessed via:
 #'
@@ -74,9 +74,9 @@
 #' - `@Units`: `"years"`
 #'
 #' @seealso [CompObs()], [CompData()], [compdata-class], [obs-class],
-#'   [rDirichletMultinomial()], [GenHistData_Catch()]
+#'   [rDirichletMultinomial()], `.GenHistDataCatch()`
 #' @keywords internal
-GenHistData_AgeComp <- function(x, Data, Hist, HistYears, i, stocks, FleetNames,
+.GenHistDataAgeComp <- function(x, Data, Hist, HistYears, i, stocks, FleetNames,
                                 type = c('LandingsAtAge', 'DiscardsAtAge')) {
   
   type <- match.arg(type, c('LandingsAtAge', 'DiscardsAtAge'))
@@ -106,11 +106,11 @@ GenHistData_AgeComp <- function(x, Data, Hist, HistYears, i, stocks, FleetNames,
   ageclasses <- purrr::map(CatchAtAge, \(st) as.numeric(dimnames(st)$Age))
  
   if (length(CatchAtAge)>1 && ! all(duplicated(ageclasses)[-1])) {
-    CatchAtAge <- align_age_dim(CatchAtAge)
+    CatchAtAge <- .AlignAgeDim(CatchAtAge)
   }
   CatchAtAge <- CatchAtAge |> List2Array('Stock') |> SumOverStock()
   
-  CatchAtAge <- SubsetYear(CatchAtAge, HistYears)
+  CatchAtAge <- .SubsetYear(CatchAtAge, HistYears)
   
   AgeClasses <- dimnames(CatchAtAge)$Age |> as.numeric()
   nAge       <- length(AgeClasses)
@@ -127,18 +127,18 @@ GenHistData_AgeComp <- function(x, Data, Hist, HistYears, i, stocks, FleetNames,
       next()
     
     sim_ss     <- min(x, nrow(CompObs@SampleSize))
-    SampleSize <- SubsetYear(CompObs@SampleSize, HistYears)[sim_ss, ]
+    SampleSize <- .SubsetYear(CompObs@SampleSize, HistYears)[sim_ss, ]
     
     ESS <- if (!is.null(CompObs@ESS)) {
       sim_ess <- min(x, nrow(CompObs@ESS))
-      SubsetYear(CompObs@ESS, HistYears)[sim_ess, ]
+      .SubsetYear(CompObs@ESS, HistYears)[sim_ess, ]
     } else {
       SampleSize
     }
     
     Theta <- if (!is.null(CompObs@Theta)) {
       sim_th <- min(x, nrow(CompObs@Theta))
-      SubsetYear(CompObs@Theta, HistYears)[sim_th, ]
+      .SubsetYear(CompObs@Theta, HistYears)[sim_th, ]
     } else {
       rep(1, nTS)
     }
@@ -146,7 +146,7 @@ GenHistData_AgeComp <- function(x, Data, Hist, HistYears, i, stocks, FleetNames,
     hasShift <- !is.null(CompObs@Shift)
     if (hasShift) {
       sim_sh <- min(x, dim(CompObs@Shift)[1])
-      Shift  <- SubsetYear(CompObs@Shift, HistYears)[sim_sh,,]  # [nYear x nBin]
+      Shift  <- .SubsetYear(CompObs@Shift, HistYears)[sim_sh,,]  # [nYear x nBin]
     }
     
     for (yr in seq_len(nTS)) {
@@ -180,7 +180,7 @@ GenHistData_AgeComp <- function(x, Data, Hist, HistYears, i, stocks, FleetNames,
   CompData
 }
 
-align_age_dim <- function(arr_list, dim_name = "Age") {
+.AlignAgeDim <- function(arr_list, dim_name = "Age") {
   
   all_ages <- sort(unique(as.numeric(unlist(
     lapply(arr_list, function(a) dimnames(a)[[dim_name]])

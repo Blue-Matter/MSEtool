@@ -1,7 +1,7 @@
 #' Update selectivity or retention across all simulations
 #'
 #' Expands selectivity/retention arrays for future projection years then
-#' delegates per-simulation updates to [Update_Selectivity_Sim()].
+#' delegates per-simulation updates to `.UpdateSelectivitySim()`.
 #' 
 #' @param Proj A `Proj` object.
 #' @param Year Integer. Current projection year.
@@ -16,7 +16,7 @@
 #' @param type One of `"Selectivity"` or `"Retention"`.
 #' @return Updated `Proj` object.
 #' @keywords internal
-Update_Selectivity <- function(Proj,
+.UpdateSelectivity <- function(Proj,
                                Year, 
                                AdviceSimList, 
                                LastAdviceSimList,
@@ -34,7 +34,7 @@ Update_Selectivity <- function(Proj,
   nArea       <- length(Areas)
   FutureYears <- YearsProj[YearsProj >= Year]
   
-  if (AllAdviceNull(AdviceSimList, type))
+  if (.AllAdviceNull(AdviceSimList, type))
     return(Proj)
   
   # Expand Selectivity/Retention arrays to cover future years
@@ -50,7 +50,7 @@ Update_Selectivity <- function(Proj,
   
   
   for (sim in seq_len(nSim)) {
-    Proj <- Update_Selectivity_Sim(
+    Proj <- .UpdateSelectivitySim(
       Proj           = Proj,
       sim            = sim,
       FutureYears    = FutureYears,
@@ -74,6 +74,12 @@ Update_Selectivity <- function(Proj,
 #' years, updating both `Proj@OM@Fleet` and the relevant `Proj@Misc` lists.
 #' Skips a complex when management is unchanged or advice is `NULL`.
 #'
+#' The fully-populated (fleet-wide-adoption) arrays are then blended against
+#' the pre-update, status-quo arrays using `Imp@Size@Compliance` -- the
+#' fraction of the fleet that adopts the new advice this year (default `1`,
+#' i.e. full/immediate adoption, when `Imp`/`Compliance` is unset). See
+#' [imp-class].
+#'
 #' @param Proj A `Proj` object.
 #' @param sim Integer. Simulation index.
 #' @param FutureYears Integer vector of years from current year to end of projection.
@@ -87,7 +93,7 @@ Update_Selectivity <- function(Proj,
 #' @param type One of `"Selectivity"` or `"Retention"`.
 #' @return Updated `Proj` object.
 #' @keywords internal
-Update_Selectivity_Sim <- function(Proj,
+.UpdateSelectivitySim <- function(Proj,
                                    sim,
                                    FutureYears,
                                    AdviceList,
@@ -111,12 +117,13 @@ Update_Selectivity_Sim <- function(Proj,
 
   for (i in seq_along(AdviceList)) {
     stocks          <- Complexes[[i]]
+    ComplexName     <- names(Complexes)[i]
     Advice          <- AdviceList[[i]]
     AdvicePrevious  <- LastAdviceList[[i]]
     
     if (!inherits(Advice, 'advice')) next    
     if (is.null(slot(Advice,type))) next
-    if (UnchangedManagement(Advice, AdvicePrevious, slotName=type)) next
+    if (.UnchangedManagement(Advice, AdvicePrevious, slotName=type)) next
     
     SelectList <- slot(Advice, type) 
     
@@ -166,8 +173,8 @@ Update_Selectivity_Sim <- function(Proj,
           if (LinIntAge) {
             # Increases the temporal resolution of `ObjectMeanAtAge` and `ASK`
             # by linear interpolate Mean length-at-age and CV length-at-age
-            ALK_1 <- CalcAgeSizeKey(MeanAtAge=LinearInterpolate_Age(Length@MeanAtAge),
-                                  CVatAge=LinearInterpolate_Age(Length@CVatAge),
+            ALK_1 <- CalcAgeSizeKey(MeanAtAge=.LinearInterpolateAge(Length@MeanAtAge),
+                                  CVatAge=.LinearInterpolateAge(Length@CVatAge),
                                   Classes=Length@Classes,
                                   TruncSD=Length@TruncSD,
                                   Dist=Length@Dist,
@@ -179,8 +186,8 @@ Update_Selectivity_Sim <- function(Proj,
         
         if (ReComputeALK) {
           if (LinIntAge) {
-            ALK <- CalcAgeSizeKey(MeanAtAge=LinearInterpolate_Age(Length@MeanAtAge),
-                                    CVatAge=LinearInterpolate_Age(Length@CVatAge),
+            ALK <- CalcAgeSizeKey(MeanAtAge=.LinearInterpolateAge(Length@MeanAtAge),
+                                    CVatAge=.LinearInterpolateAge(Length@CVatAge),
                                     Classes=Classes,
                                     TruncSD=Length@TruncSD,
                                     Dist=Length@Dist,
@@ -208,9 +215,9 @@ Update_Selectivity_Sim <- function(Proj,
         FleetLength@Classes <- Classes
         
         # Reshape mean-at-x slots to [nClass, nArea] then add Sim/Year dims
-        select <- ProcessSelectMeanAtAge(select,    Ages,   nArea, type, Year=FutureYears[1])
-        select <- ProcessSelectMeanAtLength(select, FleetLength, nArea, type, Year=FutureYears[1])
-        select <- ProcessSelectMeanAtWeight(select, Weight, nArea, type, Year=FutureYears[1])
+        select <- .ProcessSelectMeanAtAge(select,    Ages,   nArea, type, Year=FutureYears[1])
+        select <- .ProcessSelectMeanAtLength(select, FleetLength, nArea, type, Year=FutureYears[1])
+        select <- .ProcessSelectMeanAtWeight(select, Weight, nArea, type, Year=FutureYears[1])
         
         select <- populate(select,
                            Ages     = Ages,
@@ -225,19 +232,52 @@ Update_Selectivity_Sim <- function(Proj,
                            replace  = TRUE,
                            ASKOverride = ALK)
         
-        select@MeanAtAge <- set_sim_dimname(select@MeanAtAge, sim) |> 
+        select@MeanAtAge <- .SetSimDimname(select@MeanAtAge, sim) |> 
           ExtendAreas(1:nArea) |> 
           ExtendYears(FutureYears)
         
-        select@MeanAtLength <- set_sim_dimname(select@MeanAtLength, sim) |>
+        select@MeanAtLength <- .SetSimDimname(select@MeanAtLength, sim) |>
           ExtendAreas(1:nArea) |>
           ExtendYears(FutureYears)
         
-        select@MeanAtWeight <- set_sim_dimname(select@MeanAtWeight, sim) |> 
+        select@MeanAtWeight <- .SetSimDimname(select@MeanAtWeight, sim) |> 
           ExtendAreas(1:nArea) |> 
           ExtendYears(FutureYears)
         
         target <- slot(Proj@OM@Fleet[[st]][[fl]], type)
+
+        # Imp@Size@Compliance: fraction of the fleet adopting this year's
+        # Selectivity/Retention advice; the rest stays on the pre-update
+        # (`target`, already extended to FutureYears above) curve. Missing
+        # Imp/Compliance defaults to 1 -- full, immediate adoption, i.e. no
+        # change from behaviour before Imp@Size existed. Compliance is
+        # populated to [Sim x Year] by PopulateImpSlot() -- look up this
+        # sim/year directly rather than via .ResolveComplianceMatrix(), to
+        # avoid rebuilding the whole [Fleet x Complex] matrix on every sim.
+        ImpCx    <- Proj@OM@Imp[[ComplexName]]
+        ImpObj   <- if (!is.null(ImpCx)) ImpCx[[FleetNames[fl]]] else NULL
+        compFull <- if (!is.null(ImpObj)) ImpObj@Size@Compliance else NULL
+        yr_chr   <- as.character(FutureYears[1])
+        comp     <- if (!is.null(compFull) && length(compFull) &&
+                        !is.null(dim(compFull)) && yr_chr %in% dimnames(compFull)$Year) {
+          compFull[min(sim, nrow(compFull)), yr_chr]
+        } else if (length(compFull)) {
+          as.numeric(compFull)[1]
+        } else {
+          NA_real_
+        }
+        if (is.na(comp)) comp <- 1
+
+        if (comp < 1) {
+          baseline_age    <- Subset(target@MeanAtAge,    Sims = sim, Years = FutureYears)
+          baseline_length <- Subset(target@MeanAtLength, Sims = sim, Years = FutureYears)
+          baseline_weight <- Subset(target@MeanAtWeight, Sims = sim, Years = FutureYears)
+
+          select@MeanAtAge    <- comp * select@MeanAtAge    + (1 - comp) * baseline_age
+          select@MeanAtLength <- comp * select@MeanAtLength + (1 - comp) * baseline_length
+          select@MeanAtWeight <- comp * select@MeanAtWeight + (1 - comp) * baseline_weight
+        }
+
         ArrayFill(target@MeanAtAge)    <- select@MeanAtAge
         ArrayFill(target@MeanAtLength) <- select@MeanAtLength
         ArrayFill(target@MeanAtWeight) <- select@MeanAtWeight
@@ -259,12 +299,12 @@ Update_Selectivity_Sim <- function(Proj,
 
 #' Update retention across all simulations
 #'
-#' Thin wrapper around [Update_Selectivity()] with `type = "Retention"`.
+#' Thin wrapper around `.UpdateSelectivity()` with `type = "Retention"`.
 #'
-#' @inheritParams Update_Selectivity
+#' @inheritParams .UpdateSelectivity
 #' @return Updated `Proj` object.
 #' @keywords internal
-Update_Retention <- function(Proj,
+.UpdateRetention <- function(Proj,
                              Year, 
                              AdviceSimList,
                              LastAdviceSimList,
@@ -276,7 +316,7 @@ Update_Retention <- function(Proj,
   
   type <- 'Retention'
   
-  Update_Selectivity(Proj,
+  .UpdateSelectivity(Proj,
                      Year, 
                      AdviceSimList,
                      LastAdviceSimList, 
@@ -289,7 +329,7 @@ Update_Retention <- function(Proj,
   
 }
 
-set_sim_dimname <- function(x, sim) {
+.SetSimDimname <- function(x, sim) {
   if (is.null(x)) return(x)
   if (!is.array(x)) return(x)
   

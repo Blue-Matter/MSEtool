@@ -19,7 +19,7 @@
 #'
 #' @param Model Character or function or `NULL`. Selectivity model identifier.
 #'   If `NULL` (default), the model is inferred automatically from the names
-#'   in `Pars` via [FindModel()]. May also be supplied as a custom R function
+#'   in `Pars` via `.FindModel()`. May also be supplied as a custom R function
 #'   with arguments matching those in `Pars`. See [SelectivityModels()] for
 #'   built-in options.
 #' @param MeanAtAge Numeric array or `NULL`. Mean selectivity-at-age with
@@ -116,8 +116,7 @@
 #'
 #' @family fleet
 #'
-#' @examples
-#' # See man-examples/class-Selectivity.R
+#' @example man-examples/class-Selectivity.R
 #'
 #' @export
 Selectivity <- function(Pars         = list(),
@@ -129,9 +128,12 @@ Selectivity <- function(Pars         = list(),
                         isRel        = FALSE,
                         Misc         = list()) {
   
-  if (isFleetOrList(Pars))
-    return(ExtractFleetSlot(Pars, 'Selectivity'))
-  
+  if (.IsFleetOrList(Pars))
+    return(.ExtractFleetSlot(Pars, 'Selectivity'))
+
+  if (inherits(Pars, 'advice'))
+    return(.AccessSlot(Pars, 'Selectivity'))
+
   if (!inherits(Pars, 'list'))
     cli::cli_abort(c(
       'x' = '`Pars` must be a list',
@@ -155,14 +157,14 @@ Selectivity <- function(Pars         = list(),
 #' @rdname Selectivity
 #' @export
 isRel <- function(x) {
-  CheckClass(x, "selectivity", "x")
+  .CheckClass(x, "selectivity", "x")
   x@isRel
 }
 
 #' @rdname Selectivity
 #' @export
 `isRel<-` <- function(x, value) {
-  CheckClass(x, "selectivity", "x")
+  .CheckClass(x, "selectivity", "x")
   x@isRel <- value
   methods::validObject(x)
   x
@@ -171,10 +173,8 @@ isRel <- function(x) {
 #' @rdname Selectivity
 #' @export
 `Selectivity<-`<- function(x,value) {
-  AssignFleetSlot(x, value, 'Selectivity')
+  .AssignFleetSlot(x, value, 'Selectivity')
 }
-
-
 
 
 

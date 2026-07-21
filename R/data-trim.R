@@ -22,12 +22,12 @@
 #'
 #'
 #' @seealso
-#' * `SubsetYear()` for year-based subsetting
+#' * `.SubsetYear()` for year-based subsetting
 #' * `Years()` for extracting available years
 #'
 #' @export
 DataTrim <- function(Data, Year) {
-  CheckClass(Data, 'data', 'Data')
+  .CheckClass(Data, 'data', 'Data')
 
   if (!is.numeric(Year))
     cli::cli_abort("`Year` must be a numeric value")
@@ -43,7 +43,7 @@ DataTrim <- function(Data, Year) {
   
   OutYears <- Years[Years <= Year]
   
-  OutData <- SubsetYear(Data, OutYears, Impute =FALSE)
+  OutData <- .SubsetYear(Data, OutYears, Impute =FALSE)
   OutData@Advice <-  Data@Advice
   OutData
 }

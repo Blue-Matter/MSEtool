@@ -10,9 +10,9 @@
 #' @return Logical; `TRUE` if all [Obs()] objects are present and non-empty,
 #'   `FALSE` if any are missing or empty.
 #' @keywords internal
-CheckObs <- function(OM, Proj=FALSE) {
+.CheckObs <- function(OM, Proj=FALSE) {
 
-  CheckClass(OM, c('om', 'hist'))
+  .CheckClass(OM, c('om', 'hist'))
   
   if (inherits(OM,'hist')) {
     Obs <- OM@OM@Obs
@@ -20,11 +20,11 @@ CheckObs <- function(OM, Proj=FALSE) {
     Obs <- OM@Obs
   }
   if (is.null(Obs)) {
-    OM <- CaptureLog(OM, 
+    OM <- .CaptureLog(OM, 
                string =
                  cli::format_inline("No {.help MSEtool::Obs} object has been provided in the `OM` object.
        No Data will be generated."),
-               name = 'GenerateHistoricalData')
+               name = '.GenerateHistoricalData')
     
     return(OM)
   }
@@ -36,21 +36,21 @@ CheckObs <- function(OM, Proj=FALSE) {
   if (!any(unlist(Empty)))
     return(OM)
   
-  OM <- CaptureLog(OM,
+  OM <- .CaptureLog(OM,
                    string = cli::format_inline("No {.help MSEtool::Obs} object found for the following: "),
-                   name = 'GenerateHistoricalData')
+                   name = '.GenerateHistoricalData')
             
   for (i in seq_along(Empty)) {
     for (j in seq_along(Empty[[i]])) {
       if (Empty[[i]][[j]]) {
-        OM <- CaptureLog(OM,
+        OM <- .CaptureLog(OM,
                          string = cli::format_inline("Stock: {.val {names(Empty)[i]}} and Fleet: {.val {names(Empty[[i]])[j]}}.")
                          )
       }
     }
   }
   
-  OM <- CaptureLog(OM,
+  OM <- .CaptureLog(OM,
                    string = cli::format_inline("No Data will be generated for these stocks/fleets.")
   )
   

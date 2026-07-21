@@ -35,8 +35,8 @@
 #' @name extract-unfished
 NULL
 
-.unfished_slot <- function(Hist, type, slot_name, Reduce) {
-  CheckClass(Hist, 'hist', 'Hist')
+.UnfishedSlot <- function(Hist, type, slot_name, Reduce) {
+  .CheckClass(Hist, 'hist', 'Hist')
   type <- match.arg(type, c('Equilibrium', 'Dynamic'))
   
   obj <- if (type == 'Equilibrium') {
@@ -51,20 +51,19 @@ NULL
 #' @export
 #' @rdname extract-unfished
 B0  <- function(Hist, type=c('Equilibrium','Dynamic'), Reduce=TRUE) 
-  .unfished_slot(Hist, type, 'Biomass', Reduce)
+  .UnfishedSlot(Hist, type, 'Biomass', Reduce)
 
 #' @export
 #' @rdname extract-unfished
 SB0 <- function(Hist, type=c('Equilibrium','Dynamic'), Reduce=TRUE) 
-  .unfished_slot(Hist, type, 'SBiomass', Reduce)
+  .UnfishedSlot(Hist, type, 'SBiomass', Reduce)
 
 #' @export
 #' @rdname extract-unfished
 SP0 <- function(Hist, type=c('Equilibrium','Dynamic'), Reduce=TRUE) 
-  .unfished_slot(Hist, type, 'SProduction', Reduce)
+  .UnfishedSlot(Hist, type, 'SProduction', Reduce)
 
 #' @export
 #' @rdname extract-unfished
 N0 <- function(Hist, type=c('Equilibrium','Dynamic'), Reduce=TRUE) 
-  .unfished_slot(Hist, type, 'Number', Reduce)
-
+  .UnfishedSlot(Hist, type, 'Number', Reduce)

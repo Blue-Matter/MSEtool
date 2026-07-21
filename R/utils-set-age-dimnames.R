@@ -1,4 +1,4 @@
-SetAgeDimnames <- function(array, Ages) {
+.SetAgeDimnames <- function(array, Ages) {
   
   # Recall for S4
   if (isS4(array)) {

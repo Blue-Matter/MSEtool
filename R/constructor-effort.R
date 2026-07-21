@@ -73,8 +73,30 @@
 #'   management procedures to scale a per-angler bag limit to a fleet-level
 #'   retention cap. Default `NULL`. See Details.
 #'   
+#' @param Theta Numeric, numeric array, or `NULL`. Overdispersion parameter
+#'   \eqn{\theta} of the negative binomial within-trip catch distribution.
+#'   Accepted forms:
+#'   - `NULL` (default): `Theta` is not populated; bag-limit management
+#'     procedures will error if `Theta` is required and not supplied.
+#'   - Scalar numeric (e.g. `1.2`): constant overdispersion applied across
+#'     all simulations and years.
+#'   - Numeric vector length 2. Treated as lower and upper bounds of a
+#'     uniform distribution, sampled once per simulation and held constant
+#'     across years.
+#'   - Numeric vector length `nSim`. One value per simulation, held
+#'     constant across years.
+#'   - Numeric array with dimensions `Sim x Year` and named dimnames, for
+#'     `Theta` that varies over time. The `Sim` dimension may be length 1
+#'     (replicated internally). The `Year` dimension may be length 1
+#'     (replicated internally) or span the full model time series.
+#'
+#'   In every form other than a full `Sim x Year` array, the resolved value
+#'   is stored with a `Year` dimension of length 1, named with the first
+#'   historical year, and is replicated across all historical and
+#'   projection years during [Simulate()].
+#'
 #' @param Misc List. Miscellaneous additional inputs. Default `list()`.
-#' 
+#'
 #' @param df Logical. Only used when `Effort` is a [hist-class] or
 #'   [mse-class] object. If `TRUE` (default), a tidy `data.frame` is
 #'   returned. If `FALSE`, the raw `Effort` array is returned.
@@ -169,8 +191,47 @@
 #' constant over time; it is replicated internally to match the full model
 #' time series. 
 #' 
-#' When the bag limit is defined per vessel (boat limit), `AnglerPerTrip` is 
+#' When the bag limit is defined per vessel (boat limit), `AnglerPerTrip` is
 #' not used.
+#'
+#' ## Within-Trip Overdispersion: `Theta`
+#'
+#' `Theta` (\eqn{\theta}) parameterises the negative binomial distribution
+#' used by bag-limit management procedures to model within-trip catch counts:
+#'
+#' \deqn{n_{f}(t) \sim \text{NegBin}(\mu_{f}(t),\; \theta_{f}(t))}
+#'
+#' where \eqn{\mu_{f}(t)} is the mean per-trip catch at time \eqn{t} that
+#' clears all other retention rules (size limits, discard mortality, etc.)
+#' - i.e. what would be kept absent any bag limit. The bag limit itself
+#' then truncates \eqn{n_{f}(t)} at the cap; \eqn{\mu_{f}(t)} is the
+#' input to that truncation, not its output. The variance of within-trip
+#' catch (before truncation) is:
+#'
+#' \deqn{\text{Var}(n_{f}) = \mu_{f} + \frac{\mu_{f}^2}{\theta_{f}(t)}}
+#'
+#' It determines the fraction of trips that catch at or above the bag
+#' limit at any given mean catch rate, and therefore how strongly the
+#' regulation constrains total retention as stock abundance changes.
+#'
+#' Smaller values (e.g. 0.5-2) produce high trip-to-trip variability with
+#' many zero-catch trips and occasional large catches, typical of
+#' recreational marine fisheries. Larger values approach the Poisson
+#' distribution. Only required when a bag-limit management procedure is
+#' active for this fleet.
+#'
+#' The `Year` dimension of `Theta` may be length 1 if the value is assumed
+#' constant over time (the typical case, absent creel data suggesting
+#' otherwise); it is replicated internally to match the full model time
+#' series. A time-varying `Theta` can be supplied directly as a `Sim x Year`
+#' array, e.g. to represent a hypothesis that within-trip catch variability
+#' changes with stock depletion.
+#'
+#' When trip-level creel data are available, `Theta` is estimated by
+#' maximum likelihood fitting of the negative binomial to observed
+#' per-trip counts. In the absence of creel data, `Theta` must be assumed
+#' - e.g. a single plausible value, or a range sampled across simulations
+#' to test management performance against this uncertainty.
 #'
 #' ## Pass-Through Extraction
 #'
@@ -192,8 +253,8 @@
 #'   or array for [hist-class] and [mse-class] depending on `df`).
 #' - `Effort<-` returns `x` with the `Effort` slot replaced by `value`.
 #' - `Distribution()`, `Targeting()`, `Maximum()`, `Mode()`,
-#'   `TripsScalar()`, `AnglerPerTrip()` return the corresponding slot from
-#'   the [effort-class] object `x`.
+#'   `TripsScalar()`, `AnglerPerTrip()`, `Theta()` return the corresponding
+#'   slot from the [effort-class] object `x`.
 #' - Their replacement forms return `x` with the corresponding slot updated.
 #'
 #' @seealso
@@ -221,14 +282,18 @@ Effort <- function(Effort         = NULL,
                    Mode           = NULL,
                    TripsScalar    = NULL,
                    AnglerPerTrip  = NULL,
+                   Theta          = NULL,
                    Misc           = list(),
                    df             = TRUE) {
   
-  if (isFleetOrList(Effort))
-    return(ExtractFleetSlot(Effort, 'Effort'))
-  
+  if (.IsFleetOrList(Effort))
+    return(.ExtractFleetSlot(Effort, 'Effort'))
+
+  if (inherits(Effort, 'advice'))
+    return(.AccessSlot(Effort, 'Effort'))
+
   if (inherits(Effort, c('fleet', 'effort', 'hist', 'obs', 'imp', 'mse')))
-    return(extract_effort(Effort, df))
+    return(.ExtractEffort(Effort, df))
   
   if (is.null(Mode)) {
     Mode <- 'Density'
@@ -247,26 +312,27 @@ Effort <- function(Effort         = NULL,
     Mode          = Mode,
     TripsScalar   = TripsScalar,
     AnglerPerTrip = AnglerPerTrip,
+    Theta         = Theta,
     Misc          = Misc
   )
 }
 #' @rdname Effort
 #' @export
 `Effort<-` <- function(x, value) {
-  AssignSlot(x, value, 'Effort')
+  .AssignSlot(x, value, 'Effort')
 }
 
 #' @rdname Effort
 #' @export
 Distribution <- function(x) {
-  CheckClass(x, "effort", "x")
+  .CheckClass(x, "effort", "x")
   x@Distribution
 }
 
 #' @rdname Effort
 #' @export
 `Distribution<-` <- function(x, value) {
-  CheckClass(x, "effort", "x")
+  .CheckClass(x, "effort", "x")
   x@Distribution <- value
   methods::validObject(x)
   x
@@ -275,14 +341,14 @@ Distribution <- function(x) {
 #' @rdname Effort
 #' @export
 Targeting <- function(x) {
-  CheckClass(x, "effort", "x")
+  .CheckClass(x, "effort", "x")
   x@Targeting
 }
 
 #' @rdname Effort
 #' @export
 `Targeting<-` <- function(x, value) {
-  CheckClass(x, "effort", "x")
+  .CheckClass(x, "effort", "x")
   x@Targeting <- value
   methods::validObject(x)
   x
@@ -291,14 +357,14 @@ Targeting <- function(x) {
 #' @rdname Effort
 #' @export
 Maximum <- function(x) {
-  CheckClass(x, "effort", "x")
+  .CheckClass(x, "effort", "x")
   x@Maximum
 }
 
 #' @rdname Effort
 #' @export
 `Maximum<-` <- function(x, value) {
-  CheckClass(x, "effort", "x")
+  .CheckClass(x, "effort", "x")
   x@Maximum <- value
   methods::validObject(x)
   x
@@ -307,14 +373,14 @@ Maximum <- function(x) {
 #' @rdname Effort
 #' @export
 Mode <- function(x) {
-  CheckClass(x, "effort", "x")
+  .CheckClass(x, "effort", "x")
   x@Mode
 }
 
 #' @rdname Effort
 #' @export
 `Mode<-` <- function(x, value) {
-  CheckClass(x, "effort", "x")
+  .CheckClass(x, "effort", "x")
   x@Mode <- value
   methods::validObject(x)
   x
@@ -323,14 +389,14 @@ Mode <- function(x) {
 #' @rdname Effort
 #' @export
 TripsScalar <- function(x) {
-  CheckClass(x, "effort", "x")
+  .CheckClass(x, "effort", "x")
   x@TripsScalar
 }
 
 #' @rdname Effort
 #' @export
 `TripsScalar<-` <- function(x, value) {
-  CheckClass(x, "effort", "x")
+  .CheckClass(x, "effort", "x")
   x@TripsScalar <- value
   methods::validObject(x)
   x
@@ -339,15 +405,27 @@ TripsScalar <- function(x) {
 #' @rdname Effort
 #' @export
 AnglerPerTrip <- function(x) {
-  CheckClass(x, "effort", "x")
+  .CheckClass(x, "effort", "x")
   x@AnglerPerTrip
 }
 
 #' @rdname Effort
 #' @export
 `AnglerPerTrip<-` <- function(x, value) {
-  CheckClass(x, "effort", "x")
+  .CheckClass(x, "effort", "x")
   x@AnglerPerTrip <- value
   methods::validObject(x)
   x
+}
+
+#' @rdname Effort
+#' @export
+Theta <- function(x) {
+  .AccessSlot(x, 'Theta')
+}
+
+#' @rdname Effort
+#' @export
+`Theta<-` <- function(x, value) {
+  .AssignSlot(x, value, 'Theta')
 }

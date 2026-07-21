@@ -30,7 +30,7 @@
 #' * Generating mean fecundity at age, or at length if applicable
 #' * Converting between mean-at-length and mean-at-age
 #' * Multiplying by maturity to represent egg production of mature individuals
-#' * Adding stochastic variation via `PopulateRandom()`
+#' * Adding stochastic variation via `.PopulateRandom()`
 #'
 #' @return
 #' A populated [Fecundity()] object.
@@ -70,15 +70,15 @@ PopulateFecundity <- function(Fecundity,
                               force = FALSE) {
   Ages  <- DefaultAges(Ages)
   Years <- DefaultYears(Years)
-  nSim  <- Get_nSim(Fecundity, nSim)
+  nSim  <- .GetNSim(Fecundity, nSim)
   
   argList <- list(Ages, Length, Weight, Maturity, nSim, Years, CalcAtLength, seed)
   
   if (EmptyObject(Fecundity)) {
-    CheckRequiredObject(Ages, "ages", "Ages")
-    CheckRequiredObject(Weight, "weight", "Weight")
-    CheckRequiredObject(Length, "length", "Length")
-    CheckRequiredObject(Maturity, "maturity", "Maturity")
+    .CheckRequiredObject(Ages, "ages", "Ages")
+    .CheckRequiredObject(Weight, "weight", "Weight")
+    .CheckRequiredObject(Length, "length", "Length")
+    .CheckRequiredObject(Maturity, "maturity", "Maturity")
     
     Weight <- PopulateWeight(Weight,
                              Ages = Ages,
@@ -104,23 +104,23 @@ PopulateFecundity <- function(Fecundity,
       array2 = Maturity@MeanAtAge
     )
     
-    return(SetDigest(Fecundity, argList))
+    return(.SetDigest(Fecundity, argList))
   }
   
-  if (CheckDigest(Fecundity, argList) & !force) 
+  if (.CheckDigest(Fecundity, argList) & !force) 
     return(Fecundity)
   
-  SetSeed(seed)
+  .SetSeed(seed)
   
-  Fecundity@Pars <- StructurePars(Pars = Fecundity@Pars, nSim, Years)
-  Fecundity@Model <- FindModel(Fecundity)
+  Fecundity@Pars <- .StructurePars(Pars = Fecundity@Pars, nSim, Years)
+  Fecundity@Model <- .FindModel(Fecundity)
   
   if (is.null(Fecundity@Model) | all(is.na(Fecundity@Pars))) {
     if (is.null(Fecundity@MeanAtAge)) {
-      CheckRequiredObject(Ages, "ages", "Ages")
-      CheckRequiredObject(Weight, "weight", "Weight")
-      CheckRequiredObject(Length, "length", "Length")
-      CheckRequiredObject(Maturity, "maturity", "Maturity")
+      .CheckRequiredObject(Ages, "ages", "Ages")
+      .CheckRequiredObject(Weight, "weight", "Weight")
+      .CheckRequiredObject(Length, "length", "Length")
+      .CheckRequiredObject(Maturity, "maturity", "Maturity")
       
       Weight <- PopulateWeight(Weight,
                                Ages,
@@ -146,20 +146,20 @@ PopulateFecundity <- function(Fecundity,
         array2 = Maturity@MeanAtAge
       )
       
-      return(SetDigest(Fecundity, argList))
+      return(.SetDigest(Fecundity, argList))
     }
   }
   
-  ModelClass <- getModelClass(Fecundity@Model)
+  ModelClass <- .GetModelClass(Fecundity@Model)
   if (!is.null(ModelClass)) {
-    if (grepl("at-Length", getModelClass(Fecundity@Model))) {
-      CheckRequiredObject(Length, "length", "Length")
+    if (grepl("at-Length", .GetModelClass(Fecundity@Model))) {
+      .CheckRequiredObject(Length, "length", "Length")
       Length <- PopulateLength(Length, 
                                Ages = Ages, 
                                Years = Years, 
                                nSim = nSim)
       
-      Fecundity <- PopulateMeanAtLength(
+      Fecundity <- .PopulateMeanAtLength(
         object = Fecundity, 
         Length = Length, 
         Years = Years, 
@@ -168,18 +168,18 @@ PopulateFecundity <- function(Fecundity,
         silent = silent
       )
     } else {
-      Fecundity <- PopulateMeanAtAge(Fecundity, Ages, Years)
+      Fecundity <- .PopulateMeanAtAge(Fecundity, Ages, Years)
     }
   }
   
-  Fecundity <- MeanAtLength2MeanAtAge(Fecundity, Length)
+  Fecundity <- .MeanAtLength2MeanAtAge(Fecundity, Length)
 
-  Fecundity <- AddAtAgeDimnames(Fecundity, Ages, Years)
+  Fecundity <- .AddAtAgeDimnames(Fecundity, Ages, Years)
   
   if (CalcAtLength) 
-    Fecundity <- MeanAtAge2MeanAtLength(Fecundity, Length)
+    Fecundity <- .MeanAtAge2MeanAtLength(Fecundity, Length)
   
-  Fecundity <- AddAtLengthDimnames(Fecundity, Years, 'Fecundity')
+  Fecundity <- .AddAtLengthDimnames(Fecundity, Years, 'Fecundity')
   
-  SetDigest(SetAgeDimnames(Fecundity, Ages), argList)
+  .SetDigest(.SetAgeDimnames(Fecundity, Ages), argList)
 }

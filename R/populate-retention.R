@@ -9,8 +9,15 @@
 #'   on length-at-age.
 #' @param Weight A [Weight()] object. Required if the retention model depends 
 #'   on weight-at-age.
-#' @param Maturity A [Maturity()] object. Required if the retention model uses 
+#' @param Maturity A [Maturity()] object. Required if the retention model uses
 #'   relative selectivity.
+#' @param Selectivity A populated [Selectivity()] object. Optional, but
+#'   recommended whenever the retention model is defined at length or weight:
+#'   used to weight the age-length key when collapsing retention-at-length (or
+#'   -weight) to retention-at-age, so that the result reflects the length
+#'   distribution of fish the fleet actually catches at each age rather than
+#'   the unconditional population length distribution at age. Ignored for
+#'   retention models defined directly at age.
 #' @param nSim Integer. Number of simulation replicates.
 #' @param Years Numeric vector of model years.
 #' @param nArea Integer. Number of spatial areas.
@@ -30,7 +37,7 @@
 #' * Resolving the retention model class
 #' * Generating mean retention at age, length, or weight as appropriate
 #' * Converting between mean-at-length/weight and mean-at-age
-#' * Adding stochastic variation via `PopulateRandom()`
+#' * Adding stochastic variation via `.PopulateRandom()`
 #' * Adding an 'Area' dimension and setting dimension names
 #'
 #' @return
@@ -51,6 +58,7 @@ PopulateRetention <- function(Retention,
                               Length = NULL,
                               Weight = NULL,
                               Maturity = NULL,
+                              Selectivity = NULL,
                               nSim = 5,
                               Years = NULL,
                               nArea = 1,
@@ -58,16 +66,16 @@ PopulateRetention <- function(Retention,
                               seed = NULL,
                               silent = FALSE,
                               force = FALSE,
-                              replace = FALSE, 
+                              replace = FALSE,
                               ASKOverride = NULL) {
-  
-  argList <- list(Ages, Length, Years, nSim, CalcAtLength, seed)
+
+  argList <- list(Ages, Length, Years, nSim, CalcAtLength, seed, Selectivity)
   
   Ages  <- DefaultAges(Ages)
   Years <- DefaultYears(Years)
-  nSim  <- Get_nSim(Retention, nSim)
+  nSim  <- .GetNSim(Retention, nSim)
   
-  if (CheckDigest(Retention, argList) & !force) 
+  if (.CheckDigest(Retention, argList) & !force) 
     return(Retention)
   
   # Default: fully retained if object is empty
@@ -89,26 +97,26 @@ PopulateRetention <- function(Retention,
       Area = 1
     )
     
-    return(SetDigest(Retention, argList))
+    return(.SetDigest(Retention, argList))
   }
   
-  SetSeed(seed)
+  .SetSeed(seed)
   
-  Retention@Pars <- StructurePars(Pars = Retention@Pars, nSim, Years)
-  Retention@Model <- FindModel(Retention)
+  Retention@Pars <- .StructurePars(Pars = Retention@Pars, nSim, Years)
+  Retention@Model <- .FindModel(Retention)
   
-  ModelClass <- getModelClass(Retention@Model)
+  ModelClass <- .GetModelClass(Retention@Model)
   
   if (!is.null(ModelClass)) {
     if (Retention@isRel) {
-      CheckRequiredObject(Maturity, "maturity", "Maturity")
-      L50 <- FindL50(Maturity)
+      .CheckRequiredObject(Maturity, "maturity", "Maturity")
+      L50 <- .FindL50(Maturity)
       Retention@Pars$LR5 <- ArrayMultiply(Retention@Pars$LR5, L50)
       Retention@Pars$LFR <- ArrayMultiply(Retention@Pars$LFR, L50)
     }
     
     if (grepl("at-Length", ModelClass)) {
-      Retention <- PopulateMeanAtLength(
+      Retention <- .PopulateMeanAtLength(
         object = Retention, 
         Length = Length, 
         Years = Years, 
@@ -118,7 +126,7 @@ PopulateRetention <- function(Retention,
       )
   
     } else if (grepl("at-Weight", ModelClass)) {
-      Retention <- PopulateMeanAtWeight(
+      Retention <- .PopulateMeanAtWeight(
         object = Retention, 
         Weight = Weight, 
         Years = Years, 
@@ -129,19 +137,28 @@ PopulateRetention <- function(Retention,
       
 
     } else if (grepl("at-Age", ModelClass)) {
-      Retention <- PopulateMeanAtAge(
+      Retention <- .PopulateMeanAtAge(
         object = Retention, 
         Ages= Ages, 
         Years = Years)
     }
   }
   
-  Retention <- MeanAtLength2MeanAtAge(Retention, Length, max1 = FALSE)
-  Retention <- MeanAtWeight2MeanAtAge(Retention, Weight, max1 = FALSE)
-  Retention <- AddAtAgeDimnames(Retention, Ages, Years)
+  hasSelectivity <- !is.null(Selectivity) &&
+    (!is.null(Selectivity@MeanAtLength) || !is.null(Selectivity@MeanAtWeight))
+
+  if (is.null(Retention@MeanAtAge) && !is.null(Retention@MeanAtLength) && hasSelectivity) {
+    Retention <- .WeightedAtSize2AtAge(Retention, Selectivity, Length)
+  } else if (is.null(Retention@MeanAtAge) && !is.null(Retention@MeanAtWeight) && hasSelectivity) {
+    Retention <- .WeightedAtSize2AtAge(Retention, Selectivity, Weight)
+  } else {
+    Retention <- .MeanAtLength2MeanAtAge(Retention, Length, max1 = FALSE)
+    Retention <- .MeanAtWeight2MeanAtAge(Retention, Weight, max1 = FALSE)
+  }
+  Retention <- .AddAtAgeDimnames(Retention, Ages, Years)
   
   if (CalcAtLength && !is.null(Length@ALK)) {
-    Retention <- MeanAtAge2MeanAtLength(
+    Retention <- .MeanAtAge2MeanAtLength(
       object = Retention, 
       Length = Length, 
       replace = replace, 
@@ -155,9 +172,9 @@ PopulateRetention <- function(Retention,
   Retention@MeanAtAge    <- AddDimension(Retention@MeanAtAge, "Area")
   
   # Add dimension names if missing
-  Retention <- AddAtAgeDimnames(Retention, Ages, Years)
-  Retention <- AddAtLengthDimnames(Retention, Years)
-  Retention <- AddAtWeightDimnames(Retention, Years)
+  Retention <- .AddAtAgeDimnames(Retention, Ages, Years)
+  Retention <- .AddAtLengthDimnames(Retention, Years)
+  Retention <- .AddAtWeightDimnames(Retention, Years)
   
-  SetDigest(SetAgeDimnames(Retention, Ages), argList)
+  .SetDigest(.SetAgeDimnames(Retention, Ages), argList)
 }

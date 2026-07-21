@@ -20,7 +20,7 @@
 #'
 #' @export
 ConvertImp <- function(Imp, silent = FALSE) {
-  CheckClass(Imp, c("Imp", 'OM'), "Imp")
+  .CheckClass(Imp, c("Imp", 'OM'), "Imp")
   
   if (!silent) {
     cli::cli_alert("Converting object of class {.cls Imp} to class {.cls imp}")

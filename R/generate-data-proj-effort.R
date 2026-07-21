@@ -30,16 +30,16 @@
 #' \deqn{\tilde{E}_{t} = E_{t} \cdot b \cdot \varepsilon_{t}}
 #'
 #' - \eqn{E_{t}} — true OM effort in year \eqn{t}, resolved via
-#'   `resolveValue()` using `TSIndex` to locate `DataYear` in `YearsAll`
+#'   `.ResolveValue()` using `TSIndex` to locate `DataYear` in `YearsAll`
 #' - \eqn{b} — multiplicative bias for replicate `x` (`effortobs@Bias[x]`);
 #'   see [EffortObs()]
 #' - \eqn{\varepsilon_{t}} — lognormal error multiplier for replicate `x`,
 #'   year \eqn{t} (`effortobs@Error[x, t]`); see [EffortObs()]
 #'
-#' CVs for the new year are resolved via `resolveCV()`, which looks up the
+#' CVs for the new year are resolved via `.ResolveCV()`, which looks up the
 #' fleet- and year-specific CV from the existing [effortdata-class] object.
 #'
-#' ## Obs Structure
+#' ## Obs .Structure
 #'
 #' Observation parameters are accessed via:
 #'
@@ -68,9 +68,9 @@
 #' - `@CV`: `[nYear+1 x nFleet]` array of CVs
 #'
 #' @seealso [EffortObs()], [EffortData()], [effortdata-class], [obs-class],
-#'   [GenHistData_Effort()]
+#'   `.GenHistDataEffort()`
 #' @keywords internal
-GenProjData_Effort <- function(x, Proj, DataYear, YearsAll, i) {
+.GenProjDataEffort <- function(x, Proj, DataYear, YearsAll, i) {
   
   EffortData <- Proj@Data[[x]][[i]]@Effort
   
@@ -80,18 +80,18 @@ GenProjData_Effort <- function(x, Proj, DataYear, YearsAll, i) {
   TSIndex     <- match(DataYear, YearsAll)
   Value       <- EffortData@Value
   CV          <- EffortData@CV
-  FleetNames  <- resolveFleetNames(EffortData)
+  FleetNames  <- .ResolveFleetNames(EffortData)
   nFleet      <- length(FleetNames)
   
-  NewValue <- emptyFleetArray(DataYear, FleetNames)
-  NewCV    <- emptyFleetArray(DataYear, FleetNames)
+  NewValue <- .EmptyFleetArray(DataYear, FleetNames)
+  NewCV    <- .EmptyFleetArray(DataYear, FleetNames)
 
   for (fl in seq_len(nFleet)) {
     Obs <- Proj@OM@Obs[[i]][[fl]]@Effort
     if (EmptyObject(Obs) || length(Obs@Error) < 1) next
     
-    NewValue[, fl] <- resolveValue(Proj, 'Effort', i, fl, TSIndex, Obs, x, DataYear)
-    NewCV[, fl]    <- resolveCV(Proj, 'Effort', i, fl, TSIndex, EffortData, DataYear)
+    NewValue[, fl] <- .ResolveValue(Proj, 'Effort', i, fl, TSIndex, Obs, x, DataYear)
+    NewCV[, fl]    <- .ResolveCV(Proj, 'Effort', i, fl, TSIndex, EffortData, DataYear)
   }
   
   EffortData@Value <- abind::abind(Value, NewValue, along = 1, use.dnns = TRUE)

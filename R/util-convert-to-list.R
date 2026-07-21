@@ -1,6 +1,6 @@
 
 
-ConvertToList <- function(x) {
+.ConvertToList <- function(x) {
   # TODO add names
   if (inherits(x, 'om')) {
     if (inherits(x@Stock, 'stock')) {
@@ -28,7 +28,6 @@ ConvertToList <- function(x) {
   
   x
 }
-
 
 
 

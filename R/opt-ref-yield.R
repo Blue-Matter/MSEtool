@@ -1,6 +1,6 @@
 #' Optimize Reference Yield for a Single Simulation
 #'
-#' Internal helper function called by `CalcRefYield()` to optimize
+#' Internal helper function called by `.CalcRefYield()` to optimize
 #' fishing effort for a single simulation replicate.
 #'
 #' Scales historical effort by a log scalar, projects forward,
@@ -20,7 +20,7 @@
 #' @return Numeric; either negative sum of mean yields (opt=1) or vector of mean yields per stock (opt=2)
 #'
 #' @keywords internal
-OptRefYield <- function(logScalar,
+.OptRefYield <- function(logScalar,
                         Proj,
                         sim,
                         HistYears, 
@@ -48,13 +48,13 @@ OptRefYield <- function(logScalar,
   ArrayFill(Proj@Effort) <- scaledEffort
   
   # Run fishery dynamics for this sim only
-  ProjSim_opt <- CalcFisheryDynamics(Hist = Proj,
+  ProjSim_opt <- .CalcFisheryDynamics(Hist = Proj,
                                      Sims = sim,
                                      Years = c(utils::tail(HistYears, Proj@OM@Seasons), ProjYears),
                                      debug = debug)
   
   # Get total catch summed over age, fleet, area
-  Yield <- GetCatch(ProjSim_opt, Units, type)
+  Yield <- .GetCatch(ProjSim_opt, Units, type)
   
   # Take mean over last few years
   lastnTS <- Proj@OM@Control$RefYield$lastnTS %||% 5
@@ -67,6 +67,5 @@ OptRefYield <- function(logScalar,
   if (opt == 1) return(-sum(mean_Yield))
   mean_Yield
 }
-
 
 

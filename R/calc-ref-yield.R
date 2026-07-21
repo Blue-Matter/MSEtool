@@ -18,7 +18,7 @@
 #' @name calc-ref-yield
 #'
 #' @keywords internal
-CalcRefYield <- function(Hist, 
+.CalcRefYield <- function(Hist, 
                          type   = c('Landings', 'Removals'),
                          Units  = c("Biomass", 'Number'),
                          silent = FALSE) {
@@ -67,7 +67,7 @@ CalcRefYield <- function(Hist,
       
       # Optimize F scalar for this sim
       DoOpt <- optimize(f = function(logScalar) {
-        OptRefYield(logScalar,
+        .OptRefYield(logScalar,
                     Proj = Proj,
                     sim = sim,
                     HistYears = HistYears,
@@ -82,7 +82,7 @@ CalcRefYield <- function(Hist,
       }, interval = log(c(1e-5, 10)))
       
       # Get final yield using optimized scalar
-      RefYield[[sim]] <- OptRefYield(DoOpt$minimum,
+      RefYield[[sim]] <- .OptRefYield(DoOpt$minimum,
                                      Proj = Proj,
                                      sim = sim,
                                      HistYears = HistYears,

@@ -30,7 +30,7 @@
 #' @export
 PopulateClosure <- function(Closure, nArea, nSim = 5, Years, silent = FALSE) {
   
-  nSim  <- Get_nSim(Closure, nSim)
+  nSim  <- .GetNSim(Closure, nSim)
   
   if (EmptyObject(Closure)) {
     Closure <- array(1,

@@ -45,17 +45,17 @@ Subset <- function(object,
   if (!inherits(populated, "try-error"))
     object <- populated
  
-  if (!is.null(Sims))   object <- SubsetSim(object, Sims)
-  if (!is.null(Years))  object <- SubsetYear(object, Years, Impute)
-  if (!is.null(Ages))   object <- SubsetAge(object, Ages)
-  if (!is.null(MPs))    object <- SubsetMP(object, MPs)
-  if (!is.null(Fleets)) object <- SubsetFleet(object, Fleets)
-  if (!is.null(Stocks)) object <- SubsetStock(object, Stocks)
+  if (!is.null(Sims))   object <- .SubsetSim(object, Sims)
+  if (!is.null(Years))  object <- .SubsetYear(object, Years, Impute)
+  if (!is.null(Ages))   object <- .SubsetAge(object, Ages)
+  if (!is.null(MPs))    object <- .SubsetMP(object, MPs)
+  if (!is.null(Fleets)) object <- .SubsetFleet(object, Fleets)
+  if (!is.null(Stocks)) object <- .SubsetStock(object, Stocks)
   
   object
 }
 
-.make_dim_index <- function(i, array, along) {
+.MakeDimIndex <- function(i, array, along) {
   nd  <- length(dim(array))
   idx <- vector("list", nd)
   for (k in seq_len(nd))
@@ -63,7 +63,7 @@ Subset <- function(object,
   idx
 }
 
-SubsetSim <- function(object, Sims, keep_sim_name = FALSE, debug = FALSE) {
+.SubsetSim <- function(object, Sims, keep_sim_name = FALSE, debug = FALSE) {
   
   if (debug)  cli::cli_alert("Class {.val {class(object)}}")
   
@@ -104,13 +104,13 @@ SubsetSim <- function(object, Sims, keep_sim_name = FALSE, debug = FALSE) {
       SimVals <- as.numeric(dnames$Sim)
       
       if (max(SimVals) > max(Sims)) {
-        object <- ArraySubsetSim(object, Sims, keep_sim_name = keep_sim_name)
+        object <- .ArraySubsetSim(object, Sims, keep_sim_name = keep_sim_name)
       } else {
         existing_sims <- as.numeric(dimnames(object)$Sim)
         if (any(Sims > max(existing_sims))) {
           object <- ExtendSims(object, nSim = length(Sims))
         }
-        object <- ArraySubsetSim(object, Sims = Sims, keep_sim_name = keep_sim_name)
+        object <- .ArraySubsetSim(object, Sims = Sims, keep_sim_name = keep_sim_name)
       }
         
     }
@@ -125,9 +125,9 @@ SubsetSim <- function(object, Sims, keep_sim_name = FALSE, debug = FALSE) {
   object
 }
 
-ArraySubsetSim <- function(array, Sims = NULL, keep_sim_name = FALSE) {
-  CheckClass(array, 'array', 'array')
-  CheckClass(Sims, c('numeric', 'integer'), 'Sims')
+.ArraySubsetSim <- function(array, Sims = NULL, keep_sim_name = FALSE) {
+  .CheckClass(array, 'array', 'array')
+  .CheckClass(Sims, c('numeric', 'integer'), 'Sims')
   
   if (is.null(Sims)) return(array)
     
@@ -159,7 +159,7 @@ ArraySubsetSim <- function(array, Sims = NULL, keep_sim_name = FALSE) {
   }
   
   idx <- SimVals %in% Sims
-  out <- do.call(`[`, c(list(array), .make_dim_index(idx, array, 1L),
+  out <- do.call(`[`, c(list(array), .MakeDimIndex(idx, array, 1L),
                         list(drop = FALSE)))
   if (!keep_sim_name) {
     dimnames(out)$Sim <- seq_along(dimnames(out)$Sim)
@@ -170,7 +170,7 @@ ArraySubsetSim <- function(array, Sims = NULL, keep_sim_name = FALSE) {
   out
 }
 
-SubsetYear <- function(object, Years, Impute=TRUE, debug=FALSE) {
+.SubsetYear <- function(object, Years, Impute=TRUE, debug=FALSE) {
   
   if (debug) cli::cli_alert('Class {.val {class(object)}}')
   
@@ -199,7 +199,7 @@ SubsetYear <- function(object, Years, Impute=TRUE, debug=FALSE) {
     dnames <- dimnames(object)
     if (!is.null(dnames) && "Year" %in% names(dnames) &&
         !is.null(dnames[["Year"]])) {
-      object <- ArraySubsetYear(object, Years, Impute = Impute)
+      object <- .ArraySubsetYear(object, Years, Impute = Impute)
     }
     return(object)
   }
@@ -225,7 +225,7 @@ SubsetYear <- function(object, Years, Impute=TRUE, debug=FALSE) {
   object
 }
 
-ArraySubsetYear<- function(array, Years = NULL, Impute = TRUE) {
+.ArraySubsetYear<- function(array, Years = NULL, Impute = TRUE) {
   
   if (is.null(Years)) return(array)
 
@@ -252,11 +252,11 @@ ArraySubsetYear<- function(array, Years = NULL, Impute = TRUE) {
   }
   
   idx <- YearVals %in% Years
-  do.call(`[`, c(list(array), .make_dim_index(idx, array, TSind),
+  do.call(`[`, c(list(array), .MakeDimIndex(idx, array, TSind),
                  list(drop = FALSE)))
 }
 
-SubsetAge <- function(object, Ages, debug = FALSE) {
+.SubsetAge <- function(object, Ages, debug = FALSE) {
   
   if (debug) cli::cli_alert('Class {.val {class(object)}}')
   
@@ -286,7 +286,7 @@ SubsetAge <- function(object, Ages, debug = FALSE) {
   if (is.array(object)) {
     dnames <- dimnames(object)
     if (!is.null(dnames) && "Age" %in% names(dnames))
-      object <- ArraySubsetAge(object, Ages)
+      object <- .ArraySubsetAge(object, Ages)
     return(object)
   }
   
@@ -299,7 +299,7 @@ SubsetAge <- function(object, Ages, debug = FALSE) {
   object
 }
 
-ArraySubsetAge <- function(array, Ages=NULL) {
+.ArraySubsetAge <- function(array, Ages=NULL) {
   
   if (is.null(Ages))return(array)
   
@@ -318,12 +318,12 @@ ArraySubsetAge <- function(array, Ages=NULL) {
     cli::cli_abort("`Ages` greater than ages in this array")
   
   sel <- AgeVals %in% Ages
-  do.call(`[`, c(list(array), .make_dim_index(sel, array, AgeInd),
+  do.call(`[`, c(list(array), .MakeDimIndex(sel, array, AgeInd),
                  list(drop = FALSE)))
 
 }
 
-SubsetMP <- function(object, MPs=NULL, debug = FALSE) {
+.SubsetMP <- function(object, MPs=NULL, debug = FALSE) {
   
   if (debug) cli::cli_alert('Class {.val {class(object)}}')
   
@@ -353,7 +353,7 @@ SubsetMP <- function(object, MPs=NULL, debug = FALSE) {
   if (is.array(object)) {
     dnames <- dimnames(object)
     if (!is.null(dnames) && "MP" %in% names(dnames))
-      object <- ArraySubsetMP(object, MPs)
+      object <- .ArraySubsetMP(object, MPs)
     return(object)
   }
   
@@ -368,7 +368,7 @@ SubsetMP <- function(object, MPs=NULL, debug = FALSE) {
   object
 }
 
-ArraySubsetMP <- function(array, MPs=NULL) {
+.ArraySubsetMP <- function(array, MPs=NULL) {
   
   if (is.null(MPs)) return(array)
   
@@ -398,12 +398,12 @@ ArraySubsetMP <- function(array, MPs=NULL) {
   MPVals <- MPVals[MPVals %in% seq_along(MPNames)]
   sel <- seq_along(MPNames) %in% MPVals 
   
-  do.call(`[`, c(list(array), .make_dim_index(sel, array, MPInd),
+  do.call(`[`, c(list(array), .MakeDimIndex(sel, array, MPInd),
                  list(drop = FALSE)))
   
 }
 
-SubsetFleet <- function(object, Fleets=NULL, debug = FALSE) {
+.SubsetFleet <- function(object, Fleets=NULL, debug = FALSE) {
   
   if (debug) cli::cli_alert('Class {.val {class(object)}}')
   
@@ -439,7 +439,7 @@ SubsetFleet <- function(object, Fleets=NULL, debug = FALSE) {
   if (is.array(object)) {
     dnames <- dimnames(object)
     if (!is.null(dnames) && "Fleet" %in% names(dnames))
-      object <- ArraySubsetFleet(object, Fleets)
+      object <- .ArraySubsetFleet(object, Fleets)
     return(object)
   }
   
@@ -454,7 +454,7 @@ SubsetFleet <- function(object, Fleets=NULL, debug = FALSE) {
   object
 }
 
-ArraySubsetFleet <- function(array, Fleets=NULL) {
+.ArraySubsetFleet <- function(array, Fleets=NULL) {
   
   if (is.null(Fleets)) return(array)
   
@@ -482,12 +482,12 @@ ArraySubsetFleet <- function(array, Fleets=NULL) {
   FleetVals <- FleetVals[FleetVals %in% seq_along(FleetNames)]
   sel <- seq_along(FleetNames) %in% FleetVals 
   
-  do.call(`[`, c(list(array), .make_dim_index(sel, array, FleetInd),
+  do.call(`[`, c(list(array), .MakeDimIndex(sel, array, FleetInd),
                  list(drop = FALSE)))
   
 }
 
-SubsetStock <- function(object, Stocks=NULL, debug=FALSE) {
+.SubsetStock <- function(object, Stocks=NULL, debug=FALSE) {
   
   if (debug) cli::cli_alert('Class {.val {class(object)}}')
   
@@ -523,7 +523,7 @@ SubsetStock <- function(object, Stocks=NULL, debug=FALSE) {
   if (is.array(object)) {
     dnames <- dimnames(object)
     if (!is.null(dnames) && "Stock" %in% names(dnames))
-      object <- ArraySubsetStock(object, Stocks)
+      object <- .ArraySubsetStock(object, Stocks)
     return(object)
   }
   
@@ -537,7 +537,7 @@ SubsetStock <- function(object, Stocks=NULL, debug=FALSE) {
   object
 }
 
-ArraySubsetStock <- function(array, Stocks=NULL) {
+.ArraySubsetStock <- function(array, Stocks=NULL) {
   
   if (is.null(Stocks)) return(array)
   
@@ -565,6 +565,6 @@ ArraySubsetStock <- function(array, Stocks=NULL) {
   StockVals <- StockVals[StockVals %in% seq_along(StockNames)]
   sel <- seq_along(StockNames) %in% StockVals
   
-  do.call(`[`, c(list(array), .make_dim_index(sel, array, StockInd),
+  do.call(`[`, c(list(array), .MakeDimIndex(sel, array, StockInd),
                  list(drop = FALSE)))
 }

@@ -117,7 +117,7 @@ CalcYears <- function(nYear, pYear, CurrentYear, Seasons=1, Period=NULL) {
 #' @export
 Years <- function(x, Period=NULL) {
   if (isS4(x)) {
-    if (inherits(x, 'data'))
+    if (inherits(x, c('data', 'pm')))
       return(x@Years)
     if (inherits(x, 'mse') || inherits(x, 'hist'))
       x <- x@OM
@@ -125,4 +125,10 @@ Years <- function(x, Period=NULL) {
   }
   if (is.list(x))
     return(purrr::map(x, Years, Period))
+}
+
+#' @rdname Years
+#' @export
+`Years<-` <- function(x, value) {
+  .AssignSlot(x, value, 'Years')
 }

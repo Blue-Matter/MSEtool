@@ -9,7 +9,7 @@
 #' @param Hist A [Hist()] object containing historical operating model data.
 #' @param IdenticalHist Logical; if `TRUE`, assumes all simulations are identical
 #'   and calculates only a single simulation. If `NULL` (default), determined
-#'   automatically via `IdenticalSims()`.
+#'   automatically via `.IdenticalSims()`.
 #' @param silent Logical; if `TRUE`, suppress messages during calculation.
 #'
 #' @return A [popdynamics-class] object containing dynamic unfished
@@ -27,10 +27,10 @@ CalcUnfished_Dynamic <- function(Hist, IdenticalHist=NULL, silent=FALSE) {
   if (EmptyObject(Hist@Unfished@Equilibrium )) 
     Hist@Unfished@Equilibrium <- CalcUnfished_Equilibrium(Hist@OM)
   
-  Hist <- CalcDynamicInitial(Hist)
+  Hist <- .CalcDynamicInitial(Hist)
   
   if (is.null(Hist@Misc$SAVE)) 
-    Hist <- PrepHistMisc(Hist) 
+    Hist <- .PrepHistMisc(Hist) 
   
   Hist_Copy <- Hist 
   nStock <- nStock(Hist)
@@ -44,7 +44,7 @@ CalcUnfished_Dynamic <- function(Hist, IdenticalHist=NULL, silent=FALSE) {
   AllYears <- Years(Hist)
   
   if (is.null(IdenticalHist)) 
-    IdenticalHist <- IdenticalSims(Hist@OM, ignore='SRR')
+    IdenticalHist <- .IdenticalSims(Hist@OM, ignore='SRR')
   
   out <- new("popdynamics")
   
@@ -63,7 +63,7 @@ CalcUnfished_Dynamic <- function(Hist, IdenticalHist=NULL, silent=FALSE) {
 
     for (sl in slotNames('popdynamics')) {
       if (sl=='Misc') next()
-      slot(unfished, sl) <- CopyFirstSim(x=slot(unfished, sl))
+      slot(unfished, sl) <- .CopyFirstSim(x=slot(unfished, sl))
     }
   
   } else {
@@ -80,7 +80,7 @@ CalcUnfished_Dynamic <- function(Hist, IdenticalHist=NULL, silent=FALSE) {
 
   }
 
-  out <- CopySlots(S4in    = unfished, 
+  out <- .CopySlots(S4in    = unfished, 
                    S4out   = out, 
                    slots   = slotNames(out), 
                    reduce  = TRUE, 

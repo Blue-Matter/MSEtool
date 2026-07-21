@@ -89,11 +89,11 @@ ReduceDims <- function(array,
   if (!hasSim && !hasAge && !hasYear) 
     return(array)
   
-  idSim <- hasSim && IdenticalSims(array)
-  idAge <- hasAge && IdenticalAge(array)
-  idYear <- hasYear && IdenticalYears(array)
+  idSim <- hasSim && .IdenticalSims(array)
+  idAge <- hasAge && .IdenticalAge(array)
+  idYear <- hasYear && .IdenticalYears(array)
   
-  uniqYears <- if (hasYear && !idYear) UniqueYears(array) else NULL
+  uniqYears <- if (hasYear && !idYear) .UniqueYears(array) else NULL
   
   nd <- length(dim(array))
   idx <- vector("list", nd)
@@ -127,7 +127,7 @@ ReduceDims <- function(array,
 
 
 
-ReduceHist <- function(Hist, Reduce=TRUE) {
+.ReduceHist <- function(Hist, Reduce=TRUE) {
   if (!Reduce)
     return(Hist)
   
@@ -135,11 +135,9 @@ ReduceHist <- function(Hist, Reduce=TRUE) {
 }
 
 
-ReduceMSE <- function(MSE, Reduce=TRUE) {
+.ReduceMSE <- function(MSE, Reduce=TRUE) {
   if (!Reduce)
     return(MSE)
   
   ReduceDims(MSE)
 }
-
-

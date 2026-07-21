@@ -32,7 +32,7 @@
 #' ## PopulateObsCV
 #'
 #' Expands a CV value to a named `[nSim]` vector following the standard
-#' `StructurePars` + `ExtendSims` convention. If `CV` already has dimnames
+#' `.StructurePars` + `ExtendSims` convention. If `CV` already has dimnames
 #' (i.e. it has been previously populated), it is trimmed to `nSim` and
 #' returned unchanged.
 #'
@@ -110,7 +110,7 @@
 #' - Named array with correct dimensions: trimmed to `nSim` and returned.
 #' - Length-2 vector `c(lower, upper)`: `nSim` values drawn from
 #'   `Uniform(lower, upper)`, held constant across years.
-#' - Scalar or change-point matrix: expanded via `StructurePars` +
+#' - Scalar or change-point matrix: expanded via `.StructurePars` +
 #'   `ExtendSims` + `ExtendYears`.
 #'
 #' ## PopulateObsShift
@@ -158,7 +158,7 @@ PopulateObsCV <- function(CV, nSim) {
   if (!is.null(dimnames(CV))) 
     return(CV)
   
-  StructurePars(list(CV), nSim)[[1]] |>
+  .StructurePars(list(CV), nSim)[[1]] |>
     ExtendSims(nSim) |>
     DropDimension("Year", warn = FALSE)
 }
@@ -229,7 +229,7 @@ PopulateObsBias <- function(object, nSim) {
   cls <- class(object)
   
   if (length(object@Bias) < 1)
-    return(array(0, dim = nSim, dimnames = list(Sim = seq_len(nSim))))
+    return(array(1, dim = nSim, dimnames = list(Sim = seq_len(nSim))))
   
   if (any(object@Bias < 0))
     cli::cli_abort(
@@ -266,7 +266,7 @@ PopulateObsRef <- function(Ref, nSim) {
   if (nSim != 2 && length(Ref) == nSim)
     return(Ref)
   
-  CV <- StructurePars(list(Ref), nSim)[[1]] |>
+  CV <- .StructurePars(list(Ref), nSim)[[1]] |>
     ExtendSims(nSim) |>
     DropDimension("Year", warn = FALSE)
   
@@ -381,7 +381,7 @@ PopulateObsScalar <- function(x, nSim, Years, label = "value") {
     ))
   }
   
-  expanded <- StructurePars(list(x), nSim)[[1]] |>
+  expanded <- .StructurePars(list(x), nSim)[[1]] |>
     ExtendSims(nSim) |>
     ExtendYears(Years)
   

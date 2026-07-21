@@ -1,9 +1,9 @@
 
-IdenticalAge <- function(array, logical=TRUE) {
+.IdenticalAge <- function(array, logical=TRUE) {
   if (!is.array(array))
     return(TRUE)
   
-  unique <- UniqueAges(array)
+  unique <- .UniqueAges(array)
   
   if (!logical) 
     return(unique)
@@ -14,7 +14,7 @@ IdenticalAge <- function(array, logical=TRUE) {
   length(unique)==1
 }
 
-UniqueAges <- function(array) {
+.UniqueAges <- function(array) {
   if (!is.array(array))
     cli::cli_abort('`array` is not an array')
   

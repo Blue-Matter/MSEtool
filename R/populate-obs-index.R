@@ -60,7 +60,7 @@
 #'
 #' @export
 PopulateIndexObs <- function(Index, nSim, HistYears, ProjYears) {
-  CheckClass(Index, "indicesobs", "Index")
+  .CheckClass(Index, "indicesobs", "Index")
   
   if (EmptyObject(Index))
     return(Index)

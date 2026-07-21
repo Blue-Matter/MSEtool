@@ -59,7 +59,6 @@ GenRecDevs <- function(SD = 0.2,
                        RecDevHist = NULL,
                        RecDevProj = NULL) {
   
-  # ---- sanity checks ----
   if (is.null(HistYears)) cli::cli_abort('`HistYears` cannot be NULL')
   if (is.null(ProjYears)) cli::cli_abort('`ProjYears` cannot be NULL')
   
@@ -92,7 +91,6 @@ GenRecDevs <- function(SD = 0.2,
     genProj <- FALSE
   }
   
-  # ---- if all already provided, return ----
   
   if (!genInit && !genHist && !genProj) {
     dimnames(RecDevInit) <- list(Sim = 1:nrow(RecDevInit),
@@ -106,7 +104,6 @@ GenRecDevs <- function(SD = 0.2,
                 RecDevProj = RecDevProj))
   }
   
-  # ---- recycle SD and AC if needed ----
   SD <- rep(SD, nSim)[1:nSim]
   AC <- rep(AC, nSim)[1:nSim]
   AC[!is.finite(AC)] <- 0
@@ -116,16 +113,15 @@ GenRecDevs <- function(SD = 0.2,
   upper <- mu + TruncSD * SD
   
   if (genInit)
-    logRecDevInit <- array(rtnorm(nSim*nInitRecDev, mu, SD, lower, upper),
+    logRecDevInit <- array(.Rtnorm(nSim*nInitRecDev, mu, SD, lower, upper),
                            dim = c(nSim, nInitRecDev))
   if (genHist)
-    logRecDevHist <- array(rtnorm(nSim*nHistTS, mu, SD, lower, upper),
+    logRecDevHist <- array(.Rtnorm(nSim*nHistTS, mu, SD, lower, upper),
                            dim = c(nSim, nHistTS))
   if (genProj)
-    logRecDevProj <- array(rtnorm(nSim*nProjTS, mu, SD, lower, upper),
+    logRecDevProj <- array(.Rtnorm(nSim*nProjTS, mu, SD, lower, upper),
                            dim = c(nSim, nProjTS))
   
-  # ---- apply autocorrelation ----
   period <- c(rep('Init', nInitRecDev), rep('Hist', nHistTS),
               rep('Proj', nProjTS))
   required <- c(rep(genInit, nInitRecDev), rep(genHist, nHistTS),

@@ -23,14 +23,16 @@
 #'   in each fleet of the operating model.
 #' 
 #' @keywords internal
-OptFinalDepletion <- function(Hist, silent=FALSE) {
+.OptFinalDepletion <- function(Hist, silent=FALSE) {
   
   FinalDepletion <- purrr::map(Hist@OM@Stock, \(stock) {
     stock@Depletion@Final
   }) 
   
   if (!length(unlist(FinalDepletion)))  return(Hist)
-  
+
+  Hist@OM <- .CheckCatchFrac(Hist@OM)
+
   nStock <- nStock(Hist@OM)
   nFleet <- nFleet(Hist@OM)
   nSim <- Hist@OM@nSim
@@ -43,10 +45,10 @@ OptFinalDepletion <- function(Hist, silent=FALSE) {
   # HistSim <- HistSim_List[[1]] # for debugging
   
   opt_q <- if (silent) {
-    lapply(HistSim_List, OptFinalDepletion_Sim, nStock, nFleet, nArea, YearsHist)
+    lapply(HistSim_List, .OptFinalDepletionSim, nStock, nFleet, nArea, YearsHist)
   } else {
     purrr::map(HistSim_List, \(HistSim) {
-      OptFinalDepletion_Sim(HistSim, nStock, nFleet, nArea, YearsHist)
+      .OptFinalDepletionSim(HistSim, nStock, nFleet, nArea, YearsHist)
     }, .progress = list(
       type = "iterator",
       format = "Optimizing catchability (q) for Final Depletion {cli::pb_bar} {cli::pb_percent}",
@@ -69,7 +71,7 @@ OptFinalDepletion <- function(Hist, silent=FALSE) {
 }
 
 
-OptFinalDepletion_Sim <- function(HistSim, nStock, nFleet, nArea, YearsHist) {
+.OptFinalDepletionSim <- function(HistSim, nStock, nFleet, nArea, YearsHist) {
   
   bounds <- c(1e-02, 3)
   tol <- 1E-5
@@ -77,11 +79,11 @@ OptFinalDepletion_Sim <- function(HistSim, nStock, nFleet, nArea, YearsHist) {
   
   
   if (nStock > 1 || nFleet > 1) {
-    pars <- OptimizeCatchability_Multi(HistSim, nStock, nFleet, nArea, YearsHist, bounds, tol, silent, debug)
+    pars <- .OptimizeCatchabilityMulti(HistSim, nStock, nFleet, nArea, YearsHist, bounds, tol, silent, debug)
     if (inherits(pars, 'hist'))
       return(pars)
   } else {
-    pars <- OptimizeCatchability_Single(HistSim, nStock, nFleet, nArea, YearsHist, bounds, tol, silent, debug)
+    pars <- .OptimizeCatchabilitySingle(HistSim, nStock, nFleet, nArea, YearsHist, bounds, tol, silent, debug)
     if (inherits(pars, 'hist'))
       return(pars)
   }
@@ -106,14 +108,14 @@ OptFinalDepletion_Sim <- function(HistSim, nStock, nFleet, nArea, YearsHist) {
   HistSim@OM@Fleet
 }
 
-OptimizeCatchability_Single <- function(HistSim, nStock, nFleet, nArea, YearsHist, bounds, tol, silent, debug=FALSE) {
+.OptimizeCatchabilitySingle <- function(HistSim, nStock, nFleet, nArea, YearsHist, bounds, tol, silent, debug=FALSE) {
   
   FinalDepletion <- HistSim@OM@Stock[[1]]@Depletion@Final
   
   if (!length(FinalDepletion))
     return(HistSim)
   
-  doOpt <- stats::optimize(OptCatchability,
+  doOpt <- stats::optimize(.OptCatchability,
                            log(bounds),
                            Hist=HistSim,
                            nStock=nStock,
@@ -127,7 +129,7 @@ OptimizeCatchability_Single <- function(HistSim, nStock, nFleet, nArea, YearsHis
   if (any(abs(exp(pars) - bounds) < 0.01)) {
     # more robust than optimize but slower
     doOpt <- stats::nlminb(mean(log(bounds)),
-                           OptCatchability,
+                           .OptCatchability,
                            Hist=HistSim,
                            nStock=nStock,
                            nFleet=nFleet,
@@ -142,7 +144,7 @@ OptimizeCatchability_Single <- function(HistSim, nStock, nFleet, nArea, YearsHis
   
 }
 
-OptCatchability <- function(pars, HistSim, nStock, nFleet, nArea, YearsHist, CatchFrac=NULL, debug=FALSE) {
+.OptCatchability <- function(pars, HistSim, nStock, nFleet, nArea, YearsHist, CatchFrac=NULL, debug=FALSE) {
   
   qStock <- exp(pars[1:nStock])
   qFleet <- matrix(1, nStock, nFleet)
@@ -237,7 +239,7 @@ OptCatchability <- function(pars, HistSim, nStock, nFleet, nArea, YearsHist, Cat
 }
 
 
-OptimizeCatchability_Multi <- function(HistSim, nStock, nFleet, nArea, YearsHist, bounds, tol, silent, debug=FALSE) {
+.OptimizeCatchabilityMulti <- function(HistSim, nStock, nFleet, nArea, YearsHist, bounds, tol, silent, debug=FALSE) {
   
   FinalDepletion <- purrr::map(HistSim@OM@Stock, \(stock) stock@Depletion@Final) |>
     List2Array('Stock')
@@ -291,7 +293,7 @@ OptimizeCatchability_Multi <- function(HistSim, nStock, nFleet, nArea, YearsHist
   }
   
   doOpt <- optim(pars,
-                 OptCatchability,
+                 .OptCatchability,
                  method = "L-BFGS-B",
                  lower = c(rep(log(bounds[1]), nStock), rep(-5, nStock * (nFleet-1))),
                  upper = c(rep(log(bounds[2]), nStock), rep(5, nStock*(nFleet-1))),
@@ -307,6 +309,4 @@ OptimizeCatchability_Multi <- function(HistSim, nStock, nFleet, nArea, YearsHist
   pars <- doOpt$par
   pars
 }
-
-
 

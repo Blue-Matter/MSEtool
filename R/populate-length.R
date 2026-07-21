@@ -60,7 +60,7 @@ PopulateLength <- function(Length,
                            force = FALSE) {
   Ages  <- DefaultAges(Ages)
   Years <- DefaultYears(Years)
-  nSim  <- Get_nSim(Length, nSim)
+  nSim  <- .GetNSim(Length, nSim)
   
   argList <- list(Ages, nSim, Years, ALK, seed)
   
@@ -69,16 +69,16 @@ PopulateLength <- function(Length,
   
   # cli::cli_abort('{.val Length} is required but is currently empty')
   
-  if (CheckDigest(Length, argList) & !force) 
+  if (.CheckDigest(Length, argList) & !force) 
     return(Length)
   
-  SetSeed(seed)
+  .SetSeed(seed)
   
-  Length@Pars    <- StructurePars(Pars = Length@Pars, nSim, Years)
-  Length@Model   <- FindModel(Length)
-  Length         <- PopulateMeanAtAge(Length, Ages, Years)
-  Length         <- PopulateRandom(Length)
-  Length@CVatAge <- StructureCV(Length@CVatAge, nSim)
+  Length@Pars    <- .StructurePars(Pars = Length@Pars, nSim, Years)
+  Length@Model   <- .FindModel(Length)
+  Length         <- .PopulateMeanAtAge(Length, Ages, Years)
+  Length         <- .PopulateRandom(Length)
+  Length@CVatAge <- .StructureCV(Length@CVatAge, nSim)
   dd             <- dim(Length@CVatAge)
   
   if (is.null(dimnames(Length@CVatAge)) && !is.null(Length@CVatAge)) {
@@ -93,19 +93,17 @@ PopulateLength <- function(Length,
     ALK <- FALSE
   
   if (!is.null(Length@CVatAge)) 
-    Length <- PopulateClasses(Length)
+    Length <- .PopulateClasses(Length)
   
-  Length <- AddAtAgeDimnames(Length, Ages, Years)
+  Length <- .AddAtAgeDimnames(Length, Ages, Years)
   
   if (ALK && !is.null(Length@Classes) && is.null(Length@ALK))  {
-    Length <- PopulateASK(object = Length, 
+    Length <- .PopulateASK(object = Length, 
                           Ages   = Ages, 
                           silent = silent)
   }
     
-  SetDigest(SetAgeDimnames(Length, Ages), argList)
+  .SetDigest(.SetAgeDimnames(Length, Ages), argList)
 }
-
-
 
 

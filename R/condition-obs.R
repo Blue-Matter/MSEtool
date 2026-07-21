@@ -12,7 +12,7 @@
 #' @param silent Logical; if `TRUE`, suppress progress bars and status messages
 #'
 #' @keywords internal
-ConditionObs <- function(Hist, silent=FALSE) {
+.ConditionObs <- function(Hist, silent=FALSE) {
   
   HistYears <- Years(Hist,'H')
   ProjYears <- Years(Hist,'P')
@@ -42,30 +42,30 @@ ConditionObs <- function(Hist, silent=FALSE) {
     # - life history
     # - exploitation
 
-    Hist <- ConditionObs_Effort(Hist, FisheryData, HistYears, ProjYears, stocks, i)
+    Hist <- .ConditionObsEffort(Hist, FisheryData, HistYears, ProjYears, stocks, i)
 
-    Hist <- ConditionObs_Catch(Hist, FisheryData, HistYears, ProjYears, stocks,
+    Hist <- .ConditionObsCatch(Hist, FisheryData, HistYears, ProjYears, stocks,
                                i, type = 'Landings')
     
-    Hist <- ConditionObs_Catch(Hist, FisheryData, HistYears, ProjYears, stocks, i,
+    Hist <- .ConditionObsCatch(Hist, FisheryData, HistYears, ProjYears, stocks, i,
                                type = 'Discards')
     
-    Hist <- ConditionObs_Index(Hist, FisheryData, HistYears, ProjYears, stocks, 
+    Hist <- .ConditionObsIndex(Hist, FisheryData, HistYears, ProjYears, stocks, 
                                i, type = 'CPUE')
     
-    Hist <- ConditionObs_Index(Hist, FisheryData, HistYears, ProjYears,  stocks, 
+    Hist <- .ConditionObsIndex(Hist, FisheryData, HistYears, ProjYears,  stocks, 
                                i, type = 'Survey')
     
-    Hist <- ConditionObs_Comp(Hist, FisheryData, HistYears, ProjYears,  stocks, 
+    Hist <- .ConditionObsComp(Hist, FisheryData, HistYears, ProjYears,  stocks, 
                               i, type = 'LandingsAtAge')
     
-    Hist <- ConditionObs_Comp(Hist, FisheryData, HistYears, ProjYears,  stocks, 
+    Hist <- .ConditionObsComp(Hist, FisheryData, HistYears, ProjYears,  stocks, 
                               i, type = 'DiscardsAtAge')
     
-    Hist <- ConditionObs_Comp(Hist, FisheryData, HistYears, ProjYears,  stocks, 
+    Hist <- .ConditionObsComp(Hist, FisheryData, HistYears, ProjYears,  stocks, 
                               i, type = 'LandingsAtSize')
     
-    Hist <- ConditionObs_Comp(Hist, FisheryData, HistYears, ProjYears,  stocks, 
+    Hist <- .ConditionObsComp(Hist, FisheryData, HistYears, ProjYears,  stocks, 
                               i, type = 'DiscardsAtSize')
     
     if (!silent) 
@@ -78,4 +78,3 @@ ConditionObs <- function(Hist, silent=FALSE) {
   Hist
   
 }
-

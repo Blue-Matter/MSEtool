@@ -82,7 +82,6 @@ runMSE <- function(OM = NULL,
                    DoMSYRefs      = TRUE,
                    Reduce = TRUE, ...) {
   
-  # ---- Initial Checks and Setup ----
   
   if (is.null(OM))
     OM <- MSEtool::SingleStockOM
@@ -107,18 +106,15 @@ runMSE <- function(OM = NULL,
   if (is_new_hist && !silent)
     cli::cli_inform("Using {.cls hist} object to reproduce historical dynamics.")
   
-  # ---- Check MPs ----
   if (checkMPs && !Hist && (is_leg_hist || is_leg_om))
     MPs <- CheckMPs(MPs = MPs, silent = silent)
   
-  # ---- SAC parallel path (legacy OM only) ----
   if (is.character(parallel) && parallel == "sac") {
     if (!is_leg_om)
       cli::cli_abort('parallel = "sac" is only supported for {.cls OM} objects.')
     return(runMSE_sac(OM, MPs, Hist = Hist, silent = silent, extended = extended))
   }
   
-  # ---- Run Historical Simulations ----
   if (is_new_om || is_leg_om) {
     HistSims <- Simulate(OM, 
                          parallel          = parallel, 
@@ -143,7 +139,6 @@ runMSE <- function(OM = NULL,
     return(HistSims)
   }
   
-  # ---- Run Forward Projections ----
 
   MSEout <- try(
     Project(Hist     = HistSims,

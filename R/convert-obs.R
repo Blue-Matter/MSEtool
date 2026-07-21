@@ -53,7 +53,7 @@
 #'
 #' @export
 ConvertObs <- function(Obs, silent = FALSE) {
-  CheckClass(Obs, c("Obs", "OM"), "Obs")
+  .CheckClass(Obs, c("Obs", "OM"), "Obs")
   
   if (!silent)
     cli::cli_alert("Converting object of class {.cls Obs} to class {.cls obs}")
@@ -93,4 +93,3 @@ ConvertObs <- function(Obs, silent = FALSE) {
   
   obs
 }
-

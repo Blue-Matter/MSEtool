@@ -42,35 +42,8 @@
 #'   `Year`, `Period`, `MP` (MSE only), and optionally `Age`, `Area`,
 #'   and/or `Fleet`, plus `Value` and `Variable`.
 #'
-#' @examples
-#' Hist <- Simulate(SingleStockOM)
-#' MSE <- Project(Hist, 'CurrentEffort')
-#' 
-#' # Raw array slots
-#' FInteract(Hist)
-#' FDead(Hist)
-#' FRetain(MSE)
+#' @example man-examples/F_timeseries.R
 #'
-#' # Age-structured F (area always included)
-#' FInteract(Hist, df = TRUE)
-#' FDead(MSE, df = TRUE)
-#' FRetain(MSE, df = TRUE)
-#'
-#' # Retain fleet dimension
-#' FDead(MSE, df = TRUE, byFleet = TRUE)
-#'
-#' # Apical F (max over ages) as a tidy data frame
-#' FInteract(Hist, df = TRUE, byAge = FALSE)
-#' FDead(MSE,      df = TRUE, byAge = FALSE)
-#' FRetain(MSE,    df = TRUE, byAge = FALSE)
-#'
-#' # Age + Fleet
-#' FDead(MSE, df = TRUE, byFleet = TRUE)
-#'
-#' # Area only (apical F per area)
-#' FDead(MSE, df = TRUE, byAge = FALSE, byArea = TRUE)
-#' FDead(MSE, df = TRUE, byAge = FALSE, byArea = TRUE, byFleet = TRUE)
-#' 
 #' @rdname F_timeseries
 #' @export
 FInteract <- function(object,
@@ -81,7 +54,7 @@ FInteract <- function(object,
                       Reduce  = TRUE,
                       IncYear = FALSE) {
   
-  extract_F_timeseries(object,
+  .ExtractFTimeseries(object,
                        df        = df,
                        slot_name = 'FInteract',
                        byAge     = byAge,
@@ -101,7 +74,7 @@ FDead <- function(object,
                   Reduce  = TRUE,
                   IncYear = FALSE) {
   
-  extract_F_timeseries(object,
+  .ExtractFTimeseries(object,
                        df        = df,
                        slot_name = 'FDead',
                        byAge     = byAge,
@@ -121,7 +94,7 @@ FRetain <- function(object,
                     Reduce  = TRUE,
                     IncYear = FALSE) {
   
-  extract_F_timeseries(object,
+  .ExtractFTimeseries(object,
                        df        = df,
                        slot_name = 'FRetain',
                        byAge     = byAge,
@@ -131,7 +104,7 @@ FRetain <- function(object,
                        IncYear   = IncYear)
 }
 
-extract_F_timeseries <- function(object,
+.ExtractFTimeseries <- function(object,
                                  slot_name = 'FDead',
                                  df        = FALSE,
                                  byAge     = FALSE,
@@ -140,14 +113,14 @@ extract_F_timeseries <- function(object,
                                  Reduce    = TRUE,
                                  IncYear   = FALSE) {
   
-  CheckClass(object, c('hist', 'mse'), 'object')
+  .CheckClass(object, c('hist', 'mse'), 'object')
   
   if (!df)
     return(slot(object, slot_name))
   
   if (inherits(object, 'hist')) {
     return(
-      .extract_F_timeseries(object,
+      .ExtractFTimeseriesCore(object,
                             OM        = object@OM,
                             slot_name = slot_name,
                             byAge     = byAge,
@@ -159,7 +132,7 @@ extract_F_timeseries <- function(object,
   }
   
   # MSE object: bind historical + projection
-  hist <- .extract_F_timeseries(object@Hist,
+  hist <- .ExtractFTimeseriesCore(object@Hist,
                                 OM        = object@OM,
                                 slot_name = slot_name,
                                 byAge     = byAge,
@@ -169,7 +142,7 @@ extract_F_timeseries <- function(object,
                                 IncYear   = IncYear) |>
     dplyr::mutate(MP = 'Historical')
   
-  proj <- .extract_F_timeseries(object,
+  proj <- .ExtractFTimeseriesCore(object,
                                 OM        = object@OM,
                                 slot_name = slot_name,
                                 byAge     = byAge,
@@ -183,7 +156,7 @@ extract_F_timeseries <- function(object,
   out
 }
 
-.extract_F_timeseries <- function(object,
+.ExtractFTimeseriesCore <- function(object,
                                   OM        = NULL,
                                   slot_name = 'FDead',
                                   byAge     = FALSE,
@@ -238,7 +211,5 @@ extract_F_timeseries <- function(object,
   Array2DF(array) |>
     dplyr::mutate(Variable = slot_name,
                   Period   = ifelse(isMSE, 'Projection', 'Historical')) |>
-    dplyr::relocate('Sim', 'Stock', 'Year', 'Period') |>
-    dplyr::arrange(Sim, Stock, Year)
+    dplyr::relocate('Sim', 'Stock', 'Year', 'Period')
 }
-

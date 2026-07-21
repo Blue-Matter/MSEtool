@@ -41,7 +41,7 @@
 #' and `Model` is set to [MaturityAtLength]. Age-based parameters are used
 #' only when `L50` is absent or `NULL`.
 #'
-#' ## Spatial Structure
+#' ## Spatial .Structure
 #'
 #' If all three spatial parameters (`Size_area_1`, `Prob_staying`,
 #' `Frac_area_1`) equal `0.5`, an empty [spatial-class] object is returned.
@@ -62,25 +62,25 @@
 #'
 #' @export
 ConvertStock <- function(Stock, Seasons = 1, silent = FALSE) {
-  CheckClass(Stock, c("Stock", "OM"), "Stock")
+  .CheckClass(Stock, c("Stock", "OM"), "Stock")
   
   if (!silent)
     cli::cli_alert("Converting object of class {.cls Stock} to class {.cls stock}")
   
-  stock                  <- Stock2Name(Stock)
-  stock@Ages             <- Stock2Ages(Stock)
-  stock@Length           <- Stock2Length(Stock)
-  stock@Weight           <- Stock2Weight(Stock)
-  stock@NaturalMortality <- Stock2NaturalMortality(Stock)
-  stock@Maturity         <- Stock2Maturity(Stock)
-  stock@Fecundity        <- Stock2Fecundity(Stock)
-  stock@SRR              <- Stock2SRR(Stock)
-  stock@Spatial          <- Stock2Spatial(Stock)
-  stock@Depletion        <- Stock2Depletion(Stock)
+  stock                  <- .Stock2Name(Stock)
+  stock@Ages             <- .Stock2Ages(Stock)
+  stock@Length           <- .Stock2Length(Stock)
+  stock@Weight           <- .Stock2Weight(Stock)
+  stock@NaturalMortality <- .Stock2NaturalMortality(Stock)
+  stock@Maturity         <- .Stock2Maturity(Stock)
+  stock@Fecundity        <- .Stock2Fecundity(Stock)
+  stock@SRR              <- .Stock2SRR(Stock)
+  stock@Spatial          <- .Stock2Spatial(Stock)
+  stock@Depletion        <- .Stock2Depletion(Stock)
   stock
 }
 
-Stock2Name <- function(Stock) {
+.Stock2Name <- function(Stock) {
   stock <- Stock()
   if (inherits(Stock, "OM")) {
     stock@Name <- SubOM(Stock, "Stock")@Name
@@ -93,7 +93,7 @@ Stock2Name <- function(Stock) {
   stock
 }
 
-Stock2Ages <- function(Stock, Seasons = 1) {
+.Stock2Ages <- function(Stock, Seasons = 1) {
   Ages(
     MaxAge = Stock@maxage,
     MinAge = 0,
@@ -101,7 +101,7 @@ Stock2Ages <- function(Stock, Seasons = 1) {
   )
 }
 
-Stock2Length <- function(Stock) {
+.Stock2Length <- function(Stock) {
   Length <- Length()
   Length@Pars$Linf <- Stock@Linf
   Length@Pars$K <- Stock@K
@@ -114,7 +114,7 @@ Stock2Length <- function(Stock) {
   Length
 }
 
-Stock2Weight <- function(Stock) {
+.Stock2Weight <- function(Stock) {
   Weight <- Weight(Pars=list())
   Weight@Pars$alpha <- Stock@a
   Weight@Pars$beta <- Stock@b
@@ -122,25 +122,25 @@ Stock2Weight <- function(Stock) {
   Weight
 }
 
-Stock2NaturalMortality <- function(Stock) {
+.Stock2NaturalMortality <- function(Stock) {
   NaturalMortality <- NaturalMortality()
   NaturalMortality@Pars$M <- Stock@M
   NaturalMortality@Pars$Msd <- Stock@Msd
   NaturalMortality
 }
 
-Stock2Maturity <- function(Stock) {
+.Stock2Maturity <- function(Stock) {
   Maturity <- Maturity()
   Maturity@Pars$L50 <- Stock@L50
   Maturity@Pars$L50_95 <- Stock@L50_95
   Maturity
 }
 
-Stock2Fecundity <- function(Stock) {
+.Stock2Fecundity <- function(Stock) {
   Fecundity()
 }
 
-switchSRR <- function(SRrel) {
+.SwitchSRR <- function(SRrel) {
   if (is.null(SRrel))
     return(NULL)
   switch(SRrel,
@@ -148,13 +148,13 @@ switchSRR <- function(SRrel) {
          '2'='Ricker')
 }
 
-Stock2SRR <- function(Stock) {
+.Stock2SRR <- function(Stock) {
   SRR <- SRR()
   SRR@Pars$h <- Stock@h
   SRR@R0 <- Stock@R0
   SRR@SD <- Stock@Perr
   SRR@AC <- Stock@AC
-  SRR@Model <- switchSRR(Stock@SRrel[1])
+  SRR@Model <- .SwitchSRR(Stock@SRrel[1])
   if (SRR@Model == "Ricker") {
     SRR@Pars$hR <- SRR@Pars$h
     SRR@Pars$h <- NULL 
@@ -163,7 +163,7 @@ Stock2SRR <- function(Stock) {
   SRR
 }
 
-Stock2Spatial <- function(Stock) {
+.Stock2Spatial <- function(Stock) {
   Spatial <- Spatial()
   Spatial@RelativeSize <- Stock@Size_area_1
   Spatial@ProbStaying <- Stock@Prob_staying
@@ -177,7 +177,7 @@ Stock2Spatial <- function(Stock) {
   Spatial
 }
 
-Stock2Depletion <- function(Stock) {
+.Stock2Depletion <- function(Stock) {
   Depletion <- Depletion()
   Depletion@Final <- Stock@D
   Depletion

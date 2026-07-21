@@ -15,7 +15,7 @@
 #' @return A modified `Hist` object with all relevant components extended
 #'   to include the specified years.
 #' @keywords internal
-ExtendOM <- function(OM, Years = NULL, nSim = NULL, silent=FALSE, id=NULL) {
+.ExtendOM <- function(OM, Years = NULL, nSim = NULL, silent=FALSE, id=NULL) {
   
   nStock <- nStock(OM)
   nFleet <- nFleet(OM)

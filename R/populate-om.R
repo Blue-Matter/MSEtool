@@ -10,7 +10,7 @@
 #'   warnings during population.
 #' @param force Logical. If `TRUE`, force re-population even if the internal
 #'   object digest indicates no changes since the last call.
-#' @param standardize_effort Logical. Used internally. Apply [StandardizeEffort()]?
+#' @param standardize_effort Logical. Used internally. Apply `.StandardizeEffort()`?
 #' @param adjust_fecundity  Logical. Used internally. Apply [AdjustSeasonalFecundity()]?
 #'
 #' @details
@@ -48,13 +48,13 @@ PopulateOM <- function(OM,
                        standardize_effort = TRUE,
                        adjust_fecundity = TRUE) {
   
-  CheckClass(OM)
+  .CheckClass(OM)
   
   OM <- UpdateObject(OM)
   if (!length(OM@maxF)) OM@maxF <- 3
   
   if (EmptyObject(OM)) return(OM)
-  if (CheckDigest(OM) & !force) return(OM)
+  if (.CheckDigest(OM) & !force) return(OM)
   
   if (is.null(OM@Stock)) 
     cli::cli_abort(c(
@@ -69,29 +69,29 @@ PopulateOM <- function(OM,
     ))
 
   OM <- OM |>
-    PopulateStockList(silent = silent, force = force) |>
-    PopulateFleetList(silent = silent, force = force) |>
-    PopulateImpList(silent = silent) |>
-    PopulateComplexes() |>
-    ProcessData() |>
-    PopulateObsList(silent = silent) |>
-    UpdateSPFrom() |>   # TODO
-    ShareParameters() |> # TODO
-    StartMessages()
+    .PopulateStockList(silent = silent, force = force) |>
+    .PopulateFleetList(silent = silent, force = force) |>
+    .PopulateComplexes() |>
+    .PopulateImpList(silent = silent) |>
+    .ProcessData() |>
+    .PopulateObsList(silent = silent) |>
+    .UpdateSPFrom() |>   # TODO
+    .ShareParameters() |> # TODO
+    .StartMessages()
   
   if (adjust_fecundity)
     OM <- AdjustSeasonalFecundity(OM, silent = silent)
   
   if (standardize_effort)
-    OM <- StandardizeEffort(OM, populate=FALSE)
+    OM <- .StandardizeEffort(OM, populate=FALSE)
 
   if (!silent)
     cli::cli_alert_success('Populated OM {.val {OM@Name}}')
   
-  SetDigest(OM)
+  .SetDigest(OM)
 }
 
-ProcessData <- function(OM) {
+.ProcessData <- function(OM) {
   if (is.null(OM@Data)) {
     return(OM)
   }
@@ -111,7 +111,7 @@ ProcessData <- function(OM) {
   OM
 }
 
-PopulateStockList <- function(OM, silent = FALSE, force = FALSE) {
+.PopulateStockList <- function(OM, silent = FALSE, force = FALSE) {
   if (is.null(OM@Stock)) 
     return(OM)
 
@@ -149,7 +149,7 @@ PopulateStockList <- function(OM, silent = FALSE, force = FALSE) {
 }
 
 
-PopulateFleetList <- function(OM, silent = FALSE, force = FALSE) {
+.PopulateFleetList <- function(OM, silent = FALSE, force = FALSE) {
   
   if (is.null(OM@Fleet)) return(OM)
   
@@ -200,11 +200,11 @@ PopulateFleetList <- function(OM, silent = FALSE, force = FALSE) {
         force  = force
       )
       
-      # extract warning logs - only selectivity for now 
+      # extract warning logs - only selectivity for now
       if (!is.null(FleetList[[st]][[fl]]@Selectivity@Misc$warning)) {
         warns <- FleetList[[st]][[fl]]@Selectivity@Misc
-        names(warns[[1]])[1] <- paste(FleetList[[st]][[fl]]@Name, names(warns[[1]])[1], sep = ' - ')
-        OM@Log <- c(OM@Log, warns)
+        warns$warning[[1]]$name <- paste(FleetList[[st]][[fl]]@Name, warns$warning[[1]]$name, sep = ' - ')
+        OM@Log <- .JoinLog(OM@Log, warns)
       }
       
       names(FleetList[[st]])[fl] <- FleetList[[st]][[fl]]@Name
@@ -216,7 +216,7 @@ PopulateFleetList <- function(OM, silent = FALSE, force = FALSE) {
 }
 
 
-PopulateComplexes <- function(OM) {
+.PopulateComplexes <- function(OM) {
   if (length(OM@Complexes) > 0) {
     # Validate the user-supplied Complexes before proceeding.
     cx   <- OM@Complexes
@@ -295,7 +295,7 @@ PopulateComplexes <- function(OM) {
   OM
 }
 
-PopulateImpList <- function(OM, silent = FALSE) {
+.PopulateImpList <- function(OM, silent = FALSE) {
   Complexes    <- Complexes(OM)
   nComplex     <- length(Complexes)
   ComplexNames <- names(Complexes)
@@ -303,6 +303,9 @@ PopulateImpList <- function(OM, silent = FALSE) {
   FleetNames <- FleetNames(OM)
   nFleet     <- length(FleetNames)
   if (is.null(FleetNames) || nFleet < 1) return(OM)
+
+  HistYears <- Years(OM, "H")
+  ProjYears <- Years(OM, "P")
 
   # Empty object — initialise with default imp for each complex and fleet
   if (EmptyObject(OM@Imp)) {
@@ -346,7 +349,7 @@ PopulateImpList <- function(OM, silent = FALSE) {
     ImpList[[cx]]    <- vector("list", nFleet)
     names(ImpList[[cx]]) <- FleetNames
     for (fl in seq_len(nFleet)) {
-      ImpList[[cx]][[fl]] <- OM@Imp[[cx]][[fl]]
+      ImpList[[cx]][[fl]] <- PopulateImp(OM@Imp[[cx]][[fl]], OM@nSim, HistYears, ProjYears)
     }
   }
 
@@ -354,7 +357,7 @@ PopulateImpList <- function(OM, silent = FALSE) {
   OM
 }
 
-PopulateObsList <- function(OM, silent = FALSE) {
+.PopulateObsList <- function(OM, silent = FALSE) {
   Complexes    <- Complexes(OM)
   nComplex     <- length(Complexes)
   ComplexNames <- names(Complexes)
@@ -431,7 +434,7 @@ PopulateObsList <- function(OM, silent = FALSE) {
     AgeClasses           <- OM@Stock[[st]]@Ages@Classes
     
     for (fl in seq_len(nObs)) {
-      SetSeed(OM@Seed + st + fl)
+      .SetSeed(OM@Seed + st + fl)
       
       # Fleet obs use fleet-specific size classes; survey obs use NULL
       SizeClasses <- if (fl <= nFleet) {
@@ -454,7 +457,7 @@ PopulateObsList <- function(OM, silent = FALSE) {
 }
 
 
-UpdateSPFrom <- function(OM) {
+.UpdateSPFrom <- function(OM) {
   stocknames <- StockNames(OM) 
   if (length(stocknames) != nStock(OM)) {
     cli::cli_abort(c('{.var Name} must be unique for each Stock.',
@@ -474,66 +477,7 @@ UpdateSPFrom <- function(OM) {
 
 
 
-ShareParameters <- function(OM) {
-  
-  return(OM)
-  # 
-  # # TODO
-  # 
-  # 
-  # if (length(OM@Herm)) {
-  #   stop('Herm not done yet!')
-  #   # SexPars$Herm <- checkHerm(SexPars$Herm, maxage, nSim, nyears, proyears)
-  # }
-  # 
-  # # TODO - remove SPFrom if it remains in SRR
-  # if (!length(OM@SPFrom))
-  #   return(OM)
-  # 
-  # if (isFALSE(OM@SharePar))
-  #   return(OM)
-  # 
-  # # sexmatches <- sapply(1:nrow(OM@SPFrom), function(x) 
-  # #   paste(OM@SPFrom[x, ], collapse = "_"))
-  # # 
-  # # parcopy <- match(sexmatches, sexmatches)
-  # 
-  # 
-  # # if (!silent)  {
-  # 
-  # cli::cli_alert_info("You have specified sex-specific dynamics, these parameters will be mirrored across sex types according to `SPFrom(OM)`:")
-  # cli::cli_ul()
-  # cli::cli_li(OM@SexPars@Misc$Stock)
-  # cli::cli_li(OM@SexPars@Misc$Fleet)
-  # cli::cli_li('Obs: All parameters')
-  # cli::cli_li('Imp: All parameters')
-  # cli::cli_end()
-  # # }
-  # 
-  # 
-  # for (s in 1:nStock(OM)) {
-  #   # Stock
-  #   for (sl in OM@SexPars@Misc$Stock) 
-  #     slot(OM@Stock[[s]], sl) <- slot(OM@Stock[[parcopy[s]]], sl)
-  #   
-  #   for (fl in 1:nFleet(OM)) {
-  #     # Fleet
-  #     for (sl in OM@SexPars@Misc$Fleet) 
-  #       slot(OM@Fleet[[s]][[fl]], sl) <- slot(OM@Fleet[[parcopy[s]]][[fl]], sl)
-  #     
-  #     # Obs
-  #     if (OM@SexPars@Misc$Obs) {
-  #       for (sl in slotNames(OM@Obs[[s]][[fl]]))
-  #         slot(OM@Obs[[s]][[fl]], sl) <- slot(OM@Obs[[parcopy[s]]][[fl]], sl)
-  #     }
-  #     
-  #     # Imp
-  #     if (OM@SexPars@Misc$Imp) {
-  #       for (sl in slotNames(OM@Imp[[s]][[fl]]))
-  #         slot(OM@Imp[[s]][[fl]], sl) <- slot(OM@Imp[[parcopy[s]]][[fl]], sl)
-  #     }
-  #   }
-  # }
-  # OM
+.ShareParameters <- function(OM) {
+  # TODO: sex-specific parameter mirroring via SPFrom(OM) not yet implemented
+  OM
 }
-

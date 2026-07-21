@@ -8,7 +8,7 @@
 #'   model and historical dynamics, as returned by [Simulate()].
 #' @param MPs Character vector of MP names to project. If `NULL` (default),
 #'   all MPs attached to `Hist` are used. MP names must correspond to
-#'   functions available in the current environment. See [CheckMPClass()] for
+#'   functions available in the current environment. See `.CheckMPClass()` for
 #'   validation details.
 #' @param parallel Logical. Not currently used. Default `FALSE`. 
 #' @param silent Logical. Suppress progress messages if `TRUE`. Default
@@ -16,26 +16,26 @@
 #' @param nSim Integer. If provided, reduces the number of simulations to
 #'   `nSim` before projecting. If `NULL` (default), all simulations in `Hist`
 #'   are used.
-#' @param Reduce Logical. Reserved for future use. Default `TRUE`.
+#' @param Reduce Logical. Reduce object size after simulation for memory
+#'   efficiency? Default `TRUE`. See [ReduceDims()].
 #'
 #' @return A [mse-class] object containing projection results for all MPs in
 #'   `MPs`.
 #'
 #' @keywords internal
-Project_hist <- function(Hist,
+.ProjectHist <- function(Hist,
                          MPs = NULL, 
                          parallel=FALSE, 
                          silent=FALSE, 
                          nSim=NULL, 
                          Reduce=TRUE) {
 
-  # ---- Initial Checks and Setup ----
   StartTime <- Sys.time()
   Hist <- UpdateObject(Hist)
   
-  OnExit()
-  CheckClass(Hist, 'hist', 'Hist')
-  CheckMPClass(MPs)
+  .OnExit()
+  .CheckClass(Hist, 'hist', 'Hist')
+  .CheckMPClass(MPs)
   
   YearsHist <- Years(Hist@OM, "Historical")
   YearsProj <- Years(Hist@OM, "Projection")
@@ -43,32 +43,25 @@ Project_hist <- function(Hist,
   
   if (!silent) {
     cli::cli_text('')
-    cli::cli_alert_info(' Starting  {.val Project} for OM {.val {Hist@OM@Name}}')
+    cli::cli_alert_info(' Starting `Project` for OM {.val {Hist@OM@Name}}')
   }
 
-  # ---- Reduce nSim if provided ----
   Proj <- Hist |> ReduceNSim(nSim)
   
-  # ---- Check Allocation ----
-  Proj <- CheckAllocation(Proj)
+  Proj <- .CheckAllocation(Proj)
   
-  # ---- Add temporary lists and arrays to Hist@Misc ----
-  Proj <- PrepHistMisc(Proj)
+  Proj <- .PrepHistMisc(Proj)
 
-  # ---- Extend Arrays with Projection Years ----
-  Proj <- ExtendHist(Proj, Years = c(YearsHist, YearsProj))
+  Proj <- .ExtendHist(Proj, Years = c(YearsHist, YearsProj))
   
-  # ---- Populate Number-at-Age at Beginning of Projection Year ----
-  Proj <- CalcFisheryDynamics(Proj, 
+  Proj <- .CalcFisheryDynamics(Proj, 
                               Years = c(utils::tail(YearsHist,1)), 
                               clone = 1) 
   
-  # ---- Create MSE Object ----
-  MSE <- Hist2MSE(Proj, MPNames = MPs)
+  MSE <- .Hist2MSE(Proj, MPNames = MPs)
   SaveLog <- Proj@Log 
   Proj@Log <- list()
 
-  # ---- Project MPs ----
   mp <- 1 # initialise for debugging
   
   if (!silent) 
@@ -78,7 +71,7 @@ Project_hist <- function(Hist,
     MPName <- MPs[mp]
     MPfunction <- MSE@MPs[[MPName]]
     
-    MSE <- Project_MP(Proj, 
+    MSE <- .ProjectMP(Proj, 
                       MSE,
                       MPName,
                       MPfunction,
@@ -95,12 +88,12 @@ Project_hist <- function(Hist,
   if (!silent)
     cli::cli_alert_success('Completed {.val Project} for OM {.val {Hist@OM@Name}} ({elapse_auto})') 
   
-  MSE <- RestoreHistMisc(MSE)
-  
-  # TODO  CheckLog(MSE, 'MSE')
-  # - change from Warnings only to Notes/Assumptions 
-  
-  MSE@Log <- c(SaveLog, MSE@Log)
-  
-  MSE
+  MSE <- .RestoreHistMisc(MSE)
+
+  MSE@Log <- .JoinLog(SaveLog, MSE@Log)
+
+  if (!silent)
+    .CheckLog(MSE, 'MSE')
+
+  .ReduceMSE(MSE, Reduce) 
 }

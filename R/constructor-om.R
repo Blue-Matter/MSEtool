@@ -47,10 +47,21 @@
 #'   construction and pass-through access.
 #' @param DataLag Integer. Number of time steps that data are lagged relative
 #'   to management implementation. Default `0`.
-#' @param CatchFrac List. Controls catch fraction allocation among fleets or
-#'   stocks. Default `NULL`.
-#' @param Allocation List. Controls effort or catch allocation among fleets or
-#'   stocks. Default `NULL`.
+#' @param CatchFrac List. Named list of length 0 or `nStock(OM)`. Each
+#'   element is an `nSim` by `nFleet` matrix (or a single row recycled
+#'   across sims) giving the fraction of catch taken by each fleet, with
+#'   rows summing to 1. Only used when there is more than one fleet and a
+#'   historical `Depletion@Final` target is set for at least one stock, in
+#'   which case it is the target fleet split that catchability is
+#'   calibrated to reproduce. If left unspecified for a stock, it is
+#'   derived from relative Effort times Catchability in the final
+#'   historical year. Default `NULL`.
+#' @param Allocation List. Named list of length 0 or the number of stock
+#'   complexes. Each element is an `nSim` by `nFleet` matrix, with rows
+#'   summing to 1, controlling how the TAC is split among fleets during
+#'   projection. If unspecified it falls back to `CatchFrac`, and then to
+#'   the mean of removals over the last five historical years. Default
+#'   `NULL`.
 #' @param EFactor List. Effort or exploitation modifiers applied during
 #'   projection. Default `NULL`.
 #' @param Complexes List. Defines stock complexes for data aggregation and
@@ -67,10 +78,15 @@
 #'   
 #' @param Interval Numeric scalar or named numeric vector. Management update
 #'   interval in years. Default `1`.
+#' @param MPStartYear Numeric or `NULL`. First calendar year in which MPs are
+#'   applied - see *Interim Advice* in Details. Default `NULL`.
+#' @param InterimAdvice A `data.frame` or `NULL`. Fixed or stochastic
+#'   TAC/Effort values for years before `MPStartYear` - see *Interim Advice*
+#'   in Details. Default `NULL`.
 #' @param nReps Positive integer. Number of stochastic replicates used for
-#'   generating management advice. Default `1`.
+#'   generating management advice. Default `1`. Not currently used.
 #' @param pStar Numeric in \eqn{[0, 1]}. Percentile applied to stochastic
-#'   management advice. Default `0.5`.
+#'   management advice. Default `0.5`. Not currently used.
 #' @param maxF Numeric. Maximum allowable instantaneous fishing mortality.
 #'   Applies to nominal fishing mortality for fish that interact with the
 #'   fishing gear; actual effective F may be lower if some fish are discarded
@@ -102,6 +118,47 @@
 #' automatically from `nYear`, `pYear`, `CurrentYear`, and `Seasons` via
 #' [CalcYears()] and is read-only. Use [Years()] to extract it from a
 #' constructed object.
+#'
+#' ## Interim Advice
+#'
+#' When the historical period ends before MPs should actually start being
+#' applied (e.g. the OM is conditioned on data to 2024 but MPs will not be
+#' implemented until 2028), set `MPStartYear` to the first calendar year MPs
+#' should run. Projection years before `MPStartYear` are "interim" years:
+#' the MP is not called, `Imp` (implementation error) is bypassed since these
+#' values represent actual/plausible realised catch or effort rather than a
+#' management recommendation, and advice is instead taken from
+#' `InterimAdvice`.
+#'
+#' `InterimAdvice` is a `data.frame` with one row per Year x Stock x
+#' (optionally Fleet), with columns:
+#' - `Year`: calendar year, in `[first projection year, MPStartYear - 1]`.
+#' - `Stock`: stock (or complex) name. Optional when the OM has a single
+#'   stock/complex, in which case every row applies to it; required when
+#'   there is more than one.
+#' - `Fleet`: optional; fleet name, or `NA` to apply as a stock total (TAC,
+#'   allocated across fleets the same way MP-supplied TAC is) or an identical
+#'   value across fleets (Effort).
+#' - `Type`: `"TAC"` or `"Effort"`.
+#' - `Mean`: point estimate, natural scale. Must be `>= 0` (e.g. `0` for a
+#'   fleet with no historical catch, maintained as a closure in interim
+#'   years). A row with `Mean == 0` is always deterministic -- a lognormal
+#'   draw cannot be centred at `0` -- regardless of `SD`.
+#' - `SD`: optional; natural-scale SD for a lognormal draw (sampled once per
+#'   simulation, per row). `NA`/`0` (default), or `Mean == 0`, gives a fixed,
+#'   deterministic value. If supplied, must be `>= 0`, and must be `NA`/`0`
+#'   wherever `Mean == 0`.
+#' - `TACType`, `TACUnit`: as in [Advice()]; only used for `"TAC"` rows.
+#' - `EffType`: as in [Advice()]; only used for `"Effort"` rows.
+#'
+#' Any Year x Stock combination with no matching row falls back to freezing
+#' effort at the last historical level (the same default used when an MP
+#' itself returns no TAC/Effort).
+#'
+#' For seasonal OMs (`Seasons > 1`), the annual `Mean` for a row is spread
+#' across seasons using that stock/fleet's own seasonal shape from the last
+#' historical year (Landings for TAC rows, Effort for Effort rows), so a
+#' historical seasonal pattern is retained rather than flattened.
 #'
 #' ## StockTargeting Initialisation
 #'
@@ -200,6 +257,8 @@ OM <- function(Name        = "A new OM object",
                StockTargeting = NULL,
                
                Interval    = 1,
+               MPStartYear = NULL,
+               InterimAdvice = NULL,
                nReps       = 1,
                pStar       = 0.5,
                maxF        = 3,
@@ -232,18 +291,18 @@ OM <- function(Name        = "A new OM object",
   .Object@Seasons     <- Seasons
   .Object@Years       <- CalcYears(nYear, pYear, CurrentYear, Seasons)
   
-  Stock     <- if (!is.null(Stock)) ToNamedList(Stock, 'stock') else NULL
+  Stock     <- if (!is.null(Stock)) .ToNamedList(Stock, 'stock') else NULL
   stock_nms <- names(Stock)
   compx_nms <- names(Complexes)
   if (is.null(compx_nms))
     compx_nms <- stock_nms
   
-  Fleet     <- ToNestedList(Fleet, 'fleet', stock_nms)
+  Fleet     <- .ToNestedList(Fleet, 'fleet', stock_nms)
   fleet_nms <- if (!is.null(Fleet)) purrr::map(Fleet, names) else NULL
 
   # Obs/Imp are indexed by complex, not stock. When Complexes is explicit,
   # map each complex to the fleet names of its first stock. Full validation of
-  # Complexes (names, index coverage) happens in PopulateComplexes(); here we
+  # Complexes (names, index coverage) happens in .PopulateComplexes(); here we
   # are permissive so that stocks/obs/complexes can be added incrementally.
   obs_fleet_nms <- if (!is.null(Complexes) && !is.null(fleet_nms) && length(stock_nms) > 0) {
     purrr::map(setNames(nm = compx_nms), function(cx) {
@@ -256,8 +315,8 @@ OM <- function(Name        = "A new OM object",
     fleet_nms
   }
 
-  Obs       <- ToNestedList(Obs,   'obs',   compx_nms, obs_fleet_nms)
-  Imp       <- ToNestedList(Imp,   'imp',   compx_nms, obs_fleet_nms)
+  Obs       <- .ToNestedList(Obs,   'obs',   compx_nms, obs_fleet_nms)
+  Imp       <- .ToNestedList(Imp,   'imp',   compx_nms, obs_fleet_nms)
                           
   .Object@Stock       <- Stock
   .Object@Fleet       <- Fleet
@@ -281,6 +340,8 @@ OM <- function(Name        = "A new OM object",
   .Object@StockTargeting <- StockTargeting
   
   .Object@Interval    <- Interval
+  .Object@MPStartYear <- MPStartYear
+  .Object@InterimAdvice <- InterimAdvice
   .Object@nReps       <- nReps
   .Object@pStar       <- pStar
   .Object@maxF        <- maxF
@@ -349,238 +410,242 @@ OM <- function(Name        = "A new OM object",
 NULL
 
 
-# ---- Metadata ----
+#' @rdname OM-accessors
+#' @export
+Agency <- function(x) .IsHist(x, "Agency")
 
 #' @rdname OM-accessors
 #' @export
-Agency <- function(x) ishist(x, "Agency")
+`Agency<-` <- function(x, value) .AssignSlot(x, value, "Agency")
 
 #' @rdname OM-accessors
 #' @export
-`Agency<-` <- function(x, value) AssignSlot(x, value, "Agency")
+Author <- function(x) .IsHist(x, "Author")
 
 #' @rdname OM-accessors
 #' @export
-Author <- function(x) ishist(x, "Author")
+`Author<-` <- function(x, value) .AssignSlot(x, value, "Author")
 
 #' @rdname OM-accessors
 #' @export
-`Author<-` <- function(x, value) AssignSlot(x, value, "Author")
+Email <- function(x) .IsHist(x, "Email")
 
 #' @rdname OM-accessors
 #' @export
-Email <- function(x) ishist(x, "Email")
+`Email<-` <- function(x, value) .AssignSlot(x, value, "Email")
 
 #' @rdname OM-accessors
 #' @export
-`Email<-` <- function(x, value) AssignSlot(x, value, "Email")
+Region <- function(x) .IsHist(x, "Region")
 
 #' @rdname OM-accessors
 #' @export
-Region <- function(x) ishist(x, "Region")
+`Region<-` <- function(x, value) .AssignSlot(x, value, "Region")
 
 #' @rdname OM-accessors
 #' @export
-`Region<-` <- function(x, value) AssignSlot(x, value, "Region")
+Latitude <- function(x) .IsHist(x, "Latitude")
 
 #' @rdname OM-accessors
 #' @export
-Latitude <- function(x) ishist(x, "Latitude")
+`Latitude<-` <- function(x, value) .AssignSlot(x, value, "Latitude")
 
 #' @rdname OM-accessors
 #' @export
-`Latitude<-` <- function(x, value) AssignSlot(x, value, "Latitude")
+Longitude <- function(x) .IsHist(x, "Longitude")
 
 #' @rdname OM-accessors
 #' @export
-Longitude <- function(x) ishist(x, "Longitude")
+`Longitude<-` <- function(x, value) .AssignSlot(x, value, "Longitude")
 
 #' @rdname OM-accessors
 #' @export
-`Longitude<-` <- function(x, value) AssignSlot(x, value, "Longitude")
+Sponsor <- function(x) .IsHist(x, "Sponsor")
 
 #' @rdname OM-accessors
 #' @export
-Sponsor <- function(x) ishist(x, "Sponsor")
+`Sponsor<-` <- function(x, value) .AssignSlot(x, value, "Sponsor")
 
 #' @rdname OM-accessors
 #' @export
-`Sponsor<-` <- function(x, value) AssignSlot(x, value, "Sponsor")
+Source <- function(x) .IsHist(x, "Source")
 
 #' @rdname OM-accessors
 #' @export
-Source <- function(x) ishist(x, "Source")
+`Source<-` <- function(x, value) .AssignSlot(x, value, "Source")
+
 
 #' @rdname OM-accessors
 #' @export
-`Source<-` <- function(x, value) AssignSlot(x, value, "Source")
-
-
-# ---- Simulation dimensions ----
+nYear <- function(x) .IsHist(x, "nYear")
 
 #' @rdname OM-accessors
 #' @export
-nYear <- function(x) ishist(x, "nYear")
+`nYear<-` <- function(x, value) .AssignSlot(x, value, "nYear")
 
 #' @rdname OM-accessors
 #' @export
-`nYear<-` <- function(x, value) AssignSlot(x, value, "nYear")
+pYear <- function(x) .IsHist(x, "pYear")
 
 #' @rdname OM-accessors
 #' @export
-pYear <- function(x) ishist(x, "pYear")
+`pYear<-` <- function(x, value) .AssignSlot(x, value, "pYear")
 
 #' @rdname OM-accessors
 #' @export
-`pYear<-` <- function(x, value) AssignSlot(x, value, "pYear")
+CurrentYear <- function(x) .IsHist(x, "CurrentYear")
 
 #' @rdname OM-accessors
 #' @export
-CurrentYear <- function(x) ishist(x, "CurrentYear")
+`CurrentYear<-` <- function(x, value) .AssignSlot(x, value, "CurrentYear")
 
 #' @rdname OM-accessors
 #' @export
-`CurrentYear<-` <- function(x, value) AssignSlot(x, value, "CurrentYear")
+Seasons <- function(x) .IsHist(x, "Seasons")
 
 #' @rdname OM-accessors
 #' @export
-Seasons <- function(x) ishist(x, "Seasons")
+`Seasons<-` <- function(x, value) .AssignSlot(x, value, "Seasons")
+
 
 #' @rdname OM-accessors
 #' @export
-`Seasons<-` <- function(x, value) AssignSlot(x, value, "Seasons")
-
-
-# ---- Data lag and allocation ----
+DataLag <- function(x) .IsHist(x, "DataLag")
 
 #' @rdname OM-accessors
 #' @export
-DataLag <- function(x) ishist(x, "DataLag")
+`DataLag<-` <- function(x, value) .AssignSlot(x, value, "DataLag")
 
 #' @rdname OM-accessors
 #' @export
-`DataLag<-` <- function(x, value) AssignSlot(x, value, "DataLag")
+CatchFrac <- function(x) .IsHist(x, "CatchFrac")
 
 #' @rdname OM-accessors
 #' @export
-CatchFrac <- function(x) ishist(x, "CatchFrac")
+`CatchFrac<-` <- function(x, value) .AssignSlot(x, value, "CatchFrac")
 
 #' @rdname OM-accessors
 #' @export
-`CatchFrac<-` <- function(x, value) AssignSlot(x, value, "CatchFrac")
+Allocation <- function(x) .IsHist(x, "Allocation")
 
 #' @rdname OM-accessors
 #' @export
-Allocation <- function(x) ishist(x, "Allocation")
+`Allocation<-` <- function(x, value) .AssignSlot(x, value, "Allocation")
 
 #' @rdname OM-accessors
 #' @export
-`Allocation<-` <- function(x, value) AssignSlot(x, value, "Allocation")
+EFactor <- function(x) .IsHist(x, "EFactor")
 
 #' @rdname OM-accessors
 #' @export
-EFactor <- function(x) ishist(x, "EFactor")
+`EFactor<-` <- function(x, value) .AssignSlot(x, value, "EFactor")
+
 
 #' @rdname OM-accessors
 #' @export
-`EFactor<-` <- function(x, value) AssignSlot(x, value, "EFactor")
-
-
-# ---- Multi-stock structure ----
+Complexes <- function(x) .IsHist(x, "Complexes")
 
 #' @rdname OM-accessors
 #' @export
-Complexes <- function(x) ishist(x, "Complexes")
+`Complexes<-` <- function(x, value) .AssignSlot(x, value, "Complexes")
 
 #' @rdname OM-accessors
 #' @export
-`Complexes<-` <- function(x, value) AssignSlot(x, value, "Complexes")
+Herm <- function(x) .IsHist(x, "Herm")
 
 #' @rdname OM-accessors
 #' @export
-Herm <- function(x) ishist(x, "Herm")
+`Herm<-` <- function(x, value) .AssignSlot(x, value, "Herm")
 
 #' @rdname OM-accessors
 #' @export
-`Herm<-` <- function(x, value) AssignSlot(x, value, "Herm")
+SharePar <- function(x) .IsHist(x, "SharePar")
 
 #' @rdname OM-accessors
 #' @export
-SharePar <- function(x) ishist(x, "SharePar")
+`SharePar<-` <- function(x, value) .AssignSlot(x, value, "SharePar")
 
 #' @rdname OM-accessors
 #' @export
-`SharePar<-` <- function(x, value) AssignSlot(x, value, "SharePar")
+Relations <- function(x) .IsHist(x, "Relations")
 
 #' @rdname OM-accessors
 #' @export
-Relations <- function(x) ishist(x, "Relations")
+`Relations<-` <- function(x, value) .AssignSlot(x, value, "Relations")
+
 
 #' @rdname OM-accessors
 #' @export
-`Relations<-` <- function(x, value) AssignSlot(x, value, "Relations")
-
-
-# ---- Management parameters ----
+Interval <- function(x) .IsHist(x, "Interval")
 
 #' @rdname OM-accessors
 #' @export
-Interval <- function(x) ishist(x, "Interval")
+`Interval<-` <- function(x, value) .AssignSlot(x, value, "Interval")
 
 #' @rdname OM-accessors
 #' @export
-`Interval<-` <- function(x, value) AssignSlot(x, value, "Interval")
+MPStartYear <- function(x) .IsHist(x, "MPStartYear")
 
 #' @rdname OM-accessors
 #' @export
-nReps <- function(x) ishist(x, "nReps")
+`MPStartYear<-` <- function(x, value) .AssignSlot(x, value, "MPStartYear")
 
 #' @rdname OM-accessors
 #' @export
-`nReps<-` <- function(x, value) AssignSlot(x, value, "nReps")
+InterimAdvice <- function(x) .IsHist(x, "InterimAdvice")
 
 #' @rdname OM-accessors
 #' @export
-pStar <- function(x) ishist(x, "pStar")
+`InterimAdvice<-` <- function(x, value) .AssignSlot(x, value, "InterimAdvice")
 
 #' @rdname OM-accessors
 #' @export
-`pStar<-` <- function(x, value) AssignSlot(x, value, "pStar")
+nReps <- function(x) .IsHist(x, "nReps")
 
 #' @rdname OM-accessors
 #' @export
-maxF <- function(x) ishist(x, "maxF")
+`nReps<-` <- function(x, value) .AssignSlot(x, value, "nReps")
 
 #' @rdname OM-accessors
 #' @export
-`maxF<-` <- function(x, value) AssignSlot(x, value, "maxF")
+pStar <- function(x) .IsHist(x, "pStar")
 
 #' @rdname OM-accessors
 #' @export
-Seed <- function(x) ishist(x, "Seed")
+`pStar<-` <- function(x, value) .AssignSlot(x, value, "pStar")
 
 #' @rdname OM-accessors
 #' @export
-`Seed<-` <- function(x, value) AssignSlot(x, value, "Seed")
+maxF <- function(x) .IsHist(x, "maxF")
 
 #' @rdname OM-accessors
 #' @export
-Control <- function(x) ishist(x, "Control")
+`maxF<-` <- function(x, value) .AssignSlot(x, value, "maxF")
 
 #' @rdname OM-accessors
 #' @export
-`Control<-` <- function(x, value) AssignSlot(x, value, "Control")
+Seed <- function(x) .IsHist(x, "Seed")
+
+#' @rdname OM-accessors
+#' @export
+`Seed<-` <- function(x, value) .AssignSlot(x, value, "Seed")
+
+#' @rdname OM-accessors
+#' @export
+Control <- function(x) .IsHist(x, "Control")
+
+#' @rdname OM-accessors
+#' @export
+`Control<-` <- function(x, value) .AssignSlot(x, value, "Control")
 
 
-# ---- Helpers ----
-
-ishist <- function(x, slot_name) {
+.IsHist <- function(x, slot_name) {
   if (inherits(x, "hist") || inherits(x, "mse"))
     x <- x@OM
-  AccessSlot(x, slot_name)
+  .AccessSlot(x, slot_name)
 }
 
-ToNamedList <- function(x, cls) {
+.ToNamedList <- function(x, cls) {
   if (inherits(x, cls))
     return(setNames(list(x), x@Name))
   if (is.null(names(x)) || any(names(x) == ""))
@@ -588,7 +653,7 @@ ToNamedList <- function(x, cls) {
   x
 }
 
-ToNestedList <- function(x, cls, stock_nms, fleet_nms = NULL) {
+.ToNestedList <- function(x, cls, stock_nms, fleet_nms = NULL) {
   if (is.null(x)) return(NULL)
 
   is_flat <- inherits(x, cls) ||
@@ -617,4 +682,3 @@ ToNestedList <- function(x, cls, stock_nms, fleet_nms = NULL) {
     inner
   })
 }
-

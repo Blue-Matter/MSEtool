@@ -38,13 +38,12 @@ NULL
 
 
 #' @rdname internal_arrays
-ArraySimStockAgeTimeArea <- function(
-    Sims, 
-    Stocks, 
-    Ages, 
-    Years, 
-    Areas, 
-    default = 0) {
+.ArraySimStockAgeTimeArea <- function(Sims, 
+                                      Stocks, 
+                                      Ages, 
+                                      Years, 
+                                      Areas, 
+                                      default = 0) {
   array(
     default,
     dim = c(length(Sims), length(Stocks), length(Ages), length(Years), length(Areas)),
@@ -59,11 +58,10 @@ ArraySimStockAgeTimeArea <- function(
 }
 
 #' @rdname internal_arrays
-ArraySimAge <- function(
-    OM, 
-    Period = c("Historical", "Projection", "All"), 
-    stock = 1, 
-    default = 0) {
+.ArraySimAge <- function(OM, 
+                         Period = c("Historical", "Projection", "All"), 
+                         stock = 1, 
+                         default = 0) {
   meta <- GetMetaData(OM, Period)
   nAges <- meta$nAges[[stock]]
   AgeClasses <- meta$AgeClasses[[stock]]
@@ -79,14 +77,13 @@ ArraySimAge <- function(
 }
 
 #' @rdname internal_arrays
-ListArraySimAge <- function(
-    OM, 
-    Period = c("Historical", "Projection", "All"), 
-    default = 0) {
+.ListArraySimAge <- function(OM, 
+                             Period = c("Historical", "Projection", "All"), 
+                             default = 0) {
   meta <- GetMetaData(OM, Period)
   .MakeStockList(
     meta$StockNames,
-    function(st) ArraySimAge(
+    function(st) .ArraySimAge(
       OM, 
       Period, 
       stock = st, 
@@ -96,12 +93,11 @@ ListArraySimAge <- function(
 }
 
 #' @rdname internal_arrays
-ArraySimAgeTime <- function(
-    OM, 
-    Period = c("Historical", "Projection", "All"), 
-    stock = 1, 
-    default = 0, 
-    Years = NULL) {
+.ArraySimAgeTime <- function(OM, 
+                             Period = c("Historical", "Projection", "All"), 
+                             stock = 1, 
+                             default = 0, 
+                             Years = NULL) {
   meta <- GetMetaData(OM, Period, Years)
   nAges <- meta$nAges[[stock]]
   AgeClasses <- meta$AgeClasses[[stock]]
@@ -118,15 +114,14 @@ ArraySimAgeTime <- function(
 }
 
 #' @rdname internal_arrays
-ListArraySimAgeTime <- function(
-    OM, 
-    Period = c("Historical", "Projection", "All"), 
-    default = 0, 
-    Years = NULL) {
+.ListArraySimAgeTime <- function(OM, 
+                                 Period = c("Historical", "Projection", "All"), 
+                                 default = 0, 
+                                 Years = NULL) {
   meta <- GetMetaData(OM, Period, Years)
   .MakeStockList(
     meta$StockNames,
-    function(st) ArraySimAgeTime(
+    function(st) .ArraySimAgeTime(
       OM, 
       Period, 
       stock = st, 
@@ -137,12 +132,11 @@ ListArraySimAgeTime <- function(
 }
 
 #' @rdname internal_arrays
-ArraySimAgeTimeArea <- function(
-    OM, 
-    Period = c("Historical", "Projection", "All"),
-    stock = 1, 
-    default = 0, 
-    Years = NULL) {
+.ArraySimAgeTimeArea <- function(OM, 
+                                 Period = c("Historical", "Projection", "All"),
+                                 stock = 1, 
+                                 default = 0, 
+                                 Years = NULL) {
   meta <- GetMetaData(OM, Period, Years)
   AgeClasses <- meta$AgeClasses[[stock]]
   
@@ -159,15 +153,14 @@ ArraySimAgeTimeArea <- function(
 }
 
 #' @rdname internal_arrays
-ListArraySimAgeTimeArea <- function(
-    OM, 
-    Period = c("Historical", "Projection", "All"), 
-    default = 0, 
-    Years = NULL) {
+.ListArraySimAgeTimeArea <- function(OM, 
+                                     Period = c("Historical", "Projection", "All"), 
+                                     default = 0, 
+                                     Years = NULL) {
   meta <- GetMetaData(OM, Period, Years)
   .MakeStockList(
     meta$StockNames,
-    function(st) ArraySimAgeTimeArea(
+    function(st) .ArraySimAgeTimeArea(
       OM, 
       Period, 
       stock = st, 
@@ -178,12 +171,11 @@ ListArraySimAgeTimeArea <- function(
 }
 
 #' @rdname internal_arrays
-ArraySimAgeTimeFleet <- function(
-    OM, 
-    Period = c("Historical", "Projection", "All"), 
-    stock = 1, 
-    default = 0, 
-    Years = NULL) {
+.ArraySimAgeTimeFleet <- function(OM, 
+                                  Period = c("Historical", "Projection", "All"), 
+                                  stock = 1, 
+                                  default = 0, 
+                                  Years = NULL) {
   meta <- GetMetaData(OM, Period, Years)
   AgeClasses <- meta$AgeClasses[[stock]]
   
@@ -200,15 +192,14 @@ ArraySimAgeTimeFleet <- function(
 }
 
 #' @rdname internal_arrays
-ListArraySimAgeTimeFleet <- function(
-    OM, 
-    Period = c("Historical", "Projection", "All"), 
-    default = 0, 
-    Years = NULL) {
+.ListArraySimAgeTimeFleet <- function(OM, 
+                                      Period = c("Historical", "Projection", "All"), 
+                                      default = 0, 
+                                      Years = NULL) {
   meta <- GetMetaData(OM, Period, Years)
   .MakeStockList(
     meta$StockNames,
-    function(st) ArraySimAgeTimeFleet(
+    function(st) .ArraySimAgeTimeFleet(
       OM, 
       Period, 
       stock = st, 
@@ -220,12 +211,11 @@ ListArraySimAgeTimeFleet <- function(
 
 
 #' @rdname internal_arrays
-ArraySimAgeTimeFleetArea <- function(
-    OM, 
-    Period = c("Historical", "Projection", "All"), 
-    stock = 1, 
-    default = 0, 
-    Years = NULL) {
+.ArraySimAgeTimeFleetArea <- function(OM, 
+                                      Period = c("Historical", "Projection", "All"), 
+                                      stock = 1, 
+                                      default = 0, 
+                                      Years = NULL) {
   meta <- GetMetaData(OM, Period, Years)
   AgeClasses <- meta$AgeClasses[[stock]]
   
@@ -249,15 +239,14 @@ ArraySimAgeTimeFleetArea <- function(
 }
 
 #' @rdname internal_arrays
-ListArraySimAgeTimeFleetArea <- function(
-    OM, 
-    Period = c("Historical", "Projection", "All"), 
-    default = 0, 
-    Years = NULL) {
+.ListArraySimAgeTimeFleetArea <- function(OM, 
+                                          Period = c("Historical", "Projection", "All"), 
+                                          default = 0, 
+                                          Years = NULL) {
   meta <- GetMetaData(OM, Period, Years)
   .MakeStockList(
     meta$StockNames,
-    function(st) ArraySimAgeTimeFleetArea(
+    function(st) .ArraySimAgeTimeFleetArea(
       OM, 
       Period, 
       stock = st, 
@@ -268,13 +257,12 @@ ListArraySimAgeTimeFleetArea <- function(
 }
 
 #' @rdname internal_arrays
-ArraySimClassYearArea <- function(
-    OM, 
-    Period = c("Historical", "Projection", "All"), 
-    stock = 1, 
-    fleet = 1, 
-    default = 0, 
-    Years = NULL) {
+.ArraySimClassYearArea <- function(OM, 
+                                   Period = c("Historical", "Projection", "All"), 
+                                   stock = 1, 
+                                   fleet = 1, 
+                                   default = 0, 
+                                   Years = NULL) {
   meta <- GetMetaData(OM, Period, Years)
   Classes <- OM@Fleet[[stock]][[fleet]]@Selectivity@Classes
   
@@ -291,11 +279,10 @@ ArraySimClassYearArea <- function(
 }
 
 #' @rdname internal_arrays
-ListArraySimClassTimeFleetArea <- function(
-    OM, 
-    Period = c("Historical", "Projection", "All"), 
-    default = 0, 
-    Years = NULL) {
+.ListArraySimClassTimeFleetArea <- function(OM, 
+                                            Period = c("Historical", "Projection", "All"), 
+                                            default = 0, 
+                                            Years = NULL) {
   meta <- GetMetaData(OM, Period, Years)
   .MakeStockList(
     meta$StockNames,
@@ -303,7 +290,7 @@ ListArraySimClassTimeFleetArea <- function(
       FleetNames <- meta$FleetNames
       List <- MakeNamedList(FleetNames)
       for (fl in seq_along(FleetNames)) {
-        List[[fl]] <- ArraySimClassYearArea(
+        List[[fl]] <- .ArraySimClassYearArea(
           OM, 
           Period, 
           stock = st, 
@@ -318,13 +305,12 @@ ListArraySimClassTimeFleetArea <- function(
 }
 
 #' @rdname internal_arrays
-ArraySimAgeTimeMPArea <- function(
-    OM, 
-    Period = c("Historical", "Projection", "All"), 
-    MPs = NULL, 
-    stock = 1, 
-    default = 0, 
-    Years = NULL) {
+.ArraySimAgeTimeMPArea <- function(OM, 
+                                   Period = c("Historical", "Projection", "All"), 
+                                   MPs = NULL, 
+                                   stock = 1, 
+                                   default = 0, 
+                                   Years = NULL) {
   meta <- GetMetaData(OM, Period, Years)
   nAges <- meta$nAges[[stock]]
   AgeClasses <- meta$AgeClasses[[stock]]
@@ -343,16 +329,15 @@ ArraySimAgeTimeMPArea <- function(
 }
 
 #' @rdname internal_arrays
-ListArraySimAgeTimeAreaMP <- function(
-    OM, 
-    Period = c("Historical", "Projection", "All"), 
-    MPs = NULL, 
-    default = 0, 
-    Years = NULL) {
+.ListArraySimAgeTimeAreaMP <- function(OM, 
+                                       Period = c("Historical", "Projection", "All"), 
+                                       MPs = NULL, 
+                                       default = 0, 
+                                       Years = NULL) {
   meta <- GetMetaData(OM, Period)
   .MakeStockList(
     meta$StockNames,
-    function(st) ArraySimAgeTimeMPArea(
+    function(st) .ArraySimAgeTimeMPArea(
       OM, 
       Period, 
       MPs, 
@@ -364,13 +349,12 @@ ListArraySimAgeTimeAreaMP <- function(
 }
 
 #' @rdname internal_arrays
-ArraySimAgeTimeFleetAreaMP <- function(
-    OM, 
-    Period = c("Historical", "Projection", "All"), 
-    MPs = NULL, 
-    stock = 1, 
-    default = 0, 
-    Years = NULL) {
+.ArraySimAgeTimeFleetAreaMP <- function(OM, 
+                                        Period = c("Historical", "Projection", "All"), 
+                                        MPs = NULL, 
+                                        stock = 1, 
+                                        default = 0, 
+                                        Years = NULL) {
   meta <- GetMetaData(OM, Period)
   FleetNames <- meta$FleetNames
   nAges <- meta$nAges[[stock]]
@@ -398,16 +382,15 @@ ArraySimAgeTimeFleetAreaMP <- function(
 }
 
 #' @rdname internal_arrays
-ListArraySimAgeTimeFleetAreaMP <- function(
-    OM, 
-    Period = c("Historical", "Projection", "All"), 
-    MPs = NULL, 
-    default = 0, 
-    Years = NULL) {
+.ListArraySimAgeTimeFleetAreaMP <- function(OM, 
+                                            Period = c("Historical", "Projection", "All"), 
+                                            MPs = NULL, 
+                                            default = 0, 
+                                            Years = NULL) {
   meta <- GetMetaData(OM, Period)
   .MakeStockList(
     meta$StockNames,
-    function(st) ArraySimAgeTimeFleetAreaMP(
+    function(st) .ArraySimAgeTimeFleetAreaMP(
       OM, 
       Period, 
       MPs, 
@@ -419,14 +402,13 @@ ListArraySimAgeTimeFleetAreaMP <- function(
 }
 
 #' @rdname internal_arrays
-ArraySimClassYearAreaMP <- function(
-    OM, 
-    Period = c("Historical", "Projection", "All"), 
-    MPs = NULL, 
-    stock = 1, 
-    fleet = 1, 
-    default = 0, 
-    Years = NULL) {
+.ArraySimClassYearAreaMP <- function(OM, 
+                                     Period = c("Historical", "Projection", "All"), 
+                                     MPs = NULL, 
+                                     stock = 1, 
+                                     fleet = 1, 
+                                     default = 0, 
+                                     Years = NULL) {
   meta <- GetMetaData(OM, Period)
   Classes <- OM@Fleet[[stock]][[fleet]]@Selectivity@Classes
   
@@ -444,12 +426,11 @@ ArraySimClassYearAreaMP <- function(
 }
 
 #' @rdname internal_arrays
-ListArraySimClassTimeFleetAreaMP <- function(
-    OM, 
-    Period = c("Historical", "Projection", "All"), 
-    MPs = NULL, 
-    default = 0, 
-    Years = NULL) {
+.ListArraySimClassTimeFleetAreaMP <- function(OM, 
+                                              Period = c("Historical", "Projection", "All"), 
+                                              MPs = NULL, 
+                                              default = 0, 
+                                              Years = NULL) {
   meta <- GetMetaData(OM, Period)
   .MakeStockList(
     meta$StockNames,
@@ -457,7 +438,7 @@ ListArraySimClassTimeFleetAreaMP <- function(
       FleetNames <- meta$FleetNames
       List <- MakeNamedList(FleetNames)
       for (fl in seq_along(FleetNames)) {
-        List[[fl]] <- ArraySimClassYearAreaMP(
+        List[[fl]] <- .ArraySimClassYearAreaMP(
           OM, 
           Period, 
           MPs, 
@@ -473,13 +454,12 @@ ListArraySimClassTimeFleetAreaMP <- function(
 }
 
 #' @rdname internal_arrays
-ArraySimStockTimeMP <- function(
-    OM, 
-    Period = c("Historical", "Projection", "All"), 
-    MPs = NULL, 
-    stock = 1, 
-    default = 0, 
-    Years = NULL) {
+.ArraySimStockTimeMP <- function(OM, 
+                                 Period = c("Historical", "Projection", "All"), 
+                                 MPs = NULL, 
+                                 stock = 1, 
+                                 default = 0, 
+                                 Years = NULL) {
   meta <- GetMetaData(OM, Period)
   StockNames <- meta$StockNames
   
@@ -496,13 +476,12 @@ ArraySimStockTimeMP <- function(
 }
 
 #' @rdname internal_arrays
-ArraySimStockTimeFleetMP <- function(
-    OM, 
-    Period = c("Historical", "Projection", "All"), 
-    MPs = NULL, 
-    stock = 1, 
-    default = 0, 
-    Years = NULL) {
+.ArraySimStockTimeFleetMP <- function(OM, 
+                                      Period = c("Historical", "Projection", "All"), 
+                                      MPs = NULL, 
+                                      stock = 1, 
+                                      default = 0, 
+                                      Years = NULL) {
   meta <- GetMetaData(OM, Period)
   FleetNames <- meta$FleetNames
   StockNames <- meta$StockNames
@@ -521,13 +500,12 @@ ArraySimStockTimeFleetMP <- function(
 }
 
 #' @rdname internal_arrays
-ArraySimAgeTimeFleetMP <- function(
-    OM, 
-    Period = c("Historical", "Projection", "All"), 
-    MPs = NULL, 
-    stock = 1, 
-    default = 0, 
-    Years = NULL) {
+.ArraySimAgeTimeFleetMP <- function(OM, 
+                                    Period = c("Historical", "Projection", "All"), 
+                                    MPs = NULL, 
+                                    stock = 1, 
+                                    default = 0, 
+                                    Years = NULL) {
   meta <- GetMetaData(OM, Period)
   FleetNames <- meta$FleetNames
   AgeClasses <- meta$AgeClasses[[stock]]
@@ -546,16 +524,15 @@ ArraySimAgeTimeFleetMP <- function(
 }
 
 #' @rdname internal_arrays
-ListArraySimAgeTimeFleetMP <- function(
-    OM, 
-    Period = c("Historical", "Projection", "All"), 
-    MPs = NULL, 
-    default = 0, 
-    Years = NULL) {
+.ListArraySimAgeTimeFleetMP <- function(OM, 
+                                        Period = c("Historical", "Projection", "All"), 
+                                        MPs = NULL, 
+                                        default = 0, 
+                                        Years = NULL) {
   meta <- GetMetaData(OM, Period)
   .MakeStockList(
     meta$StockNames,
-    function(st) ArraySimAgeTimeFleetMP(
+    function(st) .ArraySimAgeTimeFleetMP(
       OM, 
       Period, 
       MPs, 
@@ -567,17 +544,16 @@ ListArraySimAgeTimeFleetMP <- function(
 }
 
 #' @rdname internal_arrays
-ListArraySimTimeFleetAreaMP <- function(
-    OM, 
-    Period = c("Historical", "Projection", "All"), 
-    MPs = NULL, 
-    default = 0, 
-    Years = NULL) {
+.ListArraySimTimeFleetAreaMP <- function(OM, 
+                                         Period = c("Historical", "Projection", "All"), 
+                                         MPs = NULL, 
+                                         default = 0, 
+                                         Years = NULL) {
   meta <- GetMetaData(OM, Period)
   .MakeStockList(
     meta$StockNames,
     function(st) {
-      ArraySimAgeTimeFleetAreaMP(
+      .ArraySimAgeTimeFleetAreaMP(
         OM, 
         Period, 
         MPs, 
@@ -598,7 +574,5 @@ ListArraySimTimeFleetAreaMP <- function(
   }
   List
 }
-
-
 
 

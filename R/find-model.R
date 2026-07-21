@@ -8,7 +8,7 @@
 #'
 #' @return Character vector of matching function names.
 #' @keywords internal
-FindModels <- function(ModelClass) {
+.FindModels <- function(ModelClass) {
   objects_name <- ls.str("package:MSEtool", mode = "function")
   objects <- lapply(objects_name, get, envir=asNamespace('MSEtool'))
   objects_class <- lapply(objects, class)
@@ -29,14 +29,14 @@ FindModels <- function(ModelClass) {
 #' @param ignore Character vector of formal argument names to exclude from
 #'   matching. Defaults to common auxiliary arguments such as `"Ages"`,
 #'   `"Length"`, `"Weight"`, etc.
-#' @param doCheck Logical. If `TRUE` (default), calls [CheckModel()] and
+#' @param doCheck Logical. If `TRUE` (default), calls `.CheckModel()` and
 #'   throws an informative error when no matching model is found.
 #'
 #' @return A character string naming the matched model function, a function
 #'   object if `object@Model` is already a function, or `NULL` if `Pars` is
 #'   empty or `NA`.
 #' @keywords internal
-FindModel <- function(object, 
+.FindModel <- function(object, 
                       ignore=c('Ages', 'MeanLength', 'Length', 'Weight', 'nage',
                                'AtAge', 'MaxLen', 'S0', 'S', 'R0'),
                       doCheck=TRUE) {
@@ -50,7 +50,9 @@ FindModel <- function(object,
 
   if (length(object@Pars)<1)
     return(NULL)
-  
+
+  .CheckPars(object@Pars)
+
   # if (inherits(object@Model,'character'))
   #   return(object@Model)
 
@@ -64,7 +66,7 @@ FindModel <- function(object,
   matching_parameters <- rep(TRUE, length(models))
 
   ParNames <- names(object@Pars)
-  ind <- which(tolower(ParNames) |> substrRight(2) == 'sd')
+  ind <- which(tolower(ParNames) |> .SubstrRight(2) == 'sd')
   if (length(ind)>0)
     ParNames <- ParNames[-ind]
   
@@ -82,7 +84,7 @@ FindModel <- function(object,
   model <- models[matching_parameters]
 
   if (doCheck && length(model)<1) {
-    CheckModel(object)
+    .CheckModel(object)
   }
 
   model
@@ -98,11 +100,11 @@ FindModel <- function(object,
 #'
 #' @return `Pars`, unchanged.
 #' @keywords internal
-CheckPars <- function(Pars) {
+.CheckPars <- function(Pars) {
   if (length(Pars)<1)
     return(Pars)
-  
-  if (any(nchar(names(Pars))==0)) {
+
+  if (is.null(names(Pars)) || any(nchar(names(Pars))==0)) {
     cli::cli_abort('`Pars` must be a named list (or an empty list or NULL)')
   }
   Pars
@@ -110,7 +112,7 @@ CheckPars <- function(Pars) {
 
 #' Throw an Informative Error When No Model is Found
 #'
-#' Called by [FindModel()] when parameter names in `object@Pars` do not match
+#' Called by `.FindModel()` when parameter names in `object@Pars` do not match
 #' any candidate model. Constructs an error message directing the user to the
 #' relevant `*Models()` function or advising them to set `Pars = NULL` or
 #' supply a custom function to `Model`.
@@ -121,11 +123,11 @@ CheckPars <- function(Pars) {
 #' @return Does not return. Always throws an error via [cli::cli_abort()].
 #' 
 #' @keywords internal
-CheckModel <- function(object) {
+.CheckModel <- function(object) {
   if (inherits(object, "srr")) {
-    fun <- paste0(firstup(class(object),3), 'Models')
+    fun <- paste0(.FirstUp(class(object),3), 'Models')
   } else {
-    fun <- paste0(firstup(class(object)), 'Models')  
+    fun <- paste0(.FirstUp(class(object)), 'Models')  
   }
   
   nms <-  names(object@Pars)
@@ -134,4 +136,3 @@ CheckModel <- function(object) {
     'i'='See {.fun { fun}} or set `Pars` to NULL or `Model` to a R function with arguments corresponding with those in `Pars`.'), call=rlang::caller_call(n=2)
   )
 }
-

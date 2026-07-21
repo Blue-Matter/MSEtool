@@ -45,7 +45,7 @@ CalcUnfished_Equilibrium <- function(OM, silent=FALSE) {
     OM@Stock,
     \(N, Stock) {
       UD <- Stock@Spatial@UnfishedDist |>
-        aperm(c('Sim', 'Age', 'Year', 'Area'))
+        .Aperm(c('Sim', 'Age', 'Year', 'Area'))
       ArrayMultiply(N |> AddDimension('Area'), UD) |> ReduceDims()
     }
   )
@@ -61,7 +61,7 @@ CalcUnfished_Equilibrium <- function(OM, silent=FALSE) {
   EquilibriumUnfished@Biomass <- purrr::map2(UnfishedNumberAtAge, WeightAtAge, ArrayMultiply) |>
     purrr::map(\(x) apply(x, c('Sim', 'Year'), sum)) |>  # sum over ages within each Stock
     List2Array('Stock') |> 
-    aperm(c('Sim', 'Stock', 'Year')) |>
+    .Aperm(c('Sim', 'Stock', 'Year')) |>
     ReduceDims()
   
   # SBiomass 
@@ -72,7 +72,7 @@ CalcUnfished_Equilibrium <- function(OM, silent=FALSE) {
     purrr::map2(MaturityAtAge, ArrayMultiply) |>
     purrr::map(\(x) apply(x, c('Sim', 'Year'), sum)) |>
     List2Array('Stock') |>
-    aperm(c('Sim', 'Stock', 'Year')) |>
+    .Aperm(c('Sim', 'Stock', 'Year')) |>
     ReduceDims()
   
   # SProduction 
@@ -83,7 +83,7 @@ CalcUnfished_Equilibrium <- function(OM, silent=FALSE) {
   EquilibriumUnfished@SProduction <- purrr::map2(UnfishedSpawnNumberAtAge, FecundityAtAge, ArrayMultiply) |>
     purrr::map(\(x) apply(x, c('Sim', 'Year'), sum)) |>
     List2Array('Stock') |>
-    aperm(c('Sim', 'Stock', 'Year')) |>
+    .Aperm(c('Sim', 'Stock', 'Year')) |>
     ReduceDims()
   
   # apply SPFrom for SProduction

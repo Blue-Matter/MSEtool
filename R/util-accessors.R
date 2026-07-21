@@ -25,39 +25,62 @@ NULL
 #' @rdname Access
 #' @export
 AC <- function(x) {
-  AccessSlot(x, 'AC')
+  .AccessSlot(x, 'AC')
 }
 
 #' @rdname Access
 #' @export
 `AC<-` <- function(x, value) {
-  AssignSlot(x, value, 'AC')
+  .AssignSlot(x, value, 'AC')
+}
+
+#' @rdname Access
+#' @export
+Areas <- function(x) {
+  .AccessSlot(x, 'Areas')
+}
+
+#' @rdname Access
+#' @export
+`Areas<-` <- function(x, value) {
+  .AssignSlot(x, value, 'Areas')
 }
 
 #' @rdname Access
 #' @export
 Beta <- function(x) {
-  AccessSlot(x, 'Beta')
+  .AccessSlot(x, 'Beta')
 }
 
 #' @rdname Access
 #' @export
 `Beta<-` <- function(x, value) {
-  AssignSlot(x, value, 'Beta')
+  .AssignSlot(x, value, 'Beta')
 }
 
 #' @rdname Access
 #' @export
 Bias <- function(x) {
-  AccessSlot(x, 'Bias')
+  .AccessSlot(x, 'Bias')
 }
 
 #' @rdname Access
 #' @export
 `Bias<-` <- function(x, value) {
-  AssignSlot(x, value, 'Bias')
+  .AssignSlot(x, value, 'Bias')
 }
 
+#' @rdname Access
+#' @export
+Caption <- function(x) {
+  .AccessSlot(x, 'Caption')
+}
+
+#' @rdname Access
+#' @export
+`Caption<-` <- function(x, value) {
+  .AssignSlot(x, value, 'Caption')
+}
 
 
 #' @rdname Access
@@ -65,7 +88,7 @@ Bias <- function(x) {
 Classes <- function(x) {
   validclasses <- c('ages', 'length', 'weight', 'maturity', 'fecundity',
                     'selectivity', 'discardmortality', 'retention')
-  CheckClass(x, c('stock', 'StockList', validclasses), 'x')
+  .CheckClass(x, c('stock', 'StockList', validclasses), 'x')
   
   if (inherits(x, validclasses))
     return(x@Classes)
@@ -80,229 +103,251 @@ Classes <- function(x) {
 #' @rdname Access
 #' @export
 `Classes<-` <- function(x, value) {
-  AssignSlot(x, value, 'Classes')
+  .AssignSlot(x, value, 'Classes')
 }
 
 #' @rdname Access
 #' @export
 Compliance <- function(x) {
-  AccessSlot(x, 'Compliance')
+  .AccessSlot(x, 'Compliance')
 }
 
 #' @rdname Access
 #' @export
 `Compliance<-` <- function(x, value) {
-  AssignSlot(x, value, 'Compliance')
+  .AssignSlot(x, value, 'Compliance')
 }
 
 #' @rdname Access
 #' @export
 CPUE <- function(x) {
-  AccessSlot(x, 'CPUE')
+  .AccessSlot(x, 'CPUE')
 }
 
 #' @rdname Access
 #' @export
 `CPUE<-` <- function(x, value) {
-  AssignSlot(x, value, 'CPUE')
+  .AssignSlot(x, value, 'CPUE')
 }
 
 #' @rdname Access
 #' @export
 CV <- function(x) {
-  AccessSlot(x, 'CV')
+  .AccessSlot(x, 'CV')
 }
 
 #' @rdname Access
 #' @export
 `CV<-` <- function(x, value) {
-  AssignSlot(x, value, 'CV')
+  .AssignSlot(x, value, 'CV')
 }
 
 #' @rdname Access
 #' @export
 CVatAge <- function(x) {
-  AccessSlot(x, 'CVatAge')
+  .AccessSlot(x, 'CVatAge')
 }
 
 #' @rdname Access
 #' @export
 `CVatAge<-` <- function(x, value) {
-  AssignSlot(x, value, 'CVatAge')
+  .AssignSlot(x, value, 'CVatAge')
 }
 
 #' @rdname Access
 #' @export
 Dist <- function(x) {
-  AccessSlot(x, 'Dist')
+  .AccessSlot(x, 'Dist')
 }
 
 #' @rdname Access
 #' @export
 `Dist<-` <- function(x, value) {
-  AssignSlot(x, value, 'Dist')
+  .AssignSlot(x, value, 'Dist')
 }
 
 #' @rdname Access
 #' @export
 DiscardsAtAge <- function(x) {
-  AccessSlot(x, 'DiscardsAtAge')
+  .AccessSlot(x, 'DiscardsAtAge')
 }
 
 #' @rdname Access
 #' @export
 `DiscardsAtAge<-` <- function(x, value) {
-  AssignSlot(x, value, 'DiscardsAtAge')
+  .AssignSlot(x, value, 'DiscardsAtAge')
 }
 
 #' @rdname Access
 #' @export
 DiscardsAtSize <- function(x) {
-  AccessSlot(x, 'DiscardsAtSize')
+  .AccessSlot(x, 'DiscardsAtSize')
 }
 
 #' @rdname Access
 #' @export
 `DiscardsAtSize<-` <- function(x, value) {
-  AssignSlot(x, value, 'DiscardsAtSize')
+  .AssignSlot(x, value, 'DiscardsAtSize')
+}
+
+#' @rdname Access
+#' @export
+ESS <- function(x) {
+  .AccessSlot(x, 'ESS')
+}
+
+#' @rdname Access
+#' @export
+`ESS<-` <- function(x, value) {
+  .AssignSlot(x, value, 'ESS')
 }
 
 #' @rdname Access
 #' @export
 Error <- function(x) {
-  AccessSlot(x, 'Error')
+  .AccessSlot(x, 'Error')
 }
 
 #' @rdname Access
 #' @export
 `Error<-` <- function(x, value) {
-  AssignSlot(x, value, 'Error')
+  .AssignSlot(x, value, 'Error')
 }
 
 #' @rdname Access
 #' @export
 Exploitation <- function(x) {
-  AccessSlot(x, 'Exploitation')
+  .AccessSlot(x, 'Exploitation')
 }
 
 #' @rdname Access
 #' @export
 `Exploitation<-` <- function(x, value) {
-  AssignSlot(x, value, 'Exploitation')
+  .AssignSlot(x, value, 'Exploitation')
 }
 
 
 #' @rdname Access
 #' @export
 LandingsAtAge <- function(x) {
-  AccessSlot(x, 'LandingsAtAge')
+  .AccessSlot(x, 'LandingsAtAge')
 }
 
 #' @rdname Access
 #' @export
 `LandingsAtAge<-` <- function(x, value) {
-  AssignSlot(x, value, 'LandingsAtAge')
+  .AssignSlot(x, value, 'LandingsAtAge')
 }
 
 #' @rdname Access
 #' @export
 LandingsAtSize <- function(x) {
-  AccessSlot(x, 'LandingsAtSize')
+  .AccessSlot(x, 'LandingsAtSize')
 }
 
 #' @rdname Access
 #' @export
 `LandingsAtSize<-` <- function(x, value) {
-  AssignSlot(x, value, 'LandingsAtSize')
+  .AssignSlot(x, value, 'LandingsAtSize')
 }
 
 #' @rdname Access
 #' @export
 LifeHistory <- function(x) {
-  AccessSlot(x, 'LifeHistory')
+  .AccessSlot(x, 'LifeHistory')
 }
 
 #' @rdname Access
 #' @export
 `LifeHistory<-` <- function(x, value) {
-  AssignSlot(x, value, 'LifeHistory')
+  .AssignSlot(x, value, 'LifeHistory')
 }
-
 
 
 #' @rdname Access
 #' @export
 Mean <- function(x) {
-  AccessSlot(x, 'Mean')
+  .AccessSlot(x, 'Mean')
 }
 
 #' @rdname Access
 #' @export
 `Mean<-` <- function(x, value) {
-  AssignSlot(x, value, 'Mean')
+  .AssignSlot(x, value, 'Mean')
 }
 
 
 #' @rdname Access
 #' @export
 MeanAtAge <- function(x) {
-  AccessSlot(x, 'MeanAtAge')
+  .AccessSlot(x, 'MeanAtAge')
 }
 
 #' @rdname Access
 #' @export
 `MeanAtAge<-` <- function(x, value) {
-  AssignSlot(x, value, 'MeanAtAge')
+  .AssignSlot(x, value, 'MeanAtAge')
 }
 
 #' @rdname Access
 #' @export
 MeanAtLength <- function(x) {
-  AccessSlot(x, 'MeanAtLength')
+  .AccessSlot(x, 'MeanAtLength')
 }
 
 #' @rdname Access
 #' @export
 `MeanAtLength<-` <- function(x, value) {
-  AssignSlot(x, value, 'MeanAtLength')
+  .AssignSlot(x, value, 'MeanAtLength')
 }
 
 #' @rdname Access
 #' @export
 MeanAtWeight <- function(x) {
-  AccessSlot(x, 'MeanAtWeight')
+  .AccessSlot(x, 'MeanAtWeight')
 }
 
 #' @rdname Access
 #' @export
 `MeanAtWeight<-` <- function(x, value) {
-  AssignSlot(x, value, 'MeanAtWeight')
+  .AssignSlot(x, value, 'MeanAtWeight')
 }
 
 #' @rdname Access
 #' @export
 Misc <- function(x) {
-  AccessSlot(x, 'Misc')
+  .AccessSlot(x, 'Misc')
 }
 
 #' @rdname Access
 #' @export
 `Misc<-` <- function(x, value) {
-  AssignSlot(x, value, 'Misc')
+  .AssignSlot(x, value, 'Misc')
+}
+
+#' @rdname Access
+#' @export
+MPs <- function(x) {
+  .AccessSlot(x, 'MPs')
+}
+
+#' @rdname Access
+#' @export
+`MPs<-` <- function(x, value) {
+  .AssignSlot(x, value, 'MPs')
 }
 
 #' @rdname Access
 #' @export
 Model <- function(x) {
-  AccessSlot(x, 'Model')
+  .AccessSlot(x, 'Model')
 }
-
 
 
 #' @rdname Access
 #' @export
 `Model<-` <- function(x, value) {
-  AssignSlot(x, value, 'Model')
+  .AssignSlot(x, value, 'Model')
 }
 
 #' @rdname Access
@@ -314,17 +359,17 @@ Name <- function(x) {
   if (is.list(x))
     return(purrr::map(x, Name))
   
-  AccessSlot(x, 'Name')
+  .AccessSlot(x, 'Name')
 }
 
 #' @rdname Access
 #' @export
 `Name<-` <- function(x, value) {
   if (inherits(x, 'mse')) {
-    x@OM <- AssignSlotRecursive(x@OM, value, 'Name')  
+    x@OM <- .AssignSlotRecursive(x@OM, value, 'Name')  
     return(x)
   }
-  AssignSlotRecursive(x, value, 'Name')  
+  .AssignSlotRecursive(x, value, 'Name')  
 }
 
 #' @rdname Access
@@ -348,7 +393,7 @@ nSim <- function(x) {
 #' @rdname Access
 #' @export
 `nSim<-` <- function(x, value) {
-  AssignSlot(x, value, 'nSim')
+  .AssignSlot(x, value, 'nSim')
 }
 
 #' @rdname Access
@@ -406,7 +451,7 @@ nAge <- function(x, st = NULL) {
 #' @rdname Access
 #' @export
 nComplex <- function(x) {
-  CheckClass(x, c('om', 'hist', 'mse'), 'x')
+  .CheckClass(x, c('om', 'hist', 'mse'), 'x')
   
   if (inherits(x, 'om'))
     return(length(x@Complexes))
@@ -421,7 +466,7 @@ nComplex <- function(x) {
 #' @rdname Access
 #' @export
 nStock <- function(x) {
-  CheckClass(x, c('om', 'hist', 'mse'), 'x')
+  .CheckClass(x, c('om', 'hist', 'mse'), 'x')
   
   if (inherits(x, 'om'))
     return(length(x@Stock))
@@ -436,7 +481,7 @@ nStock <- function(x) {
 #' @rdname Access
 #' @export
 nFleet <- function(x) {
-  CheckClass(x, c('om', 'hist', 'mse', 'data'), 'x')
+  .CheckClass(x, c('om', 'hist', 'mse', 'data'), 'x')
   
   if (inherits(x, 'om')) {
     fleet <- x@Fleet
@@ -469,165 +514,235 @@ nFleet <- function(x) {
 #' @rdname Access
 #' @export
 Pars <- function(x) {
-  AccessSlot(x, 'Pars')
+  .AccessSlot(x, 'Pars')
 }
 
 #' @rdname Access
 #' @export
 `Pars<-` <- function(x, value) {
-  AssignSlot(x, value, 'Pars')
+  .AssignSlot(x, value, 'Pars')
 }
 
 #' @rdname Access
 #' @export
 Period <- function(x) {
-  AccessSlot(x, 'Period')
+  .AccessSlot(x, 'Period')
 }
 
 #' @rdname Access
 #' @export
 `Period<-` <- function(x, value) {
-  AssignSlot(x, value, 'Period')
+  .AssignSlot(x, value, 'Period')
+}
+
+#' @rdname Access
+#' @export
+Prob <- function(x) {
+  .AccessSlot(x, 'Prob')
+}
+
+#' @rdname Access
+#' @export
+`Prob<-` <- function(x, value) {
+  .AssignSlot(x, value, 'Prob')
 }
 
 #' @rdname Access
 #' @export
 Random <- function(x) {
-  AccessSlot(x, 'Random')
+  .AccessSlot(x, 'Random')
 }
 
 #' @rdname Access
 #' @export
 Ref <- function(x) {
-  AccessSlot(x, 'Ref')
+  .AccessSlot(x, 'Ref')
 }
 
 #' @rdname Access
 #' @export
 `Ref<-` <- function(x, value) {
-  AssignSlot(x, value, 'Ref')
+  .AssignSlot(x, value, 'Ref')
 }
 
 #' @rdname Access
 #' @export
 RefCV <- function(x) {
-  AccessSlot(x, 'RefCV')
+  .AccessSlot(x, 'RefCV')
 }
 
 #' @rdname Access
 #' @export
 `RefCV<-` <- function(x, value) {
-  AssignSlot(x, value, 'RefCV')
+  .AssignSlot(x, value, 'RefCV')
 }
 
 #' @rdname Access
 #' @export
 Reference <- function(x) {
-  AccessSlot(x, 'Reference')
+  .AccessSlot(x, 'Reference')
 }
 
 #' @rdname Access
 #' @export
 `Reference<-` <- function(x, value) {
-  AssignSlot(x, value, 'Reference')
+  .AssignSlot(x, value, 'Reference')
+}
+
+#' @rdname Access
+#' @export
+SampleSize <- function(x) {
+  .AccessSlot(x, 'SampleSize')
+}
+
+#' @rdname Access
+#' @export
+`SampleSize<-` <- function(x, value) {
+  .AssignSlot(x, value, 'SampleSize')
 }
 
 #' @rdname Access
 #' @export
 Size <- function(x) {
-  AccessSlot(x, 'Size')
+  .AccessSlot(x, 'Size')
 }
 
 #' @rdname Access
 #' @export
 `Size<-` <- function(x, value) {
-  AssignSlot(x, value, 'Size')
+  .AssignSlot(x, value, 'Size')
 }
 
 #' @rdname Access
 #' @export
 SD <- function(x) {
-  AccessSlot(x, 'SD')
+  .AccessSlot(x, 'SD')
 }
 
 #' @rdname Access
 #' @export
 `SD<-` <- function(x, value) {
-  AssignSlot(x, value, 'SD')
+  .AssignSlot(x, value, 'SD')
+}
+
+#' @rdname Access
+#' @export
+Stat <- function(x) {
+  .AccessSlot(x, 'Stat')
+}
+
+#' @rdname Access
+#' @export
+`Stat<-` <- function(x, value) {
+  .AssignSlot(x, value, 'Stat')
+}
+
+#' @rdname Access
+#' @export
+Shift <- function(x) {
+  .AccessSlot(x, 'Shift')
+}
+
+#' @rdname Access
+#' @export
+`Shift<-` <- function(x, value) {
+  .AssignSlot(x, value, 'Shift')
+}
+
+#' @rdname Access
+#' @export
+Stats <- function(x) {
+  .AccessSlot(x, 'Stats')
+}
+
+#' @rdname Access
+#' @export
+`Stats<-` <- function(x, value) {
+  .AssignSlot(x, value, 'Stats')
 }
 
 #' @rdname Access
 #' @export
 Survey <- function(x) {
-  AccessSlot(x, 'Survey')
+  .AccessSlot(x, 'Survey')
 }
 
 #' @rdname Access
 #' @export
 `Survey<-` <- function(x, value) {
-  AssignSlot(x, value, 'Survey')
+  .AssignSlot(x, value, 'Survey')
 }
 
 #' @rdname Access
 #' @export
 Timing <- function(x) {
-  AccessSlot(x, 'Timing')
+  .AccessSlot(x, 'Timing')
 }
 
 #' @rdname Access
 #' @export
 TruncSD <- function(x) {
-  AccessSlot(x, 'TruncSD')
+  .AccessSlot(x, 'TruncSD')
 }
 
 #' @rdname Access
 #' @export
 `TruncSD<-` <- function(x, value) {
-  AssignSlot(x, value, 'TruncSD')
+  .AssignSlot(x, value, 'TruncSD')
+}
+
+#' @rdname Access
+#' @export
+Type <- function(x) {
+  .AccessSlot(x, 'Type')
+}
+
+#' @rdname Access
+#' @export
+`Type<-` <- function(x, value) {
+  .AssignSlot(x, value, 'Type')
 }
 
 #' @rdname Access
 #' @export
 Units <- function(x) {
-  AccessSlot(x, 'Units')
+  .AccessSlot(x, 'Units')
 }
 
 #' @rdname Access
 #' @export
 `Units<-` <- function(x, value) {
-  AssignSlot(x, value, 'Units')
+  .AssignSlot(x, value, 'Units')
 }
 
 #' @rdname Access
 #' @export
 Value <- function(x) {
-  AccessSlot(x, 'Value')
+  .AccessSlot(x, 'Value')
 }
 
 #' @rdname Access
 #' @export
 `Value<-` <- function(x, value) {
-  AssignSlot(x, value, 'Value')
+  .AssignSlot(x, value, 'Value')
 }
 
 #' @rdname Access
 #' @export
 YearLH <- function(x) {
-  AccessSlot(x, 'YearLH')
+  .AccessSlot(x, 'YearLH')
 }
 
 #' @rdname Access
 #' @export
 `YearLH<-` <- function(x, value) {
-  AssignSlot(x, value, 'YearLH')
+  .AssignSlot(x, value, 'YearLH')
 }
 
 
-# ---- Helpers ----
-
-AccessSlot <- function(x, slotname) {
+.AccessSlot <- function(x, slotname) {
   if (is.null(x)) return(NULL)
-  CheckClass(slotname, 'character', 'slotname')
+  .CheckClass(slotname, 'character', 'slotname')
   if (!isS4(x))
     cli::cli_abort("{.arg x} is not an S4 object.")
   if (!slotname %in% slotNames(x))
@@ -635,14 +750,14 @@ AccessSlot <- function(x, slotname) {
   slot(x, slotname)
 }
 
-AccessSlotRecursive <- function(x, SlotName) {
+.AccessSlotRecursive <- function(x, SlotName) {
   if (is.list(x))
-    return(purrr::map(x, \(xi) AccessSlotRecursive(xi, SlotName)))
-  AccessSlot(x, SlotName)
+    return(purrr::map(x, \(xi) .AccessSlotRecursive(xi, SlotName)))
+  .AccessSlot(x, SlotName)
 }
 
 
-AssignSlot <- function(x, value, slot) {
+.AssignSlot <- function(x, value, slot) {
   if (!slot %in% slotNames(x)) {
     cli::cli_alert_warning(
       "Slot {.code {slot}} not found in class {.cls {class(x)}}."
@@ -654,49 +769,53 @@ AssignSlot <- function(x, value, slot) {
   x
 }
 
-AssignSlotRecursive <- function(x, value, SlotName) {
+.AssignSlotRecursive <- function(x, value, SlotName) {
   if (is.list(x)) {
     if (!is.list(value) || length(value) != length(x))
       cli::cli_abort(c(
         "x" = "`value` must be a list of length {length(x)}",
         "i" = "`value` has length {length(value)}"
       ))
-    return(purrr::map2(x, value, \(xi, vi) AssignSlotRecursive(xi, vi, SlotName)))
+    return(purrr::map2(x, value, \(xi, vi) .AssignSlotRecursive(xi, vi, SlotName)))
   }
-  AssignSlot(x, value, SlotName)
+  .AssignSlot(x, value, SlotName)
 }
 
-isStockList <- function(x) {
+# Is `x` a non-empty list whose every element inherits from S4 class `what`?
+.IsTypeList <- function(x, what) {
   is.list(x) && length(x) > 0 &&
-    all(vapply(x, inherits, logical(1), what = 'stock'))
+    all(vapply(x, inherits, logical(1), what = what))
 }
 
-isStockOrList <- function(x) {
+.IsStockList <- function(x) {
+  .IsTypeList(x, 'stock')
+}
+
+.IsStockOrList <- function(x) {
   inherits(x, 'stock') ||
     inherits(x, 'om')    ||
-    isStockList(x)
+    .IsStockList(x)
 }
 
 
-isFleetList <- function(x) {
+.IsFleetList <- function(x) {
+  .IsTypeList(x, 'fleet')
+}
+
+.IsStockFleetList <- function(x) {
   is.list(x) && length(x) > 0 &&
-    all(vapply(x, inherits, logical(1), what = 'fleet'))
+    all(vapply(x, .IsFleetList, logical(1)))
 }
 
-isStockFleetList <- function(x) {
-  is.list(x) && length(x) > 0 &&
-    all(vapply(x, isFleetList, logical(1)))
-}
-
-isFleetOrList <- function(x) {
+.IsFleetOrList <- function(x) {
   inherits(x, 'fleet') ||
     inherits(x, 'om')    ||
-    isFleetList(x)        ||
-    isStockFleetList(x)
+    .IsFleetList(x)        ||
+    .IsStockFleetList(x)
 }
 
 
-ExtractStockSlot <- function(x, SlotName) {
+.ExtractStockSlot <- function(x, SlotName) {
   if (inherits(x, 'stock'))
     return(slot(x, SlotName))
   
@@ -709,7 +828,7 @@ ExtractStockSlot <- function(x, SlotName) {
     return(out)
   }
   
-  if (isStockList(x)) {
+  if (.IsStockList(x)) {
     out <- purrr::map(x, slot, SlotName)
     if (!length(out))
       return(NULL)
@@ -720,7 +839,7 @@ ExtractStockSlot <- function(x, SlotName) {
   NULL
 }
 
-ExtractFleetSlot <- function(x, SlotName) {
+.ExtractFleetSlot <- function(x, SlotName) {
   if (inherits(x, 'fleet'))
     return(slot(x, SlotName))
   
@@ -736,7 +855,7 @@ ExtractFleetSlot <- function(x, SlotName) {
     return(out)
   }
   
-  if (isStockFleetList(x)) {
+  if (.IsStockFleetList(x)) {
     out <- purrr::map(x, \(FleetList) {
       fl <- purrr::map(FleetList, slot, SlotName)
       class(fl) <- 'FleetList'
@@ -748,7 +867,7 @@ ExtractFleetSlot <- function(x, SlotName) {
     return(out)
   }
   
-  if (isFleetList(x)) {
+  if (.IsFleetList(x)) {
     out <- purrr::map(x, slot, SlotName)
     if (!length(out))
       return(NULL)
@@ -759,10 +878,10 @@ ExtractFleetSlot <- function(x, SlotName) {
   NULL
 }
 
-AssignFleetSlot <- function(x, value, SlotName) {
+.AssignFleetSlot <- function(x, value, SlotName) {
   if (inherits(x, 'om')) {
-    x@Fleet <- AssignSlotRecursive(x@Fleet, value, SlotName)
+    x@Fleet <- .AssignSlotRecursive(x@Fleet, value, SlotName)
     return(x)
   }
-  AssignSlotRecursive(x, value, SlotName)
+  .AssignSlotRecursive(x, value, SlotName)
 }

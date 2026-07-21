@@ -34,8 +34,8 @@
 AddDimension <- function(array, name, val = 1, pos = NULL) {
   if (is.null(array)) return(NULL)
   
-  CheckClass(array, 'array', 'array')
-  CheckClass(name, 'character', 'name')
+  .CheckClass(array, 'array', 'array')
+  .CheckClass(name, 'character', 'name')
   
   if (length(name) != 1)
     cli::cli_abort("`name` must be a single character string, not a vector of length {length(name)}.")
@@ -54,15 +54,15 @@ AddDimension <- function(array, name, val = 1, pos = NULL) {
   
   new_len <- length(val)
   new_dim <- append(d, new_len, after = pos - 1L)
-  
+
   out <- array(data = array, dim = new_dim)
-  
-  if (!is.null(dn)) {
-    new_dn         <- append(dn, list(val), after = pos - 1L)
-    names(new_dn)[pos] <- name
-    dimnames(out)  <- new_dn
-  }
-  
+
+  if (is.null(dn)) dn <- vector("list", nd)
+  new_dn <- append(dn, list(val), after = pos - 1L)
+  if (is.null(names(new_dn))) names(new_dn) <- rep("", length(new_dn))
+  names(new_dn)[pos] <- name
+  dimnames(out) <- new_dn
+
   out
 }
 
@@ -72,8 +72,8 @@ AddDimension <- function(array, name, val = 1, pos = NULL) {
 DropDimension <- function(array, name, warn = TRUE) {
   if (is.null(array)) return(NULL)
   
-  CheckClass(array, 'array', 'array')
-  CheckClass(name, 'character', 'name')
+  .CheckClass(array, 'array', 'array')
+  .CheckClass(name, 'character', 'name')
   
   d   <- dim(array)
   dn  <- dimnames(array)

@@ -49,12 +49,12 @@ CalcMSY <- function(Hist,
                     silent = FALSE) {
 
   type <- match.arg(type)
-  CheckClass(Hist, c('om', 'hist'))
+  .CheckClass(Hist, c('om', 'hist'))
   
   if (inherits(Hist, 'om'))
-    Hist <- OM2Hist(Hist, silent=TRUE)
+    Hist <- .OM2Hist(Hist, silent=TRUE)
 
-  CheckClass(Hist, 'hist', 'Hist')
+  .CheckClass(Hist, 'hist', 'Hist')
   
   nSeason <- Hist@OM@Seasons
 
@@ -66,14 +66,14 @@ CalcMSY <- function(Hist,
   if (is.null(Hist@Reference@SPR0))
     Hist@Reference@SPR0 <- CalcSPR0(Hist, silent=TRUE)
   
-  Hist <- InitMSYRefPoints(Hist, Years)
+  Hist <- .InitMSYRefPoints(Hist, Years)
   
   StockNames <- StockNames(Hist)
   
   complexes <- Complexes(Hist)
 
   for (i in seq_along(complexes)) {
-    Hist <- CalcRefMSY_Complex(Hist,
+    Hist <- .CalcRefMSYComplex(Hist,
                                complex_stocks = StockNames[complexes[[i]]],
                                complex_name   = names(complexes)[i],
                                Years          = Years,
@@ -81,17 +81,21 @@ CalcMSY <- function(Hist,
                                parallel       = parallel,
                                silent         = silent)
   }
+
+  if (!silent)
+    cli::cli_alert_success("Calculated MSY Reference Points")
+
   Hist@Reference@MSY
 }
 
-CalcRefMSY_Complex <- function(Hist, complex_stocks, complex_name, Years,
+.CalcRefMSYComplex <- function(Hist, complex_stocks, complex_name, Years,
                                type, parallel = FALSE, silent = FALSE) {
   
   StockList <- Hist@OM@Stock[complex_stocks]
   FleetList <- Hist@OM@Fleet[complex_stocks]
   
   nSim          <- nSim(Hist)
-  IdenticalHist <- IdenticalSims(Hist@OM, ignore=c('RecDevInit', 
+  IdenticalHist <- .IdenticalSims(Hist@OM, ignore=c('RecDevInit', 
                                                    'RecDevHist', 
                                                    'RecDevProj',
                                                    'Allocation',
@@ -99,7 +103,7 @@ CalcRefMSY_Complex <- function(Hist, complex_stocks, complex_name, Years,
                                                    'Data'))
   
   SPR0_Full_List <- Array2List(Hist@Reference@SPR0) |>
-    SubsetStock(Stocks = complex_stocks)
+    .SubsetStock(Stocks = complex_stocks)
   
   logApicalFRange <- log(c(1E-5, Hist@OM@maxF))
   
@@ -115,11 +119,11 @@ CalcRefMSY_Complex <- function(Hist, complex_stocks, complex_name, Years,
     
     results_sim1 <- purrr::map(seq_along(Years), \(ts) {
       
-      inputs <- PrepPerRecruitInputs(StockList_sim, FleetList_sim,
+      inputs <- .PrepPerRecruitInputs(StockList_sim, FleetList_sim,
                                      SPR0_List_sim, Years[ts])
       
       opt <- optimize(
-        OptCalcRefMSY_Sims,
+        .OptCalcRefMSYSims,
         logApicalFRange,
         inputs       = inputs,
         complex_name = complex_name,
@@ -127,7 +131,7 @@ CalcRefMSY_Complex <- function(Hist, complex_stocks, complex_name, Years,
         option       = 1
       )
       
-      OptCalcRefMSY_Sims(
+      .OptCalcRefMSYSims(
         logApicalF   = opt$minimum,
         inputs       = inputs,
         complex_name = complex_name,
@@ -146,28 +150,25 @@ CalcRefMSY_Complex <- function(Hist, complex_stocks, complex_name, Years,
       }
       slot(MSYRefPoints, sl) <- arr
     }
-    
-    if (!silent)
-      cli::cli_alert_success("Calculated MSY Reference Points")
-    
+
     Hist@Reference@MSY <- ReduceDims(MSYRefPoints)
     return(Hist)
   }
   
   CalcRefMSY_Sim <- function(sim) {
-    StockList_sim  <- SubsetSim(StockList,      Sims = sim, keep_sim_name = TRUE)
-    FleetList_sim  <- SubsetSim(FleetList,      Sims = sim, keep_sim_name = TRUE)
-    SPR0_List_sim  <- SubsetSim(SPR0_Full_List, Sims = sim, keep_sim_name = TRUE)
+    StockList_sim  <- .SubsetSim(StockList,      Sims = sim, keep_sim_name = TRUE)
+    FleetList_sim  <- .SubsetSim(FleetList,      Sims = sim, keep_sim_name = TRUE)
+    SPR0_List_sim  <- .SubsetSim(SPR0_Full_List, Sims = sim, keep_sim_name = TRUE)
 
     purrr::map(seq_along(Years), \(ts) {
 
-      inputs <- PrepPerRecruitInputs(StockList_sim,
+      inputs <- .PrepPerRecruitInputs(StockList_sim,
                                      FleetList_sim,
                                      SPR0_List_sim,
                                      Years[ts])
 
       opt <- optimize(
-        OptCalcRefMSY_Sims,
+        .OptCalcRefMSYSims,
         logApicalFRange,
         inputs       = inputs,
         complex_name = complex_name,
@@ -175,7 +176,7 @@ CalcRefMSY_Complex <- function(Hist, complex_stocks, complex_name, Years,
         option       = 1
       )
 
-      OptCalcRefMSY_Sims(
+      .OptCalcRefMSYSims(
         logApicalF   = opt$minimum,
         inputs       = inputs,
         complex_name = complex_name,
@@ -235,16 +236,13 @@ CalcRefMSY_Complex <- function(Hist, complex_stocks, complex_name, Years,
     slot(MSYRefPoints, sl) <- arr
   }
 
-  if (!silent)
-    cli::cli_alert_success("Calculated MSY Reference Points")
-  
   Hist@Reference@MSY <- ReduceDims(MSYRefPoints)
   Hist
 }
 
 
 
-OptCalcRefMSY_Sims <- function(logApicalF, inputs, complex_name,
+.OptCalcRefMSYSims <- function(logApicalF, inputs, complex_name,
                                type = c('Removals', 'Landings'),
                                option = 1) {
   type <- match.arg(type)
@@ -256,7 +254,7 @@ OptCalcRefMSY_Sims <- function(logApicalF, inputs, complex_name,
   }
   apicalF <- exp(logApicalF)
   
-  PerRecruit <- CalcPerRecruit_F(
+  PerRecruit <- .CalcPerRecruitF(
     apicalF                   = apicalF,
     StockFleetAllocation      = inputs$StockFleetAllocation,
     NaturalMortalityList      = inputs$NaturalMortalityList,
@@ -268,7 +266,8 @@ OptCalcRefMSY_Sims <- function(logApicalF, inputs, complex_name,
     SPFrom                    = inputs$SPFrom,
     SPR0List                  = inputs$SPR0List,
     FecundityList             = inputs$FecundityList,
-    WeightFleetList           = inputs$WeightFleetList,
+    WeightFleetRetainedList   = inputs$WeightFleetRetainedList,
+    WeightFleetSelectedList   = inputs$WeightFleetSelectedList,
     SelectivityFleetList      = inputs$SelectivityFleetList,
     RetentionFleetList        = inputs$RetentionFleetList,
     DiscardMortalityFleetList = inputs$DiscardMortalityFleetList,
@@ -281,7 +280,7 @@ OptCalcRefMSY_Sims <- function(logApicalF, inputs, complex_name,
   
 
   if (option == 1) {
-    Eq <- CalcEquilibrium_internal(PerRecruit, inputs)
+    Eq <- .CalcEquilibriumInternal(PerRecruit, inputs)
     Removals <- Eq@Removals |> DropDimension("F")
     Landings <- Eq@Landings |> DropDimension("F")
   
@@ -293,7 +292,7 @@ OptCalcRefMSY_Sims <- function(logApicalF, inputs, complex_name,
     return(-Catch)
   }
   
-  Eq <- CalcEquilibrium_internal(PerRecruit, inputs)
+  Eq <- .CalcEquilibriumInternal(PerRecruit, inputs)
 
   Removals <- Eq@Removals |> DropDimension("F")
   Landings <- Eq@Landings |> DropDimension("F")
@@ -316,7 +315,7 @@ OptCalcRefMSY_Sims <- function(logApicalF, inputs, complex_name,
   MSYRefPoints@BMSY        <- Eq@Biomass     |> DropDimension("F")
   MSYRefPoints@SBMSY       <- Eq@SBiomass    |> DropDimension("F")
   MSYRefPoints@SPMSY       <- Eq@SProduction |> DropDimension("F")
-  MSYRefPoints@SPRMSY      <- Eq@SPR         |> DropDimension("F") |> aperm(c('Sim', 'Stock', 'Year'))
+  MSYRefPoints@SPRMSY      <- Eq@SPR         |> DropDimension("F") |> .Aperm(c('Sim', 'Stock', 'Year'))
   MSYRefPoints@MSYLandings <- Landings
   MSYRefPoints@MSYDiscards <- Discards
   MSYRefPoints

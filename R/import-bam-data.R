@@ -24,12 +24,20 @@
 #'   If `NULL`, `"1000 lb"` is assumed for all detected landings fleets with a
 #'   warning.
 #' @param UnitsDiscards A named character vector or list following the same
-#'   convention as `UnitsLandings`, applied to discard columns (`D.*`).
-#' @param DiscFleets A character vector of BAM discard column name stubs used
-#'   to rename discard fleets after import. Names are expected in the form
-#'   `"F.FleetName.D"`, from which the middle component (e.g. `"FleetName"`)
-#'   is extracted and used as the fleet label. If `NULL`, no renaming is
-#'   applied.
+#'   convention as `UnitsLandings`, applied to discard columns (`D.*`). When
+#'   `DiscFleets` is supplied, names here must be the final (retained-fleet)
+#'   names it maps to, not the raw BAM discard stub - see `DiscFleets`.
+#' @param DiscFleets A named character vector mapping final fleet names (i.e.
+#'   names appearing in [FleetNames()]) to raw BAM discard column stubs, in
+#'   the form `FinalName = "F.RawStub.D"` (the middle component, `"RawStub"`,
+#'   is extracted and matched against detected `D.*` columns). Used when a
+#'   BAM assessment's discard columns use a different fleet code than the
+#'   corresponding retained fleet (e.g. a discard-only code distinct from the
+#'   landings code) - matching raw discard columns are remapped to their
+#'   final fleet name before import, so `UnitsDiscards` and the resulting
+#'   `@Discards` data are keyed by final fleet names throughout, consistently
+#'   with `@Landings`. If `NULL` (default), discard columns are matched
+#'   directly against [FleetNames()] with no remapping.
 #'
 #' @return The `OM` object with two slots updated:
 #'   - `OM@Data[[1]]`: a [data-class] object containing:
@@ -57,12 +65,21 @@
 #' ## Unit conversion
 #' Conversion is applied fleet-by-fleet using `UnitsLandings` and
 #' `UnitsDiscards`. Fleets present in the OM but absent from the units argument
-#' receive `NA` units and their values are left unconverted.
+#' receive `NA` units and their values are left unconverted. For discards,
+#' any raw BAM column stub named in `DiscFleets` is remapped to its final
+#' fleet name before this matching happens (see `DiscFleets`).
 #'
 #' ## Age and length composition
 #' Composition data are not yet imported. Planned sources are
 #' `BAMdata$comp.mats$*age*` (age composition) and
-#' `BAMdata$comp.mats$lcomp.*.ob` (length composition).
+#' `BAMdata$comp.mats$lcomp.*.ob` (length composition). When implemented,
+#' length composition must follow the [compdata-class] convention used by
+#' `LandingsAtSize`/`DiscardsAtSize`: `Classes` is a named list, one vector
+#' per fleet, since fleets are not required to share a length-bin grid (see
+#' `.ImportSSDataAtSize()` in `import-ss3-data.R` for a worked example, and
+#' [compdata-class] for the fleet-relative-position convention on `Value`'s
+#' Class dimension). Age composition can keep the flat shared `Classes`
+#' vector, since ages are shared across fleets.
 #'
 #' @seealso [GetBAMOutput()], [Data()], [CatchData()], [Obs()]
 #'
@@ -93,35 +110,36 @@ ImportBAMData <- function(OM,
   OM@Data[[1]]@YearLH <- max(OM@Data[[1]]@Years)
   
   # Landings & Discards
-  OM <- ImportBAM_Catch(OM, BAMdata, Units = UnitsLandings, type = 'Landings') 
-  OM <- ImportBAM_Catch(OM, BAMdata, Units = UnitsDiscards, type = 'Discards')
-  if (!is.null(DiscFleets)) 
-    OM@Data[[1]]@Discards <- Rename_Fleet(object=OM@Data[[1]]@Discards, Fleets=as.list(strip_between_periods(DiscFleets)))
-  
+  OM <- .ImportBAMCatch(OM, BAMdata, Units = UnitsLandings, type = 'Landings')
+  OM <- .ImportBAMCatch(OM, BAMdata, Units = UnitsDiscards, type = 'Discards', DiscFleets = DiscFleets)
+
   # CPUE
-  OM <- ImportBAM_CPUE(OM, BAMdata)
+  OM <- .ImportBAMCPUE(OM, BAMdata)
   
   # Surveys 
-  OM <- ImportBAM_Survey(OM, BAMdata, SurveyNames)
+  OM <- .ImportBAMSurvey(OM, BAMdata, SurveyNames)
   
-  # Composition 
+  # Composition
   # TODO: Age composition   — BAMdata$comp.mats$*age*
   # TODO: Length composition — BAMdata$comp.mats$lcomp.*.ob
+  #   `Classes` must be a named list, one vector per fleet (see
+  #   compdata-class and .ImportSSDataAtSize() for a worked example) --
+  #   fleets are not required to share a length-bin grid.
 
   OM
 }
 
-strip_between_periods <- function(x) sub("^[^.]*\\.([^.]*)\\..*$", "\\1", x)
+.StripBetweenPeriods <- function(x) sub("^[^.]*\\.([^.]*)\\..*$", "\\1", x)
 
-extract_cv <- function(t.series, obs.names) {
+.ExtractCv <- function(t.series, obs.names) {
   cv.names <- gsub(".ob", "", paste0("cv.", obs.names))
   as.matrix(t.series[cv.names])
 }
 
-convert_BAM_units <- function(value, units_arg, matched_names, fleet_names) {
+.ConvertBAMUnits <- function(value, units_arg, matched_names, fleet_names) {
   units_out <- setNames(rep(NA_character_, length(fleet_names)), fleet_names)
   
-  units_arg <- trimws(units_arg)
+  units_arg <- trimws(unlist(units_arg))
   
   nms <- dimnames(value)$Fleet
   for (i in seq_len(ncol(value))) {
@@ -141,38 +159,51 @@ convert_BAM_units <- function(value, units_arg, matched_names, fleet_names) {
 }
 
 
-ImportBAM_Catch <- function(OM, BAMdata, Units, type=c('Landings', 'Discards')) {
+.ImportBAMCatch <- function(OM, BAMdata, Units, type=c('Landings', 'Discards'), DiscFleets = NULL) {
   type <- match.arg(type)
-  
-  if (is.null(OM@Obs)) 
+
+  if (is.null(OM@Obs))
     OM@Obs <- MakeNamedList(StockNames(OM), MakeNamedList(FleetNames(OM), new('obs')))
-  
+
   t.series <- BAMdata$t.series
   years    <- t.series$year
   years <- years[years %in% Years(OM,'H')]
-  
+
   n.year   <- length(years)
   cnames   <- colnames(t.series)
   obs.names <- cnames[grepl("\\.ob", cnames)]
-  
+
   fleet.names <- FleetNames(OM)
   n.fleet <- length(fleet.names)
-  
+
   if (type=='Landings') {
     catch.names <- obs.names[grepl("^L\\.", obs.names)]
-    catch.data.names <- gsub("^L\\.", "", gsub("\\.ob", "", catch.names))  
+    catch.data.names <- gsub("^L\\.", "", gsub("\\.ob", "", catch.names))
   } else {
     catch.names <- obs.names[grepl("^D\\.", obs.names)]
     catch.data.names <- gsub("^D\\.", "", gsub("\\.ob", "", catch.names))
+
+    # A BAM assessment's discard columns may use a different fleet code than
+    # the corresponding retained fleet (e.g. Gray Triggerfish: `rHDs` discard
+    # data belongs to the `rHBs` retained fleet). `DiscFleets` maps
+    # FinalName = "F.RawStub.D"; remap any matching raw stub to its final
+    # fleet name here, before matching against `FleetNames(OM)` below, so
+    # `Units` and the resulting data are keyed by final fleet names
+    # throughout - consistently with `Landings`.
+    if (!is.null(DiscFleets)) {
+      raw_to_final <- setNames(names(DiscFleets), .StripBetweenPeriods(DiscFleets))
+      ind <- catch.data.names %in% names(raw_to_final)
+      catch.data.names[ind] <- raw_to_final[catch.data.names[ind]]
+    }
   }
-  
+
   fleet.ind <- which(catch.data.names %in% fleet.names)
   catch.names.matched <- catch.names[fleet.ind]
   catch.data.names.matched <- catch.data.names[fleet.ind]
   n.catch <- length(catch.names.matched)
-  
+
   if (!n.catch) return(OM)
-  
+
   if (is.null(Units)) {
     cli::cli_alert_warning(
       '`{paste0("Units", type)}` not specified. Assuming `1000 lb` for all detected fleets.'
@@ -192,52 +223,20 @@ ImportBAM_Catch <- function(OM, BAMdata, Units, type=c('Landings', 'Discards')) 
         "i" = "Valid fleet names: {.val {fleet.names}}."
       ))
   }
-  
+
   catchData <- CatchData(Name = fleet.names)
   catchData@Value <- array(NA, c(n.year, n.fleet),
                            dimnames = list(Year  = years,
                                            Fleet = fleet.names))
-  
+
   # Only fill in values for fleets that exist in BAM data
   catch.series <- as.matrix(t.series[seq_len(n.year), catch.names.matched])
   dimnames(catch.series) <- list(
     Year  = years,
     Fleet = catch.data.names.matched
   )
-  
-  if (is.null(Units)) {
-    cli::cli_alert_warning(
-      '`{paste0("Units", type)}` not specified. Assuming `1000 lb` for all detected fleets.'
-    )
-    Units <- setNames(rep('1000 lb', n.catch), catch.data.names.matched)
-  } else if (is.null(names(Units))) {
-    cli::cli_abort(c(
-      "x" = "`{paste0('Units', type)}` must be a named character vector.",
-      "i" = "Names must be a subset of `FleetNames(OM)`: {.val {fleet.names}}."
-    ))
-  } else {
-    invalid_names <- setdiff(names(Units), fleet.names)
-    if (length(invalid_names))
-      cli::cli_abort(c(
-        "x" = "`{paste0('Units', type)}` contains name(s) not found in `FleetNames(OM)`.",
-        "i" = "Invalid name(s): {.val {invalid_names}}.",
-        "i" = "Valid fleet names: {.val {fleet.names}}."
-      ))
-  }
-  
-  catchData <- CatchData(Name = fleet.names)
-  catchData@Value <- array(NA, c(n.year, n.fleet),
-                           dimnames = list(Year  = years,
-                                           Fleet = fleet.names))
-  
-  # Only fill in values for fleets that exist in BAM data
-  catch.series <- as.matrix(t.series[seq_len(n.year), catch.names.matched])
-  dimnames(catch.series) <- list(
-    Year  = years,
-    Fleet = catch.data.names.matched
-  )
-  
-  conv <- convert_BAM_units(value         = catch.series,
+
+  conv <- .ConvertBAMUnits(value         = catch.series,
                             units_arg     = Units,
                             matched_names = catch.data.names.matched,
                             fleet_names   = fleet.names
@@ -251,7 +250,7 @@ ImportBAM_Catch <- function(OM, BAMdata, Units, type=c('Landings', 'Discards')) 
   OM
 }
 
-ImportBAM_CPUE <- function(OM, BAMdata) {
+.ImportBAMCPUE <- function(OM, BAMdata) {
   
   t.series  <- BAMdata$t.series
   years     <- t.series$year
@@ -286,7 +285,7 @@ ImportBAM_CPUE <- function(OM, BAMdata) {
   dimnames(cpue.series) <- list(Year  = years,
                                 Fleet = cpue.data.names.matched)
   
-  cv.series <- as.matrix(extract_cv(t.series, cpue.names.matched)[seq_len(n.year), ])
+  cv.series <- as.matrix(.ExtractCv(t.series, cpue.names.matched)[seq_len(n.year), ])
   dimnames(cv.series) <- list(Year  = years,
                               Fleet = cpue.data.names.matched)
   
@@ -298,7 +297,7 @@ ImportBAM_CPUE <- function(OM, BAMdata) {
 }
 
 
-ImportBAM_Survey <- function(OM, BAMdata, SurveyNames=NULL) {
+.ImportBAMSurvey <- function(OM, BAMdata, SurveyNames=NULL) {
   
   t.series <- BAMdata$t.series
   years    <- t.series$year
@@ -343,7 +342,7 @@ ImportBAM_Survey <- function(OM, BAMdata, SurveyNames=NULL) {
   
   survey.data.object@Value[] <- as.matrix(t.series[survey.names])[seq_len(n.year),,drop=FALSE]
   survey.data.object@Value[ survey.data.object@Value<=-9999] <- NA
-  survey.data.object@CV[]    <- extract_cv(t.series, survey.names)[seq_len(n.year),,drop=FALSE]
+  survey.data.object@CV[]    <- .ExtractCv(t.series, survey.names)[seq_len(n.year),,drop=FALSE]
   
   survey.data.object@Selectivity <- rep("Obs", n.survey)
   
@@ -399,4 +398,3 @@ ImportBAM_Survey <- function(OM, BAMdata, SurveyNames=NULL) {
   
   OM
 }
-

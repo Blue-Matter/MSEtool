@@ -82,6 +82,5 @@ class(Richards) <- "Length-at-Age-Model"
 #' @name Length-at-Age-Models
 #' @export
 LengthModels <- function(full = TRUE, print = TRUE) {
-  ReturnModels(ModelClass = "Length-at-Age-Model", full, print)
+  .ReturnModels(ModelClass = "Length-at-Age-Model", full, print)
 }
-

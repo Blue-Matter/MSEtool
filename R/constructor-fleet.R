@@ -35,10 +35,17 @@
 #'   1 (replicated internally). Default is an empty array; if not specified,
 #'   [PopulateClosure()] sets all areas to open (1) across all simulations and
 #'   years.
-#' @param WeightFleet Numeric array or `NA`. Fleet-specific weight-at-age
-#'   (`Sim x Age x Year`). Used in fleet-level biomass calculations. If `NA`
-#'   (default), [PopulateFleet()] sets `WeightFleet` equal to the stock
-#'   weight-at-age array.
+#' @param WeightFleetRetained Numeric array or `NA`. Mean weight-at-age of fish
+#'   retained (landed) by this fleet (`Sim x Age x Year`), selectivity- and
+#'   retention-weighted. Used to convert landed numbers-at-age to landed
+#'   biomass. If `NA` (default), [PopulateFleet()] computes it from
+#'   selectivity, retention, and the stock's weight-at-length. Accessed via
+#'   [WeightFleetRetained()].
+#' @param WeightFleetSelected Numeric array or `NA`. Mean weight-at-age of fish
+#'   selected (encountered, before retention) by this fleet (`Sim x Age x
+#'   Year`), selectivity-weighted only. Combined with `WeightFleetRetained` to
+#'   compute discards biomass. If `NA` (default), [PopulateFleet()] computes it
+#'   from selectivity and the stock's weight-at-length.
 #' @param Bioeconomic A [bioeconomic-class] object. Not currently used.
 #'   Default is an empty [bioeconomic-class].
 #' @param Dynamics List. Reserved for future use for fleet dynamics model
@@ -62,7 +69,8 @@
 #' - [Retention()]: defaults to full retention for all age and length classes.
 #' - [DiscardMortality()]: defaults to 0 (all discards survive).
 #' - `Closure`: defaults to 1 (all areas open) across all simulations and years.
-#' - `WeightFleet`: defaults to the stock weight-at-age array.
+#' - `WeightFleetRetained`/`WeightFleetSelected`: computed from selectivity,
+#'   retention, and the stock's weight-at-length.
 #'
 #' ## Pass-Through Access from an OM
 #'
@@ -98,14 +106,16 @@
 #'
 #' Individual slots may be accessed or modified using [Effort()],
 #' [Catchability()], [Selectivity()], [Retention()], [DiscardMortality()],
-#' [Closure()], [WeightFleet()], and [Bioeconomic()].
+#' [Closure()], [WeightFleetRetained()], [WeightFleetSelected()], and
+#' [Bioeconomic()].
 #'
 #' @return
 #' - `Fleet()` returns a [fleet-class] object. If `Name` is an [om-class]
 #'   object, returns the fleet list or a specific fleet from the OM.
 #' - `Fleet<-` returns the [om-class] object `x` with the `Fleet` slot
 #'   updated.
-#' - `Closure()` and `WeightFleet()` return the corresponding slot from the
+#' - `Closure()`, `WeightFleetRetained()`, and `WeightFleetSelected()` return
+#'   the corresponding slot from the
 #'   [fleet-class] object `x`.
 #' - Their replacement forms return `x` with the corresponding slot updated.
 #'
@@ -119,8 +129,7 @@
 #'
 #' @family fleet
 #'
-#' @examples
-#' # See man-examples/class-Fleet.R
+#' @example man-examples/class-Fleet.R
 #'
 #' @export
 Fleet <- function(Name = NULL,
@@ -130,7 +139,8 @@ Fleet <- function(Name = NULL,
                   Retention = new("retention"),
                   DiscardMortality = new("discardmortality"),
                   Closure = array(),
-                  WeightFleet = array(),
+                  WeightFleetRetained = array(),
+                  WeightFleetSelected = array(),
                   Bioeconomic = new("bioeconomic"),
                   Dynamics = list(),
                   Misc = list()) {
@@ -156,8 +166,9 @@ Fleet <- function(Name = NULL,
     Selectivity      = Selectivity,
     Retention        = Retention,
     DiscardMortality = DiscardMortality,
-    Closure          = Closure,
-    WeightFleet      = WeightFleet,
+    Closure             = Closure,
+    WeightFleetRetained = WeightFleetRetained,
+    WeightFleetSelected = WeightFleetSelected,
     Bioeconomic      = Bioeconomic,
     Dynamics         = Dynamics,
     Misc             = Misc
@@ -167,36 +178,50 @@ Fleet <- function(Name = NULL,
 #' @rdname Fleet
 #' @export
 Closure <- function(x) {
-  if (isFleetOrList(x))
-    return(ExtractFleetSlot(x, 'Closure'))
+  if (.IsFleetOrList(x))
+    return(.ExtractFleetSlot(x, 'Closure'))
   
-  AccessSlot(x, 'Closure')
+  .AccessSlot(x, 'Closure')
 }
 
 #' @rdname Fleet
 #' @export
 `Closure<-` <- function(x, value) {
-  AssignSlot(x, value, 'Closure')
+  .AssignSlot(x, value, 'Closure')
 }
 
 #' @rdname Fleet
 #' @export
-WeightFleet <- function(x) {
-  if (isFleetOrList(x))
-    return(ExtractFleetSlot(x, 'WeightFleet'))
-  AccessSlot(x, 'WeightFleet')
+WeightFleetRetained <- function(x) {
+  if (.IsFleetOrList(x))
+    return(.ExtractFleetSlot(x, 'WeightFleetRetained'))
+  .AccessSlot(x, 'WeightFleetRetained')
 }
 
 #' @rdname Fleet
 #' @export
-`WeightFleet<-` <- function(x,value) {
-  AssignSlot(x, value, 'WeightFleet')
+`WeightFleetRetained<-` <- function(x,value) {
+  .AssignSlot(x, value, 'WeightFleetRetained')
+}
+
+#' @rdname Fleet
+#' @export
+WeightFleetSelected <- function(x) {
+  if (.IsFleetOrList(x))
+    return(.ExtractFleetSlot(x, 'WeightFleetSelected'))
+  .AccessSlot(x, 'WeightFleetSelected')
+}
+
+#' @rdname Fleet
+#' @export
+`WeightFleetSelected<-` <- function(x,value) {
+  .AssignSlot(x, value, 'WeightFleetSelected')
 }
 
 #' @rdname Fleet
 #' @export
 `Fleet<-` <- function(x, value) {
-  CheckClass(x, "om", "x")
+  .CheckClass(x, "om", "x")
   
   OM <- x
   Fleet <- value
@@ -262,5 +287,5 @@ WeightFleet <- function(x) {
     return(OM)
   }
   
-  AssignSlot(OM, Fleet, 'Fleet')
+  .AssignSlot(OM, Fleet, 'Fleet')
 }

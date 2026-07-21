@@ -11,7 +11,7 @@
 #' @return Logical `TRUE` if all 'Sim' slices are identical, `FALSE` otherwise.
 #' 
 #' @keywords internal
-IdenticalSims <- function(object, ignore=NULL, debug=FALSE) {
+.IdenticalSims <- function(object, ignore=NULL, debug=FALSE) {
   
   if (debug) 
     print(class(object))
@@ -57,7 +57,7 @@ IdenticalSims <- function(object, ignore=NULL, debug=FALSE) {
         return(TRUE)
       
       perm    <- c(sim_dim, setdiff(seq_along(dims), sim_dim))
-      mat     <- matrix(aperm(object, perm), nrow = dims[sim_dim])
+      mat     <- matrix(.Aperm(object, perm), nrow = dims[sim_dim])
       
       ref <- mat[1, , drop = TRUE]
       
@@ -80,7 +80,7 @@ IdenticalSims <- function(object, ignore=NULL, debug=FALSE) {
 #'
 #' Recursively inspects S4 objects, lists, and arrays to find all slots
 #' (or named list elements) that contain values varying along the "Sim"
-#' dimension. Complements [IdenticalSims()].
+#' dimension. Complements `.IdenticalSims()`.
 #'
 #' @param object An S4 object, list, or array to inspect.
 #' @param ignore Character vector of slot names to skip.
@@ -91,7 +91,7 @@ IdenticalSims <- function(object, ignore=NULL, debug=FALSE) {
 #'   Returns an empty character vector if nothing varies.
 #'
 #' @keywords internal
-VaryingSims <- function(object, ignore = NULL, path = NULL) {
+.VaryingSims <- function(object, ignore = NULL, path = NULL) {
   
   varying <- character(0)
   
@@ -104,7 +104,7 @@ VaryingSims <- function(object, ignore = NULL, path = NULL) {
       new_path <- if (is.null(path)) s else paste(path, s, sep = "@")
       
       if (!is.null(val)) {
-        varying <- c(varying, VaryingSims(val, ignore = ignore, path = new_path))
+        varying <- c(varying, .VaryingSims(val, ignore = ignore, path = new_path))
       }
     }
     return(varying)
@@ -119,7 +119,7 @@ VaryingSims <- function(object, ignore = NULL, path = NULL) {
       tag      <- if (!is.null(nms) && nzchar(nms[i])) nms[i] else paste0("[[", i, "]]")
       new_path <- if (is.null(path)) tag else paste(path, tag, sep = "$")
       if (!is.null(el)) {
-        varying <- c(varying, VaryingSims(el, ignore = ignore, path = new_path))
+        varying <- c(varying, .VaryingSims(el, ignore = ignore, path = new_path))
       }
     }
     return(varying)
@@ -136,7 +136,7 @@ VaryingSims <- function(object, ignore = NULL, path = NULL) {
       if (dims[sim_dim] == 1) return(varying)
       
       perm <- c(sim_dim, setdiff(seq_along(dims), sim_dim))
-      mat  <- matrix(aperm(object, perm), nrow = dims[sim_dim])
+      mat  <- matrix(.Aperm(object, perm), nrow = dims[sim_dim])
       ref  <- mat[1, , drop = TRUE]
       
       col_na    <- colSums(!is.na(mat)) == 0L
@@ -154,8 +154,6 @@ VaryingSims <- function(object, ignore = NULL, path = NULL) {
   
   varying
 }
-
-
 
 
 

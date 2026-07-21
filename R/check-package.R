@@ -7,63 +7,45 @@
 #' @param version Optional. Character string specifying required version number
 #' @param pkg.path Optional. Character string specifying the install command. See `Examples`
 #' @export
-#' @examples
-#' # Not installed
-#' \dontrun{
-#' CheckPackage("MadeUp")
-#' }
-#'
-#' # Already installed
-#' CheckPackage("MSEtool")
-#'
-#' # Needs updating
-#' \dontrun{
-#' CheckPackage("MSEtool", "99")
-#' }
-#' 
-#' # Update and specify installation path
-#' \dontrun{
-#' CheckPackage("MSEtool", "99", "pak::pgk_install('blue-matter/MSEtool')")
-#' }
-#'
+#' @example man-examples/CheckPackage.R
 CheckPackage <- function(pkg, version = NULL, pkg.path = NULL) {
   PackageInstalled <- requireNamespace(pkg, quietly = TRUE)
   
   if (!PackageInstalled) {
     cli::cli_abort(c(
       "x" = "Package {.pkg {pkg}} is required for this function",
-      "i" = MessageInstallPackage(pkg, pkg.path)
+      "i" = .MessageInstallPackage(pkg, pkg.path)
     ), call = NULL)
   }
   
-  CorrectVersion <- CheckPackageVersion(pkg, version)
+  CorrectVersion <- .CheckPackageVersion(pkg, version)
   if (PackageInstalled & CorrectVersion) {
     return(TRUE)
   }
 
   if (PackageInstalled & !CorrectVersion) {
-    MessageUpdatePackage(pkg, version, pkg.path)
+    .MessageUpdatePackage(pkg, version, pkg.path)
   }
 }
 
-CheckPackageVersion <- function(pkg, version = NULL) {
+.CheckPackageVersion <- function(pkg, version = NULL) {
   if (is.null(version) || packageVersion(pkg) >= version) {
     return(TRUE)
   }
   FALSE
 }
 
-MessageInstallPackage <- function(pkg, pkg.path = NULL) {
+.MessageInstallPackage <- function(pkg, pkg.path = NULL) {
   if (is.null(pkg.path)) {
     return("Please install it with {.code install.packages('{pkg}')}")
   }
   "Please install it with {.code {pkg.path}}"
 }
 
-MessageUpdatePackage <- function(pkg, version = NULL, pkg.path = NULL) {
+.MessageUpdatePackage <- function(pkg, version = NULL, pkg.path = NULL) {
   curent_version <- packageVersion(pkg)
   cli::cli_abort(c(
     "x" = "Package {.pkg {pkg}} in installed but version {.val {version}+} is required",
-    "i" = MessageInstallPackage(pkg, pkg.path)
+    "i" = .MessageInstallPackage(pkg, pkg.path)
   ), call = NULL)
 }

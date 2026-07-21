@@ -43,19 +43,19 @@
 NULL
 
 
-hasSlot <- function(object, slot) {
+.HasSlot <- function(object, slot) {
   slot %in% slotNames(object)
 }
 
-help_topic <- function(pkg, name) {
+HelpTopic <- function(pkg, name) {
   paste0(pkg, "::", name)
 }
 
-a_or_an <- function(x) {
+AOrAn <- function(x) {
   ifelse(grepl("^[aeiouAEIOU]", x), "an", "a")
 }
 
-.show_array <- function(x, name, list_element=FALSE, show_list_element=TRUE) {
+.ShowArray <- function(x, name, list_element=FALSE, show_list_element=TRUE) {
   
   if (is.null(x) || length(x) == 0) {
     cli::cli_text("{.var {name}}: ")
@@ -99,7 +99,7 @@ a_or_an <- function(x) {
   
 }
 
-.show_data_frame <- function(x, name) {
+.ShowDataFrame <- function(x, name) {
   
   cli::cli_text("{.var { name }} {.emph data.frame}")
   nms <- colnames(x)
@@ -112,11 +112,11 @@ a_or_an <- function(x) {
 }
 
 
-.show_x <- function(x, name=NULL, list_element=FALSE, show_list_element=TRUE, digits =3) {
+.ShowX <- function(x, name=NULL, list_element=FALSE, show_list_element=TRUE, digits =3) {
   
   if (isS4(x)) {
-    help_url <- paste0("ide:help:", help_topic('MSEtool', paste0(tolower(name), '-class')))
-    cli::cli_text("`{name}`: {a_or_an(class(x))} {.href [MSEtool::{tolower(class(x))}-class]({help_url})} object")
+    help_url <- paste0("ide:help:", HelpTopic('MSEtool', paste0(tolower(class(x)), '-class')))
+    cli::cli_text("`{name}`: {AOrAn(class(x))} {.href [MSEtool::{tolower(class(x))}-class]({help_url})} object")
     return(invisible(NULL))
     
   }
@@ -146,7 +146,7 @@ a_or_an <- function(x) {
   }
   
   if (inherits(x, 'data.frame')) {
-    .show_data_frame(x, name)
+    .ShowDataFrame(x, name)
     return(invisible(NULL))
   }
   
@@ -165,7 +165,7 @@ a_or_an <- function(x) {
   
   
   if (inherits(x, 'array')) {
-    .show_array(x, name, list_element, show_list_element)
+    .ShowArray(x, name, list_element, show_list_element)
     return(invisible(NULL))
   }
   
@@ -189,40 +189,40 @@ a_or_an <- function(x) {
   
 }
 
-.show_slot <- function(object, slot, digits=3) {
-  if (!hasSlot(object, slot)) {
+.ShowSlot <- function(object, slot, digits=3) {
+  if (!.HasSlot(object, slot)) {
     return(invisible(NULL))
   }
   if (slot =='Model') {
-    .show_model(object) 
+    .ShowModel(object) 
     return(invisible(NULL))
   }
   
   if (slot =='Pars') {
-    .show_pars(object)
+    .ShowPars(object)
     return(invisible(NULL))
   }
   
   x <- slot(object, slot)
   
-  .show_x(x, slot, digits=digits)
+  .ShowX(x, slot, digits=digits)
 }
 
-cli_fn <- function(fun) {
+.CliFn <- function(fun) {
   args <- names(formals(fun))
   cli::cli_text("{.var Model}: {.emph function with arguments: } {cli::cli_vec(args)}")
 }
 
 
-.show_model <- function(object) {
-  if (!hasSlot(object, "Model"))
+.ShowModel <- function(object) {
+  if (!.HasSlot(object, "Model"))
     return(NULL)
   
   param_names <- names(object@Pars)
   
   fail <- FALSE
   if (is.null(object@Model) && length(param_names)) {
-    chk <- try(FindModel(object), silent=TRUE)
+    chk <- try(.FindModel(object), silent=TRUE)
     if (inherits(chk, 'try-error')) {
       object@Model <- sub("^Error in \\S+ : ", "", as.character(chk))
       fail <- TRUE
@@ -235,14 +235,14 @@ cli_fn <- function(fun) {
     if (fail) {
       cli::cli_text("{.var Model}:  {object@Model}") 
     } else {
-      cli::cli_text("{.var Model}:  {.help {help_topic('MSEtool', object@Model)}}")   
+      cli::cli_text("{.var Model}:  {.help {HelpTopic('MSEtool', object@Model)}}")   
     }
     
     return(invisible(NULL))
   }
   
   if (is.function(object@Model)) {
-    cli_fn(object@Model)
+    .CliFn(object@Model)
     return(invisible(NULL))
   }
   
@@ -250,7 +250,7 @@ cli_fn <- function(fun) {
 }
 
 
-.show_array_p <- function(x, p ) {
+.ShowArrayP <- function(x, p ) {
   
   if (is.null(x) || length(x) == 0) {
     cli::cli_text("> {.val {p}}:")
@@ -282,8 +282,8 @@ cli_fn <- function(fun) {
   
 }
 
-.show_pars <- function(object) {
-  if (hasSlot(object, "Pars")) {
+.ShowPars <- function(object) {
+  if (.HasSlot(object, "Pars")) {
     param_names <- names(object@Pars)
     
     cli::cli_text(  "{.var Pars}: ")
@@ -294,7 +294,7 @@ cli_fn <- function(fun) {
           vals <- object@Pars[[p]]
           
           if (is.array(vals)) {
-            .show_array_p(vals,p)
+            .ShowArrayP(vals,p)
             
             
           } else if (length(vals)==1) {
@@ -315,8 +315,8 @@ cli_fn <- function(fun) {
   
 }
 
-.show_object <- function(object, name, ignore='Misc', classonly=FALSE, digits=3) {
-  cli::cli_h2("A  {.help {help_topic('MSEtool', paste0(tolower(name),'-class'))}} Object")
+.ShowObject <- function(object, name, ignore='Misc', classonly=FALSE, digits=3) {
+  cli::cli_h2("A  {.help {HelpTopic('MSEtool', paste0(tolower(name),'-class'))}} Object")
   
   if (classonly)
     return(invisible(NULL))
@@ -327,7 +327,7 @@ cli_fn <- function(fun) {
   for (sl in slots) {
     if (sl =='Log')
       next
-    .show_slot(object, sl, digits=digits)  
+    .ShowSlot(object, sl, digits=digits)  
     if (sl %in% c('Model', 'TruncSD')) {
       cli::cli_text("")
     }
@@ -335,32 +335,28 @@ cli_fn <- function(fun) {
 }
 
 
-
-
-# ---- OM ----
-
 setMethod("show", "om", function(object) {
   object <- UpdateObject(object)
   
   cli::cli_h2("An {.help MSEtool::om-class} Object")
   
-  .show_slot(object, 'Name')
+  .ShowSlot(object, 'Name')
   
   # cli::cli_text("")
   
-  # .show_slot(object, 'Agency')
-  # .show_slot(object, 'Author')
-  # .show_slot(object, 'Email')
-  # .show_slot(object, 'Region')
+  # .ShowSlot(object, 'Agency')
+  # .ShowSlot(object, 'Author')
+  # .ShowSlot(object, 'Email')
+  # .ShowSlot(object, 'Region')
   
-  .show_slot(object, 'nSim')
+  .ShowSlot(object, 'nSim')
   
   if (!is.null(object@Seasons) && object@Seasons > 1)
-  .show_slot(object, 'Seasons')
+  .ShowSlot(object, 'Seasons')
   
   
-  .show_slot(object, 'nYear')
-  .show_slot(object, 'pYear')
+  .ShowSlot(object, 'nYear')
+  .ShowSlot(object, 'pYear')
   
   histYears <- Years(object,'H')
   projYears <- Years(object,'P')
@@ -434,24 +430,24 @@ setMethod("show", "om", function(object) {
                 cli::cli_li("Slot: {.val {MissingFleet[[i]][[j]][[k]]}}")
             }
           }
-        } 
+        }
       }
     }
   }
+
+  cli::cli_text("")
+  .CheckLog(object, 'OM')
 })
 
-
-
-# ---- Stock ----
 
 setMethod('show', 'stock', function(object) {
   object <- UpdateObject(object)
   cli::cli_h2("A {.help MSEtool::stock-class} Object")
   
-  .show_slot(object, 'Name')
+  .ShowSlot(object, 'Name')
   
-  .show_slot(object, 'CommonName')
-  .show_slot(object, 'Species')
+  .ShowSlot(object, 'CommonName')
+  .ShowSlot(object, 'Species')
   
   cli::cli_text("")
   
@@ -471,7 +467,7 @@ setMethod('show', 'stock', function(object) {
       cli::cli_text("{.var {name}}: {.emph not specified}")
     } else {
       
-      cli::cli_text("{.var {name}}: {a_or_an(name)}  {.help {help_topic('MSEtool', name)}} Object")
+      cli::cli_text("{.var {name}}: {AOrAn(name)}  {.help {HelpTopic('MSEtool', name)}} Object")
     }
   }
 
@@ -482,10 +478,10 @@ setMethod("show", "ages", function(object) {
   
   cli::cli_h2("An {.help MSEtool::ages-class} Object")
   
-  .show_slot(object, 'MinAge')
-  .show_slot(object, 'MaxAge')
-  .show_slot(object, 'Units')
-  .show_slot(object, 'PlusGroup')
+  .ShowSlot(object, 'MinAge')
+  .ShowSlot(object, 'MaxAge')
+  .ShowSlot(object, 'Units')
+  .ShowSlot(object, 'PlusGroup')
   
   AgeClasses <- CalcAgeClasses(object) 
   if (!is.null(AgeClasses)) {
@@ -498,44 +494,43 @@ setMethod("show", "ages", function(object) {
 
 
 setMethod("show", "length", function(object) {
-  .show_object(object, 'Length')
+  .ShowObject(object, 'Length')
 })
 
 setMethod("show", "weight", function(object) {
-  .show_object(object, 'Weight')
+  .ShowObject(object, 'Weight')
 })
 
 setMethod("show", "naturalmortality", function(object) {
-  .show_object(object, 'NaturalMortality')
+  .ShowObject(object, 'NaturalMortality')
 })
 
 setMethod("show", "maturity", function(object) {
-  .show_object(object, 'Maturity')
+  .ShowObject(object, 'Maturity')
 })
 
 setMethod("show", "fecundity", function(object) {
-  .show_object(object, 'Fecundity')
+  .ShowObject(object, 'Fecundity')
 })
 
 setMethod("show", "srr", function(object) {
-  .show_object(object, 'SRR')
+  .ShowObject(object, 'SRR')
 })
 
 setMethod("show", "spatial", function(object) {
-  .show_object(object, 'Spatial')
+  .ShowObject(object, 'Spatial')
 })
 
 setMethod("show", "depletion", function(object) {
-  .show_object(object, 'Depletion')
+  .ShowObject(object, 'Depletion')
 })
 
-# ---- Fleet ----
 
 setMethod('show', 'fleet', function(object) {
   object <- UpdateObject(object)
   cli::cli_h2("A {.help MSEtool::fleet-class} Object")
   
-  .show_slot(object, 'Name')
+  .ShowSlot(object, 'Name')
   
   cli::cli_text("")
   
@@ -549,41 +544,41 @@ setMethod('show', 'fleet', function(object) {
     if (isNewObject(slot(object, name))) {
       cli::cli_text("`{name}`: {.emph not specified}")
     } else {
-      cli::cli_text("`{name}`: {a_or_an(name)} {.help {help_topic('MSEtool', name)}} Object")
+      cli::cli_text("`{name}`: {AOrAn(name)} {.help {HelpTopic('MSEtool', name)}} Object")
     }
   }
   
-  .show_slot(object, 'Closure')
-  .show_slot(object, 'WeightFleet')
-  
+  .ShowSlot(object, 'Closure')
+  .ShowSlot(object, 'WeightFleetRetained')
+  .ShowSlot(object, 'WeightFleetSelected')
+
 })
 
 setMethod("show", "effort", function(object) {
-  .show_object(object, 'Effort')
+  .ShowObject(object, 'Effort')
 })
 
 setMethod("show", "catchability", function(object) {
-  .show_object(object, 'Catchability')
+  .ShowObject(object, 'Catchability')
 })
 
 setMethod("show", "selectivity", function(object) {
-  .show_object(object, 'Selectivity')
+  .ShowObject(object, 'Selectivity')
 })
 
 setMethod("show", "retention", function(object) {
-  .show_object(object, 'Retention')
+  .ShowObject(object, 'Retention')
 })
 
 setMethod("show", "discardmortality", function(object) {
-  .show_object(object, 'DiscardMortality')
+  .ShowObject(object, 'DiscardMortality')
 })
 
-# ---- Obs ----
 
 setMethod('show', 'obs', function(object) {
   cli::cli_h2("An {.help MSEtool::obs-class} Object")
   
-  .show_slot(object, 'Name')
+  .ShowSlot(object, 'Name')
   
   cli::cli_text("")
   
@@ -606,7 +601,7 @@ setMethod('show', 'obs', function(object) {
     if (isNewObject(slot(object, name))) {
       cli::cli_text("`{name}`: {.emph not specified}")
     } else {
-      cli::cli_text("`{name}`: {a_or_an(constructor)} {.help {help_topic('MSEtool', constructor)}} Object")
+      cli::cli_text("`{name}`: {AOrAn(constructor)} {.help {HelpTopic('MSEtool', constructor)}} Object")
     }
   }
 })
@@ -650,22 +645,44 @@ setMethod('show', 'exploitationobs', function(object) {
 })
 
 setMethod('show', 'effortobs', function(object) {
-  .show_object(object, 'effortobs')
+  .ShowObject(object, 'effortobs')
 })
 
 setMethod('show', 'catchobs', function(object) {
-  .show_object(object, 'catchobs')
+  .ShowObject(object, 'catchobs')
 })
 
 setMethod('show', 'indicesobs', function(object) {
-  .show_object(object, 'indicesobs')
+  .ShowObject(object, 'indicesobs')
 })
 
 setMethod('show', 'compobs', function(object) {
-  .show_object(object, 'compobs')
+  .ShowObject(object, 'compobs')
 })
 
-# ---- Hist ----
+
+setMethod('show', 'imp', function(object) {
+  object <- UpdateObject(object)
+  cli::cli_h2("An {.help MSEtool::imp-class} Object")
+
+  .ShowSlot(object, 'Name')
+
+  cli::cli_text("")
+
+  slots <- c('TAC', 'Effort', 'Size')
+  for (name in slots) {
+    if (isNewObject(slot(object, name))) {
+      cli::cli_text("`{name}`: {.emph not specified}")
+    } else {
+      cli::cli_text("`{name}`: {AOrAn(name)} {.help {HelpTopic('MSEtool', 'impslot-class')}} Object")
+    }
+  }
+})
+
+setMethod("show", "impslot", function(object) {
+  .ShowObject(object, 'ImpSlot')
+})
+
 
 setMethod('show', 'hist', function(object) {
   cli::cli_h2("A {.help MSEtool::hist-class} Object")
@@ -675,7 +692,7 @@ setMethod('show', 'hist', function(object) {
   classslots <- c('OM', 'Unfished', 'Reference')
   
   for (name in classslots) {
-      cli::cli_text("`{name}`: {a_or_an(name)} {.help {help_topic('MSEtool', paste0(tolower(name), '-class'))}} Object")
+      cli::cli_text("`{name}`: {AOrAn(name)} {.help {HelpTopic('MSEtool', paste0(tolower(name), '-class'))}} Object")
     
   }
   cli::cli_text("")
@@ -688,42 +705,38 @@ setMethod('show', 'hist', function(object) {
       next
     }
     if (sl == 'Log') {
-      # TODO
       next
     }
     if (sl == 'Misc') {
       next
     }
-    .show_x(slot(object, sl), sl, show_list_element=FALSE)
+    .ShowX(slot(object, sl), sl, show_list_element=FALSE)
   }
-  
-  
-  
-  
+
+  cli::cli_text("")
+  .CheckLog(object, 'Hist')
+
+
   # cli::cli_text("{.var OM}: A {.help MSEtool::OM} Object")
   # cli::cli_text("{.var Unfished}: A {.help MSEtool::unfished-class} Object")
-  # 
+  #
   # slots %in% c('OM', 'Unfished')
-  # 
+  #
   # cli::cli_text("Slots:")
   # cli::cli_li(
   # slotNames(object))
- 
+
 })
 
-
-
-
-# ---- MSE ----
 
 setMethod('show', 'mse', function(object) {
   cli::cli_h2("A {.help MSEtool::mse-class} Object")
   
-  .show_slot(object@OM, 'Name')
-  .show_slot(object@OM, 'nSim')
+  .ShowSlot(object@OM, 'Name')
+  .ShowSlot(object@OM, 'nSim')
   
   if (!is.null(object@OM@Seasons) && object@OM@Seasons > 1)
-    .show_slot(object@OM, 'Seasons')
+    .ShowSlot(object@OM, 'Seasons')
   
   cli::cli_text('`MPs`: {.val {names(object@MPs)}}')
   histYears <- Years(object@OM,'H')
@@ -733,17 +746,16 @@ setMethod('show', 'mse', function(object) {
   
   cli::cli_text("Historical Years: {.val { paste(range(histYears), collapse = ' - ')} ({length(histYears)})}")
   cli::cli_text("Projection Years: {.val { paste(range(projYears), collapse = ' - ')} ({length(projYears)})}")
-  
+
   cli::cli_text("")
-  
+
+  .CheckLog(object, 'MSE')
+
 })
 
 
-
-# ---- Data ----
-
 setMethod('show', 'data', function(object) {
-  .show_object(object, 'data')
+  .ShowObject(object, 'data')
   
   # cli::cli_h2("A {.help MSEtool::data-class} Object")
   # cli::cli_text("")
@@ -754,53 +766,33 @@ setMethod('show', 'data', function(object) {
 })
 
 
-# ---- Advice ----
-
-
 setMethod('show', 'advice', function(object) {
-  .show_object(object, 'Advice', digits=10)
+  .ShowObject(object, 'Advice', digits=10)
 })
 
 
-# ---- per-recruit ----
 setMethod('show', 'perrecruit', function(object) {
-  .show_object(object, 'perrecruit')
+  .ShowObject(object, 'perrecruit')
 })
 
-# ---- refpointsMSY ----
 setMethod('show', 'refpointsMSY', function(object) {
-  .show_object(object, 'refpointsMSY')
+  .ShowObject(object, 'refpointsMSY')
 })
 
-# ---- equilibrium ----
 setMethod('show', 'equilibrium', function(object) {
-  .show_object(object, 'equilibrium')
+  .ShowObject(object, 'equilibrium')
 })
 
-# ---- reference ----
 setMethod('show', 'reference', function(object) {
-  .show_object(object, 'reference')
+  .ShowObject(object, 'reference')
 })
 
 
-# ---- stocktargeting ----
 setMethod('show', 'stocktargeting', function(object) {
-  .show_object(object, 'stocktargeting')
+  .ShowObject(object, 'stocktargeting')
 })
 
 
-# ---- popdynamics ----
 setMethod('show', 'popdynamics', function(object) {
-  .show_object(object, 'popdynamics')
+  .ShowObject(object, 'popdynamics')
 })
-
-
-
-
-
-
-
-
-
-
-

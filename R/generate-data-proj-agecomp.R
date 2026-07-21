@@ -53,7 +53,7 @@
 #'   - `Theta`: defaults to `1` if `NULL`
 #'   - `Shift`: defaults to zero for all bins if `NULL`
 #'
-#' ## Obs Structure
+#' ## Obs .Structure
 #'
 #' Observation parameters are accessed via:
 #'
@@ -82,9 +82,9 @@
 #' - `@Value`: `[nYear+1 x nFleet x nAge]` array of composition counts
 #'
 #' @seealso [CompObs()], [CompData()], [compdata-class], [obs-class],
-#'   [rDirichletMultinomial()], [GenHistData_AgeComp()], [GenProjData_Catch()]
+#'   [rDirichletMultinomial()], `.GenHistDataAgeComp()`, `.GenProjDataCatch()`
 #' @keywords internal
-GenProjData_AgeComp <- function(x, Proj, DataYear, YearsAll, i, stocks,
+.GenProjDataAgeComp <- function(x, Proj, DataYear, YearsAll, i, stocks,
                                 type = c('LandingsAtAge', 'DiscardsAtAge')) {
   
   type     <- match.arg(type)
@@ -94,7 +94,7 @@ GenProjData_AgeComp <- function(x, Proj, DataYear, YearsAll, i, stocks,
   if (DataYear %in% dimnames(CompData@Value)[[1]]) return(CompData)
   
   TSIndex    <- match(DataYear, YearsAll)
-  FleetNames <- resolveFleetNames(CompData)
+  FleetNames <- .ResolveFleetNames(CompData)
   nFleet     <- length(FleetNames)
   AgeClasses <- CompData@Classes
   nAge       <- length(AgeClasses)
@@ -112,7 +112,7 @@ GenProjData_AgeComp <- function(x, Proj, DataYear, YearsAll, i, stocks,
   ageclasses <- purrr::map(CatchAtAge_yr, \(st) as.numeric(dimnames(st)$Age))
   
   if (length(CatchAtAge_yr)>1 && ! all(duplicated(ageclasses)[-1])) {
-    CatchAtAge_yr <- align_age_dim(CatchAtAge_yr)
+    CatchAtAge_yr <- .AlignAgeDim(CatchAtAge_yr)
   }
   CatchAtAge_yr <- CatchAtAge_yr |> List2Array('Stock') |> SumOverStock()
   
@@ -135,20 +135,20 @@ GenProjData_AgeComp <- function(x, Proj, DataYear, YearsAll, i, stocks,
       NewValue[1, fl, ] <- slot(omData, type)@Value[TSIndex, fl, ]
     } else {
       sim_ss     <- min(x, nrow(Obs@SampleSize))
-      ss         <- ArraySubsetYear(Obs@SampleSize, DataYear)[sim_ss]
+      ss         <- .ArraySubsetYear(Obs@SampleSize, DataYear)[sim_ss]
       
       if (is.na(ss) || ss == 0) next
       
       sim_ess <- min(x, nrow(Obs@ESS))
       ess     <- if (!is.null(Obs@ESS)) {
-        ArraySubsetYear(Obs@ESS, DataYear)[sim_ess]
+        .ArraySubsetYear(Obs@ESS, DataYear)[sim_ess]
       } else {
         ss
       }
       
       sim_th <- min(x, nrow(Obs@Theta))
       th     <- if (!is.null(Obs@Theta)) {
-        ArraySubsetYear(Obs@Theta, DataYear)[sim_th]
+        .ArraySubsetYear(Obs@Theta, DataYear)[sim_th]
       } else {
         1
       }
@@ -161,7 +161,7 @@ GenProjData_AgeComp <- function(x, Proj, DataYear, YearsAll, i, stocks,
       
       shift_b <- if (!is.null(Obs@Shift)) {
         sim_sh <- min(x, dim(Obs@Shift)[1])
-        ArraySubsetYear(Obs@Shift, DataYear)[sim_sh, ]
+        .ArraySubsetYear(Obs@Shift, DataYear)[sim_sh, ]
       } else {
         rep(0, nAge)
       }
@@ -176,4 +176,3 @@ GenProjData_AgeComp <- function(x, Proj, DataYear, YearsAll, i, stocks,
   CompData@Value <- abind::abind(Value, NewValue, along = 1, use.dnns = TRUE)
   CompData
 }
-

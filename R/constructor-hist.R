@@ -28,12 +28,12 @@ Hist <- function(MSE=NULL) {
   if (is.null(MSE)) {
     return(methods::new("hist"))
   }
-  CheckClass(MSE, 'mse', 'MSE')
+  .CheckClass(MSE, 'mse', 'MSE')
   MSE@Hist
 }
 
 
-OM2Hist <- function(OM, silent) {
+.OM2Hist <- function(OM, silent) {
 
   # Create a Hist object from an OM and extend for all Sims and Years
   
@@ -48,15 +48,15 @@ OM2Hist <- function(OM, silent) {
   HistYears <- Years(OM, "Historical")
   
   # Create Time Series Arrays
-  Hist <- InitializeTimeSeries(Hist)
+  Hist <- .InitializeTimeSeries(Hist)
   
   # Add values included in Misc
   # These values won't be over-written by the model
   # TODO - new feature not used or testedd
-  Hist <- FillFromMisc(Hist)
+  Hist <- .FillFromMisc(Hist)
   
   # Extend all arrays for all sims, ages, historical years, and area
-  Hist <- ExtendHist(Hist, HistYears, silent, id)
+  Hist <- .ExtendHist(Hist, HistYears, silent, id)
   
   Hist@OM@Stock <- purrr::imap(Hist@OM@Stock, \(Stock, idx) {
     SPFrom <- Stock@SRR@SPFrom

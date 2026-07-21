@@ -43,13 +43,13 @@
 #' Truncation is applied to the innovation term \eqn{\epsilon_t}, not the
 #' deviations themselves.
 #'
-#' @seealso [CalcInnovationCov()], [AddAutoCorrelation()]
+#' @seealso [CalcInnovationCov()], `.AddAutoCorrelation()`
 #' @export
 GenMultiStockRecDevs <- function(OM, TruncSD = 2, silent = FALSE) {
   
   CheckPackage('tmvtnorm')
   
-  CheckClass(OM)
+  .CheckClass(OM)
   set.seed(OM@Seed)
   
   nSim      <- OM@nSim
@@ -73,7 +73,7 @@ GenMultiStockRecDevs <- function(OM, TruncSD = 2, silent = FALSE) {
     
     # Extract stats 
     RecDevStats <- purrr::map(OM@Stock, \(stock) 
-                              GetRecDevStats(stock@SRR, sim)
+                              .GetRecDevStats(stock@SRR, sim)
     ) |> dplyr::bind_rows() |> as.data.frame()
     
     # Extract historical deviations
@@ -174,7 +174,7 @@ GenMultiStockRecDevs <- function(OM, TruncSD = 2, silent = FALSE) {
 }
 
 
-GetRecDevStats <- function(SRR, sim = 1) {
+.GetRecDevStats <- function(SRR, sim = 1) {
   if (!is.finite(SRR@SD))
     cli::cli_abort("Non-finite SRR@SD", .internal = TRUE)
   
@@ -190,7 +190,5 @@ GetRecDevStats <- function(SRR, sim = 1) {
 
 
                           
-
-
 
 

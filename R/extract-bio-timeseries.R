@@ -29,27 +29,7 @@
 #'   `Year`, `Period`, `MP` (MSE only), and optionally `Age` / `Area`,
 #'   plus `Value`, `Variable`, and `Units`.
 #'
-#' @examples
-#' Hist <- Simulate(SingleStockOM)
-#' MSE <- Project(Hist, 'CurrentEffort')
-#' 
-#' # Raw array
-#' Biomass(Hist)
-#' Biomass(MSE)
-#'
-#' # Tidy data frames
-#' Biomass(Hist, df = TRUE)
-#' Biomass(MSE,  df = TRUE)
-#'
-#' # Retain age and area structure
-#' Biomass(MSE, df = TRUE, byAge = TRUE)
-#' Biomass(MSE, df = TRUE, byArea = TRUE)
-#' Biomass(MSE, df = TRUE, byAge = TRUE, byArea = TRUE)
-#'
-#' # Spawning biomass and production follow the same structure
-#' SBiomass(MSE, df = TRUE, byAge = TRUE)
-#' SProduction(MSE, df = TRUE, byArea = TRUE)
-#' 
+#' @example man-examples/bio_timeseries.R
 #'
 #' @name bio_timeseries
 #' @seealso [Number()]
@@ -62,7 +42,7 @@ Biomass <- function(object,
                     IncYear = FALSE
                     ) {
   
-  extract_bio_timeseries(object,
+  .ExtractBioTimeseries(object,
                      df = df, 
                      slot_name = 'Biomass', 
                      byAge = byAge,
@@ -81,7 +61,7 @@ SBiomass <- function(object,
                      Reduce  = TRUE,
                      IncYear = FALSE) {
   
-  extract_bio_timeseries(object,
+  .ExtractBioTimeseries(object,
                      df = df, 
                      slot_name = 'SBiomass', 
                      byAge = byAge,
@@ -99,7 +79,7 @@ SProduction <- function(object,
                         Reduce  = TRUE,
                         IncYear = FALSE) {
   
-  extract_bio_timeseries(object,
+  .ExtractBioTimeseries(object,
                      df = df, 
                      slot_name = 'SProduction', 
                      byAge = byAge,
@@ -108,7 +88,7 @@ SProduction <- function(object,
                      IncYear = IncYear)
 }
 
-.get_at_age <- function(OM, slot_name = 'Weight', byArea, isMSE, MP_Names) {
+.GetAtAge <- function(OM, slot_name = 'Weight', byArea, isMSE, MP_Names) {
   purrr::map(OM@Stock, \(stock) {
     
     out <- slot(stock,slot_name)@MeanAtAge
@@ -122,33 +102,29 @@ SProduction <- function(object,
   })
 }
 
-.get_units <- function(OM, slot_name = 'Weight') {
-  
-  # number_units <- purrr::map(OM@Stock, \(stock) {
-  #   stock@SRR@Units
-  # }) |> List2Array('Stock') |> DropDimension('Sim') |> Array2DF() |>
-  #   dplyr::rename(NumberUnits=Value)
-  
-  if (slot_name == 'Biomass') {
-    unit_slot_name <- 'Weight'
-  } else if (slot_name == 'SBiomass') {
-    unit_slot_name <- 'Weight'
-  } else if (slot_name == 'SProduction') {
-    unit_slot_name <- 'Fecundity'
-  }
-  
-  units <- purrr::map(OM@Stock, \(stock) slot(stock, unit_slot_name)@Units) |> 
-    List2Array('Stock') |> DropDimension('Sim', warn=FALSE) |> Array2DF() |>
-    dplyr::rename(Units=Value)
-  
-  # units <- left_join(units, number_units, by = dplyr::join_by(Stock))
-  units
-  
+.GetUnits <- function(OM, slot_name = 'Weight') {
+
+  base_slot <- switch(slot_name,
+    Biomass     = 'Weight',
+    SBiomass    = 'Weight',
+    SProduction = 'Fecundity'
+  )
+
+  # Combines each stock's base unit (Weight@Units / Fecundity@Units) with its
+  # SRR@Units scaling factor - e.g. Weight@Units = "kg", SRR@Units = 1000
+  # (R0 in thousands of fish) -> "t", since raw Biomass is already
+  # Number(in SRR@Units scale) x WeightAtAge.
+  labels <- purrr::map_chr(OM@Stock, \(stock) {
+    info <- .CombineScaledUnit(.mass_units_g, slot(stock, base_slot)@Units, stock@SRR@Units)
+    if (is.null(info)) NA_character_ else info$label
+  })
+
+  data.frame(Stock = names(labels), Units = unname(labels), stringsAsFactors = FALSE)
 }
 
 
 
-extract_bio_timeseries <- function(object, 
+.ExtractBioTimeseries <- function(object, 
                                    slot_name = 'Biomass', 
                                    df = TRUE, 
                                    byAge = FALSE, 
@@ -156,7 +132,7 @@ extract_bio_timeseries <- function(object,
                                    Reduce  = TRUE,
                                    IncYear = FALSE) {
   
-  CheckClass(object, c('hist', 'mse'), 'object')
+  .CheckClass(object, c('hist', 'mse'), 'object')
   
   if (!df)
     return(
@@ -165,7 +141,7 @@ extract_bio_timeseries <- function(object,
   
   if (inherits(object, 'hist')) {
     return(
-      .extract_bio_timeseries(object, 
+      .ExtractBioTimeseriesCore(object, 
                               OM = object@OM,
                               slot_name = slot_name,
                               byAge = byAge,
@@ -176,7 +152,7 @@ extract_bio_timeseries <- function(object,
   }
   
   # MSE object 
-  hist <- .extract_bio_timeseries(object@Hist,
+  hist <- .ExtractBioTimeseriesCore(object@Hist,
                                   OM = object@OM,
                                   slot_name = slot_name,
                                   byAge = byAge,
@@ -185,7 +161,7 @@ extract_bio_timeseries <- function(object,
                                   IncYear = IncYear) |> 
     dplyr::mutate(MP = 'Historical')
   
-  proj <- .extract_bio_timeseries(object,
+  proj <- .ExtractBioTimeseriesCore(object,
                                   OM = object@OM,
                                   slot_name = slot_name,
                                   byAge = byAge,
@@ -200,7 +176,7 @@ extract_bio_timeseries <- function(object,
 }
 
 
-.extract_bio_timeseries <- function(object, 
+.ExtractBioTimeseriesCore <- function(object, 
                                     OM = NULL,
                                     slot_name = 'Biomass',
                                     byAge = FALSE, 
@@ -214,8 +190,8 @@ extract_bio_timeseries <- function(object,
   } else {
     MP_Names <- NULL
   }
-  # units <- .get_units(OM, slot_name)
-  
+  units <- .GetUnits(OM, slot_name)
+
   if (byAge || byArea) {
     
     number <- Number(object)
@@ -223,9 +199,9 @@ extract_bio_timeseries <- function(object,
     if (!byArea) 
       number <- purrr::map(number, SumOverArea)
     
-    weight <- .get_at_age(OM, 'Weight', byArea, isMSE, MP_Names)
-    maturity <- .get_at_age(OM, 'Maturity', byArea, isMSE, MP_Names)
-    fecundity <- .get_at_age(OM, 'Fecundity', byArea, isMSE, MP_Names)
+    weight <- .GetAtAge(OM, 'Weight', byArea, isMSE, MP_Names)
+    maturity <- .GetAtAge(OM, 'Maturity', byArea, isMSE, MP_Names)
+    fecundity <- .GetAtAge(OM, 'Fecundity', byArea, isMSE, MP_Names)
     
     if (slot_name == 'Biomass') {
       arrayList <- purrr::map2(number, weight, ArrayMultiply) 
@@ -247,12 +223,12 @@ extract_bio_timeseries <- function(object,
         dplyr::bind_rows(.id = "Stock") |>
         dplyr::mutate(Variable = slot_name,
                       Period = ifelse(isMSE, 'Projection', 'Historical')) |>
-        dplyr::relocate('Sim', 'Stock', 'Year', 'Period') |> 
-       #  dplyr::left_join(units, by='Stock') |>
-        ConvertDF() |>
-        dplyr::arrange(Sim, Stock, Year) 
+        dplyr::relocate('Sim', 'Stock', 'Year', 'Period') |>
+        dplyr::left_join(units, by = 'Stock') |>
+        .ConvertDF() |>
+        dplyr::arrange(Sim, Stock, Year)
     )
-  } 
+  }
   
   array <- slot(object, slot_name)
   if (Reduce)
@@ -260,12 +236,11 @@ extract_bio_timeseries <- function(object,
   
   Array2DF(array) |>
     dplyr::mutate(Variable = slot_name,
-                  Period = ifelse(isMSE, 'Projection', 'Historical')) |>
-    dplyr::relocate('Sim', 'Stock', 'Year', 'Period') |> 
-    dplyr::arrange(Sim, Stock, Year)
-  # |> 
-   # dplyr::left_join(units, by='Stock')
-  
+                  Period = ifelse(isMSE, 'Projection', 'Historical'),
+                  Stock = as.character(Stock)) |>
+    dplyr::relocate('Sim', 'Stock', 'Year', 'Period') |>
+    dplyr::left_join(units, by = 'Stock') |>
+    dplyr::mutate(Stock = .MakeFactor(Stock))
 }
 
 # ---- Fleet ----
@@ -296,8 +271,6 @@ extract_bio_timeseries <- function(object,
 
 
 # Relative reference point functions (B_B0, SB_SB0, etc.) live in extract-relative.R
-
-
 
 
 

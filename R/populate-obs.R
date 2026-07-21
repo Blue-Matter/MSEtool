@@ -50,7 +50,7 @@ PopulateObs <- function(Obs,
                         AgeBins  = NULL,
                         SizeBins = NULL) {
   
-  CheckClass(Obs, "obs", "Obs")
+  .CheckClass(Obs, "obs", "Obs")
   
   # TODO: LifeHistory observation error 
   # TODO: Exploitation observation error

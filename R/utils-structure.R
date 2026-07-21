@@ -1,13 +1,13 @@
-#' Structure and Extend a `Pars` List 
+#' .Structure and Extend a `Pars` List 
 #'
 #' Each element is converted to a named `Sim × Year` (or `Sim × Year × Area`) array via
-#' [StructurePars_()], a random walk is applied to any parameter paired with
+#' `.StructurePar()`, a random walk is applied to any parameter paired with
 #' an `*SD` entry (unless `nArea` is supplied), and all arrays are extended to
-#' consistent dimensions via [ExtendPars()].
+#' consistent dimensions via `.ExtendPars()`.
 #'
 #' @param Pars Named list of parameter values. Each element may be a scalar,
 #'   a length-2 uniform bounds vector, an `nSim`-length vector, or an
-#'   existing array. See [StructurePars_()] for full conversion rules.
+#'   existing array. See `.StructurePar()` for full conversion rules.
 #' @param nSim Integer. Number of simulations. Required unless all elements
 #'   of `Pars` are already arrays.
 #' @param Years Numeric vector of years used to label the `Year` dimension.
@@ -17,18 +17,18 @@
 #' @return A named list of arrays, each with dimensions `Sim × Year` or
 #'   `Sim × Year × Area`, with consistent extents across all elements.
 #' @keywords internal
-StructurePars <- function(Pars, nSim=NULL, Years=NULL, nArea=NULL) {
+.StructurePars <- function(Pars, nSim=NULL, Years=NULL, nArea=NULL) {
   if (!length(Pars))
     return(Pars)
   
   Pars <- purrr::map(Pars, \(Par)
-                     StructurePars_(Par, nSim, Years, nArea)
+                     .StructurePar(Par, nSim, Years, nArea)
   )
   
   if (is.null(nArea))
-    Pars <- ApplyRandomWalk(Pars, Years)
+    Pars <- .ApplyRandomWalk(Pars, Years)
   
-  ExtendPars(Pars)
+  .ExtendPars(Pars)
 }
 
 #' Convert a Single Parameter Value to a Structured Array
@@ -37,7 +37,7 @@ StructurePars <- function(Pars, nSim=NULL, Years=NULL, nArea=NULL) {
 #' `Sim × Year × Area`) array according to the following rules:
 #'
 #' - If already an array, dimension names are assigned via
-#'   [NameParDimensions()] if missing.
+#'   `.NameParDimensions()` if missing.
 #' - If length 2 (and `nSim != 2`), treated as uniform bounds and sampled
 #'   via [stats::runif()]. When `nSim == 1` the midpoint is used.
 #' - Otherwise, values are recycled or truncated to `nSim` and wrapped in a
@@ -53,10 +53,10 @@ StructurePars <- function(Pars, nSim=NULL, Years=NULL, nArea=NULL) {
 #' @return A named array with dimensions `Sim × Year` or
 #'   `Sim × Year × Area`.
 #' @keywords internal
-StructurePars_ <- function(Par, nSim=NULL, Years=NULL, nArea=NULL) {
+.StructurePar <- function(Par, nSim=NULL, Years=NULL, nArea=NULL) {
   
   if (inherits(Par, 'array'))
-    return(NameParDimensions(Par, nSim, Years, nArea))
+    return(.NameParDimensions(Par, nSim, Years, nArea))
   
   # Length-2 vector: sample from uniform distribution
   if (length(Par) == 2 && nSim != 2) {
@@ -73,7 +73,7 @@ StructurePars_ <- function(Par, nSim=NULL, Years=NULL, nArea=NULL) {
       Par <- array(val, dim=c(length(val), 1, 1))  
     }
     
-    return(NameParDimensions(Par, nSim, Years, nArea))
+    return(.NameParDimensions(Par, nSim, Years, nArea))
   }
   
   # Vector longer than nSim: truncate
@@ -85,7 +85,7 @@ StructurePars_ <- function(Par, nSim=NULL, Years=NULL, nArea=NULL) {
   } else {
     array(Par, dim=c(length(Par), 1, 1))
   }
-  NameParDimensions(Par, nSim, Years, nArea)
+  .NameParDimensions(Par, nSim, Years, nArea)
 }
 
 #' Apply a Log-Normal Random Walk to Time-Varying Parameters
@@ -96,13 +96,13 @@ StructurePars_ <- function(Par, nSim=NULL, Years=NULL, nArea=NULL) {
 #' then removes the SD entry from the list.
 #'
 #' @param Pars Named list of structured parameter arrays (output of
-#'   [StructurePars_()]).
+#'   `.StructurePar()`).
 #'
 #' @return `Pars` with random walks applied to matched parameters and all
 #'   `*SD` entries removed.
 #' @keywords internal
-ApplyRandomWalk <- function(Pars, Years) {
-  detect_sd <- which(substrRight(tolower(names(Pars)), 2) == 'sd')
+.ApplyRandomWalk <- function(Pars, Years) {
+  detect_sd <- which(.SubstrRight(tolower(names(Pars)), 2) == 'sd')
   if (!length(detect_sd))
     return(Pars)
   
@@ -115,7 +115,7 @@ ApplyRandomWalk <- function(Pars, Years) {
     dnames <- dimnames(Pars[[par_ind]])
     nSim   <- length(dnames[['Sim']])
     
-    Pars[[par_ind]] <- RandomWalk(
+    Pars[[par_ind]] <- .RandomWalk(
       targ   = Pars[[par_ind]],
       targsd = Pars[[i]],
       nSim   = nSim,
@@ -141,8 +141,8 @@ ApplyRandomWalk <- function(Pars, Years) {
 #'
 #' @return `Pars` with all arrays extended to consistent dimensions.
 #' @keywords internal
-ExtendPars <- function(Pars) {
-  dnames <- unique_dimname_values(Pars)
+.ExtendPars <- function(Pars) {
+  dnames <- .UniqueDimnameValues(Pars)
   
   nSim  <- max(as.numeric(dnames[[1]]))
   Years <- as.numeric(dnames[[2]])
@@ -170,7 +170,7 @@ ExtendPars <- function(Pars) {
 #'
 #' @return `Par` with `dimnames` assigned.
 #' @keywords internal
-NameParDimensions <- function(Par, nSim=NULL, Years=NULL, nArea=NULL) {
+.NameParDimensions <- function(Par, nSim=NULL, Years=NULL, nArea=NULL) {
   if (!is.null(dimnames(Par)))
     return(Par)
   
@@ -208,7 +208,7 @@ NameParDimensions <- function(Par, nSim=NULL, Years=NULL, nArea=NULL) {
 #'
 #' @return A `nSim × nTS` numeric array with `Sim` and `Year` dimnames.
 #' @keywords internal
-RandomWalk <- function(targ, targsd, nSim, Years) {
+.RandomWalk <- function(targ, targsd, nSim, Years) {
   nTS    <- length(Years)
   targ   <- matrix(targ, nSim, nTS)
   mutemp <- -0.5 * targsd^2
@@ -233,7 +233,7 @@ RandomWalk <- function(targ, targsd, nSim, Years) {
 #' @return A list of length `ndim`, where each element is a character vector
 #'   of unique labels for that dimension across all arrays in `ParsList`.
 #' @keywords internal
-unique_dimname_values <- function(ParsList) {
+.UniqueDimnameValues <- function(ParsList) {
   nD <- length(dim(ParsList[[1]]))
   lapply(seq_len(nD), function(d) {
     unique(unlist(lapply(ParsList, function(x) {
@@ -251,7 +251,7 @@ unique_dimname_values <- function(ParsList) {
 #'
 #' @return Character vector of the same length as `x`.
 #' @keywords internal
-substrRight <- function(x, n) {
+.SubstrRight <- function(x, n) {
   substr(x, nchar(x) - n + 1, nchar(x))
 }
 
@@ -270,7 +270,7 @@ substrRight <- function(x, n) {
 #'
 #' @return An array with `length(out)` dimensions.
 #' @keywords internal
-Structure <- function(value, out=c('nSim', 'nage', 'nTS'), req='nage') {
+.Structure <- function(value, out=c('nSim', 'nage', 'nTS'), req='nage') {
   if (is.null(value))
     return(NULL)
   
@@ -294,15 +294,15 @@ Structure <- function(value, out=c('nSim', 'nage', 'nTS'), req='nage') {
   array(value, dim=array_str$size)
 }
 
-#' Structure a CV-at-Age Value into a Standard Array
+#' .Structure a CV-at-Age Value into a Standard Array
 #'
-#' Convenience wrapper around [Structure()] for CV-at-age values. Handles
+#' Convenience wrapper around `.Structure()` for CV-at-age values. Handles
 #' three input forms:
 #'
-#' - Scalar: passed directly to [Structure()].
+#' - Scalar: passed directly to `.Structure()`.
 #' - Length-2 vector: treated as uniform bounds, first converted via
-#'   [StructurePars_()] before structuring.
-#' - Array or longer vector: passed directly to [Structure()].
+#'   `.StructurePar()` before structuring.
+#' - Array or longer vector: passed directly to `.Structure()`.
 #'
 #' @param CVatAge Scalar, length-2 bounds vector, or array of CV-at-age
 #'   values.
@@ -311,13 +311,12 @@ Structure <- function(value, out=c('nSim', 'nage', 'nTS'), req='nage') {
 #'
 #' @return An array with dimensions `nSim × nage × nTS`.
 #' @keywords internal
-StructureCV <- function(CVatAge, nSim) {
+.StructureCV <- function(CVatAge, nSim) {
   if (is.null(dim(CVatAge))) {
     if (length(CVatAge) == 1)
-      return(Structure(CVatAge))
+      return(.Structure(CVatAge))
     if (length(CVatAge) == 2)
-      return(Structure(StructurePars_(CVatAge, nSim)))
+      return(.Structure(.StructurePar(CVatAge, nSim)))
   }
-  Structure(CVatAge)
+  .Structure(CVatAge)
 }
-

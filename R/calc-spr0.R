@@ -25,7 +25,7 @@
 CalcSPR0 <- function(OM, silent = FALSE) {
   if (inherits(OM, 'om')) {
     OM <- Populate(OM, silent=silent)
-    Hist <- OM2Hist(OM=OM, silent=silent)
+    Hist <- .OM2Hist(OM=OM, silent=silent)
   } else if (inherits(OM, 'hist')) {
     Hist <- OM
   } else {
@@ -58,5 +58,4 @@ CalcSPR0 <- function(OM, silent = FALSE) {
   ArrayDivide(SP0, R0) |> ReduceDims()
 
 }
-
 

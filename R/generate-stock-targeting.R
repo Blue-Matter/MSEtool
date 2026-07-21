@@ -73,7 +73,7 @@
 #' OM <- GenerateStockTargeting(OM, Period = "Projection", TruncSD = 2, n_recent = 5)
 #' }
 #'
-#' @seealso [FitStockTargeting()], [StandardizeEffort()]
+#' @seealso [FitStockTargeting()], `.StandardizeEffort()`
 #'
 #' @export
 GenerateStockTargeting <- function(OM,
@@ -85,7 +85,7 @@ GenerateStockTargeting <- function(OM,
   CheckPackage('MASS')
   
   Period <- match.arg(Period)
-  SetSeed(OM@Seed + seed)
+  .SetSeed(OM@Seed + seed)
   
   years   <- Years(OM, Period)
   n_years <- length(years)

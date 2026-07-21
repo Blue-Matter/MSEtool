@@ -150,7 +150,7 @@ class(DoubleNormalRetentionWeight) <- 'Retention-at-Weight-Model'
 #' @rdname Retention-Models
 #' @export
 RetentionModels <- function(full=TRUE, print=TRUE) {
-  ReturnModels(ModelClass=c('Retention-at-Age-Model',
+  .ReturnModels(ModelClass=c('Retention-at-Age-Model',
                             'Retention-at-Length-Model',
                             'Retention-at-Weight-Model'),
                full, print)
@@ -159,20 +159,20 @@ RetentionModels <- function(full=TRUE, print=TRUE) {
 #' @rdname Retention-Models
 #' @export
 RetentionModelsLength <- function(full=TRUE, print=TRUE) {
-  ReturnModels(ModelClass=c('Retention-at-Length-Model'),
+  .ReturnModels(ModelClass=c('Retention-at-Length-Model'),
                full, print)
 }
 
 #' @rdname Retention-Models
 #' @export
 RetentionModelsAge <- function(full=TRUE, print=TRUE) {
-  ReturnModels(ModelClass=c('Retention-at-Age-Model'),
+  .ReturnModels(ModelClass=c('Retention-at-Age-Model'),
                full, print)
 }
 
 #' @rdname Retention-Models
 #' @export
 RetentionModelsWeight <- function(full=TRUE, print=TRUE) {
-  ReturnModels(ModelClass=c('Retention-at-Weight-Model'),
+  .ReturnModels(ModelClass=c('Retention-at-Weight-Model'),
                full, print)
 }

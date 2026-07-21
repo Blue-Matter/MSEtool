@@ -16,8 +16,8 @@ ReduceNSim <- function(object, nSim = NULL) {
     return(object)
   }
   
-  CheckClass(object, c("om", "hist"), "object")
-  CheckClass(nSim, c("numeric", "integer"), "nSim")
+  .CheckClass(object, c("om", "hist"), "object")
+  .CheckClass(nSim, c("numeric", "integer"), "nSim")
   
   if (length(nSim) > 1) {
     cli::cli_abort("`nSim` ({.val {nSim}}) must be length 1")
@@ -32,5 +32,5 @@ ReduceNSim <- function(object, nSim = NULL) {
     nSim <- nSim(object)
   }
   
-  SubsetSim(object, Sims = 1:nSim)
+  .SubsetSim(object, Sims = 1:nSim)
 }

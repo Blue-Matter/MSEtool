@@ -2,7 +2,7 @@
 #'
 #' If `object@Classes` is empty, calculates a default set of size class
 #' lower bounds spanning from 0 to the maximum expected size. The upper bound is
-#' determined by [CalcMaxBin()] using the object's mean-at-age, CV-at-age,
+#' determined by `.CalcMaxBin()` using the object's mean-at-age, CV-at-age,
 #' truncation SD, and distribution. Returns `object` unchanged if `Classes` is
 #' already populated.
 #'
@@ -16,11 +16,11 @@
 #'
 #' @return `object` with `object@Classes` populated if it was previously empty.
 #' @keywords internal
-PopulateClasses <- function(object) {
+.PopulateClasses <- function(object) {
   if (!EmptyObject(object@Classes))
     return(object)
   
-  MaxBin <- CalcMaxBin(
+  MaxBin <- .CalcMaxBin(
     MeanAtAge = object@MeanAtAge,
     CVatAge   = object@CVatAge,
     TruncSD   = object@TruncSD,
@@ -43,7 +43,7 @@ PopulateClasses <- function(object) {
 #'
 #' @return Numeric vector of bin midpoints, same length as `Classes`.
 #' @keywords internal
-ClassMidpoints <- function(Classes) {
+.ClassMidpoints <- function(Classes) {
   n <- length(Classes)
   if (n == 1L) return(Classes)
   widths     <- diff(Classes)
@@ -58,7 +58,7 @@ ClassMidpoints <- function(Classes) {
 #'
 #' Computes the upper bound of the size class range by finding the maximum
 #' expected size across all simulations and ages, extended to `TruncSD`
-#' standard deviations above the mean. Used by [PopulateClasses()] to set
+#' standard deviations above the mean. Used by `.PopulateClasses()` to set
 #' default size class lower bounds.
 #'
 #' For the normal distribution the upper bound is:
@@ -80,7 +80,7 @@ ClassMidpoints <- function(Classes) {
 #' @return A single integer: the ceiling of the maximum expected size across
 #'   all simulations, ages, and years.
 #' @keywords internal
-CalcMaxBin <- function(MeanAtAge, CVatAge, TruncSD=2, dist='normal') {
+.CalcMaxBin <- function(MeanAtAge, CVatAge, TruncSD=2, dist='normal') {
   
   flat_index <- function(arr) {
     d <- dim(arr)

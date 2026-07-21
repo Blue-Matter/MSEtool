@@ -17,7 +17,7 @@
 #'
 #' @return The updated `CPUE` or `Survey` object.
 #' @keywords internal
-GenProjData_Index <- function(x, 
+.GenProjDataIndex <- function(x, 
                               Proj, 
                               DataYear,
                               YearsAll,
@@ -48,12 +48,12 @@ GenProjData_Index <- function(x,
       .internal = TRUE
     )
   
-  IndexData  <- resolveUnits(IndexData, nFleet, valid=c("Biomass",
+  IndexData  <- .ResolveUnits(IndexData, nFleet, valid=c("Biomass",
                                                         "Number",
                                                         "Recruitment"))
   
-  NewValue <- emptyFleetArray(DataYear, IndexData@Name)
-  NewCV    <- emptyFleetArray(DataYear, IndexData@Name)
+  NewValue <- .EmptyFleetArray(DataYear, IndexData@Name)
+  NewCV    <- .EmptyFleetArray(DataYear, IndexData@Name)
   
   Real_Pop_Number <- purrr::map(Proj@Number[stocks], \(stock_n) {
     stock_n[x, , TSIndex, seq_len(nArea), drop = FALSE] |> abind::adrop(c(1, 3))
@@ -86,7 +86,7 @@ GenProjData_Index <- function(x,
         "`Index@Timing` currently not supported. Calculating from beginning of time step"
       )
     
-    SelectivityAtAgeList <- resolveSelectivity(
+    SelectivityAtAgeList <- .ResolveSelectivity(
       Proj, stocks, StockNames, Obs=IndexObs, FleetNames, fl, x, TSIndex, nArea
     )
     
@@ -130,8 +130,8 @@ GenProjData_Index <- function(x,
                              )
     )
     
-    NewValue[, fl] <- real_nom_index * ArraySubsetYear(IndexObs@Error, DataYear)[x] * IndexObs@Efficiency[x]
-    NewCV[, fl] <- resolveCV(Proj, type, i, fl, TSIndex, IndexData, DataYear)
+    NewValue[, fl] <- real_nom_index * .ArraySubsetYear(IndexObs@Error, DataYear)[x] * IndexObs@Efficiency[x]
+    NewCV[, fl] <- .ResolveCV(Proj, type, i, fl, TSIndex, IndexData, DataYear)
   }
   
   IndexData@Value <- abind::abind(Value, NewValue, along = 1, use.dnns = TRUE)

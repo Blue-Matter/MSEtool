@@ -14,7 +14,7 @@
 #'   previous year, `1` if there is only one year, or `NULL` if no `Year`
 #'   dimension exists. Throws an error if `array` is not an array.
 #' @keywords internal
-UniqueYears <- function(array) {
+.UniqueYears <- function(array) {
   if (!is.array(array))
     cli::cli_abort('{.arg array} must be an array.')
   
@@ -50,7 +50,7 @@ UniqueYears <- function(array) {
 
 #' Check Whether an Array is Constant Across Years
 #'
-#' A convenience wrapper around [UniqueYears()] that returns a logical
+#' A convenience wrapper around `.UniqueYears()` that returns a logical
 #' indicating whether all year slices in `array` are identical, or optionally
 #' returns the unique year indices directly. Non-array inputs are treated as
 #' constant (returns `TRUE`).
@@ -58,17 +58,17 @@ UniqueYears <- function(array) {
 #' @param array A named-dimnames array, or any non-array object.
 #' @param logical Logical. If `TRUE` (default), returns a single `TRUE`/`FALSE`
 #'   indicating whether the array is constant across years. If `FALSE`, returns
-#'   the integer vector of unique year indices from [UniqueYears()].
+#'   the integer vector of unique year indices from `.UniqueYears()`.
 #'
 #' @return If `logical = TRUE`, a single logical: `TRUE` if all year slices are
 #'   identical (or if `array` is not an array), `FALSE` otherwise. If
-#'   `logical = FALSE`, the integer vector returned by [UniqueYears()].
+#'   `logical = FALSE`, the integer vector returned by `.UniqueYears()`.
 #' @keywords internal
-IdenticalYears <- function(array, logical=TRUE) {
+.IdenticalYears <- function(array, logical=TRUE) {
   if (!is.array(array))
     return(TRUE)
   
-  unique <- UniqueYears(array)
+  unique <- .UniqueYears(array)
   
   if (!logical)
     return(unique)

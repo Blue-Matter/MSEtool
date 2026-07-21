@@ -221,8 +221,8 @@ Spatial <- function(UnfishedDist = NULL,
                     CVStay = 1,
                     Misc = list()) {
   
-  if (isStockOrList(UnfishedDist)) 
-    return(ExtractStockSlot(UnfishedDist, "Spatial"))
+  if (.IsStockOrList(UnfishedDist)) 
+    return(.ExtractStockSlot(UnfishedDist, "Spatial"))
   
   object <- methods::new(
     "spatial",
@@ -246,14 +246,14 @@ Spatial <- function(UnfishedDist = NULL,
 #' @rdname Spatial
 #' @export
 UnfishedDist <- function(x) {
-  CheckClass(x, "spatial", "x")
+  .CheckClass(x, "spatial", "x")
   x@UnfishedDist
 }
 
 #' @rdname Spatial
 #' @export
 `UnfishedDist<-` <- function(x, value) {
-  CheckClass(x, "spatial", "x")
+  .CheckClass(x, "spatial", "x")
   x@UnfishedDist <- value
   methods::validObject(x)
   x
@@ -262,14 +262,14 @@ UnfishedDist <- function(x) {
 #' @rdname Spatial
 #' @export
 ProbStaying <- function(x) {
-  CheckClass(x, "spatial", "x")
+  .CheckClass(x, "spatial", "x")
   x@ProbStaying
 }
 
 #' @rdname Spatial
 #' @export
 `ProbStaying<-` <- function(x, value) {
-  CheckClass(x, "spatial", "x")
+  .CheckClass(x, "spatial", "x")
   x@ProbStaying <- value
   methods::validObject(x)
   x
@@ -278,14 +278,14 @@ ProbStaying <- function(x) {
 #' @rdname Spatial
 #' @export
 RelativeSize <- function(x) {
-  CheckClass(x, "spatial", "x")
+  .CheckClass(x, "spatial", "x")
   x@RelativeSize
 }
 
 #' @rdname Spatial
 #' @export
 `RelativeSize<-` <- function(x, value) {
-  CheckClass(x, "spatial", "x")
+  .CheckClass(x, "spatial", "x")
   x@RelativeSize <- value
   methods::validObject(x)
   x
@@ -294,14 +294,14 @@ RelativeSize <- function(x) {
 #' @rdname Spatial
 #' @export
 Movement <- function(x) {
-  CheckClass(x, "spatial", "x")
+  .CheckClass(x, "spatial", "x")
   x@Movement
 }
 
 #' @rdname Spatial
 #' @export
 `Movement<-` <- function(x, value) {
-  CheckClass(x, "spatial", "x")
+  .CheckClass(x, "spatial", "x")
   x@Movement <- value
   methods::validObject(x)
   x
@@ -310,14 +310,14 @@ Movement <- function(x) {
 #' @rdname Spatial
 #' @export
 FracOther <- function(x) {
-  CheckClass(x, "spatial", "x")
+  .CheckClass(x, "spatial", "x")
   x@FracOther
 }
 
 #' @rdname Spatial
 #' @export
 `FracOther<-` <- function(x, value) {
-  CheckClass(x, "spatial", "x")
+  .CheckClass(x, "spatial", "x")
   x@FracOther <- value
   methods::validObject(x)
   x
@@ -326,14 +326,14 @@ FracOther <- function(x) {
 #' @rdname Spatial
 #' @export
 Arrangement <- function(x) {
-  CheckClass(x, "spatial", "x")
+  .CheckClass(x, "spatial", "x")
   x@Arrangement
 }
 
 #' @rdname Spatial
 #' @export
 `Arrangement<-` <- function(x, value) {
-  CheckClass(x, "spatial", "x")
+  .CheckClass(x, "spatial", "x")
   x@Arrangement <- value
   methods::validObject(x)
   x
@@ -343,14 +343,14 @@ Arrangement <- function(x) {
 #' @rdname Spatial
 #' @export
 CVDist <- function(x) {
-  CheckClass(x, "spatial", "x")
+  .CheckClass(x, "spatial", "x")
   x@CVDist
 }
 
 #' @rdname Spatial
 #' @export
 `CVDist<-` <- function(x, value) {
-  CheckClass(x, "spatial", "x")
+  .CheckClass(x, "spatial", "x")
   x@CVDist <- value
   methods::validObject(x)
   x
@@ -359,14 +359,14 @@ CVDist <- function(x) {
 #' @rdname Spatial
 #' @export
 CVStay <- function(x) {
-  CheckClass(x, "spatial", "x")
+  .CheckClass(x, "spatial", "x")
   x@CVStay
 }
 
 #' @rdname Spatial
 #' @export
 `CVStay<-` <- function(x, value) {
-  CheckClass(x, "spatial", "x")
+  .CheckClass(x, "spatial", "x")
   x@CVStay <- value
   methods::validObject(x)
   x
@@ -377,9 +377,7 @@ CVStay <- function(x) {
 #' @rdname Spatial
 #' @export
 `Spatial<-` <- function(x, value) {
-  AssignSlotRecursive(x, value, 'Spatial')
+  .AssignSlotRecursive(x, value, 'Spatial')
 }
-
-
 
 

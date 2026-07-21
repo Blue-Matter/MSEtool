@@ -18,7 +18,7 @@
 #' @return Updated `hist` object with `Hist@Data` updated with the simulated data
 #'
 #' @keywords internal
-GenerateProjectionData <- function(Proj, Year, YearsHist, YearsProj) {
+.GenerateProjectionData <- function(Proj, Year, YearsHist, YearsProj) {
   
   YearsAll <- c(YearsHist, YearsProj)
   TSIndex <- match(Year, YearsAll) - 1
@@ -37,7 +37,7 @@ GenerateProjectionData <- function(Proj, Year, YearsHist, YearsProj) {
   }
   
   SimDataList <- purrr::map(seq_len(nSim), \(x)
-                            GenerateProjectionData_Sim(x, 
+                            .GenerateProjectionDataSim(x, 
                                                        Proj, 
                                                        DataYear, 
                                                        YearsAll,
@@ -50,7 +50,7 @@ GenerateProjectionData <- function(Proj, Year, YearsHist, YearsProj) {
   Proj
 }
 
-GenerateProjectionData_Sim <- function(x, Proj, DataYear, YearsAll,
+.GenerateProjectionDataSim <- function(x, Proj, DataYear, YearsAll,
                                        StockNames,
                                        FleetNames) {
   
@@ -75,35 +75,35 @@ GenerateProjectionData_Sim <- function(x, Proj, DataYear, YearsAll,
     # Data@LifeHistory 
     # Data@Exploitation
     
-    Data@Effort         <- GenProjData_Effort(x, Proj, DataYear, YearsAll, i)
+    Data@Effort         <- .GenProjDataEffort(x, Proj, DataYear, YearsAll, i)
     
-    Data@Landings       <- GenProjData_Catch(x, Proj, DataYear, YearsAll, i,
+    Data@Landings       <- .GenProjDataCatch(x, Proj, DataYear, YearsAll, i,
                                              stocks, type = 'Landings')
     
-    Data@Discards       <- GenProjData_Catch(x, Proj, DataYear, YearsAll, i,
+    Data@Discards       <- .GenProjDataCatch(x, Proj, DataYear, YearsAll, i,
                                              stocks, type = 'Discards')
     
-    Data@CPUE           <- GenProjData_Index(x, Proj, DataYear, YearsAll, i,
+    Data@CPUE           <- .GenProjDataIndex(x, Proj, DataYear, YearsAll, i,
                                              stocks, StockNames, FleetNames,
                                              type = 'CPUE')
     
-    Data@Survey         <- GenProjData_Index(x, Proj, DataYear, YearsAll, i,
+    Data@Survey         <- .GenProjDataIndex(x, Proj, DataYear, YearsAll, i,
                                              stocks, StockNames, FleetNames,
                                              type = 'Survey')
     
-    Data@LandingsAtAge  <- GenProjData_AgeComp(x, Proj, DataYear, YearsAll, i,
+    Data@LandingsAtAge  <- .GenProjDataAgeComp(x, Proj, DataYear, YearsAll, i,
                                                stocks,
                                                type = 'LandingsAtAge')
     
-    Data@DiscardsAtAge  <- GenProjData_AgeComp(x, Proj, DataYear, YearsAll, i,
+    Data@DiscardsAtAge  <- .GenProjDataAgeComp(x, Proj, DataYear, YearsAll, i,
                                                stocks,
                                                type = 'DiscardsAtAge')
     
-    Data@LandingsAtSize <- GenProjData_SizeComp(x, Proj, DataYear, YearsAll, i,
+    Data@LandingsAtSize <- .GenProjDataSizeComp(x, Proj, DataYear, YearsAll, i,
                                                 stocks,
                                                 type = 'LandingsAtSize')
     
-    Data@DiscardsAtSize <- GenProjData_SizeComp(x, Proj, DataYear, YearsAll, i,
+    Data@DiscardsAtSize <- .GenProjDataSizeComp(x, Proj, DataYear, YearsAll, i,
                                                 stocks,
                                                 type = 'DiscardsAtSize')
     
@@ -113,8 +113,6 @@ GenerateProjectionData_Sim <- function(x, Proj, DataYear, YearsAll,
   
   DataList
 }
-
-
 
 
 

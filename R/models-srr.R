@@ -75,14 +75,9 @@
 #' @name SRRModels
 NULL
 
-# ---------------------- NOTE ----------------------
-# 
-#   These built-in SRR models have C++ equivalents in src/srr_models.cpp
-#   The C++ models are called internally in inst/include/calc_recruitment.h 
-#   any changes or additions to these R functions should be matched by equivalent
-#   changes to inst/include/srr_models.h
-#
-# ---------------------------------------------------
+# NOTE: these built-in SRR models have C++ equivalents in src/srr_models.cpp
+# (called internally via inst/include/calc_recruitment.h); any change here
+# should be matched in inst/include/srr_models.h
 
 
 # ---- Beverton-Holt ----
@@ -90,10 +85,10 @@ NULL
 #' @rdname SRRModels
 #' @export
 BevertonHolt <- function(S, S0, R0, h) {
-  CheckSArg(S)
-  isScalarNumeric(S0, 'S0')
-  isScalarNumeric(R0, 'R0')
-  isScalarNumeric(h, 'h')
+  .CheckSArg(S)
+  .IsScalarNumeric(S0, 'S0')
+  .IsScalarNumeric(R0, 'R0')
+  .IsScalarNumeric(h, 'h')
   
   # phi0 <- S0 / R0
   # alpha <- 4 * h / ((1 - h) * phi0)
@@ -108,8 +103,8 @@ class(BevertonHolt) <- "SRR-Model"
 #' @rdname SRRModels
 #' @export
 BevertonHolt_RelRec <- function(Pars, SPR) {
-  CheckParsScalarNumeric(Pars, 'h')
-  isScalarNumeric(SPR, 'SPR')
+  .CheckParsScalarNumeric(Pars, 'h')
+  .IsScalarNumeric(SPR, 'SPR')
   h <- Pars$h
   CR <- 4 * h / (1 - h)
   relrec <- (CR * SPR - 1) / ((CR - 1) * SPR)
@@ -121,10 +116,10 @@ BevertonHolt_RelRec <- function(Pars, SPR) {
 #' @rdname SRRModels
 #' @export
 Ricker <- function(S, S0, R0, hR) {
-  CheckSArg(S)
-  isScalarNumeric(S0, 'S0')
-  isScalarNumeric(R0, 'R0')
-  isScalarNumeric(hR, 'hR')
+  .CheckSArg(S)
+  .IsScalarNumeric(S0, 'S0')
+  .IsScalarNumeric(R0, 'R0')
+  .IsScalarNumeric(hR, 'hR')
   
   # phi0 <- S0 / R0
   # alpha <- (5 * hR)^1.25 / phi0
@@ -138,8 +133,8 @@ class(Ricker) <- "SRR-Model"
 #' @rdname SRRModels
 #' @export
 Ricker_RelRec <- function(Pars, SPR) {
-  CheckParsScalarNumeric(Pars, 'hR')
-  isScalarNumeric(SPR, 'SPR')
+  .CheckParsScalarNumeric(Pars, 'hR')
+  .IsScalarNumeric(SPR, 'SPR')
   
   hR <- Pars$hR
   CR <- (5 * hR)^1.25
@@ -151,10 +146,10 @@ Ricker_RelRec <- function(Pars, SPR) {
 #' @rdname SRRModels
 #' @export
 HockeyStick <- function(S, S0, R0, Shinge) {
-  CheckSArg(S)
-  isScalarNumeric(S0, 'S0')
-  isScalarNumeric(R0, 'R0')
-  isScalarNumeric(Shinge, 'Shinge')
+  .CheckSArg(S)
+  .IsScalarNumeric(S0, 'S0')
+  .IsScalarNumeric(R0, 'R0')
+  .IsScalarNumeric(Shinge, 'Shinge')
   
   if (Shinge <= 0 || Shinge > 1) {
     cli::cli_abort(c("x"="{.val Shinge} must be in (0, 1]",
@@ -173,8 +168,8 @@ class(HockeyStick) <- "SRR-Model"
 #' @rdname SRRModels
 #' @export
 HockeyStick_RelRec <- function(Pars, SPR) {
-  CheckParsScalarNumeric(Pars, c("Shinge"))
-  isScalarNumeric(SPR, "SPR")
+  .CheckParsScalarNumeric(Pars, c("Shinge"))
+  .IsScalarNumeric(SPR, "SPR")
   ifelse(SPR >= Pars$Shinge, 1, 0)
 }
 
@@ -186,30 +181,30 @@ HockeyStick_RelRec <- function(Pars, SPR) {
 #' 
 #' @export
 SRRModels <- function(full=TRUE, print=TRUE) {
-  ReturnModels(ModelClass=c('SRR-Model'),
+  .ReturnModels(ModelClass=c('SRR-Model'),
                full, print, Independent=c('S', 'S0', 'R0'))
   
 }
 
 
 
-CheckSArg <- function(S) {
+.CheckSArg <- function(S) {
   if (!is.numeric(S) || any(is.na(S)) || !length(S)>0) {
     cli::cli_abort("{.val `S`} must be numeric vector", call.=NULL)
   }
 }
 
-isScalarNumeric <- function(x, name) {
+.IsScalarNumeric <- function(x, name) {
   if (!is.numeric(x) || length(x) != 1L || is.na(x)) {
     cli::cli_abort("{.val {name}} must be a numeric scalar", call.=NULL)
   }
 }
 
-CheckParsScalarNumeric <- function(Pars, names) {
+.CheckParsScalarNumeric <- function(Pars, names) {
   for (name in names) {
     if (is.null(Pars[[name]])) {
       cli::cli_abort("{.val {name}} is required", call.=NULL)
     }
-    isScalarNumeric(Pars[[name]], paste0("Pars$", name))
+    .IsScalarNumeric(Pars[[name]], paste0("Pars$", name))
   }
 }

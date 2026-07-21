@@ -1,7 +1,7 @@
 #' Update discard mortality across all simulations
 #'
 #' Expands discard mortality arrays to cover future projection years, then
-#' delegates per-simulation updates to [Update_DiscardMortality_Sim()].
+#' delegates per-simulation updates to `.UpdateDiscardMortalitySim()`.
 #'
 #' @param Proj A `Proj` object.
 #' @param Year Integer. Current projection year.
@@ -16,7 +16,7 @@
 #'   consistent `update_funs` signature).
 #' @return Updated `Proj` object.
 #' @keywords internal
-Update_DiscardMortality <- function(Proj, 
+.UpdateDiscardMortality <- function(Proj, 
                                     Year, 
                                     AdviceSimList, 
                                     LastAdviceSimList, 
@@ -32,7 +32,7 @@ Update_DiscardMortality <- function(Proj,
   nArea       <- length(Areas)
   FutureYears <- YearsProj[YearsProj >= Year]
   
-  if (AllAdviceNull(AdviceSimList, 'DiscardMortality'))
+  if (.AllAdviceNull(AdviceSimList, 'DiscardMortality'))
     return(Proj)
   
   # Expand DiscardMortality arrays to cover future projection years
@@ -52,7 +52,7 @@ Update_DiscardMortality <- function(Proj,
     AdviceList <- AdviceSimList[[sim]]
     LastAdviceList <- LastAdviceSimList[[sim]]
     
-    Proj <- Update_DiscardMortality_Sim(
+    Proj <- .UpdateDiscardMortalitySim(
       Proj           = Proj,
       sim            = sim,
       FutureYears    = FutureYears,
@@ -83,7 +83,7 @@ Update_DiscardMortality <- function(Proj,
 #' @param FleetNames Character vector of fleet names.
 #' @return Updated `Proj` object.
 #' @keywords internal
-Update_DiscardMortality_Sim <- function(Proj,
+.UpdateDiscardMortalitySim <- function(Proj,
                                         sim, 
                                         FutureYears,
                                         AdviceList,
@@ -101,7 +101,7 @@ Update_DiscardMortality_Sim <- function(Proj,
     
     if (!inherits(Advice, 'advice')) next    
     if (is.null(Advice@DiscardMortality)) next
-    if (UnchangedManagement(Advice, AdvicePrevious, 'DiscardMortality')) next
+    if (.UnchangedManagement(Advice, AdvicePrevious, 'DiscardMortality')) next
     
     DiscardMortalityList <- Advice@DiscardMortality
     
@@ -152,8 +152,8 @@ Update_DiscardMortality_Sim <- function(Proj,
           if (LinIntAge) {
             # Increases the temporal resolution of `ObjectMeanAtAge` and `ASK`
             # by linear interpolate Mean length-at-age and CV length-at-age
-            ALK_1 <- CalcAgeSizeKey(MeanAtAge=LinearInterpolate_Age(Length@MeanAtAge),
-                                    CVatAge=LinearInterpolate_Age(Length@CVatAge),
+            ALK_1 <- CalcAgeSizeKey(MeanAtAge=.LinearInterpolateAge(Length@MeanAtAge),
+                                    CVatAge=.LinearInterpolateAge(Length@CVatAge),
                                     Classes=Length@Classes,
                                     TruncSD=Length@TruncSD,
                                     Dist=Length@Dist,
@@ -165,8 +165,8 @@ Update_DiscardMortality_Sim <- function(Proj,
         
         if (ReComputeALK) {
           if (LinIntAge) {
-            ALK <- CalcAgeSizeKey(MeanAtAge=LinearInterpolate_Age(Length@MeanAtAge),
-                                  CVatAge=LinearInterpolate_Age(Length@CVatAge),
+            ALK <- CalcAgeSizeKey(MeanAtAge=.LinearInterpolateAge(Length@MeanAtAge),
+                                  CVatAge=.LinearInterpolateAge(Length@CVatAge),
                                   Classes=Classes,
                                   TruncSD=Length@TruncSD,
                                   Dist=Length@Dist,
@@ -191,11 +191,11 @@ Update_DiscardMortality_Sim <- function(Proj,
         
         FleetLength@Classes <- Classes
         
-        dm <- ProcessSelectMeanAtAge(dm, Ages, nArea,
+        dm <- .ProcessSelectMeanAtAge(dm, Ages, nArea,
                                      type = 'DiscardMortality', 
                                      Year = FutureYears[1])
         
-        dm <- ProcessSelectMeanAtLength(dm, FleetLength, nArea, 
+        dm <- .ProcessSelectMeanAtLength(dm, FleetLength, nArea, 
                                         type = 'DiscardMortality', 
                                         Year = FutureYears[1])
         
@@ -209,8 +209,8 @@ Update_DiscardMortality_Sim <- function(Proj,
                                        replace = TRUE,
                                        ASKOverride = ALK)
         
-        dm@MeanAtAge    <- set_sim_dimname(dm@MeanAtAge,    sim) |> ExtendAreas(1:nArea) |> ExtendYears(FutureYears)
-        dm@MeanAtLength <- set_sim_dimname(dm@MeanAtLength, sim) |> ExtendAreas(1:nArea) |> ExtendYears(FutureYears)
+        dm@MeanAtAge    <- .SetSimDimname(dm@MeanAtAge,    sim) |> ExtendAreas(1:nArea) |> ExtendYears(FutureYears)
+        dm@MeanAtLength <- .SetSimDimname(dm@MeanAtLength, sim) |> ExtendAreas(1:nArea) |> ExtendYears(FutureYears)
         
         target <- Proj@OM@Fleet[[st]][[fl]]@DiscardMortality
         ArrayFill(target@MeanAtAge)    <- dm@MeanAtAge

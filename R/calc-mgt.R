@@ -29,18 +29,19 @@
 #'
 #' @return An array with dimensions `[Sim, Stock, Year]` containing MGT in
 #'   years. Dimensions where values are identical across simulations or years
-#'   are collapsed by [ReduceDims()]. The result is also stored in
-#'   `Hist@Reference@MGT` when a [hist-class] object is supplied or produced.
+#'   are collapsed by [ReduceDims()]. Like [CalcSPR0()] and [CalcMSY()],
+#'   `CalcMGT()` does not itself store the result -- assign it to
+#'   `Hist@Reference@MGT` if needed.
 #'
 #' @seealso [CalcSPR0()], [reference-class]
 #' @export
 CalcMGT <- function(OM, Years = NULL, silent = FALSE) {
 
-  CheckClass(OM, c('om', 'hist'))
+  .CheckClass(OM, c('om', 'hist'))
 
   if (inherits(OM, 'om')) {
     OM   <- Populate(OM, silent = silent)
-    Hist <- OM2Hist(OM = OM, silent = silent)
+    Hist <- .OM2Hist(OM = OM, silent = silent)
   } else {
     Hist <- OM
   }

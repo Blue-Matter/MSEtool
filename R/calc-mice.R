@@ -1,6 +1,6 @@
-CalcMICE <- function(Hist, Years=NULL) {
+.CalcMICE <- function(Hist, Years=NULL) {
   
-  HistRel <- SetHistRel(Hist) 
+  HistRel <- .SetHistRel(Hist) 
   
   if (length(Hist@Relations)>0) {
     cli::cli_abort('MICE not done', .interal=TRUE)
@@ -15,10 +15,9 @@ CalcMICE <- function(Hist, Years=NULL) {
   Hist
 }
 
-SetHistRel <- function(OM) {
+.SetHistRel <- function(OM) {
   # Ignore MICE in historical period
   if (isFALSE(OM@Control$HistRel))
     return(list())
   Relations(OM) 
 }
-

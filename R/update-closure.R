@@ -1,6 +1,6 @@
 #' Update area closures across all simulations
 #'
-#' Loops over simulations and delegates to [Update_Closure_Sim()]. Returns
+#' Loops over simulations and delegates to `.UpdateClosureSim()`. Returns
 #' `Proj` unchanged when there is only one area.
 #'
 #' @param Proj A `Proj` object.
@@ -15,7 +15,7 @@
 #' @param StockNames Character vector of stock names.
 #' @return Updated `Proj` object.
 #' @keywords internal
-Update_Closure <- function(Proj, 
+.UpdateClosure <- function(Proj, 
                            Year, 
                            AdviceSimList, 
                            LastAdviceSimList, 
@@ -28,14 +28,14 @@ Update_Closure <- function(Proj,
   if (length(Areas) < 2)
     return(Proj)
   
-  if (AllAdviceNull(AdviceSimList, 'Closure'))
+  if (.AllAdviceNull(AdviceSimList, 'Closure'))
     return(Proj)
   
   for (sim in seq_len(Proj@OM@nSim)) {
     AdviceList <- AdviceSimList[[sim]]
     LastAdviceList <- LastAdviceSimList[[sim]]
     
-    Proj <- Update_Closure_Sim(
+    Proj <- .UpdateClosureSim(
       Proj           = Proj,
       sim            = sim,
       Year           = Year,
@@ -73,7 +73,7 @@ Update_Closure <- function(Proj,
 #' @param nSim Integer. Total number of simulations.
 #' @return Updated `Proj` object.
 #' @keywords internal
-Update_Closure_Sim <- function(Proj,
+.UpdateClosureSim <- function(Proj,
                                sim,
                                Year,
                                YearsProj,
@@ -95,9 +95,9 @@ Update_Closure_Sim <- function(Proj,
 
     if (!inherits(Advice, 'advice')) next    
     if (is.null(Advice@Closure)) next
-    if (UnchangedManagement(Advice, AdvicePrevious, 'Closure')) next
+    if (.UnchangedManagement(Advice, AdvicePrevious, 'Closure')) next
 
-    CheckClosureDimensions(Closure=Advice@Closure, FleetNames, Areas)
+    .CheckClosureDimensions(Closure=Advice@Closure, FleetNames, Areas)
     
     NewClosure <- Advice@Closure |>
       AddDimension("Year", Year, pos=1) |> 
@@ -128,7 +128,7 @@ Update_Closure_Sim <- function(Proj,
 }
 
 
-CheckClosureDimensions <- function(Closure, FleetNames, Areas) {
+.CheckClosureDimensions <- function(Closure, FleetNames, Areas) {
   if (dim(Closure)[1] != length(FleetNames))
     stop("Closure dimension does not match number of fleets")
   

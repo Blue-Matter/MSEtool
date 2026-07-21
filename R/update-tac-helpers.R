@@ -1,4 +1,4 @@
-ResolveTACByComplex <- function(AdviceList, LastAdviceList, Complexes,
+.ResolveTACByComplex <- function(AdviceList, LastAdviceList, Complexes,
                                 Proj, sim, FleetNames) {
   
   nFleet <- length(FleetNames)
@@ -54,41 +54,125 @@ ResolveTACByComplex <- function(AdviceList, LastAdviceList, Complexes,
   out
 }
 
-ResolveTACTypeByComplex <- function(AdviceList, Complexes, nFleet) {
+.ResolveTACTypeByComplex <- function(AdviceList, Complexes, nFleet) {
   if (is.null(AdviceList[[1]]@TACType))
     AdviceList[[1]]@TACType <- 'Removals'
   
   lapply(seq_along(Complexes), function(i) {
-    recycle_to_fleets(AdviceList[[i]]@TACType, nFleet, 'TACType')
+    .RecycleToFleets(AdviceList[[i]]@TACType, nFleet, 'TACType')
   })
 }
 
-ResolveTACUnitByComplex <- function(AdviceList, Complexes, nFleet) {
+.ResolveTACUnitByComplex <- function(AdviceList, Complexes, nFleet) {
   if (is.null(AdviceList[[1]]@TACUnit))
     AdviceList[[1]]@TACUnit <- 'Biomass'
   
   lapply(seq_along(Complexes), function(i) {
-    recycle_to_fleets(AdviceList[[i]]@TACUnit, nFleet, 'TACUnit')
+    .RecycleToFleets(AdviceList[[i]]@TACUnit, nFleet, 'TACUnit')
   })
 }
 
-ResolveChokeMatrix <- function(Proj, nFleet, nComplex) {
-  matrix(0L, nrow = nFleet, ncol = nComplex)
+# [nFleet x nComplex] matrix of Imp@<ControlType>@Compliance for the current
+# `sim`/`Year` (Compliance is populated to [Sim x Year] by PopulateImpSlot()),
+# NA where unset (i.e. no complex/fleet pair configured, or that fleet/
+# complex's Compliance is empty -- callers fall back to today's defaults).
+# ControlType is 'TAC', 'Effort', or 'Size' -- for 'Size' the matrix isn't
+# used by this helper's usual multi-stock-reconciliation callers, but the
+# same lookup shape is available for anyone consuming Imp@Size@Compliance
+# (see .UpdateSelectivitySim(), which does its own direct per-sim/fleet
+# lookup instead of calling this, to avoid rebuilding the whole matrix on
+# every sim).
+.ResolveComplianceMatrix <- function(Proj, FleetNames, ComplexNames, sim, Year, ControlType = 'TAC') {
+  nFleet   <- length(FleetNames)
+  nComplex <- length(ComplexNames)
+  Compliance <- matrix(NA_real_, nrow = nFleet, ncol = nComplex,
+                       dimnames = list(Fleet = FleetNames, Complex = ComplexNames))
+  yr_chr <- as.character(Year)
+
+  for (cx in seq_len(nComplex)) {
+    ImpCx <- Proj@OM@Imp[[ComplexNames[cx]]]
+    if (is.null(ImpCx)) next
+    for (fl in seq_len(nFleet)) {
+      ImpObj <- ImpCx[[FleetNames[fl]]]
+      if (is.null(ImpObj)) next
+      comp <- slot(ImpObj, ControlType)@Compliance
+      if (!length(comp)) next
+      Compliance[fl, cx] <- if (!is.null(dim(comp)) && yr_chr %in% dimnames(comp)$Year) {
+        comp[min(sim, nrow(comp)), yr_chr]
+      } else {
+        as.numeric(comp)[1]
+      }
+    }
+  }
+  Compliance
 }
 
-ResolveUndershootPenalty <- function(Proj, nFleet, nComplex) {
+.ResolveUndershootPenalty <- function(Proj, nFleet, nComplex) {
   matrix(1, nrow = nFleet, ncol = nComplex)
 }
 
-ResolveOvershootPenalty <- function(Proj, nFleet, nComplex, Choke) {
-  matrix(1, nrow = nFleet, ncol = nComplex)
+# Compliance is "how much this fleet reconciles its behaviour toward this
+# complex's TAC when it competes with other complexes" (see ImpSlot()'s
+# Compliance docs), continuously scaling the overshoot penalty:
+# Compliance -> 0 means the fleet doesn't reconcile toward this complex at
+# all, so overshoot is free (penalty = 0); Compliance = 0.5 reproduces
+# today's pre-Compliance default (symmetric penalty = 1); Compliance -> 1
+# approaches an effective hard choke, without needing a separate discrete
+# mechanism. The ratio is capped at 1000x (matching the scale of the
+# original discrete choke_mult in .OptEffortMultiStock()) rather than let
+# it grow arbitrarily large -- an extreme penalty weight ill-conditions the
+# optimiser and degrades constraint satisfaction rather than improving it.
+.ResolveOvershootPenalty <- function(Proj, nFleet, nComplex, Compliance = NULL) {
+  Penalty <- matrix(1, nrow = nFleet, ncol = nComplex)
+  if (is.null(Compliance)) return(Penalty)
+
+  set <- !is.na(Compliance)
+  Penalty[set] <- Penalty[set] * Compliance[set] / pmax(1 - Compliance[set], 1e-3)
+  Penalty
 }
 
-ResolvePenaltyMode <- function(Proj, nFleet) {
+.ResolvePenaltyMode <- function(Proj, nFleet) {
   rep("soft", nFleet)
 }
 
-ResolveLambda <- function(Proj, sim, TSIndex, 
+# Applies Imp@<ControlType>@Error[sim, Year] as a multiplicative
+# implementation-error factor to each complex's per-fleet advised value
+# (TAC or Effort), before the advice is passed to effort-solving. Matches
+# legacy's TACFrac/TACSD/TAC_y (and TAEFrac/TAESD/E_y) mechanism. A missing
+# Imp object, Error slot, or year leaves that complex/fleet's value
+# unchanged (multiplier of 1).
+.ApplyImplementationError <- function(ValueByComplex, Proj, FleetNames, ComplexNames,
+                                     sim, Year, ControlType = 'TAC') {
+  # Interim (pre-MPStartYear) values represent actual/plausible realised
+  # catch or effort, not a management recommendation - Imp error does not
+  # apply to them.
+  MPStartYear <- Proj@OM@MPStartYear
+  if (!is.null(MPStartYear) && floor(Year) < MPStartYear)
+    return(ValueByComplex)
+
+  nFleet <- length(FleetNames)
+  yr_chr <- as.character(Year)
+
+  for (cx in seq_along(ValueByComplex)) {
+    if (is.null(ValueByComplex[[cx]])) next
+    ImpCx <- Proj@OM@Imp[[ComplexNames[cx]]]
+    if (is.null(ImpCx)) next
+
+    for (fl in seq_len(min(nFleet, length(ValueByComplex[[cx]])))) {
+      ImpObj <- ImpCx[[FleetNames[fl]]]
+      if (is.null(ImpObj)) next
+
+      Error <- slot(ImpObj, ControlType)@Error
+      if (!length(Error) || !yr_chr %in% dimnames(Error)$Year) next
+
+      mult <- Error[min(sim, nrow(Error)), yr_chr]
+      ValueByComplex[[cx]][fl] <- ValueByComplex[[cx]][fl] * mult
+    }
+  }
+  ValueByComplex
+}
+
+.ResolveLambda <- function(Proj, sim, TSIndex,
                           StockNames, FleetNames, 
                           lambda_scale = 0.001, 
                           n_recent = 5) {
@@ -103,7 +187,7 @@ ResolveLambda <- function(Proj, sim, TSIndex,
   
   raw <- setNames(rep(1, nFleet), FleetNames)
   
-  active_stock <- GetActiveStocks(Proj, sim, TSIndex, StockNames, FleetNames,
+  active_stock <- .GetActiveStocks(Proj, sim, TSIndex, StockNames, FleetNames,
                                   n_recent)
   
   for (fl in seq_len(nFleet)) {

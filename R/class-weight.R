@@ -11,7 +11,7 @@
 #'   [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for
 #'   accepted input formats.
 #' @slot Model `function` or `character(1)`. Weight model identifier, matched
-#'   to one of [WeightModels()]. Set automatically by [FindModel()] when `Pars`
+#'   to one of [WeightModels()]. Set automatically by `.FindModel()` when `Pars`
 #'   is supplied without an explicit model.
 #' @slot Units `character(1)`. Physical unit of the weight measurements (e.g.,
 #'   `"g"`, `"kg"`). Must be accepted by [ValidUnits()].
@@ -63,7 +63,7 @@
 #'  - [WeightModels()] for available models and their required parameters.
 #'  - [ValidUnits()] for accepted unit strings. 
 #'  - [Populate()] for array population. 
-#'  - [FindModel()] for automatic model inference. 
+#'  - `.FindModel()` for automatic model inference. 
 #'  - [AWK()] to retrieve the age-weight key. 
 #'  - [Length()] for the companion length schedule, required when using at-length weight models.
 #'  - [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for the
@@ -94,8 +94,7 @@ setClass(
 )
 
 setValidity("weight", function(object) {
-  # TODO
+  chk <- tryCatch(.CheckPars(object@Pars), error=function(e) e)
+  if (inherits(chk, "error")) return(conditionMessage(chk))
   TRUE
 })
-
-

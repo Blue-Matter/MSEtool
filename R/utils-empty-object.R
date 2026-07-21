@@ -91,10 +91,10 @@ EmptyObject <- function(object) {
 #' The default instance is obtained as follows:
 #'
 #' * For a small set of classes whose constructors do not follow the standard
-#'   `firstup(class)()` naming convention (`naturalmortality`, `srr`, `om`,
+#'   `.FirstUp(class)()` naming convention (`naturalmortality`, `srr`, `om`,
 #'   `discardmortality`), the appropriate constructor is called directly.
 #' * For all other classes, the constructor is looked up as
-#'   `get(firstup(class))`. If no such constructor exists, `new(class)` is
+#'   `get(.FirstUp(class))`. If no such constructor exists, `new(class)` is
 #'   used as a fallback.
 #'
 #' @return A length-1 logical. Returns `FALSE` for non-S4 objects.
@@ -108,7 +108,7 @@ isNewObject <- function(object) {
   
   cl <- class(object)
   
-  # Classes whose constructors don't follow the standard firstup(class)()
+  # Classes whose constructors don't follow the standard .FirstUp(class)()
   newobj <- if (inherits(object, "naturalmortality")) {
     NaturalMortality()
   } else if (inherits(object, "srr")) {
@@ -118,11 +118,11 @@ isNewObject <- function(object) {
   } else if (inherits(object, "discardmortality")) {
     DiscardMortality()
   } else {
-    chk <- try(get(firstup(cl)), silent = TRUE)
+    chk <- try(get(.FirstUp(cl)), silent = TRUE)
     if (inherits(chk, "try-error")) {
       new(cl)
     } else {
-      get(firstup(cl))()
+      get(.FirstUp(cl))()
     }
   }
   

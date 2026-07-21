@@ -74,31 +74,31 @@ PopulateSelectivity <- function(Selectivity,
     Ages, Length, Weight, Years, nArea, nSim, CalcAtLength, seed
   )
   
-  nSim  <- Get_nSim(Selectivity, nSim)
+  nSim  <- .GetNSim(Selectivity, nSim)
   Years <- DefaultYears(Years)
   
   if (EmptyObject(Selectivity)) 
     cli::cli_abort('{.val Selectivity} is required but is currently empty')
 
-  if (CheckDigest(Selectivity, argList))  return(Selectivity)
+  if (.CheckDigest(Selectivity, argList))  return(Selectivity)
   
-  SetSeed(seed)
+  .SetSeed(seed)
   
-  Selectivity@Pars <- StructurePars(
+  Selectivity@Pars <- .StructurePars(
     Pars = Selectivity@Pars,
     nSim = nSim,
     Years = Years,
     nArea = nArea
   )
-  Selectivity@Model <- FindModel(Selectivity)
+  Selectivity@Model <- .FindModel(Selectivity)
   
-  ModelClass <- getModelClass(Selectivity@Model)
+  ModelClass <- .GetModelClass(Selectivity@Model)
   
   if (!is.null(ModelClass)) {
     if (Selectivity@isRel) {
-      CheckRequiredObject(Maturity, "maturity", "Maturity")
+      .CheckRequiredObject(Maturity, "maturity", "Maturity")
       Maturity <- PopulateMaturity(Maturity, Ages, Length, Weight, Years, nSim)
-      L50 <- FindL50(Maturity)
+      L50 <- .FindL50(Maturity)
       if (!is.null(dimnames(Selectivity@Pars$L5)$Area)) 
         L50 <- AddDimension(L50, 'Area')
         
@@ -109,7 +109,7 @@ PopulateSelectivity <- function(Selectivity,
     
     if (grepl("at-Length", ModelClass)) {
       Length <- PopulateLength(Length, Ages, Years, nSim)
-      Selectivity <- PopulateMeanAtLength(
+      Selectivity <- .PopulateMeanAtLength(
         object = Selectivity,
         Length = Length,
         Years = Years,
@@ -120,7 +120,7 @@ PopulateSelectivity <- function(Selectivity,
     } else if (grepl("at-Weight", ModelClass)) {
       Weight <- PopulateWeight(Weight, Ages, Length,Years, nSim)
       
-      Selectivity <- PopulateMeanAtWeight(
+      Selectivity <- .PopulateMeanAtWeight(
         object = Selectivity,
         Weight = Weight,
         Years = Years,
@@ -129,7 +129,7 @@ PopulateSelectivity <- function(Selectivity,
         silent = silent
       )
     } else if (grepl("at-Age", ModelClass)) {
-      Selectivity <- PopulateMeanAtAge(
+      Selectivity <- .PopulateMeanAtAge(
         object = Selectivity,
         Ages = Ages,
         Years = Years,
@@ -138,21 +138,21 @@ PopulateSelectivity <- function(Selectivity,
     }
   }
   
-  Selectivity <- MeanAtLength2MeanAtAge(
+  Selectivity <- .MeanAtLength2MeanAtAge(
     object = Selectivity,
     Length = Length,
     max1 = TRUE
   )
-  Selectivity <- MeanAtWeight2MeanAtAge(
+  Selectivity <- .MeanAtWeight2MeanAtAge(
     object = Selectivity,
     Weight = Weight,
     max1 = TRUE
   )
   
-  Selectivity <- AddAtAgeDimnames(Selectivity, Ages, Years)
+  Selectivity <- .AddAtAgeDimnames(Selectivity, Ages, Years)
   
   if (CalcAtLength && is.null(Selectivity@MeanAtWeight) && !is.null(Length@ALK)) {
-    Selectivity <- MeanAtAge2MeanAtLength(
+    Selectivity <- .MeanAtAge2MeanAtLength(
       object = Selectivity,
       Length = Length,
       replace = replace,
@@ -165,27 +165,27 @@ PopulateSelectivity <- function(Selectivity,
     cli::cli_abort("{.var Selectivity} requires values for either `Model` & `Pars` or `MeanAtAge`")
   
   if (CheckMaxValue) 
-    Selectivity <- CheckSelectivityMaximum(Selectivity)
+    Selectivity <- .CheckSelectivityMaximum(Selectivity)
   
   Selectivity@MeanAtLength <- AddDimension(Selectivity@MeanAtLength, "Area")
   Selectivity@MeanAtWeight <- AddDimension(Selectivity@MeanAtWeight, "Area")
   Selectivity@MeanAtAge    <- AddDimension(Selectivity@MeanAtAge, "Area")
   
   # Add dimension names if missing
-  Selectivity <- AddAtAgeDimnames(Selectivity, Ages, Years)
-  Selectivity <- AddAtLengthDimnames(Selectivity, Years)
-  Selectivity <- AddAtWeightDimnames(Selectivity, Years)
+  Selectivity <- .AddAtAgeDimnames(Selectivity, Ages, Years)
+  Selectivity <- .AddAtLengthDimnames(Selectivity, Years)
+  Selectivity <- .AddAtWeightDimnames(Selectivity, Years)
 
   
-  SetDigest(SetAgeDimnames(Selectivity, Ages), argList)
+  .SetDigest(.SetAgeDimnames(Selectivity, Ages), argList)
 }
 
-FindL50_vec <- function(prob_vec) {
+.FindL50Vec <- function(prob_vec) {
   classes <- names(prob_vec) |> as.numeric()
-  LinInterp(prob_vec, y=classes, 0.5)
+  .LinInterp(prob_vec, y=classes, 0.5)
 }
 
-FindL50 <- function(Maturity) {
+.FindL50 <- function(Maturity) {
   if (!is.null(Maturity@Pars$L50)) {
     return(Maturity@Pars$L50)
   }
@@ -195,6 +195,5 @@ FindL50 <- function(Maturity) {
     cli::cli_abort("Values required for `Maturity@MeanAtLength` if `Selectivity@isRel == TRUE`")
   }
   
-  apply(Maturity@MeanAtLength, c('Sim', 'Year'), FindL50_vec)
+  apply(Maturity@MeanAtLength, c('Sim', 'Year'), .FindL50Vec)
 }
-

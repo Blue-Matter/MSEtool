@@ -16,15 +16,15 @@
 #'   
 #' @param sel_mode Character. One of `"length"` (default) or `"age"`. Controls
 #'   whether the Age-Size Key is conditioned on size-selectivity before
-#'   projection. See [ConditionAgeSizeKey()] for details.
+#'   projection. See `.ConditionAgeSizeKey()` for details.
 #'
 #' @return `Hist` with `Hist@LandingsAtSize[[stock]][[fleet]]` and
 #'   `Hist@DiscardsAtSize[[stock]][[fleet]]` populated for the requested years.
 #'   Each array has dimensions `Sim x Class x Year x Area`.
 #'
-#' @seealso [ConditionAgeSizeKey()]
+#' @seealso `.ConditionAgeSizeKey()`
 #' @keywords internal
-CalcCatchAtSize <- function(Hist, Years = NULL, sel_mode = c("length", "age")) {
+.CalcCatchAtSize <- function(Hist, Years = NULL, sel_mode = c("length", "age")) {
   
   sel_mode  <- match.arg(sel_mode) # hard coded to `length` for now
   
@@ -68,7 +68,7 @@ CalcCatchAtSize <- function(Hist, Years = NULL, sel_mode = c("length", "age")) {
   age_size_keys <- purrr::map2(Hist@OM@Stock, size_type, \(stock, type) {
     if (type == 'length') return(stock@Length@ALK)
     stock@Weight@AWK
-  }) |> SubsetYear(Years = Years)
+  }) |> .SubsetYear(Years = Years)
   
   # Extract selectivity-at-size per fleet per stock 
   # MeanAtLength / MeanAtWeight: Sim x Class x Year x Area
@@ -77,7 +77,7 @@ CalcCatchAtSize <- function(Hist, Years = NULL, sel_mode = c("length", "age")) {
       if (type == 'length') return(fleet@Selectivity@MeanAtLength)
       fleet@Selectivity@MeanAtWeight
     })
-  }) |> SubsetYear(Years = Years)
+  }) |> .SubsetYear(Years = Years)
   
   length_object_vectors <- purrr::map(Hist@OM@Stock, \(stock) stock@Length)
   
@@ -107,7 +107,7 @@ CalcCatchAtSize <- function(Hist, Years = NULL, sel_mode = c("length", "age")) {
                                 TruncSD   = length_object@TruncSD,
                                 Dist      = length_object@Dist)
         }
-        ConditionAgeSizeKey(key, selectivity, sel_mode = sm)
+        .ConditionAgeSizeKey(key, selectivity, sel_mode = sm)
       })
     })
   
@@ -117,17 +117,17 @@ CalcCatchAtSize <- function(Hist, Years = NULL, sel_mode = c("length", "age")) {
     if (!ask_exists[st]) next
     
     # F arrays: Sim x Age x Year x Fleet x Area
-    f_interact <- Hist@FInteractArea[[st]] |> SubsetYear(Years = Years)
-    f_dead     <- Hist@FDeadArea[[st]] |> SubsetYear(Years = Years)
-    f_retain   <- Hist@FRetainArea[[st]] |> SubsetYear(Years = Years)
+    f_interact <- Hist@FInteractArea[[st]] |> .SubsetYear(Years = Years)
+    f_dead     <- Hist@FDeadArea[[st]] |> .SubsetYear(Years = Years)
+    f_retain   <- Hist@FRetainArea[[st]] |> .SubsetYear(Years = Years)
     
     # Natural mortality: Sim x Age x Year
     nat_mort <- Hist@OM@Stock[[st]]@NaturalMortality@MeanAtAge |>
-      SubsetYear(Years = Years) |>
+      .SubsetYear(Years = Years) |>
       AddDimension('Area')
     
     # Numbers at age: Sim x Age x Year x Area
-    naa <- Hist@Number[[st]] |> SubsetYear(Years = Years)
+    naa <- Hist@Number[[st]] |> .SubsetYear(Years = Years)
     
     # Derive Z and N_dead per sim, age, year, area
     f_dead_total <- SumOverFleet(f_dead)           # Sim x Age x Year x Area
@@ -168,4 +168,3 @@ CalcCatchAtSize <- function(Hist, Years = NULL, sel_mode = c("length", "age")) {
   }
   Hist
 }
-

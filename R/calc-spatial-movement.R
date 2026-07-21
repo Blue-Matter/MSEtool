@@ -4,8 +4,8 @@
 #' and year by numerical optimisation, so that the asymptotic (equilibrium)
 #' unfished distribution and the diagonal (staying probability) simultaneously
 #' reproduce the targets in `Spatial@UnfishedDist` and `Spatial@ProbStaying`.
-#' Dispatches to [FitMovement_2_Area()] for two-area models and
-#' [FitMovement_Multi_Area()] for three or more areas.
+#' Dispatches to `.FitMovement2Area()` for two-area models and
+#' `.FitMovementMultiArea()` for three or more areas.
 #'
 #' This function is called internally by [Populate()] for every combination of
 #' simulation, age, and year. It can also be called directly to inspect or
@@ -28,20 +28,20 @@
 #'
 #' @seealso
 #' - [Spatial()] for the constructor and full spatial specification.
-#' - [FitMovement_2_Area()] for the two-area optimisation.
-#' - [FitMovement_Multi_Area()] for the multi-area optimisation.
+#' - `.FitMovement2Area()` for the two-area optimisation.
+#' - `.FitMovementMultiArea()` for the multi-area optimisation.
 #' - [Populate()] which calls this function internally.
 #'
 #' @export
 FitMovement <-  function(Spatial, sim=1, age=1, year=1) {
   nArea <- dim(Spatial@Movement)[2]
   if (nArea==2) {
-    movement <- FitMovement_2_Area(Spatial,
+    movement <- .FitMovement2Area(Spatial,
                                    sim,
                                    age,
                                    year)
   } else {
-    movement <- FitMovement_Multi_Area(Spatial,
+    movement <- .FitMovementMultiArea(Spatial,
                                        sim,
                                        age,
                                        year)
@@ -85,11 +85,11 @@ FitMovement <-  function(Spatial, sim=1, age=1, year=1) {
 #'
 #' @return A `2 × 2` numeric matrix with rows summing to 1.
 #'
-#' @seealso [FitMovement()], [FitMovement_Multi_Area()], [MarkovFrac()],
-#'   [CalcAsymDist_2Area()], [SolveMovement_2_Area()]
+#' @seealso [FitMovement()], `.FitMovementMultiArea()`, `.MarkovFrac()`,
+#'   `.CalcAsymDist2Area()`, `.SolveMovement2Area()`
 #'
 #' @keywords internal
-FitMovement_2_Area <- function(Spatial, sim=1, age=1, year=1) {
+.FitMovement2Area <- function(Spatial, sim=1, age=1, year=1) {
 
   PS_dim <- dim(Spatial@ProbStaying)
   PS_sim <- min(sim, PS_dim[1])
@@ -113,19 +113,19 @@ FitMovement_2_Area <- function(Spatial, sim=1, age=1, year=1) {
 
   optMovement <- stats::optim(
     logit(rep(Spatial@ProbStaying[PS_sim, 1, PS_age, PS_year], 2)),
-    SolveMovement_2_Area,
+    .SolveMovement2Area,
     UnfishedDist     = UnfishedDist,
     ProbStaying      = Spatial@ProbStaying[PS_sim, 1, PS_age, PS_year],
     UnfishedDistNext = UnfishedDistNext,
     method = "L-BFGS-B"
   )
 
-  MarkovFrac(LogitProbs=optMovement$par)
+  .MarkovFrac(LogitProbs=optMovement$par)
 }
 
 #' Objective Function for Two-Area Movement Optimisation
 #'
-#' Computes the least-squares objective used by [FitMovement_2_Area()].
+#' Computes the least-squares objective used by `.FitMovement2Area()`.
 #' Penalties are applied in log space to deviations of the fitted staying
 #' probability from `ProbStaying` and of the implied area distribution from the
 #' target.
@@ -144,10 +144,10 @@ FitMovement_2_Area <- function(Spatial, sim=1, age=1, year=1) {
 #'
 #' @return `numeric(1)`. The value of the objective (to be minimised).
 #'
-#' @seealso [FitMovement_2_Area()], [CalcAsymDist_2Area()]
+#' @seealso `.FitMovement2Area()`, `.CalcAsymDist2Area()`
 #'
 #' @keywords internal
-SolveMovement_2_Area <- function(LogitProbs,
+.SolveMovement2Area <- function(LogitProbs,
                                  UnfishedDist,
                                  ProbStaying,
                                  UnfishedDistNext = NULL) {
@@ -162,7 +162,7 @@ SolveMovement_2_Area <- function(LogitProbs,
     dist_penalty <- sum((log(Projected) - log(UnfishedDistNext))^2)
   } else {
     # Asymptotic objective for plus-group / age-invariant movement
-    Distribution <- CalcAsymDist_2Area(Movement)
+    Distribution <- .CalcAsymDist2Area(Movement)
     dist_penalty <- (log(UnfishedDist[1]) - log(Distribution[1]))^2
   }
 
@@ -189,10 +189,10 @@ SolveMovement_2_Area <- function(LogitProbs,
 #' @return A square numeric matrix with `length(LogitProbs)` rows and columns.
 #'   Rows sum to 1 (verified to within `tol`).
 #'
-#' @seealso [FitMovement_2_Area()], [FitMovement_Multi_Area()]
+#' @seealso `.FitMovement2Area()`, `.FitMovementMultiArea()`
 #'
 #' @keywords internal
-MarkovFrac <- function(LogitProbs, FracOther=NULL, tol = 1e-10){
+.MarkovFrac <- function(LogitProbs, FracOther=NULL, tol = 1e-10){
   probs <- ilogit(LogitProbs)
   left <- 1-probs
   
@@ -217,7 +217,7 @@ MarkovFrac <- function(LogitProbs, FracOther=NULL, tol = 1e-10){
 #' objective. The objective simultaneously penalises deviations of the implied
 #' asymptotic distribution from `UnfishedDist` (log scale, penalty `CVDist`)
 #' and deviations of the diagonal (staying probabilities) from `ProbStaying`
-#' (logit scale, penalty `CVStay`). See [SolveMovement_Multi_Area()] for the
+#' (logit scale, penalty `CVStay`). See `.SolveMovementMultiArea()` for the
 #' objective details.
 #'
 #' @param Spatial A [spatial-class] object with populated `UnfishedDist`,
@@ -233,15 +233,15 @@ MarkovFrac <- function(LogitProbs, FracOther=NULL, tol = 1e-10){
 #' dimensions are treated as constant.
 #'
 #' The relative movement structure among areas is fixed by `FracOther` and
-#' passed to [MarkovFrac()] to construct the full matrix at each iteration.
+#' passed to `.MarkovFrac()` to construct the full matrix at each iteration.
 #'
 #' @return An `nArea × nArea` numeric matrix with rows summing to 1.
 #'
-#' @seealso [FitMovement()], [FitMovement_2_Area()], [SolveMovement_Multi_Area()],
-#'   [MarkovFrac()], [CalcAsymDist()]
+#' @seealso [FitMovement()], `.FitMovement2Area()`, `.SolveMovementMultiArea()`,
+#'   `.MarkovFrac()`, [CalcAsymDist()]
 #'
 #' @keywords internal
-FitMovement_Multi_Area <- function(Spatial, sim=1, age=1, year=1) {
+.FitMovementMultiArea <- function(Spatial, sim=1, age=1, year=1) {
 
   PS_dim <- dim(Spatial@ProbStaying)
   PS_sim <- min(sim, PS_dim[1])
@@ -272,7 +272,7 @@ FitMovement_Multi_Area <- function(Spatial, sim=1, age=1, year=1) {
 
   optMovement <- stats::nlminb(
     rep(0, nArea),
-    SolveMovement_Multi_Area,
+    .SolveMovementMultiArea,
     UnfishedDist     = UnfishedDist,
     ProbStaying      = Spatial@ProbStaying[PS_sim, , PS_age, PS_year],
     FracOther        = Spatial@FracOther[FO_sim, , , FO_age, FO_year],
@@ -282,21 +282,21 @@ FitMovement_Multi_Area <- function(Spatial, sim=1, age=1, year=1) {
     control = list(iter.max = 5e3, eval.max = 1e4)
   )
 
-  MarkovFrac(LogitProbs = optMovement$par,
+  .MarkovFrac(LogitProbs = optMovement$par,
              FracOther  = Spatial@FracOther[FO_sim, , , FO_age, FO_year])
 }
 
 #' Objective Function for Multi-Area Movement Optimisation
 #'
 #' Computes the penalised negative log-likelihood used by
-#' [FitMovement_Multi_Area()]. Two normal penalties are applied: one on the
+#' `.FitMovementMultiArea()`. Two normal penalties are applied: one on the
 #' log-scale deviation of the implied asymptotic distribution from
 #' `UnfishedDist` (controlled by `CVDist`), and one on the logit-scale
 #' deviation of the staying probabilities from `ProbStaying` (controlled by
 #' `CVStay`).
 #'
 #' @param LogitProbs `numeric(nArea)`. Logit-transformed staying probabilities,
-#'   one per area. The full movement matrix is constructed via [MarkovFrac()].
+#'   one per area. The full movement matrix is constructed via `.MarkovFrac()`.
 #' @param UnfishedDist `numeric(nArea)`. Target unfished distribution across
 #'   areas. Must sum to 1.
 #' @param ProbStaying `numeric(nArea)`. Target staying probabilities, one per
@@ -341,17 +341,17 @@ FitMovement_Multi_Area <- function(Spatial, sim=1, age=1, year=1) {
 #'
 #' @return `numeric(1)`. The value of the objective (to be minimised).
 #'
-#' @seealso [FitMovement_Multi_Area()], [MarkovFrac()], [CalcAsymDist()]
+#' @seealso `.FitMovementMultiArea()`, `.MarkovFrac()`, [CalcAsymDist()]
 #'
 #' @keywords internal
-SolveMovement_Multi_Area <- function(LogitProbs,
+.SolveMovementMultiArea <- function(LogitProbs,
                                      UnfishedDist,
                                      ProbStaying,
                                      FracOther,
                                      UnfishedDistNext = NULL,
                                      CVDist = 0.1,
                                      CVStay = 1) {
-  Movement <- MarkovFrac(LogitProbs, FracOther)
+  Movement <- .MarkovFrac(LogitProbs, FracOther)
 
   if (!is.null(UnfishedDistNext)) {
     # One-step objective: UnfishedDist %*% M should equal UnfishedDistNext

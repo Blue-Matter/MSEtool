@@ -32,17 +32,6 @@
 #'   primarily for backwards compatibility; users may find it simpler to
 #'   supply a fully specified `Efficiency` array directly.
 #'   
-#' @param Theta Numeric, array, or `NULL`. Overdispersion parameter
-#'   \eqn{\theta} of the negative binomial within-trip catch distribution.
-#'   Accepted forms:
-#'   - `NULL` (default): `Theta` is not populated; bag-limit management
-#'     procedures will error if `Theta` is required and not supplied.
-#'   - Scalar numeric (e.g. `1.2`): constant overdispersion applied across
-#'     all simulations.
-#'   - Numeric vector length 2. Treated as lower and upper bounds of a 
-#'     uniform distribution.
-#'   - Numeric vector length `nSim`.
-#'     
 #' @param Misc List. Miscellaneous additional inputs. Default `list()`.
 #' 
 #' @param x A [catchability-class] object for accessor and replacement
@@ -92,41 +81,6 @@
 #' more direct control over time-varying catchability across both historical
 #' and projected periods.
 #'
-#' ## Within-Trip Overdispersion: `Theta`
-#'
-#' `Theta` (\eqn{\theta}) parameterises the negative binomial distribution
-#' used by bag-limit management procedures to model within-trip catch counts:
-#'
-#' \deqn{n_{f,s}(t) \sim \text{NegBin}(\mu_{f,s}(t),\; \theta_{f,s})}
-#'
-#' where \eqn{\mu_{f,s}(t)} is the mean catch per trip at time \eqn{t},
-#' computed internally by the OM from the unfished equilibrium catch and
-#' current depletion (assuming \eqn{\gamma = 1}; see Note). The variance of
-#' within-trip catch is:
-#'
-#' \deqn{\text{Var}(n_{f,s}) = \mu_{f,s} + \frac{\mu_{f,s}^2}{\theta_{f,s}}}
-#'
-#' It determines the fraction of trips that catch at or above the bag
-#' limit at any given mean catch rate, and therefore how strongly the
-#' regulation constrains total retention as stock abundance changes. `Theta`
-#' is a fixed property of the fleet-stock pair and has no `Year` dimension.
-#' 
-#' `Theta` does not have a `Year` dimension. Overdispersion is treated as a fixed
-#' behavioural property of the fleet-stock pair that does not vary over
-#' time. 
-#' 
-#' Smaller values (e.g. 0.5–2) produce high trip-to-trip variability
-#' with many zero-catch trips and occasional large catches, typical of
-#' recreational marine fisheries. 
-#' 
-#' Larger values approach the Poisson distribution. 
-#' Only required when a bag-limit management procedure isactive for this 
-#' fleet-stock combination. 
-#'   
-#' When trip-level creel data are available, `Theta` is estimated by maximum
-#' likelihood fitting of the negative binomial to observed per-trip counts.
-#' In the absence of creel data, `Theta` must be assumed.
-#'
 #' ## Attaching to a Fleet
 #'
 #' A [catchability-class] object can be attached to a [Fleet()] with
@@ -154,8 +108,7 @@
 #'
 #' @family fleet
 #'
-#' @examples
-#' # See man-examples/class-Catchability.R
+#' @example man-examples/class-Catchability.R
 #'
 #' @export
 Catchability <- function(Efficiency = NULL,
@@ -163,8 +116,8 @@ Catchability <- function(Efficiency = NULL,
                          qInc       = NULL,
                          Misc       = list()) {
   
-  if (isFleetOrList(Efficiency))
-    return(ExtractFleetSlot(Efficiency, 'Catchability'))
+  if (.IsFleetOrList(Efficiency))
+    return(.ExtractFleetSlot(Efficiency, 'Catchability'))
     
   object <- methods::new(
     "catchability",
@@ -182,20 +135,20 @@ Catchability <- function(Efficiency = NULL,
 #' @rdname Catchability
 #' @export
 `Catchability<-` <- function(x, value) {
-  AssignFleetSlot(x, value, 'Catchability')
+  .AssignFleetSlot(x, value, 'Catchability')
 }
 
 #' @rdname Catchability
 #' @export
 Efficiency <- function(x) {
-  CheckClass(x, "catchability", "x")
+  .CheckClass(x, "catchability", "x")
   x@Efficiency
 }
 
 #' @rdname Catchability
 #' @export
 `Efficiency<-` <- function(x, value) {
-  CheckClass(x, "catchability", "x")
+  .CheckClass(x, "catchability", "x")
   x@Efficiency <- value
   methods::validObject(x)
   x
@@ -204,14 +157,14 @@ Efficiency <- function(x) {
 #' @rdname Catchability
 #' @export
 qCV <- function(x) {
-  CheckClass(x, "catchability", "x")
+  .CheckClass(x, "catchability", "x")
   x@qCV
 }
 
 #' @rdname Catchability
 #' @export
 `qCV<-` <- function(x, value) {
-  CheckClass(x, "catchability", "x")
+  .CheckClass(x, "catchability", "x")
   x@qCV <- value
   methods::validObject(x)
   x
@@ -220,33 +173,15 @@ qCV <- function(x) {
 #' @rdname Catchability
 #' @export
 qInc <- function(x) {
-  CheckClass(x, "catchability", "x")
+  .CheckClass(x, "catchability", "x")
   x@qInc
 }
 
 #' @rdname Catchability
 #' @export
 `qInc<-` <- function(x, value) {
-  CheckClass(x, "catchability", "x")
+  .CheckClass(x, "catchability", "x")
   x@qInc <- value
   methods::validObject(x)
   x
 }
-
-
-#' @rdname Catchability
-#' @export
-Theta <- function(x) {
-  CheckClass(x, "catchability", "x")
-  x@Theta
-}
-
-#' @rdname Catchability
-#' @export
-`Theta<-` <- function(x, value) {
-  CheckClass(x, "catchability", "x")
-  x@Theta <- value
-  methods::validObject(x)
-  x
-}
-

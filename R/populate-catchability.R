@@ -45,7 +45,7 @@ PopulateCatchability <- function(Catchability,
   
   pYears <- length(ProjYears)
   Years  <- c(HistYears, ProjYears)
-  nSim   <- Get_nSim(Catchability, nSim)
+  nSim   <- .GetNSim(Catchability, nSim)
   
   if (is.null(Catchability@Efficiency)) {
     Catchability@Efficiency <- array(
@@ -93,7 +93,7 @@ PopulateCatchability <- function(Catchability,
       Catchability@qInc <- NULL
       
     } else {
-      qIncs <- StructurePars_(Catchability@qInc, nSim = nSim, Years = Years)[, 1]
+      qIncs <- .StructurePar(Catchability@qInc, nSim = nSim, Years = Years)[, 1]
       qIncs <- sapply(qIncs, function(x) (1 + x / 100)^(1:pYears)) |> t()
       dd <- dim(qIncs)
       dimnames(qIncs) <- list(Sim = seq_len(dd[1]), Year = ProjYears)
@@ -111,7 +111,7 @@ PopulateCatchability <- function(Catchability,
         qIncs <- ExtendSims(qIncs, maxSims)
       }
       
-      qfuture <- ArrayMultiply(SubsetYear(Catchability@Efficiency, ProjYears), qIncs)
+      qfuture <- ArrayMultiply(.SubsetYear(Catchability@Efficiency, ProjYears), qIncs)
       ArrayFill(Catchability@Efficiency) <- qfuture
       Catchability@qInc <- qIncs
     }
@@ -124,7 +124,7 @@ PopulateCatchability <- function(Catchability,
     if (all(Catchability@qCV==0)) {
       Catchability@qCV <- NULL
     } else {
-      qCVs <- StructurePars_(Catchability@qCV, nSim = nSim, Years = Years)[, 1]
+      qCVs <- .StructurePar(Catchability@qCV, nSim = nSim, Years = Years)[, 1]
       Catchability@qCV <- qCVs
       qmu <- -0.5 * qCVs^2
       qvar <- array(
@@ -133,7 +133,7 @@ PopulateCatchability <- function(Catchability,
         dimnames = list(Sim = 1:nSim, Year = ProjYears)
       )
       Catchability@Efficiency <- Extend(Catchability@Efficiency, nSim = nSim)
-      qfuture <- ArrayMultiply(SubsetYear(Catchability@Efficiency, ProjYears), qvar)
+      qfuture <- ArrayMultiply(.SubsetYear(Catchability@Efficiency, ProjYears), qvar)
       if (!all(qfuture == 1)) {
         ArrayFill(Catchability@Efficiency) <- qfuture
       }

@@ -1,9 +1,9 @@
 
-CheckAdvice <- function(Advice, Proj, FleetNames, Areas, sim, name) {
+.CheckAdvice <- function(Advice, Proj, FleetNames, Areas, sim, name) {
   if (inherits(Advice, 'try-error'))
     return(Advice)
  
-  Advice <- try(CheckAdvice_TAC(Advice, Proj, FleetNames, Areas), silent=TRUE)
+  Advice <- try(.CheckAdviceTAC(Advice, Proj, FleetNames, Areas), silent=TRUE)
   
   if (!inherits(Advice, 'advice')) {
     l <- list(Advice)
@@ -11,7 +11,7 @@ CheckAdvice <- function(Advice, Proj, FleetNames, Areas, sim, name) {
     return(l)
   }
   
-  Advice <- try(CheckAdvice_Effort(Advice, Proj, FleetNames, Areas, sim), silent=TRUE)
+  Advice <- try(.CheckAdviceEffort(Advice, Proj, FleetNames, Areas, sim), silent=TRUE)
   
   if (!inherits(Advice, 'advice')) {
     l <- list(Advice)
@@ -19,7 +19,7 @@ CheckAdvice <- function(Advice, Proj, FleetNames, Areas, sim, name) {
     return(l)
   }
   
-  Advice <- try(CheckAdvice_Closure(Advice, Proj, FleetNames, Areas), silent=TRUE)
+  Advice <- try(.CheckAdviceClosure(Advice, Proj, FleetNames, Areas), silent=TRUE)
   
   if (!inherits(Advice, 'advice')) {
     l <- list(Advice)
@@ -32,7 +32,7 @@ CheckAdvice <- function(Advice, Proj, FleetNames, Areas, sim, name) {
 }
 
 
-CheckAdvice_TAC <- function(Advice, Proj, FleetNames, Areas) {
+.CheckAdviceTAC <- function(Advice, Proj, FleetNames, Areas) {
   
   if (is.null(Advice@TAC) || !length(Advice@TAC))
     return(Advice)
@@ -50,13 +50,17 @@ CheckAdvice_TAC <- function(Advice, Proj, FleetNames, Areas) {
 
   if (length(Advice@TAC)!= 1 && length(Advice@TAC)!=nFleet)
     stop("If Advice@TAC is numeric vector, it must be either length 1 or length `nFleet`")
- 
-  Advice@TAC <- as.array(Advice@TAC)
+
+  if (length(Advice@TAC) == nFleet) {
+    Advice@TAC <- array(Advice@TAC, dim=nFleet, dimnames=list(Fleet=FleetNames))
+  } else {
+    Advice@TAC <- array(Advice@TAC, dim=1, dimnames=list(Fleet='Total'))
+  }
   Advice
-  
+
 }
 
-CheckAdvice_Effort <- function(Advice, Proj, FleetNames, Areas, sim) {
+.CheckAdviceEffort <- function(Advice, Proj, FleetNames, Areas, sim) {
   
   Effort <- Advice@Effort
   nFleet <- length(FleetNames)
@@ -67,7 +71,7 @@ CheckAdvice_Effort <- function(Advice, Proj, FleetNames, Areas, sim) {
   
   if (is.numeric(Effort) && !is.array(Effort)) {
     if (length(Effort)==1) {
-      Effort <- array(Effort)
+      Effort <- array(Effort, dim=1, dimnames=list(Fleet='Total'))
     } else if (length(Effort)==nFleet) {
       Effort <- array(Effort, nFleet, dimnames = list(Fleet=FleetNames))
     } else {
@@ -102,7 +106,7 @@ CheckAdvice_Effort <- function(Advice, Proj, FleetNames, Areas, sim) {
 }
 
 
-CheckAdvice_Closure <- function(Advice, Proj, FleetNames, Areas) {
+.CheckAdviceClosure <- function(Advice, Proj, FleetNames, Areas) {
   Closure <- Advice@Closure
   if (is.null(Closure))
     return(Advice)

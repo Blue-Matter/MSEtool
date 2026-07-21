@@ -19,7 +19,7 @@
 #' @param DoCalcOverallF Integer flag; `1` (default) calculates overall fishing
 #'   mortality, `0` skips.
 #' @param IdenticalSim Logical; if `TRUE`, computes only simulation 1 and
-#'   broadcasts results to all simulations via `CopyFirstSim`.
+#'   broadcasts results to all simulations via `.CopyFirstSim`.
 #' @param debug Integer flag passed to C++; `1` enables verbose debug output.
 #' @param clone Integer or `NULL`; controls whether the internal `Hist` object
 #'   is deep-cloned before modification. `1` = always clone (safe, slower),
@@ -28,7 +28,7 @@
 #'
 #' @return The `Hist` object with updated fishery dynamics slots.
 #' @keywords internal
-CalcFisheryDynamics <- function(Hist, 
+.CalcFisheryDynamics <- function(Hist, 
                                 Years=NULL,
                                 Sims=NULL,
                                 DoCalcCatch=1,
@@ -80,7 +80,7 @@ CalcFisheryDynamics <- function(Hist,
     ts_slots <- slotNames('timeseries')
     for (sl in ts_slots) {
       if (sl == 'Misc') next
-      slot(Hist, sl) <- CopyFirstSim(x=slot(Hist_1, sl))
+      slot(Hist, sl) <- .CopyFirstSim(x=slot(Hist_1, sl))
     }
     return(Hist)
   }

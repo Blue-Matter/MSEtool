@@ -46,7 +46,7 @@
 #'
 #' @return Integer vector of length `nBin` summing to `n`.
 #'
-#' @seealso [CompObs()], [GenHistData_AgeComp()], [GenHistData_SizeComp()]
+#' @seealso [CompObs()], `.GenHistDataAgeComp()`, `.GenHistDataSizeComp()`
 #' @importFrom stats rgamma
 #' @examples
 #' # Near-multinomial draw (high ESS, Theta = 1, no shift)
@@ -69,4 +69,3 @@ rDirichletMultinomial <- function(n, alpha) {
   p <- p / sum(p)
   as.integer(rmultinom(1, size = n, prob = p))
 }
-

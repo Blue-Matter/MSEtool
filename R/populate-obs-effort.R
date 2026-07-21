@@ -30,7 +30,7 @@
 #'
 #' @export
 PopulateEffortObs <- function(Effort, nSim, HistYears, ProjYears) {
-  CheckClass(Effort, "effortobs", "Effort")
+  .CheckClass(Effort, "effortobs", "Effort")
   
   if (EmptyObject(Effort))
     return(Effort)

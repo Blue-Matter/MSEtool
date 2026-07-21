@@ -14,7 +14,7 @@
 #' @return `Hist` with any recognised slots overwritten by values found in
 #'   `Hist@OM@Misc`.
 #' @keywords internal
-FillFromMisc <- function(Hist) {
+.FillFromMisc <- function(Hist) {
   if (!length(Hist@OM@Misc))
     return(Hist)
   
@@ -26,7 +26,7 @@ FillFromMisc <- function(Hist) {
   )
   
   for (sl in ts_slots) {
-    Hist <- Misc2Hist(Hist, sl)
+    Hist <- .Misc2Hist(Hist, sl)
   }
   Hist
 }
@@ -51,7 +51,7 @@ FillFromMisc <- function(Hist) {
 #' @return `Hist` with `slot(Hist, sl)` overwritten if a matching entry was
 #'   found in `Hist@OM@Misc`, otherwise `Hist` unchanged.
 #' @keywords internal
-Misc2Hist <- function(Hist, sl='Biomass') {
+.Misc2Hist <- function(Hist, sl='Biomass') {
   value <- Hist@OM@Misc[[sl]]
   if (is.null(value))
     return(Hist)
@@ -83,4 +83,3 @@ Misc2Hist <- function(Hist, sl='Biomass') {
   ArrayFill(slot(Hist, sl)) <- value
   Hist
 }
-

@@ -45,15 +45,15 @@
 #' @seealso [CalcSPR0()], [perrecruit-class]
 #' @export
 CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
-  CheckClass(OM, c('om', 'hist'))
+  .CheckClass(OM, c('om', 'hist'))
 
   if (inherits(OM, 'om'))
-    Hist <- OM2Hist(OM, silent=TRUE)
+    Hist <- .OM2Hist(OM, silent=TRUE)
 
   if (inherits(OM, 'hist'))
     Hist <- OM
 
-  CheckClass(Hist, 'hist', 'Hist')
+  .CheckClass(Hist, 'hist', 'Hist')
 
   nSeason <- Hist@OM@Seasons
 
@@ -74,7 +74,7 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
   SPR0List <- Array2List(Hist@Reference@SPR0)
 
   PRByComplex <- purrr::map(complexes, \(stockInd) {
-    CalcPerRecruit_StockList(
+    .CalcPerRecruitStockList(
       StockList = Hist@OM@Stock[stockInd],
       FleetList = Hist@OM@Fleet[stockInd],
       apicalF   = apicalF,
@@ -85,26 +85,26 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
   
   PerRecruit <- new('perrecruit')
   PerRecruit@apicalF     <- apicalF
-  PerRecruit@NPR0        <- purrr::map(PRByComplex, \(pr) pr@NPR0)        |> JoinStockArrays(StockNames)
-  PerRecruit@NPR0_SP     <- purrr::map(PRByComplex, \(pr) pr@NPR0_SP)     |> JoinStockArrays(StockNames)
-  PerRecruit@SPR0        <- purrr::map(PRByComplex, \(pr) pr@SPR0)        |> JoinStockArrays(StockNames)
-  PerRecruit@NPRF        <- purrr::map(PRByComplex, \(pr) pr@NPRF)        |> JoinStockArrays(StockNames)
-  PerRecruit@NPRF_SP     <- purrr::map(PRByComplex, \(pr) pr@NPRF_SP)     |> JoinStockArrays(StockNames)
-  PerRecruit@SPRF        <- purrr::map(PRByComplex, \(pr) pr@SPRF)        |> JoinStockArrays(StockNames)
-  PerRecruit@SPR         <- purrr::map(PRByComplex, \(pr) pr@SPR)         |> JoinStockArrays(StockNames)
-  PerRecruit@Biomass     <- purrr::map(PRByComplex, \(pr) pr@Biomass)     |> JoinStockArrays(StockNames)
-  PerRecruit@SBiomass    <- purrr::map(PRByComplex, \(pr) pr@SBiomass)    |> JoinStockArrays(StockNames)
-  PerRecruit@SProduction <- purrr::map(PRByComplex, \(pr) pr@SProduction) |> JoinStockArrays(StockNames)
-  PerRecruit@Removals    <- purrr::map(PRByComplex, \(pr) pr@Removals)    |> JoinStockArrays(StockNames)
-  PerRecruit@Landings    <- purrr::map(PRByComplex, \(pr) pr@Landings)    |> JoinStockArrays(StockNames)
+  PerRecruit@NPR0        <- purrr::map(PRByComplex, \(pr) pr@NPR0)        |> .JoinStockArrays(StockNames)
+  PerRecruit@NPR0_SP     <- purrr::map(PRByComplex, \(pr) pr@NPR0_SP)     |> .JoinStockArrays(StockNames)
+  PerRecruit@SPR0        <- purrr::map(PRByComplex, \(pr) pr@SPR0)        |> .JoinStockArrays(StockNames)
+  PerRecruit@NPRF        <- purrr::map(PRByComplex, \(pr) pr@NPRF)        |> .JoinStockArrays(StockNames)
+  PerRecruit@NPRF_SP     <- purrr::map(PRByComplex, \(pr) pr@NPRF_SP)     |> .JoinStockArrays(StockNames)
+  PerRecruit@SPRF        <- purrr::map(PRByComplex, \(pr) pr@SPRF)        |> .JoinStockArrays(StockNames)
+  PerRecruit@SPR         <- purrr::map(PRByComplex, \(pr) pr@SPR)         |> .JoinStockArrays(StockNames)
+  PerRecruit@Biomass     <- purrr::map(PRByComplex, \(pr) pr@Biomass)     |> .JoinStockArrays(StockNames)
+  PerRecruit@SBiomass    <- purrr::map(PRByComplex, \(pr) pr@SBiomass)    |> .JoinStockArrays(StockNames)
+  PerRecruit@SProduction <- purrr::map(PRByComplex, \(pr) pr@SProduction) |> .JoinStockArrays(StockNames)
+  PerRecruit@Removals    <- purrr::map(PRByComplex, \(pr) pr@Removals)    |> .JoinStockArrays(StockNames)
+  PerRecruit@Landings    <- purrr::map(PRByComplex, \(pr) pr@Landings)    |> .JoinStockArrays(StockNames)
   PerRecruit
 }
 
-CalcPerRecruit_StockList <- function(StockList, FleetList, apicalF=0.1, Years, SPR0List) {
+.CalcPerRecruitStockList <- function(StockList, FleetList, apicalF=0.1, Years, SPR0List) {
 
-  inputs <- PrepPerRecruitInputs(StockList, FleetList, SPR0List, Years)
+  inputs <- .PrepPerRecruitInputs(StockList, FleetList, SPR0List, Years)
   
-  PR <- CalcPerRecruit_F(
+  PR <- .CalcPerRecruitF(
     apicalF                   = apicalF,
     StockFleetAllocation      = inputs$StockFleetAllocation,
     NaturalMortalityList      = inputs$NaturalMortalityList,
@@ -116,7 +116,8 @@ CalcPerRecruit_StockList <- function(StockList, FleetList, apicalF=0.1, Years, S
     SPFrom                    = inputs$SPFrom,
     SPR0List                  = inputs$SPR0List,
     FecundityList             = inputs$FecundityList,
-    WeightFleetList           = inputs$WeightFleetList,
+    WeightFleetRetainedList   = inputs$WeightFleetRetainedList,
+    WeightFleetSelectedList   = inputs$WeightFleetSelectedList,
     SelectivityFleetList      = inputs$SelectivityFleetList,
     RetentionFleetList        = inputs$RetentionFleetList,
     DiscardMortalityFleetList = inputs$DiscardMortalityFleetList,
@@ -130,14 +131,14 @@ CalcPerRecruit_StockList <- function(StockList, FleetList, apicalF=0.1, Years, S
   PR
 }
 
-JoinStockArrays <- function(arrayList, StockNames) {
+.JoinStockArrays <- function(arrayList, StockNames) {
   
   arrayList <- purrr::compact(arrayList)
   if (length(arrayList) == 0) return(NULL)
   
   StockInd <- match("Stock", names(dimnames(arrayList[[1]])))
   if (is.na(StockInd))
-    cli::cli_abort("`Stock` dimension not found in arrays passed to `JoinStockArrays()`",
+    cli::cli_abort("`Stock` dimension not found in arrays passed to `.JoinStockArrays()`",
                    .internal = TRUE)
   
   # bind across complexes along Stock dimension
@@ -152,14 +153,14 @@ JoinStockArrays <- function(arrayList, StockNames) {
       .internal = TRUE
     )
   
-  ArraySubsetStock(combined, match(StockNames, currentStocks))
+  .ArraySubsetStock(combined, match(StockNames, currentStocks))
 }
 
-CalcFleetAllocationF <- function(FleetList, Years) {
+.CalcFleetAllocationF <- function(FleetList, Years) {
 
   FDistribution <- purrr::map(FleetList, \(Fleet) {
-    ArrayMultiply(Fleet@Effort@Effort |>  ArraySubsetYear(Years),
-                  Fleet@Catchability@Efficiency |>  ArraySubsetYear(Years))
+    ArrayMultiply(Fleet@Effort@Effort |>  .ArraySubsetYear(Years),
+                  Fleet@Catchability@Efficiency |>  .ArraySubsetYear(Years))
   }) |>
     List2Array('Fleet', pos=3)
 
@@ -174,24 +175,18 @@ CalcFleetAllocationF <- function(FleetList, Years) {
     sweep(FDistribution, 1L, FPeak, "/")          # [Sim, Year, Fleet]
   } else {
     FDistributionTotal <- AddDimension(FDistributionTotal, 'Fleet') |>
-      ExtendFleets(Fleets = names(FleetList))
+      .ExtendFleets(Fleets = names(FleetList))
     dimnames(FDistributionTotal)[['Fleet']] <- names(FleetList)
     ArrayDivide(FDistribution, FDistributionTotal)
   }
 }
 
-# ── Seasonal per-recruit helpers ─────────────────────────────────────────────
+# Seasonal per-recruit helpers
 
-# Compute numbers-per-recruit for every birth season using the direct formula.
-# Z: [Sim, Age, Season] — total mortality (M + F_dead) for each age and
-#   calendar season within the target year.
-# SpawnTimeFrac: scalar or length-nSim. Fraction of time step before spawning.
-# Semelparous: [Sim, Age, Season] or FALSE.
-# Returns NPR[Sim, Age, BirthSeason] where BirthSeason = 1..nSeason and
-# corresponds to the calendar-season index within the supplied year.
-# When SpawnTimeFrac > 0 the returned array gives numbers AT the time of
-# spawning; call with SpawnTimeFrac = 0 for numbers at the start of each step.
-CalcNPR_seasonal <- function(Z, PlusGroup, SpawnTimeFrac, Semelparous) {
+# Numbers-per-recruit by birth season. Returns NPR[Sim, Age, BirthSeason];
+# SpawnTimeFrac > 0 gives numbers at the time of spawning, 0 gives numbers at
+# the start of each step.
+.CalcNPRSeasonal <- function(Z, PlusGroup, SpawnTimeFrac, Semelparous) {
 
   nSim    <- dim(Z)[1]
   nAge    <- dim(Z)[2]
@@ -235,12 +230,9 @@ CalcNPR_seasonal <- function(Z, PlusGroup, SpawnTimeFrac, Semelparous) {
   NPR   # [Sim, Age, BirthSeason]
 }
 
-# Aggregate a seasonal per-recruit quantity to an annual scalar.
-# NPR_bs[Sim, Age, BirthSeason] — per-recruit abundance by birth season.
-# q_sa[Sim, Age, Season]        — per-unit quantity for each age × season.
-# pi_s[Sim, Season]             — seasonal recruitment weights (sum_s pi_s = 1).
-# Returns [Sim] annual aggregate: sum_s { pi_s * sum_a { NPR_s[a] * q[a,s_at_a] } }.
-AggSeasonalProduct <- function(NPR_bs, q_sa, pi_s) {
+# Aggregate a seasonal per-recruit quantity to an annual [Sim] scalar,
+# weighted by seasonal recruitment weights pi_s (sum_s pi_s = 1).
+.AggSeasonalProduct <- function(NPR_bs, q_sa, pi_s) {
 
   nSim    <- dim(NPR_bs)[1]
   nAge    <- dim(NPR_bs)[2]
@@ -263,14 +255,9 @@ AggSeasonalProduct <- function(NPR_bs, q_sa, pi_s) {
   result
 }
 
-# Aggregate seasonal yield-per-recruit (summed over fleets).
-# NPR_bs[Sim, Age, BirthSeason] — unfished/fished NPR by birth season.
-# FDead_saf[Sim, Age, Season, Fleet]   — fleet fishing mortality (dead).
-# ZTotal_sa[Sim, Age, Season]          — total mortality Z.
-# WeightFleet_saf[Sim, Age, Season, Fleet] — weight for each fleet.
-# pi_s[Sim, Season] — seasonal recruitment weights.
-# Returns [Sim] annual yield per annual recruit.
-AggSeasonalYield <- function(NPR_bs, FDead_saf, ZTotal_sa, WeightFleet_saf, pi_s,
+# Aggregate seasonal yield-per-recruit (summed over fleets) to [Sim] annual
+# yield per annual recruit.
+.AggSeasonalYield <- function(NPR_bs, FDead_saf, ZTotal_sa, WeightFleet_saf, pi_s,
                              type = c('Removals', 'Landings'),
                              FRetain_saf = NULL) {
   type    <- match.arg(type)
@@ -309,8 +296,51 @@ AggSeasonalYield <- function(NPR_bs, FDead_saf, ZTotal_sa, WeightFleet_saf, pi_s
   result
 }
 
+# Aggregate seasonal discards-per-recruit (summed over fleets), using the
+# same residual formula as CalcCatch() in calc_catch.h: discard biomass is
+# the gap between total-selected biomass and landed biomass, scaled by the
+# fraction of discards that die. See .AggSeasonalYield() for array shapes.
+.AggSeasonalDiscards <- function(NPR_bs, FInteract_saf, FRetain_saf, FDiscDead_saf,
+                                ZTotal_sa, WeightFleetSelected_saf,
+                                WeightFleetRetained_saf, pi_s) {
+  nSim    <- dim(NPR_bs)[1]
+  nAge    <- dim(NPR_bs)[2]
+  nSeason <- dim(NPR_bs)[3]
+  nFleet  <- dim(FInteract_saf)[4]
 
-CalcPerRecruit_F <- function(apicalF = 0.1, spr_threshold = 0.001, ...) {
+  result <- numeric(nSim)
+
+  for (s in seq_len(nSeason)) {
+    seas_at_age <- ((s - 1L) + seq_len(nAge) - 1L) %% nSeason + 1L
+
+    Y_s <- numeric(nSim)
+    for (a in seq_len(nAge)) {
+      sa      <- seas_at_age[a]
+      Z_a     <- ZTotal_sa[, a, sa]
+      denom   <- pmax(Z_a, .Machine$double.eps)
+      Ndead_a <- NPR_bs[, a, s] * (1 - exp(-Z_a))
+
+      for (f in seq_len(nFleet)) {
+        Inum <- Ndead_a * (FInteract_saf[, a, sa, f] / denom)
+        Lnum <- Ndead_a * (FRetain_saf[, a, sa, f]   / denom)
+        Dnum <- Ndead_a * (FDiscDead_saf[, a, sa, f] / denom)
+
+        IW <- Inum * WeightFleetSelected_saf[, a, sa, f]
+        LW <- Lnum * WeightFleetRetained_saf[, a, sa, f]
+        discTotN <- Inum - Lnum
+        DW <- ifelse(discTotN > 1e-12, (IW - LW) * Dnum / discTotN, 0)
+
+        Y_s <- Y_s + DW
+      }
+    }
+    result <- result + pi_s[, s] * Y_s
+  }
+
+  result
+}
+
+
+.CalcPerRecruitF <- function(apicalF = 0.1, spr_threshold = 0.001, ...) {
   names(apicalF) <- as.character(apicalF)
   
   PRList    <- vector('list', length(apicalF))
@@ -321,7 +351,7 @@ CalcPerRecruit_F <- function(apicalF = 0.1, spr_threshold = 0.001, ...) {
     if (collapsed) {
       PRList[[i]] <- PRList[[i-1]] 
     } else {
-      PRList[[i]] <- CalcPerRecruit_F_scalar(apicalF = apicalF[i], ...)
+      PRList[[i]] <- .CalcPerRecruitFScalar(apicalF = apicalF[i], ...)
       if (!is.null(PRList[[i]]@SPR) && min(PRList[[i]]@SPR, na.rm=TRUE) < spr_threshold)
         collapsed <- TRUE
     }
@@ -368,7 +398,7 @@ CalcPerRecruit_F <- function(apicalF = 0.1, spr_threshold = 0.001, ...) {
 }
 
 
-CalcPerRecruit_F_scalar <- function(apicalF = 0.1,
+.CalcPerRecruitFScalar <- function(apicalF = 0.1,
                                     StockFleetAllocation,
                                     NaturalMortalityList,
                                     PlusGroupList,
@@ -379,7 +409,8 @@ CalcPerRecruit_F_scalar <- function(apicalF = 0.1,
                                     SPFrom,
                                     SPR0List,
                                     FecundityList,
-                                    WeightFleetList,
+                                    WeightFleetRetainedList,
+                                    WeightFleetSelectedList,
                                     SelectivityFleetList,
                                     RetentionFleetList,
                                     DiscardMortalityFleetList,
@@ -391,7 +422,7 @@ CalcPerRecruit_F_scalar <- function(apicalF = 0.1,
 
   # Dispatch to seasonal implementation when there are multiple seasons.
   if (nSeason > 1L)
-    return(CalcPerRecruit_F_scalar_seasonal(
+    return(.CalcPerRecruitFScalarSeasonal(
       apicalF                   = apicalF,
       StockFleetAllocation      = StockFleetAllocation,
       NaturalMortalityList      = NaturalMortalityList,
@@ -403,7 +434,8 @@ CalcPerRecruit_F_scalar <- function(apicalF = 0.1,
       SPFrom                    = SPFrom,
       SPR0List                  = SPR0List,
       FecundityList             = FecundityList,
-      WeightFleetList           = WeightFleetList,
+      WeightFleetRetainedList   = WeightFleetRetainedList,
+      WeightFleetSelectedList   = WeightFleetSelectedList,
       SelectivityFleetList      = SelectivityFleetList,
       RetentionFleetList        = RetentionFleetList,
       DiscardMortalityFleetList = DiscardMortalityFleetList,
@@ -428,7 +460,7 @@ CalcPerRecruit_F_scalar <- function(apicalF = 0.1,
   # max F over ages per stock (Sim x Stock x Year), then max over stocks
   ActualApicalFByStock <- purrr::map(
     FDeadTotalList,
-    \(FDeadTotal) apply(FDeadTotal, setdnames(c('Sim', 'Year')), max)
+    \(FDeadTotal) apply(FDeadTotal, .SetDnames(c('Sim', 'Year')), max)
   ) |>
     List2Array('Stock', pos = 2)
   
@@ -447,8 +479,8 @@ CalcPerRecruit_F_scalar <- function(apicalF = 0.1,
       AddDimension("Stock", pos = 2) |>
       AddDimension("Age",   pos = 3) |>
       AddDimension("Fleet", pos = 5) |>
-      ExtendFleets(Fleets = FleetNames) |>
-      ExtendStocks(Stocks = names(NaturalMortalityList))
+      .ExtendFleets(Fleets = FleetNames) |>
+      .ExtendStocks(Stocks = names(NaturalMortalityList))
     
     FInteractList <- purrr::map2(FInteractList,Array2List(adjust, 'Stock'),
       ArrayMultiply)
@@ -538,53 +570,41 @@ CalcPerRecruit_F_scalar <- function(apicalF = 0.1,
   SPR <- purrr::map2(SPRFList, SPR0List, \(SPRF, SPR0) 
                      ArrayDivide(SPRF, SPR0)) |>
     List2Array('Stock') |>
-    ArraySubsetYear(Years)
+    .ArraySubsetYear(Years)
   
-  # Removals
-  FishingDeadList <- purrr::map2(
-    FDeadList, ZDeadTotalList,
-    \(FDead, ZDeadTotal) {
-      ZDeadTotalFleet <- AddDimension(ZDeadTotal, 'Fleet') |>
-        ExtendFleets(Fleets = FleetNames)
-      ArrayDivide(FDead, ZDeadTotalFleet)
-    }
-  )
-  names(FishingDeadList) <- names(NaturalMortalityList)
-  
+  # Landings, Discards, and Removals -- mirrors the exact formula used by
+  # the C++ simulation engine (see calc_catch.h): Landings biomass uses the
+  # retention-weighted schedule; Discards biomass is the residual between
+  # total-selected biomass and landed biomass, scaled by the fraction of
+  # discards that die; Removals = Landings + Discards (not computed
+  # independently, so the two are guaranteed to be consistent).
   NDeadList <- purrr::map2(
     NPRFList, ZDeadTotalList,
     \(NPRF, ZDeadTotal) ArrayMultiply(NPRF, (1 - exp(-ZDeadTotal)))
   )
-  
-  Removals <- purrr::pmap(
-    list(FishingDeadList, NDeadList, WeightFleetList),
-    \(FishingDead, NDead, WeightFleet) {
-      NDeadFleet <- AddDimension(NDead, 'Fleet') |>
-        ExtendFleets(Fleets = FleetNames)
-      ArrayMultiply(FishingDead, NDeadFleet) |>
-        ArrayMultiply(WeightFleet) |>
-        SumOverFleet() |>
-        SumOverAge()
-    }
-  ) |>
-    List2Array('Stock', pos = 2)
-  
-  # Landings
-  FishingRetainList <- purrr::map2(
-    FRetainList, ZDeadTotalList,
-    \(FRetain, ZDeadTotal) {
-      ZDeadTotalFleet <- AddDimension(ZDeadTotal, 'Fleet') |>
-        ExtendFleets(Fleets = FleetNames)
-      ArrayDivide(FRetain, ZDeadTotalFleet)
-    }
-  )
-  names(FishingRetainList) <- names(NaturalMortalityList)
-  
+
+  ToFishingRatioList <- function(FList) {
+    out <- purrr::map2(
+      FList, ZDeadTotalList,
+      \(F_, ZDeadTotal) {
+        ZDeadTotalFleet <- AddDimension(ZDeadTotal, 'Fleet') |>
+          .ExtendFleets(Fleets = FleetNames)
+        ArrayDivide(F_, ZDeadTotalFleet)
+      }
+    )
+    names(out) <- names(NaturalMortalityList)
+    out
+  }
+
+  FishingInteractList <- ToFishingRatioList(FInteractList)
+  FishingRetainList   <- ToFishingRatioList(FRetainList)
+  FishingDiscDeadList <- ToFishingRatioList(FDiscardDeadList)
+
   Landings <- purrr::pmap(
-    list(FishingRetainList, NDeadList, WeightFleetList),
+    list(FishingRetainList, NDeadList, WeightFleetRetainedList),
     \(FishingRetain, NDead, WeightFleet) {
       NDeadFleet <- AddDimension(NDead, 'Fleet') |>
-        ExtendFleets(Fleets = FleetNames)
+        .ExtendFleets(Fleets = FleetNames)
       ArrayMultiply(FishingRetain, NDeadFleet) |>
         ArrayMultiply(WeightFleet) |>
         SumOverFleet() |>
@@ -592,7 +612,27 @@ CalcPerRecruit_F_scalar <- function(apicalF = 0.1,
     }
   ) |>
     List2Array('Stock', pos = 2)
-  
+
+  Discards <- purrr::pmap(
+    list(FishingInteractList, FishingRetainList, FishingDiscDeadList, NDeadList,
+        WeightFleetSelectedList, WeightFleetRetainedList),
+    \(FInteractRatio, FRetainRatio, FDiscDeadRatio, NDead, WSel, WRet) {
+      NDeadFleet <- AddDimension(NDead, 'Fleet') |>
+        .ExtendFleets(Fleets = FleetNames)
+      Inum <- ArrayMultiply(FInteractRatio, NDeadFleet)
+      Lnum <- ArrayMultiply(FRetainRatio, NDeadFleet)
+      Dnum <- ArrayMultiply(FDiscDeadRatio, NDeadFleet)
+      IW   <- ArrayMultiply(Inum, WSel)
+      LW   <- ArrayMultiply(Lnum, WRet)
+      discTotN <- ArraySubtract(Inum, Lnum)
+      DW <- ArrayDivide(ArrayMultiply(ArraySubtract(IW, LW), Dnum), discTotN)
+      SumOverFleet(DW) |> SumOverAge()
+    }
+  ) |>
+    List2Array('Stock', pos = 2)
+
+  Removals <- ArraySum(Landings, Discards)
+
   # Biomass, Spawning Biomass, and Spawning Production
   Biomass <- purrr::map2(
     NPRFList, WeightList,
@@ -643,7 +683,7 @@ CalcPerRecruit_F_scalar <- function(apicalF = 0.1,
 
 
 
-CalcPerRecruit_F_scalar_seasonal <- function(apicalF,
+.CalcPerRecruitFScalarSeasonal <- function(apicalF,
                                              StockFleetAllocation,
                                              NaturalMortalityList,
                                              PlusGroupList,
@@ -654,7 +694,8 @@ CalcPerRecruit_F_scalar_seasonal <- function(apicalF,
                                              SPFrom,
                                              SPR0List,
                                              FecundityList,
-                                             WeightFleetList,
+                                             WeightFleetRetainedList,
+                                             WeightFleetSelectedList,
                                              SelectivityFleetList,
                                              RetentionFleetList,
                                              DiscardMortalityFleetList,
@@ -682,7 +723,7 @@ CalcPerRecruit_F_scalar_seasonal <- function(apicalF,
 
   # Apical-F normalisation (same logic as annual path)
   ActualApicalFByStock <- purrr::map(FDeadTotalList, \(FDeadTotal)
-    apply(FDeadTotal, setdnames(c('Sim', 'Year')), max)
+    apply(FDeadTotal, .SetDnames(c('Sim', 'Year')), max)
   ) |> List2Array('Stock', pos = 2)
 
   ActualApicalF <- apply(ActualApicalFByStock, c('Sim', 'Year'), max)
@@ -693,8 +734,8 @@ CalcPerRecruit_F_scalar_seasonal <- function(apicalF,
       AddDimension("Stock", pos = 2) |>
       AddDimension("Age",   pos = 3) |>
       AddDimension("Fleet", pos = 5) |>
-      ExtendFleets(Fleets = FleetNames) |>
-      ExtendStocks(Stocks = StockNames)
+      .ExtendFleets(Fleets = FleetNames) |>
+      .ExtendStocks(Stocks = StockNames)
 
     FInteractList     <- purrr::map2(FInteractList, Array2List(adjust, 'Stock'), ArrayMultiply)
     FRetainList       <- purrr::map2(FInteractList, RetentionFleetList,         ArrayMultiply)
@@ -720,12 +761,13 @@ CalcPerRecruit_F_scalar_seasonal <- function(apicalF,
       list(
         ZDeadTotalList, NaturalMortalityList, PlusGroupList,
         SemelparousList, SpawnTimeFracList, FecundityList, WeightList,
-        MaturityList, FDeadList, FDeadTotalList, FRetainList,
-        WeightFleetList, SPR0List, SeasonalWeightsList
+        MaturityList, FDeadList, FDeadTotalList, FRetainList, FInteractList,
+        FDiscardDeadList, WeightFleetRetainedList, WeightFleetSelectedList,
+        SPR0List, SeasonalWeightsList
       ),
       \(Z_full, M_full, PlusGroup, Semel_full, STF, Fec_full, W_full,
-        Mat_full, FDead_full, FDeadTot_full, FRetain_full,
-        WF_full, SPR0_full, pi_s_full) {
+        Mat_full, FDead_full, FDeadTot_full, FRetain_full, FInteract_full,
+        FDiscDead_full, WF_full, WFSel_full, SPR0_full, pi_s_full) {
 
         nSim <- dim(Z_full)[1]
         nAge <- dim(Z_full)[2]
@@ -741,50 +783,57 @@ CalcPerRecruit_F_scalar_seasonal <- function(apicalF,
         Semel_cy <- if (is.array(Semel_full)) Semel_full[, , ts_idx, drop=FALSE] else FALSE
 
         # pi_s: seasonal recruitment weights [Sim, nSeason]
-        pi_s_cy_arr <- ArraySubsetYear(pi_s_full, seas_ts)
+        pi_s_cy_arr <- .ArraySubsetYear(pi_s_full, seas_ts)
         pi_s_cy     <- matrix(as.numeric(pi_s_cy_arr), nrow = nSim)
 
         # Seasonal SPR0 [Sim, nSeason], weighted average gives annual SPR0 [Sim]
-        SPR0_cy_arr <- ArraySubsetYear(SPR0_full, seas_ts)  # [Sim, nSeason]
+        SPR0_cy_arr <- .ArraySubsetYear(SPR0_full, seas_ts)  # [Sim, nSeason]
         SPR0_cy_mat <- matrix(as.numeric(SPR0_cy_arr), nrow = nSim)
         SPR0_ann    <- rowSums(pi_s_cy * SPR0_cy_mat)
 
         # NPR: F=0 (abundances), unfished
         Z0_cy    <- M_cy
-        NPR0_no  <- CalcNPR_seasonal(Z0_cy, PlusGroup, 0,   Semel_cy)
+        NPR0_no  <- .CalcNPRSeasonal(Z0_cy, PlusGroup, 0,   Semel_cy)
         NPR0_sp  <- if (IsSpawnTimeFrac)
-          CalcNPR_seasonal(Z0_cy, PlusGroup, STF, Semel_cy) else NPR0_no
+          .CalcNPRSeasonal(Z0_cy, PlusGroup, STF, Semel_cy) else NPR0_no
 
         # NPR: with fishing
-        NPRF_no  <- CalcNPR_seasonal(Z_cy, PlusGroup, 0,   Semel_cy)
+        NPRF_no  <- .CalcNPRSeasonal(Z_cy, PlusGroup, 0,   Semel_cy)
         NPRF_sp  <- if (IsSpawnTimeFrac)
-          CalcNPR_seasonal(Z_cy, PlusGroup, STF, Semel_cy) else NPRF_no
+          .CalcNPRSeasonal(Z_cy, PlusGroup, STF, Semel_cy) else NPRF_no
 
         # Annual aggregate quantities: [nSim] scalars
         ones_cy <- array(1, dim(Z_cy))   # for summing NPR over ages without weighting
 
-        NPR0_ann    <- AggSeasonalProduct(NPR0_no, ones_cy, pi_s_cy)
-        NPR0_SP_ann <- AggSeasonalProduct(NPR0_sp, ones_cy, pi_s_cy)
-        NPRF_ann    <- AggSeasonalProduct(NPRF_no, ones_cy, pi_s_cy)
-        NPRF_SP_ann <- AggSeasonalProduct(NPRF_sp, ones_cy, pi_s_cy)
+        NPR0_ann    <- .AggSeasonalProduct(NPR0_no, ones_cy, pi_s_cy)
+        NPR0_SP_ann <- .AggSeasonalProduct(NPR0_sp, ones_cy, pi_s_cy)
+        NPRF_ann    <- .AggSeasonalProduct(NPRF_no, ones_cy, pi_s_cy)
+        NPRF_SP_ann <- .AggSeasonalProduct(NPRF_sp, ones_cy, pi_s_cy)
 
-        SPR0f_ann   <- AggSeasonalProduct(NPR0_sp, Fec_cy,  pi_s_cy)   # unfished SP per recruit
-        SPRFf_ann   <- AggSeasonalProduct(NPRF_sp, Fec_cy,  pi_s_cy)   # fished SP per recruit
+        SPR0f_ann   <- .AggSeasonalProduct(NPR0_sp, Fec_cy,  pi_s_cy)   # unfished SP per recruit
+        SPRFf_ann   <- .AggSeasonalProduct(NPRF_sp, Fec_cy,  pi_s_cy)   # fished SP per recruit
         SPR_ann     <- SPRFf_ann / pmax(SPR0f_ann, .Machine$double.eps)
 
-        Biomass_ann  <- AggSeasonalProduct(NPRF_no, W_cy, pi_s_cy)
-        SBiomass_ann <- AggSeasonalProduct(NPRF_sp, W_cy * Mat_cy, pi_s_cy)
+        Biomass_ann  <- .AggSeasonalProduct(NPRF_no, W_cy, pi_s_cy)
+        SBiomass_ann <- .AggSeasonalProduct(NPRF_sp, W_cy * Mat_cy, pi_s_cy)
 
         # Fleet arrays [Sim, Age, Season, Fleet] — extract for yield
-        FDead_cy   <- FDead_full[,   , ts_idx, , drop = FALSE]
-        FRetain_cy <- FRetain_full[, , ts_idx, , drop = FALSE]
-        ZTot_cy    <- FDeadTot_full[, , ts_idx, drop = FALSE]
-        WF_cy      <- WF_full[,      , ts_idx, , drop = FALSE]
+        FDead_cy     <- FDead_full[,     , ts_idx, , drop = FALSE]
+        FRetain_cy   <- FRetain_full[,   , ts_idx, , drop = FALSE]
+        FInteract_cy <- FInteract_full[, , ts_idx, , drop = FALSE]
+        FDiscDead_cy <- FDiscDead_full[, , ts_idx, , drop = FALSE]
+        ZTot_cy      <- FDeadTot_full[,  , ts_idx, drop = FALSE]
+        WF_cy        <- WF_full[,        , ts_idx, , drop = FALSE]
+        WFSel_cy     <- WFSel_full[,     , ts_idx, , drop = FALSE]
 
-        Removals_ann <- AggSeasonalYield(NPRF_no, FDead_cy, ZTot_cy, WF_cy,
-                                          pi_s_cy, type = 'Removals')
-        Landings_ann <- AggSeasonalYield(NPRF_no, FDead_cy, ZTot_cy, WF_cy,
+        # Landings, Discards, and Removals -- see the equivalent note in
+        # .CalcPerRecruitFScalar(): Removals = Landings + Discards, not
+        # computed independently.
+        Landings_ann <- .AggSeasonalYield(NPRF_no, FDead_cy, ZTot_cy, WF_cy,
                                           pi_s_cy, type = 'Landings', FRetain_saf = FRetain_cy)
+        Discards_ann <- .AggSeasonalDiscards(NPRF_no, FInteract_cy, FRetain_cy, FDiscDead_cy,
+                                            ZTot_cy, WFSel_cy, WF_cy, pi_s_cy)
+        Removals_ann <- Landings_ann + Discards_ann
 
         list(
           NPR0        = NPR0_ann,
@@ -871,7 +920,7 @@ CalcPerRecruit_F_scalar_seasonal <- function(apicalF,
 
 
 
-PrepPerRecruitInputs <- function(StockList, FleetList, SPR0List, Years) {
+.PrepPerRecruitInputs <- function(StockList, FleetList, SPR0List, Years) {
 
   FleetNames <- names(FleetList[[1]])
 
@@ -905,23 +954,23 @@ PrepPerRecruitInputs <- function(StockList, FleetList, SPR0List, Years) {
   FleetNames <- names(FleetList[[1]])
 
   NaturalMortalityList <- purrr::map(StockList, \(Stock)
-                                     Stock@NaturalMortality@MeanAtAge |> ArraySubsetYear(Years))
+                                     Stock@NaturalMortality@MeanAtAge |> .ArraySubsetYear(Years))
   
   PlusGroupList <- purrr::map(StockList, \(Stock) Stock@Ages@PlusGroup)
   
   MaturityList <- purrr::map(StockList, \(Stock)
-                             Stock@Maturity@MeanAtAge |> ArraySubsetYear(Years))
+                             Stock@Maturity@MeanAtAge |> .ArraySubsetYear(Years))
   
   SemelparousList <- purrr::map(StockList, \(Stock)
-                                Stock@Maturity@Semelparous |> ArraySubsetYear(Years))
+                                Stock@Maturity@Semelparous |> .ArraySubsetYear(Years))
   
   WeightList <- purrr::map(StockList, \(Stock)
-                           Stock@Weight@MeanAtAge |> ArraySubsetYear(Years))
+                           Stock@Weight@MeanAtAge |> .ArraySubsetYear(Years))
   
   SpawnTimeFracList <- purrr::map(StockList, \(Stock) Stock@SRR@SpawnTimeFrac)
   
   FecundityList <- purrr::map(StockList, \(Stock)
-                              Stock@Fecundity@MeanAtAge |> ArraySubsetYear(Years))
+                              Stock@Fecundity@MeanAtAge |> .ArraySubsetYear(Years))
   
   SPFrom <- purrr::imap(StockList, \(stock, i) {
     spfrom <- stock@SRR@SPFrom
@@ -932,39 +981,59 @@ PrepPerRecruitInputs <- function(StockList, FleetList, SPR0List, Years) {
   
   # F-invariant: fleet allocation depends only on effort and efficiency
   StockFleetAllocation <- purrr::map(FleetList, \(fl)
-                                     CalcFleetAllocationF(fl, Years)
+                                     .CalcFleetAllocationF(fl, Years)
   ) |> List2Array('Stock', pos = 2)
-  
-  WeightFleetList <- purrr::map(FleetList, \(fl) {
+
+  # Broadcast stock-level per-recruit inputs to the true simulation count.
+  # Some (e.g. deterministic M, R0) commonly stay at Sim=1 after Populate()
+  # while fleet effort/allocation is stochastic; the seasonal aggregation
+  # path below indexes these lists directly rather than via Array*
+  # broadcasting, so a Sim mismatch causes out-of-bounds errors.
+  nSim_true <- dim(StockFleetAllocation)[1]
+  NaturalMortalityList <- purrr::map(NaturalMortalityList, ExtendSims, nSim = nSim_true)
+  MaturityList         <- purrr::map(MaturityList,         ExtendSims, nSim = nSim_true)
+  SemelparousList      <- purrr::map(SemelparousList,      ExtendSims, nSim = nSim_true)
+  WeightList           <- purrr::map(WeightList,           ExtendSims, nSim = nSim_true)
+  FecundityList        <- purrr::map(FecundityList,        ExtendSims, nSim = nSim_true)
+  SPR0List             <- purrr::map(SPR0List,             ExtendSims, nSim = nSim_true)
+
+  WeightFleetRetainedList <- purrr::map(FleetList, \(fl) {
     purrr::map(fl, \(Fleet) {
-      Fleet@WeightFleet |> ArraySubsetYear(Years)
+      Fleet@WeightFleetRetained |> .ArraySubsetYear(Years)
     }) |>
       List2Array(pos = 4)
   })
-  
+
+  WeightFleetSelectedList <- purrr::map(FleetList, \(fl) {
+    purrr::map(fl, \(Fleet) {
+      Fleet@WeightFleetSelected |> .ArraySubsetYear(Years)
+    }) |>
+      List2Array(pos = 4)
+  })
+
   SelectivityFleetList <- purrr::map(FleetList, \(fl) {
-    purrr::map(fl, \(Fleet) Fleet@Selectivity@MeanAtAge |> ArraySubsetYear(Years)) |>
+    purrr::map(fl, \(Fleet) Fleet@Selectivity@MeanAtAge |> .ArraySubsetYear(Years)) |>
       List2Array(pos = 4) |>
-      CheckSpatial('Selectivity')
+      .CheckSpatial('Selectivity')
   })
   
   RetentionFleetList <- purrr::map(FleetList, \(fl) {
-    purrr::map(fl, \(Fleet) Fleet@Retention@MeanAtAge |> ArraySubsetYear(Years)) |>
+    purrr::map(fl, \(Fleet) Fleet@Retention@MeanAtAge |> .ArraySubsetYear(Years)) |>
       List2Array(pos = 4) |> 
-      CheckSpatial('Retention')
+      .CheckSpatial('Retention')
   }) 
   
   DiscardMortalityFleetList <- purrr::map(FleetList, \(fl) {
-    purrr::map(fl, \(Fleet) Fleet@DiscardMortality@MeanAtAge |> ArraySubsetYear(Years)) |>
+    purrr::map(fl, \(Fleet) Fleet@DiscardMortality@MeanAtAge |> .ArraySubsetYear(Years)) |>
       List2Array(pos = 4) |> 
-      CheckSpatial('DiscardMortality')
+      .CheckSpatial('DiscardMortality')
   }) 
   
   # SRR quantities needed for MSY recruitment scaling
   # For seasonal models, collapse to annual R0 and SPR0 for the equilibrium
-  # scaling
+  # scaling. R0 is extended to nSim_true for the same reason as above.
   R0SeasonalList <- purrr::map(StockList, \(Stock)
-    Stock@SRR@R0 |> ArraySubsetYear(Years)   # [Sim, Year(nSeason)]
+    Stock@SRR@R0 |> .ArraySubsetYear(Years) |> ExtendSims(nSim_true)   # [Sim, Year(nSeason)]
   )
 
   if (nSeason > 1L) {
@@ -995,14 +1064,14 @@ PrepPerRecruitInputs <- function(StockList, FleetList, SPR0List, Years) {
       for (cy in seq_len(nCalYears))
         R0_ann[, cy] <- rowSums(R0_mat[, ((cy-1)*nSeason + 1):(cy*nSeason), drop=FALSE])
       R0_ann
-    }) |> List2Array('Stock') |> aperm(c('Sim', 'Stock', 'Year'))
+    }) |> List2Array('Stock') |> .Aperm(c('Sim', 'Stock', 'Year'))
 
     RecParsList <- purrr::map2(StockList, SPR0List, \(Stock, SPR0) {
       sname <- Stock@Name
       nSim  <- dim(R0SeasonalList[[sname]])[1]
       pi_s  <- SeasonalWeightsList[[sname]]           # [Sim, nSeason*nCalYears]
       R0_mat  <- matrix(as.numeric(R0SeasonalList[[sname]]), nrow = nSim)
-      SPR0_mat <- matrix(as.numeric(SPR0 |> ArraySubsetYear(Years)), nrow = nSim)
+      SPR0_mat <- matrix(as.numeric(SPR0 |> .ArraySubsetYear(Years)), nrow = nSim)
       pi_mat  <- matrix(as.numeric(pi_s), nrow = nSim)
 
       # Per-calendar-year R0 and weighted-average SPR0
@@ -1019,7 +1088,7 @@ PrepPerRecruitInputs <- function(StockList, FleetList, SPR0List, Years) {
 
       Pars <- purrr::map(Stock@SRR@Pars, \(pars) {
         # SRR parameters (e.g. steepness) don't vary by season; take one per year
-        pars_s <- ArraySubsetYear(pars, Years)
+        pars_s <- .ArraySubsetYear(pars, Years)
         pars_s[, seq(1L, nSeason * nCalYears, by = nSeason), drop = FALSE]
       })
       Pars$R0   <- R0_cy
@@ -1029,12 +1098,12 @@ PrepPerRecruitInputs <- function(StockList, FleetList, SPR0List, Years) {
   } else {
     SeasonalWeightsList <- NULL
 
-    R0 <- R0SeasonalList |> List2Array('Stock') |> aperm(c('Sim', 'Stock', 'Year'))
+    R0 <- R0SeasonalList |> List2Array('Stock') |> .Aperm(c('Sim', 'Stock', 'Year'))
 
     RecParsList <- purrr::map2(StockList, SPR0List, \(Stock, SPR0) {
-      Pars      <- purrr::map(Stock@SRR@Pars, \(pars) ArraySubsetYear(pars, Years))
-      Pars$R0   <- ArraySubsetYear(Stock@SRR@R0, Years)
-      Pars$SPR0 <- ArraySubsetYear(SPR0, Years)
+      Pars      <- purrr::map(Stock@SRR@Pars, \(pars) .ArraySubsetYear(pars, Years))
+      Pars$R0   <- .ArraySubsetYear(Stock@SRR@R0, Years)
+      Pars$SPR0 <- .ArraySubsetYear(SPR0, Years)
       Pars
     })
   }
@@ -1067,7 +1136,8 @@ PrepPerRecruitInputs <- function(StockList, FleetList, SPR0List, Years) {
     SPFrom                    = SPFrom,
     SPR0List                  = SPR0List,
     StockFleetAllocation      = StockFleetAllocation,
-    WeightFleetList           = WeightFleetList,
+    WeightFleetRetainedList   = WeightFleetRetainedList,
+    WeightFleetSelectedList   = WeightFleetSelectedList,
     SelectivityFleetList      = SelectivityFleetList,
     RetentionFleetList        = RetentionFleetList,
     DiscardMortalityFleetList = DiscardMortalityFleetList,
@@ -1081,4 +1151,3 @@ PrepPerRecruitInputs <- function(StockList, FleetList, SPR0List, Years) {
     CalendarYears             = cal_years
   )
 }
-

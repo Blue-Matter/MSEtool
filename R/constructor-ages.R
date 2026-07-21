@@ -90,32 +90,7 @@
 #'
 #' @family ages
 #'
-#' @examples
-#' # Basic construction
-#' a <- Ages(MaxAge = 20)
-#' a
-#'
-#' # Seasonal model: quarterly age classes
-#' a_qtr <- Ages(MaxAge = 20, Units = "quarter")
-#' Classes(a_qtr)
-#'
-#' # No plus group
-#' a_exact <- Ages(MaxAge = 20, PlusGroup = FALSE)
-#'
-#' # Slot accessors
-#' MaxAge(a)
-#' MaxAge(a) <- 25
-#'
-#' MinAge(a)
-#' MinAge(a) <- 1
-#'
-#' PlusGroup(a)
-#' PlusGroup(a) <- FALSE
-#'
-#' # Pass-through access from a stock
-#' s <- Stock(Name = "Cod", Ages = Ages(MaxAge = 15))
-#' Ages(s)
-#' Ages(s) <- Ages(MaxAge = 20)
+#' @example man-examples/Ages.R
 #'
 #' @export
 Ages <- function(MaxAge,
@@ -126,8 +101,8 @@ Ages <- function(MaxAge,
   if (missing(MaxAge))
     MaxAge <- numeric()
   
-  if (isStockOrList(MaxAge)) 
-    return(ExtractStockSlot(MaxAge, 'Ages'))
+  if (.IsStockOrList(MaxAge)) 
+    return(.ExtractStockSlot(MaxAge, 'Ages'))
   
   if (is.null(MaxAge))
     return(NULL)
@@ -151,20 +126,20 @@ Ages <- function(MaxAge,
 #' @rdname Ages
 #' @export
 `Ages<-` <- function(x, value) {
-  AssignSlotRecursive(x, value, 'Ages')
+  .AssignSlotRecursive(x, value, 'Ages')
 }
 
 #' @rdname Ages
 #' @export
 MaxAge <- function(x) {
-  CheckClass(x, "ages", "Ages")
+  .CheckClass(x, "ages", "Ages")
   x@MaxAge
 }
 
 #' @rdname Ages
 #' @export
 `MaxAge<-` <- function(x, value) {
-  CheckClass(x, "ages", "Ages")
+  .CheckClass(x, "ages", "Ages")
   x@MaxAge <- value
   methods::validObject(x)
   x
@@ -173,14 +148,14 @@ MaxAge <- function(x) {
 #' @rdname Ages
 #' @export
 MinAge <- function(x) {
-  CheckClass(x, "ages", "Ages")
+  .CheckClass(x, "ages", "Ages")
   x@MinAge
 }
 
 #' @rdname Ages
 #' @export
 `MinAge<-` <- function(x, value) {
-  CheckClass(x, "ages", "Ages")
+  .CheckClass(x, "ages", "Ages")
   x@MinAge <- value
   methods::validObject(x)
   x
@@ -189,18 +164,16 @@ MinAge <- function(x) {
 #' @rdname Ages
 #' @export
 PlusGroup <- function(x) {
-  CheckClass(x, "ages", "Ages")
+  .CheckClass(x, "ages", "Ages")
   x@PlusGroup
 }
 
 #' @rdname Ages
 #' @export
 `PlusGroup<-` <- function(x, value) {
-  CheckClass(x, "ages", "Ages")
+  .CheckClass(x, "ages", "Ages")
   x@PlusGroup <- value
   methods::validObject(x)
   x
 }
-
-
 

@@ -8,7 +8,7 @@
 #' @param Pars `list`. Named list of maturity parameters. Element names must
 #'   match the arguments of a built-in maturity model (see [MaturityModels()]).
 #'   When `Pars` is non-empty and `Model` is `NULL`, the model is inferred
-#'   automatically by [FindModel()]. When `Pars` is a [stock-class] object,
+#'   automatically by `.FindModel()`. When `Pars` is a [stock-class] object,
 #'   `Maturity()` acts as a pass-through accessor and returns `x@Maturity`;
 #'   when `Pars` is a list of [stock-class] objects, `Model` is treated as an
 #'   integer index selecting which stock's `Maturity` slot to return — see
@@ -17,7 +17,7 @@
 #'   full set of accepted input formats. Default `list()`.
 #' @param Model `character(1)`, `function`, or `integer(1)`. Maturity model
 #'   identifier. When `NULL` (default), the model is inferred from `Pars` via
-#'   [FindModel()]. May be set to a character string naming a built-in model or
+#'   `.FindModel()`. May be set to a character string naming a built-in model or
 #'   to a custom R function. When `Pars` is a list of [stock-class] objects,
 #'   `Model` is an integer index — see *Pass-Through Access* and
 #'   [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html).
@@ -67,7 +67,7 @@
 #'
 #' **Model-based** (recommended): supply `Pars` with named parameters matching
 #' a built-in model (see [MaturityModels()]). If `Model = NULL` and the
-#' parameter names uniquely match a model, [FindModel()] resolves the model
+#' parameter names uniquely match a model, `.FindModel()` resolves the model
 #' automatically. The relevant `MeanAt*` array is then populated by
 #' [Populate()] when the stock is added to an [OM()]:
 #'
@@ -203,7 +203,7 @@
 #' - [maturity-class] for the class definition and slot-level documentation.
 #' - [MaturityModels()] for available maturity models and required parameter
 #'   sets.
-#' - [FindModel()] for automatic model inference.
+#' - `.FindModel()` for automatic model inference.
 #' - [Populate()] for array population.
 #' - [Stock()] for the enclosing stock constructor.
 #' - [Length()] for the companion length schedule, required when using
@@ -225,8 +225,8 @@ Maturity <- function(Pars = list(),
                      Semelparous = FALSE,
                      Misc = list()) {
   
-  if (isStockOrList(Pars)) 
-    return(ExtractStockSlot(Pars, "Maturity"))
+  if (.IsStockOrList(Pars)) 
+    return(.ExtractStockSlot(Pars, "Maturity"))
   
   if (is.null(Pars))
     return(NULL)
@@ -247,7 +247,7 @@ Maturity <- function(Pars = list(),
       !is.null(names(Pars)) &&
       all(!is.na(unlist(Pars))) &&
       is.null(Model)) {
-    object@Model <- FindModel(object)
+    object@Model <- .FindModel(object)
   }
   
   methods::validObject(object)
@@ -259,14 +259,14 @@ Maturity <- function(Pars = list(),
 #' @rdname Maturity
 #' @export
 Semelparous <- function(x) {
-  CheckClass(x, "maturity", "x")
+  .CheckClass(x, "maturity", "x")
   x@Semelparous
 }
 
 #' @rdname Maturity
 #' @export
 `Semelparous<-` <- function(x, value) {
-  CheckClass(x, "maturity", "x")
+  .CheckClass(x, "maturity", "x")
   x@Semelparous <- value
   methods::validObject(x)
   x
@@ -275,5 +275,5 @@ Semelparous <- function(x) {
 #' @rdname Maturity
 #' @export
 `Maturity<-` <- function(x, value) {
-  AssignSlotRecursive(x, value, 'Maturity')
+  .AssignSlotRecursive(x, value, 'Maturity')
 }

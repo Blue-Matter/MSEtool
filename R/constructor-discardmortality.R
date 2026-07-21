@@ -89,8 +89,7 @@
 #'
 #' @family fleet
 #'
-#' @examples
-#' # See man-examples/class-DiscardMortality.R
+#' @example man-examples/class-DiscardMortality.R
 #'
 #' @export
 DiscardMortality <- function(MeanAtAge    = NULL,
@@ -98,9 +97,12 @@ DiscardMortality <- function(MeanAtAge    = NULL,
                              Classes      = NULL,
                              Misc         = list()) {
   
-  if (isFleetOrList(MeanAtAge))
-    return(ExtractFleetSlot(MeanAtAge, 'DiscardMortality'))
-  
+  if (.IsFleetOrList(MeanAtAge))
+    return(.ExtractFleetSlot(MeanAtAge, 'DiscardMortality'))
+
+  if (inherits(MeanAtAge, 'advice'))
+    return(.AccessSlot(MeanAtAge, 'DiscardMortality'))
+
   methods::new(
     "discardmortality",
     MeanAtAge    = MeanAtAge,
@@ -114,6 +116,6 @@ DiscardMortality <- function(MeanAtAge    = NULL,
 #' @rdname DiscardMortality
 #' @export
 `DiscardMortality<-` <- function(x, value) {
-  AssignFleetSlot(x, value, 'DiscardMortality')
+  .AssignFleetSlot(x, value, 'DiscardMortality')
 }
   

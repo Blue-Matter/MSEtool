@@ -54,39 +54,39 @@ PopulateSpatial <- function(Spatial,
   
   Ages  <- DefaultAges(Ages)
   Years <- DefaultYears(Years)
-  nSim  <- Get_nSim(Spatial, nSim)
+  nSim  <- .GetNSim(Spatial, nSim)
   
   argList <- list(Ages, Years, nSim, seed)
   
-  if (CheckDigest(Spatial, argList)) 
+  if (.CheckDigest(Spatial, argList)) 
     return(Spatial)
   
-  SetSeed(seed)
+  .SetSeed(seed)
   
   if (EmptyObject(Spatial)) {
-    Spatial <- DefaultSpatial(Ages, Years)
-    return(SetDigest(Spatial, argList))
+    Spatial <- .DefaultSpatial(Ages, Years)
+    return(.SetDigest(Spatial, argList))
   }
   
   hasMovement <- !is.null(Spatial@Movement)
   
   if (hasMovement) {
     # Movement matrix supplied: validate + derive implied quantities
-    Spatial <- CheckMovementDimensions(Spatial, Ages, Years)
+    Spatial <- .CheckMovementDimensions(Spatial, Ages, Years)
     Spatial <- CalcUnfishedDist(Spatial, Ages, Years)
-    Spatial <- ProcessRelativeSize(Spatial, nSim)
+    Spatial <- .ProcessRelativeSize(Spatial, nSim)
     
-    return(SetDigest(Spatial, argList))
+    return(.SetDigest(Spatial, argList))
   }
   
 
   # Derive movement matrix from component processes
   Spatial <- Spatial |>
-    ProcessUnfishedDist(Ages, Years, nSim) |>
-    ProcessProbStaying(Ages, Years, nSim) |>
-    InitMovementMatrix(Ages, Years, nSim)
+    .ProcessUnfishedDist(Ages, Years, nSim) |>
+    .ProcessProbStaying(Ages, Years, nSim) |>
+    .InitMovementMatrix(Ages, Years, nSim)
   
-  Spatial <- CheckFracArea(Spatial, Ages, Years, nSim)
+  Spatial <- .CheckFracArea(Spatial, Ages, Years, nSim)
   
   Mov_dim <- dim(Spatial@Movement)
   dnames  <- dimnames(Spatial@Movement)
@@ -112,9 +112,9 @@ PopulateSpatial <- function(Spatial,
   }
 
   Spatial <- CalcUnfishedDist(Spatial, Ages, Years)
-  Spatial <- ProcessRelativeSize(Spatial, nSim)
+  Spatial <- .ProcessRelativeSize(Spatial, nSim)
   
-  SetDigest(SetAgeDimnames(Spatial, Ages), argList)
+  .SetDigest(.SetAgeDimnames(Spatial, Ages), argList)
 }
 
 
@@ -123,7 +123,7 @@ PopulateSpatial <- function(Spatial,
 
 
 # Non-spatial object - 1 area default
-DefaultSpatial <- function(Ages=NULL, Years=NULL) {
+.DefaultSpatial <- function(Ages=NULL, Years=NULL) {
   Ages <- DefaultAges(Ages)
   Years <- DefaultYears(Years)
   
@@ -158,7 +158,7 @@ DefaultSpatial <- function(Ages=NULL, Years=NULL) {
           Movement)
 }
 
-CheckMovementDimensions <- function(Spatial, Ages=NULL, Years=NULL) {
+.CheckMovementDimensions <- function(Spatial, Ages=NULL, Years=NULL) {
   Ages <- DefaultAges(Ages)
   Years <- DefaultYears(Years)
   
@@ -218,7 +218,7 @@ CheckMovementDimensions <- function(Spatial, Ages=NULL, Years=NULL) {
   Spatial
 }
 
-CheckUnfishedDist <- function(Spatial, Ages, Years, nSim) {
+.CheckUnfishedDist <- function(Spatial, Ages, Years, nSim) {
   dd <- dim(Spatial@UnfishedDist)
   
   # add dimensions and dimension names 
@@ -252,13 +252,13 @@ CheckUnfishedDist <- function(Spatial, Ages, Years, nSim) {
 
 
 
-ProcessUnfishedDist <- function(Spatial, 
+.ProcessUnfishedDist <- function(Spatial, 
                                 Ages=NULL, 
                                 Years=NULL, 
                                 nSim=5) {
   
   if (is.array(Spatial@UnfishedDist)) 
-    return(CheckUnfishedDist(Spatial, Ages, Years, nSim))
+    return(.CheckUnfishedDist(Spatial, Ages, Years, nSim))
 
   if (is.numeric(Spatial@UnfishedDist)) {
     # 2 Area Model
@@ -299,24 +299,24 @@ ProcessUnfishedDist <- function(Spatial,
       cli::cli_abort("If `UnfishedDist(Spatial)` is a numeric value, it must be length 1 or length 2")
     }
     
-    return(CheckUnfishedDist(Spatial, Ages, Years, nSim))
+    return(.CheckUnfishedDist(Spatial, Ages, Years, nSim))
   }
 }
 
-CheckProbStaying <- function(Spatial) {
+.CheckProbStaying <- function(Spatial) {
   if (is.null(Spatial@ProbStaying)) {
     cli::cli_abort('`ProbStaying` is not populated.')
   }
   
 }
 
-ProcessProbStaying <- function(Spatial, 
+.ProcessProbStaying <- function(Spatial, 
                                Ages=NULL, 
                                Years=NULL, 
                                nSim=5) {
   
   if (is.array(Spatial@ProbStaying)) {
-    CheckProbStaying(Spatial)
+    .CheckProbStaying(Spatial)
     return(Spatial)
   } 
   
@@ -363,12 +363,12 @@ ProcessProbStaying <- function(Spatial,
                                    ))
     }
   }
-  CheckProbStaying(Spatial)
+  .CheckProbStaying(Spatial)
   Spatial
 }
 
 
-InitMovementMatrix <- function(Spatial, Ages, Years, nSim) {
+.InitMovementMatrix <- function(Spatial, Ages, Years, nSim) {
   # Calculate minimum dimensions 
   nArea <- max(2, dim(Spatial@UnfishedDist)[2])
   
@@ -405,29 +405,11 @@ InitMovementMatrix <- function(Spatial, Ages, Years, nSim) {
                               Year=Years[1:nYear])
   )
   
-  CheckMovementDimensions(Spatial, Ages, Years)
+  .CheckMovementDimensions(Spatial, Ages, Years)
 }
 
-InitUnfishedDist <- function(Spatial, Ages, Years, nSim) {
-  dd <- dim(Spatial@Movement)
-  nSim_actual <- dd[1]
-  nArea <- dd[2]
-  nAge <- dd[4]
-  nYear <- dd[5]
-  
-  array(NA, dim=c(nSim_actual,
-                  nArea,
-                  nAge,
-                  nYear),
-        dimnames = list(
-          Sim=1:nSim_actual,
-          Area=1:nArea,
-          Age=Ages@Classes[1:nAge],
-          Year=Years[1:nYear])
-  )
-}
 
-ProcessRelativeSize <- function(Spatial, nSim) {
+.ProcessRelativeSize <- function(Spatial, nSim) {
   
   nArea <- dim(Spatial@UnfishedDist)[2]
   
@@ -447,13 +429,13 @@ ProcessRelativeSize <- function(Spatial, nSim) {
       cli::cli_abort('If `Spatial@RelativeSize` is character, it can only be "EqualDensity"')
     } 
     Spatial@RelativeSize <- apply(Spatial@UnfishedDist, c('Sim', 'Area'), mean)   
-    CheckRelativeSize(Spatial)
+    .CheckRelativeSize(Spatial)
     return(Spatial)
   }
   
   
   if (is.array(Spatial@RelativeSize)) {
-    CheckRelativeSize(Spatial)
+    .CheckRelativeSize(Spatial)
     return(Spatial)
   } 
   
@@ -494,12 +476,12 @@ ProcessRelativeSize <- function(Spatial, nSim) {
                                     ))
     }
     
-    CheckRelativeSize(Spatial)
+    .CheckRelativeSize(Spatial)
     return(Spatial)
   }
 }
 
-CheckRelativeSize <- function(Spatial) {
+.CheckRelativeSize <- function(Spatial) {
   nArea <- dim(Spatial@UnfishedDist)[2]
   
   dd <- dim(Spatial@RelativeSize)
@@ -517,7 +499,7 @@ CheckRelativeSize <- function(Spatial) {
   }
 }
 
-CheckFracArea <- function(Spatial, Ages, Years, nSim) {
+.CheckFracArea <- function(Spatial, Ages, Years, nSim) {
   nArea <- dim(Spatial@Movement)[2]
   if (nArea <3) {
     return(Spatial)
@@ -571,5 +553,3 @@ CheckFracArea <- function(Spatial, Ages, Years, nSim) {
   } 
   Spatial
 }
-
-

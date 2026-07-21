@@ -9,7 +9,7 @@
 #'   [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for
 #'   accepted input formats.
 #' @slot Model `function` or `character(1)`. Growth model identifier, matched
-#'   to one of [LengthModels()]. Set automatically by [FindModel()] when `Pars`
+#'   to one of [LengthModels()]. Set automatically by `.FindModel()` when `Pars`
 #'   is supplied without an explicit model.
 #' @slot Units `character(1)`. Physical unit of the length measurements (e.g.,
 #'   `"mm"`, `"cm"`). Must be accepted by [ValidUnits()].
@@ -47,7 +47,7 @@
 #'  - [LengthModels()] for available growth models and their required #'   parameters. 
 #'  - [ValidUnits()] for accepted unit strings. 
 #'  - [Populate()] for array population. 
-#'  - [FindModel()] for automatic model inference.
+#'  - `.FindModel()` for automatic model inference.
 #'   -  [ALK()] to retrieve the age-length key.
 #'   [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for the
 #'   full description of how `Pars`, `Model`, and `MeanAtAge` interact.
@@ -75,7 +75,7 @@ setClass(
 )
 
 setValidity("length", function(object) {
-  # TODO
+  chk <- tryCatch(.CheckPars(object@Pars), error=function(e) e)
+  if (inherits(chk, "error")) return(conditionMessage(chk))
   TRUE
 })
-

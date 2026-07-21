@@ -65,7 +65,7 @@
 #'   `maxEffort` (or `MaxFleetEffort[fl]` if lower).
 #'
 #' @keywords internal
-OptEffort_singlestock <- function(Proj,
+.OptEffortSinglestock <- function(Proj,
                                   Year,
                                   TSIndex,
                                   sim,
@@ -117,13 +117,12 @@ OptEffort_singlestock <- function(Proj,
   if (length(pos_idx) == 0L)
     return(Effort_curr)
   
-  # ---- Single active fleet ----
   if (length(pos_idx) == 1L) {
     fl  <- pos_idx[1L]
     tac <- BindingTAC[fl]
     
     catch_fl <- function(log_scale) {
-      OptSingleFleetCatch(log_scale, Effort_base, Proj, sim, TSIndex,
+      .OptSingleFleetCatch(log_scale, Effort_base, Proj, sim, TSIndex,
                           Year, TACType_by_Complex, TACUnit_by_Complex, fl)
     }
     
@@ -165,14 +164,13 @@ OptEffort_singlestock <- function(Proj,
     return(Effort_curr)
   }
   
-  # ---- Multiple active fleets: Newton-Raphson ----
   
   clamp_effort <- function(e) pmin(pmax(e, minEffort), maxEffort)
   clamp_step   <- function(s) pmax(pmin(s, max_log_step), -max_log_step)
   
   residual_fn <- function(Effort_vec) {
-    Proj     <- WriteStateToProj(Proj, sim, TSIndex, Effort = Effort_vec)
-    CatchMat <- CalcFleetCatch(Proj, sim, TSIndex, Year, TACType_by_Complex,
+    Proj     <- .WriteStateToProj(Proj, sim, TSIndex, Effort = Effort_vec)
+    CatchMat <- .CalcFleetCatch(Proj, sim, TSIndex, Year, TACType_by_Complex,
                                TACUnit_by_Complex)[1, ]
     (BindingTAC - CatchMat)[pos_idx]
   }
@@ -223,7 +221,9 @@ OptEffort_singlestock <- function(Proj,
     
     J_diag    <- (residual - residual_pert) / deltaF
     flat_grad <- active & (abs(J_diag) < 1e-6) & (abs(residual) > tol)
-    J_diag[abs(J_diag) < 1e-8] <- 1e-8
+    tiny      <- abs(J_diag) < 1e-8
+    J_diag[tiny] <- sign(J_diag[tiny]) * 1e-8
+    J_diag[J_diag == 0] <- 1e-8
     
     log_step <- clamp_step(residual[active] / (J_diag[active] * Effort_curr[pos_idx[active]]))
     Eff_diag <- clamp_effort(Effort_curr[pos_idx[active]] * exp(log_step))
@@ -280,7 +280,6 @@ OptEffort_singlestock <- function(Proj,
     }
   }
   
-  # ---- BFGS fallback ----
   if (!converged && !saturated_flag) {
     obj_bfgs <- function(log_scale_vec) {
       log_scale_vec     <- clamp_step(log_scale_vec)

@@ -1,5 +1,17 @@
 
-WriteStateToProj <- function(Proj, sim, TSIndex, Effort, Delta = NULL) {
+# Applies a per-fleet effort ceiling (NA = no ceiling) to an Effort vector -
+# lets a fleet be governed by both TAC and Effort advice at once, with
+# Effort acting as the binding constraint whenever it is more restrictive
+# than what TAC-solving would otherwise choose. See .UpdateTACSim().
+.ApplyEffortCeiling <- function(Effort, MaxFleetEffort) {
+  if (is.null(MaxFleetEffort)) return(Effort)
+  has_ceiling <- !is.na(MaxFleetEffort)
+  if (any(has_ceiling))
+    Effort[has_ceiling] <- pmin(Effort[has_ceiling], MaxFleetEffort[has_ceiling])
+  Effort
+}
+
+.WriteStateToProj <- function(Proj, sim, TSIndex, Effort, Delta = NULL) {
   Proj@Effort[sim, TSIndex, ] <- Effort
   
   if (!is.null(Delta))
@@ -8,22 +20,22 @@ WriteStateToProj <- function(Proj, sim, TSIndex, Effort, Delta = NULL) {
 }
 
 
-OptSingleFleetCatch <- function(log_scale, Effort_base, Proj, sim, TSIndex,
+.OptSingleFleetCatch <- function(log_scale, Effort_base, Proj, sim, TSIndex,
                                 Year, TACType_by_Complex, TACUnit_by_Complex,
                                 fl) {
   Eff <- Effort_base
   Eff[fl] <- Effort_base[fl] * exp(log_scale)
-  Proj <- WriteStateToProj(Proj, sim, TSIndex, Effort = Eff)
-  CalcFleetCatch(Proj, sim, TSIndex, Year, TACType_by_Complex,
+  Proj <- .WriteStateToProj(Proj, sim, TSIndex, Effort = Eff)
+  .CalcFleetCatch(Proj, sim, TSIndex, Year, TACType_by_Complex,
                  TACUnit_by_Complex)[1,fl]
 }
 
 
-CalcFleetCatch <- function(Proj, sim, TSIndex, Year, 
+.CalcFleetCatch <- function(Proj, sim, TSIndex, Year, 
                            TACType_by_Complex,
                            TACUnit_by_Complex ) {
   
-  Temp <- CalcFisheryDynamics(Proj, 
+  Temp <- .CalcFisheryDynamics(Proj, 
                            Years=Year, 
                            Sims = sim, 
                            DoCalcSpawnProduction = 1,
@@ -32,11 +44,11 @@ CalcFleetCatch <- function(Proj, sim, TSIndex, Year,
                            DoCalcBiomass = 0,
                            DoCalcOverallF = 0)
   
-  CatchMatrix(Temp, sim, TSIndex, TACType_by_Complex, TACUnit_by_Complex)
+  .CatchMatrix(Temp, sim, TSIndex, TACType_by_Complex, TACUnit_by_Complex)
 }
 
 
-CatchMatrix <- function(Temp, sim, TSIndex, TACType_by_Complex, TACUnit_by_Complex) {
+.CatchMatrix <- function(Temp, sim, TSIndex, TACType_by_Complex, TACUnit_by_Complex) {
   
   Complexes <- Temp@OM@Complexes
   nComplex  <- length(Complexes)
@@ -78,7 +90,7 @@ CatchMatrix <- function(Temp, sim, TSIndex, TACType_by_Complex, TACUnit_by_Compl
   mat
 }
 
-GetActiveStocks <- function(Proj, sim, TSIndex, StockNames, FleetNames, 
+.GetActiveStocks <- function(Proj, sim, TSIndex, StockNames, FleetNames, 
                             n_recent = 5, tol = 1E-6) {
 
   nStock <- length(StockNames)
@@ -88,9 +100,9 @@ GetActiveStocks <- function(Proj, sim, TSIndex, StockNames, FleetNames,
   
   
   recent_idx <- seq(max(1L, TSIndex - n_recent), TSIndex - 1)
-  
+
   for (fl in seq_len(nFleet)) {
-    recent_mat <- Proj@OM@StockTargeting@Targeting[sim, ,fl, recent_idx, drop = FALSE] 
+    recent_mat <- Proj@Misc$StockTargeting[sim, ,fl, recent_idx, drop = FALSE]
     active[fl, ] <- apply(recent_mat, 2,
                           function(x) any(is.finite(x) & x > tol))
   }
@@ -98,7 +110,7 @@ GetActiveStocks <- function(Proj, sim, TSIndex, StockNames, FleetNames,
   active
 }
 
-GetLogDeltaPrev <- function(Delta_prev, active_stock) {
+.GetLogDeltaPrev <- function(Delta_prev, active_stock) {
 
   ld <- matrix(0, nrow(Delta_prev), ncol(Delta_prev))
   
@@ -111,7 +123,7 @@ GetLogDeltaPrev <- function(Delta_prev, active_stock) {
   ld
 }
 
-FleetHasTAC <- function(nFleet, nComplex, TAC_by_Complex) {
+.FleetHasTAC <- function(nFleet, nComplex, TAC_by_Complex) {
   vapply(seq_len(nFleet), function(fl) {
     any(vapply(seq_len(nComplex), function(i) {
       tac_vec <- TAC_by_Complex[[i]]
@@ -122,7 +134,7 @@ FleetHasTAC <- function(nFleet, nComplex, TAC_by_Complex) {
 }
 
 
-PackParams <- function(Effort, 
+.PackParams <- function(Effort, 
                        Delta, 
                        active_fleets, 
                        active_stock_list,
@@ -147,28 +159,29 @@ PackParams <- function(Effort,
 
 }
 
-UnpackParams <- function(params, 
-                         active_fleets, 
+.UnpackParams <- function(params,
+                         active_fleets,
                          active_stock_list,
-                         Effort_prev, 
-                         nFleet, 
+                         Effort_prev,
+                         nFleet,
                          nStock,
                          fixed_logeff = NULL,
-                         minEffort = 1e-8) {
-  
+                         minEffort = 1e-8,
+                         MaxFleetEffort = NULL) {
+
   Effort <- Effort_prev
   Delta  <- matrix(0, nFleet, nStock)
   pos    <- 1L
-  
+
   for (k in seq_along(active_fleets)) {
     fl       <- active_fleets[k]
     active_s <- active_stock_list[[k]]
     nA       <- length(active_s)
     if (nA == 0L) next
-    
+
     fixed     <- fixed_logeff[[as.character(fl)]]
     log_eff_s <- numeric(nA)
-    
+
     for (j in seq_len(nA)) {
       s <- active_s[j]
       if (!is.null(fixed) && !is.na(fixed[s])) {
@@ -178,22 +191,24 @@ UnpackParams <- function(params,
         pos <- pos + 1L
       }
     }
-    
+
     log_E_f     <- mean(log_eff_s)
     log_delta_s <- log_eff_s - log_E_f
     E_f         <- exp(log_E_f)
     delta_s     <- exp(log_delta_s)
-    
+
     Effort[fl]          <- max(E_f, minEffort)
     Delta[fl, active_s] <- delta_s
   }
-  
+
+  Effort <- .ApplyEffortCeiling(Effort, MaxFleetEffort)
+
   list(Effort = Effort, Delta = Delta)
-  
-  
+
+
 }
 
-OptEffort_ms_objective <- function(
+.OptEffortMsObjective <- function(
     params, 
     Proj, 
     sim, 
@@ -213,26 +228,28 @@ OptEffort_ms_objective <- function(
     active_fleets,
     active_stock_list,
     minEffort = 1e-8,
-    fixed_logeff = NULL
+    fixed_logeff = NULL,
+    MaxFleetEffort = NULL
     ) {
-  
-  
+
+
   nComplex <- length(Complexes)
-  
+
   # TAC miss penalty (proportional squared deviations)
   # plus ridge penalty on year-to-year log_delta change.
-  state <- UnpackParams(params, 
-                        active_fleets, 
+  state <- .UnpackParams(params,
+                        active_fleets,
                         active_stock_list,
-                        Effort_prev, 
+                        Effort_prev,
                         nFleet,
                         nStock,
-                        fixed_logeff, 
-                        minEffort)
+                        fixed_logeff,
+                        minEffort,
+                        MaxFleetEffort)
   
-  ProjTmp <- WriteStateToProj(Proj, sim, TSIndex, state$Effort, state$Delta)
+  ProjTmp <- .WriteStateToProj(Proj, sim, TSIndex, state$Effort, state$Delta)
   
-  Temp    <- CalcFisheryDynamics(Hist = ProjTmp, 
+  Temp    <- .CalcFisheryDynamics(Hist = ProjTmp, 
                                  Years = Year,
                                  Sims = sim,
                                  DoCalcSpawnProduction = 1,
@@ -240,7 +257,7 @@ OptEffort_ms_objective <- function(
                                  DoCalcNumberNext = 0,
                                  DoCalcBiomass = 0,
                                  DoCalcOverallF = 0)
-  cm <- CatchMatrix(Temp, sim, TSIndex, TACType_by_Complex, TACUnit_by_Complex)
+  cm <- .CatchMatrix(Temp, sim, TSIndex, TACType_by_Complex, TACUnit_by_Complex)
   
   # TAC penalty: sum of squared proportional deviations across all relevant
   # complexes for each fleet
@@ -300,7 +317,7 @@ OptEffort_ms_objective <- function(
 }
 
 
-OptEffort_ms_Solver <- function(obj_fn, params_init, maxEval, tol) {
+.OptEffortMsSolver <- function(obj_fn, params_init, maxEval, tol) {
     opt <- tryCatch(
     optim(params_init, obj_fn, method = "BFGS",
           control = list(maxit  = maxEval,
@@ -326,4 +343,3 @@ OptEffort_ms_Solver <- function(obj_fn, params_init, maxEval, tol) {
   }
   list(params = opt$par, converged = converged)
 }
-

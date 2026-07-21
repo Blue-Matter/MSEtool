@@ -30,7 +30,7 @@
 #'   historical index values and CVs
 #'
 #' @keywords internal
-GenHistData_Indices <- function(sim, Data, Hist, HistYears, i, stocks, StockNames, 
+.GenHistDataIndices <- function(sim, Data, Hist, HistYears, i, stocks, StockNames, 
                                 nArea,
                                 defaultCV = 0.2,
                                 type = c('CPUE', 'Survey')) {
@@ -104,7 +104,7 @@ GenHistData_Indices <- function(sim, Data, Hist, HistYears, i, stocks, StockName
           dd <- dim(mat)
           mat_x <- min(dd[1], sim)
           maturity_at_age <-  mat[mat_x,,, drop=FALSE] |>
-            ArraySubsetYear(HistYears) |>
+            .ArraySubsetYear(HistYears) |>
             abind::adrop(1) |>
             AddDimension('Area') |>
             ExtendAreas(Areas=1:nArea)
@@ -114,7 +114,7 @@ GenHistData_Indices <- function(sim, Data, Hist, HistYears, i, stocks, StockName
       } else if (SelectivityAtAge == 'Obs') {
         # SelectivityAtAgeList <- IndexObs@Selectivity
         SelectivityAtAgeList <- purrr::map(IndexObs@Selectivity, \(stock) {
-          stock <- ArraySubsetYear(stock, HistYears) 
+          stock <- .ArraySubsetYear(stock, HistYears) 
           stock[sim,,, drop=FALSE] |>
             AddDimension('Area') |>
             DropDimension(c('Sim', 'Year')) |>
@@ -126,7 +126,7 @@ GenHistData_Indices <- function(sim, Data, Hist, HistYears, i, stocks, StockName
         dd <- dim(  fleet_list[[FleetNames[fl]]]@Selectivity@MeanAtAge)
         sel_x <- min(dd[1], sim)
         fleet_list[[FleetNames[fl]]]@Selectivity@MeanAtAge[sel_x,,,,drop=FALSE] |>
-          ArraySubsetYear(HistYears) |>
+          .ArraySubsetYear(HistYears) |>
           abind::adrop(1)
       }) 
     }
@@ -138,7 +138,7 @@ GenHistData_Indices <- function(sim, Data, Hist, HistYears, i, stocks, StockName
       IndexObs@Areas <- 1:nArea
     
     Real_Pop_Number_Selected <- purrr::map2(Real_Pop_Number, SelectivityAtAgeList, \(num, sel) {
-      n <- num[sim,,, IndexObs@Areas,drop=FALSE] |> ArraySubsetYear(HistYears) |> abind::adrop(1)
+      n <- num[sim,,, IndexObs@Areas,drop=FALSE] |> .ArraySubsetYear(HistYears) |> abind::adrop(1)
       s <- sel[,,IndexObs@Areas,drop=FALSE]
       ArrayMultiply(n, sel) |> SumOverArea()
     })
@@ -154,7 +154,7 @@ GenHistData_Indices <- function(sim, Data, Hist, HistYears, i, stocks, StockName
         dd <- dim(wght)
         wght_x <- min(dd[1], sim)
         wght[wght_x,,, drop=FALSE] |>
-          ArraySubsetYear(HistYears) |>
+          .ArraySubsetYear(HistYears) |>
         abind::adrop(1)
       })
       real_nom_index <- purrr::map2(Real_Pop_Number_Selected, WeightAtAgeList, ArrayMultiply) |>
@@ -165,7 +165,7 @@ GenHistData_Indices <- function(sim, Data, Hist, HistYears, i, stocks, StockName
     } else if (Units == "Recruitment") {
       
       real_nom_index <- purrr::map(Real_Pop_Number_Selected,\(pop_n) {
-        ArraySubsetYear(pop_n, HistYears)[1, ,drop=FALSE] |>
+        .ArraySubsetYear(pop_n, HistYears)[1, ,drop=FALSE] |>
           abind::adrop(1)
       }) |>
         List2Array('Stock', 'Year') 
@@ -178,7 +178,7 @@ GenHistData_Indices <- function(sim, Data, Hist, HistYears, i, stocks, StockName
     
     
     # add error 
-    SimulatedIndexError <- real_nom_index *  ArraySubsetYear(IndexObs@Error, HistYears)[sim,]
+    SimulatedIndexError <- real_nom_index *  .ArraySubsetYear(IndexObs@Error, HistYears)[sim,]
     # mean 1
     StIndex <- SimulatedIndexError/mean(SimulatedIndexError, na.rm=TRUE)
     Value[,fl] <- StIndex

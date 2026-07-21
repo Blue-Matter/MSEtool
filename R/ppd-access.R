@@ -18,14 +18,14 @@
 #'
 #' @export
 PPD <- function(MSE) {
-  CheckClass(MSE, 'mse', 'MSE')
+  .CheckClass(MSE, 'mse', 'MSE')
   
   if (length(MSE@PPD)<2)
     return(MSE@PPD)
   
   # Get historical data (only stored in first MP)
   HistYears <- Years(MSE,'H')
-  HistData <- SubsetYear(MSE@PPD[[1]], Years=HistYears)
+  HistData <- .SubsetYear(MSE@PPD[[1]], Years=HistYears)
   
   ProjDataList <- MSE@PPD[-1]
   ppd_2 <- purrr::map(ProjDataList, \(ProjData) JoinYear(HistData, ProjData))

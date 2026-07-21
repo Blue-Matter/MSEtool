@@ -30,6 +30,12 @@
 #'   \eqn{C^{\text{bag}}_f(t) = B_f \cdot A_f(t) \cdot T_f(t)}, where
 #'   \eqn{B_f} is the bag limit (fish per angler per trip) and \eqn{T_f(t)}
 #'   is the number of trips. See [Effort()].
+#' @slot Theta `numeric` array or `NULL`. Overdispersion parameter
+#'   \eqn{\theta} of the negative binomial within-trip catch distribution
+#'   (`Sim x Year`). The `Year` dimension may be length 1 (replicated
+#'   internally) or span the full model time series. Used by bag-limit
+#'   management procedures to model the distribution of retained catch
+#'   across trips at a given mean catch rate. See [Effort()].
 #' @slot Misc `list`. Miscellaneous additional inputs.
 #'
 #' @seealso [Effort()] for the constructor and full parameter documentation.
@@ -50,6 +56,7 @@ setClass(
     Mode           = "char.null",
     TripsScalar    = "num.array.null",
     AnglerPerTrip  = "num.array.null",
+    Theta          = "num.array.null",
     Misc           = "list"
   )
 )

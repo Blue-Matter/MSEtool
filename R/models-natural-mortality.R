@@ -67,9 +67,8 @@ class(LorenzenMortalityWeight) <- 'NaturalMortality-at-Weight-Model'
 #' @rdname NaturalMortality-Models
 #' @export
 NaturalMortalityModels <- function(full=TRUE, print=TRUE) {
-  ReturnModels(ModelClass=c('NaturalMortality-at-Age-Model',
+  .ReturnModels(ModelClass=c('NaturalMortality-at-Age-Model',
                             'NaturalMortality-at-Length-Model',
                             'NaturalMortality-at-Weight-Model'),
                full, print)
 }
-

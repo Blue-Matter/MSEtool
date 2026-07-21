@@ -10,7 +10,7 @@
 #' @examples
 #' SingleStockOM <- CheckOM(SingleStockOM)
 CheckOM <- function(OM, msg=TRUE, stop_if_missing=TRUE) {
-  CheckClass(OM, c('OM', 'om'))
+  .CheckClass(OM, c('OM', 'om'))
   
   if (inherits(OM, 'OM'))
     return(
@@ -20,12 +20,12 @@ CheckOM <- function(OM, msg=TRUE, stop_if_missing=TRUE) {
   OM <- UpdateObject(OM)
   
   # Stock 
-  MissingStock <- CheckStock(Stock=OM@Stock)
+  MissingStock <- .CheckStock(Stock=OM@Stock)
   if (!length(MissingStock))
     MissingStock <- NULL
   
   # Fleet 
-  MissingFleet <- CheckFleet(OM@Fleet)
+  MissingFleet <- .CheckFleet(OM@Fleet)
   if (!length(MissingFleet))
     MissingFleet <- NULL
   
@@ -33,7 +33,7 @@ CheckOM <- function(OM, msg=TRUE, stop_if_missing=TRUE) {
        MissingFleet = MissingFleet)
 }
 
-CheckStock <- function(Stock) {
+.CheckStock <- function(Stock) {
   if (is.null(Stock))
     return('None Specified')
   
@@ -65,7 +65,7 @@ CheckStock <- function(Stock) {
   dplyr::filter(df, Missing==TRUE) |> dplyr::pull(Slot)
 }
 
-CheckFleet <- function(Fleet) {
+.CheckFleet <- function(Fleet) {
   if (is.null(Fleet))
     return('None Specified')
   
@@ -106,4 +106,3 @@ CheckFleet <- function(Fleet) {
   }
   dplyr::filter(df, Missing==TRUE) |> dplyr::pull(Slot)
 }
-

@@ -53,7 +53,7 @@ PopulateSRR <- function(SRR,
   
   Ages  <- DefaultAges(Ages)
   Years <- DefaultYears(Years)
-  nSim  <- Get_nSim(SRR, nSim)
+  nSim  <- .GetNSim(SRR, nSim)
   
   
   if (is.null(CurrentYear)) 
@@ -86,14 +86,14 @@ PopulateSRR <- function(SRR,
   nHistTS <- length(HistTS)
   nProjTS <- length(ProjTS)
   
-  if ((CheckDigest(SRR, argList) && !force) | EmptyObject(SRR)) 
+  if ((.CheckDigest(SRR, argList) && !force) | EmptyObject(SRR)) 
     return(SRR)
   
-  SetSeed(seed)
+  .SetSeed(seed)
   
   # TODO - should add some checks here to make sure parameters/model are ok
-  SRR@Pars  <- StructurePars(Pars = SRR@Pars, nSim, Years)
-  SRR@Model <- FindModel(SRR)
+  SRR@Pars  <- .StructurePars(Pars = SRR@Pars, nSim, Years)
+  SRR@Model <- .FindModel(SRR)
   
   # Load the Relative Recruitment function
   if (is.character(SRR@Model) && is.null(SRR@RelRecFun)) 
@@ -103,10 +103,10 @@ PopulateSRR <- function(SRR,
   names <- c('R0', 'SD', 'AC')
   defaults <- c(1000, 0.4, 0)
   for (i in seq_along(names)) 
-    SRR <- CheckSRRPars(SRR, names[i], defaults[i])
+    SRR <- .CheckSRRPars(SRR, names[i], defaults[i])
   
 
-  pars   <- StructurePars(Pars = list(SRR@R0, SRR@SD, SRR@AC), nSim, Years)
+  pars   <- .StructurePars(Pars = list(SRR@R0, SRR@SD, SRR@AC), nSim, Years)
   SRR@R0 <- pars[[1]] 
   SRR@SD <- pars[[2]][, 1, drop = FALSE] # only one time step for now
   SRR@AC <- pars[[3]][, 1, drop = FALSE] # only one time step for now
@@ -137,7 +137,7 @@ PopulateSRR <- function(SRR,
       Sim = 1:dd[1],
       Year = ProjTS
     )
-    return(SetDigest(SRR, argList))
+    return(.SetDigest(SRR, argList))
   }
   
   RecDeviations <- GenRecDevs(
@@ -170,10 +170,10 @@ PopulateSRR <- function(SRR,
     Sim = 1:nrow(SRR@RecDevProj),
     Year = ProjTS
   )
-  SetDigest(SRR, argList)
+  .SetDigest(SRR, argList)
 }
 
-CheckSRRPars <- function(SRR, name='R0', default=1000) {
+.CheckSRRPars <- function(SRR, name='R0', default=1000) {
   val <- slot(SRR, name)
   if (is.null(val)) {
     if (name !='AC') {

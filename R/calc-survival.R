@@ -1,4 +1,4 @@
-# TODO - use IsIdenticalSim and IdenticalYears to speed up if identical over sims and/or years
+# TODO - use IsIdenticalSim and .IdenticalYears to speed up if identical over sims and/or years
 
 #' Calculate Cumulative Survival-at-Age
 #'
@@ -51,9 +51,9 @@ CalcSurvival <- function(NaturalMortality,
   bySim <- length(d) == 3L
   if (!bySim) {
     NaturalMortality <- AddDimension(NaturalMortality, 'Sim') |>
-      aperm(c('Sim', 'Age', 'Year'))
+      .Aperm(c('Sim', 'Age', 'Year'))
     FishingMortality <- AddDimension(FishingMortality, 'Sim') |>
-      aperm(c('Sim', 'Age', 'Year'))
+      .Aperm(c('Sim', 'Age', 'Year'))
   }
   
   d     <- dim(NaturalMortality)
@@ -61,11 +61,11 @@ CalcSurvival <- function(NaturalMortality,
   nAge  <- d[2]
   nYear <- d[3]
   
-  Semelparous <- ProcessSemelparous(Semelparous, nSim, AgeClasses, Years) |>
-    SubsetYear(Years)
+  Semelparous <- .ProcessSemelparous(Semelparous, nSim, AgeClasses, Years) |>
+    .SubsetYear(Years)
   if (!bySim)
     Semelparous <- AddDimension(Semelparous, 'Sim') |>
-    aperm(c('Sim', 'Age', 'Year'))
+    .Aperm(c('Sim', 'Age', 'Year'))
   
   if (length(SpawnTimeFrac) != nSim)
     SpawnTimeFrac <- rep(SpawnTimeFrac, nSim)[seq_len(nSim)]
@@ -112,7 +112,7 @@ CalcSurvival <- function(NaturalMortality,
 #' @return A numeric array with dimensions `Sim × Age × Year` and named
 #'   dimnames.
 #' @keywords internal
-ProcessSemelparous <- function(Semelparous, nSim=NULL, AgeClasses=NULL, Years=NULL) {
+.ProcessSemelparous <- function(Semelparous, nSim=NULL, AgeClasses=NULL, Years=NULL) {
   if (inherits(Semelparous, 'logical')) {
     Semelparous <- array(
       0,
@@ -122,4 +122,3 @@ ProcessSemelparous <- function(Semelparous, nSim=NULL, AgeClasses=NULL, Years=NU
   }
   Semelparous |> Extend(nSim = nSim, AgeClasses = AgeClasses, Years = Years)
 }
-

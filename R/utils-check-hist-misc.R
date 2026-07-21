@@ -1,4 +1,4 @@
-CheckHistMisc <- function(Hist, Period = c('Historical', 'Projection')) {
+.CheckHistMisc <- function(Hist, Period = c('Historical', 'Projection')) {
   Period <- match.arg(Period)
   
   nSim   <- nSim(Hist)
@@ -27,8 +27,8 @@ CheckHistMisc <- function(Hist, Period = c('Historical', 'Projection')) {
     .err$msgs <- character(0)
     bullets <- stats::setNames(msg, rep("x", length(msg)))
     cli::cli_abort(
-      c(if (nzchar(where)) paste0("CheckHistMisc failed [", where, "]") else
-        "CheckHistMisc failed", bullets),
+      c(if (nzchar(where)) paste0(".CheckHistMisc failed [", where, "]") else
+        ".CheckHistMisc failed", bullets),
       .internal = TRUE
     )
   }
@@ -121,7 +121,7 @@ CheckHistMisc <- function(Hist, Period = c('Historical', 'Projection')) {
     "SP0", "R0", "RecDist",
     "Catchability", "Closure", "Spatial_Targeting",
     "StockTargeting", "StockTargetingFlag",
-    "WeightFleetList", "SelAgeList", "RetAgeList", "DiscMortList")
+    "WeightFleetRetainedList", "WeightFleetSelectedList", "SelAgeList", "RetAgeList", "DiscMortList")
   
     # "SelSizeList", "RetSizeList", "DiscMortSizeList"
   
@@ -361,11 +361,19 @@ CheckHistMisc <- function(Hist, Period = c('Historical', 'Projection')) {
   
   # fleet lists
   
-  # WeightFleetList: list[nStock] of 4D (sim, age, year, fleet)
-  check_stock_list(Misc$WeightFleetList, "Hist@Misc$WeightFleetList",
+  # WeightFleetRetainedList / WeightFleetSelectedList: list[nStock] of 4D (sim, age, year, fleet)
+  check_stock_list(Misc$WeightFleetRetainedList, "Hist@Misc$WeightFleetRetainedList",
                    function(arr, st) {
                      nages <- nAge(Hist@OM@Stock[[st]])
-                     nm    <- paste0("Hist@Misc$WeightFleetList[[", st, "]]")
+                     nm    <- paste0("Hist@Misc$WeightFleetRetainedList[[", st, "]]")
+                     check_array(arr, nm, c(nSim, nages, nyears, nFleet), Years)
+                     check_values(arr, nm, allow_neg = FALSE)
+                   })
+
+  check_stock_list(Misc$WeightFleetSelectedList, "Hist@Misc$WeightFleetSelectedList",
+                   function(arr, st) {
+                     nages <- nAge(Hist@OM@Stock[[st]])
+                     nm    <- paste0("Hist@Misc$WeightFleetSelectedList[[", st, "]]")
                      check_array(arr, nm, c(nSim, nages, nyears, nFleet), Years)
                      check_values(arr, nm, allow_neg = FALSE)
                    })
@@ -545,7 +553,8 @@ CheckHistMisc <- function(Hist, Period = c('Historical', 'Projection')) {
       MaturityList         = Misc$MaturityList[[st]],
       SemelparousList      = Misc$SemelparousList[[st]],
       FecundityList        = Misc$FecundityList[[st]],
-      WeightFleetList      = Misc$WeightFleetList[[st]],
+      WeightFleetRetainedList = Misc$WeightFleetRetainedList[[st]],
+      WeightFleetSelectedList = Misc$WeightFleetSelectedList[[st]],
       SelAgeList           = Misc$SelAgeList[[st]],
       RetAgeList           = Misc$RetAgeList[[st]],
       DiscMortList         = Misc$DiscMortList[[st]]

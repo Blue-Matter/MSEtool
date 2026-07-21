@@ -1,16 +1,16 @@
-resolveFleetNames <- function(DataSlot) {
+.ResolveFleetNames <- function(DataSlot) {
   if (!is.null(DataSlot@Name)) return(DataSlot@Name)
   paste("Fleet", seq_len(dim(DataSlot@Value)[2]))
 }
 
-emptyFleetArray <- function(DataYear, FleetNames) {
+.EmptyFleetArray <- function(DataYear, FleetNames) {
   array(NA,
         dim = c(1, length(FleetNames)),
         dimnames = list(Year = DataYear, Fleet = FleetNames)
   )
 }
 
-resolveUnits <- function(DataSlot, nFleet, default='Biomass', valid=c('Biomass', 'Number')) {
+.ResolveUnits <- function(DataSlot, nFleet, default='Biomass', valid=c('Biomass', 'Number')) {
   if (length(DataSlot@Units) == nFleet) return(DataSlot)
   DataSlot@Units <- if (is.null(DataSlot@Units)) {
     rep(default, nFleet)
@@ -31,7 +31,7 @@ resolveUnits <- function(DataSlot, nFleet, default='Biomass', valid=c('Biomass',
 }
 
 
-resolveValue <- function(Proj, slotname, i, fl, TSIndex, Obs, x, DataYear) {
+.ResolveValue <- function(Proj, slotname, i, fl, TSIndex, Obs, x, DataYear) {
   omData <- Proj@OM@Data[[i]]
   
   if (!is.null(omData)) {
@@ -44,7 +44,7 @@ resolveValue <- function(Proj, slotname, i, fl, TSIndex, Obs, x, DataYear) {
     }
   }
   
-  obsError <- ArraySubsetYear(Obs@Error, DataYear)
+  obsError <- .ArraySubsetYear(Obs@Error, DataYear)
   sim_ind <- min(x, nrow(obsError))
   obsError <- obsError[sim_ind]
   
@@ -55,7 +55,7 @@ resolveValue <- function(Proj, slotname, i, fl, TSIndex, Obs, x, DataYear) {
   projValue * obsError * obsBias
 }
 
-resolveCV <- function(Proj, slotname, i, fl, TSIndex, DataObject, DataYear, default=0.2) {
+.ResolveCV <- function(Proj, slotname, i, fl, TSIndex, DataObject, DataYear, default=0.2) {
   omData <- Proj@OM@Data[[i]]
   
   if (!is.null(omData)) {
@@ -77,19 +77,25 @@ resolveCV <- function(Proj, slotname, i, fl, TSIndex, DataObject, DataYear, defa
   previouscv
 }
 
-resolveCatchNumber <- function(Real_Catch_Number, fl) {
+.ResolveCatchNumber <- function(Real_Catch_Number, fl) {
   purrr::map(Real_Catch_Number, \(catch_n) {
     catch_n[,fl,, drop=FALSE] |> sum()
   }) |> List2Array('Stock') |> sum()
 }
 
-resolveCatchBiomass <- function(Proj, stocks, x, TSIndex, fl, nArea, Real_Catch_Number) {
+.ResolveCatchBiomass <- function(Proj, stocks, x, TSIndex, fl, nArea, Real_Catch_Number,
+                                type = c('Landings', 'Discards')) {
+  type <- match.arg(type)
+  # Landings use the retention-weighted schedule; Discards use the
+  # selectivity-weighted schedule -- see the equivalent note in
+  # .GenHistDataCatch().
+  weight_slot <- if (type == 'Landings') 'WeightFleetRetained' else 'WeightFleetSelected'
   purrr::map2(Real_Catch_Number, Proj@OM@Fleet[stocks], \(catch_n, FleetList) {
     fleet       <- FleetList[[fl]]
     catch_fleet <- catch_n[, fl, , drop = FALSE] |> abind::adrop(2)
-    fleetwght   <- fleet@WeightFleet
+    fleetwght   <- slot(fleet, weight_slot)
     flwsim      <- min(dim(fleetwght)[1], x)
-    fleetwght   <- fleet@WeightFleet[flwsim, , TSIndex, drop = FALSE] |>
+    fleetwght   <- slot(fleet, weight_slot)[flwsim, , TSIndex, drop = FALSE] |>
       abind::adrop(c(1, 3), one.d.array = TRUE) |>
       AddDimension("Area") |>
       ExtendAreas(1:nArea)
@@ -99,7 +105,7 @@ resolveCatchBiomass <- function(Proj, stocks, x, TSIndex, fl, nArea, Real_Catch_
     sum()
 }
 
-resolveSelectivity <- function(Proj, stocks, StockNames, Obs, FleetNames, fl,
+.ResolveSelectivity <- function(Proj, stocks, StockNames, Obs, FleetNames, fl,
                                x, TSIndex, nArea) {
   SelectivityAtAge <- Obs@Selectivity
   

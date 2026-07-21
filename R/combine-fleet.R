@@ -52,20 +52,23 @@
 #'   -\frac{\sum_f F_{combined,f}(a)\cdot(-\log(1-d_f(a)))}{F_{combined}(a)}
 #' \right)}
 #'
-#' **WeightFleet** (age-specific F-weighted average)
-#' \deqn{W_{combined}(a) = \frac{\sum_f F_{combined,f}(a)\cdot W_f(a)}{F_{combined}(a)}}
-#' 
+#' **WeightFleetSelected** (age-specific interaction-F-weighted average)
+#' \deqn{W^{sel}_{combined}(a) = \frac{\sum_f F_{combined,f}(a)\cdot W^{sel}_f(a)}{F_{combined}(a)}}
+#'
+#' **WeightFleetRetained** (age-specific retained-F-weighted average)
+#' \deqn{W^{ret}_{combined}(a) = \frac{\sum_f F^{retain}_{combined,f}(a)\cdot W^{ret}_f(a)}{F^{retain}_{combined}(a)}}
+#'
 #'
 #' @export
 CombineFleets <- function(OM, FleetList, silent = FALSE) {
   
-  CheckClass(OM)
-  validate_fleet_list(OM, FleetList)
+  .CheckClass(OM)
+  .ValidateFleetList(OM, FleetList)
   
   OM <- Populate(OM, silent = TRUE)
   
   FleetIndList <- purrr::map(FleetList, \(Fleets)
-                             resolve_fleet_indices(OM, Fleets)
+                             .ResolveFleetIndices(OM, Fleets)
   )
   
   if (!silent)
@@ -80,7 +83,7 @@ CombineFleets <- function(OM, FleetList, silent = FALSE) {
       cli::cli_li("{.val {FleetList[[i]]}} \u2192 new fleet: {.val {Name}}")
     
     for (st in seq_len(nStock(OM))) {
-      OM@Fleet[[st]][[replaceInd]] <- combine_fleets_stock(OM, st, Name, FleetInds)
+      OM@Fleet[[st]][[replaceInd]] <- .CombineFleetsStock(OM, st, Name, FleetInds)
       names(OM@Fleet[[st]])[replaceInd] <- Name
     }
     
@@ -93,13 +96,13 @@ CombineFleets <- function(OM, FleetList, silent = FALSE) {
   }
   
   # Combine stock targeting
-  OM <- combine_fleets_targeting(OM, FleetList, FleetIndList, silent)
+  OM <- .CombineFleetsTargeting(OM, FleetList, FleetIndList, silent)
   
   # Combine Data
-  OM <- combine_fleets_data(OM, FleetList, silent)
+  OM <- .CombineFleetsData(OM, FleetList, silent)
   
   # Combine Obs 
-  OM <- combine_fleets_obs(OM, FleetList, silent)
+  OM <- .CombineFleetsObs(OM, FleetList, silent)
   
   # EFactor 
   stock_names <- StockNames(OM)
@@ -123,7 +126,7 @@ CombineFleets <- function(OM, FleetList, silent = FALSE) {
 }
 
 
-combine_fleets_data_cpue <- function(OM, FleetList, type=c('CPUE', 'Survey'), 
+.CombineFleetsDataCpue <- function(OM, FleetList, type=c('CPUE', 'Survey'), 
                                     silent=FALSE) {
   
   type <- match.arg(type)
@@ -140,25 +143,23 @@ combine_fleets_data_cpue <- function(OM, FleetList, type=c('CPUE', 'Survey'),
       ind <- match(combine_fleets, data@Name)
       if (!length(ind) || all(is.na(ind))) next
       
-      data@Value[,ind[1]] <- weighted_mean_by_cv(
-        values=data@Value[,ind, drop=FALSE], 
+      data@Value[,ind[1]] <- .WeightedMeanByCv(
+        values=data@Value[,ind, drop=FALSE],
         cvs=data@CV[,ind, drop=FALSE]
         )
-      
-      if (!is.null(data@CV)) {
-        # TODO data@CV[,ind[1]]
-      }
-      
+
       colnames(data@Value)[ind[1]] <- names(FleetList)[fl]
-      data@Name[ind[1]] <- names(FleetList)[fl] 
+      data@Name[ind[1]] <- names(FleetList)[fl]
       drop_ind <- c(drop_ind, ind[-1])
     }
-    
+
     # drop fleet columns
     if (length(drop_ind)) {
       drop_ind   <- sort(unique(drop_ind))
       data@Value <- data@Value[,-drop_ind, drop=FALSE]
-      data@Name  <- data@Name[-drop_ind]  
+      data@Name  <- data@Name[-drop_ind]
+      if (!is.null(data@CV))
+        data@CV  <- data@CV[,-drop_ind, drop=FALSE]
     }
     
     slot(OM@Data[[st]], type) <- data
@@ -167,7 +168,7 @@ combine_fleets_data_cpue <- function(OM, FleetList, type=c('CPUE', 'Survey'),
   OM 
 }
 
-weighted_mean_by_cv <- function(values, cvs) {
+.WeightedMeanByCv <- function(values, cvs) {
   weights <- 1/cvs
   out <- rowSums(values * weights, na.rm = TRUE) / rowSums(weights, na.rm = TRUE)
   out[!is.finite(out)] <- NA
@@ -175,7 +176,7 @@ weighted_mean_by_cv <- function(values, cvs) {
 }
 
 
-combine_fleets_data_catch <- function(OM,
+.CombineFleetsDataCatch <- function(OM,
                                      FleetList, 
                                      type=c('Landings', 'Discards'),
                                      silent=FALSE) {
@@ -199,22 +200,19 @@ combine_fleets_data_catch <- function(OM,
         cli::cli_abort(c('x'='{.val {type}}: Units must be the same for all combined fleets',
                          'i'='Units for Fleets {.val {combine_fleets}}: {.val {all_units}}'))
       
-      # CV weighted by catch 
-      if (!is.null(data@CV)) {
-        # TODO data@CV[,ind[1]]
-      }
-      
       data@Value[,ind[1]] <- rowSums(data@Value[,ind, drop=FALSE], na.rm=TRUE)
       data@Value[,ind[-1]][] <- 1E-15
       colnames(data@Value)[ind[1]] <- names(FleetList)[fl]
-      data@Name[ind[1]] <- names(FleetList)[fl] 
+      data@Name[ind[1]] <- names(FleetList)[fl]
     }
     # drop fleet columns
     drop_ind <- which(colMeans(data@Value) <= 1E-15)
     if (length(drop_ind)) {
       data@Value <- data@Value[,-drop_ind, drop=FALSE]
-      data@Units <- data@Units[-drop_ind]  
-      data@Name <- data@Name[-drop_ind]  
+      data@Units <- data@Units[-drop_ind]
+      data@Name <- data@Name[-drop_ind]
+      if (!is.null(data@CV))
+        data@CV  <- data@CV[,-drop_ind, drop=FALSE]
     }
     
     
@@ -223,23 +221,23 @@ combine_fleets_data_catch <- function(OM,
   OM
 }
 
-combine_fleets_data <- function(OM, FleetList, silent=FALSE) {
+.CombineFleetsData <- function(OM, FleetList, silent=FALSE) {
   if (!length(OM@Data)) return(OM)
   
   # Effort TODO
   
-  OM <- combine_fleets_data_catch(OM, FleetList, type = 'Landings', silent = silent)
+  OM <- .CombineFleetsDataCatch(OM, FleetList, type = 'Landings', silent = silent)
   
-  OM <- combine_fleets_data_catch(OM, FleetList, type = 'Discards', silent = silent)
+  OM <- .CombineFleetsDataCatch(OM, FleetList, type = 'Discards', silent = silent)
 
-  OM <- combine_fleets_data_cpue(OM, FleetList, type='CPUE', silent = silent)
+  OM <- .CombineFleetsDataCpue(OM, FleetList, type='CPUE', silent = silent)
   
-  OM <- combine_fleets_data_cpue(OM, FleetList, type='Survey', silent = silent)
+  OM <- .CombineFleetsDataCpue(OM, FleetList, type='Survey', silent = silent)
 
   OM
 }
 
-combine_fleets_obs <- function(OM, FleetList, silent=FALSE) {
+.CombineFleetsObs <- function(OM, FleetList, silent=FALSE) {
   
   for (st in seq_along(OM@Obs)) {
     obs_list <- OM@Obs[[st]]
@@ -267,7 +265,7 @@ combine_fleets_obs <- function(OM, FleetList, silent=FALSE) {
 #'   fleet name in `FleetList` is not found in `FleetNames(OM)`.
 #'
 #' @keywords internal
-validate_fleet_list <- function(OM, FleetList) {
+.ValidateFleetList <- function(OM, FleetList) {
   if (!is.list(FleetList))
     cli::cli_abort("`FleetList` must be a list")
   
@@ -295,7 +293,7 @@ validate_fleet_list <- function(OM, FleetList) {
 #' @return An integer vector of fleet indices corresponding to `Fleets`.
 #'
 #' @keywords internal
-resolve_fleet_indices <- function(OM, Fleets) {
+.ResolveFleetIndices <- function(OM, Fleets) {
   fleetnames <- FleetNames(OM)
   
   FleetInds <- if (is.character(Fleets)) {
@@ -326,7 +324,7 @@ resolve_fleet_indices <- function(OM, Fleets) {
 #'   value across the Age dimension is 1.
 #'
 #' @keywords internal
-standardize_F <- function(Farray) {
+.StandardizeF <- function(Farray) {
   nms     <- names(dimnames(Farray))
   age_ind <- which(nms == "Age")
   maxF    <- apply(Farray, nms[-age_ind], max) |>
@@ -348,7 +346,7 @@ standardize_F <- function(Farray) {
 #' @return A [Fleet()] object representing the aggregated fleet.
 #'
 #' @keywords internal
-combine_fleets_stock <- function(OM, st, Name, FleetInds) {
+.CombineFleetsStock <- function(OM, st, Name, FleetInds) {
   
   FleetList <- OM@Fleet[[st]][FleetInds]
   NewFleet  <- Fleet(Name = Name)
@@ -373,7 +371,7 @@ combine_fleets_stock <- function(OM, st, Name, FleetInds) {
   # TODO - at length
   
   Selectivity(NewFleet) <- Selectivity(
-    MeanAtAge    = standardize_F(FInteract))
+    MeanAtAge    = .StandardizeF(FInteract))
 
   
   FRetain_list <- purrr::map2(FInteract_list, FleetList, \(Fint, fleet)
@@ -392,12 +390,22 @@ combine_fleets_stock <- function(OM, st, Name, FleetInds) {
     MeanAtAge = 1 - exp(-discZ_combined)
   )
   
-  WF_list <- purrr::map2(FInteract_list, FleetList, \(Fint, fleet)
-                         ArrayMultiply(Fint, AddDimension(WeightFleet(fleet),'Area'))
+  # WeightFleetSelected: interaction-F-weighted average (selectivity-only,
+  # not retention-weighted, so weighted by total interaction F FInteract).
+  WFSel_list <- purrr::map2(FInteract_list, FleetList, \(Fint, fleet)
+                            ArrayMultiply(Fint, AddDimension(WeightFleetSelected(fleet),'Area'))
   )
-  WeightFleet(NewFleet) <- ArrayDivide(Reduce(`+`, WF_list), FInteract) |>
+  WeightFleetSelected(NewFleet) <- ArrayDivide(Reduce(`+`, WFSel_list), FInteract) |>
     DropDimension('Area')
-  
+
+  # WeightFleetRetained: retained-F-weighted average (weighted by FRetain,
+  # not FInteract, since it represents the retained/landed catch specifically).
+  WFRet_list <- purrr::map2(FRetain_list, FleetList, \(Fret, fleet)
+                            ArrayMultiply(Fret, AddDimension(WeightFleetRetained(fleet),'Area'))
+  )
+  WeightFleetRetained(NewFleet) <- ArrayDivide(Reduce(`+`, WFRet_list), FRetain) |>
+    DropDimension('Area')
+
   NewFleet
 }
 
@@ -428,7 +436,7 @@ combine_fleets_stock <- function(OM, st, Name, FleetInds) {
 #'   fleet structure.
 #'
 #' @keywords internal
-combine_fleets_targeting <- function(OM, FleetList, FleetIndList, silent = FALSE) {
+.CombineFleetsTargeting <- function(OM, FleetList, FleetIndList, silent = FALSE) {
   
   ST <- OM@StockTargeting
   if (all(is.na(ST@Targeting))) return(OM)
@@ -516,5 +524,3 @@ combine_fleets_targeting <- function(OM, FleetList, FleetIndList, silent = FALSE
   OM@StockTargeting <- ST
   OM
 }
-
-

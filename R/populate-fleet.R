@@ -17,7 +17,11 @@
 #' * Populates fleet catchability for historical and projected years.
 #' * Populates selectivity and retention objects.
 #' * Populates discard mortality and spatial closures.
-#' * Initializes fleet-specific weight-at-age if not already defined.
+#' * Initializes `WeightFleetRetained` and `WeightFleetSelected` if not
+#'   already defined, by weighting the stock's weight-at-length by
+#'   selectivity-at-length (`WeightFleetSelected`) or by
+#'   selectivity-at-length times retention-at-length (`WeightFleetRetained`)
+#'   over the age-length distribution -- see `.CalcFleetWeightAtAge()`.
 #'
 #' @return
 #' A populated [Fleet()] object.
@@ -66,13 +70,14 @@ PopulateFleet <- function(Fleet,
   
   if (EmptyObject(Fleet)) return(Fleet)
   
-  if (CheckDigest(Fleet, argList) & !force) return(Fleet)
+  if (.CheckDigest(Fleet, argList) & !force) return(Fleet)
   
-  SetSeed(seed)
+  .SetSeed(seed)
   
   Fleet@Effort <- PopulateEffort(
     Effort = Fleet@Effort,
     HistYears = HistYears,
+    ProjYears = ProjYears,
     nArea = nArea,
     nSim = nSim,
     seed = seed
@@ -107,6 +112,7 @@ PopulateFleet <- function(Fleet,
     Length = Length,
     Weight = Weight,
     Maturity = Maturity,
+    Selectivity = Fleet@Selectivity,
     nSim = nSim,
     Years = Years,
     nArea = nArea,
@@ -136,12 +142,91 @@ PopulateFleet <- function(Fleet,
     silent = silent
   )
   
-  if (all(is.na(Fleet@WeightFleet))) {
-    Fleet@WeightFleet <- Weight@MeanAtAge
+  if (all(is.na(Fleet@WeightFleetSelected))) {
+    Fleet@WeightFleetSelected <- .CalcFleetWeightAtAge(
+      Selectivity = Fleet@Selectivity,
+      Weight = Weight,
+      Length = Length
+    )
   }
-  
-  Fleet@WeightFleet <- SetAgeDimnames(Fleet@WeightFleet, Ages)
-  
-  
-  SetDigest(Fleet, argList)
+
+  if (all(is.na(Fleet@WeightFleetRetained))) {
+    Fleet@WeightFleetRetained <- .CalcFleetWeightAtAge(
+      Selectivity = Fleet@Selectivity,
+      Weight = Weight,
+      Length = Length,
+      Retention = Fleet@Retention
+    )
+  }
+
+  Fleet@WeightFleetSelected <- .SetAgeDimnames(Fleet@WeightFleetSelected, Ages)
+  Fleet@WeightFleetRetained <- .SetAgeDimnames(Fleet@WeightFleetRetained, Ages)
+
+
+  .SetDigest(Fleet, argList)
+}
+
+#' Calculate Fleet-Specific Weight-at-Age from Selectivity- (and Retention-)
+#' at-Length
+#'
+#' Derives a fleet's weight-at-age schedule by weighting weight-at-length by
+#' selectivity-at-length (and, if `Retention` is supplied, retention-at-length
+#' too) over the age-length distribution, i.e. `W_fleet(a) = sum_L[ P(L|a)
+#' sel(L) ret(L) W(L) ] / sum_L[ P(L|a) sel(L) ret(L) ]` (`ret(L) = 1`
+#' everywhere if `Retention` is not supplied). This mirrors how Stock
+#' Synthesis derives its internal `SelWt`/`RetWt` weight-at-age-by-fleet
+#' quantities, so that catch biomass matches between the two models -- see
+#' `PopulateFleet()` for how the two calls (with and without `Retention`)
+#' populate `WeightFleetSelected` and `WeightFleetRetained` respectively.
+#' Falls back to `Weight@MeanAtAge` wherever the selectivity- or
+#' weight-at-length schedules, or the age-length key, are unavailable.
+#'
+#' @param Selectivity A populated [selectivity-class] object.
+#' @param Weight A populated [weight-class] object.
+#' @param Length A populated [length-class] object supplying the age-length
+#'   key (`Length@ALK`).
+#' @param Retention A populated [retention-class] object, or `NULL` (default)
+#'   to weight by selectivity only.
+#'
+#' @return `array`. `Sim x Age x Year` fleet weight-at-age.
+#' @keywords internal
+.CalcFleetWeightAtAge <- function(Selectivity, Weight, Length, Retention = NULL) {
+  fallback <- Weight@MeanAtAge
+
+  if (is.null(Length@ALK)) return(fallback)
+
+  if (is.null(Weight@MeanAtLength)) {
+    # Prefer evaluating the weight-length model directly at each length
+    # class; only fall back to the (lossy, round-tripped) ALK-based
+    # back-projection from MeanAtAge if the model has no Length argument.
+    Years <- as.numeric(dimnames(Weight@MeanAtAge)$Year)
+    Weight <- .PopulateMeanAtLength(Weight, Length = Length, Years = Years)
+  }
+  if (is.null(Weight@MeanAtLength))
+    Weight <- .MeanAtAge2MeanAtLength(Weight, Length)
+
+  sel_at_len <- Selectivity@MeanAtLength
+  wt_at_len  <- Weight@MeanAtLength
+
+  if (is.null(sel_at_len) || is.null(wt_at_len)) return(fallback)
+
+  if ('Area' %in% names(dimnames(sel_at_len)))
+    sel_at_len <- DropDimension(sel_at_len, 'Area', warn = FALSE)
+
+  Weighting <- Selectivity
+  Weighting@MeanAtLength <- sel_at_len
+
+  if (!is.null(Retention)) {
+    ret_at_len <- Retention@MeanAtLength
+    if (!is.null(ret_at_len)) {
+      if ('Area' %in% names(dimnames(ret_at_len)))
+        ret_at_len <- DropDimension(ret_at_len, 'Area', warn = FALSE)
+      Weighting@MeanAtLength <- ArrayMultiply(Weighting@MeanAtLength, ret_at_len)
+    }
+  }
+
+  wt_fleet <- .WeightedAtSize2AtAge(Weight, Weighting, Length)@MeanAtAge
+  bad <- !is.finite(wt_fleet)
+  wt_fleet[bad] <- fallback[bad]
+  wt_fleet
 }

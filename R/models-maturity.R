@@ -48,7 +48,7 @@ NULL
 #' @rdname Maturity-Models
 #' @export
 MaturityModelsWeight <- function(full = TRUE, print = TRUE) {
-  ReturnModels(
+  .ReturnModels(
     ModelClass = c("Maturity-at-Weight-Model"),
     full, print
   )
@@ -88,7 +88,7 @@ class(MaturityAtWeight) <- "Maturity-at-Weight-Model"
 #' @return Prints to console and invisible data.frame or model names
 #' @export
 MaturityModels <- function(full = TRUE, print = TRUE) {
-  ReturnModels(
+  .ReturnModels(
     ModelClass = c(
       "Maturity-at-Age-Model",
       "Maturity-at-Length-Model",
@@ -101,7 +101,7 @@ MaturityModels <- function(full = TRUE, print = TRUE) {
 #' @rdname Maturity-Models
 #' @export
 MaturityModelsLength <- function(full = TRUE, print = TRUE) {
-  ReturnModels(
+  .ReturnModels(
     ModelClass = c("Maturity-at-Length-Model"),
     full, print
   )
@@ -110,9 +110,8 @@ MaturityModelsLength <- function(full = TRUE, print = TRUE) {
 #' @rdname Maturity-Models
 #' @export
 MaturityModelsAge <- function(full = TRUE, print = TRUE) {
-  ReturnModels(
+  .ReturnModels(
     ModelClass = c("Maturity-at-Age-Model"),
     full, print
   )
 }
-

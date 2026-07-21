@@ -20,7 +20,8 @@
 #' @param nSim Integer. If provided, reduces the number of simulations to
 #'   `nSim` before projecting. Only used for [hist-class] objects. If `NULL`
 #'   (default), all simulations in `Hist` are used.
-#' @param Reduce Logical. Reserved for future use. Default `TRUE`.
+#' @param Reduce Logical. Reduce object size after simulation for memory
+#'   efficiency? Default `TRUE`. See [ReduceDims()]. Only for  [hist-class] objects.
 #' @param extended Logical. If `TRUE`, stores full age- and area-structured
 #'   arrays for all years in `MSE@Misc$extended`. Only used for [Hist-legacy-class]
 #'   objects. Substantially increases object size. Default `FALSE`.
@@ -41,14 +42,14 @@ Project <- function(Hist,
                     extended=FALSE,
                     checkMPs=FALSE) {
   
-  CheckClass(Hist, c('hist', 'Hist'), 'Hist')
+  .CheckClass(Hist, c('hist', 'Hist'), 'Hist')
   
   if (is.null(MPs))
     MPs <- c('CurrentEffort', 'CurrentCatch')
   
   if (inherits(Hist, 'hist'))
     return(
-      Project_hist(Hist,
+      .ProjectHist(Hist,
                    MPs = MPs, 
                    parallel=parallel, 
                    silent=silent, 

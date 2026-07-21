@@ -7,12 +7,22 @@
 #' When called on a [hist-class] or [mse-class] object, the functions return
 #' simulated catch arrays or tidy data frames as described below.
 #'
-#' When called on an [obs-class] object, the functions return the
-#' corresponding [catchobs-class] slot directly (the observation error
-#' structure, not simulated values). When called on a [data-class] object,
-#' they return the corresponding [catchdata-class] slot directly (the observed 
-#' or simulated values). In both cases no data frame conversion is performed,
-#' regardless of any `df` argument.
+#' When called on an [obs-class] object, `Landings()`/`Discards()` always
+#' return the corresponding [catchobs-class] slot directly (the observation
+#' error structure, not simulated values), regardless of any other argument.
+#'
+#' When called on a [data-class] object, `Landings()`/`Discards()` return the
+#' corresponding [catchdata-class] slot directly (the observed or simulated
+#' values) when neither `byAge` nor `bySize` is `TRUE`. When `byAge = TRUE`
+#' or `bySize = TRUE`, they instead return a tidy `data.frame` built from the
+#' corresponding `*AtAge`/`*AtSize` [compdata-class] slot, with columns
+#' `Year`, `Fleet`, `Age` or `Class`, `Value`, and `Variable` (no `Sim`,
+#' `Stock`, `Period`, or `MP`, since a `data` object is a single
+#' realization); `df` is not meaningful in that case and is ignored. For
+#' `*AtSize`, fleets are not required to share a size-class grid (see
+#' [compdata-class]); `byFleet = FALSE` raises an error if the object's
+#' fleets don't all share the exact same classes, the same as for
+#' [hist-class]/[mse-class] objects.
 #'
 #' The assignment forms `Landings<-` and `Discards<-` replace the
 #' corresponding slot of an [obs-class] or [data-class] object.
@@ -47,7 +57,10 @@
 #' @param byFleet Logical. If `TRUE` (default for `Landings()` and
 #'   `Discards()`) the data frame retains the `Fleet` dimension. Otherwise
 #'   values are summed over fleets. Applies to [hist-class] and [mse-class]
-#'   objects only.
+#'   objects only. When `bySize = TRUE`, fleets are not required to share a
+#'   size-class grid (see [compdata-class]); `byFleet = FALSE` raises an
+#'   error if a stock's fleets don't all share the exact same classes,
+#'   rather than silently summing incompatible bins.
 #' @param Reduce Logical. If `TRUE` (default) simulation dimensions are
 #'   reduced using [ReduceDims()] before conversion to a data frame. Applies
 #'   to [hist-class] and [mse-class] objects only.
@@ -58,8 +71,11 @@
 #' @return
 #' - For [obs-class]: the [catchobs-class] object stored in the `Landings` or
 #'   `Discards` slot.
-#' - For [data-class]: the [catchdata-class] object stored in the `Landings`
-#'   or `Discards` slot.
+#' - For [data-class] with `byAge = FALSE` and `bySize = FALSE`: the
+#'   [catchdata-class] object stored in the `Landings` or `Discards` slot.
+#' - For [data-class] with `byAge = TRUE` or `bySize = TRUE`: a tidy
+#'   `data.frame` with columns `Year`, `Fleet`, `Age` or `Class`, `Value`,
+#'   and `Variable`.
 #' - For [hist-class] or [mse-class] with `df = FALSE`: the raw array slot
 #'   (`Interactions`, `Landings`, or `Discards`).
 #' - For [hist-class] or [mse-class] with `df = TRUE`: a tidy `data.frame`
@@ -68,32 +84,7 @@
 #'   `Variable`.
 #' - Assignment forms return `x` with the named slot replaced by `value`.
 #'
-#' @examples
-#' Hist <- Simulate(SingleStockOM)
-#' MSE <- Project(Hist, 'CurrentEffort')
-#'
-#' # Raw arrays from Hist / MSE
-#' Interactions(Hist, df = FALSE)
-#' Landings(MSE, df = FALSE)
-#'
-#' # Tidy data frames
-#' Interactions(Hist)
-#' Landings(MSE)
-#' Discards(MSE)
-#' Removals(MSE)
-#'
-#' # Retain fleet, age, and area structure
-#' Landings(MSE, byFleet = TRUE, byAge = TRUE, byArea = TRUE)
-#' Discards(MSE, byFleet = TRUE, bySize = TRUE)
-#'
-#' # Direct slot access for obs and data objects
-#' obs <- Obs(Landings = CatchObs(CV = 0.2))
-#' Landings(obs)
-#' Landings(obs) <- CatchObs(CV = 0.3)
-#'
-#' dat <- Data(Landings = CatchData(Value = matrix(100, 1, 1)))
-#' Landings(dat)
-#' Landings(dat) <- CatchData()
+#' @example man-examples/catch_timeseries.R
 #'
 #' @name catch_timeseries
 #' @export
@@ -104,7 +95,7 @@ Interactions <- function(object,
                          byFleet = FALSE,
                          Reduce  = TRUE,
                          IncYear = FALSE) {
-  extract_catch_timeseries(object,
+  .ExtractCatchTimeseries(object,
                            df        = df,
                            slot_name = 'Interactions',
                            byAge     = byAge,
@@ -125,14 +116,23 @@ Landings <- function(object,
                      byFleet = TRUE,
                      Reduce  = TRUE,
                      IncYear = FALSE) {
-  
-  if (inherits(object, c('obs', 'data')))
+
+  if (inherits(object, 'obs'))
     return(object@Landings)
-  
+
   if (byAge)  bySize <- FALSE
   if (bySize) byAge  <- FALSE
-  
-  extract_catch_timeseries(object,
+
+  if (inherits(object, 'data')) {
+    if (!byAge && !bySize)
+      return(object@Landings)
+    return(.ExtractDataCompTimeseries(
+      object, slot_name = if (byAge) 'LandingsAtAge' else 'LandingsAtSize',
+      byFleet = byFleet
+    ))
+  }
+
+  .ExtractCatchTimeseries(object,
                            df        = df,
                            slot_name = 'Landings',
                            byAge     = byAge,
@@ -149,7 +149,7 @@ Landings <- function(object,
 #'   [catchdata-class] object (when `x` is [data-class]) to assign.
 #' @export
 `Landings<-` <- function(x, value) {
-  CheckClass(x, c('obs', 'data', 'hist', 'mse'), 'x')
+  .CheckClass(x, c('obs', 'data', 'hist', 'mse'), 'x')
   x@Landings <- value
   methods::validObject(x)
   x
@@ -165,14 +165,23 @@ Discards <- function(object,
                      byFleet = TRUE,
                      Reduce  = TRUE,
                      IncYear = FALSE) {
-  
-  if (inherits(object, c('obs', 'data')))
+
+  if (inherits(object, 'obs'))
     return(object@Discards)
-  
+
   if (byAge)  bySize <- FALSE
   if (bySize) byAge  <- FALSE
-  
-  extract_catch_timeseries(object,
+
+  if (inherits(object, 'data')) {
+    if (!byAge && !bySize)
+      return(object@Discards)
+    return(.ExtractDataCompTimeseries(
+      object, slot_name = if (byAge) 'DiscardsAtAge' else 'DiscardsAtSize',
+      byFleet = byFleet
+    ))
+  }
+
+  .ExtractCatchTimeseries(object,
                            df        = df,
                            slot_name = 'Discards',
                            byAge     = byAge,
@@ -187,7 +196,7 @@ Discards <- function(object,
 #' @rdname catch_timeseries
 #' @export
 `Discards<-` <- function(x, value) {
-  CheckClass(x, c('obs', 'data', 'hist', 'mse'), 'x')
+  .CheckClass(x, c('obs', 'data', 'hist', 'mse'), 'x')
   x@Discards <- value
   methods::validObject(x)
   x
@@ -206,7 +215,7 @@ Removals <- function(object,
   if (byAge)  bySize <- FALSE
   if (bySize) byAge  <- FALSE
   
-  L <- extract_catch_timeseries(object,
+  L <- .ExtractCatchTimeseries(object,
                            df        = df,
                            slot_name = 'Landings',
                            byAge     = byAge,
@@ -216,7 +225,7 @@ Removals <- function(object,
                            Reduce    = Reduce,
                            IncYear   = IncYear)
   
-  D <- extract_catch_timeseries(object,
+  D <- .ExtractCatchTimeseries(object,
                                 df        = df,
                                 slot_name = 'Discards',
                                 byAge     = byAge,
@@ -240,7 +249,7 @@ Removals <- function(object,
  
 }
 
-extract_catch_timeseries <- function(object,
+.ExtractCatchTimeseries <- function(object,
                                      slot_name = 'Interactions',
                                      df        = FALSE,
                                      byAge     = FALSE,
@@ -249,14 +258,14 @@ extract_catch_timeseries <- function(object,
                                      byFleet   = FALSE,
                                      Reduce    = TRUE,
                                      IncYear   = FALSE) {
-  CheckClass(object, c('hist', 'mse'), 'object')
+  .CheckClass(object, c('hist', 'mse'), 'object')
   
   if (!df)
     return(slot(object, slot_name))
   
   if (inherits(object, 'hist')) {
     return(
-      .extract_catch_timeseries(object,
+      .ExtractCatchTimeseriesCore(object,
                                 OM        = object@OM,
                                 slot_name = slot_name,
                                 byAge     = byAge,
@@ -269,7 +278,7 @@ extract_catch_timeseries <- function(object,
   }
   
   # MSE object: bind historical + projection
-  hist <- .extract_catch_timeseries(object@Hist,
+  hist <- .ExtractCatchTimeseriesCore(object@Hist,
                                     OM        = object@OM,
                                     slot_name = slot_name,
                                     byAge     = byAge,
@@ -280,7 +289,7 @@ extract_catch_timeseries <- function(object,
                                     IncYear   = IncYear) |>
     dplyr::mutate(MP = 'Historical')
   
-  proj <- .extract_catch_timeseries(object,
+  proj <- .ExtractCatchTimeseriesCore(object,
                                     OM        = object@OM,
                                     slot_name = slot_name,
                                     byAge     = byAge,
@@ -295,7 +304,7 @@ extract_catch_timeseries <- function(object,
   out
 }
 
-.extract_catch_timeseries <- function(object,
+.ExtractCatchTimeseriesCore <- function(object,
                                       OM        = NULL,
                                       slot_name = 'Interactions',
                                       byAge     = FALSE,
@@ -318,10 +327,13 @@ extract_catch_timeseries <- function(object,
       if (!byArea)
         arraySizeList <- purrr::map(arraySizeList, \(stock)
                                     purrr::map(stock, SumOverArea))
-      
+
       if (!byFleet)
-        arraySizeList <- purrr::map(arraySizeList, \(stock)
-                                    list(SumOverFleet(stock)))   
+        arraySizeList <- purrr::imap(arraySizeList, \(fleetList, stock_name)
+                                     stats::setNames(
+                                       list(.SumFleetSizeArrays(fleetList, stock_name, slot_name)),
+                                       'Total'
+                                     ))
       df <- purrr::map(arraySizeList, \(stock)
                        purrr::map(stock, Array2DF) |> 
                          dplyr::bind_rows(.id = "Fleet")
@@ -370,7 +382,26 @@ extract_catch_timeseries <- function(object,
   Array2DF(array) |>
     dplyr::mutate(Variable = slot_name,
                   Period   = ifelse(isMSE, 'Projection', 'Historical')) |>
-    dplyr::relocate('Sim', 'Stock', 'Year', 'Period') |>
-    dplyr::arrange(Sim, Stock, Year)
+    dplyr::relocate('Sim', 'Stock', 'Year', 'Period')
 }
 
+# Sums a stock's per-fleet size-structured arrays (`Sim x Class x Year x
+# Area`) together for `byFleet = FALSE`. Fleets are not required to share a
+# size-class grid (see compdata-class), so this is only valid when every
+# fleet in `fleetList` happens to share the exact same `Class` dimnames;
+# otherwise summing would silently combine incompatible bins, so this
+# raises a clear error instead.
+.SumFleetSizeArrays <- function(fleetList, stock_name, slot_name) {
+  classGrids <- purrr::map(fleetList, \(a) dimnames(a)$Class)
+  ref        <- classGrids[[1]]
+  matches    <- purrr::map_lgl(classGrids, identical, ref)
+
+  if (!all(matches))
+    cli::cli_abort(c(
+      "Cannot sum {.field {slot_name}} across fleets for stock {.val {stock_name}} with `byFleet = FALSE`.",
+      "x" = "Fleets do not share the same size-class grid.",
+      "i" = "Set `byFleet = TRUE` to keep fleets separate instead."
+    ), call = NULL)
+
+  Reduce(`+`, fleetList)
+}

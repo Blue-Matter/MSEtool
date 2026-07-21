@@ -60,14 +60,14 @@ PopulateWeight <- function(Weight,
                            Years = NULL,
                            nSim = 5,
                            AWK = FALSE,
-                           CalcAtLength = FALSE,
+                           CalcAtLength = TRUE,
                            seed = NULL,
                            silent = FALSE,
                            force = FALSE) {
   
   Ages  <- DefaultAges(Ages)
   Years <- DefaultYears(Years)
-  nSim  <- Get_nSim(Weight, nSim)
+  nSim  <- .GetNSim(Weight, nSim)
   
   argList <- list(
     Ages, Length, nSim, Years, AWK,
@@ -79,26 +79,26 @@ PopulateWeight <- function(Weight,
     return(Weight)
   }
   
-  if (CheckDigest(Weight, argList) & !force) {
+  if (.CheckDigest(Weight, argList) & !force) {
     return(Weight)
   }
   
-  SetSeed(seed)
+  .SetSeed(seed)
   
-  Weight@Pars <- StructurePars(Pars = Weight@Pars, nSim, Years)
-  Weight@Model <- FindModel(Weight)
-  Weight <- PopulateMeanAtAge(object = Weight, 
+  Weight@Pars <- .StructurePars(Pars = Weight@Pars, nSim, Years)
+  Weight@Model <- .FindModel(Weight)
+  Weight <- .PopulateMeanAtAge(object = Weight, 
                               Ages= Ages, 
                               Years = Years,
                               Length = Length)
   
-  ModelClass <- getModelClass(Weight@Model)
+  ModelClass <- .GetModelClass(Weight@Model)
   if (!is.null(ModelClass)) {
-    if (grepl("at-Length", getModelClass(Weight@Model))) {
-      CheckRequiredObject(Length, "length", "Length")
+    if (grepl("at-Length", .GetModelClass(Weight@Model))) {
+      .CheckRequiredObject(Length, "length", "Length")
       # chk <- Check(Length, silent=TRUE)
       # if (!chk@populated) {
-      CheckRequiredObject(Ages, "ages", "Ages")
+      .CheckRequiredObject(Ages, "ages", "Ages")
       Length <- PopulateLength(Length = Length, 
                                Ages = Ages, 
                                Years = Years, 
@@ -107,7 +107,7 @@ PopulateWeight <- function(Weight,
                                seed = seed, 
                                silent = silent)
       # }
-      Weight <- PopulateMeanAtLength(
+      Weight <- .PopulateMeanAtLength(
         object = Weight, 
         Length = Length, 
         Years = Years, 
@@ -116,7 +116,7 @@ PopulateWeight <- function(Weight,
         silent = silent
       )
     } else {
-      Weight <- PopulateMeanAtAge(
+      Weight <- .PopulateMeanAtAge(
         object = Weight, 
         Ages= Ages, 
         Years = Years,
@@ -125,14 +125,14 @@ PopulateWeight <- function(Weight,
     }
   }
   
-  Weight <- MeanAtLength2MeanAtAge(Weight, Length)
+  Weight <- .MeanAtLength2MeanAtAge(Weight, Length)
   
   if (CalcAtLength) {
-    Weight <- MeanAtAge2MeanAtLength(Weight, Length)
+    Weight <- .MeanAtAge2MeanAtLength(Weight, Length)
   }
   
-  Weight <- PopulateRandom(Weight)
-  Weight@CVatAge <- StructureCV(Weight@CVatAge, nSim)
+  Weight <- .PopulateRandom(Weight)
+  Weight@CVatAge <- .StructureCV(Weight@CVatAge, nSim)
   dd <- dim(Weight@CVatAge)
   if (!is.null(dd)) {
     dimnames(Weight@CVatAge) <- list(
@@ -145,12 +145,12 @@ PopulateWeight <- function(Weight,
     AWK <- FALSE
   }
   
-  Weight <- AddAtAgeDimnames(Weight, Ages, Years)
+  Weight <- .AddAtAgeDimnames(Weight, Ages, Years)
   
   if (AWK) {
-    Weight <- PopulateClasses(Weight)
-    Weight <- PopulateASK(Weight, Ages, silent, type = "Weight")
+    Weight <- .PopulateClasses(Weight)
+    Weight <- .PopulateASK(Weight, Ages, silent, type = "Weight")
   }
   
-  SetDigest(SetAgeDimnames(Weight, Ages), argList)
+  .SetDigest(.SetAgeDimnames(Weight, Ages), argList)
 }

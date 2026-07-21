@@ -41,7 +41,7 @@ ConvertOM <- function(OM,
                       Populate    = TRUE,
                       silent      = FALSE) {
   
-  CheckClass(OM, c('OM'), 'OM')
+  .CheckClass(OM, c('OM'), 'OM')
   
   if (!silent) 
     cli::cli_alert('Converting object of class {.cls OM} to class {.cls om}')
@@ -97,7 +97,7 @@ ConvertOM <- function(OM,
   StockName <- SubOM(OM, 'Stock')@Name
   om@Stock <- MakeNamedList(
     StockName,
-    OM2stock(
+    .OM2stock(
       OM,
       cpars = OM@cpars,
       YearsList,
@@ -112,12 +112,12 @@ ConvertOM <- function(OM,
     StockName,
     MakeNamedList(
       FleetName,
-      OM2fleet(OM, YearsList=YearsList, cpars=OM@cpars)
+      .OM2fleet(OM, YearsList=YearsList, cpars=OM@cpars)
     )
   )
   
   # Update selectivity/retention slots
-  om <- UpdateSelRet(OM, om)
+  om <- .UpdateSelRet(OM, om)
   
   # Observations
   om@Obs <- MakeNamedList(
@@ -139,9 +139,9 @@ ConvertOM <- function(OM,
   
   # Update max length and E-factor
   om <- om |>
-    SolveForVmaxlen('Selectivity') |>
-    SolveForVmaxlen('Retention') |>
-    ProcessEFactor()
+    .SolveForVmaxlen('Selectivity') |>
+    .SolveForVmaxlen('Retention') |>
+    .ProcessEFactor()
   
   # Populate object if requested
   if (Populate) {
@@ -169,7 +169,7 @@ ConvertOM <- function(OM,
 #'
 #' @seealso [ConvertOM()], [Selectivity()], [Retention()]
 #' @keywords internal
-UpdateSelRet <- function(OM, om) {
+.UpdateSelRet <- function(OM, om) {
   if (!as.logical(OM@isRel))
     return(om)
   
@@ -178,15 +178,15 @@ UpdateSelRet <- function(OM, om) {
   
   for (st in 1:nStock) {
     for (fl in 1:nFleet) {
-      L50 <- GetLengthClass(om@Stock[[st]]@Maturity, 0.5)
-      om@Fleet[[st]][[fl]]@Selectivity@Pars <- StructurePars(Pars=om@Fleet[[st]][[fl]]@Selectivity@Pars,
+      L50 <- .GetLengthClass(om@Stock[[st]]@Maturity, 0.5)
+      om@Fleet[[st]][[fl]]@Selectivity@Pars <- .StructurePars(Pars=om@Fleet[[st]][[fl]]@Selectivity@Pars,
                                                  nSim=om@nSim, 
                                                  Years=om@Years)
       om@Fleet[[st]][[fl]]@Selectivity@Pars$L5 <- ArrayMultiply(L50, 
                                                                 om@Fleet[[st]][[fl]]@Selectivity@Pars$L5)
       om@Fleet[[st]][[fl]]@Selectivity@Pars$LFS <- ArrayMultiply(L50, 
                                                                  om@Fleet[[st]][[fl]]@Selectivity@Pars$LFS)
-      om@Fleet[[st]][[fl]]@Retention@Pars <- StructurePars(Pars=om@Fleet[[st]][[fl]]@Retention@Pars,
+      om@Fleet[[st]][[fl]]@Retention@Pars <- .StructurePars(Pars=om@Fleet[[st]][[fl]]@Retention@Pars,
                                                            nSim=om@nSim, 
                                                            Years=om@Years)
       om@Fleet[[st]][[fl]]@Retention@Pars$LR5 <- ArrayMultiply(L50,
@@ -203,7 +203,7 @@ UpdateSelRet <- function(OM, om) {
 #'
 #' Finds the length class in a `MeanAtLength` array that most closely
 #' corresponds to a given reference value (e.g., 0.5 for length-at-50%-maturity).
-#' Called internally by [UpdateSelRet()].
+#' Called internally by `.UpdateSelRet()`.
 #'
 #' @param object An S4 object with a `MeanAtLength` array (Sim × Length × Year)
 #'   and a `Classes` slot of length classes.
@@ -213,9 +213,9 @@ UpdateSelRet <- function(OM, om) {
 #' @return A numeric array of dimensions (Sim × Year) giving the length class
 #'   closest to `RefValue` for each simulation and time step.
 #'
-#' @seealso [UpdateSelRet()], [ConvertOM()]
+#' @seealso `.UpdateSelRet()`, [ConvertOM()]
 #' @keywords internal
-GetLengthClass <- function(object, RefValue=0.5) {
+.GetLengthClass <- function(object, RefValue=0.5) {
   array <- object@MeanAtLength
   dd <- dim(array)
   
@@ -243,9 +243,9 @@ GetLengthClass <- function(object, RefValue=0.5) {
 #' @return The [om-class] object with updated `Vmaxlen` or `Rmaxlen` parameters
 #'   for all stock-fleet combinations.
 #'
-#' @seealso [ConvertOM()], [VmaxLenOpt()], [Selectivity()], [Retention()]
+#' @seealso [ConvertOM()], `.VmaxLenOpt()`, [Selectivity()], [Retention()]
 #' @keywords internal
-SolveForVmaxlen <- function(om, type=c('Selectivity', 'Retention')) {
+.SolveForVmaxlen <- function(om, type=c('Selectivity', 'Retention')) {
   type <- match.arg(type, c('Selectivity', 'Retention'))
   # calculates new value for Vmaxlen/Rmaxlen to correspond with maximum
   # length bin rather than Linf, as previously defined
@@ -299,6 +299,7 @@ SolveForVmaxlen <- function(om, type=c('Selectivity', 'Retention')) {
                                                                 Length=om@Stock[[st]]@Length,
                                                                 Weight=om@Stock[[st]]@Weight,
                                                                 Maturity=om@Stock[[st]]@Maturity,
+                                                                Selectivity=om@Fleet[[st]][[fl]]@Selectivity,
                                                                 nSim = om@nSim,
                                                                 Years=Years(om),
                                                                 nArea = nArea(om)
@@ -338,7 +339,7 @@ SolveForVmaxlen <- function(om, type=c('Selectivity', 'Retention')) {
       
       for (s in 1:nsim) {
         for (ts in seq_along(Years)) {
-          VmaxlenOut[s,ts] <- VmaxLenOpt(L5[s,ts], 
+          VmaxlenOut[s,ts] <- .VmaxLenOpt(L5[s,ts], 
                                          LFS[s,ts],
                                          Vmaxlen[s, ts],
                                          Linf[s,ts])
@@ -356,7 +357,7 @@ SolveForVmaxlen <- function(om, type=c('Selectivity', 'Retention')) {
 #'
 #' Finds the `Vmaxlen` value (on the logit scale) that reproduces the original
 #' selectivity at the maximum length bin (`Linf`) under the double-normal curve.
-#' Called internally by [SolveForVmaxlen()].
+#' Called internally by `.SolveForVmaxlen()`.
 #'
 #' @param l5 Numeric. Length at 5% selectivity.
 #' @param lfs Numeric. Length at full selectivity.
@@ -366,12 +367,12 @@ SolveForVmaxlen <- function(om, type=c('Selectivity', 'Retention')) {
 #' @return Numeric. The optimised `Vmaxlen` value on the probability scale
 #'   (0–1). Returns `vmaxlen` unchanged if it exceeds 0.99.
 #'
-#' @seealso [SolveForVmaxlen()], [optForVmaxLen()]
+#' @seealso `.SolveForVmaxlen()`, `.OptForVmaxLen()`
 #' @keywords internal
-VmaxLenOpt <- function(l5, lfs, vmaxlen, linf) {
+.VmaxLenOpt <- function(l5, lfs, vmaxlen, linf) {
   if (vmaxlen > 0.99)
     return(vmaxlen)
-  opt <- optimize(optForVmaxLen,
+  opt <- optimize(.OptForVmaxLen,
                   interval=logit(c(0.001, 0.999)),
                   l5=l5,
                   lfs=lfs,
@@ -383,7 +384,7 @@ VmaxLenOpt <- function(l5, lfs, vmaxlen, linf) {
 #' Objective Function for Vmaxlen Optimisation
 #'
 #' Computes the squared difference between the double-normal selectivity at
-#' `Linf` and the target `vmaxlen`, used by [VmaxLenOpt()] via [stats::optimize()].
+#' `Linf` and the target `vmaxlen`, used by `.VmaxLenOpt()` via [stats::optimize()].
 #'
 #' @param logitTrial Numeric. Trial value of `Vmaxlen` on the logit scale.
 #' @param l5 Numeric. Length at 5% selectivity.
@@ -394,9 +395,9 @@ VmaxLenOpt <- function(l5, lfs, vmaxlen, linf) {
 #' @return Numeric. Squared difference between predicted and target selectivity
 #'   at `Linf`.
 #'
-#' @seealso [VmaxLenOpt()], [SolveForVmaxlen()]
+#' @seealso `.VmaxLenOpt()`, `.SolveForVmaxlen()`
 #' @keywords internal
-optForVmaxLen <- function(logitTrial, l5, lfs, linf, vmaxlen) {
+.OptForVmaxLen <- function(logitTrial, l5, lfs, linf, vmaxlen) {
   trial <- ilogit(logitTrial)
   lens <- seq(0, linf,length.out=100)
   sel <- DoubleNormal(lens,l5, lfs, trial)
@@ -404,7 +405,7 @@ optForVmaxLen <- function(logitTrial, l5, lfs, linf, vmaxlen) {
 }
 
 
-SetSlotDimNames <- function(object, slot_name, value, Sims, Ages, Years, 
+.SetSlotDimNames <- function(object, slot_name, value, Sims, Ages, Years, 
                             reduce = TRUE, inc_year = TRUE) {
   
   dd <- dim(value)

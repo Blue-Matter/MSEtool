@@ -44,4 +44,3 @@ setValidity("discardmortality", function(object) {
   # TODO
   TRUE
 })
-

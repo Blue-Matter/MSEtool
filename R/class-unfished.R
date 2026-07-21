@@ -45,18 +45,18 @@ setClass("unfished",
 #' @rdname unfished-class
 #' @export
 Unfished <- function(object) {
-  CheckClass(object, c('hist', 'mse'), 'object')
-  AccessSlot(object, 'Unfished')
+  .CheckClass(object, c('hist', 'mse'), 'object')
+  .AccessSlot(object, 'Unfished')
 }
 
 #' @rdname unfished-class
 #' @export
 Equilibrium <- function(unfished) {
-  AccessSlot(unfished, 'Equilibrium')
+  .AccessSlot(unfished, 'Equilibrium')
 }
 
 #' @rdname unfished-class
 #' @export
 Dynamic <- function(unfished) {
-  AccessSlot(unfished, 'Dynamic')
+  .AccessSlot(unfished, 'Dynamic')
 }

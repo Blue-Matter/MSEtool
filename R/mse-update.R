@@ -1,4 +1,4 @@
-UpdateMSEObject <- function(MSE, Proj, MPName, mp, YearsHist, YearsProj,
+.UpdateMSEObject <- function(MSE, Proj, MPName, mp, YearsHist, YearsProj,
                             StockNames, FleetNames) {
   
   YearsAll <- c(YearsHist, YearsProj)
@@ -6,37 +6,37 @@ UpdateMSEObject <- function(MSE, Proj, MPName, mp, YearsHist, YearsProj,
   nFleet   <- length(FleetNames) 
   
   for (st in seq_len(nStock)) {
-    MSE@Number[[st]][,,,,mp] <- Proj@Number[[st]] |> SubsetYear(YearsProj)
+    MSE@Number[[st]][,,,,mp] <- Proj@Number[[st]] |> .SubsetYear(YearsProj)
   
-    MSE@InteractAtAge[[st]][,,,,,mp] <- Proj@InteractAtAge[[st]] |> SubsetYear(YearsProj)
-    MSE@LandingsAtAge[[st]][,,,,,mp] <- Proj@LandingsAtAge[[st]] |> SubsetYear(YearsProj)
-    MSE@DiscardsAtAge[[st]][,,,,,mp] <- Proj@DiscardsAtAge[[st]] |> SubsetYear(YearsProj)
+    MSE@InteractAtAge[[st]][,,,,,mp] <- Proj@InteractAtAge[[st]] |> .SubsetYear(YearsProj)
+    MSE@LandingsAtAge[[st]][,,,,,mp] <- Proj@LandingsAtAge[[st]] |> .SubsetYear(YearsProj)
+    MSE@DiscardsAtAge[[st]][,,,,,mp] <- Proj@DiscardsAtAge[[st]] |> .SubsetYear(YearsProj)
     
     for (fl in seq_len(nFleet)) {
-      MSE@LandingsAtSize[[st]][[fl]][,,,,mp] <- Proj@LandingsAtSize[[st]][[fl]] |> SubsetYear(YearsProj)
-      MSE@DiscardsAtSize[[st]][[fl]][,,,,mp] <- Proj@LandingsAtSize[[st]][[fl]] |> SubsetYear(YearsProj)  
+      MSE@LandingsAtSize[[st]][[fl]][,,,,mp] <- Proj@LandingsAtSize[[st]][[fl]] |> .SubsetYear(YearsProj)
+      MSE@DiscardsAtSize[[st]][[fl]][,,,,mp] <- Proj@DiscardsAtSize[[st]][[fl]] |> .SubsetYear(YearsProj)
     }
     
-    MSE@FInteractArea[[st]][,,,,,mp] <- Proj@FInteractArea[[st]] |> SubsetYear(YearsProj)
-    MSE@FDeadArea[[st]][,,,,,mp] <- Proj@FDeadArea[[st]] |> SubsetYear(YearsProj)
-    MSE@FRetainArea[[st]][,,,,,mp] <- Proj@FRetainArea[[st]] |> SubsetYear(YearsProj)
+    MSE@FInteractArea[[st]][,,,,,mp] <- Proj@FInteractArea[[st]] |> .SubsetYear(YearsProj)
+    MSE@FDeadArea[[st]][,,,,,mp] <- Proj@FDeadArea[[st]] |> .SubsetYear(YearsProj)
+    MSE@FRetainArea[[st]][,,,,,mp] <- Proj@FRetainArea[[st]] |> .SubsetYear(YearsProj)
     
   }
   
-  MSE@Biomass[,,,mp] <- Proj@Biomass |> SubsetYear(YearsProj)
-  MSE@SBiomass[,,,mp] <- Proj@SBiomass |> SubsetYear(YearsProj)
-  MSE@SProduction[,,,mp] <- Proj@SProduction |> SubsetYear(YearsProj)
+  MSE@Biomass[,,,mp] <- Proj@Biomass |> .SubsetYear(YearsProj)
+  MSE@SBiomass[,,,mp] <- Proj@SBiomass |> .SubsetYear(YearsProj)
+  MSE@SProduction[,,,mp] <- Proj@SProduction |> .SubsetYear(YearsProj)
   
-  MSE@Interactions[,,,,mp] <- Proj@Interactions |> SubsetYear(YearsProj)
-  MSE@Landings[,,,,mp] <- Proj@Landings |> SubsetYear(YearsProj)
-  MSE@Discards[,,,,mp] <- Proj@Discards |> SubsetYear(YearsProj)
+  MSE@Interactions[,,,,mp] <- Proj@Interactions |> .SubsetYear(YearsProj)
+  MSE@Landings[,,,,mp] <- Proj@Landings |> .SubsetYear(YearsProj)
+  MSE@Discards[,,,,mp] <- Proj@Discards |> .SubsetYear(YearsProj)
   
-  MSE@Effort[,,,mp] <- Proj@Effort |> SubsetYear(YearsProj)
-  MSE@Distribution[,,,,mp] <- Proj@Distribution |> SubsetYear(YearsProj)
+  MSE@Effort[,,,mp] <- Proj@Effort |> .SubsetYear(YearsProj)
+  MSE@Distribution[,,,,mp] <- Proj@Distribution |> .SubsetYear(YearsProj)
   
-  MSE@FInteract[,,,,mp] <- Proj@FInteract |> SubsetYear(YearsProj)
-  MSE@FDead[,,,,mp] <- Proj@FDead |> SubsetYear(YearsProj)
-  MSE@FRetain[,,,,mp] <- Proj@FRetain |> SubsetYear(YearsProj)
+  MSE@FInteract[,,,,mp] <- Proj@FInteract |> .SubsetYear(YearsProj)
+  MSE@FDead[,,,,mp] <- Proj@FDead |> .SubsetYear(YearsProj)
+  MSE@FRetain[,,,,mp] <- Proj@FRetain |> .SubsetYear(YearsProj)
   
   # Misc 
   # keep MPAdvice 
@@ -51,9 +51,9 @@ UpdateMSEObject <- function(MSE, Proj, MPName, mp, YearsHist, YearsProj,
   #   unlist() |> 
   #   as.numeric()
 
-  MSE <- AddPPD(MSE, Proj, MPName, YearsHist, YearsProj, mp)    
+  MSE <- .AddPPD(MSE, Proj, MPName, YearsHist, YearsProj, mp)    
   
-  MSE <- RecordSelRetDisc(MSE, Proj, MPName, YearsProj)
+  MSE <- .RecordSelRetDisc(MSE, Proj, MPName, YearsProj)
   
   MSE
 }
@@ -72,7 +72,7 @@ UpdateMSEObject <- function(MSE, Proj, MPName, mp, YearsHist, YearsProj,
 #'    `MSE@Misc[["Retention"]]`, and `MSE@Misc[["DiscardMortality"]]`
 #'   updated for ``MPName`.
 #' @keywords internal
-RecordSelRetDisc <- function(MSE, Proj, MPName, YearsProj) {
+.RecordSelRetDisc <- function(MSE, Proj, MPName, YearsProj) {
   for (slotname in c('Selectivity', 'Retention', 'DiscardMortality')) {
     result <- purrr::map2(Proj@OM@Fleet, MSE@OM@Fleet, \(fleetlist, origfleetlist) {
       
@@ -81,10 +81,10 @@ RecordSelRetDisc <- function(MSE, Proj, MPName, YearsProj) {
         obj      <- slot(fleet, slotname)
         obj_orig <- slot(origfleet, slotname)
         
-        MeanAtAge    <- obj@MeanAtAge |> SubsetYear(YearsProj) |> ExtendSims(nSim=MSE@OM@nSim)
-        MeanAtLength <- obj@MeanAtLength |> SubsetYear(YearsProj) |> ExtendSims(nSim=MSE@OM@nSim)
-        MeanAtAge_orig    <- obj_orig@MeanAtAge |> SubsetYear(YearsProj) |> ExtendSims(nSim=MSE@OM@nSim)
-        MeanAtLength_orig <- obj_orig@MeanAtLength |> SubsetYear(YearsProj) |> ExtendSims(nSim=MSE@OM@nSim)
+        MeanAtAge    <- obj@MeanAtAge |> .SubsetYear(YearsProj) |> ExtendSims(nSim=MSE@OM@nSim)
+        MeanAtLength <- obj@MeanAtLength |> .SubsetYear(YearsProj) |> ExtendSims(nSim=MSE@OM@nSim)
+        MeanAtAge_orig    <- obj_orig@MeanAtAge |> .SubsetYear(YearsProj) |> ExtendSims(nSim=MSE@OM@nSim)
+        MeanAtLength_orig <- obj_orig@MeanAtLength |> .SubsetYear(YearsProj) |> ExtendSims(nSim=MSE@OM@nSim)
         
         out <- list()
         if (!prod(MeanAtAge == MeanAtAge_orig)) out$MeanAtAge <- MeanAtAge
@@ -107,15 +107,15 @@ RecordSelRetDisc <- function(MSE, Proj, MPName, YearsProj) {
   MSE
 }
 
-AddPPD <- function(MSE, Proj, MPName, YearsHist, YearsProj, mp) {
+.AddPPD <- function(MSE, Proj, MPName, YearsHist, YearsProj, mp) {
   
   PPD <- Proj@Data |> 
-    AddYearDimnames(Years=c(YearsHist, YearsProj)) |>
-    AddFleetDimnames(FleetNames = FleetNames(Proj))
+    .AddYearDimnames(Years=c(YearsHist, YearsProj)) |>
+    .AddFleetDimnames(FleetNames = FleetNames(Proj))
   
   if (mp > 1) 
     PPD <- PPD |>
-    SubsetYear(Years=YearsProj)
+    .SubsetYear(Years=YearsProj)
   
   MSE@PPD[[MPName]] <- PPD
   MSE

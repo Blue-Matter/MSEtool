@@ -22,7 +22,7 @@
 CalcUnfishedNumber <- function(OM, SP = FALSE) {
   
   if (OM@Seasons > 1) 
-    return(CalcUnfishedNumber_seasonal(OM, SP))
+    return(.CalcUnfishedNumberSeasonal(OM, SP))
   
   # Unfished survival by Sim, Age, and Year for each Stock
   UnfishedSurvival_List <- CalcUnfishedSurvival(OM, SP, Years=Years(OM,'Hist')) 
@@ -31,7 +31,7 @@ CalcUnfishedNumber <- function(OM, SP = FALSE) {
   R0List <- purrr::map(OM@Stock, \(Stock) {
     Stock@SRR@R0 |>
       AddDimension("Age", val =  min(Stock@Ages@Classes)) |>
-      aperm(c("Sim", "Age", "Year"))
+      .Aperm(c("Sim", "Age", "Year"))
   })
   
   # Multiply R0 by Survival
@@ -41,7 +41,7 @@ CalcUnfishedNumber <- function(OM, SP = FALSE) {
 
 
 # Is the OM seasonal with R0 changing over seasons?
-IsSeasonalRecruitment <- function(OM) {
+.IsSeasonalRecruitment <- function(OM) {
   if (OM@Seasons == 1) 
     return(FALSE)
   
@@ -49,13 +49,13 @@ IsSeasonalRecruitment <- function(OM) {
     Stock@SRR@R0
   }) |>
     List2Array("Stock") |>
-    aperm(c("Sim", "Stock", "Year")) |>
+    .Aperm(c("Sim", "Stock", "Year")) |>
     ReduceDims(IncYear = TRUE)
   
   dim(R0Array)[[3]] > 1
 }
 
-CalcUnfishedNumber_seasonal <- function(OM, SP = FALSE) {
+.CalcUnfishedNumberSeasonal <- function(OM, SP = FALSE) {
   OM        <- PopulateOM(OM, silent = TRUE)
   Years     <- Years(OM,'Hist')
   nYear     <- OM@nYear
@@ -116,7 +116,7 @@ CalcUnfishedNumber_seasonal <- function(OM, SP = FALSE) {
     
     if (identical_years) {
       SeasonInd <- 1:nSeason
-      N_eq <- CalcUnfishedNumber_equilibrium_season(
+      N_eq <- .CalcUnfishedNumberEquilibriumSeason(
         R0_season     = R0[, SeasonInd, drop = FALSE],
         M_season      = NaturalMortality[, , SeasonInd, drop = FALSE],
         Semel_season  = Semelparous[, , SeasonInd, drop = FALSE],
@@ -130,7 +130,7 @@ CalcUnfishedNumber_seasonal <- function(OM, SP = FALSE) {
       # Loop over years
       for (y in 1:nYear) {
         SeasonInd <- ((y - 1) * nSeason + 1):(y * nSeason)
-        N_Stock[,,SeasonInd] <- CalcUnfishedNumber_equilibrium_season(R0_season=R0[,SeasonInd, drop=FALSE],
+        N_Stock[,,SeasonInd] <- .CalcUnfishedNumberEquilibriumSeason(R0_season=R0[,SeasonInd, drop=FALSE],
                                                                       M_season=NaturalMortality[,,SeasonInd, drop=FALSE],
                                                                       Semel_season=Semelparous[,,SeasonInd, drop=FALSE],
                                                                       SpawnTimeFrac,
@@ -148,7 +148,7 @@ CalcUnfishedNumber_seasonal <- function(OM, SP = FALSE) {
 
 
 # Iterates until reaching stable age structure
-CalcUnfishedNumber_equilibrium_season <- function(R0_season,
+.CalcUnfishedNumberEquilibriumSeason <- function(R0_season,
                                                   M_season,
                                                   Semel_season,
                                                   SpawnTimeFrac,
@@ -193,7 +193,7 @@ CalcUnfishedNumber_equilibrium_season <- function(R0_season,
   }
 
   if (iter == max_iter) {
-    cli::cli_alert_warning("Equilibrium not reached for at least one simulation in `CalcUnfishedNumber_equilibrium_season`")
+    cli::cli_alert_warning("Equilibrium not reached for at least one simulation in `.CalcUnfishedNumberEquilibriumSeason`")
   }
 
   SpawnNumberSeason <- array(0, dim = c(nSim, nAge, nSeason))
@@ -204,8 +204,6 @@ CalcUnfishedNumber_equilibrium_season <- function(R0_season,
   }
   SpawnNumberSeason
 }
-
-
 
 
 

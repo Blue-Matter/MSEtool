@@ -56,7 +56,7 @@
 #' by forward-filling from the most recent existing year, back-filling from the
 #' earliest (if `backfill = TRUE`), or step-filling for years within the
 #' existing range. If any year values are non-integer (decimal), seasonal
-#' matching is used via `ExtendYears_seasonal()`.
+#' matching is used via `.ExtendYearsSeasonal()`.
 #'
 #' ## ExtendAreas
 #'
@@ -131,152 +131,90 @@ Extend <- function(array,
     ExtendAreas(Areas)
 }
 
-#' @rdname Extend
-#' @export
-#'
-ExtendSims <- function(array, nSim = NULL) {
-  if (is.null(nSim)) return(array)
+# Shared implementation behind ExtendSims/Ages/Classes/Areas/Fleets/Stocks:
+# recurses into S4/list objects, then replicates a length-1 named dimension
+# out to `target_values` (error if some other length isn't already a match).
+# match_mode = "min" treats an existing length >= n as already extended
+# (used only by ExtendSims, which allows more sims than requested); "exact"
+# requires the lengths to match exactly. `allow_missing_one` reproduces the
+# ExtendAges exception where all-but-one age class already present is
+# treated as already extended (needed for RecDevInit). `coerce_char`
+# controls whether target_values are stored as character dimnames (numeric
+# dims) or used as-is (name-based dims like Fleet/Stock).
+.ExtendDim <- function(array, dimname, target_values, match_mode = c("exact", "min"),
+                       coerce_char = TRUE, allow_missing_one = FALSE) {
+  match_mode <- match.arg(match_mode)
+  if (is.null(target_values)) return(array)
 
-  if (length(nSim) != 1) 
-    cli::cli_abort("`nSim` must be an integer or numeric value of length 1")
-  
   if (isS4(array)) {
     if (inherits(array, "data")) return(array)
     for (sl in slotNames(array))
-      slot(array, sl) <- Recall(slot(array, sl), nSim)
+      slot(array, sl) <- Recall(slot(array, sl), dimname, target_values, match_mode,
+                                coerce_char, allow_missing_one)
     return(array)
   }
-  
+
   if (is.list(array)) {
     if (length(array)) {
       for (i in seq_along(array)) {
-        temp <- Recall(array[[i]], nSim)
+        temp <- Recall(array[[i]], dimname, target_values, match_mode,
+                       coerce_char, allow_missing_one)
         if (!is.null(temp)) array[[i]] <- temp
       }
     }
     return(array)
   }
-  
-  d <- dim(array)
+
+  n  <- length(target_values)
+  d  <- dim(array)
   dn <- dimnames(array)
 
-  if (is.null(dn) || !"Sim" %in% names(dn)) return(array)
-  
-  sim_dim <- which(names(dn) == "Sim")
-  existing_sims <- as.numeric(dn[[sim_dim]])
+  if (is.null(dn) || !dimname %in% names(dn)) return(array)
 
-  if (length(existing_sims) >= nSim) return(array)
+  target_dim <- which(names(dn) == dimname)
+  existing    <- dn[[target_dim]]
+  existing_n  <- if (coerce_char) as.numeric(existing) else existing
 
-  if (length(existing_sims) != 1)
+  already_ok <- if (match_mode == "min") length(existing) >= n else length(existing) == n
+  if (already_ok) return(array)
+
+  if (allow_missing_one && sum(target_values %in% existing_n) == n - 1) return(array)
+
+  if (length(existing) != 1)
     cli::cli_abort(c(
-      "The `Sim` dimension must be length 1 or `nSim` ({.val {nSim}}).",
-      "x" = "Found length {.val {d[sim_dim]}}."
+      "The `{dimname}` dimension must be length 1 or `n{dimname}` ({.val {n}}).",
+      "x" = "Found length {.val {d[target_dim]}}."
     ))
-  
+
   idx <- lapply(seq_along(d), \(i)
-                if (i == sim_dim) rep(1L, nSim) else seq_len(d[i]))
-  
+                if (i == target_dim) rep(1L, n) else seq_len(d[i]))
+
   OutArray <- do.call(`[`, c(list(array), idx, list(drop = FALSE)))
-  dimnames(OutArray)[[sim_dim]] <- as.character(seq_len(nSim))
+  dimnames(OutArray)[[target_dim]] <- if (coerce_char) as.character(target_values) else target_values
   OutArray
+}
+
+#' @rdname Extend
+#' @export
+#'
+ExtendSims <- function(array, nSim = NULL) {
+  if (is.null(nSim)) return(array)
+  if (length(nSim) != 1)
+    cli::cli_abort("`nSim` must be an integer or numeric value of length 1")
+  .ExtendDim(array, "Sim", seq_len(nSim), match_mode = "min")
 }
 
 #' @rdname Extend
 #' @export
 #'
 ExtendAges <- function(array, AgeClasses = NULL) {
-  if (is.null(AgeClasses)) return(array)
-  
-  if (isS4(array)) {
-    if (inherits(array, "data")) return(array)
-    for (sl in slotNames(array))
-      slot(array, sl) <- Recall(slot(array, sl), AgeClasses)
-    return(array)
-  }
-  
-  if (is.list(array)) {
-    if (length(array)) {
-      for (i in seq_along(array)) {
-        temp <- Recall(array[[i]], AgeClasses)
-        if (!is.null(temp)) array[[i]] <- temp
-      }
-    }
-    return(array)
-  }
-  
-  nAge <- length(AgeClasses)
-  d    <- dim(array)
-  dn   <- dimnames(array)
-  
-  if (is.null(dn) || !"Age" %in% names(dn)) return(array)
-  
-  age_dim       <- which(names(dn) == "Age")
-  existing_ages <- as.numeric(dn[[age_dim]])
-  
-  if (length(existing_ages) == nAge) return(array)
-  
-  # Exception for RecDevInit: all but one age class present
-  if (sum(AgeClasses %in% existing_ages) == nAge - 1) return(array)
-  
-  if (length(existing_ages) != 1)
-    cli::cli_abort(c(
-      "The `Age` dimension must be length 1 or `nAge` ({.val {nAge}}).",
-      "x" = "Found length {.val {d[age_dim]}}."
-    ))
-  
-  idx <- lapply(seq_along(d), \(i)
-                if (i == age_dim) rep(1L, nAge) else seq_len(d[i]))
-  
-  OutArray <- do.call(`[`, c(list(array), idx, list(drop = FALSE)))
-  dimnames(OutArray)[[age_dim]] <- as.character(AgeClasses)
-  OutArray
+  .ExtendDim(array, "Age", AgeClasses, allow_missing_one = TRUE)
 }
 
 #' @rdname Extend
 #' @export
 ExtendClasses <- function(array, Classes = NULL) {
-  if (is.null(Classes)) return(array)
-  
-  if (isS4(array)) {
-    if (inherits(array, "data")) return(array)
-    for (sl in slotNames(array))
-      slot(array, sl) <- Recall(slot(array, sl), Classes)
-    return(array)
-  }
-  
-  if (is.list(array)) {
-    if (length(array)) {
-      for (i in seq_along(array)) {
-        temp <- Recall(array[[i]], Classes)
-        if (!is.null(temp)) array[[i]] <- temp
-      }
-    }
-    return(array)
-  }
-  
-  nClass <- length(Classes)
-  d      <- dim(array)
-  dn     <- dimnames(array)
-  
-  if (is.null(dn) || !"Class" %in% names(dn)) return(array)
-  
-  class_dim        <- which(names(dn) == "Class")
-  existing_classes <- as.numeric(dn[[class_dim]])
-  
-  if (length(existing_classes) == nClass) return(array)
-  
-  if (length(existing_classes) != 1)
-    cli::cli_abort(c(
-      "The `Class` dimension must be length 1 or `nClass` ({.val {nClass}}).",
-      "x" = "Found length {.val {d[class_dim]}}."
-    ))
-  
-  idx <- lapply(seq_along(d), \(i)
-                if (i == class_dim) rep(1L, nClass) else seq_len(d[i]))
-  
-  OutArray <- do.call(`[`, c(list(array), idx, list(drop = FALSE)))
-  dimnames(OutArray)[[class_dim]] <- as.character(Classes)
-  OutArray
+  .ExtendDim(array, "Class", Classes)
 }
 
 #' @rdname Extend
@@ -319,7 +257,7 @@ ExtendYears <- function(array, Years = NULL, default = NULL,
   
   # Seasonal
   if (any(all_years %% 1 != 0))
-    return(ExtendYears_seasonal(array, Years, default, backfill = backfill,
+    return(.ExtendYearsSeasonal(array, Years, default, backfill = backfill,
                                 maintain_seasonal_pattern=maintain_seasonal_pattern))
   
 
@@ -327,7 +265,7 @@ ExtendYears <- function(array, Years = NULL, default = NULL,
   if (length(forward_years)) {
     MostRecent <- abind::asub(array, nyear, year_dim, drop = FALSE)
     if (!is.null(default)) MostRecent[] <- default
-    abind::afill(OutArray) <- extend_along_dim(MostRecent, year_dim, forward_years)
+    abind::afill(OutArray) <- .ExtendAlongDim(MostRecent, year_dim, forward_years)
   }
   
 
@@ -335,7 +273,7 @@ ExtendYears <- function(array, Years = NULL, default = NULL,
   if (length(back_years) && backfill) {
     FirstYear <- abind::asub(array, 1, year_dim, drop = FALSE)
     if (!is.null(default)) FirstYear[] <- default
-    abind::afill(OutArray) <- extend_along_dim(FirstYear, year_dim, back_years)
+    abind::afill(OutArray) <- .ExtendAlongDim(FirstYear, year_dim, back_years)
   }
   
   # Fill years within existing years
@@ -348,17 +286,17 @@ ExtendYears <- function(array, Years = NULL, default = NULL,
     for (i in seq_along(TimeBlocks)) {
       year_ind  <- max(which(existing_years < min(TimeBlocks[[i]])))
       FillValue <- abind::asub(array, year_ind, year_dim, drop = FALSE)
-      abind::afill(OutArray) <- extend_along_dim(FillValue, year_dim, TimeBlocks[[i]])
+      abind::afill(OutArray) <- .ExtendAlongDim(FillValue, year_dim, TimeBlocks[[i]])
     }
   }
   OutArray
 }
 
-NoSeasonVals <- function(x) {
+.NoSeasonVals <- function(x) {
   all(abs(x - round(x)) < .Machine$double.eps^0.5)
 }
 
-ExtendYears_seasonal <- function(array, Years = NULL, default = NULL, backfill = FALSE, 
+.ExtendYearsSeasonal <- function(array, Years = NULL, default = NULL, backfill = FALSE, 
                                  maintain_seasonal_pattern=maintain_seasonal_pattern, tol = 0.01) {
   
   if (!is.array(array)) 
@@ -403,7 +341,7 @@ ExtendYears_seasonal <- function(array, Years = NULL, default = NULL, backfill =
   # Forward fill years from most recent existing year
   if (length(forward_years)) {
     season_forward <- (forward_years %% 1) |> unique()
-    if (NoSeasonVals(season_existing) || !maintain_seasonal_pattern) {
+    if (.NoSeasonVals(season_existing) || !maintain_seasonal_pattern) {
       # no seasons in provided values - constant over seasons within years
       most_recent_ind <- nyear
       MostRecent <- abind::asub(array, most_recent_ind, year_dim, drop = FALSE)
@@ -411,7 +349,7 @@ ExtendYears_seasonal <- function(array, Years = NULL, default = NULL, backfill =
         MostRecent[] <- default
       }
       
-      Extended <- extend_along_dim(
+      Extended <- .ExtendAlongDim(
         x = MostRecent,
         along_dim = year_dim,
         new_index = forward_years
@@ -427,7 +365,7 @@ ExtendYears_seasonal <- function(array, Years = NULL, default = NULL, backfill =
           most_recent_ind <- 1
         }
         
-        CheckSeasonExists(most_recent_ind, season_forward[i], existing_years, season_existing)
+        .CheckSeasonExists(most_recent_ind, season_forward[i], existing_years, season_existing)
         most_recent_ind <- max(most_recent_ind)
         
         MostRecent <- abind::asub(array, most_recent_ind, year_dim, drop = FALSE)
@@ -436,7 +374,7 @@ ExtendYears_seasonal <- function(array, Years = NULL, default = NULL, backfill =
           MostRecent[] <- default
         }
         
-        Extended <- extend_along_dim(
+        Extended <- .ExtendAlongDim(
           x = MostRecent,
           along_dim = year_dim,
           new_index = forward_years[season_ind]
@@ -450,14 +388,14 @@ ExtendYears_seasonal <- function(array, Years = NULL, default = NULL, backfill =
   # Back fill years from first existing year
   if (length(back_years) && backfill) {
     season_backward <- (back_years %% 1) |> unique()
-    if (NoSeasonVals(season_existing) || maintain_seasonal_pattern) {
+    if (.NoSeasonVals(season_existing) || maintain_seasonal_pattern) {
       # no seasons in provided values - constant over seasons within years
       MostRecent <- abind::asub(array, 1, year_dim, drop = FALSE)
       if (!is.null(default)) {
         MostRecent[] <- default
       }
       
-      Extended <- extend_along_dim(
+      Extended <- .ExtendAlongDim(
         x = MostRecent,
         along_dim = year_dim,
         new_index = back_years
@@ -473,12 +411,12 @@ ExtendYears_seasonal <- function(array, Years = NULL, default = NULL, backfill =
         if (length(existing_years) == 1) {
           most_recent_ind <- 1
         }
-        CheckSeasonExists(most_recent_ind, season_backward[i], existing_years, season_existing)
+        .CheckSeasonExists(most_recent_ind, season_backward[i], existing_years, season_existing)
         most_recent_ind <- min(most_recent_ind)
         
         MostRecent <- abind::asub(array, most_recent_ind, year_dim, drop = FALSE)
         
-        Extended <- extend_along_dim(
+        Extended <- .ExtendAlongDim(
           x = MostRecent,
           along_dim = year_dim,
           new_index = back_years[season_ind]
@@ -500,7 +438,7 @@ ExtendYears_seasonal <- function(array, Years = NULL, default = NULL, backfill =
       years_block <- TimeBlocks[[i]]
       season_inside <- (years_block %% 1) |> unique()
 
-      if (NoSeasonVals(season_existing) || maintain_seasonal_pattern) {
+      if (.NoSeasonVals(season_existing) || maintain_seasonal_pattern) {
         # no seasons in provided values - constant over seasons within years
         most_recent_ind <- which(existing_years <  min(years_block)) |> max()
         MostRecent <- abind::asub(array, most_recent_ind, year_dim, drop = FALSE)
@@ -522,7 +460,7 @@ ExtendYears_seasonal <- function(array, Years = NULL, default = NULL, backfill =
           if (!length(most_recent_ind))
             most_recent_ind <- 1
           
-          CheckSeasonExists(most_recent_ind, season_inside[i], existing_years, season_existing)
+          .CheckSeasonExists(most_recent_ind, season_inside[i], existing_years, season_existing)
           most_recent_ind <- min(most_recent_ind)
           
           MostRecent <- abind::asub(array, most_recent_ind, year_dim, drop = FALSE)
@@ -537,7 +475,7 @@ ExtendYears_seasonal <- function(array, Years = NULL, default = NULL, backfill =
   OutArray
 }
 
-CheckSeasonExists <- function(most_recent_ind, try_season, existing_years, season_existing) {
+.CheckSeasonExists <- function(most_recent_ind, try_season, existing_years, season_existing) {
   if (length(existing_years) == 1) {
     return(NULL)
   }
@@ -555,159 +493,27 @@ CheckSeasonExists <- function(most_recent_ind, try_season, existing_years, seaso
 #' @export
 #'
 ExtendAreas <- function(array, Areas = NULL) {
-  if (is.null(Areas)) return(array)
-  
-  if (isS4(array)) {
-    if (inherits(array, "data")) return(array)
-    for (sl in slotNames(array))
-      slot(array, sl) <- Recall(slot(array, sl), Areas)
-    return(array)
-  }
-  
-  if (is.list(array)) {
-    if (length(array)) {
-      for (i in seq_along(array)) {
-        temp <- Recall(array[[i]], Areas)
-        if (!is.null(temp)) array[[i]] <- temp
-      }
-    }
-    return(array)
-  }
-  
-  nArea <- length(Areas)
-  d     <- dim(array)
-  dn    <- dimnames(array)
-  
-  if (is.null(dn) || !"Area" %in% names(dn)) return(array)
-  
-  area_dim       <- which(names(dn) == "Area")
-  existing_areas <- as.numeric(dn[[area_dim]])
-  
-  if (length(existing_areas) == nArea) return(array)
-  
-  if (length(existing_areas) != 1)
-    cli::cli_abort(c(
-      "The `Area` dimension must be length 1 or `nArea` ({.val {nArea}}).",
-      "x" = "Found length {.val {d[area_dim]}}."
-    ))
-  
-  # replicate Area = 1 along the Area dimension
-  
-  idx <- lapply(seq_along(d), \(i)
-                if (i == area_dim) rep(1L, nArea) else seq_len(d[i]))
-  
-  OutArray <- do.call(`[`, c(list(array), idx, list(drop = FALSE)))
-  dimnames(OutArray)[[area_dim]] <- as.character(Areas)
-  OutArray
-  
+  .ExtendDim(array, "Area", Areas)
 }
 
-
-ExtendFleets <- function(array, Fleets = NULL) {
-  if (is.null(Fleets)) return(array)
-  
-  if (isS4(array)) {
-    if (inherits(array, "data")) return(array)
-    for (sl in slotNames(array))
-      slot(array, sl) <- Recall(slot(array, sl), Fleets)
-    return(array)
-  }
-  
-  if (is.list(array)) {
-    if (length(array)) {
-      for (i in seq_along(array)) {
-        temp <- Recall(array[[i]], Fleets)
-        if (!is.null(temp)) array[[i]] <- temp
-      }
-    }
-    return(array)
-  }
-  
-  nFleet <- length(Fleets)
-  d     <- dim(array)
-  dn    <- dimnames(array)
-  
-  if (is.null(dn) || !"Fleet" %in% names(dn)) return(array)
-  
-  fleet_dim       <- which(names(dn) == "Fleet")
-  existing_fleets <- as.numeric(dn[[fleet_dim]])
-  
-  if (length(existing_fleets) == nFleet) return(array)
-  
-  if (length(existing_fleets) != 1)
-    cli::cli_abort(c(
-      "The `Fleet` dimension must be length 1 or `nFleet` ({.val {nFleet}}).",
-      "x" = "Found length {.val {d[fleet_dim]}}."
-    ))
-  
-
-  idx <- lapply(seq_along(d), \(i)
-                if (i == fleet_dim) rep(1L, nFleet) else seq_len(d[i]))
-  
-  OutArray <- do.call(`[`, c(list(array), idx, list(drop = FALSE)))
-  dimnames(OutArray)[[fleet_dim]] <- Fleets
-  OutArray
-  
+.ExtendFleets <- function(array, Fleets = NULL) {
+  .ExtendDim(array, "Fleet", Fleets, coerce_char = FALSE)
 }
 
-
-ExtendStocks <- function(array, Stocks = NULL) {
-  if (is.null(Stocks)) return(array)
-  
-  if (isS4(array)) {
-    if (inherits(array, "data")) return(array)
-    for (sl in slotNames(array))
-      slot(array, sl) <- Recall(slot(array, sl), Stocks)
-    return(array)
-  }
-  
-  if (is.list(array)) {
-    if (length(array)) {
-      for (i in seq_along(array)) {
-        temp <- Recall(array[[i]], Stocks)
-        if (!is.null(temp)) array[[i]] <- temp
-      }
-    }
-    return(array)
-  }
-  
-  nStock <- length(Stocks)
-  d      <- dim(array)
-  dn     <- dimnames(array)
-  
-  if (is.null(dn) || !"Stock" %in% names(dn)) return(array)
-  
-  stock_dim       <- which(names(dn) == "Stock")
-  existing_stocks <- as.numeric(dn[[stock_dim]])
-  
-  if (length(existing_stocks) == nStock) return(array)
-  
-  if (length(existing_stocks) != 1)
-    cli::cli_abort(c(
-      "The `Stock` dimension must be length 1 or `nStock` ({.val {nStock}}).",
-      "x" = "Found length {.val {d[stock_dim]}}."
-    ))
-  
-  
-  idx <- lapply(seq_along(d), \(i)
-                if (i == stock_dim) rep(1L, nStock) else seq_len(d[i]))
-  
-  OutArray <- do.call(`[`, c(list(array), idx, list(drop = FALSE)))
-  dimnames(OutArray)[[stock_dim]] <- Stocks
-  OutArray
-  
+.ExtendStocks <- function(array, Stocks = NULL) {
+  .ExtendDim(array, "Stock", Stocks, coerce_char = FALSE)
 }
 
 
 
 
-extend_along_dim <- function(x, along_dim, new_index, dimnames_list = dimnames(x)) {
+.ExtendAlongDim <- function(x, along_dim, new_index, dimnames_list = dimnames(x)) {
   
   # Permute so target dimension is first
   perm <- seq_along(dim(x))
   perm <- c(along_dim, perm[-along_dim])
   
-  x_perm <- aperm(x, perm)
+  x_perm <- .Aperm(x, perm)
   dx_perm <- dim(x_perm)
   
   # Build index list for ND subset
@@ -724,7 +530,7 @@ extend_along_dim <- function(x, along_dim, new_index, dimnames_list = dimnames(x
   
   # Permute back
   inv_perm <- order(perm)
-  out <- aperm(x_rep, inv_perm)
+  out <- .Aperm(x_rep, inv_perm)
   
   # Fix dimnames
   if (!is.null(dimnames_list)) {

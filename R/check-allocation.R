@@ -25,7 +25,7 @@
 #' - Each row must sum to 1 (within a tolerance of `sqrt(.Machine$double.eps)`).
 #'
 #' @keywords internal
-CheckAllocation <- function(Hist) {
+.CheckAllocation <- function(Hist) {
   
   StockNames <- StockNames(Hist)
   Allocation <- Hist@OM@Allocation
@@ -57,32 +57,34 @@ CheckAllocation <- function(Hist) {
       if (!is.null(Hist@OM@CatchFrac[[st]])) {
         AllocationFleet <- Hist@OM@CatchFrac[[st]]
         
-        Hist <- CaptureLog(Hist,
+        Hist <- .CaptureLog(Hist,
                          string = cli::format_inline(
                            "`Allocation(OM)` has not been specified for Complex {.val {ComplexNames[st]}}"
                            ),
-                         name = "Allocation"
+                         name = "Allocation",
+                         type = 'assumption'
                          )
-        
-        Hist <- CaptureLog(Hist,
+
+        Hist <- .CaptureLog(Hist,
                          string = cli::format_inline(
                            "Assuming distribution of TAC in projections is the same as `CatchFrac`"
-                           )
-                         
+                           ),
+                         type = 'assumption'
         )
 
       } else {
-        Hist <- CaptureLog(Hist,
+        Hist <- .CaptureLog(Hist,
                               string = cli::format_inline(
                                 "`Allocation(OM)` has not been specified for Complex {.val {ComplexNames[st]}}"
                                 ),
-                              name = "Allocation"
+                              name = "Allocation",
+                              type = 'assumption'
         )
-        Hist <- CaptureLog(Hist,
+        Hist <- .CaptureLog(Hist,
                               string = cli::format_inline(
                                 "Assuming TAC Allocation in projections is same as mean removals from last 5 historical years"
-                                )
-                              
+                                ),
+                              type = 'assumption'
         )
         
         last_5_years <- utils::tail(seq_len(length(HistYears)), 5)

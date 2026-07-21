@@ -70,6 +70,6 @@ class(WeightatMeanLength) <- 'Weight-at-Age-Model'
 #' @rdname Weight-Models
 #' @export
 WeightModels <- function(full=TRUE, print=TRUE) {
-  ReturnModels(ModelClass=c('Weight-at-Age-Model',
+  .ReturnModels(ModelClass=c('Weight-at-Age-Model',
                             'Weight-at-Length-Model'), full, print)
 }

@@ -10,10 +10,9 @@
 #' @return The modified [Hist()] object.
 #'
 #' @keywords internal
-CalcDynamicInitial <- function(Hist) {
+.CalcDynamicInitial <- function(Hist) {
   nSim <- nSim(Hist)
   
-  # ---- Loop over stocks -----
   for (st in 1:nStock(Hist)) {
 
     ## ---- Calculate dynamic age structure (multiply by rec devs) ----
@@ -59,21 +58,22 @@ CalcDynamicInitial <- function(Hist) {
       EquilNumber)
 
     if (InitYear>1) {
-      # backfill with unfished (EquilNumber already Sim x Age x Area)
-      eq_unfished <- EquilNumber |> AddDimension('Year', val=min(HistYears)) |>
+      # backfill with unfished
+      eq_unfished <- EquilNumber |> ExtendSims(nSim) |>
+        AddDimension('Year', val=min(HistYears), pos=3) |>
         ExtendYears(Years=HistYears[HistYears<InitYearCal])
 
       ArrayFill(Hist@Number[[st]]) <- eq_unfished
     }
 
     ## ---- Fill recruitment for initial time steps if age rec > 0  ----
-    RecruitTimeStep <- CalcRecruitment_AgeIndex(Hist, st)
+    RecruitTimeStep <- .CalcRecruitmentAgeIndex(Hist, st)
 
     if (RecruitTimeStep>1) {
       for (ts_ind in seq_len(RecruitTimeStep - 1) + 1) {
         ts <- ts_ind + InitYear - 1
         UnfishedDist <- Hist@OM@Stock[[st]]@Spatial@UnfishedDist[,,1,ts,drop=FALSE] |>
-          aperm(c('Sim', 'Age', 'Year', 'Area'))
+          .Aperm(c('Sim', 'Age', 'Year', 'Area'))
       
         Recruit <- ArrayMultiply(Hist@OM@Stock[[st]]@SRR@R0[, ts, drop=FALSE],
                                  RecDevHist[, ts, drop=FALSE]) |> 
@@ -85,17 +85,16 @@ CalcDynamicInitial <- function(Hist) {
       }
     }
 
-    # ---- Initial Depletion ----
     InitialDepletion <- Hist@OM@Stock[[st]]@Depletion@Initial
     if (length(InitialDepletion) && all(InitialDepletion!=1))  
-      Hist <- DoOptInitialDepletion(Hist, st)
+      Hist <- .DoOptInitialDepletion(Hist, st)
     
   }
 
   Hist
 }
 
-# TODO - DoOptInitialDepletion should probably account for selectivity,
+# TODO - .DoOptInitialDepletion should probably account for selectivity,
 # but most of the time it's already done in Import(OM)
 
 #' Apply initial depletion by scaling numbers-at-age
@@ -109,7 +108,7 @@ CalcDynamicInitial <- function(Hist) {
 #' @return The modified [Hist()] object.
 #'
 #' @keywords internal
-DoOptInitialDepletion <- function(Hist, st) {
+.DoOptInitialDepletion <- function(Hist, st) {
   DepletionInitial <- Hist@OM@Stock[[st]]@Depletion@Initial
   DepletionReference <- Hist@OM@Stock[[st]]@Depletion@Reference
 
@@ -147,7 +146,7 @@ DoOptInitialDepletion <- function(Hist, st) {
   ), \(NumberAtAge, WeightAtAge, MaturityAtAge, FecundityAtAge,
        DepletionInitial, RefVal) {
 
-    optimize(OptInitialDepletion,
+    optimize(.OptInitialDepletion,
              interval=c(0.01, 10),
              NumberAtAge=NumberAtAge,
              WeightAtAge=WeightAtAge,
@@ -177,7 +176,7 @@ DoOptInitialDepletion <- function(Hist, st) {
 #' or spawning biomass matches a target depletion level.
 #'
 #' @keywords internal
-OptInitialDepletion <- function(par=1,
+.OptInitialDepletion <- function(par=1,
                                 NumberAtAge,
                                 WeightAtAge,
                                 MaturityAtAge,
@@ -201,9 +200,9 @@ OptInitialDepletion <- function(par=1,
 
 #' Calculate Recruitment Age Index for One or All Stocks
 #'
-#' Returns the number of leading pre-recruit timesteps - those with no valid
-#' recruitment lag back to timestep 1 - for each stock in an `om` or `hist`
-#' class object, based on the seasonal time step and minimum age class.
+#' Returns the number of pre-recruit age classes (i.e. the age index at which
+#' recruitment occurs) for each stock in an `om` or `hist` class object. Pre-recruit
+#' classes are determined by the seasonal time step and the minimum age class.
 #'
 #' @param OM  An `om` or `hist` class object.
 #' @param st  Integer or `NULL`. If provided, returns the recruitment age index
@@ -213,8 +212,8 @@ OptInitialDepletion <- function(par=1,
 #'   recruitment age indices with a `Stock` dimension.
 #'
 #' @keywords internal
-CalcRecruitment_AgeIndex <- function(OM, st=NULL) {
-  CheckClass(OM, c('om', 'hist'))
+.CalcRecruitmentAgeIndex <- function(OM, st=NULL) {
+  .CheckClass(OM, c('om', 'hist'))
 
   if (inherits(OM, 'hist'))
     OM <- OM@OM
@@ -222,12 +221,12 @@ CalcRecruitment_AgeIndex <- function(OM, st=NULL) {
   if (!is.null(st)) {
     Stock <- OM@Stock[[st]]
     PreRecruit <- seq(0, by=1/Stock@Seasons, to=min(Stock@Ages@Classes))
-    return(length(PreRecruit) - 1)
+    return(length(PreRecruit))
   }
 
   purrr::map(OM@Stock, \(Stock) {
     PreRecruit <- seq(0, by=1/Stock@Seasons, to=min(Stock@Ages@Classes))
-    length(PreRecruit) - 1
+    length(PreRecruit)
   }) |>
     List2Array('Stock') |>
     DropDimension('Sim')

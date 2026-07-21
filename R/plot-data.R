@@ -7,10 +7,10 @@
 #' functions draw a single line per fleet or index rather than a
 #' median/ribbon summary.
 #'
-#' `PlotEffort()`, `PlotCPUE()`, and `PlotSurvey()` plot the `Effort`, `CPUE`,
-#' and `Survey` slots respectively. `PlotLandings()` and `PlotDiscards()`
-#' (see [plot_hist]) also accept a [data-class] object and are documented
-#' here for that case.
+#' `PlotCPUE()` and `PlotSurvey()` plot the `CPUE` and `Survey` slots
+#' respectively. `PlotLandings()`, `PlotDiscards()`, and `PlotEffort()` (see
+#' [plot_hist]) also accept a [data-class] object and are documented here for
+#' that case.
 #'
 #' If the relevant slot is not populated (`NULL`, e.g. no survey configured
 #' for this OM), the function prints an informational message and returns
@@ -40,6 +40,16 @@
 #'   sub-annual series. Default `NULL` (no filtering). Ignored for
 #'   non-seasonal data and by `PlotLandings()`/`PlotDiscards()`/
 #'   `PlotEffort()` (see `AggregateYear`).
+#' @param units Logical or a character unit string. `TRUE` (default) labels
+#'   the y-axis with the slot's own `Units` (e.g. `object@CPUE@Units`,
+#'   `"kg/trip"`) when it's set. `FALSE` suppresses the unit label. For
+#'   `PlotLandings()`/`PlotDiscards()` only, `object@Landings@Units`/
+#'   `object@Discards@Units` is a mass unit, so a character string (`"kg"`,
+#'   `"t"`, `"lb"`, etc.) both relabels the axis *and* rescales the plotted
+#'   values into that unit; requesting a character unit for `PlotCPUE()`/
+#'   `PlotSurvey()` is an error, since those `Units` (e.g. `"kg/trip"`)
+#'   aren't in a recognized conversion table. No effect on `PlotEffort()`,
+#'   which has no unit concept for a single `data-class` object.
 #'
 #' @return A `ggplot` object (a `patchwork` object for `PlotData()`), or
 #'   `NULL` invisibly if the relevant slot isn't populated.
@@ -67,43 +77,35 @@ NULL
 
 #' @rdname plot_data
 #' @export
-PlotEffort <- function(object, byFleet = NULL, AggregateYear = FALSE) {
-  CheckClass(object, 'data', 'object')
-  .plot_data_ts(object, 'Effort', 'Effort', byFleet = byFleet,
-               AggregateYear = AggregateYear)
+PlotCPUE <- function(object, byFleet = NULL, Season = NULL, units = TRUE) {
+  .CheckClass(object, 'data', 'object')
+  .PlotDataTs(object, 'CPUE', 'CPUE', byFleet = byFleet, Season = Season, units = units)
 }
 
 #' @rdname plot_data
 #' @export
-PlotCPUE <- function(object, byFleet = NULL, Season = NULL) {
-  CheckClass(object, 'data', 'object')
-  .plot_data_ts(object, 'CPUE', 'CPUE', byFleet = byFleet, Season = Season)
+PlotSurvey <- function(object, byFleet = NULL, Season = NULL, units = TRUE) {
+  .CheckClass(object, 'data', 'object')
+  .PlotDataTs(object, 'Survey', 'Survey', byFleet = byFleet, Season = Season, units = units)
 }
 
 #' @rdname plot_data
 #' @export
-PlotSurvey <- function(object, byFleet = NULL, Season = NULL) {
-  CheckClass(object, 'data', 'object')
-  .plot_data_ts(object, 'Survey', 'Survey', byFleet = byFleet, Season = Season)
-}
-
-#' @rdname plot_data
-#' @export
-PlotData <- function(object, byFleet = NULL, AggregateYear = FALSE, Season = NULL) {
-  CheckClass(object, 'data', 'object')
+PlotData <- function(object, byFleet = NULL, AggregateYear = FALSE, Season = NULL, units = TRUE) {
+  .CheckClass(object, 'data', 'object')
 
   specs <- list(
-    list(slot = 'Landings', ylab = 'Landings', AggregateYear = AggregateYear),
-    list(slot = 'Discards', ylab = 'Discards', AggregateYear = AggregateYear),
+    list(slot = 'Landings', ylab = 'Landings', AggregateYear = AggregateYear, units = units),
+    list(slot = 'Discards', ylab = 'Discards', AggregateYear = AggregateYear, units = units),
     list(slot = 'Effort',   ylab = 'Effort',   AggregateYear = AggregateYear),
-    list(slot = 'CPUE',     ylab = 'CPUE',     Season = Season),
-    list(slot = 'Survey',   ylab = 'Survey',   Season = Season)
+    list(slot = 'CPUE',     ylab = 'CPUE',     Season = Season, units = units),
+    list(slot = 'Survey',   ylab = 'Survey',   Season = Season, units = units)
   )
 
   panels <- purrr::map(specs, function(s)
-    .plot_data_ts(object, s$slot, s$ylab, byFleet = byFleet,
+    .PlotDataTs(object, s$slot, s$ylab, byFleet = byFleet,
                  AggregateYear = s$AggregateYear %||% FALSE,
-                 Season = s$Season %||% NULL, silent = TRUE)
+                 Season = s$Season %||% NULL, units = s$units %||% FALSE, silent = TRUE)
   )
   panels <- purrr::compact(panels)
 
@@ -115,14 +117,21 @@ PlotData <- function(object, byFleet = NULL, AggregateYear = FALSE, Season = NUL
   patchwork::wrap_plots(panels, ncol = 2)
 }
 
+#' @rdname plot_data
+#' @export
+setMethod('plot', 'data', function(x, y, ...) {
+  PlotData(x, ...)
+})
+
 # ---- internal helpers ----
 
 # Extract slot(object, slot_name)@Value and build a simple line plot, or
 # skip (returning NULL invisibly) if it isn't populated. `silent` suppresses
 # the "not populated" message, used when called from PlotData()'s composite
 # so a handful of missing slots doesn't print a wall of messages.
-.plot_data_ts <- function(object, slot_name, ylab, byFleet = NULL,
-                         AggregateYear = FALSE, Season = NULL, silent = FALSE) {
+.PlotDataTs <- function(object, slot_name, ylab, byFleet = NULL,
+                         AggregateYear = FALSE, Season = NULL, units = FALSE,
+                         silent = FALSE) {
   value_arr <- slot(object, slot_name)@Value
 
   if (is.null(value_arr)) {
@@ -131,14 +140,35 @@ PlotData <- function(object, byFleet = NULL, AggregateYear = FALSE, Season = NUL
     return(invisible(NULL))
   }
 
-  .build_data_ts_plot(value_arr, ylab, object = object, byFleet = byFleet,
+  if (!isFALSE(units)) {
+    # Units is stored per fleet/index; only usable when every plotted
+    # fleet/index agrees on it (same "skip if inconsistent" policy as the
+    # OM-level stock Units). Simulated data (via CreateObs()'s own `Units`)
+    # stores "Biomass"/"Number"/"Recruitment" here - the aggregation type,
+    # not a physical unit - so those aren't usable as an axis label either.
+    base_unit <- unique(slot(object, slot_name)@Units)
+    if (length(base_unit) != 1 || base_unit %in% c('Biomass', 'Number', 'Recruitment'))
+      base_unit <- NULL
+
+    if (slot_name %in% c('Landings', 'Discards')) {
+      uinfo     <- .ResolveUnitInfo(.mass_units_g, base_unit, 1, units, ylab)
+      ylab      <- .AppendUnits(ylab, uinfo$label)
+      value_arr <- value_arr * uinfo$factor
+    } else {
+      if (!isTRUE(units))
+        cli::cli_abort("`units` only accepts `TRUE`/`FALSE` for {.field {slot_name}} (its `Units` aren't in a recognized conversion table).")
+      ylab <- .AppendUnits(ylab, base_unit)
+    }
+  }
+
+  .BuildDataTsPlot(value_arr, ylab, object = object, byFleet = byFleet,
                       AggregateYear = AggregateYear, Season = Season)
 }
 
 # Positional season filter for `data`-class objects, mirroring
-# `.filter_season()` in plot-hist.R but reading `Seasons`/`Years` directly
+# `.FilterSeason()` in plot-hist.R but reading `Seasons`/`Years` directly
 # off the `data` object instead of via `object@OM@Seasons`.
-.filter_season_data <- function(df, Season, object) {
+.FilterSeasonData <- function(df, Season, object) {
   if (is.null(Season))
     return(df)
 
@@ -154,9 +184,9 @@ PlotData <- function(object, byFleet = NULL, AggregateYear = FALSE, Season = NUL
 }
 
 # Sum sub-annual (seasonal) rows into whole-year totals for `data`-class flow
-# variables (Landings/Discards/Effort), mirroring `.aggregate_year()` in
+# variables (Landings/Discards/Effort), mirroring `.AggregateYear()` in
 # plot-hist.R.
-.aggregate_year_data <- function(df, AggregateYear, object) {
+.AggregateYearData <- function(df, AggregateYear, object) {
   if (!isTRUE(AggregateYear))
     return(df)
 
@@ -177,7 +207,7 @@ PlotData <- function(object, byFleet = NULL, AggregateYear = FALSE, Season = NUL
 # either side -- `geom_line()` can't draw a segment through these, so they
 # need an explicit point marker to stay visible. Runs of >= 2 consecutive
 # non-NA values are left as line-only (no markers).
-.isolated_rows <- function(df) {
+.IsolatedRows <- function(df) {
   groupCol <- if ('Fleet' %in% colnames(df)) 'Fleet' else NULL
 
   df <- df |> dplyr::arrange(dplyr::across(dplyr::any_of(c(groupCol, 'Year'))))
@@ -193,14 +223,14 @@ PlotData <- function(object, byFleet = NULL, AggregateYear = FALSE, Season = NUL
     dplyr::ungroup()
 }
 
-.build_data_ts_plot <- function(value_arr, ylab, object = NULL, byFleet = NULL,
+.BuildDataTsPlot <- function(value_arr, ylab, object = NULL, byFleet = NULL,
                                AggregateYear = FALSE, Season = NULL) {
   df <- Array2DF(value_arr)
 
   if (!is.null(object)) {
     df <- df |>
-      .filter_season_data(Season, object) |>
-      .aggregate_year_data(AggregateYear, object)
+      .FilterSeasonData(Season, object) |>
+      .AggregateYearData(AggregateYear, object)
   }
 
   multiFleet <- length(unique(df$Fleet)) > 1
@@ -210,7 +240,7 @@ PlotData <- function(object, byFleet = NULL, AggregateYear = FALSE, Season = NUL
           else 'color'
 
   if (mode == 'sum')
-    df <- .sum_over_fleet(df)
+    df <- .SumOverFleet(df)
 
   hasColor <- mode == 'color'
 
@@ -218,14 +248,14 @@ PlotData <- function(object, byFleet = NULL, AggregateYear = FALSE, Season = NUL
   if (hasColor)
     mapping <- utils::modifyList(mapping, ggplot2::aes(color = .data$Fleet))
 
-  isolated <- .isolated_rows(df)
+  isolated <- .IsolatedRows(df)
 
   p <- ggplot2::ggplot(df, mapping) +
     ggplot2::geom_line(linewidth = 0.7, na.rm = TRUE) +
     ggplot2::geom_point(data = isolated, size = 1.2, na.rm = TRUE) +
     ggplot2::expand_limits(y = 0) +
     ggplot2::scale_x_continuous(expand = ggplot2::expansion(mult = c(0.02, 0.05)),
-                                labels = .year_labels) +
+                                labels = .YearLabels) +
     ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0.02, 0.05))) +
     ggplot2::theme_bw() +
     ggplot2::labs(x = 'Year', y = ylab, color = if (hasColor) 'Fleet' else NULL)
@@ -233,7 +263,7 @@ PlotData <- function(object, byFleet = NULL, AggregateYear = FALSE, Season = NUL
   # `Fleet` from Array2DF() is always an ordered factor, which makes ggplot2
   # fall back to its viridis-based ordinal scale unless overridden explicitly.
   if (hasColor) {
-    fleetValues <- stats::setNames(.gg_hue_pal(length(unique(df$Fleet))), levels(df$Fleet))
+    fleetValues <- stats::setNames(.GgHuePal(length(unique(df$Fleet))), levels(df$Fleet))
     p <- p + ggplot2::scale_color_manual(values = fleetValues)
   }
 

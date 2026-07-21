@@ -34,7 +34,7 @@ ConvertMOM <- function(MOM,
                        Populate=TRUE, 
                        silent=FALSE) {
   
-  CheckClass(MOM, c('MOM'), 'MOM')
+  .CheckClass(MOM, c('MOM'), 'MOM')
   
   if (!silent)
     cli::cli_alert('Converting object of class {.cls MOM} to class {.cls om}')
@@ -81,7 +81,7 @@ ConvertMOM <- function(MOM,
     Seasons   = Seasons
   )
   
-  om@Stock <- ConvertToList(MOM2stock(MOM, YearsList))
+  om@Stock <- .ConvertToList(.MOM2stock(MOM, YearsList))
   
   StockNames <- lapply(MOM@Stocks, slot, 'Name') 
   StockNames <- lapply(StockNames, function(x) gsub("REPLACED -- ", '', x)) |> unlist()
@@ -96,7 +96,7 @@ ConvertMOM <- function(MOM,
   
   for (st in seq_len(nStock)) {
     # om@Stock[[st]]@Depletion@Final <- NULL #
-    om@Fleet[[st]]  <- ConvertToList(MOM2fleet(MOM, st, YearsList))
+    om@Fleet[[st]]  <- .ConvertToList(.MOM2fleet(MOM, st, YearsList))
     names(om@Fleet[[st]]) <- FleetNames
     
     if (all(is.finite(om@Fleet[[st]][[1]]@Catchability@Efficiency))) {
@@ -144,7 +144,7 @@ ConvertMOM <- function(MOM,
 }
 
 
-MOM2fleet <- function(MOM, st, YearsList) {
+.MOM2fleet <- function(MOM, st, YearsList) {
   
   nfleets <- length(MOM@Fleets[[1]])
   FleetNames <- names(MOM@Fleets[[1]])
@@ -157,15 +157,15 @@ MOM2fleet <- function(MOM, st, YearsList) {
     Fleet <- MOM@Fleets[[st]][[fl]]
     cpars <- MOM@cpars[[st]][[fl]]
     Fdisc <- MOM@Stocks[[st]]@Fdisc
-    AgeClasses <- GetStockAges(MOM@Stocks[[st]])
-    FleetList[[fl]] <- OM2fleet(Fleet, YearsList, cpars, Fdisc, AgeClasses)
+    AgeClasses <- .GetStockAges(MOM@Stocks[[st]])
+    FleetList[[fl]] <- .OM2fleet(Fleet, YearsList, cpars, Fdisc, AgeClasses)
   }
   names(FleetList) <- FleetNames
   FleetList
 }
 
 
-MOM2stock <- function(MOM, YearsList=NULL) {
+.MOM2stock <- function(MOM, YearsList=NULL) {
   StockList <- list()
   stocks <- MOM@Stocks
   nstocks <- length(stocks)
@@ -173,7 +173,7 @@ MOM2stock <- function(MOM, YearsList=NULL) {
   for (st in seq_len(nstocks)) {
     Stock <- stocks[[st]]
     cpars <- MOM@cpars[[st]][[1]]
-    StockList[[st]] <- OM2stock(Stock, cpars, YearsList, nSim=MOM@nsim, MOM@seed)
+    StockList[[st]] <- .OM2stock(Stock, cpars, YearsList, nSim=MOM@nsim, MOM@seed)
   }
   StockList
 }

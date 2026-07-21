@@ -1,12 +1,12 @@
 
 
-ProcessBAMArgs <- function(Stock, OM=NULL) {
+.ProcessBAMArgs <- function(Stock, OM=NULL) {
   if (is.null(OM))
     OM <- ImportBAM(Stock,
                     nSim = 1,
                     pYear = 1)
 
-  CheckClass(OM, c('om', 'hist'))
+  .CheckClass(OM, c('om', 'hist'))
 
   if (inherits(OM, 'om')) {
     Hist <- Simulate(OM, nSim=1, silent=TRUE)
@@ -24,46 +24,6 @@ ProcessBAMArgs <- function(Stock, OM=NULL) {
        BAMdata=BAMdata)
 }
 
-PrintPlotBAMRE <- function(Out, name, plot=FALSE, thresh=0.5) {
-  MARE <- NULL # CRAN
-  if (is.null(Out[[name]]))
-    return(invisible(NULL))
-  re <- Out[[name]]$MARE |>
-    dplyr::mutate(MARE=abs(MARE)) |>
-    dplyr::filter(MARE>thresh)
-  
-  exMARE <- nrow(re)>0
-  
-  if (exMARE) {
-    cli::cli_alert_warning('{.val {name}:} Some Absolute Relative Error > {thresh}%')
-    # print(re) 
-  }
-  
-  if (exMARE || plot) {
-    has_fleet <- 'Fleet' %in% names(Out[[name]]$df)
-    
-    p <- ggplot2::ggplot(Out[[name]]$df, 
-                         ggplot2::aes(x=Year, y=Value, color=Model, linetype=Model, shape=Model)) +
-      ggplot2::geom_line(na.rm = TRUE) +
-      ggplot2::geom_point(na.rm = TRUE) +
-      ggplot2::labs(x='Year', y=name, title=Out$Stock) +
-      ggplot2::expand_limits(y=0) +
-      ggplot2::theme_bw()
-    
-    if (has_fleet)
-      p <- p + ggplot2::facet_wrap(~Fleet, scales = 'free_y')
-
-    print(p)
-  }
-
-  if (!exMARE)
-    cli::cli_alert('{.val {name}:} All Absolute Relative Error < {thresh}%')
-  
-  return(invisible(NULL))
-}
-
-
-
 #' Compare BAM and OM Output
 #'
 #' Compares key population time series between BAM output and a simulated
@@ -77,60 +37,74 @@ PrintPlotBAMRE <- function(Out, name, plot=FALSE, thresh=0.5) {
 #'   `BAMdata` as returned by [GetBAMOutput()].
 #' @param OM Optional OM or `hist` object. If `NULL` (default), one is
 #'   constructed internally via [ImportBAM()].
-#' @param plot Logical. Plot the timeseries for the `OM` and `BAM` output? 
+#' @param plot Logical. Plot the timeseries for the `OM` and `BAM` output?
 #' If `plot=FALSE` (default) the plots will only be printed if `MARE>thresh`
 #' in some years.
 #' @param thresh Numeric. MARE threshold (as a percentage) above which a
 #'   comparison is flagged, printed, and plotted. Default `1%`.
+#' @param save_plots Logical. If `TRUE` (default), diagnostic plots are
+#'   written as PNG files to `file.path(outdir, Stock)`, independently of
+#'   whether they are also printed to the active device (see `plot`).
+#' @param outdir Character. Base directory for saved plots. Defaults to
+#'   `"figures/diagnostics/BAM"`.
+#' @param width,height Numeric. Width/height (inches) passed to
+#'   [ggplot2::ggsave()]. If `NULL` (default), each plot is sized
+#'   automatically from its number of facet panels: `Recruits`, `Number`, and
+#'   `Biomass` (single-panel) use 6 x 4; `Landings`/`Discards`, which facet by
+#'   fleet, scale up accordingly. Set either to a number to use that fixed
+#'   size for every saved plot instead.
 #'
 #' @return Invisibly returns a named list with elements `Stock`, `Recruits`,
-#'   `Number`, and `Biomass`. Each of `Recruits`, `Number`, and `Biomass` is a
-#'   list with elements `df` (long-format data.frame of OM and BAM values by
-#'   year) and `MARE` (absolute relative error by year).
+#'   `Number`, `Biomass`, `Landings`, and `Discards`. Each of these (other
+#'   than `Stock`) is a list with elements `df` (long-format data.frame of OM
+#'   and BAM values by year), `MARE` (absolute relative error by year), and
+#'   `plot` (the `ggplot` diagnostic plot, if generated - see `plot`,
+#'   `thresh`, and `save_plots`).
 #'
 #' @seealso [ImportBAM()], [GetBAMOutput()]
 #' @export
-CompareBAM <- function(Stock, OM = NULL, plot = FALSE, thresh = 1) {
-  
-  List <- ProcessBAMArgs(Stock, OM)
+CompareBAM <- function(Stock, OM = NULL, plot = FALSE, thresh = 1,
+                       save_plots = TRUE, outdir = 'figures/diagnostics/BAM',
+                       width = NULL, height = NULL) {
+
+  List <- .ProcessBAMArgs(Stock, OM)
   Hist <- List$Hist
   OM   <- Hist@OM
-  cli::cli_text("Comparing population dynamics between BAM Model {.val {OM@Name}} and {.val OM}  ")  
+  cli::cli_text("Comparing population dynamics between BAM Model {.val {OM@Name}} and {.val OM}  ")
   BAMdata <- List$BAMdata
 
   Out <- list()
   Out$Stock <- Hist@OM@Stock[[1]]@Name
-  Out$Recruits <- CompareBAM_Recruits(BAMdata, Hist)
-  Out$Number <- CompareBAM_Number(BAMdata, Hist)
-  Out$Biomass <- CompareBAM_Biomass(BAMdata, Hist)
-  Out$Landings <- CompareBAM_Landings(BAMdata, Hist)
-  Out$Discards <- CompareBAM_Discards(BAMdata, Hist)
-  
-  PrintPlotBAMRE(Out, 'Recruits', thresh, plot = plot)
-  PrintPlotBAMRE(Out, 'Number', thresh, plot = plot)
-  PrintPlotBAMRE(Out, 'Biomass', thresh, plot = plot)
-  PrintPlotBAMRE(Out, 'Landings', thresh, plot = plot)
-  PrintPlotBAMRE(Out, 'Discards', thresh, plot = plot)
+  Out$Recruits <- .CompareBAMRecruits(BAMdata, Hist)
+  Out$Number <- .CompareBAMNumber(BAMdata, Hist)
+  Out$Biomass <- .CompareBAMBiomass(BAMdata, Hist)
+  Out$Landings <- .CompareBAMLandings(BAMdata, Hist)
+  Out$Discards <- .CompareBAMDiscards(BAMdata, Hist)
+
+  figdir <- file.path(outdir, Out$Stock)
+
+  Out <- .ComparePrintPlot(Out, 'Recruits', title = Out$Stock, plot = plot, thresh = thresh,
+                            save_plots = save_plots, figdir = figdir, width = width, height = height)
+  Out <- .ComparePrintPlot(Out, 'Number', title = Out$Stock, plot = plot, thresh = thresh,
+                            save_plots = save_plots, figdir = figdir, width = width, height = height)
+  Out <- .ComparePrintPlot(Out, 'Biomass', title = Out$Stock, plot = plot, thresh = thresh,
+                            save_plots = save_plots, figdir = figdir, width = width, height = height)
+  Out <- .ComparePrintPlot(Out, 'Landings', title = Out$Stock, plot = plot, thresh = thresh,
+                            save_plots = save_plots, figdir = figdir, width = width, height = height)
+  Out <- .ComparePrintPlot(Out, 'Discards', title = Out$Stock, plot = plot, thresh = thresh,
+                            save_plots = save_plots, figdir = figdir, width = width, height = height)
 
   invisible(Out)
 }
 
 
-CalcBAM_MARE <- function(df) {
-  OM <- BAM <- NULL # CRAN check hacks
-  
-  group_vars <- intersect(c("Year", "Fleet"), names(df))
-  
-  df |>
-    tidyr::pivot_wider(names_from = Model, values_from = Value) |>
-    dplyr::group_by(dplyr::across(dplyr::all_of(group_vars))) |>
-    dplyr::summarise(MARE = abs((OM - BAM) / BAM) * 100, .groups = "drop") |>
-    list(df = df, MARE = _)
+.CalcBAMMARE <- function(df) {
+  .CompareMare(df, 'BAM')
 }
 
-CompareBAM_Number <- function(Stock, OM=NULL) {
+.CompareBAMNumber <- function(Stock, OM=NULL) {
 
-  List <- ProcessBAMArgs(Stock, OM)
+  List <- .ProcessBAMArgs(Stock, OM)
   Hist <- List$Hist
   BAMdata <- List$BAMdata
 
@@ -154,15 +128,15 @@ CompareBAM_Number <- function(Stock, OM=NULL) {
     dplyr::select(Year, Value, Model) |>
     dplyr::arrange(Year)
 
-  CalcBAM_MARE(df)
+  .CalcBAMMARE(df)
 }
 
 
-CompareBAM_Biomass <- function(Stock, OM=NULL) {
+.CompareBAMBiomass <- function(Stock, OM=NULL) {
 
   Biomass <- year <- NULL # CRAN check hacks
 
-  List <- ProcessBAMArgs(Stock, OM)
+  List <- .ProcessBAMArgs(Stock, OM)
   Hist <- List$Hist
   BAMdata <- List$BAMdata
 
@@ -188,11 +162,11 @@ CompareBAM_Biomass <- function(Stock, OM=NULL) {
     dplyr::select(Year, Value, Model) |>
     dplyr::arrange(Year)
 
-  CalcBAM_MARE(df)
+  .CalcBAMMARE(df)
 }
 
-CompareBAM_Recruits <- function(Stock, OM=NULL) {
-  List <- ProcessBAMArgs(Stock, OM)
+.CompareBAMRecruits <- function(Stock, OM=NULL) {
+  List <- .ProcessBAMArgs(Stock, OM)
   Hist <- List$Hist
   BAMdata <- List$BAMdata
 
@@ -215,15 +189,15 @@ CompareBAM_Recruits <- function(Stock, OM=NULL) {
     dplyr::select(Year, Value, Model) |>
     dplyr::arrange(Year)
 
-  CalcBAM_MARE(df)
+  .CalcBAMMARE(df)
 
 }
 
-CompareBAM_Landings <- function(Stock, OM = NULL) {
+.CompareBAMLandings <- function(Stock, OM = NULL) {
   
   Variable <- NULL # CRAN checks
   
-  List <- ProcessBAMArgs(Stock, OM)
+  List <- .ProcessBAMArgs(Stock, OM)
   Hist <- List$Hist
   BAMdata <- List$BAMdata
   
@@ -259,14 +233,14 @@ CompareBAM_Landings <- function(Stock, OM = NULL) {
     dplyr::select(Year, Value, Model, Fleet) |>
     dplyr::arrange(Year)
   
-  CalcBAM_MARE(df)
+  .CalcBAMMARE(df)
 }
 
-CompareBAM_Discards <- function(Stock, OM = NULL) {
+.CompareBAMDiscards <- function(Stock, OM = NULL) {
   
   Variable <- NULL # CRAN checks
   
-  List <- ProcessBAMArgs(Stock, OM)
+  List <- .ProcessBAMArgs(Stock, OM)
   Hist <- List$Hist
   BAMdata <- List$BAMdata
   
@@ -306,8 +280,6 @@ CompareBAM_Discards <- function(Stock, OM = NULL) {
     dplyr::select(Year, Value, Model, Fleet) |>
     dplyr::arrange(Year)
   
-  CalcBAM_MARE(df)
+  .CalcBAMMARE(df)
 }
-
-
 

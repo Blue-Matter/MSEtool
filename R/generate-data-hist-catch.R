@@ -34,7 +34,9 @@
 #'
 #' - `"Number"`: catch-at-age is summed over age and area, then summed over
 #'   stocks within the complex.
-#' - `"Biomass"`: catch-at-age is multiplied by `WeightFleet` before summing
+#' - `"Biomass"`: catch-at-age is multiplied by `WeightFleetRetained`
+#'   (`type = "Landings"`) or `WeightFleetSelected` (`type = "Discards"`)
+#'   before summing
 #'   over age and area, then summed over stocks within the complex. 
 #'
 #' Any value of `Units` other than `"Number"` or `"Biomass"` raises an error.
@@ -62,7 +64,7 @@
 #' CVs from the [CatchObs()] object are not currently applied here; `defaultCV`
 #' serves as the working assumption for downstream MPs.
 #'
-#' ## Obs Structure
+#' ## Obs .Structure
 #'
 #' Observation parameters are accessed via:
 #'
@@ -89,9 +91,9 @@
 #'   otherwise `"Biomass"`
 #'
 #' @seealso [CatchObs()], [CatchData()], [catchdata-class], [obs-class],
-#'   [GenHistData_Effort()]
+#'   `.GenHistDataEffort()`
 #' @keywords internal
-GenHistData_Catch <- function(x, Data, Hist, HistYears, i, stocks, FleetNames,
+.GenHistDataCatch <- function(x, Data, Hist, HistYears, i, stocks, FleetNames,
                               defaultCV = 0.2, type = c('Landings', 'Discards')) {
   
   type <- match.arg(type, c('Landings', 'Discards'))
@@ -137,13 +139,19 @@ GenHistData_Catch <- function(x, Data, Hist, HistYears, i, stocks, FleetNames,
         apply('Year', sum) |> SumOverStock()
       
     } else if (CatchData@Units[fl] == "Biomass") {
+      # Landings use the retention-weighted schedule (landed fish are, on
+      # average, a different weight than discarded fish); Discards use the
+      # selectivity-weighted schedule applied directly to dead-discard
+      # numbers, a close (not exact -- see CalcCatch()'s residual formula)
+      # approximation that avoids needing Interactions-at-age here too.
+      weight_slot <- if (type == 'Landings') 'WeightFleetRetained' else 'WeightFleetSelected'
       real_catch <- purrr::map2(Real_Catch_Number, Hist@OM@Fleet[stocks],
                                 \(catch_n, fleet_list) {
-                                  fleet_weight <- fleet_list[[fl]]@WeightFleet
+                                  fleet_weight <- slot(fleet_list[[fl]], weight_slot)
                                   dd <- dim(fleet_weight)
                                   fl_x <- min(x, dd[1])
                                   
-                                  fleet_weight <- SubsetYear(fleet_weight[fl_x,,,drop=FALSE], HistYears) |>
+                                  fleet_weight <- .SubsetYear(fleet_weight[fl_x,,,drop=FALSE], HistYears) |>
                                     abind::adrop(1)
                                   
                                   dd <- dim(catch_n)
@@ -167,7 +175,7 @@ GenHistData_Catch <- function(x, Data, Hist, HistYears, i, stocks, FleetNames,
     error_sim <- min(x, nrow(CatchObs@Error))
     Value[, fl] <- real_catch *
       CatchObs@Bias[x] *
-      ArraySubsetYear(CatchObs@Error, HistYears)[error_sim, ]
+      .ArraySubsetYear(CatchObs@Error, HistYears)[error_sim, ]
   }
   
   CatchData@Value <- Value

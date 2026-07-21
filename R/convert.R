@@ -58,9 +58,14 @@ Convert <- function(x, ...) {
   
   if (inherits(x, 'Data'))
     return(ConvertData(x, ...))
-  
+
+  if (inherits(x, 'data'))
+    return(ConvertData(x, ...))
+
+  if (is.list(x) && length(x) && all(vapply(x, inherits, logical(1), what = 'data')))
+    return(ConvertData(x, ...))
+
   cli::cli_alert_info('No `Convert*` function found for object of class {.val {class(x)}}')
   cli::cli_alert('Returning object unchanged')
   x
 } 
-

@@ -21,12 +21,21 @@
 #'   calculations are performed. Only used for [om-class] objects. Default
 #'   `SimControl()`.
 #' @param Reduce Logical. Reduce object size after simulation for memory
-#'   efficiency? Default `TRUE`. Only used for [om-class] objects.
+#'   efficiency? Default `TRUE`. See [ReduceDims()].
+#' @param refpointsMSY A pre-calculated [refpointsMSY-class] object (e.g.
+#'   from a previous [Simulate()] or [CalcMSY()] call), or `NULL` (default).
+#'   If supplied, it is used directly as `Hist@Reference@MSY` and the
+#'   (expensive) MSY reference point calculation is skipped -- `control`'s
+#'   `MSYRefs` setting is ignored in this case. Only valid if it was
+#'   calculated for an `OM` with the same `nSim`, stock/complex names, and
+#'   reference year as the `OM` supplied here; an incompatible object throws
+#'   an error rather than being silently ignored. Only used for [om-class]
+#'   objects.
 #' @param ... Additional arguments passed to sub-functions. Not currently
 #'   used
 #'
 #' @details
-#' `Simulate()` is a dispatcher that calls internal functions `Simulate_om()` (for
+#' `Simulate()` is a dispatcher that calls internal functions `.SimulateOM()` (for
 #' [om-class] objects) or `SimulateOM()` (for legacy [OM-legacy-class]
 #' objects) depending on the class of `OM`.
 #'
@@ -50,13 +59,14 @@
 #' }
 #'
 #' @export
-Simulate <- function(OM       = NULL,
-                     parallel = FALSE,
-                     silent   = FALSE,
-                     nSim     = NULL,
-                     nsim     = NULL,
-                     control  = SimControl(),
-                     Reduce   = TRUE,
+Simulate <- function(OM           = NULL,
+                     parallel     = FALSE,
+                     silent       = FALSE,
+                     nSim         = NULL,
+                     nsim         = NULL,
+                     control      = SimControl(),
+                     Reduce       = TRUE,
+                     refpointsMSY = NULL,
                      ...) {
 
   if (is.null(OM))
@@ -64,12 +74,13 @@ Simulate <- function(OM       = NULL,
 
   if (inherits(OM, 'om'))
     return(
-      Simulate_om(OM       = OM,
-                  parallel = parallel,
-                  silent   = silent,
-                  nSim     = nSim,
-                  control  = control,
-                  Reduce   = Reduce,
+      .SimulateOM(OM           = OM,
+                  parallel     = parallel,
+                  silent       = silent,
+                  nSim         = nSim,
+                  control      = control,
+                  Reduce       = Reduce,
+                  refpointsMSY = refpointsMSY,
                   ...)
     )
 

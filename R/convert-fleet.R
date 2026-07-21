@@ -52,7 +52,8 @@
 #' - `DiscardMortality`: new functionality; no legacy equivalent.
 #' - `Closure`: new functionality; no legacy equivalent.
 #' - `Targeting`: new functionality; no legacy equivalent.
-#' - `WeightFleet`: new functionality; no legacy equivalent.
+#' - `WeightFleetRetained`/`WeightFleetSelected`: new functionality; no legacy
+#'   equivalent.
 #'
 #' @return A [fleet-class] object.
 #'
@@ -69,25 +70,26 @@
 #'
 #' @export
 ConvertFleet <- function(Fleet, silent = FALSE) {
-  CheckClass(Fleet, c("Fleet", "OM"), "Fleet")
+  .CheckClass(Fleet, c("Fleet", "OM"), "Fleet")
   
   if (!silent)
     cli::cli_alert("Converting object of class {.cls Fleet} to class {.cls fleet}")
   
-  fleet               <- Fleet2Name(Fleet)
-  fleet@Effort        <- Fleet2Effort(Fleet)
-  fleet@Catchability  <- Fleet2Catchability(Fleet)
-  fleet@Selectivity   <- Fleet2Selectivity(Fleet)
-  fleet@Retention     <- Fleet2Retention(Fleet)
+  fleet               <- .Fleet2Name(Fleet)
+  fleet@Effort        <- .Fleet2Effort(Fleet)
+  fleet@Catchability  <- .Fleet2Catchability(Fleet)
+  fleet@Selectivity   <- .Fleet2Selectivity(Fleet)
+  fleet@Retention     <- .Fleet2Retention(Fleet)
   # Not converted:
   # fleet@DiscardMortality
   # fleet@Closure
   # fleet@Targeting
-  # fleet@WeightFleet
+  # fleet@WeightFleetRetained
+  # fleet@WeightFleetSelected
   fleet
 }
 
-Fleet2Name <- function(Fleet) {
+.Fleet2Name <- function(Fleet) {
   fleet <- Fleet()
   if (grepl("Stock:", Fleet@Name) & grepl("Fleet:", Fleet@Name)) {
     Fleet@Name <- gsub(".*Fleet:", '', Fleet@Name)
@@ -100,27 +102,26 @@ Fleet2Name <- function(Fleet) {
   fleet
 }
 
-Fleet2Effort <- function(Fleet) {
+.Fleet2Effort <- function(Fleet) {
   Effort(Effort=data.frame(Year=Fleet@EffYears,
                           Lower=Fleet@EffLower,
                           Upper=Fleet@EffUpper,
                           CV=Fleet@Esd[1]))
 }
 
-Fleet2Catchability <- function(Fleet) {
+.Fleet2Catchability <- function(Fleet) {
   Catchability(qCV =  Fleet@qcv,
                qInc = Fleet@qinc)
 }
 
-Fleet2Selectivity <- function(Fleet) {
+.Fleet2Selectivity <- function(Fleet) {
   Selectivity(Pars=list(L5=Fleet@L5,
                         LFS=Fleet@LFS,
                         Vmaxlen=Fleet@Vmaxlen))
 }
 
-Fleet2Retention <- function(Fleet) {
+.Fleet2Retention <- function(Fleet) {
   Retention(Pars=list(LR5=Fleet@LR5,
                         LFR=Fleet@LFR,
                         Rmaxlen=Fleet@Rmaxlen))
 }
-

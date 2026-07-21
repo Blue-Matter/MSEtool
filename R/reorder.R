@@ -32,18 +32,18 @@
 #' @export
 Reorder <- function(object, Stocks=NULL, Fleets=NULL) {
   
-  CheckClass(object, 'om', 'OM')
+  .CheckClass(object, 'om', 'OM')
   
   if (!is.null(Stocks))
-    object <- Reorder_Stock(object, Stocks)
+    object <- .ReorderStock(object, Stocks)
   
   if (!is.null(Fleets))
-    object <- Reorder_Fleet(object, Fleets)
+    object <- .ReorderFleet(object, Fleets)
   
   object
 }
 
-reorder_check <- function(provided, current, label) {
+.ReorderCheck <- function(provided, current, label) {
   missing  <- setdiff(provided, current)
   extra    <- setdiff(current, provided)
   
@@ -53,13 +53,13 @@ reorder_check <- function(provided, current, label) {
     cli::cli_abort(c('x'='All {label} names must be provided. Missing from input: {.val {extra}}'))
 }
 
-reorder_recursive <- function(object, order, dim_name) {
+.ReorderRecursive <- function(object, order, dim_name) {
   
   if (isS4(object)) {
     for (s in slotNames(object)) {
       val <- slot(object, s)
       if (!is.null(val))
-        slot(object, s) <- reorder_recursive(val, order, dim_name)
+        slot(object, s) <- .ReorderRecursive(val, order, dim_name)
     }
     return(object)
   }
@@ -74,7 +74,7 @@ reorder_recursive <- function(object, order, dim_name) {
     }
     for (i in seq_along(object)) {
       if (!is.null(object[[i]]))
-        object[[i]] <- reorder_recursive(object[[i]], order, dim_name)
+        object[[i]] <- .ReorderRecursive(object[[i]], order, dim_name)
     }
     return(object)
   }
@@ -104,12 +104,12 @@ reorder_recursive <- function(object, order, dim_name) {
   object
 }
 
-Reorder_Stock <- function(object, Stocks) {
-  reorder_check(Stocks, StockNames(object), 'Stock')
-  reorder_recursive(object, Stocks, "Stock")
+.ReorderStock <- function(object, Stocks) {
+  .ReorderCheck(Stocks, StockNames(object), 'Stock')
+  .ReorderRecursive(object, Stocks, "Stock")
 }
 
-Reorder_Fleet <- function(object, Fleets) {
-  reorder_check(Fleets, FleetNames(object), 'Fleet')
-  reorder_recursive(object, Fleets, "Fleet")
+.ReorderFleet <- function(object, Fleets) {
+  .ReorderCheck(Fleets, FleetNames(object), 'Fleet')
+  .ReorderRecursive(object, Fleets, "Fleet")
 }

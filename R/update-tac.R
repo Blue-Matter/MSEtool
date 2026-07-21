@@ -13,7 +13,7 @@
 #'   consistent `update_funs` signature).
 #' @return Updated `Proj` object.
 #' @keywords internal
-Update_TAC <- function(Proj,
+.UpdateTAC <- function(Proj,
                        Year, 
                        AdviceSimList, 
                        LastAdviceSimList, 
@@ -25,7 +25,7 @@ Update_TAC <- function(Proj,
   
   TSIndex <- match(Year, c(YearsHist, YearsProj))
   
-  if (AllAdviceNull(AdviceSimList, 'TAC'))
+  if (.AllAdviceNull(AdviceSimList, 'TAC'))
     return(Proj)
   
   for (sim in seq_len(Proj@OM@nSim)) {
@@ -33,7 +33,7 @@ Update_TAC <- function(Proj,
     AdviceList <- AdviceSimList[[sim]]
     LastAdviceList <- LastAdviceSimList[[sim]]
 
-    Proj <- Update_TAC_Sim(
+    Proj <- .UpdateTACSim(
       Proj            = Proj,
       sim             = sim,
       Year            = Year,
@@ -50,12 +50,11 @@ Update_TAC <- function(Proj,
 }
 
 
-# TODO 
+# TODO
 # - add lambda_ascale to Fleet or Imp
 # - add n_recent to OM@Control
-# - add Choke to Imp
 
-Update_TAC_Sim <- function(Proj, 
+.UpdateTACSim <- function(Proj, 
                            sim, 
                            Year,
                            TSIndex,
@@ -76,17 +75,36 @@ Update_TAC_Sim <- function(Proj,
   chk <- vapply(AdviceList, function(a) inherits(a, 'advice'), logical(1))
   if (any(!chk)) return(Proj)
   
-  TAC_by_Complex     <- ResolveTACByComplex(AdviceList, LastAdviceList,
+  TAC_by_Complex     <- .ResolveTACByComplex(AdviceList, LastAdviceList,
                                             Complexes, Proj, sim, FleetNames)
-  
-  TACType_by_Complex <- ResolveTACTypeByComplex(AdviceList, Complexes, nFleet_loc)
-  TACUnit_by_Complex <- ResolveTACUnitByComplex(AdviceList, Complexes, nFleet_loc)
-  
-  MaxFleetEffort     <- Proj@Effort[sim, TSIndex,]
-  
+  TAC_by_Complex     <- .ApplyImplementationError(TAC_by_Complex, Proj, FleetNames,
+                                                 names(Complexes), sim, Year, 'TAC')
+
+  TACType_by_Complex <- .ResolveTACTypeByComplex(AdviceList, Complexes, nFleet_loc)
+  TACUnit_by_Complex <- .ResolveTACUnitByComplex(AdviceList, Complexes, nFleet_loc)
+
+  # A fleet's effort is only ceiling-constrained by Effort advice if some
+  # complex actually set Effort this year - .UpdateEffort() runs earlier in
+  # the pipeline (see .ProjectMP()) and, if so, has already written the
+  # resolved value into Proj@Effort by this point. Otherwise
+  # Proj@Effort[sim, TSIndex, ] is just whatever was left there previously
+  # (e.g. forward-filled from an earlier year's decision) and must not be
+  # mistaken for a deliberate ceiling - so users can set both TAC and
+  # Effort advice for the same stock/fleet, and whichever is more binding
+  # applies: TAC-solving will never push a fleet's effort above an Effort
+  # advice that was actually set this year.
+  HasEffortAdvice <- any(purrr::map_lgl(AdviceList, \(a) {
+    inherits(a, 'advice') && !is.null(a@Effort)
+  }))
+  MaxFleetEffort <- if (HasEffortAdvice) {
+    Proj@Effort[sim, TSIndex, ]
+  } else {
+    rep(NA_real_, nFleet_loc)
+  }
+
   if (nComplex == 1) {
     
-    Required_Effort <- OptEffort_singlestock(Proj, 
+    Required_Effort <- .OptEffortSinglestock(Proj, 
                                              Year, 
                                              TSIndex,
                                              sim, 
@@ -99,14 +117,14 @@ Update_TAC_Sim <- function(Proj,
     return(Proj)
   }
   
-  # Multi-complex 
-  Choke             <- ResolveChokeMatrix(Proj, nFleet_loc, nComplex)
-  UndershootPenalty <- ResolveUndershootPenalty(Proj, nFleet_loc, nComplex)
-  OvershootPenalty  <- ResolveOvershootPenalty(Proj, nFleet_loc, nComplex, Choke)
-  PenaltyMode       <- ResolvePenaltyMode(Proj, nFleet_loc)
-  lambda            <- ResolveLambda(Proj, sim, TSIndex, StockNames, FleetNames, lambda_scale, n_recent)
+  # Multi-complex
+  Compliance        <- .ResolveComplianceMatrix(Proj, FleetNames, names(Complexes), sim, Year)
+  UndershootPenalty <- .ResolveUndershootPenalty(Proj, nFleet_loc, nComplex)
+  OvershootPenalty  <- .ResolveOvershootPenalty(Proj, nFleet_loc, nComplex, Compliance)
+  PenaltyMode       <- .ResolvePenaltyMode(Proj, nFleet_loc)
+  lambda            <- .ResolveLambda(Proj, sim, TSIndex, StockNames, FleetNames, lambda_scale, n_recent)
 
-  result <- OptEffort_multi_stock(
+  result <- .OptEffortMultiStock(
     Proj               = Proj,
     Year               = Year,
     TSIndex            = TSIndex,
@@ -116,10 +134,10 @@ Update_TAC_Sim <- function(Proj,
     TAC_by_Complex     = TAC_by_Complex,
     TACType_by_Complex = TACType_by_Complex,
     TACUnit_by_Complex = TACUnit_by_Complex,
-    Choke              = Choke,
     UndershootPenalty  = UndershootPenalty,
     OvershootPenalty   = OvershootPenalty,
     PenaltyMode        = PenaltyMode,
+    MaxFleetEffort     = MaxFleetEffort,
     lambda             = lambda,
     n_recent           = n_recent,
     maxEval            = maxEval

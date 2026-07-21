@@ -8,6 +8,10 @@
 #' @param Name Character; name for the `Data` object
 #' @param CommonName Character; common name of the species
 #' @param Species Character; scientific name of the species
+#' @param LengthUnits Character string giving the physical unit of length
+#'   composition bins (e.g., `"cm"`, `"mm"`, `"inch"`; see [ValidUnits()]).
+#'   Not reported by SS3/`r4ss`; `"cm"` is the near-universal SS3 convention.
+#'   Default `"cm"`.
 #' @param silent Logical; suppress progress messages (default FALSE)
 #' @param ... Additional arguments passed to `ImportSSReport`
 #'
@@ -17,13 +21,14 @@ ImportSSData <- function(SSDir,
                          Name       = "Imported by ImportSSData",
                          CommonName = "",
                          Species    = "",
-                         silent     = FALSE, 
+                         LengthUnits = "cm",
+                         silent     = FALSE,
                          ...) {
-  OnExit()
-  RepList   <- ImportSSReport(SSDir, silent, ...)
+  .OnExit()
+  RepList   <- ImportSSReport(SSDir, silent = silent, ...)
   replist   <- RepList[[1]]
   nStock    <- replist$nsexes
-  YearsList <- GetSSYears(RepList[[1]], 1)
+  YearsList <- .GetSSYears(RepList[[1]], 1)
   
   # Create Data object
   Data            <- Data(Name = Name)
@@ -39,29 +44,29 @@ ImportSSData <- function(SSDir,
   Data@Seasons <- YearsList$Seasons
   Data@nArea   <- 1
   
-  Landings_Discards <- ImportSSData_Catch(replist, silent)
+  Landings_Discards <- .ImportSSDataCatch(replist, silent)
   Data@Landings     <- Landings_Discards$Landings
   Data@Discards     <- Landings_Discards$Discards
   
-  Data@CPUE   <- ImportSSData_Index(replist, "CPUE")
-  Data@Survey <- ImportSSData_Index(replist, "Survey")
+  Data@CPUE   <- .ImportSSDataIndex(replist, "CPUE")
+  Data@Survey <- .ImportSSDataIndex(replist, "Survey")
   
-  AtAge              <- ImportSSData_AtAge(replist, silent)
+  AtAge              <- .ImportSSDataAtAge(replist, silent)
   Data@LandingsAtAge <- AtAge$Landings
   Data@DiscardsAtAge <- AtAge$Discards
   
-  AtSize              <- ImportSSData_AtSize(replist, silent)
+  AtSize              <- .ImportSSDataAtSize(replist, silent, LengthUnits = LengthUnits)
   Data@LandingsAtSize <- AtSize$Landings
   Data@DiscardsAtSize <- AtSize$Discards
   
   Data
 }
 
-ImportSSData_Catch <- function(replist, silent = FALSE) {
+.ImportSSDataCatch <- function(replist, silent = FALSE) {
   
   dead_bio <- dead_num <- kill_bio <- kill_num <- ret_bio <- ret_num <- NULL
   
-  YearsList <- GetSSYears(replist, pYear = 1)
+  YearsList <- .GetSSYears(replist, pYear = 1)
   YearsHist <- YearsList$YearsHist
   nTS <- length(YearsHist)
   FleetNames <- replist$catch$Fleet_Name |> unique()
@@ -146,10 +151,10 @@ ImportSSData_Catch <- function(replist, silent = FALSE) {
 }
 
 
-ImportSSData_Index <- function(replist, Type = c("CPUE", "Survey")) {
+.ImportSSDataIndex <- function(replist, Type = c("CPUE", "Survey")) {
   Type <- match.arg(Type, c("CPUE", "Survey"))
   
-  YearsList <- GetSSYears(replist, pYear = 1)
+  YearsList <- .GetSSYears(replist, pYear = 1)
   YearsHist <- YearsList$YearsHist
   nTS <- length(YearsHist)
   
@@ -267,17 +272,17 @@ ImportSSData_Index <- function(replist, Type = c("CPUE", "Survey")) {
 }
 
 
-ImportSSData_AtAge <- function(replist, silent = FALSE) {
+.ImportSSDataAtAge <- function(replist, silent = FALSE) {
   
   # TODO
   
-  YearsList     <- GetSSYears(replist, pYear = 1)
+  YearsList     <- .GetSSYears(replist, pYear = 1)
   YearsHist     <- YearsList$YearsHist
   nTS           <- length(YearsHist)
   FishFleets    <- which(replist$IsFishFleet)
   FleetNames    <- unique(replist$catch$Fleet_Name)[FishFleets]
   nFleet        <- length(FishFleets)
-  AgeClasses    <- GetSSAgeClasses(replist)
+  AgeClasses    <- .GetSSAgeClasses(replist)
   nAge          <- length(AgeClasses)
 
   AgeDB <- replist$agebase
@@ -289,25 +294,25 @@ ImportSSData_AtAge <- function(replist, silent = FALSE) {
   cli::cli_alert_info("Importing Age Composition data from SS3 currently not supported")
   return(list(Landings = new("compdata"), Discards = new("compdata")))
   
-  # update based on ImportSSData_AtSize 
+  # update based on .ImportSSDataAtSize 
   
 }
 
 
-ImportSSData_AtSize <- function(replist, silent = FALSE) {
+.ImportSSDataAtSize <- function(replist, silent = FALSE, LengthUnits = "cm") {
   
-  YearsList     <- GetSSYears(replist, pYear = 1)
+  YearsList     <- .GetSSYears(replist, pYear = 1)
   YearsHist     <- YearsList$YearsHist
   nTS           <- length(YearsHist)
   FishFleets    <- which(replist$IsFishFleet)
   FleetNames    <- unique(replist$catch$Fleet_Name)[FishFleets]
   nFleet        <- length(FishFleets)
-  LengthClasses <- GetSSLengthClasses(replist) 
+  LengthClasses <- .GetSSLengthClasses(replist) 
   nLength       <- length(LengthClasses)
   
   if (YearsList$Seasons > 1) {
     cli::cli_alert_warning(
-      "`ImportSSData_AtSize`: multi-season models are not currently supported; \\
+      "`.ImportSSDataAtSize`: multi-season models are not currently supported; \\
        returning empty size composition objects."
     )
     return(list(Landings = new("compdata"), Discards = new("compdata")))
@@ -395,20 +400,33 @@ ImportSSData_AtSize <- function(replist, silent = FALSE) {
   }
   
   
-  units_label <- replist$lbins_units %||% "cm"
-  
+  # SS3/`r4ss` does not report the physical unit of length bins; `LengthUnits`
+  # (passed in from `ImportSSData()`/`ImportSS()`) is the caller's assumption.
+  units_label <- LengthUnits
+
+  # `Classes` is a named list, one vector per fleet (see compdata-class),
+  # even though every fleet gets the same grid here: SS3 reports length
+  # composition data against one model-wide population length-bin
+  # structure (`lbinspop`), not a fleet-specific one, so `LengthClasses` is
+  # already the shared bin grid for every fleet. Storing it as a per-fleet
+  # list rather than a flat vector keeps this consistent with
+  # `LandingsAtSize`/`DiscardsAtSize` built elsewhere (e.g.
+  # `.GenHistDataSizeComp()`), where fleets are not required to share a
+  # grid.
+  ClassesList <- stats::setNames(rep(list(as.numeric(LengthClasses)), nFleet), FleetNames)
+
   Landings         <- new("compdata")
   Landings@Name    <- FleetNames
   Landings@Value   <- LandingsArr
-  Landings@Classes <- as.numeric(LengthClasses)
+  Landings@Classes <- ClassesList
   Landings@Units   <- units_label
-  
+
   Discards         <- new("compdata")
   Discards@Name    <- FleetNames
   Discards@Value   <- DiscardsArr
-  Discards@Classes <- as.numeric(LengthClasses)
+  Discards@Classes <- ClassesList
   Discards@Units   <- units_label
-  
+
   list(Landings = Landings, Discards = Discards)
-  
+
 }

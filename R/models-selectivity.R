@@ -136,7 +136,7 @@ class(DoubleNormalWeight) <- 'Selectivity-at-Weight-Model'
 #' @rdname Selectivity-Models
 #' @export
 SelectivityModels <- function(full = TRUE, print = TRUE) {
-  ReturnModels(
+  .ReturnModels(
     ModelClass = c(
       'Selectivity-at-Age-Model',
       'Selectivity-at-Length-Model',
@@ -149,17 +149,17 @@ SelectivityModels <- function(full = TRUE, print = TRUE) {
 #' @rdname Selectivity-Models
 #' @export
 SelectivityModelsLength <- function(full = TRUE, print = TRUE) {
-  ReturnModels(ModelClass = 'Selectivity-at-Length-Model', full, print)
+  .ReturnModels(ModelClass = 'Selectivity-at-Length-Model', full, print)
 }
 
 #' @rdname Selectivity-Models
 #' @export
 SelectivityModelsAge <- function(full = TRUE, print = TRUE) {
-  ReturnModels(ModelClass = 'Selectivity-at-Age-Model', full, print)
+  .ReturnModels(ModelClass = 'Selectivity-at-Age-Model', full, print)
 }
 
 #' @rdname Selectivity-Models
 #' @export
 SelectivityModelsWeight <- function(full = TRUE, print = TRUE) {
-  ReturnModels(ModelClass = 'Selectivity-at-Weight-Model', full, print)
+  .ReturnModels(ModelClass = 'Selectivity-at-Weight-Model', full, print)
 }

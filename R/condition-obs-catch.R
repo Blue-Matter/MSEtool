@@ -18,7 +18,7 @@
 #' @param type Character, either `Landings` or `Discards`
 #'
 #' @keywords internal
-ConditionObs_Catch <- function(Hist,
+.ConditionObsCatch <- function(Hist,
                                FisheryData, 
                                HistYears,
                                ProjYears, 
@@ -35,28 +35,24 @@ ConditionObs_Catch <- function(Hist,
   
   fleetnames <- FleetNames(Hist)
   
-  ObservedCatch_Fleet <- slot(FisheryData, type)@Value |> ArraySubsetYear(Years=HistYears)
+  ObservedCatch_Fleet <- slot(FisheryData, type)@Value |> .ArraySubsetYear(Years=HistYears)
   
   if (is.null(ObservedCatch_Fleet)) return(Hist)
-  
-  # Checks 
-  # if (ncol(ObservedCatch_Fleet) != nFleet) {
-  #   cli::cli_alert_warning('Observed {.val {type}} data not available for all fleets')
-  #   cli::cli_alert('Not conditioning {.val {type}} observation error for data set {.val {FisheryData@Name}}')
-  #   return(Hist)
-  # }
-  
-  
+
   # catch number [stock] sim, age, year, fleet, area
   Sim_Catch_Number_List <- slot(Hist, paste0(type,'AtAge'))[stocks]
   
   # catch biomass - sim, year, fleet
-  Sim_Catch_Biomass <- purrr::map2(Sim_Catch_Number_List, 
+  # Landings use the retention-weighted schedule; Discards use the
+  # selectivity-weighted schedule -- see the equivalent note in
+  # .GenHistDataCatch().
+  weight_slot <- if (type == 'Landings') 'WeightFleetRetained' else 'WeightFleetSelected'
+  Sim_Catch_Biomass <- purrr::map2(Sim_Catch_Number_List,
                                    Hist@OM@Fleet[stocks],
     \(catch_n_at_age_area, fleetlist) {
-      
+
           FleetWeight <- purrr::map(fleetlist, \(fleet) {
-            fleet@WeightFleet |> Subset(Years=HistYears)
+            slot(fleet, weight_slot) |> Subset(Years=HistYears)
           }) |> List2Array(pos=4)
           
           catch_n_at_age <- SumOverArea(catch_n_at_age_area)
@@ -108,8 +104,8 @@ ConditionObs_Catch <- function(Hist,
     }
     SimValue[SimValue<0] <- 0
     
-    SimValue <- ArraySubsetYear(SimValue, CatchObs@Years)
-    ObsValue <- ArraySubsetYear(ObservedCatch, CatchObs@Years)
+    SimValue <- .ArraySubsetYear(SimValue, CatchObs@Years)
+    ObsValue <- .ArraySubsetYear(ObservedCatch, CatchObs@Years)
     
     d1 <- dim(SimValue)
     d2 <- dim(ObsValue)

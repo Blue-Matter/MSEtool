@@ -15,7 +15,7 @@
 #'
 #' @return The modified `Hist` object with initialized time-series slots.
 #' @keywords internal
-InitializeTimeSeries <- function(Hist,
+.InitializeTimeSeries <- function(Hist,
                                  Period = c("Historical", "Projection"),
                                  MPs = NULL) {
   
@@ -34,17 +34,17 @@ InitializeTimeSeries <- function(Hist,
   ## --- Numbers at age (Sim × Age × Year × Area) ---
   
   Hist@Number <- if (isProj) {
-    ListArraySimAgeTimeAreaMP(OM, Period, MPs, default=default)
+    .ListArraySimAgeTimeAreaMP(OM, Period, MPs, default=default)
   } else {
-    ListArraySimAgeTimeArea(OM, Period, default=default)
+    .ListArraySimAgeTimeArea(OM, Period, default=default)
   }
   
   ## --- Biomass, SBiomass, & SProduction  (Sim × Stock × Year [+ MP]) ---
   MakeBioListArray <- function(OM, Period, default, isProj, MPs) {
-    l <- ListArraySimAgeTime(OM, Period, default=default) |>
+    l <- .ListArraySimAgeTime(OM, Period, default=default) |>
       lapply(DropDimension, "Age", FALSE) |>
       List2Array("Stock") |>
-      aperm(c("Sim", "Stock", "Year"))
+      .Aperm(c("Sim", "Stock", "Year"))
     
     if (!isProj) 
       return(l)
@@ -58,15 +58,15 @@ InitializeTimeSeries <- function(Hist,
   
   ## --- Landings & Discards ---
   
-  Hist@Interactions <- ArraySimStockTimeFleetMP(OM, Period, MPs, default=default)
-  Hist@Landings <- ArraySimStockTimeFleetMP(OM, Period, MPs, default=default)
-  Hist@Discards <- ArraySimStockTimeFleetMP(OM, Period, MPs, default=default)
+  Hist@Interactions <- .ArraySimStockTimeFleetMP(OM, Period, MPs, default=default)
+  Hist@Landings <- .ArraySimStockTimeFleetMP(OM, Period, MPs, default=default)
+  Hist@Discards <- .ArraySimStockTimeFleetMP(OM, Period, MPs, default=default)
   
-  Hist@InteractAtAge  <- ListArraySimAgeTimeFleetAreaMP(OM, Period, MPs = MPs, default=default)
-  Hist@LandingsAtAge <- ListArraySimAgeTimeFleetAreaMP(OM, Period, MPs = MPs, default=default)
-  Hist@DiscardsAtAge <- ListArraySimAgeTimeFleetAreaMP(OM, Period, MPs = MPs, default=default)
-  Hist@LandingsAtSize <- ListArraySimClassTimeFleetAreaMP(OM, Period, MPs = MPs, default=default)
-  Hist@DiscardsAtSize <- ListArraySimClassTimeFleetAreaMP(OM, Period, MPs = MPs, default=default)
+  Hist@InteractAtAge  <- .ListArraySimAgeTimeFleetAreaMP(OM, Period, MPs = MPs, default=default)
+  Hist@LandingsAtAge <- .ListArraySimAgeTimeFleetAreaMP(OM, Period, MPs = MPs, default=default)
+  Hist@DiscardsAtAge <- .ListArraySimAgeTimeFleetAreaMP(OM, Period, MPs = MPs, default=default)
+  Hist@LandingsAtSize <- .ListArraySimClassTimeFleetAreaMP(OM, Period, MPs = MPs, default=default)
+  Hist@DiscardsAtSize <- .ListArraySimClassTimeFleetAreaMP(OM, Period, MPs = MPs, default=default)
   
   if (!isProj) {
     Hist@Interactions <- DropDimension(Hist@Interactions, 'MP', FALSE)
@@ -95,10 +95,10 @@ InitializeTimeSeries <- function(Hist,
   
   ## --- Effort & Distribution ---
   
-  Hist@Effort <- ArraySimAgeTimeFleet(OM, Period, default=default) |>
+  Hist@Effort <- .ArraySimAgeTimeFleet(OM, Period, default=default) |>
     DropDimension("Age", FALSE)
   
-  Hist@Distribution <- ArraySimAgeTimeFleetArea(OM, Period, default=default) |>
+  Hist@Distribution <- .ArraySimAgeTimeFleetArea(OM, Period, default=default) |>
     DropDimension("Age", FALSE)
   
   if (isProj) {
@@ -120,14 +120,14 @@ InitializeTimeSeries <- function(Hist,
   }
   
   ## --- Fishing Mortality ---
-  Hist@FInteract <- ArraySimStockTimeFleetMP(OM, Period, MPs, default=default)
-  Hist@FDead <- ArraySimStockTimeFleetMP(OM, Period, MPs, default=default)
-  Hist@FRetain <- ArraySimStockTimeFleetMP(OM, Period, MPs, default=default)
+  Hist@FInteract <- .ArraySimStockTimeFleetMP(OM, Period, MPs, default=default)
+  Hist@FDead <- .ArraySimStockTimeFleetMP(OM, Period, MPs, default=default)
+  Hist@FRetain <- .ArraySimStockTimeFleetMP(OM, Period, MPs, default=default)
   
   
-  Hist@FInteractArea <- ListArraySimAgeTimeFleetAreaMP(OM, Period, MPs = MPs, default=default)
-  Hist@FDeadArea <-  ListArraySimAgeTimeFleetAreaMP(OM, Period, MPs = MPs, default=default)
-  Hist@FRetainArea <- ListArraySimAgeTimeFleetAreaMP(OM, Period, MPs = MPs, default=default)
+  Hist@FInteractArea <- .ListArraySimAgeTimeFleetAreaMP(OM, Period, MPs = MPs, default=default)
+  Hist@FDeadArea <-  .ListArraySimAgeTimeFleetAreaMP(OM, Period, MPs = MPs, default=default)
+  Hist@FRetainArea <- .ListArraySimAgeTimeFleetAreaMP(OM, Period, MPs = MPs, default=default)
   
   if (!isProj) {
     Hist@FInteract <- DropDimension(Hist@FInteract, 'MP', FALSE)

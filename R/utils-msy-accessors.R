@@ -31,14 +31,14 @@ NULL
 #' @rdname MSY-accessors
 #' @export
 MSYRefs <- function(Hist) {
-  CheckClass(Hist, c('hist', 'mse'), 'Hist')
-  AccessSlot(Hist@Reference, 'MSY')
+  .CheckClass(Hist, c('hist', 'mse'), 'Hist')
+  .AccessSlot(Hist@Reference, 'MSY')
 }
 
 
-ResolveRefpointsMSY <- function(Hist, fn_name = "MSY accessor") {
+.ResolveRefpointsMSY <- function(Hist, fn_name = "MSY accessor") {
   supported <- c('hist', 'mse', 'reference', 'refpointsMSY')
-  CheckClass(Hist, supported, fn_name)
+  .CheckClass(Hist, supported, fn_name)
   
   if (inherits(Hist, 'refpointsMSY')) return(Hist)
   if (inherits(Hist, 'reference'))    return(Hist@MSY)
@@ -49,41 +49,41 @@ ResolveRefpointsMSY <- function(Hist, fn_name = "MSY accessor") {
 #' @rdname MSY-accessors
 #' @export
 FMSY <- function(Hist) {
-  AccessSlot(ResolveRefpointsMSY(Hist, 'FMSY'), 'FMSY')
+  .AccessSlot(.ResolveRefpointsMSY(Hist, 'FMSY'), 'FMSY')
 }
 
 #' @rdname MSY-accessors
 #' @export
 BMSY <- function(Hist) {
-  AccessSlot(ResolveRefpointsMSY(Hist, 'BMSY'), 'BMSY')
+  .AccessSlot(.ResolveRefpointsMSY(Hist, 'BMSY'), 'BMSY')
 }
 
 #' @rdname MSY-accessors
 #' @export
 SBMSY <- function(Hist) {
-  AccessSlot(ResolveRefpointsMSY(Hist, 'SBMSY'), 'SBMSY')
+  .AccessSlot(.ResolveRefpointsMSY(Hist, 'SBMSY'), 'SBMSY')
 }
 
 #' @rdname MSY-accessors
 #' @export
 SPMSY <- function(Hist) {
-  AccessSlot(ResolveRefpointsMSY(Hist, 'SPMSY'), 'SPMSY')
+  .AccessSlot(.ResolveRefpointsMSY(Hist, 'SPMSY'), 'SPMSY')
 }
 
 #' @rdname MSY-accessors
 #' @export
 SPRMSY <- function(Hist) {
-  AccessSlot(ResolveRefpointsMSY(Hist, 'SPRMSY'), 'SPRMSY')
+  .AccessSlot(.ResolveRefpointsMSY(Hist, 'SPRMSY'), 'SPRMSY')
 }
 
 #' @rdname MSY-accessors
 #' @export
 MSYLandings <- function(Hist) {
-  AccessSlot(ResolveRefpointsMSY(Hist, 'MSYLandings'), 'MSYLandings')
+  .AccessSlot(.ResolveRefpointsMSY(Hist, 'MSYLandings'), 'MSYLandings')
 }
 
 #' @rdname MSY-accessors
 #' @export
 MSYDiscards <- function(Hist) {
-  AccessSlot(ResolveRefpointsMSY(Hist, 'MSYDiscards'), 'MSYDiscards')
+  .AccessSlot(.ResolveRefpointsMSY(Hist, 'MSYDiscards'), 'MSYDiscards')
 }

@@ -13,7 +13,7 @@
 #' @param type Character, either `CPUE` or `Survey`
 #' 
 #' @keywords internal
-ConditionObs_Index <- function(Hist, 
+.ConditionObsIndex <- function(Hist, 
                                FisheryData, 
                                HistYears, 
                                ProjYears, 
@@ -51,7 +51,7 @@ ConditionObs_Index <- function(Hist,
   dimnames(Indices_Value) <- list(Year=c(HistYears, ProjYears)[1:dd[1]],
                                   Name=Indices_Name)
   
-  Indices_Hist <- Indices_Value |> ArraySubsetYear(Years=HistYears)
+  Indices_Hist <- Indices_Value |> .ArraySubsetYear(Years=HistYears)
   
   Sim_Number_List <- Hist@Number[stocks]
   
@@ -105,12 +105,11 @@ ConditionObs_Index <- function(Hist,
               ReduceDims() 
           } else {
             
-            Hist@Log <- list()
-            
-            Hist <- CaptureLog(Hist, 
+            Hist <- .CaptureLog(Hist,
                        string =
                          cli::format_inline("No `Obs` object found for {.val {type}} Data: {.val {Indices_Name[fl]}} \n Assuming selectivity = 1 for all age classes"),
-                       name = 'ConditionObs')
+                       name = '.ConditionObs',
+                       type = 'assumption')
 
             SelectivityAtAgeList[[st]] <-  array(1, dim=c(1,length(AgeClasses), 1, nArea),
                                                  dimnames = list(Sim=1,
@@ -125,7 +124,7 @@ ConditionObs_Index <- function(Hist,
       # Use fleet selectivity directly (CPUE)
       SelectivityAtAgeList <- purrr::map(Hist@OM@Fleet[stocks], \(stock) {
         stock[[Indices_Name[fl]]]@Selectivity@MeanAtAge |>
-          ArraySubsetYear(HistYears) |> 
+          .ArraySubsetYear(HistYears) |> 
           ReduceDims()
       })
     }
@@ -145,7 +144,7 @@ ConditionObs_Index <- function(Hist,
       # conver to biomass
       WeightAtAgeList <- purrr::map(Hist@OM@Stock[stocks], \(stock) 
                                     stock@Weight@MeanAtAge |> 
-                                      ArraySubsetYear(HistYears) |>
+                                      .ArraySubsetYear(HistYears) |>
                                       AddDimension('Area') |>
                                       ExtendAreas(Areas)
                                       ) 
@@ -176,7 +175,7 @@ ConditionObs_Index <- function(Hist,
                                            )
                            )
             
-            n <- stock |> SubsetYear(Years=Year_Names)
+            n <- stock |> .SubsetYear(Years=Year_Names)
             
             first_non_zero_age <- apply(n, 1, function(x) {
               dim(x) <- c(dim(x)[1], prod(dim(x)[-1]))
@@ -194,7 +193,7 @@ ConditionObs_Index <- function(Hist,
         SimulatedIndex <- SimNumberSelectedList |>
           purrr::map(\(stock) {
             ages <- as.numeric(dimnames(stock)[['Age']])
-            stock |> ArraySubsetAge(min(ages))
+            stock |> .ArraySubsetAge(min(ages))
           })  
         
       }
@@ -242,7 +241,7 @@ ConditionObs_Index <- function(Hist,
     
     # TODO  doesn't fit beta parameter for now; always assumes beta = 1
     # also need to account for TSInd when calculating beta
-    ResidualsBeta <- CalcIndexResiduals(ObservedIndex, SimulatedIndex, beta=1)  
+    ResidualsBeta <- .CalcIndexResiduals(ObservedIndex, SimulatedIndex, beta=1)  
     
     Index_Obs@Beta <- ResidualsBeta$beta
     LogResiduals <- ResidualsBeta$LogResiduals
@@ -265,7 +264,7 @@ ConditionObs_Index <- function(Hist,
  
     logProjResids <- ApplyAC(LogResid = logProjResids, 
                              AC = Stats$AC,
-                             LastError = LastResidual(LogResiduals))
+                             LastError = .LastResidual(LogResiduals))
     
     
     ResidualsHistorical <- exp(LogResiduals)
@@ -302,7 +301,7 @@ ConditionObs_Index <- function(Hist,
 #' * `beta`: numeric, the input beta value.
 #' 
 #' @keywords internal
-CalcIndexResiduals <- function(ObservedIndex, SimulatedIndex, beta = 1) {
+.CalcIndexResiduals <- function(ObservedIndex, SimulatedIndex, beta = 1) {
   
   if (any(ObservedIndex < 0, na.rm = TRUE)) {
     cli::cli_abort(
@@ -328,8 +327,6 @@ CalcIndexResiduals <- function(ObservedIndex, SimulatedIndex, beta = 1) {
     beta = beta
   )
 }
-
-
 
 
 

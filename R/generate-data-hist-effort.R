@@ -49,7 +49,7 @@
 #' CVs from the [EffortObs()] object are not currently applied here;
 #' `defaultCV` serves as the working assumption for downstream MPs.
 #'
-#' ## Obs Structure
+#' ## Obs .Structure
 #'
 #' Observation parameters are accessed via:
 #'
@@ -76,7 +76,7 @@
 #'
 #' @seealso [EffortObs()], [EffortData()], [effortdata-class] [obs-class]
 #' @keywords internal
-GenHistData_Effort <- function(x, Data, Hist, HistYears, i, stocks, FleetNames, defaultCV = 0.2) {
+.GenHistDataEffort <- function(x, Data, Hist, HistYears, i, stocks, FleetNames, defaultCV = 0.2) {
   
   # Return real data unchanged if already populated
   if (!EmptyObject(Data@Effort))
@@ -111,11 +111,10 @@ GenHistData_Effort <- function(x, Data, Hist, HistYears, i, stocks, FleetNames, 
 
     Value[, fl] <- Hist@Effort[x, , fl] *
       EffortObs@Bias[x] *
-      ArraySubsetYear(EffortObs@Error, HistYears)[x, ]
+      .ArraySubsetYear(EffortObs@Error, HistYears)[x, ]
   }
   
   EffortData@Value <- Value
   EffortData@CV    <- CV
   EffortData
 }
-

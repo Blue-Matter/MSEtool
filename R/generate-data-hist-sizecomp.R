@@ -30,9 +30,10 @@
 #'
 #' True catch-at-size is extracted from `Hist@LandingsAtSize` or
 #' `Hist@DiscardsAtSize` (selected by `type`) for replicate `x`, summed over
-#' areas and stocks within the complex, retaining the fleet and size dimensions.
-#' The result is normalised to proportions \eqn{\mathbf{q}} within each year
-#' and fleet.
+#' areas and stocks within the complex, computed independently for each
+#' fleet since fleets are not required to share a size-class grid (see
+#' [compdata-class]). The result is normalised to proportions
+#' \eqn{\mathbf{q}} within each year and fleet.
 #'
 #' ## Composition Simulation Model
 #'
@@ -51,7 +52,7 @@
 #' - `Theta`: defaults to `1` if `NULL`, recovering a near-multinomial draw
 #' - `Shift`: defaults to zero for all bins if `NULL`, applying no tilt
 #'
-#' ## Obs Structure
+#' ## Obs .Structure
 #'
 #' Observation parameters are accessed via:
 #'
@@ -72,13 +73,16 @@
 #' @return A [compdata-class] object with:
 #'
 #' - `@Name`: character vector of fleet names
-#' - `@Value`: `[nYear x nFleet x nSize]` array of composition counts
-#' - `@Classes`: numeric vector of size class midpoints
+#' - `@Value`: `[nYear x nFleet x nSize]` array of composition counts,
+#'   `nSize` being the largest class count among the fleets (see
+#'   [compdata-class] for the fleet-relative position convention)
+#' - `@Classes`: named list, one numeric vector of size class midpoints per
+#'   fleet
 #'
 #' @seealso [CompObs()], [CompData()], [compdata-class], [obs-class],
-#'   [rDirichletMultinomial()], [GenHistData_AgeComp()], [GenHistData_Catch()]
+#'   [rDirichletMultinomial()], `.GenHistDataAgeComp()`, `.GenHistDataCatch()`
 #' @keywords internal
-GenHistData_SizeComp <- function(x, Data, Hist, HistYears, i, stocks, FleetNames,
+.GenHistDataSizeComp <- function(x, Data, Hist, HistYears, i, stocks, FleetNames,
                                  type = c('LandingsAtSize', 'DiscardsAtSize')) {
   
   type <- match.arg(type, c('LandingsAtSize', 'DiscardsAtSize'))
@@ -96,90 +100,91 @@ GenHistData_SizeComp <- function(x, Data, Hist, HistYears, i, stocks, FleetNames
   
   nTS    <- length(HistYears)
   nFleet <- length(FleetNames)
-  
-  # Aggregate true catch-at-size over stocks and areas: [nSize x nYear x nFleet]
-  CatchAtSize <- purrr::map(slot(Hist, type)[stocks], \(stock_level) {
-    purrr::map(stock_level, \(catch_n) {
-      sim_x <- min(x, dim(catch_n)[1])
+
+  # Aggregate true catch-at-size over stocks and areas, per fleet: fleets
+  # are not stacked into a shared array since they need not share a
+  # size-class grid (see compdata-class). Each element is [Class x Year]
+  # with that fleet's own Class dimnames.
+  CatchAtSizeByFleet <- purrr::map(seq_len(nFleet), \(fl) {
+    purrr::map(slot(Hist, type)[stocks], \(stock_level) {
+      catch_n <- stock_level[[fl]]
+      sim_x   <- min(x, dim(catch_n)[1])
       catch_n[sim_x,,,,drop=FALSE] |>
         SumOverArea() |>
         DropDimension('Sim')
-    }) |> List2Array('Fleet') 
-  }) |> List2Array('Stock') |>
-    SumOverStock()
-  
-  CatchAtSize <- SubsetYear(CatchAtSize, HistYears)
-  
+    }) |> List2Array('Stock') |>
+      SumOverStock() |>
+      .SubsetYear(HistYears)
+  }) |> stats::setNames(FleetNames)
+
   # Exit early if true size compositions are all zero
-  if (all(CatchAtSize == 0, na.rm = TRUE))
+  if (all(purrr::map_lgl(CatchAtSizeByFleet, \(a) all(a == 0, na.rm = TRUE))))
     return(slot(Data, type))
-  
-  SizeClasses <- dimnames(CatchAtSize)$Class |> as.numeric()
-  nSize       <- length(SizeClasses)
-  
-  Value <- array(0,
-                 dim      = c(nTS, nFleet, nSize),
-                 dimnames = list(Year  = HistYears,
-                                 Fleet = FleetNames,
-                                 Class  = SizeClasses))
-  
+
+  padded      <- .PadClassesByFleet(CatchAtSizeByFleet, HistYears)
+  Value       <- padded$Value
+  ClassesList <- padded$Classes
+
   # Units <- rep('cm', nFleet)
-  
+
   for (fl in seq_len(nFleet)) {
+    nSize <- length(ClassesList[[fl]])
+    if (!nSize) next
+    Value[, fl, seq_len(nSize)] <- 0
+
     CompObs <- slot(Hist@OM@Obs[[i]][[fl]], type)
     if (EmptyObject(CompObs) || is.null(CompObs@SampleSize))
       next()
-    
+
     sim_ss     <- min(x, nrow(CompObs@SampleSize))
-    SampleSize <- SubsetYear(CompObs@SampleSize, HistYears)[sim_ss, ]
-    
+    SampleSize <- .SubsetYear(CompObs@SampleSize, HistYears)[sim_ss, ]
+
     ESS <- if (!is.null(CompObs@ESS)) {
       sim_ess <- min(x, nrow(CompObs@ESS))
-      SubsetYear(CompObs@ESS, HistYears)[sim_ess, ]
+      .SubsetYear(CompObs@ESS, HistYears)[sim_ess, ]
     } else {
       SampleSize
     }
-    
+
     Theta <- if (!is.null(CompObs@Theta)) {
       sim_th <- min(x, nrow(CompObs@Theta))
-      SubsetYear(CompObs@Theta, HistYears)[sim_th, ]
+      .SubsetYear(CompObs@Theta, HistYears)[sim_th, ]
     } else {
       rep(1, nTS)
     }
-    
+
     hasShift <- !is.null(CompObs@Shift)
     if (hasShift) {
       sim_sh <- min(x, dim(CompObs@Shift)[1])
-      Shift  <- SubsetYear(CompObs@Shift, HistYears)[sim_sh,, ]  # [nYear x nBin]
+      Shift  <- .SubsetYear(CompObs@Shift, HistYears)[sim_sh,, ]  # [nYear x nBin]
     }
-    
+
     for (yr in seq_len(nTS)) {
       ss  <- SampleSize[yr]
       ess <- ESS[yr]
       th  <- Theta[yr]
-      
+
       if (is.na(ss) || ss == 0) next()
-      
-      true_n  <- CatchAtSize[, yr, fl]
+
+      true_n  <- CatchAtSizeByFleet[[fl]][, yr]
       total_n <- sum(true_n, na.rm = TRUE)
       if (is.na(total_n) || total_n == 0) next()
-      
+
       q <- true_n / total_n
-      
-      shift_b <- if (hasShift) Shift[yr, ] else rep(0, nSize)
+
+      shift_b <- if (hasShift) Shift[yr, seq_len(nSize)] else rep(0, nSize)
       alpha   <- ess * th * q * exp(shift_b)
-      
+
       if (any(is.na(alpha)) || sum(alpha) == 0) next()
-      
-      Value[yr, fl, ] <- rDirichletMultinomial(n = round(ss), alpha = alpha)
+
+      Value[yr, fl, seq_len(nSize)] <- rDirichletMultinomial(n = round(ss), alpha = alpha)
     }
   }
-  
+
   CompData         <- new('compdata')
   CompData@Name    <- FleetNames
   CompData@Value   <- Value
-  CompData@Classes <- SizeClasses
+  CompData@Classes <- ClassesList
   # CompData@Units   <- Units
   CompData
 }
-

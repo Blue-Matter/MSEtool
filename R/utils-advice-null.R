@@ -13,7 +13,7 @@
 #' @return Logical; `TRUE` if the specified slot is `NULL` for all sim-stock
 #'   combinations, `FALSE` if any are non-`NULL`.
 #' @keywords internal
-AllAdviceNull <- function(AdviceSimList, slot_name='Closure') {
+.AllAdviceNull <- function(AdviceSimList, slot_name='Closure') {
   purrr::map(AdviceSimList, \(AdviceSim)
              purrr::map(AdviceSim, \(Advice) {
                if (isS4(Advice) && .hasSlot(Advice, slot_name))

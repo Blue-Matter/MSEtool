@@ -24,7 +24,7 @@
 #'   
 #' @seealso [Effort()]
 #' @keywords internal
-extract_effort <- function(object, df=FALSE) {
+.ExtractEffort <- function(object, df=FALSE) {
   
   if (inherits(object, c('fleet', 'effort', 'obs', 'imp')) || !df)
     return(object@Effort)
@@ -32,26 +32,25 @@ extract_effort <- function(object, df=FALSE) {
 
   if (inherits(object, 'hist')) {
     return(
-      .extract_effort(object)
+      .ExtractEffortCore(object)
     )
   }
   
-  hist <- .extract_effort(object@Hist) |>
+  hist <- .ExtractEffortCore(object@Hist) |>
     dplyr::mutate(MP = 'Historical')
   
-  proj <- .extract_effort(object)
+  proj <- .ExtractEffortCore(object)
   out <- dplyr::bind_rows(hist, proj)
   class(out) <- c('effort.df', class(out))
   out
   
 }
 
-.extract_effort <- function(object) {
+.ExtractEffortCore <- function(object) {
   isMSE <- inherits(object, 'mse')
   
   Array2DF(object@Effort) |> dplyr::mutate(Variable="Effort") |>
     dplyr::mutate(Variable = 'Effort',
                   Period   = ifelse(isMSE, 'Projection', 'Historical')) |>
-    dplyr::relocate('Sim', 'Year', 'Period') |>
-    dplyr::arrange(Sim, Year)
+    dplyr::relocate('Sim', 'Year', 'Period')
 }

@@ -13,7 +13,7 @@
 #'   accepted input formats.
 #' @slot Model `function` or `character(1)`. Natural mortality model
 #'   identifier, matched to one of [NaturalMortalityModels()]. Set
-#'   automatically by [FindModel()] when `Pars` is supplied without an
+#'   automatically by `.FindModel()` when `Pars` is supplied without an
 #'   explicit model.
 #' @slot Units `character(1)`. Time unit in which mortality rates are
 #'   expressed (e.g., `"year"` for instantaneous annual mortality). Must be
@@ -59,7 +59,7 @@
 #'   parameters.
 #' - [ValidUnits()] for accepted unit strings.
 #' - [Populate()] for array population.
-#' - [FindModel()] for automatic model inference.
+#' - `.FindModel()` for automatic model inference.
 #' - [Length()] for the companion length schedule, required when using
 #'   at-length mortality models.
 #' - [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for the
@@ -85,6 +85,8 @@ setClass(
 )
 
 setValidity("naturalmortality", function(object) {
+  chk <- tryCatch(.CheckPars(object@Pars), error=function(e) e)
+  if (inherits(chk, "error")) return(conditionMessage(chk))
   # TODO: add structural and dimensional checks
   TRUE
 })

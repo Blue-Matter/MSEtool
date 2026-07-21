@@ -1,38 +1,23 @@
-OnExit <- function() {
+.OnExit <- function() {
   do.call(on.exit, list(cli::stop_app(),
                         add = TRUE),
           envir = parent.frame())
 }
 
-SetSeed <- function(seed = NULL) {
+.SetSeed <- function(seed = NULL) {
   if (is.null(seed)) {
     seed <- 101
   }
   set.seed(seed)
 }
 
-not <- function(val) !val
-
-ReplaceTiny <- function(Array, value = 1, default = tiny / 2) {
-  Array[Array == default] <- value
-  Array
-}
-
-range01 <- function(x) {
-  (x - min(x)) / (max(x) - min(x))
-}
-
-aperm <- function(a, perm, ...) {
+.Aperm <- function(a, perm, ...) {
   if (is.null(a) || length(a) < 1) {
     return(a)
   }
   base::aperm(a, perm, ...)
 }
 
-
-
-
-# ---- Distributions -----
 
 #' Distribution Function for a Symmetric Truncated Normal
 #'
@@ -61,7 +46,7 @@ aperm <- function(a, perm, ...) {
 #' calculations involving symmetrically truncated normal distributions.
 #'
 #' @keywords internal
-ptnorm <- function(q, mean, sd, truncsd) {
+.Ptnorm <- function(q, mean, sd, truncsd) {
   a <- (-truncsd * sd) + mean
   b <- (truncsd * sd) + mean
   out <- vector("numeric", length(a))
@@ -79,7 +64,6 @@ ptnorm <- function(q, mean, sd, truncsd) {
   }
   out
 }
-
 
 
 #' Draw from a Truncated Normal Distribution
@@ -101,7 +85,7 @@ ptnorm <- function(q, mean, sd, truncsd) {
 #' @return A numeric vector of length `n` containing truncated normal draws
 #' 
 #' @keywords internal
-rtnorm <- function(n, mu, sigma, lower, upper) {
+.Rtnorm <- function(n, mu, sigma, lower, upper) {
   
   if (!is.numeric(n) || length(n) != 1 || n < 0) {
     cli::cli_abort("`n` must be a non-negative scalar integer.", .internal = TRUE)
@@ -129,21 +113,17 @@ rtnorm <- function(n, mu, sigma, lower, upper) {
 }
 
 
-
-
-# ---- Text ----
-firstup <- function(x, n = 1) {
+.FirstUp <- function(x, n = 1) {
   substr(x, 1, n) <- toupper(substr(x, 1, n))
   x
 }
 
-# ---- Messages ----
 
 # default: info, progress, warnings
 # FALSE: no messages or warnings
 # minimal:
 
-SetMessages <- function(messages = "default") {
+.SetMessages <- function(messages = "default") {
   msg <- list()
   if (isFALSE(messages)) {
     return(msg)
@@ -157,8 +137,8 @@ SetMessages <- function(messages = "default") {
   msg
 }
 
-StartMessages <- function(OM, messages = "default") {
-  msg <- SetMessages(messages)
+.StartMessages <- function(OM, messages = "default") {
+  msg <- .SetMessages(messages)
 
   # Allocation
 
@@ -196,7 +176,7 @@ StartMessages <- function(OM, messages = "default") {
   OM
 }
 
-getModelClass <- function(Model = NULL) {
+.GetModelClass <- function(Model = NULL) {
   if (is.null(Model)) {
     return(NULL)
   }
@@ -207,30 +187,23 @@ getModelClass <- function(Model = NULL) {
 }
 
 
-
-ParsEmpty <- function(Pars) {
-  !ParsNotEmpty(Pars)
+.ParsEmpty <- function(Pars) {
+  !.ParsNotEmpty(Pars)
 }
 
-ParsNotEmpty <- function(Pars) {
+.ParsNotEmpty <- function(Pars) {
   if (length(Pars) == 0) {
     return(FALSE)
   }
   !prod(unlist(lapply(Pars, is.na)))
 }
 
-GetIndex <- function(i, max_i) {
-  if (i >= max_i) {
-    return(rep(1:max_i, i)[i])
-  }
-  i
-}
 
-IdenticalS4 <- function(object1, object2) {
+.IdenticalS4 <- function(object1, object2) {
   digest::digest(object1, algo = "spookyhash") == digest::digest(object2, algo = "spookyhash")
 }
 
-SetDigest <- function(object, argList = list()) {
+.SetDigest <- function(object, argList = list()) {
   # object@Created <- NULL
   # object@Modified <- NULL
 
@@ -249,23 +222,20 @@ SetDigest <- function(object, argList = list()) {
 }
 
 
-
-
-CheckDigest <- function(object, argList = list()) {
+.CheckDigest <- function(object, argList = list()) {
   if (is.null(attributes(object)$digest)) {
     return(FALSE)
   }
-  SetDigest <- SetDigest(object, argList)
+  .SetDigest <- .SetDigest(object, argList)
 
-  if (attributes(SetDigest)$digest == attributes(object)$digest) {
+  if (attributes(.SetDigest)$digest == attributes(object)$digest) {
     return(TRUE)
   }
   FALSE
 }
 
 
-
-ValorNULL <- function(Value) {
+.ValorNULL <- function(Value) {
   if (all(is.na(Value))) {
     return(NULL)
   }
@@ -274,4 +244,3 @@ ValorNULL <- function(Value) {
   }
   Value
 }
-

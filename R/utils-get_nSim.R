@@ -9,18 +9,18 @@
 #'
 #' @return The maximum number of simulations found, or `nSim` if none.
 #' @keywords internal
-Get_nSim <- function(object, nSim = NULL) {
+.GetNSim <- function(object, nSim = NULL) {
   if (is.null(object))
     return(nSim)
   
   if (isS4(object)) {
-    results <- lapply(slotNames(object), function(sl) Get_nSim(slot(object, sl), nSim))
+    results <- lapply(slotNames(object), function(sl) .GetNSim(slot(object, sl), nSim))
     results <- Filter(Negate(is.null), results)
     if (length(results) > 0) return(max(unlist(results)))
   }
   
   if (is.list(object)) {
-    results <- lapply(object, Get_nSim, nSim = nSim)
+    results <- lapply(object, .GetNSim, nSim = nSim)
     results <- Filter(Negate(is.null), results)
     if (length(results) > 0) return(max(unlist(results)))
   }

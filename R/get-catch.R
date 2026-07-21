@@ -1,6 +1,6 @@
 
-CalcCatch_Biomass <- function(object, type=c("Landings", "Discards")) {
-  CheckClass(object, c('hist', 'mse'), 'object')
+.CalcCatchBiomass <- function(object, type=c("Landings", "Discards")) {
+  .CheckClass(object, c('hist', 'mse'), 'object')
   
   type <- match.arg(type, c('Landings', 'Discards'))
   
@@ -11,14 +11,19 @@ CalcCatch_Biomass <- function(object, type=c("Landings", "Discards")) {
   }
   
   StockFleetList <- object@OM@Fleet
-  
+
   isMSE <- inherits(object,'mse')
-  
-  purrr::map2(NumberList, StockFleetList,   
+
+  # Landings use the retention-weighted schedule; Discards use the
+  # selectivity-weighted schedule -- see the equivalent note in
+  # .GenHistDataCatch().
+  weight_slot <- if (type == 'Landings') 'WeightFleetRetained' else 'WeightFleetSelected'
+
+  purrr::map2(NumberList, StockFleetList,
               \(num, fleetlist) {
                 nArea <- dim(num)[5]
                 FleetWeight <- purrr::map(fleetlist, \(fleet) {
-                  weight <- fleet@WeightFleet |> 
+                  weight <- slot(fleet, weight_slot) |>
                     AddDimension("Area") |>
                     ExtendAreas(1:nArea)
                   
@@ -41,13 +46,13 @@ CalcCatch_Biomass <- function(object, type=c("Landings", "Discards")) {
   
 }
 
-GetCatch <- function(object, 
+.GetCatch <- function(object, 
                      Units=c('Biomass', 'Number'),
                      type=c('Landings', 'Discards', 'Removals'),
                      byAge=FALSE,
                      byFleet=FALSE,
                      byArea=FALSE) {
-  CheckClass(object, c('hist', 'mse'), 'object')
+  .CheckClass(object, c('hist', 'mse'), 'object')
   Units <- match.arg(Units, c('Biomass', 'Number'))
   type <- match.arg(type, c('Landings', 'Discards', 'Removals'))
   
@@ -71,10 +76,10 @@ GetCatch <- function(object,
   
   if (Units == 'Number') {
     landings <- object@LandingsAtAge
-    discards <- object@LandingsAtAge
+    discards <- object@DiscardsAtAge
   } else {
-    landings <- CalcCatch_Biomass(object, "Landings")
-    discards <- CalcCatch_Biomass(object, "Discards")
+    landings <- .CalcCatchBiomass(object, "Landings")
+    discards <- .CalcCatchBiomass(object, "Discards")
   }
 
   if (!byAge) {

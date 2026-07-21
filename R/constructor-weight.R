@@ -8,13 +8,13 @@
 #' @param Pars `list`. Named list of allometric parameters. Element names must
 #'   match the arguments of a built-in weight model (see [WeightModels()]).
 #'   When `Pars` is non-empty and `Model` is `NULL`, the model is inferred
-#'   automatically by [FindModel()]. When `Pars` is a [stock-class] object,
+#'   automatically by `.FindModel()`. When `Pars` is a [stock-class] object,
 #'   `Weight()` acts as a pass-through accessor and returns `x@Weight`.
 #'   See *Specifying Weight-at-Age* and
 #'   [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for the
 #'   full set of accepted input formats. Default `list()`.
 #' @param Model `character(1)` or `function`. Weight model identifier. When
-#'   `NULL` (default), the model is inferred from `Pars` via [FindModel()].
+#'   `NULL` (default), the model is inferred from `Pars` via `.FindModel()`.
 #'   May be set to a character string naming a built-in model or to a custom
 #'   R function — see [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html).
 #' @param Units `character(1)`. Physical unit of weight measurements. Must be
@@ -72,7 +72,7 @@
 #'
 #' **Model-based** (recommended): supply `Pars` with named parameters matching
 #' a built-in model (see [WeightModels()]). If `Model = NULL` and the parameter
-#' names uniquely match a model, [FindModel()] resolves the model
+#' names uniquely match a model, `.FindModel()` resolves the model
 #' automatically. `MeanAtAge` is then populated by [Populate()] when the stock
 #' is added to an [OM()]:
 #'
@@ -163,7 +163,7 @@
 #' - [WeightModels()] for available weight models and required parameter
 #'   sets.
 #' - [ValidUnits()] for accepted unit strings. 
-#' - [FindModel()] for automatic model inference.
+#' - `.FindModel()` for automatic model inference.
 #' - [Populate()] for array population.
 #' - [Stock()] for the enclosing stock constructor.
 #' - [Length()] for the companion length schedule, required when using
@@ -188,8 +188,8 @@ Weight <- function(Pars = list(),
                    Classes = NULL,
                    Misc = list()) {
   
-  if (isStockOrList(Pars)) 
-    return(ExtractStockSlot(Pars, "Weight"))
+  if (.IsStockOrList(Pars)) 
+    return(.ExtractStockSlot(Pars, "Weight"))
   
   if (is.null(Pars))
     return(NULL)
@@ -215,7 +215,7 @@ Weight <- function(Pars = list(),
       !is.null(names(Pars)) &&
       all(!is.na(unlist(Pars))) &&
       is.null(Model))
-    object@Model <- FindModel(object)
+    object@Model <- .FindModel(object)
   
   methods::validObject(object)
   object
@@ -224,7 +224,7 @@ Weight <- function(Pars = list(),
 #' @rdname Weight
 #' @export
 `Weight<-` <- function(x, value) {
-  AssignSlotRecursive(x, value, 'Weight')
+  .AssignSlotRecursive(x, value, 'Weight')
 }
 
 
@@ -232,19 +232,17 @@ Weight <- function(Pars = list(),
 #' @rdname Weight
 #' @export
 AWK <- function(x) {
-  CheckClass(x, "weight", "x")
+  .CheckClass(x, "weight", "x")
   x@AWK
 }
 
 #' @rdname Weight
 #' @export
 `AWK<-` <- function(x, value) {
-  CheckClass(x, "weight", "x")
+  .CheckClass(x, "weight", "x")
   x@AWK <- value
   methods::validObject(x)
   x
 }
-
-
 
 

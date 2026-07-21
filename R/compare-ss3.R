@@ -18,12 +18,28 @@
 #' @param sim Integer. Simulation index used to select both the SS3 report
 #'   element and the OM simulation row. Default `1`. Only used where
 #'   [ImportSSReport()] is applied to multiple SS3 output directories.
+#' @param plot Logical. Plot the timeseries for the `OM` and `SS3` output? If
+#'   `plot = FALSE` (default) the plots are only printed if MARE exceeds
+#'   `thresh` in some years -- see [CompareBAM()] for the same convention.
+#' @param thresh Numeric. Mean absolute relative error (MARE, as a
+#'   percentage) threshold above which a series is flagged and plotted.
+#'   Default `1`.
+#' @param save_plots Logical. If `TRUE`, diagnostic plots are written as PNG
+#'   files to `file.path(outdir, Stock)`. Default `FALSE`.
+#' @param outdir Character. Base directory for saved plots. Defaults to
+#'   `"figures/diagnostics/SS3"`.
+#' @param width,height Numeric. Width/height (inches) passed to
+#'   [ggplot2::ggsave()]. If `NULL` (default), sized automatically from the
+#'   number of facet panels -- see [CompareBAM()].
 #' @param silent Logical. Passed to [ImportSSReport()] and [Simulate()] to
 #'   suppress console output. Default `FALSE`.
 #' @param ... Additional arguments forwarded to [ImportSSReport()].
 #'
 #' @return
-#' - `CompareSS()` returns `NULL` invisibly (called for its side-effects).
+#' - `CompareSS()` invisibly returns a named list with elements `Stock`,
+#'   `Recruits`, `Number`, `Biomass`, `Landings`, and `Discards`, each (other
+#'   than `Stock`) a list with elements `df`, `MARE`, and `plot` -- the same
+#'   shape as [CompareBAM()].
 #' - `CompareSS_Number()` and `CompareSS_Biomass()` each print a [ggplot2::ggplot()]
 #'   object and return the combined `data.frame` of OM and SS3 values invisibly,
 #'   with columns `Year`, `Value`, `Stock`, and `Model`.
@@ -34,12 +50,14 @@
 #'   OM from [Landings()] / [Discards()]).
 #'
 #' @seealso [ImportSSReport()], [Simulate()], [Number()], [Biomass()],
-#'   [Landings()], [Discards()]
+#'   [Landings()], [Discards()], [CompareBAM()]
 #' @export
-CompareSS <- function(SSDir, Hist, sim = 1, silent = FALSE, ...) {
+CompareSS <- function(SSDir, Hist, sim = 1, plot = FALSE, thresh = 1,
+                      save_plots = FALSE, outdir = 'figures/diagnostics/SS3',
+                      width = NULL, height = NULL, silent = FALSE, ...) {
   RepList <- ImportSSReport(SSDir, silent = silent, ...)
 
-  CheckClass(Hist, c('hist', 'om'), 'Hist')
+  .CheckClass(Hist, c('hist', 'om'), 'Hist')
   if (inherits(Hist, 'om'))
     Hist <- Simulate(Hist,
                      DoDynamicUnfished = FALSE,
@@ -50,92 +68,123 @@ CompareSS <- function(SSDir, Hist, sim = 1, silent = FALSE, ...) {
                      DoMSYRefs         = FALSE,
                      silent = silent)
 
-  CompareSS_Number(RepList, Hist, sim)
-  CompareSS_Biomass(RepList, Hist, sim)
-  CompareSS_Landings(RepList, Hist, sim)
-  CompareSS_Discards(RepList, Hist, sim)
+  Out <- list()
+  complex_nm   <- names(Hist@OM@Complexes)[1]
+  Out$Stock    <- if (!is.null(complex_nm) && !is.na(complex_nm)) complex_nm else Hist@OM@Stock[[1]]@Name
+  Out$Recruits <- .CompareSSRecruitsImpl(RepList, Hist, sim)
+  Out$Number   <- .CompareSSInternal(RepList, Hist, sim, om_fn = Number,
+                                      ss_table = 'natage', y_label = 'Number')
+  Out$Biomass  <- .CompareSSInternal(RepList, Hist, sim, om_fn = Biomass,
+                                      ss_table = 'batage', y_label = 'Biomass')
+  Out$Landings <- .CompareSSCatchInternal(RepList, Hist, sim, catch_type = 'landings')
+  Out$Discards <- .CompareSSCatchInternal(RepList, Hist, sim, catch_type = 'discards')
 
-  invisible(NULL)
+  figdir <- file.path(outdir, Out$Stock)
+
+  Out <- .ComparePrintPlot(Out, 'Recruits', title = Out$Stock, plot = plot, thresh = thresh,
+                            save_plots = save_plots, figdir = figdir, width = width, height = height)
+  Out <- .ComparePrintPlot(Out, 'Number', title = Out$Stock, plot = plot, thresh = thresh,
+                            save_plots = save_plots, figdir = figdir, width = width, height = height)
+  Out <- .ComparePrintPlot(Out, 'Biomass', title = Out$Stock, plot = plot, thresh = thresh,
+                            save_plots = save_plots, figdir = figdir, width = width, height = height)
+  Out <- .ComparePrintPlot(Out, 'Landings', title = Out$Stock, plot = plot, thresh = thresh,
+                            save_plots = save_plots, figdir = figdir, width = width, height = height)
+  Out <- .ComparePrintPlot(Out, 'Discards', title = Out$Stock, plot = plot, thresh = thresh,
+                            save_plots = save_plots, figdir = figdir, width = width, height = height)
+
+  invisible(Out)
 }
-
-
 
 #' @export
 #' @rdname CompareSS
 CompareSS_Number <- function(SSDir, Hist, sim = 1, silent=FALSE, ...) {
-  .CompareSS_internal(
-    SSDir   = SSDir,
-    Hist      = Hist,
-    sim       = sim,
-    silent    = silent,
-    om_fn     = Number,
-    ss_table  = "natage",
-    y_label   = "Number", 
-    ...
-  )
+  RepList <- ImportSSReport(SSDir, silent = silent, ...)
+  .CheckClass(Hist, 'hist', 'Hist')
+  res <- .CompareSSInternal(RepList, Hist, sim, om_fn = Number,
+                             ss_table = 'natage', y_label = 'Number')
+  .PrintCompareSsPlot(res$df, 'Number')
+  invisible(res$df)
 }
 
 #' @export
 #' @rdname CompareSS
 CompareSS_Biomass <- function(SSDir, Hist, sim = 1, silent=FALSE, ...) {
-  .CompareSS_internal(
-    SSDir   = SSDir,
-    Hist      = Hist,
-    sim       = sim,
-    silent    = silent,
-    om_fn     = Biomass,
-    ss_table  = "batage",
-    y_label   = "Biomass", 
-    ...
-  )
+  RepList <- ImportSSReport(SSDir, silent = silent, ...)
+  .CheckClass(Hist, 'hist', 'Hist')
+  res <- .CompareSSInternal(RepList, Hist, sim, om_fn = Biomass,
+                             ss_table = 'batage', y_label = 'Biomass')
+  .PrintCompareSsPlot(res$df, 'Biomass')
+  invisible(res$df)
 }
 
 #' @export
 #' @rdname CompareSS
 CompareSS_Landings <- function(SSDir, Hist, sim = 1, silent = FALSE, ...) {
-  .CompareSS_catch_internal(
-    SSDir      = SSDir,
-    Hist       = Hist,
-    sim        = sim,
-    silent     = silent,
-    catch_type = 'landings',
-    y_label    = 'Landings',
-    ...
-  )
+  RepList <- ImportSSReport(SSDir, silent = silent, ...)
+  .CheckClass(Hist, 'hist', 'Hist')
+  res <- .CompareSSCatchInternal(RepList, Hist, sim, catch_type = 'landings')
+  if (is.null(res)) return(invisible(NULL))
+  .PrintCompareSsPlot(res$df, 'Landings')
+  invisible(res$df)
 }
 
 #' @export
 #' @rdname CompareSS
 CompareSS_Discards <- function(SSDir, Hist, sim = 1, silent = FALSE, ...) {
-  .CompareSS_catch_internal(
-    SSDir      = SSDir,
-    Hist       = Hist,
-    sim        = sim,
-    silent     = silent,
-    catch_type = 'discards',
-    y_label    = 'Discards',
-    ...
-  )
+  RepList <- ImportSSReport(SSDir, silent = silent, ...)
+  .CheckClass(Hist, 'hist', 'Hist')
+  res <- .CompareSSCatchInternal(RepList, Hist, sim, catch_type = 'discards')
+  if (is.null(res)) return(invisible(NULL))
+  .PrintCompareSsPlot(res$df, 'Discards')
+  invisible(res$df)
+}
+
+# Prints the OM-vs-SS3 comparison plot for a combined df, preserving the
+# CompareSS_*() standalone print-always contract (unlike .ComparePrintPlot,
+# which only prints conditionally on MARE/thresh -- that richer behavior is
+# reserved for the CompareSS() orchestrator).
+.PrintCompareSsPlot <- function(df, y_label) {
+  has_fleet <- 'Fleet' %in% names(df)
+  has_stock <- !has_fleet && 'Stock' %in% names(df)
+
+  p <- ggplot2::ggplot(
+    df,
+    ggplot2::aes(x = .data$Year, y = .data$Value, color = .data$Model,
+                shape = .data$Model, linetype = .data$Model)
+  ) +
+    ggplot2::geom_line() +
+    ggplot2::geom_point() +
+    ggplot2::expand_limits(y = 0) +
+    ggplot2::labs(y = y_label) +
+    theme_bw()
+
+  if (has_fleet) p <- p + ggplot2::facet_wrap(~Fleet, scales = 'free_y')
+  if (has_stock) p <- p + ggplot2::facet_grid(~Stock)
+
+  print(p)
+  invisible(p)
 }
 
 # Extract retain(B) or dead(B) from SS3 timeseries for all fishing fleets.
-# Returns a data.frame with columns Year, Fleet (name), Value.
-.GetSS_TimseriesCatch <- function(replist, HistYears, FishFleets, SSFleetNames, col_prefix) {
+# Returns a data.frame with columns Year, Fleet (name), Value. SS3's
+# timeseries `Yr` is a plain integer repeated across seasons, so `Year` is
+# taken positionally from the OM's (possibly decimal, for seasonal models)
+# `HistYears` after sorting by Yr/Seas -- the same convention used by
+# .CompareSSInternal() for Number/Biomass.
+.GetSSTimseriesCatch <- function(replist, HistYears, FishFleets, SSFleetNames, col_prefix) {
   ts <- replist$timeseries |>
-    dplyr::filter(Yr %in% HistYears)
+    dplyr::filter(Yr %in% HistYears) |>
+    dplyr::arrange(Yr, Seas)
 
   purrr::map2_dfr(FishFleets, SSFleetNames, function(fl, fleet_name) {
     col <- paste0(col_prefix, fl)
     if (!col %in% names(ts))
-      return(data.frame(Year = integer(0), Fleet = character(0), Value = numeric(0)))
-    data.frame(Year = ts$Yr, Fleet = fleet_name, Value = ts[[col]])
+      return(data.frame(Year = numeric(0), Fleet = character(0), Value = numeric(0)))
+    data.frame(Year = HistYears[seq_len(nrow(ts))], Fleet = fleet_name, Value = ts[[col]])
   })
 }
 
-.CompareSS_catch_internal <- function(SSDir, Hist, sim, silent, catch_type, y_label, ...) {
-
-  RepList <- ImportSSReport(SSDir, silent = silent, ...)
-  CheckClass(Hist, 'hist', 'Hist')
+.CompareSSCatchInternal <- function(RepList, Hist, sim, catch_type) {
 
   replist    <- RepList[[sim]]
   HistYears  <- Years(Hist@OM, 'H')
@@ -145,9 +194,9 @@ CompareSS_Discards <- function(SSDir, Hist, sim = 1, silent = FALSE, ...) {
 
   catch_units <- replist$catch_units[FishFleets]  # "1" = biomass, "2" = numbers
 
-  retain_df <- .GetSS_TimseriesCatch(replist, HistYears, FishFleets, SSFleetNames,
+  retain_df <- .GetSSTimseriesCatch(replist, HistYears, FishFleets, SSFleetNames,
                                      col_prefix = 'retain(B):_')
-  dead_df   <- .GetSS_TimseriesCatch(replist, HistYears, FishFleets, SSFleetNames,
+  dead_df   <- .GetSSTimseriesCatch(replist, HistYears, FishFleets, SSFleetNames,
                                      col_prefix = 'dead(B):_')
 
   if (nrow(retain_df) == 0 || nrow(dead_df) == 0) {
@@ -190,29 +239,14 @@ CompareSS_Discards <- function(SSDir, Hist, sim = 1, silent = FALSE, ...) {
   df <- dplyr::bind_rows(OM_Value, SS_Value) |>
     dplyr::arrange(Year, Fleet)
 
-  p <- ggplot2::ggplot(
-    df,
-    ggplot2::aes(x = Year, y = Value, color = Model, shape = Model, linetype = Model)
-  ) +
-    ggplot2::facet_wrap(~Fleet, scales = 'free_y') +
-    ggplot2::geom_line() +
-    ggplot2::geom_point() +
-    ggplot2::expand_limits(y = 0) +
-    ggplot2::labs(y = y_label) +
-    theme_bw()
-
-  print(p)
-  invisible(df)
+  .CompareMare(df, 'SS3')
 }
 
-.CompareSS_internal <- function(SSDir, Hist, sim, silent, om_fn, ss_table, y_label, ...) {
-  
-  RepList <- ImportSSReport(SSDir, silent = silent, ...)
-  CheckClass(Hist, 'hist', 'Hist')
-  
+.CompareSSInternal <- function(RepList, Hist, sim, om_fn, ss_table, y_label) {
+
   replist    <- RepList[[sim]]
   HistYears  <- Years(Hist@OM, 'H')
-  AgeClasses <- GetSSAgeClasses(replist)
+  AgeClasses <- .GetSSAgeClasses(replist)
   
   OM_Value <- om_fn(Hist, df = TRUE) |>
     dplyr::mutate(Model = 'OM') |>
@@ -227,7 +261,7 @@ CompareSS_Discards <- function(SSDir, Hist, sim = 1, silent = FALSE, ...) {
     dplyr::group_by(Stock, Year, Seas) |>
     dplyr::summarise(Value = sum(value), Model = 'SS3', .groups = 'drop') |>
     dplyr::mutate(
-      Stock = dplyr::case_match(Stock, 1 ~ 'Female', 2 ~ 'Male')
+      Stock = dplyr::recode_values(Stock, 1 ~ 'Female', 2 ~ 'Male')
     ) |>
     dplyr::select(Stock, Year, Value, Model) |>
     dplyr::arrange(Stock, Year) |>
@@ -239,19 +273,57 @@ CompareSS_Discards <- function(SSDir, Hist, sim = 1, silent = FALSE, ...) {
   df <- dplyr::bind_rows(OM_Value, SS_Value) |>
     dplyr::select(Year, Value, Stock, Model) |>
     dplyr::arrange(Year)
-  
-  p <- ggplot2::ggplot(
-    df,
-    ggplot2::aes(x = Year, y = Value, color = Model, shape = Model, linetype = Model)
-  ) +
-    ggplot2::facet_grid(~Stock) +
-    ggplot2::geom_line() +
-    ggplot2::geom_point() +
-    ggplot2::expand_limits(y = 0) +
-    ggplot2::labs(y = y_label) +
-    theme_bw()
-  
-  print(p)
-  invisible(df)
+
+  .CompareMare(df, 'SS3')
 }
 
+# Age-0 (recruit) numbers from SS3's `natage` table vs OM Number() at the
+# minimum age, mirroring .CompareBAMRecruits(). Single-stock only (SS3's
+# natage Sex column isn't disambiguated here the way .CompareSSInternal()
+# does for Number/Biomass, since recruitment is naturally reported at the
+# population level).
+.CompareSSRecruitsImpl <- function(RepList, Hist, sim) {
+  replist   <- RepList[[sim]]
+  HistYears <- Years(Hist@OM, 'H')
+
+  OM_Value <- Number(Hist, df = TRUE, byAge = TRUE) |>
+    dplyr::filter(.data$Sim == sim, .data$Age == min(.data$Age)) |>
+    dplyr::group_by(Year) |>
+    dplyr::summarise(Value = sum(Value)) |>
+    dplyr::mutate(Model = 'OM') |>
+    dplyr::select('Year', 'Value', 'Model')
+
+  AgeClasses <- .GetSSAgeClasses(replist)
+  minAge     <- as.character(min(AgeClasses))
+
+  if (!minAge %in% names(replist$natage))
+    return(NULL)
+
+  # SS3's natage age columns are coarser (typically annual) than the OM's
+  # quarterly age classes, so a cohort recruited at the birth season stays
+  # labelled as the same minimum age (declining by natural mortality) for
+  # multiple seasons afterwards -- these are surviving carry-over numbers,
+  # not additional recruitment events. Match the OM's single-quarter-per-year
+  # recruitment pulse by sampling SS3 only at the birth season (the same
+  # convention .GetSSR0() uses for R0), zeroing all other seasons so both
+  # series share the same quarterly grid.
+  birthseas <- .GetSSBirthSeas(replist)
+
+  SS_Value <- replist$natage |>
+    dplyr::filter(.data$Yr %in% HistYears, .data$`Beg/Mid` == 'B') |>
+    dplyr::rename(Year = 'Yr') |>
+    dplyr::group_by(.data$Year, .data$Seas) |>
+    dplyr::summarise(Value = sum(.data[[minAge]]), .groups = 'drop') |>
+    dplyr::arrange(.data$Year, .data$Seas) |>
+    dplyr::mutate(
+      Value = ifelse(.data$Seas == birthseas, .data$Value, 0),
+      Year  = OM_Value$Year,
+      Model = 'SS3'
+    ) |>
+    dplyr::select('Year', 'Value', 'Model')
+
+  df <- dplyr::bind_rows(OM_Value, SS_Value) |>
+    dplyr::arrange(.data$Year)
+
+  .CompareMare(df, 'SS3')
+}

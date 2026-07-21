@@ -26,13 +26,13 @@ NULL
 #' @rdname ArrayOperations
 #' @export
 ArraySum <- function(array1, array2) {
-  ArrayOperation(array1, array2, `+`)
+  .ArrayOperation(array1, array2, `+`)
 }
 
 #' @rdname ArrayOperations
 #' @export
 ArrayDivide <- function(array1, array2) {
-  out <- ArrayOperation(array1, array2, `/`)
+  out <- .ArrayOperation(array1, array2, `/`)
   out[is.na(out)] <- 0
   out[is.infinite(out)] <- 0
   out
@@ -41,16 +41,16 @@ ArrayDivide <- function(array1, array2) {
 #' @rdname ArrayOperations
 #' @export
 ArrayMultiply <- function(array1, array2) {
-  ArrayOperation(array1, array2)
+  .ArrayOperation(array1, array2)
 }
 
 #' @rdname ArrayOperations
 #' @export
 ArraySubtract <- function(array1, array2) {
-  ArrayOperation(array1, array2, `-`)
+  .ArrayOperation(array1, array2, `-`)
 }
 
-resolve_dim <- function(dimname, dname1, dname2) {
+.ResolveDim <- function(dimname, dname1, dname2) {
   ind1 <- which(names(dname1) == dimname)
   ind2 <- which(names(dname2) == dimname)
   if (!length(ind1) || !length(ind2)) return(NULL)
@@ -61,13 +61,13 @@ resolve_dim <- function(dimname, dname1, dname2) {
 #' @rdname ArrayOperations
 #' @export
 ArrayExtend <- function(array1, array2) {
-  dnames <- CheckArrays(array1, array2)
+  dnames <- .CheckArrays(array1, array2)
   dname1 <- dnames$dname1
   dname2 <- dnames$dname2
   
   # Sim: extend to max nSim; if both length-1, keep as 1
   nSim <- local({
-    r <- resolve_dim("Sim", dname1, dname2)
+    r <- .ResolveDim("Sim", dname1, dname2)
     if (is.null(r)) return(NULL)
     n1 <- length(r$vals1); n2 <- length(r$vals2)
     if (n1 == 1L && n2 == 1L) return(NULL)
@@ -76,7 +76,7 @@ ArrayExtend <- function(array1, array2) {
   
   # Age: extend to union of age classes if lengths differ
   AgeClasses <- local({
-    r <- resolve_dim("Age", dname1, dname2)
+    r <- .ResolveDim("Age", dname1, dname2)
     if (is.null(r)) return(NULL)
     if (length(r$vals1) == length(r$vals2)) return(NULL)
     c(r$vals1, r$vals2) |> as.numeric() |> unique() |> sort()
@@ -84,7 +84,7 @@ ArrayExtend <- function(array1, array2) {
   
   # Classes: extend to union of size classes if lengths differ
   Classes <- local({
-    r <- resolve_dim("Class", dname1, dname2)
+    r <- .ResolveDim("Class", dname1, dname2)
     if (is.null(r)) return(NULL)
     if (length(r$vals1) == length(r$vals2)) return(NULL)
     c(r$vals1, r$vals2) |> as.numeric() |> unique() |> sort()
@@ -92,14 +92,14 @@ ArrayExtend <- function(array1, array2) {
   
   # Year: always union of both sets
   Years <- local({
-    r <- resolve_dim("Year", dname1, dname2)
+    r <- .ResolveDim("Year", dname1, dname2)
     if (is.null(r)) return(NULL)
     c(r$vals1, r$vals2) |> as.numeric() |> unique() |> sort()
   })
   
   # Area: extend to union of areas if lengths differ
   Areas <- local({
-    r <- resolve_dim("Area", dname1, dname2)
+    r <- .ResolveDim("Area", dname1, dname2)
     if (is.null(r)) return(NULL)
     if (length(r$vals1) == length(r$vals2)) return(NULL)
     c(r$vals1, r$vals2) |> as.numeric() |> unique() |> sort()
@@ -123,7 +123,7 @@ ArrayExtend <- function(array1, array2) {
   )
 }
 
-ArrayOperation <- function(array1, array2, operation = `*`) {
+.ArrayOperation <- function(array1, array2, operation = `*`) {
   if (is.null(array2)) {
     return(array1)
   }
@@ -131,7 +131,7 @@ ArrayOperation <- function(array1, array2, operation = `*`) {
   operation(ArrayList$array1, ArrayList$array2)
 }
 
-CheckArrays <- function(array1, array2) {
+.CheckArrays <- function(array1, array2) {
   d1 <- dim(array1)
   d2 <- dim(array2)
 

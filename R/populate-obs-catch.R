@@ -34,7 +34,7 @@
 #'
 #' @export
 PopulateCatchObs <- function(Catch, nSim, HistYears, ProjYears) {
-  CheckClass(Catch, "catchobs", "Catch")
+  .CheckClass(Catch, "catchobs", "Catch")
   
   if (EmptyObject(Catch))
     return(Catch)

@@ -30,9 +30,10 @@
 #' Catch-at-size for `DataYear` is extracted from `Proj@LandingsAtSize` or
 #' `Proj@DiscardsAtSize` (selected by `type`) for each stock in `stocks` at
 #' time step `TSIndex`, dropping the simulation and time dimensions. The
-#' result is summed over stocks and areas, retaining the fleet and size
-#' dimensions, then normalised to proportions \eqn{\mathbf{q}} within each
-#' fleet.
+#' result is summed over stocks and areas, computed independently for each
+#' fleet since fleets are not required to share a size-class grid (see
+#' [compdata-class]), then normalised to proportions \eqn{\mathbf{q}} within
+#' each fleet.
 #'
 #' ## Value Resolution
 #'
@@ -53,7 +54,7 @@
 #'   - `Theta`: defaults to `1` if `NULL`
 #'   - `Shift`: defaults to zero for all bins if `NULL`
 #'
-#' ## Obs Structure
+#' ## Obs .Structure
 #'
 #' Observation parameters are accessed via:
 #'
@@ -73,101 +74,109 @@
 #'
 #' ## Appending
 #'
-#' The new year's `Value` array (dimensions `[1 x nFleet x nSize]`) is bound
-#' to the existing array along the year dimension using
-#' `abind::abind(..., along = 1)`, preserving dimension names.
+#' The new year's `Value` array (dimensions `[1 x nFleet x nSize]`, `nSize`
+#' being the existing object's class-dimension width -- see
+#' [compdata-class]) is bound to the existing array along the year
+#' dimension using `abind::abind(..., along = 1)`, preserving dimension
+#' names. Each fleet is only filled up to its own class count
+#' (`length(CompData@Classes[[fl]])`); any padding beyond that stays `NA`.
 #'
 #' @return A [compdata-class] object with `DataYear` appended to `@Value`:
 #'
 #' - `@Value`: `[nYear+1 x nFleet x nSize]` array of composition counts
 #'
 #' @seealso [CompObs()], [CompData()], [compdata-class], [obs-class],
-#'   [rDirichletMultinomial()], [GenHistData_SizeComp()], [GenProjData_AgeComp()]
+#'   [rDirichletMultinomial()], `.GenHistDataSizeComp()`, `.GenProjDataAgeComp()`
 #' @keywords internal
-GenProjData_SizeComp <- function(x, Proj, DataYear, YearsAll, i, stocks,
+.GenProjDataSizeComp <- function(x, Proj, DataYear, YearsAll, i, stocks,
                                  type = c('LandingsAtSize', 'DiscardsAtSize')) {
   
   type     <- match.arg(type)
   CompData <- slot(Proj@Data[[x]][[i]], type)
-  
+
   if (EmptyObject(CompData)) return(CompData)
   if (DataYear %in% dimnames(CompData@Value)[[1]]) return(CompData)
-  
+
   TSIndex     <- match(DataYear, YearsAll)
-  FleetNames  <- resolveFleetNames(CompData)
+  FleetNames  <- .ResolveFleetNames(CompData)
   nFleet      <- length(FleetNames)
-  SizeClasses <- CompData@Classes
-  nSize       <- length(SizeClasses)
+  ClassesList <- CompData@Classes
+  nSizeMax    <- dim(CompData@Value)[3]
   Value       <- CompData@Value
-  
-  # Aggregate true catch-at-size over stocks and areas for DataYear
-  CatchAtSize_yr <- purrr::map(slot(Proj, type)[stocks], \(stock_level) {
-    purrr::map(stock_level, \(catch_n) {
-      sim_x <- min(x, dim(catch_n)[1])
+
+  # Aggregate true catch-at-size over stocks and areas for DataYear, per
+  # fleet (fleets need not share a size-class grid -- see compdata-class).
+  CatchAtSizeByFleet <- purrr::map(seq_len(nFleet), \(fl) {
+    purrr::map(slot(Proj, type)[stocks], \(stock_level) {
+      catch_n <- stock_level[[fl]]
+      sim_x   <- min(x, dim(catch_n)[1])
       catch_n[sim_x,, TSIndex,,drop=FALSE] |>
         abind::adrop(drop = c(1, 3)) |>
-        SumOverArea()  
-    }) |> List2Array('Fleet', pos = 1) 
-  }) |> List2Array('Stock') |>
-    SumOverStock()
-  
+        SumOverArea()
+    }) |> List2Array('Stock') |>
+      SumOverStock()
+  }) |> stats::setNames(FleetNames)
+
   NewValue <- array(NA_real_,
-                    dim      = c(1L, nFleet, nSize),
+                    dim      = c(1L, nFleet, nSizeMax),
                     dimnames = list(Year  = DataYear,
                                     Fleet = FleetNames,
-                                    Size  = SizeClasses))
+                                    Class = seq_len(nSizeMax)))
 
   for (fl in seq_len(nFleet)) {
+    nSize <- length(ClassesList[[fl]])
+    if (!nSize) next
+
     Obs <- slot(Proj@OM@Obs[[i]][[fl]], type)
     if (EmptyObject(Obs) || is.null(Obs@SampleSize)) next
-    
+
     omData   <- Proj@OM@Data[[i]]
     hasOMVal <- !is.null(omData) &&
       !is.null(slot(omData, type)@Value) &&
       dim(slot(omData, type)@Value)[1] >= TSIndex
-    
+
     if (hasOMVal) {
-      NewValue[1, fl, ] <- slot(omData, type)@Value[TSIndex, fl, ]
+      NewValue[1, fl, seq_len(nSize)] <- slot(omData, type)@Value[TSIndex, fl, seq_len(nSize)]
     } else {
       sim_ss <- min(x, nrow(Obs@SampleSize))
-      ss     <- ArraySubsetYear(Obs@SampleSize, DataYear)[sim_ss]
-      
+      ss     <- .ArraySubsetYear(Obs@SampleSize, DataYear)[sim_ss]
+
       if (is.na(ss) || ss == 0) next
-      
+
       ess <- if (!is.null(Obs@ESS)) {
         sim_ess <- min(x, nrow(Obs@ESS))
-        ArraySubsetYear(Obs@ESS, DataYear)[sim_ess]
+        .ArraySubsetYear(Obs@ESS, DataYear)[sim_ess]
       } else {
         ss
       }
-      
+
       th <- if (!is.null(Obs@Theta)) {
         sim_th <- min(x, nrow(Obs@Theta))
-        ArraySubsetYear(Obs@Theta, DataYear)[sim_th]
+        .ArraySubsetYear(Obs@Theta, DataYear)[sim_th]
       } else {
         1
       }
-      
-      true_n  <- CatchAtSize_yr[fl, ]
+
+      true_n  <- CatchAtSizeByFleet[[fl]]
       total_n <- sum(true_n, na.rm = TRUE)
       if (is.na(total_n) || total_n == 0) next
-      
+
       q <- true_n / total_n
-      
+
       shift_b <- if (!is.null(Obs@Shift)) {
         sim_sh <- min(x, dim(Obs@Shift)[1])
-        abind::adrop(ArraySubsetYear(Obs@Shift, DataYear)[sim_sh, ,,drop=FALSE],1)
+        abind::adrop(.ArraySubsetYear(Obs@Shift, DataYear)[sim_sh, ,,drop=FALSE],1)[seq_len(nSize)]
       } else {
         rep(0, nSize)
       }
-      
+
       alpha <- ess * th * q * exp(shift_b)
       if (any(is.na(alpha)) || sum(alpha) == 0) next
-      
-      NewValue[1, fl, ] <- rDirichletMultinomial(n = round(ss), alpha = alpha)
+
+      NewValue[1, fl, seq_len(nSize)] <- rDirichletMultinomial(n = round(ss), alpha = alpha)
     }
   }
-  
+
   CompData@Value <- abind::abind(Value, NewValue, along = 1, use.dnns = TRUE)
   CompData
 }

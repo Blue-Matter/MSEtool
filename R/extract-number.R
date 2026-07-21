@@ -27,17 +27,17 @@
 #' Number(Hist, byAge = TRUE)
 #' Number(Hist, byAge = TRUE, byArea = TRUE)
 Number <- function(object, df = TRUE, byAge = FALSE, byArea = FALSE) {
-  CheckClass(object, c('hist', 'mse', 'timeseries'), 'object')
+  .CheckClass(object, c('hist', 'mse', 'timeseries'), 'object')
   
   if (!df)
     return(object@Number)
   
   if (inherits(object, 'hist'))
-    return(extract_number_hist(object, df = df, byAge = byAge, byArea = byArea))
+    return(.ExtractNumberHist(object, df = df, byAge = byAge, byArea = byArea))
   
-  proj <- extract_number_proj(object, df = df, byAge = byAge, byArea = byArea)
+  proj <- .ExtractNumberProj(object, df = df, byAge = byAge, byArea = byArea)
   
-  hist <- number_to_df(
+  hist <- .NumberToDf(
     number_slot      = object@Hist@Number,
     OM               = object@OM,
     period           = "Historical",
@@ -52,11 +52,11 @@ Number <- function(object, df = TRUE, byAge = FALSE, byArea = FALSE) {
   out
 }
 
-extract_number_hist <- function(Hist, df = FALSE, byAge = FALSE, byArea = FALSE) {
+.ExtractNumberHist <- function(Hist, df = FALSE, byAge = FALSE, byArea = FALSE) {
   
   if (!df) return(Hist@Number)
   
-  out <- number_to_df(
+  out <- .NumberToDf(
     number_slot    = Hist@Number,
     OM             = Hist@OM,
     period         = "Historical",
@@ -69,10 +69,10 @@ extract_number_hist <- function(Hist, df = FALSE, byAge = FALSE, byArea = FALSE)
   out
 }
 
-extract_number_proj <- function(MSE, df = FALSE, byAge = FALSE, byArea = FALSE) {
-  CheckClass(MSE, 'mse', 'MSE')
+.ExtractNumberProj <- function(MSE, df = FALSE, byAge = FALSE, byArea = FALSE) {
+  .CheckClass(MSE, 'mse', 'MSE')
   
-  out <- number_to_df(
+  out <- .NumberToDf(
     number_slot      = MSE@Number,
     OM               = MSE@OM,
     period           = "Projection",
@@ -85,7 +85,7 @@ extract_number_proj <- function(MSE, df = FALSE, byAge = FALSE, byArea = FALSE) 
   out
 }
 
-number_to_df <- function(number_slot, OM, period, extra_group_vars,
+.NumberToDf <- function(number_slot, OM, period, extra_group_vars,
                          byAge, byArea) {
   
   Area <- NULL # CRAN checks
@@ -106,7 +106,7 @@ number_to_df <- function(number_slot, OM, period, extra_group_vars,
     stock <- OM@Stock[[i]]
     
     n <- number_slot[[i]] |>
-      ArraySubsetYear(years) |>
+      .ArraySubsetYear(years) |>
       Extend(
         nSim       = OM@nSim,
         AgeClasses = stock@Ages@Classes,
@@ -132,9 +132,8 @@ number_to_df <- function(number_slot, OM, period, extra_group_vars,
   }
   
   do.call(rbind, stock_list) |> 
-    ConvertDF() |> 
+    .ConvertDF() |> 
     dplyr::relocate('Sim', 'Stock', 'Year', 'Period') |>
     dplyr::arrange(Sim, Stock, Year)
   
 }
-

@@ -19,7 +19,7 @@
 #' @name GenMeanAtLength
 #' @export
 GenMeanAtAge <- function(Model, Pars, Ages) {
-  MeanAtAge <- GenerateMeanatGeneric(Model, Pars, Ages=Ages)
+  MeanAtAge <- .GenerateMeanatGeneric(Model, Pars, Ages=Ages)
   dn <- dimnames(MeanAtAge)
   names(dn)[names(dn) == "Ages"] <- "Age"
   dimnames(MeanAtAge) <- dn
@@ -29,7 +29,7 @@ GenMeanAtAge <- function(Model, Pars, Ages) {
 #' @rdname GenMeanAtLength
 #' @export
 GenMeanAtLength <- function(Model, Pars, Length) {
-  MeanAtLength <- GenerateMeanatGeneric(Model, Pars, Length=Length)
+  MeanAtLength <- .GenerateMeanatGeneric(Model, Pars, Length=Length)
   dn <- dimnames(MeanAtLength)
   names(dn)[names(dn) == "Length"] <- "Class"
   dimnames(MeanAtLength) <- dn
@@ -39,7 +39,7 @@ GenMeanAtLength <- function(Model, Pars, Length) {
 #' @rdname GenMeanAtLength
 #' @export
 GenMeanAtWeight <- function(Model, Pars, Weight) {
-  MeanAtWeight <- GenerateMeanatGeneric(Model, Pars, Weight=Weight)
+  MeanAtWeight <- .GenerateMeanatGeneric(Model, Pars, Weight=Weight)
   dn <- dimnames(MeanAtWeight)
   names(dn)[names(dn) == "Weight"] <- "Class"
   dimnames(MeanAtWeight) <- dn
@@ -47,7 +47,7 @@ GenMeanAtWeight <- function(Model, Pars, Weight) {
 }
 
 
-GenerateMeanatGeneric <- function(Model, Pars, nSim = 5, Years=NULL,  ...) {
+.GenerateMeanatGeneric <- function(Model, Pars, nSim = 5, Years=NULL,  ...) {
   
   dots <- list(...)
   if (length(dots) != 1) {
@@ -55,7 +55,7 @@ GenerateMeanatGeneric <- function(Model, Pars, nSim = 5, Years=NULL,  ...) {
   }
   
   # Convert Pars to named arrays if needed
-  Pars <- StructurePars(Pars=Pars, nSim=nSim, Years=DefaultYears(Years))
+  Pars <- .StructurePars(Pars=Pars, nSim=nSim, Years=DefaultYears(Years))
   
   # Determine function
   fun <- if (is.function(Model)) Model else get(Model)
@@ -69,7 +69,7 @@ GenerateMeanatGeneric <- function(Model, Pars, nSim = 5, Years=NULL,  ...) {
     dim_out <- c(length(arg), dim(par_array))
     L <- list(arg); names(L) <- arg_name
     arg_array <- array(arg, dim = dim_out, dimnames = c(L, dimnames(par_array)))
-    arg_array <- reorderdims(arg_array)
+    arg_array <- .ReorderDims(arg_array)
     dim_out <- dim(arg_array)
     array_out <- array(NA, dim = dim_out, dimnames = dimnames(arg_array))
   } else {
@@ -130,9 +130,9 @@ GenerateMeanatGeneric <- function(Model, Pars, nSim = 5, Years=NULL,  ...) {
 }
 
 
-reorderdims <- function(array) {
+.ReorderDims <- function(array) {
   dn <- names(dimnames(array))
   sim_index <- which(dn == "Sim")
   new_order <- c(sim_index, setdiff(seq_along(dn), sim_index))
-  aperm(array, new_order)
+  .Aperm(array, new_order)
 }

@@ -79,7 +79,7 @@ List2Array <- function(x, name = "Fleet", dim1='Sim', pos = NULL) {
     areas   <- purrr::map(dnames, 'Area') |> unlist() |> unique() |> as.numeric() |> sort()
     
     if (length(sims) && name != 'Sim')  x <- purrr::map(x, 
-                                                        SubsetSim, 
+                                                        .SubsetSim, 
                                                         Sims = sims,
                                                         keep_sim_name = TRUE)
     if (length(years)) x <- purrr::map(x, ExtendYears, Years = years)
@@ -110,7 +110,7 @@ List2Array <- function(x, name = "Fleet", dim1='Sim', pos = NULL) {
     
     cur <- seq_len(nd)
     perm <- append(cur[-nd], nd, after = pos - 1)
-    out <- aperm(out, perm)
+    out <- .Aperm(out, perm)
   }
   
   out
@@ -161,4 +161,3 @@ Array2List <- function(x, pos=2, index = NULL) {
   
   out
 }
-

@@ -22,6 +22,12 @@
 #'
 #' @slot FMax List or array of fishing mortality at maximum yield-per-recruit.
 #'
+#' @slot FSPR List or array of fishing mortality at user-specified
+#' spawning-potential-ratio targets, with a `Target` dimension.
+#'
+#' @slot FMed List or array of fishing mortality at the empirical replacement
+#' line (median historical recruits-per-spawner).
+#'
 #' @slot FCrash List or array of fishing mortality leading to population collapse.
 #'
 #' @slot SPRcrash List or array of spawning potential ratio at collapse.
@@ -47,6 +53,8 @@ setClass("reference",
            
            F01           = "array.list.null",
            FMax          = "array.list.null",
+           FSPR          = "array.list.null",
+           FMed          = "array.list.null",
            FCrash        = "array.list.null",
            SPRcrash      = "array.list.null",
            MGT           = "array.list.null",

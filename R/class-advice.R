@@ -57,22 +57,22 @@ methods::setClassUnion(
 #' @slot ApicalF Numeric array specifying target apical fishing mortality.
 #'  Not currently used
 #'
-#' @slot BagLimit Numeric vector or `NULL`. Aggregate bag limit in fish per
-#'   angler per trip (when `LimitType = "angler"`) or fish per vessel per
-#'   trip (when `LimitType = "boat"`). Either length 1 (applied to all
-#'   fleets) or a numeric vector of length `nFleet` for fleet-specific limits.
-#'   `NULL` (default) means no bag limit regulation is active. `NA` for a
-#'   given fleet position means no aggregate limit applies to that fleet.
-#'   See [Advice()].
+#' @slot BagLimit Numeric vector or `NULL`. Bag limit in fish per angler per
+#'   trip (when `LimitType = "angler"`) or fish per vessel per trip (when
+#'   `LimitType = "boat"`), for this stock's catch by each fleet. Either
+#'   length 1 (applied to all fleets) or a numeric vector of length `nFleet`
+#'   for fleet-specific limits. `NULL` (default) means no bag limit
+#'   regulation is active. `NA` for a given fleet position means no limit
+#'   applies to that fleet. An aggregate bag limit pooling several stocks
+#'   under one fleet is set separately via `AggregateBagLimit()` (`mmp`
+#'   management procedures only); a stock's own `BagLimit` then acts as an
+#'   optional species-specific sub-cap within that pooled limit. See
+#'   [Advice()].
 #'
-#' @slot SpeciesLimit Numeric matrix or `NULL`. Species-specific bag limits
-#'   (fish per angler or vessel per trip) within a complex, with dimensions
-#'   `nFleet x nStock`. See [Advice()].
-#'
-#' @slot LimitType Character or `NULL`. Specifies whether `BagLimit` and
-#'   `SpeciesLimit` are per-angler (`"angler"`; default) or per-vessel
-#'   (`"boat"`) regulations. Either length 1 (applied to all fleets) or a
-#'   character vector of length `nFleet`. See [Advice()].
+#' @slot LimitType Character or `NULL`. Specifies whether `BagLimit` is
+#'   per-angler (`"angler"`; default) or per-vessel (`"boat"`) regulations.
+#'   Either length 1 (applied to all fleets) or a character vector of length
+#'   `nFleet`. See [Advice()].
 #'
 #' @slot ClosureMode Character or `NULL`. Determines how the OM handles catch
 #'   that exceeds the bag limit: `"discard"` (default) converts excess catch
@@ -105,7 +105,6 @@ setClass("advice",
            DiscardMortality = "discardmortality.list",
            ApicalF          = "num.array.null",
            BagLimit         = "num.array.null",
-           SpeciesLimit     = "num.array.null",
            LimitType        = "char.null",
            ClosureMode      = "char.null",
            Misc             = "list",
@@ -149,9 +148,6 @@ setValidity("advice", function(object) {
   
   if (!is.null(object@BagLimit) && any(object@BagLimit < 0, na.rm = TRUE))
     errors <- c(errors, "`BagLimit` must be non-negative")
-  
-  if (!is.null(object@SpeciesLimit) && any(object@SpeciesLimit < 0, na.rm = TRUE))
-    errors <- c(errors, "`SpeciesLimit` must be non-negative")
-  
+
   if (length(errors)) errors else TRUE
 })

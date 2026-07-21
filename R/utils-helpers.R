@@ -2,7 +2,7 @@
 
 
 # Much quicker than apply
-sumOverDim <- function(x, dimName) {
+.SumOverDim <- function(x, dimName) {
   
   if (!is.array(x)) 
     cli::cli_abort("`x` must be an array", .internal = TRUE)
@@ -25,7 +25,7 @@ sumOverDim <- function(x, dimName) {
   
   # Move sumDim to last dimension
   perm <- c(setdiff(seq_len(nd), sumDim), sumDim)
-  x_perm <- aperm(x, perm)
+  x_perm <- .Aperm(x, perm)
   
   new_dims <- dims[perm]
   x_mat <- matrix(x_perm, ncol = new_dims[length(new_dims)])
@@ -77,37 +77,37 @@ sumOverDim <- function(x, dimName) {
 #' @rdname SumOverDim
 #' @export
 SumOverAge <- function(x) {
-  sumOverDim(x, dimName = "Age")
+  .SumOverDim(x, dimName = "Age")
 }
 
 #' @rdname SumOverDim
 #' @export
 SumOverArea <- function(x) {
-  sumOverDim(x, dimName = "Area")
+  .SumOverDim(x, dimName = "Area")
 }
 
 #' @rdname SumOverDim
 #' @export
 SumOverClass <- function(x) {
-  sumOverDim(x, dimName = "Class")
+  .SumOverDim(x, dimName = "Class")
 }
 
 #' @rdname SumOverDim
 #' @export
 SumOverFleet <- function(x) {
-  sumOverDim(x, dimName = "Fleet")
+  .SumOverDim(x, dimName = "Fleet")
 }
 
 #' @rdname SumOverDim
 #' @export
 SumOverStock <- function(x) {
-  sumOverDim(x, dimName = "Stock")
+  .SumOverDim(x, dimName = "Stock")
 }
 
 #' @rdname SumOverDim
 #' @export
 SumOverYear <- function(x) {
-  sumOverDim(x, dimName = "Year")
+  .SumOverDim(x, dimName = "Year")
 }
 
 #' Default Ages and Years
@@ -258,7 +258,7 @@ CalcSeasons <- function(Units) {
 #' @return The modified `S4out` object.
 #'
 #' @keywords internal
-CopySlots <- function(S4in, S4out, slots, ignore='Misc', reduce=FALSE, ...) {
+.CopySlots <- function(S4in, S4out, slots, ignore='Misc', reduce=FALSE, ...) {
   
   if (!isS4(S4in)) {
     cli::cli_abort("`S4in` must be an S4 object.")
@@ -327,10 +327,9 @@ CopySlots <- function(S4in, S4out, slots, ignore='Misc', reduce=FALSE, ...) {
 #' @return
 #' Numeric vector of interpolated y values corresponding to `xlev`.
 #'
-#' @author T. Carruthers
 #' @keywords internal
-LinInterp <- function(x, y, xlev, ascending = FALSE, zeroint = FALSE) {
-  
+.LinInterp <- function(x, y, xlev, ascending = FALSE, zeroint = FALSE) {
+
   if (!is.numeric(x) || !is.numeric(y)) {
     cli::cli_abort("`x` and `y` must be numeric vectors.")
   }
@@ -372,8 +371,13 @@ LinInterp <- function(x, y, xlev, ascending = FALSE, zeroint = FALSE) {
     )
   }
   
-  stats::approx(x = x_out, y = y_out, xout = xlev, rule = 2, 
+  stats::approx(x = x_out, y = y_out, xout = xlev, rule = 2,
                 ties = "ordered")$y
+}
+
+# Back-compat wrapper: legacy zz_* files call LinInterp() directly.
+LinInterp <- function(x, y, xlev, ascending = FALSE, zeroint = FALSE) {
+  .LinInterp(x, y, xlev, ascending = ascending, zeroint = zeroint)
 }
 
 
@@ -387,7 +391,7 @@ LinInterp <- function(x, y, xlev, ascending = FALSE, zeroint = FALSE) {
 #' @return An array of the same dimensions as `x` with the first element
 #'   in the first dimension repeated along that dimension.
 #' @keywords internal
-CopyFirstSim <- function(x) {
+.CopyFirstSim <- function(x) {
   
   if (is.list(x)) {
     for (i in seq_along(x)) {
@@ -423,7 +427,7 @@ CopyFirstSim <- function(x) {
 #' @param LogResiduals Numeric array, dimensions nSim x nYear
 #' @return Numeric vector of length nSim, each element is the most recent non-NA residual
 #' @keywords internal
-LastResidual <- function(LogResiduals) {
+.LastResidual <- function(LogResiduals) {
   apply(LogResiduals, 1, function(x) {
     if (all(is.na(x))) return(NA_real_)
     x[max(which(!is.na(x)))]

@@ -1,6 +1,6 @@
 #' Estimate fleet effort and stock-specific targeting weights
 #'
-#' `OptEffort_multi_stock()` solves for fleet effort levels `E_f` and
+#' `.OptEffortMultiStock()` solves for fleet effort levels `E_f` and
 #' stock-specific targeting weights `delta_{s,f}` such that each active fleet
 #' catches its TAC for every stock complex it participates in, subject to choke
 #' constraints and a soft ridge penalty on year-to-year targeting changes.
@@ -8,7 +8,7 @@
 #' @param Proj       A projection object containing effort, targeting history,
 #'   operating model settings, and stock/fleet dimensions.
 #' @param Year       Integer. The simulation year index passed to
-#'   [CalcFisheryDynamics()].
+#'   `.CalcFisheryDynamics()`.
 #' @param TSIndex    Integer. Time-step index into `Proj` arrays for the current
 #'   year. `TSIndex - 1` is used to initialise the warm start.
 #' @param sim        Integer. Simulation replicate index.
@@ -17,16 +17,15 @@
 #'   complex, or `NULL` if no TAC applies to that complex.
 #' @param TACType_by_Complex Character vector of length `nComplex`. Either
 #'   `"Landings"` or `"Removals"` (landings + discards) for each complex.
-#' @param Choke      Integer matrix `[nFleet x nComplex]`. A value of `1L`
-#'   indicates that complex `i` is a choke constraint for fleet `f` — its TAC
-#'   must not be exceeded.
 #' @param UndershootPenalty Numeric matrix `[nFleet x nComplex]`. Penalty
 #'   weight applied to proportional TAC undershoot for each fleet–complex pair.
 #' @param OvershootPenalty  Numeric matrix `[nFleet x nComplex]`. Base penalty
-#'   weight for proportional TAC overshoot. Choke complexes receive a ×1000
-#'   multiplier internally.
+#'   weight for proportional TAC overshoot.
 #' @param PenaltyMode Character vector of length `nFleet`. Currently accepted
 #'   for future extensibility; not used in the current implementation.
+#' @param MaxFleetEffort Numeric vector of length `nFleet`, or `NULL`
+#'   (default). Per-fleet effort ceiling, applied throughout optimisation and
+#'   to the final result. `NA` entries impose no ceiling. 
 #' @param lambda     Numeric vector of length `nFleet` (or scalar, recycled), or
 #'   `NULL` (default `1` for all fleets). Ridge penalty weight controlling
 #'   resistance to year-to-year targeting changes. Larger values penalise
@@ -55,7 +54,7 @@
 #' }
 #'
 #' @keywords internal
-OptEffort_multi_stock <- function(Proj,
+.OptEffortMultiStock <- function(Proj,
                                   Year,
                                   TSIndex,
                                   sim,
@@ -64,11 +63,11 @@ OptEffort_multi_stock <- function(Proj,
                                   TAC_by_Complex,
                                   TACType_by_Complex,
                                   TACUnit_by_Complex,
-                                  Choke,
                                   UndershootPenalty,
                                   OvershootPenalty,
                                   PenaltyMode,
-                                  lambda        = NULL,  
+                                  MaxFleetEffort = NULL,
+                                  lambda        = NULL,
                                   n_recent      = 5,
                                   minEffort     = 1e-8,
                                   tol           = 1e-6,
@@ -84,12 +83,17 @@ OptEffort_multi_stock <- function(Proj,
   if (length(lambda) == 1L) lambda <- rep(lambda, nFleet)
   if (length(lambda) != nFleet)
     cli::cli_abort("lambda must be length `nFleet`", .internal=TRUE)
-  
+
+  # Normalise MaxFleetEffort to a length-nFleet vector (NA = no ceiling)
+  if (is.null(MaxFleetEffort)) MaxFleetEffort <- rep(NA_real_, nFleet)
+  if (length(MaxFleetEffort) != nFleet)
+    cli::cli_abort("MaxFleetEffort must be length `nFleet`", .internal=TRUE)
+
   past_yr_idx  <- seq_len(TSIndex-1)
   n_years      <- length(past_yr_idx)
 
   # Active stocks per fleet
-  active_stock <- GetActiveStocks(Proj, sim, 
+  active_stock <- .GetActiveStocks(Proj, sim, 
                                   TSIndex, 
                                   StockNames, 
                                   FleetNames,
@@ -103,23 +107,19 @@ OptEffort_multi_stock <- function(Proj,
     Delta_prev[fl, !active_stock[fl, ]] <- 0
   
   # Mean-centred log_delta from last year — ridge penalty centre
-  log_delta_prev <- GetLogDeltaPrev(Delta_prev, active_stock)
+  log_delta_prev <- .GetLogDeltaPrev(Delta_prev, active_stock)
 
   # Determine Active fleets
-  fleet_has_tac <- FleetHasTAC(nFleet, nComplex, TAC_by_Complex)
+  fleet_has_tac <- .FleetHasTAC(nFleet, nComplex, TAC_by_Complex)
   active_fleets <- which(fleet_has_tac & apply(active_stock, 1, any))
   
   # No active fleets - keep things the same
   if (length(active_fleets) == 0L)
-    return(list(Effort      = Effort_prev,
+    return(list(Effort      = .ApplyEffortCeiling(Effort_prev, MaxFleetEffort),
                 Delta       = Delta_prev,
                 converged   = TRUE,
                 ActiveStock = active_stock))
   
-  
-  # Compute choke overshoot penalty
-  choke_mult <- 1000
-  OvershootPenalty[Choke == 1L] <- OvershootPenalty[Choke == 1L] * choke_mult
   
   active_stock_list <- purrr::map(active_fleets, \(fl) which(active_stock[fl, ]))
 
@@ -142,34 +142,36 @@ OptEffort_multi_stock <- function(Proj,
     lambda_vec         = lambda,
     active_fleets      = active_fleets,
     active_stock_list  = active_stock_list,
-    minEffort          = minEffort
+    minEffort          = minEffort,
+    MaxFleetEffort     = MaxFleetEffort
   )
   
-  params_init <- PackParams(Effort            = Effort_prev, 
+  params_init <- .PackParams(Effort            = Effort_prev, 
                             Delta             = Delta_prev,
                             active_fleets     = active_fleets,
                             active_stock_list = active_stock_list,
                             minEffort         = minEffort)
                                
   obj1 <- function(p) {
-    do.call(OptEffort_ms_objective, 
+    do.call(.OptEffortMsObjective, 
             c(list(params = p,
                    fixed_logeff  = NULL),
               obj_args))
   }
     
-  result  <- OptEffort_ms_Solver(obj_fn=obj1, 
+  result  <- .OptEffortMsSolver(obj_fn=obj1, 
                                   params_init, 
                                   maxEval, 
                                   tol)
   
-  state   <- UnpackParams(result$params, 
-                          active_fleets, 
+  state   <- .UnpackParams(result$params,
+                          active_fleets,
                           active_stock_list,
-                          Effort_prev, 
-                          nFleet, 
+                          Effort_prev,
+                          nFleet,
                           nStock,
-                          minEffort = minEffort)
+                          minEffort = minEffort,
+                          MaxFleetEffort = MaxFleetEffort)
   
   Effort_final               <- state$Effort
   Delta_final                <- state$Delta
