@@ -9,6 +9,7 @@ ComplexOM <- OM(
   Stock     = list(AlbacoreExStock, ButterfishExStock),
   Fleet     = AsympExFleet,
   Obs       = AgeStructuredObs,
+  Imp       = FullComplianceImp,
   Complexes = list(StockComplex = 1:2)
 )
 

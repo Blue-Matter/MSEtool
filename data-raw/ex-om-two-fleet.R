@@ -12,7 +12,8 @@ TwoFleetOM <- OM(
   ),
   Obs    = list(
     list(AgeStructuredObs, CatchAndSurveyObs)
-  )
+  ),
+  Imp    = FullComplianceImp
 )
 
 ## ---- save object ----

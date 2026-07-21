@@ -9,7 +9,8 @@ SeasonalSpatialOM <- OM(
   Seasons = 12,
   Stock   = SeasonalSpatialExStock,
   Fleet   = DomeExFleet,
-  Obs     = CommercialFleetObs
+  Obs     = CommercialFleetObs,
+  Imp     = FullComplianceImp
 )
 
 ## ---- save object ----

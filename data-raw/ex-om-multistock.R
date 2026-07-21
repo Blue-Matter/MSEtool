@@ -14,7 +14,8 @@ MultiStockOM <- OM(
   Obs    = list(
     list(AgeStructuredObs, CommercialFleetObs),
     list(CatchAndSurveyObs, LengthStructuredObs)
-  )
+  ),
+  Imp    = FullComplianceImp
 )
 
 ## ---- save object ----
