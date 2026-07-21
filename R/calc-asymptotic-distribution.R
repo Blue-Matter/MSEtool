@@ -68,9 +68,9 @@ CalcAsymDist <- function(Movement, method=c('la', 'mc'), tol=1e-10, maxiter=1e4)
     cli::cli_abort("Each row of {.arg Movement} must sum to 1.")
   
   if (nrow(Movement) == 2L)
-    return(CalcAsymDist_2Area(Movement, tol))
+    return(.CalcAsymDist2Area(Movement, tol))
   
-  CalcAsymDist_MultiArea(Movement, method, tol, maxiter)
+  .CalcAsymDistMultiArea(Movement, method, tol, maxiter)
 }
 
 #' Closed-Form Asymptotic Distribution for a 2-Area Movement Matrix
@@ -85,7 +85,7 @@ CalcAsymDist <- function(Movement, method=c('la', 'mc'), tol=1e-10, maxiter=1e4)
 #'
 #' @return A numeric vector of length 2.
 #' @keywords internal
-CalcAsymDist_2Area <- function(Movement, tol=1e-10) {
+.CalcAsymDist2Area <- function(Movement, tol=1e-10) {
   if (!is.matrix(Movement) || any(dim(Movement) != c(2L, 2L)))
     cli::cli_abort("{.arg Movement} must be a 2 \u00d7 2 matrix.")
   
@@ -116,7 +116,7 @@ CalcAsymDist_2Area <- function(Movement, tol=1e-10) {
 #' @return A numeric vector of length `nArea` summing to 1. Emits a warning
 #'   if `method = "mc"` does not converge within `maxiter`.
 #' @keywords internal
-CalcAsymDist_MultiArea <- function(Movement, method=c('la', 'mc'),
+.CalcAsymDistMultiArea <- function(Movement, method=c('la', 'mc'),
                                    tol=1e-10, maxiter=1e4) {
   method <- match.arg(method)
   nArea  <- nrow(Movement)
@@ -142,4 +142,3 @@ CalcAsymDist_MultiArea <- function(Movement, method=c('la', 'mc'),
   )
   Prob_Area
 }
-
