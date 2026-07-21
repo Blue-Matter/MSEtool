@@ -42,28 +42,8 @@ MP) of such arrays.
 }
 }
 \description{
-\code{VBiomass()} returns vulnerable biomass -- biomass weighted by the
-fraction of it actually exposed to a fleet's gear -- as a tidy
+\code{VBiomass()} returns vulnerable biomass as a tidy
 \code{data.frame} or raw array, for a \link[=hist-class]{hist} or \link[=mse-class]{mse} object.
-}
-\details{
-Vulnerable biomass is computed at the stock level from
-\verb{Number() x Stock@Weight (raw, unselected) x eff_sel}, then summed within each
-\code{OM@Complexes} group -- weighted by \code{OM@Allocation} -- since it depends
-on the gear allocation across stocks within a complex, not on any one
-stock in isolation. \code{Stock} in the returned \code{data.frame} therefore names
-the complex, matching the convention used by \code{\link[=Biomass]{Biomass()}} etc.
-
-For \link[=hist-class]{hist} objects, and the historical period of \link[=mse-class]{mse}
-objects, gear curves (\code{Selectivity}, \code{Retention}, \code{DiscardMortality}) are
-always read from \code{object@OM@Fleet}. For the projection period of an
-\link[=mse-class]{mse} object, a management procedure can change a fleet's
-selectivity, retention, or discard mortality via \code{Advice()} (see
-\code{\link[=Advice]{Advice()}}); when it does, the actual curve used by that MP is recorded
-in \code{MSE@Misc[["Selectivity"/"Retention"/"DiscardMortality"]]} (see
-\code{.RecordSelRetDisc()} in \code{mse-update.R}) and is used here instead of the
-OM baseline. MPs that never change a regulation fall back to the OM
-baseline for that regulation.
 }
 \seealso{
 \code{\link[=Biomass]{Biomass()}}, \code{\link[=Advice]{Advice()}}
