@@ -273,9 +273,7 @@ ImportSSData <- function(SSDir,
 
 
 .ImportSSDataAtAge <- function(replist, silent = FALSE) {
-  
-  # TODO
-  
+
   YearsList     <- .GetSSYears(replist, pYear = 1)
   YearsHist     <- YearsList$YearsHist
   nTS           <- length(YearsHist)
@@ -289,13 +287,83 @@ ImportSSData <- function(SSDir,
 
   if (is.null(AgeDB) || !nrow(AgeDB))
     return(list(Landings = new("compdata"), Discards = new("compdata")))
-  
-  
-  cli::cli_alert_info("Importing Age Composition data from SS3 currently not supported")
-  return(list(Landings = new("compdata"), Discards = new("compdata")))
-  
-  # update based on .ImportSSDataAtSize 
-  
+
+  nsamp_in_valid <- !is.null(AgeDB$Nsamp_in) &&
+    any(AgeDB$Nsamp_in > 1, na.rm = TRUE)
+
+  AgeDB$N     <- if (nsamp_in_valid) AgeDB$Nsamp_in else AgeDB$Nsamp_adj
+  AgeDB$Count <- AgeDB$Obs * AgeDB$N
+
+  make_age_matrix <- function(df) {
+    mat <- matrix(
+      NA_real_,
+      nrow     = nTS,
+      ncol     = nAge,
+      dimnames = list(Year = YearsHist, Class = AgeClasses)
+    )
+    if (!nrow(df)) return(mat)
+
+    agg <- df |>
+      dplyr::summarise(Count = sum(Count), .by = c(Yr, Seas, Bin))
+
+    yr_ind <- match(agg$Yr, YearsHist) + agg$Seas - 1
+    yr_ind[!is.na(yr_ind) & (yr_ind < 1 | yr_ind > nTS)] <- NA
+
+    age_ind <- match(agg$Bin, AgeClasses)
+
+    valid <- !is.na(yr_ind) & !is.na(age_ind)
+
+    mat[cbind(yr_ind[valid], age_ind[valid])] <- agg$Count[valid]
+    mat
+  }
+
+  LandingsArr <- DiscardsArr <- array(
+    NA_real_,
+    dim      = c(nTS, nFleet, nAge),
+    dimnames = list(
+      Year   = YearsHist,
+      Fleet  = FleetNames,
+      Class  = AgeClasses
+    )
+  )
+
+  for (fl in seq_along(FishFleets)) {
+    fleet_idx <- FishFleets[fl]
+
+    fleet_db <- AgeDB |>
+      dplyr::filter(Fleet == fleet_idx, Yr %in% YearsHist)
+
+    if (!nrow(fleet_db)) next
+
+    parts <- unique(fleet_db$Part)
+
+    if (any(parts %in% c(0, 1))) {
+      LandingsArr[, fl, ] <- make_age_matrix(
+        df = dplyr::filter(fleet_db, Part == 0)
+      )
+      DiscardsArr[, fl, ] <- make_age_matrix(
+        dplyr::filter(fleet_db, Part == 1)
+      )
+    } else if (any(parts == 2)) {
+      LandingsArr[, fl, ] <- make_age_matrix(
+        dplyr::filter(fleet_db, Part == 2)
+      )
+    }
+  }
+
+  Landings         <- new("compdata")
+  Landings@Name    <- FleetNames
+  Landings@Value   <- LandingsArr
+  Landings@Classes <- as.numeric(AgeClasses)
+  Landings@Units   <- "years"
+
+  Discards         <- new("compdata")
+  Discards@Name    <- FleetNames
+  Discards@Value   <- DiscardsArr
+  Discards@Classes <- as.numeric(AgeClasses)
+  Discards@Units   <- "years"
+
+  list(Landings = Landings, Discards = Discards)
 }
 
 
@@ -309,14 +377,6 @@ ImportSSData <- function(SSDir,
   nFleet        <- length(FishFleets)
   LengthClasses <- .GetSSLengthClasses(replist) 
   nLength       <- length(LengthClasses)
-  
-  if (YearsList$Seasons > 1) {
-    cli::cli_alert_warning(
-      "`.ImportSSDataAtSize`: multi-season models are not currently supported; \\
-       returning empty size composition objects."
-    )
-    return(list(Landings = new("compdata"), Discards = new("compdata")))
-  }
   
   LenDB <- replist$lendbase
   
@@ -352,9 +412,10 @@ ImportSSData <- function(SSDir,
     if (!nrow(df)) return(mat)
 
     agg <- df |>
-      dplyr::summarise(Count = sum(Count), .by = c(Yr, BinMid))
+      dplyr::summarise(Count = sum(Count), .by = c(Yr, Seas, BinMid))
 
-    yr_ind <- match(agg$Yr, YearsHist)
+    yr_ind <- match(agg$Yr, YearsHist) + agg$Seas - 1
+    yr_ind[!is.na(yr_ind) & (yr_ind < 1 | yr_ind > nTS)] <- NA
 
     bin_ind <- findInterval(agg$BinMid, LengthClasses)
     bin_ind[bin_ind < 1 | bin_ind > nLength] <- NA

@@ -33,8 +33,8 @@ at the SPR target.
 If \code{SSDir} contains a single model, a data frame with columns:
 \itemize{
 \item \code{Label} — the \code{derived_quants} label.
-\item \code{Value} — the point estimate.
-\item \code{StdDev} — the standard deviation.
+\item \code{Value} — the point estimate, rounded to 2 decimal places.
+\item \code{StdDev} — the standard deviation, rounded to 2 decimal places.
 }
 
 If \code{SSDir} contains multiple models, a list of such data frames, one

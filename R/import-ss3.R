@@ -50,15 +50,11 @@
 #'   Default `NULL`.
 #' @param LengthUnits Character string giving the physical unit of length
 #'   measurements in the SS3 model (e.g., `"cm"`, `"mm"`, `"inch"`; see
-#'   [ValidUnits()]). SS3/`r4ss` output does not report this, so it cannot be
-#'   inferred; `"cm"` is the near-universal SS3 convention. Override if the
-#'   source model used different units. Default `"cm"`.
+#'   [ValidUnits()]). Default `"cm"`.
 #' @param WeightUnits Character string giving the physical unit of weight
 #'   measurements in the SS3 model (e.g., `"kg"`, `"g"`, `"lb"`; see
 #'   [ValidUnits()]). Not reported by SS3/`r4ss`; `"kg"` is the conventional
-#'   pairing with `LengthUnits = "cm"` (SS3's `WtLen1`/`WtLen2` growth
-#'   parameters are calibrated for cm/kg allometry). Override if the source
-#'   model used different units. Default `"kg"`.
+#'   pairing with `LengthUnits = "cm"`. Default `"kg"`.
 #' @param R0Units Numeric scaling factor for unfished recruitment (`R0`) and
 #'   related numbers-at-age quantities; see `Units` in [srr-class]. SS3 does
 #'   not export the numeric scale of its population numbers (e.g. individuals
@@ -137,10 +133,6 @@ ImportSS <- function(SSDir,
   if (length(RepList) > 1) 
     nSim <- length(RepList)
   
-  # nYear/pYear/CurrentYear/Seasons are passed here (as well as reassigned
-  # below) so that `MPStartYear`'s validity check -- which compares against
-  # `CurrentYear` -- sees the SS3 model's actual `CurrentYear` rather than
-  # OM()'s today's-date default.
   OM <- OM(
     Name = Name,
     Agency = Agency,
@@ -360,7 +352,6 @@ ImportSS <- function(SSDir,
   Stock@Fecundity <- .SS2Fecundity(st, RepList, YearsList, Ages = Stock@Ages) |>
     ReduceDims()
 
-  # Stock@Depletion <- .SS2Depletion(st, RepList, YearsList) # not needed - already accounted for in early rec devs
   Stock@SRR <- .SS2SRR(st, RepList, YearsList, Ages = Stock@Ages, nSim, R0Units = R0Units)
   Stock@nYear <- YearsList$nYear
   Stock@pYear <- YearsList$pYear
@@ -558,12 +549,6 @@ ImportSS <- function(SSDir,
     ))
   }
 
-  # Weight-at-length directly from SS3's own length-weight allometric
-  # parameters (W = Alpha * L^Beta), rather than back-projecting
-  # Weight@MeanAtAge through the age-length key (a lossy round-trip -- see
-  # .CalcFleetWeightAtAge()). Used to reconstruct fleet-specific
-  # weight-at-age (WeightFleetRetained/WeightFleetSelected) from
-  # selectivity/retention-at-length.
   LengthClasses  <- .GetSSLengthClasses(RepList[[1]])
   Weight@Classes <- LengthClasses
 
@@ -693,7 +678,13 @@ ImportSS <- function(SSDir,
 }
 
 .GetSSMaturityAtAge <- function(st, replist, YearsList, Ages) {
+  Age_Beg <- NULL # CRAN
   endgrowth <- replist$endgrowth |> dplyr::filter(Sex == st)
+  seas <- unique(endgrowth$Seas)
+
+  if (length(seas) > 1)
+    return(.GetSSMaturityAtAgeSeasonal(st, replist, YearsList, Ages))
+
   if (any(endgrowth$Age_Mat < 0)) endgrowth$Age_Mat <- abs(endgrowth$Age_Mat) # Should all be 1's
   if (any(endgrowth$Len_Mat < 0)) endgrowth$Len_Mat <- abs(endgrowth$Len_Mat)
   Mat_age <- endgrowth$Len_Mat * endgrowth$Age_Mat
@@ -703,6 +694,53 @@ ImportSS <- function(SSDir,
       Age = Ages@Classes,
       Year = YearsList$YearsHist[1]
     )
+  )
+}
+
+# For seasonal models, `endgrowth` has one row per (Sex, Morph, Seas,
+# Age_Beg) with Age_Beg the *annual* age -- multiple seasonal rows share the
+# same annual age. Map each quarterly Age class in `Ages@Classes` back to
+# its underlying annual Age_Mat/Len_Mat value via the birth-season offset,
+# mirroring .GetSSFecunditySeasonal() (maturity x fecundity is the same
+# underlying per-age quantity, just without the fecundity term).
+.GetSSMaturityAtAgeSeasonal <- function(st, replist, YearsList, Ages) {
+  Age_Beg <- NULL # CRAN
+
+  mat_age <- replist$endgrowth |>
+    dplyr::filter(Sex == st) |>
+    dplyr::distinct(Age_Beg, .keep_all = TRUE) |>
+    dplyr::arrange(Age_Beg)
+
+  q_ages <- Ages@Classes
+  n_ages <- length(q_ages)
+
+  if (nrow(mat_age) == 0L) {
+    return(array(0, dim = c(n_ages, 1L),
+                 dimnames = list(Age = q_ages, Year = YearsList$YearsHist[1])))
+  }
+
+  if (any(mat_age$Age_Mat < 0)) mat_age$Age_Mat <- abs(mat_age$Age_Mat) # Should all be 1's
+  if (any(mat_age$Len_Mat < 0)) mat_age$Len_Mat <- abs(mat_age$Len_Mat)
+  mat_age$Maturity <- mat_age$Len_Mat * mat_age$Age_Mat
+
+  birthseas <- .GetSSBirthSeas(replist)
+  n_seasons <- length(unique(replist$endgrowth$Seas[replist$endgrowth$Sex == st]))
+
+  n_idx <- seq_len(n_ages) - 1L
+  seasons_to_yr_bound <- n_seasons - birthseas + 1L
+
+  age_beg <- ifelse(
+    n_idx < seasons_to_yr_bound,
+    0L,
+    as.integer(floor((n_idx - seasons_to_yr_bound) / n_seasons) + 1L)
+  )
+
+  max_age  <- max(mat_age$Age_Beg)
+  mat_vals <- mat_age$Maturity[match(pmin(age_beg, max_age), mat_age$Age_Beg)]
+
+  array(mat_vals,
+    dim = c(n_ages, 1L),
+    dimnames = list(Age = q_ages, Year = YearsList$YearsHist[1])
   )
 }
 
@@ -1005,7 +1043,7 @@ ImportSS <- function(SSDir,
 
 .GetSSBirthSeas <- function(replist) {
   # birthseas can be a vector (e.g. c(2,3) for NPSWO) but represents a single
-  # shared spawning event; use the last (latest) season as the birth season.
+  # shared spawning event; using the last (latest) season as the birth season.
   if (is.null(replist$birthseas)) return(1L)
   max(replist$birthseas)
 }
@@ -1139,15 +1177,7 @@ ImportSS <- function(SSDir,
   Fleet@Retention               <- .SS2Retention(st, fl, RepList, YearsList,
                                                 Selectivity = Fleet@Selectivity,
                                                 Stock)
-  # WeightFleetSelected/WeightFleetRetained are reconstructed from the
-  # already-imported per-year selectivity-/retention-at-length and
-  # weight-at-length (see .CalcFleetWeightAtAge(), defined in
-  # populate-fleet.R), rather than imported from wtatage.ss_new: SS3 only
-  # actually uses that empirical table when `wtatage_switch` is enabled in
-  # the control file, and even then it has no equivalent for the
-  # selected-but-not-retained quantity needed for discards. This reproduces
-  # SS3's own internal SelWt/RetWt-by-fleet quantities (validated against
-  # real SS3 output to 4-5 significant figures).
+
   Fleet@WeightFleetSelected <- .CalcFleetWeightAtAge(
     Selectivity = Fleet@Selectivity,
     Weight      = Stock@Weight,
@@ -1384,8 +1414,7 @@ ImportSS <- function(SSDir,
 
   # Override with 100% discard mortality where SS3's own realized
   # accounting shows discard_option = 3 for this fleet (see
-  # .IsSSDiscardAllDead()) -- the length-based "Mort" curve above is not
-  # trustworthy in that case.
+  # .IsSSDiscardAllDead()) 
   if (all(purrr::map_lgl(RepList, \(replist) .IsSSDiscardAllDead(st, fl, replist))))
     DiscardMortality@MeanAtAge[] <- 1
 
@@ -1665,8 +1694,8 @@ ImportSS <- function(SSDir,
 #' @return If `SSDir` contains a single model, a data frame with columns:
 #'
 #'   - `Label` — the `derived_quants` label.
-#'   - `Value` — the point estimate.
-#'   - `StdDev` — the standard deviation.
+#'   - `Value` — the point estimate, rounded to 2 decimal places.
+#'   - `StdDev` — the standard deviation, rounded to 2 decimal places.
 #'
 #'   If `SSDir` contains multiple models, a list of such data frames, one
 #'   per model.
@@ -1692,12 +1721,13 @@ GetSSRefPoints <- function(SSDir, Labels = c("annF_F01",
   } else {
     cli::cli_abort(c('x'='`SSDir` must be a path to SS3 output or a `RepList` object returned by `ImportSSReport`'))
   }
-  
+
   out <- purrr::map(RepList, \(replist) {
     replist$derived_quants |> dplyr::filter(Label %in% Labels) |>
-      dplyr::select(Label, Value, StdDev)
+      dplyr::select(Label, Value, StdDev) |>
+      dplyr::mutate(Value = round(Value, 2), StdDev = round(StdDev, 2))
   })
-  
+
   if (length(out) == 1)
     return(out[[1]])
   out

@@ -8,20 +8,31 @@
 #' median/ribbon summary.
 #'
 #' `PlotCPUE()` and `PlotSurvey()` plot the `CPUE` and `Survey` slots
-#' respectively. `PlotLandings()`, `PlotDiscards()`, and `PlotEffort()` (see
-#' [plot_hist]) also accept a [data-class] object and are documented here for
-#' that case.
+#' respectively. `PlotLandings()`, `PlotDiscards()`, `PlotRemovals()`, and
+#' `PlotEffort()` (see [plot_hist]) also accept a [data-class] object and are
+#' documented here for that case.
 #'
 #' If the relevant slot is not populated (`NULL`, e.g. no survey configured
 #' for this OM), the function prints an informational message and returns
-#' `NULL` invisibly rather than plotting an empty panel.
+#' `NULL` invisibly rather than plotting an empty panel. `PlotRemovals()`
+#' plots `Landings` `+` `Discards`; it's omitted (with the same message)
+#' only when *both* are unpopulated, and silently treats either as `0` when
+#' just one is populated.
 #'
 #' `PlotData()` arranges whichever of `Landings`, `Discards`, `Effort`,
 #' `CPUE`, and `Survey` are populated into a single figure with
 #' [patchwork::wrap_plots()], silently omitting panels for slots that
 #' aren't; unlike the individual `Plot*()` functions it does not print a
-#' message for missing slots. If none of the five are populated, it prints
-#' a message and returns `NULL` invisibly instead of an empty figure.
+#' message for missing slots. Fleet color legends are collected into a
+#' single shared legend (`patchwork::plot_layout(guides = 'collect')`) only
+#' when every panel with a color legend maps the same set of fleets;
+#' otherwise each panel keeps its own legend, since a shared one would
+#' misrepresent panels covering a different fleet set (e.g. `Landings` and
+#' `Survey` are often reported by different fleets). If none of the five
+#' slots are populated, it prints a message and returns `NULL`
+#' invisibly instead of an empty figure. The `Discards` panel is also
+#' omitted whenever it's populated but every value (across sims/years/
+#' fleets) is zero, unless `showDiscards = TRUE`.
 #'
 #' @param object A [data-class] object.
 #' @param byFleet Logical. Controls how multiple fleets are displayed.
@@ -50,6 +61,9 @@
 #'   `PlotSurvey()` is an error, since those `Units` (e.g. `"kg/trip"`)
 #'   aren't in a recognized conversion table. No effect on `PlotEffort()`,
 #'   which has no unit concept for a single `data-class` object.
+#' @param showDiscards Logical. `PlotData()` only. By default (`FALSE`),
+#'   the `Discards` panel is omitted when it's populated but every value
+#'   (across sims/years/fleets) is zero. Set `TRUE` to always show it.
 #'
 #' @return A `ggplot` object (a `patchwork` object for `PlotData()`), or
 #'   `NULL` invisibly if the relevant slot isn't populated.
@@ -91,22 +105,28 @@ PlotSurvey <- function(object, byFleet = NULL, Season = NULL, units = TRUE) {
 
 #' @rdname plot_data
 #' @export
-PlotData <- function(object, byFleet = NULL, AggregateYear = FALSE, Season = NULL, units = TRUE) {
+PlotData <- function(object, byFleet = NULL, AggregateYear = FALSE, Season = NULL, units = TRUE, showDiscards = FALSE) {
   .CheckClass(object, 'data', 'object')
+
+  discardsVal      <- object@Discards@Value
+  discardsAllZero  <- !is.null(discardsVal) &&
+    any(!is.na(discardsVal)) && all(discardsVal == 0 | is.na(discardsVal))
 
   specs <- list(
     list(slot = 'Landings', ylab = 'Landings', AggregateYear = AggregateYear, units = units),
-    list(slot = 'Discards', ylab = 'Discards', AggregateYear = AggregateYear, units = units),
+    list(slot = 'Discards', ylab = 'Discards', AggregateYear = AggregateYear, units = units,
+         skip = discardsAllZero && !showDiscards),
     list(slot = 'Effort',   ylab = 'Effort',   AggregateYear = AggregateYear),
     list(slot = 'CPUE',     ylab = 'CPUE',     Season = Season, units = units),
     list(slot = 'Survey',   ylab = 'Survey',   Season = Season, units = units)
   )
 
-  panels <- purrr::map(specs, function(s)
+  panels <- purrr::map(specs, function(s) {
+    if (isTRUE(s$skip)) return(NULL)
     .PlotDataTs(object, s$slot, s$ylab, byFleet = byFleet,
                  AggregateYear = s$AggregateYear %||% FALSE,
                  Season = s$Season %||% NULL, units = s$units %||% FALSE, silent = TRUE)
-  )
+  })
   panels <- purrr::compact(panels)
 
   if (!length(panels)) {
@@ -114,7 +134,18 @@ PlotData <- function(object, byFleet = NULL, AggregateYear = FALSE, Season = NUL
     return(invisible(NULL))
   }
 
-  patchwork::wrap_plots(panels, ncol = 2)
+  legendFleets <- purrr::map(specs, function(s) {
+    if (isTRUE(s$skip)) return(NULL)
+    .ColorLegendFleets(object, s$slot, byFleet)
+  })
+  legendFleets <- purrr::compact(legendFleets)
+  collectGuides <- length(legendFleets) <= 1 ||
+    all(purrr::map_lgl(legendFleets[-1], setequal, legendFleets[[1]]))
+
+  p <- patchwork::wrap_plots(panels, ncol = 2)
+  if (collectGuides)
+    p <- p + patchwork::plot_layout(guides = 'collect')
+  p
 }
 
 #' @rdname plot_data
@@ -125,10 +156,6 @@ setMethod('plot', 'data', function(x, y, ...) {
 
 # ---- internal helpers ----
 
-# Extract slot(object, slot_name)@Value and build a simple line plot, or
-# skip (returning NULL invisibly) if it isn't populated. `silent` suppresses
-# the "not populated" message, used when called from PlotData()'s composite
-# so a handful of missing slots doesn't print a wall of messages.
 .PlotDataTs <- function(object, slot_name, ylab, byFleet = NULL,
                          AggregateYear = FALSE, Season = NULL, units = FALSE,
                          silent = FALSE) {
@@ -140,12 +167,7 @@ setMethod('plot', 'data', function(x, y, ...) {
     return(invisible(NULL))
   }
 
-  if (!isFALSE(units)) {
-    # Units is stored per fleet/index; only usable when every plotted
-    # fleet/index agrees on it (same "skip if inconsistent" policy as the
-    # OM-level stock Units). Simulated data (via CreateObs()'s own `Units`)
-    # stores "Biomass"/"Number"/"Recruitment" here - the aggregation type,
-    # not a physical unit - so those aren't usable as an axis label either.
+  if (!isFALSE(units)) {.
     base_unit <- unique(slot(object, slot_name)@Units)
     if (length(base_unit) != 1 || base_unit %in% c('Biomass', 'Number', 'Recruitment'))
       base_unit <- NULL
@@ -165,9 +187,50 @@ setMethod('plot', 'data', function(x, y, ...) {
                       AggregateYear = AggregateYear, Season = Season)
 }
 
-# Positional season filter for `data`-class objects, mirroring
-# `.FilterSeason()` in plot-hist.R but reading `Seasons`/`Years` directly
-# off the `data` object instead of via `object@OM@Seasons`.
+.PlotDataRemovals <- function(object, byFleet = NULL, AggregateYear = FALSE,
+                               units = TRUE, silent = FALSE) {
+  L <- object@Landings@Value
+  D <- object@Discards@Value
+
+  if (is.null(L) && is.null(D)) {
+    if (!silent)
+      cli::cli_alert_info("No {.field Landings} or {.field Discards} data found in this `data` object; nothing to plot.")
+    return(invisible(NULL))
+  }
+
+  value_arr <- if (is.null(L)) D else if (is.null(D)) L else ArraySum(L, D)
+  ylab <- 'Removals'
+
+  if (!isFALSE(units)) {
+    landUnit  <- unique(object@Landings@Units)
+    discUnit  <- unique(object@Discards@Units)
+    base_unit <- if (is.null(L)) discUnit
+                 else if (is.null(D)) landUnit
+                 else if (length(landUnit) == 1 && identical(landUnit, discUnit)) landUnit
+                 else NULL
+    if (length(base_unit) != 1 || base_unit %in% c('Biomass', 'Number', 'Recruitment'))
+      base_unit <- NULL
+
+    uinfo     <- .ResolveUnitInfo(.mass_units_g, base_unit, 1, units, ylab)
+    ylab      <- .AppendUnits(ylab, uinfo$label)
+    value_arr <- value_arr * uinfo$factor
+  }
+
+  .BuildDataTsPlot(value_arr, ylab, object = object, byFleet = byFleet,
+                    AggregateYear = AggregateYear, Season = NULL)
+}
+
+.ColorLegendFleets <- function(object, slot_name, byFleet) {
+  if (!is.null(byFleet)) return(NULL)
+  value_arr <- slot(object, slot_name)@Value
+  if (is.null(value_arr)) return(NULL)
+  dn <- dimnames(value_arr)
+  if (is.null(dn) || !'Fleet' %in% names(dn)) return(NULL)
+  fleets <- unique(dn$Fleet)
+  if (length(fleets) <= 1) return(NULL)
+  fleets
+}
+
 .FilterSeasonData <- function(df, Season, object) {
   if (is.null(Season))
     return(df)
@@ -183,9 +246,6 @@ setMethod('plot', 'data', function(x, y, ...) {
   dplyr::filter(df, .data$Year %in% keep_years)
 }
 
-# Sum sub-annual (seasonal) rows into whole-year totals for `data`-class flow
-# variables (Landings/Discards/Effort), mirroring `.AggregateYear()` in
-# plot-hist.R.
 .AggregateYearData <- function(df, AggregateYear, object) {
   if (!isTRUE(AggregateYear))
     return(df)
@@ -203,10 +263,6 @@ setMethod('plot', 'data', function(x, y, ...) {
     dplyr::summarise(Value = sum(.data$Value), .groups = 'drop')
 }
 
-# Rows whose value has no non-NA neighbor (within its Fleet, if present) on
-# either side -- `geom_line()` can't draw a segment through these, so they
-# need an explicit point marker to stay visible. Runs of >= 2 consecutive
-# non-NA values are left as line-only (no markers).
 .IsolatedRows <- function(df) {
   groupCol <- if ('Fleet' %in% colnames(df)) 'Fleet' else NULL
 
@@ -260,8 +316,6 @@ setMethod('plot', 'data', function(x, y, ...) {
     ggplot2::theme_bw() +
     ggplot2::labs(x = 'Year', y = ylab, color = if (hasColor) 'Fleet' else NULL)
 
-  # `Fleet` from Array2DF() is always an ordered factor, which makes ggplot2
-  # fall back to its viridis-based ordinal scale unless overridden explicitly.
   if (hasColor) {
     fleetValues <- stats::setNames(.GgHuePal(length(unique(df$Fleet))), levels(df$Fleet))
     p <- p + ggplot2::scale_color_manual(values = fleetValues)

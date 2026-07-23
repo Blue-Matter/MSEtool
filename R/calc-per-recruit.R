@@ -56,6 +56,8 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
   .CheckClass(Hist, 'hist', 'Hist')
 
   nSeason <- Hist@OM@Seasons
+  RefSeason      <- Hist@OM@RefSeason
+  RefEffortYears <- Hist@OM@RefEffortYears
 
   if (is.null(Years)) {
     Years <- utils::tail(Years(Hist@OM, 'Historical'), 1)
@@ -75,11 +77,13 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
 
   PRByComplex <- purrr::map(complexes, \(stockInd) {
     .CalcPerRecruitStockList(
-      StockList = Hist@OM@Stock[stockInd],
-      FleetList = Hist@OM@Fleet[stockInd],
-      apicalF   = apicalF,
-      Years     = Years,
-      SPR0List  = SPR0List[stockInd]
+      StockList      = Hist@OM@Stock[stockInd],
+      FleetList      = Hist@OM@Fleet[stockInd],
+      apicalF        = apicalF,
+      Years          = Years,
+      SPR0List       = SPR0List[stockInd],
+      RefSeason      = RefSeason,
+      RefEffortYears = RefEffortYears
     )
   })
   
@@ -100,10 +104,12 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
   PerRecruit
 }
 
-.CalcPerRecruitStockList <- function(StockList, FleetList, apicalF=0.1, Years, SPR0List) {
+.CalcPerRecruitStockList <- function(StockList, FleetList, apicalF=0.1, Years, SPR0List,
+                                     RefSeason = NULL, RefEffortYears = NULL) {
 
-  inputs <- .PrepPerRecruitInputs(StockList, FleetList, SPR0List, Years)
-  
+  inputs <- .PrepPerRecruitInputs(StockList, FleetList, SPR0List, Years,
+                                  EffortYears = RefEffortYears, RefSeason = RefSeason)
+
   PR <- .CalcPerRecruitF(
     apicalF                   = apicalF,
     StockFleetAllocation      = inputs$StockFleetAllocation,
@@ -125,7 +131,8 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
     Years                     = inputs$Years,
     nSeason                   = inputs$nSeason,
     SeasonalWeightsList       = inputs$SeasonalWeightsList,
-    CalendarYears             = inputs$CalendarYears
+    CalendarYears             = inputs$CalendarYears,
+    RefSeason                 = RefSeason
   )
 
   PR
@@ -156,13 +163,27 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
   .ArraySubsetStock(combined, match(StockNames, currentStocks))
 }
 
-.CalcFleetAllocationF <- function(FleetList, Years) {
+.CalcFleetAllocationF <- function(FleetList, Years, EffortYears = NULL) {
 
-  FDistribution <- purrr::map(FleetList, \(Fleet) {
-    ArrayMultiply(Fleet@Effort@Effort |>  .ArraySubsetYear(Years),
-                  Fleet@Catchability@Efficiency |>  .ArraySubsetYear(Years))
+  .BuildFDistribution <- \(yrs) purrr::map(FleetList, \(Fleet) {
+    ArrayMultiply(Fleet@Effort@Effort |>  .ArraySubsetYear(yrs),
+                  Fleet@Catchability@Efficiency |>  .ArraySubsetYear(yrs))
   }) |>
     List2Array('Fleet', pos=3)
+
+  if (is.null(EffortYears)) {
+    FDistribution <- .BuildFDistribution(Years)
+  } else {
+    # Decouple the seasonal effort *shape* from the biology reference year:
+    # average Effort x Efficiency across the requested calendar year(s),
+    # matching season-of-year position, before peak-season normalisation.
+    all_ts  <- as.numeric(dimnames(FleetList[[1]]@Effort@Effort)[['Year']])
+    cal_yrs <- unique(floor(EffortYears))
+
+    FDistList <- purrr::map(cal_yrs, \(cy) .BuildFDistribution(all_ts[floor(all_ts) %in% cy]))
+    FDistribution <- Reduce(`+`, FDistList) / length(FDistList)
+    dimnames(FDistribution)[['Year']] <- as.character(Years)
+  }
 
   FDistributionTotal <- SumOverFleet(FDistribution)  # [Sim, Year]
   nYear <- dim(FDistributionTotal)[['Year']]
@@ -253,6 +274,94 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
   }
 
   result
+}
+
+# Cross-sectional per-recruit snapshot at one fixed real calendar season
+# s_ref: sums, over all birth-season cohorts, the age classes that currently
+# occupy s_ref, weighted by each cohort's share of annual recruitment
+# (pi_s). Used for reference-season Biomass/SBiomass reporting rather than
+# the cohort-lifetime average produced by .AggSeasonalProduct().
+.AggCrossSectional <- function(NPR_bs, q_sa, pi_s, s_ref) {
+
+  nSim    <- dim(NPR_bs)[1]
+  nAge    <- dim(NPR_bs)[2]
+  nSeason <- dim(NPR_bs)[3]
+
+  # weight/maturity-at-age in season s_ref, as [Sim, Age] -- sliced with
+  # drop = FALSE and reshaped explicitly so a size-1 Sim or Age dimension
+  # (e.g. the single-sim fast path in CalcMSY()) doesn't collapse to a
+  # vector and break the 2-index subsetting below.
+  q_ref <- q_sa[, , s_ref, drop = FALSE]
+  dim(q_ref) <- dim(q_ref)[1:2]
+
+  result <- numeric(nSim)
+
+  for (b in seq_len(nSeason)) {
+    a0   <- 1L + ((s_ref - b) %% nSeason)
+    ages <- seq(a0, nAge, by = nSeason)
+    NPR_sel <- NPR_bs[, ages, b, drop = FALSE]
+    dim(NPR_sel) <- dim(NPR_sel)[1:2]   # [Sim, length(ages)], matching q_ref
+    result <- result + pi_s[, b] *
+      rowSums(NPR_sel * q_ref[, ages, drop = FALSE])
+  }
+
+  result
+}
+
+# Combine .AggCrossSectional() over the reference season(s) selected for
+# each simulation, via a [Sim, nSeason] weight matrix (rows summing to 1
+# over the season(s) used for that sim). See .RefSeasonWeights().
+.AggRefSeason <- function(NPR_bs, q_sa, pi_s, RefSeasonWeights) {
+
+  nSim    <- dim(NPR_bs)[1]
+  nSeason <- dim(NPR_bs)[3]
+  result  <- numeric(nSim)
+
+  for (s in seq_len(nSeason)) {
+    w <- RefSeasonWeights[, s]
+    if (all(w == 0)) next
+    result <- result + w * .AggCrossSectional(NPR_bs, q_sa, pi_s, s)
+  }
+
+  result
+}
+
+# Build the [Sim, nSeason] reference-season weight matrix used by
+# .AggRefSeason() (rows sum to 1 over the season(s) used for that sim).
+# `RefSeason` is the raw OM@RefSeason value (NULL, or a user-supplied vector
+# of season indices applied uniformly across sims). When NULL, the spawning
+# season(s) are auto-detected independently per simulation from FecundityList
+# (falling back to MaturityList when Fecundity is unset), since spawning
+# timing could in principle vary by sim under stochastic schedules.
+.RefSeasonWeights <- function(FecundityList, MaturityList, nSeason, RefSeason) {
+
+  nSim <- dim(FecundityList[[1]])[1]
+
+  if (nSeason == 1L)
+    return(matrix(1, nrow = nSim, ncol = 1))
+
+  if (!is.null(RefSeason)) {
+    W <- matrix(0, nrow = nSim, ncol = nSeason)
+    W[, RefSeason] <- 1 / length(RefSeason)
+    return(W)
+  }
+
+  eps  <- .Machine$double.eps
+  Flag <- matrix(FALSE, nrow = nSim, ncol = nSeason)
+
+  for (i in seq_along(FecundityList)) {
+    Spawn <- FecundityList[[i]]
+    if (length(Spawn) == 0) Spawn <- MaturityList[[i]]
+    SumByAgeSeason <- apply(Spawn, c(1, 3), sum)   # [Sim, nSeason]
+    Flag <- Flag | (SumByAgeSeason > eps)
+  }
+
+  # Fallback: if no season is detected for a sim (shouldn't normally
+  # happen), spread equally across all seasons rather than all-zero weights.
+  NoneDetected <- rowSums(Flag) == 0
+  if (any(NoneDetected)) Flag[NoneDetected, ] <- TRUE
+
+  Flag / rowSums(Flag)
 }
 
 # Aggregate seasonal yield-per-recruit (summed over fleets) to [Sim] annual
@@ -394,6 +503,10 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
   PerRecruit@SProduction <- purrr::map(PRList, \(pr) pr@SProduction) |> List2Array('F')
   PerRecruit@Removals    <- purrr::map(PRList, \(pr) pr@Removals)    |> List2Array('F')
   PerRecruit@Landings    <- purrr::map(PRList, \(pr) pr@Landings)    |> List2Array('F')
+  # PRList[[1]]@Misc is exact for the common single-apicalF case (e.g. the
+  # MSY search); for a multi-F grid it reports the first F's diagnostics
+  # only, since nothing currently consumes Misc across a full grid.
+  PerRecruit@Misc        <- PRList[[1]]@Misc
   PerRecruit
 }
 
@@ -418,7 +531,8 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
                                     Years,
                                     nSeason          = 1L,
                                     SeasonalWeightsList = NULL,
-                                    CalendarYears    = NULL) {
+                                    CalendarYears    = NULL,
+                                    RefSeason        = NULL) {
 
   # Dispatch to seasonal implementation when there are multiple seasons.
   if (nSeason > 1L)
@@ -443,7 +557,8 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
       Years                     = Years,
       nSeason                   = nSeason,
       SeasonalWeightsList       = SeasonalWeightsList,
-      CalendarYears             = CalendarYears
+      CalendarYears             = CalendarYears,
+      RefSeason                 = RefSeason
     ))
 
   apicalFAge     <- apicalF * StockFleetAllocation |>
@@ -703,7 +818,8 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
                                              Years,
                                              nSeason,
                                              SeasonalWeightsList,
-                                             CalendarYears) {
+                                             CalendarYears,
+                                             RefSeason = NULL) {
 
   nStocks    <- length(NaturalMortalityList)
   nCalYears  <- length(CalendarYears)
@@ -756,6 +872,13 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
   perYear <- purrr::map(seq_len(nCalYears), \(cy) {
 
     ts_idx <- ((cy - 1L) * nSeason + 1L):(cy * nSeason)   # season indices within Years
+
+    # Reference-season weight matrix for reporting Biomass/SBiomass (see
+    # .AggRefSeason()) -- computed once per calendar year across all stocks,
+    # not per stock, since RefSeason is an OM-level (complex-wide) setting.
+    FecundityList_cy    <- purrr::map(FecundityList, \(x) x[, , ts_idx, drop = FALSE])
+    MaturityList_cy     <- purrr::map(MaturityList,  \(x) x[, , ts_idx, drop = FALSE])
+    RefSeasonWeights_cy <- .RefSeasonWeights(FecundityList_cy, MaturityList_cy, nSeason, RefSeason)
 
     purrr::pmap(
       list(
@@ -814,8 +937,8 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
         SPRFf_ann   <- .AggSeasonalProduct(NPRF_sp, Fec_cy,  pi_s_cy)   # fished SP per recruit
         SPR_ann     <- SPRFf_ann / pmax(SPR0f_ann, .Machine$double.eps)
 
-        Biomass_ann  <- .AggSeasonalProduct(NPRF_no, W_cy, pi_s_cy)
-        SBiomass_ann <- .AggSeasonalProduct(NPRF_sp, W_cy * Mat_cy, pi_s_cy)
+        Biomass_ann  <- .AggRefSeason(NPRF_no, W_cy,          pi_s_cy, RefSeasonWeights_cy)
+        SBiomass_ann <- .AggRefSeason(NPRF_sp, W_cy * Mat_cy, pi_s_cy, RefSeasonWeights_cy)
 
         # Fleet arrays [Sim, Age, Season, Fleet] — extract for yield
         FDead_cy     <- FDead_full[,     , ts_idx, , drop = FALSE]
@@ -890,7 +1013,7 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
   }
 
   # Annual apical F: for each calendar year, sum seasonal F_dead rates at the
-  # apical age across all seasons.  
+  # apical age across all seasons.
   F_annual_apical <- purrr::map(seq_len(nCalYears), \(cy) {
     ts_idx <- ((cy - 1L) * nSeason + 1L):(cy * nSeason)
     f <- purrr::map(FDeadTotalList, \(FDT) {
@@ -920,7 +1043,8 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
 
 
 
-.PrepPerRecruitInputs <- function(StockList, FleetList, SPR0List, Years) {
+.PrepPerRecruitInputs <- function(StockList, FleetList, SPR0List, Years, EffortYears = NULL,
+                                  RefSeason = NULL) {
 
   FleetNames <- names(FleetList[[1]])
 
@@ -981,7 +1105,7 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
   
   # F-invariant: fleet allocation depends only on effort and efficiency
   StockFleetAllocation <- purrr::map(FleetList, \(fl)
-                                     .CalcFleetAllocationF(fl, Years)
+                                     .CalcFleetAllocationF(fl, Years, EffortYears = EffortYears)
   ) |> List2Array('Stock', pos = 2)
 
   # Broadcast stock-level per-recruit inputs to the true simulation count.
@@ -1148,6 +1272,7 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
     Years                     = Years,
     nSeason                   = nSeason,
     SeasonalWeightsList       = SeasonalWeightsList,
-    CalendarYears             = cal_years
+    CalendarYears             = cal_years,
+    RefSeason                 = RefSeason
   )
 }

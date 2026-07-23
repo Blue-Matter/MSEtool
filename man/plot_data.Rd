@@ -17,7 +17,8 @@ PlotData(
   byFleet = NULL,
   AggregateYear = FALSE,
   Season = NULL,
-  units = TRUE
+  units = TRUE,
+  showDiscards = FALSE
 )
 
 \S4method{plot}{data,ANY}(x, y, ...)
@@ -54,6 +55,10 @@ sum \code{PlotLandings()}/\code{PlotDiscards()}/\code{PlotEffort()} sub-annual v
 into whole-year totals, since these are flow quantities. Default
 \code{FALSE}. Ignored for non-seasonal data and by \code{PlotCPUE()}/
 \code{PlotSurvey()} (see \code{Season}).}
+
+\item{showDiscards}{Logical. \code{PlotData()} only. By default (\code{FALSE}),
+the \code{Discards} panel is omitted when it's populated but every value
+(across sims/years/fleets) is zero. Set \code{TRUE} to always show it.}
 }
 \value{
 A \code{ggplot} object (a \code{patchwork} object for \code{PlotData()}), or
@@ -69,20 +74,31 @@ median/ribbon summary.
 }
 \details{
 \code{PlotCPUE()} and \code{PlotSurvey()} plot the \code{CPUE} and \code{Survey} slots
-respectively. \code{PlotLandings()}, \code{PlotDiscards()}, and \code{PlotEffort()} (see
-\link{plot_hist}) also accept a \link[=data-class]{data} object and are documented here for
-that case.
+respectively. \code{PlotLandings()}, \code{PlotDiscards()}, \code{PlotRemovals()}, and
+\code{PlotEffort()} (see \link{plot_hist}) also accept a \link[=data-class]{data} object and are
+documented here for that case.
 
 If the relevant slot is not populated (\code{NULL}, e.g. no survey configured
 for this OM), the function prints an informational message and returns
-\code{NULL} invisibly rather than plotting an empty panel.
+\code{NULL} invisibly rather than plotting an empty panel. \code{PlotRemovals()}
+plots \code{Landings} \code{+} \code{Discards}; it's omitted (with the same message)
+only when \emph{both} are unpopulated, and silently treats either as \code{0} when
+just one is populated.
 
 \code{PlotData()} arranges whichever of \code{Landings}, \code{Discards}, \code{Effort},
 \code{CPUE}, and \code{Survey} are populated into a single figure with
 \code{\link[patchwork:wrap_plots]{patchwork::wrap_plots()}}, silently omitting panels for slots that
 aren't; unlike the individual \verb{Plot*()} functions it does not print a
-message for missing slots. If none of the five are populated, it prints
-a message and returns \code{NULL} invisibly instead of an empty figure.
+message for missing slots. Fleet color legends are collected into a
+single shared legend (\code{patchwork::plot_layout(guides = 'collect')}) only
+when every panel with a color legend maps the same set of fleets;
+otherwise each panel keeps its own legend, since a shared one would
+misrepresent panels covering a different fleet set (e.g. \code{Landings} and
+\code{Survey} are often reported by different fleets). If none of the five
+slots are populated, it prints a message and returns \code{NULL}
+invisibly instead of an empty figure. The \code{Discards} panel is also
+omitted whenever it's populated but every value (across sims/years/
+fleets) is zero, unless \code{showDiscards = TRUE}.
 }
 \examples{
 \dontrun{

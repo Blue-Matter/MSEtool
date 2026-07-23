@@ -57,6 +57,8 @@ CalcMSY <- function(Hist,
   .CheckClass(Hist, 'hist', 'Hist')
   
   nSeason <- Hist@OM@Seasons
+  RefSeason      <- Hist@OM@RefSeason
+  RefEffortYears <- Hist@OM@RefEffortYears
 
   if (is.null(Years)) {
     Years <- utils::tail(Years(Hist@OM, 'Historical'), 1)
@@ -65,11 +67,11 @@ CalcMSY <- function(Hist,
 
   if (is.null(Hist@Reference@SPR0))
     Hist@Reference@SPR0 <- CalcSPR0(Hist, silent=TRUE)
-  
+
   Hist <- .InitMSYRefPoints(Hist, Years)
-  
+
   StockNames <- StockNames(Hist)
-  
+
   complexes <- Complexes(Hist)
 
   for (i in seq_along(complexes)) {
@@ -79,7 +81,9 @@ CalcMSY <- function(Hist,
                                Years          = Years,
                                type           = type,
                                parallel       = parallel,
-                               silent         = silent)
+                               silent         = silent,
+                               RefSeason      = RefSeason,
+                               RefEffortYears = RefEffortYears)
   }
 
   if (!silent)
@@ -89,7 +93,8 @@ CalcMSY <- function(Hist,
 }
 
 .CalcRefMSYComplex <- function(Hist, complex_stocks, complex_name, Years,
-                               type, parallel = FALSE, silent = FALSE) {
+                               type, parallel = FALSE, silent = FALSE,
+                               RefSeason = NULL, RefEffortYears = NULL) {
   
   StockList <- Hist@OM@Stock[complex_stocks]
   FleetList <- Hist@OM@Fleet[complex_stocks]
@@ -120,8 +125,9 @@ CalcMSY <- function(Hist,
     results_sim1 <- purrr::map(seq_along(Years), \(ts) {
       
       inputs <- .PrepPerRecruitInputs(StockList_sim, FleetList_sim,
-                                     SPR0_List_sim, Years[ts])
-      
+                                     SPR0_List_sim, Years[ts],
+                                     EffortYears = RefEffortYears, RefSeason = RefSeason)
+
       opt <- optimize(
         .OptCalcRefMSYSims,
         logApicalFRange,
@@ -165,7 +171,8 @@ CalcMSY <- function(Hist,
       inputs <- .PrepPerRecruitInputs(StockList_sim,
                                      FleetList_sim,
                                      SPR0_List_sim,
-                                     Years[ts])
+                                     Years[ts],
+                                     EffortYears = RefEffortYears, RefSeason = RefSeason)
 
       opt <- optimize(
         .OptCalcRefMSYSims,
@@ -214,7 +221,8 @@ CalcMSY <- function(Hist,
       CalcRefMSY_Sim,
       .options = furrr::furrr_options(
         globals  = c('StockList', 'FleetList', 'SPR0_Full_List', 'Years',
-                     'complex_name', 'type', 'logApicalFRange'),
+                     'complex_name', 'type', 'logApicalFRange',
+                     'RefSeason', 'RefEffortYears'),
         packages = "MSEtool",
         seed     = 101
       )
@@ -239,8 +247,6 @@ CalcMSY <- function(Hist,
   Hist@Reference@MSY <- ReduceDims(MSYRefPoints)
   Hist
 }
-
-
 
 .OptCalcRefMSYSims <- function(logApicalF, inputs, complex_name,
                                type = c('Removals', 'Landings'),
@@ -275,9 +281,10 @@ CalcMSY <- function(Hist,
     Years                     = inputs$Years,
     nSeason                   = inputs$nSeason,
     SeasonalWeightsList       = inputs$SeasonalWeightsList,
-    CalendarYears             = inputs$CalendarYears
+    CalendarYears             = inputs$CalendarYears,
+    RefSeason                 = inputs$RefSeason
   )
-  
+
 
   if (option == 1) {
     Eq <- .CalcEquilibriumInternal(PerRecruit, inputs)

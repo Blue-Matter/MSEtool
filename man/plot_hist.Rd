@@ -205,11 +205,16 @@ PlotDynamics(
 }
 \arguments{
 \item{object}{A \link[=hist-class]{hist} or \link[=mse-class]{mse} object. \code{PlotLandings()},
-\code{PlotDiscards()}, and \code{PlotEffort()} also accept a \link[=data-class]{data} object
-(e.g. \code{Hist@Data[[1]][[1]]}), in which case a single observed timeseries
-(no ribbon) is plotted, with \code{byFleet} and \code{AggregateYear} applied as
-described in \link{plot_data}; other arguments (\code{byStock}, \code{probs}, \code{nsim},
-\code{Years}, \code{free_y}, \code{IncHist}, \code{byMP}) have no effect in that case.}
+\code{PlotDiscards()}, \code{PlotRemovals()}, and \code{PlotEffort()} also accept a
+\link[=data-class]{data} object (e.g. \code{Hist@Data[[1]][[1]]}), in which case a single
+observed timeseries (no ribbon) is plotted, with \code{byFleet} and
+\code{AggregateYear} applied as described in \link{plot_data}; other arguments
+(\code{byStock}, \code{probs}, \code{nsim}, \code{Years}, \code{free_y}, \code{IncHist}, \code{byMP}) have
+no effect in that case. For \code{PlotRemovals()}, the \code{data}-class series is
+\code{Landings + Discards} summed together (not distinguished by color or
+linetype, unlike the \link[=hist-class]{hist}/\link[=mse-class]{mse} case) -- a \code{data} object
+has no per-variable ribbon/MP dimension to spend color on, so it's shown
+as a single combined series, same as \code{PlotLandings()}/\code{PlotDiscards()}.}
 
 \item{byStock}{One of \code{TRUE}, \code{FALSE}, \code{'sum'}, or \code{NULL} (default).
 \code{TRUE} facets by stock. \code{FALSE} colors each stock as its own line on a
@@ -393,7 +398,9 @@ gap at the historical/projection boundary.
 panel(s) (see \code{\link[=Removals]{Removals()}} for the summed total): for \link[=hist-class]{hist}
 objects they are distinguished by color; for \link[=mse-class]{mse} objects color is
 used for MP and linetype distinguishes Landings (solid) from Discards
-(dashed).
+(dashed). For \link[=data-class]{data} objects (see \code{object} above) they're summed
+into a single \code{Landings + Discards} series instead, since there's no
+color channel to spare.
 
 \code{PlotEffort()} plots \code{\link[=Effort]{Effort()}}, which has no \code{Stock} dimension (effort is
 a fleet-level quantity), so \code{byStock} does not apply to it. See \code{units}

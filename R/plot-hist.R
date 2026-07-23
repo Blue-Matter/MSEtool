@@ -6,11 +6,16 @@
 #' removals, and effort over time.
 #'
 #' @param object A [hist-class] or [mse-class] object. `PlotLandings()`,
-#'   `PlotDiscards()`, and `PlotEffort()` also accept a [data-class] object
-#'   (e.g. `Hist@Data[[1]][[1]]`), in which case a single observed timeseries
-#'   (no ribbon) is plotted, with `byFleet` and `AggregateYear` applied as
-#'   described in [plot_data]; other arguments (`byStock`, `probs`, `nsim`,
-#'   `Years`, `free_y`, `IncHist`, `byMP`) have no effect in that case.
+#'   `PlotDiscards()`, `PlotRemovals()`, and `PlotEffort()` also accept a
+#'   [data-class] object (e.g. `Hist@Data[[1]][[1]]`), in which case a single
+#'   observed timeseries (no ribbon) is plotted, with `byFleet` and
+#'   `AggregateYear` applied as described in [plot_data]; other arguments
+#'   (`byStock`, `probs`, `nsim`, `Years`, `free_y`, `IncHist`, `byMP`) have
+#'   no effect in that case. For `PlotRemovals()`, the `data`-class series is
+#'   `Landings + Discards` summed together (not distinguished by color or
+#'   linetype, unlike the [hist-class]/[mse-class] case) -- a `data` object
+#'   has no per-variable ribbon/MP dimension to spend color on, so it's shown
+#'   as a single combined series, same as `PlotLandings()`/`PlotDiscards()`.
 #' @param byStock One of `TRUE`, `FALSE`, `'sum'`, or `NULL` (default).
 #'   `TRUE` facets by stock. `FALSE` colors each stock as its own line on a
 #'   single panel, without summing. `'sum'` sums across stocks into a single
@@ -168,7 +173,9 @@
 #' panel(s) (see [Removals()] for the summed total): for [hist-class]
 #' objects they are distinguished by color; for [mse-class] objects color is
 #' used for MP and linetype distinguishes Landings (solid) from Discards
-#' (dashed).
+#' (dashed). For [data-class] objects (see `object` above) they're summed
+#' into a single `Landings + Discards` series instead, since there's no
+#' color channel to spare.
 #'
 #' `PlotEffort()` plots [Effort()], which has no `Stock` dimension (effort is
 #' a fleet-level quantity), so `byStock` does not apply to it. See `units`
@@ -559,6 +566,10 @@ PlotRemovals <- function(object,
                          AggregateYear = FALSE,
                          units         = TRUE,
                          Stocks        = NULL) {
+  if (inherits(object, 'data'))
+    return(.PlotDataRemovals(object, byFleet = byFleet,
+                               AggregateYear = AggregateYear, units = units))
+
   .CheckClass(object, c('hist', 'mse'), 'object')
   stockNames <- .ResolveStocks(object, Stocks)
   byStock <- .ResolveByStock(byStock, .NSelStock(object, stockNames))

@@ -57,6 +57,22 @@ operating model. Supports Markdown. See \code{\link[=OM]{OM()}}.}
 if applicable). Derived from \code{nYear}, \code{pYear}, \code{CurrentYear}, and
 \code{Seasons} via \code{\link[=CalcYears]{CalcYears()}}. Read-only; see \code{\link[=Years]{Years()}}.}
 
+\item{\code{RefSeason}}{Integer vector or \code{NULL}. Only used for seasonal models
+(\code{Seasons > 1}). Season index/indices (\verb{1..Seasons}) used as the
+reference snapshot(s) for reporting equilibrium reference points.
+\code{NULL} (default)  auto-detects, independently per simulation, which
+season(s) have nonzero spawning contribution and averages the
+cross-sectional snapshot across them when more than one is detected. See \code{\link[=OM]{OM()}}.}
+
+\item{\code{RefEffortYears}}{Numeric vector or \code{NULL}. Only used for seasonal models
+(\code{Seasons > 1}). One or more historical calendar years whose relative
+seasonal effort/catchability pattern is used to fix the seasonal shape
+of fishing mortality during per-recruit and MSY reference point
+optimization, decoupled from the year used for biological parameters.
+\code{NULL} (default) reuses the same year as the biological parameters.
+When more than one year is given, the
+per-season effort is averaged across those years before use. See \code{\link[=OM]{OM()}}.}
+
 \item{\code{Stock}}{A \link[=stock-class]{stock} object or named list of \link[=stock-class]{stock} objects.
 See \code{\link[=Stock]{Stock()}}.}
 
@@ -120,7 +136,7 @@ applied. Projection years before \code{MPStartYear} are "interim" years -
 the MP is not called, and advice is instead built from \code{InterimAdvice}
 (falling back to freezing effort at the last historical level where no
 matching entry exists). \code{NULL} (default) means MPs start in the first
-projection year, matching prior behaviour. See \code{\link[=OM]{OM()}}.}
+projection year. See \code{\link[=OM]{OM()}}.}
 
 \item{\code{InterimAdvice}}{A \code{data.frame} or \code{NULL}. Analyst-supplied fixed or
 stochastic TAC/Effort values for interim years (before \code{MPStartYear}).

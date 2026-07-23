@@ -63,6 +63,8 @@ CalcEquilibrium <- function(OM,
   OM <- Populate(OM, silent = TRUE)
   
   nSeason <- OM@Seasons
+  RefSeason      <- OM@RefSeason
+  RefEffortYears <- OM@RefEffortYears
 
   if (is.null(Years)) {
     Years <- utils::tail(Years(OM, 'Historical'), 1)
@@ -99,10 +101,12 @@ CalcEquilibrium <- function(OM,
   EqByComplex <- purrr::map(complexes, \(stockInd) {
     
     inputs <- .PrepPerRecruitInputs(
-      StockList = OM@Stock[stockInd],
-      FleetList = OM@Fleet[stockInd],
-      SPR0List  = SPR0List[stockInd],
-      Years     = Years
+      StockList   = OM@Stock[stockInd],
+      FleetList   = OM@Fleet[stockInd],
+      SPR0List    = SPR0List[stockInd],
+      Years       = Years,
+      EffortYears = RefEffortYears,
+      RefSeason   = RefSeason
     )
     
     PerRecruit <- .CalcPerRecruitF(
@@ -126,9 +130,10 @@ CalcEquilibrium <- function(OM,
       Years                     = inputs$Years,
       nSeason                   = inputs$nSeason,
       SeasonalWeightsList       = inputs$SeasonalWeightsList,
-      CalendarYears             = inputs$CalendarYears
+      CalendarYears             = inputs$CalendarYears,
+      RefSeason                 = inputs$RefSeason
     )
-    
+
     .CalcEquilibriumInternal(PerRecruit, inputs)
   })
   
@@ -157,10 +162,6 @@ CalcEquilibrium <- function(OM,
     list(inputs$RecParsList, SPRList, inputs$RelRecFunList),
     \(RecPars, SPR, RelRecFun) {
       
-      # RecPars  <<- RecPars
-      # SPR       <<- SPR
-      # RelRecFun <<- RelRecFun
-      
       sims  <- seq_len(dim(SPR)['Sim'])
       years <- seq_len(dim(SPR)['Year'])
       fs    <- seq_len(dim(SPR)['F'])
@@ -187,10 +188,10 @@ CalcEquilibrium <- function(OM,
     List2Array('Stock') |>
     .Aperm(c('Sim', 'Stock', 'Year', 'F'))
   
-  R0_f <- AddDimension(inputs$R0, 'F', val = PerRecruit@apicalF) 
+  R0_f     <- AddDimension(inputs$R0, 'F', val = PerRecruit@apicalF) 
   Recruits <- ArrayMultiply(R0_f, RelRecruits)
   
-  Eq <- new('equilibrium')
+  Eq             <- new('equilibrium')
   Eq@apicalF     <- PerRecruit@apicalF
   Eq@SPR0        <- PerRecruit@SPR0
   Eq@SPR         <- PerRecruit@SPR
@@ -200,16 +201,7 @@ CalcEquilibrium <- function(OM,
   Eq@SProduction <- ArrayMultiply(PerRecruit@SProduction, Recruits)
   Eq@Removals    <- ArrayMultiply(PerRecruit@Removals, Recruits)
   Eq@Landings    <- ArrayMultiply(PerRecruit@Landings, Recruits)
-
-  # For seasonal models, B^PR and SB^PR sum over S seasonal age classes per
-  # calendar year, giving S × (mean seasonal snapshot biomass per recruit).
-  # Dividing by nSeason converts to a single-snapshot-equivalent, directly
-  # comparable to annual-model BMSY/SBMSY. SProduction (fecundity-weighted)
-  # is a flow aggregated over the year and does not need this correction.
-  nSeason <- inputs$nSeason %||% 1L
-  B_PR  <- if (nSeason > 1L) PerRecruit@Biomass  / nSeason else PerRecruit@Biomass
-  SB_PR <- if (nSeason > 1L) PerRecruit@SBiomass / nSeason else PerRecruit@SBiomass
-  Eq@Biomass  <- ArrayMultiply(B_PR,  Recruits)
-  Eq@SBiomass <- ArrayMultiply(SB_PR, Recruits)
+  Eq@Biomass     <- ArrayMultiply(PerRecruit@Biomass,  Recruits)
+  Eq@SBiomass    <- ArrayMultiply(PerRecruit@SBiomass, Recruits)
   Eq
 }

@@ -26,6 +26,20 @@
 #' @slot Years Numeric vector. Model time steps (including seasonal resolution
 #'   if applicable). Derived from `nYear`, `pYear`, `CurrentYear`, and
 #'   `Seasons` via [CalcYears()]. Read-only; see [Years()].
+#' @slot RefSeason Integer vector or `NULL`. Only used for seasonal models 
+#'   (`Seasons > 1`). Season index/indices (`1..Seasons`) used as the
+#'   reference snapshot(s) for reporting equilibrium reference points. 
+#'   `NULL` (default)  auto-detects, independently per simulation, which 
+#'   season(s) have nonzero spawning contribution and averages the 
+#'   cross-sectional snapshot across them when more than one is detected. See [OM()].
+#' @slot RefEffortYears Numeric vector or `NULL`. Only used for seasonal models
+#'  (`Seasons > 1`). One or more historical calendar years whose relative
+#'   seasonal effort/catchability pattern is used to fix the seasonal shape
+#'   of fishing mortality during per-recruit and MSY reference point
+#'   optimization, decoupled from the year used for biological parameters.
+#'   `NULL` (default) reuses the same year as the biological parameters. 
+#'   When more than one year is given, the
+#'   per-season effort is averaged across those years before use. See [OM()].
 #'
 #' @slot Stock A [stock-class] object or named list of [stock-class] objects.
 #'   See [Stock()].
@@ -78,7 +92,7 @@
 #'   the MP is not called, and advice is instead built from `InterimAdvice`
 #'   (falling back to freezing effort at the last historical level where no
 #'   matching entry exists). `NULL` (default) means MPs start in the first
-#'   projection year, matching prior behaviour. See [OM()].
+#'   projection year. See [OM()].
 #' @slot InterimAdvice A `data.frame` or `NULL`. Analyst-supplied fixed or
 #'   stochastic TAC/Effort values for interim years (before `MPStartYear`).
 #'   See [OM()] for the required columns.
@@ -152,7 +166,9 @@ setClass(
     pYear='num.null',
     CurrentYear='num.null',
     Seasons='num.null',
-    
+    RefSeason='num.null',
+    RefEffortYears='num.null',
+
     Stock='StockList',
     Fleet='StockFleetList',
     Obs='ObsList',
@@ -225,6 +241,17 @@ setValidity("om", function(object) {
       }
     }
   }
+
+  if (!is.null(object@RefSeason) && !is.null(object@Seasons)) {
+    if (any(object@RefSeason != round(object@RefSeason)) ||
+        any(object@RefSeason < 1) || any(object@RefSeason > object@Seasons))
+      errors <- c(errors, "`RefSeason` must contain whole numbers between `1` and `Seasons`")
+  }
+
+  if (!is.null(object@RefEffortYears) && !is.null(object@Years))
+    if (any(object@RefEffortYears < min(object@Years)) ||
+        any(object@RefEffortYears > max(object@Years)))
+      errors <- c(errors, "`RefEffortYears` must be within the range of `Years`")
 
   if (length(errors)) errors else TRUE
 })

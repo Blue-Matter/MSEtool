@@ -39,7 +39,7 @@ MSYRefs <- function(Hist) {
 .ResolveRefpointsMSY <- function(Hist, fn_name = "MSY accessor") {
   supported <- c('hist', 'mse', 'reference', 'refpointsMSY')
   .CheckClass(Hist, supported, fn_name)
-  
+
   if (inherits(Hist, 'refpointsMSY')) return(Hist)
   if (inherits(Hist, 'reference'))    return(Hist@MSY)
   # hist and mse
@@ -87,3 +87,5 @@ MSYLandings <- function(Hist) {
 MSYDiscards <- function(Hist) {
   .AccessSlot(.ResolveRefpointsMSY(Hist, 'MSYDiscards'), 'MSYDiscards')
 }
+
+

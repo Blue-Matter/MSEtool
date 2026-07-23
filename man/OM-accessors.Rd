@@ -26,6 +26,10 @@
 \alias{CurrentYear<-}
 \alias{Seasons}
 \alias{Seasons<-}
+\alias{RefSeason}
+\alias{RefSeason<-}
+\alias{RefEffortYears}
+\alias{RefEffortYears<-}
 \alias{DataLag}
 \alias{DataLag<-}
 \alias{CatchFrac}
@@ -107,6 +111,14 @@ CurrentYear(x) <- value
 Seasons(x)
 
 Seasons(x) <- value
+
+RefSeason(x)
+
+RefSeason(x) <- value
+
+RefEffortYears(x)
+
+RefEffortYears(x) <- value
 
 DataLag(x)
 

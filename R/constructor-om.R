@@ -31,6 +31,21 @@
 #' @param CurrentYear Integer. Final historical calendar year of the operating
 #'   model. Default is the current system year.
 #' @param Seasons Integer. Number of seasons per year. Default `1`.
+#' @param RefSeason Integer vector or `NULL`. Only used for `Seasons > 1`.
+#'   Season index/indices (`1..Seasons`) used as the reference snapshot(s) for
+#'   reporting equilibrium biomass and spawning biomass (e.g. `BMSY`, `SBMSY`,
+#'   `B0`, `SB0`, `BLow`). `NULL` (default) auto-detects, independently per
+#'   simulation, which season(s) have nonzero spawning contribution, and
+#'   averages the cross-sectional snapshot across them when more than one is
+#'   detected. Default `NULL`.
+#' @param RefEffortYears Numeric vector or `NULL`. Only used for `Seasons > 1`. 
+#'   One or more historical calendar years whose relative seasonal
+#'   effort/catchability pattern fixes the seasonal shape of fishing
+#'   mortality during per-recruit and MSY reference point optimization,
+#'   decoupled from the year used for biological parameters. `NULL` (default)
+#'   reuses the same year as the biological parameters. When more than one
+#'   year is given, the per-season effort is averaged across those years.
+#'   Default `NULL`.
 #' @param Stock A [stock-class] object or named list of [stock-class] objects.
 #'   Default `NULL`. See [Stock()] for construction and pass-through access.
 #' @param Fleet A hierarchical named list of [fleet-class] objects indexed by
@@ -108,8 +123,7 @@
 #' interface for both construction and retrieval:
 #'
 #' ```r
-#' om  <- OM(hist_obj)    # extract from hist or mse
-#' OM(hist_obj)           # same
+#' om  <- OM(hist_obj)    # extract from `hist` or `mse`
 #' ```
 #'
 #' ## Derived Slots
@@ -164,7 +178,7 @@
 #'
 #' The `StockTargeting` slot is initialised automatically by [StockTargeting()]
 #' when `Stock` and `Fleet` are provided. It is not a user-facing parameter
-#' and should not be set directly in most workflows.
+#' and should not be set directly.
 #'
 #' ## Sub-Object Slots
 #'
@@ -236,7 +250,9 @@ OM <- function(Name        = "A new OM object",
                pYear       = 30,
                CurrentYear = as.numeric(format(Sys.Date(), "%Y")),
                Seasons     = 1,
-               
+               RefSeason      = NULL,
+               RefEffortYears = NULL,
+
                Stock       = NULL,
                Fleet       = NULL,
                Obs         = NULL,
@@ -289,6 +305,8 @@ OM <- function(Name        = "A new OM object",
   .Object@pYear       <- pYear
   .Object@CurrentYear <- CurrentYear
   .Object@Seasons     <- Seasons
+  .Object@RefSeason      <- RefSeason
+  .Object@RefEffortYears <- RefEffortYears
   .Object@Years       <- CalcYears(nYear, pYear, CurrentYear, Seasons)
   
   Stock     <- if (!is.null(Stock)) .ToNamedList(Stock, 'stock') else NULL
@@ -506,6 +524,22 @@ Seasons <- function(x) .IsHist(x, "Seasons")
 #' @rdname OM-accessors
 #' @export
 `Seasons<-` <- function(x, value) .AssignSlot(x, value, "Seasons")
+
+#' @rdname OM-accessors
+#' @export
+RefSeason <- function(x) .IsHist(x, "RefSeason")
+
+#' @rdname OM-accessors
+#' @export
+`RefSeason<-` <- function(x, value) .AssignSlot(x, value, "RefSeason")
+
+#' @rdname OM-accessors
+#' @export
+RefEffortYears <- function(x) .IsHist(x, "RefEffortYears")
+
+#' @rdname OM-accessors
+#' @export
+`RefEffortYears<-` <- function(x, value) .AssignSlot(x, value, "RefEffortYears")
 
 
 #' @rdname OM-accessors

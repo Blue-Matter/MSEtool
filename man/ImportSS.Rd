@@ -82,16 +82,12 @@ Default \code{NULL}.}
 
 \item{LengthUnits}{Character string giving the physical unit of length
 measurements in the SS3 model (e.g., \code{"cm"}, \code{"mm"}, \code{"inch"}; see
-\code{\link[=ValidUnits]{ValidUnits()}}). SS3/\code{r4ss} output does not report this, so it cannot be
-inferred; \code{"cm"} is the near-universal SS3 convention. Override if the
-source model used different units. Default \code{"cm"}.}
+\code{\link[=ValidUnits]{ValidUnits()}}). Default \code{"cm"}.}
 
 \item{WeightUnits}{Character string giving the physical unit of weight
 measurements in the SS3 model (e.g., \code{"kg"}, \code{"g"}, \code{"lb"}; see
 \code{\link[=ValidUnits]{ValidUnits()}}). Not reported by SS3/\code{r4ss}; \code{"kg"} is the conventional
-pairing with \code{LengthUnits = "cm"} (SS3's \code{WtLen1}/\code{WtLen2} growth
-parameters are calibrated for cm/kg allometry). Override if the source
-model used different units. Default \code{"kg"}.}
+pairing with \code{LengthUnits = "cm"}. Default \code{"kg"}.}
 
 \item{R0Units}{Numeric scaling factor for unfished recruitment (\code{R0}) and
 related numbers-at-age quantities; see \code{Units} in \link[=srr-class]{srr}. SS3 does

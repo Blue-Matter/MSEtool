@@ -77,7 +77,8 @@ CalcRefPoints <- function(Hist,
     Hist@Reference@SPR0 <- CalcSPR0(Hist, silent = TRUE)
 
   RefYear <- utils::head(Years(Hist@OM, 'Historical'), 1)
-  Phi0Ref <- .ArraySubsetYear(Hist@Reference@SPR0, RefYear) |>
+  if (nSeason > 1L) RefYear <- floor(RefYear)
+  Phi0Ref <- CalcPerRecruit(Hist, apicalF = 1e-4, Years = RefYear)@SPR0 |>
     DropDimension('Year', warn = FALSE)
 
   Fgrid <- exp(seq(log(1e-4), log(Hist@OM@maxF), length.out = nF))

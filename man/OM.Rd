@@ -18,6 +18,8 @@ OM(
   pYear = 30,
   CurrentYear = as.numeric(format(Sys.Date(), "\%Y")),
   Seasons = 1,
+  RefSeason = NULL,
+  RefEffortYears = NULL,
   Stock = NULL,
   Fleet = NULL,
   Obs = NULL,
@@ -84,6 +86,23 @@ operating model. Supports Markdown. Default \code{""}.}
 model. Default is the current system year.}
 
 \item{Seasons}{Integer. Number of seasons per year. Default \code{1}.}
+
+\item{RefSeason}{Integer vector or \code{NULL}. Only used for \code{Seasons > 1}.
+Season index/indices (\verb{1..Seasons}) used as the reference snapshot(s) for
+reporting equilibrium biomass and spawning biomass (e.g. \code{BMSY}, \code{SBMSY},
+\code{B0}, \code{SB0}, \code{BLow}). \code{NULL} (default) auto-detects, independently per
+simulation, which season(s) have nonzero spawning contribution, and
+averages the cross-sectional snapshot across them when more than one is
+detected. Default \code{NULL}.}
+
+\item{RefEffortYears}{Numeric vector or \code{NULL}. Only used for \code{Seasons > 1}.
+One or more historical calendar years whose relative seasonal
+effort/catchability pattern fixes the seasonal shape of fishing
+mortality during per-recruit and MSY reference point optimization,
+decoupled from the year used for biological parameters. \code{NULL} (default)
+reuses the same year as the biological parameters. When more than one
+year is given, the per-season effort is averaged across those years.
+Default \code{NULL}.}
 
 \item{Stock}{A \link[=stock-class]{stock} object or named list of \link[=stock-class]{stock} objects.
 Default \code{NULL}. See \code{\link[=Stock]{Stock()}} for construction and pass-through access.}
@@ -196,8 +215,7 @@ When \code{Name} is an S4 object with an \code{OM} slot, \code{OM()} returns tha
 directly rather than constructing a new object. This allows a consistent
 interface for both construction and retrieval:
 
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{om  <- OM(hist_obj)    # extract from hist or mse
-OM(hist_obj)           # same
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{om  <- OM(hist_obj)    # extract from `hist` or `mse`
 }\if{html}{\out{</div>}}
 }
 
@@ -257,7 +275,7 @@ historical seasonal pattern is retained rather than flattened.
 
 The \code{StockTargeting} slot is initialised automatically by \code{\link[=StockTargeting]{StockTargeting()}}
 when \code{Stock} and \code{Fleet} are provided. It is not a user-facing parameter
-and should not be set directly in most workflows.
+and should not be set directly.
 }
 
 \subsection{Sub-Object Slots}{
