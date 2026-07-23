@@ -65,6 +65,7 @@
 
   if ('Length' %in% args) {
     .CheckRequiredObject(Length, 'length', 'Length')
+    .CheckDependency(Length, "MeanAtAge", "Length", .FirstUp(class(object)))
     object@MeanAtAge <- GenMeanAtLength(
       Model  = object@Model,
       Pars   = object@Pars,
@@ -75,6 +76,7 @@
   } else {
     if ('Ages' %in% args) {
       .CheckRequiredObject(Ages, 'ages', 'Ages')
+      .CheckDependency(Ages, "Classes", "Ages", .FirstUp(class(object)))
       if ('Timing' %in% slotNames(object) && !is.null(object@Timing))
         Ages@Classes <- Ages@Classes + object@Timing
     }
@@ -113,8 +115,10 @@
   if ('Ages' %in% args)
     return(object)
 
-  if ('Length' %in% args)
+  if ('Length' %in% args) {
     .CheckRequiredObject(Length, 'length', 'Length')
+    .CheckDependency(Length, "Classes", "Length", .FirstUp(class(object)))
+  }
 
   if (is.null(object@Classes))
     object@Classes <- Length@Classes
@@ -181,8 +185,10 @@
   if ('Ages' %in% args)
     return(object)
 
-  if ('Weight' %in% args)
+  if ('Weight' %in% args) {
     .CheckRequiredObject(Weight, 'weight', 'Weight')
+    .CheckDependency(Weight, "Classes", "Weight", .FirstUp(class(object)))
+  }
 
   object@MeanAtWeight <- GenMeanAtWeight(
     Model  = object@Model,

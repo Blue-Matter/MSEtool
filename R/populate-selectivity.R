@@ -98,6 +98,7 @@ PopulateSelectivity <- function(Selectivity,
     if (Selectivity@isRel) {
       .CheckRequiredObject(Maturity, "maturity", "Maturity")
       Maturity <- PopulateMaturity(Maturity, Ages, Length, Weight, Years, nSim)
+      .CheckDependency(Maturity, "MeanAtAge", "Maturity", "Selectivity")
       L50 <- .FindL50(Maturity)
       if (!is.null(dimnames(Selectivity@Pars$L5)$Area)) 
         L50 <- AddDimension(L50, 'Area')

@@ -110,6 +110,7 @@ PopulateRetention <- function(Retention,
   if (!is.null(ModelClass)) {
     if (Retention@isRel) {
       .CheckRequiredObject(Maturity, "maturity", "Maturity")
+      .CheckDependency(Maturity, "MeanAtAge", "Maturity", "Retention")
       L50 <- .FindL50(Maturity)
       Retention@Pars$LR5 <- ArrayMultiply(Retention@Pars$LR5, L50)
       Retention@Pars$LFR <- ArrayMultiply(Retention@Pars$LFR, L50)

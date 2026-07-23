@@ -98,10 +98,14 @@ PopulateStock <- function(Stock,
     Seasons = Stock@Seasons
   )
   
+  nm <- cli::format_inline("Stock {.val {Stock@Name %||% 'Stock'}}")
+
   Years <- Stock@Years
   Stock@Ages@Classes <- CalcAgeClasses(Stock@Ages)
-  
-  Stock@Length <- PopulateLength(
+  .CheckPopulated(Stock@Ages@Classes, "Ages", nm,
+    hint = cli::format_inline("Provide {.var MinAge}, {.var MaxAge}, and {.var Units} for {.var Ages}, then re-run."))
+
+  Stock@Length <- .SafePopulate(\() PopulateLength(
     Length = Stock@Length,
     Ages = Stock@Ages,
     Years = Years,
@@ -110,9 +114,10 @@ PopulateStock <- function(Stock,
     seed = seed + 1,
     silent = silent,
     force = force
-  )
-  
-  Stock@Weight <- PopulateWeight(
+  ), "Length", nm)
+  .RequireArray(Stock@Length, "MeanAtAge", "Length", nm, optional = TRUE)
+
+  Stock@Weight <- .SafePopulate(\() PopulateWeight(
     Weight = Stock@Weight,
     Ages = Stock@Ages,
     Length = Stock@Length,
@@ -123,9 +128,10 @@ PopulateStock <- function(Stock,
     silent = silent,
     force = force,
     CalcAtLength = FALSE
-  )
+  ), "Weight", nm)
+  .RequireArray(Stock@Weight, "MeanAtAge", "Weight", nm)
 
-  Stock@NaturalMortality <- PopulateNaturalMortality(
+  Stock@NaturalMortality <- .SafePopulate(\() PopulateNaturalMortality(
     NaturalMortality = Stock@NaturalMortality,
     Ages = Stock@Ages,
     Length = Stock@Length,
@@ -135,9 +141,10 @@ PopulateStock <- function(Stock,
     silent = silent,
     force = force,
     CalcAtLength = FALSE
-  )
-  
-  Stock@Maturity <- PopulateMaturity(
+  ), "NaturalMortality", nm)
+  .RequireArray(Stock@NaturalMortality, "MeanAtAge", "NaturalMortality", nm)
+
+  Stock@Maturity <- .SafePopulate(\() PopulateMaturity(
     Maturity = Stock@Maturity,
     Ages = Stock@Ages,
     Length = Stock@Length,
@@ -148,9 +155,10 @@ PopulateStock <- function(Stock,
     silent = silent,
     force = force,
     CalcAtLength = CalcAtLength
-  )
-  
-  Stock@Fecundity <- PopulateFecundity(
+  ), "Maturity", nm)
+  .RequireArray(Stock@Maturity, "MeanAtAge", "Maturity", nm)
+
+  Stock@Fecundity <- .SafePopulate(\() PopulateFecundity(
     Fecundity = Stock@Fecundity,
     Ages = Stock@Ages,
     Length = Stock@Length,
@@ -162,9 +170,10 @@ PopulateStock <- function(Stock,
     silent = silent,
     force = force,
     CalcAtLength = CalcAtLength
-  )
-  
-  Stock@SRR <- PopulateSRR(
+  ), "Fecundity", nm)
+  .RequireArray(Stock@Fecundity, "MeanAtAge", "Fecundity", nm, optional = TRUE)
+
+  Stock@SRR <- .SafePopulate(\() PopulateSRR(
     SRR = Stock@SRR,
     Ages = Stock@Ages,
     CurrentYear = Stock@CurrentYear,
@@ -173,8 +182,12 @@ PopulateStock <- function(Stock,
     seed = seed + 6,
     silent = silent,
     force = force
-  )
-  
+  ), "SRR", nm)
+  .CheckPopulated(Stock@SRR@Model, "SRR", nm,
+    hint = cli::format_inline("Provide {.var Pars} for {.var SRR} (to look up a {.var Model}), or set {.var Model} directly, then re-run."))
+  .CheckPopulated(Stock@SRR@R0, "SRR", nm,
+    hint = cli::format_inline("Provide {.var R0} (or {.var Pars} it can default from) for {.var SRR}, then re-run."))
+
   Stock@Spatial <- PopulateSpatial(
     Spatial = Stock@Spatial,
     Ages = Stock@Ages,

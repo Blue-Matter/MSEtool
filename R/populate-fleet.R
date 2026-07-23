@@ -73,26 +73,32 @@ PopulateFleet <- function(Fleet,
   if (.CheckDigest(Fleet, argList) & !force) return(Fleet)
   
   .SetSeed(seed)
-  
-  Fleet@Effort <- PopulateEffort(
+
+  nm <- cli::format_inline("Fleet {.val {Fleet@Name %||% 'Fleet'}} (stock {.val {Stock@Name %||% 'Stock'}})")
+
+  Fleet@Effort <- .SafePopulate(\() PopulateEffort(
     Effort = Fleet@Effort,
     HistYears = HistYears,
     ProjYears = ProjYears,
     nArea = nArea,
     nSim = nSim,
     seed = seed
-  )
-  
-  Fleet@Catchability <- PopulateCatchability(
+  ), "Effort", nm)
+  .CheckPopulated(Fleet@Effort@Effort, "Effort", nm,
+    hint = cli::format_inline("Provide an {.var Effort} matrix ({.var Sim} x {.var Year}) for the fleet, then re-run."))
+
+  Fleet@Catchability <- .SafePopulate(\() PopulateCatchability(
     Catchability = Fleet@Catchability,
     nSim = nSim,
     HistYears = HistYears,
     ProjYears = ProjYears,
     seed = seed,
     silent = silent
-  )
-  
-  Fleet@Selectivity <- PopulateSelectivity(
+  ), "Catchability", nm)
+  .RequireArray(Fleet@Catchability, "Efficiency", "Catchability", nm, optional = TRUE,
+    hint = cli::format_inline("Provide {.var Efficiency} for {.var Catchability}, or leave it fully unset, then re-run."))
+
+  Fleet@Selectivity <- .SafePopulate(\() PopulateSelectivity(
     Selectivity = Fleet@Selectivity,
     Ages = Ages,
     Length = Length,
@@ -104,9 +110,10 @@ PopulateFleet <- function(Fleet,
     CalcAtLength = TRUE,
     seed = seed,
     silent = silent
-  )
-  
-  Fleet@Retention <- PopulateRetention(
+  ), "Selectivity", nm)
+  .RequireArray(Fleet@Selectivity, "MeanAtAge", "Selectivity", nm)
+
+  Fleet@Retention <- .SafePopulate(\() PopulateRetention(
     Retention = Fleet@Retention,
     Ages = Ages,
     Length = Length,
@@ -120,9 +127,10 @@ PopulateFleet <- function(Fleet,
     seed = seed,
     silent = silent,
     force = force
-  )
-  
-  Fleet@DiscardMortality <- PopulateDiscardMortality(
+  ), "Retention", nm)
+  .RequireArray(Fleet@Retention, "MeanAtAge", "Retention", nm, optional = TRUE)
+
+  Fleet@DiscardMortality <- .SafePopulate(\() PopulateDiscardMortality(
     DiscardMortality = Fleet@DiscardMortality,
     Ages = Ages,
     Length = Length,
@@ -132,8 +140,10 @@ PopulateFleet <- function(Fleet,
     CalcAtLength = TRUE,
     seed = seed,
     silent = silent
-  )
-  
+  ), "DiscardMortality", nm)
+  .RequireArray(Fleet@DiscardMortality, "MeanAtAge", "DiscardMortality", nm, optional = TRUE,
+    hint = cli::format_inline("Provide {.var MeanAtAge} for {.var DiscardMortality}, or leave it fully unset, then re-run."))
+
   Fleet@Closure <- PopulateClosure(
     Closure = Fleet@Closure,
     nArea = nArea,

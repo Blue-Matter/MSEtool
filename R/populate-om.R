@@ -78,16 +78,18 @@ PopulateOM <- function(OM,
     .UpdateSPFrom() |>   # TODO
     .ShareParameters() |> # TODO
     .StartMessages()
-  
+
+  .CheckOMReady(OM)
+
   if (adjust_fecundity)
     OM <- AdjustSeasonalFecundity(OM, silent = silent)
-  
+
   if (standardize_effort)
     OM <- .StandardizeEffort(OM, populate=FALSE)
 
   if (!silent)
     cli::cli_alert_success('Populated OM {.val {OM@Name}}')
-  
+
   .SetDigest(OM)
 }
 
@@ -199,7 +201,7 @@ PopulateOM <- function(OM,
         silent = silent,
         force  = force
       )
-      
+
       # extract warning logs - only selectivity for now
       if (!is.null(FleetList[[st]][[fl]]@Selectivity@Misc$warning)) {
         warns <- FleetList[[st]][[fl]]@Selectivity@Misc
@@ -480,4 +482,74 @@ PopulateOM <- function(OM,
 .ShareParameters <- function(OM) {
   # TODO: sex-specific parameter mirroring via SPFrom(OM) not yet implemented
   OM
+}
+
+.CheckOMReady <- function(OM) {
+  problems <- character(0)
+
+  scalar_slots <- c("nSim", "nYear", "pYear", "CurrentYear", "Seasons", "maxF")
+  missing_scalars <- scalar_slots[!purrr::map_lgl(scalar_slots, \(sl) length(slot(OM, sl)) > 0)]
+  if (length(missing_scalars))
+    problems <- c(problems, "x" = cli::format_inline("{.var OM} is missing required value{?s} for: {.val {missing_scalars}}"))
+
+  if (!length(OM@Complexes))
+    problems <- c(problems, "x" = cli::format_inline("{.var OM@Complexes} has not been populated"))
+
+  stock_required <- list(
+    Ages             = "Classes",
+    Weight           = "MeanAtAge",
+    NaturalMortality = "MeanAtAge",
+    Maturity         = "MeanAtAge",
+    SRR              = c("Model", "R0")
+  )
+  stocknames <- StockNames(OM)
+  for (st in seq_along(OM@Stock)) {
+    nm <- stocknames[st] %||% paste("Stock", st)
+    missing <- character(0)
+    for (comp in names(stock_required)) {
+      obj <- slot(OM@Stock[[st]], comp)
+      if (any(purrr::map_lgl(stock_required[[comp]], \(ss) EmptyObject(slot(obj, ss)))))
+        missing <- c(missing, comp)
+    }
+    if (length(missing))
+      problems <- c(problems, "x" = cli::format_inline("Stock {.val {nm}} is missing required component{?s}: {.val {missing}}"))
+  }
+
+  fleet_required <- list(
+    Effort      = "Effort",
+    Selectivity = "MeanAtAge"
+  )
+  fleetnames <- FleetNames(OM)
+  for (st in seq_along(OM@Fleet)) {
+    nm_stock <- stocknames[st] %||% paste("Stock", st)
+    for (fl in seq_along(OM@Fleet[[st]])) {
+      nm_fleet <- fleetnames[fl] %||% paste("Fleet", fl)
+      missing <- character(0)
+      for (comp in names(fleet_required)) {
+        obj <- slot(OM@Fleet[[st]][[fl]], comp)
+        if (any(purrr::map_lgl(fleet_required[[comp]], \(ss) EmptyObject(slot(obj, ss)))))
+          missing <- c(missing, comp)
+      }
+      if (length(missing))
+        problems <- c(problems, "x" = cli::format_inline("Fleet {.val {nm_fleet}} (stock {.val {nm_stock}}) is missing required component{?s}: {.val {missing}}"))
+    }
+  }
+
+  ComplexNames <- names(Complexes(OM))
+  nFl <- nFleet(OM)
+  for (cx in seq_along(ComplexNames)) {
+    obs_cx <- OM@Obs[[cx]]
+    imp_cx <- OM@Imp[[cx]]
+    if (length(obs_cx) < nFl || !all(purrr::map_chr(obs_cx, class) == "obs"))
+      problems <- c(problems, "x" = cli::format_inline("{.var OM@Obs} for complex {.val {ComplexNames[cx]}} is incomplete"))
+    if (length(imp_cx) < nFl || !all(purrr::map_chr(imp_cx, class) == "imp"))
+      problems <- c(problems, "x" = cli::format_inline("{.var OM@Imp} for complex {.val {ComplexNames[cx]}} is incomplete"))
+  }
+
+  if (length(problems)) {
+    problems <- c(problems, "i" = "Supply the missing component(s) and re-run.")
+    cli::cli_abort(problems, call = NULL)
+  }
+
+  invisible(OM)
 }

@@ -16,7 +16,7 @@
 #'
 #' @keywords internal
 .CheckClass <- function(object, class='om', name='OM', type='Argument') {
-  
+
   checkClass <- sapply(class, function(i) inherits(object, i))
   if (all(!checkClass)) {
     cli::cli_abort(c('{type} {.var {name}} must be class {.cls {class}}',
@@ -26,21 +26,67 @@
 }
 
 
-#' Check That an Object Inherits the Required Class
-#'
-#' Validates that `object` inherits from `class` and throws an informative
-#' error if not, directing the user to the relevant help page. Returns `NULL`
-#' invisibly on success.
-#'
-#' @param object The object to check.
-#' @param class Character string. The required S4 class name
-#'   (e.g. `"length"`, `"weight"`).
-#' @param argName Character string. The argument name used in the error
-#'   message. If `NULL` (default), derived from `class` via `.FirstUp`.
-#'
-#' @return `NULL` invisibly if `object` inherits from `class`. Otherwise
-#'   throws an error via [cli::cli_abort()].
-#' @keywords internal
+.CheckPopulated <- function(value, component, label = NULL, hint = NULL) {
+  if (!EmptyObject(value))
+    return(invisible(value))
+
+  if (is.null(hint))
+    hint <- cli::format_inline("Check the {.var {component}} input parameters and re-run.")
+
+  prefix <- if (is.null(label)) "" else paste0(label, ": ")
+  cli::cli_abort(c(
+    "x" = paste0(prefix, cli::format_inline("{.var {component}} is required but did not populate.")),
+    "i" = hint
+  ), call = NULL)
+}
+
+
+.RequireArray <- function(object, arraySlot, component, label = NULL,
+                          optional = FALSE, hint = NULL) {
+  if (optional && EmptyObject(object))
+    return(invisible(object))
+
+  if (is.null(hint)) {
+    hint <- cli::format_inline(
+      "Provide {.var Pars} for {.var {component}}, or set {.var {arraySlot}} directly"
+    )
+    if (optional)
+      hint <- paste0(hint, cli::format_inline(", or leave {.var {component}} fully unset"))
+    hint <- paste0(hint, ", then re-run.")
+  }
+
+  .CheckPopulated(slot(object, arraySlot), component, label, hint)
+  invisible(object)
+}
+
+
+.SafePopulate <- function(fn, component, label = NULL) {
+  tryCatch(fn(), error = function(e) {
+    prefix <- if (is.null(label)) "" else paste0(label, ": ")
+
+    if (inherits(e, "rlang_error")) {
+      header <- unname(rlang::cnd_header(e))
+      body   <- unname(rlang::cnd_body(e))
+    } else {
+      header <- conditionMessage(e)
+      body   <- character(0)
+    }
+    msg <- c("x" = paste0(prefix, cli::format_inline("{.var {component}} failed to populate.")))
+    if (length(header)) msg <- c(msg, setNames(header, rep("i", length(header))))
+    if (length(body))   msg <- c(msg, setNames(body, rep("i", length(body))))
+    cli::cli_abort(msg, call = NULL)
+  })
+}
+
+
+.CheckDependency <- function(object, arraySlot, dependency, component) {
+  .CheckPopulated(slot(object, arraySlot), dependency,
+    hint = cli::format_inline(
+      "{.var {component}} requires a populated {.var {dependency}} — provide {.var Pars} for {.var {dependency}}, or set its {.var {arraySlot}} directly, then re-run."
+    ))
+}
+
+
 .CheckRequiredObject <- function(object, class, argName=NULL) {
   if (methods::is(object, class))
     return(invisible(NULL))

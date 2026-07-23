@@ -119,9 +119,11 @@ PopulateMaturity <- function(Maturity,
   Maturity <- .MeanAtLength2MeanAtAge(Maturity, Length)
   Maturity <- .MeanAtWeight2MeanAtAge(Maturity, Weight)
   
-  if (CalcAtLength) 
+  if (CalcAtLength)
     Maturity <- .MeanAtAge2MeanAtLength(Maturity, Length)
-  
+
+  .CheckPopulated(Maturity@MeanAtAge, "Maturity")
+
   # Semelparous
   if (inherits(Maturity@Semelparous, "array")) {
     
