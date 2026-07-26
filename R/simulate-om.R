@@ -41,7 +41,7 @@
                                                   IdenticalHist = IdenticalHist,
                                                   silent = silent)
 
-  Hist <- .OptFinalDepletion(Hist, silent = silent)
+  Hist <- .OptFinalDepletion(Hist, parallel = parallel, silent = silent)
 
   Hist@Reference@SPR0 <- CalcSPR0(Hist)
 
@@ -74,7 +74,7 @@
   )
 
   if (length(ref_types) > 0)
-    Hist <- .CalcRefYield(Hist, type=ref_types, Units='Biomass', silent=silent)
+    Hist <- .CalcRefYield(Hist, type=ref_types, Units='Biomass', parallel=parallel, silent=silent)
 
   Hist <- .RestoreHistMisc(Hist)
 
@@ -82,7 +82,7 @@
     Hist <- .ConditionObs(Hist, silent)
 
   if (control$GenerateData)
-    Hist <- .GenerateHistoricalData(Hist, silent=silent)
+    Hist <- .GenerateHistoricalData(Hist, parallel=parallel, silent=silent)
 
   if (control$BLow)
     Hist <- CalcBLow(Hist, silent = silent)
