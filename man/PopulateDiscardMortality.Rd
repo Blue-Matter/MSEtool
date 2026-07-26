@@ -8,6 +8,8 @@ PopulateDiscardMortality(
   DiscardMortality,
   Ages = NULL,
   Length = NULL,
+  Selectivity = NULL,
+  Retention = NULL,
   nSim = 5,
   Years = NULL,
   nArea = 1,
@@ -26,6 +28,13 @@ PopulateDiscardMortality(
 
 \item{Length}{A \code{\link[=Length]{Length()}} object. Required if the model depends on
 length-at-age.}
+
+\item{Selectivity}{A populated \code{\link[=Selectivity]{Selectivity()}} object. Optional, but
+recommended whenever discard mortality is defined at length.
+Ignored if either \code{Selectivity}
+or \code{Retention} is unavailable, or either's \code{isAtLength} is \code{FALSE}.}
+
+\item{Retention}{A populated \code{\link[=Retention]{Retention()}} object. See \code{Selectivity}.}
 
 \item{nSim}{Integer. Number of simulation replicates.}
 
@@ -58,7 +67,9 @@ values.
 \code{PopulateDiscardMortality()} handles population of discard mortality at age
 and optionally at length. Steps include:
 \itemize{
-\item Converting mean-at-length to mean-at-age if necessary
+\item Converting mean-at-length to mean-at-age, weighted by
+\verb{Selectivity x (1 - Retention)} when both are available and length-native
+(see \code{Selectivity}), otherwise via the plain (unweighted) age-length key
 \item Calculating mean-at-length from age-based arrays if \code{CalcAtLength = TRUE}
 \item Adding an 'Area' dimension and setting dimension names
 \item Handling empty objects by setting discard mortality to zero

@@ -114,8 +114,11 @@ and \code{Variable}.
 (\code{Interactions}, \code{Landings}, or \code{Discards}).
 \item For \link[=hist-class]{hist} or \link[=mse-class]{mse} with \code{df = TRUE}: a tidy \code{data.frame}
 with columns \code{Sim}, \code{Stock}, \code{Year}, \code{Period}, \code{MP} (MSE only), and
-optionally \code{Age}, \code{Size}, \code{Area}, and/or \code{Fleet}, plus \code{Value} and
-\code{Variable}.
+optionally \code{Age}, \code{Size}, \code{Area}, and/or \code{Fleet}, plus \code{Value},
+\code{Variable}, and \code{Units}. \code{Units} is a biomass unit label (e.g. \code{"kg"},
+\code{"t"}) when the values are in units of biomass, or the stock's
+\code{SRR@Units} scaling factor (e.g. \code{1}, \code{1000}) when the values are in
+units of numbers (see Details).
 \item Assignment forms return \code{x} with the named slot replaced by \code{value}.
 }
 }

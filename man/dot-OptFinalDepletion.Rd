@@ -4,10 +4,14 @@
 \alias{.OptFinalDepletion}
 \title{Optimize Catchability to Match Final Depletion}
 \usage{
-.OptFinalDepletion(Hist, silent = FALSE)
+.OptFinalDepletion(Hist, parallel = FALSE, silent = FALSE)
 }
 \arguments{
 \item{Hist}{A \code{Hist} object.}
+
+\item{parallel}{Logical; if \code{TRUE}, optimizes catchability across
+simulations in parallel using a \code{future} plan established by
+\code{\link[=SetupParallel]{SetupParallel()}}. Default \code{FALSE}.}
 
 \item{silent}{Logical; if \code{TRUE}, suppress progress output.
 

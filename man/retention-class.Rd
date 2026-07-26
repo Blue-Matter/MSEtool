@@ -42,6 +42,13 @@ Bin \code{k} spans \verb{[Classes[k], Classes[k+1])}; the final bin is open-ende
 Values in \code{MeanAtLength}/\code{MeanAtWeight} are evaluated at bin midpoints,
 not at these lower bounds.}
 
+\item{\code{isAtLength}}{\code{logical}. Whether \code{MeanAtLength}/\code{MeanAtWeight} reflect a
+genuinely length- (or weight-) retention schedule, as opposed to a
+one derived from an age-only schedule (e.g. via the age-length
+key). Controls whether fleet weight-at-age calculations
+(\code{WeightFleetRetained}) weight by this object's at-length schedule or
+fall back to the stock's plain weight-at-age. Default \code{TRUE}.}
+
 \item{\code{Misc}}{\code{list}. Miscellaneous additional inputs. For internal use.}
 }}
 

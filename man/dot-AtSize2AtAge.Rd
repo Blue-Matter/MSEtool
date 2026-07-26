@@ -4,7 +4,7 @@
 \alias{.AtSize2AtAge}
 \title{Convert Mean-at-Size to Mean-at-Age}
 \usage{
-.AtSize2AtAge(object, Length, max1 = FALSE)
+.AtSize2AtAge(object, Length, max1 = FALSE, allow_shortcut = TRUE)
 }
 \arguments{
 \item{object}{An S4 object with slots \code{MeanAtLength} or \code{MeanAtWeight}
@@ -17,6 +17,11 @@ slot (array: \verb{Sim × Age × Class × Year}).}
 \item{max1}{Logical. If \code{TRUE}, forces \code{max(MeanAtAge) == 1} via
 \code{.CheckSelectivityMaximum}, correcting cases where selectivity-at-length
 produces an apical selectivity-at-age below 1. Default \code{FALSE}.}
+
+\item{allow_shortcut}{Logical. If \code{TRUE} (default), skips the age-length-key
+math and fills \code{MeanAtAge} with a constant \code{1} (or \code{tiny}) when
+\code{MeanAtSize} is uniformly ~1 (or ~0). Valid only for proportion values
+like selectivity/retention.}
 }
 \value{
 \code{object} with \code{object@MeanAtAge} populated.

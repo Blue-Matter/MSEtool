@@ -13,6 +13,7 @@ Retention(
   MeanAtWeight = NULL,
   Classes = NULL,
   isRel = FALSE,
+  isAtLength = TRUE,
   Misc = list()
 )
 
@@ -62,6 +63,14 @@ corresponding to the second dimension of \code{MeanAtLength} or
 (\code{L50}) of the paired stock rather than absolute length values. A
 \code{\link[=Maturity]{Maturity()}} object must be available to \code{\link[=PopulateRetention]{PopulateRetention()}} for
 scaling to occur. Default \code{FALSE}.}
+
+\item{isAtLength}{Logical. Whether \code{MeanAtLength}/\code{MeanAtWeight} (or an
+at-length/at-weight \code{Model}) reflect a genuinely length- or weight-
+retention schedule. Set \code{FALSE} when retention is only meaningfully
+defined at age (e.g. imported from an age-structured assessment) so that
+fleet weight-at-age calculations skip weighting by this object's at-length
+schedule and use the stock's plain weight-at-age
+instead. Default \code{TRUE}.}
 
 \item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
 

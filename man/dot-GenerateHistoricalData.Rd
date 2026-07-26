@@ -4,10 +4,14 @@
 \alias{.GenerateHistoricalData}
 \title{Generate Historical Fishery Data}
 \usage{
-.GenerateHistoricalData(Hist, silent = FALSE)
+.GenerateHistoricalData(Hist, parallel = FALSE, silent = FALSE)
 }
 \arguments{
 \item{Hist}{\code{Hist} object populated with historical fishery dynamics}
+
+\item{parallel}{Logical; if \code{TRUE}, generates data across simulations in
+parallel using a \code{future} plan established by \code{\link[=SetupParallel]{SetupParallel()}}.
+Default \code{FALSE}.}
 
 \item{silent}{Logical; if \code{TRUE}, suppress progress bars and status messages}
 }

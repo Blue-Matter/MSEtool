@@ -13,7 +13,8 @@
   nTS,
   nArea = 1,
   bySim = TRUE,
-  byArea = FALSE
+  byArea = FALSE,
+  allow_shortcut = TRUE
 )
 }
 \arguments{
@@ -38,6 +39,12 @@ If \code{FALSE}, uses slice 1 for all simulations.}
 
 \item{byArea}{Logical. If \code{TRUE}, loops over areas using a 4-D
 \code{MeanAtSize}. Default \code{FALSE}.}
+
+\item{allow_shortcut}{Logical. If \code{TRUE} (default), collapses a
+fully-saturated (all \verb{> 0.99}) at-size slice to a constant \code{1}
+at-age value instead of computing the ALK-weighted sum -- valid only
+for proportion-valued objects (selectivity/retention). Must be \code{FALSE}
+for magnitude-valued objects (e.g. weight).}
 }
 \value{
 \code{MeanAtAge} array with all values filled.

@@ -40,8 +40,9 @@ the active parallel plan.}
 All three functions invisibly return a logical scalar:
 \itemize{
 \item \code{SetupParallel()} and \code{DisableParallel()} return \code{TRUE}
-\item \code{CheckParallel()} returns the value of \code{parallel} if a valid plan is
-active, or \code{FALSE} if no parallel plan is detected
+\item \code{CheckParallel()} returns \code{FALSE} if \code{parallel = FALSE}, \code{TRUE} if
+\code{parallel = TRUE} and a parallel plan is active, and throws an error
+if \code{parallel = TRUE} but no parallel plan is active
 }
 }
 \description{

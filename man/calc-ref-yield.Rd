@@ -9,6 +9,7 @@
   Hist,
   type = c("Landings", "Removals"),
   Units = c("Biomass", "Number"),
+  parallel = FALSE,
   silent = FALSE
 )
 }
@@ -18,6 +19,10 @@
 \item{type}{Character vector; one or both of \code{Landings} and \code{Removals}}
 
 \item{Units}{Character; either \code{Biomass} or \code{Number}}
+
+\item{parallel}{Logical; if \code{TRUE}, optimizes reference yield across
+simulations in parallel using a \code{future} plan established by
+\code{\link[=SetupParallel]{SetupParallel()}}. Default \code{FALSE}.}
 
 \item{silent}{Logical; if \code{TRUE}, suppress progress bars}
 }

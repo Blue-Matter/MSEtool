@@ -13,7 +13,11 @@ ManagementScheduleTable(
 )
 }
 \arguments{
-\item{FirstYear}{Numeric. First implementation year (the first management year).}
+\item{FirstYear}{Numeric, or an \link[=om-class]{om} object. If numeric, the first
+implementation year (the first management year). If an \code{om} object,
+\code{FirstYear}, \code{DataLag}, and \code{Interval} are derived from it (\code{MPStartYear}
+if set, otherwise \code{CurrentYear + 1}; \code{\link[=DataLag]{DataLag()}}; and \code{\link[=Interval]{Interval()}}),
+and the corresponding arguments below are ignored.}
 
 \item{DataLag}{Numeric. Years of data lag applied at each management year.}
 
