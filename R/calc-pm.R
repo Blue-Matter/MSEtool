@@ -3,23 +3,9 @@
 #' `PM_*` functions evaluate a performance metric against an [mse-class]
 #' object, or a `list` of [mse-class] objects (combined via [CombineMSE()]
 #' before calculation, so simulations from every list element are pooled
-#' and treated as one ensemble). All `PM_*` functions operate on the
+#' and treated as one analysis). All `PM_*` functions operate on the
 #' projection period only.
 #'
-#' Building-block PMs (`PM_FFMSY`, `PM_SBSBMSY`, `PM_SBSBlim`, `PM_Yield`,
-#' `PM_AAVY`, `PM_AAVE`) return a [pm-class] object with `Prob`/`Mean`
-#' populated whenever a reference/threshold is available (so `Prob`/`Mean`
-#' always read higher-is-better); `PM_Yield`, `PM_AAVY`, and `PM_AAVE` have no
-#' natural threshold on their own, so `Prob`/`Mean` are `NA` -- only `Stat` is
-#' meaningful for those. Objective-level PMs (`PM_Status`, `PM_Safety`,
-#' `PM_Rebuild`, `PM_RelYield` with `Ref` supplied, `PM_Stability`) always
-#' populate `Prob`/`Mean`.
-#'
-#' PMs involving spawning biomass/production (`PM_SBSBMSY`, `PM_SBSBlim`,
-#' `PM_Safety`, `PM_Status`, `PM_Rebuild`) automatically restrict to the
-#' spawning ("female") stock(s) of each sex-structured complex, identified by
-#' stock name (see `.FemaleStockNames()`) with a fallback to each stock's
-#' `SRR@SPFrom` self-reference where the name match is ambiguous.
 #'
 #' Yield-based PMs (`PM_Yield`, `PM_RelYield`, `PM_AAVY`) sum landings+discards
 #' over the stocks in each `OM@Complexes` group by default; pass `Stocks` to
@@ -28,6 +14,7 @@
 #' `PM_FFMSY` and `PM_Status` are evaluated at the *complex* level
 #' (`OM@Complexes`), not per stock, because `FMSY` is a single value
 #' optimised jointly across a complex's member stocks (see [F_FMSY()]).
+#' 
 #' `PM_Status` sums `SB`/`SBMSY` across each complex's spawning stock(s)
 #' before dividing, so both sides of the joint SB/F test are assessed at the
 #' same aggregation level rather than pairing a per-stock SB ratio with an
@@ -47,8 +34,6 @@
 #' @name PM
 NULL
 
-# ---- Shared internals -------------------------------------------------------
-
 .CoercePMInput <- function(object, silent = TRUE) {
   if (is.list(object) && !isS4(object))
     object <- CombineMSE(object, silent = silent)
@@ -56,7 +41,6 @@ NULL
   object
 }
 
-# Long-format Sim x <group_col> x MP array, averaging `valcol` over Year.
 .PMArray <- function(df, valcol, group_col = 'Stock') {
   agg <- df |>
     dplyr::group_by(.data$Sim, .data[[group_col]], .data$MP) |>
@@ -86,9 +70,6 @@ NULL
   out
 }
 
-# Build a `pm` object from a long-format data.frame with Sim/<group>/Year/MP/Value(/Period).
-# `op` compares Value against Ref (must return TRUE = good outcome); NULL means
-# the PM has no natural threshold, so Prob/Mean are left NA.
 .BuildPM <- function(df, Ref, Years, op, Name, Caption, group_col = 'Stock') {
   if ('Period' %in% names(df))
     df <- df[df$Period == 'Projection', ]
@@ -131,10 +112,6 @@ NULL
 }
 
 # Identify the spawning ("female") stock in each sex-structured complex.
-# Primary signal: stock name containing "female" (matches the convention
-# already used by PlotSBiomass()/PlotSProduction() -- see .FemaleStockNames()
-# in plot-hist.R). Falls back to SRR@SPFrom self-reference when a complex has
-# more than one stock and the name match is ambiguous.
 .SpawningStockNames <- function(OM) {
   stockNms <- StockNames(OM)
   if (length(stockNms) <= 1)
@@ -188,8 +165,7 @@ NULL
   grp
 }
 
-# Subset an array's `Stock` dimension to `keep` (by name), preserving all
-# other dimensions.
+
 .FilterStockDim <- function(arr, keep) {
   dn        <- dimnames(arr)
   stock_pos <- match('Stock', names(dn))
@@ -234,9 +210,7 @@ NULL
     dplyr::mutate(Stock = 'All')
 }
 
-# Average annual variability: |Value[t] - Value[t-1]| / Value[t-1], computed
-# on whatever set of years/timesteps is already in `df` (e.g. management
-# intervals only, via .GroupedRemovals(..., ManagementOnly = TRUE)).
+
 .AAV <- function(df, group_col = 'Stock') {
   df |>
     dplyr::arrange(.data$Sim, .data[[group_col]], .data$MP, .data$Year) |>
@@ -277,8 +251,6 @@ PM_Status <- function(object, Years = NULL, silent = TRUE) {
   object <- .CoercePMInput(object, silent)
   spawn_stocks <- .SpawningStockNames(object@OM)
 
-  # Both sides evaluated at the complex level, since FMSY is only ever
-  # defined per complex (see F_FMSY()).
   sb_arr    <- .FilterStockDim(object@SBiomass, spawn_stocks)
   sbmsy_arr <- .FilterStockDim(SBMSY(object), spawn_stocks)
 
@@ -318,7 +290,7 @@ class(PM_Status) <- 'pm'
 #' @export
 PM_SBSBlim <- function(object, Blim, Years = NULL, silent = TRUE) {
   if (missing(Blim) || is.null(Blim))
-    cli::cli_abort("`Blim` must be supplied -- there is no package default limit reference point.")
+    cli::cli_abort("`Blim` must be supplied.")
   object <- .CoercePMInput(object, silent)
 
   df <- SBiomass(object, df = TRUE, Reduce = FALSE)
@@ -334,7 +306,7 @@ class(PM_SBSBlim) <- 'pm'
 #' @export
 PM_Safety <- function(object, Blim, Years = NULL, silent = TRUE) {
   if (missing(Blim) || is.null(Blim))
-    cli::cli_abort("`Blim` must be supplied -- there is no package default limit reference point.")
+    cli::cli_abort("`Blim` must be supplied.")
   object <- .CoercePMInput(object, silent)
 
   df <- SBiomass(object, df = TRUE, Reduce = FALSE)
