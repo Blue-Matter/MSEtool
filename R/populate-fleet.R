@@ -134,6 +134,8 @@ PopulateFleet <- function(Fleet,
     DiscardMortality = Fleet@DiscardMortality,
     Ages = Ages,
     Length = Length,
+    Selectivity = Fleet@Selectivity,
+    Retention = Fleet@Retention,
     nSim = nSim,
     Years = Years,
     nArea = nArea,
@@ -205,10 +207,10 @@ PopulateFleet <- function(Fleet,
 
   if (is.null(Length@ALK)) return(fallback)
 
+  if (identical(Selectivity@isAtLength, FALSE)) return(fallback)
+  if (!is.null(Retention) && identical(Retention@isAtLength, FALSE)) return(fallback)
+
   if (is.null(Weight@MeanAtLength)) {
-    # Prefer evaluating the weight-length model directly at each length
-    # class; only fall back to the (lossy, round-tripped) ALK-based
-    # back-projection from MeanAtAge if the model has no Length argument.
     Years <- as.numeric(dimnames(Weight@MeanAtAge)$Year)
     Weight <- .PopulateMeanAtLength(Weight, Length = Length, Years = Years)
   }
