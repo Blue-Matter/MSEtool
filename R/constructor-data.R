@@ -10,7 +10,9 @@
 #' @param CV `array` or `NULL`. Coefficients of variation for the catch
 #'   observations, matching the dimensions of `Value`. Default `NULL`.
 #' @param Units `character` or `NULL`. Units of catch measurement, one element
-#'   per fleet (e.g., `"t"` for tonnes, `"numbers"`). Default `NULL`.
+#'   per fleet: `"Biomass"` or `"Number"`. Default `NULL`. TAC is always set
+#'   in units of `"Biomass"`; see [CheckCatch()] for the consequences of
+#'   supplying any other value.
 #' @param Ref `array` or `NULL`. Reference catch values (e.g., a historical
 #'   baseline), matching the dimensions of `Value`. Default `NULL`.
 #' @param RefCV `array` or `NULL`. Coefficients of variation for the reference
@@ -53,7 +55,7 @@
 #' cd <- CatchData(Name  = fleets,
 #'                 Value = val,
 #'                 CV    = array(0.1, dim = dim(val), dimnames = dimnames(val)),
-#'                 Units = c("t", "t"))
+#'                 Units = c("Biomass", "Biomass"))
 #'
 #' @export
 CatchData <- function(Name  = NULL,
@@ -255,8 +257,8 @@ EffortData <- function(Name  = NULL,
 #'   `[nYear x nIndex]`. Default `NULL`.
 #' @param CV `array` or `NULL`. Coefficients of variation for the index
 #'   observations, matching the dimensions of `Value`. Default `NULL`.
-#' @param Units `character` or `NULL`. Units of the index (e.g., `"kg/trip"`,
-#'   `"numbers/tow"`). Default `NULL`.
+#' @param Units `character` or `NULL`. Units of the index: `"Biomass"`,
+#'   `"Number"`, or `"Recruitment"`. Default `NULL`.
 #' @param Ref `numeric` or `NULL`. Reference value for each index (e.g., a
 #'   historical mean or target level), length `nIndex`. Default `NULL`.
 #' @param RefCV `array` or `NULL`. Coefficients of variation for the reference
@@ -304,7 +306,7 @@ EffortData <- function(Name  = NULL,
 #' id <- IndicesData(Name  = "Survey1",
 #'                   Value = val,
 #'                   CV    = array(0.2, dim = dim(val), dimnames = dimnames(val)),
-#'                   Units = "kg/tow")
+#'                   Units = "Biomass")
 #'
 #' @export
 IndicesData <- function(Name        = NULL,
