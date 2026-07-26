@@ -7,28 +7,31 @@
 #' optimization is not yet supported.
 #'
 #' @param Hist A `Hist` object.
+#' @param parallel Logical; if `TRUE`, optimizes catchability across
+#'   simulations in parallel using a `future` plan established by
+#'   [SetupParallel()]. Default `FALSE`.
 #' @param silent Logical; if `TRUE`, suppress progress output.
 #'
 #' The function loops over all simulations (`nSim`) in `Hist` and performs
 #' numeric optimization to scale the initial catchability to achieve the
 #' desired final depletion specified in `Stock@Depletion@Final`.
-#' 
+#'
 #' Uses `stats::optimize` with a fallback to `nlminb` if results are
-#' near bounds. 
-#' 
+#' near bounds.
+#'
 #' Currently, only single-stock and single-fleet scenarios
 #' are supported.
-#' 
+#'
 #' @return A modified [Hist()] object with optimized `Catchability@Efficiency`
 #'   in each fleet of the operating model.
-#' 
+#'
 #' @keywords internal
-.OptFinalDepletion <- function(Hist, silent=FALSE) {
-  
+.OptFinalDepletion <- function(Hist, parallel=FALSE, silent=FALSE) {
+
   FinalDepletion <- purrr::map(Hist@OM@Stock, \(stock) {
     stock@Depletion@Final
-  }) 
-  
+  })
+
   if (!length(unlist(FinalDepletion)))  return(Hist)
 
   Hist@OM <- .CheckCatchFrac(Hist@OM)
@@ -38,13 +41,25 @@
   nSim <- Hist@OM@nSim
   nArea <- nArea(Hist)
   YearsHist <- Years(Hist@OM, 'Historical')
-  
+
   # List length nSim, each with a Hist object with 1 sim
   HistSim_List <- lapply(seq_len(nSim), function(i) Subset(Hist, i))
-  
+
   # HistSim <- HistSim_List[[1]] # for debugging
-  
-  opt_q <- if (silent) {
+
+  parallel <- CheckParallel(parallel)
+
+  opt_q <- if (parallel) {
+    CheckPackage('furrr')
+    furrr::future_map(
+      HistSim_List, .OptFinalDepletionSim, nStock, nFleet, nArea, YearsHist,
+      .options = furrr::furrr_options(
+        globals  = c('nStock', 'nFleet', 'nArea', 'YearsHist'),
+        packages = "MSEtool",
+        seed     = 101
+      )
+    )
+  } else if (silent) {
     lapply(HistSim_List, .OptFinalDepletionSim, nStock, nFleet, nArea, YearsHist)
   } else {
     purrr::map(HistSim_List, \(HistSim) {
@@ -52,9 +67,9 @@
     }, .progress = list(
       type = "iterator",
       format = "Optimizing catchability (q) for Final Depletion {cli::pb_bar} {cli::pb_percent}",
-      clear = TRUE))  
+      clear = TRUE))
   }
-  
+
   
   # Update Hist object
   for (s in seq_along(opt_q)) {
