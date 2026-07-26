@@ -258,6 +258,7 @@ PM_FFMSY <- function(object, Ref = 1, Years = NULL, silent = TRUE) {
   .BuildPM(df, Ref = Ref, Years = Years, op = `<`,
            Name = 'F_FMSY', Caption = paste0('P(F < ', Ref, ' FMSY)'))
 }
+class(PM_FFMSY) <- 'pm'
 
 #' @rdname PM
 #' @export
@@ -268,6 +269,7 @@ PM_SBSBMSY <- function(object, Ref = 1, Years = NULL, silent = TRUE) {
   .BuildPM(df, Ref = Ref, Years = Years, op = `>`,
            Name = 'SB_SBMSY', Caption = paste0('P(SB > ', Ref, ' SBMSY)'))
 }
+class(PM_SBSBMSY) <- 'pm'
 
 #' @rdname PM
 #' @export
@@ -308,6 +310,7 @@ PM_Status <- function(object, Years = NULL, silent = TRUE) {
   .BuildPM(joined, Ref = 1, Years = NULL, op = \(x, r) x >= r,
            Name = 'Status', Caption = 'P(SB > SBMSY & F < FMSY), complex-level')
 }
+class(PM_Status) <- 'pm'
 
 # ---- Safety: limit reference points ----------------------------------------
 
@@ -325,6 +328,7 @@ PM_SBSBlim <- function(object, Blim, Years = NULL, silent = TRUE) {
   .BuildPM(df, Ref = 1, Years = Years, op = `>`,
            Name = 'SB_SBlim', Caption = 'P(SB > SBlim)')
 }
+class(PM_SBSBlim) <- 'pm'
 
 #' @rdname PM
 #' @export
@@ -354,6 +358,7 @@ PM_Safety <- function(object, Blim, Years = NULL, silent = TRUE) {
                Stat = StatArr, Ref = NA_real_, Prob = ProbArr, Mean = MeanArr,
                MPs = sort(unique(df$MP)), Years = YearsOut)
 }
+class(PM_Safety) <- 'pm'
 
 #' @rdname PM
 #' @export
@@ -381,6 +386,7 @@ PM_Rebuild <- function(object, Year, Target = 1, silent = TRUE) {
   .BuildPM(target_df, Ref = 1, Years = Year, op = `>`,
            Name = 'Rebuild', Caption = paste0('P(SB > ', Target, ' SBMSY by ', Year, ')'))
 }
+class(PM_Rebuild) <- 'pm'
 
 # ---- Yield ------------------------------------------------------------------
 
@@ -392,6 +398,7 @@ PM_Yield <- function(object, Years = NULL, Stocks = NULL, silent = TRUE) {
   .BuildPM(df, Ref = NA_real_, Years = Years, op = NULL,
            Name = 'Yield', Caption = 'Mean projected yield')
 }
+class(PM_Yield) <- 'pm'
 
 #' @rdname PM
 #' @export
@@ -418,6 +425,7 @@ PM_RelYield <- function(object, Ref = NULL, Years = NULL, Stocks = NULL, silent 
   .BuildPM(df, Ref = Ref, Years = Years, op = op,
            Name = 'RelYield', Caption = 'Yield relative to MSY yield')
 }
+class(PM_RelYield) <- 'pm'
 
 # ---- Stability ----------------------------------------------------------------
 
@@ -432,6 +440,7 @@ PM_AAVY <- function(object, Years = NULL, Stocks = NULL, silent = TRUE) {
   .BuildPM(aav, Ref = NA_real_, Years = NULL, op = NULL,
            Name = 'AAVY', Caption = 'Average annual variability in yield across management intervals')
 }
+class(PM_AAVY) <- 'pm'
 
 #' @rdname PM
 #' @export
@@ -444,6 +453,7 @@ PM_AAVE <- function(object, Years = NULL, Fleets = NULL, silent = TRUE) {
   .BuildPM(aav, Ref = NA_real_, Years = NULL, op = NULL,
            Name = 'AAVE', Caption = 'Average annual variability in effort across management intervals')
 }
+class(PM_AAVE) <- 'pm'
 
 #' @rdname PM
 #' @export
@@ -458,3 +468,4 @@ PM_Stability <- function(object, Threshold, Years = NULL, Stocks = NULL, silent 
   .BuildPM(aav, Ref = Threshold, Years = NULL, op = `<`,
            Name = 'Stability', Caption = paste0('P(AAVY < ', Threshold, ')'))
 }
+class(PM_Stability) <- 'pm'

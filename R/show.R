@@ -39,6 +39,7 @@
 #' @aliases show,refpointsMSY-method
 #' @aliases show,equilibrium-method
 #' @aliases show,stocktargeting-method
+#' @aliases show,pm-method
 #' @exportMethod show
 NULL
 
@@ -795,4 +796,31 @@ setMethod('show', 'stocktargeting', function(object) {
 
 setMethod('show', 'popdynamics', function(object) {
   .ShowObject(object, 'popdynamics')
+})
+
+
+setMethod('show', 'pm', function(object) {
+  cli::cli_h2("A {.help MSEtool::pm-class} Object")
+
+  .ShowSlot(object, 'Name')
+  .ShowSlot(object, 'Caption')
+
+  if (!all(is.na(object@Ref)))
+    .ShowSlot(object, 'Ref')
+
+  cli::cli_text("`MPs`: {.val {object@MPs}}")
+
+  if (length(object@Years))
+    cli::cli_text("`Years`: {.val {paste(range(object@Years), collapse = ' - ')} ({length(object@Years)})}")
+
+  cli::cli_text("")
+
+  Mean <- object@Mean
+  if (length(Mean) && !all(is.na(Mean))) {
+    group_nm <- names(dimnames(Mean))[1]
+    if (is.null(group_nm))
+      group_nm <- 'Stock'
+    cli::cli_text("{.strong {group_nm} x MP} mean:")
+    print(round(Mean, 3))
+  }
 })
