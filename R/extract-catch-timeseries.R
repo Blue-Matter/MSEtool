@@ -80,8 +80,11 @@
 #'   (`Interactions`, `Landings`, or `Discards`).
 #' - For [hist-class] or [mse-class] with `df = TRUE`: a tidy `data.frame`
 #'   with columns `Sim`, `Stock`, `Year`, `Period`, `MP` (MSE only), and
-#'   optionally `Age`, `Size`, `Area`, and/or `Fleet`, plus `Value` and
-#'   `Variable`.
+#'   optionally `Age`, `Size`, `Area`, and/or `Fleet`, plus `Value`,
+#'   `Variable`, and `Units`. `Units` is a biomass unit label (e.g. `"kg"`,
+#'   `"t"`) when the values are in units of biomass, or the stock's
+#'   `SRR@Units` scaling factor (e.g. `1`, `1000`) when the values are in
+#'   units of numbers (see Details).
 #' - Assignment forms return `x` with the named slot replaced by `value`.
 #'
 #' @example man-examples/catch_timeseries.R
@@ -304,6 +307,11 @@ Removals <- function(object,
   out
 }
 
+.GetNumberUnits <- function(OM) {
+  labels <- purrr::map_dbl(OM@Stock, \(stock) stock@SRR@Units)
+  data.frame(Stock = names(labels), Units = unname(labels), stringsAsFactors = FALSE)
+}
+
 .ExtractCatchTimeseriesCore <- function(object,
                                       OM        = NULL,
                                       slot_name = 'Interactions',
@@ -314,7 +322,7 @@ Removals <- function(object,
                                       Reduce    = TRUE,
                                       IncYear   = FALSE) {
   isMSE <- inherits(object, 'mse')
-  
+
   if (byAge || byArea || bySize) {
     
     if (bySize) {
@@ -366,23 +374,31 @@ Removals <- function(object,
         dplyr::bind_rows(.id = "Stock")
     }
     
+    units <- .GetNumberUnits(OM)
     return(
       df |>
         dplyr::mutate(Variable = slot_name,
                       Period   = ifelse(isMSE, 'Projection', 'Historical')) |>
         dplyr::relocate('Sim', 'Stock', 'Year', 'Period') |>
+        dplyr::left_join(units, by = 'Stock') |>
         dplyr::arrange(Sim, Stock, Year)
     )
   }
-  
+
   array <- slot(object, slot_name)
   if (!byFleet) array <- SumOverFleet(array)
   if (Reduce)   array <- ReduceDims(array, IncYear = IncYear)
-  
+
+  units <- if (slot_name %in% c('Landings', 'Discards'))
+    .GetUnits(OM, 'Biomass') else .GetNumberUnits(OM)
+
   Array2DF(array) |>
     dplyr::mutate(Variable = slot_name,
-                  Period   = ifelse(isMSE, 'Projection', 'Historical')) |>
-    dplyr::relocate('Sim', 'Stock', 'Year', 'Period')
+                  Period   = ifelse(isMSE, 'Projection', 'Historical'),
+                  Stock    = as.character(Stock)) |>
+    dplyr::relocate('Sim', 'Stock', 'Year', 'Period') |>
+    dplyr::left_join(units, by = 'Stock') |>
+    dplyr::mutate(Stock = .MakeFactor(Stock))
 }
 
 # Sums a stock's per-fleet size-structured arrays (`Sim x Class x Year x
