@@ -56,8 +56,9 @@
 #'
 #' @return All three functions invisibly return a logical scalar:
 #'   - `SetupParallel()` and `DisableParallel()` return `TRUE`
-#'   - `CheckParallel()` returns the value of `parallel` if a valid plan is
-#'     active, or `FALSE` if no parallel plan is detected
+#'   - `CheckParallel()` returns `FALSE` if `parallel = FALSE`, `TRUE` if
+#'     `parallel = TRUE` and a parallel plan is active, and throws an error
+#'     if `parallel = TRUE` but no parallel plan is active
 #'     
 #'     
 #' @examples
@@ -111,19 +112,15 @@ DisableParallel <- function(silent=FALSE) {
 CheckParallel <- function(parallel) {
   if (!parallel)
     return(FALSE)
-  
+
   if (inherits(future::plan(), "sequential")) {
-    cli::cli_alert_warning(
-      "{.val parallel = TRUE} requested but no parallel `future` plan is active."
-    )
-    cli::cli_inform(c(
-      "i" = "Initialise a parallel plan first, e.g.:",
-      " " = "{.code SetupParallel(workers = 4)}",
-      "i" = "Running sequentially instead."
+    cli::cli_abort(c(
+      "{.val parallel = TRUE} requested but no parallel {.pkg future} plan is active.",
+      "i" = "Initialise a parallel plan first, e.g. {.code SetupParallel(workers = 4)},",
+      "i" = "or pass {.code parallel = FALSE} to run sequentially."
     ))
-    return(FALSE)
   }
-  
+
   parallel
 }
 
