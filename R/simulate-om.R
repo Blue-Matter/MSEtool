@@ -43,11 +43,6 @@
 
   Hist <- .OptFinalDepletion(Hist, silent = silent)
 
-  # TODO - check that depletion converged on specified values
-
-  # TODO - add options for MSY type and years
-
-  # TODO Add Reference Points if they ae passed in via OM
   Hist@Reference@SPR0 <- CalcSPR0(Hist)
 
   if (!is.null(refpointsMSY)) {
@@ -89,16 +84,11 @@
   if (control$GenerateData)
     Hist <- .GenerateHistoricalData(Hist, silent=silent)
 
-  # Requires generated Data (uses Project() internally), so calculated after
-  # historical fishery data are available.
   if (control$BLow)
     Hist <- CalcBLow(Hist, silent = silent)
 
-  # Add Simulation Number to Data@Misc
   Hist <- .AddSimNumber(Hist)
-
   Hist <- .CheckAllocation(Hist)
-
   Hist <- .ReduceHist(Hist, Reduce)
 
   EndTime <- Sys.time()
@@ -115,16 +105,3 @@
   .SetDigest(Hist)
 }
 
-
-# GetRefPointYears <- function(OM, HistYears) {
-#   return(utils::tail(HistYears, 1))
-#
-#   # TODO - calculate ref points for seasonal time steps
-#
-#   HistYears <- Years(OM, "Historical")
-#   RefPointYears <- OM@Control$RefPointYears
-#   if (is.null(RefPointYears)) {
-#     RefPointYears <- utils::tail(HistYears, OM@Seasons)
-#   }
-#   RefPointYears
-# }
