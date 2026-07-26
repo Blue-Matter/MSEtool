@@ -114,9 +114,7 @@
     # Convert relative fleets to absolute
     Advice <- .ConvertEffortAbs(Proj, sim, Advice, YearsHist, nFleet)
 
-    # Apply Imp@Effort@Error implementation-error multiplier (see
-    # .ApplyImplementationError()), unless Effort is a Fleet x Area matrix
-    # (area distribution handles its own units below).
+    # Apply Imp@Effort@Error implementation-error 
     if (!is.array(Advice@Effort) || length(dim(Advice@Effort)) == 1) {
       complex_name <- names(Complexes)[i]
       wrapped <- .ApplyImplementationError(
@@ -142,40 +140,23 @@
   if (!any(effort_exists))
     return(Proj)
 
-  # Determine minimum effort across complexes WITH Effort advice, per fleet.
-  # Complexes with no Effort advice (e.g. TAC-only) are excluded here -
-  # List2Array() cannot handle a NULL entry mixed in with valid arrays/
-  # vectors: a NULL *first* entry silently yields a 0-row array (which
-  # then corrupts Proj@Effort with NA for every fleet), while a NULL entry
-  # *after* a valid one throws a hard "dimensions must match" error that
-  # aborts the whole MP run for that year.
+  # Determine minimum effort across complexes with existing Effort advice, per fleet.
   effort_idx      <- which(effort_exists)
-  EffortArray     <- purrr::map(AdviceList[effort_idx], slot, "Effort") |> List2Array('Stock') # nFleet x n(effort complexes)
+  EffortArray     <- purrr::map(AdviceList[effort_idx], slot, "Effort") |> List2Array('Stock') 
 
-  # Imp@Effort@Compliance < 1 lets a fleet exceed a complex's effort ceiling
-  # rather than always taking the strict minimum across complexes: the
-  # ceiling is inflated by 1/Compliance before comparison (Compliance = 1,
-  # the default, reproduces today's exact strict-minimum behaviour).
-  # Compliance -> 0 means the fleet doesn't reconcile toward this complex's
-  # effort limit at all, so the ceiling should approach unconstrained -- the
-  # inflation is capped at 1000x (matching .ResolveOvershootPenalty()'s TAC-
-  # side cap) rather than diverging to Inf, which would otherwise propagate
-  # into Proj@Effort.
   Compliance    <- .ResolveComplianceMatrix(Proj, FleetNames, names(Complexes)[effort_idx], sim, Year, 'Effort')
   EffectiveArray <- EffortArray
   compset <- !is.na(Compliance)
   EffectiveArray[compset] <- EffortArray[compset] / pmax(Compliance[compset], 1e-3)
 
-  MinEffortInd    <- apply(EffectiveArray, 1, which.min) |> as.numeric()  # position within effort_idx with lowest effective effort per fleet
+  MinEffortInd    <- apply(EffectiveArray, 1, which.min) |> as.numeric() 
   MinEffortValues <- EffectiveArray[cbind(seq_len(nrow(EffectiveArray)), MinEffortInd)]
-  MinEffortInd    <- effort_idx[MinEffortInd]  # map back to original complex index, for Distribution below
+  MinEffortInd    <- effort_idx[MinEffortInd]  
 
   Proj@Effort[sim, ProjInd, ] <- matrix(MinEffortValues,
                                         nrow  = length(ProjInd),
                                         ncol  = nFleet,
                                         byrow = TRUE)
-
-
 
   # Apply spatial distribution if specified
   # TODO - review indexing for multi-complex spatial effort distribution
@@ -185,20 +166,19 @@
   }
 
   # For multi-stock OMs, (re)optimise this fleet's stock-specific targeting
-  # weights at the now-fixed effort, for the current year only - unlike
-  # Effort itself, Delta is not held forward across ProjInd, since it is
-  # re-solved against that year's actual stock abundance every time this
-  # function runs (every projected year, regardless of MP management
-  # interval - see .ProjectMP()).
+  # weights at the now-fixed effort
   if (isTRUE(Proj@Misc$StockTargetingFlag == 1) && TSIndex > 1) {
     lambda <- .ResolveLambda(Proj, sim, TSIndex, StockNames, FleetNames,
                             lambda_scale, n_recent)
 
+    # Single-sim slice for the repeated fishery-dynamics calls 
+    ProjSim <- .SliceSim(Proj, sim, .DynamicsProbeSlots)
+
     result <- .OptTargetingMultiStock(
-      Proj       = Proj,
+      Proj       = ProjSim,
       Year       = Year,
       TSIndex    = TSIndex,
-      sim        = sim,
+      sim        = 1L,
       StockNames = StockNames,
       FleetNames = FleetNames,
       Effort     = MinEffortValues,
