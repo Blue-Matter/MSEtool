@@ -19,7 +19,7 @@
 #'   R function — see [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html).
 #' @param Units `character(1)`. Physical unit of weight measurements. Must be
 #'   one of the strings returned by [ValidUnits()] (e.g., `"g"`, `"kg"`).
-#'   Default `"g"`.
+#'   Default `"kg"`.
 #' @param MeanAtAge `array` or `NULL`. Mean weight at age with named dimensions
 #'   `Sim × Age × Year`. Supply directly when bypassing the model-based
 #'   approach (`Pars = list()`). Only the years at which values *change* need
@@ -176,7 +176,7 @@
 #' @export
 Weight <- function(Pars = list(),
                    Model = NULL,
-                   Units = "g",
+                   Units = "kg",
                    MeanAtAge = NULL,
                    MeanAtLength = NULL,
                    CVatAge = NULL,
