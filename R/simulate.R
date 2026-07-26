@@ -7,9 +7,12 @@
 #'
 #' @param OM An [om-class] or [OM-legacy-class] object. If `NULL` (default),
 #'   `MSEtool::SingleStockOM` is used.
-#' @param parallel Logical. Use parallel processing for MSY reference point
-#'   calculation (see [CalcMSY()])? Requires a `future` plan established by
-#'   [SetupParallel()]. Only used for [om-class] objects. Default `FALSE`.
+#' @param parallel Logical. Use parallel processing (across simulations) for
+#'   MSY reference point calculation (see [CalcMSY()]), final-depletion
+#'   catchability calibration, reference yield calculation, and historical
+#'   data generation? Requires a `future` plan established by
+#'   [SetupParallel()] -- errors if `TRUE` and no plan is active. Only used
+#'   for [om-class] objects. Default `FALSE`.
 #' @param silent Logical. Suppress progress messages if `TRUE`. Default
 #'   `FALSE`.
 #' @param nSim Integer. Number of simulation replicates. If `NULL` (default),
