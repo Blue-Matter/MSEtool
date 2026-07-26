@@ -47,7 +47,8 @@ SeasonalSpatialExStock <- Stock(
 
   Length = Length(
     Pars    = list(Linf = 30, K = 0.8, t0 = -0.1),
-    CVatAge = 0.1
+    CVatAge = 0.1,
+    Units   = "cm"
   ),
 
   Weight = Weight(
@@ -63,13 +64,14 @@ SeasonalSpatialExStock <- Stock(
   ),
 
   SRR = SRR(
-    Pars = list(h = 0.7),
-    R0   = SetSeasonalR0(AnnualR0   = 1000,
+    Pars  = list(h = 0.7),
+    R0    = SetSeasonalR0(AnnualR0   = 1000,
                          Seasons    = 12,
                          PeakSeason = 6,
                          Sigma      = 1.5),
-    SD   = 0.4,
-    AC   = 0.3
+    SD    = 0.4,
+    AC    = 0.3,
+    Units = 1000
   ),
 
   Spatial = Spatial(

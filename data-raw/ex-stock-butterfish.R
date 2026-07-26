@@ -14,7 +14,8 @@ Length(ButterfishExStock) <- Length(
                   K    = c(0.16, 0.24),
                   t0   = c(-0.032, -0.028)),
   Model    = "vonBert",
-  CVatAge  = c(0.1, 0.15)
+  CVatAge  = c(0.1, 0.15),
+  Units    = "cm"
 )
 
 ## ---- butterfish-create-weight ----
@@ -36,10 +37,11 @@ Maturity(ButterfishExStock) <- Maturity(
 
 ## ---- butterfish-create-srr ----
 SRR(ButterfishExStock) <- SRR(
-  Pars = list(h = c(0.4, 0.8)),
-  R0   = 1000,
-  SD   = c(0.7, 1.1),
-  AC   = c(0.1, 0.9)
+  Pars  = list(h = c(0.4, 0.8)),
+  R0    = 1000,
+  SD    = c(0.7, 1.1),
+  AC    = c(0.1, 0.9),
+  Units = 1000
 )
 
 ## ---- butterfish-create-spatial ----

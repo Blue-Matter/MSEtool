@@ -14,7 +14,8 @@ Length(AlbacoreExStock) <- Length(
                   K    = c(0.16, 0.22),
                   t0   = c(-1.86, -1.41)),
   Model    = "vonBert",
-  CVatAge  = c(0.1, 0.15)
+  CVatAge  = c(0.1, 0.15),
+  Units    = "cm"
 )
 
 ## ---- albacore-create-weight ----
@@ -36,10 +37,11 @@ Maturity(AlbacoreExStock) <- Maturity(
 
 ## ---- albacore-create-srr ----
 SRR(AlbacoreExStock) <- SRR(
-  Pars = list(h = c(0.65, 0.85)),
-  R0   = 1000,
-  SD   = c(0.15, 0.3),
-  AC   = c(0.1, 0.9)
+  Pars  = list(h = c(0.65, 0.85)),
+  R0    = 1000,
+  SD    = c(0.15, 0.3),
+  AC    = c(0.1, 0.9),
+  Units = 1000
 )
 
 ## ---- albacore-create-spatial ----
