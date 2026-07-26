@@ -50,9 +50,7 @@
 }
 
 
-# TODO
-# - add lambda_ascale to Fleet or Imp
-# - add n_recent to OM@Control
+# TODO add n_recent to OM@Control
 
 .UpdateTACSim <- function(Proj, 
                            sim, 
@@ -83,16 +81,6 @@
   TACType_by_Complex <- .ResolveTACTypeByComplex(AdviceList, Complexes, nFleet_loc)
   TACUnit_by_Complex <- .ResolveTACUnitByComplex(AdviceList, Complexes, nFleet_loc)
 
-  # A fleet's effort is only ceiling-constrained by Effort advice if some
-  # complex actually set Effort this year - .UpdateEffort() runs earlier in
-  # the pipeline (see .ProjectMP()) and, if so, has already written the
-  # resolved value into Proj@Effort by this point. Otherwise
-  # Proj@Effort[sim, TSIndex, ] is just whatever was left there previously
-  # (e.g. forward-filled from an earlier year's decision) and must not be
-  # mistaken for a deliberate ceiling - so users can set both TAC and
-  # Effort advice for the same stock/fleet, and whichever is more binding
-  # applies: TAC-solving will never push a fleet's effort above an Effort
-  # advice that was actually set this year.
   HasEffortAdvice <- any(purrr::map_lgl(AdviceList, \(a) {
     inherits(a, 'advice') && !is.null(a@Effort)
   }))
@@ -102,21 +90,25 @@
     rep(NA_real_, nFleet_loc)
   }
 
+  # Single-sim slice for the repeated fishery-dynamics probe calls inside
+  # the optimisers below
+  ProjSim <- .SliceSim(Proj, sim, .DynamicsProbeSlots)
+
   if (nComplex == 1) {
-    
-    Required_Effort <- .OptEffortSinglestock(Proj, 
-                                             Year, 
+
+    Required_Effort <- .OptEffortSinglestock(ProjSim,
+                                             Year,
                                              TSIndex,
-                                             sim, 
+                                             1L,
                                              TAC_by_Complex,
                                              TACType_by_Complex,
                                              TACUnit_by_Complex,
                                              MaxFleetEffort)
-    
+
     Proj@Effort[sim, TSIndex, ] <- Required_Effort
     return(Proj)
   }
-  
+
   # Multi-complex
   Compliance        <- .ResolveComplianceMatrix(Proj, FleetNames, names(Complexes), sim, Year)
   UndershootPenalty <- .ResolveUndershootPenalty(Proj, nFleet_loc, nComplex)
@@ -125,10 +117,10 @@
   lambda            <- .ResolveLambda(Proj, sim, TSIndex, StockNames, FleetNames, lambda_scale, n_recent)
 
   result <- .OptEffortMultiStock(
-    Proj               = Proj,
+    Proj               = ProjSim,
     Year               = Year,
     TSIndex            = TSIndex,
-    sim                = sim,
+    sim                = 1L,
     StockNames         = StockNames,
     FleetNames         = FleetNames,
     TAC_by_Complex     = TAC_by_Complex,
