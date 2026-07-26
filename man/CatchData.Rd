@@ -24,7 +24,9 @@ Default \code{NULL}.}
 observations, matching the dimensions of \code{Value}. Default \code{NULL}.}
 
 \item{Units}{\code{character} or \code{NULL}. Units of catch measurement, one element
-per fleet (e.g., \code{"t"} for tonnes, \code{"numbers"}). Default \code{NULL}.}
+per fleet: \code{"Biomass"} or \code{"Number"}. Default \code{NULL}. TAC is always set
+in units of \code{"Biomass"}; see \code{\link[=CheckCatch]{CheckCatch()}} for the consequences of
+supplying any other value.}
 
 \item{Ref}{\code{array} or \code{NULL}. Reference catch values (e.g., a historical
 baseline), matching the dimensions of \code{Value}. Default \code{NULL}.}
@@ -66,7 +68,7 @@ val <- array(runif(length(yrs) * length(fleets)),
 cd <- CatchData(Name  = fleets,
                 Value = val,
                 CV    = array(0.1, dim = dim(val), dimnames = dimnames(val)),
-                Units = c("t", "t"))
+                Units = c("Biomass", "Biomass"))
 
 }
 \seealso{

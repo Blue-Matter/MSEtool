@@ -25,8 +25,8 @@ IndicesData(
 \item{CV}{\code{array} or \code{NULL}. Coefficients of variation for the index
 observations, matching the dimensions of \code{Value}. Default \code{NULL}.}
 
-\item{Units}{\code{character} or \code{NULL}. Units of the index (e.g., \code{"kg/trip"},
-\code{"numbers/tow"}). Default \code{NULL}.}
+\item{Units}{\code{character} or \code{NULL}. Units of the index: \code{"Biomass"},
+\code{"Number"}, or \code{"Recruitment"}. Default \code{NULL}.}
 
 \item{Ref}{\code{numeric} or \code{NULL}. Reference value for each index (e.g., a
 historical mean or target level), length \code{nIndex}. Default \code{NULL}.}
@@ -76,7 +76,7 @@ val <- array(runif(length(yrs)),
 id <- IndicesData(Name  = "Survey1",
                   Value = val,
                   CV    = array(0.2, dim = dim(val), dimnames = dimnames(val)),
-                  Units = "kg/tow")
+                  Units = "Biomass")
 
 }
 \seealso{
