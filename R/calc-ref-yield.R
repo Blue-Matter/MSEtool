@@ -64,12 +64,16 @@
     for (sim in seq_len(nSim)) {
       baseEffort <- LastHistEffort[sim,, , drop = FALSE]
       RefYield[[sim]] <- vector("numeric", nStock)
-      
+
+      # Single-sim slice for the repeated fishery-dynamics probe calls
+      # inside optimize() below - see .SliceSim() (R/subset.R).
+      ProjSim <- .SliceSim(Proj, sim, .DynamicsProbeSlots)
+
       # Optimize F scalar for this sim
       DoOpt <- optimize(f = function(logScalar) {
         .OptRefYield(logScalar,
-                    Proj = Proj,
-                    sim = sim,
+                    Proj = ProjSim,
+                    sim = 1L,
                     HistYears = HistYears,
                     ProjYears = ProjYears,
                     ProjYearInd = ProjYearInd,
@@ -80,11 +84,11 @@
                     debug = 0,
                     opt = 1)
       }, interval = log(c(1e-5, 10)))
-      
+
       # Get final yield using optimized scalar
       RefYield[[sim]] <- .OptRefYield(DoOpt$minimum,
-                                     Proj = Proj,
-                                     sim = sim,
+                                     Proj = ProjSim,
+                                     sim = 1L,
                                      HistYears = HistYears,
                                      ProjYears = ProjYears,
                                      ProjYearInd = ProjYearInd,
