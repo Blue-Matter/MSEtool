@@ -5,24 +5,31 @@
 #'
 #' @param DiscardMortality A [DiscardMortality()] object to populate.
 #' @param Ages An [Ages()] object defining age classes.
-#' @param Length A [Length()] object. Required if the model depends on 
+#' @param Length A [Length()] object. Required if the model depends on
 #'   length-at-age.
+#' @param Selectivity A populated [Selectivity()] object. Optional, but
+#'   recommended whenever discard mortality is defined at length.
+#'   Ignored if either `Selectivity`
+#'   or `Retention` is unavailable, or either's `isAtLength` is `FALSE`.
+#' @param Retention A populated [Retention()] object. See `Selectivity`.
 #' @param nSim Integer. Number of simulation replicates.
 #' @param Years Numeric vector of model years.
 #' @param nArea Integer. Number of spatial areas.
-#' @param CalcAtLength Logical; if `TRUE`, calculates mean-at-length from 
+#' @param CalcAtLength Logical; if `TRUE`, calculates mean-at-length from
 #'   age-based arrays.
 #' @param seed Integer. Random seed used for stochastic generation.
 #' @param silent Logical; if `TRUE`, suppresses informational messages.
-#' @param force Logical; if `TRUE`, forces re-population even if digest 
+#' @param force Logical; if `TRUE`, forces re-population even if digest
 #'   indicates object is current.
 #' @param replace Used internally.
 #' @param ASKOverride Used internally.
 #' @details
-#' `PopulateDiscardMortality()` handles population of discard mortality at age 
+#' `PopulateDiscardMortality()` handles population of discard mortality at age
 #' and optionally at length. Steps include:
 #'
-#' * Converting mean-at-length to mean-at-age if necessary
+#' * Converting mean-at-length to mean-at-age, weighted by
+#'   `Selectivity x (1 - Retention)` when both are available and length-native
+#'   (see `Selectivity`), otherwise via the plain (unweighted) age-length key
 #' * Calculating mean-at-length from age-based arrays if `CalcAtLength = TRUE`
 #' * Adding an 'Area' dimension and setting dimension names
 #' * Handling empty objects by setting discard mortality to zero
@@ -42,6 +49,8 @@
 PopulateDiscardMortality <- function(DiscardMortality,
                                      Ages = NULL,
                                      Length = NULL,
+                                     Selectivity = NULL,
+                                     Retention = NULL,
                                      nSim = 5,
                                      Years = NULL,
                                      nArea = 1,
@@ -51,8 +60,8 @@ PopulateDiscardMortality <- function(DiscardMortality,
                                      force = FALSE,
                                      replace = FALSE,
                                      ASKOverride = NULL) {
-  
-  argList <- list(Ages, Length, nSim, Years, CalcAtLength, seed)
+
+  argList <- list(Ages, Length, nSim, Years, CalcAtLength, seed, Selectivity, Retention)
   
   Ages  <- DefaultAges(Ages)
   Years <- DefaultYears(Years)
@@ -83,9 +92,29 @@ PopulateDiscardMortality <- function(DiscardMortality,
   }
   
   .SetSeed(seed)
-  
-  DiscardMortality <- .MeanAtLength2MeanAtAge(DiscardMortality, Length)
-  
+
+  # Discard mortality applies only to fish caught and released, so the
+  # length-to-age conversion should be weighted by the length distribution of
+  # the discarded portion of the catch specifically (Selectivity x (1 -
+  # Retention))
+  hasWeighting <- !is.null(Selectivity) && !is.null(Retention) &&
+    !is.null(Selectivity@MeanAtLength) && !is.null(Retention@MeanAtLength) &&
+    !identical(Selectivity@isAtLength, FALSE) && !identical(Retention@isAtLength, FALSE)
+
+  if (is.null(DiscardMortality@MeanAtAge) && !is.null(DiscardMortality@MeanAtLength) && hasWeighting) {
+    sel <- Selectivity@MeanAtLength
+    ret <- Retention@MeanAtLength
+    if ('Area' %in% names(dimnames(sel))) sel <- DropDimension(sel, 'Area', warn = FALSE)
+    if ('Area' %in% names(dimnames(ret))) ret <- DropDimension(ret, 'Area', warn = FALSE)
+
+    Weighting <- Selectivity
+    Weighting@MeanAtLength <- ArrayMultiply(sel, 1 - ret)
+
+    DiscardMortality <- .WeightedAtSize2AtAge(DiscardMortality, Weighting, Length)
+  } else {
+    DiscardMortality <- .MeanAtLength2MeanAtAge(DiscardMortality, Length)
+  }
+
   DiscardMortality <- .AddAtAgeDimnames(DiscardMortality, Ages, Years)
   
   if (CalcAtLength) 
