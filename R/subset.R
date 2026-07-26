@@ -55,6 +55,29 @@ Subset <- function(object,
   object
 }
 
+# Slots `CalcFisheryDynamics_`/`HistView` read (inst/include/hist_view.h),
+# plus what `.CatchMatrix()`
+.DynamicsProbeSlots <- c(
+  "Number", "Biomass", "SBiomass", "SProduction",
+  "Interactions", "Landings", "Discards",
+  "InteractAtAge", "LandingsAtAge", "DiscardsAtAge",
+  "LandingsAtSize", "DiscardsAtSize",
+  "Effort", "Distribution",
+  "FInteract", "FDead", "FRetain",
+  "FInteractArea", "FDeadArea", "FRetainArea",
+  "Misc"
+)
+
+# Slice specific slots of an S4 object down to a single simulation.
+.SliceSim <- function(object, sim, slots) {
+  if (isS4(object) && "OM" %in% slotNames(object) &&
+      "nSim" %in% slotNames(object@OM))
+    object@OM@nSim <- 1L
+  for (s in slots)
+    slot(object, s) <- .SubsetSim(slot(object, s), sim, keep_sim_name = FALSE)
+  object
+}
+
 .MakeDimIndex <- function(i, array, along) {
   nd  <- length(dim(array))
   idx <- vector("list", nd)
