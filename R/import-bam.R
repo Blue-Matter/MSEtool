@@ -521,7 +521,7 @@ ListBAMStocks <- function(type=c('rdat', 'dat')) {
     paste0('wholewgt.lb.', fleet)
   ))
 }
-.
+
 .GetBAMFleetDiscardWeight <- function(BAMdata, fleet, discard_stub) {
   .LookupBAMFleetWeight(BAMdata, c(
     paste0('wholewgt.', fleet, '.D.lb'),
