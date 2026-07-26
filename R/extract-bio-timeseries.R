@@ -194,9 +194,9 @@ SProduction <- function(object,
 
   if (byAge || byArea) {
     
-    number <- Number(object)
-    
-    if (!byArea) 
+    number <- Number(object, df = FALSE)
+
+    if (!byArea)
       number <- purrr::map(number, SumOverArea)
     
     weight <- .GetAtAge(OM, 'Weight', byArea, isMSE, MP_Names)
