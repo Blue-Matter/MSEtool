@@ -78,6 +78,7 @@
 #'   [compdata-class] for the fleet-relative position convention)
 #' - `@Classes`: named list, one numeric vector of size class midpoints per
 #'   fleet
+#' - `@Units`: the stock's `Length@Units` (e.g. `"cm"`), shared by every fleet
 #'
 #' @seealso [CompObs()], [CompData()], [compdata-class], [obs-class],
 #'   [rDirichletMultinomial()], `.GenHistDataAgeComp()`, `.GenHistDataCatch()`
@@ -125,7 +126,7 @@
   Value       <- padded$Value
   ClassesList <- padded$Classes
 
-  # Units <- rep('cm', nFleet)
+  Units <- Hist@OM@Stock[[stocks[1]]]@Length@Units
 
   for (fl in seq_len(nFleet)) {
     nSize <- length(ClassesList[[fl]])
@@ -185,6 +186,6 @@
   CompData@Name    <- FleetNames
   CompData@Value   <- Value
   CompData@Classes <- ClassesList
-  # CompData@Units   <- Units
+  CompData@Units   <- Units
   CompData
 }
