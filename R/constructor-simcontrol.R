@@ -19,10 +19,7 @@
 #'   scales with `nSim`; use `parallel = TRUE` in [Simulate()] for large
 #'   `nSim`. Default `TRUE`.
 #' @param RefPoints Logical. Calculate F0.1, Fmax, Fx%SPR, Fmed, Fcrash and
-#'   SPRcrash reference points (see [CalcRefPoints()])? Cheap relative to
-#'   `MSYRefs` -- evaluated once on a shared per-recruit grid, fully
-#'   vectorized across simulations, with no per-simulation numerical search.
-#'   Default `TRUE`.
+#'   SPRcrash reference points (see [CalcRefPoints()])? Default `TRUE`.
 #' @param MGT Logical. Calculate mean generation time (see [CalcMGT()])?
 #'   A closed-form, fully vectorized calculation -- negligible cost. Default
 #'   `TRUE`.

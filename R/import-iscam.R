@@ -39,8 +39,8 @@
 #' **Not currently supported**: delay-difference models (`replist$mpd$F_dd`)
 #' and MCMC-based import (multiple simulation replicates drawn from
 #' `read.mcmc()`) -- both are handled by the legacy [iSCAM2OM()] but are out
-#' of scope for this first version; `ImportiSCAM()` errors clearly if either
-#' is detected rather than silently mis-importing.
+#' of scope for this first version; `ImportiSCAM()` errors if either
+#' is detected.
 #'
 #' @param iSCAMdir Character string giving the path to a directory containing
 #'   iSCAM output files, or a list already returned by `load.iscam.files()`.
@@ -124,10 +124,6 @@ ImportiSCAM <- function(iSCAMdir,
     cli::cli_end()
   }
 
-  # ---- Stock biology (age x year matrices, promoted to Sim x Age x Year
-  # with Sim = 1 -- the constructors only auto-promote bare vectors, not
-  # bare 2D matrices, so a 2D [Age x Year] matrix would otherwise get
-  # misread positionally as [Sim x Age]) ----
   dimnames2 <- list(Age = ages, Year = Years)
 
   MAA <- t(mpd$M)
@@ -138,9 +134,6 @@ ImportiSCAM <- function(iSCAMdir,
   dimnames(WAA) <- dimnames2
   WAA <- .IscamToSimAgeYear(WAA)
 
-  # Age-only (no year variation in iSCAM's MPD output); replicated across
-  # all years explicitly, matching MAA/WAA above -- passing these as bare
-  # vectors hits an edge case downstream in PopulateMaturity().
   MatAA <- matrix(as.numeric(mpd$ma), nrow = length(ages), ncol = nYear,
                   dimnames = dimnames2)
   MatAA <- .IscamToSimAgeYear(MatAA)
@@ -161,7 +154,6 @@ ImportiSCAM <- function(iSCAMdir,
     SRR              = SRR(Pars = list(h = mpd$steepness), R0 = mpd$ro)
   )
 
-  # ---- Fleet: single aggregate fleet (see @details) ----
   FAA <- t(mpd$F)
   dimnames(FAA) <- dimnames2
 
@@ -218,10 +210,6 @@ ImportiSCAM <- function(iSCAMdir,
   OM
 }
 
-# Promotes a bare `[Age x Year]` matrix (as built throughout this file) to
-# the `Sim x Age x Year` shape the Stock/Fleet constructors expect, with
-# Sim = 1. The constructors only auto-promote bare 1D vectors; a 2D matrix
-# passed as-is gets read positionally as `[Sim x Age]` instead.
 .IscamToSimAgeYear <- function(mat) {
   out <- array(mat, dim = c(1, dim(mat)),
               dimnames = c(list(Sim = 1), dimnames(mat)))

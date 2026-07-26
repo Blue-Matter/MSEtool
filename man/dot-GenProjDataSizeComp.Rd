@@ -105,16 +105,6 @@ where \code{i} is the stock complex index and \code{fl} the fleet index. The rel
 
 See \link[=obs-class]{obs} and \code{\link[=CompObs]{CompObs()}} for full slot documentation.
 }
-
-\subsection{Appending}{
-
-The new year's \code{Value} array (dimensions \verb{[1 x nFleet x nSize]}, \code{nSize}
-being the existing object's class-dimension width -- see
-\link[=compdata-class]{compdata}) is bound to the existing array along the year
-dimension using \code{abind::abind(..., along = 1)}, preserving dimension
-names. Each fleet is only filled up to its own class count
-(\code{length(CompData@Classes[[fl]])}); any padding beyond that stays \code{NA}.
-}
 }
 \seealso{
 \code{\link[=CompObs]{CompObs()}}, \code{\link[=CompData]{CompData()}}, \link[=compdata-class]{compdata}, \link[=obs-class]{obs},

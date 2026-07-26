@@ -72,14 +72,6 @@
 #'
 #' See [obs-class] and [CompObs()] for full slot documentation.
 #'
-#' ## Appending
-#'
-#' The new year's `Value` array (dimensions `[1 x nFleet x nSize]`, `nSize`
-#' being the existing object's class-dimension width -- see
-#' [compdata-class]) is bound to the existing array along the year
-#' dimension using `abind::abind(..., along = 1)`, preserving dimension
-#' names. Each fleet is only filled up to its own class count
-#' (`length(CompData@Classes[[fl]])`); any padding beyond that stays `NA`.
 #'
 #' @return A [compdata-class] object with `DataYear` appended to `@Value`:
 #'
@@ -104,8 +96,6 @@
   nSizeMax    <- dim(CompData@Value)[3]
   Value       <- CompData@Value
 
-  # Aggregate true catch-at-size over stocks and areas for DataYear, per
-  # fleet (fleets need not share a size-class grid -- see compdata-class).
   CatchAtSizeByFleet <- purrr::map(seq_len(nFleet), \(fl) {
     purrr::map(slot(Proj, type)[stocks], \(stock_level) {
       catch_n <- stock_level[[fl]]

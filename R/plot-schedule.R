@@ -20,13 +20,11 @@
 #' variant to resolve and no `byMP`/faceting-by-MP behavior.
 #'
 #' @param object An [om-class], [hist-class], or [mse-class] object. `om`
-#'   objects are populated via [PopulateOM()] if not already (there is no
-#'   projection period to plot, so `byFleet`/MP-faceting is skipped).
+#'   objects are populated via [PopulateOM()] if not already.
 #' @param Sim Integer or `NULL` (default). Which simulation replicate to
 #'   plot. `NULL` takes the median across all simulations, cell by cell, and
-#'   shades a `probs` quantile ribbon behind it -- but only when there's more
-#'   than one simulation and the curve actually varies across sims at some
-#'   Age/Year/facet cell; otherwise no ribbon is drawn (nothing to show).
+#'   adds a `probs` quantile ribbon behind it (unless `nSim == 1` or values 
+#'   constant across simulations.
 #' @param probs Numeric vector of length 2. Lower and upper quantiles of the
 #'   across-simulation ribbon drawn when `Sim = NULL`. Default `c(0.05, 0.95)`.
 #'   Ignored when `Sim` is a specific replicate.
@@ -35,24 +33,20 @@
 #'   These plots never sum or average a curve across stocks/fleets -- that
 #'   isn't a meaningful operation the way summing catch is -- so every
 #'   stock/fleet is always distinguishable somehow. `TRUE`/`NULL` facets by
-#'   `Stock`/`Fleet` (when both have more than one level, as a
-#'   `facet_grid()` -- `Stock` by row, `Fleet` by column -- rather than
-#'   `facet_wrap()`, for direct comparison). `FALSE` instead colors by that
-#'   variable (`Stock` takes the color channel if both are `FALSE`, `Fleet`
-#'   then takes linetype); `FALSE` has no effect when there's only one
-#'   stock/fleet to begin with.
+#'   `Stock`/`Fleet`. `FALSE` instead colors by that
+#'   variable; 
 #' @param Years Optional numeric vector, or `"all"`. Default `NULL`: each
 #'   independent curve (`Historical`, and each MP's projection for
 #'   `mse` objects) is trimmed to its own last full calendar year (every
 #'   season-slice sharing that curve's most recent year, for a seasonal
-#'   `Seasons > 1` OM -- just the one latest year otherwise), colored and
-#'   labelled by year in the legend -- unless the curve never changes value
-#'   over its full year range, in which case a single (arbitrary) year is
-#'   drawn and the legend is dropped entirely, since a year label would be
-#'   meaningless. `"all"` plots every available year. Both `NULL` and
-#'   `"all"` further collapse consecutive years with an identical curve down
-#'   to just the breakpoint years where the curve actually changed (a curve
-#'   that changes every year is left untouched). A numeric vector restricts
+#'   `Seasons > 1` OM; just the one latest year otherwise), colored and
+#'   labelled by year in the legend. If the curve never changes value
+#'   over its full year range, a single (arbitrary) year is
+#'   drawn and the legend is dropped entirely. 
+#'   `"all"` plots every available year. Both `NULL` and `"all"` further
+#'   collapse consecutive years with an identical curve down
+#'   to just the breakpoint years where the curve actually changed. 
+#'   A numeric vector restricts
 #'   to exactly those years with no compression, always with the legend
 #'   shown.
 #' @param units Logical or a character unit string. `TRUE` (default) labels
@@ -64,7 +58,7 @@
 #'   back to plain `"Age"`/`"Length"`/etc.). For `PlotLength()`/
 #'   `PlotWeight()` only, a character string (a length unit -- `"mm"`,
 #'   `"cm"`, `"inch"`, `"m"` -- or mass unit -- `"g"`, `"kg"`, `"lb"`,
-#'   `"t"`, etc.) both relabels the y-axis *and* rescales the plotted
+#'   `"t"`, etc.) both relabels the y-axis and rescales the plotted
 #'   values into that unit; requesting a unit that can't be converted to is
 #'   an error. Has no effect on `PlotMaturity()`/`PlotSelectivity()`/
 #'   `PlotRetention()`/`PlotDiscardMortality()` beyond the x-axis label,
@@ -166,10 +160,6 @@ PlotFecundity <- function(object, Sim = NULL, byStock = NULL, Years = NULL, unit
 }
 
 # ---- internal helpers ----
-
-# `om` objects carry the schedules directly (no `@OM` to unwrap), but may not
-# yet be populated (e.g. straight from OM()/Stock()); `hist`/`mse` objects are
-# always already populated by construction.
 .ResolveOM <- function(object) {
   if (inherits(object, 'om')) return(PopulateOM(object, silent = TRUE))
   object@OM
@@ -209,13 +199,6 @@ PlotFecundity <- function(object, Sim = NULL, byStock = NULL, Years = NULL, unit
                        probs = probs)
 }
 
-# Tidy Sim/Age/Year/Stock/Fleet/Value df of the effective `what` curve
-# (Selectivity/Retention/DiscardMortality) for every stock/fleet, over
-# `Years`. Reuses .EffectiveGearCurve() (vbiomass.R) for the MP-override
-# resolution, so this reflects the same effective curve VBiomass() does.
-# `x = "Length"` is passed through to .EffectiveGearCurve() to project
-# onto a length axis; the resulting data frame's x column is still called
-# `Age` either way (see .EffectiveGearCurve()).
 .ExtractGearSchedule <- function(object, OM, what, stockNames, fleetNames, Years, MPName, x = 'Age') {
   allStocks <- StockNames(OM)
   purrr::map(seq_along(allStocks), \(st) {
@@ -280,9 +263,6 @@ PlotFecundity <- function(object, Sim = NULL, byStock = NULL, Years = NULL, unit
                        probs = probs)
 }
 
-# Dispatches to .AgeAxisLabel() or a "Length" axis label (always in the
-# stock's native Length@Units, independent of `units`'s y-axis rescaling)
-# depending on `x`.
 .XAxisLabel <- function(OM, stockNames, units, x) {
   if (x == 'Length') {
     if (isFALSE(units)) return('Length')
@@ -291,27 +271,12 @@ PlotFecundity <- function(object, Sim = NULL, byStock = NULL, Years = NULL, unit
   .AgeAxisLabel(OM, stockNames, units)
 }
 
-# "Age" x-axis label, appending Ages@Units (e.g. "Age (year)") when it's set
-# and agrees across the selected stocks; plain "Age" when `units = FALSE` or
-# the unit can't be determined unambiguously.
+
 .AgeAxisLabel <- function(OM, stockNames, units) {
   if (isFALSE(units)) return('Age')
   .AppendUnits('Age', .GetStockUnits(OM, 'Ages', stockNames))
 }
 
-# For a *seasonal* curve (any fractional Year value present -- Seasons > 1),
-# trims to its own last full calendar year -- every season-slice sharing
-# floor(Year) with that curve's max Year, not just the single latest
-# time-slice -- so the within-year pattern (e.g. a spawning-season peak)
-# stays visible by default, bounding the window to one annual cycle before
-# .SelectBreakpointYears() gets a chance to further compress it.
-# Non-seasonal (integer-Year) curves are left with their full available
-# history untouched, so a later .SelectBreakpointYears() call can surface
-# genuine multi-year step-changes (e.g. an MP changing selectivity partway
-# through projection) instead of them being silently discarded here. A curve
-# that never changes value over its full year range is reported via
-# `showLegend = FALSE`, since labelling an unchanging curve by year would be
-# meaningless.
 .SelectDefaultYears <- function(df) {
   seriesVars <- intersect(c('Stock', 'Fleet', 'MP'), colnames(df))
   keyVars    <- c(seriesVars, 'Age')
@@ -336,13 +301,6 @@ PlotFecundity <- function(object, Sim = NULL, byStock = NULL, Years = NULL, unit
   list(df = df, showLegend = any(varies$varies))
 }
 
-# Collapses each independent curve (grouped by whichever of Stock/Fleet/MP
-# are present) down to its breakpoint years -- the same notion as
-# .UniqueYears()/.IdenticalYears() (utils-unique-years.R): a year is kept only
-# if its Age-Value slice differs from the immediately preceding year for
-# that curve. A curve that changes every year keeps every year (identical to
-# not compressing at all); a curve with long constant runs collapses those
-# runs down to a single representative year each.
 .SelectBreakpointYears <- function(df) {
   seriesVars <- intersect(c('Stock', 'Fleet', 'MP'), colnames(df))
 
@@ -366,15 +324,6 @@ PlotFecundity <- function(object, Sim = NULL, byStock = NULL, Years = NULL, unit
   }
 }
 
-# For the DEFAULT (`Years = NULL`) case only -- not `Years = "all"`, which
-# should still show every real breakpoint -- caps each non-seasonal curve's
-# already-breakpoint-reduced years down to at most `maxPoints`: first, last,
-# and (if more than `maxPoints` breakpoints remain) whichever middle
-# breakpoint sits closest to the temporal midpoint of the curve's range, so
-# the middle point reflects an actual change rather than an arbitrary
-# calendar year. A curve with <= `maxPoints` breakpoints (e.g. exactly 2, or
-# 1 for a constant curve) is left as-is. A seasonal curve (fractional Year
-# values) is left untouched so its within-year shape isn't discarded.
 .CapRepresentativeYears <- function(df, maxPoints = 3) {
   seriesVars <- intersect(c('Stock', 'Fleet', 'MP'), colnames(df))
 
@@ -399,23 +348,10 @@ PlotFecundity <- function(object, Sim = NULL, byStock = NULL, Years = NULL, unit
   }
 }
 
-# Ggplot's default categorical hue palette (evenly spaced hues, fixed
-# lightness/chroma) instead of viridis for discrete Stock/Fleet/Year
-# encodings -- viridis's terminal yellow reads poorly for a small (2-3
-# level) categorical legend (e.g. exactly 2 stocks lands on dark purple next
-# to bright yellow). Reuses .GgHuePal() (plot-hist.R), the same palette
-# .MpColorValues() already uses elsewhere in the package.
 .DiscreteColorValues <- function(levels) {
   stats::setNames(.GgHuePal(length(levels)), levels)
 }
 
-# Common line-over-age renderer: one line per year, faceted by whichever of
-# Stock/Fleet/MP have more than one level. `Sim = NULL` takes the median
-# across sims and shades a `probs` quantile ribbon (only when >1 sim and the
-# curve actually varies). Year-selection runs on the median-only collapse
-# first and quantiles are computed only for the years that survive it --
-# calling stats::quantile() over the full year range was the dominant cost
-# in profiling, so this ordering matters for performance.
 .BuildSchedulePlot <- function(df, Sim, byStock, byFleet, ylab, xlab = 'Age', defaultYears = TRUE,
                                  breakpointYears = TRUE, probs = c(0.05, 0.95)) {
   hasSim <- 'Sim' %in% colnames(df)
@@ -457,11 +393,6 @@ PlotFecundity <- function(object, Sim = NULL, byStock = NULL, Years = NULL, unit
     groupVars <- setdiff(colnames(dfSub), c('Sim', 'Value'))
     summ <- dfSub |>
       dplyr::group_by(dplyr::across(dplyr::all_of(groupVars))) |>
-      # `Value` must be computed *last*: dplyr::summarise() evaluates its
-      # arguments sequentially, so if `Value` (the median) were assigned
-      # before `Upper`, `.data$Value` in the `Upper` expression would refer
-      # to the already-collapsed median (a single number per group) instead
-      # of the raw per-sim values -- silently making Upper == Value.
       dplyr::summarise(
         Lower = stats::quantile(.data$Value, min(probs), na.rm = TRUE),
         Upper = stats::quantile(.data$Value, max(probs), na.rm = TRUE),
@@ -474,19 +405,10 @@ PlotFecundity <- function(object, Sim = NULL, byStock = NULL, Years = NULL, unit
     df <- medianDF
   }
 
-  # `.group` always includes every Stock/Fleet/MP identity var present (plus
-  # Year) regardless of how byStock/byFleet end up encoding them below, so
-  # geom_line() never connects two distinct curves into one zigzagging line.
   allSeriesVars <- intersect(c('Stock', 'Fleet', 'MP'), colnames(df))
   groupVars     <- c('Year', allSeriesVars)
   df$.group     <- interaction(df[groupVars], drop = TRUE)
 
-  # `byStock = FALSE`/`byFleet = FALSE` (only meaningful with >1 level) trade
-  # the facet for a discrete color/linetype encoding instead, so the
-  # distinction isn't lost -- Stock takes the color channel if both are
-  # turned off (the more common single-varying case, e.g. PlotLength has no
-  # Fleet at all). Whatever isn't turned off (or MP, which isn't offered a
-  # byMP toggle) still facets as before.
   facetVars <- allSeriesVars[purrr::map_lgl(allSeriesVars, \(v) {
     if (v == 'Stock' && isFALSE(byStock)) return(FALSE)
     if (v == 'Fleet' && isFALSE(byFleet)) return(FALSE)
@@ -498,21 +420,11 @@ PlotFecundity <- function(object, Sim = NULL, byStock = NULL, Years = NULL, unit
   useYearColor <- length(colorCandidates) == 0
   colorVar     <- if (!useYearColor) colorCandidates[1] else NULL
 
-  # Year itself: discrete (a handful of representative years, thanks to
-  # .SelectDefaultYears()/.CapRepresentativeYears() above) gets a
-  # legend of actual year labels instead of a washed-out few-point gradient;
-  # many years (e.g. `Years = "all"` on a curve that changes every year)
-  # keeps the continuous scale.
   nYears         <- length(unique(df$Year))
   yearVaries     <- nYears > 1
   yearIsDiscrete <- nYears <= 6
   df$.Year <- if (yearIsDiscrete) factor(df$Year, levels = sort(unique(df$Year))) else df$Year
 
-  # If color is already taken by Stock/Fleet, Year (when it varies) takes
-  # linetype instead -- otherwise distinct years become indistinguishable
-  # (all sharing whatever color Stock/Fleet assigned them). A second freed
-  # Stock/Fleet dimension can't also claim linetype in that case, so it
-  # falls back to faceting instead of being silently dropped.
   useYearLinetype <- FALSE
   linetypeVar     <- NULL
   if (!useYearColor) {
@@ -551,13 +463,6 @@ PlotFecundity <- function(object, Sim = NULL, byStock = NULL, Years = NULL, unit
     }
   }
 
-  # y always starts exactly at 0 (no lower padding) -- these are all
-  # at-age/at-length schedules, and 0 is a meaningful floor for every one of
-  # them (proportion, length, weight, etc). x (Age/Length) gets a smaller
-  # lower expansion than ggplot2's 5% default so the curve starts close to
-  # the axis without touching it, matching the tighter-than-default
-  # convention already used for the time-series plots (.BuildTsPlot(),
-  # plot-hist.R).
   p <- p +
     ggplot2::geom_line(na.rm = TRUE) +
     ggplot2::expand_limits(y = 0) +
@@ -587,10 +492,6 @@ PlotFecundity <- function(object, Sim = NULL, byStock = NULL, Years = NULL, unit
       p <- p + ggplot2::labs(linetype = linetypeVar)
   }
 
-  # Stock x Fleet is a natural 2D grid -- facet_grid() lines up rows/columns
-  # for direct comparison; any MP levels nest into the column facet
-  # alongside Fleet. A single faceting variable (or MP alone) still uses
-  # facet_wrap().
   if (length(facetVars)) {
     if (all(c('Stock', 'Fleet') %in% facetVars)) {
       colVars <- setdiff(facetVars, 'Stock')

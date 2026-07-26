@@ -111,8 +111,8 @@ see \link[=compdata-class]{compdata} for the per-fleet convention to follow.
 \strong{Not currently supported}: delay-difference models (\code{replist$mpd$F_dd})
 and MCMC-based import (multiple simulation replicates drawn from
 \code{read.mcmc()}) -- both are handled by the legacy \code{\link[=iSCAM2OM]{iSCAM2OM()}} but are out
-of scope for this first version; \code{ImportiSCAM()} errors clearly if either
-is detected rather than silently mis-importing.
+of scope for this first version; \code{ImportiSCAM()} errors if either
+is detected.
 }
 \seealso{
 \code{\link[=OM]{OM()}}, \code{\link[=PopulateOM]{PopulateOM()}}, \code{\link[=CompareiSCAM]{CompareiSCAM()}}, \code{\link[=iSCAM2OM]{iSCAM2OM()}} (legacy),

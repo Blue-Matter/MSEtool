@@ -12,10 +12,7 @@
 #'   `AggregateYear` applied as described in [plot_data]; other arguments
 #'   (`byStock`, `probs`, `nsim`, `Years`, `free_y`, `IncHist`, `byMP`) have
 #'   no effect in that case. For `PlotRemovals()`, the `data`-class series is
-#'   `Landings + Discards` summed together (not distinguished by color or
-#'   linetype, unlike the [hist-class]/[mse-class] case) -- a `data` object
-#'   has no per-variable ribbon/MP dimension to spend color on, so it's shown
-#'   as a single combined series, same as `PlotLandings()`/`PlotDiscards()`.
+#'   `Landings + Discards` summed together.
 #' @param byStock One of `TRUE`, `FALSE`, `'sum'`, or `NULL` (default).
 #'   `TRUE` facets by stock. `FALSE` colors each stock as its own line on a
 #'   single panel, without summing. `'sum'` sums across stocks into a single
@@ -39,13 +36,11 @@
 #'   `"Anglers"` (`Effort x TripsScalar x AnglerPerTrip`); `TripsScalar`/
 #'   `AnglerPerTrip` are read from the first stock's `Fleet` object for each
 #'   fleet (see [Effort()]). `NULL` (default) auto-selects, per fleet, the
-#'   most specific unit with the required data - `TripsScalar`/
-#'   `AnglerPerTrip` need not be set for every fleet. When `byFleet = TRUE`,
+#'   most specific unit with the required data. When `byFleet = TRUE`,
 #'   each fleet's facet uses its own resolved unit (labelled in the facet
 #'   strip if they differ); otherwise the weakest unit available across all
 #'   plotted fleets is used for all of them, since a raw index and real trip
-#'   counts can't share one axis or line. Requesting a `units` value a fleet
-#'   doesn't have the data for is an error.
+#'   counts can't share one axis or line. 
 #'
 #'   For `PlotNumber()`, `PlotBiomass()`, `PlotSBiomass()`, `PlotSProduction()`,
 #'   `PlotVBiomass()`, `PlotLandings()`, `PlotDiscards()`, and `PlotRemovals()`:
@@ -746,13 +741,6 @@ setMethod('plot', 'mse', function(x, y, ...) {
     dplyr::summarise(Value = sum(.data$Value), .groups = 'drop')
 }
 
-# Combined y-axis unit label (and, when a specific target unit is
-# requested, a rescale factor) for a mass-based quantity built from
-# Number(in SRR@Units scale) x <base_slot>@Units - Biomass/SBiomass/
-# VBiomass/Landings/Discards/Removals use Weight; SProduction uses
-# Fecundity. `units`: `TRUE` (default, auto label from the OM's own units),
-# `FALSE` (no unit label), or a target unit string (relabel *and* rescale
-# `Value`, e.g. `units = 'kg'`).
 .MassUnitInfo <- function(object, stockNames, units, base_slot = 'Weight', what = 'value') {
   OM        <- object@OM
   base_unit <- .GetStockUnits(OM, base_slot, stockNames)
@@ -760,16 +748,12 @@ setMethod('plot', 'mse', function(x, y, ...) {
   .ResolveUnitInfo(.mass_units_g, base_unit, scale, units, what)
 }
 
-# Effort units, weakest to strongest: raw index < real trips < anglers.
 .effort_unit_rank <- c(Effort = 1L, Trips = 2L, Anglers = 3L)
 
 .EffortYlab <- function(unit) {
   if (identical(unit, 'Effort')) 'Effort' else paste0('Effort (', unit, ')')
 }
 
-# Best unit available for each fleet, reading TripsScalar/AnglerPerTrip from
-# StockNames(object)[1]'s Fleet object - the same "treat a per-stock-stored
-# quantity as fleet-level" convention AggregateBagLimit() uses.
 .EffortUnitAvail <- function(object, fleets) {
   stock1 <- StockNames(object)[1]
   purrr::map_chr(fleets, function(fl) {
@@ -780,10 +764,6 @@ setMethod('plot', 'mse', function(x, y, ...) {
   }) |> stats::setNames(fleets)
 }
 
-# Resolves the unit to use per fleet. `units = NULL` auto-selects: per-fleet
-# best-available when `byFleet`, otherwise the weakest unit available across
-# all fleets (raw index and real trip counts can't share one axis/line). An
-# explicit `units` aborts if any fleet lacks the data it requires.
 .ResolveEffortUnits <- function(object, fleets, units, byFleet) {
   avail <- .EffortUnitAvail(object, fleets)
 
@@ -805,12 +785,6 @@ setMethod('plot', 'mse', function(x, y, ...) {
   stats::setNames(rep(uniform, length(fleets)), fleets)
 }
 
-# Converts each fleet's Effort values per `fleet_units` (Fleet -> unit),
-# multiplying by TripsScalar and/or AnglerPerTrip from
-# StockNames(object)[1]'s Fleet object. Joined on Year only when the scalar's
-# own Sim dimension is length 1 (i.e. recycled across every sim), since a
-# Sim-based join would otherwise only match `Sim = 1` and leave every other
-# sim's value unconverted.
 .ApplyEffortUnits <- function(df, object, fleet_units) {
   stock1 <- StockNames(object)[1]
 
@@ -837,8 +811,6 @@ setMethod('plot', 'mse', function(x, y, ...) {
   })
 }
 
-# Appends each fleet's resolved unit to its facet strip label when units
-# differ across fleets, e.g. "rGN (Trips)" vs "rHB (Effort)".
 .LabelFleetUnits <- function(fleet_col, fleet_units) {
   lvl <- levels(fleet_col)
   if (is.null(lvl)) lvl <- unique(as.character(fleet_col))
@@ -888,10 +860,6 @@ setMethod('plot', 'mse', function(x, y, ...) {
   if (is.null(stockNames)) nStock(object) else length(stockNames)
 }
 
-# Normalizes `byStock`: NULL resolves to the auto default (facet if more than
-# one selected stock, otherwise no faceting); explicit values must be `TRUE`
-# (facet), `FALSE` (color by stock, no summing), or `'sum'` (sum across
-# stocks - the meaning `FALSE` used to have).
 .ResolveByStock <- function(byStock, nSel) {
   if (is.null(byStock))
     return(nSel > 1)
@@ -1133,11 +1101,6 @@ setMethod('plot', 'mse', function(x, y, ...) {
   nStockRaw <- if ('Stock' %in% colnames(df)) length(unique(df$Stock)) else 1
   nFleetRaw <- if ('Fleet' %in% colnames(df)) length(unique(df$Fleet)) else 1
 
-  # `byStock = FALSE` means color by stock (data arrives un-summed). Stock
-  # then occupies the color channel, so: (1) if there's more than one MP,
-  # facet by MP instead of coloring by it (freeing color for Stock); (2) if
-  # the caller's own colorVar (e.g. `Variable` for PlotRemovals) isn't `MP`
-  # and linetype is free, fall back to linetype instead of dropping it.
   colorStock <- identical(byStock, FALSE) && nStockRaw > 1
   if (colorStock) {
     if (nMPLevels > 1) byMP <- TRUE

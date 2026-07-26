@@ -211,10 +211,7 @@ observed timeseries (no ribbon) is plotted, with \code{byFleet} and
 \code{AggregateYear} applied as described in \link{plot_data}; other arguments
 (\code{byStock}, \code{probs}, \code{nsim}, \code{Years}, \code{free_y}, \code{IncHist}, \code{byMP}) have
 no effect in that case. For \code{PlotRemovals()}, the \code{data}-class series is
-\code{Landings + Discards} summed together (not distinguished by color or
-linetype, unlike the \link[=hist-class]{hist}/\link[=mse-class]{mse} case) -- a \code{data} object
-has no per-variable ribbon/MP dimension to spend color on, so it's shown
-as a single combined series, same as \code{PlotLandings()}/\code{PlotDiscards()}.}
+\code{Landings + Discards} summed together.}
 
 \item{byStock}{One of \code{TRUE}, \code{FALSE}, \code{'sum'}, or \code{NULL} (default).
 \code{TRUE} facets by stock. \code{FALSE} colors each stock as its own line on a
@@ -267,13 +264,11 @@ for non-seasonal models.}
 \code{"Anglers"} (\verb{Effort x TripsScalar x AnglerPerTrip}); \code{TripsScalar}/
 \code{AnglerPerTrip} are read from the first stock's \code{Fleet} object for each
 fleet (see \code{\link[=Effort]{Effort()}}). \code{NULL} (default) auto-selects, per fleet, the
-most specific unit with the required data - \code{TripsScalar}/
-\code{AnglerPerTrip} need not be set for every fleet. When \code{byFleet = TRUE},
+most specific unit with the required data. When \code{byFleet = TRUE},
 each fleet's facet uses its own resolved unit (labelled in the facet
 strip if they differ); otherwise the weakest unit available across all
 plotted fleets is used for all of them, since a raw index and real trip
-counts can't share one axis or line. Requesting a \code{units} value a fleet
-doesn't have the data for is an error.
+counts can't share one axis or line.
 
 For \code{PlotNumber()}, \code{PlotBiomass()}, \code{PlotSBiomass()}, \code{PlotSProduction()},
 \code{PlotVBiomass()}, \code{PlotLandings()}, \code{PlotDiscards()}, and \code{PlotRemovals()}:

@@ -305,9 +305,7 @@
 #'   `MeanAtSize`. Default `FALSE`.
 #' @param allow_shortcut Logical. If `TRUE` (default), collapses a
 #'   fully-saturated (all `> 0.99`) at-size slice to a constant `1`
-#'   at-age value instead of computing the ALK-weighted sum -- valid only
-#'   for proportion-valued objects (selectivity/retention). Must be `FALSE`
-#'   for magnitude-valued objects (e.g. weight).
+#'   at-age value instead of computing the ALK-weighted sum
 #'
 #' @return `MeanAtAge` array with all values filled.
 #' @keywords internal
@@ -545,11 +543,6 @@
   eff <- num_at_age / den_at_age
   bad <- !is.finite(eff)
 
-  # `fallback@MeanAtAge` may span fewer Sim/Year combinations than `eff` (e.g.
-  # when `object`'s at-size schedule and the ALK share a single reference
-  # year, so `.AtSize2AtAge()` never needed to extend it). Extend it to match
-  # `eff`'s dims first -- otherwise `fallback@MeanAtAge[bad]` silently returns
-  # NA for any out-of-range position instead of the intended fallback value.
   fallbackAtAge <- Extend(
     fallback@MeanAtAge,
     nSim  = dim(eff)[names(dimnames(eff)) == 'Sim'],

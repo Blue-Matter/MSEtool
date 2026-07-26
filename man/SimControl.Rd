@@ -39,10 +39,7 @@ scales with \code{nSim}; use \code{parallel = TRUE} in \code{\link[=Simulate]{Si
 \code{nSim}. Default \code{TRUE}.}
 
 \item{RefPoints}{Logical. Calculate F0.1, Fmax, Fx\%SPR, Fmed, Fcrash and
-SPRcrash reference points (see \code{\link[=CalcRefPoints]{CalcRefPoints()}})? Cheap relative to
-\code{MSYRefs} -- evaluated once on a shared per-recruit grid, fully
-vectorized across simulations, with no per-simulation numerical search.
-Default \code{TRUE}.}
+SPRcrash reference points (see \code{\link[=CalcRefPoints]{CalcRefPoints()}})? Default \code{TRUE}.}
 
 \item{MGT}{Logical. Calculate mean generation time (see \code{\link[=CalcMGT]{CalcMGT()}})?
 A closed-form, fully vectorized calculation -- negligible cost. Default

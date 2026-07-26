@@ -53,9 +53,6 @@ JoinYear <- function(object1, object2) {
       val2 <- slot(object2, s)
 
       if (is.null(val1)) {
-        # Nothing on the object1 (early) side to prepend -- e.g. `Advice`
-        # is unset during the historical period, since no MP has run yet.
-        # The joined result is just whatever object2 (later) has, not NULL.
         if (!is.null(val2))
           slot(object1, s) <- val2
       } else {
@@ -71,11 +68,6 @@ JoinYear <- function(object1, object2) {
     if (!is.null(dnames) && "Year" %in% names(dnames)) {
       YrInd <- which(names(dnames)=='Year')
 
-      # object1 contributes no historical rows -- nothing to prepend, and its
-      # other dimensions (e.g. Fleet) may be a leftover shape from whichever
-      # MP's data supplied the historical segment, with no bearing on
-      # object2's own shape (e.g. an MP issuing a single combined TAC vs.
-      # one issuing per-fleet TAC). Just use object2 as-is.
       if (dim(object1)[YrInd] == 0)
         return(object2)
 
@@ -96,10 +88,6 @@ JoinYear <- function(object1, object2) {
     return(object1)
   }
 
-  # This shortcut must run after the array branch: `all(is.na(x))` is
-  # vacuously TRUE for a zero-length x (e.g. a "Year"-dimensioned array
-  # subset to a period with no rows), which would otherwise return the
-  # empty object1 unchanged and silently drop object2's values.
   if (all(is.na(object1)))
     return(object1)
 

@@ -97,10 +97,6 @@ CalcRefPoints <- function(Hist,
   ) |> List2Array('Target', pos = length(dim(F01)) + 1)
   dimnames(FSPR)[['Target']] <- as.character(SPRTarget)
 
-  # CR, Phi0Ref, and the Fmed target can each independently stay at Sim=1
-  # (e.g. deterministic biology with only stochastic fleet effort), so they
-  # are explicitly extended to the true nSim before combining with
-  # per-recruit quantities that may already be fully Sim-extended.
   nSim_ <- nSim(Hist)
   CR      <- .CompensationRatio(Hist, Years) |> ExtendSims(nSim_)
   Phi0Ref <- ExtendSims(Phi0Ref, nSim_)
@@ -128,8 +124,6 @@ CalcRefPoints <- function(Hist,
   Hist
 }
 
-# Broadcasts a [Sim, Stock] (or similar, missing a dim present in `template`)
-# array to match `template`'s dims by adding and replicating the missing dim.
 .BroadcastTo <- function(x, template) {
   missing_dim <- setdiff(names(dimnames(template)), names(dimnames(x)))
   if (!length(missing_dim)) return(x)
@@ -138,9 +132,6 @@ CalcRefPoints <- function(Hist,
   .ExtendAlongDim(x1, pos, dimnames(template)[[pos]])
 }
 
-# Moves the `F` dimension of `arr` last, flattens the remaining dims into
-# matrix rows, applies FUN row-wise, and reshapes the result back to an
-# array with the original (non-F) dims.
 .ApplyOverF <- function(arr, Fgrid, FUN, target = NULL) {
   Fdim <- which(names(dimnames(arr)) == 'F')
   perm <- c(setdiff(seq_along(dim(arr)), Fdim), Fdim)
@@ -159,7 +150,6 @@ CalcRefPoints <- function(Hist,
   array(out, dim = d[-length(d)], dimnames = dimnames(arr_p)[-length(d)])
 }
 
-# Finds y at x == target by linear interpolation (x need not be pre-sorted).
 .Interp1 <- function(x, y, target, rule = 1) {
   ok <- is.finite(x) & is.finite(y)
   if (sum(ok) < 2) return(NA_real_)
@@ -181,8 +171,6 @@ CalcRefPoints <- function(Hist,
   Fgrid[which.max(ypr)]
 }
 
-# Compensation ratio (initial slope of recruits-per-spawner) implied by
-# steepness. NA for stock-recruitment models other than BevertonHolt/Ricker.
 .CompensationRatio <- function(Hist, Years) {
   purrr::map(Hist@OM@Stock, \(stock) {
     model <- stock@SRR@Model
@@ -237,8 +225,6 @@ CalcRefPoints <- function(Hist,
   )
 }
 
-# Median historical recruits-per-spawner (age-at-recruitment numbers over
-# spawning biomass), per [Sim, Stock].
 .MedianReplacement <- function(Hist) {
   HistYears <- Years(Hist@OM, 'Historical')
   SSB <- Hist@SBiomass

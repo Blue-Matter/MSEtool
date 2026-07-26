@@ -105,39 +105,33 @@ PlotFecundity(
 }
 \arguments{
 \item{object}{An \link[=om-class]{om}, \link[=hist-class]{hist}, or \link[=mse-class]{mse} object. \code{om}
-objects are populated via \code{\link[=PopulateOM]{PopulateOM()}} if not already (there is no
-projection period to plot, so \code{byFleet}/MP-faceting is skipped).}
+objects are populated via \code{\link[=PopulateOM]{PopulateOM()}} if not already.}
 
 \item{Sim}{Integer or \code{NULL} (default). Which simulation replicate to
 plot. \code{NULL} takes the median across all simulations, cell by cell, and
-shades a \code{probs} quantile ribbon behind it -- but only when there's more
-than one simulation and the curve actually varies across sims at some
-Age/Year/facet cell; otherwise no ribbon is drawn (nothing to show).}
+adds a \code{probs} quantile ribbon behind it (unless \code{nSim == 1} or values
+constant across simulations.}
 
 \item{byStock, byFleet}{One of \code{TRUE}, \code{FALSE}, or \code{NULL} (default,
 facets automatically when \code{object} has more than one stock/fleet).
 These plots never sum or average a curve across stocks/fleets -- that
 isn't a meaningful operation the way summing catch is -- so every
 stock/fleet is always distinguishable somehow. \code{TRUE}/\code{NULL} facets by
-\code{Stock}/\code{Fleet} (when both have more than one level, as a
-\code{facet_grid()} -- \code{Stock} by row, \code{Fleet} by column -- rather than
-\code{facet_wrap()}, for direct comparison). \code{FALSE} instead colors by that
-variable (\code{Stock} takes the color channel if both are \code{FALSE}, \code{Fleet}
-then takes linetype); \code{FALSE} has no effect when there's only one
-stock/fleet to begin with.}
+\code{Stock}/\code{Fleet}. \code{FALSE} instead colors by that
+variable;}
 
 \item{Years}{Optional numeric vector, or \code{"all"}. Default \code{NULL}: each
 independent curve (\code{Historical}, and each MP's projection for
 \code{mse} objects) is trimmed to its own last full calendar year (every
 season-slice sharing that curve's most recent year, for a seasonal
-\code{Seasons > 1} OM -- just the one latest year otherwise), colored and
-labelled by year in the legend -- unless the curve never changes value
-over its full year range, in which case a single (arbitrary) year is
-drawn and the legend is dropped entirely, since a year label would be
-meaningless. \code{"all"} plots every available year. Both \code{NULL} and
-\code{"all"} further collapse consecutive years with an identical curve down
-to just the breakpoint years where the curve actually changed (a curve
-that changes every year is left untouched). A numeric vector restricts
+\code{Seasons > 1} OM; just the one latest year otherwise), colored and
+labelled by year in the legend. If the curve never changes value
+over its full year range, a single (arbitrary) year is
+drawn and the legend is dropped entirely.
+\code{"all"} plots every available year. Both \code{NULL} and \code{"all"} further
+collapse consecutive years with an identical curve down
+to just the breakpoint years where the curve actually changed.
+A numeric vector restricts
 to exactly those years with no compression, always with the legend
 shown.}
 
@@ -150,7 +144,7 @@ set and agrees across every plotted stock, and additionally, for
 back to plain \code{"Age"}/\code{"Length"}/etc.). For \code{PlotLength()}/
 \code{PlotWeight()} only, a character string (a length unit -- \code{"mm"},
 \code{"cm"}, \code{"inch"}, \code{"m"} -- or mass unit -- \code{"g"}, \code{"kg"}, \code{"lb"},
-\code{"t"}, etc.) both relabels the y-axis \emph{and} rescales the plotted
+\code{"t"}, etc.) both relabels the y-axis and rescales the plotted
 values into that unit; requesting a unit that can't be converted to is
 an error. Has no effect on \code{PlotMaturity()}/\code{PlotSelectivity()}/
 \code{PlotRetention()}/\code{PlotDiscardMortality()} beyond the x-axis label,

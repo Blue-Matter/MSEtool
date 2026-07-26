@@ -35,8 +35,6 @@ ImportiSCAMData <- function(iSCAMdir,
   Data@YearLH     <- max(Years)
   Data@nArea      <- 1
 
-  # Landings: aggregate catch across gears, matching ImportiSCAM()'s
-  # single-fleet scope (see its @details).
   CatchDF <- as.data.frame(dat$catch)
   CatchByYear <- stats::aggregate(value ~ year, data = CatchDF, FUN = sum)
   CatchArr <- rep(NA_real_, nYear)
@@ -48,9 +46,6 @@ ImportiSCAMData <- function(iSCAMdir,
   Landings@Units <- 'Biomass'
   Data@Landings <- Landings
 
-  # Abundance indices -> Survey (iSCAM does not distinguish fleet-CPUE from
-  # independent survey indices the way SS3/BAM report structures do, so all
-  # indices are imported as independent surveys).
   if (!is.null(dat$indices) && length(dat$indices)) {
     nIndex <- length(dat$indices)
     idxNames <- names(dat$indices)
@@ -70,9 +65,6 @@ ImportiSCAMData <- function(iSCAMdir,
     Survey@Value       <- Value
     Survey@CV          <- CV
     Survey@Timing      <- rep(0, nIndex)
-    # iSCAM's report structure doesn't indicate per-survey vulnerability;
-    # "Biomass" (all ages equally vulnerable) is the safest generic default
-    # -- see .ConditionObsIndex()'s handling of IndicesData@Selectivity.
     Survey@Selectivity <- rep('Biomass', nIndex)
     Data@Survey        <- Survey
   }

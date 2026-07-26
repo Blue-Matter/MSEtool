@@ -21,30 +21,6 @@ why, and what a real implementation needs, so the gap is discoverable
 rather than silent (see \code{\link[=ImportiSCAM]{ImportiSCAM()}} and \code{\link[=ImportBAM]{ImportBAM()}} for the
 equivalent, implemented importers).
 }
-\details{
-Unlike iSCAM (\code{\link[=ImportiSCAM]{ImportiSCAM()}}, which reuses the legacy \code{\link[=iSCAM2OM]{iSCAM2OM()}}'s
-file parser \code{load.iscam.files()} and a well-documented field mapping),
-WHAM's own legacy importer (\code{\link[=WHAM2OM]{WHAM2OM()}}) has real gaps that make it
-unsafe to port under a new name without further work:
-\itemize{
-\item It requires an in-memory \strong{fitted WHAM/TMB model object} (\code{wham::fit_wham()}'s
-return value), not raw output files -- there is no file-based reader to
-reuse, and no \code{wham}/\code{TMB}/\code{mvtnorm} dependency is declared in this
-package's \code{DESCRIPTION}.
-\item It hard-codes fleet index 1 (\code{output[[x]]$FAA[,1,]}) -- multi-fleet
-models are not actually supported despite fleet selectivity being
-sampled.
-\item Recruitment/steepness handling only covers \code{recruit_model \%in\% c(1,2)};
-other WHAM recruitment models hit an explicit, unimplemented \code{stop()}.
-\item There is no \code{WHAM2Data()} counterpart at all -- no observed-data import
-path to model a new \code{ImportWHAMData()} on.
-}
-
-Building \code{.ImportWHAM()} responsibly needs either a real fitted WHAM
-object to test against, or someone with WHAM/TMB domain knowledge to
-validate the field mapping -- neither was available while this file was
-written. Treat this as a scoped-out follow-up, not a deferred detail.
-}
 \seealso{
 \code{\link[=ImportiSCAM]{ImportiSCAM()}}, \code{\link[=ImportBAM]{ImportBAM()}}, \code{\link[=WHAM2OM]{WHAM2OM()}} (legacy, single-fleet
 only)

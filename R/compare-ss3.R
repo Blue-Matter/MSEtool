@@ -139,10 +139,6 @@ CompareSS_Discards <- function(SSDir, Hist, sim = 1, silent = FALSE, ...) {
   invisible(res$df)
 }
 
-# Prints the OM-vs-SS3 comparison plot for a combined df, preserving the
-# CompareSS_*() standalone print-always contract (unlike .ComparePrintPlot,
-# which only prints conditionally on MARE/thresh -- that richer behavior is
-# reserved for the CompareSS() orchestrator).
 .PrintCompareSsPlot <- function(df, y_label) {
   has_fleet <- 'Fleet' %in% names(df)
   has_stock <- !has_fleet && 'Stock' %in% names(df)
@@ -165,12 +161,6 @@ CompareSS_Discards <- function(SSDir, Hist, sim = 1, silent = FALSE, ...) {
   invisible(p)
 }
 
-# Extract retain(B) or dead(B) from SS3 timeseries for all fishing fleets.
-# Returns a data.frame with columns Year, Fleet (name), Value. SS3's
-# timeseries `Yr` is a plain integer repeated across seasons, so `Year` is
-# taken positionally from the OM's (possibly decimal, for seasonal models)
-# `HistYears` after sorting by Yr/Seas -- the same convention used by
-# .CompareSSInternal() for Number/Biomass.
 .GetSSTimseriesCatch <- function(replist, HistYears, FishFleets, SSFleetNames, col_prefix) {
   ts <- replist$timeseries |>
     dplyr::filter(Yr %in% HistYears) |>
@@ -277,11 +267,6 @@ CompareSS_Discards <- function(SSDir, Hist, sim = 1, silent = FALSE, ...) {
   .CompareMare(df, 'SS3')
 }
 
-# Age-0 (recruit) numbers from SS3's `natage` table vs OM Number() at the
-# minimum age, mirroring .CompareBAMRecruits(). Single-stock only (SS3's
-# natage Sex column isn't disambiguated here the way .CompareSSInternal()
-# does for Number/Biomass, since recruitment is naturally reported at the
-# population level).
 .CompareSSRecruitsImpl <- function(RepList, Hist, sim) {
   replist   <- RepList[[sim]]
   HistYears <- Years(Hist@OM, 'H')
@@ -299,14 +284,6 @@ CompareSS_Discards <- function(SSDir, Hist, sim = 1, silent = FALSE, ...) {
   if (!minAge %in% names(replist$natage))
     return(NULL)
 
-  # SS3's natage age columns are coarser (typically annual) than the OM's
-  # quarterly age classes, so a cohort recruited at the birth season stays
-  # labelled as the same minimum age (declining by natural mortality) for
-  # multiple seasons afterwards -- these are surviving carry-over numbers,
-  # not additional recruitment events. Match the OM's single-quarter-per-year
-  # recruitment pulse by sampling SS3 only at the birth season (the same
-  # convention .GetSSR0() uses for R0), zeroing all other seasons so both
-  # series share the same quarterly grid.
   birthseas <- .GetSSBirthSeas(replist)
 
   SS_Value <- replist$natage |>
