@@ -124,19 +124,7 @@ inline void CalcCatch(
         }
       }
       
-      // Calc Catch biomass
-      //
-      // Interactions biomass uses the selectivity-weighted (not
-      // retention-weighted) mean weight-at-age (WSel), since it represents
-      // all fish encountering the gear, landed or discarded. Landings
-      // biomass uses the retention-weighted mean weight-at-age (WRet).
-      // Discards biomass is the *residual* between total selected biomass
-      // and landed biomass, scaled down to the fraction of discards that
-      // actually die (Dnum / (Inum - Lnum)) -- discarded fish are not, on
-      // average, the same weight as landed fish, so a single shared weight
-      // schedule cannot represent both. This exactly reproduces how Stock
-      // Synthesis partitions landed vs. discarded biomass (validated against
-      // real SS3 output to 4-5 significant figures).
+      // Calc Catch biomass. 
       for (int fl = 0; fl < nFleet; ++fl) {
         for (int age = 0; age < nAge; ++age) {
           const double WRet = FWghtRet_st(sim_fwr, age, y, fl);
