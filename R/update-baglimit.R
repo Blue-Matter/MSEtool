@@ -1,6 +1,3 @@
-# Post-populate Sim x Year array (TripsScalar/AnglerPerTrip/Theta): Sim dim
-# is 1 or nSim, Year dim is the full model time series - index with
-# recycling on Sim only.
 .GetEffortArrayValue <- function(x, sim, TSIndex) {
   x[min(sim, nrow(x)), TSIndex]
 }
@@ -21,10 +18,6 @@
   .GetEffortArrayValue(Eff@TripsScalar, sim, TSIndex) * E
 }
 
-### LimitTypeOverride lets a stock's LimitType be substituted with an
-# aggregate group's, when that stock's BagLimit is a species-specific
-# sub-cap on a stock also covered by the group (the group's LimitType
-# governs enforcement of both, per AggregateBagLimit()'s documented rule).
 .CalcBagLimitCap <- function(Advice, Proj, sim, TSIndex, st, fl, LimitTypeOverride = NULL) {
   BagLimit  <- Advice@BagLimit
   BagLimit_fl <- if (length(BagLimit) == 1) BagLimit else BagLimit[fl]
@@ -49,18 +42,12 @@
   BagLimit_fl * .GetEffortArrayValue(Eff@AnglerPerTrip, sim, TSIndex)
 }
 
-# Resolves a character (name) or numeric (position) index against a names
-# vector - used for `aggbaglimit@Fleet`/`@Stocks`, which may be either.
 .ResolveIndex <- function(x, names) {
   if (is.character(x)) match(x, names) else as.integer(x)
 }
 
 .GroupKey <- function(st, fl) paste(st, fl, sep = "_")
 
-# Maps every (stock, fleet) pair covered by an active aggregate group to
-# that group - used so a stock's own species-specific BagLimit sub-cap is
-# enforced with the group's LimitType/ClosureMode instead of its own, when
-# that stock is a group member for the same fleet.
 .BuildGroupLookup <- function(AggBagLimit, FleetNames, StockNames) {
   lookup <- list()
   for (grp in AggBagLimit) {
@@ -73,10 +60,6 @@
   lookup
 }
 
-# Same as .CalcBagLimitCap() but for an `aggbaglimit` group, whose
-# BagLimit/LimitType are scalar (not per-fleet vectors) and whose
-# AnglerPerTrip is read from the first stock in the group (fleet trip
-# behaviour is assumed consistent across the stocks it is pooled over).
 .CalcGroupBagLimitCap <- function(grp, Proj, sim, TSIndex, st, fl) {
   if (identical(grp@LimitType, "boat"))
     return(grp@BagLimit)
@@ -91,8 +74,6 @@
   grp@BagLimit * .GetEffortArrayValue(Eff@AnglerPerTrip, sim, TSIndex)
 }
 
-# E[max(X - Bcap, 0)] for X ~ NegBin(mean = mu, dispersion = theta), via
-# truncated summation (no `actuar` dependency).
 .CalcNegBinExcess <- function(mu, theta, Bcap, quantile = 0.9999) {
   if (mu <= 0 || Bcap < 0) return(0)
 
@@ -103,20 +84,13 @@
   sum((x - Bcap) * stats::dnbinom(x, size = theta, mu = mu))
 }
 
-# rho_f(t) = E[min(X, Bcap)] / mu, the fraction of unconstrained retained
-# catch actually kept under ClosureMode = "discard" (Section 2.5).
 .CalcDiscardModeRetention <- function(mu, Bcap, theta) {
   if (mu <= 0) return(1)
   excess <- .CalcNegBinExcess(mu, theta, Bcap)
   min(max((mu - excess) / mu, 0), 1)
 }
 
-# Retained (landed) numbers for one stock/fleet at the effort currently
-# written into Proj@Effort[sim, TSIndex, fl] - a catch-only probe against
-# .CalcFisheryDynamics(), matching the pattern in opt-effort-helpers.R.
-# clone = 1 always, since (unlike .CalcFleetCatch()'s callers) this is called
-# directly on the live Proj as well as on already-disposable copies - must
-# never mutate Proj in place.
+
 .CalcRetainedNumbers <- function(Proj, sim, TSIndex, Year, st, fl) {
   Temp <- .CalcFisheryDynamics(Proj,
                               Years = Year,
@@ -132,18 +106,26 @@
     SumOverAge() |> SumOverArea() |> sum()
 }
 
-# ClosureMode = "stop" (Section 2.6): find the effort at or below the
-# resolved effort such that retained numbers equal a FIXED aggregate target
-# Bcap_f(t) * T_f(E_curr) - the trip count is evaluated once, at the
-# resolved (baseline) effort, not re-derived at each candidate effort.
-# Using T_f(E) instead (trips re-scaling with the very effort being solved
-# for) makes the target shrink in lockstep with any effort cut, which is
-# self-referential and drives effort to ~0 whenever the cap binds at all -
-# not what "stop" mode is meant to represent (an early season closure once
-# a season-length allowance, set from the trip activity that would have
-# occurred, is reached).
+.BisectBagLimitEffort <- function(residual, E_curr, Bcap_total, minEffort = 1e-8,
+                                  reltol = 1e-3, maxit = 40) {
+  lo <- minEffort
+  hi <- E_curr
+  if (residual(lo) >= 0) return(lo)  # cap already non-binding at ~zero effort
+
+  target <- reltol * max(Bcap_total, .Machine$double.eps)
+
+  for (i in seq_len(maxit)) {
+    mid   <- (lo + hi) / 2
+    r_mid <- residual(mid)
+    if (abs(r_mid) <= target) return(mid)
+    if (r_mid > 0) hi <- mid else lo <- mid
+  }
+  (lo + hi) / 2
+}
+
+# ClosureMode = "stop"
 .SolveBagLimitEffort <- function(Proj, sim, Year, TSIndex, st, fl, Advice,
-                                  minEffort = 1e-8, tol = 1e-3,
+                                  minEffort = 1e-8, reltol = 1e-3,
                                   LimitTypeOverride = NULL) {
   E_curr <- Proj@Effort[sim, TSIndex, fl]
   if (E_curr <= minEffort) return(E_curr)
@@ -152,63 +134,51 @@
   Trips_curr <- .CalcTrips(Proj, sim, TSIndex, st, fl)
   Bcap_total <- Bcap * Trips_curr
 
+  ProjSim <- .SliceSim(Proj, sim, .DynamicsProbeSlots)
+
   residual <- function(E) {
-    Eff <- Proj@Effort[sim, TSIndex, ]
+    Eff <- ProjSim@Effort[1, TSIndex, ]
     Eff[fl] <- E
-    ProjE <- .WriteStateToProj(Proj, sim, TSIndex, Effort = Eff)
-    .CalcRetainedNumbers(ProjE, sim, TSIndex, Year, st, fl) - Bcap_total
+    ProjE <- .WriteStateToProj(ProjSim, 1, TSIndex, Effort = Eff)
+    .CalcRetainedNumbers(ProjE, 1, TSIndex, Year, st, fl) - Bcap_total
   }
 
   if (residual(E_curr) <= 0)
     return(E_curr)
 
-  opt <- stats::optimize(function(E) residual(E)^2,
-                         interval = c(minEffort, E_curr), tol = tol)
-  opt$minimum
+  .BisectBagLimitEffort(residual, E_curr, Bcap_total, minEffort = minEffort, reltol = reltol)
 }
 
-# Sum of .CalcRetainedNumbers() across all stocks in an aggregate group,
-# same fleet - one trip catches several pooled species at once.
 .CalcRetainedNumbersGroup <- function(Proj, sim, TSIndex, Year, stocks, fl) {
   sum(vapply(stocks, \(st) .CalcRetainedNumbers(Proj, sim, TSIndex, Year, st, fl), numeric(1)))
 }
 
-# Group version of .SolveBagLimitEffort(): one shared fleet effort is
-# solved so the SUM of retained numbers across the group's stocks matches
-# the fixed target Bcap * T_f(E_curr) - trips are counted once (the same
-# trips catch every pooled species), not summed across stocks.
+# Group version of .SolveBagLimitEffort()
 .SolveBagLimitEffortGroup <- function(Proj, sim, Year, TSIndex, stocks, fl, Bcap,
-                                        minEffort = 1e-8, tol = 1e-3) {
+                                        minEffort = 1e-8, reltol = 1e-3) {
   E_curr <- Proj@Effort[sim, TSIndex, fl]
   if (E_curr <= minEffort) return(E_curr)
 
   Trips_curr <- .CalcTrips(Proj, sim, TSIndex, stocks[1], fl)
   Bcap_total <- Bcap * Trips_curr
 
+  ProjSim <- .SliceSim(Proj, sim, .DynamicsProbeSlots)
+
   residual <- function(E) {
-    Eff <- Proj@Effort[sim, TSIndex, ]
+    Eff <- ProjSim@Effort[1, TSIndex, ]
     Eff[fl] <- E
-    ProjE <- .WriteStateToProj(Proj, sim, TSIndex, Effort = Eff)
-    .CalcRetainedNumbersGroup(ProjE, sim, TSIndex, Year, stocks, fl) - Bcap_total
+    ProjE <- .WriteStateToProj(ProjSim, 1, TSIndex, Effort = Eff)
+    .CalcRetainedNumbersGroup(ProjE, 1, TSIndex, Year, stocks, fl) - Bcap_total
   }
 
   if (residual(E_curr) <= 0)
     return(E_curr)
 
-  opt <- stats::optimize(function(E) residual(E)^2,
-                         interval = c(minEffort, E_curr), tol = tol)
-  opt$minimum
+  .BisectBagLimitEffort(residual, E_curr, Bcap_total, minEffort = minEffort, reltol = reltol)
 }
 
 # Scales retention by rho for this sim/Year only (a proportional reduction,
 # so age/length/weight-at-age shape is preserved).
-#
-# Only Proj@Misc$RetAgeList[[st]]/RetSizeList[[st]][[fl]] is updated -
-# .CalcFisheryDynamics() (C++) reads retention from these fleet-dimensioned
-# Misc caches directly, not from Proj@OM@Fleet[[st]][[fl]]@Retention (which
-# exists for other purposes but has no live reader in the current dynamics
-# engine). No extension needed here: .ExtendHist() already sizes RetAgeList/
-# RetSizeList to nSim x full-Years before .ProjectMP's loop ever starts.
 .CalcScaleRetention <- function(Proj, sim, TSIndex, Year, st, fl, rho) {
   RetAge <- Proj@Misc$RetAgeList[[st]]
   if (!is.null(RetAge)) {
@@ -281,15 +251,6 @@
   Proj
 }
 
-# rho_f(t) (Section 2.5) is recomputed every year the bag limit is active
-# even when unchanged from LastAdviceList: unlike Retention/DiscardMortality,
-# mu_f(t) moves with stock abundance under a constant regulation.
-#
-# Loops per-stock BagLimit advice first, then any `aggbaglimit` groups from
-# an `mmp`-class MP. A stock in both an active group and its own per-stock
-# BagLimit is sub-capped first (using the group's LimitType/ClosureMode, see
-# AggregateBagLimit()), then the aggregate step runs on top of that state --
-# for ClosureMode = "stop" the more restrictive of the two ends up binding.
 .UpdateBagLimitSim <- function(Proj,
                                 sim,
                                 Year,
