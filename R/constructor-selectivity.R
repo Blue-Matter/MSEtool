@@ -42,6 +42,13 @@
 #'   (`L50`) of the paired stock rather than absolute length values. A
 #'   [Maturity()] object must be available to [PopulateSelectivity()] for
 #'   scaling to occur. Default `FALSE`.
+#' @param isAtLength Logical. Whether `MeanAtLength`/`MeanAtWeight` (or an
+#'   at-length/at-weight `Model`) reflect a genuinely length- or weight-
+#'   selectivity schedule. Set `FALSE` when selectivity is only meaningfully
+#'   defined at age (e.g. imported from an age-structured assessment) so that
+#'   fleet weight-at-age calculations skip weighting by this object's at-length
+#'   schedule and use the stock's plain weight-at-age
+#'   instead. Default `TRUE`.
 #' @param Misc List. Miscellaneous additional inputs. Default `list()`.
 #' @param x A [selectivity-class] object, or a [fleet-class] object for
 #'   `Selectivity<-`.
@@ -126,8 +133,9 @@ Selectivity <- function(Pars         = list(),
                         MeanAtWeight = NULL,
                         Classes      = NULL,
                         isRel        = FALSE,
+                        isAtLength   = TRUE,
                         Misc         = list()) {
-  
+
   if (.IsFleetOrList(Pars))
     return(.ExtractFleetSlot(Pars, 'Selectivity'))
 
@@ -145,6 +153,7 @@ Selectivity <- function(Pars         = list(),
     Pars         = Pars,
     Model        = Model,
     isRel        = isRel,
+    isAtLength   = isAtLength,
     MeanAtAge    = MeanAtAge,
     MeanAtLength = MeanAtLength,
     MeanAtWeight = MeanAtWeight,
