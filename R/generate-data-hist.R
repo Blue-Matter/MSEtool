@@ -11,34 +11,58 @@
 #'
 #'
 #' @param Hist `Hist` object populated with historical fishery dynamics
+#' @param parallel Logical; if `TRUE`, generates data across simulations in
+#'   parallel using a `future` plan established by [SetupParallel()].
+#'   Default `FALSE`.
 #' @param silent Logical; if `TRUE`, suppress progress bars and status messages
 #'
 #' @return Updated `Hist` object with `Hist@Data` containing simulated historical data
 #'
 #' @keywords internal
-.GenerateHistoricalData <- function(Hist, silent=FALSE) {
-  
+.GenerateHistoricalData <- function(Hist, parallel=FALSE, silent=FALSE) {
+
   Hist <- .CheckObs(Hist, silent)
-  
+
   HistYears <- Years(Hist,'H')
   nSim <- Hist@OM@nSim
   nArea <- nArea(Hist)
 
   FleetNames <- FleetNames(Hist@OM)
   StockNames <- StockNames(Hist@OM)
-  
-  id <- NULL
-  if (!silent) 
-    id <- cli::cli_progress_bar("Generating Historical Data")
-  
-  SimDataList <- purrr::map(seq_len(nSim), \(sim)
-                            .GenerateHistoricalDataSim(sim,
-                                                       Hist,
-                                                       HistYears,
-                                                       nArea,
-                                                       FleetNames,
-                                                       StockNames, 
-                                                       silent, id))
+
+  parallel <- CheckParallel(parallel)
+
+  SimDataList <- if (parallel) {
+    CheckPackage('furrr')
+    # No live progress bar under parallel - workers can't update the
+    # parent's cli::cli_progress_bar (id=NULL below, per .GenerateHistoricalDataSim).
+    if (!silent)
+      cli::cli_inform("Generating Historical Data ({.val {nSim}} simulation{?s}, parallel) ...")
+    furrr::future_map(
+      seq_len(nSim), .GenerateHistoricalDataSim,
+      Hist = Hist, HistYears = HistYears, nArea = nArea,
+      FleetNames = FleetNames, StockNames = StockNames,
+      silent = TRUE, id = NULL,
+      .options = furrr::furrr_options(
+        globals  = c('Hist', 'HistYears', 'nArea', 'FleetNames', 'StockNames'),
+        packages = "MSEtool",
+        seed     = 101
+      )
+    )
+  } else {
+    id <- NULL
+    if (!silent)
+      id <- cli::cli_progress_bar("Generating Historical Data")
+
+    purrr::map(seq_len(nSim), \(sim)
+              .GenerateHistoricalDataSim(sim,
+                                         Hist,
+                                         HistYears,
+                                         nArea,
+                                         FleetNames,
+                                         StockNames,
+                                         silent, id))
+  }
   names(SimDataList) <- seq_len(nSim)
   
   # Check if all `nSim` data objects are identical and if so, only return sim 1
@@ -158,11 +182,8 @@
     Data <- DataList[[i]]
     Data@nArea <- nArea
     
-    # TODO
-    # Data@LifeHistory 
-    
-    # TODO
-    # Data@Exploitation 
+    # TODO Data@LifeHistory 
+    # TODO Data@Exploitation 
     
     Data@Effort         <- .GenHistDataEffort(sim, Data, Hist, HistYears, i, 
                                               stocks, FleetNames)
