@@ -1,29 +1,4 @@
 
-
-.ProcessBAMArgs <- function(Stock, OM=NULL) {
-  if (is.null(OM))
-    OM <- ImportBAM(Stock,
-                    nSim = 1,
-                    pYear = 1)
-
-  .CheckClass(OM, c('om', 'hist'))
-
-  if (inherits(OM, 'om')) {
-    Hist <- Simulate(OM, nSim=1, silent=TRUE)
-  } else {
-    Hist <- OM
-  }
-
-  if (inherits(Stock, 'BAMdata')) {
-    BAMdata <- Stock
-  } else {
-    BAMdata <- GetBAMOutput(Stock)
-  }
-
-  list(Hist=Hist,
-       BAMdata=BAMdata)
-}
-
 #' Compare BAM and OM Output
 #'
 #' Compares key population time series between BAM output and a simulated
@@ -97,6 +72,30 @@ CompareBAM <- function(Stock, OM = NULL, plot = FALSE, thresh = 1,
   invisible(Out)
 }
 
+
+.ProcessBAMArgs <- function(Stock, OM=NULL) {
+  if (is.null(OM))
+    OM <- ImportBAM(Stock,
+                    nSim = 1,
+                    pYear = 1)
+  
+  .CheckClass(OM, c('om', 'hist'))
+  
+  if (inherits(OM, 'om')) {
+    Hist <- Simulate(OM, nSim=1, silent=TRUE)
+  } else {
+    Hist <- OM
+  }
+  
+  if (inherits(Stock, 'BAMdata')) {
+    BAMdata <- Stock
+  } else {
+    BAMdata <- GetBAMOutput(Stock)
+  }
+  
+  list(Hist=Hist,
+       BAMdata=BAMdata)
+}
 
 .CalcBAMMARE <- function(df) {
   .CompareMare(df, 'BAM')
@@ -193,17 +192,63 @@ CompareBAM <- function(Stock, OM = NULL, plot = FALSE, thresh = 1,
 
 }
 
+.BAMPredictedCatch <- function(BAMdata, catchData, prefix) {
+  t.series <- BAMdata$t.series
+  years    <- t.series$year
+  fleets   <- dimnames(catchData@Value)$Fleet
+
+  pr <- array(NA_real_, dim = c(length(years), length(fleets)),
+             dimnames = list(Year = years, Fleet = fleets))
+
+  ob_years <- as.numeric(dimnames(catchData@Value)$Year)
+  yr_idx   <- match(years, ob_years)
+
+  ob.cols <- grep(paste0('^', prefix, '[.].*[.]ob$'), colnames(t.series), value = TRUE)
+
+  for (fl in fleets) {
+    ob.converted <- catchData@Value[yr_idx, fl]
+    if (all(is.na(ob.converted))) next
+
+    best.col <- NULL
+    best.cv  <- Inf
+    for (ob.col in ob.cols) {
+      ob.raw <- t.series[[ob.col]]
+      valid  <- which(!is.na(ob.raw) & ob.raw != 0 & !is.na(ob.converted))
+      if (length(valid) < 2) next
+
+      ratio <- ob.converted[valid] / ob.raw[valid]
+      cv <- stats::sd(ratio) / abs(mean(ratio))
+      if (is.finite(cv) && cv < best.cv) {
+        best.cv <- cv
+        best.col <- ob.col
+      }
+    }
+    if (is.null(best.col) || best.cv > 0.01) next
+
+    pr.col <- sub('[.]ob$', '.pr', best.col)
+    if (!(pr.col %in% colnames(t.series))) next
+
+    ob.raw <- t.series[[best.col]]
+    pr.raw <- t.series[[pr.col]]
+    valid  <- which(!is.na(ob.raw) & ob.raw != 0 & !is.na(ob.converted))
+
+    scale <- stats::median(ob.converted[valid] / ob.raw[valid])
+    pr[, fl] <- pr.raw * scale
+  }
+  pr
+}
+
 .CompareBAMLandings <- function(Stock, OM = NULL) {
-  
+
   Variable <- NULL # CRAN checks
-  
+
   List <- .ProcessBAMArgs(Stock, OM)
   Hist <- List$Hist
   BAMdata <- List$BAMdata
-  
+
   BAM_Landings <- purrr::map(Hist@Data[[1]], \(data) {
-    data@Landings@Value 
-  }) |> List2Array(name = 'Stock') |> 
+    .BAMPredictedCatch(BAMdata, data@Landings, 'L')
+  }) |> List2Array(name = 'Stock') |>
     Array2DF() |>
     dplyr::mutate(Model = 'BAM', Variable = 'Landings')
   
@@ -243,14 +288,13 @@ CompareBAM <- function(Stock, OM = NULL, plot = FALSE, thresh = 1,
   List <- .ProcessBAMArgs(Stock, OM)
   Hist <- List$Hist
   BAMdata <- List$BAMdata
-  
-  BAM_Discards <- purrr::map(Hist@Data[[1]], \(data) {
-    data@Discards@Value 
-  }) 
-  if (is.null(BAM_Discards[[1]])) 
+
+  if (is.null(Hist@Data[[1]][[1]]@Discards@Value))
     return(NULL)
-    
-  BAM_Discards <- BAM_Discards |> List2Array(name = 'Stock') |> 
+
+  BAM_Discards <- purrr::map(Hist@Data[[1]], \(data) {
+    .BAMPredictedCatch(BAMdata, data@Discards, 'D')
+  }) |> List2Array(name = 'Stock') |>
     Array2DF() |>
     dplyr::mutate(Model = 'BAM', Variable = 'Discards')
   
