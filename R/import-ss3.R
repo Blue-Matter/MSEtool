@@ -1171,12 +1171,13 @@ ImportSS <- function(SSDir,
   Fleet@Catchability@Efficiency <- .SS2Catchability(st, fl, RepList, YearsList)
   Fleet@Selectivity             <- .SS2Selectivity(st, fl, RepList,
                                                   YearsList, Stock)
-  Fleet@DiscardMortality        <- .SS2DiscardMortality(st, fl, RepList, YearsList,
-                                                       Selectivity = Fleet@Selectivity,
-                                                       Stock)
   Fleet@Retention               <- .SS2Retention(st, fl, RepList, YearsList,
                                                 Selectivity = Fleet@Selectivity,
                                                 Stock)
+  Fleet@DiscardMortality        <- .SS2DiscardMortality(st, fl, RepList, YearsList,
+                                                       Selectivity = Fleet@Selectivity,
+                                                       Retention = Fleet@Retention,
+                                                       Stock)
 
   Fleet@WeightFleetSelected <- .CalcFleetWeightAtAge(
     Selectivity = Fleet@Selectivity,
@@ -1386,7 +1387,7 @@ ImportSS <- function(SSDir,
 }
 
 
-.SS2DiscardMortality <- function(st, fl, RepList, YearsList, Selectivity, Stock) {
+.SS2DiscardMortality <- function(st, fl, RepList, YearsList, Selectivity, Retention, Stock) {
   DiscardMortality <- DiscardMortality()
 
   DiscardMortality@MeanAtLength <- purrr::map(RepList, \(replist)
@@ -1405,16 +1406,19 @@ ImportSS <- function(SSDir,
     nSim = Stock@nSim
   )
 
-  DiscardMortality <- .MeanAtLength2MeanAtAge(
+  Weighting <- Selectivity
+  Weighting@MeanAtLength <- ArrayMultiply(Selectivity@MeanAtLength, 1 - Retention@MeanAtLength)
+
+  DiscardMortality <- .WeightedAtSize2AtAge(
     object = DiscardMortality,
-    Length = Stock@Length,
+    Weighting = Weighting,
+    Length = Stock@Length
   )
 
   DiscardMortality@MeanAtAge <- ReduceDims(DiscardMortality@MeanAtAge)
 
   # Override with 100% discard mortality where SS3's own realized
-  # accounting shows discard_option = 3 for this fleet (see
-  # .IsSSDiscardAllDead()) 
+  # accounting shows discard_option = 3 for this fleet
   if (all(purrr::map_lgl(RepList, \(replist) .IsSSDiscardAllDead(st, fl, replist))))
     DiscardMortality@MeanAtAge[] <- 1
 
@@ -1518,8 +1522,7 @@ ImportSS <- function(SSDir,
 }
 
 .SS2Selectivity <- function(st, fl, RepList, YearsList, Stock) {
-  # TODO
-  # - ideally import SS3 selectivity models and parameters
+  # TODO - ideally import SS3 selectivity models and parameters
 
   Selectivity <- Selectivity(Pars = list())
   Selectivity@MeanAtLength <- purrr::map(RepList, \(replist)
