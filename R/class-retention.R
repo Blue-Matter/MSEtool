@@ -27,11 +27,17 @@
 #'   Bin `k` spans `[Classes[k], Classes[k+1])`; the final bin is open-ended.
 #'   Values in `MeanAtLength`/`MeanAtWeight` are evaluated at bin midpoints,
 #'   not at these lower bounds.
+#' @slot isAtLength `logical`. Whether `MeanAtLength`/`MeanAtWeight` reflect a
+#'   genuinely length- (or weight-) retention schedule, as opposed to a
+#'   one derived from an age-only schedule (e.g. via the age-length
+#'   key). Controls whether fleet weight-at-age calculations
+#'   (`WeightFleetRetained`) weight by this object's at-length schedule or
+#'   fall back to the stock's plain weight-at-age. Default `TRUE`. 
 #' @slot Misc `list`. Miscellaneous additional inputs. For internal use.
 #'
-#' @seealso 
+#' @seealso
 #' - [Retention()] for the constructor and full parameter
-#'   documentation. 
+#'   documentation.
 #' - [RetentionModels()] for available model functions.
 #' - [fleet-class] for the enclosing fleet object.
 #'
@@ -49,6 +55,7 @@ setClass(
     MeanAtLength = "num.array.null",
     MeanAtWeight = "num.array.null",
     Classes      = "num.null",
+    isAtLength   = "logical",
     Misc         = "list"
   )
 )
