@@ -21,7 +21,8 @@ Length(ButterfishExStock) <- Length(
 ## ---- butterfish-create-weight ----
 Weight(ButterfishExStock) <- Weight(
   Pars = list(alpha = 1.59e-05,
-              beta  = 3.1)
+              beta  = 3.1),
+  Units = 'kg'
 )
 
 ## ---- butterfish-create-natural-mortality ----

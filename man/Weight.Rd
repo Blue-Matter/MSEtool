@@ -10,7 +10,7 @@
 Weight(
   Pars = list(),
   Model = NULL,
-  Units = "g",
+  Units = "kg",
   MeanAtAge = NULL,
   MeanAtLength = NULL,
   CVatAge = NULL,
@@ -46,7 +46,7 @@ R function — see \href{https://docs.openmse.com/concept-schedules.html}{Specif
 
 \item{Units}{\code{character(1)}. Physical unit of weight measurements. Must be
 one of the strings returned by \code{\link[=ValidUnits]{ValidUnits()}} (e.g., \code{"g"}, \code{"kg"}).
-Default \code{"g"}.}
+Default \code{"kg"}.}
 
 \item{MeanAtAge}{\code{array} or \code{NULL}. Mean weight at age with named dimensions
 \verb{Sim × Age × Year}. Supply directly when bypassing the model-based

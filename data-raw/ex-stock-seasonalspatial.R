@@ -52,7 +52,8 @@ SeasonalSpatialExStock <- Stock(
   ),
 
   Weight = Weight(
-    Pars = list(alpha = 1e-5, beta = 3)
+    Pars = list(alpha = 1e-5, beta = 3),
+    Units = 'kg'
   ),
 
   NaturalMortality = NaturalMortality(

@@ -21,7 +21,8 @@ Length(AlbacoreExStock) <- Length(
 ## ---- albacore-create-weight ----
 Weight(AlbacoreExStock) <- Weight(
   Pars = list(alpha = 1.34E-05,
-              beta  = 3.106)
+              beta  = 3.106),
+  Units = 'kg'
 )
 
 ## ---- albacore-create-natural-mortality ----
