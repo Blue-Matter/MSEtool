@@ -1,25 +1,26 @@
-# Shared engine behind CompareSS()/CompareBAM()/CompareiSCAM()/CompareWHAM():
-# each `Compare<Tool>_<Series>()` adapter builds a combined data.frame and
-# calls `.CompareMare()`; `Compare<Tool>()` assembles those and calls
-# `.ComparePrintPlot()` per series.
-
-# MARE = |OM - Assess| / Assess * 100, grouped by whichever of Year/Stock/
-# Fleet are present. Suppressed (NA) where the reference value is a
-# negligible fraction (`scale_tol`) of the comparison's overall scale, so a
-# near-zero true value doesn't produce a huge, meaningless relative error.
 .CompareMare <- function(df, assess_name, scale_tol = 0.01) {
   group_vars <- intersect(c('Year', 'Stock', 'Fleet'), colnames(df))
+  scale_vars <- setdiff(group_vars, 'Year')
 
   wide <- df |>
     tidyr::pivot_wider(names_from = 'Model', values_from = 'Value')
 
-  scale <- max(abs(wide[[assess_name]]), na.rm = TRUE)
+  .MaxAbs <- function(x) if (all(is.na(x))) NA_real_ else max(abs(x), na.rm = TRUE)
+
+  if (length(scale_vars)) {
+    wide <- wide |>
+      dplyr::group_by(dplyr::across(dplyr::all_of(scale_vars))) |>
+      dplyr::mutate(.scale = .MaxAbs(.data[[assess_name]])) |>
+      dplyr::ungroup()
+  } else {
+    wide$.scale <- .MaxAbs(wide[[assess_name]])
+  }
 
   MARE <- wide |>
     dplyr::group_by(dplyr::across(dplyr::all_of(group_vars))) |>
     dplyr::summarise(
       MARE = dplyr::if_else(
-        abs(.data[[assess_name]]) < scale_tol * scale,
+        abs(.data[[assess_name]]) < scale_tol * .data[['.scale']],
         NA_real_,
         abs((.data[['OM']] - .data[[assess_name]]) / .data[[assess_name]]) * 100
       ),
@@ -29,17 +30,12 @@
   list(df = df, MARE = MARE)
 }
 
-# Near-square (nrow, ncol) grid for `n` facet panels, matching ggplot2's own
-# facet_wrap layout heuristic.
 .CompareWrapDims <- function(n) {
   ncol <- ceiling(sqrt(n))
   nrow <- ceiling(n / ncol)
   list(nrow = nrow, ncol = ncol)
 }
 
-# Plot size (inches) for a `dims$nrow` x `dims$ncol` panel grid: 6 x 4 for a
-# single panel, scaling up per additional row/column so faceted plots (e.g.
-# Landings/Discards by fleet) don't come out squashed.
 .CompareAutoDims <- function(dims) {
   list(width  = 3.5 + dims$ncol * 2.5,
        height = 2   + dims$nrow * 2)
@@ -55,10 +51,7 @@
   invisible(NULL)
 }
 
-# Prints/saves a comparison plot for `Out[[name]]` (a `list(df, MARE)`, as
-# returned by `.CompareMare()`) when MARE exceeds `thresh`, or
-# unconditionally when `plot`/`save_plots` is requested. Facets by `Fleet`
-# if present, else by `Stock` if present, else no facet.
+
 .ComparePrintPlot <- function(Out, name, title, plot = FALSE, thresh = 1,
                                save_plots = FALSE, figdir = NULL,
                                width = NULL, height = NULL) {
