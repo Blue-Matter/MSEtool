@@ -303,14 +303,19 @@
 #'   If `FALSE`, uses slice 1 for all simulations.
 #' @param byArea Logical. If `TRUE`, loops over areas using a 4-D
 #'   `MeanAtSize`. Default `FALSE`.
+#' @param allow_shortcut Logical. If `TRUE` (default), collapses a
+#'   fully-saturated (all `> 0.99`) at-size slice to a constant `1`
+#'   at-age value instead of computing the ALK-weighted sum -- valid only
+#'   for proportion-valued objects (selectivity/retention). Must be `FALSE`
+#'   for magnitude-valued objects (e.g. weight).
 #'
 #' @return `MeanAtAge` array with all values filled.
 #' @keywords internal
 .AtSize2AtAgeCore <- function(MeanAtAge, MeanAtSize, ASK,
                               nSim, nAge, nTS, nArea=1,
-                              bySim=TRUE, byArea=FALSE) {
+                              bySim=TRUE, byArea=FALSE, allow_shortcut=TRUE) {
   ask_sim <- function(sim) if (bySim) sim else 1L
-  
+
   for (sim in seq_len(nSim)) {
     s <- ask_sim(sim)
     for (year in seq_len(nTS)) {
@@ -318,12 +323,12 @@
       if (byArea) {
         for (area in seq_len(nArea)) {
           mas <- MeanAtSize[sim, , year, area]
-          MeanAtAge[sim, , year, area] <- if (all(mas > 0.99)) 1 else
+          MeanAtAge[sim, , year, area] <- if (allow_shortcut && all(mas > 0.99)) 1 else
             as.numeric(mas %*% t(ASK_ts))
         }
       } else {
         mas <- MeanAtSize[sim, , year]
-        MeanAtAge[sim, , year] <- if (all(mas > 0.99)) 1 else
+        MeanAtAge[sim, , year] <- if (allow_shortcut && all(mas > 0.99)) 1 else
           as.numeric(mas %*% t(ASK_ts))
       }
     }
@@ -420,6 +425,10 @@
 #' @param max1 Logical. If `TRUE`, forces `max(MeanAtAge) == 1` via
 #'   `.CheckSelectivityMaximum`, correcting cases where selectivity-at-length
 #'   produces an apical selectivity-at-age below 1. Default `FALSE`.
+#' @param allow_shortcut Logical. If `TRUE` (default), skips the age-length-key
+#'   math and fills `MeanAtAge` with a constant `1` (or `tiny`) when
+#'   `MeanAtSize` is uniformly ~1 (or ~0). Valid only for proportion values
+#'   like selectivity/retention. 
 #'
 #' @details
 #' When `max1 = TRUE`, selectivity-at-age values are rescaled so the maximum
@@ -430,8 +439,8 @@
 #'
 #' @return `object` with `object@MeanAtAge` populated.
 #' @keywords internal
-.AtSize2AtAge <- function(object, Length, max1=FALSE) {
-  
+.AtSize2AtAge <- function(object, Length, max1=FALSE, allow_shortcut=TRUE) {
+
   MeanAtSize <- if (inherits(Length, 'length')) {
     object@MeanAtLength
   } else if (inherits(Length, 'weight')) {
@@ -439,12 +448,12 @@
   } else {
     cli::cli_abort("`Length` must be an object of class `length` or `weight`")
   }
-  
+
   ASK    <- .GetASK(Length)
   byArea <- "Area" %in% names(dimnames(MeanAtSize))
   nArea  <- if (byArea) dim(MeanAtSize)[4] else 1L
-  
-  #  Early exits 
+
+  #  Early exits
   alloc_and_fill <- function(val) {
     dims <- .ResolveSimYearDims(MeanAtSize, ASK)
     AgeClasses <- as.numeric(dimnames(dims$ASK)[['Age']])
@@ -453,9 +462,11 @@
     out <- array(val, dim=lengths(dn), dimnames=dn)
     object@MeanAtAge <<- out
   }
-  
-  if (all(MeanAtSize > 0.99)) { alloc_and_fill(1);    return(object) }
-  if (all(MeanAtSize < 0.01)) { alloc_and_fill(tiny); return(object) }
+
+  if (allow_shortcut) {
+    if (all(MeanAtSize > 0.99)) { alloc_and_fill(1);    return(object) }
+    if (all(MeanAtSize < 0.01)) { alloc_and_fill(tiny); return(object) }
+  }
   
   # Resolve dims 
   dims       <- .ResolveSimYearDims(MeanAtSize, ASK)
@@ -478,7 +489,8 @@
     MeanAtAge, MeanAtSize, ASK,
     nSim=nSim, nAge=nAge, nTS=nTS, nArea=nArea,
     bySim="Sim" %in% names(dimnames(MeanAtSize)),
-    byArea=byArea
+    byArea=byArea,
+    allow_shortcut=allow_shortcut
   )
   
   if (max1)
@@ -513,7 +525,7 @@
   wt_at_size  <- slot(Weighting, slotName)
   obj_at_size <- slot(object, slotName)
 
-  fallback <- .AtSize2AtAge(object, Length)
+  fallback <- .AtSize2AtAge(object, Length, allow_shortcut=FALSE)
 
   if (is.null(wt_at_size) || is.null(obj_at_size))
     return(fallback)
@@ -527,12 +539,24 @@
   DenObj <- object
   slot(DenObj, slotName) <- wt_at_size
 
-  num_at_age <- .AtSize2AtAge(NumObj, Length)@MeanAtAge
-  den_at_age <- .AtSize2AtAge(DenObj, Length)@MeanAtAge
+  num_at_age <- .AtSize2AtAge(NumObj, Length, allow_shortcut=FALSE)@MeanAtAge
+  den_at_age <- .AtSize2AtAge(DenObj, Length, allow_shortcut=FALSE)@MeanAtAge
 
   eff <- num_at_age / den_at_age
   bad <- !is.finite(eff)
-  eff[bad] <- fallback@MeanAtAge[bad]
+
+  # `fallback@MeanAtAge` may span fewer Sim/Year combinations than `eff` (e.g.
+  # when `object`'s at-size schedule and the ALK share a single reference
+  # year, so `.AtSize2AtAge()` never needed to extend it). Extend it to match
+  # `eff`'s dims first -- otherwise `fallback@MeanAtAge[bad]` silently returns
+  # NA for any out-of-range position instead of the intended fallback value.
+  fallbackAtAge <- Extend(
+    fallback@MeanAtAge,
+    nSim  = dim(eff)[names(dimnames(eff)) == 'Sim'],
+    Years = as.numeric(dimnames(eff)[['Year']]),
+    backfill = TRUE
+  )
+  eff[bad] <- fallbackAtAge[bad]
 
   object@MeanAtAge <- eff
   object
