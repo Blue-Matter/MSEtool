@@ -58,25 +58,10 @@ A \link[=pm-class]{pm} object.
 \verb{PM_*} functions evaluate a performance metric against an \link[=mse-class]{mse}
 object, or a \code{list} of \link[=mse-class]{mse} objects (combined via \code{\link[=CombineMSE]{CombineMSE()}}
 before calculation, so simulations from every list element are pooled
-and treated as one ensemble). All \verb{PM_*} functions operate on the
+and treated as one analysis). All \verb{PM_*} functions operate on the
 projection period only.
 }
 \details{
-Building-block PMs (\code{PM_FFMSY}, \code{PM_SBSBMSY}, \code{PM_SBSBlim}, \code{PM_Yield},
-\code{PM_AAVY}, \code{PM_AAVE}) return a \link[=pm-class]{pm} object with \code{Prob}/\code{Mean}
-populated whenever a reference/threshold is available (so \code{Prob}/\code{Mean}
-always read higher-is-better); \code{PM_Yield}, \code{PM_AAVY}, and \code{PM_AAVE} have no
-natural threshold on their own, so \code{Prob}/\code{Mean} are \code{NA} -- only \code{Stat} is
-meaningful for those. Objective-level PMs (\code{PM_Status}, \code{PM_Safety},
-\code{PM_Rebuild}, \code{PM_RelYield} with \code{Ref} supplied, \code{PM_Stability}) always
-populate \code{Prob}/\code{Mean}.
-
-PMs involving spawning biomass/production (\code{PM_SBSBMSY}, \code{PM_SBSBlim},
-\code{PM_Safety}, \code{PM_Status}, \code{PM_Rebuild}) automatically restrict to the
-spawning ("female") stock(s) of each sex-structured complex, identified by
-stock name (see \code{.FemaleStockNames()}) with a fallback to each stock's
-\code{SRR@SPFrom} self-reference where the name match is ambiguous.
-
 Yield-based PMs (\code{PM_Yield}, \code{PM_RelYield}, \code{PM_AAVY}) sum landings+discards
 over the stocks in each \code{OM@Complexes} group by default; pass \code{Stocks} to
 override with an explicit set of stock names.
@@ -84,6 +69,7 @@ override with an explicit set of stock names.
 \code{PM_FFMSY} and \code{PM_Status} are evaluated at the \emph{complex} level
 (\code{OM@Complexes}), not per stock, because \code{FMSY} is a single value
 optimised jointly across a complex's member stocks (see \code{\link[=F_FMSY]{F_FMSY()}}).
+
 \code{PM_Status} sums \code{SB}/\code{SBMSY} across each complex's spawning stock(s)
 before dividing, so both sides of the joint SB/F test are assessed at the
 same aggregation level rather than pairing a per-stock SB ratio with an
