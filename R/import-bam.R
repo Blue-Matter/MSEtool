@@ -347,8 +347,6 @@ ListBAMStocks <- function(type=c('rdat', 'dat')) {
   SD <- BAMdata$parms[["R.sigma.logdevs"]]
   ACF <- acf(BAMdata$t.series$logR.dev, lag.max = 1, plot = FALSE, na.action =na.pass)$acf[2]
   
-  # h, R0 taken directly from BAMdata rather than re-derived from phi0/Arec/Brec:
-  # SSBpR differs from phi0 in some cases and the derived recruits came out wrong.
   if (BAMdata$info$units.rec == "number fish") {
     NumberUnits <- 1
   } else {
@@ -364,9 +362,6 @@ ListBAMStocks <- function(type=c('rdat', 'dat')) {
                     SpawnTimeFrac = BAMdata$parms$spawn.time,
                     Units=NumberUnits
   )
-  
-  # already done in rec devs
-  # stock |> Depletion() |> Initial() <- BAMdata$t.series$B.B0[1]
   
   stock <- PopulateStock(Stock = stock, 
                          nYear = stock@nYear, 
@@ -507,12 +502,65 @@ ListBAMStocks <- function(type=c('rdat', 'dat')) {
   DiscardMortArray
 }
 
+.LookupBAMFleetWeight <- function(BAMdata, candidates) {
+  nms <- names(BAMdata$size.age.fishery)
+  for (nm in candidates) {
+    if (nm %in% nms) {
+      arr <- BAMdata$size.age.fishery[[nm]]
+      scale <- if (grepl('klb$', nm)) 1000 else 1
+      return(lb2kg(arr * scale))
+    }
+  }
+  NULL
+}
 
+.GetBAMFleetWeight <- function(BAMdata, fleet) {
+  .LookupBAMFleetWeight(BAMdata, c(
+    paste0('wholewgt.', fleet, '.lb'),
+    paste0('wgt.', fleet, '.klb'),
+    paste0('wholewgt.lb.', fleet)
+  ))
+}
+.
+.GetBAMFleetDiscardWeight <- function(BAMdata, fleet, discard_stub) {
+  .LookupBAMFleetWeight(BAMdata, c(
+    paste0('wholewgt.', fleet, '.D.lb'),
+    paste0('wgt.', fleet, '.D.klb'),
+    paste0('wholewgt.lb.', discard_stub)
+  ))
+}
 
-.BAM2Fleet <- function(Stock, 
-                      OM, 
-                      DiscMortDF=NULL, 
-                      DiscFleets=NULL, 
+.BlendBAMFleetWeight <- function(retWeight, discWeight, retainedFraction) {
+  if (is.null(discWeight)) return(retWeight)
+
+  years <- rownames(retWeight)
+  ages  <- colnames(retWeight)
+
+  disc_yr  <- match(years, rownames(discWeight))
+  disc_age <- match(ages, colnames(discWeight))
+  if (anyNA(disc_yr) || anyNA(disc_age)) return(retWeight)
+  discAligned <- discWeight[disc_yr, disc_age, drop = FALSE]
+
+  retFrac <- t(retainedFraction)  # Age x Year -> Year x Age
+  frac_yr  <- match(years, rownames(retFrac))
+  frac_age <- match(ages, colnames(retFrac))
+  if (anyNA(frac_yr) || anyNA(frac_age)) return(retWeight)
+  retFracAligned <- retFrac[frac_yr, frac_age, drop = FALSE]
+
+  out <- retFracAligned * retWeight + (1 - retFracAligned) * discAligned
+  dimnames(out) <- dimnames(retWeight)
+  out
+}
+
+.BAMFleetWeightToArray <- function(arr) {
+  dimnames(arr) <- list(Year = dimnames(arr)[[1]], Age = as.numeric(dimnames(arr)[[2]]))
+  t(arr) |> AddDimension('Sim', pos = 1) |> .Aperm(c('Sim', 'Age', 'Year'))
+}
+
+.BAM2Fleet <- function(Stock,
+                      OM,
+                      DiscMortDF=NULL,
+                      DiscFleets=NULL,
                       DiscSelFleets=NULL,
                       RetSelFleets=NULL,
                       silent=FALSE) {
@@ -527,9 +575,6 @@ ListBAMStocks <- function(type=c('rdat', 'dat')) {
   RetainFleets  <- FleetNamesList$RetainFleets
   DiscardFleets  <- FleetNamesList$DiscardFleets
   
-
-
-  
   nFleet <- length(RetainFleets)
   HistTS <- Years[Years<=OM@Stock[[1]]@CurrentYear]
   nHist <- length(HistTS)
@@ -542,7 +587,6 @@ ListBAMStocks <- function(type=c('rdat', 'dat')) {
                                              OM, 
                                              DiscMortDF)
   
-
   # Selectivity, Retention, Effort, Catchability 
   year <- NULL # CRAN check hack
   TimeSeries <- BAMdata$t.series |> dplyr::filter(year %in% HistTS)
@@ -646,21 +690,40 @@ ListBAMStocks <- function(type=c('rdat', 'dat')) {
     thisFleetF <- apicalEffort[,fl, drop=FALSE] |> DropDimension('Fleet')
     fleet@Effort@Effort <- AddDimension(thisFleetF, 'Sim', pos=1) 
 
-    fleet@Selectivity@MeanAtAge <- SelectivityAtAge[,,fl, drop=FALSE] |> 
+    fleet@Selectivity@MeanAtAge <- SelectivityAtAge[,,fl, drop=FALSE] |>
       abind::adrop(3) |>
-      AddDimension('Sim') |> 
-      .Aperm(c('Sim', 'Age', 'Year'))
-    
-    fleet@Retention@MeanAtAge <- RetentionAtAge[,,fl, drop=FALSE] |> 
-      abind::adrop(3) |>
-      AddDimension('Sim') |> 
+      AddDimension('Sim') |>
       .Aperm(c('Sim', 'Age', 'Year'))
 
-    fleet@DiscardMortality@MeanAtAge <- DiscardMortArray[,,fl, drop=FALSE] |> 
+    fleet@Selectivity@isAtLength <- FALSE
+
+    fleet@Retention@MeanAtAge <- RetentionAtAge[,,fl, drop=FALSE] |>
       abind::adrop(3) |>
-      AddDimension('Sim') |> 
+      AddDimension('Sim') |>
       .Aperm(c('Sim', 'Age', 'Year'))
-      
+    fleet@Retention@isAtLength <- FALSE
+
+    fleet@DiscardMortality@MeanAtAge <- DiscardMortArray[,,fl, drop=FALSE] |>
+      abind::adrop(3) |>
+      AddDimension('Sim') |>
+      .Aperm(c('Sim', 'Age', 'Year'))
+
+    fleetName <- RetainFleets[fl]
+    discardStub <- fleetName
+    if (!is.null(DiscFleets)) {
+      ind <- match(fleetName, names(DiscFleets))
+      if (!is.na(ind)) discardStub <- .StripBetweenPeriods(as.character(DiscFleets[ind]))
+    }
+
+    retWeight  <- .GetBAMFleetWeight(BAMdata, fleetName)
+    discWeight <- .GetBAMFleetDiscardWeight(BAMdata, fleetName, discardStub)
+
+    if (!is.null(retWeight)) {
+      fleet@WeightFleetRetained <- .BAMFleetWeightToArray(retWeight)
+      selWeight <- .BlendBAMFleetWeight(retWeight, discWeight, RetentionAtAge[,,fl])
+      fleet@WeightFleetSelected <- .BAMFleetWeightToArray(selWeight)
+    }
+
     FleetList[[fleet@Name]] <- fleet
   }
   FleetList
