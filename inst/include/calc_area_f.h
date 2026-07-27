@@ -24,7 +24,8 @@ inline void CalcArea_F(
     const ConstArrayView4D& q,                        // sim, stock, year, fleet          
     const Array3D& Effort,                            // sim, year, fleet
     const ConstArrayView2D& RelSize,                  // sim, area
-    const ConstArrayView4D& StockTargeting,           // sim, stock, fleet, year   
+    const std::vector<bool>& UseDensity,              // [fleet]
+    const ConstArrayView4D& StockTargeting,           // sim, stock, fleet, year
     const bool StockTargetingFlag,
     const double maxF,
     const int nStock,
@@ -73,9 +74,15 @@ inline void CalcArea_F(
       
         for (int ar = 0; ar < nArea; ++ar) {
 
-          const double rs = RelSize(sim_rs, ar);
-          // Effort density
-          const double ed = (rs > 0.0) ? E * Distribution(sim_dist, y, fl, ar) / rs : 0.0;
+          double ed;
+          if (UseDensity[fl]) {
+            const double rs = RelSize(sim_rs, ar);
+            // Effort density: fishing power scales with effort per unit area
+            ed = (rs > 0.0) ? E * Distribution(sim_dist, y, fl, ar) / rs : 0.0;
+          } else {
+            // Biomass mode: fishing power scales with raw effort, no area term
+            ed = E * Distribution(sim_dist, y, fl, ar);
+          }
           
           double targ = 1;
 
