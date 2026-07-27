@@ -56,14 +56,14 @@
     Hist@Reference@MSY <- CalcMSY(Hist, parallel = parallel, silent = silent)
   }
 
-  if (control$RefPoints)
-    Hist <- CalcRefPoints(Hist, silent = silent)
-
   if (control$MGT)
     Hist@Reference@MGT <- CalcMGT(Hist, silent = silent)
 
   Hist <- .CalcFisheryDynamics(Hist, IdenticalSim=IdenticalHist, clone = 1)
   Hist <- .CalcCatchAtSize(Hist, Years = HistYears)
+
+  if (control$RefPoints)
+    Hist <- CalcRefPoints(Hist, silent = silent)
 
   if (!silent)
     cli::cli_alert_success("Simulated Historical Fishery")
