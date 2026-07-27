@@ -850,6 +850,9 @@ ImportSS <- function(SSDir,
   }) |>
     List2Array("Sim", pos = 1) |>
     .ArraySubsetAge(Ages = Ages@Classes)
+  
+  if (all(is.na(Fecundity@MeanAtAge)))
+    return(Fecundity())
   Fecundity
 }
 
