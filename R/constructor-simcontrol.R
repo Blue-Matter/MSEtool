@@ -10,7 +10,7 @@
 #'   Computationally expensive. Default `FALSE`.
 #' @param RefRemovals Logical. Calculate reference yield based on total
 #'   removals (landings + discards)? Default `FALSE`.
-#' @param .ConditionObs Logical. Condition the observation model on historical
+#' @param ConditionObs Logical. Condition the observation model on historical
 #'   fishery data? Default `TRUE`.
 #' @param GenerateData Logical. Generate historical fishery data from the
 #'   observation model? Default `TRUE`.
@@ -21,12 +21,10 @@
 #' @param RefPoints Logical. Calculate F0.1, Fmax, Fx%SPR, Fmed, Fcrash and
 #'   SPRcrash reference points (see [CalcRefPoints()])? Default `TRUE`.
 #' @param MGT Logical. Calculate mean generation time (see [CalcMGT()])?
-#'   A closed-form, fully vectorized calculation -- negligible cost. Default
-#'   `TRUE`.
+#'  Default  `TRUE`.
 #' @param BLow Logical. Calculate the `BLow` rebuilding reference point (see
 #'   [CalcBLow()])? Substantially more expensive than the other reference
-#'   points -- a full population projection plus a numerical search, repeated
-#'   per simulation and stock. Default `FALSE`.
+#'   points. Default `FALSE`.
 #' @param ... Additional named arguments. Any unrecognised names trigger a
 #'   warning.
 #'
@@ -51,7 +49,7 @@
 SimControl <- function(DynamicUnfished = TRUE,
                        RefLandings     = FALSE,
                        RefRemovals     = FALSE,
-                       .ConditionObs    = TRUE,
+                       ConditionObs    = TRUE,
                        GenerateData    = TRUE,
                        MSYRefs         = TRUE,
                        RefPoints       = TRUE,
@@ -69,7 +67,7 @@ SimControl <- function(DynamicUnfished = TRUE,
     DynamicUnfished = DynamicUnfished,
     RefLandings     = RefLandings,
     RefRemovals     = RefRemovals,
-    .ConditionObs    = .ConditionObs,
+    ConditionObs    = ConditionObs,
     GenerateData    = GenerateData,
     MSYRefs         = MSYRefs,
     RefPoints       = RefPoints,
