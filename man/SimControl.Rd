@@ -8,7 +8,7 @@ SimControl(
   DynamicUnfished = TRUE,
   RefLandings = FALSE,
   RefRemovals = FALSE,
-  .ConditionObs = TRUE,
+  ConditionObs = TRUE,
   GenerateData = TRUE,
   MSYRefs = TRUE,
   RefPoints = TRUE,
@@ -27,7 +27,7 @@ Computationally expensive. Default \code{FALSE}.}
 \item{RefRemovals}{Logical. Calculate reference yield based on total
 removals (landings + discards)? Default \code{FALSE}.}
 
-\item{.ConditionObs}{Logical. Condition the observation model on historical
+\item{ConditionObs}{Logical. Condition the observation model on historical
 fishery data? Default \code{TRUE}.}
 
 \item{GenerateData}{Logical. Generate historical fishery data from the
@@ -42,13 +42,11 @@ scales with \code{nSim}; use \code{parallel = TRUE} in \code{\link[=Simulate]{Si
 SPRcrash reference points (see \code{\link[=CalcRefPoints]{CalcRefPoints()}})? Default \code{TRUE}.}
 
 \item{MGT}{Logical. Calculate mean generation time (see \code{\link[=CalcMGT]{CalcMGT()}})?
-A closed-form, fully vectorized calculation -- negligible cost. Default
-\code{TRUE}.}
+Default  \code{TRUE}.}
 
 \item{BLow}{Logical. Calculate the \code{BLow} rebuilding reference point (see
 \code{\link[=CalcBLow]{CalcBLow()}})? Substantially more expensive than the other reference
-points -- a full population projection plus a numerical search, repeated
-per simulation and stock. Default \code{FALSE}.}
+points. Default \code{FALSE}.}
 
 \item{...}{Additional named arguments. Any unrecognised names trigger a
 warning.}
