@@ -41,82 +41,15 @@ Selectivity(AsympExFleet) <- Selectivity(
 
 ## ---- fig-asymp-selectivity ----
 
-# Populate Maturity and Selectivity objects 
-# (Length and Weight objects are populated internally)
+asympOM <- OM(Stock = AlbacoreExStock, Fleet = AsympExFleet, nSim = 5)
 
-Maturity(AlbacoreExStock) <- PopulateMaturity(
-  Maturity = Maturity(AlbacoreExStock),
-  Ages     = Ages(AlbacoreExStock),
-  Length   = Length(AlbacoreExStock),
-  Weight   = Weight(AlbacoreExStock)
+patchwork::wrap_plots(
+  PlotSelectivity(asympOM, x = "Length"),
+  PlotSelectivity(asympOM, x = "Age"),
+  PlotMaturity(asympOM, x = "Length"),
+  PlotMaturity(asympOM, x = "Age"),
+  ncol = 2
 )
-
-Selectivity <- PopulateSelectivity(
-  Selectivity = Selectivity(AsympExFleet),
-  Ages        = Ages(AlbacoreExStock),
-  Length      = Length(AlbacoreExStock),
-  Weight      = Weight(AlbacoreExStock),
-  Maturity    = Maturity(AlbacoreExStock)
-)
-
-# Build combined data frames 
-sel_age <- MeanAtAge(Selectivity) |>
-  Array2DF() |>
-  dplyr::mutate(Schedule = "Selectivity")
-
-mat_age <- MeanAtAge(Maturity(AlbacoreExStock)) |>
-  Array2DF() |>
-  dplyr::mutate(Schedule = "Maturity")
-
-sel_len <- MeanAtLength(Selectivity) |>
-  Array2DF() |>
-  dplyr::mutate(Schedule = "Selectivity")
-
-mat_len <- MeanAtLength(Maturity(AlbacoreExStock)) |>
-  Array2DF() |>
-  dplyr::mutate(Schedule = "Maturity")
-
-df_age <- dplyr::bind_rows(sel_age, mat_age) 
-df_len <- dplyr::bind_rows(sel_len, mat_len) 
-
-# Plot schedules
-cols <- c("Selectivity" = "steelblue", "Maturity" = "coral")
-
-p_len <- ggplot2::ggplot(df_len,
-                         ggplot2::aes(x = Class,
-                                      y = Value, 
-                                      colour = Schedule, 
-                                      group = interaction(Sim, Schedule))) +
-  ggplot2::geom_line(alpha = 0.8) +
-  ggplot2::scale_colour_manual(values = cols) +
-  ggplot2::labs(x = "Length (cm)", y = 'Probability') +
-  ggplot2::scale_x_continuous(
-    expand = ggplot2::expansion(mult = c(0, 0.02))) +
-  ggplot2::scale_y_continuous(
-    expand = ggplot2::expansion(mult = c(0, 0.02)), 
-    limits = c(0, 1)) +
-  ggplot2::theme_bw() +
-  ggplot2::theme(legend.position = "none")
-
-p_age <- ggplot2::ggplot(df_age,
-                         ggplot2::aes(x = Age,
-                                      y = Value, 
-                                      colour = Schedule, 
-                                      group = interaction(Sim, Schedule))) +
-  ggplot2::geom_line(alpha = 0.8) +
-  ggplot2::scale_colour_manual(values = cols) +
-  ggplot2::labs(x = "Age", y = NULL) +
-  ggplot2::scale_x_continuous(
-    expand = ggplot2::expansion(mult = c(0, 0.02))) +
-  ggplot2::scale_y_continuous(
-    expand = ggplot2::expansion(mult = c(0, 0.02)), 
-    limits = c(0, 1)) +
-  ggplot2::theme_bw() +
-  ggplot2::theme(legend.position = "bottom", 
-                 legend.title = ggplot2::element_blank(),
-                 axis.text.y = ggplot2::element_blank())
-  
-patchwork::wrap_plots(p_len, p_age, ncol = 2) 
 
 
 ## ---- save object
