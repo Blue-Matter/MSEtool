@@ -78,7 +78,7 @@
 
   Hist <- .RestoreHistMisc(Hist)
 
-  if (control$.ConditionObs)
+  if (control$ConditionObs)
     Hist <- .ConditionObs(Hist, silent)
 
   if (control$GenerateData)
