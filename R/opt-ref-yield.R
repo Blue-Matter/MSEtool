@@ -33,16 +33,15 @@
                         debug = 0,
                         opt = 1) {
   
-  # Scale historical effort and tile the seasonal pattern across projection years.
-  # baseEffort has nSeason time steps (the last complete historical year); for
-  # annual models nSeason == 1, so this reduces to the previous behaviour.
+
   scaledEffort <- baseEffort * exp(logScalar)
-  nSeason_eff  <- dim(scaledEffort)[2]          # time steps in one seasonal cycle
+  nSeason_eff  <- dim(scaledEffort)[2]         
   nProjTS      <- length(ProjYears)
   tile_idx     <- rep(seq_len(nSeason_eff), ceiling(nProjTS / nSeason_eff))[seq_len(nProjTS)]
   scaledEffort <- scaledEffort[, tile_idx, , drop = FALSE]
   dnames       <- dimnames(scaledEffort)
   dnames[[2]]  <- as.character(ProjYears)
+  dnames$Sim   <- dimnames(Proj@Effort)$Sim
   dimnames(scaledEffort) <- dnames
 
   ArrayFill(Proj@Effort) <- scaledEffort

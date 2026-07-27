@@ -43,16 +43,14 @@
   Proj@OM@Stock <- Extend(Proj@OM@Stock, Years=AllYears)
   Proj@OM@Fleet <- Extend(Proj@OM@Fleet, Years=AllYears)
   Proj@Misc     <- Extend(Proj@Misc, Years=AllYears)
-  
-  for (sl in slotNames('timeseries')) 
-    slot(Proj,sl) <- Extend(slot(Proj,sl), Years=AllYears, default=0) 
+
+  for (sl in setdiff(slotNames('timeseries'), c('Misc', 'Distribution')))
+    slot(Proj,sl) <- Extend(slot(Proj,sl), Years=AllYears, default=0)
+  Proj@Distribution <- Extend(Proj@Distribution, Years=AllYears, default=NA_real_)
   
   ProjYearInd <- match(ProjYears, AllYears)
   nSeason     <- Hist@OM@Seasons
 
-  # For seasonal models use the last complete calendar year (nSeason time steps)
-  # so the seasonal effort pattern is preserved when tiled across the projection.
-  # For annual models this reduces to the single last historical time step.
   lastHistIdx     <- ProjYearInd[1] - 1L
   firstLastYearIdx <- lastHistIdx - nSeason + 1L
   LastHistEffort  <- Proj@Effort[, firstLastYearIdx:lastHistIdx, , drop = FALSE]

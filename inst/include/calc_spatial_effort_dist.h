@@ -222,7 +222,7 @@ inline void CalcSpatialDistribution(
       double total_U = 0.0;
       for (int ar = 0; ar < nArea; ++ar)
         total_U += U_buf[sfa_idx(sim, fl, ar)];
-      
+
       if (total_U <= 0.0) {
         for (int ar = 0; ar < nArea; ++ar) {
           if (std::isnan(Distribution(sim, y, fl, ar)))
@@ -248,7 +248,7 @@ inline void CalcSpatialDistribution(
       
       const int    sim_t  = sim_index<3>(sim, Spatial_Targeting);
       const double lambda = Spatial_Targeting(sim_t, y, fl);
-      
+
       if (lambda <= 0.0) {
         // Uniform share across open areas (U > 0 ↔ area accessible)
         int n_open = 0;

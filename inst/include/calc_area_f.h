@@ -90,7 +90,7 @@ inline void CalcArea_F(
             targ = StockTargeting(sim_st, st, fl, y);
           }
             
-          double q_eff = std::min(q_fl * ed * targ, maxF);          
+          double q_eff = std::min(q_fl * ed * targ, maxF);
           if (q_eff <= 0.0) continue;
           
           for (int age = 0; age < nAge; ++age) {
