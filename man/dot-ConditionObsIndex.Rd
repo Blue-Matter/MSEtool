@@ -11,7 +11,8 @@
   ProjYears,
   stocks,
   i,
-  type = c("CPUE", "Survey")
+  type = c("CPUE", "Survey"),
+  EstimateBeta = TRUE
 )
 }
 \arguments{
@@ -28,6 +29,12 @@
 \item{i}{Integer index of observed data set}
 
 \item{type}{Character, either \code{CPUE} or \code{Survey}}
+
+\item{EstimateBeta}{Logical. Estimate the hyperstability/hyperdepletion
+parameter \code{Beta} by regression? If \code{FALSE}, \code{Beta} is fixed at \code{1} unless
+the user has already supplied a value on the \code{Obs} object. Default \code{TRUE}
+for this internal function; \code{.ConditionObs()} normally passes through
+\code{SimControl()}'s own default of \code{FALSE}.}
 }
 \description{
 Internal function to condition observation error from provided indices (CPUE or Survey)

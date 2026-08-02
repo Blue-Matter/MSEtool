@@ -14,34 +14,21 @@
 #' If [EmptyObject()] returns `TRUE` for `Catch`, the object is returned
 #' unchanged and no population is performed.
 #'
-#' Otherwise the following slots are populated in order:
-#'
-#' * `CV`: expanded to a named `[nSim]` array via [PopulateObsCV()].
-#' * `Error`: generated as a lognormal draw from `CV` across all historical
-#'   and projection years, producing a named `[nSim x nYear]` array via
-#'   [PopulateObsError()]. If `Error` is already a fully-formed array it is
-#'   validated and dimension names are applied.
-#' * `Bias`: expanded to a named `[nSim]` multiplicative bias array via
-#'   [PopulateObsBias()]. Defaults to 1 (no bias) if unspecified.
-#' * `Ref`: generated as a lognormal draw from a CV, producing a named
-#'   `[nSim]` reference level error multiplier array via [PopulateObsRef()].
-#'
 #' @return A populated [catchobs-class] object.
 #'
 #' @seealso
-#' [PopulateObs()], [catchobs-class], [PopulateObsCV()],
-#' [PopulateObsError()], [PopulateObsBias()], [PopulateObsRef()]
+#' [PopulateObs()], [catchobs-class]
 #'
 #' @export
 PopulateCatchObs <- function(Catch, nSim, HistYears, ProjYears) {
   .CheckClass(Catch, "catchobs", "Catch")
-  
+
   if (EmptyObject(Catch))
     return(Catch)
-  
-  Catch@CV    <- PopulateObsCV(Catch@CV, nSim)
-  Catch@Error <- PopulateObsError(Catch, nSim, Years = c(HistYears, ProjYears))
-  Catch@Bias  <- PopulateObsBias(Catch, nSim)
-  Catch@Ref   <- PopulateObsRef(Catch@Ref, nSim)
+
+  Catch@CV    <- .PopulateObsCV(Catch@CV, nSim)
+  Catch@Error <- .PopulateObsError(Catch, nSim, Years = c(HistYears, ProjYears))
+  Catch@Bias  <- .PopulateObsBias(Catch, nSim)
+  Catch@Ref   <- .PopulateObsRef(Catch@Ref, nSim)
   Catch
 }

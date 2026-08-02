@@ -1,22 +1,12 @@
 #' Combine Multiple `mse` Objects Across Simulations
 #'
-#' Combines a list of [mse-class] objects -- e.g. results from independent
-#' batches of simulations of the same OM, or from different OMs that should
-#' be treated as one large ensemble -- into a single `mse` object, by
+#' Combines a list of [mse-class] objects into a single `MSE` object, by
 #' concatenating every simulation-indexed array along the `Sim` dimension.
 #' Used internally by [PM_FFMSY()] and the other `PM_*` functions whenever
-#' `object` is a `list` rather than a single `mse`.
+#' `object` is a `list` rather than a single `MSE`.
 #'
 #' All elements of `MSE_List` must share the same MPs (same names, same
 #' order), the same stock names, and the same historical/projection years.
-#'
-#' Every slot of `mse` (including inherited [timeseries-class] slots, `Hist`,
-#' `Unfished`, and `Reference`) is combined by concatenating along `Sim`,
-#' except `OM`, `MPs`, `PPD`, `Log`, and `Misc`, which are taken from the
-#' first element of `MSE_List` (only `OM@nSim` is updated, to the combined
-#' total). This makes `CombineMSE()` suitable for computing performance
-#' metrics over the combined ensemble, but the result should not be used to
-#' resume/extend a projection.
 #'
 #' @param MSE_List A list of [mse-class] objects.
 #' @param silent Logical. Suppress the summary message. Default `FALSE`.
@@ -29,10 +19,27 @@
 CombineMSE <- function(MSE_List, silent = FALSE) {
   .CheckClass(MSE_List, 'list', 'MSE_List')
   purrr::walk(MSE_List, .CheckClass, class = 'mse', name = 'element of `MSE_List`')
-
-  if (length(MSE_List) == 1)
+  
+  n <- length(MSE_List)
+  
+  if (n == 1)
     return(MSE_List[[1]])
-
+  
+  extend_id <- if (!silent) {
+    cli::cli_progress_bar(
+      format = "Extending MSE objects {cli::pb_current}/{cli::pb_total} {cli::pb_bar} {cli::pb_percent}",
+      format_done = "{cli::col_green(cli::symbol$tick)} Extended {n} MSE object{?s} to full `nSim` [{cli::pb_elapsed}]",
+      total = n,
+      clear = TRUE
+    )
+  } else NULL
+  
+  MSE_List <- purrr::imap(MSE_List, \(object, i) {
+    out <- ExtendSims(object, nSim(object))
+    if (!silent) cli::cli_progress_update(id = extend_id)
+    out
+  })
+  
   ref      <- MSE_List[[1]]
   RefMPs   <- names(MPs(ref))
   RefStock <- StockNames(ref)
@@ -48,26 +55,72 @@ CombineMSE <- function(MSE_List, silent = FALSE) {
   })
 
   out   <- ref
-  skip  <- c('OM', 'MPs', 'PPD', 'Log', 'Misc')
-  slots <- setdiff(methods::slotNames(ref), skip)
+  slots <- methods::slotNames(ref)
+
+  combine_id <- if (!silent) {
+    cli::cli_progress_bar(
+      format = "Combining slot {.val {cli::pb_extra$slot}} ({cli::pb_current}/{cli::pb_total}) {cli::pb_bar} {cli::pb_percent}",
+      format_done = "{cli::col_green(cli::symbol$tick)} Combined {length(slots)} slot{?s} [{cli::pb_elapsed}]",
+      total = length(slots),
+      clear = TRUE,
+      extra = list(slot = "")
+    )
+  } else NULL
+  
+
+  sim_offsets <- c(0, cumsum(purrr::map_dbl(MSE_List, nSim)))[seq_along(MSE_List)]
 
   for (sl in slots) {
-    values           <- purrr::map(MSE_List, \(m) methods::slot(m, sl))
-    slot(out, sl)    <- purrr::reduce(values, .CombineSimwise)
+    if (identical(sl, 'Log')) {
+      slot(out, sl) <- .CombineLogs(purrr::map(MSE_List, methods::slot, 'Log'), sim_offsets)
+    } else {
+      values        <- purrr::map(MSE_List, \(m) methods::slot(m, sl))
+      slot(out, sl) <- purrr::reduce(values, .CombineSimwise)
+    }
+    if (!silent) cli::cli_progress_update(id = combine_id, extra = list(slot = sl))
   }
-
+  
+ 
   totalSim       <- sum(purrr::map_dbl(MSE_List, nSim))
   out            <- .RelabelSim(out, totalSim)
   out@OM@nSim    <- totalSim
 
+  cli::cli_progress_done()
+  
   if (!silent)
-    cli::cli_alert_success("Combined {length(MSE_List)} `mse` objects into {totalSim} total simulations")
+    cli::cli_alert_success("Combined {length(MSE_List)} `MSE` objects into {totalSim} total simulations")
 
   out
 }
 
+
+.CombineLogs <- function(LogList, sim_offsets) {
+  types <- c('assumption', 'warning', 'error')
+  out   <- stats::setNames(vector('list', length(types)), types)
+
+  for (type in types) {
+    entries <- purrr::map2(LogList, sim_offsets, \(Log, offset) {
+      .CombineLogEntries(Log[[type]], offset)
+    })
+    combined <- purrr::list_c(entries)
+    if (length(combined)) out[[type]] <- combined
+  }
+
+  out
+}
+
+.CombineLogEntries <- function(entries, offset) {
+  if (is.null(entries) || !length(entries)) return(list())
+
+  lapply(entries, \(entry) {
+    if (.IsLogEntry(entry) && !is.null(entry$sim)) entry$sim <- entry$sim + offset
+    entry
+  })
+}
+
 # Recursively concatenate two S4/array/list structures along their `Sim` dimension.
 .CombineSimwise <- function(a, b) {
+ 
   if (is.null(a)) return(b)
   if (is.null(b)) return(a)
 
@@ -86,6 +139,13 @@ CombineMSE <- function(MSE_List, silent = FALSE) {
     }
     return(a)
   }
+  
+  if (is.data.frame(a)) {
+    if (!is.null(a$Sim)) {
+      return(dplyr::bind_rows(a,b))
+    } 
+    return(a)
+  }
 
   if (is.list(a)) {
     if (length(a) == length(b))
@@ -99,8 +159,11 @@ CombineMSE <- function(MSE_List, silent = FALSE) {
 # Recursively relabel every `Sim` dimname to sequential integers after combining.
 .RelabelSim <- function(x, totalSim) {
   if (isS4(x)) {
-    for (sl in methods::slotNames(x))
+    for (sl in methods::slotNames(x)) {
+      # OUT <<- methods::slot(x, sl)
       methods::slot(x, sl) <- .RelabelSim(methods::slot(x, sl), totalSim)
+    }
+      
     return(x)
   }
 
@@ -112,7 +175,15 @@ CombineMSE <- function(MSE_List, silent = FALSE) {
     dimnames(x) <- dn
     return(x)
   }
-
+  
+  if (is.data.frame(x)) {
+    if (!is.null(x$Sim)) {
+      n_exist <- length(x$Sim)
+      x$Sim <- seq_len(totalSim)[seq_len(n_exist)]
+      return(x)
+    }
+  }
+  
   if (is.list(x))
     return(purrr::map(x, .RelabelSim, totalSim = totalSim))
 

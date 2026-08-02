@@ -19,6 +19,17 @@
 #' @param MaxFleetEffort Numeric vector (length `nFleet`). Optional per-fleet
 #'   effort ceiling applied after optimisation; `NA` entries impose no ceiling.
 #'   Fleets whose ceiling is exactly zero are excluded from optimisation.
+#' @param cx Integer. Index of the complex to solve against, within
+#'   `TAC_by_Complex` and the rows of the catch matrix. Default `1`. Values
+#'   other than `1` are used when solving each complex separately to find the
+#'   effort at which it reaches its own TAC.
+#' @param Effort_start Numeric vector (length `nFleet`), or `NULL` (default) to
+#'   start from the previous time step's effort. Supplies a warm start when this
+#'   solve is nested inside an outer optimiser that re-solves a nearly identical
+#'   problem each call - see `.OptEffortChoke()`.
+#' @param reltol Numeric, or `NULL` (default). When supplied, convergence is
+#'   judged relative to each fleet's TAC rather than against the absolute `tol`,
+#'   making the criterion invariant to the units catch is measured in.
 #' @param minEffort Numeric scalar. Floor substituted for near-zero effort
 #'   values throughout; prevents log-scale arithmetic from collapsing to
 #'   `-Inf`. Default `1e-8`.
@@ -36,6 +47,10 @@
 #'   Applied via `clamp_effort()` at every step and used as the bracket ceiling
 #'   in the single-fleet case. Fleets that reach `99%` of this value while
 #'   their TAC residual remains positive are declared saturated. Default `1e6`.
+#'   This is an arbitrary backstop: it is tightened per fleet to
+#'   `.MaxUsefulEffort()`, the effort past which the `maxF` cap leaves catch
+#'   unchanged, so saturation is reached in a step or two instead of by climbing
+#'   several decades.
 #'
 #' Effort is solved on the log scale so that candidate values are always
 #' positive. The workflow is:
@@ -61,8 +76,15 @@
 #' @return Numeric vector of length `nFleet` giving optimised effort per fleet.
 #'   For fleets with no TAC constraint (`BindingTAC` is `NA` or not in
 #'   `pos_idx`), effort is carried forward from the previous time step.
-#'   For fleets whose TAC is unachievable (saturated), effort is set to
+#'   When the TAC is unachievable the two branches differ: the single-active-
+#'   fleet branch cannot bracket the TAC and returns the previous time step's
+#'   effort, while the multi-fleet Newton branch saturates and leaves effort at
 #'   `maxEffort` (or `MaxFleetEffort[fl]` if lower).
+#'
+#'   Either way the value is provisional. `.CalcFisheryDynamics()` overwrites
+#'   `Hist@Effort` with the effort implied by the F actually realised, so an
+#'   unachievable TAC is reported as the effort corresponding to the capped F
+#'   rather than as `maxEffort`. See that function's `DoBackCalcEffort`.
 #'
 #' @keywords internal
 .OptEffortSinglestock <- function(Proj,
@@ -73,24 +95,40 @@
                                   TACType_by_Complex,
                                   TACUnit_by_Complex,
                                   MaxFleetEffort = NULL,
+                                  cx            = 1L,
+                                  Effort_start  = NULL,
                                   minEffort     = 1e-8,
                                   tol           = 1e-3,
+                                  reltol        = NULL,
                                   maxIter       = 100,
                                   max_log_step  = log(10),
                                   maxEffort = 1e6) {
-  
-  nComplex <- length(TAC_by_Complex)   # always 1
+
   nFleet   <- nFleet(Proj)
-  
+
   if (is.null(MaxFleetEffort))
     MaxFleetEffort <- rep(NA_real_, nFleet)
-  
-  tac_vec <- TAC_by_Complex[[1]]
-  
+
+  # Nested in an outer optimiser this re-solves a nearly identical problem each
+  # call, so start from the previous solution when one is supplied
+  Effort_ref <- if (is.null(Effort_start)) Proj@Effort[sim, TSIndex - 1L, ] else Effort_start
+
+  # Tighten the arbitrary `maxEffort` to the point past which the maxF cap
+  # makes more effort pointless, so an unachievable TAC is detected in a step
+  # or two rather than by climbing several decades - see .MaxUsefulEffort()
+  maxEffort_fl <- rep(maxEffort, nFleet)
+  useful       <- .MaxUsefulEffort(Proj, sim, TSIndex)
+  if (!is.null(useful)) {
+    ok <- is.finite(useful) & useful > 0
+    maxEffort_fl[ok] <- pmin(maxEffort_fl[ok], useful[ok])
+  }
+
+  tac_vec <- TAC_by_Complex[[cx]]
+
   if (is.null(tac_vec)) {
-    # No TAC has been set for any fleets 
+    # No TAC has been set for any fleets
     # return previous effort unless an effort rec. has already been applied
-    Effort_base <- pmax(Proj@Effort[sim, TSIndex - 1L, ], minEffort)
+    Effort_base <- pmax(Effort_ref, minEffort)
     has_ceiling <- !is.na(MaxFleetEffort)
     if (any(has_ceiling))
       Effort_base[has_ceiling] <- MaxFleetEffort[has_ceiling]
@@ -101,7 +139,7 @@
   pos_idx    <- which(is.finite(BindingTAC) & BindingTAC > 0)
   zero_idx   <- which(is.finite(BindingTAC) & BindingTAC == 0)
   
-  Effort_base           <- pmax(Proj@Effort[sim, TSIndex - 1L, ], minEffort)
+  Effort_base           <- pmax(Effort_ref, minEffort)
   Effort_base[zero_idx] <- 0
   Effort_curr           <- Effort_base
   
@@ -123,16 +161,17 @@
     
     catch_fl <- function(log_scale) {
       .OptSingleFleetCatch(log_scale, Effort_base, Proj, sim, TSIndex,
-                          Year, TACType_by_Complex, TACUnit_by_Complex, fl)
+                          Year, TACType_by_Complex, TACUnit_by_Complex, fl,
+                          cx = cx)
     }
     
     log_lo  <- log(minEffort)
     log_hi  <- 0
     
     max_log <- if (!is.na(MaxFleetEffort[fl])) {
-      min(log(maxEffort / Effort_base[fl]), log(MaxFleetEffort[fl] / Effort_base[fl]))
+      min(log(maxEffort_fl[fl] / Effort_base[fl]), log(MaxFleetEffort[fl] / Effort_base[fl]))
     } else {
-      log(maxEffort / Effort_base[fl])
+      log(maxEffort_fl[fl] / Effort_base[fl])
     }
     
     if (catch_fl(0) > tac) {
@@ -154,7 +193,7 @@
     opt <- optimize(
       function(ls) (catch_fl(ls) - tac)^2,
       interval = c(log_lo, log_hi),
-      tol = 1e-8
+      tol = if (is.null(reltol)) 1e-8 else reltol
     )
     Effort_curr[fl] <- Effort_base[fl] * exp(opt$minimum)
     
@@ -165,13 +204,21 @@
   }
   
   
-  clamp_effort <- function(e) pmin(pmax(e, minEffort), maxEffort)
+  # Residuals are in catch units, so an absolute `tol` means different precision
+  # in every OM. `reltol` scales it by the TAC being matched.
+  tol_vec <- if (is.null(reltol)) {
+    rep(tol, length(pos_idx))
+  } else {
+    pmax(reltol * abs(BindingTAC[pos_idx]), .Machine$double.eps)
+  }
+
+  clamp_effort <- function(e, idx) pmin(pmax(e, minEffort), maxEffort_fl[idx])
   clamp_step   <- function(s) pmax(pmin(s, max_log_step), -max_log_step)
   
   residual_fn <- function(Effort_vec) {
     Proj     <- .WriteStateToProj(Proj, sim, TSIndex, Effort = Effort_vec)
     CatchMat <- .CalcFleetCatch(Proj, sim, TSIndex, Year, TACType_by_Complex,
-                               TACUnit_by_Complex)[1, ]
+                               TACUnit_by_Complex)[cx, ]
     (BindingTAC - CatchMat)[pos_idx]
   }
   
@@ -190,10 +237,10 @@
     
     # Early exit: all active fleets have hit maxEffort and TAC is
     # still unachievable (depleted stock scenario).
-    effort_at_cap <- Effort_curr[pos_idx] >= maxEffort * 0.99
+    effort_at_cap <- Effort_curr[pos_idx] >= maxEffort_fl[pos_idx] * 0.99
     if (any(effort_at_cap & !saturated_fleets)) {
       res_check <- residual_fn(Effort_curr)
-      still_under <- effort_at_cap & (res_check > tol)
+      still_under <- effort_at_cap & (res_check > tol_vec)
       if (any(still_under)) {
         saturated_fleets <- saturated_fleets | still_under
       }
@@ -208,7 +255,7 @@
     residual <- residual_fn(Effort_curr)
     curr_ss  <- sum(residual[active]^2)
     
-    if (all(abs(residual[active]) < tol)) {
+    if (all(abs(residual[active]) < tol_vec[active])) {
       converged <- TRUE
       break
     }
@@ -220,13 +267,13 @@
     residual_pert <- residual_fn(Effort_pert)
     
     J_diag    <- (residual - residual_pert) / deltaF
-    flat_grad <- active & (abs(J_diag) < 1e-6) & (abs(residual) > tol)
+    flat_grad <- active & (abs(J_diag) < 1e-6) & (abs(residual) > tol_vec)
     tiny      <- abs(J_diag) < 1e-8
     J_diag[tiny] <- sign(J_diag[tiny]) * 1e-8
     J_diag[J_diag == 0] <- 1e-8
     
     log_step <- clamp_step(residual[active] / (J_diag[active] * Effort_curr[pos_idx[active]]))
-    Eff_diag <- clamp_effort(Effort_curr[pos_idx[active]] * exp(log_step))
+    Eff_diag <- clamp_effort(Effort_curr[pos_idx[active]] * exp(log_step), pos_idx[active])
     Eff_diag <- apply_ceiling(Eff_diag, pos_idx[active])
     
     Effort_test                  <- Effort_curr
@@ -260,7 +307,7 @@
     )
     
     log_step_full <- clamp_step(delta_active / Effort_curr[pos_idx[active]])
-    new_effort    <- clamp_effort(Effort_curr[pos_idx[active]] * exp(log_step_full))
+    new_effort    <- clamp_effort(Effort_curr[pos_idx[active]] * exp(log_step_full), pos_idx[active])
     new_effort    <- apply_ceiling(new_effort, pos_idx[active])
     
     Effort_test_full                  <- Effort_curr
@@ -284,7 +331,7 @@
     obj_bfgs <- function(log_scale_vec) {
       log_scale_vec     <- clamp_step(log_scale_vec)
       Eff_test          <- Effort_base
-      Eff_test[pos_idx] <- clamp_effort(Effort_base[pos_idx] * exp(log_scale_vec))
+      Eff_test[pos_idx] <- clamp_effort(Effort_base[pos_idx] * exp(log_scale_vec), pos_idx)
       Eff_test[pos_idx] <- apply_ceiling(Eff_test[pos_idx], pos_idx)
       sum(residual_fn(Eff_test)^2)
     }
@@ -298,7 +345,7 @@
                  method  = "BFGS",
                  control = list(maxit = 200))
     
-    Effort_curr[pos_idx] <- clamp_effort(Effort_base[pos_idx] * exp(clamp_step(opt$par)))
+    Effort_curr[pos_idx] <- clamp_effort(Effort_base[pos_idx] * exp(clamp_step(opt$par)), pos_idx)
     Effort_curr[pos_idx] <- apply_ceiling(Effort_curr[pos_idx], pos_idx)
   }
   

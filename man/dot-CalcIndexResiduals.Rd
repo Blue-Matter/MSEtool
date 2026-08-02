@@ -2,27 +2,52 @@
 % Please edit documentation in R/condition-obs-index.R
 \name{.CalcIndexResiduals}
 \alias{.CalcIndexResiduals}
-\title{Calculate log residuals for standardized index}
+\title{Calculate log residuals for standardized index, fitting hyperstability (beta)}
 \usage{
-.CalcIndexResiduals(ObservedIndex, SimulatedIndex, beta = 1)
+.CalcIndexResiduals(
+  ObservedIndex,
+  SimulatedIndex,
+  beta = NULL,
+  MinPoints = 8,
+  FitInd = NULL,
+  alpha = 0.05
+)
 }
 \arguments{
 \item{ObservedIndex}{Numeric vector of length nYear with observed index values.}
 
 \item{SimulatedIndex}{Numeric matrix or array of dimensions nSim x nYear with simulated index values.}
 
-\item{beta}{Numeric scaling parameter (default 1) returned for completeness.}
+\item{beta}{\code{NULL}, numeric scalar, or length-nSim vector. Passed through
+to \code{.EstimateBeta()}.}
+
+\item{MinPoints}{Integer. Passed through to \code{.EstimateBeta()}. Default \code{8}.}
+
+\item{FitInd}{Integer vector or \code{NULL}. Year positions to restrict fitting
+to (e.g. \code{Index_Obs@Years}, matching \code{CalcResidualStats()}'s year
+restriction). \code{NULL} (default) uses every non-NA, positive year.}
+
+\item{alpha}{Numeric. Passed through to \code{.EstimateBeta()}. Default \code{0.05}.}
 }
 \value{
 A list with elements:
 \itemize{
-\item \code{LogResiduals}: matrix nSim x nYear of log residuals (log(Observed) - log(Simulated))
-\item \code{beta}: numeric, the input beta value.
+\item \code{LogResiduals}: matrix nSim x nYear of log residuals (\verb{log(Observed) - fitted log(Observed)})
+\item \code{Beta}: numeric vector length nSim, the fitted or supplied beta values.
+\item \code{Efficiency}: numeric vector length nSim, the fitted catchability \code{q}.
+\item \code{SE_Beta}, \code{CI_Lower}, \code{CI_Upper}, \code{R2}, \code{PValue}, \code{nPoints}, \code{Status}: fit
+diagnostics from \code{.EstimateBeta()}, passed through unchanged.
 }
 }
 \description{
-Internal function to compute log-scale residuals between observed
-and simulated indices. Standardizes both series to mean 1 before
-calculating residuals.
+Computes log-scale residuals under the hyperstability model
+\code{Observed_t = Efficiency * Simulated_t^Beta * exp(residual_t)} (Harley et
+al. 2001). \code{Efficiency} is fit per simulation by log-linear regression;
+\code{Beta} estimation (or fixing) is delegated to \code{.EstimateBeta()}.
+}
+\details{
+\code{NA} or non-positive years are dropped before fitting. See
+\code{.EstimateBeta()} for when \code{Beta} is fixed at \code{1} rather than freely
+estimated.
 }
 \keyword{internal}

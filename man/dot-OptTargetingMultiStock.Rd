@@ -38,10 +38,10 @@ current year. \code{TSIndex - 1} is used to initialise the warm start.}
 \item{Effort}{Numeric vector of length \code{nFleet}. Fixed fleet effort
 for this year (from the MP's \code{Effort} advice) - not optimised.}
 
-\item{lambda}{Numeric vector of length \code{nFleet} (or scalar, recycled),
-or \code{NULL} (default \code{1} for all fleets). Ridge penalty weight controlling
-resistance to year-to-year targeting changes - see
-\code{.OptEffortMultiStock()}.}
+\item{lambda}{Numeric matrix \verb{[nFleet x nStock]}, or a scalar or
+length-\code{nFleet} vector recycled across stocks, or \code{NULL} (default \code{1}).
+Ridge penalty weight controlling resistance to year-to-year targeting
+changes.}
 
 \item{n_recent}{Integer (default \code{5}). Number of most-recent historical
 years examined to determine which stocks each fleet actively targets.}
@@ -70,16 +70,16 @@ history.}
 }
 \description{
 \code{.OptTargetingMultiStock()} is the effort-control counterpart to
-\code{.OptEffortMultiStock()}. Under TAC management, fleet effort \emph{and}
-stock-specific targeting weights are solved jointly so each fleet catches
-its TAC. Under effort management there is no TAC to solve for - fleet
-effort is instead fixed by the MP's \code{Effort} advice - but a fleet fishing
-several stocks still has to decide how to point that fixed effort across
-them. This function solves for the targeting weights \verb{delta_\{s,f\}} that
-maximise a concave transform of total catch (an interim stand-in for
-catch \emph{value}, pending stock-specific bio-economic prices - see Details),
-subject to the same soft ridge penalty on year-to-year targeting change
-used by \code{.OptEffortMultiStock()}.
+\code{.OptEffortChoke()}. Under TAC management, effort is derived from the
+targeting mix by the choke rule. Under effort management there is no TAC to
+solve for - fleet effort is instead fixed by the MP's \code{Effort} advice - but
+a fleet fishing several stocks still has to decide how to point that fixed
+effort across them. This function solves for the targeting weights
+\verb{delta_\{s,f\}} that maximise a concave transform of total catch (an interim
+stand-in for catch \emph{value}, pending stock-specific bio-economic prices - see
+Details), subject to a soft ridge penalty on year-to-year targeting change.
+Both paths share \code{.OptTargetingMsObjective()}; they differ only in whether
+effort is supplied or derived.
 }
 \details{
 The catch objective for each active fleet is \code{sum(log1p(Catch_s))} over
@@ -90,7 +90,7 @@ already-abundant stock, which discourages the optimiser from collapsing
 onto whichever single stock is most catchable.
 }
 \seealso{
-\code{.OptEffortMultiStock()} for the TAC-based counterpart this
+\code{.OptEffortChoke()} for the TAC-based counterpart this
 function mirrors.
 }
 \keyword{internal}

@@ -10,11 +10,14 @@
 #' 
 #' @slot Interactions Total interaction by Stock and Fleet (biomass). Array: Sim x Stock x Year x Fleet (x MP for `MSE` objects).
 #' @slot Landings Total landings by Stock and Fleet (biomass). Array: Sim x Stock x Year x Fleet (x MP for `MSE` objects).
-#' @slot Discards Total discards by Stock and Fleet (biomass). Array: Sim x Stock x Year x Fleet (x MP for `MSE` objects).
-#' 
+#' @slot Discards Total *dead* discards by Stock and Fleet (biomass). Array: Sim x Stock x Year x Fleet (x MP for `MSE` objects).
+#'   Fish that are released and survive are counted in `Interactions` but not in
+#'   `Discards`, so `Interactions` exceeds `Landings + Discards` whenever
+#'   discard mortality is below 1.
+#'
 #' @slot InteractAtAge List of interactions-at-age (numbers) arrays. Stock: Sim × Age × Year × Fleet × Area  (x MP for `MSE` objects).
 #' @slot LandingsAtAge List of landings-at-age (numbers) arrays. Stock: Sim × Age × Year × Fleet × Area  (x MP for `MSE` objects).
-#' @slot DiscardsAtAge List of discards-at-age (numbers) arrays. Stock: Sim × Age × Year × Fleet × Area (x MP for `MSE` objects).
+#' @slot DiscardsAtAge List of dead discards-at-age (numbers) arrays. Stock: Sim × Age × Year × Fleet × Area (x MP for `MSE` objects).
 #' 
 #' @slot LandingsAtSize Nested list of landings-at-size (numbers) arrays Stock, Fleet: Sim × Class × Year × Area (x MP for `MSE` objects). 
 #' @slot DiscardsAtSize Nested list of discards-at-size (numbers) arrays Stock, Fleet: Sim × Class × Year × Area (x MP for `MSE` objects).

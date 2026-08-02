@@ -17,18 +17,18 @@
 #'
 #' Otherwise the following slots are populated in order:
 #'
-#' * `CV` — expanded to a named `[nSim]` array via [PopulateObsCV()].
+#' * `CV` — expanded to a named `[nSim]` array.
 #' * `Error` — generated as a lognormal draw from `CV` across all historical
-#'   and projection years, producing a named `[nSim x nYear]` array via
-#'   [PopulateObsError()]. If `Error` is already a fully-formed array it is
+#'   and projection years, producing a named `[nSim x nYear]` array. If 
+#'   `Error` is already a fully-formed array it is
 #'   validated and dimension names are applied. If `AC` is non-zero, the
 #'   error series is subsequently transformed to an AR(1) process (see below).
-#' * `AC` — expanded to a named `[nSim]` array via [PopulateObsAC()].
+#' * `AC` — expanded to a named `[nSim]` array.
 #'   Accepted inputs: scalar applied to all simulations, length-2 vector
 #'   `c(lower, upper)` for a per-simulation Uniform draw, or a vector of
 #'   length `nSim` used directly. Defaults to 0 (no autocorrelation).
 #' * `Ref` — generated as a lognormal draw from a CV, producing a named
-#'   `[nSim]` reference level error array via [PopulateObsRef()].
+#'   `[nSim]` reference level error array.
 #' * `Years` — if empty, defaults to all historical years (`HistYears`).
 #'
 #' The following slots are used internally during the simulation and are not
@@ -54,28 +54,27 @@
 #' @return A populated [indicesobs-class] object.
 #'
 #' @seealso
-#' [PopulateObs()], [indicesobs-class], [PopulateObsCV()],
-#' [PopulateObsError()], [PopulateObsAC()], 
-#' [PopulateObsRef()]
+#' [PopulateObs()], [indicesobs-class]
 #'
 #' @export
 PopulateIndexObs <- function(Index, nSim, HistYears, ProjYears) {
   .CheckClass(Index, "indicesobs", "Index")
-  
+
   if (EmptyObject(Index))
     return(Index)
-  
+
   Years <- c(HistYears, ProjYears)
-  
-  Index@CV    <- PopulateObsCV(Index@CV, nSim)
-  Index@Error <- PopulateObsError(Index, nSim, Years)
-  Index@AC    <- PopulateObsAC(Index@AC, nSim)
-  Index@Error <- ApplyObsAC(Index@Error, Index@AC)
-  Index@Ref   <- PopulateObsRef(Index@Ref, nSim)
+
+  Index@CV    <- .PopulateObsCV(Index@CV, nSim)
+  Index@Error <- .PopulateObsError(Index, nSim, Years)
+  Index@Beta  <- .PopulateObsBeta(Index@Beta, nSim)
+  Index@AC    <- .PopulateObsAC(Index@AC, nSim)
+  Index@Error <- .ApplyObsAC(Index@Error, Index@AC)
+  Index@Ref   <- .PopulateObsRef(Index@Ref, nSim)
   
   if (length(Index@Years) < 1)
     Index@Years <- HistYears
   
-  # TODO: Beta, Selectivity, Type, Efficiency — used internally, not populated here
+  # TODO: Selectivity, Type, Efficiency — used internally, not populated here
   Index
 }

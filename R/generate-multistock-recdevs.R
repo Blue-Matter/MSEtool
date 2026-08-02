@@ -5,50 +5,47 @@
 #' covariance and temporal autocorrelation.
 #'
 #' @param OM An operating model object of class [om-class].
-#' @param TruncSD Numeric scalar. Number of standard deviations at which to
-#'   truncate the innovation distribution. Defaults to `2`.
+#' @param TruncSD Numeric scalar. Number of standard deviations at which the
+#'   log deviations are bounded, as in [GenRecDevs()]. Defaults to `3`.
 #' @param silent `logical(1)` Display messages?
 #'
 #' @return The input `OM` object with `RecDevProj` populated for all stocks
 #'   and simulations.
 #'
 #' @details
-#' 
-#' Deviations are simulated in log-space:
+#'
+#' The AR(1) process runs on a unit-variance latent scale that carries the
+#' cross-stock correlation:
 #'
 #' \deqn{
-#'   Z_t = \mu + \Phi (Z_{t-1} - \mu) + \epsilon_t
+#'   Z_t = \Phi Z_{t-1} + \epsilon_t, \quad
+#'   \epsilon_t \sim MVN(0, \Sigma_\epsilon)
 #' }
 #'
-#' \deqn{
-#'   R_t = \exp(Z_t)
-#' }
+#' where \eqn{\Phi} is a diagonal matrix of lag-1 autocorrelation coefficients
+#' and \eqn{\Sigma_\epsilon} is derived by [CalcInnovationCov()] from the
+#' cross-stock correlation matrix.
 #'
-#' where:
-#' - \eqn{\mu} is a bias-corrected mean
-#' - \eqn{\Phi} is a diagonal matrix of lag-1 autocorrelation coefficients
-#' - \eqn{\epsilon_t \sim MVN(0, \Sigma_\epsilon)}
+#' Each stock's latent series is then mapped onto a truncated normal marginal
+#' via the probability integral transform, scaled to that stock's standard
+#' deviation, and bias-corrected so that mean recruitment multiplier is 1.
+#' This is the same transform [GenRecDevs()] applies, so bounded and
+#' correlated deviations follow the same convention. 
 #'
-#' The innovation covariance matrix \eqn{\Sigma_\epsilon} is derived from the
-#' stationary covariance \eqn{\Sigma_Z} using [CalcInnovationCov()].
-#' 
 #' The function proceeds as follows for each simulation:
 #'
-#' 1. **Extract stock-specific parameters** (`sd`, `ac`, `mu`)
+#' 1. **Extract stock-specific parameters** (`sd`, `ac`)
 #' 2. **Impute missing historical deviations** using univariate AR(1)
 #' 3. **Estimate stationary covariance** \eqn{\Sigma_Z} from historical log deviations
-#' 4. **Compute innovation covariance** via [CalcInnovationCov()]
+#' 4. **Compute latent innovation covariance** via [CalcInnovationCov()]
 #' 5. **Simulate projection deviations** using a multivariate AR(1) process
 #'
-#' Truncation is applied to the innovation term \eqn{\epsilon_t}, not the
-#' deviations themselves.
-#'
-#' @seealso [CalcInnovationCov()], `.AddAutoCorrelation()`
+#' @seealso [GenRecDevs()], [CalcInnovationCov()]
 #' @export
-GenMultiStockRecDevs <- function(OM, TruncSD = 2, silent = FALSE) {
+GenMultiStockRecDevs <- function(OM, TruncSD = 3, silent = FALSE) {
   
-  CheckPackage('tmvtnorm')
-  
+  CheckPackage('MASS')
+
   .CheckClass(OM)
   set.seed(OM@Seed)
   
@@ -83,22 +80,21 @@ GenMultiStockRecDevs <- function(OM, TruncSD = 2, silent = FALSE) {
       recdevhist[sim, ]
     }) |> dplyr::bind_rows() |> as.data.frame()
     
-    # Impute missing historical values (univariate AR1) 
+    # Impute missing historical values (univariate AR1 in latent space)
     for (st in seq_len(n_stock)) {
       na_ind <- which(is.na(RecDevHist[st, ]))
       if (!length(na_ind)) next
-      
+
+      sd_st <- RecDevStats$sd[st]
+      ac_st <- RecDevStats$ac[st]
+
       last_ind <- na_ind[1] - 1
-      z_prev   <- log(as.numeric(RecDevHist[st, last_ind]))
-      
+      zl_prev  <- .DevToLatent(log(as.numeric(RecDevHist[st, last_ind])),
+                               sd_st, TruncSD)
+
       for (k in seq_along(na_ind)) {
-        eps <- rnorm(1, 0, RecDevStats$sd[st] * sqrt(1 - RecDevStats$ac[st]^2))
-        z_t <- RecDevStats$mu[st] +
-          RecDevStats$ac[st] * (z_prev - RecDevStats$mu[st]) +
-          eps
-        
-        RecDevHist[st, na_ind[k]] <- exp(z_t)
-        z_prev <- z_t
+        zl_prev <- ac_st * zl_prev + rnorm(1) * sqrt(1 - ac_st^2)
+        RecDevHist[st, na_ind[k]] <- exp(.LatentToDev(zl_prev, sd_st, TruncSD))
       }
     }
     
@@ -113,61 +109,51 @@ GenMultiStockRecDevs <- function(OM, TruncSD = 2, silent = FALSE) {
       Sigma_Z <- as.matrix(Matrix::nearPD(Sigma_Z)$mat)
     }
     
-    # Build AR(1) components 
-    mu  <- RecDevStats$mu
-    phi <- RecDevStats$ac
-    
-    Sigma_eps <- CalcInnovationCov(Sigma_Z, phi)
-    
-    lower <- -TruncSD * RecDevStats$sd
-    upper <-  TruncSD * RecDevStats$sd
-    
-    # Initialize state 
-    Z_prev <- log(as.numeric(RecDevHist[, ncol(RecDevHist)]))
-    Z_prev[!is.finite(Z_prev)] <- mu[!is.finite(Z_prev)]
-    
-    Z_proj <- matrix(NA_real_, nrow = n_stock, ncol = pYear)
-    
-    # Sample values
+    # Build AR(1) components. The AR(1) runs on a unit-variance latent scale
+    # carrying the cross-stock correlation; per-stock marginals are imposed
+    # afterwards by .LatentToDev(), which bounds them and removes lognormal bias.
+    phi      <- RecDevStats$ac
+    sd_marg  <- sqrt(diag(as.matrix(Sigma_Z)))
+    active   <- sd_marg > 0
+
+    R_latent <- matrix(0, n_stock, n_stock)
+    if (any(active))
+      R_latent[active, active] <- stats::cov2cor(Sigma_Z[active, active, drop = FALSE])
+
+    Sigma_eps <- CalcInnovationCov(R_latent, phi)
+
+    # Initialize latent state from the last historical deviation
+    Z_last <- log(as.numeric(RecDevHist[, ncol(RecDevHist)]))
+    Zl_prev <- vapply(seq_len(n_stock), function(st) {
+      if (!is.finite(Z_last[st])) return(0)
+      .DevToLatent(Z_last[st], sd_marg[st], TruncSD)
+    }, numeric(1))
+
+    Zl_proj <- matrix(NA_real_, nrow = n_stock, ncol = pYear)
+
+    # Sample latent innovations
     if (all(abs(Sigma_eps) < 1e-12)) {
       eps_mat <- matrix(0, nrow = pYear, ncol = n_stock)
     } else {
-      if (TruncSD > 5) {
-        eps_mat <- MASS::mvrnorm(pYear, mu = rep(0, n_stock), Sigma = Sigma_eps)
-      } else {
-        
-        Sigma_eps
-        eig <- eigen(Sigma_eps, symmetric = TRUE)
-        if (any(eig$values <= 1e-10)) {
-          Sigma_eps <- Sigma_eps + diag(1e-8, nrow(Sigma_eps))
-        }
-        
-        
-        eps_mat <- tmvtnorm::rtmvnorm(
-          n     = pYear,
-          mean  = rep(0, n_stock),
-          sigma = Sigma_eps,
-          lower = lower,
-          upper = upper
-        )
-      }
+      eig <- eigen(Sigma_eps, symmetric = TRUE)
+      if (any(eig$values <= 1e-10))
+        Sigma_eps <- Sigma_eps + diag(1e-8, nrow(Sigma_eps))
+
+      eps_mat <- MASS::mvrnorm(pYear, mu = rep(0, n_stock), Sigma = Sigma_eps)
+      if (n_stock == 1) eps_mat <- matrix(eps_mat, ncol = 1)
     }
-    
-    # Add AR(1) 
+
+    # Add AR(1) on the latent scale
     for (t in seq_len(pYear)) {
-      eps <- eps_mat[t, ]
-      
-      Z_t <- mu + phi * (Z_prev - mu) + eps
-      
-      Z_proj[, t] <- Z_t
-      Z_prev <- Z_t
+      Zl_prev      <- phi * Zl_prev + eps_mat[t, ]
+      Zl_proj[, t] <- Zl_prev
     }
-    
-    
+
     for (st in seq_len(n_stock)) {
-      OM@Stock[[st]]@SRR@RecDevProj[sim, ] <- exp(Z_proj[st, ])
+      OM@Stock[[st]]@SRR@RecDevProj[sim, ] <-
+        exp(.LatentToDev(Zl_proj[st, ], sd_marg[st], TruncSD))
     }
-    
+
   } # end sim loop
   cli::cli_progress_done() 
   OM
@@ -175,17 +161,16 @@ GenMultiStockRecDevs <- function(OM, TruncSD = 2, silent = FALSE) {
 
 
 .GetRecDevStats <- function(SRR, sim = 1) {
-  if (!is.finite(SRR@SD))
-    cli::cli_abort("Non-finite SRR@SD", .internal = TRUE)
-  
-  if (!is.finite(SRR@AC))
-    cli::cli_abort("Non-finite SRR@AC", .internal = TRUE)
-  
-  sd <- ifelse(dim(SRR@SD)[1] < sim, SRR@SD[1, 1], SRR@SD[sim, 1]) |> as.numeric()
-  ac <- ifelse(dim(SRR@AC)[1] < sim, SRR@AC[1, 1], SRR@AC[sim, 1]) |> as.numeric()
-  
-  mu <- -0.5 * sd^2 * (1 - ac) / sqrt(1 - ac^2)
-  c(sd = sd, ac = ac, mu = mu)
+
+  # SD/AC may be a [Sim, Year] array or a plain per-sim vector
+  pick <- function(x, nm) {
+    if (!length(x) || any(!is.finite(x)))
+      cli::cli_abort("Non-finite or empty {.code SRR@{nm}}", .internal = TRUE)
+    d <- dim(x)
+    as.numeric(if (is.null(d)) x[min(sim, length(x))] else x[min(sim, d[1]), 1])
+  }
+
+  c(sd = pick(SRR@SD, "SD"), ac = pick(SRR@AC, "AC"))
 }
 
 

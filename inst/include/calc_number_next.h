@@ -112,19 +112,13 @@ inline void CalcNumberNext(
       if (nArea > 1) {
         
         for (int age = 1; age < nAge; ++age) {
-          
           std::fill(N_to.begin(), N_to.end(), 0.0);
-          
           for (int fromArea = 0; fromArea < nArea; ++fromArea) {
             const double Nfrom = Num_st(sim_num, age, y + 1, fromArea);
             if (Nfrom == 0.0) continue;
-          
-            double p_sum = 0.0;
-            for (int toArea = 0; toArea < nArea; ++toArea) {
-              const double p = Mov_st(sim_mov, fromArea, toArea, age, y + 1);
-              N_to[toArea] += Nfrom * p;
-              p_sum += p;
-            }
+
+            for (int toArea = 0; toArea < nArea; ++toArea)
+              N_to[toArea] += Nfrom * Mov_st(sim_mov, fromArea, toArea, age, y + 1);
           }
           for (int toArea = 0; toArea < nArea; ++toArea)
             Num_st(sim_num, age, y + 1, toArea) = N_to[toArea];

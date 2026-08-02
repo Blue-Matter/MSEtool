@@ -94,11 +94,15 @@
   
   
   if (nStock > 1 || nFleet > 1) {
-    pars <- .OptimizeCatchabilityMulti(HistSim, nStock, nFleet, nArea, YearsHist, bounds, tol, silent, debug)
+    pars <- .OptimizeCatchabilityMulti(HistSim, nStock, nFleet, 
+                                       nArea, YearsHist, bounds, tol, 
+                                       silent)
     if (inherits(pars, 'hist'))
       return(pars)
   } else {
-    pars <- .OptimizeCatchabilitySingle(HistSim, nStock, nFleet, nArea, YearsHist, bounds, tol, silent, debug)
+    pars <- .OptimizeCatchabilitySingle(HistSim, nStock, nFleet, 
+                                        nArea, YearsHist, bounds, tol, 
+                                        silent)
     if (inherits(pars, 'hist'))
       return(pars)
   }
@@ -254,7 +258,8 @@
 }
 
 
-.OptimizeCatchabilityMulti <- function(HistSim, nStock, nFleet, nArea, YearsHist, bounds, tol, silent, debug=FALSE) {
+.OptimizeCatchabilityMulti <- function(HistSim, nStock, nFleet, nArea,
+                                       YearsHist, bounds, tol, silent, debug=FALSE) {
   
   FinalDepletion <- purrr::map(HistSim@OM@Stock, \(stock) stock@Depletion@Final) |>
     List2Array('Stock')
@@ -266,7 +271,8 @@
   if (is.null(HistSim@OM@CatchFrac)) 
     CalcCatchFrac <- TRUE
     
-  if (is.list(HistSim@OM@CatchFrac) && any(lapply(HistSim@OM@CatchFrac, is.null) |> unlist()))
+  if (is.list(HistSim@OM@CatchFrac) && any(lapply(HistSim@OM@CatchFrac, is.null) |>
+                                           unlist()))
     CalcCatchFrac <- TRUE
   
   # Catch divided by effort (q proxy)
@@ -299,19 +305,25 @@
   FDist[!is.finite(FDist)] <- tiny
   FDist <- FDist/apply(FDist[, , drop = FALSE], 1, sum)    # q ratio proxy (real space)
   
+  lower <- c(rep(log(bounds[1]), nStock), rep(-5, nStock * (nFleet-1)))
+  upper <- c(rep(log(bounds[2]), nStock), rep(5,  nStock * (nFleet-1)))
+
   if (nFleet == 1) {
     pars <- rep(-5, nStock)
   } else {
     # low initial F followed by logit guess at fraction based on Fdist
     # according to catch fraction in recent year
-    pars <- c(rep(-5,nStock), logit(FDist[, 2:nFleet]))
+    pars <- c(rep(-5, nStock), logit(FDist[, 2:nFleet]))
   }
-  
+
+  # a near-zero catch fraction gives logit ~ -34, far outside the box
+  pars <- pmin(pmax(pars, lower), upper)
+
   doOpt <- optim(pars,
                  .OptCatchability,
                  method = "L-BFGS-B",
-                 lower = c(rep(log(bounds[1]), nStock), rep(-5, nStock * (nFleet-1))),
-                 upper = c(rep(log(bounds[2]), nStock), rep(5, nStock*(nFleet-1))),
+                 lower = lower,
+                 upper = upper,
                  HistSim = HistSim,
                  nStock = nStock,
                  nFleet = nFleet,

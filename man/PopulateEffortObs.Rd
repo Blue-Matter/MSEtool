@@ -28,16 +28,15 @@ unchanged and no population is performed.
 
 Otherwise the following slots are populated in order:
 \itemize{
-\item \code{CV}: expanded to a named \verb{[nSim]} array via \code{\link[=PopulateObsCV]{PopulateObsCV()}}.
+\item \code{CV}: expanded to a named \verb{[nSim]} array.
 \item \code{Error}: generated as a lognormal draw from \code{CV} across all historical
-and projection years, producing a named \verb{[nSim x nYear]} array via
-\code{\link[=PopulateObsError]{PopulateObsError()}}. If \code{Error} is already a fully-formed array it is
+and projection years, producing a named \verb{[nSim x nYear]} array. If \code{Error}
+is already a fully-formed array it is
 validated and dimension names are applied.
-\item \code{Bias}: expanded to a named \verb{[nSim]} multiplicative bias array via
-\code{\link[=PopulateObsBias]{PopulateObsBias()}}. Defaults to 1 (no bias) if unspecified.
+\item \code{Bias}: expanded to a named \verb{[nSim]} multiplicative bias array.
+Defaults to 1 (no bias) if unspecified.
 }
 }
 \seealso{
-\code{\link[=PopulateObs]{PopulateObs()}}, \link[=effortobs-class]{effortobs}, \code{\link[=PopulateObsCV]{PopulateObsCV()}},
-\code{\link[=PopulateObsError]{PopulateObsError()}}, \code{\link[=PopulateObsBias]{PopulateObsBias()}}
+\code{\link[=PopulateObs]{PopulateObs()}}, \link[=effortobs-class]{effortobs}
 }

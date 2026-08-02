@@ -16,7 +16,7 @@
   StockNames,
   Complexes,
   Areas,
-  lambda_scale = 0.001,
+  lambda_scale = 1,
   n_recent = 5,
   maxEval = 500
 )

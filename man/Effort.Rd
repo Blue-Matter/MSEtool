@@ -17,6 +17,8 @@
 \alias{AnglerPerTrip<-}
 \alias{Theta}
 \alias{Theta<-}
+\alias{StockTargetingLambda}
+\alias{StockTargetingLambda<-}
 \title{Effort Constructor and Accessors}
 \usage{
 Effort(
@@ -29,6 +31,7 @@ Effort(
   TripsScalar = NULL,
   AnglerPerTrip = NULL,
   Theta = NULL,
+  StockTargetingLambda = NULL,
   Misc = list(),
   df = TRUE
 )
@@ -62,6 +65,10 @@ AnglerPerTrip(x) <- value
 Theta(x)
 
 Theta(x) <- value
+
+StockTargetingLambda(x)
+
+StockTargetingLambda(x) <- value
 }
 \arguments{
 \item{Effort}{Numeric array, data frame, or \code{NULL}. Historical fishing
@@ -160,6 +167,18 @@ is stored with a \code{Year} dimension of length 1, named with the first
 historical year, and is replicated across all historical and
 projection years during \code{\link[=Simulate]{Simulate()}}.}
 
+\item{StockTargetingLambda}{Numeric, numeric array, or \code{NULL}. Multiplier on
+this fleet's resistance to changing its stock-targeting mix when solving
+for effort against multiple stock complexes. Accepts the same forms as
+\code{Theta} (scalar, \verb{Sim x 1}, or \verb{Sim x Year}).
+
+\code{NULL} (default) is equivalent to \code{1} and leaves the internally derived
+resistance unchanged. \code{0} removes the resistance entirely, letting the
+fleet reallocate its targeting freely. Values above \code{1} make the fleet
+hold its existing mix more strongly, approaching a fixed mix by around
+\code{100}. Only consulted for multi-complex operating models; ignored
+otherwise. See the Stock Targeting Resistance section below.}
+
 \item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
 
 \item{df}{Logical. Only used when \code{Effort} is a \link[=hist-class]{hist} or
@@ -178,8 +197,9 @@ object, the \code{Effort} slot of that object is returned (as a \code{data.frame
 or array for \link[=hist-class]{hist} and \link[=mse-class]{mse} depending on \code{df}).
 \item \verb{Effort<-} returns \code{x} with the \code{Effort} slot replaced by \code{value}.
 \item \code{Distribution()}, \code{Targeting()}, \code{Maximum()}, \code{Mode()},
-\code{TripsScalar()}, \code{AnglerPerTrip()}, \code{Theta()} return the corresponding
-slot from the \link[=effort-class]{effort} object \code{x}.
+\code{TripsScalar()}, \code{AnglerPerTrip()}, \code{Theta()},
+\code{StockTargetingLambda()} return the corresponding slot from the
+\link[=effort-class]{effort} object \code{x}.
 \item Their replacement forms return \code{x} with the corresponding slot updated.
 }
 }
@@ -332,6 +352,36 @@ When \code{Effort} is a \link[=fleet-class]{fleet}, \link[=effort-class]{effort}
 of that object rather than constructing a new one. For \link[=hist-class]{hist} and
 \link[=mse-class]{mse} objects, the \code{df} argument controls whether a tidy
 \code{data.frame} (\code{TRUE}) or the raw array (\code{FALSE}) is returned.
+}
+
+\subsection{Stock Targeting Resistance: \code{StockTargetingLambda}}{
+
+When a fleet operates on several stock complexes, a single effort level
+usually cannot meet every complex's TAC at once. Effort solving therefore
+also adjusts each fleet's stock-targeting weights, subject to a penalty on
+how far the mix moves from the previous year. The weight on that penalty is
+derived per fleet from the historical variability of its own targeting: a
+fleet whose mix has shifted a lot in the past is allowed to shift it again
+cheaply, while a fleet with a stable record resists.
+
+The derived weight is normalised so that, at a multiplier of \code{1}, shifting
+the targeting mix by a given proportion costs about as much as missing the
+TAC by the same proportion.
+
+\code{StockTargetingLambda} scales that derived weight, and is specified per
+stock and fleet since it lives on the fleet object:
+\itemize{
+\item \code{1} (or \code{NULL}) keeps the derived value: targeting shifts and TAC misses
+are weighted comparably.
+\item \code{0} removes the penalty, so the fleet reallocates targeting freely to hit
+its TACs.
+\item Values below \code{1} (say \code{0.1}) let targeting move more readily.
+\item Values above \code{1} hold the existing mix more strongly; by around \code{100} the
+mix is effectively fixed at the previous year's.
+}
+
+It has no effect on single-complex operating models, where there is no
+competing TAC to reconcile against.
 }
 
 \subsection{Attaching to a Fleet}{

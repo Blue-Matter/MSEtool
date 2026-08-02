@@ -168,11 +168,91 @@
       
       alpha <- ess * th * q * exp(shift_b)
       if (any(is.na(alpha)) || sum(alpha) == 0) next
-      
-      NewValue[1, fl, ] <- rDirichletMultinomial(n = round(ss), alpha = alpha)
+
+      seed_key <- paste(Proj@OM@Seed, DataYear, i, fl, type, x, sep = "_")
+      NewValue[1, fl, ] <- .SeededDirichletMultinomial(seed_key, n = round(ss), alpha = alpha)
     }
   }
   
   CompData@Value <- abind::abind(Value, NewValue, along = 1, use.dnns = TRUE)
   CompData
+}
+
+.GenProjDataAgeCompAll <- function(Proj, DataYear, YearsAll, i, stocks, nSim,
+                                   type = c('LandingsAtAge', 'DiscardsAtAge')) {
+  type <- match.arg(type)
+
+  CompData1 <- slot(Proj@Data[[1]][[i]], type)
+  unchanged <- EmptyObject(CompData1) || DataYear %in% dimnames(CompData1@Value)[[1]]
+  if (unchanged)
+    return(purrr::map(Proj@Data, \(DataList) slot(DataList[[i]], type)))
+
+  TSIndex    <- match(DataYear, YearsAll)
+  FleetNames <- .ResolveFleetNames(CompData1)
+  nFleet     <- length(FleetNames)
+  AgeClasses <- CompData1@Classes
+  nAge       <- length(AgeClasses)
+
+  CatchAtAge_yr <- purrr::map(slot(Proj, type)[stocks], \(catch_n) {
+    catch_n[,, TSIndex,,,drop=FALSE] |> abind::adrop(drop = 3) |> SumOverArea()
+  })
+  ageclasses <- purrr::map(CatchAtAge_yr, \(st) as.numeric(dimnames(st)$Age))
+  if (length(CatchAtAge_yr) > 1 && !all(duplicated(ageclasses)[-1]))
+    CatchAtAge_yr <- .AlignAgeDim(CatchAtAge_yr)
+  CatchAtAge_yr <- CatchAtAge_yr |> List2Array('Stock') |> SumOverStock()
+
+  NewValueAll <- array(NA_real_, dim = c(nSim, nFleet, nAge))
+  omData      <- Proj@OM@Data[[i]]
+
+  for (fl in seq_len(nFleet)) {
+    Obs <- slot(Proj@OM@Obs[[i]][[fl]], type)
+    if (EmptyObject(Obs) || is.null(Obs@SampleSize)) next
+
+    hasOMVal <- !is.null(omData) && !is.null(slot(omData, type)@Value) &&
+      dim(slot(omData, type)@Value)[1] >= TSIndex
+
+    if (hasOMVal) {
+      NewValueAll[, fl, ] <- matrix(slot(omData, type)@Value[TSIndex, fl, ], nSim, nAge, byrow = TRUE)
+      next
+    }
+
+    sim_ss  <- pmin(seq_len(nSim), nrow(Obs@SampleSize))
+    ss_all  <- .ArraySubsetYear(Obs@SampleSize, DataYear)[sim_ss]
+
+    sim_ess <- pmin(seq_len(nSim), nrow(Obs@ESS))
+    ess_all <- if (!is.null(Obs@ESS)) .ArraySubsetYear(Obs@ESS, DataYear)[sim_ess] else ss_all
+
+    sim_th  <- pmin(seq_len(nSim), nrow(Obs@Theta))
+    th_all  <- if (!is.null(Obs@Theta)) .ArraySubsetYear(Obs@Theta, DataYear)[sim_th] else rep(1, nSim)
+
+    true_n_all  <- CatchAtAge_yr[, , fl, drop = FALSE] |> abind::adrop(3)
+    total_n_all <- apply(true_n_all, 1, sum, na.rm = TRUE)
+
+    for (x in seq_len(nSim)) {
+      ss <- ss_all[x]
+      if (is.na(ss) || ss == 0) next
+      total_n <- total_n_all[x]
+      if (is.na(total_n) || total_n == 0) next
+      q <- true_n_all[x, ] / total_n
+
+      shift_b <- if (!is.null(Obs@Shift)) {
+        sim_sh <- min(x, dim(Obs@Shift)[1])
+        .ArraySubsetYear(Obs@Shift, DataYear)[sim_sh, ]
+      } else rep(0, nAge)
+
+      alpha <- ess_all[x] * th_all[x] * q * exp(shift_b)
+      if (any(is.na(alpha)) || sum(alpha) == 0) next
+      seed_key <- paste(Proj@OM@Seed, DataYear, i, fl, type, x, sep = "_")
+      NewValueAll[x, fl, ] <- .SeededDirichletMultinomial(seed_key, n = round(ss), alpha = alpha)
+    }
+  }
+
+  purrr::map(seq_len(nSim), \(x) {
+    CompData <- slot(Proj@Data[[x]][[i]], type)
+    NewValue <- array(NA_real_, dim = c(1L, nFleet, nAge),
+                      dimnames = list(Year = DataYear, Fleet = FleetNames, Age = AgeClasses))
+    NewValue[1, , ] <- NewValueAll[x, , ]
+    CompData@Value <- abind::abind(CompData@Value, NewValue, along = 1, use.dnns = TRUE)
+    CompData
+  })
 }

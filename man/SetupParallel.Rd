@@ -58,6 +58,13 @@ the end) of a workflow:
 \item \code{CheckParallel()} validates that a parallel plan is active
 }
 
+\code{SetupParallel()} spawns background worker processes that persist until
+they are explicitly shut down. Always call \code{\link[=DisableParallel]{DisableParallel()}} once your
+workflow is finished. If a session ends abnormally (crash, forced kill)
+before that happens, its workers are orphaned and keep running; use
+\code{\link[=ListParallelWorkers]{ListParallelWorkers()}} to check for these and \code{\link[=CleanupOrphanWorkers]{CleanupOrphanWorkers()}} to
+terminate them.
+
 By default, \code{SetupParallel()} selects a safe, platform-appropriate backend:
 \itemize{
 \item \strong{Windows}: \code{multisession}
@@ -68,7 +75,7 @@ Although \code{future::multicore} is often faster on Unix-like systems,
 \code{multisession} is used by default because it is more robust.
 \subsection{Global side effects}{
 
-\code{SetupParallel()} modifies the \strong{global future plan} for the current R
+\code{SetupParallel()} modifies the global future plan for the current R
 session. All packages relying on \code{future} (including \code{furrr}) will inherit
 this plan until it is changed or reset with \code{DisableParallel()}.
 }
@@ -100,5 +107,6 @@ DisableParallel()                      # restore sequential execution
 
 }
 \seealso{
-\code{\link[future:plan]{future::plan()}}, \code{\link[future:availableCores]{future::availableCores()}}, \code{\link[furrr:future_map]{furrr::future_map()}}
+\code{\link[future:plan]{future::plan()}}, \code{\link[future:availableCores]{future::availableCores()}}, \code{\link[furrr:future_map]{furrr::future_map()}},
+\code{\link[=ListParallelWorkers]{ListParallelWorkers()}}, \code{\link[=CleanupOrphanWorkers]{CleanupOrphanWorkers()}}
 }

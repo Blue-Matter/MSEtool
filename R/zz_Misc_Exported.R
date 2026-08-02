@@ -878,23 +878,6 @@ updateMSE <- function(MSEobj, save.name=NULL) {
 cv <- function(x) sd(x)/mean(x)
 
 
-#' Get parameters of lognormal distribution from mean and standard deviation in normal
-#' space
-#'
-#' @param m mean in normal space
-#' @param sd standard deviation in normal space
-#' @author T. Carruthers
-#' @return numeric
-#' @describeIn sdconv Returns sigma of lognormal distribution
-#' @keywords internal
-#' @export
-sdconv <- function(m, sd) (log(1 + ((sd^2)/(m^2))))^0.5
-
-
-#' @describeIn sdconv Returns mu of lognormal distribution
-#' @export
-mconv <- function(m, sd) log(m) - 0.5 * log(1 + ((sd^2)/(m^2)))
-
 #' Calculate parameters for beta distribution from mean and standard deviation in
 #' normal space
 #'

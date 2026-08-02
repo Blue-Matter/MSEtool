@@ -36,7 +36,9 @@ tail of that fleet's slice in \code{Value}). See \code{\link[=CompData]{CompData
 (e.g., \code{"years"}, \code{"cm"}, \code{"mm"}), shared by every fleet. See
 \code{\link[=CompData]{CompData()}}.}
 
-\item{\code{Log}}{\code{list}. Named list used for diagnostic and audit logging.}
+\item{\code{Log}}{\code{list}. Internal named list storing diagnostics, warnings, and
+assumptions recorded during processing. See \code{\link[=Log]{Log()}}. Not intended for
+direct user access.}
 
 \item{\code{Misc}}{\code{list}. Named list for additional composition-level metadata.}
 }}

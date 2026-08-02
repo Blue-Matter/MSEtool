@@ -25,8 +25,8 @@
 #'
 #' Otherwise the following slots are populated:
 #'
-#' **`SampleSize`**: expanded to a named `[nSim x nYear]` array via
-#' [PopulateObsScalar()], covering all historical and projection years. A
+#' **`SampleSize`**: expanded to a named `[nSim x nYear]` array covering all
+#' historical and projection years. A
 #' length-2 input `c(lower, upper)` is interpreted as bounds of a Uniform
 #' distribution from which `nSim` values are drawn.
 #'
@@ -39,8 +39,8 @@
 #' `(0, 1]`. If `NULL`, defaults silently to 1 (standard multinomial, no
 #' additional overdispersion). A length-2 input is treated as Uniform bounds.
 #'
-#' **`Shift`**: expanded to a named `[nSim x nYear x nBin]` array via
-#' [Extend()], where `nBin = length(Bins)`. Accepted input forms:
+#' **`Shift`**: expanded to a named `[nSim x nYear x nBin]` array 
+#' where `nBin = length(Bins)`. Accepted input forms:
 #' * `NULL` (default): no shift applied; slot remains `NULL`.
 #' * Scalar: constant offset across all simulations, years, and bins.
 #' * Vector of length `nBin`: bin-specific offset, constant across simulations
@@ -49,8 +49,7 @@
 #'   change-point years.
 #' * Full `[nSim x nYear x nBin]` array.
 #'
-#' In conditioning mode, `ESS`, `Theta`, and `Shift` are populated internally
-#' by `.ConditionObsComp()` and should not be set by the user.
+#' In conditioning mode, `ESS`, `Theta`, and `Shift` are populated internally.
 #'
 #' ## Composition generation model
 #'
@@ -69,7 +68,7 @@
 #' @return A populated [compobs-class] object.
 #'
 #' @seealso
-#' [CompObs()], [compobs-class], [PopulateObs()], `.ConditionObsComp()`
+#' [CompObs()], [compobs-class], [PopulateObs()], 
 #'
 #' @export
 PopulateCompObs <- function(Comp,
@@ -92,28 +91,28 @@ PopulateCompObs <- function(Comp,
   Years <- c(HistYears, ProjYears)
   nBin  <- length(Bins)
   
-  # SampleSize 
-  Comp@SampleSize <- PopulateObsScalar(
+  # SampleSize
+  Comp@SampleSize <- .PopulateObsScalar(
     x     = Comp@SampleSize,
     nSim  = nSim,
     Years = Years,
     label = "SampleSize"
   )
-  
-  # ESS 
+
+  # ESS
   # Default silently to SampleSize when unspecified
   if (is.null(Comp@ESS)) {
     Comp@ESS <- Comp@SampleSize
   } else {
-    Comp@ESS <- PopulateObsScalar(
+    Comp@ESS <- .PopulateObsScalar(
       x     = Comp@ESS,
       nSim  = nSim,
       Years = Years,
       label = "ESS"
     )
   }
-  
-  # Theta 
+
+  # Theta
   # Default silently to 1 (standard multinomial) when unspecified
   if (is.null(Comp@Theta)) {
     Comp@Theta <- array(
@@ -122,7 +121,7 @@ PopulateCompObs <- function(Comp,
       dimnames = list(Sim = seq_len(nSim), Year = Years)
     )
   } else {
-    Comp@Theta <- PopulateObsScalar(
+    Comp@Theta <- .PopulateObsScalar(
       x     = Comp@Theta,
       nSim  = nSim,
       Years = Years,
@@ -134,10 +133,10 @@ PopulateCompObs <- function(Comp,
           "i" = "`Theta = 1` recovers the standard multinomial; smaller values increase overdispersion.")
       )
   }
-  
+
   # Shift
   if (!is.null(Comp@Shift)) {
-    Comp@Shift <- PopulateObsShift(
+    Comp@Shift <- .PopulateObsShift(
       Shift   = Comp@Shift,
       nSim    = nSim,
       Years   = Years,

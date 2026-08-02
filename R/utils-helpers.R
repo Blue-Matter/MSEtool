@@ -18,9 +18,18 @@
     nd  # last dimension if not named
   }
   
-  if (dims[sumDim] < 2) {
+  if (dims[sumDim] == 1L) {
+    new_dims <- dims[-sumDim]
+    if (length(new_dims) == 0) new_dims <- 1L
+    dim(x) <- new_dims
+    if (!is.null(dn)) {
+      dn_new <- dn[-sumDim]
+      if (length(dn_new) > 0) dimnames(x) <- dn_new
+    }
+    return(x)
+  }
+  if (dims[sumDim] == 0L) {
     return(DropDimension(x, dimName))
-    
   }
   
   # Move sumDim to last dimension

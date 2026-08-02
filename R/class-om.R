@@ -106,7 +106,9 @@
 #'
 #' @slot Control Named list of operating model control settings. See [OM()].
 #' @slot Misc List. Miscellaneous objects or developer-use components.
-#' @slot Log List. Internal diagnostic and runtime information. See [Log()].
+#' @slot Log `list`. Internal named list storing diagnostics, warnings, and
+#'   assumptions recorded during processing. See [Log()]. Not intended for
+#'   direct user access.
 #' @slot Source Character. References to data sources or documentation.
 #'   Supports Markdown. See [OM()].
 #'

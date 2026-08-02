@@ -74,7 +74,7 @@ inline double EvalSRR(
     int y) {
   
   if (pars_st.empty()) {
-    Rcpp::stop("SRR model %d called with zero parameters" + std::to_string(model));
+    Rcpp::stop("SRR model called with zero parameters" + std::to_string(model));
   }
   
   switch (model) {

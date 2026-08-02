@@ -11,8 +11,8 @@
 #' applies fleet-specific selectivity-at-age, and standardizes
 #' generated indices to mean 1.
 #'
-#' If real index data already exist, or no observation structure is
-#' defined, the existing data are returned unchanged.
+#' If no observation structure is defined at all, the existing data are
+#' returned unchanged. Otherwise, generation happens per fleet.
 #'
 #' @param sim Integer index of the simulation replicate to extract
 #' @param Data Fishery data object to populate
@@ -36,25 +36,32 @@
                                 type = c('CPUE', 'Survey')) {
   
   type <- match.arg(type, c('CPUE', 'Survey'))
-  
-  # don't simulate data if real data exists
-  if (!EmptyObject(slot(Data, type))) 
-    return(slot(Data, type))
-  
+
+  RealData <- slot(Data, type)
+
   AllObs <- lapply(Hist@OM@Obs[[i]], slot, type)
   no_obs <- all(lapply(AllObs, isNewObject) |> unlist()  == TRUE)
-  
+
   # no Obs specified, don't simulate
   if (no_obs)
-    return(slot(Data, type))
-  
+    return(RealData)
+
   # check which Obs objects have Obs@Error for `type`
   TypeFleets <- purrr::map(AllObs, \(obs) !is.null(obs@Error)) |> unlist() |> which()
   FleetNames <- names(AllObs)[TypeFleets]
-  
-  nTS <- length(HistYears)
-  
   nFleet <- length(FleetNames)
+
+  if (!nFleet)
+    return(RealData)
+
+  RealFleetIdx  <- if (!is.null(RealData@Value)) match(FleetNames, RealData@Name) else rep(NA_integer_, nFleet)
+  HasRealColumn <- !is.na(RealFleetIdx)
+
+  if (all(HasRealColumn))
+    return(RealData)
+
+  nTS <- length(HistYears)
+
   IndexData <- new('indicesdata')
   IndexData@Name <- FleetNames
   Value <- CV <- array(NA, dim=c(nTS, nFleet),
@@ -71,8 +78,20 @@
   IndexData@Misc$IndexObs <- list()
   
   for (fl in 1:nFleet) {
+
+    if (HasRealColumn[fl]) {
+      ri <- RealFleetIdx[fl]
+      yearIdx <- match(as.character(HistYears), rownames(RealData@Value))
+      Value[, fl] <- RealData@Value[yearIdx, ri]
+      if (!is.null(RealData@CV)) CV[, fl] <- RealData@CV[yearIdx, ri]
+      if (length(RealData@Units) >= ri) IndexData@Units[fl] <- RealData@Units[ri]
+      if (length(RealData@Ref) >= ri) IndexData@Ref[fl] <- RealData@Ref[ri]
+      IndexData@Misc$IndexObs[[fl]] <- slot(Hist@OM@Obs[[i]][[FleetNames[fl]]], type)
+      next()
+    }
+
     IndexObs <- slot(Hist@OM@Obs[[i]][[FleetNames[fl]]],type)
-    
+
     if (EmptyObject(IndexObs)) 
       next()
     
@@ -81,109 +100,34 @@
     
     Units <- IndexData@Units[fl]
     
-    # Get selectivity-at-age for this index 
-    SelectivityAtAge     <- IndexObs@Selectivity
-    SelectivityAtAgeList <- MakeNamedList(StockNames[stocks])
-    
-    if (is.character(SelectivityAtAge)) {
-      if (SelectivityAtAge == 'Biomass') {
-        for (st in seq_along(stocks)) {
-          AgeClasses <- Hist@OM@Stock[[stocks[st]]]@Ages@Classes
-          
-          SelectivityAtAgeList[[st]] <- array(1, c(length(AgeClasses), 1, nArea),
-                                              dimnames = list(
-                                                Age = AgeClasses,
-                                                Year = HistYears[1],
-                                                Area = 1:nArea)
-          )
-          
-        }
-      } else if (SelectivityAtAge == 'SBiomass') {
-        for (st in seq_along(stocks)) {
-          mat <- Hist@OM@Stock[[stocks[st]]]@Maturity@MeanAtAge
-          dd <- dim(mat)
-          mat_x <- min(dd[1], sim)
-          maturity_at_age <-  mat[mat_x,,, drop=FALSE] |>
-            .ArraySubsetYear(HistYears) |>
-            abind::adrop(1) |>
-            AddDimension('Area') |>
-            ExtendAreas(Areas=1:nArea)
-          SelectivityAtAgeList[[st]] <- maturity_at_age
-        }
-        
-      } else if (SelectivityAtAge == 'Obs') {
-        # SelectivityAtAgeList <- IndexObs@Selectivity
-        SelectivityAtAgeList <- purrr::map(IndexObs@Selectivity, \(stock) {
-          stock <- .ArraySubsetYear(stock, HistYears) 
-          stock[sim,,, drop=FALSE] |>
-            AddDimension('Area') |>
-            DropDimension(c('Sim', 'Year')) |>
-            ExtendAreas(Areas=1:nArea)
-        })
-      }
-    } else {
-      SelectivityAtAgeList <- purrr::map(Hist@OM@Fleet[stocks], \(fleet_list) {
-        dd <- dim(  fleet_list[[FleetNames[fl]]]@Selectivity@MeanAtAge)
-        sel_x <- min(dd[1], sim)
-        fleet_list[[FleetNames[fl]]]@Selectivity@MeanAtAge[sel_x,,,,drop=FALSE] |>
-          .ArraySubsetYear(HistYears) |>
-          abind::adrop(1)
-      }) 
-    }
-    
-    if (!is.null(IndexObs@Units))
-      IndexData@Units[fl] <- IndexObs@Units
-    
     if (is.null(IndexObs@Areas))
       IndexObs@Areas <- 1:nArea
+
+    timing <- if (length(IndexData@Timing) >= fl) IndexData@Timing[fl] else NA_real_
+
+    real_nom_index <- .CalcNomIndex(
+      Number_List      = Real_Pop_Number,
+      object           = Hist,
+      stocks           = stocks,
+      fleet            = FleetNames[fl],
+      IndexObs         = IndexObs,
+      Years            = HistYears,
+      SelectivityAtAge = IndexObs@Selectivity,
+      sim              = sim,
+      timing           = timing,
+      Units            = Units
+    )
     
-    Real_Pop_Number_Selected <- purrr::map2(Real_Pop_Number, SelectivityAtAgeList, \(num, sel) {
-      n <- num[sim,,, IndexObs@Areas,drop=FALSE] |> .ArraySubsetYear(HistYears) |> abind::adrop(1)
-      s <- sel[,,IndexObs@Areas,drop=FALSE]
-      ArrayMultiply(n, sel) |> SumOverArea()
-    })
-    
-    if (Units=='Number') {
-      real_nom_index <- purrr::map(Real_Pop_Number_Selected, SumOverAge) |>
-        List2Array('Stock') |>
-        apply('Year', sum)
-      
-    } else if (Units == 'Biomass') {
-      WeightAtAgeList <- purrr::map(Hist@OM@Stock[stocks], \(stock) {
-        wght <- stock@Weight@MeanAtAge
-        dd <- dim(wght)
-        wght_x <- min(dd[1], sim)
-        wght[wght_x,,, drop=FALSE] |>
-          .ArraySubsetYear(HistYears) |>
-        abind::adrop(1)
-      })
-      real_nom_index <- purrr::map2(Real_Pop_Number_Selected, WeightAtAgeList, ArrayMultiply) |>
-        purrr::map(SumOverAge) |>
-        List2Array('Stock') |>
-        apply('Year', sum)
-      
-    } else if (Units == "Recruitment") {
-      
-      real_nom_index <- purrr::map(Real_Pop_Number_Selected,\(pop_n) {
-        .ArraySubsetYear(pop_n, HistYears)[1, ,drop=FALSE] |>
-          abind::adrop(1)
-      }) |>
-        List2Array('Stock', 'Year') 
-      dimnames(real_nom_index)[['Year']] <- HistYears
-      real_nom_index <- apply(real_nom_index, 'Year', sum)
-  
-    } else {
-      cli::cli_abort('Only {.val Biomass}, {.val Number} and {.val Recruitment} currently supported for {.val Units} in  {.val Obs@CPUE} and {.val Obs@Survey}', .internal=TRUE)
-    }
-    
-    
-    # add error 
-    SimulatedIndexError <- real_nom_index *  .ArraySubsetYear(IndexObs@Error, HistYears)[sim,]
+    Beta <- if (is.null(IndexObs@Beta)) 1 else IndexObs@Beta[min(sim, length(IndexObs@Beta))]
+    BetaIndex <- real_nom_index^Beta
+
+    # add error
+    SimulatedIndexError <- BetaIndex *  .ArraySubsetYear(IndexObs@Error, HistYears)[sim,]
     # mean 1
     StIndex <- SimulatedIndexError/mean(SimulatedIndexError, na.rm=TRUE)
     Value[,fl] <- StIndex
     NonNAInd <- which(!is.na(StIndex))
-    IndexObs@Efficiency <- mean(StIndex, na.rm=TRUE)/mean(real_nom_index[NonNAInd], na.rm=TRUE)  
+    IndexObs@Efficiency <- mean(StIndex, na.rm=TRUE)/mean(BetaIndex[NonNAInd], na.rm=TRUE)
     IndexData@Misc$IndexObs[[fl]] <- IndexObs
     
     # Reference Value 

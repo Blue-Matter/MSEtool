@@ -1,11 +1,14 @@
 
-#' Display Log Warnings
+#' Display Log Messages
 #'
 #' Prints any messages stored in the `Log` slot of an S4 object to the
-#' console using `cli` formatting, grouped into assumption, warning, and
-#' error sections.
+#' console using `cli` formatting. Messages are grouped into assumption,
+#' warning, and error sections; within each section, entries are further
+#' grouped by the name of the function that recorded them.
 #'
-#' @param object An S4 object with a `Log` slot
+#' @param object An S4 object with a `Log` slot. See e.g. [om-class],
+#'   [hist-class], [mse-class], [stock-class], [data-class],
+#'   [advice-class].
 #' @param type Character vector. Restrict the printed sections to one or
 #'   more of `'assumption'`, `'warning'`, `'error'`. Default `NULL` prints
 #'   all sections.
@@ -18,6 +21,8 @@
 #'   Log(my_object)
 #'   Log(my_object, type = 'error')
 #' }
+#' 
+#' @seealso [DeleteLogs()]
 #'
 #' @export
 Log <- function(object, type = NULL) {
@@ -47,14 +52,34 @@ Log <- function(object, type = NULL) {
     section <- sections[[t]]
     cli::cli_text('')
     section$header(section$colour(section$title))
-    for (entry in entries) {
-      nm  <- .LogEntryName(entry)
+
+    orig_nms   <- vapply(entries, .LogEntryName, character(1))
+    is_headline <- nchar(orig_nms) > 0
+    nms <- orig_nms
+    last <- ''
+    for (i in seq_along(nms)) {
+      if (nchar(nms[i])) last <- nms[i] else nms[i] <- last
+    }
+
+    fmt <- function(entry) {
       tag <- .LogEntryTag(entry)
-      if (nchar(nm) || nchar(tag)) {
-        cli::cli_text('')
-        section$entry("{nm}{tag}")
-      }
-      cli::cli_text(.LogEntryMessage(entry))
+      msg <- .LogEntryMessage(entry)
+      if (nchar(tag)) paste0(msg, tag) else msg
+    }
+
+    for (nm in unique(nms)) {
+      idx   <- which(nms == nm)
+      group <- entries[idx]
+      cli::cli_text('')
+      if (nchar(nm))
+        section$entry("{nm}")
+
+      headline_lines <- unique(vapply(group[is_headline[idx]], fmt, character(1)))
+      detail_lines   <- unique(vapply(group[!is_headline[idx]], fmt, character(1)))
+
+      for (line in headline_lines) cli::cli_text(line)
+      if (length(headline_lines) > 1 && length(detail_lines)) cli::cli_text('')
+      for (line in detail_lines) cli::cli_text(line)
     }
   }
   invisible(NULL)

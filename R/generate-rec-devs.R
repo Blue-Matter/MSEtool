@@ -3,9 +3,15 @@
 #' Generate recruitment deviations for initial ages, historical years, and 
 #' projected years, with optional auto-correlation and truncation.
 #'
-#' @param SD Numeric vector of standard deviations for recruitment deviations.
+#' @param SD Numeric vector of standard deviations for the log recruitment
+#'   deviations. This is the marginal standard deviation of the generated
+#'   series, after autocorrelation and truncation.
 #' @param AC Numeric vector of autocorrelation coefficients (0 = no autocorr).
-#' @param TruncSD Numeric. Number of SDs for truncation of deviations.
+#'   Must be within -1 and 1, exclusive.
+#' @param TruncSD Numeric. Number of standard deviations at which the log
+#'   deviations are bounded. Because the latent spread is widened to preserve
+#'   the marginal standard deviation, the realised bound is somewhat wider than
+#'   `TruncSD * SD`. Default `3`.
 #' @param Ages An [Ages()] object defining age classes.
 #' @param HistYears Numeric vector of historical years.
 #' @param ProjYears Numeric vector of projected years.
@@ -16,14 +22,7 @@
 #' 
 #'
 #' `GenRecDevs()` generates recruitment deviations across initial ages,
-#' historical years, and projected years. Steps include:
-#'
-#' * Generating deviations from a truncated normal distribution
-#'   with standard deviation `SD` and truncation at `TruncSD` standard 
-#'   deviations (default 2).
-#' * Applying autocorrelation using `AC` for each simulation replicate.
-#' * Returning arrays of recruitment deviations for initial ages,
-#'   historical years, and projected years.
+#' historical years, and projected years. 
 #'
 #' If `RecDevInit`, `RecDevHist`, or `RecDevProj` are provided as non-NULL
 #' arrays, they will not be overwritten and will be returned as-is.
@@ -39,7 +38,7 @@
 #' recdevs <- GenRecDevs(
 #'   SD = 0.2,
 #'   AC = 0.3,
-#'   TruncSD = 2,
+#'   TruncSD = 3,
 #'   Ages = Ages,
 #'   HistYears = 2000:2020,
 #'   ProjYears = 2021:2030,
@@ -50,7 +49,7 @@
 #' @export
 GenRecDevs <- function(SD = 0.2, 
                        AC = 0,
-                       TruncSD = 2,
+                       TruncSD = 3,
                        Ages = NULL,
                        HistYears = NULL, 
                        ProjYears = NULL,
@@ -107,39 +106,44 @@ GenRecDevs <- function(SD = 0.2,
   SD <- rep(SD, nSim)[1:nSim]
   AC <- rep(AC, nSim)[1:nSim]
   AC[!is.finite(AC)] <- 0
-  
-  mu <- -0.5 * SD^2 * (1 - AC)/sqrt(1 - AC^2)
-  lower <- mu - TruncSD * SD
-  upper <- mu + TruncSD * SD
-  
+
+  if (any(abs(AC) >= 1))
+    cli::cli_abort("{.arg AC} must be within {.val {c(-1, 1)}} exclusive: an AR(1) process with {.code abs(AC) >= 1} has no stationary distribution.")
+
+  if (!is.numeric(TruncSD) || length(TruncSD) != 1 || TruncSD <= 0)
+    cli::cli_abort("{.arg TruncSD} must be a positive scalar")
+
   if (genInit)
-    logRecDevInit <- array(.Rtnorm(nSim*nInitRecDev, mu, SD, lower, upper),
+    logRecDevInit <- array(stats::rnorm(nSim*nInitRecDev),
                            dim = c(nSim, nInitRecDev))
   if (genHist)
-    logRecDevHist <- array(.Rtnorm(nSim*nHistTS, mu, SD, lower, upper),
+    logRecDevHist <- array(stats::rnorm(nSim*nHistTS),
                            dim = c(nSim, nHistTS))
   if (genProj)
-    logRecDevProj <- array(.Rtnorm(nSim*nProjTS, mu, SD, lower, upper),
+    logRecDevProj <- array(stats::rnorm(nSim*nProjTS),
                            dim = c(nSim, nProjTS))
-  
+
   period <- c(rep('Init', nInitRecDev), rep('Hist', nHistTS),
               rep('Proj', nProjTS))
   required <- c(rep(genInit, nInitRecDev), rep(genHist, nHistTS),
                 rep(genProj, nProjTS))
   YearsSeq <- which(required)
-  
+
   for (i in seq_len(nSim)) {
     init_sim <- min(nrow(logRecDevInit), i)
     hist_sim <- min(nrow(logRecDevHist), i)
     proj_sim <- min(nrow(logRecDevProj), i)
-    
-    logRecDevs <- c(logRecDevInit[init_sim, ], 
-                    logRecDevHist[hist_sim, ], 
+
+    logRecDevs <- c(logRecDevInit[init_sim, ],
+                    logRecDevHist[hist_sim, ],
                     logRecDevProj[proj_sim, ])
     for (t in seq_along(YearsSeq)[-1]) {
       logRecDevs[YearsSeq[t]] <- AC[i] * logRecDevs[YearsSeq[t-1]] +
         logRecDevs[YearsSeq[t]] * sqrt(1 - AC[i]^2)
     }
+
+    logRecDevs[YearsSeq] <- .LatentToDev(logRecDevs[YearsSeq], SD[i], TruncSD)
+
     if (genInit) logRecDevInit[init_sim, ] <- logRecDevs[period == 'Init']
     if (genHist) logRecDevHist[hist_sim, ] <- logRecDevs[period == 'Hist']
     if (genProj) logRecDevProj[proj_sim, ] <- logRecDevs[period == 'Proj']

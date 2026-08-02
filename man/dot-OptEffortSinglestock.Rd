@@ -13,8 +13,11 @@
   TACType_by_Complex,
   TACUnit_by_Complex,
   MaxFleetEffort = NULL,
+  cx = 1L,
+  Effort_start = NULL,
   minEffort = 1e-08,
   tol = 0.001,
+  reltol = NULL,
   maxIter = 100,
   max_log_step = log(10),
   maxEffort = 1e+06
@@ -42,6 +45,16 @@ in which case the previous year's effort is returned unchanged.}
 effort ceiling applied after optimisation; \code{NA} entries impose no ceiling.
 Fleets whose ceiling is exactly zero are excluded from optimisation.}
 
+\item{cx}{Integer. Index of the complex to solve against, within
+\code{TAC_by_Complex} and the rows of the catch matrix. Default \code{1}. Values
+other than \code{1} are used when solving each complex separately to find the
+effort at which it reaches its own TAC.}
+
+\item{Effort_start}{Numeric vector (length \code{nFleet}), or \code{NULL} (default) to
+start from the previous time step's effort. Supplies a warm start when this
+solve is nested inside an outer optimiser that re-solves a nearly identical
+problem each call - see \code{.OptEffortChoke()}.}
+
 \item{minEffort}{Numeric scalar. Floor substituted for near-zero effort
 values throughout; prevents log-scale arithmetic from collapsing to
 \code{-Inf}. Default \code{1e-8}.}
@@ -49,6 +62,10 @@ values throughout; prevents log-scale arithmetic from collapsing to
 \item{tol}{Numeric scalar. Convergence tolerance: Newton-Raphson is
 considered converged when all active-fleet residuals satisfy
 \verb{|TAC - catch| < tol}. Default \code{1e-3}.}
+
+\item{reltol}{Numeric, or \code{NULL} (default). When supplied, convergence is
+judged relative to each fleet's TAC rather than against the absolute \code{tol},
+making the criterion invariant to the units catch is measured in.}
 
 \item{maxIter}{Integer. Maximum Newton-Raphson iterations before the BFGS
 fallback is attempted. Default \code{100}.}
@@ -63,6 +80,10 @@ Jacobian is near-singular (e.g. depleted stock). Default \code{log(10)}
 Applied via \code{clamp_effort()} at every step and used as the bracket ceiling
 in the single-fleet case. Fleets that reach \verb{99\%} of this value while
 their TAC residual remains positive are declared saturated. Default \code{1e6}.
+This is an arbitrary backstop: it is tightened per fleet to
+\code{.MaxUsefulEffort()}, the effort past which the \code{maxF} cap leaves catch
+unchanged, so saturation is reached in a step or two instead of by climbing
+several decades.
 
 Effort is solved on the log scale so that candidate values are always
 positive. The workflow is:
@@ -90,8 +111,15 @@ subsequent iterations.}
 Numeric vector of length \code{nFleet} giving optimised effort per fleet.
 For fleets with no TAC constraint (\code{BindingTAC} is \code{NA} or not in
 \code{pos_idx}), effort is carried forward from the previous time step.
-For fleets whose TAC is unachievable (saturated), effort is set to
+When the TAC is unachievable the two branches differ: the single-active-
+fleet branch cannot bracket the TAC and returns the previous time step's
+effort, while the multi-fleet Newton branch saturates and leaves effort at
 \code{maxEffort} (or \code{MaxFleetEffort[fl]} if lower).
+
+Either way the value is provisional. \code{.CalcFisheryDynamics()} overwrites
+\code{Hist@Effort} with the effort implied by the F actually realised, so an
+unachievable TAC is reported as the effort corresponding to the capped F
+rather than as \code{maxEffort}. See that function's \code{DoBackCalcEffort}.
 }
 \description{
 Calculates fleet-specific effort that achieves target removals (TAC) for a

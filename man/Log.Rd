@@ -2,12 +2,14 @@
 % Please edit documentation in R/utils-log.R
 \name{Log}
 \alias{Log}
-\title{Display Log Warnings}
+\title{Display Log Messages}
 \usage{
 Log(object, type = NULL)
 }
 \arguments{
-\item{object}{An S4 object with a \code{Log} slot}
+\item{object}{An S4 object with a \code{Log} slot. See e.g. \link[=om-class]{om},
+\link[=hist-class]{hist}, \link[=mse-class]{mse}, \link[=stock-class]{stock}, \link[=data-class]{data},
+\link[=advice-class]{advice}.}
 
 \item{type}{Character vector. Restrict the printed sections to one or
 more of \code{'assumption'}, \code{'warning'}, \code{'error'}. Default \code{NULL} prints
@@ -19,8 +21,9 @@ warnings to the console.
 }
 \description{
 Prints any messages stored in the \code{Log} slot of an S4 object to the
-console using \code{cli} formatting, grouped into assumption, warning, and
-error sections.
+console using \code{cli} formatting. Messages are grouped into assumption,
+warning, and error sections; within each section, entries are further
+grouped by the name of the function that recorded them.
 }
 \examples{
 \dontrun{
@@ -28,4 +31,7 @@ error sections.
   Log(my_object, type = 'error')
 }
 
+}
+\seealso{
+\code{\link[=DeleteLogs]{DeleteLogs()}}
 }

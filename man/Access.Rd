@@ -313,6 +313,9 @@ a list when \code{NULL}).}
 \value{
 \itemize{
 \item Accessor functions return the value stored in the named slot of \code{x}.
+For \code{Stat()}, \code{Prob()}, and \code{Mean()} on a \link[=pm-class]{pm} object, the named
+\verb{Sim x Stock x MP} (or \verb{Stock x MP}) array is converted to a tidy
+data frame via \code{\link[=Array2DF]{Array2DF()}} instead of being returned as a raw array.
 \item Replacement functions return \code{x} with the named slot updated to \code{value}.
 }
 }

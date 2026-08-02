@@ -22,7 +22,9 @@ all MPs attached to \code{Hist} are used. MP names must correspond to
 functions available in the current environment. See \code{.CheckMPClass()} for
 validation details.}
 
-\item{parallel}{Logical. Not currently used. Default \code{FALSE}.}
+\item{parallel}{Logical. If \code{TRUE}, projects each MP in parallel using a
+\code{future} plan established by \code{\link[=SetupParallel]{SetupParallel()}}. Errors if
+\code{TRUE} and no parallel plan is active. Default \code{FALSE}.}
 
 \item{silent}{Logical. Suppress progress messages if \code{TRUE}. Default
 \code{FALSE}.}

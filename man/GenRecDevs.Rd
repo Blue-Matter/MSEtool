@@ -7,7 +7,7 @@
 GenRecDevs(
   SD = 0.2,
   AC = 0,
-  TruncSD = 2,
+  TruncSD = 3,
   Ages = NULL,
   HistYears = NULL,
   ProjYears = NULL,
@@ -18,11 +18,17 @@ GenRecDevs(
 )
 }
 \arguments{
-\item{SD}{Numeric vector of standard deviations for recruitment deviations.}
+\item{SD}{Numeric vector of standard deviations for the log recruitment
+deviations. This is the marginal standard deviation of the generated
+series, after autocorrelation and truncation.}
 
-\item{AC}{Numeric vector of autocorrelation coefficients (0 = no autocorr).}
+\item{AC}{Numeric vector of autocorrelation coefficients (0 = no autocorr).
+Must be within -1 and 1, exclusive.}
 
-\item{TruncSD}{Numeric. Number of SDs for truncation of deviations.}
+\item{TruncSD}{Numeric. Number of standard deviations at which the log
+deviations are bounded. Because the latent spread is widened to preserve
+the marginal standard deviation, the realised bound is somewhat wider than
+\code{TruncSD * SD}. Default \code{3}.}
 
 \item{Ages}{An \code{\link[=Ages]{Ages()}} object defining age classes.}
 
@@ -39,15 +45,7 @@ GenRecDevs(
 \item{RecDevProj}{Optional array of projected recruitment deviations.
 
 \code{GenRecDevs()} generates recruitment deviations across initial ages,
-historical years, and projected years. Steps include:
-\itemize{
-\item Generating deviations from a truncated normal distribution
-with standard deviation \code{SD} and truncation at \code{TruncSD} standard
-deviations (default 2).
-\item Applying autocorrelation using \code{AC} for each simulation replicate.
-\item Returning arrays of recruitment deviations for initial ages,
 historical years, and projected years.
-}
 
 If \code{RecDevInit}, \code{RecDevHist}, or \code{RecDevProj} are provided as non-NULL
 arrays, they will not be overwritten and will be returned as-is.}
@@ -70,7 +68,7 @@ projected years, with optional auto-correlation and truncation.
 recdevs <- GenRecDevs(
   SD = 0.2,
   AC = 0.3,
-  TruncSD = 2,
+  TruncSD = 3,
   Ages = Ages,
   HistYears = 2000:2020,
   ProjYears = 2021:2030,

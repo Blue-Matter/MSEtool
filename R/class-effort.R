@@ -36,6 +36,11 @@
 #'   internally) or span the full model time series. Used by bag-limit
 #'   management procedures to model the distribution of retained catch
 #'   across trips at a given mean catch rate. See [Effort()].
+#' @slot StockTargetingLambda `numeric` array or `NULL`. Multiplier on this
+#'   fleet's resistance to changing its stock-targeting mix (`Sim x Year`).
+#'   Multi-stock TAC solving only. `1` (default) leaves the internally
+#'   derived value unchanged; `0` removes the resistance; larger values make
+#'   the fleet hold its existing mix more strongly. See [Effort()].
 #' @slot Misc `list`. Miscellaneous additional inputs.
 #'
 #' @seealso [Effort()] for the constructor and full parameter documentation.
@@ -57,6 +62,7 @@ setClass(
     TripsScalar    = "num.array.null",
     AnglerPerTrip  = "num.array.null",
     Theta          = "num.array.null",
+    StockTargetingLambda = "num.array.null",
     Misc           = "list"
   )
 )

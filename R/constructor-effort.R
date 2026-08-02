@@ -95,6 +95,18 @@
 #'   historical year, and is replicated across all historical and
 #'   projection years during [Simulate()].
 #'
+#' @param StockTargetingLambda Numeric, numeric array, or `NULL`. Multiplier on
+#'   this fleet's resistance to changing its stock-targeting mix when solving
+#'   for effort against multiple stock complexes. Accepts the same forms as
+#'   `Theta` (scalar, `Sim x 1`, or `Sim x Year`).
+#'
+#'   `NULL` (default) is equivalent to `1` and leaves the internally derived
+#'   resistance unchanged. `0` removes the resistance entirely, letting the
+#'   fleet reallocate its targeting freely. Values above `1` make the fleet
+#'   hold its existing mix more strongly, approaching a fixed mix by around
+#'   `100`. Only consulted for multi-complex operating models; ignored
+#'   otherwise. See the Stock Targeting Resistance section below.
+#'
 #' @param Misc List. Miscellaneous additional inputs. Default `list()`.
 #'
 #' @param df Logical. Only used when `Effort` is a [hist-class] or
@@ -241,6 +253,34 @@
 #' [mse-class] objects, the `df` argument controls whether a tidy
 #' `data.frame` (`TRUE`) or the raw array (`FALSE`) is returned.
 #'
+#' ## Stock Targeting Resistance: `StockTargetingLambda`
+#'
+#' When a fleet operates on several stock complexes, a single effort level
+#' usually cannot meet every complex's TAC at once. Effort solving therefore
+#' also adjusts each fleet's stock-targeting weights, subject to a penalty on
+#' how far the mix moves from the previous year. The weight on that penalty is
+#' derived per fleet from the historical variability of its own targeting: a
+#' fleet whose mix has shifted a lot in the past is allowed to shift it again
+#' cheaply, while a fleet with a stable record resists.
+#'
+#' The derived weight is normalised so that, at a multiplier of `1`, shifting
+#' the targeting mix by a given proportion costs about as much as missing the
+#' TAC by the same proportion. 
+#' 
+#' `StockTargetingLambda` scales that derived weight, and is specified per
+#' stock and fleet since it lives on the fleet object:
+#'
+#' - `1` (or `NULL`) keeps the derived value: targeting shifts and TAC misses
+#'   are weighted comparably.
+#' - `0` removes the penalty, so the fleet reallocates targeting freely to hit
+#'   its TACs.
+#' - Values below `1` (say `0.1`) let targeting move more readily.
+#' - Values above `1` hold the existing mix more strongly; by around `100` the
+#'   mix is effectively fixed at the previous year's.
+#'
+#' It has no effect on single-complex operating models, where there is no
+#' competing TAC to reconcile against.
+#'
 #' ## Attaching to a Fleet
 #'
 #' An [effort-class] object can be attached to a [Fleet()] with
@@ -253,8 +293,9 @@
 #'   or array for [hist-class] and [mse-class] depending on `df`).
 #' - `Effort<-` returns `x` with the `Effort` slot replaced by `value`.
 #' - `Distribution()`, `Targeting()`, `Maximum()`, `Mode()`,
-#'   `TripsScalar()`, `AnglerPerTrip()`, `Theta()` return the corresponding
-#'   slot from the [effort-class] object `x`.
+#'   `TripsScalar()`, `AnglerPerTrip()`, `Theta()`,
+#'   `StockTargetingLambda()` return the corresponding slot from the
+#'   [effort-class] object `x`.
 #' - Their replacement forms return `x` with the corresponding slot updated.
 #'
 #' @seealso
@@ -283,6 +324,7 @@ Effort <- function(Effort         = NULL,
                    TripsScalar    = NULL,
                    AnglerPerTrip  = NULL,
                    Theta          = NULL,
+                   StockTargetingLambda = NULL,
                    Misc           = list(),
                    df             = TRUE) {
   
@@ -313,6 +355,7 @@ Effort <- function(Effort         = NULL,
     TripsScalar   = TripsScalar,
     AnglerPerTrip = AnglerPerTrip,
     Theta         = Theta,
+    StockTargetingLambda = StockTargetingLambda,
     Misc          = Misc
   )
 }
@@ -428,4 +471,16 @@ Theta <- function(x) {
 #' @export
 `Theta<-` <- function(x, value) {
   .AssignSlot(x, value, 'Theta')
+}
+
+#' @rdname Effort
+#' @export
+StockTargetingLambda <- function(x) {
+  .AccessSlot(x, 'StockTargetingLambda')
+}
+
+#' @rdname Effort
+#' @export
+`StockTargetingLambda<-` <- function(x, value) {
+  .AssignSlot(x, value, 'StockTargetingLambda')
 }

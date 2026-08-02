@@ -519,9 +519,15 @@ ExploitationObs <- function(Selectivity      = list(),
 #'     unique reference value is drawn per simulation as
 #'     `rlnorm(nSim, mconv(1, Ref), sdconv(1, Ref))` internally.
 #'   - Length-`nSim` vector or named array: used directly.
-#' @param Beta `numeric` or `NULL`. Hyperstability/hyperdepletion parameter
-#'   relating true population size to the observed index. **Reserved for
-#'   future use; currently has no effect.** Default `NULL`.
+#' @param Beta `numeric` or `NULL`. Hyperstability/hyperdepletion parameter:
+#'   `Observed_t = Efficiency * NomIndex_t^Beta * Error_t` (Harley et al.
+#'   2001). `Beta < 1` is hyperstable, `Beta > 1` hyperdeplete. Must be
+#'   positive. Default `NULL` (`Beta = 1`, proportional). A supplied value is
+#'   used as-is for historical/projected data generation; only `Efficiency`
+#'   is then fit when conditioning on real data. If `NULL` and
+#'   `SimControl(EstimateBeta = TRUE)`, `Beta` is instead estimated per
+#'   simulation by log-linear regression when conditioned -- otherwise it
+#'   stays at `1`.
 #' @param AC `numeric`, `array`, or `NULL`. Lag-1 autocorrelation of index
 #'   residuals, one value per simulation
 #' @param Misc `list`. Miscellaneous additional objects. Default `list()`.
@@ -551,8 +557,17 @@ ExploitationObs <- function(Selectivity      = list(),
 #' When real index data are provided (via `OM@Data`) and `.ConditionObs()` is
 #' run, the following slots are estimated and populated internally:
 #'
-#' - `Efficiency` (`q`): estimated as the ratio of the mean observed index to
-#'   the mean simulated nominal index, averaged over non-NA years.
+#' - `Efficiency` (`q`) is always fit per simulation by log-linear regression
+#'   of `log(Observed)` on `log(NomIndex)`, under
+#'   `Observed_t = Efficiency * NomIndex_t^Beta`. `Beta` is jointly estimated
+#'   the same way, but only when `SimControl(EstimateBeta = TRUE)` and the
+#'   user has not already supplied a value for that index; otherwise `Beta`
+#'   is held fixed (at the user's value, or `1`). When estimated, each
+#'   simulation gets an explicit fit `Status` (`"estimated"`,
+#'   `"fixed_low_variance"`, `"fixed_not_significant"`,
+#'   `"fixed_bounds"`, ...) plus `SE_Beta`, a confidence interval, `R2`, and
+#'   `PValue`, stored in `Misc$BetaFit` (see `.EstimateBeta()`) and
+#'   summarized by [IndexFitTable()].
 #' - `Stats`: a data frame computed by [CalcResidualStats()] with columns
 #'   `Sim`, `AC` (weighted lag-1 autocorrelation of log-residuals), `SD`
 #'   (standard deviation of log-residuals), and `NA_Season` (a list-column

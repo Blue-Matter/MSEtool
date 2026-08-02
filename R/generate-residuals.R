@@ -6,11 +6,16 @@
 #' and residuals are truncated to `TruncSD` standard deviations around the mean.
 #' The resulting residuals can be propagated with autocorrelation using [ApplyAC()].
 #'
-#' @param SD Numeric vector of length nSim giving standard deviation of residuals.
-#' @param AC Numeric vector of length nSim giving autocorrelation (must be between -1 and 1 inclusive).
+#' @param SD Numeric vector of length nSim giving the marginal standard
+#'   deviation of the residuals once [ApplyAC()] has propagated them.
+#' @param AC Numeric vector of length nSim giving autocorrelation (must be
+#'   within -1 and 1, exclusive).
 #' @param Years Numeric vector of years for which residuals are generated.
 #' @param nSim Optional integer number of simulations (defaults to length(SD)).
-#' @param TruncSD Numeric scalar specifying how many SDs to truncate the residuals.
+#' @param TruncSD Numeric scalar specifying how many standard deviations at
+#'   which to truncate the innovations. The innovation standard deviation is
+#'   inflated to offset the variance lost to truncation, so the propagated
+#'   residuals retain marginal standard deviation `SD`.
 #' @param nSeasons Number of seasons in the array (default 1).
 #' @param NA_Season Optional. List length `nSim` with each element containing integer vector
 #' indicating which (if any) seasons have NA values for all years
@@ -29,26 +34,21 @@ GenResiduals <- function(SD,
   if (any(SD < 0)) 
     cli::cli_abort("`SD` cannot be negative")
   
-  if (any(abs(AC) > 1)) 
-    cli::cli_abort("`AC` must be in [-1, 1]")
-  
-  if (!is.numeric(TruncSD) || length(TruncSD) != 1 || TruncSD <= 0) 
+  if (!is.numeric(TruncSD) || length(TruncSD) != 1 || TruncSD <= 0)
     cli::cli_abort("`TruncSD` must be a positive scalar")
-  
+
   if (is.null(nSim)) nSim <- length(SD)
-  
+
   nYear <- length(Years)
-  
-  # Calculate mean for truncated log-normal
-  mu <- -0.5 * SD^2 * (1 - AC) / sqrt(1 - AC^2)
-  lower <- mu - TruncSD * SD
-  upper <- mu + TruncSD * SD
-  
-  # Expand mu, SD, lower, upper for each year
-  mu_mat <- matrix(mu, nrow = nSim, ncol = nYear)
-  SD_mat <- matrix(SD, nrow = nSim, ncol = nYear)
-  lower_mat <- matrix(lower, nrow = nSim, ncol = nYear)
-  upper_mat <- matrix(upper, nrow = nSim, ncol = nYear)
+
+  # Innovation parameters; AR(1) is applied downstream by ApplyAC()
+  Innov <- .InnovationPars(SD, AC, TruncSD)
+
+  # Expand mu, sigma, lower, upper for each year
+  mu_mat <- matrix(Innov$mu, nrow = nSim, ncol = nYear)
+  SD_mat <- matrix(Innov$sigma, nrow = nSim, ncol = nYear)
+  lower_mat <- matrix(Innov$lower, nrow = nSim, ncol = nYear)
+  upper_mat <- matrix(Innov$upper, nrow = nSim, ncol = nYear)
   
   # Generate residuals
   LogResid <- .Rtnorm(nSim * nYear, 
@@ -75,6 +75,72 @@ GenResiduals <- function(SD,
     arr[s,NA_ind] <- NA
   }
   arr
+}
+
+# sd of a symmetric truncated normal, relative to its nominal sigma
+.TruncSDScale <- function(TruncSD) {
+  sqrt(1 - 2 * TruncSD * dnorm(TruncSD) / (2 * pnorm(TruncSD) - 1))
+}
+
+# log E[exp(x)] for the stationary AR(1) x_t = AC x_{t-1} + e_t sqrt(1 - AC^2),
+# with e ~ symmetric truncated normal on +/- TruncSD * sigma
+.LogMeanExpAR1 <- function(sigma, TruncSD, AC, nTerm = 200) {
+  j <- seq_len(nTerm) - 1
+  z <- log(2 * pnorm(TruncSD) - 1)
+  vapply(seq_along(sigma), function(i) {
+    sw <- sigma[i] * sqrt(1 - AC[i]^2) * AC[i]^j
+    sum(sw^2 / 2 + log(pnorm(TruncSD - sw) - pnorm(-TruncSD - sw)) - z)
+  }, numeric(1))
+}
+
+# Innovation mean/sd/bounds such that, after AR(1) propagation, the log
+# deviations have marginal sd `SD` and mean(exp(deviation)) of 1. Truncating
+# the innovation shrinks its variance, so sigma is inflated to compensate, and
+# the lognormal bias correction accounts for the truncated (non-normal) shape.
+.InnovationPars <- function(SD, AC, TruncSD) {
+  if (any(abs(AC) >= 1, na.rm = TRUE))
+    cli::cli_abort("{.arg AC} must be within {.val {c(-1, 1)}} exclusive: an AR(1) process with {.code abs(AC) >= 1} has no stationary distribution.")
+
+  sigma <- SD / .TruncSDScale(TruncSD)
+  mu    <- -.LogMeanExpAR1(sigma, TruncSD, AC) * (1 - AC) / sqrt(1 - AC^2)
+
+  list(mu    = mu,
+       sigma = sigma,
+       lower = mu - TruncSD * sigma,
+       upper = mu + TruncSD * sigma)
+}
+
+# Latent spread, truncation probabilities, and lognormal bias offset shared by
+# .LatentToDev() and its inverse
+.TruncDevScale <- function(SD, TruncSD) {
+  sigma <- SD / .TruncSDScale(TruncSD)
+  lo    <- pnorm(-TruncSD)
+  hi    <- pnorm(TruncSD)
+  bias  <- if (sigma > 0) {
+    sigma^2 / 2 +
+      log(pnorm(TruncSD - sigma) - pnorm(-TruncSD - sigma)) - log(hi - lo)
+  } else 0
+  list(sigma = sigma, lo = lo, hi = hi, bias = bias)
+}
+
+# Map a standard-normal AR(1) series onto a symmetric truncated-normal
+# marginal via the probability integral transform, then bias-correct so
+# mean(exp(x)) is 1. Because the bound applies to the marginal rather than to
+# the innovations, it does not widen as autocorrelation increases.
+.LatentToDev <- function(z, SD, TruncSD) {
+  p <- .TruncDevScale(SD, TruncSD)
+  if (p$sigma <= 0) return(rep(0, length(z)))
+  qnorm(pnorm(z) * (p$hi - p$lo) + p$lo) * p$sigma - p$bias
+}
+
+# Inverse of .LatentToDev(), used to seed a latent AR(1) from observed
+# deviations. Values outside the truncation support are clamped to it.
+.DevToLatent <- function(x, SD, TruncSD) {
+  p <- .TruncDevScale(SD, TruncSD)
+  if (p$sigma <= 0) return(rep(0, length(x)))
+  xs <- pmin(pmax((x + p$bias) / p$sigma, -TruncSD), TruncSD)
+  u  <- (pnorm(xs) - p$lo) / (p$hi - p$lo)
+  qnorm(pmin(pmax(u, 1e-12), 1 - 1e-12))
 }
 
 .ExpandSeasons <- function(NA_seas, nSeasons, nYear) {
@@ -137,16 +203,24 @@ ApplyAC <- function(LogResid, AC, LastError) {
 #' Calculate residual statistics for log-space index residuals
 #'
 #' Computes standard deviation and lag-1 autocorrelation of log residuals
-#' for a simulated index (`sim x year`). 
-#' 
-#' Contiguous NA values are handled by splitting into separate groups 
-#' for autocorrelation calculation within each simulation. 
-#' Seasons with all NA values across all years are dropped.
+#' for a simulated index (`sim x year`).
+#'
+#' Seasons that are NA in every year are treated as seasons the index is never
+#' observed in, and are dropped; the seasons they occupy are recorded in
+#' `NA_Season` so [GenResiduals()] can reproduce the same pattern in the
+#' projection. The remaining values are taken in time order, and `AC` is the
+#' lag-1 autocorrelation between *consecutive observations* rather than
+#' consecutive time steps. For an index observed in a single season, that is
+#' the year-to-year autocorrelation. This matches how [ApplyAC()] propagates
+#' the projection residuals, which steps from one observation to the next.
+#'
+#' `AC` may be negative, and is returned as estimated.
 #'
 #' @param LogResiduals A numeric matrix or array with dimensions `sim x year`.
 #' @param nSeasons Number of seasons in the array (default 1).
 #' @return A data.frame with columns:
-#' * `AC`: weighted lag-1 autocorrelation of residuals
+#' * `AC`: lag-1 autocorrelation between consecutive observations, or `NA` when
+#'   fewer than two observations are available
 #' * `SD`: standard deviation of residuals
 #' * `NA_Season`: a list length `nSim` with each element containing integer vector
 #' indicating which (if any) seasons have NA values for all years
@@ -183,20 +257,22 @@ CalcResidualStats <- function(LogResiduals, nSeasons=1) {
       next
     }
     
-    valid_seasons <- unlist(lapply(which(seasons_to_keep), function(season) {
+    # sorted so the retained observations stay in time order; concatenating the
+    # per-season sequences would group them by season and collapse AC toward
+    # AC^nSeasons
+    valid_seasons <- sort(unlist(lapply(which(seasons_to_keep), function(season) {
       seq(season, nYear, by = nSeasons)
-    }))
-    
+    })))
+
     res <- res[valid_seasons]
     res[!is.finite(res)] <- NA
 
-    # Compute autocorrelation for each contiguous block of non-NA values
+    # lag-1 autocorrelation between consecutive observations
     non_na_idx <- which(!is.na(res))
     if (length(non_na_idx) <= 1) {
       AC[s] <- NA_real_
     } else {
       AC[s] <- acf(res[non_na_idx], plot = FALSE)$acf[2]
-      AC[s] <- max(AC[s], 0)
     }
     
     SD[s] <- sd(res, na.rm = TRUE)

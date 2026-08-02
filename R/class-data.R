@@ -91,8 +91,11 @@ setClass(
 #'   historical mean or target level). See [IndicesData()].
 #' @slot RefCV `array` or `NULL`. Coefficients of variation for the reference
 #'   values, matching the dimensions of `Ref`. See [IndicesData()].
-#' @slot Timing `numeric`. Within-year timing of each observation as a
-#'   fraction of the year (0-1). See [IndicesData()].
+#' @slot Timing `numeric`. Timing of each observation as a fraction of the
+#'   time step (0-1). Simulated
+#'   indices are decayed by the mortality accrued up to that point;
+#'   `0` (default) observes the population at the start of the time step.
+#'   See [IndicesData()].
 #' @slot Selectivity An array or character specification mapping each index
 #'   to a fleet selectivity or defining an independent selectivity curve.
 #'   See [IndicesData()].
@@ -148,7 +151,9 @@ setClass(
 #' @slot Units `character` or `NULL`. Units of the class variable
 #'   (e.g., `"years"`, `"cm"`, `"mm"`), shared by every fleet. See
 #'   [CompData()].
-#' @slot Log `list`. Named list used for diagnostic and audit logging.
+#' @slot Log `list`. Internal named list storing diagnostics, warnings, and
+#'   assumptions recorded during processing. See [Log()]. Not intended for
+#'   direct user access.
 #' @slot Misc `list`. Named list for additional composition-level metadata.
 #'
 #' @seealso
@@ -445,7 +450,9 @@ AdviceData <- function() {
 #'
 #' @slot Misc A named list for any additional user-defined data. Defaults to
 #'   `list()`.
-#' @slot Log Internal named list used for diagnostic and audit logging.
+#' @slot Log `list`. Internal named list storing diagnostics, warnings, and
+#'   assumptions recorded during processing. See [Log()]. Not intended for
+#'   direct user access.
 #'
 #' @seealso [Data()]
 #' @name data-class

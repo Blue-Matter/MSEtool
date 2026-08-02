@@ -18,6 +18,13 @@
 #'   current time step, `0` skips.
 #' @param DoCalcOverallF Integer flag; `1` (default) calculates overall fishing
 #'   mortality, `0` skips.
+#' @param DoBackCalcEffort Integer flag; `1` overwrites `Hist@Effort` with the
+#'   effort implied by the F actually realised, `0` (default) leaves the
+#'   requested effort. Unlike the other flags this defaults to *off*: the effort
+#'   solvers call this function thousands of times while probing, and rewriting
+#'   effort underneath them would corrupt their finite differences whenever the
+#'   `maxF` clamp binds. Enable it only on the calls that advance the
+#'   simulation, via `.BackCalcEffortFlag()`.
 #' @param IdenticalSim Logical; if `TRUE`, computes only simulation 1 and
 #'   broadcasts results to all simulations via `.CopyFirstSim`.
 #' @param debug Integer flag passed to C++; `1` enables verbose debug output.
@@ -28,7 +35,7 @@
 #'
 #' @return The `Hist` object with updated fishery dynamics slots.
 #' @keywords internal
-.CalcFisheryDynamics <- function(Hist, 
+.CalcFisheryDynamics <- function(Hist,
                                 Years=NULL,
                                 Sims=NULL,
                                 DoCalcCatch=1,
@@ -37,6 +44,7 @@
                                 DoCalcNumberNext=1,
                                 DoCalcBiomass=1,
                                 DoCalcOverallF=1,
+                                DoBackCalcEffort=0,
                                 IdenticalSim=FALSE,
                                 debug=0,
                                 clone=NULL) {
@@ -74,6 +82,7 @@
                                    DoCalcNumberNext=DoCalcNumberNext,
                                    DoCalcBiomass=DoCalcBiomass,
                                    DoCalcOverallF=DoCalcOverallF,
+                                   DoBackCalcEffort=DoBackCalcEffort,
                                    debug=debug,
                                    clone=1L)
     
@@ -100,6 +109,23 @@
                        DoCalcNumberNext=DoCalcNumberNext,
                        DoCalcBiomass=DoCalcBiomass,
                        DoCalcOverallF=DoCalcOverallF,
+                       DoBackCalcEffort=DoBackCalcEffort,
                        debug=debug,
                        clone=clone)
+}
+
+#' Resolve the back-calculated effort control
+#'
+#' `OM@Control$BackCalcEffort` turns off the effort back-calculation described
+#' in `.CalcFisheryDynamics()`. It defaults to on; set it to `FALSE` to keep the
+#' requested effort, for example to reproduce results generated before the
+#' back-calculation existed.
+#'
+#' @param Hist A [hist-class] object.
+#' @return `1L` or `0L`, for `.CalcFisheryDynamics()`'s `DoBackCalcEffort`.
+#' @keywords internal
+.BackCalcEffortFlag <- function(Hist) {
+  ctl <- Hist@OM@Control$BackCalcEffort
+  if (is.null(ctl)) return(1L)
+  as.integer(isTRUE(ctl))
 }

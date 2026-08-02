@@ -24,7 +24,6 @@
 #' Subsetting is applied sequentially when multiple dimensions are supplied,
 #' allowing consistent extraction across simulations, years, and age classes in
 #' a single call.
-#' 
 #'
 #' @return An object of the same class as `object`, subset according to the
 #'   supplied dimension arguments.
@@ -39,12 +38,7 @@ Subset <- function(object,
                    Fleets = NULL,
                    Stocks = NULL,
                    Impute = TRUE) {
-  
-  populated <- try(Populate(object), silent = TRUE)
-  
-  if (!inherits(populated, "try-error"))
-    object <- populated
- 
+
   if (!is.null(Sims))   object <- .SubsetSim(object, Sims)
   if (!is.null(Years))  object <- .SubsetYear(object, Years, Impute)
   if (!is.null(Ages))   object <- .SubsetAge(object, Ages)

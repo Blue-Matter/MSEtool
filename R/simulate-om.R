@@ -59,7 +59,8 @@
   if (control$MGT)
     Hist@Reference@MGT <- CalcMGT(Hist, silent = silent)
 
-  Hist <- .CalcFisheryDynamics(Hist, IdenticalSim=IdenticalHist, clone = 1)
+  Hist <- .CalcFisheryDynamics(Hist, IdenticalSim=IdenticalHist, clone = 1,
+                               DoBackCalcEffort = .BackCalcEffortFlag(Hist))
   Hist <- .CalcCatchAtSize(Hist, Years = HistYears)
 
   if (control$RefPoints)
@@ -79,7 +80,7 @@
   Hist <- .RestoreHistMisc(Hist)
 
   if (control$ConditionObs)
-    Hist <- .ConditionObs(Hist, silent)
+    Hist <- .ConditionObs(Hist, silent, EstimateBeta = control$EstimateBeta %||% TRUE)
 
   if (control$GenerateData)
     Hist <- .GenerateHistoricalData(Hist, parallel=parallel, silent=silent)

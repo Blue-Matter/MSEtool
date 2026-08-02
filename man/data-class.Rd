@@ -88,7 +88,9 @@ and related management advice.}
 \item{\code{Misc}}{A named list for any additional user-defined data. Defaults to
 \code{list()}.}
 
-\item{\code{Log}}{Internal named list used for diagnostic and audit logging.}
+\item{\code{Log}}{\code{list}. Internal named list storing diagnostics, warnings, and
+assumptions recorded during processing. See \code{\link[=Log]{Log()}}. Not intended for
+direct user access.}
 }}
 
 \seealso{

@@ -1,157 +1,5 @@
-#' Internal Observation Error Helper Functions
-#'
-#' A family of internal functions used by [PopulateEffortObs()],
-#' [PopulateCatchObs()], [PopulateIndexObs()], and [PopulateCompObs()] to
-#' expand, validate, and generate observation error arrays across simulation
-#' replicates and years.
-#'
-#' @param CV `numeric`. A CV value to expand. See [PopulateObsCV()].
-#' @param object An S4 obs sub-object with `@Error`, `@CV`, and `@Bias` slots.
-#'   See [PopulateObsError()] and [PopulateObsBias()].
-#' @param nSim Integer. Number of simulation replicates.
-#' @param Years Integer vector. Calendar years (historical and projection
-#'   combined) over which the error array spans.
-#' @param Ref `numeric`. A reference level value. See [PopulateObsRef()].
-#' @param AC `numeric`. A lag-1 autocorrelation coefficient or vector. See
-#'   [PopulateObsAC()].
-#' @param Error `numeric` array `[nSim x nYear]`. A lognormal error array to
-#'   which AR(1) autocorrelation is applied. See [ApplyObsAC()].
-#' @param x `numeric`. A scalar, length-2 uniform bound, or named matrix to
-#'   expand to `[nSim x nYear]`. See [PopulateObsScalar()].
-#' @param label Character scalar. Name of the parameter being expanded, used
-#'   in error messages. See [PopulateObsScalar()].
-#' @param Shift `numeric`. A per-bin log-concentration offset. See
-#'   [PopulateObsShift()].
-#' @param Bins Numeric vector. Composition bin values (ages or length
-#'   midpoints). See [PopulateObsShift()].
-#' @param BinName Character scalar. Name of the bin dimension
-#'   (e.g. `"Age"` or `"Size"`). See [PopulateObsShift()].
-#'
-#' @details
-#'
-#' ## PopulateObsCV
-#'
-#' Expands a CV value to a named `[nSim]` vector following the standard
-#' `.StructurePars` + `ExtendSims` convention. If `CV` already has dimnames
-#' (i.e. it has been previously populated), it is trimmed to `nSim` and
-#' returned unchanged.
-#'
-#' ## PopulateObsError
-#'
-#' Generates or validates a lognormal error array of dimension
-#' `[nSim x nYear]`.
-#'
-#' If `object@Error` is empty and `object@CV` is set, draws `nSim × nYear`
-#' lognormal values with mean 1 and the specified CV, returning a named
-#' `[nSim x nYear]` array.
-#'
-#' If `object@Error` is already provided, it is validated against the expected
-#' dimensions. A pre-supplied array with more rows than `nSim` is silently
-#' trimmed; mismatches in either dimension after trimming raise an error.
-#' Dimension names are applied to the validated array before returning.
-#'
-#' ## PopulateObsBias
-#'
-#' Expands a `Bias` value to a named `[nSim]` multiplicative array on the
-#' natural scale. Accepted inputs:
-#'
-#' - Empty or `NULL`: defaults silently to 1 (no bias).
-#' - Vector of length `nSim`: wrapped in a named array directly.
-#' - Vector longer than `nSim`: trimmed silently to `nSim`.
-#' - Scalar or length-2 vector: treated as a CV from which `nSim` lognormal
-#'   values are drawn.
-#'
-#' All supplied values must be strictly positive.
-#'
-#' ## PopulateObsRef
-#'
-#' Generates or returns a named `[nSim]` reference level array. If `Ref` has
-#' dimnames it is assumed already populated and trimmed to `nSim`. If
-#' `length(Ref) == nSim` and `nSim != 2` (to avoid ambiguity with a length-2
-#' uniform bound), it is returned as-is wrapped in a named array. Otherwise
-#' `Ref` is treated as a CV and a lognormal draw of `nSim` values is taken.
-#'
-#' ## PopulateObsAC
-#'
-#' Expands a lag-1 autocorrelation coefficient to a named `[nSim]` array.
-#' Accepted inputs:
-#'
-#' - Empty or `NULL`: defaults silently to 0 (no autocorrelation).
-#' - Scalar: constant value applied to all simulations.
-#' - Length-2 vector `c(lower, upper)` (when `nSim != 2`): bounds of a
-#'   Uniform distribution from which `nSim` values are drawn.
-#' - Vector of length `nSim`: used directly.
-#' - Vector longer than `nSim`: trimmed silently.
-#'
-#' All values are validated to lie in `[-1, 1]`.
-#'
-#' ## ApplyObsAC
-#'
-#' Applies per-simulation lag-1 AR(1) autocorrelation to a
-#' `[nSim x nYear]` lognormal error array using a variance-preserving
-#' formulation. Let \eqn{\varepsilon_t = \log(\mathrm{Error}_t)} be the
-#' raw log-errors. The AR(1) series is constructed as:
-#'
-#' \deqn{\varepsilon_t^* = \rho \, \varepsilon_{t-1}^* +
-#'   \sqrt{1 - \rho^2} \, \varepsilon_t}
-#'
-#' where \eqn{\rho} is the per-simulation autocorrelation coefficient. This
-#' preserves the marginal variance \eqn{\mathrm{Var}(\varepsilon_t^*) =
-#' \mathrm{Var}(\varepsilon_t)} for all values of \eqn{\rho}. The AR(1)
-#' series is exponentiated back to the natural scale before returning. If all
-#' AC values are zero the input array is returned unchanged.
-#'
-#' ## PopulateObsScalar
-#'
-#' Expands a scalar, length-2 uniform bound, or named matrix to a
-#' `[nSim x nYear]` array, following the standard change-point convention
-#' used throughout the operating model. Accepted inputs:
-#'
-#' - Named array with correct dimensions: trimmed to `nSim` and returned.
-#' - Length-2 vector `c(lower, upper)`: `nSim` values drawn from
-#'   `Uniform(lower, upper)`, held constant across years.
-#' - Scalar or change-point matrix: expanded via `.StructurePars` +
-#'   `ExtendSims` + `ExtendYears`.
-#'
-#' ## PopulateObsShift
-#'
-#' Expands a `Shift` value to a named `[nSim x nYear x nBin]` array following
-#' the same change-point convention, with the third dimension named by
-#' `BinName` and labelled with `Bins`. Accepted inputs:
-#'
-#' - Full `[nSim x nYear x nBin]` array: trimmed to `nSim` if oversupplied.
-#' - Scalar: broadcast to all simulations, years, and bins.
-#' - Vector of length `nBin`: bin-specific offset, constant across simulations
-#'   and years.
-#' - Named matrix or partial array with change-point years: expanded via
-#'   `Extend()` then broadcast across bins.
-#'
-#' @return
-#' - `PopulateObsCV()`: named `[nSim]` numeric vector, or the original
-#'   zero-length value if `CV` was empty.
-#' - `PopulateObsError()`: named `[nSim x nYear]` numeric array.
-#' - `PopulateObsBias()`: named `[nSim]` numeric array of positive
-#'   multiplicative bias values.
-#' - `PopulateObsRef()`: named `[nSim]` numeric array, or the original
-#'   zero-length value if `Ref` was empty.
-#' - `PopulateObsAC()`: named `[nSim]` numeric array with values in `[-1, 1]`.
-#' - `ApplyObsAC()`: named `[nSim x nYear]` numeric array with AR(1)
-#'   autocorrelation applied on the log scale.
-#' - `PopulateObsScalar()`: named `[nSim x nYear]` numeric array.
-#' - `PopulateObsShift()`: named `[nSim x nYear x nBin]` numeric array.
-#'
-#' @seealso
-#' [PopulateEffortObs()], [PopulateCatchObs()], [PopulateIndexObs()],
-#' [PopulateCompObs()]
-#'
-#' @name populate-obs-helpers
-#' @keywords internal
-NULL
 
-
-#' @rdname populate-obs-helpers
-#' @export
-PopulateObsCV <- function(CV, nSim) {
+.PopulateObsCV <- function(CV, nSim) {
   if (!length(CV))
     return(CV)
   
@@ -163,9 +11,19 @@ PopulateObsCV <- function(CV, nSim) {
     DropDimension("Year", warn = FALSE)
 }
 
-#' @rdname populate-obs-helpers
-#' @export
-PopulateObsError <- function(object, nSim, Years) {
+.PopulateObsBeta <- function(Beta, nSim) {
+  if (!is.null(Beta) && !length(Beta))
+    Beta <- NULL
+  if (is.null(Beta)) return(Beta)
+  
+  .StructurePars(list(Beta), nSim)[[1]] |>
+    ExtendSims(nSim) |>
+    DropDimension("Year", warn = FALSE)
+  
+  
+}
+
+.PopulateObsError <- function(object, nSim, Years) {
   nTS <- length(Years)
   
   if (length(object@Error) < 1) {
@@ -223,9 +81,8 @@ PopulateObsError <- function(object, nSim, Years) {
   object@Error
 }
 
-#' @rdname populate-obs-helpers
-#' @export
-PopulateObsBias <- function(object, nSim) {
+ 
+.PopulateObsBias <- function(object, nSim) {
   cls <- class(object)
   
   if (length(object@Bias) < 1)
@@ -254,9 +111,9 @@ PopulateObsBias <- function(object, nSim) {
   )
 }
 
-#' @rdname populate-obs-helpers
-#' @export
-PopulateObsRef <- function(Ref, nSim) {
+
+ 
+.PopulateObsRef <- function(Ref, nSim) {
   if (!length(Ref))
     return(Ref)
   
@@ -277,9 +134,8 @@ PopulateObsRef <- function(Ref, nSim) {
   )
 }
 
-#' @rdname populate-obs-helpers
-#' @export
-PopulateObsAC <- function(AC, nSim) {
+ 
+.PopulateObsAC <- function(AC, nSim) {
   if (!length(AC))
     return(array(0, dim = nSim, dimnames = list(Sim = seq_len(nSim))))
   
@@ -317,9 +173,8 @@ PopulateObsAC <- function(AC, nSim) {
   array(AC, dim = nSim, dimnames = list(Sim = seq_len(nSim)))
 }
 
-#' @rdname populate-obs-helpers
-#' @export
-ApplyObsAC <- function(Error, AC) {
+ 
+.ApplyObsAC <- function(Error, AC) {
   if (!length(Error) || all(AC == 0))
     return(Error)
   
@@ -344,9 +199,8 @@ ApplyObsAC <- function(Error, AC) {
   Error
 }
 
-#' @rdname populate-obs-helpers
-#' @export
-PopulateObsScalar <- function(x, nSim, Years, label = "value") {
+ 
+.PopulateObsScalar <- function(x, nSim, Years, label = "value") {
   nYear <- length(Years)
   
   if (!is.null(dimnames(x))) {
@@ -389,23 +243,24 @@ PopulateObsScalar <- function(x, nSim, Years, label = "value") {
   expanded
 }
 
-#' @rdname populate-obs-helpers
-#' @importFrom rlang :=
-#' @export
-PopulateObsShift <- function(Shift, nSim, Years, Bins, BinName = "Bin") {
+ 
+.PopulateObsShift <- function(Shift, nSim, Years, Bins, BinName = "Bin") {
   nYear <- length(Years)
   nBin  <- length(Bins)
-  
+
+  # `BinName` is dynamic, so name the third element after building the list
+  DimNames <- function() {
+    dn <- list(Sim = seq_len(nSim), Year = Years, Bins)
+    names(dn)[3] <- BinName
+    dn
+  }
+
   if (is.array(Shift) && length(dim(Shift)) == 3) {
     if (dim(Shift)[1] >= nSim &&
         dim(Shift)[2] == nYear &&
         dim(Shift)[3] == nBin) {
       Shift <- Shift[seq_len(nSim), , , drop = FALSE]
-      dimnames(Shift) <- list(
-        Sim        = seq_len(nSim),
-        Year       = Years,
-        !!BinName := Bins
-      )
+      dimnames(Shift) <- DimNames()
       return(Shift)
     }
     cli::cli_abort(
@@ -418,15 +273,15 @@ PopulateObsShift <- function(Shift, nSim, Years, Bins, BinName = "Bin") {
     return(array(
       Shift,
       dim      = c(nSim, nYear, nBin),
-      dimnames = list(Sim = seq_len(nSim), Year = Years, !!BinName := Bins)
+      dimnames = DimNames()
     ))
   }
-  
+
   if (is.vector(Shift) && length(Shift) == nBin) {
     return(array(
       rep(Shift, each = nSim * nYear),
       dim      = c(nSim, nYear, nBin),
-      dimnames = list(Sim = seq_len(nSim), Year = Years, !!BinName := Bins)
+      dimnames = DimNames()
     ))
   }
   
@@ -440,14 +295,10 @@ PopulateObsShift <- function(Shift, nSim, Years, Bins, BinName = "Bin") {
     expanded <- array(
       rep(as.vector(expanded), nBin),
       dim      = c(nSim, nYear, nBin),
-      dimnames = list(Sim = seq_len(nSim), Year = Years, !!BinName := Bins)
+      dimnames = DimNames()
     )
   } else {
-    dimnames(expanded) <- list(
-      Sim        = seq_len(nSim),
-      Year       = Years,
-      !!BinName := Bins
-    )
+    dimnames(expanded) <- DimNames()
   }
   
   expanded

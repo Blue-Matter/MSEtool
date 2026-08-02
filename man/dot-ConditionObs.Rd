@@ -4,12 +4,18 @@
 \alias{.ConditionObs}
 \title{Condition Observation Error for Fishery Data}
 \usage{
-.ConditionObs(Hist, silent = FALSE)
+.ConditionObs(Hist, silent = FALSE, EstimateBeta = TRUE)
 }
 \arguments{
 \item{Hist}{Operating model history object}
 
 \item{silent}{Logical; if \code{TRUE}, suppress progress bars and status messages}
+
+\item{EstimateBeta}{Logical. Estimate the index hyperstability/
+hyperdepletion parameter \code{Beta} by regression? If \code{FALSE}, \code{Beta} is
+fixed at \code{1} for indices without a user-supplied \code{Beta}. Default \code{TRUE}
+for this internal function; callers normally pass through
+\code{SimControl()}'s own default of \code{FALSE}.}
 }
 \description{
 Internal wrapper to condition all observed fishery data associated with

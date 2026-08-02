@@ -89,9 +89,15 @@ unique reference value is drawn per simulation as
 \item Length-\code{nSim} vector or named array: used directly.
 }}
 
-\item{Beta}{\code{numeric} or \code{NULL}. Hyperstability/hyperdepletion parameter
-relating true population size to the observed index. \strong{Reserved for
-future use; currently has no effect.} Default \code{NULL}.}
+\item{Beta}{\code{numeric} or \code{NULL}. Hyperstability/hyperdepletion parameter:
+\code{Observed_t = Efficiency * NomIndex_t^Beta * Error_t} (Harley et al.
+2001). \code{Beta < 1} is hyperstable, \code{Beta > 1} hyperdeplete. Must be
+positive. Default \code{NULL} (\code{Beta = 1}, proportional). A supplied value is
+used as-is for historical/projected data generation; only \code{Efficiency}
+is then fit when conditioning on real data. If \code{NULL} and
+\code{SimControl(EstimateBeta = TRUE)}, \code{Beta} is instead estimated per
+simulation by log-linear regression when conditioned -- otherwise it
+stays at \code{1}.}
 
 \item{AC}{\code{numeric}, \code{array}, or \code{NULL}. Lag-1 autocorrelation of index
 residuals, one value per simulation}
@@ -137,8 +143,17 @@ length-\code{nSim} input is used directly.
 When real index data are provided (via \code{OM@Data}) and \code{.ConditionObs()} is
 run, the following slots are estimated and populated internally:
 \itemize{
-\item \code{Efficiency} (\code{q}): estimated as the ratio of the mean observed index to
-the mean simulated nominal index, averaged over non-NA years.
+\item \code{Efficiency} (\code{q}) is always fit per simulation by log-linear regression
+of \code{log(Observed)} on \code{log(NomIndex)}, under
+\code{Observed_t = Efficiency * NomIndex_t^Beta}. \code{Beta} is jointly estimated
+the same way, but only when \code{SimControl(EstimateBeta = TRUE)} and the
+user has not already supplied a value for that index; otherwise \code{Beta}
+is held fixed (at the user's value, or \code{1}). When estimated, each
+simulation gets an explicit fit \code{Status} (\code{"estimated"},
+\code{"fixed_low_variance"}, \code{"fixed_not_significant"},
+\code{"fixed_bounds"}, ...) plus \code{SE_Beta}, a confidence interval, \code{R2}, and
+\code{PValue}, stored in \code{Misc$BetaFit} (see \code{.EstimateBeta()}) and
+summarized by \code{\link[=IndexFitTable]{IndexFitTable()}}.
 \item \code{Stats}: a data frame computed by \code{\link[=CalcResidualStats]{CalcResidualStats()}} with columns
 \code{Sim}, \code{AC} (weighted lag-1 autocorrelation of log-residuals), \code{SD}
 (standard deviation of log-residuals), and \code{NA_Season} (a list-column

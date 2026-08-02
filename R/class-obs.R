@@ -232,7 +232,10 @@ setValidity("catchobs", function(object) {
 #'   generated stochastically from `CV`, or
 #'   estimated from real data during `.ConditionObs()`. See [IndicesObs()].
 #' @slot Beta `numeric` array or `NULL`. Hyperstability/hyperdepletion
-#'   parameter. Reserved for future use; currently not implemented. See
+#'   parameter: `Observed_t = Efficiency * NomIndex_t^Beta * Error_t`. `NULL`
+#'   (default) is `Beta = 1` (proportional); otherwise estimated per
+#'   simulation when conditioned on real data and
+#'   `SimControl(EstimateBeta = TRUE)`, unless already supplied. See
 #'   [IndicesObs()].
 #' @slot AC `numeric` array or `NULL`. Lag-1 autocorrelation of index
 #'   residuals, one value per simulation. When supplied by the user, overrides
@@ -260,7 +263,10 @@ setValidity("catchobs", function(object) {
 #'   (weighted lag-1 autocorrelation), `SD` (standard deviation), and
 #'   `NA_Season` (a list-column of seasons with no observations). Populated
 #'   internally; not set by the user.
-#' @slot Misc `list`. Miscellaneous additional objects.
+#' @slot Misc `list`. Miscellaneous additional objects. When `Beta` is
+#'   conditioned on real data, `Misc$BetaFit` holds the per-simulation fit
+#'   diagnostics from `.EstimateBeta()`: `SE_Beta`, `CI_Lower`, `CI_Upper`,
+#'   `R2`, `PValue`, `nPoints`, and `Status`. See [IndexFitTable()].
 #'
 #' @seealso
 #'  - [IndicesObs()] for the constructor and full parameter
@@ -308,6 +314,9 @@ setValidity("indicesobs", function(object) {
 
   if (!is.null(object@TruncSD) && object@TruncSD <= 0)
     errors <- c(errors, "`TruncSD` must be positive")
+
+  if (!is.null(object@Beta) && any(object@Beta <= 0, na.rm = TRUE))
+    errors <- c(errors, "`Beta` must be positive")
 
   if (length(errors)) errors else TRUE
 })

@@ -105,8 +105,10 @@
     if (!allow_neg && any(x < 0, na.rm = TRUE))
       add_err(name, ": contains negative values")
     if (!is.null(range)) {
-      lo <- range[1L]; hi <- range[2L]
-      if (any(x < lo | x > hi, na.rm = TRUE))
+      tol <- 1e-8 
+      lo  <- range[1L]
+      hi  <- range[2L]
+      if (any(x < lo - tol | x > hi + tol, na.rm = TRUE))
         add_err(name, ": values outside [", lo, ", ", hi, "]")
     }
     invisible(NULL)
@@ -333,6 +335,29 @@
       check_array(arr, nm, c(nSim, nyears))
       check_values(arr, nm)
     }
+
+    model <- if (length(Misc$SRR_Model) >= st) Misc$SRR_Model[st] else NA_real_
+    shape <- pars_st[[1L]]
+    if (is.numeric(shape) && length(shape) && !is.na(model)) {
+      bad <- function(f) sum(f(shape), na.rm = TRUE)
+      if (model == 0) {           # Beverton-Holt: steepness
+        n <- bad(\(h) h < 0.2 | h >= 1)
+        if (n > 0)
+          add_err(nm_base, ": Beverton-Holt steepness must be in [0.2, 1); ",
+                  n, " value(s) outside (range ", signif(min(shape), 6), " to ",
+                  signif(max(shape), 6), ")")
+      } else if (model == 1) {    # Ricker: steepness
+        n <- bad(\(h) h <= 0.2)
+        if (n > 0)
+          add_err(nm_base, ": Ricker steepness must be greater than 0.2; ",
+                  n, " value(s) at or below (min ", signif(min(shape), 6), ")")
+      } else if (model == 2) {    # Hockey-stick: hinge as a fraction of SP0
+        n <- bad(\(s) s <= 0)
+        if (n > 0)
+          add_err(nm_base, ": Hockey-stick hinge must be positive; ",
+                  n, " value(s) at or below zero (min ", signif(min(shape), 6), ")")
+      }
+    }
   })
   
   # RecDevs: list[nStock] of 2D (sim, year)
@@ -403,32 +428,28 @@
   })
   
   # SelSizeList / RetSizeList / DiscMortSizeList:
-  # list[nStock] of list[nFleet] of 4D (sim, class, year, area)
-  
-  # these aren't used in C++
-  
-  # for (lnm in c("SelSizeList", "RetSizeList", "DiscMortSizeList")) {
-  #   check_stock_list(Misc[[lnm]], paste0("Hist@Misc$", lnm),
-  #                    function(fleet_lst, st) {
-  #                      nm_st <- paste0("Hist@Misc$", lnm, "[[", st, "]]")
-  #                      if (!is.list(fleet_lst)) {
-  #                        add_err(nm_st, ": must be a list (one per fleet), got ", class(fleet_lst))
-  #                        return(invisible(NULL))
-  #                      }
-  #                      if (length(fleet_lst) != nFleet)
-  #                        add_err(nm_st, ": length = ", length(fleet_lst),
-  #                                ", expected nFleet = ", nFleet)
-  #                      for (fl in seq_len(min(length(fleet_lst), nFleet))) {
-  #                        arr <- fleet_lst[[fl]]
-  #                        nm  <- paste0(nm_st, "[[", fl, "]]")
-  #                        if (is.null(arr) || !is.numeric(arr)) {
-  #                          add_err(nm, ": must be a numeric array"); next
-  #                        }
-  #                        nclass <- dim(arr)[2L]
-  #                        check_array(arr, nm, c(nSim, nclass, nyears, nArea), Years)
-  #                      }
-  #                    })
-  # }
+  for (lnm in c("SelSizeList", "RetSizeList", "DiscMortSizeList")) {
+    check_stock_list(Misc[[lnm]], paste0("Hist@Misc$", lnm),
+                     function(fleet_lst, st) {
+                       nm_st <- paste0("Hist@Misc$", lnm, "[[", st, "]]")
+                       if (!is.list(fleet_lst)) {
+                         add_err(nm_st, ": must be a list (one per fleet), got ", class(fleet_lst))
+                         return(invisible(NULL))
+                       }
+                       if (length(fleet_lst) != nFleet)
+                         add_err(nm_st, ": length = ", length(fleet_lst),
+                                 ", expected nFleet = ", nFleet)
+                       for (fl in seq_len(min(length(fleet_lst), nFleet))) {
+                         arr <- fleet_lst[[fl]]
+                         nm  <- paste0(nm_st, "[[", fl, "]]")
+                         if (is.null(arr) || !is.numeric(arr)) {
+                           add_err(nm, ": must be a numeric array"); next
+                         }
+                         nclass <- dim(arr)[2L]
+                         check_array(arr, nm, c(nSim, nclass, nyears, nArea), Years)
+                       }
+                     })
+  }
   
   flush_errors("fleet lists")
   
@@ -455,7 +476,7 @@
     check_values(Effort, "Hist@Effort", allow_neg = FALSE, allow_inf = FALSE)
   }
   
-  # Distribution: (sim, year, fleet, area)
+  # Distribution: (sim, year, fleet, area)  area shares must sum to 1
   Dist <- get_slot("Distribution")
   if (!is.null(Dist)) {
     check_array(Dist, "Hist@Distribution", c(nSim, nyears, nFleet, nArea), Years)
@@ -465,6 +486,28 @@
         add_err("Hist@Distribution: ", n_nan, " NaN value(s) in year-1 slice;",
                 " the competitor-fleet lag term reads Distribution[sim, y-1, fl, ar]",
                 " when y > 0, so year 1 must be initialised (0 is fine, NaN is not)")
+    }
+
+    if (is.numeric(Dist) && length(dim(Dist)) == 4L && nArea > 1L) {
+
+      n_unset   <- apply(is.na(Dist), c(1, 2, 3), sum)
+      n_partial <- sum(n_unset > 0L & n_unset < nArea)
+      if (n_partial > 0L)
+        add_err("Hist@Distribution: ", n_partial, " (sim, year, fleet) ",
+                "combination(s) specify some areas but not others; ",
+                "specify every area or none, as unspecified areas are filled ",
+                "without renormalising")
+
+      full <- n_unset == 0L
+      if (any(full)) {
+        area_sums <- apply(Dist, c(1, 2, 3), sum)[full]
+        n_bad     <- sum(abs(area_sums - 1.0) > 1e-6)
+        if (n_bad > 0L)
+          add_err("Hist@Distribution: area shares must sum to 1 for each ",
+                  "(sim, year, fleet); ", n_bad, " combination(s) out of range ",
+                  "(range ", signif(min(area_sums), 6), " to ",
+                  signif(max(area_sums), 6), ")")
+      }
     }
   }
   

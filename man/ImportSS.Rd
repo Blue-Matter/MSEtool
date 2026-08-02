@@ -27,6 +27,7 @@ ImportSS(
   LengthUnits = "cm",
   WeightUnits = "kg",
   R0Units = 1,
+  AllocationYears = 3,
   silent = FALSE,
   Populate = TRUE,
   ...
@@ -94,6 +95,12 @@ related numbers-at-age quantities; see \code{Units} in \link[=srr-class]{srr}. S
 not export the numeric scale of its population numbers (e.g. individuals
 vs. thousands) as metadata, so this cannot be inferred and must be
 supplied by the user if not \code{1} (absolute numbers of fish). Default \code{1}.}
+
+\item{AllocationYears}{Integer specifying the number of most recent
+historical years used to calculate \code{OM@Allocation}: each fleet's share of
+total removals biomass (landings + discards), used to split an aggregate
+TAC across fleets under multi-fleet TAC-based MPs. Averaged over this
+many years ending at the last historical year. Default \code{3}.}
 
 \item{silent}{Logical; if \code{TRUE}, suppress informational output during import.}
 

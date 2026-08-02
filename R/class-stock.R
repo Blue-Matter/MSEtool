@@ -43,7 +43,9 @@
 #'   when attached to an [OM()].
 #' @slot Seasons `numeric(1)`. Number of seasons per calendar year.
 #' @slot Misc `list`. Used internally.
-#' @slot Log `list`. Internal log. Not intended for direct user access.
+#' @slot Log `list`. Internal named list storing diagnostics, warnings, and
+#'   assumptions recorded during processing. See [Log()]. Not intended for
+#'   direct user access.
 #'
 #' @details
 #' This class is the central biological object in the operating model framework.

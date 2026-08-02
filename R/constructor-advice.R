@@ -134,7 +134,7 @@
 #'
 #' * numeric vector length `nFleet`: Fleet-specific relative or absolute Effort. 
 #'
-#' * numeric matrix: Fleet- and Area-specific relative or absolute Effort. 
+#' * numeric matrix: Fleet- and Area-specific absolute Effort.
 #' Must have `nFleet` rows and `nArea` columns.  
 #' 
 #' ## Closure

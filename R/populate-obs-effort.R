@@ -14,29 +14,28 @@
 #'
 #' Otherwise the following slots are populated in order:
 #'
-#' * `CV`: expanded to a named `[nSim]` array via [PopulateObsCV()].
+#' * `CV`: expanded to a named `[nSim]` array.
 #' * `Error`: generated as a lognormal draw from `CV` across all historical
-#'   and projection years, producing a named `[nSim x nYear]` array via
-#'   [PopulateObsError()]. If `Error` is already a fully-formed array it is
+#'   and projection years, producing a named `[nSim x nYear]` array. If `Error` 
+#'   is already a fully-formed array it is
 #'   validated and dimension names are applied.
-#' * `Bias`: expanded to a named `[nSim]` multiplicative bias array via
-#'   [PopulateObsBias()]. Defaults to 1 (no bias) if unspecified.
+#' * `Bias`: expanded to a named `[nSim]` multiplicative bias array.
+#'  Defaults to 1 (no bias) if unspecified.
 #'
 #' @return A populated [effortobs-class] object.
 #'
 #' @seealso
-#' [PopulateObs()], [effortobs-class], [PopulateObsCV()],
-#' [PopulateObsError()], [PopulateObsBias()]
+#' [PopulateObs()], [effortobs-class]
 #'
 #' @export
 PopulateEffortObs <- function(Effort, nSim, HistYears, ProjYears) {
   .CheckClass(Effort, "effortobs", "Effort")
-  
+
   if (EmptyObject(Effort))
     return(Effort)
-  
-  Effort@CV    <- PopulateObsCV(Effort@CV, nSim)
-  Effort@Error <- PopulateObsError(Effort, nSim, c(HistYears, ProjYears))
-  Effort@Bias  <- PopulateObsBias(Effort, nSim)
+
+  Effort@CV    <- .PopulateObsCV(Effort@CV, nSim)
+  Effort@Error <- .PopulateObsError(Effort, nSim, c(HistYears, ProjYears))
+  Effort@Bias  <- .PopulateObsBias(Effort, nSim)
   Effort
 }

@@ -83,7 +83,9 @@ methods::setClassUnion(
 #'   
 #' @slot Misc Miscellaneous list. Will be passed to `Data@Misc` in following time steps.
 #'
-#' @slot Log List used internally to store diagnostics
+#' @slot Log `list`. Internal named list storing diagnostics, warnings, and
+#'   assumptions recorded during processing. See [Log()]. Not intended for
+#'   direct user access.
 #' 
 #' @seealso [Advice()], [Selectivity()], [Retention()], [DiscardMortality()]
 #'

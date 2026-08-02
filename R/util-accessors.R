@@ -12,6 +12,9 @@
 #'
 #' @return
 #' - Accessor functions return the value stored in the named slot of `x`.
+#'   For `Stat()`, `Prob()`, and `Mean()` on a [pm-class] object, the named
+#'   `Sim x Stock x MP` (or `Stock x MP`) array is converted to a tidy
+#'   data frame via [Array2DF()] instead of being returned as a raw array.
 #' - Replacement functions return `x` with the named slot updated to `value`.
 #'
 #' @examples
@@ -267,6 +270,8 @@ LifeHistory <- function(x) {
 #' @rdname Access
 #' @export
 Mean <- function(x) {
+  if (inherits(x, 'pm'))
+    return(Array2DF(.AccessSlot(x, 'Mean')))
   .AccessSlot(x, 'Mean')
 }
 
@@ -353,23 +358,23 @@ Model <- function(x) {
 #' @rdname Access
 #' @export
 Name <- function(x) {
-  if (inherits(x, 'mse'))
+  if (inherits(x, 'mse') || inherits(x, 'hist'))
     x <- x@OM
-  
+
   if (is.list(x))
     return(purrr::map(x, Name))
-  
+
   .AccessSlot(x, 'Name')
 }
 
 #' @rdname Access
 #' @export
 `Name<-` <- function(x, value) {
-  if (inherits(x, 'mse')) {
-    x@OM <- .AssignSlotRecursive(x@OM, value, 'Name')  
+  if (inherits(x, 'mse') || inherits(x, 'hist')) {
+    x@OM <- .AssignSlotRecursive(x@OM, value, 'Name')
     return(x)
   }
-  .AssignSlotRecursive(x, value, 'Name')  
+  .AssignSlotRecursive(x, value, 'Name')
 }
 
 #' @rdname Access
@@ -538,6 +543,8 @@ Period <- function(x) {
 #' @rdname Access
 #' @export
 Prob <- function(x) {
+  if (inherits(x, 'pm'))
+    return(Array2DF(.AccessSlot(x, 'Prob')))
   .AccessSlot(x, 'Prob')
 }
 
@@ -628,6 +635,8 @@ SD <- function(x) {
 #' @rdname Access
 #' @export
 Stat <- function(x) {
+  if (inherits(x, 'pm'))
+    return(Array2DF(.AccessSlot(x, 'Stat')))
   .AccessSlot(x, 'Stat')
 }
 

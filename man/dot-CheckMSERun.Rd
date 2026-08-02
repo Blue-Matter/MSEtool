@@ -32,7 +32,9 @@
 is \code{TRUE}.}
 }
 \value{
-The \code{Proj} object.
+A list with \code{Proj} (the \code{Proj} object) and \code{AllFailed} (logical -
+\code{TRUE} if every simulation logged a failure at some point during the
+run, meaning the \code{MSE} object should not be updated for this MP).
 }
 \description{
 Checks whether an MP run succeeded or failed, reports results to the

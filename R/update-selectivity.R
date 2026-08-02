@@ -48,7 +48,6 @@
     }
   }
   
-  
   for (sim in seq_len(nSim)) {
     Proj <- .UpdateSelectivitySim(
       Proj           = Proj,
@@ -66,6 +65,30 @@
   }
   
   Proj
+}
+
+
+.CheckFleetWeightConsistency <- function(WSel, WRet, RetAge, st, FleetName) {
+  if (is.null(RetAge) || is.null(WSel) || is.null(WRet)) return(invisible(NULL))
+  
+  # worst case over areas: retention closest to 1 gives the tightest bound
+  dn <- names(dimnames(RetAge))
+  if (!is.null(dn) && 'Area' %in% dn)
+    RetAge <- apply(RetAge, setdiff(dn, 'Area'), max)
+  
+  if (!identical(dim(RetAge), dim(WSel)) || !identical(dim(WRet), dim(WSel)))
+    return(invisible(NULL))
+  
+  bad <- WSel + 1e-8 < RetAge * WRet
+  if (any(bad, na.rm = TRUE))
+    cli::cli_abort(
+      c("Fleet weight-at-age is inconsistent with retention-at-age for stock {st}, fleet {.val {FleetName}}.",
+        "x" = "{sum(bad, na.rm = TRUE)} age/year combination{?s} would give negative discard biomass.",
+        "i" = "Expected {.code WeightFleetSelected >= Retention * WeightFleetRetained}."),
+      .internal = TRUE
+    )
+  
+  invisible(NULL)
 }
 
 #' Update selectivity or retention for a single simulation
@@ -114,7 +137,6 @@
   size_misc <- list(Selectivity='SelSizeList',
                     Retention='RetSizeList')[[type]]
   
-
   for (i in seq_along(AdviceList)) {
     stocks          <- Complexes[[i]]
     ComplexName     <- names(Complexes)[i]
@@ -246,14 +268,6 @@
         
         target <- slot(Proj@OM@Fleet[[st]][[fl]], type)
 
-        # Imp@Size@Compliance: fraction of the fleet adopting this year's
-        # Selectivity/Retention advice; the rest stays on the pre-update
-        # (`target`, already extended to FutureYears above) curve. Missing
-        # Imp/Compliance defaults to 1 -- full, immediate adoption, i.e. no
-        # change from behaviour before Imp@Size existed. Compliance is
-        # populated to [Sim x Year] by PopulateImpSlot() -- look up this
-        # sim/year directly rather than via .ResolveComplianceMatrix(), to
-        # avoid rebuilding the whole [Fleet x Complex] matrix on every sim.
         ImpCx    <- Proj@OM@Imp[[ComplexName]]
         ImpObj   <- if (!is.null(ImpCx)) ImpCx[[FleetNames[fl]]] else NULL
         compFull <- if (!is.null(ImpObj)) ImpObj@Size@Compliance else NULL
@@ -289,8 +303,29 @@
                                                                pos=4)
         
         ArrayFill(Proj@Misc[[size_misc]][[st]][[fl]])   <- select@MeanAtLength
-        
-        
+
+        FleetObj <- Proj@OM@Fleet[[st]][[fl]]
+        SelObj   <- if (type == 'Selectivity') select else
+          Subset(FleetObj@Selectivity, Sims = sim, Years = FutureYears)
+        RetObj   <- if (type == 'Retention') select else
+          Subset(FleetObj@Retention,   Sims = sim, Years = FutureYears)
+
+        WSel <- .CalcFleetWeightAtAge(SelObj, Weight, FleetLength)
+        WRet <- .CalcFleetWeightAtAge(SelObj, Weight, FleetLength,
+                                      Retention = RetObj)
+
+        .CheckFleetWeightConsistency(WSel, WRet, RetObj@MeanAtAge,
+                                     st, FleetNames[fl])
+
+        ArrayFill(FleetObj@WeightFleetSelected) <- WSel
+        ArrayFill(FleetObj@WeightFleetRetained) <- WRet
+        Proj@OM@Fleet[[st]][[fl]] <- FleetObj
+
+        ArrayFill(Proj@Misc$WeightFleetSelectedList[[st]]) <-
+          AddDimension(WSel, 'Fleet', val = FleetNames[fl], pos = 4)
+        ArrayFill(Proj@Misc$WeightFleetRetainedList[[st]]) <-
+          AddDimension(WRet, 'Fleet', val = FleetNames[fl], pos = 4)
+
       } # end fleet loop
     }  # end stock loop
   } # end complex loop

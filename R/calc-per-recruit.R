@@ -512,27 +512,27 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
 
 
 .CalcPerRecruitFScalar <- function(apicalF = 0.1,
-                                    StockFleetAllocation,
-                                    NaturalMortalityList,
-                                    PlusGroupList,
-                                    MaturityList,
-                                    SemelparousList,
-                                    WeightList,
-                                    SpawnTimeFracList,
-                                    SPFrom,
-                                    SPR0List,
-                                    FecundityList,
-                                    WeightFleetRetainedList,
-                                    WeightFleetSelectedList,
-                                    SelectivityFleetList,
-                                    RetentionFleetList,
-                                    DiscardMortalityFleetList,
-                                    FleetNames,
-                                    Years,
-                                    nSeason          = 1L,
-                                    SeasonalWeightsList = NULL,
-                                    CalendarYears    = NULL,
-                                    RefSeason        = NULL) {
+                                   StockFleetAllocation,
+                                   NaturalMortalityList,
+                                   PlusGroupList,
+                                   MaturityList,
+                                   SemelparousList,
+                                   WeightList,
+                                   SpawnTimeFracList,
+                                   SPFrom,
+                                   SPR0List,
+                                   FecundityList,
+                                   WeightFleetRetainedList,
+                                   WeightFleetSelectedList,
+                                   SelectivityFleetList,
+                                   RetentionFleetList,
+                                   DiscardMortalityFleetList,
+                                   FleetNames,
+                                   Years,
+                                   nSeason          = 1L,
+                                   SeasonalWeightsList = NULL,
+                                   CalendarYears    = NULL,
+                                   RefSeason        = NULL) {
 
   # Dispatch to seasonal implementation when there are multiple seasons.
   if (nSeason > 1L)
@@ -678,21 +678,17 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
       SPRF
     }
   )
-  if (length(SPRFList)> 1)
-    SPRFList         <- SPRFList[SPFrom]
   names(SPRFList)  <- names(NPRFList)
-
+  if (length(SPRFList)> 1) {
+    sp_ind   <- match(names(SPFrom), names(SPRFList))
+    SPRFList <- SPRFList[sp_ind]
+  }
+    
   SPR <- purrr::map2(SPRFList, SPR0List, \(SPRF, SPR0) 
                      ArrayDivide(SPRF, SPR0)) |>
     List2Array('Stock') |>
     .ArraySubsetYear(Years)
   
-  # Landings, Discards, and Removals -- mirrors the exact formula used by
-  # the C++ simulation engine (see calc_catch.h): Landings biomass uses the
-  # retention-weighted schedule; Discards biomass is the residual between
-  # total-selected biomass and landed biomass, scaled by the fraction of
-  # discards that die; Removals = Landings + Discards (not computed
-  # independently, so the two are guaranteed to be consistent).
   NDeadList <- purrr::map2(
     NPRFList, ZDeadTotalList,
     \(NPRF, ZDeadTotal) ArrayMultiply(NPRF, (1 - exp(-ZDeadTotal)))
@@ -1108,12 +1104,7 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
                                      .CalcFleetAllocationF(fl, Years, EffortYears = EffortYears)
   ) |> List2Array('Stock', pos = 2)
 
-  # Broadcast stock-level per-recruit inputs to the true simulation count.
-  # Some (e.g. deterministic M, R0) commonly stay at Sim=1 after Populate()
-  # while fleet effort/allocation is stochastic; the seasonal aggregation
-  # path below indexes these lists directly rather than via Array*
-  # broadcasting, so a Sim mismatch causes out-of-bounds errors.
-  nSim_true <- dim(StockFleetAllocation)[1]
+  nSim_true            <- dim(StockFleetAllocation)[1]
   NaturalMortalityList <- purrr::map(NaturalMortalityList, ExtendSims, nSim = nSim_true)
   MaturityList         <- purrr::map(MaturityList,         ExtendSims, nSim = nSim_true)
   SemelparousList      <- purrr::map(SemelparousList,      ExtendSims, nSim = nSim_true)
@@ -1155,7 +1146,6 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
   
   # SRR quantities needed for MSY recruitment scaling
   # For seasonal models, collapse to annual R0 and SPR0 for the equilibrium
-  # scaling. R0 is extended to nSim_true for the same reason as above.
   R0SeasonalList <- purrr::map(StockList, \(Stock)
     Stock@SRR@R0 |> .ArraySubsetYear(Years) |> ExtendSims(nSim_true)   # [Sim, Year(nSeason)]
   )
@@ -1231,8 +1221,10 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
       Pars
     })
   }
+  
   if (length(RecParsList)> 1) {
-    RecParsList <- RecParsList[SPFrom]
+    sp_ind             <- match(names(SPFrom), names(RecParsList))
+    RecParsList        <- RecParsList[sp_ind]
     names(RecParsList) <- names(SPFrom)
   }
 

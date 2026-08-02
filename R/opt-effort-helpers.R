@@ -1,4 +1,105 @@
 
+
+.LOG_DELTA_CAP <- log(10)
+
+# Per-(fleet, stock) log-targeting deviation bound, derived from the same
+# historical `StockTargeting@Covariance` used by GenerateStockTargeting() to
+# simulate stochastic historical/projection targeting. Ties how far the
+# TAC/effort solvers may reallocate a fleet's targeting to how much that
+# fleet's targeting has actually been observed to vary historically, rather
+# than an arbitrary flat constant. Falls back to `.LOG_DELTA_CAP` for any
+# (fleet, stock) with zero/non-finite historical variance (no covariance
+# fitted, or a stock with no historical targeting record).
+#
+# Returns an [nFleet x nStock] matrix, mirroring the shape of `Delta`.
+.GetLogDeltaCap <- function(Proj, sim, TruncSD = 2) {
+  nF   <- nFleet(Proj)
+  nS   <- nStock(Proj)
+  cap  <- matrix(.LOG_DELTA_CAP, nF, nS)
+
+  Cov <- Proj@OM@StockTargeting@Covariance  # [sim, stock, stock, fleet]
+  if (is.null(Cov)) return(cap)
+
+  sim_cov <- if (dim(Cov)[1] == 1L) 1L else sim
+
+  for (fl in seq_len(nF)) {
+    var_s <- diag(Cov[sim_cov, , , fl])
+    cap_s <- TruncSD * sqrt(pmax(var_s, 0))
+    valid <- is.finite(cap_s) & cap_s > 0
+    cap[fl, valid] <- cap_s[valid]
+  }
+  cap
+}
+
+# Largest effort worth searching, per fleet.
+#
+# `maxF` caps total apical F per stock per area, so once
+#
+#   q(st,fl) * E * Dist(fl,ar) * targ(st,fl) [/ RelSize(ar)]  >=  maxF
+#
+# holds for every (stock, area) the fleet works, more effort buys no more F and
+# therefore no more catch. Solving for E and taking the largest gives the point
+# beyond which the search is pointless. `headroom` allows for other fleets
+# diluting this one's share of the capped total, since the cap applies to their
+# sum. Returns `NA` for fleets with no usable q, targeting or distribution, and
+# `NULL` if the inputs are missing entirely - callers fall back to `maxEffort`.
+#
+# Without this the solvers climb to an arbitrary `maxEffort` (1e6) purely to
+# discover a TAC is unachievable, which costs several Newton iterations per
+# saturating fleet-year.
+.MaxUsefulEffort <- function(Proj, sim, TSIndex, headroom = 10) {
+
+  Misc <- Proj@Misc
+  maxF <- Misc$maxF
+  if (!length(maxF) || !is.finite(maxF) || maxF <= 0) return(NULL)
+
+  q    <- Misc$Catchability     # Sim, Stock, Year, Fleet
+  Dist <- Proj@Distribution     # Sim, Year, Fleet, Area
+  RS   <- Misc$RelSize          # Sim, Area
+  if (is.null(q) || is.null(Dist) || is.null(RS)) return(NULL)
+
+  nF <- nFleet(Proj); nS <- nStock(Proj); nA <- nArea(Proj)
+
+  dens <- as.logical(Misc$Mode)
+  if (length(dens) != nF) dens <- rep(FALSE, nF)
+
+  targ <- if (isTRUE(as.integer(Misc$StockTargetingFlag) == 1L))
+    Misc$StockTargeting else NULL   # Sim, Stock, Fleet, Year
+
+  # arrays may be broadcast over sim
+  si <- function(A, d = 1L) min(sim, dim(A)[d])
+
+  out <- rep(NA_real_, nF)
+
+  for (fl in seq_len(nF)) {
+
+    # The current year's distribution is only filled in by CalcSpatialDistribution
+    # once the year is simulated, which is after effort has been chosen. Last
+    # year's is a fine stand-in for a search bound.
+    d <- Dist[si(Dist), TSIndex, fl, ]
+    if (!any(is.finite(d) & d > 0) && TSIndex > 1L)
+      d <- Dist[si(Dist), TSIndex - 1L, fl, ]
+
+    w <- if (isTRUE(dens[fl]))
+      1 / pmax(RS[si(RS), ], .Machine$double.eps) else rep(1, nA)
+
+    ok <- is.finite(d) & d > 0
+    if (!any(ok)) next
+
+    best <- NA_real_
+    for (st in seq_len(nS)) {
+      qq <- q[si(q), st, TSIndex, fl]
+      if (!is.finite(qq) || qq <= 0) next
+      tg <- if (is.null(targ)) 1 else targ[si(targ), st, fl, TSIndex]
+      if (!is.finite(tg) || tg <= 0) next
+      best <- max(best, maxF / (qq * tg * d[ok] * w[ok]), na.rm = TRUE)
+    }
+    out[fl] <- best
+  }
+
+  headroom * out
+}
+
 # Applies a per-fleet effort ceiling (NA = no ceiling) to an Effort vector -
 # lets a fleet be governed by both TAC and Effort advice at once, with
 # Effort acting as the binding constraint whenever it is more restrictive
@@ -22,16 +123,122 @@
 
 .OptSingleFleetCatch <- function(log_scale, Effort_base, Proj, sim, TSIndex,
                                 Year, TACType_by_Complex, TACUnit_by_Complex,
-                                fl) {
+                                fl, cx = 1L) {
   Eff <- Effort_base
   Eff[fl] <- Effort_base[fl] * exp(log_scale)
   Proj <- .WriteStateToProj(Proj, sim, TSIndex, Effort = Eff)
   .CalcFleetCatch(Proj, sim, TSIndex, Year, TACType_by_Complex,
-                 TACUnit_by_Complex)[1,fl]
+                 TACUnit_by_Complex)[cx, fl]
 }
 
 
-.CalcFleetCatch <- function(Proj, sim, TSIndex, Year, 
+#' Effort at which each complex reaches its own TAC
+#'
+#' Solves, for every complex with a TAC, the fleet effort at which that
+#' complex's catch equals it. Catch is monotone in effort, so each solve is a
+#' bracketed root find - the same operation `.OptEffortSinglestock()` performs,
+#' applied to one complex at a time.
+#'
+#' @param Proj A `Proj` object, already sliced to `sim`.
+#' @param Year Integer. Current projection year.
+#' @param TSIndex Integer. Time-step index of `Year`.
+#' @param sim Integer. Simulation index.
+#' @param TAC_by_Complex Named list of per-fleet TAC vectors, `NULL` where a
+#'   complex has no TAC.
+#' @param TACType_by_Complex,TACUnit_by_Complex Per-complex `"Removals"`/
+#'   `"Landings"` and `"Biomass"`/`"Number"` vectors.
+#' @param MaxFleetEffort Numeric vector (length `nFleet`), or `NULL`.
+#' @param Effort_start `[nComplex x nFleet]` matrix of warm-start efforts, or
+#'   `NULL`. Each complex's root find starts from its own row; rows that are not
+#'   fully finite fall back to a cold start.
+#' @param ... Passed to `.OptEffortSinglestock()`.
+#'
+#' @return A `[nComplex x nFleet]` matrix of efforts. Rows for complexes
+#'   without a TAC are `NA`, and are ignored when the efforts are combined.
+#' @keywords internal
+.SolveEffortByComplex <- function(Proj, Year, TSIndex, sim,
+                                  TAC_by_Complex,
+                                  TACType_by_Complex,
+                                  TACUnit_by_Complex,
+                                  MaxFleetEffort = NULL,
+                                  Effort_start = NULL,
+                                  ...) {
+
+  nComplex <- length(TAC_by_Complex)
+  nFleet   <- nFleet(Proj)
+
+  out <- matrix(NA_real_, nrow = nComplex, ncol = nFleet)
+
+  for (cx in seq_len(nComplex)) {
+    if (is.null(TAC_by_Complex[[cx]])) next
+
+    start_cx <- if (is.null(Effort_start)) NULL else Effort_start[cx, ]
+    if (!is.null(start_cx) && !all(is.finite(start_cx))) start_cx <- NULL
+
+    out[cx, ] <- .OptEffortSinglestock(
+      Proj               = Proj,
+      Year               = Year,
+      TSIndex            = TSIndex,
+      sim                = sim,
+      TAC_by_Complex     = TAC_by_Complex,
+      TACType_by_Complex = TACType_by_Complex,
+      TACUnit_by_Complex = TACUnit_by_Complex,
+      MaxFleetEffort     = MaxFleetEffort,
+      cx                 = cx,
+      Effort_start       = start_cx,
+      ...
+    )
+  }
+
+  out
+}
+
+#' Combine per-complex efforts into one effort per fleet
+#'
+#' Compliance sets how far a fleet respects each complex's TAC as a cap.
+#' Full compliance stops the fleet at the first TAC reached; zero compliance
+#' lets it run until the last TAC is reached, overshooting the tighter ones.
+#'
+#' \deqn{E^*_f = \min_c \left[ \kappa_{fc} E_{fc} +
+#'   (1 - \kappa_{fc}) \max_c E_{fc} \right]}
+#'
+#' Each complex contributes its own effort in proportion to how far the fleet
+#' complies with it, and the effort that fills every quota in proportion to how
+#' far it does not.
+#'
+#' @param EffortByComplex `[nComplex x nFleet]` matrix from
+#'   `.SolveEffortByComplex()`. `NA` rows are ignored.
+#' @param Compliance `[nFleet x nComplex]` matrix from
+#'   `.ResolveComplianceMatrix()`. `NA` entries take `default`.
+#' @param default Numeric. Compliance used where unset. Default `1`, i.e. a
+#'   TAC is a hard cap.
+#'
+#' @return Numeric vector of length `nFleet`. `NA` for fleets with no TAC in
+#'   any complex, which the caller leaves unchanged.
+#' @keywords internal
+.CombineEffortByCompliance <- function(EffortByComplex, Compliance,
+                                       default = 1) {
+
+  nFleet <- ncol(EffortByComplex)
+  out    <- rep(NA_real_, nFleet)
+
+  for (fl in seq_len(nFleet)) {
+    E_c <- EffortByComplex[, fl]
+    ok  <- which(is.finite(E_c))
+    if (!length(ok)) next
+
+    k <- Compliance[fl, ok]
+    k[!is.finite(k)] <- default
+    k <- pmin(pmax(k, 0), 1)
+
+    E_max <- max(E_c[ok])
+    out[fl] <- min(k * E_c[ok] + (1 - k) * E_max)
+  }
+
+  out
+}
+
+.CalcFleetCatch <- function(Proj, sim, TSIndex, Year,
                            TACType_by_Complex,
                            TACUnit_by_Complex ) {
   
@@ -110,210 +317,56 @@
   active
 }
 
-.GetLogDeltaPrev <- function(Delta_prev, active_stock) {
+.GetLogDeltaPrev <- function(Delta_prev, active_stock, log_delta_cap = NULL) {
 
   ld <- matrix(0, nrow(Delta_prev), ncol(Delta_prev))
-  
+  if (is.null(log_delta_cap))
+    log_delta_cap <- matrix(.LOG_DELTA_CAP, nrow(Delta_prev), ncol(Delta_prev))
+
   for (fl in seq_len(nrow(Delta_prev))) {
     active_s <- which(active_stock[fl, ])
     if (length(active_s) == 0L) next
-    lv <- log(pmax(Delta_prev[fl, active_s], 1e-10))
-    ld[fl, active_s] <- lv - mean(lv)
+    lv    <- log(pmax(Delta_prev[fl, active_s], 1e-10))
+    cap_s <- log_delta_cap[fl, active_s]
+    ld[fl, active_s] <- pmin(pmax(lv - mean(lv), -cap_s), cap_s)
   }
   ld
 }
 
-.FleetHasTAC <- function(nFleet, nComplex, TAC_by_Complex) {
-  vapply(seq_len(nFleet), function(fl) {
-    any(vapply(seq_len(nComplex), function(i) {
-      tac_vec <- TAC_by_Complex[[i]]
-      if (is.null(tac_vec)) return(FALSE)
-      !is.na(tac_vec[fl]) && tac_vec[fl] > 0
-    }, logical(1)))
-  }, logical(1))
-}
+#' Effort implied by a targeting mix under the choke rule
+#'
+#' Writes `Delta`, solves the effort at which each complex reaches its own TAC,
+#' and combines those by compliance. Fleets with no TAC in any complex keep
+#' their current effort.
+#'
+#' @return List with `Effort` (length `nFleet`), `Proj` (the object with both
+#'   `Delta` and the resolved effort written in), and `EffortByComplex`, the
+#'   per-complex efforts - which the caller can feed back as `Effort_start`.
+#' @keywords internal
+.ResolveChokeEffort <- function(Proj, sim, TSIndex, Year, Delta,
+                                TAC_by_Complex, TACType_by_Complex,
+                                TACUnit_by_Complex, Compliance,
+                                MaxFleetEffort = NULL, Effort_start = NULL, ...) {
 
+  Effort_curr <- Proj@Effort[sim, TSIndex, ]
+  ProjTmp     <- .WriteStateToProj(Proj, sim, TSIndex,
+                                   Effort = Effort_curr, Delta = Delta)
 
-.PackParams <- function(Effort, 
-                       Delta, 
-                       active_fleets, 
-                       active_stock_list,
-                       fixed_logeff = NULL, 
-                       minEffort = 1e-8) {
-  
-  compute_log_params <- function(fl, active_s) {
-    if (length(active_s) == 0L) return(numeric(0))
-    
-    fixed      <- fixed_logeff[[as.character(fl)]]
-    log_effort <- log(max(Effort[fl], minEffort))
-    
-    purrr::map(active_s, function(s) {
-      if (!is.null(fixed) && !is.na(fixed[s])) return(NULL)
-      log_effort + log(max(Delta[fl, s], 1e-10))
-    }) |>
-      purrr::list_c()
-  }
-   
-  purrr::map2(active_fleets, active_stock_list, compute_log_params) |>
-    purrr::list_c()
+  EbyC <- .SolveEffortByComplex(ProjTmp, Year, TSIndex, sim,
+                                TAC_by_Complex, TACType_by_Complex,
+                                TACUnit_by_Complex, MaxFleetEffort,
+                                Effort_start = Effort_start, ...)
 
-}
+  Effort <- .CombineEffortByCompliance(EbyC, Compliance)
 
-.UnpackParams <- function(params,
-                         active_fleets,
-                         active_stock_list,
-                         Effort_prev,
-                         nFleet,
-                         nStock,
-                         fixed_logeff = NULL,
-                         minEffort = 1e-8,
-                         MaxFleetEffort = NULL) {
+  unset <- !is.finite(Effort)
+  if (any(unset)) Effort[unset] <- Effort_curr[unset]
 
-  Effort <- Effort_prev
-  Delta  <- matrix(0, nFleet, nStock)
-  pos    <- 1L
+  Effort  <- .ApplyEffortCeiling(Effort, MaxFleetEffort)
+  ProjTmp <- .WriteStateToProj(ProjTmp, sim, TSIndex,
+                               Effort = Effort, Delta = Delta)
 
-  for (k in seq_along(active_fleets)) {
-    fl       <- active_fleets[k]
-    active_s <- active_stock_list[[k]]
-    nA       <- length(active_s)
-    if (nA == 0L) next
-
-    fixed     <- fixed_logeff[[as.character(fl)]]
-    log_eff_s <- numeric(nA)
-
-    for (j in seq_len(nA)) {
-      s <- active_s[j]
-      if (!is.null(fixed) && !is.na(fixed[s])) {
-        log_eff_s[j] <- fixed[s]
-      } else {
-        log_eff_s[j] <- params[pos]
-        pos <- pos + 1L
-      }
-    }
-
-    log_E_f     <- mean(log_eff_s)
-    log_delta_s <- log_eff_s - log_E_f
-    E_f         <- exp(log_E_f)
-    delta_s     <- exp(log_delta_s)
-
-    Effort[fl]          <- max(E_f, minEffort)
-    Delta[fl, active_s] <- delta_s
-  }
-
-  Effort <- .ApplyEffortCeiling(Effort, MaxFleetEffort)
-
-  list(Effort = Effort, Delta = Delta)
-
-
-}
-
-.OptEffortMsObjective <- function(
-    params, 
-    Proj, 
-    sim, 
-    TSIndex, 
-    Year, 
-    Complexes,
-    TACType_by_Complex,
-    TAC_by_Complex,
-    TACUnit_by_Complex,
-    OvershootPenalty,
-    UndershootPenalty,
-    Effort_prev,
-    nFleet,
-    nStock,
-    log_delta_prev,
-    lambda_vec,
-    active_fleets,
-    active_stock_list,
-    minEffort = 1e-8,
-    fixed_logeff = NULL,
-    MaxFleetEffort = NULL
-    ) {
-
-
-  nComplex <- length(Complexes)
-
-  # TAC miss penalty (proportional squared deviations)
-  # plus ridge penalty on year-to-year log_delta change.
-  state <- .UnpackParams(params,
-                        active_fleets,
-                        active_stock_list,
-                        Effort_prev,
-                        nFleet,
-                        nStock,
-                        fixed_logeff,
-                        minEffort,
-                        MaxFleetEffort)
-  
-  ProjTmp <- .WriteStateToProj(Proj, sim, TSIndex, state$Effort, state$Delta)
-  
-  Temp    <- .CalcFisheryDynamics(Hist = ProjTmp, 
-                                 Years = Year,
-                                 Sims = sim,
-                                 DoCalcSpawnProduction = 1,
-                                 DoCalcRecruitment = 1,
-                                 DoCalcNumberNext = 0,
-                                 DoCalcBiomass = 0,
-                                 DoCalcOverallF = 0)
-  cm <- .CatchMatrix(Temp, sim, TSIndex, TACType_by_Complex, TACUnit_by_Complex)
-  
-  # TAC penalty: sum of squared proportional deviations across all relevant
-  # complexes for each fleet
-  complex_penalty <- function(i, fl, active_s) {
-    tac_fi <- TAC_by_Complex[[i]]
-    if (is.null(tac_fi) || is.na(tac_fi[fl]) || tac_fi[fl] <= 0) 
-      return(NA_real_)
-    
-    if (!any(active_s %in% Complexes[[i]])) 
-      return(NA_real_)
-    
-    tac_fi   <- tac_fi[fl]
-    catch_fi <- cm[i, fl]
-    
-    if (!is.finite(catch_fi)) return(1)
-    
-    undershoot <- max(0, tac_fi - catch_fi) / tac_fi
-    overshoot  <- max(0, catch_fi - tac_fi) / tac_fi
-    
-    UndershootPenalty[fl, i] * undershoot^2 +
-      OvershootPenalty[fl, i]   * overshoot^2
-  }
-  
-  fleet_penalty <- function(fl, active_s) {
-    penalties <- purrr::map_dbl(seq_len(nComplex), \(i) 
-                                complex_penalty(i, fl, active_s)
-    )
-    sum(penalties, na.rm = TRUE)
-  }
-  
-  tac_pen <- purrr::map2_dbl(active_fleets, active_stock_list, fleet_penalty) |> sum()
-  
-  # Ridge penalty: sum of squared year-to-year log_delta changes for stocks,
-  # scaled by fleet-specific lambda. 
-  fleet_ridge <- function(fl, active_s) {
-    fixed <- fixed_logeff[[as.character(fl)]]
-    if (!is.null(fixed)) {
-      free <- is.na(fixed[active_s]) 
-    } else {
-      free <- rep(TRUE, length(active_s))
-    }
-    
-    log_d_cur  <- log(pmax(state$Delta[fl, active_s], 1e-10))
-    log_d_cur  <- log_d_cur - mean(log_d_cur)
-    log_d_prev <- log_delta_prev[fl, active_s]
-    
-    lambda_vec[fl] * sum((log_d_cur[free] - log_d_prev[free])^2)
-  }
-  
-  if (!any(lambda_vec > 0)) {
-    ridge_pen <- 0 
-  } else {
-    ridge_pen <- purrr::map2_dbl(active_fleets, active_stock_list, fleet_ridge) |> sum()
-  }
-  
-  tac_pen + ridge_pen
+  list(Effort = Effort, Proj = ProjTmp, EffortByComplex = EbyC)
 }
 
 

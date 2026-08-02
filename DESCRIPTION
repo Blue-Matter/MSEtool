@@ -62,7 +62,6 @@ Suggests:
     tibble,
     tidyr,
     TMB,
-    tmvtnorm,
     usethis
 LinkingTo: Rcpp, RcppArmadillo
 BugReports: https://github.com/Blue-Matter/MSEtool/issues
@@ -213,12 +212,14 @@ Collate:
     'extract-relative.R'
     'extract-unfished.R'
     'find-model.R'
+    'fit-sr.R'
     'fit-stock-targeting.R'
     'generate-data-hist-agecomp.R'
     'generate-data-hist-catch.R'
     'generate-data-hist-effort.R'
     'generate-data-hist-indices.R'
     'generate-data-hist.R'
+    'generate-data-index-timing.R'
     'generate-data-proj-agecomp.R'
     'generate-data-proj-catch.R'
     'generate-data-proj-effort.R'
@@ -244,6 +245,7 @@ Collate:
     'import-ss3-report.R'
     'import-ss3.R'
     'import-wham.R'
+    'index-nominal.R'
     'initialize-hist.R'
     'interim-advice.R'
     'models-fecundity.R'
@@ -256,8 +258,8 @@ Collate:
     'models-weight.R'
     'models.R'
     'mse-update.R'
+    'opt-effort-choke.R'
     'opt-effort-helpers.R'
-    'opt-effort-multi-stock.R'
     'opt-effort-single-stock.R'
     'opt-final-depletion.R'
     'opt-ref-yield.R'
@@ -266,7 +268,9 @@ Collate:
     'plot-comp.R'
     'plot-data.R'
     'plot-hist.R'
+    'plot-index-fit.R'
     'plot-schedule.R'
+    'plot-spatial.R'
     'populate-ASK.R'
     'populate-catchability.R'
     'populate-classes.R'
@@ -374,7 +378,6 @@ Collate:
     'utils-valid-units.R'
     'utils-wrapped-normal.R'
     'vbiomass.R'
-    'zz-project-Hist.R'
     'zz_ASAP2OM.R'
     'zz_Awatea2OM.R'
     'zz_BAM2OM.R'
@@ -432,6 +435,7 @@ Collate:
     'zz_popdyn.R'
     'zz_popdynOneMICEDEV.R'
     'zz_popdyn_MICE.R'
+    'zz_project_Hist.R'
     'zz_runMSE.R'
     'zz_simulate-OM.R'
     'zz_spatial_targ_opt.R'

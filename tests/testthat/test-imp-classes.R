@@ -40,23 +40,34 @@ test_that("PopulateImpSlot respects a directly-supplied Error array", {
   expect_equal(out@Error, err)
 })
 
-test_that(".ResolveOvershootPenalty scales continuously and matches known fixed points", {
-  Compliance <- matrix(c(0, 0.5, 0.9, 1), nrow = 1, ncol = 4)
-  pen <- MSEtool:::.ResolveOvershootPenalty(NULL, nFleet = 1, nComplex = 4, Compliance = Compliance)
+test_that(".CombineEffortByCompliance interpolates between the first and last binding TAC", {
+  # one fleet, two complexes: complex 1 binds at effort 0.4, complex 2 at 1.0
+  EbyC <- matrix(c(0.4, 1.0), nrow = 2, ncol = 1)
 
-  # Compliance = 0 -> no penalty at all
-  expect_equal(pen[1, 1], 0)
-  # Compliance = 0.5 -> exactly reproduces the "unset" default penalty of 1
-  expect_equal(pen[1, 2], 1)
-  # Monotonically increasing, and capped rather than allowed to explode
-  expect_true(pen[1, 3] > pen[1, 2])
-  expect_true(pen[1, 4] > pen[1, 3])
-  expect_lt(pen[1, 4], 1e6)
+  # full compliance -> stop at the first TAC reached
+  expect_equal(MSEtool:::.CombineEffortByCompliance(EbyC, matrix(1, 1, 2)), 0.4)
+  # no compliance -> fish on until the last TAC is reached
+  expect_equal(MSEtool:::.CombineEffortByCompliance(EbyC, matrix(0, 1, 2)), 1.0)
+  # partial compliance sits between the two
+  half <- MSEtool:::.CombineEffortByCompliance(EbyC, matrix(0.5, 1, 2))
+  expect_gt(half, 0.4)
+  expect_lt(half, 1.0)
 })
 
-test_that(".ResolveOvershootPenalty defaults to 1 (today's behaviour) when Compliance is NULL", {
-  pen <- MSEtool:::.ResolveOvershootPenalty(NULL, nFleet = 2, nComplex = 2, Compliance = NULL)
-  expect_true(all(pen == 1))
+test_that(".CombineEffortByCompliance treats an unset Compliance as a hard cap", {
+  EbyC <- matrix(c(0.4, 1.0), nrow = 2, ncol = 1)
+  Compliance <- matrix(NA_real_, nrow = 1, ncol = 2)
+  expect_equal(MSEtool:::.CombineEffortByCompliance(EbyC, Compliance), 0.4)
+})
+
+test_that(".CombineEffortByCompliance ignores complexes with no TAC", {
+  # complex 1 has no TAC (NA row); only complex 2 constrains the fleet
+  EbyC <- matrix(c(NA_real_, 0.7), nrow = 2, ncol = 1)
+  expect_equal(MSEtool:::.CombineEffortByCompliance(EbyC, matrix(1, 1, 2)), 0.7)
+
+  # no complex constrains it at all -> NA, left for the caller to fill in
+  none <- matrix(NA_real_, nrow = 2, ncol = 1)
+  expect_true(is.na(MSEtool:::.CombineEffortByCompliance(none, matrix(1, 1, 2))))
 })
 
 test_that("PopulateImpSlot expands a scalar Compliance to [Sim x Year], constant across sims/years", {

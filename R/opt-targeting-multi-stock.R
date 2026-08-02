@@ -1,16 +1,16 @@
 #' Estimate stock-specific targeting weights for a fixed fleet effort
 #'
 #' `.OptTargetingMultiStock()` is the effort-control counterpart to
-#' `.OptEffortMultiStock()`. Under TAC management, fleet effort *and*
-#' stock-specific targeting weights are solved jointly so each fleet catches
-#' its TAC. Under effort management there is no TAC to solve for - fleet
-#' effort is instead fixed by the MP's `Effort` advice - but a fleet fishing
-#' several stocks still has to decide how to point that fixed effort across
-#' them. This function solves for the targeting weights `delta_{s,f}` that
-#' maximise a concave transform of total catch (an interim stand-in for
-#' catch *value*, pending stock-specific bio-economic prices - see Details),
-#' subject to the same soft ridge penalty on year-to-year targeting change
-#' used by `.OptEffortMultiStock()`.
+#' `.OptEffortChoke()`. Under TAC management, effort is derived from the
+#' targeting mix by the choke rule. Under effort management there is no TAC to
+#' solve for - fleet effort is instead fixed by the MP's `Effort` advice - but
+#' a fleet fishing several stocks still has to decide how to point that fixed
+#' effort across them. This function solves for the targeting weights
+#' `delta_{s,f}` that maximise a concave transform of total catch (an interim
+#' stand-in for catch *value*, pending stock-specific bio-economic prices - see
+#' Details), subject to a soft ridge penalty on year-to-year targeting change.
+#' Both paths share `.OptTargetingMsObjective()`; they differ only in whether
+#' effort is supplied or derived.
 #'
 #' @param Proj       A projection object containing effort, targeting
 #'   history, operating model settings, and stock/fleet dimensions.
@@ -23,10 +23,10 @@
 #' @param FleetNames Character vector of fleet names.
 #' @param Effort     Numeric vector of length `nFleet`. Fixed fleet effort
 #'   for this year (from the MP's `Effort` advice) - not optimised.
-#' @param lambda     Numeric vector of length `nFleet` (or scalar, recycled),
-#'   or `NULL` (default `1` for all fleets). Ridge penalty weight controlling
-#'   resistance to year-to-year targeting changes - see
-#'   `.OptEffortMultiStock()`.
+#' @param lambda     Numeric matrix `[nFleet x nStock]`, or a scalar or
+#'   length-`nFleet` vector recycled across stocks, or `NULL` (default `1`).
+#'   Ridge penalty weight controlling resistance to year-to-year targeting
+#'   changes.
 #' @param n_recent   Integer (default `5`). Number of most-recent historical
 #'   years examined to determine which stocks each fleet actively targets.
 #' @param minEffort  Numeric (default `1e-8`). Floor applied to fleet effort
@@ -56,7 +56,7 @@
 #'     history.}
 #' }
 #'
-#' @seealso `.OptEffortMultiStock()` for the TAC-based counterpart this
+#' @seealso `.OptEffortChoke()` for the TAC-based counterpart this
 #'   function mirrors.
 #'
 #' @keywords internal
@@ -76,11 +76,18 @@
   nFleet <- length(FleetNames)
   nStock <- length(StockNames)
 
-  # Normalise lambda to a length-nFleet vector
-  if (is.null(lambda)) lambda <- rep(1, nFleet)
-  if (length(lambda) == 1L) lambda <- rep(lambda, nFleet)
-  if (length(lambda) != nFleet)
-    cli::cli_abort("lambda must be length `nFleet`", .internal = TRUE)
+  # Normalise lambda to an [nFleet x nStock] matrix; a scalar or length-nFleet
+  # vector is recycled across stocks
+  if (is.null(lambda)) lambda <- 1
+  if (is.null(dim(lambda))) {
+    if (length(lambda) == 1L) lambda <- rep(lambda, nFleet)
+    if (length(lambda) != nFleet)
+      cli::cli_abort("lambda must be length 1, `nFleet`, or [nFleet x nStock]",
+                     .internal = TRUE)
+    lambda <- matrix(lambda, nrow = nFleet, ncol = nStock)
+  }
+  if (length(dim(lambda)) != 2L || !all(dim(lambda) == c(nFleet, nStock)))
+    cli::cli_abort("lambda must be [nFleet x nStock]", .internal = TRUE)
 
   # Active stocks per fleet
   active_stock <- .GetActiveStocks(Proj, sim, TSIndex, StockNames, FleetNames, n_recent)
@@ -91,7 +98,11 @@
   for (fl in seq_len(nFleet))
     Delta_prev[fl, !active_stock[fl, ]] <- 0
 
-  log_delta_prev <- .GetLogDeltaPrev(Delta_prev, active_stock)
+  # Per-(fleet, stock) log-targeting bound, from historical StockTargeting
+  # variance - see .GetLogDeltaCap()
+  log_delta_cap <- .GetLogDeltaCap(Proj, sim)
+
+  log_delta_prev <- .GetLogDeltaPrev(Delta_prev, active_stock, log_delta_cap)
 
   active_fleets <- which(apply(active_stock, 1, any))
 
@@ -111,9 +122,10 @@
     Effort_fixed      = Effort,
     Delta_base        = Delta_prev,
     log_delta_prev    = log_delta_prev,
-    lambda_vec        = lambda,
+    lambda_mat        = lambda,
     active_fleets     = active_fleets,
-    active_stock_list = active_stock_list
+    active_stock_list = active_stock_list,
+    log_delta_cap     = log_delta_cap
   )
 
   params_init <- .PackDelta(Delta_prev, active_fleets, active_stock_list)
@@ -122,7 +134,8 @@
 
   result <- .OptEffortMsSolver(obj_fn = obj1, params_init, maxEval, tol)
 
-  Delta_final <- .UnpackDelta(result$params, active_fleets, active_stock_list, Delta_prev)
+  Delta_final <- .UnpackDelta(result$params, active_fleets, active_stock_list, Delta_prev,
+                              log_delta_cap)
 
   list(Delta       = Delta_final,
        converged   = result$converged,

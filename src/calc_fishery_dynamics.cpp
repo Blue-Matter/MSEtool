@@ -8,6 +8,7 @@
 #include "hist_view.h"
 #include "calc_spatial_effort_dist.h"
 #include "calc_area_f.h"
+#include "back_calc_effort.h"
 #include "calc_spawn_production.h"
 #include "calc_recruitment.h"
 #include "calc_number_next.h"
@@ -32,7 +33,8 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
                               const int DoCalcRecruitment=1,
                               const int DoCalcNumberNext=1,
                               const int DoCalcBiomass=1,
-                              const int DoCalcOverallF=1,       
+                              const int DoCalcOverallF=1,
+                              const int DoBackCalcEffort=0,
                               const int debug=0,
                               const int clone=1
 ) {
@@ -90,11 +92,15 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
   }
   int nTS = ts_index.size();
   
-  if (debug) 
+  if (debug)
     Rcpp::Rcout << "Starting time step loop \n";
 
+  // (sim, fleet) flags set by CalcArea_F where the maxF constraint bound,
+  // read by BackCalcEffort at the end of the same time step
+  std::vector<char> Clamped(nSim * nFleet, 0);
+
   // Loop over time steps in Years
-  for (int ts = 0; ts < nTS; ++ts) { 
+  for (int ts = 0; ts < nTS; ++ts) {
   
     int y = ts_index[ts]; // index for this time step
     
@@ -173,7 +179,8 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
                hv.maxF,
                nStock,
                nFleet,
-               nArea);
+               nArea,
+               Clamped);
 
     if (debug)
       Rcpp::Rcout << "End CalcArea_F \n";
@@ -361,8 +368,37 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
       if (debug)
         Rcpp::Rcout << "End CalcOverallF \n";
     }
-    
-    if (debug) 
+
+    if (DoBackCalcEffort) {
+
+      // ---------------------------------------------------------
+      // Replace requested effort with the effort implied by realised F
+      // src: inst/include/back_calc_effort.h
+      // ---------------------------------------------------------
+
+      if (debug)
+        Rcpp::Rcout << "Begin BackCalcEffort \n";
+
+      BackCalcEffort(y,
+                     Sims,
+                     hv.Effort,
+                     hv.FInteractArea,
+                     hv.SelAge,
+                     hv.q,
+                     hv.RelSize,
+                     hv.UseDensity,
+                     hv.StockTargeting,
+                     hv.StockTargetingFlag,
+                     nStock,
+                     nFleet,
+                     nArea,
+                     Clamped);
+
+      if (debug)
+        Rcpp::Rcout << "End BackCalcEffort \n";
+    }
+
+    if (debug)
       Rcpp::Rcout << "******End Time Step ****\n\n";
   
     

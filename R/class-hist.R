@@ -30,9 +30,9 @@
 #'   - **Level 2** (one entry per stock or stock complex defined in the [om-class]):
 #'     a [data-class] object holding the observations for that stock/complex.
 #'
-#' @slot Log Internal named list storing diagnostics, warnings, and
-#'   bookkeeping information generated during the historical simulation.
-#'   Not intended for direct user access.
+#' @slot Log `list`. Internal named list storing diagnostics, warnings, and
+#'   assumptions recorded during processing. See [Log()]. Not intended for
+#'   direct user access.
 #'
 #' @slot Misc Named list for carrying arbitrary additional objects alongside
 #'   the historical results. Useful for attaching model-specific diagnostics

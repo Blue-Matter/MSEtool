@@ -41,7 +41,7 @@
       
     } else if (length(dd) == 2) {
       # Fleet x Area TAC 
-      if (!all(dd == c(nFleet, length(Proj@OM@Areas)))) # adjust slot name as needed
+      if (!all(dd == c(nFleet, nArea(Proj@OM)))) 
         cli::cli_abort("Advice@TAC for complex {i} must be nFleet x nArea ({nFleet} x {length(nArea(Proj@OM))})", .internal=TRUE)
       cli::cli_abort("TAC by Fleet x Area optimization is not yet implemented")
       
@@ -55,33 +55,22 @@
 }
 
 .ResolveTACTypeByComplex <- function(AdviceList, Complexes, nFleet) {
-  if (is.null(AdviceList[[1]]@TACType))
-    AdviceList[[1]]@TACType <- 'Removals'
-  
   lapply(seq_along(Complexes), function(i) {
-    .RecycleToFleets(AdviceList[[i]]@TACType, nFleet, 'TACType')
+    TACType <- AdviceList[[i]]@TACType
+    if (!length(TACType)) TACType <- 'Removals'
+    .RecycleToFleets(TACType, nFleet, 'TACType')
   })
 }
 
 .ResolveTACUnitByComplex <- function(AdviceList, Complexes, nFleet) {
-  if (is.null(AdviceList[[1]]@TACUnit))
-    AdviceList[[1]]@TACUnit <- 'Biomass'
-  
   lapply(seq_along(Complexes), function(i) {
-    .RecycleToFleets(AdviceList[[i]]@TACUnit, nFleet, 'TACUnit')
+    TACUnit <- AdviceList[[i]]@TACUnit
+    if (!length(TACUnit)) TACUnit <- 'Biomass'
+    .RecycleToFleets(TACUnit, nFleet, 'TACUnit')
   })
 }
 
-# [nFleet x nComplex] matrix of Imp@<ControlType>@Compliance for the current
-# `sim`/`Year` (Compliance is populated to [Sim x Year] by PopulateImpSlot()),
-# NA where unset (i.e. no complex/fleet pair configured, or that fleet/
-# complex's Compliance is empty -- callers fall back to today's defaults).
-# ControlType is 'TAC', 'Effort', or 'Size' -- for 'Size' the matrix isn't
-# used by this helper's usual multi-stock-reconciliation callers, but the
-# same lookup shape is available for anyone consuming Imp@Size@Compliance
-# (see .UpdateSelectivitySim(), which does its own direct per-sim/fleet
-# lookup instead of calling this, to avoid rebuilding the whole matrix on
-# every sim).
+
 .ResolveComplianceMatrix <- function(Proj, FleetNames, ComplexNames, sim, Year, ControlType = 'TAC') {
   nFleet   <- length(FleetNames)
   nComplex <- length(ComplexNames)
@@ -105,34 +94,6 @@
     }
   }
   Compliance
-}
-
-.ResolveUndershootPenalty <- function(Proj, nFleet, nComplex) {
-  matrix(1, nrow = nFleet, ncol = nComplex)
-}
-
-# Compliance is "how much this fleet reconciles its behaviour toward this
-# complex's TAC when it competes with other complexes" (see ImpSlot()'s
-# Compliance docs), continuously scaling the overshoot penalty:
-# Compliance -> 0 means the fleet doesn't reconcile toward this complex at
-# all, so overshoot is free (penalty = 0); Compliance = 0.5 reproduces
-# today's pre-Compliance default (symmetric penalty = 1); Compliance -> 1
-# approaches an effective hard choke, without needing a separate discrete
-# mechanism. The ratio is capped at 1000x (matching the scale of the
-# original discrete choke_mult in .OptEffortMultiStock()) rather than let
-# it grow arbitrarily large -- an extreme penalty weight ill-conditions the
-# optimiser and degrades constraint satisfaction rather than improving it.
-.ResolveOvershootPenalty <- function(Proj, nFleet, nComplex, Compliance = NULL) {
-  Penalty <- matrix(1, nrow = nFleet, ncol = nComplex)
-  if (is.null(Compliance)) return(Penalty)
-
-  set <- !is.na(Compliance)
-  Penalty[set] <- Penalty[set] * Compliance[set] / pmax(1 - Compliance[set], 1e-3)
-  Penalty
-}
-
-.ResolvePenaltyMode <- function(Proj, nFleet) {
-  rep("soft", nFleet)
 }
 
 # Applies Imp@<ControlType>@Error[sim, Year] as a multiplicative
@@ -174,17 +135,15 @@
 
 .ResolveLambda <- function(Proj, sim, TSIndex,
                           StockNames, FleetNames, 
-                          lambda_scale = 0.001, 
+                          lambda_scale = 1, 
                           n_recent = 5) {
   
-  # TODO - add user_defined lambda
-  user_lambda <- NULL
-
-  STarget <- Proj@Misc$StockTargeting[sim,,,seq_len(TSIndex-1), drop = FALSE] |> abind::adrop(1) 
+  STarget <- Proj@Misc$StockTargeting[sim,,,seq_len(TSIndex-1), drop = FALSE] |> abind::adrop(1)
   n_years <- dim(STarget)[3]
-  
+
   nFleet <- length(FleetNames)
-  
+  nStock <- length(StockNames)
+
   raw <- setNames(rep(1, nFleet), FleetNames)
   
   active_stock <- .GetActiveStocks(Proj, sim, TSIndex, StockNames, FleetNames,
@@ -215,11 +174,25 @@
     sd_f <- sqrt(mean(changes^2))
     if (!is.finite(sd_f) || sd_f <= 0) next
     raw[fl] <- 1 / sd_f
-    
-    # --- Apply user override if provided 
-    # if (!is.null(user_lambda) && !is.na(user_lambda[fl]))
-    #   raw[fl] <- user_lambda[fl]
   }
-  
-  raw * (lambda_scale / mean(raw))
+
+  # derived per-fleet weight, normalised so mean(lambda) == lambda_scale
+  derived <- raw * (lambda_scale / mean(raw))
+
+  # Expand to [Fleet x Stock] and apply the user multiplier from
+  # Effort@StockTargetingLambda. Absent/non-finite entries default to 1, so an
+  # unset multiplier reproduces the derived value exactly.
+  lambda <- matrix(derived, nrow = nFleet, ncol = nStock,
+                   dimnames = list(Fleet = FleetNames, Stock = StockNames))
+
+  Mult <- Proj@Misc$StockTargetingLambda
+  if (!is.null(Mult)) {
+    sim_m <- min(sim, dim(Mult)[1])
+    yr_m  <- min(TSIndex, dim(Mult)[3])
+    m     <- t(Mult[sim_m, , yr_m, , drop = FALSE] |> abind::adrop(c(1, 3)))
+    m[!is.finite(m) | m < 0] <- 1
+    lambda <- lambda * m
+  }
+
+  lambda
 }

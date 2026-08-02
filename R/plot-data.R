@@ -167,7 +167,7 @@ setMethod('plot', 'data', function(x, y, ...) {
     return(invisible(NULL))
   }
 
-  if (!isFALSE(units)) {.
+  if (!isFALSE(units)) {
     base_unit <- unique(slot(object, slot_name)@Units)
     if (length(base_unit) != 1 || base_unit %in% c('Biomass', 'Number', 'Recruitment'))
       base_unit <- NULL

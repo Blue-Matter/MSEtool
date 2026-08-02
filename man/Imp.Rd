@@ -98,6 +98,24 @@ stocks or complexes -- meaningless (and not consulted) for a
 single-stock/single-complex OM, since there is nothing to reconcile
 against.
 
+For \code{TAC@Compliance}, a fleet that cannot satisfy every complex's TAC at
+once must trade off falling short of one against exceeding another.
+\code{Compliance} sets how heavily exceeding this complex's TAC is penalised,
+relative to falling short of it:
+\itemize{
+\item \code{0}: exceeding this TAC costs nothing, so the fleet effectively ignores
+it and fishes to satisfy its other quotas.
+\item \code{0.5}: exceeding and falling short are weighted equally.
+\item \code{0.7} (the default when unset): exceeding is penalised about 2.3 times
+more heavily than falling short, so the fleet stops at whichever quota
+binds first rather than overshooting it to fill the others.
+\item Approaching \code{1}: an effective hard choke.
+}
+
+The default is asymmetric because a TAC is a cap rather than a target:
+landing under quota is routine, while exceeding it is a regulatory breach.
+Set \code{0.5} explicitly if you want the symmetric treatment.
+
 \code{Size@Compliance} (in \verb{[0, 1]}) is the fraction of the fleet that adopts a
 newly-advised size-based regulation (a change to \code{Advice@Retention}
 and/or \code{Advice@Selectivity}) in the year it changes; the remaining

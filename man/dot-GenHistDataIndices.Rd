@@ -56,7 +56,7 @@ Supports indices in number, biomass, or recruitment units,
 applies fleet-specific selectivity-at-age, and standardizes
 generated indices to mean 1.
 
-If real index data already exist, or no observation structure is
-defined, the existing data are returned unchanged.
+If no observation structure is defined at all, the existing data are
+returned unchanged. Otherwise, generation happens per fleet.
 }
 \keyword{internal}

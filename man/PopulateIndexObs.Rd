@@ -31,18 +31,18 @@ unchanged and no population is performed.
 
 Otherwise the following slots are populated in order:
 \itemize{
-\item \code{CV} — expanded to a named \verb{[nSim]} array via \code{\link[=PopulateObsCV]{PopulateObsCV()}}.
+\item \code{CV} — expanded to a named \verb{[nSim]} array.
 \item \code{Error} — generated as a lognormal draw from \code{CV} across all historical
-and projection years, producing a named \verb{[nSim x nYear]} array via
-\code{\link[=PopulateObsError]{PopulateObsError()}}. If \code{Error} is already a fully-formed array it is
+and projection years, producing a named \verb{[nSim x nYear]} array. If
+\code{Error} is already a fully-formed array it is
 validated and dimension names are applied. If \code{AC} is non-zero, the
 error series is subsequently transformed to an AR(1) process (see below).
-\item \code{AC} — expanded to a named \verb{[nSim]} array via \code{\link[=PopulateObsAC]{PopulateObsAC()}}.
+\item \code{AC} — expanded to a named \verb{[nSim]} array.
 Accepted inputs: scalar applied to all simulations, length-2 vector
 \code{c(lower, upper)} for a per-simulation Uniform draw, or a vector of
 length \code{nSim} used directly. Defaults to 0 (no autocorrelation).
 \item \code{Ref} — generated as a lognormal draw from a CV, producing a named
-\verb{[nSim]} reference level error array via \code{\link[=PopulateObsRef]{PopulateObsRef()}}.
+\verb{[nSim]} reference level error array.
 \item \code{Years} — if empty, defaults to all historical years (\code{HistYears}).
 }
 
@@ -67,7 +67,5 @@ natural scale: \eqn{\mathrm{Error}_t^* = \exp(\varepsilon_t^*)}.
 }
 }
 \seealso{
-\code{\link[=PopulateObs]{PopulateObs()}}, \link[=indicesobs-class]{indicesobs}, \code{\link[=PopulateObsCV]{PopulateObsCV()}},
-\code{\link[=PopulateObsError]{PopulateObsError()}}, \code{\link[=PopulateObsAC]{PopulateObsAC()}},
-\code{\link[=PopulateObsRef]{PopulateObsRef()}}
+\code{\link[=PopulateObs]{PopulateObs()}}, \link[=indicesobs-class]{indicesobs}
 }

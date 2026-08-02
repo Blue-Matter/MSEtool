@@ -63,6 +63,11 @@
 #'   after fitting? Default `TRUE`. Ignored (with a warning) if
 #'   `fit_stock_targeting = FALSE`, since [GenerateStockTargeting()] requires
 #'   fitted targeting parameters.
+#' @param record_assumption `logical(1)`. Record the effort-standardization as
+#'   an `"assumption"` in `OM@Log`? Default `TRUE`. Set `FALSE` when the
+#'   differing per-stock effort is structural to how `OM` was built (e.g. a
+#'   sex-structured `ImportSS()` model, where per-sex effort naturally differs
+#'   due to sex-specific selectivity) rather than an unexpected input.
 #'
 #' @return The input `OM` object with:
 #'   - `Fleet[[st]][[fl]]@Effort@Effort` set to the geometric mean effort
@@ -84,7 +89,8 @@
 .StandardizeEffort <- function(OM,
                               populate = TRUE,
                               fit_stock_targeting = TRUE,
-                              generate_stock_targeting = TRUE) {
+                              generate_stock_targeting = TRUE,
+                              record_assumption = TRUE) {
   
   if (!fit_stock_targeting && generate_stock_targeting) {
     cli::cli_warn(c(
@@ -168,17 +174,19 @@
       next
     }
     
-    OM <- .CaptureLog(OM,
-                     string = cli::format_inline(
-                       "Effort values for Fleet {.val {fleet_names[fl]}} differ across stocks."),
-                     name = '.StandardizeEffort',
-                     type = 'assumption')
+    if (record_assumption) {
+      OM <- .CaptureLog(OM,
+                       string = cli::format_inline(
+                         "Effort values for Fleet {.val {fleet_names[fl]}} differ across stocks."),
+                       name = '.StandardizeEffort',
+                       type = 'assumption')
 
-    OM <- .CaptureLog(OM,
-                     string = cli::format_inline(
-                       "Standardizing to geometric mean effort over active stocks; absorbing deviations into {.val Targeting}."),
-                     type = 'assumption')
-    
+      OM <- .CaptureLog(OM,
+                       string = cli::format_inline(
+                         "Standardizing to geometric mean effort over active stocks; absorbing deviations into {.val Targeting}."),
+                       type = 'assumption')
+    }
+
     # Geometric mean effort over active stocks at each [sim, year] cell.
     # A stock is active if its effort exceeds tol 
     log_effort_sum <- array(0, dim = dim(EffortArrayList[[1]]),

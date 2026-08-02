@@ -56,7 +56,7 @@ CalcMSY <- function(Hist,
 
   .CheckClass(Hist, 'hist', 'Hist')
   
-  nSeason <- Hist@OM@Seasons
+  nSeason        <- Hist@OM@Seasons
   RefSeason      <- Hist@OM@RefSeason
   RefEffortYears <- Hist@OM@RefEffortYears
 
@@ -168,11 +168,12 @@ CalcMSY <- function(Hist,
 
     purrr::map(seq_along(Years), \(ts) {
 
-      inputs <- .PrepPerRecruitInputs(StockList_sim,
-                                     FleetList_sim,
-                                     SPR0_List_sim,
-                                     Years[ts],
-                                     EffortYears = RefEffortYears, RefSeason = RefSeason)
+      inputs <- .PrepPerRecruitInputs(StockList   = StockList_sim,
+                                      FleetList   = FleetList_sim,
+                                      SPR0List    = SPR0_List_sim,
+                                      Years       = Years[ts],
+                                      EffortYears = RefEffortYears, 
+                                      RefSeason   = RefSeason)
 
       opt <- optimize(
         .OptCalcRefMSYSims,

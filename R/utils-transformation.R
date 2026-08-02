@@ -43,3 +43,39 @@ logit <- function(p) {
 ilogit <- function(x) {
   1 / (1 + exp(-x))
 }
+#' Multinomial inverse logit (softmax)
+#'
+#' Maps a vector of real values, or each row of a matrix, to proportions that
+#' sum to 1.
+#'
+#' @param x A numeric vector, or a matrix whose rows are transformed
+#'   independently.
+#' @return An object of the same shape as `x`, summing to 1 overall (vector) or
+#'   by row (matrix).
+#' @keywords internal
+ilogitm <- function(x) {
+  if (inherits(x, "matrix")) return(exp(x) / apply(exp(x), 1, sum))
+  exp(x) / sum(exp(x))
+}
+
+#' Lognormal moment conversion
+#'
+#' Convert a mean and standard deviation expressed in normal space to the
+#' parameters of the corresponding lognormal distribution.
+#'
+#' @param m Mean in normal space.
+#' @param sd Standard deviation in normal space.
+#' @author T. Carruthers
+#' @return numeric
+#' @describeIn sdconv Returns sigma of the lognormal distribution
+#' @keywords internal
+#' @export
+sdconv <- function(m, sd) (log(1 + ((sd^2)/(m^2))))^0.5
+
+#' @describeIn sdconv Returns mu of the lognormal distribution
+#' @export
+mconv <- function(m, sd) log(m) - 0.5 * log(1 + ((sd^2)/(m^2)))
+
+# Small positive constant used to keep divisions and log-scale arithmetic
+# finite where a quantity may legitimately be zero.
+tiny <- 1e-15

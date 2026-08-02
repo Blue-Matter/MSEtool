@@ -28,7 +28,7 @@ SRR(
   SD = NULL,
   AC = NULL,
   SPFrom = NULL,
-  TruncSD = 2,
+  TruncSD = 3,
   RecDevInit = NULL,
   RecDevHist = NULL,
   RecDevProj = NULL,

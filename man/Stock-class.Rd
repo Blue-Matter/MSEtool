@@ -79,7 +79,9 @@ when attached to an \code{\link[=OM]{OM()}}.}
 
 \item{\code{Misc}}{\code{list}. Used internally.}
 
-\item{\code{Log}}{\code{list}. Internal log. Not intended for direct user access.}
+\item{\code{Log}}{\code{list}. Internal named list storing diagnostics, warnings, and
+assumptions recorded during processing. See \code{\link[=Log]{Log()}}. Not intended for
+direct user access.}
 }}
 
 \seealso{

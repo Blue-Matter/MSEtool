@@ -69,3 +69,17 @@ rDirichletMultinomial <- function(n, alpha) {
   p <- p / sum(p)
   as.integer(rmultinom(1, size = n, prob = p))
 }
+
+.SeededDirichletMultinomial <- function(seed_key, n, alpha) {
+  seed_val <- sum(utf8ToInt(seed_key)) %% .Machine$integer.max
+
+  has_seed <- exists(".Random.seed", envir = .GlobalEnv)
+  old_seed <- if (has_seed) get(".Random.seed", envir = .GlobalEnv) else NULL
+  on.exit({
+    if (has_seed) assign(".Random.seed", old_seed, envir = .GlobalEnv)
+    else if (exists(".Random.seed", envir = .GlobalEnv)) rm(".Random.seed", envir = .GlobalEnv)
+  })
+
+  set.seed(seed_val)
+  rDirichletMultinomial(n = n, alpha = alpha)
+}

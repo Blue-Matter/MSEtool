@@ -23,13 +23,16 @@ catch, effort, and fishing mortality components.
 
 \item{\code{Landings}}{Total landings by Stock and Fleet (biomass). Array: Sim x Stock x Year x Fleet (x MP for \code{MSE} objects).}
 
-\item{\code{Discards}}{Total discards by Stock and Fleet (biomass). Array: Sim x Stock x Year x Fleet (x MP for \code{MSE} objects).}
+\item{\code{Discards}}{Total \emph{dead} discards by Stock and Fleet (biomass). Array: Sim x Stock x Year x Fleet (x MP for \code{MSE} objects).
+Fish that are released and survive are counted in \code{Interactions} but not in
+\code{Discards}, so \code{Interactions} exceeds \code{Landings + Discards} whenever
+discard mortality is below 1.}
 
 \item{\code{InteractAtAge}}{List of interactions-at-age (numbers) arrays. Stock: Sim × Age × Year × Fleet × Area  (x MP for \code{MSE} objects).}
 
 \item{\code{LandingsAtAge}}{List of landings-at-age (numbers) arrays. Stock: Sim × Age × Year × Fleet × Area  (x MP for \code{MSE} objects).}
 
-\item{\code{DiscardsAtAge}}{List of discards-at-age (numbers) arrays. Stock: Sim × Age × Year × Fleet × Area (x MP for \code{MSE} objects).}
+\item{\code{DiscardsAtAge}}{List of dead discards-at-age (numbers) arrays. Stock: Sim × Age × Year × Fleet × Area (x MP for \code{MSE} objects).}
 
 \item{\code{LandingsAtSize}}{Nested list of landings-at-size (numbers) arrays Stock, Fleet: Sim × Class × Year × Area (x MP for \code{MSE} objects).}
 

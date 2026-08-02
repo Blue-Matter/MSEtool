@@ -61,7 +61,7 @@
                            StockNames,
                            FleetNames, 
                            Areas,
-                           lambda_scale = 0.001,
+                           lambda_scale = 1,
                            n_recent     = 5,
                            maxEval      = 500) {
   
@@ -110,13 +110,10 @@
   }
 
   # Multi-complex
-  Compliance        <- .ResolveComplianceMatrix(Proj, FleetNames, names(Complexes), sim, Year)
-  UndershootPenalty <- .ResolveUndershootPenalty(Proj, nFleet_loc, nComplex)
-  OvershootPenalty  <- .ResolveOvershootPenalty(Proj, nFleet_loc, nComplex, Compliance)
-  PenaltyMode       <- .ResolvePenaltyMode(Proj, nFleet_loc)
-  lambda            <- .ResolveLambda(Proj, sim, TSIndex, StockNames, FleetNames, lambda_scale, n_recent)
+  Compliance <- .ResolveComplianceMatrix(Proj, FleetNames, names(Complexes), sim, Year)
+  lambda     <- .ResolveLambda(Proj, sim, TSIndex, StockNames, FleetNames, lambda_scale, n_recent)
 
-  result <- .OptEffortMultiStock(
+  result <- .OptEffortChoke(
     Proj               = ProjSim,
     Year               = Year,
     TSIndex            = TSIndex,
@@ -126,9 +123,7 @@
     TAC_by_Complex     = TAC_by_Complex,
     TACType_by_Complex = TACType_by_Complex,
     TACUnit_by_Complex = TACUnit_by_Complex,
-    UndershootPenalty  = UndershootPenalty,
-    OvershootPenalty   = OvershootPenalty,
-    PenaltyMode        = PenaltyMode,
+    Compliance         = Compliance,
     MaxFleetEffort     = MaxFleetEffort,
     lambda             = lambda,
     n_recent           = n_recent,

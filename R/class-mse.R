@@ -28,8 +28,9 @@
 #' @slot PPD List containing posterior predictive distribution outputs and
 #'   diagnostics generated during the MSE.
 #'
-#' @slot Log Internal list storing MSE diagnostics and execution metadata.
-#'   Not intended for direct user access.
+#' @slot Log `list`. Internal named list storing diagnostics, warnings, and
+#'   assumptions recorded during processing. See [Log()]. Not intended for
+#'   direct user access.
 #'
 #' @slot Misc Named list for carrying arbitrary additional objects alongside
 #'   the MSE results.

@@ -32,8 +32,11 @@ historical mean or target level). See \code{\link[=IndicesData]{IndicesData()}}.
 \item{\code{RefCV}}{\code{array} or \code{NULL}. Coefficients of variation for the reference
 values, matching the dimensions of \code{Ref}. See \code{\link[=IndicesData]{IndicesData()}}.}
 
-\item{\code{Timing}}{\code{numeric}. Within-year timing of each observation as a
-fraction of the year (0-1). See \code{\link[=IndicesData]{IndicesData()}}.}
+\item{\code{Timing}}{\code{numeric}. Timing of each observation as a fraction of the
+time step (0-1). Simulated
+indices are decayed by the mortality accrued up to that point;
+\code{0} (default) observes the population at the start of the time step.
+See \code{\link[=IndicesData]{IndicesData()}}.}
 
 \item{\code{Selectivity}}{An array or character specification mapping each index
 to a fleet selectivity or defining an independent selectivity curve.

@@ -22,7 +22,10 @@ generated stochastically from \code{CV}, or
 estimated from real data during \code{.ConditionObs()}. See \code{\link[=IndicesObs]{IndicesObs()}}.}
 
 \item{\code{Beta}}{\code{numeric} array or \code{NULL}. Hyperstability/hyperdepletion
-parameter. Reserved for future use; currently not implemented. See
+parameter: \code{Observed_t = Efficiency * NomIndex_t^Beta * Error_t}. \code{NULL}
+(default) is \code{Beta = 1} (proportional); otherwise estimated per
+simulation when conditioned on real data and
+\code{SimControl(EstimateBeta = TRUE)}, unless already supplied. See
 \code{\link[=IndicesObs]{IndicesObs()}}.}
 
 \item{\code{AC}}{\code{numeric} array or \code{NULL}. Lag-1 autocorrelation of index
@@ -61,7 +64,10 @@ conditioning by \code{\link[=CalcResidualStats]{CalcResidualStats()}}. Contains 
 \code{NA_Season} (a list-column of seasons with no observations). Populated
 internally; not set by the user.}
 
-\item{\code{Misc}}{\code{list}. Miscellaneous additional objects.}
+\item{\code{Misc}}{\code{list}. Miscellaneous additional objects. When \code{Beta} is
+conditioned on real data, \code{Misc$BetaFit} holds the per-simulation fit
+diagnostics from \code{.EstimateBeta()}: \code{SE_Beta}, \code{CI_Lower}, \code{CI_Upper},
+\code{R2}, \code{PValue}, \code{nPoints}, and \code{Status}. See \code{\link[=IndexFitTable]{IndexFitTable()}}.}
 }}
 
 \seealso{

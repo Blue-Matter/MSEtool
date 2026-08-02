@@ -87,7 +87,7 @@
                               StockNames,
                               Complexes,
                               Areas,
-                              lambda_scale = 0.001,
+                              lambda_scale = 1,
                               n_recent     = 5,
                               maxEval      = 500) {
 
@@ -97,39 +97,52 @@
   TSIndex  <- match(Year, AllYears)
   ProjInd  <- TSIndex:length(AllYears)
   nComplex <- length(Complexes)
-  
+  nSeason  <- max(1L, as.integer(Proj@OM@Seasons))
+
   Distribution <- MakeNamedList(names(Complexes))
-  
+
+  # Relative effort is anchored to the last complete historical year; its
+  # seasonal shape is reapplied below so 'Rel' advice keeps the seasonal
+  # pattern rather than repeating the final season
+  LastEffort <- .LastYearEffort(Proj, sim, length(YearsHist), nFleet, nSeason)
+
+  # EffType per fleet per complex, to identify which fleets take the shape
+  EffTypeMat <- matrix('Abs', nrow = nFleet, ncol = nComplex)
+
   for (i in seq_len(nComplex)) {
     Advice         <- AdviceList[[i]]
     AdvicePrevious <- LastAdviceList[[i]]
-    
+
     if (!inherits(Advice, "advice"))                              next
     if (is.null(Advice@Effort))                                   next
-    
+
     # Scalar effort expanded to nFleet (skip if already a matrix)
-    if (!is.array(Advice@Effort) && length(Advice@Effort)==1) 
+    if (!is.array(Advice@Effort) && length(Advice@Effort)==1)
       Advice@Effort <- rep(Advice@Effort,nFleet)[seq_len(nFleet)]
 
+    EffType <- Advice@EffType
+    if (!length(EffType)) EffType <- 'Rel'
+    EffTypeMat[, i] <- .RecycleToFleets(EffType, nFleet, 'EffType')
+
     # Convert relative fleets to absolute
-    Advice <- .ConvertEffortAbs(Proj, sim, Advice, YearsHist, nFleet)
+    Advice <- .ConvertEffortAbs(Proj, sim, Advice, YearsHist, nFleet,
+                                LastEffortLevel = LastEffort$level)
 
-    # Apply Imp@Effort@Error implementation-error 
-    if (!is.array(Advice@Effort) || length(dim(Advice@Effort)) == 1) {
-      complex_name <- names(Complexes)[i]
-      wrapped <- .ApplyImplementationError(
-        setNames(list(as.numeric(Advice@Effort)), complex_name),
-        Proj, FleetNames, complex_name, sim, Year, 'Effort'
-      )
-      Advice@Effort <- wrapped[[1]]
-    }
-
-    # Distribute Effort over Areas if specified in MP
     temp <- .DistributeEffortArea(Proj, sim, TSIndex, Advice, nFleet,
-                                   nArea, FleetNames, 
+                                   nArea, FleetNames,
                                    YearsHist, YearsProj)
     Distribution[[i]] <- temp$Distribution
-    AdviceList[[i]] <- temp$Advice
+    Advice          <- temp$Advice
+
+
+    complex_name <- names(Complexes)[i]
+    wrapped <- .ApplyImplementationError(
+      setNames(list(Advice@Effort), complex_name),
+      Proj, FleetNames, complex_name, sim, Year, 'Effort'
+    )
+    Advice@Effort <- wrapped[[1]]
+
+    AdviceList[[i]] <- Advice
   }
   
   # do Effort Regulation exist?
@@ -144,19 +157,39 @@
   effort_idx      <- which(effort_exists)
   EffortArray     <- purrr::map(AdviceList[effort_idx], slot, "Effort") |> List2Array('Stock') 
 
-  Compliance    <- .ResolveComplianceMatrix(Proj, FleetNames, names(Complexes)[effort_idx], sim, Year, 'Effort')
   EffectiveArray <- EffortArray
-  compset <- !is.na(Compliance)
-  EffectiveArray[compset] <- EffortArray[compset] / pmax(Compliance[compset], 1e-3)
 
-  MinEffortInd    <- apply(EffectiveArray, 1, which.min) |> as.numeric() 
+  if (nComplex > 1L) {
+    Compliance <- .ResolveComplianceMatrix(Proj, FleetNames,
+                                           names(Complexes)[effort_idx],
+                                           sim, Year, 'Effort')
+    compset <- !is.na(Compliance)
+    EffectiveArray[compset] <- EffortArray[compset] / pmax(Compliance[compset], 1e-3)
+  }
+
+  MinEffortInd    <- apply(EffectiveArray, 1, which.min) |> as.numeric()
   MinEffortValues <- EffectiveArray[cbind(seq_len(nrow(EffectiveArray)), MinEffortInd)]
-  MinEffortInd    <- effort_idx[MinEffortInd]  
+  MinEffortInd    <- effort_idx[MinEffortInd]
 
-  Proj@Effort[sim, ProjInd, ] <- matrix(MinEffortValues,
-                                        nrow  = length(ProjInd),
-                                        ncol  = nFleet,
-                                        byrow = TRUE)
+  EffortMat <- matrix(MinEffortValues,
+                      nrow  = length(ProjInd),
+                      ncol  = nFleet,
+                      byrow = TRUE)
+
+  # Reapply the historical seasonal shape to fleets whose binding advice was
+  # relative. Absolute advice is written as given - the MP sets its own pattern.
+  if (nSeason > 1L) {
+    RelFleet <- vapply(seq_len(nFleet),
+                       \(fl) identical(EffTypeMat[fl, MinEffortInd[fl]], 'Rel'),
+                       logical(1))
+    if (any(RelFleet)) {
+      seas <- ((ProjInd - 1L) %% nSeason) + 1L
+      EffortMat[, RelFleet] <- EffortMat[, RelFleet, drop = FALSE] *
+        LastEffort$shape[seas, RelFleet, drop = FALSE]
+    }
+  }
+
+  Proj@Effort[sim, ProjInd, ] <- EffortMat
 
   # Apply spatial distribution if specified
   # TODO - review indexing for multi-complex spatial effort distribution
@@ -261,27 +294,57 @@
 }
 
 
+#' Effort level and seasonal shape from the last complete historical year
+#'
+#' Returns each fleet's mean effort over the last complete historical year, and
+#' that year's seasonal shape normalised to a mean of 1. For annual models the
+#' shape is a single 1 and `level` is the final year's effort, so behaviour is
+#' unchanged.
+#'
+#' @param Proj A `Proj` object.
+#' @param sim Integer. Simulation index.
+#' @param nHistTS Integer. Number of historical time steps.
+#' @param nFleet Integer. Number of fleets.
+#' @param nSeason Integer. Seasons per year.
+#' @return List with `level` (length `nFleet`) and `shape` (`nSeason` x `nFleet`).
+#' @keywords internal
+.LastYearEffort <- function(Proj, sim, nHistTS, nFleet, nSeason) {
+  nSeason <- max(1L, as.integer(nSeason))
+  idx     <- seq(max(1L, nHistTS - nSeason + 1L), nHistTS)
+
+  E     <- matrix(Proj@Effort[sim, idx, ], nrow = length(idx), ncol = nFleet)
+  level <- colMeans(E)
+  shape <- sweep(E, 2, ifelse(level > 0, level, 1), "/")
+
+  list(level = level, shape = shape)
+}
+
 .ConvertEffortAbs <- function(Proj,
                                sim,
-                               Advice, 
+                               Advice,
                                YearsHist,
-                               nFleet) {
-  
+                               nFleet,
+                               LastEffortLevel = NULL) {
+
   if (is.array(Advice@Effort) && length(dim(Advice@Effort)) > 1)
     return(Advice)
-  
+
   # Recycle EffType to nFleet
   eff_type <- .RecycleToFleets(Advice@EffType, nFleet, 'EffType')
-  
-  if (all(eff_type == 'Abs')) 
+
+  if (all(eff_type == 'Abs'))
     return(Advice)
-  
-  LastHistEffort <- Proj@Effort[sim, length(YearsHist), ]   
-  effort         <- rep(Advice@Effort, nFleet)[seq_len(nFleet)]
-  
+
+  # relative to the mean over the last complete historical year; the seasonal
+  # shape is reapplied by .UpdateEffortSim() when effort is written forward
+  if (is.null(LastEffortLevel))
+    LastEffortLevel <- Proj@Effort[sim, length(YearsHist), ]
+
+  effort <- rep(Advice@Effort, nFleet)[seq_len(nFleet)]
+
   rel_idx          <- eff_type == 'Rel'
-  effort[rel_idx]  <- effort[rel_idx] * LastHistEffort[rel_idx]
- 
+  effort[rel_idx]  <- effort[rel_idx] * LastEffortLevel[rel_idx]
+
   Advice@Effort <- effort
   Advice
 }

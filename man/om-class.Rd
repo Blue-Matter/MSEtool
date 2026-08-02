@@ -157,7 +157,9 @@ See \code{\link[=OM]{OM()}}.}
 
 \item{\code{Misc}}{List. Miscellaneous objects or developer-use components.}
 
-\item{\code{Log}}{List. Internal diagnostic and runtime information. See \code{\link[=Log]{Log()}}.}
+\item{\code{Log}}{\code{list}. Internal named list storing diagnostics, warnings, and
+assumptions recorded during processing. See \code{\link[=Log]{Log()}}. Not intended for
+direct user access.}
 
 \item{\code{Source}}{Character. References to data sources or documentation.
 Supports Markdown. See \code{\link[=OM]{OM()}}.}

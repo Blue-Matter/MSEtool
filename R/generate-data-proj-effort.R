@@ -98,3 +98,62 @@
   EffortData@CV    <- abind::abind(CV, NewCV, along = 1, use.dnns = TRUE)
   EffortData
 }
+
+.GenProjDataEffortAll <- function(Proj, DataYear, YearsAll, i, nSim) {
+
+  EffortData1 <- Proj@Data[[1]][[i]]@Effort
+  unchanged   <- EmptyObject(EffortData1) || DataYear %in% dimnames(EffortData1@Value)[[1]]
+  if (unchanged)
+    return(purrr::map(Proj@Data, \(DataList) DataList[[i]]@Effort))
+
+  TSIndex    <- match(DataYear, YearsAll)
+  FleetNames <- .ResolveFleetNames(EffortData1)
+  nFleet     <- length(FleetNames)
+
+  NewValueAll <- matrix(NA_real_, nSim, nFleet)
+  NewCVAll    <- matrix(NA_real_, nSim, nFleet)
+
+  for (fl in seq_len(nFleet)) {
+    Obs <- Proj@OM@Obs[[i]][[fl]]@Effort
+    if (EmptyObject(Obs) || length(Obs@Error) < 1) next
+
+    NewValueAll[, fl] <- .ResolveValueAll(Proj, 'Effort', i, fl, TSIndex, Obs, nSim, DataYear)
+
+    for (x in seq_len(nSim))
+      NewCVAll[x, fl] <- .ResolveCV(Proj, 'Effort', i, fl, TSIndex, Proj@Data[[x]][[i]]@Effort, DataYear)
+  }
+
+  purrr::map(seq_len(nSim), \(x) {
+    EffortData <- Proj@Data[[x]][[i]]@Effort
+    NewValue <- .EmptyFleetArray(DataYear, FleetNames)
+    NewCV    <- .EmptyFleetArray(DataYear, FleetNames)
+    NewValue[1, ] <- NewValueAll[x, ]
+    NewCV[1, ]    <- NewCVAll[x, ]
+    EffortData@Value <- abind::abind(EffortData@Value, NewValue, along = 1, use.dnns = TRUE)
+    EffortData@CV    <- abind::abind(EffortData@CV, NewCV, along = 1, use.dnns = TRUE)
+    EffortData
+  })
+}
+
+.ResolveValueAll <- function(Proj, slotname, i, fl, TSIndex, Obs, nSim, DataYear) {
+  omData <- Proj@OM@Data[[i]]
+
+  if (!is.null(omData)) {
+    omDataSlot <- slot(omData, slotname)@Value
+    if (!is.null(omDataSlot) &&
+        nrow(omDataSlot) >= TSIndex &&
+        ncol(omDataSlot) >= fl) {
+      return(rep(omDataSlot[TSIndex, fl], nSim))
+    }
+  }
+
+  obsError <- .ArraySubsetYear(Obs@Error, DataYear)
+  sim_ind  <- pmin(seq_len(nSim), nrow(obsError))
+  obsError <- obsError[sim_ind]
+
+  sim_ind_bias <- pmin(seq_len(nSim), length(Obs@Bias))
+  obsBias      <- Obs@Bias[sim_ind_bias]
+
+  projValue <- slot(Proj, slotname)[seq_len(nSim), TSIndex, fl]
+  projValue * obsError * obsBias
+}

@@ -151,3 +151,92 @@
   CatchData@CV    <- abind::abind(CV, NewCV, along = 1, use.dnns = TRUE)
   CatchData
 }
+
+.GenProjDataCatchAll <- function(Proj, DataYear, YearsAll, i, stocks, nSim,
+                                 type = c('Landings', 'Discards')) {
+
+  type <- match.arg(type)
+
+  CatchData1 <- slot(Proj@Data[[1]][[i]], type)
+  CatchData1@Units[is.na(CatchData1@Units)] <- 'Biomass'
+
+  unchanged <- EmptyObject(CatchData1) || DataYear %in% dimnames(CatchData1@Value)[[1]]
+  if (unchanged)
+    return(purrr::map(Proj@Data, \(DataList) {
+      cd <- slot(DataList[[i]], type)
+      cd@Units[is.na(cd@Units)] <- 'Biomass'
+      cd
+    }))
+
+  TSIndex    <- match(DataYear, YearsAll)
+  nArea      <- nArea(Proj)
+  FleetNames <- .ResolveFleetNames(CatchData1)
+  nFleet     <- length(FleetNames)
+  CatchData1 <- .ResolveUnits(CatchData1, nFleet)
+
+  Real_Catch_Number_All <- purrr::map(slot(Proj, paste0(type, 'AtAge'))[stocks],
+                                      \(catch_n) {
+                                        catch_n[,,TSIndex,,,drop=FALSE] |>
+                                          abind::adrop(drop = 3)
+                                      })
+
+  NewValueAll <- matrix(NA_real_, nSim, nFleet)
+  NewCVAll    <- matrix(NA_real_, nSim, nFleet)
+  omData      <- Proj@OM@Data[[i]]
+
+  for (fl in seq_len(nFleet)) {
+    Obs <- slot(Proj@OM@Obs[[i]][[fl]], type)
+    if (EmptyObject(Obs) || length(Obs@Error) < 1) next
+
+    hasOMVal <- !is.null(omData) &&
+      !is.null(slot(omData, type)@Value) &&
+      nrow(slot(omData, type)@Value) >= TSIndex
+
+    if (hasOMVal) {
+      NewValueAll[, fl] <- slot(omData, type)@Value[TSIndex, fl]
+    } else {
+      error <- .ArraySubsetYear(Obs@Error, DataYear)
+      sim_ind <- pmin(seq_len(nSim), nrow(error))
+      error   <- error[sim_ind]
+
+      sim_ind_bias <- pmin(seq_len(nSim), length(Obs@Bias))
+      bias         <- Obs@Bias[sim_ind_bias]
+
+      NewValueAll[, fl] <- switch(CatchData1@Units[fl],
+        Number  = .ResolveCatchNumberAll(Real_Catch_Number_All, fl, nSim) * error * bias,
+        Biomass = vapply(seq_len(nSim), \(x) {
+          Real_Catch_Number_x <- purrr::map(Real_Catch_Number_All, \(a)
+            a[x, , , , drop = FALSE] |> abind::adrop(1)
+          )
+          .ResolveCatchBiomass(Proj, stocks, x, TSIndex, fl, nArea,
+                              Real_Catch_Number_x, type = type)
+        }, numeric(1)) * error * bias
+      )
+    }
+
+    for (x in seq_len(nSim))
+      NewCVAll[x, fl] <- .ResolveCV(Proj, type, i, fl, TSIndex,
+                                    slot(Proj@Data[[x]][[i]], type), DataYear)
+  }
+
+  purrr::map(seq_len(nSim), \(x) {
+    CatchData <- slot(Proj@Data[[x]][[i]], type)
+    CatchData@Units[is.na(CatchData@Units)] <- 'Biomass'
+    CatchData <- .ResolveUnits(CatchData, nFleet)
+    NewValue <- .EmptyFleetArray(DataYear, FleetNames)
+    NewCV    <- .EmptyFleetArray(DataYear, FleetNames)
+    NewValue[1, ] <- NewValueAll[x, ]
+    NewCV[1, ]    <- NewCVAll[x, ]
+    CatchData@Value <- abind::abind(CatchData@Value, NewValue, along = 1, use.dnns = TRUE)
+    CatchData@CV    <- abind::abind(CatchData@CV, NewCV, along = 1, use.dnns = TRUE)
+    CatchData
+  })
+}
+
+.ResolveCatchNumberAll <- function(Real_Catch_Number_All, fl, nSim) {
+  per_stock <- purrr::map(Real_Catch_Number_All, \(catch_n) {
+    catch_n[, , fl, , drop = FALSE] |> abind::adrop(drop = 3)  # [Sim, Age, Area]
+  })
+  totals_by_stock <- purrr::map(per_stock, \(a) apply(a, 1, sum))  # length-nSim per stock
+  Reduce(`+`, totals_by_stock)
+}

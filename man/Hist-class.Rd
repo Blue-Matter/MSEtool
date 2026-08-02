@@ -39,9 +39,9 @@ identical): one entry per simulation.
 a \link[=data-class]{data} object holding the observations for that stock/complex.
 }}
 
-\item{\code{Log}}{Internal named list storing diagnostics, warnings, and
-bookkeeping information generated during the historical simulation.
-Not intended for direct user access.}
+\item{\code{Log}}{\code{list}. Internal named list storing diagnostics, warnings, and
+assumptions recorded during processing. See \code{\link[=Log]{Log()}}. Not intended for
+direct user access.}
 
 \item{\code{Misc}}{Named list for carrying arbitrary additional objects alongside
 the historical results. Useful for attaching model-specific diagnostics

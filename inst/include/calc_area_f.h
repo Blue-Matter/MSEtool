@@ -2,8 +2,10 @@
 #define CALC_AREA_F_H
 
 #include <Rcpp.h>
+#include <algorithm>
 #include <array>
 #include <cmath>
+#include <vector>
 
 #include "array_nd.h"
 #include "array_views.h"
@@ -30,10 +32,19 @@ inline void CalcArea_F(
     const double maxF,
     const int nStock,
     const int nFleet,
-    const int nArea) {
+    const int nArea,
+    std::vector<char>& Clamped) {                     // out: sim * nFleet
 
 
-  // Calc F-at-age 
+  // apical F by (fleet, area), before the maxF constraint is applied
+  std::vector<double> q_buf(nFleet * nArea, 0.0);
+
+  // Which (sim, fleet) had F reduced by the maxF constraint this year. Only
+  // these need their effort back-calculated - everywhere else the requested
+  // effort already matches the realised F exactly.
+  std::fill(Clamped.begin(), Clamped.end(), static_cast<char>(0));
+
+  // Calc F-at-age
   for (int st = 0; st < nStock; ++st) {
     
     auto& Fi  = FInteractArea[st];    // sim, age, year, fleet, area
@@ -66,12 +77,20 @@ inline void CalcArea_F(
       const int sim_rs = sim_index<2>(sim, RelSize);
       const int sim_st = sim_index<4>(sim, StockTargeting);
       
+      // Apical F per fleet per area, before the maxF constraint
+      std::fill(q_buf.begin(), q_buf.end(), 0.0);
+
       for (int fl = 0; fl < nFleet; ++fl) {
 
         const double q_fl = q(sim_q, st, y, fl);
-        if (q_fl <= 0.0) continue; 
+        if (q_fl <= 0.0) continue;
         const double E = Effort(sim_ef, y, fl);
-      
+
+        double targ = 1;
+        if (StockTargetingFlag) {
+          targ = StockTargeting(sim_st, st, fl, y);
+        }
+
         for (int ar = 0; ar < nArea; ++ar) {
 
           double ed;
@@ -83,34 +102,50 @@ inline void CalcArea_F(
             // Biomass mode: fishing power scales with raw effort, no area term
             ed = E * Distribution(sim_dist, y, fl, ar);
           }
-          
-          double targ = 1;
 
-          if (StockTargetingFlag) {
-            targ = StockTargeting(sim_st, st, fl, y);
-          }
-            
-          double q_eff = std::min(q_fl * ed * targ, maxF);
+          q_buf[fl * nArea + ar] = q_fl * ed * targ;
+        }
+      } // end fleet
+
+      // Constrain total apical F across fleets within each area. Selectivity is
+      // standardised to a maximum of 1, so this also bounds total F-at-age.
+      for (int ar = 0; ar < nArea; ++ar) {
+
+        double tot = 0.0;
+        for (int fl = 0; fl < nFleet; ++fl)
+          tot += q_buf[fl * nArea + ar];
+
+        const double scale = (tot > maxF) ? maxF / tot : 1.0;
+
+        if (scale < 1.0) {
+          for (int fl = 0; fl < nFleet; ++fl)
+            if (q_buf[fl * nArea + ar] > 0.0)
+              Clamped[sim * nFleet + fl] = 1;
+        }
+
+        for (int fl = 0; fl < nFleet; ++fl) {
+
+          const double q_eff = q_buf[fl * nArea + ar] * scale;
           if (q_eff <= 0.0) continue;
-          
+
           for (int age = 0; age < nAge; ++age) {
-            
+
             const double sel = S(sim_sel, age, y, fl, ar);
             const double ret = R(sim_ret, age, y, fl, ar);
             const double dm  = DM(sim_dm, age, y, fl, ar);
-            
+
             const double F_interact = q_eff * sel;
             const double F_retain   = F_interact * ret;
             const double F_disc     = (F_interact - F_retain) * dm;
-            
+
             Fi(sim, age, y, fl, ar) = F_interact;
             Fd(sim, age, y, fl, ar) = F_retain + F_disc;
             Fr(sim, age, y, fl, ar) = F_retain;
-            
+
           } // end age
-        } // end area
-      } // end fleet
-  
+        } // end fleet
+      } // end area
+
     } // end sim
   } // end stock 
 

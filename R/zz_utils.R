@@ -57,4 +57,3 @@ message_info <- function(...) {
 }
 
 
-tiny <- 1e-15  # define tiny variable

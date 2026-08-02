@@ -15,15 +15,20 @@ GenResiduals(
 )
 }
 \arguments{
-\item{SD}{Numeric vector of length nSim giving standard deviation of residuals.}
+\item{SD}{Numeric vector of length nSim giving the marginal standard
+deviation of the residuals once \code{\link[=ApplyAC]{ApplyAC()}} has propagated them.}
 
-\item{AC}{Numeric vector of length nSim giving autocorrelation (must be between -1 and 1 inclusive).}
+\item{AC}{Numeric vector of length nSim giving autocorrelation (must be
+within -1 and 1, exclusive).}
 
 \item{Years}{Numeric vector of years for which residuals are generated.}
 
 \item{nSim}{Optional integer number of simulations (defaults to length(SD)).}
 
-\item{TruncSD}{Numeric scalar specifying how many SDs to truncate the residuals.}
+\item{TruncSD}{Numeric scalar specifying how many standard deviations at
+which to truncate the innovations. The innovation standard deviation is
+inflated to offset the variance lost to truncation, so the propagated
+residuals retain marginal standard deviation \code{SD}.}
 
 \item{nSeasons}{Number of seasons in the array (default 1).}
 

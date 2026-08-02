@@ -168,7 +168,9 @@
 #' panel(s) (see [Removals()] for the summed total): for [hist-class]
 #' objects they are distinguished by color; for [mse-class] objects color is
 #' used for MP and linetype distinguishes Landings (solid) from Discards
-#' (dashed). For [data-class] objects (see `object` above) they're summed
+#' (dashed). If `Discards()` is all zero (or essentially so) across the
+#' plotted selection, the Discards series is dropped and only Landings is
+#' shown. For [data-class] objects (see `object` above) they're summed
 #' into a single `Landings + Discards` series instead, since there's no
 #' color channel to spare.
 #'
@@ -579,10 +581,15 @@ PlotRemovals <- function(object,
     .FilterStock(stockNames) |>
     .AggregateYear(AggregateYear, object) |>
     .BridgeMpGap()
+
+  discardsAllZero <- !nrow(D) || all(abs(D$Value) < 1e-8 | is.na(D$Value))
+  if (discardsAllZero) D <- D[0, ]
+
   df <- dplyr::bind_rows(L, D) |>
     .DropHistorical(IncHist) |>
     .FilterYears(Years)
   df$Variable <- factor(df$Variable, levels = c('Landings', 'Discards'), ordered = TRUE)
+  if (discardsAllZero) df$Variable <- droplevels(df$Variable)
 
   uinfo <- .MassUnitInfo(object, stockNames, units, 'Weight', 'Removals')
   df$Value <- df$Value * uinfo$factor

@@ -36,8 +36,9 @@ object, see \link[=hist-class]{hist}.}
 \item{\code{PPD}}{List containing posterior predictive distribution outputs and
 diagnostics generated during the MSE.}
 
-\item{\code{Log}}{Internal list storing MSE diagnostics and execution metadata.
-Not intended for direct user access.}
+\item{\code{Log}}{\code{list}. Internal named list storing diagnostics, warnings, and
+assumptions recorded during processing. See \code{\link[=Log]{Log()}}. Not intended for
+direct user access.}
 
 \item{\code{Misc}}{Named list for carrying arbitrary additional objects alongside
 the MSE results.

@@ -8,7 +8,8 @@
   OM,
   populate = TRUE,
   fit_stock_targeting = TRUE,
-  generate_stock_targeting = TRUE
+  generate_stock_targeting = TRUE,
+  record_assumption = TRUE
 )
 }
 \arguments{
@@ -24,6 +25,12 @@ standardizing? Default \code{TRUE}.}
 after fitting? Default \code{TRUE}. Ignored (with a warning) if
 \code{fit_stock_targeting = FALSE}, since \code{\link[=GenerateStockTargeting]{GenerateStockTargeting()}} requires
 fitted targeting parameters.}
+
+\item{record_assumption}{\code{logical(1)}. Record the effort-standardization as
+an \code{"assumption"} in \code{OM@Log}? Default \code{TRUE}. Set \code{FALSE} when the
+differing per-stock effort is structural to how \code{OM} was built (e.g. a
+sex-structured \code{ImportSS()} model, where per-sex effort naturally differs
+due to sex-specific selectivity) rather than an unexpected input.}
 }
 \value{
 The input \code{OM} object with:

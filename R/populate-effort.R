@@ -97,8 +97,24 @@ PopulateEffort <- function(Effort,
   Effort@TripsScalar   <- .PopulateEffortTrips(Effort@TripsScalar, nSim, Years, HistYears, "TripsScalar")
   Effort@AnglerPerTrip <- .PopulateEffortTrips(Effort@AnglerPerTrip, nSim, Years, HistYears, "AnglerPerTrip")
   Effort@Theta         <- .PopulateTheta(Effort@Theta, nSim, HistYears)
+  Effort@StockTargetingLambda <-
+    .PopulateStockTargetingLambda(Effort@StockTargetingLambda, nSim, HistYears)
 
   Effort
+}
+
+# Resolved like Theta, but validated first: a negative or non-finite multiplier
+# would otherwise be silently coerced to 1 when the effort solver reads it.
+.PopulateStockTargetingLambda <- function(x, nSim, HistYears) {
+  if (is.null(x)) return(x)
+
+  if (any(!is.finite(x)) || any(x < 0))
+    cli::cli_abort(c(
+      "x" = "{.arg StockTargetingLambda} must be finite and non-negative.",
+      "i" = "It multiplies the derived stock-targeting resistance: {.val {1}} keeps the derived value, {.val {0}} removes it."
+    ))
+
+  .StructurePar(x, nSim = nSim, Years = HistYears[1])
 }
 
 # Normalises a Sim x Year effort-behaviour array (TripsScalar/AnglerPerTrip):

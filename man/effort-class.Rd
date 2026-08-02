@@ -53,6 +53,12 @@ internally) or span the full model time series. Used by bag-limit
 management procedures to model the distribution of retained catch
 across trips at a given mean catch rate. See \code{\link[=Effort]{Effort()}}.}
 
+\item{\code{StockTargetingLambda}}{\code{numeric} array or \code{NULL}. Multiplier on this
+fleet's resistance to changing its stock-targeting mix (\verb{Sim x Year}).
+Multi-stock TAC solving only. \code{1} (default) leaves the internally
+derived value unchanged; \code{0} removes the resistance; larger values make
+the fleet hold its existing mix more strongly. See \code{\link[=Effort]{Effort()}}.}
+
 \item{\code{Misc}}{\code{list}. Miscellaneous additional inputs.}
 }}
 

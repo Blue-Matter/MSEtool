@@ -86,9 +86,6 @@
 .ResolveCatchBiomass <- function(Proj, stocks, x, TSIndex, fl, nArea, Real_Catch_Number,
                                 type = c('Landings', 'Discards')) {
   type <- match.arg(type)
-  # Landings use the retention-weighted schedule; Discards use the
-  # selectivity-weighted schedule -- see the equivalent note in
-  # .GenHistDataCatch().
   weight_slot <- if (type == 'Landings') 'WeightFleetRetained' else 'WeightFleetSelected'
   purrr::map2(Real_Catch_Number, Proj@OM@Fleet[stocks], \(catch_n, FleetList) {
     fleet       <- FleetList[[fl]]
@@ -108,7 +105,17 @@
 .ResolveSelectivity <- function(Proj, stocks, StockNames, Obs, FleetNames, fl,
                                x, TSIndex, nArea) {
   SelectivityAtAge <- Obs@Selectivity
-  
+
+  if (is.list(SelectivityAtAge)) {
+    return(purrr::map(SelectivityAtAge, \(stock) {
+      x_sim <- pmin(x, dim(stock)[1])
+      stock[x_sim, , TSIndex, drop = FALSE] |>
+        AddDimension("Area") |>
+        DropDimension(c("Sim", "Year")) |>
+        ExtendAreas(Areas = seq_len(nArea))
+    }))
+  }
+
   if (is.character(SelectivityAtAge)) {
     switch(SelectivityAtAge,
            Biomass = purrr::map(seq_along(stocks), \(st) {
@@ -116,21 +123,14 @@
              array(1, c(length(AgeClasses), nArea),
                    dimnames = list(Age = AgeClasses, Area = seq_len(nArea)))
            }) |> setNames(StockNames[stocks]),
-           
+
            SBiomass = purrr::map(seq_along(stocks), \(st) {
              Proj@OM@Stock[[stocks[st]]]@Maturity@MeanAtAge[x, , TSIndex, drop = FALSE] |>
                AddDimension("Area") |>
                DropDimension(c("Sim", "Year")) |>
                ExtendAreas(Areas = seq_len(nArea))
            }) |> setNames(StockNames[stocks]),
-           
-           Obs = purrr::map(Obs@Selectivity, \(stock) {
-             stock[x, , TSIndex, drop = FALSE] |>
-               AddDimension("Area") |>
-               DropDimension(c("Sim", "Year")) |>
-               ExtendAreas(Areas = seq_len(nArea))
-           }),
-           
+
            cli::cli_abort("Unknown selectivity type: {.val {SelectivityAtAge}}", .internal = TRUE)
     )
   } else {

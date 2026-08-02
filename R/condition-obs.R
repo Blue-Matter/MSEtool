@@ -10,9 +10,14 @@
 #'
 #' @param Hist Operating model history object
 #' @param silent Logical; if `TRUE`, suppress progress bars and status messages
+#' @param EstimateBeta Logical. Estimate the index hyperstability/
+#'   hyperdepletion parameter `Beta` by regression? If `FALSE`, `Beta` is
+#'   fixed at `1` for indices without a user-supplied `Beta`. Default `TRUE`
+#'   for this internal function; callers normally pass through
+#'   `SimControl()`'s own default of `FALSE`.
 #'
 #' @keywords internal
-.ConditionObs <- function(Hist, silent=FALSE) {
+.ConditionObs <- function(Hist, silent=FALSE, EstimateBeta=TRUE) {
   
   HistYears <- Years(Hist,'H')
   ProjYears <- Years(Hist,'P')
@@ -50,11 +55,11 @@
     Hist <- .ConditionObsCatch(Hist, FisheryData, HistYears, ProjYears, stocks, i,
                                type = 'Discards')
     
-    Hist <- .ConditionObsIndex(Hist, FisheryData, HistYears, ProjYears, stocks, 
-                               i, type = 'CPUE')
-    
-    Hist <- .ConditionObsIndex(Hist, FisheryData, HistYears, ProjYears,  stocks, 
-                               i, type = 'Survey')
+    Hist <- .ConditionObsIndex(Hist, FisheryData, HistYears, ProjYears, stocks,
+                               i, type = 'CPUE', EstimateBeta = EstimateBeta)
+
+    Hist <- .ConditionObsIndex(Hist, FisheryData, HistYears, ProjYears,  stocks,
+                               i, type = 'Survey', EstimateBeta = EstimateBeta)
     
     Hist <- .ConditionObsComp(Hist, FisheryData, HistYears, ProjYears,  stocks, 
                               i, type = 'LandingsAtAge')

@@ -79,3 +79,73 @@ test_that("Seasonal OM completes Simulate()+Project() without error", {
 
   expect_s4_class(mse, "mse")
 })
+
+test_that("back-calculated effort reproduces requested effort when maxF does not bind", {
+  skip_on_cran()
+  # The historical period takes effort as given, so back-calculating it from the
+  # realised F must return the same numbers unless the maxF clamp binds. Covers
+  # the multi-area sum and the density weighting.
+  data(SeasonalSpatialOM, envir = environment())
+  om <- SeasonalSpatialOM
+  om@nSim <- 2
+  expect_gt(nArea(om), 1L)
+
+  om@Control$BackCalcEffort <- FALSE
+  set.seed(1)
+  hist_off <- Simulate(om, silent = TRUE)
+
+  om@Control$BackCalcEffort <- TRUE
+  set.seed(1)
+  hist_on <- Simulate(om, silent = TRUE)
+
+  expect_equal(hist_on@Effort, hist_off@Effort, tolerance = 1e-10)
+})
+
+test_that("back-calculated effort keeps an unachievable TAC off the maxEffort cap", {
+  skip_on_cran()
+  # CurrentCatch on a stock that cannot sustain it drives effort to maxEffort;
+  # the back-calculation reports the effort matching the capped F instead.
+  data(MultiStockOM, envir = environment())
+  om <- MultiStockOM
+  om@nSim <- 2
+  set.seed(1)
+  hist <- Simulate(om, silent = TRUE)
+
+  hist@OM@Control$BackCalcEffort <- TRUE
+  mse <- Project(hist, MPs = "CurrentCatch", parallel = FALSE, silent = TRUE)
+
+  expect_true(all(is.finite(mse@Effort)))
+  expect_lt(max(mse@Effort), 1e6)
+})
+
+test_that("implementation error applies to fleet-by-area effort advice", {
+  skip_on_cran()
+  # Imp@Effort@Error is a per-fleet multiplier on effort magnitude, so advice
+  # given as a [nFleet x nArea] matrix must be scaled the same as the
+  # equivalent per-fleet vector - it used to be skipped entirely.
+  data(SeasonalSpatialOM, envir = environment())
+  om <- SeasonalSpatialOM
+  om@nSim <- 2
+  set.seed(1)
+  hist <- Simulate(om, silent = TRUE)
+
+  nF <- length(FleetNames(hist)); nA <- nArea(hist); ns <- nSim(hist)
+  AllY <- Years(hist@OM)
+  Err <- array(0.5, dim = c(ns, length(AllY)),
+               dimnames = list(Sim = seq_len(ns), Year = as.character(AllY)))
+  for (fl in seq_len(nF)) hist@OM@Imp[[1]][[fl]]@Effort@Error <- Err
+
+  EffVec <- function(Data) Advice(Effort = rep(0.4, 1), EffType = "Abs")
+  EffMat <- function(Data) Advice(Effort = matrix(0.4 / 3, nrow = 1, ncol = 3),
+                                  EffType = "Abs")
+  class(EffVec) <- class(EffMat) <- "mp"
+  assign("EffVec", EffVec, envir = globalenv())
+  assign("EffMat", EffMat, envir = globalenv())
+  on.exit(rm("EffVec", "EffMat", envir = globalenv()), add = TRUE)
+
+  e_vec <- as.vector(Project(hist, MPs = "EffVec", silent = TRUE)@Effort)
+  e_mat <- as.vector(Project(hist, MPs = "EffMat", silent = TRUE)@Effort)
+
+  expect_equal(e_mat, e_vec, tolerance = 1e-8)
+  expect_equal(e_vec[1], 0.2, tolerance = 1e-8)
+})

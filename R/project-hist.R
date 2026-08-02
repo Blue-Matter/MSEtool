@@ -10,7 +10,9 @@
 #'   all MPs attached to `Hist` are used. MP names must correspond to
 #'   functions available in the current environment. See `.CheckMPClass()` for
 #'   validation details.
-#' @param parallel Logical. Not currently used. Default `FALSE`. 
+#' @param parallel Logical. If `TRUE`, projects each MP in parallel using a
+#'   `future` plan established by [SetupParallel()]. Errors if
+#'   `TRUE` and no parallel plan is active. Default `FALSE`.
 #' @param silent Logical. Suppress progress messages if `TRUE`. Default
 #'   `FALSE`.
 #' @param nSim Integer. If provided, reduces the number of simulations to
@@ -63,23 +65,48 @@
   Proj@Log <- list()
 
   mp <- 1 # initialise for debugging
-  
-  if (!silent) 
+
+  if (!silent)
     cli::cli_alert('Projecting {.val {nMPs}} MP{?s}')
-  
-  for (mp in seq_along(MPs)) {
-    MPName <- MPs[mp]
-    MPfunction <- MSE@MPs[[MPName]]
-    
-    MSE <- .ProjectMP(Proj, 
-                      MSE,
-                      MPName,
-                      MPfunction,
-                      mp,
-                      YearsHist,
-                      YearsProj,
-                      silent)
-    
+
+  parallel <- CheckParallel(parallel)
+
+  if (parallel && nMPs > 1) {
+    CheckPackage('furrr')
+    StockNamesMSE <- StockNames(MSE)
+    FleetNamesMSE <- FleetNames(MSE)
+
+    results <- furrr::future_map(
+      seq_along(MPs), \(mp) {
+        .ProjectMPCompute(Proj, MPs[mp], MSE@MPs[[MPs[mp]]], YearsHist, YearsProj,
+                         StockNamesMSE, FleetNamesMSE, silent = TRUE)
+      },
+      .options = furrr::furrr_options(
+        globals  = c('Proj', 'MPs', 'MSE', 'YearsHist', 'YearsProj',
+                     'StockNamesMSE', 'FleetNamesMSE'),
+        packages = "MSEtool",
+        seed     = 101
+      )
+    )
+
+    for (mp in seq_along(MPs))
+      MSE <- .MergeMPResult(MSE, results[[mp]], MPs[mp], mp, YearsHist, YearsProj, silent)
+
+  } else {
+    for (mp in seq_along(MPs)) {
+      MPName <- MPs[mp]
+      MPfunction <- MSE@MPs[[MPName]]
+
+      MSE <- .ProjectMP(Proj,
+                        MSE,
+                        MPName,
+                        MPfunction,
+                        mp,
+                        YearsHist,
+                        YearsProj,
+                        silent)
+
+    }
   }
 
 

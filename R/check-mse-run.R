@@ -12,7 +12,9 @@
 #' @param ErrorMessage Character or condition. The error message if `Error`
 #'   is `TRUE`.
 #'
-#' @return The `Proj` object.
+#' @return A list with `Proj` (the `Proj` object) and `AllFailed` (logical -
+#'   `TRUE` if every simulation logged a failure at some point during the
+#'   run, meaning the `MSE` object should not be updated for this MP).
 #' @keywords internal
 .CheckMSERun <- function(Proj, MSE, MPName, StartTime, EndTime, Error, ErrorMessage,
                         silent = FALSE) {
@@ -24,7 +26,7 @@
   if (Error) {
     cli::cli_alert_warning('{.val {MPName}} failed:')
     cli::cli_alert_danger(as.character(ErrorMessage))
-    return(Proj)
+    return(list(Proj = Proj, AllFailed = TRUE))
   }
 
   # Check for simulation-level failures via Log - entries are tagged with
@@ -48,11 +50,13 @@
         cli::cli_alert_success('{.val {MPName}}')
       }
     }
-    return(Proj)
+    return(list(Proj = Proj, AllFailed = FALSE))
   }
 
+  AllFailed <- nFailed == Proj@OM@nSim
+
   cli::cli_text('')
-  if (nFailed == Proj@OM@nSim) {
+  if (AllFailed) {
     cli::cli_alert_danger(
       c('x'='ERROR: {.val {MPName}} failed for all simulations.
            `MSE` object not updated for this MP.')
@@ -93,5 +97,5 @@
   cli::cli_alert_info('Writing error log to {.file {logFile}}')
   cli::cli_text('')
 
-  Proj
+  list(Proj = Proj, AllFailed = AllFailed)
 }

@@ -4,13 +4,13 @@
 \alias{GenMultiStockRecDevs}
 \title{Generate Correlated Multi-Stock Recruitment Deviations}
 \usage{
-GenMultiStockRecDevs(OM, TruncSD = 2, silent = FALSE)
+GenMultiStockRecDevs(OM, TruncSD = 3, silent = FALSE)
 }
 \arguments{
 \item{OM}{An operating model object of class \link[=om-class]{om}.}
 
-\item{TruncSD}{Numeric scalar. Number of standard deviations at which to
-truncate the innovation distribution. Defaults to \code{2}.}
+\item{TruncSD}{Numeric scalar. Number of standard deviations at which the
+log deviations are bounded, as in \code{\link[=GenRecDevs]{GenRecDevs()}}. Defaults to \code{3}.}
 
 \item{silent}{\code{logical(1)} Display messages?}
 }
@@ -24,38 +24,33 @@ multivariate lognormal AR(1) process, preserving both cross-stock
 covariance and temporal autocorrelation.
 }
 \details{
-Deviations are simulated in log-space:
+The AR(1) process runs on a unit-variance latent scale that carries the
+cross-stock correlation:
 
 \deqn{
-  Z_t = \mu + \Phi (Z_{t-1} - \mu) + \epsilon_t
+  Z_t = \Phi Z_{t-1} + \epsilon_t, \quad
+  \epsilon_t \sim MVN(0, \Sigma_\epsilon)
 }
 
-\deqn{
-  R_t = \exp(Z_t)
-}
+where \eqn{\Phi} is a diagonal matrix of lag-1 autocorrelation coefficients
+and \eqn{\Sigma_\epsilon} is derived by \code{\link[=CalcInnovationCov]{CalcInnovationCov()}} from the
+cross-stock correlation matrix.
 
-where:
-\itemize{
-\item \eqn{\mu} is a bias-corrected mean
-\item \eqn{\Phi} is a diagonal matrix of lag-1 autocorrelation coefficients
-\item \eqn{\epsilon_t \sim MVN(0, \Sigma_\epsilon)}
-}
-
-The innovation covariance matrix \eqn{\Sigma_\epsilon} is derived from the
-stationary covariance \eqn{\Sigma_Z} using \code{\link[=CalcInnovationCov]{CalcInnovationCov()}}.
+Each stock's latent series is then mapped onto a truncated normal marginal
+via the probability integral transform, scaled to that stock's standard
+deviation, and bias-corrected so that mean recruitment multiplier is 1.
+This is the same transform \code{\link[=GenRecDevs]{GenRecDevs()}} applies, so bounded and
+correlated deviations follow the same convention.
 
 The function proceeds as follows for each simulation:
 \enumerate{
-\item \strong{Extract stock-specific parameters} (\code{sd}, \code{ac}, \code{mu})
+\item \strong{Extract stock-specific parameters} (\code{sd}, \code{ac})
 \item \strong{Impute missing historical deviations} using univariate AR(1)
 \item \strong{Estimate stationary covariance} \eqn{\Sigma_Z} from historical log deviations
-\item \strong{Compute innovation covariance} via \code{\link[=CalcInnovationCov]{CalcInnovationCov()}}
+\item \strong{Compute latent innovation covariance} via \code{\link[=CalcInnovationCov]{CalcInnovationCov()}}
 \item \strong{Simulate projection deviations} using a multivariate AR(1) process
 }
-
-Truncation is applied to the innovation term \eqn{\epsilon_t}, not the
-deviations themselves.
 }
 \seealso{
-\code{\link[=CalcInnovationCov]{CalcInnovationCov()}}, \code{.AddAutoCorrelation()}
+\code{\link[=GenRecDevs]{GenRecDevs()}}, \code{\link[=CalcInnovationCov]{CalcInnovationCov()}}
 }

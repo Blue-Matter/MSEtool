@@ -33,13 +33,24 @@
 #' to `Error`.
 #'
 #' ## Compliance
-#' 
-#' For `TAC`/`Effort`, only meaningful for multi-stock/multi-complex OMs, 
+#'
+#' For `TAC`/`Effort`, only meaningful for multi-stock/multi-complex OMs,
 #' where it governs how a fleet reconciles competing TAC or effort
-#' recommendations across stocks. 
-#' 
+#' recommendations across stocks.
+#'
+#' For `TAC` it sets how heavily exceeding this complex's TAC is penalised
+#' relative to falling short of it: `0` makes exceeding it free, `0.5` weights
+#' the two equally, and values approaching `1` act as a hard choke. Unset
+#' defaults to `0.7`, penalising overshoot about 2.3 times more than
+#' undershoot, since a TAC is a cap rather than a target. See [Imp()].
+#'
+#' Values close to `1` are not recommended: the penalty on falling short is
+#' bounded while the penalty on exceeding is not, so a sufficiently large
+#' weight makes zero effort the cheapest option and the fleet stops fishing
+#' altogether.
+#'
 #' For `Size`, it is the fraction of the fleet adopting a newly-advised size
-#' regulation. 
+#' regulation.
 #' 
 #' @return
 #' - `ImpSlot()` returns a new [impslot-class] object.

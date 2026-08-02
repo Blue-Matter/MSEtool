@@ -393,7 +393,9 @@ gap at the historical/projection boundary.
 panel(s) (see \code{\link[=Removals]{Removals()}} for the summed total): for \link[=hist-class]{hist}
 objects they are distinguished by color; for \link[=mse-class]{mse} objects color is
 used for MP and linetype distinguishes Landings (solid) from Discards
-(dashed). For \link[=data-class]{data} objects (see \code{object} above) they're summed
+(dashed). If \code{Discards()} is all zero (or essentially so) across the
+plotted selection, the Discards series is dropped and only Landings is
+shown. For \link[=data-class]{data} objects (see \code{object} above) they're summed
 into a single \code{Landings + Discards} series instead, since there's no
 color channel to spare.
 

@@ -60,6 +60,11 @@
 #'   not export the numeric scale of its population numbers (e.g. individuals
 #'   vs. thousands) as metadata, so this cannot be inferred and must be
 #'   supplied by the user if not `1` (absolute numbers of fish). Default `1`.
+#' @param AllocationYears Integer specifying the number of most recent
+#'   historical years used to calculate `OM@Allocation`: each fleet's share of
+#'   total removals biomass (landings + discards), used to split an aggregate
+#'   TAC across fleets under multi-fleet TAC-based MPs. Averaged over this
+#'   many years ending at the last historical year. Default `3`.
 #' @param silent Logical; if `TRUE`, suppress informational output during import.
 #' @param Populate Logical; if `TRUE` (default), populate the OM using
 #'   `PopulateOM()`. If `FALSE`, return the partially constructed OM.
@@ -107,6 +112,7 @@ ImportSS <- function(SSDir,
                      LengthUnits = "cm",
                      WeightUnits = "kg",
                      R0Units = 1,
+                     AllocationYears = 3,
                      silent = FALSE,
                      Populate = TRUE,
                      ...) {
@@ -227,7 +233,7 @@ ImportSS <- function(SSDir,
   # OM@Imp - TODO
 
   # Allocation
-  OM <- .ProcessSSAllocation(OM, RepList, StockName, FleetNames)
+  OM <- .ProcessSSAllocation(OM, RepList, StockName, FleetNames, AllocationYears)
   OM <- .ProcessEFactor(OM)
 
   
@@ -236,7 +242,11 @@ ImportSS <- function(SSDir,
   # OM@Relations
   
   if (Populate) {
-    out <- try(PopulateOM(OM), silent = TRUE)
+    out <- if (nStock > 1) {
+      try(.StandardizeEffort(OM, populate = TRUE, record_assumption = FALSE), silent = TRUE)
+    } else {
+      try(PopulateOM(OM), silent = TRUE)
+    }
     if (inherits(out, "om")) {
       return(out)
     }
@@ -246,21 +256,20 @@ ImportSS <- function(SSDir,
   OM
 }
 
-.ProcessSSAllocation <- function(OM, RepList, StockName, FleetNames) {
+.ProcessSSAllocation <- function(OM, RepList, StockName, FleetNames, AllocationYears = 3) {
   ComplexName <- names(OM@Data)
   Allocation <- MakeNamedList(ComplexName)
-  AgeClasses <- .GetSSAgeClasses(RepList[[1]])
-  YearsList <- .GetSSYears(RepList[[1]], pYear = 1)
 
-  CatchFrac <- RepList[[1]]$catage |>
-    .DropXXCols() |>
-    dplyr::filter(Yr == max(Yr), Type == 'dead') |>
-    tidyr::pivot_longer(as.character(AgeClasses)) |>
+  Catch <- RepList[[1]]$catch
+  MaxYr <- max(Catch$Yr)
+  YrRange <- (MaxYr - AllocationYears + 1):MaxYr
+
+  CatchFrac <- Catch |>
+    dplyr::filter(Yr %in% YrRange) |>
     dplyr::group_by(Fleet) |>
-    dplyr::summarise(Catch = sum(value), .groups = "drop") |>
-    dplyr::mutate(Catch = Catch / sum(Catch)) 
-    
-    
+    dplyr::summarise(Catch = sum(dead_bio), .groups = "drop") |>
+    dplyr::mutate(Catch = Catch / sum(Catch))
+
   nFleet <- length(FleetNames)
 
   Allocation[[1]] <- array(CatchFrac$Catch,
@@ -270,7 +279,7 @@ ImportSS <- function(SSDir,
                         Fleet = FleetNames
                       )
   )
-  
+
   OM@Allocation <- Allocation
   OM
 }

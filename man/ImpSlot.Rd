@@ -61,6 +61,17 @@ For \code{TAC}/\code{Effort}, only meaningful for multi-stock/multi-complex OMs,
 where it governs how a fleet reconciles competing TAC or effort
 recommendations across stocks.
 
+For \code{TAC} it sets how heavily exceeding this complex's TAC is penalised
+relative to falling short of it: \code{0} makes exceeding it free, \code{0.5} weights
+the two equally, and values approaching \code{1} act as a hard choke. Unset
+defaults to \code{0.7}, penalising overshoot about 2.3 times more than
+undershoot, since a TAC is a cap rather than a target. See \code{\link[=Imp]{Imp()}}.
+
+Values close to \code{1} are not recommended: the penalty on falling short is
+bounded while the penalty on exceeding is not, so a sufficiently large
+weight makes zero effort the cheapest option and the fleet stops fishing
+altogether.
+
 For \code{Size}, it is the fraction of the fleet adopting a newly-advised size
 regulation.
 }

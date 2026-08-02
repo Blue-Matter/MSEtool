@@ -27,8 +27,6 @@
                               FleetNames,
                               type=c('CPUE', 'Survey')) {
   
-  # TODO hyperstability Beta not functional yet - ignored
-  
   type      <- match.arg(type)
   IndexData <- slot(Proj@Data[[x]][[i]], type)
   
@@ -80,63 +78,129 @@
       }
     }
     
-    # simulate data
-    if (!is.na(IndexData@Timing[fl]) && IndexData@Timing[fl] != 0)
-      cli::cli_alert_warning(
-        "`Index@Timing` currently not supported. Calculating from beginning of time step"
-      )
-    
-    SelectivityAtAgeList <- .ResolveSelectivity(
-      Proj, stocks, StockNames, Obs=IndexObs, FleetNames, fl, x, TSIndex, nArea
+    timing <- if (length(IndexData@Timing) >= fl) IndexData@Timing[fl] else NA_real_
+
+    real_nom_index <- .CalcNomIndex(
+      Number_List      = Real_Pop_Number,
+      object           = Proj,
+      stocks           = stocks,
+      fleet            = IndexData@Name[fl],
+      IndexObs         = IndexObs,
+      Years            = DataYear,
+      SelectivityAtAge = IndexObs@Selectivity,
+      sim              = x,
+      timing           = timing,
+      TSIndex          = TSIndex,
+      Units            = IndexData@Units[fl]
     )
     
-    IndexAreas <- IndexObs@Areas %||% seq_len(nArea)
-    
-    Real_Pop_Number_Selected <- purrr::map2(
-      Real_Pop_Number, SelectivityAtAgeList,
-      \(num, sel) {
-        ArrayMultiply(
-          num[, IndexAreas, drop = FALSE],
-          sel[, IndexAreas, drop = FALSE]
-        ) |> SumOverArea()
-      }
-    )
-    
-    Units <- IndexData@Units[fl]
-    
-    real_nom_index <- switch(Units,
-                             Number = purrr::map_dbl(Real_Pop_Number_Selected, sum) |> sum(),
-                             
-                             Biomass = {
-                               WeightAtAgeList <- purrr::map(Proj@OM@Stock[stocks], \(stock) {
-                                 wght <- stock@Weight@MeanAtAge
-                                 dd <- dim(wght)
-                                 x_sim <- pmin(x, dd[1])
-                                 wght[x_sim, , TSIndex, drop = FALSE] |>
-                                   DropDimension(c("Sim", "Year"))
-                               })
-                               purrr::map2(Real_Pop_Number_Selected, WeightAtAgeList, ArrayMultiply) |>
-                                 purrr::map(sum) |>
-                                 List2Array("Stock") |>
-                                 sum()
-                             },
-                             
-                             Recruitment = purrr::map_dbl(Real_Pop_Number_Selected, \(pop_n) pop_n[1]) |> sum(),
-                             
-                             cli::cli_abort(
-                               paste("Only {.val Biomass}, {.val Number}, and {.val Recruitment} are",
-                                     "currently supported for {.val Units} in {.val Obs@{type}}"),
-                               .internal = TRUE
-                             )
-    )
-    
-    NewValue[, fl] <- real_nom_index * .ArraySubsetYear(IndexObs@Error, DataYear)[x] * IndexObs@Efficiency[x]
+    # min(x, length(...)) recycles a scalar Beta across every sim
+    Beta <- if (is.null(IndexObs@Beta)) 1 else IndexObs@Beta[min(x, length(IndexObs@Beta))]
+
+    NewValue[, fl] <- real_nom_index^Beta * .ArraySubsetYear(IndexObs@Error, DataYear)[x] * IndexObs@Efficiency[x]
     NewCV[, fl] <- .ResolveCV(Proj, type, i, fl, TSIndex, IndexData, DataYear)
   }
   
   IndexData@Value <- abind::abind(Value, NewValue, along = 1, use.dnns = TRUE)
   if (!is.null(IndexData@CV))
     IndexData@CV <- abind::abind(CV, NewCV, along = 1, use.dnns = TRUE)
-  
+
   IndexData
+}
+
+.GenProjDataIndexAll <- function(Proj, DataYear, YearsAll, i, stocks, StockNames,
+                                 FleetNames, nSim, type = c('CPUE', 'Survey')) {
+  type <- match.arg(type)
+
+  IndexData1 <- slot(Proj@Data[[1]][[i]], type)
+  unchanged  <- EmptyObject(IndexData1) || DataYear %in% dimnames(IndexData1@Value)[[1]]
+  if (unchanged)
+    return(purrr::map(Proj@Data, \(DataList) slot(DataList[[i]], type)))
+
+  TSIndex    <- match(DataYear, YearsAll)
+  nArea      <- nArea(Proj)
+  nFleet     <- ncol(IndexData1@Value)
+  FleetIndex <- match(IndexData1@Name, names(Proj@OM@Obs[[i]]))
+
+  if (length(FleetIndex) != nFleet)
+    cli::cli_abort(
+      "Mismatch in number of fleets in `Obs` and `Data[[x]]@{type}`",
+      .internal = TRUE
+    )
+
+  IndexData1 <- .ResolveUnits(IndexData1, nFleet, valid = c("Biomass", "Number", "Recruitment"))
+
+  Real_Pop_Number_All <- purrr::map(Proj@Number[stocks], \(stock_n) {
+    stock_n[, , TSIndex, seq_len(nArea), drop = FALSE] |> abind::adrop(drop = 3)
+  })
+
+  NewValueAll <- matrix(NA_real_, nSim, nFleet)
+  NewCVAll    <- matrix(NA_real_, nSim, nFleet)
+  omData      <- Proj@OM@Data[[i]]
+
+  for (fl in seq_len(nFleet)) {
+    IndexObs <- slot(Proj@OM@Obs[[i]][[FleetIndex[fl]]], type)
+    if (EmptyObject(IndexObs)) next
+    if (is.null(IndexObs@Areas)) IndexObs@Areas <- seq_len(nArea)
+
+    hasOMVal <- !is.null(omData) &&
+      !is.null(slot(omData, type)@Value) &&
+      nrow(slot(omData, type)@Value) >= TSIndex &&
+      ncol(slot(omData, type)@Value) >= fl
+
+    if (hasOMVal) {
+      for (x in seq_len(nSim)) {
+        Value_x <- slot(Proj@Data[[x]][[i]], type)@Value
+        if (all(!is.finite(utils::tail(Value_x[, fl], 5)))) next
+        NewValueAll[x, fl] <- slot(omData, type)@Value[TSIndex, fl]
+        NewCVAll[x, fl]    <- .ResolveCV(Proj, type, i, fl, TSIndex,
+                                        slot(Proj@Data[[x]][[i]], type), DataYear)
+      }
+      next
+    }
+
+    timing <- if (length(IndexData1@Timing) >= fl) IndexData1@Timing[fl] else NA_real_
+
+    for (x in seq_len(nSim)) {
+      Value_x <- slot(Proj@Data[[x]][[i]], type)@Value
+      if (all(!is.finite(utils::tail(Value_x[, fl], 5)))) next
+
+      Pop_Number <- purrr::map(Real_Pop_Number_All, \(a)
+        a[x, , IndexObs@Areas %||% seq_len(nArea), drop = FALSE] |> abind::adrop(1)
+      )
+
+      real_nom_index <- .CalcNomIndex(
+        Number_List      = Pop_Number,
+        object           = Proj,
+        stocks           = stocks,
+        fleet            = IndexData1@Name[fl],
+        IndexObs         = IndexObs,
+        Years            = DataYear,
+        SelectivityAtAge = IndexObs@Selectivity,
+        sim              = x,
+        timing           = timing,
+        TSIndex          = TSIndex,
+        Units            = IndexData1@Units[fl]
+      )
+
+      Beta <- if (is.null(IndexObs@Beta)) 1 else IndexObs@Beta[min(x, length(IndexObs@Beta))]
+
+      NewValueAll[x, fl] <- real_nom_index^Beta * .ArraySubsetYear(IndexObs@Error, DataYear)[x] * IndexObs@Efficiency[x]
+      NewCVAll[x, fl]    <- .ResolveCV(Proj, type, i, fl, TSIndex,
+                                      slot(Proj@Data[[x]][[i]], type), DataYear)
+    }
+  }
+
+  purrr::map(seq_len(nSim), \(x) {
+    IndexData <- slot(Proj@Data[[x]][[i]], type)
+    IndexData <- .ResolveUnits(IndexData, nFleet, valid = c("Biomass", "Number", "Recruitment"))
+    NewValue <- .EmptyFleetArray(DataYear, IndexData@Name)
+    NewCV    <- .EmptyFleetArray(DataYear, IndexData@Name)
+    NewValue[1, ] <- NewValueAll[x, ]
+    NewCV[1, ]    <- NewCVAll[x, ]
+    IndexData@Value <- abind::abind(IndexData@Value, NewValue, along = 1, use.dnns = TRUE)
+    if (!is.null(IndexData@CV))
+      IndexData@CV <- abind::abind(IndexData@CV, NewCV, along = 1, use.dnns = TRUE)
+    IndexData
+  })
 }

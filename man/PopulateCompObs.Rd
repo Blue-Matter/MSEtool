@@ -48,8 +48,8 @@ If \code{\link[=EmptyObject]{EmptyObject()}} returns \code{TRUE} for \code{Comp}
 
 Otherwise the following slots are populated:
 
-\strong{\code{SampleSize}}: expanded to a named \verb{[nSim x nYear]} array via
-\code{\link[=PopulateObsScalar]{PopulateObsScalar()}}, covering all historical and projection years. A
+\strong{\code{SampleSize}}: expanded to a named \verb{[nSim x nYear]} array covering all
+historical and projection years. A
 length-2 input \code{c(lower, upper)} is interpreted as bounds of a Uniform
 distribution from which \code{nSim} values are drawn.
 
@@ -62,8 +62,8 @@ multinomial with \code{SampleSize} draws.
 \verb{(0, 1]}. If \code{NULL}, defaults silently to 1 (standard multinomial, no
 additional overdispersion). A length-2 input is treated as Uniform bounds.
 
-\strong{\code{Shift}}: expanded to a named \verb{[nSim x nYear x nBin]} array via
-\code{\link[=Extend]{Extend()}}, where \code{nBin = length(Bins)}. Accepted input forms:
+\strong{\code{Shift}}: expanded to a named \verb{[nSim x nYear x nBin]} array
+where \code{nBin = length(Bins)}. Accepted input forms:
 \itemize{
 \item \code{NULL} (default): no shift applied; slot remains \code{NULL}.
 \item Scalar: constant offset across all simulations, years, and bins.
@@ -74,8 +74,7 @@ change-point years.
 \item Full \verb{[nSim x nYear x nBin]} array.
 }
 
-In conditioning mode, \code{ESS}, \code{Theta}, and \code{Shift} are populated internally
-by \code{.ConditionObsComp()} and should not be set by the user.
+In conditioning mode, \code{ESS}, \code{Theta}, and \code{Shift} are populated internally.
 \subsection{Composition generation model}{
 
 After population, the fully-expanded slots are used by the simulation
@@ -93,5 +92,5 @@ OM-predicted composition vector for a given simulation, year, and fleet:
 }
 }
 \seealso{
-\code{\link[=CompObs]{CompObs()}}, \link[=compobs-class]{compobs}, \code{\link[=PopulateObs]{PopulateObs()}}, \code{.ConditionObsComp()}
+\code{\link[=CompObs]{CompObs()}}, \link[=compobs-class]{compobs}, \code{\link[=PopulateObs]{PopulateObs()}},
 }

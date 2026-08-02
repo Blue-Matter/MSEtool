@@ -12,6 +12,12 @@
 #'   removals (landings + discards)? Default `FALSE`.
 #' @param ConditionObs Logical. Condition the observation model on historical
 #'   fishery data? Default `TRUE`.
+#' @param EstimateBeta Logical. Estimate the index hyperstability/
+#'   hyperdepletion parameter `Beta` by regression when conditioning on real
+#'   data (see [IndicesObs()])? Default `FALSE`. If `FALSE`, `Beta` is fixed at `1`
+#'   unless the user already supplied a value for that index. If `TRUE`,
+#'   `Beta` is estimated per simulation; see `.EstimateBeta()` and
+#'   `Index_Obs@Misc$BetaFit` for diagnostics.
 #' @param GenerateData Logical. Generate historical fishery data from the
 #'   observation model? Default `TRUE`.
 #' @param MSYRefs Logical. Calculate MSY-based reference points (see
@@ -36,7 +42,7 @@
 #'
 #' # Skip MSY reference points and reference yield calculations
 #' SimControl(MSYRefs = FALSE)
-#'
+#' 
 #' # Calculate reference yield based on landings
 #' SimControl(RefLandings = TRUE)
 #'
@@ -50,6 +56,7 @@ SimControl <- function(DynamicUnfished = TRUE,
                        RefLandings     = FALSE,
                        RefRemovals     = FALSE,
                        ConditionObs    = TRUE,
+                       EstimateBeta    = FALSE,
                        GenerateData    = TRUE,
                        MSYRefs         = TRUE,
                        RefPoints       = TRUE,
@@ -68,6 +75,7 @@ SimControl <- function(DynamicUnfished = TRUE,
     RefLandings     = RefLandings,
     RefRemovals     = RefRemovals,
     ConditionObs    = ConditionObs,
+    EstimateBeta    = EstimateBeta,
     GenerateData    = GenerateData,
     MSYRefs         = MSYRefs,
     RefPoints       = RefPoints,

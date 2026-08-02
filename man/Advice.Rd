@@ -222,7 +222,7 @@ as a length \code{nFleet} vector); Note that in this case all fleets in the OM m
 have the same units for \code{Effort}).
 }
 \item numeric vector length \code{nFleet}: Fleet-specific relative or absolute Effort.
-\item numeric matrix: Fleet- and Area-specific relative or absolute Effort.
+\item numeric matrix: Fleet- and Area-specific absolute Effort.
 Must have \code{nFleet} rows and \code{nArea} columns.
 }
 }

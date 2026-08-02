@@ -14,7 +14,8 @@ CalcResidualStats(LogResiduals, nSeasons = 1)
 \value{
 A data.frame with columns:
 \itemize{
-\item \code{AC}: weighted lag-1 autocorrelation of residuals
+\item \code{AC}: lag-1 autocorrelation between consecutive observations, or \code{NA} when
+fewer than two observations are available
 \item \code{SD}: standard deviation of residuals
 \item \code{NA_Season}: a list length \code{nSim} with each element containing integer vector
 indicating which (if any) seasons have NA values for all years
@@ -25,9 +26,16 @@ Computes standard deviation and lag-1 autocorrelation of log residuals
 for a simulated index (\verb{sim x year}).
 }
 \details{
-Contiguous NA values are handled by splitting into separate groups
-for autocorrelation calculation within each simulation.
-Seasons with all NA values across all years are dropped.
+Seasons that are NA in every year are treated as seasons the index is never
+observed in, and are dropped; the seasons they occupy are recorded in
+\code{NA_Season} so \code{\link[=GenResiduals]{GenResiduals()}} can reproduce the same pattern in the
+projection. The remaining values are taken in time order, and \code{AC} is the
+lag-1 autocorrelation between \emph{consecutive observations} rather than
+consecutive time steps. For an index observed in a single season, that is
+the year-to-year autocorrelation. This matches how \code{\link[=ApplyAC]{ApplyAC()}} propagates
+the projection residuals, which steps from one observation to the next.
+
+\code{AC} may be negative, and is returned as estimated.
 }
 \seealso{
 \code{\link[=ApplyAC]{ApplyAC()}}, \code{\link[=GenResiduals]{GenResiduals()}}

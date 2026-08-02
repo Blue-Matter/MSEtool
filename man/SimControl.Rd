@@ -9,6 +9,7 @@ SimControl(
   RefLandings = FALSE,
   RefRemovals = FALSE,
   ConditionObs = TRUE,
+  EstimateBeta = FALSE,
   GenerateData = TRUE,
   MSYRefs = TRUE,
   RefPoints = TRUE,
@@ -29,6 +30,13 @@ removals (landings + discards)? Default \code{FALSE}.}
 
 \item{ConditionObs}{Logical. Condition the observation model on historical
 fishery data? Default \code{TRUE}.}
+
+\item{EstimateBeta}{Logical. Estimate the index hyperstability/
+hyperdepletion parameter \code{Beta} by regression when conditioning on real
+data (see \code{\link[=IndicesObs]{IndicesObs()}})? Default \code{FALSE}. If \code{FALSE}, \code{Beta} is fixed at \code{1}
+unless the user already supplied a value for that index. If \code{TRUE},
+\code{Beta} is estimated per simulation; see \code{.EstimateBeta()} and
+\code{Index_Obs@Misc$BetaFit} for diagnostics.}
 
 \item{GenerateData}{Logical. Generate historical fishery data from the
 observation model? Default \code{TRUE}.}

@@ -76,7 +76,9 @@ character vector of length \code{nFleet}. See \code{\link[=Advice]{Advice()}}.}
 
 \item{\code{Misc}}{Miscellaneous list. Will be passed to \code{Data@Misc} in following time steps.}
 
-\item{\code{Log}}{List used internally to store diagnostics}
+\item{\code{Log}}{\code{list}. Internal named list storing diagnostics, warnings, and
+assumptions recorded during processing. See \code{\link[=Log]{Log()}}. Not intended for
+direct user access.}
 }}
 
 \seealso{

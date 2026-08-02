@@ -1,7 +1,7 @@
 # Pack per-fleet, per-active-stock log-targeting weights into a flat
-# parameter vector for the optimiser. Unlike .PackParams() (used by
-# .OptEffortMultiStock()), effort is fixed here and excluded entirely from
-# the parameter vector - only log(Delta) is packed.
+# parameter vector for the optimiser. Effort is never a free parameter here -
+# under effort control the MP fixes it, and under TAC control the choke rule
+# derives it - so only log(Delta) is packed.
 .PackDelta <- function(Delta, active_fleets, active_stock_list) {
   compute <- function(fl, active_s) {
     if (length(active_s) == 0L) return(numeric(0))
@@ -15,9 +15,12 @@
 # partial re-optimisation never zeroes out untouched fleets/stocks. Each
 # optimised fleet's log-Delta is mean-centred (geometric-mean-of-1, see
 # .GetLogDeltaPrev()).
-.UnpackDelta <- function(params, active_fleets, active_stock_list, Delta_base) {
+.UnpackDelta <- function(params, active_fleets, active_stock_list, Delta_base,
+                        log_delta_cap = NULL) {
   Delta <- Delta_base
   pos   <- 1L
+  if (is.null(log_delta_cap))
+    log_delta_cap <- matrix(.LOG_DELTA_CAP, nrow(Delta_base), ncol(Delta_base))
 
   for (k in seq_along(active_fleets)) {
     fl       <- active_fleets[k]
@@ -27,7 +30,8 @@
 
     log_d <- params[pos:(pos + nA - 1L)]
     pos   <- pos + nA
-    log_d <- log_d - mean(log_d)
+    cap_s <- log_delta_cap[fl, active_s]
+    log_d <- pmin(pmax(log_d - mean(log_d), -cap_s), cap_s)
 
     Delta[fl, active_s] <- exp(log_d)
   }
@@ -35,9 +39,10 @@
   Delta
 }
 
-# Objective for .OptTargetingMultiStock(): negative concave-transformed
-# catch (so minimising this maximises catch), plus the same ridge penalty
-# on year-to-year targeting change used by .OptEffortMsObjective(). Catch
+# Shared objective for .OptTargetingMultiStock() (effort control) and
+# .OptEffortChoke() (TAC control): negative concave-transformed catch (so
+# minimising this maximises catch), plus a ridge penalty on year-to-year
+# targeting change. Catch
 # is landings + discards (biomass) - an interim proxy for catch value; see
 # .OptTargetingMultiStock()'s Details for how to switch to real
 # stock-specific prices later.
@@ -49,13 +54,21 @@
                                       Effort_fixed,
                                       Delta_base,
                                       log_delta_prev,
-                                      lambda_vec,
+                                      lambda_mat,
                                       active_fleets,
-                                      active_stock_list) {
+                                      active_stock_list,
+                                      log_delta_cap = NULL,
+                                      EffortFn = NULL) {
 
-  Delta <- .UnpackDelta(params, active_fleets, active_stock_list, Delta_base)
+  Delta <- .UnpackDelta(params, active_fleets, active_stock_list, Delta_base,
+                        log_delta_cap)
 
-  ProjTmp <- .WriteStateToProj(Proj, sim, TSIndex, Effort_fixed, Delta)
+  # Under effort control the MP fixes effort. Under TAC control effort follows
+  # from the targeting mix, via the per-complex root find and the compliance
+  # rule - `EffortFn` supplies it.
+  Effort <- if (is.null(EffortFn)) Effort_fixed else EffortFn(Delta)
+
+  ProjTmp <- .WriteStateToProj(Proj, sim, TSIndex, Effort, Delta)
 
   Temp <- .CalcFisheryDynamics(Hist = ProjTmp,
                               Years = Year,
@@ -83,10 +96,10 @@
     log_d_cur  <- log(pmax(Delta[fl, active_s], 1e-10))
     log_d_cur  <- log_d_cur - mean(log_d_cur)
     log_d_prev <- log_delta_prev[fl, active_s]
-    lambda_vec[fl] * sum((log_d_cur - log_d_prev)^2)
+    sum(lambda_mat[fl, active_s] * (log_d_cur - log_d_prev)^2)
   }
 
-  ridge_pen <- if (!any(lambda_vec > 0)) {
+  ridge_pen <- if (!any(lambda_mat > 0)) {
     0
   } else {
     purrr::map2_dbl(active_fleets, active_stock_list, fleet_ridge) |> sum()

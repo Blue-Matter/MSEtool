@@ -14,6 +14,7 @@
   DoCalcNumberNext = 1,
   DoCalcBiomass = 1,
   DoCalcOverallF = 1,
+  DoBackCalcEffort = 0,
   IdenticalSim = FALSE,
   debug = 0,
   clone = NULL
@@ -44,6 +45,14 @@ current time step, \code{0} skips.}
 
 \item{DoCalcOverallF}{Integer flag; \code{1} (default) calculates overall fishing
 mortality, \code{0} skips.}
+
+\item{DoBackCalcEffort}{Integer flag; \code{1} overwrites \code{Hist@Effort} with the
+effort implied by the F actually realised, \code{0} (default) leaves the
+requested effort. Unlike the other flags this defaults to \emph{off}: the effort
+solvers call this function thousands of times while probing, and rewriting
+effort underneath them would corrupt their finite differences whenever the
+\code{maxF} clamp binds. Enable it only on the calls that advance the
+simulation, via \code{.BackCalcEffortFlag()}.}
 
 \item{IdenticalSim}{Logical; if \code{TRUE}, computes only simulation 1 and
 broadcasts results to all simulations via \code{.CopyFirstSim}.}

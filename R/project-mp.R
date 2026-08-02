@@ -1,7 +1,7 @@
 
 # TODO
 # - apply Bioeconomic to Effort
-# - improve multi-stock TAC Effort allocation and optimization
+
 
 #' Project a `Hist` Object for a Single Management Procedure
 #'
@@ -30,21 +30,28 @@
                        MSE,
                        MPName,
                        MPfunction,
-                       mp = 1, 
-                       YearsHist, 
+                       mp = 1,
+                       YearsHist,
                        YearsProj,
                        silent=FALSE) {
-  
+
+  result <- .ProjectMPCompute(Proj, MPName, MPfunction, YearsHist, YearsProj,
+                              StockNames(MSE), FleetNames(MSE), silent)
+  .MergeMPResult(MSE, result, MPName, mp, YearsHist, YearsProj, silent)
+}
+
+
+.ProjectMPCompute <- function(Proj, MPName, MPfunction, YearsHist, YearsProj,
+                              StockNames, FleetNames, silent = FALSE) {
+
   ManagementYears <- .CalcManagementYears(YearsProj, Proj@OM@Interval)
   YearsAll        <- c(YearsHist, YearsProj)
-  StockNames      <- StockNames(MSE)
-  FleetNames      <- FleetNames(MSE)
   Areas           <- 1:nArea(Proj)
-  StartTime       <- Sys.time()  
-  
+  StartTime       <- Sys.time()
+
   # initialise for debugging convenience
   Year <- YearsProj[1]; ts <- 1
-  
+
   if (!silent)
     cli::cli_progress_bar(
       format = "Projecting MP {.val {MPName}} | Year {.val {cli::pb_extra$year}} ({cli::pb_current}/{cli::pb_total})",
@@ -121,12 +128,15 @@
                              .ApplyAdviceMiscToData(DataList, AdviceList)
     )
     
-    # Save Advice@Log to Proj@Log for each sim and stock; determine directly
-    # from AdviceSimList (not from the Log content) whether every sim/stock failed
+    # Save Advice@Log to Proj@Log for each sim and stock
     ExtractResult <- .ExtractAdviceLogs(AdviceSimList, Proj, Year, MPName)
     Proj <- ExtractResult$Proj
 
-    if (ExtractResult$AllFailed) break
+    if (ExtractResult$AllFailed) {
+      Error        <- TRUE
+      ErrorMessage <- sprintf("MP '%s' failed for all simulations (Year %d)", MPName, Year)
+      break
+    }
     
     # Save TAC and Effort
     Proj@Data <- purrr::map2(Proj@Data, AdviceSimList,\(DataList, AdviceList) {
@@ -161,33 +171,48 @@
     }
     
     if (Error) break
-    
+
     # Simulate Pop Dynamics for this Time Step
-    Proj <- .CalcFisheryDynamics(Proj, Year, clone=1)
-    
+    Proj <- .CalcFisheryDynamics(Proj, Year, clone=1,
+                                 DoBackCalcEffort = .BackCalcEffortFlag(Proj))
+
     # Compute Catch & Discards at Size for this Time Step
     Proj <- .CalcCatchAtSize(Proj, Years = Year)
-   
-  }
-  
-  EndTime <- Sys.time()
-  
-  Proj <- .CheckMSERun(Proj, MSE, MPName, 
-                      StartTime, EndTime, 
-                      Error, ErrorMessage,
-                      silent = silent)
-  
 
-  if (!Error) 
-    MSE <- .UpdateMSEObject(MSE, 
+  }
+
+  EndTime <- Sys.time()
+
+  list(Proj = Proj, Error = Error, ErrorMessage = ErrorMessage,
+       StartTime = StartTime, EndTime = EndTime,
+       StockNames = StockNames, FleetNames = FleetNames)
+}
+
+# Applies a completed .ProjectMPCompute() result to the shared `MSE` object:
+# runs .CheckMSERun()'s console/log reporting, writes the projected `Proj`
+# into MSE's `mp` slice via .UpdateMSEObject(), and merges Proj@Log into
+# MSE@Log. Kept sequential (called once per MP, in the main process, even
+# when the compute step ran in parallel workers) since it mutates the one
+# shared `MSE` object and is cheap relative to .ProjectMPCompute().
+.MergeMPResult <- function(MSE, result, MPName, mp, YearsHist, YearsProj, silent = FALSE) {
+
+  CheckResult <- .CheckMSERun(result$Proj, MSE, MPName,
+                              result$StartTime, result$EndTime,
+                              result$Error, result$ErrorMessage,
+                              silent = silent)
+  Proj  <- CheckResult$Proj
+  Error <- result$Error || CheckResult$AllFailed
+
+  if (!Error)
+    MSE <- .UpdateMSEObject(MSE,
                            Proj,
-                           MPName, 
-                           mp, 
-                           YearsHist, 
-                           YearsProj, 
-                           StockNames, 
-                           FleetNames)
-  
+                           MPName,
+                           mp,
+                           YearsHist,
+                           YearsProj,
+                           result$StockNames,
+                           result$FleetNames)
+
   for (type in c('error', 'warning', 'assumption')) {
     if (is.null(Proj@Log[[type]])) next
     MSE@Log[[type]] <- c(MSE@Log[[type]], Proj@Log[[type]])

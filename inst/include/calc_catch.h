@@ -65,11 +65,7 @@ inline void CalcCatch(
     Fd_ratio_buf.resize(nAgeFleetArea);
     
     for (int sim : Sims) {
-      
-      // temp vectors for age-vectorization calcs
-      std::vector<double> Z_age(nAge);
-      std::vector<double> N_dead_age(nAge);
-      
+
       const int sim_num   = sim_index<4>(sim, Num_st);
       const int sim_fi    = sim_index<5>(sim, Fi);
       const int sim_fd    = sim_index<5>(sim, Fd);

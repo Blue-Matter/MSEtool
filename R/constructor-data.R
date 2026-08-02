@@ -263,8 +263,9 @@ EffortData <- function(Name  = NULL,
 #'   historical mean or target level), length `nIndex`. Default `NULL`.
 #' @param RefCV `array` or `NULL`. Coefficients of variation for the reference
 #'   values, matching the dimensions of `Ref`. Default `NULL`.
-#' @param Timing `numeric`. Within-year timing of each observation as a
-#'   fraction of the year (0-1), length `nIndex`. Default `0`.
+#' @param Timing `numeric`. Timing of each observation as a fraction of the
+#'   time step (0-1), length `nIndex`. Simulated indices are decayed by the mortality
+#'   accrued up to that point. Default `0`, the start of the time step.
 #' @param Selectivity An array or character specification mapping each index
 #'   to a fleet selectivity or defining an independent selectivity curve, or
 #'   `NULL`. Default `NULL`.

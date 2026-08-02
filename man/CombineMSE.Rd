@@ -16,24 +16,14 @@ A single \link[=mse-class]{mse} object spanning all simulations in
 \code{MSE_List}.
 }
 \description{
-Combines a list of \link[=mse-class]{mse} objects -- e.g. results from independent
-batches of simulations of the same OM, or from different OMs that should
-be treated as one large ensemble -- into a single \code{mse} object, by
+Combines a list of \link[=mse-class]{mse} objects into a single \code{MSE} object, by
 concatenating every simulation-indexed array along the \code{Sim} dimension.
 Used internally by \code{\link[=PM_FFMSY]{PM_FFMSY()}} and the other \verb{PM_*} functions whenever
-\code{object} is a \code{list} rather than a single \code{mse}.
+\code{object} is a \code{list} rather than a single \code{MSE}.
 }
 \details{
 All elements of \code{MSE_List} must share the same MPs (same names, same
 order), the same stock names, and the same historical/projection years.
-
-Every slot of \code{mse} (including inherited \link[=timeseries-class]{timeseries} slots, \code{Hist},
-\code{Unfished}, and \code{Reference}) is combined by concatenating along \code{Sim},
-except \code{OM}, \code{MPs}, \code{PPD}, \code{Log}, and \code{Misc}, which are taken from the
-first element of \code{MSE_List} (only \code{OM@nSim} is updated, to the combined
-total). This makes \code{CombineMSE()} suitable for computing performance
-metrics over the combined ensemble, but the result should not be used to
-resume/extend a projection.
 }
 \seealso{
 \code{\link[=CombineOMs]{CombineOMs()}}, \code{\link[=CombineFleets]{CombineFleets()}}
