@@ -18,6 +18,7 @@ SS2MOM(
   seed = 1,
   interval = 1,
   pstar = 0.5,
+  comp_partition = 2,
   Obs = MSEtool::Generic_Obs,
   Imp = MSEtool::Perfect_Imp,
   silent = FALSE,
@@ -46,6 +47,7 @@ SS2OM(
   seed = 1,
   interval = 1,
   pstar = 0.5,
+  comp_partition = 2,
   Obs = MSEtool::Generic_Obs,
   Imp = MSEtool::Perfect_Imp,
   import_mov = TRUE,
@@ -102,6 +104,9 @@ MOM_agg_fleets(MOM)
 \item{interval}{The interval at which management procedures will update the management advice in \link{multiMSE}, e.g., 1 = annual updates.}
 
 \item{pstar}{The percentile of the sample of the management recommendation for the MP/MMP.}
+
+\item{comp_partition}{Integer vector for selecting length/age observations that are retained (2), discarded (1), or both (0). By default, only retained
+comps are used. If multiple codes are used, then comp matrix is the sum over all codes.}
 
 \item{Obs}{The observation model (class Obs). These functions do not update implementation parameters.}
 

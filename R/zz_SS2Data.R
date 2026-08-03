@@ -89,7 +89,7 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
   ##### Life history
   #### Growth --------------------------------------
   if(replist$nsexes == 1) gender <- 1
-  growdat <- getGpars(replist)[[gender]]      # Age-specific parameters in endyr
+  growdat <- getGpars(replist)[[gender[1]]]      # Age-specific parameters in endyr
 
   if("int_Age" %in% names(growdat)) {
     ages <- unique(growdat$int_Age)
@@ -117,8 +117,8 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
       message(nrow(GP)," rows of growth parameters were reported by r4ss:")
       print(GP)
     }
-    if (!silent) message("Row ", gender, " will be used (see gender argument in SS2Data).\n")
-    GP <- GP[gender, ]
+    if (!silent) message("Row ", gender[1], " will be used (see gender argument in SS2Data).\n")
+    GP <- GP[gender[1], ]
   }
 
   #### Length at age --------------------------------------
@@ -293,7 +293,7 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
   if (!silent) message("Mean catch, Data@AvC = ", round(Data@AvC, 2), "\n")
 
   #### Index -------------------------
-  Ind <- SS2Data_get_index(replist, mainyrs, season_as_years, nseas, index_season)
+  Ind <- SS2Data_get_index(replist, mainyrs, season_as_years, nseas, index_season, gender)
 
   if(is.null(Ind)) {
     if (!silent) message("No indices found.")
@@ -590,7 +590,7 @@ SS2Data_get_comps <- function(replist, mainyrs, maxage, season_as_years = FALSE,
   return(comp_res[, -1])
 }
 
-SS2Data_get_index <- function(replist, mainyrs, season_as_years = FALSE, nseas = 1, index_season = "mean") {
+SS2Data_get_index <- function(replist, mainyrs, season_as_years = FALSE, nseas = 1, index_season = "mean", gender = 1) {
 
   nms <- names(replist$cpue)
   if (!"Fleet"%in% nms) {
@@ -642,32 +642,46 @@ SS2Data_get_index <- function(replist, mainyrs, season_as_years = FALSE, nseas =
 
   AddIunits <- replist$survey_units[names(cpue_split) %>% as.numeric()]
 
-  # Selectivity
-  agesel_split <- split(replist$ageselex, replist$ageselex$Fleet)
+  # Selectivity - restrict to the sex(es) requested by `gender`. If more than one sex is
+  # requested (e.g., gender = 1:2), the age selectivity is averaged across those sexes.
+  ageselex_sub <- replist$ageselex[replist$ageselex$Sex %in% gender, ]
+  agesel_split <- split(ageselex_sub, ageselex_sub$Fleet)
   agesel_ind <- match(names(cpue_split) %>% as.numeric(), names(agesel_split) %>% as.numeric())
   agesel <- agesel_split[agesel_ind]
 
-  lensel_split <- split(replist$sizeselex, replist$sizeselex$Fleet)
+  sizeselex_sub <- replist$sizeselex[replist$sizeselex$Sex %in% gender, ]
+  lensel_split <- split(sizeselex_sub, sizeselex_sub$Fleet)
   lensel_ind <- match(names(cpue_split) %>% as.numeric(), names(lensel_split) %>% as.numeric())
   lensel <- lensel_split[lensel_ind]
 
   get_AddIndV <- function(agesel, lensel) {
-    agesel <- agesel[agesel$Factor == "Asel" | agesel$Factor == "Asel2", ]
-    lensel <- lensel[lensel$Factor == "Lsel", ]
-    sel_warn <- any(is.na(match(agesel$Yr, range(mainyrs)))) # Potential change in selectivity
+    agesel_fa <- agesel[agesel$Factor == "Asel" | agesel$Factor == "Asel2", ]
+    sel_warn <- any(is.na(match(agesel_fa$Yr, range(mainyrs)))) # Potential change in selectivity
 
-    if(all(agesel$Factor != "Asel2")) {
-      ALK <- replist$ALK[, , 1]
-      ALK <- ALK[order(as.numeric(rownames(ALK))), ]
+    sexes <- unique(agesel_fa$Sex)
+    if(!length(sexes)) sexes <- unique(lensel$Sex)
 
-      Lsel <- suppressWarnings(lensel[nrow(lensel), !is.na(as.numeric(colnames(lensel)))]) %>% as.numeric()
-      Asel2 <- (Lsel %*% ALK)[1, ]
-    } else {
-      agesel2 <- agesel[agesel$Factor == "Asel2", ]
-      Asel2 <- suppressWarnings(agesel2[nrow(agesel2), !is.na(as.numeric(colnames(agesel2)))]) %>% as.numeric()
+    get_AddIndV_sex <- function(sx) {
+      agesel_i <- agesel_fa[agesel_fa$Sex == sx, ]
+      lensel_i <- lensel[lensel$Sex == sx & lensel$Factor == "Lsel", ]
+
+      if(all(agesel_i$Factor != "Asel2")) {
+        ALK <- replist$ALK[, , 1]
+        ALK <- ALK[order(as.numeric(rownames(ALK))), ]
+
+        Lsel <- suppressWarnings(lensel_i[nrow(lensel_i), !is.na(as.numeric(colnames(lensel_i)))]) %>% as.numeric()
+        Asel2 <- (Lsel %*% ALK)[1, ]
+      } else {
+        agesel2 <- agesel_i[agesel_i$Factor == "Asel2", ]
+        Asel2 <- suppressWarnings(agesel2[nrow(agesel2), !is.na(as.numeric(colnames(agesel2)))]) %>% as.numeric()
+      }
+      Asel <- suppressWarnings(agesel_i[nrow(agesel_i), !is.na(as.numeric(colnames(agesel_i)))]) %>% as.numeric()
+      Asel * Asel2
     }
-    Asel <- suppressWarnings(agesel[nrow(agesel), !is.na(as.numeric(colnames(agesel)))]) %>% as.numeric()
-    return(list(Asel = Asel * Asel2, sel_warn = sel_warn))
+
+    Asel_by_sex <- lapply(sexes, get_AddIndV_sex)
+    Asel <- Reduce("+", Asel_by_sex) / length(Asel_by_sex)
+    return(list(Asel = Asel, sel_warn = sel_warn))
   }
   AddIndV <- Map(get_AddIndV, agesel = agesel, lensel = lensel) %>% lapply(getElement, "Asel")
 

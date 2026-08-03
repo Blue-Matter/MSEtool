@@ -724,7 +724,7 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
         cpars_fleet$Data@CV_AddInd <- lapply(survey_ind, get_index) %>% lapply(getElement, "CV") %>% unlist() %>%
           array(c(nyears, length(survey_ind), 1)) %>% aperm(3:1)
 
-        cpars_fleet$Data@AddIndV <- lapply(survey_ind, get_V_from_Asel2, i = 1, replist = replist, mainyrs = mainyrs,
+        cpars_fleet$Data@AddIndV <- lapply(survey_ind, get_V_from_Asel2, i = i, replist = replist, mainyrs = mainyrs,
                                            maxage = Stock@maxage,rescale = TRUE) %>% lapply(function(x) x[, nyears]) %>%
           unlist() %>% array(c(n_age, length(survey_ind), 1)) %>% aperm(3:1)
 

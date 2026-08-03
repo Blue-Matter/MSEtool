@@ -15,7 +15,7 @@
 #' Only used for \code{SS2OM} only in a 2-sex model.
 #' @export
 SS2OM <- function(SSdir, nsim = 48, proyears = 50, reps = 1,
-                  maxF = 3, seed = 1, interval = 1, pstar = 0.5,
+                  maxF = 3, seed = 1, interval = 1, pstar = 0.5, comp_partition = 2,
                   Obs = MSEtool::Generic_Obs, Imp = MSEtool::Perfect_Imp,
                   import_mov = TRUE, gender = 1:2, seasons_to_years = TRUE,
                   model_discards = TRUE, silent = FALSE,
@@ -33,19 +33,19 @@ SS2OM <- function(SSdir, nsim = 48, proyears = 50, reps = 1,
 
   if(!silent) cli::cli_alert("Converting SS output to MOM...")
   MOM <- SS2MOM(replist, nsim = nsim, proyears = proyears, reps = reps, maxF = maxF, seed = seed,
-                interval = interval, pstar = pstar, Obs = Obs, Imp = Imp, silent = silent,
+                interval = interval, pstar = pstar, comp_partition = comp_partition, Obs = Obs, Imp = Imp, silent = silent,
                 Name = Name, Source = Source)
 
   if(!silent) cli::cli_alert("Converting MOM to OM...")
   OM <- SSMOM2OM(MOM, replist, gender, import_mov, seed, silent, model_discards)
-  
+
   if(replist$nseasons == 1 && replist$seasduration < 1 && seasons_to_years) {
     cli::cli_alert_info("Model with season as years found. Will convert to annual time step.")
     OM <- SS_seasonalyears_to_annual(OM, replist)
   }
   if(report) plot_SS2OM(OM, replist, gender, filename, dir, open_file, silent)
 
-  OM@cpars$Data <- SS2Data(replist, silent=TRUE)
+  OM@cpars$Data <- SS2Data(replist, gender = gender, silent=TRUE)
   return(OM)
 }
 
