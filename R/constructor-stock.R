@@ -12,7 +12,7 @@
 #'   `"Atlantic cod"`). When `Name` is an S4 object and `CommonName` is
 #'   `numeric`, it is treated as a list index for multi-stock `Stock` slots —
 #'   see *Pass-Through Access*. Default `NULL`.
-#' @param Species `character(1)`. Scientific (Latin) name of the species (e.g.,
+#' @param Species `character(1)`. Scientific name of the species (e.g.,
 #'   `"Gadus morhua"`). Default `NULL`.
 #'   
 #' @param Ages An [ages-class] object defining the age structure and plus-group

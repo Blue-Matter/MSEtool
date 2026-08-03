@@ -25,7 +25,7 @@ instead, which validates inputs and initialises all sub-objects.
 
 \item{\code{CommonName}}{\code{character}. Common name of the species.}
 
-\item{\code{Species}}{\code{character}. Scientific (Latin) name of the species.}
+\item{\code{Species}}{\code{character}. Scientific name of the species.}
 
 \item{\code{Ages}}{An \link[=ages-class]{ages} object defining the age structure. See \code{\link[=Ages]{Ages()}}.}
 

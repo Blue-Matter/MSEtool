@@ -6,7 +6,7 @@
 #'
 #' @slot Name `character`. Unique stock identifier.
 #' @slot CommonName `character`. Common name of the species.
-#' @slot Species `character`. Scientific (Latin) name of the species.
+#' @slot Species `character`. Scientific name of the species.
 #' @slot Ages An [ages-class] object defining the age structure. See [Ages()].
 #' @slot Length A [length-class] object defining the length-at-age schedule.
 #'   See [Length()].

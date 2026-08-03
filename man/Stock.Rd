@@ -47,7 +47,7 @@ accessor — see \emph{Pass-Through Access}. Default \code{"New Stock Object"}.}
 \code{numeric}, it is treated as a list index for multi-stock \code{Stock} slots —
 see \emph{Pass-Through Access}. Default \code{NULL}.}
 
-\item{Species}{\code{character(1)}. Scientific (Latin) name of the species (e.g.,
+\item{Species}{\code{character(1)}. Scientific name of the species (e.g.,
 \code{"Gadus morhua"}). Default \code{NULL}.}
 
 \item{Ages}{An \link[=ages-class]{ages} object defining the age structure and plus-group

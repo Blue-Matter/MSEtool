@@ -106,5 +106,5 @@ combined <- CombineOMs(
 
 }
 \seealso{
-\code{\link[=GenMultiStockRecDevs]{GenMultiStockRecDevs()}}, \code{.StandardizeEffort()}
+\code{\link[=GenMultiStockRecDevs]{GenMultiStockRecDevs()}}
 }
