@@ -62,11 +62,14 @@ than the maximum historical year.
 Missing early years are back-filled; missing later historical years are
 forward-filled using \code{FillEffort} and \code{FillEfficiency}.
 \item Concatenate stocks and fleets.
-\item Generate correlated recruitment deviations for the projection period
-via \code{\link[=GenMultiStockRecDevs]{GenMultiStockRecDevs()}}.
-\item Optionally standardize effort across stocks via \code{.StandardizeEffort()},
+\item Optionally standardize effort across stocks,
 which populates \verb{@StockTargeting}
 }
+
+Correlated projection recruitment deviations are not generated here --
+they are generated automatically (and lazily) the next time the combined
+\code{OM} is populated, e.g. via \code{\link[=PopulateOM]{PopulateOM()}} or \code{\link[=Simulate]{Simulate()}}. See
+\code{\link[=GenMultiStockRecDevs]{GenMultiStockRecDevs()}} and \code{OM@Control$CorrelatedRecDevs}.
 }
 
 \subsection{Fill Controls}{

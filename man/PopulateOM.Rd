@@ -46,6 +46,11 @@ It orchestrates population of all model components, including:
 \item Observation models (\code{obs})
 }
 
+For multi-stock \code{OM}s, projection recruitment deviations are additionally
+correlated across stocks based on historical covariance (see
+\code{\link[=GenMultiStockRecDevs]{GenMultiStockRecDevs()}}), unless disabled via
+\code{OM@Control$CorrelatedRecDevs <- FALSE}.
+
 To avoid unnecessary recomputation, a digest of the operating model is
 checked before population. If the digest is unchanged and \code{force = FALSE},
 the input object is returned unchanged.

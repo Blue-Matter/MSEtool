@@ -40,10 +40,13 @@
 #'    Missing early years are back-filled; missing later historical years are
 #'    forward-filled using `FillEffort` and `FillEfficiency`.
 #' 5. Concatenate stocks and fleets.
-#' 6. Generate correlated recruitment deviations for the projection period
-#'    via [GenMultiStockRecDevs()].
-#' 7. Optionally standardize effort across stocks via `.StandardizeEffort()`,
+#' 6. Optionally standardize effort across stocks,
 #'    which populates `@StockTargeting`
+#'
+#' Correlated projection recruitment deviations are not generated here --
+#' they are generated automatically (and lazily) the next time the combined
+#' `OM` is populated, e.g. via [PopulateOM()] or [Simulate()]. See
+#' [GenMultiStockRecDevs()] and `OM@Control$CorrelatedRecDevs`.
 #'    
 #' ## Fill Controls
 #'
@@ -112,9 +115,7 @@ CombineOMs <- function(
   OM_Out <- .CombineStocksData(OM_Out, OM_List)
 
   OM_Out@EFactor <- purrr::map(OM_List, slot, 'EFactor')
-  
-  OM_Out <- GenMultiStockRecDevs(OM_Out, silent = silent)
-  
+
   if (.StandardizeEffort)
     OM_Out <- .StandardizeEffort(OM_Out, populate=FALSE)
   

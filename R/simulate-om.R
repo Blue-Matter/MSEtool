@@ -53,7 +53,11 @@
     if (!silent)
       cli::cli_alert_info('Using user-supplied {.cls refpointsMSY} object -- skipped MSY reference point calculation')
   } else if (control$MSYRefs) {
-    Hist@Reference@MSY <- CalcMSY(Hist, parallel = parallel, silent = silent)
+    Hist@Reference@MSY <- CalcMSY(Hist,
+                                  Years    = OM@Control$RefYears,
+                                  type     = OM@Control$MSYType %||% 'Removals',
+                                  parallel = parallel,
+                                  silent   = silent)
   }
 
   if (control$MGT)
@@ -64,7 +68,10 @@
   Hist <- .CalcCatchAtSize(Hist, Years = HistYears)
 
   if (control$RefPoints)
-    Hist <- CalcRefPoints(Hist, silent = silent)
+    Hist <- CalcRefPoints(Hist,
+                          Years  = OM@Control$RefYears,
+                          type   = OM@Control$MSYType %||% 'Removals',
+                          silent = silent)
 
   if (!silent)
     cli::cli_alert_success("Simulated Historical Fishery")

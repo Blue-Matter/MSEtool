@@ -24,7 +24,12 @@
 #' * Fleets via [PopulateFleet()]
 #' * Implementation models (`imp`)
 #' * Observation models (`obs`)
-#' 
+#'
+#' For multi-stock `OM`s, projection recruitment deviations are additionally
+#' correlated across stocks based on historical covariance (see
+#' [GenMultiStockRecDevs()]), unless disabled via
+#' `OM@Control$CorrelatedRecDevs <- FALSE`.
+#'
 #' To avoid unnecessary recomputation, a digest of the operating model is
 #' checked before population. If the digest is unchanged and `force = FALSE`,
 #' the input object is returned unchanged.
@@ -68,8 +73,12 @@ PopulateOM <- function(OM,
       "i" = "See {.help MSEtool::OM} and {.help MSEtool::Fleet}"
     ))
 
+  StockListRaw <- if (inherits(OM@Stock, 'stock')) list(OM@Stock) else OM@Stock
+  auto_proj <- purrr::map_lgl(StockListRaw, \(st) EmptyObject(st@SRR@RecDevProj))
+
   OM <- OM |>
     .PopulateStockList(silent = silent, force = force) |>
+    .GenerateMultiStockRecDevs(overwrite = auto_proj, silent = silent) |>
     .PopulateFleetList(silent = silent, force = force) |>
     .PopulateComplexes() |>
     .PopulateImpList(silent = silent) |>
@@ -150,6 +159,28 @@ PopulateOM <- function(OM,
   OM
 }
 
+
+#' Generate correlated multi-stock projection recruitment deviations
+#'
+#' Internal `PopulateOM()` pipeline step. Controlled by
+#' `OM@Control$CorrelatedRecDevs` (`logical(1)`, default `TRUE`): whether
+#' multi-stock operating models get projection recruitment deviations
+#' correlated with historical cross-stock covariance (via
+#' [GenMultiStockRecDevs()]), rather than independent per-stock deviations.
+#' A property of the OM itself -- not a [SimControl()] toggle -- since it
+#' changes simulated dynamics, not just what gets computed/reported.
+#'
+#' Runs after `.PopulateStockList()` has generated each stock's (independent)
+#' `RecDevProj`, then overwrites it where applicable; stocks whose
+#' `RecDevProj` was user-supplied before population (`overwrite = FALSE`)
+#' are left untouched.
+#'
+#' @keywords internal
+.GenerateMultiStockRecDevs <- function(OM, overwrite, silent = FALSE) {
+  if (nStock(OM) < 2) return(OM)
+  if (isFALSE(OM@Control$CorrelatedRecDevs)) return(OM)
+  GenMultiStockRecDevs(OM, silent = silent, overwrite = overwrite)
+}
 
 .PopulateFleetList <- function(OM, silent = FALSE, force = FALSE) {
   

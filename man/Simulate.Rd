@@ -73,6 +73,25 @@ data, and reference points.
 \code{Simulate()} is a dispatcher that calls internal functions \code{.SimulateOM()} (for
 \link[=om-class]{om} objects) or \code{SimulateOM()} (for legacy \link[=OM-legacy-class]{OM-legacy}
 objects) depending on the class of \code{OM}.
+\subsection{\code{OM@Control}}{
+
+Unlike \code{control} (\code{SimControl()}, above), which only toggles which
+optional quantities are computed, \code{OM@Control} holds settings that affect
+simulated dynamics themselves:
+\itemize{
+\item \code{MSYType}: \code{'Removals'} (default) or \code{'Landings'}. Passed as \code{type} to
+\code{\link[=CalcMSY]{CalcMSY()}} and \code{\link[=CalcRefPoints]{CalcRefPoints()}}. Whether MSY-based and other
+fishing-mortality reference points are defined in terms of total
+removals (landings + dead discards) or landings only.
+\item \code{RefYears}: Integer vector or \code{NULL} (default). Passed as \code{Years} to
+\code{\link[=CalcMSY]{CalcMSY()}} and \code{\link[=CalcRefPoints]{CalcRefPoints()}}. Which year(s) of biological/fishery
+parameters reference points are evaluated at. \code{NULL} uses the final
+historical year.
+\item \code{CorrelatedRecDevs}: \code{logical(1)}, default \code{TRUE}. For multi-stock
+\code{OM}s, whether projection recruitment deviations are correlated across
+stocks based on historical covariance; see \code{\link[=GenMultiStockRecDevs]{GenMultiStockRecDevs()}}.
+}
+}
 }
 \examples{
 \dontrun{

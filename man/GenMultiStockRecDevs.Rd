@@ -4,7 +4,7 @@
 \alias{GenMultiStockRecDevs}
 \title{Generate Correlated Multi-Stock Recruitment Deviations}
 \usage{
-GenMultiStockRecDevs(OM, TruncSD = 3, silent = FALSE)
+GenMultiStockRecDevs(OM, TruncSD = 3, silent = FALSE, overwrite = NULL)
 }
 \arguments{
 \item{OM}{An operating model object of class \link[=om-class]{om}.}
@@ -13,10 +13,16 @@ GenMultiStockRecDevs(OM, TruncSD = 3, silent = FALSE)
 log deviations are bounded, as in \code{\link[=GenRecDevs]{GenRecDevs()}}. Defaults to \code{3}.}
 
 \item{silent}{\code{logical(1)} Display messages?}
+
+\item{overwrite}{\code{logical}, length \code{nStock(OM)}, or \code{NULL} (default).
+Controls which stocks' \code{RecDevProj} are written. \code{NULL} overwrites every
+stock. Stocks with \code{overwrite = FALSE} keep their existing \code{RecDevProj}
+(e.g. user-supplied values) untouched, but their historical deviations
+still contribute to the estimated cross-stock covariance.}
 }
 \value{
 The input \code{OM} object with \code{RecDevProj} populated for all stocks
-and simulations.
+and simulations (subject to \code{overwrite}).
 }
 \description{
 Generates stochastic recruitment deviations for multiple stocks using a
@@ -24,6 +30,14 @@ multivariate lognormal AR(1) process, preserving both cross-stock
 covariance and temporal autocorrelation.
 }
 \details{
+Within each simulation, stocks whose historical deviations
+(\code{SRR@RecDevHist[sim, ]}) are byte-identical are treated as a single
+group: one latent series is simulated for the group and copied to every
+member, so linked stocks (e.g. a female/male pair sharing recruitment)
+stay identical in the projection period rather than drifting apart under
+independent stochastic draws. Remaining stocks/groups are correlated, not
+forced identical, via the process below.
+
 The AR(1) process runs on a unit-variance latent scale that carries the
 cross-stock correlation:
 

@@ -42,6 +42,23 @@
 #' [om-class] objects) or `SimulateOM()` (for legacy [OM-legacy-class]
 #' objects) depending on the class of `OM`.
 #'
+#' ## `OM@Control`
+#'
+#' Unlike `control` (`SimControl()`, above), which only toggles which
+#' optional quantities are computed, `OM@Control` holds settings that affect
+#' simulated dynamics themselves:
+#' - `MSYType`: `'Removals'` (default) or `'Landings'`. Passed as `type` to
+#'   [CalcMSY()] and [CalcRefPoints()]. Whether MSY-based and other
+#'   fishing-mortality reference points are defined in terms of total
+#'   removals (landings + dead discards) or landings only.
+#' - `RefYears`: Integer vector or `NULL` (default). Passed as `Years` to
+#'   [CalcMSY()] and [CalcRefPoints()]. Which year(s) of biological/fishery
+#'   parameters reference points are evaluated at. `NULL` uses the final
+#'   historical year.
+#' - `CorrelatedRecDevs`: `logical(1)`, default `TRUE`. For multi-stock
+#'   `OM`s, whether projection recruitment deviations are correlated across
+#'   stocks based on historical covariance; see [GenMultiStockRecDevs()].
+#'
 #' @return
 #' - If `OM` is an [om-class] object: a [hist-class] object.
 #' - If `OM` is an [OM-legacy-class] object: a [Hist-legacy-class] object.
