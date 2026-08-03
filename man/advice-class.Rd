@@ -47,9 +47,6 @@ of \code{\link[=Retention]{Retention()}} objects  defining retention prescribed 
 \item{\code{DiscardMortality}}{A \code{\link[=DiscardMortality]{DiscardMortality()}} object or an \code{nFleet} long
 list of \code{\link[=DiscardMortality]{DiscardMortality()}} objects defining discard mortality set in the \code{MP}}
 
-\item{\code{ApicalF}}{Numeric array specifying target apical fishing mortality.
-Not currently used}
-
 \item{\code{BagLimit}}{Numeric vector or \code{NULL}. Bag limit in fish per angler per
 trip (when \code{LimitType = "angler"}) or fish per vessel per trip (when
 \code{LimitType = "boat"}), for this stock's catch by each fleet. Either

@@ -9,8 +9,6 @@
 \alias{TACUnit<-}
 \alias{EffType}
 \alias{EffType<-}
-\alias{ApicalF}
-\alias{ApicalF<-}
 \alias{BagLimit}
 \alias{BagLimit<-}
 \alias{LimitType}
@@ -29,7 +27,6 @@ Advice(
   Selectivity = NULL,
   Retention = NULL,
   DiscardMortality = NULL,
-  ApicalF = NULL,
   BagLimit = NULL,
   LimitType = "angler",
   ClosureMode = "discard",
@@ -49,10 +46,6 @@ TACUnit(x) <- value
 EffType(x)
 
 EffType(x) <- value
-
-ApicalF(x)
-
-ApicalF(x) <- value
 
 BagLimit(x)
 
@@ -94,8 +87,6 @@ vector of length \code{nFleet}. Default is \code{"Rel"}.}
 
 \item{DiscardMortality}{A \code{\link[=DiscardMortality]{DiscardMortality()}} object or an \code{nFleet}-length list
 of such objects. See \code{Details}}
-
-\item{ApicalF}{Numeric array specifying target apical fishing mortality. Not currently used}
 
 \item{BagLimit}{Numeric vector or \code{NULL}. Bag limit in fish per angler per
 trip (when \code{LimitType = "angler"}) or fish per vessel per trip (when
@@ -153,7 +144,7 @@ functions below.}
 \itemize{
 \item \code{Advice()} returns an \link[=advice-class]{advice} object.
 \item \code{TAC()}, \code{TACType()}, \code{TACUnit()}, \code{Effort()}, \code{EffType()}, \code{Closure()},
-\code{Selectivity()}, \code{Retention()}, \code{DiscardMortality()}, \code{ApicalF()},
+\code{Selectivity()}, \code{Retention()}, \code{DiscardMortality()},
 \code{BagLimit()}, \code{LimitType()}, \code{ClosureMode()}, \code{Misc()} return the
 corresponding slot from an \link[=advice-class]{advice} object \code{x}.
 \item Their replacement forms (e.g. \verb{TAC<-}) return \code{x} with the corresponding
@@ -276,11 +267,6 @@ than a single stock's own catch) is declared separately via
 \code{AggregateBagLimit()}, available to \code{mmp}-class management procedures. A
 stock's own \code{BagLimit} may still be set for any stock included in such a
 group, acting as a species-specific sub-cap within the pooled limit.
-}
-
-\subsection{ApicalF}{
-
-Not currently used.
 }
 
 \subsection{Misc}{

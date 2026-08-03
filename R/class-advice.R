@@ -54,9 +54,6 @@ methods::setClassUnion(
 #' @slot DiscardMortality A [DiscardMortality()] object or an `nFleet` long 
 #'  list of [DiscardMortality()] objects defining discard mortality set in the `MP`
 #'
-#' @slot ApicalF Numeric array specifying target apical fishing mortality.
-#'  Not currently used
-#'
 #' @slot BagLimit Numeric vector or `NULL`. Bag limit in fish per angler per
 #'   trip (when `LimitType = "angler"`) or fish per vessel per trip (when
 #'   `LimitType = "boat"`), for this stock's catch by each fleet. Either
@@ -105,7 +102,6 @@ setClass("advice",
            Selectivity      = "selectivity.list",
            Retention        = "retention.list",
            DiscardMortality = "discardmortality.list",
-           ApicalF          = "num.array.null",
            BagLimit         = "num.array.null",
            LimitType        = "char.null",
            ClosureMode      = "char.null",

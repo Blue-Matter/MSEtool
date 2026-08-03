@@ -31,7 +31,6 @@
 #' @param DiscardMortality A [DiscardMortality()] object or an `nFleet`-length list
 #' of such objects. See `Details`
 #'
-#' @param ApicalF Numeric array specifying target apical fishing mortality. Not currently used
 #'
 #' @param BagLimit Numeric vector or `NULL`. Bag limit in fish per angler per
 #'   trip (when `LimitType = "angler"`) or fish per vessel per trip (when
@@ -183,10 +182,6 @@
 #' stock's own `BagLimit` may still be set for any stock included in such a
 #' group, acting as a species-specific sub-cap within the pooled limit.
 #'
-#' ## ApicalF
-#'
-#' Not currently used.
-#'
 #' ## Misc
 #'
 #' A list of miscellaneous information that needs to be stored and accessed by
@@ -250,7 +245,7 @@
 #' @return
 #' - `Advice()` returns an [advice-class] object.
 #' - `TAC()`, `TACType()`, `TACUnit()`, `Effort()`, `EffType()`, `Closure()`,
-#'   `Selectivity()`, `Retention()`, `DiscardMortality()`, `ApicalF()`,
+#'   `Selectivity()`, `Retention()`, `DiscardMortality()`,
 #'   `BagLimit()`, `LimitType()`, `ClosureMode()`, `Misc()` return the
 #'   corresponding slot from an [advice-class] object `x`.
 #' - Their replacement forms (e.g. `TAC<-`) return `x` with the corresponding
@@ -276,7 +271,6 @@ Advice <- function(TAC              = NULL,
                    Selectivity      = NULL,
                    Retention        = NULL,
                    DiscardMortality = NULL,
-                   ApicalF          = NULL,
                    BagLimit         = NULL,
                    LimitType        = 'angler',
                    ClosureMode      = 'discard',
@@ -345,7 +339,6 @@ Advice <- function(TAC              = NULL,
     Selectivity      = Selectivity,
     Retention        = Retention,
     DiscardMortality = DiscardMortality,
-    ApicalF          = ApicalF,
     BagLimit         = BagLimit,
     LimitType        = LimitType,
     ClosureMode      = ClosureMode,
@@ -394,18 +387,6 @@ EffType <- function(x) {
 #' @export
 `EffType<-` <- function(x, value) {
   .AssignSlot(x, value, 'EffType')
-}
-
-#' @rdname Advice
-#' @export
-ApicalF <- function(x) {
-  .AccessSlot(x, 'ApicalF')
-}
-
-#' @rdname Advice
-#' @export
-`ApicalF<-` <- function(x, value) {
-  .AssignSlot(x, value, 'ApicalF')
 }
 
 #' @rdname Advice
