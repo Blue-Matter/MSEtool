@@ -68,7 +68,7 @@
 #' the desired global configuration.
 #' 
 #' 
-#' @seealso [GenMultiStockRecDevs()], `.StandardizeEffort()`
+#' @seealso [GenMultiStockRecDevs()]
 #'
 #' @examples
 #' \dontrun{
