@@ -18,9 +18,7 @@
 #' @param fleets Character vector of fleet names to include, or `NULL`
 #'   (default) to include all fleets with non-empty `Shift`.
 #' @param years Numeric vector of calendar years to include, or `NULL`
-#'   (default) to use the last `nYears` historical years. With many
-#'   historical years, plotting all of them makes an unreadably large facet
-#'   grid -- use `years` or `nYears` to control this.
+#'   (default) to use the last `nYears` historical years. 
 #' @param nYears Integer. Number of most recent historical years to plot
 #'   when `years = NULL`. Default `4`. Ignored if `years` is supplied.
 #'
@@ -40,10 +38,6 @@
 #' `Hist@Data[[sim]][[i]]`, i.e. the actual noisy Dirichlet-Multinomial draw,
 #' also normalised to proportions. All three series are drawn from the same
 #' replicate `sim`.
-#'
-#' Only fleet/year combinations where the corresponding [CompObs()] object
-#' has a non-`NULL` `Shift` slot are plotted, since `Shift` has no effect
-#' otherwise.
 #'
 #' @return A `ggplot` object (invisibly plotted), faceted by `Fleet` and
 #'   `Year`, with the true, expected-shifted, and observed proportions

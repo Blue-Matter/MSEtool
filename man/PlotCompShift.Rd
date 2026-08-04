@@ -29,9 +29,7 @@ PlotCompShift(
 (default) to include all fleets with non-empty \code{Shift}.}
 
 \item{years}{Numeric vector of calendar years to include, or \code{NULL}
-(default) to use the last \code{nYears} historical years. With many
-historical years, plotting all of them makes an unreadably large facet
-grid -- use \code{years} or \code{nYears} to control this.}
+(default) to use the last \code{nYears} historical years.}
 
 \item{nYears}{Integer. Number of most recent historical years to plot
 when \code{years = NULL}. Default \code{4}. Ignored if \code{years} is supplied.}
@@ -67,8 +65,4 @@ The observed composition is the corresponding slot of
 \code{Hist@Data[[sim]][[i]]}, i.e. the actual noisy Dirichlet-Multinomial draw,
 also normalised to proportions. All three series are drawn from the same
 replicate \code{sim}.
-
-Only fleet/year combinations where the corresponding \code{\link[=CompObs]{CompObs()}} object
-has a non-\code{NULL} \code{Shift} slot are plotted, since \code{Shift} has no effect
-otherwise.
 }
