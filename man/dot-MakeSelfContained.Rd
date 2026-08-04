@@ -15,9 +15,9 @@ parented to the MSEtool namespace.
 }
 \description{
 Creates a new function environment for \code{MP}, parented to the MSEtool
-namespace so that all package functions are findable via normal lexical
-scoping without being copied. Only user-defined helper functions detected
-by \code{.DetectCalledFunctions()} are copied explicitly into the new environment.
+namespace so that all MSEtool package functions are findable via normal
+lexical scoping without being copied. Every other helper function detected
+by \code{.DetectCalledFunctions()}.
 }
 \details{
 This ensures that an MP carries all of its dependencies when passed to a

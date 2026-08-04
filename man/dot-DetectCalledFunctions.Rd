@@ -21,7 +21,9 @@ A character vector of unique helper function names.
 \description{
 Recursively scans the body of \code{MP} and any detected helper functions,
 returning the names of all user-defined functions reachable from \code{MP} that
-are not part of the MSEtool namespace or base R. Used by
+are not part of the MSEtool namespace or base R. Detects both functions
+called directly (\code{f(...)}) and functions referenced by name as a bare
+argument value (e.g. passed as a callback to another function). Used by
 \code{.MakeSelfContained()} to identify functions that must be copied into the
 MP's self-contained environment.
 }

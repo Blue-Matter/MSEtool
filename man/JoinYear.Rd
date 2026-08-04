@@ -38,9 +38,13 @@ result is \code{object2}'s value rather than \code{NULL}.
 \item \strong{Named arrays with a \code{"Year"} dimension} — joined along the year
 axis using \code{\link[abind:abind]{abind::abind()}}. An error is thrown if years are not
 strictly increasing across \code{object1} and \code{object2}.
-\item \strong{Numeric vectors} — concatenated with \code{c()}. If all values exceed
-1000 (i.e. are likely calendar years), strict monotonicity is checked
-and an error is thrown if the combined sequence is not increasing.
+\item \strong{Numeric vectors} — if \code{object1} and \code{object2} are identical (e.g.
+static per-fleet metadata such as a \code{compdata}'s \code{Classes} bin
+boundaries, unchanged between the historical and projection segments),
+\code{object1} is returned as-is rather than duplicated. Otherwise the two
+are concatenated with \code{c()}. If all values exceed 1000 (i.e. are likely
+calendar years), strict monotonicity is checked and an error is thrown
+if the combined sequence is not increasing.
 \item \strong{All other types} — returned unchanged from \code{object1}.
 }
 }
