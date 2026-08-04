@@ -1156,23 +1156,6 @@ ImportSS <- function(SSDir,
     SRR@SPFrom <- 1
   }
 
-  RecDevs <- GenRecDevs(
-    SD = SRR@SD,
-    AC = SRR@AC,
-    Ages = Ages,
-    HistYears  = YearsList$YearsHist,
-    ProjYears  = YearsList$YearsProj,
-    nSim = nSim,
-    RecDevInit = SRR@RecDevInit,
-    RecDevHist = SRR@RecDevHist
-  )
-
-  SRR@RecDevProj <- RecDevs$RecDevProj
-  ProjectionYears <- YearsList$YearsProj
-  dimnames(SRR@RecDevProj) <- list(
-    Sim = 1:nSim,
-    Year = ProjectionYears
-  )
   SRR
 }
 
