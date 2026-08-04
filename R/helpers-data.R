@@ -22,7 +22,7 @@ NULL
 #' @export
 LastTAC <- function(Data) {
   .CheckClass(Data, 'data', 'Data')
-  LastTAC <- utils::tail(Data@Advice@TAC[!is.na(Data@Advice@TAC)], 1) |> as.numeric()
+  LastTAC <- utils::tail(Data@Advice@TAC, 1) |> as.numeric() |> sum(na.rm = TRUE)
   if (length(LastTAC) < 1)
     LastTAC <- sum(utils::tail(Data@Landings@Value, 1) + utils::tail(Data@Discards@Value, 1))
   LastTAC
