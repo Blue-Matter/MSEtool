@@ -66,10 +66,15 @@
 
   mp <- 1 # initialise for debugging
 
-  if (!silent)
-    cli::cli_alert('Projecting {.val {nMPs}} MP{?s}')
-
   parallel <- CheckParallel(parallel)
+
+  if (!silent) {
+    if (parallel && nMPs > 1) {
+      cli::cli_alert('Projecting {.val {nMPs}} MP{?s} in parallel')
+    } else {
+      cli::cli_alert('Projecting {.val {nMPs}} MP{?s}')
+    }
+  }
 
   if (parallel && nMPs > 1) {
     CheckPackage('furrr')
