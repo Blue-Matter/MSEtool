@@ -709,51 +709,30 @@ ImportSS <- function(SSDir,
   )
 }
 
-# For seasonal models, `endgrowth` has one row per (Sex, Morph, Seas,
-# Age_Beg) with Age_Beg the *annual* age -- multiple seasonal rows share the
-# same annual age. Map each quarterly Age class in `Ages@Classes` back to
-# its underlying annual Age_Mat/Len_Mat value via the birth-season offset,
-# mirroring .GetSSFecunditySeasonal() (maturity x fecundity is the same
-# underlying per-age quantity, just without the fecundity term).
 .GetSSMaturityAtAgeSeasonal <- function(st, replist, YearsList, Ages) {
-  Age_Beg <- NULL # CRAN
+  Age_Beg <- Len_Mat <- Age_Mat <- NULL # CRAN
 
-  mat_age <- replist$endgrowth |>
-    dplyr::filter(Sex == st) |>
-    dplyr::distinct(Age_Beg, .keep_all = TRUE) |>
-    dplyr::arrange(Age_Beg)
+  endgrowth <- replist$endgrowth |> dplyr::filter(Sex == st)
 
   q_ages <- Ages@Classes
   n_ages <- length(q_ages)
 
-  if (nrow(mat_age) == 0L) {
+  if (nrow(endgrowth) == 0L) {
     return(array(0, dim = c(n_ages, 1L),
                  dimnames = list(Age = q_ages, Year = YearsList$YearsHist[1])))
   }
 
-  if (any(mat_age$Age_Mat < 0)) mat_age$Age_Mat <- abs(mat_age$Age_Mat) # Should all be 1's
-  if (any(mat_age$Len_Mat < 0)) mat_age$Len_Mat <- abs(mat_age$Len_Mat)
-  mat_age$Maturity <- mat_age$Len_Mat * mat_age$Age_Mat
+  if (any(endgrowth$Age_Mat < 0)) endgrowth$Age_Mat <- abs(endgrowth$Age_Mat) # Should all be 1's
+  if (any(endgrowth$Len_Mat < 0)) endgrowth$Len_Mat <- abs(endgrowth$Len_Mat)
 
-  birthseas <- .GetSSBirthSeas(replist)
-  n_seasons <- length(unique(replist$endgrowth$Seas[replist$endgrowth$Sex == st]))
-
-  n_idx <- seq_len(n_ages) - 1L
-  seasons_to_yr_bound <- n_seasons - birthseas + 1L
-
-  age_beg <- ifelse(
-    n_idx < seasons_to_yr_bound,
-    0L,
-    as.integer(floor((n_idx - seasons_to_yr_bound) / n_seasons) + 1L)
-  )
-
-  max_age  <- max(mat_age$Age_Beg)
-  mat_vals <- mat_age$Maturity[match(pmin(age_beg, max_age), mat_age$Age_Beg)]
-
-  array(mat_vals,
-    dim = c(n_ages, 1L),
-    dimnames = list(Age = q_ages, Year = YearsList$YearsHist[1])
-  )
+  YearsHist <- YearsList$YearsHist
+  endgrowth |>
+    dplyr::mutate(Value = Len_Mat * Age_Mat) |>
+    dplyr::select(Age = Age_Beg, Value) |>
+    dplyr::mutate(Year = YearsHist[1]) |>
+    dplyr::arrange(Age, Year) |>
+    dplyr::select(Age, Year, Value) |>
+    DF2Array()
 }
 
 .SS2Maturity <- function(st, RepList, YearsList, Ages) {
