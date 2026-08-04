@@ -85,7 +85,7 @@
       arr |>
         AddDimension('Area') |>
         ExtendAreas(Areas) |>
-        DropDimension(c('Sim', 'Year'))
+        DropDimension('Year')
     }
   }
 
@@ -135,7 +135,7 @@
         .slice_sim() |>
         AddDimension('Area') |>
         ExtendAreas(Areas)
-      if (is.null(sim)) ReduceDims(arr) else DropDimension(arr, c('Sim', 'Year'))
+      if (is.null(sim)) ReduceDims(arr) else DropDimension(arr, 'Year')
     }))
   }
 
