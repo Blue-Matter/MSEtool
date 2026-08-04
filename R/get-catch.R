@@ -14,9 +14,6 @@
 
   isMSE <- inherits(object,'mse')
 
-  # Landings use the retention-weighted schedule; Discards use the
-  # selectivity-weighted schedule -- see the equivalent note in
-  # .GenHistDataCatch().
   weight_slot <- if (type == 'Landings') 'WeightFleetRetained' else 'WeightFleetSelected'
 
   purrr::map2(NumberList, StockFleetList,

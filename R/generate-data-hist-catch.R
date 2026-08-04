@@ -139,11 +139,6 @@
         apply('Year', sum) |> SumOverStock()
       
     } else if (CatchData@Units[fl] == "Biomass") {
-      # Landings use the retention-weighted schedule (landed fish are, on
-      # average, a different weight than discarded fish); Discards use the
-      # selectivity-weighted schedule applied directly to dead-discard
-      # numbers, a close (not exact -- see CalcCatch()'s residual formula)
-      # approximation that avoids needing Interactions-at-age here too.
       weight_slot <- if (type == 'Landings') 'WeightFleetRetained' else 'WeightFleetSelected'
       real_catch <- purrr::map2(Real_Catch_Number, Hist@OM@Fleet[stocks],
                                 \(catch_n, fleet_list) {
