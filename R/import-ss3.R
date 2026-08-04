@@ -261,13 +261,16 @@ ImportSS <- function(SSDir,
   Allocation <- MakeNamedList(ComplexName)
 
   Catch <- RepList[[1]]$catch
+  if (!"kill_bio" %in% names(Catch)) {
+    Catch <- Catch |> dplyr::mutate(kill_bio = dead_bio)
+  }
   MaxYr <- max(Catch$Yr)
   YrRange <- (MaxYr - AllocationYears + 1):MaxYr
 
   CatchFrac <- Catch |>
     dplyr::filter(Yr %in% YrRange) |>
     dplyr::group_by(Fleet) |>
-    dplyr::summarise(Catch = sum(dead_bio), .groups = "drop") |>
+    dplyr::summarise(Catch = sum(kill_bio), .groups = "drop") |>
     dplyr::mutate(Catch = Catch / sum(Catch))
 
   nFleet <- length(FleetNames)
