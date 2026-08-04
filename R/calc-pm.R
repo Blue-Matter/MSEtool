@@ -174,15 +174,27 @@ NULL
   do.call('[', c(list(arr), idx_list, list(drop = FALSE)))
 }
 
+# Filters `df` (must have `MP` and `Year` columns) to each row's own MP's
+# management years, since different MPs can resolve to different intervals
+# (see `.ResolveInterval()`).
+.FilterManagementYears <- function(df, object) {
+  YearsProj <- Years(object@OM, 'Projection')
+  mpNames   <- unique(df$MP)
+  keep <- lapply(mpNames, function(mp) {
+    Interval  <- .ResolveInterval(object@OM@Interval, mp, object@MPs[[mp]])
+    ManageYrs <- .CalcManagementYears(YearsProj, Interval)
+    df$MP == mp & df$Year %in% ManageYrs
+  })
+  df[Reduce(`|`, keep), ]
+}
+
 .GroupedRemovals <- function(object, Stocks, ManagementOnly = FALSE) {
   df <- Removals(object, df = TRUE, byFleet = FALSE, byAge = FALSE,
                 bySize = FALSE, byArea = FALSE, Reduce = FALSE)
   df <- df[df$Period == 'Projection', ]
 
-  if (ManagementOnly) {
-    ManageYrs <- .CalcManagementYears(Years(object@OM, 'Projection'), object@OM@Interval)
-    df <- df[df$Year %in% ManageYrs, ]
-  }
+  if (ManagementOnly)
+    df <- .FilterManagementYears(df, object)
 
   groups <- .ResolveComplexGroups(object@OM, Stocks)
   purrr::imap(groups, \(stk, grpName) {
@@ -197,10 +209,8 @@ NULL
   df <- Effort(object, df = TRUE)
   df <- df[df$Period == 'Projection', ]
 
-  if (ManagementOnly) {
-    ManageYrs <- .CalcManagementYears(Years(object@OM, 'Projection'), object@OM@Interval)
-    df <- df[df$Year %in% ManageYrs, ]
-  }
+  if (ManagementOnly)
+    df <- .FilterManagementYears(df, object)
   if (!is.null(Fleets))
     df <- df[df$Fleet %in% Fleets, ]
 

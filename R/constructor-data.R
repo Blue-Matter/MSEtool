@@ -10,9 +10,9 @@
 #' @param CV `array` or `NULL`. Coefficients of variation for the catch
 #'   observations, matching the dimensions of `Value`. Default `NULL`.
 #' @param Units `character` or `NULL`. Units of catch measurement, one element
-#'   per fleet: `"Biomass"` or `"Number"`. Default `NULL`. TAC is always set
-#'   in units of `"Biomass"`; see [CheckCatch()] for the consequences of
-#'   supplying any other value.
+#'   per fleet: `"Biomass"` or `"Number"`. Default `NULL`. See [CheckCatch()]
+#'   for the consequences of `Landings` and `Discards` having mismatched
+#'   units.
 #' @param Ref `array` or `NULL`. Reference catch values (e.g., a historical
 #'   baseline), matching the dimensions of `Value`. Default `NULL`.
 #' @param RefCV `array` or `NULL`. Coefficients of variation for the reference

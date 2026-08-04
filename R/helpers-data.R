@@ -55,3 +55,20 @@ LastHistYearInd <- function(Data) {
 ProjectionYear <- function(Data) {
   length(Data@Years[Data@Years >= Data@YearLH + 1])
 }
+
+#  
+
+#' @describeIn DataHelpers Get the season index for the season this call to an MP is providing advice for.
+#'
+#' @return
+#' - `MPSeasonIndex()`: A list elements `Seasons` the number of seasons and 
+#'   `SeasonInd` the season index  
+#'   
+#' @export
+MPSeasonIndex <- function(Data) {
+  Seasons <- Data@Seasons
+  if (is.null(Seasons) || !length(Seasons))
+    Seasons <- 1
+  list(Seasons = Seasons,
+       SeasonInd = ((length(Data@Years) - 1) %% Seasons) + 1)
+}

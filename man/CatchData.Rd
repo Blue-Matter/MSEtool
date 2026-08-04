@@ -24,9 +24,9 @@ Default \code{NULL}.}
 observations, matching the dimensions of \code{Value}. Default \code{NULL}.}
 
 \item{Units}{\code{character} or \code{NULL}. Units of catch measurement, one element
-per fleet: \code{"Biomass"} or \code{"Number"}. Default \code{NULL}. TAC is always set
-in units of \code{"Biomass"}; see \code{\link[=CheckCatch]{CheckCatch()}} for the consequences of
-supplying any other value.}
+per fleet: \code{"Biomass"} or \code{"Number"}. Default \code{NULL}. See \code{\link[=CheckCatch]{CheckCatch()}}
+for the consequences of \code{Landings} and \code{Discards} having mismatched
+units.}
 
 \item{Ref}{\code{array} or \code{NULL}. Reference catch values (e.g., a historical
 baseline), matching the dimensions of \code{Value}. Default \code{NULL}.}

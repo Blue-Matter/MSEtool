@@ -5,6 +5,7 @@
 \alias{LastTAC}
 \alias{LastHistYearInd}
 \alias{ProjectionYear}
+\alias{MPSeasonIndex}
 \title{Data Helper Functions}
 \usage{
 LastTAC(Data)
@@ -12,6 +13,8 @@ LastTAC(Data)
 LastHistYearInd(Data)
 
 ProjectionYear(Data)
+
+MPSeasonIndex(Data)
 }
 \arguments{
 \item{Data}{An object of class \link{data}.}
@@ -30,6 +33,11 @@ year in \code{Data@Years}.
 \itemize{
 \item \code{ProjectionYear()}: A positive integer giving the current projection year
 index.
+}
+
+\itemize{
+\item \code{MPSeasonIndex()}: A list elements \code{Seasons} the number of seasons and
+\code{SeasonInd} the season index
 }
 }
 \description{
@@ -51,6 +59,8 @@ vectors aligned to \code{Data@Years}.
 \item \code{ProjectionYear()}: Get the index of the current projection time step
 relative to \code{Data@YearLH}. Returns \code{1} in the first projection year,
 incrementing by one each subsequent timestep
+
+\item \code{MPSeasonIndex()}: Get the season index for the season this call to an MP is providing advice for.
 
 }}
 \seealso{

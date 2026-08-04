@@ -255,14 +255,14 @@
   no_change <- list(Distribution = NULL, Advice = Advice)
   
   if (!is.array(Advice@Effort))  {
-    Advice@Effort <- array(Advice@Effort, dimnames=list(Fleet=FleetNames))
+    Advice@Effort <- array(.RecycleToFleets(Advice@Effort, nFleet, "Advice@Effort"), dimnames=list(Fleet=FleetNames))
     return(list(Distribution = NULL, Advice = Advice))
-  }   
-  
+  }
+
   if (length(dim(Advice@Effort)) == 1) {
-    Advice@Effort <- array(rep(Advice@Effort,nFleet)[seq_len(nFleet)], dimnames=list(Fleet=FleetNames))
+    Advice@Effort <- array(.RecycleToFleets(Advice@Effort, nFleet, "Advice@Effort"), dimnames=list(Fleet=FleetNames))
     return(list(Distribution = NULL, Advice = Advice))
-  } 
+  }
   
   if (!all(dim(Advice@Effort) == c(nFleet, nArea)))
     stop("If `Advice@Effort` is a matrix it must have dimensions ",

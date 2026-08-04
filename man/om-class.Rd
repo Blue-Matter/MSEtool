@@ -129,7 +129,7 @@ stock targeting weights and deviations. Initialised automatically by
 \code{\link[=OM]{OM()}} via \code{\link[=StockTargeting]{StockTargeting()}}.}
 
 \item{\code{Interval}}{Numeric scalar or named numeric vector. Management update
-interval in years. See \code{\link[=OM]{OM()}}.}
+interval in years, optionally per-MP via names. See \code{\link[=OM]{OM()}}.}
 
 \item{\code{MPStartYear}}{Numeric or \code{NULL}. First calendar year in which MPs are
 applied. Projection years before \code{MPStartYear} are "interim" years -

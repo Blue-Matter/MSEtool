@@ -23,9 +23,9 @@ ExampleMPs()
 }
 \value{
 \itemize{
-\item \code{CurrentEffort}, \code{CurrentCatch}, \code{AverageCatch} — an \link[=advice-class]{advice}
-object; see \code{\link[=Advice]{Advice()}} for constructor details.
-\item \code{ExampleMPs} — a character vector of the example MP names.
+\item \code{CurrentEffort}, \code{CurrentCatch}, \code{CurrentLandings}, \code{AverageCatch}: an
+\link[=advice-class]{advice} object; see \code{\link[=Advice]{Advice()}} for constructor details.
+\item \code{ExampleMPs}: a character vector of the example MP names.
 }
 }
 \description{
@@ -38,19 +38,40 @@ framework.
 \itemize{
 \item \code{CurrentEffort}: Fixes fishing effort at 1 (last historical effort) for
 all fleets, maintaining the spatial distribution of effort from the last
-historical timestep. The \code{Data} argument is accepted for framework
-compatibility but is not used.
+historical timestep, and (in a seasonal model) each season's own share
+of that pattern - see \emph{Seasonal models} below. The \code{Data} argument is
+accepted for framework compatibility but is not used.
 \item \code{CurrentCatch}: Sets the TAC for each fleet to the removals observed in
-the last historical year. Returns an empty \link[=advice-class]{advice} object if no
-landings data are available.
+the last historical year, in the same units as \code{Landings}. Returns
+an empty \link[=advice-class]{advice} object if no landings data are available.
 \item \code{CurrentLandings}: Sets the TAC for each fleet to the landings observed in
-the last historical year. Returns an empty \link[=advice-class]{advice} object if no
-landings data are available.
+the last historical year, in the same units as \code{Landings}. Returns
+an empty \link[=advice-class]{advice} object if no landings data are available.
 \item \code{AverageCatch}: Sets the TAC to the mean total removals (summed over
-fleets) across all historical years. Returns an empty \link[=advice-class]{advice}
-object if no landings data are available.
+fleets) across all historical years, in the same units as
+\code{Data@Landings}. Returns an empty \link[=advice-class]{advice} object if no landings
+data are available.
 \item \code{ExampleMPs}: Returns a character vector naming all example MPs defined
 in this group, for use in batch testing or MP selection.
+}
+\subsection{Seasonal models}{
+
+\code{CurrentCatch}, \code{CurrentLandings}, and \code{AverageCatch} reference a fixed
+historical baseline that does not depend on when the MP is called, so
+each carries an \code{Interval} attribute of \code{1} (see \code{\link[=Interval]{Interval()}}) forcing the
+framework to call them at every timestep - required so that, in a
+seasonal model (\code{Seasons > 1}), each call can return the value for
+the specific season it is advising, rather than the same figure being
+reapplied to every season of the year.
+
+\code{CurrentEffort} always returns an empty \code{\link[=Advice]{Advice()}}, which the framework's
+default fallback (used whenever neither \code{TAC} nor \code{Effort} is set)
+resolves to last year's effort, relative to the last complete historical
+year - separately season-matched by the framework itself so, e.g., this
+year's Q1 reuses last year's Q1 pattern rather than the historical
+period's final season. \code{CurrentEffort} carries the same \code{Interval}
+attribute as the other three for consistency, though - unlike them - its
+output does not actually depend on how often it is called.
 }
 }
 \examples{

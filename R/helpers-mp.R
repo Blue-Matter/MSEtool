@@ -1,8 +1,26 @@
 
-# TODO add option to specify Interval by MP
 .CalcManagementYears <- function(YearsProj, Interval) {
   ind <- seq(1, by = Interval, to = length(YearsProj))
   YearsProj[ind]
+}
+
+.ResolveInterval <- function(OMInterval, MPName, MPfunction) {
+  nms <- names(OMInterval)
+
+  if (!is.null(nms) && MPName %in% nms)
+    return(unname(OMInterval[[MPName]]))
+
+  MPDefault <- attr(MPfunction, 'Interval')
+  if (!is.null(MPDefault))
+    return(MPDefault)
+
+  if (!is.null(nms)) {
+    unnamed <- OMInterval[nms == '']
+    if (length(unnamed))
+      return(unname(unnamed[[1]]))
+  }
+
+  unname(OMInterval[[1]])
 }
 
 .GetLastMPAdvice <- function(Proj) {
@@ -94,11 +112,6 @@
 
   IsFailure <- function(Advice) inherits(Advice, c('try-error', 'character'))
 
-  # only genuine failures (try-error / non-advice return) count as 'error' -
-  # an Advice object's own Log$warning / Log$assumption entries must not be
-  # treated as a failure (they used to all land in Proj@Log$error, which fed
-  # the AllSimsFailed check in .ProjectMP() and could discard an entire MP
-  # run over benign warnings)
   CollectType <- function(type) {
     entries <- list()
     for (sim in seq_along(AdviceSimList)) {
@@ -193,30 +206,15 @@
   nmN <- names(dimnames(New))
 
   if (identical(c(nmC, "Area"), nmN) && !"Area" %in% nmC)
-    return(list(Current = .BroadcastMissingDim(Current, "Area", dimnames(New)[["Area"]]), New = New))
+    return(list(Current = AddDimension(Current, "Area", val = dimnames(New)[["Area"]]), New = New))
 
   if (identical(c(nmN, "Area"), nmC) && !"Area" %in% nmN)
-    return(list(Current = Current, New = .BroadcastMissingDim(New, "Area", dimnames(Current)[["Area"]])))
+    return(list(Current = Current, New = AddDimension(New, "Area", val = dimnames(Current)[["Area"]])))
 
   cli::cli_abort(c(
     "Cannot reconcile `Advice` record shapes across years.",
     "x" = "Dimensions are {.val {nmC}} vs {.val {nmN}}."
   ))
-}
-
-#' Add a Dimension to an Array by Broadcasting Existing Values
-#'
-#' Appends `dim_name` (with levels `dim_vals`) as the last dimension of
-#' `arr`, repeating `arr`'s existing values across every level. Used by
-#' `.ReconcileAdviceShapes()`; see its documentation for why.
-#'
-#' @keywords internal
-.BroadcastMissingDim <- function(arr, dim_name, dim_vals) {
-  d  <- dim(arr)
-  dn <- dimnames(arr)
-  n  <- length(dim_vals)
-  array(rep(as.vector(arr), n), dim = c(d, n),
-        dimnames = c(dn, stats::setNames(list(dim_vals), dim_name)))
 }
 
 .AddAdviceToData <- function(Data, Advice, Year) {

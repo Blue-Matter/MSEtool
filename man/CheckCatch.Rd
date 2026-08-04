@@ -9,8 +9,9 @@ CheckCatch(Data, incUnits = TRUE, slot_names = c("Landings", "Discards"))
 \arguments{
 \item{Data}{A \link[=data-class]{data} object.}
 
-\item{incUnits}{Logical. If \code{TRUE} (default) an additional warning is
-issued when any values in \code{slot_name} are not in units of biomass.}
+\item{incUnits}{Logical. If \code{TRUE} (default), an additional warning is
+issued when \code{Landings} and \code{Discards} units do not match each other
+(only checked when both are included in \code{slot_names}).}
 
 \item{slot_names}{Slots to check. Defaults are \code{Landings} and \code{Discards}}
 }
@@ -19,7 +20,7 @@ issued when any values in \code{slot_name} are not in units of biomass.}
 }
 \description{
 Warns if a catch slot (\code{Landings} or \code{Discards}) contains no data, or if
-any catch values are not in units of biomass
+\code{Landings} and \code{Discards} are not in the same units as each other.
 }
 \details{
 If no \code{Landings} or \code{Discards} data are available, and a finite TAC value
@@ -27,11 +28,10 @@ cannot be produced, the MP will likely fall back to setting effort to last
 historical effort - ie same as \code{\link[=CurrentEffort]{CurrentEffort()}} (the default for
 empty \code{\link[=Advice]{Advice()}} objects).
 
-If the \code{Landings} or \code{Discards} data are not in units of \code{Biomass} the
-subsequent TAC values may be incorrect because the TAC is always set in units
-of \code{Biomass}.
-
-Future versions of \code{MSEtool} may allow an option to set TAC in units of \code{Number}.
+If \code{Landings} and \code{Discards} are not in the same units (e.g. one in
+\code{Biomass} and the other in \code{Number}), summing them to produce a removals
+TAC is not meaningful. The unit-mismatch check is only performed when both
+\code{'Landings'} and \code{'Discards'} are included in \code{slot_names}.
 
 Warnings are suppressed after the last historical year (i.e. once
 \code{max(Data@Years) > Data@YearLH}) so that they appear only on the first

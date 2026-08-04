@@ -44,7 +44,8 @@
 .ProjectMPCompute <- function(Proj, MPName, MPfunction, YearsHist, YearsProj,
                               StockNames, FleetNames, silent = FALSE) {
 
-  ManagementYears <- .CalcManagementYears(YearsProj, Proj@OM@Interval)
+  Interval        <- .ResolveInterval(Proj@OM@Interval, MPName, MPfunction)
+  ManagementYears <- .CalcManagementYears(YearsProj, Interval)
   YearsAll        <- c(YearsHist, YearsProj)
   Areas           <- 1:nArea(Proj)
   StartTime       <- Sys.time()
@@ -115,9 +116,14 @@
     # If neither TAC or Effort are set, set Effort = 1
     # (keep same as last historical time step - matching
     #  both seasonal and spatial distributions)
+    Seasons   <- max(1L, as.integer(Proj@OM@Seasons))
+    LHIndLast <- match(max(YearsHist), YearsAll)
+    SeasonInd <- ((match(Year, YearsAll) - 1L) %% Seasons) + 1L
+    LHInd     <- LHIndLast - Seasons + SeasonInd
+
     AdviceSimList <- .CheckTACEffort(AdviceSimList,
                                     Proj,
-                                    LHInd = match(max(YearsHist), YearsAll),
+                                    LHInd = LHInd,
                                     FleetNames)
 
     # Save MP Advice
