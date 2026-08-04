@@ -762,7 +762,12 @@ ConvertData <- function(x, Seasons = 1, sim = 1, silent = FALSE) {
     )
   }
 
-  total <- (if (!is.null(Lal)) Lal else 0) + (if (!is.null(Dal)) Dal else 0)
+  Lal0 <- Lal
+  Dal0 <- Dal
+  if (!is.null(Lal0)) Lal0[is.na(Lal0)] <- 0
+  if (!is.null(Dal0)) Dal0[is.na(Dal0)] <- 0
+
+  total <- (if (!is.null(Lal0)) Lal0 else 0) + (if (!is.null(Dal0)) Dal0 else 0)
   Data@Cat <- matrix(rowSums(total, na.rm = TRUE), nrow = 1)
   Data@Units <- if (length(unitsL)) unitsL[1] else if (length(unitsD)) unitsD[1] else NA_character_
 
