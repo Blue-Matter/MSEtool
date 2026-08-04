@@ -1,7 +1,8 @@
 #' Build a markdown table of the TAC calculation/implementation schedule
 #'
-#' @param FirstYear Numeric, or an [om-class] object. If numeric, the first
-#'   implementation year (the first management year). If an `om` object,
+#' @param FirstYear Numeric, or an [om-class], [hist-class], or [mse-class] 
+#'   object. If numeric, the first implementation year (the first management 
+#'   year). If an `om` object,
 #'   `FirstYear`, `DataLag`, and `Interval` are derived from it (`MPStartYear`
 #'   if set, otherwise `CurrentYear + 1`; [DataLag()]; and [Interval()]),
 #'   and the corresponding arguments below are ignored.
@@ -19,6 +20,9 @@ ManagementScheduleTable <- function(FirstYear, DataLag, Interval,
                                     nYears = Interval * 2 + 1,
                                     print  = TRUE) {
 
+  if (methods::is(FirstYear, "hist") || methods::is(FirstYear, "mse")) 
+    FirstYear <- FirstYear@OM
+  
   if (methods::is(FirstYear, "om")) {
     om <- FirstYear
     Interval  <- om@Interval[1]
