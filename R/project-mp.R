@@ -36,7 +36,9 @@
                        silent=FALSE) {
 
   result <- .ProjectMPCompute(Proj, MPName, MPfunction, YearsHist, YearsProj,
-                              StockNames(MSE), FleetNames(MSE), silent)
+                              StockNames = StockNames(MSE), 
+                              FleetNames = FleetNames(MSE), 
+                              silent)
   .MergeMPResult(MSE, result, MPName, mp, YearsHist, YearsProj, silent)
 }
 
@@ -80,7 +82,7 @@
 
     # Simulate data for the previous time step 
     Proj <- .GenerateProjectionData(Proj, Year, YearsHist, YearsProj)
-      
+  
     # Get previous advice
     LastAdviceSimList      <- .GetLastMPAdvice(Proj)
     LastAggBagLimitSimList <- .GetLastMPAggBagLimit(Proj)
@@ -110,6 +112,7 @@
                          mp,
                          FleetNames,
                          Areas)
+    
     AdviceSimList      <- MPResult$AdviceSimList
     AggBagLimitSimList <- MPResult$AggBagLimitSimList
 
