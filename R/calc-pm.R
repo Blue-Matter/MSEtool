@@ -23,7 +23,9 @@
 #' @param object An [mse-class] object, or a `list` of [mse-class] objects.
 #' @param Ref Numeric. Reference/threshold value.
 #' @param Years Numeric vector of projection years to evaluate over. Default
-#'   `NULL` uses all projection years.
+#'   `NULL` uses all projection years in which the MP was active, i.e.
+#'   excluding any "interim" years before `OM@MPStartYear` (see
+#'   [om-class]).
 #' @param Stocks Character vector of stock names to include. Default `NULL`
 #'   uses the automatic complex/spawning-stock grouping described above.
 #' @param silent Logical. Suppress the [CombineMSE()] summary message when
@@ -70,9 +72,11 @@ NULL
   out
 }
 
-.BuildPM <- function(df, Ref, Years, op, Name, Caption, group_col = 'Stock') {
+.BuildPM <- function(df, Ref, Years, op, Name, Caption, group_col = 'Stock', OM = NULL) {
   if ('Period' %in% names(df))
     df <- df[df$Period == 'Projection', ]
+  if (!is.null(OM))
+    df <- .FilterMPActiveYears(df, OM)
   if (!is.null(Years))
     df <- df[df$Year %in% Years, ]
   YearsOut <- if ('Year' %in% names(df)) sort(unique(df$Year)) else numeric(0)
@@ -174,15 +178,20 @@ NULL
   do.call('[', c(list(arr), idx_list, list(drop = FALSE)))
 }
 
-# Filters `df` (must have `MP` and `Year` columns) to each row's own MP's
-# management years, since different MPs can resolve to different intervals
-# (see `.ResolveInterval()`).
+.FilterMPActiveYears <- function(df, OM) {
+  if (is.null(OM@MPStartYear))
+    return(df)
+  df[floor(df$Year) >= OM@MPStartYear, , drop = FALSE]
+}
+
 .FilterManagementYears <- function(df, object) {
   YearsProj <- Years(object@OM, 'Projection')
   mpNames   <- unique(df$MP)
   keep <- lapply(mpNames, function(mp) {
     Interval  <- .ResolveInterval(object@OM@Interval, mp, object@MPs[[mp]])
     ManageYrs <- .CalcManagementYears(YearsProj, Interval)
+    if (!is.null(object@OM@MPStartYear))
+      ManageYrs <- ManageYrs[floor(ManageYrs) >= object@OM@MPStartYear]
     df$MP == mp & df$Year %in% ManageYrs
   })
   df[Reduce(`|`, keep), ]
@@ -192,6 +201,7 @@ NULL
   df <- Removals(object, df = TRUE, byFleet = FALSE, byAge = FALSE,
                 bySize = FALSE, byArea = FALSE, Reduce = FALSE)
   df <- df[df$Period == 'Projection', ]
+  df <- .FilterMPActiveYears(df, object@OM)
 
   if (ManagementOnly)
     df <- .FilterManagementYears(df, object)
@@ -208,6 +218,7 @@ NULL
 .GroupedEffort <- function(object, Fleets, ManagementOnly = FALSE) {
   df <- Effort(object, df = TRUE)
   df <- df[df$Period == 'Projection', ]
+  df <- .FilterMPActiveYears(df, object@OM)
 
   if (ManagementOnly)
     df <- .FilterManagementYears(df, object)
@@ -240,7 +251,7 @@ PM_FFMSY <- function(object, Ref = 1, Years = NULL, silent = TRUE) {
   object <- .CoercePMInput(object, silent)
   df <- F_FMSY(object, df = TRUE, Reduce = FALSE)
   .BuildPM(df, Ref = Ref, Years = Years, op = `<`,
-           Name = 'F_FMSY', Caption = paste0('P(F < ', Ref, ' FMSY)'))
+           Name = 'F_FMSY', Caption = paste0('P(F < ', Ref, ' FMSY)'), OM = object@OM)
 }
 class(PM_FFMSY) <- 'pm'
 
@@ -251,7 +262,7 @@ PM_SBSBMSY <- function(object, Ref = 1, Years = NULL, silent = TRUE) {
   df <- SB_SBMSY(object, df = TRUE, Reduce = FALSE)
   df <- df[df$Stock %in% .SpawningStockNames(object@OM), ]
   .BuildPM(df, Ref = Ref, Years = Years, op = `>`,
-           Name = 'SB_SBMSY', Caption = paste0('P(SB > ', Ref, ' SBMSY)'))
+           Name = 'SB_SBMSY', Caption = paste0('P(SB > ', Ref, ' SBMSY)'), OM = object@OM)
 }
 class(PM_SBSBMSY) <- 'pm'
 
@@ -279,6 +290,9 @@ PM_Status <- function(object, Years = NULL, silent = TRUE) {
   ff <- ff[ff$Period == 'Projection', ] |>
     dplyr::rename(Complex = 'Stock') |>
     dplyr::select('Sim', 'Complex', 'Year', 'MP', F = 'Value')
+
+  sb_df <- .FilterMPActiveYears(sb_df, object@OM)
+  ff    <- .FilterMPActiveYears(ff, object@OM)
 
   if (!is.null(Years)) {
     sb_df <- sb_df[sb_df$Year %in% Years, ]
@@ -308,7 +322,7 @@ PM_SBSBlim <- function(object, Blim, Years = NULL, silent = TRUE) {
   df$Value <- df$Value / .ResolveRefByStock(Blim, df$Stock)
 
   .BuildPM(df, Ref = 1, Years = Years, op = `>`,
-           Name = 'SB_SBlim', Caption = 'P(SB > SBlim)')
+           Name = 'SB_SBlim', Caption = 'P(SB > SBlim)', OM = object@OM)
 }
 class(PM_SBSBlim) <- 'pm'
 
@@ -321,6 +335,7 @@ PM_Safety <- function(object, Blim, Years = NULL, silent = TRUE) {
 
   df <- SBiomass(object, df = TRUE, Reduce = FALSE)
   df <- df[df$Period == 'Projection' & df$Stock %in% .SpawningStockNames(object@OM), ]
+  df <- .FilterMPActiveYears(df, object@OM)
   if (!is.null(Years))
     df <- df[df$Year %in% Years, ]
   YearsOut <- sort(unique(df$Year))
@@ -363,6 +378,7 @@ PM_Rebuild <- function(object, Year, Target = 1, silent = TRUE) {
 
   target_df <- sb[sb$Period == 'Projection' & sb$Year == Year &
                     sb$Stock %in% overfished_stocks, ]
+  target_df <- .FilterMPActiveYears(target_df, object@OM)
   target_df$Value <- target_df$Value / Target
 
   .BuildPM(target_df, Ref = 1, Years = Year, op = `>`,

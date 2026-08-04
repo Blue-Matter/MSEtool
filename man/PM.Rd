@@ -43,7 +43,9 @@ PM_Stability(object, Threshold, Years = NULL, Stocks = NULL, silent = TRUE)
 \item{Ref}{Numeric. Reference/threshold value.}
 
 \item{Years}{Numeric vector of projection years to evaluate over. Default
-\code{NULL} uses all projection years.}
+\code{NULL} uses all projection years in which the MP was active, i.e.
+excluding any "interim" years before \code{OM@MPStartYear} (see
+\link{om-class}).}
 
 \item{silent}{Logical. Suppress the \code{\link[=CombineMSE]{CombineMSE()}} summary message when
 \code{object} is a \code{list}. Default \code{TRUE}.}
