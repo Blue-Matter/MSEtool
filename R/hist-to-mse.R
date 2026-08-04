@@ -109,7 +109,9 @@
 #'
 #' Recursively scans the body of `MP` and any detected helper functions,
 #' returning the names of all user-defined functions reachable from `MP` that
-#' are not part of the MSEtool namespace or base R. Used by
+#' are not part of the MSEtool namespace or base R. Detects both functions
+#' called directly (`f(...)`) and functions referenced by name as a bare
+#' argument value (e.g. passed as a callback to another function). Used by
 #' `.MakeSelfContained()` to identify functions that must be copied into the
 #' MP's self-contained environment.
 #'
@@ -122,23 +124,27 @@
 #' @return A character vector of unique helper function names.
 #' @keywords internal
 .DetectCalledFunctions <- function(MP, MSEtool_funs, visited=character()) {
-  skip <- c("{", "<-", "=", "(", "[", "[[",
-            "if", "for", "while", "repeat", "return")
-  
+  skip <- c("{", "<-", "=", "(", "[", "[[", "::", ":::",
+            "if", "for", "while", "repeat", "return", "function")
+
   find_calls <- function(expr) {
-    if (!is.call(expr)) return(NULL)
-    fun <- expr[[1]]
-    out <- character()
-    if (is.symbol(fun)) {
-      fname <- as.character(fun)
-      if (!fname %in% skip &&
-          !fname %in% MSEtool_funs &&
-          exists(fname, mode="function", inherits=TRUE))
-        out <- fname
+    if (is.symbol(expr)) {
+      fname <- as.character(expr)
+      if (!nzchar(fname) || fname %in% skip || fname %in% MSEtool_funs)
+        return(NULL)
+      if (exists(fname, mode="function", inherits=TRUE))
+        return(fname)
+      return(NULL)
     }
-    c(out, unlist(lapply(as.list(expr)[-1], find_calls)))
+    if (!is.call(expr)) return(NULL)
+
+    fun <- expr[[1]]
+    if (is.symbol(fun) && as.character(fun) %in% c("::", ":::"))
+      return(NULL)
+
+    unlist(lapply(as.list(expr), find_calls))
   }
-  
+
   direct      <- unique(find_calls(body(MP)))
   new_helpers <- setdiff(direct, c(MSEtool_funs, visited))
   visited     <- union(visited, new_helpers)
@@ -159,9 +165,9 @@
 #' Make an MP Self-Contained by Capturing Helper Functions
 #'
 #' Creates a new function environment for `MP`, parented to the MSEtool
-#' namespace so that all package functions are findable via normal lexical
-#' scoping without being copied. Only user-defined helper functions detected
-#' by `.DetectCalledFunctions()` are copied explicitly into the new environment.
+#' namespace so that all MSEtool package functions are findable via normal
+#' lexical scoping without being copied. Every other helper function detected
+#' by `.DetectCalledFunctions()`.
 #'
 #' This ensures that an MP carries all of its dependencies when passed to a
 #' parallel worker or saved to disk, without bundling the entire MSEtool
@@ -174,10 +180,10 @@
 #' @keywords internal
 .MakeSelfContained <- function(MP) {
   .CheckClass(MP, c('mp', 'mmp'), 'MP')
-  
+
   env    <- new.env(parent=asNamespace("MSEtool"))
   mp_env <- environment(MP)
-  
+
   MSEtool_funs <- names(Filter(
     isTRUE,
     vapply(
@@ -186,16 +192,13 @@
       logical(1)
     )
   ))
-  
+
   helpers <- .DetectCalledFunctions(MP, MSEtool_funs=MSEtool_funs)
-  helpers <- Filter(\(fname) {
-    exists(fname, envir=mp_env, inherits=TRUE) &&
-      !isNamespace(environment(get(fname, envir=mp_env, inherits=TRUE)))
-  }, helpers)
-  
+  helpers <- Filter(\(fname) exists(fname, envir=mp_env, inherits=TRUE), helpers)
+
   for (fname in helpers)
     env[[fname]] <- get(fname, envir=mp_env, inherits=TRUE)
-  
+
   environment(MP) <- env
   MP
 }
