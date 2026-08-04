@@ -28,9 +28,13 @@
 #' - **Named arrays with a `"Year"` dimension** — joined along the year
 #'   axis using [abind::abind()]. An error is thrown if years are not
 #'   strictly increasing across `object1` and `object2`.
-#' - **Numeric vectors** — concatenated with `c()`. If all values exceed
-#'   1000 (i.e. are likely calendar years), strict monotonicity is checked
-#'   and an error is thrown if the combined sequence is not increasing.
+#' - **Numeric vectors** — if `object1` and `object2` are identical (e.g.
+#'   static per-fleet metadata such as a `compdata`'s `Classes` bin
+#'   boundaries, unchanged between the historical and projection segments),
+#'   `object1` is returned as-is rather than duplicated. Otherwise the two
+#'   are concatenated with `c()`. If all values exceed 1000 (i.e. are likely
+#'   calendar years), strict monotonicity is checked and an error is thrown
+#'   if the combined sequence is not increasing.
 #' - **All other types** — returned unchanged from `object1`.
 #'
 #' @section Error handling:
@@ -103,9 +107,9 @@ JoinYear <- function(object1, object2) {
   }
 
   if (is.numeric(object1)) {
-    if (length(object1)==1 && object1 == object2)
+    if (identical(object1, object2))
       return(object1)
-    
+
     out <- c(object1, object2)
     if (all(out > 1000)) { # years (probably)
       if (!all(diff(out) > 0)) 

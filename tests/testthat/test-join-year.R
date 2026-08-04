@@ -53,3 +53,17 @@ test_that("JoinYear recurses through lists element-wise", {
   out <- JoinYear(a, b)
   expect_equal(dim(out$x), c(Sim = 1L, Year = 2L))
 })
+
+test_that("JoinYear does not duplicate identical non-year numeric vectors", {
+  # e.g. a compdata's per-fleet `Classes` bin boundaries, which are static
+  # metadata shared by the historical and projection segments of a `data`
+  # object and must not be concatenated just because length(object1) > 1.
+  bins <- seq(10, 160, by = 2)
+  out <- JoinYear(bins, bins)
+  expect_equal(out, bins)
+})
+
+test_that("JoinYear still concatenates differing non-year numeric vectors", {
+  out <- JoinYear(c(1, 2, 3), c(4, 5))
+  expect_equal(out, c(1, 2, 3, 4, 5))
+})
