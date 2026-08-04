@@ -531,6 +531,14 @@
   if ('Area' %in% names(dimnames(wt_at_size)))
     wt_at_size <- DropDimension(wt_at_size, 'Area', warn = FALSE)
 
+  # constant input: skip division to avoid floating-point rounding outside range
+  const_val <- obj_at_size[1]
+  if (all(abs(obj_at_size - const_val) < 1e-9, na.rm = TRUE)) {
+    object@MeanAtAge <- fallback@MeanAtAge
+    object@MeanAtAge[] <- const_val
+    return(object)
+  }
+
   NumObj <- object
   slot(NumObj, slotName) <- ArrayMultiply(wt_at_size, obj_at_size)
 
@@ -541,7 +549,8 @@
   den_at_age <- .AtSize2AtAge(DenObj, Length, allow_shortcut=FALSE)@MeanAtAge
 
   eff <- num_at_age / den_at_age
-  bad <- !is.finite(eff)
+  negligible <- abs(den_at_age) < 1e-8 * max(abs(den_at_age), na.rm = TRUE)
+  bad <- !is.finite(eff) | negligible
 
   fallbackAtAge <- Extend(
     fallback@MeanAtAge,
