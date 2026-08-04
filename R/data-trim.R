@@ -44,6 +44,6 @@ DataTrim <- function(Data, Year) {
   OutYears <- Years[Years <= Year]
   
   OutData <- .SubsetYear(Data, OutYears, Impute =FALSE)
-  OutData@Advice <-  Data@Advice
+  # OutData@Advice <-  Data@Advice
   OutData
 }
