@@ -746,8 +746,8 @@ ImportSS <- function(SSDir,
 }
 
 .GetSSFecundity <- function(st, replist, YearsList, Ages) {
-  
-  Age_Beg <- `Mat*Fecund` <- `Mat_F_wtatage` <- NULL
+
+  Age_Beg <- `Mat*Fecund` <- `Mat_F_wtatage` <- Wt_Beg <- Len_Mat <- Age_Mat <- NULL
   endgrowth <- replist$endgrowth |> dplyr::filter(Sex == st)
   seas <- unique(endgrowth$Seas)
 
@@ -757,16 +757,19 @@ ImportSS <- function(SSDir,
     )
   }
 
-  if (!is.null(replist$endgrowth[["Mat*Fecund"]])) {
+  if (identical(replist$SpawnOutputUnits, "biomass")) {
+    fec_age <- replist$endgrowth |>
+      dplyr::filter(Morph == 1, Sex == st) |>
+      dplyr::mutate(Fecundity = Wt_Beg * Len_Mat * Age_Mat) |>
+      dplyr::select(Age_Beg, Fecundity)
+  } else if (!is.null(replist$endgrowth[["Mat*Fecund"]])) {
     fec_age <- replist$endgrowth |>
       dplyr::filter(Morph == 1, Sex == st) |>
       dplyr::select(Age = Age_Beg, Fecundity = `Mat*Fecund`)
-  } else {
-    if (!is.null(replist$endgrowth$Mat_F_wtatage)) {
-      fec_age <- replist$endgrowth |>
-        dplyr::filter(Morph == 1, Sex == st) |>
-        dplyr::select(Age_Beg, Fecundity = Mat_F_wtatage)
-    }
+  } else if (!is.null(replist$endgrowth$Mat_F_wtatage)) {
+    fec_age <- replist$endgrowth |>
+      dplyr::filter(Morph == 1, Sex == st) |>
+      dplyr::select(Age_Beg, Fecundity = Mat_F_wtatage)
   }
 
   array(fec_age$Fecundity,
@@ -780,50 +783,37 @@ ImportSS <- function(SSDir,
 
 .GetSSFecunditySeasonal <- function(st, replist, YearsList, Ages) {
 
-  Age_Beg <- `Mat*Fecund` <- `Mat_F_wtatage` <- NULL
+  Age_Beg <- `Mat*Fecund` <- Mat_F_wtatage <- Wt_Beg <- Len_Mat <- Age_Mat <- Value <- NULL
 
-  if (!is.null(replist$endgrowth[["Mat*Fecund"]])) {
-    fec_age <- replist$endgrowth |>
-      dplyr::filter(Morph == 1, Sex == st) |>
-      dplyr::select(Age = Age_Beg, Fecundity = `Mat*Fecund`) |>
-      dplyr::distinct(Age, .keep_all = TRUE)
-  } else {
-    if (!is.null(replist$endgrowth$Mat_F_wtatage)) {
-      fec_age <- replist$endgrowth |>
-        dplyr::filter(Morph == 1, Sex == st) |>
-        dplyr::select(Age = Age_Beg, Fecundity = Mat_F_wtatage) |>
-        dplyr::distinct(Age, .keep_all = TRUE)
-    }
-  }
+  endgrowth <- replist$endgrowth |> dplyr::filter(Morph == 1, Sex == st)
 
   q_ages <- Ages@Classes
   n_ages <- length(q_ages)
 
   # For Sex > 1, Morph == 1 rows may not exist; return zeros (e.g. males)
-  if (!exists("fec_age") || nrow(fec_age) == 0L) {
+  if (nrow(endgrowth) == 0L) {
     return(array(0, dim = c(n_ages, 1L),
                  dimnames = list(Age = q_ages, Year = YearsList$YearsHist[1])))
   }
 
-  birthseas <- .GetSSBirthSeas(replist)
-  n_seasons <- length(unique(replist$endgrowth$Seas[replist$endgrowth$Sex == st]))
+  if (identical(replist$SpawnOutputUnits, "biomass")) {
+    endgrowth <- endgrowth |> dplyr::mutate(Value = Wt_Beg * Len_Mat * Age_Mat)
+  } else if (!is.null(endgrowth[["Mat*Fecund"]])) {
+    endgrowth <- endgrowth |> dplyr::mutate(Value = `Mat*Fecund`)
+  } else if (!is.null(endgrowth$Mat_F_wtatage)) {
+    endgrowth <- endgrowth |> dplyr::mutate(Value = Mat_F_wtatage)
+  } else {
+    return(array(0, dim = c(n_ages, 1L),
+                 dimnames = list(Age = q_ages, Year = YearsList$YearsHist[1])))
+  }
 
-  n_idx <- seq_len(n_ages) - 1L
-  seasons_to_yr_bound <- n_seasons - birthseas + 1L
-
-  age_beg <- ifelse(
-    n_idx < seasons_to_yr_bound,
-    0L,
-    as.integer(floor((n_idx - seasons_to_yr_bound) / n_seasons) + 1L)
-  )
-
-  max_age  <- max(fec_age$Age)
-  fec_vals <- fec_age$Fecundity[match(pmin(age_beg, max_age), fec_age$Age)]
-
-  array(fec_vals,
-    dim = c(n_ages, 1L),
-    dimnames = list(Age = q_ages, Year = YearsList$YearsHist[1])
-  )
+  YearsHist <- YearsList$YearsHist
+  endgrowth |>
+    dplyr::select(Age = Age_Beg, Value) |>
+    dplyr::mutate(Year = YearsHist[1]) |>
+    dplyr::arrange(Age, Year) |>
+    dplyr::select(Age, Year, Value) |>
+    DF2Array()
 }
 
 .SS2Fecundity <- function(st, RepList, YearsList, Ages) {
@@ -1465,12 +1455,16 @@ ImportSS <- function(SSDir,
   
   for (yr in names(AgeSel_split)) {
     vals <- AgeSel_split[[yr]]$V[valid]
+    seas <- AgeSel_split[[yr]]$Seas[valid]
     ind1 <- year_to_ind[[yr]]
-    ind2 <- year_to_ind[[as.character(as.integer(yr) + 1L)]] - 1L
-    MeanAtAge[age_ind, ind1:ind2] <- vals
+    col_ind <- ind1 + seas - 1L
+    MeanAtAge[cbind(age_ind, col_ind)] <- vals
   }
-  
-  col_max <- apply(MeanAtAge, 2, max)
+
+  MeanAtAge[is.na(MeanAtAge)] <- 0
+
+  col_max <- apply(MeanAtAge, 2, max, na.rm = TRUE)
+  col_max[col_max == 0] <- 1 # avoid 0/0 for fleets/periods with no selectivity data
   sweep(MeanAtAge, 2, col_max, "/")
 }
 
