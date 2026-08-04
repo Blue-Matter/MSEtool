@@ -122,6 +122,7 @@
     Bias[!is.finite(Bias)] <- NA
     
     BiasMean <- apply(Bias, 'Sim', mean, na.rm=TRUE)
+    BiasMean[!is.finite(BiasMean)] <- 1
     Bias <- array(BiasMean, dim=c(length(BiasMean),
                                   length(CatchObs@Years)),
                                   dimnames=list(Sim=seq_along(BiasMean),
