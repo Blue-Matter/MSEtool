@@ -377,6 +377,7 @@ Collate:
     'utils-unit-conversion.R'
     'utils-valid-units.R'
     'utils-wrapped-normal.R'
+    'validate-shift.R'
     'vbiomass.R'
     'zz_ASAP2OM.R'
     'zz_Awatea2OM.R'
