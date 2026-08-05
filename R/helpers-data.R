@@ -22,10 +22,10 @@ NULL
 #' @export
 LastTAC <- function(Data) {
   .CheckClass(Data, 'data', 'Data')
-  LastTAC <- utils::tail(Data@Advice@TAC, 1) |> as.numeric() |> sum(na.rm = TRUE)
+  LastTAC <- utils::tail(Data@Advice@TAC, 1) |> as.numeric() 
   if (length(LastTAC) < 1)
     LastTAC <- sum(utils::tail(Data@Landings@Value, 1) + utils::tail(Data@Discards@Value, 1))
-  LastTAC
+  sum(LastTAC, na.rm = TRUE)
 }
 
 #' @describeIn DataHelpers Get the index of the last historical year within
