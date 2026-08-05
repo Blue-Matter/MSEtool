@@ -21,8 +21,9 @@ parameters in detail.
 \item{\code{CV}}{\code{array} or \code{NULL}. Coefficients of variation matching the
 dimensions of \code{Value}. See \code{\link[=CatchData]{CatchData()}}.}
 
-\item{\code{Units}}{\code{character} or \code{NULL}. Units of catch measurement per fleet
-(e.g., \code{"t"} for tonnes, \code{"numbers"}). See \code{\link[=CatchData]{CatchData()}}.}
+\item{\code{Units}}{\code{character} or \code{NULL}. Units of catch measurement per fleet:
+\code{"Biomass"} or \code{"Number"}. See \code{\link[=CatchData]{CatchData()}} and \code{\link[=CheckCatch]{CheckCatch()}} for the
+consequences of \code{Landings} and \code{Discards} having mismatched units.}
 
 \item{\code{Ref}}{\code{array} or \code{NULL}. Reference catch values (e.g., a historical
 baseline), matching the dimensions of \code{Value}. See \code{\link[=CatchData]{CatchData()}}.}

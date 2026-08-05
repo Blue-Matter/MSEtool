@@ -257,6 +257,8 @@ Collate:
     'models-srr.R'
     'models-weight.R'
     'models.R'
+    'mp-empirical-index.R'
+    'mp-utils.R'
     'mse-update.R'
     'opt-effort-choke.R'
     'opt-effort-helpers.R'
@@ -441,5 +443,5 @@ Collate:
     'zz_simulate-OM.R'
     'zz_spatial_targ_opt.R'
     'zz_utils.R'
-Config/roxygen2/version: 8.0.0
+Config/roxygen2/version: 8.1.0
 Config/testthat/edition: 3
