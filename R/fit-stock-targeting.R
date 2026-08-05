@@ -2,7 +2,7 @@
 #'
 #' Estimates the covariance of log-targeting deviations from historical
 #' targeting weights stored in `OM@StockTargeting@Targeting`, as produced
-#' by `.StandardizeEffort()`.
+#' by [StandardizeEffort()].
 #'
 #' For each simulation, fleet, and year, the fleet-level log-effort is the
 #' geometric mean of log-targeting weights over **active stocks at that time
@@ -34,7 +34,7 @@
 #' @param OM An operating model object ([om-class]) with a populated
 #'   `@StockTargeting@Targeting` array of dimension
 #'   `[nSim, nStock, nFleet, nYearHist]`, as produced by
-#'   `.StandardizeEffort()`.
+#'   [StandardizeEffort()].
 #' @param tol `numeric(1)`. Tolerance below which targeting values are treated
 #'   as zero for the purpose of covariance estimation. Default `1e-6`.
 #' @param active_thresh `numeric(1)`. Minimum proportion of historical years
@@ -47,14 +47,14 @@
 #'     exponentiated to the natural scale. Array of dimension
 #'     `[nSim, nStock, nFleet]`. Values are approximately 1 for active stocks
 #'     (close to zero on the log scale by the sum-to-zero construction of
-#'     `.StandardizeEffort()`, but not guaranteed to be exactly 1) and exactly
+#'     [StandardizeEffort()], but not guaranteed to be exactly 1) and exactly
 #'     1 for inactive stocks (neutral, log-deviation fixed at zero).
 #'   - `@StockTargeting@Covariance`: stationary covariance matrix of
 #'     log-targeting deviations, array of dimension
 #'     `[nSim, nStock, nStock, nFleet]`. Rows and columns for inactive stocks
 #'     are zero.
 #'
-#' @seealso `.StandardizeEffort()`, [GenerateStockTargeting()]
+#' @seealso [StandardizeEffort()], [GenerateStockTargeting()]
 #' @export
 FitStockTargeting <- function(OM, tol = 1e-6, active_thresh = 0.1) {
   

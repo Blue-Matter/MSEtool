@@ -21,7 +21,7 @@ warnings during population.}
 \item{force}{Logical. If \code{TRUE}, force re-population even if the internal
 object digest indicates no changes since the last call.}
 
-\item{standardize_effort}{Logical. Used internally. Apply \code{.StandardizeEffort()}?}
+\item{standardize_effort}{Logical. Used internally. Apply \code{\link[=StandardizeEffort]{StandardizeEffort()}}?}
 
 \item{adjust_fecundity}{Logical. Used internally. Apply \code{\link[=AdjustSeasonalFecundity]{AdjustSeasonalFecundity()}}?}
 }

@@ -73,7 +73,7 @@
 #' OM <- GenerateStockTargeting(OM, Period = "Projection", TruncSD = 2, n_recent = 5)
 #' }
 #'
-#' @seealso [FitStockTargeting()], `.StandardizeEffort()`
+#' @seealso [FitStockTargeting()], [StandardizeEffort()]
 #'
 #' @export
 GenerateStockTargeting <- function(OM,

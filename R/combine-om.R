@@ -12,9 +12,12 @@
 #'   Default `"Combined OM"`
 #' @param FillEffort List controlling effort forward-filling. See `Details`.
 #' @param FillEfficiency List controlling efficiency forward-filling. See `Details`.
-#' @param .StandardizeEffort `logical(1)`. If `TRUE` (default), calls
-#'   `.StandardizeEffort()` after combining, which equalises effort across
+#' @param StandardizeEffort `logical(1)`. If `TRUE` (default), calls
+#'   [StandardizeEffort()] after combining, which equalises effort across
 #'   stocks for each fleet and back-calculates stock targeting weights.
+#' @param record_assumption `logical(1)`. Passed to [StandardizeEffort()].
+#'   Record the effort-standardization as an `"assumption"` in `OM@Log`?
+#'   Default `TRUE`. Ignored if `StandardizeEffort = FALSE`.
 #' @param silent `logical(1)`. If `TRUE`, suppresses informational messages. Default `FALSE`.
 #'
 #' @return An [`om-class`] object with:
@@ -86,7 +89,8 @@ CombineOMs <- function(
     Name = "Combined OM",
     FillEffort = list(nYears = 3, SD = 0.1, Mean = NULL, Values = NULL),
     FillEfficiency = list(nYears = 3, SD = 0.1, Mean = NULL, Values = NULL),
-    .StandardizeEffort = TRUE,
+    StandardizeEffort = TRUE,
+    record_assumption = TRUE,
     silent = FALSE) {
   
   .ValidateOMList(OM_List)
@@ -116,8 +120,8 @@ CombineOMs <- function(
 
   OM_Out@EFactor <- purrr::map(OM_List, slot, 'EFactor')
 
-  if (.StandardizeEffort)
-    OM_Out <- .StandardizeEffort(OM_Out, populate=FALSE)
+  if (StandardizeEffort)
+    OM_Out <- StandardizeEffort(OM_Out, populate = FALSE, record_assumption = record_assumption)
   
   OM_Out
   

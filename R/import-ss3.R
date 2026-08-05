@@ -243,7 +243,7 @@ ImportSS <- function(SSDir,
   
   if (Populate) {
     out <- if (nStock > 1) {
-      try(.StandardizeEffort(OM, populate = TRUE, record_assumption = FALSE), silent = TRUE)
+      try(StandardizeEffort(OM, populate = TRUE, record_assumption = FALSE), silent = TRUE)
     } else {
       try(PopulateOM(OM), silent = TRUE)
     }

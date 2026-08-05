@@ -82,11 +82,12 @@
 #'
 #' @examples
 #' \dontrun{
-#' OM_standardized <- .StandardizeEffort(OM)
+#' OM_standardized <- StandardizeEffort(OM)
 #' # Inspect back-calculated targeting
 #' OM_standardized@StockTargeting@Targeting
 #' }
-.StandardizeEffort <- function(OM,
+#' @export
+StandardizeEffort <- function(OM,
                               populate = TRUE,
                               fit_stock_targeting = TRUE,
                               generate_stock_targeting = TRUE,
@@ -178,7 +179,7 @@
       OM <- .CaptureLog(OM,
                        string = cli::format_inline(
                          "Effort values for Fleet {.val {fleet_names[fl]}} differ across stocks."),
-                       name = '.StandardizeEffort',
+                       name = 'StandardizeEffort',
                        type = 'assumption')
 
       OM <- .CaptureLog(OM,

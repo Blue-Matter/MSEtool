@@ -9,7 +9,8 @@ CombineOMs(
   Name = "Combined OM",
   FillEffort = list(nYears = 3, SD = 0.1, Mean = NULL, Values = NULL),
   FillEfficiency = list(nYears = 3, SD = 0.1, Mean = NULL, Values = NULL),
-  .StandardizeEffort = TRUE,
+  StandardizeEffort = TRUE,
+  record_assumption = TRUE,
   silent = FALSE
 )
 }
@@ -25,9 +26,13 @@ Default \code{"Combined OM"}}
 
 \item{FillEfficiency}{List controlling efficiency forward-filling. See \code{Details}.}
 
-\item{.StandardizeEffort}{\code{logical(1)}. If \code{TRUE} (default), calls
-\code{.StandardizeEffort()} after combining, which equalises effort across
+\item{StandardizeEffort}{\code{logical(1)}. If \code{TRUE} (default), calls
+\code{\link[=StandardizeEffort]{StandardizeEffort()}} after combining, which equalises effort across
 stocks for each fleet and back-calculates stock targeting weights.}
+
+\item{record_assumption}{\code{logical(1)}. Passed to \code{\link[=StandardizeEffort]{StandardizeEffort()}}.
+Record the effort-standardization as an \code{"assumption"} in \code{OM@Log}?
+Default \code{TRUE}. Ignored if \code{StandardizeEffort = FALSE}.}
 
 \item{silent}{\code{logical(1)}. If \code{TRUE}, suppresses informational messages. Default \code{FALSE}.}
 }

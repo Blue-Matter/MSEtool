@@ -10,7 +10,7 @@
 #'   warnings during population.
 #' @param force Logical. If `TRUE`, force re-population even if the internal
 #'   object digest indicates no changes since the last call.
-#' @param standardize_effort Logical. Used internally. Apply `.StandardizeEffort()`?
+#' @param standardize_effort Logical. Used internally. Apply [StandardizeEffort()]?
 #' @param adjust_fecundity  Logical. Used internally. Apply [AdjustSeasonalFecundity()]?
 #'
 #' @details
@@ -94,7 +94,7 @@ PopulateOM <- function(OM,
     OM <- AdjustSeasonalFecundity(OM, silent = silent)
 
   if (standardize_effort)
-    OM <- .StandardizeEffort(OM, populate=FALSE)
+    OM <- StandardizeEffort(OM, populate=FALSE)
 
   if (!silent)
     cli::cli_alert_success('Populated OM {.val {OM@Name}}')
