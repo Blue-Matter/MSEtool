@@ -518,7 +518,8 @@ ListBAMStocks <- function(type=c('rdat', 'dat')) {
   .LookupBAMFleetWeight(BAMdata, c(
     paste0('wholewgt.', fleet, '.lb'),
     paste0('wgt.', fleet, '.klb'),
-    paste0('wholewgt.lb.', fleet)
+    paste0('wholewgt.lb.', fleet),
+    paste0('gutwgt.', fleet, '.lb')
   ))
 }
 
@@ -526,7 +527,8 @@ ListBAMStocks <- function(type=c('rdat', 'dat')) {
   .LookupBAMFleetWeight(BAMdata, c(
     paste0('wholewgt.', fleet, '.D.lb'),
     paste0('wgt.', fleet, '.D.klb'),
-    paste0('wholewgt.lb.', discard_stub)
+    paste0('wholewgt.lb.', discard_stub),
+    paste0('gutwgt.', fleet, '.D.lb')
   ))
 }
 
