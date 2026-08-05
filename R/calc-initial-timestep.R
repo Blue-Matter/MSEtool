@@ -221,12 +221,15 @@
   if (!is.null(st)) {
     Stock <- OM@Stock[[st]]
     PreRecruit <- seq(0, by=1/Stock@Seasons, to=min(Stock@Ages@Classes))
-    return(length(PreRecruit))
+    # `-1`: `PreRecruit` includes timestep 0, which is not a bootstrap timestep
+    # it's populated directly from RecDevHist1/RecDevInit in .CalcDynamicInitial.
+    return(length(PreRecruit) - 1)
   }
 
   purrr::map(OM@Stock, \(Stock) {
     PreRecruit <- seq(0, by=1/Stock@Seasons, to=min(Stock@Ages@Classes))
-    length(PreRecruit)
+    # see note above: exclude timestep 0 
+    length(PreRecruit) - 1
   }) |>
     List2Array('Stock') |>
     DropDimension('Sim')
