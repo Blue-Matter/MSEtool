@@ -118,6 +118,8 @@ CombineOMs <- function(
   
   OM_Out <- .CombineStocksData(OM_Out, OM_List)
 
+  OM_Out <- .CombineStocksObs(OM_Out, OM_List)
+
   OM_Out@EFactor <- purrr::map(OM_List, slot, 'EFactor')
 
   if (StandardizeEffort)
@@ -157,9 +159,13 @@ CombineOMs <- function(
   OM
 }
 
-
-
-
+.CombineStocksObs <- function(OM, OM_List) {
+  OM@Obs <- purrr::list_flatten(
+    purrr::map(OM_List, slot, 'Obs'),
+    name_spec = '{inner}'
+  )
+  OM
+}
 
 .ValidateOMList <- function(OM_List) {
   
