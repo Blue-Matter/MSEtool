@@ -91,33 +91,30 @@
       
     }
     
-    for (i in seq_along(OM@Obs)) {
+    if (st <= length(OM@Obs)) {
       if (!silent) {
         cli::cli_progress_update(id=id)
       }
-      OM@Obs[[i]] <- Extend(OM@Obs[[i]], 
-                            nSim = nSim, 
-                            AgeClasses = AgeClasses,
-                                 Years = Years,
-                                 Areas = Areas)
+      OM@Obs[[st]] <- Extend(OM@Obs[[st]],
+                             nSim = nSim,
+                             AgeClasses = AgeClasses,
+                                  Years = Years,
+                                  Areas = Areas)
     }
-    
-    
-    for (i in seq_along(OM@Imp)) {
+
+
+    if (st <= length(OM@Imp)) {
       if (!silent) {
         cli::cli_progress_update(id=id)
       }
-      OM@Imp[[i]] <- Extend(OM@Imp[[i]], 
-                            nSim = nSim, 
-                            AgeClasses = AgeClasses,
-                            Years = Years,
-                            Areas = Areas)
+      OM@Imp[[st]] <- Extend(OM@Imp[[st]],
+                             nSim = nSim,
+                             AgeClasses = AgeClasses,
+                             Years = Years,
+                             Areas = Areas)
     }
   }
   OM@StockTargeting <- Extend(OM@StockTargeting, nSim=nSim, Years=Years)
   
-  
   OM
-  
-  
 }
