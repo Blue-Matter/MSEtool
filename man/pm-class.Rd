@@ -37,6 +37,6 @@ calculated.}
 }}
 
 \seealso{
-\code{\link[=PM_FFMSY]{PM_FFMSY()}}, \code{\link[=PM_SBSBMSY]{PM_SBSBMSY()}}, \code{\link[=PM_Status]{PM_Status()}}, \code{\link[=PM_Safety]{PM_Safety()}},
-\code{\link[=PM_Rebuild]{PM_Rebuild()}}, \code{\link[=PM_Yield]{PM_Yield()}}, \code{\link[=PM_Stability]{PM_Stability()}}, \code{\link[=CombineMSE]{CombineMSE()}}
+\link{PM} for the full list of performance metric functions,
+\link{PM-equations} for their mathematical definitions, and \code{\link[=CombineMSE]{CombineMSE()}}.
 }

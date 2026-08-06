@@ -20,8 +20,8 @@
 #' @slot Years Numeric vector. Projection years over which the PM was
 #'   calculated.
 #'
-#' @seealso [PM_FFMSY()], [PM_SBSBMSY()], [PM_Status()], [PM_Safety()],
-#'   [PM_Rebuild()], [PM_Yield()], [PM_Stability()], [CombineMSE()]
+#' @seealso [PM] for the full list of performance metric functions,
+#'   [PM-equations] for their mathematical definitions, and [CombineMSE()].
 #' @name pm-class
 #' @export
 setClass("pm",

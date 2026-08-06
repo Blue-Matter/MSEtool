@@ -4,10 +4,14 @@
 \alias{PM}
 \alias{PM_FFMSY}
 \alias{PM_SBSBMSY}
+\alias{PM_SPSPMSY}
 \alias{PM_Status}
 \alias{PM_SBSBlim}
+\alias{PM_SPSPlim}
 \alias{PM_Safety}
 \alias{PM_Rebuild}
+\alias{PM_Removals}
+\alias{PM_Landings}
 \alias{PM_Yield}
 \alias{PM_RelYield}
 \alias{PM_AAVY}
@@ -19,15 +23,40 @@ PM_FFMSY(object, Ref = 1, Years = NULL, silent = TRUE)
 
 PM_SBSBMSY(object, Ref = 1, Years = NULL, silent = TRUE)
 
-PM_Status(object, Years = NULL, silent = TRUE)
+PM_SPSPMSY(object, Ref = 1, Years = NULL, silent = TRUE)
 
-PM_SBSBlim(object, Blim, Years = NULL, silent = TRUE)
+PM_Status(
+  object,
+  Definition = c("SProduction", "SBiomass"),
+  Years = NULL,
+  silent = TRUE
+)
 
-PM_Safety(object, Blim, Years = NULL, silent = TRUE)
+PM_SBSBlim(object, Lim, Years = NULL, silent = TRUE)
+
+PM_SPSPlim(object, Lim, Years = NULL, silent = TRUE)
+
+PM_Safety(
+  object,
+  Lim,
+  Definition = c("SProduction", "SBiomass"),
+  Years = NULL,
+  silent = TRUE
+)
 
 PM_Rebuild(object, Year, Target = 1, silent = TRUE)
 
-PM_Yield(object, Years = NULL, Stocks = NULL, silent = TRUE)
+PM_Removals(object, Years = NULL, Stocks = NULL, silent = TRUE)
+
+PM_Landings(object, Years = NULL, Stocks = NULL, silent = TRUE)
+
+PM_Yield(
+  object,
+  Years = NULL,
+  Stocks = NULL,
+  Type = c("Removals", "Landings"),
+  silent = TRUE
+)
 
 PM_RelYield(object, Ref = NULL, Years = NULL, Stocks = NULL, silent = TRUE)
 
@@ -50,8 +79,32 @@ excluding any "interim" years before \code{OM@MPStartYear} (see
 \item{silent}{Logical. Suppress the \code{\link[=CombineMSE]{CombineMSE()}} summary message when
 \code{object} is a \code{list}. Default \code{TRUE}.}
 
+\item{Definition}{Character. Which stock-status metric to use in
+\code{PM_Status} and \code{PM_Safety}: \code{"SProduction"} (spawning production,
+default) or \code{"SBiomass"} (spawning biomass).}
+
+\item{Lim}{Numeric, or a named numeric vector keyed by stock name. Limit
+reference point(s): spawning biomass for \code{PM_SBSBlim}, spawning
+production for \code{PM_SPSPlim}, and either (per \code{Definition}) for
+\code{PM_Safety}.}
+
+\item{Year}{Numeric. The single projection year in which to evaluate
+rebuilding, used by \code{PM_Rebuild}.}
+
+\item{Target}{Numeric. Rebuilding target, expressed as a multiple of
+\code{SBMSY}, used by \code{PM_Rebuild}. Default \code{1}.}
+
 \item{Stocks}{Character vector of stock names to include. Default \code{NULL}
 uses the automatic complex/spawning-stock grouping described above.}
+
+\item{Type}{Character. Which catch metric \code{PM_Yield} reports:
+\code{"Removals"} (landings + discards, default) or \code{"Landings"}.}
+
+\item{Fleets}{Character vector of fleet names to include in \code{PM_AAVE}.
+Default \code{NULL} uses all fleets.}
+
+\item{Threshold}{Numeric. Maximum acceptable average annual variability in
+yield, used by \code{PM_Stability}.}
 }
 \value{
 A \link[=pm-class]{pm} object.
@@ -60,20 +113,31 @@ A \link[=pm-class]{pm} object.
 \verb{PM_*} functions evaluate a performance metric against an \link[=mse-class]{mse}
 object, or a \code{list} of \link[=mse-class]{mse} objects (combined via \code{\link[=CombineMSE]{CombineMSE()}}
 before calculation, so simulations from every list element are pooled
-and treated as one analysis). All \verb{PM_*} functions operate on the
-projection period only.
+and treated as one analysis). See \link{PM-equations} for the mathematical
+definition of each metric.
 }
 \details{
-Yield-based PMs (\code{PM_Yield}, \code{PM_RelYield}, \code{PM_AAVY}) sum landings+discards
-over the stocks in each \code{OM@Complexes} group by default; pass \code{Stocks} to
+\code{PM_Removals}, \code{PM_Landings} (and \code{PM_Yield}, which is a thin wrapper
+around the two), \code{PM_RelYield}, and \code{PM_AAVY} sum removals/landings over
+the stocks in each \code{OM@Complexes} group by default; pass \code{Stocks} to
 override with an explicit set of stock names.
 
 \code{PM_FFMSY} and \code{PM_Status} are evaluated at the \emph{complex} level
 (\code{OM@Complexes}), not per stock, because \code{FMSY} is a single value
 optimised jointly across a complex's member stocks (see \code{\link[=F_FMSY]{F_FMSY()}}).
 
-\code{PM_Status} sums \code{SB}/\code{SBMSY} across each complex's spawning stock(s)
-before dividing, so both sides of the joint SB/F test are assessed at the
-same aggregation level rather than pairing a per-stock SB ratio with an
-identical, complex-wide F flag.
+\code{PM_Status} sums the status metric and its MSY reference point across each
+complex's spawning stock(s) before dividing, so both sides of the joint
+status test are assessed at the same aggregation level rather than pairing
+a per-stock ratio with an identical, complex-wide F flag.
+
+\code{PM_Status} and \code{PM_Safety} accept a \code{Definition} argument selecting
+whether stock status is assessed on spawning production (\code{SProduction()},
+the default) or spawning biomass (\code{SBiomass()}). \code{PM_SBSBMSY}/\code{PM_SBSBlim}
+and \code{PM_SPSPMSY}/\code{PM_SPSPlim} are the corresponding single-metric,
+non-switchable counterparts for spawning biomass and spawning production
+respectively.
+}
+\seealso{
+\link{PM-equations} for the mathematical definition of each metric.
 }

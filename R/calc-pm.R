@@ -3,25 +3,49 @@
 #' `PM_*` functions evaluate a performance metric against an [mse-class]
 #' object, or a `list` of [mse-class] objects (combined via [CombineMSE()]
 #' before calculation, so simulations from every list element are pooled
-#' and treated as one analysis). All `PM_*` functions operate on the
-#' projection period only.
+#' and treated as one analysis). See [PM-equations] for the mathematical
+#' definition of each metric.
 #'
-#'
-#' Yield-based PMs (`PM_Yield`, `PM_RelYield`, `PM_AAVY`) sum landings+discards
-#' over the stocks in each `OM@Complexes` group by default; pass `Stocks` to
+#' `PM_Removals`, `PM_Landings` (and `PM_Yield`, which is a thin wrapper
+#' around the two), `PM_RelYield`, and `PM_AAVY` sum removals/landings over
+#' the stocks in each `OM@Complexes` group by default; pass `Stocks` to
 #' override with an explicit set of stock names.
 #'
 #' `PM_FFMSY` and `PM_Status` are evaluated at the *complex* level
 #' (`OM@Complexes`), not per stock, because `FMSY` is a single value
 #' optimised jointly across a complex's member stocks (see [F_FMSY()]).
-#' 
-#' `PM_Status` sums `SB`/`SBMSY` across each complex's spawning stock(s)
-#' before dividing, so both sides of the joint SB/F test are assessed at the
-#' same aggregation level rather than pairing a per-stock SB ratio with an
-#' identical, complex-wide F flag.
+#'
+#' `PM_Status` sums the status metric and its MSY reference point across each
+#' complex's spawning stock(s) before dividing, so both sides of the joint
+#' status test are assessed at the same aggregation level rather than pairing
+#' a per-stock ratio with an identical, complex-wide F flag.
+#'
+#' `PM_Status` and `PM_Safety` accept a `Definition` argument selecting
+#' whether stock status is assessed on spawning production (`SProduction()`,
+#' the default) or spawning biomass (`SBiomass()`). `PM_SBSBMSY`/`PM_SBSBlim`
+#' and `PM_SPSPMSY`/`PM_SPSPlim` are the corresponding single-metric,
+#' non-switchable counterparts for spawning biomass and spawning production
+#' respectively.
 #'
 #' @param object An [mse-class] object, or a `list` of [mse-class] objects.
 #' @param Ref Numeric. Reference/threshold value.
+#' @param Lim Numeric, or a named numeric vector keyed by stock name. Limit
+#'   reference point(s): spawning biomass for `PM_SBSBlim`, spawning
+#'   production for `PM_SPSPlim`, and either (per `Definition`) for
+#'   `PM_Safety`.
+#' @param Definition Character. Which stock-status metric to use in
+#'   `PM_Status` and `PM_Safety`: `"SProduction"` (spawning production,
+#'   default) or `"SBiomass"` (spawning biomass).
+#' @param Type Character. Which catch metric `PM_Yield` reports:
+#'   `"Removals"` (landings + discards, default) or `"Landings"`.
+#' @param Year Numeric. The single projection year in which to evaluate
+#'   rebuilding, used by `PM_Rebuild`.
+#' @param Target Numeric. Rebuilding target, expressed as a multiple of
+#'   `SBMSY`, used by `PM_Rebuild`. Default `1`.
+#' @param Threshold Numeric. Maximum acceptable average annual variability in
+#'   yield, used by `PM_Stability`.
+#' @param Fleets Character vector of fleet names to include in `PM_AAVE`.
+#'   Default `NULL` uses all fleets.
 #' @param Years Numeric vector of projection years to evaluate over. Default
 #'   `NULL` uses all projection years in which the MP was active, i.e.
 #'   excluding any "interim" years before `OM@MPStartYear` (see
@@ -33,7 +57,87 @@
 #'
 #' @return A [pm-class] object.
 #'
+#' @seealso [PM-equations] for the mathematical definition of each metric.
+#'
 #' @name PM
+NULL
+
+#' Performance Metric Equations
+#'
+#' Mathematical definitions of the performance metrics computed by the
+#' [PM] functions. Notation: `s` indexes simulation replicates, `y` indexes
+#' the projection years in the evaluation window, and each metric is
+#' computed per management procedure (MP).
+#'
+#' @section Status:
+#' `PM_FFMSY`: fishing mortality relative to \eqn{F_{MSY}}{FMSY},
+#' \deqn{F_{s,y} / F_{MSY,s}}{F[s,y] / FMSY[s]}
+#' with the probability metric \eqn{P(F/F_{MSY} < Ref)}{P(F/FMSY < Ref)}.
+#'
+#' `PM_SBSBMSY` / `PM_SPSPMSY`: spawning biomass or spawning production
+#' relative to its value at MSY,
+#' \deqn{SB_{s,y} / SB_{MSY,s} \quad\text{or}\quad SP_{s,y} / SP_{MSY,s}}{SB[s,y] / SBMSY[s]  or  SP[s,y] / SPMSY[s]}
+#' with the probability metric \eqn{P(SB/SB_{MSY} > Ref)}{P(SB/SBMSY > Ref)}
+#' (or the SP equivalent).
+#'
+#' `PM_Status`: the joint probability that a complex is neither overfished
+#' nor experiencing overfishing,
+#' \deqn{P\left(\frac{SB_{y}}{SB_{MSY}} > 1 \ \text{and}\ \frac{F_{y}}{F_{MSY}} < 1\right)}{P( SB/SBMSY > 1  and  F/FMSY < 1 )}
+#' evaluated at the complex level, where `SB` is spawning biomass or spawning
+#' production according to `Definition`.
+#'
+#' @section Safety:
+#' `PM_SBSBlim` / `PM_SPSPlim`: spawning biomass or spawning production
+#' relative to its limit reference point,
+#' \deqn{SB_{s,y} / SB_{lim,s} \quad\text{or}\quad SP_{s,y} / SP_{lim,s}}{SB[s,y] / SBlim[s]  or  SP[s,y] / SPlim[s]}
+#' with the probability metric \eqn{P(SB/SB_{lim} > 1)}{P(SB/SBlim > 1)}
+#' (or the SP equivalent).
+#'
+#' `PM_Safety`: the probability that the stock-status metric never falls
+#' below its limit reference point at any point during the projection,
+#' \deqn{P\left(\min_{y \in Y} SB_{s,y} > Lim_s\right)}{P( min over y in Y of SB[s,y] > Lim[s] )}
+#' where `SB` is spawning biomass or spawning production according to
+#' `Definition`.
+#'
+#' @section Rebuild:
+#' `PM_Rebuild`: for stocks overfished (\eqn{SB/SB_{MSY} < 1}{SB/SBMSY < 1})
+#' at the end of the historical period, the probability that the stock has
+#' rebuilt to a target multiple of \eqn{SB_{MSY}}{SBMSY} by a target year,
+#' \deqn{P\left(\frac{SB_{s,\mathrm{Year}}}{SB_{MSY,s}} > \mathrm{Target}\right)}{P( SB[s,Year] / SBMSY[s] > Target )}
+#'
+#' @section Yield:
+#' `PM_Yield` / `PM_Removals` / `PM_Landings`: mean catch over the evaluation
+#' window,
+#' \deqn{\frac{1}{|Y|}\sum_{y \in Y} C_{s,y}}{(1/|Y|) * sum over y in Y of C[s,y]}
+#' where `C` is removals (landings + discards), or landings only.
+#'
+#' `PM_RelYield`: mean catch over the evaluation window, expressed relative
+#' to MSY yield,
+#' \deqn{\frac{1}{|Y|}\sum_{y \in Y} C_{s,y} \Big/ MSY_s}{[(1/|Y|) * sum over y in Y of C[s,y]] / MSY[s]}
+#' with the probability metric \eqn{P(\mathrm{RelYield} > Ref)}{P(RelYield > Ref)}
+#' when `Ref` is supplied.
+#'
+#' @section Stability:
+#' `PM_AAVY` / `PM_AAVE`: average annual variability in yield or effort
+#' across management intervals,
+#' \deqn{\frac{1}{|Y|-1}\sum_{y \in Y \setminus \{y_1\}} \frac{|C_{s,y} - C_{s,y-1}|}{C_{s,y-1}}}{(1/(|Y|-1)) * sum over y in Y (excluding the first year) of |C[s,y] - C[s,y-1]| / C[s,y-1]}
+#'
+#' `PM_Stability`: the probability that average annual variability in yield
+#' stays below a threshold,
+#' \deqn{P(\mathrm{AAVY} < \mathrm{Threshold})}{P(AAVY < Threshold)}
+#'
+#' @section Stat, Prob, and Mean:
+#' Every `PM_*` function returns a [pm-class] object with three related
+#' summaries: `Stat` is the raw metric above, computed per simulation (and
+#' averaged over the evaluation window for the Yield-family metrics); `Prob`
+#' is the per-simulation probability/indicator of meeting the stated
+#' objective (`NA` for metrics with no such objective, e.g. `PM_Yield`);
+#' `Mean` is `Prob` averaged across simulations, or — for metrics with no
+#' `Prob` — `Stat` averaged across simulations instead.
+#'
+#' @seealso [PM] for the full list of performance metric functions and their
+#'   arguments.
+#' @name PM-equations
 NULL
 
 .CoercePMInput <- function(object, silent = TRUE) {
@@ -86,11 +190,12 @@ NULL
   if (is.null(op)) {
     ProbArr <- StatArr
     ProbArr[] <- NA_real_
+    MeanArr <- .PMMean(StatArr)
   } else {
     df$.Met <- op(df$Value, Ref)
     ProbArr <- .PMArray(df, '.Met', group_col)
+    MeanArr <- .PMMean(ProbArr)
   }
-  MeanArr <- .PMMean(ProbArr)
 
   methods::new('pm',
                Name    = Name,
@@ -156,7 +261,7 @@ NULL
 .ResolveComplexGroups <- function(OM, Stocks) {
   stockNms <- StockNames(OM)
   if (!is.null(Stocks))
-    return(list(All = Stocks))
+    return(stats::setNames(list(Stocks), paste(Stocks, collapse = ' + ')))
 
   complexes <- OM@Complexes
   if (!length(complexes))
@@ -197,9 +302,9 @@ NULL
   df[Reduce(`|`, keep), ]
 }
 
-.GroupedRemovals <- function(object, Stocks, ManagementOnly = FALSE) {
-  df <- Removals(object, df = TRUE, byFleet = FALSE, byAge = FALSE,
-                bySize = FALSE, byArea = FALSE, Reduce = FALSE)
+.GroupedCatch <- function(object, Stocks, ManagementOnly = FALSE, FUN = Removals) {
+  df <- FUN(object, df = TRUE, byFleet = FALSE, byAge = FALSE,
+            bySize = FALSE, byArea = FALSE, Reduce = FALSE)
   df <- df[df$Period == 'Projection', ]
   df <- .FilterMPActiveYears(df, object@OM)
 
@@ -268,12 +373,39 @@ class(PM_SBSBMSY) <- 'pm'
 
 #' @rdname PM
 #' @export
-PM_Status <- function(object, Years = NULL, silent = TRUE) {
+PM_SPSPMSY <- function(object, Ref = 1, Years = NULL, silent = TRUE) {
+  object <- .CoercePMInput(object, silent)
+  df <- SP_SPMSY(object, df = TRUE, Reduce = FALSE)
+  df <- df[df$Stock %in% .SpawningStockNames(object@OM), ]
+  .BuildPM(df, Ref = Ref, Years = Years, op = `>`,
+           Name = 'SP_SPMSY', Caption = paste0('P(SP > ', Ref, ' SPMSY)'), OM = object@OM)
+}
+class(PM_SPSPMSY) <- 'pm'
+
+# Pulls the numerator/denominator time series for PM_Status/PM_Safety
+# according to which stock-status metric ('SProduction' or 'SBiomass')
+# is being evaluated.
+.StockStatusSeries <- function(object, Definition) {
+  if (Definition == 'SProduction') {
+    list(value = SProduction(object, df = FALSE, Reduce = FALSE),
+         msy   = SPMSY(object))
+  } else {
+    list(value = SBiomass(object, df = FALSE, Reduce = FALSE),
+         msy   = SBMSY(object))
+  }
+}
+
+#' @rdname PM
+#' @export
+PM_Status <- function(object, Definition = c('SProduction', 'SBiomass'),
+                       Years = NULL, silent = TRUE) {
+  Definition <- match.arg(Definition)
   object <- .CoercePMInput(object, silent)
   spawn_stocks <- .SpawningStockNames(object@OM)
+  series <- .StockStatusSeries(object, Definition)
 
-  sb_arr    <- .FilterStockDim(object@SBiomass, spawn_stocks)
-  sbmsy_arr <- .FilterStockDim(SBMSY(object), spawn_stocks)
+  sb_arr    <- .FilterStockDim(series$value, spawn_stocks)
+  sbmsy_arr <- .FilterStockDim(series$msy, spawn_stocks)
 
   sb_complex    <- .AggregateStockToComplex(sb_arr, object@OM, sum, strict = FALSE)
   sbmsy_complex <- .AggregateStockToComplex(sbmsy_arr, object@OM, sum, strict = FALSE)
@@ -304,7 +436,8 @@ PM_Status <- function(object, Years = NULL, silent = TRUE) {
   joined <- joined |> dplyr::rename(Stock = 'Complex')
 
   .BuildPM(joined, Ref = 1, Years = NULL, op = \(x, r) x >= r,
-           Name = 'Status', Caption = 'P(SB > SBMSY & F < FMSY), complex-level')
+           Name = 'Status',
+           Caption = paste0('P(', Definition, ' > ', Definition, 'MSY & F < FMSY), complex-level'))
 }
 class(PM_Status) <- 'pm'
 
@@ -312,14 +445,14 @@ class(PM_Status) <- 'pm'
 
 #' @rdname PM
 #' @export
-PM_SBSBlim <- function(object, Blim, Years = NULL, silent = TRUE) {
-  if (missing(Blim) || is.null(Blim))
-    cli::cli_abort("`Blim` must be supplied.")
+PM_SBSBlim <- function(object, Lim, Years = NULL, silent = TRUE) {
+  if (missing(Lim) || is.null(Lim))
+    cli::cli_abort("`Lim` must be supplied.")
   object <- .CoercePMInput(object, silent)
 
   df <- SBiomass(object, df = TRUE, Reduce = FALSE)
   df <- df[df$Stock %in% .SpawningStockNames(object@OM), ]
-  df$Value <- df$Value / .ResolveRefByStock(Blim, df$Stock)
+  df$Value <- df$Value / .ResolveRefByStock(Lim, df$Stock)
 
   .BuildPM(df, Ref = 1, Years = Years, op = `>`,
            Name = 'SB_SBlim', Caption = 'P(SB > SBlim)', OM = object@OM)
@@ -328,19 +461,40 @@ class(PM_SBSBlim) <- 'pm'
 
 #' @rdname PM
 #' @export
-PM_Safety <- function(object, Blim, Years = NULL, silent = TRUE) {
-  if (missing(Blim) || is.null(Blim))
-    cli::cli_abort("`Blim` must be supplied.")
+PM_SPSPlim <- function(object, Lim, Years = NULL, silent = TRUE) {
+  if (missing(Lim) || is.null(Lim))
+    cli::cli_abort("`Lim` must be supplied.")
   object <- .CoercePMInput(object, silent)
 
-  df <- SBiomass(object, df = TRUE, Reduce = FALSE)
+  df <- SProduction(object, df = TRUE, Reduce = FALSE)
+  df <- df[df$Stock %in% .SpawningStockNames(object@OM), ]
+  df$Value <- df$Value / .ResolveRefByStock(Lim, df$Stock)
+
+  .BuildPM(df, Ref = 1, Years = Years, op = `>`,
+           Name = 'SP_SPlim', Caption = 'P(SP > SPlim)', OM = object@OM)
+}
+class(PM_SPSPlim) <- 'pm'
+
+#' @rdname PM
+#' @export
+PM_Safety <- function(object, Lim, Definition = c('SProduction', 'SBiomass'),
+                       Years = NULL, silent = TRUE) {
+  if (missing(Lim) || is.null(Lim))
+    cli::cli_abort("`Lim` must be supplied.")
+  Definition <- match.arg(Definition)
+  object <- .CoercePMInput(object, silent)
+
+  df <- if (Definition == 'SProduction')
+    SProduction(object, df = TRUE, Reduce = FALSE)
+  else
+    SBiomass(object, df = TRUE, Reduce = FALSE)
   df <- df[df$Period == 'Projection' & df$Stock %in% .SpawningStockNames(object@OM), ]
   df <- .FilterMPActiveYears(df, object@OM)
   if (!is.null(Years))
     df <- df[df$Year %in% Years, ]
   YearsOut <- sort(unique(df$Year))
 
-  df$Ref   <- .ResolveRefByStock(Blim, df$Stock)
+  df$Ref   <- .ResolveRefByStock(Lim, df$Stock)
   df$Above <- df$Value > df$Ref
 
   StatArr <- .PMArray(df, 'Value')
@@ -350,8 +504,10 @@ PM_Safety <- function(object, Blim, Years = NULL, silent = TRUE) {
   ProbArr <- .PMArray(safe_df, 'Met')
   MeanArr <- .PMMean(ProbArr)
 
+  metric <- if (Definition == 'SProduction') 'SP' else 'SB'
   methods::new('pm',
-               Name = 'Safety', Caption = 'P(SB never drops below SBlim during the projection)',
+               Name = paste0(metric, '_Safety'),
+               Caption = paste0('P(', Definition, ' never drops below Lim during the projection)'),
                Stat = StatArr, Ref = NA_real_, Prob = ProbArr, Mean = MeanArr,
                MPs = sort(unique(df$MP)), Years = YearsOut)
 }
@@ -388,13 +544,39 @@ class(PM_Rebuild) <- 'pm'
 
 # ---- Yield ------------------------------------------------------------------
 
+.YieldPM <- function(object, Years, Stocks, FUN, Name, Caption, silent) {
+  object <- .CoercePMInput(object, silent)
+  df <- .GroupedCatch(object, Stocks, FUN = FUN)
+  .BuildPM(df, Ref = NA_real_, Years = Years, op = NULL, Name = Name, Caption = Caption)
+}
+
 #' @rdname PM
 #' @export
-PM_Yield <- function(object, Years = NULL, Stocks = NULL, silent = TRUE) {
-  object <- .CoercePMInput(object, silent)
-  df <- .GroupedRemovals(object, Stocks)
-  .BuildPM(df, Ref = NA_real_, Years = Years, op = NULL,
-           Name = 'Yield', Caption = 'Mean projected yield')
+PM_Removals <- function(object, Years = NULL, Stocks = NULL, silent = TRUE) {
+  .YieldPM(object, Years, Stocks, Removals, 'Removals',
+           'Mean projected removals (landings + discards)', silent)
+}
+class(PM_Removals) <- 'pm'
+
+#' @rdname PM
+#' @export
+PM_Landings <- function(object, Years = NULL, Stocks = NULL, silent = TRUE) {
+  .YieldPM(object, Years, Stocks, Landings, 'Landings',
+           'Mean projected landings', silent)
+}
+class(PM_Landings) <- 'pm'
+
+#' @rdname PM
+#' @export
+PM_Yield <- function(object, Years = NULL, Stocks = NULL,
+                      Type = c('Removals', 'Landings'), silent = TRUE) {
+  Type <- match.arg(Type)
+  out <- switch(Type,
+    Removals = PM_Removals(object, Years, Stocks, silent),
+    Landings = PM_Landings(object, Years, Stocks, silent))
+  out@Name    <- 'Yield'
+  out@Caption <- paste0('Mean projected yield (', Type, ')')
+  out
 }
 class(PM_Yield) <- 'pm'
 
@@ -402,7 +584,7 @@ class(PM_Yield) <- 'pm'
 #' @export
 PM_RelYield <- function(object, Ref = NULL, Years = NULL, Stocks = NULL, silent = TRUE) {
   object <- .CoercePMInput(object, silent)
-  df <- .GroupedRemovals(object, Stocks)
+  df <- .GroupedCatch(object, Stocks)
 
   msy_df <- Array2DF(MSYLandings(object)) |>
     dplyr::group_by(.data$Sim, .data$Stock) |>
@@ -431,7 +613,7 @@ class(PM_RelYield) <- 'pm'
 #' @export
 PM_AAVY <- function(object, Years = NULL, Stocks = NULL, silent = TRUE) {
   object <- .CoercePMInput(object, silent)
-  ydf <- .GroupedRemovals(object, Stocks, ManagementOnly = TRUE)
+  ydf <- .GroupedCatch(object, Stocks, ManagementOnly = TRUE)
   if (!is.null(Years))
     ydf <- ydf[ydf$Year %in% Years, ]
   aav <- .AAV(ydf)
@@ -459,7 +641,7 @@ PM_Stability <- function(object, Threshold, Years = NULL, Stocks = NULL, silent 
   if (missing(Threshold))
     cli::cli_abort("`Threshold` (maximum acceptable AAVY) must be supplied.")
   object <- .CoercePMInput(object, silent)
-  ydf <- .GroupedRemovals(object, Stocks, ManagementOnly = TRUE)
+  ydf <- .GroupedCatch(object, Stocks, ManagementOnly = TRUE)
   if (!is.null(Years))
     ydf <- ydf[ydf$Year %in% Years, ]
   aav <- .AAV(ydf)
