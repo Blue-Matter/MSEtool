@@ -361,11 +361,14 @@ ImportBAMData <- function(OM,
       cli::cli_alert('Assuming all age class fully selected')
       survey.data.object@Selectivity[i] <- 'Biomass'
       OM@Data[[1]]@Survey <- survey.data.object
-      
-      ObsList <- list(Obs())
+
+      SurveyObs <- Obs()
+      SurveyObs@Survey@Selectivity <- 'Biomass'
+
+      ObsList <- list(SurveyObs)
       names(ObsList) <- survey.data.names[i]
       OM@Obs[[1]] <- c(OM@Obs[[1]], ObsList)
-      
+
       next
     } else {
       if (length(matched.sel)>1)
