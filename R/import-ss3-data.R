@@ -387,20 +387,8 @@ ImportSSData <- function(SSDir,
     any(LenDB$Nsamp_in > 1, na.rm = TRUE)
   
   LenDB$N     <- if (nsamp_in_valid) LenDB$Nsamp_in else LenDB$Nsamp_adj
-  LenDB$Count <- LenDB$Obs * LenDB$N
-  
-  lbin_mid_valid <- !is.null(LenDB$Lbin_mid) &&
-    length(unique(LenDB$Lbin_mid)) > 1
-
-  if (lbin_mid_valid) {
-    LenDB$BinMid <- LenDB$Lbin_mid
-  } else {
-    lbins   <- replist$lbins
-    widths  <- diff(lbins)
-    widths  <- c(widths, widths[length(widths)])
-    lmids   <- lbins + widths / 2
-    LenDB$BinMid <- lmids[match(LenDB$Bin, lbins)]
-  }
+  LenDB$Count <- LenDB$Obs * LenDB$N.
+  LenDB$BinMid <- LenDB$Bin
 
   make_length_matrix <- function(df) {
     mat <- matrix(
