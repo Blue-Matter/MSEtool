@@ -387,7 +387,7 @@ ImportSSData <- function(SSDir,
     any(LenDB$Nsamp_in > 1, na.rm = TRUE)
   
   LenDB$N     <- if (nsamp_in_valid) LenDB$Nsamp_in else LenDB$Nsamp_adj
-  LenDB$Count <- LenDB$Obs * LenDB$N.
+  LenDB$Count <- LenDB$Obs * LenDB$N
   LenDB$BinMid <- LenDB$Bin
 
   make_length_matrix <- function(df) {
