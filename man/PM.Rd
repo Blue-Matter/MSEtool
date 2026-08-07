@@ -84,9 +84,9 @@ excluding any "interim" years before \code{OM@MPStartYear} (see
 default) or \code{"SBiomass"} (spawning biomass).}
 
 \item{Lim}{Numeric, or a named numeric vector keyed by stock name. Limit
-reference point(s): spawning biomass for \code{PM_SBSBlim}, spawning
-production for \code{PM_SPSPlim}, and either (per \code{Definition}) for
-\code{PM_Safety}.}
+reference point, expressed as a fraction of \code{SBMSY} (\code{PM_SBSBlim}) or
+\code{SPMSY} (\code{PM_SPSPlim}), or of \code{SBMSY}/\code{SPMSY} per \code{Definition}
+(\code{PM_Safety}) -- e.g. \code{Lim = 0.5} tests against half of \code{SBMSY}.}
 
 \item{Year}{Numeric. The single projection year in which to evaluate
 rebuilding, used by \code{PM_Rebuild}.}

@@ -30,9 +30,9 @@
 #' @param object An [mse-class] object, or a `list` of [mse-class] objects.
 #' @param Ref Numeric. Reference/threshold value.
 #' @param Lim Numeric, or a named numeric vector keyed by stock name. Limit
-#'   reference point(s): spawning biomass for `PM_SBSBlim`, spawning
-#'   production for `PM_SPSPlim`, and either (per `Definition`) for
-#'   `PM_Safety`.
+#'   reference point, expressed as a fraction of `SBMSY` (`PM_SBSBlim`) or
+#'   `SPMSY` (`PM_SPSPlim`), or of `SBMSY`/`SPMSY` per `Definition`
+#'   (`PM_Safety`) -- e.g. `Lim = 0.5` tests against half of `SBMSY`.
 #' @param Definition Character. Which stock-status metric to use in
 #'   `PM_Status` and `PM_Safety`: `"SProduction"` (spawning production,
 #'   default) or `"SBiomass"` (spawning biomass).
@@ -88,14 +88,17 @@ NULL
 #'
 #' @section Safety:
 #' `PM_SBSBlim` / `PM_SPSPlim`: spawning biomass or spawning production
-#' relative to its limit reference point,
-#' \deqn{SB_{s,y} / SB_{lim,s} \quad\text{or}\quad SP_{s,y} / SP_{lim,s}}{SB[s,y] / SBlim[s]  or  SP[s,y] / SPlim[s]}
-#' with the probability metric \eqn{P(SB/SB_{lim} > 1)}{P(SB/SBlim > 1)}
-#' (or the SP equivalent).
+#' relative to MSY, relative in turn to a limit fraction `Lim` of `SBMSY`/
+#' `SPMSY`,
+#' \deqn{\frac{SB_{s,y}/SB_{MSY,s}}{Lim_s} \quad\text{or}\quad \frac{SP_{s,y}/SP_{MSY,s}}{Lim_s}}{(SB[s,y]/SBMSY[s]) / Lim[s]  or  (SP[s,y]/SPMSY[s]) / Lim[s]}
+#' with the probability metric \eqn{P(\frac{SB/SB_{MSY}}{Lim} > 1)}{P((SB/SBMSY)/Lim > 1)}
+#' (or the SP equivalent) -- i.e. the probability that `SB/SBMSY` exceeds
+#' `Lim`.
 #'
-#' `PM_Safety`: the probability that the stock-status metric never falls
-#' below its limit reference point at any point during the projection,
-#' \deqn{P\left(\min_{y \in Y} SB_{s,y} > Lim_s\right)}{P( min over y in Y of SB[s,y] > Lim[s] )}
+#' `PM_Safety`: the probability that the stock-status metric, relative to
+#' MSY, never falls below the limit fraction `Lim` at any point during the
+#' projection,
+#' \deqn{P\left(\min_{y \in Y} \frac{SB_{s,y}}{SB_{MSY,s}} > Lim_s\right)}{P( min over y in Y of SB[s,y]/SBMSY[s] > Lim[s] )}
 #' where `SB` is spawning biomass or spawning production according to
 #' `Definition`.
 #'
@@ -140,9 +143,18 @@ NULL
 #' @name PM-equations
 NULL
 
+# Session cache so repeated PM_* calls on the same `MSE_List` don't re-run CombineMSE.
+.PMCombineCache <- new.env(parent = emptyenv())
+
 .CoercePMInput <- function(object, silent = TRUE) {
-  if (is.list(object) && !isS4(object))
-    object <- CombineMSE(object, silent = silent)
+  if (is.list(object) && !isS4(object)) {
+    key <- digest::digest(object, algo = "spookyhash")
+    if (!identical(.PMCombineCache$key, key)) {
+      .PMCombineCache$key   <- key
+      .PMCombineCache$value <- CombineMSE(object, silent = silent)
+    }
+    object <- .PMCombineCache$value
+  }
   .CheckClass(object, 'mse', 'object')
   object
 }
@@ -450,12 +462,12 @@ PM_SBSBlim <- function(object, Lim, Years = NULL, silent = TRUE) {
     cli::cli_abort("`Lim` must be supplied.")
   object <- .CoercePMInput(object, silent)
 
-  df <- SBiomass(object, df = TRUE, Reduce = FALSE)
+  df <- SB_SBMSY(object, df = TRUE, Reduce = FALSE)
   df <- df[df$Stock %in% .SpawningStockNames(object@OM), ]
   df$Value <- df$Value / .ResolveRefByStock(Lim, df$Stock)
 
   .BuildPM(df, Ref = 1, Years = Years, op = `>`,
-           Name = 'SB_SBlim', Caption = 'P(SB > SBlim)', OM = object@OM)
+           Name = 'SB_SBlim', Caption = 'P(SB/SBMSY > Lim)', OM = object@OM)
 }
 class(PM_SBSBlim) <- 'pm'
 
@@ -466,12 +478,12 @@ PM_SPSPlim <- function(object, Lim, Years = NULL, silent = TRUE) {
     cli::cli_abort("`Lim` must be supplied.")
   object <- .CoercePMInput(object, silent)
 
-  df <- SProduction(object, df = TRUE, Reduce = FALSE)
+  df <- SP_SPMSY(object, df = TRUE, Reduce = FALSE)
   df <- df[df$Stock %in% .SpawningStockNames(object@OM), ]
   df$Value <- df$Value / .ResolveRefByStock(Lim, df$Stock)
 
   .BuildPM(df, Ref = 1, Years = Years, op = `>`,
-           Name = 'SP_SPlim', Caption = 'P(SP > SPlim)', OM = object@OM)
+           Name = 'SP_SPlim', Caption = 'P(SP/SPMSY > Lim)', OM = object@OM)
 }
 class(PM_SPSPlim) <- 'pm'
 
@@ -485,9 +497,9 @@ PM_Safety <- function(object, Lim, Definition = c('SProduction', 'SBiomass'),
   object <- .CoercePMInput(object, silent)
 
   df <- if (Definition == 'SProduction')
-    SProduction(object, df = TRUE, Reduce = FALSE)
+    SP_SPMSY(object, df = TRUE, Reduce = FALSE)
   else
-    SBiomass(object, df = TRUE, Reduce = FALSE)
+    SB_SBMSY(object, df = TRUE, Reduce = FALSE)
   df <- df[df$Period == 'Projection' & df$Stock %in% .SpawningStockNames(object@OM), ]
   df <- .FilterMPActiveYears(df, object@OM)
   if (!is.null(Years))
@@ -507,7 +519,7 @@ PM_Safety <- function(object, Lim, Definition = c('SProduction', 'SBiomass'),
   metric <- if (Definition == 'SProduction') 'SP' else 'SB'
   methods::new('pm',
                Name = paste0(metric, '_Safety'),
-               Caption = paste0('P(', Definition, ' never drops below Lim during the projection)'),
+               Caption = paste0('P(', metric, '/', metric, 'MSY never drops below Lim during the projection)'),
                Stat = StatArr, Ref = NA_real_, Prob = ProbArr, Mean = MeanArr,
                MPs = sort(unique(df$MP)), Years = YearsOut)
 }

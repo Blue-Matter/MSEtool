@@ -31,14 +31,17 @@ production according to \code{Definition}.
 \section{Safety}{
 
 \code{PM_SBSBlim} / \code{PM_SPSPlim}: spawning biomass or spawning production
-relative to its limit reference point,
-\deqn{SB_{s,y} / SB_{lim,s} \quad\text{or}\quad SP_{s,y} / SP_{lim,s}}{SB[s,y] / SBlim[s]  or  SP[s,y] / SPlim[s]}
-with the probability metric \eqn{P(SB/SB_{lim} > 1)}{P(SB/SBlim > 1)}
-(or the SP equivalent).
+relative to MSY, relative in turn to a limit fraction \code{Lim} of \code{SBMSY}/
+\code{SPMSY},
+\deqn{\frac{SB_{s,y}/SB_{MSY,s}}{Lim_s} \quad\text{or}\quad \frac{SP_{s,y}/SP_{MSY,s}}{Lim_s}}{(SB[s,y]/SBMSY[s]) / Lim[s]  or  (SP[s,y]/SPMSY[s]) / Lim[s]}
+with the probability metric \eqn{P(\frac{SB/SB_{MSY}}{Lim} > 1)}{P((SB/SBMSY)/Lim > 1)}
+(or the SP equivalent) -- i.e. the probability that \code{SB/SBMSY} exceeds
+\code{Lim}.
 
-\code{PM_Safety}: the probability that the stock-status metric never falls
-below its limit reference point at any point during the projection,
-\deqn{P\left(\min_{y \in Y} SB_{s,y} > Lim_s\right)}{P( min over y in Y of SB[s,y] > Lim[s] )}
+\code{PM_Safety}: the probability that the stock-status metric, relative to
+MSY, never falls below the limit fraction \code{Lim} at any point during the
+projection,
+\deqn{P\left(\min_{y \in Y} \frac{SB_{s,y}}{SB_{MSY,s}} > Lim_s\right)}{P( min over y in Y of SB[s,y]/SBMSY[s] > Lim[s] )}
 where \code{SB} is spawning biomass or spawning production according to
 \code{Definition}.
 }
