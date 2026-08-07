@@ -132,7 +132,7 @@ ImportSS <- function(SSDir,
     cli::cli_li("{.val {nStock}-sex} and {.val {nFleet}-fleet} model detected.")
     cli::cli_li("Time Steps Per Year: {.val {YearsList$Seasons}}")
     cli::cli_li("Years: {.val {min(YearsList$YearsHist)} - {max(YearsList$YearsHist)}}")
-    # cli::cli_li("Assuming {.val {LengthUnits}} length, {.val {WeightUnits}} weight, and R0 scale {.val {R0Units}} (not reported by SS3; set `LengthUnits`/`WeightUnits`/`R0Units` to override).")
+    cli::cli_li("Assuming {.val {LengthUnits}} length, {.val {WeightUnits}} weight, and R0 scale {.val {R0Units}} (set `LengthUnits`/`WeightUnits`/`R0Units` to override).")
     cli::cli_end()
   }
 
