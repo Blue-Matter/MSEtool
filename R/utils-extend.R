@@ -87,7 +87,7 @@ Extend <- function(array,
       if (inherits(array, "data")) return(array)
     for (sl in slotNames(array)) {
       if (debug) print(sl)
-      slot(array, sl) <- Recall(slot(array, sl),
+      slot(array, sl, check = FALSE) <- Recall(slot(array, sl),
                                 nSim       = nSim,
                                 AgeClasses = AgeClasses,
                                 Classes    = Classes,
@@ -131,25 +131,17 @@ Extend <- function(array,
     ExtendAreas(Areas)
 }
 
-# Shared implementation behind ExtendSims/Ages/Classes/Areas/Fleets/Stocks:
-# recurses into S4/list objects, then replicates a length-1 named dimension
-# out to `target_values` (error if some other length isn't already a match).
-# match_mode = "min" treats an existing length >= n as already extended
-# (used only by ExtendSims, which allows more sims than requested); "exact"
-# requires the lengths to match exactly. `allow_missing_one` reproduces the
-# ExtendAges exception where all-but-one age class already present is
-# treated as already extended (needed for RecDevInit). `coerce_char`
-# controls whether target_values are stored as character dimnames (numeric
-# dims) or used as-is (name-based dims like Fleet/Stock).
+
 .ExtendDim <- function(array, dimname, target_values, match_mode = c("exact", "min"),
                        coerce_char = TRUE, allow_missing_one = FALSE) {
-  match_mode <- match.arg(match_mode)
+
+  match_mode <- if (length(match_mode) == 1L) match_mode else match.arg(match_mode)
   if (is.null(target_values)) return(array)
 
   if (isS4(array)) {
     if (inherits(array, "data")) return(array)
     for (sl in slotNames(array))
-      slot(array, sl) <- Recall(slot(array, sl), dimname, target_values, match_mode,
+      slot(array, sl, check = FALSE) <- Recall(slot(array, sl), dimname, target_values, match_mode,
                                 coerce_char, allow_missing_one)
     return(array)
   }
