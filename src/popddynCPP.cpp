@@ -244,11 +244,11 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
       d1(A) = MPA(yr+1,A) * fishdist(A);// historical closures
     }
     double fracE = sum(d1); // fraction of current effort in open areas
-    arma::vec fracE2(nareas);
-    for (int A=0; A<nareas; A++) {
-      fracE2(A) = d1(A) * (fracE + (1-fracE))/fracE;
+    if (fracE > 0) {
+      fishdist = d1 / fracE; // renormalize effort distribution over open areas
+    } else {
+      fishdist.zeros(); // all areas closed - no effort to distribute
     }
-    fishdist = fracE2;
  
   
     // calculate F at age for next year
