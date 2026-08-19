@@ -39,6 +39,7 @@
 #' @aliases show,refpointsMSY-method
 #' @aliases show,equilibrium-method
 #' @aliases show,stocktargeting-method
+#' @aliases show,stocktransition-method
 #' @aliases show,pm-method
 #' @exportMethod show
 NULL
@@ -791,6 +792,28 @@ setMethod('show', 'reference', function(object) {
 
 setMethod('show', 'stocktargeting', function(object) {
   .ShowObject(object, 'stocktargeting')
+})
+
+
+setMethod('show', 'stocktransition', function(object) {
+  cli::cli_h2("A {.help MSEtool::stocktransition-class} Object")
+
+  cli::cli_text("`From`: {.val {object@From}}")
+  cli::cli_text("`To`: {.val {object@To}}")
+
+  cli::cli_text("")
+
+  if (is.null(object@Frac)) {
+    cli::cli_text("`Frac`: {.emph not specified}")
+    return(invisible(NULL))
+  }
+
+  d  <- dim(object@Frac)
+  dn <- dimnames(object@Frac)
+  ages <- if (!is.null(dn) && !is.null(dn$Age)) as.numeric(dn$Age) else seq_len(d[2]) - 1
+
+  cli::cli_text("`Frac`: {.val {paste(d, collapse = ' x ')}} array ({.val {paste(names(dn), collapse = ', ')}})")
+  cli::cli_text("Age range: {.val {range(ages)}}")
 })
 
 
