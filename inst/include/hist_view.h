@@ -45,7 +45,12 @@ struct HistView {
   std::vector<std::vector<ConstArrayView2D>> SRR_Pars;
   std::vector<ConstArrayView2D> RecDevs;
   std::vector<int> RecLag, SRR_Model;
-  
+
+  std::vector<ConstArrayView3D> TransitionHazard;         // [pair] sim, age, year
+  std::vector<int> TransitionToStock, TransitionFromStock; // [pair], 0-indexed
+  int nTransitionPair = 0;
+  bool TransitionFlag = false;
+
   std::vector<ConstArrayView4D> WeightFleetRetained, WeightFleetSelected;
   std::vector<ConstArrayView5D> SelAge, RetAge, DiscMort;
   std::vector<std::vector<ConstArrayView4D>> SelSize, RetSize;
@@ -171,7 +176,26 @@ inline HistView::HistView(Rcpp::S4& Hist, int nSim_, int nStock_, int nFleet_, i
     RecLag.emplace_back(RecLagVec[st]);
     SRR_Model.emplace_back(SRR_Model_Vec[st]);
   }
-  
+
+  TransitionFlag = Misc.containsElementNamed("TransitionFlag") &&
+    Rcpp::as<bool>(Misc["TransitionFlag"]);
+  if (TransitionFlag) {
+    const Rcpp::List TransitionHazardList  = Misc["TransitionHazard"];
+    const Rcpp::IntegerVector ToVec        = Misc["TransitionToStock"];
+    const Rcpp::IntegerVector FromVec      = Misc["TransitionFromStock"];
+
+    nTransitionPair = TransitionHazardList.size();
+    TransitionHazard.reserve(nTransitionPair);
+    TransitionToStock.reserve(nTransitionPair);
+    TransitionFromStock.reserve(nTransitionPair);
+
+    for (int p = 0; p < nTransitionPair; ++p) {
+      TransitionHazard.emplace_back(as_ConstArrayViewND<3>(TransitionHazardList[p]));
+      TransitionToStock.push_back(ToVec[p] - 1);     // 1-indexed in R
+      TransitionFromStock.push_back(FromVec[p] - 1); // 1-indexed in R
+    }
+  }
+
   // Fleet misc
   const Rcpp::List WeightFleetRetainedList = Misc["WeightFleetRetainedList"];
   const Rcpp::List WeightFleetSelectedList = Misc["WeightFleetSelectedList"];
