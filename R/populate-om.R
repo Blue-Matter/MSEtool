@@ -511,10 +511,6 @@ PopulateOM <- function(OM,
 
 
 .ValidateSPFrom <- function(OM) {
-  SharePar <- OM@SharePar
-  if (is.null(SharePar)) SharePar <- TRUE
-  if (isFALSE(SharePar)) return(OM)
-
   stocknames <- StockNames(OM)
   SPFrom <- purrr::map_chr(OM@Stock, \(st) {
     x <- st@SRR@SPFrom
