@@ -55,7 +55,7 @@
     cli::cli_abort(c("x"= "{.val nrow(OM@Data[[{i}]]@{type}@Value)} must be at least length {.val {nHistTS}}"))
   
   dimnames(Indices_Value) <- list(Year=c(HistYears, ProjYears)[1:dd[1]],
-                                  Name=Indices_Name)
+                                  Fleet=Indices_Name)
 
   slot(Hist@OM@Data[[i]], type)@Value <- Indices_Value
 
