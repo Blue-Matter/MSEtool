@@ -74,10 +74,10 @@
 #'
 #' @slot Complexes List. Defines stock complexes for data aggregation and
 #'   management. See [OM()].
-#' @slot Herm List. Defines hermaphroditism or movement between stocks.
-#'   See [OM()].
-#' @slot SharePar Logical. Whether key parameters are shared among stocks.
-#'   See [OM()].
+#' @slot Herm A list of [stocktransition-class] objects (built via [Herm()]),
+#'   one per `From`/`To` stock pair, defining age-dependent reclassification
+#'   of individuals between stocks (e.g. sequential hermaphroditism). See
+#'   [OM()].
 #' @slot Relations List. Biological or ecological relationships among stocks.
 #'   See [OM()].
 #'
@@ -140,6 +140,7 @@
 #' @include class-obs.R
 #' @include class-imp.R
 #' @include class-stock-targeting.R
+#' @include class-stocktransition.R
 #' @include zz_Class_definitions.R
 #' @name om-class
 NULL
@@ -150,6 +151,7 @@ methods::setClassUnion(name = "FleetList",       members = c("fleet", "Fleet", "
 methods::setClassUnion(name = "DataList",        members = c("data",  "list",  "NULL"))
 methods::setClassUnion(name = "ObsList",         members = c("Obs",   "obs",   "list", "NULL"))
 methods::setClassUnion(name = "ImpList",         members = c("Imp",   "imp",   "list", "NULL"))
+methods::setClassUnion(name = "StockTransitionList", members = c("stocktransition", "list", "NULL"))
 
 setClass(
   "om",
@@ -184,8 +186,7 @@ setClass(
     EFactor='list.null',
     
     Complexes='list.null',
-    Herm='list.null',
-    SharePar='num.log',
+    Herm='StockTransitionList',
     Relations='list.null',
     
     StockTargeting = 'stocktargeting',
