@@ -2,8 +2,6 @@
 #'
 #' Combines a list of [mse-class] objects into a single `MSE` object, by
 #' concatenating every simulation-indexed array along the `Sim` dimension.
-#' Used internally by [PM_FFMSY()] and the other `PM_*` functions whenever
-#' `object` is a `list` rather than a single `MSE`.
 #'
 #' All elements of `MSE_List` must share the same MPs (same names, same
 #' order), the same stock names, and the same historical/projection years.
@@ -74,13 +72,12 @@ CombineMSE <- function(MSE_List, silent = FALSE) {
     if (identical(sl, 'Log')) {
       slot(out, sl) <- .CombineLogs(purrr::map(MSE_List, methods::slot, 'Log'), sim_offsets)
     } else {
-      values        <- purrr::map(MSE_List, \(m) methods::slot(m, sl))
-      slot(out, sl) <- purrr::reduce(values, .CombineSimwise)
+      values                     <- purrr::map(MSE_List, \(m) methods::slot(m, sl))
+      slot(out, sl, check = FALSE) <- purrr::reduce(values, .CombineSimwise)
     }
     if (!silent) cli::cli_progress_update(id = combine_id, extra = list(slot = sl))
   }
   
- 
   totalSim       <- sum(purrr::map_dbl(MSE_List, nSim))
   out            <- .RelabelSim(out, totalSim)
   out@OM@nSim    <- totalSim
@@ -118,15 +115,13 @@ CombineMSE <- function(MSE_List, silent = FALSE) {
   })
 }
 
-# Recursively concatenate two S4/array/list structures along their `Sim` dimension.
 .CombineSimwise <- function(a, b) {
- 
   if (is.null(a)) return(b)
   if (is.null(b)) return(a)
 
   if (isS4(a)) {
     for (sl in methods::slotNames(a))
-      methods::slot(a, sl) <- .CombineSimwise(methods::slot(a, sl), methods::slot(b, sl))
+      methods::slot(a, sl, check = FALSE) <- .CombineSimwise(methods::slot(a, sl), methods::slot(b, sl))
     return(a)
   }
 
@@ -156,14 +151,10 @@ CombineMSE <- function(MSE_List, silent = FALSE) {
   a
 }
 
-# Recursively relabel every `Sim` dimname to sequential integers after combining.
 .RelabelSim <- function(x, totalSim) {
   if (isS4(x)) {
-    for (sl in methods::slotNames(x)) {
-      # OUT <<- methods::slot(x, sl)
-      methods::slot(x, sl) <- .RelabelSim(methods::slot(x, sl), totalSim)
-    }
-      
+    for (sl in methods::slotNames(x))
+      methods::slot(x, sl, check = FALSE) <- .RelabelSim(methods::slot(x, sl), totalSim)
     return(x)
   }
 
@@ -180,12 +171,12 @@ CombineMSE <- function(MSE_List, silent = FALSE) {
     if (!is.null(x$Sim)) {
       n_exist <- length(x$Sim)
       x$Sim <- seq_len(totalSim)[seq_len(n_exist)]
-      return(x)
     }
+    return(x)
   }
   
   if (is.list(x))
     return(purrr::map(x, .RelabelSim, totalSim = totalSim))
-
+  
   x
 }
