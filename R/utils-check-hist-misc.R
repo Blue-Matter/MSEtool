@@ -123,6 +123,7 @@
     "SP0", "R0", "RecDist",
     "Catchability", "Closure", "Spatial_Targeting",
     "StockTargeting", "StockTargetingFlag",
+    "TransitionHazard", "TransitionToStock", "TransitionFromStock", "TransitionFlag",
     "WeightFleetRetainedList", "WeightFleetSelectedList", "SelAgeList", "RetAgeList", "DiscMortList")
   
     # "SelSizeList", "RetSizeList", "DiscMortSizeList"
@@ -141,7 +142,11 @@
   if (!is.logical(Misc$StockTargetingFlag) &&
       !Misc$StockTargetingFlag %in% c(0, 1))
     add_err("Hist@Misc$StockTargetingFlag: must be logical or 0/1")
-  
+
+  if (!is.logical(Misc$TransitionFlag) &&
+      !Misc$TransitionFlag %in% c(0, 1))
+    add_err("Hist@Misc$TransitionFlag: must be logical or 0/1")
+
   flush_errors("scalars")
   
   # 1D vectors 
@@ -265,9 +270,49 @@
     }
   }
   
+  # TransitionHazard/To/FromStock: variable-length list of pairs, one hazard
+  # array (sim, age, year) + from/to stock index per pair.
+  if (isTRUE(Misc$TransitionFlag) || identical(Misc$TransitionFlag, 1)) {
+    nPair <- length(Misc$TransitionHazard)
+    if (length(Misc$TransitionToStock) != nPair || length(Misc$TransitionFromStock) != nPair)
+      add_err("Hist@Misc$TransitionToStock/TransitionFromStock: length must match ",
+              "TransitionHazard (", nPair, "); got ", length(Misc$TransitionToStock),
+              " / ", length(Misc$TransitionFromStock))
+
+    if (!is.numeric(Misc$TransitionToStock) || !is.numeric(Misc$TransitionFromStock)) {
+      add_err("Hist@Misc$TransitionToStock/TransitionFromStock: must be numeric/integer")
+    } else {
+      bad_to   <- which(Misc$TransitionToStock < 1 | Misc$TransitionToStock > nStock)
+      bad_from <- which(Misc$TransitionFromStock < 1 | Misc$TransitionFromStock > nStock)
+      if (length(bad_to) > 0)
+        add_err("Hist@Misc$TransitionToStock: values must be in [1, nStock=", nStock,
+                "]; bad pair(s): ", paste(bad_to, collapse = ","))
+      if (length(bad_from) > 0)
+        add_err("Hist@Misc$TransitionFromStock: values must be in [1, nStock=", nStock,
+                "]; bad pair(s): ", paste(bad_from, collapse = ","))
+
+      same <- which(Misc$TransitionToStock == Misc$TransitionFromStock)
+      if (length(same) > 0)
+        add_err("Hist@Misc$TransitionToStock/TransitionFromStock: To must differ ",
+                "from From; bad pair(s): ", paste(same, collapse = ","))
+    }
+
+    for (p in seq_len(nPair)) {
+      arr <- Misc$TransitionHazard[[p]]
+      nm  <- paste0("Hist@Misc$TransitionHazard[[", p, "]]")
+      from_st <- if (length(Misc$TransitionFromStock) >= p) Misc$TransitionFromStock[p] else NA
+      nages <- if (!is.na(from_st) && from_st >= 1 && from_st <= nStock)
+        nAge(Hist@OM@Stock[[from_st]]) else NA
+      if (!is.na(nages)) {
+        check_array(arr, nm, c(nSim, nages, nyears), Years)
+      }
+      check_values(arr, nm, allow_neg = FALSE, range = c(0, 1))
+    }
+  }
+
   flush_errors("4D Misc arrays")
-  
-  # 5D Misc arrays 
+
+  # 5D Misc arrays
   
   # Closure: (sim, stock, year, fleet, area)  values must be 0 or 1
   check_array(Misc$Closure, "Hist@Misc$Closure",
