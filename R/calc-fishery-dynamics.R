@@ -14,6 +14,9 @@
 #'   and distributes recruits over areas, `0` skips.
 #' @param DoCalcNumberNext Integer flag; `1` (default) calculates numbers at
 #'   the beginning of the next time step, `0` skips.
+#' @param DoCalcTransition Integer flag; `1` (default) applies age-dependent
+#'   reclassification of numbers-at-age between stocks (e.g. `Herm`), `0`
+#'   skips. Has no effect unless `Hist@OM@Herm` is set.
 #' @param DoCalcBiomass Integer flag; `1` (default) calculates biomass for the
 #'   current time step, `0` skips.
 #' @param DoCalcOverallF Integer flag; `1` (default) calculates overall fishing
@@ -42,6 +45,7 @@
                                 DoCalcSpawnProduction=1,
                                 DoCalcRecruitment=1,
                                 DoCalcNumberNext=1,
+                                DoCalcTransition=1,
                                 DoCalcBiomass=1,
                                 DoCalcOverallF=1,
                                 DoBackCalcEffort=0,
@@ -80,6 +84,7 @@
                                    DoCalcSpawnProduction=DoCalcSpawnProduction,
                                    DoCalcRecruitment=DoCalcRecruitment,
                                    DoCalcNumberNext=DoCalcNumberNext,
+                                   DoCalcTransition=DoCalcTransition,
                                    DoCalcBiomass=DoCalcBiomass,
                                    DoCalcOverallF=DoCalcOverallF,
                                    DoBackCalcEffort=DoBackCalcEffort,
@@ -107,6 +112,7 @@
                        DoCalcSpawnProduction=DoCalcSpawnProduction,
                        DoCalcRecruitment=DoCalcRecruitment,
                        DoCalcNumberNext=DoCalcNumberNext,
+                       DoCalcTransition=DoCalcTransition,
                        DoCalcBiomass=DoCalcBiomass,
                        DoCalcOverallF=DoCalcOverallF,
                        DoBackCalcEffort=DoBackCalcEffort,
@@ -114,16 +120,6 @@
                        clone=clone)
 }
 
-#' Resolve the back-calculated effort control
-#'
-#' `OM@Control$BackCalcEffort` turns off the effort back-calculation described
-#' in `.CalcFisheryDynamics()`. It defaults to on; set it to `FALSE` to keep the
-#' requested effort, for example to reproduce results generated before the
-#' back-calculation existed.
-#'
-#' @param Hist A [hist-class] object.
-#' @return `1L` or `0L`, for `.CalcFisheryDynamics()`'s `DoBackCalcEffort`.
-#' @keywords internal
 .BackCalcEffortFlag <- function(Hist) {
   ctl <- Hist@OM@Control$BackCalcEffort
   if (is.null(ctl)) return(1L)
