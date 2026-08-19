@@ -74,9 +74,11 @@ when \code{Ref} is supplied.
 across management intervals,
 \deqn{\frac{1}{|Y|-1}\sum_{y \in Y \setminus \{y_1\}} \frac{|C_{s,y} - C_{s,y-1}|}{C_{s,y-1}}}{(1/(|Y|-1)) * sum over y in Y (excluding the first year) of |C[s,y] - C[s,y-1]| / C[s,y-1]}
 
-\code{PM_Stability}: the probability that average annual variability in yield
-stays below a threshold,
-\deqn{P(\mathrm{AAVY} < \mathrm{Threshold})}{P(AAVY < Threshold)}
+\code{PM_Stability}: the probability that yield changes by less than a
+threshold amount between one management interval and the next,
+\deqn{P\left(\frac{|C_{s,y} - C_{s,y-1}|}{C_{s,y-1}} < \mathrm{Threshold}\right)}{P( |C[s,y] - C[s,y-1]| / C[s,y-1] < Threshold )}
+evaluated per interval \code{y} and averaged across the evaluation window and
+simulations.
 }
 
 \section{Stat, Prob, and Mean}{

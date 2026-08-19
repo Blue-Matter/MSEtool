@@ -12,6 +12,7 @@
   DoCalcSpawnProduction = 1,
   DoCalcRecruitment = 1,
   DoCalcNumberNext = 1,
+  DoCalcTransition = 1,
   DoCalcBiomass = 1,
   DoCalcOverallF = 1,
   DoBackCalcEffort = 0,
@@ -39,6 +40,10 @@ and distributes recruits over areas, \code{0} skips.}
 
 \item{DoCalcNumberNext}{Integer flag; \code{1} (default) calculates numbers at
 the beginning of the next time step, \code{0} skips.}
+
+\item{DoCalcTransition}{Integer flag; \code{1} (default) applies age-dependent
+reclassification of numbers-at-age between stocks (e.g. \code{Herm}), \code{0}
+skips. Has no effect unless \code{Hist@OM@Herm} is set.}
 
 \item{DoCalcBiomass}{Integer flag; \code{1} (default) calculates biomass for the
 current time step, \code{0} skips.}

@@ -22,8 +22,4 @@ An initialized \code{\link[=OM]{OM()}} object.
 \description{
 Internal helper that initializes an \code{\link[=OM]{OM()}} object prior to simulation.
 }
-\details{
-Models using hermaphroditism are not yet supported and will result
-in an error.
-}
 \keyword{internal}

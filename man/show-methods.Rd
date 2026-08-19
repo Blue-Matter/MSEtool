@@ -35,6 +35,7 @@
 \alias{show,refpointsMSY-method}
 \alias{show,equilibrium-method}
 \alias{show,stocktargeting-method}
+\alias{show,stocktransition-method}
 \alias{show,pm-method}
 \title{Show Methods}
 \arguments{

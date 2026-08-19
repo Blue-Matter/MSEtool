@@ -100,12 +100,15 @@ structural variants.
 
 Other om:
 \code{\link{ComplexOM}},
+\code{\link[=Herm]{Herm()}},
+\code{\link{HermOM}},
 \code{\link{MultiStockOM}},
 \code{\link[=OM]{OM()}},
 \code{\link{OM-accessors}},
 \code{\link{SingleStockOM}},
 \code{\link{TwoFleetOM}},
-\code{\link{om-class}}
+\code{\link{om-class}},
+\code{\link{stocktransition-class}}
 }
 \concept{om}
 \keyword{datasets}

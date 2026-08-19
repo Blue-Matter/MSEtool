@@ -40,10 +40,7 @@
 \alias{EFactor<-}
 \alias{Complexes}
 \alias{Complexes<-}
-\alias{Herm}
 \alias{Herm<-}
-\alias{SharePar}
-\alias{SharePar<-}
 \alias{Relations}
 \alias{Relations<-}
 \alias{Interval}
@@ -140,13 +137,7 @@ Complexes(x)
 
 Complexes(x) <- value
 
-Herm(x)
-
 Herm(x) <- value
-
-SharePar(x)
-
-SharePar(x) <- value
 
 Relations(x)
 
@@ -241,11 +232,14 @@ pass-through accessors.
 
 Other om:
 \code{\link{ComplexOM}},
+\code{\link[=Herm]{Herm()}},
+\code{\link{HermOM}},
 \code{\link{MultiStockOM}},
 \code{\link[=OM]{OM()}},
 \code{\link{SeasonalSpatialOM}},
 \code{\link{SingleStockOM}},
 \code{\link{TwoFleetOM}},
-\code{\link{om-class}}
+\code{\link{om-class}},
+\code{\link{stocktransition-class}}
 }
 \concept{om}

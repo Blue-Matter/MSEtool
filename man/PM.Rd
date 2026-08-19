@@ -103,8 +103,8 @@ uses the automatic complex/spawning-stock grouping described above.}
 \item{Fleets}{Character vector of fleet names to include in \code{PM_AAVE}.
 Default \code{NULL} uses all fleets.}
 
-\item{Threshold}{Numeric. Maximum acceptable average annual variability in
-yield, used by \code{PM_Stability}.}
+\item{Threshold}{Numeric. Maximum acceptable change in yield between
+consecutive management intervals, used by \code{PM_Stability}.}
 }
 \value{
 A \link[=pm-class]{pm} object.

@@ -18,8 +18,6 @@ A single \link[=mse-class]{mse} object spanning all simulations in
 \description{
 Combines a list of \link[=mse-class]{mse} objects into a single \code{MSE} object, by
 concatenating every simulation-indexed array along the \code{Sim} dimension.
-Used internally by \code{\link[=PM_FFMSY]{PM_FFMSY()}} and the other \verb{PM_*} functions whenever
-\code{object} is a \code{list} rather than a single \code{MSE}.
 }
 \details{
 All elements of \code{MSE_List} must share the same MPs (same names, same

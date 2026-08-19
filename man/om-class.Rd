@@ -115,11 +115,10 @@ projection. See \code{\link[=OM]{OM()}}.}
 \item{\code{Complexes}}{List. Defines stock complexes for data aggregation and
 management. See \code{\link[=OM]{OM()}}.}
 
-\item{\code{Herm}}{List. Defines hermaphroditism or movement between stocks.
-See \code{\link[=OM]{OM()}}.}
-
-\item{\code{SharePar}}{Logical. Whether key parameters are shared among stocks.
-See \code{\link[=OM]{OM()}}.}
+\item{\code{Herm}}{A list of \link[=stocktransition-class]{stocktransition} objects (built via \code{\link[=Herm]{Herm()}}),
+one per \code{From}/\code{To} stock pair, defining age-dependent reclassification
+of individuals between stocks (e.g. sequential hermaphroditism). See
+\code{\link[=OM]{OM()}}.}
 
 \item{\code{Relations}}{List. Biological or ecological relationships among stocks.
 See \code{\link[=OM]{OM()}}.}
@@ -178,11 +177,14 @@ constructors and their pass-through accessors.
 
 Other om:
 \code{\link{ComplexOM}},
+\code{\link[=Herm]{Herm()}},
+\code{\link{HermOM}},
 \code{\link{MultiStockOM}},
 \code{\link[=OM]{OM()}},
 \code{\link{OM-accessors}},
 \code{\link{SeasonalSpatialOM}},
 \code{\link{SingleStockOM}},
-\code{\link{TwoFleetOM}}
+\code{\link{TwoFleetOM}},
+\code{\link{stocktransition-class}}
 }
 \concept{om}

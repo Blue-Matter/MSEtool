@@ -31,7 +31,6 @@ OM(
   EFactor = NULL,
   Complexes = NULL,
   Herm = NULL,
-  SharePar = NULL,
   Relations = NULL,
   StockTargeting = NULL,
   Interval = 1,
@@ -149,11 +148,10 @@ projection. Default \code{NULL}.}
 \item{Complexes}{List. Defines stock complexes for data aggregation and
 management. Default \code{NULL}.}
 
-\item{Herm}{List. Defines hermaphroditism or movement between stocks.
-Default \code{NULL}.}
-
-\item{SharePar}{Logical. Whether key parameters are shared among stocks.
-Default \code{NULL}.}
+\item{Herm}{A list of \link[=stocktransition-class]{stocktransition} objects (built via \code{\link[=Herm]{Herm()}}),
+one per \code{From}/\code{To} stock pair, defining age-dependent reclassification
+of individuals between stocks (e.g. sequential hermaphroditism). Default
+\code{NULL}.}
 
 \item{Relations}{List. Biological or ecological relationships among stocks
 (e.g. predator-prey). Default \code{NULL}. Currently not used.}
@@ -334,11 +332,14 @@ constructors and their pass-through accessors.
 
 Other om:
 \code{\link{ComplexOM}},
+\code{\link[=Herm]{Herm()}},
+\code{\link{HermOM}},
 \code{\link{MultiStockOM}},
 \code{\link{OM-accessors}},
 \code{\link{SeasonalSpatialOM}},
 \code{\link{SingleStockOM}},
 \code{\link{TwoFleetOM}},
-\code{\link{om-class}}
+\code{\link{om-class}},
+\code{\link{stocktransition-class}}
 }
 \concept{om}

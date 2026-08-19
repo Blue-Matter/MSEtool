@@ -85,12 +85,15 @@ for the component objects. \code{\link[=OM]{OM()}}, \link[=om-class]{om}, \code{
 
 Other om:
 \code{\link{ComplexOM}},
+\code{\link[=Herm]{Herm()}},
+\code{\link{HermOM}},
 \code{\link{MultiStockOM}},
 \code{\link[=OM]{OM()}},
 \code{\link{OM-accessors}},
 \code{\link{SeasonalSpatialOM}},
 \code{\link{TwoFleetOM}},
-\code{\link{om-class}}
+\code{\link{om-class}},
+\code{\link{stocktransition-class}}
 }
 \concept{om}
 \keyword{datasets}

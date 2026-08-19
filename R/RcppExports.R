@@ -41,8 +41,8 @@ calcVatAge <- function(len_at_age, len_aa_sd, sel_at_length, n_age, nyears, proy
     .Call(`_MSEtool_calcVatAge`, len_at_age, len_aa_sd, sel_at_length, n_age, nyears, proyears, CAL_binsmid)
 }
 
-CalcFisheryDynamics_ <- function(HistIn, Years, AllYears, Sims, nSim, nStock, nFleet, nArea, DoCalcCatch = 1L, DoCalcSpawnProduction = 1L, DoCalcRecruitment = 1L, DoCalcNumberNext = 1L, DoCalcBiomass = 1L, DoCalcOverallF = 1L, DoBackCalcEffort = 0L, debug = 0L, clone = 1L) {
-    .Call(`_MSEtool_CalcFisheryDynamics_`, HistIn, Years, AllYears, Sims, nSim, nStock, nFleet, nArea, DoCalcCatch, DoCalcSpawnProduction, DoCalcRecruitment, DoCalcNumberNext, DoCalcBiomass, DoCalcOverallF, DoBackCalcEffort, debug, clone)
+CalcFisheryDynamics_ <- function(HistIn, Years, AllYears, Sims, nSim, nStock, nFleet, nArea, DoCalcCatch = 1L, DoCalcSpawnProduction = 1L, DoCalcRecruitment = 1L, DoCalcNumberNext = 1L, DoCalcTransition = 1L, DoCalcBiomass = 1L, DoCalcOverallF = 1L, DoBackCalcEffort = 0L, debug = 0L, clone = 1L) {
+    .Call(`_MSEtool_CalcFisheryDynamics_`, HistIn, Years, AllYears, Sims, nSim, nStock, nFleet, nArea, DoCalcCatch, DoCalcSpawnProduction, DoCalcRecruitment, DoCalcNumberNext, DoCalcTransition, DoCalcBiomass, DoCalcOverallF, DoBackCalcEffort, debug, clone)
 }
 
 combine <- function(list) {
