@@ -84,8 +84,8 @@ PopulateOM <- function(OM,
     .PopulateImpList(silent = silent) |>
     .ProcessData() |>
     .PopulateObsList(silent = silent) |>
-    .UpdateSPFrom() |>   # TODO
-    .ShareParameters() |> # TODO
+    .UpdateSPFrom() |>
+    .ValidateSPFrom() |>
     .StartMessages()
 
   .CheckOMReady(OM)
@@ -510,8 +510,35 @@ PopulateOM <- function(OM,
 
 
 
-.ShareParameters <- function(OM) {
-  # TODO: sex-specific parameter mirroring via SPFrom(OM) not yet implemented
+.ValidateSPFrom <- function(OM) {
+  SharePar <- OM@SharePar
+  if (is.null(SharePar)) SharePar <- TRUE
+  if (isFALSE(SharePar)) return(OM)
+
+  stocknames <- StockNames(OM)
+  SPFrom <- purrr::map_chr(OM@Stock, \(st) {
+    x <- st@SRR@SPFrom
+    if (is.null(x)) NA_character_ else as.character(x)
+  })
+  names(SPFrom) <- stocknames
+
+  for (st in stocknames) {
+    src <- SPFrom[[st]]
+    if (is.na(src) || identical(src, st)) next
+
+    if (!src %in% stocknames)
+      cli::cli_abort(c(
+        "x" = "Stock {.val {st}} has {.field SRR@SPFrom} = {.val {src}}, which is not a known stock.",
+        "i" = "Known stocks are {.val {stocknames}}."
+      ))
+
+    srcOfSrc <- SPFrom[[src]]
+    if (!is.na(srcOfSrc) && !identical(srcOfSrc, src))
+      cli::cli_abort(c(
+        "x" = "{.var SRR@SPFrom} only supports one-hop sourcing, but {.val {st}} -> {.val {src}} -> {.val {srcOfSrc}} is a longer chain (or a cycle).",
+        "i" = "Stock {.val {src}} must not itself have a non-self {.field SPFrom}."
+      ))
+  }
   OM
 }
 
