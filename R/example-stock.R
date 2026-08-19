@@ -372,3 +372,53 @@
 #' }
 #'
 "SeasonalSpatialExStock"
+
+
+#' Wrasse Example Stocks (Female / Male)
+#'
+#' A pair of example [stock-class] objects representing the female and
+#' (terminal) male phase of a protogynous hermaphrodite wrasse (*Thalassoma*
+#' spp.), paired via [HermOM]'s [Herm()] transition and the male's
+#' `SRR@SPFrom`. Not intended to represent any specific stock; illustrates
+#' [SRR()]'s `SPFrom` cross-stock spawning-production sourcing and
+#' [Herm()]'s age-dependent stock transition together. See [HermOM] for the
+#' full worked example and how the two stocks and the transition are
+#' combined.
+#'
+#' @format Each is a [stock-class] object with the following slots
+#'   populated:
+#'
+#' - `Name`: `"Example Wrasse Female Stock"` / `"Example Wrasse Male Stock"`.
+#' - `CommonName`: `"Wrasse"`.
+#' - `Species`: `"Thalassoma spp."`.
+#' - `Ages`: An [Ages()] object with `MaxAge = 15`, identical for both
+#'   stocks - required for the [Herm()] transition, which reclassifies
+#'   individuals age-for-age between the two stocks.
+#' - `Length`: A [Length()] object with von Bertalanffy parameters. Terminal
+#'   males grow larger than females (`Linf` 30-35 cm vs 23-27 cm), typical
+#'   of this style of protogynous species; `K`/`t0` otherwise similar.
+#' - `Weight`, `Maturity`: [Weight()]/[Maturity()] objects; males mature
+#'   at a larger size than females, consistent with their larger size-at-age.
+#' - `NaturalMortality`: A [NaturalMortality()] object; males have somewhat
+#'   lower `M` (0.2-0.3 yr^-1^) than females (0.3-0.4 yr^-1^).
+#' - `SRR`: A [SRR()] object. The female is self-recruiting (`SPFrom`
+#'   unset) with `R0 = 5000`. The male's `SPFrom = "Example Wrasse Female
+#'   Stock"` sources its spawning production (`SP`/`SP0`) from the female stock. #'   
+#' - `Spatial`, `Depletion`: matching [Spatial()]/[Depletion()] objects for
+#'   both stocks.
+#'
+#' @seealso [HermOM] for the full worked example (including the [Herm()]
+#'   transition curve linking these two stocks), [SRR()] for `SPFrom`,
+#'   [stocktransition-class] for the transition mechanism, [AlbacoreExStock]
+#'   for a single-stock example with the full per-slot `Populate*()` walk-through.
+#'
+#' @examples
+#' WrasseFemaleExStock
+#' WrasseMaleExStock
+#'
+#' @name WrasseExStock
+#' @aliases WrasseFemaleExStock WrasseMaleExStock
+"WrasseFemaleExStock"
+
+#' @rdname WrasseExStock
+"WrasseMaleExStock"
