@@ -110,6 +110,10 @@ IndexRate <- function(Data,
 
   IndexHist <- .ApplyIndexFrequency(t(Selected$Value), IndexFreq, Data@YearLH, YearCur, Data@Years)
 
+  Keep        <- IndexFreq > 0
+  Ref         <- Ref[Keep]
+  IndexWeight <- IndexWeight[Keep]
+
   CalibRows   <- LHInd - (CalibYears - 1):0
   Removals    <- rowSums(Data@Landings@Value, na.rm = TRUE) + rowSums(Data@Discards@Value, na.rm = TRUE)
   CalibCatch  <- mean(Removals[CalibRows], na.rm = TRUE)
@@ -130,7 +134,7 @@ IndexRate <- function(Data,
                               ControlPointsIndex = HCRControlPointsIndex,
                               ControlPointsRate  = HCRControlPointsRate)
 
-  TrialTAC <- mean(TerminalIndex * AdjRate, na.rm = TRUE)
+  TrialTAC <- stats::weighted.mean(TerminalIndex * AdjRate, IndexWeight, na.rm = TRUE)
   PrevTAC  <- LastTAC(Data)
   if (is.na(TrialTAC)) TrialTAC <- PrevTAC
   TrialTAC <- FilterTAC(TrialTAC)
@@ -173,6 +177,10 @@ IndexTarget <- function(Data,
 
   YearCur   <- max(Data@Years)
   IndexHist <- .ApplyIndexFrequency(t(Selected$Value), IndexFreq, Data@YearLH, YearCur, Data@Years)
+
+  Keep        <- IndexFreq > 0
+  Ref         <- Ref[Keep]
+  IndexWeight <- IndexWeight[Keep]
 
   IndexSmooth <- t(apply(IndexHist, 1, SmoothSeries, ENPMult = ENPMult))
 
