@@ -66,10 +66,12 @@ PopulateIndexObs <- function(Index, nSim, HistYears, ProjYears) {
   Years <- c(HistYears, ProjYears)
 
   Index@CV    <- .PopulateObsCV(Index@CV, nSim)
+  fresh_error <- length(Index@Error) < 1
   Index@Error <- .PopulateObsError(Index, nSim, Years)
   Index@Beta  <- .PopulateObsBeta(Index@Beta, nSim)
   Index@AC    <- .PopulateObsAC(Index@AC, nSim)
-  Index@Error <- .ApplyObsAC(Index@Error, Index@AC)
+  if (fresh_error)
+    Index@Error <- .ApplyObsAC(Index@Error, Index@AC)
   Index@Ref   <- .PopulateObsRef(Index@Ref, nSim)
   
   if (length(Index@Years) < 1)

@@ -50,12 +50,20 @@
   
   nr <- nrow(object@Error)
   nc <- ncol(object@Error)
-  
+
   if (nr > nSim) {
     object@Error <- object@Error[seq_len(nSim), , drop = FALSE]
     nr <- nSim
   }
-  
+
+  if (nc > 1 && nc < nTS) {
+    existing_years <- suppressWarnings(as.numeric(dimnames(object@Error)$Year))
+    if (!anyNA(existing_years) && all(existing_years %in% Years)) {
+      object@Error <- ExtendYears(object@Error, Years = Years)
+      nc <- ncol(object@Error)
+    }
+  }
+
   chk_sim  <- nr != nSim && nr != 1
   chk_year <- nc != nTS  && nc != 1
   
