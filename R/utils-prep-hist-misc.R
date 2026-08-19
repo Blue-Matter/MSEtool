@@ -291,7 +291,21 @@
     Hist@Misc$StockTargeting <- Hist@OM@StockTargeting@Targeting
     Hist@Misc$StockTargetingFlag <- 1
   }
-  
+
+  # OM-level: Herm / stock transition
+  HermResolved <- .HermResolvePairs(Hist@OM, YearVec)
+  if (!length(HermResolved$From)) {
+    Hist@Misc$TransitionHazard    <- list()
+    Hist@Misc$TransitionToStock   <- integer(0)
+    Hist@Misc$TransitionFromStock <- integer(0)
+    Hist@Misc$TransitionFlag      <- 0
+  } else {
+    Hist@Misc$TransitionToStock   <- HermResolved$To
+    Hist@Misc$TransitionFromStock <- HermResolved$From
+    Hist@Misc$TransitionHazard    <- HermResolved$Hazard
+    Hist@Misc$TransitionFlag      <- 1
+  }
+
   Hist@Misc <- ExtendYears(Hist@Misc, Years=YearVec)
   .CheckHistMisc(Hist, Period)
   Hist
