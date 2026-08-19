@@ -12,10 +12,10 @@
 #include "calc_spawn_production.h"
 #include "calc_recruitment.h"
 #include "calc_number_next.h"
+#include "calc_transition.h"
 #include "calc_biomass.h"
 #include "calc_catch.h"
 #include "calc_overall_f.h"
-
 
 using namespace Rcpp;
 
@@ -32,6 +32,7 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
                               const int DoCalcSpawnProduction=1,
                               const int DoCalcRecruitment=1,
                               const int DoCalcNumberNext=1,
+                              const int DoCalcTransition=1,
                               const int DoCalcBiomass=1,
                               const int DoCalcOverallF=1,
                               const int DoBackCalcEffort=0,
@@ -68,7 +69,9 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
   
   Rcpp::S4 Hist = clone ? Rcpp::clone(HistIn) : Rcpp::S4(Rf_shallow_duplicate(HistIn));
   
-  // Always ensure Effort and Distribution are independent copies,
+  // Always ensure Effort and Distribution are independent copies
+  // this has been added after a lot of painful debugging - don't remove unless 
+  // you're 100% sure there aren't issues!!
   if (!clone) {
     SEXP effort_dup = PROTECT(Rf_duplicate(HistIn.slot("Effort")));
     SEXP dist_dup   = PROTECT(Rf_duplicate(HistIn.slot("Distribution")));
@@ -119,7 +122,6 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
     //        This will have to be revised once MICE calcs are added
     //
     // ---------------------------------------------------------
-    
     
     // ---------------------------------------------------------
     // Calculate Spatial Distribution of Fishing Effort
@@ -274,7 +276,32 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
       if (debug)
         Rcpp::Rcout << "End CalcNumberNext \n";
     }
-    
+
+    if (DoCalcTransition && hv.TransitionFlag) {
+
+      // ---------------------------------------------------------
+      // Age-dependent reclassification between stocks (e.g. Herm)
+      // src: inst/include/calc_transition.h
+      // ---------------------------------------------------------
+
+      if (debug)
+        Rcpp::Rcout << "Begin CalcTransition \n";
+
+      CalcTransition(y,
+                     Sims,
+                     nSim,
+                     hv.Number,
+                     hv.TransitionHazard,
+                     hv.TransitionToStock,
+                     hv.TransitionFromStock,
+                     hv.nTransitionPair,
+                     nStock,
+                     nArea);
+
+      if (debug)
+        Rcpp::Rcout << "End CalcTransition \n";
+    }
+
 
     if (DoCalcBiomass) {
       
