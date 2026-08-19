@@ -42,8 +42,8 @@
 #'   rebuilding, used by `PM_Rebuild`.
 #' @param Target Numeric. Rebuilding target, expressed as a multiple of
 #'   `SBMSY`, used by `PM_Rebuild`. Default `1`.
-#' @param Threshold Numeric. Maximum acceptable average annual variability in
-#'   yield, used by `PM_Stability`.
+#' @param Threshold Numeric. Maximum acceptable change in yield between
+#'   consecutive management intervals, used by `PM_Stability`.
 #' @param Fleets Character vector of fleet names to include in `PM_AAVE`.
 #'   Default `NULL` uses all fleets.
 #' @param Years Numeric vector of projection years to evaluate over. Default
@@ -125,9 +125,11 @@ NULL
 #' across management intervals,
 #' \deqn{\frac{1}{|Y|-1}\sum_{y \in Y \setminus \{y_1\}} \frac{|C_{s,y} - C_{s,y-1}|}{C_{s,y-1}}}{(1/(|Y|-1)) * sum over y in Y (excluding the first year) of |C[s,y] - C[s,y-1]| / C[s,y-1]}
 #'
-#' `PM_Stability`: the probability that average annual variability in yield
-#' stays below a threshold,
-#' \deqn{P(\mathrm{AAVY} < \mathrm{Threshold})}{P(AAVY < Threshold)}
+#' `PM_Stability`: the probability that yield changes by less than a
+#' threshold amount between one management interval and the next,
+#' \deqn{P\left(\frac{|C_{s,y} - C_{s,y-1}|}{C_{s,y-1}} < \mathrm{Threshold}\right)}{P( |C[s,y] - C[s,y-1]| / C[s,y-1] < Threshold )}
+#' evaluated per interval `y` and averaged across the evaluation window and
+#' simulations.
 #'
 #' @section Stat, Prob, and Mean:
 #' Every `PM_*` function returns a [pm-class] object with three related
@@ -651,13 +653,13 @@ class(PM_AAVE) <- 'pm'
 #' @export
 PM_Stability <- function(object, Threshold, Years = NULL, Stocks = NULL, silent = TRUE) {
   if (missing(Threshold))
-    cli::cli_abort("`Threshold` (maximum acceptable AAVY) must be supplied.")
+    cli::cli_abort("`Threshold` (maximum acceptable interval-to-interval yield change) must be supplied.")
   object <- .CoercePMInput(object, silent)
   ydf <- .GroupedCatch(object, Stocks, ManagementOnly = TRUE)
   if (!is.null(Years))
     ydf <- ydf[ydf$Year %in% Years, ]
   aav <- .AAV(ydf)
   .BuildPM(aav, Ref = Threshold, Years = NULL, op = `<`,
-           Name = 'Stability', Caption = paste0('P(AAVY < ', Threshold, ')'))
+           Name = 'Stability', Caption = paste0('P(interval-to-interval yield change < ', Threshold, ')'))
 }
 class(PM_Stability) <- 'pm'
