@@ -79,6 +79,7 @@
     } else {
       dimnames(hazard) <- list(Sim = sim_nm, Age = age_nm, Year = hdn[[3]])
     }
+    hazard <- ExtendSims(hazard, nSim = OM@nSim)
     ExtendYears(hazard, Years = Years)
   })
 
