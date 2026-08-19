@@ -81,10 +81,10 @@
 #'   projection. Default `NULL`.
 #' @param Complexes List. Defines stock complexes for data aggregation and
 #'   management. Default `NULL`.
-#' @param Herm List. Defines hermaphroditism or movement between stocks.
-#'   Default `NULL`.
-#' @param SharePar Logical. Whether key parameters are shared among stocks.
-#'   Default `NULL`.
+#' @param Herm A list of [stocktransition-class] objects (built via [Herm()]),
+#'   one per `From`/`To` stock pair, defining age-dependent reclassification
+#'   of individuals between stocks (e.g. sequential hermaphroditism). Default
+#'   `NULL`.
 #' @param Relations List. Biological or ecological relationships among stocks
 #'   (e.g. predator-prey). Default `NULL`. Currently not used.
 #' @param StockTargeting A [stocktargeting-class] object. Defines fleet-level
@@ -271,7 +271,6 @@ OM <- function(Name        = "A new OM object",
                
                Complexes   = NULL,
                Herm        = NULL,
-               SharePar    = NULL,
                Relations   = NULL,
                
                StockTargeting = NULL,
@@ -354,7 +353,6 @@ OM <- function(Name        = "A new OM object",
   
   .Object@Complexes   <- Complexes
   .Object@Herm        <- Herm
-  .Object@SharePar    <- SharePar
   .Object@Relations   <- Relations
   
   if (is.null(StockTargeting))
@@ -589,19 +587,7 @@ Complexes <- function(x) .IsHist(x, "Complexes")
 
 #' @rdname OM-accessors
 #' @export
-Herm <- function(x) .IsHist(x, "Herm")
-
-#' @rdname OM-accessors
-#' @export
 `Herm<-` <- function(x, value) .AssignSlot(x, value, "Herm")
-
-#' @rdname OM-accessors
-#' @export
-SharePar <- function(x) .IsHist(x, "SharePar")
-
-#' @rdname OM-accessors
-#' @export
-`SharePar<-` <- function(x, value) .AssignSlot(x, value, "SharePar")
 
 #' @rdname OM-accessors
 #' @export
