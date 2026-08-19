@@ -1,7 +1,7 @@
-# .ValidateSPFrom() (R/populate-om.R), gated on om@SharePar, runs inside
-# PopulateOM() right after .UpdateSPFrom(). Fixtures built by extending the
-# packaged MultiStockOM (2 stocks) with a duplicated third stock/fleet/obs/imp
-# entry where a 2+-hop chain needs to be exercised.
+# .ValidateSPFrom() (R/populate-om.R) runs inside PopulateOM() right after
+# .UpdateSPFrom(). Fixtures built by extending the packaged MultiStockOM
+# (2 stocks) with a duplicated third stock/fleet/obs/imp entry where a 2+-hop
+# chain needs to be exercised.
 
 .make_multistock_om <- function(nStock = 2) {
   data(MultiStockOM, envir = environment())
@@ -19,10 +19,9 @@
   om
 }
 
-test_that("one-hop SPFrom validates and PopulateOM() succeeds (SharePar left NULL)", {
+test_that("one-hop SPFrom validates and PopulateOM() succeeds", {
   om <- .make_multistock_om()
   sn <- StockNames(om)
-  expect_null(om@SharePar)
 
   om@Stock[[2]]@SRR@SPFrom <- sn[1]
   out <- PopulateOM(om, silent = TRUE)
@@ -44,10 +43,9 @@ test_that("self-reference SPFrom is a no-op", {
   expect_no_error(PopulateOM(om2, silent = TRUE))
 })
 
-test_that("a 2-stock cycle aborts PopulateOM(), including with SharePar left unset (default TRUE)", {
+test_that("a 2-stock cycle aborts PopulateOM()", {
   om <- .make_multistock_om()
   sn <- StockNames(om)
-  expect_null(om@SharePar)
 
   om@Stock[[1]]@SRR@SPFrom <- sn[2]
   om@Stock[[2]]@SRR@SPFrom <- sn[1]
@@ -63,15 +61,4 @@ test_that("a 2+-hop chain aborts PopulateOM()", {
   om@Stock[[3]]@SRR@SPFrom <- sn[1]  # C -> A (B -> C -> A is a 2-hop chain)
 
   expect_error(PopulateOM(om, silent = TRUE))
-})
-
-test_that("SharePar = FALSE skips validation even on a cyclic setup", {
-  om <- .make_multistock_om()
-  sn <- StockNames(om)
-
-  om@Stock[[1]]@SRR@SPFrom <- sn[2]
-  om@Stock[[2]]@SRR@SPFrom <- sn[1]
-  om@SharePar <- FALSE
-
-  expect_no_error(PopulateOM(om, silent = TRUE))
 })
