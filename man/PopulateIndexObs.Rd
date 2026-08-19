@@ -35,8 +35,11 @@ Otherwise the following slots are populated in order:
 \item \code{Error} — generated as a lognormal draw from \code{CV} across all historical
 and projection years, producing a named \verb{[nSim x nYear]} array. If
 \code{Error} is already a fully-formed array it is
-validated and dimension names are applied. If \code{AC} is non-zero, the
-error series is subsequently transformed to an AR(1) process (see below).
+validated and dimension names are applied. If \code{AC} is non-zero and
+\code{Error} was freshly generated (i.e. not already supplied by the user),
+the error series is subsequently transformed to an AR(1) process (see
+below). A user-supplied \code{Error} array is never transformed by \code{AC},
+since it may already encode its own autocorrelation structure.
 \item \code{AC} — expanded to a named \verb{[nSim]} array.
 Accepted inputs: scalar applied to all simulations, length-2 vector
 \code{c(lower, upper)} for a per-simulation Uniform draw, or a vector of
@@ -50,8 +53,9 @@ The following slots are used internally during the simulation and are not
 populated here: \code{Beta}, \code{Selectivity}, \code{Type}, \code{Efficiency}.
 \subsection{Autocorrelated index error}{
 
-When \code{AC} is non-zero, the independently-drawn lognormal error series is
-transformed into a variance-preserving AR(1) process on the log scale.
+When \code{AC} is non-zero and \code{Error} was freshly generated, the
+independently-drawn lognormal error series is transformed into a
+variance-preserving AR(1) process on the log scale.
 Let \eqn{\varepsilon_t = \log(\mathrm{Error}_t)} be the raw log-errors
 drawn from \eqn{N(\mu, \sigma^2)} where \eqn{\mu} and \eqn{\sigma} are
 derived from \code{CV}. The AR(1) series is constructed as:
