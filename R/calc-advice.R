@@ -178,12 +178,13 @@
                               Areas) {
   
   AdviceList <- MakeNamedList(names(DataList))
-  
+  DataOM <- .ResolveDataOM(Proj@OM@Control$DataOM, MPName, MPfunction)
+
   # loop over stocks/complexes
   nms <- names(DataList)
-  for (i in seq_along(DataList)) {  
-    Data <- DataList[[i]] |> .AddPopDyn(Proj, sim, Year, YearsProj, mp)
-    
+  for (i in seq_along(DataList)) {
+    Data <- DataList[[i]] |> .AddPopDyn(Proj, sim, Year, YearsProj, mp, DataOM = DataOM)
+
     Data@Misc$MPName <- MPName
     Data@Misc$StockName <- names(DataList)[i]
     Advice <- try(MPfunction(Data=Data), silent=TRUE)
@@ -228,9 +229,10 @@
                                Areas) {
 
   nms <- names(DataList)
+  DataOM <- .ResolveDataOM(Proj@OM@Control$DataOM, MPName, MPfunction)
 
   DataList <- purrr::imap(DataList, \(Data, nm) {
-    Data <- Data |> .AddPopDyn(Proj, sim, Year, YearsProj, mp)
+    Data <- Data |> .AddPopDyn(Proj, sim, Year, YearsProj, mp, DataOM = DataOM)
     Data@Misc$MPName    <- MPName
     Data@Misc$StockName <- nm
     Data
@@ -275,10 +277,11 @@
 #' Add Population Dynamics Data to a Data Object
 #'
 #' Optionally populates `Data@Misc$DataOM` with historical population dynamics
-#' from a [Hist()] object, controlled by `OM@Control$DataOM`. Supports adding
-#' all slots (`TRUE`), a named subset of slots (named list), or nothing (`NULL`
-#' or unrecognised value). Warnings for invalid configuration are shown once
-#' only, on the first simulation, year, and MP.
+#' from a [Hist()] object, controlled by `DataOM`. 
+#' Supports adding all slots (`TRUE`), a named subset
+#' of slots (named list), or nothing (`NULL` or unrecognised value). Warnings
+#' for invalid configuration are shown once only, on the first simulation,
+#' year, and MP.
 #'
 #' @param Data A `Data` S4 object.
 #' @param Hist A [Hist()] object containing population dynamics.
@@ -289,38 +292,51 @@
 #'   one-time warnings.
 #' @param mp Integer. Current MP index. Used to gate one-time warnings.
 #'   Default is `1`.
+#' @param DataOM `TRUE`, a named list of `hist` slot names, or `NULL` -
+#'   already resolved for the current MP via `.ResolveDataOM()`.
 #'
-#' @return The `Data` object, with `Data@Misc$DataOM` populated if
-#'   `OM@Control$DataOM` is set, otherwise unchanged.
+#' @return The `Data` object, with `Data@Misc$DataOM` populated if `DataOM`
+#'   is set, otherwise unchanged.
 #' @keywords internal
-.AddPopDyn <- function(Data, Hist, sim, Year=NULL, Years=NULL, mp=1) {
-  
-  if (!length(Hist@OM@Control$DataOM))
+.AddPopDyn <- function(Data, Hist, sim, Year=NULL, Years=NULL, mp=1, DataOM=NULL) {
+
+  if (!length(DataOM))
     return(Data)
-  
+
   Hist@Data <- list()
-  
+
   warn_once <- !is.null(Year) && sim == 1 && Year == min(Years) && mp == 1
-  
-  if (isTRUE(Hist@OM@Control$DataOM)) {
+  warn_once_mp <- !is.null(Year) && sim == 1 && Year == min(Years)
+
+  if (isTRUE(DataOM)) {
     # Add all slots
     Data@Misc$DataOM <- .SubsetSim(Hist, sim)
-    
-  } else if (is.list(Hist@OM@Control$DataOM)) {
+
+  } else if (is.list(DataOM)) {
     # Add named subset of slots
-    nms <- names(Hist@OM@Control$DataOM)
+    nms <- names(DataOM)
     Data@Misc$DataOM <- new('hist')
-    
+
     for (nm in nms) {
       if (!nm %in% slotNames('hist')) {
         if (warn_once)
           cli::cli_alert_warning("{.val {nm}} is not a valid slot name for `Hist`. Ignoring.")
+      } else if (nm == 'Reference' && !.RefPointsAvailable(Hist@Reference)) {
+        if (warn_once_mp)
+          cli::cli_alert_warning(
+            "MSY reference points ({.field Hist@Reference@MSY@FMSY}) are not available for this OM. Skipping reference MP(s) that require them."
+          )
       } else {
         slot(Data@Misc$DataOM, nm) <- slot(Hist, nm) |> .SubsetSim(Sims=sim)
       }
     }
-    
-  } 
-  
+
+  }
+
   Data
+}
+
+.RefPointsAvailable <- function(Reference) {
+  fmsy <- Reference@MSY@FMSY
+  length(fmsy) > 0 && !all(is.na(fmsy))
 }
