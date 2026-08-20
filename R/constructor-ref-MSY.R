@@ -19,14 +19,14 @@
                                                 Stock = stock_names,
                                                 Year  = Years))
   
-  MSYRefPoints@FMSY <- array(NA, 
+  MSYRefPoints@FMSY <- array(NA,
                              dim = c(nSim, n_complexes, n_ts),
                              dimnames = list(
                                Sim   = seq_len(nSim),
                                Stock = complex_names,
                                Year  = Years)
   )
-  
+
   MSYRefPoints@BMSY        <- stock_arr()
   MSYRefPoints@SBMSY       <- stock_arr()
   MSYRefPoints@SPMSY       <- stock_arr()
@@ -36,7 +36,6 @@
   
   Hist@Reference@MSY <- MSYRefPoints
   Hist
-
 }
 
 
