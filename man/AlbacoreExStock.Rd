@@ -7,7 +7,7 @@
 \format{
 A \link[=stock-class]{stock} object with the following slots populated:
 \itemize{
-\item \code{Name}: \code{"AlbacoreExStock"}.
+\item \code{Name}: \code{"Example Albacore Stock"}.
 \item \code{CommonName}: \code{"Albacore"}.
 \item \code{Species}: \code{"Thunnus alalunga"}.
 \item \code{Ages}: An \code{\link[=Ages]{Ages()}} object with \code{MaxAge = 20} years.

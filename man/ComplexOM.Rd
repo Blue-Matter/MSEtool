@@ -16,11 +16,11 @@ An \link[=om-class]{om} object with the following slots populated:
 \link{AsympExFleet}. .Structure is \verb{[[stock]][[fleet]]}. Both stocks are
 fished by the same fleet type.
 \item \strong{\code{Obs}}: a length-1 list containing a length-1 list of
-\link{AgeStructuredObs}. .Structure is \verb{[[complex]][[fleet]]}. A single
+\link{DataRichObs}. .Structure is \verb{[[complex]][[fleet]]}. A single
 observation model applies to the whole complex, since data are
 aggregated across both stocks before being observed.
-\item \strong{\code{Complexes}}: \code{list(Stock_Complex = 1:2)}. Both stocks are assigned
-to a single complex named \code{"Stock_Complex"}, so data and management
+\item \strong{\code{Complexes}}: \code{list(StockComplex = 1:2)}. Both stocks are assigned
+to a single complex named \code{"StockComplex"}, so data and management
 advice are aggregated across stocks 1 and 2.
 \item \strong{\code{Imp}}: a length-1 list containing a length-1 list of
 \link{FullComplianceImp}. .Structure is \verb{[[complex]][[fleet]]}. Perfect TAC/
@@ -53,7 +53,7 @@ See \link{AlbacoreExStock} and \link{ButterfishExStock} for full parameter detai
 
 \subsection{Stock Complex}{
 
-Setting \code{Complexes = list(Stock_Complex = 1:2)} instructs the operating
+Setting \code{Complexes = list(StockComplex = 1:2)} instructs the operating
 model to treat both stocks as a single management unit. Catch and index
 data are aggregated across the complex when generating management advice,
 while population dynamics are simulated independently for each stock.
@@ -70,9 +70,12 @@ parameter details.
 
 Because both stocks are aggregated into a single complex, the \code{Obs} slot
 is indexed by complex and fleet rather than by individual stock. A single
-\link{AgeStructuredObs} object applies to the complex as a whole: landings, a
-spawning-biomass survey, and annual age-composition samples from landed
-and discarded fish. See \link{AgeStructuredObs} for full parameter details.
+\link{DataRichObs} object applies to the complex as a whole: landings, discards,
+effort, a commercial CPUE index, a spawning-biomass survey, and annual
+age- and length-composition samples from landed and discarded fish. A
+fully-monitored scenario is appropriate here since joint management of a
+stock complex relies on comprehensive, aggregated data across its member
+stocks. See \link{DataRichObs} for full parameter details.
 }
 
 \subsection{Implementation Error}{
@@ -99,7 +102,7 @@ Hist <- runMSE(ComplexOM, MPs = ExampleMPs())
 }
 \seealso{
 \link{SingleStockOM}, \link{TwoFleetOM}, \link{MultiStockOM} for structural variants.
-\link{AlbacoreExStock}, \link{ButterfishExStock}, \link{AsympExFleet}, \link{AgeStructuredObs},
+\link{AlbacoreExStock}, \link{ButterfishExStock}, \link{AsympExFleet}, \link{DataRichObs},
 \link{FullComplianceImp} for the component objects.
 \code{\link[=OM]{OM()}}, \link[=om-class]{om}, \code{\link[=runMSE]{runMSE()}}, \code{\link[=PopulateOM]{PopulateOM()}}, \code{\link[=ExampleMPs]{ExampleMPs()}}
 

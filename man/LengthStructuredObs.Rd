@@ -23,7 +23,7 @@ discarded fish from at-sea observers. Nominal sample size \verb{[150, 300]};
 ESS \verb{[40, 80]}; \code{Theta} in \verb{[0.4, 0.8]}.
 }
 
-Empty slots (no data simulated): \code{Effort}, \code{Discards}, \code{CPUE},
+Empty slots (no data simulated): \code{Effort}, \code{CPUE},
 \code{LandingsAtAge}, \code{DiscardsAtAge}.
 }
 \usage{
