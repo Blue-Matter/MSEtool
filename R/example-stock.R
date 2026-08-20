@@ -7,7 +7,7 @@
 #'
 #' @format A [stock-class] object with the following slots populated:
 #'
-#' - `Name`: `"AlbacoreExStock"`. 
+#' - `Name`: `"Example Albacore Stock"`.
 #' - `CommonName`: `"Albacore"`.
 #' - `Species`: `"Thunnus alalunga"`.
 #' - `Ages`: An [Ages()] object with `MaxAge = 20` years.
@@ -129,7 +129,7 @@
 #'
 #' @format A [stock-class] object with the following slots populated:
 #'
-#' - `Name`: `"ButterfishExStock"`. 
+#' - `Name`: `"Example Butterfish Stock"`.
 #' - `CommonName`: `"Butterfish"`.
 #' - `Species`: `"Peprilus triacanthus"`.
 #' - `Ages`: An [Ages()] object with `MaxAge = 8`.
