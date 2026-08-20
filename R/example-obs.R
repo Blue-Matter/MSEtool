@@ -192,7 +192,7 @@
 #'   discarded fish from at-sea observers. Nominal sample size `[150, 300]`;
 #'   ESS `[40, 80]`; `Theta` in `[0.4, 0.8]`.
 #'
-#' Empty slots (no data simulated): `Effort`, `Discards`, `CPUE`,
+#' Empty slots (no data simulated): `Effort`, `CPUE`,
 #' `LandingsAtAge`, `DiscardsAtAge`.
 #'
 #'
