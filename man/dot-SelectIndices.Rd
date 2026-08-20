@@ -2,13 +2,16 @@
 % Please edit documentation in R/mp-empirical-index.R
 \name{.SelectIndices}
 \alias{.SelectIndices}
-\title{Select and Validate Indices from an \code{indicesdata} Object}
+\title{Select and Validate Indices from One or More \code{indicesdata} Objects}
 \usage{
-.SelectIndices(IndexData, Indices)
+.SelectIndices(Data, IndexSource, Indices)
 }
 \arguments{
-\item{IndexData}{An \link[=indicesdata-class]{indicesdata} object (\code{Data@Survey} or
-\code{Data@CPUE}).}
+\item{Data}{A \link[=data-class]{data} object.}
+
+\item{IndexSource}{Character vector of one or both of \code{'Survey'},
+\code{'CPUE'}; see \code{\link[=IndexRate]{IndexRate()}}. Indices from each requested source are
+combined column-wise, in the order given.}
 
 \item{Indices}{Character, integer, or \code{NULL}; see \code{\link[=IndexRate]{IndexRate()}}.}
 }
@@ -17,6 +20,6 @@ A list with elements \code{Value} (\verb{[nYear x nSelected]}) and \code{Ref}
 (length \code{nSelected}, \code{NA} where unset).
 }
 \description{
-Select and Validate Indices from an \code{indicesdata} Object
+Select and Validate Indices from One or More \code{indicesdata} Objects
 }
 \keyword{internal}

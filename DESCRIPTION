@@ -261,6 +261,8 @@ Collate:
     'models-weight.R'
     'models.R'
     'mp-empirical-index.R'
+    'mp-hockeystickHCR.R'
+    'mp-reference.R'
     'mp-utils.R'
     'mse-update.R'
     'opt-effort-choke.R'

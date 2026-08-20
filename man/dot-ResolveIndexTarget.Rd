@@ -13,11 +13,11 @@
 
 \item{nSel}{Number of selected indices.}
 
-\item{IndexSource}{Character, for the error message.}
+\item{IndexSource}{Character vector, for the error message.}
 }
 \description{
 Uses the user-supplied \code{IndexTarget}, falling back to \code{Ref} from the
-selected \link[=indicesdata-class]{indicesdata} object (see \code{\link[=.SelectIndices]{.SelectIndices()}}). Errors if
+selected \link[=indicesdata-class]{indicesdata} object(s). Errors if
 neither is available.
 }
 \keyword{internal}

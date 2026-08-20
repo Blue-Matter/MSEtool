@@ -4,7 +4,7 @@
 \alias{.AddPopDyn}
 \title{Add Population Dynamics Data to a Data Object}
 \usage{
-.AddPopDyn(Data, Hist, sim, Year = NULL, Years = NULL, mp = 1)
+.AddPopDyn(Data, Hist, sim, Year = NULL, Years = NULL, mp = 1, DataOM = NULL)
 }
 \arguments{
 \item{Data}{A \code{Data} S4 object.}
@@ -21,16 +21,20 @@ one-time warnings.}
 
 \item{mp}{Integer. Current MP index. Used to gate one-time warnings.
 Default is \code{1}.}
+
+\item{DataOM}{\code{TRUE}, a named list of \code{hist} slot names, or \code{NULL} -
+already resolved for the current MP via \code{.ResolveDataOM()}.}
 }
 \value{
-The \code{Data} object, with \code{Data@Misc$DataOM} populated if
-\code{OM@Control$DataOM} is set, otherwise unchanged.
+The \code{Data} object, with \code{Data@Misc$DataOM} populated if \code{DataOM}
+is set, otherwise unchanged.
 }
 \description{
 Optionally populates \code{Data@Misc$DataOM} with historical population dynamics
-from a \code{\link[=Hist]{Hist()}} object, controlled by \code{OM@Control$DataOM}. Supports adding
-all slots (\code{TRUE}), a named subset of slots (named list), or nothing (\code{NULL}
-or unrecognised value). Warnings for invalid configuration are shown once
-only, on the first simulation, year, and MP.
+from a \code{\link[=Hist]{Hist()}} object, controlled by \code{DataOM}.
+Supports adding all slots (\code{TRUE}), a named subset
+of slots (named list), or nothing (\code{NULL} or unrecognised value). Warnings
+for invalid configuration are shown once only, on the first simulation,
+year, and MP.
 }
 \keyword{internal}

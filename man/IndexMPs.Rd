@@ -9,33 +9,44 @@
 IndexRate(
   Data,
   Indices = NULL,
-  IndexSource = c("Survey", "CPUE"),
+  IndexSource = "Survey",
   IndexFreq = NULL,
   IndexWeight = NULL,
   CalibYears = 2,
+  Smooth = TRUE,
   ENPMult = 0.3,
+  RecentYears = 1,
+  TrendYears = NULL,
+  TrendHorizon = 1,
   IndexFactor = 1,
   IndexTarget = NULL,
   HCRControlPointsIndex = c(0, 0),
   HCRControlPointsRate = c(0, 1),
+  RampType = c("linear", "smooth"),
   Responsiveness = 1,
   DeltaDown = c(0.01, 0.5),
   DeltaUp = c(0.01, 0.5),
-  TACRange = NULL
+  TACRange = NULL,
+  Allocation = NULL
 )
 
 IndexTarget(
   Data,
   Indices = NULL,
-  IndexSource = c("Survey", "CPUE"),
+  IndexSource = "Survey",
   IndexFreq = NULL,
   IndexWeight = NULL,
+  Smooth = TRUE,
   ENPMult = 0.3,
+  RecentYears = 1,
+  TrendYears = NULL,
+  TrendHorizon = 1,
   IndexTarget = NULL,
   Responsiveness = 1,
   DeltaDown = c(0.01, 0.5),
   DeltaUp = c(0.01, 0.5),
-  TACRange = NULL
+  TACRange = NULL,
+  Allocation = NULL
 )
 }
 \arguments{
@@ -45,8 +56,12 @@ IndexTarget(
 which columns of the chosen \code{IndexSource} to use. \code{NULL} (default) uses
 every index in \code{IndexSource}.}
 
-\item{IndexSource}{Character. Use indices from \code{Data@Survey} (default) or
-\code{Data@CPUE}.}
+\item{IndexSource}{Character vector of one or both of \code{'Survey'},
+\code{'CPUE'}. Use indices from \code{Data@Survey} (default, \code{'Survey'}),
+\code{Data@CPUE}, or both (\code{c('Survey', 'CPUE')}). When both are used, their
+indices are combined into a single selection (\code{Survey} columns first,
+then \code{CPUE}), and \code{Indices}, \code{IndexFreq}, and \code{IndexWeight} apply across
+that combined set.}
 
 \item{IndexFreq}{Positive integer vector, same length as the selected
 indices. How often each index is available in the projection period
@@ -58,11 +73,38 @@ indices, giving each index's weight when averaging. \code{NULL} (default)
 weights indices equally.}
 
 \item{CalibYears}{Positive integer. Number of recent historical years used
-to calculate the catch-per-index calibration ratio.}
+to calculate the catch-per-index calibration ratio. Clamped to the
+number of historical years actually available.}
+
+\item{Smooth}{Logical. Whether to smooth each selected index with
+\code{\link[stats:loess]{stats::loess()}} (\code{ENPMult} controls the degree of smoothing) before
+use. \code{TRUE} (default). Set \code{FALSE} to use the raw (unsmoothed) index
+values directly - useful for a short series where a loess fit is
+unstable, or when the raw index should drive the harvest control rule
+directly.}
 
 \item{ENPMult}{Fraction. Smoothing parameter for \code{\link[stats:loess]{stats::loess()}}: the
 number of effective parameters is \verb{length(index) x ENPMult}. Larger
-values mean less smoothing.}
+values mean less smoothing. Ignored when \code{Smooth = FALSE}.}
+
+\item{RecentYears}{Positive integer. Number of most recent years (after
+smoothing, if \code{Smooth = TRUE}) averaged, per index, to obtain the
+current status estimate used by both MPs. \code{1} (default) uses only the
+terminal year.}
+
+\item{TrendYears}{\code{NULL} (default) disables trend projection. Otherwise a
+positive integer, \verb{>= 2}, giving the number of most recent smoothed
+years (per index) used to estimate a log-linear trend. When set, the
+status compared against \code{IndexTarget} (and, in \code{IndexRate()}, fed to
+the harvest control rule) is that trend projected forward
+\code{TrendHorizon} years, rather than the current status itself - so a
+stock at target but declining fast is treated more cautiously than one
+at target and stable. The status used to scale the trial TAC in
+\code{IndexRate()} is always the actual (non-projected) current status.}
+
+\item{TrendHorizon}{Positive number. Number of years the estimated trend
+is extrapolated forward; see \code{TrendYears}. Default \code{1}. Ignored when
+\code{TrendYears} is \code{NULL}.}
 
 \item{IndexFactor}{Positive number. Multiplier applied to the
 catch-per-index ratio when projecting the trial TAC; see Details.
@@ -85,6 +127,14 @@ ramped. \code{c(0, 0)} (default) disables the HCR (constant multiplier of
 rate multipliers corresponding to \code{HCRControlPointsIndex}. Default
 \code{c(0, 1)}.}
 
+\item{RampType}{Character. Shape of the harvest control rule's ramp
+between control points: \code{'linear'} (default) or \code{'smooth'} (a cubic
+smoothstep, avoiding the slope discontinuity a linear ramp has at each
+control point). \code{HCRControlPointsIndex}/\code{HCRControlPointsRate} may have
+\code{2} control points (the classic two-point hockey stick) or more - e.g.
+\code{3}, to cap the rate above a very healthy index level as well as floor
+it below a limit. See \code{\link[=HockeyStickHCR]{HockeyStickHCR()}}.}
+
 \item{Responsiveness}{Positive number. Responsiveness of the TAC-change
 calculation: \verb{TAC change = exp(log(new_TAC / old_TAC) * Responsiveness)}.
 Values below \code{1} damp the implied change; \code{1} (default) applies it in
@@ -97,25 +147,32 @@ downward and upward respectively.}
 \item{TACRange}{Numeric vector, length 2 (\code{c(min, max)}). Absolute bounds
 on the TAC. \code{NULL} (default) effectively imposes no limit
 (\verb{c(0, 100 * max(historical removals))}).}
+
+\item{Allocation}{\code{NULL} (default), or a positive numeric vector of length
+\code{nFleet} giving the fraction of the TAC allocated to each fleet
+(normalised to sum to \code{1}). \code{NULL} returns a single stock-wide TAC,
+which the framework then splits across fleets using \code{Allocation(OM)}
+(see \code{\link[=Advice]{Advice()}}).}
 }
 \value{
 An \link[=advice-class]{advice} object with \code{TAC} set.
 }
 \description{
 Management procedures that set a TAC from one or more relative abundance
-indices (\code{Survey(Data)} or \code{CPUE(Data)}).
+indices (\code{Survey(Data)} or \code{CPUE(Data)}, or both).
 }
 \details{
-Both smooth the selected index/indices with \code{\link[stats:loess]{stats::loess()}}
-before use, to reduce sensitivity to observation noise, and both
-constrain the resulting TAC change via \code{DeltaDown}/\code{DeltaUp}/\code{TACRange}.
+Both optionally smooth the selected index/indices with \code{\link[stats:loess]{stats::loess()}}
+(\code{Smooth}, \code{ENPMult}) before use, to reduce sensitivity to observation
+noise, average that smoothed status over the most recent \code{RecentYears},
+and constrain the resulting TAC change via \code{DeltaDown}/\code{DeltaUp}/\code{TACRange}.
 \itemize{
 \item \code{IndexRate()}: Calibrates a catch-per-index rate from \code{CalibYears} of
 recent history, damps that rate (\verb{catch_per_index x IndexFactor})
 through a hockey-stick harvest control rule
 (\code{HCRControlPointsIndex}/\code{HCRControlPointsRate}) based on the current
 index level relative to \code{IndexTarget}, then multiplies the adjusted
-rate by \code{smoothed_index[terminal]} to get a trial TAC. \code{IndexFactor = 1}
+rate by the current index status to get a trial TAC. \code{IndexFactor = 1}
 (the default) holds the catch-per-index rate observed in \code{CalibYears}
 constant; there is no way to derive a "correct" \code{IndexFactor} from
 \code{Data} alone (it would require knowing the true current fishing rate

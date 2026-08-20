@@ -14,8 +14,10 @@ modified directly by users.
 
 MSY reference points are derived from the per-recruit quantities in a
 \link[=perrecruit-class]{perrecruit} object by identifying the apical fishing mortality
-that maximises total removals, accounting for the stock-recruitment
-relationship. All slots share the same \verb{Sim × Stock × Year} dimensions,
+that maximises total removals (or optionally landing), accounting for the
+stock-recruitment relationship.
+
+All slots share the same \verb{Sim × Stock × Year} dimensions,
 where the \code{Year} dimension reflects the year(s) for which biological and
 fishery parameters were evaluated.
 }
@@ -37,7 +39,8 @@ fishery parameters were evaluated.
 
 \item{\code{MSYDiscards}}{Dead discards at MSY (\verb{Sim × Stock × Year}).}
 
-\item{\code{Misc}}{List reserved for internal use.}
+\item{\code{Misc}}{List reserved for internal use.
+#'}
 }}
 
 \seealso{
