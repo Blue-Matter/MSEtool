@@ -183,8 +183,6 @@ F_FMSY <- function(object,
     return(out)
   }
 
-  # MSE: bind historical and projection periods (object@Hist is a bare
-  # `timeseries`, not `hist`, so `OM` is passed through explicitly)
   hist_df <- .ComputeFFMSY(object@Hist, fmsy_arr, Reduce, IncYear, object@OM) |>
     dplyr::mutate(MP = 'Historical')
   proj_df <- .ComputeFFMSY(object, fmsy_arr, Reduce, IncYear, object@OM)
@@ -287,10 +285,7 @@ F_FMSY <- function(object,
   }
 }
 
-# Align the Year dimension of denom_arr to target_years.
-# Years present in both: matched exactly.
-# Target years absent from denom: the last available denom year is used
-# (forward fill for projection period).
+
 .AlignDenomYears <- function(denom_arr, target_years) {
   denom_years <- dimnames(denom_arr)[['Year']]
   if (is.null(denom_years) || is.null(target_years)) return(denom_arr)
@@ -316,7 +311,6 @@ F_FMSY <- function(object,
   out
 }
 
-# Worker: compute ratio data frame for one period/object (no byAge/byArea)
 .ComputeRelative <- function(object, OM, num_slot, denom_arr, var_name,
                                Reduce, IncYear) {
   isMSE <- inherits(object, 'mse')
