@@ -45,16 +45,17 @@
 
   Hist@Reference@SPR0 <- CalcSPR0(Hist)
 
+  MSYYears <- OM@Control$RefYears %||% utils::tail(Years(Hist@OM, 'Historical'), 1)
+  if (Hist@OM@Seasons > 1L) MSYYears <- unique(floor(MSYYears))
+
   if (!is.null(refpointsMSY)) {
-    MSYYears <- utils::tail(Years(Hist@OM, 'Historical'), 1)
-    if (Hist@OM@Seasons > 1L) MSYYears <- unique(floor(MSYYears))
     .ValidateRefpointsMSY(Hist, refpointsMSY, MSYYears)
     Hist@Reference@MSY <- refpointsMSY
     if (!silent)
       cli::cli_alert_info('Using user-supplied {.cls refpointsMSY} object -- skipped MSY reference point calculation')
   } else if (control$MSYRefs) {
     Hist@Reference@MSY <- CalcMSY(Hist,
-                                  Years    = OM@Control$RefYears,
+                                  Years    = MSYYears,
                                   type     = OM@Control$MSYType %||% 'Removals',
                                   parallel = parallel,
                                   silent   = silent)
@@ -66,6 +67,11 @@
   Hist <- .CalcFisheryDynamics(Hist, IdenticalSim=IdenticalHist, clone = 1,
                                DoBackCalcEffort = .BackCalcEffortFlag(Hist))
   Hist <- .CalcCatchAtSize(Hist, Years = HistYears)
+
+  if (!is.null(Hist@Reference@MSY))
+    Hist@Reference@MSY@Misc$FCurrent <- SumOverFleet(Hist@FInteract) |> 
+    .AggregateFToComplex(Hist@OM) |> 
+    .AlignDenomYears(as.character(MSYYears))
 
   if (control$RefPoints)
     Hist <- CalcRefPoints(Hist,
