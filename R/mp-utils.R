@@ -22,67 +22,6 @@ FilterTAC <- function(TAC) {
 }
 
 
-#' Hockey-Stick Harvest Control Rule
-#'
-#' Modifies a trial rate (e.g. an exploitation or fishing mortality rate)
-#' based on the current level of some status indicator (e.g. an index, or
-#' biomass) relative to a reference (target) level.
-#'
-#' A two-inflection-point ("hockey stick") control rule:
-#'  - below `ControlPointsIndex[1]`, `Rate = TrialRate * ControlPointsRate[1]`
-#'  - above `ControlPointsIndex[2]`, `Rate = TrialRate * ControlPointsRate[2]`
-#'  - in between, the multiplier is linearly interpolated.
-#'
-#' The returned rate is a multiplier to be applied to current biomass (or an
-#' index used as a biomass proxy) by the caller to obtain a TAC - it is not
-#' itself a TAC.
-#'
-#' @param TrialRate Positive number. Trial rate before HCR adjustment.
-#' @param Est,Ref Positive numbers, same units. Current status level and its
-#'   target/reference level.
-#' @param ControlPointsIndex Numeric vector, length 2 (`c(Lx, Ux)`). The
-#'   lower and upper control points, in units of `Est / Ref`.
-#' @param ControlPointsRate Numeric vector, length 2 (`c(Ly, Uy)`). The rate
-#'   multipliers corresponding to `ControlPointsIndex`.
-#'
-#' @return A numeric rate.
-#'
-#' @examples
-#' # At or above target (Est/Ref >= 1): full trial rate applies
-#' HockeyStickHCR(TrialRate = 0.2, Est = 1.2, Ref = 1,
-#'                ControlPointsIndex = c(0.5, 1), ControlPointsRate = c(0, 1))
-#'
-#' # Partway up the 0.5-1 ramp: rate scaled down accordingly
-#' HockeyStickHCR(TrialRate = 0.2, Est = 0.75, Ref = 1,
-#'                ControlPointsIndex = c(0.5, 1), ControlPointsRate = c(0, 1))
-#'
-#' # At or below the lower control point: rate set to zero
-#' HockeyStickHCR(TrialRate = 0.2, Est = 0.3, Ref = 1,
-#'                ControlPointsIndex = c(0.5, 1), ControlPointsRate = c(0, 1))
-#'
-#' # Plot the control rule across a range of current status (Est / Ref)
-#' Level <- seq(0, 1.5, length.out = 200)
-#' Rate  <- sapply(Level, HockeyStickHCR,
-#'                  TrialRate = 0.2, Ref = 1,
-#'                  ControlPointsIndex = c(0.5, 1), ControlPointsRate = c(0, 1))
-#' plot(Level, Rate, type = "l", lwd = 2,
-#'      xlab = "Current status (Est / Ref)", ylab = "Rate")
-#' abline(v = c(0.5, 1), lty = 3, col = "grey50")
-#'
-#' @seealso [IndexRate()], [Advice()]
-#' @export
-HockeyStickHCR <- function(TrialRate, Est, Ref,
-                           ControlPointsIndex = c(0, 1),
-                           ControlPointsRate = c(0, 1)) {
-  Level <- Est / Ref
-  if (Level <= ControlPointsIndex[1]) return(TrialRate * ControlPointsRate[1])
-  if (Level >= ControlPointsIndex[2]) return(TrialRate * ControlPointsRate[2])
-  TrialRate * ControlPointsRate[1] +
-    TrialRate * (ControlPointsRate[2] - ControlPointsRate[1]) *
-    (Level - ControlPointsIndex[1]) / (ControlPointsIndex[2] - ControlPointsIndex[1])
-}
-
-
 #' Constrain a TAC Change Between Management Cycles
 #'
 #' Applies minimum/maximum fractional change limits to a proposed TAC
