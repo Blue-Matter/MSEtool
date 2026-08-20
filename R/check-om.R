@@ -1,10 +1,19 @@
 #' Check OM object is complete
 #'
-#' @param OM An object of class `OM` 
+#' For an [om-class] object, reports which `Stock`, `Fleet`, `Obs`, and `Imp`
+#' components are missing or incomplete, as a nested list matching the
+#' `[[stock/complex]][[fleet]]` structure of `OM@Fleet`/`OM@Obs`/`OM@Imp`.
+#' `Stock`/`Fleet` list required slots that [PopulateOM()] cannot fill on its
+#' own; `Obs`/`Imp` have no such required slots (every unset slot legitimately
+#' means "no observation"/"perfect implementation").
+#'
+#' @param OM An object of class `OM`
 #' @param msg Logical. Display messages?
 #' @param stop_if_missing Logical. Stop with error is values are missing and there is no default?
 #'
-#' @return The OM object with default values (if needed)
+#' @return For an [om-class] `OM`: a list with elements `MissingStock`,
+#'   `MissingFleet`, `MissingObs`, `MissingImp` (each `NULL` if nothing is
+#'   missing). 
 #' @export
 #'
 #' @examples
@@ -24,13 +33,25 @@ CheckOM <- function(OM, msg=TRUE, stop_if_missing=TRUE) {
   if (!length(MissingStock))
     MissingStock <- NULL
   
-  # Fleet 
+  # Fleet
   MissingFleet <- .CheckFleet(OM@Fleet)
   if (!length(MissingFleet))
     MissingFleet <- NULL
-  
+
+  # Obs
+  MissingObs <- .CheckOMObs(OM@Obs)
+  if (!length(MissingObs))
+    MissingObs <- NULL
+
+  # Imp
+  MissingImp <- .CheckOMImp(OM@Imp)
+  if (!length(MissingImp))
+    MissingImp <- NULL
+
   list(MissingStock = MissingStock,
-       MissingFleet = MissingFleet)
+       MissingFleet = MissingFleet,
+       MissingObs   = MissingObs,
+       MissingImp   = MissingImp)
 }
 
 .CheckStock <- function(Stock) {
@@ -95,14 +116,78 @@ CheckOM <- function(OM, msg=TRUE, stop_if_missing=TRUE) {
     return(stockfleetlist)
   }
   
-  # Required Slots 
+  # Required Slots
   Missing <- Slot <- NULL # CRAN check hacks
   df <- data.frame(Slot= c('Effort', 'Selectivity'),
                    Missing= FALSE)
-  
+
   for (i in seq_len(nrow(df))) {
     if (EmptyObject(slot(Fleet, df$Slot[i])))
       df$Missing[i] <- TRUE
   }
   dplyr::filter(df, Missing==TRUE) |> dplyr::pull(Slot)
+}
+
+.CheckOMObs <- function(Obs) {
+  if (is.null(Obs))
+    return('None Specified')
+
+  if (is.list(Obs)) {
+    if (!is.list(Obs[[1]]))
+      Obs <- list(Obs)
+
+    complexnames <- names(Obs)
+    if (is.null(complexnames))
+      complexnames <- paste('Complex', seq_along(Obs))
+
+    complexlist <- MakeNamedList(complexnames)
+    for (i in seq_along(complexnames)) {
+      fleetobs   <- Obs[[i]]
+      fleetnames <- names(fleetobs)
+      if (is.null(fleetnames))
+        fleetnames <- paste('Fleet', seq_along(fleetobs))
+
+      complexlist[[i]] <- MakeNamedList(fleetnames)
+      for (j in seq_along(fleetnames))
+        complexlist[[i]][[j]] <- Recall(fleetobs[[j]])
+    }
+    return(complexlist)
+  }
+
+  if (EmptyObject(Obs))
+    return('No observation model specified (perfect information)')
+
+  character(0)
+}
+
+.CheckOMImp <- function(Imp) {
+  if (is.null(Imp))
+    return('None Specified')
+
+  if (is.list(Imp)) {
+    if (!is.list(Imp[[1]]))
+      Imp <- list(Imp)
+
+    complexnames <- names(Imp)
+    if (is.null(complexnames))
+      complexnames <- paste('Complex', seq_along(Imp))
+
+    complexlist <- MakeNamedList(complexnames)
+    for (i in seq_along(complexnames)) {
+      fleetimp   <- Imp[[i]]
+      fleetnames <- names(fleetimp)
+      if (is.null(fleetnames))
+        fleetnames <- paste('Fleet', seq_along(fleetimp))
+
+      complexlist[[i]] <- MakeNamedList(fleetnames)
+      for (j in seq_along(fleetnames))
+        complexlist[[i]][[j]] <- Recall(fleetimp[[j]])
+    }
+    return(complexlist)
+  }
+
+  if (EmptyObject(Imp))
+    return('No implementation error specified (perfect implementation)')
+
+  character(0)
 }

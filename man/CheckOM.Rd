@@ -14,10 +14,19 @@ CheckOM(OM, msg = TRUE, stop_if_missing = TRUE)
 \item{stop_if_missing}{Logical. Stop with error is values are missing and there is no default?}
 }
 \value{
-The OM object with default values (if needed)
+For an \link[=om-class]{om} \code{OM}: a list with elements \code{MissingStock},
+\code{MissingFleet}, \code{MissingObs}, \code{MissingImp} (each \code{NULL} if nothing is
+missing). For a legacy \code{OM-legacy-class} object, behaviour is delegated
+to the legacy engine's own check.
 }
 \description{
-Check OM object is complete
+For an \link[=om-class]{om} object, reports which \code{Stock}, \code{Fleet}, \code{Obs}, and \code{Imp}
+components are missing or incomplete, as a nested list matching the
+\verb{[[stock/complex]][[fleet]]} structure of \code{OM@Fleet}/\code{OM@Obs}/\code{OM@Imp}.
+\code{Stock}/\code{Fleet} list required slots that \code{\link[=PopulateOM]{PopulateOM()}} cannot fill on its
+own; \code{Obs}/\code{Imp} have no such required slots (every unset slot legitimately
+means "no observation"/"perfect implementation"), so they instead flag a
+leaf that is entirely empty as an FYI.
 }
 \examples{
 SingleStockOM <- CheckOM(SingleStockOM)
