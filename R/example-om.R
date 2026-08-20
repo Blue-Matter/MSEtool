@@ -19,11 +19,11 @@
 #'   [AsympExFleet]. .Structure is `[[stock]][[fleet]]`. Both stocks are
 #'   fished by the same fleet type.
 #' - **`Obs`**: a length-1 list containing a length-1 list of
-#'   [AgeStructuredObs]. .Structure is `[[complex]][[fleet]]`. A single
+#'   [DataRichObs]. .Structure is `[[complex]][[fleet]]`. A single
 #'   observation model applies to the whole complex, since data are
 #'   aggregated across both stocks before being observed.
-#' - **`Complexes`**: `list(Stock_Complex = 1:2)`. Both stocks are assigned
-#'   to a single complex named `"Stock_Complex"`, so data and management
+#' - **`Complexes`**: `list(StockComplex = 1:2)`. Both stocks are assigned
+#'   to a single complex named `"StockComplex"`, so data and management
 #'   advice are aggregated across stocks 1 and 2.
 #' - **`Imp`**: a length-1 list containing a length-1 list of
 #'   [FullComplianceImp]. .Structure is `[[complex]][[fleet]]`. Perfect TAC/
@@ -39,7 +39,7 @@
 #' See [AlbacoreExStock] and [ButterfishExStock] for full parameter details.
 #'
 #' ## Stock Complex
-#' Setting `Complexes = list(Stock_Complex = 1:2)` instructs the operating
+#' Setting `Complexes = list(StockComplex = 1:2)` instructs the operating
 #' model to treat both stocks as a single management unit. Catch and index
 #' data are aggregated across the complex when generating management advice,
 #' while population dynamics are simulated independently for each stock.
@@ -52,9 +52,12 @@
 #' ## Observation Model
 #' Because both stocks are aggregated into a single complex, the `Obs` slot
 #' is indexed by complex and fleet rather than by individual stock. A single
-#' [AgeStructuredObs] object applies to the complex as a whole: landings, a
-#' spawning-biomass survey, and annual age-composition samples from landed
-#' and discarded fish. See [AgeStructuredObs] for full parameter details.
+#' [DataRichObs] object applies to the complex as a whole: landings, discards,
+#' effort, a commercial CPUE index, a spawning-biomass survey, and annual
+#' age- and length-composition samples from landed and discarded fish. A
+#' fully-monitored scenario is appropriate here since joint management of a
+#' stock complex relies on comprehensive, aggregated data across its member
+#' stocks. See [DataRichObs] for full parameter details.
 #'
 #' ## Implementation Error
 #' [FullComplianceImp] models perfect implementation: `TAC@Mean = 1`/
@@ -68,7 +71,7 @@
 #'
 #' @seealso
 #' [SingleStockOM], [TwoFleetOM], [MultiStockOM] for structural variants.
-#' [AlbacoreExStock], [ButterfishExStock], [AsympExFleet], [AgeStructuredObs],
+#' [AlbacoreExStock], [ButterfishExStock], [AsympExFleet], [DataRichObs],
 #' [FullComplianceImp] for the component objects.
 #' [OM()], [om-class], [runMSE()], [PopulateOM()], [ExampleMPs()]
 #'
