@@ -191,11 +191,19 @@ reference:
   - AlbacoreExStock
   - ButterfishExStock
   - SeasonalSpatialExStock
+  - WrasseExStock
 
 - subtitle: Fleets
   contents:
   - AsympExFleet
   - DomeExFleet
+
+- subtitle: Implementation
+  contents:
+  - FullComplianceImp
+  - OverageImp
+  - UnderageImp
+  - PartialSizeComplianceImp
 
 - subtitle: Operating Models
   contents:
@@ -204,6 +212,7 @@ reference:
   - MultiStockOM
   - ComplexOM
   - SeasonalSpatialOM
+  - HermOM
 
 - subtitle: Management Procedures
   contents:
@@ -417,7 +426,9 @@ reference:
   - FitStockTargeting
   - GenMultiStockRecDevs
   - GenerateStockTargeting
+  - Herm
   - StandardizeEffort
+  - stocktransition-class
   - StockTargeting
 
 
