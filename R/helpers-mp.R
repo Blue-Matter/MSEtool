@@ -5,6 +5,7 @@
 }
 
 .ResolveInterval <- function(OMInterval, MPName, MPfunction) {
+
   nms <- names(OMInterval)
 
   if (!is.null(nms) && MPName %in% nms)
@@ -21,6 +22,15 @@
   }
 
   unname(OMInterval[[1]])
+}
+
+.ResolveDataOM <- function(OMControlDataOM, MPName, MPfunction) {
+  nms <- names(OMControlDataOM)
+
+  if (!is.null(nms) && MPName %in% nms)
+    return(OMControlDataOM[[MPName]])
+
+  attr(MPfunction, 'DataOM')
 }
 
 .GetLastMPAdvice <- function(Proj) {
@@ -180,27 +190,6 @@
   Current
 }
 
-#' Reconcile Mismatched `Data@Advice` Record Shapes Across Years
-#'
-#' `Data@Advice@TAC`/`@Effort` accumulate across years via [ArrayFill<-()],
-#' which requires matching dimension names throughout. In practice, a plain
-#' per-fleet `Effort` value (`Fleet` only) and the
-#' freeze-last-effort default (`Fleet` x `Area`, always built regardless of
-#' whether the MP's own advice carried area detail) can legitimately occur
-#' in different years for the same MP, which would otherwise abort the
-#' whole projection.
-#'
-#' This is a record-keeping reconciliation only (`Data@Advice` is read by
-#' MPs for introspection of past decisions; it does not feed population
-#' dynamics) - the smaller array is broadcast across the extra dimension's
-#' levels rather than an attempt to reconstruct any real spatial split.
-#'
-#' @param Current Existing accumulated array (with a `Year` dimension).
-#' @param New     This year's array (with a `Year` dimension already added).
-#'
-#' @return A list with elements `Current` and `New`, each with identical
-#'   dimension names (and order), ready for [ArrayFill<-()].
-#' @keywords internal
 .ReconcileAdviceShapes <- function(Current, New) {
   nmC <- names(dimnames(Current))
   nmN <- names(dimnames(New))
@@ -266,30 +255,6 @@
 }
 
 
-#' Process Mean-At-X Slot for a Selectivity or Retention Object
-#'
-#' Validates and reshapes `MeanAtAge`, `MeanAtLength`, or `MeanAtWeight` slots
-#' of a selectivity or retention S4 object to a standardised `[nClass, nArea]`
-#' array with `Sim` and `Year` dimensions added. Handles vector, 1-D array,
-#' and 2-D array inputs. Clears `@Pars` when a mean-at-x slot is set, as
-#' parametric selectivity is no longer used.
-#'
-#'
-#' @param select A `selectivity` or `retention` S4 object.
-#' @param Classes Character or numeric vector of class labels (ages, lengths,
-#'   or weights).
-#' @param nArea Integer. Number of areas.
-#' @param type Character. Used in error messages e.g. `'Selectivity'`.
-#' @param Year Character or numeric. Current management year.
-#' @param slot_name Character. Name of the slot to process: `'MeanAtAge'`,
-#'   `'MeanAtLength'`, or `'MeanAtWeight'`.
-#' @param dim_name Character. Label for the first dimension in `dimnames`,
-#'   e.g. `'Age'` or `'Class'`.
-#'
-#' @return The `select` object with the specified slot reshaped to
-#'   `[Sim, nClass, Year, nArea]` and `@Pars` cleared, or the original
-#'   object if the slot is `NULL`.
-#' @keywords internal
 .ProcessSelectMeanAt <- function(select, Classes, nArea, type, Year,
                                 slot_name, dim_name) {
   
@@ -340,9 +305,6 @@
   select
 }
 
-#' @describeIn dot-ProcessSelectMeanAt Process `MeanAtAge` slot.
-#' @param Ages An `ages` object with a `@Classes` slot.
-#' @keywords internal
 .ProcessSelectMeanAtAge <- function(select, Ages, nArea, type, Year) {
   
   
@@ -355,9 +317,6 @@
                       dim_name  = 'Age')
 }
 
-#' @describeIn dot-ProcessSelectMeanAt Process `MeanAtLength` slot.
-#' @param Length A `length` object with a `@Classes` slot.
-#' @keywords internal
 .ProcessSelectMeanAtLength <- function(select, Length, nArea, type, Year) {
   if (is.null(select@Classes))
     select@Classes <- Length@Classes
@@ -370,9 +329,6 @@
                       dim_name  = 'Class')
 }
 
-#' @describeIn dot-ProcessSelectMeanAt Process `MeanAtWeight` slot.
-#' @param Weight A `weight` object with a `@Classes` slot.
-#' @keywords internal
 .ProcessSelectMeanAtWeight <- function(select, Weight, nArea, type, Year) {
   if (is.null(select@Classes))
     select@Classes <- Weight@Classes
