@@ -2,7 +2,7 @@
 % Please edit documentation in R/zz_OM_init_doc.R
 \name{OMdoc}
 \alias{OMdoc}
-\title{Generate OM Documentation Report}
+\title{Generate OM Documentation Report (deprecated)}
 \usage{
 OMdoc(
   OM = NULL,
@@ -45,18 +45,11 @@ but may require additional software and have some formatting issues.}
 \item{...}{Optional additional named arguments provided to \code{runMSE}}
 }
 \value{
-Creates a Rmarkdown file and compiles a HTML report file in the working directory.
+Nothing. Always errors.
 }
 \description{
-Generate OM Documentation Report
-}
-\examples{
-\dontrun{
-OMinit('myOM', Stock='Herring', Fleet='Generic_Fleet', Obs='Generic_Obs',
-Imp='Perfect_Imp', overwrite=TRUE)
-myOM <- XL2OM('myOM.xlsx')
-OMdoc(myOM)
-}
+\code{OMdoc} has been deprecated and is no longer available. Install an earlier version of
+MSEtool (e.g. \code{remotes::install_version('MSEtool', version = '3.7.0')}) to use it.
 }
 \author{
 A. Hordyk

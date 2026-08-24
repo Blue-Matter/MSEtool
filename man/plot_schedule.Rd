@@ -104,8 +104,10 @@ PlotFecundity(
 )
 }
 \arguments{
-\item{object}{An \link[=om-class]{om}, \link[=hist-class]{hist}, or \link[=mse-class]{mse} object. \code{om}
-objects are populated via \code{\link[=PopulateOM]{PopulateOM()}} if not already.}
+\item{object}{An \link[=om-class]{om}, \link[=hist-class]{hist}, or \link[=mse-class]{mse} object (\code{om}
+objects are populated via \code{\link[=PopulateOM]{PopulateOM()}} if not already), or -- for
+\code{PlotLength()}/\code{PlotWeight()}/\code{PlotMaturity()}/\code{PlotNaturalMortality()}/
+\code{PlotFecundity()} only -- a \link[=stock-class]{stock} object.}
 
 \item{Sim}{Integer or \code{NULL} (default). Which simulation replicate to
 plot. \code{NULL} takes the median across all simulations, cell by cell, and
@@ -186,10 +188,7 @@ fleet-level gear curves (\verb{[Fleet()]}'s \code{Selectivity}/\code{Retention}/
 \code{Advice()} (see \code{\link[=VBiomass]{VBiomass()}}, which resolves the same effective curves).
 
 \code{PlotLength()}, \code{PlotWeight()}, \code{PlotMaturity()}, \code{PlotNaturalMortality()},
-and \code{PlotFecundity()} plot stock-level biological schedules. These are
-always the OM baseline -- an MP cannot change a stock's biology during
-projection (only a fleet's gear curves), so there is no MP-specific
-variant to resolve and no \code{byMP}/faceting-by-MP behavior.
+and \code{PlotFecundity()} plot stock-level biological schedules.
 }
 \examples{
 \dontrun{

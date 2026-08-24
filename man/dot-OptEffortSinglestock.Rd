@@ -108,18 +108,27 @@ Saturated fleets are frozen at their current effort and excluded from
 subsequent iterations.}
 }
 \value{
-Numeric vector of length \code{nFleet} giving optimised effort per fleet.
-For fleets with no TAC constraint (\code{BindingTAC} is \code{NA} or not in
-\code{pos_idx}), effort is carried forward from the previous time step.
-When the TAC is unachievable the two branches differ: the single-active-
-fleet branch cannot bracket the TAC and returns the previous time step's
-effort, while the multi-fleet Newton branch saturates and leaves effort at
-\code{maxEffort} (or \code{MaxFleetEffort[fl]} if lower).
+A list with:
+\itemize{
+\item \code{Effort} - numeric vector of length \code{nFleet} giving optimised effort
+per fleet. For fleets with no TAC constraint (\code{BindingTAC} is \code{NA} or
+not in \code{pos_idx}), effort is carried forward from the previous time
+step. When the TAC is unachievable the two branches differ: the
+single-active-fleet branch cannot bracket the TAC and returns the
+previous time step's effort, while the multi-fleet Newton branch
+saturates and leaves effort at \code{maxEffort} (or \code{MaxFleetEffort[fl]}
+if lower).
+\item \code{converged} - \code{TRUE} if the solve met \code{tol}/\code{reltol}, \code{FALSE} if not,
+\code{NA} if there was no active TAC to solve for.
+\item \code{saturated} - \code{TRUE} if the TAC was unachievable within the effort
+ceiling.
+}
 
-Either way the value is provisional. \code{.CalcFisheryDynamics()} overwrites
-\code{Hist@Effort} with the effort implied by the F actually realised, so an
-unachievable TAC is reported as the effort corresponding to the capped F
-rather than as \code{maxEffort}. See that function's \code{DoBackCalcEffort}.
+\code{.CalcFisheryDynamics()}
+overwrites \code{Hist@Effort} with the effort implied by the F actually
+realised, so an unachievable TAC is reported as the effort corresponding
+to the capped F rather than as \code{maxEffort}. See that function's
+\code{DoBackCalcEffort}.
 }
 \description{
 Calculates fleet-specific effort that achieves target removals (TAC) for a

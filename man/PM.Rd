@@ -27,7 +27,7 @@ PM_SPSPMSY(object, Ref = 1, Years = NULL, silent = TRUE)
 
 PM_Status(
   object,
-  Definition = c("SProduction", "SBiomass"),
+  Definition = c("SBiomass", "SProduction"),
   Years = NULL,
   silent = TRUE
 )
@@ -39,7 +39,7 @@ PM_SPSPlim(object, Lim, Years = NULL, silent = TRUE)
 PM_Safety(
   object,
   Lim,
-  Definition = c("SProduction", "SBiomass"),
+  Definition = c("SBiomass", "SProduction"),
   Years = NULL,
   silent = TRUE
 )
@@ -80,8 +80,8 @@ excluding any "interim" years before \code{OM@MPStartYear} (see
 \code{object} is a \code{list}. Default \code{TRUE}.}
 
 \item{Definition}{Character. Which stock-status metric to use in
-\code{PM_Status} and \code{PM_Safety}: \code{"SProduction"} (spawning production,
-default) or \code{"SBiomass"} (spawning biomass).}
+\code{PM_Status} and \code{PM_Safety}: \code{"SBiomass"} (spawning biomass, default) or
+\code{"SProduction"} (spawning production).}
 
 \item{Lim}{Numeric, or a named numeric vector keyed by stock name. Limit
 reference point, expressed as a fraction of \code{SBMSY} (\code{PM_SBSBlim}) or
@@ -132,8 +132,8 @@ status test are assessed at the same aggregation level rather than pairing
 a per-stock ratio with an identical, complex-wide F flag.
 
 \code{PM_Status} and \code{PM_Safety} accept a \code{Definition} argument selecting
-whether stock status is assessed on spawning production (\code{SProduction()},
-the default) or spawning biomass (\code{SBiomass()}). \code{PM_SBSBMSY}/\code{PM_SBSBlim}
+whether stock status is assessed on spawning biomass (\code{SBiomass()}, the
+default) or spawning production (\code{SProduction()}). \code{PM_SBSBMSY}/\code{PM_SBSBlim}
 and \code{PM_SPSPMSY}/\code{PM_SPSPlim} are the corresponding single-metric,
 non-switchable counterparts for spawning biomass and spawning production
 respectively.
