@@ -14,13 +14,12 @@
 #' `Advice()` (see [VBiomass()], which resolves the same effective curves).
 #'
 #' `PlotLength()`, `PlotWeight()`, `PlotMaturity()`, `PlotNaturalMortality()`,
-#' and `PlotFecundity()` plot stock-level biological schedules. These are
-#' always the OM baseline -- an MP cannot change a stock's biology during
-#' projection (only a fleet's gear curves), so there is no MP-specific
-#' variant to resolve and no `byMP`/faceting-by-MP behavior.
+#' and `PlotFecundity()` plot stock-level biological schedules. 
 #'
-#' @param object An [om-class], [hist-class], or [mse-class] object. `om`
-#'   objects are populated via [PopulateOM()] if not already.
+#' @param object An [om-class], [hist-class], or [mse-class] object (`om`
+#'   objects are populated via [PopulateOM()] if not already), or -- for
+#'   `PlotLength()`/`PlotWeight()`/`PlotMaturity()`/`PlotNaturalMortality()`/
+#'   `PlotFecundity()` only -- a [stock-class] object.
 #' @param Sim Integer or `NULL` (default). Which simulation replicate to
 #'   plot. `NULL` takes the median across all simulations, cell by cell, and
 #'   adds a `probs` quantile ribbon behind it (unless `nSim == 1` or values 
@@ -165,6 +164,28 @@ PlotFecundity <- function(object, Sim = NULL, byStock = NULL, Years = NULL, unit
   object@OM
 }
 
+# Wraps a Stock in a minimal hist shell (OM@Stock only, using the Stock's
+# own nYear/pYear/CurrentYear/Seasons set by PopulateStock()) so the
+# existing hist/mse/om-oriented Plot*() machinery can be reused directly on
+# a bare Stock -- no Fleet, no Simulate(). Self-contained: an unpopulated
+# Stock is populated internally first, with the same illustrative defaults
+# PlotStock() uses; an already-populated Stock is used as-is, with whatever
+# nSim/Years it already has.
+.StockToShellHist <- function(Stock) {
+  if (is.null(Stock@Length@MeanAtAge))
+    Stock <- PopulateStock(Stock, nYear = 20, pYear = 0, nSim = 5, silent = TRUE)
+
+  ShellOM             <- methods::new('om')
+  ShellOM@Stock       <- stats::setNames(list(Stock), Stock@Name)
+  ShellOM@nYear       <- Stock@nYear
+  ShellOM@pYear       <- Stock@pYear
+  ShellOM@CurrentYear <- Stock@CurrentYear
+  ShellOM@Seasons     <- Stock@Seasons
+  ShellHist           <- methods::new('hist')
+  ShellHist@OM        <- ShellOM
+  ShellHist
+}
+
 .PlotGearSchedule <- function(object, what, Sim, byStock, byFleet, Years, units, Stocks, x = 'Age',
                                 probs = c(0.05, 0.95)) {
   .CheckClass(object, c('hist', 'mse', 'om'), 'object')
@@ -214,7 +235,8 @@ PlotFecundity <- function(object, Sim = NULL, byStock = NULL, Years = NULL, unit
 
 .PlotStockSchedule <- function(object, what, Sim, byStock, Years, units, Stocks, x = 'Age',
                                  probs = c(0.05, 0.95)) {
-  .CheckClass(object, c('hist', 'mse', 'om'), 'object')
+  .CheckClass(object, c('stock', 'hist', 'mse', 'om'), 'object')
+  if (inherits(object, 'stock')) object <- .StockToShellHist(object)
   if (what == 'Length' && x == 'Length')
     cli::cli_abort('{.arg x = "Length"} is not meaningful for {.fn PlotLength}; use the default {.arg x = "Age"}.')
   OM         <- .ResolveOM(object)
@@ -467,7 +489,11 @@ PlotFecundity <- function(object, Sim = NULL, byStock = NULL, Years = NULL, unit
     ggplot2::geom_line(na.rm = TRUE) +
     ggplot2::expand_limits(y = 0) +
     ggplot2::scale_x_continuous(expand = ggplot2::expansion(mult = c(0.02, 0.05))) +
-    ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0, 0.05))) +
+    # A non-zero lower expansion, not 0: a curve legitimately sitting at
+    # its floor value (e.g. zero maturity at young ages, or the flat-zero
+    # segment below a stock-recruit compensation threshold) would otherwise
+    # land exactly on the panel border and become invisible against it.
+    ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0.02, 0.05))) +
     ggplot2::theme_bw() +
     ggplot2::labs(x = xlab, y = ylab)
 
@@ -493,14 +519,22 @@ PlotFecundity <- function(object, Sim = NULL, byStock = NULL, Years = NULL, unit
   }
 
   if (length(facetVars)) {
+    # Free scales when faceting by Stock: different stocks can have wildly
+    # different biological scales (body size, recruitment, etc.), so a
+    # shared axis range squashes the smaller-scale stock's curve flat.
+    # Fleet/MP-only faceting keeps fixed scales, since those compare
+    # naturally-comparable quantities (proportions, or curves for the same
+    # stock) where a shared axis aids comparison rather than hurting it.
+    freeScales <- if ('Stock' %in% facetVars) 'free' else 'fixed'
     if (all(c('Stock', 'Fleet') %in% facetVars)) {
       colVars <- setdiff(facetVars, 'Stock')
       p <- p + ggplot2::facet_grid(
         rows = ggplot2::vars(.data$Stock),
-        cols = ggplot2::vars(!!!rlang::syms(colVars))
+        cols = ggplot2::vars(!!!rlang::syms(colVars)),
+        scales = freeScales
       )
     } else {
-      p <- p + ggplot2::facet_wrap(facetVars)
+      p <- p + ggplot2::facet_wrap(facetVars, scales = freeScales)
     }
   }
 
