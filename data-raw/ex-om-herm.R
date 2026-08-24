@@ -29,7 +29,6 @@ HermOM <- OM(
     list(AsympExFleet, DomeExFleet)
   ),
   Obs    = list(
-    list(AgeStructuredObs, CommercialFleetObs),
     list(AgeStructuredObs, CommercialFleetObs)
   ),
   Imp       = FullComplianceImp,
