@@ -85,17 +85,14 @@ Log <- function(object, type = NULL) {
   invisible(NULL)
 }
 
-# a Log entry: message text plus an optional grouping `name` label and
-# optional sim/year/mp context, used for both display and filtering
+
 .NewLogEntry <- function(message, name = '', sim = NULL, year = NULL, mp = NULL) {
   list(message = message, name = name, sim = sim, year = year, mp = mp)
 }
 
 .IsLogEntry <- function(x) is.list(x) && !is.null(x$message)
 
-# entries created before this structured format existed (or written
-# directly to e.g. `Advice@Log` by external code) are bare characters -
-# tolerate both shapes throughout
+
 .LogEntryMessage <- function(entry) {
   if (.IsLogEntry(entry)) return(entry$message)
   as.character(entry)
