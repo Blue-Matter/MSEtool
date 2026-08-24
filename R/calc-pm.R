@@ -21,8 +21,8 @@
 #' a per-stock ratio with an identical, complex-wide F flag.
 #'
 #' `PM_Status` and `PM_Safety` accept a `Definition` argument selecting
-#' whether stock status is assessed on spawning production (`SProduction()`,
-#' the default) or spawning biomass (`SBiomass()`). `PM_SBSBMSY`/`PM_SBSBlim`
+#' whether stock status is assessed on spawning biomass (`SBiomass()`, the
+#' default) or spawning production (`SProduction()`). `PM_SBSBMSY`/`PM_SBSBlim`
 #' and `PM_SPSPMSY`/`PM_SPSPlim` are the corresponding single-metric,
 #' non-switchable counterparts for spawning biomass and spawning production
 #' respectively.
@@ -34,8 +34,8 @@
 #'   `SPMSY` (`PM_SPSPlim`), or of `SBMSY`/`SPMSY` per `Definition`
 #'   (`PM_Safety`) -- e.g. `Lim = 0.5` tests against half of `SBMSY`.
 #' @param Definition Character. Which stock-status metric to use in
-#'   `PM_Status` and `PM_Safety`: `"SProduction"` (spawning production,
-#'   default) or `"SBiomass"` (spawning biomass).
+#'   `PM_Status` and `PM_Safety`: `"SBiomass"` (spawning biomass, default) or
+#'   `"SProduction"` (spawning production).
 #' @param Type Character. Which catch metric `PM_Yield` reports:
 #'   `"Removals"` (landings + discards, default) or `"Landings"`.
 #' @param Year Numeric. The single projection year in which to evaluate
@@ -411,7 +411,7 @@ class(PM_SPSPMSY) <- 'pm'
 
 #' @rdname PM
 #' @export
-PM_Status <- function(object, Definition = c('SProduction', 'SBiomass'),
+PM_Status <- function(object, Definition = c('SBiomass', 'SProduction'),
                        Years = NULL, silent = TRUE) {
   Definition <- match.arg(Definition)
   object <- .CoercePMInput(object, silent)
@@ -491,7 +491,7 @@ class(PM_SPSPlim) <- 'pm'
 
 #' @rdname PM
 #' @export
-PM_Safety <- function(object, Lim, Definition = c('SProduction', 'SBiomass'),
+PM_Safety <- function(object, Lim, Definition = c('SBiomass', 'SProduction'),
                        Years = NULL, silent = TRUE) {
   if (missing(Lim) || is.null(Lim))
     cli::cli_abort("`Lim` must be supplied.")
