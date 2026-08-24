@@ -242,63 +242,7 @@ NULL
 "LHdatabase"
 
 
-#'  StockDescription 
-#'
-#'  A data.frame with description of slots for class Stock
-#'
-"StockDescription"
-
-
-#'  FleetDescription 
-#'
-#'  A data.frame with description of slots for class Fleet
-#'
-"FleetDescription"
-
-
-#'  ObsDescription 
-#'
-#'  A data.frame with description of slots for class Obs
-#'
-"ObsDescription"
-
-
-#'  ImpDescription 
-#'
-#'  A data.frame with description of slots for class Imp
-#'
-"ImpDescription"
-
-
-#'  HistDescription 
-#'
-#'  A data.frame with description of slots for class Hist
-#'
-"HistDescription"
-
-
-#'  DataDescription 
-#'
-#'  A data.frame with description of slots for class Data
-#'
-"DataDescription"
-
-
-#'  OMDescription 
-#'
-#'  A data.frame with description of slots for class OM
-#'
-"OMDescription"
-
-
-#'  MSEDescription 
-#'
-#'  A data.frame with description of slots for class MSE
-#'
-"MSEDescription"
-
-
-#'  Taxa_Table 
+#'  Taxa_Table
 #'
 #'  Database from rfishbase 
 #' 
