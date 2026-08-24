@@ -72,10 +72,6 @@
   out <- rep(NA_real_, nF)
 
   for (fl in seq_len(nF)) {
-
-    # The current year's distribution is only filled in by CalcSpatialDistribution
-    # once the year is simulated, which is after effort has been chosen. Last
-    # year's is a fine stand-in for a search bound.
     d <- Dist[si(Dist), TSIndex, fl, ]
     if (!any(is.finite(d) & d > 0) && TSIndex > 1L)
       d <- Dist[si(Dist), TSIndex - 1L, fl, ]
@@ -187,7 +183,7 @@
       cx                 = cx,
       Effort_start       = start_cx,
       ...
-    )
+    )$Effort
   }
 
   out
