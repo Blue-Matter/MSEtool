@@ -96,16 +96,17 @@
 
   if (nComplex == 1) {
 
-    Required_Effort <- .OptEffortSinglestock(ProjSim,
-                                             Year,
-                                             TSIndex,
-                                             1L,
-                                             TAC_by_Complex,
-                                             TACType_by_Complex,
-                                             TACUnit_by_Complex,
-                                             MaxFleetEffort)
+    Solved <- .OptEffortSinglestock(ProjSim,
+                                    Year,
+                                    TSIndex,
+                                    1L,
+                                    TAC_by_Complex,
+                                    TACType_by_Complex,
+                                    TACUnit_by_Complex,
+                                    MaxFleetEffort)
 
-    Proj@Effort[sim, TSIndex, ] <- Required_Effort
+    Proj@Effort[sim, TSIndex, ] <- Solved$Effort
+    Proj <- .LogEffortConvergence(Proj, Solved$converged, Solved$saturated, sim, Year)
     return(Proj)
   }
 
@@ -134,6 +135,25 @@
   for (fl in seq_len(nFleet_loc))
     Proj@Misc$StockTargeting[sim, , fl, TSIndex] <- result$Delta[fl, ]
 
+  Proj <- .LogEffortConvergence(Proj, result$converged, saturated = FALSE, sim, Year)
+
+  Proj
+}
+
+.LogEffortConvergence <- function(Proj, converged, saturated, sim, Year) {
+  if (is.na(converged) || converged)
+    return(Proj)
+
+  msg <- if (saturated) {
+    "Effort/TAC solver: TAC unachievable within the effort ceiling (saturated)."
+  } else {
+    "Effort/TAC solver: did not converge within tolerance."
+  }
+
+  Proj@Log$warning <- c(
+    Proj@Log$warning,
+    list(.NewLogEntry(msg, name = 'EffortConvergence', sim = sim, year = Year))
+  )
   Proj
 }
 
