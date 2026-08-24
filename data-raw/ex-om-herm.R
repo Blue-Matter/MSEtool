@@ -32,8 +32,9 @@ HermOM <- OM(
     list(AgeStructuredObs, CommercialFleetObs),
     list(AgeStructuredObs, CommercialFleetObs)
   ),
-  Imp    = FullComplianceImp,
-  Herm   = list(WrasseHerm)
+  Imp       = FullComplianceImp,
+  Herm      = list(WrasseHerm),
+  Complexes = list(Wrasse = 1:2)
 )
 
 ## ---- save object ----
