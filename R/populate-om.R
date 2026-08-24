@@ -489,15 +489,12 @@ PopulateOM <- function(OM,
   OM
 }
 
-
 .UpdateSPFrom <- function(OM) {
-  stocknames <- StockNames(OM) 
+  stocknames <- StockNames(OM)
   if (length(stocknames) != nStock(OM)) {
     cli::cli_abort(c('{.var Name} must be unique for each Stock.',
                      'i'='Current Stock Names are {.val {stocknames}}'))
   }
-  if (length(stocknames)==1)
-    return(OM)
   for (st in 1:nStock(OM)) {
     if (!is.null(OM@Stock[[st]]@SRR@SPFrom)) {
       if (is.numeric(OM@Stock[[st]]@SRR@SPFrom))
@@ -506,9 +503,6 @@ PopulateOM <- function(OM,
   }
   OM
 }
-
-
-
 
 .ValidateSPFrom <- function(OM) {
   stocknames <- StockNames(OM)
