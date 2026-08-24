@@ -338,7 +338,13 @@ reference:
   contents:
   - plot_hist
   - plot_data
+  - plot_schedule
+  - plot_comp
+  - PlotIndexFit
   - PlotSpatial
+  - PlotSRR
+  - PlotDepletion
+  - PlotStock
 
 
 - title: Generate Observation Data
@@ -815,18 +821,14 @@ reference:
   contents:
   - CheckDuplicate
   - ChkYrs
-  - DataDescription
   - DataDir
   - DLMDataDir
-  - FleetDescription
   - getclass
   - getDataList
   - getfirstlev
   - getnIVs
   - getMP
   - hist2
-  - HistDescription
-  - ImpDescription
   - initialize-methods
   - iSCAM
   - iSCAMcomps
@@ -835,11 +837,8 @@ reference:
   - LHdatabase
   - makemov2
   - MPCalcsNAs
-  - MSEDescription
   - movfit_Rcpp
   - NIL
-  - ObsDescription
-  - OMDescription
   - OMexample
   - OMinit
   - plot.pars
@@ -852,7 +851,6 @@ reference:
   - show-MSEtool
   - SIL
   - simmov2
-  - StockDescription
   - Taxa_Table
   - TEG
   - optMSY_eq
