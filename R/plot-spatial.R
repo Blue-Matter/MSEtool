@@ -10,7 +10,7 @@
 #' year. Simulation replicates are averaged. Stocks with only one area have
 #' no spatial structure to show and are skipped with a message.
 #'
-#' @param object A [hist-class] or [mse-class] object.
+#' @param object A [stock-class], [hist-class], or [mse-class]  object.
 #' @param Stocks Character or numeric vector restricting the plot to
 #'   specific stocks, either by name (matching [StockNames()]) or by index.
 #'   Default `NULL` includes every stock in `object`.
@@ -38,7 +38,8 @@
 #' @seealso [Movement()], [UnfishedDist()], [Populate()]
 #' @export
 PlotSpatial <- function(object, Stocks = NULL, byStock = NULL, Age = NULL, Year = NULL) {
-  .CheckClass(object, c('hist', 'mse'), 'object')
+  .CheckClass(object, c('stock', 'hist', 'mse'), 'object')
+  if (inherits(object, 'stock')) object <- .StockToShellHist(object)
 
   allNames   <- StockNames(object)
   stockNames <- .ResolveStocks(object, Stocks)
@@ -78,9 +79,7 @@ PlotSpatial <- function(object, Stocks = NULL, byStock = NULL, Age = NULL, Year 
   patchwork::wrap_plots(list(pMove, pDist), ncol = 2)
 }
 
-# For each stock, resolve the Age/Year slice of Movement/UnfishedDist to
-# plot and average over Sim, returning the resulting FromArea x ToArea
-# movement matrix and per-Area unfished-distribution vector.
+
 .SpatialSliceData <- function(object, stockNames, Age, Year) {
   yearDefault <- max(Years(object, 'Historical'))
 
@@ -90,8 +89,12 @@ PlotSpatial <- function(object, Stocks = NULL, byStock = NULL, Age = NULL, Year 
     ud <- UnfishedDist(sp)
     dn <- dimnames(mv)
 
-    ageChar  <- if (is.null(Age))  dn$Age[1]                 else as.character(Age)
-    yearChar <- if (is.null(Year)) as.character(yearDefault) else as.character(Year)
+    ageChar <- if (is.null(Age)) dn$Age[1] else as.character(Age)
+
+    yearChar <- if (is.null(Year)) {
+      availYears <- as.numeric(dn$Year)
+      as.character(availYears[which.min(abs(availYears - yearDefault))])
+    } else as.character(Year)
 
     if (!ageChar %in% dn$Age)
       cli::cli_abort(c(
@@ -104,7 +107,9 @@ PlotSpatial <- function(object, Stocks = NULL, byStock = NULL, Age = NULL, Year 
         "i" = "Available years span {.val {range(as.numeric(dn$Year))}}"
       ))
 
-    if ((is.null(Age) && length(dn$Age) > 1) || (is.null(Year) && length(dn$Year) > 1))
+    ageMatters  <- is.null(Age)  && (.DimVaries(mv, 'Age')  || .DimVaries(ud, 'Age'))
+    yearMatters <- is.null(Year) && (.DimVaries(mv, 'Year') || .DimVaries(ud, 'Year'))
+    if (ageMatters || yearMatters)
       cli::cli_alert_info(
         "Stock {.val {nm}}: plotting movement/distribution at Age = {.val {ageChar}}, Year = {.val {yearChar}} (override via {.arg Age}/{.arg Year})."
       )
@@ -119,7 +124,16 @@ PlotSpatial <- function(object, Stocks = NULL, byStock = NULL, Age = NULL, Year 
   })
 }
 
-# Order area labels numerically when possible, alphabetically otherwise.
+.DimVaries <- function(arr, dimName) {
+  dn  <- dimnames(arr)
+  pos <- which(names(dn) == dimName)
+  if (!length(pos) || dim(arr)[pos] <= 1) return(FALSE)
+
+  otherDims <- setdiff(seq_along(dim(arr)), pos)
+  ranges <- apply(arr, otherDims, function(x) diff(range(x, na.rm = TRUE)))
+  any(ranges > 1e-6, na.rm = TRUE)
+}
+
 .OrderAreaLevels <- function(x) {
   u <- unique(x)
   numOk <- suppressWarnings(!anyNA(as.numeric(u)))
