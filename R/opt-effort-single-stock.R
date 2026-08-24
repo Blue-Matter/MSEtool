@@ -73,18 +73,25 @@
 #' Saturated fleets are frozen at their current effort and excluded from
 #' subsequent iterations.
 #' 
-#' @return Numeric vector of length `nFleet` giving optimised effort per fleet.
-#'   For fleets with no TAC constraint (`BindingTAC` is `NA` or not in
-#'   `pos_idx`), effort is carried forward from the previous time step.
-#'   When the TAC is unachievable the two branches differ: the single-active-
-#'   fleet branch cannot bracket the TAC and returns the previous time step's
-#'   effort, while the multi-fleet Newton branch saturates and leaves effort at
-#'   `maxEffort` (or `MaxFleetEffort[fl]` if lower).
+#' @return A list with:
+#'   * `Effort` - numeric vector of length `nFleet` giving optimised effort
+#'     per fleet. For fleets with no TAC constraint (`BindingTAC` is `NA` or
+#'     not in `pos_idx`), effort is carried forward from the previous time
+#'     step. When the TAC is unachievable the two branches differ: the
+#'     single-active-fleet branch cannot bracket the TAC and returns the
+#'     previous time step's effort, while the multi-fleet Newton branch
+#'     saturates and leaves effort at `maxEffort` (or `MaxFleetEffort[fl]`
+#'     if lower).
+#'   * `converged` - `TRUE` if the solve met `tol`/`reltol`, `FALSE` if not,
+#'     `NA` if there was no active TAC to solve for.
+#'   * `saturated` - `TRUE` if the TAC was unachievable within the effort
+#'     ceiling.
 #'
-#'   Either way the value is provisional. `.CalcFisheryDynamics()` overwrites
-#'   `Hist@Effort` with the effort implied by the F actually realised, so an
-#'   unachievable TAC is reported as the effort corresponding to the capped F
-#'   rather than as `maxEffort`. See that function's `DoBackCalcEffort`.
+#'   `.CalcFisheryDynamics()`
+#'   overwrites `Hist@Effort` with the effort implied by the F actually
+#'   realised, so an unachievable TAC is reported as the effort corresponding
+#'   to the capped F rather than as `maxEffort`. See that function's
+#'   `DoBackCalcEffort`.
 #'
 #' @keywords internal
 .OptEffortSinglestock <- function(Proj,
@@ -109,13 +116,9 @@
   if (is.null(MaxFleetEffort))
     MaxFleetEffort <- rep(NA_real_, nFleet)
 
-  # Nested in an outer optimiser this re-solves a nearly identical problem each
-  # call, so start from the previous solution when one is supplied
+  # start from the previous solution when one is supplied
   Effort_ref <- if (is.null(Effort_start)) Proj@Effort[sim, TSIndex - 1L, ] else Effort_start
 
-  # Tighten the arbitrary `maxEffort` to the point past which the maxF cap
-  # makes more effort pointless, so an unachievable TAC is detected in a step
-  # or two rather than by climbing several decades - see .MaxUsefulEffort()
   maxEffort_fl <- rep(maxEffort, nFleet)
   useful       <- .MaxUsefulEffort(Proj, sim, TSIndex)
   if (!is.null(useful)) {
@@ -132,7 +135,7 @@
     has_ceiling <- !is.na(MaxFleetEffort)
     if (any(has_ceiling))
       Effort_base[has_ceiling] <- MaxFleetEffort[has_ceiling]
-    return(Effort_base)
+    return(list(Effort = Effort_base, converged = NA, saturated = FALSE))
   }
   
   BindingTAC <- tac_vec
@@ -153,7 +156,7 @@
   pos_idx <- setdiff(pos_idx, which(ceiling_zero))
   
   if (length(pos_idx) == 0L)
-    return(Effort_curr)
+    return(list(Effort = Effort_curr, converged = NA, saturated = FALSE))
   
   if (length(pos_idx) == 1L) {
     fl  <- pos_idx[1L]
@@ -186,26 +189,23 @@
         Effort_curr[fl] <- Effort_base[fl]
         if (!is.na(MaxFleetEffort[fl]))
           Effort_curr[fl] <- min(Effort_curr[fl], MaxFleetEffort[fl])
-        return(Effort_curr)
+        return(list(Effort = Effort_curr, converged = FALSE, saturated = TRUE))
       }
     }
-    
+
     opt <- optimize(
       function(ls) (catch_fl(ls) - tac)^2,
       interval = c(log_lo, log_hi),
       tol = if (is.null(reltol)) 1e-8 else reltol
     )
     Effort_curr[fl] <- Effort_base[fl] * exp(opt$minimum)
-    
+
     if (!is.na(MaxFleetEffort[fl]))
       Effort_curr[fl] <- min(Effort_curr[fl], MaxFleetEffort[fl])
-    
-    return(Effort_curr)
+
+    return(list(Effort = Effort_curr, converged = TRUE, saturated = FALSE))
   }
   
-  
-  # Residuals are in catch units, so an absolute `tol` means different precision
-  # in every OM. `reltol` scales it by the TAC being matched.
   tol_vec <- if (is.null(reltol)) {
     rep(tol, length(pos_idx))
   } else {
@@ -347,12 +347,13 @@
     
     Effort_curr[pos_idx] <- clamp_effort(Effort_base[pos_idx] * exp(clamp_step(opt$par)), pos_idx)
     Effort_curr[pos_idx] <- apply_ceiling(Effort_curr[pos_idx], pos_idx)
+.
+    converged <- all(abs(residual_fn(Effort_curr)) < tol_vec)
   }
-  
-  # Final ceiling clamp
+
   if (any(has_ceiling))
     Effort_curr[has_ceiling] <- pmin(Effort_curr[has_ceiling],
                                      MaxFleetEffort[has_ceiling])
-  
-  Effort_curr
+
+  list(Effort = Effort_curr, converged = converged, saturated = saturated_flag)
 }
