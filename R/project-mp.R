@@ -197,12 +197,6 @@
        StockNames = StockNames, FleetNames = FleetNames)
 }
 
-# Applies a completed .ProjectMPCompute() result to the shared `MSE` object:
-# runs .CheckMSERun()'s console/log reporting, writes the projected `Proj`
-# into MSE's `mp` slice via .UpdateMSEObject(), and merges Proj@Log into
-# MSE@Log. Kept sequential (called once per MP, in the main process, even
-# when the compute step ran in parallel workers) since it mutates the one
-# shared `MSE` object and is cheap relative to .ProjectMPCompute().
 .MergeMPResult <- function(MSE, result, MPName, mp, YearsHist, YearsProj, silent = FALSE) {
 
   CheckResult <- .CheckMSERun(result$Proj, MSE, MPName,
@@ -223,8 +217,14 @@
                            result$FleetNames)
 
   for (type in c('error', 'warning', 'assumption')) {
-    if (is.null(Proj@Log[[type]])) next
-    MSE@Log[[type]] <- c(MSE@Log[[type]], Proj@Log[[type]])
+    entries <- Proj@Log[[type]]
+    if (is.null(entries)) next
+    
+    entries <- purrr::map(entries, \(e) {
+      if (.IsLogEntry(e) && is.null(e$mp)) e$mp <- MPName
+      e
+    })
+    MSE@Log[[type]] <- c(MSE@Log[[type]], entries)
   }
 
   MSE
