@@ -410,9 +410,7 @@ PM_SPSPMSY <- function(object, Ref = 1, Years = NULL, silent = TRUE) {
 }
 class(PM_SPSPMSY) <- 'pm'
 
-# Pulls the numerator/denominator time series for PM_Status/PM_Safety
-# according to which stock-status metric ('SProduction' or 'SBiomass')
-# is being evaluated.
+
 .StockStatusSeries <- function(object, Definition) {
   if (Definition == 'SProduction') {
     list(value = SProduction(object, df = FALSE, Reduce = FALSE),
