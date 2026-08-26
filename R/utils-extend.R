@@ -246,14 +246,14 @@ ExtendSims <- function(array, nSim = NULL) {
     (\(x) any(x == 1))()
 }
 
-.FinalizeTimeseriesDF <- function(out, nSim, extend = FALSE, silent = TRUE) {
-  if (extend)
+.FinalizeTimeseriesDF <- function(out, nSim, Extend = FALSE, silent = TRUE) {
+  if (Extend)
     return(.ExtendSimsDF(out, nSim))
 
   if (!silent && .HasCollapsedSims(out, nSim))
     cli::cli_inform(c(
       "i" = "Some rows share one value across all {.val {nSim}} simulations ({.field Sim} not expanded).",
-      "i" = "Use {.code extend = TRUE} to broadcast them to every simulation."
+      "i" = "Use {.code Extend = TRUE} to broadcast them to every simulation."
     ))
 
   out
