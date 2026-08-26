@@ -16,7 +16,7 @@
 #'   hyperdepletion parameter `Beta` by regression when conditioning on real
 #'   data (see [IndicesObs()])? Default `FALSE`. If `FALSE`, `Beta` is fixed at `1`
 #'   unless the user already supplied a value for that index. If `TRUE`,
-#'   `Beta` is estimated per simulation; see `.EstimateBeta()` and
+#'   `Beta` is estimated per simulation; see [EstimateBeta()] and
 #'   `Index_Obs@Misc$BetaFit` for diagnostics.
 #' @param GenerateData Logical. Generate historical fishery data from the
 #'   observation model? Default `TRUE`.
