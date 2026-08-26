@@ -333,6 +333,8 @@ Misc <- function(x) {
 #' @rdname Access
 #' @export
 MPs <- function(x) {
+  if (!isS4(x) && is.list(x))
+    return(purrr::map(x, MPs))
   .AccessSlot(x, 'MPs')
 }
 
