@@ -1,39 +1,42 @@
 
-#' Generate (log-space) residuals with truncated log-normal distribution
+#' Generate log-normally distributed multiplicative residuals with optional AR(1)-autocorrelation 
 #'
-#' Generate random residuals for multiple simulations and years.
-#' Each simulation has a standard deviation `SD` and autocorrelation `AC`, 
-#' and residuals are truncated to `TruncSD` standard deviations around the mean.
-#' The resulting residuals can be propagated with autocorrelation using [ApplyAC()].
+#' Generate random, AR(1)-autocorrelated multiplicative (normal-space)
+#' residuals for multiple simulations and years, lognormally distributed with
+#' marginal standard deviation `SD` (in log-space) and autocorrelation `AC`.
 #'
 #' @param SD Numeric vector of length nSim giving the marginal standard
-#'   deviation of the residuals once [ApplyAC()] has propagated them.
+#'   deviation, in log-space, of the returned (AC-propagated) residuals.
 #' @param AC Numeric vector of length nSim giving autocorrelation (must be
 #'   within -1 and 1, exclusive).
 #' @param Years Numeric vector of years for which residuals are generated.
 #' @param nSim Optional integer number of simulations (defaults to length(SD)).
 #' @param TruncSD Numeric scalar specifying how many standard deviations at
-#'   which to truncate the innovations. The innovation standard deviation is
-#'   inflated to offset the variance lost to truncation, so the propagated
-#'   residuals retain marginal standard deviation `SD`.
+#'   which to truncate the innovations. 
 #' @param nSeasons Number of seasons in the array (default 1).
 #' @param NA_Season Optional. List length `nSim` with each element containing integer vector
 #' indicating which (if any) seasons have NA values for all years
-#' 
-#' @return Numeric array of dimensions nSim x nYear containing truncated log-normal residuals.
+#' @param LastError Optional numeric vector of length nSim giving the starting
+#'   value for the AR(1) recursion, in normal space; i.e. the last
+#'   observed multiplicative residual. `NA` (default) means no prior state
+#'
+#' @return Numeric array of dimensions nSim x nYear containing multiplicative
+#'   (normal-space) lognormal residuals with AR(1) autocorrelation `AC`
+#'   applied.
 #' @seealso [ApplyAC()], [CalcResidualStats()]
 #' @export
-GenResiduals <- function(SD, 
-                         AC, 
-                         Years, 
-                         nSim = NULL, 
+GenResiduals <- function(SD,
+                         AC,
+                         Years,
+                         nSim = NULL,
                          TruncSD = 2,
                          nSeasons = 1,
-                         NA_Season = list()) {
-  
-  if (any(SD < 0)) 
+                         NA_Season = list(),
+                         LastError = NULL) {
+
+  if (any(SD < 0))
     cli::cli_abort("`SD` cannot be negative")
-  
+
   if (!is.numeric(TruncSD) || length(TruncSD) != 1 || TruncSD <= 0)
     cli::cli_abort("`TruncSD` must be a positive scalar")
 
@@ -41,7 +44,8 @@ GenResiduals <- function(SD,
 
   nYear <- length(Years)
 
-  # Innovation parameters; AR(1) is applied downstream by ApplyAC()
+  if (is.null(LastError)) LastError <- rep(NA_real_, nSim)
+
   Innov <- .InnovationPars(SD, AC, TruncSD)
 
   # Expand mu, sigma, lower, upper for each year
@@ -49,41 +53,37 @@ GenResiduals <- function(SD,
   SD_mat <- matrix(Innov$sigma, nrow = nSim, ncol = nYear)
   lower_mat <- matrix(Innov$lower, nrow = nSim, ncol = nYear)
   upper_mat <- matrix(Innov$upper, nrow = nSim, ncol = nYear)
-  
-  # Generate residuals
-  LogResid <- .Rtnorm(nSim * nYear, 
+
+  LogResid <- .Rtnorm(nSim * nYear,
                 as.vector(mu_mat),
                 as.vector(SD_mat),
-                as.vector(lower_mat), 
+                as.vector(lower_mat),
                 as.vector(upper_mat))
-  
+
   arr <- array(LogResid, dim = c(nSim, nYear),
                dimnames = list(Sim = seq_len(nSim), Year = Years))
-  
 
-  
-  if (!length(NA_Season)) return(arr)
-    
-  if (length(NA_Season)!=nSim)
-    cli::cli_abort("`NA_Season` must be a length {.val nSim ({nSim})}")
-  
-  for (s in seq_along(NA_Season)) {
-    NA_ind <- .ExpandSeasons(NA_seas = NA_Season[[s]], 
-                             nSeasons = nSeasons, 
-                             nYear = nYear)
-    
-    arr[s,NA_ind] <- NA
+  if (length(NA_Season)) {
+    if (length(NA_Season)!=nSim)
+      cli::cli_abort("`NA_Season` must be a length {.val nSim ({nSim})}")
+
+    for (s in seq_along(NA_Season)) {
+      NA_ind <- .ExpandSeasons(NA_seas = NA_Season[[s]],
+                               nSeasons = nSeasons,
+                               nYear = nYear)
+
+      arr[s,NA_ind] <- NA
+    }
   }
-  arr
+
+  ApplyAC(Resid = exp(arr), AC = AC, LastError = LastError)
 }
 
-# sd of a symmetric truncated normal, relative to its nominal sigma
+
 .TruncSDScale <- function(TruncSD) {
   sqrt(1 - 2 * TruncSD * dnorm(TruncSD) / (2 * pnorm(TruncSD) - 1))
 }
 
-# log E[exp(x)] for the stationary AR(1) x_t = AC x_{t-1} + e_t sqrt(1 - AC^2),
-# with e ~ symmetric truncated normal on +/- TruncSD * sigma
 .LogMeanExpAR1 <- function(sigma, TruncSD, AC, nTerm = 200) {
   j <- seq_len(nTerm) - 1
   z <- log(2 * pnorm(TruncSD) - 1)
@@ -93,10 +93,6 @@ GenResiduals <- function(SD,
   }, numeric(1))
 }
 
-# Innovation mean/sd/bounds such that, after AR(1) propagation, the log
-# deviations have marginal sd `SD` and mean(exp(deviation)) of 1. Truncating
-# the innovation shrinks its variance, so sigma is inflated to compensate, and
-# the lognormal bias correction accounts for the truncated (non-normal) shape.
 .InnovationPars <- function(SD, AC, TruncSD) {
   if (any(abs(AC) >= 1, na.rm = TRUE))
     cli::cli_abort("{.arg AC} must be within {.val {c(-1, 1)}} exclusive: an AR(1) process with {.code abs(AC) >= 1} has no stationary distribution.")
@@ -110,8 +106,6 @@ GenResiduals <- function(SD,
        upper = mu + TruncSD * sigma)
 }
 
-# Latent spread, truncation probabilities, and lognormal bias offset shared by
-# .LatentToDev() and its inverse
 .TruncDevScale <- function(SD, TruncSD) {
   sigma <- SD / .TruncSDScale(TruncSD)
   lo    <- pnorm(-TruncSD)
@@ -123,18 +117,12 @@ GenResiduals <- function(SD,
   list(sigma = sigma, lo = lo, hi = hi, bias = bias)
 }
 
-# Map a standard-normal AR(1) series onto a symmetric truncated-normal
-# marginal via the probability integral transform, then bias-correct so
-# mean(exp(x)) is 1. Because the bound applies to the marginal rather than to
-# the innovations, it does not widen as autocorrelation increases.
 .LatentToDev <- function(z, SD, TruncSD) {
   p <- .TruncDevScale(SD, TruncSD)
   if (p$sigma <= 0) return(rep(0, length(z)))
   qnorm(pnorm(z) * (p$hi - p$lo) + p$lo) * p$sigma - p$bias
 }
 
-# Inverse of .LatentToDev(), used to seed a latent AR(1) from observed
-# deviations. Values outside the truncation support are clamped to it.
 .DevToLatent <- function(x, SD, TruncSD) {
   p <- .TruncDevScale(SD, TruncSD)
   if (p$sigma <= 0) return(rep(0, length(x)))
@@ -147,46 +135,64 @@ GenResiduals <- function(SD,
   rep(seq(0, nYear / nSeasons - 1) * nSeasons, each = length(NA_seas)) + rep(NA_seas, times = nYear / nSeasons)
 }
 
-#' Apply AR(1) autocorrelation to residuals, skipping NAs
+#' Apply AR(1) autocorrelation to residuals
 #'
-#' Applies AR(1) propagation to a numeric matrix of residuals (`sim x year`), 
-#' respecting missing values (NAs). Autocorrelation is applied only across 
-#' non-NA values within each simulation.
+#' Applies AR(1) propagation to a numeric matrix of multiplicative
+#' (normal-space) residuals (`sim x year`), respecting missing values (NAs).
+#' 
+#' 
+#' Autocorrelation is applied only across non-NA values within each
+#' simulation. The recursion itself happens in log-space (the only space in
+#' which it is valid), but both the input and the returned residuals are in
+#' normal space.
 #'
-#' @param LogResid Numeric matrix of log residuals, dimensions nSim x nYear.
+#' @param Resid Numeric matrix of multiplicative (normal-space) residuals,
+#'   dimensions nSim x nYear.
 #' @param AC Numeric vector of length nSim, autocorrelation coefficient per simulation (must be in between -1 &  1).
-#' @param LastError Numeric vector of length nSim, starting value for each simulation.
-#' @return Numeric matrix of same dimensions as `LogResid` with autocorrelated residuals.
+#' @param LastError Numeric vector of length nSim giving the starting value for
+#'   the AR(1) recursion, in normal (natural) space — i.e. the last observed
+#'   multiplicative residual. `NA` (including all-`NA` history) means no prior
+#'   state, i.e. a fresh chain starting at 1.
+#' @return Numeric matrix of same dimensions as `Resid` with autocorrelated
+#'   multiplicative (normal-space) residuals.
 #' @seealso [GenResiduals()], [CalcResidualStats()]
 #' @export
-ApplyAC <- function(LogResid, AC, LastError) {
-  
-  if (!is.numeric(LogResid) || length(dim(LogResid)) != 2) {
-    cli::cli_abort("`LogResid` must be a numeric matrix")
+ApplyAC <- function(Resid, AC, LastError) {
+
+  if (!is.numeric(Resid) || length(dim(Resid)) != 2) {
+    cli::cli_abort("`Resid` must be a numeric matrix")
   }
-  
-  nSim <- nrow(LogResid)
-  nYear <- ncol(LogResid)
-  
+
+  nSim <- nrow(Resid)
+  nYear <- ncol(Resid)
+
   if (!is.numeric(AC) || length(AC) != nSim || any(abs(AC) > 1))
     cli::cli_abort("`AC` must be a numeric vector of length {.val nSim ({nSim})} with values in [-1,1]")
-  
+
   if (!is.numeric(LastError) || length(LastError) != nSim)
     cli::cli_abort("`LastError` must be a numeric vector of length {.val nSim ({nSim})}")
-  
+  if (any(Resid <= 0, na.rm = TRUE))
+    cli::cli_abort("`Resid` must be positive (it is in normal, not log, space)")
+  if (any(LastError <= 0, na.rm = TRUE))
+    cli::cli_abort("`LastError` must be positive (it is in normal, not log, space)")
+
+  LogResid <- log(Resid)
+
+  LastError <- log(LastError)
+  LastError[is.na(LastError)] <- 0
+
   scale <- sqrt(1 - AC^2)
-  
-  # Apply AR(1) 
+
+
   for (s in seq_len(nSim)) {
-    
+
     non_na_idx <- which(!is.na(LogResid[s, ]))
     if (length(non_na_idx) == 0) next
-    
+
     # first time step
-    LogResid[s, non_na_idx[1]] <- AC[s] * LastError[s] + 
+    LogResid[s, non_na_idx[1]] <- AC[s] * LastError[s] +
       LogResid[s, non_na_idx[1]] * scale[s]
-    
- 
+
     # Apply AR(1) to remaining non-NA values
     if (length(non_na_idx) > 1) {
       for (t in 2:length(non_na_idx)) {
@@ -196,8 +202,8 @@ ApplyAC <- function(LogResid, AC, LastError) {
       }
     }
   }
-  
-  LogResid
+
+  exp(LogResid)
 }
 
 #' Calculate residual statistics for log-space index residuals
@@ -209,8 +215,8 @@ ApplyAC <- function(LogResid, AC, LastError) {
 #' observed in, and are dropped; the seasons they occupy are recorded in
 #' `NA_Season` so [GenResiduals()] can reproduce the same pattern in the
 #' projection. The remaining values are taken in time order, and `AC` is the
-#' lag-1 autocorrelation between *consecutive observations* rather than
-#' consecutive time steps. For an index observed in a single season, that is
+#' lag-1 autocorrelation between consecutive observations. 
+#' For an index observed in a single season, that is
 #' the year-to-year autocorrelation. This matches how [ApplyAC()] propagates
 #' the projection residuals, which steps from one observation to the next.
 #'
@@ -257,9 +263,6 @@ CalcResidualStats <- function(LogResiduals, nSeasons=1) {
       next
     }
     
-    # sorted so the retained observations stay in time order; concatenating the
-    # per-season sequences would group them by season and collapse AC toward
-    # AC^nSeasons
     valid_seasons <- sort(unlist(lapply(which(seasons_to_keep), function(season) {
       seq(season, nYear, by = nSeasons)
     })))
