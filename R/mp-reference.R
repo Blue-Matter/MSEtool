@@ -4,21 +4,23 @@
 #' (effort-based) or `MSY` (TAC-based), using true operating-model reference
 #' points. 
 #'
-#' `refFMSY_1`, `refFMSY_075`, `refFMSY_05` set effort so that realised F
+#' `refFMSY`, `refFMSY75`, `refFMSY50` set effort so that realised F
 #' equals 100%, 75%, or 50% of `FMSY`, and default to being applied every
 #' year (like any MP, this can be overridden via `OM@Interval`).
-#' 
-#' `refMSY_1`, `refMSY_075`, `refMSY_05` set TAC to 100%, 75%, or 50% of
+#'
+#' `refMSY`, `refMSY75`, `refMSY50` set TAC to 100%, 75%, or 50% of
 #' `MSY` (landings plus discards).
+#'
+#' `NoFishing` sets TAC to 0 every year
 #'
 #' `FMSY`/`MSY` are computed once, during `Simulate()`, at the terminal
 #' historical year (or `OM@Control$RefYears`) and held fixed for the whole
-#' projection; i.e., they are not recalculated per projection year. 
-#' 
+#' projection; i.e., they are not recalculated per projection year.
+#'
 #' If reference points are not available for an `OM`  each reference MP returns
 #' empty advice and a single warning is issued the first time it is called.
 #'
-#' In spatial `OM`s, fleet targeting means the realised F from `refFMSY_x`
+#' In spatial `OM`s, fleet targeting means the realised F from `refFMSY*`
 #' may differ from the specified fraction of `FMSY`, because the `FMSY`
 #' calculation does not account for spatial structure.
 #'
@@ -33,51 +35,56 @@ NULL
 
 #' @rdname ReferenceMPs
 #' @export
-refFMSY_1 <- function(Data) .RefFMSYAdvice(Data, 1)
-class(refFMSY_1) <- 'mp'
-attr(refFMSY_1, 'Interval') <- 1
-attr(refFMSY_1, 'DataOM') <- list(Reference = TRUE)
+refFMSY <- function(Data) .RefFMSYAdvice(Data, 1)
+class(refFMSY) <- 'mp'
+attr(refFMSY, 'Interval') <- 1
+attr(refFMSY, 'DataOM') <- list(Reference = TRUE)
 
 #' @rdname ReferenceMPs
 #' @export
-refFMSY_075 <- function(Data) .RefFMSYAdvice(Data, 0.75)
-class(refFMSY_075) <- 'mp'
-attr(refFMSY_075, 'Interval') <- 1
-attr(refFMSY_075, 'DataOM') <- list(Reference = TRUE)
+refFMSY75 <- function(Data) .RefFMSYAdvice(Data, 0.75)
+class(refFMSY75) <- 'mp'
+attr(refFMSY75, 'Interval') <- 1
+attr(refFMSY75, 'DataOM') <- list(Reference = TRUE)
 
 #' @rdname ReferenceMPs
 #' @export
-refFMSY_05 <- function(Data) .RefFMSYAdvice(Data, 0.5)
-class(refFMSY_05) <- 'mp'
-attr(refFMSY_05, 'Interval') <- 1
-attr(refFMSY_05, 'DataOM') <- list(Reference = TRUE)
+refFMSY50 <- function(Data) .RefFMSYAdvice(Data, 0.5)
+class(refFMSY50) <- 'mp'
+attr(refFMSY50, 'Interval') <- 1
+attr(refFMSY50, 'DataOM') <- list(Reference = TRUE)
 
 #' @rdname ReferenceMPs
 #' @export
-refMSY_1 <- function(Data) .RefMSYAdvice(Data, 1)
-class(refMSY_1) <- 'mp'
-attr(refMSY_1, 'Interval') <- 1
-attr(refMSY_1, 'DataOM') <- list(Reference = TRUE)
+refMSY <- function(Data) .RefMSYAdvice(Data, 1)
+class(refMSY) <- 'mp'
+attr(refMSY, 'Interval') <- 1
+attr(refMSY, 'DataOM') <- list(Reference = TRUE)
 
 #' @rdname ReferenceMPs
 #' @export
-refMSY_075 <- function(Data) .RefMSYAdvice(Data, 0.75)
-class(refMSY_075) <- 'mp'
-attr(refMSY_075, 'Interval') <- 1
-attr(refMSY_075, 'DataOM') <- list(Reference = TRUE)
+refMSY75 <- function(Data) .RefMSYAdvice(Data, 0.75)
+class(refMSY75) <- 'mp'
+attr(refMSY75, 'Interval') <- 1
+attr(refMSY75, 'DataOM') <- list(Reference = TRUE)
 
 #' @rdname ReferenceMPs
 #' @export
-refMSY_05 <- function(Data) .RefMSYAdvice(Data, 0.5)
-class(refMSY_05) <- 'mp'
-attr(refMSY_05, 'Interval') <- 1
-attr(refMSY_05, 'DataOM') <- list(Reference = TRUE)
+refMSY50 <- function(Data) .RefMSYAdvice(Data, 0.5)
+class(refMSY50) <- 'mp'
+attr(refMSY50, 'Interval') <- 1
+attr(refMSY50, 'DataOM') <- list(Reference = TRUE)
+
+#' @rdname ReferenceMPs
+#' @export
+NoFishing <- function(Data) Advice(TAC = 0, TACType = 'Removals')
+class(NoFishing) <- 'mp'
+attr(NoFishing, 'Interval') <- 1
 
 #' @rdname ReferenceMPs
 #' @export
 ReferenceMPs <- function() {
-  c('refFMSY_1', 'refFMSY_075', 'refFMSY_05',
-    'refMSY_1',  'refMSY_075',  'refMSY_05')
+  c('refFMSY', 'refFMSY75', 'refFMSY50', 'NoFishing')
 }
 
 
