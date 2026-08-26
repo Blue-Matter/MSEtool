@@ -28,7 +28,12 @@
 #' respectively.
 #'
 #' @param object An [mse-class] object, or a `list` of [mse-class] objects.
-#' @param Ref Numeric. Reference/threshold value.
+#' @param Ref Numeric, or `NULL`. Reference/threshold value for `PM_FFMSY`/
+#'   `PM_SBSBMSY`/`PM_SPSPMSY`'s probability metric (default `1`). Pass
+#'   `Ref = NULL` instead to get the mean projected ratio itself (`Stat`
+#'   averaged across simulations, on its natural scale) rather than a
+#'   probability against a threshold -- `Prob` is left `NA` in that case,
+#'   consistent with other natural-scale metrics such as `PM_Yield()`.
 #' @param Lim Numeric, or a named numeric vector keyed by stock name. Limit
 #'   reference point, expressed as a fraction of `SBMSY` (`PM_SBSBlim`) or
 #'   `SPMSY` (`PM_SPSPlim`), or of `SBMSY`/`SPMSY` per `Definition`
@@ -145,7 +150,7 @@ NULL
 #' @name PM-equations
 NULL
 
-# Session cache so repeated PM_* calls on the same `MSE_List` don't re-run CombineMSE.
+# Cache so repeated PM_* calls on the same `MSE_List` don't re-run CombineMSE.
 .PMCombineCache <- new.env(parent = emptyenv())
 
 .CoercePMInput <- function(object, silent = TRUE) {
@@ -369,6 +374,9 @@ NULL
 PM_FFMSY <- function(object, Ref = 1, Years = NULL, silent = TRUE) {
   object <- .CoercePMInput(object, silent)
   df <- F_FMSY(object, df = TRUE, Reduce = FALSE)
+  if (is.null(Ref))
+    return(.BuildPM(df, Ref = NA_real_, Years = Years, op = NULL,
+             Name = 'F_FMSY', Caption = 'Mean projected F/FMSY', OM = object@OM))
   .BuildPM(df, Ref = Ref, Years = Years, op = `<`,
            Name = 'F_FMSY', Caption = paste0('P(F < ', Ref, ' FMSY)'), OM = object@OM)
 }
@@ -380,6 +388,9 @@ PM_SBSBMSY <- function(object, Ref = 1, Years = NULL, silent = TRUE) {
   object <- .CoercePMInput(object, silent)
   df <- SB_SBMSY(object, df = TRUE, Reduce = FALSE)
   df <- df[df$Stock %in% .SpawningStockNames(object@OM), ]
+  if (is.null(Ref))
+    return(.BuildPM(df, Ref = NA_real_, Years = Years, op = NULL,
+             Name = 'SB_SBMSY', Caption = 'Mean projected SB/SBMSY', OM = object@OM))
   .BuildPM(df, Ref = Ref, Years = Years, op = `>`,
            Name = 'SB_SBMSY', Caption = paste0('P(SB > ', Ref, ' SBMSY)'), OM = object@OM)
 }
@@ -391,6 +402,9 @@ PM_SPSPMSY <- function(object, Ref = 1, Years = NULL, silent = TRUE) {
   object <- .CoercePMInput(object, silent)
   df <- SP_SPMSY(object, df = TRUE, Reduce = FALSE)
   df <- df[df$Stock %in% .SpawningStockNames(object@OM), ]
+  if (is.null(Ref))
+    return(.BuildPM(df, Ref = NA_real_, Years = Years, op = NULL,
+             Name = 'SP_SPMSY', Caption = 'Mean projected SP/SPMSY', OM = object@OM))
   .BuildPM(df, Ref = Ref, Years = Years, op = `>`,
            Name = 'SP_SPMSY', Caption = paste0('P(SP > ', Ref, ' SPMSY)'), OM = object@OM)
 }
