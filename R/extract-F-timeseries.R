@@ -34,6 +34,15 @@
 #'   
 #' @param IncYear Logical. Passed to [ReduceDims()]; controls whether the
 #'   year dimension is retained during reduction. Default `FALSE`.
+#' @param Extend Logical. If `TRUE`, rows sharing one value across every
+#'   simulation (e.g. the historical period, or any deterministic quantity --
+#'   see `Reduce`/[ReduceDims()]) are broadcast to all `nSim` simulations via
+#'   [ExtendSims()], rather than appearing once with `Sim = 1`. Default
+#'   `FALSE`. Ignored when `df = FALSE`.
+#' @param silent Logical. If `FALSE` and `Extend = FALSE`, emits a message
+#'   when the returned data frame has rows sharing one value across every
+#'   simulation, pointing at `Extend = TRUE`. Default `TRUE`. Ignored when
+#'   `df = FALSE`.
 #'
 #' @return
 #' * `df = FALSE` — the raw array slot (`FInteract`, `FDead`, or
@@ -45,6 +54,7 @@
 #' @example man-examples/F_timeseries.R
 #'
 #' @rdname F_timeseries
+#' @seealso [ExtendSims()]
 #' @export
 FInteract <- function(object,
                       df = TRUE,
@@ -52,8 +62,10 @@ FInteract <- function(object,
                       byArea = FALSE,
                       byFleet = FALSE,
                       Reduce  = TRUE,
-                      IncYear = FALSE) {
-  
+                      IncYear = FALSE,
+                      Extend  = FALSE,
+                      silent  = TRUE) {
+
   .ExtractFTimeseries(object,
                        df        = df,
                        slot_name = 'FInteract',
@@ -61,7 +73,9 @@ FInteract <- function(object,
                        byArea    = byArea,
                        byFleet   = byFleet,
                        Reduce    = Reduce,
-                       IncYear   = IncYear)
+                       IncYear   = IncYear,
+                       Extend    = Extend,
+                       silent    = silent)
 }
 
 #' @name F_timeseries
@@ -72,8 +86,10 @@ FDead <- function(object,
                   byArea = FALSE,
                   byFleet = FALSE,
                   Reduce  = TRUE,
-                  IncYear = FALSE) {
-  
+                  IncYear = FALSE,
+                  Extend  = FALSE,
+                  silent  = TRUE) {
+
   .ExtractFTimeseries(object,
                        df        = df,
                        slot_name = 'FDead',
@@ -81,7 +97,9 @@ FDead <- function(object,
                        byArea    = byArea,
                        byFleet   = byFleet,
                        Reduce    = Reduce,
-                       IncYear   = IncYear)
+                       IncYear   = IncYear,
+                       Extend    = Extend,
+                       silent    = silent)
 }
 
 #' @name F_timeseries
@@ -92,8 +110,10 @@ FRetain <- function(object,
                     byArea = FALSE,
                     byFleet = FALSE,
                     Reduce  = TRUE,
-                    IncYear = FALSE) {
-  
+                    IncYear = FALSE,
+                    Extend  = FALSE,
+                    silent  = TRUE) {
+
   .ExtractFTimeseries(object,
                        df        = df,
                        slot_name = 'FRetain',
@@ -101,7 +121,9 @@ FRetain <- function(object,
                        byArea    = byArea,
                        byFleet   = byFleet,
                        Reduce    = Reduce,
-                       IncYear   = IncYear)
+                       IncYear   = IncYear,
+                       Extend    = Extend,
+                       silent    = silent)
 }
 
 .ExtractFTimeseries <- function(object,
@@ -111,16 +133,17 @@ FRetain <- function(object,
                                  byArea    = FALSE,
                                  byFleet   = FALSE,
                                  Reduce    = TRUE,
-                                 IncYear   = FALSE) {
-  
+                                 IncYear   = FALSE,
+                                 Extend    = FALSE,
+                                 silent    = TRUE) {
+
   .CheckClass(object, c('hist', 'mse'), 'object')
-  
+
   if (!df)
     return(slot(object, slot_name))
-  
+
   if (inherits(object, 'hist')) {
-    return(
-      .ExtractFTimeseriesCore(object,
+    out <- .ExtractFTimeseriesCore(object,
                             OM        = object@OM,
                             slot_name = slot_name,
                             byAge     = byAge,
@@ -128,9 +151,9 @@ FRetain <- function(object,
                             byFleet   = byFleet,
                             Reduce    = Reduce,
                             IncYear   = IncYear)
-    )
+    return(.FinalizeTimeseriesDF(out, object@OM@nSim, Extend, silent))
   }
-  
+
   # MSE object: bind historical + projection
   hist <- .ExtractFTimeseriesCore(object@Hist,
                                 OM        = object@OM,
@@ -141,7 +164,7 @@ FRetain <- function(object,
                                 Reduce    = Reduce,
                                 IncYear   = IncYear) |>
     dplyr::mutate(MP = 'Historical')
-  
+
   proj <- .ExtractFTimeseriesCore(object,
                                 OM        = object@OM,
                                 slot_name = slot_name,
@@ -150,8 +173,9 @@ FRetain <- function(object,
                                 byFleet   = byFleet,
                                 Reduce    = Reduce,
                                 IncYear   = IncYear)
-  
+
   out <- dplyr::bind_rows(hist, proj)
+  out <- .FinalizeTimeseriesDF(out, object@OM@nSim, Extend, silent)
   class(out) <- c(paste0(tolower(slot_name), '.df'), class(out))
   out
 }
