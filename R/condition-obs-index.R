@@ -151,7 +151,7 @@
     # Fit jointly unless Beta is fixed by the user or EstimateBeta = FALSE.
     FixedBeta <- if (EstimateBeta) Index_Obs@Beta else (Index_Obs@Beta %||% 1)
     
-    ResidualsBeta <- .CalcIndexResiduals(ObservedIndex, Nom_Index, beta=FixedBeta, FitInd=TSInd)
+    ResidualsBeta <- CalcIndexResiduals(ObservedIndex, Nom_Index, beta=FixedBeta, FitInd=TSInd)
 
     Index_Obs@Beta       <- ResidualsBeta$Beta
     Index_Obs@Efficiency <- ResidualsBeta$Efficiency
@@ -190,20 +190,15 @@
       Index_Obs@TruncSD <- 2
     
     
-    logProjResids <- GenResiduals(SD = Stats$SD, 
-                                  AC = Stats$AC, 
-                                  Years = ProjYears, 
-                                  TruncSD = Index_Obs@TruncSD,
-                                  nSeasons = nSeasons, 
-                                  NA_Season = Stats$NA_Season)
- 
-    logProjResids <- ApplyAC(LogResid = logProjResids, 
-                             AC = Stats$AC,
-                             LastError = .LastResidual(LogResiduals))
-    
-    
+    ResidualsProjection <- GenResiduals(SD = Stats$SD,
+                                        AC = Stats$AC,
+                                        Years = ProjYears,
+                                        TruncSD = Index_Obs@TruncSD,
+                                        nSeasons = nSeasons,
+                                        NA_Season = Stats$NA_Season,
+                                        LastError = exp(.LastResidual(LogResiduals)))
+
     ResidualsHistorical <- exp(LogResiduals)
-    ResidualsProjection <- exp(logProjResids)
     
     Index_Obs@Error <- abind::abind(ResidualsHistorical, ResidualsProjection,
                                     along=2, use.dnns=TRUE) 
@@ -226,21 +221,20 @@
 #' Computes log-scale residuals under the hyperstability model
 #' `Observed_t = Efficiency * Simulated_t^Beta * exp(residual_t)` (Harley et
 #' al. 2001). `Efficiency` is fit per simulation by log-linear regression;
-#' `Beta` estimation (or fixing) is delegated to `.EstimateBeta()`.
+#' `Beta` estimation (or fixing) is delegated to [EstimateBeta()].
 #'
 #' @param ObservedIndex Numeric vector of length nYear with observed index values.
 #' @param SimulatedIndex Numeric matrix or array of dimensions nSim x nYear with simulated index values.
 #' @param beta `NULL`, numeric scalar, or length-nSim vector. Passed through
-#'   to `.EstimateBeta()`.
-#' @param MinPoints Integer. Passed through to `.EstimateBeta()`. Default `8`.
+#'   to [EstimateBeta()].
+#' @param MinPoints Integer. Passed through to [EstimateBeta()]. Default `8`.
 #' @param FitInd Integer vector or `NULL`. Year positions to restrict fitting
-#'   to (e.g. `Index_Obs@Years`, matching `CalcResidualStats()`'s year
-#'   restriction). `NULL` (default) uses every non-NA, positive year.
-#' @param alpha Numeric. Passed through to `.EstimateBeta()`. Default `0.05`.
+#'   to (e.g. `Index_Obs@Years`). `NULL` (default) uses every non-NA, positive year.
+#' @param alpha Numeric. Passed through to `EstimateBeta()`. Default `0.05`.
 #'
 #' @details
 #' `NA` or non-positive years are dropped before fitting. See
-#' `.EstimateBeta()` for when `Beta` is fixed at `1` rather than freely
+#' [EstimateBeta()] for when `Beta` is fixed at `1` rather than freely
 #' estimated.
 #'
 #' @return A list with elements:
@@ -248,10 +242,10 @@
 #' * `Beta`: numeric vector length nSim, the fitted or supplied beta values.
 #' * `Efficiency`: numeric vector length nSim, the fitted catchability `q`.
 #' * `SE_Beta`, `CI_Lower`, `CI_Upper`, `R2`, `PValue`, `nPoints`, `Status`: fit
-#'   diagnostics from `.EstimateBeta()`, passed through unchanged.
+#'   diagnostics from [EstimateBeta()], passed through unchanged.
 #'
-#' @keywords internal
-.CalcIndexResiduals <- function(ObservedIndex, SimulatedIndex, beta = NULL,
+#' @export
+CalcIndexResiduals <- function(ObservedIndex, SimulatedIndex, beta = NULL,
                                 MinPoints = 8, FitInd = NULL, alpha = 0.05) {
 
   if (any(ObservedIndex < 0, na.rm = TRUE)) {
@@ -271,7 +265,7 @@
   logSim <- log(SimulatedIndex[, ValidInd, drop = FALSE])
   logSim[!is.finite(logSim)] <- NA
 
-  BetaFit <- .EstimateBeta(logObs, logSim, beta = beta, MinPoints = MinPoints, alpha = alpha)
+  BetaFit <- EstimateBeta(logObs, logSim, beta = beta, MinPoints = MinPoints, alpha = alpha)
   Beta <- BetaFit$Beta
 
   if (length(ValidInd) == 0) {
@@ -359,8 +353,8 @@
 #'   `"fixed_not_significant"` (slope not distinguishable from `1` at
 #'   `alpha`), or `"fixed_bounds"` (significant slope clamped to `Bounds`).
 #'
-#' @keywords internal
-.EstimateBeta <- function(logObs, logSim, beta = NULL, MinPoints = 8,
+#' @export
+EstimateBeta <- function(logObs, logSim, beta = NULL, MinPoints = 8,
                           MinLogSD = 0.1, alpha = 0.05, Bounds = c(0.1, 3)) {
 
   nSim <- nrow(logSim)
