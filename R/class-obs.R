@@ -265,7 +265,7 @@ setValidity("catchobs", function(object) {
 #'   internally; not set by the user.
 #' @slot Misc `list`. Miscellaneous additional objects. When `Beta` is
 #'   conditioned on real data, `Misc$BetaFit` holds the per-simulation fit
-#'   diagnostics from `.EstimateBeta()`: `SE_Beta`, `CI_Lower`, `CI_Upper`,
+#'   diagnostics from [EstimateBeta()]: `SE_Beta`, `CI_Lower`, `CI_Upper`,
 #'   `R2`, `PValue`, `nPoints`, and `Status`. See [IndexFitTable()].
 #'
 #' @seealso
