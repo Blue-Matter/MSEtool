@@ -7,7 +7,6 @@
 #' @importFrom methods formalArgs getClassDef getSlots .hasSlot is new show slot slot<- slotNames
 #' @importFrom parallel detectCores
 #' @importFrom Rcpp evalCpp
-#' @importFrom snowfall sfClusterEval sfInit sfExportAll sfIsRunning sfExport sfSapply sfLibrary
 #' @importFrom stats acf aggregate approx coef cor dbeta density dnorm dlnorm lm loess loess.smooth nls setNames simulate SSasympOff weighted.mean median nlm nlminb optim optimise optimize plogis pnorm predict qnorm qlnorm quantile rbeta rlnorm rmultinom rnorm runif sd window
 #' @importFrom utils  browseURL capture.output combn find flush.console packageVersion txtProgressBar setTxtProgressBar ls.str lsf.str read.csv read.csv2
 #'

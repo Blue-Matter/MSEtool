@@ -2669,7 +2669,7 @@ ref_plots <- function(Data, i=1, n=20000, fignum=1) {
 #' and the second the updated Data object
 #' @export
 #'
-applyMP <- function(Data, MPs = NA, reps = 100, nsims=NA, silent=FALSE, parallel = snowfall::sfIsRunning()) {
+applyMP <- function(Data, MPs = NA, reps = 100, nsims=NA, silent=FALSE, parallel = .sfIsRunning()) {
   if (!methods::is(Data, "Data")) stop("First argument must be object of class 'Data'", call.=FALSE)
   Dataout <- Data
   if (is.na(nsims)) nsims <- nrow(Data@Cat)
@@ -2695,7 +2695,7 @@ applyMP <- function(Data, MPs = NA, reps = 100, nsims=NA, silent=FALSE, parallel
     }
   }
   
-  runParallel <- snowfall::sfIsRunning()
+  runParallel <- .sfIsRunning()
   # if (nMPs < 8 & nsims < 8) runParallel <- FALSE
 
   if (!silent)

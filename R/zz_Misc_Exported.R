@@ -721,7 +721,6 @@ Required <- function(funcs = NA, noCV=FALSE) {
 #' physical and logical (virtual) cores will be used.
 #' @param logical Use the logical cores as well? Using the virtual cores may
 #' not lead to any significant decrease in run time.
-#' You can test the optimal number of cores using `optCPU()`
 #' @param ... other arguments passed to 'snowfall::sfInit'
 #' @examples
 #' \dontrun{
@@ -731,17 +730,19 @@ Required <- function(funcs = NA, noCV=FALSE) {
 #' }
 #' @export
 setup <- function(cpus=NULL, logical=FALSE, ...) {
+  if (!requireNamespace('snowfall', quietly = TRUE))
+    cli::cli_abort("Package {.pkg snowfall} is required for parallel processing of the legacy engine. Install it with {.code install.packages('snowfall')}.")
   if (is.null(cpus))
     cpus <- parallel::detectCores(logical=logical)
-  if(snowfall::sfIsRunning())
+  if (.sfIsRunning())
     snowfall::sfStop()
   snowfall::sfInit(parallel=TRUE,cpus=cpus, ...)
-  sfLibrary("MSEtool", character.only = TRUE, verbose=FALSE)
+  snowfall::sfLibrary("MSEtool", character.only = TRUE, verbose=FALSE)
   pkgs <- search()
   if ("package:DLMtool" %in% pkgs)
-    sfLibrary("DLMtool", character.only = TRUE, verbose=FALSE)
+    snowfall::sfLibrary("DLMtool", character.only = TRUE, verbose=FALSE)
   if ("package:SAMtool" %in% pkgs)
-    sfLibrary("SAMtool", character.only = TRUE, verbose=FALSE)
+    snowfall::sfLibrary("SAMtool", character.only = TRUE, verbose=FALSE)
 
 }
 
@@ -1297,64 +1298,6 @@ L2A <- function(t0c, Linfc, Kc, Len, maxage, ploty=F) {
 }
 
 
-
-#' Determine optimal number of cpus
-#'
-#' @param nsim Numeric. Number of simulations.
-#' @param thresh Recommended n cpus is what percent of the fastest time?
-#' @param plot Logical. Show the plot?
-#' @param msg Logical. Should messages be printed to console?
-#' @param maxn Optional. Maximum number of cpus. Used for demo purposes
-#'
-#' @templateVar url parallel-processing
-#' @templateVar ref determining-optimal-number-of-processors
-# #' @template userguide_link
-#'
-#' @export
-#' @seealso \link{setup}
-#' @examples
-#' \dontrun{
-#' optCPU()
-#' }
-#' @author A. Hordyk
-optCPU <- function(nsim=96, thresh=5, plot=TRUE, msg=TRUE, maxn=NULL) {
-  cpus <- 1:parallel::detectCores()
-  if (!is.null(maxn)) cpus <- 1:maxn
-
-  time <- NA
-  OM <- MSEtool::testOM
-  OM@nsim <- nsim
-  for (n in cpus) {
-    if (msg) message('Running MSE with ', nsim, ' simulations and ', n, ' of ', max(cpus), ' cpus')
-    if (n == 1) {
-      snowfall::sfStop()
-      st <- Sys.time()
-      tt <- runMSE(OM, silent = TRUE)
-      time[n] <- difftime(Sys.time(), st, units='secs')
-    } else{
-      if (msg) {
-        setup(cpus=n)
-      } else {
-        sink('temp')
-        suppressMessages(setup(cpus=n))
-        sink()
-      }
-      st <- Sys.time()
-      tt <- runMSE(OM, silent=TRUE, parallel=TRUE)
-
-      time[n] <- difftime(Sys.time(), st, units='secs')
-
-    }
-  }
-  df <- data.frame(ncpu=cpus, time=time)
-  df$time <- round(df$time,2)
-  rec <- min(which(time < min(time) * (1 + thresh/100)))
-  if (plot) {
-    plot(df, type='b', ylab="time (seconds)", xlab= "# cpus", bty="l", lwd=2)
-    points(rec, df[rec,2], cex=2, pch=16, col="blue")
-  }
-  return(df)
-}
 
 
 # #' Convert an MMSE object to an MSE object

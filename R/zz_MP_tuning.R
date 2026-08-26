@@ -8,7 +8,7 @@ int_tune = function(par, MP_parname, MP, Hist_list,minfunc,parallel){
   if(!parallel){
     MSE_list = lapply(Hist_list,function(X)Project(X,MPs = "MPtest"))
   }else{
-    sfExport('MPtest')
+    snowfall::sfExport('MPtest')
     MSE_list = snowfall::sfLapply(Hist_list,function(X)Project(X,MPs = "MPtest"))
   }
   minfunc(MSE_list)

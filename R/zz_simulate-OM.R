@@ -27,8 +27,8 @@ SimulateOM <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NU
     .sapply <- pbapply::pbsapply
     
     # Argument to pass parallel cluster (if running)
-    formals(.lapply)$cl <- formals(.sapply)$cl <- substitute(if (snowfall::sfIsRunning()) snowfall::sfGetCluster() else NULL)
-  } else if (snowfall::sfIsRunning()) {
+    formals(.lapply)$cl <- formals(.sapply)$cl <- substitute(if (.sfIsRunning()) snowfall::sfGetCluster() else NULL)
+  } else if (.sfIsRunning()) {
     .lapply <- snowfall::sfLapply
     .sapply <- snowfall::sfSapply
   } else {
@@ -520,7 +520,7 @@ SimulateOM <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NU
       FleetPars$dFfinal[probQ] <- ResampFleetPars$dFfinal
       
       # Optimize for q
-      if (!snowfall::sfIsRunning()) {
+      if (!.sfIsRunning()) {
         qs[probQ] <- sapply(probQ, CalculateQ, StockPars, FleetPars,
                             pyears=nyears, bounds, control)
       } else {
@@ -710,7 +710,7 @@ SimulateOM <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NU
       cli::cli_alert("Calculating B-low reference points")
     
     MGThorizon<-floor(HZN*MGT)
-    if (!snowfall::sfIsRunning()) {
+    if (!.sfIsRunning()) {
       Blow <- sapply(1:nsim,getBlow,
                      StockPars$N,
                      StockPars$Asize,
@@ -743,7 +743,7 @@ SimulateOM <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NU
                      SRRpars=StockPars$SRRpars,
                      spawn_time_frac=StockPars$spawn_time_frac)
     } else {
-      Blow <- sfSapply(1:nsim,getBlow,
+      Blow <- snowfall::sfSapply(1:nsim,getBlow,
                        StockPars$N,
                        StockPars$Asize,
                        StockPars$SSBMSY,
@@ -783,11 +783,11 @@ SimulateOM <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NU
   # --- Calculate Reference Yield ----
   if(!silent) 
     cli::cli_alert("Calculating reference yield - best fixed F strategy")
-  if (!snowfall::sfIsRunning()) {
+  if (!.sfIsRunning()) {
     RefY <- sapply(1:nsim, calcRefYield, StockPars, FleetPars, proyears,
                    Ncurr=StockPars$N[,,nyears,], nyears, proyears)
   } else {
-    RefY <- sfSapply(1:nsim, calcRefYield, StockPars, FleetPars, proyears,
+    RefY <- snowfall::sfSapply(1:nsim, calcRefYield, StockPars, FleetPars, proyears,
                      Ncurr=StockPars$N[,,nyears,], nyears, proyears)
   }
   

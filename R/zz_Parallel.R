@@ -1,12 +1,23 @@
+#' Is a snowfall (legacy engine) cluster running?
+#'
+#' Safe wrapper around `snowfall::sfIsRunning()` for use in the legacy engine,
+#' now that `snowfall` is an optional (`Suggests`) dependency: returns `FALSE`
+#' if `snowfall` isn't installed rather than erroring, so sequential legacy
+#' runs work without it.
+#' @keywords internal
+.sfIsRunning <- function() {
+  requireNamespace('snowfall', quietly = TRUE) && snowfall::sfIsRunning()
+}
+
 define.lapply <- function(silent=FALSE) {
   if (requireNamespace("pbapply", quietly = TRUE) && !silent) {
-    .lapply <- pbapply::pblapply   
+    .lapply <- pbapply::pblapply
     # Argument to pass parallel cluster (if running)
-    formals(.lapply)$cl <- if (snowfall::sfIsRunning()) snowfall::sfGetCluster() else NULL
+    formals(.lapply)$cl <- if (.sfIsRunning()) snowfall::sfGetCluster() else NULL
     return(.lapply)
-  } else if (snowfall::sfIsRunning()) {
+  } else if (.sfIsRunning()) {
     return(snowfall::sfLapply)
-  } 
+  }
   .lapply <- base::lapply
 }
 
@@ -15,12 +26,12 @@ define.sapply <- function(silent=FALSE) {
   if (requireNamespace("pbapply", quietly = TRUE) && !silent) {
     .sapply <- return(pbapply::pbsapply)
     # Argument to pass parallel cluster (if running)
-    formals(.sapply)$cl <- if (snowfall::sfIsRunning()) snowfall::sfGetCluster() else NULL
+    formals(.sapply)$cl <- if (.sfIsRunning()) snowfall::sfGetCluster() else NULL
     return(.sapply)
-  } else if (snowfall::sfIsRunning()) {
+  } else if (.sfIsRunning()) {
     .lapply <- snowfall::sfLapply
     return(snowfall::sfSapply)
-  } 
+  }
   base::sapply
 }
 

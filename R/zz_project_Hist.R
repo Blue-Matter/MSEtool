@@ -68,7 +68,7 @@ Project_Hist <- function (Hist=NULL,
   nMP <- length(MPs)  # the total number of methods used
   if (nMP < 1) stop("No valid MPs found", call.=FALSE)
   
-  isrunning <- snowfall::sfIsRunning()
+  isrunning <- .sfIsRunning()
   if (!runparallel & isrunning) snowfall::sfStop()
   
   # Don't run MPs in parallel unless specified
