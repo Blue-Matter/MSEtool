@@ -12,9 +12,8 @@ License: GPL-3
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-Depends: 
-    R (>= 4.2.0),
-    snowfall
+Depends:
+    R (>= 4.2.0)
 Imports:
     abind,
     cli,
@@ -58,6 +57,7 @@ Suggests:
     rmarkdown,
     shiny,
     Slick,
+    snowfall,
     testthat,
     tibble,
     tidyr,

@@ -12,8 +12,7 @@ all physical cores will be used, unless \code{logical=TRUE}, in which case both
 physical and logical (virtual) cores will be used.}
 
 \item{logical}{Use the logical cores as well? Using the virtual cores may
-not lead to any significant decrease in run time.
-You can test the optimal number of cores using \code{optCPU()}}
+not lead to any significant decrease in run time.}
 
 \item{...}{other arguments passed to 'snowfall::sfInit'}
 }

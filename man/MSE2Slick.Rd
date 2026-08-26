@@ -48,71 +48,31 @@ metadata, all default \code{""}.}
 
 \item{Date}{\code{Date}, or \code{NULL} (default) for \code{Sys.Date()}.}
 
-\item{PMs}{A list of performance-metric specs, used as the shared default
-for \code{Boxplot}/\code{Quilt}/\code{Spider}/\code{Tradeoff} (see \code{BoxplotPMs} etc. below to
-give one of them a different list). \code{NULL} (default) uses
-\code{\link[=DefaultSlickPMs]{DefaultSlickPMs()}}. Each element is either a bare \verb{PM_*}-shaped function
-(its \code{Code}/\code{Label} come from the resulting \link[=pm-class]{pm} object's own
-\code{Name}/\code{Caption}), or a list
-\code{list(fun, args = list(), Code = NULL, Label = NULL, Description = NULL)}
-for extra arguments or an explicit label -- needed to distinguish two
-calls to the \emph{same} function with different arguments, e.g.
-\code{list(fun = PM_Yield, args = list(Years = 2000:2009), Code = "Yield_early")}
-alongside a second entry for \code{Years = 2010:2019}.}
+\item{PMs}{A list of performance-metric specs, shared by default across
+\code{Boxplot}/\code{Quilt}/\code{Spider}/\code{Tradeoff}. \code{NULL} (default) uses
+\code{\link[=DefaultSlickPMs]{DefaultSlickPMs()}}. See Details.}
 
-\item{BoxplotPMs, QuiltPMs, SpiderPMs, TradeoffPMs}{A list of performance-
-metric specs (same shape as \code{PMs}) for that one panel only, or \code{NULL}
-(default) to fall back to \code{PMs}. Use these when, for example, the Spider
-plot should compare a different set of metrics than the Boxplot.}
+\item{BoxplotPMs, QuiltPMs, SpiderPMs, TradeoffPMs}{Per-panel overrides for
+\code{PMs}, or \code{NULL} (default) to fall back to it. See Details.}
 
-\item{TimeseriesCode, TimeseriesLabel}{Character vectors overriding the
-\code{Code}/\code{Label} used to build the \code{Timeseries} panel (see
-\code{.MSE2Timeseries()}'s own defaults), or \code{NULL} (default) to keep them.
-\code{TimeseriesCode} entries must name functions that accept an \link[=mse-class]{mse}
-object and return a tidy data frame with columns \code{Sim}, \code{Year}, \code{MP},
-\code{Period}, and \code{Value} (optionally \code{Stock}, for per-complex expansion).}
+\item{TimeseriesCode, TimeseriesLabel}{Overrides for the \code{Timeseries}
+panel's variables, or \code{NULL} (default) to keep \code{.MSE2Timeseries()}'s
+own defaults. See Details.}
 
 \item{KobeComplex}{Character, or \code{NULL} (default: the first complex).
 Which stock/complex the Kobe plot shows, when \code{MSE} has more than one.}
 
-\item{MPCode, MPLabel, MPDescription}{Override the \code{Slick} App's per-MP
-display text -- useful when \code{names(MSE@MPs)} are long, systematic
-run/storage names (e.g. \code{"IndexRate_All3_MC20_44"}) unsuited to compact
-plots/tables. Each is one of: \code{NULL} (default -- \code{MPCode}/\code{MPLabel} fall
-back to \code{names(MSE@MPs)}, \code{MPDescription} is left unset); a function
-applied to \code{names(MSE@MPs)} (e.g. an abbreviation function); or a
-character vector, either named (matched by MP name, any order) or
-unnamed (matched by position, must have length \code{nMP}).}
+\item{MPCode, MPLabel, MPDescription}{Overrides for the per-MP display
+text, or \code{NULL} (default). See Details.}
 
-\item{Design}{A \code{data.frame} with one row per OM (in the order/names of
-the \code{MSE} list) and one column per factorial-design factor, holding
-that OM's level for each factor -- e.g. a row \verb{M = 'Low', h = 'Base'}
-for an OM that varies natural mortality and steepness independently. A
-named list of length-\code{nOM} vectors (\code{list(M = c(...), h = c(...))}) is
-also accepted and converted. The per-factor level catalog Slick needs
-(\code{OMs@Factors}) is derived automatically from the unique values in each
-column. \code{NULL} (default) uses a single \code{Scenario} factor built from the
-\code{MSE} list names (or \code{"OM1"}, \code{"OM2"}, ... if unnamed). When \code{Design}
-is supplied and \code{MSE} has more than one element, \code{MSE} must be a
-\emph{named} list -- this is what keeps \code{Design}'s rows unambiguously
-matched to the right \code{mse} object (see \code{\link[=.MSE2OMs]{.MSE2OMs()}}).}
+\item{Design}{The OM factorial design, or \code{NULL} (default) for a single
+\code{Scenario} factor built from the \code{MSE} list names. See Details.}
 
-\item{AutoPreset}{Logical. If \code{TRUE} (default), \code{OMs@Preset} is
-auto-populated with one button per unique level of each \code{Design}
-column (see \code{\link[=.MSE2OMs]{.MSE2OMs()}}). Ignored when \code{Design} is \code{NULL}, or
-overridden entirely by \code{OMsPreset} when that's supplied.}
+\item{AutoPreset}{Logical. Auto-populate \code{OMs@Preset} from \code{Design}?
+Default \code{TRUE}. See Details.}
 
-\item{OMsPreset, MPsPreset, BoxplotPreset, QuiltPreset, SpiderPreset, TradeoffPreset}{A named list of preset buttons for the App (see \code{\link[Slick:Preset]{Slick::Preset()}}), or
-\code{NULL} (default) for none -- except \code{OMs}, which still gets
-\code{AutoPreset}'s auto-generated buttons unless \code{OMsPreset} is supplied to
-override them. Each list element's values are: for \code{OMsPreset}, one
-list of factor-level indices per \code{Design} column (see
-\code{\link[Slick:Preset]{Slick::Preset()}}'s own \code{OMs}-class documentation); for the rest, MP or
-PI indices into that object's own \code{Code}. Not auto-derivable from \code{MSE}
-alone (unlike the \code{OMs} case) -- these groupings only exist in the
-calling project (e.g. "which MPs belong to which family", "which PIs
-belong to a short-term view"), so they're plain pass-throughs rather
-than something \code{MSE2Slick()} guesses at.}
+\item{OMsPreset, MPsPreset, BoxplotPreset, QuiltPreset, SpiderPreset, TradeoffPreset}{Preset buttons for the App, or \code{NULL} (default) for none (except \code{OMs},
+which still gets \code{AutoPreset}'s buttons). See Details.}
 }
 \value{
 A \code{\link[Slick:Slick]{Slick::Slick()}} object ready for use with \code{\link[Slick:App]{Slick::App()}}.
@@ -129,44 +89,60 @@ to \code{\link[Slick:App]{Slick::App()}} for interactive exploration, or saved a
 online Slick App.
 
 When \code{MSE} is a list, each element should represent a different Operating
-Model (OM) hypothesis tested with the same set of MPs. All \link[=mse-class]{mse}
-objects in the list must have identical MPs, number of simulations, number
-of time steps, and stock complexes.
+Model (OM) tested with the same set of MPs.
+
+All \link[=mse-class]{mse} objects in the list must have identical MPs, number of
+simulations, number of time steps, and stock complexes.
 
 The resulting \code{\link[Slick:Slick]{Slick::Slick()}} object includes:
 \itemize{
 \item \strong{MPs}: management procedure codes, labels, and display colours.
 \item \strong{OMs}: one factor level per list element of \code{MSE} (see \code{Design}).
 \item \strong{Kobe}: SB/SBMSY and F/FMSY time series for the Kobe plot. Kobe is
-inherently single-stock -- its \code{PI} axis is fixed at exactly these two
-indicators, with no stock/complex dimension in the underlying \code{Slick}
-schema -- so for a multi-complex OM, \code{KobeComplex} selects which one to
+single-stock so for a multi-complex OM, \code{KobeComplex} selects which one to
 show (default: the first).
-\item \strong{Timeseries}: projection-period time series for spawning biomass,
-fishing mortality, landings, SB/SBMSY, and F/FMSY. Unlike Kobe,
-\code{Timeseries}'s \code{PI} axis is an open list, so a multi-complex OM gets one
-PI per variable per complex (e.g. \code{SBiomass [StockA]},
-\code{SBiomass [StockB]}).
+\item \strong{Timeseries}: SB/SBMSY, F/FMSY, and landings time series.
 \item \strong{Boxplot/Quilt/Spider/Tradeoff}: driven by \code{PMs}, a flexible list of
-performance-metric specs (see \code{PMs} below). Each spec is evaluated
-against every complex in every OM, giving one \code{PI} per (spec, complex)
-combination -- same expansion rule as \code{Timeseries}.
+performance-metric specs (see \code{PMs} below). Each is evaluated
+against every complex in every OM.
 }
 
-Every stock/complex configuration MSEtool supports is handled the same
-way -- through each \verb{PM_*} function's own aggregation, not by
-\code{MSE2Slick()} reimplementing it: a single stock is trivially its own
-complex; independent multi-stock OMs (no shared \code{Complexes}) each stock is
-its own complex, so PIs are reported per stock; a joint stock complex
-(\code{Complexes} grouping multiple stocks) is reported as the one complex,
-already summed/aggregated by the \verb{PM_*} function; a sex-linked pair (e.g.
-\link{HermOM}) resolves spawning-stock metrics (\code{SBiomass}/\code{SB_SBMSY}/
-\code{PM_Status}/\code{PM_Safety}) to the female sub-stock only via
-\link{relative_ref}'s underlying spawning-stock resolution, while catch/effort
-metrics sum across both sexes. True multi-species OMs needing genuinely
-different metrics per species are not supported -- pass \code{Stocks} (in the
-\code{PMs} spec's own \code{args}) to scope a metric to one species at a time
-instead.
+\code{PMs} (and the per-panel \code{BoxplotPMs}/\code{QuiltPMs}/\code{SpiderPMs}/
+\code{TradeoffPMs} overrides) is a list of performance-metric specifications: each
+element is either a \verb{PM_*} function (e.g., \code{PM_Status} for \code{\link[=PM_Status]{PM_Status()}}), or a list
+\code{list(fun, args = list(), Code = NULL, Label = NULL, Description = NULL)}, e.g.
+\code{list(fun = PM_Yield, args = list(Years = 2000:2009), Code = "Yield_early")}. Each per-panel override
+falls back to \code{PMs} when \code{NULL}; a spec list is only re-evaluated once
+even when shared across panels.
+
+\code{TimeseriesCode}/\code{TimeseriesLabel} override the variables built into the
+\code{Timeseries} panel; entries must name functions that accept an \link[=mse-class]{mse}
+object and return a tidy data frame with columns \code{Sim}, \code{Year}, \code{MP}, \code{Period},
+and \code{Value}.
+
+\code{MPCode}/\code{MPLabel}/\code{MPDescription} set the resulting \code{Slick} object's
+\code{MPs@Code}/\code{Label}/\code{Description}. Each is \code{NULL} (default \code{MPCode}/\code{MPLabel}
+fall back to \code{names(MSE@MPs)}, \code{MPDescription} is left unset).
+
+\code{Design} gives each OM's level along one or more factorial-design factors
+(e.g. \code{M}, steepness), as a \code{data.frame} (one row per OM, one column per
+factor) or an equivalent named list of length-\code{nOM} vectors. The
+per-factor level catalog Slick needs (\code{OMs@Factors}) is derived
+automatically from the unique values in each column; \code{NULL} (default)
+uses a single \code{Scenario} factor built from the \code{MSE} list names (or
+\code{"OM1"}, \code{"OM2"}, ... if unnamed).
+
+When \code{Design} is supplied and \code{MSE}
+has more than one element, \code{MSE} must be a \emph{named} list -- this is what
+keeps \code{Design}'s rows unambiguously matched to the right \code{mse} object
+(see \code{\link[=.MSE2OMs]{.MSE2OMs()}}).
+
+\code{AutoPreset} (default \code{TRUE}) auto-populates \code{OMs@Preset} with one button
+per unique level of each \code{Design} column, unless \code{OMsPreset} overrides it
+entirely; ignored when \code{Design} is \code{NULL}. \code{MPsPreset}/\code{BoxplotPreset}/
+\code{QuiltPreset}/\code{SpiderPreset}/\code{TradeoffPreset} are pass-throughs (a
+named list of MP or PI indices into that object's own \code{Code}; see
+\code{\link[Slick:Preset]{Slick::Preset()}}).
 }
 \examples{
 \dontrun{

@@ -845,7 +845,6 @@ export(nReps)
 export(nSim)
 export(nStock)
 export(nYear)
-export(optCPU)
 export(optMSY_eq)
 export(pStar)
 export(pYear)
@@ -1047,15 +1046,6 @@ importFrom(purrr,
   pmap
 )
 importFrom(rlang,caller_call)
-importFrom(snowfall,
-  sfClusterEval,
-  sfExport,
-  sfExportAll,
-  sfInit,
-  sfIsRunning,
-  sfLibrary,
-  sfSapply
-)
 importFrom(stats,
   SSasympOff,
   acf,
