@@ -133,9 +133,7 @@ uses a single \code{Scenario} factor built from the \code{MSE} list names (or
 \code{"OM1"}, \code{"OM2"}, ... if unnamed).
 
 When \code{Design} is supplied and \code{MSE}
-has more than one element, \code{MSE} must be a \emph{named} list -- this is what
-keeps \code{Design}'s rows unambiguously matched to the right \code{mse} object
-(see \code{\link[=.MSE2OMs]{.MSE2OMs()}}).
+has more than one element, \code{MSE} must be a \emph{named} list.
 
 \code{AutoPreset} (default \code{TRUE}) auto-populates \code{OMs@Preset} with one button
 per unique level of each \code{Design} column, unless \code{OMsPreset} overrides it

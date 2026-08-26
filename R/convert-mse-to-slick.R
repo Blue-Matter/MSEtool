@@ -53,9 +53,7 @@
 #' `"OM1"`, `"OM2"`, ... if unnamed). 
 #' 
 #' When `Design` is supplied and `MSE`
-#' has more than one element, `MSE` must be a *named* list -- this is what
-#' keeps `Design`'s rows unambiguously matched to the right `mse` object
-#' (see [.MSE2OMs()]).
+#' has more than one element, `MSE` must be a *named* list.
 #'
 #' `AutoPreset` (default `TRUE`) auto-populates `OMs@Preset` with one button
 #' per unique level of each `Design` column, unless `OMsPreset` overrides it

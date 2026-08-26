@@ -7,7 +7,7 @@
 DefaultSlickPMs()
 }
 \value{
-A list of performance-metric specs, in the shape \code{\link[=MSE2Slick]{MSE2Slick()}}'s
+A list of performance-metrics, in the shape \code{\link[=MSE2Slick]{MSE2Slick()}}'s
 \code{PMs} argument expects.
 }
 \description{
@@ -19,28 +19,22 @@ having to assemble a \code{PMs} list themselves.
 }
 \details{
 \itemize{
-\item \code{\link[=PM_Yield]{PM_Yield()}}: mean projected catch, on its natural (biomass) scale --
+\item \code{\link[=PM_Yield]{PM_Yield()}}: mean projected catch, on its natural (biomass) scale;
 not a probability, so it's excluded from \code{Spider} (which requires
 every PI on a 0-1/0-100 scale) but included in \code{Boxplot}/\code{Quilt}/
 \code{Tradeoff}.
 \item \code{\link[=PM_AAVY]{PM_AAVY()}}: average annual variability in yield, i.e. how much catch
-swings year to year -- also natural-scale, same \code{Spider} exclusion as
+swings year to year; also natural-scale, same \code{Spider} exclusion as
 \code{PM_Yield()}.
 \item \code{\link[=PM_Status]{PM_Status()}}: the joint probability that a stock/complex is neither
-overfished nor experiencing overfishing (\code{P(SB > SBMSY & F < FMSY)}) --
-already a 0-1 probability, included everywhere.
+overfished nor experiencing overfishing (\code{P(SB > SBMSY & F < FMSY)}).#'
 \item \code{\link[=PM_Safety]{PM_Safety()}} with \code{Lim = 0.4}: the probability that \code{SB/SBMSY} never
-drops below 40\% at any point in the projection -- a stricter, whole-
-projection limit reference, distinct from \code{PM_Status()}'s year-by-year
-target check.
+drops below 40\% at any point in the projection.
 }
 
 Pass your own list to \code{MSE2Slick(PMs = ...)} to override this entirely,
-or start from \code{DefaultSlickPMs()} and append/replace entries -- each
-element is either a bare \verb{PM_*}-shaped function, or a
-\code{list(fun, args = list(), Code = NULL, Label = NULL, Description = NULL)}
-spec (see \code{\link[=MSE2Slick]{MSE2Slick()}}'s Details for the full spec format, e.g. how to
-pass extra arguments or an explicit \code{Code}/\code{Label}).
+or start from \code{DefaultSlickPMs()} and append/replace entries (see
+\code{\link[=MSE2Slick]{MSE2Slick()}}'s Details section).
 }
 \seealso{
 \code{\link[=MSE2Slick]{MSE2Slick()}}, \link{PM}
