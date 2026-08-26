@@ -28,6 +28,15 @@
 #'   reduced using [ReduceDims()] before conversion to a data frame.
 #' @param IncYear Logical. Passed to [ReduceDims()]; controls whether the
 #'   year dimension is retained during reduction. Default `FALSE`.
+#' @param Extend Logical. If `TRUE`, rows sharing one value across every
+#'   simulation (e.g. the historical period, or any deterministic quantity --
+#'   see `Reduce`/[ReduceDims()]) are broadcast to all `nSim` simulations via
+#'   [ExtendSims()], rather than appearing once with `Sim = 1`. Default
+#'   `FALSE`. Ignored when `df = FALSE`.
+#' @param silent Logical. If `FALSE` and `Extend = FALSE`, emits a message
+#'   when the returned data frame has rows sharing one value across every
+#'   simulation, pointing at `Extend = TRUE`. Default `TRUE`. Ignored when
+#'   `df = FALSE`.
 #'
 #' @return
 #' * `df = FALSE`: a numeric array of ratios with dimensions `Sim × Stock × Year`.
@@ -47,19 +56,22 @@
 #' F_FMSY(MSE, df = TRUE)
 #'
 #' @name relative_ref
-#' @seealso [Biomass()], [B0()], [BMSY()], [FDead()], [FMSY()]
+#' @seealso [Biomass()], [B0()], [BMSY()], [FDead()], [FMSY()], [ExtendSims()]
 #' @export
 B_B0 <- function(object,
                  type    = c('Equilibrium', 'Dynamic'),
                  df      = TRUE,
                  Reduce  = TRUE,
-                 IncYear = FALSE) {
+                 IncYear = FALSE,
+                 Extend  = FALSE,
+                 silent  = TRUE) {
   .ExtractRelative(object,
                    num_slot   = 'Biomass',
                    denom_slot = 'Biomass',
                    ref        = 'Unfished',
                    type       = match.arg(type),
                    df = df, Reduce = Reduce, IncYear = IncYear,
+                   Extend = Extend, silent = silent,
                    var_name   = 'B_B0')
 }
 
@@ -69,13 +81,16 @@ SB_SB0 <- function(object,
                    type    = c('Equilibrium', 'Dynamic'),
                    df      = TRUE,
                    Reduce  = TRUE,
-                   IncYear = FALSE) {
+                   IncYear = FALSE,
+                   Extend  = FALSE,
+                   silent  = TRUE) {
   .ExtractRelative(object,
                    num_slot   = 'SBiomass',
                    denom_slot = 'SBiomass',
                    ref        = 'Unfished',
                    type       = match.arg(type),
                    df = df, Reduce = Reduce, IncYear = IncYear,
+                   Extend = Extend, silent = silent,
                    var_name   = 'SB_SB0')
 }
 
@@ -85,13 +100,16 @@ SP_SP0 <- function(object,
                    type    = c('Equilibrium', 'Dynamic'),
                    df      = TRUE,
                    Reduce  = TRUE,
-                   IncYear = FALSE) {
+                   IncYear = FALSE,
+                   Extend  = FALSE,
+                   silent  = TRUE) {
   .ExtractRelative(object,
                    num_slot   = 'SProduction',
                    denom_slot = 'SProduction',
                    ref        = 'Unfished',
                    type       = match.arg(type),
                    df = df, Reduce = Reduce, IncYear = IncYear,
+                   Extend = Extend, silent = silent,
                    var_name   = 'SP_SP0')
 }
 
@@ -100,13 +118,16 @@ SP_SP0 <- function(object,
 B_BMSY <- function(object,
                    df      = TRUE,
                    Reduce  = TRUE,
-                   IncYear = FALSE) {
+                   IncYear = FALSE,
+                   Extend  = FALSE,
+                   silent  = TRUE) {
   .ExtractRelative(object,
                    num_slot   = 'Biomass',
                    denom_slot = 'BMSY',
                    ref        = 'MSY',
                    type       = NULL,
                    df = df, Reduce = Reduce, IncYear = IncYear,
+                   Extend = Extend, silent = silent,
                    var_name   = 'B_BMSY')
 }
 
@@ -115,13 +136,16 @@ B_BMSY <- function(object,
 SB_SBMSY <- function(object,
                      df      = TRUE,
                      Reduce  = TRUE,
-                     IncYear = FALSE) {
+                     IncYear = FALSE,
+                     Extend  = FALSE,
+                     silent  = TRUE) {
   .ExtractRelative(object,
                    num_slot   = 'SBiomass',
                    denom_slot = 'SBMSY',
                    ref        = 'MSY',
                    type       = NULL,
                    df = df, Reduce = Reduce, IncYear = IncYear,
+                   Extend = Extend, silent = silent,
                    var_name   = 'SB_SBMSY')
 }
 
@@ -130,13 +154,16 @@ SB_SBMSY <- function(object,
 SP_SPMSY <- function(object,
                      df      = TRUE,
                      Reduce  = TRUE,
-                     IncYear = FALSE) {
+                     IncYear = FALSE,
+                     Extend  = FALSE,
+                     silent  = TRUE) {
   .ExtractRelative(object,
                    num_slot   = 'SProduction',
                    denom_slot = 'SPMSY',
                    ref        = 'MSY',
                    type       = NULL,
                    df = df, Reduce = Reduce, IncYear = IncYear,
+                   Extend = Extend, silent = silent,
                    var_name   = 'SP_SPMSY')
 }
 
@@ -158,7 +185,9 @@ SP_SPMSY <- function(object,
 F_FMSY <- function(object,
                    df      = TRUE,
                    Reduce  = TRUE,
-                   IncYear = FALSE) {
+                   IncYear = FALSE,
+                   Extend  = FALSE,
+                   silent  = TRUE) {
   .CheckClass(object, c('hist', 'mse'), 'object')
 
   fmsy_arr <- object@Reference@MSY@FMSY
@@ -179,6 +208,7 @@ F_FMSY <- function(object,
 
   if (inherits(object, 'hist')) {
     out <- .ComputeFFMSY(object, fmsy_arr, Reduce, IncYear, object@OM)
+    out <- .FinalizeTimeseriesDF(out, object@OM@nSim, Extend, silent)
     class(out) <- c('ffmsy.df', class(out))
     return(out)
   }
@@ -188,6 +218,7 @@ F_FMSY <- function(object,
   proj_df <- .ComputeFFMSY(object, fmsy_arr, Reduce, IncYear, object@OM)
 
   out <- dplyr::bind_rows(hist_df, proj_df)
+  out <- .FinalizeTimeseriesDF(out, object@OM@nSim, Extend, silent)
   class(out) <- c('ffmsy.df', class(out))
   out
 }
@@ -339,7 +370,9 @@ F_FMSY <- function(object,
                               type    = NULL,
                               df      = TRUE,
                               Reduce  = TRUE,
-                              IncYear = FALSE) {
+                              IncYear = FALSE,
+                              Extend  = FALSE,
+                              silent  = TRUE) {
 
   .CheckClass(object, c('hist', 'mse'), 'object')
 
@@ -363,6 +396,7 @@ F_FMSY <- function(object,
   if (inherits(object, 'hist')) {
     out <- .ComputeRelative(object, OM, num_slot, denom_arr, var_name,
                               Reduce, IncYear)
+    out <- .FinalizeTimeseriesDF(out, OM@nSim, Extend, silent)
     class(out) <- c(paste0(tolower(gsub('_', '', var_name)), '.df'), class(out))
     return(out)
   }
@@ -376,6 +410,7 @@ F_FMSY <- function(object,
                                 Reduce, IncYear)
 
   out <- dplyr::bind_rows(hist_df, proj_df)
+  out <- .FinalizeTimeseriesDF(out, OM@nSim, Extend, silent)
   class(out) <- c(paste0(tolower(gsub('_', '', var_name)), '.df'), class(out))
   out
 }
