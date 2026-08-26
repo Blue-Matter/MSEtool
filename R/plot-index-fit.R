@@ -89,7 +89,7 @@ PlotIndexFit <- function(object,
 #' Each parameter may vary by simulation. When more than one distinct value
 #' is present, the column reports `median [min, max]`; a single fixed value
 #' is reported as-is. `R2` and `PValue` come from the per-simulation `Beta`
-#' fit (`Misc$BetaFit`, see `.EstimateBeta()`) and are `NA` where `Beta` was
+#' fit (`Misc$BetaFit`, see [EstimateBeta()]) and are `NA` where `Beta` was
 #' not freely estimated (fixed by the user or `SimControl(EstimateBeta =
 #' FALSE)`). `Status` lists the distinct fit outcomes across simulations
 #' (`"estimated"`, `"fixed_user"`, `"fixed_insufficient_data"`,
