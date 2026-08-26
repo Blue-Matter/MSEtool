@@ -1,14 +1,14 @@
 # Coverage for the index observation-conditioning pipeline (R/condition-obs-index.R,
-# R/index-nominal.R, R/plot-index-fit.R). The `.EstimateBeta()`/`.CalcIndexResiduals()`
+# R/index-nominal.R, R/plot-index-fit.R). The `EstimateBeta()`/`CalcIndexResiduals()`
 # tests are pure-function and need no OM. The wiring tests are real Simulate() calls
 # (small, nSim = 1) and follow the skip_on_cran() convention used elsewhere -- see
 # tests/testthat/setup.R for why a bare test_dir() run skips them.
 
-# ---- .EstimateBeta() ----
+# ---- EstimateBeta() ----
 
-test_that(".EstimateBeta fixes Beta at the user-supplied value", {
+test_that("EstimateBeta fixes Beta at the user-supplied value", {
   logSim <- matrix(rnorm(2 * 10), nrow = 2)
-  fit <- .EstimateBeta(logObs = rnorm(10), logSim = logSim, beta = 0.7)
+  fit <- EstimateBeta(logObs = rnorm(10), logSim = logSim, beta = 0.7)
 
   expect_equal(fit$Beta, c(0.7, 0.7))
   expect_equal(fit$Status, c("fixed_user", "fixed_user"))
@@ -16,26 +16,26 @@ test_that(".EstimateBeta fixes Beta at the user-supplied value", {
   expect_true(all(is.na(fit$PValue)))
 })
 
-test_that(".EstimateBeta fixes Beta at 1 with too few usable points", {
+test_that("EstimateBeta fixes Beta at 1 with too few usable points", {
   logSim <- matrix(rnorm(5), nrow = 1)
-  fit <- .EstimateBeta(logObs = rnorm(5), logSim = logSim, MinPoints = 8)
+  fit <- EstimateBeta(logObs = rnorm(5), logSim = logSim, MinPoints = 8)
 
   expect_equal(fit$Beta, 1)
   expect_equal(fit$Status, "fixed_insufficient_data")
   expect_equal(fit$nPoints, 5)
 })
 
-test_that(".EstimateBeta fixes Beta at 1 for a flat (near-zero-variance) nominal index", {
+test_that("EstimateBeta fixes Beta at 1 for a flat (near-zero-variance) nominal index", {
   n <- 10
   logSim <- matrix(rep(0, n), nrow = 1)
-  fit <- .EstimateBeta(logObs = rnorm(n), logSim = logSim)
+  fit <- EstimateBeta(logObs = rnorm(n), logSim = logSim)
 
   expect_equal(fit$Beta, 1)
   expect_equal(fit$Status, "fixed_low_variance")
   expect_true(is.na(fit$R2))
 })
 
-test_that(".EstimateBeta recovers a strong, significant hyperstability signal", {
+test_that("EstimateBeta recovers a strong, significant hyperstability signal", {
   set.seed(1)
   n <- 20
   x <- seq(0, 2, length.out = n)
@@ -43,7 +43,7 @@ test_that(".EstimateBeta recovers a strong, significant hyperstability signal", 
   logSim <- matrix(x, nrow = 1)
   logObs <- trueBeta * x + rnorm(n, sd = 0.01)
 
-  fit <- .EstimateBeta(logObs, logSim)
+  fit <- EstimateBeta(logObs, logSim)
 
   expect_equal(fit$Status, "estimated")
   expect_equal(fit$Beta, trueBeta, tolerance = 0.05)
@@ -53,20 +53,20 @@ test_that(".EstimateBeta recovers a strong, significant hyperstability signal", 
   expect_true(fit$CI_Lower < trueBeta && trueBeta < fit$CI_Upper)
 })
 
-test_that(".EstimateBeta fixes Beta at 1 when the true relationship is proportional (Beta = 1)", {
+test_that("EstimateBeta fixes Beta at 1 when the true relationship is proportional (Beta = 1)", {
   set.seed(1)
   n <- 20
   x <- seq(0, 2, length.out = n)
   logSim <- matrix(x, nrow = 1)
   logObs <- x + rnorm(n, sd = 0.3)
 
-  fit <- .EstimateBeta(logObs, logSim)
+  fit <- EstimateBeta(logObs, logSim)
 
   expect_equal(fit$Status, "fixed_not_significant")
   expect_equal(fit$Beta, 1)
 })
 
-test_that(".EstimateBeta clamps an extreme, significant slope and flags fixed_bounds", {
+test_that("EstimateBeta clamps an extreme, significant slope and flags fixed_bounds", {
   set.seed(1)
   n <- 20
   x <- seq(0.01, 0.5, length.out = n)
@@ -74,33 +74,33 @@ test_that(".EstimateBeta clamps an extreme, significant slope and flags fixed_bo
   logSim <- matrix(x, nrow = 1)
   logObs <- trueBeta * x + rnorm(n, sd = 0.001)
 
-  fit <- .EstimateBeta(logObs, logSim)
+  fit <- EstimateBeta(logObs, logSim)
 
   expect_equal(fit$Status, "fixed_bounds")
   expect_equal(fit$Beta, 3)
 })
 
-test_that(".EstimateBeta handles simulations independently", {
+test_that("EstimateBeta handles simulations independently", {
   set.seed(1)
   n <- 20
   x <- seq(0, 2, length.out = n)
   logObs <- 0.5 * x
   logSim <- rbind(x, rep(0, n))
 
-  fit <- .EstimateBeta(logObs, logSim)
+  fit <- EstimateBeta(logObs, logSim)
 
   expect_equal(unname(fit$Status), c("estimated", "fixed_low_variance"))
   expect_equal(unname(fit$Beta[2]), 1)
 })
 
-# ---- .CalcIndexResiduals() ----
+# ---- CalcIndexResiduals() ----
 
-test_that(".CalcIndexResiduals recovers Efficiency = 1 and zero residuals for an exact fit", {
+test_that("CalcIndexResiduals recovers Efficiency = 1 and zero residuals for an exact fit", {
   n <- 20
   nomIndex <- matrix(exp(seq(0, 1, length.out = n)), nrow = 1)
   observed <- as.numeric(nomIndex[1, ])
 
-  res <- .CalcIndexResiduals(observed, nomIndex, beta = 1)
+  res <- CalcIndexResiduals(observed, nomIndex, beta = 1)
 
   expect_equal(res$Beta, 1)
   expect_equal(res$Efficiency, 1, tolerance = 1e-8)
