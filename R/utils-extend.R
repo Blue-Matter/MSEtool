@@ -1,13 +1,16 @@
 #' Extend an Array Along Named Dimensions
 #'
 #' Extends an array with named dimensions to include all simulations, ages,
-#' size classes, areas, and any missing years. Can also recurse into 
-#' S4 objects and lists.
+#' size classes, areas, and any missing years. Can also recurse into
+#' S4 objects and lists, or broadcast a tidy `data.frame`'s collapsed `Sim`
+#' rows.
 #'
 #' @param array An [array()] with named dimensions including at least one of
 #'   `Sim`, `Year`, `Age`, or `Area`. Alternatively, an S4 or [list()] object,
 #'   in which case the function recurses over all slots or elements and extends
-#'   any named arrays. Any other object is returned unchanged.
+#'   any named arrays; or a tidy `data.frame` with a `Sim` column, in which
+#'   case it is passed to [ExtendSims()]. Any other object is returned
+#'   unchanged.
 #' @param nSim Integer. Total number of simulations, or `NULL` to skip.
 #' @param AgeClasses Numeric vector of age classes, or `NULL` to skip.
 #' @param Classes Numeric vector of size classes (length or weight bins), or
@@ -101,6 +104,9 @@ Extend <- function(array,
     return(array)
   }
 
+  if (is.data.frame(array))
+    return(ExtendSims(array, nSim))
+
   if (is.list(array)) {
     if (length(array)) {
       for (i in seq_along(array)) {
@@ -189,11 +195,68 @@ Extend <- function(array,
 #' @rdname Extend
 #' @export
 #'
+#' @details
+#' `ExtendSims()` also accepts a tidy `data.frame` (e.g. from `SBiomass(df =
+#' TRUE)` or similar accessors) with a `Sim` column.
 ExtendSims <- function(array, nSim = NULL) {
   if (is.null(nSim)) return(array)
   if (length(nSim) != 1)
     cli::cli_abort("`nSim` must be an integer or numeric value of length 1")
+
+  if (is.data.frame(array))
+    return(.ExtendSimsDF(array, nSim))
+
   .ExtendDim(array, "Sim", seq_len(nSim), match_mode = "min")
+}
+
+.ExtendSimsDF <- function(df, nSim) {
+  if (!"Sim" %in% names(df) || !nrow(df) || nSim <= 1) return(df)
+
+  key_cols <- setdiff(names(df), c("Sim", "Value"))
+  if (!length(key_cols)) return(df)
+
+  nsim_by_key <- df |>
+    dplyr::group_by(dplyr::across(dplyr::all_of(key_cols))) |>
+    dplyr::summarise(.nSim = dplyr::n_distinct(.data$Sim), .groups = "drop")
+
+  if (!any(nsim_by_key$.nSim == 1)) return(df)
+
+  collapsed_keys <- nsim_by_key[nsim_by_key$.nSim == 1, key_cols, drop = FALSE]
+  is_collapsed    <- dplyr::semi_join(df, collapsed_keys, by = key_cols)
+  not_collapsed   <- dplyr::anti_join(df, collapsed_keys, by = key_cols)
+
+  expanded <- is_collapsed |>
+    dplyr::select(-"Sim") |>
+    dplyr::cross_join(data.frame(Sim = seq_len(nSim)))
+
+  dplyr::bind_rows(not_collapsed, expanded) |>
+    dplyr::select(dplyr::all_of(names(df)))
+}
+
+.HasCollapsedSims <- function(df, nSim) {
+  if (!"Sim" %in% names(df) || !nrow(df) || is.null(nSim) || nSim <= 1) return(FALSE)
+
+  key_cols <- setdiff(names(df), c("Sim", "Value"))
+  if (!length(key_cols)) return(FALSE)
+
+  df |>
+    dplyr::group_by(dplyr::across(dplyr::all_of(key_cols))) |>
+    dplyr::summarise(.nSim = dplyr::n_distinct(.data$Sim), .groups = "drop") |>
+    dplyr::pull(".nSim") |>
+    (\(x) any(x == 1))()
+}
+
+.FinalizeTimeseriesDF <- function(out, nSim, extend = FALSE, silent = TRUE) {
+  if (extend)
+    return(.ExtendSimsDF(out, nSim))
+
+  if (!silent && .HasCollapsedSims(out, nSim))
+    cli::cli_inform(c(
+      "i" = "Some rows share one value across all {.val {nSim}} simulations ({.field Sim} not expanded).",
+      "i" = "Use {.code extend = TRUE} to broadcast them to every simulation."
+    ))
+
+  out
 }
 
 #' @rdname Extend
@@ -495,8 +558,6 @@ ExtendAreas <- function(array, Areas = NULL) {
 .ExtendStocks <- function(array, Stocks = NULL) {
   .ExtendDim(array, "Stock", Stocks, coerce_char = FALSE)
 }
-
-
 
 
 .ExtendAlongDim <- function(x, along_dim, new_index, dimnames_list = dimnames(x)) {
