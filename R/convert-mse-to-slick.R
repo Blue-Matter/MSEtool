@@ -234,29 +234,23 @@ MSE2Slick <- function(MSE,
 #' give a reasonably complete first look at a set of MPs without the caller
 #' having to assemble a `PMs` list themselves.
 #'
-#' - [PM_Yield()]: mean projected catch, on its natural (biomass) scale --
+#' - [PM_Yield()]: mean projected catch, on its natural (biomass) scale;
 #'   not a probability, so it's excluded from `Spider` (which requires
 #'   every PI on a 0-1/0-100 scale) but included in `Boxplot`/`Quilt`/
 #'   `Tradeoff`.
 #' - [PM_AAVY()]: average annual variability in yield, i.e. how much catch
-#'   swings year to year -- also natural-scale, same `Spider` exclusion as
+#'   swings year to year; also natural-scale, same `Spider` exclusion as
 #'   `PM_Yield()`.
 #' - [PM_Status()]: the joint probability that a stock/complex is neither
-#'   overfished nor experiencing overfishing (`P(SB > SBMSY & F < FMSY)`) --
-#'   already a 0-1 probability, included everywhere.
+#'   overfished nor experiencing overfishing (`P(SB > SBMSY & F < FMSY)`).#'   
 #' - [PM_Safety()] with `Lim = 0.4`: the probability that `SB/SBMSY` never
-#'   drops below 40% at any point in the projection -- a stricter, whole-
-#'   projection limit reference, distinct from `PM_Status()`'s year-by-year
-#'   target check.
+#'   drops below 40% at any point in the projection.
 #'
 #' Pass your own list to `MSE2Slick(PMs = ...)` to override this entirely,
-#' or start from `DefaultSlickPMs()` and append/replace entries -- each
-#' element is either a bare `PM_*`-shaped function, or a
-#' `list(fun, args = list(), Code = NULL, Label = NULL, Description = NULL)`
-#' spec (see [MSE2Slick()]'s Details for the full spec format, e.g. how to
-#' pass extra arguments or an explicit `Code`/`Label`).
+#' or start from `DefaultSlickPMs()` and append/replace entries (see 
+#' [MSE2Slick()]'s Details section).
 #'
-#' @return A list of performance-metric specs, in the shape [MSE2Slick()]'s
+#' @return A list of performance-metrics, in the shape [MSE2Slick()]'s
 #'   `PMs` argument expects.
 #' @seealso [MSE2Slick()], [PM]
 #' @export
