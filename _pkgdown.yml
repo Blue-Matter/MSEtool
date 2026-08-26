@@ -751,7 +751,6 @@ reference:
   desc: Convenient user functions to process various objects
   contents:
   - avail
-  - optCPU
   - print.multiHist
   - tinyErr
   - writeCSV
