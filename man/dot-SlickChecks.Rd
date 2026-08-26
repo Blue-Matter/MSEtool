@@ -17,7 +17,5 @@ Checks that \code{MSE} is a valid \link[=mse-class]{mse} object or list of \link
 objects for conversion to a \code{\link[Slick:Slick]{Slick::Slick()}} object. Aborts with an
 informative message if the \code{Slick} package is not installed, or if a list
 of \link[=mse-class]{mse} objects has inconsistent simulations, MPs, or time steps.
-Also aborts if any object contains multiple stocks, which are not currently
-supported.
 }
 \keyword{internal}

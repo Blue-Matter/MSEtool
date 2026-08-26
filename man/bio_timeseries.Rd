@@ -5,6 +5,7 @@
 \alias{Biomass}
 \alias{SBiomass}
 \alias{SProduction}
+\alias{VBiomass}
 \title{Extract Biological Time Series}
 \usage{
 Biomass(
@@ -13,7 +14,9 @@ Biomass(
   byAge = FALSE,
   byArea = FALSE,
   Reduce = TRUE,
-  IncYear = FALSE
+  IncYear = FALSE,
+  Extend = FALSE,
+  silent = TRUE
 )
 
 SBiomass(
@@ -22,7 +25,9 @@ SBiomass(
   byAge = FALSE,
   byArea = FALSE,
   Reduce = TRUE,
-  IncYear = FALSE
+  IncYear = FALSE,
+  Extend = FALSE,
+  silent = TRUE
 )
 
 SProduction(
@@ -31,7 +36,20 @@ SProduction(
   byAge = FALSE,
   byArea = FALSE,
   Reduce = TRUE,
-  IncYear = FALSE
+  IncYear = FALSE,
+  Extend = FALSE,
+  silent = TRUE
+)
+
+VBiomass(
+  object,
+  df = TRUE,
+  byFleet = TRUE,
+  type = c("Removals", "Landings"),
+  Reduce = TRUE,
+  IncYear = FALSE,
+  Extend = FALSE,
+  silent = TRUE
 )
 }
 \arguments{
@@ -43,30 +61,53 @@ If \code{TRUE} (default)  a tidy \code{data.frame} is returned.}
 \item{byAge}{Logical. If \code{TRUE} the data frame retains the \code{Age}
 dimension. Values are derived by multiplying numbers-at-age by the
 relevant biological schedule before optionally summing over age.
-Ignored when \code{df = FALSE}.}
+Ignored when \code{df = FALSE}. Not applicable to \code{VBiomass()}.}
 
 \item{byArea}{Logical. If \code{TRUE} the data frame retains the \code{Area}
-dimension. Ignored when \code{df = FALSE}.}
+dimension. Ignored when \code{df = FALSE}. Not applicable to \code{VBiomass()}.}
 
 \item{Reduce}{Logical. If \code{TRUE} (default) simulation dimensions are
 reduced using  \code{\link[=ReduceDims]{ReduceDims()}} before conversion to a data frame.}
 
 \item{IncYear}{Logical. Passed to \code{\link[=ReduceDims]{ReduceDims()}}; controls whether the
 year dimension is retained during reduction. Default \code{FALSE}.}
+
+\item{Extend}{Logical. If \code{TRUE}, rows sharing one value across every
+simulation (e.g. the historical period, or any deterministic quantity --
+see \code{Reduce}/\code{\link[=ReduceDims]{ReduceDims()}}) are broadcast to all \code{nSim} simulations via
+\code{\link[=ExtendSims]{ExtendSims()}}, rather than appearing once with \code{Sim = 1}. Default
+\code{FALSE}. Ignored when \code{df = FALSE}.}
+
+\item{silent}{Logical. If \code{FALSE} and \code{Extend = FALSE}, emits a message
+when the returned data frame has rows sharing one value across every
+simulation, pointing at \code{Extend = TRUE}. Default \code{TRUE}. Ignored when
+\code{df = FALSE}.}
+
+\item{byFleet}{Logical. \code{VBiomass()} only. If \code{TRUE} (default) the data
+frame retains the \code{Fleet} dimension. Otherwise values are summed over
+fleets.}
+
+\item{type}{Character. \code{VBiomass()} only. \code{"Removals"} (default) weights
+biomass by \verb{Selectivity x (Retention + (1 - Retention) x DiscardMortality)} (i.e. fish that die from the encounter, whether
+landed or discarded). \code{"Landings"} weights by \verb{Selectivity x Retention}
+only.}
 }
 \value{
 \itemize{
 \item \code{df = FALSE} — the raw array slot (\code{Biomass}, \code{SBiomass}, or
-\code{SProduction}).
+\code{SProduction}); for \code{VBiomass()}, for \link[=hist-class]{hist} a numeric array \verb{Sim x Stock x Fleet x Year}, or for \link[=mse-class]{mse} a named list (\code{Historical}
+plus one element per MP) of such arrays.
 \item \code{df = TRUE} — a tidy \code{data.frame} with columns \code{Sim}, \code{Stock},
-\code{Year}, \code{Period}, \code{MP} (MSE only), and optionally \code{Age} / \code{Area},
-plus \code{Value}, \code{Variable}, and \code{Units}.
+\code{Year}, \code{Period}, \code{MP} (MSE only), and optionally \code{Age} / \code{Area}
+(\code{Fleet} for \code{VBiomass()}), plus \code{Value}, \code{Variable}, and \code{Units}
+(\code{VBiomass()} omits \code{Units}).
 }
 }
 \description{
 \code{Biomass()}, \code{SBiomass()}, and \code{SProduction()} extract total biomass,
 spawning biomass, and spawning production, respectively, from a
-\link[=hist-class]{hist} or \link[=mse-class]{mse} object.
+\link[=hist-class]{hist} or \link[=mse-class]{mse} object. \code{VBiomass()} extracts vulnerable
+biomass (biomass weighted by fleet selectivity/retention).
 }
 \details{
 When applied to an \link[=mse-class]{mse} object the historical and projection
@@ -89,5 +130,5 @@ SBiomass(MSE, df = TRUE, byAge = TRUE)
 SProduction(MSE, df = TRUE, byArea = TRUE)
 }
 \seealso{
-\code{\link[=Number]{Number()}}
+\code{\link[=Number]{Number()}}, \code{\link[=ExtendSims]{ExtendSims()}}
 }

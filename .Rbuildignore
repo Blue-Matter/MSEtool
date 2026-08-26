@@ -49,3 +49,5 @@ src\*.dll
 
 TODO.md
 
+^test-mse2slick-item4\.R$
+

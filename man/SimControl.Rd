@@ -35,7 +35,7 @@ fishery data? Default \code{TRUE}.}
 hyperdepletion parameter \code{Beta} by regression when conditioning on real
 data (see \code{\link[=IndicesObs]{IndicesObs()}})? Default \code{FALSE}. If \code{FALSE}, \code{Beta} is fixed at \code{1}
 unless the user already supplied a value for that index. If \code{TRUE},
-\code{Beta} is estimated per simulation; see \code{.EstimateBeta()} and
+\code{Beta} is estimated per simulation; see \code{\link[=EstimateBeta]{EstimateBeta()}} and
 \code{Index_Obs@Misc$BetaFit} for diagnostics.}
 
 \item{GenerateData}{Logical. Generate historical fishery data from the

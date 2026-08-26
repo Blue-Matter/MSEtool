@@ -2,25 +2,28 @@
 % Please edit documentation in R/mp-reference.R
 \name{ReferenceMPs}
 \alias{ReferenceMPs}
-\alias{refFMSY_1}
-\alias{refFMSY_075}
-\alias{refFMSY_05}
-\alias{refMSY_1}
-\alias{refMSY_075}
-\alias{refMSY_05}
+\alias{refFMSY}
+\alias{refFMSY75}
+\alias{refFMSY50}
+\alias{refMSY}
+\alias{refMSY75}
+\alias{refMSY50}
+\alias{NoFishing}
 \title{Reference Management Procedures}
 \usage{
-refFMSY_1(Data)
+refFMSY(Data)
 
-refFMSY_075(Data)
+refFMSY75(Data)
 
-refFMSY_05(Data)
+refFMSY50(Data)
 
-refMSY_1(Data)
+refMSY(Data)
 
-refMSY_075(Data)
+refMSY75(Data)
 
-refMSY_05(Data)
+refMSY50(Data)
+
+NoFishing(Data)
 
 ReferenceMPs()
 }
@@ -36,12 +39,14 @@ Diagnostic management procedures that fish at fixed fractions of \code{FMSY}
 points.
 }
 \details{
-\code{refFMSY_1}, \code{refFMSY_075}, \code{refFMSY_05} set effort so that realised F
+\code{refFMSY}, \code{refFMSY75}, \code{refFMSY50} set effort so that realised F
 equals 100\%, 75\%, or 50\% of \code{FMSY}, and default to being applied every
 year (like any MP, this can be overridden via \code{OM@Interval}).
 
-\code{refMSY_1}, \code{refMSY_075}, \code{refMSY_05} set TAC to 100\%, 75\%, or 50\% of
+\code{refMSY}, \code{refMSY75}, \code{refMSY50} set TAC to 100\%, 75\%, or 50\% of
 \code{MSY} (landings plus discards).
+
+\code{NoFishing} sets TAC to 0 every year
 
 \code{FMSY}/\code{MSY} are computed once, during \code{Simulate()}, at the terminal
 historical year (or \code{OM@Control$RefYears}) and held fixed for the whole
@@ -50,7 +55,7 @@ projection; i.e., they are not recalculated per projection year.
 If reference points are not available for an \code{OM}  each reference MP returns
 empty advice and a single warning is issued the first time it is called.
 
-In spatial \code{OM}s, fleet targeting means the realised F from \code{refFMSY_x}
+In spatial \code{OM}s, fleet targeting means the realised F from \verb{refFMSY*}
 may differ from the specified fraction of \code{FMSY}, because the \code{FMSY}
 calculation does not account for spatial structure.
 }

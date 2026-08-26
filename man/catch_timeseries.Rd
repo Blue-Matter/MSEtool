@@ -17,7 +17,9 @@ Interactions(
   byArea = FALSE,
   byFleet = FALSE,
   Reduce = TRUE,
-  IncYear = FALSE
+  IncYear = FALSE,
+  Extend = FALSE,
+  silent = TRUE
 )
 
 Landings(
@@ -28,7 +30,9 @@ Landings(
   byArea = FALSE,
   byFleet = TRUE,
   Reduce = TRUE,
-  IncYear = FALSE
+  IncYear = FALSE,
+  Extend = FALSE,
+  silent = TRUE
 )
 
 Landings(x) <- value
@@ -41,7 +45,9 @@ Discards(
   byArea = FALSE,
   byFleet = TRUE,
   Reduce = TRUE,
-  IncYear = FALSE
+  IncYear = FALSE,
+  Extend = FALSE,
+  silent = TRUE
 )
 
 Discards(x) <- value
@@ -54,7 +60,9 @@ Removals(
   byArea = FALSE,
   byFleet = TRUE,
   Reduce = TRUE,
-  IncYear = FALSE
+  IncYear = FALSE,
+  Extend = FALSE,
+  silent = TRUE
 )
 }
 \arguments{
@@ -88,6 +96,17 @@ to \link[=hist-class]{hist} and \link[=mse-class]{mse} objects only.}
 
 \item{IncYear}{Logical. Passed to \code{\link[=ReduceDims]{ReduceDims()}}; controls whether the year
 dimension is retained during reduction. Default \code{FALSE}. Applies to
+\link[=hist-class]{hist} and \link[=mse-class]{mse} objects only.}
+
+\item{Extend}{Logical. If \code{TRUE}, rows sharing one value across every
+simulation (e.g. the historical period, or any deterministic quantity --
+see \code{Reduce}/\code{\link[=ReduceDims]{ReduceDims()}}) are broadcast to all \code{nSim} simulations via
+\code{\link[=ExtendSims]{ExtendSims()}}, rather than appearing once with \code{Sim = 1}. Default
+\code{FALSE}. Applies to \link[=hist-class]{hist} and \link[=mse-class]{mse} objects only.}
+
+\item{silent}{Logical. If \code{FALSE} and \code{Extend = FALSE}, emits a message
+when the returned data frame has rows sharing one value across every
+simulation, pointing at \code{Extend = TRUE}. Default \code{TRUE}. Applies to
 \link[=hist-class]{hist} and \link[=mse-class]{mse} objects only.}
 
 \item{bySize}{Logical. If \code{TRUE} the data frame retains the \code{Size}

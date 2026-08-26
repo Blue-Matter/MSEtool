@@ -43,7 +43,9 @@ ExtendAreas(array, Areas = NULL)
 \item{array}{An \code{\link[=array]{array()}} with named dimensions including at least one of
 \code{Sim}, \code{Year}, \code{Age}, or \code{Area}. Alternatively, an S4 or \code{\link[=list]{list()}} object,
 in which case the function recurses over all slots or elements and extends
-any named arrays. Any other object is returned unchanged.}
+any named arrays; or a tidy \code{data.frame} with a \code{Sim} column, in which
+case it is passed to \code{\link[=ExtendSims]{ExtendSims()}}. Any other object is returned
+unchanged.}
 
 \item{nSim}{Integer. Total number of simulations, or \code{NULL} to skip.}
 
@@ -79,7 +81,8 @@ type matches the input type (array, S4, or list).
 \description{
 Extends an array with named dimensions to include all simulations, ages,
 size classes, areas, and any missing years. Can also recurse into
-S4 objects and lists.
+S4 objects and lists, or broadcast a tidy \code{data.frame}'s collapsed \code{Sim}
+rows.
 }
 \details{
 \subsection{ExtendSims}{
@@ -119,6 +122,8 @@ The \code{Area} dimension must have length \code{1} or \code{nArea}. If length \
 replicated to length \code{nArea} with area 1 values copied to all areas. If
 already length \code{nArea}, the array is returned unchanged.
 }
+
+\code{ExtendSims()} also accepts a tidy \code{data.frame} (e.g. from \code{SBiomass(df = TRUE)} or similar accessors) with a \code{Sim} column.
 }
 \examples{
 # ExtendSims

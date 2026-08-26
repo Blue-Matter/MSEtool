@@ -66,7 +66,7 @@ internally; not set by the user.}
 
 \item{\code{Misc}}{\code{list}. Miscellaneous additional objects. When \code{Beta} is
 conditioned on real data, \code{Misc$BetaFit} holds the per-simulation fit
-diagnostics from \code{.EstimateBeta()}: \code{SE_Beta}, \code{CI_Lower}, \code{CI_Upper},
+diagnostics from \code{\link[=EstimateBeta]{EstimateBeta()}}: \code{SE_Beta}, \code{CI_Lower}, \code{CI_Upper},
 \code{R2}, \code{PValue}, \code{nPoints}, and \code{Status}. See \code{\link[=IndexFitTable]{IndexFitTable()}}.}
 }}
 

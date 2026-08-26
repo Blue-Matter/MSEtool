@@ -2,7 +2,7 @@
 % Please edit documentation in R/generate-residuals.R
 \name{GenResiduals}
 \alias{GenResiduals}
-\title{Generate (log-space) residuals with truncated log-normal distribution}
+\title{Generate log-normally distributed multiplicative residuals with optional AR(1)-autocorrelation}
 \usage{
 GenResiduals(
   SD,
@@ -11,12 +11,13 @@ GenResiduals(
   nSim = NULL,
   TruncSD = 2,
   nSeasons = 1,
-  NA_Season = list()
+  NA_Season = list(),
+  LastError = NULL
 )
 }
 \arguments{
 \item{SD}{Numeric vector of length nSim giving the marginal standard
-deviation of the residuals once \code{\link[=ApplyAC]{ApplyAC()}} has propagated them.}
+deviation, in log-space, of the returned (AC-propagated) residuals.}
 
 \item{AC}{Numeric vector of length nSim giving autocorrelation (must be
 within -1 and 1, exclusive).}
@@ -26,23 +27,26 @@ within -1 and 1, exclusive).}
 \item{nSim}{Optional integer number of simulations (defaults to length(SD)).}
 
 \item{TruncSD}{Numeric scalar specifying how many standard deviations at
-which to truncate the innovations. The innovation standard deviation is
-inflated to offset the variance lost to truncation, so the propagated
-residuals retain marginal standard deviation \code{SD}.}
+which to truncate the innovations.}
 
 \item{nSeasons}{Number of seasons in the array (default 1).}
 
 \item{NA_Season}{Optional. List length \code{nSim} with each element containing integer vector
 indicating which (if any) seasons have NA values for all years}
+
+\item{LastError}{Optional numeric vector of length nSim giving the starting
+value for the AR(1) recursion, in normal space; i.e. the last
+observed multiplicative residual. \code{NA} (default) means no prior state}
 }
 \value{
-Numeric array of dimensions nSim x nYear containing truncated log-normal residuals.
+Numeric array of dimensions nSim x nYear containing multiplicative
+(normal-space) lognormal residuals with AR(1) autocorrelation \code{AC}
+applied.
 }
 \description{
-Generate random residuals for multiple simulations and years.
-Each simulation has a standard deviation \code{SD} and autocorrelation \code{AC},
-and residuals are truncated to \code{TruncSD} standard deviations around the mean.
-The resulting residuals can be propagated with autocorrelation using \code{\link[=ApplyAC]{ApplyAC()}}.
+Generate random, AR(1)-autocorrelated multiplicative (normal-space)
+residuals for multiple simulations and years, lognormally distributed with
+marginal standard deviation \code{SD} (in log-space) and autocorrelation \code{AC}.
 }
 \seealso{
 \code{\link[=ApplyAC]{ApplyAC()}}, \code{\link[=CalcResidualStats]{CalcResidualStats()}}

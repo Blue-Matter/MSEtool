@@ -39,7 +39,7 @@ Companion summary for \code{\link[=PlotIndexFit]{PlotIndexFit()}}.
 Each parameter may vary by simulation. When more than one distinct value
 is present, the column reports \code{median [min, max]}; a single fixed value
 is reported as-is. \code{R2} and \code{PValue} come from the per-simulation \code{Beta}
-fit (\code{Misc$BetaFit}, see \code{.EstimateBeta()}) and are \code{NA} where \code{Beta} was
+fit (\code{Misc$BetaFit}, see \code{\link[=EstimateBeta]{EstimateBeta()}}) and are \code{NA} where \code{Beta} was
 not freely estimated (fixed by the user or \code{SimControl(EstimateBeta = FALSE)}). \code{Status} lists the distinct fit outcomes across simulations
 (\code{"estimated"}, \code{"fixed_user"}, \code{"fixed_insufficient_data"},
 \code{"fixed_low_variance"}, \code{"fixed_not_significant"}, \code{"fixed_bounds"}).

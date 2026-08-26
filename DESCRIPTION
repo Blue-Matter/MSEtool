@@ -19,7 +19,7 @@ Imports:
     abind,
     cli,
     digest,
-    dplyr,
+    dplyr (>= 1.1.0),
     ggplot2,
     grDevices,
     lubridate,
@@ -390,7 +390,6 @@ Collate:
     'utils-valid-units.R'
     'utils-wrapped-normal.R'
     'validate-shift.R'
-    'vbiomass.R'
     'zz_ASAP2OM.R'
     'zz_Awatea2OM.R'
     'zz_BAM2OM.R'

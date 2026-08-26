@@ -69,7 +69,12 @@ PM_Stability(object, Threshold, Years = NULL, Stocks = NULL, silent = TRUE)
 \arguments{
 \item{object}{An \link[=mse-class]{mse} object, or a \code{list} of \link[=mse-class]{mse} objects.}
 
-\item{Ref}{Numeric. Reference/threshold value.}
+\item{Ref}{Numeric, or \code{NULL}. Reference/threshold value for \code{PM_FFMSY}/
+\code{PM_SBSBMSY}/\code{PM_SPSPMSY}'s probability metric (default \code{1}). Pass
+\code{Ref = NULL} instead to get the mean projected ratio itself (\code{Stat}
+averaged across simulations, on its natural scale) rather than a
+probability against a threshold -- \code{Prob} is left \code{NA} in that case,
+consistent with other natural-scale metrics such as \code{PM_Yield()}.}
 
 \item{Years}{Numeric vector of projection years to evaluate over. Default
 \code{NULL} uses all projection years in which the MP was active, i.e.

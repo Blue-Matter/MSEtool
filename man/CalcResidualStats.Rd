@@ -30,8 +30,8 @@ Seasons that are NA in every year are treated as seasons the index is never
 observed in, and are dropped; the seasons they occupy are recorded in
 \code{NA_Season} so \code{\link[=GenResiduals]{GenResiduals()}} can reproduce the same pattern in the
 projection. The remaining values are taken in time order, and \code{AC} is the
-lag-1 autocorrelation between \emph{consecutive observations} rather than
-consecutive time steps. For an index observed in a single season, that is
+lag-1 autocorrelation between consecutive observations.
+For an index observed in a single season, that is
 the year-to-year autocorrelation. This matches how \code{\link[=ApplyAC]{ApplyAC()}} propagates
 the projection residuals, which steps from one observation to the next.
 

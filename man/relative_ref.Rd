@@ -16,7 +16,9 @@ B_B0(
   type = c("Equilibrium", "Dynamic"),
   df = TRUE,
   Reduce = TRUE,
-  IncYear = FALSE
+  IncYear = FALSE,
+  Extend = FALSE,
+  silent = TRUE
 )
 
 SB_SB0(
@@ -24,7 +26,9 @@ SB_SB0(
   type = c("Equilibrium", "Dynamic"),
   df = TRUE,
   Reduce = TRUE,
-  IncYear = FALSE
+  IncYear = FALSE,
+  Extend = FALSE,
+  silent = TRUE
 )
 
 SP_SP0(
@@ -32,16 +36,46 @@ SP_SP0(
   type = c("Equilibrium", "Dynamic"),
   df = TRUE,
   Reduce = TRUE,
-  IncYear = FALSE
+  IncYear = FALSE,
+  Extend = FALSE,
+  silent = TRUE
 )
 
-B_BMSY(object, df = TRUE, Reduce = TRUE, IncYear = FALSE)
+B_BMSY(
+  object,
+  df = TRUE,
+  Reduce = TRUE,
+  IncYear = FALSE,
+  Extend = FALSE,
+  silent = TRUE
+)
 
-SB_SBMSY(object, df = TRUE, Reduce = TRUE, IncYear = FALSE)
+SB_SBMSY(
+  object,
+  df = TRUE,
+  Reduce = TRUE,
+  IncYear = FALSE,
+  Extend = FALSE,
+  silent = TRUE
+)
 
-SP_SPMSY(object, df = TRUE, Reduce = TRUE, IncYear = FALSE)
+SP_SPMSY(
+  object,
+  df = TRUE,
+  Reduce = TRUE,
+  IncYear = FALSE,
+  Extend = FALSE,
+  silent = TRUE
+)
 
-F_FMSY(object, df = TRUE, Reduce = TRUE, IncYear = FALSE)
+F_FMSY(
+  object,
+  df = TRUE,
+  Reduce = TRUE,
+  IncYear = FALSE,
+  Extend = FALSE,
+  silent = TRUE
+)
 }
 \arguments{
 \item{object}{A \link[=hist-class]{hist} or \link[=mse-class]{mse} object.}
@@ -58,6 +92,17 @@ reduced using \code{\link[=ReduceDims]{ReduceDims()}} before conversion to a dat
 
 \item{IncYear}{Logical. Passed to \code{\link[=ReduceDims]{ReduceDims()}}; controls whether the
 year dimension is retained during reduction. Default \code{FALSE}.}
+
+\item{Extend}{Logical. If \code{TRUE}, rows sharing one value across every
+simulation (e.g. the historical period, or any deterministic quantity --
+see \code{Reduce}/\code{\link[=ReduceDims]{ReduceDims()}}) are broadcast to all \code{nSim} simulations via
+\code{\link[=ExtendSims]{ExtendSims()}}, rather than appearing once with \code{Sim = 1}. Default
+\code{FALSE}. Ignored when \code{df = FALSE}.}
+
+\item{silent}{Logical. If \code{FALSE} and \code{Extend = FALSE}, emits a message
+when the returned data frame has rows sharing one value across every
+simulation, pointing at \code{Extend = TRUE}. Default \code{TRUE}. Ignored when
+\code{df = FALSE}.}
 }
 \value{
 \itemize{
@@ -112,5 +157,5 @@ F_FMSY(MSE, df = TRUE)
 
 }
 \seealso{
-\code{\link[=Biomass]{Biomass()}}, \code{\link[=B0]{B0()}}, \code{\link[=BMSY]{BMSY()}}, \code{\link[=FDead]{FDead()}}, \code{\link[=FMSY]{FMSY()}}
+\code{\link[=Biomass]{Biomass()}}, \code{\link[=B0]{B0()}}, \code{\link[=BMSY]{BMSY()}}, \code{\link[=FDead]{FDead()}}, \code{\link[=FMSY]{FMSY()}}, \code{\link[=ExtendSims]{ExtendSims()}}
 }

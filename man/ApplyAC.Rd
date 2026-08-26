@@ -2,24 +2,34 @@
 % Please edit documentation in R/generate-residuals.R
 \name{ApplyAC}
 \alias{ApplyAC}
-\title{Apply AR(1) autocorrelation to residuals, skipping NAs}
+\title{Apply AR(1) autocorrelation to residuals}
 \usage{
-ApplyAC(LogResid, AC, LastError)
+ApplyAC(Resid, AC, LastError)
 }
 \arguments{
-\item{LogResid}{Numeric matrix of log residuals, dimensions nSim x nYear.}
+\item{Resid}{Numeric matrix of multiplicative (normal-space) residuals,
+dimensions nSim x nYear.}
 
 \item{AC}{Numeric vector of length nSim, autocorrelation coefficient per simulation (must be in between -1 &  1).}
 
-\item{LastError}{Numeric vector of length nSim, starting value for each simulation.}
+\item{LastError}{Numeric vector of length nSim giving the starting value for
+the AR(1) recursion, in normal (natural) space — i.e. the last observed
+multiplicative residual. \code{NA} (including all-\code{NA} history) means no prior
+state, i.e. a fresh chain starting at 1.}
 }
 \value{
-Numeric matrix of same dimensions as \code{LogResid} with autocorrelated residuals.
+Numeric matrix of same dimensions as \code{Resid} with autocorrelated
+multiplicative (normal-space) residuals.
 }
 \description{
-Applies AR(1) propagation to a numeric matrix of residuals (\verb{sim x year}),
-respecting missing values (NAs). Autocorrelation is applied only across
-non-NA values within each simulation.
+Applies AR(1) propagation to a numeric matrix of multiplicative
+(normal-space) residuals (\verb{sim x year}), respecting missing values (NAs).
+}
+\details{
+Autocorrelation is applied only across non-NA values within each
+simulation. The recursion itself happens in log-space (the only space in
+which it is valid), but both the input and the returned residuals are in
+normal space.
 }
 \seealso{
 \code{\link[=GenResiduals]{GenResiduals()}}, \code{\link[=CalcResidualStats]{CalcResidualStats()}}

@@ -4,10 +4,12 @@
 \alias{.MSE2MPs}
 \title{Extract MP Metadata for a Slick Object}
 \usage{
-.MSE2MPs(MSE)
+.MSE2MPs(MSE, MPCode = NULL, MPLabel = NULL, MPDescription = NULL)
 }
 \arguments{
 \item{MSE}{An \link[=mse-class]{mse} object.}
+
+\item{MPCode, MPLabel, MPDescription}{Overrides -- see \code{\link[=MSE2Slick]{MSE2Slick()}}.}
 }
 \value{
 A \code{\link[Slick:MPs]{Slick::MPs()}} object.

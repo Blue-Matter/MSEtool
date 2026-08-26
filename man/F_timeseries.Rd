@@ -14,7 +14,9 @@ FInteract(
   byArea = FALSE,
   byFleet = FALSE,
   Reduce = TRUE,
-  IncYear = FALSE
+  IncYear = FALSE,
+  Extend = FALSE,
+  silent = TRUE
 )
 
 FDead(
@@ -24,7 +26,9 @@ FDead(
   byArea = FALSE,
   byFleet = FALSE,
   Reduce = TRUE,
-  IncYear = FALSE
+  IncYear = FALSE,
+  Extend = FALSE,
+  silent = TRUE
 )
 
 FRetain(
@@ -34,7 +38,9 @@ FRetain(
   byArea = FALSE,
   byFleet = FALSE,
   Reduce = TRUE,
-  IncYear = FALSE
+  IncYear = FALSE,
+  Extend = FALSE,
+  silent = TRUE
 )
 }
 \arguments{
@@ -61,6 +67,17 @@ reduced using  \code{\link[=ReduceDims]{ReduceDims()}} before conversion to a da
 
 \item{IncYear}{Logical. Passed to \code{\link[=ReduceDims]{ReduceDims()}}; controls whether the
 year dimension is retained during reduction. Default \code{FALSE}.}
+
+\item{Extend}{Logical. If \code{TRUE}, rows sharing one value across every
+simulation (e.g. the historical period, or any deterministic quantity --
+see \code{Reduce}/\code{\link[=ReduceDims]{ReduceDims()}}) are broadcast to all \code{nSim} simulations via
+\code{\link[=ExtendSims]{ExtendSims()}}, rather than appearing once with \code{Sim = 1}. Default
+\code{FALSE}. Ignored when \code{df = FALSE}.}
+
+\item{silent}{Logical. If \code{FALSE} and \code{Extend = FALSE}, emits a message
+when the returned data frame has rows sharing one value across every
+simulation, pointing at \code{Extend = TRUE}. Default \code{TRUE}. Ignored when
+\code{df = FALSE}.}
 }
 \value{
 \itemize{
@@ -104,4 +121,7 @@ FDead(MSE, df = TRUE, byAge = FALSE)
 # Retain fleet and area dimensions
 FDead(MSE, df = TRUE, byFleet = TRUE)
 FDead(MSE, df = TRUE, byAge = FALSE, byArea = TRUE, byFleet = TRUE)
+}
+\seealso{
+\code{\link[=ExtendSims]{ExtendSims()}}
 }
