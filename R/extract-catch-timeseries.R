@@ -67,6 +67,15 @@
 #' @param IncYear Logical. Passed to [ReduceDims()]; controls whether the year
 #'   dimension is retained during reduction. Default `FALSE`. Applies to
 #'   [hist-class] and [mse-class] objects only.
+#' @param Extend Logical. If `TRUE`, rows sharing one value across every
+#'   simulation (e.g. the historical period, or any deterministic quantity --
+#'   see `Reduce`/[ReduceDims()]) are broadcast to all `nSim` simulations via
+#'   [ExtendSims()], rather than appearing once with `Sim = 1`. Default
+#'   `FALSE`. Applies to [hist-class] and [mse-class] objects only.
+#' @param silent Logical. If `FALSE` and `Extend = FALSE`, emits a message
+#'   when the returned data frame has rows sharing one value across every
+#'   simulation, pointing at `Extend = TRUE`. Default `TRUE`. Applies to
+#'   [hist-class] and [mse-class] objects only.
 #'
 #' @return
 #' - For [obs-class]: the [catchobs-class] object stored in the `Landings` or
@@ -97,7 +106,9 @@ Interactions <- function(object,
                          byArea  = FALSE,
                          byFleet = FALSE,
                          Reduce  = TRUE,
-                         IncYear = FALSE) {
+                         IncYear = FALSE,
+                         Extend  = FALSE,
+                         silent  = TRUE) {
   .ExtractCatchTimeseries(object,
                            df        = df,
                            slot_name = 'Interactions',
@@ -106,7 +117,9 @@ Interactions <- function(object,
                            byArea    = byArea,
                            byFleet   = byFleet,
                            Reduce    = Reduce,
-                           IncYear   = IncYear)
+                           IncYear   = IncYear,
+                           Extend    = Extend,
+                           silent    = silent)
 }
 
 #' @rdname catch_timeseries
@@ -118,7 +131,9 @@ Landings <- function(object,
                      byArea  = FALSE,
                      byFleet = TRUE,
                      Reduce  = TRUE,
-                     IncYear = FALSE) {
+                     IncYear = FALSE,
+                     Extend  = FALSE,
+                     silent  = TRUE) {
 
   if (inherits(object, 'obs'))
     return(object@Landings)
@@ -143,7 +158,9 @@ Landings <- function(object,
                            byArea    = byArea,
                            byFleet   = byFleet,
                            Reduce    = Reduce,
-                           IncYear   = IncYear)
+                           IncYear   = IncYear,
+                           Extend    = Extend,
+                           silent    = silent)
 }
 
 #' @rdname catch_timeseries
@@ -167,7 +184,9 @@ Discards <- function(object,
                      byArea  = FALSE,
                      byFleet = TRUE,
                      Reduce  = TRUE,
-                     IncYear = FALSE) {
+                     IncYear = FALSE,
+                     Extend  = FALSE,
+                     silent  = TRUE) {
 
   if (inherits(object, 'obs'))
     return(object@Discards)
@@ -192,7 +211,9 @@ Discards <- function(object,
                            byArea    = byArea,
                            byFleet   = byFleet,
                            Reduce    = Reduce,
-                           IncYear   = IncYear)
+                           IncYear   = IncYear,
+                           Extend    = Extend,
+                           silent    = silent)
 }
 
 
@@ -214,10 +235,12 @@ Removals <- function(object,
                      byArea  = FALSE,
                      byFleet = TRUE,
                      Reduce  = TRUE,
-                     IncYear = FALSE) {
+                     IncYear = FALSE,
+                     Extend  = FALSE,
+                     silent  = TRUE) {
   if (byAge)  bySize <- FALSE
   if (bySize) byAge  <- FALSE
-  
+
   L <- .ExtractCatchTimeseries(object,
                            df        = df,
                            slot_name = 'Landings',
@@ -227,7 +250,7 @@ Removals <- function(object,
                            byFleet   = byFleet,
                            Reduce    = Reduce,
                            IncYear   = IncYear)
-  
+
   D <- .ExtractCatchTimeseries(object,
                                 df        = df,
                                 slot_name = 'Discards',
@@ -237,19 +260,20 @@ Removals <- function(object,
                                 byFleet   = byFleet,
                                 Reduce    = Reduce,
                                 IncYear   = IncYear)
-  
+
   if (!df)
     return(ArraySum(D,L))
-  
- R <- dplyr::bind_rows(L, D) 
+
+ R <- dplyr::bind_rows(L, D)
  cnames <- colnames(R)
  cnames <- cnames[!cnames=='Variable']
  cnames <- cnames[!cnames=='Value']
- 
- R |> dplyr::group_by(dplyr::across(dplyr::all_of(cnames))) |>
+
+ out <- R |> dplyr::group_by(dplyr::across(dplyr::all_of(cnames))) |>
    dplyr::summarise(Value = sum(Value, na.rm=TRUE), .groups='drop') |>
    dplyr::mutate(Variable = 'Removals')
- 
+
+ .FinalizeTimeseriesDF(out, object@OM@nSim, Extend, silent)
 }
 
 .ExtractCatchTimeseries <- function(object,
@@ -260,15 +284,16 @@ Removals <- function(object,
                                      byArea    = FALSE,
                                      byFleet   = FALSE,
                                      Reduce    = TRUE,
-                                     IncYear   = FALSE) {
+                                     IncYear   = FALSE,
+                                     Extend    = FALSE,
+                                     silent    = TRUE) {
   .CheckClass(object, c('hist', 'mse'), 'object')
-  
+
   if (!df)
     return(slot(object, slot_name))
-  
+
   if (inherits(object, 'hist')) {
-    return(
-      .ExtractCatchTimeseriesCore(object,
+    out <- .ExtractCatchTimeseriesCore(object,
                                 OM        = object@OM,
                                 slot_name = slot_name,
                                 byAge     = byAge,
@@ -277,9 +302,9 @@ Removals <- function(object,
                                 byFleet   = byFleet,
                                 Reduce    = Reduce,
                                 IncYear   = IncYear)
-    )
+    return(.FinalizeTimeseriesDF(out, object@OM@nSim, Extend, silent))
   }
-  
+
   # MSE object: bind historical + projection
   hist <- .ExtractCatchTimeseriesCore(object@Hist,
                                     OM        = object@OM,
@@ -291,7 +316,7 @@ Removals <- function(object,
                                     Reduce    = Reduce,
                                     IncYear   = IncYear) |>
     dplyr::mutate(MP = 'Historical')
-  
+
   proj <- .ExtractCatchTimeseriesCore(object,
                                     OM        = object@OM,
                                     slot_name = slot_name,
@@ -301,8 +326,9 @@ Removals <- function(object,
                                     byFleet   = byFleet,
                                     Reduce    = Reduce,
                                     IncYear   = IncYear)
-  
+
   out <- dplyr::bind_rows(hist, proj)
+  out <- .FinalizeTimeseriesDF(out, object@OM@nSim, Extend, silent)
   class(out) <- c(paste0(tolower(slot_name), '.df'), class(out))
   out
 }
