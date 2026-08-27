@@ -106,10 +106,22 @@ PopulateSRR <- function(SRR,
   if (is.character(SRR@Model) && is.null(SRR@RelRecFun)) 
     SRR@RelRecFun <- paste(SRR@Model, "RelRec", sep = "_")
   
-  # checks 
+  # If SD wasn't specified but the deviations were fully supplied by the
+  # user, calculate it from the supplied log-deviations instead of silently
+  # defaulting/warning.
+  recDevsSupplied <- !EmptyObject(SRR@RecDevHist) && !anyNA(SRR@RecDevHist) &&
+    !EmptyObject(SRR@RecDevProj) && !anyNA(SRR@RecDevProj)
+  if (is.null(SRR@SD) && recDevsSupplied) {
+    logDevs <- c(log(SRR@RecDevHist), log(SRR@RecDevProj))
+    if (!EmptyObject(SRR@RecDevInit) && !anyNA(SRR@RecDevInit))
+      logDevs <- c(logDevs, log(SRR@RecDevInit))
+    SRR@SD <- stats::sd(logDevs)
+  }
+
+  # checks
   names <- c('R0', 'SD', 'AC')
   defaults <- c(1000, 0.4, 0)
-  for (i in seq_along(names)) 
+  for (i in seq_along(names))
     SRR <- .CheckSRRPars(SRR, names[i], defaults[i])
   
   pars   <- .StructurePars(Pars = list(SRR@R0, SRR@SD, SRR@AC), nSim, Years)
@@ -194,10 +206,8 @@ PopulateSRR <- function(SRR,
 .CheckSRRPars <- function(SRR, name='R0', default=1000) {
   val <- slot(SRR, name)
   if (is.null(val)) {
-    if (name !='AC') {
-      cli::cli_alert_danger('Warning: {.val {name}} is missing in {.val SRR}')
-      cli::cli_alert_info('Using default value: {.val {default}}')  
-    }
+    if (name !='AC')
+      cli::cli_warn('{.val {name}} is missing in {.val SRR}; using default value {.val {default}}.')
     slot(SRR, name) <- default
   }
   SRR
