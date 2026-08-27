@@ -277,6 +277,7 @@ Collate:
     'plot-depletion.R'
     'plot-hist.R'
     'plot-index-fit.R'
+    'plot-recdevs.R'
     'plot-schedule.R'
     'plot-spatial.R'
     'plot-srr.R'
