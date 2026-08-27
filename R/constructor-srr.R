@@ -48,14 +48,17 @@
 #'   (`Sim × Age`) for initialising the historical age structure, covering all
 #'   age classes except the minimum age (whose deviation is the first column
 #'   of `RecDevHist`). If `NULL` (default), generated internally from `SD`
-#'   and `AC` during [Populate()].
+#'   and `AC` during [Populate()]. The trailing dimension must have length
+#'   `length(Ages@Classes) - 1`; [PopulateSRR()] aborts otherwise.
 #' @param RecDevHist `matrix` or `NULL`. Pre-specified recruitment deviations
 #'   (`Sim × nHistTS`) for historical time steps. The first column corresponds
 #'   to the minimum age class in the initial year. If `NULL` (default),
-#'   generated internally from `SD` and `AC`.
+#'   generated internally from `SD` and `AC`. The trailing dimension must
+#'   match the number of historical years; [PopulateSRR()] aborts otherwise.
 #' @param RecDevProj `matrix` or `NULL`. Pre-specified recruitment deviations
 #'   (`Sim × nProjTS`) for projection time steps. If `NULL` (default),
-#'   generated internally from `SD` and `AC`.
+#'   generated internally from `SD` and `AC`. The trailing dimension must
+#'   match the number of projection years; [PopulateSRR()] aborts otherwise.
 #' @param SpawnTimeFrac `numeric(1)`. Fraction of the time step elapsed before
 #'   spawning occurs. Determines how much mortality (`exp(-Z × SpawnTimeFrac)`)
 #'   is applied to the population before spawning numbers are counted:

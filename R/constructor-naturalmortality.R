@@ -31,11 +31,15 @@
 #'   during [Populate()]. A numeric vector of length `nAge` is also accepted
 #'   and promoted to a `1 × nAge × 1` array automatically. Default `NULL`.
 #' @param MeanAtLength `array` or `NULL`. Mean natural mortality at length with
-#'   named dimensions `Sim × Length × Year`. Populated automatically during
+#'   named dimensions `Sim × Class × Year`. Populated automatically during
 #'   [Populate()] when an at-length mortality model is used; may also be
 #'   supplied directly. When `MeanAtLength` is populated and `MeanAtAge` is
 #'   not, [Populate()] converts it to `MeanAtAge` via the age-length key
-#'   (`ALK`) from a [length-class] object. Default `NULL`.
+#'   (`ALK`) from a [length-class] object. A numeric vector is also accepted
+#'   and promoted to a `1 × nClass × 1` array automatically, using `Classes`
+#'   if supplied or the [length-class] object's own `Classes` otherwise; if
+#'   `Classes` differs from the [length-class] object's, the `ALK` is
+#'   recalculated on `Classes`. Default `NULL`.
 #' @param Random `array` or `NULL`. Reserved for future use. Intended to hold
 #'   simulation- and year-specific multipliers that add stochastic variation
 #'   around the average mortality schedule in `MeanAtAge`. Currently stored

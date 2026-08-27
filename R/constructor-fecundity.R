@@ -29,11 +29,15 @@
 #'   [Populate()]. A numeric vector of length `nAge` is also accepted and
 #'   promoted to a `1 × nAge × 1` array automatically. Default `NULL`.
 #' @param MeanAtLength `array` or `NULL`. Mean fecundity-at-length with named
-#'   dimensions `Sim × Length × Year`. Populated automatically during
+#'   dimensions `Sim × Class × Year`. Populated automatically during
 #'   [Populate()] when an at-length fecundity model is used; may also be
 #'   supplied directly. When `MeanAtLength` is populated and `MeanAtAge` is
 #'   not, [Populate()] converts it to `MeanAtAge` via the age-length key
-#'   (`ALK`) from a [length-class] object. Default `NULL`.
+#'   (`ALK`) from a [length-class] object. A numeric vector is also accepted
+#'   and promoted to a `1 × nClass × 1` array automatically, using `Classes`
+#'   if supplied or the [length-class] object's own `Classes` otherwise; if
+#'   `Classes` differs from the [length-class] object's, the `ALK` is
+#'   recalculated on `Classes`. Default `NULL`.
 #' @param Classes `numeric` or `NULL`. Age or length class midpoints
 #'   corresponding to the `MeanAt*` array in use. Default `NULL`.
 #' @param Timing `array` or `NULL`. Reserved for future use. Intended to
