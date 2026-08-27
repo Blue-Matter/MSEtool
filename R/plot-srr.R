@@ -1,20 +1,22 @@
 #' Plot the Stock-Recruit Relationship
 #'
-#' Plots recruitment against spawning production, evaluating each stock's
-#' `SRR` model (`[SRR()]`) at the last available calendar year. When `object`
-#' has more than one simulation, the median curve is drawn with a `probs`
-#' quantile ribbon.
+#' `PlotSRR()` plots stock-recruit curve (`PlotSRRCurve()`) and the recruitment deviations
+#' (`PlotRecDevs()`.
 #'
-#' A bare [stock-class] `object` plots a *relative* curve -- relative
-#' recruitment (`R/R0`) against relative spawning production (`SP/SP0`, both
-#' `0`-`1`) -- using the stock's own SRR model function (`SRR@Model`, e.g.
-#' [BevertonHolt()]) evaluated at `S0 = R0 = 1`. 
+#' `PlotSRRCurve()` plots recruitment against spawning production, evaluating
+#' each stock's `SRR` model (`[SRR()]`) at the last available calendar year.
+#' When `object` has more than one simulation, the median curve is drawn with
+#' a `probs` quantile ribbon.
+#'
+#' A bare [stock-class] `object` plots relative recruitment (`R/R0`) against 
+#' relative spawning production using the stock's SRR model function (`SRR@Model`, e.g.
+#' [BevertonHolt()]) evaluated at `S0 = R0 = 1`.
 #'
 #' An [om-class], [hist-class], or [mse-class] `object` instead plots the
-#' *absolute* curve (real recruitment against real spawning production, using
+#' absolute curve (real recruitment against real spawning production, using
 #' `SP0` and `R0`).
 #'
-#' @param object A [stock-class]/[om-class]/[hist-class]/[mse-class] object. 
+#' @param object A [stock-class]/[om-class]/[hist-class]/[mse-class] object.
 #' @param Sim Integer or `NULL` (default). Which simulation replicate to
 #'   plot. `NULL` takes the median across all simulations and adds a `probs`
 #'   quantile ribbon (unless `nSim == 1`).
@@ -29,12 +31,28 @@
 #' @param nPoints Integer. Number of spawning-production values to evaluate
 #'   the curve at. Default `50`.
 #'
-#' @return A `ggplot` object.
+#' @return `PlotSRRCurve()` returns a `ggplot` object; `PlotSRR()` returns a
+#'   `patchwork` object.
 #'
-#' @seealso [SRR()], [PlotDepletion()], [Stock()]
+#' @seealso [SRR()], [PlotRecDevs], [PlotDepletion()], [Stock()]
 #' @export
 PlotSRR <- function(object, Sim = NULL, byStock = NULL, Stocks = NULL,
                     nPoints = 50, probs = c(0.05, 0.95)) {
+  .CheckClass(object, c('stock', 'hist', 'mse', 'om'), 'object')
+
+  panels <- purrr::compact(list(
+    Curve   = PlotSRRCurve(object, Sim = Sim, byStock = byStock, Stocks = Stocks,
+                           nPoints = nPoints, probs = probs),
+    RecDevs = PlotRecDevs(object, Sim = Sim, byStock = byStock, Stocks = Stocks, probs = probs)
+  ))
+
+  patchwork::wrap_plots(panels, ncol = 1)
+}
+
+#' @rdname PlotSRR
+#' @export
+PlotSRRCurve <- function(object, Sim = NULL, byStock = NULL, Stocks = NULL,
+                         nPoints = 50, probs = c(0.05, 0.95)) {
   .CheckClass(object, c('stock', 'hist', 'mse', 'om'), 'object')
 
   if (inherits(object, 'stock')) {
@@ -59,7 +77,7 @@ PlotSRR <- function(object, Sim = NULL, byStock = NULL, Stocks = NULL,
     xlab <- 'Spawning Production'
   }
 
-  df$Age <- df$S 
+  df$Age <- df$S
   p <- .BuildSchedulePlot(df, Sim = Sim, byStock = byStock, byFleet = FALSE,
                          ylab = ylab, xlab = xlab,
                          defaultYears = FALSE, breakpointYears = FALSE, probs = probs)
@@ -77,7 +95,7 @@ PlotSRR <- function(object, Sim = NULL, byStock = NULL, Stocks = NULL,
 
 
 .EnsureSRRPopulated <- function(Stock) {
-  if (!is.null(Stock@SRR@RelRecFun))
+  if (!is.null(Stock@SRR@RelRecFun) && !is.null(Stock@SRR@RecDevHist))
     return(Stock)
 
   nSim        <- if (length(Stock@nSim) && Stock@nSim > 0) Stock@nSim else 5
