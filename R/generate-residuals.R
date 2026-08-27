@@ -76,6 +76,17 @@ GenResiduals <- function(SD,
     }
   }
 
+  freshStart <- is.na(LastError)
+  if (any(freshStart)) {
+    Innov0 <- .InnovationPars(SD, rep(0, nSim), TruncSD)
+    for (s in which(freshStart)) {
+      firstPos <- which(!is.na(arr[s, ]))[1]
+      if (is.na(firstPos)) next
+      arr[s, firstPos] <- .Rtnorm(1, Innov0$mu[s], Innov0$sigma[s],
+                                  Innov0$lower[s], Innov0$upper[s])
+    }
+  }
+
   ApplyAC(Resid = exp(arr), AC = AC, LastError = LastError)
 }
 
@@ -151,8 +162,7 @@ GenResiduals <- function(SD,
 #' @param AC Numeric vector of length nSim, autocorrelation coefficient per simulation (must be in between -1 &  1).
 #' @param LastError Numeric vector of length nSim giving the starting value for
 #'   the AR(1) recursion, in normal (natural) space — i.e. the last observed
-#'   multiplicative residual. `NA` (including all-`NA` history) means no prior
-#'   state, i.e. a fresh chain starting at 1.
+#'   multiplicative residual. 
 #' @return Numeric matrix of same dimensions as `Resid` with autocorrelated
 #'   multiplicative (normal-space) residuals.
 #' @seealso [GenResiduals()], [CalcResidualStats()]
@@ -178,8 +188,9 @@ ApplyAC <- function(Resid, AC, LastError) {
 
   LogResid <- log(Resid)
 
+  freshStart <- is.na(LastError)
   LastError <- log(LastError)
-  LastError[is.na(LastError)] <- 0
+  LastError[freshStart] <- 0
 
   scale <- sqrt(1 - AC^2)
 
@@ -189,9 +200,10 @@ ApplyAC <- function(Resid, AC, LastError) {
     non_na_idx <- which(!is.na(LogResid[s, ]))
     if (length(non_na_idx) == 0) next
 
-    # first time step
-    LogResid[s, non_na_idx[1]] <- AC[s] * LastError[s] +
-      LogResid[s, non_na_idx[1]] * scale[s]
+    if (!freshStart[s]) {
+      LogResid[s, non_na_idx[1]] <- AC[s] * LastError[s] +
+        LogResid[s, non_na_idx[1]] * scale[s]
+    }
 
     # Apply AR(1) to remaining non-NA values
     if (length(non_na_idx) > 1) {
