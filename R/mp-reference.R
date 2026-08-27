@@ -11,6 +11,12 @@
 #' `refMSY`, `refMSY75`, `refMSY50` set TAC to 100%, 75%, or 50% of
 #' `MSY` (landings plus discards).
 #'
+#' `refFCurr` fixes F at its last historical value. It is currently a wrapper
+#' around [CurrentEffort()], since `advice-class` has no way to specify
+#' apical F directly. In spatial models, or where catchability (`q`) drifts
+#' over time, realised F can diverge from the last historical effort. It will
+#' be updated to set F directly once `advice-class` supports it.
+#'
 #' `NoFishing` sets TAC to 0 every year
 #'
 #' `FMSY`/`MSY` are computed once, during `Simulate()`, at the terminal
@@ -28,7 +34,8 @@
 #'
 #' @return An [advice-class] object.
 #'
-#' @seealso [Advice()], [data-class], [advice-class], [CalcMSY()], [F_FMSY()]
+#' @seealso [Advice()], [data-class], [advice-class], [CalcMSY()], [F_FMSY()],
+#'   [CurrentEffort()]
 #' @name ReferenceMPs
 NULL
 
@@ -77,6 +84,12 @@ attr(refMSY50, 'DataOM') <- list(Reference = TRUE)
 
 #' @rdname ReferenceMPs
 #' @export
+refFCurr <- function(Data) CurrentEffort(Data)
+class(refFCurr) <- 'mp'
+attr(refFCurr, 'Interval') <- 1
+
+#' @rdname ReferenceMPs
+#' @export
 NoFishing <- function(Data) Advice(TAC = 0, TACType = 'Removals')
 class(NoFishing) <- 'mp'
 attr(NoFishing, 'Interval') <- 1
@@ -84,9 +97,8 @@ attr(NoFishing, 'Interval') <- 1
 #' @rdname ReferenceMPs
 #' @export
 ReferenceMPs <- function() {
-  c('refFMSY', 'refFMSY75', 'refFMSY50', 'NoFishing')
+  c('refFMSY', 'refFMSY75', 'refFMSY50', 'refFCurr', 'NoFishing')
 }
-
 
 
 

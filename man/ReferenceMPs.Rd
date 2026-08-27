@@ -8,6 +8,7 @@
 \alias{refMSY}
 \alias{refMSY75}
 \alias{refMSY50}
+\alias{refFCurr}
 \alias{NoFishing}
 \title{Reference Management Procedures}
 \usage{
@@ -22,6 +23,8 @@ refMSY(Data)
 refMSY75(Data)
 
 refMSY50(Data)
+
+refFCurr(Data)
 
 NoFishing(Data)
 
@@ -46,6 +49,12 @@ year (like any MP, this can be overridden via \code{OM@Interval}).
 \code{refMSY}, \code{refMSY75}, \code{refMSY50} set TAC to 100\%, 75\%, or 50\% of
 \code{MSY} (landings plus discards).
 
+\code{refFCurr} fixes F at its last historical value. It is currently a wrapper
+around \code{\link[=CurrentEffort]{CurrentEffort()}}, since \code{advice-class} has no way to specify
+apical F directly - in spatial models, or where catchability (\code{q}) drifts
+over time, realised F can diverge from the last historical effort. It will
+be updated to set F directly once \code{advice-class} supports it.
+
 \code{NoFishing} sets TAC to 0 every year
 
 \code{FMSY}/\code{MSY} are computed once, during \code{Simulate()}, at the terminal
@@ -60,5 +69,6 @@ may differ from the specified fraction of \code{FMSY}, because the \code{FMSY}
 calculation does not account for spatial structure.
 }
 \seealso{
-\code{\link[=Advice]{Advice()}}, \link[=data-class]{data}, \link[=advice-class]{advice}, \code{\link[=CalcMSY]{CalcMSY()}}, \code{\link[=F_FMSY]{F_FMSY()}}
+\code{\link[=Advice]{Advice()}}, \link[=data-class]{data}, \link[=advice-class]{advice}, \code{\link[=CalcMSY]{CalcMSY()}}, \code{\link[=F_FMSY]{F_FMSY()}},
+\code{\link[=CurrentEffort]{CurrentEffort()}}
 }
