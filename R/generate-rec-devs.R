@@ -128,6 +128,9 @@ GenRecDevs <- function(SD = 0.2,
   required <- c(rep(genInit, nInitRecDev), rep(genHist, nHistTS),
                 rep(genProj, nProjTS))
   YearsSeq <- which(required)
+  firstHistPos   <- nInitRecDev + 1
+  firstProjPos   <- nInitRecDev + nHistTS + 1
+  nearestInitPos <- if (nInitRecDev > 0) 1L else NA_integer_
 
   for (i in seq_len(nSim)) {
     init_sim <- min(nrow(logRecDevInit), i)
@@ -137,9 +140,25 @@ GenRecDevs <- function(SD = 0.2,
     logRecDevs <- c(logRecDevInit[init_sim, ],
                     logRecDevHist[hist_sim, ],
                     logRecDevProj[proj_sim, ])
-    for (t in seq_along(YearsSeq)[-1]) {
-      logRecDevs[YearsSeq[t]] <- AC[i] * logRecDevs[YearsSeq[t-1]] +
-        logRecDevs[YearsSeq[t]] * sqrt(1 - AC[i]^2)
+
+    for (t in seq_along(YearsSeq)) {
+      pos <- YearsSeq[t]
+
+      if (pos == firstHistPos && !genInit && !is.na(nearestInitPos)) {
+        prevVal <- .DevToLatent(logRecDevs[nearestInitPos], SD[i], TruncSD)
+        logRecDevs[pos] <- AC[i] * prevVal + logRecDevs[pos] * sqrt(1 - AC[i]^2)
+        next
+      }
+
+      if (pos == firstProjPos && !genHist) {
+        prevVal <- .DevToLatent(logRecDevs[pos - 1], SD[i], TruncSD)
+        logRecDevs[pos] <- AC[i] * prevVal + logRecDevs[pos] * sqrt(1 - AC[i]^2)
+        next
+      }
+
+      if (t == 1) next
+      logRecDevs[pos] <- AC[i] * logRecDevs[YearsSeq[t - 1]] +
+        logRecDevs[pos] * sqrt(1 - AC[i]^2)
     }
 
     logRecDevs[YearsSeq] <- .LatentToDev(logRecDevs[YearsSeq], SD[i], TruncSD)
