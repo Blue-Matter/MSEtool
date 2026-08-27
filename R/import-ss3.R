@@ -1093,7 +1093,7 @@ ImportSS <- function(SSDir,
   YearsHist <- YearsList$YearsHist
   Seasons   <- YearsList$Seasons
   dev <- .GetSSRecDevsRaw(replist, YearsList, Ages)
-.
+
   trailing <- .GetSSPlateauYears(replist, YearsHist)$trailing_unsupported
   if (length(trailing)) dev[as.character(trailing)] <- NA_real_
 
