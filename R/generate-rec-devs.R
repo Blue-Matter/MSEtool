@@ -66,14 +66,21 @@ GenRecDevs <- function(SD = 0.2,
   nHistTS <- length(HistYears)
   nProjTS <- length(ProjYears)
 
-  .Normalize <- function(x, n) {
+  .Normalize <- function(x, n, label) {
     if (is.null(x)) return(NULL)
-    if (!is.array(x)) x <- array(x, dim = c(1, n))
+    if (!is.array(x)) {
+      if (length(x) != n)
+        cli::cli_abort(c(
+          "x" = "{.arg {label}} has length {.val {length(x)}} but {.val {n}} is expected.",
+          "i" = "{.arg {label}} must have one value per age/year class."
+        ))
+      x <- array(x, dim = c(1, n))
+    }
     x
   }
-  RecDevInit <- .Normalize(RecDevInit, nInitRecDev)
-  RecDevHist <- .Normalize(RecDevHist, nHistTS)
-  RecDevProj <- .Normalize(RecDevProj, nProjTS)
+  RecDevInit <- .Normalize(RecDevInit, nInitRecDev, "RecDevInit")
+  RecDevHist <- .Normalize(RecDevHist, nHistTS, "RecDevHist")
+  RecDevProj <- .Normalize(RecDevProj, nProjTS, "RecDevProj")
 
   # A column needs generating if it wasn't supplied at all, or is NA in the
   # supplied array (any Sim row, since a single supplied row recycled across
@@ -141,7 +148,7 @@ GenRecDevs <- function(SD = 0.2,
   # the oldest age, i.e. the furthest deviation in the past.
   nearestInitPos <- if (nInitRecDev > 0) 1L else NA_integer_
   histSeedsFromLastInit <- nInitRecDev > 0 && required[firstHistPos - 1]
-.
+
   init_sim <- if (genInit) seq_len(nSim) else pmin(nrow(logRecDevInit), seq_len(nSim))
   hist_sim <- if (genHist) seq_len(nSim) else pmin(nrow(logRecDevHist), seq_len(nSim))
   proj_sim <- if (genProj) seq_len(nSim) else pmin(nrow(logRecDevProj), seq_len(nSim))
