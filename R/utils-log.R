@@ -6,6 +6,17 @@
 #' warning, and error sections; within each section, entries are further
 #' grouped by the name of the function that recorded them.
 #'
+#' Log entries fall into three types:
+#' \itemize{
+#'   \item `'assumption'`: something was inferred or auto-corrected (e.g.
+#'     a missing value defaulted, a selectivity schedule rescaled to a
+#'     maximum of 1) and no further action is required. 
+#'   \item `'warning'`: something is likely wrong with the object or its
+#'     inputs and should be reviewed.
+#'   \item `'error'`: a problem serious enough that results built from the
+#'     object should not be trusted. 
+#' }
+#' 
 #' @param object An S4 object with a `Log` slot. See e.g. [om-class],
 #'   [hist-class], [mse-class], [stock-class], [data-class],
 #'   [advice-class].
