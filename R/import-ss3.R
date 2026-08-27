@@ -109,9 +109,9 @@ ImportSS <- function(SSDir,
                      DataLag = 0,
                      MPStartYear = NULL,
                      InterimAdvice = NULL,
-                     LengthUnits = "cm",
-                     WeightUnits = "kg",
-                     R0Units = 1,
+                     LengthUnits = NULL,
+                     WeightUnits = NULL,
+                     R0Units = NULL,
                      AllocationYears = 3,
                      silent = FALSE,
                      Populate = TRUE,
@@ -123,6 +123,23 @@ ImportSS <- function(SSDir,
   YearsList <- .GetSSYears(RepList[[1]], pYear)
   nFleet    <- RepList[[1]]$nfishfleets
 
+  assumedLength <- assumedWeight <- assumedR0 <- FALSE
+  if (is.null(LengthUnits)) {
+    LengthUnits <- 'cm'
+    assumedLength <- TRUE
+  }
+  
+  if (is.null(WeightUnits)) {
+    WeightUnits <- 'kg'
+    assumedWeight <- TRUE
+  }
+  
+  if (is.null(R0Units)) {
+    R0Units <- 1
+    assumedR0 <- TRUE
+  }
+  
+  
   DotsList <- list(...)
   if (!is.null(DotsList$nsim)) nSim <- DotsList$nsim
 
@@ -132,7 +149,12 @@ ImportSS <- function(SSDir,
     cli::cli_li("{.val {nStock}-sex} and {.val {nFleet}-fleet} model detected.")
     cli::cli_li("Time Steps Per Year: {.val {YearsList$Seasons}}")
     cli::cli_li("Years: {.val {min(YearsList$YearsHist)} - {max(YearsList$YearsHist)}}")
-    cli::cli_li("Assuming {.val {LengthUnits}} length, {.val {WeightUnits}} weight, and R0 scale {.val {R0Units}} (set `LengthUnits`/`WeightUnits`/`R0Units` to override).")
+    if (assumedLength)
+      cli::cli_li("Assuming {.val {LengthUnits}} length units (set `LengthUnits` to override)")
+    if (assumedWeight)
+      cli::cli_li("Assuming {.val {WeightUnits}} weight units (set `WeightUnits` to override)")
+    if (assumedR0)
+      cli::cli_li("Assuming R0 scale {.val {R0Units}} (set `R0Units` to override)")
     cli::cli_end()
   }
 
@@ -975,9 +997,8 @@ ImportSS <- function(SSDir,
 }
 
 
-.GetSSRecDevs <- function(replist, YearsList, Ages) {
+.GetSSRecDevsRaw <- function(replist, YearsList, Ages) {
   YearsHist <- YearsList$YearsHist
-  Seasons   <- YearsList$Seasons
   recruit   <- replist$recruit
 
   Rec_main <- recruit[recruit$Yr %in% YearsHist, ]
@@ -988,7 +1009,7 @@ ImportSS <- function(SSDir,
     dimnames = list(Year = YearsHist[match(Rec_main$Yr, YearsHist)])
   )
 
-  lag <- round(min(Ages@Classes) * Seasons)
+  lag <- round(min(Ages@Classes) * YearsList$Seasons)
   if (lag > 0) {
     # R0_virgin: total recruitment across all sexes at virgin unfished state.
     # Sum over sexes (Sex dimension) to match pred_recr which is sex-combined.
@@ -1013,6 +1034,68 @@ ImportSS <- function(SSDir,
       dev[1] <- Rec_main$pred_recr[1] / R0_virgin[1]
     }
   }
+
+  dev
+}
+
+# SS3's recruitment bias-adjustment ramp (Methot & Taylor 2011) identifies
+# which years are fully informed by data ("plateau": full bias
+# adjustment) versus ramping up/down toward a deterministic S-R prediction
+# because the model doesn't yet (or no longer) has enough age/length
+# composition data to estimate that year's deviation independently. 
+#
+# Returns the plateau years (for AC/SD estimation) and the trailing years
+# within `YearsHist` that fall after the plateau (to be generated rather
+# than trusted as fitted values, the same way projection years are).
+.GetSSPlateauYears <- function(replist, YearsHist) {
+  rec <- replist$recruit
+  if (is.null(rec) || !"biasadjuster" %in% names(rec))
+    return(list(plateau = YearsHist, trailing_unsupported = integer(0)))
+
+  maxBA <- suppressWarnings(max(rec$biasadjuster, na.rm = TRUE))
+  if (!is.finite(maxBA) || maxBA <= 0)
+    return(list(plateau = YearsHist, trailing_unsupported = integer(0)))
+
+  bp <- replist$breakpoints_for_bias_adjustment_ramp
+  if (!is.null(bp) && nrow(bp) >= 1) {
+    first_full <- ceiling(as.numeric(bp$first_yr_full[1]))
+    last_full  <- floor(as.numeric(bp$last_yr_full[1]))
+  } else {
+    onPlateau  <- !is.na(rec$biasadjuster) & rec$biasadjuster >= 0.99 * maxBA
+    plateauYrs <- rec$Yr[onPlateau]
+    first_full <- min(plateauYrs)
+    last_full  <- max(plateauYrs)
+  }
+
+  list(plateau = YearsHist[YearsHist >= first_full & YearsHist <= last_full],
+       trailing_unsupported = YearsHist[YearsHist > last_full])
+}
+
+# SD/AC of log recruitment deviations, estimated from the plateau years only
+# so the ramp-up/ramp-down years (shrunk toward the deterministic S-R
+# prediction, not genuinely data-informed) don't pull the estimates toward
+# zero.
+.GetSSRecDevStats <- function(replist, YearsList, Ages) {
+  dev     <- .GetSSRecDevsRaw(replist, YearsList, Ages)
+  plateau <- .GetSSPlateauYears(replist, YearsList$YearsHist)$plateau
+
+  logdev <- log(dev[as.character(plateau)])
+  logdev <- logdev[is.finite(logdev)]
+
+  if (length(logdev) < 2)
+    return(list(SD = NA_real_, AC = 0))
+
+  list(SD = stats::sd(logdev),
+       AC = stats::acf(logdev, lag.max = 1, plot = FALSE)$acf[2])
+}
+
+.GetSSRecDevs <- function(replist, YearsList, Ages) {
+  YearsHist <- YearsList$YearsHist
+  Seasons   <- YearsList$Seasons
+  dev <- .GetSSRecDevsRaw(replist, YearsList, Ages)
+.
+  trailing <- .GetSSPlateauYears(replist, YearsHist)$trailing_unsupported
+  if (length(trailing)) dev[as.character(trailing)] <- NA_real_
 
   if (Seasons == 1)
     return(dev)
@@ -1071,9 +1154,18 @@ ImportSS <- function(SSDir,
 }
 
 .SS2SRR <- function(st, RepList, YearsList, Ages, nSim, R0Units = 1) {
-  SD <- purrr::map(RepList, \(replist) replist$sigma_R_in) |>
+  RecDevStats <- purrr::map(RepList, \(replist) .GetSSRecDevStats(replist, YearsList, Ages))
+  SD <- purrr::map_dbl(RecDevStats, "SD")
+  AC <- purrr::map_dbl(RecDevStats, "AC")
+
+  # Fall back to the input prior where the plateau didn't yield enough years
+  # to estimate SD directly
+  SDPrior <- purrr::map(RepList, \(replist) replist$sigma_R_in) |>
     unlist() |>
     as.numeric()
+  SD[!is.finite(SD)] <- SDPrior[!is.finite(SD)]
+  AC[!is.finite(AC)] <- 0
+
   R0 <- purrr::map(RepList, \(replist) .GetSSR0(st, replist, YearsList)) |>
     List2Array("Sim", pos = 1)
 
@@ -1112,13 +1204,6 @@ ImportSS <- function(SSDir,
   .GetSSRecDevs(replist, YearsList, Ages)) |>
     List2Array("Sim", pos = 1)
 
-  AC <- log(SRR@RecDevHist) |>
-    apply(1, acf, lag.max = 1, plot = FALSE, na.rm = TRUE) |>
-    lapply(getElement, "acf") |>
-    lapply(getElement, 2) |>
-    unlist()
-
-  AC[!is.finite(AC)] <- 0
   SRR@AC <- AC
 
   if (st == 2) {
@@ -1464,7 +1549,7 @@ ImportSS <- function(SSDir,
   MeanAtAge[is.na(MeanAtAge)] <- 0
 
   col_max <- apply(MeanAtAge, 2, max, na.rm = TRUE)
-  col_max[col_max == 0] <- 1 # avoid 0/0 for fleets/periods with no selectivity data
+  col_max[col_max == 0] <- 1
   sweep(MeanAtAge, 2, col_max, "/")
 }
 
@@ -1513,9 +1598,6 @@ ImportSS <- function(SSDir,
 
   Selectivity
 }
-
-
-
 
 .GetSSRetentionAtLength <- function(st, fl, replist, YearsList) {
   RetainAtLength <- replist$sizeselex[
