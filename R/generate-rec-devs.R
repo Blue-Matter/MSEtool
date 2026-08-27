@@ -19,13 +19,17 @@
 #' @param RecDevInit Optional array of initial age recruitment deviations.
 #' @param RecDevHist Optional array of historical recruitment deviations.
 #' @param RecDevProj Optional array of projected recruitment deviations.
-#' 
+#'
 #'
 #' `GenRecDevs()` generates recruitment deviations across initial ages,
-#' historical years, and projected years. 
+#' historical years, and projected years.
 #'
 #' If `RecDevInit`, `RecDevHist`, or `RecDevProj` are provided as non-NULL
-#' arrays, they will not be overwritten and will be returned as-is.
+#' arrays, their non-`NA` entries will not be overwritten and are returned
+#' as-is. Individual `NA` entries (e.g. recent historical years not yet
+#' supported by data in an imported assessment) are generated in their place,
+#' chained via the same AR(1)/truncation process off the nearest known
+#' deviation. 
 #'
 #' @return A list with three elements:
 #' * `RecDevInit`: Array of recruitment deviations for initial ages.
@@ -33,18 +37,15 @@
 #' * `RecDevProj`: Array of recruitment deviations for projection years.
 #'
 #' @examples
-#' \dontrun{
-#' # Assuming `Ages` object exists
 #' recdevs <- GenRecDevs(
 #'   SD = 0.2,
 #'   AC = 0.3,
 #'   TruncSD = 3,
-#'   Ages = Ages,
+#'   Ages = Ages(10),
 #'   HistYears = 2000:2020,
 #'   ProjYears = 2021:2030,
 #'   nSim = 5
 #' )
-#' }
 #'
 #' @export
 GenRecDevs <- function(SD = 0.2, 
@@ -60,37 +61,39 @@ GenRecDevs <- function(SD = 0.2,
   
   if (is.null(HistYears)) cli::cli_abort('`HistYears` cannot be NULL')
   if (is.null(ProjYears)) cli::cli_abort('`ProjYears` cannot be NULL')
-  
+
   nInitRecDev <- length(Ages@Classes) - 1
   nHistTS <- length(HistYears)
   nProjTS <- length(ProjYears)
-  
-  genInit <- genHist <- genProj <- TRUE
-  
-  if (!is.null(RecDevInit) && all(!is.na(RecDevInit))) {
-    if (!is.array(RecDevInit)) {
-      RecDevInit <- array(RecDevInit, dim = c(1, nInitRecDev))  
-    }
-    logRecDevInit <- log(RecDevInit)
-    genInit <- FALSE
+
+  .Normalize <- function(x, n) {
+    if (is.null(x)) return(NULL)
+    if (!is.array(x)) x <- array(x, dim = c(1, n))
+    x
   }
-  if (!is.null(RecDevHist) && all(!is.na(RecDevHist))) {
-    if (!is.array(RecDevHist)) {
-      RecDevHist <- array(RecDevHist, dim = c(1, nHistTS))  
-    }
-    
-    logRecDevHist <- log(RecDevHist)
-    genHist <- FALSE
+  RecDevInit <- .Normalize(RecDevInit, nInitRecDev)
+  RecDevHist <- .Normalize(RecDevHist, nHistTS)
+  RecDevProj <- .Normalize(RecDevProj, nProjTS)
+
+  # A column needs generating if it wasn't supplied at all, or is NA in the
+  # supplied array (any Sim row, since a single supplied row recycled across
+  # `nSim` simulations means every simulation sees that NA).
+  .ColRequired <- function(x, n) {
+    if (is.null(x)) return(rep(TRUE, n))
+    apply(is.na(x), 2, any)
   }
-  if (!is.null(RecDevProj) && all(!is.na(RecDevProj))) {
-    if (!is.array(RecDevProj)) {
-      RecDevProj <- array(RecDevProj, dim = c(1, nProjTS))
-    }
-    logRecDevProj <- log(RecDevProj)
-    genProj <- FALSE
-  }
-  
-  
+  initReq <- .ColRequired(RecDevInit, nInitRecDev)
+  histReq <- .ColRequired(RecDevHist, nHistTS)
+  projReq <- .ColRequired(RecDevProj, nProjTS)
+
+  genInit <- is.null(RecDevInit) || any(initReq)
+  genHist <- is.null(RecDevHist) || any(histReq)
+  genProj <- is.null(RecDevProj) || any(projReq)
+
+  if (!is.null(RecDevInit)) logRecDevInit <- log(RecDevInit)
+  if (!is.null(RecDevHist)) logRecDevHist <- log(RecDevHist)
+  if (!is.null(RecDevProj)) logRecDevProj <- log(RecDevProj)
+
   if (!genInit && !genHist && !genProj) {
     dimnames(RecDevInit) <- list(Sim = 1:nrow(RecDevInit),
                                  Age = Ages@Classes[-1])
@@ -102,7 +105,7 @@ GenRecDevs <- function(SD = 0.2,
                 RecDevHist = RecDevHist,
                 RecDevProj = RecDevProj))
   }
-  
+
   SD <- rep(SD, nSim)[1:nSim]
   AC <- rep(AC, nSim)[1:nSim]
   AC[!is.finite(AC)] <- 0
@@ -113,61 +116,65 @@ GenRecDevs <- function(SD = 0.2,
   if (!is.numeric(TruncSD) || length(TruncSD) != 1 || TruncSD <= 0)
     cli::cli_abort("{.arg TruncSD} must be a positive scalar")
 
-  if (genInit)
-    logRecDevInit <- array(stats::rnorm(nSim*nInitRecDev),
-                           dim = c(nSim, nInitRecDev))
-  if (genHist)
-    logRecDevHist <- array(stats::rnorm(nSim*nHistTS),
-                           dim = c(nSim, nHistTS))
-  if (genProj)
-    logRecDevProj <- array(stats::rnorm(nSim*nProjTS),
-                           dim = c(nSim, nProjTS))
+  .SeedBlock <- function(x, req, n) {
+    mat <- array(stats::rnorm(nSim * n), dim = c(nSim, n))
+    known <- which(!req)
+    if (length(known)) {
+      nrowX <- nrow(x)
+      for (i in seq_len(nSim)) mat[i, known] <- log(x[min(nrowX, i), known])
+    }
+    mat
+  }
+  if (genInit) logRecDevInit <- .SeedBlock(RecDevInit, initReq, nInitRecDev)
+  if (genHist) logRecDevHist <- .SeedBlock(RecDevHist, histReq, nHistTS)
+  if (genProj) logRecDevProj <- .SeedBlock(RecDevProj, projReq, nProjTS)
 
   period <- c(rep('Init', nInitRecDev), rep('Hist', nHistTS),
               rep('Proj', nProjTS))
-  required <- c(rep(genInit, nInitRecDev), rep(genHist, nHistTS),
-                rep(genProj, nProjTS))
+  required <- c(initReq, histReq, projReq)
   YearsSeq <- which(required)
   firstHistPos   <- nInitRecDev + 1
-  firstProjPos   <- nInitRecDev + nHistTS + 1
+  
+  # RecDevInit is stored in ascending-age order (see calc-initial-timestep.R):
+  # column 1 is `Ages@Classes[2]`, the age one year before HistYears[1] and so
+  # the chronologically nearest Init deviation to Hist. The last column is
+  # the oldest age, i.e. the furthest deviation in the past.
   nearestInitPos <- if (nInitRecDev > 0) 1L else NA_integer_
+  histSeedsFromLastInit <- nInitRecDev > 0 && required[firstHistPos - 1]
+.
+  init_sim <- if (genInit) seq_len(nSim) else pmin(nrow(logRecDevInit), seq_len(nSim))
+  hist_sim <- if (genHist) seq_len(nSim) else pmin(nrow(logRecDevHist), seq_len(nSim))
+  proj_sim <- if (genProj) seq_len(nSim) else pmin(nrow(logRecDevProj), seq_len(nSim))
 
   for (i in seq_len(nSim)) {
-    init_sim <- min(nrow(logRecDevInit), i)
-    hist_sim <- min(nrow(logRecDevHist), i)
-    proj_sim <- min(nrow(logRecDevProj), i)
-
-    logRecDevs <- c(logRecDevInit[init_sim, ],
-                    logRecDevHist[hist_sim, ],
-                    logRecDevProj[proj_sim, ])
+    logRecDevs <- c(logRecDevInit[init_sim[i], ],
+                    logRecDevHist[hist_sim[i], ],
+                    logRecDevProj[proj_sim[i], ])
 
     for (t in seq_along(YearsSeq)) {
       pos <- YearsSeq[t]
 
-      if (pos == firstHistPos && !genInit && !is.na(nearestInitPos)) {
+      if (pos == firstHistPos && nInitRecDev > 0 && !histSeedsFromLastInit) {
         prevVal <- .DevToLatent(logRecDevs[nearestInitPos], SD[i], TruncSD)
         logRecDevs[pos] <- AC[i] * prevVal + logRecDevs[pos] * sqrt(1 - AC[i]^2)
         next
       }
 
-      if (pos == firstProjPos && !genHist) {
-        prevVal <- .DevToLatent(logRecDevs[pos - 1], SD[i], TruncSD)
-        logRecDevs[pos] <- AC[i] * prevVal + logRecDevs[pos] * sqrt(1 - AC[i]^2)
-        next
-      }
+      if (pos == 1) next
 
-      if (t == 1) next
-      logRecDevs[pos] <- AC[i] * logRecDevs[YearsSeq[t - 1]] +
-        logRecDevs[pos] * sqrt(1 - AC[i]^2)
+      prevPos <- pos - 1
+      prevVal <- logRecDevs[prevPos]
+      if (!required[prevPos]) prevVal <- .DevToLatent(prevVal, SD[i], TruncSD)
+      logRecDevs[pos] <- AC[i] * prevVal + logRecDevs[pos] * sqrt(1 - AC[i]^2)
     }
 
-    logRecDevs[YearsSeq] <- .LatentToDev(logRecDevs[YearsSeq], SD[i], TruncSD)
+    logRecDevs[required] <- .LatentToDev(logRecDevs[required], SD[i], TruncSD)
 
-    if (genInit) logRecDevInit[init_sim, ] <- logRecDevs[period == 'Init']
-    if (genHist) logRecDevHist[hist_sim, ] <- logRecDevs[period == 'Hist']
-    if (genProj) logRecDevProj[proj_sim, ] <- logRecDevs[period == 'Proj']
+    if (genInit) logRecDevInit[i, ] <- logRecDevs[period == 'Init']
+    if (genHist) logRecDevHist[i, ] <- logRecDevs[period == 'Hist']
+    if (genProj) logRecDevProj[i, ] <- logRecDevs[period == 'Proj']
   }
-  
+
   RecDevInit <- exp(logRecDevInit)
   RecDevHist <- exp(logRecDevHist)
   RecDevProj <- exp(logRecDevProj)
