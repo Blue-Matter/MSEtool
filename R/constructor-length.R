@@ -25,7 +25,7 @@
 #'   approach (`Pars = list()`). Only the years at which values *change* need
 #'   to be included; [Extend()] fills the remainder. When `Pars` contains a
 #'   matched model, any values here are **overwritten** during [Populate()].
-#'   A numeric vector of length `nAge` is also accepted and is promoted to a
+#'   A numeric vector of length `nAge` is also accepted and is converted to a
 #'   `1 × nAge × 1` array automatically. Default `NULL`.
 #' @param CVatAge `numeric(1)`, length-2 bounds vector, or `array`. Coefficient
 #'   of variation of length-at-age within each age class, used to parameterise

@@ -48,7 +48,11 @@ the marginal standard deviation, the realised bound is somewhat wider than
 historical years, and projected years.
 
 If \code{RecDevInit}, \code{RecDevHist}, or \code{RecDevProj} are provided as non-NULL
-arrays, they will not be overwritten and will be returned as-is.}
+arrays, their non-\code{NA} entries will not be overwritten and are returned
+as-is. Individual \code{NA} entries (e.g. recent historical years not yet
+supported by data in an imported assessment) are generated in their place,
+chained via the same AR(1)/truncation process off the nearest known
+deviation.}
 }
 \value{
 A list with three elements:
@@ -63,17 +67,14 @@ Generate recruitment deviations for initial ages, historical years, and
 projected years, with optional auto-correlation and truncation.
 }
 \examples{
-\dontrun{
-# Assuming `Ages` object exists
 recdevs <- GenRecDevs(
   SD = 0.2,
   AC = 0.3,
   TruncSD = 3,
-  Ages = Ages,
+  Ages = Ages(10),
   HistYears = 2000:2020,
   ProjYears = 2021:2030,
   nSim = 5
 )
-}
 
 }

@@ -24,7 +24,7 @@ and non-zero, the slice is rescaled so its maximum equals 1. Returns
 \details{
 Selectivity-at-age not peaking at 1 means that apical fishing mortality
 does not correspond with F-at-age, which can produce unexpected behaviour
-in downstream calculations. If \code{alert = TRUE}, a warning is emitted
+in downstream calculations. If \code{alert = TRUE}, an assumption is recorded
 identifying the affected simulations, years, and areas.
 }
 \keyword{internal}

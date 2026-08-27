@@ -25,6 +25,18 @@ console using \code{cli} formatting. Messages are grouped into assumption,
 warning, and error sections; within each section, entries are further
 grouped by the name of the function that recorded them.
 }
+\details{
+Log entries fall into three types:
+\itemize{
+\item \code{'assumption'}: something was inferred or auto-corrected (e.g.
+a missing value defaulted, a selectivity schedule rescaled to a
+maximum of 1) and no further action is required.
+\item \code{'warning'}: something is likely wrong with the object or its
+inputs and should be reviewed.
+\item \code{'error'}: a problem serious enough that results built from the
+object should not be trusted.
+}
+}
 \examples{
 \dontrun{
   Log(my_object)

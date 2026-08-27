@@ -46,14 +46,18 @@ bypassing the model-based approach (\code{Pars = list()}). Only the years at
 which values \emph{change} need to be included; \code{\link[=Extend]{Extend()}} fills the remainder.
 When \code{Pars} contains a matched model, any values here are \strong{overwritten}
 during \code{\link[=Populate]{Populate()}}. A numeric vector of length \code{nAge} is also accepted
-and promoted to a \verb{1 × nAge × 1} array automatically. Default \code{NULL}.}
+and converted to a \verb{1 × nAge × 1} array automatically. Default \code{NULL}.}
 
 \item{MeanAtLength}{\code{array} or \code{NULL}. Mean natural mortality at length with
-named dimensions \verb{Sim × Length × Year}. Populated automatically during
+named dimensions \verb{Sim × Class × Year}. Populated automatically during
 \code{\link[=Populate]{Populate()}} when an at-length mortality model is used; may also be
 supplied directly. When \code{MeanAtLength} is populated and \code{MeanAtAge} is
 not, \code{\link[=Populate]{Populate()}} converts it to \code{MeanAtAge} via the age-length key
-(\code{ALK}) from a \link[=length-class]{length} object. Default \code{NULL}.}
+(\code{ALK}) from a \link[=length-class]{length} object. A numeric vector is also accepted
+and converted to a \verb{1 × nClass × 1} array automatically, using \code{Classes}
+if supplied or the \link[=length-class]{length} object's own \code{Classes} otherwise; if
+\code{Classes} differs from the \link[=length-class]{length} object's, the \code{ALK} is
+recalculated on \code{Classes}. Default \code{NULL}.}
 
 \item{Random}{\code{array} or \code{NULL}. Reserved for future use. Intended to hold
 simulation- and year-specific multipliers that add stochastic variation

@@ -47,12 +47,17 @@ accepted array formats. \strong{Note:} if \code{Pars} and \code{Model} are both
 provided, any values supplied here will be overwritten during population.}
 
 \item{MeanAtLength}{Numeric array or \code{NULL}. Mean retention-at-length with
-dimensions \verb{Sim x Length x Year}. If provided and \code{Pars} is empty, takes
+dimensions \verb{Sim x Class x Year}. If provided and \code{Pars} is empty, takes
 precedence over \code{MeanAtAge}; \code{MeanAtAge} is derived from it via the
-age-length key.}
+age-length key. A numeric vector is also accepted and converted to a
+\verb{1 x nClass x 1} array automatically, using \code{Classes} if supplied or the
+\link[=length-class]{length} object's own \code{Classes} otherwise; if \code{Classes} differs
+from the \link[=length-class]{length} object's, the \code{ALK} is recalculated on \code{Classes}.}
 
 \item{MeanAtWeight}{Numeric array or \code{NULL}. Mean retention-at-weight with
-dimensions \verb{Sim x Weight x Year}. Default \code{NULL}.}
+dimensions \verb{Sim x Class x Year}. A numeric vector is also accepted and
+converted the same way as \code{MeanAtLength}, using the \link[=weight-class]{weight}
+object's \code{AWK}. Default \code{NULL}.}
 
 \item{Classes}{Numeric vector or \code{NULL}. Length or weight class midpoints
 corresponding to the second dimension of \code{MeanAtLength} or

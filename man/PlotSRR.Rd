@@ -2,9 +2,19 @@
 % Please edit documentation in R/plot-srr.R
 \name{PlotSRR}
 \alias{PlotSRR}
+\alias{PlotSRRCurve}
 \title{Plot the Stock-Recruit Relationship}
 \usage{
 PlotSRR(
+  object,
+  Sim = NULL,
+  byStock = NULL,
+  Stocks = NULL,
+  nPoints = 50,
+  probs = c(0.05, 0.95)
+)
+
+PlotSRRCurve(
   object,
   Sim = NULL,
   byStock = NULL,
@@ -35,24 +45,27 @@ the curve at. Default \code{50}.}
 across-simulation ribbon drawn when \code{Sim = NULL}. Default \code{c(0.05, 0.95)}.}
 }
 \value{
-A \code{ggplot} object.
+\code{PlotSRRCurve()} returns a \code{ggplot} object; \code{PlotSRR()} returns a
+\code{patchwork} object.
 }
 \description{
-Plots recruitment against spawning production, evaluating each stock's
-\code{SRR} model (\verb{[SRR()]}) at the last available calendar year. When \code{object}
-has more than one simulation, the median curve is drawn with a \code{probs}
-quantile ribbon.
+\code{PlotSRR()} plots stock-recruit curve (\code{PlotSRRCurve()}) and the recruitment deviations
+(\code{PlotRecDevs()}.
 }
 \details{
-A bare \link[=stock-class]{stock} \code{object} plots a \emph{relative} curve -- relative
-recruitment (\code{R/R0}) against relative spawning production (\code{SP/SP0}, both
-\code{0}-\code{1}) -- using the stock's own SRR model function (\code{SRR@Model}, e.g.
+\code{PlotSRRCurve()} plots recruitment against spawning production, evaluating
+each stock's \code{SRR} model (\verb{[SRR()]}) at the last available calendar year.
+When \code{object} has more than one simulation, the median curve is drawn with
+a \code{probs} quantile ribbon.
+
+A bare \link[=stock-class]{stock} \code{object} plots relative recruitment (\code{R/R0}) against
+relative spawning production using the stock's SRR model function (\code{SRR@Model}, e.g.
 \code{\link[=BevertonHolt]{BevertonHolt()}}) evaluated at \code{S0 = R0 = 1}.
 
 An \link[=om-class]{om}, \link[=hist-class]{hist}, or \link[=mse-class]{mse} \code{object} instead plots the
-\emph{absolute} curve (real recruitment against real spawning production, using
+absolute curve (real recruitment against real spawning production, using
 \code{SP0} and \code{R0}).
 }
 \seealso{
-\code{\link[=SRR]{SRR()}}, \code{\link[=PlotDepletion]{PlotDepletion()}}, \code{\link[=Stock]{Stock()}}
+\code{\link[=SRR]{SRR()}}, \link{PlotRecDevs}, \code{\link[=PlotDepletion]{PlotDepletion()}}, \code{\link[=Stock]{Stock()}}
 }

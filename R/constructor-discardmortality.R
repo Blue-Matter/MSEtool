@@ -28,7 +28,7 @@
 #'   length with dimensions `Sim x Class x Year`. If provided, takes
 #'   precedence over `MeanAtAge`; `MeanAtAge` is derived from it via the
 #'   age-length key during [PopulateDiscardMortality()]. A numeric vector is
-#'   also accepted and promoted to a `1 x nClass x 1` array automatically,
+#'   also accepted and converted to a `1 x nClass x 1` array automatically,
 #'   using `Classes` if supplied or the [length-class] object's own `Classes`
 #'   otherwise; if `Classes` differs from the [length-class] object's, the
 #'   `ALK` is recalculated on `Classes`.

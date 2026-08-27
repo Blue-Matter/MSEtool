@@ -128,16 +128,19 @@ log-normal recruitment deviation distribution is truncated. Default \code{2}.}
 (\verb{Sim × Age}) for initialising the historical age structure, covering all
 age classes except the minimum age (whose deviation is the first column
 of \code{RecDevHist}). If \code{NULL} (default), generated internally from \code{SD}
-and \code{AC} during \code{\link[=Populate]{Populate()}}.}
+and \code{AC} during \code{\link[=Populate]{Populate()}}. The trailing dimension must have length
+\code{length(Ages@Classes) - 1}; \code{\link[=PopulateSRR]{PopulateSRR()}} aborts otherwise.}
 
 \item{RecDevHist}{\code{matrix} or \code{NULL}. Pre-specified recruitment deviations
 (\verb{Sim × nHistTS}) for historical time steps. The first column corresponds
 to the minimum age class in the initial year. If \code{NULL} (default),
-generated internally from \code{SD} and \code{AC}.}
+generated internally from \code{SD} and \code{AC}. The trailing dimension must
+match the number of historical years; \code{\link[=PopulateSRR]{PopulateSRR()}} aborts otherwise.}
 
 \item{RecDevProj}{\code{matrix} or \code{NULL}. Pre-specified recruitment deviations
 (\verb{Sim × nProjTS}) for projection time steps. If \code{NULL} (default),
-generated internally from \code{SD} and \code{AC}.}
+generated internally from \code{SD} and \code{AC}. The trailing dimension must
+match the number of projection years; \code{\link[=PopulateSRR]{PopulateSRR()}} aborts otherwise.}
 
 \item{SpawnTimeFrac}{\code{numeric(1)}. Fraction of the time step elapsed before
 spawning occurs. Determines how much mortality (\verb{exp(-Z × SpawnTimeFrac)})

@@ -14,8 +14,7 @@ dimensions nSim x nYear.}
 
 \item{LastError}{Numeric vector of length nSim giving the starting value for
 the AR(1) recursion, in normal (natural) space — i.e. the last observed
-multiplicative residual. \code{NA} (including all-\code{NA} history) means no prior
-state, i.e. a fresh chain starting at 1.}
+multiplicative residual.}
 }
 \value{
 Numeric matrix of same dimensions as \code{Resid} with autocorrelated

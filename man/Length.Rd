@@ -52,7 +52,7 @@ Default \code{"mm"}.}
 approach (\code{Pars = list()}). Only the years at which values \emph{change} need
 to be included; \code{\link[=Extend]{Extend()}} fills the remainder. When \code{Pars} contains a
 matched model, any values here are \strong{overwritten} during \code{\link[=Populate]{Populate()}}.
-A numeric vector of length \code{nAge} is also accepted and is promoted to a
+A numeric vector of length \code{nAge} is also accepted and is converted to a
 \verb{1 × nAge × 1} array automatically. Default \code{NULL}.}
 
 \item{CVatAge}{\code{numeric(1)}, length-2 bounds vector, or \code{array}. Coefficient

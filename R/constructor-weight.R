@@ -25,7 +25,7 @@
 #'   approach (`Pars = list()`). Only the years at which values *change* need
 #'   to be included; [Extend()] fills the remainder. When `Pars` contains a
 #'   matched model, any values here are **overwritten** during [Populate()].
-#'   A numeric vector of length `nAge` is also accepted and is promoted to a
+#'   A numeric vector of length `nAge` is also accepted and is converted to a
 #'   `1 × nAge × 1` array automatically. Default `NULL`.
 #' @param MeanAtLength `array` or `NULL`. Mean weight at length with named
 #'   dimensions `Sim × Class × Year`. Populated automatically during
@@ -33,7 +33,7 @@
 #'   Models*); may also be supplied directly. When `MeanAtLength` is populated
 #'   and `MeanAtAge` is not, [Populate()] converts it to `MeanAtAge` via the
 #'   age-length key (`ALK`) from a [length-class] object. A numeric vector is
-#'   also accepted and promoted to a `1 × nClass × 1` array automatically,
+#'   also accepted and converted to a `1 × nClass × 1` array automatically,
 #'   using `Classes` if supplied or the [length-class] object's own `Classes`
 #'   otherwise; if `Classes` differs from the [length-class] object's, the
 #'   `ALK` is recalculated on `Classes`. Default `NULL`.

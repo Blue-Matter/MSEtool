@@ -27,7 +27,7 @@
 #'   (`Pars = list()`). Only the years at which values *change* need to be
 #'   included; [Extend()] fills the remainder. When `Pars` contains a matched
 #'   model, any values here are **overwritten** during [Populate()]. A numeric
-#'   vector of length `nAge` is also accepted and promoted to a `1 × nAge × 1`
+#'   vector of length `nAge` is also accepted and converted to a `1 × nAge × 1`
 #'   array automatically. Default `NULL`.
 #' @param MeanAtLength `array` or `NULL`. Mean maturity-at-length with named
 #'   dimensions `Sim × Class × Year`. Populated automatically during
@@ -35,7 +35,7 @@
 #'   supplied directly. When `MeanAtLength` is populated and `MeanAtAge` is
 #'   not, [Populate()] converts it to `MeanAtAge` via the age-length key
 #'   (`ALK`) from a [length-class] object. A numeric vector is also accepted
-#'   and promoted to a `1 × nClass × 1` array automatically, using `Classes`
+#'   and converted to a `1 × nClass × 1` array automatically, using `Classes`
 #'   if supplied or the [length-class] object's own `Classes` otherwise; if
 #'   `Classes` differs from the [length-class] object's, the `ALK` is
 #'   recalculated on `Classes`. Default `NULL`.
@@ -46,7 +46,7 @@
 #'   not, [Populate()] converts it to `MeanAtAge` via the age-weight key
 #'   (`AWK`) from a [weight-class] object. Requires a populated [weight-class]
 #'   with a non-`NULL` `CVatAge` slot so that the `AWK` exists. A numeric
-#'   vector is also accepted and promoted to a `1 × nClass × 1` array
+#'   vector is also accepted and converted to a `1 × nClass × 1` array
 #'   automatically, using `Classes` if supplied or the [weight-class]
 #'   object's own `Classes` otherwise; if `Classes` differs from the
 #'   [weight-class] object's, the `AWK` is recalculated on `Classes`. Default
@@ -114,7 +114,7 @@
 #' )
 #'
 #' # A plain numeric vector is also accepted for `MeanAtLength`/`MeanAtWeight`
-#' # and promoted automatically, using `Classes` for the class labels:
+#' # and converted automatically, using `Classes` for the class labels:
 #' mat_al2 <- Maturity(
 #'   MeanAtLength = 1 / (1 + exp(-log(19) * (lens - 40) / 8)),
 #'   Classes      = lens

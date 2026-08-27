@@ -51,7 +51,7 @@ year (like any MP, this can be overridden via \code{OM@Interval}).
 
 \code{refFCurr} fixes F at its last historical value. It is currently a wrapper
 around \code{\link[=CurrentEffort]{CurrentEffort()}}, since \code{advice-class} has no way to specify
-apical F directly - in spatial models, or where catchability (\code{q}) drifts
+apical F directly. In spatial models, or where catchability (\code{q}) drifts
 over time, realised F can diverge from the last historical effort. It will
 be updated to set F directly once \code{advice-class} supports it.
 

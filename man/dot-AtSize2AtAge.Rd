@@ -8,8 +8,9 @@
 }
 \arguments{
 \item{object}{An S4 object with slots \code{MeanAtLength} or \code{MeanAtWeight}
-(array: \verb{Sim × Class × Year} or \verb{Sim × Class × Year × Area}) and
-\code{MeanAtAge} (\code{NULL} if not yet populated).}
+(array: \verb{Sim × Class × Year} or \verb{Sim × Class × Year × Area}, or a plain
+numeric vector of length \code{nClass}) and \code{MeanAtAge} (\code{NULL} if not yet
+populated).}
 
 \item{Length}{A \code{\link[=Length]{Length()}} or \code{\link[=Weight]{Weight()}} object supplying an \code{ALK} or \code{AWK}
 slot (array: \verb{Sim × Age × Class × Year}).}

@@ -49,23 +49,32 @@ dimensions \verb{Sim × Age × Year}. Values should range from 0 (immature) to 1
 (\code{Pars = list()}). Only the years at which values \emph{change} need to be
 included; \code{\link[=Extend]{Extend()}} fills the remainder. When \code{Pars} contains a matched
 model, any values here are \strong{overwritten} during \code{\link[=Populate]{Populate()}}. A numeric
-vector of length \code{nAge} is also accepted and promoted to a \verb{1 × nAge × 1}
+vector of length \code{nAge} is also accepted and converted to a \verb{1 × nAge × 1}
 array automatically. Default \code{NULL}.}
 
 \item{MeanAtLength}{\code{array} or \code{NULL}. Mean maturity-at-length with named
-dimensions \verb{Sim × Length × Year}. Populated automatically during
+dimensions \verb{Sim × Class × Year}. Populated automatically during
 \code{\link[=Populate]{Populate()}} when an at-length maturity model is used; may also be
 supplied directly. When \code{MeanAtLength} is populated and \code{MeanAtAge} is
 not, \code{\link[=Populate]{Populate()}} converts it to \code{MeanAtAge} via the age-length key
-(\code{ALK}) from a \link[=length-class]{length} object. Default \code{NULL}.}
+(\code{ALK}) from a \link[=length-class]{length} object. A numeric vector is also accepted
+and converted to a \verb{1 × nClass × 1} array automatically, using \code{Classes}
+if supplied or the \link[=length-class]{length} object's own \code{Classes} otherwise; if
+\code{Classes} differs from the \link[=length-class]{length} object's, the \code{ALK} is
+recalculated on \code{Classes}. Default \code{NULL}.}
 
 \item{MeanAtWeight}{\code{array} or \code{NULL}. Mean maturity-at-weight with named
-dimensions \verb{Sim × Weight × Year}. Populated automatically during
+dimensions \verb{Sim × Class × Year}. Populated automatically during
 \code{\link[=Populate]{Populate()}} when an at-weight maturity model is used; may also be
 supplied directly. When \code{MeanAtWeight} is populated and \code{MeanAtAge} is
 not, \code{\link[=Populate]{Populate()}} converts it to \code{MeanAtAge} via the age-weight key
 (\code{AWK}) from a \link[=weight-class]{weight} object. Requires a populated \link[=weight-class]{weight}
-with a non-\code{NULL} \code{CVatAge} slot so that the \code{AWK} exists. Default \code{NULL}.}
+with a non-\code{NULL} \code{CVatAge} slot so that the \code{AWK} exists. A numeric
+vector is also accepted and converted to a \verb{1 × nClass × 1} array
+automatically, using \code{Classes} if supplied or the \link[=weight-class]{weight}
+object's own \code{Classes} otherwise; if \code{Classes} differs from the
+\link[=weight-class]{weight} object's, the \code{AWK} is recalculated on \code{Classes}. Default
+\code{NULL}.}
 
 \item{Classes}{\code{numeric} or \code{NULL}. Age, length, or weight class midpoints
 corresponding to the \verb{MeanAt*} array in use. Default \code{NULL}.}
@@ -145,8 +154,15 @@ mat_al <- Maturity(
   MeanAtLength = array(
     1 / (1 + exp(-log(19) * (lens - 40) / 8)),
     dim      = c(1, length(lens), 1),
-    dimnames = list(Sim = 1, Length = lens, Year = 1990)
+    dimnames = list(Sim = 1, Class = lens, Year = 1990)
   )
+)
+
+# A plain numeric vector is also accepted for `MeanAtLength`/`MeanAtWeight`
+# and converted automatically, using `Classes` for the class labels:
+mat_al2 <- Maturity(
+  MeanAtLength = 1 / (1 + exp(-log(19) * (lens - 40) / 8)),
+  Classes      = lens
 )
 }\if{html}{\out{</div>}}
 }

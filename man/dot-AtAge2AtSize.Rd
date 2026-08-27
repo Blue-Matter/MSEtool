@@ -15,8 +15,9 @@
 }
 \arguments{
 \item{object}{An S4 object with slots \code{MeanAtAge} (array:
-\verb{Sim × Age × Year} or \verb{Sim × Age × Year × Area}) and \code{MeanAtLength}
-(\code{NULL} if not yet populated).}
+\verb{Sim × Age × Year} or \verb{Sim × Age × Year × Area}) and \code{MeanAtLength}/
+\code{MeanAtWeight} (\code{NULL} if not yet populated, or a plain numeric vector
+of length \code{nClass}).}
 
 \item{Length}{A \code{\link[=Length]{Length()}} or \code{\link[=Weight]{Weight()}} object supplying \code{MeanAtAge},
 \code{CVatAge}, \code{Classes}, \code{TruncSD}, \code{Dist}, and either an \code{ALK} or \code{AWK}
@@ -45,6 +46,6 @@ from a \code{\link[=Length]{Length()}} or \code{\link[=Weight]{Weight()}} object
 below \code{minAgeRes}, both \code{MeanAtAge} and the Age-Size Key are linearly
 interpolated to a finer age resolution before conversion, ensuring the
 at-age schedule has sufficient resolution to fill all size classes. Returns
-\code{object} unchanged if \code{MeanAtLength} is already populated.
+\code{object} unchanged if \code{MeanAtLength}/\code{MeanAtWeight} is already populated.
 }
 \keyword{internal}
