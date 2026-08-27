@@ -347,7 +347,7 @@
     
     Effort_curr[pos_idx] <- clamp_effort(Effort_base[pos_idx] * exp(clamp_step(opt$par)), pos_idx)
     Effort_curr[pos_idx] <- apply_ceiling(Effort_curr[pos_idx], pos_idx)
-.
+
     converged <- all(abs(residual_fn(Effort_curr)) < tol_vec)
   }
 
