@@ -25,11 +25,6 @@
 #' @return A `ggplot` object.
 #'
 #' @seealso [PlotSRR()], [PlotSRRCurve()], [GenRecDevs()], [srr-class]
-#' @name plot_recdevs
-NULL
-
-#' @rdname plot_recdevs
-#' @export
 PlotRecDevs <- function(object, Sim = NULL, byStock = NULL, Stocks = NULL, probs = c(0.05, 0.95)) {
   .CheckClass(object, c('stock', 'hist', 'mse', 'om'), 'object')
   if (inherits(object, 'stock')) object <- .StockToShellHist(object)
