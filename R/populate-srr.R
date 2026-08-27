@@ -55,7 +55,6 @@ PopulateSRR <- function(SRR,
   Years <- DefaultYears(Years)
   nSim  <- .GetNSim(SRR, nSim)
   
-  
   if (is.null(CurrentYear)) 
     CurrentYear <-  as.numeric(format(Sys.Date(), "%Y"))
   
@@ -85,8 +84,16 @@ PopulateSRR <- function(SRR,
   ProjTS <- Years[tYears > CurrentYear]
   nHistTS <- length(HistTS)
   nProjTS <- length(ProjTS)
-  
-  if ((.CheckDigest(SRR, argList) && !force) | EmptyObject(SRR)) 
+  nInitRecDev <- length(Ages@Classes) - 1
+
+  .CheckRecDevDim(SRR@RecDevInit, nInitRecDev, "RecDevInit",
+                  "`length(Ages@Classes) - 1`")
+  .CheckRecDevDim(SRR@RecDevHist, nHistTS, "RecDevHist",
+                  "the number of historical years")
+  .CheckRecDevDim(SRR@RecDevProj, nProjTS, "RecDevProj",
+                  "the number of projection years")
+
+  if ((.CheckDigest(SRR, argList) && !force) | EmptyObject(SRR))
     return(SRR)
   
   .SetSeed(seed)
@@ -105,7 +112,6 @@ PopulateSRR <- function(SRR,
   for (i in seq_along(names)) 
     SRR <- .CheckSRRPars(SRR, names[i], defaults[i])
   
-
   pars   <- .StructurePars(Pars = list(SRR@R0, SRR@SD, SRR@AC), nSim, Years)
   SRR@R0 <- pars[[1]] 
   SRR@SD <- pars[[2]][, 1, drop = FALSE] # only one time step for now
@@ -171,6 +177,18 @@ PopulateSRR <- function(SRR,
     Year = ProjTS
   )
   .SetDigest(SRR, argList)
+}
+
+
+.CheckRecDevDim <- function(x, n, label, expected) {
+  if (is.null(x)) return(invisible(TRUE))
+  actual <- if (!is.null(dim(x))) dim(x)[length(dim(x))] else length(x)
+  if (actual != n)
+    cli::cli_abort(c(
+      "x" = "{.arg {label}} has a trailing dimension of length {.val {actual}} but {.val {n}} is expected.",
+      "i" = "The trailing dimension of {.arg {label}} must match {expected} ({.val {n}})."
+    ))
+  invisible(TRUE)
 }
 
 .CheckSRRPars <- function(SRR, name='R0', default=1000) {
