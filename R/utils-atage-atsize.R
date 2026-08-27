@@ -110,11 +110,12 @@
 #' below `minAgeRes`, both `MeanAtAge` and the Age-Size Key are linearly
 #' interpolated to a finer age resolution before conversion, ensuring the
 #' at-age schedule has sufficient resolution to fill all size classes. Returns
-#' `object` unchanged if `MeanAtLength` is already populated.
+#' `object` unchanged if `MeanAtLength`/`MeanAtWeight` is already populated.
 #'
 #' @param object An S4 object with slots `MeanAtAge` (array:
-#'   `Sim × Age × Year` or `Sim × Age × Year × Area`) and `MeanAtLength`
-#'   (`NULL` if not yet populated).
+#'   `Sim × Age × Year` or `Sim × Age × Year × Area`) and `MeanAtLength`/
+#'   `MeanAtWeight` (`NULL` if not yet populated, or a plain numeric vector
+#'   of length `nClass`).
 #' @param Length A [Length()] or [Weight()] object supplying `MeanAtAge`,
 #'   `CVatAge`, `Classes`, `TruncSD`, `Dist`, and either an `ALK` or `AWK`
 #'   slot (array: `Sim × Age × Class × Year`).
@@ -132,10 +133,30 @@
 #' @keywords internal
 .AtAge2AtSize <- function(object, Length, max1=TRUE, Years=NULL,
                          ASKOverride=NULL, minAgeRes=50) {
-  
-  if (!is.null(object@MeanAtLength))
+
+  slotName   <- if (inherits(Length, 'weight')) 'MeanAtWeight' else 'MeanAtLength'
+  MeanAtSize <- slot(object, slotName)
+
+  if (!is.null(MeanAtSize)) {
+    if (!is.array(MeanAtSize)) {
+      Classes <- if (!EmptyObject(object@Classes)) object@Classes else Length@Classes
+      if (length(MeanAtSize) != length(Classes))
+        cli::cli_abort(c(
+          "x" = "If `{slotName}` is a numeric vector it must have length matching `Classes` ({.val {length(Classes)}}).",
+          "i" = "Error occurred on object of class {.cls {class(object)}}."
+        ))
+      Year <- dimnames(.GetASK(Length))[['Year']][1]
+      MeanAtSize <- array(
+        MeanAtSize,
+        dim      = c(1L, length(Classes), 1L),
+        dimnames = list(Sim=1, Class=Classes, Year=Year)
+      )
+      slot(object, slotName) <- MeanAtSize
+      object@Classes <- Classes
+    }
     return(object)
-  
+  }
+
   ObjectMeanAtAge <- object@MeanAtAge |> ReduceDims()
   LengthMeanAtAge <- Length@MeanAtAge |> ReduceDims()
   LengthCVatAge   <- Length@CVatAge   |> ReduceDims()
@@ -208,7 +229,6 @@
       col_sums   <- matrix(class_sums, nAge, nClass, byrow=TRUE)
       ASK_stand  <- ASK_sim_ts / col_sums
       ASK_stand[!is.finite(ASK_stand)] <- 0
-      # No ASK mass (beyond TruncSD for every age); carry forward instead of 0 to avoid a spurious drop
       no_mass    <- class_sums == 0
 
       for (a in seq_len(nArea)) {
@@ -227,8 +247,8 @@
     }
   }
   
-  object@Classes      <- Length@Classes
-  object@MeanAtLength <- MeanAtLength
+  object@Classes    <- Length@Classes
+  slot(object, slotName) <- MeanAtLength
   object
 }
 
@@ -413,11 +433,12 @@
 #' `object@MeanAtWeight`) through the Age-Size Key stored in `Length`.
 #' Handles optional simulation and area dimensions. Early-exits when all
 #' values are effectively 1 or 0. Returns `object` unchanged if `MeanAtAge`
-#' is already populated.
+#' is already populated. 
 #'
 #' @param object An S4 object with slots `MeanAtLength` or `MeanAtWeight`
-#'   (array: `Sim × Class × Year` or `Sim × Class × Year × Area`) and
-#'   `MeanAtAge` (`NULL` if not yet populated).
+#'   (array: `Sim × Class × Year` or `Sim × Class × Year × Area`, or a plain
+#'   numeric vector of length `nClass`) and `MeanAtAge` (`NULL` if not yet
+#'   populated).
 #' @param Length A [Length()] or [Weight()] object supplying an `ALK` or `AWK`
 #'   slot (array: `Sim × Age × Class × Year`).
 #' @param max1 Logical. If `TRUE`, forces `max(MeanAtAge) == 1` via
@@ -439,15 +460,55 @@
 #' @keywords internal
 .AtSize2AtAge <- function(object, Length, max1=FALSE, allow_shortcut=TRUE) {
 
-  MeanAtSize <- if (inherits(Length, 'length')) {
-    object@MeanAtLength
+  slotName <- if (inherits(Length, 'length')) {
+    'MeanAtLength'
   } else if (inherits(Length, 'weight')) {
-    object@MeanAtWeight
+    'MeanAtWeight'
   } else {
     cli::cli_abort("`Length` must be an object of class `length` or `weight`")
   }
 
-  ASK    <- .GetASK(Length)
+  MeanAtSize <- slot(object, slotName)
+
+  Classes <- if (is.array(MeanAtSize) && !is.null(dimnames(MeanAtSize)[['Class']])) {
+    as.numeric(dimnames(MeanAtSize)[['Class']])
+  } else if (!EmptyObject(object@Classes)) {
+    object@Classes
+  } else {
+    Length@Classes
+  }
+
+  # If MeanAtSize is defined on different classes than Length, the ALK/AWK
+  # must be recalculated on those classes rather than using Length's own key.
+  ASK <- if (isTRUE(all.equal(Classes, Length@Classes))) {
+    .GetASK(Length)
+  } else {
+    CalcAgeSizeKey(
+      MeanAtAge = Length@MeanAtAge,
+      CVatAge   = Length@CVatAge,
+      Classes   = Classes,
+      TruncSD   = Length@TruncSD,
+      Dist      = Length@Dist,
+      silent    = TRUE
+    )
+  }
+
+  if (!is.array(MeanAtSize)) {
+    if (length(MeanAtSize) != length(Classes))
+      cli::cli_abort(c(
+        "x" = "If `{slotName}` is a numeric vector it must have length matching `Classes` ({.val {length(Classes)}}).",
+        "i" = "Error occurred on object of class {.cls {class(object)}}."
+      ))
+    Year <- dimnames(ASK)[['Year']][1]
+    MeanAtSize <- array(
+      MeanAtSize,
+      dim      = c(1L, length(Classes), 1L),
+      dimnames = list(Sim=1, Class=Classes, Year=Year)
+    )
+    slot(object, slotName) <- MeanAtSize
+    object@Classes <- Classes
+  }
+
   byArea <- "Area" %in% names(dimnames(MeanAtSize))
   nArea  <- if (byArea) dim(MeanAtSize)[4] else 1L
 
