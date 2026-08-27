@@ -162,7 +162,7 @@
 #'
 #' Selectivity-at-age not peaking at 1 means that apical fishing mortality
 #' does not correspond with F-at-age, which can produce unexpected behaviour
-#' in downstream calculations. If `alert = TRUE`, a warning is emitted
+#' in downstream calculations. If `alert = TRUE`, an assumption is recorded
 #' identifying the affected simulations, years, and areas.
 #'
 #' @param object A `Selectivity` object with `MeanAtAge` slot a 
@@ -189,11 +189,13 @@
              string =
                cli::format_inline("Selectivity-at-Age does not reach a maximum of 1. \\
                                   F-at-Age will not correspond with apical F."),
-             name = '.CheckSelectivityMaximum')
-  
+             name = '.CheckSelectivityMaximum',
+             type = 'assumption')
+
   object <- .CaptureLog(object,
                        string =
-                         cli::format_inline("Standardizing to a maximum of 1. Check the selectivity schedule in the OM.")
+                         cli::format_inline("Standardizing to a maximum of 1. Check the selectivity schedule in the OM."),
+                       type = 'assumption'
   )
   
     trunc_vec <- list("vec-trunc"=5)
@@ -205,15 +207,17 @@
       
       object <- .CaptureLog(object,
                            string =
-                             cli::format_inline('Simulations: {.val {sims}}; Years: {.val {yrs}}; Areas: {.val {areas}}')
+                             cli::format_inline('Simulations: {.val {sims}}; Years: {.val {yrs}}; Areas: {.val {areas}}'),
+                           type = 'assumption'
       )
-      
+
     } else {
       object <- .CaptureLog(object,
                            string =
-                             cli::format_inline('Simulations: {.val {sims}}; Years: {.val {yrs}}')
+                             cli::format_inline('Simulations: {.val {sims}}; Years: {.val {yrs}}'),
+                           type = 'assumption'
       )
-      
+
     }
   
   
