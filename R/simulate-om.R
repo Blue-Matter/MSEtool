@@ -103,6 +103,7 @@
 
   Hist <- .AddSimNumber(Hist)
   Hist <- .CheckAllocation(Hist)
+  Hist <- .LogDepletionAchievement(Hist)
   Hist <- .ReduceHist(Hist, Reduce)
 
   EndTime <- Sys.time()
