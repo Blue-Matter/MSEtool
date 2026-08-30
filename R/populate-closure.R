@@ -62,6 +62,7 @@ PopulateClosure <- function(Closure, nArea, nSim = 5, Years, silent = FALSE) {
     if (is.null(dn[[1]])) dn[[1]] <- 1:dd[1]
     if (is.null(dn[[2]])) dn[[2]] <- Years[1:dd[2]]
     if (is.null(dn[[3]])) dn[[3]] <- 1:dd[3]
+    names(dn) <- c('Sim', 'Year', 'Area')
     dimnames(Closure) <- dn
   }
   
