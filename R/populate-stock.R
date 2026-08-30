@@ -68,7 +68,7 @@ PopulateStock <- function(Stock,
                           seed = 102,
                           silent = FALSE,
                           force = FALSE,
-                          CalcAtLength = FALSE) {
+                          CalcAtLength = TRUE) {
   
   if (is.null(seed))  seed <- 102
   
@@ -127,7 +127,7 @@ PopulateStock <- function(Stock,
     seed = seed + 2,
     silent = silent,
     force = force,
-    CalcAtLength = FALSE
+    CalcAtLength = CalcAtLength
   ), "Weight", nm)
   .RequireArray(Stock@Weight, "MeanAtAge", "Weight", nm)
 
@@ -140,7 +140,7 @@ PopulateStock <- function(Stock,
     seed = seed + 3,
     silent = silent,
     force = force,
-    CalcAtLength = FALSE
+    CalcAtLength = CalcAtLength
   ), "NaturalMortality", nm)
   .RequireArray(Stock@NaturalMortality, "MeanAtAge", "NaturalMortality", nm)
 
