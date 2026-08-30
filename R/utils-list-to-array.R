@@ -66,33 +66,38 @@ List2Array <- function(x, name = "Fleet", dim1='Sim', pos = NULL) {
     )
     
     names(dimnames(out)) <- c(dim1, name)
-  } else {  ## list of arrays 
+  } else {  ## list of arrays
     d  <- dim(first)
     dn <- dimnames(first)
-    
-    if (is.null(dn)) 
+
+    if (is.null(dn))
       cli::cli_abort("arrays must have named dimensions")
-    
-    dnames  <- purrr::map(x, dimnames)
-    sims    <- purrr::map(dnames, 'Sim')  |> unlist() |> unique() |> as.numeric() |> sort()
-    years   <- purrr::map(dnames, 'Year') |> unlist() |> unique() |> as.numeric() |> sort()
-    areas   <- purrr::map(dnames, 'Area') |> unlist() |> unique() |> as.numeric() |> sort()
-    
-    if (length(sims) && name != 'Sim')  x <- purrr::map(x, 
-                                                        .SubsetSim, 
-                                                        Sims = sims,
-                                                        keep_sim_name = TRUE)
-    if (length(years)) x <- purrr::map(x, ExtendYears, Years = years)
-    if (length(areas)) x <- purrr::map(x, ExtendAreas, Areas = areas)
-    
-    first <- x[[1]]
-    d     <- dim(first)
-    dn    <- dimnames(first)
-    
-    conformable <- purrr::map_lgl(x, \(a) identical(dim(a), d))
-    if (!all(conformable))
-      cli::cli_abort("all arrays in `x` must have identical dimensions")
-    
+
+    already_conformable <- purrr::map_lgl(x, \(a) identical(dim(a), d) &&
+                                            identical(dimnames(a), dn))
+
+    if (!all(already_conformable)) {
+      dnames  <- purrr::map(x, dimnames)
+      sims    <- purrr::map(dnames, 'Sim')  |> unlist() |> unique() |> as.numeric() |> sort()
+      years   <- purrr::map(dnames, 'Year') |> unlist() |> unique() |> as.numeric() |> sort()
+      areas   <- purrr::map(dnames, 'Area') |> unlist() |> unique() |> as.numeric() |> sort()
+
+      if (length(sims) && name != 'Sim')  x <- purrr::map(x,
+                                                          .SubsetSim,
+                                                          Sims = sims,
+                                                          keep_sim_name = TRUE)
+      if (length(years)) x <- purrr::map(x, ExtendYears, Years = years)
+      if (length(areas)) x <- purrr::map(x, ExtendAreas, Areas = areas)
+
+      first <- x[[1]]
+      d     <- dim(first)
+      dn    <- dimnames(first)
+
+      conformable <- purrr::map_lgl(x, \(a) identical(dim(a), d))
+      if (!all(conformable))
+        cli::cli_abort("all arrays in `x` must have identical dimensions")
+    }
+
     out <- array(
       unlist(x, use.names = FALSE),
       dim      = c(d, length(x)),
