@@ -7,19 +7,27 @@
 #' schedule for [mse-class] objects) is drawn for its own last available
 #' year only; pass `Years` to see more.
 #'
-#' `PlotSelectivity()`, `PlotRetention()`, and `PlotDiscardMortality()` plot
-#' fleet-level gear curves (`[Fleet()]`'s `Selectivity`/`Retention`/
-#' `DiscardMortality` sub-objects). For the projection period of
-#' [mse-class] objects, these reflect any change made by the MP via
-#' `Advice()` (see [VBiomass()], which resolves the same effective curves).
+#' `PlotSelectivityCurve()`, `PlotRetentionCurve()`, and
+#' `PlotDiscardMortalityCurve()` plot a single fleet-level gear curve
+#' (`[Fleet()]`'s `Selectivity`/`Retention`/`DiscardMortality` sub-objects)
+#' on a chosen `x` axis. For the projection period of [mse-class] objects,
+#' these reflect any change made by the MP via `Advice()` (see
+#' [VBiomass()], which resolves the same effective curves). Each has a
+#' combining counterpart -- [PlotSelectivity()], [PlotRetention()],
+#' [PlotDiscardMortality()] -- that arranges every plot available for that
+#' schedule into one figure.
 #'
-#' `PlotLength()`, `PlotWeight()`, `PlotMaturity()`, `PlotNaturalMortality()`,
-#' and `PlotFecundity()` plot stock-level biological schedules. 
+#' `PlotLengthCurve()`, `PlotWeightCurve()`, `PlotMaturityCurve()`,
+#' `PlotNaturalMortalityCurve()`, and `PlotFecundityCurve()` plot a single
+#' stock-level biological curve on a chosen `x` axis. Each has a combining
+#' counterpart -- [PlotLength()], [PlotWeight()], [PlotMaturity()],
+#' [PlotNaturalMortality()], [PlotFecundity()] -- that arranges every plot
+#' available for that schedule (the age-based curve, the length-based curve
+#' when populated, and an age-size key where one exists) into one figure.
 #'
 #' @param object An [om-class], [hist-class], or [mse-class] object (`om`
-#'   objects are populated via [PopulateOM()] if not already), or -- for
-#'   `PlotLength()`/`PlotWeight()`/`PlotMaturity()`/`PlotNaturalMortality()`/
-#'   `PlotFecundity()` only -- a [stock-class] object.
+#'   objects are populated via [PopulateOM()] if not already), or -- for the
+#'   `*Curve()` functions only -- a [stock-class]/[fleet-class] object.
 #' @param Sim Integer or `NULL` (default). Which simulation replicate to
 #'   plot. `NULL` takes the median across all simulations, cell by cell, and
 #'   adds a `probs` quantile ribbon behind it (unless `nSim == 1` or values 
@@ -34,131 +42,394 @@
 #'   stock/fleet is always distinguishable somehow. `TRUE`/`NULL` facets by
 #'   `Stock`/`Fleet`. `FALSE` instead colors by that
 #'   variable; 
-#' @param Years Optional numeric vector, or `"all"`. Default `NULL`: each
-#'   independent curve (`Historical`, and each MP's projection for
-#'   `mse` objects) is trimmed to its own last full calendar year (every
-#'   season-slice sharing that curve's most recent year, for a seasonal
-#'   `Seasons > 1` OM; just the one latest year otherwise), colored and
-#'   labelled by year in the legend. If the curve never changes value
-#'   over its full year range, a single (arbitrary) year is
-#'   drawn and the legend is dropped entirely. 
-#'   `"all"` plots every available year. Both `NULL` and `"all"` further
-#'   collapse consecutive years with an identical curve down
-#'   to just the breakpoint years where the curve actually changed. 
-#'   A numeric vector restricts
-#'   to exactly those years with no compression, always with the legend
-#'   shown.
+#' @param Years Optional numeric vector, or `"all"`. Default `NULL` shows
+#'   each independent curve's own last calendar year, labelled by year in
+#'   the legend (legend dropped if the curve is constant over that year).
+#'   `"all"` shows every available year. Both `NULL` and `"all"` collapse
+#'   consecutive years with an identical curve to just the breakpoint
+#'   years. A numeric vector shows exactly those years, uncompressed.
 #' @param units Logical or a character unit string. `TRUE` (default) labels
-#'   the x-axis with the stock's `Ages@Units` (e.g. `"Age (year)"`) when it's
-#'   set and agrees across every plotted stock, and additionally, for
-#'   `PlotLength()`/`PlotWeight()`, labels the y-axis with `Length@Units`/
-#'   `Weight@Units` (and appends the unit for `PlotNaturalMortality()`/
-#'   `PlotFecundity()`). `FALSE` suppresses all unit labelling (axes fall
-#'   back to plain `"Age"`/`"Length"`/etc.). For `PlotLength()`/
-#'   `PlotWeight()` only, a character string (a length unit -- `"mm"`,
-#'   `"cm"`, `"inch"`, `"m"` -- or mass unit -- `"g"`, `"kg"`, `"lb"`,
-#'   `"t"`, etc.) both relabels the y-axis and rescales the plotted
-#'   values into that unit; requesting a unit that can't be converted to is
-#'   an error. Has no effect on `PlotMaturity()`/`PlotSelectivity()`/
-#'   `PlotRetention()`/`PlotDiscardMortality()` beyond the x-axis label,
-#'   since those are unitless proportions.
+#'   axes with the relevant `Units` slot (e.g. `Ages@Units`; also
+#'   `Length@Units`/`Weight@Units` for `PlotLengthCurve()`/
+#'   `PlotWeightCurve()`). `FALSE` suppresses unit labelling. For
+#'   `PlotLengthCurve()`/`PlotWeightCurve()` only, a unit string (e.g.
+#'   `"cm"`, `"kg"`) relabels *and rescales* the y-axis into that unit; an
+#'   unconvertible unit is an error. No effect beyond the x-axis label for
+#'   the unitless-proportion plots (`PlotMaturityCurve()`,
+#'   `PlotSelectivityCurve()`, etc.).
 #' @param Stocks Character or numeric vector. Restrict the plot to specific
 #'   stocks, either by name (matching [StockNames()]) or by index. Default
 #'   `NULL` (all stocks).
 #' @param x `"Age"` (default) or `"Length"`. `"Length"` projects the curve
 #'   through the stock's `[Length()]` age-length key (`@ALK`) onto a length
-#'   axis instead -- e.g. `PlotWeight(x = "Length")` gives the weight-length
-#'   relationship, `PlotMaturity(x = "Length")` gives maturity-at-length.
-#'   Not meaningful for `PlotLength()` itself (length-at-length is a trivial
-#'   identity), which errors if `x = "Length"` is requested. The length axis
-#'   is always labelled in the stock's native `Length@Units`, independent of
-#'   `units`.
+#'   axis instead -- e.g. `PlotWeightCurve(x = "Length")` gives the
+#'   weight-length relationship, `PlotMaturityCurve(x = "Length")` gives
+#'   maturity-at-length. Not meaningful for `PlotLengthCurve()` itself (see
+#'   [PlotLength()]; length-at-length is a trivial identity, and errors if
+#'   requested). The length axis is always labelled in the stock's native
+#'   `Length@Units`, independent of `units`.
 #'
 #' @return A `ggplot` object.
 #'
 #' @examples
 #' \dontrun{
 #' Hist <- Simulate(SingleStockOM)
-#' PlotSelectivity(Hist)
-#' PlotMaturity(Hist)
+#' PlotSelectivityCurve(Hist)
+#' PlotMaturityCurve(Hist)
 #'
 #' MSE <- Project(Hist, ExampleMPs())
-#' PlotRetention(MSE)
-#' PlotWeight(MSE, Sim = 3)
+#' PlotRetentionCurve(MSE)
+#' PlotWeightCurve(MSE, Sim = 3)
 #' }
 #'
 #' @name plot_schedule
-#' @seealso [Fleet()], [Stock()], [VBiomass()]
+#' @seealso [Fleet()], [Stock()], [VBiomass()], [PlotSelectivity()],
+#'   [PlotRetention()], [PlotDiscardMortality()], [PlotLength()],
+#'   [PlotWeight()], [PlotMaturity()], [PlotNaturalMortality()],
+#'   [PlotFecundity()]
 NULL
 
-#' @rdname plot_schedule
+#' Plot the Selectivity Schedule
+#'
+#' `PlotSelectivity()` arranges every plot related to a fleet's
+#' [selectivity-class] object -- the age-based curve
+#' (`PlotSelectivityCurve()`), the length-based curve (when
+#' `Selectivity@MeanAtLength` is populated), and the weight-based curve
+#' (when `Selectivity@MeanAtWeight` is populated) -- into a single figure
+#' with [patchwork::wrap_plots()].
+#'
+#' @inheritParams plot_schedule
+#' @param object A [fleet-class] object, or an [om-class], [hist-class], or
+#'   [mse-class] object.
+#' @param Stock A [stock-class] object supplying the biology needed to
+#'   populate a bare [fleet-class] `object` (`Length`/`Weight` for
+#'   projecting onto those axes, etc.). Ignored otherwise. Default `NULL`
+#'   uses an example stock, with a message noting this.
+#'
+#' @return `PlotSelectivityCurve()` returns a `ggplot` object;
+#'   `PlotSelectivity()` returns a `patchwork` object (or a plain `ggplot`
+#'   when only the age-based curve is available).
+#'
+#' @param x `PlotSelectivityCurve()` only; see [plot_schedule]. Also accepts
+#'   `"Weight"`, projecting the curve through the stock's `[Weight()]`
+#'   age-weight key (`@AWK`) onto a weight axis; requires
+#'   `Weight@CVatAge` to be set.
+#'
+#' @seealso [plot_schedule]
 #' @export
-PlotSelectivity <- function(object, Sim = NULL, byStock = NULL, byFleet = NULL,
-                            Years = NULL, units = TRUE, Stocks = NULL, x = c('Age', 'Length'),
-                            probs = c(0.05, 0.95)) {
+PlotSelectivity <- function(object, Sim = NULL, byStock = NULL, byFleet = NULL, Years = NULL,
+                            units = TRUE, Stocks = NULL, Stock = NULL, probs = c(0.05, 0.95)) {
+  .CheckClass(object, c('fleet', 'hist', 'mse', 'om'), 'object')
+  if (inherits(object, 'fleet')) object <- .FleetToShellHist(object, Stock)
+  .PlotGearScheduleCombined(object, 'Selectivity', hasWeight = TRUE, Sim, byStock, byFleet,
+                            Years, units, Stocks, probs)
+}
+
+#' @rdname PlotSelectivity
+#' @export
+PlotSelectivityCurve <- function(object, Sim = NULL, byStock = NULL, byFleet = NULL, Years = NULL,
+                                 units = TRUE, Stocks = NULL, Stock = NULL,
+                                 x = c('Age', 'Length', 'Weight'), probs = c(0.05, 0.95)) {
   x <- match.arg(x)
+  .CheckClass(object, c('fleet', 'hist', 'mse', 'om'), 'object')
+  if (inherits(object, 'fleet')) object <- .FleetToShellHist(object, Stock)
   .PlotGearSchedule(object, 'Selectivity', Sim, byStock, byFleet, Years, units, Stocks, x, probs)
 }
 
-#' @rdname plot_schedule
+#' Plot the Retention Schedule
+#'
+#' `PlotRetention()` arranges every plot related to a fleet's
+#' [retention-class] object -- the age-based curve (`PlotRetentionCurve()`),
+#' the length-based curve (when `Retention@MeanAtLength` is populated), and
+#' the weight-based curve (when `Retention@MeanAtWeight` is populated) --
+#' into a single figure with [patchwork::wrap_plots()].
+#'
+#' @inheritParams plot_schedule
+#' @param object A [fleet-class] object, or an [om-class], [hist-class], or
+#'   [mse-class] object.
+#' @param Stock A [stock-class] object supplying the biology needed to
+#'   populate a bare [fleet-class] `object`. Ignored otherwise. Default
+#'   `NULL` uses an example stock, with a message noting this.
+#'
+#' @return `PlotRetentionCurve()` returns a `ggplot` object;
+#'   `PlotRetention()` returns a `patchwork` object (or a plain `ggplot`
+#'   when only the age-based curve is available).
+#'
+#' @param x `PlotRetentionCurve()` only; see [PlotSelectivityCurve()].
+#'
+#' @seealso [plot_schedule]
 #' @export
-PlotRetention <- function(object, Sim = NULL, byStock = NULL, byFleet = NULL,
-                          Years = NULL, units = TRUE, Stocks = NULL, x = c('Age', 'Length'),
-                          probs = c(0.05, 0.95)) {
+PlotRetention <- function(object, Sim = NULL, byStock = NULL, byFleet = NULL, Years = NULL,
+                          units = TRUE, Stocks = NULL, Stock = NULL, probs = c(0.05, 0.95)) {
+  .CheckClass(object, c('fleet', 'hist', 'mse', 'om'), 'object')
+  if (inherits(object, 'fleet')) object <- .FleetToShellHist(object, Stock)
+  .PlotGearScheduleCombined(object, 'Retention', hasWeight = TRUE, Sim, byStock, byFleet,
+                            Years, units, Stocks, probs)
+}
+
+#' @rdname PlotRetention
+#' @export
+PlotRetentionCurve <- function(object, Sim = NULL, byStock = NULL, byFleet = NULL, Years = NULL,
+                               units = TRUE, Stocks = NULL, Stock = NULL,
+                               x = c('Age', 'Length', 'Weight'), probs = c(0.05, 0.95)) {
   x <- match.arg(x)
+  .CheckClass(object, c('fleet', 'hist', 'mse', 'om'), 'object')
+  if (inherits(object, 'fleet')) object <- .FleetToShellHist(object, Stock)
   .PlotGearSchedule(object, 'Retention', Sim, byStock, byFleet, Years, units, Stocks, x, probs)
 }
 
-#' @rdname plot_schedule
+#' Plot the Discard Mortality Schedule
+#'
+#' `PlotDiscardMortality()` arranges every plot related to a fleet's
+#' [discardmortality-class] object -- the age-based curve
+#' (`PlotDiscardMortalityCurve()`) and the length-based curve (when
+#' `DiscardMortality@MeanAtLength` is populated) -- into a single figure
+#' with [patchwork::wrap_plots()].
+#'
+#' @inheritParams plot_schedule
+#' @param object A [fleet-class] object, or an [om-class], [hist-class], or
+#'   [mse-class] object.
+#' @param Stock A [stock-class] object supplying the biology needed to
+#'   populate a bare [fleet-class] `object`. Ignored otherwise. Default
+#'   `NULL` uses an example stock, with a message noting this.
+#'
+#' @return `PlotDiscardMortalityCurve()` returns a `ggplot` object;
+#'   `PlotDiscardMortality()` returns a `patchwork` object (or a plain
+#'   `ggplot` when only the age-based curve is available).
+#'
+#' @seealso [plot_schedule]
 #' @export
-PlotDiscardMortality <- function(object, Sim = NULL, byStock = NULL, byFleet = NULL,
-                                 Years = NULL, units = TRUE, Stocks = NULL, x = c('Age', 'Length'),
-                                 probs = c(0.05, 0.95)) {
+PlotDiscardMortality <- function(object, Sim = NULL, byStock = NULL, byFleet = NULL, Years = NULL,
+                                 units = TRUE, Stocks = NULL, Stock = NULL, probs = c(0.05, 0.95)) {
+  .CheckClass(object, c('fleet', 'hist', 'mse', 'om'), 'object')
+  if (inherits(object, 'fleet')) object <- .FleetToShellHist(object, Stock)
+  .PlotGearScheduleCombined(object, 'DiscardMortality', hasWeight = FALSE, Sim, byStock, byFleet,
+                            Years, units, Stocks, probs)
+}
+
+#' @rdname PlotDiscardMortality
+#' @export
+PlotDiscardMortalityCurve <- function(object, Sim = NULL, byStock = NULL, byFleet = NULL, Years = NULL,
+                                      units = TRUE, Stocks = NULL, Stock = NULL,
+                                      x = c('Age', 'Length'), probs = c(0.05, 0.95)) {
   x <- match.arg(x)
+  .CheckClass(object, c('fleet', 'hist', 'mse', 'om'), 'object')
+  if (inherits(object, 'fleet')) object <- .FleetToShellHist(object, Stock)
   .PlotGearSchedule(object, 'DiscardMortality', Sim, byStock, byFleet, Years, units, Stocks, x, probs)
 }
 
-#' @rdname plot_schedule
+#' Plot the Length-at-Age Schedule
+#'
+#' `PlotLength()` arranges every plot related to a stock's [length-class]
+#' object -- the mean length-at-age curve (`PlotLengthCurve()`) and the
+#' age-length key (`PlotALK()`) -- into a single figure with
+#' [patchwork::wrap_plots()]. The `ALK` panel is omitted when the
+#' stock's `Length@CVatAge` isn't set (so `ALK` was not populated).
+#'
+#' @inheritParams plot_schedule
+#' @param object An [om-class], [hist-class], [mse-class], or
+#'   [stock-class] object.
+#'
+#' @return `PlotLengthCurve()` returns a `ggplot` object; `PlotLength()`
+#'   returns a `patchwork` object.
+#'
+#' @param x `PlotLengthCurve()` only. Always `"Age"`; `"Length"` is not
+#'   meaningful (length-at-length is a trivial identity) and errors if
+#'   requested.
+#'
+#' @seealso [PlotALK()], [plot_schedule]
 #' @export
 PlotLength <- function(object, Sim = NULL, byStock = NULL, Years = NULL, units = TRUE, Stocks = NULL,
-                       x = c('Age', 'Length'), probs = c(0.05, 0.95)) {
+                       probs = c(0.05, 0.95)) {
+  panels <- purrr::compact(list(
+    Curve = PlotLengthCurve(object, Sim = Sim, byStock = byStock, Years = Years, units = units,
+                            Stocks = Stocks, probs = probs),
+    ALK   = PlotALK(object, Sim = Sim, byStock = byStock, Stocks = Stocks, Years = Years, units = units)
+  ))
+  patchwork::wrap_plots(panels, ncol = 1)
+}
+
+#' @rdname PlotLength
+#' @export
+PlotLengthCurve <- function(object, Sim = NULL, byStock = NULL, Years = NULL, units = TRUE, Stocks = NULL,
+                            x = c('Age', 'Length'), probs = c(0.05, 0.95)) {
   x <- match.arg(x)
   .PlotStockSchedule(object, 'Length', Sim, byStock, Years, units, Stocks, x, probs)
 }
 
-#' @rdname plot_schedule
+#' Plot the Weight-at-Age Schedule
+#'
+#' `PlotWeight()` arranges every plot related to a stock's [weight-class]
+#' object -- the mean weight-at-age curve (`PlotWeightCurve()`), the
+#' weight-at-length curve (when `Weight@MeanAtLength` is populated), and
+#' the age-weight key (`PlotAWK()`, when `Weight@CVatAge` is set) -- into a
+#' single figure with [patchwork::wrap_plots()].
+#'
+#' @inheritParams plot_schedule
+#' @param object An [om-class], [hist-class], [mse-class], or
+#'   [stock-class] object.
+#'
+#' @return `PlotWeightCurve()` returns a `ggplot` object; `PlotWeight()`
+#'   returns a `patchwork` object (or a plain `ggplot` when only the
+#'   age-based curve is available).
+#'
+#' @param x `PlotWeightCurve()` only; see [plot_schedule].
+#'
+#' @seealso [PlotAWK()], [plot_schedule]
 #' @export
 PlotWeight <- function(object, Sim = NULL, byStock = NULL, Years = NULL, units = TRUE, Stocks = NULL,
-                       x = c('Age', 'Length'), probs = c(0.05, 0.95)) {
+                       probs = c(0.05, 0.95)) {
+  .PlotScheduleCombined(object, 'Weight', PlotAWK, Sim, byStock, Years, units, Stocks, probs)
+}
+
+#' @rdname PlotWeight
+#' @export
+PlotWeightCurve <- function(object, Sim = NULL, byStock = NULL, Years = NULL, units = TRUE, Stocks = NULL,
+                            x = c('Age', 'Length'), probs = c(0.05, 0.95)) {
   x <- match.arg(x)
   .PlotStockSchedule(object, 'Weight', Sim, byStock, Years, units, Stocks, x, probs)
 }
 
-#' @rdname plot_schedule
+#' Plot the Maturity-at-Age Schedule
+#'
+#' `PlotMaturity()` arranges every plot related to a stock's
+#' [maturity-class] object -- the mean maturity-at-age curve
+#' (`PlotMaturityCurve()`), the maturity-at-length curve (when
+#' `Maturity@MeanAtLength` is populated), and the maturity-at-weight curve
+#' (when `Maturity@MeanAtWeight` is populated) -- into a single figure with
+#' [patchwork::wrap_plots()].
+#'
+#' @inheritParams plot_schedule
+#' @param object An [om-class], [hist-class], [mse-class], or
+#'   [stock-class] object.
+#'
+#' @return `PlotMaturityCurve()` returns a `ggplot` object; `PlotMaturity()`
+#'   returns a `patchwork` object (or a plain `ggplot` when only the
+#'   age-based curve is available).
+#'
+#' @param x `PlotMaturityCurve()` only. `"Age"` (default), `"Length"`, or
+#'   `"Weight"` -- `"Weight"` projects the curve through the stock's
+#'   `[Weight()]` age-weight key (`@AWK`) onto a weight axis, and requires
+#'   `Weight@CVatAge` to be set.
+#'
+#' @seealso [plot_schedule]
 #' @export
 PlotMaturity <- function(object, Sim = NULL, byStock = NULL, Years = NULL, units = TRUE, Stocks = NULL,
-                         x = c('Age', 'Length'), probs = c(0.05, 0.95)) {
+                         probs = c(0.05, 0.95)) {
+  .PlotScheduleCombined(object, 'Maturity', NULL, Sim, byStock, Years, units, Stocks, probs)
+}
+
+#' @rdname PlotMaturity
+#' @export
+PlotMaturityCurve <- function(object, Sim = NULL, byStock = NULL, Years = NULL, units = TRUE, Stocks = NULL,
+                              x = c('Age', 'Length', 'Weight'), probs = c(0.05, 0.95)) {
   x <- match.arg(x)
   .PlotStockSchedule(object, 'Maturity', Sim, byStock, Years, units, Stocks, x, probs)
 }
 
-#' @rdname plot_schedule
+#' Plot the Natural Mortality-at-Age Schedule
+#'
+#' `PlotNaturalMortality()` arranges every plot related to a stock's
+#' [naturalmortality-class] object -- the mean natural-mortality-at-age
+#' curve (`PlotNaturalMortalityCurve()`) and the natural-mortality-at-length
+#' curve (when `NaturalMortality@MeanAtLength` is populated) -- into a
+#' single figure with [patchwork::wrap_plots()].
+#'
+#' @inheritParams plot_schedule
+#' @param object An [om-class], [hist-class], [mse-class], or
+#'   [stock-class] object.
+#'
+#' @return `PlotNaturalMortalityCurve()` returns a `ggplot` object;
+#'   `PlotNaturalMortality()` returns a `patchwork` object (or a plain
+#'   `ggplot` when only the age-based curve is available).
+#'
+#' @param x `PlotNaturalMortalityCurve()` only; see [plot_schedule].
+#'
+#' @seealso [plot_schedule]
 #' @export
 PlotNaturalMortality <- function(object, Sim = NULL, byStock = NULL, Years = NULL, units = TRUE, Stocks = NULL,
-                                 x = c('Age', 'Length'), probs = c(0.05, 0.95)) {
+                                 probs = c(0.05, 0.95)) {
+  .PlotScheduleCombined(object, 'NaturalMortality', NULL, Sim, byStock, Years, units, Stocks, probs)
+}
+
+#' @rdname PlotNaturalMortality
+#' @export
+PlotNaturalMortalityCurve <- function(object, Sim = NULL, byStock = NULL, Years = NULL, units = TRUE, Stocks = NULL,
+                                      x = c('Age', 'Length'), probs = c(0.05, 0.95)) {
   x <- match.arg(x)
   .PlotStockSchedule(object, 'NaturalMortality', Sim, byStock, Years, units, Stocks, x, probs)
 }
 
-#' @rdname plot_schedule
+#' Plot the Fecundity-at-Age Schedule
+#'
+#' `PlotFecundity()` arranges every plot related to a stock's
+#' [fecundity-class] object -- the mean fecundity-at-age curve
+#' (`PlotFecundityCurve()`) and the fecundity-at-length curve (when
+#' `Fecundity@MeanAtLength` is populated) -- into a single figure with
+#' [patchwork::wrap_plots()].
+#'
+#' @inheritParams plot_schedule
+#' @param object An [om-class], [hist-class], [mse-class], or
+#'   [stock-class] object.
+#'
+#' @return `PlotFecundityCurve()` returns a `ggplot` object;
+#'   `PlotFecundity()` returns a `patchwork` object (or a plain `ggplot`
+#'   when only the age-based curve is available).
+#'
+#' @param x `PlotFecundityCurve()` only; see [plot_schedule].
+#'
+#' @seealso [plot_schedule]
 #' @export
 PlotFecundity <- function(object, Sim = NULL, byStock = NULL, Years = NULL, units = TRUE, Stocks = NULL,
-                          x = c('Age', 'Length'), probs = c(0.05, 0.95)) {
+                          probs = c(0.05, 0.95)) {
+  .PlotScheduleCombined(object, 'Fecundity', NULL, Sim, byStock, Years, units, Stocks, probs)
+}
+
+#' @rdname PlotFecundity
+#' @export
+PlotFecundityCurve <- function(object, Sim = NULL, byStock = NULL, Years = NULL, units = TRUE, Stocks = NULL,
+                               x = c('Age', 'Length'), probs = c(0.05, 0.95)) {
   x <- match.arg(x)
   .PlotStockSchedule(object, 'Fecundity', Sim, byStock, Years, units, Stocks, x, probs)
 }
 
 # ---- internal helpers ----
+
+.HasMeanAtLength <- function(object, what, Stocks) {
+  if (inherits(object, 'stock')) object <- .StockToShellHist(object)
+  OM         <- .ResolveOM(object)
+  stockNames <- .ResolveStocks(object, Stocks)
+  stockNames <- if (is.null(stockNames)) StockNames(OM) else stockNames
+  any(purrr::map_lgl(stockNames, \(nm) !is.null(slot(OM@Stock[[nm]], what)@MeanAtLength)))
+}
+
+.HasMeanAtWeight <- function(object, what, Stocks) {
+  if (inherits(object, 'stock')) object <- .StockToShellHist(object)
+  OM         <- .ResolveOM(object)
+  stockNames <- .ResolveStocks(object, Stocks)
+  stockNames <- if (is.null(stockNames)) StockNames(OM) else stockNames
+  any(purrr::map_lgl(stockNames, \(nm) {
+    obj <- slot(OM@Stock[[nm]], what)
+    'MeanAtWeight' %in% methods::slotNames(obj) && !is.null(obj@MeanAtWeight)
+  }))
+}
+
+.PlotScheduleCombined <- function(object, what, keyFn, Sim, byStock, Years, units, Stocks, probs) {
+  panels <- list(
+    AtAge = .PlotStockSchedule(object, what, Sim, byStock, Years, units, Stocks, 'Age', probs)
+  )
+  if (.HasMeanAtLength(object, what, Stocks))
+    panels$AtLength <- .PlotStockSchedule(object, what, Sim, byStock, Years, units, Stocks, 'Length', probs)
+  if (.HasMeanAtWeight(object, what, Stocks))
+    panels$AtWeight <- .PlotStockSchedule(object, what, Sim, byStock, Years, units, Stocks, 'Weight', probs)
+  if (!is.null(keyFn))
+    panels$Key <- keyFn(object, Sim = Sim, byStock = byStock, Stocks = Stocks, Years = Years, units = units)
+
+  panels <- purrr::compact(panels)
+  if (length(panels) == 1) return(panels[[1]])
+  patchwork::wrap_plots(panels, ncol = 1)
+}
+
 .ResolveOM <- function(object) {
   if (inherits(object, 'om')) return(PopulateOM(object, silent = TRUE))
   object@OM
@@ -184,6 +455,79 @@ PlotFecundity <- function(object, Sim = NULL, byStock = NULL, Years = NULL, unit
   ShellHist           <- methods::new('hist')
   ShellHist@OM        <- ShellOM
   ShellHist
+}
+
+# Wraps a Fleet (+ companion Stock) in a minimal hist shell, mirroring
+# .StockToShellHist(), so the existing hist/mse/om-oriented gear-schedule
+# machinery can be reused directly on a bare Fleet. `Stock` supplies the
+# biology (Length/Weight/etc.) PopulateFleet() needs; when NULL, an example
+# stock is used instead, with a message noting this (a bare Fleet has no
+# Stock of its own to draw on).
+.FleetToShellHist <- function(Fleet, Stock = NULL) {
+  if (is.null(Stock)) {
+    cli::cli_alert_info(
+      "No {.arg Stock} provided; using example stock {.val {AlbacoreExStock@Name}} to populate this fleet."
+    )
+    Stock <- AlbacoreExStock
+  }
+  .CheckClass(Stock, 'stock', 'Stock')
+
+  if (is.null(Stock@Length@MeanAtAge))
+    Stock <- PopulateStock(Stock, nYear = 20, pYear = 0, nSim = 5, silent = TRUE)
+
+  Fleet <- PopulateFleet(Fleet, Stock, silent = TRUE)
+
+  stockName <- Stock@Name %||% 'Stock'
+  fleetName <- Fleet@Name %||% 'Fleet'
+
+  ShellOM             <- methods::new('om')
+  ShellOM@Stock       <- stats::setNames(list(Stock), stockName)
+  ShellOM@Fleet       <- stats::setNames(list(stats::setNames(list(Fleet), fleetName)), stockName)
+  ShellOM@nYear       <- Stock@nYear
+  ShellOM@pYear       <- Stock@pYear
+  ShellOM@CurrentYear <- Stock@CurrentYear
+  ShellOM@Seasons     <- Stock@Seasons
+  ShellHist           <- methods::new('hist')
+  ShellHist@OM        <- ShellOM
+  ShellHist
+}
+
+.HasGearMeanAtLength <- function(object, what, Stocks) {
+  OM         <- .ResolveOM(object)
+  stockNames <- .ResolveStocks(object, Stocks)
+  stockNames <- if (is.null(stockNames)) StockNames(OM) else stockNames
+  fleetNames <- FleetNames(OM)
+  any(purrr::map_lgl(stockNames, \(nm)
+    any(purrr::map_lgl(fleetNames, \(fl) !is.null(slot(OM@Fleet[[nm]][[fl]], what)@MeanAtLength)))
+  ))
+}
+
+.HasGearMeanAtWeight <- function(object, what, Stocks) {
+  OM         <- .ResolveOM(object)
+  stockNames <- .ResolveStocks(object, Stocks)
+  stockNames <- if (is.null(stockNames)) StockNames(OM) else stockNames
+  fleetNames <- FleetNames(OM)
+  any(purrr::map_lgl(stockNames, \(nm)
+    any(purrr::map_lgl(fleetNames, \(fl) {
+      obj <- slot(OM@Fleet[[nm]][[fl]], what)
+      'MeanAtWeight' %in% methods::slotNames(obj) && !is.null(obj@MeanAtWeight)
+    }))
+  ))
+}
+
+.PlotGearScheduleCombined <- function(object, what, hasWeight, Sim, byStock, byFleet, Years, units,
+                                       Stocks, probs) {
+  panels <- list(
+    AtAge = .PlotGearSchedule(object, what, Sim, byStock, byFleet, Years, units, Stocks, 'Age', probs)
+  )
+  if (.HasGearMeanAtLength(object, what, Stocks))
+    panels$AtLength <- .PlotGearSchedule(object, what, Sim, byStock, byFleet, Years, units, Stocks, 'Length', probs)
+  if (hasWeight && .HasGearMeanAtWeight(object, what, Stocks))
+    panels$AtWeight <- .PlotGearSchedule(object, what, Sim, byStock, byFleet, Years, units, Stocks, 'Weight', probs)
+
+  panels <- purrr::compact(panels)
+  if (length(panels) == 1) return(panels[[1]])
+  patchwork::wrap_plots(panels, ncol = 1)
 }
 
 .PlotGearSchedule <- function(object, what, Sim, byStock, byFleet, Years, units, Stocks, x = 'Age',
@@ -255,6 +599,15 @@ PlotFecundity <- function(object, Sim = NULL, byStock = NULL, Years = NULL, unit
       schedObj <- .MeanAtAge2MeanAtLength(schedObj, OM@Stock[[st]]@Length, replace = TRUE, Years = allYears)
       arr      <- schedObj@MeanAtLength |> .SubsetYear(allYears)
       names(dimnames(arr))[names(dimnames(arr)) == 'Class'] <- 'Age'
+    } else if (x == 'Weight') {
+      schedObj <- .MeanAtAge2MeanAtWeight(schedObj, OM@Stock[[st]]@Weight, replace = TRUE, Years = allYears)
+      if (is.null(schedObj@MeanAtWeight))
+        cli::cli_abort(c(
+          "x" = "{.arg x = \"Weight\"} requires a populated age-weight key for stock {.val {allStocks[st]}}.",
+          "i" = "Set {.field Weight@CVatAge} (so {.field AWK} is populated) or supply {.field {what}@MeanAtWeight} directly."
+        ))
+      arr <- schedObj@MeanAtWeight |> .SubsetYear(allYears)
+      names(dimnames(arr))[names(dimnames(arr)) == 'Class'] <- 'Age'
     } else {
       arr <- schedObj@MeanAtAge |> .SubsetYear(allYears)
     }
@@ -289,6 +642,10 @@ PlotFecundity <- function(object, Sim = NULL, byStock = NULL, Years = NULL, unit
   if (x == 'Length') {
     if (isFALSE(units)) return('Length')
     return(.AppendUnits('Length', .GetStockUnits(OM, 'Length', stockNames)))
+  }
+  if (x == 'Weight') {
+    if (isFALSE(units)) return('Weight')
+    return(.AppendUnits('Weight', .GetStockUnits(OM, 'Weight', stockNames)))
   }
   .AgeAxisLabel(OM, stockNames, units)
 }
