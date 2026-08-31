@@ -191,10 +191,12 @@ PlotDepletion <- function(object, byStock = NULL, Stocks = NULL, bins = 15, tol 
 
 .LogDepletionAchievement <- function(Hist, tol = 0.1) {
   stockNames <- StockNames(Hist@OM)
-  refs <- purrr::map_chr(stockNames, \(nm) Hist@OM@Stock[[nm]]@Depletion@Reference)
+  refs <- purrr::map(stockNames, \(nm) Hist@OM@Stock[[nm]]@Depletion@Reference)
   names(refs) <- stockNames
 
   achieved <- .ComputeDepletionAchievement(Hist, stockNames, refs, tol)
+  if (!nrow(achieved))
+    return(Hist)
   failed   <- dplyr::filter(achieved, !.data$Pass)
   if (!nrow(failed)) return(Hist)
 
