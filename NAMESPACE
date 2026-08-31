@@ -949,173 +949,151 @@ exportMethods(plot)
 exportMethods(show)
 exportMethods(summary)
 exportMethods(tinyErr)
-importFrom(Rcpp,
-  evalCpp,
-  sourceCpp
-)
+importFrom(Rcpp,evalCpp)
+importFrom(Rcpp,sourceCpp)
 importFrom(abind,abind)
 importFrom(digest,digest)
-importFrom(dplyr,
-  "%>%",
-  all_of,
-  arrange,
-  bind_rows,
-  filter,
-  group_by,
-  left_join,
-  mutate,
-  pull,
-  select,
-  summarise,
-  summarize
-)
-importFrom(ggplot2,
-  aes,
-  element_blank,
-  expand_limits,
-  facet_wrap,
-  geom_boxplot,
-  geom_line,
-  geom_point,
-  geom_rect,
-  ggplot,
-  ggplotGrob,
-  guide_legend,
-  guides,
-  labs,
-  theme,
-  theme_bw,
-  theme_classic,
-  xlab,
-  xlim,
-  ylab,
-  ylim
-)
-importFrom(grDevices,
-  col2rgb,
-  colorRampPalette,
-  dev.new,
-  dev.off,
-  gray,
-  jpeg,
-  png,
-  rainbow,
-  rgb,
-  xy.coords
-)
-importFrom(graphics,
-  abline,
-  arrows,
-  axTicks,
-  axis,
-  barplot,
-  boxplot,
-  contour,
-  grid,
-  hist,
-  identify,
-  layout,
-  legend,
-  lines,
-  matplot,
-  mtext,
-  par,
-  plot,
-  plot.new,
-  points,
-  polygon,
-  segments,
-  text,
-  title
-)
-importFrom(grid,
-  grid.draw,
-  grid.newpage,
-  unit,
-  unit.c
-)
-importFrom(lubridate,
-  as_date,
-  date_decimal,
-  decimal_date,
-  ymd
-)
-importFrom(methods,
-  "slot<-",
-  .hasSlot,
-  formalArgs,
-  getClassDef,
-  getSlots,
-  is,
-  new,
-  show,
-  slot,
-  slotNames,
-  validObject
-)
+importFrom(dplyr,"%>%")
+importFrom(dplyr,all_of)
+importFrom(dplyr,arrange)
+importFrom(dplyr,bind_rows)
+importFrom(dplyr,filter)
+importFrom(dplyr,group_by)
+importFrom(dplyr,left_join)
+importFrom(dplyr,mutate)
+importFrom(dplyr,pull)
+importFrom(dplyr,select)
+importFrom(dplyr,summarise)
+importFrom(dplyr,summarize)
+importFrom(ggplot2,aes)
+importFrom(ggplot2,element_blank)
+importFrom(ggplot2,expand_limits)
+importFrom(ggplot2,facet_wrap)
+importFrom(ggplot2,geom_boxplot)
+importFrom(ggplot2,geom_line)
+importFrom(ggplot2,geom_point)
+importFrom(ggplot2,geom_rect)
+importFrom(ggplot2,ggplot)
+importFrom(ggplot2,ggplotGrob)
+importFrom(ggplot2,guide_legend)
+importFrom(ggplot2,guides)
+importFrom(ggplot2,labs)
+importFrom(ggplot2,theme)
+importFrom(ggplot2,theme_bw)
+importFrom(ggplot2,theme_classic)
+importFrom(ggplot2,xlab)
+importFrom(ggplot2,xlim)
+importFrom(ggplot2,ylab)
+importFrom(ggplot2,ylim)
+importFrom(grDevices,col2rgb)
+importFrom(grDevices,colorRampPalette)
+importFrom(grDevices,dev.new)
+importFrom(grDevices,dev.off)
+importFrom(grDevices,gray)
+importFrom(grDevices,jpeg)
+importFrom(grDevices,png)
+importFrom(grDevices,rainbow)
+importFrom(grDevices,rgb)
+importFrom(grDevices,xy.coords)
+importFrom(graphics,abline)
+importFrom(graphics,arrows)
+importFrom(graphics,axTicks)
+importFrom(graphics,axis)
+importFrom(graphics,barplot)
+importFrom(graphics,boxplot)
+importFrom(graphics,contour)
+importFrom(graphics,grid)
+importFrom(graphics,hist)
+importFrom(graphics,identify)
+importFrom(graphics,layout)
+importFrom(graphics,legend)
+importFrom(graphics,lines)
+importFrom(graphics,matplot)
+importFrom(graphics,mtext)
+importFrom(graphics,par)
+importFrom(graphics,plot)
+importFrom(graphics,plot.new)
+importFrom(graphics,points)
+importFrom(graphics,polygon)
+importFrom(graphics,segments)
+importFrom(graphics,text)
+importFrom(graphics,title)
+importFrom(grid,grid.draw)
+importFrom(grid,grid.newpage)
+importFrom(grid,unit)
+importFrom(grid,unit.c)
+importFrom(lubridate,as_date)
+importFrom(lubridate,date_decimal)
+importFrom(lubridate,decimal_date)
+importFrom(lubridate,ymd)
+importFrom(methods,"slot<-")
+importFrom(methods,.hasSlot)
+importFrom(methods,formalArgs)
+importFrom(methods,getClassDef)
+importFrom(methods,getSlots)
+importFrom(methods,is)
+importFrom(methods,new)
+importFrom(methods,show)
+importFrom(methods,slot)
+importFrom(methods,slotNames)
+importFrom(methods,validObject)
 importFrom(parallel,detectCores)
-importFrom(purrr,
-  imap,
-  map,
-  map2,
-  map_lgl,
-  pmap
-)
+importFrom(purrr,imap)
+importFrom(purrr,map)
+importFrom(purrr,map2)
+importFrom(purrr,map_lgl)
+importFrom(purrr,pmap)
 importFrom(rlang,caller_call)
-importFrom(stats,
-  SSasympOff,
-  acf,
-  aggregate,
-  approx,
-  coef,
-  cor,
-  dbeta,
-  density,
-  dlnorm,
-  dnorm,
-  lm,
-  loess,
-  loess.smooth,
-  median,
-  na.pass,
-  nlm,
-  nlminb,
-  nls,
-  optim,
-  optimise,
-  optimize,
-  plogis,
-  pnorm,
-  predict,
-  qlnorm,
-  qnorm,
-  quantile,
-  rbeta,
-  rgamma,
-  rlnorm,
-  rmultinom,
-  rnorm,
-  runif,
-  sd,
-  setNames,
-  simulate,
-  weighted.mean,
-  window
-)
-importFrom(utils,
-  browseURL,
-  capture.output,
-  combn,
-  find,
-  flush.console,
-  ls.str,
-  lsf.str,
-  packageVersion,
-  read.csv,
-  read.csv2,
-  setTxtProgressBar,
-  str,
-  txtProgressBar
-)
+importFrom(stats,SSasympOff)
+importFrom(stats,acf)
+importFrom(stats,aggregate)
+importFrom(stats,approx)
+importFrom(stats,coef)
+importFrom(stats,cor)
+importFrom(stats,dbeta)
+importFrom(stats,density)
+importFrom(stats,dlnorm)
+importFrom(stats,dnorm)
+importFrom(stats,lm)
+importFrom(stats,loess)
+importFrom(stats,loess.smooth)
+importFrom(stats,median)
+importFrom(stats,na.pass)
+importFrom(stats,nlm)
+importFrom(stats,nlminb)
+importFrom(stats,nls)
+importFrom(stats,optim)
+importFrom(stats,optimise)
+importFrom(stats,optimize)
+importFrom(stats,plogis)
+importFrom(stats,pnorm)
+importFrom(stats,predict)
+importFrom(stats,qlnorm)
+importFrom(stats,qnorm)
+importFrom(stats,quantile)
+importFrom(stats,rbeta)
+importFrom(stats,rgamma)
+importFrom(stats,rlnorm)
+importFrom(stats,rmultinom)
+importFrom(stats,rnorm)
+importFrom(stats,runif)
+importFrom(stats,sd)
+importFrom(stats,setNames)
+importFrom(stats,simulate)
+importFrom(stats,weighted.mean)
+importFrom(stats,window)
+importFrom(utils,browseURL)
+importFrom(utils,capture.output)
+importFrom(utils,combn)
+importFrom(utils,find)
+importFrom(utils,flush.console)
+importFrom(utils,ls.str)
+importFrom(utils,lsf.str)
+importFrom(utils,packageVersion)
+importFrom(utils,read.csv)
+importFrom(utils,read.csv2)
+importFrom(utils,setTxtProgressBar)
+importFrom(utils,str)
+importFrom(utils,txtProgressBar)
 useDynLib(MSEtool)
 useDynLib(MSEtool, .registration = TRUE)
