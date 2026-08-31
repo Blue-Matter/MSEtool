@@ -190,19 +190,27 @@ VBiomass <- function(object,
   schedObj <- slot(OM@Fleet[[stock]][[fleet]], what)
   base     <- schedObj@MeanAtAge |> .SubsetYear(Years)
 
+  overridden <- FALSE
   if (inherits(object, 'mse') && !is.null(MPName)) {
     override <- object@Misc[[what]][[MPName]][[stock]][[fleet]]$MeanAtAge
-    if (!is.null(override))
+    if (!is.null(override)) {
       ArrayFill(base) <- override
+      overridden <- TRUE
+    }
   }
 
   if (identical(x, 'Age'))
     return(base)
 
-  schedObj@MeanAtAge    <- base
-  schedObj@MeanAtLength <- NULL
-  schedObj <- .MeanAtAge2MeanAtLength(schedObj, OM@Stock[[stock]]@Length, replace = TRUE, Years = Years)
-  out <- schedObj@MeanAtLength
+  schedObj@MeanAtAge <- base
+  slotName <- if (identical(x, 'Weight')) 'MeanAtWeight' else 'MeanAtLength'
+  sizeObj  <- if (identical(x, 'Weight')) OM@Stock[[stock]]@Weight else OM@Stock[[stock]]@Length
+
+  if (overridden) slot(schedObj, slotName) <- NULL
+
+  fn  <- if (identical(x, 'Weight')) .MeanAtAge2MeanAtWeight else .MeanAtAge2MeanAtLength
+  schedObj <- fn(schedObj, sizeObj, Years = Years)
+  out <- slot(schedObj, slotName)
   names(dimnames(out))[names(dimnames(out)) == 'Class'] <- 'Age'
   out
 }
@@ -294,10 +302,6 @@ VBiomass <- function(object,
     SProduction = 'Fecundity'
   )
 
-  # Combines each stock's base unit (Weight@Units / Fecundity@Units) with its
-  # SRR@Units scaling factor - e.g. Weight@Units = "kg", SRR@Units = 1000
-  # (R0 in thousands of fish) -> "t", since raw Biomass is already
-  # Number(in SRR@Units scale) x WeightAtAge.
   labels <- purrr::map_chr(OM@Stock, \(stock) {
     info <- .CombineScaledUnit(.mass_units_g, slot(stock, base_slot)@Units, stock@SRR@Units)
     if (is.null(info)) NA_character_ else info$label
