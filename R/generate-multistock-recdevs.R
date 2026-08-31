@@ -39,19 +39,6 @@
 #' and \eqn{\Sigma_\epsilon} is derived by [CalcInnovationCov()] from the
 #' cross-stock correlation matrix.
 #'
-#' Each stock's latent series is then mapped onto a truncated normal marginal
-#' via the probability integral transform, scaled to that stock's standard
-#' deviation, and bias-corrected so that mean recruitment multiplier is 1.
-#' This is the same transform [GenRecDevs()] applies, so bounded and
-#' correlated deviations follow the same convention. 
-#'
-#' The function proceeds as follows for each simulation:
-#'
-#' 1. **Extract stock-specific parameters** (`sd`, `ac`)
-#' 2. **Impute missing historical deviations** using univariate AR(1)
-#' 3. **Estimate stationary covariance** \eqn{\Sigma_Z} from historical log deviations
-#' 4. **Compute latent innovation covariance** via [CalcInnovationCov()]
-#' 5. **Simulate projection deviations** using a multivariate AR(1) process
 #'
 #' @seealso [GenRecDevs()], [CalcInnovationCov()]
 #' @export
@@ -66,6 +53,7 @@ GenMultiStockRecDevs <- function(OM, TruncSD = 3, silent = FALSE, overwrite = NU
   n_stock   <- nStock(OM)
   ProjYears <- Years(OM, "P")
   pYear     <- length(ProjYears)
+  nSeason   <- max(1L, as.integer(OM@Seasons %||% 1))
 
   if (n_stock < 2) return(OM)
 
@@ -97,27 +85,44 @@ GenMultiStockRecDevs <- function(OM, TruncSD = 3, silent = FALSE, overwrite = NU
       recdevhist[sim, ]
     }) |> dplyr::bind_rows() |> as.data.frame()
 
-    # Stocks with byte-identical historical deviations (this sim) are
-    # collapsed to a single representative before the covariance/AR(1) steps,
-    # then the resulting series is copied back to every member of the group.
     grp     <- .IdenticalRecDevGroups(RecDevHist)
     rep_idx <- match(unique(grp), grp)
     n_grp   <- length(rep_idx)
 
     RecDevStatsGrp <- RecDevStats[rep_idx, , drop = FALSE]
     RecDevHistGrp  <- RecDevHist[rep_idx, , drop = FALSE]
+    nHistTS        <- ncol(RecDevHistGrp)
 
-    # Impute missing historical values (univariate AR1 in latent space)
+    active_phase <- matrix(TRUE, nrow = n_grp, ncol = nSeason)
     for (g in seq_len(n_grp)) {
-      na_ind <- which(is.na(RecDevHistGrp[g, ]))
+      for (p in seq_len(nSeason)) {
+        cols  <- seq(p, nHistTS, by = nSeason)
+        known <- as.numeric(RecDevHistGrp[g, cols])
+        known <- known[!is.na(known)]
+        if (length(known) && all(known == 0)) active_phase[g, p] <- FALSE
+      }
+    }
+    hist_phase <- ((seq_len(nHistTS) - 1) %% nSeason) + 1
+    proj_phase <- ((nHistTS + seq_len(pYear) - 1) %% nSeason) + 1
+    ActiveHist <- active_phase[, hist_phase, drop = FALSE]
+    ActiveProj <- active_phase[, proj_phase, drop = FALSE]
+
+    for (g in seq_len(n_grp)) {
+      inactive_na <- which(!ActiveHist[g, ] & is.na(RecDevHistGrp[g, ]))
+      if (length(inactive_na)) RecDevHistGrp[g, inactive_na] <- 0
+
+      active_cols <- which(ActiveHist[g, ])
+      na_ind <- active_cols[is.na(RecDevHistGrp[g, active_cols])]
       if (!length(na_ind)) next
 
       sd_st <- RecDevStatsGrp$sd[g]
       ac_st <- RecDevStatsGrp$ac[g]
 
-      last_ind <- na_ind[1] - 1
-      zl_prev  <- .DevToLatent(log(as.numeric(RecDevHistGrp[g, last_ind])),
-                               sd_st, TruncSD)
+      prior_active <- active_cols[active_cols < na_ind[1]]
+      zl_prev <- if (length(prior_active)) {
+        .DevToLatent(log(as.numeric(RecDevHistGrp[g, max(prior_active)])),
+                     sd_st, TruncSD)
+      } else 0
 
       for (k in seq_along(na_ind)) {
         zl_prev <- ac_st * zl_prev + rnorm(1) * sqrt(1 - ac_st^2)
@@ -125,9 +130,11 @@ GenMultiStockRecDevs <- function(OM, TruncSD = 3, silent = FALSE, overwrite = NU
       }
     }
 
-    # Estimate covariance
-    ignore_cols <- apply(RecDevHistGrp, 2, function(col) any(col == 1 | is.na(col)))
-    use_cols    <- which(!ignore_cols)
+    ignore_cols <- vapply(seq_len(nHistTS), function(j) {
+      col <- as.numeric(RecDevHistGrp[, j])
+      any(col == 1 | is.na(col)) || any(!ActiveHist[, j])
+    }, logical(1))
+    use_cols <- which(!ignore_cols)
 
     log_hist <- log(RecDevHistGrp[, use_cols, drop = FALSE])
     Sigma_Z  <- stats::cov(t(log_hist))
@@ -136,9 +143,6 @@ GenMultiStockRecDevs <- function(OM, TruncSD = 3, silent = FALSE, overwrite = NU
       Sigma_Z <- as.matrix(Matrix::nearPD(Sigma_Z)$mat)
     }
 
-    # Build AR(1) components. The AR(1) runs on a unit-variance latent scale
-    # carrying the cross-stock correlation; per-stock marginals are imposed
-    # afterwards by .LatentToDev(), which bounds them and removes lognormal bias.
     phi      <- RecDevStatsGrp$ac
     sd_marg  <- sqrt(diag(as.matrix(Sigma_Z)))
     active   <- sd_marg > 0
@@ -149,11 +153,12 @@ GenMultiStockRecDevs <- function(OM, TruncSD = 3, silent = FALSE, overwrite = NU
 
     Sigma_eps <- CalcInnovationCov(R_latent, phi)
 
-    # Initialize latent state from the last historical deviation
-    Z_last <- log(as.numeric(RecDevHistGrp[, ncol(RecDevHistGrp)]))
     Zl_prev <- vapply(seq_len(n_grp), function(g) {
-      if (!is.finite(Z_last[g])) return(0)
-      .DevToLatent(Z_last[g], sd_marg[g], TruncSD)
+      active_cols <- which(ActiveHist[g, ])
+      if (!length(active_cols)) return(0)
+      z_last <- log(as.numeric(RecDevHistGrp[g, max(active_cols)]))
+      if (!is.finite(z_last)) return(0)
+      .DevToLatent(z_last, sd_marg[g], TruncSD)
     }, numeric(1))
 
     Zl_proj <- matrix(NA_real_, nrow = n_grp, ncol = pYear)
@@ -170,14 +175,16 @@ GenMultiStockRecDevs <- function(OM, TruncSD = 3, silent = FALSE, overwrite = NU
       if (n_grp == 1) eps_mat <- matrix(eps_mat, ncol = 1)
     }
 
-    # Add AR(1) on the latent scale
     for (t in seq_len(pYear)) {
-      Zl_prev      <- phi * Zl_prev + eps_mat[t, ]
+      active_t <- ActiveProj[, t]
+      Zl_prev[active_t] <- phi[active_t] * Zl_prev[active_t] + eps_mat[t, active_t]
       Zl_proj[, t] <- Zl_prev
     }
 
     for (g in seq_len(n_grp)) {
-      proj_dev <- exp(.LatentToDev(Zl_proj[g, ], sd_marg[g], TruncSD))
+      proj_dev  <- rep(0, pYear)
+      active_t  <- ActiveProj[g, ]
+      proj_dev[active_t] <- exp(.LatentToDev(Zl_proj[g, active_t], sd_marg[g], TruncSD))
       members  <- which(grp == grp[rep_idx[g]])
       for (st in members) {
         if (!overwrite[st]) next
@@ -204,10 +211,6 @@ GenMultiStockRecDevs <- function(OM, TruncSD = 3, silent = FALSE, overwrite = NU
   c(sd = pick(SRR@SD, "SD"), ac = pick(SRR@AC, "AC"))
 }
 
-# Group stock indices (rows of `RecDevHist`) whose historical deviation
-# vectors are byte-identical. A row containing any NA is never grouped with
-# another row, since equality can't be established from partial data.
-# Returns an integer vector of group ids, one per row (stock).
 .IdenticalRecDevGroups <- function(RecDevHist) {
   n   <- nrow(RecDevHist)
   grp <- seq_len(n)
