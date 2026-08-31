@@ -283,7 +283,9 @@ CalcMSY <- function(Hist,
     nSeason                   = inputs$nSeason,
     SeasonalWeightsList       = inputs$SeasonalWeightsList,
     CalendarYears             = inputs$CalendarYears,
-    RefSeason                 = inputs$RefSeason
+    RefSeason                 = inputs$RefSeason,
+    NPR0List                  = inputs$NPR0List,
+    NPR0_SPList               = inputs$NPR0_SPList
   )
 
 
