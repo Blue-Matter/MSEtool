@@ -7,9 +7,10 @@
 #' definition of each metric.
 #'
 #' `PM_Removals`, `PM_Landings` (and `PM_Yield`, which is a thin wrapper
-#' around the two), `PM_RelYield`, and `PM_AAVY` sum removals/landings over
-#' the stocks in each `OM@Complexes` group by default; pass `Stocks` to
-#' override with an explicit set of stock names.
+#' around the two), `PM_RelYield`, `PM_AAVY`, and `PM_Stability` sum their
+#' series (TAC, removals, or landings) over the stocks in each
+#' `OM@Complexes` group by default; pass `Stocks` to override with an
+#' explicit set of stock names.
 #'
 #' `PM_FFMSY` and `PM_Status` are evaluated at the *complex* level
 #' (`OM@Complexes`), not per stock, because `FMSY` is a single value
@@ -41,14 +42,17 @@
 #' @param Definition Character. Which stock-status metric to use in
 #'   `PM_Status` and `PM_Safety`: `"SBiomass"` (spawning biomass, default) or
 #'   `"SProduction"` (spawning production).
-#' @param Type Character. Which catch metric `PM_Yield` reports:
-#'   `"Removals"` (landings + discards, default) or `"Landings"`.
+#' @param Type Character. For `PM_Yield`, which catch metric to report:
+#'   `"Removals"` (landings + discards, default) or `"Landings"`. For
+#'   `PM_AAVY`/`PM_Stability`, which series to assess interval-to-interval
+#'   variability in: `"TAC"` (the MP's recommendation, default),
+#'   `"Removals"`, or `"Landings"`.
 #' @param Year Numeric. The single projection year in which to evaluate
 #'   rebuilding, used by `PM_Rebuild`.
 #' @param Target Numeric. Rebuilding target, expressed as a multiple of
 #'   `SBMSY`, used by `PM_Rebuild`. Default `1`.
-#' @param Threshold Numeric. Maximum acceptable change in yield between
-#'   consecutive management intervals, used by `PM_Stability`.
+#' @param Threshold Numeric. Maximum acceptable interval-to-interval change
+#'   in the series selected by `Type`, used by `PM_Stability`.
 #' @param Fleets Character vector of fleet names to include in `PM_AAVE`.
 #'   Default `NULL` uses all fleets.
 #' @param Years Numeric vector of projection years to evaluate over. Default
@@ -126,12 +130,13 @@ NULL
 #' when `Ref` is supplied.
 #'
 #' @section Stability:
-#' `PM_AAVY` / `PM_AAVE`: average annual variability in yield or effort
-#' across management intervals,
+#' `PM_AAVY` / `PM_AAVE`: average annual variability in TAC, removals,
+#' landings (per `Type`), or effort, across management intervals,
 #' \deqn{\frac{1}{|Y|-1}\sum_{y \in Y \setminus \{y_1\}} \frac{|C_{s,y} - C_{s,y-1}|}{C_{s,y-1}}}{(1/(|Y|-1)) * sum over y in Y (excluding the first year) of |C[s,y] - C[s,y-1]| / C[s,y-1]}
 #'
-#' `PM_Stability`: the probability that yield changes by less than a
-#' threshold amount between one management interval and the next,
+#' `PM_Stability`: the probability that the series selected by `Type`
+#' changes by less than a threshold amount between one management interval
+#' and the next,
 #' \deqn{P\left(\frac{|C_{s,y} - C_{s,y-1}|}{C_{s,y-1}} < \mathrm{Threshold}\right)}{P( |C[s,y] - C[s,y-1]| / C[s,y-1] < Threshold )}
 #' evaluated per interval `y` and averaged across the evaluation window and
 #' simulations.
@@ -337,6 +342,35 @@ NULL
       dplyr::summarise(Value = sum(.data$Value, na.rm = TRUE), .groups = 'drop') |>
       dplyr::mutate(Stock = grpName)
   }) |> dplyr::bind_rows()
+}
+
+.GroupedTAC <- function(object, Stocks, ManagementOnly = FALSE) {
+  df <- TACs(object)
+  df <- df[df$Period == 'Projection', ]
+  df <- .FilterMPActiveYears(df, object@OM)
+
+  if (ManagementOnly)
+    df <- .FilterManagementYears(df, object)
+
+  groups <- .ResolveComplexGroups(object@OM, Stocks)
+  purrr::imap(groups, \(stk, grpName) {
+    df[df$Stock %in% stk, ] |>
+      dplyr::group_by(.data$Sim, .data$Year, .data$MP) |>
+      dplyr::summarise(Value = sum(.data$Value, na.rm = TRUE), .groups = 'drop') |>
+      dplyr::mutate(Stock = grpName)
+  }) |> dplyr::bind_rows()
+}
+
+# Shared dispatch for the stability-family PMs (PM_AAVY, PM_Stability): TAC
+# (the recommendation issued by the MP) vs. realised removals/landings.
+.StabilityLabel <- c(TAC = 'TAC', Removals = 'removals', Landings = 'landings')
+
+.GroupedStabilitySeries <- function(object, Type, Stocks, ManagementOnly = TRUE) {
+  switch(Type,
+    TAC      = .GroupedTAC(object, Stocks, ManagementOnly = ManagementOnly),
+    Removals = .GroupedCatch(object, Stocks, ManagementOnly = ManagementOnly, FUN = Removals),
+    Landings = .GroupedCatch(object, Stocks, ManagementOnly = ManagementOnly, FUN = Landings)
+  )
 }
 
 .GroupedEffort <- function(object, Fleets, ManagementOnly = FALSE) {
@@ -637,14 +671,18 @@ class(PM_RelYield) <- 'pm'
 
 #' @rdname PM
 #' @export
-PM_AAVY <- function(object, Years = NULL, Stocks = NULL, silent = TRUE) {
+PM_AAVY <- function(object, Type = c('TAC', 'Removals', 'Landings'), Years = NULL,
+                     Stocks = NULL, silent = TRUE) {
+  Type <- match.arg(Type)
   object <- .CoercePMInput(object, silent)
-  ydf <- .GroupedCatch(object, Stocks, ManagementOnly = TRUE)
+  ydf <- .GroupedStabilitySeries(object, Type, Stocks, ManagementOnly = TRUE)
   if (!is.null(Years))
     ydf <- ydf[ydf$Year %in% Years, ]
   aav <- .AAV(ydf)
   .BuildPM(aav, Ref = NA_real_, Years = NULL, op = NULL,
-           Name = 'AAVY', Caption = 'Average annual variability in yield across management intervals')
+           Name = 'AAVY',
+           Caption = paste0('Average annual variability in ', .StabilityLabel[[Type]],
+                             ' across management intervals'))
 }
 class(PM_AAVY) <- 'pm'
 
@@ -663,15 +701,19 @@ class(PM_AAVE) <- 'pm'
 
 #' @rdname PM
 #' @export
-PM_Stability <- function(object, Threshold, Years = NULL, Stocks = NULL, silent = TRUE) {
+PM_Stability <- function(object, Threshold, Type = c('TAC', 'Removals', 'Landings'),
+                          Years = NULL, Stocks = NULL, silent = TRUE) {
   if (missing(Threshold))
-    cli::cli_abort("`Threshold` (maximum acceptable interval-to-interval yield change) must be supplied.")
+    cli::cli_abort("`Threshold` (maximum acceptable interval-to-interval change) must be supplied.")
+  Type <- match.arg(Type)
   object <- .CoercePMInput(object, silent)
-  ydf <- .GroupedCatch(object, Stocks, ManagementOnly = TRUE)
+  ydf <- .GroupedStabilitySeries(object, Type, Stocks, ManagementOnly = TRUE)
   if (!is.null(Years))
     ydf <- ydf[ydf$Year %in% Years, ]
   aav <- .AAV(ydf)
   .BuildPM(aav, Ref = Threshold, Years = NULL, op = `<`,
-           Name = 'Stability', Caption = paste0('P(interval-to-interval yield change < ', Threshold, ')'))
+           Name = 'Stability',
+           Caption = paste0('P(interval-to-interval ', .StabilityLabel[[Type]],
+                             ' change < ', Threshold, ')'))
 }
 class(PM_Stability) <- 'pm'
