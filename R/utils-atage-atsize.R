@@ -235,10 +235,10 @@
         MeanAtAge_vec <- if (hasArea) ObjectMeanAtAge[obj_s, , y, a] else
           ObjectMeanAtAge[obj_s, , y]
 
-        atlength <- if (all(MeanAtAge_vec >= 0.99)) 1 else
-          as.numeric(MeanAtAge_vec %*% ASK_stand)
+        atlength <- as.numeric(MeanAtAge_vec %*% ASK_stand)
         atlength[no_mass] <- NA
         atlength <- .CarryForwardLOCF(atlength)
+        atlength <- rev(.CarryForwardLOCF(rev(atlength)))
         atlength[is.na(atlength)] <- 0
 
         if (hasArea) MeanAtLength[s, , y, a] <- atlength else
@@ -247,7 +247,8 @@
     }
   }
   
-  object@Classes    <- Length@Classes
+  if (!inherits(object, 'weight'))
+    object@Classes <- Length@Classes
   slot(object, slotName) <- MeanAtLength
   object
 }
