@@ -76,20 +76,15 @@ every available year.}
 }
 \value{
 \code{PlotEffortCurve()} returns a \code{ggplot} object; \code{PlotEffort()}
-returns a \code{patchwork} object for \link[=hist-class]{hist}/\link[=mse-class]{mse} \code{object}, or
-a \code{ggplot} object otherwise.
+returns a \code{ggplot} object too (\code{.PlotEffortRealized()}'s, for
+\link[=hist-class]{hist}/\link[=mse-class]{mse} \code{object}, otherwise \code{PlotEffortCurve()}'s).
 }
 \description{
-\code{PlotEffort()} arranges every plot related to a fleet's \link[=effort-class]{effort}
-object -- the \emph{realized} historical/projection effort trajectory
-(\code{.PlotEffortRealized()}, \link[=hist-class]{hist}/\link[=mse-class]{mse} only -- possibly
-back-calculated from catch/F rather than taken directly from the
-specified schedule, see \code{DoBackCalcEffort} in \code{\link[=Simulate]{Simulate()}}), and the
-\emph{specified} input trend (\code{PlotEffortCurve()}, \code{Fleet@Effort@Effort}) --
-into a single figure with \code{\link[patchwork:wrap_plots]{patchwork::wrap_plots()}}. For a bare
-\link[=fleet-class]{fleet} or \link[=om-class]{om} \code{object} (nothing simulated yet), only the
-specified curve exists, so \code{PlotEffort()} and \code{PlotEffortCurve()} are
-equivalent.
+For a bare \link[=fleet-class]{fleet} or \link[=om-class]{om} \code{object} (nothing simulated
+yet), \code{PlotEffort()} plots the specified input effort trend
+(\code{PlotEffortCurve()}, \code{Fleet@Effort@Effort}, historical years only).
+For a \link[=hist-class]{hist}/\link[=mse-class]{mse} \code{object}, it plots the realized
+historical/projection effort trajectory.
 }
 \seealso{
 \code{\link[=Effort]{Effort()}}, \code{\link[=PlotCatchability]{PlotCatchability()}}, \code{\link[=Fleet]{Fleet()}}
