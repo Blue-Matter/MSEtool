@@ -71,7 +71,6 @@
       Pars   = object@Pars,
       Length = Length@MeanAtAge
     )
-    object@Classes <- Length@Classes
 
   } else {
     if ('Ages' %in% args) {
