@@ -10,7 +10,8 @@
 #' year. Simulation replicates are averaged. Stocks with only one area have
 #' no spatial structure to show and are skipped with a message.
 #'
-#' @param object A [stock-class], [hist-class], or [mse-class]  object.
+#' @param object A [stock-class], [om-class], [hist-class], or [mse-class]
+#'   object.
 #' @param Stocks Character or numeric vector restricting the plot to
 #'   specific stocks, either by name (matching [StockNames()]) or by index.
 #'   Default `NULL` includes every stock in `object`.
@@ -38,14 +39,15 @@
 #' @seealso [Movement()], [UnfishedDist()], [Populate()]
 #' @export
 PlotSpatial <- function(object, Stocks = NULL, byStock = NULL, Age = NULL, Year = NULL) {
-  .CheckClass(object, c('stock', 'hist', 'mse'), 'object')
+  .CheckClass(object, c('stock', 'hist', 'mse', 'om'), 'object')
   if (inherits(object, 'stock')) object <- .StockToShellHist(object)
+  OM <- .ResolveOM(object)
 
   allNames   <- StockNames(object)
   stockNames <- .ResolveStocks(object, Stocks)
   if (is.null(stockNames)) stockNames <- allNames
 
-  nAreaVec <- purrr::map_int(match(stockNames, allNames), \(st) nArea(object@OM, st))
+  nAreaVec <- purrr::map_int(match(stockNames, allNames), \(st) nArea(OM, st))
 
   spatialStocks <- stockNames[nAreaVec > 1]
   skipped       <- stockNames[nAreaVec <= 1]
@@ -62,7 +64,7 @@ PlotSpatial <- function(object, Stocks = NULL, byStock = NULL, Age = NULL, Year 
 
   facet <- if (is.null(byStock)) length(spatialStocks) > 1 else isTRUE(byStock)
 
-  sliceData <- .SpatialSliceData(object, spatialStocks, Age, Year)
+  sliceData <- .SpatialSliceData(OM, spatialStocks, Age, Year)
 
   moveDF <- purrr::map_dfr(sliceData, function(s) {
     df <- Array2DF(s$Movement)
@@ -80,11 +82,11 @@ PlotSpatial <- function(object, Stocks = NULL, byStock = NULL, Age = NULL, Year 
 }
 
 
-.SpatialSliceData <- function(object, stockNames, Age, Year) {
-  yearDefault <- max(Years(object, 'Historical'))
+.SpatialSliceData <- function(OM, stockNames, Age, Year) {
+  yearDefault <- max(Years(OM, 'Historical'))
 
   purrr::map(stockNames, function(nm) {
-    sp <- object@OM@Stock[[nm]]@Spatial
+    sp <- OM@Stock[[nm]]@Spatial
     mv <- Movement(sp)
     ud <- UnfishedDist(sp)
     dn <- dimnames(mv)
