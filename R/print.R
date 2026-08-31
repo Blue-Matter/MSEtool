@@ -24,6 +24,8 @@ print.RepList <- function(x, ...) {
 
 #' Print a `PlotStockList` object
 #'
+#' Draws every panel in `x` to the active graphics device.
+#'
 #' @param x A `PlotStockList` object.
 #' @param ... Additional arguments (currently ignored).
 #'
@@ -32,7 +34,25 @@ print.RepList <- function(x, ...) {
 #' @export
 print.PlotStockList <- function(x, ...) {
   if (!isTRUE(attr(x, 'silent')))
-    cli::cli_alert_info("Plotted {.val {length(x)}} panel{?s}: {.val {names(x)}}")
+    cli::cli_alert_info("Plotting {.val {length(x)}} panel{?s}: {.val {names(x)}}")
+  for (p in x) print(p)
+  invisible(x)
+}
+
+#' Print a `PlotFleetList` object
+#'
+#' Draws every panel in `x` to the active graphics device.
+#'
+#' @param x A `PlotFleetList` object.
+#' @param ... Additional arguments (currently ignored).
+#'
+#' @return Invisibly returns `x`.
+#'
+#' @export
+print.PlotFleetList <- function(x, ...) {
+  if (!isTRUE(attr(x, 'silent')))
+    cli::cli_alert_info("Plotting {.val {length(x)}} panel{?s}: {.val {names(x)}}")
+  for (p in x) print(p)
   invisible(x)
 }
 
