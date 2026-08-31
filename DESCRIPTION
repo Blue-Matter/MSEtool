@@ -279,6 +279,7 @@ Collate:
     'plot-comp.R'
     'plot-data.R'
     'plot-depletion.R'
+    'plot-fleet.R'
     'plot-hist.R'
     'plot-index-fit.R'
     'plot-recdevs.R'
