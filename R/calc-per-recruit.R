@@ -132,7 +132,9 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
     nSeason                   = inputs$nSeason,
     SeasonalWeightsList       = inputs$SeasonalWeightsList,
     CalendarYears             = inputs$CalendarYears,
-    RefSeason                 = RefSeason
+    RefSeason                 = RefSeason,
+    NPR0List                  = inputs$NPR0List,
+    NPR0_SPList               = inputs$NPR0_SPList
   )
 
   PR
@@ -190,7 +192,7 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
 
   if (nYear > 1L) {
     # Seasonal: normalise by the peak-season total so apicalF = peak-season F.
-    # This preserves the seasonal effort pattern while keeping the scale correct.
+    # Preserves the seasonal effort pattern while keeping the scale correct.
     FPeak <- apply(FDistributionTotal, 1L, max)   # max over seasons, [Sim]
     FPeak <- pmax(FPeak, .Machine$double.eps)
     sweep(FDistribution, 1L, FPeak, "/")          # [Sim, Year, Fleet]
@@ -276,21 +278,11 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
   result
 }
 
-# Cross-sectional per-recruit snapshot at one fixed real calendar season
-# s_ref: sums, over all birth-season cohorts, the age classes that currently
-# occupy s_ref, weighted by each cohort's share of annual recruitment
-# (pi_s). Used for reference-season Biomass/SBiomass reporting rather than
-# the cohort-lifetime average produced by .AggSeasonalProduct().
 .AggCrossSectional <- function(NPR_bs, q_sa, pi_s, s_ref) {
 
   nSim    <- dim(NPR_bs)[1]
   nAge    <- dim(NPR_bs)[2]
   nSeason <- dim(NPR_bs)[3]
-
-  # weight/maturity-at-age in season s_ref, as [Sim, Age] -- sliced with
-  # drop = FALSE and reshaped explicitly so a size-1 Sim or Age dimension
-  # (e.g. the single-sim fast path in CalcMSY()) doesn't collapse to a
-  # vector and break the 2-index subsetting below.
   q_ref <- q_sa[, , s_ref, drop = FALSE]
   dim(q_ref) <- dim(q_ref)[1:2]
 
@@ -308,9 +300,6 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
   result
 }
 
-# Combine .AggCrossSectional() over the reference season(s) selected for
-# each simulation, via a [Sim, nSeason] weight matrix (rows summing to 1
-# over the season(s) used for that sim). See .RefSeasonWeights().
 .AggRefSeason <- function(NPR_bs, q_sa, pi_s, RefSeasonWeights) {
 
   nSim    <- dim(NPR_bs)[1]
@@ -326,13 +315,6 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
   result
 }
 
-# Build the [Sim, nSeason] reference-season weight matrix used by
-# .AggRefSeason() (rows sum to 1 over the season(s) used for that sim).
-# `RefSeason` is the raw OM@RefSeason value (NULL, or a user-supplied vector
-# of season indices applied uniformly across sims). When NULL, the spawning
-# season(s) are auto-detected independently per simulation from FecundityList
-# (falling back to MaturityList when Fecundity is unset), since spawning
-# timing could in principle vary by sim under stochastic schedules.
 .RefSeasonWeights <- function(FecundityList, MaturityList, nSeason, RefSeason) {
 
   nSim <- dim(FecundityList[[1]])[1]
@@ -356,16 +338,12 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
     Flag <- Flag | (SumByAgeSeason > eps)
   }
 
-  # Fallback: if no season is detected for a sim (shouldn't normally
-  # happen), spread equally across all seasons rather than all-zero weights.
   NoneDetected <- rowSums(Flag) == 0
   if (any(NoneDetected)) Flag[NoneDetected, ] <- TRUE
 
   Flag / rowSums(Flag)
 }
 
-# Aggregate seasonal yield-per-recruit (summed over fleets) to [Sim] annual
-# yield per annual recruit.
 .AggSeasonalYield <- function(NPR_bs, FDead_saf, ZTotal_sa, WeightFleet_saf, pi_s,
                              type = c('Removals', 'Landings'),
                              FRetain_saf = NULL) {
@@ -405,10 +383,6 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
   result
 }
 
-# Aggregate seasonal discards-per-recruit (summed over fleets), using the
-# same residual formula as CalcCatch() in calc_catch.h: discard biomass is
-# the gap between total-selected biomass and landed biomass, scaled by the
-# fraction of discards that die. See .AggSeasonalYield() for array shapes.
 .AggSeasonalDiscards <- function(NPR_bs, FInteract_saf, FRetain_saf, FDiscDead_saf,
                                 ZTotal_sa, WeightFleetSelected_saf,
                                 WeightFleetRetained_saf, pi_s) {
@@ -449,18 +423,43 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
 }
 
 
-.CalcPerRecruitF <- function(apicalF = 0.1, spr_threshold = 0.001, ...) {
+.CalcPerRecruitF <- function(apicalF = 0.1, spr_threshold = 0.001,
+                             NPR0List = NULL, NPR0_SPList = NULL, ...) {
   names(apicalF) <- as.character(apicalF)
-  
+  dots <- list(...)
+
+  if (is.null(NPR0List) && (is.null(dots$nSeason) || dots$nSeason <= 1L)) {
+    NPR0List <- purrr::pmap(
+      list(dots$NaturalMortalityList, dots$PlusGroupList, dots$SemelparousList),
+      \(NaturalMortality, PlusGroup, Semelparous)
+      CalcSurvival(NaturalMortality, FishingMortality = NULL,
+                  PlusGroup, SpawnTimeFrac = 0, Semelparous)
+    )
+    IsSpawnTimeFrac <- any(unlist(dots$SpawnTimeFracList) != 0)
+    NPR0_SPList <- if (IsSpawnTimeFrac) {
+      purrr::pmap(
+        list(dots$NaturalMortalityList, dots$PlusGroupList,
+            dots$SemelparousList, dots$SpawnTimeFracList),
+        \(NaturalMortality, PlusGroup, Semelparous, SpawnTimeFrac)
+        CalcSurvival(NaturalMortality, FishingMortality = NULL,
+                    PlusGroup, SpawnTimeFrac, Semelparous)
+      )
+    } else {
+      NPR0List
+    }
+  }
+
   PRList    <- vector('list', length(apicalF))
   names(PRList) <- names(apicalF)
   collapsed <- FALSE
-  
+
   for (i in seq_along(apicalF)) {
     if (collapsed) {
-      PRList[[i]] <- PRList[[i-1]] 
+      PRList[[i]] <- PRList[[i-1]]
     } else {
-      PRList[[i]] <- .CalcPerRecruitFScalar(apicalF = apicalF[i], ...)
+      PRList[[i]] <- .CalcPerRecruitFScalar(apicalF = apicalF[i], ...,
+                                            NPR0List = NPR0List,
+                                            NPR0_SPList = NPR0_SPList)
       if (!is.null(PRList[[i]]@SPR) && min(PRList[[i]]@SPR, na.rm=TRUE) < spr_threshold)
         collapsed <- TRUE
     }
@@ -532,7 +531,9 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
                                    nSeason          = 1L,
                                    SeasonalWeightsList = NULL,
                                    CalendarYears    = NULL,
-                                   RefSeason        = NULL) {
+                                   RefSeason        = NULL,
+                                   NPR0List         = NULL,
+                                   NPR0_SPList      = NULL) {
 
   # Dispatch to seasonal implementation when there are multiple seasons.
   if (nSeason > 1L)
@@ -615,17 +616,24 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
     FDeadTotalList, NaturalMortalityList, ArraySum
   )
   
-  NPR0List <- purrr::pmap(
-    list(
-      NaturalMortalityList, PlusGroupList, SemelparousList
-    ),
-    \(NaturalMortality, PlusGroup, Semelparous)
-    CalcSurvival(
-      NaturalMortality, FishingMortality  = NULL,
-      PlusGroup, SpawnTimeFrac = 0, Semelparous
+  # NPR0/NPR0_SP (unfished numbers-per-recruit) depend only on
+  # NaturalMortality/PlusGroup/Semelparous(/SpawnTimeFrac), none of which vary
+  # with apicalF -- callers that re-evaluate this function many times for the
+  # same inputs (e.g. an optimizer search, or a grid of F values) can pass
+  # these in pre-computed to skip recomputing them on every call.
+  if (is.null(NPR0List)) {
+    NPR0List <- purrr::pmap(
+      list(
+        NaturalMortalityList, PlusGroupList, SemelparousList
+      ),
+      \(NaturalMortality, PlusGroup, Semelparous)
+      CalcSurvival(
+        NaturalMortality, FishingMortality  = NULL,
+        PlusGroup, SpawnTimeFrac = 0, Semelparous
+      )
     )
-  )
-  
+  }
+
   NPRFList <- purrr::pmap(
     list(
       NaturalMortalityList, FDeadTotalList,
@@ -639,18 +647,23 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
   )
 
   IsSpawnTimeFrac <- any(unlist(SpawnTimeFracList)!=0)
-  if (IsSpawnTimeFrac) {
-    
-    NPR0_SPList <- purrr::pmap(
-      list(
-        NaturalMortalityList, PlusGroupList,SemelparousList, SpawnTimeFracList),
-      \(NaturalMortality, PlusGroup, Semelparous, SpawnTimeFrac)
-      CalcSurvival(
-        NaturalMortality, FishingMortality = NULL,
-        PlusGroup, SpawnTimeFrac, Semelparous
+  if (is.null(NPR0_SPList)) {
+    NPR0_SPList <- if (IsSpawnTimeFrac) {
+      purrr::pmap(
+        list(
+          NaturalMortalityList, PlusGroupList,SemelparousList, SpawnTimeFracList),
+        \(NaturalMortality, PlusGroup, Semelparous, SpawnTimeFrac)
+        CalcSurvival(
+          NaturalMortality, FishingMortality = NULL,
+          PlusGroup, SpawnTimeFrac, Semelparous
+        )
       )
-    )
-    
+    } else {
+      NPR0List
+    }
+  }
+
+  if (IsSpawnTimeFrac) {
     NPRF_SPList <- purrr::pmap(
       list(
         NaturalMortalityList, FDeadTotalList, PlusGroupList,
@@ -664,7 +677,6 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
       )
     )
   } else {
-    NPR0_SPList <- NPR0List
     NPRF_SPList <- NPRFList
   }
 
@@ -1112,6 +1124,32 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
   FecundityList        <- purrr::map(FecundityList,        ExtendSims, nSim = nSim_true)
   SPR0List             <- purrr::map(SPR0List,             ExtendSims, nSim = nSim_true)
 
+  # NPR0/NPR0_SP (unfished numbers-per-recruit) depend only on
+  # NaturalMortality/PlusGroup/Semelparous(/SpawnTimeFrac) -- all fixed here,
+  # not on apicalF -- so compute them once per `optimize()` search instead of
+  # once per evaluation. Non-seasonal path only; the seasonal per-recruit
+  # calculation computes its own NPR0/NPR0_SP internally.
+  NPR0List <- NPR0_SPList <- NULL
+  if (nSeason <= 1L) {
+    NPR0List <- purrr::pmap(
+      list(NaturalMortalityList, PlusGroupList, SemelparousList),
+      \(NaturalMortality, PlusGroup, Semelparous)
+      CalcSurvival(NaturalMortality, FishingMortality = NULL,
+                  PlusGroup, SpawnTimeFrac = 0, Semelparous)
+    )
+    IsSpawnTimeFrac <- any(unlist(SpawnTimeFracList) != 0)
+    NPR0_SPList <- if (IsSpawnTimeFrac) {
+      purrr::pmap(
+        list(NaturalMortalityList, PlusGroupList, SemelparousList, SpawnTimeFracList),
+        \(NaturalMortality, PlusGroup, Semelparous, SpawnTimeFrac)
+        CalcSurvival(NaturalMortality, FishingMortality = NULL,
+                    PlusGroup, SpawnTimeFrac, Semelparous)
+      )
+    } else {
+      NPR0List
+    }
+  }
+
   WeightFleetRetainedList <- purrr::map(FleetList, \(fl) {
     purrr::map(fl, \(Fleet) {
       Fleet@WeightFleetRetained |> .ArraySubsetYear(Years)
@@ -1265,6 +1303,8 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
     nSeason                   = nSeason,
     SeasonalWeightsList       = SeasonalWeightsList,
     CalendarYears             = cal_years,
-    RefSeason                 = RefSeason
+    RefSeason                 = RefSeason,
+    NPR0List                  = NPR0List,
+    NPR0_SPList               = NPR0_SPList
   )
 }
