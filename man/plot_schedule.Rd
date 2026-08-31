@@ -2,117 +2,20 @@
 % Please edit documentation in R/plot-schedule.R
 \name{plot_schedule}
 \alias{plot_schedule}
-\alias{PlotSelectivity}
-\alias{PlotRetention}
-\alias{PlotDiscardMortality}
-\alias{PlotLength}
-\alias{PlotWeight}
-\alias{PlotMaturity}
-\alias{PlotNaturalMortality}
-\alias{PlotFecundity}
 \title{Plot Biological and Gear Schedules}
-\usage{
-PlotSelectivity(
-  object,
-  Sim = NULL,
-  byStock = NULL,
-  byFleet = NULL,
-  Years = NULL,
-  units = TRUE,
-  Stocks = NULL,
-  x = c("Age", "Length"),
-  probs = c(0.05, 0.95)
-)
-
-PlotRetention(
-  object,
-  Sim = NULL,
-  byStock = NULL,
-  byFleet = NULL,
-  Years = NULL,
-  units = TRUE,
-  Stocks = NULL,
-  x = c("Age", "Length"),
-  probs = c(0.05, 0.95)
-)
-
-PlotDiscardMortality(
-  object,
-  Sim = NULL,
-  byStock = NULL,
-  byFleet = NULL,
-  Years = NULL,
-  units = TRUE,
-  Stocks = NULL,
-  x = c("Age", "Length"),
-  probs = c(0.05, 0.95)
-)
-
-PlotLength(
-  object,
-  Sim = NULL,
-  byStock = NULL,
-  Years = NULL,
-  units = TRUE,
-  Stocks = NULL,
-  x = c("Age", "Length"),
-  probs = c(0.05, 0.95)
-)
-
-PlotWeight(
-  object,
-  Sim = NULL,
-  byStock = NULL,
-  Years = NULL,
-  units = TRUE,
-  Stocks = NULL,
-  x = c("Age", "Length"),
-  probs = c(0.05, 0.95)
-)
-
-PlotMaturity(
-  object,
-  Sim = NULL,
-  byStock = NULL,
-  Years = NULL,
-  units = TRUE,
-  Stocks = NULL,
-  x = c("Age", "Length"),
-  probs = c(0.05, 0.95)
-)
-
-PlotNaturalMortality(
-  object,
-  Sim = NULL,
-  byStock = NULL,
-  Years = NULL,
-  units = TRUE,
-  Stocks = NULL,
-  x = c("Age", "Length"),
-  probs = c(0.05, 0.95)
-)
-
-PlotFecundity(
-  object,
-  Sim = NULL,
-  byStock = NULL,
-  Years = NULL,
-  units = TRUE,
-  Stocks = NULL,
-  x = c("Age", "Length"),
-  probs = c(0.05, 0.95)
-)
-}
 \arguments{
 \item{object}{An \link[=om-class]{om}, \link[=hist-class]{hist}, or \link[=mse-class]{mse} object (\code{om}
-objects are populated via \code{\link[=PopulateOM]{PopulateOM()}} if not already), or -- for
-\code{PlotLength()}/\code{PlotWeight()}/\code{PlotMaturity()}/\code{PlotNaturalMortality()}/
-\code{PlotFecundity()} only -- a \link[=stock-class]{stock} object.}
+objects are populated via \code{\link[=PopulateOM]{PopulateOM()}} if not already), or -- for the
+\verb{*Curve()} functions only -- a \link[=stock-class]{stock}/\link[=fleet-class]{fleet} object.}
 
 \item{Sim}{Integer or \code{NULL} (default). Which simulation replicate to
 plot. \code{NULL} takes the median across all simulations, cell by cell, and
 adds a \code{probs} quantile ribbon behind it (unless \code{nSim == 1} or values
 constant across simulations.}
+
+\item{probs}{Numeric vector of length 2. Lower and upper quantiles of the
+across-simulation ribbon drawn when \code{Sim = NULL}. Default \code{c(0.05, 0.95)}.
+Ignored when \code{Sim} is a specific replicate.}
 
 \item{byStock, byFleet}{One of \code{TRUE}, \code{FALSE}, or \code{NULL} (default,
 facets automatically when \code{object} has more than one stock/fleet).
@@ -122,35 +25,22 @@ stock/fleet is always distinguishable somehow. \code{TRUE}/\code{NULL} facets by
 \code{Stock}/\code{Fleet}. \code{FALSE} instead colors by that
 variable;}
 
-\item{Years}{Optional numeric vector, or \code{"all"}. Default \code{NULL}: each
-independent curve (\code{Historical}, and each MP's projection for
-\code{mse} objects) is trimmed to its own last full calendar year (every
-season-slice sharing that curve's most recent year, for a seasonal
-\code{Seasons > 1} OM; just the one latest year otherwise), colored and
-labelled by year in the legend. If the curve never changes value
-over its full year range, a single (arbitrary) year is
-drawn and the legend is dropped entirely.
-\code{"all"} plots every available year. Both \code{NULL} and \code{"all"} further
-collapse consecutive years with an identical curve down
-to just the breakpoint years where the curve actually changed.
-A numeric vector restricts
-to exactly those years with no compression, always with the legend
-shown.}
+\item{Years}{Optional numeric vector, or \code{"all"}. Default \code{NULL} shows
+each independent curve's own last calendar year, labelled by year in
+the legend (legend dropped if the curve is constant over that year).
+\code{"all"} shows every available year. Both \code{NULL} and \code{"all"} collapse
+consecutive years with an identical curve to just the breakpoint
+years. A numeric vector shows exactly those years, uncompressed.}
 
 \item{units}{Logical or a character unit string. \code{TRUE} (default) labels
-the x-axis with the stock's \code{Ages@Units} (e.g. \code{"Age (year)"}) when it's
-set and agrees across every plotted stock, and additionally, for
-\code{PlotLength()}/\code{PlotWeight()}, labels the y-axis with \code{Length@Units}/
-\code{Weight@Units} (and appends the unit for \code{PlotNaturalMortality()}/
-\code{PlotFecundity()}). \code{FALSE} suppresses all unit labelling (axes fall
-back to plain \code{"Age"}/\code{"Length"}/etc.). For \code{PlotLength()}/
-\code{PlotWeight()} only, a character string (a length unit -- \code{"mm"},
-\code{"cm"}, \code{"inch"}, \code{"m"} -- or mass unit -- \code{"g"}, \code{"kg"}, \code{"lb"},
-\code{"t"}, etc.) both relabels the y-axis and rescales the plotted
-values into that unit; requesting a unit that can't be converted to is
-an error. Has no effect on \code{PlotMaturity()}/\code{PlotSelectivity()}/
-\code{PlotRetention()}/\code{PlotDiscardMortality()} beyond the x-axis label,
-since those are unitless proportions.}
+axes with the relevant \code{Units} slot (e.g. \code{Ages@Units}; also
+\code{Length@Units}/\code{Weight@Units} for \code{PlotLengthCurve()}/
+\code{PlotWeightCurve()}). \code{FALSE} suppresses unit labelling. For
+\code{PlotLengthCurve()}/\code{PlotWeightCurve()} only, a unit string (e.g.
+\code{"cm"}, \code{"kg"}) relabels \emph{and rescales} the y-axis into that unit; an
+unconvertible unit is an error. No effect beyond the x-axis label for
+the unitless-proportion plots (\code{PlotMaturityCurve()},
+\code{PlotSelectivityCurve()}, etc.).}
 
 \item{Stocks}{Character or numeric vector. Restrict the plot to specific
 stocks, either by name (matching \code{\link[=StockNames]{StockNames()}}) or by index. Default
@@ -158,16 +48,12 @@ stocks, either by name (matching \code{\link[=StockNames]{StockNames()}}) or by 
 
 \item{x}{\code{"Age"} (default) or \code{"Length"}. \code{"Length"} projects the curve
 through the stock's \verb{[Length()]} age-length key (\verb{@ALK}) onto a length
-axis instead -- e.g. \code{PlotWeight(x = "Length")} gives the weight-length
-relationship, \code{PlotMaturity(x = "Length")} gives maturity-at-length.
-Not meaningful for \code{PlotLength()} itself (length-at-length is a trivial
-identity), which errors if \code{x = "Length"} is requested. The length axis
-is always labelled in the stock's native \code{Length@Units}, independent of
-\code{units}.}
-
-\item{probs}{Numeric vector of length 2. Lower and upper quantiles of the
-across-simulation ribbon drawn when \code{Sim = NULL}. Default \code{c(0.05, 0.95)}.
-Ignored when \code{Sim} is a specific replicate.}
+axis instead -- e.g. \code{PlotWeightCurve(x = "Length")} gives the
+weight-length relationship, \code{PlotMaturityCurve(x = "Length")} gives
+maturity-at-length. Not meaningful for \code{PlotLengthCurve()} itself (see
+\code{\link[=PlotLength]{PlotLength()}}; length-at-length is a trivial identity, and errors if
+requested). The length axis is always labelled in the stock's native
+\code{Length@Units}, independent of \code{units}.}
 }
 \value{
 A \code{ggplot} object.
@@ -181,27 +67,39 @@ schedule for \link[=mse-class]{mse} objects) is drawn for its own last available
 year only; pass \code{Years} to see more.
 }
 \details{
-\code{PlotSelectivity()}, \code{PlotRetention()}, and \code{PlotDiscardMortality()} plot
-fleet-level gear curves (\verb{[Fleet()]}'s \code{Selectivity}/\code{Retention}/
-\code{DiscardMortality} sub-objects). For the projection period of
-\link[=mse-class]{mse} objects, these reflect any change made by the MP via
-\code{Advice()} (see \code{\link[=VBiomass]{VBiomass()}}, which resolves the same effective curves).
+\code{PlotSelectivityCurve()}, \code{PlotRetentionCurve()}, and
+\code{PlotDiscardMortalityCurve()} plot a single fleet-level gear curve
+(\verb{[Fleet()]}'s \code{Selectivity}/\code{Retention}/\code{DiscardMortality} sub-objects)
+on a chosen \code{x} axis. For the projection period of \link[=mse-class]{mse} objects,
+these reflect any change made by the MP via \code{Advice()} (see
+\code{\link[=VBiomass]{VBiomass()}}, which resolves the same effective curves). Each has a
+combining counterpart -- \code{\link[=PlotSelectivity]{PlotSelectivity()}}, \code{\link[=PlotRetention]{PlotRetention()}},
+\code{\link[=PlotDiscardMortality]{PlotDiscardMortality()}} -- that arranges every plot available for that
+schedule into one figure.
 
-\code{PlotLength()}, \code{PlotWeight()}, \code{PlotMaturity()}, \code{PlotNaturalMortality()},
-and \code{PlotFecundity()} plot stock-level biological schedules.
+\code{PlotLengthCurve()}, \code{PlotWeightCurve()}, \code{PlotMaturityCurve()},
+\code{PlotNaturalMortalityCurve()}, and \code{PlotFecundityCurve()} plot a single
+stock-level biological curve on a chosen \code{x} axis. Each has a combining
+counterpart -- \code{\link[=PlotLength]{PlotLength()}}, \code{\link[=PlotWeight]{PlotWeight()}}, \code{\link[=PlotMaturity]{PlotMaturity()}},
+\code{\link[=PlotNaturalMortality]{PlotNaturalMortality()}}, \code{\link[=PlotFecundity]{PlotFecundity()}} -- that arranges every plot
+available for that schedule (the age-based curve, the length-based curve
+when populated, and an age-size key where one exists) into one figure.
 }
 \examples{
 \dontrun{
 Hist <- Simulate(SingleStockOM)
-PlotSelectivity(Hist)
-PlotMaturity(Hist)
+PlotSelectivityCurve(Hist)
+PlotMaturityCurve(Hist)
 
 MSE <- Project(Hist, ExampleMPs())
-PlotRetention(MSE)
-PlotWeight(MSE, Sim = 3)
+PlotRetentionCurve(MSE)
+PlotWeightCurve(MSE, Sim = 3)
 }
 
 }
 \seealso{
-\code{\link[=Fleet]{Fleet()}}, \code{\link[=Stock]{Stock()}}, \code{\link[=VBiomass]{VBiomass()}}
+\code{\link[=Fleet]{Fleet()}}, \code{\link[=Stock]{Stock()}}, \code{\link[=VBiomass]{VBiomass()}}, \code{\link[=PlotSelectivity]{PlotSelectivity()}},
+\code{\link[=PlotRetention]{PlotRetention()}}, \code{\link[=PlotDiscardMortality]{PlotDiscardMortality()}}, \code{\link[=PlotLength]{PlotLength()}},
+\code{\link[=PlotWeight]{PlotWeight()}}, \code{\link[=PlotMaturity]{PlotMaturity()}}, \code{\link[=PlotNaturalMortality]{PlotNaturalMortality()}},
+\code{\link[=PlotFecundity]{PlotFecundity()}}
 }

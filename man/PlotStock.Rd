@@ -6,6 +6,7 @@
 \usage{
 PlotStock(
   Stock,
+  Stocks = NULL,
   nYear = NULL,
   pYear = NULL,
   CurrentYear = NULL,
@@ -15,29 +16,48 @@ PlotStock(
   AWK = TRUE,
   seed = 102,
   force = FALSE,
-  CalcAtLength = FALSE
+  CalcAtLength = FALSE,
+  silent = FALSE
 )
 }
 \arguments{
-\item{Stock}{A \code{\link[=Stock]{Stock()}} object, populated or not.}
+\item{Stock}{A \code{\link[=Stock]{Stock()}} object (populated or not), or an \link[=om-class]{om},
+\link[=hist-class]{hist}, or \link[=mse-class]{mse} object -- in which case the plots are
+built from the single stock it resolves to (see \code{Stocks}), already
+populated as part of that object.}
+
+\item{Stocks}{Character or numeric vector. Selects which stock to plot
+when \code{Stock} is an \link[=om-class]{om}/\link[=hist-class]{hist}/\link[=mse-class]{mse} object with more
+than one, either by name (matching \code{\link[=StockNames]{StockNames()}}) or by index; must
+resolve to exactly one stock. Ignored for a bare \code{\link[=Stock]{Stock()}} object.}
 
 \item{nYear, pYear, CurrentYear, nSim, Seasons, ALK, AWK, seed, force, CalcAtLength}{Passed to \code{\link[=PopulateStock]{PopulateStock()}}; same arguments, same defaults, except
-\code{nYear}/\code{pYear} also accept \code{NULL} (the default here) -- unlike
-\code{\link[=PopulateStock]{PopulateStock()}}, which requires them -- since their exact value
-doesn't affect any of these schedules; \code{NULL} resolves to \code{nYear = 20},
-\code{pYear = 0}.}
+\code{nYear}/\code{pYear} also accept \code{NULL} in which case defaults
+\code{nYear = 20} and \code{pYear = 0} are used. An already-populated bare
+\code{Stock} is plotted as-is (with whatever \code{nYear}/\code{pYear}/\code{nSim} it
+already has) unless \code{nYear}, \code{pYear}, \code{CurrentYear}, or \code{force} is
+explicitly set, in which case it's re-populated with these values.}
+
+\item{silent}{Logical. If \code{TRUE}, the returned list doesn't announce what
+it contains when printed at the console (see \code{\link[=print.PlotStockList]{print.PlotStockList()}}).
+Default \code{FALSE}.}
 }
 \value{
-A named list of \code{ggplot} objects: \code{Length}, \code{Weight}, \code{Maturity},
-\code{NaturalMortality}, \code{Fecundity}, \code{Spatial} (omitted for a single-area
-stock), \code{Depletion}, \code{SRR}.
+A named list of \code{ggplot}/\code{patchwork} objects: \code{Length}, \code{Weight},
+\code{Maturity}, \code{NaturalMortality}, \code{Fecundity} (each a \code{patchwork} when
+more than one plot is available for that schedule, otherwise a plain
+\code{ggplot}), \code{Spatial} (omitted for a single-area stock), \code{Depletion},
+\code{SRR}.
 }
 \description{
 Runs every stock-related \verb{Plot*()} function against a bare \link[=stock-class]{stock}
 object: \code{\link[=PlotLength]{PlotLength()}}, \code{\link[=PlotWeight]{PlotWeight()}}, \code{\link[=PlotMaturity]{PlotMaturity()}},
-\code{\link[=PlotNaturalMortality]{PlotNaturalMortality()}}, \code{\link[=PlotFecundity]{PlotFecundity()}}, \code{\link[=PlotSpatial]{PlotSpatial()}} (when the
-stock has more than one area), \code{\link[=PlotDepletion]{PlotDepletion()}}, and \code{\link[=PlotSRR]{PlotSRR()}}.
+\code{\link[=PlotNaturalMortality]{PlotNaturalMortality()}}, \code{\link[=PlotFecundity]{PlotFecundity()}} (each combining the
+age-based curve with any additional plot available for that schedule --
+a length-based curve, an age-size key -- see their own docs),
+\code{\link[=PlotSpatial]{PlotSpatial()}} (when the stock has more than one area),
+\code{\link[=PlotDepletion]{PlotDepletion()}}, and \code{\link[=PlotSRR]{PlotSRR()}}.
 }
 \seealso{
-\code{\link[=Stock]{Stock()}}, \code{\link[=PopulateStock]{PopulateStock()}}, \code{\link[=PlotSRR]{PlotSRR()}}, \code{\link[=PlotDepletion]{PlotDepletion()}}
+\code{\link[=Stock]{Stock()}}, \code{\link[=PopulateStock]{PopulateStock()}}, \code{\link[=PlotSRR]{PlotSRR()}}, \code{\link[=PlotALK]{PlotALK()}}, \code{\link[=PlotAWK]{PlotAWK()}}, \code{\link[=PlotDepletion]{PlotDepletion()}}
 }

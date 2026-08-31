@@ -38,6 +38,9 @@ forms:
 \item Positive scalar: interpreted as the CV of a lognormal distribution; a
 unique bias is drawn per simulation as
 \code{rlnorm(nSim, mconv(1, Bias), sdconv(1, Bias))}.
+\item Length-2 vector \code{c(lower, upper)} (when \code{nSim != 2}): treated as
+uniform bounds; a unique bias per simulation is drawn via
+\code{runif(nSim, lower, upper)}.
 \item Length-\code{nSim} vector or named array: used directly, one bias per
 simulation.
 }

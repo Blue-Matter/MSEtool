@@ -4,22 +4,29 @@
 \alias{PlotDepletion}
 \title{Plot Initial/Final Depletion}
 \usage{
-PlotDepletion(object, byStock = NULL, Stocks = NULL, bins = 15)
+PlotDepletion(object, byStock = NULL, Stocks = NULL, bins = 15, tol = 0.1)
 }
 \arguments{
 \item{object}{\link[=stock-class]{stock}, \link[=om-class]{om}, \link[=hist-class]{hist}, or \link[=mse-class]{mse} object.}
 
-\item{byStock}{One of \code{TRUE}, \code{FALSE}, or \code{NULL} (default, facets
-automatically when \code{object} has more than one stock).}
+\item{byStock}{Logical. Facet by stock? Default \code{NULL} facets
+automatically when \code{object} has more than one stock.}
 
 \item{Stocks}{Character or numeric vector. Restrict the plot to specific
 stocks, either by name (matching \code{\link[=StockNames]{StockNames()}}) or by index. Default
 \code{NULL} (all stocks).}
 
 \item{bins}{Integer. Number of histogram bins. Default \code{15}.}
+
+\item{tol}{Numeric. Relative tolerance for flagging a simulation as
+having missed its \code{Depletion@Initial}/\code{Final} target -- a simulation is
+flagged when \code{abs(log(achieved / target)) > log(1 + tol)}. Default
+\code{0.1} (10\%). Ignored for \link[=stock-class]{stock}/\link[=om-class]{om} \code{object} (nothing yet
+simulated to check against).}
 }
 \value{
-A \code{ggplot} object.
+A \code{ggplot} object, or (for \link[=hist-class]{hist}/\link[=mse-class]{mse} \code{object}) a
+\code{patchwork} object combining the histogram and trajectory panels.
 }
 \description{
 Histogram of each stock's sampled depletion values (relative to
@@ -27,6 +34,21 @@ Histogram of each stock's sampled depletion values (relative to
 replicates; the \code{Initial}/\code{Final} slots of \verb{[Depletion()]}. Both are
 shown, side by side, when a stock has both populated.
 }
+\details{
+For a \link[=hist-class]{hist} or \link[=mse-class]{mse} \code{object}, a second panel is added
+below: the actual historical relative-biomass trajectory (\verb{[B_B0()]} or
+\verb{[SB_SB0()]}, matching \code{Depletion@Reference}) for every simulation, so
+the sampled targets above can be checked against what was actually
+achieved. Where \code{Depletion@Initial}/\code{Final} are specified, the target
+value for each simulation is overlaid as a point on its own trajectory
+at the first/last historical year; a simulation whose achieved value
+misses its target by more than \code{tol} (relative) is colored red rather
+than grey, and listed in a warning (via \code{\link[cli:cli_warn]{cli::cli_warn()}}). This can
+legitimately happen -- e.g. a low target depletion combined with
+selectivity maturing well before maturity -- and \code{\link[=Simulate]{Simulate()}} performs
+the same check itself, recording any misses to \code{Hist@Log} (see \code{\link[=Log]{Log()}})
+rather than printing them.
+}
 \seealso{
-\code{\link[=Depletion]{Depletion()}}, \code{\link[=PlotSRR]{PlotSRR()}}, \code{\link[=Stock]{Stock()}}
+\code{\link[=Depletion]{Depletion()}}, \code{\link[=B_B0]{B_B0()}}, \code{\link[=SB_SB0]{SB_SB0()}}, \code{\link[=PlotSRR]{PlotSRR()}}, \code{\link[=Stock]{Stock()}}
 }

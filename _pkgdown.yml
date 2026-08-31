@@ -338,12 +338,27 @@ reference:
   contents:
   - plot_hist
   - plot_data
+  - PlotLength
+  - PlotWeight
+  - PlotMaturity
+  - PlotNaturalMortality
+  - PlotFecundity
+  - PlotSelectivity
+  - PlotRetention
+  - PlotDiscardMortality
+  - PlotEffort
+  - PlotCatchability
+  - PlotClosure
   - plot_schedule
   - plot_comp
   - PlotIndexFit
   - PlotSpatial
   - PlotSRR
+  - PlotSRRCurve
+  - PlotRecDevs
   - PlotDepletion
+  - PlotALK
+  - PlotAWK
   - PlotStock
 
 

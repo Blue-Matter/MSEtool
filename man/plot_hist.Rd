@@ -12,7 +12,6 @@
 \alias{PlotDiscards}
 \alias{PlotInteractions}
 \alias{PlotRemovals}
-\alias{PlotEffort}
 \alias{PlotDynamics}
 \title{Plot Historical and Projected Dynamics}
 \usage{
@@ -169,19 +168,6 @@ PlotRemovals(
   AggregateYear = FALSE,
   units = TRUE,
   Stocks = NULL
-)
-
-PlotEffort(
-  object,
-  units = NULL,
-  byFleet = NULL,
-  probs = c(0.05, 0.95),
-  nsim = 0,
-  Years = NULL,
-  free_y = NULL,
-  IncHist = TRUE,
-  byMP = FALSE,
-  AggregateYear = FALSE
 )
 
 PlotDynamics(
@@ -399,10 +385,10 @@ shown. For \link[=data-class]{data} objects (see \code{object} above) they're su
 into a single \code{Landings + Discards} series instead, since there's no
 color channel to spare.
 
-\code{PlotEffort()} plots \code{\link[=Effort]{Effort()}}, which has no \code{Stock} dimension (effort is
-a fleet-level quantity), so \code{byStock} does not apply to it. See \code{units}
-above for plotting effort as real trip (or angler) counts instead of the
-raw index, where \code{TripsScalar}/\code{AnglerPerTrip} are available.
+See \code{\link[=PlotEffort]{PlotEffort()}} for fishing effort, documented on its own page. See
+\code{units} above for plotting effort as real trip (or angler) counts
+instead of the raw index, where \code{TripsScalar}/\code{AnglerPerTrip} are
+available.
 
 \code{byStock} and (for \code{PlotLandings()}/\code{PlotDiscards()}/\code{PlotRemovals()})
 \code{byFleet} control faceting: when both are \code{TRUE} panels are arranged in a

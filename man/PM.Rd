@@ -60,11 +60,24 @@ PM_Yield(
 
 PM_RelYield(object, Ref = NULL, Years = NULL, Stocks = NULL, silent = TRUE)
 
-PM_AAVY(object, Years = NULL, Stocks = NULL, silent = TRUE)
+PM_AAVY(
+  object,
+  Type = c("TAC", "Removals", "Landings"),
+  Years = NULL,
+  Stocks = NULL,
+  silent = TRUE
+)
 
 PM_AAVE(object, Years = NULL, Fleets = NULL, silent = TRUE)
 
-PM_Stability(object, Threshold, Years = NULL, Stocks = NULL, silent = TRUE)
+PM_Stability(
+  object,
+  Threshold,
+  Type = c("TAC", "Removals", "Landings"),
+  Years = NULL,
+  Stocks = NULL,
+  silent = TRUE
+)
 }
 \arguments{
 \item{object}{An \link[=mse-class]{mse} object, or a \code{list} of \link[=mse-class]{mse} objects.}
@@ -102,14 +115,17 @@ rebuilding, used by \code{PM_Rebuild}.}
 \item{Stocks}{Character vector of stock names to include. Default \code{NULL}
 uses the automatic complex/spawning-stock grouping described above.}
 
-\item{Type}{Character. Which catch metric \code{PM_Yield} reports:
-\code{"Removals"} (landings + discards, default) or \code{"Landings"}.}
+\item{Type}{Character. For \code{PM_Yield}, which catch metric to report:
+\code{"Removals"} (landings + discards, default) or \code{"Landings"}. For
+\code{PM_AAVY}/\code{PM_Stability}, which series to assess interval-to-interval
+variability in: \code{"TAC"} (the MP's recommendation, default),
+\code{"Removals"}, or \code{"Landings"}.}
 
 \item{Fleets}{Character vector of fleet names to include in \code{PM_AAVE}.
 Default \code{NULL} uses all fleets.}
 
-\item{Threshold}{Numeric. Maximum acceptable change in yield between
-consecutive management intervals, used by \code{PM_Stability}.}
+\item{Threshold}{Numeric. Maximum acceptable interval-to-interval change
+in the series selected by \code{Type}, used by \code{PM_Stability}.}
 }
 \value{
 A \link[=pm-class]{pm} object.
@@ -123,9 +139,10 @@ definition of each metric.
 }
 \details{
 \code{PM_Removals}, \code{PM_Landings} (and \code{PM_Yield}, which is a thin wrapper
-around the two), \code{PM_RelYield}, and \code{PM_AAVY} sum removals/landings over
-the stocks in each \code{OM@Complexes} group by default; pass \code{Stocks} to
-override with an explicit set of stock names.
+around the two), \code{PM_RelYield}, \code{PM_AAVY}, and \code{PM_Stability} sum their
+series (TAC, removals, or landings) over the stocks in each
+\code{OM@Complexes} group by default; pass \code{Stocks} to override with an
+explicit set of stock names.
 
 \code{PM_FFMSY} and \code{PM_Status} are evaluated at the \emph{complex} level
 (\code{OM@Complexes}), not per stock, because \code{FMSY} is a single value

@@ -7,7 +7,8 @@
 PlotSpatial(object, Stocks = NULL, byStock = NULL, Age = NULL, Year = NULL)
 }
 \arguments{
-\item{object}{A \link[=stock-class]{stock}, \link[=hist-class]{hist}, or \link[=mse-class]{mse}  object.}
+\item{object}{A \link[=stock-class]{stock}, \link[=om-class]{om}, \link[=hist-class]{hist}, or \link[=mse-class]{mse}
+object.}
 
 \item{Stocks}{Character or numeric vector restricting the plot to
 specific stocks, either by name (matching \code{\link[=StockNames]{StockNames()}}) or by index.

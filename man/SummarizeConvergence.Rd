@@ -13,13 +13,14 @@ SummarizeConvergence(MSE, silent = FALSE)
 }
 \value{
 Invisibly, a \code{data.frame} with one row per logged event: \code{Sim},
-\code{Year}, \code{MP}, \code{Type} (\code{"Saturated"} or \code{"Not converged"}). Zero rows if
-nothing was logged.
+\code{Year}, \code{MP}. Zero rows if nothing was logged.
 }
 \description{
-Reports how often the effort/TAC solver failed to converge or saturated
-(TAC unachievable within the effort ceiling) during a \code{\link[=Project]{Project()}}/
-\code{\link[=runMSE]{runMSE()}} run.
+Reports how often the effort/TAC solver failed to converge within
+tolerance during a \code{\link[=Project]{Project()}}/\code{\link[=runMSE]{runMSE()}} run. TAC saturation (TAC
+unachievable within the effort ceiling, e.g. because the stock is too
+depleted) is not logged, since it reflects the stock dynamics rather than
+a solver failure.
 }
 \seealso{
 \code{\link[=Project]{Project()}}, \code{\link[=runMSE]{runMSE()}}
