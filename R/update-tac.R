@@ -144,12 +144,13 @@
   if (is.na(converged) || converged)
     return(Proj)
 
-  msg <- if (saturated) {
-    "Effort/TAC solver: TAC unachievable within the effort ceiling (saturated)."
-  } else {
-    "Effort/TAC solver: did not converge within tolerance."
-  }
+  # Saturation (TAC unachievable within the effort ceiling) is expected
+  # whenever the stock is too depleted to support the TAC even at the
+  # ceiling, so it isn't logged.
+  if (saturated)
+    return(Proj)
 
+  msg <- "Effort/TAC solver: did not converge within tolerance."
   Proj@Log$warning <- c(
     Proj@Log$warning,
     list(.NewLogEntry(msg, name = 'EffortConvergence', sim = sim, year = Year))
