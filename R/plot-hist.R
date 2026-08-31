@@ -610,16 +610,11 @@ PlotRemovals <- function(object,
 
 #' Plot Fishing Effort
 #'
-#' `PlotEffort()` arranges every plot related to a fleet's [effort-class]
-#' object -- the *realized* historical/projection effort trajectory
-#' (`.PlotEffortRealized()`, [hist-class]/[mse-class] only -- possibly
-#' back-calculated from catch/F rather than taken directly from the
-#' specified schedule, see `DoBackCalcEffort` in [Simulate()]), and the
-#' *specified* input trend (`PlotEffortCurve()`, `Fleet@Effort@Effort`) --
-#' into a single figure with [patchwork::wrap_plots()]. For a bare
-#' [fleet-class] or [om-class] `object` (nothing simulated yet), only the
-#' specified curve exists, so `PlotEffort()` and `PlotEffortCurve()` are
-#' equivalent.
+#' For a bare [fleet-class] or [om-class] `object` (nothing simulated
+#' yet), `PlotEffort()` plots the specified input effort trend
+#' (`PlotEffortCurve()`, `Fleet@Effort@Effort`, historical years only).
+#' For a [hist-class]/[mse-class] `object`, it plots the realized
+#' historical/projection effort trajectory.
 #'
 #' @param object A [fleet-class] object, an [om-class], [hist-class], or
 #'   [mse-class] object, or a [data-class] object (plots `Effort(object)`
@@ -652,8 +647,8 @@ PlotRemovals <- function(object,
 #'   [plot_hist].
 #'
 #' @return `PlotEffortCurve()` returns a `ggplot` object; `PlotEffort()`
-#'   returns a `patchwork` object for [hist-class]/[mse-class] `object`, or
-#'   a `ggplot` object otherwise.
+#'   returns a `ggplot` object too (`.PlotEffortRealized()`'s, for
+#'   [hist-class]/[mse-class] `object`, otherwise `PlotEffortCurve()`'s).
 #'
 #' @seealso [Effort()], [PlotCatchability()], [Fleet()]
 #' @export
@@ -683,15 +678,9 @@ PlotEffort <- function(object,
                            Stocks = Stocks, probs = probs, nsim = nsim, Years = Years,
                            free_y = free_y))
 
-  panels <- list(
-    Realized  = .PlotEffortRealized(object, units = units, byFleet = byFleet, probs = probs,
-                                    nsim = nsim, Years = Years, free_y = free_y, IncHist = IncHist,
-                                    byMP = byMP, AggregateYear = AggregateYear),
-    Specified = PlotEffortCurve(object, units = units, byStock = byStock, byFleet = byFleet,
-                                Stocks = Stocks, probs = probs, nsim = nsim, Years = Years,
-                                free_y = free_y)
-  )
-  patchwork::wrap_plots(panels, ncol = 1)
+  .PlotEffortRealized(object, units = units, byFleet = byFleet, probs = probs,
+                      nsim = nsim, Years = Years, free_y = free_y, IncHist = IncHist,
+                      byMP = byMP, AggregateYear = AggregateYear)
 }
 
 #' @rdname PlotEffort
