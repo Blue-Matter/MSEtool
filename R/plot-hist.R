@@ -174,10 +174,10 @@
 #' into a single `Landings + Discards` series instead, since there's no
 #' color channel to spare.
 #'
-#' `PlotEffort()` plots [Effort()], which has no `Stock` dimension (effort is
-#' a fleet-level quantity), so `byStock` does not apply to it. See `units`
-#' above for plotting effort as real trip (or angler) counts instead of the
-#' raw index, where `TripsScalar`/`AnglerPerTrip` are available.
+#' See [PlotEffort()] for fishing effort, documented on its own page. See
+#' `units` above for plotting effort as real trip (or angler) counts
+#' instead of the raw index, where `TripsScalar`/`AnglerPerTrip` are
+#' available.
 #'
 #' `byStock` and (for `PlotLandings()`/`PlotDiscards()`/`PlotRemovals()`)
 #' `byFleet` control faceting: when both are `TRUE` panels are arranged in a
@@ -608,11 +608,61 @@ PlotRemovals <- function(object,
                 linetypeVar = if (isMSE) 'Variable' else NULL)
 }
 
-#' @rdname plot_hist
+#' Plot Fishing Effort
+#'
+#' `PlotEffort()` arranges every plot related to a fleet's [effort-class]
+#' object -- the *realized* historical/projection effort trajectory
+#' (`.PlotEffortRealized()`, [hist-class]/[mse-class] only -- possibly
+#' back-calculated from catch/F rather than taken directly from the
+#' specified schedule, see `DoBackCalcEffort` in [Simulate()]), and the
+#' *specified* input trend (`PlotEffortCurve()`, `Fleet@Effort@Effort`) --
+#' into a single figure with [patchwork::wrap_plots()]. For a bare
+#' [fleet-class] or [om-class] `object` (nothing simulated yet), only the
+#' specified curve exists, so `PlotEffort()` and `PlotEffortCurve()` are
+#' equivalent.
+#'
+#' @param object A [fleet-class] object, an [om-class], [hist-class], or
+#'   [mse-class] object, or a [data-class] object (plots `Effort(object)`
+#'   directly).
+#' @param Stock A [stock-class] object supplying the biology needed to
+#'   populate a bare [fleet-class] `object`. Ignored otherwise. Default
+#'   `NULL` uses an example stock, with a message noting this.
+#' @param units Character or `NULL`. `NULL` (default) uses the coarsest
+#'   unit common to every plotted fleet (`"Effort"`, `"Trips"`, or
+#'   `"Anglers"`, depending on what each fleet's [Effort()] object
+#'   supplies). Set explicitly to force one; requesting a unit some fleet
+#'   lacks the data for is an error.
+#' @param byStock,byFleet One of `TRUE`, `FALSE`, or `NULL` (default,
+#'   facets automatically when `object` has more than one stock/fleet).
+#'   `FALSE` sums effort across fleets instead of faceting/coloring by
+#'   fleet (only when every summed fleet shares the same `units`).
+#' @param Stocks Character or numeric vector. Restrict the plot to specific
+#'   stocks, either by name (matching [StockNames()]) or by index. Default
+#'   `NULL` (all stocks).
+#' @param probs Numeric vector of length 2. Lower and upper quantiles of
+#'   the across-simulation ribbon. Default `c(0.05, 0.95)`.
+#' @param nsim Integer. Number of individual simulation trajectories to
+#'   overlay as thin lines, in addition to the median/ribbon. Default `0`.
+#' @param Years Optional numeric vector, or `"all"`. Default `NULL` plots
+#'   every available year.
+#' @param free_y Logical. Free the y-axis scale across facets? Default
+#'   `NULL` resolves to `TRUE`.
+#' @param IncHist,byMP,AggregateYear `.PlotEffortRealized()` only (via
+#'   `PlotEffort()` on a [hist-class]/[mse-class] `object`); see
+#'   [plot_hist].
+#'
+#' @return `PlotEffortCurve()` returns a `ggplot` object; `PlotEffort()`
+#'   returns a `patchwork` object for [hist-class]/[mse-class] `object`, or
+#'   a `ggplot` object otherwise.
+#'
+#' @seealso [Effort()], [PlotCatchability()], [Fleet()]
 #' @export
 PlotEffort <- function(object,
+                       Stock         = NULL,
                        units         = NULL,
+                       byStock       = NULL,
                        byFleet       = NULL,
+                       Stocks        = NULL,
                        probs         = c(0.05, 0.95),
                        nsim          = 0,
                        Years         = NULL,
@@ -624,6 +674,73 @@ PlotEffort <- function(object,
     return(.PlotDataTs(object, 'Effort', 'Effort', byFleet = byFleet,
                          AggregateYear = AggregateYear))
 
+  .CheckClass(object, c('fleet', 'om', 'hist', 'mse'), 'object')
+  wasFleet <- inherits(object, 'fleet')
+  if (wasFleet) object <- .FleetToShellHist(object, Stock)
+
+  if (wasFleet || !inherits(object, c('hist', 'mse')))
+    return(PlotEffortCurve(object, units = units, byStock = byStock, byFleet = byFleet,
+                           Stocks = Stocks, probs = probs, nsim = nsim, Years = Years,
+                           free_y = free_y))
+
+  panels <- list(
+    Realized  = .PlotEffortRealized(object, units = units, byFleet = byFleet, probs = probs,
+                                    nsim = nsim, Years = Years, free_y = free_y, IncHist = IncHist,
+                                    byMP = byMP, AggregateYear = AggregateYear),
+    Specified = PlotEffortCurve(object, units = units, byStock = byStock, byFleet = byFleet,
+                                Stocks = Stocks, probs = probs, nsim = nsim, Years = Years,
+                                free_y = free_y)
+  )
+  patchwork::wrap_plots(panels, ncol = 1)
+}
+
+#' @rdname PlotEffort
+#' @export
+PlotEffortCurve <- function(object, Stock = NULL, units = NULL, byStock = NULL, byFleet = NULL,
+                            Stocks = NULL, probs = c(0.05, 0.95), nsim = 0, Years = NULL,
+                            free_y = NULL) {
+  .CheckClass(object, c('fleet', 'om', 'hist', 'mse'), 'object')
+  if (inherits(object, 'fleet')) object <- .FleetToShellHist(object, Stock)
+
+  OM         <- .ResolveOM(object)
+  stockNames <- .ResolveStocks(object, Stocks)
+  stockNames <- if (is.null(stockNames)) StockNames(OM) else stockNames
+  fleetNames <- FleetNames(OM)
+  if (is.null(byFleet)) byFleet <- length(fleetNames) > 1
+  if (is.null(free_y))  free_y  <- TRUE
+
+  df <- purrr::map(stockNames, \(nm) {
+    purrr::map(fleetNames, \(fl) {
+      Array2DF(OM@Fleet[[nm]][[fl]]@Effort@Effort) |>
+        dplyr::mutate(Stock = nm, Fleet = fl)
+    }) |> dplyr::bind_rows()
+  }) |> dplyr::bind_rows()
+
+  fleetUnits <- .ResolveEffortUnits(object, unique(df$Fleet), units, byFleet)
+  df <- .ApplyEffortUnits(df, object, fleetUnits) |> .FilterYears(Years)
+
+  if (!byFleet) {
+    df <- .SumOverFleet(df)
+  } else if (length(unique(fleetUnits)) > 1) {
+    df$Fleet <- .LabelFleetUnits(df$Fleet, fleetUnits)
+  }
+
+  ylab <- if (length(unique(fleetUnits)) == 1) .EffortYlab(fleetUnits[[1]]) else 'Effort'
+
+  .BuildTsPlot(df, byStock = byStock, byFleet = byFleet,
+                ylab = ylab, probs = probs, nsim = nsim, free_y = free_y)
+}
+
+.PlotEffortRealized <- function(object,
+                                units         = NULL,
+                                byFleet       = NULL,
+                                probs         = c(0.05, 0.95),
+                                nsim          = 0,
+                                Years         = NULL,
+                                free_y        = NULL,
+                                IncHist       = TRUE,
+                                byMP          = FALSE,
+                                AggregateYear = FALSE) {
   .CheckClass(object, c('hist', 'mse'), 'object')
   if (is.null(byFleet)) byFleet <- nFleet(object) > 1
   if (is.null(free_y))  free_y  <- TRUE
@@ -762,9 +879,10 @@ setMethod('plot', 'mse', function(x, y, ...) {
 }
 
 .EffortUnitAvail <- function(object, fleets) {
-  stock1 <- StockNames(object)[1]
+  OM     <- .ResolveOM(object)
+  stock1 <- StockNames(OM)[1]
   purrr::map_chr(fleets, function(fl) {
-    eff <- object@OM@Fleet[[stock1]][[fl]]@Effort
+    eff <- OM@Fleet[[stock1]][[fl]]@Effort
     if (!is.null(eff@TripsScalar) && !is.null(eff@AnglerPerTrip)) return('Anglers')
     if (!is.null(eff@TripsScalar)) return('Trips')
     'Effort'
@@ -793,7 +911,8 @@ setMethod('plot', 'mse', function(x, y, ...) {
 }
 
 .ApplyEffortUnits <- function(df, object, fleet_units) {
-  stock1 <- StockNames(object)[1]
+  OM     <- .ResolveOM(object)
+  stock1 <- StockNames(OM)[1]
 
   purrr::map_dfr(unique(df$Fleet), function(fl) {
     sub  <- df[df$Fleet == fl, , drop = FALSE]
@@ -801,7 +920,7 @@ setMethod('plot', 'mse', function(x, y, ...) {
     if (identical(unit, 'Effort'))
       return(sub)
 
-    eff        <- object@OM@Fleet[[stock1]][[fl]]@Effort
+    eff        <- OM@Fleet[[stock1]][[fl]]@Effort
     factor_arr <- eff@TripsScalar
     if (identical(unit, 'Anglers'))
       factor_arr <- ArrayMultiply(factor_arr, eff@AnglerPerTrip)
