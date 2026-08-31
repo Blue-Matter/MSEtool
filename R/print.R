@@ -14,11 +14,25 @@
 print.RepList <- function(x, ...) {
   n <- length(x)
   cli::cli_h2("A list of length {.val {n}} of output from `r4ss::SS_output`")
-  
+
   if (!is.null(names(x))) {
     cli::cli_text("Elements: {.val {head(names(x), 5)}}{? ...}")
   }
-  
-  invisible(x)  
+
+  invisible(x)
+}
+
+#' Print a `PlotStockList` object
+#'
+#' @param x A `PlotStockList` object.
+#' @param ... Additional arguments (currently ignored).
+#'
+#' @return Invisibly returns `x`.
+#'
+#' @export
+print.PlotStockList <- function(x, ...) {
+  if (!isTRUE(attr(x, 'silent')))
+    cli::cli_alert_info("Plotted {.val {length(x)}} panel{?s}: {.val {names(x)}}")
+  invisible(x)
 }
 
