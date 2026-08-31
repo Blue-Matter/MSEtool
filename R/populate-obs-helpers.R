@@ -102,16 +102,23 @@
         "i" = "`Bias` is a multiplicative scalar on the natural scale.")
     )
   
+  if (length(object@Bias) == 2 && nSim != 2)
+    return(array(
+      stats::runif(nSim, min(object@Bias), max(object@Bias)),
+      dim      = nSim,
+      dimnames = list(Sim = seq_len(nSim))
+    ))
+
   if (length(object@Bias) > nSim)
     object@Bias <- object@Bias[seq_len(nSim)]
-  
+
   if (length(object@Bias) == nSim)
     return(array(
       object@Bias,
       dim      = nSim,
       dimnames = list(Sim = seq_len(nSim))
     ))
-  
+
   array(
     rlnorm(nSim, mconv(1, object@Bias), sdconv(1, object@Bias)),
     dim      = nSim,
