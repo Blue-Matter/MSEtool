@@ -22,6 +22,9 @@
 #'   - Positive scalar: interpreted as the CV of a lognormal distribution; a
 #'     unique bias is drawn per simulation as
 #'     `rlnorm(nSim, mconv(1, Bias), sdconv(1, Bias))`.
+#'   - Length-2 vector `c(lower, upper)` (when `nSim != 2`): treated as
+#'     uniform bounds; a unique bias per simulation is drawn via
+#'     `runif(nSim, lower, upper)`.
 #'   - Length-`nSim` vector or named array: used directly, one bias per
 #'     simulation.
 #'
@@ -302,6 +305,9 @@ CompObs <- function(SampleSize = NULL,
 #'   - Positive scalar: interpreted as the CV of a lognormal distribution; a
 #'     unique bias is drawn per simulation as
 #'     `rlnorm(nSim, mconv(1, Bias), sdconv(1, Bias))`.
+#'   - Length-2 vector `c(lower, upper)` (when `nSim != 2`): treated as
+#'     uniform bounds; a unique bias per simulation is drawn via
+#'     `runif(nSim, lower, upper)`.
 #'   - Length-`nSim` vector or named array: used directly, one bias per
 #'     simulation.
 #' @param Error `numeric` array or `NULL`. Pre-specified lognormal observation
