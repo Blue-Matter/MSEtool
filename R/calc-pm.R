@@ -711,7 +711,7 @@ PM_Stability <- function(object, Threshold, Type = c('TAC', 'Removals', 'Landing
   if (!is.null(Years))
     ydf <- ydf[ydf$Year %in% Years, ]
   aav <- .AAV(ydf)
-  .BuildPM(aav, Ref = Threshold, Years = NULL, op = `<`,
+  .BuildPM(aav, Ref = Threshold, Years = NULL, op = `<=`,
            Name = 'Stability',
            Caption = paste0('P(interval-to-interval ', .StabilityLabel[[Type]],
                              ' change < ', Threshold, ')'))
