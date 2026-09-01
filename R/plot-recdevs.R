@@ -23,6 +23,7 @@
 #'   `NULL` (all stocks).
 #'
 #' @return A `ggplot` object.
+#' @export
 #'
 #' @seealso [PlotSRR()], [PlotSRRCurve()], [GenRecDevs()], [srr-class]
 PlotRecDevs <- function(object, Sim = NULL, byStock = NULL, Stocks = NULL, probs = c(0.05, 0.95)) {
