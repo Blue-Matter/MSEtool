@@ -460,7 +460,7 @@ IndexFitTable <- function(object,
     p <- p + ggplot2::geom_line(
       data    = simdf,
       mapping = ggplot2::aes(y = .data$Value, group = .data$.group, color = .data$Series),
-      alpha = 0.4, linewidth = 0.3
+      alpha = 0.9, linewidth = 0.5, linetype = 3, na.rm = TRUE
     )
   }
 
@@ -475,7 +475,7 @@ IndexFitTable <- function(object,
       data    = summ,
       mapping = ggplot2::aes(y = .data$Median, color = .data$Series,
                              linetype = .data$Series, group = .data$.group),
-      linewidth = 0.7
+      linewidth = 0.7, na.rm = TRUE
     )
 
   seriesValues <- c(Index = 'steelblue', True = 'grey30')
