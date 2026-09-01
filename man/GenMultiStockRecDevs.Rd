@@ -49,21 +49,6 @@ cross-stock correlation:
 where \eqn{\Phi} is a diagonal matrix of lag-1 autocorrelation coefficients
 and \eqn{\Sigma_\epsilon} is derived by \code{\link[=CalcInnovationCov]{CalcInnovationCov()}} from the
 cross-stock correlation matrix.
-
-Each stock's latent series is then mapped onto a truncated normal marginal
-via the probability integral transform, scaled to that stock's standard
-deviation, and bias-corrected so that mean recruitment multiplier is 1.
-This is the same transform \code{\link[=GenRecDevs]{GenRecDevs()}} applies, so bounded and
-correlated deviations follow the same convention.
-
-The function proceeds as follows for each simulation:
-\enumerate{
-\item \strong{Extract stock-specific parameters} (\code{sd}, \code{ac})
-\item \strong{Impute missing historical deviations} using univariate AR(1)
-\item \strong{Estimate stationary covariance} \eqn{\Sigma_Z} from historical log deviations
-\item \strong{Compute latent innovation covariance} via \code{\link[=CalcInnovationCov]{CalcInnovationCov()}}
-\item \strong{Simulate projection deviations} using a multivariate AR(1) process
-}
 }
 \seealso{
 \code{\link[=GenRecDevs]{GenRecDevs()}}, \code{\link[=CalcInnovationCov]{CalcInnovationCov()}}
