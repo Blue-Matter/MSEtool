@@ -17,7 +17,7 @@
 #' over time, realised F can diverge from the last historical effort. It will
 #' be updated to set F directly once `advice-class` supports it.
 #'
-#' `NoFishing` sets TAC to 0 every year
+#' `NoFishing` sets Effort to 0 every year
 #'
 #' `FMSY`/`MSY` are computed once, during `Simulate()`, at the terminal
 #' historical year (or `OM@Control$RefYears`) and held fixed for the whole
@@ -90,7 +90,7 @@ attr(refFCurr, 'Interval') <- 1
 
 #' @rdname ReferenceMPs
 #' @export
-NoFishing <- function(Data) Advice(TAC = 0, TACType = 'Removals')
+NoFishing <- function(Data) Advice(Effort = 0, EffType = 'Abs')
 class(NoFishing) <- 'mp'
 attr(NoFishing, 'Interval') <- 1
 
