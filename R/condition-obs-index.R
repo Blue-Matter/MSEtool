@@ -185,8 +185,10 @@
                                nSeasons=nSeasons)
     
     Index_Obs@Stats <- Stats
-    
-    if (is.null(Index_Obs@TruncSD)) 
+    Index_Obs@AC    <- Stats$AC
+    Index_Obs@CV    <- sqrt(exp(Stats$SD^2) - 1)
+
+    if (is.null(Index_Obs@TruncSD))
       Index_Obs@TruncSD <- 2
     
     
