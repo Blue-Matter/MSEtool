@@ -359,6 +359,19 @@ Subset <- function(object,
   if (is.list(object)) {
     n <- length(object)
     if (n == 0) return(object)
+
+    if (!is.null(names(object))) {
+      if (is.numeric(MPs)) {
+        idx <- as.integer(MPs)
+        idx <- idx[idx %in% seq_len(n)]
+        return(object[idx])
+      }
+      if (is.character(MPs) && any(MPs %in% names(object))) {
+        MPs <- MPs[MPs %in% names(object)]
+        return(object[MPs])
+      }
+    }
+
     for (i in seq_len(n)) {
       el <- object[[i]]
       if (!is.null(el))
@@ -366,7 +379,7 @@ Subset <- function(object,
     }
     return(object)
   }
-  
+
   if (is.array(object)) {
     dnames <- dimnames(object)
     if (!is.null(dnames) && "MP" %in% names(dnames))
