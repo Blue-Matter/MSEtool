@@ -17,9 +17,11 @@
 #'   shaded ribbon across simulations. Only used when `ribbon = TRUE`.
 #'   Default `c(0.05, 0.95)`.
 #' @param nsim Integer. Number of individual simulation replicates to plot.
-#'   Default `3`. Sims are chosen to span the range of overall trajectory
-#'   outcomes (see Details), not just the first `nsim` sim IDs. Set to `0`
-#'   to show only the median/ribbon summary (forces `ribbon = TRUE`).
+#'   Default `1`. Sims are chosen to span the range of overall trajectory
+#'   outcomes (see Details), not just the first `nsim` sim IDs. When
+#'   `nsim > 1`, panels are additionally faceted by `Sim` (see Details) --
+#'   keep this small. Set to `0` to show only the median/ribbon summary
+#'   (forces `ribbon = TRUE`).
 #' @param ribbon Logical. Show the across-simulation median and
 #'   `probs`-quantile ribbon instead of (or, if `nsim > 0`, in addition to)
 #'   individual simulation lines. Default `FALSE`. See Details for why
@@ -37,11 +39,10 @@
 #' `Efficiency * NomIndex^Beta`.
 #'
 #' Panels are faceted by `Fleet` (and `Stock` when more than one
-#' stock/complex is plotted). For [mse-class] objects with more than one MP,
-#' an `MP` facet column is added; the historical period is repeated in every
-#' MP's panel so each line is unbroken across the historical/projection
-#' boundary.
-#'
+#' stock/complex is plotted). For a single displayed simulation (`nsim <= 1`)
+#' and an [mse-class] object with more than one MP, an `MP` facet column is
+#' added, with the historical period repeated in every MP's panel so each
+#' line is unbroken across the historical/projection boundary.
 #'
 #' @return A `ggplot` object, or `NULL` invisibly if no populated `type`
 #'   index is found.
@@ -54,7 +55,7 @@ PlotIndexFit <- function(object,
                          Fleets  = NULL,
                          Stocks  = NULL,
                          probs   = c(0.05, 0.95),
-                         nsim    = 3,
+                         nsim    = 1,
                          ribbon  = FALSE,
                          Years   = NULL,
                          IncHist = TRUE,
@@ -466,6 +467,45 @@ IndexFitTable <- function(object,
   unique(ord[idx])
 }
 
+#' Fill in a shared single-replicate historical series for every requested sim
+#'
+#' Some conditioned scenarios (e.g. a single stock assessment) leave the
+#' historical portion of a series populated for only one simulation, even
+#' when `nsim(object) > 1` (real-data years are often de-duplicated to a
+#' single stored replicate). When displaying a sample of individual sims,
+#' any requested sim missing its own historical rows borrows another sim's
+#' (values are identical/shared anyway) so every displayed sim gets an
+#' unbroken historical-to-projection line rather than a historical gap.
+#'
+#' @keywords internal
+.ReplicateHistPerSim <- function(df, simIDs) {
+  histRows <- df[df$Period == 'Historical', , drop = FALSE]
+  projRows <- df[df$Period != 'Historical' & df$Sim %in% simIDs, , drop = FALSE]
+
+  if (!nrow(histRows)) return(projRows)
+
+  groupVars <- intersect(c('Series', 'Stock', 'Fleet', 'MP'), colnames(histRows))
+
+  histRep <- histRows |>
+    dplyr::group_by(dplyr::across(dplyr::all_of(groupVars))) |>
+    dplyr::group_modify(function(g, key) {
+      available <- unique(g$Sim)
+      missing   <- setdiff(simIDs, available)
+      keep      <- g[g$Sim %in% simIDs, , drop = FALSE]
+      if (!length(missing)) return(keep)
+      template <- g[g$Sim == available[1], , drop = FALSE]
+      extra <- purrr::map_dfr(missing, function(sm) {
+        rows <- template
+        rows$Sim <- sm
+        rows
+      })
+      dplyr::bind_rows(keep, extra)
+    }) |>
+    dplyr::ungroup()
+
+  dplyr::bind_rows(histRep, projRows)
+}
+
 .BuildIndexFitPlot <- function(df, probs, nsim, ribbon, free_y) {
   hasStock <- length(unique(df$Stock)) > 1
   hasFleet <- length(unique(df$Fleet)) > 1
@@ -479,12 +519,28 @@ IndexFitTable <- function(object,
 
   if (nsim <= 0) ribbon <- TRUE
 
-  p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$Year))
+  # Multiple same-colored/same-linetype lines can't be told apart by eye, so
+  # nsim > 1 switches to one panel per Sim (replacing the MP facet column)
+  # and, if there's more than one MP, colors by MP instead of Series within
+  # each Sim panel (Series is then carried by linetype alone).
+  facetSim  <- nsim > 1
+  colorByMP <- facetSim && hasMP
+
+  # No default `data` here: `df` (used below to build each layer's own
+  # data) still spans every sim in the OM, and facet_grid/facet_wrap derive
+  # their panel levels from the plot's default data as well as each layer's
+  # -- passing the unfiltered `df` as default data would create an empty
+  # facet panel for every sim that wasn't actually selected/plotted.
+  p <- ggplot2::ggplot(mapping = ggplot2::aes(x = .data$Year))
 
   if (nsim > 0) {
     simIDs <- .SelectRepresentativeSims(df, nsim)
-    simdf  <- dplyr::filter(df, .data$Sim %in% simIDs)
-    simdf$.group <- interaction(simdf[c('Sim', 'Series')], drop = TRUE)
+    simdf  <- .ReplicateHistPerSim(df, simIDs)
+
+    groupCols <- c('Sim', 'Series', if (hasMP) 'MP')
+    simdf$.group <- interaction(simdf[groupCols], drop = TRUE)
+
+    colorVar <- if (colorByMP) 'MP' else 'Series'
 
     # Full-weight lines carrying the Series linetype (solid/dashed) as the
     # primary view; the same mapping, just thinner and more transparent, as
@@ -492,7 +548,7 @@ IndexFitTable <- function(object,
     p <- p + ggplot2::geom_line(
       data    = simdf,
       mapping = ggplot2::aes(y = .data$Value, group = .data$.group,
-                             color = .data$Series, linetype = .data$Series),
+                             color = .data[[colorVar]], linetype = .data$Series),
       alpha     = if (ribbon) 0.6 else 1,
       linewidth = if (ribbon) 0.5 else 0.7,
       na.rm     = TRUE
@@ -529,17 +585,21 @@ IndexFitTable <- function(object,
 
   seriesValues <- c(Index = 'steelblue', True = 'grey30')
   seriesLines  <- c(Index = 'solid', True = 'dashed')
-  p <- p +
-    ggplot2::scale_color_manual(values = seriesValues) +
-    ggplot2::scale_linetype_manual(values = seriesLines)
+  p <- p + ggplot2::scale_linetype_manual(values = seriesLines)
+  # `colorByMP` maps color to MP names rather than Series, so the fixed
+  # Index/True palette doesn't apply -- fall back to ggplot2's own discrete
+  # scale for MP.
+  if (!colorByMP)
+    p <- p + ggplot2::scale_color_manual(values = seriesValues)
   if (ribbon)
     p <- p + ggplot2::scale_fill_manual(values = seriesValues)
 
   facetScales <- if (free_y) 'free_y' else 'fixed'
 
-  if (hasMP) {
+  if (facetSim || hasMP) {
+    colFacetVar <- if (facetSim) 'Sim' else 'MP'
     rowVar <- if (hasStock) ggplot2::vars(.data$Stock, .data$Fleet) else ggplot2::vars(.data$Fleet)
-    p <- p + ggplot2::facet_grid(rows = rowVar, cols = ggplot2::vars(.data$MP), scales = facetScales)
+    p <- p + ggplot2::facet_grid(rows = rowVar, cols = ggplot2::vars(.data[[colFacetVar]]), scales = facetScales)
   } else if (hasStock && hasFleet) {
     p <- p + ggplot2::facet_grid(ggplot2::vars(.data$Stock), ggplot2::vars(.data$Fleet), scales = facetScales)
   } else if (hasStock) {
@@ -555,7 +615,7 @@ IndexFitTable <- function(object,
     ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0.02, 0.05))) +
     ggplot2::theme_bw() +
     ggplot2::labs(x = 'Year', y = 'Index value (True on Index scale)',
-                 color = 'Series', linetype = 'Series')
+                 color = if (colorByMP) 'MP' else 'Series', linetype = 'Series')
   if (ribbon)
     p <- p + ggplot2::labs(fill = 'Series')
   p
