@@ -25,10 +25,9 @@
 #'   Default `TRUE`.
 #'
 #' @details
-#' The `Index` series is plotted on its natural scale, The `True` (OM) 
-#' series is rescaled, per simulation, so
-#' its mean over the years the real index spans (`Period == "Historical"`
-#' and non-`NA`) equals the `Index` series' own mean over those same years.
+#' The `Index` series is plotted on its natural scale. The `True` (OM)
+#' series is put on that same scale, per simulation, via
+#' `Efficiency * NomIndex^Beta`. 
 #'
 #' Panels are faceted by `Fleet` (and `Stock` when more than one
 #' stock/complex is plotted). For [mse-class] objects with more than one MP,
@@ -174,11 +173,7 @@ IndexFitTable <- function(object,
   sprintf('%.3g [%.3g, %.3g]', stats::median(x), min(x), max(x))
 }
 
-# Index series for one (complex, fleet), all sims (and, for mse, all MPs),
-# tagged with MP/Period.
 .ExtractIndexSeries <- function(object, isMSE, type, cx, fl) {
-  # mse@Hist has no @Data; the full hist+proj series lives in mse@PPD per MP,
-  # so historical values come from any one MP's PPD instead.
   if (!isMSE) {
     df <- .IndexSeriesFromDataList(purrr::map(object@Data, cx), type, fl)
     if (is.null(df) || !nrow(df)) return(NULL)
@@ -264,18 +259,6 @@ IndexFitTable <- function(object,
 
   mps <- if (isMSE) dimnames(object@Number[[1]])$MP else NULL
 
-  # `.CalcNomIndex()`'s timing decay needs an object with both `@OM` (for
-  # Stock/Fleet definitions) and Hist/Proj-shaped `@FDeadArea` (Sim x Age x
-  # Year x Fleet x Area, for the mortality used to decay numbers). For `mse`
-  # objects neither `object` nor `object@Hist` has both on its own:
-  # `object@Hist` is a stripped `timeseries` object with no `@OM` at all, and
-  # `object@FDeadArea` carries an extra MP dimension `.TotalMortalityAtAge()`
-  # doesn't handle. Slice that MP dimension off (same idea as the `Number`
-  # slicing below) to get an object with both -- for the historical period,
-  # which precedes any MP's management action, an arbitrary MP's slice is
-  # equally valid. Falls back to the unsliced `object` (decay silently
-  # no-ops, matching the previous approximation) if `@FDeadArea` isn't in
-  # the expected shape for any reason.
   DecayObject <- function(mp) {
     if (!isMSE) return(object)
     tryCatch({
@@ -336,32 +319,62 @@ IndexFitTable <- function(object,
   df
 }
 
-#' Rescale `df$Value` so its mean over `ref_years` equals `target`
-#'
-#' Used to put the `True` (OM) series on the `Index` series' own natural
-#' scale, rather than rescaling the `Index` -- the index stays in its
-#' observed units; only the (otherwise unitless) population trend is scaled
-#' to match it over the years they're being compared on.
-#'
-#' @keywords internal
-.ScaleToReference <- function(df, group_vars, ref_years, target) {
-  df <- df |>
-    dplyr::left_join(
-      dplyr::mutate(ref_years, .isRef = TRUE),
-      by = intersect(colnames(ref_years), colnames(df))
-    )
 
-  df |>
-    dplyr::group_by(dplyr::across(dplyr::all_of(group_vars))) |>
-    dplyr::mutate(
-      .ownMean = mean(.data$Value[.data$Period == 'Historical' & .data$.isRef], na.rm = TRUE),
-      .ownMean = ifelse(is.nan(.ownMean) | !is.finite(.ownMean),
-                        mean(.data$Value[.data$Period == 'Historical'], na.rm = TRUE),  # fallback
-                        .ownMean),
-      Value = .data$Value / .data$.ownMean * target
-    ) |>
-    dplyr::select(-".ownMean", -".isRef") |>
-    dplyr::ungroup()
+.ApplyObsCalibration <- function(df, Beta, Efficiency) {
+  sim  <- pmin(df$Sim, length(Beta))
+  simE <- pmin(df$Sim, length(Efficiency))
+  df$Value <- Efficiency[simE] * df$Value ^ Beta[sim]
+  df
+}
+
+
+.ResolveObsCalibration <- function(object, isMSE, type, cx, fl, IndexObs, nSim_) {
+  Beta <- IndexObs@Beta
+  if (is.null(Beta) || !length(Beta)) Beta <- 1
+  Beta <- rep_len(Beta, nSim_)
+
+  Efficiency <- IndexObs@Efficiency
+  if (!is.null(Efficiency) && length(Efficiency))
+    return(list(Beta = Beta, Efficiency = rep_len(Efficiency, nSim_)))
+
+  list(Beta = Beta, Efficiency = .ExtractSimEfficiency(object, isMSE, type, cx, fl, nSim_))
+}
+
+.ExtractSimEfficiency <- function(object, isMSE, type, cx, fl, nSim_) {
+  dataList <- if (isMSE) {
+    mps <- names(object@PPD)
+    if (!length(mps)) list() else purrr::map(object@PPD[[mps[1]]], cx)
+  } else {
+    purrr::map(object@Data, cx)
+  }
+
+  simIDs <- suppressWarnings(as.integer(names(dataList)))
+  if (is.null(dataList) || !length(dataList) || anyNA(simIDs))
+    simIDs <- seq_along(dataList)
+
+  Efficiency <- rep(NA_real_, nSim_)
+  for (di in seq_along(dataList)) {
+    d <- dataList[[di]]
+    if (is.null(d)) next
+    idx   <- slot(d, type)
+    flIdx <- match(fl, idx@Name)
+    if (is.na(flIdx)) next
+    IndexObsMisc <- idx@Misc$IndexObs
+    if (is.null(IndexObsMisc) || length(IndexObsMisc) < flIdx) next
+    eff <- IndexObsMisc[[flIdx]]@Efficiency
+    if (is.null(eff) || !length(eff)) next
+    sim <- simIDs[di]
+    if (isTRUE(sim >= 1 && sim <= nSim_)) Efficiency[sim] <- eff[1]
+  }
+
+  missing <- is.na(Efficiency)
+  if (any(missing)) {
+    Efficiency[missing] <- 1
+    cli::cli_alert_warning(
+      "Could not resolve a fitted {.val Efficiency} for {.val {fl}} in {sum(missing)}/{nSim_} simulation{?s}; using {.val 1}."
+    )
+  }
+  Efficiency
 }
 
 .BuildIndexFitDF <- function(object, type, Fleets = NULL, Stocks = NULL) {
@@ -403,19 +416,13 @@ IndexFitTable <- function(object,
     idxDF$Stock <- r$Stock
     idxDF$Fleet <- r$Fleet
 
-    refYears <- idxDF |>
-      dplyr::filter(.data$Period == 'Historical', !is.na(.data$Value)) |>
-      dplyr::distinct(.data$Year)
-
-    targetMean <- mean(idxDF$Value[idxDF$Period == 'Historical' & idxDF$Year %in% refYears$Year], na.rm = TRUE)
-    if (is.nan(targetMean) || !is.finite(targetMean)) targetMean <- 1
-
     trueDF <- .ExtractTrueSeries(object, isMSE, type, cx = r$Stock, fl = r$Fleet, Complexes)
 
     trueDF$Stock <- r$Stock
 
-    trueDF <- .ScaleToReference(trueDF, intersect(c('Sim', 'Stock'), colnames(trueDF)),
-                                ref_years = refYears, target = targetMean)
+    IndexObs <- slot(OM@Obs[[r$Stock]][[r$Fleet]], type)
+    calib <- .ResolveObsCalibration(object, isMSE, type, r$Stock, r$Fleet, IndexObs, nSim(object))
+    trueDF <- .ApplyObsCalibration(trueDF, calib$Beta, calib$Efficiency)
 
     trueDF$Fleet <- r$Fleet
 
@@ -504,6 +511,6 @@ IndexFitTable <- function(object,
                                 labels = .YearLabels) +
     ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0.02, 0.05))) +
     ggplot2::theme_bw() +
-    ggplot2::labs(x = 'Year', y = 'Index value (True scaled to match)',
+    ggplot2::labs(x = 'Year', y = 'Index value (True on Index scale)',
                  color = 'Series', fill = 'Series', linetype = 'Series')
 }
