@@ -14,9 +14,16 @@
 #'   (matching `names(object@OM@Complexes)`, or `StockNames()` when
 #'   `Complexes` is unset). Default `NULL` (all).
 #' @param probs Numeric vector of length 2. Lower and upper quantiles of the
-#'   shaded ribbon across simulations. Default `c(0.05, 0.95)`.
-#' @param nsim Integer. Number of individual simulation replicates to overlay
-#'   as thin lines, in addition to the median/ribbon. Default `0` (none).
+#'   shaded ribbon across simulations. Only used when `ribbon = TRUE`.
+#'   Default `c(0.05, 0.95)`.
+#' @param nsim Integer. Number of individual simulation replicates to plot.
+#'   Default `3`. Sims are chosen to span the range of overall trajectory
+#'   outcomes (see Details), not just the first `nsim` sim IDs. Set to `0`
+#'   to show only the median/ribbon summary (forces `ribbon = TRUE`).
+#' @param ribbon Logical. Show the across-simulation median and
+#'   `probs`-quantile ribbon instead of (or, if `nsim > 0`, in addition to)
+#'   individual simulation lines. Default `FALSE`. See Details for why
+#'   individual lines are the default.
 #' @param Years Optional numeric vector. Subset the time series to these
 #'   years before plotting.
 #' @param IncHist Logical. For [mse-class] objects, include the historical
@@ -27,7 +34,7 @@
 #' @details
 #' The `Index` series is plotted on its natural scale. The `True` (OM)
 #' series is put on that same scale, per simulation, via
-#' `Efficiency * NomIndex^Beta`. 
+#' `Efficiency * NomIndex^Beta`.
 #'
 #' Panels are faceted by `Fleet` (and `Stock` when more than one
 #' stock/complex is plotted). For [mse-class] objects with more than one MP,
@@ -47,7 +54,8 @@ PlotIndexFit <- function(object,
                          Fleets  = NULL,
                          Stocks  = NULL,
                          probs   = c(0.05, 0.95),
-                         nsim    = 0,
+                         nsim    = 3,
+                         ribbon  = FALSE,
                          Years   = NULL,
                          IncHist = TRUE,
                          free_y  = TRUE) {
@@ -55,7 +63,7 @@ PlotIndexFit <- function(object,
   .CheckClass(object, c('hist', 'mse'), 'object')
 
   df <- .BuildIndexFitDF(object, type, Fleets = Fleets, Stocks = Stocks)
-  
+
   if (is.null(df) || !nrow(df)) {
     cli::cli_alert_info("No populated {.field {type}} index found to plot.")
     return(invisible(NULL))
@@ -65,7 +73,7 @@ PlotIndexFit <- function(object,
     .DropHistorical(IncHist) |>
     .FilterYears(Years)
 
-  .BuildIndexFitPlot(df, probs = probs, nsim = nsim, free_y = free_y)
+  .BuildIndexFitPlot(df, probs = probs, nsim = nsim, ribbon = ribbon, free_y = free_y)
 }
 
 #' Summarize Fitted/Estimated Index Observation Error Parameters
@@ -433,7 +441,32 @@ IndexFitTable <- function(object,
   })
 }
 
-.BuildIndexFitPlot <- function(df, probs, nsim, free_y) {
+.SelectRepresentativeSims <- function(df, nsim) {
+  simIDs <- sort(unique(df$Sim))
+  if (nsim <= 0 || nsim >= length(simIDs)) return(simIDs)
+
+  ref <- df[df$Series == 'True' & df$Stock == df$Stock[1] & df$Fleet == df$Fleet[1], ]
+  if ('MP' %in% colnames(ref)) {
+    mps <- unique(ref$MP[ref$MP != 'Historical'])
+    if (length(mps)) ref <- ref[ref$MP %in% c('Historical', mps[1]), ]
+  }
+
+  metric <- ref |>
+    dplyr::group_by(.data$Sim) |>
+    dplyr::summarise(
+      First = .data$Value[which.min(.data$Year)],
+      Last  = .data$Value[which.max(.data$Year)],
+      .groups = 'drop'
+    ) |>
+    dplyr::mutate(Metric = .data$Last / .data$First)
+
+  ord  <- metric$Sim[order(metric$Metric)]
+  qpos <- if (nsim == 1) 0.5 else seq(0, 1, length.out = nsim)
+  idx  <- round(qpos * (length(ord) - 1)) + 1
+  unique(ord[idx])
+}
+
+.BuildIndexFitPlot <- function(df, probs, nsim, ribbon, free_y) {
   hasStock <- length(unique(df$Stock)) > 1
   hasFleet <- length(unique(df$Fleet)) > 1
   hasMP    <- 'MP' %in% colnames(df) && length(unique(df$MP[df$MP != 'Historical'])) > 1
@@ -443,54 +476,64 @@ IndexFitTable <- function(object,
 
   if (hasFleet)
     df$Fleet <- factor(df$Fleet, levels = unique(df$Fleet), ordered = TRUE)
-  
-  
-  group_vars <- c('Series', 'Stock', 'Fleet', 'Year', if (hasMP) 'MP')
-  summ <- df |>
-    dplyr::group_by(dplyr::across(dplyr::all_of(group_vars))) |>
-    dplyr::summarise(
-      Lower  = if (all(is.na(.data$Value))) NA_real_ else stats::quantile(.data$Value, min(probs), na.rm = TRUE),
-      Median = if (all(is.na(.data$Value))) NA_real_ else stats::median(.data$Value, na.rm = TRUE),
-      Upper  = if (all(is.na(.data$Value))) NA_real_ else stats::quantile(.data$Value, max(probs), na.rm = TRUE),
-      .groups = 'drop'
-    ) |>
-    dplyr::filter(!is.na(.data$Median))
-  summ$.group <- interaction(summ['Series'], drop = TRUE)
 
-  p <- ggplot2::ggplot(summ, ggplot2::aes(x = .data$Year))
+  if (nsim <= 0) ribbon <- TRUE
+
+  p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$Year))
 
   if (nsim > 0) {
-    simIDs <- utils::head(sort(unique(df$Sim)), nsim)
+    simIDs <- .SelectRepresentativeSims(df, nsim)
     simdf  <- dplyr::filter(df, .data$Sim %in% simIDs)
     simdf$.group <- interaction(simdf[c('Sim', 'Series')], drop = TRUE)
 
+    # Full-weight lines carrying the Series linetype (solid/dashed) as the
+    # primary view; the same mapping, just thinner and more transparent, as
+    # an overlay when the ribbon/median is also shown.
     p <- p + ggplot2::geom_line(
       data    = simdf,
-      mapping = ggplot2::aes(y = .data$Value, group = .data$.group, color = .data$Series),
-      alpha = 0.9, linewidth = 0.5, linetype = 3, na.rm = TRUE
+      mapping = ggplot2::aes(y = .data$Value, group = .data$.group,
+                             color = .data$Series, linetype = .data$Series),
+      alpha     = if (ribbon) 0.6 else 1,
+      linewidth = if (ribbon) 0.5 else 0.7,
+      na.rm     = TRUE
     )
   }
 
-  p <- p +
-    ggplot2::geom_ribbon(
-      data    = summ,
-      mapping = ggplot2::aes(ymin = .data$Lower, ymax = .data$Upper,
-                             fill = .data$Series, group = .data$.group),
-      alpha = 0.2, color = NA, na.rm = TRUE
-    ) +
-    ggplot2::geom_line(
-      data    = summ,
-      mapping = ggplot2::aes(y = .data$Median, color = .data$Series,
-                             linetype = .data$Series, group = .data$.group),
-      linewidth = 0.7, na.rm = TRUE
-    )
+  if (ribbon) {
+    group_vars <- c('Series', 'Stock', 'Fleet', 'Year', if (hasMP) 'MP')
+    summ <- df |>
+      dplyr::group_by(dplyr::across(dplyr::all_of(group_vars))) |>
+      dplyr::summarise(
+        Lower  = if (all(is.na(.data$Value))) NA_real_ else stats::quantile(.data$Value, min(probs), na.rm = TRUE),
+        Median = if (all(is.na(.data$Value))) NA_real_ else stats::median(.data$Value, na.rm = TRUE),
+        Upper  = if (all(is.na(.data$Value))) NA_real_ else stats::quantile(.data$Value, max(probs), na.rm = TRUE),
+        .groups = 'drop'
+      ) |>
+      dplyr::filter(!is.na(.data$Median))
+    summ$.group <- interaction(summ['Series'], drop = TRUE)
+
+    p <- p +
+      ggplot2::geom_ribbon(
+        data    = summ,
+        mapping = ggplot2::aes(ymin = .data$Lower, ymax = .data$Upper,
+                               fill = .data$Series, group = .data$.group),
+        alpha = 0.2, color = NA, na.rm = TRUE
+      ) +
+      ggplot2::geom_line(
+        data    = summ,
+        mapping = ggplot2::aes(y = .data$Median, color = .data$Series,
+                               linetype = .data$Series, group = .data$.group),
+        linewidth = 0.7, na.rm = TRUE
+      )
+  }
 
   seriesValues <- c(Index = 'steelblue', True = 'grey30')
   seriesLines  <- c(Index = 'solid', True = 'dashed')
   p <- p +
     ggplot2::scale_color_manual(values = seriesValues) +
-    ggplot2::scale_fill_manual(values = seriesValues) +
     ggplot2::scale_linetype_manual(values = seriesLines)
+  if (ribbon)
+    p <- p + ggplot2::scale_fill_manual(values = seriesValues)
 
   facetScales <- if (free_y) 'free_y' else 'fixed'
 
@@ -505,12 +548,15 @@ IndexFitTable <- function(object,
     p <- p + ggplot2::facet_wrap(~Fleet, scales = facetScales)
   }
 
-  p +
+  p <- p +
     ggplot2::expand_limits(y = 0) +
     ggplot2::scale_x_continuous(expand = ggplot2::expansion(mult = c(0.02, 0.05)),
                                 labels = .YearLabels) +
     ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0.02, 0.05))) +
     ggplot2::theme_bw() +
     ggplot2::labs(x = 'Year', y = 'Index value (True on Index scale)',
-                 color = 'Series', fill = 'Series', linetype = 'Series')
+                 color = 'Series', linetype = 'Series')
+  if (ribbon)
+    p <- p + ggplot2::labs(fill = 'Series')
+  p
 }
