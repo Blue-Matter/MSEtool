@@ -181,7 +181,9 @@ IndexRate <- function(Data,
   RefLevel <- stats::weighted.mean(Ref, IndexWeight, na.rm = TRUE)
 
   TrialRate <- CatchPerIndex * IndexFactor
-  AdjRate   <- HockeyStickHCR(TrialRate, Est = Est, Ref = RefLevel,
+  AdjRate   <- HockeyStickHCR(TrialRate, 
+                              Est = Est, 
+                              Ref = RefLevel,
                               ControlPointsIndex = HCRControlPointsIndex,
                               ControlPointsRate  = HCRControlPointsRate,
                               RampType           = RampType)
