@@ -23,8 +23,8 @@
   ## ---- Vector ----
   
   Hist@Misc$SPFrom <- purrr::map(Hist@OM@Stock, \(stock) {
-    stock@SRR@SPFrom
-  }) |> unlist() |> array(dim=nStock(Hist), dimnames = list(Stock=StockNames(Hist)))
+    match(stock@SRR@SPFrom, stock_names)
+  }) |> unlist() |> array(dim=nStock, dimnames = list(Stock=stock_names))
   
   Hist@Misc$PlusGroup <- purrr::map(Hist@OM@Stock, \(stock) {
     stock@Ages@PlusGroup
