@@ -61,13 +61,11 @@ Hist <- function(MSE=NULL) {
   Hist@OM@Stock <- purrr::imap(Hist@OM@Stock, \(Stock, idx) {
     SPFrom <- Stock@SRR@SPFrom
     if (!length(SPFrom)) {
-      SPFrom <- idx
-    }
-    if (is.character(SPFrom)) {
-      Stock@SRR@SPFrom <- match(SPFrom, StockNames(OM))
+      SPFrom <- idx  
     } else if (is.numeric(SPFrom)) {
-      Stock@SRR@SPFrom <- SPFrom
+      SPFrom <- StockNames(OM)[SPFrom]
     }
+    Stock@SRR@SPFrom <- SPFrom
     Stock
   })
   
