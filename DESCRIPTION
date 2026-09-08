@@ -83,6 +83,7 @@ Collate:
     'calc-innovation-cov.R'
     'calc-mgt.R'
     'calc-mice.R'
+    'calc-msy-cpp.R'
     'calc-msy.R'
     'calc-per-recruit.R'
     'calc-pm.R'
