@@ -55,7 +55,7 @@ apical F directly. In spatial models, or where catchability (\code{q}) drifts
 over time, realised F can diverge from the last historical effort. It will
 be updated to set F directly once \code{advice-class} supports it.
 
-\code{NoFishing} sets TAC to 0 every year
+\code{NoFishing} sets Effort to 0 every year
 
 \code{FMSY}/\code{MSY} are computed once, during \code{Simulate()}, at the terminal
 historical year (or \code{OM@Control$RefYears}) and held fixed for the whole

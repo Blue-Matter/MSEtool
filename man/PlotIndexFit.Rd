@@ -10,7 +10,8 @@ PlotIndexFit(
   Fleets = NULL,
   Stocks = NULL,
   probs = c(0.05, 0.95),
-  nsim = 0,
+  nsim = 1,
+  ribbon = FALSE,
   Years = NULL,
   IncHist = TRUE,
   free_y = TRUE
@@ -29,10 +30,20 @@ PlotIndexFit(
 \code{Complexes} is unset). Default \code{NULL} (all).}
 
 \item{probs}{Numeric vector of length 2. Lower and upper quantiles of the
-shaded ribbon across simulations. Default \code{c(0.05, 0.95)}.}
+shaded ribbon across simulations. Only used when \code{ribbon = TRUE}.
+Default \code{c(0.05, 0.95)}.}
 
-\item{nsim}{Integer. Number of individual simulation replicates to overlay
-as thin lines, in addition to the median/ribbon. Default \code{0} (none).}
+\item{nsim}{Integer. Number of individual simulation replicates to plot.
+Default \code{1}. Sims are chosen to span the range of overall trajectory
+outcomes (see Details), not just the first \code{nsim} sim IDs. When
+\code{nsim > 1}, panels are additionally faceted by \code{Sim} (see Details) --
+keep this small. Set to \code{0} to show only the median/ribbon summary
+(forces \code{ribbon = TRUE}).}
+
+\item{ribbon}{Logical. Show the across-simulation median and
+\code{probs}-quantile ribbon instead of (or, if \code{nsim > 0}, in addition to)
+individual simulation lines. Default \code{FALSE}. See Details for why
+individual lines are the default.}
 
 \item{Years}{Optional numeric vector. Subset the time series to these
 years before plotting.}
@@ -55,16 +66,15 @@ autocorrelation). See \code{\link[=IndexFitTable]{IndexFitTable()}} for the matc
 summary.
 }
 \details{
-The \code{Index} series is plotted on its natural scale, The \code{True} (OM)
-series is rescaled, per simulation, so
-its mean over the years the real index spans (\code{Period == "Historical"}
-and non-\code{NA}) equals the \code{Index} series' own mean over those same years.
+The \code{Index} series is plotted on its natural scale. The \code{True} (OM)
+series is put on that same scale, per simulation, via
+\code{Efficiency * NomIndex^Beta}.
 
 Panels are faceted by \code{Fleet} (and \code{Stock} when more than one
-stock/complex is plotted). For \link[=mse-class]{mse} objects with more than one MP,
-an \code{MP} facet column is added; the historical period is repeated in every
-MP's panel so each line is unbroken across the historical/projection
-boundary.
+stock/complex is plotted). For a single displayed simulation (\code{nsim <= 1})
+and an \link[=mse-class]{mse} object with more than one MP, an \code{MP} facet column is
+added, with the historical period repeated in every MP's panel so each
+line is unbroken across the historical/projection boundary.
 }
 \seealso{
 \code{\link[=IndexFitTable]{IndexFitTable()}}, \code{\link[=PlotCPUE]{PlotCPUE()}}, \code{\link[=PlotSurvey]{PlotSurvey()}}, \code{\link[=Biomass]{Biomass()}},
