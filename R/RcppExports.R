@@ -45,20 +45,64 @@ CalcFisheryDynamics_ <- function(HistIn, Years, AllYears, Sims, nSim, nStock, nF
     .Call(`_MSEtool_CalcFisheryDynamics_`, HistIn, Years, AllYears, Sims, nSim, nStock, nFleet, nArea, DoCalcCatch, DoCalcSpawnProduction, DoCalcRecruitment, DoCalcNumberNext, DoCalcTransition, DoCalcBiomass, DoCalcOverallF, DoBackCalcEffort, debug, clone)
 }
 
-combine <- function(list) {
-    .Call(`_MSEtool_combine`, list)
+#' Internal C++ per-recruit calculation (annual/non-seasonal, parallel implementation)
+#'
+#' Computes the apicalF-dependent per-recruit quantities for one sim/year,
+#' mirroring `.CalcPerRecruitFScalar()`
+#' (`R/calc-per-recruit.R`). 
+#'
+#' @param apicalF Scalar apical fishing mortality.
+#' @param StockFleetAllocation nStock x nFleet matrix -- fraction of apicalF
+#'   allocated to each fleet, per stock (constant across age).
+#' @param NaturalMortalityList,MaturityList,SemelparousList,WeightList,FecundityList,NPR0List,NPR0_SPList
+#'   Named lists (one element per stock) of per-age `NumericVector`s.
+#' @param PlusGroupVec,SpawnTimeFracVec Per-stock scalars (length nStock).
+#' @param WeightFleetRetainedList,WeightFleetSelectedList,SelectivityFleetList,RetentionFleetList,DiscardMortalityFleetList
+#'   Named lists (one element per stock) of nAge x nFleet `NumericMatrix`.
+#' @param IsSpawnTimeFrac Logical. Whether any stock has a non-zero spawn-time fraction.
+#' @return A named `List` of per-stock (length nStock) `NumericVector`s:
+#'   NPR0, NPRF, NPR0_SP, NPRF_SP (all summed-over-age, matching what
+#'   `.CalcPerRecruitFScalar()` stores in the `perrecruit` slots of the same
+#'   name), SPRF, Biomass, SBiomass, SProduction, Landings, Discards, Removals.
+CalcPerRecruitFScalarCpp_ <- function(apicalF, StockFleetAllocation, NaturalMortalityList, PlusGroupVec, MaturityList, SemelparousList, WeightList, SpawnTimeFracVec, FecundityList, WeightFleetRetainedList, WeightFleetSelectedList, SelectivityFleetList, RetentionFleetList, DiscardMortalityFleetList, NPR0List, NPR0_SPList, IsSpawnTimeFrac) {
+    .Call(`_MSEtool_CalcPerRecruitFScalarCpp_`, apicalF, StockFleetAllocation, NaturalMortalityList, PlusGroupVec, MaturityList, SemelparousList, WeightList, SpawnTimeFracVec, FecundityList, WeightFleetRetainedList, WeightFleetSelectedList, SelectivityFleetList, RetentionFleetList, DiscardMortalityFleetList, NPR0List, NPR0_SPList, IsSpawnTimeFrac)
 }
 
-get_freq <- function(x, width, origin = 0, outlen = 0L) {
-    .Call(`_MSEtool_get_freq`, x, width, origin, outlen)
+#' Internal C++ per-recruit calculation (seasonal, parallel implementation)
+#'
+#' Computes the apicalF-dependent seasonal per-recruit quantities for one
+#' sim/calendar-year, mirroring `.CalcPerRecruitFScalarSeasonal()`
+#' (`R/calc-per-recruit.R`). NPR0/NPR0_SP and RefSeasonWeights (both
+#' F-invariant) are precomputed in R and passed in.
+#'
+#' @param apicalF Scalar apical fishing mortality.
+#' @param StockFleetAllocationList Named list (one per stock) of
+#'   nSeason x nFleet `NumericMatrix` -- fraction of apicalF allocated to
+#'   each fleet in each season, per stock.
+#' @param NaturalMortalityList,MaturityList,SemelparousList,WeightList,FecundityList,NPR0_noList,NPR0_spList
+#'   Named lists (one per stock) of nAge x nSeason `NumericMatrix`.
+#' @param PlusGroupVec,SpawnTimeFracVec Per-stock scalars (length nStock).
+#' @param WeightFleetRetainedList,WeightFleetSelectedList,SelectivityFleetList,RetentionFleetList,DiscardMortalityFleetList
+#'   Named lists (one per stock) of nAge x (nSeason*nFleet) `NumericMatrix`
+#'   (column index `season + nSeason*fleet`, 0-indexed).
+#' @param SeasonalWeightsList Named list (one per stock) of length-nSeason
+#'   `NumericVector` (`pi_s`, seasonal recruitment weights).
+#' @param RefSeasonWeights Length-nSeason `NumericVector` (search-invariant,
+#'   precomputed once per calendar year).
+#' @param SPFromVec Integer, 1-based stock index (length nStock) -- which
+#'   stock's spawning production each stock's SPR is computed from.
+#' @param IsSpawnTimeFrac Logical. Whether any stock has a non-zero spawn-time fraction.
+#' @param nSeason Integer number of seasons per calendar year.
+#' @return A named `List`: per-stock (length nStock) `NumericVector`s NPR0,
+#'   NPRF, NPR0_SP, NPRF_SP, SPR0f (unfished SP-per-recruit), SPRFf (fished
+#'   SP-per-recruit), Biomass, SBiomass, SProduction, Landings, Discards,
+#'   Removals, plus a scalar `F_annual_apical`.
+CalcPerRecruitFScalarSeasonalCpp_ <- function(apicalF, StockFleetAllocationList, NaturalMortalityList, PlusGroupVec, MaturityList, SemelparousList, WeightList, SpawnTimeFracVec, FecundityList, WeightFleetRetainedList, WeightFleetSelectedList, SelectivityFleetList, RetentionFleetList, DiscardMortalityFleetList, SeasonalWeightsList, NPR0_noList, NPR0_spList, RefSeasonWeights, SPFromVec, IsSpawnTimeFrac, nSeason) {
+    .Call(`_MSEtool_CalcPerRecruitFScalarSeasonalCpp_`, apicalF, StockFleetAllocationList, NaturalMortalityList, PlusGroupVec, MaturityList, SemelparousList, WeightList, SpawnTimeFracVec, FecundityList, WeightFleetRetainedList, WeightFleetSelectedList, SelectivityFleetList, RetentionFleetList, DiscardMortalityFleetList, SeasonalWeightsList, NPR0_noList, NPR0_spList, RefSeasonWeights, SPFromVec, IsSpawnTimeFrac, nSeason)
 }
 
 get_freq2 <- function(x, CAL_bins, outlen = 0L) {
     .Call(`_MSEtool_get_freq2`, x, CAL_bins, outlen)
-}
-
-rnormSelect2 <- function(N, mi, ma) {
-    .Call(`_MSEtool_rnormSelect2`, N, mi, ma)
 }
 
 tdnorm <- function(x, mi, ma) {
