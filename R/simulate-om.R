@@ -54,11 +54,12 @@
     if (!silent)
       cli::cli_alert_info('Using user-supplied {.cls refpointsMSY} object -- skipped MSY reference point calculation')
   } else if (control$MSYRefs) {
-    Hist@Reference@MSY <- CalcMSY(Hist,
-                                  Years    = MSYYears,
-                                  type     = OM@Control$MSYType %||% 'Removals',
-                                  parallel = parallel,
-                                  silent   = silent)
+    MSYFun <- if (control$MSYRefsCpp) CalcMSYCpp else CalcMSY
+    Hist@Reference@MSY <- MSYFun(Hist,
+                                 Years    = MSYYears,
+                                 type     = OM@Control$MSYType %||% 'Removals',
+                                 parallel = parallel,
+                                 silent   = silent)
   }
 
   if (control$MGT)
