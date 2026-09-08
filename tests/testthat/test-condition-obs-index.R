@@ -347,9 +347,67 @@ test_that("simulating an index then conditioning on it recovers the generating B
 
   expect_equal(as.numeric(obsC@Beta), trueBeta, tolerance = 0.05)
   expect_equal(unname(obsC@Misc$BetaFit$Status), "estimated")
+
+  # `AC` and `CV` (the SD-equivalent) must be synced from the fit, the same
+  # way `Beta`/`Efficiency` are -- previously only `@Stats` held the
+  # estimated AC/SD, leaving `@AC`/`@CV` stuck at their pre-conditioning
+  # (unset/default) values even though the projection `Error` was actually
+  # generated using `Stats$AC`/`Stats$SD`.
+  expect_equal(as.numeric(obsC@AC), as.numeric(obsC@Stats$AC))
+  expect_equal(as.numeric(obsC@CV), sqrt(exp(obsC@Stats$SD^2) - 1))
 })
 
-test_that("PlotIndexFit() standardizes every simulation's True series to the reference years, not just sim 1", {
+test_that("PlotIndexFit() applies the fitted Beta/Efficiency to True, not a linear mean-ratio, when Beta != 1", {
+  skip_on_cran()
+  data(SingleStockOM, envir = environment())
+  om <- SingleStockOM
+  om@nSim <- 3
+  fl <- FleetNames(om)[1]
+
+  trueBeta <- 0.5
+  om@Obs[[1]][[fl]]@CPUE <- IndicesObs(Beta = trueBeta, CV = 0.01, AC = 0)
+
+  set.seed(42)
+  hist_sim <- Simulate(om, control = SimControl(GenerateData = TRUE), silent = TRUE)
+  HistYears <- Years(hist_sim, 'H')
+  ProjYears <- Years(hist_sim, 'P')
+  simVal <- hist_sim@Data[["1"]][[1]]@CPUE@Value[, fl]
+
+  # Feed sim 1's simulated (Beta = 0.5) series back in as "real" data,
+  # shared across all sims, and re-condition, estimating Beta afresh.
+  om2 <- om
+  om2@Obs[[1]][[fl]]@CPUE <- IndicesObs()
+  om2@Data <- list(Data(
+    Years = HistYears,
+    CPUE  = IndicesData(Name = fl,
+                        Value = matrix(simVal, ncol = 1, dimnames = list(as.character(HistYears), fl)))
+  ))
+
+  set.seed(1)
+  hist_cond <- Simulate(om2, control = SimControl(EstimateBeta = TRUE), silent = TRUE)
+  obsC <- hist_cond@OM@Obs[[1]][[fl]]@CPUE
+  # Confirm a genuinely non-unit Beta was fit, not silently falling back to 1.
+  expect_gt(abs(mean(as.numeric(obsC@Beta)) - 1), 0.1)
+
+  mse <- Project(hist_cond, MPs = "NFref", parallel = FALSE, silent = TRUE)
+  df  <- MSEtool:::.BuildIndexFitDF(mse, 'CPUE')
+
+  ratio <- function(period) {
+    idx  <- df[df$Series == 'Index' & df$Period == period, c("Sim", "Year", "Value")]
+    true <- df[df$Series == 'True'  & df$Period == period, c("Sim", "Year", "Value")]
+    m <- merge(idx, true, by = c("Sim", "Year"), suffixes = c("_Index", "_True"))
+    m$Value_Index / m$Value_True
+  }
+
+  # Fitting the actual Beta keeps the historical AND projection-period
+  # Index/True ratio centered near 1 -- a linear mean-ratio rescale (the
+  # previous, buggy behavior) would leave a systematic per-sim offset here
+  # because Beta != 1 makes the Index/True relationship non-linear.
+  expect_equal(mean(ratio("Historical")), 1, tolerance = 0.15)
+  expect_equal(mean(ratio("Projection")), 1, tolerance = 0.15)
+})
+
+test_that("PlotIndexFit() scales every simulation's True series by its own fitted Efficiency/Beta, not just sim 1's", {
   skip_on_cran()
   data(SingleStockOM, envir = environment())
   om <- SingleStockOM
@@ -378,11 +436,27 @@ test_that("PlotIndexFit() standardizes every simulation's True series to the ref
   # it) -- force that here since it's the scenario that broke.
   hist_c@Data <- list("1" = hist_c@Data[[1]])
 
+  obsC <- hist_c@OM@Obs[[1]][[fl]]@CPUE
+  Beta <- if (is.null(obsC@Beta)) rep(1, 5) else obsC@Beta
+  Efficiency <- obsC@Efficiency
+
   df <- MSEtool:::.BuildIndexFitDF(hist_c, 'CPUE')
   for (s in unique(df$Sim[df$Series == 'True'])) {
     sub <- df[df$Sim == s & df$Period == 'Historical' & df$Series == 'True' & df$Year %in% subYears, ]
-    expect_equal(mean(sub$Value), 1, tolerance = 1e-8, label = paste0("sim ", s, " mean over reference years"))
+    NomIndex_s <- .CalcNomIndex(Number_List = hist_c@Number[1], object = hist_c, stocks = 1,
+                                fleet = fl, IndexObs = IndicesObs(), Years = subYears, sim = s)
+    expected <- Efficiency[s] * as.numeric(NomIndex_s) ^ Beta[s]
+    expect_equal(sub$Value[order(sub$Year)], expected,
+                tolerance = 1e-8, label = paste0("sim ", s, " True series"))
   }
+
+  # Sim 1's fit is against its own exact-proportional data (zero residual);
+  # other sims' population trajectories differ from the fixed "real" data
+  # pattern, so their fitted Efficiency legitimately leaves a small
+  # lack-of-fit residual instead of being forced to match exactly.
+  expect_equal(mean(df$Value[df$Sim == 1 & df$Period == 'Historical' &
+                              df$Series == 'True' & df$Year %in% subYears]),
+              1, tolerance = 1e-8)
 })
 
 test_that("IndexFitTable() drops all-NA columns and has no Efficiency column", {
@@ -452,4 +526,108 @@ test_that("PlotIndexFit() keeps the Index on its natural scale and scales True t
   expect_equal(sub$Value[sub$Series == 'Index'], synthetic, tolerance = 1e-8)
   # True scaled to share the Index's mean over the same years.
   expect_equal(mean(sub$Value[sub$Series == 'True']), natScale, tolerance = 1e-8)
+})
+
+test_that(".SelectRepresentativeSims() picks sims spanning the range of outcomes, not sim-ID order", {
+  # 5 sims whose True series each run flat except for a Last/First ratio of
+  # 0.5, 0.8, 1.0, 1.2, 1.5 -- deliberately shuffled sim-ID order so a bug
+  # that just takes head(sort(Sim), nsim) would be caught.
+  ratios <- c("3" = 1.0, "5" = 1.5, "1" = 0.5, "4" = 1.2, "2" = 0.8)
+  df <- purrr::imap_dfr(ratios, function(r, sim) {
+    data.frame(Sim = as.integer(sim), Year = c(2000, 2010), Value = c(1, r),
+              Series = 'True', Stock = 'S1', Fleet = 'F1', Period = 'Historical')
+  })
+
+  picked <- MSEtool:::.SelectRepresentativeSims(df, nsim = 3)
+  expect_length(picked, 3)
+  # Lowest ratio (sim 1), middle (sim 3), and highest (sim 5).
+  expect_setequal(picked, c(1, 3, 5))
+
+  # nsim covering (or exceeding) every sim returns all of them, untouched.
+  expect_setequal(MSEtool:::.SelectRepresentativeSims(df, nsim = 5), 1:5)
+  expect_setequal(MSEtool:::.SelectRepresentativeSims(df, nsim = 10), 1:5)
+})
+
+test_that("PlotIndexFit() defaults to a single sim line, and doesn't flatten a single-historical-sim / multi-projection-sim case", {
+  skip_on_cran()
+  data(SingleStockOM, envir = environment())
+  om <- SingleStockOM
+  om@nSim <- 6
+  fl <- FleetNames(om)[1]
+  om@Obs[[1]][[fl]]@CPUE <- IndicesObs(CV = 0.2, AC = 0)
+
+  set.seed(1)
+  hist0 <- Simulate(om, control = SimControl(GenerateData = TRUE), silent = TRUE)
+
+  # Force the single-historical-sim conditioning scenario this fix targets:
+  # one real/conditioned historical trajectory shared by every sim, many
+  # projected trajectories.
+  hist0@Data <- list("1" = hist0@Data[[1]])
+
+  mse <- Project(hist0, MPs = c("NFref", "FMSYref"), parallel = FALSE, silent = TRUE)
+
+  # Default (nsim = 1): a single representative sim, faceted by MP as before,
+  # colored by Series (no MP dimension to color by with only one sim shown).
+  pLines <- PlotIndexFit(mse, type = 'CPUE')
+  lineLayerData <- pLines$layers[[1]]$data
+  expect_true(is.data.frame(lineLayerData))
+  expect_equal(length(unique(lineLayerData$Sim)), 1L)
+  expect_false('fill' %in% names(pLines$labels))
+  expect_equal(names(pLines$facet$params$cols), "MP")
+
+  renderedLine <- ggplot2::ggplot_build(pLines)$data[[1]]
+  expect_setequal(unique(renderedLine$linetype), c('solid', 'dashed'))
+
+  # ribbon = TRUE (nsim = 0): pointwise median/ribbon across all 6 projected
+  # sims -- smoother than any individual sim's True/Index trace, but still
+  # available for anyone who wants the ensemble-uncertainty view.
+  pRibbon <- PlotIndexFit(mse, type = 'CPUE', nsim = 0)
+  ribbonLayerData <- pRibbon$layers[[1]]$data
+  expect_true(all(c("Lower", "Median", "Upper") %in% names(ribbonLayerData)))
+})
+
+test_that("PlotIndexFit() facets by Sim and colors by MP when nsim > 1, replicating shared history into every panel", {
+  skip_on_cran()
+  data(SingleStockOM, envir = environment())
+  om <- SingleStockOM
+  om@nSim <- 6
+  fl <- FleetNames(om)[1]
+  om@Obs[[1]][[fl]]@CPUE <- IndicesObs(CV = 0.2, AC = 0)
+
+  set.seed(1)
+  hist0 <- Simulate(om, control = SimControl(GenerateData = TRUE), silent = TRUE)
+  hist0@Data <- list("1" = hist0@Data[[1]])  # single real historical replicate
+  mse <- Project(hist0, MPs = c("NFref", "FMSYref"), parallel = FALSE, silent = TRUE)
+
+  p <- PlotIndexFit(mse, type = 'CPUE', nsim = 3)
+  ld <- p$layers[[1]]$data
+
+  # Faceted by Sim (not MP) once more than one sim is displayed.
+  expect_equal(names(p$facet$params$cols), "Sim")
+  expect_equal(length(unique(ld$Sim)), 3L)
+
+  # Colored by MP -- both MPs present within every displayed sim.
+  expect_true('MP' %in% names(ld))
+  for (s in unique(ld$Sim))
+    expect_setequal(ld$MP[ld$Sim == s & ld$Period == 'Projection'], c("NFref", "FMSYref"))
+
+  # The single real historical replicate is copied into every displayed sim
+  # (not just whichever sim happened to hold it), so each panel's historical
+  # Index/True calibration is intact rather than showing a gap.
+  histIdx <- ld[ld$Period == 'Historical' & ld$Series == 'Index', ]
+  expect_equal(length(unique(histIdx$Sim)), 3L)
+  perSimMean <- as.numeric(unname(tapply(histIdx$Value, histIdx$Sim, mean)))
+  expect_equal(perSimMean, rep(perSimMean[1], length(perSimMean)))
+
+  renderedLine <- ggplot2::ggplot_build(p)$data[[1]]
+  expect_setequal(unique(renderedLine$linetype), c('solid', 'dashed'))
+
+  # Regression: the base ggplot() call must not carry the full (6-sim)
+  # data.frame as default plot data -- facet_grid/facet_wrap derive their
+  # panel levels from a layer's data AND the plot's default data, so an
+  # unfiltered default data set built one empty panel per un-selected sim
+  # (3 real + 3 blank, for nsim = 3 of 6) even though only 3 sims were
+  # actually plotted.
+  panelSims <- ggplot2::ggplot_build(p)$layout$layout$Sim
+  expect_setequal(panelSims, unique(ld$Sim))
 })
