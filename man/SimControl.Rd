@@ -12,6 +12,7 @@ SimControl(
   EstimateBeta = FALSE,
   GenerateData = TRUE,
   MSYRefs = TRUE,
+  MSYRefsCpp = TRUE,
   RefPoints = TRUE,
   MGT = TRUE,
   BLow = FALSE,
@@ -45,6 +46,10 @@ observation model? Default \code{TRUE}.}
 \code{\link[=CalcMSY]{CalcMSY()}})? Numerically optimizes apical F per simulation, so cost
 scales with \code{nSim}; use \code{parallel = TRUE} in \code{\link[=Simulate]{Simulate()}} for large
 \code{nSim}. Default \code{TRUE}.}
+
+\item{MSYRefsCpp}{Logical. Use the C++
+implementation of the MSY reference point calculation instead of the R
+implementation (\code{\link[=CalcMSY]{CalcMSY()}})? Default \code{TRUE}.}
 
 \item{RefPoints}{Logical. Calculate F0.1, Fmax, Fx\%SPR, Fmed, Fcrash and
 SPRcrash reference points (see \code{\link[=CalcRefPoints]{CalcRefPoints()}})? Default \code{TRUE}.}
