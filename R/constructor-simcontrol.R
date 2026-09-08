@@ -24,6 +24,9 @@
 #'   [CalcMSY()])? Numerically optimizes apical F per simulation, so cost
 #'   scales with `nSim`; use `parallel = TRUE` in [Simulate()] for large
 #'   `nSim`. Default `TRUE`.
+#' @param MSYRefsCpp Logical. Use the C++
+#'   implementation of the MSY reference point calculation instead of the R
+#'   implementation ([CalcMSY()])? Default `TRUE`.
 #' @param RefPoints Logical. Calculate F0.1, Fmax, Fx%SPR, Fmed, Fcrash and
 #'   SPRcrash reference points (see [CalcRefPoints()])? Default `TRUE`.
 #' @param MGT Logical. Calculate mean generation time (see [CalcMGT()])?
@@ -59,6 +62,7 @@ SimControl <- function(DynamicUnfished = TRUE,
                        EstimateBeta    = FALSE,
                        GenerateData    = TRUE,
                        MSYRefs         = TRUE,
+                       MSYRefsCpp      = TRUE,
                        RefPoints       = TRUE,
                        MGT             = TRUE,
                        BLow            = FALSE,
@@ -78,6 +82,7 @@ SimControl <- function(DynamicUnfished = TRUE,
     EstimateBeta    = EstimateBeta,
     GenerateData    = GenerateData,
     MSYRefs         = MSYRefs,
+    MSYRefsCpp      = MSYRefsCpp,
     RefPoints       = RefPoints,
     MGT             = MGT,
     BLow            = BLow
