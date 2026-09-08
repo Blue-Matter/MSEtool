@@ -5,7 +5,6 @@ using namespace Rcpp;
 
 
 // https://stackoverflow.com/questions/30175104/how-to-effectively-combine-a-list-of-numericvectors-into-one-large-numericvector
-// [[Rcpp::export]]
 NumericVector combine(const List& list)
 {
   std::size_t n = list.size();
@@ -33,7 +32,6 @@ NumericVector combine(const List& list)
 
 // https://stackoverflow.com/questions/13661065/superimpose-histogram-fits-in-one-plot-ggplot
 
-// [[Rcpp::export]]
 NumericVector get_freq(NumericVector x, double width, double origin = 0,
                        int outlen=0) {
   int bin= 0;
@@ -84,7 +82,7 @@ NumericVector get_freq2(NumericVector x, NumericVector CAL_bins, int outlen=0) {
 
 // https://stackoverflow.com/questions/14034200/efficient-random-number-generation-from-a-truncated-normal-distribution
 
-// [[Rcpp::export]]
+
 NumericVector rnormSelect2(int N, int mi, int ma) {
   int N2 = N * 1.25;
   NumericVector X = rnorm(N2, 0, 1);
