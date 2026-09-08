@@ -52,7 +52,8 @@
     NPR0List                  = purrr::map(inputs$NPR0List, .FlattenAgeArray),
     NPR0_SPList               = purrr::map(inputs$NPR0_SPList, .FlattenAgeArray),
     SPR0_full                 = inputs$SPR0List |> List2Array('Stock', pos = 2),
-    SPR0_target               = inputs$SPR0List |> List2Array('Stock', pos = 2) |> .ArraySubsetYear(inputs$Years)
+    SPR0_target               = inputs$SPR0List |> List2Array('Stock', pos = 2) |> .ArraySubsetYear(inputs$Years),
+    IsSpawnTimeFrac           = any(unlist(inputs$SpawnTimeFracList) != 0)
   )
 }
 
