@@ -176,8 +176,12 @@ Subset <- function(object,
   }
   
   idx <- SimVals %in% Sims
-  out <- do.call(`[`, c(list(array), .MakeDimIndex(idx, array, 1L),
-                        list(drop = FALSE)))
+  out <- if (all(idx)) {
+    array
+  } else {
+    do.call(`[`, c(list(array), .MakeDimIndex(idx, array, 1L),
+                   list(drop = FALSE)))
+  }
   if (!keep_sim_name) {
     dimnames(out)$Sim <- seq_along(dimnames(out)$Sim)
   } else {
@@ -269,6 +273,7 @@ Subset <- function(object,
   }
   
   idx <- YearVals %in% Years
+  if (all(idx)) return(array)
   do.call(`[`, c(list(array), .MakeDimIndex(idx, array, TSind),
                  list(drop = FALSE)))
 }
@@ -335,6 +340,7 @@ Subset <- function(object,
     cli::cli_abort("`Ages` greater than ages in this array")
   
   sel <- AgeVals %in% Ages
+  if (all(sel)) return(array)
   do.call(`[`, c(list(array), .MakeDimIndex(sel, array, AgeInd),
                  list(drop = FALSE)))
 
@@ -426,11 +432,12 @@ Subset <- function(object,
   
  
   MPVals <- MPVals[MPVals %in% seq_along(MPNames)]
-  sel <- seq_along(MPNames) %in% MPVals 
-  
+  sel <- seq_along(MPNames) %in% MPVals
+
+  if (all(sel)) return(array)
   do.call(`[`, c(list(array), .MakeDimIndex(sel, array, MPInd),
                  list(drop = FALSE)))
-  
+
 }
 
 .SubsetFleet <- function(object, Fleets=NULL, debug = FALSE) {
@@ -510,11 +517,12 @@ Subset <- function(object,
   
 
   FleetVals <- FleetVals[FleetVals %in% seq_along(FleetNames)]
-  sel <- seq_along(FleetNames) %in% FleetVals 
-  
+  sel <- seq_along(FleetNames) %in% FleetVals
+
+  if (all(sel)) return(array)
   do.call(`[`, c(list(array), .MakeDimIndex(sel, array, FleetInd),
                  list(drop = FALSE)))
-  
+
 }
 
 .SubsetStock <- function(object, Stocks=NULL, debug=FALSE) {
@@ -594,7 +602,8 @@ Subset <- function(object,
   
   StockVals <- StockVals[StockVals %in% seq_along(StockNames)]
   sel <- seq_along(StockNames) %in% StockVals
-  
+
+  if (all(sel)) return(array)
   do.call(`[`, c(list(array), .MakeDimIndex(sel, array, StockInd),
                  list(drop = FALSE)))
 }
