@@ -184,11 +184,16 @@ Extend <- function(array,
       "x" = "Found length {.val {d[target_dim]}}."
     ))
 
-  idx <- lapply(seq_along(d), \(i)
-                if (i == target_dim) rep(1L, n) else seq_len(d[i]))
+  nd   <- length(d)
+  pre  <- if (target_dim == 1L) 1L else prod(d[seq_len(target_dim - 1L)])
+  post <- if (target_dim == nd) 1L else prod(d[(target_dim + 1L):nd])
 
-  OutArray <- do.call(`[`, c(list(array), idx, list(drop = FALSE)))
-  dimnames(OutArray)[[target_dim]] <- if (coerce_char) as.character(target_values) else target_values
+  dim(array) <- c(pre, post)
+  OutArray   <- array[, rep(seq_len(post), each = n), drop = FALSE]
+  dim(OutArray) <- replace(d, target_dim, n)
+
+  dn[[target_dim]] <- if (coerce_char) as.character(target_values) else target_values
+  dimnames(OutArray) <- dn
   OutArray
 }
 
