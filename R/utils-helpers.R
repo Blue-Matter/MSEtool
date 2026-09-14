@@ -32,17 +32,16 @@
     return(DropDimension(x, dimName))
   }
   
-  # Move sumDim to last dimension
-  perm <- c(setdiff(seq_len(nd), sumDim), sumDim)
-  x_perm <- .Aperm(x, perm)
-  
-  new_dims <- dims[perm]
-  x_mat <- matrix(x_perm, ncol = new_dims[length(new_dims)])
-  
-  summed <- rowSums(x_mat)
-  
+  mid  <- dims[sumDim]
+  pre  <- if (sumDim == 1L) 1L else prod(dims[seq_len(sumDim - 1L)])
+  post <- if (sumDim == nd) 1L else prod(dims[(sumDim + 1L):nd])
+
+  dim(x) <- c(pre, mid, post)
+  summed <- x[, 1L, , drop = TRUE]
+  for (t in seq_len(mid)[-1L]) summed <- summed + x[, t, , drop = TRUE]
+
   # Rebuild array without the summed dimension
-  out_dims <- new_dims[-length(new_dims)]
+  out_dims <- dims[-sumDim]
   if (length(out_dims) == 0) out_dims <- 1
   out <- array(summed, dim = out_dims)
   
@@ -51,7 +50,7 @@
     dn_new <- dn[-sumDim]
     if (length(dn_new) > 0) dimnames(out) <- dn_new
   }
-  
+
   out
 }
 
