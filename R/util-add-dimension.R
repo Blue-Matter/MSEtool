@@ -100,11 +100,17 @@ DropDimension <- function(array, name, warn = TRUE) {
     )
   }
   
+  if (all(d[ind] == 1L)) {
+    dim(array)      <- d[-ind]
+    dimnames(array) <- dn[-ind]
+    return(array)
+  }
+
   idx <- lapply(seq_along(d), function(i) if (i %in% ind) 1L else seq_len(d[i]))
   out <- do.call(`[`, c(list(array), idx, list(drop = FALSE)))
-  
+
   dim(out)      <- d[-ind]
   dimnames(out) <- dn[-ind]
-  
+
   out
 }
