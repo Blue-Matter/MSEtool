@@ -1,29 +1,4 @@
-#' Calculate Catch-at-Size for Landings and Discards
-#'
-#' Computes landings-at-size and discards-at-size for each stock and fleet by
-#' projecting numbers-at-age through a selectivity-conditioned Age-Size Key.
-#' Supports both length- and weight-based size compositions, determined
-#' automatically per stock by the availability of an AWK. Under
-#' `sel_mode = "length"`, the Age-Size Key is reweighted by size-selectivity
-#' within each age class before projection, correctly capturing the effect of
-#' length-based selectivity on the size composition of catch. Under
-#' `sel_mode = "age"`, the population Age-Size Key is used unchanged.
-#'
-#' @param Hist A `Hist` object.
-#'   
-#' @param Years Numeric vector of years to compute catch-at-size for. If
-#'   `NULL` (default), all historical years in `Hist` are used.
-#'   
-#' @param sel_mode Character. One of `"length"` (default) or `"age"`. Controls
-#'   whether the Age-Size Key is conditioned on size-selectivity before
-#'   projection. See `.ConditionAgeSizeKey()` for details.
-#'
-#' @return `Hist` with `Hist@LandingsAtSize[[stock]][[fleet]]` and
-#'   `Hist@DiscardsAtSize[[stock]][[fleet]]` populated for the requested years.
-#'   Each array has dimensions `Sim x Class x Year x Area`.
-#'
-#' @seealso `.ConditionAgeSizeKey()`
-#' @keywords internal
+
 .CalcCatchAtSize <- function(Hist, Years = NULL, sel_mode = c("length", "age")) {
   
   sel_mode  <- match.arg(sel_mode) # hard coded to `length` for now
@@ -80,47 +55,16 @@
   }) |> .SubsetYear(Years = Years)
   
   length_object_vectors <- purrr::map(Hist@OM@Stock, \(stock) stock@Length)
-  
-  # Condition age-size keys on size selectivity 
-  # conditioned_keys[[stock]][[fleet]]: Sim x Age x Class x Year x Area
-  conditioned_keys <- purrr::pmap(
-    list(age_size_keys, sel_size_vectors, sel_mode_sf, length_object_vectors),
-    \(key, sel_size_stock, sel_mode_stock, length_object) {
 
-      key_area_default <- if (length(sel_size_stock)) {
-        area_vals <- as.numeric(dimnames(sel_size_stock[[1]])$Area)
-        ExtendAreas(AddDimension(key, 'Area'), Areas = area_vals)
-      } else {
-        AddDimension(key, 'Area')
-      }
+  key_area_defaults <- purrr::map2(age_size_keys, sel_size_vectors, \(key, sel_size_stock) {
+    if (length(sel_size_stock)) {
+      area_vals <- as.numeric(dimnames(sel_size_stock[[1]])$Area)
+      ExtendAreas(AddDimension(key, 'Area'), Areas = area_vals)
+    } else {
+      AddDimension(key, 'Area')
+    }
+  })
 
-      purrr::map2(sel_size_stock, sel_mode_stock, \(selectivity, sm) {
-
-        # check classes
-        key_class <- as.numeric(dimnames(key)$Class)
-        sel_class <- as.numeric(dimnames(selectivity)$Class)
-
-        recalc_key <- FALSE
-
-        if (length(key_class) != length(sel_class)) {
-          recalc_key <- TRUE
-        } else if (any(key_class != sel_class)) {
-          recalc_key <- TRUE
-        }
-
-        key_area <- if (recalc_key) {
-          recalced <- CalcAgeSizeKey(MeanAtAge = length_object@MeanAtAge,
-                                CVatAge   =length_object@CVatAge,
-                                Classes   = sel_class,
-                                TruncSD   = length_object@TruncSD,
-                                Dist      = length_object@Dist)
-          AddDimension(recalced, 'Area')
-        } else key_area_default
-
-        .ConditionAgeSizeKey(key_area, selectivity, sel_mode = sm)
-      })
-    })
-  
   # Loop over stocks and fleets
   for (st in seq_len(n_stock)) {
     
@@ -148,6 +92,10 @@
     Z_safe <- Z
     Z_safe[Z_safe == 0] <- .Machine$double.eps
 
+    key_area_default  <- key_area_defaults[[st]]
+    length_object      <- length_object_vectors[[st]]
+    recalced_key_cache <- list() # keyed by sel_class signature, shared across fleets
+
     for (fl in seq_len(n_fleet)) {
 
       # F slices for this fleet: Sim x Age x Year x Area
@@ -156,24 +104,42 @@
 
       fr_ratio  <- ArrayDivide(fr_fl, Z_safe)
       fd_ratio <- ArrayDivide(pmax(ArraySubtract(fd_fl, fr_fl), 0), Z_safe)
-      
-      # Conditioned key for this stock x fleet: Sim x Age x Class x Year x Area
-      cond_key <- conditioned_keys[[st]][[fl]]
-      
+
       # Sim x Age x Year x Area — numbers dying from landings/discards per age
       landings_N <- ArrayMultiply(fr_ratio, N_dead)
       discards_N <- ArrayMultiply(fd_ratio, N_dead)
-      
-      classes <- as.numeric(dimnames(cond_key)$Class)
-      
-      landings_N_exp <- AddDimension(landings_N, 'Class', pos = 3, val = classes[1])
-      discards_N_exp <- AddDimension(discards_N, 'Class', pos = 3, val = classes[1])
-      
-      LAS <- SumOverAge(ArrayMultiply(cond_key, landings_N_exp))
-      DAS <- SumOverAge(ArrayMultiply(cond_key, discards_N_exp))
-      
-      ArrayFill(Hist@LandingsAtSize[[st]][[fl]]) <- LAS
-      ArrayFill(Hist@DiscardsAtSize[[st]][[fl]]) <- DAS
+
+      selectivity <- sel_size_vectors[[st]][[fl]]
+      sm          <- sel_mode_sf[[st]][[fl]]
+
+      # Age-Size Key for this fleet: recalculate only if the fleet's
+      # selectivity is defined on different size classes to the stock's key
+      key_class <- as.numeric(dimnames(key_area_default)$Class)
+      sel_class <- as.numeric(dimnames(selectivity)$Class)
+
+      recalc_key <- length(key_class) != length(sel_class) ||
+        any(key_class != sel_class)
+
+      key_area <- if (!recalc_key) {
+        key_area_default
+      } else {
+        cache_id <- paste(sel_class, collapse = ",")
+        if (is.null(recalced_key_cache[[cache_id]])) {
+          recalced <- CalcAgeSizeKey(MeanAtAge = length_object@MeanAtAge,
+                                CVatAge   = length_object@CVatAge,
+                                Classes   = sel_class,
+                                TruncSD   = length_object@TruncSD,
+                                Dist      = length_object@Dist)
+          recalced_key_cache[[cache_id]] <- AddDimension(recalced, 'Area')
+        }
+        recalced_key_cache[[cache_id]]
+      }
+
+      res <- .CalcCatchAtSizeFleet(key_area, selectivity, sel_mode = sm,
+                                   landings_N = landings_N, discards_N = discards_N)
+
+      ArrayFill(Hist@LandingsAtSize[[st]][[fl]]) <- res$LAS
+      ArrayFill(Hist@DiscardsAtSize[[st]][[fl]]) <- res$DAS
     }
   }
   Hist
