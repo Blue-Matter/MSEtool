@@ -33,8 +33,9 @@ ArraySum <- function(array1, array2) {
 #' @export
 ArrayDivide <- function(array1, array2) {
   out <- .ArrayOperation(array1, array2, `/`)
-  out[is.na(out)] <- 0
-  out[is.infinite(out)] <- 0
+  if (anyNA(out)) out[is.na(out)] <- 0
+  inf_mask <- is.infinite(out)
+  if (any(inf_mask)) out[inf_mask] <- 0
   out
 }
 
