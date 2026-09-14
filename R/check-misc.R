@@ -17,8 +17,7 @@
 #' @keywords internal
 .CheckClass <- function(object, class='om', name='OM', type='Argument') {
 
-  checkClass <- sapply(class, function(i) inherits(object, i))
-  if (all(!checkClass)) {
+  if (!inherits(object, class)) {
     cli::cli_abort(c('{type} {.var {name}} must be class {.cls {class}}',
                      "x" = "You've supplied an object of class {.cls {class(object)}}"), call=NULL)
   }
