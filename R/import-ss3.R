@@ -1077,7 +1077,8 @@ ImportSS <- function(SSDir,
 # zero.
 .GetSSRecDevStats <- function(replist, YearsList, Ages) {
   dev     <- .GetSSRecDevsRaw(replist, YearsList, Ages)
-  plateau <- .GetSSPlateauYears(replist, YearsList$YearsHist)$plateau
+  AnnualYearsHist <- unique(floor(YearsList$YearsHist))
+  plateau <- .GetSSPlateauYears(replist, AnnualYearsHist)$plateau
 
   logdev <- log(dev[as.character(plateau)])
   logdev <- logdev[is.finite(logdev)]
@@ -1094,7 +1095,8 @@ ImportSS <- function(SSDir,
   Seasons   <- YearsList$Seasons
   dev <- .GetSSRecDevsRaw(replist, YearsList, Ages)
 
-  trailing <- .GetSSPlateauYears(replist, YearsHist)$trailing_unsupported
+  AnnualYearsHist <- unique(floor(YearsHist))
+  trailing <- .GetSSPlateauYears(replist, AnnualYearsHist)$trailing_unsupported
   if (length(trailing)) dev[as.character(trailing)] <- NA_real_
 
   if (Seasons == 1)
