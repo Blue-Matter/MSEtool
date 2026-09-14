@@ -119,7 +119,11 @@ Subset <- function(object,
     dnames <- dimnames(object)
     if (!is.null(dnames) && "Sim" %in% names(dnames)) {
       SimVals <- as.numeric(dnames$Sim)
-      
+
+      if (length(SimVals) == 1L) {
+        return(object)
+      }
+
       if (max(SimVals) > max(Sims)) {
         object <- .ArraySubsetSim(object, Sims, keep_sim_name = keep_sim_name)
       } else {
@@ -129,7 +133,7 @@ Subset <- function(object,
         }
         object <- .ArraySubsetSim(object, Sims = Sims, keep_sim_name = keep_sim_name)
       }
-        
+
     }
     return(object)
   }
