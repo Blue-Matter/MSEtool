@@ -86,28 +86,38 @@
   conditioned_keys <- purrr::pmap(
     list(age_size_keys, sel_size_vectors, sel_mode_sf, length_object_vectors),
     \(key, sel_size_stock, sel_mode_stock, length_object) {
+
+      key_area_default <- if (length(sel_size_stock)) {
+        area_vals <- as.numeric(dimnames(sel_size_stock[[1]])$Area)
+        ExtendAreas(AddDimension(key, 'Area'), Areas = area_vals)
+      } else {
+        AddDimension(key, 'Area')
+      }
+
       purrr::map2(sel_size_stock, sel_mode_stock, \(selectivity, sm) {
-        
+
         # check classes
         key_class <- as.numeric(dimnames(key)$Class)
         sel_class <- as.numeric(dimnames(selectivity)$Class)
-        
+
         recalc_key <- FALSE
-        
+
         if (length(key_class) != length(sel_class)) {
           recalc_key <- TRUE
         } else if (any(key_class != sel_class)) {
           recalc_key <- TRUE
         }
-        
-        if (recalc_key) {
-          key <- CalcAgeSizeKey(MeanAtAge = length_object@MeanAtAge,
+
+        key_area <- if (recalc_key) {
+          recalced <- CalcAgeSizeKey(MeanAtAge = length_object@MeanAtAge,
                                 CVatAge   =length_object@CVatAge,
                                 Classes   = sel_class,
                                 TruncSD   = length_object@TruncSD,
                                 Dist      = length_object@Dist)
-        }
-        .ConditionAgeSizeKey(key, selectivity, sel_mode = sm)
+          AddDimension(recalced, 'Area')
+        } else key_area_default
+
+        .ConditionAgeSizeKey(key_area, selectivity, sel_mode = sm)
       })
     })
   
@@ -133,17 +143,17 @@
     f_dead_total <- SumOverFleet(f_dead)           # Sim x Age x Year x Area
     Z            <- ArraySum(nat_mort, f_dead_total)
     N_dead       <- ArrayMultiply(naa, 1 - exp(-Z))
-    
+
+    # F-ratios (proportion of total mortality attributable to this fleet)
+    Z_safe <- Z
+    Z_safe[Z_safe == 0] <- .Machine$double.eps
+
     for (fl in seq_len(n_fleet)) {
-      
+
       # F slices for this fleet: Sim x Age x Year x Area
       fd_fl <- f_dead[, , , fl, , drop = FALSE] |> DropDimension('Fleet')
       fr_fl <- f_retain[, , , fl, , drop = FALSE] |> DropDimension('Fleet')
-      
-      # F-ratios (proportion of total mortality attributable to this fleet)
-      Z_safe    <- Z
-      Z_safe[Z_safe == 0] <- .Machine$double.eps
-      
+
       fr_ratio  <- ArrayDivide(fr_fl, Z_safe)
       fd_ratio <- ArrayDivide(pmax(ArraySubtract(fd_fl, fr_fl), 0), Z_safe)
       
