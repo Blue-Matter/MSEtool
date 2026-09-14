@@ -122,16 +122,13 @@ ImportSSReport <- function(SSDir, parallel=FALSE, silent=FALSE, ...) {
   dots$verbose    <- dots$verbose     %||% FALSE
   dots$warn       <- dots$warn        %||% FALSE
   
-  if (!silent) 
-    cli::cli_progress_message(
+  if (!silent)
+    cli::cli_alert_info(
       "Importing SS3 output from {.val {basename(SSDir)}}"
       )
-  
+
   replist <- try(do.call(r4ss::SS_output, dots), silent = TRUE)
-  
-  if (!silent) 
-    cli::cli_progress_done()
-  
+
   if (is.character(replist)) {
     cli::cli_abort(
       c("`r4ss::SS_output` returned an error.", "x" = replist)
