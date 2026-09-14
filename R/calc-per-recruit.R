@@ -317,7 +317,7 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
 
 .RefSeasonWeights <- function(FecundityList, MaturityList, nSeason, RefSeason) {
 
-  nSim <- dim(FecundityList[[1]])[1]
+  nSim <- max(vapply(FecundityList, \(x) dim(x)[1], integer(1)))
 
   if (nSeason == 1L)
     return(matrix(1, nrow = nSim, ncol = 1))
@@ -335,6 +335,8 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
     Spawn <- FecundityList[[i]]
     if (length(Spawn) == 0) Spawn <- MaturityList[[i]]
     SumByAgeSeason <- apply(Spawn, c(1, 3), sum)   # [Sim, nSeason]
+    if (nrow(SumByAgeSeason) == 1L && nSim > 1L)
+      SumByAgeSeason <- SumByAgeSeason[rep(1L, nSim), , drop = FALSE]
     Flag <- Flag | (SumByAgeSeason > eps)
   }
 
