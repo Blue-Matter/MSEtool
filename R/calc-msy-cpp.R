@@ -409,7 +409,7 @@
 
   if (IdenticalHist) {
     if (!silent)
-      cli::cli_progress_message("Calculating MSY reference points (C++): {.val {complex_name}}")
+      cli::cli_progress_message("Calculating MSY reference points: {.val {complex_name}}")
 
     results_sim1 <- RunOneSim(
       Subset(StockList,      Sims = 1),
@@ -445,7 +445,7 @@
   if (!parallel) {
     if (!silent) {
       id <- cli::cli_progress_bar(
-        name   = paste0("Calculating MSY reference points (C++): ", complex_name),
+        name   = paste0("Calculating MSY reference points: ", complex_name),
         total  = nSim,
         format = "{cli::pb_name} {cli::pb_bar} {cli::pb_current}/{cli::pb_total} sims | {cli::pb_elapsed}"
       )
@@ -538,7 +538,7 @@ CalcMSYCpp <- function(Hist,
   }
 
   if (!silent)
-    cli::cli_alert_success("Calculated MSY Reference Points (C++)")
+    cli::cli_alert_success("Calculated MSY Reference Points")
 
   Hist@Reference@MSY
 }
