@@ -354,10 +354,15 @@ CombineFleets <- function(OM, FleetList, silent = FALSE) {
   apicalF_list <- purrr::map(FleetList, \(fleet)
                              ArrayMultiply(fleet@Effort@Effort, fleet@Catchability@Efficiency)
   )
-  totalApicalF <- Reduce(`+`, apicalF_list)
+  totalApicalF <- Reduce(ArraySum, apicalF_list)
   
   Efficiency <- FleetList[[1]]@Catchability@Efficiency
-  Effort(NewFleet)       <- Effort(Effort = ArrayDivide(totalApicalF, Efficiency))
+  HistYears  <- as.numeric(dimnames(FleetList[[1]]@Effort@Effort)$Year)
+
+  Effort(NewFleet) <- Effort(
+    Effort = ArrayDivide(.ArraySubsetYear(totalApicalF, HistYears),
+                         .ArraySubsetYear(Efficiency, HistYears))
+  )
   Catchability(NewFleet) <- Catchability(Efficiency = Efficiency)
   
   FInteract_list <- purrr::map2(apicalF_list, FleetList, \(apicalF, fleet) {
@@ -366,7 +371,7 @@ CombineFleets <- function(OM, FleetList, silent = FALSE) {
       AddDimension("Area", pos = 4)
     ArrayMultiply(apicalF_expanded, fleet@Selectivity@MeanAtAge)
   })
-  FInteract <- Reduce(`+`, FInteract_list)   # aggregate F-at-age
+  FInteract <- Reduce(ArraySum, FInteract_list)   # aggregate F-at-age
   
   # TODO - at length
   
@@ -377,7 +382,7 @@ CombineFleets <- function(OM, FleetList, silent = FALSE) {
   FRetain_list <- purrr::map2(FInteract_list, FleetList, \(Fint, fleet)
                               ArrayMultiply(Fint, fleet@Retention@MeanAtAge)
   )
-  FRetain <- Reduce(`+`, FRetain_list)
+  FRetain <- Reduce(ArraySum, FRetain_list)
   Retention(NewFleet) <- Retention(MeanAtAge = ArrayDivide(FRetain, FInteract))
   
   discZ_list <- purrr::map2(FInteract_list, FleetList, \(Fint, fleet) {
@@ -385,25 +390,21 @@ CombineFleets <- function(OM, FleetList, silent = FALSE) {
     discZ[!is.finite(discZ)] <- Inf
     ArrayMultiply(Fint, discZ)
   })
-  discZ_combined <- ArrayDivide(Reduce(`+`, discZ_list), FInteract)
+  discZ_combined <- ArrayDivide(Reduce(ArraySum, discZ_list), FInteract)
   DiscardMortality(NewFleet) <- DiscardMortality(
     MeanAtAge = 1 - exp(-discZ_combined)
   )
   
-  # WeightFleetSelected: interaction-F-weighted average (selectivity-only,
-  # not retention-weighted, so weighted by total interaction F FInteract).
   WFSel_list <- purrr::map2(FInteract_list, FleetList, \(Fint, fleet)
                             ArrayMultiply(Fint, AddDimension(WeightFleetSelected(fleet),'Area'))
   )
-  WeightFleetSelected(NewFleet) <- ArrayDivide(Reduce(`+`, WFSel_list), FInteract) |>
+  WeightFleetSelected(NewFleet) <- ArrayDivide(Reduce(ArraySum, WFSel_list), FInteract) |>
     DropDimension('Area')
 
-  # WeightFleetRetained: retained-F-weighted average (weighted by FRetain,
-  # not FInteract, since it represents the retained/landed catch specifically).
   WFRet_list <- purrr::map2(FRetain_list, FleetList, \(Fret, fleet)
                             ArrayMultiply(Fret, AddDimension(WeightFleetRetained(fleet),'Area'))
   )
-  WeightFleetRetained(NewFleet) <- ArrayDivide(Reduce(`+`, WFRet_list), FRetain) |>
+  WeightFleetRetained(NewFleet) <- ArrayDivide(Reduce(ArraySum, WFRet_list), FRetain) |>
     DropDimension('Area')
 
   NewFleet
@@ -451,35 +452,32 @@ CombineFleets <- function(OM, FleetList, silent = FALSE) {
     apicalF_list <- purrr::map(FleetInds, \(fl) {
       slices <- purrr::map(seq_len(nStock), \(st) {
         fleet <- OM@Fleet[[st]][[fl]]
-        apF   <- ArrayMultiply(fleet@Effort@Effort, fleet@Catchability@Efficiency)
-        AddDimension(apF, "Stock", pos = 2)             
+        ArrayMultiply(fleet@Effort@Effort, fleet@Catchability@Efficiency)
       })
-      abind::abind(slices, along = 2, use.dnns = TRUE)                  
+      List2Array(slices, name = "Stock", pos = 2)
     })
-    
-    totalApicalF <- Reduce(`+`, apicalF_list)           
-    
-    targeting_combined <- Reduce(`+`,
+
+    totalApicalF <- Reduce(ArraySum, apicalF_list)
+
+    targeting_combined <- Reduce(ArraySum,
                                  purrr::map2(apicalF_list, FleetInds, \(apF, fl) {
                                    tau <- ST@Targeting[, , fl, , drop=FALSE] |> DropDimension('Fleet')
                                    ArrayMultiply(tau, apF)
                                  })
     )
     ST@Targeting[, , replaceInd, ] <- ArrayDivide(targeting_combined, totalApicalF)
-    
-    
+
+
     meanF_list <- purrr::map(apicalF_list, \(apF) {
-      # apply over Year dim (dim 3), keep [nSim, nStock]
-      apply(apF, c(1, 2), mean)   # [nSim, nStock] - check orientation
+      apply(apF, c(1, 2), mean)   
     })
-    # apply(X, c(1,2), mean) on [nSim, nStock, nYear] returns [nSim, nStock] correctly
-    totalMeanF <- Reduce(`+`, meanF_list)               # [nSim, nStock]
-    
-    mean_combined <- Reduce(`+`,
+    totalMeanF <- Reduce(ArraySum, meanF_list)      
+
+    mean_combined <- Reduce(ArraySum,
                             purrr::map2(meanF_list, FleetInds, \(mF, fl) {
-                              mu <- ST@Mean[, , fl, drop = FALSE]             # [nSim, nStock, 1] - preserve dims
-                              mu <- drop(mu)                                  # [nSim, nStock]
-                              mu * mF                                         # element-wise, both [nSim, nStock]
+                              mu <- ST@Mean[, , fl, drop = FALSE]          
+                              mu <- DropDimension(mu, 'Fleet')             
+                              ArrayMultiply(mu, mF)                        
                             })
     )
     ST@Mean[, , replaceInd] <- ArrayDivide(mean_combined, totalMeanF)
@@ -491,27 +489,24 @@ CombineFleets <- function(OM, FleetList, silent = FALSE) {
                  dimnames = list(Sim     = rownames(mF),
                                  Stock_i = dimnames(ST@Covariance)[[2]],
                                  Stock_j = dimnames(ST@Covariance)[[3]]))
-      # vectorised: outer product per sim via sweep
       for (sim in seq_len(nSim_))
         w[sim, , ] <- outer(mF[sim, ], mF[sim, ], \(a, b) sqrt(a * b))
       w
     }
     
     meanF_list_cov  <- purrr::map(meanF_list, make_outer_weight)
-    totalCovWeight  <- Reduce(`+`, meanF_list_cov)      # [nSim, nStock_i, nStock_j]
-    
-    cov_combined <- Reduce(`+`,
+    totalCovWeight  <- Reduce(ArraySum, meanF_list_cov)      # [nSim, nStock_i, nStock_j]
+
+    cov_combined <- Reduce(ArraySum,
                            purrr::map2(meanF_list_cov, FleetInds, \(w, fl) {
-                             cov_fl <- ST@Covariance[, , , fl, drop = FALSE] |> DropDimension('Fleet') 
+                             cov_fl <- ST@Covariance[, , , fl, drop = FALSE] |> DropDimension('Fleet')
                              names(dimnames(cov_fl)) <- c('Sim', 'Stock_i', 'Stock_j')
-                             cov_fl * w
+                             ArrayMultiply(cov_fl, w)
                            })
     )
     ST@Covariance[, , , replaceInd] <- ArrayDivide(cov_combined, totalCovWeight)
   }
   
-  # Drop source fleet indices (all but first per group), highest index first
-  # to avoid index shifting
   drop_inds <- purrr::map(FleetIndList, \(inds) inds[-1]) |>
     unlist() |> sort(decreasing = TRUE)
   
