@@ -85,7 +85,8 @@ List2Array <- function(x, name = "Fleet", dim1='Sim', pos = NULL) {
       if (length(sims) && name != 'Sim')  x <- purrr::map(x,
                                                           .SubsetSim,
                                                           Sims = sims,
-                                                          keep_sim_name = TRUE)
+                                                          keep_sim_name = TRUE,
+                                                          broadcast = TRUE)
       if (length(years)) x <- purrr::map(x, ExtendYears, Years = years)
       if (length(areas)) x <- purrr::map(x, ExtendAreas, Areas = areas)
 
