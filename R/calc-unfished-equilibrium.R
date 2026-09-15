@@ -58,7 +58,8 @@ CalcUnfished_Equilibrium <- function(OM, silent=FALSE) {
     x@Weight@MeanAtAge 
   })
   
-  EquilibriumUnfished@Biomass <- purrr::map2(UnfishedNumberAtAge, WeightAtAge, ArrayMultiply) |>
+  EquilibriumUnfished@Biomass <- purrr::map2(UnfishedNumberAtAge, 
+                                             WeightAtAge, ArrayMultiply) |>
     purrr::map(\(x) apply(x, c('Sim', 'Year'), sum)) |>  # sum over ages within each Stock
     List2Array('Stock') |> 
     .Aperm(c('Sim', 'Stock', 'Year')) |>
@@ -68,7 +69,8 @@ CalcUnfished_Equilibrium <- function(OM, silent=FALSE) {
   MaturityAtAge <- purrr::map(OM@Stock, \(x) {
     x@Maturity@MeanAtAge 
   })
-  EquilibriumUnfished@SBiomass <- purrr::map2(UnfishedSpawnNumberAtAge, WeightAtAge, ArrayMultiply) |> 
+  EquilibriumUnfished@SBiomass <- purrr::map2(UnfishedSpawnNumberAtAge, 
+                                              WeightAtAge, ArrayMultiply) |> 
     purrr::map2(MaturityAtAge, ArrayMultiply) |>
     purrr::map(\(x) apply(x, c('Sim', 'Year'), sum)) |>
     List2Array('Stock') |>
@@ -80,7 +82,8 @@ CalcUnfished_Equilibrium <- function(OM, silent=FALSE) {
     x@Fecundity@MeanAtAge 
   }) 
   
-  EquilibriumUnfished@SProduction <- purrr::map2(UnfishedSpawnNumberAtAge, FecundityAtAge, ArrayMultiply) |>
+  EquilibriumUnfished@SProduction <- purrr::map2(UnfishedSpawnNumberAtAge,
+                                                 FecundityAtAge, ArrayMultiply) |>
     purrr::map(\(x) apply(x, c('Sim', 'Year'), sum)) |>
     List2Array('Stock') |>
     .Aperm(c('Sim', 'Stock', 'Year')) |>
