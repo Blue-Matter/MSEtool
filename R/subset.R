@@ -80,10 +80,10 @@ Subset <- function(object,
   idx
 }
 
-.SubsetSim <- function(object, Sims, keep_sim_name = FALSE, debug = FALSE) {
-  
+.SubsetSim <- function(object, Sims, keep_sim_name = FALSE, debug = FALSE, broadcast = FALSE) {
+
   if (debug)  cli::cli_alert("Class {.val {class(object)}}")
-  
+
   if (isS4(object)) {
     if (debug) cli::cli_alert("S4 Object")
     slots <- slotNames(object)
@@ -91,38 +91,37 @@ Subset <- function(object,
       if (debug) cli::cli_alert("Slot {.val {s}}")
       val <- slot(object, s)
       if (!is.null(val))
-        slot(object, s) <- Recall(val, Sims, keep_sim_name, debug)
+        slot(object, s) <- Recall(val, Sims, keep_sim_name, debug, broadcast)
     }
-    
-    if ("nSim" %in% slots) 
+
+    if ("nSim" %in% slots)
       object@nSim <- length(Sims)
-    
+
     return(object)
   }
-  
+
   if (is.list(object)) {
     n <- length(object)
     if (n == 0) return(object)
-  
-    if (!is.null(names(object)) && all(Sims %in% names(object))) 
+
+    if (!is.null(names(object)) && all(Sims %in% names(object)))
       return(object[Sims])
-  
+
     for (i in seq_len(n)) {
       el <- object[[i]]
       if (!is.null(el))
-        object[[i]] <- Recall(el, Sims, keep_sim_name, debug)
+        object[[i]] <- Recall(el, Sims, keep_sim_name, debug, broadcast)
     }
     return(object)
   }
-  
+
   if (is.array(object)) {
     dnames <- dimnames(object)
     if (!is.null(dnames) && "Sim" %in% names(dnames)) {
       SimVals <- as.numeric(dnames$Sim)
 
-      if (length(SimVals) == 1L) {
+      if (length(SimVals) == 1L && !broadcast) 
         return(object)
-      }
 
       if (max(SimVals) > max(Sims)) {
         object <- .ArraySubsetSim(object, Sims, keep_sim_name = keep_sim_name)
