@@ -100,7 +100,6 @@
   summed
 }
 
-
 .CatchAtSizeFleetGeneric <- function(key, selectivity, sel_mode = c("length", "age"),
                                      landings_N, discards_N) {
   sel_mode <- match.arg(sel_mode)
