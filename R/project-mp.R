@@ -46,8 +46,8 @@
 .ProjectMPCompute <- function(Proj, MPName, MPfunction, YearsHist, YearsProj,
                               StockNames, FleetNames, silent = FALSE, mp = 1) {
 
-  Interval        <- .ResolveInterval(Proj@OM@Interval, MPName, MPfunction)
-  ManagementYears <- .CalcManagementYears(YearsProj, Interval)
+  Interval        <- .ResolveInterval(Proj@OM@Interval, MPName, MPfunction, Proj@OM@Seasons)
+  ManagementYears <- .CalcManagementYears(YearsProj, Interval, Proj@OM@Seasons)
   YearsAll        <- c(YearsHist, YearsProj)
   Areas           <- 1:nArea(Proj)
   StartTime       <- Sys.time()
@@ -74,6 +74,10 @@
     .UpdateTAC              = .UpdateTAC,
     .UpdateBagLimit         = .UpdateBagLimit
   )
+
+  CatchAtSizeNeeded <- Proj@OM@Control$CalcCatchAtSizeNeeded %||%
+    .NeedsCatchAtSize(Proj@OM, SimControl())
+  CatchAtSizeCpp <- Proj@OM@Control$CalcCatchAtSizeCpp %||% TRUE
 
   for (ts in seq_along(YearsProj)) {
     
@@ -186,7 +190,8 @@
                                  DoBackCalcEffort = .BackCalcEffortFlag(Proj))
 
     # Compute Catch & Discards at Size for this Time Step
-    Proj <- .CalcCatchAtSize(Proj, Years = Year)
+    Proj <- .CalcCatchAtSize(Proj, Years = Year, needed = CatchAtSizeNeeded,
+                             useCpp = CatchAtSizeCpp)
 
   }
 
@@ -230,32 +235,6 @@
   MSE
 }
 
-
-#' Execute a Single Update Step with Error Handling
-#'
-#' Calls one of the `Update_*` functions within a `tryCatch()` block.
-#' If the function throws an error, returns a structured `update_error`
-#' object instead of propagating the condition, allowing `.ProjectMP()`
-#' to log the failure and exit the projection loop cleanly.
-#'
-#' @param fun      Function. One of the `Update_*` population dynamics
-#'                 update functions.
-#' @param fun_name Character. Name of `fun`, used for error reporting.
-#' @param Proj     `Hist` object containing the current operating model state.
-#' @param Year     Integer. Current projection year.
-#' @param AdviceSimList  Nested list of `Advice` objects for the current year.
-#' @param LastAdviceSimList Nested list of `Advice` objects from the previous year.
-#' @param YearsHist Integer vector. Historical years.
-#' @param YearsProj Integer vector. Projection years.
-#' @param Areas     Integer vector. Area indices.
-#' @param FleetNames Character vector. Fleet names.
-#' @param StockNames Character vector. Stock names.
-#'
-#' @return Either the updated `Hist` object returned by `fun`, or a list
-#'   of class `"update_error"` with elements `step` (character) and
-#'   `message` (character) if `fun` throws an error.
-#'
-#' @keywords internal
 .RunUpdateStep <- function(fun, fun_name, Proj, Year, AdviceSimList, LastAdviceSimList,
                             YearsHist, YearsProj, Areas, FleetNames, StockNames) {
   tryCatch(
@@ -274,7 +253,3 @@
     )
   )
 }
-
-
-
-

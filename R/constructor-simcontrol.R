@@ -34,6 +34,18 @@
 #' @param BLow Logical. Calculate the `BLow` rebuilding reference point (see
 #'   [CalcBLow()])? Substantially more expensive than the other reference
 #'   points. Default `FALSE`.
+#' @param CalcCatchAtSize Logical, or `NA`. Calculate historical and
+#'   projected landings/discards-at-size?
+#'   Computationally expensive for models with many fleets and/or fine
+#'   seasonal time steps. `NA` (default) auto-detects, per stock: skipped
+#'   unless either a fleet's size-composition observation model is
+#'   configured (relevant when `GenerateData = TRUE`) or real
+#'   size-composition data is supplied for conditioning (relevant when
+#'   `ConditionObs = TRUE`). Set `TRUE` to always calculate it regardless or `FALSE` to always skip it.
+#' @param CalcCatchAtSizeCpp Logical. Use the C++ implementation of the
+#'   landings/discards-at-size projection
+#'   instead of its pure-R equivalent? Default
+#'   `TRUE`. Set `FALSE` as a fallback if the C++ version has problems
 #' @param ... Additional named arguments. Any unrecognised names trigger a
 #'   warning.
 #'
@@ -45,27 +57,31 @@
 #'
 #' # Skip MSY reference points and reference yield calculations
 #' SimControl(MSYRefs = FALSE)
-#' 
+#'
 #' # Calculate reference yield based on landings
 #' SimControl(RefLandings = TRUE)
 #'
 #' # Also calculate the (expensive) BLow rebuilding reference point
 #' SimControl(BLow = TRUE)
 #'
+#'
+#'
 #' @seealso [Simulate()], [CalcRefPoints()], [CalcMSY()], [CalcMGT()],
 #'   [CalcBLow()]
 #' @export
-SimControl <- function(DynamicUnfished = TRUE,
-                       RefLandings     = FALSE,
-                       RefRemovals     = FALSE,
-                       ConditionObs    = TRUE,
-                       EstimateBeta    = FALSE,
-                       GenerateData    = TRUE,
-                       MSYRefs         = TRUE,
-                       MSYRefsCpp      = TRUE,
-                       RefPoints       = TRUE,
-                       MGT             = TRUE,
-                       BLow            = FALSE,
+SimControl <- function(DynamicUnfished    = TRUE,
+                       RefLandings        = FALSE,
+                       RefRemovals        = FALSE,
+                       ConditionObs       = TRUE,
+                       EstimateBeta       = FALSE,
+                       GenerateData       = TRUE,
+                       MSYRefs            = TRUE,
+                       MSYRefsCpp         = TRUE,
+                       RefPoints          = TRUE,
+                       MGT                = TRUE,
+                       BLow               = FALSE,
+                       CalcCatchAtSize    = NA,
+                       CalcCatchAtSizeCpp = TRUE,
                        ...) {
   dots <- list(...)
   if (length(dots) > 0) {
@@ -75,16 +91,18 @@ SimControl <- function(DynamicUnfished = TRUE,
   }
 
   list(
-    DynamicUnfished = DynamicUnfished,
-    RefLandings     = RefLandings,
-    RefRemovals     = RefRemovals,
-    ConditionObs    = ConditionObs,
-    EstimateBeta    = EstimateBeta,
-    GenerateData    = GenerateData,
-    MSYRefs         = MSYRefs,
-    MSYRefsCpp      = MSYRefsCpp,
-    RefPoints       = RefPoints,
-    MGT             = MGT,
-    BLow            = BLow
+    DynamicUnfished    = DynamicUnfished,
+    RefLandings        = RefLandings,
+    RefRemovals        = RefRemovals,
+    ConditionObs       = ConditionObs,
+    EstimateBeta       = EstimateBeta,
+    GenerateData       = GenerateData,
+    MSYRefs            = MSYRefs,
+    MSYRefsCpp         = MSYRefsCpp,
+    RefPoints          = RefPoints,
+    MGT                = MGT,
+    BLow               = BLow,
+    CalcCatchAtSize    = CalcCatchAtSize,
+    CalcCatchAtSizeCpp = CalcCatchAtSizeCpp
   )
 }

@@ -16,7 +16,7 @@
 
   if (!silent) {
     cli::cli_text('')
-    cli::cli_alert_info(' Starting  `Simulate` for OM {.val {OM@Name}}')
+    cli::cli_alert_info(' Starting `Simulate` for OM {.val {OM@Name}}')
   }
 
   OM <- .StartUp(OM, nSim, silent=silent)
@@ -86,13 +86,30 @@
   if (!silent)
     cli::cli_alert_success("Calculated Historical Fishery Dynamics")
 
+  CatchAtSizeNeeded <- .NeedsCatchAtSize(OM, control)
+  CatchAtSizeCpp    <- control$CalcCatchAtSizeCpp %||% TRUE
+  Hist@OM@Control$CalcCatchAtSizeNeeded <- CatchAtSizeNeeded
+  Hist@OM@Control$CalcCatchAtSizeCpp    <- CatchAtSizeCpp
+
+  if (is.na(control$CalcCatchAtSize %||% NA) && !all(CatchAtSizeNeeded))
+    Hist <- .CaptureLog(Hist,
+      string = cli::format_inline(
+        "Skipping catch-at-size for {sum(!CatchAtSizeNeeded)} of {length(CatchAtSizeNeeded)} stock{?s}. No size-composition observation model or real data configured. Set {.code SimControl(CalcCatchAtSize = TRUE)} to force it."
+      ),
+      name = 'CatchAtSize',
+      type = 'assumption'
+    )
+
+  AnyCatchAtSizeNeeded <- any(CatchAtSizeNeeded)
+
   Hist <- local({
-    if (!silent)
+    if (!silent && AnyCatchAtSizeNeeded)
       cli::cli_progress_message("Calculating Historical Catch-at-Size")
-    .CalcCatchAtSize(Hist, Years = HistYears)
+    .CalcCatchAtSize(Hist, Years = HistYears, needed = CatchAtSizeNeeded,
+                     useCpp = CatchAtSizeCpp)
   })
-  
-  if (!silent)
+
+  if (!silent && AnyCatchAtSizeNeeded)
     cli::cli_alert_success("Calculated Historical Catch-at-Size")
 
   # ---- reference points & ref yield ----

@@ -39,6 +39,7 @@ skip_on_cran()
 
 .expect_fast_matches_generic <- function(key, selectivity, sel_mode, landings_N, discards_N,
                                          tol = 1e-9) {
+  # useCpp = TRUE (default): the C++ fast path
   fast    <- .CalcCatchAtSizeFleet(key, selectivity, sel_mode, landings_N, discards_N)
   generic <- .CatchAtSizeFleetGeneric(key, selectivity, sel_mode, landings_N, discards_N)
 
@@ -46,6 +47,18 @@ skip_on_cran()
   expect_equal(dim(fast$DAS), dim(generic$DAS))
   expect_equal(as.numeric(fast$LAS), as.numeric(generic$LAS), tolerance = tol)
   expect_equal(as.numeric(fast$DAS), as.numeric(generic$DAS), tolerance = tol)
+
+  # useCpp = FALSE: the SimControl(CalcCatchAtSizeCpp = FALSE) fallback --
+  # .CatchAtSizeFleetFastR(), the pure-R fast path, NOT .CatchAtSizeFleetGeneric()
+  # (dropping all the way back to the slow pre-optimisation path would defeat
+  # the point of the fallback). Must independently match both.
+  forced_r <- .CalcCatchAtSizeFleet(key, selectivity, sel_mode, landings_N, discards_N,
+                                    useCpp = FALSE)
+  expect_equal(dim(forced_r$LAS), dim(generic$LAS))
+  expect_equal(as.numeric(forced_r$LAS), as.numeric(generic$LAS), tolerance = tol)
+  expect_equal(as.numeric(forced_r$DAS), as.numeric(generic$DAS), tolerance = tol)
+  expect_equal(as.numeric(forced_r$LAS), as.numeric(fast$LAS), tolerance = tol)
+  expect_equal(as.numeric(forced_r$DAS), as.numeric(fast$DAS), tolerance = tol)
 }
 
 test_that(".CalcCatchAtSizeFleet() fast path matches the generic fallback -- key and N share Sim", {

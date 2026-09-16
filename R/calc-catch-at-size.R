@@ -1,12 +1,44 @@
 
-.CalcCatchAtSize <- function(Hist, Years = NULL, sel_mode = c("length", "age")) {
-  
+.NeedsCatchAtSize <- function(OM, control) {
+  n_stock  <- nStock(OM)
+  override <- control$CalcCatchAtSize %||% NA
+
+  if (!is.na(override))
+    return(rep(override, n_stock))
+
+  needed    <- rep(FALSE, n_stock)
+  complexes <- Complexes(OM)
+
+  for (i in seq_along(complexes)) {
+    stocks <- complexes[[i]]
+
+    needs_gen <- isTRUE(control$GenerateData) && i <= length(OM@Obs) &&
+      any(vapply(c('LandingsAtSize', 'DiscardsAtSize'), \(type) {
+        !all(vapply(OM@Obs[[i]], \(o) isNewObject(slot(o, type)), logical(1)))
+      }, logical(1)))
+
+    needs_cond <- isTRUE(control$ConditionObs) && i <= length(OM@Data) &&
+      any(vapply(c('LandingsAtSize', 'DiscardsAtSize'), \(type) {
+        !EmptyObject(slot(OM@Data[[i]], type))
+      }, logical(1)))
+
+    needed[stocks] <- needs_gen || needs_cond
+  }
+
+  needed
+}
+
+.CalcCatchAtSize <- function(Hist, Years = NULL, sel_mode = c("length", "age"),
+                             needed = NULL, useCpp = TRUE) {
+
   sel_mode  <- match.arg(sel_mode) # hard coded to `length` for now
-  
+
   if (is.null(Years)) Years <- Years(Hist, 'H')
-  
+
   n_stock <- nStock(Hist)
   n_fleet <- nFleet(Hist)
+
+  if (is.null(needed)) needed <- rep(TRUE, n_stock)
   
   # Determine size type (length or weight) per stock
   # Use AWK if available, otherwise fall back to ALK
@@ -68,7 +100,7 @@
   # Loop over stocks and fleets
   for (st in seq_len(n_stock)) {
     
-    if (!ask_exists[st]) next
+    if (!ask_exists[st] || !needed[st]) next
     
     # F arrays: Sim x Age x Year x Fleet x Area
     f_interact <- Hist@FInteractArea[[st]] |> .SubsetYear(Years = Years)
@@ -136,7 +168,8 @@
       }
 
       res <- .CalcCatchAtSizeFleet(key_area, selectivity, sel_mode = sm,
-                                   landings_N = landings_N, discards_N = discards_N)
+                                   landings_N = landings_N, discards_N = discards_N,
+                                   useCpp = useCpp)
 
       ArrayFill(Hist@LandingsAtSize[[st]][[fl]]) <- res$LAS
       ArrayFill(Hist@DiscardsAtSize[[st]][[fl]]) <- res$DAS
