@@ -13,7 +13,8 @@
 #' @param FleetList A named list of character vectors. Each element names the
 #'   fleets to merge, and the element's name becomes the name of the new
 #'   combined fleet. Multiple entries combine multiple sets of fleets
-#'   simultaneously.
+#'   simultaneously. Defaults to `NULL`, which combines every fleet in `OM`
+#'   into one, named `"Combined"`.
 #' @param silent `logical(1)`. If `TRUE`, suppresses informational console
 #'   messages. Defaults to `FALSE`.
 #'
@@ -69,9 +70,11 @@
 #'
 #'
 #' @export
-CombineFleets <- function(OM, FleetList, silent = FALSE) {
-  
+CombineFleets <- function(OM, FleetList = NULL, silent = FALSE) {
+
   .CheckClass(OM)
+  if (is.null(FleetList))
+    FleetList <- list(Combined = FleetNames(OM))
   .ValidateFleetList(OM, FleetList)
   
   OM <- Populate(OM, silent = TRUE)
@@ -98,15 +101,14 @@ CombineFleets <- function(OM, FleetList, silent = FALSE) {
       names(OM@Fleet[[st]])[replaceInd] <- Name
       if (is.null(RefEffort)) RefEffort <- Combined$Effort
     }
-    
-    # Combine Allocation 
-    OM@Allocation <- purrr::map(OM@Allocation, \(allocate) {
-      purrr::imap(FleetIndList, \(fleet_ind, idx)
-                  allocate[,fleet_ind, drop=FALSE] |> SumOverFleet()
-      ) |> List2Array()
-    })
   }
-  
+
+  OM@Allocation <- purrr::map(OM@Allocation, \(allocate) {
+    purrr::imap(FleetIndList, \(fleet_ind, idx)
+                allocate[,fleet_ind, drop=FALSE] |> SumOverFleet()
+    ) |> List2Array()
+  })
+
   # Combine stock targeting
   OM <- .CombineFleetsTargeting(OM, FleetList, FleetIndList, silent)
   
@@ -194,40 +196,41 @@ CombineFleets <- function(OM, FleetList, silent = FALSE) {
                                      silent=FALSE) {
   
   type <- match.arg(type)
-  
+
   for (st in seq_along(OM@Data)) {
     data <- slot(OM@Data[[st]], type)
-    
+
     if (is.null(data@Value)) next
-    
+
+    drop_ind <- integer(0)
+
     for (fl in seq_along(FleetList)) {
       combine_fleets <- FleetList[[fl]]
-  
+
       ind <- match(combine_fleets, data@Name)
       if (!length(ind) || any(is.na(ind))) next
-      
+
       all_units <- data@Units[ind]
       unique_units <- unique(all_units)
-      if (length(unique_units)>1) 
+      if (length(unique_units)>1)
         cli::cli_abort(c('x'='{.val {type}}: Units must be the same for all combined fleets',
                          'i'='Units for Fleets {.val {combine_fleets}}: {.val {all_units}}'))
-      
+
       data@Value[,ind[1]] <- rowSums(data@Value[,ind, drop=FALSE], na.rm=TRUE)
-      data@Value[,ind[-1]][] <- 1E-15
       colnames(data@Value)[ind[1]] <- names(FleetList)[fl]
       data@Name[ind[1]] <- names(FleetList)[fl]
+      drop_ind <- c(drop_ind, ind[-1])
     }
     # drop fleet columns
-    drop_ind <- which(colMeans(data@Value) <= 1E-15)
     if (length(drop_ind)) {
+      drop_ind   <- sort(unique(drop_ind))
       data@Value <- data@Value[,-drop_ind, drop=FALSE]
       data@Units <- data@Units[-drop_ind]
-      data@Name <- data@Name[-drop_ind]
+      data@Name  <- data@Name[-drop_ind]
       if (!is.null(data@CV))
         data@CV  <- data@CV[,-drop_ind, drop=FALSE]
     }
-    
-    
+
     slot(OM@Data[[st]], type) <- data
   }
   OM
@@ -303,17 +306,34 @@ CombineFleets <- function(OM, FleetList, silent = FALSE) {
         if (length(ind) < 2) next
 
         units <- data@Units[ind]
-        if (length(unique(units)) > 1) {
-          cli::cli_abort(c(
-            "x" = "Cannot combine fleets recorded in different {.val {type}} units.",
-            "i" = "Group {.val {names(FleetList)[i]}}: fleet(s) {.val {data@Name[ind]}} are in units {.val {units}} respectively.",
-            "i" = "Group fleets with matching units together, or convert the mismatched fleet's real data to a common unit in {.field OM@Data} first."
-          ))
-        }
+        if (length(unique(units)) > 1)
+          .AbortMixedUnits(type, names(FleetList)[i], data@Name[ind], units)
       }
     }
   }
   invisible(NULL)
+}
+
+.AbortMixedUnits <- function(type, group_name, fleet_names, units) {
+  by_unit <- split(fleet_names, units)
+
+  group_lines <- purrr::imap_chr(by_unit, \(fls, u) {
+    n <- length(fls)
+    cli::format_inline("{.val {u}} ({n} fleet{if (n == 1) '' else 's'}): {.val {fls}}")
+  })
+
+  vec_code <- \(x) paste0('c(', paste0('"', x, '"', collapse = ', '), ')')
+  suggestion_args <- purrr::imap_chr(by_unit, \(fls, u) paste0(make.names(u), " = ", vec_code(fls)))
+  suggestion <- paste0("CombineFleets(OM, FleetList = list(", paste(suggestion_args, collapse = ", "), "))")
+
+  bullets <- c(
+    "x" = "Cannot combine fleets recorded in different {.val {type}} units.",
+    "i" = "Group {.val {group_name}} mixes units - group fleets by matching units instead:"
+  )
+  names(group_lines) <- rep("*", length(group_lines))
+  bullets <- c(bullets, group_lines, "i" = "e.g. {.code {suggestion}}")
+
+  cli::cli_abort(bullets)
 }
 
 .ResolveFleetIndices <- function(OM, Fleets) {
