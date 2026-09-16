@@ -46,8 +46,6 @@ without a TAC are \code{NA}, and are ignored when the efforts are combined.
 }
 \description{
 Solves, for every complex with a TAC, the fleet effort at which that
-complex's catch equals it. Catch is monotone in effort, so each solve is a
-bracketed root find - the same operation \code{.OptEffortSinglestock()} performs,
-applied to one complex at a time.
+complex's catch equals it.
 }
 \keyword{internal}

@@ -161,11 +161,11 @@ stock targeting weights and deviations. Populated internally.
 See \code{\link[=StockTargeting]{StockTargeting()}}.}
 
 \item{Interval}{Numeric scalar or named numeric vector. Management update
-interval in years. Default \code{1}. A named vector gives a per-MP interval,
-e.g. \code{c(MP1 = 1, MP2 = 4)}; an MP not named here falls back to its own
-declared default (an \code{Interval} attribute set on the MP function, if
-any - see, e.g., \link{ExampleMPs}), then to the unnamed/first element of
-\code{Interval}.}
+interval in years. Default \code{1}. A named vector
+gives a per-MP interval, e.g. \code{c(MP1 = 1, MP2 = 4)}.
+\code{attr(mp, 'EverySeason') <- TRUE} on the MP function instead of a small
+\code{Interval}, since a fixed fraction like \code{1/Seasons} can't be hard-coded
+on the MP without knowing which OM it will run under.}
 
 \item{MPStartYear}{Numeric or \code{NULL}. First calendar year in which MPs are
 applied - see \emph{Interim Advice} in Details. Default \code{NULL}.}

@@ -38,13 +38,13 @@ current year. \code{TSIndex - 1} is used to initialise the warm start.}
 \item{Effort}{Numeric vector of length \code{nFleet}. Fixed fleet effort
 for this year (from the MP's \code{Effort} advice) - not optimised.}
 
-\item{lambda}{Numeric matrix \verb{[nFleet x nStock]}, or a scalar or
-length-\code{nFleet} vector recycled across stocks, or \code{NULL} (default \code{1}).
-Ridge penalty weight controlling resistance to year-to-year targeting
-changes.}
+\item{lambda}{Numeric matrix \verb{[nFleet x nComplex]}, or a scalar or
+length-\code{nFleet} vector recycled across complexes, or \code{NULL} (default
+\code{1}). Ridge penalty weight controlling resistance to year-to-year
+targeting changes.}
 
 \item{n_recent}{Integer (default \code{5}). Number of most-recent historical
-years examined to determine which stocks each fleet actively targets.}
+years examined to determine which complexes each fleet actively targets.}
 
 \item{minEffort}{Numeric (default \code{1e-8}). Floor applied to fleet effort
 to avoid degenerate zero-effort fleets.}
@@ -59,13 +59,15 @@ allowed across the BFGS and Nelder-Mead phases combined.}
 A named list with elements:
 \describe{
 \item{\code{Delta}}{Numeric matrix \verb{[nFleet x nStock]}. Final targeting
-weights. Fleets/stocks not actively re-optimised retain their
-previous value.}
+weights, broadcast from the underlying \verb{[nFleet x nComplex]} solution
+so every stock in a complex shares the same weight (see
+\code{.ExpandComplexDelta()}). Fleets/complexes not actively re-optimised
+retain their previous value.}
 \item{\code{converged}}{Logical. \code{TRUE} if the BFGS or Nelder-Mead optimiser
 reported convergence.}
-\item{\code{ActiveStock}}{Logical matrix \verb{[nFleet x nStock]}. Which stocks
-are considered active for each fleet based on recent targeting
-history.}
+\item{\code{ActiveComplex}}{Logical matrix \verb{[nFleet x nComplex]}. Which
+complexes are considered active for each fleet based on recent
+targeting history.}
 }
 }
 \description{
@@ -73,21 +75,25 @@ history.}
 \code{.OptEffortChoke()}. Under TAC management, effort is derived from the
 targeting mix by the choke rule. Under effort management there is no TAC to
 solve for - fleet effort is instead fixed by the MP's \code{Effort} advice - but
-a fleet fishing several stocks still has to decide how to point that fixed
-effort across them. This function solves for the targeting weights
-\verb{delta_\{s,f\}} that maximise a concave transform of total catch (an interim
-stand-in for catch \emph{value}, pending stock-specific bio-economic prices - see
-Details), subject to a soft ridge penalty on year-to-year targeting change.
-Both paths share \code{.OptTargetingMsObjective()}; they differ only in whether
-effort is supplied or derived.
+a fleet fishing several complexes still has to decide how to point that
+fixed effort across them. This function solves for the targeting weights
+\verb{delta_\{c,f\}} (one per fleet-complex pair - fleets don't target the
+individual stocks \emph{within} a complex, e.g. the sexes of a 2-sex stock; that
+split is left to each stock's own catchability/selectivity) that maximise a
+concave transform of total catch (an interim stand-in for catch \emph{value},
+pending complex-specific bio-economic prices - see Details), subject to a
+soft ridge penalty on year-to-year targeting change. Both paths share
+\code{.OptTargetingMsObjective()}; they differ only in whether effort is
+supplied or derived.
 }
 \details{
 The catch objective for each active fleet is \code{sum(log1p(Catch_s))} over
-the fleet's active stocks, where \code{Catch_s} is landings + discards
-(biomass) for stock \code{s} at the trial targeting weights. \code{log1p} is a
-concave transform: it gives diminishing weight to additional catch of an
-already-abundant stock, which discourages the optimiser from collapsing
-onto whichever single stock is most catchable.
+the member stocks of the fleet's active complexes, where \code{Catch_s} is
+landings + discards (biomass) for stock \code{s} at the trial targeting
+weights. \code{log1p} is a concave transform: it gives diminishing weight to
+additional catch of an already-abundant complex, which discourages the
+optimiser from collapsing onto whichever single complex is most
+catchable.
 }
 \seealso{
 \code{.OptEffortChoke()} for the TAC-based counterpart this

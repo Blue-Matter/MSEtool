@@ -112,8 +112,7 @@ The \code{Year} dimension can be any length. If all values in \code{Years} are a
 present, the array is returned unchanged. Otherwise missing years are added
 by forward-filling from the most recent existing year, back-filling from the
 earliest (if \code{backfill = TRUE}), or step-filling for years within the
-existing range. If any year values are non-integer (decimal), seasonal
-matching is used via \code{.ExtendYearsSeasonal()}.
+existing range.
 }
 
 \subsection{ExtendAreas}{

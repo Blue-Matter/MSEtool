@@ -486,7 +486,7 @@ CollapseSeasons <- function(OM, silent = FALSE) {
       if (!is.null(idata@CV)) rownames(idata@CV) <- AnnualYr
 
       if (length(idata@Timing) != ncol(idata@Value))
-        idata@Timing <- rep(idata@Timing, length.out = ncol(idata@Value)).
+        idata@Timing <- rep(idata@Timing, length.out = ncol(idata@Value))
       for (i in seq_len(ncol(idata@Value))) {
         obs <- which(!is.na(idata@Value[, i]))
         if (length(obs)) idata@Timing[i] <- withinYearFrac[obs[1]]

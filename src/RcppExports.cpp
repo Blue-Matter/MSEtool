@@ -105,6 +105,24 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// CalcCatchAtSizeFleet_
+Rcpp::List CalcCatchAtSizeFleet_(const Rcpp::NumericVector& key, const Rcpp::IntegerVector& key_dim, const Rcpp::NumericVector& selectivity, const Rcpp::IntegerVector& sel_dim, const bool sel_mode_length, const Rcpp::NumericVector& landings_N, const Rcpp::NumericVector& discards_N, const Rcpp::IntegerVector& N_dim);
+RcppExport SEXP _MSEtool_CalcCatchAtSizeFleet_(SEXP keySEXP, SEXP key_dimSEXP, SEXP selectivitySEXP, SEXP sel_dimSEXP, SEXP sel_mode_lengthSEXP, SEXP landings_NSEXP, SEXP discards_NSEXP, SEXP N_dimSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type key(keySEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector& >::type key_dim(key_dimSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type selectivity(selectivitySEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector& >::type sel_dim(sel_dimSEXP);
+    Rcpp::traits::input_parameter< const bool >::type sel_mode_length(sel_mode_lengthSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type landings_N(landings_NSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type discards_N(discards_NSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector& >::type N_dim(N_dimSEXP);
+    rcpp_result_gen = Rcpp::wrap(CalcCatchAtSizeFleet_(key, key_dim, selectivity, sel_dim, sel_mode_length, landings_N, discards_N, N_dim));
+    return rcpp_result_gen;
+END_RCPP
+}
 // CalcFisheryDynamics_
 Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn, SEXP Years, SEXP AllYears, std::vector<int> Sims, const int nSim, const int nStock, const int nFleet, const int nArea, const int DoCalcCatch, const int DoCalcSpawnProduction, const int DoCalcRecruitment, const int DoCalcNumberNext, const int DoCalcTransition, const int DoCalcBiomass, const int DoCalcOverallF, const int DoBackCalcEffort, const int debug, const int clone);
 RcppExport SEXP _MSEtool_CalcFisheryDynamics_(SEXP HistInSEXP, SEXP YearsSEXP, SEXP AllYearsSEXP, SEXP SimsSEXP, SEXP nSimSEXP, SEXP nStockSEXP, SEXP nFleetSEXP, SEXP nAreaSEXP, SEXP DoCalcCatchSEXP, SEXP DoCalcSpawnProductionSEXP, SEXP DoCalcRecruitmentSEXP, SEXP DoCalcNumberNextSEXP, SEXP DoCalcTransitionSEXP, SEXP DoCalcBiomassSEXP, SEXP DoCalcOverallFSEXP, SEXP DoBackCalcEffortSEXP, SEXP debugSEXP, SEXP cloneSEXP) {
@@ -405,6 +423,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MSEtool_Ref_int_cpp", (DL_FUNC) &_MSEtool_Ref_int_cpp, 12},
     {"_MSEtool_CalcAgeSizeKey_", (DL_FUNC) &_MSEtool_CalcAgeSizeKey_, 5},
     {"_MSEtool_calcVatAge", (DL_FUNC) &_MSEtool_calcVatAge, 7},
+    {"_MSEtool_CalcCatchAtSizeFleet_", (DL_FUNC) &_MSEtool_CalcCatchAtSizeFleet_, 8},
     {"_MSEtool_CalcFisheryDynamics_", (DL_FUNC) &_MSEtool_CalcFisheryDynamics_, 18},
     {"_MSEtool_CalcPerRecruitFScalarCpp_", (DL_FUNC) &_MSEtool_CalcPerRecruitFScalarCpp_, 17},
     {"_MSEtool_CalcPerRecruitFScalarSeasonalCpp_", (DL_FUNC) &_MSEtool_CalcPerRecruitFScalarSeasonalCpp_, 21},

@@ -32,13 +32,22 @@ Let \eqn{F^{apical}_f} be the apical fishing mortality for fleet \eqn{f},
 and \eqn{s_f(a)}, \eqn{r_f(a)}, \eqn{d_f(a)} be selectivity, retention,
 and discard mortality at age \eqn{a}.
 
-\strong{Apical F and effort}
-\deqn{F^{apical}_{combined} = \sum_f F^{apical}_f}
-Effort is recovered as \eqn{F^{apical}_{combined} / q}, where \eqn{q} is
-taken from the first fleet.
-
 \strong{F-at-age (interaction)}
 \deqn{F_{combined}(a) = \sum_f F^{apical}_f \cdot s_f(a)}
+
+\strong{Apical F and effort}
+\deqn{F^{apical}_{combined} = \max_a F_{combined}(a)}
+the peak of the summed age curve.
+\eqn{q} for the combined fleet is taken from the first
+fleet, and effort is recovered as \eqn{F^{apical}_{combined} / q}.
+
+Because effort has no stock dimension (one effort series
+drives every stock a fleet interacts with) this reconstruction can only
+define effort for the first stock processed. For every other stock,
+effort is reused from that first stock's reconstruction, and the
+difference is instead absorbed into that stock's own \eqn{q}, so
+\eqn{q_{combined,stock} = F^{apical}_{combined,stock} / \text{Effort}_{ref}}
+still reproduces that stock's true apical F exactly.
 
 \strong{Selectivity}
 \deqn{s_{combined}(a) = F_{combined}(a) \,/\, \max_a F_{combined}(a)}

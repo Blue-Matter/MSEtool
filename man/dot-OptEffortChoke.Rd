@@ -51,13 +51,13 @@ complex has no TAC.}
 
 \item{MaxFleetEffort}{Numeric vector (length \code{nFleet}), or \code{NULL}.}
 
-\item{lambda}{Numeric matrix \verb{[nFleet x nStock]}, or a scalar or
-length-\code{nFleet} vector recycled across stocks, or \code{NULL} (default \code{1}).
-Ridge penalty weight controlling resistance to year-to-year targeting
-changes.}
+\item{lambda}{Numeric matrix \verb{[nFleet x nComplex]}, or a scalar or
+length-\code{nFleet} vector recycled across complexes, or \code{NULL} (default
+\code{1}). Ridge penalty weight controlling resistance to year-to-year
+targeting changes.}
 
 \item{n_recent}{Integer (default \code{5}). Number of most-recent historical
-years examined to determine which stocks each fleet actively targets.}
+years examined to determine which complexes each fleet actively targets.}
 
 \item{minEffort}{Numeric (default \code{1e-8}). Floor applied to fleet effort
 to avoid degenerate zero-effort fleets.}
@@ -74,7 +74,9 @@ absolute \code{tol}.}
 allowed across the BFGS and Nelder-Mead phases combined.}
 }
 \value{
-A named list with \code{Effort}, \code{Delta}, \code{converged} and \code{ActiveStock}.
+A named list with \code{Effort}, \code{Delta} (\verb{[nFleet x nStock]}, broadcast
+from the underlying per-complex solution), \code{converged} and
+\code{ActiveComplex}.
 }
 \description{
 Solves fleet effort under TAC management in a multi-complex model. Rather
@@ -90,6 +92,7 @@ is reached.
 Only the targeting mix is optimised, maximising a concave transform of catch
 against a penalty for drifting from last year's mix - the same objective
 \code{.OptTargetingMultiStock()} uses under effort control, with effort supplied
-by the choke rule instead of by the MP.
+by the choke rule instead of by the MP. As in that function, the targeting
+mix is a fleet's allocation across complexes.
 }
 \keyword{internal}

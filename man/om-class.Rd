@@ -128,7 +128,12 @@ stock targeting weights and deviations. Initialised automatically by
 \code{\link[=OM]{OM()}} via \code{\link[=StockTargeting]{StockTargeting()}}.}
 
 \item{\code{Interval}}{Numeric scalar or named numeric vector. Management update
-interval in years, optionally per-MP via names. See \code{\link[=OM]{OM()}}.}
+interval in years (regardless of \code{Seasons} - e.g. \code{Interval = 1} always
+means "once a year"), optionally per-MP via
+names. MPs that need to be called at every timestep of a
+seasonal OM (e.g. because they return a season-specific value derived
+directly from history) should declare \code{attr(mp, 'EverySeason') <- TRUE}
+instead of relying on a small \code{Interval} value.}
 
 \item{\code{MPStartYear}}{Numeric or \code{NULL}. First calendar year in which MPs are
 applied. Projection years before \code{MPStartYear} are "interim" years -
