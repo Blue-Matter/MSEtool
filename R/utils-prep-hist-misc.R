@@ -144,15 +144,6 @@
   Hist@Misc$R0 <- purrr::map(R0_list, \(st) ExtendSims(st, nSim_R0)) |>
     List2Array('Stock', pos=2)
 
-  # Unfished Spawning Production: SP0(y) = phi0_ref(season) x R0(y + RecLag).
-  # phi0_ref is frozen at its first-year value per season (so alpha/beta
-  # implied by a constant steepness don't drift under time-varying M/growth/
-  # maturity), broadcast via ExtendYears(maintain_seasonal_pattern=TRUE)
-  # rather than a flat slice since R0/phi0_ref can be zero in non-spawning
-  # seasons. R0 is shifted forward by RecLag before pairing with SP0's season
-  # (R0's nonzero season is birthseas, SP0's is the spawning season, offset
-  # by RecLag) -- otherwise phi0_ref divides by R0's zero spawn-season value
-  # and SP0 collapses to zero exactly where C++ CalcRecruitment() evaluates it.
   RawSP0 <- Hist@Unfished@Equilibrium@SProduction |> ExtendSims(nSim = nSim(Hist))
   SP0Dim <- which(names(dimnames(RawSP0)) == 'Year')
   R0Dim  <- which(names(dimnames(Hist@Misc$R0)) == 'Year')
@@ -160,9 +151,6 @@
   AllYears <- as.numeric(dimnames(RawSP0)[[SP0Dim]])
   Yr1Ind   <- which(floor(AllYears) == floor(min(AllYears)))
 
-  # Size the shift off R0's own Year axis -- it need not match RawSP0's
-  # Year axis length (e.g. if the unfished equilibrium is only computed
-  # over the historical period while R0 spans historical + projection).
   nYearR0   <- dim(Hist@Misc$R0)[R0Dim]
   R0Shifted <- Hist@Misc$R0
   for (st in seq_len(nStock(Hist))) {
@@ -273,18 +261,16 @@
     })
   })
   
-  # OM-level: StockTargeting 
-  if (nStock(Hist) == 1 || is.null(Hist@OM@StockTargeting@Targeting)) {
-    # single stock 
-    
-    Hist@Misc$StockTargeting <- array(1, 
-                                      dim = c(1, 1, nFleet, 1),
+  if (nComplex(Hist) == 1 || is.null(Hist@OM@StockTargeting@Targeting)) {
+    # single complex - no targeting choice for any fleet to make
+    Hist@Misc$StockTargeting <- array(1,
+                                      dim = c(1, nStock, nFleet, 1),
                                       dimnames = list(
                                         Sim   = 1,
                                         Stock = stock_names,
                                         Fleet = fleet_names,
                                         Year  = YearVec[1]
-                                        
+
                                       ))
     Hist@Misc$StockTargetingFlag <- 0
   } else {
@@ -312,22 +298,6 @@
 }
 
 
-#' Restore `@Misc` Slot After a Projection
-#'
-#' Restores the `@Misc` slot of a `hist-class` or `mse-class` object to its
-#' saved state, then re-attaches any named components that were preserved
-#' separately (`Advice`, `Selectivity`, `Retention`, `DiscardMortality`).
-#'
-#' During a projection run, the full `@Misc` contents are stashed in
-#' `@Misc$SAVE` and named components are stored alongside it. This function
-#' reverses that process: it replaces `@Misc` with the stashed contents and
-#' then writes back any non-`NULL` named components so they are not lost.
-#'
-#' @param Hist A `hist-class` or `mse-class` object whose `@Misc$SAVE` slot
-#'   contains the stashed `@Misc` list.
-#'
-#' @return The input object with `@Misc` restored.
-#' @keywords internal
 .RestoreHistMisc <- function(Hist) {
   preserved_names <- c('Advice', 'Selectivity', 'Retention', 'DiscardMortality')
   saved <- purrr::map(

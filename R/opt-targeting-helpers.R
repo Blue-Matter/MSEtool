@@ -1,7 +1,4 @@
-# Pack per-fleet, per-active-stock log-targeting weights into a flat
-# parameter vector for the optimiser. Effort is never a free parameter here -
-# under effort control the MP fixes it, and under TAC control the choke rule
-# derives it - so only log(Delta) is packed.
+
 .PackDelta <- function(Delta, active_fleets, active_stock_list) {
   compute <- function(fl, active_s) {
     if (length(active_s) == 0L) return(numeric(0))
@@ -10,11 +7,6 @@
   purrr::map2(active_fleets, active_stock_list, compute) |> purrr::list_c()
 }
 
-# Unpack the flat parameter vector back into a full [nFleet x nStock] Delta
-# matrix. `Delta_base` supplies entries not being optimised this call, so a
-# partial re-optimisation never zeroes out untouched fleets/stocks. Each
-# optimised fleet's log-Delta is mean-centred (geometric-mean-of-1, see
-# .GetLogDeltaPrev()).
 .UnpackDelta <- function(params, active_fleets, active_stock_list, Delta_base,
                         log_delta_cap = NULL) {
   Delta <- Delta_base
@@ -39,13 +31,6 @@
   Delta
 }
 
-# Shared objective for .OptTargetingMultiStock() (effort control) and
-# .OptEffortChoke() (TAC control): negative concave-transformed catch (so
-# minimising this maximises catch), plus a ridge penalty on year-to-year
-# targeting change. Catch
-# is landings + discards (biomass) - an interim proxy for catch value; see
-# .OptTargetingMultiStock()'s Details for how to switch to real
-# stock-specific prices later.
 .OptTargetingMsObjective <- function(params,
                                       Proj,
                                       sim,
@@ -56,16 +41,16 @@
                                       log_delta_prev,
                                       lambda_mat,
                                       active_fleets,
-                                      active_stock_list,
+                                      active_complex_list,
+                                      Complexes,
+                                      StockNames,
                                       log_delta_cap = NULL,
                                       EffortFn = NULL) {
 
-  Delta <- .UnpackDelta(params, active_fleets, active_stock_list, Delta_base,
-                        log_delta_cap)
+  DeltaComplex <- .UnpackDelta(params, active_fleets, active_complex_list, Delta_base,
+                               log_delta_cap)
+  Delta <- .ExpandComplexDelta(DeltaComplex, Complexes, StockNames)
 
-  # Under effort control the MP fixes effort. Under TAC control effort follows
-  # from the targeting mix, via the per-complex root find and the compliance
-  # rule - `EffortFn` supplies it.
   Effort <- if (is.null(EffortFn)) Effort_fixed else EffortFn(Delta)
 
   ProjTmp <- .WriteStateToProj(Proj, sim, TSIndex, Effort, Delta)
@@ -79,30 +64,31 @@
                               DoCalcBiomass = 0,
                               DoCalcOverallF = 0)
 
-  fleet_catch_value <- function(fl, active_s) {
-    catch_s <- vapply(active_s, function(st)
+  fleet_catch_value <- function(fl, active_cx) {
+    stock_idx <- unlist(Complexes[active_cx], use.names = FALSE)
+    catch_s <- vapply(stock_idx, function(st)
       Temp@Landings[sim, st, TSIndex, fl] + Temp@Discards[sim, st, TSIndex, fl],
       numeric(1))
     sum(log1p(pmax(catch_s, 0)))
   }
 
-  catch_value <- purrr::map2_dbl(active_fleets, active_stock_list, \(fl, active_s) {
-    if (!length(active_s)) return(0)
-    fleet_catch_value(fl, active_s)
+  catch_value <- purrr::map2_dbl(active_fleets, active_complex_list, \(fl, active_cx) {
+    if (!length(active_cx)) return(0)
+    fleet_catch_value(fl, active_cx)
   }) |> sum()
 
-  fleet_ridge <- function(fl, active_s) {
-    if (!length(active_s)) return(0)
-    log_d_cur  <- log(pmax(Delta[fl, active_s], 1e-10))
+  fleet_ridge <- function(fl, active_cx) {
+    if (!length(active_cx)) return(0)
+    log_d_cur  <- log(pmax(DeltaComplex[fl, active_cx], 1e-10))
     log_d_cur  <- log_d_cur - mean(log_d_cur)
-    log_d_prev <- log_delta_prev[fl, active_s]
-    sum(lambda_mat[fl, active_s] * (log_d_cur - log_d_prev)^2)
+    log_d_prev <- log_delta_prev[fl, active_cx]
+    sum(lambda_mat[fl, active_cx] * (log_d_cur - log_d_prev)^2)
   }
 
   ridge_pen <- if (!any(lambda_mat > 0)) {
     0
   } else {
-    purrr::map2_dbl(active_fleets, active_stock_list, fleet_ridge) |> sum()
+    purrr::map2_dbl(active_fleets, active_complex_list, fleet_ridge) |> sum()
   }
 
   -catch_value + ridge_pen

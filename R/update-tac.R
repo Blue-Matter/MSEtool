@@ -112,7 +112,7 @@
 
   # Multi-complex
   Compliance <- .ResolveComplianceMatrix(Proj, FleetNames, names(Complexes), sim, Year)
-  lambda     <- .ResolveLambda(Proj, sim, TSIndex, StockNames, FleetNames, lambda_scale, n_recent)
+  lambda     <- .ResolveLambda(Proj, sim, TSIndex, Complexes, FleetNames, lambda_scale, n_recent)
 
   result <- .OptEffortChoke(
     Proj               = ProjSim,

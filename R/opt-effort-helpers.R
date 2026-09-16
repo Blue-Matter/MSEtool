@@ -2,20 +2,10 @@
 
 .LOG_DELTA_CAP <- log(10)
 
-# Per-(fleet, stock) log-targeting deviation bound, derived from the same
-# historical `StockTargeting@Covariance` used by GenerateStockTargeting() to
-# simulate stochastic historical/projection targeting. Ties how far the
-# TAC/effort solvers may reallocate a fleet's targeting to how much that
-# fleet's targeting has actually been observed to vary historically, rather
-# than an arbitrary flat constant. Falls back to `.LOG_DELTA_CAP` for any
-# (fleet, stock) with zero/non-finite historical variance (no covariance
-# fitted, or a stock with no historical targeting record).
-#
-# Returns an [nFleet x nStock] matrix, mirroring the shape of `Delta`.
-.GetLogDeltaCap <- function(Proj, sim, TruncSD = 2) {
+.GetLogDeltaCapComplex <- function(Proj, sim, Complexes, TruncSD = 2) {
   nF   <- nFleet(Proj)
-  nS   <- nStock(Proj)
-  cap  <- matrix(.LOG_DELTA_CAP, nF, nS)
+  nC   <- length(Complexes)
+  cap  <- matrix(.LOG_DELTA_CAP, nF, nC)
 
   Cov <- Proj@OM@StockTargeting@Covariance  # [sim, stock, stock, fleet]
   if (is.null(Cov)) return(cap)
@@ -24,29 +14,16 @@
 
   for (fl in seq_len(nF)) {
     var_s <- diag(Cov[sim_cov, , , fl])
-    cap_s <- TruncSD * sqrt(pmax(var_s, 0))
-    valid <- is.finite(cap_s) & cap_s > 0
-    cap[fl, valid] <- cap_s[valid]
+    for (cx in seq_len(nC)) {
+      var_cx <- max(pmax(var_s[Complexes[[cx]]], 0))
+      cap_cx <- TruncSD * sqrt(var_cx)
+      if (is.finite(cap_cx) && cap_cx > 0)
+        cap[fl, cx] <- cap_cx
+    }
   }
   cap
 }
 
-# Largest effort worth searching, per fleet.
-#
-# `maxF` caps total apical F per stock per area, so once
-#
-#   q(st,fl) * E * Dist(fl,ar) * targ(st,fl) [/ RelSize(ar)]  >=  maxF
-#
-# holds for every (stock, area) the fleet works, more effort buys no more F and
-# therefore no more catch. Solving for E and taking the largest gives the point
-# beyond which the search is pointless. `headroom` allows for other fleets
-# diluting this one's share of the capped total, since the cap applies to their
-# sum. Returns `NA` for fleets with no usable q, targeting or distribution, and
-# `NULL` if the inputs are missing entirely - callers fall back to `maxEffort`.
-#
-# Without this the solvers climb to an arbitrary `maxEffort` (1e6) purely to
-# discover a TAC is unachievable, which costs several Newton iterations per
-# saturating fleet-year.
 .MaxUsefulEffort <- function(Proj, sim, TSIndex, headroom = 10) {
 
   Misc <- Proj@Misc
@@ -96,10 +73,6 @@
   headroom * out
 }
 
-# Applies a per-fleet effort ceiling (NA = no ceiling) to an Effort vector -
-# lets a fleet be governed by both TAC and Effort advice at once, with
-# Effort acting as the binding constraint whenever it is more restrictive
-# than what TAC-solving would otherwise choose. See .UpdateTACSim().
 .ApplyEffortCeiling <- function(Effort, MaxFleetEffort) {
   if (is.null(MaxFleetEffort)) return(Effort)
   has_ceiling <- !is.na(MaxFleetEffort)
@@ -131,9 +104,7 @@
 #' Effort at which each complex reaches its own TAC
 #'
 #' Solves, for every complex with a TAC, the fleet effort at which that
-#' complex's catch equals it. Catch is monotone in effort, so each solve is a
-#' bracketed root find - the same operation `.OptEffortSinglestock()` performs,
-#' applied to one complex at a time.
+#' complex's catch equals it.
 #'
 #' @param Proj A `Proj` object, already sliced to `sim`.
 #' @param Year Integer. Current projection year.
@@ -293,24 +264,72 @@
   mat
 }
 
-.GetActiveStocks <- function(Proj, sim, TSIndex, StockNames, FleetNames, 
-                            n_recent = 5, tol = 1E-6) {
+.GetActiveComplexes <- function(Proj, sim, TSIndex, Complexes, FleetNames,
+                               n_recent = 5, tol = 1E-6) {
 
-  nStock <- length(StockNames)
-  nFleet <- length(FleetNames)
-  active <- matrix(FALSE, nFleet, nStock,
-                   dimnames = list(Fleet = FleetNames, Stock = StockNames))
-  
-  
+  nComplex <- length(Complexes)
+  nFleet   <- length(FleetNames)
+  active   <- matrix(FALSE, nFleet, nComplex,
+                     dimnames = list(Fleet = FleetNames, Complex = names(Complexes)))
+
   recent_idx <- seq(max(1L, TSIndex - n_recent), TSIndex - 1)
 
   for (fl in seq_len(nFleet)) {
-    recent_mat <- Proj@Misc$StockTargeting[sim, ,fl, recent_idx, drop = FALSE]
-    active[fl, ] <- apply(recent_mat, 2,
-                          function(x) any(is.finite(x) & x > tol))
+    for (cx in seq_len(nComplex)) {
+      recent_mat <- Proj@Misc$StockTargeting[sim, Complexes[[cx]], fl, recent_idx, drop = FALSE]
+      active[fl, cx] <- any(is.finite(recent_mat) & recent_mat > tol)
+    }
   }
-  
+
   active
+}
+
+.ExpandComplexDelta <- function(DeltaComplex, Complexes, StockNames) {
+  DeltaStock <- matrix(1, nrow(DeltaComplex), length(StockNames),
+                       dimnames = list(rownames(DeltaComplex), StockNames))
+  for (cx in seq_along(Complexes))
+    DeltaStock[, Complexes[[cx]]] <- DeltaComplex[, cx]
+  DeltaStock
+}
+
+.PrepComplexTargetingState <- function(Proj, sim, TSIndex, Complexes, FleetNames,
+                                      n_recent = 5) {
+
+  nFleet   <- length(FleetNames)
+  nComplex <- length(Complexes)
+
+  active_complex <- .GetActiveComplexes(Proj, sim, TSIndex, Complexes, FleetNames, n_recent)
+
+  STarget <- Proj@Misc$StockTargeting[sim, , , , drop = FALSE] |> abind::adrop(1)
+  Delta_prev_stock <- t(STarget[, , TSIndex - 1, drop = FALSE] |> abind::adrop(3))  # [nFleet x nStock]
+
+  Delta_prev <- matrix(0, nFleet, nComplex,
+                       dimnames = list(FleetNames, names(Complexes)))
+  for (cx in seq_len(nComplex)) {
+    stock_idx <- Complexes[[cx]]
+    Delta_prev[, cx] <- if (length(stock_idx) == 1L) {
+      Delta_prev_stock[, stock_idx]
+    } else {
+      exp(rowMeans(log(pmax(Delta_prev_stock[, stock_idx, drop = FALSE], 1e-10))))
+    }
+  }
+  for (fl in seq_len(nFleet))
+    Delta_prev[fl, !active_complex[fl, ]] <- 0
+
+  log_delta_cap  <- .GetLogDeltaCapComplex(Proj, sim, Complexes)
+  log_delta_prev <- .GetLogDeltaPrev(Delta_prev, active_complex, log_delta_cap)
+
+  active_fleets       <- which(apply(active_complex, 1, any))
+  active_complex_list <- purrr::map(active_fleets, \(fl) which(active_complex[fl, ]))
+
+  list(
+    active_complex      = active_complex,
+    Delta_prev          = Delta_prev,
+    log_delta_prev      = log_delta_prev,
+    log_delta_cap       = log_delta_cap,
+    active_fleets       = active_fleets,
+    active_complex_list = active_complex_list
+  )
 }
 
 .GetLogDeltaPrev <- function(Delta_prev, active_stock, log_delta_cap = NULL) {
@@ -329,16 +348,6 @@
   ld
 }
 
-#' Effort implied by a targeting mix under the choke rule
-#'
-#' Writes `Delta`, solves the effort at which each complex reaches its own TAC,
-#' and combines those by compliance. Fleets with no TAC in any complex keep
-#' their current effort.
-#'
-#' @return List with `Effort` (length `nFleet`), `Proj` (the object with both
-#'   `Delta` and the resolved effort written in), and `EffortByComplex`, the
-#'   per-complex efforts - which the caller can feed back as `Effort_start`.
-#' @keywords internal
 .ResolveChokeEffort <- function(Proj, sim, TSIndex, Year, Delta,
                                 TAC_by_Complex, TACType_by_Complex,
                                 TACUnit_by_Complex, Compliance,

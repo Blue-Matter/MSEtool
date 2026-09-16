@@ -96,17 +96,8 @@
   Compliance
 }
 
-# Applies Imp@<ControlType>@Error[sim, Year] as a multiplicative
-# implementation-error factor to each complex's per-fleet advised value
-# (TAC or Effort), before the advice is passed to effort-solving. Matches
-# legacy's TACFrac/TACSD/TAC_y (and TAEFrac/TAESD/E_y) mechanism. A missing
-# Imp object, Error slot, or year leaves that complex/fleet's value
-# unchanged (multiplier of 1).
 .ApplyImplementationError <- function(ValueByComplex, Proj, FleetNames, ComplexNames,
                                      sim, Year, ControlType = 'TAC') {
-  # Interim (pre-MPStartYear) values represent actual/plausible realised
-  # catch or effort, not a management recommendation - Imp error does not
-  # apply to them.
   MPStartYear <- Proj@OM@MPStartYear
   if (!is.null(MPStartYear) && floor(Year) < MPStartYear)
     return(ValueByComplex)
@@ -134,42 +125,51 @@
 }
 
 .ResolveLambda <- function(Proj, sim, TSIndex,
-                          StockNames, FleetNames, 
-                          lambda_scale = 1, 
+                          Complexes, FleetNames,
+                          lambda_scale = 1,
                           n_recent = 5) {
-  
-  STarget <- Proj@Misc$StockTargeting[sim,,,seq_len(TSIndex-1), drop = FALSE] |> abind::adrop(1)
+
+  STarget <- Proj@Misc$StockTargeting[sim,,,seq_len(TSIndex-1), drop = FALSE] |> abind::adrop(1)  # [nStock x nFleet x nYear]
   n_years <- dim(STarget)[3]
 
-  nFleet <- length(FleetNames)
-  nStock <- length(StockNames)
+  nFleet   <- length(FleetNames)
+  nComplex <- length(Complexes)
 
   raw <- setNames(rep(1, nFleet), FleetNames)
-  
-  active_stock <- .GetActiveStocks(Proj, sim, TSIndex, StockNames, FleetNames,
-                                  n_recent)
-  
+
+  active_complex <- .GetActiveComplexes(Proj, sim, TSIndex, Complexes, FleetNames, n_recent)
+
+  CTarget <- array(NA_real_, dim = c(nComplex, nFleet, n_years))
+  for (cx in seq_len(nComplex)) {
+    stock_idx <- Complexes[[cx]]
+    CTarget[cx, , ] <- if (length(stock_idx) == 1L) {
+      STarget[stock_idx, , ]
+    } else {
+      exp(apply(log(pmax(STarget[stock_idx, , , drop = FALSE], 1e-10)), c(2, 3), mean))
+    }
+  }
+
   for (fl in seq_len(nFleet)) {
-    active_s <- which(active_stock[fl, ])
-    
-    if (length(active_s) == 0L || n_years < 2L) next
-    
+    active_cx <- which(active_complex[fl, ])
+
+    if (length(active_cx) == 0L || n_years < 2L) next
+
     # Mean-centred log_delta for each historical year
-    log_delta_hist <- matrix(NA_real_, length(active_s), n_years)
+    log_delta_hist <- matrix(NA_real_, length(active_cx), n_years)
     for (yr in seq_len(n_years)) {
-      d <- STarget[active_s, fl, yr]
+      d <- CTarget[active_cx, fl, yr]
       if (any(!is.finite(d) | d <= 0)) next
       ld <- log(d)
       log_delta_hist[, yr] <- ld - mean(ld)
     }
-    
+
     # Year-to-year changes across valid consecutive years
     valid_cols <- which(apply(log_delta_hist, 2, function(x) all(is.finite(x))))
     if (length(valid_cols) < 2L) next
-    
+
     changes <- log_delta_hist[, valid_cols[-1], drop = FALSE] -
       log_delta_hist[, valid_cols[-length(valid_cols)], drop = FALSE]
-    
+
     # 1/sd: inverse of typical targeting volatility
     sd_f <- sqrt(mean(changes^2))
     if (!is.finite(sd_f) || sd_f <= 0) next
@@ -179,18 +179,18 @@
   # derived per-fleet weight, normalised so mean(lambda) == lambda_scale
   derived <- raw * (lambda_scale / mean(raw))
 
-  # Expand to [Fleet x Stock] and apply the user multiplier from
-  # Effort@StockTargetingLambda. Absent/non-finite entries default to 1, so an
-  # unset multiplier reproduces the derived value exactly.
-  lambda <- matrix(derived, nrow = nFleet, ncol = nStock,
-                   dimnames = list(Fleet = FleetNames, Stock = StockNames))
+  lambda <- matrix(derived, nrow = nFleet, ncol = nComplex,
+                   dimnames = list(Fleet = FleetNames, Complex = names(Complexes)))
 
   Mult <- Proj@Misc$StockTargetingLambda
   if (!is.null(Mult)) {
-    sim_m <- min(sim, dim(Mult)[1])
-    yr_m  <- min(TSIndex, dim(Mult)[3])
-    m     <- t(Mult[sim_m, , yr_m, , drop = FALSE] |> abind::adrop(c(1, 3)))
-    m[!is.finite(m) | m < 0] <- 1
+    sim_m   <- min(sim, dim(Mult)[1])
+    yr_m    <- min(TSIndex, dim(Mult)[3])
+    m_stock <- t(Mult[sim_m, , yr_m, , drop = FALSE] |> abind::adrop(c(1, 3)))  # [nFleet x nStock]
+    m_stock[!is.finite(m_stock) | m_stock < 0] <- 1
+    m <- matrix(1, nFleet, nComplex)
+    for (cx in seq_len(nComplex))
+      m[, cx] <- rowMeans(m_stock[, Complexes[[cx]], drop = FALSE])
     lambda <- lambda * m
   }
 

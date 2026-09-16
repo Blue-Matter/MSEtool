@@ -201,7 +201,7 @@
   # For multi-stock OMs, (re)optimise this fleet's stock-specific targeting
   # weights at the now-fixed effort
   if (isTRUE(Proj@Misc$StockTargetingFlag == 1) && TSIndex > 1) {
-    lambda <- .ResolveLambda(Proj, sim, TSIndex, StockNames, FleetNames,
+    lambda <- .ResolveLambda(Proj, sim, TSIndex, Complexes, FleetNames,
                             lambda_scale, n_recent)
 
     # Single-sim slice for the repeated fishery-dynamics calls 
