@@ -92,11 +92,11 @@
 #'    See [StockTargeting()].
 #'   
 #' @param Interval Numeric scalar or named numeric vector. Management update
-#'   interval in years. Default `1`. A named vector gives a per-MP interval,
-#'   e.g. `c(MP1 = 1, MP2 = 4)`; an MP not named here falls back to its own
-#'   declared default (an `Interval` attribute set on the MP function, if
-#'   any - see, e.g., [ExampleMPs]), then to the unnamed/first element of
-#'   `Interval`.
+#'   interval in years. Default `1`. A named vector
+#'   gives a per-MP interval, e.g. `c(MP1 = 1, MP2 = 4)`. 
+#'   `attr(mp, 'EverySeason') <- TRUE` on the MP function instead of a small
+#'   `Interval`, since a fixed fraction like `1/Seasons` can't be hard-coded
+#'   on the MP without knowing which OM it will run under.
 #' @param MPStartYear Numeric or `NULL`. First calendar year in which MPs are
 #'   applied - see *Interim Advice* in Details. Default `NULL`.
 #' @param InterimAdvice A `data.frame` or `NULL`. Fixed or stochastic

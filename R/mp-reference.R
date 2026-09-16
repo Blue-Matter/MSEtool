@@ -86,7 +86,7 @@ attr(refMSY50, 'DataOM') <- list(Reference = TRUE)
 #' @export
 refFCurr <- function(Data) CurrentEffort(Data)
 class(refFCurr) <- 'mp'
-attr(refFCurr, 'Interval') <- 1
+attr(refFCurr, 'EverySeason') <- TRUE
 
 #' @rdname ReferenceMPs
 #' @export

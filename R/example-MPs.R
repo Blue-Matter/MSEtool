@@ -27,18 +27,18 @@
 #'
 #' `CurrentCatch`, `CurrentLandings`, and `AverageCatch` reference a fixed
 #' historical baseline that does not depend on when the MP is called, so
-#' each carries an `Interval` attribute of `1` (see [Interval()]) forcing the
-#' framework to call them at every timestep - required so that, in a
-#' seasonal model (`Seasons > 1`), each call can return the value for
-#' the specific season it is advising, rather than the same figure being
-#' reapplied to every season of the year.
+#' each carries an `EverySeason` attribute of `TRUE`, forcing the framework
+#' to call them at every timestep of the operating model regardless
+#' of `Interval`. This is required so that, in a seasonal model (`Seasons > 1`),
+#' each call can return the value for the specific season it is advising,
+#' rather than the same figure being reapplied to every season of the year.
 #'
 #' `CurrentEffort` always returns an empty [Advice()], which the framework's
 #' default fallback (used whenever neither `TAC` nor `Effort` is set)
 #' resolves to last year's effort, relative to the last complete historical
 #' year - separately season-matched by the framework itself so, e.g., this
 #' year's Q1 reuses last year's Q1 pattern rather than the historical
-#' period's final season. `CurrentEffort` carries the same `Interval`
+#' period's final season. `CurrentEffort` carries the same `EverySeason`
 #' attribute as the other three for consistency, though - unlike them - its
 #' output does not actually depend on how often it is called.
 #'
@@ -67,7 +67,7 @@ CurrentEffort <- function(Data) {
   Advice()
 }
 class(CurrentEffort) <- 'mp'
-attr(CurrentEffort, 'Interval') <- 1
+attr(CurrentEffort, 'EverySeason') <- TRUE
 
 #' @rdname ExampleMPs
 #' @export
@@ -89,7 +89,7 @@ CurrentCatch <- function(Data) {
   Advice(TAC = LastHistRemovals, TACUnit = Data@Landings@Units)
 }
 class(CurrentCatch) <- 'mp'
-attr(CurrentCatch, 'Interval') <- 1
+attr(CurrentCatch, 'EverySeason') <- TRUE
 
 #' @rdname ExampleMPs
 #' @export
@@ -109,7 +109,7 @@ CurrentLandings <- function(Data) {
          TACUnit = Data@Landings@Units)
 }
 class(CurrentLandings) <- 'mp'
-attr(CurrentLandings, 'Interval') <- 1
+attr(CurrentLandings, 'EverySeason') <- TRUE
 
 #' @rdname ExampleMPs
 #' @export
@@ -132,7 +132,7 @@ AverageCatch <- function(Data) {
          TACUnit = Data@Landings@Units)
 }
 class(AverageCatch) <- 'mp'
-attr(AverageCatch, 'Interval') <- 1
+attr(AverageCatch, 'EverySeason') <- TRUE
 
 #' @rdname ExampleMPs
 #' @export

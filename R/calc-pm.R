@@ -317,8 +317,8 @@ NULL
   YearsProj <- Years(object@OM, 'Projection')
   mpNames   <- unique(df$MP)
   keep <- lapply(mpNames, function(mp) {
-    Interval  <- .ResolveInterval(object@OM@Interval, mp, object@MPs[[mp]])
-    ManageYrs <- .CalcManagementYears(YearsProj, Interval)
+    Interval  <- .ResolveInterval(object@OM@Interval, mp, object@MPs[[mp]], object@OM@Seasons)
+    ManageYrs <- .CalcManagementYears(YearsProj, Interval, object@OM@Seasons)
     if (!is.null(object@OM@MPStartYear))
       ManageYrs <- ManageYrs[floor(ManageYrs) >= object@OM@MPStartYear]
     df$MP == mp & df$Year %in% ManageYrs

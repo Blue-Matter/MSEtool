@@ -1,15 +1,32 @@
 
-.CalcManagementYears <- function(YearsProj, Interval) {
-  ind <- seq(1, by = Interval, to = length(YearsProj))
+.CalcManagementYears <- function(YearsProj, Interval, Seasons = 1) {
+  step   <- Interval * Seasons
+  step_i <- round(step)
+
+  if (abs(step - step_i) > 1e-6)
+    cli::cli_abort(c(
+      "`Interval` must correspond to a whole number of timesteps.",
+      "x" = "Interval = {Interval} years x Seasons = {Seasons} = {step} timesteps."
+    ))
+
+  if (Seasons > 1 && step_i > 1 && step_i %% Seasons != 0)
+    cli::cli_alert_info(
+      "Management timing will rotate across different calendar seasons over successive cycles (Interval = {Interval} years is not a whole number of years)."
+    )
+
+  ind <- seq(1, by = max(1L, step_i), to = length(YearsProj))
   YearsProj[ind]
 }
 
-.ResolveInterval <- function(OMInterval, MPName, MPfunction) {
+.ResolveInterval <- function(OMInterval, MPName, MPfunction, Seasons = 1) {
 
   nms <- names(OMInterval)
 
   if (!is.null(nms) && MPName %in% nms)
     return(unname(OMInterval[[MPName]]))
+
+  if (isTRUE(attr(MPfunction, 'EverySeason')))
+    return(1 / Seasons)
 
   MPDefault <- attr(MPfunction, 'Interval')
   if (!is.null(MPDefault))
