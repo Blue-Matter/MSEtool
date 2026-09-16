@@ -54,7 +54,21 @@
 #' @name Years
 #' @export
 CalcYears <- function(nYear, pYear, CurrentYear, Seasons=1, Period=NULL) {
-  
+
+  key <- paste(nYear, pYear, CurrentYear, Seasons, Period %||% "NULL", sep = "|")
+  cached <- .CalcYearsCache[[key]]
+  if (!is.null(cached))
+    return(cached)
+
+  result <- .CalcYearsUncached(nYear, pYear, CurrentYear, Seasons, Period)
+  .CalcYearsCache[[key]] <- result
+  result
+}
+
+.CalcYearsCache <- new.env(parent = emptyenv())
+
+.CalcYearsUncached <- function(nYear, pYear, CurrentYear, Seasons=1, Period=NULL) {
+
   period_resolved <- NULL
   if (!is.null(Period)) {
     valid   <- c("Historical", "Projection")
@@ -104,7 +118,6 @@ CalcYears <- function(nYear, pYear, CurrentYear, Seasons=1, Period=NULL) {
     proj <- proj[seq_len(pYear * Seasons)]
   }
   
-
   switch(
     period_resolved %||% "All",
     "All"        = if (CalcProj) c(hist, proj) else hist,

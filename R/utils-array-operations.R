@@ -128,10 +128,16 @@ ArrayExtend <- function(array1, array2) {
   if (is.null(array2)) {
     return(array1)
   }
-  if (identical(dim(array1), dim(array2)) &&
-      identical(dimnames(array1), dimnames(array2))) {
-    return(operation(array1, array2))
+
+  dn1 <- dimnames(array1)
+  dn2 <- dimnames(array2)
+
+  if (identical(dim(array1), dim(array2)) && identical(names(dn1), names(dn2))) {
+    same_year <- if ("Year" %in% names(dn1)) identical(dn1$Year, dn2$Year) else TRUE
+    if (same_year)
+      return(operation(array1, array2))
   }
+
   ArrayList <- ArrayExtend(array1, array2)
   operation(ArrayList$array1, ArrayList$array2)
 }
