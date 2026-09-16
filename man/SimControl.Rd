@@ -16,6 +16,8 @@ SimControl(
   RefPoints = TRUE,
   MGT = TRUE,
   BLow = FALSE,
+  CalcCatchAtSize = NA,
+  CalcCatchAtSizeCpp = TRUE,
   ...
 )
 }
@@ -61,6 +63,20 @@ Default  \code{TRUE}.}
 \code{\link[=CalcBLow]{CalcBLow()}})? Substantially more expensive than the other reference
 points. Default \code{FALSE}.}
 
+\item{CalcCatchAtSize}{Logical, or \code{NA}. Calculate historical and
+projected landings/discards-at-size?
+Computationally expensive for models with many fleets and/or fine
+seasonal time steps. \code{NA} (default) auto-detects, per stock: skipped
+unless either a fleet's size-composition observation model is
+configured (relevant when \code{GenerateData = TRUE}) or real
+size-composition data is supplied for conditioning (relevant when
+\code{ConditionObs = TRUE}). Set \code{TRUE} to always calculate it regardless or \code{FALSE} to always skip it.}
+
+\item{CalcCatchAtSizeCpp}{Logical. Use the C++ implementation of the
+landings/discards-at-size projection
+instead of its pure-R equivalent? Default
+\code{TRUE}. Set \code{FALSE} as a fallback if the C++ version has problems}
+
 \item{...}{Additional named arguments. Any unrecognised names trigger a
 warning.}
 }
@@ -84,6 +100,8 @@ SimControl(RefLandings = TRUE)
 
 # Also calculate the (expensive) BLow rebuilding reference point
 SimControl(BLow = TRUE)
+
+
 
 }
 \seealso{
