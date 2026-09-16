@@ -9,7 +9,10 @@
 #' year (like any MP, this can be overridden via `OM@Interval`).
 #'
 #' `refMSY`, `refMSY75`, `refMSY50` set TAC to 100%, 75%, or 50% of
-#' `MSY` (landings plus discards).
+#' `MSY` (landings plus discards). `MSY` is an annual quantity, so on a
+#' seasonal `OM` (`OM@Seasons > 1`) the TAC returned at each call is `MSY`
+#' divided by the number of seasons, since [Advice()] returned by an MP is
+#' reapplied unchanged at every timestep until the MP is next called.
 #'
 #' `refFCurr` fixes F at its last historical value. It is currently a wrapper
 #' around [CurrentEffort()], since `advice-class` has no way to specify
@@ -153,11 +156,13 @@ ReferenceMPs <- function() {
   ref <- Data@Misc$DataOM@Reference
   Landings <- .RefMSYCatchValue(ref@MSY@MSYLandings, Data@Misc$StockName)
   Discards <- .RefMSYCatchValue(ref@MSY@MSYDiscards, Data@Misc$StockName)
-  
+
   if (is.na(Landings))
     return(Advice())
   if (is.na(Discards))
     Discards <- 0
-  
-  Advice(TAC = fraction * (Landings + Discards), TACType = 'Removals')
+
+  Seasons <- MPSeasonIndex(Data)$Seasons
+
+  Advice(TAC = fraction * (Landings + Discards) / Seasons, TACType = 'Removals')
 }
