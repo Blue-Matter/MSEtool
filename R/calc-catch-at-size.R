@@ -158,11 +158,14 @@
         cache_id <- paste(sel_class, collapse = ",")
         if (is.null(recalced_key_cache[[cache_id]])) {
           recalced <- CalcAgeSizeKey(MeanAtAge = length_object@MeanAtAge,
-                                CVatAge   = length_object@CVatAge,
-                                Classes   = sel_class,
-                                TruncSD   = length_object@TruncSD,
-                                Dist      = length_object@Dist)
-          recalced_key_cache[[cache_id]] <- AddDimension(recalced, 'Area')
+                                     CVatAge   = length_object@CVatAge,
+                                     Classes   = sel_class,
+                                     TruncSD   = length_object@TruncSD,
+                                     Dist      = length_object@Dist) |>
+            .SubsetYear(Years = Years)
+          area_vals <- as.numeric(dimnames(key_area_default)$Area)
+          recalced_key_cache[[cache_id]] <- ExtendAreas(AddDimension(recalced, 'Area'),
+                                                        Areas = area_vals)
         }
         recalced_key_cache[[cache_id]]
       }

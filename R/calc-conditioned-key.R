@@ -20,14 +20,16 @@
       sel_nSim %in% c(1L, nSim)
   }
 
-  fast_path_ok <- d_key[4] == nYear && d_key[5] == nArea &&
+  dims_ok <- d_key[4] == nYear && d_key[5] == nArea &&
     key_nSim %in% c(1L, nSim) &&
     dim(discards_N)[3] == nYear && dim(discards_N)[4] == nArea &&
     sel_ok
 
-  if (!fast_path_ok) {
-    return(.CatchAtSizeFleetGeneric(key, selectivity, sel_mode,
-                                    landings_N, discards_N))
+  if (!dims_ok) {
+    cli::cli_abort(
+      "Dimension mismatch in {.fn .CalcCatchAtSizeFleet}: `key`/`selectivity` are not aligned with `landings_N`/`discards_N`.",
+      .internal = TRUE
+    )
   }
 
   if (useCpp) {
@@ -80,12 +82,9 @@
   LAS <- array(0, dim = c(nSim, nClass, nYear, nArea), dimnames = dn_out)
   DAS <- array(0, dim = c(nSim, nClass, nYear, nArea), dimnames = dn_out)
 
-  key_raw <- key        
-  dimnames(key_raw) <- NULL
-  Nl_raw  <- landings_
-  dimnames(Nl_raw)  <- NULL
-  Nd_raw  <- discards_N
-  dimnames(Nd_raw)  <- NULL
+  key_raw <- key;         dimnames(key_raw) <- NULL
+  Nl_raw  <- landings_N;  dimnames(Nl_raw)  <- NULL
+  Nd_raw  <- discards_N;  dimnames(Nd_raw)  <- NULL
 
   sim_idx_key <- if (key_nSim == 1L) rep.int(1L, nSim) else seq_len(nSim)
 
@@ -141,35 +140,4 @@
   summed <- colSums(perm)
   dim(summed) <- c(d1, d3)
   summed
-}
-
-.CatchAtSizeFleetGeneric <- function(key, selectivity, sel_mode = c("length", "age"),
-                                     landings_N, discards_N) {
-  sel_mode <- match.arg(sel_mode)
-
-  cond_key <- if (sel_mode == "age" || is.null(selectivity)) {
-    key
-  } else {
-    sel_area <- AddDimension(selectivity, 'Age', pos = 2)
-    weighted <- ArrayMultiply(key, sel_area)
-
-    size_classes <- as.numeric(dimnames(sel_area)$Class)
-
-    denom <- SumOverClass(weighted)
-    denom <- AddDimension(denom, 'Class', pos = 3)
-    denom[denom == 0] <- .Machine$double.eps
-    denom <- ExtendClasses(denom, Classes = size_classes)
-
-    ArrayDivide(weighted, denom)
-  }
-
-  classes <- as.numeric(dimnames(cond_key)$Class)
-
-  landings_N_exp <- AddDimension(landings_N, 'Class', pos = 3, val = classes[1])
-  discards_N_exp <- AddDimension(discards_N, 'Class', pos = 3, val = classes[1])
-
-  list(
-    LAS = SumOverAge(ArrayMultiply(cond_key, landings_N_exp)),
-    DAS = SumOverAge(ArrayMultiply(cond_key, discards_N_exp))
-  )
 }
