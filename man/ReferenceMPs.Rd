@@ -47,7 +47,10 @@ equals 100\%, 75\%, or 50\% of \code{FMSY}, and default to being applied every
 year (like any MP, this can be overridden via \code{OM@Interval}).
 
 \code{refMSY}, \code{refMSY75}, \code{refMSY50} set TAC to 100\%, 75\%, or 50\% of
-\code{MSY} (landings plus discards).
+\code{MSY} (landings plus discards). \code{MSY} is an annual quantity, so on a
+seasonal \code{OM} (\code{OM@Seasons > 1}) the TAC returned at each call is \code{MSY}
+divided by the number of seasons, since \code{\link[=Advice]{Advice()}} returned by an MP is
+reapplied unchanged at every timestep until the MP is next called.
 
 \code{refFCurr} fixes F at its last historical value. It is currently a wrapper
 around \code{\link[=CurrentEffort]{CurrentEffort()}}, since \code{advice-class} has no way to specify
