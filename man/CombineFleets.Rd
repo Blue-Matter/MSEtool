@@ -4,7 +4,7 @@
 \alias{CombineFleets}
 \title{Combine Multiple Fleets into a Single Fleet}
 \usage{
-CombineFleets(OM, FleetList, silent = FALSE)
+CombineFleets(OM, FleetList = NULL, silent = FALSE)
 }
 \arguments{
 \item{OM}{An \code{\link[=OM]{OM()}} object.}
@@ -12,7 +12,8 @@ CombineFleets(OM, FleetList, silent = FALSE)
 \item{FleetList}{A named list of character vectors. Each element names the
 fleets to merge, and the element's name becomes the name of the new
 combined fleet. Multiple entries combine multiple sets of fleets
-simultaneously.}
+simultaneously. Defaults to \code{NULL}, which combines every fleet in \code{OM}
+into one, named \code{"Combined"}.}
 
 \item{silent}{\code{logical(1)}. If \code{TRUE}, suppresses informational console
 messages. Defaults to \code{FALSE}.}
