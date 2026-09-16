@@ -32,13 +32,22 @@
 #' and \eqn{s_f(a)}, \eqn{r_f(a)}, \eqn{d_f(a)} be selectivity, retention,
 #' and discard mortality at age \eqn{a}.
 #'
-#' **Apical F and effort**
-#' \deqn{F^{apical}_{combined} = \sum_f F^{apical}_f}
-#' Effort is recovered as \eqn{F^{apical}_{combined} / q}, where \eqn{q} is
-#' taken from the first fleet. 
-#'
 #' **F-at-age (interaction)**
 #' \deqn{F_{combined}(a) = \sum_f F^{apical}_f \cdot s_f(a)}
+#'
+#' **Apical F and effort**
+#' \deqn{F^{apical}_{combined} = \max_a F_{combined}(a)}
+#' the peak of the summed age curve. 
+#' \eqn{q} for the combined fleet is taken from the first
+#' fleet, and effort is recovered as \eqn{F^{apical}_{combined} / q}.
+#'
+#' Because effort has no stock dimension (one effort series
+#' drives every stock a fleet interacts with) this reconstruction can only
+#' define effort for the first stock processed. For every other stock,
+#' effort is reused from that first stock's reconstruction, and the
+#' difference is instead absorbed into that stock's own \eqn{q}, so
+#' \eqn{q_{combined,stock} = F^{apical}_{combined,stock} / \text{Effort}_{ref}}
+#' still reproduces that stock's true apical F exactly.
 #'
 #' **Selectivity**
 #' \deqn{s_{combined}(a) = F_{combined}(a) \,/\, \max_a F_{combined}(a)}
@@ -82,9 +91,12 @@ CombineFleets <- function(OM, FleetList, silent = FALSE) {
     if (!silent)
       cli::cli_li("{.val {FleetList[[i]]}} \u2192 new fleet: {.val {Name}}")
     
+    RefEffort <- NULL
     for (st in seq_len(nStock(OM))) {
-      OM@Fleet[[st]][[replaceInd]] <- .CombineFleetsStock(OM, st, Name, FleetInds)
+      Combined <- .CombineFleetsStock(OM, st, Name, FleetInds, RefEffort = RefEffort)
+      OM@Fleet[[st]][[replaceInd]] <- Combined$Fleet
       names(OM@Fleet[[st]])[replaceInd] <- Name
+      if (is.null(RefEffort)) RefEffort <- Combined$Effort
     }
     
     # Combine Allocation 
@@ -255,44 +267,55 @@ CombineFleets <- function(OM, FleetList, silent = FALSE) {
   OM
 }
 
-#' Validate that all fleets in a FleetList exist in the OM
-#'
-#' @param OM An [OM()] object.
-#' @param FleetList A named list of character vectors, each naming one or more
-#'   fleets to combine.
-#'
-#' @return Called for its side effects; aborts with an informative error if any
-#'   fleet name in `FleetList` is not found in `FleetNames(OM)`.
-#'
-#' @keywords internal
 .ValidateFleetList <- function(OM, FleetList) {
   if (!is.list(FleetList))
     cli::cli_abort("`FleetList` must be a list")
-  
+
   if (is.null(names(FleetList)))
     cli::cli_abort("`FleetList` must be a named list")
-  
+
   fleetnames <- FleetNames(OM)
   all_supplied <- as.character(unlist(FleetList))
   missing <- !all_supplied %in% fleetnames
-  
+
   if (any(missing)) {
     cli::cli_abort(c(
       "x" = "Names in `FleetList` do not match `FleetNames(OM)`",
       "i" = "Invalid fleet(s): {.val {all_supplied[missing]}}"
     ))
   }
+
+  .ValidateFleetListUnits(OM, FleetList)
 }
 
-#' Resolve fleet names to integer indices
-#'
-#' @param OM An [OM()] object.
-#' @param Fleets A character vector of fleet names, or an integer vector of
-#'   fleet indices.
-#'
-#' @return An integer vector of fleet indices corresponding to `Fleets`.
-#'
-#' @keywords internal
+
+.ValidateFleetListUnits <- function(OM, FleetList) {
+  if (!length(OM@Data)) return(invisible(NULL))
+
+  for (type in c('Landings', 'Discards')) {
+    for (st in seq_along(OM@Data)) {
+      data <- slot(OM@Data[[st]], type)
+      if (is.null(data@Value) || is.null(data@Units)) next
+
+      for (i in seq_along(FleetList)) {
+        ind <- match(FleetList[[i]], data@Name)
+        ind <- ind[!is.na(ind)]
+        if (length(ind) < 2) next
+
+        units <- data@Units[ind]
+        if (length(unique(units)) > 1) {
+          cli::cli_abort(c(
+            "x" = "Cannot combine fleets recorded in different {.val {type}} units.",
+            "i" = "Group {.val {names(FleetList)[i]}}: fleet(s) {.val {data@Name[ind]}} are in units {.val {units}} respectively.",
+            "i" = "Group fleets with matching units together, or convert the mismatched fleet's real data to a common unit in {.field OM@Data} first."
+          ))
+        }
+      }
+    }
+  }
+  invisible(NULL)
+}
+
 .ResolveFleetIndices <- function(OM, Fleets) {
   fleetnames <- FleetNames(OM)
   
@@ -313,17 +336,6 @@ CombineFleets <- function(OM, FleetList, silent = FALSE) {
   FleetInds
 }
 
-#' Standardize an F-at-age array so the maximum across ages equals 1
-#'
-#' Divides each age slice by the maximum F across ages, preserving the shape
-#' of selectivity across simulations, years, and areas.
-#'
-#' @param Farray A numeric array with a named `"Age"` dimension.
-#'
-#' @return An array of the same dimensions as `Farray`, scaled so the maximum
-#'   value across the Age dimension is 1.
-#'
-#' @keywords internal
 .StandardizeF <- function(Farray) {
   nms     <- names(dimnames(Farray))
   age_ind <- which(nms == "Age")
@@ -332,39 +344,19 @@ CombineFleets <- function(OM, FleetList, silent = FALSE) {
   ArrayDivide(Farray, maxF)
 }
 
-#' Combine multiple fleets into a single aggregated fleet for one stock
-#'
-#' Computes effort, catchability, selectivity, retention, discard mortality,
-#' and weight-fleet for the combined fleet, preserving the aggregate fishery
-#' dynamics of the individual fleets.
-#'
-#' @param OM An [OM()] object (already populated via [Populate()]).
-#' @param st Integer. Stock index.
-#' @param Name Character. Name for the new combined fleet.
-#' @param FleetInds Integer vector. Indices of the fleets to combine.
-#'
-#' @return A [Fleet()] object representing the aggregated fleet.
-#'
-#' @keywords internal
-.CombineFleetsStock <- function(OM, st, Name, FleetInds) {
-  
+
+.CombineFleetsStock <- function(OM, st, Name, FleetInds, RefEffort = NULL) {
+
   FleetList <- OM@Fleet[[st]][FleetInds]
   NewFleet  <- Fleet(Name = Name)
-  
+
   apicalF_list <- purrr::map(FleetList, \(fleet)
                              ArrayMultiply(fleet@Effort@Effort, fleet@Catchability@Efficiency)
   )
-  totalApicalF <- Reduce(ArraySum, apicalF_list)
-  
+
   Efficiency <- FleetList[[1]]@Catchability@Efficiency
   HistYears  <- as.numeric(dimnames(FleetList[[1]]@Effort@Effort)$Year)
 
-  Effort(NewFleet) <- Effort(
-    Effort = ArrayDivide(.ArraySubsetYear(totalApicalF, HistYears),
-                         .ArraySubsetYear(Efficiency, HistYears))
-  )
-  Catchability(NewFleet) <- Catchability(Efficiency = Efficiency)
-  
   FInteract_list <- purrr::map2(apicalF_list, FleetList, \(apicalF, fleet) {
     apicalF_expanded <- apicalF |>
       AddDimension("Age",  pos = 2) |>
@@ -372,9 +364,25 @@ CombineFleets <- function(OM, FleetList, silent = FALSE) {
     ArrayMultiply(apicalF_expanded, fleet@Selectivity@MeanAtAge)
   })
   FInteract <- Reduce(ArraySum, FInteract_list)   # aggregate F-at-age
-  
+
+  nms         <- names(dimnames(FInteract))
+  keepDims    <- which(nms %in% c('Sim', 'Year'))
+  trueApicalF <- apply(FInteract, keepDims, max) |>
+    .ArraySubsetYear(HistYears)
+  Efficiency  <- .ArraySubsetYear(Efficiency, HistYears)
+
+  if (is.null(RefEffort)) {
+    EffortOut <- ArrayDivide(trueApicalF, Efficiency)
+  } else {
+    EffortOut  <- RefEffort
+    Efficiency <- ArrayDivide(trueApicalF, RefEffort)
+  }
+
+  Effort(NewFleet)       <- Effort(Effort = EffortOut)
+  Catchability(NewFleet) <- Catchability(Efficiency = Efficiency)
+
   # TODO - at length
-  
+
   Selectivity(NewFleet) <- Selectivity(
     MeanAtAge    = .StandardizeF(FInteract))
 
@@ -407,36 +415,10 @@ CombineFleets <- function(OM, FleetList, silent = FALSE) {
   WeightFleetRetained(NewFleet) <- ArrayDivide(Reduce(ArraySum, WFRet_list), FRetain) |>
     DropDimension('Area')
 
-  NewFleet
+  list(Fleet = NewFleet, Effort = EffortOut)
 }
 
 
-#' Combine stocktargeting slots after fleet aggregation
-#'
-#' Updates `OM@StockTargeting` so that the combined fleet's targeting
-#' parameters reflect an apical-F-weighted average of the source fleets'
-#' parameters. 
-#'
-#' The combined targeting deviation for stock `s` at time `t` is:
-#'
-#' \deqn{\tau_{s,\text{comb},t} =
-#'   \frac{\sum_f F^{apical}_{s,f,t} \cdot \tau_{s,f,t}}{\sum_f F^{apical}_{s,f,t}}}
-#'
-#' and analogously for `Mean` and `Covariance`.
-#'
-#' If `OM@StockTargeting` is uninitialised (all `NA`), the function returns
-#' `OM` unchanged.
-#'
-#' @param OM An [OM()] object (already populated and with fleet slots updated).
-#' @param FleetList A named list of character vectors as passed to [CombineFleets()].
-#' @param FleetIndList A named list of integer vectors; the resolved fleet
-#'   indices corresponding to `FleetList`.
-#' @param silent `logical(1)`. Suppresses messages when `TRUE`.
-#'
-#' @return Updated `OM` object with `@StockTargeting` reflecting the combined
-#'   fleet structure.
-#'
-#' @keywords internal
 .CombineFleetsTargeting <- function(OM, FleetList, FleetIndList, silent = FALSE) {
   
   ST <- OM@StockTargeting
