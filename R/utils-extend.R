@@ -58,8 +58,7 @@
 #' present, the array is returned unchanged. Otherwise missing years are added
 #' by forward-filling from the most recent existing year, back-filling from the
 #' earliest (if `backfill = TRUE`), or step-filling for years within the
-#' existing range. If any year values are non-integer (decimal), seasonal
-#' matching is used via `.ExtendYearsSeasonal()`.
+#' existing range. 
 #'
 #' ## ExtendAreas
 #'
@@ -287,11 +286,12 @@ ExtendYears <- function(array, Years = NULL, default = NULL,
     return(array)
   
   d <- dim(array)
+  nd <- length(d)
   dn <- dimnames(array)
 
-  if (is.null(dn) || !"Year" %in% names(dn)) 
+  if (is.null(dn) || !"Year" %in% names(dn))
     return(array)
-  
+
   year_dim       <- which(names(dn) == "Year")
   nyear          <- d[year_dim]
   existing_years <- as.numeric(dn[[year_dim]])
@@ -306,47 +306,48 @@ ExtendYears <- function(array, Years = NULL, default = NULL,
   forward_years <- fill_years[fill_years > max(existing_years)]
   inside_years  <- fill_years[!fill_years %in% back_years & !fill_years %in% forward_years]
   
-  if (!backfill) 
+  if (!backfill)
     all_years <- all_years[!all_years %in% back_years]
-  
+
+  if (any(all_years %% 1 != 0))
+    return(.ExtendYearsSeasonal(array, Years, default, backfill = backfill,
+                                maintain_seasonal_pattern=maintain_seasonal_pattern))
+
   # Create output array
   d[[year_dim]] <- length(all_years)
   dn[[year_dim]] <- all_years
   OutArray <- array(NA, dim = d, dimnames = dn)
-  abind::afill(OutArray) <- array # add the existing values
-  
-  # Seasonal
-  if (any(all_years %% 1 != 0))
-    return(.ExtendYearsSeasonal(array, Years, default, backfill = backfill,
-                                maintain_seasonal_pattern=maintain_seasonal_pattern))
-  
+  value <- array # add the existing values
+  eval(.YearSliceAssignCall(nd, year_dim, all_years, existing_years))
 
   # Forward fill years from most recent existing year
   if (length(forward_years)) {
     MostRecent <- abind::asub(array, nyear, year_dim, drop = FALSE)
     if (!is.null(default)) MostRecent[] <- default
-    abind::afill(OutArray) <- .ExtendAlongDim(MostRecent, year_dim, forward_years)
+    value <- .ExtendAlongDim(MostRecent, year_dim, forward_years)
+    eval(.YearSliceAssignCall(nd, year_dim, all_years, forward_years))
   }
-  
 
   # Back fill years from first existing year
   if (length(back_years) && backfill) {
     FirstYear <- abind::asub(array, 1, year_dim, drop = FALSE)
     if (!is.null(default)) FirstYear[] <- default
-    abind::afill(OutArray) <- .ExtendAlongDim(FirstYear, year_dim, back_years)
+    value <- .ExtendAlongDim(FirstYear, year_dim, back_years)
+    eval(.YearSliceAssignCall(nd, year_dim, all_years, back_years))
   }
-  
+
   # Fill years within existing years
   if (length(inside_years)) {
     interval_index <- findInterval(inside_years, existing_years)
     interval_index[interval_index == 0] <- 1
     interval_index[interval_index > length(existing_years) - 1] <- length(existing_years) - 1
     TimeBlocks <- split(inside_years, interval_index)
-    
+
     for (i in seq_along(TimeBlocks)) {
       year_ind  <- max(which(existing_years < min(TimeBlocks[[i]])))
       FillValue <- abind::asub(array, year_ind, year_dim, drop = FALSE)
-      abind::afill(OutArray) <- .ExtendAlongDim(FillValue, year_dim, TimeBlocks[[i]])
+      value <- .ExtendAlongDim(FillValue, year_dim, TimeBlocks[[i]])
+      eval(.YearSliceAssignCall(nd, year_dim, all_years, TimeBlocks[[i]]))
     }
   }
   OutArray
@@ -356,8 +357,11 @@ ExtendYears <- function(array, Years = NULL, default = NULL,
   all(abs(x - round(x)) < .Machine$double.eps^0.5)
 }
 
-.ExtendYearsSeasonal <- function(array, Years = NULL, default = NULL, backfill = FALSE, 
-                                 maintain_seasonal_pattern=maintain_seasonal_pattern, tol = 0.01) {
+.ExtendYearsSeasonal <- function(array, Years = NULL,
+                                 default = NULL,
+                                 backfill = FALSE, 
+                                 maintain_seasonal_pattern=maintain_seasonal_pattern,
+                                 tol = 0.01) {
   
   if (!is.array(array)) 
     cli::cli_abort("`array` must be an array")
@@ -366,11 +370,11 @@ ExtendYears <- function(array, Years = NULL, default = NULL,
     return(array)
   
   d <- dim(array)
+  nd <- length(d)
   dn <- dimnames(array)
 
-  if (is.null(dn) || !"Year" %in% names(dn)) 
+  if (is.null(dn) || !"Year" %in% names(dn))
     cli::cli_abort("`array` must have a dimension named 'Year'")
-  
 
   year_dim <- which(names(dn) == "Year")
   nyear <- d[year_dim]
@@ -386,7 +390,8 @@ ExtendYears <- function(array, Years = NULL, default = NULL,
   fill_years <- all_years[!all_years %in% existing_years]
   back_years <- fill_years[which(fill_years < min(existing_years))]
   forward_years <- fill_years[which(fill_years > max(existing_years))]
-  inside_years <- fill_years[!fill_years %in% back_years & !fill_years %in% forward_years]
+  inside_years <- fill_years[!fill_years %in% back_years &
+                             !fill_years %in% forward_years]
   
   if (!backfill) 
     all_years <- all_years[!all_years %in% back_years]
@@ -395,8 +400,9 @@ ExtendYears <- function(array, Years = NULL, default = NULL,
   d[[year_dim]] <- length(all_years)
   dn[[year_dim]] <- all_years
   OutArray <- array(NA, dim = d, dimnames = dn)
-  abind::afill(OutArray) <- array # add the existing values
-  
+  value <- array # add the existing values
+  eval(.YearSliceAssignCall(nd, year_dim, all_years, existing_years))
+
   season_existing <- existing_years %% 1
   # Forward fill years from most recent existing year
   if (length(forward_years)) {
@@ -409,13 +415,13 @@ ExtendYears <- function(array, Years = NULL, default = NULL,
         MostRecent[] <- default
       }
       
-      Extended <- .ExtendAlongDim(
+      value <- .ExtendAlongDim(
         x = MostRecent,
         along_dim = year_dim,
         new_index = forward_years
       )
-      abind::afill(OutArray) <- Extended
-      
+      eval(.YearSliceAssignCall(nd, year_dim, all_years, forward_years))
+
     } else {
       # loop over seasons - match the season
       for (i in seq_along(season_forward)) {
@@ -424,23 +430,23 @@ ExtendYears <- function(array, Years = NULL, default = NULL,
         if (length(existing_years) == 1) {
           most_recent_ind <- 1
         }
-        
+
         .CheckSeasonExists(most_recent_ind, season_forward[i], existing_years, season_existing)
         most_recent_ind <- max(most_recent_ind)
-        
+
         MostRecent <- abind::asub(array, most_recent_ind, year_dim, drop = FALSE)
-      
+
         if (!is.null(default)) {
           MostRecent[] <- default
         }
-        
-        Extended <- .ExtendAlongDim(
+
+        value <- .ExtendAlongDim(
           x = MostRecent,
           along_dim = year_dim,
           new_index = forward_years[season_ind]
         )
-        abind::afill(OutArray) <- Extended
-        
+        eval(.YearSliceAssignCall(nd, year_dim, all_years, forward_years[season_ind]))
+
       }
     }
   }
@@ -448,21 +454,21 @@ ExtendYears <- function(array, Years = NULL, default = NULL,
   # Back fill years from first existing year
   if (length(back_years) && backfill) {
     season_backward <- (back_years %% 1) |> unique()
-    if (.NoSeasonVals(season_existing) || maintain_seasonal_pattern) {
+    if (.NoSeasonVals(season_existing) || !maintain_seasonal_pattern) {
       # no seasons in provided values - constant over seasons within years
       MostRecent <- abind::asub(array, 1, year_dim, drop = FALSE)
       if (!is.null(default)) {
         MostRecent[] <- default
       }
       
-      Extended <- .ExtendAlongDim(
+      value <- .ExtendAlongDim(
         x = MostRecent,
         along_dim = year_dim,
         new_index = back_years
       )
-      abind::afill(OutArray) <- Extended
+      eval(.YearSliceAssignCall(nd, year_dim, all_years, back_years))
 
-      
+
     } else {
       # loop over seasons - match the season
       for (i in seq_along(season_backward)) {
@@ -473,15 +479,15 @@ ExtendYears <- function(array, Years = NULL, default = NULL,
         }
         .CheckSeasonExists(most_recent_ind, season_backward[i], existing_years, season_existing)
         most_recent_ind <- min(most_recent_ind)
-        
+
         MostRecent <- abind::asub(array, most_recent_ind, year_dim, drop = FALSE)
-        
-        Extended <- .ExtendAlongDim(
+
+        value <- .ExtendAlongDim(
           x = MostRecent,
           along_dim = year_dim,
           new_index = back_years[season_ind]
         )
-        abind::afill(OutArray) <- Extended
+        eval(.YearSliceAssignCall(nd, year_dim, all_years, back_years[season_ind]))
 
       }
     }
@@ -498,7 +504,7 @@ ExtendYears <- function(array, Years = NULL, default = NULL,
       years_block <- TimeBlocks[[i]]
       season_inside <- (years_block %% 1) |> unique()
 
-      if (.NoSeasonVals(season_existing) || maintain_seasonal_pattern) {
+      if (.NoSeasonVals(season_existing) || !maintain_seasonal_pattern) {
         # no seasons in provided values - constant over seasons within years
         most_recent_ind <- which(existing_years <  min(years_block)) |> max()
         MostRecent <- abind::asub(array, most_recent_ind, year_dim, drop = FALSE)
@@ -508,26 +514,28 @@ ExtendYears <- function(array, Years = NULL, default = NULL,
         d <- dim(MostRecent)
         d[[year_dim]] <- length(years_block)
         dn[[year_dim]] <- years_block
-        abind::afill(OutArray) <- array(MostRecent, dim = d, dimnames = dn)
-        
+        value <- array(MostRecent, dim = d, dimnames = dn)
+        eval(.YearSliceAssignCall(nd, year_dim, all_years, years_block))
+
       } else {
         for (j in seq_along(season_inside)) {
           season_ind <- which(abs(years_block %% 1 - season_inside[j]) < tol)
-          most_recent_ind <- which(abs(season_existing - season_inside[i]) < tol)
-          if (length(existing_years) == 1) 
+          most_recent_ind <- which(abs(season_existing - season_inside[j]) < tol)
+          if (length(existing_years) == 1)
             most_recent_ind <- 1
-          
+
           if (!length(most_recent_ind))
             most_recent_ind <- 1
-          
-          .CheckSeasonExists(most_recent_ind, season_inside[i], existing_years, season_existing)
+
+          .CheckSeasonExists(most_recent_ind, season_inside[j], existing_years, season_existing)
           most_recent_ind <- min(most_recent_ind)
           
           MostRecent <- abind::asub(array, most_recent_ind, year_dim, drop = FALSE)
           d <- dim(MostRecent)
           d[[year_dim]] <- length(years_block[season_ind])
           dn[[year_dim]] <- years_block[season_ind]
-          abind::afill(OutArray) <- array(MostRecent, dim = d, dimnames = dn)
+          value <- array(MostRecent, dim = d, dimnames = dn)
+          eval(.YearSliceAssignCall(nd, year_dim, all_years, years_block[season_ind]))
         }
       }
     }
@@ -567,14 +575,12 @@ ExtendAreas <- function(array, Areas = NULL) {
 
 .ExtendAlongDim <- function(x, along_dim, new_index, dimnames_list = dimnames(x)) {
   
-  # Permute so target dimension is first
   perm <- seq_along(dim(x))
   perm <- c(along_dim, perm[-along_dim])
   
   x_perm <- .Aperm(x, perm)
   dx_perm <- dim(x_perm)
   
-  # Build index list for ND subset
   idx <- vector("list", length(dx_perm))
   idx[[1]] <- rep(seq_len(dx_perm[1]), length(new_index))
   for (i in 2:length(dx_perm)) {
@@ -583,10 +589,8 @@ ExtendAreas <- function(array, Areas = NULL) {
   
   x_rep <- do.call(`[`, c(list(x_perm), idx, list(drop = FALSE)))
   
-  # Update dimension
   dim(x_rep)[1] <- length(new_index)
   
-  # Permute back
   inv_perm <- order(perm)
   out <- .Aperm(x_rep, inv_perm)
   
@@ -595,6 +599,14 @@ ExtendAreas <- function(array, Areas = NULL) {
     dimnames_list[[along_dim]] <- new_index
     dimnames(out) <- dimnames_list
   }
-  
+
   out
+}
+
+.YearSliceAssignCall <- function(nd, year_dim, all_years, target_years) {
+  pos <- match(target_years, all_years)
+  idxs <- vector("list", nd)
+  for (i in seq_len(nd)) idxs[[i]] <- quote(expr = )
+  idxs[[year_dim]] <- pos
+  call("<-", as.call(c(list(quote(`[`), quote(OutArray)), idxs)), quote(value))
 }

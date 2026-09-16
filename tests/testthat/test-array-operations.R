@@ -107,6 +107,52 @@ test_that("ExtendYears preserves a seasonal pattern rather than flat-filling", {
   expect_equal(as.numeric(out[1, "2021.5"]), 20)
 })
 
+test_that("ExtendYears forward-fill flat-fills (ignores season) when maintain_seasonal_pattern = FALSE", {
+  seed <- array(c(10, 20), dim = c(1, 2), dimnames = list(Sim = 1, Year = c(2020, 2020.5)))
+  out <- ExtendYears(seed, Years = c(2020, 2020.5, 2021, 2021.5), maintain_seasonal_pattern = FALSE)
+  # both new years copy the single most recent existing value (season .5, value 20)
+  expect_equal(as.numeric(out[1, "2021"]), 20)
+  expect_equal(as.numeric(out[1, "2021.5"]), 20)
+})
+
+test_that("ExtendYears back-fill matches the season when maintain_seasonal_pattern = TRUE", {
+  # 2 seasons per year; existing years are 2021/2021.5, back-fill to 2020/2020.5
+  seed <- array(c(10, 20), dim = c(1, 2), dimnames = list(Sim = 1, Year = c(2021, 2021.5)))
+  out <- ExtendYears(seed, Years = c(2020, 2020.5, 2021, 2021.5),
+                     backfill = TRUE, maintain_seasonal_pattern = TRUE)
+  expect_equal(as.numeric(out[1, "2020"]), 10)   # season 0 matched from 2021
+  expect_equal(as.numeric(out[1, "2020.5"]), 20) # season .5 matched from 2021.5
+})
+
+test_that("ExtendYears back-fill flat-fills (ignores season) when maintain_seasonal_pattern = FALSE", {
+  seed <- array(c(10, 20), dim = c(1, 2), dimnames = list(Sim = 1, Year = c(2021, 2021.5)))
+  out <- ExtendYears(seed, Years = c(2020, 2020.5, 2021, 2021.5),
+                     backfill = TRUE, maintain_seasonal_pattern = FALSE)
+  # both new years copy the first existing value (season 0, value 10)
+  expect_equal(as.numeric(out[1, "2020"]), 10)
+  expect_equal(as.numeric(out[1, "2020.5"]), 10)
+})
+
+test_that("ExtendYears inside-fill matches the season when maintain_seasonal_pattern = TRUE", {
+  # gap at 2021/2021.5 between existing 2020/2020.5 and 2022/2022.5
+  seed <- array(c(10, 20, 30, 40), dim = c(1, 4),
+               dimnames = list(Sim = 1, Year = c(2020, 2020.5, 2022, 2022.5)))
+  out <- ExtendYears(seed, Years = c(2020, 2020.5, 2021, 2021.5, 2022, 2022.5),
+                     maintain_seasonal_pattern = TRUE)
+  expect_equal(as.numeric(out[1, "2021"]), 10)   # season 0 matched from 2020
+  expect_equal(as.numeric(out[1, "2021.5"]), 20) # season .5 matched from 2020.5
+})
+
+test_that("ExtendYears inside-fill flat-fills (ignores season) when maintain_seasonal_pattern = FALSE", {
+  seed <- array(c(10, 20, 30, 40), dim = c(1, 4),
+               dimnames = list(Sim = 1, Year = c(2020, 2020.5, 2022, 2022.5)))
+  out <- ExtendYears(seed, Years = c(2020, 2020.5, 2021, 2021.5, 2022, 2022.5),
+                     maintain_seasonal_pattern = FALSE)
+  # both gap years copy the year immediately preceding the gap (season .5, value 20)
+  expect_equal(as.numeric(out[1, "2021"]), 20)
+  expect_equal(as.numeric(out[1, "2021.5"]), 20)
+})
+
 test_that("List2Array takes the identical-dims fast path when all elements already conform", {
   a <- array(1:4, dim = c(2, 2), dimnames = list(Sim = 1:2, Year = 2001:2002))
   b <- array(5:8, dim = c(2, 2), dimnames = list(Sim = 1:2, Year = 2001:2002))
