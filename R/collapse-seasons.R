@@ -1,6 +1,8 @@
 
 #' Collapse a Seasonal Operating Model to an Annual Operating Model
 #'
+#' `r lifecycle::badge("experimental")`
+#'
 #' Converts an Operating Model with sub-annual seasonal resolution
 #' (`OM@Seasons > 1`) into an annual Operating Model (`Seasons = 1`) that
 #' approximates the same annual-scale fishery dynamics. 
