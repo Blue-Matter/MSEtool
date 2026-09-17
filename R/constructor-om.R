@@ -77,6 +77,18 @@
 #'   projection. If unspecified it falls back to `CatchFrac`, and then to
 #'   the mean of removals over the last five historical years. Default
 #'   `NULL`.
+#' @param HistoricalWeight List. Named list of length 0 or the number of
+#'   stock complexes. Each element is a named numeric vector over fleet
+#'   names, values in `[0,1]`, giving the weight placed on the historical
+#'   seasonal pattern (vs. the population abundance pattern) when
+#'   `SeasonalAllocation` is derived. `1` (default) uses the historical
+#'   pattern only. Default `NULL`.
+#' @param SeasonalAllocation List. Named list of length 0 or the number of
+#'   stock complexes. Each element is an `nSim` (or 1, recycled) by
+#'   `Seasons` by `nFleet` array, each `[sim, , fleet]` column summing to 1,
+#'   controlling how a periodically-set TAC/Effort is split across the
+#'   seasons of the interval it covers. If unspecified it is derived from
+#'   `HistoricalWeight`. Default `NULL`.
 #' @param EFactor List. Effort or exploitation modifiers applied during
 #'   projection. Default `NULL`.
 #' @param Complexes List. Defines stock complexes for data aggregation and
@@ -267,6 +279,8 @@ OM <- function(Name        = "A new OM object",
                
                CatchFrac   = NULL,
                Allocation  = NULL,
+               HistoricalWeight   = NULL,
+               SeasonalAllocation = NULL,
                EFactor     = NULL,
                
                Complexes   = NULL,
@@ -349,6 +363,8 @@ OM <- function(Name        = "A new OM object",
   
   .Object@CatchFrac   <- CatchFrac
   .Object@Allocation  <- Allocation
+  .Object@HistoricalWeight   <- HistoricalWeight
+  .Object@SeasonalAllocation <- SeasonalAllocation
   .Object@EFactor     <- EFactor
   
   .Object@Complexes   <- Complexes
@@ -567,6 +583,22 @@ Allocation <- function(x) .IsHist(x, "Allocation")
 #' @rdname OM-accessors
 #' @export
 `Allocation<-` <- function(x, value) .AssignSlot(x, value, "Allocation")
+
+#' @rdname OM-accessors
+#' @export
+HistoricalWeight <- function(x) .IsHist(x, "HistoricalWeight")
+
+#' @rdname OM-accessors
+#' @export
+`HistoricalWeight<-` <- function(x, value) .AssignSlot(x, value, "HistoricalWeight")
+
+#' @rdname OM-accessors
+#' @export
+SeasonalAllocation <- function(x) .IsHist(x, "SeasonalAllocation")
+
+#' @rdname OM-accessors
+#' @export
+`SeasonalAllocation<-` <- function(x, value) .AssignSlot(x, value, "SeasonalAllocation")
 
 #' @rdname OM-accessors
 #' @export

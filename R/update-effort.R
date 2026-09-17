@@ -29,9 +29,11 @@
                           YearsProj,
                           Areas,
                           FleetNames,
-                          StockNames) {
+                          StockNames,
+                          EverySeason = FALSE) {
 
-  nSim <- Proj@OM@nSim
+  nSim   <- Proj@OM@nSim
+  Season <- .SeasonOfYear(Year, c(YearsHist, YearsProj), Proj@OM@Seasons)
 
   if (.AllAdviceNull(AdviceSimList, 'Effort'))
     return(Proj)
@@ -57,6 +59,8 @@
       StockNames     = StockNames,
       Complexes      = Proj@OM@Complexes,
       Areas          = Areas,
+      Season         = Season,
+      EverySeason    = EverySeason,
       lambda_scale   = lambda_scale,
       n_recent       = n_recent,
       maxEval        = maxEval
@@ -101,6 +105,8 @@
                               StockNames,
                               Complexes,
                               Areas,
+                              Season       = NULL,
+                              EverySeason  = FALSE,
                               lambda_scale = 1,
                               n_recent     = 5,
                               maxEval      = 500) {
@@ -190,9 +196,16 @@
                       ncol  = nFleet,
                       byrow = TRUE)
 
-  # Reapply the historical seasonal shape to fleets whose binding advice was
-  # relative. Absolute advice is written as given - the MP sets its own pattern.
-  if (nSeason > 1L) {
+  if (nSeason > 1L && !EverySeason) {
+    seas     <- ((ProjInd - 1L) %% nSeason) + 1L
+    ShapeMat <- matrix(1, nrow = length(ProjInd), ncol = nFleet)
+    for (fl in seq_len(nFleet)) {
+      SA <- Proj@OM@SeasonalAllocation[[MinEffortInd[fl]]]
+      if (!is.null(SA))
+        ShapeMat[, fl] <- SA[sim, seas, fl]
+    }
+    EffortMat <- EffortMat * ShapeMat
+  } else if (nSeason > 1L) {
     RelFleet <- vapply(seq_len(nFleet),
                        \(fl) identical(EffTypeMat[fl, MinEffortInd[fl]], 'Rel'),
                        logical(1))

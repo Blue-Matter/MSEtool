@@ -16,15 +16,16 @@
 #'   consistent `update_funs` signature).
 #' @return Updated `Proj` object.
 #' @keywords internal
-.UpdateDiscardMortality <- function(Proj, 
-                                    Year, 
-                                    AdviceSimList, 
-                                    LastAdviceSimList, 
+.UpdateDiscardMortality <- function(Proj,
+                                    Year,
+                                    AdviceSimList,
+                                    LastAdviceSimList,
                                     YearsHist,
                                     YearsProj,
-                                    Areas, 
+                                    Areas,
                                     FleetNames,
-                                    StockNames) {
+                                    StockNames,
+                                    EverySeason = FALSE) {
   
   nSim        <- Proj@OM@nSim
   nStock      <- nStock(Proj)

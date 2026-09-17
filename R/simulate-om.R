@@ -154,6 +154,7 @@
   # ---- finalize ----
   Hist <- .AddSimNumber(Hist)
   Hist <- .CheckAllocation(Hist)
+  Hist <- .CheckSeasonalAllocation(Hist)
   Hist <- .LogDepletionAchievement(Hist)
   Hist <- .ReduceHist(Hist, Reduce)
 

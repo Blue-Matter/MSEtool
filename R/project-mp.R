@@ -48,6 +48,7 @@
 
   Interval        <- .ResolveInterval(Proj@OM@Interval, MPName, MPfunction, Proj@OM@Seasons)
   ManagementYears <- .CalcManagementYears(YearsProj, Interval, Proj@OM@Seasons)
+  EverySeason     <- isTRUE(attr(MPfunction, 'EverySeason'))
   YearsAll        <- c(YearsHist, YearsProj)
   Areas           <- 1:nArea(Proj)
   StartTime       <- Sys.time()
@@ -163,10 +164,11 @@
     # Update population dynamics with MP advice
     for (fun_name in names(update_funs)) {
    
-      result <- .RunUpdateStep(fun=update_funs[[fun_name]], 
+      result <- .RunUpdateStep(fun=update_funs[[fun_name]],
                                 fun_name,
                                 Proj, Year, AdviceSimList, LastAdviceSimList,
-                                YearsHist, YearsProj, Areas, FleetNames, StockNames)
+                                YearsHist, YearsProj, Areas, FleetNames, StockNames,
+                                EverySeason)
 
       if (inherits(result, "update_error")) {
         Error        <- TRUE
@@ -236,17 +238,19 @@
 }
 
 .RunUpdateStep <- function(fun, fun_name, Proj, Year, AdviceSimList, LastAdviceSimList,
-                            YearsHist, YearsProj, Areas, FleetNames, StockNames) {
+                            YearsHist, YearsProj, Areas, FleetNames, StockNames,
+                            EverySeason = FALSE) {
   tryCatch(
-    fun(Proj, 
+    fun(Proj,
         Year,
-        AdviceSimList, 
+        AdviceSimList,
         LastAdviceSimList,
         YearsHist,
-        YearsProj, 
-        Areas, 
-        FleetNames, 
-        StockNames),
+        YearsProj,
+        Areas,
+        FleetNames,
+        StockNames,
+        EverySeason),
     error = function(e) structure(
       list(step = fun_name, message = conditionMessage(e)),
       class = "update_error"

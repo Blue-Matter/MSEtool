@@ -162,7 +162,5 @@ ReferenceMPs <- function() {
   if (is.na(Discards))
     Discards <- 0
 
-  Seasons <- MPSeasonIndex(Data)$Seasons
-
-  Advice(TAC = fraction * (Landings + Discards) / Seasons, TACType = 'Removals')
+  Advice(TAC = fraction * (Landings + Discards), TACType = 'Removals')
 }

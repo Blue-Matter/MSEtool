@@ -1,4 +1,10 @@
 
+.SeasonOfYear <- function(Year, YearsAll, Seasons) {
+  Seasons <- max(1L, as.integer(Seasons %||% 1))
+  TSIndex <- match(Year, YearsAll)
+  ((TSIndex - 1L) %% Seasons) + 1L
+}
+
 .CalcManagementYears <- function(YearsProj, Interval, Seasons = 1) {
   step   <- Interval * Seasons
   step_i <- round(step)

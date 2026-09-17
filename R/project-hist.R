@@ -49,9 +49,10 @@
   }
 
   Proj <- Hist |> ReduceNSim(nSim)
-  
+
   Proj <- .CheckAllocation(Proj)
-  
+  Proj <- .CheckSeasonalAllocation(Proj)
+
   Proj <- .PrepHistMisc(Proj)
 
   Proj <- .ExtendHist(Proj, Years = c(YearsHist, YearsProj))

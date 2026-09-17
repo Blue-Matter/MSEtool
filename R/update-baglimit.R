@@ -216,7 +216,8 @@
                             YearsProj,
                             Areas,
                             FleetNames,
-                            StockNames) {
+                            StockNames,
+                            EverySeason = FALSE) {
 
   TSIndex <- match(Year, c(YearsHist, YearsProj))
 

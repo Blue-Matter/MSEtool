@@ -34,9 +34,11 @@
                        YearsProj,
                        Areas,
                        FleetNames,
-                       StockNames) {
+                       StockNames,
+                       EverySeason = FALSE) {
 
   TSIndex <- match(Year, c(YearsHist, YearsProj))
+  Season  <- .SeasonOfYear(Year, c(YearsHist, YearsProj), Proj@OM@Seasons)
 
   if (.AllAdviceNull(AdviceSimList, 'TAC'))
     return(Proj)
@@ -56,6 +58,8 @@
       sim             = sim,
       Year            = Year,
       TSIndex         = TSIndex,
+      Season          = Season,
+      EverySeason     = EverySeason,
       AdviceList      = AdviceList,
       LastAdviceList  = LastAdviceList,
       StockNames      = StockNames,
@@ -72,30 +76,40 @@
 
 
 .UpdateTACSim <- function(Proj,
-                           sim, 
+                           sim,
                            Year,
                            TSIndex,
                            AdviceList,
                            LastAdviceList,
                            StockNames,
-                           FleetNames, 
+                           FleetNames,
                            Areas,
+                           Season      = NULL,
+                           EverySeason = FALSE,
                            lambda_scale = 1,
                            n_recent     = 5,
                            maxEval      = 500) {
-  
+
   Complexes  <- Proj@OM@Complexes
   nComplex   <- length(Complexes)
   nFleet_loc <- length(FleetNames)
   nStock     <- length(StockNames)
-  
+
   chk <- vapply(AdviceList, function(a) inherits(a, 'advice'), logical(1))
   if (any(!chk)) return(Proj)
-  
+
   TAC_by_Complex     <- .ResolveTACByComplex(AdviceList, LastAdviceList,
                                             Complexes, Proj, sim, FleetNames)
   TAC_by_Complex     <- .ApplyImplementationError(TAC_by_Complex, Proj, FleetNames,
                                                  names(Complexes), sim, Year, 'TAC')
+
+  if (!EverySeason && !is.null(Season)) {
+    for (i in seq_len(nComplex)) {
+      SA <- Proj@OM@SeasonalAllocation[[i]]
+      if (!is.null(SA))
+        TAC_by_Complex[[i]] <- TAC_by_Complex[[i]] * SA[sim, Season, ]
+    }
+  }
 
   TACType_by_Complex <- .ResolveTACTypeByComplex(AdviceList, Complexes, nFleet_loc)
   TACUnit_by_Complex <- .ResolveTACUnitByComplex(AdviceList, Complexes, nFleet_loc)

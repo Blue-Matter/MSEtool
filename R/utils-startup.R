@@ -18,9 +18,10 @@
 
   if (is.null(OM@Control$Clone))
     OM@Control$Clone <- 0
-    
-  OM |> 
+
+  OM |>
+    ReduceNSim(OM@nSim) |>
     PopulateOM(silent = silent) |>
-    ReduceNSim(nSim) 
-  
+    ReduceNSim(nSim)
+
 }

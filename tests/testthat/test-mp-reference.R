@@ -2,15 +2,12 @@
 # Simulate()/Project() calls on the seasonal example OM, so kept out of the
 # CRAN check budget -- see skip_on_cran() below.
 
-test_that("refMSY* divides TAC by Seasons on a seasonal OM", {
+test_that("refMSY* realises its annual MSY target on a seasonal OM", {
   skip_on_cran()
   # .RefMSYAdvice() returns a fixed annual removals figure (fraction * MSY)
-  # as `Advice@TAC`, and .ApplyMP() reapplies whatever TAC an MP returns,
-  # unchanged, at every timestep until the MP is next called. refMSY* has
-  # `Interval = 1`, so on a seasonal OM it is called every season. Without
-  # dividing by the number of seasons, the annual MSY figure would be
-  # applied as the TAC at every season, overcatching by a factor of
-  # `Seasons` each year.
+  # as `Advice@TAC`. refMSY* has `Interval = 1` (year) and no `EverySeason`,
+  # so the framework's `SeasonalAllocation` weighting distributes that
+  # annual figure across the OM's seasons automatically.
   data(SeasonalSpatialOM, envir = environment())
   om <- SeasonalSpatialOM
   om@nSim <- 1

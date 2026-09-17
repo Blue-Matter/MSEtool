@@ -17,14 +17,15 @@
 #' @return Updated `Proj` object.
 #' @keywords internal
 .UpdateSelectivity <- function(Proj,
-                               Year, 
-                               AdviceSimList, 
+                               Year,
+                               AdviceSimList,
                                LastAdviceSimList,
                                YearsHist,
-                               YearsProj, 
-                               Areas, 
+                               YearsProj,
+                               Areas,
                                FleetNames,
                                StockNames,
+                               EverySeason = FALSE,
                                type=c('Selectivity', 'Retention')) {
   
   type        <- match.arg(type)
@@ -340,14 +341,15 @@
 #' @return Updated `Proj` object.
 #' @keywords internal
 .UpdateRetention <- function(Proj,
-                             Year, 
+                             Year,
                              AdviceSimList,
                              LastAdviceSimList,
                              YearsHist,
                              YearsProj,
-                             Areas, 
+                             Areas,
                              FleetNames,
-                             StockNames) {
+                             StockNames,
+                             EverySeason = FALSE) {
   
   type <- 'Retention'
   

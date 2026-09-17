@@ -15,15 +15,16 @@
 #' @param StockNames Character vector of stock names.
 #' @return Updated `Proj` object.
 #' @keywords internal
-.UpdateClosure <- function(Proj, 
-                           Year, 
-                           AdviceSimList, 
-                           LastAdviceSimList, 
+.UpdateClosure <- function(Proj,
+                           Year,
+                           AdviceSimList,
+                           LastAdviceSimList,
                            YearsHist,
                            YearsProj,
-                           Areas, 
-                           FleetNames, 
-                           StockNames) {
+                           Areas,
+                           FleetNames,
+                           StockNames,
+                           EverySeason = FALSE) {
   
   if (length(Areas) < 2)
     return(Proj)
