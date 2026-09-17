@@ -96,7 +96,7 @@
 
   if (nComplex == 1) {
 
-    Solved <- .OptEffortSinglestock(ProjSim,
+    Solved <- .OptEffortSingleStock(ProjSim,
                                     Year,
                                     TSIndex,
                                     1L,
@@ -106,7 +106,8 @@
                                     MaxFleetEffort)
 
     Proj@Effort[sim, TSIndex, ] <- Solved$Effort
-    Proj <- .LogEffortConvergence(Proj, Solved$converged, Solved$saturated, sim, Year)
+    Proj <- .LogEffortConvergence(Proj, Solved$converged, Solved$saturated, sim, Year,
+                                  TAC = Solved$TAC, Catch = Solved$Catch, FleetNames = FleetNames)
     return(Proj)
   }
 
@@ -135,22 +136,40 @@
   for (fl in seq_len(nFleet_loc))
     Proj@Misc$StockTargeting[sim, , fl, TSIndex] <- result$Delta[fl, ]
 
-  Proj <- .LogEffortConvergence(Proj, result$converged, saturated = FALSE, sim, Year)
+  Proj <- .LogEffortConvergence(Proj, result$converged, result$saturated, sim, Year,
+                                TAC = result$TAC, Catch = result$Catch)
 
   Proj
 }
 
-.LogEffortConvergence <- function(Proj, converged, saturated, sim, Year) {
+# Log a failed TAC/Effort solve
+.LogEffortConvergence <- function(Proj, converged, saturated, sim, Year,
+                                  TAC = NULL, Catch = NULL, FleetNames = NULL) {
   if (is.na(converged) || converged)
     return(Proj)
 
-  # Saturation (TAC unachievable within the effort ceiling) is expected
-  # whenever the stock is too depleted to support the TAC even at the
-  # ceiling, so it isn't logged.
-  if (saturated)
+  if (isTRUE(saturated))
     return(Proj)
 
-  msg <- "Effort/TAC solver: did not converge within tolerance."
+  msg <- "Effort/TAC solver: did not converge within tolerance. Realised landings/removals may not match the TAC advised by the MP."
+
+  if (!is.null(TAC) && !is.null(Catch)) {
+    shortfall <- TAC - Catch
+    ok <- is.finite(shortfall) & TAC > 0
+    if (any(ok)) {
+      idx  <- which(ok)
+      idx  <- idx[order(-abs(shortfall[idx]))]
+      nms  <- if (!is.null(names(TAC))) names(TAC)[idx] else
+              if (!is.null(FleetNames)) FleetNames[idx] else paste0('Fleet_', idx)
+      detail <- sprintf("%s: TAC = %s, achieved = %s (%s%%)",
+                        nms,
+                        format(round(TAC[idx], 1), big.mark = ','),
+                        format(round(Catch[idx], 1), big.mark = ','),
+                        round(100 * Catch[idx] / TAC[idx], 1))
+      msg <- paste0(msg, " ", paste(detail, collapse = '; '))
+    }
+  }
+
   Proj@Log$warning <- c(
     Proj@Log$warning,
     list(.NewLogEntry(msg, name = 'EffortConvergence', sim = sim, year = Year))

@@ -1,19 +1,12 @@
 #' Solve fleet effort and targeting under the choke rule
 #'
-#' Solves fleet effort under TAC management in a multi-complex model. Rather
-#' than penalising TAC over/undershoot, effort is derived from the targeting
-#' mix: for each
-#' complex, the effort at which its catch equals its TAC is found by a
-#' bracketed root find (`.SolveEffortByComplex()`), and those are combined by
-#' `Imp@TAC@Compliance` (`.CombineEffortByCompliance()`). Full compliance stops
-#' a fleet at the first TAC reached; zero compliance lets it run until the last
-#' is reached.
-#'
-#' Only the targeting mix is optimised, maximising a concave transform of catch
-#' against a penalty for drifting from last year's mix - the same objective
-#' `.OptTargetingMultiStock()` uses under effort control, with effort supplied
-#' by the choke rule instead of by the MP. As in that function, the targeting
-#' mix is a fleet's allocation across complexes.
+#' Solves fleet effort under TAC management in a multi-complex model. 
+#' 
+#' Effort is derived from the targeting mix: for each complex, the effort at 
+#' which its catch equals its TAC is found by a bracketed root find (`.SolveEffortByComplex()`), and those are combined by `Imp@TAC@Compliance`
+#' (`.CombineEffortByCompliance()`). Full compliance stops
+#' a fleet at the first TAC reached.Zero compliance lets it run until the last
+#' TAC is reached.
 #'
 #' @inheritParams .OptTargetingMultiStock
 #' @param TAC_by_Complex Named list of per-fleet TAC vectors, `NULL` where a
@@ -25,7 +18,7 @@
 #' @param MaxFleetEffort Numeric vector (length `nFleet`), or `NULL`.
 #' @param inner_reltol Numeric, or `NULL` (default). Relative convergence
 #'   tolerance for the per-complex root finds during optimisation, as a
-#'   fraction of the TAC being matched; `NULL` keeps `.OptEffortSinglestock()`'s
+#'   fraction of the TAC being matched; `NULL` keeps `.OptEffortSingleStock()`'s
 #'   absolute `tol`.
 #'
 #' @return A named list with `Effort`, `Delta` (`[nFleet x nStock]`, broadcast
@@ -71,17 +64,30 @@
     res$Effort
   }
 
-  # The returned effort is the advice itself, so it is re-solved exactly
-  FinalEffortFn <- function(Delta) EffortFn(Delta, reltol = NULL)
+  FinalSolve <- function(Delta) {
+    res <- .ResolveChokeEffort(Proj, sim, TSIndex, Year, Delta,
+                               TAC_by_Complex, TACType_by_Complex,
+                               TACUnit_by_Complex, Compliance, MaxFleetEffort,
+                               Effort_start = cache$warm, reltol = NULL)
+    cache$warm <- res$EffortByComplex
+    Attainment <- .CheckComplexTACAttainment(Proj, sim, TSIndex, Year, res$Effort, Delta,
+                                             TAC_by_Complex, TACType_by_Complex, TACUnit_by_Complex,
+                                             res$EffortByComplex)
+    list(Effort = res$Effort, Attainment = Attainment)
+  }
 
   state <- .PrepComplexTargetingState(Proj, sim, TSIndex, Complexes, FleetNames, n_recent)
 
   # Nothing to re-target: effort still follows from the existing mix
   if (length(state$active_fleets) == 0L) {
     Delta_prev_stock <- .ExpandComplexDelta(state$Delta_prev, Complexes, StockNames)
-    return(list(Effort        = FinalEffortFn(Delta_prev_stock),
+    Final <- FinalSolve(Delta_prev_stock)
+    return(list(Effort        = Final$Effort,
                 Delta         = Delta_prev_stock,
-                converged     = TRUE,
+                converged     = Final$Attainment$converged,
+                saturated     = Final$Attainment$saturated,
+                TAC           = Final$Attainment$TAC,
+                Catch         = Final$Attainment$Catch,
                 ActiveComplex = state$active_complex))
   }
 
@@ -112,8 +118,13 @@
                                      state$Delta_prev, state$log_delta_cap)
   Delta_final <- .ExpandComplexDelta(DeltaComplex_final, Complexes, StockNames)
 
-  list(Effort        = FinalEffortFn(Delta_final),
+  Final <- FinalSolve(Delta_final)
+
+  list(Effort        = Final$Effort,
        Delta         = Delta_final,
-       converged     = result$converged,
+       converged     = Final$Attainment$converged,
+       saturated     = Final$Attainment$saturated,
+       TAC           = Final$Attainment$TAC,
+       Catch         = Final$Attainment$Catch,
        ActiveComplex = state$active_complex)
 }

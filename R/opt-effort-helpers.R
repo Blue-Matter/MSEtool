@@ -1,5 +1,4 @@
 
-
 .LOG_DELTA_CAP <- log(10)
 
 .GetLogDeltaCapComplex <- function(Proj, sim, Complexes, TruncSD = 2) {
@@ -28,17 +27,22 @@
 
   Misc <- Proj@Misc
   maxF <- Misc$maxF
-  if (!length(maxF) || !is.finite(maxF) || maxF <= 0) return(NULL)
+  if (!length(maxF) || !is.finite(maxF) || maxF <= 0)
+    return(NULL)
 
   q    <- Misc$Catchability     # Sim, Stock, Year, Fleet
   Dist <- Proj@Distribution     # Sim, Year, Fleet, Area
   RS   <- Misc$RelSize          # Sim, Area
-  if (is.null(q) || is.null(Dist) || is.null(RS)) return(NULL)
+  if (is.null(q) || is.null(Dist) || is.null(RS)) 
+    return(NULL)
 
-  nF <- nFleet(Proj); nS <- nStock(Proj); nA <- nArea(Proj)
+  nF <- nFleet(Proj)
+  nS <- nStock(Proj)
+  nA <- nArea(Proj)
 
   dens <- as.logical(Misc$Mode)
-  if (length(dens) != nF) dens <- rep(FALSE, nF)
+  if (length(dens) != nF) 
+    dens <- rep(FALSE, nF)
 
   targ <- if (isTRUE(as.integer(Misc$StockTargetingFlag) == 1L))
     Misc$StockTargeting else NULL   # Sim, Stock, Fleet, Year
@@ -101,28 +105,10 @@
 }
 
 
-#' Effort at which each complex reaches its own TAC
-#'
-#' Solves, for every complex with a TAC, the fleet effort at which that
-#' complex's catch equals it.
-#'
-#' @param Proj A `Proj` object, already sliced to `sim`.
-#' @param Year Integer. Current projection year.
-#' @param TSIndex Integer. Time-step index of `Year`.
-#' @param sim Integer. Simulation index.
-#' @param TAC_by_Complex Named list of per-fleet TAC vectors, `NULL` where a
-#'   complex has no TAC.
-#' @param TACType_by_Complex,TACUnit_by_Complex Per-complex `"Removals"`/
-#'   `"Landings"` and `"Biomass"`/`"Number"` vectors.
-#' @param MaxFleetEffort Numeric vector (length `nFleet`), or `NULL`.
-#' @param Effort_start `[nComplex x nFleet]` matrix of warm-start efforts, or
-#'   `NULL`. Each complex's root find starts from its own row; rows that are not
-#'   fully finite fall back to a cold start.
-#' @param ... Passed to `.OptEffortSinglestock()`.
-#'
-#' @return A `[nComplex x nFleet]` matrix of efforts. Rows for complexes
-#'   without a TAC are `NA`, and are ignored when the efforts are combined.
-#' @keywords internal
+# Effort at which each complex reaches its own TAC
+#
+# Solves, for every complex with a TAC, the fleet effort at which that
+# complex's catch equals it.
 .SolveEffortByComplex <- function(Proj, Year, TSIndex, sim,
                                   TAC_by_Complex,
                                   TACType_by_Complex,
@@ -134,7 +120,9 @@
   nComplex <- length(TAC_by_Complex)
   nFleet   <- nFleet(Proj)
 
-  out <- matrix(NA_real_, nrow = nComplex, ncol = nFleet)
+  out          <- matrix(NA_real_, nrow = nComplex, ncol = nFleet)
+  converged_cx <- rep(NA, nComplex)
+  saturated_cx <- rep(NA, nComplex)
 
   for (cx in seq_len(nComplex)) {
     if (is.null(TAC_by_Complex[[cx]])) next
@@ -142,7 +130,7 @@
     start_cx <- if (is.null(Effort_start)) NULL else Effort_start[cx, ]
     if (!is.null(start_cx) && !all(is.finite(start_cx))) start_cx <- NULL
 
-    out[cx, ] <- .OptEffortSinglestock(
+    solved <- .OptEffortSingleStock(
       Proj               = Proj,
       Year               = Year,
       TSIndex            = TSIndex,
@@ -154,35 +142,25 @@
       cx                 = cx,
       Effort_start       = start_cx,
       ...
-    )$Effort
+    )
+    out[cx, ]        <- solved$Effort
+    converged_cx[cx] <- solved$converged
+    saturated_cx[cx] <- solved$saturated
   }
 
+  attr(out, "converged") <- converged_cx
+  attr(out, "saturated") <- saturated_cx
   out
 }
 
-#' Combine per-complex efforts into one effort per fleet
-#'
-#' Compliance sets how far a fleet respects each complex's TAC as a cap.
-#' Full compliance stops the fleet at the first TAC reached; zero compliance
-#' lets it run until the last TAC is reached, overshooting the tighter ones.
-#'
-#' \deqn{E^*_f = \min_c \left[ \kappa_{fc} E_{fc} +
-#'   (1 - \kappa_{fc}) \max_c E_{fc} \right]}
-#'
-#' Each complex contributes its own effort in proportion to how far the fleet
-#' complies with it, and the effort that fills every quota in proportion to how
-#' far it does not.
-#'
-#' @param EffortByComplex `[nComplex x nFleet]` matrix from
-#'   `.SolveEffortByComplex()`. `NA` rows are ignored.
-#' @param Compliance `[nFleet x nComplex]` matrix from
-#'   `.ResolveComplianceMatrix()`. `NA` entries take `default`.
-#' @param default Numeric. Compliance used where unset. Default `1`, i.e. a
-#'   TAC is a hard cap.
-#'
-#' @return Numeric vector of length `nFleet`. `NA` for fleets with no TAC in
-#'   any complex, which the caller leaves unchanged.
-#' @keywords internal
+# Combine per-complex efforts into one effort per fleet
+#
+# Compliance sets how far a fleet respects each complex's TAC as a cap.
+# Full compliance stops the fleet at the first TAC reached; zero compliance
+# lets it run until the last TAC is reached, overshooting the tighter ones.
+#
+# \deqn{E^*_f = \min_c \left[ \kappa_{fc} E_{fc} +
+#   (1 - \kappa_{fc}) \max_c E_{fc} \right]}
 .CombineEffortByCompliance <- function(EffortByComplex, Compliance,
                                        default = 1) {
 
@@ -231,8 +209,8 @@
   
   for (i in seq_len(nComplex)) {
     stocks   <- Complexes[[i]]
-    tac_type <- TACType_by_Complex[[i]]   # length nFleet
-    tac_unit <- TACUnit_by_Complex[[i]]   # length nFleet
+    tac_type <- TACType_by_Complex[[i]]  
+    tac_unit <- TACUnit_by_Complex[[i]] 
     
     for (fl in seq_len(nFleet)) {
       
@@ -301,7 +279,7 @@
   active_complex <- .GetActiveComplexes(Proj, sim, TSIndex, Complexes, FleetNames, n_recent)
 
   STarget <- Proj@Misc$StockTargeting[sim, , , , drop = FALSE] |> abind::adrop(1)
-  Delta_prev_stock <- t(STarget[, , TSIndex - 1, drop = FALSE] |> abind::adrop(3))  # [nFleet x nStock]
+  Delta_prev_stock <- t(STarget[, , TSIndex - 1, drop = FALSE] |> abind::adrop(3))  
 
   Delta_prev <- matrix(0, nFleet, nComplex,
                        dimnames = list(FleetNames, names(Complexes)))
@@ -348,6 +326,40 @@
   ld
 }
 
+.CheckComplexTACAttainment <- function(Proj, sim, TSIndex, Year, Effort_final, Delta_final,
+                                       TAC_by_Complex, TACType_by_Complex, TACUnit_by_Complex,
+                                       EbyC_final) {
+
+  ComplexNames <- names(TAC_by_Complex)
+  nComplex     <- length(TAC_by_Complex)
+
+  ProjFinal <- .WriteStateToProj(Proj, sim, TSIndex, Effort = Effort_final, Delta = Delta_final)
+  CatchMat  <- .CalcFleetCatch(ProjFinal, sim, TSIndex, Year, TACType_by_Complex, TACUnit_by_Complex)
+
+  TAC_vec   <- vapply(TAC_by_Complex, function(x) if (is.null(x)) NA_real_ else sum(x, na.rm = TRUE), numeric(1))
+  Catch_vec <- stats::setNames(rowSums(CatchMat, na.rm = TRUE), ComplexNames)
+
+  has_tac <- is.finite(TAC_vec) & TAC_vec > 0
+  tol_cx  <- pmax(1e-3, 1e-6 * abs(TAC_vec))
+  hit     <- !has_tac | abs(Catch_vec - TAC_vec) < tol_cx
+
+  converged_cx <- attr(EbyC_final, "converged")
+  saturated_cx <- attr(EbyC_final, "saturated")
+  if (is.null(converged_cx))
+    converged_cx <- rep(NA, nComplex)
+  if (is.null(saturated_cx))
+    saturated_cx <- rep(NA, nComplex)
+
+  choke_ok   <- !hit & !is.na(converged_cx) & converged_cx
+  cap_ok     <- !hit & !is.na(saturated_cx) & saturated_cx
+  unresolved <- !hit & !choke_ok & !cap_ok
+
+  converged <- all(hit)
+  saturated <- if (converged) NA else !any(unresolved)
+
+  list(converged = converged, saturated = saturated, TAC = TAC_vec, Catch = Catch_vec)
+}
+
 .ResolveChokeEffort <- function(Proj, sim, TSIndex, Year, Delta,
                                 TAC_by_Complex, TACType_by_Complex,
                                 TACUnit_by_Complex, Compliance,
@@ -375,29 +387,69 @@
 }
 
 
-.OptEffortMsSolver <- function(obj_fn, params_init, maxEval, tol) {
+# Solve the targeting-mix (Delta) objective, with multi-start restarts
+#
+# Minimises `obj_fn` (a concave-in-catch, penalised-for-drift objective
+# over the packed log targeting-mix parameters) via BFGS, with a
+# Nelder-Mead fallback when BFGS doesn't converge - as before. On top of
+# that single search, a small, fixed number of additional restarts are
+# tried from deterministically offset starting points, and the best result
+# (lowest `obj_fn` value) across all of them is kept.
+.OptEffortMsSolver <- function(obj_fn, params_init, maxEval, tol,
+                               n_restarts = 3, restart_scale = 2) {
+
+  .RunOnce <- function(p0, budget) {
     opt <- tryCatch(
-    optim(params_init, obj_fn, method = "BFGS",
-          control = list(maxit  = maxEval,
-                         reltol = tol,
-                         ndeps  = rep(1e-4, length(params_init)))),
-    error = function(e) list(convergence = 1L, par = params_init,
-                             counts = c(`function` = 0L))
-  )
-  eval_used <- as.integer(opt$counts["function"])
-  converged <- opt$convergence == 0L
-  
-  if (!converged && eval_used < maxEval) {
-    opt2 <- tryCatch(
-      optim(opt$par, obj_fn, method = "Nelder-Mead",
-            control = list(maxit  = maxEval - eval_used,
-                           reltol = tol)),
-      error = function(e) opt
+      optim(p0, obj_fn, method = "BFGS",
+            control = list(maxit  = budget,
+                           reltol = tol,
+                           ndeps  = rep(1e-4, length(p0)))),
+      error = function(e) list(convergence = 1L, par = p0,
+                               counts = c(`function` = 0L))
     )
-    if (opt2$convergence == 0L) {
-      converged <- TRUE
-      opt       <- opt2
+    eval_used <- as.integer(opt$counts["function"])
+    converged <- opt$convergence == 0L
+
+    if (!converged && eval_used < budget) {
+      opt2 <- tryCatch(
+        optim(opt$par, obj_fn, method = "Nelder-Mead",
+              control = list(maxit  = budget - eval_used,
+                             reltol = tol)),
+        error = function(e) opt
+      )
+      if (opt2$convergence == 0L) {
+        converged <- TRUE
+        opt       <- opt2
+      }
+    }
+    list(params = opt$par, converged = converged, value = obj_fn(opt$par))
+  }
+
+  best <- .RunOnce(params_init, maxEval)
+
+  np <- length(params_init)
+  if (n_restarts > 0 && np > 0) {
+    restart_budget <- max(20L, as.integer(maxEval / (n_restarts + 1)))
+    offsets        <- .WeylOffsets(np, n_restarts)
+
+    for (i in seq_len(n_restarts)) {
+      p0   <- params_init + restart_scale * offsets[, i]
+      cand <- .RunOnce(p0, restart_budget)
+      if (is.finite(cand$value) && cand$value < best$value) best <- cand
     }
   }
-  list(params = opt$par, converged = converged)
+
+  list(params = best$params, converged = best$converged)
+}
+
+
+.WeylOffsets <- function(np, n) {
+  primes <- c(2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53)
+  irr    <- sqrt(primes[(seq_len(np) - 1) %% length(primes) + 1])
+  offsets <- matrix(NA_real_, nrow = np, ncol = n)
+  for (i in seq_len(n)) {
+    frac          <- ((i + 1) * irr) %% 1
+    offsets[, i] <- 2 * frac - 1
+  }
+  offsets
 }
