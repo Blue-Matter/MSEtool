@@ -18,9 +18,12 @@
 #'   Set to `Inf` to disable truncation.
 #' @param n_recent `integer(1)`. For `Period = "Projection"` only: number of
 #'   recent historical years used to determine whether a stock has been
-#'   continuously inactive at the end of history. A stock with zero targeting
-#'   weight in all `n_recent` years is treated as inactive and receives
-#'   \eqn{T_{s,t} = 0} throughout the projection. Default `5`.
+#'   continuously inactive at the end of history (converted to time steps as
+#'   `n_recent * OM@Seasons`, and capped to however much history is
+#'   available). A stock with zero targeting weight throughout that window
+#'   is treated as inactive and receives \eqn{T_{s,t} = 0} throughout the
+#'   projection. Default `NULL`, which falls back to
+#'   `OM@Control$StockTargeting$n_recent`, then to `5`.
 #' @param seed `numeric(1)`. Offset added to `OM@Seed` for the random number
 #'   generator, ensuring independence from other stochastic processes.
 #'   Default `101`.
@@ -79,12 +82,14 @@
 GenerateStockTargeting <- function(OM,
                                    Period = c('Historical', 'Projection'),
                                    TruncSD = 2,
-                                   n_recent = 5,
+                                   n_recent = NULL,
                                    seed = 101) {
-  
+
   CheckPackage('MASS')
-  
+
   Period <- match.arg(Period)
+  n_recent <- n_recent %||% OM@Control$StockTargeting$n_recent %||% 5
+  n_recent <- n_recent * OM@Seasons
   .SetSeed(OM@Seed + seed)
   
   years   <- Years(OM, Period)

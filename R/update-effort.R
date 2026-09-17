@@ -14,6 +14,12 @@
 #'   stock-specific targeting weights for multi-stock OMs - see
 #'   `.OptTargetingMultiStock()`.
 #' @return Updated `Proj` object.
+#'
+#' @details
+#' For multi-stock/multi-complex `OM`s, the choke/targeting optimizer used
+#' to (re)optimise stock-specific targeting weights is tuned by
+#' `OM@Control$EffortOptim`.  See `.UpdateTAC()` for the recognized elements
+#' (`lambda_scale`, `n_recent`, `maxEval`).
 #' @keywords internal
 .UpdateEffort <- function(Proj,
                           Year,
@@ -30,6 +36,11 @@
   if (.AllAdviceNull(AdviceSimList, 'Effort'))
     return(Proj)
 
+  lambda_scale <- Proj@OM@Control$EffortOptim$lambda_scale %||% 1
+  n_recent     <- Proj@OM@Control$EffortOptim$n_recent     %||% 5
+  n_recent     <- n_recent * Proj@OM@Seasons
+  maxEval      <- Proj@OM@Control$EffortOptim$maxEval      %||% 500
+
   for (sim in seq_len(nSim)) {
     AdviceList <- AdviceSimList[[sim]]
     LastAdviceList <- LastAdviceSimList[[sim]]
@@ -45,7 +56,10 @@
       FleetNames     = FleetNames,
       StockNames     = StockNames,
       Complexes      = Proj@OM@Complexes,
-      Areas          = Areas
+      Areas          = Areas,
+      lambda_scale   = lambda_scale,
+      n_recent       = n_recent,
+      maxEval        = maxEval
     )
   }
 

@@ -12,24 +12,42 @@
 #' @param StockNames Character vector of stock names (unused here, kept for
 #'   consistent `update_funs` signature).
 #' @return Updated `Proj` object.
+#'
+#' @details
+#' For multi-complex `OM`s, the choke/targeting optimizer used to resolve
+#' effort across complexes is tuned by `OM@Control$EffortOptim`, a named
+#' list with elements:
+#' - `lambda_scale`: `numeric(1)`, default `1`. Scales the complex-compliance
+#'   penalty `lambda` passed to [.OptEffortChoke()].
+#' - `n_recent`: `integer(1)`, default `5`. Number of recent *years* used to
+#'   determine which complexes are currently active; converted to time
+#'   steps (`n_recent * OM@Seasons`) before being passed to
+#'   [.ResolveLambda()], and capped to however much history is available.
+#' - `maxEval`: `integer(1)`, default `500`. Maximum solver evaluations
+#'   passed to [.OptEffortChoke()].
 #' @keywords internal
 .UpdateTAC <- function(Proj,
-                       Year, 
-                       AdviceSimList, 
-                       LastAdviceSimList, 
-                       YearsHist, 
-                       YearsProj, 
-                       Areas, 
+                       Year,
+                       AdviceSimList,
+                       LastAdviceSimList,
+                       YearsHist,
+                       YearsProj,
+                       Areas,
                        FleetNames,
                        StockNames) {
-  
+
   TSIndex <- match(Year, c(YearsHist, YearsProj))
-  
+
   if (.AllAdviceNull(AdviceSimList, 'TAC'))
     return(Proj)
-  
+
+  lambda_scale <- Proj@OM@Control$EffortOptim$lambda_scale %||% 1
+  n_recent     <- Proj@OM@Control$EffortOptim$n_recent     %||% 5
+  n_recent     <- n_recent * Proj@OM@Seasons
+  maxEval      <- Proj@OM@Control$EffortOptim$maxEval      %||% 500
+
   for (sim in seq_len(Proj@OM@nSim)) {
-    
+
     AdviceList <- AdviceSimList[[sim]]
     LastAdviceList <- LastAdviceSimList[[sim]]
 
@@ -42,17 +60,18 @@
       LastAdviceList  = LastAdviceList,
       StockNames      = StockNames,
       FleetNames      = FleetNames,
-      Areas           = Areas
+      Areas           = Areas,
+      lambda_scale    = lambda_scale,
+      n_recent        = n_recent,
+      maxEval         = maxEval
     )
   }
-  
+
   Proj
 }
 
 
-# TODO add n_recent to OM@Control
-
-.UpdateTACSim <- function(Proj, 
+.UpdateTACSim <- function(Proj,
                            sim, 
                            Year,
                            TSIndex,
