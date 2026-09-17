@@ -5,9 +5,8 @@
 #' (`OM@Seasons > 1`) into an annual Operating Model (`Seasons = 1`) that
 #' approximates the same annual-scale fishery dynamics. 
 #'
-#' @param OM A seasonal [OM()] object (`OM@Seasons > 1`). Every stock's
-#'   `Ages@Units` must match `OM@Seasons` (e.g. `Seasons = 4` requires
-#'   `Ages@Units = "quarter"`). Multi-area (`nArea > 1`) OMs are not yet supported.
+#' @param OM A seasonal [OM()] object (`OM@Seasons > 1`). 
+#' Multi-area (`nArea > 1`) OMs are not yet supported.
 #' @param silent `logical(1)`. If `TRUE`, suppresses informational console
 #'   messages. Defaults to `FALSE`.
 #'
@@ -271,6 +270,29 @@ CollapseSeasons <- function(OM, silent = FALSE) {
   out
 }
 
+.CollapseRecDevWeighted <- function(RecDev, R0, IndexMap) {
+  if (is.null(RecDev)) return(NULL)
+
+  origYears  <- as.numeric(dimnames(RecDev)$Year)
+  origIdx    <- match(origYears, IndexMap$SeasonalYears)
+  origBlocks <- sort(unique(IndexMap$YearBlock[origIdx]))
+
+  RecDev <- .CollapseEnsureFullYears(RecDev, IndexMap)
+  R0     <- .CollapseEnsureFullYears(R0, IndexMap)
+
+  WeightedSum <- .CollapseYearSum(ArrayMultiply(RecDev, R0), IndexMap)
+  R0Sum       <- .CollapseYearSum(R0, IndexMap)
+
+  keep <- as.numeric(dimnames(WeightedSum)$Year) %in% IndexMap$AnnualYears[origBlocks]
+  WeightedSum <- WeightedSum[, keep, drop = FALSE]
+  R0Sum       <- R0Sum[, keep, drop = FALSE]
+
+  out <- ArrayDivide(WeightedSum, R0Sum)
+  out[out == 0] <- 1
+  out
+}
+
+
 .CollapseSpatialAtAge <- function(arr, AgeMap, IndexMap, Stock) {
   if (is.null(arr)) return(NULL)
   dn <- names(dimnames(arr))
@@ -289,9 +311,13 @@ CollapseSeasons <- function(OM, silent = FALSE) {
   out
 }
 
-.CollapseAtAgeParam <- function(x, AgeMap, IndexMap) {
+.CollapseAtAgeParam <- function(x, AgeMap, IndexMap, Stock) {
   if (is.null(x) || !is.array(x) || !"Age" %in% names(dimnames(x)))
     return(x)
+  if (dim(x)[which(names(dimnames(x)) == "Age")] != length(Stock@Ages@Classes)) {
+    if (length(x) == 1) return(as.numeric(x))
+    return(x)
+  }
   .CollapseCohortPathPick(x, AgeMap, IndexMap)
 }
 
@@ -340,7 +366,7 @@ CollapseSeasons <- function(OM, silent = FALSE) {
   NewStock@Length <- Length(
     MeanAtAge = Len_annual,
     Units     = Stock@Length@Units,
-    CVatAge   = .CollapseAtAgeParam(Stock@Length@CVatAge, AgeMap, IndexMap),
+    CVatAge   = .CollapseAtAgeParam(Stock@Length@CVatAge, AgeMap, IndexMap, Stock),
     Dist      = Stock@Length@Dist,
     TruncSD   = Stock@Length@TruncSD
   )
@@ -348,7 +374,7 @@ CollapseSeasons <- function(OM, silent = FALSE) {
   NewStock@Weight <- Weight(
     MeanAtAge = Wt_annual,
     Units     = Stock@Weight@Units,
-    CVatAge   = .CollapseAtAgeParam(Stock@Weight@CVatAge, AgeMap, IndexMap),
+    CVatAge   = .CollapseAtAgeParam(Stock@Weight@CVatAge, AgeMap, IndexMap, Stock),
     Dist      = Stock@Weight@Dist,
     TruncSD   = Stock@Weight@TruncSD
   )
@@ -361,13 +387,27 @@ CollapseSeasons <- function(OM, silent = FALSE) {
   NewStock@Spatial@Movement     <- .CollapseSpatialAtAge(Stock@Spatial@Movement,     AgeMap, IndexMap, Stock)
 
   NewStock@SRR@R0         <- R0_annual
-  NewStock@SRR@RecDevInit <- NULL
-  NewStock@SRR@RecDevHist <- NULL
-  NewStock@SRR@RecDevProj <- NULL
+  NewStock@SRR@RecDevHist <- .CollapseRecDevWeighted(Stock@SRR@RecDevHist, R0_seasonal_adj, IndexMap)
+  NewStock@SRR@RecDevProj <- .CollapseRecDevWeighted(Stock@SRR@RecDevProj, R0_seasonal_adj, IndexMap)
+  NewStock@SRR@RecDevInit <- .CollapseRecDevInit(Stock@SRR@RecDevInit, AgeMap)
+
   if (length(Stock@SRR@SpawnLag))
     NewStock@SRR@SpawnLag <- round(Stock@SRR@SpawnLag / AgeMap$AgeSeasons)
 
+  if (length(Stock@SRR@SpawnTimeFrac))
+    NewStock@SRR@SpawnTimeFrac <- Stock@SRR@SpawnTimeFrac / AgeMap$AgeSeasons
+
   NewStock
+}
+
+
+#' @keywords internal
+.CollapseRecDevInit <- function(RecDevInit, AgeMap) {
+  if (is.null(RecDevInit)) return(NULL)
+
+  idx <- AgeMap$ExactIdx[-1] - 1L
+  RecDevInit[, idx, drop = FALSE] |>
+    `dimnames<-`(list(Sim = dimnames(RecDevInit)$Sim, Age = AgeMap$AnnualAges[-1]))
 }
 
 .CollapseSeasonsFleet <- function(Fleet, AgeMap, IndexMap) {
