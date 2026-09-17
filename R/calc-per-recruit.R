@@ -687,9 +687,13 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
     sp_ind   <- match(names(SPFrom), names(SPRFList))
     SPRFList <- SPRFList[sp_ind]
   }
-    
-  SPR <- purrr::map2(SPRFList, SPR0List, \(SPRF, SPR0)
-                     ArrayDivide(SPRF, SPR0)) |>
+
+  StockNamesOrdered <- names(NPRFList)
+  SPR <- purrr::map(StockNamesOrdered, \(stock_name) {
+    src <- StockNamesOrdered[SPFrom[stock_name]]
+    ArrayDivide(SPRFList[[src]], SPR0List[[src]])
+  }) |>
+    stats::setNames(StockNamesOrdered) |>
     List2Array('Stock', pos = 2) |>
     .ArraySubsetYear(Years)
   
