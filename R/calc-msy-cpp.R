@@ -166,8 +166,12 @@
   SPR0_full <- flat$SPR0_full
 
   SPR0_vals <- flat$SPR0_target[1, StockNames, 1]
-  SPR_vals  <- SPRF_reordered[StockNames] / SPR0_vals
-  SPR_vals[is.na(SPR_vals)]       <- 0   
+  names(SPR0_vals) <- StockNames
+
+  SPFromNames <- StockNames[inputs$SPFrom[StockNames]]
+  SPR_vals    <- SPRF_reordered[SPFromNames] / SPR0_vals[SPFromNames]
+  names(SPR_vals) <- StockNames
+  SPR_vals[is.na(SPR_vals)]       <- 0
   SPR_vals[is.infinite(SPR_vals)] <- 0
   SPR <- .Wrap(SPR_vals)
 
