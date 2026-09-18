@@ -50,7 +50,7 @@
 
   Proj <- Hist |> ReduceNSim(nSim)
 
-  Proj <- .CheckAllocation(Proj)
+  Proj <- .CheckFleetAllocation(Proj)
   Proj <- .CheckSeasonalAllocation(Proj)
 
   Proj <- .PrepHistMisc(Proj)

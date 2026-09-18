@@ -71,7 +71,7 @@
 #'   calibrated to reproduce. If left unspecified for a stock, it is
 #'   derived from relative Effort times Catchability in the final
 #'   historical year. Default `NULL`.
-#' @param Allocation List. Named list of length 0 or the number of stock
+#' @param FleetAllocation List. Named list of length 0 or the number of stock
 #'   complexes. Each element is an `nSim` by `nFleet` matrix, with rows
 #'   summing to 1, controlling how the TAC is split among fleets during
 #'   projection. If unspecified it falls back to `CatchFrac`, and then to
@@ -278,7 +278,7 @@ OM <- function(Name        = "A new OM object",
                DataLag     = 0,
                
                CatchFrac   = NULL,
-               Allocation  = NULL,
+               FleetAllocation  = NULL,
                HistoricalWeight   = NULL,
                SeasonalAllocation = NULL,
                EFactor     = NULL,
@@ -362,7 +362,7 @@ OM <- function(Name        = "A new OM object",
   .Object@DataLag     <- DataLag
   
   .Object@CatchFrac   <- CatchFrac
-  .Object@Allocation  <- Allocation
+  .Object@FleetAllocation  <- FleetAllocation
   .Object@HistoricalWeight   <- HistoricalWeight
   .Object@SeasonalAllocation <- SeasonalAllocation
   .Object@EFactor     <- EFactor
@@ -578,11 +578,11 @@ CatchFrac <- function(x) .IsHist(x, "CatchFrac")
 
 #' @rdname OM-accessors
 #' @export
-Allocation <- function(x) .IsHist(x, "Allocation")
+FleetAllocation <- function(x) .IsHist(x, "FleetAllocation")
 
 #' @rdname OM-accessors
 #' @export
-`Allocation<-` <- function(x, value) .AssignSlot(x, value, "Allocation")
+`FleetAllocation<-` <- function(x, value) .AssignSlot(x, value, "FleetAllocation")
 
 #' @rdname OM-accessors
 #' @export

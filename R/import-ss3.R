@@ -61,7 +61,7 @@
 #'   vs. thousands) as metadata, so this cannot be inferred and must be
 #'   supplied by the user if not `1` (absolute numbers of fish). Default `1`.
 #' @param AllocationYears Integer specifying the number of most recent
-#'   historical years used to calculate `OM@Allocation`: each fleet's share of
+#'   historical years used to calculate `OM@FleetAllocation`: each fleet's share of
 #'   total removals biomass (landings + discards), used to split an aggregate
 #'   TAC across fleets under multi-fleet TAC-based MPs. Averaged over this
 #'   many years ending at the last historical year. Default `3`.
@@ -305,7 +305,7 @@ ImportSS <- function(SSDir,
                       )
   )
 
-  OM@Allocation <- Allocation
+  OM@FleetAllocation <- Allocation
   OM
 }
 

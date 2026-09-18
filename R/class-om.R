@@ -64,11 +64,17 @@
 #'   it is the target fleet split that catchability is calibrated to
 #'   reproduce. If left unspecified for a stock, it is derived from relative
 #'   Effort times Catchability in the final historical year. See [OM()].
-#' @slot Allocation List. Named list of length 0 or the number of stock
+#' @slot FleetAllocation List. Named list of length 0 or the number of stock
 #'   complexes. Each element is an `nSim` by `nFleet` matrix, with rows
 #'   summing to 1, controlling how the TAC is split among fleets during
-#'   projection. If unspecified it falls back to `CatchFrac`, and then to
-#'   the mean of removals over the last five historical years. See [OM()].
+#'   projection. If unspecified it falls back to `Allocation` (retained for
+#'   backwards compatibility - see below), then `CatchFrac`, then the mean of
+#'   removals over the last five historical years. See [OM()].
+#' @slot Allocation List. Deprecated alias for `FleetAllocation`, retained
+#'   only so that objects saved before the rename still carry their data. If
+#'   `FleetAllocation` is unset and `Allocation` is, its value is copied over
+#'   during `Simulate()`/`Project()`. Not user-facing, set `FleetAllocation`
+#'   directly instead.
 #' @slot HistoricalWeight List. Named list of length 0 or the number of
 #'   stock complexes. Each element is a named numeric vector over fleet
 #'   names, values in `[0,1]`, giving the weight placed on the historical
@@ -199,6 +205,7 @@ setClass(
     DataLag='numeric',
     
     CatchFrac='list.null',
+    FleetAllocation='list.null',
     Allocation='list.null',
     HistoricalWeight='list.null',
     SeasonalAllocation='list.null',

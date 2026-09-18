@@ -103,7 +103,7 @@ CombineFleets <- function(OM, FleetList = NULL, silent = FALSE) {
     }
   }
 
-  OM@Allocation <- purrr::map(OM@Allocation, \(allocate) {
+  OM@FleetAllocation <- purrr::map(OM@FleetAllocation, \(allocate) {
     purrr::imap(FleetIndList, \(fleet_ind, idx)
                 allocate[,fleet_ind, drop=FALSE] |> SumOverFleet()
     ) |> List2Array()

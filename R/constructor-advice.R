@@ -106,7 +106,7 @@
 #' `nFleet` specifying per-fleet values.
 #'
 #'  * single numeric value: global TAC distributed across
-#' the stocks and fleets in the [Data()] object according to `Allocation(OM)`.
+#' the stocks and fleets in the [Data()] object according to `FleetAllocation(OM)`.
 #'
 #'  * numeric vector length `nFleet`: fleet-specific TAC.
 #'

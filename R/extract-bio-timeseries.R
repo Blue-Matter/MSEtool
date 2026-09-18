@@ -227,7 +227,7 @@ VBiomass <- function(object,
   n_sim       <- nSim(OM)
   n_area      <- nArea(OM)
   Complexes   <- OM@Complexes
-  Allocation  <- OM@Allocation
+  Allocation  <- OM@FleetAllocation
   n_complex   <- length(Complexes)
   n_year      <- length(Years)
 

@@ -27,9 +27,9 @@
         if (nFleet == 1) {
           out[[i]] <- as.numeric(TAC)
         } else {
-          allocation <- Proj@OM@Allocation[[i]]
+          allocation <- Proj@OM@FleetAllocation[[i]]
           if (is.null(allocation))
-            cli::cli_abort("Proj@OM@Allocation[[{i}]] is NULL but TAC is a scalar with nFleet > 1", .internal=TRUE)
+            cli::cli_abort("Proj@OM@FleetAllocation[[{i}]] is NULL but TAC is a scalar with nFleet > 1", .internal=TRUE)
           all_sim  <- min(nrow(allocation), sim)
           out[[i]] <- as.numeric(TAC) * allocation[all_sim, ]
         }

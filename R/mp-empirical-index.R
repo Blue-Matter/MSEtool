@@ -78,7 +78,7 @@
 #' @param Allocation `NULL` (default), or a positive numeric vector of length
 #'   `nFleet` giving the fraction of the TAC allocated to each fleet
 #'   (normalised to sum to `1`). `NULL` returns a single stock-wide TAC,
-#'   which the framework then splits across fleets using `Allocation(OM)`
+#'   which the framework then splits across fleets using `FleetAllocation(OM)`
 #'   (see [Advice()]).
 #'
 #' @return An [advice-class] object with `TAC` set.
