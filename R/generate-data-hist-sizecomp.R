@@ -102,10 +102,6 @@
   nTS    <- length(HistYears)
   nFleet <- length(FleetNames)
 
-  # Aggregate true catch-at-size over stocks and areas, per fleet: fleets
-  # are not stacked into a shared array since they need not share a
-  # size-class grid (see compdata-class). Each element is [Class x Year]
-  # with that fleet's own Class dimnames.
   CatchAtSizeByFleet <- purrr::map(seq_len(nFleet), \(fl) {
     purrr::map(slot(Hist, type)[stocks], \(stock_level) {
       catch_n <- stock_level[[fl]]
@@ -157,7 +153,7 @@
     hasShift <- !is.null(CompObs@Shift)
     if (hasShift) {
       sim_sh <- min(x, dim(CompObs@Shift)[1])
-      Shift  <- .SubsetYear(CompObs@Shift, HistYears)[sim_sh,, ]  # [nYear x nBin]
+      Shift  <- .SubsetYear(CompObs@Shift, HistYears)[sim_sh,, ]  
     }
 
     for (yr in seq_len(nTS)) {

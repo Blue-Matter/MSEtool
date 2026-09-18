@@ -95,17 +95,7 @@
   ClassesList <- CompData@Classes
   nSizeMax    <- dim(CompData@Value)[3]
   Value       <- CompData@Value
-
-  CatchAtSizeByFleet <- purrr::map(seq_len(nFleet), \(fl) {
-    purrr::map(slot(Proj, type)[stocks], \(stock_level) {
-      catch_n <- stock_level[[fl]]
-      sim_x   <- min(x, dim(catch_n)[1])
-      catch_n[sim_x,, TSIndex,,drop=FALSE] |>
-        abind::adrop(drop = c(1, 3)) |>
-        SumOverArea()
-    }) |> List2Array('Stock') |>
-      SumOverStock()
-  }) |> stats::setNames(FleetNames)
+  StockLevels <- slot(Proj, type)[stocks]
 
   NewValue <- array(NA_real_,
                     dim      = c(1L, nFleet, nSizeMax),
@@ -128,6 +118,17 @@
     if (hasOMVal) {
       NewValue[1, fl, seq_len(nSize)] <- slot(omData, type)@Value[TSIndex, fl, seq_len(nSize)]
     } else {
+      true_n <- purrr::map(StockLevels, \(stock_level) {
+        if (is.null(stock_level) || fl > length(stock_level)) return(NULL)
+        catch_n <- stock_level[[fl]]
+        sim_x   <- min(x, dim(catch_n)[1])
+        catch_n[sim_x,, TSIndex,,drop=FALSE] |>
+          abind::adrop(drop = c(1, 3)) |>
+          SumOverArea()
+      })
+      if (any(purrr::map_lgl(true_n, is.null))) next
+      true_n <- true_n |> List2Array('Stock') |> SumOverStock()
+
       sim_ss <- min(x, nrow(Obs@SampleSize))
       ss     <- .ArraySubsetYear(Obs@SampleSize, DataYear)[sim_ss]
 
@@ -147,7 +148,6 @@
         1
       }
 
-      true_n  <- CatchAtSizeByFleet[[fl]]
       total_n <- sum(true_n, na.rm = TRUE)
       if (is.na(total_n) || total_n == 0) next
 
@@ -172,7 +172,6 @@
   CompData
 }
 
-# Vectorized across all sims - see .GenProjDataAgeCompAll() for rationale.
 .GenProjDataSizeCompAll <- function(Proj, DataYear, YearsAll, i, stocks, nSim,
                                     type = c('LandingsAtSize', 'DiscardsAtSize')) {
   type <- match.arg(type)
@@ -187,13 +186,7 @@
   nFleet      <- length(FleetNames)
   ClassesList <- CompData1@Classes
   nSizeMax    <- dim(CompData1@Value)[3]
-
-  CatchAtSizeByFleetAll <- purrr::map(seq_len(nFleet), \(fl) {
-    purrr::map(slot(Proj, type)[stocks], \(stock_level) {
-      catch_n <- stock_level[[fl]]
-      catch_n[,, TSIndex,,drop=FALSE] |> abind::adrop(drop = 3) |> SumOverArea()
-    }) |> List2Array('Stock') |> SumOverStock()
-  }) |> stats::setNames(FleetNames)
+  StockLevels <- slot(Proj, type)[stocks]
 
   NewValueAll <- array(NA_real_, dim = c(nSim, nFleet, nSizeMax))
   omData      <- Proj@OM@Data[[i]]
@@ -214,6 +207,14 @@
       next
     }
 
+    true_n_all <- purrr::map(StockLevels, \(stock_level) {
+      if (is.null(stock_level) || fl > length(stock_level)) return(NULL)
+      catch_n <- stock_level[[fl]]
+      catch_n[,, TSIndex,,drop=FALSE] |> abind::adrop(drop = 3) |> SumOverArea()
+    })
+    if (any(purrr::map_lgl(true_n_all, is.null))) next
+    true_n_all <- true_n_all |> List2Array('Stock') |> SumOverStock()
+
     sim_ss <- pmin(seq_len(nSim), nrow(Obs@SampleSize))
     ss_all <- .ArraySubsetYear(Obs@SampleSize, DataYear)[sim_ss]
 
@@ -227,7 +228,7 @@
       .ArraySubsetYear(Obs@Theta, DataYear)[sim_th]
     } else rep(1, nSim)
 
-    true_n_all  <- CatchAtSizeByFleetAll[[fl]][, seq_len(nSize), drop = FALSE]
+    true_n_all  <- true_n_all[, seq_len(nSize), drop = FALSE]
     total_n_all <- apply(true_n_all, 1, sum, na.rm = TRUE)
 
     for (x in seq_len(nSim)) {
