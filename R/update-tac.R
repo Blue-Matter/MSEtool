@@ -186,6 +186,13 @@
 
   msg <- "Effort/TAC solver: did not converge within tolerance. Realised landings/removals may not match the TAC advised by the MP."
 
+  # Level: single-stock path passes FleetNames (per-fleet TAC/Catch);
+  # the multi-complex/choke path doesn't (per-complex TAC/Catch instead).
+  Level     <- if (!is.null(FleetNames)) 'Fleet' else 'Complex'
+  Names     <- character(0)
+  TAC_out   <- numeric(0)
+  Catch_out <- numeric(0)
+
   if (!is.null(TAC) && !is.null(Catch)) {
     shortfall <- TAC - Catch
     ok <- is.finite(shortfall) & TAC > 0
@@ -200,13 +207,20 @@
                         format(round(Catch[idx], 1), big.mark = ','),
                         round(100 * Catch[idx] / TAC[idx], 1))
       msg <- paste0(msg, " ", paste(detail, collapse = '; '))
+
+      Names     <- nms
+      TAC_out   <- unname(TAC[idx])
+      Catch_out <- unname(Catch[idx])
     }
   }
 
-  Proj@Log$warning <- c(
-    Proj@Log$warning,
-    list(.NewLogEntry(msg, name = 'EffortConvergence', sim = sim, year = Year))
-  )
+  entry        <- .NewLogEntry(msg, name = 'EffortConvergence', sim = sim, year = Year)
+  entry$Level  <- Level
+  entry$Names  <- Names
+  entry$TAC    <- TAC_out
+  entry$Catch  <- Catch_out
+
+  Proj@Log$warning <- c(Proj@Log$warning, list(entry))
   Proj
 }
 
