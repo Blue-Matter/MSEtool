@@ -21,8 +21,7 @@
 #'   penalty `lambda` passed to [.OptEffortChoke()].
 #' - `n_recent`: `integer(1)`, default `5`. Number of recent *years* used to
 #'   determine which complexes are currently active; converted to time
-#'   steps (`n_recent * OM@Seasons`) before being passed to
-#'   [.ResolveLambda()], and capped to however much history is available.
+#'   steps (`n_recent * OM@Seasons`) 
 #' - `maxEval`: `integer(1)`, default `500`. Maximum solver evaluations
 #'   passed to [.OptEffortChoke()].
 #' @keywords internal
