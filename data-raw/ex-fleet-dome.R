@@ -34,10 +34,10 @@ Selectivity(DomeExFleet) <- Selectivity(
 domeOM <- OM(Stock = AlbacoreExStock, Fleet = DomeExFleet, nSim = 5)
 
 patchwork::wrap_plots(
-  PlotSelectivity(domeOM, x = "Length"),
-  PlotSelectivity(domeOM, x = "Age"),
-  PlotMaturity(domeOM, x = "Length"),
-  PlotMaturity(domeOM, x = "Age"),
+  PlotSelectivityCurve(domeOM, x = "Length"),
+  PlotSelectivityCurve(domeOM, x = "Age"),
+  PlotMaturityCurve(domeOM, x = "Length"),
+  PlotMaturityCurve(domeOM, x = "Age"),
   ncol = 2
 )
 

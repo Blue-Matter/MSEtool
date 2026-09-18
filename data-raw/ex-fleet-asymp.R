@@ -44,10 +44,10 @@ Selectivity(AsympExFleet) <- Selectivity(
 asympOM <- OM(Stock = AlbacoreExStock, Fleet = AsympExFleet, nSim = 5)
 
 patchwork::wrap_plots(
-  PlotSelectivity(asympOM, x = "Length"),
-  PlotSelectivity(asympOM, x = "Age"),
-  PlotMaturity(asympOM, x = "Length"),
-  PlotMaturity(asympOM, x = "Age"),
+  PlotSelectivityCurve(asympOM, x = "Length"),
+  PlotSelectivityCurve(asympOM, x = "Age"),
+  PlotMaturityCurve(asympOM, x = "Length"),
+  PlotMaturityCurve(asympOM, x = "Age"),
   ncol = 2
 )
 
