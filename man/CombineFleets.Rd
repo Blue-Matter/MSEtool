@@ -68,6 +68,17 @@ instantaneous-rate scale)
 \strong{WeightFleetRetained} (age-specific retained-F-weighted average)
 \deqn{W^{ret}_{combined}(a) = \frac{\sum_f F^{retain}_{combined,f}(a)\cdot W^{ret}_f(a)}{F^{retain}_{combined}(a)}}
 }
+
+\subsection{Composition data}{
+
+\code{LandingsAtAge}/\code{DiscardsAtAge} counts are summed directly across the
+combined fleets, since age classes are shared by every fleet.
+\code{LandingsAtSize}/\code{DiscardsAtSize} counts are only summed when every fleet
+in a group shares the same size-class bins (within floating-point
+tolerance); if bins differ, that composition is not well-defined for the
+combined fleet, so it is dropped and an assumption is recorded in the
+relevant stock's \code{Data} object (see \code{\link[=Log]{Log()}}).
+}
 }
 \description{
 Combines several fleets into a new aggregated fleet within an Operating

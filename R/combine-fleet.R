@@ -1,8 +1,3 @@
-
-# TODO
-# - Combine Data
-# - Combine Obs
-
 #' Combine Multiple Fleets into a Single Fleet
 #'
 #' Combines several fleets into a new aggregated fleet within an Operating
@@ -67,6 +62,16 @@
 #'
 #' **WeightFleetRetained** (age-specific retained-F-weighted average)
 #' \deqn{W^{ret}_{combined}(a) = \frac{\sum_f F^{retain}_{combined,f}(a)\cdot W^{ret}_f(a)}{F^{retain}_{combined}(a)}}
+#'
+#' ## Composition data
+#'
+#' `LandingsAtAge`/`DiscardsAtAge` counts are summed directly across the
+#' combined fleets, since age classes are shared by every fleet.
+#' `LandingsAtSize`/`DiscardsAtSize` counts are only summed when every fleet
+#' in a group shares the same size-class bins (within floating-point
+#' tolerance); if bins differ, that composition is not well-defined for the
+#' combined fleet, so it is dropped and an assumption is recorded in the
+#' relevant stock's `Data` object (see [Log()]).
 #'
 #'
 #' @export
@@ -236,18 +241,126 @@ CombineFleets <- function(OM, FleetList = NULL, silent = FALSE) {
   OM
 }
 
+.CombineFleetsDataCompAge <- function(OM, FleetList, type=c('LandingsAtAge', 'DiscardsAtAge'),
+                                       silent=FALSE) {
+
+  type <- match.arg(type)
+
+  for (st in seq_along(OM@Data)) {
+    data <- slot(OM@Data[[st]], type)
+
+    if (is.null(data@Value)) next
+
+    drop_ind <- integer(0)
+
+    for (fl in seq_along(FleetList)) {
+      combine_fleets <- FleetList[[fl]]
+
+      ind <- match(combine_fleets, data@Name)
+      if (!length(ind) || any(is.na(ind))) next
+
+      data@Value[,ind[1],] <- apply(data@Value[,ind,, drop=FALSE], c(1,3), sum, na.rm=TRUE)
+
+      dimnames(data@Value)$Fleet[ind[1]] <- names(FleetList)[fl]
+      data@Name[ind[1]] <- names(FleetList)[fl]
+      drop_ind <- c(drop_ind, ind[-1])
+    }
+    # drop fleet columns
+    if (length(drop_ind)) {
+      drop_ind   <- sort(unique(drop_ind))
+      data@Value <- data@Value[,-drop_ind,, drop=FALSE]
+      data@Name  <- data@Name[-drop_ind]
+    }
+
+    slot(OM@Data[[st]], type) <- data
+  }
+  OM
+}
+
+.CombineFleetsDataCompSize <- function(OM, FleetList, type=c('LandingsAtSize', 'DiscardsAtSize'),
+                                        silent=FALSE) {
+
+  type <- match.arg(type)
+
+  for (st in seq_along(OM@Data)) {
+    data <- slot(OM@Data[[st]], type)
+
+    if (is.null(data@Value)) next
+
+    drop_ind <- integer(0)
+
+    for (fl in seq_along(FleetList)) {
+      combine_fleets <- FleetList[[fl]]
+      new_name <- names(FleetList)[fl]
+
+      ind <- match(combine_fleets, data@Name)
+      if (!length(ind) || any(is.na(ind))) next
+
+      classes_ind <- purrr::map(ind, \(i) .CompdataClasses(data, i))
+      same_bins   <- length(classes_ind) < 2 ||
+        all(purrr::map_lgl(classes_ind[-1], \(cl) isTRUE(all.equal(cl, classes_ind[[1]]))))
+
+      if (same_bins) {
+        nC <- length(classes_ind[[1]])
+        data@Value[,ind[1], seq_len(nC)] <- apply(
+          data@Value[,ind, seq_len(nC), drop=FALSE], c(1,3), sum, na.rm=TRUE
+        )
+        dimnames(data@Value)$Fleet[ind[1]] <- new_name
+        data@Name[ind[1]] <- new_name
+        if (is.list(data@Classes))
+          names(data@Classes)[ind[1]] <- new_name
+        drop_ind <- c(drop_ind, ind[-1])
+      } else {
+        if (!silent)
+          cli::cli_alert_info(
+            "{.val {type}}: fleets {.val {combine_fleets}} use different size-class bins - dropping size composition for combined fleet {.val {new_name}}"
+          )
+        OM@Data[[st]] <- .CaptureLog(
+          OM@Data[[st]],
+          string = cli::format_inline(
+            "Fleets {.val {combine_fleets}} use different size-class bins and could not be combined; {.val {type}} was dropped for the new fleet {.val {new_name}}."
+          ),
+          name = "CombineFleets",
+          type = "assumption"
+        )
+        # drop all fleets in this group - no combined column is created
+        drop_ind <- c(drop_ind, ind)
+      }
+    }
+    # drop fleet columns
+    if (length(drop_ind)) {
+      drop_ind     <- sort(unique(drop_ind))
+      data@Value   <- data@Value[,-drop_ind,, drop=FALSE]
+      data@Name    <- data@Name[-drop_ind]
+      if (is.list(data@Classes))
+        data@Classes <- data@Classes[-drop_ind]
+    }
+
+    slot(OM@Data[[st]], type) <- data
+  }
+  OM
+}
+
 .CombineFleetsData <- function(OM, FleetList, silent=FALSE) {
   if (!length(OM@Data)) return(OM)
-  
+
   # Effort TODO
-  
+
   OM <- .CombineFleetsDataCatch(OM, FleetList, type = 'Landings', silent = silent)
-  
+
   OM <- .CombineFleetsDataCatch(OM, FleetList, type = 'Discards', silent = silent)
 
   OM <- .CombineFleetsDataCpue(OM, FleetList, type='CPUE', silent = silent)
-  
+
   OM <- .CombineFleetsDataCpue(OM, FleetList, type='Survey', silent = silent)
+
+  OM <- .CombineFleetsDataCompAge(OM, FleetList, type='LandingsAtAge', silent = silent)
+
+  OM <- .CombineFleetsDataCompAge(OM, FleetList, type='DiscardsAtAge', silent = silent)
+
+  OM <- .CombineFleetsDataCompSize(OM, FleetList, type='LandingsAtSize', silent = silent)
+
+  OM <- .CombineFleetsDataCompSize(OM, FleetList, type='DiscardsAtSize', silent = silent)
 
   OM
 }
