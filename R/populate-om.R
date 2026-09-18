@@ -533,6 +533,34 @@ PopulateOM <- function(OM,
   length(w$from) == 1L && identical(w$from, selfIndex)
 }
 
+.SPFromConnectedGroups <- function(OM) {
+  stockNames <- StockNames(OM)
+  n <- nStock(OM)
+
+  From <- integer(0)
+  To   <- integer(0)
+  for (i in seq_len(n)) {
+    SPFrom <- OM@Stock[[i]]@SRR@SPFrom
+    if (.IsSPFromSelfOnly(SPFrom, i, stockNames)) next
+    w <- .ResolveSPFromWeights(SPFrom, stockNames, i)
+    From <- c(From, rep(i, length(w$from)))
+    To   <- c(To,   w$from)
+  }
+
+  comps <- .HermConnectedComponents(From, To, n)
+
+  purrr::map(comps, \(members) {
+    members    <- sort(members)
+    is_source  <- purrr::map_lgl(members, \(i) .IsSPFromSelfOnly(OM@Stock[[i]]@SRR@SPFrom, i, stockNames))
+    sources    <- members[is_source]
+    dependents <- members[!is_source]
+    weights    <- purrr::map(dependents, \(i)
+      .ResolveSPFromWeights(OM@Stock[[i]]@SRR@SPFrom, stockNames, i)
+    )
+    list(members = members, sources = sources, dependents = dependents, weights = weights)
+  })
+}
+
 .ValidateSPFrom <- function(OM) {
   stocknames <- StockNames(OM)
   nStockOM   <- length(stocknames)
