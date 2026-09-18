@@ -56,19 +56,34 @@ ProjectionYear <- function(Data) {
   length(Data@Years[Data@Years >= Data@YearLH + 1])
 }
 
-#  
+#
 
-#' @describeIn DataHelpers Get the season index for the season this call to an MP is providing advice for.
+#' @describeIn DataHelpers Get the season of a given (or, by default, the
+#'   current/most recent) year. `x` may be a `data` object (`Seasons` is then
+#'   taken from `x@@Seasons` and `Year` defaults to the most recent element of
+#'   `x@@Years`) or a plain numeric vector of years, in which case `Seasons`
+#'   must be supplied.
+#'
+#' @param x A [data] object, or a numeric vector of years.
+#' @param Seasons Integer. Seasons per year. Required when `x` is not a
+#'   `data` object; ignored otherwise.
+#' @param Year Numeric. The year to query. Defaults to the most recent year
+#'   in the resolved years vector.
 #'
 #' @return
-#' - `MPSeasonIndex()`: A list elements `Seasons` the number of seasons and 
-#'   `SeasonInd` the season index  
-#'   
+#' - `SeasonOfYear()`: A list with elements `Seasons` (the number of seasons)
+#'   and `SeasonInd` (the season index, `1..Seasons`, of `Year`).
+#'
 #' @export
-MPSeasonIndex <- function(Data) {
-  Seasons <- Data@Seasons
-  if (is.null(Seasons) || !length(Seasons))
-    Seasons <- 1
+SeasonOfYear <- function(x, Seasons = NULL, Year = NULL) {
+  if (inherits(x, "data")) {
+    Years   <- x@Years
+    Seasons <- x@Seasons
+  } else {
+    Years <- x
+  }
+  Seasons <- max(1L, as.integer(Seasons %||% 1))
+  TSIndex <- if (is.null(Year)) length(Years) else match(Year, Years)
   list(Seasons = Seasons,
-       SeasonInd = ((length(Data@Years) - 1) %% Seasons) + 1)
+       SeasonInd = ((TSIndex - 1L) %% Seasons) + 1L)
 }

@@ -74,7 +74,7 @@ attr(CurrentEffort, 'EverySeason') <- TRUE
 CurrentCatch <- function(Data) {
   CheckCatch(Data)
 
-  si <- MPSeasonIndex(Data)
+  si <- SeasonOfYear(Data)
   TargetRow <- LastHistYearInd(Data) - si$Seasons + si$SeasonInd
 
   LastHistLandings <- Data@Landings@Value[TargetRow, , drop=FALSE]
@@ -96,7 +96,7 @@ attr(CurrentCatch, 'EverySeason') <- TRUE
 CurrentLandings <- function(Data) {
   CheckCatch(Data, slot_names = 'Landings')
 
-  si <- MPSeasonIndex(Data)
+  si <- SeasonOfYear(Data)
   TargetRow <- LastHistYearInd(Data) - si$Seasons + si$SeasonInd
 
   LastHistLandings <- Data@Landings@Value[TargetRow, , drop=FALSE]
@@ -116,7 +116,7 @@ attr(CurrentLandings, 'EverySeason') <- TRUE
 AverageCatch <- function(Data) {
   CheckCatch(Data)
 
-  si <- MPSeasonIndex(Data)
+  si <- SeasonOfYear(Data)
   HistRows <- seq(si$SeasonInd, LastHistYearInd(Data), by = si$Seasons)
 
   HistLandings <- Data@Landings@Value[HistRows, , drop=FALSE]

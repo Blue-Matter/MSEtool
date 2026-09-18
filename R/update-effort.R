@@ -33,7 +33,7 @@
                           EverySeason = FALSE) {
 
   nSim   <- Proj@OM@nSim
-  Season <- .SeasonOfYear(Year, c(YearsHist, YearsProj), Proj@OM@Seasons)
+  Season <- SeasonOfYear(c(YearsHist, YearsProj), Proj@OM@Seasons, Year)$SeasonInd
 
   if (.AllAdviceNull(AdviceSimList, 'Effort'))
     return(Proj)

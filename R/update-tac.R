@@ -38,7 +38,7 @@
                        EverySeason = FALSE) {
 
   TSIndex <- match(Year, c(YearsHist, YearsProj))
-  Season  <- .SeasonOfYear(Year, c(YearsHist, YearsProj), Proj@OM@Seasons)
+  Season  <- SeasonOfYear(c(YearsHist, YearsProj), Proj@OM@Seasons, Year)$SeasonInd
 
   if (.AllAdviceNull(AdviceSimList, 'TAC'))
     return(Proj)

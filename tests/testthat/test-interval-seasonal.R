@@ -107,7 +107,7 @@ test_that("a custom MP with a multi-year Interval stays phase-aligned on a seaso
 
   AnnualEqualSplit <- function(Data) {
     CheckCatch(Data)
-    si  <- MPSeasonIndex(Data)
+    si  <- SeasonOfYear(Data)
     LHY <- LastHistYearInd(Data)
     rows <- (LHY - si$Seasons + 1):LHY
     total <- sum(Data@Landings@Value[rows, , drop = FALSE], na.rm = TRUE) +

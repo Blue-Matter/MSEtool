@@ -105,7 +105,7 @@ test_that("a periodic TAC MP with no seasonal logic still produces the historica
 
   Simple3yr <- function(Data) {
     CheckCatch(Data)
-    Seasons <- MPSeasonIndex(Data)$Seasons
+    Seasons <- SeasonOfYear(Data)$Seasons
     n <- length(Data@Years)
     rows <- (n - Seasons + 1):n
     total <- sum(Data@Landings@Value[rows, , drop = FALSE], na.rm = TRUE) +
