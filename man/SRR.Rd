@@ -115,11 +115,14 @@ recruitment deviations. Follows the same length conventions as \code{R0}.
 Currently fixed across years. Defaults to \code{0} (no autocorrelation) when
 \code{NULL}. Default \code{NULL}.}
 
-\item{SPFrom}{\code{character(1)} or \code{numeric(1)}. Stock whose spawning
-production drives this stock's recruitment. Specify by stock name
-(\code{character}) or 1-based integer index (\code{numeric}). Defaults to self
+\item{SPFrom}{\code{character(1)}, \code{numeric(1)}, or a named \code{numeric} vector.
+Stock(s) whose spawning production drives this stock's recruitment.
+Specify a single source by stock name (\code{character}) or 1-based integer
+index (\code{numeric}), or a weighted blend of multiple sources with a named
+\code{numeric} vector, e.g. \code{c(Stock1 = 0.6, Stock2 = 0.4)}. Defaults to self
 (the stock recruits from its own spawning production). Relevant only in
-multi-stock operating models. Default \code{NULL}.}
+multi-stock operating models. See \link[=srr-class]{srr} for details and
+constraints on the weighted form. Default \code{NULL}.}
 
 \item{TruncSD}{\code{numeric(1)}. Number of standard deviations at which the
 log-normal recruitment deviation distribution is truncated. Default \code{2}.}
@@ -270,6 +273,10 @@ stock's spawning production. Specify by stock name or 1-based index:
 srr2 <- SRR(Pars = list(h = 0.7), R0 = 500, SPFrom = 1)
 # equivalently by name:
 srr2 <- SRR(Pars = list(h = 0.7), R0 = 500, SPFrom = "Stock1")
+
+# Stock 3 recruits from a 60/40 weighted blend of stocks 1 and 2
+srr3 <- SRR(Pars = list(h = 0.7), R0 = 500,
+            SPFrom = c(Stock1 = 0.6, Stock2 = 0.4))
 }\if{html}{\out{</div>}}
 }
 

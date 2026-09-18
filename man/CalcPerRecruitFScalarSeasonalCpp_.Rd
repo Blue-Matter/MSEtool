@@ -23,7 +23,9 @@ CalcPerRecruitFScalarSeasonalCpp_(
   NPR0_noList,
   NPR0_spList,
   RefSeasonWeights,
-  SPFromVec,
+  SPFromToStock,
+  SPFromFromStock,
+  SPFromWeight,
   IsSpawnTimeFrac,
   nSeason
 )
@@ -48,8 +50,12 @@ each fleet in each season, per stock.}
 \item{RefSeasonWeights}{Length-nSeason \code{NumericVector} (search-invariant,
 precomputed once per calendar year).}
 
-\item{SPFromVec}{Integer, 1-based stock index (length nStock) -- which
-stock's spawning production each stock's SPR is computed from.}
+\item{SPFromToStock, SPFromFromStock}{Integer, 1-based stock index, one
+entry per (to, from) source pair -- which stock(s)' spawning production
+each stock's SPR is computed from (parallel to \code{SPFromWeight}).}
+
+\item{SPFromWeight}{Numeric, one entry per pair -- weight applied to the
+\code{from} stock's SPR contribution to the \code{to} stock.}
 
 \item{IsSpawnTimeFrac}{Logical. Whether any stock has a non-zero spawn-time fraction.}
 

@@ -23,9 +23,10 @@ for all stocks, \code{NPRF_SP} is not populated.
 \subsection{SPFrom}{
 
 When stocks share a spawning component (e.g. a complex), the \code{SPFrom} slot
-of each stock's \code{\link[=SRR]{SRR()}} determines which stock's \code{SPRF} is used when
-computing relative \code{SPR}. This is handled upstream in \code{\link[=CalcPerRecruit]{CalcPerRecruit()}}
-before the \code{SPRF} and \code{SPR0} slots are populated.
+of each stock's \code{\link[=SRR]{SRR()}} determines which stock's (or weighted blend of
+stocks') \code{SPRF}/\code{SPR0} is used when computing relative \code{SPR}. This is
+handled upstream in \code{\link[=CalcPerRecruit]{CalcPerRecruit()}} before the \code{SPRF} and \code{SPR0} slots
+are populated.
 }
 
 \subsection{Relationships between slots}{

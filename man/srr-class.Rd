@@ -60,10 +60,21 @@ recruitment deviations. Follows the same length conventions as \code{SD}.
 Fixed across years (currently not time-varying). Defaults to \code{0}
 (no autocorrelation) when \code{NULL}.}
 
-\item{\code{SPFrom}}{\code{character(1)} or \code{numeric(1)}. Identifies which stock's
-spawning production drives this stock's recruitment. Defaults to self
-(stock recruits from its own spawning production). For multi-stock models,
-may be a stock name (\code{character}) or 1-based integer index (\code{numeric}).}
+\item{\code{SPFrom}}{\code{character(1)}, \code{numeric(1)}, or a named \code{numeric} vector.
+Identifies which stock's spawning production drives this stock's
+recruitment. Defaults to self (stock recruits from its own spawning
+production). For multi-stock models, may be:
+\itemize{
+\item An unnamed stock name (\code{character(1)}) or 1-based integer index
+(\code{numeric(1)}): single source, 100\% of this stock's spawning
+production is replaced by the named stock's.
+\item A \strong{named} \code{numeric} vector, e.g. \code{c(Stock1 = 0.6, Stock2 = 0.4)}:
+weighted blend of spawning production from multiple stocks. Names may
+be stock names or numeric-string indices. Weights need not sum to \code{1}
+(a warning is logged to \code{Log} if they don't); negative or non-finite
+weights are not allowed. Every referenced source stock must itself be
+self-recruiting.
+}}
 
 \item{\code{TruncSD}}{\code{numeric(1)}. Number of standard deviations at which the
 log-normal recruitment deviation distribution is truncated. Default \code{2}.}

@@ -1,4 +1,3 @@
-# TODO - document
 
 #' Reference Points Object
 #'
