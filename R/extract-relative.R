@@ -316,6 +316,17 @@ F_FMSY <- function(object,
   }
 }
 
+# Subset an array's "Stock" dimension to `stockNames` (no-op if NULL or absent).
+.SubsetStockDim <- function(x, stockNames) {
+  if (is.null(stockNames)) return(x)
+  dn <- dimnames(x)
+  stock_pos <- match('Stock', names(dn))
+  if (is.na(stock_pos)) return(x)
+  idx <- rep(list(quote(expr = )), length(dim(x)))
+  idx[[stock_pos]] <- stockNames
+  do.call('[', c(list(x), idx, list(drop = FALSE)))
+}
+
 
 .AlignDenomYears <- function(denom_arr, target_years) {
   denom_years <- dimnames(denom_arr)[['Year']]
@@ -343,7 +354,7 @@ F_FMSY <- function(object,
 }
 
 .ComputeRelative <- function(object, OM, num_slot, denom_arr, var_name,
-                               Reduce, IncYear) {
+                               Reduce, IncYear, stockNames = NULL, sumStock = FALSE) {
   isMSE <- inherits(object, 'mse')
 
   arr          <- slot(object, num_slot)
@@ -355,24 +366,32 @@ F_FMSY <- function(object,
     denom_aligned <- AddDimension(denom_aligned, name = 'MP', val = MP_names)
   }
 
+  if (sumStock) {
+    arr           <- SumOverStock(.SubsetStockDim(arr, stockNames))
+    denom_aligned <- SumOverStock(.SubsetStockDim(denom_aligned, stockNames))
+  }
+
   ratio <- ArrayDivide(arr, denom_aligned)
 
   if (Reduce)
     ratio <- ReduceDims(ratio, IncYear = IncYear)
 
-  Array2DF(ratio) |>
+  out <- Array2DF(ratio) |>
     dplyr::mutate(Variable = var_name,
-                  Period   = ifelse(isMSE, 'Projection', 'Historical')) |>
-    dplyr::relocate('Sim', 'Stock', 'Year', 'Period')
+                  Period   = ifelse(isMSE, 'Projection', 'Historical'))
+  if (sumStock) out$Stock <- 'Total'
+  out |> dplyr::relocate('Sim', 'Stock', 'Year', 'Period')
 }
 
 .ExtractRelative <- function(object, num_slot, denom_slot, ref, var_name,
-                              type    = NULL,
-                              df      = TRUE,
-                              Reduce  = TRUE,
-                              IncYear = FALSE,
-                              Extend  = FALSE,
-                              silent  = TRUE) {
+                              type       = NULL,
+                              df         = TRUE,
+                              Reduce     = TRUE,
+                              IncYear    = FALSE,
+                              Extend     = FALSE,
+                              silent     = TRUE,
+                              stockNames = NULL,
+                              sumStock   = FALSE) {
 
   .CheckClass(object, c('hist', 'mse'), 'object')
 
@@ -388,6 +407,10 @@ F_FMSY <- function(object,
     arr          <- slot(object, num_slot)
     target_years <- dimnames(arr)[['Year']]
     denom_aligned <- .AlignDenomYears(denom_arr, target_years)
+    if (sumStock) {
+      arr           <- SumOverStock(.SubsetStockDim(arr, stockNames))
+      denom_aligned <- SumOverStock(.SubsetStockDim(denom_aligned, stockNames))
+    }
     return(ArrayDivide(arr, denom_aligned))
   }
 
@@ -395,7 +418,7 @@ F_FMSY <- function(object,
 
   if (inherits(object, 'hist')) {
     out <- .ComputeRelative(object, OM, num_slot, denom_arr, var_name,
-                              Reduce, IncYear)
+                              Reduce, IncYear, stockNames, sumStock)
     out <- .FinalizeTimeseriesDF(out, OM@nSim, Extend, silent)
     class(out) <- c(paste0(tolower(gsub('_', '', var_name)), '.df'), class(out))
     return(out)
@@ -403,11 +426,11 @@ F_FMSY <- function(object,
 
   # MSE: bind historical and projection periods
   hist_df <- .ComputeRelative(object@Hist, OM, num_slot, denom_arr, var_name,
-                                Reduce, IncYear) |>
+                                Reduce, IncYear, stockNames, sumStock) |>
     dplyr::mutate(MP = 'Historical')
 
   proj_df <- .ComputeRelative(object, OM, num_slot, denom_arr, var_name,
-                                Reduce, IncYear)
+                                Reduce, IncYear, stockNames, sumStock)
 
   out <- dplyr::bind_rows(hist_df, proj_df)
   out <- .FinalizeTimeseriesDF(out, OM@nSim, Extend, silent)

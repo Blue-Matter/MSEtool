@@ -16,8 +16,10 @@
 #' @param byStock One of `TRUE`, `FALSE`, `'sum'`, or `NULL` (default).
 #'   `TRUE` facets by stock. `FALSE` colors each stock as its own line on a
 #'   single panel, without summing. `'sum'` sums across stocks into a single
-#'   line (relative time series, `relative != 'none'`, cannot be meaningfully
-#'   summed this way and fall back to faceting instead - see `relative`).
+#'   line; for relative time series (`relative != 'none'`, see `relative`)
+#'   the numerator and denominator are summed across stocks separately
+#'   before dividing, giving an aggregate ratio (e.g. overall depletion)
+#'   rather than a sum of per-stock ratios.
 #'   `NULL` (default) resolves to `TRUE` when `object` has more than one
 #'   (selected) stock, otherwise `FALSE`. When `FALSE` and `object` has more
 #'   than one MP, MP is faceted instead of colored, since stock now occupies
@@ -93,10 +95,9 @@
 #'   relative to unfished (`"B0"`, via [B_B0()]/[SB_SB0()]/[SP_SP0()]) or to
 #'   the MSY reference point (`"BMSY"`, via
 #'   [B_BMSY()]/[SB_SBMSY()]/[SP_SPMSY()]). For `PlotF()`: `"none"` (default,
-#'   apical `what` fishing mortality) or `"FMSY"` (via [F_FMSY()]). When
-#'   `relative != "none"` and there is more than one stock, `byStock = FALSE`
-#'   is not allowed (ratios cannot be meaningfully summed across stocks) and
-#'   faceting by stock is used instead, with a message.
+#'   apical `what` fishing mortality) or `"FMSY"` (via [F_FMSY()]). See
+#'   `byStock` above for how `byStock = 'sum'` aggregates a relative time
+#'   series across stocks.
 #' @param type Character. One of `"Equilibrium"` or `"Dynamic"`. Which
 #'   unfished baseline to use when `relative = "B0"`; see [B_B0()]. Ignored
 #'   otherwise.
@@ -202,10 +203,12 @@
 #'
 #' `PlotBiomass()`, `PlotSBiomass()`, `PlotSProduction()`, and `PlotF()` can
 #' plot values relative to unfished or MSY reference points instead of
-#' absolute values; see `relative` and `type` above. Relative time series
-#' cannot be meaningfully summed across stocks, so `byStock = 'sum'` with
-#' `relative != 'none'` falls back to faceting instead (`byStock = FALSE`,
-#' coloring each stock's ratio, is unaffected by this restriction).
+#' absolute values; see `relative` and `type` above. For `PlotBiomass()`,
+#' `PlotSBiomass()`, and `PlotSProduction()`, `byStock = 'sum'` with
+#' `relative != 'none'` sums the numerator (e.g. `Biomass`) and denominator
+#' (e.g. `B0`/`BMSY`) across stocks separately before dividing, giving a
+#' true aggregate ratio (e.g. overall depletion) rather than summing the
+#' per-stock ratios themselves (which would not be meaningful).
 #'
 #' `PlotDynamics()` arranges `PlotNumber()`, `PlotBiomass()`,
 #' `PlotSBiomass()`, and `PlotRemovals()` into a single, terse figure with
@@ -292,18 +295,23 @@ PlotBiomass <- function(object,
   byStock <- .ResolveByStock(byStock, nSel)
   if (is.null(free_y))  free_y  <- relative == 'none'
 
-  if (relative != 'none' && identical(byStock, 'sum') && nSel > 1) {
-    cli::cli_alert_info(
-      "Relative time series (`relative = '{relative}'`) cannot be meaningfully summed across stocks; faceting by stock instead."
-    )
-    byStock <- TRUE
-  }
+  sumRelative <- relative != 'none' && identical(byStock, 'sum') && nSel > 1
 
   if (relative == 'none') {
     df <- Biomass(object, df = TRUE)
     uinfo <- .MassUnitInfo(object, stockNames, units, 'Weight', 'Biomass')
     df$Value <- df$Value * uinfo$factor
     ylab <- .AppendUnits('Biomass', uinfo$label)
+  } else if (sumRelative) {
+    df <- .ExtractRelative(object,
+                             num_slot   = 'Biomass',
+                             denom_slot = if (relative == 'B0') 'Biomass' else 'BMSY',
+                             ref        = if (relative == 'B0') 'Unfished' else 'MSY',
+                             var_name   = .RelativeFnName('Biomass', relative),
+                             type       = if (relative == 'B0') type else NULL,
+                             stockNames = stockNames,
+                             sumStock   = TRUE)
+    ylab <- .RelativeYlab('Biomass', relative)
   } else {
     extractArgs <- list(object = object, df = TRUE)
     if (relative == 'B0') extractArgs$type <- type
@@ -311,13 +319,13 @@ PlotBiomass <- function(object,
     ylab <- .RelativeYlab('Biomass', relative)
   }
 
+  if (!sumRelative) df <- .FilterStock(df, stockNames)
   df <- df |>
-    .FilterStock(stockNames) |>
     .BridgeMpGap() |>
     .DropHistorical(IncHist) |>
     .FilterSeason(Season, object) |>
     .FilterYears(Years)
-  if (identical(byStock, 'sum'))
+  if (identical(byStock, 'sum') && !sumRelative)
     df <- .SumOverStock(df)
 
   .BuildTsPlot(df, byStock = byStock, byFleet = FALSE,
@@ -1037,18 +1045,42 @@ setMethod('plot', 'mse', function(x, y, ...) {
   nSel <- .NSelStock(object, stockNames)
   byStock <- .ResolveByStock(byStock, nSel)
 
-  if (relative != 'none' && identical(byStock, 'sum') && nSel > 1) {
-    cli::cli_alert_info(
-      "Relative time series (`relative = '{relative}'`) cannot be meaningfully summed across stocks; faceting by stock instead."
-    )
-    byStock <- TRUE
+  sumStockNames <- stockNames
+  femaleLabel   <- FALSE
+
+  if (identical(byStock, 'sum') && nSel > 1 && is.null(stockNames) && byFemale) {
+    female <- .FemaleStockNames(object@OM)
+    if (female$ambiguous) {
+      cli::cli_alert_info(
+        "Cannot unambiguously identify a female stock in one or more complexes; faceting by stock instead."
+      )
+      byStock <- TRUE
+    } else {
+      sumStockNames <- female$stocks
+      femaleLabel   <- TRUE
+    }
   }
+
+  sumStock    <- identical(byStock, 'sum') && nSel > 1
+  sumRelative <- sumStock && relative != 'none'
 
   if (relative == 'none') {
     df <- do.call(slot_name, list(object = object, df = TRUE))
     uinfo <- .MassUnitInfo(object, stockNames, units, base_slot, ylab)
     df$Value <- df$Value * uinfo$factor
     ylab <- .AppendUnits(ylab, uinfo$label)
+  } else if (sumRelative) {
+    denom_slot <- if (relative == 'B0') slot_name else
+      switch(slot_name, SBiomass = 'SBMSY', SProduction = 'SPMSY')
+    df <- .ExtractRelative(object,
+                             num_slot   = slot_name,
+                             denom_slot = denom_slot,
+                             ref        = if (relative == 'B0') 'Unfished' else 'MSY',
+                             var_name   = .RelativeFnName(slot_name, relative),
+                             type       = if (relative == 'B0') type else NULL,
+                             stockNames = sumStockNames,
+                             sumStock   = TRUE)
+    ylab <- .RelativeYlab(ylab, relative)
   } else {
     extractArgs <- list(object = object, df = TRUE)
     if (relative == 'B0') extractArgs$type <- type
@@ -1056,30 +1088,18 @@ setMethod('plot', 'mse', function(x, y, ...) {
     ylab <- .RelativeYlab(ylab, relative)
   }
 
+  if (!sumRelative) df <- .FilterStock(df, stockNames)
   df <- df |>
-    .FilterStock(stockNames) |>
     .BridgeMpGap() |>
     .DropHistorical(IncHist) |>
     .FilterSeason(Season, object) |>
     .FilterYears(Years)
 
-  if (identical(byStock, 'sum')) {
-    if (is.null(stockNames) && byFemale && nSel > 1) {
-      female <- .FemaleStockNames(object@OM)
-      if (female$ambiguous) {
-        cli::cli_alert_info(
-          "Cannot unambiguously identify a female stock in one or more complexes; faceting by stock instead."
-        )
-        byStock <- TRUE
-      } else {
-        df <- dplyr::filter(df, .data$Stock %in% female$stocks)
-        df <- .SumOverStock(df)
-        df$Stock <- 'Total (Female)'
-      }
-    } else {
-      df <- .SumOverStock(df)
-    }
+  if (sumStock && !sumRelative) {
+    if (femaleLabel) df <- dplyr::filter(df, .data$Stock %in% sumStockNames)
+    df <- .SumOverStock(df)
   }
+  if (sumStock && femaleLabel) df$Stock <- 'Total (Female)'
 
   .BuildTsPlot(df, byStock = byStock, byFleet = FALSE,
                 ylab = ylab, probs = probs, nsim = nsim, free_y = free_y,

@@ -202,8 +202,10 @@ no effect in that case. For \code{PlotRemovals()}, the \code{data}-class series 
 \item{byStock}{One of \code{TRUE}, \code{FALSE}, \code{'sum'}, or \code{NULL} (default).
 \code{TRUE} facets by stock. \code{FALSE} colors each stock as its own line on a
 single panel, without summing. \code{'sum'} sums across stocks into a single
-line (relative time series, \code{relative != 'none'}, cannot be meaningfully
-summed this way and fall back to faceting instead - see \code{relative}).
+line; for relative time series (\code{relative != 'none'}, see \code{relative})
+the numerator and denominator are summed across stocks separately
+before dividing, giving an aggregate ratio (e.g. overall depletion)
+rather than a sum of per-stock ratios.
 \code{NULL} (default) resolves to \code{TRUE} when \code{object} has more than one
 (selected) stock, otherwise \code{FALSE}. When \code{FALSE} and \code{object} has more
 than one MP, MP is faceted instead of colored, since stock now occupies
@@ -291,10 +293,9 @@ sums exactly the stocks selected, instead of guessing the female one).}
 relative to unfished (\code{"B0"}, via \code{\link[=B_B0]{B_B0()}}/\code{\link[=SB_SB0]{SB_SB0()}}/\code{\link[=SP_SP0]{SP_SP0()}}) or to
 the MSY reference point (\code{"BMSY"}, via
 \code{\link[=B_BMSY]{B_BMSY()}}/\code{\link[=SB_SBMSY]{SB_SBMSY()}}/\code{\link[=SP_SPMSY]{SP_SPMSY()}}). For \code{PlotF()}: \code{"none"} (default,
-apical \code{what} fishing mortality) or \code{"FMSY"} (via \code{\link[=F_FMSY]{F_FMSY()}}). When
-\code{relative != "none"} and there is more than one stock, \code{byStock = FALSE}
-is not allowed (ratios cannot be meaningfully summed across stocks) and
-faceting by stock is used instead, with a message.}
+apical \code{what} fishing mortality) or \code{"FMSY"} (via \code{\link[=F_FMSY]{F_FMSY()}}). See
+\code{byStock} above for how \code{byStock = 'sum'} aggregates a relative time
+series across stocks.}
 
 \item{type}{Character. One of \code{"Equilibrium"} or \code{"Dynamic"}. Which
 unfished baseline to use when \code{relative = "B0"}; see \code{\link[=B_B0]{B_B0()}}. Ignored
@@ -413,10 +414,12 @@ when \code{byStock = FALSE} (every stock, male and female, is shown colored).
 
 \code{PlotBiomass()}, \code{PlotSBiomass()}, \code{PlotSProduction()}, and \code{PlotF()} can
 plot values relative to unfished or MSY reference points instead of
-absolute values; see \code{relative} and \code{type} above. Relative time series
-cannot be meaningfully summed across stocks, so \code{byStock = 'sum'} with
-\code{relative != 'none'} falls back to faceting instead (\code{byStock = FALSE},
-coloring each stock's ratio, is unaffected by this restriction).
+absolute values; see \code{relative} and \code{type} above. For \code{PlotBiomass()},
+\code{PlotSBiomass()}, and \code{PlotSProduction()}, \code{byStock = 'sum'} with
+\code{relative != 'none'} sums the numerator (e.g. \code{Biomass}) and denominator
+(e.g. \code{B0}/\code{BMSY}) across stocks separately before dividing, giving a
+true aggregate ratio (e.g. overall depletion) rather than summing the
+per-stock ratios themselves (which would not be meaningful).
 
 \code{PlotDynamics()} arranges \code{PlotNumber()}, \code{PlotBiomass()},
 \code{PlotSBiomass()}, and \code{PlotRemovals()} into a single, terse figure with
