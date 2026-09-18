@@ -34,10 +34,19 @@
 #'   recruitment deviations. Follows the same length conventions as `SD`.
 #'   Fixed across years (currently not time-varying). Defaults to `0`
 #'   (no autocorrelation) when `NULL`.
-#' @slot SPFrom `character(1)` or `numeric(1)`. Identifies which stock's
-#'   spawning production drives this stock's recruitment. Defaults to self
-#'   (stock recruits from its own spawning production). For multi-stock models,
-#'   may be a stock name (`character`) or 1-based integer index (`numeric`).
+#' @slot SPFrom `character(1)`, `numeric(1)`, or a named `numeric` vector.
+#'   Identifies which stock's spawning production drives this stock's
+#'   recruitment. Defaults to self (stock recruits from its own spawning
+#'   production). For multi-stock models, may be:
+#'   - An unnamed stock name (`character(1)`) or 1-based integer index
+#'     (`numeric(1)`): single source, 100% of this stock's spawning
+#'     production is replaced by the named stock's.
+#'   - A **named** `numeric` vector, e.g. `c(Stock1 = 0.6, Stock2 = 0.4)`:
+#'     weighted blend of spawning production from multiple stocks. Names may
+#'     be stock names or numeric-string indices. Weights need not sum to `1`
+#'     (a warning is logged to `Log` if they don't); negative or non-finite
+#'     weights are not allowed. Every referenced source stock must itself be
+#'     self-recruiting.
 #' @slot TruncSD `numeric(1)`. Number of standard deviations at which the
 #'   log-normal recruitment deviation distribution is truncated. Default `2`.
 #' @slot RecDevInit `matrix`. Recruitment deviations (`Sim × Age`) used to

@@ -21,7 +21,9 @@ inline void CalcSpawnProduction(
     const std::vector<ConstArrayView3D>& Weight,            // [stock] sim, age, year
     const std::vector<ConstArrayView3D>& NaturalMortality,  // [stock] sim, age, year
     const ConstArrayView2D SpawnTimeFrac,                   // sim, stock
-    const ConstArrayView1D SPFrom,                          // stock
+    const std::vector<int>& SPFromToStock,                  // [pair], 0-indexed
+    const std::vector<int>& SPFromFromStock,                // [pair], 0-indexed
+    const std::vector<double>& SPFromWeight,                // [pair]
     const std::vector<Array5D>& FDeadArea,                  // [stock] sim, age, year, fleet, area
     const int nStock,
     const int nFleet,
@@ -109,19 +111,25 @@ inline void CalcSpawnProduction(
   } // end stock loop 
   
   
-  for (int st = 0; st < nStock; ++st) {
-    const int fromSt = static_cast<int>(SPFrom(st)) - 1;  // 1-indexed in R
-    
-    if (fromSt < 0 || fromSt >= nStock) {
-      Rcpp::stop("SPFrom" + std::to_string(st+1) + " out of range");
-    }
-    
+  const int nPair = static_cast<int>(SPFromToStock.size());
+  std::vector<double> SP_raw(nStock), SP_new(nStock);
 
-    if (fromSt == st) continue;
-    
-    for (int sim : Sims) {
-      SProduction(sim, st, y) = SProduction(sim, fromSt, y);
+  for (int sim : Sims) {
+    for (int st = 0; st < nStock; ++st)
+      SP_raw[st] = SProduction(sim, st, y);
+
+    std::fill(SP_new.begin(), SP_new.end(), 0.0);
+
+    for (int p = 0; p < nPair; ++p) {
+      const int to   = SPFromToStock[p];
+      const int from = SPFromFromStock[p];
+      if (to < 0 || to >= nStock || from < 0 || from >= nStock)
+        Rcpp::stop("SPFrom pair " + std::to_string(p+1) + " out of range");
+      SP_new[to] += SPFromWeight[p] * SP_raw[from];
     }
+
+    for (int st = 0; st < nStock; ++st)
+      SProduction(sim, st, y) = SP_new[st];
   }
 }
 

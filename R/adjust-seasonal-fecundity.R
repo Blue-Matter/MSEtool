@@ -58,10 +58,11 @@ AdjustSeasonalFecundity <- function(OM, silent = FALSE) {
   # each sim x age x year
   UnfishedN <- CalcUnfishedNumber(OM, SP = TRUE)
 
+  stockNames <- StockNames(OM)
   for (st in seq_along(OM@Stock)) {
     Stock <- OM@Stock[[st]]
-    
-    if (!is.null(Stock@SRR@SPFrom) && Stock@SRR@SPFrom != Stock@Name)
+
+    if (!.IsSPFromSelfOnly(Stock@SRR@SPFrom, st, stockNames))
       next
     
     nSim  <- Stock@nSim

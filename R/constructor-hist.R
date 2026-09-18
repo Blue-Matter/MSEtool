@@ -58,17 +58,13 @@ Hist <- function(MSE=NULL) {
   # Extend all arrays for all sims, ages, historical years, and area
   Hist <- .ExtendHist(Hist, HistYears, silent, id)
   
-  Hist@OM@Stock <- purrr::imap(Hist@OM@Stock, \(Stock, idx) {
-    SPFrom <- Stock@SRR@SPFrom
-    if (!length(SPFrom)) {
-      SPFrom <- idx  
-    } else if (is.numeric(SPFrom)) {
-      SPFrom <- StockNames(OM)[SPFrom]
-    }
-    Stock@SRR@SPFrom <- SPFrom
-    Stock
-  })
-  
+  Hist@OM <- .UpdateSPFrom(Hist@OM)
+  histStockNames <- StockNames(Hist@OM)
+  for (idx in seq_along(Hist@OM@Stock)) {
+    if (is.null(Hist@OM@Stock[[idx]]@SRR@SPFrom))
+      Hist@OM@Stock[[idx]]@SRR@SPFrom <- histStockNames[idx]
+  }
+
   if (!silent) {
     cli::cli_alert_success("Initialized `Hist` Object")
   }

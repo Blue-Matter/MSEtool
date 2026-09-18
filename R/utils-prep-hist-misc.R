@@ -22,9 +22,12 @@
   
   ## ---- Vector ----
   
-  Hist@Misc$SPFrom <- purrr::map(Hist@OM@Stock, \(stock) {
-    match(stock@SRR@SPFrom, stock_names)
-  }) |> unlist() |> array(dim=nStock, dimnames = list(Stock=stock_names))
+  SPFromResolved <- purrr::map2(Hist@OM@Stock, seq_len(nStock), \(stock, i)
+    .ResolveSPFromWeights(stock@SRR@SPFrom, stock_names, i)
+  )
+  Hist@Misc$SPFromToStock   <- purrr::map2(SPFromResolved, seq_len(nStock), \(w, i) rep(i, length(w$from))) |> unlist()
+  Hist@Misc$SPFromFromStock <- purrr::map(SPFromResolved, \(w) w$from) |> unlist()
+  Hist@Misc$SPFromWeight    <- purrr::map(SPFromResolved, \(w) w$weight) |> unlist()
   
   Hist@Misc$PlusGroup <- purrr::map(Hist@OM@Stock, \(stock) {
     stock@Ages@PlusGroup

@@ -690,8 +690,11 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
 
   StockNamesOrdered <- names(NPRFList)
   SPR <- purrr::map(StockNamesOrdered, \(stock_name) {
-    src <- StockNamesOrdered[SPFrom[stock_name]]
-    ArrayDivide(SPRFList[[src]], SPR0List[[src]])
+    w <- SPFrom[[stock_name]]
+    Reduce(`+`, purrr::map2(w$from, w$weight, \(idx, wt) {
+      src <- StockNamesOrdered[idx]
+      wt * ArrayDivide(SPRFList[[src]], SPR0List[[src]])
+    }))
   }) |>
     stats::setNames(StockNamesOrdered) |>
     List2Array('Stock', pos = 2) |>
@@ -999,12 +1002,17 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
   Removals    <- WrapSlot('Removals')
   Landings    <- WrapSlot('Landings')
 
-  # Apply SPFrom: SPR[i] = SPRFf[SPFrom[i]] / SPR0f[SPFrom[i]]
+  # Apply SPFrom: SPR[i] = weighted sum of SPRFf[src] / SPR0f[src] over sources
   SPR <- array(0, dim = dim(SPRFf), dimnames = dimnames(SPRFf))
   eps <- .Machine$double.eps
   for (i in seq_len(nStocks)) {
-    spf <- SPFrom[i]
-    SPR[, i, ] <- SPRFf[, spf, ] / pmax(SPR0f[, spf, ], eps)
+    w <- SPFrom[[i]]
+    acc <- 0
+    for (k in seq_along(w$from)) {
+      spf <- w$from[k]
+      acc <- acc + w$weight[k] * (SPRFf[, spf, ] / pmax(SPR0f[, spf, ], eps))
+    }
+    SPR[, i, ] <- acc
   }
 
   # Annual apical F: for each calendar year, sum seasonal F_dead rates at the
@@ -1091,12 +1099,9 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
   FecundityList <- purrr::map(StockList, \(Stock)
                               Stock@Fecundity@MeanAtAge |> .ArraySubsetYear(Years))
   
-  SPFrom <- purrr::imap(StockList, \(stock, i) {
-    spfrom <- stock@SRR@SPFrom
-    if (is.null(spfrom))      spfrom <- i
-    if (is.character(spfrom)) spfrom <- match(spfrom, names(StockList))
-    spfrom
-  }) |> unlist()
+  SPFrom <- purrr::map2(StockList, seq_along(StockList), \(stock, i)
+    .ResolveSPFromWeights(stock@SRR@SPFrom, names(StockList), i)
+  ) |> stats::setNames(names(StockList))
   
   # F-invariant: fleet allocation depends only on effort and efficiency
   StockFleetAllocation <- purrr::map(FleetList, \(fl)

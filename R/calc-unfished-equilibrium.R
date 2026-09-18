@@ -91,14 +91,16 @@ CalcUnfished_Equilibrium <- function(OM, silent=FALSE) {
   
   # apply SPFrom for SProduction
   stockNames <- StockNames(OM)
-  
+
   if (length(stockNames) > 1) {
+    RawSProduction <- EquilibriumUnfished@SProduction
     for (st in seq_along(stockNames)) {
-      SPFrom <- OM@Stock[[st]]@SRR@SPFrom
-      if (!is.null(SPFrom)) {
-        ind <- match(SPFrom, stockNames)
-        EquilibriumUnfished@SProduction[,st,] <- EquilibriumUnfished@SProduction[,ind,]
-      }
+      w <- .ResolveSPFromWeights(OM@Stock[[st]]@SRR@SPFrom, stockNames, st)
+      if (length(w$from) == 1L && identical(w$from, st)) next
+      EquilibriumUnfished@SProduction[,st,] <- Reduce(
+        `+`,
+        purrr::map2(w$from, w$weight, \(idx, wt) wt * RawSProduction[,idx,])
+      )
     }
   }
 

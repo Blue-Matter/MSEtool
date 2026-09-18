@@ -439,8 +439,11 @@ static double AggSeasonalDiscards(
 //'   `NumericVector` (`pi_s`, seasonal recruitment weights).
 //' @param RefSeasonWeights Length-nSeason `NumericVector` (search-invariant,
 //'   precomputed once per calendar year).
-//' @param SPFromVec Integer, 1-based stock index (length nStock) -- which
-//'   stock's spawning production each stock's SPR is computed from.
+//' @param SPFromToStock,SPFromFromStock Integer, 1-based stock index, one
+//'   entry per (to, from) source pair -- which stock(s)' spawning production
+//'   each stock's SPR is computed from (parallel to `SPFromWeight`).
+//' @param SPFromWeight Numeric, one entry per pair -- weight applied to the
+//'   `from` stock's SPR contribution to the `to` stock.
 //' @param IsSpawnTimeFrac Logical. Whether any stock has a non-zero spawn-time fraction.
 //' @param nSeason Integer number of seasons per calendar year.
 //' @return A named `List`: per-stock (length nStock) `NumericVector`s NPR0,
@@ -467,7 +470,9 @@ List CalcPerRecruitFScalarSeasonalCpp_(
     List NPR0_noList,
     List NPR0_spList,
     NumericVector RefSeasonWeights,
-    IntegerVector SPFromVec,
+    IntegerVector SPFromToStock,
+    IntegerVector SPFromFromStock,
+    NumericVector SPFromWeight,
     bool IsSpawnTimeFrac,
     int nSeason
 ) {
@@ -652,12 +657,14 @@ List CalcPerRecruitFScalarSeasonalCpp_(
   double F_annual_apical = 0.0;
   for (int s = 0; s < nStock; s++) if (FDeadTotalAnnualByAge_max[s] > F_annual_apical) F_annual_apical = FDeadTotalAnnualByAge_max[s];
 
-  // Apply SPFrom: SPR[i] = SPRFf[SPFrom[i]] / max(SPR0f[SPFrom[i]], eps).
-  NumericVector SPR(nStock);
-  for (int i = 0; i < nStock; i++) {
-    int spf = SPFromVec[i] - 1;  // 1-based -> 0-based
-    double denom = std::max(SPR0f_out[spf], 2.220446e-16);
-    SPR[i] = SPRFf_out[spf] / denom;
+  // Apply SPFrom: SPR[to] = sum_from weight * SPRFf[from] / max(SPR0f[from], eps).
+  NumericVector SPR(nStock, 0.0);
+  int nSPFromPair = SPFromToStock.size();
+  for (int p = 0; p < nSPFromPair; p++) {
+    int to   = SPFromToStock[p]   - 1;  // 1-based -> 0-based
+    int from = SPFromFromStock[p] - 1;
+    double denom = std::max(SPR0f_out[from], 2.220446e-16);
+    SPR[to] += SPFromWeight[p] * (SPRFf_out[from] / denom);
   }
 
   NPR0out.names() = stockNames;

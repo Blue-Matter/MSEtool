@@ -78,6 +78,10 @@
                                         inputs$nSeason, inputs$RefSeason)
   RefSeasonWeightsVec <- as.numeric(RefSeasonWeights[1, ])
 
+  SPFromPairs <- purrr::imap(inputs$SPFrom[StockNames], \(w, st) {
+    data.frame(to = match(st, StockNames), from = w$from, weight = w$weight)
+  }) |> do.call(rbind, args = _)
+
   NPR0_noList <- purrr::map(StockNames, \(nm) {
     Z0 <- inputs$NaturalMortalityList[[nm]]
     Semel <- inputs$SemelparousList[[nm]]
@@ -115,7 +119,9 @@
     NPR0_noList                  = NPR0_noList,
     NPR0_spList                  = NPR0_spList,
     RefSeasonWeights              = RefSeasonWeightsVec,
-    SPFromVec                    = as.integer(unname(inputs$SPFrom[StockNames])),
+    SPFromToStock                = as.integer(SPFromPairs$to),
+    SPFromFromStock               = as.integer(SPFromPairs$from),
+    SPFromWeight                  = as.numeric(SPFromPairs$weight),
     IsSpawnTimeFrac               = IsSpawnTimeFrac
   )
 }
@@ -168,11 +174,16 @@
   SPR0_vals <- flat$SPR0_target[1, StockNames, 1]
   names(SPR0_vals) <- StockNames
 
-  SPFromNames <- StockNames[inputs$SPFrom[StockNames]]
-  SPR_vals    <- SPRF_reordered[SPFromNames] / SPR0_vals[SPFromNames]
+  SPR_vals <- purrr::map_dbl(StockNames, \(st) {
+    w <- inputs$SPFrom[[st]]
+    sum(purrr::map2_dbl(w$from, w$weight, \(idx, wt) {
+      src <- StockNames[idx]
+      val <- SPRF_reordered[src] / SPR0_vals[src]
+      if (!is.finite(val)) val <- 0
+      wt * val
+    }))
+  })
   names(SPR_vals) <- StockNames
-  SPR_vals[is.na(SPR_vals)]       <- 0
-  SPR_vals[is.infinite(SPR_vals)] <- 0
   SPR <- .Wrap(SPR_vals)
 
   IsSpawnTimeFrac <- flat$IsSpawnTimeFrac
@@ -214,7 +225,9 @@
     NPR0_noList                  = flat$NPR0_noList,
     NPR0_spList                  = flat$NPR0_spList,
     RefSeasonWeights              = flat$RefSeasonWeights,
-    SPFromVec                    = flat$SPFromVec,
+    SPFromToStock                 = flat$SPFromToStock,
+    SPFromFromStock                = flat$SPFromFromStock,
+    SPFromWeight                   = flat$SPFromWeight,
     IsSpawnTimeFrac               = flat$IsSpawnTimeFrac,
     nSeason                       = flat$nSeason
   )

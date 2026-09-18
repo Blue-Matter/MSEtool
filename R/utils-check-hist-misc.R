@@ -116,7 +116,8 @@
   
   # required Misc objects
   required_objects <- c(
-    "maxF", "SPFrom", "PlusGroup", "Mode", "RelSize", "SpawnTimeFrac",
+    "maxF", "SPFromToStock", "SPFromFromStock", "SPFromWeight",
+    "PlusGroup", "Mode", "RelSize", "SpawnTimeFrac",
     "LengthList", "WeightList", "NaturalMortalityList", "MaturityList",
     "SemelparousList", "FecundityList", "MovementList",
     "SRR_Pars", "RecDevs", "RecLag", "SRR_Model",
@@ -151,17 +152,32 @@
   
   # 1D vectors 
   
-  # SPFrom: length nStock, values in [1, nStock]
-  if (!is.numeric(Misc$SPFrom) || length(Misc$SPFrom) != nStock)
-    add_err("Hist@Misc$SPFrom: must be numeric of length nStock (", nStock,
-            "), got length ", length(Misc$SPFrom))
-  if (is.numeric(Misc$SPFrom)) {
-    bad <- which(Misc$SPFrom < 1 | Misc$SPFrom > nStock | is.na(Misc$SPFrom))
-    if (length(bad) > 0)
-      add_err("Hist@Misc$SPFrom: values must be in [1, nStock=", nStock,
-              "]; bad stock(s): ", paste(bad, collapse = ","))
+  # SPFromToStock/FromStock/Weight: variable-length list of (to, from, weight)
+  # pairs, one per source contributing to a stock's spawning production.
+  # Every stock has at least one pair (self, weight 1, when SPFrom is unset).
+  nSPFromPair <- length(Misc$SPFromToStock)
+  if (length(Misc$SPFromFromStock) != nSPFromPair || length(Misc$SPFromWeight) != nSPFromPair)
+    add_err("Hist@Misc$SPFromToStock/SPFromFromStock/SPFromWeight: lengths must match (",
+            nSPFromPair, "); got ", length(Misc$SPFromToStock), " / ",
+            length(Misc$SPFromFromStock), " / ", length(Misc$SPFromWeight))
+
+  if (!is.numeric(Misc$SPFromToStock) || !is.numeric(Misc$SPFromFromStock)) {
+    add_err("Hist@Misc$SPFromToStock/SPFromFromStock: must be numeric/integer")
+  } else {
+    bad_to   <- which(Misc$SPFromToStock < 1 | Misc$SPFromToStock > nStock | is.na(Misc$SPFromToStock))
+    bad_from <- which(Misc$SPFromFromStock < 1 | Misc$SPFromFromStock > nStock | is.na(Misc$SPFromFromStock))
+    if (length(bad_to) > 0)
+      add_err("Hist@Misc$SPFromToStock: values must be in [1, nStock=", nStock,
+              "]; bad pair(s): ", paste(bad_to, collapse = ","))
+    if (length(bad_from) > 0)
+      add_err("Hist@Misc$SPFromFromStock: values must be in [1, nStock=", nStock,
+              "]; bad pair(s): ", paste(bad_from, collapse = ","))
+    if (length(setdiff(seq_len(nStock), Misc$SPFromToStock)) > 0)
+      add_err("Hist@Misc$SPFromToStock: every stock must have at least one pair; missing stock(s): ",
+              paste(setdiff(seq_len(nStock), Misc$SPFromToStock), collapse = ","))
   }
-  
+  check_values(Misc$SPFromWeight, "Hist@Misc$SPFromWeight", allow_neg = FALSE)
+
   # PlusGroup: length nStock, values 0 or 1
   if (!is.numeric(Misc$PlusGroup) || length(Misc$PlusGroup) != nStock)
     add_err("Hist@Misc$PlusGroup: must be numeric of length nStock (", nStock,

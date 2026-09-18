@@ -14,7 +14,6 @@ struct HistView {
   ConstArrayView3D SP0;
   ConstArrayView3D R0;
   ConstArrayView4D RecDist;
-  ConstArrayView1D SPFrom;
   ConstArrayView1D PlusGroup;
   ConstArrayView2D RelSize;
   ConstArrayView2D SpawnTimeFrac;
@@ -51,6 +50,10 @@ struct HistView {
   int nTransitionPair = 0;
   bool TransitionFlag = false;
 
+  std::vector<int> SPFromToStock, SPFromFromStock; // [pair], 0-indexed
+  std::vector<double> SPFromWeight;                // [pair]
+  int nSPFromPair = 0;
+
   std::vector<ConstArrayView4D> WeightFleetRetained, WeightFleetSelected;
   std::vector<ConstArrayView5D> SelAge, RetAge, DiscMort;
   std::vector<std::vector<ConstArrayView4D>> SelSize, RetSize;
@@ -67,7 +70,6 @@ inline HistView::HistView(Rcpp::S4& Hist, int nSim_, int nStock_, int nFleet_, i
     SP0(              GetMisc_ConstArrayView<3>(Hist, "SP0")),
     R0(               GetMisc_ConstArrayView<3>(Hist, "R0")),
     RecDist(          GetMisc_ConstArrayView<4>(Hist, "RecDist")),
-    SPFrom(           GetMisc_ConstArrayView<1>(Hist, "SPFrom")),
     PlusGroup(        GetMisc_ConstArrayView<1>(Hist, "PlusGroup")),
     RelSize(          GetMisc_ConstArrayView<2>(Hist, "RelSize")),
     SpawnTimeFrac(    GetMisc_ConstArrayView<2>(Hist, "SpawnTimeFrac")),
@@ -194,6 +196,21 @@ inline HistView::HistView(Rcpp::S4& Hist, int nSim_, int nStock_, int nFleet_, i
       TransitionToStock.push_back(ToVec[p] - 1);     // 1-indexed in R
       TransitionFromStock.push_back(FromVec[p] - 1); // 1-indexed in R
     }
+  }
+
+  const Rcpp::IntegerVector SPFromToVec    = Misc["SPFromToStock"];
+  const Rcpp::IntegerVector SPFromFromVec  = Misc["SPFromFromStock"];
+  const Rcpp::NumericVector SPFromWeightVec = Misc["SPFromWeight"];
+
+  nSPFromPair = SPFromToVec.size();
+  SPFromToStock.reserve(nSPFromPair);
+  SPFromFromStock.reserve(nSPFromPair);
+  SPFromWeight.reserve(nSPFromPair);
+
+  for (int p = 0; p < nSPFromPair; ++p) {
+    SPFromToStock.push_back(SPFromToVec[p] - 1);     // 1-indexed in R
+    SPFromFromStock.push_back(SPFromFromVec[p] - 1); // 1-indexed in R
+    SPFromWeight.push_back(SPFromWeightVec[p]);
   }
 
   // Fleet misc

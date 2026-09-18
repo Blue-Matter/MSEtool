@@ -313,13 +313,16 @@ test_that("SRR@SPFrom is stored as a portable stock name after .OM2Hist(), not a
     expect_true(spf %in% stock_names)
   }
 
-  # Hist@Misc$SPFrom is the compensating fix -- the C++ dynamics engine reads
-  # this as a global numeric index over the full stock list, so it must stay
-  # numeric even though @SRR@SPFrom is now a name.
+  # Hist@Misc$SPFromToStock/SPFromFromStock are the compensating fix -- the
+  # C++ dynamics engine reads these as global numeric indices (sparse pairs)
+  # over the full stock list, so they must stay numeric even though
+  # @SRR@SPFrom is now a name.
   # (Misc is stripped by the time Simulate() returns; recompute it directly.)
   hist_prepped <- MSEtool:::.PrepHistMisc(hist_no_msy)
-  expect_type(hist_prepped@Misc$SPFrom, "integer")
-  expect_true(all(hist_prepped@Misc$SPFrom %in% seq_along(stock_names)))
+  expect_type(hist_prepped@Misc$SPFromToStock, "integer")
+  expect_type(hist_prepped@Misc$SPFromFromStock, "integer")
+  expect_true(all(hist_prepped@Misc$SPFromToStock %in% seq_along(stock_names)))
+  expect_true(all(hist_prepped@Misc$SPFromFromStock %in% seq_along(stock_names)))
 
   # The actual reported bug: each stock alone in its own complex (no
   # `@Complexes` grouping) used to throw "subscript out of bounds".

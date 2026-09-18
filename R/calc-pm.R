@@ -267,12 +267,9 @@ NULL
       keep <- c(keep, resolved)
       next
     }
-    self_ref <- purrr::keep(cx, \(i) {
-      spf <- OM@Stock[[i]]@SRR@SPFrom
-      length(spf) == 0 ||
-        (is.character(spf) && identical(spf, stockNms[i])) ||
-        (is.numeric(spf)   && spf == i)
-    })
+    self_ref <- purrr::keep(cx, \(i)
+      .IsSPFromSelfOnly(OM@Stock[[i]]@SRR@SPFrom, i, stockNms)
+    )
     if (length(self_ref) == 1) {
       keep <- c(keep, stockNms[self_ref])
     } else {

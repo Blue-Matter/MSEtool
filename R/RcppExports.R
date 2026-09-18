@@ -93,16 +93,19 @@ CalcPerRecruitFScalarCpp_ <- function(apicalF, StockFleetAllocation, NaturalMort
 #'   `NumericVector` (`pi_s`, seasonal recruitment weights).
 #' @param RefSeasonWeights Length-nSeason `NumericVector` (search-invariant,
 #'   precomputed once per calendar year).
-#' @param SPFromVec Integer, 1-based stock index (length nStock) -- which
-#'   stock's spawning production each stock's SPR is computed from.
+#' @param SPFromToStock,SPFromFromStock Integer, 1-based stock index, one
+#'   entry per (to, from) source pair -- which stock(s)' spawning production
+#'   each stock's SPR is computed from (parallel to `SPFromWeight`).
+#' @param SPFromWeight Numeric, one entry per pair -- weight applied to the
+#'   `from` stock's SPR contribution to the `to` stock.
 #' @param IsSpawnTimeFrac Logical. Whether any stock has a non-zero spawn-time fraction.
 #' @param nSeason Integer number of seasons per calendar year.
 #' @return A named `List`: per-stock (length nStock) `NumericVector`s NPR0,
 #'   NPRF, NPR0_SP, NPRF_SP, SPR0f (unfished SP-per-recruit), SPRFf (fished
 #'   SP-per-recruit), Biomass, SBiomass, SProduction, Landings, Discards,
 #'   Removals, plus a scalar `F_annual_apical`.
-CalcPerRecruitFScalarSeasonalCpp_ <- function(apicalF, StockFleetAllocationList, NaturalMortalityList, PlusGroupVec, MaturityList, SemelparousList, WeightList, SpawnTimeFracVec, FecundityList, WeightFleetRetainedList, WeightFleetSelectedList, SelectivityFleetList, RetentionFleetList, DiscardMortalityFleetList, SeasonalWeightsList, NPR0_noList, NPR0_spList, RefSeasonWeights, SPFromVec, IsSpawnTimeFrac, nSeason) {
-    .Call(`_MSEtool_CalcPerRecruitFScalarSeasonalCpp_`, apicalF, StockFleetAllocationList, NaturalMortalityList, PlusGroupVec, MaturityList, SemelparousList, WeightList, SpawnTimeFracVec, FecundityList, WeightFleetRetainedList, WeightFleetSelectedList, SelectivityFleetList, RetentionFleetList, DiscardMortalityFleetList, SeasonalWeightsList, NPR0_noList, NPR0_spList, RefSeasonWeights, SPFromVec, IsSpawnTimeFrac, nSeason)
+CalcPerRecruitFScalarSeasonalCpp_ <- function(apicalF, StockFleetAllocationList, NaturalMortalityList, PlusGroupVec, MaturityList, SemelparousList, WeightList, SpawnTimeFracVec, FecundityList, WeightFleetRetainedList, WeightFleetSelectedList, SelectivityFleetList, RetentionFleetList, DiscardMortalityFleetList, SeasonalWeightsList, NPR0_noList, NPR0_spList, RefSeasonWeights, SPFromToStock, SPFromFromStock, SPFromWeight, IsSpawnTimeFrac, nSeason) {
+    .Call(`_MSEtool_CalcPerRecruitFScalarSeasonalCpp_`, apicalF, StockFleetAllocationList, NaturalMortalityList, PlusGroupVec, MaturityList, SemelparousList, WeightList, SpawnTimeFracVec, FecundityList, WeightFleetRetainedList, WeightFleetSelectedList, SelectivityFleetList, RetentionFleetList, DiscardMortalityFleetList, SeasonalWeightsList, NPR0_noList, NPR0_spList, RefSeasonWeights, SPFromToStock, SPFromFromStock, SPFromWeight, IsSpawnTimeFrac, nSeason)
 }
 
 get_freq2 <- function(x, CAL_bins, outlen = 0L) {

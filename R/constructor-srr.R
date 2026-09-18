@@ -37,11 +37,14 @@
 #'   recruitment deviations. Follows the same length conventions as `R0`.
 #'   Currently fixed across years. Defaults to `0` (no autocorrelation) when
 #'   `NULL`. Default `NULL`.
-#' @param SPFrom `character(1)` or `numeric(1)`. Stock whose spawning
-#'   production drives this stock's recruitment. Specify by stock name
-#'   (`character`) or 1-based integer index (`numeric`). Defaults to self
+#' @param SPFrom `character(1)`, `numeric(1)`, or a named `numeric` vector.
+#'   Stock(s) whose spawning production drives this stock's recruitment.
+#'   Specify a single source by stock name (`character`) or 1-based integer
+#'   index (`numeric`), or a weighted blend of multiple sources with a named
+#'   `numeric` vector, e.g. `c(Stock1 = 0.6, Stock2 = 0.4)`. Defaults to self
 #'   (the stock recruits from its own spawning production). Relevant only in
-#'   multi-stock operating models. Default `NULL`.
+#'   multi-stock operating models. See [srr-class] for details and
+#'   constraints on the weighted form. Default `NULL`.
 #' @param TruncSD `numeric(1)`. Number of standard deviations at which the
 #'   log-normal recruitment deviation distribution is truncated. Default `2`.
 #' @param RecDevInit `matrix` or `NULL`. Pre-specified recruitment deviations
@@ -160,6 +163,10 @@
 #' srr2 <- SRR(Pars = list(h = 0.7), R0 = 500, SPFrom = 1)
 #' # equivalently by name:
 #' srr2 <- SRR(Pars = list(h = 0.7), R0 = 500, SPFrom = "Stock1")
+#'
+#' # Stock 3 recruits from a 60/40 weighted blend of stocks 1 and 2
+#' srr3 <- SRR(Pars = list(h = 0.7), R0 = 500,
+#'             SPFrom = c(Stock1 = 0.6, Stock2 = 0.4))
 #' ```
 #'
 #' ## Pass-Through Access from a Stock

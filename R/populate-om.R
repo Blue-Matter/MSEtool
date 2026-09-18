@@ -496,38 +496,105 @@ PopulateOM <- function(OM,
                      'i'='Current Stock Names are {.val {stocknames}}'))
   }
   for (st in 1:nStock(OM)) {
-    if (!is.null(OM@Stock[[st]]@SRR@SPFrom)) {
-      if (is.numeric(OM@Stock[[st]]@SRR@SPFrom))
-        OM@Stock[[st]]@SRR@SPFrom <- stocknames[OM@Stock[[st]]@SRR@SPFrom]
+    SPFrom <- OM@Stock[[st]]@SRR@SPFrom
+    if (is.null(SPFrom)) next
+
+    nm <- names(SPFrom)
+    if (!is.null(nm) && any(nzchar(nm))) {
+      names(SPFrom) <- purrr::map_chr(nm, \(x) {
+        idx <- suppressWarnings(as.numeric(x))
+        if (nzchar(x) && !is.na(idx) && idx >= 1 && idx <= length(stocknames))
+          return(stocknames[idx])
+        x
+      })
+    } else if (is.numeric(SPFrom)) {
+      SPFrom <- stocknames[SPFrom]
     }
+    OM@Stock[[st]]@SRR@SPFrom <- SPFrom
   }
   OM
 }
 
+
+.ResolveSPFromWeights <- function(SPFrom, stockNames, selfIndex) {
+  if (is.null(SPFrom))
+    return(list(from = selfIndex, weight = 1))
+
+  nm <- names(SPFrom)
+  if (!is.null(nm) && any(nzchar(nm)))
+    return(list(from = match(nm, stockNames), weight = unname(as.numeric(SPFrom))))
+
+  src <- if (is.character(SPFrom)) match(SPFrom, stockNames) else as.integer(SPFrom)
+  list(from = src, weight = 1)
+}
+
+.IsSPFromSelfOnly <- function(SPFrom, selfIndex, stockNames) {
+  w <- .ResolveSPFromWeights(SPFrom, stockNames, selfIndex)
+  length(w$from) == 1L && identical(w$from, selfIndex)
+}
+
 .ValidateSPFrom <- function(OM) {
   stocknames <- StockNames(OM)
-  SPFrom <- purrr::map_chr(OM@Stock, \(st) {
-    x <- st@SRR@SPFrom
-    if (is.null(x)) NA_character_ else as.character(x)
-  })
-  names(SPFrom) <- stocknames
+  nStockOM   <- length(stocknames)
 
-  for (st in stocknames) {
-    src <- SPFrom[[st]]
-    if (is.na(src) || identical(src, st)) next
+  for (i in seq_len(nStockOM)) {
+    st     <- stocknames[i]
+    SPFrom <- OM@Stock[[i]]@SRR@SPFrom
+    if (is.null(SPFrom)) next
 
-    if (!src %in% stocknames)
+    nm <- names(SPFrom)
+    weighted <- !is.null(nm) && any(nzchar(nm))
+    if (!weighted && length(SPFrom) > 1L)
       cli::cli_abort(c(
-        "x" = "Stock {.val {st}} has {.field SRR@SPFrom} = {.val {src}}, which is not a known stock.",
+        "x" = "Stock {.val {st}} has a {.field SRR@SPFrom} of length {length(SPFrom)} with no names.",
+        "i" = "Multiple sources must be given as a named vector, e.g. {.code c(Stock1 = 0.6, Stock2 = 0.4)}."
+      ))
+
+    w <- .ResolveSPFromWeights(SPFrom, stocknames, i)
+    if (length(w$from) == 1L && identical(w$from, i)) next
+
+    if (anyNA(w$from) || any(w$from < 1L | w$from > nStockOM))
+      cli::cli_abort(c(
+        "x" = "Stock {.val {st}} has {.field SRR@SPFrom} referencing an unknown stock.",
         "i" = "Known stocks are {.val {stocknames}}."
       ))
 
-    srcOfSrc <- SPFrom[[src]]
-    if (!is.na(srcOfSrc) && !identical(srcOfSrc, src))
-      cli::cli_abort(c(
-        "x" = "{.var SRR@SPFrom} only supports one-hop sourcing, but {.val {st}} -> {.val {src}} -> {.val {srcOfSrc}} is a longer chain (or a cycle).",
-        "i" = "Stock {.val {src}} must not itself have a non-self {.field SPFrom}."
-      ))
+    if (anyDuplicated(w$from))
+      cli::cli_abort(
+        "Stock {.val {st}} has a duplicate source stock in {.field SRR@SPFrom}."
+      )
+
+    if (!all(is.finite(w$weight)))
+      cli::cli_abort(
+        "Stock {.val {st}} has a non-finite weight in {.field SRR@SPFrom}."
+      )
+
+    if (any(w$weight < 0))
+      cli::cli_abort(
+        "Stock {.val {st}} has a negative weight in {.field SRR@SPFrom}; weights must be non-negative."
+      )
+
+    for (src in w$from) {
+      if (src == i) next
+      srcSPFrom <- OM@Stock[[src]]@SRR@SPFrom
+      if (!.IsSPFromSelfOnly(srcSPFrom, src, stocknames)) {
+        srcOfSrc <- .ResolveSPFromWeights(srcSPFrom, stocknames, src)$from[1]
+        cli::cli_abort(c(
+          "x" = "{.var SRR@SPFrom} only supports one-hop sourcing, but {.val {st}} -> {.val {stocknames[src]}} -> {.val {stocknames[srcOfSrc]}} is a longer chain (or a cycle).",
+          "i" = "Stock {.val {stocknames[src]}} must not itself have a non-self {.field SPFrom}."
+        ))
+      }
+    }
+
+    wsum <- sum(w$weight)
+    if (abs(wsum - 1) > 1e-8)
+      OM <- .CaptureLog(
+        OM,
+        string = cli::format_inline(
+          "Stock {.val {st}}: {.field SRR@SPFrom} weights sum to {.val {round(wsum, 4)}}, not 1."),
+        name = '.ValidateSPFrom',
+        type = 'warning'
+      )
   }
   OM
 }

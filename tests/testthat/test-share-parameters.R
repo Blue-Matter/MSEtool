@@ -62,3 +62,66 @@ test_that("a 2+-hop chain aborts PopulateOM()", {
 
   expect_error(PopulateOM(om, silent = TRUE))
 })
+
+test_that("weighted multi-source SPFrom validates and PopulateOM() succeeds", {
+  om <- .make_multistock_om(nStock = 3)
+  sn <- StockNames(om)
+
+  om@Stock[[3]]@SRR@SPFrom <- c(0.6, 0.4) |> stats::setNames(sn[1:2])
+  out <- PopulateOM(om, silent = TRUE)
+  expect_s4_class(out, "om")
+})
+
+test_that("weighted SPFrom produces the expected weighted SProduction", {
+  om <- .make_multistock_om(nStock = 3)
+  sn <- StockNames(om)
+
+  om@Stock[[3]]@SRR@SPFrom <- c(0.6, 0.4) |> stats::setNames(sn[1:2])
+
+  Eq <- CalcUnfished_Equilibrium(om, silent = TRUE)
+  expected <- 0.6 * Eq@SProduction[, 1, ] + 0.4 * Eq@SProduction[, 2, ]
+  expect_equal(Eq@SProduction[, 3, ], expected)
+})
+
+test_that("weighted SPFrom with a non-terminal source aborts PopulateOM()", {
+  om <- .make_multistock_om(nStock = 3)
+  sn <- StockNames(om)
+
+  om@Stock[[3]]@SRR@SPFrom <- sn[1]                                  # C -> A (terminal, fine alone)
+  om@Stock[[2]]@SRR@SPFrom <- c(0.5, 0.5) |> stats::setNames(sn[c(1, 3)])  # B -> {A, C}; C is not terminal
+
+  expect_error(PopulateOM(om, silent = TRUE))
+})
+
+test_that("weighted SPFrom weights not summing to 1 logs a warning but succeeds", {
+  om <- .make_multistock_om(nStock = 3)
+  sn <- StockNames(om)
+
+  om@Stock[[3]]@SRR@SPFrom <- c(0.6, 0.6) |> stats::setNames(sn[1:2])
+  out <- expect_no_error(PopulateOM(om, silent = TRUE))
+  expect_true(length(out@Log$warning) > 0)
+})
+
+test_that("a negative weight in SPFrom aborts PopulateOM()", {
+  om <- .make_multistock_om(nStock = 3)
+  sn <- StockNames(om)
+
+  om@Stock[[3]]@SRR@SPFrom <- c(1.5, -0.5) |> stats::setNames(sn[1:2])
+  expect_error(PopulateOM(om, silent = TRUE))
+})
+
+test_that("a duplicate source stock in SPFrom aborts PopulateOM()", {
+  om <- .make_multistock_om(nStock = 3)
+  sn <- StockNames(om)
+
+  om@Stock[[3]]@SRR@SPFrom <- c(0.5, 0.5) |> stats::setNames(sn[c(1, 1)])
+  expect_error(PopulateOM(om, silent = TRUE))
+})
+
+test_that("an unnamed multi-element SPFrom aborts PopulateOM()", {
+  om <- .make_multistock_om(nStock = 3)
+  sn <- StockNames(om)
+
+  om@Stock[[3]]@SRR@SPFrom <- c(1, 2)
+  expect_error(PopulateOM(om, silent = TRUE))
+})

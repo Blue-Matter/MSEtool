@@ -48,9 +48,10 @@
 #'
 #' ## SPFrom
 #' When stocks share a spawning component (e.g. a complex), the `SPFrom` slot
-#' of each stock's [SRR()] determines which stock's `SPRF` is used when
-#' computing relative `SPR`. This is handled upstream in [CalcPerRecruit()]
-#' before the `SPRF` and `SPR0` slots are populated.
+#' of each stock's [SRR()] determines which stock's (or weighted blend of
+#' stocks') `SPRF`/`SPR0` is used when computing relative `SPR`. This is
+#' handled upstream in [CalcPerRecruit()] before the `SPRF` and `SPR0` slots
+#' are populated.
 #'
 #' ## Relationships between slots
 #' \deqn{\texttt{SPR} = \texttt{SPRF} / \texttt{SPR0}}

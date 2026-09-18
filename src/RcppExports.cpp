@@ -179,8 +179,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // CalcPerRecruitFScalarSeasonalCpp_
-List CalcPerRecruitFScalarSeasonalCpp_(double apicalF, List StockFleetAllocationList, List NaturalMortalityList, LogicalVector PlusGroupVec, List MaturityList, List SemelparousList, List WeightList, NumericVector SpawnTimeFracVec, List FecundityList, List WeightFleetRetainedList, List WeightFleetSelectedList, List SelectivityFleetList, List RetentionFleetList, List DiscardMortalityFleetList, List SeasonalWeightsList, List NPR0_noList, List NPR0_spList, NumericVector RefSeasonWeights, IntegerVector SPFromVec, bool IsSpawnTimeFrac, int nSeason);
-RcppExport SEXP _MSEtool_CalcPerRecruitFScalarSeasonalCpp_(SEXP apicalFSEXP, SEXP StockFleetAllocationListSEXP, SEXP NaturalMortalityListSEXP, SEXP PlusGroupVecSEXP, SEXP MaturityListSEXP, SEXP SemelparousListSEXP, SEXP WeightListSEXP, SEXP SpawnTimeFracVecSEXP, SEXP FecundityListSEXP, SEXP WeightFleetRetainedListSEXP, SEXP WeightFleetSelectedListSEXP, SEXP SelectivityFleetListSEXP, SEXP RetentionFleetListSEXP, SEXP DiscardMortalityFleetListSEXP, SEXP SeasonalWeightsListSEXP, SEXP NPR0_noListSEXP, SEXP NPR0_spListSEXP, SEXP RefSeasonWeightsSEXP, SEXP SPFromVecSEXP, SEXP IsSpawnTimeFracSEXP, SEXP nSeasonSEXP) {
+List CalcPerRecruitFScalarSeasonalCpp_(double apicalF, List StockFleetAllocationList, List NaturalMortalityList, LogicalVector PlusGroupVec, List MaturityList, List SemelparousList, List WeightList, NumericVector SpawnTimeFracVec, List FecundityList, List WeightFleetRetainedList, List WeightFleetSelectedList, List SelectivityFleetList, List RetentionFleetList, List DiscardMortalityFleetList, List SeasonalWeightsList, List NPR0_noList, List NPR0_spList, NumericVector RefSeasonWeights, IntegerVector SPFromToStock, IntegerVector SPFromFromStock, NumericVector SPFromWeight, bool IsSpawnTimeFrac, int nSeason);
+RcppExport SEXP _MSEtool_CalcPerRecruitFScalarSeasonalCpp_(SEXP apicalFSEXP, SEXP StockFleetAllocationListSEXP, SEXP NaturalMortalityListSEXP, SEXP PlusGroupVecSEXP, SEXP MaturityListSEXP, SEXP SemelparousListSEXP, SEXP WeightListSEXP, SEXP SpawnTimeFracVecSEXP, SEXP FecundityListSEXP, SEXP WeightFleetRetainedListSEXP, SEXP WeightFleetSelectedListSEXP, SEXP SelectivityFleetListSEXP, SEXP RetentionFleetListSEXP, SEXP DiscardMortalityFleetListSEXP, SEXP SeasonalWeightsListSEXP, SEXP NPR0_noListSEXP, SEXP NPR0_spListSEXP, SEXP RefSeasonWeightsSEXP, SEXP SPFromToStockSEXP, SEXP SPFromFromStockSEXP, SEXP SPFromWeightSEXP, SEXP IsSpawnTimeFracSEXP, SEXP nSeasonSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -202,10 +202,12 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< List >::type NPR0_noList(NPR0_noListSEXP);
     Rcpp::traits::input_parameter< List >::type NPR0_spList(NPR0_spListSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type RefSeasonWeights(RefSeasonWeightsSEXP);
-    Rcpp::traits::input_parameter< IntegerVector >::type SPFromVec(SPFromVecSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type SPFromToStock(SPFromToStockSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type SPFromFromStock(SPFromFromStockSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type SPFromWeight(SPFromWeightSEXP);
     Rcpp::traits::input_parameter< bool >::type IsSpawnTimeFrac(IsSpawnTimeFracSEXP);
     Rcpp::traits::input_parameter< int >::type nSeason(nSeasonSEXP);
-    rcpp_result_gen = Rcpp::wrap(CalcPerRecruitFScalarSeasonalCpp_(apicalF, StockFleetAllocationList, NaturalMortalityList, PlusGroupVec, MaturityList, SemelparousList, WeightList, SpawnTimeFracVec, FecundityList, WeightFleetRetainedList, WeightFleetSelectedList, SelectivityFleetList, RetentionFleetList, DiscardMortalityFleetList, SeasonalWeightsList, NPR0_noList, NPR0_spList, RefSeasonWeights, SPFromVec, IsSpawnTimeFrac, nSeason));
+    rcpp_result_gen = Rcpp::wrap(CalcPerRecruitFScalarSeasonalCpp_(apicalF, StockFleetAllocationList, NaturalMortalityList, PlusGroupVec, MaturityList, SemelparousList, WeightList, SpawnTimeFracVec, FecundityList, WeightFleetRetainedList, WeightFleetSelectedList, SelectivityFleetList, RetentionFleetList, DiscardMortalityFleetList, SeasonalWeightsList, NPR0_noList, NPR0_spList, RefSeasonWeights, SPFromToStock, SPFromFromStock, SPFromWeight, IsSpawnTimeFrac, nSeason));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -426,7 +428,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MSEtool_CalcCatchAtSizeFleet_", (DL_FUNC) &_MSEtool_CalcCatchAtSizeFleet_, 8},
     {"_MSEtool_CalcFisheryDynamics_", (DL_FUNC) &_MSEtool_CalcFisheryDynamics_, 18},
     {"_MSEtool_CalcPerRecruitFScalarCpp_", (DL_FUNC) &_MSEtool_CalcPerRecruitFScalarCpp_, 17},
-    {"_MSEtool_CalcPerRecruitFScalarSeasonalCpp_", (DL_FUNC) &_MSEtool_CalcPerRecruitFScalarSeasonalCpp_, 21},
+    {"_MSEtool_CalcPerRecruitFScalarSeasonalCpp_", (DL_FUNC) &_MSEtool_CalcPerRecruitFScalarSeasonalCpp_, 23},
     {"_MSEtool_get_freq2", (DL_FUNC) &_MSEtool_get_freq2, 3},
     {"_MSEtool_tdnorm", (DL_FUNC) &_MSEtool_tdnorm, 3},
     {"_MSEtool_genSizeComp", (DL_FUNC) &_MSEtool_genSizeComp, 11},
