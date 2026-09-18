@@ -15,15 +15,20 @@ simulations in parallel using a \code{future} plan established by
 
 \item{silent}{Logical; if \code{TRUE}, suppress progress output.
 
+Stocks are grouped by \code{SRR@SPFrom} connectivity: within each
+group, self-recruiting ("source") stocks each get an independently-fit
+catchability scale, while \code{SPFrom}-dependent stocks' scale is derived as
+the weighted average of their source(s)' fitted scale. The depletion
+objective is evaluated once per group, against a target taken from the
+group's source stock(s) only; a dependent's own \code{Depletion@Final}/
+\code{Reference} (if set) has no effect.
+
 The function loops over all simulations (\code{nSim}) in \code{Hist} and performs
 numeric optimization to scale the initial catchability to achieve the
 desired final depletion specified in \code{Stock@Depletion@Final}.
 
 Uses \code{stats::optimize} with a fallback to \code{nlminb} if results are
-near bounds.
-
-Currently, only single-stock and single-fleet scenarios
-are supported.}
+near bounds.}
 }
 \value{
 A modified \code{\link[=Hist]{Hist()}} object with optimized \code{Catchability@Efficiency}
@@ -32,7 +37,5 @@ in each fleet of the operating model.
 \description{
 Internal function to adjust fleet-specific catchability (q) to match
 the target final depletion for each stock in the historical operating model.
-Works for single-stock and single-fleet models. Multi-stock/fleet
-optimization is not yet supported.
 }
 \keyword{internal}
