@@ -16,6 +16,8 @@
   StockNames,
   Complexes,
   Areas,
+  Season = NULL,
+  EverySeason = FALSE,
   lambda_scale = 1,
   n_recent = 5,
   maxEval = 500

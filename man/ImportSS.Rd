@@ -97,7 +97,7 @@ vs. thousands) as metadata, so this cannot be inferred and must be
 supplied by the user if not \code{1} (absolute numbers of fish). Default \code{1}.}
 
 \item{AllocationYears}{Integer specifying the number of most recent
-historical years used to calculate \code{OM@Allocation}: each fleet's share of
+historical years used to calculate \code{OM@FleetAllocation}: each fleet's share of
 total removals biomass (landings + discards), used to split an aggregate
 TAC across fleets under multi-fleet TAC-based MPs. Averaged over this
 many years ending at the last historical year. Default \code{3}.}

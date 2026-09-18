@@ -7,9 +7,8 @@
 CollapseSeasons(OM, silent = FALSE)
 }
 \arguments{
-\item{OM}{A seasonal \code{\link[=OM]{OM()}} object (\code{OM@Seasons > 1}). Every stock's
-\code{Ages@Units} must match \code{OM@Seasons} (e.g. \code{Seasons = 4} requires
-\code{Ages@Units = "quarter"}). Multi-area (\code{nArea > 1}) OMs are not yet supported.}
+\item{OM}{A seasonal \code{\link[=OM]{OM()}} object (\code{OM@Seasons > 1}).
+Multi-area (\code{nArea > 1}) OMs are not yet supported.}
 
 \item{silent}{\code{logical(1)}. If \code{TRUE}, suppresses informational console
 messages. Defaults to \code{FALSE}.}
@@ -46,6 +45,9 @@ heterogeneity in \code{F} and \code{M} is mild.
 }
 }
 \description{
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
+}
+\details{
 Converts an Operating Model with sub-annual seasonal resolution
 (\code{OM@Seasons > 1}) into an annual Operating Model (\code{Seasons = 1}) that
 approximates the same annual-scale fishery dynamics.

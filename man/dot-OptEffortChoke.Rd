@@ -67,7 +67,7 @@ to the optimiser.}
 
 \item{inner_reltol}{Numeric, or \code{NULL} (default). Relative convergence
 tolerance for the per-complex root finds during optimisation, as a
-fraction of the TAC being matched; \code{NULL} keeps \code{.OptEffortSinglestock()}'s
+fraction of the TAC being matched; \code{NULL} keeps \code{.OptEffortSingleStock()}'s
 absolute \code{tol}.}
 
 \item{maxEval}{Integer (default \code{500}). Maximum function evaluations
@@ -79,20 +79,13 @@ from the underlying per-complex solution), \code{converged} and
 \code{ActiveComplex}.
 }
 \description{
-Solves fleet effort under TAC management in a multi-complex model. Rather
-than penalising TAC over/undershoot, effort is derived from the targeting
-mix: for each
-complex, the effort at which its catch equals its TAC is found by a
-bracketed root find (\code{.SolveEffortByComplex()}), and those are combined by
-\code{Imp@TAC@Compliance} (\code{.CombineEffortByCompliance()}). Full compliance stops
-a fleet at the first TAC reached; zero compliance lets it run until the last
-is reached.
+Solves fleet effort under TAC management in a multi-complex model.
 }
 \details{
-Only the targeting mix is optimised, maximising a concave transform of catch
-against a penalty for drifting from last year's mix - the same objective
-\code{.OptTargetingMultiStock()} uses under effort control, with effort supplied
-by the choke rule instead of by the MP. As in that function, the targeting
-mix is a fleet's allocation across complexes.
+Effort is derived from the targeting mix: for each complex, the effort at
+which its catch equals its TAC is found by a bracketed root find (\code{.SolveEffortByComplex()}), and those are combined by \code{Imp@TAC@Compliance}
+(\code{.CombineEffortByCompliance()}). Full compliance stops
+a fleet at the first TAC reached.Zero compliance lets it run until the last
+TAC is reached.
 }
 \keyword{internal}

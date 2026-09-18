@@ -5,7 +5,7 @@
 \alias{LastTAC}
 \alias{LastHistYearInd}
 \alias{ProjectionYear}
-\alias{MPSeasonIndex}
+\alias{SeasonOfYear}
 \title{Data Helper Functions}
 \usage{
 LastTAC(Data)
@@ -14,10 +14,18 @@ LastHistYearInd(Data)
 
 ProjectionYear(Data)
 
-MPSeasonIndex(Data)
+SeasonOfYear(x, Seasons = NULL, Year = NULL)
 }
 \arguments{
 \item{Data}{An object of class \link{data}.}
+
+\item{x}{A \link{data} object, or a numeric vector of years.}
+
+\item{Seasons}{Integer. Seasons per year. Required when \code{x} is not a
+\code{data} object; ignored otherwise.}
+
+\item{Year}{Numeric. The year to query. Defaults to the most recent year
+in the resolved years vector.}
 }
 \value{
 \itemize{
@@ -36,8 +44,8 @@ index.
 }
 
 \itemize{
-\item \code{MPSeasonIndex()}: A list elements \code{Seasons} the number of seasons and
-\code{SeasonInd} the season index
+\item \code{SeasonOfYear()}: A list with elements \code{Seasons} (the number of seasons)
+and \code{SeasonInd} (the season index, \verb{1..Seasons}, of \code{Year}).
 }
 }
 \description{
@@ -60,7 +68,11 @@ vectors aligned to \code{Data@Years}.
 relative to \code{Data@YearLH}. Returns \code{1} in the first projection year,
 incrementing by one each subsequent timestep
 
-\item \code{MPSeasonIndex()}: Get the season index for the season this call to an MP is providing advice for.
+\item \code{SeasonOfYear()}: Get the season of a given (or, by default, the
+current/most recent) year. \code{x} may be a \code{data} object (\code{Seasons} is then
+taken from \code{x@Seasons} and \code{Year} defaults to the most recent element of
+\code{x@Years}) or a plain numeric vector of years, in which case \code{Seasons}
+must be supplied.
 
 }}
 \seealso{

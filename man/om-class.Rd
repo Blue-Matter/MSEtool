@@ -103,11 +103,32 @@ reproduce. If left unspecified for a stock, it is derived from relative
 Effort times Catchability in the final historical year. See \code{\link[=OM]{OM()}}.
 }}
 
-\item{\code{Allocation}}{List. Named list of length 0 or the number of stock
+\item{\code{FleetAllocation}}{List. Named list of length 0 or the number of stock
 complexes. Each element is an \code{nSim} by \code{nFleet} matrix, with rows
 summing to 1, controlling how the TAC is split among fleets during
-projection. If unspecified it falls back to \code{CatchFrac}, and then to
-the mean of removals over the last five historical years. See \code{\link[=OM]{OM()}}.}
+projection. If unspecified it falls back to \code{Allocation} (retained for
+backwards compatibility - see below), then \code{CatchFrac}, then the mean of
+removals over the last five historical years. See \code{\link[=OM]{OM()}}.}
+
+\item{\code{Allocation}}{List. Deprecated alias for \code{FleetAllocation}, retained
+only so that objects saved before the rename still carry their data. If
+\code{FleetAllocation} is unset and \code{Allocation} is, its value is copied over
+during \code{Simulate()}/\code{Project()}. Not user-facing, set \code{FleetAllocation}
+directly instead.}
+
+\item{\code{HistoricalWeight}}{List. Named list of length 0 or the number of
+stock complexes. Each element is a named numeric vector over fleet
+names, values in \verb{[0,1]}, giving the weight placed on the historical
+seasonal pattern (vs. the population abundance pattern) when
+\code{SeasonalAllocation} is derived. \code{1} (default) uses the historical
+pattern only. See \code{\link[=OM]{OM()}}.}
+
+\item{\code{SeasonalAllocation}}{List. Named list of length 0 or the number of
+stock complexes. Each element is an \code{nSim} (or 1, recycled) by
+\code{Seasons} by \code{nFleet} array, each \verb{[sim, , fleet]} column summing to 1,
+controlling how a periodically-set TAC/Effort is split across the
+seasons of the interval it covers. If unspecified it is derived from
+\code{HistoricalWeight}. See \code{\link[=OM]{OM()}}.}
 
 \item{\code{EFactor}}{List. Effort or exploitation modifiers applied during
 projection. See \code{\link[=OM]{OM()}}.}

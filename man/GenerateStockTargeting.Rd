@@ -8,7 +8,7 @@ GenerateStockTargeting(
   OM,
   Period = c("Historical", "Projection"),
   TruncSD = 2,
-  n_recent = 5,
+  n_recent = NULL,
   seed = 101
 )
 }
@@ -34,9 +34,12 @@ Set to \code{Inf} to disable truncation.}
 
 \item{n_recent}{\code{integer(1)}. For \code{Period = "Projection"} only: number of
 recent historical years used to determine whether a stock has been
-continuously inactive at the end of history. A stock with zero targeting
-weight in all \code{n_recent} years is treated as inactive and receives
-\eqn{T_{s,t} = 0} throughout the projection. Default \code{5}.}
+continuously inactive at the end of history (converted to time steps as
+\code{n_recent * OM@Seasons}, and capped to however much history is
+available). A stock with zero targeting weight throughout that window
+is treated as inactive and receives \eqn{T_{s,t} = 0} throughout the
+projection. Default \code{NULL}, which falls back to
+\code{OM@Control$StockTargeting$n_recent}, then to \code{5}.}
 
 \item{seed}{\code{numeric(1)}. Offset added to \code{OM@Seed} for the random number
 generator, ensuring independence from other stochastic processes.

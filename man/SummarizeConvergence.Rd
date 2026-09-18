@@ -12,16 +12,28 @@ SummarizeConvergence(MSE, silent = FALSE)
 \item{silent}{Logical. Suppress the console summary? Default \code{FALSE}.}
 }
 \value{
-Invisibly, a \code{data.frame} with one row per logged event: \code{Sim},
-\code{Year}, \code{MP}. Zero rows if nothing was logged.
+Invisibly, a \code{data.frame} with one row per fleet or complex
+involved in a logged failure: \code{Sim}, \code{Year}, \code{MP}, \code{Level} (\code{"Fleet"} or
+\code{"Complex"}), \code{Name}, \code{TAC}, \code{Catch}, \code{PctAchieved} (\code{100 * Catch / TAC}). Zero rows if nothing was logged. \code{Level}/\code{Name}/\code{TAC}/\code{Catch}/
+\code{PctAchieved} are \code{NA} for log entries recorded before this per-
+fleet/complex detail was captured.
 }
 \description{
 Reports how often the effort/TAC solver failed to converge within
-tolerance during a \code{\link[=Project]{Project()}}/\code{\link[=runMSE]{runMSE()}} run. TAC saturation (TAC
-unachievable within the effort ceiling, e.g. because the stock is too
-depleted) is not logged, since it reflects the stock dynamics rather than
-a solver failure.
+tolerance during a \code{\link[=Project]{Project()}}/\code{\link[=runMSE]{runMSE()}} run, and — where recorded — the
+per-fleet or per-complex TAC vs. achieved-catch shortfall behind each
+failure. TAC saturation (TAC unachievable within the effort ceiling, e.g.
+because the stock is too depleted) and expected multi-complex choke
+trade-offs are never logged, since they reflect stock dynamics or fleet
+allocation rather than a solver problem — every row returned here is a
+genuine solver failure.
+}
+\details{
+The \code{TAC} values reported are the \emph{effective} TAC the solver actually
+targeted, i.e. after any implementation error (\code{OM@Imp}) has already been
+applied — the same target realised landings/removals should be compared
+against.
 }
 \seealso{
-\code{\link[=Project]{Project()}}, \code{\link[=runMSE]{runMSE()}}
+\code{\link[=Project]{Project()}}, \code{\link[=runMSE]{runMSE()}}, \code{\link[=MPFailureRate]{MPFailureRate()}}
 }

@@ -13,7 +13,8 @@
   YearsProj,
   Areas,
   FleetNames,
-  StockNames
+  StockNames,
+  EverySeason = FALSE
 )
 }
 \arguments{
@@ -42,5 +43,11 @@ Updated \code{Proj} object.
 }
 \description{
 Loops over simulations and delegates to \code{.UpdateEffortSim()}.
+}
+\details{
+For multi-stock/multi-complex \code{OM}s, the choke/targeting optimizer used
+to (re)optimise stock-specific targeting weights is tuned by
+\code{OM@Control$EffortOptim}.  See \code{.UpdateTAC()} for the recognized elements
+(\code{lambda_scale}, \code{n_recent}, \code{maxEval}).
 }
 \keyword{internal}

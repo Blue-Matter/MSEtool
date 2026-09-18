@@ -14,6 +14,7 @@
   Areas,
   FleetNames,
   StockNames,
+  EverySeason = FALSE,
   type = c("Selectivity", "Retention")
 )
 }

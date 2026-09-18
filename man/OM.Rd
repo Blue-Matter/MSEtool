@@ -27,7 +27,9 @@ OM(
   Data = NULL,
   DataLag = 0,
   CatchFrac = NULL,
-  Allocation = NULL,
+  FleetAllocation = NULL,
+  HistoricalWeight = NULL,
+  SeasonalAllocation = NULL,
   EFactor = NULL,
   Complexes = NULL,
   Herm = NULL,
@@ -135,12 +137,26 @@ calibrated to reproduce. If left unspecified for a stock, it is
 derived from relative Effort times Catchability in the final
 historical year. Default \code{NULL}.}
 
-\item{Allocation}{List. Named list of length 0 or the number of stock
+\item{FleetAllocation}{List. Named list of length 0 or the number of stock
 complexes. Each element is an \code{nSim} by \code{nFleet} matrix, with rows
 summing to 1, controlling how the TAC is split among fleets during
 projection. If unspecified it falls back to \code{CatchFrac}, and then to
 the mean of removals over the last five historical years. Default
 \code{NULL}.}
+
+\item{HistoricalWeight}{List. Named list of length 0 or the number of
+stock complexes. Each element is a named numeric vector over fleet
+names, values in \verb{[0,1]}, giving the weight placed on the historical
+seasonal pattern (vs. the population abundance pattern) when
+\code{SeasonalAllocation} is derived. \code{1} (default) uses the historical
+pattern only. Default \code{NULL}.}
+
+\item{SeasonalAllocation}{List. Named list of length 0 or the number of
+stock complexes. Each element is an \code{nSim} (or 1, recycled) by
+\code{Seasons} by \code{nFleet} array, each \verb{[sim, , fleet]} column summing to 1,
+controlling how a periodically-set TAC/Effort is split across the
+seasons of the interval it covers. If unspecified it is derived from
+\code{HistoricalWeight}. Default \code{NULL}.}
 
 \item{EFactor}{List. Effort or exploitation modifiers applied during
 projection. Default \code{NULL}.}

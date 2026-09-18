@@ -13,7 +13,8 @@
   YearsProj,
   Areas,
   FleetNames,
-  StockNames
+  StockNames,
+  EverySeason = FALSE
 )
 }
 \arguments{

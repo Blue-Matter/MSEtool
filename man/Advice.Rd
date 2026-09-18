@@ -187,7 +187,7 @@ Total allowable catch in units of \code{"Biomass"} (default) or \code{"Number"}
 \code{nFleet} specifying per-fleet values.
 \itemize{
 \item single numeric value: global TAC distributed across
-the stocks and fleets in the \code{\link[=Data]{Data()}} object according to \code{Allocation(OM)}.
+the stocks and fleets in the \code{\link[=Data]{Data()}} object according to \code{FleetAllocation(OM)}.
 \item numeric vector length \code{nFleet}: fleet-specific TAC.
 }
 }

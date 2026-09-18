@@ -151,7 +151,7 @@ on the TAC. \code{NULL} (default) effectively imposes no limit
 \item{Allocation}{\code{NULL} (default), or a positive numeric vector of length
 \code{nFleet} giving the fraction of the TAC allocated to each fleet
 (normalised to sum to \code{1}). \code{NULL} returns a single stock-wide TAC,
-which the framework then splits across fleets using \code{Allocation(OM)}
+which the framework then splits across fleets using \code{FleetAllocation(OM)}
 (see \code{\link[=Advice]{Advice()}}).}
 }
 \value{

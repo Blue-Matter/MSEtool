@@ -34,8 +34,12 @@
 \alias{DataLag<-}
 \alias{CatchFrac}
 \alias{CatchFrac<-}
-\alias{Allocation}
-\alias{Allocation<-}
+\alias{FleetAllocation}
+\alias{FleetAllocation<-}
+\alias{HistoricalWeight}
+\alias{HistoricalWeight<-}
+\alias{SeasonalAllocation}
+\alias{SeasonalAllocation<-}
 \alias{EFactor}
 \alias{EFactor<-}
 \alias{Complexes}
@@ -125,9 +129,17 @@ CatchFrac(x)
 
 CatchFrac(x) <- value
 
-Allocation(x)
+FleetAllocation(x)
 
-Allocation(x) <- value
+FleetAllocation(x) <- value
+
+HistoricalWeight(x)
+
+HistoricalWeight(x) <- value
+
+SeasonalAllocation(x)
+
+SeasonalAllocation(x) <- value
 
 EFactor(x)
 
