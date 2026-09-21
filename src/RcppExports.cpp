@@ -73,6 +73,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// ArrayBroadcastOp_
+NumericVector ArrayBroadcastOp_(NumericVector x, IntegerVector dimx, NumericVector y, IntegerVector dimy, int op);
+RcppExport SEXP _MSEtool_ArrayBroadcastOp_(SEXP xSEXP, SEXP dimxSEXP, SEXP ySEXP, SEXP dimySEXP, SEXP opSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type dimx(dimxSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type y(ySEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type dimy(dimySEXP);
+    Rcpp::traits::input_parameter< int >::type op(opSEXP);
+    rcpp_result_gen = Rcpp::wrap(ArrayBroadcastOp_(x, dimx, y, dimy, op));
+    return rcpp_result_gen;
+END_RCPP
+}
 // CalcAgeSizeKey_
 Rcpp::NumericVector CalcAgeSizeKey_(const Rcpp::NumericMatrix& MeanAtAge, const Rcpp::NumericMatrix& SDatAge, const Rcpp::NumericVector& Classes, const double TruncSD, const std::string& Dist);
 RcppExport SEXP _MSEtool_CalcAgeSizeKey_(SEXP MeanAtAgeSEXP, SEXP SDatAgeSEXP, SEXP ClassesSEXP, SEXP TruncSDSEXP, SEXP DistSEXP) {
@@ -423,6 +438,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MSEtool_LinInterp_cpp", (DL_FUNC) &_MSEtool_LinInterp_cpp, 3},
     {"_MSEtool_MSYCalcs", (DL_FUNC) &_MSEtool_MSYCalcs, 17},
     {"_MSEtool_Ref_int_cpp", (DL_FUNC) &_MSEtool_Ref_int_cpp, 12},
+    {"_MSEtool_ArrayBroadcastOp_", (DL_FUNC) &_MSEtool_ArrayBroadcastOp_, 5},
     {"_MSEtool_CalcAgeSizeKey_", (DL_FUNC) &_MSEtool_CalcAgeSizeKey_, 5},
     {"_MSEtool_calcVatAge", (DL_FUNC) &_MSEtool_calcVatAge, 7},
     {"_MSEtool_CalcCatchAtSizeFleet_", (DL_FUNC) &_MSEtool_CalcCatchAtSizeFleet_, 8},

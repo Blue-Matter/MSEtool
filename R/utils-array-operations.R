@@ -59,69 +59,75 @@ ArraySubtract <- function(array1, array2) {
        vals1 = dname1[[ind1]], vals2 = dname2[[ind2]])
 }
 
+.DimExtendOptions <- function(dimname) {
+  list(
+    coerce_char       = !(dimname %in% c("Fleet", "Stock")),
+    allow_missing_one = dimname == "Age"
+  )
+}
+
 #' @rdname ArrayOperations
 #' @export
 ArrayExtend <- function(array1, array2) {
   dnames <- .CheckArrays(array1, array2)
   dname1 <- dnames$dname1
   dname2 <- dnames$dname2
-  
-  # Sim: extend to max nSim; if both length-1, keep as 1
-  nSim <- local({
-    r <- .ResolveDim("Sim", dname1, dname2)
-    if (is.null(r)) return(NULL)
-    n1 <- length(r$vals1); n2 <- length(r$vals2)
-    if (n1 == 1L && n2 == 1L) return(NULL)
-    max(n1, n2)
-  })
-  
-  # Age: extend to union of age classes if lengths differ
-  AgeClasses <- local({
-    r <- .ResolveDim("Age", dname1, dname2)
-    if (is.null(r)) return(NULL)
-    if (length(r$vals1) == length(r$vals2)) return(NULL)
-    c(r$vals1, r$vals2) |> as.numeric() |> unique() |> sort()
-  })
-  
-  # Classes: extend to union of size classes if lengths differ
-  Classes <- local({
-    r <- .ResolveDim("Class", dname1, dname2)
-    if (is.null(r)) return(NULL)
-    if (length(r$vals1) == length(r$vals2)) return(NULL)
-    c(r$vals1, r$vals2) |> as.numeric() |> unique() |> sort()
-  })
-  
+
+  a1 <- array1
+  a2 <- array2
+
+  # Every dimension except Year: extend to the union of both sides if
+  # lengths differ (a no-op if one side is already the union, e.g. length 1
+  # vs length n). Year is handled separately below via forward/back-fill.
+  dim_names <- setdiff(names(dname1), "Year")
+  for (nm in dim_names) {
+    r <- .ResolveDim(nm, dname1, dname2)
+    if (is.null(r)) next
+    if (length(r$vals1) == length(r$vals2)) next
+
+    opts <- .DimExtendOptions(nm)
+    target <- c(r$vals1, r$vals2)
+    target <- if (opts$coerce_char) {
+      target |> as.numeric() |> unique() |> sort()
+    } else {
+      unique(target)
+    }
+
+    a1 <- .ExtendDim(a1, nm, target, coerce_char = opts$coerce_char,
+                     allow_missing_one = opts$allow_missing_one)
+    a2 <- .ExtendDim(a2, nm, target, coerce_char = opts$coerce_char,
+                     allow_missing_one = opts$allow_missing_one)
+  }
+
   # Year: always union of both sets
   Years <- local({
     r <- .ResolveDim("Year", dname1, dname2)
     if (is.null(r)) return(NULL)
     c(r$vals1, r$vals2) |> as.numeric() |> unique() |> sort()
   })
-  
-  # Area: extend to union of areas if lengths differ
-  Areas <- local({
-    r <- .ResolveDim("Area", dname1, dname2)
-    if (is.null(r)) return(NULL)
-    if (length(r$vals1) == length(r$vals2)) return(NULL)
-    c(r$vals1, r$vals2) |> as.numeric() |> unique() |> sort()
-  })
-  
+
   list(
-    array1 = Extend(array1,
-                    nSim       = nSim,
-                    AgeClasses = AgeClasses,
-                    Classes    = Classes,
-                    Years      = Years,
-                    Areas      = Areas,
-                    backfill   = TRUE),
-    array2 = Extend(array2,
-                    nSim       = nSim,
-                    AgeClasses = AgeClasses,
-                    Classes    = Classes,
-                    Years      = Years,
-                    Areas      = Areas,
-                    backfill   = TRUE)
+    array1 = Extend(a1, Years = Years, backfill = TRUE),
+    array2 = Extend(a2, Years = Years, backfill = TRUE)
   )
+}
+
+.OpCode <- function(operation) {
+  if (identical(operation, `+`)) return(0L)
+  if (identical(operation, `-`)) return(1L)
+  if (identical(operation, `*`)) return(2L)
+  if (identical(operation, `/`)) return(3L)
+  cli::cli_abort("Unsupported operation for array broadcasting")
+}
+
+.ValidateBroadcastDims <- function(dim1, dim2, dim_names) {
+  bad <- dim1 != dim2 & dim1 != 1L & dim2 != 1L
+  if (any(bad)) {
+    cli::cli_abort(c(
+      "`array1` and `array2` are not conformable.",
+      "x" = "Dimension {.val {dim_names[bad]}} has length {.val {dim1[bad]}} and {.val {dim2[bad]}}; each must be {.val 1} or match the other."
+    ))
+  }
 }
 
 .ArrayOperation <- function(array1, array2, operation = `*`) {
@@ -138,8 +144,31 @@ ArrayExtend <- function(array1, array2) {
       return(operation(array1, array2))
   }
 
-  ArrayList <- ArrayExtend(array1, array2)
-  operation(ArrayList$array1, ArrayList$array2)
+  .CheckArrays(array1, array2)
+
+  a1 <- array1
+  a2 <- array2
+
+  if ("Year" %in% names(dn1)) {
+    r <- .ResolveDim("Year", dn1, dn2)
+    if (!identical(as.numeric(r$vals1), as.numeric(r$vals2))) {
+      Years <- c(r$vals1, r$vals2) |> as.numeric() |> unique() |> sort()
+      a1 <- ExtendYears(a1, Years = Years, backfill = TRUE)
+      a2 <- ExtendYears(a2, Years = Years, backfill = TRUE)
+    }
+  }
+
+  dim1 <- dim(a1)
+  dim2 <- dim(a2)
+  .ValidateBroadcastDims(dim1, dim2, names(dimnames(a1)))
+
+  out <- ArrayBroadcastOp_(as.double(a1), as.integer(dim1),
+                           as.double(a2), as.integer(dim2),
+                           .OpCode(operation))
+
+  dimnames(out) <- Map(function(v1, v2) if (length(v1) >= length(v2)) v1 else v2,
+                       dimnames(a1), dimnames(a2))
+  out
 }
 
 .CheckArrays <- function(array1, array2) {

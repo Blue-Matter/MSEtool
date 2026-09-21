@@ -224,10 +224,22 @@ PopulateOM <- function(OM,
   }
   
   for (st in seq_len(nStocks)) {
+    StockExt <- StockList[[st]]
+    Years <- CalcYears(
+      nYear = StockExt@nYear,
+      pYear = StockExt@pYear,
+      CurrentYear = StockExt@CurrentYear,
+      Seasons = StockExt@Seasons
+    )
+    if (!is.null(StockExt@Length@ALK))
+      StockExt@Length@ALK <- StockExt@Length@ALK |> ExtendSims(StockExt@nSim) |> ExtendYears(Years)
+    if (!is.null(StockExt@Weight@MeanAtLength))
+      StockExt@Weight@MeanAtLength <- StockExt@Weight@MeanAtLength |> ExtendSims(StockExt@nSim) |> ExtendYears(Years)
+
     for (fl in seq_len(nFleets)) {
       FleetList[[st]][[fl]] <- PopulateFleet(
         Fleet = FleetList[[st]][[fl]],
-        Stock = StockList[[st]],
+        Stock = StockExt,
         seed = OM@Seed + st + fl,
         silent = silent,
         force  = force

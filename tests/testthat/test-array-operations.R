@@ -42,6 +42,57 @@ test_that("ArrayMultiply gives the same result via the fast and slow (extend) pa
   expect_equal(as.numeric(fast_result), as.numeric(a) * as.numeric(b_same))
 })
 
+test_that("ArrayMultiply broadcasts a Fleet dimension (previously errored)", {
+  a <- array(1:8, dim = c(Sim = 2, Fleet = 4), dimnames = list(Sim = 1:2, Fleet = 1:4))
+  b <- array(c(10, 100), dim = c(Sim = 2, Fleet = 1), dimnames = list(Sim = 1:2, Fleet = 1))
+
+  out <- ArrayMultiply(a, b)
+  expect_equal(dim(out), c(Sim = 2L, Fleet = 4L))
+  expect_equal(as.numeric(out), as.numeric(a) * as.numeric(b)[c(1, 2, 1, 2, 1, 2, 1, 2)])
+})
+
+test_that("ArraySum broadcasts a Stock dimension with character labels (previously errored)", {
+  a <- array(1:6, dim = c(Sim = 2, Stock = 3),
+             dimnames = list(Sim = 1:2, Stock = c("north", "south", "east")))
+  b <- array(c(1, 2), dim = c(Sim = 2, Stock = 1),
+             dimnames = list(Sim = 1:2, Stock = "north"))
+
+  out <- ArraySum(a, b)
+  expect_equal(dim(out), c(Sim = 2L, Stock = 3L))
+  expect_equal(dimnames(out)$Stock, c("north", "south", "east"))
+  expect_equal(as.numeric(out), as.numeric(a) + as.numeric(b)[c(1, 2, 1, 2, 1, 2)])
+})
+
+test_that("ArrayMultiply broadcasts two dimensions simultaneously (Sim on one side, Age on the other)", {
+  a <- array(1:6, dim = c(Sim = 3, Age = 1, Year = 2),
+             dimnames = list(Sim = 1:3, Age = 1, Year = 2020:2021))
+  b <- array(1:8, dim = c(Sim = 1, Age = 4, Year = 2),
+             dimnames = list(Sim = 1, Age = 1:4, Year = 2020:2021))
+
+  out <- ArrayMultiply(a, b)
+  expect_equal(dim(out), c(Sim = 3L, Age = 4L, Year = 2L))
+
+  expected <- array(NA_real_, dim = c(3, 4, 2))
+  for (s in 1:3) for (ag in 1:4) for (y in 1:2)
+    expected[s, ag, y] <- a[s, 1, y] * b[1, ag, y]
+  expect_equal(as.numeric(out), as.numeric(expected))
+})
+
+test_that("ArrayMultiply's broadcast path matches the old materialize-then-operate approach", {
+  a <- array(rnorm(3 * 1 * 5), dim = c(Sim = 3, Age = 1, Year = 5),
+             dimnames = list(Sim = 1:3, Age = 1, Year = 2020:2024))
+  b <- array(rnorm(1 * 4 * 5), dim = c(Sim = 1, Age = 4, Year = 5),
+             dimnames = list(Sim = 1, Age = 1:4, Year = 2020:2024))
+
+  fast <- ArrayMultiply(a, b)
+
+  ArrayList <- ArrayExtend(a, b)
+  slow <- ArrayList$array1 * ArrayList$array2
+
+  expect_equal(dim(fast), dim(slow))
+  expect_equal(as.numeric(fast), as.numeric(slow))
+})
+
 test_that("ArrayDivide zeroes NA/Inf results", {
   a <- array(c(1, 0), dim = 2, dimnames = list(Sim = 1:2))
   b <- array(c(0, 0), dim = 2, dimnames = list(Sim = 1:2))

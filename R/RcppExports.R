@@ -33,6 +33,10 @@ Ref_int_cpp <- function(F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V
     .Call(`_MSEtool_Ref_int_cpp`, F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, Wt_at_Age_C, relRfun, SRRpars, maxage, plusgroup, spawn_time_frac)
 }
 
+ArrayBroadcastOp_ <- function(x, dimx, y, dimy, op) {
+    .Call(`_MSEtool_ArrayBroadcastOp_`, x, dimx, y, dimy, op)
+}
+
 CalcAgeSizeKey_ <- function(MeanAtAge, SDatAge, Classes, TruncSD, Dist) {
     .Call(`_MSEtool_CalcAgeSizeKey_`, MeanAtAge, SDatAge, Classes, TruncSD, Dist)
 }
