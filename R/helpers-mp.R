@@ -65,8 +65,18 @@
 }
 
 .CalcDataYear <- function(Year, YearsAll, DataLag, Seasons) {
-  nYears <- length(YearsAll)
-  lagYear <- nYears - (DataLag * Seasons)
+  nYears  <- length(YearsAll)
+  lagStep <- DataLag * Seasons
+  lagYear <- nYears - lagStep
+
+  if (lagYear < 1) {
+    maxDataLag <- floor((nYears - 1) / Seasons)
+    cli::cli_abort(c(
+      "x" = "`DataLag` = {.val {DataLag}} requires data further back than is available at Year {.val {Year}}.",
+      "i" = "At most {.val {maxDataLag}} year(s) of `DataLag` can currently be used ({.val {nYears}} timestep(s) of data available, {.val {Seasons}} per year)."
+    ))
+  }
+
   YearsAll[lagYear]
 }
 
@@ -74,8 +84,6 @@
   Proj <- .AddSimNumber(Proj)
   purrr::map(Proj@Data, \(DataSim) {
     purrr::map(DataSim, \(Data) {
-      if (DataYear < Data@YearLH)
-        return(Data)
       DataTrim(Data, Year = DataYear)
     })
   })

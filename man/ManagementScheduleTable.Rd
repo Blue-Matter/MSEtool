@@ -34,5 +34,19 @@ if \code{print = TRUE} invisibly returns the underlying data.frame, and
 \code{cat()}s a markdown table. If \code{print == FALSE}, returns the data.frame
 }
 \description{
-Build a markdown table of the TAC calculation/implementation schedule
+Shows which projection years are management years (years in which an MP
+is actually called) and which calendar year of data the \code{DataLag} rule
+calls for at each one. See \code{\link[=DataLag]{DataLag()}} for a full explanation of what the
+data lag means and how the data year for a given management year is
+worked out in practice.
+}
+\details{
+The "DataYear used" column follows the \code{DataLag} rule described in
+\code{\link[=DataLag]{DataLag()}}: for each management year, the data year is one year before
+it, shifted back by a further \code{DataLag} years. See \code{\link[=DataLag]{DataLag()}} for how
+this interacts with \code{MPStartYear} and \code{InterimAdvice}.
+}
+\seealso{
+\code{\link[=DataLag]{DataLag()}} for what the data lag means and how it is applied,
+\code{\link[=Interval]{Interval()}} for the management update frequency.
 }

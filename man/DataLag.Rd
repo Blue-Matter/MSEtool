@@ -12,7 +12,7 @@ DataLag(x) <- value
 \arguments{
 \item{x}{An \link[=om-class]{om}, \link[=hist-class]{hist}, or \link[=mse-class]{mse} object.}
 
-\item{value}{Replacement value; a non-negative integer.}
+\item{value}{Replacement value; a non-negative integer, in years.}
 }
 \value{
 \itemize{
@@ -22,28 +22,82 @@ DataLag(x) <- value
 }
 \description{
 Access or replace the \code{DataLag} slot of an \link[=om-class]{om} object: the number
-of years that the \code{Data} seen by an MP is lagged behind the current
-management timestep. Also accepts \link[=hist-class]{hist} and \link[=mse-class]{mse} objects,
-extracting the embedded \code{OM} slot transparently.
+of additional whole years that the \code{Data} seen by an MP is lagged behind
+the timestep at which its advice takes effect. Also accepts \link[=hist-class]{hist}
+and \link[=mse-class]{mse} objects, extracting the embedded \code{OM} slot transparently.
 }
 \details{
-Real management decisions are rarely made on fully up-to-date data - there
-is a delay between when data are collected and when they are compiled,
-analysed, and available to inform the next round of advice. \code{DataLag}
-reproduces that delay: at each management timestep, the \code{Data} object
-passed to the MP reflects observations only up to \code{DataLag} years earlier,
-rather than the most recent completed timestep (see \code{.CalcDataYear()} in
-\code{R/helpers-mp.R}, which is not exported).
+In a real fishery, management advice is never based on fully up to date
+data. Even without any extra delay, an MP can only ever see data through
+the timestep immediately before the one at which its advice takes effect,
+since a timestep's data cannot be complete until that timestep has ended.
+\code{DataLag} adds a further, deliberate delay on top of that unavoidable
+one-timestep gap: \code{DataLag = 0} is that minimum unavoidable gap, and each
+extra year of \code{DataLag} pushes the data the MP sees one further whole
+year into the past.
+\subsection{Management years and when advice takes effect}{
 
-\code{DataLag} combines with \code{Interval} (the management update frequency) and
-\code{MPStartYear} to determine the full management timeline. Use
-\code{\link[=ManagementScheduleTable]{ManagementScheduleTable()}} to preview, for a given OM, which data year
-feeds into which management year.
+A "management year" is a projection year in which the MP is actually
+called to produce new advice. Which years are management years is
+controlled by \code{Interval}: with \code{Interval = 1} every projection year is a
+management year, with \code{Interval = 2} every second year is, and so on. In
+a year that is not a management year, the TAC or Effort from the most
+recent management year simply carries forward unchanged. Whatever advice
+is produced for a management year takes effect starting in that same
+calendar year, not the year after. Before \code{MPStartYear} (if it is set),
+the MP is not called at all; advice instead comes from \code{InterimAdvice}.
+}
+
+\subsection{Which data year the MP sees}{
+
+The MP is given data up to and including the timestep immediately before
+the current management timestep, shifted back by a further \code{DataLag}
+whole years. This applies uniformly from the very first management year
+onward, reaching back into the operating model's historical data if
+needed, and it does not depend on \code{Interval}: the one-timestep minimum
+gap is always relative to the single timestep before the current
+management timestep, not to whenever the MP was previously called.
+
+For an annual OM (\code{Seasons = 1}), a timestep is a calendar year, so this
+is simply: with a last historical year of 2026, \code{MPStartYear = NULL} (so
+MPs start in 2027), \code{Interval = 1}, and \code{DataLag = 1}, the very first
+management year (2027) is based on data up to 2025 (2026 is the year
+immediately before 2027, and shifting that back one further year for the
+lag lands on 2025).
+
+If \code{MPStartYear} is set, the years before it are "interim" years in which
+\code{\link[=InterimAdvice]{InterimAdvice()}} is used instead of the MP, but the operating model
+still simulates real catch and effort for those years and records data
+for them (f they are missing in the OM Data). Once the MP starts being called
+at \code{MPStartYear}, \code{DataLag} counts back from the timestep before that
+management year in exactly the same way, reaching into the interim period's
+data rather than treating the operating model's original historical period as
+the most recent data available.
+}
+
+\subsection{Seasonal OMs}{
+
+For a seasonal OM (\code{Seasons > 1}), \code{DataLag} is still always specified in
+whole years; internally it is converted to \code{DataLag * Seasons} timesteps.
+For example, in a quarterly OM (\code{Seasons = 4}), a management timestep of
+quarter 1, 2028 with \code{DataLag = 1} uses data up to quarter 4, 2026
+(quarter 4, 2027 is the timestep immediately before quarter 1, 2028, and shifting that back one
+further year lands on quarter 4, 2026).
+
+\code{DataLag} combines with \code{Interval} and \code{MPStartYear} to determine the
+full management timeline. \code{\link[=ManagementScheduleTable]{ManagementScheduleTable()}} shows, for a given
+OM, which years are management years and which data year \code{DataLag} calls
+for at each one.
+}
 }
 \examples{
 om <- OM(DataLag = 1)
 DataLag(om)
 DataLag(om) <- 2
+
+# Preview which years are management years, and which data year each uses
+om <- OM(CurrentYear = 2026, DataLag = 1, Interval = 1)
+ManagementScheduleTable(om)
 
 }
 \seealso{

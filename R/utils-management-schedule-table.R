@@ -1,7 +1,13 @@
 #' Build a markdown table of the TAC calculation/implementation schedule
 #'
-#' @param FirstYear Numeric, or an [om-class], [hist-class], or [mse-class] 
-#'   object. If numeric, the first implementation year (the first management 
+#' Shows which projection years are management years (years in which an MP
+#' is actually called) and which calendar year of data the `DataLag` rule
+#' calls for at each one. See [DataLag()] for a full explanation of what the
+#' data lag means and how the data year for a given management year is
+#' worked out in practice.
+#'
+#' @param FirstYear Numeric, or an [om-class], [hist-class], or [mse-class]
+#'   object. If numeric, the first implementation year (the first management
 #'   year). If an `om` object,
 #'   `FirstYear`, `DataLag`, and `Interval` are derived from it (`MPStartYear`
 #'   if set, otherwise `CurrentYear + 1`; [DataLag()]; and [Interval()]),
@@ -12,7 +18,16 @@
 #'   Default shows 3 full management cycles.
 #' @param print Logical. Print the data.frame to console with `cat()`?
 #'
+#' @details
+#' The "DataYear used" column follows the `DataLag` rule described in
+#' [DataLag()]: for each management year, the data year is one year before
+#' it, shifted back by a further `DataLag` years. See [DataLag()] for how
+#' this interacts with `MPStartYear` and `InterimAdvice`.
+#'
 #' @export
+#'
+#' @seealso [DataLag()] for what the data lag means and how it is applied,
+#'   [Interval()] for the management update frequency.
 #'
 #' @return if `print = TRUE` invisibly returns the underlying data.frame, and
 #' `cat()`s a markdown table. If `print == FALSE`, returns the data.frame

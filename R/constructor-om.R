@@ -572,26 +572,74 @@ RefEffortYears <- function(x) .IsHist(x, "RefEffortYears")
 #' Data Lag for OM Objects
 #'
 #' Access or replace the `DataLag` slot of an [om-class] object: the number
-#' of years that the `Data` seen by an MP is lagged behind the current
-#' management timestep. Also accepts [hist-class] and [mse-class] objects,
-#' extracting the embedded `OM` slot transparently.
+#' of additional whole years that the `Data` seen by an MP is lagged behind
+#' the timestep at which its advice takes effect. Also accepts [hist-class]
+#' and [mse-class] objects, extracting the embedded `OM` slot transparently.
 #'
 #' @param x An [om-class], [hist-class], or [mse-class] object.
-#' @param value Replacement value; a non-negative integer.
+#' @param value Replacement value; a non-negative integer, in years.
 #'
 #' @details
-#' Real management decisions are rarely made on fully up-to-date data - there
-#' is a delay between when data are collected and when they are compiled,
-#' analysed, and available to inform the next round of advice. `DataLag`
-#' reproduces that delay: at each management timestep, the `Data` object
-#' passed to the MP reflects observations only up to `DataLag` years earlier,
-#' rather than the most recent completed timestep (see `.CalcDataYear()` in
-#' `R/helpers-mp.R`, which is not exported).
+#' In a real fishery, management advice is never based on fully up to date
+#' data. Even without any extra delay, an MP can only ever see data through
+#' the timestep immediately before the one at which its advice takes effect,
+#' since a timestep's data cannot be complete until that timestep has ended.
+#' `DataLag` adds a further, deliberate delay on top of that unavoidable
+#' one-timestep gap: `DataLag = 0` is that minimum unavoidable gap, and each
+#' extra year of `DataLag` pushes the data the MP sees one further whole
+#' year into the past.
 #'
-#' `DataLag` combines with `Interval` (the management update frequency) and
-#' `MPStartYear` to determine the full management timeline. Use
-#' [ManagementScheduleTable()] to preview, for a given OM, which data year
-#' feeds into which management year.
+#' ## Management years and when advice takes effect
+#'
+#' A "management year" is a projection year in which the MP is actually
+#' called to produce new advice. Which years are management years is
+#' controlled by `Interval`: with `Interval = 1` every projection year is a
+#' management year, with `Interval = 2` every second year is, and so on. In
+#' a year that is not a management year, the TAC or Effort from the most
+#' recent management year simply carries forward unchanged. Whatever advice
+#' is produced for a management year takes effect starting in that same
+#' calendar year, not the year after. Before `MPStartYear` (if it is set),
+#' the MP is not called at all; advice instead comes from `InterimAdvice`.
+#'
+#' ## Which data year the MP sees
+#'
+#' The MP is given data up to and including the timestep immediately before
+#' the current management timestep, shifted back by a further `DataLag`
+#' whole years. This applies uniformly from the very first management year
+#' onward, reaching back into the operating model's historical data if
+#' needed, and it does not depend on `Interval`: the one-timestep minimum
+#' gap is always relative to the single timestep before the current
+#' management timestep, not to whenever the MP was previously called.
+#'
+#' For an annual OM (`Seasons = 1`), a timestep is a calendar year, so this
+#' is simply: with a last historical year of 2026, `MPStartYear = NULL` (so
+#' MPs start in 2027), `Interval = 1`, and `DataLag = 1`, the very first
+#' management year (2027) is based on data up to 2025 (2026 is the year
+#' immediately before 2027, and shifting that back one further year for the
+#' lag lands on 2025).
+#'
+#' If `MPStartYear` is set, the years before it are "interim" years in which
+#' [InterimAdvice()] is used instead of the MP, but the operating model
+#' still simulates real catch and effort for those years and records data
+#' for them (f they are missing in the OM Data). Once the MP starts being called 
+#' at `MPStartYear`, `DataLag` counts back from the timestep before that 
+#' management year in exactly the same way, reaching into the interim period's 
+#' data rather than treating the operating model's original historical period as
+#' the most recent data available.
+#'
+#' ## Seasonal OMs
+#'
+#' For a seasonal OM (`Seasons > 1`), `DataLag` is still always specified in
+#' whole years; internally it is converted to `DataLag * Seasons` timesteps.
+#' For example, in a quarterly OM (`Seasons = 4`), a management timestep of 
+#' quarter 1, 2028 with `DataLag = 1` uses data up to quarter 4, 2026 
+#' (quarter 4, 2027 is the timestep immediately before quarter 1, 2028, and shifting that back one
+#' further year lands on quarter 4, 2026). 
+#'
+#' `DataLag` combines with `Interval` and `MPStartYear` to determine the
+#' full management timeline. [ManagementScheduleTable()] shows, for a given
+#' OM, which years are management years and which data year `DataLag` calls
+#' for at each one.
 #'
 #' @return
 #' - `DataLag()` returns the value of the `DataLag` slot.
@@ -612,13 +660,21 @@ RefEffortYears <- function(x) .IsHist(x, "RefEffortYears")
 #' DataLag(om)
 #' DataLag(om) <- 2
 #'
+#' # Preview which years are management years, and which data year each uses
+#' om <- OM(CurrentYear = 2026, DataLag = 1, Interval = 1)
+#' ManagementScheduleTable(om)
+#'
 #' @rdname DataLag
 #' @export
-DataLag <- function(x) .IsHist(x, "DataLag")
+DataLag <- function(x) {
+  .IsHist(x, "DataLag")
+}
 
 #' @rdname DataLag
 #' @export
-`DataLag<-` <- function(x, value) .AssignSlot(x, value, "DataLag")
+`DataLag<-` <- function(x, value) {
+  .AssignSlot(x, value, "DataLag")
+}
 
 #' Fleet Allocation of TAC for OM Objects
 #'
