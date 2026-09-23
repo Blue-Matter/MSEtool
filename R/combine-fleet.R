@@ -188,8 +188,17 @@ CombineFleets <- function(OM, FleetList = NULL, silent = FALSE) {
 }
 
 .WeightedMeanByCv <- function(values, cvs) {
-  weights <- 1/cvs
-  out <- rowSums(values * weights, na.rm = TRUE) / rowSums(weights, na.rm = TRUE)
+  if (is.null(cvs) || all(is.na(cvs))) {
+    out <- rowMeans(values, na.rm = TRUE)
+  } else if (anyNA(cvs)) {
+    cli::cli_abort(c(
+      "x" = "CV is available for some fleets being combined but not others.",
+      "i" = "Provide a CV for every fleet in the combination, or for none of them."
+    ))
+  } else {
+    weights <- 1/cvs
+    out <- rowSums(values * weights, na.rm = TRUE) / rowSums(weights, na.rm = TRUE)
+  }
   out[!is.finite(out)] <- NA
   out
 }
