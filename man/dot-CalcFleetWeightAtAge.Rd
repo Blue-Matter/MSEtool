@@ -5,7 +5,13 @@
 \title{Calculate Fleet-Specific Weight-at-Age from Selectivity- (and Retention-)
 at-Length}
 \usage{
-.CalcFleetWeightAtAge(Selectivity, Weight, Length, Retention = NULL)
+.CalcFleetWeightAtAge(
+  Selectivity,
+  Weight,
+  Length,
+  Retention = NULL,
+  Fallback = NULL
+)
 }
 \arguments{
 \item{Selectivity}{A populated \link[=selectivity-class]{selectivity} object.}
@@ -17,6 +23,8 @@ key (\code{Length@ALK}).}
 
 \item{Retention}{A populated \link[=retention-class]{retention} object, or \code{NULL} (default)
 to weight by selectivity only.}
+
+\item{Fallback}{Optional precomputed \code{.AtSize2AtAge(Weight, Length, allow_shortcut=FALSE)} result, reused as-is instead of recomputed.}
 }
 \value{
 \code{array}. \verb{Sim x Age x Year} fleet weight-at-age.

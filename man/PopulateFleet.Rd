@@ -4,7 +4,16 @@
 \alias{PopulateFleet}
 \title{Populate a Fleet Object}
 \usage{
-PopulateFleet(Fleet, Stock, seed = 103, silent = FALSE, force = FALSE)
+PopulateFleet(
+  Fleet,
+  Stock,
+  seed = 103,
+  silent = FALSE,
+  force = FALSE,
+  WeightFallback = NULL,
+  ExtendedLength = NULL,
+  ExtendedWeight = NULL
+)
 }
 \arguments{
 \item{Fleet}{A \code{\link[=Fleet]{Fleet()}} object to populate.}
@@ -17,6 +26,12 @@ PopulateFleet(Fleet, Stock, seed = 103, silent = FALSE, force = FALSE)
 
 \item{force}{Logical. If \code{TRUE}, force re-population even if digest indicates
 the object is current.}
+
+\item{WeightFallback}{Used internally.}
+
+\item{ExtendedLength}{Used internally.}
+
+\item{ExtendedWeight}{Used internally.}
 }
 \value{
 A populated \code{\link[=Fleet]{Fleet()}} object.
@@ -36,7 +51,7 @@ retention, discard mortality, and spatial closures for a fleet.
 already defined, by weighting the stock's weight-at-length by
 selectivity-at-length (\code{WeightFleetSelected}) or by
 selectivity-at-length times retention-at-length (\code{WeightFleetRetained})
-over the age-length distribution -- see \code{.CalcFleetWeightAtAge()}.
+over the age-length distribution.
 }
 }
 \examples{
@@ -44,7 +59,6 @@ over the age-length distribution -- see \code{.CalcFleetWeightAtAge()}.
 F <- Fleet()
 F_pop <- PopulateFleet(Fleet = F, Stock = Stock, seed = 123, nSim = 50)
 }
-
 }
 \seealso{
 \code{\link[=Populate]{Populate()}}, \code{\link[=PopulateStock]{PopulateStock()}}

@@ -4,7 +4,7 @@
 \alias{.WeightedAtSize2AtAge}
 \title{Convert Mean-at-Size to Mean-at-Age, Weighted by Selectivity}
 \usage{
-.WeightedAtSize2AtAge(object, Weighting, Length)
+.WeightedAtSize2AtAge(object, Weighting, Length, Fallback = NULL)
 }
 \arguments{
 \item{object}{An S4 object with \code{MeanAtLength}/\code{MeanAtWeight} and
