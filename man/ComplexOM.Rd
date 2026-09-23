@@ -109,6 +109,7 @@ Hist <- runMSE(ComplexOM, MPs = ExampleMPs())
 Other om:
 \code{\link[=CatchFrac]{CatchFrac()}},
 \code{\link[=DataLag]{DataLag()}},
+\code{\link[=EffortAllocation]{EffortAllocation()}},
 \code{\link[=Herm]{Herm()}},
 \code{\link{HermOM}},
 \code{\link[=HistoricalWeight]{HistoricalWeight()}},

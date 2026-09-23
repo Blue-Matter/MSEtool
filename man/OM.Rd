@@ -30,7 +30,7 @@ OM(
   FleetAllocation = NULL,
   HistoricalWeight = NULL,
   SeasonalAllocation = NULL,
-  EFactor = NULL,
+  EffortAllocation = NULL,
   Complexes = NULL,
   Herm = NULL,
   Relations = NULL,
@@ -137,8 +137,9 @@ stock complexes, controlling how a periodically-set TAC/Effort is split
 across the seasons of the interval it covers. Default \code{NULL}. See
 \code{\link[=SeasonalAllocation]{SeasonalAllocation()}}.}
 
-\item{EFactor}{List. Effort or exploitation modifiers applied during
-projection. Default \code{NULL}.}
+\item{EffortAllocation}{List. Named list of length 0 or the number of
+stock complexes, splitting a scalar absolute Effort recommendation
+across fleets. Default \code{NULL}. See \code{\link[=EffortAllocation]{EffortAllocation()}}.}
 
 \item{Complexes}{List. Defines stock complexes for data aggregation and
 management. Default \code{NULL}.}
@@ -289,6 +290,8 @@ Years(om)
 \item \code{\link[=SeasonalAllocation]{SeasonalAllocation()}} for splitting a periodic TAC/Effort across
 seasons.
 \item \code{\link[=RefSeason]{RefSeason()}} for reference point season handling in seasonal OMs.
+\item \code{\link[=EffortAllocation]{EffortAllocation()}} for splitting a scalar absolute Effort
+recommendation among fleets.
 \item \code{\link[=Stock]{Stock()}}, \code{\link[=Fleet]{Fleet()}}, \code{\link[=Obs]{Obs()}}, \code{\link[=Imp]{Imp()}}, \code{\link[=Data]{Data()}} for sub-object
 constructors and their pass-through accessors.
 \item \code{\link[=Years]{Years()}}, \code{\link[=CalcYears]{CalcYears()}} for the derived time-step vector.
@@ -302,6 +305,7 @@ Other om:
 \code{\link[=CatchFrac]{CatchFrac()}},
 \code{\link{ComplexOM}},
 \code{\link[=DataLag]{DataLag()}},
+\code{\link[=EffortAllocation]{EffortAllocation()}},
 \code{\link[=Herm]{Herm()}},
 \code{\link{HermOM}},
 \code{\link[=HistoricalWeight]{HistoricalWeight()}},

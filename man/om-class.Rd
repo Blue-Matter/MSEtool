@@ -133,8 +133,18 @@ controlling how a periodically-set TAC/Effort is split across the
 seasons of the interval it covers. If unspecified it is derived from
 \code{HistoricalWeight}. See \code{\link[=SeasonalAllocation]{SeasonalAllocation()}}.}
 
-\item{\code{EFactor}}{List. Effort or exploitation modifiers applied during
-projection. See \code{\link[=OM]{OM()}}.}
+\item{\code{EffortAllocation}}{List. Named list of length 0 or the number of
+stock complexes. Each element is an \code{nSim} (or 1, recycled) by \code{nFleet}
+matrix, with rows summing to 1, splitting a scalar absolute Effort
+recommendation among fleets. If unspecified it falls back to to mean
+relative effort over the last five historical years. See
+\code{\link[=EffortAllocation]{EffortAllocation()}}.}
+
+\item{\code{EFactor}}{List. Deprecated alias for \code{EffortAllocation}, retained
+only so that objects saved before the rename still carry their data. If
+\code{EffortAllocation} is unset and \code{EFactor} is, its value is copied over
+during \code{Simulate()}/\code{Project()}. Set \code{EffortAllocation} directly
+instead.}
 
 \item{\code{Complexes}}{List. Defines stock complexes for data aggregation and
 management. See \code{\link[=OM]{OM()}}.}
@@ -208,6 +218,7 @@ Other om:
 \code{\link[=CatchFrac]{CatchFrac()}},
 \code{\link{ComplexOM}},
 \code{\link[=DataLag]{DataLag()}},
+\code{\link[=EffortAllocation]{EffortAllocation()}},
 \code{\link[=Herm]{Herm()}},
 \code{\link{HermOM}},
 \code{\link[=HistoricalWeight]{HistoricalWeight()}},

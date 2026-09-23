@@ -26,8 +26,6 @@
 \alias{CurrentYear<-}
 \alias{Seasons}
 \alias{Seasons<-}
-\alias{EFactor}
-\alias{EFactor<-}
 \alias{Complexes}
 \alias{Complexes<-}
 \alias{Herm<-}
@@ -96,10 +94,6 @@ CurrentYear(x) <- value
 Seasons(x)
 
 Seasons(x) <- value
-
-EFactor(x)
-
-EFactor(x) <- value
 
 Complexes(x)
 
@@ -198,6 +192,7 @@ Other om:
 \code{\link[=CatchFrac]{CatchFrac()}},
 \code{\link{ComplexOM}},
 \code{\link[=DataLag]{DataLag()}},
+\code{\link[=EffortAllocation]{EffortAllocation()}},
 \code{\link[=Herm]{Herm()}},
 \code{\link{HermOM}},
 \code{\link[=HistoricalWeight]{HistoricalWeight()}},

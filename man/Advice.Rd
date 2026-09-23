@@ -208,9 +208,10 @@ always treated as absolute regardless of \code{EffType}.
 \item If \code{EffType}=\code{"Rel"}: Effort relative to last historical year, applied to all
 fleets. E.g., if \code{Effort=0.5}, effort for all fleets will be set to half
 the effort in the last historical year.
-\item If \code{EffType}=\code{"Abs"}: the total effort (summed over fleets unless provide
-as a length \code{nFleet} vector); Note that in this case all fleets in the OM must
-have the same units for \code{Effort}).
+\item If \code{EffType}=\code{"Abs"}: the total effort, split across fleets according
+to \code{\link[=EffortAllocation]{EffortAllocation()}} (unless provided as a length \code{nFleet} vector,
+which is already fleet-specific). Note that in this case all fleets in
+the OM must have the same units for \code{Effort}).
 }
 \item numeric vector length \code{nFleet}: Fleet-specific relative or absolute Effort.
 \item numeric matrix: Fleet- and Area-specific absolute Effort.

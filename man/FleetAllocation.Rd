@@ -85,6 +85,7 @@ TAC/Effort is further split across seasons.
 Other om:
 \code{\link{ComplexOM}},
 \code{\link[=DataLag]{DataLag()}},
+\code{\link[=EffortAllocation]{EffortAllocation()}},
 \code{\link[=Herm]{Herm()}},
 \code{\link{HermOM}},
 \code{\link[=HistoricalWeight]{HistoricalWeight()}},

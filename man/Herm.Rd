@@ -61,6 +61,7 @@ Other om:
 \code{\link[=CatchFrac]{CatchFrac()}},
 \code{\link{ComplexOM}},
 \code{\link[=DataLag]{DataLag()}},
+\code{\link[=EffortAllocation]{EffortAllocation()}},
 \code{\link{HermOM}},
 \code{\link[=HistoricalWeight]{HistoricalWeight()}},
 \code{\link[=InterimAdvice]{InterimAdvice()}},
