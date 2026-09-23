@@ -96,10 +96,24 @@ PopulateOM <- function(OM,
   if (standardize_effort)
     OM <- StandardizeEffort(OM, populate=FALSE)
 
+  OM <- .RefreshFleetDigests(OM)
+
   if (!silent)
     cli::cli_alert_success('Populated OM {.val {OM@Name}}')
 
   .SetDigest(OM)
+}
+
+.RefreshFleetDigests <- function(OM) {
+  if (is.null(OM@Fleet) || !inherits(OM@Fleet, "StockFleetList")) return(OM)
+  for (st in seq_along(OM@Fleet)) {
+    Stock <- OM@Stock[[st]]
+    for (fl in seq_along(OM@Fleet[[st]])) {
+      seed <- OM@Seed + st + fl
+      OM@Fleet[[st]][[fl]] <- .SetDigest(OM@Fleet[[st]][[fl]], .FleetArgList(Stock, seed))
+    }
+  }
+  OM
 }
 
 .ProcessData <- function(OM) {
@@ -137,10 +151,13 @@ PopulateOM <- function(OM,
     )
   }
   class(StockList) <- "StockList"
-  
+
+  if (!silent) cli::cli_progress_bar(format = "Populating Stock {.val {Stock@Name}}", 
+                                     total = nStock)
   for (st in seq_len(nStock)) {
     Stock <- StockList[[st]]
     Stock@nSim <- OM@nSim
+    if (!silent) cli::cli_progress_update()
     StockList[[st]] <- PopulateStock(
       Stock = Stock,
       nYear = OM@nYear,
@@ -154,32 +171,27 @@ PopulateOM <- function(OM,
     )
     names(StockList)[st] <- StockList[[st]]@Name
   }
-  
+  if (!silent) cli::cli_progress_done()
+
   OM@Stock <- StockList
   OM
 }
 
 
-#' Generate correlated multi-stock projection recruitment deviations
-#'
-#' Internal `PopulateOM()` pipeline step. Controlled by
-#' `OM@Control$CorrelatedRecDevs` (`logical(1)`, default `TRUE`): whether
-#' multi-stock operating models get projection recruitment deviations
-#' correlated with historical cross-stock covariance (via
-#' [GenMultiStockRecDevs()]), rather than independent per-stock deviations.
-#' A property of the OM itself -- not a [SimControl()] toggle -- since it
-#' changes simulated dynamics, not just what gets computed/reported.
-#'
-#' Runs after `.PopulateStockList()` has generated each stock's (independent)
-#' `RecDevProj`, then overwrites it where applicable; stocks whose
-#' `RecDevProj` was user-supplied before population (`overwrite = FALSE`)
-#' are left untouched.
-#'
-#' @keywords internal
 .GenerateMultiStockRecDevs <- function(OM, overwrite, silent = FALSE) {
   if (nStock(OM) < 2) return(OM)
   if (isFALSE(OM@Control$CorrelatedRecDevs)) return(OM)
-  GenMultiStockRecDevs(OM, silent = silent, overwrite = overwrite)
+
+  argList <- list(
+    purrr::map(OM@Stock, \(s) s@SRR),
+    OM@Seed, OM@nSim, Years(OM, "P"), OM@Seasons, overwrite
+  )
+  newDigest <- digest::digest(argList, algo = "spookyhash")
+  if (isTRUE(identical(attr(OM, "RecDevDigest"), newDigest))) return(OM)
+
+  OM <- GenMultiStockRecDevs(OM, silent = silent, overwrite = overwrite)
+  attr(OM, "RecDevDigest") <- newDigest
+  OM
 }
 
 .PopulateFleetList <- function(OM, silent = FALSE, force = FALSE) {
@@ -223,26 +235,50 @@ PopulateOM <- function(OM,
     class(FleetList[[st]]) <- "FleetList"
   }
   
-  for (st in seq_len(nStocks)) {
-    StockExt <- StockList[[st]]
-    Years <- CalcYears(
-      nYear = StockExt@nYear,
-      pYear = StockExt@pYear,
-      CurrentYear = StockExt@CurrentYear,
-      Seasons = StockExt@Seasons
+  if (!silent)
+    cli::cli_progress_bar(
+      format = "Populating Fleet {.val {FleetList[[st]][[fl]]@Name}} (Stock {.val {names(StockList)[st]}}) {cli::pb_bar} {cli::pb_percent}",
+      total = nStocks * nFleets
     )
-    if (!is.null(StockExt@Length@ALK))
-      StockExt@Length@ALK <- StockExt@Length@ALK |> ExtendSims(StockExt@nSim) |> ExtendYears(Years)
-    if (!is.null(StockExt@Weight@MeanAtLength))
-      StockExt@Weight@MeanAtLength <- StockExt@Weight@MeanAtLength |> ExtendSims(StockExt@nSim) |> ExtendYears(Years)
+  for (st in seq_len(nStocks)) {
+    StockOrig <- StockList[[st]]
+
+    needsUpdate <- force || any(vapply(seq_len(nFleets), function(fl) {
+      !.CheckDigest(FleetList[[st]][[fl]], .FleetArgList(StockOrig, OM@Seed + st + fl))
+    }, logical(1)))
+
+    ExtendedLength <- NULL
+    ExtendedWeight <- NULL
+    WeightFallback <- NULL
+    if (needsUpdate) {
+      Years <- CalcYears(
+        nYear = StockOrig@nYear,
+        pYear = StockOrig@pYear,
+        CurrentYear = StockOrig@CurrentYear,
+        Seasons = StockOrig@Seasons
+      )
+      ExtendedLength <- StockOrig@Length
+      if (!is.null(ExtendedLength@ALK))
+        ExtendedLength@ALK <- ExtendedLength@ALK |> ExtendSims(StockOrig@nSim) |> ExtendYears(Years)
+      ExtendedWeight <- StockOrig@Weight
+      if (!is.null(ExtendedWeight@MeanAtLength))
+        ExtendedWeight@MeanAtLength <- ExtendedWeight@MeanAtLength |> ExtendSims(StockOrig@nSim) |> ExtendYears(Years)
+
+      if (!is.null(ExtendedLength@ALK) && !is.null(ExtendedWeight@MeanAtLength))
+        WeightFallback <- .AtSize2AtAge(ExtendedWeight, ExtendedLength, allow_shortcut = FALSE)
+    }
 
     for (fl in seq_len(nFleets)) {
+      if (!silent) cli::cli_progress_update()
       FleetList[[st]][[fl]] <- PopulateFleet(
         Fleet = FleetList[[st]][[fl]],
-        Stock = StockExt,
+        Stock = StockOrig,
         seed = OM@Seed + st + fl,
         silent = silent,
-        force  = force
+        force  = force,
+        WeightFallback = WeightFallback,
+        ExtendedLength = ExtendedLength,
+        ExtendedWeight = ExtendedWeight
       )
 
       # extract warning logs - only selectivity for now
@@ -255,7 +291,8 @@ PopulateOM <- function(OM,
       names(FleetList[[st]])[fl] <- FleetList[[st]][[fl]]@Name
     }
   }
-  
+  if (!silent) cli::cli_progress_done()
+
   OM@Fleet <- FleetList
   OM
 }
@@ -659,7 +696,7 @@ PopulateOM <- function(OM,
   )
   stocknames <- StockNames(OM)
   for (st in seq_along(OM@Stock)) {
-    nm <- stocknames[st] %||% paste("Stock", st)
+    nm <- stocknames[st] %||NA% paste("Stock", st)
     missing <- character(0)
     for (comp in names(stock_required)) {
       obj <- slot(OM@Stock[[st]], comp)
@@ -676,9 +713,9 @@ PopulateOM <- function(OM,
   )
   fleetnames <- FleetNames(OM)
   for (st in seq_along(OM@Fleet)) {
-    nm_stock <- stocknames[st] %||% paste("Stock", st)
+    nm_stock <- stocknames[st] %||NA% paste("Stock", st)
     for (fl in seq_along(OM@Fleet[[st]])) {
-      nm_fleet <- fleetnames[fl] %||% paste("Fleet", fl)
+      nm_fleet <- fleetnames[fl] %||NA% paste("Fleet", fl)
       missing <- character(0)
       for (comp in names(fleet_required)) {
         obj <- slot(OM@Fleet[[st]][[fl]], comp)

@@ -9,6 +9,9 @@
 #' @param silent Logical. If `TRUE`, suppress informational messages.
 #' @param force Logical. If `TRUE`, force re-population even if digest indicates
 #' the object is current.
+#' @param WeightFallback Used internally.
+#' @param ExtendedLength Used internally.
+#' @param ExtendedWeight Used internally.
 #'
 #' @details
 #' `PopulateFleet()` performs the following steps:
@@ -21,7 +24,7 @@
 #'   already defined, by weighting the stock's weight-at-length by
 #'   selectivity-at-length (`WeightFleetSelected`) or by
 #'   selectivity-at-length times retention-at-length (`WeightFleetRetained`)
-#'   over the age-length distribution -- see `.CalcFleetWeightAtAge()`.
+#'   over the age-length distribution.
 #'
 #' @return
 #' A populated [Fleet()] object.
@@ -33,13 +36,15 @@
 #' F <- Fleet()
 #' F_pop <- PopulateFleet(Fleet = F, Stock = Stock, seed = 123, nSim = 50)
 #' }
-#'
 #' @export
 PopulateFleet <- function(Fleet,
                           Stock,
                           seed = 103,
                           silent = FALSE,
-                          force = FALSE) {
+                          force = FALSE,
+                          WeightFallback = NULL,
+                          ExtendedLength = NULL,
+                          ExtendedWeight = NULL) {
   Ages <- Stock@Ages
   Length <- Stock@Length
   Weight <- Stock@Weight
@@ -66,16 +71,16 @@ PopulateFleet <- function(Fleet,
   ProjYears <- Years[!Years %in% HistYears]
   nArea <- ncol(RelativeSize)
   
-  argList <- list(Ages, Length, Weight, RelativeSize, nSim, Years, seed)
+  argList <- .FleetArgList(Stock, seed)
   
   if (EmptyObject(Fleet)) return(Fleet)
   
   if (.CheckDigest(Fleet, argList) & !force) return(Fleet)
   
   .SetSeed(seed)
-
-  nm <- cli::format_inline("Fleet {.val {Fleet@Name %||% 'Fleet'}} (stock {.val {Stock@Name %||% 'Stock'}})")
-
+  
+  nm <- cli::format_inline("Fleet {.val {Fleet@Name %||NA% 'Fleet'}} (stock {.val {Stock@Name %||NA% 'Stock'}})")
+  
   Fleet@Effort <- .SafePopulate(\() PopulateEffort(
     Effort = Fleet@Effort,
     HistYears = HistYears,
@@ -85,8 +90,8 @@ PopulateFleet <- function(Fleet,
     seed = seed
   ), "Effort", nm)
   .CheckPopulated(Fleet@Effort@Effort, "Effort", nm,
-    hint = cli::format_inline("Provide an {.var Effort} matrix ({.var Sim} x {.var Year}) for the fleet, then re-run."))
-
+                  hint = cli::format_inline("Provide an {.var Effort} matrix ({.var Sim} x {.var Year}) for the fleet, then re-run."))
+  
   Fleet@Catchability <- .SafePopulate(\() PopulateCatchability(
     Catchability = Fleet@Catchability,
     nSim = nSim,
@@ -96,8 +101,8 @@ PopulateFleet <- function(Fleet,
     silent = silent
   ), "Catchability", nm)
   .RequireArray(Fleet@Catchability, "Efficiency", "Catchability", nm, optional = TRUE,
-    hint = cli::format_inline("Provide {.var Efficiency} for {.var Catchability}, or leave it fully unset, then re-run."))
-
+                hint = cli::format_inline("Provide {.var Efficiency} for {.var Catchability}, or leave it fully unset, then re-run."))
+  
   Fleet@Selectivity <- .SafePopulate(\() PopulateSelectivity(
     Selectivity = Fleet@Selectivity,
     Ages = Ages,
@@ -112,7 +117,7 @@ PopulateFleet <- function(Fleet,
     silent = silent
   ), "Selectivity", nm)
   .RequireArray(Fleet@Selectivity, "MeanAtAge", "Selectivity", nm)
-
+  
   Fleet@Retention <- .SafePopulate(\() PopulateRetention(
     Retention = Fleet@Retention,
     Ages = Ages,
@@ -129,7 +134,7 @@ PopulateFleet <- function(Fleet,
     force = force
   ), "Retention", nm)
   .RequireArray(Fleet@Retention, "MeanAtAge", "Retention", nm, optional = TRUE)
-
+  
   Fleet@DiscardMortality <- .SafePopulate(\() PopulateDiscardMortality(
     DiscardMortality = Fleet@DiscardMortality,
     Ages = Ages,
@@ -144,8 +149,8 @@ PopulateFleet <- function(Fleet,
     silent = silent
   ), "DiscardMortality", nm)
   .RequireArray(Fleet@DiscardMortality, "MeanAtAge", "DiscardMortality", nm, optional = TRUE,
-    hint = cli::format_inline("Provide {.var MeanAtAge} for {.var DiscardMortality}, or leave it fully unset, then re-run."))
-
+                hint = cli::format_inline("Provide {.var MeanAtAge} for {.var DiscardMortality}, or leave it fully unset, then re-run."))
+  
   Fleet@Closure <- PopulateClosure(
     Closure = Fleet@Closure,
     nArea = nArea,
@@ -154,29 +159,50 @@ PopulateFleet <- function(Fleet,
     silent = silent
   )
   
+  WeightAtAgeLength <- if (is.null(ExtendedLength)) Length else ExtendedLength
+  WeightAtAgeWeight <- if (is.null(ExtendedWeight)) Weight else ExtendedWeight
+  
+  Fallback <- WeightFallback
+  if (is.null(Fallback) && !is.null(WeightAtAgeLength@ALK) && !is.null(WeightAtAgeWeight@MeanAtLength))
+    Fallback <- .AtSize2AtAge(WeightAtAgeWeight, WeightAtAgeLength, allow_shortcut = FALSE)
+  
   if (all(is.na(Fleet@WeightFleetSelected))) {
     Fleet@WeightFleetSelected <- .CalcFleetWeightAtAge(
       Selectivity = Fleet@Selectivity,
-      Weight = Weight,
-      Length = Length
+      Weight = WeightAtAgeWeight,
+      Length = WeightAtAgeLength,
+      Fallback = Fallback
     )
   }
-
+  
   if (all(is.na(Fleet@WeightFleetRetained))) {
     Fleet@WeightFleetRetained <- .CalcFleetWeightAtAge(
       Selectivity = Fleet@Selectivity,
-      Weight = Weight,
-      Length = Length,
-      Retention = Fleet@Retention
+      Weight = WeightAtAgeWeight,
+      Length = WeightAtAgeLength,
+      Retention = Fleet@Retention,
+      Fallback = Fallback
     )
   }
-
+  
   Fleet@WeightFleetSelected <- .SetAgeDimnames(Fleet@WeightFleetSelected, Ages)
   Fleet@WeightFleetRetained <- .SetAgeDimnames(Fleet@WeightFleetRetained, Ages)
-
-
+  
+  
   .SetDigest(Fleet, argList)
 }
+
+
+.FleetArgList <- function(Stock, seed) {
+  Years <- CalcYears(
+    nYear = Stock@nYear,
+    pYear = Stock@pYear,
+    CurrentYear = Stock@CurrentYear,
+    Seasons = Stock@Seasons
+  )
+  list(Stock@Ages, Stock@Length, Stock@Weight, Stock@Spatial@RelativeSize, Stock@nSim, Years, seed)
+}
+
 
 #' Calculate Fleet-Specific Weight-at-Age from Selectivity- (and Retention-)
 #' at-Length
@@ -199,10 +225,12 @@ PopulateFleet <- function(Fleet,
 #'   key (`Length@ALK`).
 #' @param Retention A populated [retention-class] object, or `NULL` (default)
 #'   to weight by selectivity only.
+#' @param Fallback Optional precomputed `.AtSize2AtAge(Weight, Length,
+#'   allow_shortcut=FALSE)` result, reused as-is instead of recomputed.
 #'
 #' @return `array`. `Sim x Age x Year` fleet weight-at-age.
 #' @keywords internal
-.CalcFleetWeightAtAge <- function(Selectivity, Weight, Length, Retention = NULL) {
+.CalcFleetWeightAtAge <- function(Selectivity, Weight, Length, Retention = NULL, Fallback = NULL) {
   fallback <- Weight@MeanAtAge
 
   if (is.null(Length@ALK)) return(fallback)
@@ -237,7 +265,7 @@ PopulateFleet <- function(Fleet,
     }
   }
 
-  wt_fleet <- .WeightedAtSize2AtAge(Weight, Weighting, Length)@MeanAtAge
+  wt_fleet <- .WeightedAtSize2AtAge(Weight, Weighting, Length, Fallback = Fallback)@MeanAtAge
   bad <- !is.finite(wt_fleet)
   wt_fleet[bad] <- fallback[bad]
   wt_fleet

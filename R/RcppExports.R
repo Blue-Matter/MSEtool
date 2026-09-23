@@ -37,6 +37,14 @@ ArrayBroadcastOp_ <- function(x, dimx, y, dimy, op) {
     .Call(`_MSEtool_ArrayBroadcastOp_`, x, dimx, y, dimy, op)
 }
 
+AtAge2AtSizeCore_ <- function(ObjectMeanAtAge, dimOMA, ASK, dimASK, nSim, nYear, hasArea, nArea) {
+    .Call(`_MSEtool_AtAge2AtSizeCore_`, ObjectMeanAtAge, dimOMA, ASK, dimASK, nSim, nYear, hasArea, nArea)
+}
+
+AtSize2AtAgeCore_ <- function(MeanAtSize, dimMeanAtSize, ASK, dimASK, nSim, nAge, nTS, nArea, bySim, byArea, allow_shortcut) {
+    .Call(`_MSEtool_AtSize2AtAgeCore_`, MeanAtSize, dimMeanAtSize, ASK, dimASK, nSim, nAge, nTS, nArea, bySim, byArea, allow_shortcut)
+}
+
 CalcAgeSizeKey_ <- function(MeanAtAge, SDatAge, Classes, TruncSD, Dist) {
     .Call(`_MSEtool_CalcAgeSizeKey_`, MeanAtAge, SDatAge, Classes, TruncSD, Dist)
 }

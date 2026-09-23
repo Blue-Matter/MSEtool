@@ -88,6 +88,45 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// AtAge2AtSizeCore_
+NumericVector AtAge2AtSizeCore_(const NumericVector& ObjectMeanAtAge, const IntegerVector& dimOMA, const NumericVector& ASK, const IntegerVector& dimASK, int nSim, int nYear, bool hasArea, int nArea);
+RcppExport SEXP _MSEtool_AtAge2AtSizeCore_(SEXP ObjectMeanAtAgeSEXP, SEXP dimOMASEXP, SEXP ASKSEXP, SEXP dimASKSEXP, SEXP nSimSEXP, SEXP nYearSEXP, SEXP hasAreaSEXP, SEXP nAreaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type ObjectMeanAtAge(ObjectMeanAtAgeSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type dimOMA(dimOMASEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type ASK(ASKSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type dimASK(dimASKSEXP);
+    Rcpp::traits::input_parameter< int >::type nSim(nSimSEXP);
+    Rcpp::traits::input_parameter< int >::type nYear(nYearSEXP);
+    Rcpp::traits::input_parameter< bool >::type hasArea(hasAreaSEXP);
+    Rcpp::traits::input_parameter< int >::type nArea(nAreaSEXP);
+    rcpp_result_gen = Rcpp::wrap(AtAge2AtSizeCore_(ObjectMeanAtAge, dimOMA, ASK, dimASK, nSim, nYear, hasArea, nArea));
+    return rcpp_result_gen;
+END_RCPP
+}
+// AtSize2AtAgeCore_
+NumericVector AtSize2AtAgeCore_(const NumericVector& MeanAtSize, const IntegerVector& dimMeanAtSize, const NumericVector& ASK, const IntegerVector& dimASK, int nSim, int nAge, int nTS, int nArea, bool bySim, bool byArea, bool allow_shortcut);
+RcppExport SEXP _MSEtool_AtSize2AtAgeCore_(SEXP MeanAtSizeSEXP, SEXP dimMeanAtSizeSEXP, SEXP ASKSEXP, SEXP dimASKSEXP, SEXP nSimSEXP, SEXP nAgeSEXP, SEXP nTSSEXP, SEXP nAreaSEXP, SEXP bySimSEXP, SEXP byAreaSEXP, SEXP allow_shortcutSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type MeanAtSize(MeanAtSizeSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type dimMeanAtSize(dimMeanAtSizeSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type ASK(ASKSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type dimASK(dimASKSEXP);
+    Rcpp::traits::input_parameter< int >::type nSim(nSimSEXP);
+    Rcpp::traits::input_parameter< int >::type nAge(nAgeSEXP);
+    Rcpp::traits::input_parameter< int >::type nTS(nTSSEXP);
+    Rcpp::traits::input_parameter< int >::type nArea(nAreaSEXP);
+    Rcpp::traits::input_parameter< bool >::type bySim(bySimSEXP);
+    Rcpp::traits::input_parameter< bool >::type byArea(byAreaSEXP);
+    Rcpp::traits::input_parameter< bool >::type allow_shortcut(allow_shortcutSEXP);
+    rcpp_result_gen = Rcpp::wrap(AtSize2AtAgeCore_(MeanAtSize, dimMeanAtSize, ASK, dimASK, nSim, nAge, nTS, nArea, bySim, byArea, allow_shortcut));
+    return rcpp_result_gen;
+END_RCPP
+}
 // CalcAgeSizeKey_
 Rcpp::NumericVector CalcAgeSizeKey_(const Rcpp::NumericMatrix& MeanAtAge, const Rcpp::NumericMatrix& SDatAge, const Rcpp::NumericVector& Classes, const double TruncSD, const std::string& Dist);
 RcppExport SEXP _MSEtool_CalcAgeSizeKey_(SEXP MeanAtAgeSEXP, SEXP SDatAgeSEXP, SEXP ClassesSEXP, SEXP TruncSDSEXP, SEXP DistSEXP) {
@@ -439,6 +478,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MSEtool_MSYCalcs", (DL_FUNC) &_MSEtool_MSYCalcs, 17},
     {"_MSEtool_Ref_int_cpp", (DL_FUNC) &_MSEtool_Ref_int_cpp, 12},
     {"_MSEtool_ArrayBroadcastOp_", (DL_FUNC) &_MSEtool_ArrayBroadcastOp_, 5},
+    {"_MSEtool_AtAge2AtSizeCore_", (DL_FUNC) &_MSEtool_AtAge2AtSizeCore_, 8},
+    {"_MSEtool_AtSize2AtAgeCore_", (DL_FUNC) &_MSEtool_AtSize2AtAgeCore_, 11},
     {"_MSEtool_CalcAgeSizeKey_", (DL_FUNC) &_MSEtool_CalcAgeSizeKey_, 5},
     {"_MSEtool_calcVatAge", (DL_FUNC) &_MSEtool_calcVatAge, 7},
     {"_MSEtool_CalcCatchAtSizeFleet_", (DL_FUNC) &_MSEtool_CalcCatchAtSizeFleet_, 8},

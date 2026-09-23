@@ -217,36 +217,15 @@
   
   out_dim      <- if (hasArea) c(nSim, nClass, nYear, nArea) else
     c(nSim, nClass, nYear)
-  MeanAtLength <- array(NA, dim=out_dim, dimnames=dn)
-  
-  for (s in seq_len(nSim)) {
-    obj_s      <- min(s, OMA_dim[1])
-    ASK_s      <- min(ASK_dim[1], s)
-    for (y in seq_len(nYear)) {
-      ASK_y      <- min(ASK_dim[4], y)
-      ASK_sim_ts <- ASK[ASK_s, , , ASK_y]
-      class_sums <- colSums(ASK_sim_ts)
-      col_sums   <- matrix(class_sums, nAge, nClass, byrow=TRUE)
-      ASK_stand  <- ASK_sim_ts / col_sums
-      ASK_stand[!is.finite(ASK_stand)] <- 0
-      no_mass    <- class_sums == 0
 
-      for (a in seq_len(nArea)) {
-        MeanAtAge_vec <- if (hasArea) ObjectMeanAtAge[obj_s, , y, a] else
-          ObjectMeanAtAge[obj_s, , y]
+  MeanAtLength <- AtAge2AtSizeCore_(
+    as.double(ObjectMeanAtAge), as.integer(dim(ObjectMeanAtAge)),
+    as.double(ASK), as.integer(dim(ASK)),
+    as.integer(nSim), as.integer(nYear), hasArea, as.integer(nArea)
+  )
+  dim(MeanAtLength) <- out_dim
+  dimnames(MeanAtLength) <- dn
 
-        atlength <- as.numeric(MeanAtAge_vec %*% ASK_stand)
-        atlength[no_mass] <- NA
-        atlength <- .CarryForwardLOCF(atlength)
-        atlength <- rev(.CarryForwardLOCF(rev(atlength)))
-        atlength[is.na(atlength)] <- 0
-
-        if (hasArea) MeanAtLength[s, , y, a] <- atlength else
-          MeanAtLength[s, , y]    <- atlength
-      }
-    }
-  }
-  
   if (!inherits(object, 'weight'))
     object@Classes <- Length@Classes
   slot(object, slotName) <- MeanAtLength
@@ -333,26 +312,15 @@
 .AtSize2AtAgeCore <- function(MeanAtAge, MeanAtSize, ASK,
                               nSim, nAge, nTS, nArea=1,
                               bySim=TRUE, byArea=FALSE, allow_shortcut=TRUE) {
-  ask_sim <- function(sim) if (bySim) sim else 1L
-
-  for (sim in seq_len(nSim)) {
-    s <- ask_sim(sim)
-    for (year in seq_len(nTS)) {
-      ASK_ts <- ASK[s, , , year]
-      if (byArea) {
-        for (area in seq_len(nArea)) {
-          mas <- MeanAtSize[sim, , year, area]
-          MeanAtAge[sim, , year, area] <- if (allow_shortcut && all(mas > 0.99)) 1 else
-            as.numeric(mas %*% t(ASK_ts))
-        }
-      } else {
-        mas <- MeanAtSize[sim, , year]
-        MeanAtAge[sim, , year] <- if (allow_shortcut && all(mas > 0.99)) 1 else
-          as.numeric(mas %*% t(ASK_ts))
-      }
-    }
-  }
-  MeanAtAge
+  out <- AtSize2AtAgeCore_(
+    as.double(MeanAtSize), as.integer(dim(MeanAtSize)),
+    as.double(ASK), as.integer(dim(ASK)),
+    as.integer(nSim), as.integer(nAge), as.integer(nTS), as.integer(nArea),
+    isTRUE(bySim), isTRUE(byArea), isTRUE(allow_shortcut)
+  )
+  dim(out) <- dim(MeanAtAge)
+  dimnames(out) <- dimnames(MeanAtAge)
+  out
 }
 
 #' Resolve Consistent Sim and Year Dimensions
@@ -579,13 +547,13 @@
 #'
 #' @return `object` with `object@MeanAtAge` populated.
 #' @keywords internal
-.WeightedAtSize2AtAge <- function(object, Weighting, Length) {
+.WeightedAtSize2AtAge <- function(object, Weighting, Length, Fallback = NULL) {
   slotName <- if (inherits(Length, 'weight')) 'MeanAtWeight' else 'MeanAtLength'
 
   wt_at_size  <- slot(Weighting, slotName)
   obj_at_size <- slot(object, slotName)
 
-  fallback <- .AtSize2AtAge(object, Length, allow_shortcut=FALSE)
+  fallback <- if (is.null(Fallback)) .AtSize2AtAge(object, Length, allow_shortcut=FALSE) else Fallback
 
   if (is.null(wt_at_size) || is.null(obj_at_size))
     return(fallback)
