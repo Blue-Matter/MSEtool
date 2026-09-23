@@ -83,7 +83,7 @@ Used by \code{\link[=ImportBAMData]{ImportBAMData()}}.}
 applied; see \code{\link[=OM]{OM()}}/\link[=om-class]{om}. Default \code{NULL}.}
 
 \item{InterimAdvice}{A \code{data.frame} or \code{NULL}. Fixed or stochastic
-TAC/Effort values for years before \code{MPStartYear}; see \code{\link[=OM]{OM()}}/\link[=om-class]{om}.
+TAC/Effort values for years before \code{MPStartYear}; see \code{\link[=InterimAdvice]{InterimAdvice()}}.
 Default \code{NULL}.}
 
 \item{populate}{Logical. If \code{TRUE} (default), calls \code{\link[=PopulateOM]{PopulateOM()}} to

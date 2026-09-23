@@ -58,11 +58,16 @@ herm <- Herm(From = 1, To = 2, Frac = Frac)
 \link[=stocktransition-class]{stocktransition}
 
 Other om:
+\code{\link[=CatchFrac]{CatchFrac()}},
 \code{\link{ComplexOM}},
+\code{\link[=DataLag]{DataLag()}},
 \code{\link{HermOM}},
+\code{\link[=HistoricalWeight]{HistoricalWeight()}},
+\code{\link[=InterimAdvice]{InterimAdvice()}},
 \code{\link{MultiStockOM}},
 \code{\link[=OM]{OM()}},
 \code{\link{OM-accessors}},
+\code{\link[=RefSeason]{RefSeason()}},
 \code{\link{SeasonalSpatialOM}},
 \code{\link{SingleStockOM}},
 \code{\link{TwoFleetOM}},

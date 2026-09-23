@@ -78,7 +78,7 @@ fleet names are inferred from SS3 output.}
 applied; see \code{\link[=OM]{OM()}}/\link[=om-class]{om}. Default \code{NULL}.}
 
 \item{InterimAdvice}{A \code{data.frame} or \code{NULL}. Fixed or stochastic
-TAC/Effort values for years before \code{MPStartYear}; see \code{\link[=OM]{OM()}}/\link[=om-class]{om}.
+TAC/Effort values for years before \code{MPStartYear}; see \code{\link[=InterimAdvice]{InterimAdvice()}}.
 Default \code{NULL}.}
 
 \item{LengthUnits}{Character string giving the physical unit of length

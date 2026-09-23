@@ -89,21 +89,13 @@ model. Default is the current system year.}
 \item{Seasons}{Integer. Number of seasons per year. Default \code{1}.}
 
 \item{RefSeason}{Integer vector or \code{NULL}. Only used for \code{Seasons > 1}.
-Season index/indices (\verb{1..Seasons}) used as the reference snapshot(s) for
-reporting equilibrium biomass and spawning biomass (e.g. \code{BMSY}, \code{SBMSY},
-\code{B0}, \code{SB0}, \code{BLow}). \code{NULL} (default) auto-detects, independently per
-simulation, which season(s) have nonzero spawning contribution, and
-averages the cross-sectional snapshot across them when more than one is
-detected. Default \code{NULL}.}
+Reference season(s) for reporting equilibrium/MSY reference points.
+Default \code{NULL}. See \code{\link[=RefSeason]{RefSeason()}}.}
 
-\item{RefEffortYears}{Numeric vector or \code{NULL}. Only used for \code{Seasons > 1}.
-One or more historical calendar years whose relative seasonal
-effort/catchability pattern fixes the seasonal shape of fishing
-mortality during per-recruit and MSY reference point optimization,
-decoupled from the year used for biological parameters. \code{NULL} (default)
-reuses the same year as the biological parameters. When more than one
-year is given, the per-season effort is averaged across those years.
-Default \code{NULL}.}
+\item{RefEffortYears}{Numeric vector or \code{NULL}. Only used for
+\code{Seasons > 1}. Historical year(s) fixing the seasonal shape of fishing
+mortality for reference point calculation. Default \code{NULL}. See
+\code{\link[=RefSeason]{RefSeason()}}.}
 
 \item{Stock}{A \link[=stock-class]{stock} object or named list of \link[=stock-class]{stock} objects.
 Default \code{NULL}. See \code{\link[=Stock]{Stock()}} for construction and pass-through access.}
@@ -124,39 +116,26 @@ pass-through access.}
 associated with the operating model. Default \code{NULL}. See \code{\link[=Data]{Data()}} for
 construction and pass-through access.}
 
-\item{DataLag}{Integer. Number of time steps that data are lagged relative
-to management implementation. Default \code{0}.}
+\item{DataLag}{Integer. Number of years that data are lagged relative
+to management implementation. Default \code{0}. See \code{\link[=DataLag]{DataLag()}}.}
 
-\item{CatchFrac}{List. Named list of length 0 or \code{nStock(OM)}. Each
-element is an \code{nSim} by \code{nFleet} matrix (or a single row recycled
-across sims) giving the fraction of catch taken by each fleet, with
-rows summing to 1. Only used when there is more than one fleet and a
-historical \code{Depletion@Final} target is set for at least one stock, in
-which case it is the target fleet split that catchability is
-calibrated to reproduce. If left unspecified for a stock, it is
-derived from relative Effort times Catchability in the final
-historical year. Default \code{NULL}.}
+\item{CatchFrac}{List. Named list of length 0 or \code{nStock(OM)}, giving the
+historical fleet split of catch used as a catchability calibration
+target. Default \code{NULL}. See \code{\link[=FleetAllocation]{FleetAllocation()}}.}
 
 \item{FleetAllocation}{List. Named list of length 0 or the number of stock
-complexes. Each element is an \code{nSim} by \code{nFleet} matrix, with rows
-summing to 1, controlling how the TAC is split among fleets during
-projection. If unspecified it falls back to \code{CatchFrac}, and then to
-the mean of removals over the last five historical years. Default
-\code{NULL}.}
+complexes, controlling how the TAC is split among fleets during
+projection. Default \code{NULL}. See \code{\link[=FleetAllocation]{FleetAllocation()}}.}
 
 \item{HistoricalWeight}{List. Named list of length 0 or the number of
-stock complexes. Each element is a named numeric vector over fleet
-names, values in \verb{[0,1]}, giving the weight placed on the historical
-seasonal pattern (vs. the population abundance pattern) when
-\code{SeasonalAllocation} is derived. \code{1} (default) uses the historical
-pattern only. Default \code{NULL}.}
+stock complexes, giving the weight placed on the historical seasonal
+pattern (vs. the population abundance pattern) when \code{SeasonalAllocation}
+is derived. Default \code{NULL}. See \code{\link[=SeasonalAllocation]{SeasonalAllocation()}}.}
 
 \item{SeasonalAllocation}{List. Named list of length 0 or the number of
-stock complexes. Each element is an \code{nSim} (or 1, recycled) by
-\code{Seasons} by \code{nFleet} array, each \verb{[sim, , fleet]} column summing to 1,
-controlling how a periodically-set TAC/Effort is split across the
-seasons of the interval it covers. If unspecified it is derived from
-\code{HistoricalWeight}. Default \code{NULL}.}
+stock complexes, controlling how a periodically-set TAC/Effort is split
+across the seasons of the interval it covers. Default \code{NULL}. See
+\code{\link[=SeasonalAllocation]{SeasonalAllocation()}}.}
 
 \item{EFactor}{List. Effort or exploitation modifiers applied during
 projection. Default \code{NULL}.}
@@ -187,8 +166,8 @@ on the MP without knowing which OM it will run under.}
 applied - see \emph{Interim Advice} in Details. Default \code{NULL}.}
 
 \item{InterimAdvice}{A \code{data.frame} or \code{NULL}. Fixed or stochastic
-TAC/Effort values for years before \code{MPStartYear} - see \emph{Interim Advice}
-in Details. Default \code{NULL}.}
+TAC/Effort values for years before \code{MPStartYear}. Default \code{NULL}. See
+\code{\link[=InterimAdvice]{InterimAdvice()}} for the required columns and how it is applied.}
 
 \item{nReps}{Positive integer. Number of stochastic replicates used for
 generating management advice. Default \code{1}. Not currently used.}
@@ -251,42 +230,9 @@ When the historical period ends before MPs should actually start being
 applied (e.g. the OM is conditioned on data to 2024 but MPs will not be
 implemented until 2028), set \code{MPStartYear} to the first calendar year MPs
 should run. Projection years before \code{MPStartYear} are "interim" years:
-the MP is not called, \code{Imp} (implementation error) is bypassed since these
-values represent actual/plausible realised catch or effort rather than a
-management recommendation, and advice is instead taken from
-\code{InterimAdvice}.
-
-\code{InterimAdvice} is a \code{data.frame} with one row per Year x Stock x
-(optionally Fleet), with columns:
-\itemize{
-\item \code{Year}: calendar year, in \verb{[first projection year, MPStartYear - 1]}.
-\item \code{Stock}: stock (or complex) name. Optional when the OM has a single
-stock/complex, in which case every row applies to it; required when
-there is more than one.
-\item \code{Fleet}: optional; fleet name, or \code{NA} to apply as a stock total (TAC,
-allocated across fleets the same way MP-supplied TAC is) or an identical
-value across fleets (Effort).
-\item \code{Type}: \code{"TAC"} or \code{"Effort"}.
-\item \code{Mean}: point estimate, natural scale. Must be \verb{>= 0} (e.g. \code{0} for a
-fleet with no historical catch, maintained as a closure in interim
-years). A row with \code{Mean == 0} is always deterministic -- a lognormal
-draw cannot be centred at \code{0} -- regardless of \code{SD}.
-\item \code{SD}: optional; natural-scale SD for a lognormal draw (sampled once per
-simulation, per row). \code{NA}/\code{0} (default), or \code{Mean == 0}, gives a fixed,
-deterministic value. If supplied, must be \verb{>= 0}, and must be \code{NA}/\code{0}
-wherever \code{Mean == 0}.
-\item \code{TACType}, \code{TACUnit}: as in \code{\link[=Advice]{Advice()}}; only used for \code{"TAC"} rows.
-\item \code{EffType}: as in \code{\link[=Advice]{Advice()}}; only used for \code{"Effort"} rows.
-}
-
-Any Year x Stock combination with no matching row falls back to freezing
-effort at the last historical level (the same default used when an MP
-itself returns no TAC/Effort).
-
-For seasonal OMs (\code{Seasons > 1}), the annual \code{Mean} for a row is spread
-across seasons using that stock/fleet's own seasonal shape from the last
-historical year (Landings for TAC rows, Effort for Effort rows), so a
-historical seasonal pattern is retained rather than flattened.
+the MP is not called, and advice is instead taken from \code{InterimAdvice}.
+See \code{\link[=InterimAdvice]{InterimAdvice()}} for how interim years are resolved and the
+\code{data.frame} format used to populate them.
 }
 
 \subsection{StockTargeting Initialisation}{
@@ -337,6 +283,12 @@ Years(om)
 \itemize{
 \item \link[=om-class]{om} for the class definition.
 \item \link{OM-accessors} for slot accessor and replacement functions.
+\item \code{\link[=InterimAdvice]{InterimAdvice()}} for populating interim TAC/Effort.
+\item \code{\link[=DataLag]{DataLag()}} for the data-lag applied to the MP's \code{Data}.
+\item \code{\link[=FleetAllocation]{FleetAllocation()}} for splitting a stock/complex TAC among fleets.
+\item \code{\link[=SeasonalAllocation]{SeasonalAllocation()}} for splitting a periodic TAC/Effort across
+seasons.
+\item \code{\link[=RefSeason]{RefSeason()}} for reference point season handling in seasonal OMs.
 \item \code{\link[=Stock]{Stock()}}, \code{\link[=Fleet]{Fleet()}}, \code{\link[=Obs]{Obs()}}, \code{\link[=Imp]{Imp()}}, \code{\link[=Data]{Data()}} for sub-object
 constructors and their pass-through accessors.
 \item \code{\link[=Years]{Years()}}, \code{\link[=CalcYears]{CalcYears()}} for the derived time-step vector.
@@ -347,11 +299,16 @@ constructors and their pass-through accessors.
 }
 
 Other om:
+\code{\link[=CatchFrac]{CatchFrac()}},
 \code{\link{ComplexOM}},
+\code{\link[=DataLag]{DataLag()}},
 \code{\link[=Herm]{Herm()}},
 \code{\link{HermOM}},
+\code{\link[=HistoricalWeight]{HistoricalWeight()}},
+\code{\link[=InterimAdvice]{InterimAdvice()}},
 \code{\link{MultiStockOM}},
 \code{\link{OM-accessors}},
+\code{\link[=RefSeason]{RefSeason()}},
 \code{\link{SeasonalSpatialOM}},
 \code{\link{SingleStockOM}},
 \code{\link{TwoFleetOM}},

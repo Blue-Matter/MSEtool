@@ -84,12 +84,17 @@ for the component objects. \code{\link[=OM]{OM()}}, \link[=om-class]{om}, \code{
 \code{\link[=ExampleMPs]{ExampleMPs()}}
 
 Other om:
+\code{\link[=CatchFrac]{CatchFrac()}},
 \code{\link{ComplexOM}},
+\code{\link[=DataLag]{DataLag()}},
 \code{\link[=Herm]{Herm()}},
 \code{\link{HermOM}},
+\code{\link[=HistoricalWeight]{HistoricalWeight()}},
+\code{\link[=InterimAdvice]{InterimAdvice()}},
 \code{\link{MultiStockOM}},
 \code{\link[=OM]{OM()}},
 \code{\link{OM-accessors}},
+\code{\link[=RefSeason]{RefSeason()}},
 \code{\link{SeasonalSpatialOM}},
 \code{\link{TwoFleetOM}},
 \code{\link{om-class}},

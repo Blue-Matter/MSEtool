@@ -42,12 +42,17 @@ extensions. Not used internally.}
 \code{\link[=Herm]{Herm()}}
 
 Other om:
+\code{\link[=CatchFrac]{CatchFrac()}},
 \code{\link{ComplexOM}},
+\code{\link[=DataLag]{DataLag()}},
 \code{\link[=Herm]{Herm()}},
 \code{\link{HermOM}},
+\code{\link[=HistoricalWeight]{HistoricalWeight()}},
+\code{\link[=InterimAdvice]{InterimAdvice()}},
 \code{\link{MultiStockOM}},
 \code{\link[=OM]{OM()}},
 \code{\link{OM-accessors}},
+\code{\link[=RefSeason]{RefSeason()}},
 \code{\link{SeasonalSpatialOM}},
 \code{\link{SingleStockOM}},
 \code{\link{TwoFleetOM}},

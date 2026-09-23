@@ -26,20 +26,6 @@
 \alias{CurrentYear<-}
 \alias{Seasons}
 \alias{Seasons<-}
-\alias{RefSeason}
-\alias{RefSeason<-}
-\alias{RefEffortYears}
-\alias{RefEffortYears<-}
-\alias{DataLag}
-\alias{DataLag<-}
-\alias{CatchFrac}
-\alias{CatchFrac<-}
-\alias{FleetAllocation}
-\alias{FleetAllocation<-}
-\alias{HistoricalWeight}
-\alias{HistoricalWeight<-}
-\alias{SeasonalAllocation}
-\alias{SeasonalAllocation<-}
 \alias{EFactor}
 \alias{EFactor<-}
 \alias{Complexes}
@@ -51,8 +37,6 @@
 \alias{Interval<-}
 \alias{MPStartYear}
 \alias{MPStartYear<-}
-\alias{InterimAdvice}
-\alias{InterimAdvice<-}
 \alias{nReps}
 \alias{nReps<-}
 \alias{pStar}
@@ -113,34 +97,6 @@ Seasons(x)
 
 Seasons(x) <- value
 
-RefSeason(x)
-
-RefSeason(x) <- value
-
-RefEffortYears(x)
-
-RefEffortYears(x) <- value
-
-DataLag(x)
-
-DataLag(x) <- value
-
-CatchFrac(x)
-
-CatchFrac(x) <- value
-
-FleetAllocation(x)
-
-FleetAllocation(x) <- value
-
-HistoricalWeight(x)
-
-HistoricalWeight(x) <- value
-
-SeasonalAllocation(x)
-
-SeasonalAllocation(x) <- value
-
 EFactor(x)
 
 EFactor(x) <- value
@@ -162,10 +118,6 @@ Interval(x) <- value
 MPStartYear(x)
 
 MPStartYear(x) <- value
-
-InterimAdvice(x)
-
-InterimAdvice(x) <- value
 
 nReps(x)
 
@@ -243,11 +195,16 @@ pass-through accessors.
 }
 
 Other om:
+\code{\link[=CatchFrac]{CatchFrac()}},
 \code{\link{ComplexOM}},
+\code{\link[=DataLag]{DataLag()}},
 \code{\link[=Herm]{Herm()}},
 \code{\link{HermOM}},
+\code{\link[=HistoricalWeight]{HistoricalWeight()}},
+\code{\link[=InterimAdvice]{InterimAdvice()}},
 \code{\link{MultiStockOM}},
 \code{\link[=OM]{OM()}},
+\code{\link[=RefSeason]{RefSeason()}},
 \code{\link{SeasonalSpatialOM}},
 \code{\link{SingleStockOM}},
 \code{\link{TwoFleetOM}},

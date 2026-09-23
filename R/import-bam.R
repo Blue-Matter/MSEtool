@@ -48,7 +48,7 @@
 #' @param MPStartYear Numeric or `NULL`. First calendar year in which MPs are
 #'   applied; see [OM()]/[om-class]. Default `NULL`.
 #' @param InterimAdvice A `data.frame` or `NULL`. Fixed or stochastic
-#'   TAC/Effort values for years before `MPStartYear`; see [OM()]/[om-class].
+#'   TAC/Effort values for years before `MPStartYear`; see [InterimAdvice()].
 #'   Default `NULL`.
 #' @param populate Logical. If `TRUE` (default), calls [PopulateOM()] to
 #'   populate the OM after construction.

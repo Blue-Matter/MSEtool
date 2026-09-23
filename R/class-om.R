@@ -29,17 +29,19 @@
 #' @slot RefSeason Integer vector or `NULL`. Only used for seasonal models 
 #'   (`Seasons > 1`). Season index/indices (`1..Seasons`) used as the
 #'   reference snapshot(s) for reporting equilibrium reference points. 
-#'   `NULL` (default)  auto-detects, independently per simulation, which 
-#'   season(s) have nonzero spawning contribution and averages the 
-#'   cross-sectional snapshot across them when more than one is detected. See [OM()].
+#'   `NULL` (default)  auto-detects, independently per simulation, which
+#'   season(s) have nonzero spawning contribution and averages the
+#'   cross-sectional snapshot across them when more than one is detected. See
+#'   [RefSeason()].
 #' @slot RefEffortYears Numeric vector or `NULL`. Only used for seasonal models
 #'  (`Seasons > 1`). One or more historical calendar years whose relative
 #'   seasonal effort/catchability pattern is used to fix the seasonal shape
 #'   of fishing mortality during per-recruit and MSY reference point
 #'   optimization, decoupled from the year used for biological parameters.
-#'   `NULL` (default) reuses the same year as the biological parameters. 
+#'   `NULL` (default) reuses the same year as the biological parameters.
 #'   When more than one year is given, the
-#'   per-season effort is averaged across those years before use. See [OM()].
+#'   per-season effort is averaged across those years before use. See
+#'   [RefSeason()].
 #'
 #' @slot Stock A [stock-class] object or named list of [stock-class] objects.
 #'   See [Stock()].
@@ -53,8 +55,8 @@
 #'
 #' @slot Data A [data-class] object or list of [data-class] objects associated
 #'   with the operating model. See [Data()].
-#' @slot DataLag Integer. Number of time steps that data are lagged relative
-#'   to management implementation. See [OM()].
+#' @slot DataLag Integer. Number of years that data are lagged relative
+#'   to management implementation. See [DataLag()].
 #'
 #' @slot CatchFrac List. Named list of length 0 or `nStock(OM)`. Each element
 #'   is an `nSim` by `nFleet` matrix (or a single row recycled across sims)
@@ -63,13 +65,14 @@
 #'   `Depletion@Final` target is set for at least one stock, in which case
 #'   it is the target fleet split that catchability is calibrated to
 #'   reproduce. If left unspecified for a stock, it is derived from relative
-#'   Effort times Catchability in the final historical year. See [OM()].
+#'   Effort times Catchability in the final historical year. See
+#'   [FleetAllocation()].
 #' @slot FleetAllocation List. Named list of length 0 or the number of stock
 #'   complexes. Each element is an `nSim` by `nFleet` matrix, with rows
 #'   summing to 1, controlling how the TAC is split among fleets during
 #'   projection. If unspecified it falls back to `Allocation` (retained for
 #'   backwards compatibility - see below), then `CatchFrac`, then the mean of
-#'   removals over the last five historical years. See [OM()].
+#'   removals over the last five historical years. See [FleetAllocation()].
 #' @slot Allocation List. Deprecated alias for `FleetAllocation`, retained
 #'   only so that objects saved before the rename still carry their data. If
 #'   `FleetAllocation` is unset and `Allocation` is, its value is copied over
@@ -80,13 +83,13 @@
 #'   names, values in `[0,1]`, giving the weight placed on the historical
 #'   seasonal pattern (vs. the population abundance pattern) when
 #'   `SeasonalAllocation` is derived. `1` (default) uses the historical
-#'   pattern only. See [OM()].
+#'   pattern only. See [SeasonalAllocation()].
 #' @slot SeasonalAllocation List. Named list of length 0 or the number of
 #'   stock complexes. Each element is an `nSim` (or 1, recycled) by
 #'   `Seasons` by `nFleet` array, each `[sim, , fleet]` column summing to 1,
 #'   controlling how a periodically-set TAC/Effort is split across the
 #'   seasons of the interval it covers. If unspecified it is derived from
-#'   `HistoricalWeight`. See [OM()].
+#'   `HistoricalWeight`. See [SeasonalAllocation()].
 #' @slot EFactor List. Effort or exploitation modifiers applied during
 #'   projection. See [OM()].
 #'
@@ -115,10 +118,10 @@
 #'   the MP is not called, and advice is instead built from `InterimAdvice`
 #'   (falling back to freezing effort at the last historical level where no
 #'   matching entry exists). `NULL` (default) means MPs start in the first
-#'   projection year. See [OM()].
+#'   projection year. See [InterimAdvice()].
 #' @slot InterimAdvice A `data.frame` or `NULL`. Analyst-supplied fixed or
 #'   stochastic TAC/Effort values for interim years (before `MPStartYear`).
-#'   See [OM()] for the required columns.
+#'   See [InterimAdvice()] for the required columns.
 #' @slot nReps Positive integer. Number of stochastic replicates for
 #'   management advice. See [OM()]. Not currently used.
 #' @slot pStar Numeric. Percentile applied to stochastic management advice.
