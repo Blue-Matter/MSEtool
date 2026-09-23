@@ -90,8 +90,17 @@
 #'   controlling how a periodically-set TAC/Effort is split across the
 #'   seasons of the interval it covers. If unspecified it is derived from
 #'   `HistoricalWeight`. See [SeasonalAllocation()].
-#' @slot EFactor List. Effort or exploitation modifiers applied during
-#'   projection. See [OM()].
+#' @slot EffortAllocation List. Named list of length 0 or the number of
+#'   stock complexes. Each element is an `nSim` (or 1, recycled) by `nFleet`
+#'   matrix, with rows summing to 1, splitting a scalar absolute Effort
+#'   recommendation among fleets. If unspecified it falls back to to mean
+#'   relative effort over the last five historical years. See
+#'   [EffortAllocation()].
+#' @slot EFactor List. Deprecated alias for `EffortAllocation`, retained
+#'   only so that objects saved before the rename still carry their data. If
+#'   `EffortAllocation` is unset and `EFactor` is, its value is copied over
+#'   during `Simulate()`/`Project()`. Set `EffortAllocation` directly
+#'   instead.
 #'
 #' @slot Complexes List. Defines stock complexes for data aggregation and
 #'   management. See [OM()].
@@ -212,6 +221,7 @@ setClass(
     Allocation='list.null',
     HistoricalWeight='list.null',
     SeasonalAllocation='list.null',
+    EffortAllocation='list.null',
     EFactor='list.null',
     
     Complexes='list.null',

@@ -127,9 +127,10 @@
 #'    fleets. E.g., if `Effort=0.5`, effort for all fleets will be set to half 
 #'    the effort in the last historical year. 
 #'  
-#'    * If `EffType`=`"Abs"`: the total effort (summed over fleets unless provide
-#'    as a length `nFleet` vector); Note that in this case all fleets in the OM must 
-#'    have the same units for `Effort`).
+#'    * If `EffType`=`"Abs"`: the total effort, split across fleets according
+#'    to [EffortAllocation()] (unless provided as a length `nFleet` vector,
+#'    which is already fleet-specific). Note that in this case all fleets in
+#'    the OM must have the same units for `Effort`).
 #'
 #' * numeric vector length `nFleet`: Fleet-specific relative or absolute Effort. 
 #'

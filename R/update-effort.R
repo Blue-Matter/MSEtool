@@ -132,16 +132,38 @@
   for (i in seq_len(nComplex)) {
     Advice         <- AdviceList[[i]]
     AdvicePrevious <- LastAdviceList[[i]]
+    complex_name   <- names(Complexes)[i]
 
     if (!inherits(Advice, "advice"))                              next
     if (is.null(Advice@Effort))                                   next
 
-    # Scalar effort expanded to nFleet (skip if already a matrix)
-    if (!is.array(Advice@Effort) && length(Advice@Effort)==1)
-      Advice@Effort <- rep(Advice@Effort,nFleet)[seq_len(nFleet)]
-
     EffType <- Advice@EffType
     if (!length(EffType)) EffType <- 'Rel'
+
+    # A single scalar Effort value passed through `.CheckAdviceEffort()` is
+    # tagged `dimnames(Effort)$Fleet == 'Total'`; any other 1-fleet array
+    # (a genuine nFleet=1 OM) keeps its real fleet name.
+    IsScalarTotal <- is.array(Advice@Effort) && length(Advice@Effort) == 1 &&
+      identical(unname(dimnames(Advice@Effort)$Fleet), "Total")
+    IsRawScalar   <- !is.array(Advice@Effort) && length(Advice@Effort) == 1
+
+    if ((IsScalarTotal || IsRawScalar) && nFleet > 1 &&
+        length(EffType) == 1 && EffType == 'Abs') {
+      # A scalar absolute Effort recommendation is a total to be split
+      # across fleets, the same way a scalar TAC is - see `EffortAllocation()`.
+      EffortAllocationMat <- Proj@OM@EffortAllocation[[complex_name]]
+      if (is.null(EffortAllocationMat))
+        cli::cli_abort(
+          "Proj@OM@EffortAllocation[[{complex_name}]] is NULL but Effort is a scalar Abs value with nFleet > 1",
+          .internal = TRUE
+        )
+      alloc_sim <- min(nrow(EffortAllocationMat), sim)
+      Advice@Effort <- as.numeric(Advice@Effort) * EffortAllocationMat[alloc_sim, ]
+    } else if (IsScalarTotal || IsRawScalar) {
+      # Scalar effort expanded to nFleet (skip if already fleet-specific)
+      Advice@Effort <- rep(as.numeric(Advice@Effort), nFleet)[seq_len(nFleet)]
+    }
+
     EffTypeMat[, i] <- .RecycleToFleets(EffType, nFleet, 'EffType')
 
     # Convert relative fleets to absolute
@@ -155,7 +177,6 @@
     Advice          <- temp$Advice
 
 
-    complex_name <- names(Complexes)[i]
     wrapped <- .ApplyImplementationError(
       setNames(list(Advice@Effort), complex_name),
       Proj, FleetNames, complex_name, sim, Year, 'Effort'

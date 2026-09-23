@@ -68,8 +68,9 @@
 #'   stock complexes, controlling how a periodically-set TAC/Effort is split
 #'   across the seasons of the interval it covers. Default `NULL`. See
 #'   [SeasonalAllocation()].
-#' @param EFactor List. Effort or exploitation modifiers applied during
-#'   projection. Default `NULL`.
+#' @param EffortAllocation List. Named list of length 0 or the number of
+#'   stock complexes, splitting a scalar absolute Effort recommendation
+#'   across fleets. Default `NULL`. See [EffortAllocation()].
 #' @param Complexes List. Defines stock complexes for data aggregation and
 #'   management. Default `NULL`.
 #' @param Herm A list of [stocktransition-class] objects (built via [Herm()]),
@@ -185,6 +186,8 @@
 #' - [SeasonalAllocation()] for splitting a periodic TAC/Effort across
 #'   seasons.
 #' - [RefSeason()] for reference point season handling in seasonal OMs.
+#' - [EffortAllocation()] for splitting a scalar absolute Effort
+#'   recommendation among fleets.
 #' - [Stock()], [Fleet()], [Obs()], [Imp()], [Data()] for sub-object
 #'   constructors and their pass-through accessors.
 #' - [Years()], [CalcYears()] for the derived time-step vector.
@@ -235,8 +238,8 @@ OM <- function(Name        = "A new OM object",
                FleetAllocation  = NULL,
                HistoricalWeight   = NULL,
                SeasonalAllocation = NULL,
-               EFactor     = NULL,
-               
+               EffortAllocation = NULL,
+
                Complexes   = NULL,
                Herm        = NULL,
                Relations   = NULL,
@@ -319,7 +322,7 @@ OM <- function(Name        = "A new OM object",
   .Object@FleetAllocation  <- FleetAllocation
   .Object@HistoricalWeight   <- HistoricalWeight
   .Object@SeasonalAllocation <- SeasonalAllocation
-  .Object@EFactor     <- EFactor
+  .Object@EffortAllocation <- EffortAllocation
   
   .Object@Complexes   <- Complexes
   .Object@Herm        <- Herm
@@ -818,13 +821,66 @@ SeasonalAllocation <- function(x) .IsHist(x, "SeasonalAllocation")
 #' @export
 `SeasonalAllocation<-` <- function(x, value) .AssignSlot(x, value, "SeasonalAllocation")
 
-#' @rdname OM-accessors
+#' Fleet Allocation of Absolute Effort for OM Objects
+#'
+#' Access or replace the `EffortAllocation` slot of an [om-class] object:
+#' the fleet-level split applied when an MP returns a single, scalar,
+#' absolute Effort recommendation (`EffType = "Abs"`) for a complex with
+#' more than one fleet. Also accepts [hist-class] and [mse-class] objects,
+#' extracting the embedded `OM` slot transparently.
+#'
+#' @param x An [om-class], [hist-class], or [mse-class] object.
+#' @param value Replacement value; a named list of length 0 or the number of
+#'   stock complexes, each element an `nSim` (or 1, recycled) by `nFleet`
+#'   matrix with rows summing to 1. `NULL` clears it.
+#'
+#' @details
+#' A scalar `Advice@Effort` value is interpreted differently depending on
+#' `EffType`:
+#' - `EffType = "Rel"` (the default): the scalar is a fraction of the last
+#'   historical year's effort, applied per fleet to that fleet's own
+#'   historical level. Each fleet's share of total effort is preserved
+#'   automatically, with no allocation step needed.
+#' - `EffType = "Abs"`: the scalar is a single total effort value to be
+#'   split across fleets. `EffortAllocation` supplies that split: for a
+#'   complex with `nFleet > 1`, the total is multiplied by
+#'   `EffortAllocation[[complex]][sim, ]` to get each fleet's absolute
+#'   effort.
+#'
+#' `EffortAllocation` is only consulted for this scalar-plus-`"Abs"` case.
+#' It is ignored for scalar `"Rel"` effort, a length-`nFleet` effort vector
+#' (already fleet-specific), a fleet x area effort matrix (already
+#' fleet-specific), and any complex with only one fleet.
+#'
+#' If unspecified for a complex, `EffortAllocation` falls back to the mean relative effort
+#' by fleet over the last five historical years, i.e. absolute effort is
+#' split in the same proportions the fleets have historically fished in.
+#'
+#' @return
+#' - `EffortAllocation()` returns the value of the `EffortAllocation` slot.
+#' - `EffortAllocation<-()` returns `x` with the `EffortAllocation` slot
+#'   updated.
+#'
+#' @seealso
+#' - [OM()] for the constructor, [om-class] for the class definition.
+#' - [Advice()] for the interpretation of scalar Effort advice.
+#' - [FleetAllocation()] for the equivalent split applied to TAC.
+#' - [OM-accessors] for the remaining `OM` slot accessors.
+#'
+#' @family om
+#'
+#' @examples
+#' om <- OM(nSim = 10)
+#' EffortAllocation(om) <- list(Stock1 = matrix(c(0.3, 0.7), 10, 2, byrow = TRUE))
+#' EffortAllocation(om)
+#'
+#' @rdname EffortAllocation
 #' @export
-EFactor <- function(x) .IsHist(x, "EFactor")
+EffortAllocation <- function(x) .IsHist(x, "EffortAllocation")
 
-#' @rdname OM-accessors
+#' @rdname EffortAllocation
 #' @export
-`EFactor<-` <- function(x, value) .AssignSlot(x, value, "EFactor")
+`EffortAllocation<-` <- function(x, value) .AssignSlot(x, value, "EffortAllocation")
 
 
 #' @rdname OM-accessors

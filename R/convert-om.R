@@ -137,11 +137,10 @@ ConvertOM <- function(OM,
     )
   )
   
-  # Update max length and E-factor
+  # Update max length
   om <- om |>
     .SolveForVmaxlen('Selectivity') |>
-    .SolveForVmaxlen('Retention') |>
-    .ProcessEFactor()
+    .SolveForVmaxlen('Retention')
   
   # Populate object if requested
   if (Populate) {

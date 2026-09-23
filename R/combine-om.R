@@ -120,8 +120,6 @@ CombineOMs <- function(
 
   OM_Out <- .CombineStocksObs(OM_Out, OM_List)
 
-  OM_Out@EFactor <- purrr::map(OM_List, slot, 'EFactor')
-
   if (StandardizeEffort)
     OM_Out <- StandardizeEffort(OM_Out, populate = FALSE, record_assumption = record_assumption)
   

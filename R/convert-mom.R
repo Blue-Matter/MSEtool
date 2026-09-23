@@ -124,19 +124,14 @@ ConvertMOM <- function(MOM,
     om@CatchFrac <- MOM@CatchFrac
   } 
   
-  if (!length(MOM@Efactor)) {
-    om@EFactor <- MakeNamedList(StockNames(om), 
-                                array(1, dim=c(om@nSim, nFleet(om)),
-                                      dimnames = list(
-                                        Sim=seq_len(om@nSim),
-                                        Fleet=FleetNames(om)
-                                      )
-                                ))  
-  } else {
-    om@EFactor <- MOM@Efactor
+  if (length(MOM@Efactor)) {
+    om@EffortAllocation <- purrr::map(MOM@Efactor, \(mat) {
+      mat <- matrix(mat, ncol = nFleet(om))
+      mat / rowSums(mat)
+    })
+    names(om@EffortAllocation) <- StockNames(om)
   }
   
-
   if (Populate)
     om <- PopulateOM(om, silent=FALSE)
   

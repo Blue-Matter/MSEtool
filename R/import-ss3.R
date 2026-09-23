@@ -256,7 +256,6 @@ ImportSS <- function(SSDir,
 
   # Allocation
   OM <- .ProcessSSAllocation(OM, RepList, StockName, FleetNames, AllocationYears)
-  OM <- .ProcessEFactor(OM)
 
   
   # OM@Complexes

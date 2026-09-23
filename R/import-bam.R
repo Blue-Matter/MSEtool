@@ -131,8 +131,6 @@ ImportBAM <- function(Stock='Red Snapper',
                                                 DiscSelFleets,
                                                 RetSelFleets)
   
-  OM <- .ProcessEFactor(OM)
-
   if (BAMdata$parms$spawn.time>0) {
     OM@Misc$SProduction <- data.frame(Sim=1,
                                       Stock=BAMdata$info$species,

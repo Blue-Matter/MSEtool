@@ -155,6 +155,7 @@
   Hist <- .AddSimNumber(Hist)
   Hist <- .CheckFleetAllocation(Hist)
   Hist <- .CheckSeasonalAllocation(Hist)
+  Hist <- .CheckEffortAllocation(Hist)
   Hist <- .LogDepletionAchievement(Hist)
   Hist <- .ReduceHist(Hist, Reduce)
 

@@ -52,6 +52,7 @@
 
   Proj <- .CheckFleetAllocation(Proj)
   Proj <- .CheckSeasonalAllocation(Proj)
+  Proj <- .CheckEffortAllocation(Proj)
 
   Proj <- .PrepHistMisc(Proj)
 

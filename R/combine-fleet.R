@@ -123,18 +123,9 @@ CombineFleets <- function(OM, FleetList = NULL, silent = FALSE) {
   # Combine Obs 
   OM <- .CombineFleetsObs(OM, FleetList, silent)
   
-  # EFactor 
-  stock_names <- StockNames(OM)
-  fleet_names <- FleetNames(OM)
-  n_fleet <- length(fleet_names)
-  OM@EFactor <-  MakeNamedList(stock_names, 
-                               array(1, dim=c(1, n_fleet),
-                                     dimnames = list(
-                                       Sim = 1,
-                                       Fleet = fleet_names
-                                     ))
-  )
-  
+  OM@EffortAllocation <- list()
+  OM@EFactor <- list()
+
   # Drop the source fleets (all but the first index per group)
   drop_names <- purrr::map(FleetList, \(f) f[-1]) |> unlist()
   for (st in seq_len(nStock(OM))) {
