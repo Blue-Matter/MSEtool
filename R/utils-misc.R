@@ -112,68 +112,9 @@
   qnorm(runif(n, p_lower, p_upper), mu, sigma)
 }
 
-
 .FirstUp <- function(x, n = 1) {
   substr(x, 1, n) <- toupper(substr(x, 1, n))
   x
-}
-
-
-# default: info, progress, warnings
-# FALSE: no messages or warnings
-# minimal:
-
-.SetMessages <- function(messages = "default") {
-  msg <- list()
-  if (isFALSE(messages)) {
-    return(msg)
-  }
-
-  msg$info <- TRUE
-  msg$alert <- TRUE
-  msg$progress <- TRUE
-  msg$warning <- TRUE
-
-  msg
-}
-
-.StartMessages <- function(OM, messages = "default") {
-  msg <- .SetMessages(messages)
-
-  # Allocation
-
-  # if (!length(OM@Allocation)) {
-  #   OM@Allocation <- OM@CatchFrac
-  #   if (nFleet(OM)>1) {
-  #     if (isTRUE(msg$alert))
-  #       cli::cli(c(
-  #         cli::cli_alert_info('`Allocation(OM)` not specified'),
-  #         cli::cli_alert('Setting `Allocation` equal to `CatchFrac` (`Allocate(OM) <- CatchFrac(OM)`)')
-  #       ))
-  #   }
-  # }
-
-  if (!length(OM@EFactor)) {
-    OM@EFactor <- lapply(1:nStock(OM), function(x) {
-      matrix(1, nSim(OM), nFleet(OM))
-    })
-    if (nFleet(OM) > 1) {
-      # if (isTRUE(msg$alert)) {
-      #   cli::cli(c(
-      #     cli::cli_alert_info("`EFactor(OM)` not specified"),
-      #     cli::cli_alert("Setting `EFactor(OM)` to current effort for all fleets")
-      #   ))
-      # }
-    }
-  }
-
-
-  # if (nStock(OM)>1 && !length(OM@Relations) && !length(OM@Herm)) {
-  #   if (isTRUE(msg$alert)) {
-  #     cli::cli_alert_info("You have specified more than one stock but no MICE relationships (`Relations(OM)`) or sex-specific relationships (`SexPars(OM)`) among these. \nAs they are independent, consider doing MSE for one stock at a time for computational efficiency\n")
-  #   }
-  # }
-  OM
 }
 
 .GetModelClass <- function(Model = NULL) {
