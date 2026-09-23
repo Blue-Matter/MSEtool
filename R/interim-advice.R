@@ -3,7 +3,7 @@
 
   OM      <- Proj@OM
   nSim    <- OM@nSim
-  Seasons <- OM@Seasons %||% 1
+  Seasons <- OM@Seasons %||NA% 1
 
   YearsHist <- Years(OM, "Historical")
   AllYears  <- c(YearsHist, YearsProj)

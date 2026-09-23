@@ -477,8 +477,8 @@ PlotFecundityCurve <- function(object, Sim = NULL, byStock = NULL, Years = NULL,
 
   Fleet <- PopulateFleet(Fleet, Stock, silent = TRUE)
 
-  stockName <- Stock@Name %||% 'Stock'
-  fleetName <- Fleet@Name %||% 'Fleet'
+  stockName <- Stock@Name %||NA% 'Stock'
+  fleetName <- Fleet@Name %||NA% 'Fleet'
 
   ShellOM             <- methods::new('om')
   ShellOM@Stock       <- stats::setNames(list(Stock), stockName)

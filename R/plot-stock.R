@@ -57,9 +57,9 @@ PlotStock <- function(Stock,
     wantsRepopulate  <- !is.null(nYear) || !is.null(pYear) || !is.null(CurrentYear) || force
 
     if (!alreadyPopulated || wantsRepopulate) {
-      nYear       <- nYear %||% 20
-      pYear       <- pYear %||% 0
-      CurrentYear <- CurrentYear %||% as.numeric(format(Sys.Date(), '%Y'))
+      nYear       <- nYear %||NA% 20
+      pYear       <- pYear %||NA% 0
+      CurrentYear <- CurrentYear %||NA% as.numeric(format(Sys.Date(), '%Y'))
 
       Stock <- PopulateStock(Stock, nYear = nYear, pYear = pYear,
                              CurrentYear = CurrentYear, nSim = nSim, Seasons = Seasons,

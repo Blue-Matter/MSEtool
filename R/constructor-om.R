@@ -734,7 +734,7 @@ Control <- function(x) .IsHist(x, "Control")
     if (inherits(inner, cls))
       inner <- setNames(list(inner), inner@Name)
     if (is.null(names(inner)) || any(names(inner) == ""))
-      names(inner) <- (fleet_nms[[stk]] %||% purrr::map_chr(inner, ~ .x@Name))[seq_along(inner)]
+      names(inner) <- (fleet_nms[[stk]] %||NA% purrr::map_chr(inner, ~ .x@Name))[seq_along(inner)]
     inner
   })
 }

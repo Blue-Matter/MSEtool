@@ -116,11 +116,11 @@ ImportSSReport <- function(SSDir, parallel=FALSE, silent=FALSE, ...) {
 .GetSSRepList <- function(SSDir, silent = FALSE, ...) {
   
   dots            <- list(dir = SSDir, ...)
-  dots$covar      <- dots$covar       %||% FALSE
-  dots$forecast   <- dots$forecast    %||% FALSE
-  dots$printstats <- dots$printstats  %||% FALSE
-  dots$verbose    <- dots$verbose     %||% FALSE
-  dots$warn       <- dots$warn        %||% FALSE
+  dots$covar      <- dots$covar       %||NA% FALSE
+  dots$forecast   <- dots$forecast    %||NA% FALSE
+  dots$printstats <- dots$printstats  %||NA% FALSE
+  dots$verbose    <- dots$verbose     %||NA% FALSE
+  dots$warn       <- dots$warn        %||NA% FALSE
   
   if (!silent)
     cli::cli_alert_info(

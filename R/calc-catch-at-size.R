@@ -1,7 +1,7 @@
 
 .NeedsCatchAtSize <- function(OM, control) {
   n_stock  <- nStock(OM)
-  override <- control$CalcCatchAtSize %||% NA
+  override <- control$CalcCatchAtSize %||NA% NA
 
   if (!is.na(override))
     return(rep(override, n_stock))

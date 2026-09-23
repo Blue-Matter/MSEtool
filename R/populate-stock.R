@@ -98,7 +98,7 @@ PopulateStock <- function(Stock,
     Seasons = Stock@Seasons
   )
   
-  nm <- cli::format_inline("Stock {.val {Stock@Name %||% 'Stock'}}")
+  nm <- cli::format_inline("Stock {.val {Stock@Name %||NA% 'Stock'}}")
 
   Years <- Stock@Years
   Stock@Ages@Classes <- CalcAgeClasses(Stock@Ages)

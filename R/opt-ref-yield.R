@@ -58,7 +58,7 @@
   # Take mean over last few calendar years. `lastnTS` is specified in years;
   # convert to time steps so seasonal models average whole years, not
   # individual season-steps.
-  lastnTS <- Proj@OM@Control$RefYield$lastnTS %||% 5
+  lastnTS <- Proj@OM@Control$RefYield$lastnTS %||NA% 5
   lastnTS <- lastnTS * Proj@OM@Seasons
   lastnTS <- min(lastnTS, dim(Yield)[3])
   TSmean <- (dim(Yield)[3]-lastnTS+1):dim(Yield)[3]

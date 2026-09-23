@@ -76,9 +76,9 @@
     .UpdateBagLimit         = .UpdateBagLimit
   )
 
-  CatchAtSizeNeeded <- Proj@OM@Control$CalcCatchAtSizeNeeded %||%
+  CatchAtSizeNeeded <- Proj@OM@Control$CalcCatchAtSizeNeeded %||NA%
     .NeedsCatchAtSize(Proj@OM, SimControl())
-  CatchAtSizeCpp <- Proj@OM@Control$CalcCatchAtSizeCpp %||% TRUE
+  CatchAtSizeCpp <- Proj@OM@Control$CalcCatchAtSizeCpp %||NA% TRUE
 
   for (ts in seq_along(YearsProj)) {
     

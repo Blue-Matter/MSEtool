@@ -308,7 +308,7 @@
     \(nm) Hist@Misc[[nm]]
   ) |> purrr::set_names(c('SAVE', preserved_names))
   
-  Hist@Misc <- saved$SAVE %||% list()
+  Hist@Misc <- saved$SAVE %||NA% list()
   
   for (nm in preserved_names) {
     if (!is.null(saved[[nm]]))

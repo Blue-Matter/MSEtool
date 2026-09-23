@@ -23,7 +23,7 @@
 
   nFleetTot <- nFleet(Hist)
   nSimTot   <- nSim(Hist)
-  Seasons   <- max(1L, as.integer(Hist@OM@Seasons %||% 1))
+  Seasons   <- max(1L, as.integer(Hist@OM@Seasons %||NA% 1))
   HistYears <- Years(Hist, 'H')
   FleetNms  <- FleetNames(Hist@OM)
 
@@ -43,7 +43,7 @@
   if (length(HistoricalWeight) != nComplex)
     cli::cli_abort('`HistoricalWeight` must be a list length 0 or length `nComplex(OM)`')
 
-  nYears      <- Hist@OM@Control$SeasonalAllocationYears %||% 5
+  nYears      <- Hist@OM@Control$SeasonalAllocationYears %||NA% 5
   windowRows  <- utils::tail(seq_len(length(HistYears)), nYears * Seasons)
   seasonOfRow <- ((windowRows - 1) %% Seasons) + 1
 

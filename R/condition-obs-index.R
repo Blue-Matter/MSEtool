@@ -149,7 +149,7 @@
 
     # Observed_t = Efficiency * Nom_Index_t^Beta * exp(residual_t) (Harley et al. 2001).
     # Fit jointly unless Beta is fixed by the user or EstimateBeta = FALSE.
-    FixedBeta <- if (EstimateBeta) Index_Obs@Beta else (Index_Obs@Beta %||% 1)
+    FixedBeta <- if (EstimateBeta) Index_Obs@Beta else (Index_Obs@Beta %||NA% 1)
     
     ResidualsBeta <- CalcIndexResiduals(ObservedIndex, Nom_Index, beta=FixedBeta, FitInd=TSInd)
 

@@ -110,7 +110,7 @@ Log <- function(object, type = NULL) {
 }
 
 .LogEntryName <- function(entry) {
-  if (.IsLogEntry(entry)) return(entry$name %||% '')
+  if (.IsLogEntry(entry)) return(entry$name %||NA% '')
   ''
 }
 

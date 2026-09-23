@@ -42,10 +42,10 @@
   if (.AllAdviceNull(AdviceSimList, 'TAC'))
     return(Proj)
 
-  lambda_scale <- Proj@OM@Control$EffortOptim$lambda_scale %||% 1
-  n_recent     <- Proj@OM@Control$EffortOptim$n_recent     %||% 5
+  lambda_scale <- Proj@OM@Control$EffortOptim$lambda_scale %||NA% 1
+  n_recent     <- Proj@OM@Control$EffortOptim$n_recent     %||NA% 5
   n_recent     <- n_recent * Proj@OM@Seasons
-  maxEval      <- Proj@OM@Control$EffortOptim$maxEval      %||% 500
+  maxEval      <- Proj@OM@Control$EffortOptim$maxEval      %||NA% 500
 
   for (sim in seq_len(Proj@OM@nSim)) {
 

@@ -82,7 +82,7 @@ SeasonOfYear <- function(x, Seasons = NULL, Year = NULL) {
   } else {
     Years <- x
   }
-  Seasons <- max(1L, as.integer(Seasons %||% 1))
+  Seasons <- max(1L, as.integer(Seasons %||NA% 1))
   TSIndex <- if (is.null(Year)) length(Years) else match(Year, Years)
   list(Seasons = Seasons,
        SeasonInd = ((TSIndex - 1L) %% Seasons) + 1L)

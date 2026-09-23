@@ -55,7 +55,7 @@
   Hist@Reference@SPR0 <- CalcSPR0(Hist)
 
   # ---- MSY reference points ----
-  MSYYears <- OM@Control$RefYears %||% utils::tail(Years(Hist@OM, 'Historical'), 1)
+  MSYYears <- OM@Control$RefYears %||NA% utils::tail(Years(Hist@OM, 'Historical'), 1)
   if (Hist@OM@Seasons > 1L) MSYYears <- unique(floor(MSYYears)) # collapse sub-annual time steps to whole years
 
   if (!is.null(refpointsMSY)) {
@@ -68,7 +68,7 @@
     MSYFun <- if (control$MSYRefsCpp) CalcMSYCpp else CalcMSY
     Hist@Reference@MSY <- MSYFun(Hist,
                                  Years    = MSYYears,
-                                 type     = OM@Control$MSYType %||% 'Removals',
+                                 type     = OM@Control$MSYType %||NA% 'Removals',
                                  parallel = parallel,
                                  silent   = silent)
   }
@@ -87,11 +87,11 @@
     cli::cli_alert_success("Calculated Historical Fishery Dynamics")
 
   CatchAtSizeNeeded <- .NeedsCatchAtSize(OM, control)
-  CatchAtSizeCpp    <- control$CalcCatchAtSizeCpp %||% TRUE
+  CatchAtSizeCpp    <- control$CalcCatchAtSizeCpp %||NA% TRUE
   Hist@OM@Control$CalcCatchAtSizeNeeded <- CatchAtSizeNeeded
   Hist@OM@Control$CalcCatchAtSizeCpp    <- CatchAtSizeCpp
 
-  if (is.na(control$CalcCatchAtSize %||% NA) && !all(CatchAtSizeNeeded))
+  if (is.na(control$CalcCatchAtSize %||NA% NA) && !all(CatchAtSizeNeeded))
     Hist <- .CaptureLog(Hist,
       string = cli::format_inline(
         "Skipping catch-at-size for {sum(!CatchAtSizeNeeded)} of {length(CatchAtSizeNeeded)} stock{?s}. No size-composition observation model or real data configured. Set {.code SimControl(CalcCatchAtSize = TRUE)} to force it."
@@ -124,7 +124,7 @@
         cli::cli_progress_message("Calculating Reference Points")
       CalcRefPoints(Hist,
                     Years  = OM@Control$RefYears,
-                    type   = OM@Control$MSYType %||% 'Removals',
+                    type   = OM@Control$MSYType %||NA% 'Removals',
                     silent = TRUE)
     })
     if (!silent)
@@ -143,7 +143,7 @@
 
   # ---- observation conditioning & data generation ----
   if (control$ConditionObs)
-    Hist <- .ConditionObs(Hist, silent, EstimateBeta = control$EstimateBeta %||% TRUE)
+    Hist <- .ConditionObs(Hist, silent, EstimateBeta = control$EstimateBeta %||NA% TRUE)
 
   if (control$GenerateData)
     Hist <- .GenerateHistoricalData(Hist, parallel=parallel, silent=silent)

@@ -166,7 +166,7 @@
       if (all(!is.finite(utils::tail(Value_x[, fl], 5)))) next
 
       Pop_Number <- purrr::map(Real_Pop_Number_All, \(a)
-        a[x, , IndexObs@Areas %||% seq_len(nArea), drop = FALSE] |> abind::adrop(1)
+        a[x, , IndexObs@Areas %||NA% seq_len(nArea), drop = FALSE] |> abind::adrop(1)
       )
 
       real_nom_index <- .CalcNomIndex(

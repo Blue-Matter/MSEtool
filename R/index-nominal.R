@@ -116,7 +116,7 @@
     }
 
     if (inherits(sel, 'list')) {
-      stock_sel <- sel[[st_idx]] %||% sel[[st]]
+      stock_sel <- sel[[st_idx]] %||NA% sel[[st]]
       if (is.null(stock_sel)) {
         if (!is.null(on_missing_obs_sel)) on_missing_obs_sel()
         return(.flat_sel(AgeClasses))
@@ -382,10 +382,10 @@
 
   Years <- as.numeric(Years)
   nArea_ <- nArea(object)
-  Areas <- IndexObs@Areas %||% seq_len(nArea_)
+  Areas <- IndexObs@Areas %||NA% seq_len(nArea_)
   nSeasons <- Seasons(object)
 
-  if (is.null(Units)) Units <- IndexObs@Units %||% 'Biomass'
+  if (is.null(Units)) Units <- IndexObs@Units %||NA% 'Biomass'
 
   if (is.null(TSIndex)) {
     year_names <- dimnames(Number_List[[1]])[['Year']]

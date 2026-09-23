@@ -497,7 +497,7 @@ CollapseSeasons <- function(OM, silent = FALSE) {
       cd <- slot(d, type)
       if (is.null(cd@Value)) next
 
-      YearsSeasonal <- as.numeric(rownames(cd@Value) %||% d@Years)
+      YearsSeasonal <- as.numeric(rownames(cd@Value) %||NA% d@Years)
       yearIdx  <- match(YearsSeasonal, IndexMap$SeasonalYears)
       blockAll <- IndexMap$YearBlock[yearIdx]
       uBlocks  <- sort(unique(blockAll))
@@ -518,7 +518,7 @@ CollapseSeasons <- function(OM, silent = FALSE) {
       idata <- slot(d, type)
       if (is.null(idata@Value)) next
 
-      YearsSeasonal <- as.numeric(rownames(idata@Value) %||% d@Years)
+      YearsSeasonal <- as.numeric(rownames(idata@Value) %||NA% d@Years)
       yearIdx  <- match(YearsSeasonal, IndexMap$SeasonalYears)
       blockAll <- IndexMap$YearBlock[yearIdx]
       AnnualYr <- IndexMap$AnnualYears[blockAll]

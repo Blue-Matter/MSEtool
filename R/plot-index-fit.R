@@ -144,7 +144,7 @@ IndexFitTable <- function(object,
         nYears = if (!is.null(BetaFit) && length(BetaFit$nPoints)) as.integer(BetaFit$nPoints[1]) else NA_integer_,
         SD     = .SummarizeParam(if (!is.null(stats)) stats$SD else NULL),
         AC     = .SummarizeParam(if (!is.null(stats)) stats$AC else NULL),
-        Beta   = .SummarizeParam(idxObs@Beta %||% 1),
+        Beta   = .SummarizeParam(idxObs@Beta %||NA% 1),
         R2     = .SummarizeParam(if (!is.null(BetaFit)) BetaFit$R2 else NULL),
         PValue = .SummarizeParam(if (!is.null(BetaFit)) BetaFit$PValue else NULL),
         Status = if (!is.null(BetaFit)) paste(unique(BetaFit$Status), collapse = ', ') else NA_character_,
@@ -243,7 +243,7 @@ IndexFitTable <- function(object,
   stocks   <- Complexes[[cx]]
   OM       <- object@OM
   IndexObs <- slot(OM@Obs[[cx]][[fl]], type)
-  Units    <- IndexObs@Units %||% 'Biomass'
+  Units    <- IndexObs@Units %||NA% 'Biomass'
   nSim_    <- nSim(object)
 
   fd      <- tryCatch(OM@Data[[cx]], error = function(e) NULL)

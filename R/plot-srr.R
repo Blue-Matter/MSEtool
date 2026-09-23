@@ -57,7 +57,7 @@ PlotSRRCurve <- function(object, Sim = NULL, byStock = NULL, Stocks = NULL,
 
   if (inherits(object, 'stock')) {
     object <- .EnsureSRRPopulated(object)
-    df <- .SRRRelativeCurveDF(object, nPoints) |> dplyr::mutate(Stock = object@Name %||% 'Stock')
+    df <- .SRRRelativeCurveDF(object, nPoints) |> dplyr::mutate(Stock = object@Name %||NA% 'Stock')
     ylab <- 'Relative Recruitment (R/R0)'
     xlab <- 'Relative Spawning Production (SP/SP0)'
   } else {

@@ -55,7 +55,7 @@
 #' @export
 CalcYears <- function(nYear, pYear, CurrentYear, Seasons=1, Period=NULL) {
 
-  key <- paste(nYear, pYear, CurrentYear, Seasons, Period %||% "NULL", sep = "|")
+  key <- paste(nYear, pYear, CurrentYear, Seasons, Period %||NA% "NULL", sep = "|")
   cached <- .CalcYearsCache[[key]]
   if (!is.null(cached))
     return(cached)
@@ -119,7 +119,7 @@ CalcYears <- function(nYear, pYear, CurrentYear, Seasons=1, Period=NULL) {
   }
   
   switch(
-    period_resolved %||% "All",
+    period_resolved %||NA% "All",
     "All"        = if (CalcProj) c(hist, proj) else hist,
     "Historical" = hist,
     "Projection" = if (CalcProj) proj else numeric(0)

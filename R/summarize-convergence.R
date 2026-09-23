@@ -46,15 +46,15 @@ SummarizeConvergence <- function(MSE, silent = FALSE) {
     nms <- e$Names
     if (is.null(nms) || !length(nms)) {
       return(data.frame(
-        Sim = e$sim %||% NA_integer_, Year = e$year %||% NA_real_,
-        MP  = e$mp %||% NA_character_, Level = NA_character_,
+        Sim = e$sim %||NA% NA_integer_, Year = e$year %||NA% NA_real_,
+        MP  = e$mp %||NA% NA_character_, Level = NA_character_,
         Name = NA_character_, TAC = NA_real_, Catch = NA_real_,
         PctAchieved = NA_real_
       ))
     }
     data.frame(
-      Sim   = e$sim %||% NA_integer_, Year = e$year %||% NA_real_,
-      MP    = e$mp %||% NA_character_, Level = e$Level %||% NA_character_,
+      Sim   = e$sim %||NA% NA_integer_, Year = e$year %||NA% NA_real_,
+      MP    = e$mp %||NA% NA_character_, Level = e$Level %||NA% NA_character_,
       Name  = nms, TAC = e$TAC, Catch = e$Catch,
       PctAchieved = round(100 * e$Catch / e$TAC, 1)
     )

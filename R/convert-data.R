@@ -517,11 +517,11 @@ ConvertData <- function(x, Seasons = 1, sim = 1, silent = FALSE) {
   Pars <- Length@Pars
   if (length(Pars) && identical(Length@Model, 'vonBert') && !is.null(Pars$Linf)) {
     Data@vbLinf     <- Pars$Linf
-    Data@CV_vbLinf  <- Pars$Linf_CV %||% NA_real_
+    Data@CV_vbLinf  <- Pars$Linf_CV %||NA% NA_real_
     Data@vbK        <- Pars$K
-    Data@CV_vbK     <- Pars$K_CV %||% NA_real_
-    Data@vbt0       <- Pars$t0 %||% 0
-    Data@CV_vbt0    <- Pars$t0_CV %||% NA_real_
+    Data@CV_vbK     <- Pars$K_CV %||NA% NA_real_
+    Data@vbt0       <- Pars$t0 %||NA% 0
+    Data@CV_vbt0    <- Pars$t0_CV %||NA% NA_real_
     if (length(Length@CVatAge))
       Data@LenCV    <- .TerminalValue(Length@CVatAge)
     return(Data)
@@ -550,9 +550,9 @@ ConvertData <- function(x, Seasons = 1, sim = 1, silent = FALSE) {
   Pars <- Weight@Pars
   if (length(Pars) && !is.null(Pars$alpha) && !is.null(Pars$beta)) {
     Data@wla    <- Pars$alpha
-    Data@CV_wla <- Pars$alpha_CV %||% NA_real_
+    Data@CV_wla <- Pars$alpha_CV %||NA% NA_real_
     Data@wlb    <- Pars$beta
-    Data@CV_wlb <- Pars$beta_CV %||% NA_real_
+    Data@CV_wlb <- Pars$beta_CV %||NA% NA_real_
     return(Data)
   }
 
@@ -576,7 +576,7 @@ ConvertData <- function(x, Seasons = 1, sim = 1, silent = FALSE) {
   Pars <- NM@Pars
   if (length(Pars) && !is.null(Pars$M)) {
     Data@Mort    <- Pars$M
-    Data@CV_Mort <- Pars$CV_M %||% NA_real_
+    Data@CV_Mort <- Pars$CV_M %||NA% NA_real_
     return(Data)
   }
 
@@ -596,8 +596,8 @@ ConvertData <- function(x, Seasons = 1, sim = 1, silent = FALSE) {
   Pars <- Mat@Pars
   if (length(Pars) && !is.null(Pars$L50)) {
     Data@L50    <- Pars$L50
-    Data@CV_L50 <- Pars$L50_CV %||% NA_real_
-    Data@L95    <- Pars$L50 + (Pars$L50_95 %||% 0)
+    Data@CV_L50 <- Pars$L50_CV %||NA% NA_real_
+    Data@L95    <- Pars$L50 + (Pars$L50_95 %||NA% 0)
     return(Data)
   }
 
@@ -635,7 +635,7 @@ ConvertData <- function(x, Seasons = 1, sim = 1, silent = FALSE) {
   Model <- SRR@Model
   if (length(Pars) && (identical(Model, 'BevertonHolt') || is.null(Model)) && !is.null(Pars$h)) {
     Data@steep    <- Pars$h
-    Data@CV_steep <- Pars$h_CV %||% NA_real_
+    Data@CV_steep <- Pars$h_CV %||NA% NA_real_
   } else if (length(Pars) && !is.null(Model) && !identical(Model, 'BevertonHolt')) {
     Data <- .CaptureLog(
       Data, sprintf("`SRR@Model` is '%s'; not directly convertible to legacy Beverton-Holt-style `steep` - left NA.", .ModelName(Model)),
@@ -660,10 +660,10 @@ ConvertData <- function(x, Seasons = 1, sim = 1, silent = FALSE) {
   Pars <- data@Exploitation@Selectivity@Pars
   if (length(Pars) && !is.null(Pars$L5)) {
     Data@LFC     <- Pars$L5
-    Data@CV_LFC  <- Pars$L5_CV %||% NA_real_
+    Data@CV_LFC  <- Pars$L5_CV %||NA% NA_real_
     Data@LFS     <- Pars$LFS
-    Data@CV_LFS  <- Pars$LFS_CV %||% NA_real_
-    Data@Vmaxlen <- Pars$Vmaxlen %||% NA_real_
+    Data@CV_LFS  <- Pars$LFS_CV %||NA% NA_real_
+    Data@Vmaxlen <- Pars$Vmaxlen %||NA% NA_real_
     return(Data)
   }
 
@@ -976,7 +976,17 @@ ConvertData <- function(x, Seasons = 1, sim = 1, silent = FALSE) {
 
 # ---- small numeric helpers ----
 
-`%||%` <- function(x, y) if (is.null(x) || (length(x) == 1 && is.na(x))) y else x
+# Like base `%||%` (NULL fallback) but also falls back on a length-1 `NA`. Named
+# distinctly (not `%||%`) so it never shadows base R's operator with different semantics.
+# Guards `is.na()` to only run on `list`/atomic `x` -- `is.na()` is documented to work on
+# "a list or vector"; calling it on an S4 object, closure, or environment warns/misbehaves,
+# and `length()` on such an object commonly defaults to 1, so an unguarded check can hit
+# that case silently.
+`%||NA%` <- function(x, y) {
+  if (is.null(x)) return(y)
+  if ((is.atomic(x) || is.list(x)) && length(x) == 1 && is.na(x)) return(y)
+  x
+}
 
 .TerminalValue <- function(arr) {
   if (is.null(arr)) return(NULL)

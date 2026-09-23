@@ -88,7 +88,7 @@ GenerateStockTargeting <- function(OM,
   CheckPackage('MASS')
 
   Period <- match.arg(Period)
-  n_recent <- n_recent %||% OM@Control$StockTargeting$n_recent %||% 5
+  n_recent <- n_recent %||NA% OM@Control$StockTargeting$n_recent %||NA% 5
   n_recent <- n_recent * OM@Seasons
   .SetSeed(OM@Seed + seed)
   

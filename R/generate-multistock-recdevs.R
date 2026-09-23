@@ -53,7 +53,7 @@ GenMultiStockRecDevs <- function(OM, TruncSD = 3, silent = FALSE, overwrite = NU
   n_stock   <- nStock(OM)
   ProjYears <- Years(OM, "P")
   pYear     <- length(ProjYears)
-  nSeason   <- max(1L, as.integer(OM@Seasons %||% 1))
+  nSeason   <- max(1L, as.integer(OM@Seasons %||NA% 1))
 
   if (n_stock < 2) return(OM)
 

@@ -124,8 +124,8 @@ PlotData <- function(object, byFleet = NULL, AggregateYear = FALSE, Season = NUL
   panels <- purrr::map(specs, function(s) {
     if (isTRUE(s$skip)) return(NULL)
     .PlotDataTs(object, s$slot, s$ylab, byFleet = byFleet,
-                 AggregateYear = s$AggregateYear %||% FALSE,
-                 Season = s$Season %||% NULL, units = s$units %||% FALSE, silent = TRUE)
+                 AggregateYear = s$AggregateYear %||NA% FALSE,
+                 Season = s$Season %||NA% NULL, units = s$units %||NA% FALSE, silent = TRUE)
   })
   panels <- purrr::compact(panels)
 

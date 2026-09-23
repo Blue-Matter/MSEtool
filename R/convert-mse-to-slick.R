@@ -143,12 +143,12 @@ MSE2Slick <- function(MSE,
   .SlickChecks(MSE)
 
   mse_ref  <- if (is.list(MSE)) MSE[[1]] else MSE
-  PMs      <- PMs %||% DefaultSlickPMs()
+  PMs      <- PMs %||NA% DefaultSlickPMs()
 
-  BoxplotPMs  <- BoxplotPMs  %||% PMs
-  QuiltPMs    <- QuiltPMs    %||% PMs
-  SpiderPMs   <- SpiderPMs   %||% PMs
-  TradeoffPMs <- TradeoffPMs %||% PMs
+  BoxplotPMs  <- BoxplotPMs  %||NA% PMs
+  QuiltPMs    <- QuiltPMs    %||NA% PMs
+  SpiderPMs   <- SpiderPMs   %||NA% PMs
+  TradeoffPMs <- TradeoffPMs %||NA% PMs
 
   panelCache <- new.env(parent = emptyenv())
   .panel <- function(pms) {
@@ -158,13 +158,13 @@ MSE2Slick <- function(MSE,
   }
 
   Slick             <- Slick::Slick()
-  Slick@Title       <- Title %||% mse_ref@OM@Name
+  Slick@Title       <- Title %||NA% mse_ref@OM@Name
   Slick@Subtitle    <- Subtitle
   Slick@Author      <- Author
   Slick@Email       <- Email
   Slick@Institution <- Institution
   Slick@Introduction <- Introduction
-  Slick@Date        <- Date %||% Sys.Date()
+  Slick@Date        <- Date %||NA% Sys.Date()
   Slick@MPs         <- .MSE2MPs(mse_ref, MPCode, MPLabel, MPDescription) |> .ApplyPreset(MPsPreset)
   Slick@OMs         <- .MSE2OMs(MSE, Design, AutoPreset) |> .ApplyPreset(OMsPreset)
   Slick@Kobe        <- .MSE2Kobe(MSE, KobeComplex)
@@ -209,7 +209,7 @@ MSE2Slick <- function(MSE,
         "All MSE objects must have the same time steps. \\
          Use {.run Years(MSE)} to check."
       )
-    complex_sets <- purrr::map(MSE, \(mse) sort(names(Complexes(mse@OM)) %||% StockNames(mse@OM)))
+    complex_sets <- purrr::map(MSE, \(mse) sort(names(Complexes(mse@OM)) %||NA% StockNames(mse@OM)))
     if (length(unique(complex_sets)) != 1)
       cli::cli_abort(
         "All MSE objects must have the same stock complexes. \\
@@ -381,8 +381,8 @@ DefaultSlickPMs <- function() {
   mse_ref <- if (is.list(MSE)) MSE[[1]] else MSE
   nOM     <- if (is.list(MSE)) length(MSE) else 1L
 
-  allComplexes <- names(Complexes(mse_ref@OM)) %||% StockNames(mse_ref@OM)
-  Complex <- Complex %||% allComplexes[1]
+  allComplexes <- names(Complexes(mse_ref@OM)) %||NA% StockNames(mse_ref@OM)
+  Complex <- Complex %||NA% allComplexes[1]
   if (!Complex %in% allComplexes)
     cli::cli_abort("{.arg Complex} = {.val {Complex}} is not one of {.val {allComplexes}}.")
 
@@ -462,7 +462,7 @@ DefaultSlickPMs <- function() {
 
   mse_ref <- if (is.list(MSE)) MSE[[1]] else MSE
   nOM     <- if (is.list(MSE)) length(MSE) else 1L
-  allComplexes <- names(Complexes(mse_ref@OM)) %||% StockNames(mse_ref@OM)
+  allComplexes <- names(Complexes(mse_ref@OM)) %||NA% StockNames(mse_ref@OM)
   multi   <- length(allComplexes) > 1
 
   piCode  <- if (multi) paste0(rep(Code,  each = length(allComplexes)), '_', allComplexes) else Code
@@ -601,7 +601,7 @@ DefaultSlickPMs <- function() {
 
 .ResolvePMSpec <- function(spec) {
   if (is.function(spec)) spec <- list(fun = spec)
-  spec$args <- spec$args %||% list()
+  spec$args <- spec$args %||NA% list()
   spec
 }
 
@@ -618,9 +618,9 @@ DefaultSlickPMs <- function() {
     pmobj     <- perOM[[1]]
     complexes <- dimnames(pmobj@Stat)[['Stock']]
     spec      <- specs[[i]]
-    code      <- spec$Code  %||% pmobj@Name
-    label     <- spec$Label %||% pmobj@Caption
-    desc      <- spec$Description %||% pmobj@Caption
+    code      <- spec$Code  %||NA% pmobj@Name
+    label     <- spec$Label %||NA% pmobj@Caption
+    desc      <- spec$Description %||NA% pmobj@Caption
     purrr::map(complexes, \(cx) list(
       spec_i = i, complex = cx,
       Code        = if (length(complexes) > 1) paste0(code, '_', cx) else code,
