@@ -56,7 +56,7 @@
 
     hwSpecified <- !is.null(HistoricalWeight[[i]])
     hw <- .ResolveHistoricalWeight(HistoricalWeight[[i]], FleetNms)
-    if (!hwSpecified) {
+    if (!hwSpecified && Seasons > 1) {
       Hist <- .CaptureLog(Hist,
         string = cli::format_inline("`HistoricalWeight(OM)` has not been specified for Complex {.val {ComplexNames[i]}}"),
         name = "SeasonalAllocation", type = 'assumption')
