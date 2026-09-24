@@ -956,12 +956,18 @@ MPStartYear <- function(x) .IsHist(x, "MPStartYear")
 #' - `Type`: `"TAC"` or `"Effort"`.
 #' - `Mean`: point estimate, natural scale. Must be `>= 0` (e.g. `0` for a
 #'   fleet with no historical catch, maintained as a closure in interim
-#'   years). A row with `Mean == 0` is always deterministic -- a lognormal
-#'   draw cannot be centred at `0` -- regardless of `SD`.
-#' - `SD`: optional; natural-scale SD for a lognormal draw (sampled once per
-#'   simulation, per row). `NA`/`0` (default), or `Mean == 0`, gives a fixed,
-#'   deterministic value. If supplied, must be `>= 0`, and must be `NA`/`0`
-#'   wherever `Mean == 0`.
+#'   years).
+#' - `CV`: optional; coefficient of variation of a lognormal multiplier with
+#'   mean 1. `NA`/`0` (default) gives a fixed, deterministic value. One
+#'   multiplier is drawn per simulation for each Year x Stock x Type and
+#'   applied to every row in that group, so values across fleets move
+#'   together and fleet shares stay fixed at the ratios of their `Mean`s.
+#'   Must be identical for all rows with `Mean > 0` in a Year x Stock x Type.
+#' - `Max`: optional; upper bound on the drawn value. The multiplier is drawn
+#'   from a lognormal truncated at the smallest `Max / Mean` in its Year x
+#'   Stock x Type, so no row exceeds its `Max`. `Mean` is the mean before
+#'   truncation; the realised mean is lower. `NA` (default) gives no bound.
+#'   If supplied, must be `>= Mean`.
 #' - `TACType`, `TACUnit`: as in [Advice()]; only used for `"TAC"` rows.
 #' - `EffType`: as in [Advice()]; only used for `"Effort"` rows.
 #'
@@ -988,7 +994,7 @@ MPStartYear <- function(x) .IsHist(x, "MPStartYear")
 #' @examples
 #' om <- OM(CurrentYear = 2023, MPStartYear = 2028)
 #' InterimAdvice(om) <- data.frame(
-#'   Year = 2024:2027, Type = "TAC", Mean = 1000
+#'   Year = 2024:2027, Type = "TAC", Mean = 1000, CV = 0.2, Max = 1200
 #' )
 #' InterimAdvice(om)
 #'

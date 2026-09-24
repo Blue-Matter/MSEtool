@@ -52,12 +52,18 @@ value across fleets (Effort).
 \item \code{Type}: \code{"TAC"} or \code{"Effort"}.
 \item \code{Mean}: point estimate, natural scale. Must be \verb{>= 0} (e.g. \code{0} for a
 fleet with no historical catch, maintained as a closure in interim
-years). A row with \code{Mean == 0} is always deterministic -- a lognormal
-draw cannot be centred at \code{0} -- regardless of \code{SD}.
-\item \code{SD}: optional; natural-scale SD for a lognormal draw (sampled once per
-simulation, per row). \code{NA}/\code{0} (default), or \code{Mean == 0}, gives a fixed,
-deterministic value. If supplied, must be \verb{>= 0}, and must be \code{NA}/\code{0}
-wherever \code{Mean == 0}.
+years).
+\item \code{CV}: optional; coefficient of variation of a lognormal multiplier with
+mean 1. \code{NA}/\code{0} (default) gives a fixed, deterministic value. One
+multiplier is drawn per simulation for each Year x Stock x Type and
+applied to every row in that group, so values across fleets move
+together and fleet shares stay fixed at the ratios of their \code{Mean}s.
+Must be identical for all rows with \code{Mean > 0} in a Year x Stock x Type.
+\item \code{Max}: optional; upper bound on the drawn value. The multiplier is drawn
+from a lognormal truncated at the smallest \code{Max / Mean} in its Year x
+Stock x Type, so no row exceeds its \code{Max}. \code{Mean} is the mean before
+truncation; the realised mean is lower. \code{NA} (default) gives no bound.
+If supplied, must be \verb{>= Mean}.
 \item \code{TACType}, \code{TACUnit}: as in \code{\link[=Advice]{Advice()}}; only used for \code{"TAC"} rows.
 \item \code{EffType}: as in \code{\link[=Advice]{Advice()}}; only used for \code{"Effort"} rows.
 }
@@ -75,7 +81,7 @@ historical seasonal pattern is retained rather than flattened.
 \examples{
 om <- OM(CurrentYear = 2023, MPStartYear = 2028)
 InterimAdvice(om) <- data.frame(
-  Year = 2024:2027, Type = "TAC", Mean = 1000
+  Year = 2024:2027, Type = "TAC", Mean = 1000, CV = 0.2, Max = 1200
 )
 InterimAdvice(om)
 

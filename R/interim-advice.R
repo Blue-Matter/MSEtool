@@ -44,7 +44,8 @@
     }
 
     if (nrow(rows)) {
-      if (!"SD" %in% names(rows)) rows$SD <- NA_real_
+      if (!"CV" %in% names(rows)) rows$CV <- NA_real_
+      if (!"Max" %in% names(rows)) rows$Max <- NA_real_
       if (!"Fleet" %in% names(rows)) rows$Fleet <- NA_character_
 
       tac_rows <- rows[rows$Type == "TAC", , drop = FALSE]
@@ -63,11 +64,20 @@
   .CheckAdvice(Advice, Proj, FleetNames, Areas, sim, name = Stock)
 }
 
-.SampleInterimValue <- function(OM, CalYear, Stock, Fleet, Type, Mean, SD, sim) {
-  if (is.na(SD) || SD <= 0 || Mean == 0) return(Mean)
+# one mean-1 lognormal multiplier per sim, shared by all rows of a Year x Stock x Type
+.SampleInterimMultiplier <- function(OM, CalYear, Stock, Type, rows, sim) {
+  pos <- rows$Mean > 0
+  if (!any(pos)) return(1)
+  CV <- rows$CV[pos][1]
+  if (is.na(CV) || CV <= 0) return(1)
 
-  key <- paste(OM@Seed, CalYear, Stock, Fleet, Type, sep = "_")
-  seed_val <- sum(utf8ToInt(key)) %% .Machine$integer.max
+  sigma <- sqrt(log(1 + CV^2))
+  mu    <- -sigma^2 / 2
+  Upper <- min(c(Inf, rows$Max[pos] / rows$Mean[pos]), na.rm = TRUE)
+  pUpper <- if (is.finite(Upper)) stats::plnorm(Upper, mu, sigma) else 1
+
+  key <- paste(OM@Seed, CalYear, Stock, Type, sep = "_")
+  seed_val <- digest::digest2int(key)
 
   has_seed <- exists(".Random.seed", envir = .GlobalEnv)
   old_seed <- if (has_seed) get(".Random.seed", envir = .GlobalEnv) else NULL
@@ -77,7 +87,7 @@
   })
 
   set.seed(seed_val)
-  draws <- stats::rlnorm(OM@nSim, mconv(Mean, SD), sdconv(Mean, SD))
+  draws <- stats::qlnorm(stats::runif(OM@nSim, 0, pUpper), mu, sigma)
   draws[sim]
 }
 
@@ -122,7 +132,7 @@
     hist_arr  <- array(hist_arr, dim = dim(hist_arr)[3:4])  # Season x Fleet
     hist_vals <- rowSums(hist_arr)
     frac  <- .SeasonalFractionSum(hist_vals, Season, Seasons)
-    value <- .SampleInterimValue(Proj@OM, CalYear, Stock, "ALL", "TAC", row$Mean, row$SD, sim)
+    value <- row$Mean * .SampleInterimMultiplier(Proj@OM, CalYear, Stock, "TAC", row, sim)
 
     Advice@TAC     <- value * frac
     Advice@TACType <- if (!is.null(row$TACType) && !is.na(row$TACType)) row$TACType else "Removals"
@@ -136,6 +146,7 @@
       "i" = "Specify all {nFleet} fleets, or none (a stock total allocated across fleets)."
     ))
 
+  mult    <- .SampleInterimMultiplier(Proj@OM, CalYear, Stock, "TAC", rows, sim)
   tac_vec <- numeric(nFleet)
   for (i in seq_len(nFleet)) {
     fl     <- FleetNames[i]
@@ -143,7 +154,7 @@
     fl_idx <- match(fl, dimnames(Proj@Landings)[["Fleet"]])
     hist_vals <- Proj@Landings[sim, stk_idx, last_ts, fl_idx]
     frac   <- .SeasonalFractionSum(hist_vals, Season, Seasons)
-    tac_vec[i] <- .SampleInterimValue(Proj@OM, CalYear, Stock, fl, "TAC", row$Mean, row$SD, sim) * frac
+    tac_vec[i] <- row$Mean * mult * frac
   }
 
   Advice@TAC     <- tac_vec
@@ -174,7 +185,7 @@
     hist_mat  <- array(hist_mat, dim = dim(hist_mat)[2:3])  # Season x Fleet
     hist_vals <- rowMeans(hist_mat)
     frac  <- .SeasonalFractionMean(hist_vals, Season, Seasons)
-    value <- .SampleInterimValue(Proj@OM, CalYear, Stock, "ALL", "Effort", row$Mean, row$SD, sim)
+    value <- row$Mean * .SampleInterimMultiplier(Proj@OM, CalYear, Stock, "Effort", row, sim)
     eff_vec[] <- value * frac
 
   } else {
@@ -185,13 +196,14 @@
         "i" = "Specify all {nFleet} fleets, or none (identical value across fleets)."
       ))
 
+    mult <- .SampleInterimMultiplier(Proj@OM, CalYear, Stock, "Effort", rows, sim)
     for (i in seq_len(nFleet)) {
       fl     <- FleetNames[i]
       row    <- rows[rows$Fleet == fl, ][1, ]
       fl_idx <- match(fl, dimnames(Proj@Effort)[["Fleet"]])
       hist_vals <- Proj@Effort[sim, last_ts, fl_idx]
       frac   <- .SeasonalFractionMean(hist_vals, Season, Seasons)
-      eff_vec[i] <- .SampleInterimValue(Proj@OM, CalYear, Stock, fl, "Effort", row$Mean, row$SD, sim) * frac
+      eff_vec[i] <- row$Mean * mult * frac
     }
   }
 

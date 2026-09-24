@@ -274,12 +274,28 @@ setValidity("om", function(object) {
       if (any(is.na(mean_vals) | mean_vals < 0))
         errors <- c(errors, "`InterimAdvice$Mean` must be `>= 0` (natural-scale TAC/Effort values); found `NA` or negative value(s)")
 
-      if ("SD" %in% names(object@InterimAdvice)) {
-        sd_vals <- object@InterimAdvice$SD
-        if (any(!is.na(sd_vals) & sd_vals < 0))
-          errors <- c(errors, "`InterimAdvice$SD` must be `NA`, `0`, or positive; found negative value(s)")
-        if (any(!is.na(mean_vals) & mean_vals == 0 & !is.na(sd_vals) & sd_vals > 0))
-          errors <- c(errors, "`InterimAdvice$Mean` is `0` for some row(s) with `SD > 0`; a lognormal draw cannot be centred at `0` -- use `SD = NA`/`0` for a deterministic closure instead")
+      if ("SD" %in% names(object@InterimAdvice))
+        errors <- c(errors, "`InterimAdvice$SD` is not supported; use `CV` (coefficient of variation) instead")
+
+      if ("CV" %in% names(object@InterimAdvice)) {
+        cv_vals <- object@InterimAdvice$CV
+        if (any(!is.na(cv_vals) & cv_vals < 0))
+          errors <- c(errors, "`InterimAdvice$CV` must be `NA`, `0`, or positive; found negative value(s)")
+        pos <- !is.na(mean_vals) & mean_vals > 0
+        if (any(pos)) {
+          stk <- if ("Stock" %in% names(object@InterimAdvice)) object@InterimAdvice$Stock else ""
+          grp <- paste(object@InterimAdvice$Year, stk, object@InterimAdvice$Type, sep = "\r")
+          cv0 <- ifelse(is.na(cv_vals), 0, cv_vals)
+          n_cv <- tapply(cv0[pos], grp[pos], function(x) length(unique(x)))
+          if (any(n_cv > 1))
+            errors <- c(errors, "`InterimAdvice$CV` must be identical for all rows with `Mean > 0` within a Year x Stock x Type")
+        }
+      }
+
+      if ("Max" %in% names(object@InterimAdvice)) {
+        max_vals <- object@InterimAdvice$Max
+        if (any(!is.na(max_vals) & !is.na(mean_vals) & max_vals < mean_vals))
+          errors <- c(errors, "`InterimAdvice$Max` must be `NA` or `>= Mean`")
       }
     }
   }
