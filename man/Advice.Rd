@@ -68,8 +68,11 @@ See \code{Details}}
 vector of length \code{nFleet}.}
 
 \item{TACUnit}{Character. Units in which the TAC is expressed: \code{"Biomass"}
-(default) or \code{"Number"}. Either length 1 (applied to all fleets) or a
-character vector of length \code{nFleet}.}
+(default), \code{"Number"}, or a catch unit such as \code{Data@Landings@Units}
+(e.g. \code{"t"}, \code{"kg"}, \code{"n"}), which is stored as \code{"Biomass"} or
+\code{"Number"}. The TAC is not rescaled, so a TAC in biomass is in the OM's
+\code{Weight} units. Either length 1 (applied to all fleets) or a character
+vector of length \code{nFleet}.}
 
 \item{Effort}{Numeric vector or matrix specifying relative or absolute
 fishing effort. See \code{Details}}

@@ -29,7 +29,8 @@ historical effort - ie same as \code{\link[=CurrentEffort]{CurrentEffort()}} (th
 empty \code{\link[=Advice]{Advice()}} objects).
 
 If \code{Landings} and \code{Discards} are not in the same units (e.g. one in
-\code{Biomass} and the other in \code{Number}), summing them to produce a removals
+\code{Biomass} and the other in \code{Number}, or one in \code{"t"} and the other in
+\code{"kg"}), summing them to produce a removals
 TAC is not meaningful. The unit-mismatch check is only performed when both
 \code{'Landings'} and \code{'Discards'} are included in \code{slot_names}.
 

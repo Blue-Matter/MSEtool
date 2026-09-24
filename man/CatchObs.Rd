@@ -62,10 +62,12 @@ condition the observation error when real catch data are provided. When
 \code{NULL} (default), all historical years in the \code{Data} object are used.
 Has no effect when no real data are supplied.}
 
-\item{Units}{\code{character(1)} or \code{NULL}. Units of catch measurement. Must be
-\code{"Biomass"} or \code{"Number"}. Determines how simulated catch is aggregated
-when generating pseudo-observed data. Default \code{NULL} (treated as
-\code{"Biomass"}).}
+\item{Units}{\code{character(1)} or \code{NULL}. Units of catch measurement:
+\code{"Biomass"}, \code{"Number"}, or a mass or count unit (e.g. \code{"t"}, \code{"kg"},
+\code{"n"}). Determines whether simulated catch is
+aggregated as biomass or numbers when generating data.
+Values are not rescaled, so catch in biomass is in the OM's \code{Weight}
+units. Default \code{NULL} (treated as \code{"Biomass"}).}
 
 \item{Ref}{\code{numeric} or \code{NULL}. Reference catch value. Accepted forms:
 \itemize{

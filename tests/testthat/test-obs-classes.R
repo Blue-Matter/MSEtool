@@ -12,6 +12,11 @@ test_that("CatchObs rejects invalid CV/Bias/Units", {
   expect_error(CatchObs(Units = "Weight"))
 })
 
+test_that("CatchObs accepts physical catch units", {
+  expect_s4_class(CatchObs(Units = "t"), "catchobs")
+  expect_s4_class(CatchObs(Units = "1000 n"), "catchobs")
+})
+
 test_that("EffortObs rejects invalid CV/Bias", {
   expect_error(EffortObs(CV = -0.1))
   expect_error(EffortObs(Bias = 0))

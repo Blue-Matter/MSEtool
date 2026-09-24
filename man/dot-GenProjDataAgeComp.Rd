@@ -114,6 +114,6 @@ to the existing array along the year dimension using
 }
 \seealso{
 \code{\link[=CompObs]{CompObs()}}, \code{\link[=CompData]{CompData()}}, \link[=compdata-class]{compdata}, \link[=obs-class]{obs},
-\code{\link[=rDirichletMultinomial]{rDirichletMultinomial()}}, \code{.GenHistDataAgeComp()}, \code{.GenProjDataCatch()}
+\code{\link[=rDirichletMultinomial]{rDirichletMultinomial()}}
 }
 \keyword{internal}

@@ -66,8 +66,8 @@ is a default (unconditioned) object, as determined by \code{isNewObject()}.
 
 Before applying observation error, true catch is aggregated from
 \code{Hist@LandingsAtAge} or \code{Hist@DiscardsAtAge} (selected by \code{type}) across
-stocks, ages, and areas for replicate \code{x}. The aggregation unit depends on
-\code{CatchObs@Units} for each fleet:
+stocks, ages, and areas for replicate \code{x}. The aggregation depends on
+\code{.CatchUnitType(CatchObs@Units)} for each fleet:
 \itemize{
 \item \code{"Number"}: catch-at-age is summed over age and area, then summed over
 stocks within the complex.
@@ -77,7 +77,8 @@ before summing
 over age and area, then summed over stocks within the complex.
 }
 
-Any value of \code{Units} other than \code{"Number"} or \code{"Biomass"} raises an error.
+\code{Units} that are not a recognized catch unit (see \code{.CatchUnitType()}) raise
+an error.
 Units default to \code{"Biomass"} unless specified in the \code{\link[=CatchObs]{CatchObs()}} object.
 }
 
@@ -118,7 +119,7 @@ where \code{i} is the stock complex index and \code{fl} the fleet index. The rel
 \itemize{
 \item \verb{@Bias[x]}: per-replicate multiplicative bias
 \item \verb{@Error[x, t]}: per-replicate, per-year lognormal error multiplier
-\item \verb{@Units}: catch units (\code{"Biomass"} or \code{"Number"}), propagated to the
+\item \verb{@Units}: catch units (see \code{.CatchUnitType()}), propagated to the
 output \link[=catchdata-class]{catchdata}
 }
 

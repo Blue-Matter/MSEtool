@@ -24,9 +24,10 @@ Default \code{NULL}.}
 observations, matching the dimensions of \code{Value}. Default \code{NULL}.}
 
 \item{Units}{\code{character} or \code{NULL}. Units of catch measurement, one element
-per fleet: \code{"Biomass"} or \code{"Number"}. Default \code{NULL}. See \code{\link[=CheckCatch]{CheckCatch()}}
-for the consequences of \code{Landings} and \code{Discards} having mismatched
-units.}
+per fleet: \code{"Biomass"}, \code{"Number"}, or a mass or count unit (e.g. \code{"t"},
+\code{"kg"}, \code{"n"}). Values are not rescaled, so catch in biomass must be in
+the OM's \code{Weight} units. Default \code{NULL}. See \code{\link[=CheckCatch]{CheckCatch()}} for the
+consequences of \code{Landings} and \code{Discards} having mismatched units.}
 
 \item{Ref}{\code{array} or \code{NULL}. Reference catch values (e.g., a historical
 baseline), matching the dimensions of \code{Value}. Default \code{NULL}.}

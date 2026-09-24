@@ -26,8 +26,8 @@ simulation; see \code{\link[=CatchObs]{CatchObs()}}.}
 \item{\code{Years}}{\code{numeric} or \code{NULL}. Calendar years over which the observation
 error is conditioned. See \code{\link[=CatchObs]{CatchObs()}}.}
 
-\item{\code{Units}}{\code{character} or \code{NULL}. Units of catch (\code{"Biomass"} or
-\code{"Number"}). See \code{\link[=CatchObs]{CatchObs()}}.}
+\item{\code{Units}}{\code{character} or \code{NULL}. Units of catch: \code{"Biomass"}, \code{"Number"},
+or a mass or count unit (e.g. \code{"t"}, \code{"kg"}, \code{"n"}). See \code{\link[=CatchObs]{CatchObs()}}.}
 
 \item{\code{Ref}}{\code{numeric} array or \code{NULL}. Reference catch values, one per
 simulation. See \code{\link[=CatchObs]{CatchObs()}}.}

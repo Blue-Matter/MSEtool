@@ -61,7 +61,7 @@ projection data are not generated.
 Catch-at-age for \code{DataYear} is extracted from \code{Proj@LandingsAtAge} or
 \code{Proj@DiscardsAtAge} (selected by \code{type}) for each stock in \code{stocks},
 dropping the simulation and time dimensions. Per-fleet aggregation then
-depends on \code{CatchData@Units[fl]}:
+depends on \code{.CatchUnitType(CatchData@Units[fl])}:
 \itemize{
 \item \code{"Number"}: summed over age and area via \code{.ResolveCatchNumber()}.
 \item \code{"Biomass"}: multiplied by \code{WeightFleetRetained} (\code{type = "Landings"}) or
