@@ -93,6 +93,36 @@ test_that("CurrentCatch reproduces the exact historical seasonal pattern under P
   }
 })
 
+test_that("CurrentEffort repeats the last historical year's seasonal effort per fleet", {
+  skip_on_cran()
+  data(SeasonalSpatialOM, envir = environment())
+  om <- SeasonalSpatialOM
+  om@nSim  <- 2
+  om@pYear <- 2
+  f2 <- om@Fleet[[1]][[1]]
+  f2@Name <- "Fleet2"
+  eff <- f2@Effort@Effort
+  eff$Lower <- eff$Lower * 0.5 + 0.2
+  eff$Upper <- eff$Upper * 0.5 + 0.2
+  f2@Effort@Effort <- eff
+  om@Fleet[[1]][["Fleet2"]] <- f2
+  om@Obs[[1]][["Fleet2"]]   <- om@Obs[[1]][[1]]
+  om@Imp[[1]][["Fleet2"]]   <- om@Imp[[1]][[1]]
+  Imp(om) <- FullComplianceImp
+
+  set.seed(1)
+  hist <- Simulate(om, silent = TRUE)
+  mse  <- Project(hist, MPs = "CurrentEffort", parallel = FALSE, silent = TRUE)
+
+  Seasons <- om@Seasons
+  nHist   <- dim(hist@Effort)[2]
+  LastYr  <- hist@Effort[, (nHist - Seasons + 1):nHist, , drop = FALSE]
+  for (yr in seq_len(om@pYear) - 1) {
+    idx <- yr * Seasons + seq_len(Seasons)
+    expect_equal(unname(mse@Effort[, idx, , 1]), unname(LastYr), tolerance = 1e-8)
+  }
+})
+
 test_that("a custom MP with a multi-year Interval stays phase-aligned on a seasonal OM", {
   skip_on_cran()
   data(SeasonalSpatialOM, envir = environment())

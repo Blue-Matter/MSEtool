@@ -271,6 +271,7 @@
                              Fleet=FleetNames)
                            )  |> AddDimension('Area')
           Advice@Effort <- ArrayMultiply(lastdist, lasteff)
+          Advice@EffType <- 'Abs'
       }
       
       Advice
