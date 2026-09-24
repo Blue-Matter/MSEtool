@@ -80,17 +80,14 @@
 
   if (parallel && nMPs > 1) {
     CheckPackage('furrr')
-    StockNamesMSE <- StockNames(MSE)
-    FleetNamesMSE <- FleetNames(MSE)
 
     results <- furrr::future_map(
       seq_along(MPs), \(mp) {
         .ProjectMPCompute(Proj, MPs[mp], MSE@MPs[[MPs[mp]]], YearsHist, YearsProj,
-                         StockNamesMSE, FleetNamesMSE, silent = TRUE)
+                         silent = TRUE, mp = mp)
       },
       .options = furrr::furrr_options(
-        globals  = c('Proj', 'MPs', 'MSE', 'YearsHist', 'YearsProj',
-                     'StockNamesMSE', 'FleetNamesMSE'),
+        globals  = c('Proj', 'MPs', 'MSE', 'YearsHist', 'YearsProj'),
         packages = "MSEtool",
         seed     = 101
       )
