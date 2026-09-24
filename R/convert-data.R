@@ -285,7 +285,8 @@ ConvertData <- function(x, Seasons = 1, sim = 1, silent = FALSE) {
   if (all(is.na(Data@CV_Cat)))
     return(data)
   data@Landings@CV    <- .ValorNULL(Data@CV_Cat[sim, ]) |> .AddYearFleetArray(data)
-  data@Landings@Units <- Data@Units
+  if (length(Data@Units) && all(.IsCatchUnit(Data@Units)))
+    data@Landings@Units <- Data@Units
   data@Landings@Ref   <- Data@Cref[sim]    |> .AddFleetArray(data)
   data@Landings@RefCV <- Data@CV_Cref[sim] |> .AddFleetArray(data)
   data

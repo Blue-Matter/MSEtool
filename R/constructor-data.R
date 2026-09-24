@@ -10,9 +10,10 @@
 #' @param CV `array` or `NULL`. Coefficients of variation for the catch
 #'   observations, matching the dimensions of `Value`. Default `NULL`.
 #' @param Units `character` or `NULL`. Units of catch measurement, one element
-#'   per fleet: `"Biomass"` or `"Number"`. Default `NULL`. See [CheckCatch()]
-#'   for the consequences of `Landings` and `Discards` having mismatched
-#'   units.
+#'   per fleet: `"Biomass"`, `"Number"`, or a mass or count unit (e.g. `"t"`,
+#'   `"kg"`, `"n"`). Values are not rescaled, so catch in biomass must be in
+#'   the OM's `Weight` units. Default `NULL`. See [CheckCatch()] for the
+#'   consequences of `Landings` and `Discards` having mismatched units.
 #' @param Ref `array` or `NULL`. Reference catch values (e.g., a historical
 #'   baseline), matching the dimensions of `Value`. Default `NULL`.
 #' @param RefCV `array` or `NULL`. Coefficients of variation for the reference

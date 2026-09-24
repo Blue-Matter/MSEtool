@@ -11,8 +11,11 @@
 #'   vector of length `nFleet`.
 #'
 #' @param TACUnit Character. Units in which the TAC is expressed: `"Biomass"`
-#'   (default) or `"Number"`. Either length 1 (applied to all fleets) or a
-#'   character vector of length `nFleet`.
+#'   (default), `"Number"`, or a catch unit such as `Data@Landings@Units`
+#'   (e.g. `"t"`, `"kg"`, `"n"`), which is stored as `"Biomass"` or
+#'   `"Number"`. The TAC is not rescaled, so a TAC in biomass is in the OM's
+#'   `Weight` units. Either length 1 (applied to all fleets) or a character
+#'   vector of length `nFleet`.
 #'    
 #' @param Effort Numeric vector or matrix specifying relative or absolute 
 #' fishing effort. See `Details`
@@ -288,7 +291,7 @@ Advice <- function(TAC              = NULL,
   }
   
   TACType     <- match_arg_vec(TACType,     c('Removals', 'Landings'),  'TACType')
-  TACUnit     <- match_arg_vec(TACUnit,     c('Biomass',  'Number'),    'TACUnit')
+  TACUnit     <- .CatchUnitType(TACUnit, arg = 'TACUnit')
   EffType     <- match_arg_vec(EffType,     c('Rel',      'Abs'),       'EffType')
   LimitType   <- match_arg_vec(LimitType,   c('angler',   'boat'),      'LimitType')
   ClosureMode <- match_arg_vec(ClosureMode, c('discard',  'stop'),      'ClosureMode')
@@ -375,7 +378,7 @@ TACUnit <- function(x) {
 #' @rdname Advice
 #' @export
 `TACUnit<-` <- function(x, value) {
-  .AssignSlot(x, value, 'TACUnit')
+  .AssignSlot(x, .CatchUnitType(value, arg = 'TACUnit'), 'TACUnit')
 }
 
 #' @rdname Advice

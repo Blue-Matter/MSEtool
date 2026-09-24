@@ -18,6 +18,44 @@
   m    = 1000
 )
 
+.count_units <- c("Number", "n", "1000 n", "fish", "1000 fish")
+
+#' Catch quantity type from catch units
+#'
+#' Classifies catch units as `"Biomass"` or `"Number"`. `units` may be the
+#' generic `"Biomass"` or `"Number"`, a mass unit (a name of `.mass_units_g`),
+#' or a count unit (`.count_units`). Matching is case-insensitive. Values are
+#' never rescaled.
+#'
+#' @param units `character` vector of catch units, or `NULL`.
+#' @param default Type returned for `NA` elements of `units`.
+#' @param arg Argument name used in the error message.
+#'
+#' @return `character` vector of `"Biomass"`/`"Number"` the same length as
+#'   `units`, or `NULL` if `units` is `NULL`. Errors on an unrecognized unit.
+#' @keywords internal
+.CatchUnitType <- function(units, default = "Biomass", arg = "Units") {
+  if (is.null(units)) return(NULL)
+  u   <- tolower(trimws(units))
+  out <- rep(NA_character_, length(u))
+  out[is.na(u)] <- default
+  out[u %in% tolower(c("Biomass", names(.mass_units_g)))] <- "Biomass"
+  out[u %in% tolower(.count_units)] <- "Number"
+  bad <- is.na(out)
+  if (any(bad))
+    cli::cli_abort(c(
+      "x" = "Unrecognized catch {.arg {arg}}: {.val {unique(units[bad])}}.",
+      "i" = "Biomass units: {.val {c('Biomass', names(.mass_units_g))}}.",
+      "i" = "Number units: {.val {(.count_units)}}."
+    ))
+  out
+}
+
+.IsCatchUnit <- function(units) {
+  u <- tolower(trimws(units))
+  is.na(u) | u %in% tolower(c("Biomass", names(.mass_units_g), .count_units))
+}
+
 .NiceUnitName <- function(table, value, tol = 1e-6) {
   if (!is.finite(value) || value <= 0)
     return(NULL)
@@ -63,9 +101,6 @@
   info$per_unit / unname(table[[target]])
 }
 
-# Suffix describing a pure count scaling factor with no base unit involved
-# (e.g. Number()/SRR@Units), e.g. 1000 -> "thousands", 500 -> "× 500".
-# NULL when scale is 1 (no suffix needed) or unset.
 .CountScaleLabel <- function(scale) {
   if (is.null(scale) || !is.numeric(scale) || length(scale) != 1 || is.na(scale))
     return(NULL)
@@ -79,20 +114,12 @@
   paste0('× ', format(scale, big.mark = ',', scientific = FALSE))
 }
 
-# Appends a (possibly NULL/NA/empty) unit string to a plain axis label, e.g.
-# .AppendUnits('Biomass', 't') -> "Biomass (t)"; .AppendUnits('Biomass', NULL) -> "Biomass".
 .AppendUnits <- function(label, units) {
   if (is.null(units) || is.na(units) || !nzchar(units))
     return(label)
   paste0(label, ' (', units, ')')
 }
 
-# Core TRUE/FALSE/character `units` dispatch shared by every Plot*() unit
-# helper: OM-level quantities (Biomass etc, `scale` = SRR@Units) and
-# per-individual schedules (Length/Weight-at-age, `scale` = 1) both resolve
-# `base_unit`/`scale` themselves and delegate here. `table` is
-# `.mass_units_g` or `.length_units_mm`. Returns `list(label, factor)`:
-# `factor` rescales the plotted values (1 unless a target unit is requested).
 .ResolveUnitInfo <- function(table, base_unit, scale, units, what = 'value') {
   if (isFALSE(units))
     return(list(label = NULL, factor = 1))
@@ -108,10 +135,6 @@
   list(label = units, factor = factor)
 }
 
-# Single consistent value of `slot(stock, what)@Units` across every selected
-# stock in `OM` (or all stocks when `stockNames` is NULL), or NULL if stocks
-# disagree or none has it set. `what` is one of "Weight", "Length", "Ages",
-# "Fecundity", "NaturalMortality", "SRR".
 .GetStockUnits <- function(OM, what, stockNames = NULL) {
   stocks <- OM@Stock
   if (!is.null(stockNames))

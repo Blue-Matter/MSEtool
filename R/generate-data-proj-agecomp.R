@@ -82,7 +82,7 @@
 #' - `@Value`: `[nYear+1 x nFleet x nAge]` array of composition counts
 #'
 #' @seealso [CompObs()], [CompData()], [compdata-class], [obs-class],
-#'   [rDirichletMultinomial()], `.GenHistDataAgeComp()`, `.GenProjDataCatch()`
+#'   [rDirichletMultinomial()]
 #' @keywords internal
 .GenProjDataAgeComp <- function(x, Proj, DataYear, YearsAll, i, stocks,
                                 type = c('LandingsAtAge', 'DiscardsAtAge')) {

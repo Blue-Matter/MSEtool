@@ -92,12 +92,12 @@
     Units <- FleetUnits[fl]
     if (is.na(Units))
       Units <- 'Biomass'
-    CatchObs@Units <- FleetUnits[fl]
-    
+    CatchObs@Units <- Units
+
     # Years to use condition the observation error - default all historical
     if (is.null(CatchObs@Years)) CatchObs@Years <- FisheryData@Years
-    
-    if (Units=='Biomass') {
+
+    if (.CatchUnitType(Units)=='Biomass') {
       SimValue <- Sim_Catch_Biomass[,,fl, drop=FALSE] |> abind::adrop(3)  
     } else {
       SimValue <- Sim_Catch_Number[,,fl, drop=FALSE] |> abind::adrop(3)  

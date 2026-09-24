@@ -11,13 +11,21 @@
 }
 
 .ResolveUnits <- function(DataSlot, nFleet, default='Biomass', valid=c('Biomass', 'Number')) {
-  if (length(DataSlot@Units) == nFleet) return(DataSlot)
-  DataSlot@Units <- if (is.null(DataSlot@Units)) {
-    rep(default, nFleet)
-  } else {
-    rep(DataSlot@Units, nFleet)[seq_len(nFleet)]
+  isCatch <- is(DataSlot, 'catchdata')
+  if (length(DataSlot@Units) == nFleet && !isCatch) return(DataSlot)
+  if (length(DataSlot@Units) != nFleet) {
+    DataSlot@Units <- if (is.null(DataSlot@Units)) {
+      rep(default, nFleet)
+    } else {
+      rep(DataSlot@Units, nFleet)[seq_len(nFleet)]
+    }
   }
-  
+
+  if (isCatch) {
+    .CatchUnitType(DataSlot@Units)
+    return(DataSlot)
+  }
+
   if (any(is.na(DataSlot@Units)) || !all(DataSlot@Units %in% valid))
     cli::cli_abort(
       c("Invalid {.val Units} in {.cls {class(DataSlot)}} object.",

@@ -42,10 +42,12 @@
 #'   condition the observation error when real catch data are provided. When
 #'   `NULL` (default), all historical years in the `Data` object are used.
 #'   Has no effect when no real data are supplied.
-#' @param Units `character(1)` or `NULL`. Units of catch measurement. Must be
-#'   `"Biomass"` or `"Number"`. Determines how simulated catch is aggregated
-#'   when generating pseudo-observed data. Default `NULL` (treated as
-#'   `"Biomass"`).
+#' @param Units `character(1)` or `NULL`. Units of catch measurement:
+#'   `"Biomass"`, `"Number"`, or a mass or count unit (e.g. `"t"`, `"kg"`,
+#'   `"n"`). Determines whether simulated catch is
+#'   aggregated as biomass or numbers when generating data.
+#'   Values are not rescaled, so catch in biomass is in the OM's `Weight`
+#'   units. Default `NULL` (treated as `"Biomass"`).
 #' @param Ref `numeric` or `NULL`. Reference catch value. Accepted forms:
 #'   - `NULL` (default): no reference value.
 #'   - Positive scalar: interpreted as the CV of a lognormal distribution; a

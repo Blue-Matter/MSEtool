@@ -29,8 +29,8 @@
 #'
 #' Before applying observation error, true catch is aggregated from
 #' `Hist@LandingsAtAge` or `Hist@DiscardsAtAge` (selected by `type`) across
-#' stocks, ages, and areas for replicate `x`. The aggregation unit depends on
-#' `CatchObs@Units` for each fleet:
+#' stocks, ages, and areas for replicate `x`. The aggregation depends on
+#' `.CatchUnitType(CatchObs@Units)` for each fleet:
 #'
 #' - `"Number"`: catch-at-age is summed over age and area, then summed over
 #'   stocks within the complex.
@@ -39,7 +39,8 @@
 #'   before summing
 #'   over age and area, then summed over stocks within the complex. 
 #'
-#' Any value of `Units` other than `"Number"` or `"Biomass"` raises an error.
+#' `Units` that are not a recognized catch unit (see `.CatchUnitType()`) raise
+#' an error.
 #' Units default to `"Biomass"` unless specified in the [CatchObs()] object.
 #'
 #' ## Observation Error Model
@@ -77,7 +78,7 @@
 #'
 #' - `@Bias[x]`: per-replicate multiplicative bias
 #' - `@Error[x, t]`: per-replicate, per-year lognormal error multiplier
-#' - `@Units`: catch units (`"Biomass"` or `"Number"`), propagated to the
+#' - `@Units`: catch units (see `.CatchUnitType()`), propagated to the
 #'   output [catchdata-class]
 #'
 #' See [obs-class] and [CatchObs()] for full slot documentation.
@@ -132,13 +133,13 @@
     if (!is.null(CatchObs@Units))
       CatchData@Units[fl] <- CatchObs@Units
     
-    if (CatchData@Units[fl] == "Number") {
+    if (.CatchUnitType(CatchData@Units[fl]) == "Number") {
       real_catch <- purrr::map(Real_Catch_Number, \(catch_n) {
         catch_n[x,,,fl,] |> SumOverAge() |> SumOverArea()
       }) |> List2Array('Stock') |>
         apply('Year', sum) |> SumOverStock()
       
-    } else if (CatchData@Units[fl] == "Biomass") {
+    } else {
       weight_slot <- if (type == 'Landings') 'WeightFleetRetained' else 'WeightFleetSelected'
       real_catch <- purrr::map2(Real_Catch_Number, Hist@OM@Fleet[stocks],
                                 \(catch_n, fleet_list) {
@@ -159,12 +160,6 @@
                                   
                                 }) |> List2Array('Stock') |>
         apply('Year', sum)
-      
-    } else {
-      cli::cli_abort(
-        'Only {.val Biomass} or {.val Number} are valid {.val Units} in {.val Obs@Landings} and {.val Obs@Discards}',
-        .internal = TRUE
-      )
     }
     
     error_sim <- min(x, nrow(CatchObs@Error))

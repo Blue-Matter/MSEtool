@@ -30,7 +30,7 @@
 #' Catch-at-age for `DataYear` is extracted from `Proj@LandingsAtAge` or
 #' `Proj@DiscardsAtAge` (selected by `type`) for each stock in `stocks`,
 #' dropping the simulation and time dimensions. Per-fleet aggregation then
-#' depends on `CatchData@Units[fl]`:
+#' depends on `.CatchUnitType(CatchData@Units[fl])`:
 #'
 #' - `"Number"`: summed over age and area via `.ResolveCatchNumber()`.
 #' - `"Biomass"`: multiplied by `WeightFleetRetained` (`type = "Landings"`) or
@@ -137,7 +137,7 @@
       error <- .ArraySubsetYear(Obs@Error, DataYear)[x]
       bias  <- Obs@Bias[x]
       
-      NewValue[, fl] <- switch(CatchData@Units[fl],
+      NewValue[, fl] <- switch(.CatchUnitType(CatchData@Units[fl]),
                                Number  = .ResolveCatchNumber(Real_Catch_Number, fl) * error * bias,
                                Biomass = .ResolveCatchBiomass(Proj, stocks, x, TSIndex, fl, nArea,
                                                              Real_Catch_Number, type = type) * error * bias
@@ -195,14 +195,14 @@
     if (hasOMVal) {
       NewValueAll[, fl] <- slot(omData, type)@Value[TSIndex, fl]
     } else {
-      error <- .ArraySubsetYear(Obs@Error, DataYear)
+      error   <- .ArraySubsetYear(Obs@Error, DataYear)
       sim_ind <- pmin(seq_len(nSim), nrow(error))
       error   <- error[sim_ind]
 
       sim_ind_bias <- pmin(seq_len(nSim), length(Obs@Bias))
       bias         <- Obs@Bias[sim_ind_bias]
 
-      NewValueAll[, fl] <- switch(CatchData1@Units[fl],
+      NewValueAll[, fl] <- switch(.CatchUnitType(CatchData1@Units[fl]),
         Number  = .ResolveCatchNumberAll(Real_Catch_Number_All, fl, nSim) * error * bias,
         Biomass = vapply(seq_len(nSim), \(x) {
           Real_Catch_Number_x <- purrr::map(Real_Catch_Number_All, \(a)

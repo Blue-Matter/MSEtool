@@ -11,8 +11,8 @@
 #' @slot CV `array` or `NULL`. Coefficients of variation matching the
 #'   dimensions of `Value`. See [CatchData()].
 #' @slot Units `character` or `NULL`. Units of catch measurement per fleet:
-#'   `"Biomass"` or `"Number"`. See [CatchData()] and [CheckCatch()] for the
-#'   consequences of `Landings` and `Discards` having mismatched units.
+#'   `"Biomass"`, `"Number"`, or a mass or count unit (e.g. `"t"`, `"kg"`,
+#'   `"n"`). See [CatchData()] and [CheckCatch()] for the consequences of `Landings` and `Discards` having mismatched units.
 #' @slot Ref `array` or `NULL`. Reference catch values (e.g., a historical
 #'   baseline), matching the dimensions of `Value`. See [CatchData()].
 #' @slot RefCV `array` or `NULL`. Coefficients of variation for the reference

@@ -10,7 +10,8 @@
 #' empty [Advice()] objects).
 #'
 #' If `Landings` and `Discards` are not in the same units (e.g. one in
-#' `Biomass` and the other in `Number`), summing them to produce a removals
+#' `Biomass` and the other in `Number`, or one in `"t"` and the other in
+#' `"kg"`), summing them to produce a removals
 #' TAC is not meaningful. The unit-mismatch check is only performed when both
 #' `'Landings'` and `'Discards'` are included in `slot_names`.
 #'
@@ -39,8 +40,12 @@ CheckCatch <- function(Data, incUnits = TRUE, slot_names = c('Landings', 'Discar
   if (incUnits && all(c('Landings', 'Discards') %in% slot_names)) {
     LandingsUnits <- Data@Landings@Units
     DiscardsUnits <- Data@Discards@Units
-    if (!is.null(LandingsUnits) && !is.null(DiscardsUnits))
-      unit_mismatch <- any(LandingsUnits != DiscardsUnits)
+    if (!is.null(LandingsUnits) && !is.null(DiscardsUnits)) {
+      generic <- c('biomass', 'number')
+      specific <- !tolower(LandingsUnits) %in% generic & !tolower(DiscardsUnits) %in% generic
+      unit_mismatch <- any(.CatchUnitType(LandingsUnits) != .CatchUnitType(DiscardsUnits) |
+                             (specific & LandingsUnits != DiscardsUnits), na.rm = TRUE)
+    }
   }
 
   if (!any(value_errors, na.rm = TRUE) && !unit_mismatch)

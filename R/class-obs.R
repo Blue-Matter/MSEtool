@@ -170,8 +170,8 @@ setValidity("effortobs", function(object) {
 #'   [CatchObs()].
 #' @slot Years `numeric` or `NULL`. Calendar years over which the observation
 #'   error is conditioned. See [CatchObs()].
-#' @slot Units `character` or `NULL`. Units of catch (`"Biomass"` or
-#'   `"Number"`). See [CatchObs()].
+#' @slot Units `character` or `NULL`. Units of catch: `"Biomass"`, `"Number"`,
+#'   or a mass or count unit (e.g. `"t"`, `"kg"`, `"n"`). See [CatchObs()].
 #' @slot Ref `numeric` array or `NULL`. Reference catch values, one per
 #'   simulation. See [CatchObs()].
 #' @slot Misc `list`. Miscellaneous additional objects.
@@ -209,10 +209,8 @@ setValidity("catchobs", function(object) {
   if (!is.null(object@Error) && any(object@Error <= 0, na.rm = TRUE))
     errors <- c(errors, "`Error` must be positive")
 
-  valid_Units <- c("Biomass", "Number")
-  if (!is.null(object@Units) && !all(object@Units %in% valid_Units))
-    errors <- c(errors,
-                paste0("`Units` must be one of: ", paste(valid_Units, collapse = ", ")))
+  if (!is.null(object@Units) && !all(.IsCatchUnit(object@Units)))
+    errors <- c(errors, "`Units` must be `\"Biomass\"`, `\"Number\"`, or a mass or count unit")
 
   if (length(errors)) errors else TRUE
 })

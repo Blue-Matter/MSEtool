@@ -36,15 +36,13 @@
                        silent=FALSE) {
 
   result <- .ProjectMPCompute(Proj, MPName, MPfunction, YearsHist, YearsProj,
-                              StockNames = StockNames(MSE),
-                              FleetNames = FleetNames(MSE),
                               silent, mp = mp)
   .MergeMPResult(MSE, result, MPName, mp, YearsHist, YearsProj, silent)
 }
 
 
 .ProjectMPCompute <- function(Proj, MPName, MPfunction, YearsHist, YearsProj,
-                              StockNames, FleetNames, silent = FALSE, mp = 1) {
+                              silent = FALSE, mp = 1) {
 
   Interval        <- .ResolveInterval(Proj@OM@Interval, MPName, MPfunction, Proj@OM@Seasons)
   ManagementYears <- .CalcManagementYears(YearsProj, Interval, Proj@OM@Seasons)
@@ -52,6 +50,8 @@
   YearsAll        <- c(YearsHist, YearsProj)
   Areas           <- 1:nArea(Proj)
   StartTime       <- Sys.time()
+  StockNames      <- StockNames(Proj)
+  FleetNames      <- FleetNames(Proj)
 
   # initialise for debugging convenience
   Year <- YearsProj[1]; ts <- 1
