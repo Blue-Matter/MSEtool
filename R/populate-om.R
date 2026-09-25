@@ -73,6 +73,8 @@ PopulateOM <- function(OM,
       "i" = "See {.help MSEtool::OM} and {.help MSEtool::Fleet}"
     ))
 
+  .MsgStep("Populating OM", "Populated OM", silent)
+
   StockListRaw <- if (inherits(OM@Stock, 'stock')) list(OM@Stock) else OM@Stock
   auto_proj <- purrr::map_lgl(StockListRaw, \(st) EmptyObject(st@SRR@RecDevProj))
 
@@ -96,9 +98,6 @@ PopulateOM <- function(OM,
     OM <- StandardizeEffort(OM, populate=FALSE)
 
   OM <- .RefreshFleetDigests(OM)
-
-  if (!silent)
-    cli::cli_alert_success('Populated OM {.val {OM@Name}}')
 
   .SetDigest(OM)
 }
@@ -151,12 +150,13 @@ PopulateOM <- function(OM,
   }
   class(StockList) <- "StockList"
 
-  if (!silent) cli::cli_progress_bar(format = "Populating Stock {.val {Stock@Name}}", 
-                                     total = nStock)
+  show <- .MsgShowProgress(silent)
+  if (show) cli::cli_progress_bar(format = "Populating stock {.stock {Stock@Name}}",
+                                  total = nStock)
   for (st in seq_len(nStock)) {
     Stock <- StockList[[st]]
     Stock@nSim <- OM@nSim
-    if (!silent) cli::cli_progress_update()
+    if (show) cli::cli_progress_update()
     StockList[[st]] <- PopulateStock(
       Stock = Stock,
       nYear = OM@nYear,
@@ -170,7 +170,7 @@ PopulateOM <- function(OM,
     )
     names(StockList)[st] <- StockList[[st]]@Name
   }
-  if (!silent) cli::cli_progress_done()
+  if (show) cli::cli_progress_done()
 
   OM@Stock <- StockList
   OM
@@ -234,9 +234,10 @@ PopulateOM <- function(OM,
     class(FleetList[[st]]) <- "FleetList"
   }
   
-  if (!silent)
+  show <- .MsgShowProgress(silent)
+  if (show)
     cli::cli_progress_bar(
-      format = "Populating Fleet {.val {FleetList[[st]][[fl]]@Name}} (Stock {.val {names(StockList)[st]}}) {cli::pb_bar} {cli::pb_percent}",
+      format = "Populating fleet {.fleet {FleetList[[st]][[fl]]@Name}} (stock {.stock {names(StockList)[st]}}) {cli::pb_bar} {cli::pb_percent}",
       total = nStocks * nFleets
     )
   for (st in seq_len(nStocks)) {
@@ -268,7 +269,7 @@ PopulateOM <- function(OM,
     }
 
     for (fl in seq_len(nFleets)) {
-      if (!silent) cli::cli_progress_update()
+      if (show) cli::cli_progress_update()
       FleetList[[st]][[fl]] <- PopulateFleet(
         Fleet = FleetList[[st]][[fl]],
         Stock = StockOrig,
@@ -290,7 +291,7 @@ PopulateOM <- function(OM,
       names(FleetList[[st]])[fl] <- FleetList[[st]][[fl]]@Name
     }
   }
-  if (!silent) cli::cli_progress_done()
+  if (show) cli::cli_progress_done()
 
   OM@Fleet <- FleetList
   OM

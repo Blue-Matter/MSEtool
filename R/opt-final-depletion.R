@@ -39,6 +39,9 @@
   ))
   if (!AnyActive) return(Hist)
 
+  .MsgStep("Optimizing catchability (q) for final depletion",
+           "Optimized catchability (q) for final depletion", silent)
+
   Hist@OM <- .CheckCatchFrac(Hist@OM)
 
   nStock <- nStock(Hist@OM)
@@ -64,14 +67,14 @@
         seed     = 101
       )
     )
-  } else if (silent) {
+  } else if (!.MsgShowProgress(silent)) {
     lapply(HistSim_List, .OptFinalDepletionSim, nStock, nFleet, nArea, YearsHist, Groups)
   } else {
     purrr::map(HistSim_List, \(HistSim) {
       .OptFinalDepletionSim(HistSim, nStock, nFleet, nArea, YearsHist, Groups)
     }, .progress = list(
       type = "iterator",
-      format = "Optimizing catchability (q) for Final Depletion {cli::pb_bar} {cli::pb_percent}",
+      format = "Optimizing catchability (q) for final depletion {cli::pb_bar} {cli::pb_percent}",
       clear = TRUE))
   }
 
@@ -85,8 +88,6 @@
       }
     }
   }
-  if (!silent) cli::cli_alert_success("Optimized catchability (q) for Final Depletion")
-
   Hist
 }
 

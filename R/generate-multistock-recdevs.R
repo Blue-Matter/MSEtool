@@ -61,7 +61,8 @@ GenMultiStockRecDevs <- function(OM, TruncSD = 3, silent = FALSE, overwrite = NU
   if (length(overwrite) != n_stock)
     cli::cli_abort("`overwrite` must be length `nStock(OM)` ({n_stock})", .internal = TRUE)
 
-  pb <- if (!silent) {
+  show <- .MsgShowProgress(silent)
+  pb <- if (show) {
     cli::cli_progress_bar(
       name = "Simulating correlated recruitment deviations for projection period",
       total = nSim,
@@ -71,7 +72,7 @@ GenMultiStockRecDevs <- function(OM, TruncSD = 3, silent = FALSE, overwrite = NU
   
   for (sim in seq_len(nSim)) {
     
-    if (!silent) cli::cli_progress_update(pb, set = sim)
+    if (show) cli::cli_progress_update(pb, set = sim)
     
     # Extract stats 
     RecDevStats <- purrr::map(OM@Stock, \(stock) 
@@ -193,7 +194,7 @@ GenMultiStockRecDevs <- function(OM, TruncSD = 3, silent = FALSE, overwrite = NU
     }
 
   } # end sim loop
-  cli::cli_progress_done() 
+  if (show) cli::cli_progress_done(pb)
   OM
 }
 

@@ -29,7 +29,9 @@
 
   type  <- match.arg(type, c('Landings', 'Removals'), several.ok=TRUE)
   Units <- match.arg(Units, c("Biomass", 'Number'))
-  
+  .MsgStep("Calculating reference yield ({tolower(type)})",
+           "Calculated reference yield ({tolower(type)})", silent)
+
   HistYears  <- Years(Hist,'H')
   ProjYears  <- Years(Hist,'P')
   AllYears   <- c(HistYears, ProjYears)
@@ -76,17 +78,18 @@
         )
       )
     } else {
-      if (!silent)
-        cli::cli_progress_bar(format = "Calculating Reference {.val {t}} {cli::pb_bar} {cli::pb_percent}",  total = nSim)
+      show <- .MsgShowProgress(silent)
+      if (show)
+        cli::cli_progress_bar(format = "Calculating reference yield ({tolower(t)}) {cli::pb_bar} {cli::pb_percent}",  total = nSim)
 
       out <- lapply(seq_len(nSim), function(sim) {
         val <- .CalcRefYieldSim(sim, Proj, HistYears, ProjYears, ProjYearInd,
                                 nFleet, Units, t, LastHistEffort)
-        if (!silent) cli::cli_progress_update()
+        if (show) cli::cli_progress_update()
         val
       })
 
-      if (!silent) cli::cli_progress_done()
+      if (show) cli::cli_progress_done()
       out
     }
 
@@ -97,7 +100,6 @@
 
   } # end type=c('Landings', 'Removals') loop
 
-  if (!silent) cli::cli_alert_success("Calculated Reference {.val {type}}")
   Hist
 }
 

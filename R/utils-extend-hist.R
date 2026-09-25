@@ -17,14 +17,15 @@
 #'   to include the specified years.
 #' @keywords internal
 .ExtendHist <- function(Hist, Years, silent=FALSE, id=NULL) {
+  show <- .MsgShowProgress(silent)
   nStock <- nStock(Hist@OM)
   nFleet <- nFleet(Hist)
   nSim <- Hist@OM@nSim
   nArea <- nArea(Hist@OM)
   Areas <- 1:nArea
   
-  if (!silent && is.null(id)) 
-    id <- cli::cli_progress_bar("Extending `Hist` Object")
+  if (show && is.null(id)) 
+    id <- cli::cli_progress_bar("Extending hist object")
   
   # Extend OM
   Hist@OM <- .ExtendOM(OM=Hist@OM, Years=Years, silent=silent, id=id)
@@ -33,7 +34,7 @@
   slots <- slotNames('timeseries')
   
   for (sl in slots) {
-    if (!silent) {
+    if (show) {
       cli::cli_progress_update(id=id)
     }
     default <- 0
@@ -49,7 +50,7 @@
                              default = default)
   }
   
-  if (!silent) {
+  if (show) {
     cli::cli_progress_done()
   }
   

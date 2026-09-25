@@ -39,6 +39,7 @@
 CalcBLow <- function(Hist, HZN = 2, Bfrac = 0.5, silent = FALSE) {
 
   .CheckClass(Hist, c('om', 'hist'))
+  .MsgStep("Calculating BLow reference point", "Calculated BLow reference point", silent)
   if (inherits(Hist, 'om')) Hist <- .OM2Hist(Hist, silent = TRUE)
   .CheckClass(Hist, 'hist', 'Hist')
 
@@ -86,9 +87,6 @@ CalcBLow <- function(Hist, HZN = 2, Bfrac = 0.5, silent = FALSE) {
   }
 
   Hist@Reference@BLow <- ReduceDims(BLow)
-
-  if (!silent)
-    cli::cli_alert_success("Calculated BLow reference point")
 
   Hist
 }

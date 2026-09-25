@@ -425,8 +425,7 @@
   }
 
   if (IdenticalHist) {
-    if (!silent)
-      cli::cli_progress_message("Calculating MSY reference points: {.val {complex_name}}")
+    .MsgStatus("Calculating MSY reference points for {.complex {complex_name}}", silent)
 
     results_sim1 <- RunOneSim(
       Subset(StockList,      Sims = 1),
@@ -460,7 +459,7 @@
   parallel <- CheckParallel(parallel)
 
   if (!parallel) {
-    if (!silent) {
+    if (.MsgShowProgress(silent)) {
       id <- cli::cli_progress_bar(
         name   = paste0("Calculating MSY reference points: ", complex_name),
         total  = nSim,
@@ -470,15 +469,11 @@
 
     results_by_sim <- purrr::map(seq_len(nSim), \(sim) {
       result <- CalcRefMSY_Sim(sim)
-      if (!silent) cli::cli_progress_update(id = id)
+      if (.MsgShowProgress(silent)) cli::cli_progress_update(id = id)
       result
     })
   } else {
-    if (!silent)
-      cli::cli_inform(
-        "Calculating MSY reference points (C++): {.val {complex_name}} \\
-         ({.val {nSim}} simulation{?s}, parallel) ..."
-      )
+    .MsgStatus("Calculating MSY reference points for {.complex {complex_name}} ({nSim} simulation{?s} in parallel)", silent)
     CheckPackage('furrr')
     results_by_sim <- furrr::future_map(
       seq_len(nSim),
@@ -519,6 +514,8 @@ CalcMSYCpp <- function(Hist,
   type <- match.arg(type)
   .CheckClass(Hist, c('om', 'hist'))
 
+  .MsgStep("Calculating MSY reference points", "Calculated MSY reference points", silent)
+
   if (inherits(Hist, 'om'))
     Hist <- .OM2Hist(Hist, silent = TRUE)
 
@@ -553,9 +550,6 @@ CalcMSYCpp <- function(Hist,
                                   RefSeason      = RefSeason,
                                   RefEffortYears = RefEffortYears)
   }
-
-  if (!silent)
-    cli::cli_alert_success("Calculated MSY Reference Points")
 
   Hist@Reference@MSY
 }

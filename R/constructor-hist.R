@@ -37,9 +37,11 @@ Hist <- function(MSE=NULL) {
 
   # Create a Hist object from an OM and extend for all Sims and Years
   
-  if (!silent) 
-    id <- cli::cli_progress_bar("Initializing `Hist` Object")
-  
+  .MsgStep("Initializing hist object", "Initialized hist object", silent)
+  id <- NULL
+  if (.MsgShowProgress(silent))
+    id <- cli::cli_progress_bar("Initializing hist object")
+
   # Populate if needed
   OM <- PopulateOM(OM, silent = TRUE)
 
@@ -65,8 +67,5 @@ Hist <- function(MSE=NULL) {
       Hist@OM@Stock[[idx]]@SRR@SPFrom <- histStockNames[idx]
   }
 
-  if (!silent) {
-    cli::cli_alert_success("Initialized `Hist` Object")
-  }
-  Hist 
+  Hist
 }

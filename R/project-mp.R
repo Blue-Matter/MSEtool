@@ -21,6 +21,7 @@
 #' @param YearsProj Integer vector. Projection years to iterate over.
 #' @param silent    Logical. If `TRUE`, suppresses the progress bar.
 #'                  Default: `FALSE`.
+#' @param nMP       Integer. Total number of MPs being projected. Default: `1`.
 #'
 #' @return An updated `MSE` object. If an error occurs during projection,
 #'   the error is logged and the partial `MSE` object is returned.
@@ -33,16 +34,17 @@
                        mp = 1,
                        YearsHist,
                        YearsProj,
-                       silent=FALSE) {
+                       silent=FALSE,
+                       nMP = 1) {
 
   result <- .ProjectMPCompute(Proj, MPName, MPfunction, YearsHist, YearsProj,
-                              silent, mp = mp)
-  .MergeMPResult(MSE, result, MPName, mp, YearsHist, YearsProj, silent)
+                              silent, mp = mp, nMP = nMP)
+  .MergeMPResult(MSE, result, MPName, mp, YearsHist, YearsProj, silent, nMP = nMP)
 }
 
 
 .ProjectMPCompute <- function(Proj, MPName, MPfunction, YearsHist, YearsProj,
-                              silent = FALSE, mp = 1) {
+                              silent = FALSE, mp = 1, nMP = 1) {
 
   Interval        <- .ResolveInterval(Proj@OM@Interval, MPName, MPfunction, Proj@OM@Seasons)
   IsInterim       <- YearsProj %in% .InterimTimesteps(Proj@OM)
@@ -58,11 +60,12 @@
   # initialise for debugging convenience
   Year <- YearsProj[1]; ts <- 1
 
-  if (!silent)
+  show <- .MsgShowProgress(silent)
+  if (show)
     cli::cli_progress_bar(
-      format = "Projecting MP {.val {MPName}} | Year {.val {cli::pb_extra$year}} ({cli::pb_current}/{cli::pb_total})",
+      format = "[{mp}/{nMP}] {.mp {MPName}} {cli::pb_bar} Year {cli::pb_extra$year} ({cli::pb_current}/{cli::pb_total})",
       total  = length(YearsProj),
-      extra  = list(year = YearsProj[1])  
+      extra  = list(year = YearsProj[1])
     )
   
   Error <- FALSE
@@ -85,7 +88,7 @@
   for (ts in seq_along(YearsProj)) {
     
     Year <- YearsProj[ts]
-    if (!silent) cli::cli_progress_update(extra = list(year = Year))
+    if (show) cli::cli_progress_update(extra = list(year = Year))
 
     # Simulate data for the previous time step 
     Proj <- .GenerateProjectionData(Proj, Year, YearsHist, YearsProj)
@@ -154,7 +157,7 @@
 
     if (ExtractResult$AllFailed) {
       Error        <- TRUE
-      ErrorMessage <- sprintf("MP '%s' failed for all simulations (Year %d)", MPName, Year)
+      ErrorMessage <- sprintf("failed for all simulations in %s", Year)
       break
     }
     
@@ -178,11 +181,10 @@
 
       if (inherits(result, "update_error")) {
         Error        <- TRUE
-        ErrorMessage <- sprintf("Error in %s (Year %d): %s",
-                                result$step, Year, result$message)
+        ErrorMessage <- sprintf("failed in %s (%s): %s", result$step, Year, result$message)
         Proj <- .CaptureLog(Proj,
-                          string = ErrorMessage,
-                          name = 'UpdateError',
+                          string = sprintf("%s failed: %s", result$step, result$message),
+                          name = paste(MPName, 'UpdateError', sep = ' - '),
                           type = 'error',
                           year = Year,
                           mp   = MPName)
@@ -210,12 +212,13 @@
        StockNames = StockNames, FleetNames = FleetNames)
 }
 
-.MergeMPResult <- function(MSE, result, MPName, mp, YearsHist, YearsProj, silent = FALSE) {
+.MergeMPResult <- function(MSE, result, MPName, mp, YearsHist, YearsProj, silent = FALSE,
+                           nMP = 1) {
 
   CheckResult <- .CheckMSERun(result$Proj, MSE, MPName,
                               result$StartTime, result$EndTime,
                               result$Error, result$ErrorMessage,
-                              silent = silent)
+                              silent = silent, mp = mp, nMP = nMP)
   Proj  <- CheckResult$Proj
   Error <- result$Error || CheckResult$AllFailed
 

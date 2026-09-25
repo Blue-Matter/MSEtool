@@ -28,7 +28,10 @@
 #'
 #' @export
 CalcUnfished_Equilibrium <- function(OM, silent=FALSE) {
-  
+
+  .MsgStep("Calculating equilibrium unfished conditions",
+           "Calculated equilibrium unfished conditions", silent)
+
   if (inherits(OM,'hist')) 
     OM <- OM@OM
   
@@ -104,10 +107,6 @@ CalcUnfished_Equilibrium <- function(OM, silent=FALSE) {
     }
   }
 
-  
-  if (!silent) {
-    cli::cli_alert_success("Calculated Equilibrium Unfished Conditions ")
-  }
-    
+
   EquilibriumUnfished
 }

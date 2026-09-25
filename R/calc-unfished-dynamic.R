@@ -20,7 +20,10 @@
 #'
 #' @export
 CalcUnfished_Dynamic <- function(Hist, IdenticalHist=NULL, silent=FALSE) {
-  
+
+  .MsgStep("Calculating dynamic unfished conditions",
+           "Calculated dynamic unfished conditions", silent)
+
   if (inherits(Hist,'om')) 
     Hist <- Hist(OM, silent=TRUE)
   
@@ -86,9 +89,6 @@ CalcUnfished_Dynamic <- function(Hist, IdenticalHist=NULL, silent=FALSE) {
                    reduce  = TRUE, 
                    IncYear = TRUE)
   out@Misc <- list()
-  
-  if (!silent) 
-    cli::cli_alert_success("Calculated Dynamic Unfished Conditions")
-  
+
   out
 }

@@ -15,9 +15,11 @@
 #' misses its target by more than `tol` (relative) is colored red rather
 #' than grey, and listed in a warning (via [cli::cli_warn()]). This can
 #' legitimately happen -- e.g. a low target depletion combined with
-#' selectivity maturing well before maturity -- and [Simulate()] performs
-#' the same check itself, recording any misses to `Hist@Log` (see [Log()])
-#' rather than printing them.
+#' selectivity maturing well before maturity, or a `Final` target above the
+#' unfished trajectory (`Unfished@Dynamic`) after a run of poor recruitment,
+#' which no catchability can reach; the warning lists these separately.
+#' [Simulate()] performs the same check itself, recording any misses to
+#' `Hist@Log` (see [Log()]) rather than printing them.
 #'
 #' @param object   [stock-class], [om-class], [hist-class], or [mse-class] object.
 #' @param byStock Logical. Facet by stock? Default `NULL` facets
@@ -116,9 +118,17 @@ PlotDepletion <- function(object, byStock = NULL, Stocks = NULL, bins = 15, tol 
         dplyr::summarise(Sims = paste(sort(.data$Sim), collapse = ', '), .groups = 'drop') |>
         dplyr::mutate(line = paste0(.data$Stock, ' ', .data$Type, ': Sim ', .data$Sims)) |>
         dplyr::pull('line')
+      unreach <- dplyr::filter(failed, .data$Unreachable) |>
+        dplyr::group_by(.data$Stock) |>
+        dplyr::summarise(Sims = paste(sort(.data$Sim), collapse = ', '), .groups = 'drop') |>
+        dplyr::mutate(line = paste0(.data$Stock, ' Final: Sim ', .data$Sims)) |>
+        dplyr::pull('line')
       cli::cli_warn(c(
         "!" = "{length(unique(failed$Sim))} simulation{?s} missed {?its/their} target depletion by more than {tol*100}%:",
-        stats::setNames(msg, rep('*', length(msg)))
+        stats::setNames(msg, rep('*', length(msg))),
+        if (length(unreach))
+          c("i" = "Target is above the unfished depletion ({.code Unfished@Dynamic}) and cannot be reached at any catchability:",
+            stats::setNames(unreach, rep('*', length(unreach))))
       ))
     }
   }
@@ -180,14 +190,38 @@ PlotDepletion <- function(object, byStock = NULL, Stocks = NULL, bins = 15, tol 
         dplyr::filter(.data$Stock == nm, .data$Year == yr) |>
         dplyr::arrange(.data$Sim)
       target <- rep(target, length.out = nrow(achieved))
+      unfished <- if (what == 'Final')
+        .UnfishedDepletion(object, nm, refs[[nm]], yr, achieved$Sim)
+      else rep(NA_real_, nrow(achieved))
       data.frame(
         Stock    = nm, Type = what, Sim = achieved$Sim, Year = yr,
         Target   = target, Achieved = achieved$Value,
-        Pass     = abs(log(achieved$Value / target)) <= log(1 + tol)
+        Pass     = abs(log(achieved$Value / target)) <= log(1 + tol),
+        Unfished = unfished,
+        Unreachable = !is.na(unfished) & unfished < target
       )
     }) |> dplyr::bind_rows()
   }) |> dplyr::bind_rows()
 }
+
+# Dynamic-unfished biomass relative to equilibrium B0/SB0: the ceiling any catchability can reach
+.UnfishedDepletion <- function(object, nm, ref, yr, sims) {
+  slt <- if (identical(ref, 'B0')) 'Biomass' else 'SBiomass'
+  dyn <- slot(object@Unfished@Dynamic, slt)
+  eq  <- slot(object@Unfished@Equilibrium, slt)
+  if (!length(dyn) || !length(eq)) return(rep(NA_real_, length(sims)))
+
+  ratio <- ArrayDivide(dyn, eq)
+  dn  <- dimnames(ratio)
+  idx <- list(
+    Sim   = if (length(dn$Sim) == 1) rep(1L, length(sims)) else match(as.character(sims), dn$Sim),
+    Stock = rep(match(nm, dn$Stock), length(sims)),
+    Year  = rep(if (length(dn$Year) == 1) 1L else match(as.character(yr), dn$Year), length(sims))
+  )
+  as.numeric(ratio[do.call(cbind, idx[names(dn)])])
+}
+
+.DepletionRatioLabel <- function(ref) if (identical(ref, 'B0')) 'B/B0' else 'SB/SB0'
 
 .LogDepletionAchievement <- function(Hist, tol = 0.1) {
   stockNames <- StockNames(Hist@OM)
@@ -200,12 +234,26 @@ PlotDepletion <- function(object, byStock = NULL, Stocks = NULL, bins = 15, tol 
   failed   <- dplyr::filter(achieved, !.data$Pass)
   if (!nrow(failed)) return(Hist)
 
-  for (i in seq_len(nrow(failed))) {
-    row <- failed[i, ]
+  nSim <- Hist@OM@nSim
+  for (rows in split(failed, list(failed$Stock, failed$Type), drop = TRUE)) {
+    st <- rows$Stock[1]; type <- rows$Type[1]; n <- nrow(rows)
+    ratio <- .DepletionRatioLabel(refs[[st]])
+    nUnreach <- sum(rows$Unreachable)
     msg <- cli::format_inline(
-      "Stock {.val {row$Stock}} did not reach its target {row$Type} depletion: achieved {.val {round(row$Achieved, 3)}}, target {.val {round(row$Target, 3)}}."
+      "{type} depletion is more than {round(tol * 100)}% from its target in {n} of {nSim} simulation{?s}."
     )
-    Hist <- .CaptureLog(Hist, msg, name = 'Simulate', type = 'warning', sim = row$Sim)
+    if (nUnreach > 0)
+      msg <- paste(msg, cli::format_inline(
+        "In {nUnreach} simulation{?s} the target is above the unfished {ratio} ({.code Unfished@Dynamic}), so it cannot be reached at any catchability."
+      ))
+    msg <- paste(msg, cli::format_inline("See {.code PlotDepletion(hist)}."))
+    Hist <- .CaptureLog(Hist, msg, name = paste0('Depletion - ', st), type = 'warning')
+    for (i in seq_len(n)) {
+      detail <- sprintf("Achieved %s, target %s", round(rows$Achieved[i], 3), round(rows$Target[i], 3))
+      if (rows$Unreachable[i])
+        detail <- sprintf("%s; unfished %s %s (unreachable)", detail, ratio, round(rows$Unfished[i], 3))
+      Hist <- .CaptureLog(Hist, detail, type = 'warning', sim = rows$Sim[i])
+    }
   }
   Hist
 }

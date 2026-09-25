@@ -14,10 +14,8 @@
   .CheckClass(OM)
   OM <- UpdateObject(OM)
 
-  if (!silent) {
-    cli::cli_text('')
-    cli::cli_alert_info(' Starting `Simulate` for OM {.val {OM@Name}}')
-  }
+  .MsgTheme()
+  .MsgStart('Simulate', OM, nSim, silent)
 
   OM <- .StartUp(OM, nSim, silent=silent)
 
@@ -62,8 +60,8 @@
     # user-supplied refpoints: validate and reuse instead of recalculating MSY
     .ValidateRefpointsMSY(Hist, refpointsMSY, MSYYears)
     Hist@Reference@MSY <- refpointsMSY
-    if (!silent)
-      cli::cli_alert_info('Using user-supplied {.cls refpointsMSY} object -- skipped MSY reference point calculation')
+    .MsgAlert('Using user-supplied {.cls refpointsMSY}; skipped MSY reference point calculation',
+              silent = silent)
   } else if (control$MSYRefs) {
     MSYFun <- if (control$MSYRefsCpp) CalcMSYCpp else CalcMSY
     Hist@Reference@MSY <- MSYFun(Hist,
@@ -77,14 +75,11 @@
     Hist@Reference@MGT <- CalcMGT(Hist, silent = silent)
 
   # ---- historical fishery dynamics & catch-at-size ----
-  Hist <- local({
-    if (!silent)
-      cli::cli_progress_message("Calculating Historical Fishery Dynamics")
-    .CalcFisheryDynamics(Hist, IdenticalSim=IdenticalHist, clone = 1,
-                         DoBackCalcEffort = .BackCalcEffortFlag(Hist))
-  })
-  if (!silent)
-    cli::cli_alert_success("Calculated Historical Fishery Dynamics")
+  step <- .MsgStep("Calculating historical fishery dynamics",
+                   "Calculated historical fishery dynamics", silent)
+  Hist <- .CalcFisheryDynamics(Hist, IdenticalSim=IdenticalHist, clone = 1,
+                               DoBackCalcEffort = .BackCalcEffortFlag(Hist))
+  .MsgStepDone(step)
 
   CatchAtSizeNeeded <- .NeedsCatchAtSize(OM, control)
   CatchAtSizeCpp    <- control$CalcCatchAtSizeCpp %||NA% TRUE
@@ -102,15 +97,11 @@
 
   AnyCatchAtSizeNeeded <- any(CatchAtSizeNeeded)
 
-  Hist <- local({
-    if (!silent && AnyCatchAtSizeNeeded)
-      cli::cli_progress_message("Calculating Historical Catch-at-Size")
-    .CalcCatchAtSize(Hist, Years = HistYears, needed = CatchAtSizeNeeded,
-                     useCpp = CatchAtSizeCpp)
-  })
-
-  if (!silent && AnyCatchAtSizeNeeded)
-    cli::cli_alert_success("Calculated Historical Catch-at-Size")
+  step <- .MsgStep("Calculating historical catch-at-size",
+                   "Calculated historical catch-at-size", silent || !AnyCatchAtSizeNeeded)
+  Hist <- .CalcCatchAtSize(Hist, Years = HistYears, needed = CatchAtSizeNeeded,
+                           useCpp = CatchAtSizeCpp)
+  .MsgStepDone(step)
 
   # ---- reference points & ref yield ----
   if (!is.null(Hist@Reference@MSY))
@@ -118,19 +109,12 @@
     .AggregateFToComplex(Hist@OM) |>
     .AlignDenomYears(as.character(MSYYears))
 
-  if (control$RefPoints) {
-    Hist <- local({
-      if (!silent)
-        cli::cli_progress_message("Calculating Reference Points")
-      CalcRefPoints(Hist,
-                    Years  = OM@Control$RefYears,
-                    type   = OM@Control$MSYType %||NA% 'Removals',
-                    silent = TRUE)
-    })
-    if (!silent)
-      cli::cli_alert_success("Calculated Reference Points")
-  }
-  
+  if (control$RefPoints)
+    Hist <- CalcRefPoints(Hist,
+                          Years  = OM@Control$RefYears,
+                          type   = OM@Control$MSYType %||NA% 'Removals',
+                          silent = silent)
+
   ref_types <- c(
     if (control$RefLandings) 'Landings',
     if (control$RefRemovals) 'Removals'
@@ -159,14 +143,12 @@
   Hist <- .LogDepletionAchievement(Hist)
   Hist <- .ReduceHist(Hist, Reduce)
 
-  elapsed <- round(difftime(Sys.time(), StartTime, units='auto'), 2) |> format()
-  if (!silent)
-    cli::cli_alert_success('Completed `Simulate` for OM {.val {OM@Name}} ({elapsed})')
+  .MsgDone('Simulate', StartTime, silent)
 
   Hist@Log <- .JoinLog(OM@Log, Hist@Log)
 
   if (!silent)
-    .CheckLog(Hist, 'Hist')
+    .CheckLog(Hist, 'hist')
 
   .SetDigest(Hist) 
 }

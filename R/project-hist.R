@@ -42,12 +42,12 @@
   YearsHist <- Years(Hist@OM, "Historical")
   YearsProj <- Years(Hist@OM, "Projection")
   nMPs <- length(MPs)
-  
-  if (!silent) {
-    cli::cli_text('')
-    cli::cli_alert_info(' Starting `Project` for OM {.val {Hist@OM@Name}}')
-  }
+  parallel <- CheckParallel(parallel)
 
+  .MsgTheme()
+  .MsgStart('Project', Hist@OM, nSim, silent, nMP = nMPs, parallel = parallel && nMPs > 1)
+
+  step <- .MsgStep("Preparing projections", "Prepared projections", silent)
   Proj <- Hist |> ReduceNSim(nSim)
 
   Proj <- .CheckFleetAllocation(Proj)
@@ -57,45 +57,39 @@
   Proj <- .PrepHistMisc(Proj)
   Proj <- .CheckInterimAdvice(Proj)
 
-  Proj <- .ExtendHist(Proj, Years = c(YearsHist, YearsProj))
+  Proj <- .ExtendHist(Proj, Years = c(YearsHist, YearsProj), silent = silent)
   
   Proj <- .CalcFisheryDynamics(Proj, 
                               Years = c(utils::tail(YearsHist,1)), 
                               clone = 1) 
   
   MSE <- .Hist2MSE(Proj, MPNames = MPs)
-  SaveLog <- Proj@Log 
+  SaveLog <- Proj@Log
   Proj@Log <- list()
+  .MsgStepDone(step)
 
   mp <- 1 # initialise for debugging
-
-  parallel <- CheckParallel(parallel)
-
-  if (!silent) {
-    if (parallel && nMPs > 1) {
-      cli::cli_alert('Projecting {.val {nMPs}} MP{?s} in parallel')
-    } else {
-      cli::cli_alert('Projecting {.val {nMPs}} MP{?s}')
-    }
-  }
 
   if (parallel && nMPs > 1) {
     CheckPackage('furrr')
 
+    status <- .MsgStatus("Projecting {nMPs} MPs in parallel", silent)
     results <- furrr::future_map(
       seq_along(MPs), \(mp) {
         .ProjectMPCompute(Proj, MPs[mp], MSE@MPs[[MPs[mp]]], YearsHist, YearsProj,
-                         silent = TRUE, mp = mp)
+                         silent = TRUE, mp = mp, nMP = nMPs)
       },
       .options = furrr::furrr_options(
-        globals  = c('Proj', 'MPs', 'MSE', 'YearsHist', 'YearsProj'),
+        globals  = c('Proj', 'MPs', 'MSE', 'YearsHist', 'YearsProj', 'nMPs'),
         packages = "MSEtool",
         seed     = 101
       )
     )
+    if (!is.null(status)) cli::cli_progress_done(status)
 
     for (mp in seq_along(MPs))
-      MSE <- .MergeMPResult(MSE, results[[mp]], MPs[mp], mp, YearsHist, YearsProj, silent)
+      MSE <- .MergeMPResult(MSE, results[[mp]], MPs[mp], mp, YearsHist, YearsProj, silent,
+                            nMP = nMPs)
 
   } else {
     for (mp in seq_along(MPs)) {
@@ -109,23 +103,20 @@
                         mp,
                         YearsHist,
                         YearsProj,
-                        silent)
+                        silent,
+                        nMP = nMPs)
 
     }
   }
 
+  .MsgDone('Project', StartTime, silent)
 
-  EndTime <- Sys.time()
-  elapse_auto <- round(difftime(time1 = EndTime, time2 = StartTime, units = "auto"),2) |> format()
-  if (!silent)
-    cli::cli_alert_success('Completed {.val Project} for OM {.val {Hist@OM@Name}} ({elapse_auto})') 
-  
   MSE <- .RestoreHistMisc(MSE)
 
   MSE@Log <- .JoinLog(SaveLog, MSE@Log)
 
   if (!silent)
-    .CheckLog(MSE, 'MSE')
+    .CheckLog(MSE, 'mse')
 
   .ReduceMSE(MSE, Reduce) 
 }

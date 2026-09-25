@@ -64,6 +64,8 @@ CalcRefPoints <- function(Hist,
 
   type <- match.arg(type)
   .CheckClass(Hist, c('om', 'hist'))
+  step <- .MsgStep("Calculating per-recruit reference points",
+                   "Calculated per-recruit reference points (F0.1, Fmax, FSPR, Fmed, Fcrash)", silent)
   if (inherits(Hist, 'om')) Hist <- .OM2Hist(Hist, silent = TRUE)
   .CheckClass(Hist, 'hist', 'Hist')
 
@@ -115,8 +117,7 @@ CalcRefPoints <- function(Hist,
   Hist@Reference@FCrash   <- ReduceDims(CrashRes$Fcrash)
   Hist@Reference@SPRcrash <- ReduceDims(CrashRes$SPRcrash)
 
-  if (!silent)
-    cli::cli_alert_success("Calculated F0.1, Fmax, FSPR, Fmed, Fcrash and SPRcrash reference points")
+  .MsgStepDone(step)
 
   if (BLow)
     Hist <- CalcBLow(Hist, HZN = HZN, Bfrac = Bfrac, silent = silent)

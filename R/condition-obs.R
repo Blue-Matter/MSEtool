@@ -30,11 +30,15 @@
   
   Complexes <- Hist@OM@Complexes
   
-  nms <- ""  
-  if (!silent)
+  .MsgStep("Conditioning observation error to fishery data",
+           "Conditioned observation error to fishery data for {.complex {names(FisheryDataList)}}", silent)
+
+  nms <- ""
+  show <- .MsgShowProgress(silent)
+  if (show)
     id <- cli::cli_progress_bar(
       total  = nData,
-      format = "Conditioning Observation Error [{cli::pb_current}/{cli::pb_total}]: {.val {nms}}"
+      format = "Conditioning observation error [{cli::pb_current}/{cli::pb_total}]: {.complex {nms}}"
     )
 
   for (i in seq_along(FisheryDataList)) {
@@ -73,13 +77,10 @@
     Hist <- .ConditionObsComp(Hist, FisheryData, HistYears, ProjYears,  stocks, 
                               i, type = 'DiscardsAtSize')
     
-    if (!silent) 
+    if (show)
       cli::cli_progress_update(id=id)
   }
-  
-  if (!silent) 
-    cli::cli_alert_success("Conditioned Observation Error for Real Fishery Data: {.val {names(FisheryDataList)}}")
-  
+
   Hist
   
 }

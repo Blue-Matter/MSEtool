@@ -1,9 +1,8 @@
 #' Check and log errors from a Management Procedure
 #'
-#' Internal helper function to standardize error handling for Management Procedures (MPs).  
-#' If the MP returns a valid `Advice` object, nothing happens. If the MP returns a different  
-#' type or a `try-error`, a descriptive error message is thrown including the MP name, data,  
-#' simulation, year, and original error message.
+#' Internal helper function to standardize error handling for Management Procedures (MPs).
+#' If the MP returns a valid `Advice` object, it is returned unchanged. If the MP returns a
+#' different type or a `try-error`, a short error message is returned for the log.
 #'
 #' @param Advice The result returned by the MP. Should be of class `advice`.
 #' @param MPName Character. Name of the Management Procedure.
@@ -12,23 +11,17 @@
 #' @param Year Integer. Current simulation year.
 #'
 #' @return
-#' Stops execution with a descriptive error if `Advice` is invalid. 
-#' Returns `NULL` if `MPAdvice` is a valid advice object.
+#' `Advice` if it is a valid advice object; otherwise a character error message.
 #'
 #' @keywords internal
 .LogMPError <- function(Advice, MPName, Data, Sim, Year) {
   if (inherits(Advice, 'advice')) return(Advice)
-    
-  if (!inherits(Advice, 'try-error')) {
-    return(paste0("\nMP `", MPName, "` did not return an `Advice()` object\nData: ",  
-                Data@Name, 
-                "\nSimulation: ", Sim, 
-                '\nYear: ', Year))
-  }
-  return(paste0("\nMP `", MPName, "` Error\nData: ",  
-              Data@Name, 
-              "\nSimulation: ", Sim, 
-              '\nYear: ', Year,
-              '\nError: ', Advice)
-  )
+
+  # MP, sim, and year are recorded as log entry tags, not in the message
+  if (!inherits(Advice, 'try-error'))
+    return("MP did not return an `Advice()` object")
+
+  cond <- attr(Advice, 'condition')
+  msg  <- if (inherits(cond, 'condition')) conditionMessage(cond) else trimws(as.character(Advice))
+  paste0("MP error: ", msg)
 }

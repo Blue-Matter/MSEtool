@@ -21,6 +21,8 @@
 #' @keywords internal
 .GenerateHistoricalData <- function(Hist, parallel=FALSE, silent=FALSE) {
 
+  .MsgStep("Generating historical data", "Generated historical data", silent)
+
   Hist <- .CheckObs(Hist, silent)
 
   HistYears <- Years(Hist,'H')
@@ -36,8 +38,7 @@
     CheckPackage('furrr')
     # No live progress bar under parallel - workers can't update the
     # parent's cli::cli_progress_bar (id=NULL below, per .GenerateHistoricalDataSim).
-    if (!silent)
-      cli::cli_inform("Generating Historical Data ({.val {nSim}} simulation{?s}, parallel) ...")
+    .MsgStatus("Generating historical data ({nSim} simulation{?s} in parallel)", silent)
     furrr::future_map(
       seq_len(nSim), .GenerateHistoricalDataSim,
       Hist = Hist, HistYears = HistYears, nArea = nArea,
@@ -51,8 +52,9 @@
     )
   } else {
     id <- NULL
-    if (!silent)
-      id <- cli::cli_progress_bar("Generating Historical Data")
+    show <- .MsgShowProgress(silent)
+    if (show)
+      id <- cli::cli_progress_bar("Generating historical data")
 
     purrr::map(seq_len(nSim), \(sim)
               .GenerateHistoricalDataSim(sim,
@@ -61,7 +63,7 @@
                                          nArea,
                                          FleetNames,
                                          StockNames,
-                                         silent, id))
+                                         !show, id))
   }
   names(SimDataList) <- seq_len(nSim)
   
@@ -127,9 +129,6 @@
     
   }
   
-  if (!silent)
-    cli::cli_alert_success("Generated Historical Data")
- 
   Hist
 }
 

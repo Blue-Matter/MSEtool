@@ -11,27 +11,32 @@
 #' @param Error Logical. `TRUE` if the MP threw an error.
 #' @param ErrorMessage Character or condition. The error message if `Error`
 #'   is `TRUE`.
+#' @param silent Logical. Suppress the success message? Failures are always
+#'   reported.
+#' @param mp Integer. Index of the MP.
+#' @param nMP Integer. Total number of MPs being projected.
 #'
 #' @return A list with `Proj` (the `Proj` object) and `AllFailed` (logical -
 #'   `TRUE` if every simulation logged a failure at some point during the
 #'   run, meaning the `MSE` object should not be updated for this MP).
 #' @keywords internal
 .CheckMSERun <- function(Proj, MSE, MPName, StartTime, EndTime, Error, ErrorMessage,
-                        silent = FALSE) {
+                        silent = FALSE, mp = 1, nMP = 1) {
 
-  elapsed_secs <- as.numeric(round(difftime(EndTime, StartTime, units='secs'), 2))
-  elapsed_auto <- format(round(difftime(EndTime, StartTime, units='auto'), 2))
+  el    <- .FormatElapsed(difftime(EndTime, StartTime, units = 'secs'))
+  label <- .MsgFormat("[{mp}/{nMP}] {.mp {MPName}}")
+  ErrorEntries <- Proj@Log$error
 
   # MP-level error - report and return early
   if (Error) {
-    cli::cli_alert_warning('{.val {MPName}} failed:')
-    cli::cli_alert_danger(as.character(ErrorMessage))
+    msg <- as.character(ErrorMessage)
+    cli::cli_alert_danger("{label} {msg} {.timestamp {el}}")
+    .MsgErrorDetails(ErrorEntries)
     return(list(Proj = Proj, AllFailed = TRUE))
   }
 
   # Check for simulation-level failures via Log - entries are tagged with
   # `sim` directly, so the failed sims are whichever appear here at all
-  ErrorEntries <- Proj@Log$error
   SimsFailed <- ErrorEntries |>
     purrr::map('sim') |>
     purrr::compact() |>
@@ -42,32 +47,21 @@
   nFailed <- length(SimsFailed)
 
   if (!nFailed) {
-    # Success - include elapsed time only if run took more than 5 seconds
-    if (!silent) {
-      if (elapsed_secs > 5) {
-        cli::cli_alert_success('{.val {MPName}} ({elapsed_auto})')
-      } else {
-        cli::cli_alert_success('{.val {MPName}}')
-      }
-    }
+    if (!silent)
+      cli::cli_alert_success("{label} {.timestamp {el}}")
     return(list(Proj = Proj, AllFailed = FALSE))
   }
 
-  AllFailed <- nFailed == Proj@OM@nSim
+  nSim      <- Proj@OM@nSim
+  AllFailed <- nFailed == nSim
+  sims      <- .CompressRange(SimsFailed)
 
-  cli::cli_text('')
   if (AllFailed) {
-    cli::cli_alert_danger(
-      c('x'='ERROR: {.val {MPName}} failed for all simulations.
-           `MSE` object not updated for this MP.')
-    )
+    cli::cli_alert_danger("{label} failed for all simulations; {.cls mse} not updated for this MP {.timestamp {el}}")
   } else {
-    cli::cli_alert_warning(
-      c('x'='WARNING: {.val {MPName}} failed for {.val {nFailed}}
-           simulation{?s}: {.val {SimsFailed}}.{cli::qty(nFailed)}
-           `MSE` object not updated for {?this/these} simulation{?s}.')
-    )
+    cli::cli_alert_warning("{label} failed for {nFailed} of {nSim} simulation{?s} ({sims}); {.cls mse} not updated for {cli::qty(nFailed)}{?this/these} simulation{?s} {.timestamp {el}}")
   }
+  .MsgErrorDetails(ErrorEntries)
 
   # Write log file
   LogDir  <- file.path(getwd(), 'Log')
@@ -94,8 +88,20 @@
     }
   }
 
-  cli::cli_alert_info('Writing error log to {.file {logFile}}')
-  cli::cli_text('')
+  .MsgAlert('Error log written to {.file {logFile}}')
 
   list(Proj = Proj, AllFailed = AllFailed)
+}
+
+# distinct error messages as indented bullets under an MP failure line
+.MsgErrorDetails <- function(ErrorEntries, max = 3) {
+  msgs <- unique(vapply(ErrorEntries, \(e) gsub("\\s*\n\\s*", " ", trimws(.LogEntryMessage(e))),
+                        character(1)))
+  if (!length(msgs)) return(invisible(NULL))
+  shown <- utils::head(msgs, max)
+  bullets <- stats::setNames(.MsgEscape(shown), rep(" ", length(shown)))
+  if (length(msgs) > max)
+    bullets <- c(bullets, " " = paste0("... and ", length(msgs) - max, " more"))
+  cli::cli_bullets(bullets)
+  invisible(NULL)
 }

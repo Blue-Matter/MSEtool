@@ -16,6 +16,7 @@
 #'   to include the specified years.
 #' @keywords internal
 .ExtendOM <- function(OM, Years = NULL, nSim = NULL, silent=FALSE, id=NULL) {
+  show <- .MsgShowProgress(silent)
   
   nStock <- nStock(OM)
   nFleet <- nFleet(OM)
@@ -25,8 +26,8 @@
   if (is.null(Years))
     Years <- Years(OM,'H')
   
-  if (!silent && is.null(id)) 
-    id <- cli::cli_progress_bar("Extending `OM` Object")
+  if (show && is.null(id)) 
+    id <- cli::cli_progress_bar("Extending OM object")
   
   for (st in 1:nStock) {
     stock <- OM@Stock[[st]]
@@ -77,7 +78,7 @@
       }
     }
     
-    if (!silent) 
+    if (show) 
       cli::cli_progress_update(id=id)
     
     for (fl in 1:nFleet) {
@@ -86,13 +87,13 @@
                                      AgeClasses = AgeClasses,
                                      Years = Years,
                                      Areas = Areas)
-      if (!silent) 
+      if (show) 
         cli::cli_progress_update(id=id)
       
     }
     
     if (st <= length(OM@Obs)) {
-      if (!silent) {
+      if (show) {
         cli::cli_progress_update(id=id)
       }
       OM@Obs[[st]] <- Extend(OM@Obs[[st]],
@@ -104,7 +105,7 @@
 
 
     if (st <= length(OM@Imp)) {
-      if (!silent) {
+      if (show) {
         cli::cli_progress_update(id=id)
       }
       OM@Imp[[st]] <- Extend(OM@Imp[[st]],

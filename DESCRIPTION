@@ -360,6 +360,7 @@ Collate:
     'utils-atage-atsize.R'
     'utils-calc-ageclasses.R'
     'utils-check-hist-misc.R'
+    'utils-cli.R'
     'utils-compdata.R'
     'utils-cr2h.R'
     'utils-dirichlet-multinomial.R'

@@ -147,6 +147,8 @@
 
   IsFailure <- function(Advice) inherits(Advice, c('try-error', 'character'))
 
+  LogName <- function(...) paste(Filter(nzchar, c(MPName %||% '', ...)), collapse = ' - ')
+
   CollectType <- function(type) {
     entries <- list()
     for (sim in seq_along(AdviceSimList)) {
@@ -154,7 +156,7 @@
 
       if (inherits(AdviceList, 'try-error')) {
         if (type == 'error')
-          entries <- c(entries, list(.NewLogEntry(as.character(AdviceList), sim = sim, year = Year, mp = MPName)))
+          entries <- c(entries, list(.NewLogEntry(as.character(AdviceList), name = LogName(), sim = sim, year = Year, mp = MPName)))
         next
       }
 
@@ -167,12 +169,11 @@
           log <- Advice@Log[[type]]
           for (entry in log) {
             msg <- .LogEntryMessage(entry)
-            nm  <- .LogEntryName(entry)
-            nm  <- if (nchar(nm)) paste(stockName, nm, sep = ' - ') else stockName
+            nm  <- LogName(stockName, .LogEntryName(entry))
             entries <- c(entries, list(.NewLogEntry(msg, name = nm, sim = sim, year = Year, mp = MPName)))
           }
         } else if (IsFailure(Advice) && type == 'error') {
-          entries <- c(entries, list(.NewLogEntry(as.character(Advice), name = stockName, sim = sim, year = Year, mp = MPName)))
+          entries <- c(entries, list(.NewLogEntry(as.character(Advice), name = LogName(stockName), sim = sim, year = Year, mp = MPName)))
         }
       }
     }
