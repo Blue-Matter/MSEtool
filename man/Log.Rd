@@ -23,7 +23,9 @@ warnings to the console.
 Prints any messages stored in the \code{Log} slot of an S4 object to the
 console using \code{cli} formatting. Messages are grouped into assumption,
 warning, and error sections; within each section, entries are further
-grouped by the name of the function that recorded them.
+grouped by the name of the function that recorded them. Identical messages
+recorded for several MPs, years, or simulations are printed once, with the
+MPs, years, and simulations listed after the message.
 }
 \details{
 Log entries fall into three types:

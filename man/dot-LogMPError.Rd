@@ -18,13 +18,11 @@
 \item{Year}{Integer. Current simulation year.}
 }
 \value{
-Stops execution with a descriptive error if \code{Advice} is invalid.
-Returns \code{NULL} if \code{MPAdvice} is a valid advice object.
+\code{Advice} if it is a valid advice object; otherwise a character error message.
 }
 \description{
 Internal helper function to standardize error handling for Management Procedures (MPs).
-If the MP returns a valid \code{Advice} object, nothing happens. If the MP returns a different
-type or a \code{try-error}, a descriptive error message is thrown including the MP name, data,
-simulation, year, and original error message.
+If the MP returns a valid \code{Advice} object, it is returned unchanged. If the MP returns a
+different type or a \code{try-error}, a short error message is returned for the log.
 }
 \keyword{internal}

@@ -23,6 +23,12 @@
 #'   moves the TAC up or down from its previous value in proportion to
 #'   `(current index / IndexTarget) ^ Responsiveness`.
 #'
+#' For seasonal data (`Data@@Seasons > 1`), both MPs first aggregate `Data` to
+#' calendar years with [AnnualData()]: catches are summed over seasons and
+#' each index is averaged over the seasons in `IndexSeasons`. All arguments
+#' given in years (`CalibYears`, `RecentYears`, `TrendYears`, `TrendHorizon`,
+#' `IndexFreq`) therefore refer to calendar years, and the TAC is annual.
+#'
 #' @param Data A [data-class] object.
 #' @param Indices Character (matching `Name`) or integer vector selecting
 #'   which columns of the chosen `IndexSource` to use. `NULL` (default) uses
@@ -66,9 +72,14 @@
 #'   is extrapolated forward; see `TrendYears`. Default `1`. Ignored when
 #'   `TrendYears` is `NULL`.
 #' @param IndexTarget `NULL` (default), or a positive number (or vector, one
-#'   per selected index) giving the index level considered "on target".
-#'   Defaults to `Ref` on the selected `IndexSource` object (see
-#'   [IndicesData()]); an error is raised if neither is available.
+#'   per selected index) giving the index level considered "on target", in
+#'   the units of the (annual) index. When `NULL`, `Ref` on the selected
+#'   `IndexSource` object (see [IndicesData()]) is used. An index with neither
+#'   uses its status in the last historical year: the historical index,
+#'   smoothed as set by `Smooth`/`ENPMult`, averaged over the `RecentYears`
+#'   ending in the last historical year with an observation. This target is
+#'   the same in every management cycle, so by default `IndexTarget()` aims to
+#'   keep the index at its level at the end of the historical period.
 #' @param DeltaDown,DeltaUp Numeric vector, length 2 (`c(min, max)`). Minimum
 #'   and maximum allowed fractional TAC change among management cycles,
 #'   downward and upward respectively.
@@ -80,6 +91,11 @@
 #'   (normalised to sum to `1`). `NULL` returns a single stock-wide TAC,
 #'   which the framework then splits across fleets using `FleetAllocation(OM)`
 #'   (see [Advice()]).
+#' @param IndexSeasons Seasonal data only. `NULL` (default) averages each
+#'   index over every season of the year. Otherwise an integer vector of
+#'   seasons applied to every selected index, or a list with one element
+#'   (integer vector, or `NULL` for every season) per selected index. See
+#'   [AnnualData()]. Ignored when `Data@@Seasons = 1`.
 #'
 #' @return An [advice-class] object with `TAC` set.
 #'
@@ -139,19 +155,19 @@ IndexRate <- function(Data,
                       DeltaDown             = c(0.01, 0.5),
                       DeltaUp               = c(0.01, 0.5),
                       TACRange              = NULL,
-                      Allocation            = NULL) {
+                      Allocation            = NULL,
+                      IndexSeasons          = NULL) {
 
   RampType <- match.arg(RampType)
 
   CheckCatch(Data)
   IndexSource <- match.arg(IndexSource, c('Survey', 'CPUE'), several.ok = TRUE)
+  Data <- AnnualData(Data, .IndexSeasonsBySource(Data, IndexSource, Indices, IndexSeasons))
 
   Selected <- .SelectIndices(Data, IndexSource, Indices)
   nSel <- ncol(Selected$Value)
   if (is.null(IndexFreq))   IndexFreq   <- rep(1, nSel)
   if (is.null(IndexWeight)) IndexWeight <- rep(1, nSel)
-
-  Ref <- .ResolveIndexTarget(Selected$Ref, IndexTarget, nSel, IndexSource)
 
   LHInd   <- LastHistYearInd(Data)
   YearCur <- max(Data@Years)
@@ -159,8 +175,9 @@ IndexRate <- function(Data,
   IndexHist <- .ApplyIndexFrequency(t(Selected$Value), IndexFreq, Data@YearLH, YearCur, Data@Years)
 
   Keep        <- IndexFreq > 0
-  Ref         <- Ref[Keep]
   IndexWeight <- IndexWeight[Keep]
+  Ref <- .ResolveIndexTarget(Selected$Ref, IndexTarget, Keep, IndexHist, LHInd,
+                             Smooth, ENPMult, RecentYears)
 
   CalibRows   <- seq(max(1, LHInd - CalibYears + 1), LHInd)
   Removals    <- rowSums(Data@Landings@Value, na.rm = TRUE) + rowSums(Data@Discards@Value, na.rm = TRUE)
@@ -223,24 +240,26 @@ IndexTarget <- function(Data,
                         DeltaDown      = c(0.01, 0.5),
                         DeltaUp        = c(0.01, 0.5),
                         TACRange       = NULL,
-                        Allocation     = NULL) {
+                        Allocation     = NULL,
+                        IndexSeasons   = NULL) {
 
   CheckCatch(Data)
   IndexSource <- match.arg(IndexSource, c('Survey', 'CPUE'), several.ok = TRUE)
+  Data <- AnnualData(Data, .IndexSeasonsBySource(Data, IndexSource, Indices, IndexSeasons))
 
   Selected <- .SelectIndices(Data, IndexSource, Indices)
   nSel <- ncol(Selected$Value)
   if (is.null(IndexFreq))   IndexFreq   <- rep(1, nSel)
   if (is.null(IndexWeight)) IndexWeight <- rep(1, nSel)
 
-  Ref <- .ResolveIndexTarget(Selected$Ref, IndexTarget, nSel, IndexSource)
-
+  LHInd     <- LastHistYearInd(Data)
   YearCur   <- max(Data@Years)
   IndexHist <- .ApplyIndexFrequency(t(Selected$Value), IndexFreq, Data@YearLH, YearCur, Data@Years)
 
   Keep        <- IndexFreq > 0
-  Ref         <- Ref[Keep]
   IndexWeight <- IndexWeight[Keep]
+  Ref <- .ResolveIndexTarget(Selected$Ref, IndexTarget, Keep, IndexHist, LHInd,
+                             Smooth, ENPMult, RecentYears)
 
   IndexSmooth <- .SmoothIndices(IndexHist, Smooth, ENPMult)
 
@@ -276,8 +295,9 @@ class(IndexTarget) <- 'mp'
 #'   `'CPUE'`; see [IndexRate()]. Indices from each requested source are
 #'   combined column-wise, in the order given.
 #' @param Indices Character, integer, or `NULL`; see [IndexRate()].
-#' @return A list with elements `Value` (`[nYear x nSelected]`) and `Ref`
-#'   (length `nSelected`, `NA` where unset).
+#' @return A list with elements `Value` (`[nYear x nSelected]`), `Ref`
+#'   (length `nSelected`, `NA` where unset), and `Source`/`Column` (length
+#'   `nSelected`, the slot and column each selected index comes from).
 #' @keywords internal
 .SelectIndices <- function(Data, IndexSource, Indices) {
   Sources <- lapply(IndexSource, function(src) {
@@ -289,12 +309,15 @@ class(IndexTarget) <- 'mp'
     if (is.null(Name)) Name <- paste0(src, seq_len(nIndex))
     Ref <- IndexData@Ref
     if (is.null(Ref)) Ref <- rep(NA_real_, nIndex)
-    list(Value = IndexData@Value, Name = Name, Ref = Ref)
+    list(Value = IndexData@Value, Name = Name, Ref = Ref,
+         Source = rep(src, nIndex), Column = seq_len(nIndex))
   })
 
-  Value <- do.call(cbind, lapply(Sources, `[[`, 'Value'))
-  Name  <- unlist(lapply(Sources, `[[`, 'Name'),  use.names = FALSE)
-  Ref   <- unlist(lapply(Sources, `[[`, 'Ref'),   use.names = FALSE)
+  Value  <- do.call(cbind, lapply(Sources, `[[`, 'Value'))
+  Name   <- unlist(lapply(Sources, `[[`, 'Name'),   use.names = FALSE)
+  Ref    <- unlist(lapply(Sources, `[[`, 'Ref'),    use.names = FALSE)
+  Source <- unlist(lapply(Sources, `[[`, 'Source'), use.names = FALSE)
+  Column <- unlist(lapply(Sources, `[[`, 'Column'), use.names = FALSE)
 
   nIndex <- ncol(Value)
 
@@ -310,30 +333,71 @@ class(IndexTarget) <- 'mp'
       cli::cli_abort("{.arg Indices} must be within {.val 1} to {.val {nIndex}}.")
   }
 
-  list(Value = Value[, Sel, drop = FALSE], Ref = Ref[Sel])
+  list(Value = Value[, Sel, drop = FALSE], Ref = Ref[Sel],
+       Source = Source[Sel], Column = Column[Sel])
+}
+
+#' Map a Per-Selected-Index `IndexSeasons` List to [AnnualData()]'s Per-Slot Form
+#'
+#' @param Data A [data-class] object (before aggregation).
+#' @param IndexSource,Indices See [IndexRate()].
+#' @param IndexSeasons `NULL`, an integer vector, or a list with one element
+#'   per selected index; see [IndexRate()].
+#' @return `IndexSeasons` unchanged unless it is a list, in which case a list
+#'   with one element per `IndexSource` slot, each a list with one element per
+#'   index in that slot (`NULL` for unselected indices).
+#' @keywords internal
+.IndexSeasonsBySource <- function(Data, IndexSource, Indices, IndexSeasons) {
+  if (!is.list(IndexSeasons))
+    return(IndexSeasons)
+
+  Selected <- .SelectIndices(Data, IndexSource, Indices)
+  if (length(IndexSeasons) != length(Selected$Source))
+    cli::cli_abort("A list {.arg IndexSeasons} must have one element per selected index ({.val {length(Selected$Source)}}).")
+
+  Out <- list()
+  for (src in unique(Selected$Source)) {
+    BySlot <- vector('list', ncol(slot(Data, src)@Value))
+    Ind <- which(Selected$Source == src)
+    BySlot[Selected$Column[Ind]] <- IndexSeasons[Ind]
+    Out[[src]] <- BySlot
+  }
+  Out
 }
 
 #' Resolve the Target ("on target") Index Level
 #'
 #' Uses the user-supplied `IndexTarget`, falling back to `Ref` from the
-#' selected [indicesdata-class] object(s). Errors if
-#' neither is available.
+#' selected [indicesdata-class] object(s). Any index still without a target
+#' uses its status at the last historical year: the index over the historical
+#' years only, smoothed as in the MP (`Smooth`, `ENPMult`) and averaged over
+#' the `RecentYears` ending at the last historical year with a non-`NA`
+#' value.
 #' @param Ref Numeric vector from `.SelectIndices()$Ref`.
 #' @param IndexTarget User-supplied override; see [IndexRate()].
-#' @param nSel Number of selected indices.
-#' @param IndexSource Character vector, for the error message.
+#' @param Keep Logical vector, one per selected index; `IndexFreq > 0`.
+#' @param IndexHist `[sum(Keep) x nYear]` matrix from `.ApplyIndexFrequency()`.
+#' @param LHInd Column of `IndexHist` for the last historical year.
+#' @param Smooth,ENPMult,RecentYears See [IndexRate()].
+#' @return Numeric vector, length `sum(Keep)`.
 #' @keywords internal
-.ResolveIndexTarget <- function(Ref, IndexTarget, nSel, IndexSource) {
+.ResolveIndexTarget <- function(Ref, IndexTarget, Keep, IndexHist, LHInd,
+                                Smooth, ENPMult, RecentYears) {
   if (!is.null(IndexTarget))
-    Ref <- rep_len(IndexTarget, nSel)
+    Ref <- rep_len(IndexTarget, length(Keep))
+  Ref <- Ref[Keep]
 
-  if (anyNA(Ref)) {
-    Slots <- paste(paste0('Data@', IndexSource), collapse = ' or ')
-    cli::cli_abort(c(
-      "No reference (target) index level available for one or more selected indices.",
-      "i" = "Set {.field Ref} on {.code {Slots}}, or supply {.arg IndexTarget}."
-    ))
-  }
+  Missing <- which(is.na(Ref))
+  if (!length(Missing))
+    return(Ref)
+
+  Hist <- .SmoothIndices(IndexHist[Missing, seq_len(LHInd), drop = FALSE], Smooth, ENPMult)
+  Ref[Missing] <- apply(Hist, 1, function(x) {
+    Last <- utils::tail(which(!is.na(x)), 1)
+    if (!length(Last))
+      cli::cli_abort("No historical index values available to set a default {.arg IndexTarget}.")
+    mean(x[seq(max(1, Last - RecentYears + 1), Last)], na.rm = TRUE)
+  })
   Ref
 }
 

@@ -12,7 +12,8 @@
   mp = 1,
   YearsHist,
   YearsProj,
-  silent = FALSE
+  silent = FALSE,
+  nMP = 1
 )
 }
 \arguments{
@@ -34,6 +35,8 @@ Default: \code{1}.}
 
 \item{silent}{Logical. If \code{TRUE}, suppresses the progress bar.
 Default: \code{FALSE}.}
+
+\item{nMP}{Integer. Total number of MPs being projected. Default: \code{1}.}
 }
 \value{
 An updated \code{MSE} object. If an error occurs during projection,

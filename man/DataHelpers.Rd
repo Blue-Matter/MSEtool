@@ -29,8 +29,8 @@ in the resolved years vector.}
 }
 \value{
 \itemize{
-\item \code{LastTAC()}: A numeric scalar giving the last TAC, or the sum of the
-most recent landings and discards if no TAC is available.
+\item \code{LastTAC()}: A numeric scalar giving the last TAC, or the most recent
+annual landings plus discards if no TAC is available.
 }
 
 \itemize{
@@ -56,8 +56,10 @@ time steps.
 \section{Functions}{
 \itemize{
 \item \code{LastTAC()}: Get the last TAC (Total Allowable Catch) from the
-advice slot. If no TAC has been set, returns the sum of the most recent
-landings and discards.
+advice slot. If no TAC has been set, returns the total landings plus
+discards (summed over fleets, ignoring \code{NA}) of the most recent year; for
+seasonal data (\code{Seasons > 1}), the most recent complete calendar year
+(see \code{\link[=AnnualData]{AnnualData()}}).
 
 \item \code{LastHistYearInd()}: Get the index of the last historical year within
 \code{Data@Years}. This is the position of the final year that does not exceed

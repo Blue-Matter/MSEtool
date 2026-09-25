@@ -12,7 +12,9 @@
   EndTime,
   Error,
   ErrorMessage,
-  silent = FALSE
+  silent = FALSE,
+  mp = 1,
+  nMP = 1
 )
 }
 \arguments{
@@ -30,6 +32,13 @@
 
 \item{ErrorMessage}{Character or condition. The error message if \code{Error}
 is \code{TRUE}.}
+
+\item{silent}{Logical. Suppress the success message? Failures are always
+reported.}
+
+\item{mp}{Integer. Index of the MP.}
+
+\item{nMP}{Integer. Total number of MPs being projected.}
 }
 \value{
 A list with \code{Proj} (the \code{Proj} object) and \code{AllFailed} (logical -

@@ -9,8 +9,7 @@ use in Management Strategy Evaluation (MSE).
 }
 \details{
 Direct construction via \code{\link[methods:new]{methods::new()}} is not recommended; use \code{\link[=OM]{OM()}}
-instead, which populates defaults, derives \code{Years}, and initialises
-\code{StockTargeting} automatically.
+instead, which populates defaults and derives \code{Years}.
 
 All slots can be accessed or replaced using functions matching the slot
 name. See \link{OM-accessors} for the full list. Slots belonging to sub-objects
@@ -158,8 +157,8 @@ of individuals between stocks (e.g. sequential hermaphroditism). See
 See \code{\link[=OM]{OM()}}.}
 
 \item{\code{StockTargeting}}{A \link[=stocktargeting-class]{stocktargeting} object. Defines fleet-level
-stock targeting weights and deviations. Initialised automatically by
-\code{\link[=OM]{OM()}} via \code{\link[=StockTargeting]{StockTargeting()}}.}
+stock targeting weights and deviations. Built by \code{\link[=StockTargeting]{StockTargeting()}} when
+the OM is populated.}
 
 \item{\code{Interval}}{Numeric scalar or named numeric vector. Management update
 interval in years (regardless of \code{Seasons} - e.g. \code{Interval = 1} always

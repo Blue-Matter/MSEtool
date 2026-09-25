@@ -27,7 +27,8 @@ IndexRate(
   DeltaDown = c(0.01, 0.5),
   DeltaUp = c(0.01, 0.5),
   TACRange = NULL,
-  Allocation = NULL
+  Allocation = NULL,
+  IndexSeasons = NULL
 )
 
 IndexTarget(
@@ -46,7 +47,8 @@ IndexTarget(
   DeltaDown = c(0.01, 0.5),
   DeltaUp = c(0.01, 0.5),
   TACRange = NULL,
-  Allocation = NULL
+  Allocation = NULL,
+  IndexSeasons = NULL
 )
 }
 \arguments{
@@ -111,9 +113,14 @@ catch-per-index ratio when projecting the trial TAC; see Details.
 Default \code{1}.}
 
 \item{IndexTarget}{\code{NULL} (default), or a positive number (or vector, one
-per selected index) giving the index level considered "on target".
-Defaults to \code{Ref} on the selected \code{IndexSource} object (see
-\code{\link[=IndicesData]{IndicesData()}}); an error is raised if neither is available.}
+per selected index) giving the index level considered "on target", in
+the units of the (annual) index. When \code{NULL}, \code{Ref} on the selected
+\code{IndexSource} object (see \code{\link[=IndicesData]{IndicesData()}}) is used. An index with neither
+uses its status in the last historical year: the historical index,
+smoothed as set by \code{Smooth}/\code{ENPMult}, averaged over the \code{RecentYears}
+ending in the last historical year with an observation. This target is
+the same in every management cycle, so by default \code{IndexTarget()} aims to
+keep the index at its level at the end of the historical period.}
 
 \item{HCRControlPointsIndex}{Numeric vector, length 2 (\code{c(Lx, Ux)}). The
 lower and upper control points, in units of current-index-over-target,
@@ -153,6 +160,12 @@ on the TAC. \code{NULL} (default) effectively imposes no limit
 (normalised to sum to \code{1}). \code{NULL} returns a single stock-wide TAC,
 which the framework then splits across fleets using \code{FleetAllocation(OM)}
 (see \code{\link[=Advice]{Advice()}}).}
+
+\item{IndexSeasons}{Seasonal data only. \code{NULL} (default) averages each
+index over every season of the year. Otherwise an integer vector of
+seasons applied to every selected index, or a list with one element
+(integer vector, or \code{NULL} for every season) per selected index. See
+\code{\link[=AnnualData]{AnnualData()}}. Ignored when \code{Data@Seasons = 1}.}
 }
 \value{
 An \link[=advice-class]{advice} object with \code{TAC} set.
@@ -182,6 +195,12 @@ supply that ratio themselves.
 moves the TAC up or down from its previous value in proportion to
 \verb{(current index / IndexTarget) ^ Responsiveness}.
 }
+
+For seasonal data (\code{Data@Seasons > 1}), both MPs first aggregate \code{Data} to
+calendar years with \code{\link[=AnnualData]{AnnualData()}}: catches are summed over seasons and
+each index is averaged over the seasons in \code{IndexSeasons}. All arguments
+given in years (\code{CalibYears}, \code{RecentYears}, \code{TrendYears}, \code{TrendHorizon},
+\code{IndexFreq}) therefore refer to calendar years, and the TAC is annual.
 }
 \seealso{
 \code{\link[=Advice]{Advice()}}, \code{\link[=CheckCatch]{CheckCatch()}}, \code{\link[=LastTAC]{LastTAC()}}, \code{\link[=FilterTAC]{FilterTAC()}},

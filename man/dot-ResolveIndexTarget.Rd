@@ -4,20 +4,39 @@
 \alias{.ResolveIndexTarget}
 \title{Resolve the Target ("on target") Index Level}
 \usage{
-.ResolveIndexTarget(Ref, IndexTarget, nSel, IndexSource)
+.ResolveIndexTarget(
+  Ref,
+  IndexTarget,
+  Keep,
+  IndexHist,
+  LHInd,
+  Smooth,
+  ENPMult,
+  RecentYears
+)
 }
 \arguments{
 \item{Ref}{Numeric vector from \code{.SelectIndices()$Ref}.}
 
 \item{IndexTarget}{User-supplied override; see \code{\link[=IndexRate]{IndexRate()}}.}
 
-\item{nSel}{Number of selected indices.}
+\item{Keep}{Logical vector, one per selected index; \code{IndexFreq > 0}.}
 
-\item{IndexSource}{Character vector, for the error message.}
+\item{IndexHist}{\verb{[sum(Keep) x nYear]} matrix from \code{.ApplyIndexFrequency()}.}
+
+\item{LHInd}{Column of \code{IndexHist} for the last historical year.}
+
+\item{Smooth, ENPMult, RecentYears}{See \code{\link[=IndexRate]{IndexRate()}}.}
+}
+\value{
+Numeric vector, length \code{sum(Keep)}.
 }
 \description{
 Uses the user-supplied \code{IndexTarget}, falling back to \code{Ref} from the
-selected \link[=indicesdata-class]{indicesdata} object(s). Errors if
-neither is available.
+selected \link[=indicesdata-class]{indicesdata} object(s). Any index still without a target
+uses its status at the last historical year: the index over the historical
+years only, smoothed as in the MP (\code{Smooth}, \code{ENPMult}) and averaged over
+the \code{RecentYears} ending at the last historical year with a non-\code{NA}
+value.
 }
 \keyword{internal}

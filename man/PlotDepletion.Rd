@@ -45,9 +45,11 @@ at the first/last historical year; a simulation whose achieved value
 misses its target by more than \code{tol} (relative) is colored red rather
 than grey, and listed in a warning (via \code{\link[cli:cli_warn]{cli::cli_warn()}}). This can
 legitimately happen -- e.g. a low target depletion combined with
-selectivity maturing well before maturity -- and \code{\link[=Simulate]{Simulate()}} performs
-the same check itself, recording any misses to \code{Hist@Log} (see \code{\link[=Log]{Log()}})
-rather than printing them.
+selectivity maturing well before maturity, or a \code{Final} target above the
+unfished trajectory (\code{Unfished@Dynamic}) after a run of poor recruitment,
+which no catchability can reach; the warning lists these separately.
+\code{\link[=Simulate]{Simulate()}} performs the same check itself, recording any misses to
+\code{Hist@Log} (see \code{\link[=Log]{Log()}}) rather than printing them.
 }
 \seealso{
 \code{\link[=Depletion]{Depletion()}}, \code{\link[=B_B0]{B_B0()}}, \code{\link[=SB_SB0]{SB_SB0()}}, \code{\link[=PlotSRR]{PlotSRR()}}, \code{\link[=Stock]{Stock()}}

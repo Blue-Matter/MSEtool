@@ -236,13 +236,6 @@ See \code{\link[=InterimAdvice]{InterimAdvice()}} for how interim years are reso
 \code{data.frame} format used to populate them.
 }
 
-\subsection{StockTargeting Initialisation}{
-
-The \code{StockTargeting} slot is initialised automatically by \code{\link[=StockTargeting]{StockTargeting()}}
-when \code{Stock} and \code{Fleet} are provided. It is not a user-facing parameter
-and should not be set directly.
-}
-
 \subsection{Sub-Object Slots}{
 
 \code{Stock}, \code{Fleet}, \code{Obs}, \code{Imp}, and \code{Data} each have dedicated constructor
