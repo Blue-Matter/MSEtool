@@ -223,13 +223,16 @@
     if (is.null(Data@Name)) 
       Data@Name <- purrr::map(Hist@OM@Stock[stocks], slot, 'Name') |> unlist() |> paste(collapse='-')
     
-    if (is.null(Data@Years)) 
+    if (is.null(Data@Years))
       Data@Years <- HistYears
-    
+
+    # projection years are appended by .GenerateProjectionData()
+    Data@Years <- Data@Years[Data@Years <= max(HistYears)]
+
     if (is.null(Data@Seasons)) 
       Data@Seasons <- Hist@OM@Seasons
     
-    if (is.null(Data@YearLH))
+    if (is.null(Data@YearLH) || Data@YearLH > max(HistYears))
       Data@YearLH <- floor(Data@Years[length(Data@Years)])
     
     # Add Pop Dyn if specified

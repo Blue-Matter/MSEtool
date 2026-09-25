@@ -416,8 +416,7 @@
     if (is.null(sim)) {
       Number_List <- .DecayNumberListToTiming(Number_List, object, stocks, timing)
     } else {
-      Number_List <- purrr::imap(Number_List, function(num, idx) {
-        st <- stocks[idx]
+      Number_List <- purrr::map2(Number_List, stocks, function(num, st) {
         decayed <- .DecayNumbersToTiming(list(num), object, st, sim, TSIndex, timing, Areas)
         decayed[[1]]
       })
