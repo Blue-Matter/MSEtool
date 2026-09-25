@@ -6,10 +6,8 @@
 #'
 #' @param Hist A [hist-class] object containing the conditioned operating
 #'   model and historical dynamics, as returned by [Simulate()].
-#' @param MPs Character vector of MP names to project. If `NULL` (default),
-#'   all MPs attached to `Hist` are used. MP names must correspond to
-#'   functions available in the current environment. See `.CheckMPClass()` for
-#'   validation details.
+#' @param MPs Character vector of MP names, or a named list of MP functions
+#'   (optionally mixed with MP names). See `.ResolveMPs()`.
 #' @param parallel Logical. If `TRUE`, projects each MP in parallel using a
 #'   `future` plan established by [SetupParallel()]. Errors if
 #'   `TRUE` and no parallel plan is active. Default `FALSE`.
@@ -37,7 +35,8 @@
   
   .OnExit()
   .CheckClass(Hist, 'hist', 'Hist')
-  .CheckMPClass(MPs)
+  MPList <- .ResolveMPs(MPs)
+  MPs    <- names(MPList)
   
   YearsHist <- Years(Hist@OM, "Historical")
   YearsProj <- Years(Hist@OM, "Projection")
@@ -63,7 +62,7 @@
                               Years = c(utils::tail(YearsHist,1)), 
                               clone = 1) 
   
-  MSE <- .Hist2MSE(Proj, MPNames = MPs)
+  MSE <- .Hist2MSE(Proj, MPs = MPList)
   SaveLog <- Proj@Log
   Proj@Log <- list()
   .MsgStepDone(step)
@@ -82,7 +81,7 @@
       .options = furrr::furrr_options(
         globals  = c('Proj', 'MPs', 'MSE', 'YearsHist', 'YearsProj', 'nMPs'),
         packages = "MSEtool",
-        seed     = 101
+        seed     = TRUE
       )
     )
     if (!is.null(status)) cli::cli_progress_done(status)
