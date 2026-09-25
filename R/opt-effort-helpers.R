@@ -218,12 +218,12 @@
         landings <- Temp@Landings[sim, stocks, TSIndex, fl, drop = FALSE]
         discards <- Temp@Discards[sim, stocks, TSIndex, fl, drop = FALSE]
       } else {
-        landings <- purrr::map(Temp@LandingsAtAge, \(stock) {
+        landings <- purrr::map(Temp@LandingsAtAge[stocks], \(stock) {
           stock[sim, , TSIndex, fl, ,drop = FALSE] |>
           SumOverAge() |> SumOverArea()
         }) |> List2Array('Stock') |> SumOverStock()
-        
-        discards <- purrr::map(Temp@DiscardsAtAge, \(stock) {
+
+        discards <- purrr::map(Temp@DiscardsAtAge[stocks], \(stock) {
           stock[sim, , TSIndex, fl, ,drop = FALSE] |>
             SumOverAge() |> SumOverArea()
         }) |> List2Array('Stock') |> SumOverStock()

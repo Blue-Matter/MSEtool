@@ -57,3 +57,46 @@ test_that("Advice stores physical TAC units as Biomass or Number", {
   TACUnit(adv) <- "n"
   expect_identical(TACUnit(adv), "Number")
 })
+
+test_that(".CatchMatrix in numbers sums only each complex's stocks", {
+  skip_on_cran()
+  data(MultiStockOM, envir = environment())
+  om <- MultiStockOM
+  om@nSim <- 2
+  set.seed(1)
+  hist <- Simulate(om, silent = TRUE)
+  nF  <- dim(hist@Landings)[4]
+  nC  <- length(hist@OM@Complexes)
+  TSI <- dim(hist@Landings)[3]
+  mN  <- .CatchMatrix(hist, 1, TSI, rep(list(rep("Removals", nF)), nC), rep(list(rep("Number", nF)), nC))
+  byStock <- sapply(seq_along(hist@LandingsAtAge), \(s) {
+    N <- ArraySum(hist@LandingsAtAge[[s]], hist@DiscardsAtAge[[s]])
+    apply(N[1, , TSI, , , drop = FALSE], 4, sum)
+  })
+  expected <- t(sapply(hist@OM@Complexes, \(s) rowSums(byStock[, s, drop = FALSE])))
+  expect_equal(mN, unname(expected), tolerance = 1e-8)
+})
+
+test_that("multi-complex TAC in numbers chokes on each complex's own catch", {
+  skip_on_cran()
+  data(MultiStockOM, envir = environment())
+  om <- MultiStockOM
+  om@nSim <- 3
+  om@pYear <- 3
+  set.seed(1)
+  hist <- Simulate(om, silent = TRUE)
+  cx <- names(hist@OM@Complexes)
+  yr <- floor(Years(hist, "P")[1])
+  TAC <- c(60, 40)
+  hist@OM@MPStartYear <- yr + 1
+  hist@OM@InterimAdvice <- data.frame(Year = yr, Complex = cx, Type = "TAC", Mean = TAC, TACUnit = "Number")
+  mse <- Project(hist, MPs = "refMSY50", parallel = FALSE, silent = TRUE)
+  remN <- sapply(seq_along(mse@LandingsAtAge), \(s) {
+    N <- ArraySum(mse@LandingsAtAge[[s]], mse@DiscardsAtAge[[s]])
+    apply(N[, , as.character(yr), , , 1, drop = FALSE], 1, sum)
+  })
+  for (sim in 1:3) {
+    expect_true(all(remN[sim, ] <= TAC * (1 + 1e-4)))
+    expect_true(any(abs(remN[sim, ] / TAC - 1) < 1e-4))
+  }
+})
