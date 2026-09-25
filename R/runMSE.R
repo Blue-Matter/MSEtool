@@ -17,8 +17,11 @@
 #'
 #' @param OM An [om-class], [OM-legacy-class], [hist-class], or [Hist-legacy-class] object.
 #'   If `NULL` (default), uses [SingleStockOM].
-#' @param MPs Character vector of MP names to project. MPs must be functions
-#'   available in the current environment. If `NULL` (default), projects
+#' @param MPs MPs to project: a character vector of names of MP functions
+#'   available in the current environment, or (for [hist-class] objects) a
+#'   named list of MP functions, optionally mixed with MP names, e.g.
+#'   `list(IR5 = SetMPArgs(IndexRate, CalibYears = 5), 'IndexTarget')`. List
+#'   names are used as the MP names. If `NULL` (default), projects
 #'   `c("CurrentEffort", "CurrentCatch")`.
 #' @param Hist Logical. If `TRUE`, returns the [hist-class] or [Hist-legacy-class]
 #'   object from [Simulate()] without running forward projections. Useful for
