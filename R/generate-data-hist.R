@@ -107,7 +107,7 @@
       IndexObs <- SimDataList[[i]][[st]]@Survey@Misc$IndexObs
       if (!is.null(IndexObs)) {
         for (fl in seq_along(IndexObs)) {
-          fl_ind <- match(names(IndexObs)[fl], FleetNames)
+          fl_ind <- names(IndexObs)[fl]
           Hist@OM@Obs[[st]][[fl_ind]]@Survey <- IndexObs[[fl]]
           Hist@OM@Obs[[st]][[fl_ind]]@Survey@Efficiency <- unlist(Survey_Efficiency[[st]][[fl]])
         }
@@ -118,7 +118,7 @@
       IndexObs <- SimDataList[[i]][[st]]@CPUE@Misc$IndexObs
       if (!is.null(IndexObs)) {
         for (fl in seq_along(IndexObs)) {
-          fl_ind <- match(names(IndexObs)[fl], FleetNames)
+          fl_ind <- names(IndexObs)[fl]
           Hist@OM@Obs[[st]][[fl_ind]]@CPUE <- IndexObs[[fl]]
           Hist@OM@Obs[[st]][[fl_ind]]@CPUE@Efficiency <- unlist(CPUE_Efficiency[[st]][[fl]])
           

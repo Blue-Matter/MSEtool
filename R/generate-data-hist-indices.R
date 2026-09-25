@@ -72,6 +72,7 @@
   IndexData@Units <- rep('Biomass', nFleet)
   
   IndexData@Ref <- rep(NA_real_, nFleet) 
+  if (length(RealData@Timing)) IndexData@Timing <- rep(0, nFleet)
   
   Real_Pop_Number <- Hist@Number[stocks]
   
@@ -86,7 +87,12 @@
       if (!is.null(RealData@CV)) CV[, fl] <- RealData@CV[yearIdx, ri]
       if (length(RealData@Units) >= ri) IndexData@Units[fl] <- RealData@Units[ri]
       if (length(RealData@Ref) >= ri) IndexData@Ref[fl] <- RealData@Ref[ri]
-      IndexData@Misc$IndexObs[[fl]] <- slot(Hist@OM@Obs[[i]][[FleetNames[fl]]], type)
+      if (length(RealData@Timing) >= ri) IndexData@Timing[fl] <- RealData@Timing[ri]
+      IndexObs <- slot(Hist@OM@Obs[[i]][[FleetNames[fl]]], type)
+      # one value per sim; recombined across sims in .GenerateHistoricalData()
+      if (length(IndexObs@Efficiency))
+        IndexObs@Efficiency <- IndexObs@Efficiency[min(sim, length(IndexObs@Efficiency))]
+      IndexData@Misc$IndexObs[[fl]] <- IndexObs
       next()
     }
 

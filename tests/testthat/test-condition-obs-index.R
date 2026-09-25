@@ -631,3 +631,54 @@ test_that("PlotIndexFit() facets by Sim and colors by MP when nsim > 1, replicat
   panelSims <- ggplot2::ggplot_build(p)$layout$layout$Sim
   expect_setequal(panelSims, unique(ld$Sim))
 })
+
+test_that("a non-fleet survey conditions and projects with IndicesData(Selectivity = 'SBiomass')", {
+  skip_on_cran()
+  data(SingleStockOM, envir = environment())
+  om <- SingleStockOM
+  nSim(om) <- 3
+  set.seed(1)
+  hist0 <- Simulate(om, silent = TRUE)
+  yrs <- Years(om, 'Historical')
+  B <- SBiomass(hist0, df = FALSE)[1, 1, ]
+  vals <- B / mean(B) * exp(rnorm(length(yrs), 0, 0.2))
+  vals[1:8] <- NA
+  survey <- matrix(vals, ncol = 1, dimnames = list(Year = yrs, Index = 'Acoustic'))
+  Data(om) <- Data(Name = 'x', Years = yrs,
+                   Survey = IndicesData(Name = 'Acoustic', Value = survey, Units = 'Biomass',
+                                        Timing = 0.5, Selectivity = 'SBiomass'))
+
+  hist <- Simulate(om, silent = TRUE)
+  idxObs <- hist@OM@Obs[[1]][['Acoustic']]@Survey
+  expect_equal(idxObs@Selectivity, 'SBiomass')
+  expect_length(idxObs@Efficiency, 3)
+  expect_equal(hist@Data[[1]][[1]]@Survey@Timing[hist@Data[[1]][[1]]@Survey@Name == 'Acoustic'], 0.5)
+
+  tbl <- IndexFitTable(hist, type = 'Survey', print = FALSE)
+  row <- tbl[tbl$Fleet == 'Acoustic', ]
+  expect_equal(nrow(row), 1)
+  expect_equal(row$nYears, 12L)
+  expect_false(is.na(row$SD))
+
+  mse <- Project(hist, MPs = 'NFref', parallel = FALSE, silent = TRUE)
+  ProjYears <- as.character(Years(om, 'Projection'))
+  SB <- SBiomass(mse, df = FALSE)
+  for (x in 1:3) {
+    val <- mse@PPD[[1]][[x]][[1]]@Survey@Value[, 'Acoustic']
+    val <- val[intersect(ProjYears, names(val))]
+    expect_true(all(is.finite(val) & val > 0))
+    # maturity-selected: nominal index is a constant fraction of SBiomass under NFref
+    nom <- val / idxObs@Error[x, names(val)] / idxObs@Efficiency[x]
+    ratio <- nom / SB[x, 1, names(val), 1]
+    expect_lt(stats::sd(ratio) / mean(ratio), 1e-4)
+  }
+
+  # no selectivity for a non-fleet index: informative error, and the Obs route works
+  Survey(om@Data) <- IndicesData(Name = 'Acoustic', Value = survey, Timing = 0.5)
+  expect_error(Simulate(om, silent = TRUE), "not a fleet")
+  o <- Obs('Acoustic')
+  Survey(o) <- IndicesObs(Selectivity = 'Biomass')
+  om@Obs[[1]][['Acoustic']] <- o
+  hist2 <- Simulate(om, silent = TRUE)
+  expect_equal(hist2@OM@Obs[[1]][['Acoustic']]@Survey@Selectivity, 'Biomass')
+})

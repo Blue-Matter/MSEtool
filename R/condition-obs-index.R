@@ -87,8 +87,21 @@
     }
     
     
-    SelectivityAtAge_Data <- slot(FisheryData, type)@Selectivity[[fl]]
+    DataSel <- slot(FisheryData, type)@Selectivity
+    SelectivityAtAge_Data <- if (length(DataSel) >= fl) DataSel[[fl]] else NULL
     SelectivityAtAge <- if (is.character(SelectivityAtAge_Data)) SelectivityAtAge_Data else NULL
+
+    # carry data-level selectivity onto Obs so generated data use the same curve
+    if (is.null(Index_Obs@Selectivity) && !is.null(SelectivityAtAge) &&
+        SelectivityAtAge %in% c('Biomass', 'SBiomass'))
+      Index_Obs@Selectivity <- SelectivityAtAge
+    if (is.null(SelectivityAtAge)) SelectivityAtAge <- Index_Obs@Selectivity
+
+    if (is.null(SelectivityAtAge) && !Indices_Name[fl] %in% FleetNames(Hist@OM))
+      cli::cli_abort(c(
+        "x" = "{type} index {.val {Indices_Name[fl]}} is not a fleet in {.code OM@Fleet}, so its {.field Selectivity} must be set.",
+        "i" = "Set e.g. {.code {type}(Data) <- IndicesData(Name = '{Indices_Name[fl]}', ..., Selectivity = 'Biomass')} (flat) or {.code 'SBiomass'} (maturity-at-age)."
+      ))
 
     Units <- slot(FisheryData, type)@Units[fl]
     if (is.null(Units)) Units <- 'Biomass'
