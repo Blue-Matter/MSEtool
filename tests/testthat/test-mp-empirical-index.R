@@ -95,6 +95,27 @@ test_that("IndexTarget defaults the target to the last historical status", {
   expect_true(is.finite(IndexRate(Flat)@TAC))
 })
 
+test_that("IndexTarget scales the reference catch by the HCR, independent of the previous TAC", {
+  D <- .AnnualIndexData(rep(1, 20), Ref = 2)
+  D@Landings@Value[16:20, 1] <- c(60, 80, 100, 120, 140)
+  Free <- list(DeltaUp = c(0, 10), DeltaDown = c(0, 1), Smooth = FALSE)
+
+  expect_equal(do.call(IndexTarget, c(list(D), Free))@TAC, 100 * 0.5)
+  expect_equal(do.call(IndexTarget, c(list(D, CalibYears = 2), Free))@TAC, 130 * 0.5)
+
+  D@Advice@TAC <- array(1000, c(1, 1), list(Year = '2020', Fleet = 'Total'))
+  expect_equal(do.call(IndexTarget, c(list(D), Free))@TAC, 50)
+
+  expect_equal(do.call(IndexTarget, c(list(D, IndexTarget = 4), Free))@TAC, 12.5)
+  expect_equal(do.call(IndexTarget, c(list(D, IndexTarget = 2 / 3), Free))@TAC, 125)
+  expect_equal(do.call(IndexTarget, c(list(D, IndexTarget = 0.2), Free))@TAC, 150)
+  expect_equal(do.call(IndexTarget, c(list(D, IndexTarget = 0.2, HCRControlPointsIndex = c(0, 1, 3),
+                                           HCRControlPointsRate = c(0, 1, 2)), Free))@TAC,
+               100 * 2)
+  expect_equal(do.call(IndexTarget, c(list(D, HCRControlPointsIndex = c(0.5, 1),
+                                           HCRControlPointsRate = c(0, 1)), Free))@TAC, 0)
+})
+
 test_that("TACType sets the catch used for calibration, the previous TAC, and the advice", {
   D <- .AnnualIndexData(rep(1, 20))
   D@Discards@Value[] <- 50
@@ -108,6 +129,15 @@ test_that("TACType sets the catch used for calibration, the previous TAC, and th
     expect_equal(c(Rem@TAC, Land@TAC), c(150, 100))
     expect_equal(c(TACType(Rem), TACType(Land)), c('Removals', 'Landings'))
   }
+})
+
+test_that("IndexRate's default HCR cuts the rate linearly below half the target", {
+  D <- .AnnualIndexData(rep(1, 20))
+  Free <- list(DeltaUp = c(0, 10), DeltaDown = c(0, 1), Smooth = FALSE)
+  expect_equal(do.call(IndexRate, c(list(D, IndexTarget = 1.5), Free))@TAC, 100)
+  expect_equal(do.call(IndexRate, c(list(D, IndexTarget = 4), Free))@TAC, 50)
+  expect_equal(do.call(IndexRate, c(list(D, IndexTarget = 4, HCRControlPointsIndex = c(0, 0)),
+                                    Free))@TAC, 100)
 })
 
 test_that("IndexRate keeps the previous TAC when the trial TAC is infinite", {
@@ -175,7 +205,7 @@ test_that("index MPs project non-zero annual-scale TACs in annual and seasonal O
   }
 })
 
-test_that("tunepar scales the IndexRate rate and the IndexTarget target", {
+test_that("tunepar scales the IndexRate rate and the IndexTarget reference catch", {
   D <- .AnnualIndexData(seq(2, 1, length.out = 20), Ref = 1.5)
   Free <- list(DeltaUp = c(0, 10), DeltaDown = c(0, 1), Smooth = FALSE)
 
@@ -185,9 +215,7 @@ test_that("tunepar scales the IndexRate rate and the IndexTarget target", {
 
   Target1 <- do.call(IndexTarget, c(list(D), Free))
   Target2 <- do.call(IndexTarget, c(list(D, tunepar = 1.25), Free))
-  Target3 <- do.call(IndexTarget, c(list(D, IndexTarget = 1.5 / 1.25), Free))
   expect_equal(Target2@TAC, 1.25 * Target1@TAC)
-  expect_equal(Target2@TAC, Target3@TAC)
 
   expect_error(IndexRate(D, tunepar = -1), 'tunepar')
   expect_error(IndexTarget(D, tunepar = c(1, 2)), 'tunepar')

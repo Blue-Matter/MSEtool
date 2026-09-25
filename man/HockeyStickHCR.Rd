@@ -14,7 +14,8 @@ HockeyStickHCR(
 )
 }
 \arguments{
-\item{TrialRate}{Positive number. Trial rate before HCR adjustment.}
+\item{TrialRate}{Positive number. Trial rate (or catch, as in
+\code{\link[=IndexTarget]{IndexTarget()}}) before HCR adjustment.}
 
 \item{Est, Ref}{Positive numbers, same units. Current status level and its
 target/reference level.}

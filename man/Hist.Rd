@@ -23,9 +23,7 @@ documentation of all slots.
 \code{hist} objects are created by \code{\link[=Simulate]{Simulate()}}. \code{Hist()} recovers the \code{hist}
 object from an \link[=mse-class]{mse} object, combining the historical time-series in
 \code{MSE@Hist} with the operating model, reference points, and historical
-data stored in the \code{mse} object. The returned object can be passed to
-\code{\link[=Project]{Project()}} to evaluate additional management procedures; the projections
-are identical to those from the \code{hist} object returned by \code{\link[=Simulate]{Simulate()}}.
+data stored in the \code{mse} object.
 }
 \examples{
 \dontrun{

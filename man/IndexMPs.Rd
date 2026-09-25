@@ -20,7 +20,7 @@ IndexRate(
   TrendHorizon = 1,
   IndexFactor = 1,
   IndexTarget = NULL,
-  HCRControlPointsIndex = c(0, 0),
+  HCRControlPointsIndex = c(0, 0.5),
   HCRControlPointsRate = c(0, 1),
   RampType = c("linear", "smooth"),
   Responsiveness = 1,
@@ -39,12 +39,16 @@ IndexTarget(
   IndexSource = "Survey",
   IndexFreq = NULL,
   IndexWeight = NULL,
+  CalibYears = 5,
   Smooth = TRUE,
   ENPMult = 0.3,
   RecentYears = 1,
   TrendYears = NULL,
   TrendHorizon = 1,
   IndexTarget = NULL,
+  HCRControlPointsIndex = c(0, 0.25, 0.5, 1, 2),
+  HCRControlPointsRate = c(0, 0.125, 0.5, 1, 1.5),
+  RampType = c("linear", "smooth"),
   Responsiveness = 1,
   DeltaDown = c(0.01, 0.5),
   DeltaUp = c(0.01, 0.5),
@@ -79,7 +83,8 @@ each index's weight when combining indices. \code{NULL} (default) weights
 indices equally.}
 
 \item{CalibYears}{Positive integer. Number of most recent historical years
-used to calculate the catch-per-index rate. Default \code{2}. Clamped to the
+used to calculate the catch-per-index rate (\code{IndexRate()}, default \code{2})
+or the reference catch (\code{IndexTarget()}, default \code{5}). Clamped to the
 number of historical years available.}
 
 \item{Smooth}{Logical. Whether to smooth each selected index with
@@ -120,41 +125,41 @@ per selected index) giving the target index level, in the units of the
 status at the end of the historical period: the historical index,
 smoothed as set by \code{Smooth}/\code{ENPMult}, averaged over the \code{RecentYears}
 ending in the last historical year with an observation. The target is
-fixed across management cycles.
-\itemize{
-\item In \code{IndexTarget()}, the TAC is adjusted each management cycle to move
-the index toward this level.
-\item In \code{IndexRate()}, it is only the reference level for the harvest
-control rule: \code{HCRControlPointsIndex} is expressed as a fraction of
-\code{IndexTarget}. It has no effect with the default
-\code{HCRControlPointsIndex = c(0, 0)}.
-}}
+fixed across management cycles. \code{HCRControlPointsIndex} is expressed as
+a fraction of \code{IndexTarget}. See Details for choosing a target.}
 
 \item{HCRControlPointsIndex}{Numeric vector of at least 2 non-decreasing
 values: the control points of a hockey-stick harvest control rule, as
 fractions of \code{IndexTarget} (i.e. in units of \code{status / IndexTarget}).
-At or below the first control point the catch-per-index rate is
-multiplied by the first value of \code{HCRControlPointsRate}; at or above the
-last, by the last value; in between, the multiplier is interpolated
-(see \code{RampType}). E.g. \code{c(0.2, 0.8)} with \code{HCRControlPointsRate = c(0, 1)}
-closes the fishery below 20\% of \code{IndexTarget} and applies the full rate
-above 80\%. \code{c(0, 0)} (default) makes the multiplier \code{1} for any positive
-status, so the harvest control rule and \code{IndexTarget} have no effect.
-See \code{\link[=HockeyStickHCR]{HockeyStickHCR()}}.}
+At or below the first control point the catch-per-index rate
+(\code{IndexRate()}) or reference catch (\code{IndexTarget()}) is multiplied by
+the first value of \code{HCRControlPointsRate}; at or above the last, by the
+last value; in between, the multiplier is interpolated (see
+\code{RampType}). See \code{\link[=HockeyStickHCR]{HockeyStickHCR()}}.
+\itemize{
+\item \code{IndexRate()}: default \code{c(0, 0.5)}. E.g. \code{c(0.2, 0.8)} with
+\code{HCRControlPointsRate = c(0, 1)} closes the fishery below 20\% of
+\code{IndexTarget} and applies the full rate above 80\%. \code{c(0, 0)} makes the
+multiplier \code{1} for any positive status, disabling the harvest control
+rule.
+\item \code{IndexTarget()}: default \code{c(0, 0.25, 0.5, 1, 2)}. The multiplier
+applies to the reference catch, so the control points define the TAC
+as a function of \code{status / IndexTarget}.
+}}
 
 \item{HCRControlPointsRate}{Numeric vector, same length as
-\code{HCRControlPointsIndex}, giving the rate multiplier at each control
-point. Default \code{c(0, 1)}.}
+\code{HCRControlPointsIndex}, giving the multiplier at each control point.
+Default \code{c(0, 1)} for \code{IndexRate()} and \code{c(0, 0.125, 0.5, 1, 1.5)} for
+\code{IndexTarget()}.}
 
 \item{RampType}{Character. Shape of the harvest control rule between
 control points: \code{'linear'} (default) or \code{'smooth'} (a cubic smoothstep,
 with zero slope at each control point).}
 
 \item{Responsiveness}{Positive number. Exponent applied to the proposed
-TAC ratio before \code{DeltaDown}/\code{DeltaUp} are applied: in \code{IndexRate()},
-\verb{(trial TAC / previous TAC) ^ Responsiveness}; in \code{IndexTarget()},
-\code{(status / IndexTarget) ^ Responsiveness}. Values below \code{1} damp the
-change; \code{1} (default) applies it in full.}
+TAC ratio, \verb{(trial TAC / previous TAC) ^ Responsiveness}, before
+\code{DeltaDown}/\code{DeltaUp} are applied. Values below \code{1} damp the change;
+\code{1} (default) applies it in full.}
 
 \item{DeltaDown, DeltaUp}{Numeric vector, length 2 (\code{c(min, max)}). Limits
 on the fractional TAC change from the previous TAC, for decreases and
@@ -174,7 +179,8 @@ which the framework then splits across fleets using \code{FleetAllocation(OM)}
 
 \item{TACType}{Character. Whether the TAC applies to \code{'Removals'}
 (default; landings plus discards) or \code{'Landings'}. Sets the catch used
-for the \code{IndexRate()} calibration, for the previous TAC in the first
+for the catch-per-index rate (\code{IndexRate()}) or reference catch
+(\code{IndexTarget()}), for the previous TAC in the first
 management cycle (see \code{\link[=LastTAC]{LastTAC()}}), and for the default \code{TACRange}. See
 \code{\link[=Advice]{Advice()}}.}
 
@@ -186,8 +192,8 @@ seasons applied to every selected index, or a list with one element
 
 \item{tunepar}{Positive number used to tune the MP (see \code{\link[=TuneMP]{TuneMP()}});
 larger values give higher catches. \code{1} (default) applies the MP as
-specified. In \code{IndexRate()} it multiplies the catch-per-index rate; in
-\code{IndexTarget()} it divides \code{IndexTarget}.}
+specified. It multiplies the catch-per-index rate (\code{IndexRate()}) or
+the reference catch (\code{IndexTarget()}).}
 }
 \value{
 An \link[=advice-class]{advice} object with \code{TAC} and \code{TACType} set, and
@@ -203,32 +209,75 @@ Both MPs estimate the current status of each selected index as its
 \code{RecentYears} most recent years. When \code{TrendYears} is set, that status is
 projected forward \code{TrendHorizon} years along a log-linear trend before it
 is compared with the index target. Per-index values are combined with
-\code{IndexWeight}, and the proposed change from the previous TAC
-(\code{\link[=LastTAC]{LastTAC()}}) is raised to the power \code{Responsiveness} and then constrained
-by \code{DeltaDown}/\code{DeltaUp}/\code{TACRange}.
-\itemize{
-\item \code{IndexRate()}: Calculates a catch-per-index rate as the mean catch of
-type \code{TACType} (summed over fleets) over the last \code{CalibYears}
-historical years divided by the mean unsmoothed index over the same
-years, then multiplies it by \code{IndexFactor} and \code{tunepar}. That rate is
-scaled by a hockey-stick harvest control rule
-(\code{HCRControlPointsIndex}/\code{HCRControlPointsRate}) evaluated at
-\code{status / IndexTarget}, and the trial TAC is the scaled rate multiplied
-by the current (non-projected) status. With the default control points
-the harvest control rule is inactive, so the trial TAC is
-\verb{rate x current status} and \code{IndexTarget} has no effect. If the trial
-TAC is negative, infinite, or \code{NA}, the previous TAC is kept.
-\item \code{IndexTarget()}: Multiplies the previous TAC by
-\verb{(status x tunepar / IndexTarget) ^ Responsiveness}, so the TAC
-increases while the index is above target and decreases while it is
-below.
-}
+\code{IndexWeight}.
+
+The harvest control rules of both MPs are expressed relative to
+\code{IndexTarget}. With no \code{IndexTarget} or \code{Ref}, the target is the index at
+the end of the historical period, which is not a biological reference
+point: for a stock that is depleted at that time, the target is the
+depleted level and the harvest control rule does not reduce the TAC until
+the index falls further. Supply \code{IndexTarget} or \code{Ref} (e.g. the index
+level corresponding to BMSY) to set the harvest control rule relative to
+stock status.
+
+Each MP then calculates a trial TAC (see the sections below). If the trial
+TAC is negative, infinite, or \code{NA}, the previous TAC (\code{\link[=LastTAC]{LastTAC()}}) is
+kept. The proposed change from the previous TAC is raised to the power
+\code{Responsiveness} and then constrained by \code{DeltaDown}/\code{DeltaUp}/\code{TACRange}.
 
 For seasonal data (\code{Data@Seasons > 1}), both MPs first aggregate \code{Data} to
 calendar years with \code{\link[=AnnualData]{AnnualData()}}: catches are summed over seasons and
 each index is averaged over the seasons in \code{IndexSeasons}. All arguments
 given in years (\code{CalibYears}, \code{RecentYears}, \code{TrendYears}, \code{TrendHorizon},
 \code{IndexFreq}) therefore refer to calendar years, and the TAC is annual.
+\subsection{IndexRate()}{
+
+\code{IndexRate()} fishes at a catch-per-index rate, so the TAC follows the
+index.
+
+The rate is the mean catch of type \code{TACType} (summed over fleets) over the
+last \code{CalibYears} historical years divided by the mean unsmoothed index
+over the same years, multiplied by \code{IndexFactor} and \code{tunepar}. A
+hockey-stick harvest control rule (\code{\link[=HockeyStickHCR]{HockeyStickHCR()}}), evaluated at
+\code{status / IndexTarget}, scales the rate, and the trial TAC is the scaled
+rate multiplied by the current (non-projected) status.
+
+With the default control points (\code{HCRControlPointsIndex = c(0, 0.5)},
+\code{HCRControlPointsRate = c(0, 1)}) the full rate applies above half of
+\code{IndexTarget}. Below half the target the rate falls linearly to zero, so
+the trial TAC falls quadratically with the index.
+\code{HCRControlPointsIndex = c(0, 0)} disables the harvest control rule, so the
+trial TAC is \verb{rate x current status} and \code{IndexTarget} has no effect.
+}
+
+\subsection{IndexTarget()}{
+
+\code{IndexTarget()} sets the TAC to keep the index around \code{IndexTarget}.
+
+The reference catch is the mean catch of type \code{TACType} (summed over
+fleets) over the last \code{CalibYears} historical years, multiplied by
+\code{tunepar}. A hockey-stick harvest control rule (\code{\link[=HockeyStickHCR]{HockeyStickHCR()}}),
+evaluated at \code{status / IndexTarget}, scales the reference catch to give the
+trial TAC. With control points passing through \verb{(1, 1)}, the trial TAC is
+the reference catch when the index is at \code{IndexTarget}. The trial TAC does
+not depend on the previous TAC, so TAC changes do not accumulate while the
+index is away from \code{IndexTarget}.
+
+With the default control points, the trial TAC as a fraction of the
+reference catch is:
+\itemize{
+\item \code{status / IndexTarget} between half the target and the target;
+\item falling to zero below half the target along a piecewise-linear
+approximation of a quadratic (\code{0.125} at a quarter of the target);
+\item increasing at half that slope above the target, capped at \code{1.5} from
+twice the target.
+}
+
+The index settles where the trial TAC equals the stock's production,
+which is at \code{IndexTarget} only when the reference catch is sustainable
+there. Tune \code{tunepar} (see \code{\link[=TuneMP]{TuneMP()}}) so that the index fluctuates around
+\code{IndexTarget}.
+}
 }
 \seealso{
 \code{\link[=Advice]{Advice()}}, \code{\link[=CheckCatch]{CheckCatch()}}, \code{\link[=LastTAC]{LastTAC()}}, \code{\link[=FilterTAC]{FilterTAC()}},

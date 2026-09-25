@@ -3,36 +3,76 @@
 #' Management procedures that set a TAC from one or more relative abundance
 #' indices (`Survey(Data)` or `CPUE(Data)`, or both).
 #'
+#' @details
 #' Both MPs estimate the current status of each selected index as its
 #' (optionally loess-smoothed, see `Smooth`) value averaged over the
 #' `RecentYears` most recent years. When `TrendYears` is set, that status is
 #' projected forward `TrendHorizon` years along a log-linear trend before it
 #' is compared with the index target. Per-index values are combined with
-#' `IndexWeight`, and the proposed change from the previous TAC
-#' ([LastTAC()]) is raised to the power `Responsiveness` and then constrained
-#' by `DeltaDown`/`DeltaUp`/`TACRange`.
+#' `IndexWeight`.
 #'
-#' - `IndexRate()`: Calculates a catch-per-index rate as the mean catch of
-#'   type `TACType` (summed over fleets) over the last `CalibYears`
-#'   historical years divided by the mean unsmoothed index over the same
-#'   years, then multiplies it by `IndexFactor` and `tunepar`. That rate is
-#'   scaled by a hockey-stick harvest control rule
-#'   (`HCRControlPointsIndex`/`HCRControlPointsRate`) evaluated at
-#'   `status / IndexTarget`, and the trial TAC is the scaled rate multiplied
-#'   by the current (non-projected) status. With the default control points
-#'   the harvest control rule is inactive, so the trial TAC is
-#'   `rate x current status` and `IndexTarget` has no effect. If the trial
-#'   TAC is negative, infinite, or `NA`, the previous TAC is kept.
-#' - `IndexTarget()`: Multiplies the previous TAC by
-#'   `(status x tunepar / IndexTarget) ^ Responsiveness`, so the TAC
-#'   increases while the index is above target and decreases while it is
-#'   below.
+#' The harvest control rules of both MPs are expressed relative to
+#' `IndexTarget`. With no `IndexTarget` or `Ref`, the target is the index at
+#' the end of the historical period, which is not a biological reference
+#' point: for a stock that is depleted at that time, the target is the
+#' depleted level and the harvest control rule does not reduce the TAC until
+#' the index falls further. Supply `IndexTarget` or `Ref` (e.g. the index
+#' level corresponding to BMSY) to set the harvest control rule relative to
+#' stock status.
+#'
+#' Each MP then calculates a trial TAC (see the sections below). If the trial
+#' TAC is negative, infinite, or `NA`, the previous TAC ([LastTAC()]) is
+#' kept. The proposed change from the previous TAC is raised to the power
+#' `Responsiveness` and then constrained by `DeltaDown`/`DeltaUp`/`TACRange`.
 #'
 #' For seasonal data (`Data@@Seasons > 1`), both MPs first aggregate `Data` to
 #' calendar years with [AnnualData()]: catches are summed over seasons and
 #' each index is averaged over the seasons in `IndexSeasons`. All arguments
 #' given in years (`CalibYears`, `RecentYears`, `TrendYears`, `TrendHorizon`,
 #' `IndexFreq`) therefore refer to calendar years, and the TAC is annual.
+#'
+#' ## IndexRate
+#' `IndexRate()` fishes at a catch-per-index rate, so the TAC follows the
+#' index.
+#'
+#' The rate is the mean catch of type `TACType` (summed over fleets) over the
+#' last `CalibYears` historical years divided by the mean unsmoothed index
+#' over the same years, multiplied by `IndexFactor` and `tunepar`. A
+#' hockey-stick harvest control rule ([HockeyStickHCR()]), evaluated at
+#' `status / IndexTarget`, scales the rate, and the trial TAC is the scaled
+#' rate multiplied by the current (non-projected) status.
+#'
+#' With the default control points (`HCRControlPointsIndex = c(0, 0.5)`,
+#' `HCRControlPointsRate = c(0, 1)`) the full rate applies above half of
+#' `IndexTarget`. Below half the target the rate falls linearly to zero, so
+#' the trial TAC falls quadratically with the index.
+#' `HCRControlPointsIndex = c(0, 0)` disables the harvest control rule, so the
+#' trial TAC is `rate x current status` and `IndexTarget` has no effect.
+#'
+#' ## IndexTarget
+#' `IndexTarget()` sets the TAC to keep the index around `IndexTarget`.
+#'
+#' The reference catch is the mean catch of type `TACType` (summed over
+#' fleets) over the last `CalibYears` historical years, multiplied by
+#' `tunepar`. A hockey-stick harvest control rule ([HockeyStickHCR()]),
+#' evaluated at `status / IndexTarget`, scales the reference catch to give the
+#' trial TAC. With control points passing through `(1, 1)`, the trial TAC is
+#' the reference catch when the index is at `IndexTarget`. The trial TAC does
+#' not depend on the previous TAC, so TAC changes do not accumulate while the
+#' index is away from `IndexTarget`.
+#'
+#' With the default control points, the trial TAC as a fraction of the
+#' reference catch is:
+#' - `status / IndexTarget` between half the target and the target;
+#' - falling to zero below half the target along a piecewise-linear
+#'   approximation of a quadratic (`0.125` at a quarter of the target);
+#' - increasing at half that slope above the target, capped at `1.5` from
+#'   twice the target.
+#'
+#' The index settles where the trial TAC equals the stock's production,
+#' which is at `IndexTarget` only when the reference catch is sustainable
+#' there. Tune `tunepar` (see [TuneMP()]) so that the index fluctuates around
+#' `IndexTarget`.
 #'
 #' @param Data A [data-class] object.
 #' @param Indices Character (matching `Name`) or integer vector selecting
@@ -80,18 +120,39 @@
 #'   status at the end of the historical period: the historical index,
 #'   smoothed as set by `Smooth`/`ENPMult`, averaged over the `RecentYears`
 #'   ending in the last historical year with an observation. The target is
-#'   fixed across management cycles.
-#'   - In `IndexTarget()`, the TAC is adjusted each management cycle to move
-#'     the index toward this level.
-#'   - In `IndexRate()`, it is only the reference level for the harvest
-#'     control rule: `HCRControlPointsIndex` is expressed as a fraction of
-#'     `IndexTarget`. It has no effect with the default
-#'     `HCRControlPointsIndex = c(0, 0)`.
+#'   fixed across management cycles. `HCRControlPointsIndex` is expressed as
+#'   a fraction of `IndexTarget`. See Details for choosing a target.
+#' @param CalibYears Positive integer. Number of most recent historical years
+#'   used to calculate the catch-per-index rate (`IndexRate()`, default `2`)
+#'   or the reference catch (`IndexTarget()`, default `5`). Clamped to the
+#'   number of historical years available.
+#' @param HCRControlPointsIndex Numeric vector of at least 2 non-decreasing
+#'   values: the control points of a hockey-stick harvest control rule, as
+#'   fractions of `IndexTarget` (i.e. in units of `status / IndexTarget`).
+#'   At or below the first control point the catch-per-index rate
+#'   (`IndexRate()`) or reference catch (`IndexTarget()`) is multiplied by
+#'   the first value of `HCRControlPointsRate`; at or above the last, by the
+#'   last value; in between, the multiplier is interpolated (see
+#'   `RampType`). See [HockeyStickHCR()].
+#'   - `IndexRate()`: default `c(0, 0.5)`. E.g. `c(0.2, 0.8)` with
+#'     `HCRControlPointsRate = c(0, 1)` closes the fishery below 20% of
+#'     `IndexTarget` and applies the full rate above 80%. `c(0, 0)` makes the
+#'     multiplier `1` for any positive status, disabling the harvest control
+#'     rule.
+#'   - `IndexTarget()`: default `c(0, 0.25, 0.5, 1, 2)`. The multiplier
+#'     applies to the reference catch, so the control points define the TAC
+#'     as a function of `status / IndexTarget`.
+#' @param HCRControlPointsRate Numeric vector, same length as
+#'   `HCRControlPointsIndex`, giving the multiplier at each control point.
+#'   Default `c(0, 1)` for `IndexRate()` and `c(0, 0.125, 0.5, 1, 1.5)` for
+#'   `IndexTarget()`.
+#' @param RampType Character. Shape of the harvest control rule between
+#'   control points: `'linear'` (default) or `'smooth'` (a cubic smoothstep,
+#'   with zero slope at each control point).
 #' @param Responsiveness Positive number. Exponent applied to the proposed
-#'   TAC ratio before `DeltaDown`/`DeltaUp` are applied: in `IndexRate()`,
-#'   `(trial TAC / previous TAC) ^ Responsiveness`; in `IndexTarget()`,
-#'   `(status / IndexTarget) ^ Responsiveness`. Values below `1` damp the
-#'   change; `1` (default) applies it in full.
+#'   TAC ratio, `(trial TAC / previous TAC) ^ Responsiveness`, before
+#'   `DeltaDown`/`DeltaUp` are applied. Values below `1` damp the change;
+#'   `1` (default) applies it in full.
 #' @param DeltaDown,DeltaUp Numeric vector, length 2 (`c(min, max)`). Limits
 #'   on the fractional TAC change from the previous TAC, for decreases and
 #'   increases respectively. Changes larger than `max` are capped at `max`;
@@ -107,7 +168,8 @@
 #'   (see [Advice()]).
 #' @param TACType Character. Whether the TAC applies to `'Removals'`
 #'   (default; landings plus discards) or `'Landings'`. Sets the catch used
-#'   for the `IndexRate()` calibration, for the previous TAC in the first
+#'   for the catch-per-index rate (`IndexRate()`) or reference catch
+#'   (`IndexTarget()`), for the previous TAC in the first
 #'   management cycle (see [LastTAC()]), and for the default `TACRange`. See
 #'   [Advice()].
 #' @param IndexSeasons Seasonal data only. `NULL` (default) averages each
@@ -117,8 +179,8 @@
 #'   [AnnualData()]. Ignored when `Data@@Seasons = 1`.
 #' @param tunepar Positive number used to tune the MP (see [TuneMP()]);
 #'   larger values give higher catches. `1` (default) applies the MP as
-#'   specified. In `IndexRate()` it multiplies the catch-per-index rate; in
-#'   `IndexTarget()` it divides `IndexTarget`.
+#'   specified. It multiplies the catch-per-index rate (`IndexRate()`) or
+#'   the reference catch (`IndexTarget()`).
 #'
 #' @return An [advice-class] object with `TAC` and `TACType` set, and
 #'   `TACUnit` taken from `Data@Landings@Units`.
@@ -131,29 +193,9 @@ NULL
 
 
 #' @rdname IndexMPs
-#' @param CalibYears Positive integer. Number of most recent historical years
-#'   used to calculate the catch-per-index rate. Default `2`. Clamped to the
-#'   number of historical years available.
 #' @param IndexFactor Positive number. Multiplier on the calibrated
 #'   catch-per-index rate. `1` (default) keeps the rate observed over
 #'   `CalibYears`; e.g. `0.75` sets it 25% lower.
-#' @param HCRControlPointsIndex Numeric vector of at least 2 non-decreasing
-#'   values: the control points of a hockey-stick harvest control rule, as
-#'   fractions of `IndexTarget` (i.e. in units of `status / IndexTarget`).
-#'   At or below the first control point the catch-per-index rate is
-#'   multiplied by the first value of `HCRControlPointsRate`; at or above the
-#'   last, by the last value; in between, the multiplier is interpolated
-#'   (see `RampType`). E.g. `c(0.2, 0.8)` with `HCRControlPointsRate = c(0, 1)`
-#'   closes the fishery below 20% of `IndexTarget` and applies the full rate
-#'   above 80%. `c(0, 0)` (default) makes the multiplier `1` for any positive
-#'   status, so the harvest control rule and `IndexTarget` have no effect.
-#'   See [HockeyStickHCR()].
-#' @param HCRControlPointsRate Numeric vector, same length as
-#'   `HCRControlPointsIndex`, giving the rate multiplier at each control
-#'   point. Default `c(0, 1)`.
-#' @param RampType Character. Shape of the harvest control rule between
-#'   control points: `'linear'` (default) or `'smooth'` (a cubic smoothstep,
-#'   with zero slope at each control point).
 #' @export
 IndexRate <- function(Data,
                       Indices               = NULL,
@@ -168,7 +210,7 @@ IndexRate <- function(Data,
                       TrendHorizon          = 1,
                       IndexFactor           = 1,
                       IndexTarget           = NULL,
-                      HCRControlPointsIndex = c(0, 0),
+                      HCRControlPointsIndex = c(0, 0.5),
                       HCRControlPointsRate  = c(0, 1),
                       RampType              = c('linear', 'smooth'),
                       Responsiveness        = 1,
@@ -251,27 +293,32 @@ class(IndexRate) <- 'mp'
 #' @rdname IndexMPs
 #' @export
 IndexTarget <- function(Data,
-                        Indices        = NULL,
-                        IndexSource    = 'Survey',
-                        IndexFreq      = NULL,
-                        IndexWeight    = NULL,
-                        Smooth         = TRUE,
-                        ENPMult        = 0.3,
-                        RecentYears    = 1,
-                        TrendYears     = NULL,
-                        TrendHorizon   = 1,
-                        IndexTarget    = NULL,
-                        Responsiveness = 1,
-                        DeltaDown      = c(0.01, 0.5),
-                        DeltaUp        = c(0.01, 0.5),
-                        TACRange       = NULL,
-                        Allocation     = NULL,
-                        TACType        = c('Removals', 'Landings'),
-                        IndexSeasons   = NULL,
-                        tunepar        = 1) {
+                        Indices               = NULL,
+                        IndexSource           = 'Survey',
+                        IndexFreq             = NULL,
+                        IndexWeight           = NULL,
+                        CalibYears            = 5,
+                        Smooth                = TRUE,
+                        ENPMult               = 0.3,
+                        RecentYears           = 1,
+                        TrendYears            = NULL,
+                        TrendHorizon          = 1,
+                        IndexTarget           = NULL,
+                        HCRControlPointsIndex = c(0, 0.25, 0.5, 1, 2),
+                        HCRControlPointsRate  = c(0, 0.125, 0.5, 1, 1.5),
+                        RampType              = c('linear', 'smooth'),
+                        Responsiveness        = 1,
+                        DeltaDown             = c(0.01, 0.5),
+                        DeltaUp               = c(0.01, 0.5),
+                        TACRange              = NULL,
+                        Allocation            = NULL,
+                        TACType               = c('Removals', 'Landings'),
+                        IndexSeasons          = NULL,
+                        tunepar               = 1) {
 
   .CheckClass(Data, 'data', 'Data')
-  TACType <- match.arg(TACType, c('Removals', 'Landings'))
+  RampType <- match.arg(RampType, c('linear', 'smooth'))
+  TACType  <- match.arg(TACType, c('Removals', 'Landings'))
   .CheckTunePar(tunepar)
   CheckCatch(Data)
   IndexSource <- match.arg(IndexSource, c('Survey', 'CPUE'), several.ok = TRUE)
@@ -303,11 +350,23 @@ IndexTarget <- function(Data,
   Est      <- stats::weighted.mean(StatusTrend, IndexWeight, na.rm = TRUE)
   RefLevel <- stats::weighted.mean(Ref, IndexWeight, na.rm = TRUE)
 
-  # a loess-smoothed status can dip below zero
-  Mod <- exp(log(max(Est * tunepar / RefLevel, 0)) * Responsiveness)
+  CalibRows <- seq(max(1, LHInd - CalibYears + 1), LHInd)
+  Catch     <- .AnnualCatchByType(Data, TACType)
+  RefCatch  <- mean(Catch[CalibRows], na.rm = TRUE) * tunepar
 
-  PrevTAC <- LastTAC(Data, TACType)
-  Catch   <- .AnnualCatchByType(Data, TACType)
+  TrialTAC <- HockeyStickHCR(RefCatch,
+                             Est = Est,
+                             Ref = RefLevel,
+                             ControlPointsIndex = HCRControlPointsIndex,
+                             ControlPointsRate  = HCRControlPointsRate,
+                             RampType           = RampType)
+
+  PrevTAC  <- LastTAC(Data, TACType)
+  TrialTAC <- FilterTAC(TrialTAC)
+  if (is.na(TrialTAC)) TrialTAC <- PrevTAC
+
+  Mod <- exp(log(TrialTAC / PrevTAC) * Responsiveness)
+
   if (is.null(TACRange))
     TACRange <- c(0, 100 * max(Catch, na.rm = TRUE))
 

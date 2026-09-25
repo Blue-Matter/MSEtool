@@ -15,7 +15,8 @@
 #' e.g. to cap the rate above a very healthy status as well as floor it
 #' below a limit.
 #'
-#' @param TrialRate Positive number. Trial rate before HCR adjustment.
+#' @param TrialRate Positive number. Trial rate (or catch, as in
+#'   [IndexTarget()]) before HCR adjustment.
 #' @param Est,Ref Positive numbers, same units. Current status level and its
 #'   target/reference level.
 #' @param ControlPointsIndex Numeric vector, length `>= 2`, non-decreasing
