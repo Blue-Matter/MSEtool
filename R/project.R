@@ -6,11 +6,15 @@
 #' objects use the new `om`-based engine; [Hist-legacy-class] objects use the legacy
 #' engine.
 #'
+#'
 #' @param Hist A [hist-class] or [Hist-legacy-class] object containing the
 #'   conditioned operating model and historical dynamics, as returned by
 #'   [Simulate()].
-#' @param MPs Character vector of MP names to project. MPs must be functions
-#'   available in the current environment. f `NULL` (default), projects
+#' @param MPs MPs to project: a character vector of names of MP functions
+#'   available in the current environment, or (for [hist-class] objects) a
+#'   named list of MP functions, optionally mixed with MP names, e.g.
+#'   `list(IR5 = SetMPArgs(IndexRate, CalibYears = 5), 'IndexTarget')`. List
+#'   names are used as the MP names. If `NULL` (default), projects
 #'   `c("CurrentEffort", "CurrentCatch")`.
 #' @param parallel Logical or named list controlling parallel execution of
 #'   MPs. If `TRUE`, all MPs are run in parallel. If a named list, names
