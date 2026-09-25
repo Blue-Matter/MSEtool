@@ -289,7 +289,7 @@ setMethod('plot', 'data', function(x, y, ...) {
       .AggregateYearData(AggregateYear, object)
   }
 
-  multiFleet <- length(unique(df$Fleet)) > 1
+  multiFleet <- 'Fleet' %in% colnames(df) && length(unique(df$Fleet)) > 1
   mode <- if (!multiFleet) 'single'
           else if (isTRUE(byFleet))  'facet'
           else if (isFALSE(byFleet)) 'sum'
