@@ -46,6 +46,10 @@
 .ProjectMPCompute <- function(Proj, MPName, MPfunction, YearsHist, YearsProj,
                               silent = FALSE, mp = 1, nMP = 1) {
 
+  OldRNG <- .SaveRNG()
+  on.exit(.RestoreRNG(OldRNG), add = TRUE)
+  .SeedMP(Proj@OM@Seed)
+
   Interval        <- .ResolveInterval(Proj@OM@Interval, MPName, MPfunction, Proj@OM@Seasons)
   IsInterim       <- YearsProj %in% .InterimTimesteps(Proj@OM)
   ManagementYears <- if (all(IsInterim)) YearsProj[0] else
@@ -125,7 +129,8 @@
                          YearsProj,
                          mp,
                          FleetNames,
-                         Areas)
+                         Areas,
+                         Interval)
     
     AdviceSimList      <- MPResult$AdviceSimList
     AggBagLimitSimList <- MPResult$AggBagLimitSimList
