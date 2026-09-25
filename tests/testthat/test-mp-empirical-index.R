@@ -95,6 +95,26 @@ test_that("IndexTarget defaults the target to the last historical status", {
   expect_true(is.finite(IndexRate(Flat)@TAC))
 })
 
+test_that("TACType sets the catch used for calibration, the previous TAC, and the advice", {
+  D <- .AnnualIndexData(rep(1, 20))
+  D@Discards@Value[] <- 50
+  expect_equal(LastTAC(D), 150)
+  expect_equal(LastTAC(D, 'Landings'), 100)
+  expect_equal(LastTAC(.SeasonalIndexData(), 'Landings'), sum(9:12) + 10 * sum(9:12))
+
+  for (MP in list(IndexRate, IndexTarget)) {
+    Rem  <- MP(D, Smooth = FALSE)
+    Land <- MP(D, Smooth = FALSE, TACType = 'Landings')
+    expect_equal(c(Rem@TAC, Land@TAC), c(150, 100))
+    expect_equal(c(TACType(Rem), TACType(Land)), c('Removals', 'Landings'))
+  }
+})
+
+test_that("IndexRate keeps the previous TAC when the trial TAC is infinite", {
+  D <- .AnnualIndexData(c(rep(1, 18), 0, 0))
+  expect_equal(IndexRate(D, Smooth = FALSE, RecentYears = 3)@TAC, 100)
+})
+
 test_that(".ResolveIndexTarget keeps supplied values and falls back past trailing NAs", {
   IndexHist <- rbind(c(1, 2, 3, 4, 5, NA), c(2, 2, 2, 2, NA, NA))
   Ref <- .ResolveIndexTarget(c(10, NA), NULL, c(TRUE, TRUE), IndexHist, LHInd = 6,
@@ -152,5 +172,37 @@ test_that("index MPs project non-zero annual-scale TACs in annual and seasonal O
     FirstYear <- Annual[1, , ]
     expect_true(all(FirstYear > 0.4 * LastRemovals & FirstYear < 2 * LastRemovals),
                 info = paste("Seasons =", Seasons))
+  }
+})
+
+test_that("tunepar scales the IndexRate rate and the IndexTarget target", {
+  D <- .AnnualIndexData(seq(2, 1, length.out = 20), Ref = 1.5)
+  Free <- list(DeltaUp = c(0, 10), DeltaDown = c(0, 1), Smooth = FALSE)
+
+  Rate1 <- do.call(IndexRate, c(list(D), Free))
+  Rate2 <- do.call(IndexRate, c(list(D, tunepar = 1.25), Free))
+  expect_equal(Rate2@TAC, 1.25 * Rate1@TAC)
+
+  Target1 <- do.call(IndexTarget, c(list(D), Free))
+  Target2 <- do.call(IndexTarget, c(list(D, tunepar = 1.25), Free))
+  Target3 <- do.call(IndexTarget, c(list(D, IndexTarget = 1.5 / 1.25), Free))
+  expect_equal(Target2@TAC, 1.25 * Target1@TAC)
+  expect_equal(Target2@TAC, Target3@TAC)
+
+  expect_error(IndexRate(D, tunepar = -1), 'tunepar')
+  expect_error(IndexTarget(D, tunepar = c(1, 2)), 'tunepar')
+})
+
+test_that("catch in the first projection years increases with tunepar for every MP", {
+  skip_on_cran()
+  OM <- SingleStockOM
+  OM@nSim <- 3
+  Hist <- Simulate(OM, silent = TRUE)
+  for (MP in c('IndexRate', 'IndexTarget', 'SurplusProduction')) {
+    Fn <- get(MP)
+    MPs <- list(Low = SetMPArgs(Fn, tunepar = 0.6), Mid = Fn, High = SetMPArgs(Fn, tunepar = 1.6))
+    MSE <- Project(Hist, MPs = MPs, silent = TRUE)
+    Yield <- PM_Removals(MSE, Years = Years(OM, 'Projection')[1:10])@Mean[1, c('Low', 'Mid', 'High')]
+    expect_true(all(diff(Yield) > 0), label = MP)
   }
 })

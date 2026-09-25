@@ -136,3 +136,25 @@ test_that("EffortAllocation is not required and not applied for single-fleet OMs
   mse <- Project(hist, MPs = "scalarAbsMP", parallel = FALSE, silent = TRUE)
   expect_equal(unname(mse@Effort[1, 1, , 1]), 2, tolerance = 1e-6)
 })
+
+test_that("an unreachable combined TAC saturates fleets at their effort ceiling", {
+  skip_on_cran()
+  OM <- TwoFleetOM
+  OM@nSim <- 2
+  Hist <- Simulate(OM, silent = TRUE)
+  Huge <- function(Data) Advice(TAC = 1e9)
+  class(Huge) <- 'mp'
+  Big <- function(Data) Advice(Effort = 50)
+  class(Big) <- 'mp'
+  MSE <- Project(Hist, MPs = list(Huge = Huge, Big = Big), silent = TRUE)
+
+  Msg <- vapply(MSE@Log$warning, \(w) w$message, character(1))
+  expect_false(any(grepl('did not converge', Msg)))
+
+  R <- Removals(MSE, df = TRUE)
+  R <- R[R$Period == 'Projection', ]
+  RHuge <- tapply(R$Value[R$MP == 'Huge'], R$Year[R$MP == 'Huge'], sum)
+  RBig  <- tapply(R$Value[R$MP == 'Big'], R$Year[R$MP == 'Big'], sum)
+  expect_true(all(is.finite(RHuge) & RHuge > 0))
+  expect_gte(sum(RHuge[1]), sum(RBig[1]) * 0.99)
+})
