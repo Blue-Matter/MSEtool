@@ -102,6 +102,15 @@ does not converge, unless the reason is a genuine effort ceiling
 TAC is unreachable, so it always gets a further, less-local search
 before the solve is given up on.
 }
+\subsection{Unreachable combined TAC.}{
+
+With multiple active fleets, the catch with every active fleet at its
+effort ceiling is calculated first. If the combined TAC exceeds that
+catch by more than the combined tolerance, the TAC cannot be reached at
+any effort: every active fleet is set to its ceiling and the solve is
+returned as saturated, without iterating.
+}
+
 \subsection{Warm-start rescale.}{
 
 The Newton-Raphson loop starts from the previous

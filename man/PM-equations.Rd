@@ -61,6 +61,12 @@ window,
 \deqn{\frac{1}{|Y|}\sum_{y \in Y} C_{s,y}}{(1/|Y|) * sum over y in Y of C[s,y]}
 where \code{C} is removals (landings + discards), or landings only.
 
+\code{PM_LogYield}: mean log catch over the evaluation window, with catch
+floored at a fraction \code{Floor} of the simulation's mean historical catch
+\eqn{\bar{C}^{hist}_s}{Chist[s]} so that a zero catch has a finite log,
+\deqn{\frac{1}{|Y|}\sum_{y \in Y} \log\left(\max\left(C_{s,y},\ \mathrm{Floor} \cdot \bar{C}^{hist}_s\right)\right)}{(1/|Y|) * sum over y in Y of log(max(C[s,y], Floor * Chist[s]))}
+where \code{C} is landings (default) or removals, per \code{Type}.
+
 \code{PM_RelYield}: mean catch over the evaluation window, expressed relative
 to MSY yield,
 \deqn{\frac{1}{|Y|}\sum_{y \in Y} C_{s,y} \Big/ MSY_s}{[(1/|Y|) * sum over y in Y of C[s,y]] / MSY[s]}
@@ -74,10 +80,13 @@ when \code{Ref} is supplied.
 landings (per \code{Type}), or effort, across management intervals,
 \deqn{\frac{1}{|Y|-1}\sum_{y \in Y \setminus \{y_1\}} \frac{|C_{s,y} - C_{s,y-1}|}{C_{s,y-1}}}{(1/(|Y|-1)) * sum over y in Y (excluding the first year) of |C[s,y] - C[s,y-1]| / C[s,y-1]}
 
+where \code{Y} is the set of management years in the evaluation window and
+\code{y-1} denotes the preceding management year.
+
 \code{PM_Stability}: the probability that the series selected by \code{Type}
-changes by less than a threshold amount between one management interval
+changes by no more than a threshold amount between one management interval
 and the next,
-\deqn{P\left(\frac{|C_{s,y} - C_{s,y-1}|}{C_{s,y-1}} < \mathrm{Threshold}\right)}{P( |C[s,y] - C[s,y-1]| / C[s,y-1] < Threshold )}
+\deqn{P\left(\frac{|C_{s,y} - C_{s,y-1}|}{C_{s,y-1}} \le \mathrm{Threshold}\right)}{P( |C[s,y] - C[s,y-1]| / C[s,y-1] <= Threshold )}
 evaluated per interval \code{y} and averaged across the evaluation window and
 simulations.
 }
@@ -95,5 +104,5 @@ objective (\code{NA} for metrics with no such objective, e.g. \code{PM_Yield});
 
 \seealso{
 \link{PM} for the full list of performance metric functions and their
-arguments.
+arguments; \code{\link[=NewPM]{NewPM()}} to create a custom metric.
 }

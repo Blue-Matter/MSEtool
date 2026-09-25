@@ -7,17 +7,16 @@
 .CheckMPClass(MPs)
 }
 \arguments{
-\item{MPs}{Character vector of MP function names.}
+\item{MPs}{Named list of MP functions, or a character vector of MP
+function names.}
 }
 \value{
 \code{NULL} invisibly if all MPs are valid. Otherwise throws an error.
 }
 \description{
-Retrieves each function named in \code{MPs} and aborts with an informative error
-listing all invalid MPs if any is not one of the native (\code{"mp"}/\code{"mmp"}) or
-legacy DLMtool/SAMtool (\code{"MP"}/\code{"MMP"}) management-procedure classes. Used
-as an upfront validation step before running an MSE. Legacy \code{"MP"}
-functions are wrapped for the new pipeline by \code{.WrapLegacyMP()} inside
-\code{.AddMPFunctions()}.
+Aborts with an informative error listing all invalid MPs if any is not one
+of the native (\code{"mp"}/\code{"mmp"}) or legacy DLMtool/SAMtool (\code{"MP"}/\code{"MMP"})
+management-procedure classes. Legacy \code{"MP"} functions are wrapped for the
+new pipeline by \code{.WrapLegacyMP()} inside \code{.AddMPFunctions()}.
 }
 \keyword{internal}

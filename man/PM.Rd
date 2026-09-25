@@ -13,6 +13,7 @@
 \alias{PM_Removals}
 \alias{PM_Landings}
 \alias{PM_Yield}
+\alias{PM_LogYield}
 \alias{PM_RelYield}
 \alias{PM_AAVY}
 \alias{PM_AAVE}
@@ -55,6 +56,15 @@ PM_Yield(
   Years = NULL,
   Stocks = NULL,
   Type = c("Removals", "Landings"),
+  silent = TRUE
+)
+
+PM_LogYield(
+  object,
+  Years = NULL,
+  Stocks = NULL,
+  Type = c("Landings", "Removals"),
+  Floor = 0.001,
   silent = TRUE
 )
 
@@ -121,6 +131,10 @@ uses the automatic complex/spawning-stock grouping described above.}
 variability in: \code{"TAC"} (the MP's recommendation, default),
 \code{"Removals"}, or \code{"Landings"}.}
 
+\item{Floor}{Positive number. In \code{PM_LogYield}, catches are floored at
+\code{Floor} times the simulation's mean historical catch before taking logs,
+so a zero catch has a finite log. Default \code{1e-3}.}
+
 \item{Fleets}{Character vector of fleet names to include in \code{PM_AAVE}.
 Default \code{NULL} uses all fleets.}
 
@@ -139,7 +153,8 @@ definition of each metric.
 }
 \details{
 \code{PM_Removals}, \code{PM_Landings} (and \code{PM_Yield}, which is a thin wrapper
-around the two), \code{PM_RelYield}, \code{PM_AAVY}, and \code{PM_Stability} sum their
+around the two), \code{PM_LogYield}, \code{PM_RelYield}, \code{PM_AAVY}, and
+\code{PM_Stability} sum their
 series (TAC, removals, or landings) over the stocks in each
 \code{OM@Complexes} group by default; pass \code{Stocks} to override with an
 explicit set of stock names.

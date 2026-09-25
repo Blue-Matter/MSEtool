@@ -16,9 +16,11 @@ combined column-wise, in the order given.}
 \item{Indices}{Character, integer, or \code{NULL}; see \code{\link[=IndexRate]{IndexRate()}}.}
 }
 \value{
-A list with elements \code{Value} (\verb{[nYear x nSelected]}), \code{Ref}
-(length \code{nSelected}, \code{NA} where unset), and \code{Source}/\code{Column} (length
-\code{nSelected}, the slot and column each selected index comes from).
+A list with elements \code{Value} and \code{CV} (\verb{[nYear x nSelected]};
+\code{CV} is \code{NA} where unset), and, each of length \code{nSelected}: \code{Ref} (\code{NA}
+where unset), \code{Name}, \code{Timing} (\code{0} where unset), \code{Units} (\code{NA} where
+unset), and \code{Source}/\code{Column} (the slot and column each selected index
+comes from).
 }
 \description{
 Select and Validate Indices from One or More \code{indicesdata} Objects

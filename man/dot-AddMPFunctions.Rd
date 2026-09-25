@@ -4,21 +4,20 @@
 \alias{.AddMPFunctions}
 \title{Attach MP Functions to an \code{mse} Object}
 \usage{
-.AddMPFunctions(MSE, MPNames)
+.AddMPFunctions(MSE, MPs)
 }
 \arguments{
 \item{MSE}{An \link[=mse-class]{mse} object.}
 
-\item{MPNames}{Character vector of MP function names.}
+\item{MPs}{Named list of MP functions (from \code{.ResolveMPs()}), or a
+character vector of MP function names.}
 }
 \value{
 \code{MSE} with \code{MSE@MPs} populated by valid, self-contained MP
-functions named by their original names.
+functions, named as in \code{MPs}.
 }
 \description{
-Validates that all names in \code{MPNames} correspond to functions of class
-\code{"mp"}, \code{"mmp"}, or a legacy (DLMtool/SAMtool) \code{"MP"} via \code{.CheckMPClass()},
-wraps any legacy \code{"MP"} functions via \code{.WrapLegacyMP()} so they can be
+Wraps any legacy \code{"MP"} functions via \code{.WrapLegacyMP()} so they can be
 called by the new pipeline, then wraps each in a self-contained
 environment via \code{.MakeSelfContained()} and stores them in \code{MSE@MPs}.
 }

@@ -17,10 +17,8 @@
 \item{Hist}{A \link[=hist-class]{hist} object containing the conditioned operating
 model and historical dynamics, as returned by \code{\link[=Simulate]{Simulate()}}.}
 
-\item{MPs}{Character vector of MP names to project. If \code{NULL} (default),
-all MPs attached to \code{Hist} are used. MP names must correspond to
-functions available in the current environment. See \code{.CheckMPClass()} for
-validation details.}
+\item{MPs}{Character vector of MP names, or a named list of MP functions
+(optionally mixed with MP names). See \code{.ResolveMPs()}.}
 
 \item{parallel}{Logical. If \code{TRUE}, projects each MP in parallel using a
 \code{future} plan established by \code{\link[=SetupParallel]{SetupParallel()}}. Errors if

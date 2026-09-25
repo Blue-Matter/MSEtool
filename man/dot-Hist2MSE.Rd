@@ -4,12 +4,13 @@
 \alias{.Hist2MSE}
 \title{Initialise an \code{mse} Object from a \code{hist} Object}
 \usage{
-.Hist2MSE(Hist, MPNames)
+.Hist2MSE(Hist, MPs)
 }
 \arguments{
 \item{Hist}{A populated \link[=hist-class]{hist} object.}
 
-\item{MPNames}{Character vector of MP function names to attach to the MSE.}
+\item{MPs}{Named list of MP functions (from \code{.ResolveMPs()}), or a
+character vector of MP function names.}
 }
 \value{
 An \link[=mse-class]{mse} object with historical slots populated and

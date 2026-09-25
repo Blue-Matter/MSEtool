@@ -27,5 +27,5 @@ own; \code{Obs}/\code{Imp} have no such required slots (every unset slot legitim
 means "no observation"/"perfect implementation").
 }
 \examples{
-SingleStockOM <- CheckOM(SingleStockOM)
+CheckOM(SingleStockOM)
 }

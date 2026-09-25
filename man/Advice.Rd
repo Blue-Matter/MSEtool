@@ -278,6 +278,13 @@ group, acting as a species-specific sub-cap within the pooled limit.
 A list of miscellaneous information that needs to be stored and accessed by
 the MP in future timesteps. Contents of \code{Advice@Misc} will be available in
 the \code{Data@Misc} slot in subsequent time steps.
+
+\code{Advice@Misc} replaces \code{Data@Misc} as a whole, so an MP that keeps state
+across management cycles should start from \code{Data@Misc} and add to it.
+When an MP is called in a projection, the framework also sets
+\code{Data@Misc$MPName}, \code{Data@Misc$StockName}, \code{Data@Misc$AdviceYear} (the time
+step the advice is first applied in), and \code{Data@Misc$Interval} (the
+management interval in years); these are reset at every call.
 }
 
 \subsection{Populating Selectivity, Retention, and Discard Mortality Objects}{

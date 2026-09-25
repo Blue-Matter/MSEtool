@@ -14,7 +14,8 @@
   YearsProj,
   mp,
   FleetNames,
-  Areas
+  Areas,
+  Interval = NULL
 )
 }
 \arguments{
@@ -30,7 +31,13 @@
 
 \item{Proj}{Projection object containing OM and control settings.}
 
-\item{YearsProj}{Numeric vector of projected years (default = \code{YearsProj} from parent scope).
+\item{YearsProj}{Numeric vector of projected years (default = \code{YearsProj} from parent scope).}
+
+\item{Interval}{Numeric management interval (years), or \code{NULL}.
+
+Each \code{Data} object passed to the MP has \code{Data@Misc$MPName},
+\code{Data@Misc$StockName}, \code{Data@Misc$AdviceYear} (the time step the advice
+is first applied in) and \code{Data@Misc$Interval} set.
 
 If \code{Proj@OM@Control$DataOM} is \code{TRUE} or a named list, population dynamics
 information from the \code{Proj} will be included in \code{Data@Misc}

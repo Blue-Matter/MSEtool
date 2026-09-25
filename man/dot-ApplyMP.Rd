@@ -16,7 +16,8 @@
   YearsProj,
   mp,
   FleetNames,
-  Areas
+  Areas,
+  Interval = NULL
 )
 }
 \arguments{
@@ -55,6 +56,9 @@ model state.}
 \item{FleetNames}{Character vector. Fleet names.}
 
 \item{Areas}{Integer vector. Area indices.}
+
+\item{Interval}{Numeric. Management interval (years) resolved for
+this MP; passed to MPs as \code{Data@Misc$Interval}.}
 }
 \value{
 A list with elements \code{AdviceSimList} (nested list of \code{Advice}

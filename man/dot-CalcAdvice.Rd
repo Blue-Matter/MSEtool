@@ -13,7 +13,8 @@
   YearsProj,
   mp,
   FleetNames,
-  Areas
+  Areas,
+  Interval = NULL
 )
 }
 \arguments{
@@ -28,6 +29,8 @@
 \item{Proj}{\code{Hist} object containing population dynamics up to \code{Year}-1}
 
 \item{YearsProj}{Numeric vector of projected years}
+
+\item{Interval}{Numeric management interval (years), or \code{NULL}.}
 }
 \value{
 A list with elements \code{AdviceSimList} (a list of length

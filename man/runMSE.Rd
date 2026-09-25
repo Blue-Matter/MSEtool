@@ -28,8 +28,11 @@ runMSE(
 \item{OM}{An \link[=om-class]{om}, \link[=OM-legacy-class]{OM-legacy}, \link[=hist-class]{hist}, or \link[=Hist-legacy-class]{Hist-legacy} object.
 If \code{NULL} (default), uses \link{SingleStockOM}.}
 
-\item{MPs}{Character vector of MP names to project. MPs must be functions
-available in the current environment. If \code{NULL} (default), projects
+\item{MPs}{MPs to project: a character vector of names of MP functions
+available in the current environment, or (for \link[=hist-class]{hist} objects) a
+named list of MP functions, optionally mixed with MP names, e.g.
+\code{list(IR5 = SetMPArgs(IndexRate, CalibYears = 5), 'IndexTarget')}. List
+names are used as the MP names. If \code{NULL} (default), projects
 \code{c("CurrentEffort", "CurrentCatch")}.}
 
 \item{Hist}{Logical. If \code{TRUE}, returns the \link[=hist-class]{hist} or \link[=Hist-legacy-class]{Hist-legacy}
