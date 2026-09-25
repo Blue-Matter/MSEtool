@@ -49,15 +49,15 @@
 
     NewYear <- !DataYear %in% Data1@Years
 
-    EffortAll         <- .GenProjDataEffortAll(Proj, DataYear, YearsAll, i, nSim)
-    LandingsAll       <- .GenProjDataCatchAll(Proj, DataYear, YearsAll, i, stocks, nSim, type = 'Landings')
-    DiscardsAll       <- .GenProjDataCatchAll(Proj, DataYear, YearsAll, i, stocks, nSim, type = 'Discards')
-    CPUEAll           <- .GenProjDataIndexAll(Proj, DataYear, YearsAll, i, stocks, StockNames, FleetNames, nSim, type = 'CPUE')
-    SurveyAll         <- .GenProjDataIndexAll(Proj, DataYear, YearsAll, i, stocks, StockNames, FleetNames, nSim, type = 'Survey')
-    LandingsAtAgeAll  <- .GenProjDataAgeCompAll(Proj, DataYear, YearsAll, i, stocks, nSim, type = 'LandingsAtAge')
-    DiscardsAtAgeAll  <- .GenProjDataAgeCompAll(Proj, DataYear, YearsAll, i, stocks, nSim, type = 'DiscardsAtAge')
-    LandingsAtSizeAll <- .GenProjDataSizeCompAll(Proj, DataYear, YearsAll, i, stocks, nSim, type = 'LandingsAtSize')
-    DiscardsAtSizeAll <- .GenProjDataSizeCompAll(Proj, DataYear, YearsAll, i, stocks, nSim, type = 'DiscardsAtSize')
+    EffortAll         <- .GenProjDataEffort(Proj, DataYear, YearsAll, i, nSim)
+    LandingsAll       <- .GenProjDataCatch(Proj, DataYear, YearsAll, i, stocks, nSim, type = 'Landings')
+    DiscardsAll       <- .GenProjDataCatch(Proj, DataYear, YearsAll, i, stocks, nSim, type = 'Discards')
+    CPUEAll           <- .GenProjDataIndex(Proj, DataYear, YearsAll, i, stocks, StockNames, FleetNames, nSim, type = 'CPUE')
+    SurveyAll         <- .GenProjDataIndex(Proj, DataYear, YearsAll, i, stocks, StockNames, FleetNames, nSim, type = 'Survey')
+    LandingsAtAgeAll  <- .GenProjDataAgeComp(Proj, DataYear, YearsAll, i, stocks, nSim, type = 'LandingsAtAge')
+    DiscardsAtAgeAll  <- .GenProjDataAgeComp(Proj, DataYear, YearsAll, i, stocks, nSim, type = 'DiscardsAtAge')
+    LandingsAtSizeAll <- .GenProjDataSizeComp(Proj, DataYear, YearsAll, i, stocks, nSim, type = 'LandingsAtSize')
+    DiscardsAtSizeAll <- .GenProjDataSizeComp(Proj, DataYear, YearsAll, i, stocks, nSim, type = 'DiscardsAtSize')
 
     for (x in seq_len(nSim)) {
       Data <- Proj@Data[[x]][[i]]

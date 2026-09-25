@@ -39,27 +39,26 @@
 }
 
 
-.ResolveValue <- function(Proj, slotname, i, fl, TSIndex, Obs, x, DataYear) {
+.ResolveValue <- function(Proj, slotname, i, fl, TSIndex, Obs, nSim, DataYear) {
   omData <- Proj@OM@Data[[i]]
-  
+
   if (!is.null(omData)) {
     omDataSlot <- slot(omData, slotname)@Value
-    
     if (!is.null(omDataSlot) &&
         nrow(omDataSlot) >= TSIndex &&
         ncol(omDataSlot) >= fl) {
-      return(omDataSlot[TSIndex, fl])
+      return(rep(omDataSlot[TSIndex, fl], nSim))
     }
   }
-  
+
   obsError <- .ArraySubsetYear(Obs@Error, DataYear)
-  sim_ind <- min(x, nrow(obsError))
+  sim_ind  <- pmin(seq_len(nSim), nrow(obsError))
   obsError <- obsError[sim_ind]
-  
-  sim_ind <- min(x, length(Obs@Bias))
-  obsBias  <- Obs@Bias[sim_ind]
-  
-  projValue <- slot(Proj, slotname)[x, TSIndex, fl]
+
+  sim_ind_bias <- pmin(seq_len(nSim), length(Obs@Bias))
+  obsBias      <- Obs@Bias[sim_ind_bias]
+
+  projValue <- slot(Proj, slotname)[seq_len(nSim), TSIndex, fl]
   projValue * obsError * obsBias
 }
 
@@ -85,10 +84,12 @@
   previouscv
 }
 
-.ResolveCatchNumber <- function(Real_Catch_Number, fl) {
-  purrr::map(Real_Catch_Number, \(catch_n) {
-    catch_n[,fl,, drop=FALSE] |> sum()
-  }) |> List2Array('Stock') |> sum()
+.ResolveCatchNumber <- function(Real_Catch_Number_All, fl, nSim) {
+  per_stock <- purrr::map(Real_Catch_Number_All, \(catch_n) {
+    catch_n[, , fl, , drop = FALSE] |> abind::adrop(drop = 3)  # [Sim, Age, Area]
+  })
+  totals_by_stock <- purrr::map(per_stock, \(a) apply(a, 1, sum))  # length-nSim per stock
+  Reduce(`+`, totals_by_stock)
 }
 
 .ResolveCatchBiomass <- function(Proj, stocks, x, TSIndex, fl, nArea, Real_Catch_Number,

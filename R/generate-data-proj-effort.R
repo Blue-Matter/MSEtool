@@ -1,22 +1,23 @@
 #' Generate Projected Effort Data
 #'
-#' Internal function to append one year of simulated observed effort to an
-#' existing [effortdata-class] object during the projection period.
+#' Internal function to append one year of simulated observed effort to the
+#' [effortdata-class] object of every simulation during the projection period.
 #'
-#' @param x Integer index of the simulation replicate.
 #' @param Proj A `hist` class object used in the projection.
 #' @param DataYear Numeric. The calendar year to generate data for.
 #' @param YearsAll Numeric vector of all calendar years spanning the
 #'   historical and projection periods.
 #' @param i Integer index of the stock complex.
+#' @param nSim Integer. Number of simulation replicates.
 #'
 #' @details
 #'
 #' ## Early Exit Conditions
 #'
-#' The function returns `EffortData` unchanged in two cases:
+#' The existing `EffortData` of every simulation is returned unchanged in two
+#' cases, both evaluated on simulation 1 (`Proj@Data[[1]][[i]]@Effort`):
 #'
-#' - **No effort data exist**: `Proj@Data[[x]][[i]]@Effort` is empty
+#' - **No effort data exist**: the object is empty
 #'   (`EmptyObject(EffortData)`). Effort was not simulated historically,
 #'   so projection data are not generated.
 #' - **Year already present**: `DataYear` is already a row in
@@ -25,19 +26,24 @@
 #' ## Observation Error Model
 #'
 #' For each fleet with a non-empty [EffortObs()] object and a populated
-#' `Error` array, observed effort for `DataYear` is generated as:
+#' `Error` array, observed effort for `DataYear` is resolved via
+#' `.ResolveValue()`. If `Proj@OM@Data[[i]]` contains an effort value at
+#' `TSIndex`, it is used for all simulations without observation error.
+#' Otherwise:
 #'
-#' \deqn{\tilde{E}_{t} = E_{t} \cdot b \cdot \varepsilon_{t}}
+#' \deqn{\tilde{E}_{x,t} = E_{x,t} \cdot b_x \cdot \varepsilon_{x,t}}
 #'
-#' - \eqn{E_{t}} — true OM effort in year \eqn{t}, resolved via
-#'   `.ResolveValue()` using `TSIndex` to locate `DataYear` in `YearsAll`
-#' - \eqn{b} — multiplicative bias for replicate `x` (`effortobs@Bias[x]`);
-#'   see [EffortObs()]
-#' - \eqn{\varepsilon_{t}} — lognormal error multiplier for replicate `x`,
-#'   year \eqn{t} (`effortobs@Error[x, t]`); see [EffortObs()]
+#' - \eqn{E_{x,t}} — true OM effort for replicate \eqn{x} in year \eqn{t}
+#' - \eqn{b_x} — multiplicative bias (`effortobs@Bias[x]`); see [EffortObs()]
+#' - \eqn{\varepsilon_{x,t}} — lognormal error multiplier
+#'   (`effortobs@Error[x, t]`); see [EffortObs()]
 #'
-#' CVs for the new year are resolved via `.ResolveCV()`, which looks up the
-#' fleet- and year-specific CV from the existing [effortdata-class] object.
+#' `Bias` and `Error` with fewer rows than `nSim` are recycled from their
+#' last row.
+#'
+#' CVs for the new year are resolved per simulation via `.ResolveCV()`, which
+#' looks up the fleet- and year-specific CV from that simulation's existing
+#' [effortdata-class] object.
 #'
 #' ## Obs .Structure
 #'
@@ -58,11 +64,11 @@
 #' ## Appending
 #'
 #' The new year's `Value` and `CV` arrays (dimensions `[1 x nFleet]`) are
-#' bound to the existing arrays along the year dimension using
+#' bound to each simulation's existing arrays along the year dimension using
 #' `abind::abind(..., along = 1)`, preserving dimension names.
 #'
-#' @return An [effortdata-class] object with `DataYear` appended to `@Value`
-#'   and `@CV`:
+#' @return A list of length `nSim` of [effortdata-class] objects, each with
+#'   `DataYear` appended to `@Value` and `@CV`:
 #'
 #' - `@Value`: `[nYear+1 x nFleet]` array of observed effort
 #' - `@CV`: `[nYear+1 x nFleet]` array of CVs
@@ -70,36 +76,7 @@
 #' @seealso [EffortObs()], [EffortData()], [effortdata-class], [obs-class],
 #'   `.GenHistDataEffort()`
 #' @keywords internal
-.GenProjDataEffort <- function(x, Proj, DataYear, YearsAll, i) {
-  
-  EffortData <- Proj@Data[[x]][[i]]@Effort
-  
-  if (EmptyObject(EffortData)) return(EffortData)
-  if (DataYear %in% dimnames(EffortData@Value)[[1]]) return(EffortData)
-  
-  TSIndex     <- match(DataYear, YearsAll)
-  Value       <- EffortData@Value
-  CV          <- EffortData@CV
-  FleetNames  <- .ResolveFleetNames(EffortData)
-  nFleet      <- length(FleetNames)
-  
-  NewValue <- .EmptyFleetArray(DataYear, FleetNames)
-  NewCV    <- .EmptyFleetArray(DataYear, FleetNames)
-
-  for (fl in seq_len(nFleet)) {
-    Obs <- Proj@OM@Obs[[i]][[fl]]@Effort
-    if (EmptyObject(Obs) || length(Obs@Error) < 1) next
-    
-    NewValue[, fl] <- .ResolveValue(Proj, 'Effort', i, fl, TSIndex, Obs, x, DataYear)
-    NewCV[, fl]    <- .ResolveCV(Proj, 'Effort', i, fl, TSIndex, EffortData, DataYear)
-  }
-  
-  EffortData@Value <- abind::abind(Value, NewValue, along = 1, use.dnns = TRUE)
-  EffortData@CV    <- abind::abind(CV, NewCV, along = 1, use.dnns = TRUE)
-  EffortData
-}
-
-.GenProjDataEffortAll <- function(Proj, DataYear, YearsAll, i, nSim) {
+.GenProjDataEffort <- function(Proj, DataYear, YearsAll, i, nSim) {
 
   EffortData1 <- Proj@Data[[1]][[i]]@Effort
   unchanged   <- EmptyObject(EffortData1) || DataYear %in% dimnames(EffortData1@Value)[[1]]
@@ -117,7 +94,7 @@
     Obs <- Proj@OM@Obs[[i]][[fl]]@Effort
     if (EmptyObject(Obs) || length(Obs@Error) < 1) next
 
-    NewValueAll[, fl] <- .ResolveValueAll(Proj, 'Effort', i, fl, TSIndex, Obs, nSim, DataYear)
+    NewValueAll[, fl] <- .ResolveValue(Proj, 'Effort', i, fl, TSIndex, Obs, nSim, DataYear)
 
     for (x in seq_len(nSim))
       NewCVAll[x, fl] <- .ResolveCV(Proj, 'Effort', i, fl, TSIndex, Proj@Data[[x]][[i]]@Effort, DataYear)
@@ -133,27 +110,4 @@
     EffortData@CV    <- abind::abind(EffortData@CV, NewCV, along = 1, use.dnns = TRUE)
     EffortData
   })
-}
-
-.ResolveValueAll <- function(Proj, slotname, i, fl, TSIndex, Obs, nSim, DataYear) {
-  omData <- Proj@OM@Data[[i]]
-
-  if (!is.null(omData)) {
-    omDataSlot <- slot(omData, slotname)@Value
-    if (!is.null(omDataSlot) &&
-        nrow(omDataSlot) >= TSIndex &&
-        ncol(omDataSlot) >= fl) {
-      return(rep(omDataSlot[TSIndex, fl], nSim))
-    }
-  }
-
-  obsError <- .ArraySubsetYear(Obs@Error, DataYear)
-  sim_ind  <- pmin(seq_len(nSim), nrow(obsError))
-  obsError <- obsError[sim_ind]
-
-  sim_ind_bias <- pmin(seq_len(nSim), length(Obs@Bias))
-  obsBias      <- Obs@Bias[sim_ind_bias]
-
-  projValue <- slot(Proj, slotname)[seq_len(nSim), TSIndex, fl]
-  projValue * obsError * obsBias
 }
