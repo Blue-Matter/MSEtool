@@ -2,48 +2,92 @@
 .InterimRows <- function(Mean, CV = NA_real_, Max = NA_real_)
   data.frame(Mean = Mean, CV = CV, Max = Max)
 
+.DrawInterimMultipliers <- function(om, rows, CalYear = 2025, Complex = "S", Type = "TAC", Fleet = "F1") {
+  z <- .SampleInterimDeviate(om, CalYear, Complex, Type, Fleet, rows, seq_len(om@nSim))
+  vapply(rows$CV, .InterimMultiplier, numeric(om@nSim), z = z)
+}
+
 test_that("interim multiplier is deterministic when CV is NA/0 or all Mean are 0", {
   data(SingleStockOM, envir = environment())
   om <- SingleStockOM
   om@nSim <- 10
-  expect_equal(.SampleInterimMultiplier(om, 2025, "S", "TAC", .InterimRows(100), 1), 1)
-  expect_equal(.SampleInterimMultiplier(om, 2025, "S", "TAC", .InterimRows(100, 0), 1), 1)
-  expect_equal(.SampleInterimMultiplier(om, 2025, "S", "TAC", .InterimRows(c(0, 0), 0.3), 1), 1)
+  expect_equal(.SampleInterimDeviate(om, 2025, "S", "TAC", "F1", .InterimRows(100), 1), 0)
+  expect_equal(.SampleInterimDeviate(om, 2025, "S", "TAC", "F1", .InterimRows(100, 0), 1), 0)
+  expect_equal(.SampleInterimDeviate(om, 2025, "S", "TAC", "F1", .InterimRows(c(0, 0), 0.3), 1), 0)
+  expect_equal(.InterimMultiplier(c(NA, 0), 1.5), c(1, 1))
 })
 
 test_that("interim multiplier has mean 1 and the requested CV", {
   data(SingleStockOM, envir = environment())
   om <- SingleStockOM
   om@nSim <- 20000
-  rows <- .InterimRows(c(600, 400), 0.2)
-  m <- .SampleInterimMultiplier(om, 2025, "S", "TAC", rows, seq_len(om@nSim))
+  m <- .DrawInterimMultipliers(om, .InterimRows(600, 0.2))
   expect_equal(mean(m), 1, tolerance = 0.01)
-  expect_equal(sd(m) / mean(m), 0.2, tolerance = 0.03)
+  expect_equal(sd(m), 0.2, tolerance = 0.03)
 })
 
-test_that("interim multiplier is truncated at the smallest Max / Mean", {
+test_that("interim multiplier: a fleet's seasonal rows share a deviate, each with its own CV", {
+  data(SingleStockOM, envir = environment())
+  om <- SingleStockOM
+  om@nSim <- 20000
+  m <- .DrawInterimMultipliers(om, .InterimRows(c(600, 400, 300, 0), c(0, 0.1, 0.4, 0.2)))
+  expect_true(all(m[, 1] == 1))
+  expect_equal(colMeans(m[, 2:3]), c(1, 1), tolerance = 0.01)
+  expect_equal(apply(m[, 2:3], 2, sd), c(0.1, 0.4), tolerance = 0.03)
+  expect_equal(cor(log(m[, 2]), log(m[, 3])), 1)
+})
+
+test_that("interim multiplier is independent among fleets", {
+  data(SingleStockOM, envir = environment())
+  om <- SingleStockOM
+  om@nSim <- 20000
+  rows <- .InterimRows(600, 0.3)
+  mA <- .DrawInterimMultipliers(om, rows, Fleet = "A")
+  mB <- .DrawInterimMultipliers(om, rows, Fleet = "B")
+  mT <- .DrawInterimMultipliers(om, rows, Fleet = .InterimFleetKey(NA))
+  expect_lt(abs(cor(log(mA), log(mB))), 0.03)
+  expect_lt(abs(cor(log(mA), log(mT))), 0.03)
+})
+
+test_that("interim multiplier is truncated at the smallest Max / Mean of the fleet's rows", {
   data(SingleStockOM, envir = environment())
   om <- SingleStockOM
   om@nSim <- 5000
-  rows <- .InterimRows(c(600, 400, 0), 0.3, c(720, 500, NA))
-  m <- .SampleInterimMultiplier(om, 2025, "S", "TAC", rows, seq_len(om@nSim))
-  expect_true(all(m <= 1.2))
-  expect_true(mean(m) < 1)
+  m <- .DrawInterimMultipliers(om, .InterimRows(c(600, 400, 0), 0.3, c(720, 500, NA)))
+  expect_true(all(m[, 1:2] <= 1.2))
+  expect_true(mean(m[, 1]) < 1)
+
+  m <- .DrawInterimMultipliers(om, .InterimRows(c(600, 400, 200), c(0.1, 0.4, 0), c(Inf, 500, 200)))
+  expect_true(all(m[, 2] <= 1.25 + 1e-12))
+  expect_true(all(m[, 3] == 1))
 })
 
-test_that("interim multiplier seeds differ across years, stocks, and types", {
+test_that("interim multiplier is a truncated mean-1 lognormal draw", {
+  data(SingleStockOM, envir = environment())
+  om <- SingleStockOM
+  om@nSim <- 50
+  sigma <- sqrt(log(1 + 0.3^2))
+  mu <- -sigma^2 / 2
+  set.seed(digest::digest2int(paste(om@Seed, 2025, "S", "TAC", "F1", sep = "_")))
+  ref <- stats::qlnorm(stats::runif(om@nSim, 0, stats::plnorm(1.2, mu, sigma)), mu, sigma)
+  m <- .DrawInterimMultipliers(om, .InterimRows(600, 0.3, 720))
+  expect_equal(m[, 1], ref)
+})
+
+test_that("interim multiplier seeds differ across years, complexes, types, and fleets", {
   data(SingleStockOM, envir = environment())
   om <- SingleStockOM
   om@nSim <- 5
   rows <- .InterimRows(100, 0.3)
-  draw <- function(y, s, t) .SampleInterimMultiplier(om, y, s, t, rows, seq_len(om@nSim))
+  draw <- function(y, s, t, f = "F1") .DrawInterimMultipliers(om, rows, y, s, t, f)
   expect_false(isTRUE(all.equal(draw(2024, "S", "TAC"), draw(2042, "S", "TAC"))))
   expect_false(isTRUE(all.equal(draw(2025, "S1", "TAC"), draw(2024, "S2", "TAC"))))
   expect_false(isTRUE(all.equal(draw(2025, "S", "TAC"), draw(2025, "S", "Effort"))))
+  expect_false(isTRUE(all.equal(draw(2025, "S", "TAC", "F1"), draw(2025, "S", "TAC", "F2"))))
   expect_equal(draw(2025, "S", "TAC"), draw(2025, "S", "TAC"))
 })
 
-test_that("InterimAdvice validation rejects SD, negative CV, mixed CV, and Max < Mean", {
+test_that("InterimAdvice validation rejects SD, negative CV, and Max < Mean", {
   data(SingleStockOM, envir = environment())
   om <- SingleStockOM
   yr <- CurrentYear(om) + 1
@@ -52,9 +96,10 @@ test_that("InterimAdvice validation rejects SD, negative CV, mixed CV, and Max <
 
   expect_error(set_ia(data.frame(Year = yr, Type = "TAC", Mean = 100, SD = 10)), "use `CV`")
   expect_error(set_ia(data.frame(Year = yr, Type = "TAC", Mean = 100, CV = -0.1)), "CV")
-  expect_error(set_ia(data.frame(Year = yr, Type = "TAC", Fleet = c("A", "B"),
-                                 Mean = c(100, 50), CV = c(0.1, 0.2))), "identical")
   expect_error(set_ia(data.frame(Year = yr, Type = "TAC", Mean = 100, Max = 90)), "Max")
+
+  expect_no_error(set_ia(data.frame(Year = yr, Type = "TAC", Fleet = c("A", "B"),
+                                    Mean = c(100, 50), CV = c(0, 0.2))))
 
   expect_no_error(set_ia(data.frame(Year = yr, Type = "TAC", Fleet = c("A", "B", "C"),
                                 Mean = c(100, 50, 0), CV = c(0.2, 0.2, NA), Max = c(100, NA, NA))))
@@ -164,6 +209,38 @@ test_that("seasonal OM: seasonal rows used as given, annual rows split by Season
 
   # interim years do not depend on the MP's EverySeason attribute
   expect_equal(removals("CurrentCatch"), rem, tolerance = 1e-6)
+})
+
+test_that("seasonal OM: per-fleet CVs, reported catch fixed and assumed catch drawn independently", {
+  skip_on_cran()
+  hist <- .InterimSeasonalHist()
+  yp <- Years(hist, "P")
+  fl <- FleetNames(hist)
+  hist@OM@MPStartYear <- 2029
+  CV <- c(0, 0.3, 0.2, 0.3)
+  hist@OM@InterimAdvice <- data.frame(Year = rep(2027:2028, each = 2), Fleet = fl, Type = "TAC",
+                                      Mean = c(300, 150, 300, 150), CV = CV)
+  SA <- (.CheckFleetAllocation(hist) |> .CheckSeasonalAllocation())@OM@SeasonalAllocation[[1]]
+
+  mse <- Project(hist, MPs = "refMSY50", parallel = FALSE, silent = TRUE)
+  rem <- ArraySum(mse@Landings, mse@Discards)
+  rem <- apply(rem[, , as.character(yp[1:8]), , 1, drop = FALSE], c(1, 3, 4), sum)
+
+  cx <- names(hist@OM@Complexes)[1]
+  Mean <- c(300, 150)
+  for (y in 1:2) {
+    cv <- CV[(y - 1) * 2 + 1:2]
+    ts <- (y - 1) * 4 + 1:4
+    for (f in 1:2) {
+      z <- .SampleInterimDeviate(hist@OM, 2026 + y, cx, "TAC", fl[f],
+                                 data.frame(Mean = Mean[f], CV = cv[f], Max = NA), 1:3) |> rep_len(3)
+      if (cv[f] > 0) expect_length(unique(z), 3)
+      for (sim in 1:3)
+        expect_equal(unname(rem[sim, ts, fl[f]]),
+                     Mean[f] * .InterimMultiplier(cv[f], z[sim]) * unname(SA[sim, , fl[f]]),
+                     tolerance = 1e-3)
+    }
+  }
 })
 
 test_that("annual OM: per-fleet TAC and relative/absolute Effort are applied", {

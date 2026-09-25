@@ -954,17 +954,17 @@ MPStartYear <- function(x) .IsHist(x, "MPStartYear")
 #'   fleet with no historical catch, maintained as a closure in interim
 #'   years).
 #' - `CV`: optional; coefficient of variation of a lognormal multiplier with
-#'   mean 1. `NA`/`0` (default) gives a fixed, deterministic value. One
-#'   multiplier is drawn per simulation for each calendar year x Complex x
-#'   Type and applied to every row in that group (all fleets and seasons), so
-#'   fleet and seasonal shares stay fixed at the ratios of their `Mean`s.
-#'   Must be identical for all rows with `Mean > 0` in a calendar year x
-#'   Complex x Type.
-#' - `Max`: optional; upper bound on the drawn value. The multiplier is drawn
-#'   from a lognormal truncated at the smallest `Max / Mean` in its calendar
-#'   year x Complex x Type, so no row exceeds its `Max`. `Mean` is the mean
-#'   before truncation; the realised mean is lower. `NA` (default) gives no
-#'   bound. If supplied, must be `>= Mean`.
+#'   mean 1. `NA`/`0` (default) gives a fixed, deterministic value. May differ
+#'   among rows, e.g. `0` for fleets with reported catch and `> 0` for fleets
+#'   with assumed catch. One standard-normal deviate is drawn per simulation
+#'   for each calendar year x Complex x Type x Fleet and shared by that
+#'   fleet's seasonal rows; each row converts it to a multiplier with its own
+#'   `CV`. Draws are independent among fleets. A `Fleet = NA` total is one
+#'   draw, split among its fleets as described above.
+#' - `Max`: optional; upper bound on the drawn value. A fleet's deviate is
+#'   truncated so that none of its rows in the calendar year exceeds its
+#'   `Max`. `Mean` is the mean before truncation; the realised mean is lower.
+#'   `NA` (default) gives no bound. If supplied, must be `>= Mean`.
 #' - `TACType`: `"Removals"` (default) or `"Landings"`; only used for `"TAC"`
 #'   rows.
 #' - `TACUnit`: units of `Mean` and `Max` for `"TAC"` rows, as in [Advice()]:

@@ -91,7 +91,7 @@
   IA$Season  <- ((tsIdx - 1L) %% Seasons) + 1L
 
   # per fleet (or complex total) and calendar year: one integer-year row, or one row per season
-  FleetKey <- ifelse(is.na(IA$Fleet), "<complex total>", IA$Fleet)
+  FleetKey <- .InterimFleetKey(IA$Fleet)
   grp <- paste(IA$Complex, IA$Type, FleetKey, IA$CalYear, sep = "\r")
   IA$Seasonal <- FALSE
   for (g in unique(grp)) {
@@ -191,9 +191,11 @@
   for (Type in c("TAC", "Effort")) {
     r <- rows[rows$Type == Type, , drop = FALSE]
     if (!nrow(r)) next
-    mult <- .SampleInterimMultiplier(Proj@OM, CalYear, Complex, Type,
-                                     yearRows[yearRows$Type == Type, , drop = FALSE], sim)
-    vals <- .InterimFleetValues(Proj, sim, Season, cxInd, FleetNames, r, mult, last_ts, Type)
+    yr   <- yearRows[yearRows$Type == Type, , drop = FALSE]
+    keys <- .InterimFleetKey(yr$Fleet)
+    z    <- vapply(unique(keys), \(k) .SampleInterimDeviate(
+      Proj@OM, CalYear, Complex, Type, k, yr[keys == k, , drop = FALSE], sim), numeric(1))
+    vals <- .InterimFleetValues(Proj, sim, Season, cxInd, FleetNames, r, z, last_ts, Type)
     if (Type == "TAC") {
       Advice@TAC     <- vals$value
       Advice@TACType <- vals$TACType
@@ -211,8 +213,9 @@
 }
 
 # absolute per-fleet value for this timestep: annual rows split by SeasonalAllocation,
-# a Fleet = NA total split by Fleet/EffortAllocation over the fleets not listed
-.InterimFleetValues <- function(Proj, sim, Season, cxInd, FleetNames, rows, mult,
+# a Fleet = NA total split by Fleet/EffortAllocation over the fleets not listed;
+# z is the deviate for each .InterimFleetKey()
+.InterimFleetValues <- function(Proj, sim, Season, cxInd, FleetNames, rows, z,
                                 last_ts, Type) {
   nFleet  <- length(FleetNames)
   SA      <- Proj@OM@SeasonalAllocation[[cxInd]]
@@ -226,7 +229,7 @@
   explicit <- rows[!is.na(rows$Fleet), , drop = FALSE]
   for (k in seq_len(nrow(explicit))) {
     fl <- match(explicit$Fleet[k], FleetNames)
-    v  <- explicit$Mean[k] * mult
+    v  <- explicit$Mean[k] * .InterimMultiplier(explicit$CV[k], z[[explicit$Fleet[k]]])
     if (Type == "Effort" && explicit$EffType[k] == "Rel") {
       v <- v * LastEff[fl]
     } else if (!explicit$Seasonal[k]) {
@@ -240,7 +243,7 @@
   total <- rows[is.na(rows$Fleet), , drop = FALSE]
   if (nrow(total)) {
     rest <- which(!FleetNames %in% explicit$Fleet)
-    v    <- total$Mean[1] * mult
+    v    <- total$Mean[1] * .InterimMultiplier(total$CV[1], z[[.InterimFleetKey(NA)]])
     if (Type == "Effort" && total$EffType[1] == "Rel") {
       value[rest] <- v * LastEff[rest]
     } else {
@@ -259,19 +262,27 @@
   list(value = value, TACType = TACType, TACUnit = TACUnit)
 }
 
-# one mean-1 lognormal multiplier per sim, shared by all rows of a Year x Complex x Type
-.SampleInterimMultiplier <- function(OM, CalYear, Complex, Type, rows, sim) {
-  pos <- rows$Mean > 0
-  if (!any(pos)) return(1)
-  CV <- rows$CV[pos][1]
-  if (is.na(CV) || CV <= 0) return(1)
+.InterimFleetKey <- function(Fleet) ifelse(is.na(Fleet), "<complex total>", Fleet)
 
-  sigma <- sqrt(log(1 + CV^2))
-  mu    <- -sigma^2 / 2
-  Upper <- min(c(Inf, rows$Max[pos] / rows$Mean[pos]), na.rm = TRUE)
-  pUpper <- if (is.finite(Upper)) stats::plnorm(Upper, mu, sigma) else 1
+.InterimSigma <- function(CV) ifelse(is.na(CV) | CV <= 0, 0, sqrt(log(1 + CV^2)))
 
-  key <- paste(OM@Seed, CalYear, Complex, Type, sep = "_")
+# mean-1 lognormal multiplier for each CV at the standard-normal deviate z
+.InterimMultiplier <- function(CV, z) {
+  sigma <- .InterimSigma(CV)
+  exp(sigma * z - sigma^2 / 2)
+}
+
+# one standard-normal deviate per sim for a Year x Complex x Type x Fleet, shared by
+# that fleet's seasonal rows and truncated so no row's multiplier exceeds its Max / Mean
+.SampleInterimDeviate <- function(OM, CalYear, Complex, Type, Fleet, rows, sim) {
+  sigma <- .InterimSigma(rows$CV)
+  pos   <- rows$Mean > 0 & sigma > 0
+  if (!any(pos)) return(0)
+
+  Upper  <- (log(rows$Max[pos] / rows$Mean[pos]) + sigma[pos]^2 / 2) / sigma[pos]
+  pUpper <- stats::pnorm(min(c(Inf, Upper), na.rm = TRUE))
+
+  key <- paste(OM@Seed, CalYear, Complex, Type, Fleet, sep = "_")
   seed_val <- digest::digest2int(key)
 
   has_seed <- exists(".Random.seed", envir = .GlobalEnv)
@@ -282,7 +293,7 @@
   })
 
   set.seed(seed_val)
-  draws <- stats::qlnorm(stats::runif(OM@nSim, 0, pUpper), mu, sigma)
+  draws <- stats::qnorm(stats::runif(OM@nSim, 0, pUpper))
   draws[sim]
 }
 

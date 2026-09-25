@@ -285,15 +285,6 @@ setValidity("om", function(object) {
         cv_vals <- object@InterimAdvice$CV
         if (any(!is.na(cv_vals) & cv_vals < 0))
           errors <- c(errors, "`InterimAdvice$CV` must be `NA`, `0`, or positive; found negative value(s)")
-        pos <- !is.na(mean_vals) & mean_vals > 0
-        if (any(pos)) {
-          cx  <- if (!is.na(cx_col)) object@InterimAdvice[[cx_col]] else ""
-          grp <- paste(floor(object@InterimAdvice$Year + 5e-4), cx, object@InterimAdvice$Type, sep = "\r")
-          cv0 <- ifelse(is.na(cv_vals), 0, cv_vals)
-          n_cv <- tapply(cv0[pos], grp[pos], function(x) length(unique(x)))
-          if (any(n_cv > 1))
-            errors <- c(errors, "`InterimAdvice$CV` must be identical for all rows with `Mean > 0` within a Year x Complex x Type")
-        }
       }
 
       if ("Max" %in% names(object@InterimAdvice)) {
