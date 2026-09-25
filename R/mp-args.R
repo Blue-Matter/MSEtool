@@ -2,13 +2,7 @@
 #'
 #' Returns a copy of a management procedure (MP) with new default values for
 #' some of its arguments, e.g. to define a variant of a built-in MP with
-#' different settings. The class and all attributes of `MP` (e.g. `Interval`,
-#' `DataOM`, `EverySeason`) are kept, so the variant is a valid MP that can be
-#' projected directly, tuned with [TuneMP()], or given further variants.
-#'
-#' The new values are stored as the defaults of the returned function's
-#' arguments, so they are carried with the function when it is projected in
-#' parallel or saved to disk.
+#' different settings. 
 #'
 #' @param MP An MP function (class `mp` or `mmp`), or the name of one.
 #' @param ... Named argument values. Each name must be an argument of `MP`
