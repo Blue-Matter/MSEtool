@@ -55,17 +55,17 @@ Year x Complex x Type, split among them by \code{\link[=FleetAllocation]{FleetAl
 fleet with no historical catch, maintained as a closure in interim
 years).
 \item \code{CV}: optional; coefficient of variation of a lognormal multiplier with
-mean 1. \code{NA}/\code{0} (default) gives a fixed, deterministic value. One
-multiplier is drawn per simulation for each calendar year x Complex x
-Type and applied to every row in that group (all fleets and seasons), so
-fleet and seasonal shares stay fixed at the ratios of their \code{Mean}s.
-Must be identical for all rows with \code{Mean > 0} in a calendar year x
-Complex x Type.
-\item \code{Max}: optional; upper bound on the drawn value. The multiplier is drawn
-from a lognormal truncated at the smallest \code{Max / Mean} in its calendar
-year x Complex x Type, so no row exceeds its \code{Max}. \code{Mean} is the mean
-before truncation; the realised mean is lower. \code{NA} (default) gives no
-bound. If supplied, must be \verb{>= Mean}.
+mean 1. \code{NA}/\code{0} (default) gives a fixed, deterministic value. May differ
+among rows, e.g. \code{0} for fleets with reported catch and \verb{> 0} for fleets
+with assumed catch. One standard-normal deviate is drawn per simulation
+for each calendar year x Complex x Type x Fleet and shared by that
+fleet's seasonal rows; each row converts it to a multiplier with its own
+\code{CV}. Draws are independent among fleets. A \code{Fleet = NA} total is one
+draw, split among its fleets as described above.
+\item \code{Max}: optional; upper bound on the drawn value. A fleet's deviate is
+truncated so that none of its rows in the calendar year exceeds its
+\code{Max}. \code{Mean} is the mean before truncation; the realised mean is lower.
+\code{NA} (default) gives no bound. If supplied, must be \verb{>= Mean}.
 \item \code{TACType}: \code{"Removals"} (default) or \code{"Landings"}; only used for \code{"TAC"}
 rows.
 \item \code{TACUnit}: units of \code{Mean} and \code{Max} for \code{"TAC"} rows, as in \code{\link[=Advice]{Advice()}}:
