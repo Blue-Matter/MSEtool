@@ -69,6 +69,14 @@
 #'    TAC is unreachable, so it always gets a further, less-local search
 #'    before the solve is given up on.
 #'
+#' ## Unreachable combined TAC.
+#'
+#' With multiple active fleets, the catch with every active fleet at its
+#' effort ceiling is calculated first. If the combined TAC exceeds that
+#' catch by more than the combined tolerance, the TAC cannot be reached at
+#' any effort: every active fleet is set to its ceiling and the solve is
+#' returned as saturated, without iterating.
+#'
 #' ## Warm-start rescale.
 #' 
 #' The Newton-Raphson loop starts from the previous
@@ -281,6 +289,18 @@
     e
   }
   
+  Effort_cap          <- Effort_curr
+  Effort_cap[pos_idx] <- apply_ceiling(maxEffort_fl[pos_idx], pos_idx)
+  residual_cap        <- residual_fn(Effort_cap)
+  if (is.finite(sum(residual_cap)) && sum(residual_cap) > sum(tol_vec)) {
+    Catch_out <- rep(NA_real_, nFleet); Catch_out[pos_idx] <- BindingTAC[pos_idx] - residual_cap
+    if (length(zero_idx))  Catch_out[zero_idx]    <- 0
+    if (any(ceiling_zero)) Catch_out[ceiling_zero] <- 0
+    TAC_out <- rep(NA_real_, nFleet); TAC_out[pos_idx] <- BindingTAC[pos_idx]
+    return(list(Effort = Effort_cap, converged = FALSE, saturated = TRUE,
+                TAC = TAC_out, Catch = Catch_out))
+  }
+
   # Informed warm-start rescale
   # A large, simultaneous multi-fleet TAC change can require the solver
   # to find a joint root far from the previous time step's effort. Rescale
