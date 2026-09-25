@@ -92,6 +92,9 @@ Simulate <- function(OM           = NULL,
   if (is.null(OM))
     OM <- MSEtool::SingleStockOM
 
+  if (inherits(OM, 'hist')) 
+    OM <- OM@OM
+    
   if (inherits(OM, 'om'))
     return(
       .SimulateOM(OM           = OM,
