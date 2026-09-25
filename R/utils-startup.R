@@ -19,6 +19,9 @@
   if (is.null(OM@Control$Clone))
     OM@Control$Clone <- 0
 
+  if (EmptyObject(OM@StockTargeting))
+    OM@StockTargeting <- new("stocktargeting")
+
   OM |>
     ReduceNSim(OM@nSim) |>
     PopulateOM(silent = silent) |>

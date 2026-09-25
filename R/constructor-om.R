@@ -139,11 +139,6 @@
 #' See [InterimAdvice()] for how interim years are resolved and the
 #' `data.frame` format used to populate them.
 #'
-#' ## StockTargeting Initialisation
-#'
-#' The `StockTargeting` slot is initialised automatically by [StockTargeting()]
-#' when `Stock` and `Fleet` are provided. It is not a user-facing parameter
-#' and should not be set directly.
 #'
 #' ## Sub-Object Slots
 #'
@@ -329,7 +324,7 @@ OM <- function(Name        = "A new OM object",
   .Object@Relations   <- Relations
   
   if (is.null(StockTargeting))
-    StockTargeting <- StockTargeting(.Object)
+    StockTargeting <- new("stocktargeting")
   .Object@StockTargeting <- StockTargeting
   
   .Object@Interval    <- Interval

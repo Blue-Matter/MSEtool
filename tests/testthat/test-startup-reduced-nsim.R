@@ -27,3 +27,37 @@ test_that("Simulate() works after lowering OM@nSim to 1", {
   expect_equal(unname(dim(hist@Landings)[1]), 1)
   expect_false(anyNA(hist@SBiomass))
 })
+
+test_that("Simulate() works after raising nSim on built-in multi-stock OMs", {
+  skip_on_cran()
+  for (nm in c("MultiStockOM", "ComplexOM", "HermOM")) {
+    om <- get(nm)
+    nSim(om) <- nSim(om) + 3
+
+    hist <- Simulate(om, silent = TRUE)
+    expect_s4_class(hist, "hist")
+    expect_equal(unname(dim(hist@OM@StockTargeting@Targeting)[1]), nSim(om),
+                 label = nm)
+  }
+})
+
+test_that("Simulate() works after raising nSim on a user-built multi-stock OM", {
+  skip_on_cran()
+  om <- OM(nSim = 3, nYear = 20, pYear = 5,
+           Stock = list(AlbacoreExStock, ButterfishExStock),
+           Fleet = list(list(AsympExFleet), list(AsympExFleet)))
+  nSim(om) <- 5
+
+  hist <- Simulate(om, silent = TRUE)
+  expect_equal(unname(dim(hist@OM@StockTargeting@Targeting)[1]), 5)
+})
+
+test_that("Simulate() drops StockTargeting placeholders sized to an earlier nSim", {
+  skip_on_cran()
+  om <- MultiStockOM
+  om@StockTargeting <- StockTargeting(om)
+  om@nSim <- nSim(om) + 2
+
+  hist <- Simulate(om, silent = TRUE)
+  expect_equal(unname(dim(hist@OM@StockTargeting@Targeting)[1]), nSim(om))
+})

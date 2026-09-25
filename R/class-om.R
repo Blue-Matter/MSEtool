@@ -112,8 +112,8 @@
 #'   See [OM()].
 #'
 #' @slot StockTargeting A [stocktargeting-class] object. Defines fleet-level
-#'   stock targeting weights and deviations. Initialised automatically by
-#'   [OM()] via [StockTargeting()].
+#'   stock targeting weights and deviations. Built by [StockTargeting()] when
+#'   the OM is populated.
 #'
 #' @slot Interval Numeric scalar or named numeric vector. Management update
 #'   interval in years (regardless of `Seasons` - e.g. `Interval = 1` always
@@ -148,8 +148,7 @@
 #'
 #' @details
 #' Direct construction via [methods::new()] is not recommended; use [OM()]
-#' instead, which populates defaults, derives `Years`, and initialises
-#' `StockTargeting` automatically.
+#' instead, which populates defaults and derives `Years`.
 #'
 #' All slots can be accessed or replaced using functions matching the slot
 #' name. See [OM-accessors] for the full list. Slots belonging to sub-objects
