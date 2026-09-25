@@ -207,8 +207,9 @@ SurplusProduction <- function(Data,
                               FallbackYears           = c(2, 3),
                               Diagnostics             = c('min', 'none', 'full')) {
 
+  .CheckClass(Data, 'data', 'Data')
   CatchType   <- match.arg(CatchType, c('Removals', 'Landings'))
-  Model      <- match.arg(Model, c('internal', 'spict'))
+  Model       <- match.arg(Model, c('internal', 'spict'))
   IndexSD     <- match.arg(IndexSD, c('estimate', 'data'))
   RampType    <- match.arg(RampType, c('linear', 'smooth'))
   GapCatch    <- match.arg(GapCatch, c('TAC', 'LastCatch'))

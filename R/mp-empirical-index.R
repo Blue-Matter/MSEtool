@@ -180,6 +180,7 @@ IndexRate <- function(Data,
                       IndexSeasons          = NULL,
                       tunepar               = 1) {
 
+  .CheckClass(Data, 'data', 'Data')
   RampType <- match.arg(RampType, c('linear', 'smooth'))
   TACType  <- match.arg(TACType, c('Removals', 'Landings'))
   .CheckTunePar(tunepar)
@@ -269,6 +270,7 @@ IndexTarget <- function(Data,
                         IndexSeasons   = NULL,
                         tunepar        = 1) {
 
+  .CheckClass(Data, 'data', 'Data')
   TACType <- match.arg(TACType, c('Removals', 'Landings'))
   .CheckTunePar(tunepar)
   CheckCatch(Data)
