@@ -146,6 +146,7 @@ reference:
   contents:
   - Data
   - DataHelpers
+  - AnnualData
   - DataTrim
   - CatchData
   - CompData
@@ -327,6 +328,32 @@ reference:
   - SimControl
   - SimulateMOM
   - ProjectMOM
+
+
+- title: Management Procedures
+  desc: Built-in management procedures, their components, and tools for defining MP variants.
+  contents:
+  - IndexMPs
+  - SurplusProduction
+  - FitSP
+  - SPControl
+  - SpictControl
+  - SPEstimates
+  - HockeyStickHCR
+  - ConstrainTAC
+  - FilterTAC
+  - SmoothSeries
+  - SetMPArgs
+
+
+- title: Tuning
+  desc: Tune a management procedure to maximise an objective subject to performance constraints.
+  contents:
+  - TuneMP
+  - TuneObjective
+  - TuneControl
+  - TuneTable
+  - tunemp-class
 
 
 - title: Plotting
@@ -582,6 +609,9 @@ reference:
   desc: Built-in performance metrics for evaluating MSE results.
   contents:
   - PerformanceMetric
+  - PM
+  - PM-equations
+  - NewPM
   - TACs
 
 
