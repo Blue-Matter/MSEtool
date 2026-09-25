@@ -29,7 +29,7 @@
 #' @export
 CheckCatch <- function(Data, incUnits = TRUE, slot_names = c('Landings', 'Discards')) {
 
-  if (max(Data@Years) > Data@YearLH || Data@Misc$Sim > 1)
+  if (max(Data@Years) > Data@YearLH || isTRUE(Data@Misc$Sim > 1))
     return(invisible(NULL)) # warnings only the first projection year
 
 
