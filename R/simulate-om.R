@@ -86,14 +86,17 @@
   Hist@OM@Control$CalcCatchAtSizeNeeded <- CatchAtSizeNeeded
   Hist@OM@Control$CalcCatchAtSizeCpp    <- CatchAtSizeCpp
 
-  if (is.na(control$CalcCatchAtSize %||NA% NA) && !all(CatchAtSizeNeeded))
+  if (is.na(control$CalcCatchAtSize %||NA% NA) && !all(CatchAtSizeNeeded)) {
+    SkipStocks <- if (length(CatchAtSizeNeeded) > 1)
+      cli::format_inline(" for {.val {StockNames(OM)[!CatchAtSizeNeeded]}}") else ""
     Hist <- .CaptureLog(Hist,
       string = cli::format_inline(
-        "Skipping catch-at-size for {sum(!CatchAtSizeNeeded)} of {length(CatchAtSizeNeeded)} stock{?s}. No size-composition observation model or real data configured. Set {.code SimControl(CalcCatchAtSize = TRUE)} to force it."
+        "No size-composition observation model or real data configured{SkipStocks}, so skipping computationally expensive generation of catch-at-size. Set {.code SimControl(CalcCatchAtSize = TRUE)} to force it."
       ),
       name = 'CatchAtSize',
       type = 'assumption'
     )
+  }
 
   AnyCatchAtSizeNeeded <- any(CatchAtSizeNeeded)
 
