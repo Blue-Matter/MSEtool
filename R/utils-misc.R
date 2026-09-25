@@ -11,6 +11,27 @@
   set.seed(seed)
 }
 
+.SaveRNG <- function() {
+  list(Kind = RNGkind(),
+       Seed = if (exists('.Random.seed', envir = globalenv(), inherits = FALSE))
+         get('.Random.seed', envir = globalenv(), inherits = FALSE))
+}
+
+.RestoreRNG <- function(Saved) {
+  do.call(RNGkind, as.list(Saved$Kind))
+  if (is.null(Saved$Seed)) {
+    if (exists('.Random.seed', envir = globalenv(), inherits = FALSE))
+      rm('.Random.seed', envir = globalenv())
+  } else {
+    assign('.Random.seed', Saved$Seed, envir = globalenv())
+  }
+}
+
+.SeedMP <- function(Seed) {
+  set.seed(Seed %||% 101, kind = 'Mersenne-Twister', normal.kind = 'Inversion',
+           sample.kind = 'Rejection')
+}
+
 .Aperm <- function(a, perm, ...) {
   if (is.null(a) || length(a) < 1) {
     return(a)
