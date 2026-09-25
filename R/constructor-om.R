@@ -965,8 +965,13 @@ MPStartYear <- function(x) .IsHist(x, "MPStartYear")
 #'   year x Complex x Type, so no row exceeds its `Max`. `Mean` is the mean
 #'   before truncation; the realised mean is lower. `NA` (default) gives no
 #'   bound. If supplied, must be `>= Mean`.
-#' - `TACType`, `TACUnit`: as in [Advice()]; only used for `"TAC"` rows.
-#'   Default `"Removals"` and `"Biomass"`.
+#' - `TACType`: `"Removals"` (default) or `"Landings"`; only used for `"TAC"`
+#'   rows.
+#' - `TACUnit`: units of `Mean` and `Max` for `"TAC"` rows, as in [Advice()]:
+#'   `"Biomass"` (default), `"Number"`, or a catch unit such as
+#'   `Data@Landings@Units` (e.g. `"t"`, `"kg"`, `"n"`), which is stored as
+#'   `"Biomass"` or `"Number"`. The TAC is not rescaled, so a TAC in biomass
+#'   is in the OM's `Weight` units. May differ among fleets.
 #' - `EffType`: `"Abs"` (default) or `"Rel"`; only used for `"Effort"` rows.
 #'   `"Abs"` is absolute effort. `"Rel"` is a multiplier on the fleet's effort
 #'   in the same season of the last historical year.
