@@ -131,11 +131,15 @@
     sim_ss  <- pmin(seq_len(nSim), nrow(Obs@SampleSize))
     ss_all  <- .ArraySubsetYear(Obs@SampleSize, DataYear)[sim_ss]
 
-    sim_ess <- pmin(seq_len(nSim), nrow(Obs@ESS))
-    ess_all <- if (!is.null(Obs@ESS)) .ArraySubsetYear(Obs@ESS, DataYear)[sim_ess] else ss_all
+    ess_all <- if (!is.null(Obs@ESS)) {
+      sim_ess <- pmin(seq_len(nSim), nrow(Obs@ESS))
+      .ArraySubsetYear(Obs@ESS, DataYear)[sim_ess]
+    } else ss_all
 
-    sim_th  <- pmin(seq_len(nSim), nrow(Obs@Theta))
-    th_all  <- if (!is.null(Obs@Theta)) .ArraySubsetYear(Obs@Theta, DataYear)[sim_th] else rep(1, nSim)
+    th_all <- if (!is.null(Obs@Theta)) {
+      sim_th <- pmin(seq_len(nSim), nrow(Obs@Theta))
+      .ArraySubsetYear(Obs@Theta, DataYear)[sim_th]
+    } else rep(1, nSim)
 
     true_n_all  <- CatchAtAge_yr[, , fl, drop = FALSE] |> abind::adrop(3)
     total_n_all <- apply(true_n_all, 1, sum, na.rm = TRUE)
@@ -147,11 +151,7 @@
       if (is.na(total_n) || total_n == 0) next
       q <- true_n_all[x, ] / total_n
 
-      shift_b <- if (!is.null(Obs@Shift)) {
-        sim_sh <- min(x, dim(Obs@Shift)[1])
-        .ArraySubsetYear(Obs@Shift, DataYear)[sim_sh, ]
-      } else rep(0, nAge)
-
+      shift_b <- .CompShiftAt(Obs@Shift, x, DataYear, nAge)
       alpha <- ess_all[x] * th_all[x] * q * exp(shift_b)
       if (any(is.na(alpha)) || sum(alpha) == 0) next
       seed_key <- paste(Proj@OM@Seed, DataYear, i, fl, type, x, sep = "_")

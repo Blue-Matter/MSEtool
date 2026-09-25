@@ -135,9 +135,9 @@
     valid_yrs <- which(ObsTotals > 0 & !is.na(ObsTotals))
     if (length(valid_yrs) == 0) next
     
-    CompObs@SampleSize <- matrix(ObsTotals, 1, length(ObsTotals))
-    dimnames(CompObs@SampleSize) <- list(Sim = 1,
-                                         Year = names(ObsTotals))
+    # Projection years hold the last year with observed data
+    CompObs@SampleSize <- matrix(c(ObsTotals, rep(ObsTotals[max(valid_yrs)], nProjTS)), nrow = 1,
+                                 dimnames = list(Sim = 1, Year = c(CondYears, ProjYears)))
     # Observed proportions 
     ObsProp     <- ObsCounts / ObsTotals
     ObsProp[ObsTotals == 0 | is.na(ObsTotals), ] <- NA
@@ -235,38 +235,30 @@
     HN_den <- apply((ObsPropExp - PredProp)^2, c(1, 3), sum, na.rm = TRUE)
     
     NHat <- HN_num / HN_den
-    NHat[!is.finite(NHat) | NHat <= 0] <- NA
-    
-    # Cap ESS at observed sample size 
+    NHat[, !seq_len(nCondYears) %in% valid_yrs] <- NA
+    # Inf (exact fit) is kept so it caps at the sample size below
+    NHat[is.na(NHat) | NHat <= 0] <- NA
+
+    # Cap ESS at observed sample size
     SampleSizeMat <- matrix(
       rep(ObsTotals, each = nSim),
       nrow = nSim,
       ncol = nCondYears
     )
     NHat <- pmin(NHat, SampleSizeMat, na.rm = FALSE)
-    
+
     ESSArray <- array(
       NA_real_,
       dim      = c(nSim, nYearsAll),
       dimnames = list(Sim  = seq_len(nSim),
                       Year = YearsAll)
     )
-    
+
     ESSArray[, yr_ind_all] <- NHat
-    
-    # Hold last *valid* conditioning year constant, per sim (see
-    # `last_valid_idx` above; `last_cond_col` reused from the Shift block)
-    last_ess <- vapply(seq_len(nSim), function(s) {
-      if (is.na(last_cond_col[s])) return(NA_real_)
-      ESSArray[s, last_cond_col[s]]
-    }, numeric(1))
-    if (length(fill_ind) > 0)
-      ESSArray[, fill_ind] <- matrix(
-        rep(last_ess, length(fill_ind)),
-        nrow = nSim,
-        ncol = length(fill_ind)
-      )
-    
+
+    # Years without an estimate take the nearest earlier valid year, else the first valid year
+    ESSArray[] <- t(apply(ESSArray, 1, \(ess) rev(.CarryForwardLOCF(rev(.CarryForwardLOCF(ess))))))
+
     CompObs@ESS <- ESSArray
     
     slot(Hist@OM@Obs[[i]][[fleet_name]], type) <- CompObs

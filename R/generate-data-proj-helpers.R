@@ -153,3 +153,12 @@
     })
   }
 }
+
+.CompShiftAt <- function(Shift, x, DataYear, nBin) {
+  if (is.null(Shift)) return(rep(0, nBin))
+  Shift <- .ArraySubsetYear(Shift, DataYear)
+  dn    <- names(dimnames(Shift))
+  dims  <- match(c('Sim', 'Year'), dn)
+  sim   <- min(x, dim(Shift)[dims[1]])
+  as.numeric(abind::asub(Shift, list(sim, 1), dims = dims, drop = FALSE))[seq_len(nBin)]
+}

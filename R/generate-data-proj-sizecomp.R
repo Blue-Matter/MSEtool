@@ -151,11 +151,7 @@
       if (is.na(total_n) || total_n == 0) next
       q <- true_n_all[x, ] / total_n
 
-      shift_b <- if (!is.null(Obs@Shift)) {
-        sim_sh <- min(x, dim(Obs@Shift)[1])
-        abind::adrop(.ArraySubsetYear(Obs@Shift, DataYear)[sim_sh, ,,drop=FALSE], 1)[seq_len(nSize)]
-      } else rep(0, nSize)
-
+      shift_b <- .CompShiftAt(Obs@Shift, x, DataYear, nSize)
       alpha <- ess_all[x] * th_all[x] * q * exp(shift_b)
       if (any(is.na(alpha)) || sum(alpha) == 0) next
       seed_key <- paste(Proj@OM@Seed, DataYear, i, fl, type, x, sep = "_")
