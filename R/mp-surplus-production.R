@@ -6,6 +6,33 @@
 #' rule, and projects the fitted model to calculate the TAC (or effort) for
 #' the next management interval.
 #'
+#' ## Model parameters
+#'
+#' The leading parameters of the surplus production model are:
+#'
+#' - `FMSY`: the fishing mortality that produces MSY. Always estimated.
+#' - `MSY`: the maximum sustainable yield, in catch units. Always estimated.
+#' - `Depletion`: biomass at the start of the first fitted year relative to
+#'   `K`. Fixed at `Depletion` (default `1`, an unfished stock at the start
+#'   of the fitted years), or estimated with `EstDepletion = TRUE`.
+#' - `Shape`: the shape parameter `n` of the production function, which sets
+#'   `BMSY/K = n^(1/(1-n))`. `n = 2` (the default) is the Schaefer model
+#'   (`BMSY/K = 0.5`), and `n = 1` the Fox model (`BMSY/K = exp(-1)`, the
+#'   limit as `n` approaches `1`). Fixed at `Shape`, or estimated with
+#'   `EstShape = TRUE` with a lognormal prior (median `Shape`, CV `ShapeCV`,
+#'   or `Priors$Shape`).
+#'
+#' The derived quantities are `BMSY = MSY / FMSY` and `K = BMSY / (BMSY/K)`.
+#' Lognormal priors can be set on any estimated leading parameter with
+#' `Priors`. With `Model = 'internal'`, the catchability of each index is
+#' calculated at its maximum likelihood value given the leading parameters,
+#' and the observation standard deviation of each index is either calculated
+#' the same way (`IndexSD = 'estimate'`) or set from the index `CV`
+#' (`IndexSD = 'data'`). See [FitSP()] for the model equations, and
+#' [SpictControl()] for how the leading parameters map to the `spict`
+#' parameterisation with `Model = 'spict'`, which also estimates process
+#' error and catch observation error.
+#'
 #' ## Procedure
 #'
 #' 1. The model is fitted to the calendar-year data (see [FitSP()] for the
@@ -14,9 +41,9 @@
 #'    management cycle, if these were made with the same `Model` (`WarmStart`
 #'    in [SPControl()]/[SpictControl()]).
 #' 2. Biomass at the start of `AdviceYear` is calculated by projecting the
-#'    fitted model through any years between the last data year and
-#'    `AdviceYear` (when there is a data lag), with the catch set by
-#'    `GapCatch`.
+#'    fitted model through any years between the last fitted year and
+#'    `AdviceYear` (when there is a data lag, or `FitYears` ends before the
+#'    last data year), with the catch set by `GapCatch`.
 #' 3. The fishing mortality is
 #'    `HockeyStickHCR(tunepar * FTarget * FMSY, Est = B/BMSY, Ref = 1)`, where
 #'    `B/BMSY` is the projected status at the start of `AdviceYear` and the
@@ -24,8 +51,8 @@
 #'    [HockeyStickHCR()]). With `FractileB` (`FractileF`), the `FractileB`
 #'    (`FractileF`) quantile of `B/BMSY` (`FMSY`) is used instead of the point
 #'    estimate, assuming a lognormal distribution with the standard error of
-#'    the estimate (for `B/BMSY`, the standard error after the last data
-#'    year).
+#'    the estimate (for `B/BMSY`, the standard error at the start of the year
+#'    after the last fitted year).
 #' 4. The model is projected at that fishing mortality for the `Interval`
 #'    years of the management cycle. The TAC is the mean (`TACYears = 'mean'`)
 #'    or first-year (`'first'`) catch. With `AdviceType = 'Effort'`, the advice
@@ -35,15 +62,19 @@
 #'    differs from `CatchType`). The change from the previous TAC (or effort)
 #'    is scaled by `Responsiveness` and constrained by `DeltaDown` and
 #'    `DeltaUp`, and the TAC is bounded by `TACRange` (see [ConstrainTAC()]).
+#'    If the previous TAC is zero, the TAC is only bounded by `TACRange`.
 #'
 #' If the data cannot be prepared, fewer than `MinIndexYears` years have
-#' index observations, the model fit fails or does not converge, or the
-#' standard errors needed by `FractileB`/`FractileF` are not available, the
-#' advice is set by `OnFail`: `'hold'` keeps the previous TAC (or effort),
-#' and `'trend'` changes it by the ratio of the mean index over the last
-#' `FallbackYears[1]` years to the mean over the `FallbackYears[2]` years
-#' before them (the geometric mean over indices, weighted by `IndexWeight`,
-#' and raised to `Responsiveness`). The fallback advice is constrained as in
+#' index observations, the model fit fails or does not converge, the
+#' standard errors needed by `FractileB`/`FractileF` are not available, or
+#' (with `AdviceType = 'Effort'`) the estimated fishing mortality in the last
+#' historical year is zero, the advice is set by `OnFail`: `'hold'` keeps
+#' the previous TAC (or effort), and `'trend'` changes it by the ratio of the
+#' mean index over the last `FallbackYears[1]` fitted years to the mean over
+#' the `FallbackYears[2]` years before them (the geometric mean over indices,
+#' weighted by `IndexWeight`, and raised to `Responsiveness`). If the data
+#' cannot be prepared, `'trend'` keeps the previous advice. The fallback
+#' advice is constrained as in
 #' step 5. Each such management cycle is recorded as a warning in the `Log`
 #' of the returned [advice-class] object.
 #'
@@ -55,6 +86,12 @@
 #' target fishing mortality proportionally. See [TuneMP()].
 #'
 #' @inheritParams FitSP
+#' @param Model Character. The surplus production model: `'internal'`
+#'   (default) or `'spict'`. See [FitSP()].
+#' @param IndexSD Character. `'estimate'` (default) estimates the observation
+#'   standard deviation of each index; `'data'` calculates it from the index
+#'   `CV` in `Data` (with `Model = 'spict'`, the `CV`s scale the estimated
+#'   standard deviation; see [SpictControl()]). See [FitSP()].
 #' @param MinIndexYears Positive integer. Minimum number of years with index
 #'   observations required to fit the model. Default `5`.
 #' @param FTarget Positive number. Target fishing mortality as a fraction of
