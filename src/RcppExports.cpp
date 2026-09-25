@@ -430,6 +430,48 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// SPModel_cpp
+List SPModel_cpp(NumericVector Pars, NumericVector Catch, NumericMatrix Index, NumericMatrix SD, NumericVector Timing, NumericVector Weight, LogicalVector EstSD, int nSub, int nItF, double Fmax, double FPenalty, double FoxTol, double MinSD, bool Report);
+RcppExport SEXP _MSEtool_SPModel_cpp(SEXP ParsSEXP, SEXP CatchSEXP, SEXP IndexSEXP, SEXP SDSEXP, SEXP TimingSEXP, SEXP WeightSEXP, SEXP EstSDSEXP, SEXP nSubSEXP, SEXP nItFSEXP, SEXP FmaxSEXP, SEXP FPenaltySEXP, SEXP FoxTolSEXP, SEXP MinSDSEXP, SEXP ReportSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type Pars(ParsSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type Catch(CatchSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type Index(IndexSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type SD(SDSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type Timing(TimingSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type Weight(WeightSEXP);
+    Rcpp::traits::input_parameter< LogicalVector >::type EstSD(EstSDSEXP);
+    Rcpp::traits::input_parameter< int >::type nSub(nSubSEXP);
+    Rcpp::traits::input_parameter< int >::type nItF(nItFSEXP);
+    Rcpp::traits::input_parameter< double >::type Fmax(FmaxSEXP);
+    Rcpp::traits::input_parameter< double >::type FPenalty(FPenaltySEXP);
+    Rcpp::traits::input_parameter< double >::type FoxTol(FoxTolSEXP);
+    Rcpp::traits::input_parameter< double >::type MinSD(MinSDSEXP);
+    Rcpp::traits::input_parameter< bool >::type Report(ReportSEXP);
+    rcpp_result_gen = Rcpp::wrap(SPModel_cpp(Pars, Catch, Index, SD, Timing, Weight, EstSD, nSub, nItF, Fmax, FPenalty, FoxTol, MinSD, Report));
+    return rcpp_result_gen;
+END_RCPP
+}
+// SPProject_cpp
+List SPProject_cpp(NumericVector Pars, double B0, NumericVector Value, IntegerVector Type, int nSub, int nItF, double Fmax, double FoxTol);
+RcppExport SEXP _MSEtool_SPProject_cpp(SEXP ParsSEXP, SEXP B0SEXP, SEXP ValueSEXP, SEXP TypeSEXP, SEXP nSubSEXP, SEXP nItFSEXP, SEXP FmaxSEXP, SEXP FoxTolSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type Pars(ParsSEXP);
+    Rcpp::traits::input_parameter< double >::type B0(B0SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type Value(ValueSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type Type(TypeSEXP);
+    Rcpp::traits::input_parameter< int >::type nSub(nSubSEXP);
+    Rcpp::traits::input_parameter< int >::type nItF(nItFSEXP);
+    Rcpp::traits::input_parameter< double >::type Fmax(FmaxSEXP);
+    Rcpp::traits::input_parameter< double >::type FoxTol(FoxTolSEXP);
+    rcpp_result_gen = Rcpp::wrap(SPProject_cpp(Pars, B0, Value, Type, nSub, nItF, Fmax, FoxTol));
+    return rcpp_result_gen;
+END_RCPP
+}
 // BevertonHolt_cpp
 NumericVector BevertonHolt_cpp(const NumericVector& S, const double S0, const double R0, const double h);
 RcppExport SEXP _MSEtool_BevertonHolt_cpp(SEXP SSEXP, SEXP S0SEXP, SEXP R0SEXP, SEXP hSEXP) {
@@ -495,6 +537,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MSEtool_popdynOneTScpp", (DL_FUNC) &_MSEtool_popdynOneTScpp, 5},
     {"_MSEtool_movestockCPP", (DL_FUNC) &_MSEtool_movestockCPP, 4},
     {"_MSEtool_popdynCPP", (DL_FUNC) &_MSEtool_popdynCPP, 31},
+    {"_MSEtool_SPModel_cpp", (DL_FUNC) &_MSEtool_SPModel_cpp, 14},
+    {"_MSEtool_SPProject_cpp", (DL_FUNC) &_MSEtool_SPProject_cpp, 8},
     {"_MSEtool_BevertonHolt_cpp", (DL_FUNC) &_MSEtool_BevertonHolt_cpp, 4},
     {"_MSEtool_Ricker_cpp", (DL_FUNC) &_MSEtool_Ricker_cpp, 4},
     {"_MSEtool_HockeyStick_cpp", (DL_FUNC) &_MSEtool_HockeyStick_cpp, 4},

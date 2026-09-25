@@ -8,7 +8,7 @@
 \alias{SeasonOfYear}
 \title{Data Helper Functions}
 \usage{
-LastTAC(Data)
+LastTAC(Data, TACType = c("Removals", "Landings"))
 
 LastHistYearInd(Data)
 
@@ -18,6 +18,9 @@ SeasonOfYear(x, Seasons = NULL, Year = NULL)
 }
 \arguments{
 \item{Data}{An object of class \link{data}.}
+
+\item{TACType}{Character. Catch returned when no TAC has been set:
+\code{'Removals'} (default; landings plus discards) or \code{'Landings'}.}
 
 \item{x}{A \link{data} object, or a numeric vector of years.}
 
@@ -30,7 +33,7 @@ in the resolved years vector.}
 \value{
 \itemize{
 \item \code{LastTAC()}: A numeric scalar giving the last TAC, or the most recent
-annual landings plus discards if no TAC is available.
+annual catch of type \code{TACType} if no TAC is available.
 }
 
 \itemize{
@@ -56,8 +59,8 @@ time steps.
 \section{Functions}{
 \itemize{
 \item \code{LastTAC()}: Get the last TAC (Total Allowable Catch) from the
-advice slot. If no TAC has been set, returns the total landings plus
-discards (summed over fleets, ignoring \code{NA}) of the most recent year; for
+advice slot. If no TAC has been set, returns the catch of type \code{TACType}
+(summed over fleets, ignoring \code{NA}) in the most recent year; for
 seasonal data (\code{Seasons > 1}), the most recent complete calendar year
 (see \code{\link[=AnnualData]{AnnualData()}}).
 

@@ -12,23 +12,29 @@
 NULL
 
 #' @describeIn DataHelpers Get the last TAC (Total Allowable Catch) from the
-#'   advice slot. If no TAC has been set, returns the total landings plus
-#'   discards (summed over fleets, ignoring `NA`) of the most recent year; for
+#'   advice slot. If no TAC has been set, returns the catch of type `TACType`
+#'   (summed over fleets, ignoring `NA`) in the most recent year; for
 #'   seasonal data (`Seasons > 1`), the most recent complete calendar year
 #'   (see [AnnualData()]).
 #'
+#' @param TACType Character. Catch returned when no TAC has been set:
+#'   `'Removals'` (default; landings plus discards) or `'Landings'`.
+#'
 #' @return
 #' - `LastTAC()`: A numeric scalar giving the last TAC, or the most recent
-#'   annual landings plus discards if no TAC is available.
+#'   annual catch of type `TACType` if no TAC is available.
 #'
 #' @export
-LastTAC <- function(Data) {
+LastTAC <- function(Data, TACType = c('Removals', 'Landings')) {
   .CheckClass(Data, 'data', 'Data')
+  TACType <- match.arg(TACType)
   LastTAC <- utils::tail(Data@Advice@TAC, 1) |> as.numeric()
   if (length(LastTAC) < 1) {
     Annual <- AnnualData(Data)
     LastRow <- function(x) if (is.null(x@Value)) NULL else utils::tail(x@Value, 1)
-    LastTAC <- c(LastRow(Annual@Landings), LastRow(Annual@Discards))
+    LastTAC <- LastRow(Annual@Landings)
+    if (TACType == 'Removals')
+      LastTAC <- c(LastTAC, LastRow(Annual@Discards))
   }
   sum(LastTAC, na.rm = TRUE)
 }

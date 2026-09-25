@@ -59,12 +59,14 @@ Suggests:
     shiny,
     Slick,
     snowfall,
+    spict,
     testthat,
     tibble,
     tidyr,
     TMB,
     usethis
 LinkingTo: Rcpp, RcppArmadillo
+Remotes: DTUAqua/spict/spict
 BugReports: https://github.com/Blue-Matter/MSEtool/issues
 URL: https://msetool.openmse.com/
 Collate: 
@@ -147,6 +149,7 @@ Collate:
     'class-mse.R'
     'class-perrecruit.R'
     'class-pm.R'
+    'class-tune.R'
     'collapse-seasons.R'
     'combine-fleet.R'
     'combine-mse.R'
@@ -220,6 +223,8 @@ Collate:
     'extract-relative.R'
     'extract-unfished.R'
     'find-model.R'
+    'fit-sp-spict.R'
+    'fit-sp.R'
     'fit-sr.R'
     'fit-stock-targeting.R'
     'generate-data-hist-agecomp.R'
@@ -265,9 +270,11 @@ Collate:
     'models-srr.R'
     'models-weight.R'
     'models.R'
+    'mp-args.R'
     'mp-empirical-index.R'
     'mp-hockeystickHCR.R'
     'mp-reference.R'
+    'mp-surplus-production.R'
     'mp-utils.R'
     'mse-update.R'
     'opt-effort-choke.R'
@@ -338,6 +345,7 @@ Collate:
     'standardize-effort.R'
     'subset.R'
     'summarize-convergence.R'
+    'tune-mp.R'
     'unit-conversions.R'
     'update-baglimit.R'
     'update-closure.R'

@@ -239,6 +239,14 @@ popdynCPP <- function(nareas, maxage, Ncurr, pyears, M_age, Asize_c, MatAge, WtA
     .Call(`_MSEtool_popdynCPP`, nareas, maxage, Ncurr, pyears, M_age, Asize_c, MatAge, WtAge, FecAge, Vuln, Retc, Prec, movc, SRrelc, Effind, Spat_targc, hc, R0c, SSBpRc, aRc, bRc, Qc, Fapic, maxF, MPA, control, SSB0c, SRRfun, SRRpars, plusgroup, spawn_time_frac)
 }
 
+SPModel_cpp <- function(Pars, Catch, Index, SD, Timing, Weight, EstSD, nSub, nItF, Fmax, FPenalty, FoxTol, MinSD, Report) {
+    .Call(`_MSEtool_SPModel_cpp`, Pars, Catch, Index, SD, Timing, Weight, EstSD, nSub, nItF, Fmax, FPenalty, FoxTol, MinSD, Report)
+}
+
+SPProject_cpp <- function(Pars, B0, Value, Type, nSub, nItF, Fmax, FoxTol) {
+    .Call(`_MSEtool_SPProject_cpp`, Pars, B0, Value, Type, nSub, nItF, Fmax, FoxTol)
+}
+
 BevertonHolt_cpp <- function(S, S0, R0, h) {
     .Call(`_MSEtool_BevertonHolt_cpp`, S, S0, R0, h)
 }
