@@ -135,7 +135,7 @@
     
     if (.CatchUnitType(CatchData@Units[fl]) == "Number") {
       real_catch <- purrr::map(Real_Catch_Number, \(catch_n) {
-        catch_n[x,,,fl,] |> SumOverAge() |> SumOverArea()
+        catch_n[min(x, dim(catch_n)[1]),,,fl,] |> SumOverAge() |> SumOverArea()
       }) |> List2Array('Stock') |>
         apply('Year', sum) |> SumOverStock()
       
@@ -164,7 +164,7 @@
     
     error_sim <- min(x, nrow(CatchObs@Error))
     Value[, fl] <- real_catch *
-      CatchObs@Bias[x] *
+      CatchObs@Bias[min(x, length(CatchObs@Bias))] *
       .ArraySubsetYear(CatchObs@Error, HistYears)[error_sim, ]
   }
   

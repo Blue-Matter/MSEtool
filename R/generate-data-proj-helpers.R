@@ -134,7 +134,8 @@
            }) |> setNames(StockNames[stocks]),
 
            SBiomass = purrr::map(seq_along(stocks), \(st) {
-             Proj@OM@Stock[[stocks[st]]]@Maturity@MeanAtAge[x, , TSIndex, drop = FALSE] |>
+             mat <- Proj@OM@Stock[[stocks[st]]]@Maturity@MeanAtAge
+             mat[min(x, dim(mat)[1]), , TSIndex, drop = FALSE] |>
                AddDimension("Area") |>
                DropDimension(c("Sim", "Year")) |>
                ExtendAreas(Areas = seq_len(nArea))

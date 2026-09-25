@@ -21,7 +21,7 @@
   Mv <- M[pmin(x, dim(M)[1]), , TSIndex, drop = FALSE] |> abind::adrop(1)
 
   # [Age x nY x Fleet x Area] -> [Age x nY x Area]
-  Ft <- Fd[x, , TSIndex, , areas, drop = FALSE] |> abind::adrop(1)
+  Ft <- Fd[min(x, dim(Fd)[1]), , TSIndex, , areas, drop = FALSE] |> abind::adrop(1)
   Ft <- apply(Ft, c(1, 2, 4), sum)
 
   # Mv recycles over the Area margin: Age and Year are the fastest-varying dims

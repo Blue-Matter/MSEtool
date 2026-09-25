@@ -122,7 +122,7 @@
     BetaIndex <- real_nom_index^Beta
 
     # add error
-    SimulatedIndexError <- BetaIndex *  .ArraySubsetYear(IndexObs@Error, HistYears)[sim,]
+    SimulatedIndexError <- BetaIndex *  .ArraySubsetYear(IndexObs@Error, HistYears)[min(sim, nrow(IndexObs@Error)),]
     # mean 1
     StIndex <- SimulatedIndexError/mean(SimulatedIndexError, na.rm=TRUE)
     Value[,fl] <- StIndex
@@ -133,19 +133,23 @@
     # Reference Value 
     if (length(IndexObs@Ref)) {
       # TODO - index ref value if units != Biomass - only does BMSY at the moment
+      sim_b   <- min(sim, dim(Hist@Biomass)[1])
+      ref_sim <- IndexObs@Ref[min(sim, length(IndexObs@Ref))]
       if (length(Hist@Reference@MSY@BMSY)) {
-        adjust <- mean(real_nom_index/apply(Hist@Biomass[sim,i,,drop=FALSE], 'Year', mean, na.rm=TRUE), na.rm=TRUE)
-        IndexData@Ref[fl] <- array(mean(Hist@RefPointsMSY@BMSY[sim,i,], na.rm=TRUE) *  adjust *IndexObs@Efficiency) * IndexObs@Ref[sim]
+        BMSY <- Hist@Reference@MSY@BMSY
+        adjust <- mean(real_nom_index/apply(Hist@Biomass[sim_b,i,,drop=FALSE], 'Year', mean, na.rm=TRUE), na.rm=TRUE)
+        IndexData@Ref[fl] <- array(mean(BMSY[min(sim, dim(BMSY)[1]),i,], na.rm=TRUE) *  adjust *IndexObs@Efficiency) * ref_sim
       } else {
         # do B0
-        Ref_Dep <- 0.5 # hard coded for now 
-        B0 <- Hist@Unfished@Equilibrium@Biomass[sim,i,,drop=FALSE]
-        Bhist <- Hist@Biomass[sim,i,,drop=FALSE]
+        Ref_Dep <- 0.5 # hard coded for now
+        B0 <- Hist@Unfished@Equilibrium@Biomass
+        B0 <- B0[min(sim, dim(B0)[1]),i,,drop=FALSE]
+        Bhist <- Hist@Biomass[sim_b,i,,drop=FALSE]
         B_B0 <- ArrayDivide(Bhist, B0) |> apply('Year', mean, na.rm=TRUE)
         ind <- which.min(abs(B_B0-Ref_Dep))
         if (!is.null(ind) && length(ind)) {
-          adjust <- mean(real_nom_index/apply(Hist@Biomass[sim,i,,drop=FALSE], 'Year', mean, na.rm=TRUE), na.rm=TRUE)
-          IndexData@Ref[fl] <- array(mean(Hist@Biomass[sim,i, ind], na.rm=TRUE) *  adjust *IndexObs@Efficiency) * IndexObs@Ref[sim]   
+          adjust <- mean(real_nom_index/apply(Hist@Biomass[sim_b,i,,drop=FALSE], 'Year', mean, na.rm=TRUE), na.rm=TRUE)
+          IndexData@Ref[fl] <- array(mean(Hist@Biomass[sim_b,i, ind], na.rm=TRUE) *  adjust *IndexObs@Efficiency) * ref_sim
         }
         
         

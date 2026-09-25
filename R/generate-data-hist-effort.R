@@ -109,9 +109,9 @@
     if (!is.null(EffortObs@Units))
       EffortData@Units[fl] <- EffortObs@Units
 
-    Value[, fl] <- Hist@Effort[x, , fl] *
-      EffortObs@Bias[x] *
-      .ArraySubsetYear(EffortObs@Error, HistYears)[x, ]
+    Value[, fl] <- Hist@Effort[min(x, dim(Hist@Effort)[1]), , fl] *
+      EffortObs@Bias[min(x, length(EffortObs@Bias))] *
+      .ArraySubsetYear(EffortObs@Error, HistYears)[min(x, nrow(EffortObs@Error)), ]
   }
   
   EffortData@Value <- Value

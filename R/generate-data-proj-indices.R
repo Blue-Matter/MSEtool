@@ -101,7 +101,9 @@
 
       Beta <- if (is.null(IndexObs@Beta)) 1 else IndexObs@Beta[min(x, length(IndexObs@Beta))]
 
-      NewValueAll[x, fl] <- real_nom_index^Beta * .ArraySubsetYear(IndexObs@Error, DataYear)[x] * IndexObs@Efficiency[x]
+      NewValueAll[x, fl] <- real_nom_index^Beta *
+        .ArraySubsetYear(IndexObs@Error, DataYear)[min(x, nrow(IndexObs@Error))] *
+        IndexObs@Efficiency[min(x, length(IndexObs@Efficiency))]
       NewCVAll[x, fl]    <- .ResolveCV(Proj, type, i, fl, TSIndex,
                                       slot(Proj@Data[[x]][[i]], type), DataYear)
     }
