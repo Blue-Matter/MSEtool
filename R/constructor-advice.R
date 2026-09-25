@@ -191,7 +191,14 @@
 #' A list of miscellaneous information that needs to be stored and accessed by
 #' the MP in future timesteps. Contents of `Advice@Misc` will be available in
 #' the `Data@Misc` slot in subsequent time steps.
-#' 
+#'
+#' `Advice@Misc` replaces `Data@Misc` as a whole, so an MP that keeps state
+#' across management cycles should start from `Data@Misc` and add to it.
+#' When an MP is called in a projection, the framework also sets
+#' `Data@Misc$MPName`, `Data@Misc$StockName`, `Data@Misc$AdviceYear` (the time
+#' step the advice is first applied in), and `Data@Misc$Interval` (the
+#' management interval in years); these are reset at every call.
+#'
 #' ## Populating Selectivity, Retention, and Discard Mortality Objects
 #' 
 #'  The `Selectivity`, `Retention`, and `DiscardMortality` objects are used to 
