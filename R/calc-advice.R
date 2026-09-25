@@ -30,6 +30,8 @@
 #' @param mp                Integer. Index of the MP within the `MSE` object.
 #' @param FleetNames        Character vector. Fleet names.
 #' @param Areas             Integer vector. Area indices.
+#' @param Interval          Numeric. Management interval (years) resolved for
+#'                          this MP; passed to MPs as `Data@@Misc$Interval`.
 #'
 #' @return A list with elements `AdviceSimList` (nested list of `Advice`
 #'   objects) and `AggBagLimitSimList` (nested list of `aggbaglimit`
@@ -48,7 +50,8 @@
                      YearsProj,
                      mp,
                      FleetNames,
-                     Areas) {
+                     Areas,
+                     Interval = NULL) {
 
   MPStartYear <- Proj@OM@MPStartYear
   if (!is.null(MPStartYear) && floor(Year) < MPStartYear)
@@ -67,7 +70,8 @@
     YearsProj,
     mp,
     FleetNames,
-    Areas
+    Areas,
+    Interval
   )
 }
 
@@ -82,6 +86,7 @@
 #' @param Year Numeric year for which advice is calculated.
 #' @param Proj `Hist` object containing population dynamics up to `Year`-1
 #' @param YearsProj Numeric vector of projected years
+#' @param Interval Numeric management interval (years), or `NULL`.
 #'
 #' @return A list with elements `AdviceSimList` (a list of length
 #'   `length(DataSimList)`, each element a named list of `Advice` objects
@@ -92,7 +97,7 @@
 #' @keywords internal
 #'
 .CalcAdvice <- function(MPName, MPfunction, DataSimList, Year, Proj, YearsProj, mp,
-                       FleetNames, Areas) {
+                       FleetNames, Areas, Interval = NULL) {
   nSim <- length(DataSimList)
 
   if (nSim != Proj@OM@nSim)
@@ -117,7 +122,8 @@
                           YearsProj = YearsProj,
                           mp = mp,
                           FleetNames = FleetNames,
-                          Areas = Areas),
+                          Areas = Areas,
+                          Interval = Interval),
         silent = TRUE
       )
       if (inherits(result, 'try-error')) {
@@ -137,7 +143,8 @@
                          YearsProj = YearsProj,
                          mp = mp,
                          FleetNames = FleetNames,
-                         Areas = Areas),
+                         Areas = Areas,
+                         Interval = Interval),
         silent=TRUE
       )
     }
@@ -158,6 +165,11 @@
 #' @param Year Numeric year for which advice is calculated.
 #' @param Proj Projection object containing OM and control settings.
 #' @param YearsProj Numeric vector of projected years (default = `YearsProj` from parent scope).
+#' @param Interval Numeric management interval (years), or `NULL`.
+#'
+#' Each `Data` object passed to the MP has `Data@@Misc$MPName`,
+#' `Data@@Misc$StockName`, `Data@@Misc$AdviceYear` (the time step the advice
+#' is first applied in) and `Data@@Misc$Interval` set.
 #'
 #' If `Proj@OM@Control$DataOM` is `TRUE` or a named list, population dynamics
 #' information from the `Proj` will be included in `Data@Misc` 
@@ -175,7 +187,8 @@
                               YearsProj,
                               mp, 
                               FleetNames, 
-                              Areas) {
+                              Areas,
+                              Interval = NULL) {
   
   AdviceList <- MakeNamedList(names(DataList))
   DataOM <- .ResolveDataOM(Proj@OM@Control$DataOM, MPName, MPfunction)
@@ -185,8 +198,10 @@
   for (i in seq_along(DataList)) {
     Data <- DataList[[i]] |> .AddPopDyn(Proj, sim, Year, YearsProj, mp, DataOM = DataOM)
 
-    Data@Misc$MPName <- MPName
-    Data@Misc$StockName <- names(DataList)[i]
+    Data@Misc$MPName     <- MPName
+    Data@Misc$StockName  <- names(DataList)[i]
+    Data@Misc$AdviceYear <- Year
+    Data@Misc$Interval   <- Interval
     Advice <- try(MPfunction(Data=Data), silent=TRUE)
     Advice <- .CheckAdvice(Advice, Proj, FleetNames, Areas, sim, name=nms[i])
     Advice <- .LogMPError(Advice, MPName, Data, Sim=sim, Year)
@@ -226,15 +241,18 @@
                                YearsProj,
                                mp,
                                FleetNames,
-                               Areas) {
+                               Areas,
+                               Interval = NULL) {
 
   nms <- names(DataList)
   DataOM <- .ResolveDataOM(Proj@OM@Control$DataOM, MPName, MPfunction)
 
   DataList <- purrr::imap(DataList, \(Data, nm) {
     Data <- Data |> .AddPopDyn(Proj, sim, Year, YearsProj, mp, DataOM = DataOM)
-    Data@Misc$MPName    <- MPName
-    Data@Misc$StockName <- nm
+    Data@Misc$MPName     <- MPName
+    Data@Misc$StockName  <- nm
+    Data@Misc$AdviceYear <- Year
+    Data@Misc$Interval   <- Interval
     Data
   })
 
