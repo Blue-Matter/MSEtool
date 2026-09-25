@@ -358,9 +358,12 @@ NULL
   if (ManagementOnly)
     df <- .FilterManagementYears(df, object)
 
-  groups <- .ResolveComplexGroups(object@OM, Stocks)
+  # TAC rows are per complex; a group takes the TAC of any complex it overlaps
+  cxStocks <- .ResolveComplexGroups(object@OM, NULL)
+  groups   <- .ResolveComplexGroups(object@OM, Stocks)
   purrr::imap(groups, \(stk, grpName) {
-    df[df$Stock %in% stk, ] |>
+    cx <- names(cxStocks)[purrr::map_lgl(cxStocks, \(s) any(s %in% stk))]
+    df[df$Stock %in% cx, ] |>
       dplyr::group_by(.data$Sim, .data$Year, .data$MP) |>
       dplyr::summarise(Value = sum(.data$Value, na.rm = TRUE), .groups = 'drop') |>
       dplyr::mutate(Stock = grpName)

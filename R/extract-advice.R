@@ -1,9 +1,9 @@
 #' Extract TAC Recommendations from an MSE Object
 #'
 #' Extracts the total allowable catch (TAC) recommendations issued by each
-#' management procedure (MP) in each simulation, year, stock, and fleet from
-#' the `PPD` slot of an [mse-class] object. Returns a tidy data frame
-#' suitable for plotting and performance indicator calculations.
+#' management procedure (MP) in each simulation, year, stock complex, and
+#' fleet from the `PPD` slot of an [mse-class] object. Returns a tidy data
+#' frame suitable for plotting and performance indicator calculations.
 #'
 #' @param MSE An [mse-class] object.
 #'
@@ -19,7 +19,8 @@
 #'
 #' @return A data frame with columns:
 #'   - `Sim`: simulation index.
-#'   - `Stock`: stock name.
+#'   - `Stock`: stock complex name (`names(OM@Complexes)`). TAC advice is set
+#'     per complex; for single-stock complexes this is the stock name.
 #'   - `MP`: management procedure name.
 #'   - `Year`: calendar year (or decimal date for sub-annual time steps).
 #'   - `Period`: always `"Projection"` for the reasons above.
@@ -36,15 +37,14 @@ TACs <- function(MSE) {
   ProjYears <- Years(MSE, 'Projection')
   AllYears  <- c(HistYears, ProjYears)
 
-  ppd        <- PPD(MSE)
-  mpNames    <- names(ppd)
-  stockNames <- StockNames(MSE)
+  ppd     <- PPD(MSE)
+  mpNames <- names(ppd)
 
   purrr::map(mpNames, \(mp) {
     simNames <- names(ppd[[mp]])
     purrr::map(simNames, \(sim) {
-      purrr::map(seq_along(stockNames), \(st) {
-        tac <- ppd[[mp]][[sim]][[st]]@Advice@TAC
+      purrr::imap(ppd[[mp]][[sim]], \(dat, cx) {
+        tac <- dat@Advice@TAC
         if (is.null(tac) || !length(tac)) return(NULL)
 
         tac <- ExtendYears(tac, Years = AllYears)
@@ -52,7 +52,7 @@ TACs <- function(MSE) {
         Array2DF(tac) |>
           dplyr::mutate(
             Sim      = as.numeric(sim),
-            Stock    = stockNames[st],
+            Stock    = cx,
             MP       = mp,
             Period   = ifelse(.data$Year %in% ProjYears, 'Projection', 'Historical'),
             Variable = 'TAC',
