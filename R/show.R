@@ -359,7 +359,14 @@ setMethod("show", "om", function(object) {
   
   .ShowSlot(object, 'nYear')
   .ShowSlot(object, 'pYear')
-  
+
+  interval <- object@Interval
+  if (length(interval) > 1 && !is.null(names(interval))) {
+    cli::cli_text("{.var Interval}:  {.val {paste(names(interval), interval, sep = ' = ')}}")
+  } else {
+    .ShowSlot(object, 'Interval')
+  }
+
   histYears <- Years(object,'H')
   projYears <- Years(object,'P')
   
