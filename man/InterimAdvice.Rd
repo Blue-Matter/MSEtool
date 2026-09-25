@@ -66,8 +66,13 @@ from a lognormal truncated at the smallest \code{Max / Mean} in its calendar
 year x Complex x Type, so no row exceeds its \code{Max}. \code{Mean} is the mean
 before truncation; the realised mean is lower. \code{NA} (default) gives no
 bound. If supplied, must be \verb{>= Mean}.
-\item \code{TACType}, \code{TACUnit}: as in \code{\link[=Advice]{Advice()}}; only used for \code{"TAC"} rows.
-Default \code{"Removals"} and \code{"Biomass"}.
+\item \code{TACType}: \code{"Removals"} (default) or \code{"Landings"}; only used for \code{"TAC"}
+rows.
+\item \code{TACUnit}: units of \code{Mean} and \code{Max} for \code{"TAC"} rows, as in \code{\link[=Advice]{Advice()}}:
+\code{"Biomass"} (default), \code{"Number"}, or a catch unit such as
+\code{Data@Landings@Units} (e.g. \code{"t"}, \code{"kg"}, \code{"n"}), which is stored as
+\code{"Biomass"} or \code{"Number"}. The TAC is not rescaled, so a TAC in biomass
+is in the OM's \code{Weight} units. May differ among fleets.
 \item \code{EffType}: \code{"Abs"} (default) or \code{"Rel"}; only used for \code{"Effort"} rows.
 \code{"Abs"} is absolute effort. \code{"Rel"} is a multiplier on the fleet's effort
 in the same season of the last historical year.

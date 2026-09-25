@@ -71,6 +71,11 @@
   bad <- setdiff(unique(IA$EffType[IA$Type == "Effort"]), c("Abs", "Rel"))
   if (length(bad))
     cli::cli_abort("`InterimAdvice$EffType` must be {.val Abs} or {.val Rel}; found {.val {bad}}.")
+  isTAC <- IA$Type == "TAC"
+  bad <- setdiff(unique(IA$TACType[isTAC]), c("Removals", "Landings"))
+  if (length(bad))
+    cli::cli_abort("`InterimAdvice$TACType` must be {.val Removals} or {.val Landings}; found {.val {bad}}.")
+  IA$TACUnit[isTAC] <- .CatchUnitType(IA$TACUnit[isTAC], arg = "InterimAdvice$TACUnit")
 
   tsIdx <- vapply(IA$Year, \(y) {
     d <- abs(InterimTS - y)
