@@ -140,8 +140,9 @@ CatchObs <- function(CV    = NULL,
 #'
 #' @param SampleSize `numeric` or `NULL`. Nominal sample size (number of fish
 #'   aged or measured per year), used as the count argument of the final
-#'   multinomial draw. `NULL` (default) suppresses composition data generation
-#'   for this data type entirely. Accepted input forms:
+#'   multinomial draw. `NULL` (default) uses `ESS` as the sample size; if both
+#'   are `NULL`, no composition data are generated for this data type.
+#'   Accepted input forms:
 #'   - Scalar: constant across all simulations and years.
 #'   - Length-2 vector `c(lower, upper)`: bounds of a Uniform distribution
 #'     from which one value per simulation is drawn, constant across years.

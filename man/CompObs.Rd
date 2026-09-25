@@ -16,8 +16,9 @@ CompObs(
 \arguments{
 \item{SampleSize}{\code{numeric} or \code{NULL}. Nominal sample size (number of fish
 aged or measured per year), used as the count argument of the final
-multinomial draw. \code{NULL} (default) suppresses composition data generation
-for this data type entirely. Accepted input forms:
+multinomial draw. \code{NULL} (default) uses \code{ESS} as the sample size; if both
+are \code{NULL}, no composition data are generated for this data type.
+Accepted input forms:
 \itemize{
 \item Scalar: constant across all simulations and years.
 \item Length-2 vector \code{c(lower, upper)}: bounds of a Uniform distribution

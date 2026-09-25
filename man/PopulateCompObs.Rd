@@ -43,15 +43,17 @@ Populate a \link[=compobs-class]{compobs} object by expanding \code{SampleSize},
 bins, and applying default values where slots are unspecified.
 }
 \details{
-If \code{\link[=EmptyObject]{EmptyObject()}} returns \code{TRUE} for \code{Comp} (i.e. \code{SampleSize} is
-\code{NULL}), the object is returned unchanged and no population is performed.
+If \code{\link[=EmptyObject]{EmptyObject()}} returns \code{TRUE} for \code{Comp}, or both \code{SampleSize} and
+\code{ESS} are \code{NULL}, the object is returned without composition generation
+settings and no composition data are generated.
 
 Otherwise the following slots are populated:
 
 \strong{\code{SampleSize}}: expanded to a named \verb{[nSim x nYear]} array covering all
 historical and projection years. A
 length-2 input \code{c(lower, upper)} is interpreted as bounds of a Uniform
-distribution from which \code{nSim} values are drawn.
+distribution from which \code{nSim} values are drawn. If \code{NULL}, defaults
+silently to the populated \code{ESS} array.
 
 \strong{\code{ESS}}: expanded in the same way as \code{SampleSize}. If \code{NULL}, defaults
 silently to the populated \code{SampleSize} array. Typically \code{ESS <= SampleSize};

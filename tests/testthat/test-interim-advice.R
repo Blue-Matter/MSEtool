@@ -184,3 +184,36 @@ test_that("annual OM: per-fleet TAC and relative/absolute Effort are applied", {
   expect_equal(unname(mse@Effort[, "2028", fl[1], 1]), 0.5 * unname(hist@Effort[, nH, fl[1]]), tolerance = 1e-6)
   expect_equal(unname(mse@Effort[, "2028", fl[2], 1]), rep(0.2, 3), tolerance = 1e-6)
 })
+
+test_that("InterimAdvice TACUnit accepts catch units and validates TACType", {
+  skip_on_cran()
+  hist <- .InterimSeasonalHist(Seasons = 1)
+  fl <- FleetNames(hist)
+  IA <- data.frame(Year = rep(2027:2028, each = 2), Fleet = fl, Type = "TAC", Mean = 100,
+                   TACUnit = c("t", "1000 n", NA, "Number"))
+  out <- .InterimCheck(hist, IA)
+  expect_identical(out@OM@InterimAdvice$TACUnit, c("Biomass", "Number", "Biomass", "Number"))
+
+  expect_error(.InterimCheck(hist, transform(IA, TACUnit = "tonnes")), "TACUnit")
+  expect_error(.InterimCheck(hist, transform(IA, TACType = "Catch")), "TACType")
+})
+
+test_that("annual OM: interim TAC in numbers and biomass are applied per fleet", {
+  skip_on_cran()
+  hist <- .InterimSeasonalHist(Seasons = 1)
+  fl <- FleetNames(hist)
+  hist@OM@MPStartYear <- 2029
+  hist@OM@InterimAdvice <- data.frame(Year = rep(2027:2028, each = 2), Fleet = fl, Type = "TAC",
+                                      Mean = c(20, 100, 100, 10),
+                                      TACUnit = c("n", "t", "Biomass", "Number"))
+  mse <- Project(hist, MPs = "refMSY50", parallel = FALSE, silent = TRUE)
+  remB <- apply(ArraySum(mse@Landings, mse@Discards)[, , c("2027", "2028"), , 1, drop = FALSE], c(1, 3, 4), sum)
+  remN <- ArraySum(mse@LandingsAtAge[[1]], mse@DiscardsAtAge[[1]])
+  remN <- apply(remN[, , c("2027", "2028"), , , 1, drop = FALSE], c(1, 3, 4), sum)
+  for (sim in 1:3) {
+    expect_equal(unname(remN[sim, "2027", fl[1]]), 20, tolerance = 1e-3)
+    expect_equal(unname(remB[sim, "2027", fl[2]]), 100, tolerance = 1e-3)
+    expect_equal(unname(remB[sim, "2028", fl[1]]), 100, tolerance = 1e-3)
+    expect_equal(unname(remN[sim, "2028", fl[2]]), 10, tolerance = 1e-3)
+  }
+})

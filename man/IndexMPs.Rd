@@ -230,7 +230,7 @@ calendar years with \code{\link[=AnnualData]{AnnualData()}}: catches are summed 
 each index is averaged over the seasons in \code{IndexSeasons}. All arguments
 given in years (\code{CalibYears}, \code{RecentYears}, \code{TrendYears}, \code{TrendHorizon},
 \code{IndexFreq}) therefore refer to calendar years, and the TAC is annual.
-\subsection{IndexRate()}{
+\subsection{IndexRate}{
 
 \code{IndexRate()} fishes at a catch-per-index rate, so the TAC follows the
 index.
@@ -250,7 +250,7 @@ the trial TAC falls quadratically with the index.
 trial TAC is \verb{rate x current status} and \code{IndexTarget} has no effect.
 }
 
-\subsection{IndexTarget()}{
+\subsection{IndexTarget}{
 
 \code{IndexTarget()} sets the TAC to keep the index around \code{IndexTarget}.
 

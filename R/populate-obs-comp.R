@@ -20,15 +20,17 @@
 #'   populated arrays, typically `"Age"` or `"Class"`.
 #'
 #' @details
-#' If [EmptyObject()] returns `TRUE` for `Comp` (i.e. `SampleSize` is
-#' `NULL`), the object is returned unchanged and no population is performed.
+#' If [EmptyObject()] returns `TRUE` for `Comp`, or both `SampleSize` and
+#' `ESS` are `NULL`, the object is returned without composition generation
+#' settings and no composition data are generated.
 #'
 #' Otherwise the following slots are populated:
 #'
 #' **`SampleSize`**: expanded to a named `[nSim x nYear]` array covering all
 #' historical and projection years. A
 #' length-2 input `c(lower, upper)` is interpreted as bounds of a Uniform
-#' distribution from which `nSim` values are drawn.
+#' distribution from which `nSim` values are drawn. If `NULL`, defaults
+#' silently to the populated `ESS` array.
 #'
 #' **`ESS`**: expanded in the same way as `SampleSize`. If `NULL`, defaults
 #' silently to the populated `SampleSize` array. Typically `ESS <= SampleSize`;
@@ -91,26 +93,31 @@ PopulateCompObs <- function(Comp,
   Years <- c(HistYears, ProjYears)
   nBin  <- length(Bins)
   
-  # SampleSize
-  Comp@SampleSize <- .PopulateObsScalar(
-    x     = Comp@SampleSize,
-    nSim  = nSim,
-    Years = Years,
-    label = "SampleSize"
-  )
+  # SampleSize and ESS each default to the other when unspecified
+  if (!is.null(Comp@SampleSize))
+    Comp@SampleSize <- .PopulateObsScalar(
+      x     = Comp@SampleSize,
+      nSim  = nSim,
+      Years = Years,
+      label = "SampleSize"
+    )
 
-  # ESS
-  # Default silently to SampleSize when unspecified
-  if (is.null(Comp@ESS)) {
-    Comp@ESS <- Comp@SampleSize
-  } else {
+  if (!is.null(Comp@ESS))
     Comp@ESS <- .PopulateObsScalar(
       x     = Comp@ESS,
       nSim  = nSim,
       Years = Years,
       label = "ESS"
     )
-  }
+
+  if (is.null(Comp@SampleSize))
+    Comp@SampleSize <- Comp@ESS
+  if (is.null(Comp@ESS))
+    Comp@ESS <- Comp@SampleSize
+
+  # No composition generation without SampleSize or ESS
+  if (is.null(Comp@SampleSize))
+    return(Comp)
 
   # Theta
   # Default silently to 1 (standard multinomial) when unspecified
