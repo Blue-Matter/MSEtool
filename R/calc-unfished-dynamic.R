@@ -6,7 +6,8 @@
 #' over historical and projection years.
 #'
 #'
-#' @param Hist A [Hist()] object containing historical operating model data.
+#' @param Hist A [hist-class] object, or an [om-class] object from which a
+#'   `hist` object is built.
 #' @param IdenticalHist Logical; if `TRUE`, assumes all simulations are identical
 #'   and calculates only a single simulation. If `NULL` (default), determined
 #'   automatically via `.IdenticalSims()`.
@@ -24,11 +25,11 @@ CalcUnfished_Dynamic <- function(Hist, IdenticalHist=NULL, silent=FALSE) {
   .MsgStep("Calculating dynamic unfished conditions",
            "Calculated dynamic unfished conditions", silent)
 
-  if (inherits(Hist,'om')) 
-    Hist <- Hist(OM, silent=TRUE)
+  if (inherits(Hist,'om'))
+    Hist <- .OM2Hist(Hist, silent=TRUE)
   
   if (EmptyObject(Hist@Unfished@Equilibrium )) 
-    Hist@Unfished@Equilibrium <- CalcUnfished_Equilibrium(Hist@OM)
+    Hist@Unfished@Equilibrium <- CalcUnfished_Equilibrium(Hist@OM, silent)
   
   Hist <- .CalcDynamicInitial(Hist)
   
