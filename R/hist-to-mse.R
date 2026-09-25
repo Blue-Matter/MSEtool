@@ -7,19 +7,21 @@
 #' arrays are pre-allocated via `.InitializeTimeSeries()`.
 #'
 #' @param Hist A populated [hist-class] object.
-#' @param MPNames Character vector of MP function names to attach to the MSE.
+#' @param MPs Named list of MP functions (from `.ResolveMPs()`), or a
+#'   character vector of MP function names.
 #'
 #' @return An [mse-class] object with historical slots populated and
 #'   projection arrays initialised, ready for closed-loop simulation.
 #' @keywords internal
-.Hist2MSE <- function(Hist, MPNames) {
+.Hist2MSE <- function(Hist, MPs) {
+  MPs <- .ResolveMPs(MPs)
   MSE           <- new('mse')
   MSE@OM        <- Hist@OM
   MSE@Unfished  <- Hist@Unfished
   MSE@Reference <- Hist@Reference
   MSE           <- .CopyTimeseriesSlots(MSE, Hist)
-  MSE           <- .AddMPFunctions(MSE, MPNames)
-  MSE           <- .InitializeTimeSeries(MSE, 'Projection', MPs=MPNames)
+  MSE           <- .AddMPFunctions(MSE, MPs)
+  MSE           <- .InitializeTimeSeries(MSE, 'Projection', MPs = names(MPs))
   MSE
 }
 
@@ -45,57 +47,101 @@
 
 #' Attach MP Functions to an `mse` Object
 #'
-#' Validates that all names in `MPNames` correspond to functions of class
-#' `"mp"`, `"mmp"`, or a legacy (DLMtool/SAMtool) `"MP"` via `.CheckMPClass()`,
-#' wraps any legacy `"MP"` functions via `.WrapLegacyMP()` so they can be
+#' Wraps any legacy `"MP"` functions via `.WrapLegacyMP()` so they can be
 #' called by the new pipeline, then wraps each in a self-contained
 #' environment via `.MakeSelfContained()` and stores them in `MSE@MPs`.
 #'
 #' @param MSE An [mse-class] object.
-#' @param MPNames Character vector of MP function names.
+#' @param MPs Named list of MP functions (from `.ResolveMPs()`), or a
+#'   character vector of MP function names.
 #'
 #' @return `MSE` with `MSE@MPs` populated by valid, self-contained MP
-#'   functions named by their original names.
+#'   functions, named as in `MPs`.
 #' @keywords internal
-.AddMPFunctions <- function(MSE, MPNames) {
-  .CheckMPClass(MPNames)
+.AddMPFunctions <- function(MSE, MPs) {
+  MPs <- .ResolveMPs(MPs)
 
-  MPs <- lapply(MPNames, \(x) {
-    fn <- get(x)
+  Fns <- purrr::imap(MPs, \(fn, x) {
     if (inherits(fn, 'MMP'))
       cli::cli_abort("Legacy {.cls MMP} management procedures are not yet supported ({.val {x}}).")
     if (inherits(fn, 'MP'))
       fn <- .WrapLegacyMP(fn)
     .MakeSelfContained(fn)
   })
-  MSE@MPs        <- MPs
-  names(MSE@MPs) <- MPNames
+  MSE@MPs <- Fns
   MSE
 }
 
+#' Resolve Management Procedures to a Named List of Functions
+#'
+#' Accepts a character vector of MP function names, a named list of MP
+#' functions, or a list mixing both. Character elements are looked up with
+#' [get()] and named by themselves unless a name is given; function elements
+#' must be named. Validates each with `.CheckMPClass()`.
+#'
+#' @param MPs Character vector, or list of character strings and/or
+#'   functions.
+#'
+#' @return A named list of MP functions.
+#' @keywords internal
+.ResolveMPs <- function(MPs) {
+  if (is.function(MPs))
+    cli::cli_abort("Supply a single MP function as a named list, e.g. {.code MPs = list(MyMP = MyMP)}.")
+  if (is.character(MPs))
+    MPs <- as.list(MPs)
+  if (!is.list(MPs) || !length(MPs))
+    cli::cli_abort("{.arg MPs} must be a character vector of MP names, or a named list of MP functions.")
 
+  Names <- names(MPs)
+  if (is.null(Names)) Names <- rep('', length(MPs))
+  Names[is.na(Names)] <- ''
+
+  Fns <- vector('list', length(MPs))
+  for (i in seq_along(MPs)) {
+    x <- MPs[[i]]
+    if (is.character(x)) {
+      if (length(x) != 1)
+        cli::cli_abort("Character elements of {.arg MPs} must each be a single MP name.")
+      if (!nzchar(Names[i])) Names[i] <- x
+      if (!exists(x, mode = 'function'))
+        cli::cli_abort("MP {.val {x}} not found.")
+      x <- get(x, mode = 'function')
+    } else if (!is.function(x)) {
+      cli::cli_abort("Element {i} of {.arg MPs} must be an MP name or an MP function.")
+    } else if (!nzchar(Names[i])) {
+      cli::cli_abort("MP functions in {.arg MPs} must be named, e.g. {.code MPs = list(MyMP = MyMP)}.")
+    }
+    Fns[[i]] <- x
+  }
+  names(Fns) <- Names
+
+  Dup <- unique(Names[duplicated(Names)])
+  if (length(Dup))
+    cli::cli_abort("Duplicated MP name{?s}: {.val {Dup}}.")
+
+  .CheckMPClass(Fns)
+  Fns
+}
 
 #' Check That All MPs are of Class `"mp"`, `"mmp"`, `"MP"`, or `"MMP"`
 #'
-#' Retrieves each function named in `MPs` and aborts with an informative error
-#' listing all invalid MPs if any is not one of the native (`"mp"`/`"mmp"`) or
-#' legacy DLMtool/SAMtool (`"MP"`/`"MMP"`) management-procedure classes. Used
-#' as an upfront validation step before running an MSE. Legacy `"MP"`
-#' functions are wrapped for the new pipeline by `.WrapLegacyMP()` inside
-#' `.AddMPFunctions()`.
+#' Aborts with an informative error listing all invalid MPs if any is not one
+#' of the native (`"mp"`/`"mmp"`) or legacy DLMtool/SAMtool (`"MP"`/`"MMP"`)
+#' management-procedure classes. Legacy `"MP"` functions are wrapped for the
+#' new pipeline by `.WrapLegacyMP()` inside `.AddMPFunctions()`.
 #'
-#' @param MPs Character vector of MP function names.
+#' @param MPs Named list of MP functions, or a character vector of MP
+#'   function names.
 #'
 #' @return `NULL` invisibly if all MPs are valid. Otherwise throws an error.
 #' @keywords internal
 .CheckMPClass <- function(MPs) {
-  .CheckClass(MPs, 'character', 'MPs')
+  if (is.character(MPs))
+    MPs <- stats::setNames(purrr::map(MPs, get), MPs)
 
-  MP_funs    <- purrr::map(MPs, get)
-  is_mp      <- vapply(MP_funs, \(f) inherits(f, c('mp', 'mmp', 'MP', 'MMP')), logical(1))
-  names(is_mp) <- MPs
+  is_mp <- vapply(MPs, \(f) inherits(f, c('mp', 'mmp', 'MP', 'MMP')), logical(1))
 
-  invalid <- names(is_mp)[!is_mp]
+  invalid <- names(MPs)[!is_mp]
   if (length(invalid))
     cli::cli_abort(c(
       "All MPs must be of class {.cls mp}, {.cls mmp}, or legacy {.cls MP}/{.cls MMP}.",
