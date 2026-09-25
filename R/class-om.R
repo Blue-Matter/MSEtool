@@ -124,10 +124,9 @@
 #'   instead of relying on a small `Interval` value. 
 #' @slot MPStartYear Numeric or `NULL`. First calendar year in which MPs are
 #'   applied. Projection years before `MPStartYear` are "interim" years -
-#'   the MP is not called, and advice is instead built from `InterimAdvice`
-#'   (falling back to freezing effort at the last historical level where no
-#'   matching entry exists). `NULL` (default) means MPs start in the first
-#'   projection year. See [InterimAdvice()].
+#'   the MP is not called, and advice is instead built from `InterimAdvice`.
+#'   `NULL` (default) means MPs start in the first projection year. See
+#'   [InterimAdvice()].
 #' @slot InterimAdvice A `data.frame` or `NULL`. Analyst-supplied fixed or
 #'   stochastic TAC/Effort values for interim years (before `MPStartYear`).
 #'   See [InterimAdvice()] for the required columns.
@@ -257,10 +256,16 @@ setValidity("om", function(object) {
   }
 
   if (!is.null(object@InterimAdvice)) {
+    ia_names <- names(object@InterimAdvice)
+    if (all(c("Complex", "Stock") %in% ia_names))
+      errors <- c(errors, "`InterimAdvice` must not have both `Complex` and `Stock` columns; use `Complex`")
+    cx_col <- intersect(c("Complex", "Stock"), ia_names)[1]
+
     required_cols <- c("Year", "Type", "Mean")
-    if (length(object@Stock) > 1)
-      required_cols <- c(required_cols, "Stock")
-    missing_cols  <- setdiff(required_cols, names(object@InterimAdvice))
+    missing_cols  <- setdiff(required_cols, ia_names)
+    nCx <- if (length(object@Complexes)) length(object@Complexes) else length(object@Stock)
+    if (nCx > 1 && is.na(cx_col))
+      missing_cols <- c(missing_cols, "Complex")
     if (length(missing_cols))
       errors <- c(errors, paste0(
         "`InterimAdvice` is missing required column(s): ",
@@ -283,12 +288,12 @@ setValidity("om", function(object) {
           errors <- c(errors, "`InterimAdvice$CV` must be `NA`, `0`, or positive; found negative value(s)")
         pos <- !is.na(mean_vals) & mean_vals > 0
         if (any(pos)) {
-          stk <- if ("Stock" %in% names(object@InterimAdvice)) object@InterimAdvice$Stock else ""
-          grp <- paste(object@InterimAdvice$Year, stk, object@InterimAdvice$Type, sep = "\r")
+          cx  <- if (!is.na(cx_col)) object@InterimAdvice[[cx_col]] else ""
+          grp <- paste(floor(object@InterimAdvice$Year + 5e-4), cx, object@InterimAdvice$Type, sep = "\r")
           cv0 <- ifelse(is.na(cv_vals), 0, cv_vals)
           n_cv <- tapply(cv0[pos], grp[pos], function(x) length(unique(x)))
           if (any(n_cv > 1))
-            errors <- c(errors, "`InterimAdvice$CV` must be identical for all rows with `Mean > 0` within a Year x Stock x Type")
+            errors <- c(errors, "`InterimAdvice$CV` must be identical for all rows with `Mean > 0` within a Year x Complex x Type")
         }
       }
 

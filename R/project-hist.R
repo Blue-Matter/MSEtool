@@ -55,6 +55,7 @@
   Proj <- .CheckEffortAllocation(Proj)
 
   Proj <- .PrepHistMisc(Proj)
+  Proj <- .CheckInterimAdvice(Proj)
 
   Proj <- .ExtendHist(Proj, Years = c(YearsHist, YearsProj))
   

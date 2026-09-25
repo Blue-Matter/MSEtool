@@ -45,7 +45,9 @@
                               silent = FALSE, mp = 1) {
 
   Interval        <- .ResolveInterval(Proj@OM@Interval, MPName, MPfunction, Proj@OM@Seasons)
-  ManagementYears <- .CalcManagementYears(YearsProj, Interval, Proj@OM@Seasons)
+  IsInterim       <- YearsProj %in% .InterimTimesteps(Proj@OM)
+  ManagementYears <- if (all(IsInterim)) YearsProj[0] else
+    .CalcManagementYears(YearsProj[!IsInterim], Interval, Proj@OM@Seasons)
   EverySeason     <- isTRUE(attr(MPfunction, 'EverySeason'))
   YearsAll        <- c(YearsHist, YearsProj)
   Areas           <- 1:nArea(Proj)
@@ -88,9 +90,13 @@
     # Simulate data for the previous time step 
     Proj <- .GenerateProjectionData(Proj, Year, YearsHist, YearsProj)
   
-    # Get previous advice
+    # Get previous advice; interim advice is never carried forward
     LastAdviceSimList      <- .GetLastMPAdvice(Proj)
     LastAggBagLimitSimList <- .GetLastMPAggBagLimit(Proj)
+    if (IsInterim[ts] || (ts > 1 && IsInterim[ts - 1]))
+      LastAdviceSimList <- NULL
+    # interim advice is already per timestep, so no seasonal re-split
+    EverySeasonTS <- EverySeason || IsInterim[ts]
 
     # Data year accounting for lag
     DataYear <- .CalcDataYear(Year     = Year,
@@ -168,7 +174,7 @@
                                 fun_name,
                                 Proj, Year, AdviceSimList, LastAdviceSimList,
                                 YearsHist, YearsProj, Areas, FleetNames, StockNames,
-                                EverySeason)
+                                EverySeasonTS)
 
       if (inherits(result, "update_error")) {
         Error        <- TRUE

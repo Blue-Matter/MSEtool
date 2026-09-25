@@ -944,41 +944,55 @@ MPStartYear <- function(x) .IsHist(x, "MPStartYear")
 #'
 #' ## Format
 #'
-#' `InterimAdvice` is a `data.frame` with one row per Year x Stock x
-#' (optionally Fleet), with columns:
-#' - `Year`: calendar year, in `[first projection year, MPStartYear - 1]`.
-#' - `Stock`: stock (or complex) name. Optional when the OM has a single
-#'   stock/complex, in which case every row applies to it; required when
-#'   there is more than one.
-#' - `Fleet`: optional; fleet name, or `NA` to apply as a stock total (TAC,
-#'   allocated across fleets the same way MP-supplied TAC is) or an identical
-#'   value across fleets (Effort).
+#' `InterimAdvice` is a `data.frame` with columns:
+#' - `Year`: an interim timestep, i.e. a value of `Years(OM, "Projection")`
+#'   before `MPStartYear`. See *Annual and seasonal values* below.
+#' - `Complex`: stock complex name, matching `names(OM@Complexes)`. Optional
+#'   when the OM has a single complex, in which case every row applies to it;
+#'   required when there is more than one.
+#' - `Fleet`: optional; fleet name, or `NA` for a complex total. A `Fleet = NA`
+#'   row gives the total for the fleets not listed individually in the same
+#'   Year x Complex x Type, split among them by [FleetAllocation()] (TAC) or
+#'   [EffortAllocation()] (absolute Effort).
 #' - `Type`: `"TAC"` or `"Effort"`.
 #' - `Mean`: point estimate, natural scale. Must be `>= 0` (e.g. `0` for a
 #'   fleet with no historical catch, maintained as a closure in interim
 #'   years).
 #' - `CV`: optional; coefficient of variation of a lognormal multiplier with
 #'   mean 1. `NA`/`0` (default) gives a fixed, deterministic value. One
-#'   multiplier is drawn per simulation for each Year x Stock x Type and
-#'   applied to every row in that group, so values across fleets move
-#'   together and fleet shares stay fixed at the ratios of their `Mean`s.
-#'   Must be identical for all rows with `Mean > 0` in a Year x Stock x Type.
+#'   multiplier is drawn per simulation for each calendar year x Complex x
+#'   Type and applied to every row in that group (all fleets and seasons), so
+#'   fleet and seasonal shares stay fixed at the ratios of their `Mean`s.
+#'   Must be identical for all rows with `Mean > 0` in a calendar year x
+#'   Complex x Type.
 #' - `Max`: optional; upper bound on the drawn value. The multiplier is drawn
-#'   from a lognormal truncated at the smallest `Max / Mean` in its Year x
-#'   Stock x Type, so no row exceeds its `Max`. `Mean` is the mean before
-#'   truncation; the realised mean is lower. `NA` (default) gives no bound.
-#'   If supplied, must be `>= Mean`.
+#'   from a lognormal truncated at the smallest `Max / Mean` in its calendar
+#'   year x Complex x Type, so no row exceeds its `Max`. `Mean` is the mean
+#'   before truncation; the realised mean is lower. `NA` (default) gives no
+#'   bound. If supplied, must be `>= Mean`.
 #' - `TACType`, `TACUnit`: as in [Advice()]; only used for `"TAC"` rows.
-#' - `EffType`: as in [Advice()]; only used for `"Effort"` rows.
+#'   Default `"Removals"` and `"Biomass"`.
+#' - `EffType`: `"Abs"` (default) or `"Rel"`; only used for `"Effort"` rows.
+#'   `"Abs"` is absolute effort. `"Rel"` is a multiplier on the fleet's effort
+#'   in the same season of the last historical year.
 #'
-#' Any Year x Stock combination with no matching row falls back to freezing
-#' effort at the last historical level (the same default used when an MP
-#' itself returns no TAC/Effort).
+#' ## Annual and seasonal values
 #'
-#' For seasonal OMs (`Seasons > 1`), the annual `Mean` for a row is spread
-#' across seasons using that stock/fleet's own seasonal shape from the last
-#' historical year (Landings for TAC rows, Effort for Effort rows), so a
-#' historical seasonal pattern is retained rather than flattened.
+#' For each calendar year x Complex x Type x Fleet (with `Fleet = NA` treated
+#' as its own entry), supply either:
+#' - one row with the integer calendar year: an annual value. For seasonal
+#'   OMs (`Seasons > 1`), an annual TAC or absolute Effort is split across
+#'   seasons by [SeasonalAllocation()]; an annual relative Effort applies to
+#'   every season; or
+#' - one row for every timestep of that year (the integer year is the first
+#'   season): a value for each season, used as given.
+#'
+#' Different fleets in the same year may use different forms. Every complex
+#' must have rows in every interim year, and within each calendar year x
+#' Complex x Type every fleet must be covered, either by its own rows or by a
+#' `Fleet = NA` row. `InterimAdvice` must be supplied if and only if
+#' `MPStartYear` leaves at least one interim year. These rules are checked at
+#' the start of [Project()], and any violation is an error.
 #'
 #' @return
 #' - `InterimAdvice()` returns the value of the `InterimAdvice` slot.

@@ -312,12 +312,11 @@ NULL
 
 .FilterManagementYears <- function(df, object) {
   YearsProj <- Years(object@OM, 'Projection')
+  YearsProj <- YearsProj[!YearsProj %in% .InterimTimesteps(object@OM)]
   mpNames   <- unique(df$MP)
   keep <- lapply(mpNames, function(mp) {
     Interval  <- .ResolveInterval(object@OM@Interval, mp, object@MPs[[mp]], object@OM@Seasons)
-    ManageYrs <- .CalcManagementYears(YearsProj, Interval, object@OM@Seasons)
-    if (!is.null(object@OM@MPStartYear))
-      ManageYrs <- ManageYrs[floor(ManageYrs) >= object@OM@MPStartYear]
+    ManageYrs <- if (length(YearsProj)) .CalcManagementYears(YearsProj, Interval, object@OM@Seasons) else YearsProj
     df$MP == mp & df$Year %in% ManageYrs
   })
   df[Reduce(`|`, keep), ]

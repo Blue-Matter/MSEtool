@@ -171,10 +171,9 @@ instead of relying on a small \code{Interval} value.}
 
 \item{\code{MPStartYear}}{Numeric or \code{NULL}. First calendar year in which MPs are
 applied. Projection years before \code{MPStartYear} are "interim" years -
-the MP is not called, and advice is instead built from \code{InterimAdvice}
-(falling back to freezing effort at the last historical level where no
-matching entry exists). \code{NULL} (default) means MPs start in the first
-projection year. See \code{\link[=InterimAdvice]{InterimAdvice()}}.}
+the MP is not called, and advice is instead built from \code{InterimAdvice}.
+\code{NULL} (default) means MPs start in the first projection year. See
+\code{\link[=InterimAdvice]{InterimAdvice()}}.}
 
 \item{\code{InterimAdvice}}{A \code{data.frame} or \code{NULL}. Analyst-supplied fixed or
 stochastic TAC/Effort values for interim years (before \code{MPStartYear}).
