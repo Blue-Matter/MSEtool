@@ -13,7 +13,8 @@ TACs(MSE)
 A data frame with columns:
 \itemize{
 \item \code{Sim}: simulation index.
-\item \code{Stock}: stock name.
+\item \code{Stock}: stock complex name (\code{names(OM@Complexes)}). TAC advice is set
+per complex; for single-stock complexes this is the stock name.
 \item \code{MP}: management procedure name.
 \item \code{Year}: calendar year (or decimal date for sub-annual time steps).
 \item \code{Period}: always \code{"Projection"} for the reasons above.
@@ -24,9 +25,9 @@ A data frame with columns:
 }
 \description{
 Extracts the total allowable catch (TAC) recommendations issued by each
-management procedure (MP) in each simulation, year, stock, and fleet from
-the \code{PPD} slot of an \link[=mse-class]{mse} object. Returns a tidy data frame
-suitable for plotting and performance indicator calculations.
+management procedure (MP) in each simulation, year, stock complex, and
+fleet from the \code{PPD} slot of an \link[=mse-class]{mse} object. Returns a tidy data
+frame suitable for plotting and performance indicator calculations.
 }
 \details{
 An MP's \code{Advice(TAC = ...)} only gets recorded in the year it actually

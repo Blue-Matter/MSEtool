@@ -1,4 +1,4 @@
-# Regression coverage for .GenProjDataSizeComp()/.GenProjDataSizeCompAll()
+# Regression coverage for .GenProjDataSizeComp()
 # (R/generate-data-proj-sizecomp.R): true catch-at-size for a fleet must only
 # be aggregated from `Proj@LandingsAtSize`/`Proj@DiscardsAtSize` lazily, when
 # it is actually going to be used. Previously this was computed unconditionally
@@ -27,7 +27,7 @@ skip_on_cran()
 
   # Real historical composition data (e.g. conditioned from supplied
   # `OM@Data`), independent of the (skipped) true catch-at-size calculation --
-  # this is what stops `.GenProjDataSizeComp[All]()`'s "no composition data"
+  # this is what stops `.GenProjDataSizeComp()`'s "no composition data"
   # early exit from firing.
   val <- array(0, dim = c(length(HistYears), 1, nBin),
               dimnames = list(Year = HistYears, Fleet = FleetNms, Class = seq_len(nBin)))
@@ -53,12 +53,12 @@ skip_on_cran()
   list(Proj = Proj, YearsAll = YearsAll, DataYear = ProjYears[1], nSim = nSim)
 }
 
-test_that(".GenProjDataSizeCompAll() does not error when true catch-at-size is unavailable for a stock", {
+test_that(".GenProjDataSizeComp() does not error when true catch-at-size is unavailable for a stock", {
   built <- .BuildProjWithUnavailableTrueCatchAtSize()
 
-  result <- MSEtool:::.GenProjDataSizeCompAll(built$Proj, built$DataYear, built$YearsAll,
-                                              i = 1, stocks = 1, nSim = built$nSim,
-                                              type = 'LandingsAtSize')
+  result <- MSEtool:::.GenProjDataSizeComp(built$Proj, built$DataYear, built$YearsAll,
+                                           i = 1, stocks = 1, nSim = built$nSim,
+                                           type = 'LandingsAtSize')
 
   expect_length(result, built$nSim)
   for (cd in result) {
@@ -66,16 +66,5 @@ test_that(".GenProjDataSizeCompAll() does not error when true catch-at-size is u
     # No true data available to simulate from -- the new year is left NA,
     # the same as when no Obs is configured for a fleet.
     expect_true(all(is.na(cd@Value[as.character(built$DataYear), , ])))
-  }
-})
-
-test_that(".GenProjDataSizeComp() does not error when true catch-at-size is unavailable for a stock", {
-  built <- .BuildProjWithUnavailableTrueCatchAtSize()
-
-  for (x in seq_len(built$nSim)) {
-    result <- MSEtool:::.GenProjDataSizeComp(x, built$Proj, built$DataYear, built$YearsAll,
-                                             i = 1, stocks = 1, type = 'LandingsAtSize')
-    expect_true(built$DataYear %in% dimnames(result@Value)[[1]])
-    expect_true(all(is.na(result@Value[as.character(built$DataYear), , ])))
   }
 })

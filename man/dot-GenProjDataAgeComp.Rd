@@ -5,18 +5,16 @@
 \title{Generate Projected Age Composition Data}
 \usage{
 .GenProjDataAgeComp(
-  x,
   Proj,
   DataYear,
   YearsAll,
   i,
   stocks,
+  nSim,
   type = c("LandingsAtAge", "DiscardsAtAge")
 )
 }
 \arguments{
-\item{x}{Integer index of the simulation replicate.}
-
 \item{Proj}{A \code{hist} class object used in the projection.}
 
 \item{DataYear}{Numeric. The calendar year to generate data for.}
@@ -29,24 +27,29 @@ historical and projection periods.}
 \item{stocks}{Integer vector of stock indices used to subset catch-at-age
 arrays.}
 
+\item{nSim}{Integer. Number of simulation replicates.}
+
 \item{type}{Character. Either \code{"LandingsAtAge"} or \code{"DiscardsAtAge"}.}
 }
 \value{
-A \link[=compdata-class]{compdata} object with \code{DataYear} appended to \verb{@Value}:
+A list of length \code{nSim} of \link[=compdata-class]{compdata} objects, each with
+\code{DataYear} appended to \verb{@Value}:
 \itemize{
 \item \verb{@Value}: \verb{[nYear+1 x nFleet x nAge]} array of composition counts
 }
 }
 \description{
 Internal function to append one year of simulated age composition data to
-an existing \link[=compdata-class]{compdata} object during the projection period.
+the \link[=compdata-class]{compdata} object of every simulation during the projection
+period.
 }
 \details{
 \subsection{Early Exit Conditions}{
 
-The function returns \code{CompData} unchanged in two cases:
+The existing \code{CompData} of every simulation is returned unchanged in two
+cases, both evaluated on simulation 1 (\code{slot(Proj@Data[[1]][[i]], type)}):
 \itemize{
-\item \strong{No composition data exist}: \code{slot(Proj@Data[[x]][[i]], type)} is empty
+\item \strong{No composition data exist}: the object is empty
 (\code{EmptyObject(CompData)}). Age compositions were not simulated
 historically, so projection data are not generated.
 \item \strong{Year already present}: \code{DataYear} is already a row in
@@ -58,9 +61,9 @@ historically, so projection data are not generated.
 
 Catch-at-age for \code{DataYear} is extracted from \code{Proj@LandingsAtAge} or
 \code{Proj@DiscardsAtAge} (selected by \code{type}) for each stock in \code{stocks} at
-time step \code{TSIndex}, dropping the simulation and time dimensions. The
-result is summed over stocks and areas, retaining the fleet and age
-dimensions, then normalised to proportions \eqn{\mathbf{q}} within each
+time step \code{TSIndex}, dropping the time dimension. The result is summed
+over stocks and areas, retaining the simulation, fleet and age dimensions,
+then normalised to proportions \eqn{\mathbf{q}} within each simulation and
 fleet.
 }
 
@@ -69,10 +72,10 @@ fleet.
 For each fleet, the new composition is resolved in order of precedence:
 \itemize{
 \item \strong{OM data present}: if \code{Proj@OM@Data[[i]]} contains a pre-computed
-composition for \code{type} at \code{TSIndex}, it is used directly without
-applying observation error.
-\item \strong{Stochastic}: otherwise, the Dirichlet concentration vector is
-constructed as:
+composition for \code{type} at \code{TSIndex}, it is used for all simulations
+without applying observation error.
+\item \strong{Stochastic}: otherwise, the Dirichlet concentration vector for each
+simulation is constructed as:
 }
 
 \deqn{\alpha_b = \mathrm{ESS} \cdot \Theta \cdot q_b \cdot \exp(\mathrm{Shift}_b)}
@@ -84,6 +87,9 @@ and a Dirichlet-Multinomial sample of size \code{SampleSize} is drawn via
 \item \code{Theta}: defaults to \code{1} if \code{NULL}
 \item \code{Shift}: defaults to zero for all bins if \code{NULL}
 }
+
+Slots with fewer simulation rows than \code{nSim} are recycled from their last
+row.
 }
 
 \subsection{Obs .Structure}{
@@ -108,7 +114,7 @@ See \link[=obs-class]{obs} and \code{\link[=CompObs]{CompObs()}} for full slot d
 \subsection{Appending}{
 
 The new year's \code{Value} array (dimensions \verb{[1 x nFleet x nAge]}) is bound
-to the existing array along the year dimension using
+to each simulation's existing array along the year dimension using
 \code{abind::abind(..., along = 1)}, preserving dimension names.
 }
 }

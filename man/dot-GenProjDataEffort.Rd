@@ -4,11 +4,9 @@
 \alias{.GenProjDataEffort}
 \title{Generate Projected Effort Data}
 \usage{
-.GenProjDataEffort(x, Proj, DataYear, YearsAll, i)
+.GenProjDataEffort(Proj, DataYear, YearsAll, i, nSim)
 }
 \arguments{
-\item{x}{Integer index of the simulation replicate.}
-
 \item{Proj}{A \code{hist} class object used in the projection.}
 
 \item{DataYear}{Numeric. The calendar year to generate data for.}
@@ -17,25 +15,28 @@
 historical and projection periods.}
 
 \item{i}{Integer index of the stock complex.}
+
+\item{nSim}{Integer. Number of simulation replicates.}
 }
 \value{
-An \link[=effortdata-class]{effortdata} object with \code{DataYear} appended to \verb{@Value}
-and \verb{@CV}:
+A list of length \code{nSim} of \link[=effortdata-class]{effortdata} objects, each with
+\code{DataYear} appended to \verb{@Value} and \verb{@CV}:
 \itemize{
 \item \verb{@Value}: \verb{[nYear+1 x nFleet]} array of observed effort
 \item \verb{@CV}: \verb{[nYear+1 x nFleet]} array of CVs
 }
 }
 \description{
-Internal function to append one year of simulated observed effort to an
-existing \link[=effortdata-class]{effortdata} object during the projection period.
+Internal function to append one year of simulated observed effort to the
+\link[=effortdata-class]{effortdata} object of every simulation during the projection period.
 }
 \details{
 \subsection{Early Exit Conditions}{
 
-The function returns \code{EffortData} unchanged in two cases:
+The existing \code{EffortData} of every simulation is returned unchanged in two
+cases, both evaluated on simulation 1 (\code{Proj@Data[[1]][[i]]@Effort}):
 \itemize{
-\item \strong{No effort data exist}: \code{Proj@Data[[x]][[i]]@Effort} is empty
+\item \strong{No effort data exist}: the object is empty
 (\code{EmptyObject(EffortData)}). Effort was not simulated historically,
 so projection data are not generated.
 \item \strong{Year already present}: \code{DataYear} is already a row in
@@ -46,20 +47,25 @@ so projection data are not generated.
 \subsection{Observation Error Model}{
 
 For each fleet with a non-empty \code{\link[=EffortObs]{EffortObs()}} object and a populated
-\code{Error} array, observed effort for \code{DataYear} is generated as:
+\code{Error} array, observed effort for \code{DataYear} is resolved via
+\code{.ResolveValue()}. If \code{Proj@OM@Data[[i]]} contains an effort value at
+\code{TSIndex}, it is used for all simulations without observation error.
+Otherwise:
 
-\deqn{\tilde{E}_{t} = E_{t} \cdot b \cdot \varepsilon_{t}}
+\deqn{\tilde{E}_{x,t} = E_{x,t} \cdot b_x \cdot \varepsilon_{x,t}}
 \itemize{
-\item \eqn{E_{t}} — true OM effort in year \eqn{t}, resolved via
-\code{.ResolveValue()} using \code{TSIndex} to locate \code{DataYear} in \code{YearsAll}
-\item \eqn{b} — multiplicative bias for replicate \code{x} (\code{effortobs@Bias[x]});
-see \code{\link[=EffortObs]{EffortObs()}}
-\item \eqn{\varepsilon_{t}} — lognormal error multiplier for replicate \code{x},
-year \eqn{t} (\code{effortobs@Error[x, t]}); see \code{\link[=EffortObs]{EffortObs()}}
+\item \eqn{E_{x,t}} — true OM effort for replicate \eqn{x} in year \eqn{t}
+\item \eqn{b_x} — multiplicative bias (\code{effortobs@Bias[x]}); see \code{\link[=EffortObs]{EffortObs()}}
+\item \eqn{\varepsilon_{x,t}} — lognormal error multiplier
+(\code{effortobs@Error[x, t]}); see \code{\link[=EffortObs]{EffortObs()}}
 }
 
-CVs for the new year are resolved via \code{.ResolveCV()}, which looks up the
-fleet- and year-specific CV from the existing \link[=effortdata-class]{effortdata} object.
+\code{Bias} and \code{Error} with fewer rows than \code{nSim} are recycled from their
+last row.
+
+CVs for the new year are resolved per simulation via \code{.ResolveCV()}, which
+looks up the fleet- and year-specific CV from that simulation's existing
+\link[=effortdata-class]{effortdata} object.
 }
 
 \subsection{Obs .Structure}{
@@ -82,7 +88,7 @@ See \link[=obs-class]{obs} and \code{\link[=EffortObs]{EffortObs()}} for full sl
 \subsection{Appending}{
 
 The new year's \code{Value} and \code{CV} arrays (dimensions \verb{[1 x nFleet]}) are
-bound to the existing arrays along the year dimension using
+bound to each simulation's existing arrays along the year dimension using
 \code{abind::abind(..., along = 1)}, preserving dimension names.
 }
 }

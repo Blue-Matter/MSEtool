@@ -5,18 +5,16 @@
 \title{Generate Projected Catch Data}
 \usage{
 .GenProjDataCatch(
-  x,
   Proj,
   DataYear,
   YearsAll,
   i,
   stocks,
+  nSim,
   type = c("Landings", "Discards")
 )
 }
 \arguments{
-\item{x}{Integer index of the simulation replicate.}
-
 \item{Proj}{A \code{hist} class object used in the projection.}
 
 \item{DataYear}{Numeric. The calendar year to generate data for.}
@@ -29,28 +27,31 @@ historical and projection periods.}
 \item{stocks}{Integer vector of stock indices used to subset catch-at-age
 arrays.}
 
+\item{nSim}{Integer. Number of simulation replicates.}
+
 \item{type}{Character. Either \code{"Landings"} or \code{"Discards"}.}
 }
 \value{
-A \link[=catchdata-class]{catchdata} object with \code{DataYear} appended to \verb{@Value}
-and \verb{@CV}:
+A list of length \code{nSim} of \link[=catchdata-class]{catchdata} objects, each with
+\code{DataYear} appended to \verb{@Value} and \verb{@CV}:
 \itemize{
 \item \verb{@Value}: \verb{[nYear+1 x nFleet]} array of observed catch
 \item \verb{@CV}: \verb{[nYear+1 x nFleet]} array of CVs
 }
 }
 \description{
-Internal function to append one year of simulated observed catch to an
-existing \link[=catchdata-class]{catchdata} object during the projection period.
+Internal function to append one year of simulated observed catch to the
+\link[=catchdata-class]{catchdata} object of every simulation during the projection period.
 }
 \details{
 \subsection{Early Exit Conditions}{
 
-The function returns \code{CatchData} unchanged in two cases:
+The existing \code{CatchData} of every simulation is returned unchanged in two
+cases, both evaluated on simulation 1 (\code{slot(Proj@Data[[1]][[i]], type)}):
 \itemize{
-\item \strong{No catch data exist}: \code{slot(Proj@Data[[x]][[i]], type)} is empty
-(\code{EmptyObject(CatchData)}). Catch was not simulated historically, so
-projection data are not generated.
+\item \strong{No catch data exist}: the object is empty (\code{EmptyObject(CatchData)}).
+Catch was not simulated historically, so projection data are not
+generated.
 \item \strong{Year already present}: \code{DataYear} is already a row in
 \code{CatchData@Value}, indicating this year has been appended previously.
 }
@@ -60,13 +61,14 @@ projection data are not generated.
 
 Catch-at-age for \code{DataYear} is extracted from \code{Proj@LandingsAtAge} or
 \code{Proj@DiscardsAtAge} (selected by \code{type}) for each stock in \code{stocks},
-dropping the simulation and time dimensions. Per-fleet aggregation then
-depends on \code{.CatchUnitType(CatchData@Units[fl])}:
+dropping the time dimension. Per-fleet aggregation then depends on
+\code{CatchData@Units[fl]}:
 \itemize{
-\item \code{"Number"}: summed over age and area via \code{.ResolveCatchNumber()}.
+\item \code{"Number"}: summed over age and area for all simulations via
+\code{.ResolveCatchNumber()}.
 \item \code{"Biomass"}: multiplied by \code{WeightFleetRetained} (\code{type = "Landings"}) or
 \code{WeightFleetSelected} (\code{type = "Discards"}) before summing over age and
-area via \code{.ResolveCatchBiomass()}.
+area via \code{.ResolveCatchBiomass()}, one simulation at a time.
 }
 }
 
@@ -75,23 +77,27 @@ area via \code{.ResolveCatchBiomass()}.
 For each fleet, the new observed value is resolved in order of precedence:
 \itemize{
 \item \strong{OM data present}: if \code{Proj@OM@Data[[i]]} contains a pre-computed value
-for \code{type} at \code{TSIndex}, it is used directly without applying observation
-error.
+for \code{type} at \code{TSIndex}, it is used for all simulations without applying
+observation error.
 \item \strong{Stochastic}: otherwise, the aggregated true catch is multiplied by
 bias and error from the \code{\link[=CatchObs]{CatchObs()}} object:
 }
 
-\deqn{\tilde{C}_{t} = C_{t} \cdot b \cdot \varepsilon_{t}}
+\deqn{\tilde{C}_{x,t} = C_{x,t} \cdot b_x \cdot \varepsilon_{x,t}}
 \itemize{
-\item \eqn{C_{t}} — true aggregated catch for \code{DataYear}
-\item \eqn{b} — multiplicative bias for replicate \code{x} (\code{catchobs@Bias[x]});
-see \code{\link[=CatchObs]{CatchObs()}}
-\item \eqn{\varepsilon_{t}} — lognormal error multiplier for replicate \code{x},
-year \eqn{t} (\code{catchobs@Error[x, t]}); see \code{\link[=CatchObs]{CatchObs()}}
+\item \eqn{C_{x,t}} — true aggregated catch for replicate \eqn{x} in
+\code{DataYear}
+\item \eqn{b_x} — multiplicative bias (\code{catchobs@Bias[x]}); see \code{\link[=CatchObs]{CatchObs()}}
+\item \eqn{\varepsilon_{x,t}} — lognormal error multiplier
+(\code{catchobs@Error[x, t]}); see \code{\link[=CatchObs]{CatchObs()}}
 }
 
-CVs for the new year are resolved via \code{.ResolveCV()}, which looks up the
-fleet- and year-specific CV from the existing \link[=catchdata-class]{catchdata} object.
+\code{Bias} and \code{Error} with fewer rows than \code{nSim} are recycled from their
+last row.
+
+CVs for the new year are resolved per simulation via \code{.ResolveCV()}, which
+looks up the fleet- and year-specific CV from that simulation's existing
+\link[=catchdata-class]{catchdata} object.
 }
 
 \subsection{Obs .Structure}{
@@ -114,7 +120,7 @@ See \link[=obs-class]{obs} and \code{\link[=CatchObs]{CatchObs()}} for full slot
 \subsection{Appending}{
 
 The new year's \code{Value} and \code{CV} arrays (dimensions \verb{[1 x nFleet]}) are
-bound to the existing arrays along the year dimension using
+bound to each simulation's existing arrays along the year dimension using
 \code{abind::abind(..., along = 1)}, preserving dimension names.
 }
 }

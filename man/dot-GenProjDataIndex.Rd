@@ -5,7 +5,6 @@
 \title{Generate Projected Index Data for a Stock/Complex}
 \usage{
 .GenProjDataIndex(
-  x,
   Proj,
   DataYear,
   YearsAll,
@@ -13,12 +12,11 @@
   stocks,
   StockNames,
   FleetNames,
+  nSim,
   type = c("CPUE", "Survey")
 )
 }
 \arguments{
-\item{x}{Integer. Simulation index.}
-
 \item{Proj}{A \code{Hist} object used in the projection.}
 
 \item{DataYear}{Numeric. The calendar year to generate data for.}
@@ -35,13 +33,22 @@ and projection years}
 \item{FleetNames}{Character. Names of all fleets, used to match
 fleet-specific selectivity from \code{Proj@OM@Fleet}.}
 
+\item{nSim}{Integer. Number of simulation replicates.}
+
 \item{type}{Character. One of \code{"CPUE"} or \code{"Survey"}.}
 }
 \value{
-The updated \code{CPUE} or \code{Survey} object.
+A list of length \code{nSim} of updated \code{CPUE} or \code{Survey} objects.
 }
 \description{
-Appends a new year of observed index data (\code{Value} and \code{CV}) to the existing
-\code{CPUE} or \code{Survey} data object for a given simulation and stock/complex.
+Appends a new year of observed index data (\code{Value} and \code{CV}) to the
+\code{CPUE} or \code{Survey} data object of every simulation for a given
+stock/complex.
+}
+\details{
+The existing objects are returned unchanged if the index data of
+simulation 1 is empty or already contains \code{DataYear}. For each simulation,
+a fleet's index is not simulated if its last five values are all
+non-finite.
 }
 \keyword{internal}

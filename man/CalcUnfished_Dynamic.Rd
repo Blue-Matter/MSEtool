@@ -7,7 +7,8 @@
 CalcUnfished_Dynamic(Hist, IdenticalHist = NULL, silent = FALSE)
 }
 \arguments{
-\item{Hist}{A \code{\link[=Hist]{Hist()}} object containing historical operating model data.}
+\item{Hist}{A \link[=hist-class]{hist} object, or an \link[=om-class]{om} object from which a
+\code{hist} object is built.}
 
 \item{IdenticalHist}{Logical; if \code{TRUE}, assumes all simulations are identical
 and calculates only a single simulation. If \code{NULL} (default), determined

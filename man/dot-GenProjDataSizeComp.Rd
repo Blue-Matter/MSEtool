@@ -5,18 +5,16 @@
 \title{Generate Projected Size Composition Data}
 \usage{
 .GenProjDataSizeComp(
-  x,
   Proj,
   DataYear,
   YearsAll,
   i,
   stocks,
+  nSim,
   type = c("LandingsAtSize", "DiscardsAtSize")
 )
 }
 \arguments{
-\item{x}{Integer index of the simulation replicate.}
-
 \item{Proj}{A \code{hist} class object used in the projection.}
 
 \item{DataYear}{Numeric. The calendar year to generate data for.}
@@ -29,24 +27,29 @@ historical and projection periods.}
 \item{stocks}{Integer vector of stock indices used to subset catch-at-size
 arrays.}
 
+\item{nSim}{Integer. Number of simulation replicates.}
+
 \item{type}{Character. Either \code{"LandingsAtSize"} or \code{"DiscardsAtSize"}.}
 }
 \value{
-A \link[=compdata-class]{compdata} object with \code{DataYear} appended to \verb{@Value}:
+A list of length \code{nSim} of \link[=compdata-class]{compdata} objects, each with
+\code{DataYear} appended to \verb{@Value}:
 \itemize{
 \item \verb{@Value}: \verb{[nYear+1 x nFleet x nSize]} array of composition counts
 }
 }
 \description{
 Internal function to append one year of simulated size composition data to
-an existing \link[=compdata-class]{compdata} object during the projection period.
+the \link[=compdata-class]{compdata} object of every simulation during the projection
+period.
 }
 \details{
 \subsection{Early Exit Conditions}{
 
-The function returns \code{CompData} unchanged in two cases:
+The existing \code{CompData} of every simulation is returned unchanged in two
+cases, both evaluated on simulation 1 (\code{slot(Proj@Data[[1]][[i]], type)}):
 \itemize{
-\item \strong{No composition data exist}: \code{slot(Proj@Data[[x]][[i]], type)} is empty
+\item \strong{No composition data exist}: the object is empty
 (\code{EmptyObject(CompData)}). Size compositions were not simulated
 historically, so projection data are not generated.
 \item \strong{Year already present}: \code{DataYear} is already a row in
@@ -58,11 +61,11 @@ historically, so projection data are not generated.
 
 Catch-at-size for \code{DataYear} is extracted from \code{Proj@LandingsAtSize} or
 \code{Proj@DiscardsAtSize} (selected by \code{type}) for each stock in \code{stocks} at
-time step \code{TSIndex}, dropping the simulation and time dimensions. The
-result is summed over stocks and areas, computed independently for each
-fleet since fleets are not required to share a size-class grid (see
-\link[=compdata-class]{compdata}), then normalised to proportions \eqn{\mathbf{q}} within
-each fleet.
+time step \code{TSIndex}, dropping the time dimension. The result is summed over
+stocks and areas, computed independently for each fleet since fleets are
+not required to share a size-class grid (see \link[=compdata-class]{compdata}), then
+normalised to proportions \eqn{\mathbf{q}} within each simulation and
+fleet.
 }
 
 \subsection{Value Resolution}{
@@ -70,10 +73,10 @@ each fleet.
 For each fleet, the new composition is resolved in order of precedence:
 \itemize{
 \item \strong{OM data present}: if \code{Proj@OM@Data[[i]]} contains a pre-computed
-composition for \code{type} at \code{TSIndex}, it is used directly without
-applying observation error.
-\item \strong{Stochastic}: otherwise, the Dirichlet concentration vector is
-constructed as:
+composition for \code{type} at \code{TSIndex}, it is used for all simulations
+without applying observation error.
+\item \strong{Stochastic}: otherwise, the Dirichlet concentration vector for each
+simulation is constructed as:
 }
 
 \deqn{\alpha_b = \mathrm{ESS} \cdot \Theta \cdot q_b \cdot \exp(\mathrm{Shift}_b)}
@@ -85,6 +88,9 @@ and a Dirichlet-Multinomial sample of size \code{SampleSize} is drawn via
 \item \code{Theta}: defaults to \code{1} if \code{NULL}
 \item \code{Shift}: defaults to zero for all bins if \code{NULL}
 }
+
+Slots with fewer simulation rows than \code{nSim} are recycled from their last
+row.
 }
 
 \subsection{Obs .Structure}{
