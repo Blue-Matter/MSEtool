@@ -27,11 +27,8 @@ management reference points derived from the historical period. See
 
 \item{\code{Hist}}{A \link[=timeseries-class]{timeseries} object containing the historical
 time-series of population and fishery dynamics used to initialize the MSE
-projections. Typed as \link[=timeseries-class]{timeseries} rather than \link[=hist-class]{hist} because
-slots such as \code{OM}, \code{Unfished}, and \code{Reference} are already present
-directly on the \code{mse} object, making a full \link[=hist-class]{hist} object redundant.
-Use \code{\link[=Hist]{Hist()}} to access this slot. For the full standalone historical
-object, see \link[=hist-class]{hist}.}
+projections. Use \code{\link[=Hist]{Hist()}} to recover the complete \link[=hist-class]{hist} object,
+e.g. to pass to \code{\link[=Project]{Project()}} with additional management procedures.}
 
 \item{\code{PPD}}{List containing posterior predictive distribution outputs and
 diagnostics generated during the MSE.}

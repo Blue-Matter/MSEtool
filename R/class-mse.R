@@ -19,11 +19,8 @@
 #'
 #' @slot Hist A [timeseries-class] object containing the historical
 #'   time-series of population and fishery dynamics used to initialize the MSE
-#'   projections. Typed as [timeseries-class] rather than [hist-class] because
-#'   slots such as `OM`, `Unfished`, and `Reference` are already present
-#'   directly on the `mse` object, making a full [hist-class] object redundant.
-#'   Use [Hist()] to access this slot. For the full standalone historical
-#'   object, see [hist-class].
+#'   projections. Use [Hist()] to recover the complete [hist-class] object,
+#'   e.g. to pass to [Project()] with additional management procedures.
 #'
 #' @slot PPD List containing posterior predictive distribution outputs and
 #'   diagnostics generated during the MSE.

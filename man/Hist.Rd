@@ -11,12 +11,7 @@ Hist(MSE = NULL)
 object is returned.}
 }
 \value{
-When \code{MSE} is supplied, a \link[=timeseries-class]{timeseries} object extracted from
-the \code{Hist} slot of the \link[=mse-class]{mse} object. Note this is a
-\link[=timeseries-class]{timeseries} and not a \link[=hist-class]{hist} — slots such as \code{OM},
-\code{Unfished}, and \code{Reference} are stored directly on the parent \link[=mse-class]{mse}
-object to avoid duplication. When \code{MSE = NULL}, an empty \link[=hist-class]{hist}
-object is returned.
+A \link[=hist-class]{hist} object.
 }
 \description{
 The \link[=hist-class]{hist} object stores the complete historical time-series generated
@@ -25,11 +20,21 @@ reference points, and observational data. See \link[=hist-class]{hist} for full
 documentation of all slots.
 }
 \details{
-Users do not typically need to create or manipulate \code{hist} objects directly —
-they are generated automatically as part of \code{\link[=Simulate]{Simulate()}} and stored in the
-\code{Hist} slot of the resulting \link[=mse-class]{mse} object. \code{Hist()} is provided to
-extract that slot when needed.
+\code{hist} objects are created by \code{\link[=Simulate]{Simulate()}}. \code{Hist()} recovers the \code{hist}
+object from an \link[=mse-class]{mse} object, combining the historical time-series in
+\code{MSE@Hist} with the operating model, reference points, and historical
+data stored in the \code{mse} object. The returned object can be passed to
+\code{\link[=Project]{Project()}} to evaluate additional management procedures; the projections
+are identical to those from the \code{hist} object returned by \code{\link[=Simulate]{Simulate()}}.
+}
+\examples{
+\dontrun{
+Hist <- Simulate(SingleStockOM)
+MSE  <- Project(Hist, MPs = c('CurrentCatch', 'CurrentEffort'))
+MSE2 <- Project(Hist(MSE), MPs = 'NoFishing')
+}
+
 }
 \seealso{
-\link[=hist-class]{hist}, \link[=mse-class]{mse}, \link[=timeseries-class]{timeseries}, \code{\link[=Simulate]{Simulate()}}
+\link[=hist-class]{hist}, \link[=mse-class]{mse}, \code{\link[=Simulate]{Simulate()}}, \code{\link[=Project]{Project()}}
 }

@@ -5,22 +5,24 @@
 #' reference points, and observational data. See [hist-class] for full
 #' documentation of all slots.
 #'
-#' Users do not typically need to create or manipulate `hist` objects directly —
-#' they are generated automatically as part of [Simulate()] and stored in the
-#' `Hist` slot of the resulting [mse-class] object. `Hist()` is provided to
-#' extract that slot when needed.
+#' `hist` objects are created by [Simulate()]. `Hist()` recovers the `hist`
+#' object from an [mse-class] object, combining the historical time-series in
+#' `MSE@Hist` with the operating model, reference points, and historical
+#' data stored in the `mse` object. 
 #'
 #' @param MSE An [mse-class] object. If `NULL` (default), an empty [hist-class]
 #'   object is returned.
 #'
-#' @return When `MSE` is supplied, a [timeseries-class] object extracted from
-#'   the `Hist` slot of the [mse-class] object. Note this is a
-#'   [timeseries-class] and not a [hist-class] — slots such as `OM`,
-#'   `Unfished`, and `Reference` are stored directly on the parent [mse-class]
-#'   object to avoid duplication. When `MSE = NULL`, an empty [hist-class]
-#'   object is returned.
+#' @return A [hist-class] object.
 #'
-#' @seealso [hist-class], [mse-class], [timeseries-class], [Simulate()]
+#' @examples
+#' \dontrun{
+#' Hist <- Simulate(SingleStockOM)
+#' MSE  <- Project(Hist, MPs = c('CurrentCatch', 'CurrentEffort'))
+#' MSE2 <- Project(Hist(MSE), MPs = 'NoFishing')
+#' }
+#'
+#' @seealso [hist-class], [mse-class], [Simulate()], [Project()]
 #' @include class-hist.R
 #' @rdname Hist
 #' @export
@@ -29,7 +31,38 @@ Hist <- function(MSE=NULL) {
     return(methods::new("hist"))
   }
   .CheckClass(MSE, 'mse', 'MSE')
-  MSE@Hist
+
+  Hist <- methods::new('hist')
+  for (sl in methods::slotNames('timeseries'))
+    methods::slot(Hist, sl) <- methods::slot(MSE@Hist, sl)
+  Hist@Misc      <- list()
+  Hist@OM        <- MSE@OM
+  Hist@Unfished  <- MSE@Unfished
+  Hist@Reference <- MSE@Reference
+  Hist@Log       <- .HistLog(MSE@Log)
+  Hist@Data      <- .HistData(MSE)
+  Hist
+}
+
+# drop entries recorded while projecting an MP
+.HistLog <- function(Log) {
+  purrr::map(Log, \(entries) {
+    entries[!purrr::map_lgl(entries, \(e) .IsLogEntry(e) && !is.null(e$mp))] |>
+      unique()
+  })
+}
+
+# historical data are stored with the first MP's PPD
+.HistData <- function(MSE) {
+  if (!length(MSE@PPD))
+    return(list())
+  .SubsetYear(MSE@PPD[[1]], Years = Years(MSE, 'Historical')) |>
+    purrr::imap(\(DataList, sim) purrr::map(DataList, \(Data) {
+      if (is.null(Data)) return(Data)
+      Data@Advice   <- AdviceData()
+      Data@Misc$Sim <- as.numeric(sim)
+      Data
+    }))
 }
 
 

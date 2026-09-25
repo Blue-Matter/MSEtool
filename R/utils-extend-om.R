@@ -52,11 +52,7 @@
       } else  if (sl =='SRR') {
         for (sl2 in slotNames('srr')) {
           if (sl2 =='RecDevHist') {
-            slot(OM@Stock[[st]]@SRR,sl2) <- Extend(array=slot(OM@Stock[[st]]@SRR,sl2), 
-                                                   nSim = nSim, 
-                                                   AgeClasses = AgeClasses,
-                                                   Years = Years,
-                                                   Areas = Areas)
+            slot(OM@Stock[[st]]@SRR,sl2) <- ExtendSims(slot(OM@Stock[[st]]@SRR,sl2), nSim)
           } else {
             slot(OM@Stock[[st]]@SRR,sl2) <- Extend(array=slot(OM@Stock[[st]]@SRR,sl2), 
                                                    nSim = nSim,

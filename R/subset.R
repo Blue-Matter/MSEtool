@@ -281,6 +281,15 @@ Subset <- function(object,
                  list(drop = FALSE)))
 }
 
+.DropYearsAfter <- function(array, LastYear) {
+  TSind <- match("Year", names(dimnames(array)))
+  if (is.na(TSind)) return(array)
+  idx <- as.numeric(dimnames(array)[[TSind]]) <= LastYear
+  if (all(idx)) return(array)
+  do.call(`[`, c(list(array), .MakeDimIndex(idx, array, TSind),
+                 list(drop = FALSE)))
+}
+
 .SubsetAge <- function(object, Ages, debug = FALSE) {
   
   if (debug) cli::cli_alert('Class {.val {class(object)}}')

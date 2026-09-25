@@ -440,6 +440,10 @@
       add_err(nm, ": dim[2] (year) = ", dim(arr)[2L],
               "; must be >= nyears + RecLag[", st, "] = ", min_yr,
               " (recruits appear at y + RecLag)")
+    nAllYears <- length(HistYears) + length(ProjYears)
+    if (dim(arr)[2L] != nAllYears)
+      add_err(nm, ": dim[2] (year) = ", dim(arr)[2L],
+              "; must equal the number of historical + projection years (", nAllYears, ")")
     check_values(arr, nm, allow_neg = FALSE)
   })
   

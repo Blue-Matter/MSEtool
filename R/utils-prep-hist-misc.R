@@ -111,9 +111,12 @@
   Hist@Misc$SRR_Pars <- purrr::map(Hist@OM@Stock, \(stock) stock@SRR@Pars)
   
   # SRR rec devs
+  LastHistYear <- max(as.numeric(Years(Hist, 'Historical')))
   Hist@Misc$RecDevs <- purrr::map(Hist@OM@Stock, \(stock) {
     dd <- dim(stock@SRR@RecDevProj)
-    hist <- ExtendSims(stock@SRR@RecDevHist, dd[1])
+    # MSE objects from older versions have RecDevHist extended over projection years
+    hist <- .DropYearsAfter(stock@SRR@RecDevHist, LastHistYear)
+    hist <- ExtendSims(hist, dd[1])
     proj <- stock@SRR@RecDevProj 
     abind::abind(hist, proj, along=2, 
                  use.first.dimnames=TRUE,
