@@ -7,7 +7,8 @@
 #' definition of each metric.
 #'
 #' `PM_Removals`, `PM_Landings` (and `PM_Yield`, which is a thin wrapper
-#' around the two), `PM_RelYield`, `PM_AAVY`, and `PM_Stability` sum their
+#' around the two), `PM_LogYield`, `PM_RelYield`, `PM_AAVY`, and
+#' `PM_Stability` sum their
 #' series (TAC, removals, or landings) over the stocks in each
 #' `OM@Complexes` group by default; pass `Stocks` to override with an
 #' explicit set of stock names.
@@ -123,6 +124,12 @@ NULL
 #' \deqn{\frac{1}{|Y|}\sum_{y \in Y} C_{s,y}}{(1/|Y|) * sum over y in Y of C[s,y]}
 #' where `C` is removals (landings + discards), or landings only.
 #'
+#' `PM_LogYield`: mean log catch over the evaluation window, with catch
+#' floored at a fraction `Floor` of the simulation's mean historical catch
+#' \eqn{\bar{C}^{hist}_s}{Chist[s]} so that a zero catch has a finite log,
+#' \deqn{\frac{1}{|Y|}\sum_{y \in Y} \log\left(\max\left(C_{s,y},\ \mathrm{Floor} \cdot \bar{C}^{hist}_s\right)\right)}{(1/|Y|) * sum over y in Y of log(max(C[s,y], Floor * Chist[s]))}
+#' where `C` is landings (default) or removals, per `Type`.
+#'
 #' `PM_RelYield`: mean catch over the evaluation window, expressed relative
 #' to MSY yield,
 #' \deqn{\frac{1}{|Y|}\sum_{y \in Y} C_{s,y} \Big/ MSY_s}{[(1/|Y|) * sum over y in Y of C[s,y]] / MSY[s]}
@@ -134,10 +141,13 @@ NULL
 #' landings (per `Type`), or effort, across management intervals,
 #' \deqn{\frac{1}{|Y|-1}\sum_{y \in Y \setminus \{y_1\}} \frac{|C_{s,y} - C_{s,y-1}|}{C_{s,y-1}}}{(1/(|Y|-1)) * sum over y in Y (excluding the first year) of |C[s,y] - C[s,y-1]| / C[s,y-1]}
 #'
+#' where `Y` is the set of management years in the evaluation window and
+#' `y-1` denotes the preceding management year.
+#'
 #' `PM_Stability`: the probability that the series selected by `Type`
-#' changes by less than a threshold amount between one management interval
+#' changes by no more than a threshold amount between one management interval
 #' and the next,
-#' \deqn{P\left(\frac{|C_{s,y} - C_{s,y-1}|}{C_{s,y-1}} < \mathrm{Threshold}\right)}{P( |C[s,y] - C[s,y-1]| / C[s,y-1] < Threshold )}
+#' \deqn{P\left(\frac{|C_{s,y} - C_{s,y-1}|}{C_{s,y-1}} \le \mathrm{Threshold}\right)}{P( |C[s,y] - C[s,y-1]| / C[s,y-1] <= Threshold )}
 #' evaluated per interval `y` and averaged across the evaluation window and
 #' simulations.
 #'
@@ -151,7 +161,7 @@ NULL
 #' `Prob` — `Stat` averaged across simulations instead.
 #'
 #' @seealso [PM] for the full list of performance metric functions and their
-#'   arguments.
+#'   arguments; [NewPM()] to create a custom metric.
 #' @name PM-equations
 NULL
 
@@ -635,6 +645,90 @@ PM_Yield <- function(object, Years = NULL, Stocks = NULL,
   out
 }
 class(PM_Yield) <- 'pm'
+
+#' @rdname PM
+#' @param Floor Positive number. In `PM_LogYield`, catches are floored at
+#'   `Floor` times the simulation's mean historical catch before taking logs,
+#'   so a zero catch has a finite log. Default `1e-3`.
+#' @export
+PM_LogYield <- function(object, Years = NULL, Stocks = NULL,
+                        Type = c('Landings', 'Removals'), Floor = 1e-3, silent = TRUE) {
+  Type <- match.arg(Type)
+  object <- .CoercePMInput(object, silent)
+  FUN <- if (Type == 'Landings') Landings else Removals
+  df <- .GroupedCatch(object, Stocks, FUN = FUN)
+
+  HistDF <- FUN(object, df = TRUE, byFleet = FALSE, byAge = FALSE, bySize = FALSE,
+                byArea = FALSE, Reduce = FALSE)
+  HistDF <- HistDF[HistDF$Period == 'Historical', ]
+  groups <- .ResolveComplexGroups(object@OM, Stocks)
+  RefDF <- purrr::imap(groups, \(stk, grpName) {
+    HistDF[HistDF$Stock %in% stk, ] |>
+      dplyr::group_by(.data$Sim, .data$Year) |>
+      dplyr::summarise(Value = sum(.data$Value, na.rm = TRUE), .groups = 'drop') |>
+      dplyr::group_by(.data$Sim) |>
+      dplyr::summarise(HistMean = mean(.data$Value, na.rm = TRUE), .groups = 'drop') |>
+      dplyr::mutate(Stock = grpName)
+  }) |> dplyr::bind_rows()
+
+  df <- dplyr::left_join(df, RefDF, by = c('Sim', 'Stock'))
+  Lower <- ifelse(is.finite(df$HistMean) & df$HistMean > 0, Floor * df$HistMean, 0)
+  df$Value <- log(pmax(df$Value, Lower))
+  .BuildPM(df, Ref = NA_real_, Years = Years, op = NULL, Name = 'LogYield',
+           Caption = paste0('Mean log projected ', tolower(Type)))
+}
+class(PM_LogYield) <- 'pm'
+
+#' Create a Custom Performance Metric
+#'
+#' Builds a [pm-class] object from a data frame of per-simulation, per-year
+#' values, so any metric can be used as a compatible performance metric (PM), e.g. 
+#' as the objective or a constraint in [TuneMP()]. 
+#' 
+#' A custom PM function takes an
+#' [mse-class] object, calculates the metric (e.g. from [Landings()] or
+#' [SB_SBMSY()] with `df = TRUE`), and returns `NewPM(...)`.
+#'
+#' @param df A data frame with columns `Sim`, `Stock`, `Year`, `MP`, and
+#'   `Value` (and optionally `Period`; only `'Projection'` rows are used).
+#' @param Name Character. Short name of the metric.
+#' @param Caption Character. Description of the metric. Default `Name`.
+#' @param Ref `NULL` (default) or the reference value compared with `Value`
+#'   by `Op`.
+#' @param Op `NULL` (default) or a comparison function, e.g. `` `>` ``. When
+#'   given, `Prob` is, for each simulation, the proportion of years in which
+#'   `Op(Value, Ref)` is `TRUE`, and `Mean` is `Prob` averaged over
+#'   simulations; otherwise `Prob` is `NA` and `Mean` is `Stat` (the
+#'   per-simulation mean `Value`) averaged over simulations.
+#' @param Years `NULL` (default, all projection years) or the years to include.
+#' @param OM `NULL`, or the [om-class] object, to exclude interim years
+#'   before `OM@@MPStartYear`.
+#'
+#' @return A [pm-class] object.
+#'
+#' @examples
+#' \dontrun{
+#' PM_MinSB <- function(object, Years = NULL) {
+#'   df <- SB_SBMSY(object, df = TRUE, Reduce = FALSE)
+#'   df <- df[df$Period == 'Projection', ]
+#'   df <- dplyr::summarise(dplyr::group_by(df, Sim, Stock, MP),
+#'                          Value = min(Value), Year = max(Year), .groups = 'drop')
+#'   NewPM(df, Name = 'MinSB', Caption = 'P(min SB/SBMSY > 0.5)', Ref = 0.5, Op = `>`)
+#' }
+#' class(PM_MinSB) <- 'pm'
+#' }
+#'
+#' @seealso [PM], [TuneMP()]
+#' @export
+NewPM <- function(df, Name, Caption = Name, Ref = NULL, Op = NULL, Years = NULL, OM = NULL) {
+  Missing <- setdiff(c('Sim', 'Stock', 'Year', 'MP', 'Value'), names(df))
+  if (length(Missing))
+    cli::cli_abort("{.arg df} is missing column{?s} {.val {Missing}}.")
+  if (!is.null(Op) && is.null(Ref))
+    cli::cli_abort("{.arg Ref} is needed when {.arg Op} is given.")
+  .BuildPM(as.data.frame(df), Ref = Ref, Years = Years, op = Op, Name = Name,
+           Caption = Caption, OM = OM)
+}
 
 #' @rdname PM
 #' @export
