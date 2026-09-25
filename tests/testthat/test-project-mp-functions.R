@@ -71,3 +71,29 @@ test_that("Project() with MP functions matches name-based projection and passes 
   expect_equal(First[2], 2)
   expect_equal(First[3], YearsProj[1] - 2)
 })
+
+test_that("Project() seeds MP random draws from OM@Seed and restores the global RNG", {
+  skip_on_cran()
+  OM <- SingleStockOM
+  OM@nSim <- 3
+  Hist <- Simulate(OM, silent = TRUE)
+  RandMP <- function(Data, ...) {
+    Advice <- IndexTarget(Data, ...)
+    Advice@TAC <- Advice@TAC * exp(stats::rnorm(length(Advice@TAC), 0, 0.2))
+    Advice
+  }
+  class(RandMP) <- class(IndexTarget)
+
+  set.seed(1)
+  A <- Project(Hist, MPs = list(R = RandMP), silent = TRUE)
+  set.seed(999)
+  Before <- get('.Random.seed', envir = globalenv())
+  B <- Project(Hist, MPs = list(I = IndexTarget, R = RandMP), silent = TRUE)
+  expect_identical(get('.Random.seed', envir = globalenv()), Before)
+  expect_identical(unname(A@Landings[, , , , 'R']), unname(B@Landings[, , , , 'R']))
+
+  Hist2 <- Hist
+  Hist2@OM@Seed <- Hist@OM@Seed + 1
+  C <- Project(Hist2, MPs = list(R = RandMP), silent = TRUE)
+  expect_false(isTRUE(all.equal(A@Landings, C@Landings)))
+})

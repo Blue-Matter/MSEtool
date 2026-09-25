@@ -123,7 +123,6 @@ test_that("TuneMP() tunes an MP to a constraint boundary over two Hist objects",
   OM <- SingleStockOM
   OM@nSim <- 4
   H1 <- Simulate(OM, silent = TRUE)
-  Seed <- H1@OM@Seed
   OM@Seed <- 42
   H2 <- Simulate(OM, silent = TRUE)
   Hists <- list(A = H1, B = H2)
@@ -138,17 +137,13 @@ test_that("TuneMP() tunes an MP to a constraint boundary over two Hist objects",
   expect_gte(Con$Value[Con$Name == 'PM_SBSBMSY'], 0.6 - 0.6 * Ctl$TolPM)
   expect_identical(attr(Tuned@MP, 'Tuning')$Value, Tuned@Args$tunepar)
 
-  Again <- lapply(Hists, \(h) {
-    set.seed(Seed)
-    Project(h, MPs = list(T = Tuned@MP), silent = TRUE)
-  })
+  Again <- lapply(Hists, \(h) Project(h, MPs = list(T = Tuned@MP), silent = TRUE))
   SB <- mean(vapply(Again, \(m) PM_SBSBMSY(m)@Mean[1, 'T'], numeric(1)))
   expect_equal(SB, Con$Value[Con$Name == 'PM_SBSBMSY'], tolerance = 1e-8)
 
   if (Tuned@Status == 'boundary') {
     Up <- SetMPArgs(Tuned@MP, tunepar = Tuned@Args$tunepar * (1 + 3 * Ctl$TolTune))
     SBUp <- mean(vapply(Hists, \(h) {
-      set.seed(Seed)
       PM_SBSBMSY(Project(h, MPs = list(T = Up), silent = TRUE))@Mean[1, 'T']
     }, numeric(1)))
     expect_lte(SBUp, 0.6 + 1e-8)
@@ -196,13 +191,14 @@ test_that(".SaveRNG()/.RestoreRNG() leave the global RNG state as they found it"
   set.seed(3)
   Before <- get('.Random.seed', envir = globalenv())
   Saved <- .SaveRNG()
-  set.seed(99)
+  set.seed(99, kind = "L'Ecuyer-CMRG")
   .RestoreRNG(Saved)
   expect_identical(get('.Random.seed', envir = globalenv()), Before)
+  expect_identical(RNGkind(), Saved$Kind)
 
   rm('.Random.seed', envir = globalenv())
   Saved <- .SaveRNG()
-  expect_null(Saved)
+  expect_null(Saved$Seed)
   set.seed(99)
   .RestoreRNG(Saved)
   expect_false(exists('.Random.seed', envir = globalenv(), inherits = FALSE))
