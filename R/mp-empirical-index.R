@@ -261,8 +261,8 @@ IndexRate <- function(Data,
   Slope       <- .TrendSlope(IndexSmooth, TrendYears)
   StatusTrend <- Status * exp(Slope * TrendHorizon)
 
-  Est      <- stats::weighted.mean(StatusTrend, IndexWeight, na.rm = TRUE)
-  RefLevel <- stats::weighted.mean(Ref, IndexWeight, na.rm = TRUE)
+  Est      <- stats::weighted.mean(StatusTrend/Ref, IndexWeight, na.rm = TRUE)
+  RefLevel <- 1
 
   TrialRate <- CatchPerIndex * IndexFactor * tunepar
   AdjRate   <- HockeyStickHCR(TrialRate, 
