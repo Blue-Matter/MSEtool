@@ -20,8 +20,8 @@
 #' For each entry in `FleetList`, the first named fleet is replaced in-place
 #' by the combined fleet and the remaining fleets are dropped. Combination
 #' preserves aggregate fishing mortality, selectivity, retention, discard
-#' mortality, and weight-at-age. S
-#' 
+#' mortality, and weight-at-age.
+#'
 #' ## Combination equations
 #'
 #' Let \eqn{F^{apical}_f} be the apical fishing mortality for fleet \eqn{f},
@@ -73,6 +73,36 @@
 #' combined fleet, so it is dropped and an assumption is recorded in the
 #' relevant stock's `Data` object (see [Log()]).
 #'
+#' ## Allocations
+#'
+#' [FleetAllocation()] and [CatchFrac()] shares are summed across the combined
+#' fleets. For each complex with a [SeasonalAllocation()], the combined
+#' fleet's seasonal shares are the `FleetAllocation`-weighted mean of its
+#' fleets' shares. If `FleetAllocation` is not set, the fleets' seasonal
+#' shares must be identical. [EffortAllocation()] is reset, and derived
+#' again in [Simulate()].
+#'
+#' ## Interim advice
+#'
+#' [InterimAdvice()] rows for the combined fleets are replaced by one row per
+#' timestep for the new fleet. `Fleet = NA` rows are unchanged. Within each
+#' calendar year x Complex x Type, every fleet in a group must have one row
+#' for each of the same timesteps, or no rows so that a `Fleet = NA` total
+#' covers the combined fleet.
+#'
+#' - `"TAC"` rows must share `TACType` and `TACUnit`. `Mean` is the sum of the
+#'   fleets' means and `CV` is \eqn{\sqrt{\sum_f (CV_f \cdot Mean_f)^2} / \sum_f Mean_f},
+#'   the CV of a sum of independent draws. `Max` is the sum of the fleets'
+#'   bounds, where a fleet with `CV = NA`/`0` or `Mean = 0` is bounded by its
+#'   `Mean`, and is `NA` if any other fleet has no bound.
+#' - Relative `"Effort"` rows (`EffType = "Rel"`) must have the same `Mean`,
+#'   `CV` and `Max` for every fleet, and are kept as a single row.
+#' - Absolute `"Effort"` rows cannot be combined, since effort units depend on
+#'   each fleet's catchability.
+#'
+#' Rows that cannot be combined are an error. In that case, set
+#' `InterimAdvice(OM) <- NULL` before combining and supply rows for the new
+#' fleet afterwards.
 #'
 #' @export
 CombineFleets <- function(OM, FleetList = NULL, silent = FALSE) {
@@ -81,13 +111,16 @@ CombineFleets <- function(OM, FleetList = NULL, silent = FALSE) {
   if (is.null(FleetList))
     FleetList <- list(Combined = FleetNames(OM))
   .ValidateFleetList(OM, FleetList)
-  
+  OM <- .CombineFleetsInterimAdvice(OM, FleetList)
+
   OM <- Populate(OM, silent = TRUE)
-  
+
   FleetIndList <- purrr::map(FleetList, \(Fleets)
                              .ResolveFleetIndices(OM, Fleets)
   )
-  
+  FleetMap <- .CombineFleetsMap(FleetNames(OM), FleetList)
+  OM <- .CombineFleetsAllocation(OM, FleetMap)
+
   if (!silent)
     cli::cli_alert_info("Combining fleets into aggregated fleet(s):")
   
@@ -107,12 +140,6 @@ CombineFleets <- function(OM, FleetList = NULL, silent = FALSE) {
       if (is.null(RefEffort)) RefEffort <- Combined$Effort
     }
   }
-
-  OM@FleetAllocation <- purrr::map(OM@FleetAllocation, \(allocate) {
-    purrr::imap(FleetIndList, \(fleet_ind, idx)
-                allocate[,fleet_ind, drop=FALSE] |> SumOverFleet()
-    ) |> List2Array()
-  })
 
   # Combine stock targeting
   OM <- .CombineFleetsTargeting(OM, FleetList, FleetIndList, silent)
