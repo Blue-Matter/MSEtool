@@ -43,7 +43,8 @@ and whether the constraint is binding, for the tuned MP.}
 \item{\code{History}}{\code{data.frame} of every evaluated candidate.}
 
 \item{\code{Validation}}{\code{data.frame} of the tuned MP's metrics for
-\code{ValidationHist} (empty without it).}
+\code{ValidationHist} (empty without it). See \code{\link[=TuneTable]{TuneTable()}} for the columns
+of these four tables.}
 
 \item{\code{MSE}}{List of the \link[=mse-class]{mse} objects of every evaluation, with
 \code{KeepMSE = TRUE} in \code{\link[=TuneControl]{TuneControl()}}.}

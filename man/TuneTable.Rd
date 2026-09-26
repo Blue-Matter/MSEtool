@@ -10,15 +10,121 @@ TuneTable(x, What = c("Constraints", "Configs", "History", "Validation"))
 \item{x}{A \link[=tunemp-class]{tunemp} object.}
 
 \item{What}{Character. \code{'Constraints'} (default; the tuned MP's metric
-values), \code{'Configs'} (the first-stage ranking of configurations),
-\code{'History'} (every evaluated candidate), or \code{'Validation'}.}
+values), \code{'Configs'} (the ranking of configurations), \code{'History'} (every
+evaluated candidate), or \code{'Validation'} (the tuned MP's metric values for
+\code{ValidationHist}). See Details.}
 }
 \value{
-A \code{data.frame}.
+A \code{data.frame}; see Details for the columns.
 }
 \description{
-Tables from a Tuned MP
+Returns one of the tables stored in a \link[=tunemp-class]{tunemp} object: the
+performance of the tuned MP, the ranking of candidate configurations, the
+record of every evaluated candidate, or the performance of the tuned MP on
+the validation operating models.
+}
+\details{
+Metric values are combined across stocks and \code{Hist} objects as specified
+in \code{\link[=TuneObjective]{TuneObjective()}} and \code{\link[=TuneConstraint]{TuneConstraint()}}. With \code{'worst'}, the reported
+value is that of the stock or \code{Hist} with the smallest slack. The slack of
+a constraint is \verb{(Value - Min) / |Min|} and/or \verb{(Max - Value) / |Max|} (the
+smaller of the two); a negative slack means the constraint is not met.
+\subsection{\code{'Constraints'}}{
+
+One row per metric (the objective first, then each constraint), for the
+tuned MP. Also printed by \code{show()}.
+\itemize{
+\item \code{Name}: name of the metric (\code{Name} in \code{\link[=TuneObjective]{TuneObjective()}} or
+\code{\link[=TuneConstraint]{TuneConstraint()}}).
+\item \code{Type}: \code{'objective'} or \code{'constraint'}.
+\item \code{Value}: value of the metric.
+\item \code{Min}, \code{Max}: thresholds of the constraint (\code{NA} when not set).
+\item \code{Slack}: slack of the constraint (\code{NA} for the objective).
+\item \code{Binding}: \code{TRUE} for constraints with an absolute slack no greater than
+\code{max(TolPM, 0.01)} (see \code{\link[=TuneControl]{TuneControl()}}), i.e. the constraints that limit
+the tuned value.
+}
+}
+
+\subsection{\code{'Configs'}}{
+
+One row per configuration in \code{Configs} (an empty data frame without
+\code{Configs}, or with a single configuration). \code{Value} to \code{Slack} are from
+the first stage, the \code{Tuned} columns from the second stage.
+\itemize{
+\item \code{Config}: index of the configuration. Matches \code{Config} in \code{'History'}.
+\item \code{Label}: the configuration's argument values, e.g.
+\code{'Smooth = TRUE, RecentYears = 2'}.
+\item \code{Value}: approximately tuned value of the tuning argument. When the
+constraint boundary lies between two grid values, \code{Value} is
+interpolated between them.
+\item \code{Objective}: objective at \code{Value} (interpolated in the same way; \code{NA}
+when infeasible).
+\item \code{Feasible}: did any grid value meet every constraint?
+\item \code{Status}: \code{'boundary'}, \code{'interior'}, \code{'at_bound'}, or \code{'infeasible'}
+(see the \code{Status} slot of \link[=tunemp-class]{tunemp}).
+\item \code{Slack}: largest slack across the grid values (\code{Inf} without
+constraints).
+\item \code{TunedValue}, \code{TunedObjective}, \code{TunedStatus}: the tuned value,
+objective, and status of the \code{nRefine} best configurations that were
+tuned fully (\code{NA} for the others).
+}
+}
+
+\subsection{\code{'History'}}{
+
+One row per evaluated combination of configuration and tuning-argument
+value, in the order they were evaluated.
+\itemize{
+\item \code{Config}: index of the configuration (\code{1} without \code{Configs}).
+\item \code{x}: value of the tuning argument.
+\item \code{Objective}: value of the objective (\code{NA} without an objective, or when
+the candidate failed).
+\item \code{Slack}: smallest slack across the constraints (\code{Inf} without
+constraints, \code{-Inf} when the candidate failed).
+\item \code{Feasible}: does the candidate meet every constraint (within \code{TolPM})?
+\item \code{FailRate}: largest fraction, across the \code{Hist} objects, of
+simulation-management years in which the MP returned an error (\code{1} when
+the projection failed). Candidates with a \code{FailRate} greater than
+\code{MaxFailRate} (see \code{\link[=TuneControl]{TuneControl()}}) fail.
+\item One column per metric, named by the metric, with its value.
+\item \code{Stage}: \code{'Configure'} (first stage, on the first \code{nSimConfig}
+simulations when set) or \code{'Tune'} (second stage, all simulations).
+}
+}
+
+\subsection{\code{'Validation'}}{
+
+One row per validation \code{Hist} object and metric (an empty data frame
+without \code{ValidationHist} in \code{\link[=TuneMP]{TuneMP()}}). Metrics are calculated for each
+\code{Hist} separately and combined across stocks only.
+\itemize{
+\item \code{Hist}: name of the validation \code{Hist} object (\code{'Validation1'}, ...
+when unnamed).
+\item \code{Name}, \code{Type}, \code{Value}, \code{Min}, \code{Max}: as for \code{'Constraints'}.
+\item \code{Met}: is the constraint met (without tolerance)? \code{NA} for the
+objective.
+}
+}
+}
+\examples{
+\dontrun{
+Tuned <- TuneMP(Hist, IndexTarget,
+                Constraints = TuneConstraint(PM_SBSBMSY, Min = 0.6),
+                Configs     = list(RecentYears = 1:3))
+TuneTable(Tuned)
+
+# configurations, best first
+Cfg <- TuneTable(Tuned, 'Configs')
+Cfg[order(-Cfg$Objective), ]
+
+# objective against the tuning argument for the chosen configuration
+Evals <- TuneTable(Tuned, 'History')
+Evals <- Evals[Evals$Stage == 'Tune', ]
+plot(Objective ~ x, data = Evals, log = 'x', col = ifelse(Evals$Feasible, 1, 2))
+}
+
 }
 \seealso{
-\code{\link[=TuneMP]{TuneMP()}}
+\code{\link[=TuneMP]{TuneMP()}}, \link[=tunemp-class]{tunemp}
 }

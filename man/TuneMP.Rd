@@ -50,7 +50,8 @@ of them, used only to report the final MP's performance.}
 \item{silent}{Logical. Suppress progress messages? Default \code{FALSE}.}
 }
 \value{
-A \link[=tunemp-class]{tunemp} object. The tuned MP is \verb{@MP}.
+A \link[=tunemp-class]{tunemp} object (invisibly). The tuned MP is \verb{@MP}. See
+Results in Details.
 }
 \description{
 Finds the value of a management procedure's tuning argument (\code{tunepar} by
@@ -113,17 +114,73 @@ objective is returned. Selecting configurations on the same operating
 models used to tune them is optimistic; \code{ValidationHist} reports the
 performance of the final MP on other operating models.
 }
+
+\subsection{The MP}{
+
+\code{MP} must be an MP function (class \code{mp} or \code{mmp}) with an argument named
+\code{TuneArg} that takes a single positive number; the search is on the log
+scale. Arguments in \code{Configs} must be arguments of \code{MP} (unless \code{MP} has a
+\code{...} argument). Candidates are made with \code{\link[=SetMPArgs]{SetMPArgs()}}, so the other
+arguments of \code{MP} keep their defaults.
+}
+
+\subsection{Results}{
+
+The tuned MP is \verb{@MP}, ready for \code{\link[=Project]{Project()}}. Its \code{Tuning} attribute
+records the tuned value, the other arguments, the status, and the
+constraint table. Printing the result shows the tuned value, the
+configuration, and the value and slack of each metric.
+
+\verb{@Status} reports how the tuning ended:
+\itemize{
+\item \code{'boundary'}: the objective is still increasing where a constraint is
+breached, and the tuned value is the feasible value closest to that
+boundary. The binding constraints have \code{Binding = TRUE} in the
+constraint table.
+\item \code{'interior'}: the objective peaks within the feasible range.
+\item \code{'at_bound'}: the objective was still increasing at the end of the
+searched range after the permitted extensions. Widen \code{Interval} or
+increase \code{MaxExpand} in \code{\link[=TuneControl]{TuneControl()}}.
+\item \code{'infeasible'}: no evaluated value met every constraint. The value
+closest to meeting them (largest slack) is returned; the constraints
+may be unattainable for this MP.
+}
+
+\code{\link[=TuneTable]{TuneTable()}} returns the constraint table, the ranking of configurations,
+every evaluated candidate, and the validation results. The full
+\link[=mse-class]{mse} objects of every evaluation are kept with \code{KeepMSE = TRUE} in
+\code{\link[=TuneControl]{TuneControl()}}. With \code{DryRun = TRUE}, \code{TuneMP()} instead returns (invisibly)
+a list with the number of projections in each stage and an estimate of the
+run time.
+}
 }
 \examples{
 \dontrun{
 Hist <- Simulate(SingleStockOM)
+
+# tune to a target: the largest tunepar with P(SB > SBMSY) >= 0.6
+Tuned <- TuneMP(Hist, IndexTarget, Objective = NULL,
+                Constraints = TuneConstraint(PM_SBSBMSY, Min = 0.6))
+
+# maximise landings subject to constraints, choosing among configurations
 Tuned <- TuneMP(Hist, IndexTarget,
                 Objective   = TuneObjective(PM_Landings),
                 Constraints = list(TuneConstraint(PM_SBSBMSY, Min = 0.6),
                                    TuneConstraint(PM_Safety, Lim = 0.4, Min = 0.9)),
                 Configs     = list(Smooth = c(TRUE, FALSE), RecentYears = 1:2))
 Tuned
+TuneTable(Tuned, 'Configs')
 MSE <- Project(Hist, MPs = list(IT_Tuned = Tuned@MP))
+
+# check the run time first
+TuneMP(Hist, IndexTarget, Constraints = TuneConstraint(PM_SBSBMSY, Min = 0.6),
+       Control = TuneControl(DryRun = TRUE))
+
+# tune over a reference set, validate on a robustness set
+Tuned <- TuneMP(list(Base = HistBase, LowM = HistLowM), IndexTarget,
+                Constraints    = TuneConstraint(PM_SBSBMSY, Min = 0.6, HistSummary = 'worst'),
+                ValidationHist = list(HighSteep = HistHighSteep))
+TuneTable(Tuned, 'Validation')
 }
 
 }

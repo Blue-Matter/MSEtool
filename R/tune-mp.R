@@ -58,6 +58,41 @@
 #' models used to tune them is optimistic; `ValidationHist` reports the
 #' performance of the final MP on other operating models.
 #'
+#' ## The MP
+#'
+#' `MP` must be an MP function (class `mp` or `mmp`) with an argument named
+#' `TuneArg` that takes a single positive number; the search is on the log
+#' scale. Arguments in `Configs` must be arguments of `MP` (unless `MP` has a
+#' `...` argument). Candidates are made with [SetMPArgs()], so the other
+#' arguments of `MP` keep their defaults.
+#'
+#' ## Results
+#'
+#' The tuned MP is `@@MP`, ready for [Project()]. Its `Tuning` attribute
+#' records the tuned value, the other arguments, the status, and the
+#' constraint table. Printing the result shows the tuned value, the
+#' configuration, and the value and slack of each metric.
+#'
+#' `@@Status` reports how the tuning ended:
+#' - `'boundary'`: the objective is still increasing where a constraint is
+#'   breached, and the tuned value is the feasible value closest to that
+#'   boundary. The binding constraints have `Binding = TRUE` in the
+#'   constraint table.
+#' - `'interior'`: the objective peaks within the feasible range.
+#' - `'at_bound'`: the objective was still increasing at the end of the
+#'   searched range after the permitted extensions. Widen `Interval` or
+#'   increase `MaxExpand` in [TuneControl()].
+#' - `'infeasible'`: no evaluated value met every constraint. The value
+#'   closest to meeting them (largest slack) is returned; the constraints
+#'   may be unattainable for this MP.
+#'
+#' [TuneTable()] returns the constraint table, the ranking of configurations,
+#' every evaluated candidate, and the validation results. The full
+#' [mse-class] objects of every evaluation are kept with `KeepMSE = TRUE` in
+#' [TuneControl()]. With `DryRun = TRUE`, `TuneMP()` instead returns (invisibly)
+#' a list with the number of projections in each stage and an estimate of the
+#' run time.
+#'
 #' @param Hist A [hist-class] object, or a (named) list of them (e.g. a
 #'   reference set of operating models).
 #' @param MP An MP function (or its name) with a `TuneArg` argument.
@@ -78,18 +113,36 @@
 #'   [SetupParallel()])? Default `FALSE`.
 #' @param silent Logical. Suppress progress messages? Default `FALSE`.
 #'
-#' @return A [tunemp-class] object. The tuned MP is `@@MP`.
+#' @return A [tunemp-class] object (invisibly). The tuned MP is `@@MP`. See
+#'   Results in Details.
 #'
 #' @examples
 #' \dontrun{
 #' Hist <- Simulate(SingleStockOM)
+#'
+#' # tune to a target: the largest tunepar with P(SB > SBMSY) >= 0.6
+#' Tuned <- TuneMP(Hist, IndexTarget, Objective = NULL,
+#'                 Constraints = TuneConstraint(PM_SBSBMSY, Min = 0.6))
+#'
+#' # maximise landings subject to constraints, choosing among configurations
 #' Tuned <- TuneMP(Hist, IndexTarget,
 #'                 Objective   = TuneObjective(PM_Landings),
 #'                 Constraints = list(TuneConstraint(PM_SBSBMSY, Min = 0.6),
 #'                                    TuneConstraint(PM_Safety, Lim = 0.4, Min = 0.9)),
 #'                 Configs     = list(Smooth = c(TRUE, FALSE), RecentYears = 1:2))
 #' Tuned
+#' TuneTable(Tuned, 'Configs')
 #' MSE <- Project(Hist, MPs = list(IT_Tuned = Tuned@@MP))
+#'
+#' # check the run time first
+#' TuneMP(Hist, IndexTarget, Constraints = TuneConstraint(PM_SBSBMSY, Min = 0.6),
+#'        Control = TuneControl(DryRun = TRUE))
+#'
+#' # tune over a reference set, validate on a robustness set
+#' Tuned <- TuneMP(list(Base = HistBase, LowM = HistLowM), IndexTarget,
+#'                 Constraints    = TuneConstraint(PM_SBSBMSY, Min = 0.6, HistSummary = 'worst'),
+#'                 ValidationHist = list(HighSteep = HistHighSteep))
+#' TuneTable(Tuned, 'Validation')
 #' }
 #'
 #' @seealso [TuneObjective()], [TuneConstraint()], [TuneControl()],
