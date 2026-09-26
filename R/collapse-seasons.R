@@ -33,6 +33,10 @@
 #'   F-weighted-average reconstruction used by [CombineFleets()], but
 #'   weighting across a cohort's season-steps within a year instead of
 #'   across fleets.
+#' - **Observation and implementation models** (`OM@Obs`, `OM@Imp`) keep the
+#'   first season of each year from their `Year`-indexed arrays (e.g. errors,
+#'   sample sizes, compliance) and the integer ages from their `Age`-indexed
+#'   arrays
 #'
 #' This is an approximation, not an exact transformation: the population
 #' dynamics apply mortality and fishing simultaneously within each season
@@ -94,6 +98,9 @@ CollapseSeasons <- function(OM, silent = FALSE) {
 
   if (length(OM@Data))
     OM <- .CollapseSeasonsData(OM, IndexMap)
+
+  OM@Obs <- .CollapseSeasonsObsImp(OM@Obs)
+  OM@Imp <- .CollapseSeasonsObsImp(OM@Imp)
 
   methods::validObject(OM)
   OM
@@ -541,4 +548,45 @@ CollapseSeasons <- function(OM, silent = FALSE) {
     OM@Data[[st]] <- d
   }
   OM
+}
+
+.CollapseSeasonsObsImp <- function(ObjList) {
+  for (cx in seq_along(ObjList))
+    for (fl in seq_along(ObjList[[cx]]))
+      ObjList[[cx]][[fl]] <- .CollapseSeasonsSlots(ObjList[[cx]][[fl]])
+  ObjList
+}
+
+.CollapseSeasonsSlots <- function(object) {
+  for (sl in methods::slotNames(object)) {
+    x <- methods::slot(object, sl)
+    if (isS4(x)) {
+      x <- .CollapseSeasonsSlots(x)
+    } else if (sl == "Years") {
+      if (length(x)) x <- unique(floor(as.numeric(x)))
+    } else {
+      x <- .CollapsePickYear(x) |> .CollapsePickAge()
+    }
+    methods::slot(object, sl) <- x
+  }
+  object
+}
+
+# first timestep of each calendar year
+.CollapsePickYear <- function(arr) {
+  pos <- match("Year", names(dimnames(arr)))
+  if (is.na(pos)) return(arr)
+  yr   <- floor(as.numeric(dimnames(arr)[[pos]]))
+  keep <- !duplicated(yr)
+  out  <- do.call(`[`, c(list(arr), .MakeDimIndex(keep, arr, pos), list(drop = FALSE)))
+  dimnames(out)[[pos]] <- yr[keep]
+  out
+}
+
+.CollapsePickAge <- function(arr) {
+  pos <- match("Age", names(dimnames(arr)))
+  if (is.na(pos) || dim(arr)[pos] < 2) return(arr)
+  age  <- round(as.numeric(dimnames(arr)[[pos]]), 3)
+  keep <- age == round(age)
+  do.call(`[`, c(list(arr), .MakeDimIndex(keep, arr, pos), list(drop = FALSE)))
 }
