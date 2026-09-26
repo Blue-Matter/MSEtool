@@ -27,6 +27,7 @@ ImportSS(
   LengthUnits = NULL,
   WeightUnits = NULL,
   R0Units = NULL,
+  CatchUnits = c("SS3", "Biomass"),
   AllocationYears = 3,
   silent = FALSE,
   Populate = TRUE,
@@ -95,6 +96,16 @@ related numbers-at-age quantities; see \code{Units} in \link[=srr-class]{srr}. S
 not export the numeric scale of its population numbers (e.g. individuals
 vs. thousands) as metadata, so this cannot be inferred and must be
 supplied by the user if not \code{1} (absolute numbers of fish). Default \code{1}.}
+
+\item{CatchUnits}{Character. Units of the imported catch data
+(\code{Data@Landings}, \code{Data@Discards}), and therefore of the catch data
+simulated from the OM. \code{'SS3'} (default) uses the catch units of each SS3
+fleet (biomass or numbers). \code{'Biomass'} imports the catch of every fleet
+in biomass: for fleets with catch in numbers, this is the catch biomass
+predicted by SS3 (\code{ret_bio}, \code{kill_bio} in the \code{CATCH} report), which
+depends on the estimated selectivity and weight-at-age. Use \code{'Biomass'}
+when a TAC for several fleets is set in biomass, or for MPs that need
+catch in biomass (e.g. \code{\link[=SurplusProduction]{SurplusProduction()}}).}
 
 \item{AllocationYears}{Integer specifying the number of most recent
 historical years used to calculate \code{OM@FleetAllocation}: each fleet's share of

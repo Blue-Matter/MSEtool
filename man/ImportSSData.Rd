@@ -10,6 +10,7 @@ ImportSSData(
   CommonName = "",
   Species = "",
   LengthUnits = "cm",
+  CatchUnits = c("SS3", "Biomass"),
   silent = FALSE,
   ...
 )
@@ -28,6 +29,10 @@ ImportSSData(
 composition bins (e.g., \code{"cm"}, \code{"mm"}, \code{"inch"}; see \code{\link[=ValidUnits]{ValidUnits()}}).
 Not reported by SS3/\code{r4ss}; \code{"cm"} is the near-universal SS3 convention.
 Default \code{"cm"}.}
+
+\item{CatchUnits}{Character. \code{'SS3'} (default) imports the catch of each
+fleet in its SS3 catch units; \code{'Biomass'} imports the catch of every
+fleet in biomass. See \code{\link[=ImportSS]{ImportSS()}}.}
 
 \item{silent}{Logical; suppress progress messages (default FALSE)}
 

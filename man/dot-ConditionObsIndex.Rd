@@ -12,7 +12,8 @@
   stocks,
   i,
   type = c("CPUE", "Survey"),
-  EstimateBeta = TRUE
+  EstimateBeta = TRUE,
+  silent = FALSE
 )
 }
 \arguments{
@@ -35,6 +36,9 @@ parameter \code{Beta} by regression? If \code{FALSE}, \code{Beta} is fixed at \c
 the user has already supplied a value on the \code{Obs} object. Default \code{TRUE}
 for this internal function; \code{.ConditionObs()} normally passes through
 \code{SimControl()}'s own default of \code{FALSE}.}
+
+\item{silent}{Logical. Suppress the console message for indices skipped
+because of unsupported \code{Units}? The skip is always recorded in the log.}
 }
 \description{
 Internal function to condition observation error from provided indices (CPUE or Survey)

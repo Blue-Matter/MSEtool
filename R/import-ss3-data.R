@@ -12,6 +12,9 @@
 #'   composition bins (e.g., `"cm"`, `"mm"`, `"inch"`; see [ValidUnits()]).
 #'   Not reported by SS3/`r4ss`; `"cm"` is the near-universal SS3 convention.
 #'   Default `"cm"`.
+#' @param CatchUnits Character. `'SS3'` (default) imports the catch of each
+#'   fleet in its SS3 catch units; `'Biomass'` imports the catch of every
+#'   fleet in biomass. See [ImportSS()].
 #' @param silent Logical; suppress progress messages (default FALSE)
 #' @param ... Additional arguments passed to `ImportSSReport`
 #'
@@ -22,9 +25,11 @@ ImportSSData <- function(SSDir,
                          CommonName = "",
                          Species    = "",
                          LengthUnits = "cm",
+                         CatchUnits = c('SS3', 'Biomass'),
                          silent     = FALSE,
                          ...) {
   .OnExit()
+  CatchUnits <- match.arg(CatchUnits)
   RepList   <- ImportSSReport(SSDir, silent = silent, ...)
   replist   <- RepList[[1]]
   nStock    <- replist$nsexes
@@ -44,7 +49,7 @@ ImportSSData <- function(SSDir,
   Data@Seasons <- YearsList$Seasons
   Data@nArea   <- 1
   
-  Landings_Discards <- .ImportSSDataCatch(replist, silent)
+  Landings_Discards <- .ImportSSDataCatch(replist, silent, CatchUnits = CatchUnits)
   Data@Landings     <- Landings_Discards$Landings
   Data@Discards     <- Landings_Discards$Discards
   
@@ -62,7 +67,7 @@ ImportSSData <- function(SSDir,
   Data
 }
 
-.ImportSSDataCatch <- function(replist, silent = FALSE) {
+.ImportSSDataCatch <- function(replist, silent = FALSE, CatchUnits = 'SS3') {
   
   dead_bio <- dead_num <- kill_bio <- kill_num <- ret_bio <- ret_num <- NULL
   
@@ -89,7 +94,9 @@ ImportSSData <- function(SSDir,
            "2" = "Number"
     )
   })
-  
+  if (CatchUnits == 'Biomass')
+    Landings@Units[] <- 'Biomass'
+
   Discards <- Landings
   
   CatchColNames <- names(replist$catch)

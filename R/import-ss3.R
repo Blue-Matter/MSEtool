@@ -60,6 +60,15 @@
 #'   not export the numeric scale of its population numbers (e.g. individuals
 #'   vs. thousands) as metadata, so this cannot be inferred and must be
 #'   supplied by the user if not `1` (absolute numbers of fish). Default `1`.
+#' @param CatchUnits Character. Units of the imported catch data
+#'   (`Data@Landings`, `Data@Discards`), and therefore of the catch data
+#'   simulated from the OM. `'SS3'` (default) uses the catch units of each SS3
+#'   fleet (biomass or numbers). `'Biomass'` imports the catch of every fleet
+#'   in biomass: for fleets with catch in numbers, this is the catch biomass
+#'   predicted by SS3 (`ret_bio`, `kill_bio` in the `CATCH` report), which
+#'   depends on the estimated selectivity and weight-at-age. Use `'Biomass'`
+#'   when a TAC for several fleets is set in biomass, or for MPs that need
+#'   catch in biomass (e.g. [SurplusProduction()]).
 #' @param AllocationYears Integer specifying the number of most recent
 #'   historical years used to calculate `OM@FleetAllocation`: each fleet's share of
 #'   total removals biomass (landings + discards), used to split an aggregate
@@ -112,12 +121,14 @@ ImportSS <- function(SSDir,
                      LengthUnits = NULL,
                      WeightUnits = NULL,
                      R0Units = NULL,
+                     CatchUnits = c('SS3', 'Biomass'),
                      AllocationYears = 3,
                      silent = FALSE,
                      Populate = TRUE,
                      ...) {
 
   .OnExit()
+  CatchUnits <- match.arg(CatchUnits)
   RepList   <- ImportSSReport(SSDir, silent = silent, ...)
   nStock    <- RepList[[1]]$nsexes
   YearsList <- .GetSSYears(RepList[[1]], pYear)
@@ -155,6 +166,8 @@ ImportSS <- function(SSDir,
       cli::cli_li("Assuming {.val {WeightUnits}} weight units (set `WeightUnits` to override)")
     if (assumedR0)
       cli::cli_li("Assuming R0 scale {.val {R0Units}} (set `R0Units` to override)")
+    if (CatchUnits == 'Biomass')
+      cli::cli_li("Importing catch in {.val Biomass} for all fleets (SS3 {.code ret_bio}/{.code kill_bio})")
     cli::cli_end()
   }
 
@@ -242,6 +255,7 @@ ImportSS <- function(SSDir,
                                CommonName  = CommonName,
                                Species     = Species,
                                LengthUnits = LengthUnits,
+                               CatchUnits  = CatchUnits,
                                silent      = silent
   ))
   names(OM@Data) <- paste(StockName, collapse = " ")
