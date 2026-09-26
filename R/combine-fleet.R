@@ -63,6 +63,13 @@
 #' **WeightFleetRetained** (age-specific retained-F-weighted average)
 #' \deqn{W^{ret}_{combined}(a) = \frac{\sum_f F^{retain}_{combined,f}(a)\cdot W^{ret}_f(a)}{F^{retain}_{combined}(a)}}
 #'
+#' **Years with zero F**
+#'
+#' In a year and simulation where every combined fleet has zero F, the
+#' selectivity, retention, discard mortality, and weight-at-age curves above
+#' use each fleet's catchability \eqn{q_f} in place of \eqn{F^{apical}_f}, or
+#' equal weights if every \eqn{q_f} is also zero.
+#'
 #' ## Fleet settings
 #'
 #' Weights \eqn{w_f} are each fleet's share of the summed apical F in each
@@ -703,6 +710,16 @@ CombineFleets <- function(OM, FleetList = NULL, silent = FALSE) {
   ArrayDivide(Farray, maxF)
 }
 
+# replace per-fleet weights with `fill_list` wherever they sum to zero; NULL fills equal weights
+.FillZeroWeights <- function(weight_list, fill_list = NULL) {
+  zero <- Reduce(ArraySum, weight_list) == 0
+  if (!any(zero, na.rm = TRUE)) return(weight_list)
+  if (is.null(fill_list)) fill_list <- rep(list(zero), length(weight_list))
+  purrr::map2(weight_list, fill_list, \(w, fill)
+    ArraySum(ArrayMultiply(w, !zero), ArrayMultiply(fill, zero))
+  )
+}
+
 
 .CombineFleetsStock <- function(OM, st, Name, FleetInds, RefEffort = NULL) {
 
@@ -716,17 +733,15 @@ CombineFleets <- function(OM, FleetList = NULL, silent = FALSE) {
   Efficiency <- FleetList[[1]]@Catchability@Efficiency
   HistYears  <- as.numeric(dimnames(FleetList[[1]]@Effort@Effort)$Year)
 
-  FInteract_list <- purrr::map2(apicalF_list, FleetList, \(apicalF, fleet) {
-    apicalF_expanded <- apicalF |>
+  FAtAge <- \(weight_list) purrr::map2(weight_list, FleetList, \(w, fleet)
+    w |>
       AddDimension("Age",  pos = 2) |>
-      AddDimension("Area", pos = 4)
-    ArrayMultiply(apicalF_expanded, fleet@Selectivity@MeanAtAge)
-  })
-  FInteract <- Reduce(ArraySum, FInteract_list)   # aggregate F-at-age
+      AddDimension("Area", pos = 4) |>
+      ArrayMultiply(fleet@Selectivity@MeanAtAge)
+  )
 
-  nms         <- names(dimnames(FInteract))
-  keepDims    <- which(nms %in% c('Sim', 'Year'))
-  trueApicalF <- apply(FInteract, keepDims, max) |>
+  trueApicalF <- Reduce(ArraySum, FAtAge(apicalF_list)) |>
+    apply(c('Sim', 'Year'), max) |>
     .ArraySubsetYear(HistYears)
   Efficiency  <- .ArraySubsetYear(Efficiency, HistYears)
 
@@ -741,6 +756,13 @@ CombineFleets <- function(OM, FleetList = NULL, silent = FALSE) {
   Catchability(NewFleet) <- Catchability(Efficiency = Efficiency)
 
   # TODO - at length
+
+  # where every fleet has zero F, weight the curves by catchability, then equally
+  FInteract_list <- apicalF_list |>
+    .FillZeroWeights(purrr::map(FleetList, \(fleet) fleet@Catchability@Efficiency)) |>
+    .FillZeroWeights() |>
+    FAtAge()
+  FInteract <- Reduce(ArraySum, FInteract_list)
 
   Selectivity(NewFleet) <- Selectivity(
     MeanAtAge    = .StandardizeF(FInteract))

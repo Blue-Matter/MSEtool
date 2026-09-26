@@ -32,7 +32,9 @@
 #'   discard mortality, weight-at-age-in-the-catch) follow the same
 #'   F-weighted-average reconstruction used by [CombineFleets()], but
 #'   weighting across a cohort's season-steps within a year instead of
-#'   across fleets.
+#'   across fleets. In a year where every season has zero F, the at-age
+#'   curves weight the season-steps by catchability, or equally if
+#'   catchability is also zero.
 #' - **Observation and implementation models** (`OM@Obs`, `OM@Imp`) keep the
 #'   first season of each year from their `Year`-indexed arrays (e.g. errors,
 #'   sample sizes, compliance) and the integer ages from their `Age`-indexed
@@ -259,6 +261,18 @@ CollapseSeasons <- function(OM, silent = FALSE) {
   out
 }
 
+# replace seasonal weights with `fill` within years where they sum to zero; NULL fills equal weights
+.FillZeroYearWeights <- function(weight, IndexMap, fill = NULL) {
+  weight <- .CollapseEnsureFullYears(weight, IndexMap)
+  zero   <- .CollapseYearSum(weight, IndexMap) == 0
+  if (!any(zero, na.rm = TRUE)) return(weight)
+  block <- IndexMap$YearBlock[match(as.numeric(dimnames(weight)$Year), IndexMap$SeasonalYears)]
+  zero  <- zero[, as.character(IndexMap$AnnualYears[block]), drop = FALSE]
+  dimnames(zero) <- dimnames(weight)
+  if (is.null(fill)) fill <- zero
+  ArraySum(ArrayMultiply(weight, !zero), ArrayMultiply(fill, zero))
+}
+
 .CollapseYearMean <- function(arr, IndexMap) {
 
   arr <- .CollapseEnsureFullYears(arr, IndexMap)
@@ -430,11 +444,19 @@ CollapseSeasons <- function(OM, silent = FALSE) {
   WFRet_s      <- Fleet@WeightFleetRetained
 
   apicalF_s <- ArrayMultiply(Effort_s, Efficiency_s)
-  apicalF_s_expanded <- apicalF_s |>
+  FAtAge_s <- \(weight) weight |>
     AddDimension("Age", pos = 2) |>
-    AddDimension("Area", pos = 4)
+    AddDimension("Area", pos = 4) |>
+    ArrayMultiply(Sel_s)
 
-  FInteract_s <- ArrayMultiply(apicalF_s_expanded, Sel_s)
+  apicalF_a <- .CollapseCohortPathSum4D(FAtAge_s(apicalF_s), AgeMap, IndexMap) |>
+    apply(c('Sim', 'Year'), max)
+
+  # where a year has zero F, weight its seasons by catchability, then equally
+  FInteract_s <- apicalF_s |>
+    .FillZeroYearWeights(IndexMap, Efficiency_s) |>
+    .FillZeroYearWeights(IndexMap) |>
+    FAtAge_s()
   FRetain_s   <- ArrayMultiply(FInteract_s, Ret_s)
 
   discZ_s <- -log(1 - Disc_s)
@@ -452,13 +474,7 @@ CollapseSeasons <- function(OM, silent = FALSE) {
 
   Selectivity_a <- .StandardizeF(FInteract_a)
 
-  nms <- names(dimnames(FInteract_a))
-  age_ind <- which(nms == "Age")
-  apicalF_a <- apply(FInteract_a, nms[-age_ind], max)
-  names(dimnames(apicalF_a)) <- nms[-age_ind]
-  apicalF_a <- DropDimension(apicalF_a, "Area", warn = FALSE)
-
-  Retention_a        <- ArrayDivide(FRetain_a, FInteract_a)
+  Retention_a       <- ArrayDivide(FRetain_a, FInteract_a)
   DiscardMortality_a <- 1 - exp(-ArrayDivide(discZF_a, FInteract_a))
 
   WeightFleetSelected_a <- ArrayDivide(WFSel_a_x, FInteract_a) |> DropDimension("Area", warn = FALSE)
