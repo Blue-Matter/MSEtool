@@ -119,8 +119,11 @@
     return(DataList)
     
   purrr::map2(DataList, AdviceList, \(Data, Advice) {
-    if (inherits(Advice, 'advice'))
-      Data@Misc <- Advice@Misc
+    if (inherits(Advice, 'advice')) {
+      Misc <- Advice@Misc
+      Misc$AnnualTAC <- NULL
+      Data@Misc <- Misc
+    }
     Data
   })
 }
@@ -235,7 +238,8 @@
 .AddAdviceToData <- function(Data, Advice, Year) {
   if (!inherits(Advice, 'advice'))
     return(Data)
-  Data@Advice@TAC <- .UpdateAdviceArray(Current=Data@Advice@TAC, New=Advice@TAC, Year)
+  TAC <- Advice@Misc$AnnualTAC %||% Advice@TAC
+  Data@Advice@TAC <- .UpdateAdviceArray(Current=Data@Advice@TAC, New=TAC, Year)
   Data@Advice@Effort <- .UpdateAdviceArray(Data@Advice@Effort, Advice@Effort, Year)
   Data
 }

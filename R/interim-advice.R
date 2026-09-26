@@ -186,7 +186,8 @@
 .BuildInterimAdviceOne <- function(Proj, sim, CalYear, Season, cxInd, Complex,
                                    FleetNames, Areas, rows, yearRows, last_ts) {
 
-  Advice <- methods::new("advice")
+  Advice    <- methods::new("advice")
+  AnnualTAC <- NULL
 
   for (Type in c("TAC", "Effort")) {
     r <- rows[rows$Type == Type, , drop = FALSE]
@@ -200,6 +201,7 @@
       Advice@TAC     <- vals$value
       Advice@TACType <- vals$TACType
       Advice@TACUnit <- vals$TACUnit
+      AnnualTAC      <- .InterimAnnualTAC(Proj, sim, cxInd, FleetNames, yr, z, last_ts)
     } else {
       dist_mat <- Proj@Distribution[sim, last_ts[Season], , , drop = FALSE]
       dist_mat <- array(dist_mat, dim = dim(dist_mat)[3:4])  # Fleet x Area
@@ -209,7 +211,22 @@
     }
   }
 
-  .CheckAdvice(Advice, Proj, FleetNames, Areas, sim, name = Complex)
+  Advice <- .CheckAdvice(Advice, Proj, FleetNames, Areas, sim, name = Complex)
+  if (!is.null(AnnualTAC)) {
+    Annual   <- Advice@TAC
+    Annual[] <- AnnualTAC
+    Advice@Misc$AnnualTAC <- Annual
+  }
+  Advice
+}
+
+# annual per-fleet TAC: the sum of the per-timestep TACs over the seasons of the calendar year
+.InterimAnnualTAC <- function(Proj, sim, cxInd, FleetNames, yearRows, z, last_ts) {
+  Seasons <- max(1L, as.integer(Proj@OM@Seasons %||NA% 1))
+  Reduce(`+`, lapply(seq_len(Seasons), \(s) {
+    r <- yearRows[!yearRows$Seasonal | yearRows$Season == s, , drop = FALSE]
+    .InterimFleetValues(Proj, sim, s, cxInd, FleetNames, r, z, last_ts, "TAC")$value
+  }))
 }
 
 # absolute per-fleet value for this timestep: annual rows split by SeasonalAllocation,

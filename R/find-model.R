@@ -9,11 +9,11 @@
 #' @return Character vector of matching function names.
 #' @keywords internal
 .FindModels <- function(ModelClass) {
-  objects_name <- ls.str("package:MSEtool", mode = "function")
-  objects <- lapply(objects_name, get, envir=asNamespace('MSEtool'))
-  objects_class <- lapply(objects, class)
-  objects_class <- unlist(lapply(objects_class, '[[', 1))
-  ind <- which(objects_class%in%ModelClass)
+  ns <- asNamespace('MSEtool')
+  objects_name <- sort(getNamespaceExports(ns))
+  objects <- lapply(objects_name, get, envir=ns)
+  objects_class <- vapply(objects, \(x) class(x)[1], character(1))
+  ind <- which(vapply(objects, is.function, logical(1)) & objects_class %in% ModelClass)
   objects_name[ind]
 }
 

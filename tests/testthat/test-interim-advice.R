@@ -294,3 +294,53 @@ test_that("annual OM: interim TAC in numbers and biomass are applied per fleet",
     expect_equal(unname(remN[sim, "2028", fl[2]]), 10, tolerance = 1e-3)
   }
 })
+
+test_that("seasonal OM: the first MP sees the annual TAC of the latest interim year, despite DataLag", {
+  skip_on_cran()
+  hist <- .InterimSeasonalHist()
+  fl <- FleetNames(hist)
+  hist@OM@MPStartYear <- 2029
+  hist@OM@DataLag <- 1
+  hist@OM@InterimAdvice <- data.frame(Year = rep(2027:2028, each = 2), Fleet = fl, Type = "TAC",
+                                      Mean = c(300, 150, 600, 250))
+  SeenTAC <- function(Data) Advice(TAC = LastTAC(Data))
+  class(SeenTAC) <- "mp"
+  mse <- Project(hist, MPs = list(SeenTAC = SeenTAC), parallel = FALSE, silent = TRUE)
+
+  for (sim in 1:3) {
+    TAC <- mse@PPD[[1]][[sim]][[1]]@Advice@TAC
+    Yr  <- as.numeric(rownames(TAC))
+    Row <- rowSums(TAC, na.rm = TRUE)
+    expect_equal(unname(Row[floor(Yr) == 2027]), rep(450, 4))
+    expect_equal(unname(Row[floor(Yr) == 2028]), rep(850, 4))
+    expect_equal(unname(Row[Yr == 2029]), 850)
+  }
+})
+
+test_that("DataTrim keeps the full Advice record", {
+  Years <- 2000:2005
+  d <- new("data")
+  d@Years <- Years
+  d@YearLH <- 2003
+  d@Landings@Value <- array(1, c(6, 1), dimnames = list(Year = Years, Fleet = "F1"))
+  d@Advice@TAC <- array(1:6, c(6, 1), dimnames = list(Year = Years, Fleet = "Total"))
+  out <- DataTrim(d, 2003)
+  expect_equal(out@Years, 2000:2003)
+  expect_identical(out@Advice, d@Advice)
+})
+
+test_that(".FindModels works when MSEtool is loaded but not attached", {
+  skip_on_cran()
+  skip_if_not_installed("callr")
+  skip_if_not_installed("pkgload")
+  Expected <- .FindModels("Length-at-Age-Model")
+  expect_gt(length(Expected), 0)
+  Path <- normalizePath(testthat::test_path("..", ".."))
+  Out  <- callr::r(function(Path) {
+    pkgload::load_all(Path, attach = FALSE, quiet = TRUE)
+    c(attached = "package:MSEtool" %in% search(),
+      MSEtool:::.FindModels("Length-at-Age-Model"))
+  }, args = list(Path = Path))
+  expect_identical(Out[["attached"]], "FALSE")
+  expect_identical(unname(Out[-1]), Expected)
+})
