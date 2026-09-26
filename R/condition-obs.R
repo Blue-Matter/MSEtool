@@ -60,10 +60,12 @@
                                type = 'Discards')
     
     Hist <- .ConditionObsIndex(Hist, FisheryData, HistYears, ProjYears, stocks,
-                               i, type = 'CPUE', EstimateBeta = EstimateBeta)
+                               i, type = 'CPUE', EstimateBeta = EstimateBeta,
+                               silent = silent)
 
     Hist <- .ConditionObsIndex(Hist, FisheryData, HistYears, ProjYears,  stocks,
-                               i, type = 'Survey', EstimateBeta = EstimateBeta)
+                               i, type = 'Survey', EstimateBeta = EstimateBeta,
+                               silent = silent)
     
     Hist <- .ConditionObsComp(Hist, FisheryData, HistYears, ProjYears,  stocks, 
                               i, type = 'LandingsAtAge')

@@ -682,3 +682,34 @@ test_that("a non-fleet survey conditions and projects with IndicesData(Selectivi
   hist2 <- Simulate(om, silent = TRUE)
   expect_equal(hist2@OM@Obs[[1]][['Acoustic']]@Survey@Selectivity, 'Biomass')
 })
+
+test_that("an index with unsupported Units is skipped with a message, not an error", {
+  skip_on_cran()
+  data(SingleStockOM, envir = environment())
+  om <- SingleStockOM
+  nSim(om) <- 3
+  set.seed(1)
+  hist0 <- Simulate(om, silent = TRUE)
+  yrs <- Years(om, 'Historical')
+  B <- SBiomass(hist0, df = FALSE)[1, 1, ]
+  v1 <- B / mean(B) * exp(rnorm(length(yrs), 0, 0.2)); v1[1:8] <- NA
+  v2 <- B / mean(B) * exp(rnorm(length(yrs), 0, 0.2)); v2[1:5] <- NA
+  survey <- cbind(v1, v2)
+  dimnames(survey) <- list(Year = yrs, Index = c('Acoustic', 'Trawl'))
+  Data(om) <- Data(Name = 'x', Years = yrs,
+                   Survey = IndicesData(Name = c('Acoustic', 'Trawl'), Value = survey,
+                                        Units = c('Biomass', 'Weight'), Timing = c(0.5, 0.5),
+                                        Selectivity = c('SBiomass', 'Biomass')))
+
+  msgs <- testthat::capture_messages(hist <- Simulate(om, silent = FALSE))
+  expect_true(any(grepl("unsupported.*Weight", msgs)))
+  expect_null(hist@OM@Obs[[1]][['Trawl']]@Survey@Error)
+  expect_length(hist@OM@Obs[[1]][['Acoustic']]@Survey@Efficiency, 3)
+  logged <- purrr::map_chr(hist@Log$warning, \(e) paste(e$message, collapse = ' '))
+  expect_true(any(grepl("Trawl", logged) & grepl("unsupported", logged)))
+
+  mse <- expect_no_error(Project(hist, MPs = 'NFref', parallel = FALSE, silent = TRUE))
+  ProjYears <- as.character(Years(om, 'Projection'))
+  val <- mse@PPD[[1]][[2]][[1]]@Survey@Value[, 'Acoustic']
+  expect_true(all(is.finite(val[intersect(ProjYears, names(val))])))
+})

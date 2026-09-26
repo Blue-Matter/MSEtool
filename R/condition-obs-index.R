@@ -16,6 +16,8 @@
 #'   the user has already supplied a value on the `Obs` object. Default `TRUE`
 #'   for this internal function; `.ConditionObs()` normally passes through
 #'   `SimControl()`'s own default of `FALSE`.
+#' @param silent Logical. Suppress the console message for indices skipped
+#'   because of unsupported `Units`? The skip is always recorded in the log.
 #'
 #' @keywords internal
 .ConditionObsIndex <- function(Hist,
@@ -25,7 +27,8 @@
                                stocks,    # stocks in this complex
                                i,         # observe data set number
                                type=c('CPUE', 'Survey'),
-                               EstimateBeta=TRUE) {
+                               EstimateBeta=TRUE,
+                               silent=FALSE) {
   
   type <- match.arg(type, c('CPUE', 'Survey'))
   
@@ -74,7 +77,17 @@
     Index_Obs <- slot(ObsObject,type)
     ObservedIndex <- Indices_Value[,fl]
     if (all(is.na(ObservedIndex))) next
-    
+
+    Units <- slot(FisheryData, type)@Units[fl] %||NA% 'Biomass'
+    if (!Units %in% c('Biomass', 'Number', 'Recruitment')) {
+      msg <- cli::format_inline(
+        "{type} index {.val {Indices_Name[fl]}} has unsupported {.field Units} {.val {Units}}; skipped conditioning and simulating this index (supported: {.val {c('Biomass', 'Number', 'Recruitment')}})."
+      )
+      .MsgAlert(msg, 'warning', silent = silent)
+      Hist <- .CaptureLog(Hist, string = msg, name = '.ConditionObsIndex', type = 'warning')
+      next
+    }
+
     BadInd <- which(!is.na(ObservedIndex) & ObservedIndex <= 0)
     if (length(BadInd)) {
       Hist <- .CaptureLog(Hist,
@@ -103,8 +116,6 @@
         "i" = "Set e.g. {.code {type}(Data) <- IndicesData(Name = '{Indices_Name[fl]}', ..., Selectivity = 'Biomass')} (flat) or {.code 'SBiomass'} (maturity-at-age)."
       ))
 
-    Units <- slot(FisheryData, type)@Units[fl]
-    if (is.null(Units)) Units <- 'Biomass'
     Index_Obs@Units <- Units
 
     timing <- slot(FisheryData, type)@Timing
