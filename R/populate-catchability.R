@@ -20,6 +20,12 @@
 #' * Applies `qInc` (annual increase in catchability) if provided.
 #' * Applies `qCV` (coefficient of variation) to introduce stochasticity.
 #'
+#' After population, `qInc` and `qCV` hold the per-simulation values used, and
+#' the multipliers applied to the projection years of `Efficiency` are stored
+#' in `Misc$qAdjust`. Re-populating leaves `Efficiency` unchanged while `qInc`
+#' and `qCV` are unchanged. If either is modified, its previous multiplier is
+#' divided out of `Efficiency` before the new one is applied.
+#'
 #' @return
 #' A populated [Catchability()] object.
 #'
@@ -43,7 +49,6 @@ PopulateCatchability <- function(Catchability,
                                  seed = NULL,
                                  silent = FALSE) {
   
-  pYears <- length(ProjYears)
   Years  <- c(HistYears, ProjYears)
   nSim   <- .GetNSim(Catchability, nSim)
   
@@ -88,58 +93,51 @@ PopulateCatchability <- function(Catchability,
     Years = HistYears
   )
   
-  if (!is.null(Catchability@qInc)) {
-    if (all(Catchability@qInc==0)) {
-      Catchability@qInc <- NULL
-      
-    } else {
-      qIncs <- .StructurePar(Catchability@qInc, nSim = nSim, Years = Years)[, 1]
-      qIncs <- sapply(qIncs, function(x) (1 + x / 100)^(1:pYears)) |> t()
-      dd <- dim(qIncs)
-      dimnames(qIncs) <- list(Sim = seq_len(dd[1]), Year = ProjYears)
-      qIncs <- ReduceDims(qIncs)
-      q_sims <- dimnames(Catchability@Efficiency)[['Sim']] |> as.numeric()
-      qinc_sims <- dimnames(qIncs)[['Sim']] |> as.numeric()
-      
-      if (length(q_sims)>1 || length(qinc_sims)>1) {
-        allSims <- c(q_sims, qinc_sims) |> unique() 
-        maxSims <- 1
-        if (length(allSims)>1)
-          maxSims <- max(allSims)
-        
-        Catchability@Efficiency <- ExtendSims(Catchability@Efficiency, maxSims)
-        qIncs <- ExtendSims(qIncs, maxSims)
-      }
-      
-      qfuture <- ArrayMultiply(.SubsetYear(Catchability@Efficiency, ProjYears), qIncs)
-      ArrayFill(Catchability@Efficiency) <- qfuture
-      Catchability@qInc <- qIncs
-    }
-    
-
+  for (nm in c("qInc", "qCV")) {
+    if (!is.null(slot(Catchability, nm)) && all(slot(Catchability, nm) == 0))
+      slot(Catchability, nm) <- NULL
+    Catchability <- .ApplyqAdjust(Catchability, nm, nSim, HistYears, ProjYears)
   }
-  
-  if (!is.null(Catchability@qCV)) {
-    
-    if (all(Catchability@qCV==0)) {
-      Catchability@qCV <- NULL
-    } else {
-      qCVs <- .StructurePar(Catchability@qCV, nSim = nSim, Years = Years)[, 1]
-      Catchability@qCV <- qCVs
-      qmu <- -0.5 * qCVs^2
-      qvar <- array(
-        exp(rnorm(pYears * nSim, rep(qmu, pYears), rep(qCVs, pYears))),
-        dim = c(nSim, pYears),
-        dimnames = list(Sim = 1:nSim, Year = ProjYears)
-      )
-      Catchability@Efficiency <- Extend(Catchability@Efficiency, nSim = nSim)
-      qfuture <- ArrayMultiply(.SubsetYear(Catchability@Efficiency, ProjYears), qvar)
-      if (!all(qfuture == 1)) {
-        ArrayFill(Catchability@Efficiency) <- qfuture
-      }
-    }
 
+  Catchability
+}
+
+# Misc$qAdjust records the multiplier already in projection Efficiency so re-populating never compounds it
+.ApplyqAdjust <- function(Catchability, nm, nSim, HistYears, ProjYears) {
+  Par       <- slot(Catchability, nm)
+  Prev      <- Catchability@Misc$qAdjust[[nm]]
+  PrevYears <- dimnames(Prev$Multiplier)$Year
+  Applied   <- !is.null(Prev) &&
+    all(PrevYears %in% dimnames(Catchability@Efficiency)$Year) &&
+    !any(PrevYears %in% as.character(HistYears))
+
+  if (Applied && identical(Prev$Par, Par) && identical(PrevYears, as.character(ProjYears)))
+    return(Catchability)
+
+  if (Applied)
+    ArrayFill(Catchability@Efficiency) <- ArrayDivide(
+      .SubsetYear(Catchability@Efficiency, PrevYears), Prev$Multiplier)
+  if (!is.null(Prev))
+    Catchability@Misc$qAdjust[[nm]] <- NULL
+
+  pYears <- length(ProjYears)
+  if (is.null(Par) || !pYears)
+    return(Catchability)
+
+  Par <- .StructurePar(Par, nSim = nSim, Years = c(HistYears, ProjYears))[, 1] |> unname()
+  Multiplier <- if (nm == "qInc") {
+    outer(Par, seq_len(pYears), \(x, t) (1 + x / 100)^t)
+  } else {
+    matrix(exp(rnorm(pYears * nSim, rep(-0.5 * Par^2, pYears), rep(Par, pYears))), nrow = nSim)
   }
-  
+  dimnames(Multiplier) <- list(Sim = seq_len(nrow(Multiplier)), Year = ProjYears)
+
+  if (nrow(Multiplier) > 1)
+    Catchability@Efficiency <- Extend(Catchability@Efficiency, nSim = nSim)
+  ArrayFill(Catchability@Efficiency) <- ArrayMultiply(
+    .SubsetYear(Catchability@Efficiency, ProjYears), Multiplier)
+
+  slot(Catchability, nm) <- Par
+  Catchability@Misc$qAdjust[[nm]] <- list(Par = Par, Multiplier = Multiplier)
   Catchability
 }
