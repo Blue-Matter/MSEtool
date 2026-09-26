@@ -43,6 +43,12 @@ increasing catchability parameters.
 \item Applies \code{qInc} (annual increase in catchability) if provided.
 \item Applies \code{qCV} (coefficient of variation) to introduce stochasticity.
 }
+
+After population, \code{qInc} and \code{qCV} hold the per-simulation values used, and
+the multipliers applied to the projection years of \code{Efficiency} are stored
+in \code{Misc$qAdjust}. Re-populating leaves \code{Efficiency} unchanged while \code{qInc}
+and \code{qCV} are unchanged. If either is modified, its previous multiplier is
+divided out of \code{Efficiency} before the new one is applied.
 }
 \examples{
 \dontrun{

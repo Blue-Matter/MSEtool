@@ -33,7 +33,13 @@ directly off the populated seasonal array at the exact integer-age, first-season
 discard mortality, weight-at-age-in-the-catch) follow the same
 F-weighted-average reconstruction used by \code{\link[=CombineFleets]{CombineFleets()}}, but
 weighting across a cohort's season-steps within a year instead of
-across fleets.
+across fleets. In a year where every season has zero F, the at-age
+curves weight the season-steps by catchability, or equally if
+catchability is also zero.
+\item \strong{Observation and implementation models} (\code{OM@Obs}, \code{OM@Imp}) keep the
+first season of each year from their \code{Year}-indexed arrays (e.g. errors,
+sample sizes, compliance) and the integer ages from their \code{Age}-indexed
+arrays
 }
 
 This is an approximation, not an exact transformation: the population

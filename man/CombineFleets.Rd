@@ -26,7 +26,7 @@ stocks.
 For each entry in \code{FleetList}, the first named fleet is replaced in-place
 by the combined fleet and the remaining fleets are dropped. Combination
 preserves aggregate fishing mortality, selectivity, retention, discard
-mortality, and weight-at-age. S
+mortality, and weight-at-age.
 \subsection{Combination equations}{
 
 Let \eqn{F^{apical}_f} be the apical fishing mortality for fleet \eqn{f},
@@ -67,17 +67,102 @@ instantaneous-rate scale)
 
 \strong{WeightFleetRetained} (age-specific retained-F-weighted average)
 \deqn{W^{ret}_{combined}(a) = \frac{\sum_f F^{retain}_{combined,f}(a)\cdot W^{ret}_f(a)}{F^{retain}_{combined}(a)}}
+
+\strong{Years with zero F}
+
+In a year and simulation where every combined fleet has zero F, the
+selectivity, retention, discard mortality, and weight-at-age curves above
+use each fleet's catchability \eqn{q_f} in place of \eqn{F^{apical}_f}, or
+equal weights if every \eqn{q_f} is also zero.
 }
 
-\subsection{Composition data}{
+\subsection{Fleet settings}{
 
-\code{LandingsAtAge}/\code{DiscardsAtAge} counts are summed directly across the
-combined fleets, since age classes are shared by every fleet.
-\code{LandingsAtSize}/\code{DiscardsAtSize} counts are only summed when every fleet
-in a group shares the same size-class bins (within floating-point
-tolerance); if bins differ, that composition is not well-defined for the
-combined fleet, so it is dropped and an assumption is recorded in the
-relevant stock's \code{Data} object (see \code{\link[=Log]{Log()}}).
+Weights \eqn{w_f} are each fleet's share of the summed apical F in each
+simulation and historical year (equal shares where the total is zero).
+\itemize{
+\item \code{Effort@Targeting} and \code{Effort@StockTargetingLambda} are the
+\eqn{w_f}-weighted means of the fleets' values.
+\item \code{Effort@Distribution} is the \eqn{w_f}-weighted mean of the fleets'
+fixed distributions, and is derived dynamically unless every fleet has
+one.
+\item \code{Effort@Units} are the first fleet's units, since effort is recovered
+from its catchability.
+\item \code{Closure}: an area is open to the combined fleet where any of its fleets
+is open.
+\item Projected catchability (from \code{qInc}/\code{qCV}) is
+\eqn{q_{combined}(y) = q_{combined}(y_c) \sum_f w_f(y_c)\, q_f(y) / q_f(y_c)},
+where \eqn{y_c} is the last historical year.
+\item Fleets must share \code{Effort@Mode}, and bag-limit settings
+(\code{TripsScalar}, \code{AnglerPerTrip}, \code{Theta}) cannot be combined; either is an
+error.
+}
+
+The combined fleet uses the first fleet's \code{\link[=Obs]{Obs()}} and \code{\link[=Imp]{Imp()}} objects.
+}
+
+\subsection{Data}{
+
+For each stock's \code{\link[=Data]{Data()}} object:
+\itemize{
+\item \code{Landings}, \code{Discards}, and \code{Effort} values are summed across the
+combined fleets in each year, and are \code{NA} in years with no data for any
+of them. \code{CV} is \eqn{\sqrt{\sum_f (CV_f \cdot x_f)^2} / \sum_f x_f}, and
+\code{Ref}/\code{RefCV} are combined in the same way. Catch units must match;
+effort recorded in different units is dropped for the combined fleet.
+\item \code{CPUE} indices named after combined fleets are moved to \code{Survey}, with
+their values, \code{CV}, \code{Units}, \code{Ref}, and \code{Timing}. Each moved index, and
+each \code{Survey} index named after a combined fleet, gets a survey \code{\link[=Obs]{Obs()}}
+entry that carries the fleet's index observation settings and, unless
+the index has its own selectivity, the fleet's selectivity-at-age from
+before combining. An index keeps its fleet's name, with a \code{" CPUE"} or
+\code{" Survey"} suffix where that name is taken by a fleet or another index.
+\item \code{LandingsAtAge}/\code{DiscardsAtAge} counts are summed across the combined
+fleets. \code{LandingsAtSize}/\code{DiscardsAtSize} counts are summed when every
+fleet shares the same size-class bins (within floating-point
+tolerance), and dropped otherwise. Counts are \code{NA} in years with no
+sample for any of the fleets.
+}
+
+Catch, effort, and composition data held by only some fleets of a group
+are dropped for the combined fleet, since the combined total is unknown.
+Each drop is recorded as an assumption in the stock's \code{Data} object (see
+\code{\link[=Log]{Log()}}).
+}
+
+\subsection{Allocations}{
+
+\code{\link[=FleetAllocation]{FleetAllocation()}} and \code{\link[=CatchFrac]{CatchFrac()}} shares are summed across the combined
+fleets. For each complex with a \code{\link[=SeasonalAllocation]{SeasonalAllocation()}}, the combined
+fleet's seasonal shares are the \code{FleetAllocation}-weighted mean of its
+fleets' shares. \code{\link[=HistoricalWeight]{HistoricalWeight()}} is combined the same way for
+complexes where \code{SeasonalAllocation} is derived. If \code{FleetAllocation} is
+not set, the fleets' values must be identical. \code{\link[=EffortAllocation]{EffortAllocation()}} is
+reset, and derived again in \code{\link[=Simulate]{Simulate()}}.
+}
+
+\subsection{Interim advice}{
+
+\code{\link[=InterimAdvice]{InterimAdvice()}} rows for the combined fleets are replaced by one row per
+timestep for the new fleet. \code{Fleet = NA} rows are unchanged. Within each
+calendar year x Complex x Type, every fleet in a group must have one row
+for each of the same timesteps, or no rows so that a \code{Fleet = NA} total
+covers the combined fleet.
+\itemize{
+\item \code{"TAC"} rows must share \code{TACType} and \code{TACUnit}. \code{Mean} is the sum of the
+fleets' means and \code{CV} is \eqn{\sqrt{\sum_f (CV_f \cdot Mean_f)^2} / \sum_f Mean_f},
+the CV of a sum of independent draws. \code{Max} is the sum of the fleets'
+bounds, where a fleet with \code{CV = NA}/\code{0} or \code{Mean = 0} is bounded by its
+\code{Mean}, and is \code{NA} if any other fleet has no bound.
+\item Relative \code{"Effort"} rows (\code{EffType = "Rel"}) must have the same \code{Mean},
+\code{CV} and \code{Max} for every fleet, and are kept as a single row.
+\item Absolute \code{"Effort"} rows cannot be combined, since effort units depend on
+each fleet's catchability.
+}
+
+Rows that cannot be combined are an error. In that case, set
+\code{InterimAdvice(OM) <- NULL} before combining and supply rows for the new
+fleet afterwards.
 }
 }
 \description{
