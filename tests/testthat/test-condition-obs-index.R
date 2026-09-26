@@ -713,3 +713,27 @@ test_that("an index with unsupported Units is skipped with a message, not an err
   val <- mse@PPD[[1]][[2]][[1]]@Survey@Value[, 'Acoustic']
   expect_true(all(is.finite(val[intersect(ProjYears, names(val))])))
 })
+
+test_that("index selectivity may vary by area, with or without a sim", {
+  data(TwoFleetOM, envir = environment())
+  obj <- methods::new("hist")
+  obj@OM <- Populate(TwoFleetOM, silent = TRUE)
+  Ages <- obj@OM@Stock[[1]]@Ages@Classes
+  Year <- Years(obj@OM, "Historical")[1]
+  a1 <- seq(0.1, 1, length.out = length(Ages))
+  sel <- array(c(a1, a1 / 2), c(1, length(Ages), 1, 2),
+               dimnames = list(Sim = 1, Age = Ages, Year = Year, Area = 1:2))
+  IndexObs <- new("indicesobs")
+  IndexObs@Selectivity <- list(sel)
+  resolve <- function(spec, sim = NULL)
+    .ResolveIndexSelectivity(obj, stocks = 1, fleet = "Survey", IndexObs = IndexObs, Years = Year,
+                             SelectivityAtAge = spec, sim = sim, nArea = 2)[[1]]
+
+  for (spec in list(list(sel), sel, "Obs")) {
+    expect_equal(unname(resolve(spec)[1, , 1, ]), cbind(a1, a1 / 2), ignore_attr = TRUE)
+    expect_equal(unname(resolve(spec, sim = 2)), cbind(a1, a1 / 2), ignore_attr = TRUE)
+  }
+
+  sel3 <- DropDimension(sel[, , , 1, drop = FALSE], "Area")
+  expect_equal(unname(resolve(list(sel3), sim = 2)), cbind(a1, a1), ignore_attr = TRUE)
+})

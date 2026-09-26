@@ -29,6 +29,7 @@
     OM@FleetAllocation <- OM@Allocation
     OM@Allocation <- list()
   }
+  OM <- .CombineFleetsHistoricalWeight(OM, FleetMap)
   OM <- .CombineFleetsSeasonalAllocation(OM, FleetMap)
   OM@FleetAllocation <- purrr::map(OM@FleetAllocation, \(x) .CombineFleetShares(x, FleetMap))
   OM@CatchFrac <- purrr::map(OM@CatchFrac, \(x) .CombineFleetShares(x, FleetMap))
@@ -80,6 +81,43 @@
     SA[[i]] <- out
   }
   OM@SeasonalAllocation <- SA
+  OM
+}
+
+# FleetAllocation-weighted mean for fleets with differing weights; only used where SeasonalAllocation is derived
+.CombineFleetsHistoricalWeight <- function(OM, FleetMap) {
+  HW <- OM@HistoricalWeight
+  if (!length(HW)) return(OM)
+  SA <- OM@SeasonalAllocation
+  FA <- OM@FleetAllocation
+  ComplexNames <- names(OM@Complexes)
+  fleetnames   <- names(sort(unlist(unname(FleetMap))))
+
+  for (i in seq_along(HW)) {
+    if (is.null(HW[[i]]) || (length(SA) >= i && !is.null(SA[[i]]))) next
+    hw <- .ResolveHistoricalWeight(HW[[i]], fleetnames)
+    fa <- if (length(FA) >= i && !is.null(FA[[i]])) colMeans(FA[[i]]) else NULL
+    HW[[i]] <- purrr::imap_dbl(FleetMap, \(ind, NewName) {
+      h <- unname(hw[ind])
+      if (isTRUE(all.equal(h, rep(h[1], length(h))))) return(h[1])
+      if (is.null(fa))
+        cli::cli_abort(c(
+          "x" = "Cannot combine `HistoricalWeight` for fleets {.val {names(ind)}} in Complex {.val {ComplexNames[i]}}: their values differ ({.val {h}}) and `FleetAllocation` is not set to weight them.",
+          "i" = "Set `FleetAllocation(OM)`, or give the fleets the same `HistoricalWeight` before `CombineFleets()`."
+        ))
+      wt <- fa[ind]
+      if (sum(wt) == 0) wt[] <- 1
+      sum(h * wt) / sum(wt)
+    })
+  }
+  OM@HistoricalWeight <- HW
+  OM
+}
+
+# the combined fleet uses the first fleet's implementation error
+.CombineFleetsImp <- function(OM, FleetMap) {
+  First <- purrr::map_int(FleetMap, \(ind) unname(ind[1]))
+  OM@Imp <- purrr::map(OM@Imp, \(ImpList) stats::setNames(ImpList[First], names(FleetMap)))
   OM
 }
 

@@ -64,7 +64,7 @@
     if (is.null(sim)) return(arr)
     dd <- dim(arr)
     if (length(dd) >= 1L && !is.null(dimnames(arr)[['Sim']])) {
-      arr[min(sim, dd[1]), , , drop = FALSE] |> abind::adrop(1)
+      abind::asub(arr, min(sim, dd[1]), 1, drop = FALSE) |> abind::adrop(1)
     } else {
       arr
     }

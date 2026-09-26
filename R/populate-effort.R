@@ -180,7 +180,7 @@ PopulateEffort <- function(Effort,
     if (is.null(dnames)) {
       dimnames(Targeting) <- list(
         Sim=1:dd[1],
-        Years=Years[1:dd[2]]
+        Year=Years[1:dd[2]]
       )
     }
     

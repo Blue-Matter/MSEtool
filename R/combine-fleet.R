@@ -63,24 +63,65 @@
 #' **WeightFleetRetained** (age-specific retained-F-weighted average)
 #' \deqn{W^{ret}_{combined}(a) = \frac{\sum_f F^{retain}_{combined,f}(a)\cdot W^{ret}_f(a)}{F^{retain}_{combined}(a)}}
 #'
-#' ## Composition data
+#' ## Fleet settings
 #'
-#' `LandingsAtAge`/`DiscardsAtAge` counts are summed directly across the
-#' combined fleets, since age classes are shared by every fleet.
-#' `LandingsAtSize`/`DiscardsAtSize` counts are only summed when every fleet
-#' in a group shares the same size-class bins (within floating-point
-#' tolerance); if bins differ, that composition is not well-defined for the
-#' combined fleet, so it is dropped and an assumption is recorded in the
-#' relevant stock's `Data` object (see [Log()]).
+#' Weights \eqn{w_f} are each fleet's share of the summed apical F in each
+#' simulation and historical year (equal shares where the total is zero).
+#'
+#' - `Effort@Targeting` and `Effort@StockTargetingLambda` are the
+#'   \eqn{w_f}-weighted means of the fleets' values.
+#' - `Effort@Distribution` is the \eqn{w_f}-weighted mean of the fleets'
+#'   fixed distributions, and is derived dynamically unless every fleet has
+#'   one.
+#' - `Effort@Units` are the first fleet's units, since effort is recovered
+#'   from its catchability.
+#' - `Closure`: an area is open to the combined fleet where any of its fleets
+#'   is open.
+#' - Projected catchability (from `qInc`/`qCV`) is
+#'   \eqn{q_{combined}(y) = q_{combined}(y_c) \sum_f w_f(y_c)\, q_f(y) / q_f(y_c)},
+#'   where \eqn{y_c} is the last historical year.
+#' - Fleets must share `Effort@Mode`, and bag-limit settings
+#'   (`TripsScalar`, `AnglerPerTrip`, `Theta`) cannot be combined; either is an
+#'   error.
+#'
+#' The combined fleet uses the first fleet's [Obs()] and [Imp()] objects.
+#'
+#' ## Data
+#'
+#' For each stock's [Data()] object:
+#'
+#' - `Landings`, `Discards`, and `Effort` values are summed across the
+#'   combined fleets in each year, and are `NA` in years with no data for any
+#'   of them. `CV` is \eqn{\sqrt{\sum_f (CV_f \cdot x_f)^2} / \sum_f x_f}, and
+#'   `Ref`/`RefCV` are combined in the same way. Catch units must match;
+#'   effort recorded in different units is dropped for the combined fleet.
+#' - `CPUE` indices named after combined fleets are moved to `Survey`, with
+#'   their values, `CV`, `Units`, `Ref`, and `Timing`. Each moved index, and
+#'   each `Survey` index named after a combined fleet, gets a survey [Obs()]
+#'   entry that carries the fleet's index observation settings and, unless
+#'   the index has its own selectivity, the fleet's selectivity-at-age from
+#'   before combining. An index keeps its fleet's name, with a `" CPUE"` or
+#'   `" Survey"` suffix where that name is taken by a fleet or another index.
+#' - `LandingsAtAge`/`DiscardsAtAge` counts are summed across the combined
+#'   fleets. `LandingsAtSize`/`DiscardsAtSize` counts are summed when every
+#'   fleet shares the same size-class bins (within floating-point
+#'   tolerance), and dropped otherwise. Counts are `NA` in years with no
+#'   sample for any of the fleets.
+#'
+#' Catch, effort, and composition data held by only some fleets of a group
+#' are dropped for the combined fleet, since the combined total is unknown.
+#' Each drop is recorded as an assumption in the stock's `Data` object (see
+#' [Log()]).
 #'
 #' ## Allocations
 #'
 #' [FleetAllocation()] and [CatchFrac()] shares are summed across the combined
 #' fleets. For each complex with a [SeasonalAllocation()], the combined
 #' fleet's seasonal shares are the `FleetAllocation`-weighted mean of its
-#' fleets' shares. If `FleetAllocation` is not set, the fleets' seasonal
-#' shares must be identical. [EffortAllocation()] is reset, and derived
-#' again in [Simulate()].
+#' fleets' shares. [HistoricalWeight()] is combined the same way for
+#' complexes where `SeasonalAllocation` is derived. If `FleetAllocation` is
+#' not set, the fleets' values must be identical. [EffortAllocation()] is
+#' reset, and derived again in [Simulate()].
 #'
 #' ## Interim advice
 #'
@@ -120,22 +161,28 @@ CombineFleets <- function(OM, FleetList = NULL, silent = FALSE) {
   )
   FleetMap <- .CombineFleetsMap(FleetNames(OM), FleetList)
   OM <- .CombineFleetsAllocation(OM, FleetMap)
+  OM <- .CombineFleetsImp(OM, FleetMap)
+  Indices <- .CombineFleetsIndices(OM, FleetList, FleetMap, silent)
+  OM <- Indices$OM
+  HistYears <- Years(OM, "Historical")
+  ProjYears <- Years(OM, "Projection")
 
   if (!silent)
     cli::cli_alert_info("Combining fleets into aggregated fleet(s):")
-  
+
   for (i in seq_along(FleetList)) {
     Name <- names(FleetList)[i]
     FleetInds <- FleetIndList[[i]]
     replaceInd <- FleetInds[1]
-    
+
     if (!silent)
       cli::cli_li("{.val {FleetList[[i]]}} \u2192 new fleet: {.val {Name}}")
-    
+
     RefEffort <- NULL
     for (st in seq_len(nStock(OM))) {
       Combined <- .CombineFleetsStock(OM, st, Name, FleetInds, RefEffort = RefEffort)
-      OM@Fleet[[st]][[replaceInd]] <- Combined$Fleet
+      OM@Fleet[[st]][[replaceInd]] <- .CombineFleetsSettings(
+        Combined$Fleet, OM@Fleet[[st]][FleetInds], HistYears, ProjYears)
       names(OM@Fleet[[st]])[replaceInd] <- Name
       if (is.null(RefEffort)) RefEffort <- Combined$Effort
     }
@@ -147,9 +194,10 @@ CombineFleets <- function(OM, FleetList = NULL, silent = FALSE) {
   # Combine Data
   OM <- .CombineFleetsData(OM, FleetList, silent)
   
-  # Combine Obs 
+  # Combine Obs
   OM <- .CombineFleetsObs(OM, FleetList, silent)
-  
+  OM@Obs <- purrr::map2(OM@Obs, Indices$Obs, c)
+
   OM@EffortAllocation <- list()
   OM@EFactor <- list()
 
@@ -163,70 +211,189 @@ CombineFleets <- function(OM, FleetList = NULL, silent = FALSE) {
 }
 
 
-.CombineFleetsDataCpue <- function(OM, FleetList, type=c('CPUE', 'Survey'), 
-                                    silent=FALSE) {
-  
-  type <- match.arg(type)
-  for (st in seq_along(OM@Data)) {
-    data <- slot(OM@Data[[st]], type)
-    
-    if (is.null(data@Value)) next
-    
-    drop_ind <- integer(0)
-    
-    for (fl in seq_along(FleetList)) {
-      combine_fleets <- FleetList[[fl]]
-      
-      ind <- match(combine_fleets, data@Name)
-      if (!length(ind) || all(is.na(ind))) next
-      
-      data@Value[,ind[1]] <- .WeightedMeanByCv(
-        values=data@Value[,ind, drop=FALSE],
-        cvs=data@CV[,ind, drop=FALSE]
-        )
+# CPUE and Survey indices named after combined fleets become Survey indices that
+# keep the selectivity of their fleet from before combining
+.CombineFleetsIndices <- function(OM, FleetList, FleetMap, silent = FALSE) {
+  GroupFleets <- unlist(FleetList, use.names = FALSE)
+  nFleetOrig  <- length(FleetNames(OM))
+  NewObs      <- purrr::map(OM@Obs, \(x) list())
 
-      colnames(data@Value)[ind[1]] <- names(FleetList)[fl]
-      data@Name[ind[1]] <- names(FleetList)[fl]
-      drop_ind <- c(drop_ind, ind[-1])
+  for (i in seq_along(OM@Data)) {
+    data   <- OM@Data[[i]]
+    cpue   <- data@CPUE
+    survey <- data@Survey
+    stocks <- OM@Complexes[[i]]
+    ObsList <- OM@Obs[[i]]
+    taken  <- c(names(FleetMap), names(ObsList)[-seq_len(nFleetOrig)],
+                setdiff(survey@Name, GroupFleets))
+    moved  <- character(0)
+
+    for (j in which(survey@Name %in% GroupFleets)) {
+      f <- survey@Name[j]
+      NewName <- .UniqueIndexName(f, "Survey", taken)
+      taken <- c(taken, NewName)
+      IndexObs <- ObsList[[f]]@Survey
+      IndexObs@Selectivity <- .IndexFleetSelectivity(IndexObs@Selectivity,
+                                                     .IndexEntry(survey@Selectivity, j), OM, stocks, f)
+      NewObs[[i]][[NewName]] <- .SurveyObs(NewName, IndexObs)
+      survey@Name[j] <- NewName
+      survey@Value <- .RenameColumn(survey@Value, j, NewName)
+      if (.HasFleetColumns(survey@CV, length(survey@Name)))
+        survey@CV <- .RenameColumn(survey@CV, j, NewName)
+      moved <- c(moved, stats::setNames(NewName, paste("Survey", f)))
     }
 
-    # drop fleet columns
-    if (length(drop_ind)) {
-      drop_ind   <- sort(unique(drop_ind))
-      data@Value <- data@Value[,-drop_ind, drop=FALSE]
-      data@Name  <- data@Name[-drop_ind]
-      if (!is.null(data@CV))
-        data@CV  <- data@CV[,-drop_ind, drop=FALSE]
+    idx <- which(cpue@Name %in% GroupFleets)
+    if (length(idx)) {
+      nIndex   <- length(cpue@Name)
+      nSurvey  <- length(survey@Name)
+      NewNames <- character(0)
+      for (j in idx) {
+        f <- cpue@Name[j]
+        NewName <- .UniqueIndexName(f, "CPUE", taken)
+        taken <- c(taken, NewName)
+        NewNames <- c(NewNames, NewName)
+        IndexObs <- ObsList[[f]]@CPUE
+        IndexObs@Selectivity <- .IndexFleetSelectivity(IndexObs@Selectivity,
+                                                       .IndexEntry(cpue@Selectivity, j), OM, stocks, f)
+        NewObs[[i]][[NewName]] <- .SurveyObs(NewName, IndexObs)
+        moved <- c(moved, stats::setNames(NewName, paste("CPUE", f)))
+      }
+
+      Value <- cpue@Value[, idx, drop = FALSE]
+      colnames(Value) <- NewNames
+      CV <- if (.HasFleetColumns(cpue@CV, nIndex)) cpue@CV[, idx, drop = FALSE] else NULL
+      if (!is.null(CV)) colnames(CV) <- NewNames
+      if (!is.null(survey@CV) || !is.null(CV))
+        survey@CV <- .AppendIndexColumns(survey@CV %||% .NALike(survey@Value), CV %||% .NALike(Value))
+      survey@Value  <- .AppendIndexColumns(survey@Value, Value)
+      survey@Units  <- .AppendIndexEntries(survey@Units, nSurvey, cpue@Units, idx, as.character)
+      survey@Ref    <- .AppendIndexEntries(survey@Ref, nSurvey, cpue@Ref, idx, as.numeric)
+      survey@Timing <- .AppendIndexEntries(survey@Timing, nSurvey, cpue@Timing, idx, as.numeric)
+      survey@Name   <- c(survey@Name, NewNames)
+
+      if (length(idx) == nIndex) {
+        cpue <- new("indicesdata")
+      } else {
+        cpue@Value <- cpue@Value[, -idx, drop = FALSE]
+        cpue@Name  <- cpue@Name[-idx]
+        for (sl in c("CV", "Units", "Ref", "RefCV", "Timing", "Selectivity"))
+          slot(cpue, sl) <- .DropIndexEntries(slot(cpue, sl), idx, nIndex)
+      }
     }
-    
-    slot(OM@Data[[st]], type) <- data
+
+    data@CPUE   <- cpue
+    data@Survey <- survey
+    for (k in seq_along(moved)) {
+      msg <- cli::format_inline("{sub(' .*', '', names(moved)[k])} index {.val {sub('^[^ ]+ ', '', names(moved)[k])}} is Survey index {.val {moved[k]}}, using the selectivity of its fleet before combining.")
+      if (!silent) cli::cli_alert_info(msg)
+      data <- .CaptureLog(data, string = msg, name = "CombineFleets", type = "assumption")
+    }
+    OM@Data[[i]] <- data
   }
-  
-  OM 
+  list(OM = OM, Obs = NewObs)
 }
 
-.WeightedMeanByCv <- function(values, cvs) {
-  if (is.null(cvs) || all(is.na(cvs))) {
-    out <- rowMeans(values, na.rm = TRUE)
-  } else if (anyNA(cvs)) {
-    cli::cli_abort(c(
-      "x" = "CV is available for some fleets being combined but not others.",
-      "i" = "Provide a CV for every fleet in the combination, or for none of them."
-    ))
-  } else {
-    weights <- 1/cvs
-    out <- rowSums(values * weights, na.rm = TRUE) / rowSums(weights, na.rm = TRUE)
-  }
-  out[!is.finite(out)] <- NA
+.UniqueIndexName <- function(name, suffix, taken) {
+  if (!name %in% taken) return(name)
+  candidate <- paste(name, suffix)
+  if (!candidate %in% taken) return(candidate)
+  utils::tail(make.unique(c(taken, candidate)), 1)
+}
+
+# positional per-index entry, as read in index conditioning
+.IndexEntry <- function(x, j) if (length(x) >= j) x[[j]] else NULL
+
+# an index's own selectivity if set, otherwise its fleet's selectivity-at-age for each stock
+.IndexFleetSelectivity <- function(ObsSel, DataSel, OM, stocks, fleet) {
+  if (!is.null(ObsSel)) return(ObsSel)
+  if (is.character(DataSel) && DataSel %in% c("Biomass", "SBiomass")) return(DataSel)
+  sel <- purrr::map(stocks, \(st) OM@Fleet[[st]][[fleet]]@Selectivity@MeanAtAge)
+  stats::setNames(sel, StockNames(OM)[stocks])
+}
+
+.SurveyObs <- function(Name, IndexObs) {
+  obs <- Obs(Name = Name)
+  obs@Survey <- IndexObs
+  obs
+}
+
+.NALike <- function(x) {
+  if (is.null(x)) return(NULL)
+  x[] <- NA_real_
+  x
+}
+
+# append Year x Index columns, aligning rows by year
+.AppendIndexColumns <- function(x, y) {
+  if (is.null(x)) return(y)
+  if (is.null(rownames(x)) || is.null(rownames(y))) return(cbind(x, y))
+  Years <- sort(unique(as.numeric(c(rownames(x), rownames(y)))))
+  DimNames <- names(dimnames(x))
+  if (is.null(DimNames)) DimNames <- c("Year", "Fleet")
+  out <- matrix(NA_real_, length(Years), ncol(x) + ncol(y),
+                dimnames = stats::setNames(list(Years, c(colnames(x), colnames(y))), DimNames))
+  out[match(as.numeric(rownames(x)), Years), seq_len(ncol(x))] <- x
+  out[match(as.numeric(rownames(y)), Years), ncol(x) + seq_len(ncol(y))] <- y
   out
 }
 
+# per-index slot of the first nSurvey indices, with the moved indices' entries appended
+.AppendIndexEntries <- function(x, nSurvey, from, idx, as) {
+  add <- vapply(idx, \(j) if (length(from) >= j) as(from[[j]]) else as(NA), as(NA))
+  if (is.null(x) && all(is.na(add))) return(x)
+  base <- if (is.null(x)) rep(as(NA), nSurvey) else as(x)[seq_len(nSurvey)]
+  c(base, add)
+}
+.HasFleetColumns <- function(x, n) length(dim(x)) == 2 && ncol(x) == n
 
-.CombineFleetsDataCatch <- function(OM,
-                                     FleetList, 
-                                     type=c('Landings', 'Discards'),
-                                     silent=FALSE) {
-  
+# drop the entries of dropped indices from a per-index slot, read by position (vector) or column (matrix)
+.DropIndexEntries <- function(x, drop, n) {
+  if (is.null(x)) return(x)
+  d <- dim(x)
+  if (length(d) == 2) return(if (d[2] == n) x[, -drop, drop = FALSE] else x)
+  keep <- setdiff(seq_len(length(x)), drop)
+  if (length(d) == 1) x[keep, drop = FALSE] else x[keep]
+}
+
+.SumOrNA <- function(values) {
+  out <- rowSums(values, na.rm = TRUE)
+  out[rowSums(!is.na(values)) == 0] <- NA
+  out
+}
+
+# CV of a sum of independent observations (mean CV where the sum is zero); NA where an observed value has no CV
+.SumCV <- function(values, cvs) {
+  observed <- !is.na(values)
+  total <- rowSums(values, na.rm = TRUE)
+  out <- sqrt(rowSums((cvs * values)^2, na.rm = TRUE)) / total
+  zero <- total == 0
+  out[zero] <- rowMeans(ifelse(observed, cvs, NA), na.rm = TRUE)[zero]
+  out[rowSums(observed & is.na(cvs)) > 0 | rowSums(observed) == 0 | !is.finite(out)] <- NA
+  out
+}
+
+.RenameColumn <- function(x, col, name) {
+  if (!is.null(colnames(x))) colnames(x)[col] <- name
+  x
+}
+
+.LogCombineFleetsDrop <- function(OM, st, type, new_name, reason, silent) {
+  msg <- cli::format_inline("{.val {type}} was dropped for the new fleet {.val {new_name}}: {reason}")
+  if (!silent) cli::cli_alert_info(msg)
+  OM@Data[[st]] <- .CaptureLog(OM@Data[[st]], string = msg, name = "CombineFleets", type = "assumption")
+  OM
+}
+
+.MissingFleetsReason <- function(fleets) {
+  cli::format_inline("fleet{?s} {.val {fleets}} {?has/have} no data, so the combined total is unknown.")
+}
+
+# Landings, Discards, and Effort: values summed; drops the group if a fleet has no data or effort units differ
+.CombineFleetsDataSum <- function(OM, FleetList,
+                                  type = c('Landings', 'Discards', 'Effort'),
+                                  silent = FALSE) {
+
   type <- match.arg(type)
 
   for (st in seq_along(OM@Data)) {
@@ -234,38 +401,73 @@ CombineFleets <- function(OM, FleetList = NULL, silent = FALSE) {
 
     if (is.null(data@Value)) next
 
+    nFleet   <- length(data@Name)
+    hasRef   <- methods::.hasSlot(data, "Ref")
     drop_ind <- integer(0)
 
     for (fl in seq_along(FleetList)) {
       combine_fleets <- FleetList[[fl]]
+      new_name <- names(FleetList)[fl]
 
       ind <- match(combine_fleets, data@Name)
-      if (!length(ind) || any(is.na(ind))) next
+      if (all(is.na(ind))) next
 
-      all_units <- data@Units[ind]
-      unique_units <- unique(all_units)
-      if (length(unique_units)>1)
-        cli::cli_abort(c('x'='{.val {type}}: Units must be the same for all combined fleets',
-                         'i'='Units for Fleets {.val {combine_fleets}}: {.val {all_units}}'))
+      if (anyNA(ind)) {
+        OM <- .LogCombineFleetsDrop(OM, st, type, new_name,
+                                    .MissingFleetsReason(combine_fleets[is.na(ind)]), silent)
+        drop_ind <- c(drop_ind, ind[!is.na(ind)])
+        next
+      }
 
-      data@Value[,ind[1]] <- rowSums(data@Value[,ind, drop=FALSE], na.rm=TRUE)
-      colnames(data@Value)[ind[1]] <- names(FleetList)[fl]
-      data@Name[ind[1]] <- names(FleetList)[fl]
+      units <- if (length(data@Units) == nFleet) data@Units[ind] else NULL
+      if (length(unique(units)) > 1) {
+        if (type != 'Effort')
+          cli::cli_abort(c('x'='{.val {type}}: Units must be the same for all combined fleets',
+                           'i'='Units for Fleets {.val {combine_fleets}}: {.val {units}}'))
+        OM <- .LogCombineFleetsDrop(OM, st, type, new_name,
+                                    cli::format_inline("fleets {.val {combine_fleets}} record effort in different units ({.val {units}})."),
+                                    silent)
+        drop_ind <- c(drop_ind, ind)
+        next
+      }
+
+      values <- data@Value[, ind, drop = FALSE]
+      if (.HasFleetColumns(data@CV, nFleet))
+        data@CV[, ind[1]] <- .SumCV(values, data@CV[, ind, drop = FALSE])
+      data@Value[, ind[1]] <- .SumOrNA(values)
+
+      if (hasRef && .HasFleetColumns(data@Ref, nFleet)) {
+        refs <- data@Ref[, ind, drop = FALSE]
+        if (.HasFleetColumns(data@RefCV, nFleet))
+          data@RefCV[, ind[1]] <- .SumCV(refs, data@RefCV[, ind, drop = FALSE])
+        data@Ref[, ind[1]] <- .SumOrNA(refs)
+      }
+
+      for (sl in c("Value", "CV", if (hasRef) c("Ref", "RefCV")))
+        if (.HasFleetColumns(slot(data, sl), nFleet))
+          slot(data, sl) <- .RenameColumn(slot(data, sl), ind[1], new_name)
+      data@Name[ind[1]] <- new_name
       drop_ind <- c(drop_ind, ind[-1])
     }
-    # drop fleet columns
+
     if (length(drop_ind)) {
       drop_ind   <- sort(unique(drop_ind))
-      data@Value <- data@Value[,-drop_ind, drop=FALSE]
-      data@Units <- data@Units[-drop_ind]
+      data@Value <- data@Value[, -drop_ind, drop = FALSE]
       data@Name  <- data@Name[-drop_ind]
-      if (!is.null(data@CV))
-        data@CV  <- data@CV[,-drop_ind, drop=FALSE]
+      for (sl in c("CV", "Units", if (hasRef) c("Ref", "RefCV")))
+        slot(data, sl) <- .DropIndexEntries(slot(data, sl), drop_ind, nFleet)
     }
 
     slot(OM@Data[[st]], type) <- data
   }
   OM
+}
+
+# counts summed across fleets; NA where no fleet has a sample
+.SumCompOrNA <- function(values) {
+  out <- apply(values, c(1, 3), sum, na.rm = TRUE)
+  out[apply(is.na(values), c(1, 3), all)] <- NA
+  out
 }
 
 .CombineFleetsDataCompAge <- function(OM, FleetList, type=c('LandingsAtAge', 'DiscardsAtAge'),
@@ -282,14 +484,22 @@ CombineFleets <- function(OM, FleetList = NULL, silent = FALSE) {
 
     for (fl in seq_along(FleetList)) {
       combine_fleets <- FleetList[[fl]]
+      new_name <- names(FleetList)[fl]
 
       ind <- match(combine_fleets, data@Name)
-      if (!length(ind) || any(is.na(ind))) next
+      if (all(is.na(ind))) next
 
-      data@Value[,ind[1],] <- apply(data@Value[,ind,, drop=FALSE], c(1,3), sum, na.rm=TRUE)
+      if (anyNA(ind)) {
+        OM <- .LogCombineFleetsDrop(OM, st, type, new_name,
+                                    .MissingFleetsReason(combine_fleets[is.na(ind)]), silent)
+        drop_ind <- c(drop_ind, ind[!is.na(ind)])
+        next
+      }
 
-      dimnames(data@Value)$Fleet[ind[1]] <- names(FleetList)[fl]
-      data@Name[ind[1]] <- names(FleetList)[fl]
+      data@Value[,ind[1],] <- .SumCompOrNA(data@Value[,ind,, drop=FALSE])
+
+      dimnames(data@Value)$Fleet[ind[1]] <- new_name
+      data@Name[ind[1]] <- new_name
       drop_ind <- c(drop_ind, ind[-1])
     }
     # drop fleet columns
@@ -321,7 +531,14 @@ CombineFleets <- function(OM, FleetList = NULL, silent = FALSE) {
       new_name <- names(FleetList)[fl]
 
       ind <- match(combine_fleets, data@Name)
-      if (!length(ind) || any(is.na(ind))) next
+      if (all(is.na(ind))) next
+
+      if (anyNA(ind)) {
+        OM <- .LogCombineFleetsDrop(OM, st, type, new_name,
+                                    .MissingFleetsReason(combine_fleets[is.na(ind)]), silent)
+        drop_ind <- c(drop_ind, ind[!is.na(ind)])
+        next
+      }
 
       classes_ind <- purrr::map(ind, \(i) .CompdataClasses(data, i))
       same_bins   <- length(classes_ind) < 2 ||
@@ -329,27 +546,16 @@ CombineFleets <- function(OM, FleetList = NULL, silent = FALSE) {
 
       if (same_bins) {
         nC <- length(classes_ind[[1]])
-        data@Value[,ind[1], seq_len(nC)] <- apply(
-          data@Value[,ind, seq_len(nC), drop=FALSE], c(1,3), sum, na.rm=TRUE
-        )
+        data@Value[,ind[1], seq_len(nC)] <- .SumCompOrNA(data@Value[,ind, seq_len(nC), drop=FALSE])
         dimnames(data@Value)$Fleet[ind[1]] <- new_name
         data@Name[ind[1]] <- new_name
         if (is.list(data@Classes))
           names(data@Classes)[ind[1]] <- new_name
         drop_ind <- c(drop_ind, ind[-1])
       } else {
-        if (!silent)
-          cli::cli_alert_info(
-            "{.val {type}}: fleets {.val {combine_fleets}} use different size-class bins - dropping size composition for combined fleet {.val {new_name}}"
-          )
-        OM@Data[[st]] <- .CaptureLog(
-          OM@Data[[st]],
-          string = cli::format_inline(
-            "Fleets {.val {combine_fleets}} use different size-class bins and could not be combined; {.val {type}} was dropped for the new fleet {.val {new_name}}."
-          ),
-          name = "CombineFleets",
-          type = "assumption"
-        )
+        OM <- .LogCombineFleetsDrop(OM, st, type, new_name,
+                                    cli::format_inline("fleets {.val {combine_fleets}} use different size-class bins."),
+                                    silent)
         # drop all fleets in this group - no combined column is created
         drop_ind <- c(drop_ind, ind)
       }
@@ -371,15 +577,8 @@ CombineFleets <- function(OM, FleetList = NULL, silent = FALSE) {
 .CombineFleetsData <- function(OM, FleetList, silent=FALSE) {
   if (!length(OM@Data)) return(OM)
 
-  # Effort TODO
-
-  OM <- .CombineFleetsDataCatch(OM, FleetList, type = 'Landings', silent = silent)
-
-  OM <- .CombineFleetsDataCatch(OM, FleetList, type = 'Discards', silent = silent)
-
-  OM <- .CombineFleetsDataCpue(OM, FleetList, type='CPUE', silent = silent)
-
-  OM <- .CombineFleetsDataCpue(OM, FleetList, type='Survey', silent = silent)
+  for (type in c('Landings', 'Discards', 'Effort'))
+    OM <- .CombineFleetsDataSum(OM, FleetList, type = type, silent = silent)
 
   OM <- .CombineFleetsDataCompAge(OM, FleetList, type='LandingsAtAge', silent = silent)
 

@@ -152,6 +152,7 @@ Collate:
     'class-tune.R'
     'collapse-seasons.R'
     'combine-fleet-allocation.R'
+    'combine-fleet-settings.R'
     'combine-fleet.R'
     'combine-mse.R'
     'combine-om.R'
