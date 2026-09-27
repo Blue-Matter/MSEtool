@@ -31,7 +31,7 @@ CalcUnfished_Dynamic <- function(Hist, IdenticalHist=NULL, silent=FALSE) {
   if (EmptyObject(Hist@Unfished@Equilibrium )) 
     Hist@Unfished@Equilibrium <- CalcUnfished_Equilibrium(Hist@OM, silent)
   
-  Hist <- .CalcDynamicInitial(Hist)
+  Hist <- .CalcDynamicInitial(Hist, Unfished = TRUE)
   
   if (is.null(Hist@Misc$SAVE)) 
     Hist <- .PrepHistMisc(Hist) 
@@ -48,7 +48,7 @@ CalcUnfished_Dynamic <- function(Hist, IdenticalHist=NULL, silent=FALSE) {
   AllYears <- Years(Hist)
   
   if (is.null(IdenticalHist)) 
-    IdenticalHist <- .IdenticalSims(Hist@OM, ignore='SRR')
+    IdenticalHist <- .IdenticalSims(Hist@OM, ignore=c('SRR', 'Depletion'))
   
   out <- new("popdynamics")
   

@@ -189,3 +189,29 @@ test_that(".ProjectMPCompute() leaves its input Proj and earlier MP results unch
   expect_identical(First@FDeadArea, FirstCopy@FDeadArea)
   expect_false(identical(First@Biomass, Second@Biomass))
 })
+
+test_that("a stochastic MP's draws for a sim do not depend on nSim", {
+  skip_on_cran()
+  data(SingleStockOM, envir = environment())
+  om <- SingleStockOM
+  om@nSim <- 6
+  set.seed(1)
+  hist <- Simulate(om, silent = TRUE)
+
+  StochCatch <- function(Data) {
+    Adv <- CurrentCatch(Data)
+    Adv@TAC <- Adv@TAC * stats::rlnorm(1, 0, 0.3)
+    Adv
+  }
+  class(StochCatch) <- "mp"
+  assign("StochCatch", StochCatch, envir = globalenv())
+  on.exit(rm("StochCatch", envir = globalenv()), add = TRUE)
+
+  Full <- Project(hist, MPs = "StochCatch", silent = TRUE, Reduce = FALSE)
+  Sub  <- Project(hist, MPs = "StochCatch", silent = TRUE, Reduce = FALSE, nSim = 3)
+  Det  <- Project(hist, MPs = "CurrentCatch", silent = TRUE, Reduce = FALSE)
+
+  expect_identical(Sub@Biomass, Full@Biomass[1:3, , , , drop = FALSE])
+  expect_identical(Sub@Effort, Full@Effort[1:3, , , , drop = FALSE])
+  expect_false(isTRUE(all.equal(Full@Biomass, Det@Biomass, check.attributes = FALSE)))
+})

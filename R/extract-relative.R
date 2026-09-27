@@ -15,8 +15,9 @@
 #' `MP = "Historical"`.
 #'
 #' For the projection period of an [mse-class] object the denominator is
-#' extended to cover projection years by repeating the last available
-#' historical reference value (forward fill).
+#' extended to cover projection years by repeating the reference value from
+#' the last historical year. In seasonal models, each projection time step
+#' uses the value from the same season of the last historical year.
 #'
 #' @param object A [hist-class] or [mse-class] object.
 #' @param type Character. One of `'Equilibrium'` or `'Dynamic'`. Controls
@@ -337,9 +338,13 @@ F_FMSY <- function(object,
   denom_nums  <- as.numeric(denom_years)
   target_nums <- as.numeric(target_years)
 
+  last_idx  <- which(floor(denom_nums) == floor(denom_nums[length(denom_nums)]))
+  last_frac <- denom_nums[last_idx] %% 1
+
   year_idx <- vapply(target_nums, function(ty) {
     m <- which(denom_nums == ty)
-    if (length(m)) m else length(denom_nums)
+    if (length(m)) return(m[1])
+    last_idx[which.min(abs(last_frac - ty %% 1))]
   }, integer(1))
 
   nd  <- length(dim(denom_arr))
@@ -407,6 +412,8 @@ F_FMSY <- function(object,
     arr          <- slot(object, num_slot)
     target_years <- dimnames(arr)[['Year']]
     denom_aligned <- .AlignDenomYears(denom_arr, target_years)
+    if (inherits(object, 'mse'))
+      denom_aligned <- AddDimension(denom_aligned, name = 'MP', val = dimnames(arr)[['MP']])
     if (sumStock) {
       arr           <- SumOverStock(.SubsetStockDim(arr, stockNames))
       denom_aligned <- SumOverStock(.SubsetStockDim(denom_aligned, stockNames))

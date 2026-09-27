@@ -32,6 +32,15 @@
            sample.kind = 'Rejection')
 }
 
+# Evaluates one MP call with a seed keyed to (Seed, sim, Year, Key), so its draws don't depend on nSim or sim order
+.WithMPSeed <- function(expr, Seed, sim, Year, Key = '') {
+  Saved <- .SaveRNG()
+  on.exit(.RestoreRNG(Saved), add = TRUE)
+  set.seed(digest::digest2int(paste(Seed %||% 101, sim, Year, Key, sep = '_')),
+           kind = 'Mersenne-Twister', normal.kind = 'Inversion', sample.kind = 'Rejection')
+  expr
+}
+
 .Aperm <- function(a, perm, ...) {
   if (is.null(a) || length(a) < 1) {
     return(a)

@@ -3,14 +3,18 @@
 #' Internal helper that constructs the initial age–area population structure
 #' in a [Hist()] object by applying recruitment deviations to the equilibrium
 #' unfished numbers-at-age (which already carry the spatial distribution) and
-#' optionally applying initial depletion.
+#' optionally applying initial depletion (`Depletion@Misc$InitialAtAge` and
+#' `Depletion@Initial`).
 #'
 #' @param Hist A [Hist()] object with initialized unfished equilibrium state.
+#' @param Unfished Logical. If `TRUE`, only the recruitment deviations are
+#'   applied and the initial depletion is skipped. Used for the dynamic
+#'   unfished conditions.
 #'
 #' @return The modified [Hist()] object.
 #'
 #' @keywords internal
-.CalcDynamicInitial <- function(Hist) {
+.CalcDynamicInitial <- function(Hist, Unfished = FALSE) {
   nSim <- nSim(Hist)
   
   for (st in 1:nStock(Hist)) {
@@ -43,6 +47,10 @@
                        '*'='First age class in `RecDevInit`: {.val {min(ages)}}'
       ), call=NULL)
     }
+
+    InitialAtAge <- Hist@OM@Stock[[st]]@Depletion@Misc$InitialAtAge
+    if (!Unfished && length(InitialAtAge))
+      RecDevInit <- ArrayMultiply(RecDevInit, ExtendSims(InitialAtAge, nSim))
 
     InitAgeClassRecDevs <- cbind(RecDevHist1, RecDevInit)
     dimnames(InitAgeClassRecDevs) <- list(Sim=1:nSim,
@@ -86,7 +94,7 @@
     }
 
     InitialDepletion <- Hist@OM@Stock[[st]]@Depletion@Initial
-    if (length(InitialDepletion) && all(InitialDepletion!=1))  
+    if (!Unfished && length(InitialDepletion) && all(InitialDepletion!=1))  
       Hist <- .DoOptInitialDepletion(Hist, st)
     
   }

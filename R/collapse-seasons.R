@@ -413,6 +413,7 @@ CollapseSeasons <- function(OM, silent = FALSE) {
   NewStock@SRR@RecDevHist <- .CollapseRecDevWeighted(Stock@SRR@RecDevHist, R0_seasonal_adj, IndexMap)
   NewStock@SRR@RecDevProj <- .CollapseRecDevWeighted(Stock@SRR@RecDevProj, R0_seasonal_adj, IndexMap)
   NewStock@SRR@RecDevInit <- .CollapseRecDevInit(Stock@SRR@RecDevInit, AgeMap)
+  NewStock@Depletion@Misc$InitialAtAge <- .CollapseRecDevInit(Stock@Depletion@Misc$InitialAtAge, AgeMap)
 
   if (length(Stock@SRR@SpawnLag))
     NewStock@SRR@SpawnLag <- round(Stock@SRR@SpawnLag / AgeMap$AgeSeasons)
