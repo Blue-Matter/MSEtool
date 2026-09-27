@@ -71,7 +71,7 @@ rDirichletMultinomial <- function(n, alpha) {
 }
 
 .SeededDirichletMultinomial <- function(seed_key, n, alpha) {
-  seed_val <- sum(utf8ToInt(seed_key)) %% .Machine$integer.max
+  seed_val <- digest::digest2int(seed_key)
 
   has_seed <- exists(".Random.seed", envir = .GlobalEnv)
   old_seed <- if (has_seed) get(".Random.seed", envir = .GlobalEnv) else NULL
