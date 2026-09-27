@@ -4,10 +4,14 @@
 \alias{.CalcDynamicInitial}
 \title{Initialize dynamic population state in Hist}
 \usage{
-.CalcDynamicInitial(Hist)
+.CalcDynamicInitial(Hist, Unfished = FALSE)
 }
 \arguments{
 \item{Hist}{A \code{\link[=Hist]{Hist()}} object with initialized unfished equilibrium state.}
+
+\item{Unfished}{Logical. If \code{TRUE}, only the recruitment deviations are
+applied and the initial depletion is skipped. Used for the dynamic
+unfished conditions.}
 }
 \value{
 The modified \code{\link[=Hist]{Hist()}} object.
@@ -16,6 +20,7 @@ The modified \code{\link[=Hist]{Hist()}} object.
 Internal helper that constructs the initial age–area population structure
 in a \code{\link[=Hist]{Hist()}} object by applying recruitment deviations to the equilibrium
 unfished numbers-at-age (which already carry the spatial distribution) and
-optionally applying initial depletion.
+optionally applying initial depletion (\code{Depletion@Misc$InitialAtAge} and
+\code{Depletion@Initial}).
 }
 \keyword{internal}

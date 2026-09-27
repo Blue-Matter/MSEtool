@@ -128,8 +128,9 @@ are row-bound and labelled via the \code{Period} column; historical rows carry
 \code{MP = "Historical"}.
 
 For the projection period of an \link[=mse-class]{mse} object the denominator is
-extended to cover projection years by repeating the last available
-historical reference value (forward fill).
+extended to cover projection years by repeating the reference value from
+the last historical year. In seasonal models, each projection time step
+uses the value from the same season of the last historical year.
 
 \code{FMSY} is a single "apical fishing mortality" optimised jointly across all
 stocks in a complex (see \code{\link[=CalcMSY]{CalcMSY()}}) -- there is no separate \code{FMSY} for an

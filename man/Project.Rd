@@ -27,9 +27,14 @@ named list of MP functions, optionally mixed with MP names, e.g.
 names are used as the MP names. If \code{NULL} (default), projects
 \code{c("CurrentEffort", "CurrentCatch")}.}
 
-\item{parallel}{Logical or named list controlling parallel execution of
-MPs. If \code{TRUE}, all MPs are run in parallel. If a named list, names
-correspond to individual MPs to run in parallel. Default \code{FALSE}.}
+\item{parallel}{Logical or named list controlling parallel execution. For
+\link[=hist-class]{hist} objects, \code{TRUE} splits the simulations into chunks and
+projects every MP x chunk combination in parallel on the active
+\code{\link[=SetupParallel]{SetupParallel()}} plan. The number of chunks defaults to the number of
+workers; set \code{Hist@OM@Control$ProjectChunks} to change it. Results do not
+depend on the number of chunks. For \link[=Hist-legacy-class]{Hist-legacy} objects, \code{TRUE}
+runs all MPs in parallel, and a named list selects individual MPs to run
+in parallel. Default \code{FALSE}.}
 
 \item{silent}{Logical. Suppress progress messages if \code{TRUE}. Default
 \code{FALSE}.}

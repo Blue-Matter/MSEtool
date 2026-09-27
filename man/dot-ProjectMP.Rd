@@ -13,7 +13,8 @@
   YearsHist,
   YearsProj,
   silent = FALSE,
-  nMP = 1
+  nMP = 1,
+  Store = NULL
 )
 }
 \arguments{

@@ -124,6 +124,14 @@ from BAM parameters and time series, including selectivity, retention,
 discard mortality, recruitment deviations, and stock-recruitment
 relationships.
 }
+\details{
+The numbers-at-age in the first historical year are the equilibrium unfished
+numbers-at-age multiplied by \code{SRR@RecDevInit} (the BAM initial-age
+deviations, \code{log.Nage.dev}) and \code{Depletion@Misc$InitialAtAge} (the remaining
+age-specific depletion, e.g. from initial fishing mortality). The dynamic
+unfished conditions start from the equilibrium unfished numbers-at-age
+multiplied by \code{SRR@RecDevInit} only.
+}
 \seealso{
 \code{\link[=ImportBAMData]{ImportBAMData()}}
 }
