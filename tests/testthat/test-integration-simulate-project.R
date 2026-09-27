@@ -154,3 +154,38 @@ test_that("implementation error applies to fleet-by-area effort advice", {
   seasonal_weight <- hist@OM@SeasonalAllocation[[1]][1, 1, 1]
   expect_equal(e_vec[1], 0.4 * 0.5 * seasonal_weight, tolerance = 1e-8)
 })
+
+test_that(".ProjectMPCompute() leaves its input Proj and earlier MP results unchanged", {
+  skip_on_cran()
+  data(SingleStockOM, envir = environment())
+  om <- SingleStockOM
+  om@nSim <- 4
+  set.seed(1)
+  hist <- Simulate(om, silent = TRUE)
+
+  YearsHist <- Years(hist@OM, "Historical")
+  YearsProj <- Years(hist@OM, "Projection")[1:5]
+  Proj <- hist |>
+    .CheckFleetAllocation() |>
+    .CheckSeasonalAllocation() |>
+    .CheckEffortAllocation() |>
+    .PrepHistMisc() |>
+    .CheckInterimAdvice() |>
+    .ExtendHist(Years = Years(hist@OM), silent = TRUE) |>
+    .CalcFisheryDynamics(Years = utils::tail(YearsHist, 1), clone = 1)
+  ProjCopy <- unserialize(serialize(Proj, NULL))
+  MPs <- .AddMPFunctions(new("mse"), c("CurrentCatch", "CurrentEffort"))@MPs
+
+  # a parallel worker runs its MPs back to back on one shared Proj
+  First <- .ProjectMPCompute(Proj, "CurrentCatch", MPs$CurrentCatch, YearsHist, YearsProj,
+                             silent = TRUE)$Proj
+  FirstCopy <- unserialize(serialize(First, NULL))
+  Second <- .ProjectMPCompute(Proj, "CurrentEffort", MPs$CurrentEffort, YearsHist, YearsProj,
+                              silent = TRUE)$Proj
+
+  expect_identical(Proj, ProjCopy)
+  expect_identical(First@Biomass, FirstCopy@Biomass)
+  expect_identical(First@Landings, FirstCopy@Landings)
+  expect_identical(First@FDeadArea, FirstCopy@FDeadArea)
+  expect_false(identical(First@Biomass, Second@Biomass))
+})

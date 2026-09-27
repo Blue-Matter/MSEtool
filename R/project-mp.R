@@ -50,6 +50,10 @@
   on.exit(.RestoreRNG(OldRNG), add = TRUE)
   .SeedMP(Proj@OM@Seed)
 
+  # unshare them from the caller's Proj because C++ writes these in place when Control$Clone = 0
+  for (sl in setdiff(methods::slotNames('timeseries'), 'Misc'))
+    methods::slot(Proj, sl) <- rlang::duplicate(methods::slot(Proj, sl), shallow = FALSE)
+
   Interval        <- .ResolveInterval(Proj@OM@Interval, MPName, MPfunction, Proj@OM@Seasons)
   IsInterim       <- YearsProj %in% .InterimTimesteps(Proj@OM)
   ManagementYears <- if (all(IsInterim)) YearsProj[0] else
