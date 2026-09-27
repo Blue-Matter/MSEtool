@@ -16,9 +16,14 @@
 #'   `list(IR5 = SetMPArgs(IndexRate, CalibYears = 5), 'IndexTarget')`. List
 #'   names are used as the MP names. If `NULL` (default), projects
 #'   `c("CurrentEffort", "CurrentCatch")`.
-#' @param parallel Logical or named list controlling parallel execution of
-#'   MPs. If `TRUE`, all MPs are run in parallel. If a named list, names
-#'   correspond to individual MPs to run in parallel. Default `FALSE`.
+#' @param parallel Logical or named list controlling parallel execution. For
+#'   [hist-class] objects, `TRUE` splits the simulations into chunks and
+#'   projects every MP x chunk combination in parallel on the active
+#'   [SetupParallel()] plan. The number of chunks defaults to the number of
+#'   workers; set `Hist@OM@Control$ProjectChunks` to change it. Results do not
+#'   depend on the number of chunks. For [Hist-legacy-class] objects, `TRUE`
+#'   runs all MPs in parallel, and a named list selects individual MPs to run
+#'   in parallel. Default `FALSE`.
 #' @param silent Logical. Suppress progress messages if `TRUE`. Default
 #'   `FALSE`.
 #' @param nSim Integer. If provided, reduces the number of simulations to

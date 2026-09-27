@@ -32,6 +32,15 @@
            sample.kind = 'Rejection')
 }
 
+# Global sim ids of a sim chunk (see .ChunkProj()); identity when not chunked
+.GlobalSim <- function(OM, sim) {
+  ids <- OM@Misc$SimIDs
+  if (is.null(ids)) return(sim)
+  ids[sim]
+}
+
+.GlobalNSim <- function(OM) OM@Misc$nSimGlobal %||% OM@nSim
+
 # Evaluates one MP call with a seed keyed to (Seed, sim, Year, Key), so its draws don't depend on nSim or sim order
 .WithMPSeed <- function(expr, Seed, sim, Year, Key = '') {
   Saved <- .SaveRNG()

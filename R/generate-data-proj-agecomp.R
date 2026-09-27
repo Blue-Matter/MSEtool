@@ -154,7 +154,7 @@
       shift_b <- .CompShiftAt(Obs@Shift, x, DataYear, nAge)
       alpha <- ess_all[x] * th_all[x] * q * exp(shift_b)
       if (any(is.na(alpha)) || sum(alpha) == 0) next
-      seed_key <- paste(Proj@OM@Seed, DataYear, i, fl, type, x, sep = "_")
+      seed_key <- paste(Proj@OM@Seed, DataYear, i, fl, type, .GlobalSim(Proj@OM, x), sep = "_")
       NewValueAll[x, fl, ] <- .SeededDirichletMultinomial(seed_key, n = round(ss), alpha = alpha)
     }
   }

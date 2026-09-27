@@ -35,17 +35,19 @@
                        YearsHist,
                        YearsProj,
                        silent=FALSE,
-                       nMP = 1) {
+                       nMP = 1,
+                       Store = NULL) {
 
   result <- .ProjectMPCompute(Proj, MPName, MPfunction, YearsHist, YearsProj,
                               silent, mp = mp, nMP = nMP)
-  .MergeMPResult(MSE, result, MPName, mp, YearsHist, YearsProj, silent, nMP = nMP)
+  .MergeMPResult(MSE, result, MPName, mp, YearsHist, YearsProj, silent, nMP = nMP,
+                 Store = Store)
 }
 
 .ProjectMPTask <- function(mp, MPName, MPfunction, Proj, YearsHist, YearsProj,
-                           silent = TRUE, nMP = 1) {
+                           silent = TRUE, nMP = 1, StopIfAllFailed = TRUE) {
   result <- .ProjectMPCompute(Proj, MPName, MPfunction, YearsHist, YearsProj,
-                              silent, mp = mp, nMP = nMP)
+                              silent, mp = mp, nMP = nMP, StopIfAllFailed = StopIfAllFailed)
   result$Proj <- .CompactMPProj(result$Proj, YearsProj)
   result
 }
@@ -66,7 +68,7 @@
 
 
 .ProjectMPCompute <- function(Proj, MPName, MPfunction, YearsHist, YearsProj,
-                              silent = FALSE, mp = 1, nMP = 1) {
+                              silent = FALSE, mp = 1, nMP = 1, StopIfAllFailed = TRUE) {
 
   OldRNG <- .SaveRNG()
   on.exit(.RestoreRNG(OldRNG), add = TRUE)
@@ -100,6 +102,8 @@
   
   Error <- FALSE
   ErrorMessage <- NULL
+  AllFailedYears <- YearsProj[0]
+  ErrorYear <- NULL
   
   update_funs <- list(
     .UpdateClosure          = .UpdateClosure,
@@ -186,9 +190,14 @@
     ExtractResult <- .ExtractAdviceLogs(AdviceSimList, Proj, Year, MPName)
     Proj <- ExtractResult$Proj
 
-    if (ExtractResult$AllFailed) {
+    # a sim chunk only records the year; the master decides whether every sim failed
+    if (ExtractResult$AllFailed && !StopIfAllFailed)
+      AllFailedYears <- c(AllFailedYears, Year)
+
+    if (ExtractResult$AllFailed && StopIfAllFailed) {
       Error        <- TRUE
       ErrorMessage <- sprintf("failed for all simulations in %s", Year)
+      ErrorYear    <- Year
       break
     }
     
@@ -213,6 +222,7 @@
       if (inherits(result, "update_error")) {
         Error        <- TRUE
         ErrorMessage <- sprintf("failed in %s (%s): %s", result$step, Year, result$message)
+        ErrorYear    <- Year
         Proj <- .CaptureLog(Proj,
                           string = sprintf("%s failed: %s", result$step, result$message),
                           name = paste(MPName, 'UpdateError', sep = ' - '),
@@ -240,11 +250,12 @@
 
   list(Proj = Proj, Error = Error, ErrorMessage = ErrorMessage,
        StartTime = StartTime, EndTime = EndTime,
-       StockNames = StockNames, FleetNames = FleetNames)
+       StockNames = StockNames, FleetNames = FleetNames, AllFailedYears = AllFailedYears,
+       ErrorYear = ErrorYear)
 }
 
 .MergeMPResult <- function(MSE, result, MPName, mp, YearsHist, YearsProj, silent = FALSE,
-                           nMP = 1) {
+                           nMP = 1, Store = NULL) {
 
   CheckResult <- .CheckMSERun(result$Proj, MSE, MPName,
                               result$StartTime, result$EndTime,
@@ -261,7 +272,8 @@
                            YearsHist,
                            YearsProj,
                            result$StockNames,
-                           result$FleetNames)
+                           result$FleetNames,
+                           Store = Store)
 
   for (type in c('error', 'warning', 'assumption')) {
     entries <- Proj@Log[[type]]

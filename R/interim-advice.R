@@ -310,8 +310,8 @@
   })
 
   set.seed(seed_val)
-  draws <- stats::qnorm(stats::runif(OM@nSim, 0, pUpper))
-  draws[sim]
+  draws <- stats::qnorm(stats::runif(.GlobalNSim(OM), 0, pUpper))
+  draws[.GlobalSim(OM, sim)]
 }
 
 .LastHistYearIndices <- function(YearsHist, Seasons) {

@@ -65,8 +65,11 @@ Subset <- function(object,
 # Slice specific slots of an S4 object down to a single simulation.
 .SliceSim <- function(object, sim, slots) {
   if (isS4(object) && "OM" %in% slotNames(object) &&
-      "nSim" %in% slotNames(object@OM))
+      "nSim" %in% slotNames(object@OM)) {
     object@OM@nSim <- 1L
+    # the solvers index StockTargeting by the slice's sim (1)
+    object@OM@StockTargeting <- .SubsetSim(object@OM@StockTargeting, sim, keep_sim_name = FALSE)
+  }
   for (s in slots)
     slot(object, s) <- .SubsetSim(slot(object, s), sim, keep_sim_name = FALSE)
   object
@@ -80,7 +83,8 @@ Subset <- function(object,
   idx
 }
 
-.SubsetSim <- function(object, Sims, keep_sim_name = FALSE, debug = FALSE, broadcast = FALSE) {
+.SubsetSim <- function(object, Sims, keep_sim_name = FALSE, debug = FALSE, broadcast = FALSE,
+                       nSim = NULL) {
 
   if (debug)  cli::cli_alert("Class {.val {class(object)}}")
 
@@ -91,7 +95,7 @@ Subset <- function(object,
       if (debug) cli::cli_alert("Slot {.val {s}}")
       val <- slot(object, s)
       if (!is.null(val))
-        slot(object, s) <- Recall(val, Sims, keep_sim_name, debug, broadcast)
+        slot(object, s) <- Recall(val, Sims, keep_sim_name, debug, broadcast, nSim)
     }
 
     if ("nSim" %in% slots)
@@ -110,7 +114,7 @@ Subset <- function(object,
     for (i in seq_len(n)) {
       el <- object[[i]]
       if (!is.null(el))
-        object[[i]] <- Recall(el, Sims, keep_sim_name, debug, broadcast)
+        object[[i]] <- Recall(el, Sims, keep_sim_name, debug, broadcast, nSim)
     }
     return(object)
   }
@@ -141,7 +145,15 @@ Subset <- function(object,
       length(object) > 1 && "Sim" %in% names(object)) {
     return(as.numeric(object[Sims]))
   }
-  
+
+  # per-sim vectors named "1".."nSim" (e.g. Obs@Survey@Efficiency)
+  if (!is.null(nSim) && nSim > 1 && is.numeric(object) && is.null(dim(object)) &&
+      length(object) == nSim && identical(names(object), as.character(seq_len(nSim)))) {
+    object <- object[Sims]
+    names(object) <- if (keep_sim_name) Sims else seq_along(Sims)
+    return(object)
+  }
+
   object
 }
 

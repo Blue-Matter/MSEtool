@@ -202,7 +202,7 @@
     Data@Misc$StockName  <- names(DataList)[i]
     Data@Misc$AdviceYear <- Year
     Data@Misc$Interval   <- Interval
-    Advice <- try(.WithMPSeed(MPfunction(Data=Data), Proj@OM@Seed, sim, Year, nms[i]),
+    Advice <- try(.WithMPSeed(MPfunction(Data=Data), Proj@OM@Seed, .GlobalSim(Proj@OM, sim), Year, nms[i]),
                   silent=TRUE)
     Advice <- .CheckAdvice(Advice, Proj, FleetNames, Areas, sim, name=nms[i])
     Advice <- .LogMPError(Advice, MPName, Data, Sim=sim, Year)
@@ -257,7 +257,7 @@
     Data
   })
 
-  result <- .WithMPSeed(MPfunction(DataList = DataList), Proj@OM@Seed, sim, Year, 'mmp')
+  result <- .WithMPSeed(MPfunction(DataList = DataList), Proj@OM@Seed, .GlobalSim(Proj@OM, sim), Year, "mmp")
 
   is_bare <- is.list(result) && length(result) &&
     all(vapply(result, inherits, logical(1), what = "advice"))
