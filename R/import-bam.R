@@ -7,6 +7,13 @@
 #' discard mortality, recruitment deviations, and stock-recruitment
 #' relationships.
 #'
+#' The numbers-at-age in the first historical year are the equilibrium unfished
+#' numbers-at-age multiplied by `SRR@RecDevInit` (the BAM initial-age
+#' deviations, `log.Nage.dev`) and `Depletion@Misc$InitialAtAge` (the remaining
+#' age-specific depletion, e.g. from initial fishing mortality). The dynamic
+#' unfished conditions start from the equilibrium unfished numbers-at-age
+#' multiplied by `SRR@RecDevInit` only.
+#'
 #' @param Stock Character string matching a stock name available in `bamExtras`
 #'   (e.g., `'Red Snapper'`), or a list of BAM output objects containing
 #'   elements `rdat` and `dat`.
@@ -373,12 +380,20 @@ ListBAMStocks <- function(type=c('rdat', 'dat')) {
   )
   
   N.age <- BAMdata$N.age
-  InitRecDevs <- N.age[1,]/UnfishedEq[1,,1]
+  InitRatio <- N.age[1,]/UnfishedEq[1,,1]
+  InitRecDevs <- .GetBAMInitRecDevs(BAMdata, AgeClasses)
   
-  stock@SRR@RecDevInit <- array(InitRecDevs[2:length(InitRecDevs)],
+  stock@SRR@RecDevInit <- array(InitRecDevs[-1],
                                 dim=c(1, nAgeClasses-1),
                                 dimnames = list(Sim=1,
                                                 Age=AgeClasses[-1]))  
+  
+  InitialAtAge <- InitRatio[-1]/InitRecDevs[-1]
+  if (!all(InitialAtAge == 1))
+    stock@Depletion@Misc$InitialAtAge <- array(InitialAtAge,
+                                               dim=c(1, nAgeClasses-1),
+                                               dimnames = list(Sim=1,
+                                                               Age=AgeClasses[-1]))
   
   # equilibrium recruitment
   SSB0 <- BAMdata$eq.series$SSB.eq[1]
@@ -411,6 +426,18 @@ ListBAMStocks <- function(type=c('rdat', 'dat')) {
   
   stock@SRR@RecDevProj <- NULL # reset so it's populated again in Populate(stock)
   stock
+}
+
+.GetBAMInitRecDevs <- function(BAMdata, AgeClasses) {
+  dev <- rep(1, length(AgeClasses))
+  avec <- BAMdata$parm.avec
+  if (!is.null(avec$age) && !is.null(avec$log.Nage.dev)) {
+    ind <- match(avec$age, AgeClasses)
+    val <- exp(avec$log.Nage.dev)
+    ok <- !is.na(ind) & is.finite(val)
+    dev[ind[ok]] <- val[ok]
+  }
+  dev
 }
 
 .GetBAMDiscardMortality <- function(Stock, Years, RetainFleets, DiscardFleets, OM, DiscMortDF=NULL) {
