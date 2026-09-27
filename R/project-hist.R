@@ -73,13 +73,15 @@
     CheckPackage('furrr')
 
     status <- .MsgStatus("Projecting {nMPs} MPs in parallel", silent)
-    results <- furrr::future_map(
-      seq_along(MPs), \(mp) {
-        .ProjectMPCompute(Proj, MPs[mp], MSE@MPs[[MPs[mp]]], YearsHist, YearsProj,
-                         silent = TRUE, mp = mp, nMP = nMPs)
-      },
+    results <- furrr::future_pmap(
+      list(mp = seq_along(MPs), MPName = MPs, MPfunction = unname(MSE@MPs[MPs])),
+      .ProjectMPTask,
+      Proj      = Proj,
+      YearsHist = YearsHist,
+      YearsProj = YearsProj,
+      silent    = TRUE,
+      nMP       = nMPs,
       .options = furrr::furrr_options(
-        globals  = c('Proj', 'MPs', 'MSE', 'YearsHist', 'YearsProj', 'nMPs'),
         packages = "MSEtool",
         seed     = TRUE
       )

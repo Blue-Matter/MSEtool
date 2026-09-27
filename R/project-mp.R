@@ -42,6 +42,28 @@
   .MergeMPResult(MSE, result, MPName, mp, YearsHist, YearsProj, silent, nMP = nMP)
 }
 
+.ProjectMPTask <- function(mp, MPName, MPfunction, Proj, YearsHist, YearsProj,
+                           silent = TRUE, nMP = 1) {
+  result <- .ProjectMPCompute(Proj, MPName, MPfunction, YearsHist, YearsProj,
+                              silent, mp = mp, nMP = nMP)
+  result$Proj <- .CompactMPProj(result$Proj, YearsProj)
+  result
+}
+
+
+.CompactMPProj <- function(Proj, YearsProj) {
+  for (sl in setdiff(methods::slotNames('timeseries'), 'Misc'))
+    methods::slot(Proj, sl) <- .SubsetYear(methods::slot(Proj, sl), YearsProj)
+  Proj@Misc      <- Proj@Misc[intersect(names(Proj@Misc), c('MPAdvice', 'MPAggBagLimit'))]
+  Proj@OM@Stock  <- NULL
+  Proj@OM@Obs    <- NULL
+  Proj@OM@Imp    <- NULL
+  Proj@OM@Data   <- NULL
+  Proj@Unfished  <- methods::new('unfished')
+  Proj@Reference <- methods::new('reference')
+  Proj
+}
+
 
 .ProjectMPCompute <- function(Proj, MPName, MPfunction, YearsHist, YearsProj,
                               silent = FALSE, mp = 1, nMP = 1) {
