@@ -164,6 +164,25 @@ here. See \code{\link[=Stock]{Stock()}}, \code{\link[=Fleet]{Fleet()}}, \code{\l
 \code{Years} is derived automatically from \code{nYear}, \code{pYear}, \code{CurrentYear}, and
 \code{Seasons} and is read-only. Use \code{\link[=Years]{Years()}} to extract it.
 }
+
+\subsection{Replacing Slots in \code{hist} and \code{mse} Objects}{
+
+Replacement functions called on a \link[=hist-class]{hist} or \link[=mse-class]{mse} object
+modify its embedded \code{OM}, subject to when the slot is used:
+\itemize{
+\item Metadata (\code{Agency}, \code{Author}, \code{Email}, \code{Region}, \code{Latitude},
+\code{Longitude}, \code{Sponsor}, \code{Source}): can be replaced in \link[=om-class]{om},
+\link[=hist-class]{hist}, and \link[=mse-class]{mse} objects.
+\item Settings used in projections (\code{Control}, \code{Interval}, \code{MPStartYear},
+\code{InterimAdvice}, \code{DataLag}, \code{FleetAllocation}, \code{SeasonalAllocation},
+\code{HistoricalWeight}, \code{EffortAllocation}, \code{nReps}, \code{pStar}): can be
+replaced in \link[=om-class]{om} and \link[=hist-class]{hist} objects, and take effect in the
+next \code{\link[=Project]{Project()}}.
+\item All other slots (e.g. \code{Seed}, \code{nYear}, \code{Seasons}, \code{maxF}, \code{Complexes})
+are used to simulate the historical dynamics and can only be replaced
+in \link[=om-class]{om} objects; re-run \code{\link[=Simulate]{Simulate()}} after changing them.
+}
+}
 }
 \examples{
 om <- OM()
