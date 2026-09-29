@@ -507,6 +507,8 @@
                        for (fl in seq_len(min(length(fleet_lst), nFleet))) {
                          arr <- fleet_lst[[fl]]
                          nm  <- paste0(nm_st, "[[", fl, "]]")
+                         if (is.null(arr) && is.null(Hist@OM@Stock[[st]]@Length@MeanAtAge))
+                           next
                          if (is.null(arr) || !is.numeric(arr)) {
                            add_err(nm, ": must be a numeric array"); next
                          }

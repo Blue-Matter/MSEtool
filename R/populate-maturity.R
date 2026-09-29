@@ -123,6 +123,7 @@ PopulateMaturity <- function(Maturity,
     Maturity <- .MeanAtAge2MeanAtLength(Maturity, Length)
 
   .CheckPopulated(Maturity@MeanAtAge, "Maturity")
+  Maturity <- .AddAtAgeDimnames(Maturity, Ages, Years)
 
   # Semelparous
   if (inherits(Maturity@Semelparous, "array")) {
@@ -135,8 +136,6 @@ PopulateMaturity <- function(Maturity,
       Maturity@Semelparous[] <- 0
     }
   }
-  
-  Maturity <- .AddAtAgeDimnames(Maturity, Ages, Years)
   
   if (is.null(dimnames(Maturity@Semelparous))) {
     dd <- dim(Maturity@Semelparous)

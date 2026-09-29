@@ -175,6 +175,67 @@ HockeyStick_RelRec <- function(Pars, SPR) {
 
 
 
+# ---- Alpha-Beta ----
+
+#' Convert Between Steepness and Alpha-Beta SRR Parameters
+#'
+#' Converts `BevertonHolt` and `Ricker` stock-recruitment parameters between
+#' the steepness parameterisation (steepness and `R0`) and the alpha-beta
+#' parameterisation, given the unfished spawning production per recruit
+#' `phi0`.
+#'
+#' @param alpha Recruits per unit of spawning production at low spawning
+#'   production (slope at the origin).
+#' @param beta Density-dependence parameter, in units of 1/spawning production.
+#' @param h Steepness: `h` for `BevertonHolt`, `hR` for `Ricker`.
+#' @param R0 Unfished equilibrium recruitment.
+#' @param phi0 Unfished spawning production per recruit, e.g., from [CalcSPR0()].
+#' @param Model `"BevertonHolt"` or `"Ricker"`.
+#'
+#' @details
+#' Beverton-Holt: \eqn{R = \alpha S / (1 + \beta S)}, with
+#' \eqn{h = \alpha\phi_0 / (4 + \alpha\phi_0)} and
+#' \eqn{R_0 = (\alpha\phi_0 - 1) / (\beta\phi_0)}.
+#'
+#' Ricker: \eqn{R = \alpha S e^{-\beta S}}, with
+#' \eqn{h_R = (\alpha\phi_0)^{0.8} / 5} and
+#' \eqn{R_0 = \log(\alpha\phi_0) / (\beta\phi_0)}.
+#'
+#' Both require \eqn{\alpha\phi_0 > 1}; otherwise the stock cannot persist
+#' in the absence of fishing.
+#'
+#' Arguments are vectorised and recycled.
+#'
+#' @return
+#' `SRRSteepness()`: a named list with elements `h` (`hR` for `Ricker`) and `R0`.
+#'
+#' `SRRAlphaBeta()`: a named list with elements `alpha` and `beta`.
+#'
+#' @example man-examples/srr-alpha-beta.R
+#' @seealso [SRR()], [SRRModels()], [CalcSPR0()]
+#' @export
+SRRSteepness <- function(alpha, beta, phi0, Model = c("BevertonHolt", "Ricker")) {
+  Model <- match.arg(Model)
+  CR <- alpha * phi0
+  if (any(!is.finite(CR) | CR <= 1) || any(!is.finite(beta) | beta <= 0))
+    cli::cli_abort(c("x" = "{.arg alpha} * {.arg phi0} must be > 1 and {.arg beta} must be > 0.",
+                     "i" = "Range of {.arg alpha} * {.arg phi0}: {.val {signif(range(CR), 3)}}"))
+  if (Model == "BevertonHolt")
+    return(list(h = CR / (4 + CR), R0 = (CR - 1) / (beta * phi0)))
+  list(hR = CR^0.8 / 5, R0 = log(CR) / (beta * phi0))
+}
+
+#' @rdname SRRSteepness
+#' @export
+SRRAlphaBeta <- function(h, R0, phi0, Model = c("BevertonHolt", "Ricker")) {
+  Model <- match.arg(Model)
+  if (Model == "BevertonHolt")
+    return(list(alpha = 4 * h / ((1 - h) * phi0),
+                beta  = (5 * h - 1) / ((1 - h) * phi0 * R0)))
+  CR <- (5 * h)^1.25
+  list(alpha = CR / phi0, beta = log(CR) / (phi0 * R0))
+}
+
 #' @rdname SRRModels
 #' @param full Logical. Provide a complete table (TRUE) or just the model names (FALSE)?
 #' @param print Logical. Print out the results (TRUE) or just return the data.frame (FALSE)?

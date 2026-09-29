@@ -75,35 +75,8 @@ PopulateFecundity <- function(Fecundity,
   argList <- list(Ages, Length, Weight, Maturity, nSim, Years, CalcAtLength, seed)
   
   if (EmptyObject(Fecundity)) {
-    .CheckRequiredObject(Ages, "ages", "Ages")
-    .CheckRequiredObject(Weight, "weight", "Weight")
-    .CheckRequiredObject(Length, "length", "Length")
-    .CheckRequiredObject(Maturity, "maturity", "Maturity")
-    
-    Weight <- PopulateWeight(Weight,
-                             Ages = Ages,
-                             Length = Length,
-                             Years = Years,
-                             nSim = nSim,
-                             seed = seed,
-                             AWK = FALSE
-    )
-    
-    Maturity <- PopulateMaturity(
-      Maturity,
-      Ages = Ages,
-      Length = Length,
-      Weight = Weight,
-      Years = Years,
-      nSim = nSim,
-      seed = seed
-    )
-    
-    Fecundity@MeanAtAge <- ArrayMultiply(
-      array1 = Weight@MeanAtAge,
-      array2 = Maturity@MeanAtAge
-    )
-    
+    Fecundity@MeanAtAge <- .FecundityFromWeightMaturity(Ages, Length, Weight, Maturity,
+                                                        Years, nSim, seed)
     return(.SetDigest(Fecundity, argList))
   }
   
@@ -117,35 +90,8 @@ PopulateFecundity <- function(Fecundity,
   
   if (is.null(Fecundity@Model) | all(is.na(Fecundity@Pars))) {
     if (is.null(Fecundity@MeanAtAge)) {
-      .CheckRequiredObject(Ages, "ages", "Ages")
-      .CheckRequiredObject(Weight, "weight", "Weight")
-      .CheckRequiredObject(Length, "length", "Length")
-      .CheckRequiredObject(Maturity, "maturity", "Maturity")
-      
-      Weight <- PopulateWeight(Weight,
-                               Ages,
-                               Length,
-                               Years,
-                               nSim,
-                               seed,
-                               AWK = FALSE
-      )
-      
-      Maturity <- PopulateMaturity(
-        Maturity,
-        Ages,
-        Length,
-        Weight,
-        Years,
-        nSim,
-        seed
-      )
-      
-      Fecundity@MeanAtAge <- ArrayMultiply(
-        array1 = Weight@MeanAtAge,
-        array2 = Maturity@MeanAtAge
-      )
-      
+      Fecundity@MeanAtAge <- .FecundityFromWeightMaturity(Ages, Length, Weight, Maturity,
+                                                          Years, nSim, seed)
       return(.SetDigest(Fecundity, argList))
     }
   }
@@ -182,4 +128,18 @@ PopulateFecundity <- function(Fecundity,
   Fecundity <- .AddAtLengthDimnames(Fecundity, Years, 'Fecundity')
   
   .SetDigest(.SetAgeDimnames(Fecundity, Ages), argList)
+}
+
+.FecundityFromWeightMaturity <- function(Ages, Length, Weight, Maturity, Years, nSim, seed) {
+  .CheckRequiredObject(Ages, "ages", "Ages")
+  .CheckRequiredObject(Weight, "weight", "Weight")
+  .CheckRequiredObject(Maturity, "maturity", "Maturity")
+  CalcAtLength <- !is.null(Length) && !EmptyObject(Length)
+
+  Weight <- PopulateWeight(Weight, Ages = Ages, Length = Length, Years = Years,
+                           nSim = nSim, AWK = FALSE, CalcAtLength = CalcAtLength,
+                           seed = seed)
+  Maturity <- PopulateMaturity(Maturity, Ages = Ages, Length = Length, Weight = Weight,
+                               Years = Years, nSim = nSim, seed = seed)
+  ArrayMultiply(array1 = Weight@MeanAtAge, array2 = Maturity@MeanAtAge)
 }

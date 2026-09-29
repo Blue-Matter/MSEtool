@@ -236,8 +236,8 @@
   Hist@Misc$SelSizeList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
     purrr::map(FleetList, \(fleet) {
       if (!is.null(  fleet@Selectivity@MeanAtLength))
-      return(fleet@Selectivity@MeanAtLength) # Sim, Age, Year, Area
-      fleet@Selectivity@MeanAtWeight
+      return(.SizeArrayOrNull(fleet@Selectivity@MeanAtLength)) # Sim, Age, Year, Area
+      .SizeArrayOrNull(fleet@Selectivity@MeanAtWeight)
     })
   })
   
@@ -250,8 +250,8 @@
   Hist@Misc$RetSizeList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
     purrr::map(FleetList, \(fleet) {
       if (!is.null(  fleet@Retention@MeanAtLength))
-        return(fleet@Retention@MeanAtLength) # Sim, Age, Year, Area
-      fleet@Retention@MeanAtWeight
+        return(.SizeArrayOrNull(fleet@Retention@MeanAtLength)) # Sim, Age, Year, Area
+      .SizeArrayOrNull(fleet@Retention@MeanAtWeight)
     })
   })
   
@@ -263,7 +263,7 @@
   
   Hist@Misc$DiscMortSizeList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
     purrr::map(FleetList, \(fleet) {
-      fleet@DiscardMortality@MeanAtLength  # Sim, Class, Year, Area
+      .SizeArrayOrNull(fleet@DiscardMortality@MeanAtLength)  # Sim, Class, Year, Area
     })
   })
   
@@ -318,4 +318,10 @@
       Hist@Misc[[nm]] <- saved[[nm]]
   }
   Hist
+}
+
+# stocks without Length have no size classes
+.SizeArrayOrNull <- function(x) {
+  if (is.null(x) || !length(x)) return(NULL)
+  x
 }

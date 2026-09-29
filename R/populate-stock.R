@@ -71,6 +71,7 @@ PopulateStock <- function(Stock,
                           CalcAtLength = TRUE) {
   
   if (is.null(seed))  seed <- 102
+  CalcAtLength <- CalcAtLength && !EmptyObject(Stock@Length)
   
   argList <- list(seed, ALK, AWK, nYear, pYear, CurrentYear, nSim)
   
@@ -172,6 +173,8 @@ PopulateStock <- function(Stock,
     CalcAtLength = CalcAtLength
   ), "Fecundity", nm)
   .RequireArray(Stock@Fecundity, "MeanAtAge", "Fecundity", nm, optional = TRUE)
+
+  Stock <- .ConvertAlphaBetaSRR(Stock, nSim = nSim, Years = Years, seed = seed + 6, nm = nm)
 
   Stock@SRR <- .SafePopulate(\() PopulateSRR(
     SRR = Stock@SRR,

@@ -45,7 +45,8 @@
                                                      nSim = nSim, 
                                                      AgeClasses = AgeClasses,
                                                      Years = Years,
-                                                     Areas = Areas)
+                                                     Areas = Areas,
+                                                     backfill = TRUE)
           
         }
           
@@ -70,7 +71,8 @@
                                                nSim = nSim, 
                                                AgeClasses = AgeClasses,
                                                Years = Years,
-                                               Areas = Areas)
+                                               Areas = Areas,
+                                               backfill = sl %in% c("NaturalMortality", "Maturity", "Fecundity"))
       }
     }
     
@@ -83,6 +85,9 @@
                                      AgeClasses = AgeClasses,
                                      Years = Years,
                                      Areas = Areas)
+      for (sl in c("WeightFleetRetained", "WeightFleetSelected"))
+        slot(OM@Fleet[[st]][[fl]], sl) <- Extend(slot(OM@Fleet[[st]][[fl]], sl),
+                                                 Years = Years, backfill = TRUE)
       if (show) 
         cli::cli_progress_update(id=id)
       

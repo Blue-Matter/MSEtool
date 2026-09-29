@@ -87,7 +87,8 @@ PopulateOM <- function(OM,
     .ProcessData() |>
     .PopulateObsList(silent = silent) |>
     .UpdateSPFrom() |>
-    .ValidateSPFrom() 
+    .ValidateSPFrom() |>
+    .CheckAlphaBetaSRR()
 
   .CheckOMReady(OM)
 

@@ -11,6 +11,15 @@
 #'   - `BevertonHolt`: `list(h = ...)` where `0.2 < h < 1`.
 #'   - `Ricker`: `list(hR = ...)`.
 #'   - `HockeyStick`: `list(Shinge = ...)` where `0 < Shinge <= 1`.
+#'   `BevertonHolt` and `Ricker` also accept `list(alpha = ..., beta = ...)`
+#'   (see [SRRSteepness()]), in which case `R0` must be `NULL`. During
+#'   [Populate()] these are converted to steepness and `R0` using the
+#'   first-year unfished spawning production per recruit, and the supplied
+#'   values are kept in `Misc$AlphaBeta`. `alpha` is recruits per unit of
+#'   spawning production and `beta` is in units of 1/spawning production, on
+#'   the scale set by `Units`. Not available for seasonal stocks, stocks in a
+#'   [Herm()] complex, or stocks that recruit from another stock's spawning
+#'   production (`SPFrom`).
 #'   When `Pars` is a non-list S4 object with an `SRR` slot (e.g., a
 #'   [stock-class]), `SRR()` acts as a pass-through accessor and returns that
 #'   slot. See [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html)
@@ -28,7 +37,8 @@
 #'   - A `Sim x Year` array: deliberately time-varying, e.g. to model a
 #'     regime shift in carrying capacity. See [srr-class] for how this
 #'     differs from a constant `R0`.
-#'   Interpreted in units of `Units`. Default `NULL`.
+#'   Interpreted in units of `Units`. Must be `NULL` when `Pars` contains
+#'   `alpha` and `beta`. Default `NULL`.
 #' @param SD `numeric` or `NULL`. Log-space standard deviation of recruitment
 #'   deviations. Follows the same length conventions as `R0`. Currently fixed
 #'   across years (time-varying `SD` is not yet supported). When `NULL`,

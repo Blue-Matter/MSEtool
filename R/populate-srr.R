@@ -212,3 +212,78 @@ PopulateSRR <- function(SRR,
   }
   SRR
 }
+
+
+.HasAlphaBeta <- function(SRR) {
+  all(c("alpha", "beta") %in% names(SRR@Pars))
+}
+
+# Replaces alpha/beta in SRR@Pars with steepness and R0 using first-year phi0,
+# matching the phi0 reference used for recruitment in .PrepHistMisc()
+.ConvertAlphaBetaSRR <- function(Stock, nSim, Years, seed = NULL, nm = NULL) {
+  SRR <- Stock@SRR
+  if (!.HasAlphaBeta(SRR))
+    return(Stock)
+
+  Model <- SRR@Model
+  if (!is.character(Model) || !Model %in% c("BevertonHolt", "Ricker"))
+    cli::cli_abort(c("x" = "{nm}: {.var alpha}/{.var beta} {.var SRR@Pars} require {.var Model} to be {.val BevertonHolt} or {.val Ricker}.",
+                     "i" = "Currently: {.val {format(Model)}}"), call = NULL)
+  if (!is.null(SRR@R0))
+    cli::cli_abort(c("x" = "{nm}: {.var SRR@R0} must be {.val NULL} when {.var SRR@Pars} contains {.var alpha} and {.var beta}.",
+                     "i" = "{.var R0} is calculated from {.var alpha}, {.var beta}, and unfished spawning production per recruit."),
+                   call = NULL)
+  if (Stock@Seasons > 1)
+    cli::cli_abort("{nm}: {.var alpha}/{.var beta} {.var SRR@Pars} are not supported for seasonal stocks.", call = NULL)
+
+  .SetSeed(seed)
+  AB <- .StructurePars(Pars = SRR@Pars[c("alpha", "beta")], nSim, Years) |>
+    purrr::map(\(x) ExtendSims(x, nSim) |> ExtendYears(Years = Years) |> .ArraySubsetYear(Years))
+
+  Yr1  <- min(Years)
+  Surv <- .CalcUnfishedSurvivalStock(Stock, SP = TRUE, Years = Yr1)
+  Fec  <- Extend(Stock@Fecundity@MeanAtAge, nSim = nSim, Years = Yr1, backfill = TRUE) |>
+    .ArraySubsetYear(Yr1)
+  phi0 <- apply(ArrayMultiply(Surv, Fec), "Sim", sum) |> rep_len(nSim)
+  if (any(!is.finite(phi0) | phi0 <= 0))
+    cli::cli_abort("{nm}: unfished spawning production per recruit must be > 0 to convert {.var alpha}/{.var beta}.",
+                   call = NULL)
+
+  Conv <- tryCatch(SRRSteepness(AB$alpha, AB$beta, phi0 = phi0, Model = Model),
+                   error = \(e) cli::cli_abort("{nm}: invalid {.var alpha}/{.var beta}.", parent = e, call = NULL))
+
+  # R0 at the recruitment year corresponds to alpha/beta at the spawning year
+  lag <- if (!is.null(SRR@SpawnLag)) as.integer(round(SRR@SpawnLag)) else
+    as.integer(round(min(Stock@Ages@Classes)))
+  R0 <- AB$alpha
+  R0[] <- Conv$R0
+  nYear <- length(Years)
+  R0[] <- R0[, pmax(seq_len(nYear) - lag, 1L), drop = FALSE]
+
+  hPar <- AB$alpha
+  hPar[] <- Conv[[1]]
+
+  SRR@Misc$AlphaBeta <- c(AB, list(phi0 = phi0))
+  SRR@Pars <- c(stats::setNames(list(hPar), names(Conv)[1]),
+                SRR@Pars[!names(SRR@Pars) %in% c("alpha", "beta")])
+  SRR@R0 <- R0 |> ReduceDims()
+  Stock@SRR <- SRR
+  Stock
+}
+
+.CheckAlphaBetaSRR <- function(OM) {
+  StockNames <- StockNames(OM)
+  for (st in seq_along(OM@Stock)) {
+    SRR <- OM@Stock[[st]]@SRR
+    if (is.null(SRR@Misc$AlphaBeta)) next
+    nm <- StockNames[st]
+    if (length(OM@Herm))
+      cli::cli_abort("Stock {.val {nm}}: {.var alpha}/{.var beta} {.var SRR@Pars} are not supported in an OM with {.var Herm}.",
+                     call = NULL)
+    from <- .ResolveSPFromWeights(SRR@SPFrom, StockNames, st)$from
+    if (!identical(as.integer(from), as.integer(st)))
+      cli::cli_abort("Stock {.val {nm}}: {.var alpha}/{.var beta} {.var SRR@Pars} are not supported when {.var SPFrom} is another stock.",
+                     call = NULL)
+  }
+  OM
+}
