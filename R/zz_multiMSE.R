@@ -22,7 +22,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     .sapply <- pbapply::pbsapply
     
     # Argument to pass parallel cluster (if running)
-    formals(.lapply)$cl <- formals(.sapply)$cl <- substitute(if (.sfIsRunning()) snowfall::sfGetCluster() else NULL)
+    formals(.lapply)$cl <- formals(.sapply)$cl <- substitute(if (requireNamespace('snowfall', quietly = TRUE) && snowfall::sfIsRunning()) snowfall::sfGetCluster() else NULL)
   } else if (.sfIsRunning()) {
     .lapply <- snowfall::sfLapply
     .sapply <- snowfall::sfSapply
