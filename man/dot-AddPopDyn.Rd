@@ -13,28 +13,25 @@
 
 \item{sim}{Integer. Current simulation index.}
 
-\item{Year}{Integer or \code{NULL}. Current projection year. Used to gate
-one-time warnings.}
+\item{Year}{Numeric or \code{NULL}. Current projection time step. \code{NULL} for
+historical data (no trimming).}
 
-\item{Years}{Integer vector or \code{NULL}. All projection years. Used to gate
-one-time warnings.}
+\item{Years}{Numeric vector or \code{NULL}. All projection time steps. Used to
+gate one-time warnings.}
 
-\item{mp}{Integer. Current MP index. Used to gate one-time warnings.
-Default is \code{1}.}
+\item{mp}{Integer. Current MP index. Not currently used.}
 
-\item{DataOM}{\code{TRUE}, a named list of \code{hist} slot names, or \code{NULL} -
-already resolved for the current MP via \code{.ResolveDataOM()}.}
+\item{DataOM}{\code{NULL}, \code{TRUE}, or a character vector of \code{hist} slot names,
+as returned by \code{.ResolveDataOM()}.}
 }
 \value{
-The \code{Data} object, with \code{Data@Misc$DataOM} populated if \code{DataOM}
-is set, otherwise unchanged.
+The \code{Data} object, with \code{Data@Misc$DataOM} set to a \link[=hist-class]{hist}
+object, or removed if \code{DataOM} is \code{NULL}.
 }
 \description{
-Optionally populates \code{Data@Misc$DataOM} with historical population dynamics
-from a \code{\link[=Hist]{Hist()}} object, controlled by \code{DataOM}.
-Supports adding all slots (\code{TRUE}), a named subset
-of slots (named list), or nothing (\code{NULL} or unrecognised value). Warnings
-for invalid configuration are shown once only, on the first simulation,
-year, and MP.
+Populates \code{Data@Misc$DataOM} with the requested slots of \code{Hist} for
+simulation \code{sim}. During projections (\code{Year} supplied), time-series slots
+are trimmed to time steps before \code{Year}. Invalid slot names are ignored
+(they are reported by \code{.CheckDataOM()}).
 }
 \keyword{internal}

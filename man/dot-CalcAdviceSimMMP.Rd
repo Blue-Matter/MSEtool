@@ -39,9 +39,9 @@ Each \code{Data} object passed to the MP has \code{Data@Misc$MPName},
 \code{Data@Misc$StockName}, \code{Data@Misc$AdviceYear} (the time step the advice
 is first applied in) and \code{Data@Misc$Interval} set.
 
-If \code{Proj@OM@Control$DataOM} is \code{TRUE} or a named list, population dynamics
-information from the \code{Proj} will be included in \code{Data@Misc}
-for each simulation.}
+\code{Data@Misc$DataOM} is populated with the \code{hist} slots resolved for the
+MP from \code{OM@Control$DataOM} and the MP's \code{DataOM} attribute; see
+\link{OMControl}.}
 }
 \value{
 A list with elements \code{AdviceList} (a named list of \code{Advice}

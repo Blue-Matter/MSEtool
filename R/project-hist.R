@@ -37,6 +37,8 @@
   .CheckClass(Hist, 'hist', 'Hist')
   MPList <- .ResolveMPs(MPs)
   MPs    <- names(MPList)
+  if (!silent)
+    .CheckDataOM(Hist@OM@Control$DataOM, MPList)
   
   YearsHist <- Years(Hist@OM, "Historical")
   YearsProj <- Years(Hist@OM, "Projection")

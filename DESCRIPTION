@@ -209,6 +209,7 @@ Collate:
     'zz_MOM_object.r'
     'convert.R'
     'data-trim.R'
+    'doc-om-control.R'
     'example-MPs.R'
     'example-fleet.R'
     'example-imp.R'

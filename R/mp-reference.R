@@ -29,6 +29,12 @@
 #' If reference points are not available for an `OM`  each reference MP returns
 #' empty advice and a single warning is issued the first time it is called.
 #'
+#' The `refFMSY*` and `refMSY*` MPs read reference points from
+#' `Data@Misc$DataOM@Reference`, requested by their
+#' `attr(MP, 'DataOM') <- list(Reference = TRUE)`. A custom MP that calls one
+#' of them needs `Reference` as well, via its own `DataOM` attribute or
+#' `OM@Control$DataOM`; see [OMControl].
+#'
 #' In spatial `OM`s, fleet targeting means the realised F from `refFMSY*`
 #' may differ from the specified fraction of `FMSY`, because the `FMSY`
 #' calculation does not account for spatial structure.

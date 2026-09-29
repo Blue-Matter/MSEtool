@@ -67,6 +67,12 @@ projection; i.e., they are not recalculated per projection year.
 If reference points are not available for an \code{OM}  each reference MP returns
 empty advice and a single warning is issued the first time it is called.
 
+The \verb{refFMSY*} and \verb{refMSY*} MPs read reference points from
+\code{Data@Misc$DataOM@Reference}, requested by their
+\code{attr(MP, 'DataOM') <- list(Reference = TRUE)}. A custom MP that calls one
+of them needs \code{Reference} as well, via its own \code{DataOM} attribute or
+\code{OM@Control$DataOM}; see \link{OMControl}.
+
 In spatial \code{OM}s, fleet targeting means the realised F from \verb{refFMSY*}
 may differ from the specified fraction of \code{FMSY}, because the \code{FMSY}
 calculation does not account for spatial structure.

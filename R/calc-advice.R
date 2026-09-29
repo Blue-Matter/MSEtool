@@ -171,10 +171,10 @@
 #' `Data@@Misc$StockName`, `Data@@Misc$AdviceYear` (the time step the advice
 #' is first applied in) and `Data@@Misc$Interval` set.
 #'
-#' If `Proj@OM@Control$DataOM` is `TRUE` or a named list, population dynamics
-#' information from the `Proj` will be included in `Data@Misc` 
-#' for each simulation.
-#' 
+#' `Data@@Misc$DataOM` is populated with the `hist` slots resolved for the
+#' MP from `OM@@Control$DataOM` and the MP's `DataOM` attribute; see
+#' [OMControl].
+#'
 #' @return A named list of `Advice` objects for each stock/complex.
 #'
 #' @keywords internal
@@ -295,64 +295,70 @@
 
 #' Add Population Dynamics Data to a Data Object
 #'
-#' Optionally populates `Data@Misc$DataOM` with historical population dynamics
-#' from a [Hist()] object, controlled by `DataOM`. 
-#' Supports adding all slots (`TRUE`), a named subset
-#' of slots (named list), or nothing (`NULL` or unrecognised value). Warnings
-#' for invalid configuration are shown once only, on the first simulation,
-#' year, and MP.
+#' Populates `Data@Misc$DataOM` with the requested slots of `Hist` for
+#' simulation `sim`. During projections (`Year` supplied), time-series slots
+#' are trimmed to time steps before `Year`. Invalid slot names are ignored
+#' (they are reported by `.CheckDataOM()`).
 #'
 #' @param Data A `Data` S4 object.
 #' @param Hist A [Hist()] object containing population dynamics.
 #' @param sim Integer. Current simulation index.
-#' @param Year Integer or `NULL`. Current projection year. Used to gate
-#'   one-time warnings.
-#' @param Years Integer vector or `NULL`. All projection years. Used to gate
-#'   one-time warnings.
-#' @param mp Integer. Current MP index. Used to gate one-time warnings.
-#'   Default is `1`.
-#' @param DataOM `TRUE`, a named list of `hist` slot names, or `NULL` -
-#'   already resolved for the current MP via `.ResolveDataOM()`.
+#' @param Year Numeric or `NULL`. Current projection time step. `NULL` for
+#'   historical data (no trimming).
+#' @param Years Numeric vector or `NULL`. All projection time steps. Used to
+#'   gate one-time warnings.
+#' @param mp Integer. Current MP index. Not currently used.
+#' @param DataOM `NULL`, `TRUE`, or a character vector of `hist` slot names,
+#'   as returned by `.ResolveDataOM()`.
 #'
-#' @return The `Data` object, with `Data@Misc$DataOM` populated if `DataOM`
-#'   is set, otherwise unchanged.
+#' @return The `Data` object, with `Data@Misc$DataOM` set to a [hist-class]
+#'   object, or removed if `DataOM` is `NULL`.
 #' @keywords internal
 .AddPopDyn <- function(Data, Hist, sim, Year=NULL, Years=NULL, mp=1, DataOM=NULL) {
 
-  if (!length(DataOM))
+  if (!length(DataOM)) {
+    Data@Misc$DataOM <- NULL
     return(Data)
-
-  Hist@Data <- list()
-
-  warn_once <- !is.null(Year) && sim == 1 && Year == min(Years) && mp == 1
-  warn_once_mp <- !is.null(Year) && sim == 1 && Year == min(Years)
-
-  if (isTRUE(DataOM)) {
-    # Add all slots
-    Data@Misc$DataOM <- .SubsetSim(Hist, sim)
-
-  } else if (is.list(DataOM)) {
-    # Add named subset of slots
-    nms <- names(DataOM)
-    Data@Misc$DataOM <- new('hist')
-
-    for (nm in nms) {
-      if (!nm %in% slotNames('hist')) {
-        if (warn_once)
-          cli::cli_alert_warning("{.val {nm}} is not a valid slot name for `Hist`. Ignoring.")
-      } else if (nm == 'Reference' && !.RefPointsAvailable(Hist@Reference)) {
-        if (warn_once_mp)
-          cli::cli_alert_warning(
-            "MSY reference points ({.field Hist@Reference@MSY@FMSY}) are not available for this OM. Skipping reference MP(s) that require them."
-          )
-      } else {
-        slot(Data@Misc$DataOM, nm) <- slot(Hist, nm) |> .SubsetSim(Sims=sim)
-      }
-    }
-
   }
 
+  Slots <- if (isTRUE(DataOM)) .DataOMSlots() else intersect(DataOM, .DataOMSlots())
+
+  if (!isTRUE(DataOM) && 'Reference' %in% Slots && !.RefPointsAvailable(Hist@Reference)) {
+    if (!is.null(Year) && sim == 1 && Year == min(Years))
+      cli::cli_alert_warning(
+        "MSY reference points ({.field Hist@Reference@MSY@FMSY}) are not available for this OM. Skipping reference MP(s) that require them."
+      )
+    Slots <- setdiff(Slots, 'Reference')
+  }
+
+  TimeSeries <- setdiff(methods::slotNames('timeseries'), 'Misc')
+  PopDyn <- new('hist')
+  for (nm in Slots) {
+    val <- .SubsetSim(slot(Hist, nm), Sims = sim)
+    if (!is.null(Year) && nm %in% TimeSeries)
+      val <- .DropYearsFrom(val, Year)
+    slot(PopDyn, nm) <- val
+  }
+
+  Data@Misc$DataOM <- PopDyn
   Data
+}
+
+# Drop time steps >= `Year` from every array with a `Year` dimension
+.DropYearsFrom <- function(object, Year) {
+  if (is.list(object)) {
+    object[] <- lapply(object, .DropYearsFrom, Year = Year)
+    return(object)
+  }
+  if (!is.array(object))
+    return(object)
+  TSind <- match("Year", names(dimnames(object)))
+  if (is.na(TSind))
+    return(object)
+  idx <- as.numeric(dimnames(object)[[TSind]]) < Year
+  if (all(idx) || !any(idx))
+    return(object)
+  do.call(`[`, c(list(object), .MakeDimIndex(idx, object, TSind), list(drop = FALSE)))
 }
 
 .RefPointsAvailable <- function(Reference) {

@@ -104,8 +104,8 @@
 #'   and survive. Default `3`.
 #' @param Seed Integer. Random number generator seed for reproducibility.
 #'   Default `101`.
-#' @param Control Named list of internal operating model control settings.
-#'   Default `list()`.
+#' @param Control Named list of optional operating model control settings.
+#'   Default `list()`. See [OMControl] for the available settings.
 #' @param Misc List. Miscellaneous objects or developer-use components.
 #'   Default `list()`.
 #' @param Source Character. References to data sources or documentation.
@@ -1058,7 +1058,13 @@ Control <- function(x) .IsHist(x, "Control")
 
 #' @rdname OM-accessors
 #' @export
-`Control<-` <- function(x, value) .AssignSlot(x, value, "Control")
+`Control<-` <- function(x, value) {
+  if (inherits(x, "hist")) {
+    x@OM <- .AssignSlot(x@OM, value, "Control")
+    return(x)
+  }
+  .AssignSlot(x, value, "Control")
+}
 
 
 .IsHist <- function(x, slot_name) {

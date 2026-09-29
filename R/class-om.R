@@ -138,7 +138,7 @@
 #'   See [OM()].
 #' @slot Seed Integer. Random number generator seed. See [OM()].
 #'
-#' @slot Control Named list of operating model control settings. See [OM()].
+#' @slot Control Named list of operating model control settings. See [OMControl].
 #' @slot Misc List. Miscellaneous objects or developer-use components.
 #' @slot Log `list`. Internal named list storing diagnostics, warnings, and
 #'   assumptions recorded during processing. See [Log()]. Not intended for

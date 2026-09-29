@@ -236,7 +236,7 @@
       Data@YearLH <- floor(Data@Years[length(Data@Years)])
     
     # Add Pop Dyn if specified
-    Data <- .AddPopDyn(Data, Hist, sim, DataOM = Hist@OM@Control$DataOM)
+    Data <- .AddPopDyn(Data, Hist, sim, DataOM = .ResolveDataOM(Hist@OM@Control$DataOM))
     
     DataList[[i]] <- Data
   }

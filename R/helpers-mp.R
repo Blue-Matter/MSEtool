@@ -41,13 +41,95 @@
   unname(OMInterval[[1]])
 }
 
-.ResolveDataOM <- function(OMControlDataOM, MPName, MPfunction) {
-  nms <- names(OMControlDataOM)
+#' Resolve the `Hist` Slots Passed to an MP via `Data@Misc$DataOM`
+#'
+#' Combines `OM@Control$DataOM` with the MP's `DataOM` attribute. A
+#' per-MP entry in `OM@Control$DataOM` (named by `MPName`) is used on its
+#' own; otherwise the OM-wide default is unioned with the MP attribute.
+#' With `MPName = NULL`, only the OM-wide default is returned. See
+#' [OMControl].
+#'
+#' @param OMControlDataOM Value of `OM@Control$DataOM`.
+#' @param MPName Character MP name, or `NULL`.
+#' @param MPfunction MP function, or `NULL`.
+#'
+#' @return `NULL` (nothing), `TRUE` (all slots), or a character vector of
+#'   `hist` slot names.
+#' @keywords internal
+.ResolveDataOM <- function(OMControlDataOM, MPName = NULL, MPfunction = NULL) {
+  Split <- .SplitDataOM(OMControlDataOM)
 
-  if (!is.null(nms) && MPName %in% nms)
-    return(OMControlDataOM[[MPName]])
+  if (!is.null(MPName) && MPName %in% names(Split$PerMP))
+    return(.NormaliseDataOM(Split$PerMP[[MPName]]))
 
-  attr(MPfunction, 'DataOM')
+  .UnionDataOM(.NormaliseDataOM(Split$Default),
+               .NormaliseDataOM(attr(MPfunction, 'DataOM')))
+}
+
+.DataOMSlots <- function() setdiff(methods::slotNames('hist'), 'Data')
+
+# Separate OM-wide (hist slot names) from per-MP (any other name) entries
+.SplitDataOM <- function(x) {
+  if (!is.list(x) && (is.null(names(x)) || is.character(x)))
+    return(list(Default = x, PerMP = list()))
+
+  nms <- names(x)
+  if (is.null(nms) || any(!nzchar(nms)))
+    cli::cli_abort(c("All elements of {.code OM@Control$DataOM} must be named when it is a list.",
+                     "i" = "See {.topic MSEtool::OMControl}."), call = NULL)
+
+  x      <- as.list(x)
+  IsSlot <- nms %in% methods::slotNames('hist')
+  list(Default = if (any(IsSlot)) x[IsSlot] else NULL,
+       PerMP   = x[!IsSlot])
+}
+
+.NormaliseDataOM <- function(x) {
+  if (!length(x) || isFALSE(x))
+    return(NULL)
+  if (isTRUE(x) && is.null(names(x)))
+    return(TRUE)
+  if (is.character(x))
+    return(unique(x))
+  if ((is.list(x) || is.logical(x)) && !is.null(names(x))) {
+    Keep <- vapply(x, isTRUE, logical(1))
+    return(if (any(Keep)) names(x)[Keep] else NULL)
+  }
+  cli::cli_abort(c("Invalid {.code DataOM} value.",
+                   "i" = "Use {.code TRUE}, a character vector of {.cls hist} slot names, or a named logical list. See {.topic MSEtool::OMControl}."),
+                 call = NULL)
+}
+
+.UnionDataOM <- function(a, b) {
+  if (isTRUE(a) || isTRUE(b))
+    return(TRUE)
+  out <- unique(c(a, b))
+  if (length(out)) out else NULL
+}
+
+# Warn about DataOM names that are neither hist slots nor (if known) MP names
+.CheckDataOM <- function(OMControlDataOM, MPList = NULL) {
+  Split  <- .SplitDataOM(OMControlDataOM)
+  Values <- c(list(Split$Default), Split$PerMP)
+
+  if (!is.null(MPList)) {
+    BadMP <- setdiff(names(Split$PerMP), names(MPList))
+    if (length(BadMP))
+      cli::cli_alert_warning(
+        "{.code OM@Control$DataOM} entr{?y/ies} {.val {BadMP}} {?is/are} neither a {.cls hist} slot nor an MP being projected. Ignoring."
+      )
+    Values <- c(Values, lapply(MPList, attr, 'DataOM'))
+  }
+
+  BadSlots <- unique(unlist(lapply(Values, \(v) {
+    v <- .NormaliseDataOM(v)
+    if (is.character(v)) setdiff(v, methods::slotNames('hist'))
+  })))
+  if (length(BadSlots))
+    cli::cli_alert_warning(
+      "{.val {BadSlots}} {?is not a/are not} valid {.cls hist} slot name{?s} for {.code DataOM}. Ignoring."
+    )
+  invisible()
 }
 
 .GetLastMPAdvice <- function(Proj) {

@@ -112,5 +112,5 @@ If \code{OM = NULL}, uses \link{SingleStockOM} and projects example MPs \link{Cu
 \link{CurrentCatch} as a quick demonstration.
 }
 \seealso{
-\code{\link[=Simulate]{Simulate()}}, \code{\link[=Project]{Project()}}
+\code{\link[=Simulate]{Simulate()}}, \code{\link[=Project]{Project()}}, \link{OMControl}
 }

@@ -63,6 +63,11 @@ internal projection engine based on the class of \code{Hist}: \link[=hist-class]
 objects use the new \code{om}-based engine; \link[=Hist-legacy-class]{Hist-legacy} objects use the legacy
 engine.
 }
+\details{
+For \link[=hist-class]{hist} objects, \code{Hist@OM@Control} settings used in projections
+(e.g. \code{ProjectChunks}, \code{EffortOptim}, \code{DataOM}) are described in
+\link{OMControl}.
+}
 \seealso{
-\code{\link[=Simulate]{Simulate()}}, \code{\link[=runMSE]{runMSE()}}
+\code{\link[=Simulate]{Simulate()}}, \code{\link[=runMSE]{runMSE()}}, \link{OMControl}
 }

@@ -39,7 +39,12 @@
 #'
 #' @return An [mse-class] or a [MSE-legacy-class] object containing projection results for all MPs.
 #'
-#' @seealso [Simulate()], [runMSE()]
+#' @details
+#' For [hist-class] objects, `Hist@OM@Control` settings used in projections
+#' (e.g. `ProjectChunks`, `EffortOptim`, `DataOM`) are described in
+#' [OMControl].
+#'
+#' @seealso [Simulate()], [runMSE()], [OMControl]
 #' 
 #' @export
 Project <- function(Hist,

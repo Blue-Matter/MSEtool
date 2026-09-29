@@ -189,7 +189,7 @@ See \code{\link[=OM]{OM()}}.}
 
 \item{\code{Seed}}{Integer. Random number generator seed. See \code{\link[=OM]{OM()}}.}
 
-\item{\code{Control}}{Named list of operating model control settings. See \code{\link[=OM]{OM()}}.}
+\item{\code{Control}}{Named list of operating model control settings. See \link{OMControl}.}
 
 \item{\code{Misc}}{List. Miscellaneous objects or developer-use components.}
 

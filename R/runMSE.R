@@ -65,7 +65,7 @@
 #'   containing projection results for all MPs. If an error occurs during
 #'   [Project()], the historical simulations are returned with a warning.
 #'
-#' @seealso [Simulate()], [Project()]
+#' @seealso [Simulate()], [Project()], [OMControl]
 #'
 #' @export
 runMSE <- function(OM = NULL,
