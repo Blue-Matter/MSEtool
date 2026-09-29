@@ -368,6 +368,23 @@ OM <- function(Name        = "A new OM object",
 #' `Years` is derived automatically from `nYear`, `pYear`, `CurrentYear`, and
 #' `Seasons` and is read-only. Use [Years()] to extract it.
 #'
+#' ## Replacing Slots in `hist` and `mse` Objects
+#'
+#' Replacement functions called on a [hist-class] or [mse-class] object
+#' modify its embedded `OM`, subject to when the slot is used:
+#'
+#' - Metadata (`Agency`, `Author`, `Email`, `Region`, `Latitude`,
+#'   `Longitude`, `Sponsor`, `Source`): can be replaced in [om-class],
+#'   [hist-class], and [mse-class] objects.
+#' - Settings used in projections (`Control`, `Interval`, `MPStartYear`,
+#'   `InterimAdvice`, `DataLag`, `FleetAllocation`, `SeasonalAllocation`,
+#'   `HistoricalWeight`, `EffortAllocation`, `nReps`, `pStar`): can be
+#'   replaced in [om-class] and [hist-class] objects, and take effect in the
+#'   next [Project()].
+#' - All other slots (e.g. `Seed`, `nYear`, `Seasons`, `maxF`, `Complexes`)
+#'   are used to simulate the historical dynamics and can only be replaced
+#'   in [om-class] objects; re-run [Simulate()] after changing them.
+#'
 #' @return
 #' - Accessor functions return the value of the named slot.
 #' - Replacement functions return `x` with the named slot updated.
@@ -404,7 +421,7 @@ Agency <- function(x) .IsHist(x, "Agency")
 
 #' @rdname OM-accessors
 #' @export
-`Agency<-` <- function(x, value) .AssignSlot(x, value, "Agency")
+`Agency<-` <- function(x, value) .AssignOMSlot(x, value, "Agency", "meta")
 
 #' @rdname OM-accessors
 #' @export
@@ -412,7 +429,7 @@ Author <- function(x) .IsHist(x, "Author")
 
 #' @rdname OM-accessors
 #' @export
-`Author<-` <- function(x, value) .AssignSlot(x, value, "Author")
+`Author<-` <- function(x, value) .AssignOMSlot(x, value, "Author", "meta")
 
 #' @rdname OM-accessors
 #' @export
@@ -420,7 +437,7 @@ Email <- function(x) .IsHist(x, "Email")
 
 #' @rdname OM-accessors
 #' @export
-`Email<-` <- function(x, value) .AssignSlot(x, value, "Email")
+`Email<-` <- function(x, value) .AssignOMSlot(x, value, "Email", "meta")
 
 #' @rdname OM-accessors
 #' @export
@@ -428,7 +445,7 @@ Region <- function(x) .IsHist(x, "Region")
 
 #' @rdname OM-accessors
 #' @export
-`Region<-` <- function(x, value) .AssignSlot(x, value, "Region")
+`Region<-` <- function(x, value) .AssignOMSlot(x, value, "Region", "meta")
 
 #' @rdname OM-accessors
 #' @export
@@ -436,7 +453,7 @@ Latitude <- function(x) .IsHist(x, "Latitude")
 
 #' @rdname OM-accessors
 #' @export
-`Latitude<-` <- function(x, value) .AssignSlot(x, value, "Latitude")
+`Latitude<-` <- function(x, value) .AssignOMSlot(x, value, "Latitude", "meta")
 
 #' @rdname OM-accessors
 #' @export
@@ -444,7 +461,7 @@ Longitude <- function(x) .IsHist(x, "Longitude")
 
 #' @rdname OM-accessors
 #' @export
-`Longitude<-` <- function(x, value) .AssignSlot(x, value, "Longitude")
+`Longitude<-` <- function(x, value) .AssignOMSlot(x, value, "Longitude", "meta")
 
 #' @rdname OM-accessors
 #' @export
@@ -452,7 +469,7 @@ Sponsor <- function(x) .IsHist(x, "Sponsor")
 
 #' @rdname OM-accessors
 #' @export
-`Sponsor<-` <- function(x, value) .AssignSlot(x, value, "Sponsor")
+`Sponsor<-` <- function(x, value) .AssignOMSlot(x, value, "Sponsor", "meta")
 
 #' @rdname OM-accessors
 #' @export
@@ -460,7 +477,7 @@ Source <- function(x) .IsHist(x, "Source")
 
 #' @rdname OM-accessors
 #' @export
-`Source<-` <- function(x, value) .AssignSlot(x, value, "Source")
+`Source<-` <- function(x, value) .AssignOMSlot(x, value, "Source", "meta")
 
 
 #' @rdname OM-accessors
@@ -469,7 +486,7 @@ nYear <- function(x) .IsHist(x, "nYear")
 
 #' @rdname OM-accessors
 #' @export
-`nYear<-` <- function(x, value) .AssignSlot(x, value, "nYear")
+`nYear<-` <- function(x, value) .AssignOMSlot(x, value, "nYear", "struct")
 
 #' @rdname OM-accessors
 #' @export
@@ -477,7 +494,7 @@ pYear <- function(x) .IsHist(x, "pYear")
 
 #' @rdname OM-accessors
 #' @export
-`pYear<-` <- function(x, value) .AssignSlot(x, value, "pYear")
+`pYear<-` <- function(x, value) .AssignOMSlot(x, value, "pYear", "struct")
 
 #' @rdname OM-accessors
 #' @export
@@ -485,7 +502,7 @@ CurrentYear <- function(x) .IsHist(x, "CurrentYear")
 
 #' @rdname OM-accessors
 #' @export
-`CurrentYear<-` <- function(x, value) .AssignSlot(x, value, "CurrentYear")
+`CurrentYear<-` <- function(x, value) .AssignOMSlot(x, value, "CurrentYear", "struct")
 
 #' @rdname OM-accessors
 #' @export
@@ -493,7 +510,7 @@ Seasons <- function(x) .IsHist(x, "Seasons")
 
 #' @rdname OM-accessors
 #' @export
-`Seasons<-` <- function(x, value) .AssignSlot(x, value, "Seasons")
+`Seasons<-` <- function(x, value) .AssignOMSlot(x, value, "Seasons", "struct")
 
 #' Reference Point Season Handling for OM Objects
 #'
@@ -556,7 +573,7 @@ RefSeason <- function(x) .IsHist(x, "RefSeason")
 
 #' @rdname RefSeason
 #' @export
-`RefSeason<-` <- function(x, value) .AssignSlot(x, value, "RefSeason")
+`RefSeason<-` <- function(x, value) .AssignOMSlot(x, value, "RefSeason", "struct")
 
 #' @rdname RefSeason
 #' @export
@@ -564,7 +581,7 @@ RefEffortYears <- function(x) .IsHist(x, "RefEffortYears")
 
 #' @rdname RefSeason
 #' @export
-`RefEffortYears<-` <- function(x, value) .AssignSlot(x, value, "RefEffortYears")
+`RefEffortYears<-` <- function(x, value) .AssignOMSlot(x, value, "RefEffortYears", "struct")
 
 
 #' Data Lag for OM Objects
@@ -670,9 +687,7 @@ DataLag <- function(x) {
 
 #' @rdname DataLag
 #' @export
-`DataLag<-` <- function(x, value) {
-  .AssignSlot(x, value, "DataLag")
-}
+`DataLag<-` <- function(x, value) .AssignOMSlot(x, value, "DataLag", "proj")
 
 #' Fleet Allocation of TAC for OM Objects
 #'
@@ -739,7 +754,7 @@ CatchFrac <- function(x) .IsHist(x, "CatchFrac")
 
 #' @rdname FleetAllocation
 #' @export
-`CatchFrac<-` <- function(x, value) .AssignSlot(x, value, "CatchFrac")
+`CatchFrac<-` <- function(x, value) .AssignOMSlot(x, value, "CatchFrac", "struct")
 
 #' @rdname FleetAllocation
 #' @export
@@ -747,7 +762,7 @@ FleetAllocation <- function(x) .IsHist(x, "FleetAllocation")
 
 #' @rdname FleetAllocation
 #' @export
-`FleetAllocation<-` <- function(x, value) .AssignSlot(x, value, "FleetAllocation")
+`FleetAllocation<-` <- function(x, value) .AssignOMSlot(x, value, "FleetAllocation", "proj")
 
 #' Seasonal Allocation of TAC/Effort for OM Objects
 #'
@@ -806,7 +821,7 @@ HistoricalWeight <- function(x) .IsHist(x, "HistoricalWeight")
 
 #' @rdname SeasonalAllocation
 #' @export
-`HistoricalWeight<-` <- function(x, value) .AssignSlot(x, value, "HistoricalWeight")
+`HistoricalWeight<-` <- function(x, value) .AssignOMSlot(x, value, "HistoricalWeight", "proj")
 
 #' @rdname SeasonalAllocation
 #' @export
@@ -814,7 +829,7 @@ SeasonalAllocation <- function(x) .IsHist(x, "SeasonalAllocation")
 
 #' @rdname SeasonalAllocation
 #' @export
-`SeasonalAllocation<-` <- function(x, value) .AssignSlot(x, value, "SeasonalAllocation")
+`SeasonalAllocation<-` <- function(x, value) .AssignOMSlot(x, value, "SeasonalAllocation", "proj")
 
 #' Fleet Allocation of Absolute Effort for OM Objects
 #'
@@ -875,7 +890,7 @@ EffortAllocation <- function(x) .IsHist(x, "EffortAllocation")
 
 #' @rdname EffortAllocation
 #' @export
-`EffortAllocation<-` <- function(x, value) .AssignSlot(x, value, "EffortAllocation")
+`EffortAllocation<-` <- function(x, value) .AssignOMSlot(x, value, "EffortAllocation", "proj")
 
 
 #' @rdname OM-accessors
@@ -884,11 +899,11 @@ Complexes <- function(x) .IsHist(x, "Complexes")
 
 #' @rdname OM-accessors
 #' @export
-`Complexes<-` <- function(x, value) .AssignSlot(x, value, "Complexes")
+`Complexes<-` <- function(x, value) .AssignOMSlot(x, value, "Complexes", "struct")
 
 #' @rdname OM-accessors
 #' @export
-`Herm<-` <- function(x, value) .AssignSlot(x, value, "Herm")
+`Herm<-` <- function(x, value) .AssignOMSlot(x, value, "Herm", "struct")
 
 #' @rdname OM-accessors
 #' @export
@@ -896,7 +911,7 @@ Relations <- function(x) .IsHist(x, "Relations")
 
 #' @rdname OM-accessors
 #' @export
-`Relations<-` <- function(x, value) .AssignSlot(x, value, "Relations")
+`Relations<-` <- function(x, value) .AssignOMSlot(x, value, "Relations", "struct")
 
 
 #' @rdname OM-accessors
@@ -905,7 +920,7 @@ Interval <- function(x) .IsHist(x, "Interval")
 
 #' @rdname OM-accessors
 #' @export
-`Interval<-` <- function(x, value) .AssignSlot(x, value, "Interval")
+`Interval<-` <- function(x, value) .AssignOMSlot(x, value, "Interval", "proj")
 
 #' @rdname OM-accessors
 #' @export
@@ -913,7 +928,7 @@ MPStartYear <- function(x) .IsHist(x, "MPStartYear")
 
 #' @rdname OM-accessors
 #' @export
-`MPStartYear<-` <- function(x, value) .AssignSlot(x, value, "MPStartYear")
+`MPStartYear<-` <- function(x, value) .AssignOMSlot(x, value, "MPStartYear", "proj")
 
 #' Interim Advice for OM Objects
 #'
@@ -1018,7 +1033,7 @@ InterimAdvice <- function(x) .IsHist(x, "InterimAdvice")
 
 #' @rdname InterimAdvice
 #' @export
-`InterimAdvice<-` <- function(x, value) .AssignSlot(x, value, "InterimAdvice")
+`InterimAdvice<-` <- function(x, value) .AssignOMSlot(x, value, "InterimAdvice", "proj")
 
 #' @rdname OM-accessors
 #' @export
@@ -1026,7 +1041,7 @@ nReps <- function(x) .IsHist(x, "nReps")
 
 #' @rdname OM-accessors
 #' @export
-`nReps<-` <- function(x, value) .AssignSlot(x, value, "nReps")
+`nReps<-` <- function(x, value) .AssignOMSlot(x, value, "nReps", "proj")
 
 #' @rdname OM-accessors
 #' @export
@@ -1034,7 +1049,7 @@ pStar <- function(x) .IsHist(x, "pStar")
 
 #' @rdname OM-accessors
 #' @export
-`pStar<-` <- function(x, value) .AssignSlot(x, value, "pStar")
+`pStar<-` <- function(x, value) .AssignOMSlot(x, value, "pStar", "proj")
 
 #' @rdname OM-accessors
 #' @export
@@ -1042,7 +1057,7 @@ maxF <- function(x) .IsHist(x, "maxF")
 
 #' @rdname OM-accessors
 #' @export
-`maxF<-` <- function(x, value) .AssignSlot(x, value, "maxF")
+`maxF<-` <- function(x, value) .AssignOMSlot(x, value, "maxF", "struct")
 
 #' @rdname OM-accessors
 #' @export
@@ -1050,7 +1065,7 @@ Seed <- function(x) .IsHist(x, "Seed")
 
 #' @rdname OM-accessors
 #' @export
-`Seed<-` <- function(x, value) .AssignSlot(x, value, "Seed")
+`Seed<-` <- function(x, value) .AssignOMSlot(x, value, "Seed", "struct")
 
 #' @rdname OM-accessors
 #' @export
@@ -1058,19 +1073,34 @@ Control <- function(x) .IsHist(x, "Control")
 
 #' @rdname OM-accessors
 #' @export
-`Control<-` <- function(x, value) {
-  if (inherits(x, "hist")) {
-    x@OM <- .AssignSlot(x@OM, value, "Control")
-    return(x)
-  }
-  .AssignSlot(x, value, "Control")
-}
+`Control<-` <- function(x, value) .AssignOMSlot(x, value, "Control", "proj")
 
 
 .IsHist <- function(x, slot_name) {
   if (inherits(x, "hist") || inherits(x, "mse"))
     x <- x@OM
   .AccessSlot(x, slot_name)
+}
+
+# `Type`: "meta" can be set on om/hist/mse, "proj" (read at projection time) on
+# om/hist, "struct" (baked into simulated dynamics) on om only
+.AssignOMSlot <- function(x, value, slot, Type = c("struct", "proj", "meta")) {
+  Type <- match.arg(Type)
+  if (!inherits(x, "hist") && !inherits(x, "mse"))
+    return(.AssignSlot(x, value, slot))
+
+  Allowed <- Type == "meta" || (Type == "proj" && !inherits(x, "mse"))
+  if (!Allowed)
+    cli::cli_abort(c(
+      "{.code {slot}} cannot be changed on a {.cls {class(x)}} object.",
+      "i" = if (Type == "struct")
+        "It is used to simulate the historical dynamics. Change it in the {.cls om} object and re-run {.fn Simulate}."
+      else
+        "The projections have already been run. Change it in the {.cls hist} object and re-run {.fn Project}."
+    ), call = NULL)
+
+  x@OM <- .AssignSlot(x@OM, value, slot)
+  x
 }
 
 .ToNamedList <- function(x, cls) {

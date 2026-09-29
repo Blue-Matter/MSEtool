@@ -769,12 +769,8 @@ YearLH <- function(x) {
 
 
 .AssignSlot <- function(x, value, slot) {
-  if (!slot %in% slotNames(x)) {
-    cli::cli_alert_warning(
-      "Slot {.code {slot}} not found in class {.cls {class(x)}}."
-    )
-    return(invisible(NULL))
-  }
+  if (!isS4(x) || !slot %in% methods::slotNames(x))
+    cli::cli_abort("Slot {.code {slot}} not found in class {.cls {class(x)}}.", call = NULL)
   slot(x, slot) <- value
   methods::validObject(x)
   x
