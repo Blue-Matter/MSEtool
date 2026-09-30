@@ -85,12 +85,9 @@
 #'   
 #' @param Interval Numeric scalar or named numeric vector. Management update
 #'   interval in years. Default `1`. A named vector
-#'   gives a per-MP interval, e.g. `c(MP1 = 1, MP2 = 4)`. 
-#'   `attr(mp, 'EverySeason') <- TRUE` on the MP function instead of a small
-#'   `Interval`, since a fixed fraction like `1/Seasons` can't be hard-coded
-#'   on the MP without knowing which OM it will run under.
+#'   gives a per-MP interval, e.g. `c(MP1 = 1, MP2 = 4)`. See [Interval()].
 #' @param MPStartYear Numeric or `NULL`. First calendar year in which MPs are
-#'   applied - see *Interim Advice* in Details. Default `NULL`.
+#'   applied. Default `NULL`. See [MPStartYear()].
 #' @param InterimAdvice A `data.frame` or `NULL`. Fixed or stochastic
 #'   TAC/Effort values for years before `MPStartYear`. Default `NULL`. See
 #'   [InterimAdvice()] for the required columns and how it is applied.
@@ -914,19 +911,125 @@ Relations <- function(x) .IsHist(x, "Relations")
 `Relations<-` <- function(x, value) .AssignOMSlot(x, value, "Relations", "struct")
 
 
-#' @rdname OM-accessors
+#' Management Interval for OM Objects
+#'
+#' Access or replace the `Interval` slot of an [om-class] object: how often,
+#' in years, an MP is called to produce new advice during projection. Also
+#' accepts [hist-class] and [mse-class] objects, extracting the embedded `OM`
+#' slot transparently.
+#'
+#' @param x An [om-class], [hist-class], or [mse-class] object.
+#' @param value Replacement value; a positive numeric scalar, or a named
+#'   numeric vector giving a per-MP interval.
+#'
+#' @details
+#' `Interval` is always in years, regardless of `Seasons`: `Interval = 1`
+#' calls the MP once a year, `Interval = 2` every second year, and so on.
+#' The first management year is the first projection year, or `MPStartYear`
+#' if it is set. In projection years that are not management years, the TAC
+#' or Effort from the most recent management year carries forward unchanged.
+#'
+#' ## Per-MP intervals
+#'
+#' A named vector sets the interval by MP name, e.g.
+#' `c(MP1 = 1, MP2 = 4)`. An unnamed element (e.g. `c(2, MP2 = 4)`) is the
+#' default for MPs not named. For each MP, the interval is resolved in this
+#' order:
+#' 1. The element of `Interval` named for the MP.
+#' 2. `1 / Seasons` if the MP has `attr(mp, 'EverySeason') <- TRUE`.
+#' 3. The MP's `attr(mp, 'Interval')`, if set.
+#' 4. The unnamed element of `Interval`, or its first element.
+#'
+#' ## Seasonal OMs
+#'
+#' For a seasonal OM (`Seasons > 1`), `Interval * Seasons` must be a whole
+#' number of timesteps. MPs that must be called at every timestep (e.g.
+#' because they return a season-specific value) should declare
+#' `attr(mp, 'EverySeason') <- TRUE`, since `1 / Seasons` depends on the OM
+#' the MP is run with. Advice set for a multi-season interval is split across
+#' seasons by [SeasonalAllocation()].
+#'
+#' @return
+#' - `Interval()` returns the value of the `Interval` slot.
+#' - `Interval<-()` returns `x` with the `Interval` slot updated.
+#'
+#' @seealso
+#' - [OM()] for the constructor, [om-class] for the class definition.
+#' - [MPStartYear()], [DataLag()] for the other slots controlling the
+#'   management timeline.
+#' - [ManagementScheduleTable()] for previewing the resulting schedule.
+#' - [OM-accessors] for the remaining `OM` slot accessors.
+#'
+#' @family om
+#'
+#' @examples
+#' om <- OM(Interval = 2)
+#' Interval(om)
+#' Interval(om) <- c(3, MP2 = 1)
+#'
+#' @rdname Interval
 #' @export
 Interval <- function(x) .IsHist(x, "Interval")
 
-#' @rdname OM-accessors
+#' @rdname Interval
 #' @export
 `Interval<-` <- function(x, value) .AssignOMSlot(x, value, "Interval", "proj")
 
-#' @rdname OM-accessors
+#' MP Start Year for OM Objects
+#'
+#' Access or replace the `MPStartYear` slot of an [om-class] object: the
+#' first calendar year in which MPs are called during projection. Also
+#' accepts [hist-class] and [mse-class] objects, extracting the embedded `OM`
+#' slot transparently.
+#'
+#' @param x An [om-class], [hist-class], or [mse-class] object.
+#' @param value Replacement value; a single calendar year after
+#'   `CurrentYear`, or `NULL`.
+#'
+#' @details
+#' `MPStartYear = NULL` (the default) calls MPs from the first projection
+#' year (`CurrentYear + 1`).
+#'
+#' When the historical period ends before MPs will actually be applied (e.g.
+#' the OM is conditioned on data to 2024 but MPs will not be implemented
+#' until 2028), set `MPStartYear` to the first calendar year MPs should run.
+#' Projection years before `MPStartYear` are "interim" years:
+#' - the MP is not called, and the TAC or Effort is instead taken from
+#'   [InterimAdvice()], which must then be supplied for every interim year;
+#' - implementation error (`Imp`) is not applied;
+#' - the OM still simulates the fishery and generates data for those years,
+#'   so the MP's first call at `MPStartYear` sees data from the interim
+#'   period (subject to [DataLag()]).
+#'
+#' `MPStartYear` is the first management year; later management years follow
+#' every [Interval()] years from it. Performance metrics exclude interim
+#' years (see [PM()]).
+#'
+#' @return
+#' - `MPStartYear()` returns the value of the `MPStartYear` slot.
+#' - `MPStartYear<-()` returns `x` with the `MPStartYear` slot updated.
+#'
+#' @seealso
+#' - [OM()] for the constructor, [om-class] for the class definition.
+#' - [InterimAdvice()] for the TAC/Effort used in interim years.
+#' - [Interval()], [DataLag()] for the other slots controlling the
+#'   management timeline.
+#' - [ManagementScheduleTable()] for previewing the resulting schedule.
+#' - [OM-accessors] for the remaining `OM` slot accessors.
+#'
+#' @family om
+#'
+#' @examples
+#' om <- OM(CurrentYear = 2023, MPStartYear = 2028)
+#' MPStartYear(om)
+#' InterimAdvice(om) <- data.frame(Year = 2024:2027, Type = "TAC", Mean = 1000)
+#' ManagementScheduleTable(om)
+#'
+#' @rdname MPStartYear
 #' @export
 MPStartYear <- function(x) .IsHist(x, "MPStartYear")
 
-#' @rdname OM-accessors
+#' @rdname MPStartYear
 #' @export
 `MPStartYear<-` <- function(x, value) .AssignOMSlot(x, value, "MPStartYear", "proj")
 

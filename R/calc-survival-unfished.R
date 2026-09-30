@@ -27,7 +27,7 @@ CalcUnfishedSurvival <- function(OM, SP = FALSE, Years = NULL, silent = FALSE, E
   }
   
   if (inherits(OM, "om")) {
-    OM <- PopulateOM(OM, silent)
+    OM <- .PopulateForUnfished(OM, silent, adjust_fecundity = FALSE)
     if (is.null(Years)) {
       Years <- Years(OM,'Hist')
     }

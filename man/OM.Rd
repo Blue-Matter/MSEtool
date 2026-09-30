@@ -158,13 +158,10 @@ See \code{\link[=StockTargeting]{StockTargeting()}}.}
 
 \item{Interval}{Numeric scalar or named numeric vector. Management update
 interval in years. Default \code{1}. A named vector
-gives a per-MP interval, e.g. \code{c(MP1 = 1, MP2 = 4)}.
-\code{attr(mp, 'EverySeason') <- TRUE} on the MP function instead of a small
-\code{Interval}, since a fixed fraction like \code{1/Seasons} can't be hard-coded
-on the MP without knowing which OM it will run under.}
+gives a per-MP interval, e.g. \code{c(MP1 = 1, MP2 = 4)}. See \code{\link[=Interval]{Interval()}}.}
 
 \item{MPStartYear}{Numeric or \code{NULL}. First calendar year in which MPs are
-applied - see \emph{Interim Advice} in Details. Default \code{NULL}.}
+applied. Default \code{NULL}. See \code{\link[=MPStartYear]{MPStartYear()}}.}
 
 \item{InterimAdvice}{A \code{data.frame} or \code{NULL}. Fixed or stochastic
 TAC/Effort values for years before \code{MPStartYear}. Default \code{NULL}. See
@@ -303,6 +300,8 @@ Other om:
 \code{\link{HermOM}},
 \code{\link[=HistoricalWeight]{HistoricalWeight()}},
 \code{\link[=InterimAdvice]{InterimAdvice()}},
+\code{\link[=Interval]{Interval()}},
+\code{\link[=MPStartYear]{MPStartYear()}},
 \code{\link{MultiStockOM}},
 \code{\link{OM-accessors}},
 \code{\link[=RefSeason]{RefSeason()}},

@@ -45,10 +45,11 @@ AdjustSeasonalFecundity <- function(OM, silent = FALSE) {
   if (!.IsSeasonalRecruitment(OM))
     return(OM)
 
-  OM <- PopulateOM(OM,
-                   standardize_effort = FALSE,
-                   adjust_fecundity = FALSE,
-                   silent = TRUE)
+  OM <- if (.HasFleet(OM)) {
+    PopulateOM(OM, standardize_effort = FALSE, adjust_fecundity = FALSE, silent = TRUE)
+  } else {
+    .PopulateStocksOnly(OM, silent = TRUE, adjust_fecundity = FALSE)
+  }
 
   n_seasons <- OM@Seasons
   nYear     <- OM@nYear

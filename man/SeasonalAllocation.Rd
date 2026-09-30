@@ -80,6 +80,8 @@ Other om:
 \code{\link[=Herm]{Herm()}},
 \code{\link{HermOM}},
 \code{\link[=InterimAdvice]{InterimAdvice()}},
+\code{\link[=Interval]{Interval()}},
+\code{\link[=MPStartYear]{MPStartYear()}},
 \code{\link{MultiStockOM}},
 \code{\link[=OM]{OM()}},
 \code{\link{OM-accessors}},

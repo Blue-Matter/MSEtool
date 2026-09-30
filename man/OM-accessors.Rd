@@ -31,10 +31,6 @@
 \alias{Herm<-}
 \alias{Relations}
 \alias{Relations<-}
-\alias{Interval}
-\alias{Interval<-}
-\alias{MPStartYear}
-\alias{MPStartYear<-}
 \alias{nReps}
 \alias{nReps<-}
 \alias{pStar}
@@ -104,14 +100,6 @@ Herm(x) <- value
 Relations(x)
 
 Relations(x) <- value
-
-Interval(x)
-
-Interval(x) <- value
-
-MPStartYear(x)
-
-MPStartYear(x) <- value
 
 nReps(x)
 
@@ -216,6 +204,8 @@ Other om:
 \code{\link{HermOM}},
 \code{\link[=HistoricalWeight]{HistoricalWeight()}},
 \code{\link[=InterimAdvice]{InterimAdvice()}},
+\code{\link[=Interval]{Interval()}},
+\code{\link[=MPStartYear]{MPStartYear()}},
 \code{\link{MultiStockOM}},
 \code{\link[=OM]{OM()}},
 \code{\link[=RefSeason]{RefSeason()}},

@@ -132,6 +132,8 @@ Other om:
 \code{\link[=Herm]{Herm()}},
 \code{\link[=HistoricalWeight]{HistoricalWeight()}},
 \code{\link[=InterimAdvice]{InterimAdvice()}},
+\code{\link[=Interval]{Interval()}},
+\code{\link[=MPStartYear]{MPStartYear()}},
 \code{\link{MultiStockOM}},
 \code{\link[=OM]{OM()}},
 \code{\link{OM-accessors}},

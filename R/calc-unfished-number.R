@@ -207,7 +207,7 @@ CalcUnfishedNumber <- function(OM, SP = FALSE) {
 }
 
 .CalcUnfishedNumberSeasonal <- function(OM, SP = FALSE) {
-  OM        <- PopulateOM(OM, silent = TRUE)
+  OM        <- .PopulateForUnfished(OM, adjust_fecundity = FALSE)
   Years     <- Years(OM,'Hist')
   nYear     <- OM@nYear
   nSeason   <- OM@Seasons

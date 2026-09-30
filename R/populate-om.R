@@ -746,3 +746,34 @@ PopulateOM <- function(OM,
 
   invisible(OM)
 }
+
+# Populates only the Stock objects and the stock-level checks; Fleet, Obs, and
+# Imp are left untouched
+.PopulateStocksOnly <- function(OM, silent = TRUE, adjust_fecundity = TRUE) {
+  .CheckClass(OM)
+  OM <- UpdateObject(OM)
+  if (is.null(OM@Stock))
+    cli::cli_abort(c(
+      "x" = "{.var OM} must have at least one stock",
+      "i" = "See {.help MSEtool::OM} and {.help MSEtool::Stock}"
+    ))
+  OM <- OM |>
+    .PopulateStockList(silent = silent) |>
+    .UpdateSPFrom() |>
+    .ValidateSPFrom() |>
+    .CheckAlphaBetaSRR()
+  if (adjust_fecundity)
+    OM <- AdjustSeasonalFecundity(OM, silent = silent)
+  OM
+}
+
+.HasFleet <- function(OM) {
+  !is.null(OM@Fleet) && length(OM@Fleet) > 0
+}
+
+# unfished calculations only need populated stocks
+.PopulateForUnfished <- function(OM, silent = TRUE, adjust_fecundity = TRUE) {
+  if (!.HasFleet(OM))
+    return(.PopulateStocksOnly(OM, silent = silent, adjust_fecundity = adjust_fecundity))
+  PopulateOM(OM, silent = silent)
+}
