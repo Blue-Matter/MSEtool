@@ -28,6 +28,9 @@ accepts \link[=hist-class]{hist} and \link[=mse-class]{mse} objects, extracting 
 slot transparently.
 }
 \details{
+Use \code{\link[=ManagementScheduleTable]{ManagementScheduleTable()}} to see which years are management years
+for a given OM.
+
 \code{Interval} is always in years, regardless of \code{Seasons}: \code{Interval = 1}
 calls the MP once a year, \code{Interval = 2} every second year, and so on.
 The first management year is the first projection year, or \code{MPStartYear}
@@ -61,6 +64,10 @@ seasons by \code{\link[=SeasonalAllocation]{SeasonalAllocation()}}.
 om <- OM(Interval = 2)
 Interval(om)
 Interval(om) <- c(3, MP2 = 1)
+
+# Preview which years are management years
+om <- OM(CurrentYear = 2026, Interval = 2)
+ManagementScheduleTable(om)
 
 }
 \seealso{

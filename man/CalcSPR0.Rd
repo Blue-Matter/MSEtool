@@ -4,23 +4,30 @@
 \alias{CalcSPR0}
 \title{Unfished Spawning Production Per Recruit}
 \usage{
-CalcSPR0(OM, silent = FALSE)
+CalcSPR0(OM, silent = FALSE, ...)
 }
 \arguments{
-\item{OM}{Either a \link[=om-class]{om} or \link[=hist-class]{hist} object. If an \link[=om-class]{om}
-object is provided, the historical dynamics are populated internally via
-\code{\link[=Populate]{Populate()}} and \code{\link[=CalcUnfished_Equilibrium]{CalcUnfished_Equilibrium()}}, which may be
-computationally expensive. If a \link[=hist-class]{hist} object is provided (the output
-of \code{\link[=Simulate]{Simulate()}}), it is used directly.}
+\item{OM}{A \link[=stock-class]{stock}, \link[=om-class]{om}, or \link[=hist-class]{hist} object. For a
+\link[=stock-class]{stock} or \link[=om-class]{om} object, only the stock components are
+populated and used, so the OM does not need \code{Fleet}, \code{Obs}, or \code{Imp}
+objects. A \link[=stock-class]{stock} object is placed in an OM created with \code{\link[=OM]{OM()}},
+using the arguments in \code{...}. If a \link[=hist-class]{hist} object is provided (the
+output of \code{\link[=Simulate]{Simulate()}}), it is used directly.
+
+SPR0 uses only the spawning timing in \code{SRR} (\code{SpawnTimeFrac} and
+\code{SpawnLag}), so the \code{SRR} object may be left unspecified or partially
+specified: missing \code{Pars}, \code{R0}, and \code{SD} are not required.}
 
 \item{silent}{Logical. If \code{TRUE}, suppresses progress messages during
-population and simulation. Only used when \code{object} is an \link[=om-class]{om}.
-Default is \code{FALSE}.}
+population. Default is \code{FALSE}.}
+
+\item{...}{Arguments passed to \code{\link[=OM]{OM()}} when \code{OM} is a \link[=stock-class]{stock} object,
+e.g., \code{nSim}, \code{nYear}, \code{pYear}, \code{CurrentYear}, and \code{Seasons}.}
 }
 \value{
 An array with dimensions \verb{[Sim, Stock, Year]} containing the
-unfished spawning production per recruit. Dimensions where values are
-identical across simulations or years are collapsed by \code{\link[=ReduceDims]{ReduceDims()}}.
+unfished spawning production per recruit. The \code{Sim} dimension is
+collapsed by \code{\link[=ReduceDims]{ReduceDims()}} when values are identical across simulations.
 }
 \description{
 Calculates the unfished spawning production per recruit (SPR0) — the

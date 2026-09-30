@@ -44,3 +44,26 @@ test_that("CalcSPR0 from an OM matches CalcSPR0 from the simulated Hist", {
     expect_equal(c(fromOM), c(fromHist))
   }
 })
+
+test_that("CalcSPR0 does not need SRR parameters, R0, or SD", {
+  args <- list(nSim = 3, CurrentYear = 2024, nYear = 25, pYear = 5, silent = TRUE)
+  full <- .SPR0Stock()
+  full@SRR <- SRR(Pars = list(h = 0.8), R0 = 5000, SD = 0.3, SpawnTimeFrac = 0.5)
+  ref <- do.call(CalcSPR0, c(list(full), args))
+
+  timingOnly <- .SPR0Stock()
+  timingOnly@SRR <- SRR(SpawnTimeFrac = 0.5)
+  expect_equal(do.call(CalcSPR0, c(list(timingOnly), args)), ref)
+
+  noSRR <- .SPR0Stock()
+  noSRR@SRR <- SRR()
+  refNoTiming <- .SPR0Stock()
+  refNoTiming@SRR <- SRR(Pars = list(h = 0.8), R0 = 5000, SD = 0.3)
+  expect_equal(do.call(CalcSPR0, c(list(noSRR), args)),
+               do.call(CalcSPR0, c(list(refNoTiming), args)))
+
+  hOnly <- .SPR0Stock()
+  hOnly@SRR <- SRR(Pars = list(h = 0.8), SpawnTimeFrac = 0.5)
+  expect_no_warning(out <- do.call(CalcSPR0, c(list(hOnly), args)))
+  expect_equal(out, ref)
+})

@@ -27,6 +27,9 @@ the timestep at which its advice takes effect. Also accepts \link[=hist-class]{h
 and \link[=mse-class]{mse} objects, extracting the embedded \code{OM} slot transparently.
 }
 \details{
+Use \code{\link[=ManagementScheduleTable]{ManagementScheduleTable()}} to see which data year is used at each
+management year for a given OM.
+
 In a real fishery, management advice is never based on fully up to date
 data. Even without any extra delay, an MP can only ever see data through
 the timestep immediately before the one at which its advice takes effect,

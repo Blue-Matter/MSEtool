@@ -588,6 +588,9 @@ RefEffortYears <- function(x) .IsHist(x, "RefEffortYears")
 #' the timestep at which its advice takes effect. Also accepts [hist-class]
 #' and [mse-class] objects, extracting the embedded `OM` slot transparently.
 #'
+#' Use [ManagementScheduleTable()] to see which data year is used at each
+#' management year for a given OM.
+#'
 #' @param x An [om-class], [hist-class], or [mse-class] object.
 #' @param value Replacement value; a non-negative integer, in years.
 #'
@@ -918,6 +921,9 @@ Relations <- function(x) .IsHist(x, "Relations")
 #' accepts [hist-class] and [mse-class] objects, extracting the embedded `OM`
 #' slot transparently.
 #'
+#' Use [ManagementScheduleTable()] to see which years are management years
+#' for a given OM.
+#'
 #' @param x An [om-class], [hist-class], or [mse-class] object.
 #' @param value Replacement value; a positive numeric scalar, or a named
 #'   numeric vector giving a per-MP interval.
@@ -966,6 +972,10 @@ Relations <- function(x) .IsHist(x, "Relations")
 #' om <- OM(Interval = 2)
 #' Interval(om)
 #' Interval(om) <- c(3, MP2 = 1)
+#'
+#' # Preview which years are management years
+#' om <- OM(CurrentYear = 2026, Interval = 2)
+#' ManagementScheduleTable(om)
 #'
 #' @rdname Interval
 #' @export
