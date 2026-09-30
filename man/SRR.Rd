@@ -81,6 +81,15 @@ dedicated slot. The required name depends on \code{Model}:
 \item \code{BevertonHolt}: \code{list(h = ...)} where \verb{0.2 < h < 1}.
 \item \code{Ricker}: \code{list(hR = ...)}.
 \item \code{HockeyStick}: \code{list(Shinge = ...)} where \verb{0 < Shinge <= 1}.
+\code{BevertonHolt} and \code{Ricker} also accept \code{list(alpha = ..., beta = ...)}
+(see \code{\link[=SRRSteepness]{SRRSteepness()}}), in which case \code{R0} must be \code{NULL}. During
+\code{\link[=Populate]{Populate()}} these are converted to steepness and \code{R0} using the
+first-year unfished spawning production per recruit, and the supplied
+values are kept in \code{Misc$AlphaBeta}. \code{alpha} is recruits per unit of
+spawning production and \code{beta} is in units of 1/spawning production, on
+the scale set by \code{Units}. Not available for seasonal stocks, stocks in a
+\code{\link[=Herm]{Herm()}} complex, or stocks that recruit from another stock's spawning
+production (\code{SPFrom}).
 When \code{Pars} is a non-list S4 object with an \code{SRR} slot (e.g., a
 \link[=stock-class]{stock}), \code{SRR()} acts as a pass-through accessor and returns that
 slot. See \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules}
@@ -102,7 +111,8 @@ simulation.
 \item A \verb{Sim x Year} array: deliberately time-varying, e.g. to model a
 regime shift in carrying capacity. See \link[=srr-class]{srr} for how this
 differs from a constant \code{R0}.
-Interpreted in units of \code{Units}. Default \code{NULL}.
+Interpreted in units of \code{Units}. Must be \code{NULL} when \code{Pars} contains
+\code{alpha} and \code{beta}. Default \code{NULL}.
 }}
 
 \item{SD}{\code{numeric} or \code{NULL}. Log-space standard deviation of recruitment
