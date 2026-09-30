@@ -76,10 +76,23 @@ relative to \code{R0} as a function of spawning-per-recruit (SPR).
 available in the package.
 }
 
+\subsection{Parameterisation}{
+
+In \code{\link[=SRR]{SRR()}}, \code{Pars} for \code{BevertonHolt} and \code{Ricker} may be given either as
+steepness (\code{list(h = ...)} or \code{list(hR = ...)}, with \code{R0}) or as
+\code{list(alpha = ..., beta = ...)} with \code{R0 = NULL}. Alpha-beta values are
+converted to steepness and \code{R0} during \code{\link[=Populate]{Populate()}} using the first-year
+unfished spawning production per recruit \eqn{\phi_0}. See \code{\link[=SRRSteepness]{SRRSteepness()}}
+for the conversion.
+}
+
 \subsection{Beverton–Holt}{
 \itemize{
 \item \code{BevertonHolt()} evaluates expected recruitment:
 \deqn{R = \frac{\alpha S}{1 + \beta S}}
+where \eqn{\phi_0 = S_0 / R_0},
+\eqn{\alpha = 4h / ((1 - h)\phi_0)}, and
+\eqn{\beta = (5h - 1) / ((1 - h)\phi_0 R_0)}.
 \item \code{BevertonHolt_RelRec()} evaluates equilibrium recruitment relative to unfished
 recruitment as a function of SPR.
 }
@@ -89,6 +102,8 @@ recruitment as a function of SPR.
 \itemize{
 \item \code{Ricker()} evaluates expected recruitment:
 \deqn{R = \alpha S e^{-\beta S}}
+where \eqn{\alpha = (5h_R)^{1.25} / \phi_0} and
+\eqn{\beta = \log((5h_R)^{1.25}) / (\phi_0 R_0)}.
 \item \code{Ricker_RelRec()} evaluates equilibrium relative recruitment as a function
 of SPR.
 }
@@ -156,5 +171,5 @@ legend("bottomright",
 
 }
 \seealso{
-\code{\link[=SRR]{SRR()}}
+\code{\link[=SRR]{SRR()}}, \code{\link[=SRRSteepness]{SRRSteepness()}}
 }

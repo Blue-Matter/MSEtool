@@ -27,10 +27,22 @@
 #' `SRRModels()` prints or returns the set of stock–recruitment models
 #' available in the package.
 #'
+#' ## Parameterisation
+#'
+#' In [SRR()], `Pars` for `BevertonHolt` and `Ricker` may be given either as
+#' steepness (`list(h = ...)` or `list(hR = ...)`, with `R0`) or as
+#' `list(alpha = ..., beta = ...)` with `R0 = NULL`. Alpha-beta values are
+#' converted to steepness and `R0` during [Populate()] using the first-year
+#' unfished spawning production per recruit \eqn{\phi_0}. See [SRRSteepness()]
+#' for the conversion.
+#'
 #' ## Beverton–Holt
 #'
 #' * `BevertonHolt()` evaluates expected recruitment:
 #' \deqn{R = \frac{\alpha S}{1 + \beta S}}
+#' where \eqn{\phi_0 = S_0 / R_0},
+#' \eqn{\alpha = 4h / ((1 - h)\phi_0)}, and
+#' \eqn{\beta = (5h - 1) / ((1 - h)\phi_0 R_0)}.
 #'
 #' * `BevertonHolt_RelRec()` evaluates equilibrium recruitment relative to unfished
 #' recruitment as a function of SPR.
@@ -39,6 +51,8 @@
 #'
 #' * `Ricker()` evaluates expected recruitment:
 #' \deqn{R = \alpha S e^{-\beta S}}
+#' where \eqn{\alpha = (5h_R)^{1.25} / \phi_0} and
+#' \eqn{\beta = \log((5h_R)^{1.25}) / (\phi_0 R_0)}.
 #'
 #' * `Ricker_RelRec()` evaluates equilibrium relative recruitment as a function
 #' of SPR.
@@ -70,7 +84,7 @@
 #' 
 #' @example man-examples/models-srr.R
 #' 
-#' @seealso [SRR()]
+#' @seealso [SRR()], [SRRSteepness()]
 #'
 #' @name SRRModels
 NULL

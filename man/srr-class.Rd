@@ -29,7 +29,10 @@ the operating model on observed recruitment indices.
 \item{\code{Pars}}{\code{list}. Named list containing the steepness parameter for the
 chosen SRR model. For \code{BevertonHolt}: \code{list(h = ...)}. For \code{Ricker}:
 \code{list(hR = ...)}. For \code{HockeyStick}: \code{list(Shinge = ...)}. \code{R0} is never
-placed in \code{Pars}; it has its own dedicated slot. See \code{\link[=SRRModels]{SRRModels()}} and
+placed in \code{Pars}; it has its own dedicated slot. \code{BevertonHolt} and
+\code{Ricker} also accept \code{list(alpha = ..., beta = ...)} with \code{R0 = NULL};
+\code{\link[=Populate]{Populate()}} converts these to steepness and \code{R0} and stores the supplied
+values in \code{Misc$AlphaBeta} (see \code{\link[=SRRSteepness]{SRRSteepness()}}). See \code{\link[=SRRModels]{SRRModels()}} and
 \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for
 accepted input formats.}
 

@@ -8,7 +8,10 @@
 #' @slot Pars `list`. Named list containing the steepness parameter for the
 #'   chosen SRR model. For `BevertonHolt`: `list(h = ...)`. For `Ricker`:
 #'   `list(hR = ...)`. For `HockeyStick`: `list(Shinge = ...)`. `R0` is never
-#'   placed in `Pars`; it has its own dedicated slot. See [SRRModels()] and
+#'   placed in `Pars`; it has its own dedicated slot. `BevertonHolt` and
+#'   `Ricker` also accept `list(alpha = ..., beta = ...)` with `R0 = NULL`;
+#'   [Populate()] converts these to steepness and `R0` and stores the supplied
+#'   values in `Misc$AlphaBeta` (see [SRRSteepness()]). See [SRRModels()] and
 #'   [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for
 #'   accepted input formats.
 #' @slot Model `function` or `character(1)`. SRR model identifier. Defaults
