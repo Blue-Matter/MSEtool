@@ -40,7 +40,8 @@
 #' ## Models
 #'
 #' - `Model = 'internal'` (default): the model above, fitted by maximum
-#'   likelihood with [stats::nlminb()]. Numerical settings are set with
+#'   likelihood with [stats::nlminb()], using the exact gradient and Hessian of
+#'   the negative log-likelihood. Numerical settings are set with
 #'   [SPControl()].
 #' - `Model = 'spict'`: the stochastic surplus production model in
 #'   continuous time (SPiCT; Pedersen and Berg 2017), fitted with the `spict`
@@ -77,7 +78,9 @@
 #' @param IndexSD Character. `'estimate'` (default) or `'data'`; see Model.
 #' @param Priors Named list of lognormal priors, each `c(median, CV)`, on any
 #'   of `FMSY`, `MSY` (in catch units), `Depletion`, and `Shape`. A prior on a
-#'   fixed parameter is ignored.
+#'   fixed parameter is ignored. Default `list(FMSY = c(0.2, 2))`, a vague
+#'   prior that keeps the `FMSY` estimate away from zero when the data contain
+#'   little information on productivity. `list()` uses no priors.
 #' @param Control An [SPControl()] (`Model = 'internal'`) or
 #'   [SpictControl()] (`Model = 'spict'`) list. `NULL` (default) uses the
 #'   defaults of the selected model.
@@ -101,6 +104,11 @@
 #'   - `BMSY`, `FMSY`, `MSY`, `K`, `Shape`, `Depletion`
 #'   - `q`, `Sigma`: catchability and observation standard deviation of each
 #'     index
+#'   - `Indices`: a `data.frame` with one row per index used in the fit:
+#'     `Index` (name), `Source` (`'Survey'` or `'CPUE'`), `Units`, `Timing`,
+#'     `Weight` (the `IndexWeight` multiplier of its negative
+#'     log-likelihood, normalised to a mean of `1`), `nObs` (number of
+#'     positive observations in the fitted years), `q`, and `Sigma`
 #'   - `Terminal`: named vector of `B_BMSY` (after the last fitted year) and
 #'     `F_FMSY` (in the last fitted year)
 #'   - `SE`: named vector of standard errors of `logB_BMSY` (as in
@@ -129,7 +137,7 @@
 #' @export
 FitSP <- function(Data,
                   Indices      = NULL,
-                  IndexSource  = 'Survey',
+                  IndexSource  = 'auto',
                   IndexFreq    = NULL,
                   IndexWeight  = NULL,
                   IndexSeasons = NULL,
@@ -143,7 +151,7 @@ FitSP <- function(Data,
                   Depletion    = 1,
                   EstDepletion = FALSE,
                   IndexSD      = c('estimate', 'data'),
-                  Priors       = list(),
+                  Priors       = list(FMSY = c(0.2, 2)),
                   Control      = NULL,
                   Start        = NULL,
                   Uncertainty  = FALSE) {
@@ -192,10 +200,15 @@ FitSP <- function(Data,
 #'   does not converge. Default `2`.
 #' @param MinSD Positive number. Lower bound on an estimated index
 #'   observation standard deviation (`IndexSD = 'estimate'`). Default `0.05`.
-#' @param GradTol Positive number. A fit is converged when, for each
-#'   estimated (log-scale) parameter, the gradient divided by the curvature of
-#'   the negative log-likelihood (the estimated distance to the optimum) is
-#'   below `GradTol`, and the curvature is positive. Default `1e-3`.
+#' @param GradTol Positive number. A fit is converged when the Hessian of the
+#'   negative log-likelihood is positive definite and, for each estimated
+#'   (log-scale) parameter, the Newton step (the inverse Hessian times the
+#'   gradient, the estimated distance to the optimum) is below `GradTol`. The
+#'   gradient and Hessian are calculated exactly. Default `1e-3`.
+#' @param nNewton Non-negative integer. Maximum number of Newton steps, with
+#'   the exact gradient and Hessian, taken after [stats::nlminb()] stops, used
+#'   when the estimated distance to the optimum exceeds `GradTol`. Default
+#'   `10`.
 #' @param BoundTol Non-negative number. A fit with a log-scale parameter
 #'   within `BoundTol` of a bound is not converged. Default `0.01`.
 #' @param Bounds Named list of `c(lower, upper)` bounds on the estimated
@@ -203,10 +216,6 @@ FitSP <- function(Data,
 #'   Elements not given keep their defaults: `FMSY = c(0.005, 3)`,
 #'   `MSY = c(0.01, 100)`, `Depletion = c(0.05, 1.5)`, `Shape = c(0.2, 10)`.
 #' @param nlminb List of `control` settings passed to [stats::nlminb()].
-#' @param HessianStep Positive number. Finite-difference step (on the log
-#'   scale of the parameters) used to calculate the Hessian; steps 10 and 100
-#'   times smaller are tried if the Hessian is not positive definite. Default
-#'   `1e-5`.
 #' @param Hessian Character. When to calculate the Hessian used for the
 #'   standard errors: `'auto'` (default; when `Uncertainty = TRUE` in
 #'   [FitSP()], or when [SurplusProduction()] uses `FractileB`, `FractileF`,
@@ -228,11 +237,11 @@ SPControl <- function(nSubStep   = 4,
                       nRestart   = 2,
                       MinSD      = 0.05,
                       GradTol    = 1e-3,
+                      nNewton    = 10,
                       BoundTol   = 0.01,
                       Bounds     = list(FMSY = c(0.005, 3), MSY = c(0.01, 100),
                                         Depletion = c(0.05, 1.5), Shape = c(0.2, 10)),
                       nlminb     = list(iter.max = 500, eval.max = 1000),
-                      HessianStep = 1e-5,
                       Hessian    = c('auto', 'always', 'never')) {
 
   CatchScale <- match.arg(CatchScale, c('mean', 'none'))
@@ -257,8 +266,9 @@ SPControl <- function(nSubStep   = 4,
          FPenalty = FPenalty, FoxTol = FoxTol, CatchScale = CatchScale,
          WarmStart = WarmStart, nGrid = as.integer(nGrid), GridFMSY = GridFMSY,
          GridMSY = GridMSY, nRestart = as.integer(nRestart), MinSD = MinSD,
-         GradTol = GradTol, BoundTol = BoundTol, Bounds = Bounds, nlminb = nlminb,
-         HessianStep = HessianStep, Hessian = Hessian),
+         GradTol = GradTol, nNewton = as.integer(nNewton), BoundTol = BoundTol,
+         Bounds = Bounds, nlminb = nlminb,
+         Hessian = Hessian),
     class = 'spcontrol'
   )
 }
@@ -269,13 +279,13 @@ SPControl <- function(nSubStep   = 4,
 #' @return A list with `Years` (fitted years), `Catch` (fitted catch),
 #'   `Landings`, `Discards` (annual totals over all years), `AllYears`,
 #'   `Index`, `CV` (`[nFitYear x nIndex]`), `Timing`, `Weight`, `Name`,
-#'   `Units`, `YearLH`, `LastDataYear`, and `Log` (character vector of
+#'   `Source` (`'Survey'` or `'CPUE'`), `Units`, `YearLH`, `LastDataYear`, and `Log` (character vector of
 #'   assumptions).
 #' @keywords internal
 .SPPrepData <- function(Data, Indices, IndexSource, IndexFreq, IndexWeight, IndexSeasons,
                         IndexUnits, CatchType, FitYears) {
   .CheckClass(Data, 'data', 'Data')
-  IndexSource <- match.arg(IndexSource, c('Survey', 'CPUE'), several.ok = TRUE)
+  IndexSource <- .ResolveIndexSource(Data, IndexSource)
   IndexUnits  <- match.arg(IndexUnits, c('Biomass', 'Number'), several.ok = TRUE)
   Log         <- character()
 
@@ -334,12 +344,14 @@ SPControl <- function(nSubStep   = 4,
 
   CVMat  <- Selected$CV[, Keep, drop = FALSE]
   Name   <- Selected$Name[Keep]
+  Source <- Selected$Source[Keep]
   Weight <- IndexWeight[Keep]
 
   IndexMat <- IndexMat[, UseUnits, drop = FALSE]
   CVMat    <- CVMat[, UseUnits, drop = FALSE]
   Timing   <- Timing[UseUnits]
   Name     <- Name[UseUnits]
+  Source   <- Source[UseUnits]
   Units    <- Units[UseUnits]
   Weight   <- Weight[UseUnits]
   if (!length(Weight))
@@ -382,7 +394,7 @@ SPControl <- function(nSubStep   = 4,
   list(Years = Years[FitRows], Catch = FitCatch, AllYears = Years, SubCatch = SubCatch,
        Landings = Landings, Discards = Discards, CatchAll = Catch,
        Index = IndexMat, CV = CVMat, Timing = Timing, Weight = Weight,
-       Name = Name, Units = Units, YearLH = Data@YearLH,
+       Name = Name, Source = Source, Units = Units, YearLH = Data@YearLH,
        LastDataYear = max(Years), CatchUnits = CatchUnits, Log = Log)
 }
 
@@ -483,26 +495,49 @@ SPControl <- function(nSubStep   = 4,
     p
   }
 
-  PriorNLL <- function(p) {
-    Out <- 0
+  Ind <- match(Est, names(Base))
+  PriorTerms <- function(theta) {
+    Out <- list(NLL = 0, Grad = numeric(length(Est)), Hess = matrix(0, length(Est), length(Est)))
     for (nm in intersect(names(Priors), Est)) {
-      sdlog <- sqrt(log(1 + Priors[[nm]][2]^2))
-      Out   <- Out + (log(p[[nm]]) - log(Priors[[nm]][1]))^2 / (2 * sdlog^2)
+      k     <- match(nm, Est)
+      prec  <- 1 / log(1 + Priors[[nm]][2]^2)
+      Dev   <- theta[[k]] - log(Priors[[nm]][1])
+      Out$NLL        <- Out$NLL + Dev^2 * prec / 2
+      Out$Grad[k]    <- Out$Grad[k] + Dev * prec
+      Out$Hess[k, k] <- Out$Hess[k, k] + prec
     }
     Out
   }
 
+  ModelPars <- function(p) c(p[['FMSY']], p[['MSY']] / Scale, p[['Depletion']], p[['Shape']])
   Model <- function(p, Report = FALSE) {
-    SPModel_cpp(c(p[['FMSY']], p[['MSY']] / Scale, p[['Depletion']], p[['Shape']]),
-                CatchS, Prep$Index, SDInfo$SD, Prep$Timing, Prep$Weight, SDInfo$EstSD,
-                Control$nSubStep, Control$nItF, Control$Fmax, Control$FPenalty,
+    SPModel_cpp(ModelPars(p), CatchS, Prep$Index, SDInfo$SD, Prep$Timing, Prep$Weight,
+                SDInfo$EstSD, Control$nSubStep, Control$nItF, Control$Fmax, Control$FPenalty,
                 Control$FoxTol, Control$MinSD, Report)
   }
 
   Objective <- function(theta) {
-    p   <- Natural(theta)
-    Out <- Model(p)$NLL + PriorNLL(p)
+    Out <- Model(Natural(theta))$NLL + PriorTerms(theta)$NLL
     if (!is.finite(Out)) 1e10 else Out
+  }
+
+  Cache <- new.env()
+  Eval  <- function(theta) {
+    if (identical(theta, Cache$theta)) return(Cache$Value)
+    D  <- SPModelDeriv_cpp(ModelPars(Natural(theta)), Ind, CatchS, Prep$Index, SDInfo$SD,
+                           Prep$Timing, Prep$Weight, SDInfo$EstSD, Control$nSubStep,
+                           Control$nItF, Control$Fmax, Control$FPenalty, Control$FoxTol,
+                           Control$MinSD)
+    Pr <- PriorTerms(theta)
+    Value <- list(f = D$NLL + Pr$NLL, g = D$Grad + Pr$Grad, H = D$Hess + Pr$Hess, D = D)
+    if (!is.finite(Value$f) || any(!is.finite(Value$g)) || any(!is.finite(Value$H))) {
+      Value$f <- Inf
+      Value$g[] <- 0
+      Value$H[] <- 0
+    }
+    Cache$theta <- theta
+    Cache$Value <- Value
+    Value
   }
 
   Log <- Prep$Log
@@ -522,13 +557,13 @@ SPControl <- function(nSubStep   = 4,
       (Fit$Converged == Best$Converged && Fit$objective < Best$objective)
   }
   for (Theta in StartList) {
-    Fit <- .SPOptimise(Theta, Objective, Lower[Est], Upper[Est], Control)
+    Fit <- .SPOptimise(Theta, Eval, Lower[Est], Upper[Est], Control)
     if (Better(Fit, Best)) Best <- Fit
   }
   if (is.null(Best) || !Best$Converged) {
     GridStarts <- .SPGridStarts(Objective, Est, Base, MeanCatch, Control, Lower, Upper)
     for (Theta in GridStarts[seq_len(min(length(GridStarts), 1 + Control$nRestart))]) {
-      Fit <- .SPOptimise(Theta, Objective, Lower[Est], Upper[Est], Control)
+      Fit <- .SPOptimise(Theta, Eval, Lower[Est], Upper[Est], Control)
       if (Better(Fit, Best)) Best <- Fit
       if (Best$Converged) break
     }
@@ -540,14 +575,7 @@ SPControl <- function(nSubStep   = 4,
   WantSE <- Control$Hessian == 'always' || (Control$Hessian == 'auto' && Uncertainty)
   SE     <- c(logB_BMSY = NA_real_, logFMSY = NA_real_, logF_FMSY = NA_real_, logMSY = NA_real_)
   if (WantSE) {
-    Derived <- function(theta) {
-      pp   <- Natural(theta)
-      R    <- Model(pp, Report = TRUE)
-      BMSY <- pp[['MSY']] / pp[['FMSY']] / Scale
-      c(logB_BMSY = log(utils::tail(R$B, 1) / BMSY), logFMSY = log(pp[['FMSY']]),
-        logF_FMSY = log(utils::tail(R$F, 1) / pp[['FMSY']]), logMSY = log(pp[['MSY']]))
-    }
-    SE <- .SPDeltaSE(Best$par, Objective, Derived, SE, Control$HessianStep)
+    SE <- .SPDeltaSE(Eval(Best$par), Est, SE)
     if (anyNA(SE)) Log <- c(Log, "Hessian not positive definite; standard errors not available.")
   }
 
@@ -572,58 +600,59 @@ SPControl <- function(nSubStep   = 4,
   Theta[order(Value)]
 }
 
-.SPOptimise <- function(Start, Objective, Lower, Upper, Control) {
-  Opt <- try(stats::nlminb(Start, Objective, lower = Lower, upper = Upper,
-                           control = Control$nlminb), silent = TRUE)
+.SPOptimise <- function(Start, Eval, Lower, Upper, Control) {
+  Opt <- try(stats::nlminb(Start, \(x) Eval(x)$f, \(x) Eval(x)$g, \(x) Eval(x)$H,
+                           lower = Lower, upper = Upper, control = Control$nlminb),
+             silent = TRUE)
   if (inherits(Opt, 'try-error'))
-    return(list(par = Start, objective = Objective(Start), Converged = FALSE,
+    return(list(par = Start, objective = Eval(Start)$f, Converged = FALSE,
                 Message = conditionMessage(attr(Opt, 'condition'))))
 
-  Step      <- .SPNewtonStep(Opt$par, Opt$objective, Objective)
-  AtBound   <- any(Opt$par - Lower < Control$BoundTol | Upper - Opt$par < Control$BoundTol)
-  Converged <- Opt$convergence == 0 && all(is.finite(Step)) &&
-    max(abs(Step)) < Control$GradTol && !AtBound && Opt$objective < 1e10
-  Message <- if (Converged) 'Converged' else if (Opt$convergence != 0) Opt$message else
-    if (AtBound) 'Estimate at a parameter bound' else
-      sprintf('Estimated distance to the optimum %.2g exceeds GradTol', max(abs(Step)))
-  list(par = Opt$par, objective = Opt$objective, Converged = Converged, Message = Message)
-}
-
-.SPNewtonStep <- function(theta, f0, fn, h = 1e-4) {
-  vapply(seq_along(theta), \(j) {
-    Up <- Dn <- theta
-    Up[j] <- Up[j] + h
-    Dn[j] <- Dn[j] - h
-    fUp  <- fn(Up)
-    fDn  <- fn(Dn)
-    Curv <- (fUp - 2 * f0 + fDn) / h^2
-    if (!is.finite(Curv) || Curv <= 0) return(Inf)
-    ((fUp - fDn) / (2 * h)) / Curv
-  }, numeric(1))
-}
-
-.SPDeltaSE <- function(theta, Objective, Derived, Default, Step = 1e-5) {
-  V <- NULL
-  for (h in Step * 10^(0:-2)) {
-    H <- try(stats::optimHess(theta, Objective, control = list(ndeps = rep(h, length(theta)))),
-             silent = TRUE)
-    if (inherits(H, 'try-error') || any(!is.finite(H))) next
-    H <- (H + t(H)) / 2
-    if (all(eigen(H, symmetric = TRUE, only.values = TRUE)$values > 0)) {
-      V <- solve(H)
-      break
+  Par  <- Opt$par
+  E    <- Eval(Par)
+  Step <- .SPNewtonStep(E$g, E$H)
+  for (it in seq_len(Control$nNewton)) {
+    if (!all(is.finite(Step)) || max(abs(Step)) < Control$GradTol) break
+    Accepted <- FALSE
+    for (Frac in 2^-(0:5)) {
+      New  <- pmin(pmax(Par - Frac * Step, Lower), Upper)
+      ENew <- Eval(New)
+      if (ENew$f <= E$f) {
+        Accepted <- TRUE
+        break
+      }
     }
+    if (!Accepted) break
+    Par  <- New
+    E    <- ENew
+    Step <- .SPNewtonStep(E$g, E$H)
   }
-  if (is.null(V)) return(Default)
-  h <- Step
-  J <- vapply(seq_along(theta), \(j) {
-    Up <- Dn <- theta
-    Up[j] <- Up[j] + h
-    Dn[j] <- Dn[j] - h
-    (Derived(Up) - Derived(Dn)) / (2 * h)
-  }, numeric(length(Default)))
-  J  <- matrix(J, nrow = length(Default))
-  SE <- sqrt(pmax(diag(J %*% V %*% t(J)), 0))
+
+  AtBound   <- any(Par - Lower < Control$BoundTol | Upper - Par < Control$BoundTol)
+  Converged <- all(is.finite(Step)) && max(abs(Step)) < Control$GradTol && !AtBound &&
+    E$f < 1e10
+  Message <- if (Converged) 'Converged' else if (AtBound) 'Estimate at a parameter bound' else
+    if (!all(is.finite(Step))) 'Hessian not positive definite' else
+      sprintf('Estimated distance to the optimum %.2g exceeds GradTol', max(abs(Step)))
+  list(par = Par, objective = E$f, Converged = Converged, Message = Message)
+}
+
+.SPPosDef <- function(H) {
+  all(is.finite(H)) && all(eigen(H, symmetric = TRUE, only.values = TRUE)$values > 0)
+}
+
+.SPNewtonStep <- function(g, H) {
+  if (!.SPPosDef(H)) return(rep(Inf, length(g)))
+  drop(solve(H, g))
+}
+
+.SPDeltaSE <- function(E, Est, Default) {
+  if (!.SPPosDef(E$H)) return(Default)
+  V    <- solve(E$H)
+  Unit <- function(nm) as.numeric(Est == nm)
+  J    <- rbind(E$D$GradLogB - Unit('MSY') + Unit('FMSY'), Unit('FMSY'),
+                E$D$GradLogF - Unit('FMSY'), Unit('MSY'))
+  SE   <- sqrt(pmax(rowSums((J %*% V) * J), 0))
   stats::setNames(SE, names(Default))
 }
 
@@ -641,7 +670,7 @@ SPControl <- function(nSubStep   = 4,
          B_BMSY = B / BMSY, F_FMSY = F / par[['FMSY']],
          BMSY = BMSY, FMSY = par[['FMSY']], MSY = par[['MSY']], K = K,
          Shape = par[['Shape']], Depletion = par[['Depletion']],
-         q = q, Sigma = Sigma,
+         q = q, Sigma = Sigma, Indices = .SPIndexTable(Prep, q, Sigma),
          Terminal = c(B_BMSY = unname(utils::tail(B, 1)) / BMSY,
                       F_FMSY = unname(utils::tail(F, 1)) / par[['FMSY']]),
          SE = SE, NLL = NLL, Time = proc.time()[[3]] - StartTime,
@@ -650,11 +679,18 @@ SPControl <- function(nSubStep   = 4,
   )
 }
 
+.SPIndexTable <- function(Prep, q = NA_real_, Sigma = NA_real_) {
+  data.frame(Index = Prep$Name, Source = Prep$Source, Units = Prep$Units, Timing = Prep$Timing,
+             Weight = Prep$Weight, nObs = colSums(is.finite(Prep$Index) & Prep$Index > 0),
+             q = unname(q), Sigma = unname(Sigma), row.names = NULL)
+}
+
 .SPFailedFit <- function(Prep, Model, Message, Log, StartTime) {
   structure(
     list(Model = Model, Converged = FALSE, Message = Message,
          par = c(FMSY = NA_real_, MSY = NA_real_, Depletion = NA_real_, Shape = NA_real_),
-         Years = Prep$Years, Terminal = c(B_BMSY = NA_real_, F_FMSY = NA_real_),
+         Years = Prep$Years, Indices = .SPIndexTable(Prep),
+         Terminal = c(B_BMSY = NA_real_, F_FMSY = NA_real_),
          SE = c(logB_BMSY = NA_real_, logFMSY = NA_real_, logF_FMSY = NA_real_, logMSY = NA_real_),
          NLL = NA_real_, Time = proc.time()[[3]] - StartTime, Log = Log, Prep = Prep),
     class = 'spfit'

@@ -243,6 +243,10 @@ SPModel_cpp <- function(Pars, Catch, Index, SD, Timing, Weight, EstSD, nSub, nIt
     .Call(`_MSEtool_SPModel_cpp`, Pars, Catch, Index, SD, Timing, Weight, EstSD, nSub, nItF, Fmax, FPenalty, FoxTol, MinSD, Report)
 }
 
+SPModelDeriv_cpp <- function(Pars, Active, Catch, Index, SD, Timing, Weight, EstSD, nSub, nItF, Fmax, FPenalty, FoxTol, MinSD) {
+    .Call(`_MSEtool_SPModelDeriv_cpp`, Pars, Active, Catch, Index, SD, Timing, Weight, EstSD, nSub, nItF, Fmax, FPenalty, FoxTol, MinSD)
+}
+
 SPProject_cpp <- function(Pars, B0, Value, Type, nSub, nItF, Fmax, FoxTol) {
     .Call(`_MSEtool_SPProject_cpp`, Pars, B0, Value, Type, nSub, nItF, Fmax, FoxTol)
 }

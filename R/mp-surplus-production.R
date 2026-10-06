@@ -24,7 +24,7 @@
 #'
 #' The derived quantities are `BMSY = MSY / FMSY` and `K = BMSY / (BMSY/K)`.
 #' Lognormal priors can be set on any estimated leading parameter with
-#' `Priors`. With `Model = 'internal'`, the catchability of each index is
+#' `Priors`; by default `FMSY` has a vague prior (median `0.2`, CV `2`). With `Model = 'internal'`, the catchability of each index is
 #' calculated at its maximum likelihood value given the leading parameters,
 #' and the observation standard deviation of each index is either calculated
 #' the same way (`IndexSD = 'estimate'`) or set from the index `CV`
@@ -78,9 +78,50 @@
 #' step 5. Each such management cycle is recorded as a warning in the `Log`
 #' of the returned [advice-class] object.
 #'
-#' The estimates of each management cycle are stored in
-#' `Advice@@Misc$SurplusProduction` (see `Diagnostics`); [SPEstimates()]
-#' extracts them from an [mse-class] object.
+#' ## Diagnostics
+#'
+#' The estimates of each management cycle are stored in the `Misc` slot of
+#' the returned [advice-class] object, as the list
+#' `Advice@@Misc$SurplusProduction`. Its contents are set by the
+#' `Diagnostics` argument:
+#'
+#' - `Model` and `par`: the model and the parameter estimates, used as
+#'   starting values for the next fit. Always stored.
+#' - `Summary` (`'min'` and `'full'`): a one-row `data.frame` with
+#'   `AdviceYear`, `LastDataYear`, `Converged`, `Fallback`, the estimated
+#'   `B_BMSY` and `F_FMSY`, `BAdvice_BMSY` (the projected status at the start
+#'   of `AdviceYear`), `MSY`, `FMSY`, `FAdvice` (the fishing mortality from
+#'   the harvest control rule), `Advice` (the TAC or relative effort before
+#'   allocation), and `Message` (`'Converged'`, or the reason the advice was
+#'   set by `OnFail`).
+#' - `Indices` (`'min'` and `'full'`): a `data.frame` with one row per index
+#'   used in the fit: `Index`, `Source` (`'Survey'` or `'CPUE'`), `Units`,
+#'   `Timing`, `Weight` (the normalised `IndexWeight`), `nObs` (number of
+#'   positive observations in the fitted years), and the estimated `q` and
+#'   `Sigma` (`NA` when the advice is set by `OnFail`). The relative weight of
+#'   each index in the fit is `Weight / Sigma^2`.
+#' - `Fit` (`'full'` only): the `spfit` object returned by [FitSP()],
+#'   including the estimated biomass and fishing mortality time series, the
+#'   index catchabilities and standard deviations, the standard errors, and
+#'   the `Log` of the fit, without the `Prep` and `Spict` elements. Not
+#'   stored when the advice is set by `OnFail`.
+#'
+#' In a projection, the advice objects are kept in `MSE@@Misc$Advice`,
+#' indexed by MP, management year, simulation, and stock (complex).
+#' [SPEstimates()] combines the `Summary` of every management cycle into one
+#' `data.frame` and adds the operating model values of `B/BMSY` and
+#' `F/FMSY` (from [B_BMSY()] and [F_FMSY()]) for the same years, to compare
+#' the estimated and true stock status. `SPEstimates(Type = 'Indices')`
+#' combines the `Indices` of every management cycle. The fit for a single data set can be
+#' examined directly with [FitSP()], using the same arguments.
+#'
+#' Each management cycle with advice set by `OnFail` is also recorded as a
+#' `SurplusProduction` warning in `MSE@@Log`, with the reason the fit was not
+#' used; `Log(MSE, type = 'warning')` lists these by MP, year, and
+#' simulation. The `Converged` and `Fallback` columns of [SPEstimates()]
+#' give the same information as a `data.frame`.
+#'
+#' ## Tuning
 #'
 #' `tunepar = 1` applies the MP as specified; larger values increase the
 #' target fishing mortality proportionally. See [TuneMP()].
@@ -145,10 +186,11 @@
 #'   `c(2, 3)`.
 #' @param Diagnostics Character. Information stored in
 #'   `Advice@@Misc$SurplusProduction`: `'min'` (default; the parameter
-#'   estimates and a one-row summary, used by [SPEstimates()]), `'none'` (the
+#'   estimates, a one-row summary, and a table of the indices used, used by
+#'   [SPEstimates()]), `'none'` (the
 #'   parameter estimates only, used to start the next fit), or `'full'` (also
 #'   the `spfit` object, without `Prep` and `Spict`; see [FitSP()]). When the
-#'   advice is set by `OnFail`, `'min'` is used.
+#'   advice is set by `OnFail`, `'min'` is used. See Details, Diagnostics.
 #'
 #' @return An [advice-class] object.
 #'
@@ -162,12 +204,13 @@
 #' SPEstimates(MSE)
 #' }
 #'
-#' @seealso [FitSP()], [SPEstimates()], [HockeyStickHCR()], [ConstrainTAC()],
-#'   [IndexRate()], [TuneMP()]
+#' @seealso [FitSP()], [SPControl()], [SpictControl()], [AnnualData()],
+#'   [SPEstimates()], [Log()], [B_BMSY()], [F_FMSY()], [HockeyStickHCR()],
+#'   [ConstrainTAC()], [IndexRate()], [TuneMP()]
 #' @export
 SurplusProduction <- function(Data,
                               Indices                 = NULL,
-                              IndexSource             = 'Survey',
+                              IndexSource             = 'auto',
                               IndexFreq               = NULL,
                               IndexWeight             = NULL,
                               IndexSeasons            = NULL,
@@ -182,7 +225,7 @@ SurplusProduction <- function(Data,
                               Depletion               = 1,
                               EstDepletion            = FALSE,
                               IndexSD                 = c('estimate', 'data'),
-                              Priors                  = list(),
+                              Priors                  = list(FMSY = c(0.2, 2)),
                               Control                 = NULL,
                               FTarget                 = 1,
                               HCRControlPointsBiomass = c(0, 0.5),
@@ -332,7 +375,7 @@ SurplusProduction <- function(Data,
                      TACUnit = .SPTACUnit(Data))
   }
 
-  Advice@Misc <- .SPStoreState(Misc, Model, Fit$par, Summary, Fit, Diagnostics)
+  Advice@Misc <- .SPStoreState(Misc, Model, Fit$par, Summary, Fit, Diagnostics, Fit$Indices)
   if (First)
     for (msg in Prep$Log)
       Advice <- .CaptureLog(Advice, msg, name = 'SurplusProduction', type = 'assumption')
@@ -385,10 +428,12 @@ class(SurplusProduction) <- 'mp'
   if (!length(Eff) || !(mean(Eff) > 0)) 1 else mean(Eff)
 }
 
-.SPStoreState <- function(Misc, Model, par, Summary, Fit, Diagnostics) {
+.SPStoreState <- function(Misc, Model, par, Summary, Fit, Diagnostics, Indices = NULL) {
   State <- list(Model = Model, par = par)
-  if (Diagnostics != 'none')
+  if (Diagnostics != 'none') {
     State$Summary <- Summary
+    State$Indices <- Indices
+  }
   if (Diagnostics == 'full' && !is.null(Fit)) {
     Fit$Prep  <- NULL
     Fit$Spict <- NULL
@@ -427,7 +472,8 @@ class(SurplusProduction) <- 'mp'
                         Advice = Value, Message = Message)
   par         <- if (!is.null(State)) State$par else NULL
   Model      <- if (!is.null(State)) State$Model else NULL
-  Advice@Misc <- .SPStoreState(Misc, Model, par, Summary, Fit, 'min')
+  Advice@Misc <- .SPStoreState(Misc, Model, par, Summary, Fit, 'min',
+                               if (!is.null(Prep)) .SPIndexTable(Prep))
   Message     <- sub('([^.])$', '\\1.', Message)
   .CaptureLog(Advice, paste0(Message, ' Advice set by OnFail = "', OnFail, '".'),
               name = 'SurplusProduction', type = 'warning')
@@ -455,9 +501,15 @@ class(SurplusProduction) <- 'mp'
 #' @param MSE An [mse-class] object.
 #' @param MPs Character vector of MP names. `NULL` (default) uses every MP
 #'   that stored [SurplusProduction()] estimates.
+#' @param Type Character. `'Summary'` (default) or `'Indices'`.
 #'
-#' @return A `data.frame` with one row per MP, simulation, stock (complex),
-#'   and management cycle: `AdviceYear`, `LastDataYear`, `Converged`,
+#' @return For `Type = 'Indices'`, a `data.frame` with one row per MP,
+#'   simulation, stock (complex), management cycle (`AdviceYear`), and index,
+#'   with the columns of `Indices` described in [SurplusProduction()]
+#'   (Details, Diagnostics).
+#'
+#'   For `Type = 'Summary'`, a `data.frame` with one row per MP, simulation,
+#'   stock (complex), and management cycle: `AdviceYear`, `LastDataYear`, `Converged`,
 #'   `Fallback`, the estimated `B_BMSY` (biomass at the start of the year
 #'   after the last data year relative to `BMSY`) and `F_FMSY` (in the last
 #'   data year), `BAdvice_BMSY`, `MSY`, `FMSY`, `FAdvice`, `Advice` (the TAC
@@ -468,10 +520,28 @@ class(SurplusProduction) <- 'mp'
 #' Estimates are only available for MPs run with `Diagnostics = 'min'` or
 #' `'full'`.
 #'
-#' @seealso [SurplusProduction()], [B_BMSY()], [F_FMSY()]
+#' @examples
+#' \dontrun{
+#' Hist <- Simulate(SingleStockOM)
+#' MSE  <- Project(Hist, MPs = list(SP = SurplusProduction))
+#' Est  <- SPEstimates(MSE)
+#'
+#' # fraction of management cycles with advice set by `OnFail`, by MP
+#' aggregate(Fallback ~ MP, data = Est, FUN = mean)
+#'
+#' # reasons the fit was not used
+#' table(Est$Message[Est$Fallback])
+#'
+#' # estimated vs operating model stock status
+#' plot(Est$OM_B_BMSY, Est$B_BMSY, xlab = 'OM B/BMSY', ylab = 'Estimated B/BMSY')
+#' abline(0, 1)
+#' }
+#'
+#' @seealso [SurplusProduction()], [Log()], [B_BMSY()], [F_FMSY()]
 #' @export
-SPEstimates <- function(MSE, MPs = NULL) {
+SPEstimates <- function(MSE, MPs = NULL, Type = c('Summary', 'Indices')) {
   .CheckClass(MSE, 'mse', 'MSE')
+  Type <- match.arg(Type, c('Summary', 'Indices'))
   AdviceByMP <- MSE@Misc$Advice
   if (is.null(MPs)) MPs <- names(AdviceByMP)
 
@@ -487,6 +557,11 @@ SPEstimates <- function(MSE, MPs = NULL) {
           if (!inherits(A, 'advice')) next
           S <- A@Misc$SurplusProduction$Summary
           if (is.null(S)) next
+          if (Type == 'Indices') {
+            I <- A@Misc$SurplusProduction$Indices
+            if (!NROW(I)) next
+            S <- cbind(data.frame(AdviceYear = S$AdviceYear), I)
+          }
           Rows[[length(Rows) + 1]] <- cbind(data.frame(MP = mp, Sim = sim, Stock = st), S)
         }
       }
@@ -495,6 +570,11 @@ SPEstimates <- function(MSE, MPs = NULL) {
   if (!length(Rows))
     cli::cli_abort("No {.fn SurplusProduction} estimates found in {.arg MSE}.")
   Out <- do.call(rbind, Rows)
+  if (Type == 'Indices') {
+    Out <- Out[!duplicated(Out[, c('MP', 'Sim', 'Stock', 'AdviceYear', 'Index')]), ]
+    rownames(Out) <- NULL
+    return(Out)
+  }
   Out <- Out[!duplicated(Out[, c('MP', 'Sim', 'Stock', 'AdviceYear')]), ]
 
   BTrue         <- tryCatch(.SPTrueSeries(B_BMSY(MSE, df = TRUE, Reduce = FALSE)), error = function(e) NULL)

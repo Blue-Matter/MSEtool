@@ -24,6 +24,18 @@
 #'   (with `n = Shape`), and `Priors$MSY` a prior on `m` (MSY).
 #' - `Start` (or the warm start in [SurplusProduction()]) sets the starting
 #'   values of `m` and `K`.
+#' - Catch observations cannot be zero, so a year (or season) with zero
+#'   catch is combined with the preceding catch observation (or the following
+#'   one, before the first positive catch) into one observation of the total
+#'   catch over the longer interval.
+#'
+#' A fit is converged when the Hessian of the objective function is positive
+#' definite and, for each estimated parameter, the Newton step (the inverse
+#' Hessian times the gradient) is below `GradTol`. If the fit does not
+#' converge, it is repeated from the default `spict` starting values (when
+#' the first fit used `Start`) and then with the starting value of `K` at
+#' each multiple of the maximum catch in `RestartK`, and the converged fit
+#' with the lowest objective function value is used.
 #'
 #' @param dteuler Positive number. Euler time step (years) of the model.
 #'   Default `1`. With sub-annual catch (`SeasonalCatch = TRUE`), the time
@@ -43,6 +55,11 @@
 #' @param optimiser Character. `'nlminb'` (default) or `'optim'`.
 #' @param optimiser.control List of optimiser controls. Default
 #'   `list(iter.max = 500, eval.max = 1000)`.
+#' @param GradTol Positive number. Convergence tolerance on the Newton step;
+#'   see Details. Default `1e-3`.
+#' @param RestartK Numeric vector. Starting values of `K`, as multiples of the
+#'   maximum catch, used for additional fits when a fit does not converge.
+#'   `NULL` for no additional fits. Default `c(10, 2)`.
 #' @param SDReport Character. When to run `TMB::sdreport()`, which is needed
 #'   for the standard errors: `'auto'` (default; when `Uncertainty = TRUE` in
 #'   [FitSP()], or when [SurplusProduction()] uses `FractileB`, `FractileF`,
@@ -69,6 +86,8 @@ SpictControl <- function(dteuler             = 1,
                          stabilise           = TRUE,
                          optimiser           = c('nlminb', 'optim'),
                          optimiser.control   = list(iter.max = 500, eval.max = 1000),
+                         GradTol             = 1e-3,
+                         RestartK            = c(10, 2),
                          SDReport            = c('auto', 'always', 'never'),
                          getReportCovariance = FALSE,
                          WarmStart           = TRUE,
@@ -83,7 +102,8 @@ SpictControl <- function(dteuler             = 1,
   structure(
     list(dteuler = dteuler, SeasonalCatch = SeasonalCatch, Robust = Robust, Priors = Priors,
          FixedDepletionCV = FixedDepletionCV, stabilise = stabilise, optimiser = optimiser,
-         optimiser.control = optimiser.control, SDReport = SDReport,
+         optimiser.control = optimiser.control, GradTol = GradTol, RestartK = RestartK,
+         SDReport = SDReport,
          getReportCovariance = getReportCovariance, WarmStart = WarmStart, Quiet = Quiet,
          Inp = Inp),
     class = 'spictcontrol'
@@ -92,19 +112,11 @@ SpictControl <- function(dteuler             = 1,
 
 .SpictInp <- function(Prep, Shape, EstShape, Depletion, EstDepletion, IndexSD, Priors,
                       Control, Start) {
-  inp <- list()
-  if (Control$SeasonalCatch && !is.null(Prep$SubCatch)) {
-    inp$obsC  <- Prep$SubCatch$Catch
-    inp$timeC <- Prep$SubCatch$Time
-    inp$dtc   <- Prep$SubCatch$dt
+  inp <- if (Control$SeasonalCatch && !is.null(Prep$SubCatch)) {
+    .SpictCatch(Prep$SubCatch$Catch, Prep$SubCatch$Time, Prep$SubCatch$dt)
   } else {
-    inp$obsC  <- Prep$Catch
-    inp$timeC <- Prep$Years
-    inp$dtc   <- 1
+    .SpictCatch(Prep$Catch, Prep$Years, 1)
   }
-  Pos <- inp$obsC > 0
-  if (!all(Pos))
-    inp$obsC[!Pos] <- 1e-6 * mean(inp$obsC[Pos])
 
   SDLog    <- sqrt(log(1 + Prep$CV^2))
   inp$obsI <- inp$timeI <- inp$stdevfacI <- list()
@@ -171,6 +183,17 @@ SpictControl <- function(dteuler             = 1,
   inp
 }
 
+# zero-catch intervals join the preceding positive catch (the following one if leading)
+.SpictCatch <- function(Catch, Time, dt) {
+  Pos <- is.finite(Catch) & Catch > 0
+  if (!any(Pos))
+    cli::cli_abort("No positive catch in the fitted years.")
+  Group <- pmax(cumsum(Pos), 1)
+  list(obsC  = as.numeric(tapply(ifelse(Pos, Catch, 0), Group, sum)),
+       timeC = as.numeric(tapply(Time, Group, min)),
+       dtc   = as.numeric(tapply(rep(dt, length(Time)), Group, sum)))
+}
+
 .FitSPspict <- function(Prep, Shape, EstShape, Depletion, EstDepletion, IndexSD, Priors,
                         Control, Start, Uncertainty) {
   CheckPackage('spict', pkg.path = "pak::pkg_install('DTUAqua/spict/spict')")
@@ -183,8 +206,33 @@ SpictControl <- function(dteuler             = 1,
   if (is.character(inp))
     return(.SPFailedFit(Prep, 'spict', inp, Log, StartTime))
 
-  inp$do.sd.report <- Control$SDReport == 'always' || (Control$SDReport == 'auto' && Uncertainty)
+  DoSD     <- Control$SDReport == 'always' || (Control$SDReport == 'auto' && Uncertainty)
+  HasStart <- length(Start) > 0 && all(c('FMSY', 'MSY') %in% names(Start))
+  Base     <- if (HasStart) {
+    .SpictInp(Prep, Shape, EstShape, Depletion, EstDepletion, IndexSD, Priors, Control, NULL)
+  } else {
+    inp
+  }
+  Starts <- c(if (HasStart) list(inp), list(Base),
+              lapply(Control$RestartK, \(k) {
+                x <- Base
+                x$ini$logK <- log(k * max(x$obsC))
+                x
+              }))
 
+  Best <- NULL
+  for (x in Starts) {
+    x$do.sd.report <- DoSD
+    Out <- .SpictFitOnce(x, Prep, Log, StartTime, Control)
+    if (is.null(Best) || (Out$Converged && !Best$Converged) ||
+        (Out$Converged == Best$Converged && isTRUE(Out$NLL < Best$NLL)))
+      Best <- Out
+    if (Best$Converged) break
+  }
+  Best
+}
+
+.SpictFitOnce <- function(inp, Prep, Log, StartTime, Control) {
   Warnings <- character()
   Fit      <- NULL
   if (Control$Quiet) {
@@ -231,9 +279,16 @@ SpictControl <- function(dteuler             = 1,
     if (any(ok)) mean(FSeries[ok]) else NA_real_
   }, numeric(1))
 
-  Converged <- Fit$opt$convergence == 0 && all(is.finite(c(m, K, n, B, F)))
-  Message   <- if (Converged) 'Converged' else if (Fit$opt$convergence != 0)
-    paste('spict optimiser:', Fit$opt$message %||% 'did not converge') else 'Non-finite estimates'
+  Step <- tryCatch({
+    g <- Fit$obj$gr(Fit$opt$par)
+    H <- stats::optimHess(Fit$opt$par, Fit$obj$fn, Fit$obj$gr)
+    .SPNewtonStep(drop(g), (H + t(H)) / 2)
+  }, error = function(e) Inf)
+  Finite    <- all(is.finite(c(m, K, n, B, F)))
+  Converged <- Finite && all(is.finite(Step)) && max(abs(Step)) < Control$GradTol
+  Message   <- if (Converged) 'Converged' else if (!Finite) 'Non-finite estimates' else
+    if (!all(is.finite(Step))) 'Hessian not positive definite' else
+      sprintf('Estimated distance to the optimum %.2g exceeds GradTol', max(abs(Step)))
 
   SE <- c(logB_BMSY = NA_real_, logFMSY = NA_real_, logF_FMSY = NA_real_, logMSY = NA_real_)
   if (isTRUE(inp$do.sd.report)) {
