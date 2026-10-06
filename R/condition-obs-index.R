@@ -177,11 +177,11 @@
     
     ResidualsBeta <- CalcIndexResiduals(ObservedIndex, Nom_Index, beta=FixedBeta, FitInd=TSInd)
 
-    Index_Obs@Beta       <- ResidualsBeta$Beta
-    Index_Obs@Efficiency <- ResidualsBeta$Efficiency
+    Index_Obs@Beta       <- .NameSims(ResidualsBeta$Beta, nSim)
+    Index_Obs@Efficiency <- .NameSims(ResidualsBeta$Efficiency, nSim)
     LogResiduals <- ResidualsBeta$LogResiduals
 
-    Index_Obs@Misc$BetaFit <- list(
+    Index_Obs@Misc$BetaFit <- lapply(list(
       SE_Beta  = ResidualsBeta$SE_Beta,
       CI_Lower = ResidualsBeta$CI_Lower,
       CI_Upper = ResidualsBeta$CI_Upper,
@@ -189,7 +189,7 @@
       PValue   = ResidualsBeta$PValue,
       nPoints  = ResidualsBeta$nPoints,
       Status   = ResidualsBeta$Status
-    )
+    ), .NameSims, nSim = nSim)
 
     if (is.null(FixedBeta)) {
       FellBack <- ResidualsBeta$Status != "estimated"
@@ -209,8 +209,8 @@
                                nSeasons=nSeasons)
     
     Index_Obs@Stats <- Stats
-    Index_Obs@AC    <- Stats$AC
-    Index_Obs@CV    <- sqrt(exp(Stats$SD^2) - 1)
+    Index_Obs@AC    <- .NameSims(Stats$AC, nSim)
+    Index_Obs@CV    <- .NameSims(sqrt(exp(Stats$SD^2) - 1), nSim)
 
     if (is.null(Index_Obs@TruncSD))
       Index_Obs@TruncSD <- 2

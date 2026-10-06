@@ -142,7 +142,7 @@
     
     SD[!is.finite(SD)] <- 1E-6
     
-    CatchObs@CV <- SD
+    CatchObs@CV <- .NameSims(SD, nSim)
     
     # Generate obs error for projections 
     ErrorProj <- exp(matrix(rnorm(nSim * nProjTS,

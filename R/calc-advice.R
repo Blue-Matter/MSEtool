@@ -334,7 +334,7 @@
   TimeSeries <- setdiff(methods::slotNames('timeseries'), 'Misc')
   PopDyn <- new('hist')
   for (nm in Slots) {
-    val <- .SubsetSim(slot(Hist, nm), Sims = sim)
+    val <- .SubsetSim(slot(Hist, nm), Sims = sim, nSim = nSim(Hist))
     if (!is.null(Year) && nm %in% TimeSeries)
       val <- .DropYearsFrom(val, Year)
     slot(PopDyn, nm) <- val

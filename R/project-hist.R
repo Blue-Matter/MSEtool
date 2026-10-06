@@ -79,6 +79,7 @@
     nSimAll    <- nSim(Proj)
     Chunks     <- .SplitSims(nSimAll, .ResolveProjectChunks(Proj, parallel))
     ProjChunks <- lapply(Chunks, \(Sims) .ChunkProj(Proj, Sims))
+    ParentIDs  <- Proj@OM@Misc[c('SimIDs', 'nSimGlobal')]
     rm(Proj)
     nChunk <- length(Chunks)
     Tasks  <- expand.grid(chunk = seq_len(nChunk), mp = seq_along(MPs))
@@ -121,7 +122,7 @@
 
       Ind <- which(Tasks$mp == NextMP)
       if (!any(vapply(Results[Ind], is.null, logical(1)))) {
-        result <- .BindChunkResults(Results[Ind], Chunks, nSimAll)
+        result <- .BindChunkResults(Results[Ind], Chunks, nSimAll, ParentIDs)
         Results[Ind] <- list(NULL)
         MSE <- .MergeMPResult(MSE, result, MPs[NextMP], NextMP, YearsHist, YearsProj, silent,
                               nMP = nMPs, Store = Store)
@@ -208,7 +209,7 @@
 }
 
 # Joins the per-chunk results of one MP into a single full-nSim result for .MergeMPResult()
-.BindChunkResults <- function(Results, Chunks, nSimAll) {
+.BindChunkResults <- function(Results, Chunks, nSimAll, ParentIDs = list()) {
   if (length(Results) == 1) return(Results[[1]])
 
   Sizes <- lengths(Chunks)
@@ -220,8 +221,8 @@
 
   Proj@OM@Fleet            <- .BindSims(lapply(Projs, \(x) x@OM@Fleet), Sizes)
   Proj@OM@nSim             <- nSimAll
-  Proj@OM@Misc$SimIDs      <- NULL
-  Proj@OM@Misc$nSimGlobal  <- NULL
+  Proj@OM@Misc$SimIDs      <- ParentIDs$SimIDs
+  Proj@OM@Misc$nSimGlobal  <- ParentIDs$nSimGlobal
   Proj@Data                <- do.call(c, lapply(Projs, methods::slot, 'Data'))
 
   for (nm in c('MPAdvice', 'MPAggBagLimit')) {

@@ -91,7 +91,7 @@
                         na.rm = TRUE))
     SD[!is.finite(SD)] <- 1e-6
 
-    EffortObs@CV <- SD
+    EffortObs@CV <- .NameSims(SD, nSim)
 
     # Generate lognormal observation error for projection years
     ErrorProj <- exp(matrix(

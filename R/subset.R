@@ -9,8 +9,12 @@
 #'   * Lists (including `StockList`, `FleetList`, etc.)
 #'   * Arrays with a `Sim`, `Year`, `Age`, `MP`, and/or `Fleet` dimension
 #'   * Named numeric vectors (for `Sim` and `Age` dimensions)
+#'   * Data frames with a `Sim` column
 #'
-#' @param Sims   Numeric vector of simulation indices to retain. `NULL` skips.
+#' @param Sims   Numeric vector of simulation indices to retain, in the order
+#'   they are returned. `NULL` skips. Subsetting an `om`, `hist`, or `mse`
+#'   object records the original simulation numbers, so projections of the
+#'   subset reproduce those simulations of the full object.
 #' @param Years  Numeric vector of calendar years to retain. `NULL` skips.
 #' @param Ages   Numeric vector of age classes to retain. `NULL` skips.
 #' @param MPs    Integer or character vector of MPs to retain. `NULL` skips.
@@ -39,7 +43,11 @@ Subset <- function(object,
                    Stocks = NULL,
                    Impute = TRUE) {
 
-  if (!is.null(Sims))   object <- .SubsetSim(object, Sims)
+  if (!is.null(Sims)) {
+    OM     <- .SimOM(object)
+    object <- .SubsetSim(object, Sims)
+    if (!is.null(OM)) object <- .SetGlobalSims(object, OM, Sims)
+  }
   if (!is.null(Years))  object <- .SubsetYear(object, Years, Impute)
   if (!is.null(Ages))   object <- .SubsetAge(object, Ages)
   if (!is.null(MPs))    object <- .SubsetMP(object, MPs)
@@ -47,6 +55,43 @@ Subset <- function(object,
   if (!is.null(Stocks)) object <- .SubsetStock(object, Stocks)
   
   object
+}
+
+# The `om` that holds an object's nSim and global sim IDs, or NULL
+.SimOM <- function(object) {
+  if (inherits(object, "om")) return(object)
+  if (isS4(object) && "OM" %in% methods::slotNames(object) && inherits(object@OM, "om"))
+    return(object@OM)
+  NULL
+}
+
+# Records which sims of the full run a subset holds, so per-sim seeds follow the sim
+.SetGlobalSims <- function(object, OM, Sims) {
+  SimIDs  <- .GlobalSim(OM, Sims)
+  nGlobal <- .GlobalNSim(OM)
+  Identity <- nGlobal == length(Sims) && identical(as.numeric(SimIDs), as.numeric(seq_len(nGlobal)))
+  Set <- \(om) {
+    om@Misc$SimIDs     <- if (Identity) NULL else SimIDs
+    om@Misc$nSimGlobal <- if (Identity) NULL else nGlobal
+    om
+  }
+  if (inherits(object, "om")) return(Set(object))
+  object@OM <- Set(object@OM)
+  object
+}
+
+# nSim of the object a .SubsetSim() call starts from, or NULL if it has none
+.TopNSim <- function(object) {
+  OM <- .SimOM(object)
+  n  <- if (!is.null(OM)) OM@nSim else if (isS4(object) && "nSim" %in% methods::slotNames(object)) object@nSim
+  if (is.numeric(n) && length(n) == 1 && !is.na(n)) n else NULL
+}
+
+# Names a per-sim vector "1".."nSim" so .SubsetSim() recognizes it
+.NameSims <- function(x, nSim) {
+  if (!is.null(x) && is.null(dim(x)) && length(x) == nSim)
+    names(x) <- seq_len(nSim)
+  x
 }
 
 # Slots `CalcFisheryDynamics_`/`HistView` read (inst/include/hist_view.h),
@@ -64,14 +109,16 @@ Subset <- function(object,
 
 # Slice specific slots of an S4 object down to a single simulation.
 .SliceSim <- function(object, sim, slots) {
+  nSim <- .TopNSim(object)
   if (isS4(object) && "OM" %in% slotNames(object) &&
       "nSim" %in% slotNames(object@OM)) {
     object@OM@nSim <- 1L
     # the solvers index StockTargeting by the slice's sim (1)
-    object@OM@StockTargeting <- .SubsetSim(object@OM@StockTargeting, sim, keep_sim_name = FALSE)
+    object@OM@StockTargeting <- .SubsetSim(object@OM@StockTargeting, sim, keep_sim_name = FALSE,
+                                           nSim = nSim)
   }
   for (s in slots)
-    slot(object, s) <- .SubsetSim(slot(object, s), sim, keep_sim_name = FALSE)
+    slot(object, s) <- .SubsetSim(slot(object, s), sim, keep_sim_name = FALSE, nSim = nSim)
   object
 }
 
@@ -85,6 +132,32 @@ Subset <- function(object,
 
 .SubsetSim <- function(object, Sims, keep_sim_name = FALSE, debug = FALSE, broadcast = FALSE,
                        nSim = NULL) {
+  Sims <- as.numeric(Sims)
+  nSim <- nSim %||% .TopNSim(object)
+  # names a per-sim vector or list can carry: local sims, or the full run's sims in a chunk
+  SimKeys <- if (!is.null(nSim)) {
+    Keys <- list(as.character(seq_len(nSim)))
+    OM <- .SimOM(object)
+    if (!is.null(OM) && !is.null(OM@Misc$SimIDs))
+      Keys <- c(Keys, list(as.character(.GlobalSim(OM, seq_len(nSim)))))
+    Keys
+  }
+  .SubsetSimNode(object, Sims, keep_sim_name, debug, broadcast, nSim, SimKeys)
+}
+
+.IsSimKeyed <- function(object, nSim, SimKeys) {
+  nms <- names(object)
+  if (is.null(nms)) return(FALSE)
+  if (is.null(nSim))
+    return(identical(nms, as.character(seq_along(object))))
+  length(object) == nSim && any(vapply(SimKeys, identical, logical(1), nms))
+}
+
+.SimLabels <- function(Sims, keep_sim_name) {
+  if (keep_sim_name) Sims else seq_along(Sims)
+}
+
+.SubsetSimNode <- function(object, Sims, keep_sim_name, debug, broadcast, nSim, SimKeys) {
 
   if (debug)  cli::cli_alert("Class {.val {class(object)}}")
 
@@ -95,7 +168,7 @@ Subset <- function(object,
       if (debug) cli::cli_alert("Slot {.val {s}}")
       val <- slot(object, s)
       if (!is.null(val))
-        slot(object, s) <- Recall(val, Sims, keep_sim_name, debug, broadcast, nSim)
+        slot(object, s) <- .SubsetSimNode(val, Sims, keep_sim_name, debug, broadcast, nSim, SimKeys)
     }
 
     if ("nSim" %in% slots)
@@ -104,17 +177,22 @@ Subset <- function(object,
     return(object)
   }
 
+  if (is.data.frame(object))
+    return(.DFSubsetSim(object, Sims, keep_sim_name))
+
   if (is.list(object)) {
     n <- length(object)
     if (n == 0) return(object)
 
-    if (!is.null(names(object)) && all(Sims %in% names(object)))
+    if (.IsSimKeyed(object, nSim, SimKeys)) {
+      .CheckSimsAvailable(Sims, n)
       return(object[Sims])
+    }
 
     for (i in seq_len(n)) {
       el <- object[[i]]
       if (!is.null(el))
-        object[[i]] <- Recall(el, Sims, keep_sim_name, debug, broadcast, nSim)
+        object[[i]] <- .SubsetSimNode(el, Sims, keep_sim_name, debug, broadcast, nSim, SimKeys)
     }
     return(object)
   }
@@ -122,87 +200,72 @@ Subset <- function(object,
   if (is.array(object)) {
     dnames <- dimnames(object)
     if (!is.null(dnames) && "Sim" %in% names(dnames)) {
-      SimVals <- as.numeric(dnames$Sim)
-
-      if (length(SimVals) == 1L && !broadcast) 
+      if (length(dnames$Sim) == 1L && !broadcast)
         return(object)
-
-      if (max(SimVals) > max(Sims)) {
-        object <- .ArraySubsetSim(object, Sims, keep_sim_name = keep_sim_name)
-      } else {
-        existing_sims <- as.numeric(dimnames(object)$Sim)
-        if (any(Sims > max(existing_sims))) {
-          object <- ExtendSims(object, nSim = length(Sims))
-        }
-        object <- .ArraySubsetSim(object, Sims = Sims, keep_sim_name = keep_sim_name)
-      }
-
+      object <- .ArraySubsetSim(object, Sims, keep_sim_name = keep_sim_name)
     }
     return(object)
   }
-  
-  if (is.numeric(object) && !is.null(names(object)) &&
-      length(object) > 1 && "Sim" %in% names(object)) {
-    return(as.numeric(object[Sims]))
-  }
 
-  # per-sim vectors named "1".."nSim" (e.g. Obs@Survey@Efficiency)
-  if (!is.null(nSim) && nSim > 1 && is.numeric(object) && is.null(dim(object)) &&
-      length(object) == nSim && identical(names(object), as.character(seq_len(nSim)))) {
+  # per-sim vectors named by sim (e.g. Obs@Survey@Efficiency)
+  if (is.atomic(object) && is.null(dim(object)) && !is.null(nSim) && nSim > 1 &&
+      .IsSimKeyed(object, nSim, SimKeys)) {
+    .CheckSimsAvailable(Sims, nSim)
     object <- object[Sims]
-    names(object) <- if (keep_sim_name) Sims else seq_along(Sims)
+    names(object) <- .SimLabels(Sims, keep_sim_name)
     return(object)
   }
 
   object
 }
 
+.CheckSimsAvailable <- function(Sims, n) {
+  if (any(Sims < 1 | Sims > n | Sims != round(Sims)))
+    cli::cli_abort("`Sims` ({.val {Sims}}) must be within 1:{n}.")
+}
+
+# Rows of a data frame with a `Sim` column, in the order of `Sims`; one-sim frames apply to all sims
+.DFSubsetSim <- function(df, Sims, keep_sim_name = FALSE) {
+  if (!"Sim" %in% names(df) || !nrow(df) || length(unique(df$Sim)) == 1L)
+    return(df)
+  Pos  <- lapply(Sims, \(s) which(df$Sim == s))
+  Rows <- unlist(Pos)
+  out  <- df[Rows, , drop = FALSE]
+  out$Sim <- rep(.SimLabels(Sims, keep_sim_name), lengths(Pos))
+  rownames(out) <- NULL
+  out
+}
+
 .ArraySubsetSim <- function(array, Sims = NULL, keep_sim_name = FALSE) {
   .CheckClass(array, 'array', 'array')
   .CheckClass(Sims, c('numeric', 'integer'), 'Sims')
-  
+
   if (is.null(Sims)) return(array)
-    
+
   DN <- dimnames(array)
-  if (is.null(DN) || !"Sim" %in% names(DN)) 
+  if (is.null(DN) || !"Sim" %in% names(DN))
     cli::cli_abort("`Sim` dimension not found in this array")
-  
+
   SimVals <- as.numeric(DN$Sim)
- 
-  if (any(Sims > max(SimVals))) {
-    if (max(SimVals)==1) {
-      if (length(Sims) == 1) {
-        if (keep_sim_name) {
-          DN$Sim <- Sims 
-        } else {
-          DN$Sim <- seq_along(Sims) 
-        }
-    
-        dimnames(array) <- DN
-        return(array)
-      } else {
-        return(
-          ExtendSims(array, max(Sims)) 
-        )
-      }
-    } else {
-      Sims <- seq_len(max(SimVals))
+  Along   <- match("Sim", names(DN))
+
+  if (length(SimVals) == 1L) {
+    idx <- rep(1L, length(Sims))
+  } else {
+    idx <- match(Sims, SimVals)
+    if (anyNA(idx)) {
+      Missing <- Sims[is.na(idx)]
+      cli::cli_abort("`Sims` {.val {Missing}} not found in an array with {length(SimVals)} sims.")
     }
   }
-  
-  idx <- SimVals %in% Sims
-  out <- if (all(idx)) {
+
+  out <- if (identical(idx, seq_along(SimVals))) {
     array
   } else {
-    do.call(`[`, c(list(array), .MakeDimIndex(idx, array, 1L),
+    do.call(`[`, c(list(array), .MakeDimIndex(idx, array, Along),
                    list(drop = FALSE)))
   }
-  if (!keep_sim_name) {
-    dimnames(out)$Sim <- seq_along(dimnames(out)$Sim)
-  } else {
-    dimnames(out)$Sim <- Sims # keep the name of the actual sim
-  }
-   
+  dimnames(out)[[Along]] <- .SimLabels(Sims, keep_sim_name)
   out
 }
 
