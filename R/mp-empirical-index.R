@@ -78,12 +78,15 @@
 #' @param Indices Character (matching `Name`) or integer vector selecting
 #'   which columns of the chosen `IndexSource` to use. `NULL` (default) uses
 #'   every index in `IndexSource`.
-#' @param IndexSource Character vector of one or both of `'Survey'`,
-#'   `'CPUE'`. Use indices from `Data@Survey` (default, `'Survey'`),
-#'   `Data@CPUE`, or both (`c('Survey', 'CPUE')`). When both are used, their
-#'   indices are combined into a single selection (`Survey` columns first,
-#'   then `CPUE`), and `Indices`, `IndexFreq`, `IndexWeight`, `IndexTarget`
-#'   and `IndexSeasons` apply across that combined set.
+#' @param IndexSource Character. `'auto'` (default), or one or both of
+#'   `'Survey'` and `'CPUE'`. `'auto'` uses the indices in `Data@Survey` if it
+#'   has any positive observation, otherwise those in `Data@CPUE`. `'Survey'`
+#'   or `'CPUE'` uses that slot, and
+#'   `c('Survey', 'CPUE')` combines the indices of both into a single
+#'   selection (`Survey` columns first, then `CPUE`). `Indices`, `IndexFreq`,
+#'   `IndexWeight`, `IndexTarget` and `IndexSeasons` apply to the selected
+#'   indices in that order; set `IndexSource` explicitly when these are given
+#'   per index.
 #' @param IndexFreq Non-negative integer vector, one per selected index. How
 #'   often each index is available in the projection period (`1` = every
 #'   year, `2` = every 2 years, `0` = not used). Historical values are
@@ -199,7 +202,7 @@ NULL
 #' @export
 IndexRate <- function(Data,
                       Indices               = NULL,
-                      IndexSource           = 'Survey',
+                      IndexSource           = 'auto',
                       IndexFreq             = NULL,
                       IndexWeight           = NULL,
                       CalibYears            = 2,
@@ -228,7 +231,7 @@ IndexRate <- function(Data,
   .CheckTunePar(tunepar)
 
   CheckCatch(Data)
-  IndexSource <- match.arg(IndexSource, c('Survey', 'CPUE'), several.ok = TRUE)
+  IndexSource <- .ResolveIndexSource(Data, IndexSource)
   Data <- AnnualData(Data, .IndexSeasonsBySource(Data, IndexSource, Indices, IndexSeasons))
 
   Selected <- .SelectIndices(Data, IndexSource, Indices)
@@ -294,7 +297,7 @@ class(IndexRate) <- 'mp'
 #' @export
 IndexTarget <- function(Data,
                         Indices               = NULL,
-                        IndexSource           = 'Survey',
+                        IndexSource           = 'auto',
                         IndexFreq             = NULL,
                         IndexWeight           = NULL,
                         CalibYears            = 5,
@@ -321,7 +324,7 @@ IndexTarget <- function(Data,
   TACType  <- match.arg(TACType, c('Removals', 'Landings'))
   .CheckTunePar(tunepar)
   CheckCatch(Data)
-  IndexSource <- match.arg(IndexSource, c('Survey', 'CPUE'), several.ok = TRUE)
+  IndexSource <- .ResolveIndexSource(Data, IndexSource)
   Data <- AnnualData(Data, .IndexSeasonsBySource(Data, IndexSource, Indices, IndexSeasons))
 
   Selected <- .SelectIndices(Data, IndexSource, Indices)
@@ -391,6 +394,29 @@ class(IndexTarget) <- 'mp'
   Catch
 }
 
+
+#' Resolve `IndexSource`, Including `'auto'`
+#'
+#' @param Data A [data-class] object.
+#' @param IndexSource See [IndexRate()].
+#' @return Character vector of slot names.
+#' @keywords internal
+.ResolveIndexSource <- function(Data, IndexSource) {
+  IndexSource <- match.arg(IndexSource, c('auto', 'Survey', 'CPUE'), several.ok = TRUE)
+  if (!'auto' %in% IndexSource)
+    return(IndexSource)
+  if (length(IndexSource) > 1)
+    cli::cli_abort("{.arg IndexSource} {.val auto} cannot be combined with other sources.")
+  HasData <- function(src) {
+    x <- slot(Data, src)@Value
+    !is.null(x) && any(is.finite(x) & x > 0)
+  }
+  if (HasData('Survey'))
+    return('Survey')
+  if (!HasData('CPUE'))
+    cli::cli_abort("No index data in {.code Data@Survey} or {.code Data@CPUE}.")
+  'CPUE'
+}
 
 #' Select and Validate Indices from One or More `indicesdata` Objects
 #'
