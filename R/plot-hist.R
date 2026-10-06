@@ -836,6 +836,9 @@ setMethod('plot', 'mse', function(x, y, ...) {
   nSeason <- object@OM@Seasons
   if (is.null(nSeason) || nSeason <= 1)
     return(df)
+  # calendar-year series (e.g. MSY-relative ratios) have no seasons to filter
+  if (all(df$Year == floor(df$Year)))
+    return(df)
 
   all_years  <- Years(object)
   season_idx <- ((seq_along(all_years) - 1) %% nSeason) + 1
