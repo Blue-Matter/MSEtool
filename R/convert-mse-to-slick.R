@@ -393,8 +393,8 @@ DefaultSlickPMs <- function() {
     'Spawning biomass (SB) relative to SB at maximum sustainable yield (SBMSY)',
     'Fishing mortality (F) relative to F at maximum sustainable yield (FMSY)'
   )
-  Kobe@Time    <- Years(mse_ref@OM, 'Projection')
-  Kobe@TimeLab <- .FirstUp(CalcTSUnits(mse_ref@OM@Seasons))
+  Kobe@Time    <- .SlickTime(mse_ref@OM, 'Projection')
+  Kobe@TimeLab <- .SlickTimeLab(mse_ref@OM)
   Kobe@Target  <- rep(1, 2)
 
   MPs_names    <- names(mse_ref@MPs)
@@ -435,18 +435,24 @@ DefaultSlickPMs <- function() {
 
 .ComplexStatusSeries <- function(object, Definition = c('SBiomass', 'SProduction')) {
   Definition <- match.arg(Definition)
-  spawn_stocks <- .SpawningStockNames(object@OM)
   series <- .StockStatusSeries(object, Definition)
+  .ComplexStatusRatio(series$value, series$msy, Definition, object@OM)
+}
 
-  sb_arr    <- .FilterStockDim(series$value, spawn_stocks)
-  sbmsy_arr <- .FilterStockDim(series$msy, spawn_stocks)
+.ComplexStatusRatio <- function(value, msy, Definition, OM) {
+  spawn_stocks <- .SpawningStockNames(OM)
 
-  sb_complex    <- .AggregateStockToComplex(sb_arr, object@OM, sum, strict = FALSE)
-  sbmsy_complex <- .AggregateStockToComplex(sbmsy_arr, object@OM, sum, strict = FALSE)
+  sb_arr    <- .FilterStockDim(value, spawn_stocks) |>
+    .AnnualMSYNumerator(Definition, OM)
+  sbmsy_arr <- .FilterStockDim(msy, spawn_stocks)
+
+  sb_complex    <- .AggregateStockToComplex(sb_arr, OM, sum, strict = FALSE)
+  sbmsy_complex <- .AggregateStockToComplex(sbmsy_arr, OM, sum, strict = FALSE)
 
   target_years  <- dimnames(sb_complex)[['Year']]
-  sbmsy_aligned <- .AlignDenomYears(sbmsy_complex, target_years) |>
-    AddDimension('MP', val = dimnames(sb_complex)[['MP']])
+  sbmsy_aligned <- .AlignDenomYears(sbmsy_complex, target_years)
+  if ('MP' %in% names(dimnames(sb_complex)))
+    sbmsy_aligned <- AddDimension(sbmsy_aligned, 'MP', val = dimnames(sb_complex)[['MP']])
 
   ArrayDivide(sb_complex, sbmsy_aligned)
 }
@@ -471,9 +477,9 @@ DefaultSlickPMs <- function() {
   Timeseries              <- Slick::Timeseries()
   Timeseries@Code         <- piCode
   Timeseries@Label        <- piLabel
-  Timeseries@Time         <- Years(mse_ref@OM)
-  Timeseries@TimeNow      <- max(Years(mse_ref@OM, 'Historical'))
-  Timeseries@TimeLab      <- .FirstUp(CalcTSUnits(mse_ref@OM@Seasons))
+  Timeseries@Time         <- .SlickTime(mse_ref@OM)
+  Timeseries@TimeNow      <- max(.SlickTime(mse_ref@OM, 'Historical'))
+  Timeseries@TimeLab      <- .SlickTimeLab(mse_ref@OM)
 
   refTarget <- c(SB_SBMSY = 1,   F_FMSY = NA)
   refLimit  <- c(SB_SBMSY = 0.4, F_FMSY = 1)
@@ -504,9 +510,10 @@ DefaultSlickPMs <- function() {
 .GetTimeseriesVariable <- function(Var, MSE, Complex) {
   nsim <- MSE@OM@nSim
   nMP  <- length(MSE@MPs)
-  nTS  <- length(Years(MSE@OM))
+  nTS  <- length(.SlickTime(MSE@OM))
 
   DF <- .ComplexTimeseriesDF(Var, MSE, Complex) |>
+    .AnnualTimeseriesDF(Var, MSE@OM) |>
     dplyr::arrange(.data$Sim, .data$Year, .data$MP) |>
     dplyr::mutate(MP=as.character(.data$MP))
 
@@ -536,6 +543,29 @@ DefaultSlickPMs <- function() {
   Array
 }
 
+# Slick time axis: calendar years for seasonal OMs, where the MSY-relative
+# series are annual.
+.SlickTime <- function(OM, Period = NULL) {
+  yrs <- if (is.null(Period)) Years(OM) else Years(OM, Period)
+  if (.IsSeasonal(OM)) unique(floor(yrs + 1e-8)) else yrs
+}
+
+.SlickTimeLab <- function(OM) {
+  .FirstUp(CalcTSUnits(if (.IsSeasonal(OM)) 1 else OM@Seasons))
+}
+
+# Collapse a time-step series to calendar years for seasonal OMs: catches and
+# F summed over seasons, other quantities averaged.
+.AnnualTimeseriesDF <- function(DF, Var, OM) {
+  if (!.IsSeasonal(OM) || all(DF$Year == floor(DF$Year)))
+    return(DF)
+  FUN <- if (Var %in% c('Landings', 'Removals', 'FInteract', 'FDead', 'FRetain')) sum else mean
+  DF |>
+    dplyr::mutate(Year = floor(.data$Year + 1e-8)) |>
+    dplyr::group_by(.data$Sim, .data$Year, .data$Period, .data$MP) |>
+    dplyr::summarise(Value = FUN(.data$Value), .groups = 'drop')
+}
+
 .StockComplexMap <- function(OM) {
   stockNms  <- StockNames(OM)
   complexes <- Complexes(OM)
@@ -561,15 +591,15 @@ DefaultSlickPMs <- function() {
   }
 
   if (Var == 'SB_SBMSY') {
-    sb_df    <- SBiomass(MSE) |> dplyr::filter(.data$Stock %in% spawnStocks)
-    ratio_df <- SB_SBMSY(MSE) |> dplyr::filter(.data$Stock %in% spawnStocks) |>
-      dplyr::select('Sim', 'Stock', 'Year', 'Period', 'MP', Ratio = 'Value')
-    merged <- dplyr::left_join(sb_df, ratio_df, by = c('Sim', 'Stock', 'Year', 'Period', 'MP'))
-    merged$SBMSY <- merged$Value / merged$Ratio
-    merged$Complex <- complexOf[as.character(merged$Stock)]
-    merged <- merged[merged$Complex == Complex, ]
-    return(merged |> dplyr::group_by(.data$Sim, .data$Year, .data$Period, .data$MP) |>
-             dplyr::summarise(Value = sum(.data$Value) / sum(.data$SBMSY), .groups = 'drop'))
+    hist_df <- .ComplexStatusRatio(MSE@Hist@SBiomass, MSE@Reference@MSY@SBMSY,
+                                   'SBiomass', MSE@OM) |>
+      Array2DF() |>
+      dplyr::mutate(Period = 'Historical', MP = 'Historical')
+    proj_df <- Array2DF(.ComplexStatusSeries(MSE, 'SBiomass')) |>
+      dplyr::mutate(Period = 'Projection')
+    return(dplyr::bind_rows(hist_df, proj_df) |>
+             dplyr::filter(.data$Stock == !!Complex) |>
+             dplyr::select('Sim', 'Year', 'Period', 'MP', 'Value'))
   }
 
   if (Var %in% c('FInteract', 'FDead', 'FRetain')) {
