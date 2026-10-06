@@ -12,7 +12,7 @@ test_that(".SpictInp() maps FitSP settings to spict inputs", {
   inp <- .SpictInp(Prep, Shape = 1.5, EstShape = FALSE, Depletion = 0.8, EstDepletion = FALSE,
                    IndexSD = 'estimate', Priors = list(FMSY = c(0.2, 0.5)),
                    Control = SpictControl(Priors = list(logalpha = c(0, 1, 1))), Start = NULL)
-  expect_equal(inp$obsC, Prep$Catch)
+  expect_equal(inp$obsC, unname(Prep$Catch))
   expect_length(inp$obsI, 2)
   expect_equal(inp$timeI[[1]][1], Prep$Years[1] + 0.5)
   expect_equal(inp$timeI[[2]][1], Prep$Years[10])
@@ -31,6 +31,23 @@ test_that(".SpictInp() maps FitSP settings to spict inputs", {
   expect_null(Est$priors$logbkfrac)
   expect_equal(Est$ini$logm, log(100))
   expect_equal(Est$ini$logK, log(100 / (0.2 * 0.5)))
+})
+
+test_that(".SpictInp() merges zero catch, and FitSP(Model = 'spict') converges with it", {
+  Sim <- SimSPData(Seed = 3)
+  Sim$Data@Landings@Value[c(1, 12), ] <- 0
+  Prep <- .SPPrepData(Sim$Data, NULL, 'Survey', NULL, NULL, NULL, c('Biomass', 'Number'),
+                      'Removals', NULL)
+  inp <- .SpictInp(Prep, Shape = 2, EstShape = FALSE, Depletion = 1, EstDepletion = FALSE,
+                   IndexSD = 'estimate', Priors = list(), Control = SpictControl(), Start = NULL)
+  expect_equal(inp$timeC, unname(Prep$Years[-c(2, 12)]))
+  expect_equal(inp$obsC, unname(Prep$Catch[-c(1, 12)]))
+  expect_equal(inp$dtc, replace(rep(1, length(Prep$Years) - 2), c(1, 10), 2))
+
+  skip_if_not_installed('spict')
+  Fit <- FitSP(Sim$Data, Model = 'spict')
+  expect_true(Fit$Converged)
+  expect_length(Fit$B, length(Prep$Years) + 1)
 })
 
 test_that("FitSP(Model = 'spict') agrees with the internal model", {

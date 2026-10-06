@@ -68,6 +68,8 @@ test_that("SurplusProduction() falls back when the model cannot be fitted", {
   Hold <- SurplusProduction(D, MinIndexYears = 100)
   expect_equal(Hold@TAC, 80)
   expect_true(Hold@Misc$SurplusProduction$Summary$Fallback)
+  expect_equal(Hold@Misc$SurplusProduction$Indices$Index, colnames(D@Survey@Value))
+  expect_true(all(is.na(Hold@Misc$SurplusProduction$Indices$q)))
   expect_match(Hold@Log$warning[[1]]$message, 'MinIndexYears')
 
   Trend <- SurplusProduction(D, MinIndexYears = 100, OnFail = 'trend', DeltaUp = c(0, 10),
@@ -108,6 +110,11 @@ test_that("SurplusProduction() in closed-loop projections", {
   expect_setequal(unique(E$MP), c('SP', 'SPE'))
   expect_equal(nrow(E[E$MP == 'SP', ]), OM@nSim * length(Years(OM, 'Projection')))
   expect_gt(mean(E$Converged), 0.8)
+
+  I <- SPEstimates(MSE, MPs = 'SP', Type = 'Indices')
+  expect_equal(nrow(I), nrow(E[E$MP == 'SP', ]) * length(unique(I$Index)))
+  expect_true(all(c('AdviceYear', 'Index', 'Source', 'Weight', 'nObs', 'q', 'Sigma') %in% names(I)))
+  expect_true(all(I$Weight == 1))
   expect_true(all(c('OM_B_BMSY', 'OM_F_FMSY') %in% names(E)))
   expect_gt(stats::cor(log(E$B_BMSY), log(E$OM_B_BMSY), use = 'complete.obs'), 0.3)
 

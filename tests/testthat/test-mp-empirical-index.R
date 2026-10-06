@@ -145,6 +145,30 @@ test_that("IndexRate keeps the previous TAC when the trial TAC is infinite", {
   expect_equal(IndexRate(D, Smooth = FALSE, RecentYears = 3)@TAC, 100)
 })
 
+test_that("IndexSource = 'auto' uses Survey, else CPUE", {
+  D <- .AnnualIndexData(rep(1, 20))
+  expect_identical(.ResolveIndexSource(D, 'auto'), 'Survey')
+  expect_identical(.ResolveIndexSource(D, c('Survey', 'CPUE')), c('Survey', 'CPUE'))
+  expect_error(.ResolveIndexSource(D, c('auto', 'CPUE')), 'cannot be combined')
+
+  C <- D
+  C@CPUE   <- D@Survey
+  C@Survey <- IndicesData()
+  expect_identical(.ResolveIndexSource(C, 'auto'), 'CPUE')
+
+  Empty <- C
+  Empty@Survey <- D@Survey
+  Empty@Survey@Value[] <- NA
+  expect_identical(.ResolveIndexSource(Empty, 'auto'), 'CPUE')
+
+  for (MP in list(IndexRate, IndexTarget)) {
+    expect_equal(MP(C, Smooth = FALSE)@TAC, MP(D, Smooth = FALSE)@TAC)
+    expect_error(MP(C, IndexSource = 'Survey'), 'No index data')
+  }
+  C@CPUE <- IndicesData()
+  expect_error(.ResolveIndexSource(C, 'auto'), 'No index data')
+})
+
 test_that(".ResolveIndexTarget keeps supplied values and falls back past trailing NAs", {
   IndexHist <- rbind(c(1, 2, 3, 4, 5, NA), c(2, 2, 2, 2, NA, NA))
   Ref <- .ResolveIndexTarget(c(10, NA), NULL, c(TRUE, TRUE), IndexHist, LHInd = 6,

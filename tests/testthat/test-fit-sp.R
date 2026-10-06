@@ -20,6 +20,44 @@ test_that("SPModel_cpp() matches the R reference implementation", {
   }
 })
 
+test_that("SPModelDeriv_cpp() gradient and Hessian match finite differences", {
+  Sim  <- SimSPData(nYear = 30, nIndex = 2, CV = c(0.2, 0.3), IndexStart = c(1, 12),
+                    Timing = c(0.3, 0.8))
+  Prep <- .SPPrepData(Sim$Data, NULL, 'Survey', NULL, NULL, NULL, c('Biomass', 'Number'),
+                      'Removals', NULL)
+  SD   <- sqrt(log(1 + Prep$CV^2))
+  Cases <- list(list(Pars = c(0.2, 100, 1, 2), Active = 1:2),
+                list(Pars = c(0.15, 90, 0.8, 1.5), Active = 1:4),
+                list(Pars = c(0.25, 130, 1, 3), Active = c(1L, 2L, 4L)),
+                list(Pars = c(0.25, 95, 0.7, 1), Active = 1:3))
+  for (Case in Cases) for (EstSD in c(TRUE, FALSE)) {
+    Fn <- function(theta) {
+      p <- Case$Pars
+      p[Case$Active] <- exp(theta)
+      SPModel_cpp(p, Prep$Catch, Prep$Index, SD, Prep$Timing, Prep$Weight, rep(EstSD, 2),
+                  4L, 5L, 3, 1e3, 1e-3, 0.05, FALSE)$NLL
+    }
+    Gr <- function(theta) {
+      p <- Case$Pars
+      p[Case$Active] <- exp(theta)
+      SPModelDeriv_cpp(p, Case$Active, Prep$Catch, Prep$Index, SD, Prep$Timing, Prep$Weight,
+                       rep(EstSD, 2), 4L, 5L, 3, 1e3, 1e-3, 0.05)$Grad
+    }
+    theta <- log(Case$Pars[Case$Active])
+    D     <- SPModelDeriv_cpp(Case$Pars, Case$Active, Prep$Catch, Prep$Index, SD, Prep$Timing,
+                              Prep$Weight, rep(EstSD, 2), 4L, 5L, 3, 1e3, 1e-3, 0.05)
+    h     <- 1e-5
+    Step  <- function(j) replace(numeric(length(theta)), j, h)
+    GrFD  <- vapply(seq_along(theta), \(j) (Fn(theta + Step(j)) - Fn(theta - Step(j))) / (2 * h), 1)
+    HFD   <- vapply(seq_along(theta), \(j) (Gr(theta + Step(j)) - Gr(theta - Step(j))) / (2 * h),
+                    numeric(length(theta)))
+    expect_equal(D$NLL, Fn(theta), tolerance = 1e-12)
+    expect_equal(D$Grad, GrFD, tolerance = 1e-6)
+    expect_equal(unname(D$Hess), unname(HFD), tolerance = 1e-6)
+    expect_equal(unname(D$Hess), t(unname(D$Hess)), tolerance = 1e-10)
+  }
+})
+
 test_that("SPProject_cpp() reproduces catch when projecting at the solved F", {
   Pars <- c(0.25, 120, 0.8, 1.7)
   K    <- 120 / (0.25 * 1.7^(1 / (1 - 1.7)))
@@ -99,6 +137,21 @@ test_that("FitSP() combines Survey and CPUE indices", {
   expect_named(Named$q, c('LonglineCPUE', 'Survey1'))
   expect_equal(Both$par, Orig$par, tolerance = 1e-6)
   expect_equal(Named$par, Orig$par, tolerance = 1e-6)
+
+  CPUEOnly <- D
+  CPUEOnly@Survey <- IndicesData()
+  Auto <- FitSP(CPUEOnly)
+  expect_named(Auto$q, 'LonglineCPUE')
+  expect_equal(Auto$Indices$Source, 'CPUE')
+
+  W <- FitSP(D, IndexSource = c('Survey', 'CPUE'), IndexWeight = c(1, 3))
+  expect_equal(W$Indices$Index, c('Survey1', 'LonglineCPUE'))
+  expect_equal(W$Indices$Source, c('Survey', 'CPUE'))
+  expect_equal(W$Indices$Weight, c(0.5, 1.5))
+  expect_equal(W$Indices$Timing, c(0.5, 0))
+  expect_equal(W$Indices$nObs, unname(colSums(W$Prep$Index > 0, na.rm = TRUE)))
+  expect_equal(W$Indices$q, unname(W$q))
+  expect_equal(W$Indices$Sigma, unname(W$Sigma))
 })
 
 test_that("FitSP() aggregates seasonal data to calendar years", {
