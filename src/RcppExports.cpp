@@ -454,6 +454,30 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// SPModelDeriv_cpp
+List SPModelDeriv_cpp(NumericVector Pars, IntegerVector Active, NumericVector Catch, NumericMatrix Index, NumericMatrix SD, NumericVector Timing, NumericVector Weight, LogicalVector EstSD, int nSub, int nItF, double Fmax, double FPenalty, double FoxTol, double MinSD);
+RcppExport SEXP _MSEtool_SPModelDeriv_cpp(SEXP ParsSEXP, SEXP ActiveSEXP, SEXP CatchSEXP, SEXP IndexSEXP, SEXP SDSEXP, SEXP TimingSEXP, SEXP WeightSEXP, SEXP EstSDSEXP, SEXP nSubSEXP, SEXP nItFSEXP, SEXP FmaxSEXP, SEXP FPenaltySEXP, SEXP FoxTolSEXP, SEXP MinSDSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type Pars(ParsSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type Active(ActiveSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type Catch(CatchSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type Index(IndexSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type SD(SDSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type Timing(TimingSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type Weight(WeightSEXP);
+    Rcpp::traits::input_parameter< LogicalVector >::type EstSD(EstSDSEXP);
+    Rcpp::traits::input_parameter< int >::type nSub(nSubSEXP);
+    Rcpp::traits::input_parameter< int >::type nItF(nItFSEXP);
+    Rcpp::traits::input_parameter< double >::type Fmax(FmaxSEXP);
+    Rcpp::traits::input_parameter< double >::type FPenalty(FPenaltySEXP);
+    Rcpp::traits::input_parameter< double >::type FoxTol(FoxTolSEXP);
+    Rcpp::traits::input_parameter< double >::type MinSD(MinSDSEXP);
+    rcpp_result_gen = Rcpp::wrap(SPModelDeriv_cpp(Pars, Active, Catch, Index, SD, Timing, Weight, EstSD, nSub, nItF, Fmax, FPenalty, FoxTol, MinSD));
+    return rcpp_result_gen;
+END_RCPP
+}
 // SPProject_cpp
 List SPProject_cpp(NumericVector Pars, double B0, NumericVector Value, IntegerVector Type, int nSub, int nItF, double Fmax, double FoxTol);
 RcppExport SEXP _MSEtool_SPProject_cpp(SEXP ParsSEXP, SEXP B0SEXP, SEXP ValueSEXP, SEXP TypeSEXP, SEXP nSubSEXP, SEXP nItFSEXP, SEXP FmaxSEXP, SEXP FoxTolSEXP) {
@@ -538,6 +562,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MSEtool_movestockCPP", (DL_FUNC) &_MSEtool_movestockCPP, 4},
     {"_MSEtool_popdynCPP", (DL_FUNC) &_MSEtool_popdynCPP, 31},
     {"_MSEtool_SPModel_cpp", (DL_FUNC) &_MSEtool_SPModel_cpp, 14},
+    {"_MSEtool_SPModelDeriv_cpp", (DL_FUNC) &_MSEtool_SPModelDeriv_cpp, 14},
     {"_MSEtool_SPProject_cpp", (DL_FUNC) &_MSEtool_SPProject_cpp, 8},
     {"_MSEtool_BevertonHolt_cpp", (DL_FUNC) &_MSEtool_BevertonHolt_cpp, 4},
     {"_MSEtool_Ricker_cpp", (DL_FUNC) &_MSEtool_Ricker_cpp, 4},

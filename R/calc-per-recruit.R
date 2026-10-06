@@ -209,6 +209,22 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
 # Numbers-per-recruit by birth season. Returns NPR[Sim, Age, BirthSeason];
 # SpawnTimeFrac > 0 gives numbers at the time of spawning, 0 gives numbers at
 # the start of each step.
+# Seasonal models: plus-group fish pass through every season, so the plus age
+# is carried forward as nSeason - 1 extra age classes, one per later season.
+.ExtendPlusGroupSeasons <- function(arr, nSeason, nAge) {
+  if (!is.array(arr)) return(arr)
+  dn      <- dimnames(arr)
+  age_pos <- match('Age', names(dn))
+  if (is.na(age_pos) || dim(arr)[age_pos] != nAge) return(arr)
+
+  idx_list          <- rep(list(quote(expr = )), length(dim(arr)))
+  idx_list[[age_pos]] <- c(seq_len(nAge), rep(nAge, nSeason - 1L))
+  out <- do.call('[', c(list(arr), idx_list, list(drop = FALSE)))
+  dn[[age_pos]] <- c(dn[[age_pos]], paste0(dn[[age_pos]][nAge], '_', seq_len(nSeason - 1L)))
+  dimnames(out) <- dn
+  out
+}
+
 .CalcNPRSeasonal <- function(Z, PlusGroup, SpawnTimeFrac, Semelparous) {
 
   nSim    <- dim(Z)[1]
@@ -240,13 +256,20 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
         (1 - Semel_prev)
     }
 
-    # Standard plus-group adjustment at the last age class
+    # Plus group: the last nSeason ages are one annual cycle of the plus age
+    # (see .ExtendPlusGroupSeasons()), repeated with full-cycle survival
     if (PlusGroup) {
-      s_last  <- seas_at_age[nAge]
-      z_last  <- Z[, nAge, s_last]
-      denom   <- 1 - exp(-z_last)
-      ok      <- denom > .Machine$double.eps
-      NPR[ok,  nAge, s] <- NPR[ok,  nAge, s] / denom[ok]
+      block <- (nAge - nSeason + 1L):nAge
+      Step  <- function(a_from, a_to) {
+        exp(-(Z[, a_from, seas_at_age[a_from]] * (1 - SpawnTimeFrac) +
+              Z[, a_to,   seas_at_age[a_to]]   *      SpawnTimeFrac)) *
+          (1 - Semelparous[, a_from, seas_at_age[a_from]])
+      }
+      CycleSurv <- Step(nAge, block[1])
+      for (a in block[-1]) CycleSurv <- CycleSurv * Step(a - 1L, a)
+      denom <- 1 - CycleSurv
+      ok    <- denom > .Machine$double.eps
+      NPR[ok, block, s] <- NPR[ok, block, s] / denom[ok]
     }
   }
 
@@ -939,6 +962,7 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
 
         Biomass_ann  <- .AggRefSeason(NPRF_no, W_cy,          pi_s_cy, RefSeasonWeights_cy)
         SBiomass_ann <- .AggRefSeason(NPRF_sp, W_cy * Mat_cy, pi_s_cy, RefSeasonWeights_cy)
+        SProd_ann    <- .AggRefSeason(NPRF_sp, Fec_cy,        pi_s_cy, RefSeasonWeights_cy)
 
         # Fleet arrays [Sim, Age, Season, Fleet] — extract for yield
         FDead_cy     <- FDead_full[,     , ts_idx, , drop = FALSE]
@@ -967,7 +991,7 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
           SPR         = SPR_ann,
           Biomass     = Biomass_ann,
           SBiomass    = SBiomass_ann,
-          SProduction = SPRFf_ann,
+          SProduction = SProd_ann,
           Removals    = Removals_ann,
           Landings    = Landings_ann
         )
@@ -1265,6 +1289,24 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
       Stock@SRR@RelRecFun <- get(Stock@SRR@RelRecFun)
     Stock@SRR@RelRecFun
   })
+
+  if (nSeason > 1L) {
+    for (st in seq_along(StockList)) {
+      if (!isTRUE(as.logical(PlusGroupList[[st]]))) next
+      nAge <- dim(NaturalMortalityList[[st]])[match('Age', names(dimnames(NaturalMortalityList[[st]])))]
+      Ext  <- \(x) .ExtendPlusGroupSeasons(x, nSeason, nAge)
+      NaturalMortalityList[[st]]      <- Ext(NaturalMortalityList[[st]])
+      MaturityList[[st]]              <- Ext(MaturityList[[st]])
+      SemelparousList[[st]]           <- Ext(SemelparousList[[st]])
+      WeightList[[st]]                <- Ext(WeightList[[st]])
+      FecundityList[[st]]             <- Ext(FecundityList[[st]])
+      WeightFleetRetainedList[[st]]   <- Ext(WeightFleetRetainedList[[st]])
+      WeightFleetSelectedList[[st]]   <- Ext(WeightFleetSelectedList[[st]])
+      SelectivityFleetList[[st]]      <- Ext(SelectivityFleetList[[st]])
+      RetentionFleetList[[st]]        <- Ext(RetentionFleetList[[st]])
+      DiscardMortalityFleetList[[st]] <- Ext(DiscardMortalityFleetList[[st]])
+    }
+  }
 
   list(
     NaturalMortalityList      = NaturalMortalityList,

@@ -35,7 +35,15 @@
 #'   catchability and selectivity.
 #' - Stock-level quantities (`BMSY`, `SBMSY`, etc.) are reported for each
 #'   stock evaluated at the complex-level `FMSY`.
-#' 
+#'
+#' ## Seasonal models
+#' For seasonal models (`Seasons > 1`) the reference points are annual
+#' quantities: `FMSY` is the annual apical fishing mortality (seasonal
+#' fishing mortality at age summed over the seasons of the year, maximum
+#' over ages), `MSYLandings`/`MSYDiscards` are annual totals, and
+#' `BMSY`/`SBMSY`/`SPMSY` are the biomass or spawning production in the
+#' reference season(s) (see [RefSeason()]).
+#'
 #' @return An a [refpointsMSY-class] object. 
 #'
 #' @seealso [CalcPerRecruit()], [CalcSPR0()], [refpointsMSY-class],

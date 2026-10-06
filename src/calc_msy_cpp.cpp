@@ -287,12 +287,23 @@ static std::vector<double> CalcNPRSeasonalMat(
         (1.0 - semel_prev);
     }
 
+    // Plus group: the last nSeason ages are one annual cycle of the plus age
+    // (inputs extended in R), repeated with full-cycle survival
     if (plusgroup) {
-      int s_last = SeasAtAge0(s0, nAge - 1, nSeason);
-      double z_last = Z[(nAge - 1) + s_last * nAge];
-      double denom = 1.0 - std::exp(-z_last);
-      if (denom > 1e-300) {
-        NPR[(nAge - 1) + s0 * nAge] = NPR[(nAge - 1) + s0 * nAge] / denom;
+      int first = nAge - nSeason;
+      auto Step = [&](int a_from, int a_to) {
+        int s_from = SeasAtAge0(s0, a_from, nSeason);
+        int s_to   = SeasAtAge0(s0, a_to, nSeason);
+        return std::exp(-(Z[a_from + s_from * nAge] * (1.0 - spawn_time_frac) +
+                          Z[a_to + s_to * nAge] * spawn_time_frac)) *
+          (1.0 - semelparous[a_from + s_from * nAge]);
+      };
+      double cycle_surv = Step(nAge - 1, first);
+      for (int a0 = first + 1; a0 < nAge; a0++) cycle_surv *= Step(a0 - 1, a0);
+      double denom = 1.0 - cycle_surv;
+      if (denom > 2.220446e-16) {
+        for (int a0 = first; a0 < nAge; a0++)
+          NPR[a0 + s0 * nAge] /= denom;
       }
     }
   }
@@ -619,8 +630,10 @@ List CalcPerRecruitFScalarSeasonalCpp_(
     double spr0f_ann = AggSeasonalProduct(NPR0_sp_v, Fecv, pi_sv, nAge, nSeason);
     double sprff_ann = AggSeasonalProduct(NPRF_sp,   Fecv, pi_sv, nAge, nSeason);
 
-    double biomass_ann  = AggRefSeason(NPRF_no, Wtv,  pi_sv, std::vector<double>(RefSeasonWeights.begin(), RefSeasonWeights.end()), nAge, nSeason);
-    double sbiomass_ann = AggRefSeason(NPRF_sp, WMatv, pi_sv, std::vector<double>(RefSeasonWeights.begin(), RefSeasonWeights.end()), nAge, nSeason);
+    std::vector<double> RefW(RefSeasonWeights.begin(), RefSeasonWeights.end());
+    double biomass_ann     = AggRefSeason(NPRF_no, Wtv,   pi_sv, RefW, nAge, nSeason);
+    double sbiomass_ann    = AggRefSeason(NPRF_sp, WMatv, pi_sv, RefW, nAge, nSeason);
+    double sproduction_ann = AggRefSeason(NPRF_sp, Fecv,  pi_sv, RefW, nAge, nSeason);
 
     NumericMatrix WFRet = WeightFleetRetainedList[s];
     NumericMatrix WFSel = WeightFleetSelectedList[s];
@@ -639,7 +652,7 @@ List CalcPerRecruitFScalarSeasonalCpp_(
     SPRFf_out[s]   = sprff_ann;
     Biomass[s]     = biomass_ann;
     SBiomass[s]    = sbiomass_ann;
-    SProduction[s] = sprff_ann;
+    SProduction[s] = sproduction_ann;
     Landings[s]    = landings_ann;
     Discards[s]    = discards_ann;
     Removals[s]    = landings_ann + discards_ann;

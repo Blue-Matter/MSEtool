@@ -29,6 +29,12 @@
 #' non-switchable counterparts for spawning biomass and spawning production
 #' respectively.
 #'
+#' In seasonal models (`Seasons > 1`), the metrics based on MSY reference
+#' points (`PM_FFMSY`, `PM_SBSBMSY`, `PM_SPSPMSY`, `PM_Status`, `PM_SBSBlim`,
+#' `PM_SPSPlim`, `PM_Safety`, and `PM_Rebuild`) are evaluated on annual status
+#' per calendar year, as returned by [F_FMSY()], [SB_SBMSY()], and
+#' [SP_SPMSY()], and `Years`/`Year` refer to calendar years.
+#'
 #' @param object An [mse-class] object, or a `list` of [mse-class] objects.
 #' @param Ref Numeric, or `NULL`. Reference/threshold value for `PM_FFMSY`/
 #'   `PM_SBSBMSY`/`PM_SPSPMSY`'s probability metric (default `1`). Pass
@@ -470,20 +476,8 @@ PM_Status <- function(object, Definition = c('SBiomass', 'SProduction'),
                        Years = NULL, silent = TRUE) {
   Definition <- match.arg(Definition)
   object <- .CoercePMInput(object, silent)
-  spawn_stocks <- .SpawningStockNames(object@OM)
-  series <- .StockStatusSeries(object, Definition)
 
-  sb_arr    <- .FilterStockDim(series$value, spawn_stocks)
-  sbmsy_arr <- .FilterStockDim(series$msy, spawn_stocks)
-
-  sb_complex    <- .AggregateStockToComplex(sb_arr, object@OM, sum, strict = FALSE)
-  sbmsy_complex <- .AggregateStockToComplex(sbmsy_arr, object@OM, sum, strict = FALSE)
-
-  target_years  <- dimnames(sb_complex)[['Year']]
-  sbmsy_aligned <- .AlignDenomYears(sbmsy_complex, target_years) |>
-    AddDimension('MP', val = dimnames(sb_complex)[['MP']])
-
-  sb_df <- ArrayDivide(sb_complex, sbmsy_aligned) |>
+  sb_df <- .ComplexStatusSeries(object, Definition) |>
     Array2DF() |>
     dplyr::rename(Complex = 'Stock', SB = 'Value')
 
@@ -592,7 +586,7 @@ PM_Rebuild <- function(object, Year, Target = 1, silent = TRUE) {
   sb <- SB_SBMSY(object, df = TRUE, Reduce = FALSE)
   sb <- sb[sb$Stock %in% .SpawningStockNames(object@OM), ]
 
-  lastHistYr <- max(Years(object@OM, 'Historical'))
+  lastHistYr <- max(floor(Years(object@OM, 'Historical')))
   baseline <- sb[sb$Period == 'Historical' & sb$Year == lastHistYr, ] |>
     dplyr::group_by(.data$Stock) |>
     dplyr::summarise(Overfished = mean(.data$Value) < 1, .groups = 'drop')
