@@ -19,6 +19,23 @@
 #' the last historical year. In seasonal models, each projection time step
 #' uses the value from the same season of the last historical year.
 #'
+#' ## Seasonal models
+#'
+#' In seasonal models (`Seasons > 1`) the MSY reference points are annual
+#' quantities, so `B_BMSY()`, `SB_SBMSY()`, `SP_SPMSY()`, and `F_FMSY()`
+#' return one value per complete calendar year, with `Year` holding the
+#' calendar year:
+#'
+#' * `F_FMSY()`: apical fishing mortality summed over the seasons of each
+#'   calendar year, the same annual basis as `FMSY` (see [CalcMSY()]).
+#' * `B_BMSY()`, `SB_SBMSY()`, `SP_SPMSY()`: biomass or spawning production
+#'   in the reference season(s) of each calendar year (see [RefSeason()]), the
+#'   same snapshot used for `BMSY`, `SBMSY`, and `SPMSY`.
+#'
+#' `B_B0()`, `SB_SB0()`, and `SP_SP0()` are reported per time step. The
+#' per-time-step series are available from [Biomass()], [SBiomass()],
+#' [SProduction()], and [FDead()].
+#'
 #' @param object A [hist-class] or [mse-class] object.
 #' @param type Character. One of `'Equilibrium'` or `'Dynamic'`. Controls
 #'   which unfished baseline is used. See [B0()] for details.
@@ -195,7 +212,7 @@ F_FMSY <- function(object,
   .CheckRefPopulated(fmsy_arr, 'MSY', 'Reference@MSY@FMSY', 'F_FMSY')
 
   if (!df) {
-    f_arr <- SumOverFleet(slot(object, 'FDead')) |> .AggregateFToComplex(object@OM)
+    f_arr <- .ApicalFByComplex(object, object@OM)
 
     if (inherits(object, 'mse')) {
       MP_names <- dimnames(f_arr)[['MP']]
@@ -270,10 +287,18 @@ F_FMSY <- function(object,
   .AggregateStockToComplex(f_arr, OM, max)
 }
 
+# Realised apical F on the basis of FMSY: summed over seasons within each
+# calendar year for seasonal OMs, then the controlling stock in each complex.
+.ApicalFByComplex <- function(object, OM) {
+  SumOverFleet(slot(object, 'FDead')) |>
+    .AnnualMSYNumerator('FDead', OM) |>
+    .AggregateFToComplex(OM)
+}
+
 .ComputeFFMSY <- function(object, fmsy_arr, Reduce, IncYear, OM) {
   isMSE <- inherits(object, 'mse')
 
-  f_arr <- SumOverFleet(slot(object, 'FDead')) |> .AggregateFToComplex(OM)
+  f_arr <- .ApicalFByComplex(object, OM)
 
   if (isMSE) {
     MP_names <- dimnames(f_arr)[['MP']]
@@ -359,10 +384,13 @@ F_FMSY <- function(object,
 }
 
 .ComputeRelative <- function(object, OM, num_slot, denom_arr, var_name,
-                               Reduce, IncYear, stockNames = NULL, sumStock = FALSE) {
+                               Reduce, IncYear, stockNames = NULL, sumStock = FALSE,
+                               ref = 'Unfished') {
   isMSE <- inherits(object, 'mse')
 
   arr          <- slot(object, num_slot)
+  if (ref == 'MSY')
+    arr <- .AnnualMSYNumerator(arr, num_slot, OM)
   target_years <- dimnames(arr)[['Year']]
   denom_aligned <- .AlignDenomYears(denom_arr, target_years)
 
@@ -410,6 +438,8 @@ F_FMSY <- function(object,
 
   if (!df) {
     arr          <- slot(object, num_slot)
+    if (ref == 'MSY')
+      arr <- .AnnualMSYNumerator(arr, num_slot, object@OM)
     target_years <- dimnames(arr)[['Year']]
     denom_aligned <- .AlignDenomYears(denom_arr, target_years)
     if (inherits(object, 'mse'))
@@ -425,7 +455,7 @@ F_FMSY <- function(object,
 
   if (inherits(object, 'hist')) {
     out <- .ComputeRelative(object, OM, num_slot, denom_arr, var_name,
-                              Reduce, IncYear, stockNames, sumStock)
+                              Reduce, IncYear, stockNames, sumStock, ref)
     out <- .FinalizeTimeseriesDF(out, OM@nSim, Extend, silent)
     class(out) <- c(paste0(tolower(gsub('_', '', var_name)), '.df'), class(out))
     return(out)
@@ -433,14 +463,97 @@ F_FMSY <- function(object,
 
   # MSE: bind historical and projection periods
   hist_df <- .ComputeRelative(object@Hist, OM, num_slot, denom_arr, var_name,
-                                Reduce, IncYear, stockNames, sumStock) |>
+                                Reduce, IncYear, stockNames, sumStock, ref) |>
     dplyr::mutate(MP = 'Historical')
 
   proj_df <- .ComputeRelative(object, OM, num_slot, denom_arr, var_name,
-                                Reduce, IncYear, stockNames, sumStock)
+                                Reduce, IncYear, stockNames, sumStock, ref)
 
   out <- dplyr::bind_rows(hist_df, proj_df)
   out <- .FinalizeTimeseriesDF(out, OM@nSim, Extend, silent)
   class(out) <- c(paste0(tolower(gsub('_', '', var_name)), '.df'), class(out))
   out
+}
+
+# ---- Seasonal OMs: MSY-relative quantities on a calendar-year basis ---------
+
+.IsSeasonal <- function(OM) isTRUE(OM@Seasons > 1)
+
+# Seasonal time-step array on the basis of its MSY reference point: F summed
+# within each calendar year, biomass and production taken at the RefSeason
+# snapshot.
+.AnnualMSYNumerator <- function(arr, num_slot, OM) {
+  if (!.IsSeasonal(OM)) return(arr)
+  if (num_slot %in% c('Biomass', 'SBiomass', 'SProduction'))
+    arr <- .ApplyRefSeasonWeights(arr, OM)
+  .SumWithinCalendarYear(arr, OM@Seasons)
+}
+
+# Sum over the time steps of each complete calendar year; Year relabelled to
+# the calendar year.
+.SumWithinCalendarYear <- function(arr, nSeason) {
+  dn     <- dimnames(arr)
+  yr_pos <- match('Year', names(dn))
+  ts     <- as.numeric(dn[[yr_pos]])
+  cal    <- floor(ts + 1e-8)
+  calYrs <- unique(cal)
+  calYrs <- calYrs[tabulate(match(cal, calYrs), length(calYrs)) == nSeason]
+
+  G    <- outer(cal, calYrs, `==`) * 1
+  perm <- c(setdiff(seq_along(dn), yr_pos), yr_pos)
+  a    <- aperm(arr, perm)
+  d    <- dim(a)
+  m    <- matrix(a, ncol = d[length(d)]) %*% G
+
+  out_dn <- c(dn[perm[-length(perm)]], list(Year = as.character(calYrs)))
+  out    <- array(m, dim = c(d[-length(d)], length(calYrs)), dimnames = out_dn)
+  aperm(out, order(perm))
+}
+
+.ApplyRefSeasonWeights <- function(arr, OM) {
+  nSim <- OM@nSim
+  if (dim(arr)[match('Sim', names(dimnames(arr)))] < nSim)
+    arr <- ExtendSims(arr, nSim)
+  dn <- dimnames(arr)
+  W  <- .RefSeasonWeightArray(OM, dn[['Year']])[, dn[['Stock']], , drop = FALSE]
+
+  lead <- match(c('Sim', 'Stock', 'Year'), names(dn))
+  perm <- c(lead, setdiff(seq_along(dn), lead))
+  a    <- aperm(arr, perm) * as.vector(W)
+  aperm(a, order(perm))
+}
+
+# Weight of each time step in its calendar year's RefSeason snapshot
+# (`Sim x Stock x Year`), using the same per-complex season detection as the
+# seasonal per-recruit model.
+.RefSeasonWeightArray <- function(OM, Years) {
+  nSim      <- OM@nSim
+  nSeason   <- OM@Seasons
+  stockNms  <- StockNames(OM)
+  complexes <- OM@Complexes
+  if (!length(complexes))
+    complexes <- stats::setNames(as.list(seq_along(stockNms)), stockNms)
+
+  ts  <- as.numeric(Years)
+  cal <- floor(ts + 1e-8)
+  W   <- array(0, dim = c(nSim, length(stockNms), length(ts)),
+               dimnames = list(Sim = seq_len(nSim), Stock = stockNms, Year = Years))
+
+  StockAtTS <- function(x, idx) {
+    if (!length(x)) return(x)
+    .ArraySubsetYear(x, ts[idx]) |> ExtendSims(nSim)
+  }
+
+  for (cx in complexes) {
+    StockList <- OM@Stock[stockNms[cx]]
+    for (cy in unique(cal)) {
+      idx <- which(cal == cy)
+      if (length(idx) != nSeason) next
+      Fec <- purrr::map(StockList, \(st) StockAtTS(st@Fecundity@MeanAtAge, idx))
+      Mat <- purrr::map(StockList, \(st) StockAtTS(st@Maturity@MeanAtAge, idx))
+      w   <- .RefSeasonWeights(Fec, Mat, nSeason, OM@RefSeason)
+      for (st in stockNms[cx]) W[, st, idx] <- w
+    }
+  }
+  W
 }
