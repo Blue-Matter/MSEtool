@@ -22,9 +22,13 @@ Subset(
 \item Lists (including \code{StockList}, \code{FleetList}, etc.)
 \item Arrays with a \code{Sim}, \code{Year}, \code{Age}, \code{MP}, and/or \code{Fleet} dimension
 \item Named numeric vectors (for \code{Sim} and \code{Age} dimensions)
+\item Data frames with a \code{Sim} column
 }}
 
-\item{Sims}{Numeric vector of simulation indices to retain. \code{NULL} skips.}
+\item{Sims}{Numeric vector of simulation indices to retain, in the order
+they are returned. \code{NULL} skips. Subsetting an \code{om}, \code{hist}, or \code{mse}
+object records the original simulation numbers, so projections of the
+subset reproduce those simulations of the full object.}
 
 \item{Years}{Numeric vector of calendar years to retain. \code{NULL} skips.}
 

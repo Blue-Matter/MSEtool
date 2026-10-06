@@ -4,17 +4,24 @@
 \alias{SPEstimates}
 \title{Extract Surplus Production Model Estimates from an MSE}
 \usage{
-SPEstimates(MSE, MPs = NULL)
+SPEstimates(MSE, MPs = NULL, Type = c("Summary", "Indices"))
 }
 \arguments{
 \item{MSE}{An \link[=mse-class]{mse} object.}
 
 \item{MPs}{Character vector of MP names. \code{NULL} (default) uses every MP
 that stored \code{\link[=SurplusProduction]{SurplusProduction()}} estimates.}
+
+\item{Type}{Character. \code{'Summary'} (default) or \code{'Indices'}.}
 }
 \value{
-A \code{data.frame} with one row per MP, simulation, stock (complex),
-and management cycle: \code{AdviceYear}, \code{LastDataYear}, \code{Converged},
+For \code{Type = 'Indices'}, a \code{data.frame} with one row per MP,
+simulation, stock (complex), management cycle (\code{AdviceYear}), and index,
+with the columns of \code{Indices} described in \code{\link[=SurplusProduction]{SurplusProduction()}}
+(Details, Diagnostics).
+
+For \code{Type = 'Summary'}, a \code{data.frame} with one row per MP, simulation,
+stock (complex), and management cycle: \code{AdviceYear}, \code{LastDataYear}, \code{Converged},
 \code{Fallback}, the estimated \code{B_BMSY} (biomass at the start of the year
 after the last data year relative to \code{BMSY}) and \code{F_FMSY} (in the last
 data year), \code{BAdvice_BMSY}, \code{MSY}, \code{FMSY}, \code{FAdvice}, \code{Advice} (the TAC
@@ -30,6 +37,24 @@ Collects the estimates made by \code{\link[=SurplusProduction]{SurplusProduction
 cycle of a projection, alongside the operating model values for
 comparison.
 }
+\examples{
+\dontrun{
+Hist <- Simulate(SingleStockOM)
+MSE  <- Project(Hist, MPs = list(SP = SurplusProduction))
+Est  <- SPEstimates(MSE)
+
+# fraction of management cycles with advice set by `OnFail`, by MP
+aggregate(Fallback ~ MP, data = Est, FUN = mean)
+
+# reasons the fit was not used
+table(Est$Message[Est$Fallback])
+
+# estimated vs operating model stock status
+plot(Est$OM_B_BMSY, Est$B_BMSY, xlab = 'OM B/BMSY', ylab = 'Estimated B/BMSY')
+abline(0, 1)
+}
+
+}
 \seealso{
-\code{\link[=SurplusProduction]{SurplusProduction()}}, \code{\link[=B_BMSY]{B_BMSY()}}, \code{\link[=F_FMSY]{F_FMSY()}}
+\code{\link[=SurplusProduction]{SurplusProduction()}}, \code{\link[=Log]{Log()}}, \code{\link[=B_BMSY]{B_BMSY()}}, \code{\link[=F_FMSY]{F_FMSY()}}
 }

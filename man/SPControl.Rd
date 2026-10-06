@@ -18,11 +18,11 @@ SPControl(
   nRestart = 2,
   MinSD = 0.05,
   GradTol = 0.001,
+  nNewton = 10,
   BoundTol = 0.01,
   Bounds = list(FMSY = c(0.005, 3), MSY = c(0.01, 100), Depletion = c(0.05, 1.5), Shape =
     c(0.2, 10)),
   nlminb = list(iter.max = 500, eval.max = 1000),
-  HessianStep = 1e-05,
   Hessian = c("auto", "always", "never")
 )
 }
@@ -68,10 +68,16 @@ does not converge. Default \code{2}.}
 \item{MinSD}{Positive number. Lower bound on an estimated index
 observation standard deviation (\code{IndexSD = 'estimate'}). Default \code{0.05}.}
 
-\item{GradTol}{Positive number. A fit is converged when, for each
-estimated (log-scale) parameter, the gradient divided by the curvature of
-the negative log-likelihood (the estimated distance to the optimum) is
-below \code{GradTol}, and the curvature is positive. Default \code{1e-3}.}
+\item{GradTol}{Positive number. A fit is converged when the Hessian of the
+negative log-likelihood is positive definite and, for each estimated
+(log-scale) parameter, the Newton step (the inverse Hessian times the
+gradient, the estimated distance to the optimum) is below \code{GradTol}. The
+gradient and Hessian are calculated exactly. Default \code{1e-3}.}
+
+\item{nNewton}{Non-negative integer. Maximum number of Newton steps, with
+the exact gradient and Hessian, taken after \code{\link[stats:nlminb]{stats::nlminb()}} stops, used
+when the estimated distance to the optimum exceeds \code{GradTol}. Default
+\code{10}.}
 
 \item{BoundTol}{Non-negative number. A fit with a log-scale parameter
 within \code{BoundTol} of a bound is not converged. Default \code{0.01}.}
@@ -82,11 +88,6 @@ Elements not given keep their defaults: \code{FMSY = c(0.005, 3)},
 \code{MSY = c(0.01, 100)}, \code{Depletion = c(0.05, 1.5)}, \code{Shape = c(0.2, 10)}.}
 
 \item{nlminb}{List of \code{control} settings passed to \code{\link[stats:nlminb]{stats::nlminb()}}.}
-
-\item{HessianStep}{Positive number. Finite-difference step (on the log
-scale of the parameters) used to calculate the Hessian; steps 10 and 100
-times smaller are tried if the Hessian is not positive definite. Default
-\code{1e-5}.}
 
 \item{Hessian}{Character. When to calculate the Hessian used for the
 standard errors: \code{'auto'} (default; when \code{Uncertainty = TRUE} in

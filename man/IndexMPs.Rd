@@ -9,7 +9,7 @@
 IndexRate(
   Data,
   Indices = NULL,
-  IndexSource = "Survey",
+  IndexSource = "auto",
   IndexFreq = NULL,
   IndexWeight = NULL,
   CalibYears = 2,
@@ -36,7 +36,7 @@ IndexRate(
 IndexTarget(
   Data,
   Indices = NULL,
-  IndexSource = "Survey",
+  IndexSource = "auto",
   IndexFreq = NULL,
   IndexWeight = NULL,
   CalibYears = 5,
@@ -66,12 +66,15 @@ IndexTarget(
 which columns of the chosen \code{IndexSource} to use. \code{NULL} (default) uses
 every index in \code{IndexSource}.}
 
-\item{IndexSource}{Character vector of one or both of \code{'Survey'},
-\code{'CPUE'}. Use indices from \code{Data@Survey} (default, \code{'Survey'}),
-\code{Data@CPUE}, or both (\code{c('Survey', 'CPUE')}). When both are used, their
-indices are combined into a single selection (\code{Survey} columns first,
-then \code{CPUE}), and \code{Indices}, \code{IndexFreq}, \code{IndexWeight}, \code{IndexTarget}
-and \code{IndexSeasons} apply across that combined set.}
+\item{IndexSource}{Character. \code{'auto'} (default), or one or both of
+\code{'Survey'} and \code{'CPUE'}. \code{'auto'} uses the indices in \code{Data@Survey} if it
+has any positive observation, otherwise those in \code{Data@CPUE}. \code{'Survey'}
+or \code{'CPUE'} uses that slot, and
+\code{c('Survey', 'CPUE')} combines the indices of both into a single
+selection (\code{Survey} columns first, then \code{CPUE}). \code{Indices}, \code{IndexFreq},
+\code{IndexWeight}, \code{IndexTarget} and \code{IndexSeasons} apply to the selected
+indices in that order; set \code{IndexSource} explicitly when these are given
+per index.}
 
 \item{IndexFreq}{Non-negative integer vector, one per selected index. How
 often each index is available in the projection period (\code{1} = every

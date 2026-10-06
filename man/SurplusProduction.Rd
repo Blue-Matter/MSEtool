@@ -7,7 +7,7 @@
 SurplusProduction(
   Data,
   Indices = NULL,
-  IndexSource = "Survey",
+  IndexSource = "auto",
   IndexFreq = NULL,
   IndexWeight = NULL,
   IndexSeasons = NULL,
@@ -22,7 +22,7 @@ SurplusProduction(
   Depletion = 1,
   EstDepletion = FALSE,
   IndexSD = c("estimate", "data"),
-  Priors = list(),
+  Priors = list(FMSY = c(0.2, 2)),
   Control = NULL,
   FTarget = 1,
   HCRControlPointsBiomass = c(0, 0.5),
@@ -95,7 +95,9 @@ standard deviation; see \code{\link[=SpictControl]{SpictControl()}}). See \code{
 
 \item{Priors}{Named list of lognormal priors, each \code{c(median, CV)}, on any
 of \code{FMSY}, \code{MSY} (in catch units), \code{Depletion}, and \code{Shape}. A prior on a
-fixed parameter is ignored.}
+fixed parameter is ignored. Default \code{list(FMSY = c(0.2, 2))}, a vague
+prior that keeps the \code{FMSY} estimate away from zero when the data contain
+little information on productivity. \code{list()} uses no priors.}
 
 \item{Control}{An \code{\link[=SPControl]{SPControl()}} (\code{Model = 'internal'}) or
 \code{\link[=SpictControl]{SpictControl()}} (\code{Model = 'spict'}) list. \code{NULL} (default) uses the
@@ -171,10 +173,11 @@ preceding window lengths (years) for \code{OnFail = 'trend'}. Default
 
 \item{Diagnostics}{Character. Information stored in
 \code{Advice@Misc$SurplusProduction}: \code{'min'} (default; the parameter
-estimates and a one-row summary, used by \code{\link[=SPEstimates]{SPEstimates()}}), \code{'none'} (the
+estimates, a one-row summary, and a table of the indices used, used by
+\code{\link[=SPEstimates]{SPEstimates()}}), \code{'none'} (the
 parameter estimates only, used to start the next fit), or \code{'full'} (also
 the \code{spfit} object, without \code{Prep} and \code{Spict}; see \code{\link[=FitSP]{FitSP()}}). When the
-advice is set by \code{OnFail}, \code{'min'} is used.}
+advice is set by \code{OnFail}, \code{'min'} is used. See Details, Diagnostics.}
 }
 \value{
 An \link[=advice-class]{advice} object.
@@ -206,7 +209,7 @@ or \code{Priors$Shape}).
 
 The derived quantities are \code{BMSY = MSY / FMSY} and \code{K = BMSY / (BMSY/K)}.
 Lognormal priors can be set on any estimated leading parameter with
-\code{Priors}. With \code{Model = 'internal'}, the catchability of each index is
+\code{Priors}; by default \code{FMSY} has a vague prior (median \code{0.2}, CV \code{2}). With \code{Model = 'internal'}, the catchability of each index is
 calculated at its maximum likelihood value given the leading parameters,
 and the observation standard deviation of each index is either calculated
 the same way (\code{IndexSD = 'estimate'}) or set from the index \code{CV}
@@ -261,10 +264,54 @@ cannot be prepared, \code{'trend'} keeps the previous advice. The fallback
 advice is constrained as in
 step 5. Each such management cycle is recorded as a warning in the \code{Log}
 of the returned \link[=advice-class]{advice} object.
+}
 
-The estimates of each management cycle are stored in
-\code{Advice@Misc$SurplusProduction} (see \code{Diagnostics}); \code{\link[=SPEstimates]{SPEstimates()}}
-extracts them from an \link[=mse-class]{mse} object.
+\subsection{Diagnostics}{
+
+The estimates of each management cycle are stored in the \code{Misc} slot of
+the returned \link[=advice-class]{advice} object, as the list
+\code{Advice@Misc$SurplusProduction}. Its contents are set by the
+\code{Diagnostics} argument:
+\itemize{
+\item \code{Model} and \code{par}: the model and the parameter estimates, used as
+starting values for the next fit. Always stored.
+\item \code{Summary} (\code{'min'} and \code{'full'}): a one-row \code{data.frame} with
+\code{AdviceYear}, \code{LastDataYear}, \code{Converged}, \code{Fallback}, the estimated
+\code{B_BMSY} and \code{F_FMSY}, \code{BAdvice_BMSY} (the projected status at the start
+of \code{AdviceYear}), \code{MSY}, \code{FMSY}, \code{FAdvice} (the fishing mortality from
+the harvest control rule), \code{Advice} (the TAC or relative effort before
+allocation), and \code{Message} (\code{'Converged'}, or the reason the advice was
+set by \code{OnFail}).
+\item \code{Indices} (\code{'min'} and \code{'full'}): a \code{data.frame} with one row per index
+used in the fit: \code{Index}, \code{Source} (\code{'Survey'} or \code{'CPUE'}), \code{Units},
+\code{Timing}, \code{Weight} (the normalised \code{IndexWeight}), \code{nObs} (number of
+positive observations in the fitted years), and the estimated \code{q} and
+\code{Sigma} (\code{NA} when the advice is set by \code{OnFail}). The relative weight of
+each index in the fit is \code{Weight / Sigma^2}.
+\item \code{Fit} (\code{'full'} only): the \code{spfit} object returned by \code{\link[=FitSP]{FitSP()}},
+including the estimated biomass and fishing mortality time series, the
+index catchabilities and standard deviations, the standard errors, and
+the \code{Log} of the fit, without the \code{Prep} and \code{Spict} elements. Not
+stored when the advice is set by \code{OnFail}.
+}
+
+In a projection, the advice objects are kept in \code{MSE@Misc$Advice},
+indexed by MP, management year, simulation, and stock (complex).
+\code{\link[=SPEstimates]{SPEstimates()}} combines the \code{Summary} of every management cycle into one
+\code{data.frame} and adds the operating model values of \code{B/BMSY} and
+\code{F/FMSY} (from \code{\link[=B_BMSY]{B_BMSY()}} and \code{\link[=F_FMSY]{F_FMSY()}}) for the same years, to compare
+the estimated and true stock status. \code{SPEstimates(Type = 'Indices')}
+combines the \code{Indices} of every management cycle. The fit for a single data set can be
+examined directly with \code{\link[=FitSP]{FitSP()}}, using the same arguments.
+
+Each management cycle with advice set by \code{OnFail} is also recorded as a
+\code{SurplusProduction} warning in \code{MSE@Log}, with the reason the fit was not
+used; \code{Log(MSE, type = 'warning')} lists these by MP, year, and
+simulation. The \code{Converged} and \code{Fallback} columns of \code{\link[=SPEstimates]{SPEstimates()}}
+give the same information as a \code{data.frame}.
+}
+
+\subsection{Tuning}{
 
 \code{tunepar = 1} applies the MP as specified; larger values increase the
 target fishing mortality proportionally. See \code{\link[=TuneMP]{TuneMP()}}.
@@ -282,6 +329,7 @@ SPEstimates(MSE)
 
 }
 \seealso{
-\code{\link[=FitSP]{FitSP()}}, \code{\link[=SPEstimates]{SPEstimates()}}, \code{\link[=HockeyStickHCR]{HockeyStickHCR()}}, \code{\link[=ConstrainTAC]{ConstrainTAC()}},
-\code{\link[=IndexRate]{IndexRate()}}, \code{\link[=TuneMP]{TuneMP()}}
+\code{\link[=FitSP]{FitSP()}}, \code{\link[=SPControl]{SPControl()}}, \code{\link[=SpictControl]{SpictControl()}}, \code{\link[=AnnualData]{AnnualData()}},
+\code{\link[=SPEstimates]{SPEstimates()}}, \code{\link[=Log]{Log()}}, \code{\link[=B_BMSY]{B_BMSY()}}, \code{\link[=F_FMSY]{F_FMSY()}}, \code{\link[=HockeyStickHCR]{HockeyStickHCR()}},
+\code{\link[=ConstrainTAC]{ConstrainTAC()}}, \code{\link[=IndexRate]{IndexRate()}}, \code{\link[=TuneMP]{TuneMP()}}
 }

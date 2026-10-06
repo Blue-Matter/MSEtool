@@ -57,6 +57,16 @@ catchability and selectivity.
 stock evaluated at the complex-level \code{FMSY}.
 }
 }
+
+\subsection{Seasonal models}{
+
+For seasonal models (\code{Seasons > 1}) the reference points are annual
+quantities: \code{FMSY} is the annual apical fishing mortality (seasonal
+fishing mortality at age summed over the seasons of the year, maximum
+over ages), \code{MSYLandings}/\code{MSYDiscards} are annual totals, and
+\code{BMSY}/\code{SBMSY}/\code{SPMSY} are the biomass or spawning production in the
+reference season(s) (see \code{\link[=RefSeason]{RefSeason()}}).
+}
 }
 \seealso{
 \code{\link[=CalcPerRecruit]{CalcPerRecruit()}}, \code{\link[=CalcSPR0]{CalcSPR0()}}, \link[=refpointsMSY-class]{refpointsMSY},

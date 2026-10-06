@@ -13,6 +13,8 @@ SpictControl(
   stabilise = TRUE,
   optimiser = c("nlminb", "optim"),
   optimiser.control = list(iter.max = 500, eval.max = 1000),
+  GradTol = 0.001,
+  RestartK = c(10, 2),
   SDReport = c("auto", "always", "never"),
   getReportCovariance = FALSE,
   WarmStart = TRUE,
@@ -46,6 +48,13 @@ Default \code{TRUE}.}
 
 \item{optimiser.control}{List of optimiser controls. Default
 \code{list(iter.max = 500, eval.max = 1000)}.}
+
+\item{GradTol}{Positive number. Convergence tolerance on the Newton step;
+see Details. Default \code{1e-3}.}
+
+\item{RestartK}{Numeric vector. Starting values of \code{K}, as multiples of the
+maximum catch, used for additional fits when a fit does not converge.
+\code{NULL} for no additional fits. Default \code{c(10, 2)}.}
 
 \item{SDReport}{Character. When to run \code{TMB::sdreport()}, which is needed
 for the standard errors: \code{'auto'} (default; when \code{Uncertainty = TRUE} in
@@ -93,7 +102,19 @@ The standard deviation of each index is still estimated.
 (with \code{n = Shape}), and \code{Priors$MSY} a prior on \code{m} (MSY).
 \item \code{Start} (or the warm start in \code{\link[=SurplusProduction]{SurplusProduction()}}) sets the starting
 values of \code{m} and \code{K}.
+\item Catch observations cannot be zero, so a year (or season) with zero
+catch is combined with the preceding catch observation (or the following
+one, before the first positive catch) into one observation of the total
+catch over the longer interval.
 }
+
+A fit is converged when the Hessian of the objective function is positive
+definite and, for each estimated parameter, the Newton step (the inverse
+Hessian times the gradient) is below \code{GradTol}. If the fit does not
+converge, it is repeated from the default \code{spict} starting values (when
+the first fit used \code{Start}) and then with the starting value of \code{K} at
+each multiple of the maximum catch in \code{RestartK}, and the converged fit
+with the lowest objective function value is used.
 }
 \references{
 Pedersen, M. W. and Berg, C. W. 2017. A stochastic surplus

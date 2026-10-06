@@ -7,7 +7,7 @@
 FitSP(
   Data,
   Indices = NULL,
-  IndexSource = "Survey",
+  IndexSource = "auto",
   IndexFreq = NULL,
   IndexWeight = NULL,
   IndexSeasons = NULL,
@@ -21,7 +21,7 @@ FitSP(
   Depletion = 1,
   EstDepletion = FALSE,
   IndexSD = c("estimate", "data"),
-  Priors = list(),
+  Priors = list(FMSY = c(0.2, 2)),
   Control = NULL,
   Start = NULL,
   Uncertainty = FALSE
@@ -68,7 +68,9 @@ relative to \code{K} (fixed value, or starting value when
 
 \item{Priors}{Named list of lognormal priors, each \code{c(median, CV)}, on any
 of \code{FMSY}, \code{MSY} (in catch units), \code{Depletion}, and \code{Shape}. A prior on a
-fixed parameter is ignored.}
+fixed parameter is ignored. Default \code{list(FMSY = c(0.2, 2))}, a vague
+prior that keeps the \code{FMSY} estimate away from zero when the data contain
+little information on productivity. \code{list()} uses no priors.}
 
 \item{Control}{An \code{\link[=SPControl]{SPControl()}} (\code{Model = 'internal'}) or
 \code{\link[=SpictControl]{SpictControl()}} (\code{Model = 'spict'}) list. \code{NULL} (default) uses the
@@ -97,6 +99,11 @@ fitted year and after the last), and \code{F}, \code{F_FMSY}, and \code{CatchPre
 \item \code{BMSY}, \code{FMSY}, \code{MSY}, \code{K}, \code{Shape}, \code{Depletion}
 \item \code{q}, \code{Sigma}: catchability and observation standard deviation of each
 index
+\item \code{Indices}: a \code{data.frame} with one row per index used in the fit:
+\code{Index} (name), \code{Source} (\code{'Survey'} or \code{'CPUE'}), \code{Units}, \code{Timing},
+\code{Weight} (the \code{IndexWeight} multiplier of its negative
+log-likelihood, normalised to a mean of \code{1}), \code{nObs} (number of
+positive observations in the fitted years), \code{q}, and \code{Sigma}
 \item \code{Terminal}: named vector of \code{B_BMSY} (after the last fitted year) and
 \code{F_FMSY} (in the last fitted year)
 \item \code{SE}: named vector of standard errors of \code{logB_BMSY} (as in
@@ -154,7 +161,8 @@ the mean timing, as a fraction of the calendar year, of the seasons in
 \subsection{Models}{
 \itemize{
 \item \code{Model = 'internal'} (default): the model above, fitted by maximum
-likelihood with \code{\link[stats:nlminb]{stats::nlminb()}}. Numerical settings are set with
+likelihood with \code{\link[stats:nlminb]{stats::nlminb()}}, using the exact gradient and Hessian of
+the negative log-likelihood. Numerical settings are set with
 \code{\link[=SPControl]{SPControl()}}.
 \item \code{Model = 'spict'}: the stochastic surplus production model in
 continuous time (SPiCT; Pedersen and Berg 2017), fitted with the \code{spict}

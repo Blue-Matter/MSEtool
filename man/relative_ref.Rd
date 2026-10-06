@@ -131,6 +131,24 @@ For the projection period of an \link[=mse-class]{mse} object the denominator is
 extended to cover projection years by repeating the reference value from
 the last historical year. In seasonal models, each projection time step
 uses the value from the same season of the last historical year.
+\subsection{Seasonal models}{
+
+In seasonal models (\code{Seasons > 1}) the MSY reference points are annual
+quantities, so \code{B_BMSY()}, \code{SB_SBMSY()}, \code{SP_SPMSY()}, and \code{F_FMSY()}
+return one value per complete calendar year, with \code{Year} holding the
+calendar year:
+\itemize{
+\item \code{F_FMSY()}: apical fishing mortality summed over the seasons of each
+calendar year, the same annual basis as \code{FMSY} (see \code{\link[=CalcMSY]{CalcMSY()}}).
+\item \code{B_BMSY()}, \code{SB_SBMSY()}, \code{SP_SPMSY()}: biomass or spawning production
+in the reference season(s) of each calendar year (see \code{\link[=RefSeason]{RefSeason()}}), the
+same snapshot used for \code{BMSY}, \code{SBMSY}, and \code{SPMSY}.
+}
+
+\code{B_B0()}, \code{SB_SB0()}, and \code{SP_SP0()} are reported per time step. The
+per-time-step series are available from \code{\link[=Biomass]{Biomass()}}, \code{\link[=SBiomass]{SBiomass()}},
+\code{\link[=SProduction]{SProduction()}}, and \code{\link[=FDead]{FDead()}}.
+}
 
 \code{FMSY} is a single "apical fishing mortality" optimised jointly across all
 stocks in a complex (see \code{\link[=CalcMSY]{CalcMSY()}}) -- there is no separate \code{FMSY} for an

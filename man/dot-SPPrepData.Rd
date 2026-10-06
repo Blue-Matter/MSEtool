@@ -40,7 +40,7 @@ first fitted year is set to \code{0}.}
 A list with \code{Years} (fitted years), \code{Catch} (fitted catch),
 \code{Landings}, \code{Discards} (annual totals over all years), \code{AllYears},
 \code{Index}, \code{CV} (\verb{[nFitYear x nIndex]}), \code{Timing}, \code{Weight}, \code{Name},
-\code{Units}, \code{YearLH}, \code{LastDataYear}, and \code{Log} (character vector of
+\code{Source} (\code{'Survey'} or \code{'CPUE'}), \code{Units}, \code{YearLH}, \code{LastDataYear}, and \code{Log} (character vector of
 assumptions).
 }
 \description{

@@ -174,6 +174,12 @@ default) or spawning production (\code{SProduction()}). \code{PM_SBSBMSY}/\code{
 and \code{PM_SPSPMSY}/\code{PM_SPSPlim} are the corresponding single-metric,
 non-switchable counterparts for spawning biomass and spawning production
 respectively.
+
+In seasonal models (\code{Seasons > 1}), the metrics based on MSY reference
+points (\code{PM_FFMSY}, \code{PM_SBSBMSY}, \code{PM_SPSPMSY}, \code{PM_Status}, \code{PM_SBSBlim},
+\code{PM_SPSPlim}, \code{PM_Safety}, and \code{PM_Rebuild}) are evaluated on annual status
+per calendar year, as returned by \code{\link[=F_FMSY]{F_FMSY()}}, \code{\link[=SB_SBMSY]{SB_SBMSY()}}, and
+\code{\link[=SP_SPMSY]{SP_SPMSY()}}, and \code{Years}/\code{Year} refer to calendar years.
 }
 \seealso{
 \link{PM-equations} for the mathematical definition of each metric.
