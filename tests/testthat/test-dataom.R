@@ -45,8 +45,10 @@ test_that(".ResolveDataOM() rejects malformed values", {
 })
 
 test_that("unknown OM@Control names and DataOM slots are reported", {
-  expect_message(.CheckOMControl(list(Reference = TRUE)), 'not a recognised')
-  expect_message(.CheckOMControl(list(Reference = TRUE)), 'DataOM')
+  Msgs <- testthat::capture_messages(.CheckOMControl(list(Reference = TRUE)))
+  expect_length(Msgs, 2)
+  expect_match(Msgs[1], 'not a recognised')
+  expect_match(Msgs[2], 'DataOM')
   expect_no_message(.CheckOMControl(list(MSYType = 'Landings', DataOM = list(Reference = TRUE))))
   expect_message(.CheckDataOM(c('Biomass', 'Biomas')), 'Biomas')
   expect_message(.CheckDataOM(list(Reference = TRUE, typoMP = TRUE), list(myMP = MakeMP())),
