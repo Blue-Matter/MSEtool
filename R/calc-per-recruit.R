@@ -854,6 +854,29 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
   nCalYears  <- length(CalendarYears)
   StockNames <- names(NaturalMortalityList)
 
+  # aggregation below is matrix-based, so all inputs need a common Sim length
+  SimInputs <- list(StockFleetAllocation, NaturalMortalityList, MaturityList, SemelparousList,
+                    WeightList, SPR0List, FecundityList, WeightFleetRetainedList,
+                    WeightFleetSelectedList, SelectivityFleetList, RetentionFleetList,
+                    DiscardMortalityFleetList, SeasonalWeightsList)
+  nSimAll <- max(1L, rapply(SimInputs, \(x) if (is.array(x) && 'Sim' %in% names(dimnames(x)))
+    dim(x)[names(dimnames(x)) == 'Sim'] else 1L, how = 'unlist'))
+  if (nSimAll > 1) {
+    StockFleetAllocation      <- ExtendSims(StockFleetAllocation, nSimAll)
+    NaturalMortalityList      <- ExtendSims(NaturalMortalityList, nSimAll)
+    MaturityList              <- ExtendSims(MaturityList, nSimAll)
+    SemelparousList           <- ExtendSims(SemelparousList, nSimAll)
+    WeightList                <- ExtendSims(WeightList, nSimAll)
+    SPR0List                  <- ExtendSims(SPR0List, nSimAll)
+    FecundityList             <- ExtendSims(FecundityList, nSimAll)
+    WeightFleetRetainedList   <- ExtendSims(WeightFleetRetainedList, nSimAll)
+    WeightFleetSelectedList   <- ExtendSims(WeightFleetSelectedList, nSimAll)
+    SelectivityFleetList      <- ExtendSims(SelectivityFleetList, nSimAll)
+    RetentionFleetList        <- ExtendSims(RetentionFleetList, nSimAll)
+    DiscardMortalityFleetList <- ExtendSims(DiscardMortalityFleetList, nSimAll)
+    SeasonalWeightsList       <- ExtendSims(SeasonalWeightsList, nSimAll)
+  }
+
   # Fleet F by stock × age × season × fleet
   # StockFleetAllocation: [Sim, Stock, Year(nSeason), Fleet]
   apicalFAge     <- apicalF * StockFleetAllocation |> AddDimension("Age", pos = 3)
