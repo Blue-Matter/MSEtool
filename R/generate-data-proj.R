@@ -33,7 +33,7 @@
   # replicate if only 1 sim for historical
   if (length(Proj@Data) == 1) {
     Proj@Data <- replicate(nSim, Proj@Data)
-    names(Proj@Data) <- .GlobalSim(Proj@OM, seq_len(nSim))
+    names(Proj@Data) <- seq_len(nSim)
   }
 
   if (!length(Proj@Data)) return(Proj)

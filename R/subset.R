@@ -186,7 +186,9 @@ Subset <- function(object,
 
     if (.IsSimKeyed(object, nSim, SimKeys)) {
       .CheckSimsAvailable(Sims, n)
-      return(object[Sims])
+      object <- object[Sims]
+      names(object) <- .SimLabels(Sims, keep_sim_name)
+      return(object)
     }
 
     for (i in seq_len(n)) {

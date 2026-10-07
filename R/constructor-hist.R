@@ -56,8 +56,8 @@ Hist <- function(MSE=NULL) {
 .HistData <- function(MSE) {
   if (!length(MSE@PPD))
     return(list())
-  .SubsetYear(MSE@PPD[[1]], Years = Years(MSE, 'Historical')) |>
-    purrr::imap(\(DataList, sim) purrr::map(DataList, \(Data) {
+  Data <- .SubsetYear(MSE@PPD[[1]], Years = Years(MSE, 'Historical'))
+  purrr::map2(Data, .GlobalSim(MSE@OM, seq_along(Data)), \(DataList, sim) purrr::map(DataList, \(Data) {
       if (is.null(Data)) return(Data)
       Data@Advice   <- AdviceData()
       Data@Misc$Sim <- as.numeric(sim)

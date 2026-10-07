@@ -67,7 +67,7 @@ test_that(".ChunkProj() leaves nothing sized to the full sim count", {
   Chunk <- .ChunkProj(Proj, 3:5)
   expect_identical(.SimSizedPaths(Chunk, 7), character())
   expect_identical(Chunk@OM@Misc$SimIDs, 3:5)
-  expect_identical(names(Chunk@Data), c("3", "4", "5"))
+  expect_identical(names(Chunk@Data), c("1", "2", "3"))
   expect_identical(.ChunkProj(Proj, 1:7), Proj)
 })
 

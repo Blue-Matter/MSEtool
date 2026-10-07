@@ -224,6 +224,7 @@
   Proj@OM@Misc$SimIDs      <- ParentIDs$SimIDs
   Proj@OM@Misc$nSimGlobal  <- ParentIDs$nSimGlobal
   Proj@Data                <- do.call(c, lapply(Projs, methods::slot, 'Data'))
+  if (length(Proj@Data) == nSimAll) names(Proj@Data) <- seq_len(nSimAll)
 
   for (nm in c('MPAdvice', 'MPAggBagLimit')) {
     Years <- names(Proj@Misc[[nm]])

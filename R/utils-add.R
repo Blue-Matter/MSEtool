@@ -337,11 +337,13 @@
 
 
 
+# Data@Misc$Sim is the sim of the full run, so MPs see the same sim in a Subset() or chunk
 .AddSimNumber <- function(Hist) {
   DataSimList <- Hist@Data
-  DataSimList <- purrr::imap(DataSimList, \(DataStock, i)
+  SimIDs <- .GlobalSim(Hist@OM, seq_along(DataSimList))
+  DataSimList <- purrr::map2(DataSimList, SimIDs, \(DataStock, sim)
               purrr::map(DataStock, \(Data) {
-                Data@Misc$Sim  <- as.numeric(i)
+                Data@Misc$Sim  <- as.numeric(sim)
                 Data  
               })
   )
