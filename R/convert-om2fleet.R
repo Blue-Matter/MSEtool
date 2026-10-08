@@ -97,7 +97,7 @@
   }
   
   if (!is.null(cpars[['SLarray']])) {
-    Classes <- cpars$CAL_binsmid
+    Classes <- .LegacyCALClasses(cpars)
     Selectivity@Classes <- Classes
     
     dd <- dim(cpars[['SLarray']])
@@ -149,7 +149,7 @@
   }
   
   if (!is.null(cpars[['retL']])) {
-    Classes <- cpars$CAL_binsmid
+    Classes <- .LegacyCALClasses(cpars)
     Retention@Classes <- Classes
     
     dd <- dim(cpars[['retL']])
@@ -219,7 +219,7 @@
   }
   
   if (!is.null(cpars[['Fdisc_array2']])) {
-    Classes <- cpars$CAL_binsmid
+    Classes <- .LegacyCALClasses(cpars)
     DiscardMortality@Classes <- Classes
     dd <- dim(cpars[['Fdisc_array2']])
     DiscardMortality@MeanAtLength <- array(cpars[['Fdisc_array2']],

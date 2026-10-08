@@ -74,17 +74,31 @@
   ASK <- if (!is.null(ASKOverride)) {
     ASKOverride
   } else {
-    CalcAgeSizeKey(
-      MeanAtAge = .LinearInterpolateAge(LengthMeanAtAge),
-      CVatAge   = .LinearInterpolateAge(LengthCVatAge),
-      Classes   = Length@Classes,
-      TruncSD   = Length@TruncSD,
-      Dist      = Length@Dist,
-      silent    = TRUE
-    )
+    .FineAgeSizeKey(LengthMeanAtAge, LengthCVatAge, Length)
   }
   
   list(ObjectMeanAtAge=ObjectMeanAtAge, ASK=ASK)
+}
+
+.FineASKCache <- new.env(parent = emptyenv())
+
+.FineAgeSizeKey <- function(LengthMeanAtAge, LengthCVatAge, Length) {
+  key <- digest::digest(list(LengthMeanAtAge, LengthCVatAge, Length@Classes,
+                             Length@TruncSD, Length@Dist), algo = "spookyhash")
+  if (identical(.FineASKCache$key, key))
+    return(.FineASKCache$value)
+  
+  ASK <- CalcAgeSizeKey(
+    MeanAtAge = .LinearInterpolateAge(LengthMeanAtAge),
+    CVatAge   = .LinearInterpolateAge(LengthCVatAge),
+    Classes   = Length@Classes,
+    TruncSD   = Length@TruncSD,
+    Dist      = Length@Dist,
+    silent    = TRUE
+  )
+  .FineASKCache$key   <- key
+  .FineASKCache$value <- ASK
+  ASK
 }
 
 #' Last-Observation-Carried-Forward

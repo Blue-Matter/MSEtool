@@ -93,8 +93,9 @@
   }
 
   # Classes
-  if (!is.null(cpars$CAL_bins))
-    Length@Classes <- cpars[["CAL_bins"]]
+  CALClasses <- .LegacyCALClasses(cpars)
+  if (!is.null(CALClasses))
+    Length@Classes <- CALClasses
 
   # Pars
   if (!is.null(cpars$Linf)) 
@@ -373,3 +374,14 @@
   Depletion
 }
 
+
+# Legacy `CAL_bins` are bin edges (n+1) and `CAL_binsmid` midpoints (n); `Classes` are lower bounds (n)
+.LegacyCALClasses <- function(cpars) {
+  bins <- cpars[["CAL_bins"]]
+  if (length(bins) > 1)
+    return(bins[-length(bins)])
+  mids <- cpars[["CAL_binsmid"]]
+  if (length(mids) > 1)
+    return(mids - 0.5 * c(diff(mids), diff(mids)[length(mids) - 1]))
+  NULL
+}
