@@ -33,7 +33,11 @@
 #' points (`PM_FFMSY`, `PM_SBSBMSY`, `PM_SPSPMSY`, `PM_Status`, `PM_SBSBlim`,
 #' `PM_SPSPlim`, `PM_Safety`, and `PM_Rebuild`) are evaluated on annual status
 #' per calendar year, as returned by [F_FMSY()], [SB_SBMSY()], and
-#' [SP_SPMSY()], and `Years`/`Year` refer to calendar years.
+#' [SP_SPMSY()], and `Years`/`Year` refer to calendar years. The catch-based
+#' metrics (`PM_Yield`, `PM_Removals`, `PM_Landings`, `PM_LogYield`,
+#' `PM_RelYield`, and `PM_AAVY`/`PM_Stability` with `Type = "Removals"` or
+#' `"Landings"`) use annual catch, summed over the seasons of each complete
+#' calendar year. In all metrics, `Years` refers to calendar years.
 #'
 #' @param object An [mse-class] object, or a `list` of [mse-class] objects.
 #' @param Ref Numeric, or `NULL`. Reference/threshold value for `PM_FFMSY`/
@@ -128,7 +132,8 @@ NULL
 #' `PM_Yield` / `PM_Removals` / `PM_Landings`: mean catch over the evaluation
 #' window,
 #' \deqn{\frac{1}{|Y|}\sum_{y \in Y} C_{s,y}}{(1/|Y|) * sum over y in Y of C[s,y]}
-#' where `C` is removals (landings + discards), or landings only.
+#' where `C` is annual removals (landings + discards), or landings only,
+#' summed over seasons in seasonal models.
 #'
 #' `PM_LogYield`: mean log catch over the evaluation window, with catch
 #' floored at a fraction `Floor` of the simulation's mean historical catch
@@ -326,16 +331,35 @@ NULL
   df[floor(df$Year) >= OM@MPStartYear, , drop = FALSE]
 }
 
-.FilterManagementYears <- function(df, object) {
+.FilterManagementYears <- function(df, object, Calendar = FALSE) {
   YearsProj <- Years(object@OM, 'Projection')
   YearsProj <- YearsProj[!YearsProj %in% .InterimTimesteps(object@OM)]
   mpNames   <- unique(df$MP)
   keep <- lapply(mpNames, function(mp) {
     Interval  <- .ResolveInterval(object@OM@Interval, mp, object@MPs[[mp]], object@OM@Seasons)
     ManageYrs <- if (length(YearsProj)) .CalcManagementYears(YearsProj, Interval, object@OM@Seasons) else YearsProj
+    if (Calendar)
+      return(df$MP == mp & df$Year %in% .CalendarYear(ManageYrs))
     df$MP == mp & df$Year %in% ManageYrs
   })
   df[Reduce(`|`, keep), ]
+}
+
+.CalendarYear <- function(Year) floor(Year + 1e-8)
+
+# Sum a seasonal time-step series within each complete calendar year.
+.SumCalendarYearDF <- function(df, OM) {
+  if (!.IsSeasonal(OM))
+    return(df)
+  ts  <- sort(unique(df$Year))
+  cal <- .CalendarYear(ts)
+  complete <- as.numeric(names(which(table(cal) == OM@Seasons)))
+  grp <- intersect(c('Sim', 'Stock', 'MP', 'Period'), names(df))
+  df |>
+    dplyr::mutate(Year = .CalendarYear(.data$Year)) |>
+    dplyr::filter(.data$Year %in% complete) |>
+    dplyr::group_by(dplyr::across(dplyr::all_of(grp)), .data$Year) |>
+    dplyr::summarise(Value = sum(.data$Value, na.rm = TRUE), .groups = 'drop')
 }
 
 .GroupedCatch <- function(object, Stocks, ManagementOnly = FALSE, FUN = Removals) {
@@ -343,9 +367,10 @@ NULL
             bySize = FALSE, byArea = FALSE, Reduce = FALSE)
   df <- df[df$Period == 'Projection', ]
   df <- .FilterMPActiveYears(df, object@OM)
+  df <- .SumCalendarYearDF(df, object@OM)
 
   if (ManagementOnly)
-    df <- .FilterManagementYears(df, object)
+    df <- .FilterManagementYears(df, object, Calendar = TRUE)
 
   groups <- .ResolveComplexGroups(object@OM, Stocks)
   purrr::imap(groups, \(stk, grpName) {
@@ -658,6 +683,7 @@ PM_LogYield <- function(object, Years = NULL, Stocks = NULL,
   HistDF <- FUN(object, df = TRUE, byFleet = FALSE, byAge = FALSE, bySize = FALSE,
                 byArea = FALSE, Reduce = FALSE)
   HistDF <- HistDF[HistDF$Period == 'Historical', ]
+  HistDF <- .SumCalendarYearDF(HistDF, object@OM)
   groups <- .ResolveComplexGroups(object@OM, Stocks)
   RefDF <- purrr::imap(groups, \(stk, grpName) {
     HistDF[HistDF$Stock %in% stk, ] |>
@@ -764,7 +790,7 @@ PM_AAVY <- function(object, Type = c('TAC', 'Removals', 'Landings'), Years = NUL
   object <- .CoercePMInput(object, silent)
   ydf <- .GroupedStabilitySeries(object, Type, Stocks, ManagementOnly = TRUE)
   if (!is.null(Years))
-    ydf <- ydf[ydf$Year %in% Years, ]
+    ydf <- ydf[.CalendarYear(ydf$Year) %in% Years, ]
   aav <- .AAV(ydf)
   .BuildPM(aav, Ref = NA_real_, Years = NULL, op = NULL,
            Name = 'AAVY',
@@ -779,7 +805,7 @@ PM_AAVE <- function(object, Years = NULL, Fleets = NULL, silent = TRUE) {
   object <- .CoercePMInput(object, silent)
   edf <- .GroupedEffort(object, Fleets, ManagementOnly = TRUE)
   if (!is.null(Years))
-    edf <- edf[edf$Year %in% Years, ]
+    edf <- edf[.CalendarYear(edf$Year) %in% Years, ]
   aav <- .AAV(edf)
   .BuildPM(aav, Ref = NA_real_, Years = NULL, op = NULL,
            Name = 'AAVE', Caption = 'Average annual variability in effort across management intervals')
@@ -796,7 +822,7 @@ PM_Stability <- function(object, Threshold, Type = c('TAC', 'Removals', 'Landing
   object <- .CoercePMInput(object, silent)
   ydf <- .GroupedStabilitySeries(object, Type, Stocks, ManagementOnly = TRUE)
   if (!is.null(Years))
-    ydf <- ydf[ydf$Year %in% Years, ]
+    ydf <- ydf[.CalendarYear(ydf$Year) %in% Years, ]
   aav <- .AAV(ydf)
   .BuildPM(aav, Ref = Threshold, Years = NULL, op = \(x, r) x <= r + 1e-4,
            Name = 'Stability',

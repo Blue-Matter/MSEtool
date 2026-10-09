@@ -127,3 +127,33 @@ test_that("Default RefSeason weights sum to one within each calendar year", {
   Tot <- .SumWithinCalendarYear(W, 4)
   expect_equal(as.numeric(Tot), rep(1, length(Tot)))
 })
+
+test_that("Seasonal catch PMs use annual catch and calendar-year Years", {
+  skip_on_cran()
+  data(TwoFleetOM, envir = environment())
+  om <- TwoFleetOM
+  om@nSim <- 3
+  om@pYear <- 3
+  om@Seasons <- 4
+  set.seed(1)
+  hist <- Simulate(om, silent = TRUE)
+  mse <- Project(hist, MPs = "CurrentEffort", parallel = FALSE, silent = TRUE)
+
+  R <- Removals(mse, df = TRUE, byFleet = FALSE, Reduce = FALSE)
+  R <- R[R$Period == "Projection", ]
+  R$Cal <- floor(R$Year + 1e-8)
+  Ann <- stats::aggregate(Value ~ Sim + Cal, R, sum)
+  ProjYears <- sort(unique(Ann$Cal))
+
+  pm <- PM_Removals(mse)
+  expect_equal(pm@Years, ProjYears)
+  expect_equal(unname(pm@Stat[, 1, 1]), unname(c(tapply(Ann$Value, Ann$Sim, mean))))
+
+  Late <- Ann[Ann$Cal %in% ProjYears[-1], ]
+  expect_equal(unname(PM_Yield(mse, Years = ProjYears[-1])@Stat[, 1, 1]),
+               unname(c(tapply(Late$Value, Late$Sim, mean))))
+
+  MSYC <- as.numeric(MSYLandings(mse)[, 1, 1])
+  expect_equal(unname(PM_RelYield(mse)@Stat[, 1, 1]),
+               unname(c(tapply(Ann$Value, Ann$Sim, mean))) / MSYC)
+})
