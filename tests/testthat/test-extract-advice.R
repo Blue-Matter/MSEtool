@@ -41,3 +41,19 @@ test_that("TACs() labels rows by complex for a multi-stock complex OM", {
   aavy <- PM_AAVY(mse, Type = "TAC", Stocks = StockNames(mse)[1])
   expect_true(any(is.finite(aavy@Stat)))
 })
+
+test_that("TACs() returns an empty data frame when no MP sets a TAC", {
+  skip_on_cran()
+  data(SingleStockOM, envir = environment())
+  om <- SingleStockOM
+  om@nSim <- 2
+  set.seed(1)
+  hist <- Simulate(om, silent = TRUE)
+  mse <- Project(hist, MPs = "CurrentEffort", parallel = FALSE, silent = TRUE)
+
+  tac <- TACs(mse)
+  expect_s3_class(tac, "data.frame")
+  expect_equal(nrow(tac), 0)
+  expect_identical(names(tac)[1:5], c("Sim", "Stock", "MP", "Year", "Period"))
+  expect_no_error(PM_AAVY(mse, Type = "TAC"))
+})

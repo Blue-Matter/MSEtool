@@ -40,7 +40,7 @@ TACs <- function(MSE) {
   ppd     <- PPD(MSE)
   mpNames <- names(ppd)
 
-  purrr::map(mpNames, \(mp) {
+  out <- purrr::map(mpNames, \(mp) {
     simNames <- names(ppd[[mp]])
     purrr::map(simNames, \(sim) {
       purrr::imap(ppd[[mp]][[sim]], \(dat, cx) {
@@ -60,7 +60,14 @@ TACs <- function(MSE) {
           )
       }) |> dplyr::bind_rows()
     }) |> dplyr::bind_rows()
-  }) |> dplyr::bind_rows() |>
+  }) |> dplyr::bind_rows()
+
+  if (!nrow(out))
+    return(data.frame(Sim = numeric(0), Stock = character(0), MP = character(0),
+                      Year = numeric(0), Period = character(0), Fleet = character(0),
+                      Value = numeric(0), Variable = character(0)))
+
+  out |>
     dplyr::relocate('Sim', 'Stock', 'MP', 'Year', 'Period') |>
     dplyr::arrange(.data$Sim, .data$Stock, .data$MP, .data$Year)
 }
