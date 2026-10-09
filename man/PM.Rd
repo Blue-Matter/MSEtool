@@ -5,7 +5,10 @@
 \alias{PM_FFMSY}
 \alias{PM_SBSBMSY}
 \alias{PM_SPSPMSY}
+\alias{PM_Kobe}
 \alias{PM_Status}
+\alias{PM_Red}
+\alias{PM_MinStatus}
 \alias{PM_SBSBlim}
 \alias{PM_SPSPlim}
 \alias{PM_Safety}
@@ -18,6 +21,7 @@
 \alias{PM_AAVY}
 \alias{PM_AAVE}
 \alias{PM_Stability}
+\alias{PM_TACLimited}
 \title{Performance Metrics}
 \usage{
 PM_FFMSY(object, Ref = 1, Years = NULL, silent = TRUE)
@@ -26,8 +30,31 @@ PM_SBSBMSY(object, Ref = 1, Years = NULL, silent = TRUE)
 
 PM_SPSPMSY(object, Ref = 1, Years = NULL, silent = TRUE)
 
+PM_Kobe(
+  object,
+  Quadrant = c("green", "red", "yellow", "orange"),
+  Definition = c("SBiomass", "SProduction"),
+  Years = NULL,
+  silent = TRUE
+)
+
 PM_Status(
   object,
+  Definition = c("SBiomass", "SProduction"),
+  Years = NULL,
+  silent = TRUE
+)
+
+PM_Red(
+  object,
+  Definition = c("SBiomass", "SProduction"),
+  Years = NULL,
+  silent = TRUE
+)
+
+PM_MinStatus(
+  object,
+  Reference = c("MSY", "Unfished"),
   Definition = c("SBiomass", "SProduction"),
   Years = NULL,
   silent = TRUE
@@ -75,6 +102,7 @@ PM_AAVY(
   Type = c("TAC", "Removals", "Landings"),
   Years = NULL,
   Stocks = NULL,
+  IncludeFirst = FALSE,
   silent = TRUE
 )
 
@@ -86,6 +114,18 @@ PM_Stability(
   Type = c("TAC", "Removals", "Landings"),
   Years = NULL,
   Stocks = NULL,
+  IncludeFirst = FALSE,
+  silent = TRUE
+)
+
+PM_TACLimited(
+  object,
+  DeltaUp = NULL,
+  DeltaDown = NULL,
+  IncludeFirst = TRUE,
+  Years = NULL,
+  Stocks = NULL,
+  tol = 1e-06,
   silent = TRUE
 )
 }
@@ -107,9 +147,17 @@ excluding any "interim" years before \code{OM@MPStartYear} (see
 \item{silent}{Logical. Suppress the \code{\link[=CombineMSE]{CombineMSE()}} summary message when
 \code{object} is a \code{list}. Default \code{TRUE}.}
 
+\item{Quadrant}{Character. The Kobe quadrant of \code{PM_Kobe}: \code{"green"},
+\code{"red"}, \code{"yellow"}, or \code{"orange"}. See Details.}
+
 \item{Definition}{Character. Which stock-status metric to use in
-\code{PM_Status} and \code{PM_Safety}: \code{"SBiomass"} (spawning biomass, default) or
-\code{"SProduction"} (spawning production).}
+\code{PM_Status}, \code{PM_Kobe}, \code{PM_Red}, \code{PM_MinStatus}, and \code{PM_Safety}:
+\code{"SBiomass"} (spawning biomass, default) or \code{"SProduction"} (spawning
+production).}
+
+\item{Reference}{Character. The reference point of \code{PM_MinStatus}:
+\code{"MSY"} (\code{SBMSY}, default) or \code{"Unfished"} (equilibrium unfished
+spawning biomass, \code{SB0}).}
 
 \item{Lim}{Numeric, or a named numeric vector keyed by stock name. Limit
 reference point, expressed as a fraction of \code{SBMSY} (\code{PM_SBSBlim}) or
@@ -135,11 +183,27 @@ variability in: \code{"TAC"} (the MP's recommendation, default),
 \code{Floor} times the simulation's mean historical catch before taking logs,
 so a zero catch has a finite log. Default \code{1e-3}.}
 
+\item{IncludeFirst}{Logical. In \code{PM_AAVY}, \code{PM_Stability}, and
+\code{PM_TACLimited}, include the change from the value in effect before the
+first management cycle in \code{Years} to the first value: for the first
+cycle in which the MPs are active, the TAC in the last time step before
+\code{OM@MPStartYear} (e.g. an interim TAC), or, if there is none, the
+removals (or landings) in the calendar year before. Default \code{FALSE}
+(\code{TRUE} for \code{PM_TACLimited}).}
+
 \item{Fleets}{Character vector of fleet names to include in \code{PM_AAVE}.
 Default \code{NULL} uses all fleets.}
 
 \item{Threshold}{Numeric. Maximum acceptable interval-to-interval change
 in the series selected by \code{Type}, used by \code{PM_Stability}.}
+
+\item{DeltaUp, DeltaDown}{\code{NULL} (default), a number, or a named numeric
+vector (one value per MP). The maximum proportional TAC increase and
+decrease in \code{PM_TACLimited}, overriding the \code{DeltaUp[2]}/\code{DeltaDown[2]}
+of the MPs.}
+
+\item{tol}{Numeric. Tolerance of \code{PM_TACLimited}: a change within \code{tol} of
+the limit is at the limit. Default \code{1e-6}.}
 }
 \value{
 A \link[=pm-class]{pm} object.
@@ -168,7 +232,28 @@ complex's spawning stock(s) before dividing, so both sides of the joint
 status test are assessed at the same aggregation level rather than pairing
 a per-stock ratio with an identical, complex-wide F flag.
 
-\code{PM_Status} and \code{PM_Safety} accept a \code{Definition} argument selecting
+\code{PM_Kobe} is the probability of being in one quadrant of the Kobe plot,
+evaluated at the complex level in the same way as \code{PM_Status}. The four
+quadrants partition every year: \code{"green"} (\code{SB > SBMSY} and \code{F < FMSY}),
+\code{"red"} (\code{SB < SBMSY} and \code{F > FMSY}), \code{"yellow"} (\code{SB <= SBMSY} and
+\code{F <= FMSY}), and \code{"orange"} (all other years: \code{SB >= SBMSY} and
+\code{F >= FMSY}, excluding the green and red quadrants). \code{PM_Status} is the
+green quadrant and \code{PM_Red} the red quadrant.
+
+\code{PM_MinStatus} is the lowest annual stock status in each simulation over
+\code{Years}, relative to \code{SBMSY} (\code{Reference = "MSY"}) or to the equilibrium
+unfished spawning biomass \code{SB0} (\code{Reference = "Unfished"}), at the complex
+level. It is a statistic, not a probability (\code{Prob} is \code{NA}).
+
+\code{PM_TACLimited} is the proportion of management cycles in each simulation
+in which the change in the TAC is at the maximum allowed by the MP:
+increases are compared with \code{DeltaUp[2]} and decreases with \code{DeltaDown[2]}
+(see \code{\link[=ConstrainTAC]{ConstrainTAC()}}). The limits are the defaults of the \code{DeltaUp} and
+\code{DeltaDown} arguments of each MP (e.g. as set with \code{\link[=SetMPArgs]{SetMPArgs()}}) unless
+given in \code{DeltaUp}/\code{DeltaDown}. MPs with no limits, or no TAC, are \code{NA}.
+
+\code{PM_Status}, \code{PM_Kobe}, \code{PM_MinStatus}, and \code{PM_Safety} accept a
+\code{Definition} argument selecting
 whether stock status is assessed on spawning biomass (\code{SBiomass()}, the
 default) or spawning production (\code{SProduction()}). \code{PM_SBSBMSY}/\code{PM_SBSBlim}
 and \code{PM_SPSPMSY}/\code{PM_SPSPlim} are the corresponding single-metric,
@@ -176,10 +261,18 @@ non-switchable counterparts for spawning biomass and spawning production
 respectively.
 
 In seasonal models (\code{Seasons > 1}), the metrics based on MSY reference
-points (\code{PM_FFMSY}, \code{PM_SBSBMSY}, \code{PM_SPSPMSY}, \code{PM_Status}, \code{PM_SBSBlim},
-\code{PM_SPSPlim}, \code{PM_Safety}, and \code{PM_Rebuild}) are evaluated on annual status
-per calendar year, as returned by \code{\link[=F_FMSY]{F_FMSY()}}, \code{\link[=SB_SBMSY]{SB_SBMSY()}}, and
-\code{\link[=SP_SPMSY]{SP_SPMSY()}}, and \code{Years}/\code{Year} refer to calendar years.
+points (\code{PM_FFMSY}, \code{PM_SBSBMSY}, \code{PM_SPSPMSY}, \code{PM_Status}, \code{PM_Kobe},
+\code{PM_MinStatus}, \code{PM_SBSBlim}, \code{PM_SPSPlim}, \code{PM_Safety}, and \code{PM_Rebuild})
+are evaluated on annual status per calendar year, as returned by
+\code{\link[=F_FMSY]{F_FMSY()}}, \code{\link[=SB_SBMSY]{SB_SBMSY()}}, and \code{\link[=SP_SPMSY]{SP_SPMSY()}}, and \code{Years}/\code{Year} refer to
+calendar years. \code{PM_MinStatus} with \code{Reference = "Unfished"} uses the
+ratio to unfished spawning biomass in the reference season of each year
+(see \code{\link[=RefSeason]{RefSeason()}}), the season used for \code{SB/SBMSY}. The catch-based
+metrics (\code{PM_Yield}, \code{PM_Removals}, \code{PM_Landings}, \code{PM_LogYield},
+\code{PM_RelYield}, and \code{PM_AAVY}/\code{PM_Stability} with \code{Type = "Removals"} or
+\code{"Landings"}) use annual catch, summed over the seasons of each complete
+calendar year. In all metrics, \code{Years} refers to calendar years; see
+\code{\link[=PMYears]{PMYears()}} for the years in which the MPs are active, or a window of them.
 }
 \seealso{
 \link{PM-equations} for the mathematical definition of each metric.

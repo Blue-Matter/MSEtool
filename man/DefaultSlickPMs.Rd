@@ -19,15 +19,12 @@ having to assemble a \code{PMs} list themselves.
 }
 \details{
 \itemize{
-\item \code{\link[=PM_Yield]{PM_Yield()}}: mean projected catch, on its natural (biomass) scale;
-not a probability, so it's excluded from \code{Spider} (which requires
-every PI on a 0-1/0-100 scale) but included in \code{Boxplot}/\code{Quilt}/
-\code{Tradeoff}.
-\item \code{\link[=PM_AAVY]{PM_AAVY()}}: average annual variability in yield, i.e. how much catch
-swings year to year; also natural-scale, same \code{Spider} exclusion as
-\code{PM_Yield()}.
+\item \code{\link[=PM_Yield]{PM_Yield()}}: mean projected catch, on its natural (biomass) scale; in
+the \code{Spider} it is relative to the highest value among the MPs.
+\item \code{\link[=PM_AAVY]{PM_AAVY()}}: average annual variability in the TAC, i.e. how much the
+TAC changes between management cycles; also natural-scale.
 \item \code{\link[=PM_Status]{PM_Status()}}: the joint probability that a stock/complex is neither
-overfished nor experiencing overfishing (\code{P(SB > SBMSY & F < FMSY)}).#'
+overfished nor experiencing overfishing (\code{P(SB > SBMSY & F < FMSY)}).
 \item \code{\link[=PM_Safety]{PM_Safety()}} with \code{Lim = 0.4}: the probability that \code{SB/SBMSY} never
 drops below 40\% at any point in the projection.
 }

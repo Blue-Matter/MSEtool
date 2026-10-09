@@ -301,6 +301,7 @@ Collate:
     'plot-spatial.R'
     'plot-srr.R'
     'plot-stock.R'
+    'pm-years.R'
     'populate-ASK.R'
     'populate-catchability.R'
     'populate-classes.R'

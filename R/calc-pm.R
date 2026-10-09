@@ -22,7 +22,28 @@
 #' status test are assessed at the same aggregation level rather than pairing
 #' a per-stock ratio with an identical, complex-wide F flag.
 #'
-#' `PM_Status` and `PM_Safety` accept a `Definition` argument selecting
+#' `PM_Kobe` is the probability of being in one quadrant of the Kobe plot,
+#' evaluated at the complex level in the same way as `PM_Status`. The four
+#' quadrants partition every year: `"green"` (`SB > SBMSY` and `F < FMSY`),
+#' `"red"` (`SB < SBMSY` and `F > FMSY`), `"yellow"` (`SB <= SBMSY` and
+#' `F <= FMSY`), and `"orange"` (all other years: `SB >= SBMSY` and
+#' `F >= FMSY`, excluding the green and red quadrants). `PM_Status` is the
+#' green quadrant and `PM_Red` the red quadrant.
+#'
+#' `PM_MinStatus` is the lowest annual stock status in each simulation over
+#' `Years`, relative to `SBMSY` (`Reference = "MSY"`) or to the equilibrium
+#' unfished spawning biomass `SB0` (`Reference = "Unfished"`), at the complex
+#' level. It is a statistic, not a probability (`Prob` is `NA`).
+#'
+#' `PM_TACLimited` is the proportion of management cycles in each simulation
+#' in which the change in the TAC is at the maximum allowed by the MP:
+#' increases are compared with `DeltaUp[2]` and decreases with `DeltaDown[2]`
+#' (see [ConstrainTAC()]). The limits are the defaults of the `DeltaUp` and
+#' `DeltaDown` arguments of each MP (e.g. as set with [SetMPArgs()]) unless
+#' given in `DeltaUp`/`DeltaDown`. MPs with no limits, or no TAC, are `NA`.
+#'
+#' `PM_Status`, `PM_Kobe`, `PM_MinStatus`, and `PM_Safety` accept a
+#' `Definition` argument selecting
 #' whether stock status is assessed on spawning biomass (`SBiomass()`, the
 #' default) or spawning production (`SProduction()`). `PM_SBSBMSY`/`PM_SBSBlim`
 #' and `PM_SPSPMSY`/`PM_SPSPlim` are the corresponding single-metric,
@@ -30,14 +51,18 @@
 #' respectively.
 #'
 #' In seasonal models (`Seasons > 1`), the metrics based on MSY reference
-#' points (`PM_FFMSY`, `PM_SBSBMSY`, `PM_SPSPMSY`, `PM_Status`, `PM_SBSBlim`,
-#' `PM_SPSPlim`, `PM_Safety`, and `PM_Rebuild`) are evaluated on annual status
-#' per calendar year, as returned by [F_FMSY()], [SB_SBMSY()], and
-#' [SP_SPMSY()], and `Years`/`Year` refer to calendar years. The catch-based
+#' points (`PM_FFMSY`, `PM_SBSBMSY`, `PM_SPSPMSY`, `PM_Status`, `PM_Kobe`,
+#' `PM_MinStatus`, `PM_SBSBlim`, `PM_SPSPlim`, `PM_Safety`, and `PM_Rebuild`)
+#' are evaluated on annual status per calendar year, as returned by
+#' [F_FMSY()], [SB_SBMSY()], and [SP_SPMSY()], and `Years`/`Year` refer to
+#' calendar years. `PM_MinStatus` with `Reference = "Unfished"` uses the
+#' ratio to unfished spawning biomass in the reference season of each year
+#' (see [RefSeason()]), the season used for `SB/SBMSY`. The catch-based
 #' metrics (`PM_Yield`, `PM_Removals`, `PM_Landings`, `PM_LogYield`,
 #' `PM_RelYield`, and `PM_AAVY`/`PM_Stability` with `Type = "Removals"` or
 #' `"Landings"`) use annual catch, summed over the seasons of each complete
-#' calendar year. In all metrics, `Years` refers to calendar years.
+#' calendar year. In all metrics, `Years` refers to calendar years; see
+#' [PMYears()] for the years in which the MPs are active, or a window of them.
 #'
 #' @param object An [mse-class] object, or a `list` of [mse-class] objects.
 #' @param Ref Numeric, or `NULL`. Reference/threshold value for `PM_FFMSY`/
@@ -51,8 +76,27 @@
 #'   `SPMSY` (`PM_SPSPlim`), or of `SBMSY`/`SPMSY` per `Definition`
 #'   (`PM_Safety`) -- e.g. `Lim = 0.5` tests against half of `SBMSY`.
 #' @param Definition Character. Which stock-status metric to use in
-#'   `PM_Status` and `PM_Safety`: `"SBiomass"` (spawning biomass, default) or
-#'   `"SProduction"` (spawning production).
+#'   `PM_Status`, `PM_Kobe`, `PM_Red`, `PM_MinStatus`, and `PM_Safety`:
+#'   `"SBiomass"` (spawning biomass, default) or `"SProduction"` (spawning
+#'   production).
+#' @param Quadrant Character. The Kobe quadrant of `PM_Kobe`: `"green"`,
+#'   `"red"`, `"yellow"`, or `"orange"`. See Details.
+#' @param Reference Character. The reference point of `PM_MinStatus`:
+#'   `"MSY"` (`SBMSY`, default) or `"Unfished"` (equilibrium unfished
+#'   spawning biomass, `SB0`).
+#' @param IncludeFirst Logical. In `PM_AAVY`, `PM_Stability`, and
+#'   `PM_TACLimited`, include the change from the value in effect before the
+#'   first management cycle in `Years` to the first value: for the first
+#'   cycle in which the MPs are active, the TAC in the last time step before
+#'   `OM@MPStartYear` (e.g. an interim TAC), or, if there is none, the
+#'   removals (or landings) in the calendar year before. Default `FALSE`
+#'   (`TRUE` for `PM_TACLimited`).
+#' @param DeltaUp,DeltaDown `NULL` (default), a number, or a named numeric
+#'   vector (one value per MP). The maximum proportional TAC increase and
+#'   decrease in `PM_TACLimited`, overriding the `DeltaUp[2]`/`DeltaDown[2]`
+#'   of the MPs.
+#' @param tol Numeric. Tolerance of `PM_TACLimited`: a change within `tol` of
+#'   the limit is at the limit. Default `1e-6`.
 #' @param Type Character. For `PM_Yield`, which catch metric to report:
 #'   `"Removals"` (landings + discards, default) or `"Landings"`. For
 #'   `PM_AAVY`/`PM_Stability`, which series to assess interval-to-interval
@@ -105,6 +149,16 @@ NULL
 #' \deqn{P\left(\frac{SB_{y}}{SB_{MSY}} > 1 \ \text{and}\ \frac{F_{y}}{F_{MSY}} < 1\right)}{P( SB/SBMSY > 1  and  F/FMSY < 1 )}
 #' evaluated at the complex level, where `SB` is spawning biomass or spawning
 #' production according to `Definition`.
+#'
+#' `PM_Kobe`: the probability of being in a quadrant of the Kobe plot, e.g.
+#' for the red quadrant,
+#' \deqn{P\left(\frac{SB_{y}}{SB_{MSY}} < 1 \ \text{and}\ \frac{F_{y}}{F_{MSY}} > 1\right)}{P( SB/SBMSY < 1  and  F/FMSY > 1 )}
+#' (see [PM] for the definition of each quadrant).
+#'
+#' `PM_MinStatus`: the lowest annual stock status over the evaluation window,
+#' \deqn{\min_{y \in Y} \frac{SB_{s,y}}{SB_{ref,s}}}{min over y in Y of SB[s,y] / SBref[s]}
+#' where \eqn{SB_{ref}}{SBref} is \eqn{SB_{MSY}}{SBMSY} or \eqn{SB_0}{SB0}
+#' according to `Reference`.
 #'
 #' @section Safety:
 #' `PM_SBSBlim` / `PM_SPSPlim`: spawning biomass or spawning production
@@ -161,6 +215,16 @@ NULL
 #' \deqn{P\left(\frac{|C_{s,y} - C_{s,y-1}|}{C_{s,y-1}} \le \mathrm{Threshold}\right)}{P( |C[s,y] - C[s,y-1]| / C[s,y-1] <= Threshold )}
 #' evaluated per interval `y` and averaged across the evaluation window and
 #' simulations.
+#'
+#' `PM_TACLimited`: the probability that the change in the TAC between one
+#' management interval and the next is at the limit of the MP,
+#' \deqn{P\left(\frac{TAC_{s,y} - TAC_{s,y-1}}{TAC_{s,y-1}} \ge \Delta^{up} \ \text{or}\ \frac{TAC_{s,y-1} - TAC_{s,y}}{TAC_{s,y-1}} \ge \Delta^{down}\right)}{P( (TAC[s,y] - TAC[s,y-1]) / TAC[s,y-1] >= DeltaUp  or  (TAC[s,y-1] - TAC[s,y]) / TAC[s,y-1] >= DeltaDown )}
+#' where \eqn{\Delta^{up}}{DeltaUp} and \eqn{\Delta^{down}}{DeltaDown} are
+#' the maximum proportional increase and decrease (`DeltaUp[2]` and
+#' `DeltaDown[2]` of the MP).
+#'
+#' With `IncludeFirst = TRUE`, `y-1` of the first management year in the
+#' evaluation window is the value in effect before it (see [PM]).
 #'
 #' @section Stat, Prob, and Mean:
 #' Every `PM_*` function returns a [pm-class] object with three related
@@ -362,7 +426,18 @@ NULL
     dplyr::summarise(Value = sum(.data$Value, na.rm = TRUE), .groups = 'drop')
 }
 
-.GroupedCatch <- function(object, Stocks, ManagementOnly = FALSE, FUN = Removals) {
+.GroupCatchByStocks <- function(df, OM, Stocks) {
+  groups <- .ResolveComplexGroups(OM, Stocks)
+  purrr::imap(groups, \(stk, grpName) {
+    df[df$Stock %in% stk, ] |>
+      dplyr::group_by(.data$Sim, .data$Year, .data$MP) |>
+      dplyr::summarise(Value = sum(.data$Value, na.rm = TRUE), .groups = 'drop') |>
+      dplyr::mutate(Stock = grpName)
+  }) |> dplyr::bind_rows()
+}
+
+.GroupedCatch <- function(object, Stocks, ManagementOnly = FALSE, FUN = Removals,
+                          IncludeFirst = FALSE) {
   df <- FUN(object, df = TRUE, byFleet = FALSE, byAge = FALSE,
             bySize = FALSE, byArea = FALSE, Reduce = FALSE)
   df <- df[df$Period == 'Projection', ]
@@ -372,26 +447,39 @@ NULL
   if (ManagementOnly)
     df <- .FilterManagementYears(df, object, Calendar = TRUE)
 
-  groups <- .ResolveComplexGroups(object@OM, Stocks)
-  purrr::imap(groups, \(stk, grpName) {
-    df[df$Stock %in% stk, ] |>
-      dplyr::group_by(.data$Sim, .data$Year, .data$MP) |>
-      dplyr::summarise(Value = sum(.data$Value, na.rm = TRUE), .groups = 'drop') |>
-      dplyr::mutate(Stock = grpName)
-  }) |> dplyr::bind_rows()
+  out <- .GroupCatchByStocks(df, object@OM, Stocks)
+  if (IncludeFirst)
+    out <- dplyr::bind_rows(.PreMPCatch(object, Stocks, FUN, out), out)
+  out
 }
 
-.GroupedTAC <- function(object, Stocks, ManagementOnly = FALSE) {
-  df <- TACs(object)
-  df <- df[df$Period == 'Projection', ]
-  df <- .FilterMPActiveYears(df, object@OM)
+# Calendar-year catch before the first MP year, one row per Sim/MP/Stock of `template`.
+.PreMPCatch <- function(object, Stocks, FUN, template) {
+  Year0 <- .CalendarYear(.FirstMPTimestep(object@OM)) - 1
+  df <- FUN(object, df = TRUE, byFleet = FALSE, byAge = FALSE,
+            bySize = FALSE, byArea = FALSE, Reduce = FALSE)
+  df <- .SumCalendarYearDF(as.data.frame(df), object@OM)
+  df <- df[.CalendarYear(df$Year) == Year0, ]
+  catch <- .GroupCatchByStocks(df, object@OM, Stocks)
 
-  if (ManagementOnly)
-    df <- .FilterManagementYears(df, object)
+  keys <- dplyr::distinct(template, .data$Sim, .data$MP, .data$Stock)
+  byMP <- dplyr::left_join(keys, catch, by = c('Sim', 'MP', 'Stock'))
+  hist <- catch[catch$MP == 'Historical', c('Sim', 'Stock', 'Value')]
+  byHist <- dplyr::left_join(keys, hist, by = c('Sim', 'Stock'))
+  byMP$Value <- ifelse(is.na(byMP$Value), byHist$Value, byMP$Value)
+  byMP$Year <- Year0
+  byMP[, c('Sim', 'Year', 'MP', 'Value', 'Stock')]
+}
 
+.FirstMPTimestep <- function(OM) {
+  YearsProj <- Years(OM, 'Projection')
+  YearsProj[!YearsProj %in% .InterimTimesteps(OM)][1]
+}
+
+.GroupTACByStocks <- function(df, OM, Stocks) {
   # TAC rows are per complex; a group takes the TAC of any complex it overlaps
-  cxStocks <- .ResolveComplexGroups(object@OM, NULL)
-  groups   <- .ResolveComplexGroups(object@OM, Stocks)
+  cxStocks <- .ResolveComplexGroups(OM, NULL)
+  groups   <- .ResolveComplexGroups(OM, Stocks)
   purrr::imap(groups, \(stk, grpName) {
     cx <- names(cxStocks)[purrr::map_lgl(cxStocks, \(s) any(s %in% stk))]
     df[df$Stock %in% cx, ] |>
@@ -401,16 +489,63 @@ NULL
   }) |> dplyr::bind_rows()
 }
 
+.GroupedTAC <- function(object, Stocks, ManagementOnly = FALSE, IncludeFirst = FALSE) {
+  all_df <- TACs(object)
+  all_df <- all_df[all_df$Period == 'Projection', ]
+  df <- .FilterMPActiveYears(all_df, object@OM)
+
+  if (ManagementOnly)
+    df <- .FilterManagementYears(df, object)
+
+  out <- .GroupTACByStocks(df, object@OM, Stocks)
+  if (IncludeFirst)
+    out <- dplyr::bind_rows(.PreMPTAC(object, all_df, Stocks, out), out)
+  out
+}
+
+# TAC in the last time step before the first MP time step, or the catch in the
+# calendar year before when there is no TAC (as `LastTAC()`).
+.PreMPTAC <- function(object, df, Stocks, template) {
+  First <- .FirstMPTimestep(object@OM)
+  df <- df[df$Year < First - 1e-8 & !is.na(df$Value), ]
+  keys <- dplyr::distinct(template, .data$Sim, .data$MP, .data$Stock)
+  if (nrow(df)) {
+    df  <- df[df$Year == max(df$Year), ]
+    pre <- .GroupTACByStocks(df, object@OM, Stocks)
+    out <- dplyr::left_join(keys, pre, by = c('Sim', 'MP', 'Stock'))
+  } else {
+    out <- dplyr::mutate(keys, Year = NA_real_, Value = NA_real_)
+  }
+  Missing <- is.na(out$Value)
+  if (any(Missing)) {
+    Catch <- .PreMPCatch(object, Stocks, Removals, keys[Missing, ])
+    out[Missing, c('Year', 'Value')] <- Catch[, c('Year', 'Value')]
+  }
+  out[, c('Sim', 'Year', 'MP', 'Value', 'Stock')]
+}
+
 # Shared dispatch for the stability-family PMs (PM_AAVY, PM_Stability): TAC
 # (the recommendation issued by the MP) vs. realised removals/landings.
 .StabilityLabel <- c(TAC = 'TAC', Removals = 'removals', Landings = 'landings')
 
-.GroupedStabilitySeries <- function(object, Type, Stocks, ManagementOnly = TRUE) {
+.GroupedStabilitySeries <- function(object, Type, Stocks, ManagementOnly = TRUE,
+                                    IncludeFirst = FALSE) {
   switch(Type,
-    TAC      = .GroupedTAC(object, Stocks, ManagementOnly = ManagementOnly),
-    Removals = .GroupedCatch(object, Stocks, ManagementOnly = ManagementOnly, FUN = Removals),
-    Landings = .GroupedCatch(object, Stocks, ManagementOnly = ManagementOnly, FUN = Landings)
+    TAC      = .GroupedTAC(object, Stocks, ManagementOnly, IncludeFirst),
+    Removals = .GroupedCatch(object, Stocks, ManagementOnly, FUN = Removals, IncludeFirst),
+    Landings = .GroupedCatch(object, Stocks, ManagementOnly, FUN = Landings, IncludeFirst)
   )
+}
+
+# Changes between successive values of a series; with `IncludeFirst`, the
+# change into the first value in `Years` is kept.
+.WindowChanges <- function(df, Years = NULL, IncludeFirst = FALSE, group_col = 'Stock') {
+  if (!is.null(Years) && !IncludeFirst)
+    df <- df[.CalendarYear(df$Year) %in% Years, ]
+  ch <- .Changes(df, group_col)
+  if (!is.null(Years) && IncludeFirst)
+    ch <- ch[.CalendarYear(ch$Year) %in% Years, ]
+  ch
 }
 
 .GroupedEffort <- function(object, Fleets, ManagementOnly = FALSE) {
@@ -430,16 +565,22 @@ NULL
 }
 
 
-.AAV <- function(df, group_col = 'Stock') {
+.Changes <- function(df, group_col = 'Stock') {
   df |>
     dplyr::arrange(.data$Sim, .data[[group_col]], .data$MP, .data$Year) |>
     dplyr::group_by(.data$Sim, .data[[group_col]], .data$MP) |>
     dplyr::mutate(Prev = dplyr::lag(.data$Value)) |>
     dplyr::filter(!is.na(.data$Prev)) |>
+    dplyr::ungroup()
+}
+
+.RelChange <- function(ch, group_col = 'Stock') {
+  ch |>
     dplyr::mutate(Value = abs(.data$Value - .data$Prev) / .data$Prev) |>
-    dplyr::ungroup() |>
     dplyr::select('Sim', dplyr::all_of(group_col), 'Year', 'MP', 'Value')
 }
+
+.AAV <- function(df, group_col = 'Stock') .RelChange(.Changes(df, group_col), group_col)
 
 # ---- Status: F/FMSY, SB/SBMSY, joint status --------------------------------
 
@@ -495,13 +636,8 @@ class(PM_SPSPMSY) <- 'pm'
   }
 }
 
-#' @rdname PM
-#' @export
-PM_Status <- function(object, Definition = c('SBiomass', 'SProduction'),
-                       Years = NULL, silent = TRUE) {
-  Definition <- match.arg(Definition)
-  object <- .CoercePMInput(object, silent)
-
+# Annual SB/SBMSY (`SB`) and F/FMSY (`F`) per complex in the projection.
+.KobeStatusDF <- function(object, Definition, Years = NULL, ActiveOnly = TRUE) {
   sb_df <- .ComplexStatusSeries(object, Definition) |>
     Array2DF() |>
     dplyr::rename(Complex = 'Stock', SB = 'Value')
@@ -511,23 +647,103 @@ PM_Status <- function(object, Definition = c('SBiomass', 'SProduction'),
     dplyr::rename(Complex = 'Stock') |>
     dplyr::select('Sim', 'Complex', 'Year', 'MP', F = 'Value')
 
-  sb_df <- .FilterMPActiveYears(sb_df, object@OM)
-  ff    <- .FilterMPActiveYears(ff, object@OM)
-
+  if (ActiveOnly) {
+    sb_df <- .FilterMPActiveYears(sb_df, object@OM)
+    ff    <- .FilterMPActiveYears(ff, object@OM)
+  }
   if (!is.null(Years)) {
     sb_df <- sb_df[sb_df$Year %in% Years, ]
     ff    <- ff[ff$Year %in% Years, ]
   }
 
-  joined <- dplyr::inner_join(sb_df, ff, by = c('Sim', 'Complex', 'Year', 'MP'))
-  joined$Value <- as.numeric(joined$SB > 1 & joined$F < 1)
-  joined <- joined |> dplyr::rename(Stock = 'Complex')
+  dplyr::inner_join(sb_df, ff, by = c('Sim', 'Complex', 'Year', 'MP')) |>
+    dplyr::rename(Stock = 'Complex')
+}
 
-  .BuildPM(joined, Ref = 1, Years = NULL, op = \(x, r) x >= r,
-           Name = 'Status',
-           Caption = paste0('P(', Definition, ' > ', Definition, 'MSY & F < FMSY), complex-level'))
+.KobeQuadrant <- function(SB, F) {
+  out <- rep('orange', length(SB))
+  out[SB <= 1 & F <= 1] <- 'yellow'
+  out[SB > 1 & F < 1]   <- 'green'
+  out[SB < 1 & F > 1]   <- 'red'
+  out[is.na(SB) | is.na(F)] <- NA
+  out
+}
+
+.KobeCaption <- c(green  = 'SB > SBMSY & F < FMSY',
+                  red    = 'SB < SBMSY & F > FMSY',
+                  yellow = 'SB <= SBMSY & F <= FMSY',
+                  orange = 'SB >= SBMSY & F >= FMSY')
+
+#' @rdname PM
+#' @export
+PM_Kobe <- function(object, Quadrant = c('green', 'red', 'yellow', 'orange'),
+                    Definition = c('SBiomass', 'SProduction'), Years = NULL, silent = TRUE) {
+  Quadrant   <- match.arg(Quadrant)
+  Definition <- match.arg(Definition)
+  object <- .CoercePMInput(object, silent)
+
+  df <- .KobeStatusDF(object, Definition, Years)
+  df$Value <- as.numeric(.KobeQuadrant(df$SB, df$F) == Quadrant)
+
+  .BuildPM(df, Ref = 1, Years = NULL, op = \(x, r) x >= r,
+           Name = paste0('Kobe', .FirstUp(Quadrant)),
+           Caption = paste0('P(Kobe ', Quadrant, ': ', .KobeCaption[[Quadrant]], ')'))
+}
+class(PM_Kobe) <- 'pm'
+
+#' @rdname PM
+#' @export
+PM_Status <- function(object, Definition = c('SBiomass', 'SProduction'),
+                       Years = NULL, silent = TRUE) {
+  Definition <- match.arg(Definition)
+  out <- PM_Kobe(object, 'green', Definition, Years, silent)
+  out@Name    <- 'Status'
+  out@Caption <- paste0('P(', Definition, ' > ', Definition, 'MSY & F < FMSY), complex-level')
+  out
 }
 class(PM_Status) <- 'pm'
+
+#' @rdname PM
+#' @export
+PM_Red <- function(object, Definition = c('SBiomass', 'SProduction'),
+                   Years = NULL, silent = TRUE) {
+  PM_Kobe(object, 'red', match.arg(Definition), Years, silent)
+}
+class(PM_Red) <- 'pm'
+
+#' @rdname PM
+#' @export
+PM_MinStatus <- function(object, Reference = c('MSY', 'Unfished'),
+                         Definition = c('SBiomass', 'SProduction'),
+                         Years = NULL, silent = TRUE) {
+  Reference  <- match.arg(Reference)
+  Definition <- match.arg(Definition)
+  object <- .CoercePMInput(object, silent)
+
+  df <- if (Reference == 'MSY') {
+    Array2DF(.ComplexStatusSeries(object, Definition))
+  } else {
+    .ComplexDepletionDF(object, Definition)
+  }
+  if ('Period' %in% names(df))
+    df <- df[df$Period == 'Projection', ]
+  df <- .FilterMPActiveYears(df, object@OM)
+  if (!is.null(Years))
+    df <- df[df$Year %in% Years, ]
+  YearsOut <- sort(unique(df$Year))
+
+  df <- df |>
+    dplyr::group_by(.data$Sim, .data$Stock, .data$MP) |>
+    dplyr::summarise(Value = min(.data$Value), Year = max(.data$Year), .groups = 'drop')
+
+  Metric <- if (Definition == 'SProduction') 'SP' else 'SB'
+  RefNm  <- if (Reference == 'MSY') 'MSY' else '0'
+  out <- .BuildPM(df, Ref = NA_real_, Years = NULL, op = NULL, Name = 'MinStatus',
+                  Caption = paste0('Minimum ', Metric, '/', Metric, RefNm))
+  out@Years <- YearsOut
+  out
+}
+class(PM_MinStatus) <- 'pm'
 
 # ---- Safety: limit reference points ----------------------------------------
 
@@ -785,13 +1001,11 @@ class(PM_RelYield) <- 'pm'
 #' @rdname PM
 #' @export
 PM_AAVY <- function(object, Type = c('TAC', 'Removals', 'Landings'), Years = NULL,
-                     Stocks = NULL, silent = TRUE) {
+                     Stocks = NULL, IncludeFirst = FALSE, silent = TRUE) {
   Type <- match.arg(Type)
   object <- .CoercePMInput(object, silent)
-  ydf <- .GroupedStabilitySeries(object, Type, Stocks, ManagementOnly = TRUE)
-  if (!is.null(Years))
-    ydf <- ydf[.CalendarYear(ydf$Year) %in% Years, ]
-  aav <- .AAV(ydf)
+  ydf <- .GroupedStabilitySeries(object, Type, Stocks, ManagementOnly = TRUE, IncludeFirst)
+  aav <- .RelChange(.WindowChanges(ydf, Years, IncludeFirst))
   .BuildPM(aav, Ref = NA_real_, Years = NULL, op = NULL,
            Name = 'AAVY',
            Caption = paste0('Average annual variability in ', .StabilityLabel[[Type]],
@@ -815,18 +1029,59 @@ class(PM_AAVE) <- 'pm'
 #' @rdname PM
 #' @export
 PM_Stability <- function(object, Threshold, Type = c('TAC', 'Removals', 'Landings'),
-                          Years = NULL, Stocks = NULL, silent = TRUE) {
+                          Years = NULL, Stocks = NULL, IncludeFirst = FALSE, silent = TRUE) {
   if (missing(Threshold))
     cli::cli_abort("`Threshold` (maximum acceptable interval-to-interval change) must be supplied.")
   Type <- match.arg(Type)
   object <- .CoercePMInput(object, silent)
-  ydf <- .GroupedStabilitySeries(object, Type, Stocks, ManagementOnly = TRUE)
-  if (!is.null(Years))
-    ydf <- ydf[.CalendarYear(ydf$Year) %in% Years, ]
-  aav <- .AAV(ydf)
+  ydf <- .GroupedStabilitySeries(object, Type, Stocks, ManagementOnly = TRUE, IncludeFirst)
+  aav <- .RelChange(.WindowChanges(ydf, Years, IncludeFirst))
   .BuildPM(aav, Ref = Threshold, Years = NULL, op = \(x, r) x <= r + 1e-4,
            Name = 'Stability',
            Caption = paste0('P(interval-to-interval ', .StabilityLabel[[Type]],
                              ' change < ', Threshold, ')'))
 }
 class(PM_Stability) <- 'pm'
+
+#' @rdname PM
+#' @export
+PM_TACLimited <- function(object, DeltaUp = NULL, DeltaDown = NULL, IncludeFirst = TRUE,
+                          Years = NULL, Stocks = NULL, tol = 1e-6, silent = TRUE) {
+  object <- .CoercePMInput(object, silent)
+  Up   <- .MPDeltaLimit(object@MPs, 'DeltaUp', DeltaUp)
+  Down <- .MPDeltaLimit(object@MPs, 'DeltaDown', DeltaDown)
+
+  ydf <- .GroupedTAC(object, Stocks, ManagementOnly = TRUE, IncludeFirst = IncludeFirst)
+  ch  <- .WindowChanges(ydf, Years, IncludeFirst)
+  Change <- (ch$Value - ch$Prev) / ch$Prev
+  Lim    <- ifelse(Change < 0, Down[ch$MP], Up[ch$MP])
+  ch$Value <- as.numeric(abs(Change) >= Lim - tol)
+  ch$Value[!is.finite(Change)] <- NA
+
+  out <- .BuildPM(ch[, c('Sim', 'Stock', 'Year', 'MP', 'Value')], Ref = 1, Years = NULL,
+                  op = \(x, r) x >= r, Name = 'TACLimited',
+                  Caption = 'P(TAC change at the limit of the MP)')
+  out@Stat[is.nan(out@Stat)] <- NA
+  out@Prob[is.nan(out@Prob)] <- NA
+  out@Mean[is.nan(out@Mean)] <- NA
+  out
+}
+class(PM_TACLimited) <- 'pm'
+
+# Maximum proportional TAC change (`Arg[2]`) of each MP, from `Override` or the MP's formals.
+.MPDeltaLimit <- function(MPList, Arg, Override = NULL) {
+  MPs <- names(MPList)
+  Named <- !is.null(Override) && !is.null(names(Override))
+  if (!is.null(Override) && !Named && length(Override) != 1)
+    cli::cli_abort("{.arg {Arg}} must be a single number or a numeric vector named by MP.")
+  vapply(MPs, \(mp) {
+    if (Named && mp %in% names(Override)) return(as.numeric(Override[[mp]]))
+    if (!is.null(Override) && !Named) return(as.numeric(Override))
+    fn <- MPList[[mp]]
+    if (is.character(fn)) fn <- get0(fn, mode = 'function')
+    if (!is.function(fn) || !Arg %in% names(formals(fn))) return(NA_real_)
+    val <- tryCatch(eval(formals(fn)[[Arg]], environment(fn)), error = \(e) NULL)
+    if (!is.numeric(val) || !length(val)) return(NA_real_)
+    as.numeric(utils::tail(val, 1))
+  }, numeric(1))
+}

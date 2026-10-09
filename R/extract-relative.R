@@ -523,6 +523,50 @@ F_FMSY <- function(object,
   aperm(a, order(perm))
 }
 
+# Annual values of a time-step data frame (`Sim`, `Stock`, `Year`, `Value`):
+# the value in the RefSeason, the mean over the seasons, or the sum within
+# each complete calendar year. `Stock` may hold stock or complex names.
+.AnnualDF <- function(df, OM, Basis = c('RefSeason', 'Mean', 'Sum')) {
+  Basis <- match.arg(Basis)
+  if (!.IsSeasonal(OM) || !nrow(df))
+    return(df)
+  if (Basis == 'Sum')
+    return(.SumCalendarYearDF(df, OM))
+
+  df  <- as.data.frame(df)
+  grp <- intersect(c('Sim', 'Stock', 'MP', 'Period'), names(df))
+  ts  <- sort(unique(df$Year))
+  nTS <- table(.CalendarYear(ts))
+  complete <- as.numeric(names(nTS)[nTS == OM@Seasons])
+  df <- df[.CalendarYear(df$Year) %in% complete, ]
+
+  if (Basis == 'RefSeason') {
+    df$Stock <- as.character(df$Stock)
+    df$.Key  <- round(df$Year, 6)
+    df <- dplyr::left_join(df, .RefSeasonWeightDF(OM, sort(unique(df$Year))),
+                           by = c('Sim', 'Stock', '.Key'))
+    df$Value <- df$Value * df$.W
+  }
+  FUN <- if (Basis == 'Mean') mean else sum
+  df |>
+    dplyr::mutate(Year = .CalendarYear(.data$Year)) |>
+    dplyr::group_by(dplyr::across(dplyr::all_of(grp)), .data$Year) |>
+    dplyr::summarise(Value = FUN(.data$Value), .groups = 'drop')
+}
+
+# RefSeason weights as a data frame, with rows for both stock and complex names.
+.RefSeasonWeightDF <- function(OM, Years) {
+  W <- Array2DF(.RefSeasonWeightArray(OM, as.character(Years)))
+  W$Stock <- as.character(W$Stock)
+  cx  <- .StockComplexMap(OM)
+  Wcx <- W[W$Stock %in% names(cx)[!duplicated(cx)], ]
+  Wcx$Stock <- unname(cx[Wcx$Stock])
+  W <- dplyr::bind_rows(W, Wcx)
+  W <- W[!duplicated(W[, c('Sim', 'Stock', 'Year')]), ]
+  data.frame(Sim = as.numeric(W$Sim), Stock = W$Stock,
+             .Key = round(as.numeric(W$Year), 6), .W = W$Value)
+}
+
 # Weight of each time step in its calendar year's RefSeason snapshot
 # (`Sim x Stock x Year`), using the same per-complex season detection as the
 # seasonal per-recruit model.

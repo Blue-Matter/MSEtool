@@ -26,6 +26,16 @@ nor experiencing overfishing,
 \deqn{P\left(\frac{SB_{y}}{SB_{MSY}} > 1 \ \text{and}\ \frac{F_{y}}{F_{MSY}} < 1\right)}{P( SB/SBMSY > 1  and  F/FMSY < 1 )}
 evaluated at the complex level, where \code{SB} is spawning biomass or spawning
 production according to \code{Definition}.
+
+\code{PM_Kobe}: the probability of being in a quadrant of the Kobe plot, e.g.
+for the red quadrant,
+\deqn{P\left(\frac{SB_{y}}{SB_{MSY}} < 1 \ \text{and}\ \frac{F_{y}}{F_{MSY}} > 1\right)}{P( SB/SBMSY < 1  and  F/FMSY > 1 )}
+(see \link{PM} for the definition of each quadrant).
+
+\code{PM_MinStatus}: the lowest annual stock status over the evaluation window,
+\deqn{\min_{y \in Y} \frac{SB_{s,y}}{SB_{ref,s}}}{min over y in Y of SB[s,y] / SBref[s]}
+where \eqn{SB_{ref}}{SBref} is \eqn{SB_{MSY}}{SBMSY} or \eqn{SB_0}{SB0}
+according to \code{Reference}.
 }
 
 \section{Safety}{
@@ -59,7 +69,8 @@ rebuilt to a target multiple of \eqn{SB_{MSY}}{SBMSY} by a target year,
 \code{PM_Yield} / \code{PM_Removals} / \code{PM_Landings}: mean catch over the evaluation
 window,
 \deqn{\frac{1}{|Y|}\sum_{y \in Y} C_{s,y}}{(1/|Y|) * sum over y in Y of C[s,y]}
-where \code{C} is removals (landings + discards), or landings only.
+where \code{C} is annual removals (landings + discards), or landings only,
+summed over seasons in seasonal models.
 
 \code{PM_LogYield}: mean log catch over the evaluation window, with catch
 floored at a fraction \code{Floor} of the simulation's mean historical catch
@@ -89,6 +100,16 @@ and the next,
 \deqn{P\left(\frac{|C_{s,y} - C_{s,y-1}|}{C_{s,y-1}} \le \mathrm{Threshold}\right)}{P( |C[s,y] - C[s,y-1]| / C[s,y-1] <= Threshold )}
 evaluated per interval \code{y} and averaged across the evaluation window and
 simulations.
+
+\code{PM_TACLimited}: the probability that the change in the TAC between one
+management interval and the next is at the limit of the MP,
+\deqn{P\left(\frac{TAC_{s,y} - TAC_{s,y-1}}{TAC_{s,y-1}} \ge \Delta^{up} \ \text{or}\ \frac{TAC_{s,y-1} - TAC_{s,y}}{TAC_{s,y-1}} \ge \Delta^{down}\right)}{P( (TAC[s,y] - TAC[s,y-1]) / TAC[s,y-1] >= DeltaUp  or  (TAC[s,y-1] - TAC[s,y]) / TAC[s,y-1] >= DeltaDown )}
+where \eqn{\Delta^{up}}{DeltaUp} and \eqn{\Delta^{down}}{DeltaDown} are
+the maximum proportional increase and decrease (\code{DeltaUp[2]} and
+\code{DeltaDown[2]} of the MP).
+
+With \code{IncludeFirst = TRUE}, \code{y-1} of the first management year in the
+evaluation window is the value in effect before it (see \link{PM}).
 }
 
 \section{Stat, Prob, and Mean}{

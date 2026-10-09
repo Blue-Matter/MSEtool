@@ -20,7 +20,13 @@ MSE2Slick(
   TradeoffPMs = NULL,
   TimeseriesCode = NULL,
   TimeseriesLabel = NULL,
+  TimeseriesDescription = NULL,
+  TimeseriesTarget = NULL,
+  TimeseriesLimit = NULL,
+  SeasonalBasis = c("RefSeason", "Mean"),
   KobeComplex = NULL,
+  KobeYears = NULL,
+  KobeLimit = c(0.4, 1),
   MPCode = NULL,
   MPLabel = NULL,
   MPDescription = NULL,
@@ -55,12 +61,32 @@ metadata, all default \code{""}.}
 \item{BoxplotPMs, QuiltPMs, SpiderPMs, TradeoffPMs}{Per-panel overrides for
 \code{PMs}, or \code{NULL} (default) to fall back to it. See Details.}
 
-\item{TimeseriesCode, TimeseriesLabel}{Overrides for the \code{Timeseries}
-panel's variables, or \code{NULL} (default) to keep \code{.MSE2Timeseries()}'s
-own defaults. See Details.}
+\item{TimeseriesCode}{Character. The variables of the \code{Timeseries} panel,
+or \code{NULL} (default) for \code{c('SB_SBMSY', 'F_FMSY', 'Landings')}. See
+Details.}
+
+\item{TimeseriesLabel, TimeseriesDescription}{Character, one per
+\code{TimeseriesCode}, or \code{NULL} (default) for the codes and built-in
+descriptions.}
+
+\item{TimeseriesTarget, TimeseriesLimit}{Numeric vectors named by
+\code{TimeseriesCode}, or \code{NULL} (default). The target and limit lines of the
+\code{Timeseries} panel. The defaults are a target of \code{1} for \code{SB_SBMSY} and
+\code{F_FMSY}, and limits of \code{0.4} for \code{SB_SBMSY} and \code{1} for \code{F_FMSY};
+entries given here replace them.}
+
+\item{SeasonalBasis}{Character. For seasonal OMs, the annual value of the
+\code{Timeseries} variables that are not summed over the seasons:
+\code{'RefSeason'} (default) or \code{'Mean'}. See Details.}
 
 \item{KobeComplex}{Character, or \code{NULL} (default: the first complex).
 Which stock/complex the Kobe plot shows, when \code{MSE} has more than one.}
+
+\item{KobeYears}{Numeric, or \code{NULL} (default: the years the MPs are
+active, \code{\link[=PMYears]{PMYears()}}). The calendar years of the Kobe plot.}
+
+\item{KobeLimit}{Numeric, length 2. The limits of SB/SBMSY and F/FMSY in
+the Kobe plot. Default \code{c(0.4, 1)}.}
 
 \item{MPCode, MPLabel, MPDescription}{Overrides for the per-MP display
 text, or \code{NULL} (default). See Details.}
@@ -98,27 +124,55 @@ The resulting \code{\link[Slick:Slick]{Slick::Slick()}} object includes:
 \itemize{
 \item \strong{MPs}: management procedure codes, labels, and display colours.
 \item \strong{OMs}: one factor level per list element of \code{MSE} (see \code{Design}).
-\item \strong{Kobe}: SB/SBMSY and F/FMSY time series for the Kobe plot. Kobe is
-single-stock so for a multi-complex OM, \code{KobeComplex} selects which one to
-show (default: the first).
-\item \strong{Timeseries}: SB/SBMSY, F/FMSY, and landings time series.
+\item \strong{Kobe}: annual SB/SBMSY and F/FMSY in the years the MPs are active
+(\code{KobeYears}). Kobe is single-stock so for a multi-complex OM,
+\code{KobeComplex} selects which one to show (default: the first).
+\item \strong{Timeseries}: annual time series for the historical and projection
+periods (see \code{TimeseriesCode}).
 \item \strong{Boxplot/Quilt/Spider/Tradeoff}: driven by \code{PMs}, a flexible list of
 performance-metric specs (see \code{PMs} below). Each is evaluated
 against every complex in every OM.
 }
 
 \code{PMs} (and the per-panel \code{BoxplotPMs}/\code{QuiltPMs}/\code{SpiderPMs}/
-\code{TradeoffPMs} overrides) is a list of performance-metric specifications: each
-element is either a \verb{PM_*} function (e.g., \code{PM_Status} for \code{\link[=PM_Status]{PM_Status()}}), or a list
-\code{list(fun, args = list(), Code = NULL, Label = NULL, Description = NULL)}, e.g.
-\code{list(fun = PM_Yield, args = list(Years = 2000:2009), Code = "Yield_early")}. Each per-panel override
-falls back to \code{PMs} when \code{NULL}; a spec list is only re-evaluated once
-even when shared across panels.
+\code{TradeoffPMs} overrides) is a list of performance-metric specifications.
+Each element is one of:
+\itemize{
+\item a \verb{PM_*} function, e.g. \code{PM_Status} for \code{\link[=PM_Status]{PM_Status()}};
+\item a list \code{list(PM, Args = list(), Code = NULL, Label = NULL, Description = NULL)}
+(\code{fun} and \code{args} are accepted for \code{PM} and \code{Args}), e.g.
+\code{list(PM = PM_Yield, Args = list(Years = 2030:2039), Code = 'Yield_Short')};
+\item a call, e.g. \code{quote(PM_Status(Years = 2030:2039))}, evaluated in the
+environment \code{MSE2Slick()} is called from.
+}
 
-\code{TimeseriesCode}/\code{TimeseriesLabel} override the variables built into the
-\code{Timeseries} panel; entries must name functions that accept an \link[=mse-class]{mse}
-object and return a tidy data frame with columns \code{Sim}, \code{Year}, \code{MP}, \code{Period},
-and \code{Value}.
+\code{Code}, \code{Label}, and \code{Description} default to the \code{Name} and \code{Caption} of
+the \link[=pm-class]{pm} object. The codes must be unique, so give a \code{Code} when the
+same PM function is used more than once (e.g. with different \code{Years}; see
+\code{\link[=PMYears]{PMYears()}}). Each per-panel override falls back to \code{PMs} when \code{NULL}; a
+spec list is only evaluated once even when shared across panels.
+
+A PM is a probability if its \code{Prob} is not all \code{NA} (e.g. \code{\link[=PM_Status]{PM_Status()}},
+\code{\link[=PM_Safety]{PM_Safety()}}, \code{\link[=PM_FFMSY]{PM_FFMSY()}} with a \code{Ref}), and a statistic otherwise (e.g.
+\code{\link[=PM_Yield]{PM_Yield()}}, \code{\link[=PM_MinStatus]{PM_MinStatus()}}, \code{\link[=PM_AAVY]{PM_AAVY()}}). The \code{Boxplot} and \code{Quilt}
+show the per-simulation \code{Prob} of a probability and the per-simulation
+\code{Stat} of a statistic, and the \code{Tradeoff} and \code{Spider} the \code{Mean} over
+simulations. The \code{Quilt} colour scale of a probability spans 0 to 1. In
+the \code{Spider}, which needs values from 0 to 1, a statistic is divided by its
+largest absolute value among the MPs in each OM.
+
+\code{TimeseriesCode} selects the variables of the \code{Timeseries} panel, one value
+per calendar year: \code{'SB_SBMSY'}, \code{'F_FMSY'} (see \code{\link[=SB_SBMSY]{SB_SBMSY()}},
+\code{\link[=F_FMSY]{F_FMSY()}}), \code{'SB_SB0'} (spawning biomass relative to equilibrium unfished
+spawning biomass), \code{'SBiomass'}, \code{'Landings'}, \code{'Removals'}, and \code{'TAC'}
+(the TAC in effect, projection years only). Other entries must name
+functions that accept an \link[=mse-class]{mse} object and return a tidy data frame
+with columns \code{Sim}, \code{Year}, \code{MP}, \code{Period}, and \code{Value}. In seasonal OMs,
+catches and F are summed over the seasons of each calendar year and the TAC
+is the mean over the seasons; other variables are taken in the reference
+season of each year (\code{SeasonalBasis = 'RefSeason'}, the season of the MSY
+reference points; see \code{\link[=RefSeason]{RefSeason()}}) or are the mean over the seasons
+(\code{SeasonalBasis = 'Mean'}).
 
 \code{MPCode}/\code{MPLabel}/\code{MPDescription} set the resulting \code{Slick} object's
 \code{MPs@Code}/\code{Label}/\code{Description}. Each is \code{NULL} (default \code{MPCode}/\code{MPLabel}
@@ -158,9 +212,31 @@ Slick <- MSE2Slick(
   )
 )
 Slick::App(slick=Slick)
+
+# The same PM over windows of years, probabilities and statistics
+Slick <- MSE2Slick(
+  MSE,
+  PMs = list(
+    list(PM = PM_Status, Code = 'PGK', Label = 'P(Kobe green)'),
+    list(PM = PM_Status, Args = list(Years = PMYears(MSE, 'first', 10)),
+         Code = 'PGK_Short', Label = 'P(Kobe green) (years 1-10)'),
+    list(PM = PM_Red, Code = 'PRed', Label = 'P(Kobe red)'),
+    list(PM = PM_MinStatus, Code = 'SB_SBMSY_Min', Label = 'Minimum SB/SBMSY'),
+    list(PM = PM_FFMSY, Args = list(Ref = 1.4), Code = 'PLim_F',
+         Label = 'P(F < 1.4 FMSY)'),
+    list(PM = PM_Yield, Code = 'Yield', Label = 'Mean catch'),
+    list(PM = PM_AAVY, Args = list(IncludeFirst = TRUE), Code = 'AAV_TAC',
+         Label = 'Mean TAC change'),
+    list(PM = PM_TACLimited, Code = 'P_TACLimited', Label = 'P(TAC change limited)')
+  ),
+  TimeseriesCode = c('SB_SBMSY', 'F_FMSY', 'SB_SB0', 'Removals', 'TAC'),
+  TimeseriesLimit = c(SB_SBMSY = 0.4, F_FMSY = 1.4),
+  KobeLimit = c(0.4, 1.4)
+)
 }
 
 }
 \seealso{
-\code{\link[Slick:Slick]{Slick::Slick()}}, \code{\link[Slick:App]{Slick::App()}}, \link[=mse-class]{mse}, \code{\link[=DefaultSlickPMs]{DefaultSlickPMs()}}
+\code{\link[Slick:Slick]{Slick::Slick()}}, \code{\link[Slick:App]{Slick::App()}}, \link[=mse-class]{mse}, \code{\link[=DefaultSlickPMs]{DefaultSlickPMs()}},
+\link{PM}, \code{\link[=PMYears]{PMYears()}}
 }

@@ -19,26 +19,52 @@
 #' The resulting [Slick::Slick()] object includes:
 #' - **MPs**: management procedure codes, labels, and display colours.
 #' - **OMs**: one factor level per list element of `MSE` (see `Design`).
-#' - **Kobe**: SB/SBMSY and F/FMSY time series for the Kobe plot. Kobe is
-#'   single-stock so for a multi-complex OM, `KobeComplex` selects which one to
-#'   show (default: the first).
-#' - **Timeseries**: SB/SBMSY, F/FMSY, and landings time series.
+#' - **Kobe**: annual SB/SBMSY and F/FMSY in the years the MPs are active
+#'   (`KobeYears`). Kobe is single-stock so for a multi-complex OM,
+#'   `KobeComplex` selects which one to show (default: the first).
+#' - **Timeseries**: annual time series for the historical and projection
+#'   periods (see `TimeseriesCode`).
 #' - **Boxplot/Quilt/Spider/Tradeoff**: driven by `PMs`, a flexible list of
 #'   performance-metric specs (see `PMs` below). Each is evaluated
 #'   against every complex in every OM.
 #'
 #' `PMs` (and the per-panel `BoxplotPMs`/`QuiltPMs`/`SpiderPMs`/
-#' `TradeoffPMs` overrides) is a list of performance-metric specifications: each
-#' element is either a `PM_*` function (e.g., `PM_Status` for [PM_Status()]), or a list
-#' `list(fun, args = list(), Code = NULL, Label = NULL, Description = NULL)`, e.g.
-#' `list(fun = PM_Yield, args = list(Years = 2000:2009), Code = "Yield_early")`. Each per-panel override
-#' falls back to `PMs` when `NULL`; a spec list is only re-evaluated once
-#' even when shared across panels.
+#' `TradeoffPMs` overrides) is a list of performance-metric specifications.
+#' Each element is one of:
+#' - a `PM_*` function, e.g. `PM_Status` for [PM_Status()];
+#' - a list `list(PM, Args = list(), Code = NULL, Label = NULL, Description = NULL)`
+#'   (`fun` and `args` are accepted for `PM` and `Args`), e.g.
+#'   `list(PM = PM_Yield, Args = list(Years = 2030:2039), Code = 'Yield_Short')`;
+#' - a call, e.g. `quote(PM_Status(Years = 2030:2039))`, evaluated in the
+#'   environment `MSE2Slick()` is called from.
 #'
-#' `TimeseriesCode`/`TimeseriesLabel` override the variables built into the
-#' `Timeseries` panel; entries must name functions that accept an [mse-class]
-#'  object and return a tidy data frame with columns `Sim`, `Year`, `MP`, `Period`,
-#'  and `Value`.
+#' `Code`, `Label`, and `Description` default to the `Name` and `Caption` of
+#' the [pm-class] object. The codes must be unique, so give a `Code` when the
+#' same PM function is used more than once (e.g. with different `Years`; see
+#' [PMYears()]). Each per-panel override falls back to `PMs` when `NULL`; a
+#' spec list is only evaluated once even when shared across panels.
+#'
+#' A PM is a probability if its `Prob` is not all `NA` (e.g. [PM_Status()],
+#' [PM_Safety()], [PM_FFMSY()] with a `Ref`), and a statistic otherwise (e.g.
+#' [PM_Yield()], [PM_MinStatus()], [PM_AAVY()]). The `Boxplot` and `Quilt`
+#' show the per-simulation `Prob` of a probability and the per-simulation
+#' `Stat` of a statistic, and the `Tradeoff` and `Spider` the `Mean` over
+#' simulations. The `Quilt` colour scale of a probability spans 0 to 1. In
+#' the `Spider`, which needs values from 0 to 1, a statistic is divided by its
+#' largest absolute value among the MPs in each OM.
+#'
+#' `TimeseriesCode` selects the variables of the `Timeseries` panel, one value
+#' per calendar year: `'SB_SBMSY'`, `'F_FMSY'` (see [SB_SBMSY()],
+#' [F_FMSY()]), `'SB_SB0'` (spawning biomass relative to equilibrium unfished
+#' spawning biomass), `'SBiomass'`, `'Landings'`, `'Removals'`, and `'TAC'`
+#' (the TAC in effect, projection years only). Other entries must name
+#' functions that accept an [mse-class] object and return a tidy data frame
+#' with columns `Sim`, `Year`, `MP`, `Period`, and `Value`. In seasonal OMs,
+#' catches and F are summed over the seasons of each calendar year and the TAC
+#' is the mean over the seasons; other variables are taken in the reference
+#' season of each year (`SeasonalBasis = 'RefSeason'`, the season of the MSY
+#' reference points; see [RefSeason()]) or are the mean over the seasons
+#' (`SeasonalBasis = 'Mean'`).
 #'
 #' `MPCode`/`MPLabel`/`MPDescription` set the resulting `Slick` object's
 #' `MPs@Code`/`Label`/`Description`. Each is `NULL` (default `MPCode`/`MPLabel` 
@@ -76,11 +102,26 @@
 #'   [DefaultSlickPMs()]. See Details.
 #' @param BoxplotPMs,QuiltPMs,SpiderPMs,TradeoffPMs Per-panel overrides for
 #'   `PMs`, or `NULL` (default) to fall back to it. See Details.
-#' @param TimeseriesCode,TimeseriesLabel Overrides for the `Timeseries`
-#'   panel's variables, or `NULL` (default) to keep `.MSE2Timeseries()`'s
-#'   own defaults. See Details.
+#' @param TimeseriesCode Character. The variables of the `Timeseries` panel,
+#'   or `NULL` (default) for `c('SB_SBMSY', 'F_FMSY', 'Landings')`. See
+#'   Details.
+#' @param TimeseriesLabel,TimeseriesDescription Character, one per
+#'   `TimeseriesCode`, or `NULL` (default) for the codes and built-in
+#'   descriptions.
+#' @param TimeseriesTarget,TimeseriesLimit Numeric vectors named by
+#'   `TimeseriesCode`, or `NULL` (default). The target and limit lines of the
+#'   `Timeseries` panel. The defaults are a target of `1` for `SB_SBMSY` and
+#'   `F_FMSY`, and limits of `0.4` for `SB_SBMSY` and `1` for `F_FMSY`;
+#'   entries given here replace them.
+#' @param SeasonalBasis Character. For seasonal OMs, the annual value of the
+#'   `Timeseries` variables that are not summed over the seasons:
+#'   `'RefSeason'` (default) or `'Mean'`. See Details.
 #' @param KobeComplex Character, or `NULL` (default: the first complex).
 #'   Which stock/complex the Kobe plot shows, when `MSE` has more than one.
+#' @param KobeYears Numeric, or `NULL` (default: the years the MPs are
+#'   active, [PMYears()]). The calendar years of the Kobe plot.
+#' @param KobeLimit Numeric, length 2. The limits of SB/SBMSY and F/FMSY in
+#'   the Kobe plot. Default `c(0.4, 1)`.
 #' @param MPCode,MPLabel,MPDescription Overrides for the per-MP display
 #'   text, or `NULL` (default). See Details.
 #' @param Design The OM factorial design, or `NULL` (default) for a single
@@ -109,9 +150,31 @@
 #'   )
 #' )
 #' Slick::App(slick=Slick)
+#'
+#' # The same PM over windows of years, probabilities and statistics
+#' Slick <- MSE2Slick(
+#'   MSE,
+#'   PMs = list(
+#'     list(PM = PM_Status, Code = 'PGK', Label = 'P(Kobe green)'),
+#'     list(PM = PM_Status, Args = list(Years = PMYears(MSE, 'first', 10)),
+#'          Code = 'PGK_Short', Label = 'P(Kobe green) (years 1-10)'),
+#'     list(PM = PM_Red, Code = 'PRed', Label = 'P(Kobe red)'),
+#'     list(PM = PM_MinStatus, Code = 'SB_SBMSY_Min', Label = 'Minimum SB/SBMSY'),
+#'     list(PM = PM_FFMSY, Args = list(Ref = 1.4), Code = 'PLim_F',
+#'          Label = 'P(F < 1.4 FMSY)'),
+#'     list(PM = PM_Yield, Code = 'Yield', Label = 'Mean catch'),
+#'     list(PM = PM_AAVY, Args = list(IncludeFirst = TRUE), Code = 'AAV_TAC',
+#'          Label = 'Mean TAC change'),
+#'     list(PM = PM_TACLimited, Code = 'P_TACLimited', Label = 'P(TAC change limited)')
+#'   ),
+#'   TimeseriesCode = c('SB_SBMSY', 'F_FMSY', 'SB_SB0', 'Removals', 'TAC'),
+#'   TimeseriesLimit = c(SB_SBMSY = 0.4, F_FMSY = 1.4),
+#'   KobeLimit = c(0.4, 1.4)
+#' )
 #' }
 #'
-#' @seealso [Slick::Slick()], [Slick::App()], [mse-class], [DefaultSlickPMs()]
+#' @seealso [Slick::Slick()], [Slick::App()], [mse-class], [DefaultSlickPMs()],
+#'   [PM], [PMYears()]
 #' @export
 MSE2Slick <- function(MSE,
                       Title        = NULL,
@@ -128,7 +191,13 @@ MSE2Slick <- function(MSE,
                       TradeoffPMs  = NULL,
                       TimeseriesCode  = NULL,
                       TimeseriesLabel = NULL,
+                      TimeseriesDescription = NULL,
+                      TimeseriesTarget = NULL,
+                      TimeseriesLimit  = NULL,
+                      SeasonalBasis    = c('RefSeason', 'Mean'),
                       KobeComplex  = NULL,
+                      KobeYears    = NULL,
+                      KobeLimit    = c(0.4, 1),
                       MPCode        = NULL,
                       MPLabel       = NULL,
                       MPDescription = NULL,
@@ -141,6 +210,8 @@ MSE2Slick <- function(MSE,
                       SpiderPreset    = NULL,
                       TradeoffPreset  = NULL) {
   .SlickChecks(MSE)
+  SeasonalBasis <- match.arg(SeasonalBasis)
+  env <- parent.frame()
 
   mse_ref  <- if (is.list(MSE)) MSE[[1]] else MSE
   PMs      <- PMs %||NA% DefaultSlickPMs()
@@ -153,7 +224,7 @@ MSE2Slick <- function(MSE,
   panelCache <- new.env(parent = emptyenv())
   .panel <- function(pms) {
     key <- rlang::hash(pms)
-    if (is.null(panelCache[[key]])) panelCache[[key]] <- .EvalPMPanel(MSE, pms)
+    if (is.null(panelCache[[key]])) panelCache[[key]] <- .EvalPMPanel(MSE, pms, env)
     panelCache[[key]]
   }
 
@@ -167,11 +238,10 @@ MSE2Slick <- function(MSE,
   Slick@Date        <- Date %||NA% Sys.Date()
   Slick@MPs         <- .MSE2MPs(mse_ref, MPCode, MPLabel, MPDescription) |> .ApplyPreset(MPsPreset)
   Slick@OMs         <- .MSE2OMs(MSE, Design, AutoPreset) |> .ApplyPreset(OMsPreset)
-  Slick@Kobe        <- .MSE2Kobe(MSE, KobeComplex)
-  tsArgs <- list(MSE = MSE)
-  if (!is.null(TimeseriesCode))  tsArgs$Code  <- TimeseriesCode
-  if (!is.null(TimeseriesLabel)) tsArgs$Label <- TimeseriesLabel
-  Slick@Timeseries  <- do.call(.MSE2Timeseries, tsArgs)
+  Slick@Kobe        <- .MSE2Kobe(MSE, KobeComplex, KobeYears, KobeLimit)
+  Slick@Timeseries  <- .MSE2Timeseries(MSE, TimeseriesCode, TimeseriesLabel,
+                                       TimeseriesDescription, TimeseriesTarget,
+                                       TimeseriesLimit, SeasonalBasis)
   Slick@Boxplot     <- .MSE2Boxplot(.panel(BoxplotPMs))     |> .ApplyPreset(BoxplotPreset)
   Slick@Quilt       <- .MSE2Quilt(.panel(QuiltPMs))         |> .ApplyPreset(QuiltPreset)
   Slick@Spider      <- .MSE2Spider(.panel(SpiderPMs))       |> .ApplyPreset(SpiderPreset)
@@ -232,15 +302,12 @@ MSE2Slick <- function(MSE,
 #' give a reasonably complete first look at a set of MPs without the caller
 #' having to assemble a `PMs` list themselves.
 #'
-#' - [PM_Yield()]: mean projected catch, on its natural (biomass) scale;
-#'   not a probability, so it's excluded from `Spider` (which requires
-#'   every PI on a 0-1/0-100 scale) but included in `Boxplot`/`Quilt`/
-#'   `Tradeoff`.
-#' - [PM_AAVY()]: average annual variability in yield, i.e. how much catch
-#'   swings year to year; also natural-scale, same `Spider` exclusion as
-#'   `PM_Yield()`.
+#' - [PM_Yield()]: mean projected catch, on its natural (biomass) scale; in
+#'   the `Spider` it is relative to the highest value among the MPs.
+#' - [PM_AAVY()]: average annual variability in the TAC, i.e. how much the
+#'   TAC changes between management cycles; also natural-scale.
 #' - [PM_Status()]: the joint probability that a stock/complex is neither
-#'   overfished nor experiencing overfishing (`P(SB > SBMSY & F < FMSY)`).#'   
+#'   overfished nor experiencing overfishing (`P(SB > SBMSY & F < FMSY)`).
 #' - [PM_Safety()] with `Lim = 0.4`: the probability that `SB/SBMSY` never
 #'   drops below 40% at any point in the projection.
 #'
@@ -375,11 +442,11 @@ DefaultSlickPMs <- function() {
 }
 
 
-.MSE2Kobe <- function(MSE, Complex = NULL) {
+.MSE2Kobe <- function(MSE, Complex = NULL, Years = NULL, Limit = c(0.4, 1)) {
   .SlickChecks(MSE)
 
-  mse_ref <- if (is.list(MSE)) MSE[[1]] else MSE
-  nOM     <- if (is.list(MSE)) length(MSE) else 1L
+  mseList <- if (is.list(MSE)) MSE else list(MSE)
+  mse_ref <- mseList[[1]]
 
   allComplexes <- names(Complexes(mse_ref@OM)) %||NA% StockNames(mse_ref@OM)
   Complex <- Complex %||NA% allComplexes[1]
@@ -393,42 +460,24 @@ DefaultSlickPMs <- function() {
     'Spawning biomass (SB) relative to SB at maximum sustainable yield (SBMSY)',
     'Fishing mortality (F) relative to F at maximum sustainable yield (FMSY)'
   )
-  Kobe@Time    <- .SlickTime(mse_ref@OM, 'Projection')
+  Kobe@Time    <- Years %||NA% PMYears(mse_ref)
   Kobe@TimeLab <- .SlickTimeLab(mse_ref@OM)
   Kobe@Target  <- rep(1, 2)
+  Kobe@Limit   <- Limit
 
-  MPs_names    <- names(mse_ref@MPs)
-  nsim         <- mse_ref@OM@nSim
-  nMP          <- length(MPs_names)
-  nTS          <- length(Kobe@Time)
-  ProjectionTS <- Kobe@Time
+  MPs_names <- names(mse_ref@MPs)
+  nsim      <- mse_ref@OM@nSim
+  Kobe@Value <- array(NA_real_, dim = c(nsim, length(mseList), length(MPs_names), 2L,
+                                        length(Kobe@Time)))
 
-  Kobe@Value <- array(NA, dim=c(nsim, nOM, nMP, 2L, nTS))
-
-  for (om in seq_len(nOM)) {
-    mse <- if (is.list(MSE)) MSE[[om]] else MSE
-
-    sb_sbmsy_arr <- .ComplexStatusSeries(mse, 'SBiomass')
-    sb_sbmsy <- Array2DF(sb_sbmsy_arr) |>
-      dplyr::rename(Complex = 'Stock', Value = 'Value') |>
-      dplyr::filter(.data$Year %in% ProjectionTS, .data$Complex == !!Complex) |>
-      dplyr::arrange(.data$Sim, .data$Year, .data$MP)
-
-    f_fmsy <- F_FMSY(mse) |>
-      dplyr::filter(.data$Year %in% ProjectionTS, .data$Stock == !!Complex) |>
-      dplyr::arrange(.data$Sim, .data$Year, .data$MP)
-
-    for (mm in seq_len(nMP)) {
-      Kobe@Value[, om, mm, 1, ] <- sb_sbmsy |>
-        dplyr::filter(.data$MP == MPs_names[mm]) |>
-        dplyr::pull(.data$Value) |>
-        matrix(nrow=nsim, ncol=nTS, byrow=TRUE)
-
-      Kobe@Value[, om, mm, 2, ] <- f_fmsy |>
-        dplyr::filter(.data$MP == MPs_names[mm]) |>
-        dplyr::pull(.data$Value) |>
-        matrix(nrow=nsim, ncol=nTS, byrow=TRUE)
-    }
+  for (om in seq_along(mseList)) {
+    df <- .KobeStatusDF(mseList[[om]], 'SBiomass', ActiveOnly = FALSE)
+    df <- df[df$Stock == Complex & df$Year %in% Kobe@Time & df$MP %in% MPs_names, ]
+    idx <- cbind(match(df$Sim, seq_len(nsim)), om, match(df$MP, MPs_names), 1L,
+                 match(df$Year, Kobe@Time))
+    Kobe@Value[idx] <- df$SB
+    idx[, 4] <- 2L
+    Kobe@Value[idx] <- df$F
   }
   Kobe
 }
@@ -457,48 +506,120 @@ DefaultSlickPMs <- function() {
   ArrayDivide(sb_complex, sbmsy_aligned)
 }
 
-.MSE2Timeseries <- function(MSE,
-                            Code  = c('SB_SBMSY',
-                                      'F_FMSY',
-                                      'Landings'),
-                            Label = c('SB/SBMSY',
-                                      'F/FMSY',
-                                      'Landings')) {
+.ComplexUnfishedRatio <- function(value, unfished, OM) {
+  spawn_stocks <- .SpawningStockNames(OM)
+  num <- .FilterStockDim(value, spawn_stocks) |> .AggregateStockToComplex(OM, sum, strict = FALSE)
+  den <- .FilterStockDim(unfished, spawn_stocks) |> .AggregateStockToComplex(OM, sum, strict = FALSE)
+  den <- .AlignDenomYears(den, dimnames(num)[['Year']])
+  if ('MP' %in% names(dimnames(num)))
+    den <- AddDimension(den, 'MP', val = dimnames(num)[['MP']])
+  ArrayDivide(num, den)
+}
+
+# Annual spawning biomass (or production) per complex relative to equilibrium
+# unfished, historical and projection periods.
+.ComplexDepletionDF <- function(object, Definition = c('SBiomass', 'SProduction'),
+                                Basis = c('RefSeason', 'Mean'), type = 'Equilibrium') {
+  Definition <- match.arg(Definition)
+  Basis      <- match.arg(Basis)
+  OM <- object@OM
+  denom <- slot(slot(object@Unfished, type), Definition)
+  .CheckRefPopulated(denom, 'Unfished', paste0('Unfished@', type, '@', Definition), 'SB_SB0')
+
+  parts <- if (inherits(object, 'mse')) {
+    list(Historical = slot(object@Hist, Definition), Projection = slot(object, Definition))
+  } else {
+    list(Historical = slot(object, Definition))
+  }
+  df <- purrr::imap(parts, \(arr, period) {
+    .ComplexUnfishedRatio(arr, denom, OM) |>
+      ExtendSims(OM@nSim) |>
+      Array2DF() |>
+      dplyr::mutate(Period = period)
+  }) |> dplyr::bind_rows()
+  df$MP <- if ('MP' %in% names(df)) as.character(df$MP) else NA_character_
+  df$MP[df$Period == 'Historical'] <- 'Historical'
+  .AnnualDF(df, OM, Basis)
+}
+
+.TimeseriesDefaults <- list(
+  Label = c(SB_SBMSY = 'SB/SBMSY', F_FMSY = 'F/FMSY', SB_SB0 = 'SB/SB0',
+            SBiomass = 'Spawning biomass', Landings = 'Landings', Removals = 'Removals',
+            TAC = 'TAC'),
+  Description = c(
+    SB_SBMSY = 'Spawning biomass relative to spawning biomass at maximum sustainable yield (SBMSY)',
+    F_FMSY   = 'Fishing mortality relative to fishing mortality at maximum sustainable yield (FMSY)',
+    SB_SB0   = 'Spawning biomass relative to equilibrium unfished spawning biomass (SB0)',
+    SBiomass = 'Spawning biomass',
+    Landings = 'Landings of all fleets',
+    Removals = 'Removals (landings and dead discards) of all fleets',
+    TAC      = 'Total allowable catch (TAC)'
+  ),
+  Target = c(SB_SBMSY = 1, F_FMSY = 1),
+  Limit  = c(SB_SBMSY = 0.4, F_FMSY = 1)
+)
+
+# Catch and F are summed over the seasons of each calendar year.
+.SummableVars <- c('Landings', 'Removals', 'Discards', 'FInteract', 'FDead', 'FRetain', 'Effort')
+
+.TimeseriesText <- function(Value, Default, Code, argName) {
+  if (is.null(Value)) {
+    out <- unname(Default[Code])
+    out[is.na(out)] <- Code[is.na(out)]
+    return(out)
+  }
+  if (length(Value) != length(Code))
+    cli::cli_abort("{.arg {argName}} must have one entry per {.arg TimeseriesCode} ({length(Code)}).")
+  unname(Value)
+}
+
+.TimeseriesRef <- function(Value, Default, Code) {
+  Ref <- Default
+  if (!is.null(Value)) {
+    if (is.null(names(Value)))
+      cli::cli_abort("{.arg TimeseriesTarget} and {.arg TimeseriesLimit} must be named by {.arg TimeseriesCode}.")
+    Ref[names(Value)] <- Value
+  }
+  unname(Ref[Code])
+}
+
+.MSE2Timeseries <- function(MSE, Code = NULL, Label = NULL, Description = NULL,
+                            Target = NULL, Limit = NULL, Basis = 'RefSeason') {
   .SlickChecks(MSE)
+  Code        <- Code %||NA% c('SB_SBMSY', 'F_FMSY', 'Landings')
+  Label       <- .TimeseriesText(Label, .TimeseriesDefaults$Label, Code, 'TimeseriesLabel')
+  Description <- .TimeseriesText(Description, .TimeseriesDefaults$Description, Code,
+                                 'TimeseriesDescription')
+  Target <- .TimeseriesRef(Target, .TimeseriesDefaults$Target, Code)
+  Limit  <- .TimeseriesRef(Limit, .TimeseriesDefaults$Limit, Code)
 
-  mse_ref <- if (is.list(MSE)) MSE[[1]] else MSE
-  nOM     <- if (is.list(MSE)) length(MSE) else 1L
+  mseList <- if (is.list(MSE)) MSE else list(MSE)
+  mse_ref <- mseList[[1]]
   allComplexes <- names(Complexes(mse_ref@OM)) %||NA% StockNames(mse_ref@OM)
-  multi   <- length(allComplexes) > 1
-
-  piCode  <- if (multi) paste0(rep(Code,  each = length(allComplexes)), '_', allComplexes) else Code
-  piLabel <- if (multi) paste0(rep(Label, each = length(allComplexes)), ' [', allComplexes, ']') else Label
+  nCx   <- length(allComplexes)
+  multi <- nCx > 1
 
   Timeseries              <- Slick::Timeseries()
-  Timeseries@Code         <- piCode
-  Timeseries@Label        <- piLabel
+  Timeseries@Code         <- if (multi) paste0(rep(Code, each = nCx), '_', allComplexes) else Code
+  Timeseries@Label        <- if (multi) paste0(rep(Label, each = nCx), ' [', allComplexes, ']') else Label
+  Timeseries@Description  <- rep(Description, each = nCx)
   Timeseries@Time         <- .SlickTime(mse_ref@OM)
   Timeseries@TimeNow      <- max(.SlickTime(mse_ref@OM, 'Historical'))
   Timeseries@TimeLab      <- .SlickTimeLab(mse_ref@OM)
-
-  refTarget <- c(SB_SBMSY = 1,   F_FMSY = NA)
-  refLimit  <- c(SB_SBMSY = 0.4, F_FMSY = 1)
-  Timeseries@Target       <- rep(unname(refTarget[Code]), length(allComplexes))
-  Timeseries@Limit        <- rep(unname(refLimit[Code]),  length(allComplexes))
+  Timeseries@Target       <- rep(Target, each = nCx)
+  Timeseries@Limit        <- rep(Limit, each = nCx)
 
   nsim <- mse_ref@OM@nSim
   nMP  <- length(mse_ref@MPs)
-  nPI  <- length(piCode)
-  nTS  <- length(Timeseries@Time)
+  Timeseries@Value <- array(NA_real_, dim = c(nsim, length(mseList), nMP,
+                                              length(Timeseries@Code), length(Timeseries@Time)))
 
-  Timeseries@Value <- array(NA, dim=c(nsim, nOM, nMP, nPI, nTS))
-
-  for (om in seq_len(nOM)) {
-    mse <- if (is.list(MSE)) MSE[[om]] else MSE
-    pi  <- 1
+  for (om in seq_along(mseList)) {
+    pi <- 1
     for (i in seq_along(Code)) {
       for (cx in allComplexes) {
-        Timeseries@Value[, om, , pi, ] <- .GetTimeseriesVariable(Code[i], mse, cx)
+        Timeseries@Value[, om, , pi, ] <- .GetTimeseriesVariable(Code[i], mseList[[om]], cx,
+                                                                 Timeseries@Time, Basis)
         pi <- pi + 1
       }
     }
@@ -507,63 +628,46 @@ DefaultSlickPMs <- function() {
 }
 
 
-.GetTimeseriesVariable <- function(Var, MSE, Complex) {
+.GetTimeseriesVariable <- function(Var, MSE, Complex, Time, Basis = 'RefSeason') {
   nsim <- MSE@OM@nSim
-  nMP  <- length(MSE@MPs)
-  nTS  <- length(.SlickTime(MSE@OM))
+  MPs  <- names(MSE@MPs)
 
-  DF <- .ComplexTimeseriesDF(Var, MSE, Complex) |>
-    .AnnualTimeseriesDF(Var, MSE@OM) |>
-    dplyr::arrange(.data$Sim, .data$Year, .data$MP) |>
-    dplyr::mutate(MP=as.character(.data$MP))
+  DF <- .ComplexTimeseriesDF(Var, MSE, Complex, Basis) |>
+    .AnnualTimeseriesDF(Var, MSE@OM, Complex, Basis) |>
+    as.data.frame()
+  DF$MP <- as.character(DF$MP)
+  DF <- DF[DF$Year %in% Time, ]
 
-  MPs_proj <- DF$MP |> unique()
-  MPs_proj <- MPs_proj[MPs_proj != 'Historical']
-
-  nHistTS <- DF |>
-    dplyr::filter(.data$Period == 'Historical') |>
-    dplyr::pull(.data$Year) |>
-    unique() |>
-    length()
-
-  HistValues <- DF |>
-    dplyr::filter(.data$MP == 'Historical') |>
-    dplyr::pull(.data$Value) |>
-    matrix(nrow=nsim, ncol=nHistTS, byrow=TRUE)
-
-  Array <- array(NA, dim=c(nsim, nMP, nTS))
-
-  for (mm in seq_along(MPs_proj)) {
-    ProjValues <- DF |>
-      dplyr::filter(.data$MP == MPs_proj[mm]) |>
-      dplyr::pull(.data$Value) |>
-      matrix(nrow=nsim, ncol=nTS - nHistTS, byrow=TRUE)
-    Array[, mm, ] <- cbind(HistValues, ProjValues)
-  }
+  Array <- array(NA_real_, dim = c(nsim, length(MPs), length(Time)))
+  Hist  <- DF[DF$MP == 'Historical', ]
+  if (nrow(Hist))
+    for (mm in seq_along(MPs))
+      Array[cbind(match(Hist$Sim, seq_len(nsim)), mm, match(Hist$Year, Time))] <- Hist$Value
+  Proj <- DF[DF$MP %in% MPs, ]
+  Array[cbind(match(Proj$Sim, seq_len(nsim)), match(Proj$MP, MPs), match(Proj$Year, Time))] <- Proj$Value
   Array
 }
 
-# Slick time axis: calendar years for seasonal OMs, where the MSY-relative
-# series are annual.
+# Slick time axis: complete calendar years for seasonal OMs.
 .SlickTime <- function(OM, Period = NULL) {
   yrs <- if (is.null(Period)) Years(OM) else Years(OM, Period)
-  if (.IsSeasonal(OM)) unique(floor(yrs + 1e-8)) else yrs
+  if (.IsSeasonal(OM)) .CompleteCalendarYears(yrs, OM@Seasons) else yrs
 }
 
 .SlickTimeLab <- function(OM) {
   .FirstUp(CalcTSUnits(if (.IsSeasonal(OM)) 1 else OM@Seasons))
 }
 
-# Collapse a time-step series to calendar years for seasonal OMs: catches and
-# F summed over seasons, other quantities averaged.
-.AnnualTimeseriesDF <- function(DF, Var, OM) {
-  if (!.IsSeasonal(OM) || all(DF$Year == floor(DF$Year)))
+# Annual values of a time-step series for seasonal OMs: catches and F summed
+# over the seasons, the TAC averaged, and other variables per `Basis`.
+.AnnualTimeseriesDF <- function(DF, Var, OM, Complex, Basis = 'RefSeason') {
+  if (!.IsSeasonal(OM) || all(abs(DF$Year - round(DF$Year)) < 1e-8))
     return(DF)
-  FUN <- if (Var %in% c('Landings', 'Removals', 'FInteract', 'FDead', 'FRetain')) sum else mean
-  DF |>
-    dplyr::mutate(Year = floor(.data$Year + 1e-8)) |>
-    dplyr::group_by(.data$Sim, .data$Year, .data$Period, .data$MP) |>
-    dplyr::summarise(Value = FUN(.data$Value), .groups = 'drop')
+  Basis <- if (Var %in% .SummableVars) 'Sum' else if (Var == 'TAC') 'Mean' else Basis
+  DF$Stock <- Complex
+  out <- .AnnualDF(DF, OM, Basis)
+  out$Stock <- NULL
+  out
 }
 
 .StockComplexMap <- function(OM) {
@@ -577,22 +681,26 @@ DefaultSlickPMs <- function() {
   out
 }
 
+.SumByComplex <- function(df, OM, Complex, FUN = sum) {
+  complexOf  <- .StockComplexMap(OM)
+  df$Complex <- complexOf[as.character(df$Stock)]
+  df[df$Complex == Complex, ] |>
+    dplyr::group_by(.data$Sim, .data$Year, .data$Period, .data$MP) |>
+    dplyr::summarise(Value = FUN(.data$Value), .groups = 'drop')
+}
 
-.ComplexTimeseriesDF <- function(Var, MSE, Complex) {
-  complexOf   <- .StockComplexMap(MSE@OM)
-  spawnStocks <- .SpawningStockNames(MSE@OM)
+.ComplexTimeseriesDF <- function(Var, MSE, Complex, Basis = 'RefSeason') {
+  OM <- MSE@OM
+  spawnStocks <- .SpawningStockNames(OM)
 
   if (Var == 'SBiomass') {
-    df <- SBiomass(MSE) |> dplyr::filter(.data$Stock %in% spawnStocks)
-    df$Complex <- complexOf[as.character(df$Stock)]
-    df <- df[df$Complex == Complex, ]
-    return(df |> dplyr::group_by(.data$Sim, .data$Year, .data$Period, .data$MP) |>
-             dplyr::summarise(Value = sum(.data$Value), .groups = 'drop'))
+    df <- SBiomass(MSE, Reduce = FALSE) |> dplyr::filter(.data$Stock %in% spawnStocks)
+    return(.SumByComplex(df, OM, Complex))
   }
 
   if (Var == 'SB_SBMSY') {
     hist_df <- .ComplexStatusRatio(MSE@Hist@SBiomass, MSE@Reference@MSY@SBMSY,
-                                   'SBiomass', MSE@OM) |>
+                                   'SBiomass', OM) |>
       Array2DF() |>
       dplyr::mutate(Period = 'Historical', MP = 'Historical')
     proj_df <- Array2DF(.ComplexStatusSeries(MSE, 'SBiomass')) |>
@@ -602,26 +710,34 @@ DefaultSlickPMs <- function() {
              dplyr::select('Sim', 'Year', 'Period', 'MP', 'Value'))
   }
 
+  if (Var == 'SB_SB0') {
+    return(.ComplexDepletionDF(MSE, 'SBiomass', Basis) |>
+             dplyr::filter(.data$Stock == !!Complex) |>
+             dplyr::select('Sim', 'Year', 'Period', 'MP', 'Value'))
+  }
+
   if (Var %in% c('FInteract', 'FDead', 'FRetain')) {
-    df <- do.call(Var, list(MSE, byAge = FALSE, byArea = FALSE, byFleet = FALSE))
-    df$Complex <- complexOf[as.character(df$Stock)]
-    df <- df[df$Complex == Complex, ]
-    return(df |> dplyr::group_by(.data$Sim, .data$Year, .data$Period, .data$MP) |>
-             dplyr::summarise(Value = max(.data$Value), .groups = 'drop'))
+    df <- do.call(Var, list(MSE, byAge = FALSE, byArea = FALSE, byFleet = FALSE, Reduce = FALSE))
+    return(.SumByComplex(df, OM, Complex, max))
   }
 
   if (Var == 'F_FMSY') {
-    return(F_FMSY(MSE) |> dplyr::filter(.data$Stock == !!Complex) |> dplyr::select(-'Stock'))
+    return(F_FMSY(MSE, Reduce = FALSE) |>
+             dplyr::filter(.data$Stock == !!Complex) |>
+             dplyr::select('Sim', 'Year', 'Period', 'MP', 'Value'))
   }
 
-  if (Var == 'Landings') {
-    df <- Landings(MSE) |>
-      dplyr::group_by(.data$Sim, .data$Stock, .data$Year, .data$Period, .data$MP) |>
-      dplyr::summarise(Value = sum(.data$Value), .groups = 'drop') # sum over Fleet
-    df$Complex <- complexOf[as.character(df$Stock)]
-    df <- df[df$Complex == Complex, ]
-    return(df |> dplyr::group_by(.data$Sim, .data$Year, .data$Period, .data$MP) |>
-             dplyr::summarise(Value = sum(.data$Value), .groups = 'drop'))
+  if (Var %in% c('Landings', 'Removals')) {
+    df <- do.call(Var, list(MSE, byFleet = FALSE, Reduce = FALSE))
+    return(.SumByComplex(df, OM, Complex))
+  }
+
+  if (Var == 'TAC') {
+    df <- TACs(MSE)
+    return(df[df$Stock == Complex, ] |>
+             dplyr::group_by(.data$Sim, .data$Year, .data$Period, .data$MP) |>
+             dplyr::summarise(Value = if (all(is.na(.data$Value))) NA_real_ else
+                                sum(.data$Value, na.rm = TRUE), .groups = 'drop'))
   }
 
   df <- do.call(Var, list(MSE))
@@ -629,14 +745,29 @@ DefaultSlickPMs <- function() {
   df
 }
 
-.ResolvePMSpec <- function(spec) {
-  if (is.function(spec)) spec <- list(fun = spec)
+# A PM spec as `list(fun, args, Code, Label, Description)`.
+.ResolvePMSpec <- function(spec, env = parent.frame()) {
+  if (is.function(spec))
+    return(list(fun = spec, args = list()))
+  if (is.call(spec))
+    return(list(fun  = eval(spec[[1]], env),
+                args = lapply(as.list(spec)[-1], eval, envir = env)))
+  if (!is.list(spec))
+    cli::cli_abort("Each element of {.arg PMs} must be a PM function, a call, or a list.")
+  if (!is.null(names(spec))) {
+    names(spec)[names(spec) == 'PM']   <- 'fun'
+    names(spec)[names(spec) == 'Args'] <- 'args'
+  }
+  if (is.null(spec$fun) && length(spec) && is.function(spec[[1]]))
+    spec$fun <- spec[[1]]
+  if (!is.function(spec$fun))
+    cli::cli_abort("A {.arg PMs} list must include a PM function as {.code PM} (or {.code fun}).")
   spec$args <- spec$args %||NA% list()
   spec
 }
 
-.EvalPMPanel <- function(MSE, PMs) {
-  specs   <- purrr::map(PMs, .ResolvePMSpec)
+.EvalPMPanel <- function(MSE, PMs, env = parent.frame()) {
+  specs   <- purrr::map(PMs, \(spec) .ResolvePMSpec(spec, env))
   mseList <- if (is.list(MSE)) MSE else list(MSE)
   nOM     <- length(mseList)
 
@@ -651,17 +782,23 @@ DefaultSlickPMs <- function() {
     code      <- spec$Code  %||NA% pmobj@Name
     label     <- spec$Label %||NA% pmobj@Caption
     desc      <- spec$Description %||NA% pmobj@Caption
+    isProb    <- any(purrr::map_lgl(perOM, \(pm) any(!is.na(pm@Prob))))
     purrr::map(complexes, \(cx) list(
-      spec_i = i, complex = cx,
+      spec_i = i, complex = cx, isProb = isProb,
       Code        = if (length(complexes) > 1) paste0(code, '_', cx) else code,
       Label       = if (length(complexes) > 1) paste0(label, ' [', cx, ']') else label,
       Description = desc
     ))
   }))
 
-  MPnames <- results[[1]][[1]]@MPs
+  Codes <- purrr::map_chr(piInfo, 'Code')
+  if (anyDuplicated(Codes))
+    cli::cli_abort(c("Duplicated PM code{?s}: {.val {unique(Codes[duplicated(Codes)])}}.",
+                     "i" = "Give each PM a unique {.code Code}, e.g. when the same PM function is used with different {.code Args}."))
+
+  MPnames <- names(mseList[[1]]@MPs)
   nMP     <- length(MPnames)
-  nSim    <- dim(results[[1]][[1]]@Stat)[1]
+  nSim    <- mseList[[1]]@OM@nSim
   nPI     <- length(piInfo)
 
   StatArr <- array(NA_real_, dim = c(nSim, nOM, nMP, nPI))
@@ -672,34 +809,52 @@ DefaultSlickPMs <- function() {
     info <- piInfo[[pi]]
     for (om in seq_len(nOM)) {
       pmobj <- results[[info$spec_i]][[om]]
-      StatArr[, om, , pi] <- pmobj@Stat[, info$complex, ]
-      ProbArr[, om, , pi] <- pmobj@Prob[, info$complex, ]
-      MeanArr[om, , pi]   <- pmobj@Mean[info$complex, ]
+      sims  <- match(as.numeric(dimnames(pmobj@Stat)[['Sim']]), seq_len(nSim))
+      mps   <- match(dimnames(pmobj@Stat)[['MP']], MPnames)
+      keep  <- !is.na(mps)
+      StatArr[sims, om, mps[keep], pi] <- pmobj@Stat[, info$complex, keep]
+      ProbArr[sims, om, mps[keep], pi] <- pmobj@Prob[, info$complex, keep]
+      MeanArr[om, mps[keep], pi]       <- pmobj@Mean[info$complex, keep]
     }
   }
+  StatArr[is.nan(StatArr)] <- NA
+  ProbArr[is.nan(ProbArr)] <- NA
+  MeanArr[is.nan(MeanArr)] <- NA
+
+  isProb <- purrr::map_lgl(piInfo, 'isProb')
+  Value  <- StatArr
+  Value[, , , isProb] <- ProbArr[, , , isProb]
 
   list(
-    Code        = purrr::map_chr(piInfo, 'Code'),
+    Code        = Codes,
     Label       = purrr::map_chr(piInfo, 'Label'),
     Description = purrr::map_chr(piInfo, 'Description'),
-    MPs = MPnames, Stat = StatArr, Prob = ProbArr, Mean = MeanArr
+    MPs = MPnames, isProb = isProb, Value = Value, Mean = MeanArr
   )
 }
 
 
 .MSE2Boxplot <- function(panel) {
   Slick::Boxplot(Code = panel$Code, Label = panel$Label,
-                 Description = panel$Description, Value = panel$Stat)
+                 Description = panel$Description, Value = panel$Value)
 }
 
 .MSE2Quilt <- function(panel) {
   Slick::Quilt(Code = panel$Code, Label = panel$Label,
-              Description = panel$Description, Value = panel$Stat)
+               Description = panel$Description, Value = panel$Value,
+               MinValue = ifelse(panel$isProb, 0, NA_real_),
+               MaxValue = ifelse(panel$isProb, 1, NA_real_))
 }
 
 .MSE2Spider <- function(panel) {
+  Value <- panel$Mean
+  for (pi in which(!panel$isProb)) {
+    Max <- apply(abs(Value[, , pi, drop = FALSE]), 1,
+                 \(x) if (all(is.na(x))) NA_real_ else max(x, na.rm = TRUE))
+    Value[, , pi] <- Value[, , pi] / ifelse(is.finite(Max) & Max > 0, Max, NA_real_)
+  }
   Slick::Spider(Code = panel$Code, Label = panel$Label,
-                Description = panel$Description, Value = panel$Mean)
+                Description = panel$Description, Value = Value)
 }
 
 .MSE2Tradeoff <- function(panel) {
