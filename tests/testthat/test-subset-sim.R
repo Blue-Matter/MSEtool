@@ -140,6 +140,42 @@ test_that("a non-contiguous Subset() projects the same as those sims of the full
   }
 })
 
+test_that("Subset() of an unpopulated OM with unnamed arrays simulates the same as those sims of the full run", {
+  skip_on_cran()
+  om <- SingleStockOM
+  om@nSim <- 4
+  Stay <- c(0.9, 0.7, 0.5, 0.3)
+  Mov <- array(NA, dim = c(4, 2, 2))
+  for (s in 1:4)
+    Mov[s, , ] <- matrix(c(Stay[s], 1 - Stay[s], 1 - Stay[s], Stay[s]), 2, byrow = TRUE)
+  om@Stock[[1]]@Spatial@Movement <- Mov
+
+  Sims <- c(4, 1, 2)
+  Sub <- Subset(om, Sims = Sims)
+  expect_identical(dimnames(Sub@Stock[[1]]@Spatial@Movement)$Sim, c("1", "2", "3"))
+
+  Full <- Simulate(om, silent = TRUE)
+  Hist <- Simulate(Sub, silent = TRUE)
+  for (sl in c("Number", "Biomass", "Effort", "FDead"))
+    expect_equal(methods::slot(Hist, sl), methods::slot(Subset(Full, Sims = Sims), sl), label = sl)
+})
+
+test_that("a 2-sim Subset() of a populated OM simulates the same as those sims of the full run", {
+  skip_on_cran()
+  om <- SingleStockOM
+  om@nSim <- 4
+  Pop <- Populate(om, silent = TRUE)
+  Sims <- c(4, 2)
+  Sub <- Subset(Pop, Sims = Sims)
+
+  Full <- Simulate(Pop, silent = TRUE)
+  Hist <- Simulate(Sub, silent = TRUE)
+  expect_equal(unname(Hist@OM@Stock[[1]]@Depletion@Final),
+               unname(Pop@Stock[[1]]@Depletion@Final[Sims]))
+  for (sl in c("Number", "Biomass", "Effort", "FDead"))
+    expect_equal(methods::slot(Hist, sl), methods::slot(Subset(Full, Sims = Sims), sl), label = sl)
+})
+
 test_that("extractors of a Subset() MSE number sims 1..nSim", {
   skip_on_cran()
   hist <- .ConditionedHist(nSim = 6)

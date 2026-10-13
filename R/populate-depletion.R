@@ -60,7 +60,11 @@ PopulateDepletion <- function(Depletion,
   if (all(is.na(Initial))) {
     return(Initial)
   }
-  
+  # already populated per-sim values; don't treat length 2 as bounds
+  if ("Sim" %in% names(dimnames(Initial))) {
+    return(Initial)
+  }
+
   if (length(Initial) == 1) {
     nSim <- 1
   }
