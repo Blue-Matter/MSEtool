@@ -13,12 +13,15 @@
 The input \code{hist} object with \code{hist@OM@FleetAllocation} populated
 and validated for all stocks.
 
-For each stock, allocation is resolved in this order:
+For each complex, allocation is resolved in this order:
 \enumerate{
 \item Use \code{OM@FleetAllocation} if specified.
-\item Fall back to \code{OM@CatchFrac} if available.
-\item Derive from the mean relative removals (landings + discards)
-over the last five historical years.
+\item Fall back to \code{OM@CatchFrac} if it is set for every stock in the
+complex, weighting each stock's \code{CatchFrac} by its removals in the
+final historical year.
+\item Derive from the mean relative removals (landings + discards) of all
+stocks in the complex over the last five historical years, or the last
+five years with non-zero removals, or an equal split if there are none.
 }
 
 After resolution, each allocation matrix is validated:

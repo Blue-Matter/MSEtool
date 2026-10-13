@@ -41,8 +41,8 @@ contributing to this index. See \code{\link[=IndicesObs]{IndicesObs()}}.}
 \item{\code{Units}}{\code{character} or \code{NULL}. Units of the index (\code{"Biomass"},
 \code{"Number"}, or \code{"Recruitment"}). See \code{\link[=IndicesObs]{IndicesObs()}}.}
 
-\item{\code{Selectivity}}{\code{array}, \code{character}, \code{numeric}, or \code{list}. Selectivity
-specification for this index. See \code{\link[=IndicesObs]{IndicesObs()}}.}
+\item{\code{Selectivity}}{\code{array}, \code{character}, \code{numeric}, or \code{list}.
+Selectivity-at-age of this index. See \code{\link[=IndicesObs]{IndicesObs()}}.}
 
 \item{\code{Type}}{\code{character}. Index type identifier. See \code{\link[=IndicesObs]{IndicesObs()}}.}
 

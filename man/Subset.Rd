@@ -26,7 +26,8 @@ Subset(
 }}
 
 \item{Sims}{Numeric vector of simulation indices to retain, in the order
-they are returned. \code{NULL} skips. Subsetting an \code{om}, \code{hist}, or \code{mse}
+they are returned. \code{NULL} skips. An \code{om} is populated with \code{\link[=Populate]{Populate()}}
+before it is subset. Subsetting an \code{om}, \code{hist}, or \code{mse}
 object records the original simulation numbers, so projections of the
 subset reproduce those simulations of the full object.}
 

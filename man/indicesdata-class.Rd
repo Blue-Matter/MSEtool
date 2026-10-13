@@ -38,10 +38,6 @@ indices are decayed by the mortality accrued up to that point;
 \code{0} (default) observes the population at the start of the time step.
 See \code{\link[=IndicesData]{IndicesData()}}.}
 
-\item{\code{Selectivity}}{An array or character specification mapping each index
-to a fleet selectivity or defining an independent selectivity curve.
-See \code{\link[=IndicesData]{IndicesData()}}.}
-
 \item{\code{Misc}}{A named list for any additional index-level metadata.}
 }}
 

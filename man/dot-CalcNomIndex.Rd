@@ -11,14 +11,12 @@
   fleet,
   IndexObs,
   Years,
-  SelectivityAtAge = NULL,
   sim = NULL,
   timing = NA_real_,
   TSIndex = NULL,
   apply_timing = TRUE,
   Units = NULL,
-  recruitment_years = NULL,
-  on_missing_obs_sel = NULL
+  recruitment_years = NULL
 )
 }
 \arguments{
@@ -36,9 +34,6 @@ element is either \verb{[Sim x Age x Year x Area]}, \verb{[Age x Year x Area]}, 
 
 \item{Years}{Numeric calendar year(s) to include.}
 
-\item{SelectivityAtAge}{Optional selectivity specification passed to
-\code{\link[=.ResolveIndexSelectivity]{.ResolveIndexSelectivity()}}. When \code{NULL}, fleet selectivity is used.}
-
 \item{sim}{Optional simulation replicate index.}
 
 \item{timing}{Numeric fraction of the time step at which the index is
@@ -53,8 +48,6 @@ population arrays. When \code{NULL}, matched from array dimnames.}
 
 \item{recruitment_years}{Optional calendar years for seasonal recruitment
 indexing (see \code{\link[=.ApplyIndexUnits]{.ApplyIndexUnits()}}).}
-
-\item{on_missing_obs_sel}{Optional callback when \code{"Obs"} selectivity is missing.}
 }
 \value{
 Numeric matrix (\verb{nSim x nYear}) when \code{sim} is \code{NULL}; numeric vector

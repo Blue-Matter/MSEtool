@@ -61,20 +61,25 @@ simulation and year is used.
 Default \code{NULL} (treated as \code{"Biomass"}).
 }}
 
-\item{Selectivity}{Selectivity specification for this index. Accepted forms:
+\item{Selectivity}{Selectivity-at-age of this index, multiplied by
+numbers-at-age before they are summed into the index. Accepted forms:
 \itemize{
-\item \code{NULL} (default): for CPUE indices, the corresponding fleet selectivity
-from \code{OM@Fleet} is used automatically. For survey indices with no
-selectivity specified, a warning is issued and flat selectivity
-(all ages equally selected) is assumed.
-\item \code{"Biomass"}: flat selectivity of 1 for all age classes (equivalent to
-a biomass-weighted survey).
-\item \code{"SBiomass"}: maturity-at-age is used as selectivity (equivalent to
-a spawning biomass index).
-\item \code{"Obs"}: the selectivity array stored in this slot is used directly.
-In this case \code{Selectivity} must also contain the array (or list of
-arrays by stock) as set by the user.
-}}
+\item \code{NULL} (default): selectivity of the fleet in \code{OM@Fleet} with the same
+name as the index. Indices that are not fleets must set \code{Selectivity}.
+\item \code{"Biomass"}: flat selectivity of 1 for all age classes.
+\item \code{"SBiomass"}: maturity-at-age.
+\item Numeric vector named by age, e.g. \code{c('3' = 1, '4' = 1, '5' = 1)}.
+Ages not named have selectivity 0. An unnamed vector must have one
+value per age class.
+\item Array with named dimnames including \code{Age} and optionally \code{Sim},
+\code{Year}, and \code{Area}, for selectivity that varies by simulation, year,
+or area. \code{Age} must cover the stock's age classes.
+\item List of any of the numeric forms, named by stock (or in stock order),
+for indices of multi-stock complexes.
+}
+
+See \code{\link[=AddAgeIndices]{AddAgeIndices()}} to add an age-disaggregated index as one index per
+age class.}
 
 \item{TruncSD}{\code{numeric(1)}. Number of standard deviations at which to
 truncate the lognormal residual distribution when generating observation
@@ -174,16 +179,20 @@ replaced during conditioning regardless of whether the user supplied
 
 \subsection{Selectivity Notes}{
 
-CPUE indices automatically use the fleet selectivity from \code{OM@Fleet} when
-\code{Selectivity} is \code{NULL}. For survey indices, the selectivity must be
-specified explicitly via one of the four forms described under the
-\code{Selectivity} parameter.
+Index selectivity is set only on the \link[=indicesobs-class]{indicesobs} object, and is used
+both when conditioning on real index data and when generating simulated
+index data. CPUE indices named after a fleet use that fleet's selectivity
+when \code{Selectivity} is \code{NULL}. Survey indices must set \code{Selectivity} with one
+of the forms described under the \code{Selectivity} parameter.
 }
 
 \subsection{Attaching to an Obs Object}{
 
 \if{html}{\out{<div class="sourceCode">}}\preformatted{CPUE(obs)   <- IndicesObs(CV = 0.3)
 Survey(obs) <- IndicesObs(CV = 0.2, Selectivity = "SBiomass")
+
+# index of ages 3-5
+Survey(obs) <- IndicesObs(Selectivity = c('3' = 1, '4' = 1, '5' = 1))
 }\if{html}{\out{</div>}}
 }
 }

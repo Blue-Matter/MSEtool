@@ -12,7 +12,6 @@ IndicesData(
   Ref = NULL,
   RefCV = NULL,
   Timing = 0,
-  Selectivity = NULL,
   Misc = list()
 )
 }
@@ -37,10 +36,6 @@ values, matching the dimensions of \code{Ref}. Default \code{NULL}.}
 \item{Timing}{\code{numeric}. Timing of each observation as a fraction of the
 time step (0-1), length \code{nIndex}. Simulated indices are decayed by the mortality
 accrued up to that point. Default \code{0}, the start of the time step.}
-
-\item{Selectivity}{An array or character specification mapping each index
-to a fleet selectivity or defining an independent selectivity curve, or
-\code{NULL}. Default \code{NULL}.}
 
 \item{Misc}{\code{list}. Named list for additional metadata. Default \code{list()}.}
 }
