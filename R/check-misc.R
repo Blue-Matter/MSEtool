@@ -133,7 +133,7 @@
       cli::cli_abort('`OM@CatchFrac` must be a list length `nStock(OM)` with a `nSim` by `nFleet` matrix  for each stock')
 
     if (any(CatchFracFleet<0) || any(!is.finite(CatchFracFleet)))
-      cli::cli_abort('Values in `OM@CatchFrac` must be positive')
+      cli::cli_abort('Values in `OM@CatchFrac` must be finite and non-negative')
 
     rsum <- rowSums(CatchFracFleet)
     tol  <- sqrt(.Machine$double.eps)

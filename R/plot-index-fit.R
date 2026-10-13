@@ -250,12 +250,6 @@ IndexFitTable <- function(object,
   idxData <- if (!is.null(fd)) slot(fd, type) else NULL
   fi      <- if (!is.null(idxData)) match(fl, idxData@Name) else NA_integer_
 
-  SelectivityAtAge_Data <- if (!is.null(idxData) && !is.na(fi) && length(idxData@Selectivity) >= fi) {
-    idxData@Selectivity[[fi]]
-  } else {
-    IndexObs@Selectivity
-  }
-
   # Real-data Timing (fraction of the time step), when available.
   timing <- if (!is.null(idxData) && !is.na(fi) && length(idxData@Timing) >= fi) {
     idxData@Timing[fi]
@@ -286,7 +280,6 @@ IndexFitTable <- function(object,
     fleet            = fl,
     IndexObs         = IndexObs,
     Years            = HistYears,
-    SelectivityAtAge = SelectivityAtAge_Data,
     timing           = timing,
     Units            = Units
   ) |> ExtendSims(nSim = nSim_)
@@ -311,7 +304,6 @@ IndexFitTable <- function(object,
       fleet            = fl,
       IndexObs         = IndexObs,
       Years            = ProjYears,
-      SelectivityAtAge = SelectivityAtAge_Data,
       timing           = timing,
       Units            = Units
     )

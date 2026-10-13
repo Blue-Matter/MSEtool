@@ -50,6 +50,9 @@
   nArea <- nArea(Hist)
   YearsHist <- Years(Hist@OM, 'Historical')
 
+  if (nFleet > 1)
+    Hist <- .CheckTerminalEffort(Hist, nStock, nFleet, nSim)
+
   # List length nSim, each with a Hist object with 1 sim
   HistSim_List <- lapply(seq_len(nSim), function(i) Subset(Hist, i))
 
@@ -91,6 +94,48 @@
   Hist
 }
 
+
+.CheckTerminalEffort <- function(Hist, nStock, nFleet, nSim) {
+  FleetNames <- FleetNames(Hist@OM)
+  StockNames <- StockNames(Hist@OM)
+  Bad <- NoEffort <- character(0)
+
+  for (st in 1:nStock) {
+    TermEffort <- vapply(1:nFleet, \(fl) {
+      Effort <- Hist@OM@Fleet[[st]][[fl]]@Effort@Effort
+      rep_len(Effort[, ncol(Effort)], nSim)
+    }, numeric(nSim)) |> matrix(nSim, nFleet)
+
+    CF <- Hist@OM@CatchFrac[[st]]
+    for (fl in 1:nFleet) {
+      Zero <- which(TermEffort[, fl] == 0)
+      if (length(Zero))
+        NoEffort <- c(NoEffort, cli::format_inline("{.val {FleetNames[fl]}} ({.val {StockNames[st]}}): {cli::qty(length(Zero))}Sim{?s} {Zero}"))
+      if (is.null(CF)) next
+      CFfl <- rep_len(CF[, fl], nSim)
+      Wrong <- which((CFfl > 0) != (TermEffort[, fl] > 0))
+      if (length(Wrong))
+        Bad <- c(Bad, cli::format_inline("{.val {FleetNames[fl]}} ({.val {StockNames[st]}}): {cli::qty(length(Wrong))}Sim{?s} {Wrong}"))
+    }
+  }
+
+  if (length(Bad))
+    cli::cli_abort(c(
+      'x' = '`OM@CatchFrac` must be zero for fleets with zero effort in the final historical year, and positive otherwise:',
+      stats::setNames(Bad, rep('*', length(Bad)))
+    ), call = NULL)
+
+  if (length(NoEffort)) {
+    Hist <- .CaptureLog(Hist,
+                        string = cli::format_inline("Effort is zero in the final historical year for: {paste(NoEffort, collapse = '; ')}"),
+                        name = 'Catchability',
+                        type = 'assumption')
+    Hist <- .CaptureLog(Hist,
+                        string = "Catchability of these fleets is set relative to the first fleet with final-year effort, by the ratio of their `Catchability@Efficiency`",
+                        type = 'assumption')
+  }
+  Hist
+}
 
 .ResolveGroupTarget <- function(group, OM) {
   srcs <- group$sources
@@ -143,6 +188,41 @@
 }
 
 
+.TerminalEffortFleet <- function(OM, nStock, nFleet) {
+  EffortFleet <- matrix(NA_real_, nStock, nFleet)
+  for (st in 1:nStock)
+    for (fl in 1:nFleet) {
+      Effort <- OM@Fleet[[st]][[fl]]@Effort@Effort
+      EffortFleet[st, fl] <- Effort[1, ncol(Effort)]
+    }
+  EffortFleet
+}
+
+# Which fleet q-shares are estimated, and fixed log-offsets for fleets with no terminal effort
+.QFleetMap <- function(HistSim, nStock, nFleet, ActiveInfo) {
+  Active <- .TerminalEffortFleet(HistSim@OM, nStock, nFleet) > 0
+  Est    <- matrix(FALSE, nStock, nFleet)
+  Offset <- matrix(0, nStock, nFleet)
+  Ref    <- rep(1L, nStock)
+  for (st in ActiveInfo$stocks) {
+    Ref[st] <- which(Active[st, ])[1] %||NA% 1L
+    Est[st, ] <- Active[st, ]
+    Est[st, Ref[st]] <- FALSE
+    Eff1 <- vapply(1:nFleet, \(fl) HistSim@OM@Fleet[[st]][[fl]]@Catchability@Efficiency[1], numeric(1))
+    Fixed <- !Active[st, ]
+    Offset[st, Fixed] <- log(Eff1[Fixed] / Eff1[Ref[st]])
+  }
+  list(Active = Active, Est = Est, Offset = Offset, Ref = Ref)
+}
+
+.QFleet <- function(pars, nSrc, nStock, nFleet, QMap) {
+  if (nFleet == 1) return(matrix(1, nStock, nFleet))
+  qlogit <- QMap$Offset
+  if (any(QMap$Est))
+    qlogit[QMap$Est] <- pars[(nSrc + 1):length(pars)]
+  ilogitm(qlogit)
+}
+
 .OptFinalDepletionSim <- function(HistSim, nStock, nFleet, nArea, YearsHist, Groups) {
 
   bounds <- c(1e-02, 3)
@@ -155,27 +235,22 @@
   if (!length(ActiveInfo$sources))
     return(HistSim@OM@Fleet)
 
+  QMap <- .QFleetMap(HistSim, nStock, nFleet, ActiveInfo)
+
   if (nStock > 1 || nFleet > 1) {
     pars <- .OptimizeCatchabilityMulti(HistSim, nStock, nFleet,
                                        nArea, YearsHist, bounds, tol,
-                                       silent, ActiveInfo)
+                                       silent, ActiveInfo, QMap)
   } else {
     pars <- .OptimizeCatchabilitySingle(HistSim, nStock, nFleet,
                                         nArea, YearsHist, bounds, tol,
-                                        silent, ActiveInfo)
+                                        silent, ActiveInfo, QMap)
   }
 
   nSrc <- length(ActiveInfo$sources)
   qSource <- exp(pars[seq_len(nSrc)])
   qStock  <- .DeriveStockQ(qSource, ActiveInfo, nStock)
-  qFleet  <- matrix(1, nStock, nFleet)
-
-  if (nFleet > 1) {
-    nAct <- length(ActiveInfo$stocks)
-    qlogit <- matrix(0, nStock, nFleet)
-    qlogit[ActiveInfo$stocks, 2:nFleet] <- matrix(pars[(nSrc+1):length(pars)], nrow = nAct)
-    qFleet <- ilogitm(qlogit)
-  }
+  qFleet  <- .QFleet(pars, nSrc, nStock, nFleet, QMap)
 
   for (st in ActiveInfo$stocks) {
     for (fl in 1:nFleet) {
@@ -188,7 +263,7 @@
   HistSim@OM@Fleet
 }
 
-.OptimizeCatchabilitySingle <- function(HistSim, nStock, nFleet, nArea, YearsHist, bounds, tol, silent, ActiveInfo, debug=FALSE) {
+.OptimizeCatchabilitySingle <- function(HistSim, nStock, nFleet, nArea, YearsHist, bounds, tol, silent, ActiveInfo, QMap, debug=FALSE) {
 
   doOpt <- stats::optimize(.OptCatchability,
                            log(bounds),
@@ -198,6 +273,7 @@
                            nArea=nArea,
                            YearsHist=YearsHist,
                            ActiveInfo=ActiveInfo,
+                           QMap=QMap,
                            debug=debug,
                            tol=tol)
   pars <- doOpt$minimum
@@ -212,6 +288,7 @@
                            nArea=nArea,
                            YearsHist=YearsHist,
                            ActiveInfo=ActiveInfo,
+                           QMap=QMap,
                            debug=debug,
                            lower=log(bounds[1]),
                            upper=log(bounds[2]))
@@ -221,19 +298,12 @@
 
 }
 
-.OptCatchability <- function(pars, HistSim, nStock, nFleet, nArea, YearsHist, ActiveInfo, CatchFrac=NULL, debug=FALSE) {
+.OptCatchability <- function(pars, HistSim, nStock, nFleet, nArea, YearsHist, ActiveInfo, QMap, CatchFrac=NULL, debug=FALSE) {
 
   nSrc <- length(ActiveInfo$sources)
   qSource <- exp(pars[seq_len(nSrc)])
   qStock  <- .DeriveStockQ(qSource, ActiveInfo, nStock)
-  qFleet  <- matrix(1, nStock, nFleet)
-
-  if (nFleet > 1) {
-    nAct <- length(ActiveInfo$stocks)
-    qlogit <- matrix(0, nStock, nFleet)
-    qlogit[ActiveInfo$stocks, 2:nFleet] <- matrix(pars[(nSrc+1):length(pars)], nrow = nAct)
-    qFleet <- ilogitm(qlogit)
-  }
+  qFleet  <- .QFleet(pars, nSrc, nStock, nFleet, QMap)
 
   for (st in ActiveInfo$stocks) {
     for (fl in 1:nFleet) {
@@ -289,7 +359,9 @@
   total[total==0] <- tiny
   predCatchFrac <- predCatchFrac/total
 
-  cOBJ <- sum(log(CatchFrac/predCatchFrac)^2)
+  # fleets with no terminal effort carry no information on the catch split
+  Use  <- QMap$Active
+  cOBJ <- sum(log(CatchFrac[Use]/predCatchFrac[Use])^2)
   depOBJ <- depOBJ+cOBJ
 
   depOBJ
@@ -298,40 +370,23 @@
 
 
 .OptimizeCatchabilityMulti <- function(HistSim, nStock, nFleet, nArea,
-                                       YearsHist, bounds, tol, silent, ActiveInfo, debug=FALSE) {
+                                       YearsHist, bounds, tol, silent, ActiveInfo, QMap, debug=FALSE) {
 
-  CalcCatchFrac <- FALSE
-  if (is.null(HistSim@OM@CatchFrac))
-    CalcCatchFrac <- TRUE
+  EffortFleet <- .TerminalEffortFleet(HistSim@OM, nStock, nFleet)
 
-  if (is.list(HistSim@OM@CatchFrac) && any(lapply(HistSim@OM@CatchFrac, is.null) |>
-                                           unlist()))
-    CalcCatchFrac <- TRUE
-
-  # Catch divided by effort (q proxy)
-  if (CalcCatchFrac) {
-    HistSim@OM@CatchFrac <- MakeNamedList(StockNames(HistSim@OM))
-    for (st in 1:nStock) {
-      relF <- rep(NA, nFleet)
-      for (fl in 1:nFleet) {
-        effort <- HistSim@OM@Fleet[[st]][[fl]]@Effort@Effort
-        q <- HistSim@OM@Fleet[[st]][[fl]]@Catchability@Efficiency
-        relF[fl] <- effort[1,ncol(effort)] * q[1,ncol(q)]
-      }
-      HistSim@OM@CatchFrac[[st]] <- relF/sum(relF)
-    }
-  }
-
-  CatchFrac <- List2Array(HistSim@OM@CatchFrac, name = 'Stock', dim1 = 'Fleet', pos=2) |>
-    t()
-
-  EffortFleet <- array(NA, dim=c(nStock, nFleet))
-  nTS <- length(YearsHist)
+  # Catch divided by effort (q proxy) where CatchFrac is not specified
+  CatchFrac <- matrix(NA_real_, nStock, nFleet)
   for (st in 1:nStock) {
-    for (fl in 1:nFleet) {
-      EffortFleet[st,fl] <- HistSim@OM@Fleet[[st]][[fl]]@Effort@Effort[1,nTS]
+    CF <- HistSim@OM@CatchFrac[[st]]
+    if (!is.null(CF)) {
+      CatchFrac[st, ] <- if (is.matrix(CF)) CF[1, ] else CF
+      next
     }
-
+    relF <- vapply(1:nFleet, \(fl) {
+      q <- HistSim@OM@Fleet[[st]][[fl]]@Catchability@Efficiency
+      EffortFleet[st, fl] * q[1, ncol(q)]
+    }, numeric(1))
+    CatchFrac[st, ] <- if (sum(relF) > 0) relF/sum(relF) else 0
   }
 
   FDist <- CatchFrac/EffortFleet
@@ -339,18 +394,14 @@
   FDist <- FDist/apply(FDist[, , drop = FALSE], 1, sum)    # q ratio proxy (real space)
 
   nSrc <- length(ActiveInfo$sources)
-  nAct <- length(ActiveInfo$stocks)
+  nEst <- sum(QMap$Est)
 
-  lower <- c(rep(log(bounds[1]), nSrc), rep(-5, nAct * (nFleet-1)))
-  upper <- c(rep(log(bounds[2]), nSrc), rep(5,  nAct * (nFleet-1)))
+  lower <- c(rep(log(bounds[1]), nSrc), rep(-5, nEst))
+  upper <- c(rep(log(bounds[2]), nSrc), rep(5,  nEst))
 
-  if (nFleet == 1) {
-    pars <- rep(-5, nSrc)
-  } else {
-    # low initial F followed by logit guess at fraction based on Fdist
-    # according to catch fraction in recent year
-    pars <- c(rep(-5, nSrc), logit(FDist[ActiveInfo$stocks, 2:nFleet, drop=FALSE]))
-  }
+  # low initial F followed by logit guess at fraction based on Fdist
+  # according to catch fraction in recent year
+  pars <- c(rep(-5, nSrc), logit(FDist[QMap$Est]))
 
   # a near-zero catch fraction gives logit ~ -34, far outside the box
   pars <- pmin(pmax(pars, lower), upper)
@@ -366,6 +417,7 @@
                  nArea = nArea,
                  YearsHist=YearsHist,
                  ActiveInfo = ActiveInfo,
+                 QMap = QMap,
                  CatchFrac = CatchFrac,
                  debug=debug,
                  control = list(trace = ifelse(silent, 0, 1), factr = tol/.Machine$double.eps)

@@ -18,6 +18,7 @@
   .MsgStart('Simulate', OM, nSim, silent)
 
   OM <- .StartUp(OM, nSim, silent=silent)
+  .CheckZeroEffort(OM)
 
   if (is.null(OM@Name) || nchar(OM@Name) < 2)
     OM@Name <- 'Unnamed OM'

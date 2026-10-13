@@ -12,7 +12,8 @@
 #'   * Data frames with a `Sim` column
 #'
 #' @param Sims   Numeric vector of simulation indices to retain, in the order
-#'   they are returned. `NULL` skips. Subsetting an `om`, `hist`, or `mse`
+#'   they are returned. `NULL` skips. An `om` is populated with [Populate()]
+#'   before it is subset. Subsetting an `om`, `hist`, or `mse`
 #'   object records the original simulation numbers, so projections of the
 #'   subset reproduce those simulations of the full object.
 #' @param Years  Numeric vector of calendar years to retain. `NULL` skips.
@@ -44,6 +45,8 @@ Subset <- function(object,
                    Impute = TRUE) {
 
   if (!is.null(Sims)) {
+    # populating names every array's Sim dimension and fixes the per-sim draws
+    if (inherits(object, "om")) object <- Populate(object, silent = TRUE)
     OM     <- .SimOM(object)
     object <- .SubsetSim(object, Sims)
     if (!is.null(OM)) object <- .SetGlobalSims(object, OM, Sims)

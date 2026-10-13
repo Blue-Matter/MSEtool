@@ -44,13 +44,10 @@
       )
 
       if (is.null(DefaultEffortAllocation)) {
-        last_5_years <- utils::tail(seq_len(length(HistYears)), 5)
-
-        effort <- Hist@Effort[, last_5_years, , drop = FALSE]
-        effort <- apply(effort, c('Sim', 'Fleet'), sum)
-        rel_effort <- effort / apply(effort, 'Sim', sum)
-
-        DefaultEffortAllocation <- matrix(rel_effort, nSim, nFleet)
+        effort <- Hist@Effort[, seq_along(HistYears), , drop = FALSE]
+        Recent <- .RecentShare(effort)
+        Hist <- .LogRecentShare(Hist, Recent, 'effort')
+        DefaultEffortAllocation <- Recent$Share
       }
 
       EffortAllocationFleet <- DefaultEffortAllocation
@@ -64,7 +61,7 @@
       cli::cli_abort('`OM@EffortAllocation` must be a list length `nComplex(OM)` with an `nSim` by `nFleet` matrix for each complex')
 
     if (any(EffortAllocationFleet < 0) || any(!is.finite(EffortAllocationFleet)))
-      cli::cli_abort('Values in `OM@EffortAllocation` must be positive')
+      cli::cli_abort('Values in `OM@EffortAllocation` must be finite and non-negative')
 
     rsum <- rowSums(EffortAllocationFleet)
     tol  <- sqrt(.Machine$double.eps)
@@ -81,5 +78,61 @@
   }
 
   Hist@OM@EffortAllocation <- EffortAllocation
+  Hist
+}
+
+.CheckZeroEffort <- function(OM) {
+  Fished <- rep(FALSE, nSim(OM))
+  for (FleetList in OM@Fleet) {
+    for (Fleet in FleetList) {
+      Effort <- Fleet@Effort@Effort
+      if (!is.numeric(Effort)) next
+      Effort <- matrix(Effort, nrow = NROW(Effort))
+      Total  <- rowSums(abs(Effort))
+      Fished <- Fished | is.na(Total) | Total > 0
+    }
+  }
+  ZeroSims <- which(!Fished)
+  if (!length(ZeroSims)) return(invisible(OM))
+
+  cli::cli_abort(c(
+    'x' = 'Historical effort is zero for all fleets in every year in {cli::qty(length(ZeroSims))}Sim{?s} {ZeroSims}.',
+    'i' = 'Correct the {.code Effort} inputs, or remove the simulations with {.code Subset(OM, Sims = ...)}.'
+  ), call = NULL)
+}
+
+# Fleet shares over the last `nYear` years, or the last `nYear` years with a positive total
+.RecentShare <- function(x, nYear = 5) {
+  nSim   <- dim(x)[1]
+  nFleet <- dim(x)[3]
+  Total  <- apply(x, c(1, 2), sum)
+  Share  <- matrix(NA_real_, nSim, nFleet)
+  Shifted <- Equal <- integer(0)
+
+  for (s in seq_len(nSim)) {
+    Yrs <- utils::tail(seq_len(ncol(Total)), nYear)
+    if (!sum(Total[s, Yrs]) > 0) {
+      Yrs <- utils::tail(which(Total[s, ] > 0), nYear)
+      if (length(Yrs)) Shifted <- c(Shifted, s) else Equal <- c(Equal, s)
+    }
+    if (!length(Yrs)) {
+      Share[s, ] <- 1 / nFleet
+      next
+    }
+    ByFleet <- colSums(matrix(x[s, Yrs, ], length(Yrs), nFleet))
+    Share[s, ] <- ByFleet / sum(ByFleet)
+  }
+  list(Share = Share, Shifted = Shifted, Equal = Equal)
+}
+
+.LogRecentShare <- function(Hist, Recent, what) {
+  if (length(Recent$Shifted))
+    Hist <- .CaptureLog(Hist,
+                        string = cli::format_inline("Total {what} is zero in the last 5 historical years for {cli::qty(length(Recent$Shifted))}Sim{?s} {Recent$Shifted}; using the last 5 years with non-zero {what}"),
+                        type = 'assumption')
+  if (length(Recent$Equal))
+    Hist <- .CaptureLog(Hist,
+                        string = cli::format_inline("Total {what} is zero in all historical years for {cli::qty(length(Recent$Equal))}Sim{?s} {Recent$Equal}; splitting equally across fleets"),
+                        type = 'assumption')
   Hist
 }

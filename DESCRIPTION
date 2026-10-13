@@ -72,6 +72,7 @@ URL: https://msetool.openmse.com/
 Collate: 
     'MSEtool-package.R'
     'RcppExports.R'
+    'add-age-indices.R'
     'add-fleet.R'
     'adjust-seasonal-fecundity.R'
     'calc-advice.R'

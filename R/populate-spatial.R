@@ -201,7 +201,8 @@ PopulateSpatial <- function(Spatial,
   Names <- names(dnames)
   nArea <- dims[2]
   
-  if (is.null(Names)) {
+  # AddDimension() above leaves the user-supplied leading dims with "" names
+  if (is.null(Names) || !all(nzchar(Names))) {
     if (dims[5] != 1 && dims[5] != length(Years)) 
       cli::cli_abort('`Spatial@Movement` must have named dimensions if length of Year dimension != 1 || != length(Years)')
     
