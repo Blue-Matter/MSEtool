@@ -118,7 +118,6 @@
       fleet            = FleetNames[fl],
       IndexObs         = IndexObs,
       Years            = HistYears,
-      SelectivityAtAge = IndexObs@Selectivity,
       sim              = sim,
       timing           = timing,
       Units            = Units

@@ -158,3 +158,52 @@ test_that("an unreachable combined TAC saturates fleets at their effort ceiling"
   expect_true(all(is.finite(RHuge) & RHuge > 0))
   expect_gte(sum(RHuge[1]), sum(RBig[1]) * 0.99)
 })
+
+test_that("Simulate() aborts early only when all fleets have zero historical effort in a simulation", {
+  om <- .StartUp(TwoFleetOM, nSim = 3, silent = TRUE)
+  expect_silent(.CheckZeroEffort(om))
+
+  one_fleet <- om
+  one_fleet@Fleet[[1]][[2]]@Effort@Effort[2, ] <- 0
+  expect_silent(.CheckZeroEffort(one_fleet))
+
+  all_fleets <- one_fleet
+  all_fleets@Fleet[[1]][[1]]@Effort@Effort[2, ] <- 0
+  expect_error(.CheckZeroEffort(all_fleets), "Sim 2")
+
+  expect_error(Simulate(all_fleets, silent = TRUE), "zero for all fleets")
+})
+
+test_that("default allocations use the last 5 years with non-zero totals when the final 5 years are zero", {
+  skip_on_cran()
+  om <- .StartUp(TwoFleetOM, nSim = 3, silent = TRUE)
+  nYear <- ncol(om@Fleet[[1]][[1]]@Effort@Effort)
+  for (fl in 1:2)
+    om@Fleet[[1]][[fl]]@Effort@Effort[2, (nYear - 4):nYear] <- 0
+  set.seed(1)
+  Hist <- Simulate(om, silent = TRUE, Reduce = FALSE)
+
+  Recent <- (nYear - 9):(nYear - 5)
+  Effort <- colSums(Hist@Effort[2, Recent, ])
+  expect_equal(unname(Hist@OM@EffortAllocation[[1]][2, ]), unname(Effort / sum(Effort)))
+
+  Removals <- colSums(Hist@Landings[2, 1, Recent, ] + Hist@Discards[2, 1, Recent, ])
+  expect_equal(unname(Hist@OM@FleetAllocation[[1]][2, ]), unname(Removals / sum(Removals)))
+
+  for (Other in c(1, 3)) {
+    Effort <- colSums(Hist@Effort[Other, (nYear - 4):nYear, ])
+    expect_equal(unname(Hist@OM@EffortAllocation[[1]][Other, ]), unname(Effort / sum(Effort)))
+  }
+  expect_true(any(grepl("last 5 years with non-zero effort", unlist(Hist@Log))))
+  expect_true(any(grepl("last 5 years with non-zero removals", unlist(Hist@Log))))
+})
+
+test_that(".RecentShare() splits equally when a sim has no positive totals", {
+  x <- array(0, dim = c(2, 6, 3), dimnames = list(Sim = 1:2, Year = 1:6, Fleet = 1:3))
+  x[1, 1, ] <- 1:3
+  Recent <- .RecentShare(x)
+  expect_equal(Recent$Share[1, ], (1:3) / 6)
+  expect_equal(Recent$Share[2, ], rep(1 / 3, 3))
+  expect_identical(Recent$Shifted, 1L)
+  expect_identical(Recent$Equal, 2L)
+})

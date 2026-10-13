@@ -57,9 +57,10 @@ test_that(".SubsetSim() subsets sim-keyed vectors, lists and Sim-column data fra
                        CPUE  = IndicesData(Name = fl,
                                            Value = matrix(Val / mean(Val), ncol = 1,
                                                           dimnames = list(as.character(HY), fl))),
-                       Survey = IndicesData(Name = "Surv", Selectivity = "Biomass",
+                       Survey = IndicesData(Name = "Surv",
                                             Value = matrix(Surv / mean(Surv), ncol = 1,
                                                            dimnames = list(as.character(HY), "Surv")))))
+  om@Obs[[1]][["Surv"]] <- Obs("Surv", Survey = IndicesObs(Selectivity = "Biomass"))
   om@nSim <- nSim
   set.seed(1)
   Simulate(om, control = SimControl(EstimateBeta = TRUE), silent = TRUE)

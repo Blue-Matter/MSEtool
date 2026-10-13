@@ -40,3 +40,24 @@ test_that(".ImportSSDataCatch imports every fleet in biomass with CatchUnits = '
 test_that("ImportSSData rejects unknown CatchUnits", {
   expect_error(ImportSSData(list(), CatchUnits = 'Numbers'), "should be one of")
 })
+
+test_that("SS3 survey selectivity is assigned to the survey's Obs by name when fleets are interleaved", {
+  # SS3 fleets: F1 fishery, S1 survey, F2 fishery, S2 survey with composition data only, S3 survey
+  replist <- list(FleetNames = c("F1", "S1", "F2", "S2", "S3"),
+                  IsFishFleet = c(TRUE, FALSE, TRUE, FALSE, FALSE))
+  data(SingleStockOM, envir = environment())
+  om <- SingleStockOM
+  om@Data <- list(Data(Survey = IndicesData(Name = c("S3", "S1"))))
+  om@Obs <- list(MakeNamedList(c("F1", "F2", "S3", "S1"), new("obs")))
+
+  local_mocked_bindings(
+    .GetSSYears = function(...) list(),
+    .SS2Selectivity = function(st, fl, ...) methods::new("selectivity", MeanAtAge = array(fl))
+  )
+  out <- .ProcessSurveyObsSelectivity(om, list(replist))
+  expect_equal(as.numeric(out@Obs[[1]][["S1"]]@Survey@Selectivity[[1]]), 2)
+  expect_equal(as.numeric(out@Obs[[1]][["S3"]]@Survey@Selectivity[[1]]), 5)
+  expect_equal(names(out@Obs[[1]][["S1"]]@Survey@Selectivity), StockNames(om))
+  expect_null(out@Obs[[1]][["F2"]]@Survey@Selectivity)
+  expect_equal(names(out@Obs[[1]]), c("F1", "F2", "S3", "S1"))
+})

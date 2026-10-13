@@ -632,7 +632,7 @@ test_that("PlotIndexFit() facets by Sim and colors by MP when nsim > 1, replicat
   expect_setequal(panelSims, unique(ld$Sim))
 })
 
-test_that("a non-fleet survey conditions and projects with IndicesData(Selectivity = 'SBiomass')", {
+test_that("a non-fleet survey conditions and projects with Obs Selectivity = 'SBiomass'", {
   skip_on_cran()
   data(SingleStockOM, envir = environment())
   om <- SingleStockOM
@@ -646,7 +646,10 @@ test_that("a non-fleet survey conditions and projects with IndicesData(Selectivi
   survey <- matrix(vals, ncol = 1, dimnames = list(Year = yrs, Index = 'Acoustic'))
   Data(om) <- Data(Name = 'x', Years = yrs,
                    Survey = IndicesData(Name = 'Acoustic', Value = survey, Units = 'Biomass',
-                                        Timing = 0.5, Selectivity = 'SBiomass'))
+                                        Timing = 0.5))
+  o <- Obs('Acoustic')
+  Survey(o) <- IndicesObs(Selectivity = 'SBiomass')
+  om@Obs[[1]][['Acoustic']] <- o
 
   hist <- Simulate(om, silent = TRUE)
   idxObs <- hist@OM@Obs[[1]][['Acoustic']]@Survey
@@ -673,14 +676,9 @@ test_that("a non-fleet survey conditions and projects with IndicesData(Selectivi
     expect_lt(stats::sd(ratio) / mean(ratio), 1e-4)
   }
 
-  # no selectivity for a non-fleet index: informative error, and the Obs route works
-  Survey(om@Data) <- IndicesData(Name = 'Acoustic', Value = survey, Timing = 0.5)
+  # no selectivity for a non-fleet index: informative error
+  om@Obs[[1]][['Acoustic']] <- NULL
   expect_error(Simulate(om, silent = TRUE), "not a fleet")
-  o <- Obs('Acoustic')
-  Survey(o) <- IndicesObs(Selectivity = 'Biomass')
-  om@Obs[[1]][['Acoustic']] <- o
-  hist2 <- Simulate(om, silent = TRUE)
-  expect_equal(hist2@OM@Obs[[1]][['Acoustic']]@Survey@Selectivity, 'Biomass')
 })
 
 test_that("an index with unsupported Units is skipped with a message, not an error", {
@@ -698,8 +696,12 @@ test_that("an index with unsupported Units is skipped with a message, not an err
   dimnames(survey) <- list(Year = yrs, Index = c('Acoustic', 'Trawl'))
   Data(om) <- Data(Name = 'x', Years = yrs,
                    Survey = IndicesData(Name = c('Acoustic', 'Trawl'), Value = survey,
-                                        Units = c('Biomass', 'Weight'), Timing = c(0.5, 0.5),
-                                        Selectivity = c('SBiomass', 'Biomass')))
+                                        Units = c('Biomass', 'Weight'), Timing = c(0.5, 0.5)))
+  for (nm in c('Acoustic', 'Trawl')) {
+    o <- Obs(nm)
+    Survey(o) <- IndicesObs(Selectivity = c(Acoustic = 'SBiomass', Trawl = 'Biomass')[[nm]])
+    om@Obs[[1]][[nm]] <- o
+  }
 
   msgs <- testthat::capture_messages(hist <- Simulate(om, silent = FALSE))
   expect_true(any(grepl("unsupported.*Weight", msgs)))
@@ -723,17 +725,77 @@ test_that("index selectivity may vary by area, with or without a sim", {
   a1 <- seq(0.1, 1, length.out = length(Ages))
   sel <- array(c(a1, a1 / 2), c(1, length(Ages), 1, 2),
                dimnames = list(Sim = 1, Age = Ages, Year = Year, Area = 1:2))
-  IndexObs <- new("indicesobs")
-  IndexObs@Selectivity <- list(sel)
-  resolve <- function(spec, sim = NULL)
+  resolve <- function(spec, sim = NULL) {
+    IndexObs <- new("indicesobs")
+    IndexObs@Selectivity <- spec
     .ResolveIndexSelectivity(obj, stocks = 1, fleet = "Survey", IndexObs = IndexObs, Years = Year,
-                             SelectivityAtAge = spec, sim = sim, nArea = 2)[[1]]
+                             sim = sim, nArea = 2)[[1]]
+  }
 
-  for (spec in list(list(sel), sel, "Obs")) {
+  for (spec in list(list(sel), sel)) {
     expect_equal(unname(resolve(spec)[1, , 1, ]), cbind(a1, a1 / 2), ignore_attr = TRUE)
     expect_equal(unname(resolve(spec, sim = 2)), cbind(a1, a1 / 2), ignore_attr = TRUE)
   }
 
   sel3 <- DropDimension(sel[, , , 1, drop = FALSE], "Area")
   expect_equal(unname(resolve(list(sel3), sim = 2)), cbind(a1, a1), ignore_attr = TRUE)
+})
+
+test_that("index selectivity accepts age vectors and partial-dimension arrays", {
+  data(TwoFleetOM, envir = environment())
+  om <- TwoFleetOM
+  nSim(om) <- 3
+  set.seed(1)
+  hist <- Simulate(om, silent = TRUE)
+  Ages <- hist@OM@Stock[[1]]@Ages@Classes
+  nAge <- length(Ages)
+  HY <- Years(hist, "H")
+  NAge <- apply(hist@Number[[1]], c(1, 2, 3), sum)
+  nom <- function(sel, sim = NULL)
+    .CalcNomIndex(hist@Number[1], hist, 1, "Survey", IndicesObs(Selectivity = sel), HY,
+                  sim = sim, Units = "Number")
+
+  s <- seq_len(nAge) / nAge
+  SimSel <- matrix(stats::runif(3 * nAge), 3, nAge)
+  YearSel <- outer(seq_along(HY), seq_len(nAge), \(y, a) (a / nAge)^(y / 10))
+  Cases <- list(
+    named   = list(c("2" = 1, "3" = 0.5), c(0, 0, 1, 0.5, rep(0, nAge - 4))),
+    unnamed = list(s, s),
+    age     = list(array(rev(s), nAge, dimnames = list(Age = rev(Ages))), s),
+    sim     = list(array(SimSel, dim(SimSel), dimnames = list(Sim = 1:3, Age = Ages)), NULL),
+    year    = list(array(t(YearSel), rev(dim(YearSel)), dimnames = list(Age = Ages, Year = HY)), NULL)
+  )
+  for (nm in names(Cases)) {
+    sel <- Cases[[nm]][[1]]
+    out <- nom(sel)
+    expected <- switch(nm,
+      sim  = t(sapply(1:3, \(x) colSums(NAge[x, , as.character(HY)] * SimSel[x, ]))),
+      year = t(sapply(1:3, \(x) colSums(NAge[x, , as.character(HY)] * t(YearSel)))),
+      t(sapply(1:3, \(x) colSums(NAge[x, , as.character(HY)] * Cases[[nm]][[2]]))))
+    expect_equal(unname(out), unname(expected), info = nm)
+    for (x in c(1, 3))
+      expect_equal(as.numeric(nom(sel, sim = x)), as.numeric(out[x, ]), info = nm)
+  }
+
+  expect_error(nom(c("99" = 1)), "not in the stock's age classes")
+  expect_error(nom(rep(1, nAge - 1)), "one value per age class")
+  expect_error(nom(array(1, 2, dimnames = list(Age = Ages[1:2]))), "cover the stock's age classes")
+  expect_error(nom(array(1, c(nAge, 2), dimnames = list(Age = Ages, Fleet = 1:2))), "unsupported dimension")
+  expect_error(nom(-s), "non-negative")
+  expect_error(nom("Obs"), "Unknown")
+})
+
+test_that("a Selectivity attribute left on an older indicesdata object is ignored with a warning", {
+  skip_on_cran()
+  data(SingleStockOM, envir = environment())
+  om <- SingleStockOM
+  nSim(om) <- 2
+  yrs <- Years(om, 'Historical')
+  survey <- matrix(stats::runif(length(yrs)), ncol = 1, dimnames = list(Year = yrs, Index = 'Acoustic'))
+  Survey <- IndicesData(Name = 'Acoustic', Value = survey)
+  attr(Survey, 'Selectivity') <- 'Biomass'
+  Data(om) <- Data(Name = 'x', Years = yrs, Survey = Survey)
+  om@Obs[[1]][['Acoustic']] <- Obs('Acoustic', Survey = IndicesObs(Selectivity = 'SBiomass'))
+  expect_warning(hist <- Simulate(om, silent = TRUE), "no longer used")
+  expect_equal(hist@OM@Obs[[1]][['Acoustic']]@Survey@Selectivity, 'SBiomass')
 })

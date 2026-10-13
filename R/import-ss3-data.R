@@ -269,12 +269,6 @@ ImportSSData <- function(SSDir,
       "x" = "CPUE/Survey units do not match fleets"
     ), internal = TRUE)
   }
-  
-  if (Type == "CPUE") {
-    Indices@Selectivity <- IndFleets
-  } else {
-    Indices@Selectivity <- rep("Obs", length(CPUE_Ind))
-  }
   Indices
 }
 

@@ -65,7 +65,6 @@ ImportiSCAMData <- function(iSCAMdir,
     Survey@Value       <- Value
     Survey@CV          <- CV
     Survey@Timing      <- rep(0, nIndex)
-    Survey@Selectivity <- rep('Biomass', nIndex)
     Data@Survey        <- Survey
   }
 

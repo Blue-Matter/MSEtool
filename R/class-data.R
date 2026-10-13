@@ -97,9 +97,6 @@ setClass(
 #'   indices are decayed by the mortality accrued up to that point;
 #'   `0` (default) observes the population at the start of the time step.
 #'   See [IndicesData()].
-#' @slot Selectivity An array or character specification mapping each index
-#'   to a fleet selectivity or defining an independent selectivity curve.
-#'   See [IndicesData()].
 #' @slot Misc A named list for any additional index-level metadata.
 #'
 #' @seealso [IndicesData()] for the constructor and full parameter
@@ -119,7 +116,6 @@ setClass(
     Ref         = "num.null",
     RefCV       = "array.null",
     Timing      = "numeric",
-    Selectivity = "array.char.num",
     Misc        = "list"
   )
 )

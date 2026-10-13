@@ -1698,23 +1698,21 @@ ImportSS <- function(SSDir,
 
 
 .ProcessSurveyObsSelectivity <- function(OM, RepList) {
-  # Add Selectivity to Obs for Survey indices
-  IndexInd <- which(grepl("Obs", OM@Data[[1]]@Survey@Selectivity))
+  SurveyNames <- OM@Data[[1]]@Survey@Name
+  if (!length(SurveyNames)) return(OM)
 
-  if (!length(IndexInd)) {
-    return(OM)
-  }
+  # SS3 fleet number of each survey index; fleets may be in any order
+  SSFleets <- match(SurveyNames, RepList[[1]]$FleetNames)
+  if (anyNA(SSFleets))
+    cli::cli_abort("Survey index {.val {SurveyNames[is.na(SSFleets)]}} not found in the SS3 fleet names.",
+                   .internal = TRUE)
 
-  Survey_Ind <- which(!RepList[[1]]$IsFishFleet)
-  nStock <- nStock(OM)
   YearsList <- .GetSSYears(RepList[[1]], pYear = 1)
 
-  for (fl in Survey_Ind) {
-    OM@Obs[[1]][[fl]]@Survey@Selectivity <- MakeNamedList(StockNames(OM))
-    for (st in 1:nStock) {
-      SurveySelect <- .SS2Selectivity(st, fl, RepList, YearsList, Stock = OM@Stock[[st]])
-      OM@Obs[[1]][[fl]]@Survey@Selectivity[[st]] <- SurveySelect@MeanAtAge
-    }
+  for (i in seq_along(SurveyNames)) {
+    OM@Obs[[1]][[SurveyNames[i]]]@Survey@Selectivity <- purrr::map(seq_len(nStock(OM)), \(st)
+      .SS2Selectivity(st, SSFleets[i], RepList, YearsList, Stock = OM@Stock[[st]])@MeanAtAge
+    ) |> stats::setNames(StockNames(OM))
   }
   OM
 }

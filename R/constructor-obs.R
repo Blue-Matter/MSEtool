@@ -507,18 +507,23 @@ ExploitationObs <- function(Selectivity      = list(),
 #'     areas. For seasonal models, the first non-zero age class in each
 #'     simulation and year is used.
 #'   Default `NULL` (treated as `"Biomass"`).
-#' @param Selectivity Selectivity specification for this index. Accepted forms:
-#'   - `NULL` (default): for CPUE indices, the corresponding fleet selectivity
-#'     from `OM@Fleet` is used automatically. For survey indices with no
-#'     selectivity specified, a warning is issued and flat selectivity
-#'     (all ages equally selected) is assumed.
-#'   - `"Biomass"`: flat selectivity of 1 for all age classes (equivalent to
-#'     a biomass-weighted survey).
-#'   - `"SBiomass"`: maturity-at-age is used as selectivity (equivalent to
-#'     a spawning biomass index).
-#'   - `"Obs"`: the selectivity array stored in this slot is used directly.
-#'     In this case `Selectivity` must also contain the array (or list of
-#'     arrays by stock) as set by the user.
+#' @param Selectivity Selectivity-at-age of this index, multiplied by
+#'   numbers-at-age before they are summed into the index. Accepted forms:
+#'   - `NULL` (default): selectivity of the fleet in `OM@Fleet` with the same
+#'     name as the index. Indices that are not fleets must set `Selectivity`.
+#'   - `"Biomass"`: flat selectivity of 1 for all age classes.
+#'   - `"SBiomass"`: maturity-at-age.
+#'   - Numeric vector named by age, e.g. `c('3' = 1, '4' = 1, '5' = 1)`.
+#'     Ages not named have selectivity 0. An unnamed vector must have one
+#'     value per age class.
+#'   - Array with named dimnames including `Age` and optionally `Sim`,
+#'     `Year`, and `Area`, for selectivity that varies by simulation, year,
+#'     or area. `Age` must cover the stock's age classes.
+#'   - List of any of the numeric forms, named by stock (or in stock order),
+#'     for indices of multi-stock complexes.
+#'
+#'   See [AddAgeIndices()] to add an age-disaggregated index as one index per
+#'   age class.
 #' @param TruncSD `numeric(1)`. Number of standard deviations at which to
 #'   truncate the lognormal residual distribution when generating observation
 #'   errors for projection years via [GenResiduals()]. Default `2`.
@@ -595,16 +600,20 @@ ExploitationObs <- function(Selectivity      = list(),
 #'
 #' ## Selectivity Notes
 #'
-#' CPUE indices automatically use the fleet selectivity from `OM@Fleet` when
-#' `Selectivity` is `NULL`. For survey indices, the selectivity must be
-#' specified explicitly via one of the four forms described under the
-#' `Selectivity` parameter.
+#' Index selectivity is set only on the [indicesobs-class] object, and is used
+#' both when conditioning on real index data and when generating simulated
+#' index data. CPUE indices named after a fleet use that fleet's selectivity
+#' when `Selectivity` is `NULL`. Survey indices must set `Selectivity` with one
+#' of the forms described under the `Selectivity` parameter.
 #'
 #' ## Attaching to an Obs Object
 #'
 #' ```
 #' CPUE(obs)   <- IndicesObs(CV = 0.3)
 #' Survey(obs) <- IndicesObs(CV = 0.2, Selectivity = "SBiomass")
+#'
+#' # index of ages 3-5
+#' Survey(obs) <- IndicesObs(Selectivity = c('3' = 1, '4' = 1, '5' = 1))
 #' ```
 #'
 #' @return

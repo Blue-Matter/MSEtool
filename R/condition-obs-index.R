@@ -100,20 +100,15 @@
     }
     
     
-    DataSel <- slot(FisheryData, type)@Selectivity
-    SelectivityAtAge_Data <- if (length(DataSel) >= fl) DataSel[[fl]] else NULL
-    SelectivityAtAge <- if (is.character(SelectivityAtAge_Data)) SelectivityAtAge_Data else NULL
+    if (!is.null(attr(slot(FisheryData, type), 'Selectivity')))
+      cli::cli_warn(c("!" = "{.code Data@{type}@Selectivity} is no longer used and is ignored.",
+                      "i" = "Set selectivity on the Obs object instead: {.code OM@Obs[[{i}]][['{Indices_Name[fl]}']]@{type}@Selectivity}."),
+                    .frequency = 'once', .frequency_id = paste0('DataSelectivity', type))
 
-    # carry data-level selectivity onto Obs so generated data use the same curve
-    if (is.null(Index_Obs@Selectivity) && !is.null(SelectivityAtAge) &&
-        SelectivityAtAge %in% c('Biomass', 'SBiomass'))
-      Index_Obs@Selectivity <- SelectivityAtAge
-    if (is.null(SelectivityAtAge)) SelectivityAtAge <- Index_Obs@Selectivity
-
-    if (is.null(SelectivityAtAge) && !Indices_Name[fl] %in% FleetNames(Hist@OM))
+    if (is.null(Index_Obs@Selectivity) && !Indices_Name[fl] %in% FleetNames(Hist@OM))
       cli::cli_abort(c(
         "x" = "{type} index {.val {Indices_Name[fl]}} is not a fleet in {.code OM@Fleet}, so its {.field Selectivity} must be set.",
-        "i" = "Set e.g. {.code {type}(Data) <- IndicesData(Name = '{Indices_Name[fl]}', ..., Selectivity = 'Biomass')} (flat) or {.code 'SBiomass'} (maturity-at-age)."
+        "i" = "Set e.g. {.code OM@Obs[[{i}]][['{Indices_Name[fl]}']]@{type}@Selectivity <- 'Biomass'} (flat), {.val SBiomass} (maturity-at-age), or a vector of selectivity-at-age named by age. See {.help MSEtool::IndicesObs}."
       ))
 
     Index_Obs@Units <- Units
@@ -148,20 +143,9 @@
       fleet               = Indices_Name[fl],
       IndexObs            = Index_Obs,
       Years               = HistYears,
-      SelectivityAtAge    = SelectivityAtAge,
       timing              = timing,
       Units               = Units,
-      recruitment_years   = recruitment_years,
-      on_missing_obs_sel  = function() {
-        Hist <<- .CaptureLog(
-          Hist,
-          string = cli::format_inline(
-            "No `Obs` object found for {.val {type}} Data: {.val {Indices_Name[fl]}} \n Assuming selectivity = 1 for all age classes"
-          ),
-          name = '.ConditionObs',
-          type = 'assumption'
-        )
-      }
+      recruitment_years   = recruitment_years
     )
     
     NonNAInd <- which(!is.na(ObservedIndex) & ObservedIndex > 0)

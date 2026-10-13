@@ -92,7 +92,6 @@
         fleet            = IndexData1@Name[fl],
         IndexObs         = IndexObs,
         Years            = DataYear,
-        SelectivityAtAge = IndexObs@Selectivity,
         sim              = x,
         timing           = timing,
         TSIndex          = TSIndex,

@@ -344,8 +344,6 @@ ImportBAMData <- function(OM,
   survey.data.object@Value[ survey.data.object@Value<=-9999] <- NA
   survey.data.object@CV[]    <- .ExtractCv(t.series, survey.names)[seq_len(n.year),,drop=FALSE]
   
-  survey.data.object@Selectivity <- rep("Obs", n.survey)
-  
   OM@Data[[1]]@Survey <- survey.data.object
   
   # Add Obs object for surveys
@@ -359,8 +357,6 @@ ImportBAMData <- function(OM,
     if (!length(matched.sel)) {
       cli::cli_alert_warning("No matching selectivity schedule found for Survey: {.val {nms[i]}}")
       cli::cli_alert('Assuming all age class fully selected')
-      survey.data.object@Selectivity[i] <- 'Biomass'
-      OM@Data[[1]]@Survey <- survey.data.object
 
       SurveyObs <- Obs()
       SurveyObs@Survey@Selectivity <- 'Biomass'

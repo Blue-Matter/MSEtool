@@ -111,49 +111,6 @@
     sum()
 }
 
-.ResolveSelectivity <- function(Proj, stocks, StockNames, Obs, FleetNames, fl,
-                               x, TSIndex, nArea) {
-  SelectivityAtAge <- Obs@Selectivity
-
-  if (is.list(SelectivityAtAge)) {
-    return(purrr::map(SelectivityAtAge, \(stock) {
-      x_sim <- pmin(x, dim(stock)[1])
-      stock[x_sim, , TSIndex, drop = FALSE] |>
-        AddDimension("Area") |>
-        DropDimension(c("Sim", "Year")) |>
-        ExtendAreas(Areas = seq_len(nArea))
-    }))
-  }
-
-  if (is.character(SelectivityAtAge)) {
-    switch(SelectivityAtAge,
-           Biomass = purrr::map(seq_along(stocks), \(st) {
-             AgeClasses <- Proj@OM@Stock[[stocks[st]]]@Ages@Classes
-             array(1, c(length(AgeClasses), nArea),
-                   dimnames = list(Age = AgeClasses, Area = seq_len(nArea)))
-           }) |> setNames(StockNames[stocks]),
-
-           SBiomass = purrr::map(seq_along(stocks), \(st) {
-             mat <- Proj@OM@Stock[[stocks[st]]]@Maturity@MeanAtAge
-             mat[min(x, dim(mat)[1]), , TSIndex, drop = FALSE] |>
-               AddDimension("Area") |>
-               DropDimension(c("Sim", "Year")) |>
-               ExtendAreas(Areas = seq_len(nArea))
-           }) |> setNames(StockNames[stocks]),
-
-           cli::cli_abort("Unknown selectivity type: {.val {SelectivityAtAge}}", .internal = TRUE)
-    )
-  } else {
-    purrr::map(Proj@OM@Fleet[stocks], \(fleet_list) {
-      sel <- fleet_list[[FleetNames[fl]]]@Selectivity@MeanAtAge
-      dd <- dim(sel)
-      x_sim <- pmin(x, dd[1])
-      sel[x_sim, , TSIndex, , drop = FALSE] |>
-        DropDimension(c("Sim", "Year"))
-    })
-  }
-}
-
 .CompShiftAt <- function(Shift, x, DataYear, nBin) {
   if (is.null(Shift)) return(rep(0, nBin))
   Shift <- .ArraySubsetYear(Shift, DataYear)

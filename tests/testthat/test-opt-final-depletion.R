@@ -164,3 +164,75 @@ test_that("an unrelated independent stock is unaffected by a separate SPFrom-lin
   DepC <- PopDyn@Biomass[1, 3, TermInd] / Hist@Unfished@Equilibrium@Biomass[1, 3, TermInd]
   expect_equal(DepC, 0.5, tolerance = 1e-3)
 })
+
+## ---- Fleets with zero effort in the final historical year ----
+
+.two_fleet_zero_effort_om <- function(fleets, years = NULL) {
+  om <- .StartUp(TwoFleetOM, nSim = 3, silent = TRUE)
+  om@Fleet[[1]][[2]]@Catchability@Efficiency <- om@Fleet[[1]][[2]]@Catchability@Efficiency * 2
+  nYear <- ncol(om@Fleet[[1]][[1]]@Effort@Effort)
+  years <- years %||% nYear
+  for (fl in fleets)
+    om@Fleet[[1]][[fl]]@Effort@Effort[2, years] <- 0
+  om
+}
+
+.terminal_depletion <- function(hist) {
+  nYear <- length(Years(hist, 'H'))
+  as.numeric(hist@Biomass[, 1, nYear] / hist@Unfished@Equilibrium@Biomass[, 1, nYear])
+}
+
+.terminal_q <- function(hist, fl) {
+  q <- hist@OM@Fleet[[1]][[fl]]@Catchability@Efficiency
+  as.numeric(q[, ncol(q)])
+}
+
+test_that("q is calibrated when a fleet has zero effort in the final historical year", {
+  base <- .two_fleet_zero_effort_om(integer(0))
+  set.seed(1)
+  Base <- Simulate(base, silent = TRUE)
+  Target <- as.numeric(base@Stock[[1]]@Depletion@Final)
+
+  for (fl in 1:2) {
+    set.seed(1)
+    Hist <- Simulate(.two_fleet_zero_effort_om(fl), silent = TRUE)
+    expect_equal(.terminal_depletion(Hist), Target, tolerance = 1e-3, label = paste("depletion, fleet", fl))
+
+    # the inactive fleet keeps its input Efficiency ratio (2) to the other fleet
+    qRatio <- .terminal_q(Hist, 2)[2] / .terminal_q(Hist, 1)[2]
+    expect_equal(qRatio, 2, tolerance = 1e-8, label = paste("q ratio, fleet", fl))
+
+    for (Other in c(1, 3)) {
+      expect_identical(.terminal_q(Hist, 1)[Other], .terminal_q(Base, 1)[Other])
+      expect_identical(.terminal_q(Hist, 2)[Other], .terminal_q(Base, 2)[Other])
+    }
+  }
+})
+
+test_that("q is calibrated when all fleets have zero effort in the final historical years", {
+  nYear <- length(Years(TwoFleetOM, 'H'))
+  om <- .two_fleet_zero_effort_om(1:2, (nYear - 4):nYear)
+  Hist <- Simulate(om, silent = TRUE)
+  expect_equal(.terminal_depletion(Hist), as.numeric(om@Stock[[1]]@Depletion@Final), tolerance = 1e-3)
+  expect_equal(.terminal_q(Hist, 2)[2] / .terminal_q(Hist, 1)[2], 2, tolerance = 1e-8)
+  expect_true(any(grepl("zero in the final historical year", unlist(Hist@Log))))
+})
+
+test_that("a user-supplied per-sim CatchFrac is matched, including a zero share for a fleet with no final-year effort", {
+  om <- .two_fleet_zero_effort_om(2)
+  om@CatchFrac <- list(matrix(c(0.7, 0.3, 1, 0, 0.4, 0.6), 3, 2, byrow = TRUE))
+  Hist <- Simulate(om, silent = TRUE)
+
+  nYear <- length(Years(Hist, 'H'))
+  Landings <- Hist@Landings[, 1, nYear, ]
+  Split <- Landings / rowSums(Landings)
+  expect_equal(as.vector(Split), as.vector(om@CatchFrac[[1]]), tolerance = 1e-3)
+  expect_equal(.terminal_depletion(Hist), as.numeric(om@Stock[[1]]@Depletion@Final), tolerance = 1e-3)
+
+  Bad <- om
+  Bad@CatchFrac <- list(matrix(c(0.7, 0.3), 1, 2))
+  expect_error(Simulate(Bad, silent = TRUE), "Sim 2")
+
+  Bad@CatchFrac <- list(matrix(c(1, 0), 1, 2))
+  expect_error(Simulate(Bad, silent = TRUE), "Sims 1 and 3")
+})

@@ -244,8 +244,8 @@ setValidity("catchobs", function(object) {
 #'   contributing to this index. See [IndicesObs()].
 #' @slot Units `character` or `NULL`. Units of the index (`"Biomass"`,
 #'   `"Number"`, or `"Recruitment"`). See [IndicesObs()].
-#' @slot Selectivity `array`, `character`, `numeric`, or `list`. Selectivity
-#'   specification for this index. See [IndicesObs()].
+#' @slot Selectivity `array`, `character`, `numeric`, or `list`.
+#'   Selectivity-at-age of this index. See [IndicesObs()].
 #' @slot Type `character`. Index type identifier. See [IndicesObs()].
 #' @slot Ref `numeric` array or `NULL`. Reference index value, one per
 #'   simulation. See [IndicesObs()].

@@ -200,6 +200,8 @@ ImportiSCAM <- function(iSCAMdir,
   SurveyNames <- DataObj@Survey@Name
   AllNames    <- unique(c(FleetName, SurveyNames))
   OM@Obs      <- MakeNamedList(StockName, MakeNamedList(AllNames, methods::new('obs')))
+  for (nm in SurveyNames)
+    OM@Obs[[1]][[nm]]@Survey@Selectivity <- 'Biomass'
 
   if (Populate) {
     out <- try(PopulateOM(OM), silent = TRUE)

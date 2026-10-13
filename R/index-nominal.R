@@ -12,25 +12,19 @@
 #' Resolve selectivity-at-age arrays for a nominal index
 #'
 #' Builds a named list of selectivity arrays (one per stock in the complex)
-#' for use by [.CalcNomIndex()]. When `SelectivityAtAge` is `NULL`, fleet
-#' selectivity from `object@OM@Fleet` is used.
+#' for use by [.CalcNomIndex()] from `IndexObs@Selectivity`. See
+#' [IndicesObs()] for the accepted forms.
 #'
 #' @param object A `hist`-like object with an `@OM` slot.
 #' @param stocks Integer vector of stock indices in the complex.
 #' @param fleet Character fleet / index name.
 #' @param IndexObs An [indicesobs-class] object.
 #' @param Years Calendar years spanned by the selectivity arrays.
-#' @param SelectivityAtAge Optional selectivity specification. When `NULL`,
-#'   fleet selectivity is used. Otherwise may be `character` (`"Biomass"`,
-#'   `"SBiomass"`, `"Obs"`), a per-stock `list`, or a single `array`.
 #' @param sim Optional simulation index. When set, arrays are sliced to that
 #'   replicate and returned without a `Sim` dimension.
 #' @param nArea Number of spatial areas. Defaults to [nArea()] of `object`.
 #' @param StockNames Optional character vector of stock names (defaults to
 #'   [StockNames()] for `stocks`).
-#' @param on_missing_obs_sel Optional zero-argument function invoked once per
-#'   stock when `SelectivityAtAge = "Obs"` but no selectivity is available on
-#'   `IndexObs`.
 #'
 #' @return A list of selectivity arrays, one element per stock in `stocks`.
 #' @keywords internal
@@ -39,16 +33,14 @@
                                      fleet,
                                      IndexObs,
                                      Years,
-                                     SelectivityAtAge = NULL,
                                      sim = NULL,
                                      nArea = NULL,
-                                     StockNames = NULL,
-                                     on_missing_obs_sel = NULL) {
+                                     StockNames = NULL) {
 
   if (is.null(nArea)) nArea <- nArea(object)
   Areas <- seq_len(nArea)
   if (is.null(StockNames)) StockNames <- StockNames(object@OM)[stocks]
-  spec <- SelectivityAtAge
+  spec <- IndexObs@Selectivity
 
   .flat_sel <- function(AgeClasses) {
     if (is.null(sim)) {
@@ -75,20 +67,6 @@
     arr |> .ArraySubsetYear(Years)
   }
 
-  .with_areas <- function(arr) {
-    if (is.null(sim)) {
-      arr |>
-        AddDimension('Area') |>
-        ExtendAreas(Areas) |>
-        ReduceDims()
-    } else {
-      arr |>
-        AddDimension('Area') |>
-        ExtendAreas(Areas) |>
-        DropDimension('Year')
-    }
-  }
-
   .maturity_sel <- function(st) {
     mat <- object@OM@Stock[[st]]@Maturity@MeanAtAge
     if (is.null(sim)) {
@@ -107,55 +85,49 @@
     }
   }
 
-  .obs_sel <- function(st_idx, st) {
-    sel <- IndexObs@Selectivity
-    AgeClasses <- object@OM@Stock[[st]]@Ages@Classes
-
-    if (inherits(sel, 'array')) {
-      return(sel |> .subset_years() |> .slice_sim() |> .with_areas())
-    }
-
-    if (inherits(sel, 'list')) {
-      stock_sel <- sel[[st_idx]] %||NA% sel[[st]]
-      if (is.null(stock_sel)) {
-        if (!is.null(on_missing_obs_sel)) on_missing_obs_sel()
-        return(.flat_sel(AgeClasses))
-      }
-      return(stock_sel |> .subset_years() |> .slice_sim() |> .with_areas())
-    }
-
-    if (!is.null(on_missing_obs_sel)) on_missing_obs_sel()
-    .flat_sel(AgeClasses)
-  }
-
-  if (is.list(spec) && !is.character(spec)) {
-    return(purrr::imap(spec, function(stock_sel, nm) {
-      arr <- stock_sel |>
-        .subset_years() |>
-        .slice_sim() |>
-        AddDimension('Area') |>
-        ExtendAreas(Areas)
-      if (is.null(sim)) ReduceDims(arr) else DropDimension(arr, 'Year')
-    }))
-  }
-
-  if (inherits(spec, 'array')) {
-    sel_arr <- spec |> .subset_years() |> .slice_sim() |> .with_areas()
-    return(stats::setNames(rep(list(sel_arr), length(stocks)), StockNames))
+  .user_sel <- function(sel, st, st_idx) {
+    arr <- .IndexSelectivityArray(sel, object@OM@Stock[[st]]@Ages@Classes,
+                                  Index = fleet, Stock = StockNames[st_idx]) |>
+      .subset_years() |>
+      AddDimension('Year', val = Years[1])
+    if (is.null(sim)) arr <- AddDimension(arr, 'Sim', pos = 1)
+    arr <- arr |> .slice_sim() |> AddDimension('Area') |> ExtendAreas(Areas)
+    arr <- base::aperm(arr, intersect(c('Sim', 'Age', 'Year', 'Area'), names(dimnames(arr))))
+    if (is.null(sim)) ReduceDims(arr) else arr
   }
 
   if (is.character(spec)) {
     return(purrr::imap(stocks, function(st, st_idx) {
-      AgeClasses <- object@OM@Stock[[st]]@Ages@Classes
       switch(spec,
-             Biomass  = .flat_sel(AgeClasses),
+             Biomass  = .flat_sel(object@OM@Stock[[st]]@Ages@Classes),
              SBiomass = .maturity_sel(st),
-             Obs      = .obs_sel(st_idx, st),
-             cli::cli_abort('Unknown selectivity type: {.val {spec}}', .internal = TRUE))
-    }))
+             cli::cli_abort(c("x" = "Unknown {.field Selectivity} {.val {spec}} for index {.val {fleet}}.",
+                              "i" = "Use {.val Biomass}, {.val SBiomass}, a vector or array of selectivity-at-age, or a list of these by stock.")))
+    }) |> stats::setNames(StockNames))
   }
 
-  # Fleet selectivity (default)
+  if (is.list(spec)) {
+    return(purrr::imap(stocks, function(st, st_idx) {
+      sel <- if (!is.null(names(spec)) && StockNames[st_idx] %in% names(spec)) {
+        spec[[StockNames[st_idx]]]
+      } else if (is.null(names(spec)) && length(spec) >= st_idx) {
+        spec[[st_idx]]
+      }
+      if (is.null(sel))
+        cli::cli_abort("{.field Selectivity} list for index {.val {fleet}} has no entry for stock {.val {StockNames[st_idx]}}.")
+      .user_sel(sel, st, st_idx)
+    }) |> stats::setNames(StockNames))
+  }
+
+  if (!is.null(spec)) {
+    return(purrr::imap(stocks, \(st, st_idx) .user_sel(spec, st, st_idx)) |>
+             stats::setNames(StockNames))
+  }
+
+  if (!fleet %in% names(object@OM@Fleet[[stocks[1]]]))
+    cli::cli_abort(c("x" = "Index {.val {fleet}} is not a fleet in {.code OM@Fleet}, so its {.field Selectivity} must be set.",
+                     "i" = "e.g. {.code OM@Obs[[Stock]][['{fleet}']]@Survey@Selectivity <- 'Biomass'}. See {.help MSEtool::IndicesObs}."))
+
   purrr::map(object@OM@Fleet[stocks], function(stock_fleets) {
     sel <- stock_fleets[[fleet]]@Selectivity@MeanAtAge
     if (is.null(sim)) {
@@ -167,6 +139,52 @@
         abind::adrop(1)
     }
   })
+}
+
+#' Coerce a user-supplied index selectivity to a named array
+#'
+#' @param sel Numeric vector (named by age, or unnamed of length
+#'   `length(AgeClasses)`) or array with named dimnames including `Age`, and
+#'   optionally `Sim`, `Year`, and `Area`.
+#' @param AgeClasses Age classes of the stock.
+#' @param Index,Stock Index and stock names, for error messages.
+#'
+#' @return An array with an `Age` dimension ordered as `AgeClasses`.
+#' @keywords internal
+.IndexSelectivityArray <- function(sel, AgeClasses, Index = NULL, Stock = NULL) {
+  where <- cli::format_inline("index {.val {Index}}, stock {.val {Stock}}")
+  if (!is.numeric(sel))
+    cli::cli_abort("{.field Selectivity} for {where} must be numeric, not {.cls {class(sel)}}.")
+  if (any(!is.finite(sel)) || any(sel < 0))
+    cli::cli_abort("{.field Selectivity} for {where} must be finite and non-negative.")
+
+  Ages <- as.character(AgeClasses)
+
+  if (is.null(dim(sel)) || length(dim(sel)) == 1L) {
+    nms <- names(sel) %||% dimnames(sel)[[1]]
+    if (is.null(nms)) {
+      if (length(sel) != length(Ages))
+        cli::cli_abort("Unnamed {.field Selectivity} for {where} has length {length(sel)}; needs one value per age class ({length(Ages)}), or names giving the ages.")
+      nms <- Ages
+    }
+    Bad <- setdiff(nms, Ages)
+    if (length(Bad))
+      cli::cli_abort("{.field Selectivity} for {where} names age{?s} {.val {Bad}} not in the stock's age classes ({min(AgeClasses)} to {max(AgeClasses)}).")
+    out <- stats::setNames(rep(0, length(Ages)), Ages)
+    out[nms] <- as.numeric(sel)
+    return(array(out, dim = length(Ages), dimnames = list(Age = Ages)))
+  }
+
+  DN <- dimnames(sel)
+  if (is.null(names(DN)) || !'Age' %in% names(DN))
+    cli::cli_abort("{.field Selectivity} array for {where} needs named dimnames including {.val Age}.")
+  Bad <- setdiff(names(DN), c('Sim', 'Age', 'Year', 'Area'))
+  if (length(Bad))
+    cli::cli_abort("{.field Selectivity} array for {where} has unsupported dimension{?s} {.val {Bad}}; allowed: {.val {c('Sim', 'Age', 'Year', 'Area')}}.")
+  if (!setequal(DN$Age, Ages))
+    cli::cli_abort("{.field Selectivity} array for {where} must cover the stock's age classes exactly ({min(AgeClasses)} to {max(AgeClasses)}).")
+  if (identical(DN$Age, Ages)) return(sel)
+  abind::asub(sel, match(Ages, DN$Age), match('Age', names(DN)), drop = FALSE)
 }
 
 
@@ -349,8 +367,6 @@
 #' @param fleet Character fleet / index name.
 #' @param IndexObs An [indicesobs-class] object.
 #' @param Years Numeric calendar year(s) to include.
-#' @param SelectivityAtAge Optional selectivity specification passed to
-#'   [.ResolveIndexSelectivity()]. When `NULL`, fleet selectivity is used.
 #' @param sim Optional simulation replicate index.
 #' @param timing Numeric fraction of the time step at which the index is
 #'   observed, for within-step mortality decay. `NA` skips decay.
@@ -360,7 +376,6 @@
 #' @param Units Index units; defaults to `IndexObs@Units` or `"Biomass"`.
 #' @param recruitment_years Optional calendar years for seasonal recruitment
 #'   indexing (see [.ApplyIndexUnits()]).
-#' @param on_missing_obs_sel Optional callback when `"Obs"` selectivity is missing.
 #'
 #' @return Numeric matrix (`nSim x nYear`) when `sim` is `NULL`; numeric vector
 #'   of length `nYear` (or scalar when `Years` is length 1) when `sim` is set.
@@ -371,14 +386,12 @@
                           fleet,
                           IndexObs,
                           Years,
-                          SelectivityAtAge = NULL,
                           sim = NULL,
                           timing = NA_real_,
                           TSIndex = NULL,
                           apply_timing = TRUE,
                           Units = NULL,
-                          recruitment_years = NULL,
-                          on_missing_obs_sel = NULL) {
+                          recruitment_years = NULL) {
 
   Years <- as.numeric(Years)
   nArea_ <- nArea(object)
@@ -429,10 +442,8 @@
     fleet         = fleet,
     IndexObs      = IndexObs,
     Years         = Years,
-    SelectivityAtAge = SelectivityAtAge,
     sim           = sim,
-    nArea         = nArea_,
-    on_missing_obs_sel = on_missing_obs_sel
+    nArea         = nArea_
   )
 
   SimNumberSelectedList <- purrr::map2(Number_List, SelectivityAtAgeList, function(num, sel) {

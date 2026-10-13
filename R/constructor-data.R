@@ -267,9 +267,6 @@ EffortData <- function(Name  = NULL,
 #' @param Timing `numeric`. Timing of each observation as a fraction of the
 #'   time step (0-1), length `nIndex`. Simulated indices are decayed by the mortality
 #'   accrued up to that point. Default `0`, the start of the time step.
-#' @param Selectivity An array or character specification mapping each index
-#'   to a fleet selectivity or defining an independent selectivity curve, or
-#'   `NULL`. Default `NULL`.
 #' @param Misc `list`. Named list for additional metadata. Default `list()`.
 #'
 #' @details
@@ -318,7 +315,6 @@ IndicesData <- function(Name        = NULL,
                         Ref         = NULL,
                         RefCV       = NULL,
                         Timing      = 0,
-                        Selectivity = NULL,
                         Misc        = list()) {
   .Object <- methods::new("indicesdata")
   if (!is.null(Name))        .Object@Name        <- Name
@@ -328,7 +324,6 @@ IndicesData <- function(Name        = NULL,
   if (!is.null(Ref))         .Object@Ref         <- Ref
   if (!is.null(RefCV))       .Object@RefCV       <- RefCV
   if (!is.null(Timing))      .Object@Timing      <- Timing
-  if (!is.null(Selectivity)) .Object@Selectivity <- Selectivity
   .Object@Misc <- Misc
   methods::validObject(.Object)
   .Object

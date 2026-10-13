@@ -240,8 +240,7 @@ CombineFleets <- function(OM, FleetList = NULL, silent = FALSE) {
       NewName <- .UniqueIndexName(f, "Survey", taken)
       taken <- c(taken, NewName)
       IndexObs <- ObsList[[f]]@Survey
-      IndexObs@Selectivity <- .IndexFleetSelectivity(IndexObs@Selectivity,
-                                                     .IndexEntry(survey@Selectivity, j), OM, stocks, f)
+      IndexObs@Selectivity <- .IndexFleetSelectivity(IndexObs@Selectivity, OM, stocks, f)
       NewObs[[i]][[NewName]] <- .SurveyObs(NewName, IndexObs)
       survey@Name[j] <- NewName
       survey@Value <- .RenameColumn(survey@Value, j, NewName)
@@ -261,8 +260,7 @@ CombineFleets <- function(OM, FleetList = NULL, silent = FALSE) {
         taken <- c(taken, NewName)
         NewNames <- c(NewNames, NewName)
         IndexObs <- ObsList[[f]]@CPUE
-        IndexObs@Selectivity <- .IndexFleetSelectivity(IndexObs@Selectivity,
-                                                       .IndexEntry(cpue@Selectivity, j), OM, stocks, f)
+        IndexObs@Selectivity <- .IndexFleetSelectivity(IndexObs@Selectivity, OM, stocks, f)
         NewObs[[i]][[NewName]] <- .SurveyObs(NewName, IndexObs)
         moved <- c(moved, stats::setNames(NewName, paste("CPUE", f)))
       }
@@ -284,7 +282,7 @@ CombineFleets <- function(OM, FleetList = NULL, silent = FALSE) {
       } else {
         cpue@Value <- cpue@Value[, -idx, drop = FALSE]
         cpue@Name  <- cpue@Name[-idx]
-        for (sl in c("CV", "Units", "Ref", "RefCV", "Timing", "Selectivity"))
+        for (sl in c("CV", "Units", "Ref", "RefCV", "Timing"))
           slot(cpue, sl) <- .DropIndexEntries(slot(cpue, sl), idx, nIndex)
       }
     }
@@ -308,13 +306,9 @@ CombineFleets <- function(OM, FleetList = NULL, silent = FALSE) {
   utils::tail(make.unique(c(taken, candidate)), 1)
 }
 
-# positional per-index entry, as read in index conditioning
-.IndexEntry <- function(x, j) if (length(x) >= j) x[[j]] else NULL
-
 # an index's own selectivity if set, otherwise its fleet's selectivity-at-age for each stock
-.IndexFleetSelectivity <- function(ObsSel, DataSel, OM, stocks, fleet) {
+.IndexFleetSelectivity <- function(ObsSel, OM, stocks, fleet) {
   if (!is.null(ObsSel)) return(ObsSel)
-  if (is.character(DataSel) && DataSel %in% c("Biomass", "SBiomass")) return(DataSel)
   sel <- purrr::map(stocks, \(st) OM@Fleet[[st]][[fleet]]@Selectivity@MeanAtAge)
   stats::setNames(sel, StockNames(OM)[stocks])
 }

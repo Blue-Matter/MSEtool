@@ -234,7 +234,7 @@ test_that("CPUE of combined fleets moves to Survey with its fleet's selectivity 
   d@CPUE <- IndicesData(Name = fl, Value = val, CV = val * 0 + 0.2,
                         Units = c("Biomass", "Number"), Timing = c(0.25, 0.75))
   d@Survey <- IndicesData(Name = "Acoustic", Value = .IndexMatrix(1, Years, "Acoustic"),
-                          Units = "Biomass", Timing = 0.5, Selectivity = "SBiomass")
+                          Units = "Biomass", Timing = 0.5)
   om@Data <- list(d)
 
   omc <- CombineFleets(om, silent = TRUE)
@@ -243,7 +243,6 @@ test_that("CPUE of combined fleets moves to Survey with its fleet's selectivity 
   expect_equal(dc@Survey@Name, c("Acoustic", fl))
   expect_equal(dc@Survey@Units, c("Biomass", "Biomass", "Number"))
   expect_equal(dc@Survey@Timing, c(0.5, 0.25, 0.75))
-  expect_equal(dc@Survey@Selectivity, "SBiomass")
   expect_equal(dc@Survey@Value[, fl], val, ignore_attr = TRUE)
   expect_equal(dc@Survey@CV[, fl], val * 0 + 0.2, ignore_attr = TRUE)
   expect_true(all(is.na(dc@Survey@CV[, "Acoustic"])))
@@ -264,10 +263,11 @@ test_that("fleet-named Survey indices are kept; index selectivity and fleets not
   Years <- Years(om, "Historical")
   d <- Data()
   d@CPUE <- IndicesData(Name = c(fl[1], "Third", fl[2]), Value = .IndexMatrix(1, Years, c(fl[1], "Third", fl[2])),
-                        Units = c("Biomass", "Number", "Biomass"), Timing = c(0.1, 0.2, 0.3),
-                        Selectivity = c("SBiomass", "Biomass"))
+                        Units = c("Biomass", "Number", "Biomass"), Timing = c(0.1, 0.2, 0.3))
   d@Survey <- IndicesData(Name = fl[2], Value = .IndexMatrix(2, Years, fl[2]))
   om@Data <- list(d)
+  om@Obs[[1]][[fl[1]]]@CPUE@Selectivity <- "SBiomass"
+  om@Obs[[1]][["Third"]]@CPUE@Selectivity <- "Biomass"
 
   # the survey's own selectivity is kept
   expect_equal(om@Obs[[1]][[fl[2]]]@Survey@Selectivity, "Biomass")
@@ -280,7 +280,7 @@ test_that("fleet-named Survey indices are kept; index selectivity and fleets not
   expect_equal(dc@CPUE@Name, "Third")
   expect_equal(dc@CPUE@Units, "Number")
   expect_equal(dc@CPUE@Timing, 0.2)
-  expect_equal(dc@CPUE@Selectivity, "Biomass")
+  expect_equal(omc@Obs[[1]][["Third"]]@CPUE@Selectivity, "Biomass")
   expect_equal(dc@Survey@Name, c(fl[2], fl[1], paste(fl[2], "CPUE")))
   expect_equal(unname(dc@Survey@Value[1, ]), c(2, 1, 1))
   expect_equal(names(omc@Obs[[1]]), c("AB", "Third", fl[2], fl[1], paste(fl[2], "CPUE")))
