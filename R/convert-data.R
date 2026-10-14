@@ -19,8 +19,6 @@
 # data@DiscardsAtAge / DiscardsAtSize (.Data2CAA/.Data2CAL only populate
 #   Landings* - legacy `Data@CAA`/`Data@CAL` don't distinguish landed vs
 #   discarded catch)
-# data@Survey (intentionally empty for legacy-sourced objects, see
-#   .Data2Survey - all indices are folded into `CPUE` instead)
 
 
 #' Convert Between Legacy `Data` and New `data` Classes
@@ -47,11 +45,11 @@
 #' resulting [data-class] object. If `Data@Cat` represents total removals,
 #' the `Discards` slot must be populated manually after conversion.
 #'
-#' `Ind`, `SpInd`, `VInd`, and every column of `AddInd` are folded into one
-#' multi-column `data@CPUE` (there is no fishery-dependent/-independent
-#' distinction in legacy `Data`); the tracked biomass component (total,
-#' spawning, vulnerable) is recorded in `CPUE@Misc$IndexType`. `data@Survey`
-#' is intentionally left empty. `FMSY_M` is converted to an absolute
+#' `Ind`, `SpInd`, `VInd`, and every column of `AddInd` become indices in
+#' `data@Survey`. The tracked biomass component (total, spawning,
+#' vulnerable) is recorded in `Survey@Misc$IndexType`, and `AddIunits` sets
+#' the `Units` of each `AddInd` index (`Ind`, `SpInd`, and `VInd` are
+#' `"Biomass"`). `FMSY_M` is converted to an absolute
 #' `Reference@FMSY` via `FMSY_M * Mort`. Slots with no structural equivalent
 #' anywhere in `data` (`ML`, `Lc`, `Lbar`, `Abun`, `SpAbun`, `BMSY_B0`,
 #' `Bref`, `Rec`, `AvC`, `Dt`, `Ref`, `Ref_type`) are stashed under
@@ -122,8 +120,7 @@ ConvertData <- function(x, Seasons = 1, sim = 1, silent = FALSE) {
   data <- .Data2Exploitation(Data, data, sim)
   data <- .Data2Effort(Data, data, sim)
   data <- .Data2Landings(Data, data, sim)
-  data <- .Data2CPUE(Data, data, sim)
-  data <- .Data2Survey(Data, data, sim)
+  data <- .Data2Indices(Data, data, sim)
   data <- .Data2CAA(Data, data, sim)
   data <- .Data2CAL(Data, data, sim)
   data <- .Data2Advice(Data, data, sim)
@@ -299,16 +296,14 @@ ConvertData <- function(x, Seasons = 1, sim = 1, silent = FALSE) {
   out
 }
 
-# Legacy `Data` has no fishery-dependent (CPUE) vs -independent (Survey)
-# distinction - only *which biomass component* an index tracks, via
-# `AddIndType` (1 = total, 2 = spawning, 3 = vulnerable) plus the dedicated
-# `SpInd`/`VInd` slots. All indices are folded into one multi-column `CPUE`;
-# `Survey` is intentionally left empty for legacy-sourced objects (see
-# `.Data2Survey`), and the tracked component is recorded in `CPUE@Misc$IndexType`.
-.Data2CPUE <- function(Data, data, sim) {
+# All legacy indices become `Survey` indices; the biomass component each
+# tracks (`AddIndType`: 1 = total, 2 = spawning, 3 = vulnerable) is recorded in
+# `Survey@Misc$IndexType`, and `AddIunits` (1 = biomass, 0 = numbers) sets `Units`.
+.Data2Indices <- function(Data, data, sim) {
   cols   <- list()
   cvcols <- list()
   types  <- character()
+  units  <- character()
   typeMap <- c("total", "spawning", "vulnerable")
 
   if (!all(is.na(Data@Ind[sim, ]))) {
@@ -336,32 +331,30 @@ ConvertData <- function(x, Seasons = 1, sim = 1, silent = FALSE) {
       cvcols[[nm]] <- if (length(dim(Data@CV_AddInd)) == 3) Data@CV_AddInd[sim, j, ] else rep(NA_real_, length(v))
       code <- Data@AddIndType[j]
       types[nm] <- if (!is.na(code) && code %in% 1:3) typeMap[code] else "unknown"
+      unit <- if (length(Data@AddIunits) >= j) Data@AddIunits[j] else NA
+      units[nm] <- if (!is.na(unit) && unit == 0) "Number" else "Biomass"
     }
   }
 
   if (!length(cols)) return(data)
 
-  data@CPUE@Value <- .AddYearIndexArray(cols, data)
-  data@CPUE@CV    <- .AddYearIndexArray(cvcols, data)
-  data@CPUE@Misc$IndexType <- types
+  Survey <- IndicesData(Name  = names(cols),
+                        Value = .AddYearIndexArray(cols, data),
+                        CV    = .AddYearIndexArray(cvcols, data),
+                        Units = ifelse(names(cols) %in% names(units), units[names(cols)], "Biomass"))
+  Survey@Misc$IndexType <- types
 
   if (!is.na(Data@Iref[sim])) {
     ref <- stats::setNames(rep(NA_real_, length(cols)), names(cols))
     ref["Ind"] <- Data@Iref[sim]
-    data@CPUE@Ref <- ref
+    Survey@Ref <- ref
   }
   if (!is.na(Data@CV_Iref[sim])) {
     refcv <- rep(NA_real_, length(cols))
     refcv[match("Ind", names(cols))] <- Data@CV_Iref[sim]
-    data@CPUE@RefCV <- array(refcv, dim = length(cols), dimnames = list(Index = names(cols)))
+    Survey@RefCV <- array(refcv, dim = length(cols), dimnames = list(Index = names(cols)))
   }
-  data
-}
-
-.Data2Survey <- function(Data, data, sim) {
-  # legacy `Data` has no fishery-independent survey concept distinct from
-  # `Ind`/`SpInd`/`VInd`/`AddInd` - all of those are folded into `CPUE` by
-  # `.Data2CPUE`; `Survey` is intentionally left empty here, by design.
+  data@Survey <- Survey
   data
 }
 
