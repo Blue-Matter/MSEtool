@@ -167,6 +167,15 @@ test_that("IndexSource = 'auto' uses Survey, else CPUE", {
   }
   C@CPUE <- IndicesData()
   expect_error(.ResolveIndexSource(C, 'auto'), 'No index data')
+
+  # a survey that ended long before the CPUE is still used, with a warning
+  Stale <- D
+  Stale@Survey@Value[11:20, ] <- NA
+  Stale@CPUE <- D@Survey
+  expect_warning(src <- .ResolveIndexSource(Stale, 'auto'), 'more than 5 years older')
+  expect_identical(src, 'Survey')
+  Stale@Survey@Value[11:15, ] <- 1
+  expect_no_warning(.ResolveIndexSource(Stale, 'auto'))
 })
 
 test_that(".ResolveIndexTarget keeps supplied values and falls back past trailing NAs", {

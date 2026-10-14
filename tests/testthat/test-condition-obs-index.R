@@ -734,11 +734,11 @@ test_that("index selectivity may vary by area, with or without a sim", {
 
   for (spec in list(list(sel), sel)) {
     expect_equal(unname(resolve(spec)[1, , 1, ]), cbind(a1, a1 / 2), ignore_attr = TRUE)
-    expect_equal(unname(resolve(spec, sim = 2)), cbind(a1, a1 / 2), ignore_attr = TRUE)
+    expect_equal(as.numeric(resolve(spec, sim = 2)), c(a1, a1 / 2))
   }
 
   sel3 <- DropDimension(sel[, , , 1, drop = FALSE], "Area")
-  expect_equal(unname(resolve(list(sel3), sim = 2)), cbind(a1, a1), ignore_attr = TRUE)
+  expect_equal(as.numeric(resolve(list(sel3), sim = 2)), c(a1, a1))
 })
 
 test_that("index selectivity accepts age vectors and partial-dimension arrays", {
@@ -772,7 +772,7 @@ test_that("index selectivity accepts age vectors and partial-dimension arrays", 
       sim  = t(sapply(1:3, \(x) colSums(NAge[x, , as.character(HY)] * SimSel[x, ]))),
       year = t(sapply(1:3, \(x) colSums(NAge[x, , as.character(HY)] * t(YearSel)))),
       t(sapply(1:3, \(x) colSums(NAge[x, , as.character(HY)] * Cases[[nm]][[2]]))))
-    expect_equal(unname(out), unname(expected), info = nm)
+    expect_equal(as.numeric(out), as.numeric(expected), info = nm)
     for (x in c(1, 3))
       expect_equal(as.numeric(nom(sel, sim = x)), as.numeric(out[x, ]), info = nm)
   }
@@ -798,4 +798,64 @@ test_that("a Selectivity attribute left on an older indicesdata object is ignore
   om@Obs[[1]][['Acoustic']] <- Obs('Acoustic', Survey = IndicesObs(Selectivity = 'SBiomass'))
   expect_warning(hist <- Simulate(om, silent = TRUE), "no longer used")
   expect_equal(hist@OM@Obs[[1]][['Acoustic']]@Survey@Selectivity, 'SBiomass')
+})
+
+test_that("index rows are matched to model years by row name", {
+  skip_on_cran()
+  data(SingleStockOM, envir = environment())
+  om <- SingleStockOM
+  nSim(om) <- 3
+  set.seed(1)
+  hist0 <- Simulate(om, silent = TRUE)
+  yrs <- Years(om, 'Historical')
+  B <- SBiomass(hist0, df = FALSE)[1, 1, ]
+  vals <- B / mean(B) * exp(rnorm(length(yrs), 0, 0.2))
+  vals[1:8] <- NA
+  full <- matrix(vals, ncol = 1, dimnames = list(Year = yrs, Index = 'Acoustic'))
+  om@Obs[[1]][['Acoustic']] <- Obs('Acoustic', Survey = IndicesObs(Selectivity = 'SBiomass'))
+  condition <- function(value) {
+    Data(om) <- Data(Name = 'x', Years = yrs, Survey = IndicesData(Name = 'Acoustic', Value = value))
+    set.seed(2)
+    Simulate(om, silent = TRUE)
+  }
+  ref <- condition(full)
+
+  # later start and reversed order: same observations, same conditioning
+  part <- full[rev(9:length(yrs)), , drop = FALSE]
+  h <- condition(part)
+  expect_equal(h@OM@Data[[1]]@Survey@Value, ref@OM@Data[[1]]@Survey@Value)
+  expect_equal(h@OM@Obs[[1]][['Acoustic']]@Survey@Efficiency,
+               ref@OM@Obs[[1]][['Acoustic']]@Survey@Efficiency)
+
+  # no row names: rows start in the first historical year, recorded as an assumption
+  h <- condition(unname(full))
+  expect_equal(unname(h@OM@Data[[1]]@Survey@Value), unname(ref@OM@Data[[1]]@Survey@Value))
+  logged <- unlist(purrr::map(h@Log$assumption, \(e) e$message))
+  expect_true(any(grepl("no row names", logged)))
+
+  expect_error(condition(unname(full[-(1:3), , drop = FALSE])), "no row names")
+
+  shifted <- full
+  rownames(shifted) <- yrs + 100
+  expect_error(condition(shifted), "not model time steps")
+  expect_error(condition(full[c(9, 9:length(yrs)), , drop = FALSE]), "duplicated")
+})
+
+test_that("per-index entries of indicesdata are checked against the number of indices", {
+  v <- matrix(1, 3, 2, dimnames = list(Year = 2001:2003, Index = c('a', 'b')))
+  expect_error(IndicesData(Name = 'a', Value = v), "`Name` has 1")
+  expect_error(IndicesData(Name = c('a', 'b'), Value = v, Units = c('Biomass', 'Number', 'Biomass')), "Units")
+  expect_error(IndicesData(Name = c('a', 'b'), Value = v, Timing = c(0, 0.5, 1)), "Timing")
+  expect_error(IndicesData(Name = c('a', 'b'), Value = v, Ref = 1), "Ref")
+  expect_no_error(IndicesData(Name = c('a', 'b'), Value = v, Units = 'Number', Timing = 0.5))
+
+  Indices <- IndicesData(Name = c('a', 'b'), Value = v, Units = 'Number', Timing = 0.5)
+  out <- .AlignIndicesData(Indices, HistYears = 2000:2004, ProjYears = 2005:2006)$Indices
+  expect_equal(out@Units, c('Number', 'Number'))
+  expect_equal(out@Timing, c(0.5, 0.5))
+  expect_equal(rownames(out@Value), as.character(2000:2004))
+  expect_equal(unname(out@Value[, 'a']), c(NA, 1, 1, 1, NA))
+
+  Indices@Units <- c('Number', 'Biomass', 'Number')
+  expect_error(.AlignIndicesData(Indices, 2000:2004, 2005:2006), "one per index")
 })

@@ -225,7 +225,7 @@ test_that("data held by only some fleets of a group is dropped", {
   matrix(x, length(Years), length(Names), dimnames = list(Year = Years, Fleet = Names))
 }
 
-test_that("CPUE of combined fleets moves to Survey with its fleet's selectivity from before combining", {
+test_that("CPUE of combined fleets stays CPUE with its fleet's selectivity from before combining", {
   om <- .CombineSettingsOM() |> Populate(silent = TRUE)
   fl <- FleetNames(om)
   Years <- Years(om, "Historical")
@@ -239,20 +239,24 @@ test_that("CPUE of combined fleets moves to Survey with its fleet's selectivity 
 
   omc <- CombineFleets(om, silent = TRUE)
   dc <- omc@Data[[1]]
-  expect_null(dc@CPUE@Value)
-  expect_equal(dc@Survey@Name, c("Acoustic", fl))
-  expect_equal(dc@Survey@Units, c("Biomass", "Biomass", "Number"))
-  expect_equal(dc@Survey@Timing, c(0.5, 0.25, 0.75))
-  expect_equal(dc@Survey@Value[, fl], val, ignore_attr = TRUE)
-  expect_equal(dc@Survey@CV[, fl], val * 0 + 0.2, ignore_attr = TRUE)
-  expect_true(all(is.na(dc@Survey@CV[, "Acoustic"])))
+  expect_equal(dc@CPUE@Name, fl)
+  expect_equal(dc@CPUE@Units, c("Biomass", "Number"))
+  expect_equal(dc@CPUE@Timing, c(0.25, 0.75))
+  expect_equal(dc@CPUE@Value, val, ignore_attr = TRUE)
+  expect_equal(dc@CPUE@CV, val * 0 + 0.2, ignore_attr = TRUE)
+  expect_equal(dc@Survey@Name, "Acoustic")
   expect_equal(names(omc@Obs[[1]]), c("Combined", fl))
-  for (f in fl)
-    expect_equal(omc@Obs[[1]][[f]]@Survey@Selectivity[[1]],
+  for (f in fl) {
+    expect_equal(omc@Obs[[1]][[f]]@CPUE@Selectivity[[1]],
                  om@Fleet[[1]][[f]]@Selectivity@MeanAtAge)
+    expect_true(EmptyObject(omc@Obs[[1]][[f]]@Survey))
+  }
+  # the combined fleet does not also carry the moved CPUE
+  expect_identical(omc@Obs[[1]][["Combined"]]@CPUE, new("indicesobs"))
 
   omc <- CombineFleets(om, list(AsympExFleet = fl), silent = TRUE)
-  expect_equal(omc@Data[[1]]@Survey@Name, c("Acoustic", "AsympExFleet CPUE", "DomeExFleet"))
+  expect_equal(omc@Data[[1]]@CPUE@Name, c("AsympExFleet CPUE", "DomeExFleet"))
+  expect_equal(omc@Data[[1]]@Survey@Name, "Acoustic")
   expect_equal(names(omc@Obs[[1]]), c("AsympExFleet", "AsympExFleet CPUE", "DomeExFleet"))
 })
 
@@ -277,18 +281,18 @@ test_that("fleet-named Survey indices are kept; index selectivity and fleets not
   om@Obs[[1]][[fl[2]]]@Survey@Selectivity <- NULL
   omc <- CombineFleets(om, list(AB = fl), silent = TRUE)
   dc <- omc@Data[[1]]
-  expect_equal(dc@CPUE@Name, "Third")
-  expect_equal(dc@CPUE@Units, "Number")
-  expect_equal(dc@CPUE@Timing, 0.2)
+  expect_equal(dc@CPUE@Name, c(fl[1], "Third", paste(fl[2], "CPUE")))
+  expect_equal(dc@CPUE@Units, c("Biomass", "Number", "Biomass"))
+  expect_equal(dc@CPUE@Timing, c(0.1, 0.2, 0.3))
   expect_equal(omc@Obs[[1]][["Third"]]@CPUE@Selectivity, "Biomass")
-  expect_equal(dc@Survey@Name, c(fl[2], fl[1], paste(fl[2], "CPUE")))
-  expect_equal(unname(dc@Survey@Value[1, ]), c(2, 1, 1))
+  expect_equal(dc@Survey@Name, fl[2])
+  expect_equal(unname(dc@Survey@Value[1, ]), 2)
   expect_equal(names(omc@Obs[[1]]), c("AB", "Third", fl[2], fl[1], paste(fl[2], "CPUE")))
 
   fleet_sel <- om@Fleet[[1]][[fl[2]]]@Selectivity@MeanAtAge
   expect_equal(omc@Obs[[1]][[fl[2]]]@Survey@Selectivity[[1]], fleet_sel)
-  expect_equal(omc@Obs[[1]][[fl[1]]]@Survey@Selectivity, "SBiomass")
-  expect_equal(omc@Obs[[1]][[paste(fl[2], "CPUE")]]@Survey@Selectivity[[1]], fleet_sel)
+  expect_equal(omc@Obs[[1]][[fl[1]]]@CPUE@Selectivity, "SBiomass")
+  expect_equal(omc@Obs[[1]][[paste(fl[2], "CPUE")]]@CPUE@Selectivity[[1]], fleet_sel)
 })
 
 test_that("moved fleet CPUE conditions as it did before combining", {
@@ -310,14 +314,14 @@ test_that("moved fleet CPUE conditions as it did before combining", {
   set.seed(2)
   after <- Simulate(omc, silent = TRUE)
   for (f in fl)
-    expect_equal(after@OM@Obs[[1]][[f]]@Survey@Efficiency, before@OM@Obs[[1]][[f]]@CPUE@Efficiency,
+    expect_equal(after@OM@Obs[[1]][[f]]@CPUE@Efficiency, before@OM@Obs[[1]][[f]]@CPUE@Efficiency,
                  tolerance = 0.02, ignore_attr = TRUE)
 
   mse <- Project(after, MPs = "CurrentEffort", parallel = FALSE, silent = TRUE)
   ppd <- mse@PPD[[1]][[1]]
   while (!isS4(ppd)) ppd <- ppd[[1]]
-  expect_true(all(fl %in% ppd@Survey@Name))
-  expect_false(anyNA(utils::tail(ppd@Survey@Value[, fl], 5)))
+  expect_true(all(fl %in% ppd@CPUE@Name))
+  expect_false(anyNA(utils::tail(ppd@CPUE@Value[, fl], 5)))
 })
 
 
