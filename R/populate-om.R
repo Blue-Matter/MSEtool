@@ -86,6 +86,7 @@ PopulateOM <- function(OM,
     .PopulateImpList(silent = silent) |>
     .ProcessData() |>
     .PopulateObsList(silent = silent) |>
+    .ProcessDataNames() |>
     .UpdateSPFrom() |>
     .ValidateSPFrom() |>
     .CheckAlphaBetaSRR()
@@ -133,6 +134,98 @@ PopulateOM <- function(OM,
   }
 
   OM
+}
+
+.ProcessDataNames <- function(OM) {
+  if (is.null(OM@Data)) return(OM)
+  HistYears <- Years(OM, "H")
+  FleetNms  <- FleetNames(OM)
+
+  # CPUE/Survey names and rows are resolved by .AlignIndicesData() during conditioning
+  for (i in seq_along(OM@Data)) {
+    Data <- OM@Data[[i]]
+    if (!isS4(Data)) next
+    Years <- if (length(Data@Years)) Data@Years else HistYears
+    for (sl in c("Effort", "Landings", "Discards", "LandingsAtAge", "DiscardsAtAge",
+                 "LandingsAtSize", "DiscardsAtSize"))
+      slot(Data, sl) <- .ResolveDataNames(slot(Data, sl), Years, FleetNms, sl, i)
+    OM@Data[[i]] <- Data
+  }
+  OM
+}
+
+.ResolveDataNames <- function(obj, Years, FleetNms, slotName, i) {
+  if (is.null(obj@Value)) return(obj)
+  Where    <- paste0("OM@Data[[", i, "]]@", slotName)
+  Value    <- .AddDataYearDimnames(obj@Value, Years, paste0(Where, "@Value"))
+  nCol     <- dim(Value)[2]
+  ColNames <- dimnames(Value)[[2]]
+
+  Name <- obj@Name %||% ColNames
+  if (is.null(Name) && nCol == length(FleetNms)) Name <- FleetNms
+  if (is.null(Name))
+    cli::cli_abort("{.code {Where}} has no names: set {.code {Where}@Name} or the column names of {.code {Where}@Value}.")
+  if (length(Name) != nCol)
+    cli::cli_abort("{.code {Where}@Name} has {length(Name)} element{?s} but {.code {Where}@Value} has {nCol} column{?s}.")
+  if (!is.null(ColNames) && !identical(as.character(ColNames), as.character(Name)))
+    cli::cli_abort(c(
+      "x" = "{.code {Where}@Name} does not match the column names of {.code {Where}@Value}.",
+      "i" = "{.code @Name}: {.val {Name}}; column names: {.val {ColNames}}."
+    ))
+  if (anyDuplicated(Name))
+    cli::cli_abort("{.code {Where}@Name} has duplicated name{?s} {.val {unique(Name[duplicated(Name)])}}.")
+
+  Unknown <- setdiff(Name, FleetNms)
+  if (length(Unknown))
+    cli::cli_abort(c(
+      "x" = "{.code {Where}} has {cli::qty(length(Unknown))}name{?s} {.val {Unknown}} not found in {.code FleetNames(OM)}.",
+      "i" = "Fleet names: {.val {FleetNms}}."
+    ))
+  Missing <- setdiff(FleetNms, Name)
+  if (length(Missing))
+    cli::cli_abort(c(
+      "x" = "{.code {Where}} has no column for fleet{?s} {.val {Missing}}.",
+      "i" = "Supply a column for every fleet in {.code FleetNames(OM)}, with {.code NA} where there are no data."
+    ))
+  ord <- match(FleetNms, Name)
+
+  # projection reads fleet columns by position, so store them in FleetNames(OM) order
+  obj@Name <- Name[ord]
+  for (val in intersect(c("Value", "CV"), slotNames(obj))) {
+    arr <- slot(obj, val)
+    if (is.null(arr)) next
+    arr <- .AddDataYearDimnames(arr, Years, paste0(Where, "@", val))
+    if (dim(arr)[2] != nCol)
+      cli::cli_abort("{.code {Where}@{val}} has {dim(arr)[2]} column{?s} but {.code {Where}@Value} has {nCol}.")
+    dimnames(arr)[[2]] <- Name
+    slot(obj, val) <- abind::asub(arr, ord, 2, drop = FALSE)
+  }
+  if (length(obj@Units) == nCol) obj@Units <- obj@Units[ord]
+  if ("Classes" %in% slotNames(obj) && is.list(obj@Classes) && length(obj@Classes) == nCol)
+    obj@Classes <- stats::setNames(obj@Classes[ord], obj@Name)
+  obj
+}
+
+.AddDataYearDimnames <- function(arr, Years, Where) {
+  if (length(dim(arr)) < 2) arr <- array(arr, dim = c(length(arr), 1))
+  d  <- dim(arr)
+  dn <- dimnames(arr)
+  if (is.null(dn)) dn <- vector("list", length(d))
+  dnn <- names(dn)
+  if (is.null(dnn)) dnn <- rep("", length(d))
+  dnn[1:2][dnn[1:2] == ""] <- c("Year", "Fleet")[dnn[1:2] == ""]
+  names(dn) <- dnn
+
+  if (is.null(dn[[1]])) {
+    if (d[1] != length(Years))
+      cli::cli_abort(c(
+        "x" = "{.code {Where}} has {d[1]} row{?s} but {length(Years)} historical year{?s}.",
+        "i" = "Add {.code Year} row names to identify the years, or supply one row per historical year."
+      ))
+    dn[[1]] <- Years
+  }
+  dimnames(arr) <- dn
+  arr
 }
 
 .PopulateStockList <- function(OM, silent = FALSE, force = FALSE) {
