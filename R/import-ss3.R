@@ -235,8 +235,9 @@ ImportSS <- function(SSDir,
   
   FleetNames <- .ProcessSSFleetNames(
     FleetNames,
-    SSFleetNames = unique(RepList[[1]]$catch$Fleet_Name)
+    SSFleetNames = .SSFishFleets(RepList[[1]])$SSName
   )
+  SSFleets <- .SSFishFleets(RepList[[1]])$SS
   
   for (st in seq_along(OM@Fleet)) {
     FleetList <- purrr::map(seq_along(FleetNames), \(fl) {
@@ -246,7 +247,8 @@ ImportSS <- function(SSDir,
         RepList,
         YearsList,
         FleetNames,
-        Stock = OM@Stock[[st]]
+        Stock = OM@Stock[[st]],
+        SSFleet = SSFleets[fl]
       )
     },
     .progress = list(
@@ -265,6 +267,7 @@ ImportSS <- function(SSDir,
                                Species     = Species,
                                LengthUnits = LengthUnits,
                                CatchUnits  = CatchUnits,
+                               FleetNames  = FleetNames,
                                silent      = silent
   ))
   names(OM@Data) <- paste(StockName, collapse = " ")
@@ -318,8 +321,10 @@ ImportSS <- function(SSDir,
     dplyr::mutate(Catch = Catch / sum(Catch))
 
   nFleet <- length(FleetNames)
+  FleetCatch <- CatchFrac$Catch[match(.SSFishFleets(RepList[[1]])$SS, CatchFrac$Fleet)]
+  FleetCatch[is.na(FleetCatch)] <- 0
 
-  Allocation[[1]] <- array(CatchFrac$Catch,
+  Allocation[[1]] <- array(FleetCatch,
                       dim = c(1, nFleet),
                       dimnames = list(
                         Sim = 1,
@@ -368,6 +373,13 @@ ImportSS <- function(SSDir,
     cli::cli_abort("`StockName` ({.val {StockName}}) should be length `nStock` ({.val {nStock}})")
   }
   StockName
+}
+
+# SS3 fleet number and name of each fishing fleet, in SS3 fleet order
+.SSFishFleets <- function(replist) {
+  SS <- which(replist$IsFishFleet)
+  SSName <- if (!is.null(replist$FleetNames)) replist$FleetNames[SS] else unique(replist$catch$Fleet_Name)
+  data.frame(SS = SS, SSName = SSName)
 }
 
 .ProcessSSFleetNames <- function(FleetNames, SSFleetNames) {
@@ -1278,17 +1290,17 @@ ImportSS <- function(SSDir,
 
 ## Fleet ----
 
-.SS2Fleet <- function(st, fl, RepList, YearsList, FleetNames, Stock) {
+.SS2Fleet <- function(st, fl, RepList, YearsList, FleetNames, Stock, SSFleet = fl) {
   AgeClasses                    <- Stock@Ages@Classes
   Fleet                         <- Fleet(FleetNames[fl])
-  Fleet@Effort@Effort           <- .SS2Effort(st, fl, RepList, YearsList)
-  Fleet@Catchability@Efficiency <- .SS2Catchability(st, fl, RepList, YearsList)
-  Fleet@Selectivity             <- .SS2Selectivity(st, fl, RepList,
+  Fleet@Effort@Effort           <- .SS2Effort(st, SSFleet, RepList, YearsList)
+  Fleet@Catchability@Efficiency <- .SS2Catchability(st, SSFleet, RepList, YearsList)
+  Fleet@Selectivity             <- .SS2Selectivity(st, SSFleet, RepList,
                                                   YearsList, Stock)
-  Fleet@Retention               <- .SS2Retention(st, fl, RepList, YearsList,
+  Fleet@Retention               <- .SS2Retention(st, SSFleet, RepList, YearsList,
                                                 Selectivity = Fleet@Selectivity,
                                                 Stock)
-  Fleet@DiscardMortality        <- .SS2DiscardMortality(st, fl, RepList, YearsList,
+  Fleet@DiscardMortality        <- .SS2DiscardMortality(st, SSFleet, RepList, YearsList,
                                                        Selectivity = Fleet@Selectivity,
                                                        Retention = Fleet@Retention,
                                                        Stock)
@@ -1709,10 +1721,18 @@ ImportSS <- function(SSDir,
 
   YearsList <- .GetSSYears(RepList[[1]], pYear = 1)
 
+  SSUnits <- as.character(RepList[[1]]$survey_units[SSFleets])
+
   for (i in seq_along(SurveyNames)) {
-    OM@Obs[[1]][[SurveyNames[i]]]@Survey@Selectivity <- purrr::map(seq_len(nStock(OM)), \(st)
-      .SS2Selectivity(st, SSFleets[i], RepList, YearsList, Stock = OM@Stock[[st]])@MeanAtAge
-    ) |> stats::setNames(StockNames(OM))
+    # SS3 special survey types do not use the fleet's selectivity
+    OM@Obs[[1]][[SurveyNames[i]]]@Survey@Selectivity <- switch(
+      SSUnits[i] %||NA% "",
+      "30" = "SBiomass",
+      "33" = "Biomass",
+      purrr::map(seq_len(nStock(OM)), \(st)
+        .SS2Selectivity(st, SSFleets[i], RepList, YearsList, Stock = OM@Stock[[st]])@MeanAtAge
+      ) |> stats::setNames(StockNames(OM))
+    )
   }
   OM
 }
