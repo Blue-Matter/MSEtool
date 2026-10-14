@@ -25,10 +25,22 @@ PPD <- function(MSE) {
   
   # Get historical data (only stored in first MP)
   HistYears <- Years(MSE,'H')
-  HistData <- .SubsetYear(MSE@PPD[[1]], Years=HistYears)
-  
+  HistData <- .SubsetYear(MSE@PPD[[1]], Years=HistYears) |> .SetPPDMisc()
+
   ProjDataList <- MSE@PPD[-1]
-  ppd_2 <- purrr::map(ProjDataList, \(ProjData) JoinYear(HistData, ProjData))
+  ppd_2 <- purrr::map(ProjDataList, \(ProjData)
+    JoinYear(HistData, ProjData) |> .SetPPDMisc(ProjData)
+  )
   c(MSE@PPD[1], ppd_2)
-  
+
+}
+
+# Data@Misc holds the MP's last Advice@Misc, so it is taken from `From` (empty if NULL)
+.SetPPDMisc <- function(DataSimList, From = NULL) {
+  purrr::imap(DataSimList, \(DataList, sim)
+    purrr::imap(DataList, \(Data, st) {
+      Data@Misc <- if (is.null(From)) list() else From[[sim]][[st]]@Misc
+      Data
+    })
+  )
 }
