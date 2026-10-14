@@ -73,6 +73,15 @@ period's final season. \code{CurrentEffort} carries the same \code{EverySeason}
 attribute as the other three for consistency, though - unlike them - its
 output does not actually depend on how often it is called.
 }
+
+\subsection{Data lag}{
+
+\code{CurrentCatch}, \code{CurrentLandings}, and \code{AverageCatch} carry a \code{DataLag}
+attribute of \code{0}, so they always see the complete historical period
+regardless of the OM's \code{\link[=DataLag]{DataLag()}}, and the same baseline catch applies
+from the first projection year onward. \code{CurrentEffort} uses the last
+historical effort directly and is likewise unaffected by \code{DataLag}.
+}
 }
 \examples{
 \dontrun{

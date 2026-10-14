@@ -86,6 +86,13 @@ For example, in a quarterly OM (\code{Seasons = 4}), a management timestep of
 quarter 1, 2028 with \code{DataLag = 1} uses data up to quarter 4, 2026
 (quarter 4, 2027 is the timestep immediately before quarter 1, 2028, and shifting that back one
 further year lands on quarter 4, 2026).
+}
+
+\subsection{Per-MP override}{
+
+An MP can declare \code{attr(mp, 'DataLag') <- value} to use that lag in place
+of the OM's \code{DataLag}. The status-quo MPs \code{\link[=CurrentCatch]{CurrentCatch()}},
+\code{\link[=CurrentLandings]{CurrentLandings()}}, and \code{\link[=AverageCatch]{AverageCatch()}} set it to \code{0}.
 
 \code{DataLag} combines with \code{Interval} and \code{MPStartYear} to determine the
 full management timeline. \code{\link[=ManagementScheduleTable]{ManagementScheduleTable()}} shows, for a given
