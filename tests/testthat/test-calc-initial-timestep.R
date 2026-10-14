@@ -20,7 +20,7 @@
   rowSums(N * W * M)
 }
 
-test_that(".CalcDynamicInitial(Unfished = TRUE) ignores Depletion@Initial", {
+test_that(".CalcDynamicInitial() leaves Depletion@Initial to the fished equilibrium", {
   skip_on_cran()
   OM <- SingleStockOM
   nSim(OM) <- 3
@@ -30,10 +30,11 @@ test_that(".CalcDynamicInitial(Unfished = TRUE) ignores Depletion@Initial", {
   Unfished <- .CalcDynamicInitial(Hist, Unfished = TRUE)
   expect_equal(unname(Unfished@Number[[1]][, , 1, ]),
                unname(.ExpectedInitialNumber(Hist)))
+  expect_equal(.CalcDynamicInitial(Hist)@Number, Unfished@Number)
 
-  Fished <- .CalcDynamicInitial(Hist)
+  Fished <- .CalcInitialFishedEquilibrium(.PrepHistMisc(.CalcDynamicInitial(Hist)), silent = TRUE)
   SB0 <- Hist@Unfished@Equilibrium@SBiomass[, 1, 1] |> rep_len(3)
-  expect_equal(unname(.InitialSB(Fished) / SB0), rep(0.3, 3), tolerance = 1e-3)
+  expect_equal(unname(.InitialSB(Fished) / SB0), rep(0.3, 3), tolerance = 1e-8)
 })
 
 test_that("Depletion@Initial does not change the dynamic unfished conditions", {
@@ -49,8 +50,8 @@ test_that("Depletion@Initial does not change the dynamic unfished conditions", {
 
   Hist <- Simulate(OM, silent = TRUE)
   expect_equal(Hist@Unfished@Dynamic@SBiomass, Base@SBiomass)
-  Fished <- .CalcDynamicInitial(.InitialHist(OM))
-  expect_equal(Hist@Number[[1]][, , 1, ], Fished@Number[[1]][, , 1, ])
+  SB0 <- Hist@Unfished@Equilibrium@SBiomass[, 1, 1] |> rep_len(3)
+  expect_equal(unname(Hist@SBiomass[, 1, 1] / SB0), rep(0.3, 3), tolerance = 1e-8)
 })
 
 test_that("InitialAtAge applies to the fished dynamics only", {

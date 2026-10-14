@@ -13,9 +13,10 @@
 #'   - Length-2 bounds vector: depletion sampled from `Uniform(lower, upper)`
 #'     independently for each simulation.
 #'   - Length-`nSim` vector: one value per simulation.
-#'   When provided, early historical recruitment deviations are adjusted so
-#'   that biomass relative to `Reference` in the first time step matches the
-#'   specified value. When `Initial` is a [stock-class] object, `Depletion()`
+#'   When provided, the historical period starts from a fished equilibrium
+#'   with biomass relative to `Reference` in the first time step equal to the
+#'   specified value (see *Initial Depletion*). When `Initial` is a
+#'   [stock-class] object, `Depletion()`
 #'   acts as a pass-through accessor and returns `x@Depletion`.
 #' @param Final `numeric` or `NULL`. Target depletion relative to `Reference`
 #'   in the terminal historical time step. Accepts the same formats as
@@ -48,9 +49,18 @@
 #'
 #' ## Initial Depletion
 #'
-#' When `Initial` is supplied, the operating model adjusts early recruitment
-#' deviations so that biomass relative to `Reference` in the first time step
-#' matches the target. Values must be in (0, 1]:
+#' When `Initial` is supplied, the historical period starts from the
+#' equilibrium age structure, spatial distribution and recruitment produced by
+#' constant fishing with the first historical year's biology, selectivity,
+#' retention, discard mortality, and fleet and seasonal effort pattern
+#' (`Effort x Efficiency`). If no fleet has effort in the first year, the effort
+#' pattern of the first year with effort is used. Equilibrium recruitment
+#' follows the stock-recruit relationship. The fishing mortality is scaled so
+#' that biomass (`Reference = "B0"`) or spawning biomass (`"SB0"`) in the
+#' first time step, after applying the initial recruitment deviations, equals
+#' `Initial` times the unfished equilibrium value in that time step. The
+#' solved multiplier on the fishing pattern is stored in
+#' `Depletion@Misc$InitialEffortScale`. Values must be in (0, 1]:
 #'
 #' ```r
 #' # Fixed initial depletion across all simulations

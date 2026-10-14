@@ -41,14 +41,25 @@
   # prepare hist@Misc list - used for access in C++  - removed later
   Hist <- .PrepHistMisc(Hist)
 
-  # calculate unfished - dynamics 
+  # fished equilibrium initial conditions for Depletion@Initial
+  Hist <- .CalcInitialFishedEquilibrium(Hist, silent = silent)
+
+  # calculate unfished - dynamics
   if (control$DynamicUnfished)
     Hist@Unfished@Dynamic <- CalcUnfished_Dynamic(Hist = Hist,
                                                   IdenticalHist = IdenticalHist,
                                                   silent = silent)
 
   # ---- optimize q for specified depletion (if applicable)
+  qInit <- Hist@Misc$Catchability
   Hist <- .OptFinalDepletion(Hist, parallel = parallel, silent = silent)
+
+  # initial equilibrium depends on the relative fleet q, so repeat once with the optimized q
+  if (nFleet(Hist) > 1 && any(.FishedInitStocks(Hist)) &&
+      !isTRUE(all.equal(qInit, Hist@Misc$Catchability))) {
+    Hist <- .CalcInitialFishedEquilibrium(Hist, silent = silent)
+    Hist <- .OptFinalDepletion(Hist, parallel = parallel, silent = silent)
+  }
 
   # ---- calculate unfished spawning per recruit ----
   Hist@Reference@SPR0 <- CalcSPR0(Hist)
