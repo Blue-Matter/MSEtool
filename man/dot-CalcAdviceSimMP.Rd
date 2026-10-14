@@ -37,7 +37,8 @@
 
 Each \code{Data} object passed to the MP has \code{Data@Misc$MPName},
 \code{Data@Misc$StockName}, \code{Data@Misc$AdviceYear} (the time step the advice
-is first applied in) and \code{Data@Misc$Interval} set.
+is first applied in), \code{Data@Misc$FirstAdvice} (\code{TRUE} on the MP's first
+call of the projection) and \code{Data@Misc$Interval} set.
 
 \code{Data@Misc$DataOM} is populated with the \code{hist} slots resolved for the
 MP from \code{OM@Control$DataOM} and the MP's \code{DataOM} attribute; see

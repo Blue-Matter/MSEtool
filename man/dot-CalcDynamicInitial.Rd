@@ -19,8 +19,9 @@ The modified \code{\link[=Hist]{Hist()}} object.
 \description{
 Internal helper that constructs the initial age–area population structure
 in a \code{\link[=Hist]{Hist()}} object by applying recruitment deviations to the equilibrium
-unfished numbers-at-age (which already carry the spatial distribution) and
-optionally applying initial depletion (\code{Depletion@Misc$InitialAtAge} and
-\code{Depletion@Initial}).
+unfished numbers-at-age (which already carry the spatial distribution).
+When \code{Depletion@Misc$InitialAtAge} is supplied it is applied to the initial
+numbers-at-age, which are then scaled to \code{Depletion@Initial}. Otherwise
+\code{Depletion@Initial} is applied later by \code{\link[=.CalcInitialFishedEquilibrium]{.CalcInitialFishedEquilibrium()}}.
 }
 \keyword{internal}

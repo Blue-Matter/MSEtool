@@ -31,9 +31,10 @@ historical period. No adjustment to recruitment deviations.
 \item Length-2 bounds vector: depletion sampled from \code{Uniform(lower, upper)}
 independently for each simulation.
 \item Length-\code{nSim} vector: one value per simulation.
-When provided, early historical recruitment deviations are adjusted so
-that biomass relative to \code{Reference} in the first time step matches the
-specified value. When \code{Initial} is a \link[=stock-class]{stock} object, \code{Depletion()}
+When provided, the historical period starts from a fished equilibrium
+with biomass relative to \code{Reference} in the first time step equal to the
+specified value (see \emph{Initial Depletion}). When \code{Initial} is a
+\link[=stock-class]{stock} object, \code{Depletion()}
 acts as a pass-through accessor and returns \code{x@Depletion}.
 }}
 
@@ -93,9 +94,18 @@ directly in this case.
 
 \subsection{Initial Depletion}{
 
-When \code{Initial} is supplied, the operating model adjusts early recruitment
-deviations so that biomass relative to \code{Reference} in the first time step
-matches the target. Values must be in (0, 1]:
+When \code{Initial} is supplied, the historical period starts from the
+equilibrium age structure, spatial distribution and recruitment produced by
+constant fishing with the first historical year's biology, selectivity,
+retention, discard mortality, and fleet and seasonal effort pattern
+(\verb{Effort x Efficiency}). If no fleet has effort in the first year, the effort
+pattern of the first year with effort is used. Equilibrium recruitment
+follows the stock-recruit relationship. The fishing mortality is scaled so
+that biomass (\code{Reference = "B0"}) or spawning biomass (\code{"SB0"}) in the
+first time step, after applying the initial recruitment deviations, equals
+\code{Initial} times the unfished equilibrium value in that time step. The
+solved multiplier on the fishing pattern is stored in
+\code{Depletion@Misc$InitialEffortScale}. Values must be in (0, 1]:
 
 \if{html}{\out{<div class="sourceCode r">}}\preformatted{# Fixed initial depletion across all simulations
 dep <- Depletion(Initial = 0.8)

@@ -19,14 +19,15 @@ issued when \code{Landings} and \code{Discards} units do not match each other
 \code{NULL} invisibly, called for its side-effect warnings.
 }
 \description{
-Warns if a catch slot (\code{Landings} or \code{Discards}) contains no data, or if
-\code{Landings} and \code{Discards} are not in the same units as each other.
+Warns if none of the catch slots in \code{slot_names} (by default \code{Landings} and
+\code{Discards}) contain data, or if \code{Landings} and \code{Discards} are not in the
+same units as each other. Missing \code{Discards} alone is not a problem: TACs
+are then set from \code{Landings}.
 }
 \details{
-If no \code{Landings} or \code{Discards} data are available, and a finite TAC value
-cannot be produced, the MP will likely fall back to setting effort to last
-historical effort - ie same as \code{\link[=CurrentEffort]{CurrentEffort()}} (the default for
-empty \code{\link[=Advice]{Advice()}} objects).
+If no catch data are available, and a finite TAC value cannot be produced,
+the MP will likely fall back to setting effort to last historical effort -
+ie same as \code{\link[=CurrentEffort]{CurrentEffort()}} (the default for empty \code{\link[=Advice]{Advice()}} objects).
 
 If \code{Landings} and \code{Discards} are not in the same units (e.g. one in
 \code{Biomass} and the other in \code{Number}, or one in \code{"t"} and the other in
@@ -34,7 +35,6 @@ If \code{Landings} and \code{Discards} are not in the same units (e.g. one in
 TAC is not meaningful. The unit-mismatch check is only performed when both
 \code{'Landings'} and \code{'Discards'} are included in \code{slot_names}.
 
-Warnings are suppressed after the last historical year (i.e. once
-\code{max(Data@Years) > Data@YearLH}) so that they appear only on the first
-call within a projection, not on every subsequent timestep.
+Within a projection, warnings are issued only for the first simulation on
+the MP's first call (\code{Data@Misc$FirstAdvice}), so they appear once per MP.
 }
