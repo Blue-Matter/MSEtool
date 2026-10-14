@@ -468,8 +468,9 @@ EstimateBeta <- function(logObs, logSim, beta = NULL, MinPoints = 8,
   .MatchRows <- function(x, label) {
     rn <- rownames(x)
     if (is.null(rn)) {
-      if (nrow(x) > length(AllYears))
-        cli::cli_abort("{.code {Where}@{label}} has {nrow(x)} rows, more than the {length(AllYears)} model time steps.")
+      if (nrow(x) < length(HistYears) || nrow(x) > length(AllYears))
+        cli::cli_abort(c("x" = "{.code {Where}@{label}} has no row names and {nrow(x)} rows; without row names it needs one row per model time step from the first historical year ({length(HistYears)} historical).",
+                         "i" = "Name the rows by year (values of {.code Years(OM, 'Historical')}) to supply only some years."))
       return(seq_len(nrow(x)))
     }
     yrs <- suppressWarnings(as.numeric(rn))
