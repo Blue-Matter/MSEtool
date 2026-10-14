@@ -80,7 +80,9 @@
 #'   every index in `IndexSource`.
 #' @param IndexSource Character. `'auto'` (default), or one or both of
 #'   `'Survey'` and `'CPUE'`. `'auto'` uses the indices in `Data@Survey` if it
-#'   has any positive observation, otherwise those in `Data@CPUE`. `'Survey'`
+#'   has any positive observation, otherwise those in `Data@CPUE`, and warns
+#'   once when the last `Survey` observation is more than 5 years older than
+#'   the last `CPUE` observation. `'Survey'`
 #'   or `'CPUE'` uses that slot, and
 #'   `c('Survey', 'CPUE')` combines the indices of both into a single
 #'   selection (`Survey` columns first, then `CPUE`). `Indices`, `IndexFreq`,
@@ -411,8 +413,18 @@ class(IndexTarget) <- 'mp'
     x <- slot(Data, src)@Value
     !is.null(x) && any(is.finite(x) & x > 0)
   }
-  if (HasData('Survey'))
+  LastYear <- function(src) {
+    x <- slot(Data, src)@Value
+    Years <- suppressWarnings(as.numeric(rownames(x) %||% Data@Years[seq_len(nrow(x))]))
+    max(Years[apply(is.finite(x) & x > 0, 1, any)], -Inf, na.rm = TRUE)
+  }
+  if (HasData('Survey')) {
+    if (HasData('CPUE') && LastYear('CPUE') - LastYear('Survey') > 5)
+      cli::cli_warn(c("!" = "{.arg IndexSource} {.val auto} uses {.code Data@Survey}, whose last observation ({floor(LastYear('Survey'))}) is more than 5 years older than the last {.code Data@CPUE} observation ({floor(LastYear('CPUE'))}).",
+                      "i" = "Set {.arg IndexSource} explicitly to choose the index."),
+                    .frequency = 'once', .frequency_id = 'IndexSourceStaleSurvey')
     return('Survey')
+  }
   if (!HasData('CPUE'))
     cli::cli_abort("No index data in {.code Data@Survey} or {.code Data@CPUE}.")
   'CPUE'
