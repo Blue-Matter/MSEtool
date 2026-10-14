@@ -92,7 +92,7 @@ Slots with fewer simulation rows than \code{nSim} are recycled from their last
 row.
 }
 
-\subsection{Obs .Structure}{
+\subsection{Obs Structure}{
 
 Observation parameters are accessed via:
 

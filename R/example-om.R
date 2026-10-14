@@ -16,17 +16,17 @@
 #' - **`pYear`**: `30`. Number of projection years.
 #' - **`Stock`**: a length-2 list of `[[AlbacoreExStock, ButterfishExStock]]`.
 #' - **`Fleet`**: a length-2 list, each containing a length-1 list of
-#'   [AsympExFleet]. .Structure is `[[stock]][[fleet]]`. Both stocks are
+#'   [AsympExFleet]. Structure is `[[stock]][[fleet]]`. Both stocks are
 #'   fished by the same fleet type.
 #' - **`Obs`**: a length-1 list containing a length-1 list of
-#'   [DataRichObs]. .Structure is `[[complex]][[fleet]]`. A single
+#'   [DataRichObs]. Structure is `[[complex]][[fleet]]`. A single
 #'   observation model applies to the whole complex, since data are
 #'   aggregated across both stocks before being observed.
 #' - **`Complexes`**: `list(StockComplex = 1:2)`. Both stocks are assigned
 #'   to a single complex named `"StockComplex"`, so data and management
 #'   advice are aggregated across stocks 1 and 2.
 #' - **`Imp`**: a length-1 list containing a length-1 list of
-#'   [FullComplianceImp]. .Structure is `[[complex]][[fleet]]`. Perfect TAC/
+#'   [FullComplianceImp]. Structure is `[[complex]][[fleet]]`. Perfect TAC/
 #'   effort implementation and full immediate size-regulation compliance.
 #'
 #' @details
@@ -65,7 +65,7 @@
 #' equal advice exactly, and
 #' `Size@Compliance = 1` means any size-regulation advice (a change to
 #' `Advice@Retention`/`Advice@Selectivity`) is adopted immediately by the
-#' whole fleet (see `.UpdateSelectivitySim()`). See [Imp()] for details,
+#' whole fleet. See [Imp()] for details,
 #' and [OverageImp], [UnderageImp], [PartialSizeComplianceImp] for
 #' contrasting examples.
 #'
@@ -107,7 +107,7 @@
 #' - **`pYear`**: `30`. Number of projection years.
 #' - **`Stock`**: a length-2 list of `[[AlbacoreExStock, ButterfishExStock]]`.
 #' - **`Fleet`**: a length-2 list, each containing a length-2 list of
-#'   `[[AsympExFleet, DomeExFleet]]`. .Structure is `[[stock]][[fleet]]`.
+#'   `[[AsympExFleet, DomeExFleet]]`. Structure is `[[stock]][[fleet]]`.
 #'   Both stocks are fished by the same two fleet types.
 #' - **`Obs`**: a length-2 list with structure `[[stock]][[fleet]]`:
 #'   - [AlbacoreExStock]: `[[AgeStructuredObs, CommercialFleetObs]]`
@@ -158,7 +158,7 @@
 #' equal advice exactly, and
 #' `Size@Compliance = 1` means any size-regulation advice (a change to
 #' `Advice@Retention`/`Advice@Selectivity`) is adopted immediately by the
-#' whole fleet (see `.UpdateSelectivitySim()`). See [Imp()] for details,
+#' whole fleet. See [Imp()] for details,
 #' and [OverageImp], [UnderageImp], [PartialSizeComplianceImp] for
 #' contrasting examples.
 #'
@@ -245,7 +245,7 @@
 #' equal advice exactly, and
 #' `Size@Compliance = 1` means any size-regulation advice (a change to
 #' `Advice@Retention`/`Advice@Selectivity`) is adopted immediately by the
-#' whole fleet (see `.UpdateSelectivitySim()`). See [Imp()] for details,
+#' whole fleet. See [Imp()] for details,
 #' and [OverageImp], [UnderageImp], [PartialSizeComplianceImp] for
 #' contrasting examples.
 #'
@@ -285,11 +285,11 @@
 #' - **`pYear`**: `30`. Number of projection years.
 #' - **`Stock`**: [AlbacoreExStock]. A single [stock-class] object.
 #' - **`Fleet`**: a length-1 list containing a length-1 list of
-#'   [AsympExFleet]. .Structure is `[[stock]][[fleet]]`.
+#'   [AsympExFleet]. Structure is `[[stock]][[fleet]]`.
 #' - **`Obs`**: a length-1 list containing a length-1 list of
-#'   [AgeStructuredObs]. .Structure is `[[stock]][[fleet]]`.
+#'   [AgeStructuredObs]. Structure is `[[stock]][[fleet]]`.
 #' - **`Imp`**: a length-1 list containing a length-1 list of
-#'   [FullComplianceImp]. .Structure is `[[stock]][[fleet]]`. Perfect TAC/
+#'   [FullComplianceImp]. Structure is `[[stock]][[fleet]]`. Perfect TAC/
 #'   effort implementation and full immediate size-regulation compliance.
 #'
 #' @details
@@ -315,7 +315,7 @@
 #' equal advice exactly, and
 #' `Size@Compliance = 1` means any size-regulation advice (a change to
 #' `Advice@Retention`/`Advice@Selectivity`) is adopted immediately by the
-#' whole fleet (see `.UpdateSelectivitySim()`). See [Imp()] for details,
+#' whole fleet. See [Imp()] for details,
 #' and [OverageImp], [UnderageImp], [PartialSizeComplianceImp] for
 #' contrasting examples.
 #'
@@ -356,13 +356,13 @@
 #' - **`pYear`**: `30`. Number of projection years.
 #' - **`Stock`**: [AlbacoreExStock]. A single [stock-class] object.
 #' - **`Fleet`**: a length-1 list containing a length-2 list of
-#'   `[[AsympExFleet, DomeExFleet]]`. .Structure is `[[stock]][[fleet]]`.
+#'   `[[AsympExFleet, DomeExFleet]]`. Structure is `[[stock]][[fleet]]`.
 #' - **`Obs`**: a length-1 list containing a length-2 list of
-#'   `[[AgeStructuredObs, CatchAndSurveyObs]]`. .Structure is
+#'   `[[AgeStructuredObs, CatchAndSurveyObs]]`. Structure is
 #'   `[[stock]][[fleet]]`. Fleet 1 has a data-moderate age-structured
 #'   monitoring programme; Fleet 2 has catch and a survey only.
 #' - **`Imp`**: a length-1 list containing a length-2 list of
-#'   [FullComplianceImp]. .Structure is `[[stock]][[fleet]]`. Perfect TAC/
+#'   [FullComplianceImp]. Structure is `[[stock]][[fleet]]`. Perfect TAC/
 #'   effort implementation and full immediate size-regulation compliance.
 #'
 #' @details
@@ -397,7 +397,7 @@
 #' equal advice exactly, and
 #' `Size@Compliance = 1` means any size-regulation advice (a change to
 #' `Advice@Retention`/`Advice@Selectivity`) is adopted immediately by the
-#' whole fleet (see `.UpdateSelectivitySim()`). See [Imp()] for details,
+#' whole fleet. See [Imp()] for details,
 #' and [OverageImp], [UnderageImp], [PartialSizeComplianceImp] for
 #' contrasting examples.
 #'

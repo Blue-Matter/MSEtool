@@ -49,3 +49,4 @@ Computes the apicalF-dependent per-recruit quantities for one sim/year,
 mirroring \code{.CalcPerRecruitFScalar()}
 (\code{R/calc-per-recruit.R}).
 }
+\keyword{internal}

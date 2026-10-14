@@ -70,14 +70,13 @@ every available year.}
 \item{free_y}{Logical. Free the y-axis scale across facets? Default
 \code{NULL} resolves to \code{TRUE}.}
 
-\item{IncHist, byMP, AggregateYear}{\code{.PlotEffortRealized()} only (via
-\code{PlotEffort()} on a \link[=hist-class]{hist}/\link[=mse-class]{mse} \code{object}); see
-\link{plot_hist}.}
+\item{IncHist, byMP, AggregateYear}{Used only when \code{object} is a
+\link[=hist-class]{hist}/\link[=mse-class]{mse} object; see \link{plot_hist}.}
 }
 \value{
 \code{PlotEffortCurve()} returns a \code{ggplot} object; \code{PlotEffort()}
-returns a \code{ggplot} object too (\code{.PlotEffortRealized()}'s, for
-\link[=hist-class]{hist}/\link[=mse-class]{mse} \code{object}, otherwise \code{PlotEffortCurve()}'s).
+returns a \code{ggplot} object of realised effort when \code{object} is a
+\link[=hist-class]{hist}/\link[=mse-class]{mse} object, otherwise the \code{PlotEffortCurve()} plot.
 }
 \description{
 For a bare \link[=fleet-class]{fleet} or \link[=om-class]{om} \code{object} (nothing simulated

@@ -650,13 +650,12 @@ PlotRemovals <- function(object,
 #'   every available year.
 #' @param free_y Logical. Free the y-axis scale across facets? Default
 #'   `NULL` resolves to `TRUE`.
-#' @param IncHist,byMP,AggregateYear `.PlotEffortRealized()` only (via
-#'   `PlotEffort()` on a [hist-class]/[mse-class] `object`); see
-#'   [plot_hist].
+#' @param IncHist,byMP,AggregateYear Used only when `object` is a
+#'   [hist-class]/[mse-class] object; see [plot_hist].
 #'
 #' @return `PlotEffortCurve()` returns a `ggplot` object; `PlotEffort()`
-#'   returns a `ggplot` object too (`.PlotEffortRealized()`'s, for
-#'   [hist-class]/[mse-class] `object`, otherwise `PlotEffortCurve()`'s).
+#'   returns a `ggplot` object of realised effort when `object` is a
+#'   [hist-class]/[mse-class] object, otherwise the `PlotEffortCurve()` plot.
 #'
 #' @seealso [Effort()], [PlotCatchability()], [Fleet()]
 #' @export

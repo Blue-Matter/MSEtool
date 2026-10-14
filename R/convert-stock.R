@@ -41,7 +41,7 @@
 #' and `Model` is set to [MaturityAtLength]. Age-based parameters are used
 #' only when `L50` is absent or `NULL`.
 #'
-#' ## Spatial .Structure
+#' ## Spatial Structure
 #'
 #' If all three spatial parameters (`Size_area_1`, `Prob_staying`,
 #' `Frac_area_1`) equal `0.5`, an empty [spatial-class] object is returned.

@@ -26,8 +26,8 @@ untouched (all slots \code{NULL}) if the input object is empty -- see
 implementation model incurs no extra computation.
 }
 \details{
-\code{Compliance} is expanded to a \verb{[Sim x Year]} array via
-\code{.StructurePars()}, using the same conventions as every other structured
+\code{Compliance} is expanded to a \verb{[Sim x Year]} array,
+using the same conventions as every other structured
 OM parameter: a scalar is a fixed value for every simulation and year; a
 length-2 vector is \code{c(lower, upper)} bounds sampled once per simulation
 (held constant across years); a full array is respected as-is, with named

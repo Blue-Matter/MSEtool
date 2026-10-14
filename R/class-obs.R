@@ -228,7 +228,7 @@ setValidity("catchobs", function(object) {
 #' @slot Error `numeric` array or `NULL`. Lognormal observation error
 #'   multipliers (`nSim x nYear`). May be supplied directly via [IndicesObs()],
 #'   generated stochastically from `CV`, or
-#'   estimated from real data during `.ConditionObs()`. See [IndicesObs()].
+#'   estimated from real data during [Simulate()]. See [IndicesObs()].
 #' @slot Beta `numeric` array or `NULL`. Hyperstability/hyperdepletion
 #'   parameter: `Observed_t = Efficiency * NomIndex_t^Beta * Error_t`. `NULL`
 #'   (default) is `Beta = 1` (proportional); otherwise estimated per
@@ -357,8 +357,8 @@ setValidity("indicesobs", function(object) {
 #'   `[nSim x nYear]` array.
 #'
 #' @slot Years `numeric` vector or `NULL`. Calendar years of observed
-#'   composition data to be used during the conditioning step (see
-#'   `.ConditionObsComp()`). `NULL` (default) uses all available historical years during
+#'   composition data to be used during the conditioning step.
+#'   `NULL` (default) uses all available historical years during
 #'   conditioning.
 #'
 #' @slot Shift `numeric` or `NULL`. Systematic per-bin offset on the
@@ -366,7 +366,7 @@ setValidity("indicesobs", function(object) {
 #'   before drawing, capturing directional bias between observed and
 #'   OM-predicted compositions. After population by [PopulateCompObs()],
 #'   stored as a named `[nSim x nYear x nBin]` array. `NULL` (default) applies
-#'   no shift. In conditioning mode, populated internally by `.ConditionObsComp()`
+#'   no shift. In conditioning mode, populated internally
 #'   from the mean per-bin log-concentration residual across historical years.
 #'
 #' @slot Misc `list`. Reserved for internal use.
@@ -389,7 +389,7 @@ setValidity("indicesobs", function(object) {
 #'
 #' When observed compositions differ substantially from OM-predicted
 #' compositions (e.g. a length distribution shifted far left or right, or
-#' with markedly different spread), `.ConditionObsComp()` will produce large
+#' with markedly different spread), conditioning will produce large
 #' values in `Shift`. These are treated as observation error rather than model
 #' mis-specification — an assumption that should be evaluated carefully.
 #' See the technical manual for a full discussion of this assumption and its
@@ -399,7 +399,7 @@ setValidity("indicesobs", function(object) {
 #' @seealso
 #' - [CompObs()] for the constructor and full parameter documentation.
 #' - [PopulateCompObs()] for the population function.
-#' - `.ConditionObsComp()` for the conditioning function.
+#' - [Simulate()] for conditioning the observation model on real data.
 #' - [obs-class] for the enclosing observation model object.
 #'
 #' @family obs

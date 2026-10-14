@@ -13,17 +13,17 @@ An \link[=om-class]{om} object with the following slots populated:
 \item \strong{\code{pYear}}: \code{30}. Number of projection years.
 \item \strong{\code{Stock}}: a length-2 list of \verb{[[AlbacoreExStock, ButterfishExStock]]}.
 \item \strong{\code{Fleet}}: a length-2 list, each containing a length-1 list of
-\link{AsympExFleet}. .Structure is \verb{[[stock]][[fleet]]}. Both stocks are
+\link{AsympExFleet}. Structure is \verb{[[stock]][[fleet]]}. Both stocks are
 fished by the same fleet type.
 \item \strong{\code{Obs}}: a length-1 list containing a length-1 list of
-\link{DataRichObs}. .Structure is \verb{[[complex]][[fleet]]}. A single
+\link{DataRichObs}. Structure is \verb{[[complex]][[fleet]]}. A single
 observation model applies to the whole complex, since data are
 aggregated across both stocks before being observed.
 \item \strong{\code{Complexes}}: \code{list(StockComplex = 1:2)}. Both stocks are assigned
 to a single complex named \code{"StockComplex"}, so data and management
 advice are aggregated across stocks 1 and 2.
 \item \strong{\code{Imp}}: a length-1 list containing a length-1 list of
-\link{FullComplianceImp}. .Structure is \verb{[[complex]][[fleet]]}. Perfect TAC/
+\link{FullComplianceImp}. Structure is \verb{[[complex]][[fleet]]}. Perfect TAC/
 effort implementation and full immediate size-regulation compliance.
 }
 }
@@ -85,7 +85,7 @@ stocks. See \link{DataRichObs} for full parameter details.
 equal advice exactly, and
 \code{Size@Compliance = 1} means any size-regulation advice (a change to
 \code{Advice@Retention}/\code{Advice@Selectivity}) is adopted immediately by the
-whole fleet (see \code{.UpdateSelectivitySim()}). See \code{\link[=Imp]{Imp()}} for details,
+whole fleet. See \code{\link[=Imp]{Imp()}} for details,
 and \link{OverageImp}, \link{UnderageImp}, \link{PartialSizeComplianceImp} for
 contrasting examples.
 }

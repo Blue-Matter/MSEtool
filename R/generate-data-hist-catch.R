@@ -65,7 +65,7 @@
 #' CVs from the [CatchObs()] object are not currently applied here; `defaultCV`
 #' serves as the working assumption for downstream MPs.
 #'
-#' ## Obs .Structure
+#' ## Obs Structure
 #'
 #' Observation parameters are accessed via:
 #'

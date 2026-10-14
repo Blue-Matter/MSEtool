@@ -19,7 +19,7 @@ error. See \code{\link[=IndicesObs]{IndicesObs()}}.}
 \item{\code{Error}}{\code{numeric} array or \code{NULL}. Lognormal observation error
 multipliers (\verb{nSim x nYear}). May be supplied directly via \code{\link[=IndicesObs]{IndicesObs()}},
 generated stochastically from \code{CV}, or
-estimated from real data during \code{.ConditionObs()}. See \code{\link[=IndicesObs]{IndicesObs()}}.}
+estimated from real data during \code{\link[=Simulate]{Simulate()}}. See \code{\link[=IndicesObs]{IndicesObs()}}.}
 
 \item{\code{Beta}}{\code{numeric} array or \code{NULL}. Hyperstability/hyperdepletion
 parameter: \code{Observed_t = Efficiency * NomIndex_t^Beta * Error_t}. \code{NULL}

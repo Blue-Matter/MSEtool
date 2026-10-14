@@ -47,8 +47,8 @@ observations of catch samples.
 \subsection{Usage}{
 
 All arguments are optional; an empty object is valid and slots are
-populated later (e.g., by \code{.GenHistDataAgeComp()} or
-\code{.GenHistDataSizeComp()}.
+populated later (e.g., when \code{\link[=Simulate]{Simulate()}} generates
+historical data).
 }
 
 \subsection{Value Dimensions and Units}{

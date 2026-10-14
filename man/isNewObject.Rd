@@ -7,22 +7,7 @@
 isNewObject(object)
 }
 \arguments{
-\item{object}{An S4 object.
-
-\code{isNewObject()} constructs a default instance of the same class as
-\code{object} and compares the two with \code{\link[=identical]{identical()}}. Before comparing, the
-\code{Name} slot (if present) is set to \code{NULL} on \code{object} so that a user-
-supplied name alone does not cause the object to be considered non-default.
-
-The default instance is obtained as follows:
-\itemize{
-\item For a small set of classes whose constructors do not follow the standard
-\code{.FirstUp(class)()} naming convention (\code{naturalmortality}, \code{srr}, \code{om},
-\code{discardmortality}), the appropriate constructor is called directly.
-\item For all other classes, the constructor is looked up as
-\code{get(.FirstUp(class))}. If no such constructor exists, \code{new(class)} is
-used as a fallback.
-}}
+\item{object}{An S4 object.}
 }
 \value{
 A length-1 logical. Returns \code{FALSE} for non-S4 objects.
@@ -31,6 +16,13 @@ A length-1 logical. Returns \code{FALSE} for non-S4 objects.
 Returns \code{TRUE} if \code{object} is identical to a freshly constructed default
 instance of its class — i.e. the object has not been modified since
 construction. Used internally by \code{\link[=EmptyObject]{EmptyObject()}}.
+}
+\details{
+'
+\code{isNewObject()} constructs a default instance of the same class as
+\code{object} and compares the two with \code{\link[=identical]{identical()}}. Before comparing, the
+\code{Name} slot (if present) is set to \code{NULL} on \code{object} so that a user-
+supplied name alone does not cause the object to be considered non-default.
 }
 \seealso{
 \code{\link[=EmptyObject]{EmptyObject()}}

@@ -49,7 +49,7 @@
 #' CVs from the [EffortObs()] object are not currently applied here;
 #' `defaultCV` serves as the working assumption for downstream MPs.
 #'
-#' ## Obs .Structure
+#' ## Obs Structure
 #'
 #' Observation parameters are accessed via:
 #'

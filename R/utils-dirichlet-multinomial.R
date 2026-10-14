@@ -46,7 +46,7 @@
 #'
 #' @return Integer vector of length `nBin` summing to `n`.
 #'
-#' @seealso [CompObs()], `.GenHistDataAgeComp()`, `.GenHistDataSizeComp()`
+#' @seealso [CompObs()]
 #' @importFrom stats rgamma
 #' @examples
 #' # Near-multinomial draw (high ESS, Theta = 1, no shift)

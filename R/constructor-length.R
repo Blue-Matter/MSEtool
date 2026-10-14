@@ -8,13 +8,13 @@
 #' @param Pars `list`. Named list of growth parameters. Element names must
 #'   match the arguments of a built-in growth model (see [LengthModels()]).
 #'   When `Pars` is non-empty and `Model` is `NULL`, the model is inferred
-#'   automatically by `.FindModel()`. When `Pars` is a [stock-class] object,
+#'   automatically from the parameter names. When `Pars` is a [stock-class] object,
 #'   `Length()` acts as a pass-through accessor and returns `x@Length`.
 #'   See *Specifying the Length-at-Age* and 
 #'   [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for the full
 #'   set of accepted input formats. Default `list()`.
 #' @param Model `character(1)` or `function`. Growth model identifier. When
-#'   `NULL` (default), the model is inferred from `Pars` via `.FindModel()`.
+#'   `NULL` (default), the model is inferred from `Pars`.
 #'   May be set to a character string naming a built-in model or to a custom
 #'   R function — see [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html).
 #' @param Units `character(1)`. Physical unit of length measurements. Must be
@@ -67,7 +67,7 @@
 #' 1. **Model-based** (recommended): supply `Pars` with the named parameters
 #'    for your chosen growth model (e.g., `list(Linf = 80, K = 0.2, t0 =
 #'    -0.5)` for von Bertalanffy). If `Model` is `NULL` and the parameter
-#'    names uniquely identify a model, `.FindModel()` sets `Model`
+#'    names uniquely identify a model, `Model` is set
 #'    automatically. The `MeanAtAge` array and `ALK` are then populated by
 #'    [Populate()] when the stock is added to an [OM()].
 #'
@@ -127,7 +127,6 @@
 #' - [length-class] for the class definition and slot-level documentation.
 #' - [LengthModels()] for available growth models and required parameter sets.
 #' - [ValidUnits()] for accepted unit strings.
-#' - `.FindModel()` for automatic model inference. 
 #' - [Populate()] for array population. 
 #' - [Stock()] for the enclosing stock constructor. 
 #'

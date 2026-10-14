@@ -78,7 +78,7 @@ at-length, or retention-at-weight. Steps include:
 \item Resolving the retention model class
 \item Generating mean retention at age, length, or weight as appropriate
 \item Converting between mean-at-length/weight and mean-at-age
-\item Adding stochastic variation via \code{.PopulateRandom()}
+\item Adding stochastic variation
 \item Adding an 'Area' dimension and setting dimension names
 }
 }

@@ -10,7 +10,7 @@
 #'   `hist` object is built.
 #' @param IdenticalHist Logical; if `TRUE`, assumes all simulations are identical
 #'   and calculates only a single simulation. If `NULL` (default), determined
-#'   automatically via `.IdenticalSims()`.
+#'   automatically by checking whether all simulations are identical.
 #' @param silent Logical; if `TRUE`, suppress messages during calculation.
 #'
 #' @return A [popdynamics-class] object containing dynamic unfished

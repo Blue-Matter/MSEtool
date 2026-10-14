@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils-structure.R
 \name{.StructurePars}
 \alias{.StructurePars}
-\title{.Structure and Extend a \code{Pars} List}
+\title{Structure and Extend a \code{Pars} List}
 \usage{
 .StructurePars(Pars, nSim = NULL, Years = NULL, nArea = NULL)
 }

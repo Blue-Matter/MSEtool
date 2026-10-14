@@ -86,7 +86,8 @@
 #' - **`Size`** ([impslot-class]): `Compliance = 0.6` -- only 60% of the
 #'   fleet adopts a newly-advised size regulation in the year it changes; the
 #'   remaining 40% continues fishing under the previous Retention/Selectivity
-#'   curve. See `.UpdateSelectivitySim()` for how this blend is applied.
+#'   curve. Selectivity and retention in that year are the
+#'   compliance-weighted average of the new and previous curves.
 #'
 #' @seealso
 #' [imp-class], [Imp()], [ImpSlot()], [FullComplianceImp], [OverageImp],

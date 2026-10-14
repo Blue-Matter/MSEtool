@@ -50,7 +50,7 @@ index and associated uncertainty.
 \subsection{Usage}{
 
 All arguments are optional; an empty object is valid and slots are
-populated later (e.g., by \code{.GenHistDataIndices()}).
+populated later (e.g., when \code{\link[=Simulate]{Simulate()}} generates historical data).
 }
 
 \subsection{Attaching to a Data Object}{

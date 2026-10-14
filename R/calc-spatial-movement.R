@@ -4,8 +4,8 @@
 #' and year by numerical optimisation, so that the asymptotic (equilibrium)
 #' unfished distribution and the diagonal (staying probability) simultaneously
 #' reproduce the targets in `Spatial@UnfishedDist` and `Spatial@ProbStaying`.
-#' Dispatches to `.FitMovement2Area()` for two-area models and
-#' `.FitMovementMultiArea()` for three or more areas.
+#' Separate optimisation routines are used for two-area models and for models
+#' with three or more areas.
 #'
 #' This function is called internally by [Populate()] for every combination of
 #' simulation, age, and year. It can also be called directly to inspect or
@@ -28,8 +28,6 @@
 #'
 #' @seealso
 #' - [Spatial()] for the constructor and full spatial specification.
-#' - `.FitMovement2Area()` for the two-area optimisation.
-#' - `.FitMovementMultiArea()` for the multi-area optimisation.
 #' - [Populate()] which calls this function internally.
 #'
 #' @export

@@ -37,7 +37,7 @@
 #' * Resolving the retention model class
 #' * Generating mean retention at age, length, or weight as appropriate
 #' * Converting between mean-at-length/weight and mean-at-age
-#' * Adding stochastic variation via `.PopulateRandom()`
+#' * Adding stochastic variation
 #' * Adding an 'Area' dimension and setting dimension names
 #'
 #' @return

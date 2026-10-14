@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils-structure.R
 \name{.StructureCV}
 \alias{.StructureCV}
-\title{.Structure a CV-at-Age Value into a Standard Array}
+\title{Structure a CV-at-Age Value into a Standard Array}
 \usage{
 .StructureCV(CVatAge, nSim)
 }

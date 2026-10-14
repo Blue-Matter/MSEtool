@@ -5,8 +5,7 @@
 #'   `r4ss::SS_output` list or `RepList` object
 #' @param parallel Logical; whether to use parallel processing (default FALSE)
 #' @param silent Logical; suppress progress messages (default FALSE)
-#' @param ... Additional arguments passed to `r4ss::SS_output` and
-#'   `.GetSSRepList`
+#' @param ... Additional arguments passed to `r4ss::SS_output`
 #'
 #' @return A named `RepList` object: a list of parsed `r4ss::SS_output` lists,
 #'   one per SS3 directory, with integer-character names (`"1"`, `"2"`, ...)

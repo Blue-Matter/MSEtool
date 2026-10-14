@@ -19,7 +19,7 @@
 #'
 #' @param Model Character or function or `NULL`. Selectivity model identifier.
 #'   If `NULL` (default), the model is inferred automatically from the names
-#'   in `Pars` via `.FindModel()`. May also be supplied as a custom R function
+#'   in `Pars`. May also be supplied as a custom R function
 #'   with arguments matching those in `Pars`. See [SelectivityModels()] for
 #'   built-in options.
 #' @param MeanAtAge Numeric array or `NULL`. Mean selectivity-at-age with

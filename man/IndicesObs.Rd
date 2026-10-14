@@ -27,12 +27,12 @@ supplied directly.
 \item Length-1 scalar: a single CV applied uniformly across all simulations
 and years when generating the \code{Error} array internally.
 \item Length-2 vector \code{c(mean, sd)}: \code{CV} is itself drawn stochastically —
-a unique CV per simulation is generated via \code{.StructurePars()} before
+a unique CV per simulation is generated before
 being used to generate the \code{Error} array.
 \item Length-\code{nSim} named array: used directly, one CV per simulation.
 }
 
-When conditioning on real data via \code{.ConditionObs()}, \code{CV} is replaced by
+When conditioning on real data, \code{CV} is replaced by
 the simulation-specific standard deviation of historical log-residuals
 estimated by \code{\link[=CalcResidualStats]{CalcResidualStats()}}. Ignored if \code{Error} is supplied
 directly.}
@@ -40,8 +40,8 @@ directly.}
 \item{Error}{\code{numeric} array or \code{NULL}. Pre-specified lognormal observation
 error multipliers with dimensions \verb{nSim x nYear} and named dimnames
 (\code{Sim}, \code{Year}). When supplied, \code{Error} is used directly and \code{CV} is
-ignored for error generation. When real index data are provided and
-\code{.ConditionObs()} is run, \code{Error} is replaced by conditioned values
+ignored for error generation. When real index data are provided in \code{OM@Data},
+\code{Error} is replaced by conditioned values
 regardless of whether it was user-supplied. Default \code{NULL}, in which case
 \code{Error} is generated from \code{CV} internally.}
 
@@ -160,7 +160,7 @@ Internally the model generates a lognormal array where each cell is
 \code{rlnorm(1, mconv(1, CV[sim]), sdconv(1, CV[sim]))}. \code{CV} is first
 expanded to length \code{nSim} internally — a length-2 input
 triggers a stochastic draw of a unique CV per simulation.
-\item \strong{Conditioned from real data}: \code{.ConditionObs()} estimates \code{CV},
+\item \strong{Conditioned from real data}: \code{\link[=Simulate]{Simulate()}} estimates \code{CV},
 \code{Beta}, \code{Efficiency}, \code{AC}, \code{Stats}, and \code{Error} from historical
 residuals; any user-supplied values are replaced.
 }
@@ -172,8 +172,8 @@ length-\code{nSim} input is used directly.
 
 \subsection{Conditioning on Real Data}{
 
-When real index data are provided (via \code{OM@Data}) and \code{.ConditionObs()} is
-run, the following slots are estimated and populated internally:
+When real index data are provided (via \code{OM@Data}), \code{\link[=Simulate]{Simulate()}}
+conditions the observation model and the following slots are estimated:
 \itemize{
 \item \code{Efficiency} (\code{q}) is always fit per simulation by log-linear regression
 of \code{log(Observed)} on \code{log(NomIndex)}, under
@@ -256,7 +256,7 @@ qInc(io) <- -1
 \item \code{\link[=Obs]{Obs()}} for the enclosing observation model constructor.
 \item \code{\link[=CalcResidualStats]{CalcResidualStats()}} for residual statistic computation.
 \item \code{\link[=GenResiduals]{GenResiduals()}}, \code{\link[=ApplyAC]{ApplyAC()}} for projection error generation.
-\item \code{.ConditionObs()} for how slots are estimated from real data.
+\item \code{\link[=Simulate]{Simulate()}} for conditioning the observation model on real data.
 }
 
 Other obs:

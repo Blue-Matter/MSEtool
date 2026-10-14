@@ -30,7 +30,6 @@ to the specified final year.
 }
 \seealso{
 \itemize{
-\item \code{.SubsetYear()} for year-based subsetting
 \item \code{Years()} for extracting available years
 }
 }

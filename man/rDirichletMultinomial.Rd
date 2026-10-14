@@ -76,5 +76,5 @@ rDirichletMultinomial(n = 500, alpha = alpha_shifted)
 
 }
 \seealso{
-\code{\link[=CompObs]{CompObs()}}, \code{.GenHistDataAgeComp()}, \code{.GenHistDataSizeComp()}
+\code{\link[=CompObs]{CompObs()}}
 }

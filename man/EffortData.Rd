@@ -34,8 +34,8 @@ uncertainty, or access and replace individual slots.
 \subsection{Usage}{
 
 \code{EffortData()} is the standard constructor. All arguments are optional;
-an empty object is valid and slots are populated later (e.g., by
-\code{.GenHistDataEffort()}).
+an empty object is valid and slots are populated later (e.g., when
+\code{\link[=Simulate]{Simulate()}} generates historical data).
 }
 
 \subsection{Attaching to a Data Object}{
@@ -65,8 +65,6 @@ ed <- EffortData(Value = val,
 \item \link[=data-class]{data} and \code{\link[=Data]{Data()}} for the enclosing data object.
 \item \code{\link[=EffortObs]{EffortObs()}} for the observation error structure that generates
 \link[=effortdata-class]{effortdata} objects during simulation.
-\item \code{.GenHistDataEffort()} for how \code{Value}, \code{CV}, and \code{Units} are populated
-from the operating model history.
 }
 
 Other data:

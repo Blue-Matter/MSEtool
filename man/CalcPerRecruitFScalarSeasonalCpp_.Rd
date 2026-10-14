@@ -73,3 +73,4 @@ sim/calendar-year, mirroring \code{.CalcPerRecruitFScalarSeasonal()}
 (\code{R/calc-per-recruit.R}). NPR0/NPR0_SP and RefSeasonWeights (both
 F-invariant) are precomputed in R and passed in.
 }
+\keyword{internal}

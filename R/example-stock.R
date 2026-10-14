@@ -63,7 +63,7 @@
 #' ## Natural Mortality
 #' [PopulateNaturalMortality()] samples `M` for each simulation from the
 #' uniform bounds and expands the result into a natural mortality-at-age array.
-#' Stochastic annual deviates are added via `.PopulateRandom()`.
+#' Stochastic annual deviates are then added.
 #'
 #' See also [NaturalMortalityModels()].
 #' 
@@ -184,7 +184,7 @@
 #' ## Natural Mortality
 #' [PopulateNaturalMortality()] samples `M` for each simulation from the
 #' uniform prior and expands the result into a natural mortality-at-age array.
-#' Stochastic annual deviates are added via `.PopulateRandom()`. The high `M`
+#' Stochastic annual deviates are then added. The high `M`
 #' range (0.7–0.9 yr^-1^) is consistent with the short lifespan of this species.
 #'
 #' ## Maturity
@@ -290,7 +290,7 @@
 #' 1000`) across months using a Gaussian curve centred on month 6 with
 #' standard deviation 1.5 months, creating a sharply seasonal pulse. 
 #'
-#' ## Spatial .Structure
+#' ## Spatial Structure
 #'
 #' The three areas represent a linear inshore-to-offshore gradient:
 #'
@@ -325,7 +325,7 @@
 #' ## Natural Mortality
 #' [PopulateNaturalMortality()] expands the fixed `M` into a constant
 #' natural mortality-at-age array. Stochastic annual deviates are added
-#' via `.PopulateRandom()` using `SD` and `AC` from the `SRR` slot.
+#' using `SD` and `AC` from the `SRR` slot.
 #'
 #' See also [NaturalMortalityModels()].
 #'

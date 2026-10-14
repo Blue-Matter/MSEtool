@@ -92,7 +92,7 @@ The slot defaults are:
 }
 }
 
-\subsection{Obs .Structure}{
+\subsection{Obs Structure}{
 
 Observation parameters are accessed via:
 

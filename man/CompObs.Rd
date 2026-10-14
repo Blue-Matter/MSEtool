@@ -44,7 +44,7 @@ multinomial. Values less than 1 produce overdispersed compositions, with
 identical to those for \code{SampleSize} above.}
 
 \item{Years}{\code{numeric} vector or \code{NULL}. Calendar years of observed
-composition data to use during conditioning via \code{.ConditionObsComp()}. Only
+composition data to use during conditioning. Only
 relevant when real composition data are supplied in \code{OM@Data}; has no
 effect during simulation-only runs. \code{NULL} (default) uses all available
 historical years during conditioning.}
@@ -67,8 +67,8 @@ simulations and years.
 with change-point years: expanded to \verb{[nSim x nYear x nBin]} by
 \code{\link[=PopulateCompObs]{PopulateCompObs()}}.
 \item Full \verb{[nSim x nYear x nBin]} array.
-In conditioning mode, \code{Shift} is populated internally by
-\code{.ConditionObsComp()} from the mean per-bin log-concentration residual across
+In conditioning mode, \code{Shift} is populated internally
+from the mean per-bin log-concentration residual across
 historical years and should not be set by the user.
 }}
 
@@ -122,7 +122,7 @@ variance.
 
 \subsection{Conditioning mode}{
 
-When real composition data are supplied via \code{OM@Data}, \code{.ConditionObsComp()}
+When real composition data are supplied via \code{OM@Data}, \code{\link[=Simulate]{Simulate()}}
 compares observed compositions with OM-predicted compositions across the
 historical years specified in \code{Years}, and populates \code{Shift} (mean per-bin
 log-concentration residual) as well as estimating an appropriate \code{ESS} and
@@ -168,7 +168,7 @@ obs <- Obs(
 \itemize{
 \item \link[=compobs-class]{compobs} for the class definition and slot descriptions.
 \item \code{\link[=PopulateCompObs]{PopulateCompObs()}} for the population function.
-\item \code{.ConditionObsComp()} for the conditioning function.
+\item \code{\link[=Simulate]{Simulate()}} for conditioning the observation model on real data.
 \item \code{\link[=Obs]{Obs()}} for the enclosing observation model constructor.
 }
 

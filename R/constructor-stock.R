@@ -65,7 +65,7 @@
 #'   and `Species<-`: a `character(1)` string.
 #'
 #' @details
-#' ## Object .Structure
+#' ## Object Structure
 #'
 #' A [stock-class] object aggregates all biological components needed to
 #' simulate stock dynamics: 

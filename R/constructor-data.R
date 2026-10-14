@@ -23,7 +23,7 @@
 #' ## Usage
 #'
 #' All arguments are optional; an empty object is valid and slots are
-#' populated later (e.g., by `.GenHistDataCatch()`).
+#' populated later (e.g., when [Simulate()] generates historical data).
 #'
 #' ## Attaching to a Data Object
 #'
@@ -105,8 +105,8 @@ CatchData <- function(Name  = NULL,
 #' ## Usage
 #'
 #' All arguments are optional; an empty object is valid and slots are
-#' populated later (e.g., by `.GenHistDataAgeComp()` or
-#' `.GenHistDataSizeComp()`.
+#' populated later (e.g., when [Simulate()] generates
+#' historical data).
 #'
 #' ## Value Dimensions and Units
 #'
@@ -192,8 +192,8 @@ CompData <- function(Name    = NULL,
 #' ## Usage
 #'
 #' `EffortData()` is the standard constructor. All arguments are optional;
-#' an empty object is valid and slots are populated later (e.g., by
-#' `.GenHistDataEffort()`).
+#' an empty object is valid and slots are populated later (e.g., when
+#' [Simulate()] generates historical data).
 #'
 #' ## Attaching to a Data Object
 #'
@@ -213,8 +213,6 @@ CompData <- function(Name    = NULL,
 #' - [data-class] and [Data()] for the enclosing data object.
 #' - [EffortObs()] for the observation error structure that generates
 #'   [effortdata-class] objects during simulation.
-#' - `.GenHistDataEffort()` for how `Value`, `CV`, and `Units` are populated
-#'   from the operating model history.
 #'
 #' @family data
 #'
@@ -273,7 +271,7 @@ EffortData <- function(Name  = NULL,
 #' ## Usage
 #'
 #' All arguments are optional; an empty object is valid and slots are
-#' populated later (e.g., by `.GenHistDataIndices()`).
+#' populated later (e.g., when [Simulate()] generates historical data).
 #'
 #' ## Attaching to a Data Object
 #'

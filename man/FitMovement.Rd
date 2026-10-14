@@ -30,8 +30,8 @@ Fits a row-stochastic movement matrix for a single simulation, age class,
 and year by numerical optimisation, so that the asymptotic (equilibrium)
 unfished distribution and the diagonal (staying probability) simultaneously
 reproduce the targets in \code{Spatial@UnfishedDist} and \code{Spatial@ProbStaying}.
-Dispatches to \code{.FitMovement2Area()} for two-area models and
-\code{.FitMovementMultiArea()} for three or more areas.
+Separate optimisation routines are used for two-area models and for models
+with three or more areas.
 }
 \details{
 This function is called internally by \code{\link[=Populate]{Populate()}} for every combination of
@@ -42,8 +42,6 @@ object.
 \seealso{
 \itemize{
 \item \code{\link[=Spatial]{Spatial()}} for the constructor and full spatial specification.
-\item \code{.FitMovement2Area()} for the two-area optimisation.
-\item \code{.FitMovementMultiArea()} for the multi-area optimisation.
 \item \code{\link[=Populate]{Populate()}} which calls this function internally.
 }
 }

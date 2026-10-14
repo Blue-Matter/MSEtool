@@ -107,7 +107,7 @@ CVs from the \code{\link[=CatchObs]{CatchObs()}} object are not currently applie
 serves as the working assumption for downstream MPs.
 }
 
-\subsection{Obs .Structure}{
+\subsection{Obs Structure}{
 
 Observation parameters are accessed via:
 

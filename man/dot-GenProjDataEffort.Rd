@@ -68,7 +68,7 @@ looks up the fleet- and year-specific CV from that simulation's existing
 \link[=effortdata-class]{effortdata} object.
 }
 
-\subsection{Obs .Structure}{
+\subsection{Obs Structure}{
 
 Observation parameters are accessed via:
 

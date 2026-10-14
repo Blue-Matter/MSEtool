@@ -120,8 +120,8 @@ Set \code{0.5} explicitly if you want the symmetric treatment.
 newly-advised size-based regulation (a change to \code{Advice@Retention}
 and/or \code{Advice@Selectivity}) in the year it changes; the remaining
 \code{1 - Compliance} fraction continues under the prior curve. Missing/\code{NA}
-defaults to \code{1} (full, immediate adoption). See
-\code{.UpdateSelectivitySim()}. \code{Size@Mean}/\code{SD}/\code{Error} are not consumed.
+defaults to \code{1} (full, immediate adoption).
+\code{Size@Mean}/\code{SD}/\code{Error} are not consumed.
 }
 }
 \seealso{

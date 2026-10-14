@@ -30,7 +30,7 @@
 #' * Generating mean fecundity at age, or at length if applicable
 #' * Converting between mean-at-length and mean-at-age
 #' * Multiplying by maturity to represent egg production of mature individuals
-#' * Adding stochastic variation via `.PopulateRandom()`
+#' * Adding stochastic variation
 #'
 #' @return
 #' A populated [Fecundity()] object.

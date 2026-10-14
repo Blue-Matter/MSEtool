@@ -37,8 +37,8 @@ PopulateImp <- function(Imp, nSim, HistYears, ProjYears) {
 #' @param Years Integer vector. Calendar years (historical and projection).
 #'
 #' @details
-#' `Compliance` is expanded to a `[Sim x Year]` array via
-#' `.StructurePars()`, using the same conventions as every other structured
+#' `Compliance` is expanded to a `[Sim x Year]` array,
+#' using the same conventions as every other structured
 #' OM parameter: a scalar is a fixed value for every simulation and year; a
 #' length-2 vector is `c(lower, upper)` bounds sampled once per simulation
 #' (held constant across years); a full array is respected as-is, with named

@@ -20,7 +20,7 @@
 #'
 #' @param Model Character or function or `NULL`. Retention model identifier.
 #'   If `NULL` (default), the model is inferred automatically from the names
-#'   in `Pars` via `.FindModel()`. May also be supplied as a custom R function
+#'   in `Pars`. May also be supplied as a custom R function
 #'   with arguments matching those in `Pars`. See [RetentionModels()] for
 #'   built-in options.
 #' @param MeanAtAge Numeric array or `NULL`. Mean retention-at-age with

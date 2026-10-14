@@ -48,7 +48,7 @@
 #' - `Theta`: defaults to `1` if `NULL`, recovering a near-multinomial draw
 #' - `Shift`: defaults to zero for all bins if `NULL`, applying no tilt
 #'
-#' ## Obs .Structure
+#' ## Obs Structure
 #'
 #' Observation parameters are accessed via:
 #'

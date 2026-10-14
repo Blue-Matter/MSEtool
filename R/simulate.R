@@ -38,9 +38,8 @@
 #'   used
 #'
 #' @details
-#' `Simulate()` is a dispatcher that calls internal functions `.SimulateOM()` (for
-#' [om-class] objects) or `SimulateOM()` (for legacy [OM-legacy-class]
-#' objects) depending on the class of `OM`.
+#' `Simulate()` accepts both [om-class] and legacy [OM-legacy-class] objects,
+#' dispatching on the class of `OM`.
 #'
 #' ## `OM@Control`
 #'

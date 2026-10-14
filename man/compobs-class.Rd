@@ -32,7 +32,7 @@ dispersion \code{Theta}:
 
 When observed compositions differ substantially from OM-predicted
 compositions (e.g. a length distribution shifted far left or right, or
-with markedly different spread), \code{.ConditionObsComp()} will produce large
+with markedly different spread), conditioning will produce large
 values in \code{Shift}. These are treated as observation error rather than model
 mis-specification — an assumption that should be evaluated carefully.
 See the technical manual for a full discussion of this assumption and its
@@ -64,8 +64,8 @@ standard multinomial. Accepted input forms are the same as for
 \verb{[nSim x nYear]} array.}
 
 \item{\code{Years}}{\code{numeric} vector or \code{NULL}. Calendar years of observed
-composition data to be used during the conditioning step (see
-\code{.ConditionObsComp()}). \code{NULL} (default) uses all available historical years during
+composition data to be used during the conditioning step.
+\code{NULL} (default) uses all available historical years during
 conditioning.}
 
 \item{\code{Shift}}{\code{numeric} or \code{NULL}. Systematic per-bin offset on the
@@ -73,7 +73,7 @@ log-concentration scale applied to the Dirichlet concentration vector
 before drawing, capturing directional bias between observed and
 OM-predicted compositions. After population by \code{\link[=PopulateCompObs]{PopulateCompObs()}},
 stored as a named \verb{[nSim x nYear x nBin]} array. \code{NULL} (default) applies
-no shift. In conditioning mode, populated internally by \code{.ConditionObsComp()}
+no shift. In conditioning mode, populated internally
 from the mean per-bin log-concentration residual across historical years.}
 
 \item{\code{Misc}}{\code{list}. Reserved for internal use.}
@@ -83,7 +83,7 @@ from the mean per-bin log-concentration residual across historical years.}
 \itemize{
 \item \code{\link[=CompObs]{CompObs()}} for the constructor and full parameter documentation.
 \item \code{\link[=PopulateCompObs]{PopulateCompObs()}} for the population function.
-\item \code{.ConditionObsComp()} for the conditioning function.
+\item \code{\link[=Simulate]{Simulate()}} for conditioning the observation model on real data.
 \item \link[=obs-class]{obs} for the enclosing observation model object.
 }
 

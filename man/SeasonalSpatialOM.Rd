@@ -78,7 +78,7 @@ See \link{CommercialFleetObs} for full parameter details.
 equal advice exactly, and
 \code{Size@Compliance = 1} means any size-regulation advice (a change to
 \code{Advice@Retention}/\code{Advice@Selectivity}) is adopted immediately by the
-whole fleet (see \code{.UpdateSelectivitySim()}). See \code{\link[=Imp]{Imp()}} for details,
+whole fleet. See \code{\link[=Imp]{Imp()}} for details,
 and \link{OverageImp}, \link{UnderageImp}, \link{PartialSizeComplianceImp} for
 contrasting examples.
 }

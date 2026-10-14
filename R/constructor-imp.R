@@ -70,8 +70,8 @@
 #' newly-advised size-based regulation (a change to `Advice@Retention`
 #' and/or `Advice@Selectivity`) in the year it changes; the remaining
 #' `1 - Compliance` fraction continues under the prior curve. Missing/`NA`
-#' defaults to `1` (full, immediate adoption). See
-#' `.UpdateSelectivitySim()`. `Size@Mean`/`SD`/`Error` are not consumed.
+#' defaults to `1` (full, immediate adoption).
+#' `Size@Mean`/`SD`/`Error` are not consumed.
 #'
 #' @param x An [om-class] object, for `Imp<-`; an [imp-class] object, for
 #'   `TACImp()`/`TACImp<-`.

@@ -76,6 +76,7 @@ CalcFisheryDynamics_ <- function(HistIn, Years, AllYears, Sims, nSim, nStock, nF
 #' @param WeightFleetRetainedList,WeightFleetSelectedList,SelectivityFleetList,RetentionFleetList,DiscardMortalityFleetList
 #'   Named lists (one element per stock) of nAge x nFleet `NumericMatrix`.
 #' @param IsSpawnTimeFrac Logical. Whether any stock has a non-zero spawn-time fraction.
+#' @keywords internal
 #' @return A named `List` of per-stock (length nStock) `NumericVector`s:
 #'   NPR0, NPRF, NPR0_SP, NPRF_SP (all summed-over-age, matching what
 #'   `.CalcPerRecruitFScalar()` stores in the `perrecruit` slots of the same
@@ -112,6 +113,7 @@ CalcPerRecruitFScalarCpp_ <- function(apicalF, StockFleetAllocation, NaturalMort
 #'   `from` stock's SPR contribution to the `to` stock.
 #' @param IsSpawnTimeFrac Logical. Whether any stock has a non-zero spawn-time fraction.
 #' @param nSeason Integer number of seasons per calendar year.
+#' @keywords internal
 #' @return A named `List`: per-stock (length nStock) `NumericVector`s NPR0,
 #'   NPRF, NPR0_SP, NPRF_SP, SPR0f (unfished SP-per-recruit), SPRFf (fished
 #'   SP-per-recruit), Biomass, SBiomass, SProduction, Landings, Discards,

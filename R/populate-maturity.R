@@ -27,7 +27,7 @@
 #' * Resolving the maturity model class
 #' * Generating mean maturity at age, at length, or at weight as appropriate
 #' * Converting between mean-at-length/weight and mean-at-age
-#' * Adding stochastic variation via `.PopulateRandom()`
+#' * Adding stochastic variation
 #' * Setting semelparous array if applicable
 #'
 #'

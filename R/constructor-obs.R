@@ -10,11 +10,11 @@
 #'   - Length-1 scalar: a single CV applied uniformly across all simulations
 #'     and years when generating the `Error` array internally.
 #'   - Length-2 vector `c(mean, sd)`: `CV` is itself drawn stochastically —
-#'     a unique CV per simulation is generated via `.StructurePars()` before
+#'     a unique CV per simulation is generated before
 #'     being used to generate the `Error` array.
 #'   - Length-`nSim` named array: used directly, one CV per simulation.
 #'
-#'   When conditioning on real data via `.ConditionObs()`, `CV` is replaced by
+#'   When conditioning on real data, `CV` is replaced by
 #'   the simulation-specific standard deviation of historical log-residuals.
 #' @param Bias `numeric` or `NULL`. Multiplicative observation bias. Accepted
 #'   forms:
@@ -28,7 +28,7 @@
 #'   - Length-`nSim` vector or named array: used directly, one bias per
 #'     simulation.
 #'
-#'   When conditioning on real data via `.ConditionObs()`, `Bias` is replaced
+#'   When conditioning on real data, `Bias` is replaced
 #'   by the mean ratio of simulated to observed catch across historical years,
 #'   per simulation.
 #' @param Error `numeric` array or `NULL`. Pre-specified lognormal observation
@@ -36,8 +36,8 @@
 #'   (`Sim`, `Year`). When supplied, `Error` is used directly and `CV` is
 #'   ignored for error generation. Values should be positive multipliers
 #'   centred near 1. Default `NULL`, in which case `Error` is generated from
-#'   `CV` internally. When conditioning on real data via
-#'   `.ConditionObs()`, any user-supplied `Error` is replaced.
+#'   `CV` internally. When conditioning on real data,
+#'   any user-supplied `Error` is replaced.
 #' @param Years `numeric` vector or `NULL`. Calendar years over which to
 #'   condition the observation error when real catch data are provided. When
 #'   `NULL` (default), all historical years in the `Data` object are used.
@@ -67,7 +67,7 @@
 #' 2. **Stochastic from `CV`**: if `Error` is `NULL` and `CV` is specified,
 #'    Internally the model generates a lognormal array where each cell is
 #'    `rlnorm(1, mconv(1, CV[sim]), sdconv(1, CV[sim]))`.
-#' 3. **Conditioned from real data**: `.ConditionObs()` estimates `CV`, `Bias`,
+#' 3. **Conditioned from real data**: [Simulate()] estimates `CV`, `Bias`,
 #'    and `Error` from historical residuals; any user-supplied values are
 #'    replaced.
 #'
@@ -80,9 +80,9 @@
 #'
 #' ## Conditioning on Real Data
 #'
-#' When real catch data are provided (via `OM@Data`) and `.ConditionObs()` is
-#' run, `CV` and `Bias` are estimated from the historical residuals between
-#' simulated and observed catch, and `Error` is populated to cover both
+#' When real catch data are provided (via `OM@Data`), [Simulate()]
+#' conditions the observation model: `CV` and `Bias` are estimated from the
+#' historical residuals between simulated and observed catch, and `Error` is populated to cover both
 #' historical and projection years. Any user-supplied `CV`, `Bias`, and `Error`
 #' values are replaced.
 #'
@@ -103,7 +103,7 @@
 #' @seealso
 #' - [catchobs-class] for the class definition.
 #' - [Obs()] for the enclosing observation model constructor.
-#' - `.ConditionObs()` for how these slots are estimated from real data.
+#' - [Simulate()] for conditioning the observation model on real data.
 #'
 #' @family obs
 #'
@@ -166,7 +166,7 @@ CatchObs <- function(CV    = NULL,
 #'   identical to those for `SampleSize` above.
 #'
 #' @param Years `numeric` vector or `NULL`. Calendar years of observed
-#'   composition data to use during conditioning via `.ConditionObsComp()`. Only
+#'   composition data to use during conditioning. Only
 #'   relevant when real composition data are supplied in `OM@Data`; has no
 #'   effect during simulation-only runs. `NULL` (default) uses all available
 #'   historical years during conditioning.
@@ -188,8 +188,8 @@ CatchObs <- function(CV    = NULL,
 #'     with change-point years: expanded to `[nSim x nYear x nBin]` by
 #'     [PopulateCompObs()].
 #'   - Full `[nSim x nYear x nBin]` array.
-#'   In conditioning mode, `Shift` is populated internally by
-#'   `.ConditionObsComp()` from the mean per-bin log-concentration residual across
+#'   In conditioning mode, `Shift` is populated internally
+#'   from the mean per-bin log-concentration residual across
 #'   historical years and should not be set by the user.
 #'
 #' @param Misc `list`. Reserved for internal use. Default `list()`.
@@ -226,7 +226,7 @@ CatchObs <- function(CV    = NULL,
 #'
 #' ## Conditioning mode
 #'
-#' When real composition data are supplied via `OM@Data`, `.ConditionObsComp()`
+#' When real composition data are supplied via `OM@Data`, [Simulate()]
 #' compares observed compositions with OM-predicted compositions across the
 #' historical years specified in `Years`, and populates `Shift` (mean per-bin
 #' log-concentration residual) as well as estimating an appropriate `ESS` and
@@ -259,7 +259,7 @@ CatchObs <- function(CV    = NULL,
 #' @seealso
 #' - [compobs-class] for the class definition and slot descriptions.
 #' - [PopulateCompObs()] for the population function.
-#' - `.ConditionObsComp()` for the conditioning function.
+#' - [Simulate()] for conditioning the observation model on real data.
 #' - [Obs()] for the enclosing observation model constructor.
 #'
 #' @family obs
@@ -299,7 +299,7 @@ CompObs <- function(SampleSize = NULL,
 #'   - Length-1 scalar: a single CV applied uniformly across all simulations
 #'     and years when generating the `Error` array internally.
 #'   - Length-2 vector `c(mean, sd)`: `CV` is itself drawn stochastically —
-#'     a unique CV per simulation is generated via `.StructurePars()` before
+#'     a unique CV per simulation is generated before
 #'     being used to generate the `Error` array.
 #'   - Length-`nSim` named array: used directly, one CV per simulation.
 #' @param Bias `numeric` or `NULL`. Multiplicative observation bias. Accepted
@@ -479,19 +479,19 @@ ExploitationObs <- function(Selectivity      = list(),
 #'   - Length-1 scalar: a single CV applied uniformly across all simulations
 #'     and years when generating the `Error` array internally.
 #'   - Length-2 vector `c(mean, sd)`: `CV` is itself drawn stochastically —
-#'     a unique CV per simulation is generated via `.StructurePars()` before
+#'     a unique CV per simulation is generated before
 #'     being used to generate the `Error` array.
 #'   - Length-`nSim` named array: used directly, one CV per simulation.
 #'
-#'   When conditioning on real data via `.ConditionObs()`, `CV` is replaced by
+#'   When conditioning on real data, `CV` is replaced by
 #'   the simulation-specific standard deviation of historical log-residuals
 #'   estimated by [CalcResidualStats()]. Ignored if `Error` is supplied
 #'   directly.
 #' @param Error `numeric` array or `NULL`. Pre-specified lognormal observation
 #'   error multipliers with dimensions `nSim x nYear` and named dimnames
 #'   (`Sim`, `Year`). When supplied, `Error` is used directly and `CV` is
-#'   ignored for error generation. When real index data are provided and
-#'   `.ConditionObs()` is run, `Error` is replaced by conditioned values
+#'   ignored for error generation. When real index data are provided in `OM@Data`,
+#'   `Error` is replaced by conditioned values
 #'   regardless of whether it was user-supplied. Default `NULL`, in which case
 #'   `Error` is generated from `CV` internally.
 #' @param Areas `integer` vector or `NULL`. Indices of the spatial areas that
@@ -580,7 +580,7 @@ ExploitationObs <- function(Selectivity      = list(),
 #'    `rlnorm(1, mconv(1, CV[sim]), sdconv(1, CV[sim]))`. `CV` is first
 #'    expanded to length `nSim` internally — a length-2 input
 #'    triggers a stochastic draw of a unique CV per simulation.
-#' 3. **Conditioned from real data**: `.ConditionObs()` estimates `CV`,
+#' 3. **Conditioned from real data**: [Simulate()] estimates `CV`,
 #'    `Beta`, `Efficiency`, `AC`, `Stats`, and `Error` from historical
 #'    residuals; any user-supplied values are replaced.
 #'
@@ -590,8 +590,8 @@ ExploitationObs <- function(Selectivity      = list(),
 #'
 #' ## Conditioning on Real Data
 #'
-#' When real index data are provided (via `OM@Data`) and `.ConditionObs()` is
-#' run, the following slots are estimated and populated internally:
+#' When real index data are provided (via `OM@Data`), [Simulate()]
+#' conditions the observation model and the following slots are estimated:
 #'
 #' - `Efficiency` (`q`) is always fit per simulation by log-linear regression
 #'   of `log(Observed)` on `log(NomIndex)`, under
@@ -649,7 +649,7 @@ ExploitationObs <- function(Selectivity      = list(),
 #' - [Obs()] for the enclosing observation model constructor.
 #' - [CalcResidualStats()] for residual statistic computation.
 #' - [GenResiduals()], [ApplyAC()] for projection error generation.
-#' - `.ConditionObs()` for how slots are estimated from real data.
+#' - [Simulate()] for conditioning the observation model on real data.
 #'
 #' @family obs
 #'

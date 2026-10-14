@@ -70,9 +70,8 @@ or \link[=hist-class]{Hist-class} object containing historical population dynami
 data, and reference points.
 }
 \details{
-\code{Simulate()} is a dispatcher that calls internal functions \code{.SimulateOM()} (for
-\link[=om-class]{om} objects) or \code{SimulateOM()} (for legacy \link[=OM-legacy-class]{OM-legacy}
-objects) depending on the class of \code{OM}.
+\code{Simulate()} accepts both \link[=om-class]{om} and legacy \link[=OM-legacy-class]{OM-legacy} objects,
+dispatching on the class of \code{OM}.
 \subsection{\code{OM@Control}}{
 
 \code{OM@Control} holds optional settings that modify the simulated dynamics,

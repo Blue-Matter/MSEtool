@@ -22,7 +22,6 @@
 #'
 #'
 #' @seealso
-#' * `.SubsetYear()` for year-based subsetting
 #' * `Years()` for extracting available years
 #'
 #' @export

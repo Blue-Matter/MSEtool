@@ -11,7 +11,7 @@
 #'   [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for
 #'   accepted input formats.
 #' @slot Model `function` or `character(1)`. Maturity model identifier,
-#'   matched to one of [MaturityModels()]. Set automatically by `.FindModel()`
+#'   matched to one of [MaturityModels()]. Set automatically from the parameter names
 #'   when `Pars` is supplied without an explicit model.
 #' @slot MeanAtAge `array`. Mean maturity-at-age with named dimensions `Sim`,
 #'   `Age`, and `Year`. Values range from 0 (immature) to 1 (fully mature).
@@ -68,7 +68,6 @@
 #' - [MaturityModels()] for available maturity models and their required
 #'   parameters. 
 #' - [Populate()] for array population.
-#' - `.FindModel()` for automatic model inference. 
 #' - [Semelparous()] to retrieve or set the post-spawn mortality array. 
 #' - [Length()] and [Weight()] for the companion schedules required by at-length and at-weight maturity models.
 #' - [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for the

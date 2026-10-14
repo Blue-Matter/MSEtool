@@ -64,7 +64,7 @@
 #' looks up the fleet- and year-specific CV from that simulation's existing
 #' [catchdata-class] object.
 #'
-#' ## Obs .Structure
+#' ## Obs Structure
 #'
 #' Observation parameters are accessed via:
 #'

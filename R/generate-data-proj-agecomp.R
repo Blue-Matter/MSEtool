@@ -58,7 +58,7 @@
 #'   Slots with fewer simulation rows than `nSim` are recycled from their last
 #'   row.
 #'
-#' ## Obs .Structure
+#' ## Obs Structure
 #'
 #' Observation parameters are accessed via:
 #'

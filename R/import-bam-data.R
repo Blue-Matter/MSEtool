@@ -76,7 +76,6 @@
 #' length composition must follow the [compdata-class] convention used by
 #' `LandingsAtSize`/`DiscardsAtSize`: `Classes` is a named list, one vector
 #' per fleet, since fleets are not required to share a length-bin grid (see
-#' `.ImportSSDataAtSize()` in `import-ss3-data.R` for a worked example, and
 #' [compdata-class] for the fleet-relative-position convention on `Value`'s
 #' Class dimension). Age composition can keep the flat shared `Classes`
 #' vector, since ages are shared across fleets.

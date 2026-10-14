@@ -1,4 +1,4 @@
-#' .Structure and Extend a `Pars` List 
+#' Structure and Extend a `Pars` List 
 #'
 #' Each element is converted to a named `Sim × Year` (or `Sim × Year × Area`) array via
 #' `.StructurePar()`, a random walk is applied to any parameter paired with
@@ -294,7 +294,7 @@
   array(value, dim=array_str$size)
 }
 
-#' .Structure a CV-at-Age Value into a Standard Array
+#' Structure a CV-at-Age Value into a Standard Array
 #'
 #' Convenience wrapper around `.Structure()` for CV-at-age values. Handles
 #' three input forms:

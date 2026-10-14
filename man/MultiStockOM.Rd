@@ -13,7 +13,7 @@ An \link[=om-class]{om} object with the following slots populated:
 \item \strong{\code{pYear}}: \code{30}. Number of projection years.
 \item \strong{\code{Stock}}: a length-2 list of \verb{[[AlbacoreExStock, ButterfishExStock]]}.
 \item \strong{\code{Fleet}}: a length-2 list, each containing a length-2 list of
-\verb{[[AsympExFleet, DomeExFleet]]}. .Structure is \verb{[[stock]][[fleet]]}.
+\verb{[[AsympExFleet, DomeExFleet]]}. Structure is \verb{[[stock]][[fleet]]}.
 Both stocks are fished by the same two fleet types.
 \item \strong{\code{Obs}}: a length-2 list with structure \verb{[[stock]][[fleet]]}:
 \itemize{
@@ -89,7 +89,7 @@ and discarded fish.
 equal advice exactly, and
 \code{Size@Compliance = 1} means any size-regulation advice (a change to
 \code{Advice@Retention}/\code{Advice@Selectivity}) is adopted immediately by the
-whole fleet (see \code{.UpdateSelectivitySim()}). See \code{\link[=Imp]{Imp()}} for details,
+whole fleet. See \code{\link[=Imp]{Imp()}} for details,
 and \link{OverageImp}, \link{UnderageImp}, \link{PartialSizeComplianceImp} for
 contrasting examples.
 }

@@ -82,20 +82,14 @@ EmptyObject <- function(object) {
 #' construction. Used internally by [EmptyObject()].
 #'
 #' @param object An S4 object.
-#'
+#'  
+#' @details
+#' '   
 #' `isNewObject()` constructs a default instance of the same class as
 #' `object` and compares the two with [identical()]. Before comparing, the
 #' `Name` slot (if present) is set to `NULL` on `object` so that a user-
 #' supplied name alone does not cause the object to be considered non-default.
 #'
-#' The default instance is obtained as follows:
-#'
-#' * For a small set of classes whose constructors do not follow the standard
-#'   `.FirstUp(class)()` naming convention (`naturalmortality`, `srr`, `om`,
-#'   `discardmortality`), the appropriate constructor is called directly.
-#' * For all other classes, the constructor is looked up as
-#'   `get(.FirstUp(class))`. If no such constructor exists, `new(class)` is
-#'   used as a fallback.
 #'
 #' @return A length-1 logical. Returns `FALSE` for non-S4 objects.
 #'

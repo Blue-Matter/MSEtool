@@ -26,7 +26,7 @@
 #' * Resolving the mortality model class
 #' * Generating mean natural mortality at age or at length
 #' * Converting between mean-at-length and mean-at-age if necessary
-#' * Adding stochastic variation via `.PopulateRandom()`
+#' * Adding stochastic variation
 #'
 #'
 #' @return
