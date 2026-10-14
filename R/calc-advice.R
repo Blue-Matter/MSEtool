@@ -61,6 +61,14 @@
     return(list(AdviceSimList      = LastAdviceSimList,
                 AggBagLimitSimList = LastAggBagLimitSimList))
 
+  MPYears <- ManagementYears
+  if (!is.null(MPStartYear)) MPYears <- MPYears[floor(MPYears) >= MPStartYear]
+  FirstAdvice <- isTRUE(abs(Year - min(MPYears)) < 1e-6)
+  DataSimList <- purrr::map(DataSimList, \(DataList) purrr::map(DataList, \(Data) {
+    Data@Misc$FirstAdvice <- FirstAdvice
+    Data
+  }))
+
   .CalcAdvice(
     MPName,
     MPfunction,
@@ -169,7 +177,8 @@
 #'
 #' Each `Data` object passed to the MP has `Data@@Misc$MPName`,
 #' `Data@@Misc$StockName`, `Data@@Misc$AdviceYear` (the time step the advice
-#' is first applied in) and `Data@@Misc$Interval` set.
+#' is first applied in), `Data@@Misc$FirstAdvice` (`TRUE` on the MP's first
+#' call of the projection) and `Data@@Misc$Interval` set.
 #'
 #' `Data@@Misc$DataOM` is populated with the `hist` slots resolved for the
 #' MP from `OM@@Control$DataOM` and the MP's `DataOM` attribute; see

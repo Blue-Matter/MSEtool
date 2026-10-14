@@ -1,13 +1,14 @@
 
 #' Check catch data availability and units
 #'
-#' Warns if a catch slot (`Landings` or `Discards`) contains no data, or if
-#' `Landings` and `Discards` are not in the same units as each other.
+#' Warns if none of the catch slots in `slot_names` (by default `Landings` and
+#' `Discards`) contain data, or if `Landings` and `Discards` are not in the
+#' same units as each other. Missing `Discards` alone is not a problem: TACs
+#' are then set from `Landings`.
 #'
-#' If no `Landings` or `Discards` data are available, and a finite TAC value
-#' cannot be produced, the MP will likely fall back to setting effort to last
-#' historical effort - ie same as [CurrentEffort()] (the default for
-#' empty [Advice()] objects).
+#' If no catch data are available, and a finite TAC value cannot be produced,
+#' the MP will likely fall back to setting effort to last historical effort -
+#' ie same as [CurrentEffort()] (the default for empty [Advice()] objects).
 #'
 #' If `Landings` and `Discards` are not in the same units (e.g. one in
 #' `Biomass` and the other in `Number`, or one in `"t"` and the other in
@@ -15,9 +16,8 @@
 #' TAC is not meaningful. The unit-mismatch check is only performed when both
 #' `'Landings'` and `'Discards'` are included in `slot_names`.
 #'
-#' Warnings are suppressed after the last historical year (i.e. once
-#' `max(Data@Years) > Data@YearLH`) so that they appear only on the first
-#' call within a projection, not on every subsequent timestep.
+#' Within a projection, warnings are issued only for the first simulation on
+#' the MP's first call (`Data@Misc$FirstAdvice`), so they appear once per MP.
 #'
 #' @param Data A [data-class] object.
 #' @param incUnits Logical. If `TRUE` (default), an additional warning is
@@ -29,12 +29,10 @@
 #' @export
 CheckCatch <- function(Data, incUnits = TRUE, slot_names = c('Landings', 'Discards')) {
 
-  if (max(Data@Years) > Data@YearLH || isTRUE(Data@Misc$Sim > 1))
-    return(invisible(NULL)) # warnings only the first projection year
+  if (isTRUE(Data@Misc$Sim > 1) || isFALSE(Data@Misc$FirstAdvice))
+    return(invisible(NULL))
 
-
-  # Check errors for each slot
-  value_errors <- sapply(slot_names, function(s) is.null(slot(Data, s)@Value))
+  no_data <- all(vapply(slot_names, function(s) is.null(slot(Data, s)@Value), logical(1)))
 
   unit_mismatch <- FALSE
   if (incUnits && all(c('Landings', 'Discards') %in% slot_names)) {
@@ -48,33 +46,25 @@ CheckCatch <- function(Data, incUnits = TRUE, slot_names = c('Landings', 'Discar
     }
   }
 
-  if (!any(value_errors, na.rm = TRUE) && !unit_mismatch)
+  if (!no_data && !unit_mismatch)
     return(invisible(NULL))
 
-  if (!is.null(Data@Misc$StockName))
-    cli::cli_alert_warning("Stock: {Data@Misc$StockName}")
+  Stock    <- Data@Misc$StockName %||% Data@Name
+  MPPrefix <- if (is.null(Data@Misc$MPName)) "" else cli::format_inline("MP {.val {Data@Misc$MPName}}: ")
 
-  if (any(value_errors)) {
-    affected <- slot_names[value_errors]
-    if (length(affected)>1) {
-      cli::cli_alert_warning(
-        'No {.val {affected}} data available for: {.val {Data@Name}}'
-      )
-      cli::cli_alert_warning(
-        'If this data is used to set TAC, the MP will likely use {.val CurrentEffort} instead'
-      )
-    }
+  if (no_data)
+    cli::cli_alert_warning(paste0(
+      MPPrefix,
+      "no {.val {slot_names}} data for {.val {Stock}}, so no TAC can be calculated from catch. ",
+      "The MP will likely return no TAC and effort will stay at the last historical level (as {.fn CurrentEffort})."
+    ))
 
-  }
-
-  if (unit_mismatch) {
-    cli::cli_alert_warning(
-      'Caution: {.val Landings} and {.val Discards} are not in the same units for: {.val {Data@Name}}'
-    )
-    cli::cli_alert_warning(
-      'Summing these values to set TAC may result in incorrect TAC values'
-    )
-  }
+  if (unit_mismatch)
+    cli::cli_alert_warning(paste0(
+      MPPrefix,
+      "{.val Landings} and {.val Discards} for {.val {Stock}} are not in the same units, ",
+      "so summing them to set a TAC may give incorrect TAC values."
+    ))
 
   invisible(NULL)
 

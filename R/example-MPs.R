@@ -82,7 +82,7 @@ CurrentCatch <- function(Data) {
   if (is.null(LastHistLandings) || !length(LastHistLandings))
     return(Advice())
 
-  LastHistDiscards <- Data@Discards@Value[TargetRow, , drop=FALSE]
+  LastHistDiscards <- Data@Discards@Value[TargetRow, , drop=FALSE] %||% 0
 
   LastHistRemovals <- as.vector(replace(LastHistLandings, is.na(LastHistLandings), 0) +
                                   replace(LastHistDiscards,  is.na(LastHistDiscards),  0))
@@ -126,7 +126,7 @@ AverageCatch <- function(Data) {
   HistDiscards <- Data@Discards@Value[HistRows, , drop=FALSE]
 
   TotalHistLandings <- rowSums(HistLandings, na.rm=TRUE)
-  TotalHistDiscards <- rowSums(HistDiscards, na.rm=TRUE)
+  TotalHistDiscards <- if (is.null(HistDiscards)) 0 else rowSums(HistDiscards, na.rm=TRUE)
   TotalHistRemovals <- TotalHistLandings + TotalHistDiscards
   Advice(TAC=mean(TotalHistRemovals[TotalHistRemovals!=0]),
          TACUnit = Data@Landings@Units)
