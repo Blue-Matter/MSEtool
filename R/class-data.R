@@ -120,6 +120,21 @@ setClass(
   )
 )
 
+setValidity("indicesdata", function(object) {
+  nIndex <- if (!is.null(object@Value)) NCOL(object@Value) else length(object@Name)
+  if (!nIndex) return(TRUE)
+  if (!is.null(object@Value) && length(object@Name) && length(object@Name) != nIndex)
+    return(paste0("`Name` has ", length(object@Name), " elements but `Value` has ", nIndex, " columns"))
+  if (!is.null(object@CV) && !is.null(object@Value) && NCOL(object@CV) != nIndex)
+    return("`CV` must have one column per index")
+  for (sl in c("Units", "Timing"))
+    if (!length(slot(object, sl)) %in% c(0, 1, nIndex))
+      return(paste0("`", sl, "` must have one value per index (", nIndex, "), or a single value"))
+  if (!length(object@Ref) %in% c(0, nIndex))
+    return(paste0("`Ref` must have one value per index (", nIndex, ")"))
+  TRUE
+})
+
 
 #' The `compdata` S4 Class
 #'

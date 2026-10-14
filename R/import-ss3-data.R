@@ -15,6 +15,9 @@
 #' @param CatchUnits Character. `'SS3'` (default) imports the catch of each
 #'   fleet in its SS3 catch units; `'Biomass'` imports the catch of every
 #'   fleet in biomass. See [ImportSS()].
+#' @param FleetNames Optional character vector of names for the SS3 fishing
+#'   fleets, in SS3 fleet order, used for their catch, CPUE, and composition
+#'   data. If `NULL`, the SS3 fleet names are used.
 #' @param silent Logical; suppress progress messages (default FALSE)
 #' @param ... Additional arguments passed to `ImportSSReport`
 #'
@@ -26,6 +29,7 @@ ImportSSData <- function(SSDir,
                          Species    = "",
                          LengthUnits = "cm",
                          CatchUnits = c('SS3', 'Biomass'),
+                         FleetNames = NULL,
                          silent     = FALSE,
                          ...) {
   .OnExit()
@@ -49,32 +53,34 @@ ImportSSData <- function(SSDir,
   Data@Seasons <- YearsList$Seasons
   Data@nArea   <- 1
   
-  Landings_Discards <- .ImportSSDataCatch(replist, silent, CatchUnits = CatchUnits)
+  FleetNames <- .ProcessSSFleetNames(FleetNames, .SSFishFleets(replist)$SSName)
+  Landings_Discards <- .ImportSSDataCatch(replist, silent, CatchUnits = CatchUnits, FleetNames = FleetNames)
   Data@Landings     <- Landings_Discards$Landings
   Data@Discards     <- Landings_Discards$Discards
   
-  Data@CPUE   <- .ImportSSDataIndex(replist, "CPUE")
+  Data@CPUE   <- .ImportSSDataIndex(replist, "CPUE", FleetNames = FleetNames)
   Data@Survey <- .ImportSSDataIndex(replist, "Survey")
   
-  AtAge              <- .ImportSSDataAtAge(replist, silent)
+  AtAge              <- .ImportSSDataAtAge(replist, silent, FleetNames = FleetNames)
   Data@LandingsAtAge <- AtAge$Landings
   Data@DiscardsAtAge <- AtAge$Discards
   
-  AtSize              <- .ImportSSDataAtSize(replist, silent, LengthUnits = LengthUnits)
+  AtSize              <- .ImportSSDataAtSize(replist, silent, LengthUnits = LengthUnits, FleetNames = FleetNames)
   Data@LandingsAtSize <- AtSize$Landings
   Data@DiscardsAtSize <- AtSize$Discards
   
   Data
 }
 
-.ImportSSDataCatch <- function(replist, silent = FALSE, CatchUnits = 'SS3') {
+.ImportSSDataCatch <- function(replist, silent = FALSE, CatchUnits = 'SS3', FleetNames = NULL) {
   
   dead_bio <- dead_num <- kill_bio <- kill_num <- ret_bio <- ret_num <- NULL
   
   YearsList <- .GetSSYears(replist, pYear = 1)
   YearsHist <- YearsList$YearsHist
   nTS <- length(YearsHist)
-  FleetNames <- replist$catch$Fleet_Name |> unique()
+  FishFleets <- .SSFishFleets(replist)$SS
+  FleetNames <- FleetNames %||% .SSFishFleets(replist)$SSName
   nFleet <- length(FleetNames)
   
   # Landings, Dead Discards
@@ -125,11 +131,11 @@ ImportSSData <- function(SSDir,
     
     if (units == "Biomass") {
       Dead <- CatchDF |>
-        dplyr::filter(Fleet == fl) |>
+        dplyr::filter(Fleet == FishFleets[fl]) |>
         dplyr::select(Year = Yr, Obs = kill_bio)
     } else if (units == "Number") {
       Dead <- CatchDF |>
-        dplyr::filter(Fleet == fl) |>
+        dplyr::filter(Fleet == FishFleets[fl]) |>
         dplyr::select(Year = Yr, Obs = kill_num)
     } else {
       cli::cli_alert_warning("Units {.val {units}} not supported for landings & discards")
@@ -137,11 +143,11 @@ ImportSSData <- function(SSDir,
     
     if (units == "Biomass") {
       Retain <- CatchDF |>
-        dplyr::filter(Fleet == fl) |>
+        dplyr::filter(Fleet == FishFleets[fl]) |>
         dplyr::select(Year = Yr, Obs = ret_bio)
     } else if (units == "Number") {
       Retain <- CatchDF |>
-        dplyr::filter(Fleet == fl) |>
+        dplyr::filter(Fleet == FishFleets[fl]) |>
         dplyr::select(Year = Yr, Obs = ret_num)
     } else {
       cli::cli_alert_warning("Units {.val {units}} not supported for landings & discards")
@@ -158,7 +164,7 @@ ImportSSData <- function(SSDir,
 }
 
 
-.ImportSSDataIndex <- function(replist, Type = c("CPUE", "Survey")) {
+.ImportSSDataIndex <- function(replist, Type = c("CPUE", "Survey"), FleetNames = NULL) {
   Type <- match.arg(Type, c("CPUE", "Survey"))
   
   YearsList <- .GetSSYears(replist, pYear = 1)
@@ -188,7 +194,7 @@ ImportSSData <- function(SSDir,
     return(Indices)
   }
   
-  CPUE_Ind <- CPUE$Fleet |> unique()
+  CPUE_Ind <- CPUE$Fleet |> unique() |> sort()
   
   CPUE_Split <- CPUE |>
     dplyr::group_by(Fleet) |>
@@ -201,6 +207,9 @@ ImportSSData <- function(SSDir,
   }) |>
     unlist() |>
     as.character()
+  # CPUE of a fishing fleet takes that fleet's (possibly user-supplied) name
+  if (Type == "CPUE" && !is.null(FleetNames))
+    CPUENames <- FleetNames[match(CPUE_Ind, .SSFishFleets(replist)$SS)]
   
   Indices@Name <- CPUENames
   names(CPUE_Split) <- CPUENames
@@ -238,7 +247,7 @@ ImportSSData <- function(SSDir,
                                        )
   )
   
-  Indices@Timing <- rep(0, nIndex) # assume at beginning of time step
+  Indices@Timing <- purrr::map2_dbl(CPUE_Split, CPUENames, \(cpue, nm) .SSIndexTiming(cpue, replist, nm))
   
   for (i in seq_along(Value)) {
     ArrayFill(Indices@Value) <- Value[[i]]
@@ -253,7 +262,7 @@ ImportSSData <- function(SSDir,
            "0" = "Number",
            "1" = "Biomass",
            "2" = "F",
-           "30" = "Spawning Production",
+           "30" = "Biomass", # spawning production: SBiomass selectivity set on Obs
            "31" = "Expected Recruitment Deviation",
            "32" = "Spawning Production * exp(recruitment deviation)",
            "33" = "Recruitment",
@@ -272,14 +281,26 @@ ImportSSData <- function(SSDir,
   Indices
 }
 
+# timing of an SS3 index within its time step, from the observation month
+.SSIndexTiming <- function(cpue, replist, Name) {
+  if (!'Month' %in% names(cpue)) return(0)
+  SeasDur   <- (replist$seasdurations %||% rep(1 / replist$nseasons, replist$nseasons)) * 12
+  SeasStart <- 1 + c(0, cumsum(SeasDur))[seq_along(SeasDur)]
+  Timing <- (cpue$Month - SeasStart[cpue$Seas]) / SeasDur[cpue$Seas]
+  Timing <- pmin(pmax(Timing, 0), 1)
+  if (length(unique(round(Timing, 3))) > 1)
+    cli::cli_alert_info("SS3 index {.val {Name}} is observed at different times within the time step; using the median timing ({round(stats::median(Timing), 3)}).")
+  stats::median(Timing)
+}
 
-.ImportSSDataAtAge <- function(replist, silent = FALSE) {
+
+.ImportSSDataAtAge <- function(replist, silent = FALSE, FleetNames = NULL) {
 
   YearsList     <- .GetSSYears(replist, pYear = 1)
   YearsHist     <- YearsList$YearsHist
   nTS           <- length(YearsHist)
-  FishFleets    <- which(replist$IsFishFleet)
-  FleetNames    <- unique(replist$catch$Fleet_Name)[FishFleets]
+  FishFleets    <- .SSFishFleets(replist)$SS
+  FleetNames    <- FleetNames %||% .SSFishFleets(replist)$SSName
   nFleet        <- length(FishFleets)
   AgeClasses    <- .GetSSAgeClasses(replist)
   nAge          <- length(AgeClasses)
@@ -368,13 +389,13 @@ ImportSSData <- function(SSDir,
 }
 
 
-.ImportSSDataAtSize <- function(replist, silent = FALSE, LengthUnits = "cm") {
+.ImportSSDataAtSize <- function(replist, silent = FALSE, LengthUnits = "cm", FleetNames = NULL) {
   
   YearsList     <- .GetSSYears(replist, pYear = 1)
   YearsHist     <- YearsList$YearsHist
   nTS           <- length(YearsHist)
-  FishFleets    <- which(replist$IsFishFleet)
-  FleetNames    <- unique(replist$catch$Fleet_Name)[FishFleets]
+  FishFleets    <- .SSFishFleets(replist)$SS
+  FleetNames    <- FleetNames %||% .SSFishFleets(replist)$SSName
   nFleet        <- length(FishFleets)
   LengthClasses <- .GetSSLengthClasses(replist) 
   nLength       <- length(LengthClasses)

@@ -282,6 +282,10 @@ EffortData <- function(Name  = NULL,
 #' Survey(data) <- IndicesData(Value = myArray, CV = myCVArray)
 #' ```
 #'
+#' The selectivity of an index is set on its observation model
+#' ([IndicesObs()]). Use [AddIndex()] to add an index and its selectivity to
+#' an operating model in one step.
+#'
 #' @return An [indicesdata-class] object.
 #'
 #' @seealso

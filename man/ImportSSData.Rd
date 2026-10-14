@@ -11,6 +11,7 @@ ImportSSData(
   Species = "",
   LengthUnits = "cm",
   CatchUnits = c("SS3", "Biomass"),
+  FleetNames = NULL,
   silent = FALSE,
   ...
 )
@@ -33,6 +34,10 @@ Default \code{"cm"}.}
 \item{CatchUnits}{Character. \code{'SS3'} (default) imports the catch of each
 fleet in its SS3 catch units; \code{'Biomass'} imports the catch of every
 fleet in biomass. See \code{\link[=ImportSS]{ImportSS()}}.}
+
+\item{FleetNames}{Optional character vector of names for the SS3 fishing
+fleets, in SS3 fleet order, used for their catch, CPUE, and composition
+data. If \code{NULL}, the SS3 fleet names are used.}
 
 \item{silent}{Logical; suppress progress messages (default FALSE)}
 

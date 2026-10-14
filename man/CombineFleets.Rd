@@ -110,13 +110,12 @@ combined fleets in each year, and are \code{NA} in years with no data for any
 of them. \code{CV} is \eqn{\sqrt{\sum_f (CV_f \cdot x_f)^2} / \sum_f x_f}, and
 \code{Ref}/\code{RefCV} are combined in the same way. Catch units must match;
 effort recorded in different units is dropped for the combined fleet.
-\item \code{CPUE} indices named after combined fleets are moved to \code{Survey}, with
-their values, \code{CV}, \code{Units}, \code{Ref}, and \code{Timing}. Each moved index, and
-each \code{Survey} index named after a combined fleet, gets a survey \code{\link[=Obs]{Obs()}}
-entry that carries the fleet's index observation settings and, unless
-the index has its own selectivity, the fleet's selectivity-at-age from
-before combining. An index keeps its fleet's name, with a \code{" CPUE"} or
-\code{" Survey"} suffix where that name is taken by a fleet or another index.
+\item \code{CPUE} and \code{Survey} indices named after combined fleets stay in their
+slot, and each gets its own \code{\link[=Obs]{Obs()}} entry that carries the fleet's index
+observation settings and, unless the index has its own selectivity, the
+fleet's selectivity-at-age from before combining. An index keeps its
+fleet's name, with a \code{" CPUE"} or \code{" Survey"} suffix where that name is
+taken by a fleet or another index.
 \item \code{LandingsAtAge}/\code{DiscardsAtAge} counts are summed across the combined
 fleets. \code{LandingsAtSize}/\code{DiscardsAtSize} counts are summed when every
 fleet shares the same size-class bins (within floating-point

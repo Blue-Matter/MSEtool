@@ -102,13 +102,12 @@
 #'   of them. `CV` is \eqn{\sqrt{\sum_f (CV_f \cdot x_f)^2} / \sum_f x_f}, and
 #'   `Ref`/`RefCV` are combined in the same way. Catch units must match;
 #'   effort recorded in different units is dropped for the combined fleet.
-#' - `CPUE` indices named after combined fleets are moved to `Survey`, with
-#'   their values, `CV`, `Units`, `Ref`, and `Timing`. Each moved index, and
-#'   each `Survey` index named after a combined fleet, gets a survey [Obs()]
-#'   entry that carries the fleet's index observation settings and, unless
-#'   the index has its own selectivity, the fleet's selectivity-at-age from
-#'   before combining. An index keeps its fleet's name, with a `" CPUE"` or
-#'   `" Survey"` suffix where that name is taken by a fleet or another index.
+#' - `CPUE` and `Survey` indices named after combined fleets stay in their
+#'   slot, and each gets its own [Obs()] entry that carries the fleet's index
+#'   observation settings and, unless the index has its own selectivity, the
+#'   fleet's selectivity-at-age from before combining. An index keeps its
+#'   fleet's name, with a `" CPUE"` or `" Survey"` suffix where that name is
+#'   taken by a fleet or another index.
 #' - `LandingsAtAge`/`DiscardsAtAge` counts are summed across the combined
 #'   fleets. `LandingsAtSize`/`DiscardsAtSize` counts are summed when every
 #'   fleet shares the same size-class bins (within floating-point
@@ -203,6 +202,15 @@ CombineFleets <- function(OM, FleetList = NULL, silent = FALSE) {
   
   # Combine Obs
   OM <- .CombineFleetsObs(OM, FleetList, silent)
+  # indices moved off a combined fleet's first source fleet are not indices of the combined fleet
+  for (i in seq_along(OM@Obs)) {
+    for (g in names(FleetList)) {
+      for (type in c("CPUE", "Survey")) {
+        if (FleetList[[g]][1] %in% Indices$Moved[[i]][[type]])
+          slot(OM@Obs[[i]][[g]], type) <- new("indicesobs")
+      }
+    }
+  }
   OM@Obs <- purrr::map2(OM@Obs, Indices$Obs, c)
 
   OM@EffortAllocation <- list()
@@ -218,85 +226,54 @@ CombineFleets <- function(OM, FleetList = NULL, silent = FALSE) {
 }
 
 
-# CPUE and Survey indices named after combined fleets become Survey indices that
-# keep the selectivity of their fleet from before combining
+# CPUE and Survey indices named after combined fleets become indices with their
+# own Obs entry, keeping the type and the selectivity of their fleet before combining
 .CombineFleetsIndices <- function(OM, FleetList, FleetMap, silent = FALSE) {
   GroupFleets <- unlist(FleetList, use.names = FALSE)
   nFleetOrig  <- length(FleetNames(OM))
   NewObs      <- purrr::map(OM@Obs, \(x) list())
+  Moved       <- purrr::map(OM@Obs, \(x) list(CPUE = character(0), Survey = character(0)))
 
   for (i in seq_along(OM@Data)) {
-    data   <- OM@Data[[i]]
-    cpue   <- data@CPUE
-    survey <- data@Survey
-    stocks <- OM@Complexes[[i]]
+    data    <- OM@Data[[i]]
+    stocks  <- OM@Complexes[[i]]
     ObsList <- OM@Obs[[i]]
-    taken  <- c(names(FleetMap), names(ObsList)[-seq_len(nFleetOrig)],
-                setdiff(survey@Name, GroupFleets))
-    moved  <- character(0)
+    taken   <- c(names(FleetMap), names(ObsList)[-seq_len(nFleetOrig)],
+                 setdiff(data@Survey@Name, GroupFleets), setdiff(data@CPUE@Name, GroupFleets))
+    msgs    <- character(0)
 
-    for (j in which(survey@Name %in% GroupFleets)) {
-      f <- survey@Name[j]
-      NewName <- .UniqueIndexName(f, "Survey", taken)
-      taken <- c(taken, NewName)
-      IndexObs <- ObsList[[f]]@Survey
-      IndexObs@Selectivity <- .IndexFleetSelectivity(IndexObs@Selectivity, OM, stocks, f)
-      NewObs[[i]][[NewName]] <- .SurveyObs(NewName, IndexObs)
-      survey@Name[j] <- NewName
-      survey@Value <- .RenameColumn(survey@Value, j, NewName)
-      if (.HasFleetColumns(survey@CV, length(survey@Name)))
-        survey@CV <- .RenameColumn(survey@CV, j, NewName)
-      moved <- c(moved, stats::setNames(NewName, paste("Survey", f)))
-    }
-
-    idx <- which(cpue@Name %in% GroupFleets)
-    if (length(idx)) {
-      nIndex   <- length(cpue@Name)
-      nSurvey  <- length(survey@Name)
-      NewNames <- character(0)
-      for (j in idx) {
-        f <- cpue@Name[j]
-        NewName <- .UniqueIndexName(f, "CPUE", taken)
+    for (type in c("Survey", "CPUE")) {
+      Indices <- slot(data, type)
+      for (j in which(Indices@Name %in% GroupFleets)) {
+        f <- Indices@Name[j]
+        NewName <- .UniqueIndexName(f, type, taken)
         taken <- c(taken, NewName)
-        NewNames <- c(NewNames, NewName)
-        IndexObs <- ObsList[[f]]@CPUE
+        IndexObs <- slot(ObsList[[f]], type)
         IndexObs@Selectivity <- .IndexFleetSelectivity(IndexObs@Selectivity, OM, stocks, f)
-        NewObs[[i]][[NewName]] <- .SurveyObs(NewName, IndexObs)
-        moved <- c(moved, stats::setNames(NewName, paste("CPUE", f)))
+        obs <- Obs(Name = NewName)
+        slot(obs, type) <- IndexObs
+        NewObs[[i]][[NewName]] <- obs
+        Indices@Name[j] <- NewName
+        Indices@Value <- .RenameColumn(Indices@Value, j, NewName)
+        if (.HasFleetColumns(Indices@CV, length(Indices@Name)))
+          Indices@CV <- .RenameColumn(Indices@CV, j, NewName)
+        Moved[[i]][[type]] <- c(Moved[[i]][[type]], f)
+        msgs <- c(msgs, if (NewName == f) {
+          cli::format_inline("{type} index {.val {f}} uses the selectivity of fleet {.val {f}} before combining.")
+        } else {
+          cli::format_inline("{type} index {.val {f}} is now {type} index {.val {NewName}}, using the selectivity of fleet {.val {f}} before combining.")
+        })
       }
-
-      Value <- cpue@Value[, idx, drop = FALSE]
-      colnames(Value) <- NewNames
-      CV <- if (.HasFleetColumns(cpue@CV, nIndex)) cpue@CV[, idx, drop = FALSE] else NULL
-      if (!is.null(CV)) colnames(CV) <- NewNames
-      if (!is.null(survey@CV) || !is.null(CV))
-        survey@CV <- .AppendIndexColumns(survey@CV %||% .NALike(survey@Value), CV %||% .NALike(Value))
-      survey@Value  <- .AppendIndexColumns(survey@Value, Value)
-      survey@Units  <- .AppendIndexEntries(survey@Units, nSurvey, cpue@Units, idx, as.character)
-      survey@Ref    <- .AppendIndexEntries(survey@Ref, nSurvey, cpue@Ref, idx, as.numeric)
-      survey@Timing <- .AppendIndexEntries(survey@Timing, nSurvey, cpue@Timing, idx, as.numeric)
-      survey@Name   <- c(survey@Name, NewNames)
-
-      if (length(idx) == nIndex) {
-        cpue <- new("indicesdata")
-      } else {
-        cpue@Value <- cpue@Value[, -idx, drop = FALSE]
-        cpue@Name  <- cpue@Name[-idx]
-        for (sl in c("CV", "Units", "Ref", "RefCV", "Timing"))
-          slot(cpue, sl) <- .DropIndexEntries(slot(cpue, sl), idx, nIndex)
-      }
+      slot(data, type) <- Indices
     }
 
-    data@CPUE   <- cpue
-    data@Survey <- survey
-    for (k in seq_along(moved)) {
-      msg <- cli::format_inline("{sub(' .*', '', names(moved)[k])} index {.val {sub('^[^ ]+ ', '', names(moved)[k])}} is Survey index {.val {moved[k]}}, using the selectivity of its fleet before combining.")
+    for (msg in msgs) {
       if (!silent) cli::cli_alert_info(msg)
       data <- .CaptureLog(data, string = msg, name = "CombineFleets", type = "assumption")
     }
     OM@Data[[i]] <- data
   }
-  list(OM = OM, Obs = NewObs)
+  list(OM = OM, Obs = NewObs, Moved = Moved)
 }
 
 .UniqueIndexName <- function(name, suffix, taken) {
@@ -313,11 +290,6 @@ CombineFleets <- function(OM, FleetList = NULL, silent = FALSE) {
   stats::setNames(sel, StockNames(OM)[stocks])
 }
 
-.SurveyObs <- function(Name, IndexObs) {
-  obs <- Obs(Name = Name)
-  obs@Survey <- IndexObs
-  obs
-}
 
 .NALike <- function(x) {
   if (is.null(x)) return(NULL)
@@ -339,13 +311,6 @@ CombineFleets <- function(OM, FleetList = NULL, silent = FALSE) {
   out
 }
 
-# per-index slot of the first nSurvey indices, with the moved indices' entries appended
-.AppendIndexEntries <- function(x, nSurvey, from, idx, as) {
-  add <- vapply(idx, \(j) if (length(from) >= j) as(from[[j]]) else as(NA), as(NA))
-  if (is.null(x) && all(is.na(add))) return(x)
-  base <- if (is.null(x)) rep(as(NA), nSurvey) else as(x)[seq_len(nSurvey)]
-  c(base, add)
-}
 .HasFleetColumns <- function(x, n) length(dim(x)) == 2 && ncol(x) == n
 
 # drop the entries of dropped indices from a per-index slot, read by position (vector) or column (matrix)

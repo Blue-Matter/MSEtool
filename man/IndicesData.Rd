@@ -58,6 +58,10 @@ populated later (e.g., by \code{.GenHistDataIndices()}).
 \if{html}{\out{<div class="sourceCode r">}}\preformatted{CPUE(data)   <- IndicesData(Value = myArray, CV = myCVArray)
 Survey(data) <- IndicesData(Value = myArray, CV = myCVArray)
 }\if{html}{\out{</div>}}
+
+The selectivity of an index is set on its observation model
+(\code{\link[=IndicesObs]{IndicesObs()}}). Use \code{\link[=AddIndex]{AddIndex()}} to add an index and its selectivity to
+an operating model in one step.
 }
 }
 \examples{

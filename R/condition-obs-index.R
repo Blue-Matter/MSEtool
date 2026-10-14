@@ -40,27 +40,19 @@
    
   nSim <- nSim(Hist)
   
-  IndicesData <- slot(FisheryData, type)
-  
-  Indices_Name <- IndicesData@Name
-  Indices_Value <- IndicesData@Value
-  
-  if (is.null(Indices_Value)) return(Hist)
-  
-  dd <- dim(Indices_Value)
-  nFleet <- ncol(Indices_Value)
-  
-  # checks 
-  if (dd[2] != length(Indices_Name)) 
-    cli::cli_abort(c("x"= "{.val ncol(OM@Data[[{i}]]@{type}@Value)} is not the same as {.val length(OM@Data[[{i}]]@{type}@Name)}"))
-  
-  if (dd[1] < nHistTS) 
-    cli::cli_abort(c("x"= "{.val nrow(OM@Data[[{i}]]@{type}@Value)} must be at least length {.val {nHistTS}}"))
-  
-  dimnames(Indices_Value) <- list(Year=c(HistYears, ProjYears)[1:dd[1]],
-                                  Fleet=Indices_Name)
+  if (is.null(slot(FisheryData, type)@Value)) return(Hist)
 
-  slot(Hist@OM@Data[[i]], type)@Value <- Indices_Value
+  Aligned <- .AlignIndicesData(slot(FisheryData, type), HistYears, ProjYears,
+                               Where = paste0("OM@Data[[", i, "]]@", type))
+  if (!is.null(Aligned$Assumption))
+    Hist <- .CaptureLog(Hist, string = Aligned$Assumption, name = '.ConditionObsIndex', type = 'assumption')
+  IndicesData <- Aligned$Indices
+  slot(FisheryData, type) <- IndicesData
+  slot(Hist@OM@Data[[i]], type) <- IndicesData
+
+  Indices_Name  <- IndicesData@Name
+  Indices_Value <- IndicesData@Value
+  nFleet <- ncol(Indices_Value)
 
   Indices_Hist <- Indices_Value |> .ArraySubsetYear(Years=HistYears)
   
@@ -106,10 +98,7 @@
                     .frequency = 'once', .frequency_id = paste0('DataSelectivity', type))
 
     if (is.null(Index_Obs@Selectivity) && !Indices_Name[fl] %in% FleetNames(Hist@OM))
-      cli::cli_abort(c(
-        "x" = "{type} index {.val {Indices_Name[fl]}} is not a fleet in {.code OM@Fleet}, so its {.field Selectivity} must be set.",
-        "i" = "Set e.g. {.code OM@Obs[[{i}]][['{Indices_Name[fl]}']]@{type}@Selectivity <- 'Biomass'} (flat), {.val SBiomass} (maturity-at-age), or a vector of selectivity-at-age named by age. See {.help MSEtool::IndicesObs}."
-      ))
+      cli::cli_abort(.MsgIndexNotFleet(Indices_Name[fl], FleetNames(Hist@OM)))
 
     Index_Obs@Units <- Units
 
@@ -447,4 +436,88 @@ EstimateBeta <- function(logObs, logSim, beta = NULL, MinPoints = 8,
     nPoints  = n,
     Status   = Status
   )
+}
+
+
+#' Align and validate observed index data
+#'
+#' Matches the rows of `Indices@Value` (and `Indices@CV`) to the model time
+#' steps by row name, and checks that the per-index entries (`Units`,
+#' `Timing`, `Ref`) have one value per index. Length-1 `Units` and `Timing`
+#' are recycled to all indices.
+#'
+#' @param Indices An [indicesdata-class] object with non-`NULL` `Value`.
+#' @param HistYears,ProjYears Model time steps of the historical and
+#'   projection periods.
+#' @param Where Location of `Indices` in the OM, for error messages.
+#'
+#' @return A list with `Indices` (rows covering the time steps from the first
+#'   historical year to the last observation, at least all historical years,
+#'   named by time step) and `Assumption` (a message when rows were matched by
+#'   position because `Value` has no row names, otherwise `NULL`).
+#' @keywords internal
+.AlignIndicesData <- function(Indices, HistYears, ProjYears, Where = "Indices") {
+  Value    <- Indices@Value
+  AllYears <- c(HistYears, ProjYears)
+  nIndex   <- ncol(Value)
+  Name     <- Indices@Name %||% colnames(Value)
+
+  if (length(Name) != nIndex)
+    cli::cli_abort("{.code {Where}@Name} has {length(Name)} element{?s} but {.code {Where}@Value} has {nIndex} column{?s}.")
+
+  .MatchRows <- function(x, label) {
+    rn <- rownames(x)
+    if (is.null(rn)) {
+      if (nrow(x) > length(AllYears))
+        cli::cli_abort("{.code {Where}@{label}} has {nrow(x)} rows, more than the {length(AllYears)} model time steps.")
+      return(seq_len(nrow(x)))
+    }
+    yrs <- suppressWarnings(as.numeric(rn))
+    idx <- vapply(yrs, \(y) {
+      d <- abs(AllYears - y)
+      if (!is.na(y) && min(d) < 1e-6) which.min(d) else NA_integer_
+    }, integer(1))
+    if (anyNA(idx))
+      cli::cli_abort(c("x" = "{.code {Where}@{label}} has {cli::qty(sum(is.na(idx)))}row name{?s} {.val {rn[is.na(idx)]}} that {?is/are} not model time steps.",
+                       "i" = "Row names must be values of {.code Years(OM, 'Historical')} (or {.code 'Projection'})."))
+    if (anyDuplicated(idx))
+      cli::cli_abort("{.code {Where}@{label}} has duplicated row{?s} for time step{?s} {.val {unique(rn[duplicated(idx)])}}.")
+    idx
+  }
+
+  .Full <- function(x, idx, nRow) {
+    out <- matrix(NA_real_, nRow, nIndex,
+                  dimnames = list(Year = AllYears[seq_len(nRow)], Fleet = Name))
+    out[idx, ] <- as.matrix(x)
+    out
+  }
+
+  ValIdx <- .MatchRows(Value, "Value")
+  CV     <- Indices@CV
+  CVIdx  <- NULL
+  if (!is.null(CV)) {
+    if (length(dim(CV)) != 2 || ncol(CV) != nIndex)
+      cli::cli_abort("{.code {Where}@CV} must be a matrix with one column per index ({nIndex}).")
+    CVIdx <- if (is.null(rownames(CV)) && nrow(CV) == nrow(Value)) ValIdx else .MatchRows(CV, "CV")
+  }
+  nRow <- max(length(HistYears), ValIdx, CVIdx)
+
+  Assumption <- if (is.null(rownames(Value)))
+    cli::format_inline("{.code {Where}@Value} has no row names; its rows are assumed to start in the first historical year ({.val {HistYears[1]}}).")
+
+  .PerIndex <- function(x, label, recycle) {
+    if (!length(x)) return(x)
+    if (recycle && length(x) == 1) return(rep(x, nIndex))
+    if (length(x) != nIndex)
+      cli::cli_abort("{.code {Where}@{label}} has {length(x)} value{?s}; needs one per index ({nIndex}){if (recycle) ' or a single value' else ''}.")
+    x
+  }
+
+  Indices@Value  <- .Full(Value, ValIdx, nRow)
+  if (!is.null(CV)) Indices@CV <- .Full(CV, CVIdx, nRow)
+  Indices@Name   <- Name
+  Indices@Units  <- .PerIndex(Indices@Units, "Units", TRUE)
+  Indices@Timing <- .PerIndex(Indices@Timing, "Timing", TRUE)
+  Indices@Ref    <- .PerIndex(Indices@Ref, "Ref", FALSE)
+  list(Indices = Indices, Assumption = Assumption)
 }

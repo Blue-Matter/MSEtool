@@ -68,7 +68,9 @@ every index in \code{IndexSource}.}
 
 \item{IndexSource}{Character. \code{'auto'} (default), or one or both of
 \code{'Survey'} and \code{'CPUE'}. \code{'auto'} uses the indices in \code{Data@Survey} if it
-has any positive observation, otherwise those in \code{Data@CPUE}. \code{'Survey'}
+has any positive observation, otherwise those in \code{Data@CPUE}, and warns
+once when the last \code{Survey} observation is more than 5 years older than
+the last \code{CPUE} observation. \code{'Survey'}
 or \code{'CPUE'} uses that slot, and
 \code{c('Survey', 'CPUE')} combines the indices of both into a single
 selection (\code{Survey} columns first, then \code{CPUE}). \code{Indices}, \code{IndexFreq},

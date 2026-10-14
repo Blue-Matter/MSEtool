@@ -125,8 +125,7 @@
   }
 
   if (!fleet %in% names(object@OM@Fleet[[stocks[1]]]))
-    cli::cli_abort(c("x" = "Index {.val {fleet}} is not a fleet in {.code OM@Fleet}, so its {.field Selectivity} must be set.",
-                     "i" = "e.g. {.code OM@Obs[[Stock]][['{fleet}']]@Survey@Selectivity <- 'Biomass'}. See {.help MSEtool::IndicesObs}."))
+    cli::cli_abort(.MsgIndexNotFleet(fleet, names(object@OM@Fleet[[stocks[1]]])))
 
   purrr::map(object@OM@Fleet[stocks], function(stock_fleets) {
     sel <- stock_fleets[[fleet]]@Selectivity@MeanAtAge
@@ -160,7 +159,7 @@
 
   Ages <- as.character(AgeClasses)
 
-  if (is.null(dim(sel)) || length(dim(sel)) == 1L) {
+  if (is.null(dim(sel)) || (length(dim(sel)) == 1L && is.null(names(dimnames(sel))))) {
     nms <- names(sel) %||% dimnames(sel)[[1]]
     if (is.null(nms)) {
       if (length(sel) != length(Ages))
@@ -169,7 +168,7 @@
     }
     Bad <- setdiff(nms, Ages)
     if (length(Bad))
-      cli::cli_abort("{.field Selectivity} for {where} names age{?s} {.val {Bad}} not in the stock's age classes ({min(AgeClasses)} to {max(AgeClasses)}).")
+      cli::cli_abort("{.field Selectivity} for {where} names {cli::qty(length(Bad))}age{?s} {.val {Bad}} not in the stock's age classes ({min(AgeClasses)} to {max(AgeClasses)}).")
     out <- stats::setNames(rep(0, length(Ages)), Ages)
     out[nms] <- as.numeric(sel)
     return(array(out, dim = length(Ages), dimnames = list(Age = Ages)))
@@ -180,11 +179,57 @@
     cli::cli_abort("{.field Selectivity} array for {where} needs named dimnames including {.val Age}.")
   Bad <- setdiff(names(DN), c('Sim', 'Age', 'Year', 'Area'))
   if (length(Bad))
-    cli::cli_abort("{.field Selectivity} array for {where} has unsupported dimension{?s} {.val {Bad}}; allowed: {.val {c('Sim', 'Age', 'Year', 'Area')}}.")
+    cli::cli_abort("{.field Selectivity} array for {where} has unsupported {cli::qty(length(Bad))}dimension{?s} {.val {Bad}}; allowed: {.val {c('Sim', 'Age', 'Year', 'Area')}}.")
   if (!setequal(DN$Age, Ages))
     cli::cli_abort("{.field Selectivity} array for {where} must cover the stock's age classes exactly ({min(AgeClasses)} to {max(AgeClasses)}).")
   if (identical(DN$Age, Ages)) return(sel)
   abind::asub(sel, match(Ages, DN$Age), match('Age', names(DN)), drop = FALSE)
+}
+
+#' Validate an index selectivity specification against the stocks of a complex
+#'
+#' @param spec An index `Selectivity` specification (see [IndicesObs()]).
+#' @param OM An [om-class] object.
+#' @param stocks Integer stock indices of the complex.
+#' @param Index Index name, for error messages.
+#'
+#' @return `spec`, invisibly.
+#' @keywords internal
+.CheckIndexSelectivity <- function(spec, OM, stocks, Index) {
+  if (is.null(spec)) return(invisible(spec))
+  StockNms <- StockNames(OM)[stocks]
+  if (is.character(spec)) {
+    if (length(spec) != 1 || !spec %in% c('Biomass', 'SBiomass'))
+      cli::cli_abort(c("x" = "Unknown {.field Selectivity} {.val {spec}} for index {.val {Index}}.",
+                       "i" = "Use {.val Biomass}, {.val SBiomass}, a vector or array of selectivity-at-age, or a list of these by stock."))
+    return(invisible(spec))
+  }
+  for (i in seq_along(stocks)) {
+    sel <- spec
+    if (is.list(spec)) {
+      sel <- if (!is.null(names(spec))) spec[[StockNms[i]]] else if (length(spec) >= i) spec[[i]]
+      if (is.null(sel))
+        cli::cli_abort("{.field Selectivity} list for index {.val {Index}} has no entry for stock {.val {StockNms[i]}}.")
+    }
+    .IndexSelectivityArray(sel, OM@Stock[[stocks[i]]]@Ages@Classes, Index = Index, Stock = StockNms[i])
+  }
+  invisible(spec)
+}
+
+.MsgIndexNotFleet <- function(Index, FleetNames) {
+  Closest <- .ClosestName(Index, FleetNames)
+  c("x" = cli::format_inline("Index {.val {Index}} is not a fleet in {.code OM@Fleet}, so its {.field Selectivity} must be set."),
+    if (!is.null(Closest))
+      c("i" = cli::format_inline("If it is the CPUE of fleet {.val {Closest}}, name the index {.val {Closest}} to use that fleet's selectivity.")),
+    "i" = cli::format_inline("Otherwise set it with {.code IndexSelectivity(OM, '{Index}') <- 'Biomass'}, or add the index with {.fn AddIndex}. See {.help MSEtool::IndicesObs}."))
+}
+
+# closest of `choices` to `x` (ignoring case), or NULL when none is close
+.ClosestName <- function(x, choices) {
+  if (!length(choices)) return(NULL)
+  d <- utils::adist(tolower(x), tolower(choices))[1, ]
+  if (min(d) > max(2, nchar(x) %/% 3)) return(NULL)
+  choices[which.min(d)]
 }
 
 

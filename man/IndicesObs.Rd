@@ -78,8 +78,9 @@ or area. \code{Age} must cover the stock's age classes.
 for indices of multi-stock complexes.
 }
 
-See \code{\link[=AddAgeIndices]{AddAgeIndices()}} to add an age-disaggregated index as one index per
-age class.}
+\code{\link[=AddIndex]{AddIndex()}} adds an index and its selectivity to an operating model in
+one step; \code{\link[=AddAgeIndices]{AddAgeIndices()}} adds an age-disaggregated index as one index
+per age class.}
 
 \item{TruncSD}{\code{numeric(1)}. Number of standard deviations at which to
 truncate the lognormal residual distribution when generating observation

@@ -47,7 +47,7 @@
     cli::cli_abort(c(
       "x" = "The following {cli::qty(length(MissingSel))} {.cls indicesobs} object{?s} {?is/are} configured (non-empty) but {.field Selectivity} is not set:",
       stats::setNames(MissingSel, rep('*', length(MissingSel))),
-      "i" = "Set {.field Selectivity} on the {.cls indicesobs} object before running {.fn Simulate}, e.g. {.code OM@Obs[[Stock]][[Index]]@Survey@Selectivity <- 'Biomass'} (full selection). See {.help MSEtool::IndicesObs}."
+      "i" = "Set {.field Selectivity} before running {.fn Simulate}, e.g. {.code OM@Obs[[Stock]][[Index]]@Survey@Selectivity <- 'Biomass'} (full selection), or add the index with {.fn AddIndex}. See {.help MSEtool::IndicesObs}."
     ))
 
   Empty <- purrr::map(Obs, \(stock)

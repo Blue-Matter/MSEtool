@@ -43,11 +43,11 @@ Legacy \code{Data} objects do not distinguish between landings and discards.
 resulting \link[=data-class]{data} object. If \code{Data@Cat} represents total removals,
 the \code{Discards} slot must be populated manually after conversion.
 
-\code{Ind}, \code{SpInd}, \code{VInd}, and every column of \code{AddInd} are folded into one
-multi-column \code{data@CPUE} (there is no fishery-dependent/-independent
-distinction in legacy \code{Data}); the tracked biomass component (total,
-spawning, vulnerable) is recorded in \code{CPUE@Misc$IndexType}. \code{data@Survey}
-is intentionally left empty. \code{FMSY_M} is converted to an absolute
+\code{Ind}, \code{SpInd}, \code{VInd}, and every column of \code{AddInd} become indices in
+\code{data@Survey}. The tracked biomass component (total, spawning,
+vulnerable) is recorded in \code{Survey@Misc$IndexType}, and \code{AddIunits} sets
+the \code{Units} of each \code{AddInd} index (\code{Ind}, \code{SpInd}, and \code{VInd} are
+\code{"Biomass"}). \code{FMSY_M} is converted to an absolute
 \code{Reference@FMSY} via \code{FMSY_M * Mort}. Slots with no structural equivalent
 anywhere in \code{data} (\code{ML}, \code{Lc}, \code{Lbar}, \code{Abun}, \code{SpAbun}, \code{BMSY_B0},
 \code{Bref}, \code{Rec}, \code{AvC}, \code{Dt}, \code{Ref}, \code{Ref_type}) are stashed under

@@ -522,8 +522,9 @@ ExploitationObs <- function(Selectivity      = list(),
 #'   - List of any of the numeric forms, named by stock (or in stock order),
 #'     for indices of multi-stock complexes.
 #'
-#'   See [AddAgeIndices()] to add an age-disaggregated index as one index per
-#'   age class.
+#'   [AddIndex()] adds an index and its selectivity to an operating model in
+#'   one step; [AddAgeIndices()] adds an age-disaggregated index as one index
+#'   per age class.
 #' @param TruncSD `numeric(1)`. Number of standard deviations at which to
 #'   truncate the lognormal residual distribution when generating observation
 #'   errors for projection years via [GenResiduals()]. Default `2`.
