@@ -14,6 +14,7 @@ IndicesObs(
   Ref = NULL,
   Beta = NULL,
   AC = NULL,
+  qInc = NULL,
   Misc = list()
 )
 }
@@ -108,6 +109,20 @@ stays at \code{1}.}
 \item{AC}{\code{numeric}, \code{array}, or \code{NULL}. Lag-1 autocorrelation of index
 residuals, one value per simulation}
 
+\item{qInc}{\code{numeric} or \code{NULL}. Annual percentage change in index
+catchability during projection years (e.g. \code{2} = 2\% per year; negative
+values indicate declining catchability). Default \code{NULL} (no change).
+Accepted forms:
+\itemize{
+\item Scalar: applied to all simulations.
+\item Length-2 vector \code{c(lower, upper)}: one value per simulation drawn from
+a uniform distribution.
+\item Length-\code{nSim} vector: used directly.
+}
+
+See "Projected Change in Catchability" below. Also get or set with
+\code{\link[=qInc]{qInc()}} and \verb{qInc<-}.}
+
 \item{Misc}{\code{list}. Miscellaneous additional objects. Default \code{list()}.}
 }
 \value{
@@ -123,6 +138,17 @@ Construct an \link[=indicesobs-class]{indicesobs} object defining observation er
 CPUE or survey abundance index, or access and replace individual slots.
 }
 \details{
+\subsection{Projected Change in Catchability}{
+
+In projection years, simulated index values are
+\code{Efficiency * NomIndex_t^Beta * Error_t * (1 + qInc / 100)^(t - t_H)},
+where \code{t - t_H} is the time in years since the last historical time step
+(a fraction of a year for each season of a seasonal model). The multiplier
+is 1 in the historical period, so \code{qInc} has no effect on historical data,
+conditioning on real data, or \code{Ref}. Index values supplied for projection
+years in \code{OM@Data} are used as-is.
+}
+
 \subsection{Observation Error Generation}{
 
 The \code{Error} array (\verb{nSim x nYear}) is obtained in one of three ways, in
@@ -213,6 +239,16 @@ io <- IndicesObs(CV = 0.25, Areas = c(1L, 2L))
 # Attach to an obs object
 obs <- Obs(CPUE   = IndicesObs(CV = 0.3),
            Survey = IndicesObs(CV = 0.2, Selectivity = "SBiomass"))
+
+# Index catchability increasing 2\% per year during the projection
+io <- IndicesObs(CV = 0.3, qInc = 2)
+
+# Creep drawn per simulation from a uniform distribution between 0 and 3\%
+io <- IndicesObs(CV = 0.3, qInc = c(0, 3))
+qInc(io)
+
+# Declining catchability
+qInc(io) <- -1
 }
 \seealso{
 \itemize{

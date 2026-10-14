@@ -253,6 +253,9 @@ setValidity("catchobs", function(object) {
 #'   relating the nominal index to the population quantity. Calculated
 #'   internally during conditioning as the ratio of mean observed index to
 #'   mean simulated index; not set by the user.
+#' @slot qInc `numeric` array or `NULL`. Annual percentage change in index
+#'   catchability during projection years, one value per simulation. See
+#'   [IndicesObs()].
 #' @slot TruncSD `numeric(1)` or `NULL`. Number of standard deviations at
 #'   which to truncate the lognormal residual distribution when generating
 #'   projection errors. Default `2`. See [IndicesObs()].
@@ -290,6 +293,7 @@ setClass(
     Type        = "character",
     Ref         = "num.array.null",
     Efficiency  = "num.array.null",
+    qInc        = "num.array.null",
     TruncSD     = "num.null",
     Stats       = "df.null",
     Misc        = "list"
@@ -315,6 +319,9 @@ setValidity("indicesobs", function(object) {
 
   if (!is.null(object@Beta) && any(object@Beta <= 0, na.rm = TRUE))
     errors <- c(errors, "`Beta` must be positive")
+
+  if (!is.null(object@qInc) && any(object@qInc <= -100, na.rm = TRUE))
+    errors <- c(errors, "`qInc` must be greater than -100")
 
   if (length(errors)) errors else TRUE
 })

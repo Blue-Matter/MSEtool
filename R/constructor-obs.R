@@ -545,9 +545,30 @@ ExploitationObs <- function(Selectivity      = list(),
 #'   stays at `1`.
 #' @param AC `numeric`, `array`, or `NULL`. Lag-1 autocorrelation of index
 #'   residuals, one value per simulation
+#' @param qInc `numeric` or `NULL`. Annual percentage change in index
+#'   catchability during projection years (e.g. `2` = 2% per year; negative
+#'   values indicate declining catchability). Default `NULL` (no change).
+#'   Accepted forms:
+#'   - Scalar: applied to all simulations.
+#'   - Length-2 vector `c(lower, upper)`: one value per simulation drawn from
+#'     a uniform distribution.
+#'   - Length-`nSim` vector: used directly.
+#'
+#'   See "Projected Change in Catchability" below. Also get or set with
+#'   [qInc()] and `qInc<-`.
 #' @param Misc `list`. Miscellaneous additional objects. Default `list()`.
 #'
 #' @details
+#' ## Projected Change in Catchability
+#'
+#' In projection years, simulated index values are
+#' `Efficiency * NomIndex_t^Beta * Error_t * (1 + qInc / 100)^(t - t_H)`,
+#' where `t - t_H` is the time in years since the last historical time step
+#' (a fraction of a year for each season of a seasonal model). The multiplier
+#' is 1 in the historical period, so `qInc` has no effect on historical data,
+#' conditioning on real data, or `Ref`. Index values supplied for projection
+#' years in `OM@Data` are used as-is.
+#'
 #' ## Observation Error Generation
 #'
 #' The `Error` array (`nSim x nYear`) is obtained in one of three ways, in
@@ -646,6 +667,7 @@ IndicesObs <- function(CV          = NULL,
                        Ref         = NULL,
                        Beta        = NULL,
                        AC          = NULL,
+                       qInc        = NULL,
                        Misc        = list()) {
   .Object <- methods::new("indicesobs")
   if (!is.null(CV))          .Object@CV          <- CV
@@ -657,6 +679,7 @@ IndicesObs <- function(CV          = NULL,
   if (!is.null(Ref))         .Object@Ref         <- Ref
   if (!is.null(Beta))        .Object@Beta        <- Beta
   if (!is.null(AC))          .Object@AC          <- AC
+  if (!is.null(qInc))        .Object@qInc        <- qInc
 
   .Object@Misc <- Misc
   methods::validObject(.Object)

@@ -32,6 +32,8 @@
 #'   length `nSim` used directly. Defaults to 0 (no autocorrelation).
 #' * `Ref` — generated as a lognormal draw from a CV, producing a named
 #'   `[nSim]` reference level error array.
+#' * `qInc` — expanded to a named `[nSim]` array (scalar, length-2 uniform
+#'   range, or length-`nSim` vector); `NULL` if all values are 0.
 #' * `Years` — if empty, defaults to all historical years (`HistYears`).
 #'
 #' The following slots are used internally during the simulation and are not
@@ -77,6 +79,7 @@ PopulateIndexObs <- function(Index, nSim, HistYears, ProjYears) {
   if (fresh_error)
     Index@Error <- .ApplyObsAC(Index@Error, Index@AC)
   Index@Ref   <- .PopulateObsRef(Index@Ref, nSim)
+  Index@qInc  <- .PopulateObsqInc(Index@qInc, nSim)
   
   if (length(Index@Years) < 1)
     Index@Years <- HistYears

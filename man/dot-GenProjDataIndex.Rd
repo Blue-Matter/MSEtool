@@ -46,6 +46,10 @@ Appends a new year of observed index data (\code{Value} and \code{CV}) to the
 stock/complex.
 }
 \details{
+Simulated values are multiplied by \code{(1 + qInc / 100)^(DataYear - t_H)},
+where \code{t_H} is the last historical time step, when the index's
+\link[=indicesobs-class]{indicesobs} \code{qInc} is set.
+
 The existing objects are returned unchanged if the index data of
 simulation 1 is empty or already contains \code{DataYear}. For each simulation,
 a fleet's index is not simulated if its last five values are all

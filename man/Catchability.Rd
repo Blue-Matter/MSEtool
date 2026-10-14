@@ -62,7 +62,7 @@ supply a fully specified \code{Efficiency} array directly.}
 \item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
 
 \item{x}{A \link[=catchability-class]{catchability} object for accessor and replacement
-functions.}
+functions, or an \link[=indicesobs-class]{indicesobs} object for \code{qInc()} and \verb{qInc<-}.}
 
 \item{value}{The replacement value for the corresponding slot.}
 }
@@ -74,7 +74,8 @@ returned.
 \item \verb{Catchability<-} returns \code{x} with the \code{Catchability} slot replaced by
 \code{value}.
 \item \code{Efficiency()}, \code{qCV()}, \code{qInc()} return the corresponding slot from
-the \link[=catchability-class]{catchability} object \code{x}.
+the \link[=catchability-class]{catchability} object \code{x}. \code{qInc()} also accepts an
+\link[=indicesobs-class]{indicesobs} object.
 \item Their replacement forms return \code{x} with the corresponding slot updated.
 }
 }
@@ -110,9 +111,11 @@ When \code{Efficiency} is \code{NULL}, \code{\link[=PopulateCatchability]{Popula
 effect on historical years.
 
 \code{qInc} specifies a percentage annual increase compounded over projection
-years: efficiency in projection year index \code{t} is scaled by
-\code{(1 + qInc / 100)^t}. Negative values model declining gear efficiency
-over the projection period.
+years: efficiency in projection time step \code{t} is scaled by
+\code{(1 + qInc / 100)^(t - t_H)}, where \code{t - t_H} is the time in years since
+the last historical time step (a fraction of a year for each season of a
+seasonal model). Negative values model declining gear efficiency over the
+projection period.
 
 \code{qCV} introduces lognormal inter-annual variation in efficiency during
 projection years. Each projected year's efficiency is multiplied by a

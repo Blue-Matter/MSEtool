@@ -163,6 +163,7 @@ AddIndex <- function(OM,
 
 # set the indicesobs of index `Name`, creating its Obs entry if needed
 .SetIndexObs <- function(OM, Name, Type, Complex, IndexObs, Selectivity) {
+  OM <- UpdateObject(OM)
   Complexes <- .AddIndexComplexes(OM)
   if (EmptyObject(OM@Obs))
     OM@Obs <- MakeNamedList(names(Complexes), MakeNamedList(FleetNames(OM), new("obs")))

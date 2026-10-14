@@ -35,7 +35,7 @@
 #' @param Misc List. Miscellaneous additional inputs. Default `list()`.
 #' 
 #' @param x A [catchability-class] object for accessor and replacement
-#'   functions.
+#'   functions, or an [indicesobs-class] object for `qInc()` and `qInc<-`.
 #' @param value The replacement value for the corresponding slot.
 #'
 #' @details
@@ -68,9 +68,11 @@
 #' effect on historical years.
 #'
 #' `qInc` specifies a percentage annual increase compounded over projection
-#' years: efficiency in projection year index `t` is scaled by
-#' `(1 + qInc / 100)^t`. Negative values model declining gear efficiency
-#' over the projection period.
+#' years: efficiency in projection time step `t` is scaled by
+#' `(1 + qInc / 100)^(t - t_H)`, where `t - t_H` is the time in years since
+#' the last historical time step (a fraction of a year for each season of a
+#' seasonal model). Negative values model declining gear efficiency over the
+#' projection period.
 #'
 #' `qCV` introduces lognormal inter-annual variation in efficiency during
 #' projection years. Each projected year's efficiency is multiplied by a
@@ -94,7 +96,8 @@
 #' - `Catchability<-` returns `x` with the `Catchability` slot replaced by
 #'   `value`.
 #' - `Efficiency()`, `qCV()`, `qInc()` return the corresponding slot from
-#'   the [catchability-class] object `x`.
+#'   the [catchability-class] object `x`. `qInc()` also accepts an
+#'   [indicesobs-class] object.
 #' - Their replacement forms return `x` with the corresponding slot updated.
 #'
 #' @seealso
@@ -173,14 +176,14 @@ qCV <- function(x) {
 #' @rdname Catchability
 #' @export
 qInc <- function(x) {
-  .CheckClass(x, "catchability", "x")
+  .CheckClass(x, c("catchability", "indicesobs"), "x")
   x@qInc
 }
 
 #' @rdname Catchability
 #' @export
 `qInc<-` <- function(x, value) {
-  .CheckClass(x, "catchability", "x")
+  .CheckClass(x, c("catchability", "indicesobs"), "x")
   x@qInc <- value
   methods::validObject(x)
   x

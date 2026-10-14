@@ -126,7 +126,7 @@ PopulateCatchability <- function(Catchability,
 
   Par <- .StructurePar(Par, nSim = nSim, Years = c(HistYears, ProjYears))[, 1] |> unname()
   Multiplier <- if (nm == "qInc") {
-    outer(Par, seq_len(pYears), \(x, t) (1 + x / 100)^t)
+    outer(Par, ProjYears - max(HistYears), .qIncMultiplier)
   } else {
     matrix(exp(rnorm(pYears * nSim, rep(-0.5 * Par^2, pYears), rep(Par, pYears))), nrow = nSim)
   }

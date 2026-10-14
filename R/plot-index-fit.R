@@ -328,6 +328,14 @@ IndexFitTable <- function(object,
   df
 }
 
+.ApplyIndexqInc <- function(df, qInc, LastHistYear) {
+  if (is.null(qInc) || !nrow(df)) return(df)
+  proj <- df$Period == 'Projection'
+  sim  <- pmin(df$Sim[proj], length(qInc))
+  df$Value[proj] <- df$Value[proj] * .qIncMultiplier(qInc[sim], df$Year[proj] - LastHistYear)
+  df
+}
+
 
 .ResolveObsCalibration <- function(object, isMSE, type, cx, fl, IndexObs, nSim_) {
   Beta <- IndexObs@Beta
@@ -424,6 +432,8 @@ IndexFitTable <- function(object,
     IndexObs <- slot(OM@Obs[[r$Stock]][[r$Fleet]], type)
     calib <- .ResolveObsCalibration(object, isMSE, type, r$Stock, r$Fleet, IndexObs, nSim(object))
     trueDF <- .ApplyObsCalibration(trueDF, calib$Beta, calib$Efficiency)
+    if (methods::.hasSlot(IndexObs, "qInc"))
+      trueDF <- .ApplyIndexqInc(trueDF, IndexObs@qInc, max(Years(OM, 'Historical')))
 
     trueDF$Fleet <- r$Fleet
 

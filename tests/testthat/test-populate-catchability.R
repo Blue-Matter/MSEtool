@@ -21,6 +21,15 @@ test_that("re-populating a Catchability object does not re-apply qInc or qCV", {
   expect_identical(RePop@qCV, Pop@qCV)
 })
 
+test_that("qInc compounds per calendar year in a seasonal model", {
+  Pop <- PopulateCatchability(Catchability(qInc = c(2, -4)), nSim = 2,
+                              HistYears = 2010 + (0:7) / 4,
+                              ProjYears = 2012 + (0:7) / 4)
+  Elapsed <- (1:8) / 4
+  expect_equal(unname(Pop@Efficiency[, as.character(2012 + (0:7) / 4)]),
+               rbind(1.02^Elapsed, 0.96^Elapsed))
+})
+
 test_that("editing a populated fleet and re-populating leaves projection Efficiency unchanged", {
   skip_on_cran()
   om <- TwoFleetOM

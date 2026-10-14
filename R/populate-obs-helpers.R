@@ -149,7 +149,23 @@
   )
 }
 
- 
+.PopulateObsqInc <- function(qInc, nSim) {
+  if (!length(qInc) || all(qInc == 0))
+    return(NULL)
+
+  if (!is.null(dimnames(qInc)))
+    return(qInc[seq_len(min(nSim, length(qInc)))])
+
+  qInc <- .StructurePar(qInc, nSim = nSim)[, 1] |> unname()
+  array(rep_len(qInc, nSim), dim = nSim, dimnames = list(Sim = seq_len(nSim)))
+}
+
+# compounds per calendar year: Elapsed is years since the last historical time step
+.qIncMultiplier <- function(qInc, Elapsed) {
+  (1 + qInc / 100)^Elapsed
+}
+
+
 .PopulateObsAC <- function(AC, nSim) {
   if (!length(AC))
     return(array(0, dim = nSim, dimnames = list(Sim = seq_len(nSim))))

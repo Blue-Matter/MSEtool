@@ -54,6 +54,10 @@ relating the nominal index to the population quantity. Calculated
 internally during conditioning as the ratio of mean observed index to
 mean simulated index; not set by the user.}
 
+\item{\code{qInc}}{\code{numeric} array or \code{NULL}. Annual percentage change in index
+catchability during projection years, one value per simulation. See
+\code{\link[=IndicesObs]{IndicesObs()}}.}
+
 \item{\code{TruncSD}}{\code{numeric(1)} or \code{NULL}. Number of standard deviations at
 which to truncate the lognormal residual distribution when generating
 projection errors. Default \code{2}. See \code{\link[=IndicesObs]{IndicesObs()}}.}

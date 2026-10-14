@@ -13,3 +13,13 @@ io <- IndicesObs(CV = 0.25, Areas = c(1L, 2L))
 # Attach to an obs object
 obs <- Obs(CPUE   = IndicesObs(CV = 0.3),
            Survey = IndicesObs(CV = 0.2, Selectivity = "SBiomass"))
+
+# Index catchability increasing 2% per year during the projection
+io <- IndicesObs(CV = 0.3, qInc = 2)
+
+# Creep drawn per simulation from a uniform distribution between 0 and 3%
+io <- IndicesObs(CV = 0.3, qInc = c(0, 3))
+qInc(io)
+
+# Declining catchability
+qInc(io) <- -1

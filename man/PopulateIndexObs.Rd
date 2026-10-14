@@ -46,6 +46,8 @@ Accepted inputs: scalar applied to all simulations, length-2 vector
 length \code{nSim} used directly. Defaults to 0 (no autocorrelation).
 \item \code{Ref} — generated as a lognormal draw from a CV, producing a named
 \verb{[nSim]} reference level error array.
+\item \code{qInc} — expanded to a named \verb{[nSim]} array (scalar, length-2 uniform
+range, or length-\code{nSim} vector); \code{NULL} if all values are 0.
 \item \code{Years} — if empty, defaults to all historical years (\code{HistYears}).
 }
 

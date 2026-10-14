@@ -17,6 +17,10 @@
 #' @param type Character. One of `"CPUE"` or `"Survey"`.
 #'
 #' @details
+#' Simulated values are multiplied by `(1 + qInc / 100)^(DataYear - t_H)`,
+#' where `t_H` is the last historical time step, when the index's
+#' [indicesobs-class] `qInc` is set.
+#'
 #' The existing objects are returned unchanged if the index data of
 #' simulation 1 is empty or already contains `DataYear`. For each simulation,
 #' a fleet's index is not simulated if its last five values are all
@@ -53,6 +57,7 @@
   NewValueAll <- matrix(NA_real_, nSim, nFleet)
   NewCVAll    <- matrix(NA_real_, nSim, nFleet)
   omData      <- Proj@OM@Data[[i]]
+  Elapsed     <- DataYear - max(Years(Proj@OM, 'Historical'))
 
   for (fl in seq_len(nFleet)) {
     IndexObs <- slot(Proj@OM@Obs[[i]][[FleetIndex[fl]]], type)
@@ -103,6 +108,9 @@
       NewValueAll[x, fl] <- real_nom_index^Beta *
         .ArraySubsetYear(IndexObs@Error, DataYear)[min(x, nrow(IndexObs@Error))] *
         IndexObs@Efficiency[min(x, length(IndexObs@Efficiency))]
+      if (!is.null(IndexObs@qInc))
+        NewValueAll[x, fl] <- NewValueAll[x, fl] *
+          .qIncMultiplier(IndexObs@qInc[min(x, length(IndexObs@qInc))], Elapsed)
       NewCVAll[x, fl]    <- .ResolveCV(Proj, type, i, fl, TSIndex,
                                       slot(Proj@Data[[x]][[i]], type), DataYear)
     }
