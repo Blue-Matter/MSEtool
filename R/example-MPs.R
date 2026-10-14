@@ -42,6 +42,14 @@
 #' attribute as the other three for consistency, though - unlike them - its
 #' output does not actually depend on how often it is called.
 #'
+#' ## Data lag
+#'
+#' `CurrentCatch`, `CurrentLandings`, and `AverageCatch` carry a `DataLag`
+#' attribute of `0`, so they always see the complete historical period
+#' regardless of the OM's [DataLag()], and the same baseline catch applies
+#' from the first projection year onward. `CurrentEffort` uses the last
+#' historical effort directly and is likewise unaffected by `DataLag`.
+#'
 #' @param Data A [data-class] object containing historical observations.
 #'
 #' @return
@@ -90,6 +98,7 @@ CurrentCatch <- function(Data) {
 }
 class(CurrentCatch) <- 'mp'
 attr(CurrentCatch, 'EverySeason') <- TRUE
+attr(CurrentCatch, 'DataLag') <- 0
 
 #' @rdname ExampleMPs
 #' @export
@@ -110,6 +119,7 @@ CurrentLandings <- function(Data) {
 }
 class(CurrentLandings) <- 'mp'
 attr(CurrentLandings, 'EverySeason') <- TRUE
+attr(CurrentLandings, 'DataLag') <- 0
 
 #' @rdname ExampleMPs
 #' @export
@@ -133,6 +143,7 @@ AverageCatch <- function(Data) {
 }
 class(AverageCatch) <- 'mp'
 attr(AverageCatch, 'EverySeason') <- TRUE
+attr(AverageCatch, 'DataLag') <- 0
 
 #' @rdname ExampleMPs
 #' @export

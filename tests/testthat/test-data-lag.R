@@ -45,7 +45,7 @@ test_that(".CalcDataYear() errors clearly when DataLag exceeds the available dat
   expect_equal(.CalcDataYear(Year = 2027, YearsAll = YearsAll, DataLag = 19, Seasons = 1), 2007)
 })
 
-.RunDataLagMP <- function(om, DataLagVal, IntervalVal, MPStartYearVal = NULL) {
+.RunDataLagMP <- function(om, DataLagVal, IntervalVal, MPStartYearVal = NULL, MPDataLag = NULL) {
   om <- Simulate(om, silent = TRUE)
 
   assign(".dataLagLog", list(), envir = globalenv())
@@ -58,6 +58,7 @@ test_that(".CalcDataYear() errors clearly when DataLag exceeds the available dat
     Advice(Effort = 1, EffType = 'Rel')
   }
   class(logMP) <- 'mp'
+  attr(logMP, 'DataLag') <- MPDataLag
   assign(".logMP_dataLag", logMP, envir = globalenv())
   on.exit(rm(".logMP_dataLag", envir = globalenv()), add = TRUE)
 
@@ -112,6 +113,39 @@ test_that("DataLag's data-year rule does not depend on Interval", {
   CurrentYr <- CurrentYear(om)
   ManagementYears <- CurrentYr + seq(1, pYear(om), by = 2)
   expect_equal(dataYearsUsed, ManagementYears - 1 - 1)
+})
+
+test_that("an MP's DataLag attribute overrides the OM's DataLag", {
+  skip_on_cran()
+  data(SingleStockOM, envir = environment())
+  om <- SingleStockOM
+  om@nSim <- 1
+  pYear(om) <- 4
+  DataLag(om) <- 2
+  Interval(om) <- 1
+
+  set.seed(1)
+  dataYearsUsed <- .RunDataLagMP(om, 2, 1, MPDataLag = 0)
+
+  ManagementYears <- CurrentYear(om) + seq_len(pYear(om))
+  expect_equal(dataYearsUsed, ManagementYears - 1)
+})
+
+test_that("CurrentCatch is unaffected by the OM's DataLag", {
+  skip_on_cran()
+  data(SingleStockOM, envir = environment())
+  om <- SingleStockOM
+  om@nSim <- 2
+  pYear(om) <- 4
+
+  set.seed(1)
+  DataLag(om) <- 0
+  L0 <- Project(Simulate(om, silent = TRUE), MPs = "CurrentCatch", silent = TRUE)@Landings
+  set.seed(1)
+  DataLag(om) <- 2
+  L2 <- Project(Simulate(om, silent = TRUE), MPs = "CurrentCatch", silent = TRUE)@Landings
+
+  expect_equal(L2, L0)
 })
 
 test_that("DataLag lags from the last InterimAdvice year, not the OM's true historical year", {

@@ -651,6 +651,12 @@ RefEffortYears <- function(x) .IsHist(x, "RefEffortYears")
 #' (quarter 4, 2027 is the timestep immediately before quarter 1, 2028, and shifting that back one
 #' further year lands on quarter 4, 2026). 
 #'
+#' ## Per-MP override
+#'
+#' An MP can declare `attr(mp, 'DataLag') <- value` to use that lag in place
+#' of the OM's `DataLag`. The status-quo MPs [CurrentCatch()],
+#' [CurrentLandings()], and [AverageCatch()] set it to `0`.
+#'
 #' `DataLag` combines with `Interval` and `MPStartYear` to determine the
 #' full management timeline. [ManagementScheduleTable()] shows, for a given
 #' OM, which years are management years and which data year `DataLag` calls

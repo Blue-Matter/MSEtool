@@ -83,7 +83,8 @@
   ManagementYears <- if (all(IsInterim)) YearsProj[0] else
     .CalcManagementYears(YearsProj[!IsInterim], Interval, Proj@OM@Seasons)
   EverySeason     <- isTRUE(attr(MPfunction, 'EverySeason'))
-  YearsAll        <- c(YearsHist, YearsProj)
+  DataLag         <- attr(MPfunction, 'DataLag') %||% Proj@OM@DataLag
+  YearsAll       <- c(YearsHist, YearsProj)
   Areas           <- 1:nArea(Proj)
   StartTime       <- Sys.time()
   StockNames      <- StockNames(Proj)
@@ -138,7 +139,7 @@
     # Data year accounting for lag
     DataYear <- .CalcDataYear(Year     = Year,
                              YearsAll = Proj@Data[[1]][[1]]@Years,
-                             DataLag  = Proj@OM@DataLag,
+                             DataLag  = DataLag,
                              Seasons  = Proj@OM@Seasons)
 
     # Trim Data to `DataYear` if applicable
