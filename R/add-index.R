@@ -265,7 +265,7 @@ AddAgeIndices <- function(OM,
   if (Complex > length(Complexes))
     cli::cli_abort("{.arg Complex} is {Complex} but {.arg OM} has {length(Complexes)} stock complex{?es}.")
   for (st in Complexes[[Complex]]) {
-    BadAges <- setdiff(Ages, as.character(OM@Stock[[st]]@Ages@Classes))
+    BadAges <- setdiff(Ages, as.character(.ConvertToList(OM@Stock)[[st]]@Ages@Classes))
     if (length(BadAges))
       cli::cli_abort("{.arg Value} has {cli::qty(length(BadAges))}age class{?es} {.val {BadAges}} not in the age classes of stock {.val {StockNames(OM)[st]}}.")
   }

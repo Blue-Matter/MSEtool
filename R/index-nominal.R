@@ -211,7 +211,7 @@
       if (is.null(sel))
         cli::cli_abort("{.field Selectivity} list for index {.val {Index}} has no entry for stock {.val {StockNms[i]}}.")
     }
-    .IndexSelectivityArray(sel, OM@Stock[[stocks[i]]]@Ages@Classes, Index = Index, Stock = StockNms[i])
+    .IndexSelectivityArray(sel, .ConvertToList(OM@Stock)[[stocks[i]]]@Ages@Classes, Index = Index, Stock = StockNms[i])
   }
   invisible(spec)
 }
