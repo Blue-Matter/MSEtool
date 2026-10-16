@@ -9,29 +9,36 @@ Rename(object, Stocks = NULL, Fleets = NULL)
 \arguments{
 \item{object}{An object of class \code{om}.}
 
-\item{Stocks}{Optional named character vector or named list mapping new
-stock names to current names (e.g. \code{c('new_name' = 'old_name')}). If \code{NULL},
-stock names are unchanged.}
+\item{Stocks}{Optional stock names. Either an unnamed character vector of new
+names with length \code{nStock(object)}, matched to the current names in order,
+or a named character vector mapping new stock names to current names
+(e.g. \code{c('new_name' = 'old_name')}). If \code{NULL}, stock names are unchanged.}
 
-\item{Fleets}{Optional named character vector or named list mapping new
-fleet names to current names. If \code{NULL}, fleet names are unchanged.}
+\item{Fleets}{Optional fleet names, in the same form as \code{Stocks}. An unnamed
+vector must have length \code{nFleet(object)}. If \code{NULL}, fleet names are
+unchanged.}
 }
 \value{
 The input \code{OM} object with stock and/or fleet names updated
 throughout.
-
-Renaming is applied recursively: list element names, S4 slot names, and the
-\code{Stock} and \code{Fleet} dimensions of arrays are all updated wherever a match is
-found. Names not present in \code{Stocks} or \code{Fleets} are left unchanged, so
-partial lookups are safe.
-
-The lookup arguments use the convention \code{NewName = OldName}, e.g.:
-\code{Fleets = list(NewFleet = 'OldFleet')}.
 }
 \description{
 Renames stocks and/or fleets throughout an operating model (OM) object,
 updating all names recursively across S4 slots, lists, and array dimension
 names.
+}
+\details{
+Renaming is applied recursively: list element names, S4 slot names, and the
+\code{Stock} and \code{Fleet} dimensions of arrays are all updated wherever a match is
+found. A named lookup can cover a subset of the names; names not included
+are left unchanged.
+
+A named lookup uses the convention \code{NewName = OldName}, e.g.:
+\code{Fleets = c(NewFleet = 'OldFleet')}.
+
+An error is raised if any new or old name is empty or \code{NA}, if new or old
+names are duplicated, if an old name is not found in the OM, or if the
+renaming would leave two stocks (or fleets) with the same name.
 }
 \examples{
 OM <- SingleStockOM
@@ -39,12 +46,16 @@ StockNames(OM)
 FleetNames(OM)
 
 OM2 <- Rename(OM, 
-              Stocks = list('New Stock Name' = 'Example Stock'),
-              Fleets = list('New Fleet Name' = 'Example Fleet')
+              Stocks = c('New Stock Name' = 'Example Albacore Stock'),
+              Fleets = c('New Fleet Name' = 'AsympExFleet')
 )
 
 StockNames(OM2)
 FleetNames(OM2)
+
+OM3 <- Rename(OM, Stocks = 'New Stock Name', Fleets = 'New Fleet Name')
+StockNames(OM3)
+FleetNames(OM3)
 
 }
 \seealso{
