@@ -71,14 +71,9 @@ CalcAgeSizeKey <- function(MeanAtAge,
     }
   }
   
-  if (length(dim_MeanAtAge[1])==1 && length( dim_SDatAge[1])==1) {
-    nSim <- 1
-    sims <- as.numeric(max(dim_MeanAtAge[1], dim_SDatAge[1]))
-
-  } else {
-    nSim <- max(dim_MeanAtAge[1], dim_SDatAge[1]) # maximum number of simulations
-    sims <- 1:nSim
-  }
+  nSim <- max(dim_MeanAtAge[1], dim_SDatAge[1])
+  MeanAtAge <- ExtendSims(MeanAtAge, nSim)
+  SDatAge <- ExtendSims(SDatAge, nSim)
 
   YearsList <- list(
     dimnames(MeanAtAge)[["Year"]],
@@ -89,8 +84,8 @@ CalcAgeSizeKey <- function(MeanAtAge,
   Years <- YearsList[[ind]]
 
   if (!is.null(Years)) {
-    MeanAtAge <- MeanAtAge |> ExtendSims(nSim) |> ExtendYears(Years)
-    SDatAge <- SDatAge |> ExtendSims(nSim) |> ExtendYears(Years)
+    MeanAtAge <- MeanAtAge |> ExtendYears(Years)
+    SDatAge <- SDatAge |> ExtendYears(Years)
   }
 
   MeanAtAgeList <- MeanAtAge |> Array2List(pos = 1)
@@ -124,6 +119,7 @@ CalcAgeSizeKey <- function(MeanAtAge,
     }
     ask
   })
-  
+  names(ASKList) <- seq_along(ASKList)
+
   List2Array(ASKList, "Sim", pos=1) 
 }

@@ -55,7 +55,7 @@ PopulateOM <- function(OM,
   
   .CheckClass(OM)
   
-  OM <- UpdateObject(OM)
+  OM <- UpdateObject(OM) |> .RepairSimDimnames()
   if (!length(OM@maxF)) OM@maxF <- 3
   
   if (EmptyObject(OM)) return(OM)
@@ -89,7 +89,8 @@ PopulateOM <- function(OM,
     .ProcessDataNames() |>
     .UpdateSPFrom() |>
     .ValidateSPFrom() |>
-    .CheckAlphaBetaSRR()
+    .CheckAlphaBetaSRR() |>
+    .RepairSimDimnames()
 
   .CheckOMReady(OM)
 

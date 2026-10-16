@@ -196,3 +196,40 @@ test_that("extractors of a Subset() MSE number sims 1..nSim", {
     expect_identical(names(PPD(MSE)[[1]]), as.character(Want))
   }
 })
+
+test_that("CalcAgeSizeKey() numbers sims 1..n when only CVatAge varies by sim", {
+  Mean <- array(seq(5, 50, length.out = 10), c(1, 10, 1),
+                dimnames = list(Sim = 1, Age = 0:9, Year = 2020))
+  CV <- array(c(0.1, 0.15, 0.2), c(3, 1, 1), dimnames = list(Sim = 1:3, Age = 0, Year = 2020))
+  Classes <- seq(1, 60, 2)
+  ALK <- CalcAgeSizeKey(Mean, CV, Classes = Classes, silent = TRUE)
+  expect_identical(dimnames(ALK)$Sim, c("1", "2", "3"))
+  for (s in 1:3) {
+    One <- CalcAgeSizeKey(Mean, CV[s, , , drop = FALSE], Classes = Classes, silent = TRUE)
+    expect_equal(unname(ALK[s, , , ]), unname(One[1, , , ]))
+  }
+  expect_identical(dimnames(.SubsetSim(ALK, 3:1, keep_sim_name = TRUE))$Sim, c("3", "2", "1"))
+})
+
+test_that(".RepairSimDimnames() renumbers only duplicated or NA sims", {
+  A <- array(1:8, c(4, 2), dimnames = list(Sim = rep(1, 4), Year = 1:2))
+  B <- array(1:4, c(2, 2), dimnames = list(Sim = c(5, 7), Year = 1:2))
+  x <- list(A = A, B = B, One = A[1, , drop = FALSE])
+  Fix <- .RepairSimDimnames(x)
+  expect_identical(dimnames(Fix$A)$Sim, as.character(1:4))
+  expect_identical(Fix$B, B)
+  expect_identical(Fix$One, x$One)
+})
+
+test_that("an OM with duplicated Sim dimnames still simulates", {
+  skip_on_cran()
+  om <- SingleStockOM
+  om@nSim <- 4
+  Pop <- Populate(om, silent = TRUE)
+  ALK <- Pop@Stock[[1]]@Length@ALK
+  skip_if(is.null(ALK) || dim(ALK)[1] == 1)
+  Bad <- Pop
+  dimnames(Bad@Stock[[1]]@Length@ALK)$Sim <- rep("1", dim(ALK)[1])
+  Hist <- Simulate(Bad, silent = TRUE)
+  expect_equal(Hist@Biomass, Simulate(Pop, silent = TRUE)@Biomass)
+})

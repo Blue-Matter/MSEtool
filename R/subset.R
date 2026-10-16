@@ -224,6 +224,36 @@ Subset <- function(object,
   object
 }
 
+# Renumbers a duplicated or NA `Sim` dimension (e.g. all "1") to 1..n
+.RepairSimDimnames <- function(object) {
+  if (isS4(object)) {
+    for (s in methods::slotNames(object)) {
+      val <- methods::slot(object, s)
+      if (!is.null(val))
+        methods::slot(object, s, check = FALSE) <- .RepairSimDimnames(val)
+    }
+    return(object)
+  }
+
+  if (is.list(object) && !is.data.frame(object)) {
+    for (i in seq_along(object))
+      if (!is.null(object[[i]])) object[[i]] <- .RepairSimDimnames(object[[i]])
+    return(object)
+  }
+
+  if (is.array(object)) {
+    dn <- dimnames(object)
+    if ("Sim" %in% names(dn) && length(dn$Sim) > 1) {
+      s <- suppressWarnings(as.numeric(dn$Sim))
+      if (anyNA(s) || anyDuplicated(s)) {
+        dn$Sim <- as.character(seq_along(s))
+        dimnames(object) <- dn
+      }
+    }
+  }
+  object
+}
+
 .CheckSimsAvailable <- function(Sims, n) {
   if (any(Sims < 1 | Sims > n | Sims != round(Sims)))
     cli::cli_abort("`Sims` ({.val {Sims}}) must be within 1:{n}.")
