@@ -36,3 +36,4 @@ scales each value to preserve the marginal variance under the AR(1) process.
 \seealso{
 \code{\link[=GenMultiStockRecDevs]{GenMultiStockRecDevs()}}
 }
+\keyword{internal}

@@ -10,7 +10,6 @@
 #'   \[-1, 1\].
 #' @param last_value `numeric` scalar. The last observed value from the
 #'   preceding time period, used to condition the first element of `values`.
-#
 #'
 #' The AR(1) recursion applied is:
 #'
@@ -24,6 +23,7 @@
 #'   auto-correlation applied.
 #'   
 #' @seealso [GenMultiStockRecDevs()]
+#' @keywords internal
 .AddAutoCorrelation <- function(values, ac, last_value) {
   n_fill <- length(values)
   values[1] <- ac * last_value + values[1] * sqrt(1 - ac^2)
