@@ -69,6 +69,7 @@ PopulateIndexObs <- function(Index, nSim, HistYears, ProjYears) {
   if (EmptyObject(Index))
     return(Index)
 
+  Index <- .RecordUserSupplied(Index, c("CV", "Error", "AC"))
   Years <- c(HistYears, ProjYears)
 
   Index@CV    <- .PopulateObsCV(Index@CV, nSim)

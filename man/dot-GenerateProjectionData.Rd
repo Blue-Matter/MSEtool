@@ -4,7 +4,7 @@
 \alias{.GenerateProjectionData}
 \title{Generate Fishery Data for a single projection time step}
 \usage{
-.GenerateProjectionData(Proj, Year, YearsHist, YearsProj)
+.GenerateProjectionData(Proj, Year, YearsHist, YearsProj, DataYear = NULL)
 }
 \arguments{
 \item{Proj}{A \code{hist} object populated with fishery dynamics up to \code{Year}}
@@ -13,9 +13,12 @@
 
 \item{YearsHist}{Numeric vector of historical years}
 
-\item{YearsProj}{Numeric vector of projection years
+\item{YearsProj}{Numeric vector of projection years}
 
-Generates data up to the time-step before \code{Year}:
+\item{DataYear}{The year to generate data for. Defaults to the time-step
+before \code{Year}.
+
+By default, generates data up to the time-step before \code{Year}:
 \itemize{
 \item \code{YearsAll <- c(YearsHist, YearsProj)}
 \item \code{TSIndex <- match(Year, YearsAll) - 1}

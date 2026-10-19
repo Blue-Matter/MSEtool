@@ -12,7 +12,7 @@
   i,
   stocks,
   FleetNames,
-  defaultCV = 0.2
+  defaultCV = .DefaultDataCV(Hist, "Effort")
 )
 }
 \arguments{
@@ -31,14 +31,14 @@
 \item{FleetNames}{Character vector of fleet names.}
 
 \item{defaultCV}{Numeric default coefficient of variation applied
-when no fleet-specific CV is provided. Default \code{0.2}.}
+when no fleet-specific CV is provided. Default \code{SimControl(DataCV)}.}
 }
 \value{
 An \link[=effortdata-class]{effortdata} object with:
 \itemize{
 \item \verb{@Name}: character vector of fleet names
 \item \verb{@Value}: \verb{[nYear x nFleet]} array of observed effort
-\item \verb{@CV}:  \verb{[nYear x nFleet]} array initialised to \code{defaultCV}
+\item \verb{@CV}:  \verb{[nYear x nFleet]} array of reported CVs
 \item \verb{@Units}: per-fleet units, from \code{\link[=EffortObs]{EffortObs()}} \verb{@Units} where defined,
 otherwise \code{"unitless"}
 }
@@ -82,9 +82,8 @@ dropping any years outside the historical period.
 
 \subsection{CV Handling}{
 
-CVs are initialised to \code{defaultCV} for all fleets and years. Fleet-specific
-CVs from the \code{\link[=EffortObs]{EffortObs()}} object are not currently applied here;
-\code{defaultCV} serves as the working assumption for downstream MPs.
+CVs are set from the \code{\link[=EffortObs]{EffortObs()}} \code{DataCV} where defined, otherwise
+\code{defaultCV}.
 }
 
 \subsection{Obs Structure}{

@@ -90,6 +90,7 @@ PopulateCompObs <- function(Comp,
         "i" = "Supply the age class vector (`AgeBins`) or length class vector (`SizeBins`) to `PopulateObs()`.")
     )
   
+  Comp  <- .RecordUserSupplied(Comp, c("SampleSize", "ESS", "Shift"))
   Years <- c(HistYears, ProjYears)
   nBin  <- length(Bins)
   

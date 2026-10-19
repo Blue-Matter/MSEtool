@@ -46,6 +46,13 @@
 #'   landings/discards-at-size projection
 #'   instead of its pure-R equivalent? Default
 #'   `TRUE`. Set `FALSE` as a fallback if the C++ version has problems
+#' @param DataCV Default coefficient of variation reported in the `CV` slot
+#'   of generated effort, catch, and index data, used where neither real data
+#'   nor the series' `DataCV` (see [IndicesObs()], [CatchObs()], [EffortObs()])
+#'   give one. It sets the reported CV only; observation error is set by the
+#'   observation model. Either a non-negative number for all data types, or a
+#'   list named by data type (`"Effort"`, `"Landings"`, `"Discards"`, `"CPUE"`,
+#'   `"Survey"`), with `0.2` for types not named. Default `0.2`.
 #' @param ... Additional named arguments. Any unrecognised names trigger a
 #'   warning.
 #'
@@ -63,6 +70,9 @@
 #'
 #' # Also calculate the (expensive) BLow rebuilding reference point
 #' SimControl(BLow = TRUE)
+#'
+#' # Reported CV of generated data by data type
+#' SimControl(DataCV = list(Landings = 0.05, Survey = 0.3))
 #'
 #'
 #'
@@ -82,6 +92,7 @@ SimControl <- function(DynamicUnfished    = TRUE,
                        BLow               = FALSE,
                        CalcCatchAtSize    = NA,
                        CalcCatchAtSizeCpp = TRUE,
+                       DataCV             = 0.2,
                        ...) {
   dots <- list(...)
   if (length(dots) > 0) {
@@ -89,6 +100,8 @@ SimControl <- function(DynamicUnfished    = TRUE,
       'Unknown {.fn SimControl} argument{?s}: {.val {names(dots)}}. Ignored.'
     )
   }
+
+  DataCV <- .ExpandDataCV(DataCV)
 
   list(
     DynamicUnfished    = DynamicUnfished,
@@ -103,6 +116,25 @@ SimControl <- function(DynamicUnfished    = TRUE,
     MGT                = MGT,
     BLow               = BLow,
     CalcCatchAtSize    = CalcCatchAtSize,
-    CalcCatchAtSizeCpp = CalcCatchAtSizeCpp
+    CalcCatchAtSizeCpp = CalcCatchAtSizeCpp,
+    DataCV             = DataCV
   )
+}
+
+.DataCVTypes <- c("Effort", "Landings", "Discards", "CPUE", "Survey")
+
+# default reported CV for each data type, from a scalar or a list/vector named by type
+.ExpandDataCV <- function(DataCV, Default = 0.2) {
+  if (is.list(DataCV)) DataCV <- unlist(DataCV)
+  Named <- !is.null(names(DataCV))
+  if (!is.numeric(DataCV) || !length(DataCV) || anyNA(DataCV) || any(DataCV < 0) ||
+      (!Named && length(DataCV) != 1))
+    cli::cli_abort("{.arg DataCV} must be a non-negative number, or a list of numbers named by data type.")
+  if (!Named) return(stats::setNames(rep(DataCV, length(.DataCVTypes)), .DataCVTypes))
+  BadNames <- setdiff(names(DataCV), .DataCVTypes)
+  if (length(BadNames))
+    cli::cli_abort("{.arg DataCV} names must be in {.val {(.DataCVTypes)}}, not {.val {BadNames}}.")
+  out <- stats::setNames(rep(Default, length(.DataCVTypes)), .DataCVTypes)
+  out[names(DataCV)] <- DataCV
+  out
 }

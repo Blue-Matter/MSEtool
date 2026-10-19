@@ -26,8 +26,8 @@
 #' ## Observation Error Model
 #'
 #' For each fleet with a non-empty [EffortObs()] object and a populated
-#' `Error` array, observed effort for `DataYear` is resolved via
-#' `.ResolveValue()`. If `Proj@OM@Data[[i]]` contains an effort value at
+#' `Error` array, observed effort for `DataYear` is resolved per simulation.
+#' If `Proj@OM@Data[[i]]` contains an effort value at
 #' `TSIndex`, it is used for all simulations without observation error.
 #' Otherwise:
 #'
@@ -41,9 +41,9 @@
 #' `Bias` and `Error` with fewer rows than `nSim` are recycled from their
 #' last row.
 #'
-#' CVs for the new year are resolved per simulation via `.ResolveCV()`, which
-#' looks up the fleet- and year-specific CV from that simulation's existing
-#' [effortdata-class] object.
+#' The CV for the new year, per simulation, is the CV supplied for the year in
+#' `OM@Data`, else the [EffortObs()] `DataCV`, else the last CV in that
+#' simulation's existing [effortdata-class] object, else `SimControl(DataCV)`.
 #'
 #' ## Obs Structure
 #'
@@ -73,8 +73,7 @@
 #' - `@Value`: `[nYear+1 x nFleet]` array of observed effort
 #' - `@CV`: `[nYear+1 x nFleet]` array of CVs
 #'
-#' @seealso [EffortObs()], [EffortData()], [effortdata-class], [obs-class],
-#'   `.GenHistDataEffort()`
+#' @seealso [EffortObs()], [EffortData()], [effortdata-class], [obs-class]
 #' @keywords internal
 .GenProjDataEffort <- function(Proj, DataYear, YearsAll, i, nSim) {
 
@@ -97,7 +96,7 @@
     NewValueAll[, fl] <- .ResolveValue(Proj, 'Effort', i, fl, TSIndex, Obs, nSim, DataYear)
 
     for (x in seq_len(nSim))
-      NewCVAll[x, fl] <- .ResolveCV(Proj, 'Effort', i, fl, TSIndex, Proj@Data[[x]][[i]]@Effort, DataYear)
+      NewCVAll[x, fl] <- .ResolveCV(Proj, 'Effort', i, fl, TSIndex, Proj@Data[[x]][[i]]@Effort, DataYear, Obs)
   }
 
   purrr::map(seq_len(nSim), \(x) {

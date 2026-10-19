@@ -1,4 +1,25 @@
 
+# slots set before Populate fills defaults; conditioning keeps these for projection years
+.RecordUserSupplied <- function(object, slots) {
+  if (!is.null(object@Misc$UserSupplied)) return(object)
+  object@Misc$UserSupplied <- slots[vapply(slots, \(sl) length(slot(object, sl)) > 0, logical(1))]
+  object
+}
+
+.UserSupplied <- function(object, slot) slot %in% object@Misc$UserSupplied
+
+# [nSim x nYear] projection-year values of a populated [Sim x Year] array
+.ProjYearValues <- function(x, nSim, ProjYears) {
+  x <- .ArraySubsetYear(x, ProjYears)
+  if (length(dim(x)) != 2) x <- matrix(x, nrow = 1)
+  x <- x[pmin(seq_len(nSim), nrow(x)), pmin(seq_along(ProjYears), ncol(x)), drop = FALSE]
+  dimnames(x) <- list(Sim = seq_len(nSim), Year = ProjYears)
+  x
+}
+
+# per-sim value of a populated [Sim] array
+.SimValues <- function(x, nSim) as.numeric(x)[pmin(seq_len(nSim), length(x))]
+
 .PopulateObsCV <- function(CV, nSim) {
   if (!length(CV))
     return(CV)

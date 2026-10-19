@@ -50,7 +50,10 @@ Slots for \code{LifeHistory} and \code{Exploitation} observation error are reser
 for future implementation and are not populated.
 
 If a slot contains an empty object (as determined by \code{\link[=EmptyObject]{EmptyObject()}}), it
-is returned unchanged. See the individual sub-function documentation for
+is returned unchanged. Otherwise the slots set by the user before
+population are recorded in \code{Misc$UserSupplied}; when conditioning on real
+data, \code{\link[=Simulate]{Simulate()}} uses these values for projection years in place of the
+conditioned estimates. See the individual sub-function documentation for
 details on expansion rules, default values, and accepted input forms.
 }
 \seealso{

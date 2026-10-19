@@ -13,7 +13,7 @@
   stocks,
   StockNames,
   nArea,
-  defaultCV = 0.2,
+  defaultCV = .DefaultDataCV(Hist, type),
   type = c("CPUE", "Survey")
 )
 }
@@ -35,7 +35,8 @@
 \item{nArea}{Integer number of spatial areas}
 
 \item{defaultCV}{Numeric default coefficient of variation applied
-when no fleet-specific CV is provided}
+when neither real data nor the \code{\link[=IndicesObs]{IndicesObs()}} \code{DataCV} provide one.
+Default \code{SimControl(DataCV)}.}
 
 \item{type}{Character, either \code{CPUE} or \code{Survey}}
 }

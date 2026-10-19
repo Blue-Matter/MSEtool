@@ -32,7 +32,11 @@ or a mass or count unit (e.g. \code{"t"}, \code{"kg"}, \code{"n"}). See \code{\l
 \item{\code{Ref}}{\code{numeric} array or \code{NULL}. Reference catch values, one per
 simulation. See \code{\link[=CatchObs]{CatchObs()}}.}
 
-\item{\code{Misc}}{\code{list}. Miscellaneous additional objects.}
+\item{\code{DataCV}}{\code{numeric} or \code{NULL}. Coefficient of variation reported with
+the generated data. See \code{\link[=CatchObs]{CatchObs()}}.}
+
+\item{\code{Misc}}{\code{list}. Miscellaneous additional objects. \code{Misc$UserSupplied}
+names the slots set by the user before population.}
 }}
 
 \seealso{

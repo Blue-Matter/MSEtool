@@ -14,8 +14,8 @@
 #' @param EstimateBeta Logical. Estimate the hyperstability/hyperdepletion
 #'   parameter `Beta` by regression? If `FALSE`, `Beta` is fixed at `1` unless
 #'   the user has already supplied a value on the `Obs` object. Default `TRUE`
-#'   for this internal function; `.ConditionObs()` normally passes through
-#'   `SimControl()`'s own default of `FALSE`.
+#'   for this function; [Simulate()] passes `SimControl(EstimateBeta)`, which
+#'   defaults to `FALSE`.
 #' @param silent Logical. Suppress the console message for indices skipped
 #'   because of unsupported `Units`? The skip is always recorded in the log.
 #'
@@ -182,20 +182,28 @@
                                nSeasons=nSeasons)
     
     Index_Obs@Stats <- Stats
-    Index_Obs@AC    <- .NameSims(Stats$AC, nSim)
-    Index_Obs@CV    <- .NameSims(sqrt(exp(Stats$SD^2) - 1), nSim)
+    if (!.UserSupplied(Index_Obs, "AC"))
+      Index_Obs@AC <- .NameSims(Stats$AC, nSim)
+    if (!.UserSupplied(Index_Obs, "CV"))
+      Index_Obs@CV <- .NameSims(sqrt(exp(Stats$SD^2) - 1), nSim)
 
     if (is.null(Index_Obs@TruncSD))
       Index_Obs@TruncSD <- 2
-    
-    
-    ResidualsProjection <- GenResiduals(SD = Stats$SD,
-                                        AC = Stats$AC,
-                                        Years = ProjYears,
-                                        TruncSD = Index_Obs@TruncSD,
-                                        nSeasons = nSeasons,
-                                        NA_Season = Stats$NA_Season,
-                                        LastError = exp(.LastResidual(LogResiduals)))
+
+    ProjSD <- if (.UserSupplied(Index_Obs, "CV")) sdconv(1, .SimValues(Index_Obs@CV, nSim)) else Stats$SD
+    ProjAC <- if (.UserSupplied(Index_Obs, "AC")) .SimValues(Index_Obs@AC, nSim) else Stats$AC
+
+    ResidualsProjection <- if (.UserSupplied(Index_Obs, "Error")) {
+      .ProjYearValues(Index_Obs@Error, nSim, ProjYears)
+    } else {
+      GenResiduals(SD = ProjSD,
+                   AC = ProjAC,
+                   Years = ProjYears,
+                   TruncSD = Index_Obs@TruncSD,
+                   nSeasons = nSeasons,
+                   NA_Season = Stats$NA_Season,
+                   LastError = exp(.LastResidual(LogResiduals)))
+    }
 
     ResidualsHistorical <- exp(LogResiduals)
     

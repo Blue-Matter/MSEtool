@@ -11,7 +11,7 @@
 #' @param stocks Integer vector of stock indices in the complex.
 #' @param FleetNames Character vector of fleet names.
 #' @param defaultCV Numeric default coefficient of variation applied
-#'   when no fleet-specific CV is provided. Default `0.2`.
+#'   when no fleet-specific CV is provided. Default `SimControl(DataCV)`.
 #'
 #' @details
 #'  
@@ -45,9 +45,8 @@
 #'
 #' ## CV Handling
 #'
-#' CVs are initialised to `defaultCV` for all fleets and years. Fleet-specific
-#' CVs from the [EffortObs()] object are not currently applied here;
-#' `defaultCV` serves as the working assumption for downstream MPs.
+#' CVs are set from the [EffortObs()] `DataCV` where defined, otherwise
+#' `defaultCV`.
 #'
 #' ## Obs Structure
 #'
@@ -70,13 +69,13 @@
 #'
 #' - `@Name`: character vector of fleet names
 #' - `@Value`: `[nYear x nFleet]` array of observed effort
-#' - `@CV`:  `[nYear x nFleet]` array initialised to `defaultCV`
+#' - `@CV`:  `[nYear x nFleet]` array of reported CVs
 #' - `@Units`: per-fleet units, from [EffortObs()] `@Units` where defined,
 #'   otherwise `"unitless"`
 #'
 #' @seealso [EffortObs()], [EffortData()], [effortdata-class] [obs-class]
 #' @keywords internal
-.GenHistDataEffort <- function(x, Data, Hist, HistYears, i, stocks, FleetNames, defaultCV = 0.2) {
+.GenHistDataEffort <- function(x, Data, Hist, HistYears, i, stocks, FleetNames, defaultCV = .DefaultDataCV(Hist, 'Effort')) {
   
   # Return real data unchanged if already populated
   if (!EmptyObject(Data@Effort))
@@ -106,6 +105,7 @@
     if (EmptyObject(EffortObs))
       next()
 
+    CV[, fl] <- .DataCVYears(EffortObs, HistYears, defaultCV)
     if (!is.null(EffortObs@Units))
       EffortData@Units[fl] <- EffortObs@Units
 

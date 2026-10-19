@@ -62,26 +62,48 @@
   projValue * obsError * obsBias
 }
 
-.ResolveCV <- function(Proj, slotname, i, fl, TSIndex, DataObject, DataYear, default=0.2) {
+.ResolveCV <- function(Proj, slotname, i, fl, TSIndex, DataObject, DataYear, Obs = NULL) {
   omData <- Proj@OM@Data[[i]]
-  
+
   if (!is.null(omData)) {
     omDataSlot <- slot(omData, slotname)@CV
-    
+
     if (!is.null(omDataSlot) &&
         nrow(omDataSlot) >= TSIndex &&
-        ncol(omDataSlot) >= fl) {
+        ncol(omDataSlot) >= fl &&
+        !is.na(omDataSlot[TSIndex, fl])) {
       return(omDataSlot[TSIndex, fl])
     }
   }
-  
+
+  ObsCV <- .DataCVYears(Obs, DataYear, NA_real_)
+  if (!is.na(ObsCV)) return(ObsCV)
+
   # use the CV from last time step
-  previouscv <- DataObject@CV[,fl]
-  if (is.null(previouscv)) 
-    return(default)
-  
-  previouscv <- previouscv[!is.na(previouscv)] |> utils::tail(1) |> as.numeric()    
-  previouscv
+  previouscv <- DataObject@CV[, fl]
+  previouscv <- previouscv[!is.na(previouscv)]
+  if (length(previouscv))
+    return(as.numeric(utils::tail(previouscv, 1)))
+
+  .DefaultDataCV(Proj, slotname)
+}
+
+.DefaultDataCV <- function(object, type) {
+  DataCV <- .ExpandDataCV(object@OM@Control$DataCV %||% 0.2)
+  DataCV[[type]]
+}
+
+# reported CV per year: the Obs `DataCV` (scalar, or values from each named year onwards), else `Default`
+.DataCVYears <- function(Obs, Years, Default) {
+  DataCV <- if (!is.null(Obs) && methods::.hasSlot(Obs, "DataCV")) Obs@DataCV
+  out    <- rep(Default, length(Years))
+  if (!length(DataCV)) return(out)
+  if (is.null(names(DataCV))) return(rep(DataCV[1], length(Years)))
+  ChangeYears <- as.numeric(names(DataCV))
+  Ord <- order(ChangeYears)
+  Ind <- findInterval(as.numeric(Years), ChangeYears[Ord])
+  out[Ind > 0] <- DataCV[Ord][Ind[Ind > 0]]
+  out
 }
 
 .ResolveCatchNumber <- function(Real_Catch_Number_All, fl, nSim) {
@@ -109,6 +131,28 @@
   }) |>
     List2Array("Stock") |>
     sum()
+}
+
+# calendar years between the last historical year and the last historical observation; Inf if none
+.ObsGap <- function(Years, Observed, LastHistYear) {
+  Years <- as.numeric(Years)
+  Hist  <- Observed & Years <= LastHistYear
+  if (!any(Hist, na.rm = TRUE)) return(Inf)
+  floor(LastHistYear) - floor(max(Years[which(Hist)]))
+}
+
+.ExceedsMaxGap <- function(object, Gap) {
+  MaxGap <- if (methods::.hasSlot(object, "MaxGap")) object@MaxGap
+  MaxGap <- MaxGap %||% 5
+  !is.na(MaxGap) && Gap > MaxGap
+}
+
+# composition series with no historical observations are not subject to `MaxGap`
+.CompExceedsMaxGap <- function(CompData, fl, Obs, LastHistYear) {
+  Value  <- CompData@Value
+  Totals <- apply(Value[, fl, , drop = FALSE], 1, sum, na.rm = TRUE)
+  Gap    <- .ObsGap(dimnames(Value)[[1]], Totals > 0, LastHistYear)
+  is.finite(Gap) && .ExceedsMaxGap(Obs, Gap)
 }
 
 .CompShiftAt <- function(Shift, x, DataYear, nBin) {

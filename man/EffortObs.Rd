@@ -11,6 +11,7 @@ EffortObs(
   Years = NULL,
   Units = NULL,
   Ref = NULL,
+  DataCV = NULL,
   Misc = list()
 )
 }
@@ -63,6 +64,15 @@ unique reference value is drawn per simulation as
 \item Length-\code{nSim} vector or named array: used directly.
 }}
 
+\item{DataCV}{\code{numeric} or \code{NULL}. Coefficient of variation reported in
+the \code{CV} slot of the generated effort data, which MPs can use. A scalar,
+or values named by year that apply from that year onwards (e.g.
+\code{c('1990' = 0.4, '2010' = 0.2)}). Real data CVs take precedence in
+historical years, and CVs supplied for projection years in \code{OM@Data}
+take precedence in projection years. \code{NULL} (default) uses the real data
+CV of the last historical year where there is one, otherwise
+\code{SimControl(DataCV)}. Also get or set with \code{\link[=DataCV]{DataCV()}} and \verb{DataCV<-}.}
+
 \item{Misc}{\code{list}. Miscellaneous additional objects. Default \code{list()}.}
 }
 \value{
@@ -94,19 +104,31 @@ expanded to length \code{nSim} internally — a length-2 input
 triggers a stochastic draw of a unique CV per simulation.
 }
 
-\strong{Note}: Effort observation error is not currently conditioned from observed
-data.
-
 \code{Bias} is expanded internally: a scalar input is treated as
 the CV of a lognormal from which one bias per simulation is drawn; a
 length-\code{nSim} input is used directly.
 
 \code{Ref} is expanded internally using the same convention as
 \code{Bias}.
+}
 
-Unlike catch and index observation error, effort observation error is not
-conditioned on real data; the user-supplied \code{CV}, \code{Bias}, and \code{Error} are
-always used as specified.
+\subsection{Conditioning on Real Data}{
+
+When real effort data are provided (via \code{OM@Data}), \code{\link[=Simulate]{Simulate()}}
+conditions the observation model. The historical years of \code{Error} are the
+residuals between simulated and observed effort, so historical data match
+the observed effort. Values supplied by the user before conditioning are
+used for projection years:
+\itemize{
+\item \code{CV}: sets the lognormal error of projection years; otherwise \code{CV} is
+estimated from the historical residuals.
+\item \code{Bias}: used for all years; otherwise estimated as the mean ratio of
+simulated to observed effort.
+\item \code{Error}: its projection years are used as-is.
+}
+
+Values are recorded as user-supplied in \code{Misc$UserSupplied} when the
+object is populated.
 }
 
 \subsection{Attaching to an Obs Object}{

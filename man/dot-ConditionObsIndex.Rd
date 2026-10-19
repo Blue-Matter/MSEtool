@@ -34,8 +34,8 @@
 \item{EstimateBeta}{Logical. Estimate the hyperstability/hyperdepletion
 parameter \code{Beta} by regression? If \code{FALSE}, \code{Beta} is fixed at \code{1} unless
 the user has already supplied a value on the \code{Obs} object. Default \code{TRUE}
-for this internal function; \code{.ConditionObs()} normally passes through
-\code{SimControl()}'s own default of \code{FALSE}.}
+for this function; \code{\link[=Simulate]{Simulate()}} passes \code{SimControl(EstimateBeta)}, which
+defaults to \code{FALSE}.}
 
 \item{silent}{Logical. Suppress the console message for indices skipped
 because of unsupported \code{Units}? The skip is always recorded in the log.}

@@ -33,7 +33,10 @@
 #' for future implementation and are not populated.
 #'
 #' If a slot contains an empty object (as determined by [EmptyObject()]), it
-#' is returned unchanged. See the individual sub-function documentation for
+#' is returned unchanged. Otherwise the slots set by the user before
+#' population are recorded in `Misc$UserSupplied`; when conditioning on real
+#' data, [Simulate()] uses these values for projection years in place of the
+#' conditioned estimates. See the individual sub-function documentation for
 #' details on expansion rules, default values, and accepted input forms.
 #'
 #' @return A populated [obs-class] object.

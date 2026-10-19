@@ -31,7 +31,11 @@ error applies. See \code{\link[=EffortObs]{EffortObs()}}.}
 \item{\code{Ref}}{\code{numeric} array or \code{NULL}. Reference effort values, one per
 simulation. See \code{\link[=EffortObs]{EffortObs()}}.}
 
-\item{\code{Misc}}{\code{list}. Miscellaneous additional objects.}
+\item{\code{DataCV}}{\code{numeric} or \code{NULL}. Coefficient of variation reported with
+the generated data. See \code{\link[=EffortObs]{EffortObs()}}.}
+
+\item{\code{Misc}}{\code{list}. Miscellaneous additional objects. \code{Misc$UserSupplied}
+names the slots set by the user before population.}
 }}
 
 \seealso{

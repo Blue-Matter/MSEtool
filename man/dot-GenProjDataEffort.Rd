@@ -47,8 +47,8 @@ so projection data are not generated.
 \subsection{Observation Error Model}{
 
 For each fleet with a non-empty \code{\link[=EffortObs]{EffortObs()}} object and a populated
-\code{Error} array, observed effort for \code{DataYear} is resolved via
-\code{.ResolveValue()}. If \code{Proj@OM@Data[[i]]} contains an effort value at
+\code{Error} array, observed effort for \code{DataYear} is resolved per simulation.
+If \code{Proj@OM@Data[[i]]} contains an effort value at
 \code{TSIndex}, it is used for all simulations without observation error.
 Otherwise:
 
@@ -63,9 +63,9 @@ Otherwise:
 \code{Bias} and \code{Error} with fewer rows than \code{nSim} are recycled from their
 last row.
 
-CVs for the new year are resolved per simulation via \code{.ResolveCV()}, which
-looks up the fleet- and year-specific CV from that simulation's existing
-\link[=effortdata-class]{effortdata} object.
+The CV for the new year, per simulation, is the CV supplied for the year in
+\code{OM@Data}, else the \code{\link[=EffortObs]{EffortObs()}} \code{DataCV}, else the last CV in that
+simulation's existing \link[=effortdata-class]{effortdata} object, else \code{SimControl(DataCV)}.
 }
 
 \subsection{Obs Structure}{
@@ -93,7 +93,6 @@ bound to each simulation's existing arrays along the year dimension using
 }
 }
 \seealso{
-\code{\link[=EffortObs]{EffortObs()}}, \code{\link[=EffortData]{EffortData()}}, \link[=effortdata-class]{effortdata}, \link[=obs-class]{obs},
-\code{.GenHistDataEffort()}
+\code{\link[=EffortObs]{EffortObs()}}, \code{\link[=EffortData]{EffortData()}}, \link[=effortdata-class]{effortdata}, \link[=obs-class]{obs}
 }
 \keyword{internal}

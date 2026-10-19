@@ -90,6 +90,11 @@ and a Dirichlet-Multinomial sample of size \code{SampleSize} is drawn via
 
 Slots with fewer simulation rows than \code{nSim} are recycled from their last
 row.
+
+No composition is drawn for a simulation when the number of calendar
+years between the fleet's last historical observation and the last
+historical year exceeds the \link[=compobs-class]{compobs} \code{MaxGap}. Fleets with no
+historical observations are drawn whenever \code{SampleSize} is set.
 }
 
 \subsection{Obs Structure}{

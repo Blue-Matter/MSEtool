@@ -11,7 +11,7 @@
 #' @param stocks Integer vector of stock indices in the complex.
 #' @param FleetNames Character vector of fleet names.
 #' @param defaultCV Numeric default coefficient of variation applied when no
-#'   fleet-specific CV is provided. Default `0.2`.
+#'   fleet-specific CV is provided. Default `SimControl(DataCV)`.
 #' @param type Character. Either `"Landings"` or `"Discards"`.
 #'
 #' @details
@@ -30,7 +30,7 @@
 #' Before applying observation error, true catch is aggregated from
 #' `Hist@LandingsAtAge` or `Hist@DiscardsAtAge` (selected by `type`) across
 #' stocks, ages, and areas for replicate `x`. The aggregation depends on
-#' `.CatchUnitType(CatchObs@Units)` for each fleet:
+#' whether each fleet's `CatchObs@Units` is a count or a mass unit:
 #'
 #' - `"Number"`: catch-at-age is summed over age and area, then summed over
 #'   stocks within the complex.
@@ -39,8 +39,7 @@
 #'   before summing
 #'   over age and area, then summed over stocks within the complex. 
 #'
-#' `Units` that are not a recognized catch unit (see `.CatchUnitType()`) raise
-#' an error.
+#' `Units` that are not a recognized catch unit raise an error.
 #' Units default to `"Biomass"` unless specified in the [CatchObs()] object.
 #'
 #' ## Observation Error Model
@@ -61,9 +60,8 @@
 #'
 #' ## CV Handling
 #'
-#' CVs are initialised to `defaultCV` for all fleets and years. Fleet-specific
-#' CVs from the [CatchObs()] object are not currently applied here; `defaultCV`
-#' serves as the working assumption for downstream MPs.
+#' CVs are set from the [CatchObs()] `DataCV` where defined, otherwise
+#' `defaultCV`.
 #'
 #' ## Obs Structure
 #'
@@ -78,7 +76,7 @@
 #'
 #' - `@Bias[x]`: per-replicate multiplicative bias
 #' - `@Error[x, t]`: per-replicate, per-year lognormal error multiplier
-#' - `@Units`: catch units (see `.CatchUnitType()`), propagated to the
+#' - `@Units`: catch units, propagated to the
 #'   output [catchdata-class]
 #'
 #' See [obs-class] and [CatchObs()] for full slot documentation.
@@ -87,15 +85,14 @@
 #'
 #' - `@Name`: character vector of fleet names
 #' - `@Value`: `[nYear x nFleet]` array of observed catch
-#' - `@CV`: `[nYear x nFleet]` array initialised to `defaultCV`
+#' - `@CV`: `[nYear x nFleet]` array of reported CVs
 #' - `@Units`: per-fleet units, from [CatchObs()] `@Units` where defined,
 #'   otherwise `"Biomass"`
 #'
-#' @seealso [CatchObs()], [CatchData()], [catchdata-class], [obs-class],
-#'   `.GenHistDataEffort()`
+#' @seealso [CatchObs()], [CatchData()], [catchdata-class], [obs-class]
 #' @keywords internal
 .GenHistDataCatch <- function(x, Data, Hist, HistYears, i, stocks, FleetNames,
-                              defaultCV = 0.2, type = c('Landings', 'Discards')) {
+                              defaultCV = .DefaultDataCV(Hist, type), type = c('Landings', 'Discards')) {
   
   type <- match.arg(type, c('Landings', 'Discards'))
   
@@ -129,7 +126,8 @@
     CatchObs <- slot(Hist@OM@Obs[[i]][[fl]], type)
     if (EmptyObject(CatchObs))
       next()
-    
+
+    CV[, fl] <- .DataCVYears(CatchObs, HistYears, defaultCV)
     if (!is.null(CatchObs@Units))
       CatchData@Units[fl] <- CatchObs@Units
     

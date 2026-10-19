@@ -11,6 +11,7 @@ CatchObs(
   Years = NULL,
   Units = NULL,
   Ref = NULL,
+  DataCV = NULL,
   Misc = list()
 )
 }
@@ -28,8 +29,9 @@ being used to generate the \code{Error} array.
 \item Length-\code{nSim} named array: used directly, one CV per simulation.
 }
 
-When conditioning on real data, \code{CV} is replaced by
-the simulation-specific standard deviation of historical log-residuals.}
+When conditioning on real data, a \code{CV} supplied here sets the observation
+error for projection years; otherwise \code{CV} is estimated as the
+simulation-specific standard deviation of historical log-residuals.}
 
 \item{Bias}{\code{numeric} or \code{NULL}. Multiplicative observation bias. Accepted
 forms:
@@ -45,17 +47,18 @@ uniform bounds; a unique bias per simulation is drawn via
 simulation.
 }
 
-When conditioning on real data, \code{Bias} is replaced
-by the mean ratio of simulated to observed catch across historical years,
-per simulation.}
+When conditioning on real data, a \code{Bias} supplied here is used;
+otherwise \code{Bias} is estimated as the mean ratio of simulated to observed
+catch across historical years, per simulation.}
 
 \item{Error}{\code{numeric} array or \code{NULL}. Pre-specified lognormal observation
 error multipliers with dimensions \verb{nSim x nYear} and named dimnames
 (\code{Sim}, \code{Year}). When supplied, \code{Error} is used directly and \code{CV} is
 ignored for error generation. Values should be positive multipliers
 centred near 1. Default \code{NULL}, in which case \code{Error} is generated from
-\code{CV} internally. When conditioning on real data,
-any user-supplied \code{Error} is replaced.}
+\code{CV} internally. When conditioning on real data, the projection years of
+a supplied \code{Error} are used and the historical years are replaced by the
+conditioned residuals.}
 
 \item{Years}{\code{numeric} vector or \code{NULL}. Calendar years over which to
 condition the observation error when real catch data are provided. When
@@ -77,6 +80,15 @@ unique reference value is drawn per simulation as
 \code{rlnorm(nSim, mconv(1, Ref), sdconv(1, Ref))} internally.
 \item Length-\code{nSim} vector or named array: used directly.
 }}
+
+\item{DataCV}{\code{numeric} or \code{NULL}. Coefficient of variation reported in
+the \code{CV} slot of the generated catch data, which MPs can use. A scalar,
+or values named by year that apply from that year onwards (e.g.
+\code{c('1990' = 0.4, '2010' = 0.2)}). Real data CVs take precedence in
+historical years, and CVs supplied for projection years in \code{OM@Data}
+take precedence in projection years. \code{NULL} (default) uses the real data
+CV of the last historical year where there is one, otherwise
+\code{SimControl(DataCV)}. Also get or set with \code{\link[=DataCV]{DataCV()}} and \verb{DataCV<-}.}
 
 \item{Misc}{\code{list}. Miscellaneous additional objects. Default \code{list()}.}
 }
@@ -104,9 +116,9 @@ of precedence:
 \item \strong{Stochastic from \code{CV}}: if \code{Error} is \code{NULL} and \code{CV} is specified,
 Internally the model generates a lognormal array where each cell is
 \code{rlnorm(1, mconv(1, CV[sim]), sdconv(1, CV[sim]))}.
-\item \strong{Conditioned from real data}: \code{\link[=Simulate]{Simulate()}} estimates \code{CV}, \code{Bias},
-and \code{Error} from historical residuals; any user-supplied values are
-replaced.
+\item \strong{Conditioned from real data}: \code{\link[=Simulate]{Simulate()}} sets the historical years
+of \code{Error} from the residuals between simulated and observed catch, and
+generates projection years from \code{CV} (see below).
 }
 
 \code{Bias} is expanded internally: a scalar input is treated as
@@ -120,10 +132,20 @@ length-\code{nSim} input is used directly.
 \subsection{Conditioning on Real Data}{
 
 When real catch data are provided (via \code{OM@Data}), \code{\link[=Simulate]{Simulate()}}
-conditions the observation model: \code{CV} and \code{Bias} are estimated from the
-historical residuals between simulated and observed catch, and \code{Error} is populated to cover both
-historical and projection years. Any user-supplied \code{CV}, \code{Bias}, and \code{Error}
-values are replaced.
+conditions the observation model. The historical years of \code{Error} are the
+residuals between simulated and observed catch, so historical data match
+the observed catch. Values supplied by the user before conditioning are
+used for projection years:
+\itemize{
+\item \code{CV}: sets the lognormal error of projection years; otherwise \code{CV} is
+estimated from the historical residuals.
+\item \code{Bias}: used for all years; otherwise estimated as the mean ratio of
+simulated to observed catch.
+\item \code{Error}: its projection years are used as-is.
+}
+
+Values are recorded as user-supplied in \code{Misc$UserSupplied} when the
+object is populated.
 }
 
 \subsection{Attaching to an Obs Object}{

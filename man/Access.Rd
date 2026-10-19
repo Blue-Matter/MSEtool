@@ -22,6 +22,8 @@
 \alias{CV<-}
 \alias{CVatAge}
 \alias{CVatAge<-}
+\alias{DataCV}
+\alias{DataCV<-}
 \alias{Dist}
 \alias{Dist<-}
 \alias{DiscardsAtAge}
@@ -40,6 +42,8 @@
 \alias{LandingsAtSize<-}
 \alias{LifeHistory}
 \alias{LifeHistory<-}
+\alias{MaxGap}
+\alias{MaxGap<-}
 \alias{Mean}
 \alias{Mean<-}
 \alias{MeanAtAge}
@@ -143,6 +147,10 @@ CVatAge(x)
 
 CVatAge(x) <- value
 
+DataCV(x)
+
+DataCV(x) <- value
+
 Dist(x)
 
 Dist(x) <- value
@@ -178,6 +186,10 @@ LandingsAtSize(x) <- value
 LifeHistory(x)
 
 LifeHistory(x) <- value
+
+MaxGap(x)
+
+MaxGap(x) <- value
 
 Mean(x)
 

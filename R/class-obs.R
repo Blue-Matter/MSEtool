@@ -116,7 +116,10 @@ setClass(
 #'   (e.g., `"hours"`, `"trips"`). See [EffortObs()].
 #' @slot Ref `numeric` array or `NULL`. Reference effort values, one per
 #'   simulation. See [EffortObs()].
-#' @slot Misc `list`. Miscellaneous additional objects.
+#' @slot DataCV `numeric` or `NULL`. Coefficient of variation reported with
+#'   the generated data. See [EffortObs()].
+#' @slot Misc `list`. Miscellaneous additional objects. `Misc$UserSupplied`
+#'   names the slots set by the user before population.
 #'
 #' @seealso [EffortObs()] for the constructor and full parameter documentation.
 #'   [obs-class] for the enclosing observation model object.
@@ -134,6 +137,7 @@ setClass(
     Years = "num.null",
     Units = "char.null",
     Ref   = "num.array.null",
+    DataCV = "num.null",
     Misc  = "list"
   )
 )
@@ -149,6 +153,8 @@ setValidity("effortobs", function(object) {
 
   if (!is.null(object@Error) && any(object@Error <= 0, na.rm = TRUE))
     errors <- c(errors, "`Error` must be positive")
+
+  errors <- c(errors, .CheckDataCV(object@DataCV))
 
   if (length(errors)) errors else TRUE
 })
@@ -174,7 +180,10 @@ setValidity("effortobs", function(object) {
 #'   or a mass or count unit (e.g. `"t"`, `"kg"`, `"n"`). See [CatchObs()].
 #' @slot Ref `numeric` array or `NULL`. Reference catch values, one per
 #'   simulation. See [CatchObs()].
-#' @slot Misc `list`. Miscellaneous additional objects.
+#' @slot DataCV `numeric` or `NULL`. Coefficient of variation reported with
+#'   the generated data. See [CatchObs()].
+#' @slot Misc `list`. Miscellaneous additional objects. `Misc$UserSupplied`
+#'   names the slots set by the user before population.
 #'
 #' @seealso
 #' - [CatchObs()] for the constructor and full parameter documentation.
@@ -193,6 +202,7 @@ setClass(
     Years = "num.null",
     Units = "char.null",
     Ref   = "num.array.null",
+    DataCV = "num.null",
     Misc  = "list"
   )
 )
@@ -211,6 +221,8 @@ setValidity("catchobs", function(object) {
 
   if (!is.null(object@Units) && !all(.IsCatchUnit(object@Units)))
     errors <- c(errors, "`Units` must be `\"Biomass\"`, `\"Number\"`, or a mass or count unit")
+
+  errors <- c(errors, .CheckDataCV(object@DataCV))
 
   if (length(errors)) errors else TRUE
 })
@@ -236,8 +248,9 @@ setValidity("catchobs", function(object) {
 #'   `SimControl(EstimateBeta = TRUE)`, unless already supplied. See
 #'   [IndicesObs()].
 #' @slot AC `numeric` array or `NULL`. Lag-1 autocorrelation of index
-#'   residuals, one value per simulation. When supplied by the user, overrides
-#'   the value estimated during conditioning. See [IndicesObs()].
+#'   residuals, one value per simulation. When supplied by the user, used for
+#'   projection years in place of the value estimated during conditioning.
+#'   See [IndicesObs()].
 #' @slot Years `numeric` or `NULL`. Calendar years over which the observation
 #'   error is conditioned. See [IndicesObs()].
 #' @slot Areas `numeric` or `NULL`. Integer indices of the spatial areas
@@ -249,6 +262,8 @@ setValidity("catchobs", function(object) {
 #' @slot Type `character`. Index type identifier. See [IndicesObs()].
 #' @slot Ref `numeric` array or `NULL`. Reference index value, one per
 #'   simulation. See [IndicesObs()].
+#' @slot DataCV `numeric` or `NULL`. Coefficient of variation reported with
+#'   the generated data. See [IndicesObs()].
 #' @slot Efficiency `numeric` array or `NULL`. Catchability coefficient `q`
 #'   relating the nominal index to the population quantity. Calculated
 #'   internally during conditioning as the ratio of mean observed index to
@@ -259,6 +274,10 @@ setValidity("catchobs", function(object) {
 #' @slot TruncSD `numeric(1)` or `NULL`. Number of standard deviations at
 #'   which to truncate the lognormal residual distribution when generating
 #'   projection errors. Default `2`. See [IndicesObs()].
+#' @slot MaxGap `numeric(1)` or `NULL`. Largest number of calendar years
+#'   between the last historical observation and the last historical year for
+#'   which the index is generated in projection years. `NULL` is `5`. See
+#'   [IndicesObs()].
 #' @slot Stats `data.frame` or `NULL`. Residual statistics computed during
 #'   conditioning by [CalcResidualStats()]. Contains columns `Sim`, `AC`
 #'   (weighted lag-1 autocorrelation), `SD` (standard deviation), and
@@ -268,6 +287,7 @@ setValidity("catchobs", function(object) {
 #'   conditioned on real data, `Misc$BetaFit` holds the per-simulation fit
 #'   diagnostics from [EstimateBeta()]: `SE_Beta`, `CI_Lower`, `CI_Upper`,
 #'   `R2`, `PValue`, `nPoints`, and `Status`. See [IndexFitTable()].
+#'   `Misc$UserSupplied` names the slots set by the user before population.
 #'
 #' @seealso
 #'  - [IndicesObs()] for the constructor and full parameter
@@ -292,9 +312,11 @@ setClass(
     Selectivity = "array.char.num.list",
     Type        = "character",
     Ref         = "num.array.null",
+    DataCV      = "num.null",
     Efficiency  = "num.array.null",
     qInc        = "num.array.null",
     TruncSD     = "num.null",
+    MaxGap      = "num.null",
     Stats       = "df.null",
     Misc        = "list"
   )
@@ -322,6 +344,10 @@ setValidity("indicesobs", function(object) {
 
   if (!is.null(object@qInc) && any(object@qInc <= -100, na.rm = TRUE))
     errors <- c(errors, "`qInc` must be greater than -100")
+
+  errors <- c(errors, .CheckMaxGap(object@MaxGap))
+
+  errors <- c(errors, .CheckDataCV(object@DataCV))
 
   if (length(errors)) errors else TRUE
 })
@@ -366,10 +392,16 @@ setValidity("indicesobs", function(object) {
 #'   before drawing, capturing directional bias between observed and
 #'   OM-predicted compositions. After population by [PopulateCompObs()],
 #'   stored as a named `[nSim x nYear x nBin]` array. `NULL` (default) applies
-#'   no shift. In conditioning mode, populated internally
-#'   from the mean per-bin log-concentration residual across historical years.
+#'   no shift. When conditioning on real data, the historical years are set
+#'   from the per-bin log-concentration residuals. See [CompObs()].
 #'
-#' @slot Misc `list`. Reserved for internal use.
+#' @slot MaxGap `numeric(1)` or `NULL`. Largest number of calendar years
+#'   between the fleet's last historical observation and the last historical
+#'   year for which compositions are generated in projection years. `NULL` is
+#'   `5`. See [CompObs()].
+#'
+#' @slot Misc `list`. Reserved for internal use. `Misc$UserSupplied` names
+#'   the slots set by the user before population.
 #'
 #' @details
 #' ## Composition generation model
@@ -415,12 +447,27 @@ setClass(
     Theta      = "num.array.null",
     Years      = "num.null",
     Shift      = "num.array.null",
+    MaxGap     = "num.null",
     Misc       = "list"
   )
 )
 
+.CheckDataCV <- function(DataCV) {
+  if (is.null(DataCV)) return(character())
+  if (any(is.na(DataCV) | DataCV < 0) || (length(DataCV) > 1 && is.null(names(DataCV))))
+    return("`DataCV` must be a non-negative scalar, or values named by year")
+  character()
+}
+
+.CheckMaxGap <- function(MaxGap) {
+  if (is.null(MaxGap)) return(character())
+  if (length(MaxGap) != 1 || (!is.na(MaxGap) && MaxGap < 0))
+    return("`MaxGap` must be a single non-negative number or `NA`")
+  character()
+}
+
 setValidity("compobs", function(object) {
-  errors <- character()
+  errors <- c(character(), .CheckMaxGap(object@MaxGap))
 
   if (!is.null(object@SampleSize) && any(object@SampleSize <= 0, na.rm = TRUE))
     errors <- c(errors, "`SampleSize` must be positive")

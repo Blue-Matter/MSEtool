@@ -33,11 +33,10 @@
 #' dropping the time dimension. Per-fleet aggregation then depends on
 #' `CatchData@Units[fl]`:
 #'
-#' - `"Number"`: summed over age and area for all simulations via
-#'   `.ResolveCatchNumber()`.
+#' - `"Number"`: summed over age and area for all simulations.
 #' - `"Biomass"`: multiplied by `WeightFleetRetained` (`type = "Landings"`) or
 #'   `WeightFleetSelected` (`type = "Discards"`) before summing over age and
-#'   area via `.ResolveCatchBiomass()`, one simulation at a time.
+#'   area, one simulation at a time.
 #'
 #' ## Value Resolution
 #'
@@ -60,9 +59,9 @@
 #'   `Bias` and `Error` with fewer rows than `nSim` are recycled from their
 #'   last row.
 #'
-#' CVs for the new year are resolved per simulation via `.ResolveCV()`, which
-#' looks up the fleet- and year-specific CV from that simulation's existing
-#' [catchdata-class] object.
+#' The CV for the new year, per simulation, is the CV supplied for the year in
+#' `OM@Data`, else the [CatchObs()] `DataCV`, else the last CV in that
+#' simulation's existing [catchdata-class] object, else `SimControl(DataCV)`.
 #'
 #' ## Obs Structure
 #'
@@ -92,8 +91,7 @@
 #' - `@Value`: `[nYear+1 x nFleet]` array of observed catch
 #' - `@CV`: `[nYear+1 x nFleet]` array of CVs
 #'
-#' @seealso [CatchObs()], [CatchData()], [catchdata-class], [obs-class],
-#'   `.GenHistDataCatch()`, `.GenProjDataEffort()`
+#' @seealso [CatchObs()], [CatchData()], [catchdata-class], [obs-class]
 #' @keywords internal
 .GenProjDataCatch <- function(Proj, DataYear, YearsAll, i, stocks, nSim,
                                  type = c('Landings', 'Discards')) {
@@ -159,7 +157,7 @@
 
     for (x in seq_len(nSim))
       NewCVAll[x, fl] <- .ResolveCV(Proj, type, i, fl, TSIndex,
-                                    slot(Proj@Data[[x]][[i]], type), DataYear)
+                                    slot(Proj@Data[[x]][[i]], type), DataYear, Obs)
   }
 
   purrr::map(seq_len(nSim), \(x) {

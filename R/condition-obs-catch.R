@@ -129,7 +129,11 @@
                                                 Year=CatchObs@Years)
     )
     
-    CatchObs@Bias <- Bias[,1]
+    if (.UserSupplied(CatchObs, "Bias")) {
+      Bias[] <- .SimValues(CatchObs@Bias, nSim)
+    } else {
+      CatchObs@Bias <- Bias[,1]
+    }
     
     # Error
     ErrorHist <- matrix(ObservedCatch, nSim, length(ObservedCatch), byrow = TRUE)/(SimValue*Bias)
@@ -142,24 +146,30 @@
     
     SD[!is.finite(SD)] <- 1E-6
     
-    CatchObs@CV <- .NameSims(SD, nSim)
-    
-    # Generate obs error for projections 
-    ErrorProj <- exp(matrix(rnorm(nSim * nProjTS,
-                                  mean = rep(-(SD^2) / 2, each = nProjTS),
-                                  sd   = rep(SD, each = nProjTS)),
-                            nrow = nSim,
-                            ncol = nProjTS,
-                            byrow = TRUE
-      )
-    )
-    dimnames(ErrorProj) <- list(Sim=1:nSim,
-                                Year=ProjYears)
-    
+    if (.UserSupplied(CatchObs, "CV")) {
+      SD <- sdconv(1, .SimValues(CatchObs@CV, nSim))
+    } else {
+      CatchObs@CV <- .NameSims(SD, nSim)
+    }
+
+    ErrorProj <- .ProjObsError(CatchObs, SD, nSim, ProjYears)
     Error <- abind::abind(ErrorHist,ErrorProj, along = 2, use.dnns = TRUE)
     CatchObs@Error <- Error
     slot(Hist@OM@Obs[[i]][[fl]], type) <- CatchObs
   }
   
   Hist
+}
+
+# projection-year catch/effort observation error: user-supplied `Error`, else lognormal with log-scale `SD`
+.ProjObsError <- function(object, SD, nSim, ProjYears) {
+  if (.UserSupplied(object, "Error"))
+    return(.ProjYearValues(object@Error, nSim, ProjYears))
+  nProjTS <- length(ProjYears)
+  ErrorProj <- exp(matrix(rnorm(nSim * nProjTS,
+                                mean = rep(-(SD^2) / 2, each = nProjTS),
+                                sd   = rep(SD, each = nProjTS)),
+                          nrow = nSim, ncol = nProjTS, byrow = TRUE))
+  dimnames(ErrorProj) <- list(Sim = seq_len(nSim), Year = ProjYears)
+  ErrorProj
 }

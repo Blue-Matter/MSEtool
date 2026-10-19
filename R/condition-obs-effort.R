@@ -77,7 +77,11 @@
                   dimnames = list(Sim  = seq_along(BiasMean),
                                   Year = EffortObs@Years))
 
-    EffortObs@Bias <- Bias[, 1]
+    if (.UserSupplied(EffortObs, "Bias")) {
+      Bias[] <- .SimValues(EffortObs@Bias, nSim)
+    } else {
+      EffortObs@Bias <- Bias[, 1]
+    }
 
     # Lognormal error: standardised residuals of obs / (sim / bias)
     ErrorHist <- matrix(ObservedEffort, nSim, length(ObservedEffort), byrow = TRUE) /
@@ -91,18 +95,13 @@
                         na.rm = TRUE))
     SD[!is.finite(SD)] <- 1e-6
 
-    EffortObs@CV <- .NameSims(SD, nSim)
+    if (.UserSupplied(EffortObs, "CV")) {
+      SD <- sdconv(1, .SimValues(EffortObs@CV, nSim))
+    } else {
+      EffortObs@CV <- .NameSims(SD, nSim)
+    }
 
-    # Generate lognormal observation error for projection years
-    ErrorProj <- exp(matrix(
-      rnorm(nSim * nProjTS,
-            mean = rep(-(SD^2) / 2, each = nProjTS),
-            sd   = rep(SD,          each = nProjTS)),
-      nrow   = nSim,
-      ncol   = nProjTS,
-      byrow  = TRUE
-    ))
-    dimnames(ErrorProj) <- list(Sim = seq_len(nSim), Year = ProjYears)
+    ErrorProj <- .ProjObsError(EffortObs, SD, nSim, ProjYears)
 
     Error <- abind::abind(ErrorHist, ErrorProj, along = 2, use.dnns = TRUE)
     EffortObs@Error <- Error

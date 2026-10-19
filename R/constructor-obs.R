@@ -14,8 +14,9 @@
 #'     being used to generate the `Error` array.
 #'   - Length-`nSim` named array: used directly, one CV per simulation.
 #'
-#'   When conditioning on real data, `CV` is replaced by
-#'   the simulation-specific standard deviation of historical log-residuals.
+#'   When conditioning on real data, a `CV` supplied here sets the observation
+#'   error for projection years; otherwise `CV` is estimated as the
+#'   simulation-specific standard deviation of historical log-residuals.
 #' @param Bias `numeric` or `NULL`. Multiplicative observation bias. Accepted
 #'   forms:
 #'   - `NULL` (default): bias defaults to `1` (unbiased) internally.
@@ -28,16 +29,17 @@
 #'   - Length-`nSim` vector or named array: used directly, one bias per
 #'     simulation.
 #'
-#'   When conditioning on real data, `Bias` is replaced
-#'   by the mean ratio of simulated to observed catch across historical years,
-#'   per simulation.
+#'   When conditioning on real data, a `Bias` supplied here is used;
+#'   otherwise `Bias` is estimated as the mean ratio of simulated to observed
+#'   catch across historical years, per simulation.
 #' @param Error `numeric` array or `NULL`. Pre-specified lognormal observation
 #'   error multipliers with dimensions `nSim x nYear` and named dimnames
 #'   (`Sim`, `Year`). When supplied, `Error` is used directly and `CV` is
 #'   ignored for error generation. Values should be positive multipliers
 #'   centred near 1. Default `NULL`, in which case `Error` is generated from
-#'   `CV` internally. When conditioning on real data,
-#'   any user-supplied `Error` is replaced.
+#'   `CV` internally. When conditioning on real data, the projection years of
+#'   a supplied `Error` are used and the historical years are replaced by the
+#'   conditioned residuals.
 #' @param Years `numeric` vector or `NULL`. Calendar years over which to
 #'   condition the observation error when real catch data are provided. When
 #'   `NULL` (default), all historical years in the `Data` object are used.
@@ -54,6 +56,14 @@
 #'     unique reference value is drawn per simulation as
 #'     `rlnorm(nSim, mconv(1, Ref), sdconv(1, Ref))` internally.
 #'   - Length-`nSim` vector or named array: used directly.
+#' @param DataCV `numeric` or `NULL`. Coefficient of variation reported in
+#'   the `CV` slot of the generated catch data, which MPs can use. A scalar,
+#'   or values named by year that apply from that year onwards (e.g.
+#'   `c('1990' = 0.4, '2010' = 0.2)`). Real data CVs take precedence in
+#'   historical years, and CVs supplied for projection years in `OM@Data`
+#'   take precedence in projection years. `NULL` (default) uses the real data
+#'   CV of the last historical year where there is one, otherwise
+#'   `SimControl(DataCV)`. Also get or set with [DataCV()] and `DataCV<-`.
 #' @param Misc `list`. Miscellaneous additional objects. Default `list()`.
 #'
 #' @details
@@ -67,9 +77,9 @@
 #' 2. **Stochastic from `CV`**: if `Error` is `NULL` and `CV` is specified,
 #'    Internally the model generates a lognormal array where each cell is
 #'    `rlnorm(1, mconv(1, CV[sim]), sdconv(1, CV[sim]))`.
-#' 3. **Conditioned from real data**: [Simulate()] estimates `CV`, `Bias`,
-#'    and `Error` from historical residuals; any user-supplied values are
-#'    replaced.
+#' 3. **Conditioned from real data**: [Simulate()] sets the historical years
+#'    of `Error` from the residuals between simulated and observed catch, and
+#'    generates projection years from `CV` (see below).
 #'
 #' `Bias` is expanded internally: a scalar input is treated as
 #' the CV of a lognormal from which one bias per simulation is drawn; a
@@ -81,10 +91,19 @@
 #' ## Conditioning on Real Data
 #'
 #' When real catch data are provided (via `OM@Data`), [Simulate()]
-#' conditions the observation model: `CV` and `Bias` are estimated from the
-#' historical residuals between simulated and observed catch, and `Error` is populated to cover both
-#' historical and projection years. Any user-supplied `CV`, `Bias`, and `Error`
-#' values are replaced.
+#' conditions the observation model. The historical years of `Error` are the
+#' residuals between simulated and observed catch, so historical data match
+#' the observed catch. Values supplied by the user before conditioning are
+#' used for projection years:
+#'
+#' - `CV`: sets the lognormal error of projection years; otherwise `CV` is
+#'   estimated from the historical residuals.
+#' - `Bias`: used for all years; otherwise estimated as the mean ratio of
+#'   simulated to observed catch.
+#' - `Error`: its projection years are used as-is.
+#'
+#' Values are recorded as user-supplied in `Misc$UserSupplied` when the
+#' object is populated.
 #'
 #' ## Attaching to an Obs Object
 #'
@@ -118,6 +137,7 @@ CatchObs <- function(CV    = NULL,
                      Years = NULL,
                      Units = NULL,
                      Ref   = NULL,
+                     DataCV = NULL,
                      Misc  = list()) {
   .Object <- methods::new("catchobs")
   if (!is.null(CV))    .Object@CV    <- CV
@@ -126,6 +146,7 @@ CatchObs <- function(CV    = NULL,
   if (!is.null(Years)) .Object@Years <- Years
   if (!is.null(Units)) .Object@Units <- Units
   if (!is.null(Ref))   .Object@Ref   <- Ref
+  if (!is.null(DataCV)) .Object@DataCV <- DataCV
   .Object@Misc <- Misc
   methods::validObject(.Object)
   .Object
@@ -188,9 +209,17 @@ CatchObs <- function(CV    = NULL,
 #'     with change-point years: expanded to `[nSim x nYear x nBin]` by
 #'     [PopulateCompObs()].
 #'   - Full `[nSim x nYear x nBin]` array.
-#'   In conditioning mode, `Shift` is populated internally
-#'   from the mean per-bin log-concentration residual across
-#'   historical years and should not be set by the user.
+#'   When conditioning on real data, `Shift` is set from the per-bin
+#'   log-concentration residuals of the historical years; a `Shift` supplied
+#'   here is used for projection years.
+#'
+#' @param MaxGap `numeric(1)` or `NULL`. Largest number of calendar years
+#'   between the fleet's last historical composition observation and the last
+#'   historical year for which compositions are generated in projection years.
+#'   `NULL` (default) is `5`; `0` generates compositions only when observed in
+#'   the last historical year; `Inf` or `NA` always generates them. Fleets with
+#'   no historical observations are generated whenever `SampleSize` is set. Also get
+#'   or set with [MaxGap()] and `MaxGap<-`.
 #'
 #' @param Misc `list`. Reserved for internal use. Default `list()`.
 #'
@@ -228,10 +257,20 @@ CatchObs <- function(CV    = NULL,
 #'
 #' When real composition data are supplied via `OM@Data`, [Simulate()]
 #' compares observed compositions with OM-predicted compositions across the
-#' historical years specified in `Years`, and populates `Shift` (mean per-bin
-#' log-concentration residual) as well as estimating an appropriate `ESS` and
-#' `Theta`. Users should not set these slots manually when conditioning on
-#' real data.
+#' historical years specified in `Years`, and sets:
+#'
+#' - `SampleSize`: the observed sample size in historical years. Projection
+#'   years use a `SampleSize` supplied by the user before conditioning, or
+#'   else the sample size of the last observed year.
+#' - `ESS`: estimated in historical years and capped at the observed sample
+#'   size. Projection years use an `ESS` supplied by the user, or else the
+#'   last estimate, capped at a user-supplied `SampleSize`.
+#' - `Shift`: the per-bin log-concentration residual in historical years.
+#'   Projection years use a `Shift` supplied by the user, or else the
+#'   residual of the last observed year.
+#'
+#' `Theta` is not estimated. Values are recorded as user-supplied in
+#' `Misc$UserSupplied` when the object is populated.
 #'
 #' Note: when observed compositions differ substantially from OM-predicted
 #' compositions (e.g. a length distribution shifted far left or right, or
@@ -274,6 +313,7 @@ CompObs <- function(SampleSize = NULL,
                     Theta      = NULL,
                     Years      = NULL,
                     Shift      = NULL,
+                    MaxGap     = NULL,
                     Misc       = list()) {
   .Object <- methods::new("compobs")
   if (!is.null(SampleSize)) .Object@SampleSize <- SampleSize
@@ -281,6 +321,7 @@ CompObs <- function(SampleSize = NULL,
   if (!is.null(Theta))      .Object@Theta      <- Theta
   if (!is.null(Years))      .Object@Years      <- Years
   if (!is.null(Shift))      .Object@Shift      <- Shift
+  if (!is.null(MaxGap))     .Object@MaxGap     <- as.numeric(MaxGap)
   .Object@Misc <- Misc
   methods::validObject(.Object)
   .Object
@@ -328,6 +369,14 @@ CompObs <- function(SampleSize = NULL,
 #'     unique reference value is drawn per simulation as
 #'     `rlnorm(nSim, mconv(1, Ref), sdconv(1, Ref))` internally.
 #'   - Length-`nSim` vector or named array: used directly.
+#' @param DataCV `numeric` or `NULL`. Coefficient of variation reported in
+#'   the `CV` slot of the generated effort data, which MPs can use. A scalar,
+#'   or values named by year that apply from that year onwards (e.g.
+#'   `c('1990' = 0.4, '2010' = 0.2)`). Real data CVs take precedence in
+#'   historical years, and CVs supplied for projection years in `OM@Data`
+#'   take precedence in projection years. `NULL` (default) uses the real data
+#'   CV of the last historical year where there is one, otherwise
+#'   `SimControl(DataCV)`. Also get or set with [DataCV()] and `DataCV<-`.
 #' @param Misc `list`. Miscellaneous additional objects. Default `list()`.
 #'
 #' @details
@@ -344,9 +393,6 @@ CompObs <- function(SampleSize = NULL,
 #'    expanded to length `nSim` internally — a length-2 input
 #'    triggers a stochastic draw of a unique CV per simulation.
 #'
-#' **Note**: Effort observation error is not currently conditioned from observed
-#' data.
-#'
 #' `Bias` is expanded internally: a scalar input is treated as
 #' the CV of a lognormal from which one bias per simulation is drawn; a
 #' length-`nSim` input is used directly.
@@ -354,9 +400,22 @@ CompObs <- function(SampleSize = NULL,
 #' `Ref` is expanded internally using the same convention as
 #' `Bias`.
 #'
-#' Unlike catch and index observation error, effort observation error is not
-#' conditioned on real data; the user-supplied `CV`, `Bias`, and `Error` are
-#' always used as specified.
+#' ## Conditioning on Real Data
+#'
+#' When real effort data are provided (via `OM@Data`), [Simulate()]
+#' conditions the observation model. The historical years of `Error` are the
+#' residuals between simulated and observed effort, so historical data match
+#' the observed effort. Values supplied by the user before conditioning are
+#' used for projection years:
+#'
+#' - `CV`: sets the lognormal error of projection years; otherwise `CV` is
+#'   estimated from the historical residuals.
+#' - `Bias`: used for all years; otherwise estimated as the mean ratio of
+#'   simulated to observed effort.
+#' - `Error`: its projection years are used as-is.
+#'
+#' Values are recorded as user-supplied in `Misc$UserSupplied` when the
+#' object is populated.
 #'
 #' ## Attaching to an Obs Object
 #'
@@ -399,6 +458,7 @@ EffortObs <- function(CV    = NULL,
                       Years = NULL,
                       Units = NULL,
                       Ref   = NULL,
+                      DataCV = NULL,
                       Misc  = list()) {
   .Object <- methods::new("effortobs")
   if (!is.null(CV))    .Object@CV    <- CV
@@ -407,6 +467,7 @@ EffortObs <- function(CV    = NULL,
   if (!is.null(Years)) .Object@Years <- Years
   if (!is.null(Units)) .Object@Units <- Units
   if (!is.null(Ref))   .Object@Ref   <- Ref
+  if (!is.null(DataCV)) .Object@DataCV <- DataCV
   .Object@Misc <- Misc
   methods::validObject(.Object)
   .Object
@@ -483,17 +544,18 @@ ExploitationObs <- function(Selectivity      = list(),
 #'     being used to generate the `Error` array.
 #'   - Length-`nSim` named array: used directly, one CV per simulation.
 #'
-#'   When conditioning on real data, `CV` is replaced by
-#'   the simulation-specific standard deviation of historical log-residuals
+#'   When conditioning on real data, a `CV` supplied here sets the observation
+#'   error for projection years; otherwise `CV` is set from the
+#'   simulation-specific standard deviation of historical log-residuals
 #'   estimated by [CalcResidualStats()]. Ignored if `Error` is supplied
 #'   directly.
 #' @param Error `numeric` array or `NULL`. Pre-specified lognormal observation
 #'   error multipliers with dimensions `nSim x nYear` and named dimnames
 #'   (`Sim`, `Year`). When supplied, `Error` is used directly and `CV` is
-#'   ignored for error generation. When real index data are provided in `OM@Data`,
-#'   `Error` is replaced by conditioned values
-#'   regardless of whether it was user-supplied. Default `NULL`, in which case
-#'   `Error` is generated from `CV` internally.
+#'   ignored for error generation. When real index data are provided in
+#'   `OM@Data`, the projection years of a supplied `Error` are used and the
+#'   historical years are replaced by the conditioned residuals. Default
+#'   `NULL`, in which case `Error` is generated from `CV` internally.
 #' @param Areas `integer` vector or `NULL`. Indices of the spatial areas that
 #'   contribute to this index (e.g., `c(1, 2)` for a two-area model where the
 #'   index covers only the first two areas). Default `NULL`, in which case all
@@ -534,6 +596,14 @@ ExploitationObs <- function(Selectivity      = list(),
 #'     unique reference value is drawn per simulation as
 #'     `rlnorm(nSim, mconv(1, Ref), sdconv(1, Ref))` internally.
 #'   - Length-`nSim` vector or named array: used directly.
+#' @param DataCV `numeric` or `NULL`. Coefficient of variation reported in
+#'   the `CV` slot of the generated index data, which MPs can use. A scalar,
+#'   or values named by year that apply from that year onwards (e.g.
+#'   `c('1990' = 0.4, '2010' = 0.2)`). Real data CVs take precedence in
+#'   historical years, and CVs supplied for projection years in `OM@Data`
+#'   take precedence in projection years. `NULL` (default) uses the real data
+#'   CV of the last historical year where there is one, otherwise
+#'   `SimControl(DataCV)`. Also get or set with [DataCV()] and `DataCV<-`.
 #' @param Beta `numeric` or `NULL`. Hyperstability/hyperdepletion parameter:
 #'   `Observed_t = Efficiency * NomIndex_t^Beta * Error_t` (Harley et al.
 #'   2001). `Beta < 1` is hyperstable, `Beta > 1` hyperdeplete. Must be
@@ -544,7 +614,9 @@ ExploitationObs <- function(Selectivity      = list(),
 #'   simulation by log-linear regression when conditioned -- otherwise it
 #'   stays at `1`.
 #' @param AC `numeric`, `array`, or `NULL`. Lag-1 autocorrelation of index
-#'   residuals, one value per simulation
+#'   residuals, one value per simulation. When conditioning on real data, an
+#'   `AC` supplied here is used for projection years; otherwise `AC` is
+#'   estimated from the historical residuals.
 #' @param qInc `numeric` or `NULL`. Annual percentage change in index
 #'   catchability during projection years (e.g. `2` = 2% per year; negative
 #'   values indicate declining catchability). Default `NULL` (no change).
@@ -556,6 +628,14 @@ ExploitationObs <- function(Selectivity      = list(),
 #'
 #'   See "Projected Change in Catchability" below. Also get or set with
 #'   [qInc()] and `qInc<-`.
+#' @param MaxGap `numeric(1)` or `NULL`. Largest number of calendar years
+#'   between the last historical observation of the index and the last
+#'   historical year for which the index is generated in projection years.
+#'   `NULL` (default) is `5`; `0` generates the index only when it is observed
+#'   in the last historical year; `Inf` or `NA` always generates it. An index
+#'   with no historical observations is not generated. Index values supplied
+#'   for projection years in `OM@Data` are always used. Also get
+#'   or set with [MaxGap()] and `MaxGap<-`.
 #' @param Misc `list`. Miscellaneous additional objects. Default `list()`.
 #'
 #' @details
@@ -580,9 +660,10 @@ ExploitationObs <- function(Selectivity      = list(),
 #'    `rlnorm(1, mconv(1, CV[sim]), sdconv(1, CV[sim]))`. `CV` is first
 #'    expanded to length `nSim` internally — a length-2 input
 #'    triggers a stochastic draw of a unique CV per simulation.
-#' 3. **Conditioned from real data**: [Simulate()] estimates `CV`,
-#'    `Beta`, `Efficiency`, `AC`, `Stats`, and `Error` from historical
-#'    residuals; any user-supplied values are replaced.
+#' 3. **Conditioned from real data**: [Simulate()] sets the historical years
+#'    of `Error` from the residuals between the observed and simulated index,
+#'    and generates projection years from `CV` and `AC` (see "Conditioning on
+#'    Real Data").
 #'
 #' `Ref` is expanded internally: a scalar is treated as the CV of
 #' a lognormal from which one reference value per simulation is drawn; a
@@ -608,17 +689,18 @@ ExploitationObs <- function(Selectivity      = list(),
 #'   `Sim`, `AC` (weighted lag-1 autocorrelation of log-residuals), `SD`
 #'   (standard deviation of log-residuals), and `NA_Season` (a list-column
 #'   indicating which seasons, if any, have no observations in any year).
-#' - `AC` and `CV` are set from `Stats$AC` and `Stats$SD` (the latter
-#'   converted from log-scale SD to CV via the inverse of [sdconv()]), so
-#'   they reflect the estimated values used to generate `Error` rather than
-#'   whatever was supplied beforehand.
-#' - `Error`: lognormal error multipliers covering both historical and
-#'   projection years, with projection errors generated by [GenResiduals()]
-#'   using the estimated `SD` and `AC`.
+#' - `AC` and `CV`: values supplied by the user before conditioning are kept
+#'   and used for projection years. Otherwise they are set from `Stats$AC`
+#'   and `Stats$SD` (the latter converted from log-scale SD to CV via the
+#'   inverse of [sdconv()]).
+#' - `Error`: the historical years are the residuals, so historical data
+#'   match the observed index. The projection years are taken from a
+#'   user-supplied `Error`, or else generated by [GenResiduals()] from `CV`
+#'   and `AC`, starting from the last historical residual.
 #'
-#' The `Beta`, `Efficiency`, `AC`, `CV`, `Stats`, and `Error` slots are
-#' replaced during conditioning regardless of whether the user supplied
-#' `Error` directly.
+#' `Stats` always holds the estimated residual statistics. Values are
+#' recorded as user-supplied in `Misc$UserSupplied` when the object is
+#' populated.
 #'
 #' ## Selectivity Notes
 #'
@@ -668,6 +750,8 @@ IndicesObs <- function(CV          = NULL,
                        Beta        = NULL,
                        AC          = NULL,
                        qInc        = NULL,
+                       MaxGap      = NULL,
+                       DataCV      = NULL,
                        Misc        = list()) {
   .Object <- methods::new("indicesobs")
   if (!is.null(CV))          .Object@CV          <- CV
@@ -680,6 +764,8 @@ IndicesObs <- function(CV          = NULL,
   if (!is.null(Beta))        .Object@Beta        <- Beta
   if (!is.null(AC))          .Object@AC          <- AC
   if (!is.null(qInc))        .Object@qInc        <- qInc
+  if (!is.null(MaxGap))      .Object@MaxGap      <- as.numeric(MaxGap)
+  if (!is.null(DataCV))      .Object@DataCV      <- DataCV
 
   .Object@Misc <- Misc
   methods::validObject(.Object)

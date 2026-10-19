@@ -29,8 +29,9 @@ simulation when conditioned on real data and
 \code{\link[=IndicesObs]{IndicesObs()}}.}
 
 \item{\code{AC}}{\code{numeric} array or \code{NULL}. Lag-1 autocorrelation of index
-residuals, one value per simulation. When supplied by the user, overrides
-the value estimated during conditioning. See \code{\link[=IndicesObs]{IndicesObs()}}.}
+residuals, one value per simulation. When supplied by the user, used for
+projection years in place of the value estimated during conditioning.
+See \code{\link[=IndicesObs]{IndicesObs()}}.}
 
 \item{\code{Years}}{\code{numeric} or \code{NULL}. Calendar years over which the observation
 error is conditioned. See \code{\link[=IndicesObs]{IndicesObs()}}.}
@@ -49,6 +50,9 @@ Selectivity-at-age of this index. See \code{\link[=IndicesObs]{IndicesObs()}}.}
 \item{\code{Ref}}{\code{numeric} array or \code{NULL}. Reference index value, one per
 simulation. See \code{\link[=IndicesObs]{IndicesObs()}}.}
 
+\item{\code{DataCV}}{\code{numeric} or \code{NULL}. Coefficient of variation reported with
+the generated data. See \code{\link[=IndicesObs]{IndicesObs()}}.}
+
 \item{\code{Efficiency}}{\code{numeric} array or \code{NULL}. Catchability coefficient \code{q}
 relating the nominal index to the population quantity. Calculated
 internally during conditioning as the ratio of mean observed index to
@@ -62,6 +66,11 @@ catchability during projection years, one value per simulation. See
 which to truncate the lognormal residual distribution when generating
 projection errors. Default \code{2}. See \code{\link[=IndicesObs]{IndicesObs()}}.}
 
+\item{\code{MaxGap}}{\code{numeric(1)} or \code{NULL}. Largest number of calendar years
+between the last historical observation and the last historical year for
+which the index is generated in projection years. \code{NULL} is \code{5}. See
+\code{\link[=IndicesObs]{IndicesObs()}}.}
+
 \item{\code{Stats}}{\code{data.frame} or \code{NULL}. Residual statistics computed during
 conditioning by \code{\link[=CalcResidualStats]{CalcResidualStats()}}. Contains columns \code{Sim}, \code{AC}
 (weighted lag-1 autocorrelation), \code{SD} (standard deviation), and
@@ -71,7 +80,8 @@ internally; not set by the user.}
 \item{\code{Misc}}{\code{list}. Miscellaneous additional objects. When \code{Beta} is
 conditioned on real data, \code{Misc$BetaFit} holds the per-simulation fit
 diagnostics from \code{\link[=EstimateBeta]{EstimateBeta()}}: \code{SE_Beta}, \code{CI_Lower}, \code{CI_Upper},
-\code{R2}, \code{PValue}, \code{nPoints}, and \code{Status}. See \code{\link[=IndexFitTable]{IndexFitTable()}}.}
+\code{R2}, \code{PValue}, \code{nPoints}, and \code{Status}. See \code{\link[=IndexFitTable]{IndexFitTable()}}.
+\code{Misc$UserSupplied} names the slots set by the user before population.}
 }}
 
 \seealso{

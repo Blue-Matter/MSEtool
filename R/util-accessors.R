@@ -159,6 +159,18 @@ CVatAge <- function(x) {
 
 #' @rdname Access
 #' @export
+DataCV <- function(x) {
+  .AccessSlot(x, 'DataCV')
+}
+
+#' @rdname Access
+#' @export
+`DataCV<-` <- function(x, value) {
+  .AssignSlot(x, value, 'DataCV')
+}
+
+#' @rdname Access
+#' @export
 Dist <- function(x) {
   .AccessSlot(x, 'Dist')
 }
@@ -266,6 +278,19 @@ LifeHistory <- function(x) {
   .AssignSlot(x, value, 'LifeHistory')
 }
 
+
+#' @rdname Access
+#' @export
+MaxGap <- function(x) {
+  .AccessSlot(x, 'MaxGap')
+}
+
+#' @rdname Access
+#' @export
+`MaxGap<-` <- function(x, value) {
+  if (!is.null(value)) value <- as.numeric(value)
+  .AssignSlot(x, value, 'MaxGap')
+}
 
 #' @rdname Access
 #' @export

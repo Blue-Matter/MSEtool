@@ -10,6 +10,7 @@ CompObs(
   Theta = NULL,
   Years = NULL,
   Shift = NULL,
+  MaxGap = NULL,
   Misc = list()
 )
 }
@@ -67,10 +68,18 @@ simulations and years.
 with change-point years: expanded to \verb{[nSim x nYear x nBin]} by
 \code{\link[=PopulateCompObs]{PopulateCompObs()}}.
 \item Full \verb{[nSim x nYear x nBin]} array.
-In conditioning mode, \code{Shift} is populated internally
-from the mean per-bin log-concentration residual across
-historical years and should not be set by the user.
+When conditioning on real data, \code{Shift} is set from the per-bin
+log-concentration residuals of the historical years; a \code{Shift} supplied
+here is used for projection years.
 }}
+
+\item{MaxGap}{\code{numeric(1)} or \code{NULL}. Largest number of calendar years
+between the fleet's last historical composition observation and the last
+historical year for which compositions are generated in projection years.
+\code{NULL} (default) is \code{5}; \code{0} generates compositions only when observed in
+the last historical year; \code{Inf} or \code{NA} always generates them. Fleets with
+no historical observations are generated whenever \code{SampleSize} is set. Also get
+or set with \code{\link[=MaxGap]{MaxGap()}} and \verb{MaxGap<-}.}
 
 \item{Misc}{\code{list}. Reserved for internal use. Default \code{list()}.}
 }
@@ -124,10 +133,21 @@ variance.
 
 When real composition data are supplied via \code{OM@Data}, \code{\link[=Simulate]{Simulate()}}
 compares observed compositions with OM-predicted compositions across the
-historical years specified in \code{Years}, and populates \code{Shift} (mean per-bin
-log-concentration residual) as well as estimating an appropriate \code{ESS} and
-\code{Theta}. Users should not set these slots manually when conditioning on
-real data.
+historical years specified in \code{Years}, and sets:
+\itemize{
+\item \code{SampleSize}: the observed sample size in historical years. Projection
+years use a \code{SampleSize} supplied by the user before conditioning, or
+else the sample size of the last observed year.
+\item \code{ESS}: estimated in historical years and capped at the observed sample
+size. Projection years use an \code{ESS} supplied by the user, or else the
+last estimate, capped at a user-supplied \code{SampleSize}.
+\item \code{Shift}: the per-bin log-concentration residual in historical years.
+Projection years use a \code{Shift} supplied by the user, or else the
+residual of the last observed year.
+}
+
+\code{Theta} is not estimated. Values are recorded as user-supplied in
+\code{Misc$UserSupplied} when the object is populated.
 
 Note: when observed compositions differ substantially from OM-predicted
 compositions (e.g. a length distribution shifted far left or right, or

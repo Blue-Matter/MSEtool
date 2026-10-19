@@ -23,7 +23,8 @@
 #' @param StockNames Character vector of stock names
 #' @param nArea Integer number of spatial areas
 #' @param defaultCV Numeric default coefficient of variation applied
-#'   when no fleet-specific CV is provided
+#'   when neither real data nor the [IndicesObs()] `DataCV` provide one.
+#'   Default `SimControl(DataCV)`.
 #' @param type Character, either `CPUE` or `Survey`
 #'
 #' @return An object of class `indicesdata` containing simulated
@@ -32,7 +33,7 @@
 #' @keywords internal
 .GenHistDataIndices <- function(sim, Data, Hist, HistYears, i, stocks, StockNames, 
                                 nArea,
-                                defaultCV = 0.2,
+                                defaultCV = .DefaultDataCV(Hist, type),
                                 type = c('CPUE', 'Survey')) {
   
   type <- match.arg(type, c('CPUE', 'Survey'))
@@ -84,11 +85,15 @@
       ri <- RealFleetIdx[fl]
       yearIdx <- match(as.character(HistYears), rownames(RealData@Value))
       Value[, fl] <- RealData@Value[yearIdx, ri]
-      if (!is.null(RealData@CV)) CV[, fl] <- RealData@CV[yearIdx, ri]
+      IndexObs <- slot(Hist@OM@Obs[[i]][[FleetNames[fl]]], type)
+      CV[, fl] <- .DataCVYears(IndexObs, HistYears, defaultCV)
+      if (!is.null(RealData@CV)) {
+        RealCV <- RealData@CV[yearIdx, ri]
+        CV[!is.na(RealCV), fl] <- RealCV[!is.na(RealCV)]
+      }
       if (length(RealData@Units) >= ri) IndexData@Units[fl] <- RealData@Units[ri]
       if (length(RealData@Ref) >= ri) IndexData@Ref[fl] <- RealData@Ref[ri]
       if (length(RealData@Timing) >= ri) IndexData@Timing[fl] <- RealData@Timing[ri]
-      IndexObs <- slot(Hist@OM@Obs[[i]][[FleetNames[fl]]], type)
       # one value per sim; recombined across sims in .GenerateHistoricalData()
       if (length(IndexObs@Efficiency))
         IndexObs@Efficiency <- IndexObs@Efficiency[min(sim, length(IndexObs@Efficiency))]
@@ -100,7 +105,8 @@
 
     if (EmptyObject(IndexObs)) 
       next()
-    
+
+    CV[, fl] <- .DataCVYears(IndexObs, HistYears, defaultCV)
     if (!is.null(IndexObs@Units))
       IndexData@Units[fl] <- IndexObs@Units
     

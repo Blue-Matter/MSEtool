@@ -12,7 +12,7 @@
   i,
   stocks,
   FleetNames,
-  defaultCV = 0.2,
+  defaultCV = .DefaultDataCV(Hist, type),
   type = c("Landings", "Discards")
 )
 }
@@ -32,7 +32,7 @@
 \item{FleetNames}{Character vector of fleet names.}
 
 \item{defaultCV}{Numeric default coefficient of variation applied when no
-fleet-specific CV is provided. Default \code{0.2}.}
+fleet-specific CV is provided. Default \code{SimControl(DataCV)}.}
 
 \item{type}{Character. Either \code{"Landings"} or \code{"Discards"}.}
 }
@@ -41,7 +41,7 @@ A \link[=catchdata-class]{catchdata} object with:
 \itemize{
 \item \verb{@Name}: character vector of fleet names
 \item \verb{@Value}: \verb{[nYear x nFleet]} array of observed catch
-\item \verb{@CV}: \verb{[nYear x nFleet]} array initialised to \code{defaultCV}
+\item \verb{@CV}: \verb{[nYear x nFleet]} array of reported CVs
 \item \verb{@Units}: per-fleet units, from \code{\link[=CatchObs]{CatchObs()}} \verb{@Units} where defined,
 otherwise \code{"Biomass"}
 }
@@ -67,7 +67,7 @@ is a default (unconditioned) object, as determined by \code{isNewObject()}.
 Before applying observation error, true catch is aggregated from
 \code{Hist@LandingsAtAge} or \code{Hist@DiscardsAtAge} (selected by \code{type}) across
 stocks, ages, and areas for replicate \code{x}. The aggregation depends on
-\code{.CatchUnitType(CatchObs@Units)} for each fleet:
+whether each fleet's \code{CatchObs@Units} is a count or a mass unit:
 \itemize{
 \item \code{"Number"}: catch-at-age is summed over age and area, then summed over
 stocks within the complex.
@@ -77,8 +77,7 @@ before summing
 over age and area, then summed over stocks within the complex.
 }
 
-\code{Units} that are not a recognized catch unit (see \code{.CatchUnitType()}) raise
-an error.
+\code{Units} that are not a recognized catch unit raise an error.
 Units default to \code{"Biomass"} unless specified in the \code{\link[=CatchObs]{CatchObs()}} object.
 }
 
@@ -102,9 +101,8 @@ dropping any years outside the historical period.
 
 \subsection{CV Handling}{
 
-CVs are initialised to \code{defaultCV} for all fleets and years. Fleet-specific
-CVs from the \code{\link[=CatchObs]{CatchObs()}} object are not currently applied here; \code{defaultCV}
-serves as the working assumption for downstream MPs.
+CVs are set from the \code{\link[=CatchObs]{CatchObs()}} \code{DataCV} where defined, otherwise
+\code{defaultCV}.
 }
 
 \subsection{Obs Structure}{
@@ -119,7 +117,7 @@ where \code{i} is the stock complex index and \code{fl} the fleet index. The rel
 \itemize{
 \item \verb{@Bias[x]}: per-replicate multiplicative bias
 \item \verb{@Error[x, t]}: per-replicate, per-year lognormal error multiplier
-\item \verb{@Units}: catch units (see \code{.CatchUnitType()}), propagated to the
+\item \verb{@Units}: catch units, propagated to the
 output \link[=catchdata-class]{catchdata}
 }
 
@@ -127,7 +125,6 @@ See \link[=obs-class]{obs} and \code{\link[=CatchObs]{CatchObs()}} for full slot
 }
 }
 \seealso{
-\code{\link[=CatchObs]{CatchObs()}}, \code{\link[=CatchData]{CatchData()}}, \link[=catchdata-class]{catchdata}, \link[=obs-class]{obs},
-\code{.GenHistDataEffort()}
+\code{\link[=CatchObs]{CatchObs()}}, \code{\link[=CatchData]{CatchData()}}, \link[=catchdata-class]{catchdata}, \link[=obs-class]{obs}
 }
 \keyword{internal}

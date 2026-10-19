@@ -58,6 +58,11 @@
 #'   Slots with fewer simulation rows than `nSim` are recycled from their last
 #'   row.
 #'
+#'   No composition is drawn for a simulation when the number of calendar
+#'   years between the fleet's last historical observation and the last
+#'   historical year exceeds the [compobs-class] `MaxGap`. Fleets with no
+#'   historical observations are drawn whenever `SampleSize` is set.
+#'
 #' ## Obs Structure
 #'
 #' Observation parameters are accessed via:
@@ -113,8 +118,9 @@
     CatchAtAge_yr <- .AlignAgeDim(CatchAtAge_yr)
   CatchAtAge_yr <- CatchAtAge_yr |> List2Array('Stock') |> SumOverStock()
 
-  NewValueAll <- array(NA_real_, dim = c(nSim, nFleet, nAge))
-  omData      <- Proj@OM@Data[[i]]
+  NewValueAll  <- array(NA_real_, dim = c(nSim, nFleet, nAge))
+  omData       <- Proj@OM@Data[[i]]
+  LastHistYear <- max(Years(Proj@OM, 'Historical'))
 
   for (fl in seq_len(nFleet)) {
     Obs <- slot(Proj@OM@Obs[[i]][[fl]], type)
@@ -147,6 +153,7 @@
     for (x in seq_len(nSim)) {
       ss <- ss_all[x]
       if (is.na(ss) || ss == 0) next
+      if (.CompExceedsMaxGap(slot(Proj@Data[[x]][[i]], type), fl, Obs, LastHistYear)) next
       total_n <- total_n_all[x]
       if (is.na(total_n) || total_n == 0) next
       q <- true_n_all[x, ] / total_n

@@ -73,10 +73,16 @@ log-concentration scale applied to the Dirichlet concentration vector
 before drawing, capturing directional bias between observed and
 OM-predicted compositions. After population by \code{\link[=PopulateCompObs]{PopulateCompObs()}},
 stored as a named \verb{[nSim x nYear x nBin]} array. \code{NULL} (default) applies
-no shift. In conditioning mode, populated internally
-from the mean per-bin log-concentration residual across historical years.}
+no shift. When conditioning on real data, the historical years are set
+from the per-bin log-concentration residuals. See \code{\link[=CompObs]{CompObs()}}.}
 
-\item{\code{Misc}}{\code{list}. Reserved for internal use.}
+\item{\code{MaxGap}}{\code{numeric(1)} or \code{NULL}. Largest number of calendar years
+between the fleet's last historical observation and the last historical
+year for which compositions are generated in projection years. \code{NULL} is
+\code{5}. See \code{\link[=CompObs]{CompObs()}}.}
+
+\item{\code{Misc}}{\code{list}. Reserved for internal use. \code{Misc$UserSupplied} names
+the slots set by the user before population.}
 }}
 
 \seealso{

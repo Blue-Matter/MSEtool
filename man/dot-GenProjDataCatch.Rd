@@ -64,11 +64,10 @@ Catch-at-age for \code{DataYear} is extracted from \code{Proj@LandingsAtAge} or
 dropping the time dimension. Per-fleet aggregation then depends on
 \code{CatchData@Units[fl]}:
 \itemize{
-\item \code{"Number"}: summed over age and area for all simulations via
-\code{.ResolveCatchNumber()}.
+\item \code{"Number"}: summed over age and area for all simulations.
 \item \code{"Biomass"}: multiplied by \code{WeightFleetRetained} (\code{type = "Landings"}) or
 \code{WeightFleetSelected} (\code{type = "Discards"}) before summing over age and
-area via \code{.ResolveCatchBiomass()}, one simulation at a time.
+area, one simulation at a time.
 }
 }
 
@@ -95,9 +94,9 @@ bias and error from the \code{\link[=CatchObs]{CatchObs()}} object:
 \code{Bias} and \code{Error} with fewer rows than \code{nSim} are recycled from their
 last row.
 
-CVs for the new year are resolved per simulation via \code{.ResolveCV()}, which
-looks up the fleet- and year-specific CV from that simulation's existing
-\link[=catchdata-class]{catchdata} object.
+The CV for the new year, per simulation, is the CV supplied for the year in
+\code{OM@Data}, else the \code{\link[=CatchObs]{CatchObs()}} \code{DataCV}, else the last CV in that
+simulation's existing \link[=catchdata-class]{catchdata} object, else \code{SimControl(DataCV)}.
 }
 
 \subsection{Obs Structure}{
@@ -125,7 +124,6 @@ bound to each simulation's existing arrays along the year dimension using
 }
 }
 \seealso{
-\code{\link[=CatchObs]{CatchObs()}}, \code{\link[=CatchData]{CatchData()}}, \link[=catchdata-class]{catchdata}, \link[=obs-class]{obs},
-\code{.GenHistDataCatch()}, \code{.GenProjDataEffort()}
+\code{\link[=CatchObs]{CatchObs()}}, \code{\link[=CatchData]{CatchData()}}, \link[=catchdata-class]{catchdata}, \link[=obs-class]{obs}
 }
 \keyword{internal}

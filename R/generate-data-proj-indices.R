@@ -22,9 +22,11 @@
 #' [indicesobs-class] `qInc` is set.
 #'
 #' The existing objects are returned unchanged if the index data of
-#' simulation 1 is empty or already contains `DataYear`. For each simulation,
-#' a fleet's index is not simulated if its last five values are all
-#' non-finite.
+#' simulation 1 is empty or already contains `DataYear`. Index values supplied
+#' for projection years in `OM@Data` are used as-is. Otherwise, for each
+#' simulation, an index is not simulated if it has no historical observations,
+#' or if the number of calendar years between its last historical observation
+#' and the last historical year exceeds the [indicesobs-class] `MaxGap`.
 #'
 #' @return A list of length `nSim` of updated `CPUE` or `Survey` objects.
 #' @keywords internal
@@ -57,7 +59,8 @@
   NewValueAll <- matrix(NA_real_, nSim, nFleet)
   NewCVAll    <- matrix(NA_real_, nSim, nFleet)
   omData      <- Proj@OM@Data[[i]]
-  Elapsed     <- DataYear - max(Years(Proj@OM, 'Historical'))
+  LastHistYear <- max(Years(Proj@OM, 'Historical'))
+  Elapsed     <- DataYear - LastHistYear
 
   for (fl in seq_len(nFleet)) {
     IndexObs <- slot(Proj@OM@Obs[[i]][[FleetIndex[fl]]], type)
@@ -71,11 +74,9 @@
 
     if (hasOMVal) {
       for (x in seq_len(nSim)) {
-        Value_x <- slot(Proj@Data[[x]][[i]], type)@Value
-        if (all(!is.finite(utils::tail(Value_x[, fl], 5)))) next
         NewValueAll[x, fl] <- slot(omData, type)@Value[TSIndex, fl]
         NewCVAll[x, fl]    <- .ResolveCV(Proj, type, i, fl, TSIndex,
-                                        slot(Proj@Data[[x]][[i]], type), DataYear)
+                                        slot(Proj@Data[[x]][[i]], type), DataYear, IndexObs)
       }
       next
     }
@@ -84,7 +85,8 @@
 
     for (x in seq_len(nSim)) {
       Value_x <- slot(Proj@Data[[x]][[i]], type)@Value
-      if (all(!is.finite(utils::tail(Value_x[, fl], 5)))) next
+      Gap <- .ObsGap(dimnames(Value_x)[[1]], is.finite(Value_x[, fl]), LastHistYear)
+      if (is.infinite(Gap) || .ExceedsMaxGap(IndexObs, Gap)) next
 
       Pop_Number <- purrr::map(Real_Pop_Number_All, \(a)
         a[x, , IndexObs@Areas %||NA% seq_len(nArea), drop = FALSE] |> abind::adrop(1)
@@ -112,7 +114,7 @@
         NewValueAll[x, fl] <- NewValueAll[x, fl] *
           .qIncMultiplier(IndexObs@qInc[min(x, length(IndexObs@qInc))], Elapsed)
       NewCVAll[x, fl]    <- .ResolveCV(Proj, type, i, fl, TSIndex,
-                                      slot(Proj@Data[[x]][[i]], type), DataYear)
+                                      slot(Proj@Data[[x]][[i]], type), DataYear, IndexObs)
     }
   }
 

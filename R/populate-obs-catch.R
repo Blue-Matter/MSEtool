@@ -26,6 +26,7 @@ PopulateCatchObs <- function(Catch, nSim, HistYears, ProjYears) {
   if (EmptyObject(Catch))
     return(Catch)
 
+  Catch       <- .RecordUserSupplied(Catch, c("CV", "Error", "Bias"))
   Catch@CV    <- .PopulateObsCV(Catch@CV, nSim)
   Catch@Error <- .PopulateObsError(Catch, nSim, Years = c(HistYears, ProjYears))
   Catch@Bias  <- .PopulateObsBias(Catch, nSim)

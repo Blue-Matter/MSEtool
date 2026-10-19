@@ -78,8 +78,9 @@ test_that("Project() generates comp data from conditioned LandingsAtAge/Landings
     ProjYr <- intersect(as.character(built$ProjYears),
                         dimnames(slot(PPD[[1]][[1]], type)@Value)$Year)
     expect_true(length(ProjYr) > 0)
-    ss <- slot(Obs(built$Hist@OM)[[1]][[1]], type)@SampleSize[1, ProjYr]
+    SampleSize <- slot(Obs(built$Hist@OM)[[1]][[1]], type)@SampleSize
     for (x in seq_len(built$nSim)) {
+      ss  <- SampleSize[min(x, nrow(SampleSize)), ProjYr]
       val <- slot(PPD[[x]][[1]], type)@Value[ProjYr, 1, , drop = FALSE]
       expect_true(all(is.finite(val)), label = paste(type, "sim", x, "projected comps finite"))
       expect_equal(unname(apply(val, 1, sum)), unname(round(ss)))

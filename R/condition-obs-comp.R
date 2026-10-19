@@ -96,6 +96,9 @@
     if (is.na(fl_obs_ind)) next
 
     CompObs <- slot(Hist@OM@Obs[[i]][[fleet_name]], type)
+    UserSS  <- if (.UserSupplied(CompObs, "SampleSize")) .ProjYearValues(CompObs@SampleSize, nSim, ProjYears)
+    UserESS <- if (.UserSupplied(CompObs, "ESS")) .ProjYearValues(CompObs@ESS, nSim, ProjYears)
+    UserShift <- if (.UserSupplied(CompObs, "Shift")) CompObs@Shift
 
     if (!isAtAge) {
       # AtSize: predicted catch and its bin labels are this fleet's own,
@@ -135,9 +138,10 @@
     valid_yrs <- which(ObsTotals > 0 & !is.na(ObsTotals))
     if (length(valid_yrs) == 0) next
     
-    # Projection years hold the last year with observed data
-    CompObs@SampleSize <- matrix(c(ObsTotals, rep(ObsTotals[max(valid_yrs)], nProjTS)), nrow = 1,
-                                 dimnames = list(Sim = 1, Year = c(CondYears, ProjYears)))
+    # Projection years hold the last year with observed data unless user-supplied
+    ProjSS <- UserSS %||% matrix(ObsTotals[max(valid_yrs)], 1, nProjTS)
+    CompObs@SampleSize <- cbind(matrix(ObsTotals, nrow(ProjSS), nCondYears, byrow = TRUE), ProjSS)
+    dimnames(CompObs@SampleSize) <- list(Sim = seq_len(nrow(ProjSS)), Year = c(CondYears, ProjYears))
     # Observed proportions 
     ObsProp     <- ObsCounts / ObsTotals
     ObsProp[ObsTotals == 0 | is.na(ObsTotals), ] <- NA
@@ -225,6 +229,11 @@
         dim = c(nSim, length(fill_ind), nBin)
       )
     
+    ProjInd <- match(as.character(ProjYears), as.character(YearsAll))
+    if (!is.null(UserShift)) {
+      ShiftArray[, ProjInd, ] <- UserShift[pmin(seq_len(nSim), dim(UserShift)[1]),
+                                           as.character(ProjYears), , drop = FALSE]
+    }
     CompObs@Shift <- ShiftArray
 
     # ESS
@@ -259,6 +268,11 @@
     # Years without an estimate take the nearest earlier valid year, else the first valid year
     ESSArray[] <- t(apply(ESSArray, 1, \(ess) rev(.CarryForwardLOCF(rev(.CarryForwardLOCF(ess))))))
 
+    if (!is.null(UserESS)) {
+      ESSArray[, ProjInd] <- UserESS
+    } else if (!is.null(UserSS)) {
+      ESSArray[, ProjInd] <- pmin(ESSArray[, ProjInd, drop = FALSE], UserSS)
+    }
     CompObs@ESS <- ESSArray
     
     slot(Hist@OM@Obs[[i]][[fleet_name]], type) <- CompObs

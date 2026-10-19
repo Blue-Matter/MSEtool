@@ -141,6 +141,7 @@
   Hist <- .RestoreHistMisc(Hist) # undo .PrepHistMisc above
 
   # ---- observation conditioning & data generation ----
+  Hist@OM@Control$DataCV <- control$DataCV %||% 0.2
   if (control$ConditionObs)
     Hist <- .ConditionObs(Hist, silent, EstimateBeta = control$EstimateBeta %||NA% TRUE)
 

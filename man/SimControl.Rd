@@ -18,6 +18,7 @@ SimControl(
   BLow = FALSE,
   CalcCatchAtSize = NA,
   CalcCatchAtSizeCpp = TRUE,
+  DataCV = 0.2,
   ...
 )
 }
@@ -77,6 +78,14 @@ landings/discards-at-size projection
 instead of its pure-R equivalent? Default
 \code{TRUE}. Set \code{FALSE} as a fallback if the C++ version has problems}
 
+\item{DataCV}{Default coefficient of variation reported in the \code{CV} slot
+of generated effort, catch, and index data, used where neither real data
+nor the series' \code{DataCV} (see \code{\link[=IndicesObs]{IndicesObs()}}, \code{\link[=CatchObs]{CatchObs()}}, \code{\link[=EffortObs]{EffortObs()}})
+give one. It sets the reported CV only; observation error is set by the
+observation model. Either a non-negative number for all data types, or a
+list named by data type (\code{"Effort"}, \code{"Landings"}, \code{"Discards"}, \code{"CPUE"},
+\code{"Survey"}), with \code{0.2} for types not named. Default \code{0.2}.}
+
 \item{...}{Additional named arguments. Any unrecognised names trigger a
 warning.}
 }
@@ -100,6 +109,9 @@ SimControl(RefLandings = TRUE)
 
 # Also calculate the (expensive) BLow rebuilding reference point
 SimControl(BLow = TRUE)
+
+# Reported CV of generated data by data type
+SimControl(DataCV = list(Landings = 0.05, Survey = 0.3))
 
 
 

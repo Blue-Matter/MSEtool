@@ -51,8 +51,10 @@ where \code{t_H} is the last historical time step, when the index's
 \link[=indicesobs-class]{indicesobs} \code{qInc} is set.
 
 The existing objects are returned unchanged if the index data of
-simulation 1 is empty or already contains \code{DataYear}. For each simulation,
-a fleet's index is not simulated if its last five values are all
-non-finite.
+simulation 1 is empty or already contains \code{DataYear}. Index values supplied
+for projection years in \code{OM@Data} are used as-is. Otherwise, for each
+simulation, an index is not simulated if it has no historical observations,
+or if the number of calendar years between its last historical observation
+and the last historical year exceeds the \link[=indicesobs-class]{indicesobs} \code{MaxGap}.
 }
 \keyword{internal}

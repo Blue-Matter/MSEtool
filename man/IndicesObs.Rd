@@ -15,6 +15,8 @@ IndicesObs(
   Beta = NULL,
   AC = NULL,
   qInc = NULL,
+  MaxGap = NULL,
+  DataCV = NULL,
   Misc = list()
 )
 }
@@ -32,18 +34,19 @@ being used to generate the \code{Error} array.
 \item Length-\code{nSim} named array: used directly, one CV per simulation.
 }
 
-When conditioning on real data, \code{CV} is replaced by
-the simulation-specific standard deviation of historical log-residuals
+When conditioning on real data, a \code{CV} supplied here sets the observation
+error for projection years; otherwise \code{CV} is set from the
+simulation-specific standard deviation of historical log-residuals
 estimated by \code{\link[=CalcResidualStats]{CalcResidualStats()}}. Ignored if \code{Error} is supplied
 directly.}
 
 \item{Error}{\code{numeric} array or \code{NULL}. Pre-specified lognormal observation
 error multipliers with dimensions \verb{nSim x nYear} and named dimnames
 (\code{Sim}, \code{Year}). When supplied, \code{Error} is used directly and \code{CV} is
-ignored for error generation. When real index data are provided in \code{OM@Data},
-\code{Error} is replaced by conditioned values
-regardless of whether it was user-supplied. Default \code{NULL}, in which case
-\code{Error} is generated from \code{CV} internally.}
+ignored for error generation. When real index data are provided in
+\code{OM@Data}, the projection years of a supplied \code{Error} are used and the
+historical years are replaced by the conditioned residuals. Default
+\code{NULL}, in which case \code{Error} is generated from \code{CV} internally.}
 
 \item{Areas}{\code{integer} vector or \code{NULL}. Indices of the spatial areas that
 contribute to this index (e.g., \code{c(1, 2)} for a two-area model where the
@@ -107,7 +110,9 @@ simulation by log-linear regression when conditioned -- otherwise it
 stays at \code{1}.}
 
 \item{AC}{\code{numeric}, \code{array}, or \code{NULL}. Lag-1 autocorrelation of index
-residuals, one value per simulation}
+residuals, one value per simulation. When conditioning on real data, an
+\code{AC} supplied here is used for projection years; otherwise \code{AC} is
+estimated from the historical residuals.}
 
 \item{qInc}{\code{numeric} or \code{NULL}. Annual percentage change in index
 catchability during projection years (e.g. \code{2} = 2\% per year; negative
@@ -122,6 +127,24 @@ a uniform distribution.
 
 See "Projected Change in Catchability" below. Also get or set with
 \code{\link[=qInc]{qInc()}} and \verb{qInc<-}.}
+
+\item{MaxGap}{\code{numeric(1)} or \code{NULL}. Largest number of calendar years
+between the last historical observation of the index and the last
+historical year for which the index is generated in projection years.
+\code{NULL} (default) is \code{5}; \code{0} generates the index only when it is observed
+in the last historical year; \code{Inf} or \code{NA} always generates it. An index
+with no historical observations is not generated. Index values supplied
+for projection years in \code{OM@Data} are always used. Also get
+or set with \code{\link[=MaxGap]{MaxGap()}} and \verb{MaxGap<-}.}
+
+\item{DataCV}{\code{numeric} or \code{NULL}. Coefficient of variation reported in
+the \code{CV} slot of the generated index data, which MPs can use. A scalar,
+or values named by year that apply from that year onwards (e.g.
+\code{c('1990' = 0.4, '2010' = 0.2)}). Real data CVs take precedence in
+historical years, and CVs supplied for projection years in \code{OM@Data}
+take precedence in projection years. \code{NULL} (default) uses the real data
+CV of the last historical year where there is one, otherwise
+\code{SimControl(DataCV)}. Also get or set with \code{\link[=DataCV]{DataCV()}} and \verb{DataCV<-}.}
 
 \item{Misc}{\code{list}. Miscellaneous additional objects. Default \code{list()}.}
 }
@@ -160,9 +183,10 @@ Internally the model generates a lognormal array where each cell is
 \code{rlnorm(1, mconv(1, CV[sim]), sdconv(1, CV[sim]))}. \code{CV} is first
 expanded to length \code{nSim} internally — a length-2 input
 triggers a stochastic draw of a unique CV per simulation.
-\item \strong{Conditioned from real data}: \code{\link[=Simulate]{Simulate()}} estimates \code{CV},
-\code{Beta}, \code{Efficiency}, \code{AC}, \code{Stats}, and \code{Error} from historical
-residuals; any user-supplied values are replaced.
+\item \strong{Conditioned from real data}: \code{\link[=Simulate]{Simulate()}} sets the historical years
+of \code{Error} from the residuals between the observed and simulated index,
+and generates projection years from \code{CV} and \code{AC} (see "Conditioning on
+Real Data").
 }
 
 \code{Ref} is expanded internally: a scalar is treated as the CV of
@@ -190,18 +214,19 @@ summarized by \code{\link[=IndexFitTable]{IndexFitTable()}}.
 \code{Sim}, \code{AC} (weighted lag-1 autocorrelation of log-residuals), \code{SD}
 (standard deviation of log-residuals), and \code{NA_Season} (a list-column
 indicating which seasons, if any, have no observations in any year).
-\item \code{AC} and \code{CV} are set from \code{Stats$AC} and \code{Stats$SD} (the latter
-converted from log-scale SD to CV via the inverse of \code{\link[=sdconv]{sdconv()}}), so
-they reflect the estimated values used to generate \code{Error} rather than
-whatever was supplied beforehand.
-\item \code{Error}: lognormal error multipliers covering both historical and
-projection years, with projection errors generated by \code{\link[=GenResiduals]{GenResiduals()}}
-using the estimated \code{SD} and \code{AC}.
+\item \code{AC} and \code{CV}: values supplied by the user before conditioning are kept
+and used for projection years. Otherwise they are set from \code{Stats$AC}
+and \code{Stats$SD} (the latter converted from log-scale SD to CV via the
+inverse of \code{\link[=sdconv]{sdconv()}}).
+\item \code{Error}: the historical years are the residuals, so historical data
+match the observed index. The projection years are taken from a
+user-supplied \code{Error}, or else generated by \code{\link[=GenResiduals]{GenResiduals()}} from \code{CV}
+and \code{AC}, starting from the last historical residual.
 }
 
-The \code{Beta}, \code{Efficiency}, \code{AC}, \code{CV}, \code{Stats}, and \code{Error} slots are
-replaced during conditioning regardless of whether the user supplied
-\code{Error} directly.
+\code{Stats} always holds the estimated residual statistics. Values are
+recorded as user-supplied in \code{Misc$UserSupplied} when the object is
+populated.
 }
 
 \subsection{Selectivity Notes}{
