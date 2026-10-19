@@ -8,8 +8,10 @@
 #' @param Year The 'current' year when the function is being called
 #' @param YearsHist Numeric vector of historical years
 #' @param YearsProj Numeric vector of projection years
+#' @param DataYear The year to generate data for. Defaults to the time-step
+#'   before `Year`.
 #' 
-#' Generates data up to the time-step before `Year`:
+#' By default, generates data up to the time-step before `Year`:
 #' 
 #'  * `YearsAll <- c(YearsHist, YearsProj)`
 #'  * `TSIndex <- match(Year, YearsAll) - 1`
@@ -18,11 +20,11 @@
 #' @return Updated `hist` object with `Hist@Data` updated with the simulated data
 #'
 #' @keywords internal
-.GenerateProjectionData <- function(Proj, Year, YearsHist, YearsProj) {
+.GenerateProjectionData <- function(Proj, Year, YearsHist, YearsProj, DataYear = NULL) {
 
   YearsAll <- c(YearsHist, YearsProj)
-  TSIndex <- match(Year, YearsAll) - 1
-  DataYear <- YearsAll[TSIndex]
+  if (is.null(DataYear))
+    DataYear <- YearsAll[match(Year, YearsAll) - 1]
 
   nSim <- Proj@OM@nSim
   nArea <- nArea(Proj)

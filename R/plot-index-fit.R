@@ -195,7 +195,7 @@ IndexFitTable <- function(object,
   mps <- names(object@PPD)
 
   perMP <- purrr::map(mps, function(mp) {
-    mpList <- purrr::map(object@PPD[[mp]], cx)
+    mpList <- purrr::map(.DropPaddedPPDYears(object@PPD[mp])[[1]], cx)
     .IndexSeriesFromDataList(mpList, type, fl)
   })
   names(perMP) <- mps

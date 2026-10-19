@@ -247,6 +247,11 @@
 
   }
 
+  # final-timestep data are never seen by an MP but are reported in PPD
+  if (!Error)
+    Proj <- .GenerateProjectionData(Proj, Year, YearsHist, YearsProj,
+                                    DataYear = YearsProj[length(YearsProj)])
+
   EndTime <- Sys.time()
 
   list(Proj = Proj, Error = Error, ErrorMessage = ErrorMessage,

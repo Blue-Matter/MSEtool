@@ -443,7 +443,7 @@ Data <- function(Name = 'New Data Object',
     return(Name@Data)
 
   if (inherits(Name, 'mse'))
-    return(Name@PPD)
+    return(.DropPaddedPPDYears(Name@PPD))
 
   if (is.null(LifeHistory))
     LifeHistory <- new('lifehistorydata')
