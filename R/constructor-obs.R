@@ -30,8 +30,8 @@
 #'     simulation.
 #'
 #'   When conditioning on real data, a `Bias` supplied here is used;
-#'   otherwise `Bias` is estimated as the mean ratio of simulated to observed
-#'   catch across historical years, per simulation.
+#'   otherwise `Bias` is estimated as the mean ratio of observed to simulated
+#'   catch across the conditioning years (`Years`), per simulation.
 #' @param Error `numeric` array or `NULL`. Pre-specified lognormal observation
 #'   error multipliers with dimensions `nSim x nYear` and named dimnames
 #'   (`Sim`, `Year`). When supplied, `Error` is used directly and `CV` is
@@ -42,7 +42,8 @@
 #'   conditioned residuals.
 #' @param Years `numeric` vector or `NULL`. Calendar years over which to
 #'   condition the observation error when real catch data are provided. When
-#'   `NULL` (default), all historical years in the `Data` object are used.
+#'   `NULL` (default), all historical years with positive observed catch are
+#'   used; otherwise the supplied years that have positive observed catch.
 #'   Has no effect when no real data are supplied.
 #' @param Units `character(1)` or `NULL`. Units of catch measurement:
 #'   `"Biomass"`, `"Number"`, or a mass or count unit (e.g. `"t"`, `"kg"`,
@@ -99,7 +100,7 @@
 #' - `CV`: sets the lognormal error of projection years; otherwise `CV` is
 #'   estimated from the historical residuals.
 #' - `Bias`: used for all years; otherwise estimated as the mean ratio of
-#'   simulated to observed catch.
+#'   observed to simulated catch.
 #' - `Error`: its projection years are used as-is.
 #'
 #' Values are recorded as user-supplied in `Misc$UserSupplied` when the
@@ -359,8 +360,10 @@ CompObs <- function(SampleSize = NULL,
 #'   (`Sim`, `Year`). When supplied, `Error` is used directly and `CV` is
 #'   ignored for error generation. Default `NULL`, in which case `Error` is
 #'   generated from `CV` internally.
-#' @param Years `numeric` vector or `NULL`. Calendar years over which the
-#'   observation error applies. Default `NULL` (all historical years).
+#' @param Years `numeric` vector or `NULL`. Calendar years over which to
+#'   condition the observation error when real effort data are provided. When
+#'   `NULL` (default), all historical years with positive observed effort are
+#'   used; otherwise the supplied years that have positive observed effort.
 #' @param Units `character(1)` or `NULL`. Units of effort
 #'   (e.g., `"hours"`, `"trips"`, `"unitless"`). Default `NULL`.
 #' @param Ref `numeric` or `NULL`. Reference effort value. Accepted forms:
@@ -411,7 +414,7 @@ CompObs <- function(SampleSize = NULL,
 #' - `CV`: sets the lognormal error of projection years; otherwise `CV` is
 #'   estimated from the historical residuals.
 #' - `Bias`: used for all years; otherwise estimated as the mean ratio of
-#'   simulated to observed effort.
+#'   observed to simulated effort.
 #' - `Error`: its projection years are used as-is.
 #'
 #' Values are recorded as user-supplied in `Misc$UserSupplied` when the

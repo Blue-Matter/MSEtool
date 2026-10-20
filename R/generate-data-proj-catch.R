@@ -43,7 +43,7 @@
 #' For each fleet, the new observed value is resolved in order of precedence:
 #'
 #' - **OM data present**: if `Proj@OM@Data[[i]]` contains a pre-computed value
-#'   for `type` at `TSIndex`, it is used for all simulations without applying
+#'   for `type` in year `DataYear`, it is used for all simulations without applying
 #'   observation error.
 #' - **Stochastic**: otherwise, the aggregated true catch is multiplied by
 #'   bias and error from the [CatchObs()] object:
@@ -129,12 +129,10 @@
     Obs <- slot(Proj@OM@Obs[[i]][[fl]], type)
     if (EmptyObject(Obs) || length(Obs@Error) < 1) next
 
-    hasOMVal <- !is.null(omData) &&
-      !is.null(slot(omData, type)@Value) &&
-      nrow(slot(omData, type)@Value) >= TSIndex
+    omRow <- .OMDataRow(omData, type, DataYear)
 
-    if (hasOMVal) {
-      NewValueAll[, fl] <- slot(omData, type)@Value[TSIndex, fl]
+    if (!is.na(omRow)) {
+      NewValueAll[, fl] <- slot(omData, type)@Value[omRow, fl]
     } else {
       error   <- .ArraySubsetYear(Obs@Error, DataYear)
       sim_ind <- pmin(seq_len(nSim), nrow(error))

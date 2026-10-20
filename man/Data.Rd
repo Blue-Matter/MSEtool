@@ -58,7 +58,9 @@ Defaults to \code{"New Data Object"}.}
 
 \item{Longitude}{Optional numeric. Longitude of the stock.}
 
-\item{Years}{Vector of calendar years covered by the data. \strong{Required}}
+\item{Years}{Vector of calendar years covered by the data. \strong{Required}
+when attached to an OM with catch, effort or composition data; every row
+of their \code{Value} must be one of these years.}
 
 \item{YearLH}{The last historical calendar year; always a whole integer,
 even when \code{Seasons > 1} and \code{Years} holds sub-annual decimal steps.

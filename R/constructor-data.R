@@ -366,6 +366,8 @@ IndicesData <- function(Name        = NULL,
 #' @param Latitude Optional numeric. Latitude of the stock.
 #' @param Longitude Optional numeric. Longitude of the stock.
 #' @param Years Vector of calendar years covered by the data. **Required**
+#'   when attached to an OM with catch, effort or composition data; every row
+#'   of their `Value` must be one of these years.
 #' @param YearLH The last historical calendar year; always a whole integer,
 #'   even when `Seasons > 1` and `Years` holds sub-annual decimal steps.
 #'   Separates the historical period from the projection period. Defaults to

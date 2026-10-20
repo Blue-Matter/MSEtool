@@ -41,7 +41,7 @@
 #' For each fleet, the new composition is resolved in order of precedence:
 #'
 #' - **OM data present**: if `Proj@OM@Data[[i]]` contains a pre-computed
-#'   composition for `type` at `TSIndex`, it is used for all simulations
+#'   composition for `type` in year `DataYear`, it is used for all simulations
 #'   without applying observation error.
 #' - **Stochastic**: otherwise, the Dirichlet concentration vector for each
 #'   simulation is constructed as:
@@ -126,11 +126,10 @@
     Obs <- slot(Proj@OM@Obs[[i]][[fl]], type)
     if (EmptyObject(Obs) || is.null(Obs@SampleSize)) next
 
-    hasOMVal <- !is.null(omData) && !is.null(slot(omData, type)@Value) &&
-      dim(slot(omData, type)@Value)[1] >= TSIndex
+    omRow <- .OMDataRow(omData, type, DataYear)
 
-    if (hasOMVal) {
-      NewValueAll[, fl, ] <- matrix(slot(omData, type)@Value[TSIndex, fl, ], nSim, nAge, byrow = TRUE)
+    if (!is.na(omRow)) {
+      NewValueAll[, fl, ] <- matrix(slot(omData, type)@Value[omRow, fl, ], nSim, nAge, byrow = TRUE)
       next
     }
 

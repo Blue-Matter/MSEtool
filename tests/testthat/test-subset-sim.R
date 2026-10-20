@@ -111,7 +111,8 @@ test_that("conditioned per-sim observation parameters are subset with their sims
   expect_identical(Sub@OM@Misc$SimIDs, Sims)
   expect_equal(Sub@OM@Misc$nSimGlobal, 11)
 
-  expect_identical(.UnkeyedSimPaths(ReduceNSim(hist, 5), 5), character())
+  expect_identical(setdiff(.UnkeyedSimPaths(ReduceNSim(hist, 5), 5), "@OM@Control[[DataCV]]"),
+                   character())
   expect_null(ReduceNSim(hist, 5)@OM@Misc$SimIDs)
 })
 

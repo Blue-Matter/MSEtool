@@ -49,8 +49,10 @@ error multipliers with dimensions \verb{nSim x nYear} and named dimnames
 ignored for error generation. Default \code{NULL}, in which case \code{Error} is
 generated from \code{CV} internally.}
 
-\item{Years}{\code{numeric} vector or \code{NULL}. Calendar years over which the
-observation error applies. Default \code{NULL} (all historical years).}
+\item{Years}{\code{numeric} vector or \code{NULL}. Calendar years over which to
+condition the observation error when real effort data are provided. When
+\code{NULL} (default), all historical years with positive observed effort are
+used; otherwise the supplied years that have positive observed effort.}
 
 \item{Units}{\code{character(1)} or \code{NULL}. Units of effort
 (e.g., \code{"hours"}, \code{"trips"}, \code{"unitless"}). Default \code{NULL}.}
@@ -123,7 +125,7 @@ used for projection years:
 \item \code{CV}: sets the lognormal error of projection years; otherwise \code{CV} is
 estimated from the historical residuals.
 \item \code{Bias}: used for all years; otherwise estimated as the mean ratio of
-simulated to observed effort.
+observed to simulated effort.
 \item \code{Error}: its projection years are used as-is.
 }
 

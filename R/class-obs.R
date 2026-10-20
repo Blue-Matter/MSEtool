@@ -111,7 +111,7 @@ setClass(
 #' @slot Bias `numeric` or `NULL`. Multiplicative observation bias. See
 #'   [EffortObs()].
 #' @slot Years `numeric` or `NULL`. Calendar years over which the observation
-#'   error applies. See [EffortObs()].
+#'   error is conditioned. See [EffortObs()].
 #' @slot Units `character` or `NULL`. Units of fishing effort
 #'   (e.g., `"hours"`, `"trips"`). See [EffortObs()].
 #' @slot Ref `numeric` array or `NULL`. Reference effort values, one per

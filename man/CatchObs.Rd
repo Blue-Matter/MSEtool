@@ -48,8 +48,8 @@ simulation.
 }
 
 When conditioning on real data, a \code{Bias} supplied here is used;
-otherwise \code{Bias} is estimated as the mean ratio of simulated to observed
-catch across historical years, per simulation.}
+otherwise \code{Bias} is estimated as the mean ratio of observed to simulated
+catch across the conditioning years (\code{Years}), per simulation.}
 
 \item{Error}{\code{numeric} array or \code{NULL}. Pre-specified lognormal observation
 error multipliers with dimensions \verb{nSim x nYear} and named dimnames
@@ -62,7 +62,8 @@ conditioned residuals.}
 
 \item{Years}{\code{numeric} vector or \code{NULL}. Calendar years over which to
 condition the observation error when real catch data are provided. When
-\code{NULL} (default), all historical years in the \code{Data} object are used.
+\code{NULL} (default), all historical years with positive observed catch are
+used; otherwise the supplied years that have positive observed catch.
 Has no effect when no real data are supplied.}
 
 \item{Units}{\code{character(1)} or \code{NULL}. Units of catch measurement:
@@ -140,7 +141,7 @@ used for projection years:
 \item \code{CV}: sets the lognormal error of projection years; otherwise \code{CV} is
 estimated from the historical residuals.
 \item \code{Bias}: used for all years; otherwise estimated as the mean ratio of
-simulated to observed catch.
+observed to simulated catch.
 \item \code{Error}: its projection years are used as-is.
 }
 

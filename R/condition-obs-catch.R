@@ -35,7 +35,7 @@
   
   fleetnames <- FleetNames(Hist)
   
-  ObservedCatch_Fleet <- slot(FisheryData, type)@Value |> .ArraySubsetYear(Years=HistYears)
+  ObservedCatch_Fleet <- slot(FisheryData, type)@Value |> .AlignObsHistYears(HistYears)
   
   if (is.null(ObservedCatch_Fleet)) return(Hist)
 
@@ -94,71 +94,75 @@
       Units <- 'Biomass'
     CatchObs@Units <- Units
 
-    # Years to use condition the observation error - default all historical
-    if (is.null(CatchObs@Years)) CatchObs@Years <- FisheryData@Years
-
     if (.CatchUnitType(Units)=='Biomass') {
       SimValue <- Sim_Catch_Biomass[,,fl, drop=FALSE] |> abind::adrop(3)  
     } else {
       SimValue <- Sim_Catch_Number[,,fl, drop=FALSE] |> abind::adrop(3)  
     }
-    SimValue[SimValue<0] <- 0
-    
-    SimValue <- .ArraySubsetYear(SimValue, CatchObs@Years)
-    ObsValue <- .ArraySubsetYear(ObservedCatch, CatchObs@Years)
-    
-    d1 <- dim(SimValue)
-    d2 <- dim(ObsValue)
-    
-    if (is.null(d2)) {
-      ObsValue <- matrix(ObsValue, d1[1], length(ObsValue), byrow=TRUE)
-      dimnames(ObsValue) <- list(Sim = seq_len(d1[1]),
-                                 Year = names(ObservedCatch))
-    }
-      
-    # Bias 
-    Bias <- ObsValue / SimValue
-    Bias[Bias<0.001] <- NA
-    Bias[!is.finite(Bias)] <- NA
-    
-    BiasMean <- apply(Bias, 'Sim', mean, na.rm=TRUE)
-    BiasMean[!is.finite(BiasMean)] <- 1
-    Bias <- array(BiasMean, dim=c(length(BiasMean),
-                                  length(CatchObs@Years)),
-                                  dimnames=list(Sim=seq_along(BiasMean),
-                                                Year=CatchObs@Years)
-    )
-    
-    if (.UserSupplied(CatchObs, "Bias")) {
-      Bias[] <- .SimValues(CatchObs@Bias, nSim)
-    } else {
-      CatchObs@Bias <- Bias[,1]
-    }
-    
-    # Error
-    ErrorHist <- matrix(ObservedCatch, nSim, length(ObservedCatch), byrow = TRUE)/(SimValue*Bias)
-    ErrorHist[!is.finite(ErrorHist)] <- NA
-    
-    row_mean <- rowMeans(ErrorHist, na.rm = TRUE)
-    row_mean[!is.finite(row_mean) | row_mean == 0] <- NA_real_
-    StHistError <- ErrorHist / row_mean
-    SD <- sqrt(rowMeans((StHistError - rowMeans(StHistError, na.rm = TRUE))^2, na.rm = TRUE)) # faster than `sd`
-    
-    SD[!is.finite(SD)] <- 1E-6
-    
-    if (.UserSupplied(CatchObs, "CV")) {
-      SD <- sdconv(1, .SimValues(CatchObs@CV, nSim))
-    } else {
-      CatchObs@CV <- .NameSims(SD, nSim)
-    }
 
-    ErrorProj <- .ProjObsError(CatchObs, SD, nSim, ProjYears)
-    Error <- abind::abind(ErrorHist,ErrorProj, along = 2, use.dnns = TRUE)
-    CatchObs@Error <- Error
+    CatchObs <- .ConditionBiasError(CatchObs, ObservedCatch, SimValue, HistYears, ProjYears, nSim)
+    if (is.null(CatchObs)) next
     slot(Hist@OM@Obs[[i]][[fl]], type) <- CatchObs
   }
   
   Hist
+}
+
+# [HistYears x Fleet] observed values; NA in years with no row
+.AlignObsHistYears <- function(Value, HistYears) {
+  if (is.null(Value)) return(NULL)
+  RowYears <- rownames(Value) %||% HistYears[seq_len(nrow(Value))]
+  Out <- matrix(NA_real_, length(HistYears), ncol(Value),
+                dimnames = list(Year = HistYears, Fleet = colnames(Value)))
+  ind <- match(round(HistYears, 6), round(as.numeric(RowYears), 6))
+  Out[!is.na(ind), ] <- Value[ind[!is.na(ind)], , drop = FALSE]
+  Out
+}
+
+# Bias, CV and [Sim x Year] Error of a catch/effort obs object; NULL if no years to condition on
+.ConditionBiasError <- function(object, ObservedValue, SimValue, HistYears, ProjYears, nSim) {
+  nHistTS  <- length(HistYears)
+  SimValue <- .ArraySubsetYear(SimValue, HistYears)
+  SimValue[SimValue < 0] <- 0
+
+  CondInd <- which(!is.na(ObservedValue) & ObservedValue > 0)
+  if (!is.null(object@Years))
+    CondInd <- intersect(CondInd, which(round(HistYears, 6) %in% round(as.numeric(object@Years), 6)))
+  if (!length(CondInd)) return(NULL)
+  object@Years <- HistYears[CondInd]
+
+  ObsMat <- matrix(ObservedValue, nSim, nHistTS, byrow = TRUE)
+  Ratio  <- ObsMat[, CondInd, drop = FALSE] / SimValue[, CondInd, drop = FALSE]
+  Ratio[!is.finite(Ratio) | Ratio < 0.001] <- NA
+  Bias <- rowMeans(Ratio, na.rm = TRUE)
+  Bias[!is.finite(Bias)] <- 1
+
+  if (.UserSupplied(object, "Bias")) {
+    Bias <- .SimValues(object@Bias, nSim)
+  } else {
+    object@Bias <- .NameSims(Bias, nSim)
+  }
+
+  ErrorHist <- ObsMat / (SimValue * Bias)
+  ErrorHist[!is.finite(ErrorHist)] <- NA
+  dimnames(ErrorHist) <- list(Sim = seq_len(nSim), Year = HistYears)
+
+  CondError <- ErrorHist[, CondInd, drop = FALSE]
+  row_mean <- rowMeans(CondError, na.rm = TRUE)
+  row_mean[!is.finite(row_mean) | row_mean == 0] <- NA_real_
+  StHistError <- CondError / row_mean
+  SD <- sqrt(rowMeans((StHistError - rowMeans(StHistError, na.rm = TRUE))^2, na.rm = TRUE)) # faster than `sd`
+  SD[!is.finite(SD)] <- 1E-6
+
+  if (.UserSupplied(object, "CV")) {
+    SD <- sdconv(1, .SimValues(object@CV, nSim))
+  } else {
+    object@CV <- .NameSims(SD, nSim)
+  }
+
+  ErrorProj <- .ProjObsError(object, SD, nSim, ProjYears)
+  object@Error <- abind::abind(ErrorHist, ErrorProj, along = 2, use.dnns = TRUE)
+  object
 }
 
 # projection-year catch/effort observation error: user-supplied `Error`, else lognormal with log-scale `SD`

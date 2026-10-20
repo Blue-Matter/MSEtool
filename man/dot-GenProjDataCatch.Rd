@@ -76,7 +76,7 @@ area, one simulation at a time.
 For each fleet, the new observed value is resolved in order of precedence:
 \itemize{
 \item \strong{OM data present}: if \code{Proj@OM@Data[[i]]} contains a pre-computed value
-for \code{type} at \code{TSIndex}, it is used for all simulations without applying
+for \code{type} in year \code{DataYear}, it is used for all simulations without applying
 observation error.
 \item \strong{Stochastic}: otherwise, the aggregated true catch is multiplied by
 bias and error from the \code{\link[=CatchObs]{CatchObs()}} object:

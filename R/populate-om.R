@@ -139,17 +139,22 @@ PopulateOM <- function(OM,
 
 .ProcessDataNames <- function(OM) {
   if (is.null(OM@Data)) return(OM)
-  HistYears <- Years(OM, "H")
   FleetNms  <- FleetNames(OM)
 
   # CPUE/Survey names and rows are resolved by .AlignIndicesData() during conditioning
   for (i in seq_along(OM@Data)) {
     Data <- OM@Data[[i]]
     if (!isS4(Data)) next
-    Years <- if (length(Data@Years)) Data@Years else HistYears
-    for (sl in c("Effort", "Landings", "Discards", "LandingsAtAge", "DiscardsAtAge",
-                 "LandingsAtSize", "DiscardsAtSize"))
-      slot(Data, sl) <- .ResolveDataNames(slot(Data, sl), Years, FleetNms, sl, i)
+    Slots <- c("Effort", "Landings", "Discards", "LandingsAtAge", "DiscardsAtAge",
+               "LandingsAtSize", "DiscardsAtSize")
+    HasValue <- vapply(Slots, \(sl) !is.null(slot(Data, sl)@Value), logical(1))
+    if (any(HasValue) && !length(Data@Years))
+      cli::cli_abort(c(
+        "x" = "{.code OM@Data[[{i}]]@Years} is not set.",
+        "i" = "Set {.code Years} in {.fn Data} to the calendar years covered by the data."
+      ))
+    for (sl in Slots[HasValue])
+      slot(Data, sl) <- .ResolveDataNames(slot(Data, sl), Data@Years, FleetNms, sl, i)
     OM@Data[[i]] <- Data
   }
   OM
@@ -220,11 +225,17 @@ PopulateOM <- function(OM,
   if (is.null(dn[[1]])) {
     if (d[1] != length(Years))
       cli::cli_abort(c(
-        "x" = "{.code {Where}} has {d[1]} row{?s} but {length(Years)} historical year{?s}.",
-        "i" = "Add {.code Year} row names to identify the years, or supply one row per historical year."
+        "x" = "{.code {Where}} has {d[1]} row{?s} but {.code Data@Years} has {length(Years)} year{?s}.",
+        "i" = "Add {.code Year} row names to identify the years, or supply one row per year in {.code Data@Years}."
       ))
     dn[[1]] <- Years
   }
+  Outside <- dn[[1]][!round(as.numeric(dn[[1]]), 6) %in% round(as.numeric(Years), 6)]
+  if (length(Outside))
+    cli::cli_abort(c(
+      "x" = "{.code {Where}} has {cli::qty(length(Outside))}row{?s} for year{?s} {.val {Outside}} not in {.code Data@Years}.",
+      "i" = "{.code Data@Years} covers {min(Years)} to {max(Years)}."
+    ))
   dimnames(arr) <- dn
   arr
 }

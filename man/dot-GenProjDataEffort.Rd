@@ -48,8 +48,8 @@ so projection data are not generated.
 
 For each fleet with a non-empty \code{\link[=EffortObs]{EffortObs()}} object and a populated
 \code{Error} array, observed effort for \code{DataYear} is resolved per simulation.
-If \code{Proj@OM@Data[[i]]} contains an effort value at
-\code{TSIndex}, it is used for all simulations without observation error.
+If \code{Proj@OM@Data[[i]]} contains an effort value for
+\code{DataYear}, it is used for all simulations without observation error.
 Otherwise:
 
 \deqn{\tilde{E}_{x,t} = E_{x,t} \cdot b_x \cdot \varepsilon_{x,t}}

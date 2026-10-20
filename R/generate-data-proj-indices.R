@@ -67,14 +67,11 @@
     if (EmptyObject(IndexObs)) next
     if (is.null(IndexObs@Areas)) IndexObs@Areas <- seq_len(nArea)
 
-    hasOMVal <- !is.null(omData) &&
-      !is.null(slot(omData, type)@Value) &&
-      nrow(slot(omData, type)@Value) >= TSIndex &&
-      ncol(slot(omData, type)@Value) >= fl
+    omRow <- .OMDataRow(omData, type, DataYear)
 
-    if (hasOMVal) {
+    if (!is.na(omRow) && ncol(slot(omData, type)@Value) >= fl) {
       for (x in seq_len(nSim)) {
-        NewValueAll[x, fl] <- slot(omData, type)@Value[TSIndex, fl]
+        NewValueAll[x, fl] <- slot(omData, type)@Value[omRow, fl]
         NewCVAll[x, fl]    <- .ResolveCV(Proj, type, i, fl, TSIndex,
                                         slot(Proj@Data[[x]][[i]], type), DataYear, IndexObs)
       }

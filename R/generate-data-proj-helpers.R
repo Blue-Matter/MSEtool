@@ -39,17 +39,19 @@
 }
 
 
+# row of `OM@Data` `slotname@what` for calendar year `DataYear`; NA if absent
+.OMDataRow <- function(omData, slotname, DataYear, what = "Value") {
+  if (is.null(omData)) return(NA_integer_)
+  arr <- slot(slot(omData, slotname), what)
+  if (is.null(arr) || is.null(dimnames(arr)[[1]])) return(NA_integer_)
+  match(round(DataYear, 6), round(as.numeric(dimnames(arr)[[1]]), 6))
+}
+
 .ResolveValue <- function(Proj, slotname, i, fl, TSIndex, Obs, nSim, DataYear) {
   omData <- Proj@OM@Data[[i]]
-
-  if (!is.null(omData)) {
-    omDataSlot <- slot(omData, slotname)@Value
-    if (!is.null(omDataSlot) &&
-        nrow(omDataSlot) >= TSIndex &&
-        ncol(omDataSlot) >= fl) {
-      return(rep(omDataSlot[TSIndex, fl], nSim))
-    }
-  }
+  omRow  <- .OMDataRow(omData, slotname, DataYear)
+  if (!is.na(omRow) && ncol(slot(omData, slotname)@Value) >= fl)
+    return(rep(slot(omData, slotname)@Value[omRow, fl], nSim))
 
   obsError <- .ArraySubsetYear(Obs@Error, DataYear)
   sim_ind  <- pmin(seq_len(nSim), nrow(obsError))
@@ -64,17 +66,10 @@
 
 .ResolveCV <- function(Proj, slotname, i, fl, TSIndex, DataObject, DataYear, Obs = NULL) {
   omData <- Proj@OM@Data[[i]]
-
-  if (!is.null(omData)) {
-    omDataSlot <- slot(omData, slotname)@CV
-
-    if (!is.null(omDataSlot) &&
-        nrow(omDataSlot) >= TSIndex &&
-        ncol(omDataSlot) >= fl &&
-        !is.na(omDataSlot[TSIndex, fl])) {
-      return(omDataSlot[TSIndex, fl])
-    }
-  }
+  omRow  <- .OMDataRow(omData, slotname, DataYear, "CV")
+  if (!is.na(omRow) && ncol(slot(omData, slotname)@CV) >= fl &&
+      !is.na(slot(omData, slotname)@CV[omRow, fl]))
+    return(slot(omData, slotname)@CV[omRow, fl])
 
   ObsCV <- .DataCVYears(Obs, DataYear, NA_real_)
   if (!is.na(ObsCV)) return(ObsCV)

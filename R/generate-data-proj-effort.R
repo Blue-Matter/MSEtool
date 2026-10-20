@@ -27,8 +27,8 @@
 #'
 #' For each fleet with a non-empty [EffortObs()] object and a populated
 #' `Error` array, observed effort for `DataYear` is resolved per simulation.
-#' If `Proj@OM@Data[[i]]` contains an effort value at
-#' `TSIndex`, it is used for all simulations without observation error.
+#' If `Proj@OM@Data[[i]]` contains an effort value for
+#' `DataYear`, it is used for all simulations without observation error.
 #' Otherwise:
 #'
 #' \deqn{\tilde{E}_{x,t} = E_{x,t} \cdot b_x \cdot \varepsilon_{x,t}}

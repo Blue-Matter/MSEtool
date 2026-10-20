@@ -30,7 +30,7 @@
 
   fleetnames <- FleetNames(Hist)
 
-  ObservedEffort_Fleet <- FisheryData@Effort@Value |> .ArraySubsetYear(Years = HistYears)
+  ObservedEffort_Fleet <- FisheryData@Effort@Value |> .AlignObsHistYears(HistYears)
 
   if (is.null(ObservedEffort_Fleet)) return(Hist)
 
@@ -48,63 +48,9 @@
 
     EffortObs <- Hist@OM@Obs[[i]][[fleet_name]]@Effort
 
-    # Years to use for conditioning — default all historical
-    if (is.null(EffortObs@Years)) EffortObs@Years <- FisheryData@Years
-
-    SimValue <- SimEffort_All[, , fl, drop = FALSE] |> abind::adrop(3)  # Sim x Year
-    SimValue[SimValue < 0] <- 0
-
-    SimValue      <- .ArraySubsetYear(SimValue,      EffortObs@Years)
-    ObsValue      <- .ArraySubsetYear(ObservedEffort, EffortObs@Years)
-
-    d1 <- dim(SimValue)
-    d2 <- dim(ObsValue)
-
-    if (is.null(d2)) {
-      ObsValue <- matrix(ObsValue, d1[1], length(ObsValue), byrow = TRUE)
-      dimnames(ObsValue) <- list(Sim  = seq_len(d1[1]),
-                                 Year = names(ObservedEffort))
-    }
-
-    # Bias: mean ratio of observed to simulated across years, per sim
-    Bias <- ObsValue / SimValue
-    Bias[Bias < 0.001]    <- NA
-    Bias[!is.finite(Bias)] <- NA
-
-    BiasMean <- apply(Bias, 'Sim', mean, na.rm = TRUE)
-    Bias <- array(BiasMean,
-                  dim      = c(length(BiasMean), length(EffortObs@Years)),
-                  dimnames = list(Sim  = seq_along(BiasMean),
-                                  Year = EffortObs@Years))
-
-    if (.UserSupplied(EffortObs, "Bias")) {
-      Bias[] <- .SimValues(EffortObs@Bias, nSim)
-    } else {
-      EffortObs@Bias <- Bias[, 1]
-    }
-
-    # Lognormal error: standardised residuals of obs / (sim * bias)
-    ErrorHist <- matrix(ObservedEffort, nSim, length(ObservedEffort), byrow = TRUE) /
-      (SimValue * Bias)
-    ErrorHist[!is.finite(ErrorHist)] <- NA
-
-    row_mean <- rowMeans(ErrorHist, na.rm = TRUE)
-    row_mean[!is.finite(row_mean) | row_mean == 0] <- NA_real_
-    StHistError <- ErrorHist / row_mean
-    SD <- sqrt(rowMeans((StHistError - rowMeans(StHistError, na.rm = TRUE))^2,
-                        na.rm = TRUE))
-    SD[!is.finite(SD)] <- 1e-6
-
-    if (.UserSupplied(EffortObs, "CV")) {
-      SD <- sdconv(1, .SimValues(EffortObs@CV, nSim))
-    } else {
-      EffortObs@CV <- .NameSims(SD, nSim)
-    }
-
-    ErrorProj <- .ProjObsError(EffortObs, SD, nSim, ProjYears)
-
-    Error <- abind::abind(ErrorHist, ErrorProj, along = 2, use.dnns = TRUE)
-    EffortObs@Error <- Error
+    SimValue  <- SimEffort_All[, , fl, drop = FALSE] |> abind::adrop(3)  # Sim x Year
+    EffortObs <- .ConditionBiasError(EffortObs, ObservedEffort, SimValue, HistYears, ProjYears, nSim)
+    if (is.null(EffortObs)) next
 
     Hist@OM@Obs[[i]][[fleet_name]]@Effort <- EffortObs
   }

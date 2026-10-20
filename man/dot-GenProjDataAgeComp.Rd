@@ -72,7 +72,7 @@ fleet.
 For each fleet, the new composition is resolved in order of precedence:
 \itemize{
 \item \strong{OM data present}: if \code{Proj@OM@Data[[i]]} contains a pre-computed
-composition for \code{type} at \code{TSIndex}, it is used for all simulations
+composition for \code{type} in year \code{DataYear}, it is used for all simulations
 without applying observation error.
 \item \strong{Stochastic}: otherwise, the Dirichlet concentration vector for each
 simulation is constructed as:

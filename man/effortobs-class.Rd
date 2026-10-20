@@ -23,7 +23,7 @@ see \code{\link[=EffortObs]{EffortObs()}}.}
 \code{\link[=EffortObs]{EffortObs()}}.}
 
 \item{\code{Years}}{\code{numeric} or \code{NULL}. Calendar years over which the observation
-error applies. See \code{\link[=EffortObs]{EffortObs()}}.}
+error is conditioned. See \code{\link[=EffortObs]{EffortObs()}}.}
 
 \item{\code{Units}}{\code{character} or \code{NULL}. Units of fishing effort
 (e.g., \code{"hours"}, \code{"trips"}). See \code{\link[=EffortObs]{EffortObs()}}.}
