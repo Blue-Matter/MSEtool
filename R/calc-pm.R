@@ -409,8 +409,6 @@ NULL
   df[Reduce(`|`, keep), ]
 }
 
-.CalendarYear <- function(Year) floor(Year + 1e-8)
-
 # Sum a seasonal time-step series within each complete calendar year.
 .SumCalendarYearDF <- function(df, OM) {
   if (!.IsSeasonal(OM))

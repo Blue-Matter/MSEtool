@@ -167,6 +167,7 @@ reference:
   - extract_effort
   - extract-unfished
   - Number
+  - Recruits
   - Interactions
 
 - subtitle: Miscellaneous Slot Access

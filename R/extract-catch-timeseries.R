@@ -415,8 +415,7 @@ Removals <- function(object,
   if (!byFleet) array <- SumOverFleet(array)
   if (Reduce)   array <- ReduceDims(array, IncYear = IncYear)
 
-  units <- if (slot_name %in% c('Landings', 'Discards'))
-    .GetUnits(OM, 'Biomass') else .GetNumberUnits(OM)
+  units <- .GetUnits(OM, 'Biomass')
 
   Array2DF(array) |>
     dplyr::mutate(Variable = slot_name,

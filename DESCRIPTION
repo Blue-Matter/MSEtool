@@ -225,6 +225,7 @@ Collate:
     'extract-catch-timeseries.R'
     'extract-effort.R'
     'extract-number.R'
+    'extract-recruits.R'
     'extract-relative.R'
     'extract-unfished.R'
     'find-model.R'
