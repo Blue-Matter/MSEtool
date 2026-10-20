@@ -151,99 +151,99 @@
   invisible(NULL)
 }
 
-#' Detect Helper Functions Called by an MP
+#' Resolve a Free Name of an MP to a User Object
 #'
-#' Recursively scans the body of `MP` and any detected helper functions,
-#' returning the names of all user-defined functions reachable from `MP` that
-#' are not part of the MSEtool namespace or base R. Detects both functions
-#' called directly (`f(...)`) and functions referenced by name as a bare
-#' argument value (e.g. passed as a callback to another function). Used by
-#' `.MakeSelfContained()` to identify functions that must be copied into the
-#' MP's self-contained environment.
+#' Looks up `name` along the enclosing environments of an MP or helper
+#' function, starting at `env`. Returns the object when it is defined in user
+#' code (a closure frame, the global environment, or an attached package that
+#' is not attached by default) and `NULL` when it is provided by MSEtool, its
+#' imports, base R, a default package, or is not found.
 #'
-#' @param MP A function of class `"mp"`.
-#' @param MSEtool_funs Character vector of function names in the MSEtool
-#'   namespace, used to exclude them from results.
-#' @param visited Character vector of already-visited function names, used
-#'   internally to prevent infinite recursion.
+#' @param name Character. The free name.
+#' @param env The environment the name is looked up from.
 #'
-#' @return A character vector of unique helper function names.
+#' @return A list with element `value`, or `NULL`.
 #' @keywords internal
-.DetectCalledFunctions <- function(MP, MSEtool_funs, visited=character()) {
-  skip <- c("{", "<-", "=", "(", "[", "[[", "::", ":::",
-            "if", "for", "while", "repeat", "return", "function")
+.ResolveUserObject <- function(name, env) {
+  ns       <- asNamespace("MSEtool")
+  Provided <- exists(name, envir = ns, inherits = FALSE) ||
+    exists(name, envir = parent.env(ns), inherits = FALSE) ||
+    exists(name, envir = baseenv(), inherits = FALSE)
+  Default  <- paste0("package:", c("base", getOption("defaultPackages")))
 
-  find_calls <- function(expr) {
-    if (is.symbol(expr)) {
-      fname <- as.character(expr)
-      if (!nzchar(fname) || fname %in% skip || fname %in% MSEtool_funs)
+  while (!identical(env, emptyenv())) {
+    if (isNamespace(env) || identical(env, baseenv()))
+      return(NULL)
+    if (exists(name, envir = env, inherits = FALSE)) {
+      EnvName <- environmentName(env)
+      if (startsWith(EnvName, "package:"))
+        return(if (Provided || EnvName %in% Default) NULL else list(value = get(name, envir = env)))
+      if (identical(env, globalenv()) && Provided)
         return(NULL)
-      if (exists(fname, mode="function", inherits=TRUE))
-        return(fname)
-      return(NULL)
+      return(list(value = get(name, envir = env)))
     }
-    if (!is.call(expr)) return(NULL)
-
-    fun <- expr[[1]]
-    if (is.symbol(fun) && as.character(fun) %in% c("::", ":::"))
-      return(NULL)
-
-    unlist(lapply(as.list(expr), find_calls))
+    env <- parent.env(env)
   }
-
-  direct      <- unique(find_calls(body(MP)))
-  new_helpers <- setdiff(direct, c(MSEtool_funs, visited))
-  visited     <- union(visited, new_helpers)
-  
-  deeper <- unlist(lapply(new_helpers, function(fname) {
-    fun <- tryCatch(
-      get(fname, mode="function", inherits=TRUE),
-      error = function(e) NULL
-    )
-    if (is.null(fun) || isNamespace(environment(fun)))
-      return(NULL)
-    .DetectCalledFunctions(fun, MSEtool_funs, visited)
-  }))
-  
-  unique(c(direct, deeper))
+  NULL
 }
 
-#' Make an MP Self-Contained by Capturing Helper Functions
+# TRUE for closures defined in user code (not in a package namespace)
+.IsUserFunction <- function(x) {
+  is.function(x) && !is.primitive(x) && !isNamespace(topenv(environment(x)))
+}
+
+#' Make an MP Self-Contained by Capturing its Dependencies
 #'
 #' Creates a new function environment for `MP`, parented to the MSEtool
 #' namespace so that all MSEtool package functions are findable via normal
-#' lexical scoping without being copied. Every other helper function detected
-#' by `.DetectCalledFunctions()`.
+#' lexical scoping without being copied. Every free name of `MP` that
+#' resolves to a user object (see `.ResolveUserObject()`) - helper functions,
+#' global variables, variables captured by a closure, and functions from
+#' non-default attached packages - is copied into that environment. Copied
+#' user-defined helper functions are scanned in turn from their original
+#' environment and then re-homed into the same environment, so helpers
+#' calling other helpers resolve. Names referenced only as strings (e.g. `do.call("f", ...)`) are
+#' not detected.
 #'
 #' This ensures that an MP carries all of its dependencies when passed to a
 #' parallel worker or saved to disk, without bundling the entire MSEtool
 #' namespace.
 #'
 #' @param MP A function of class `"mp"`.
+#' @param MaxSize Numeric. Total size (bytes) of copied non-function objects
+#'   above which a warning is issued.
 #'
 #' @return `MP` with its environment replaced by a self-contained environment
 #'   parented to the MSEtool namespace.
 #' @keywords internal
-.MakeSelfContained <- function(MP) {
+.MakeSelfContained <- function(MP, MaxSize = 10 * 1024^2) {
   .CheckClass(MP, c('mp', 'mmp'), 'MP')
 
-  env    <- new.env(parent=asNamespace("MSEtool"))
-  mp_env <- environment(MP)
+  env   <- new.env(parent = asNamespace("MSEtool"))
+  Queue <- list(MP)
+  while (length(Queue)) {
+    fn    <- Queue[[1]]
+    Queue <- Queue[-1]
+    for (nm in codetools::findGlobals(fn, merge = TRUE)) {
+      if (exists(nm, envir = env, inherits = FALSE)) next
+      Obj <- .ResolveUserObject(nm, environment(fn))
+      if (is.null(Obj)) next
+      Value <- Obj$value
+      if (.IsUserFunction(Value)) {
+        Queue <- c(Queue, Value)
+        environment(Value) <- env
+      }
+      env[[nm]] <- Value
+    }
+  }
 
-  MSEtool_funs <- names(Filter(
-    isTRUE,
-    vapply(
-      ls(getNamespace("MSEtool"), all.names=TRUE),
-      \(x) is.function(get(x, envir=asNamespace("MSEtool"))),
-      logical(1)
-    )
-  ))
-
-  helpers <- .DetectCalledFunctions(MP, MSEtool_funs=MSEtool_funs)
-  helpers <- Filter(\(fname) exists(fname, envir=mp_env, inherits=TRUE), helpers)
-
-  for (fname in helpers)
-    env[[fname]] <- get(fname, envir=mp_env, inherits=TRUE)
+  Vars <- Filter(\(x) !is.function(env[[x]]), ls(env, all.names = TRUE))
+  Size <- vapply(Vars, \(x) as.numeric(utils::object.size(env[[x]])), numeric(1))
+  if (sum(Size) > MaxSize)
+    cli::cli_warn(c(
+      "MP uses {.val {length(Vars)}} global object{?s} totalling {format(structure(sum(Size), class = 'object_size'), units = 'auto')}: {.val {Vars[order(-Size)]}}.",
+      "i" = "These are stored with the MP and sent to every parallel task. Pass large inputs as MP arguments with {.fn SetMPArgs} or reduce them."
+    ))
 
   environment(MP) <- env
   MP

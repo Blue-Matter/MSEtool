@@ -32,9 +32,13 @@ names are used as the MP names. If \code{NULL} (default), projects
 projects every MP x chunk combination in parallel on the active
 \code{\link[=SetupParallel]{SetupParallel()}} plan. The number of chunks defaults to the number of
 workers; set \code{Hist@OM@Control$ProjectChunks} to change it. Results do not
-depend on the number of chunks. For \link[=Hist-legacy-class]{Hist-legacy} objects, \code{TRUE}
-runs all MPs in parallel, and a named list selects individual MPs to run
-in parallel. Default \code{FALSE}.}
+depend on the number of chunks. A named list is accepted and runs all MPs
+in parallel if any element is \code{TRUE}. Objects an MP uses (helper
+functions, global variables) are sent to the workers with it when they
+are referenced by name in its code; objects referenced only as strings,
+e.g. \code{do.call("f", ...)}, are not. For \link[=Hist-legacy-class]{Hist-legacy} objects,
+\code{TRUE} runs all MPs in parallel, and a named list selects individual MPs
+to run in parallel. Default \code{FALSE}.}
 
 \item{silent}{Logical. Suppress progress messages if \code{TRUE}. Default
 \code{FALSE}.}

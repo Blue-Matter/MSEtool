@@ -120,6 +120,8 @@ DisableParallel <- function(silent=FALSE) {
 #' @rdname SetupParallel
 #' @export
 CheckParallel <- function(parallel) {
+  if (!is.logical(parallel) || length(parallel) != 1 || is.na(parallel))
+    cli::cli_abort("{.arg parallel} must be {.val TRUE} or {.val FALSE}.")
   if (!parallel)
     return(FALSE)
 

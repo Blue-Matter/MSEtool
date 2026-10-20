@@ -43,6 +43,11 @@
   YearsHist <- Years(Hist@OM, "Historical")
   YearsProj <- Years(Hist@OM, "Projection")
   nMPs <- length(MPs)
+  if (is.list(parallel)) {
+    parallel <- any(unlist(parallel))
+    if (!silent)
+      cli::cli_inform(c("i" = "Per-MP {.arg parallel} selection does not apply to {.cls hist} objects; all MPs are projected {if (parallel) 'in parallel' else 'sequentially'}."))
+  }
   parallel <- CheckParallel(parallel)
 
   .MsgTheme()

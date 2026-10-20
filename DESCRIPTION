@@ -17,6 +17,7 @@ Depends:
 Imports:
     abind,
     cli,
+    codetools,
     digest,
     dplyr (>= 1.1.0),
     ggplot2,

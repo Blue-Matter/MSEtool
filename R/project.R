@@ -21,9 +21,13 @@
 #'   projects every MP x chunk combination in parallel on the active
 #'   [SetupParallel()] plan. The number of chunks defaults to the number of
 #'   workers; set `Hist@OM@Control$ProjectChunks` to change it. Results do not
-#'   depend on the number of chunks. For [Hist-legacy-class] objects, `TRUE`
-#'   runs all MPs in parallel, and a named list selects individual MPs to run
-#'   in parallel. Default `FALSE`.
+#'   depend on the number of chunks. A named list is accepted and runs all MPs
+#'   in parallel if any element is `TRUE`. Objects an MP uses (helper
+#'   functions, global variables) are sent to the workers with it when they
+#'   are referenced by name in its code; objects referenced only as strings,
+#'   e.g. `do.call("f", ...)`, are not. For [Hist-legacy-class] objects,
+#'   `TRUE` runs all MPs in parallel, and a named list selects individual MPs
+#'   to run in parallel. Default `FALSE`.
 #' @param silent Logical. Suppress progress messages if `TRUE`. Default
 #'   `FALSE`.
 #' @param nSim Integer. If provided, reduces the number of simulations to

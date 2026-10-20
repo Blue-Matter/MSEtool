@@ -2,12 +2,15 @@
 % Please edit documentation in R/hist-to-mse.R
 \name{.MakeSelfContained}
 \alias{.MakeSelfContained}
-\title{Make an MP Self-Contained by Capturing Helper Functions}
+\title{Make an MP Self-Contained by Capturing its Dependencies}
 \usage{
-.MakeSelfContained(MP)
+.MakeSelfContained(MP, MaxSize = 10 * 1024^2)
 }
 \arguments{
 \item{MP}{A function of class \code{"mp"}.}
+
+\item{MaxSize}{Numeric. Total size (bytes) of copied non-function objects
+above which a warning is issued.}
 }
 \value{
 \code{MP} with its environment replaced by a self-contained environment
@@ -16,8 +19,14 @@ parented to the MSEtool namespace.
 \description{
 Creates a new function environment for \code{MP}, parented to the MSEtool
 namespace so that all MSEtool package functions are findable via normal
-lexical scoping without being copied. Every other helper function detected
-by \code{.DetectCalledFunctions()}.
+lexical scoping without being copied. Every free name of \code{MP} that
+resolves to a user object (see \code{.ResolveUserObject()}) - helper functions,
+global variables, variables captured by a closure, and functions from
+non-default attached packages - is copied into that environment. Copied
+user-defined helper functions are scanned in turn from their original
+environment and then re-homed into the same environment, so helpers
+calling other helpers resolve. Names referenced only as strings (e.g. \code{do.call("f", ...)}) are
+not detected.
 }
 \details{
 This ensures that an MP carries all of its dependencies when passed to a
