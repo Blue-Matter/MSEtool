@@ -66,8 +66,8 @@
                                  Year = names(ObservedEffort))
     }
 
-    # Bias: mean ratio of simulated to observed across years, per sim
-    Bias <- SimValue / ObsValue
+    # Bias: mean ratio of observed to simulated across years, per sim
+    Bias <- ObsValue / SimValue
     Bias[Bias < 0.001]    <- NA
     Bias[!is.finite(Bias)] <- NA
 
@@ -83,7 +83,7 @@
       EffortObs@Bias <- Bias[, 1]
     }
 
-    # Lognormal error: standardised residuals of obs / (sim / bias)
+    # Lognormal error: standardised residuals of obs / (sim * bias)
     ErrorHist <- matrix(ObservedEffort, nSim, length(ObservedEffort), byrow = TRUE) /
       (SimValue * Bias)
     ErrorHist[!is.finite(ErrorHist)] <- NA

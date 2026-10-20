@@ -117,7 +117,7 @@
     }
       
     # Bias 
-    Bias <- SimValue / ObsValue
+    Bias <- ObsValue / SimValue
     Bias[Bias<0.001] <- NA
     Bias[!is.finite(Bias)] <- NA
     
