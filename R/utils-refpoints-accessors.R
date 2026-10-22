@@ -6,12 +6,14 @@
 #' @param Hist A [hist-class] object.
 #'
 #' @return A numeric array with dimensions `Sim x Stock x Year` (`FSPR()`
-#'   additionally has a `Target` dimension). Returns `NULL` if the slot has
-#'   not yet been populated (i.e. [CalcRefPoints()] has not been run).
+#'   additionally has a `Target` dimension). For `F01()` and `FMax()` the
+#'   `Stock` dimension is labelled by complex name. Returns `NULL` if the slot
+#'   has not yet been populated (i.e. [CalcRefPoints()] has not been run).
 #'
 #' @details
-#' - `F01()`: apical F at 10% of the yield-per-recruit slope at the origin.
-#' - `FMax()`: apical F maximising yield-per-recruit.
+#' - `F01()`: apical F at 10% of the complex's yield-per-recruit slope at the
+#'   origin.
+#' - `FMax()`: apical F maximising the complex's yield-per-recruit.
 #' - `FSPR()`: apical F at each requested SPR target.
 #' - `FMed()`: apical F at the median historical replacement line.
 #' - `FCrash()`: apical F at which the stock can no longer replace itself.

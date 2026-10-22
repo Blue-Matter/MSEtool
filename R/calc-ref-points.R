@@ -28,13 +28,19 @@
 #' apical-F grid via [CalcPerRecruit()], reusing a single evaluation rather
 #' than re-optimizing per reference point.
 #'
-#' - `F0.1`: apical F at which the slope of the yield-per-recruit curve is
-#'   10% of the slope at the origin. For stocks linked by `Herm`,
-#'   yield-per-recruit is the lifetime yield of a recruit to that stock,
-#'   including catch taken after it transitions to another stock.
-#' - `Fmax`: apical F maximising yield-per-recruit. Undefined (returned as
-#'   the upper grid bound) for asymptotic selectivity, where
+#' - `F0.1`: apical F at which the slope of the complex's yield-per-recruit
+#'   curve is 10% of the slope at the origin.
+#' - `Fmax`: apical F maximising the complex's yield-per-recruit. Undefined
+#'   (returned as the upper grid bound) for asymptotic selectivity, where
 #'   yield-per-recruit has no interior maximum.
+#'
+#'   `F0.1` and `Fmax` are calculated for each complex (`OM@Complexes`),
+#'   whose stocks are fished together at a common apical F, and are reported
+#'   under the complex name, as for `FMSY`. The complex's yield-per-recruit
+#'   is total yield per unit of unfished recruitment,
+#'   \eqn{\sum_k R0_k \, YPR_k / \sum_k R0_k}, where \eqn{YPR_k} is the
+#'   lifetime yield of a recruit to stock \eqn{k}, including catch taken
+#'   after it transitions to another stock via `Herm`.
 #' - `Fx%SPR`: apical F at which spawning-per-recruit relative to unfished
 #'   equals each value in `SPRTarget`.
 #' - `Fcrash`/`SPRcrash`: the apical F (and corresponding relative SPR) at
@@ -47,6 +53,7 @@
 #'   median historical recruits-per-spawner ratio.
 #' - `BLow` (optional): see [CalcBLow()].
 #'
+#' `Fx%SPR`, `Fcrash`, `SPRcrash`, and `Fmed` are calculated for each stock.
 #' For a stock whose recruitment comes from a single other stock's spawning
 #' production (`SRR@SPFrom`), `Fx%SPR`, `Fcrash`, `SPRcrash`, and `Fmed` are
 #' those of the source stock, the spawning population that drives its
@@ -96,7 +103,8 @@ CalcRefPoints <- function(Hist,
 
   PerRecruit <- CalcPerRecruit(Hist, apicalF = Fgrid, Years = Years)
   YPR  <- if (type == 'Removals') PerRecruit@Removals else PerRecruit@Landings
-  YPR  <- .AddHermLifetime(YPR, PerRecruit@Misc$HermCross, type)
+  YPR  <- .AddHermLifetime(YPR, PerRecruit@Misc$HermCross, type) |>
+    .ComplexYPR(Hist)
   SPRF <- PerRecruit@SPRF
   SPR  <- PerRecruit@SPR
   RPS  <- 1 / SPRF
@@ -137,6 +145,36 @@ CalcRefPoints <- function(Hist,
     Hist <- CalcBLow(Hist, HZN = HZN, Bfrac = Bfrac, silent = silent)
 
   Hist
+}
+
+# Yield per unit of unfished recruitment for each complex: sum_k R0_k YPR_k / sum_k R0_k,
+# with the Stock dimension labelled by complex name (as for FMSY)
+.ComplexYPR <- function(YPR, Hist) {
+  Y  <- .Aperm(YPR, c('Sim', 'Stock', 'Year', 'F'))
+  d  <- dim(Y)
+  dn <- dimnames(Y)
+  CalYears  <- as.numeric(dn$Year)
+  complexes <- Complexes(Hist)
+
+  R0 <- purrr::map(stats::setNames(dn$Stock, dn$Stock), \(st) {
+    r0 <- Hist@OM@Stock[[st]]@SRR@R0
+    ts <- floor(as.numeric(dimnames(r0)[['Year']]))
+    out <- vapply(CalYears, \(cy) rowSums(r0[, ts == cy, drop = FALSE]), numeric(nrow(r0)))
+    out <- matrix(out, nrow = nrow(r0))
+    out[pmin(seq_len(d[1]), nrow(out)), , drop = FALSE]
+  })
+
+  Out <- array(NA_real_, dim = c(d[1], length(complexes), d[3], d[4]),
+               dimnames = list(Sim = dn$Sim, Stock = names(complexes), Year = dn$Year, F = dn$F))
+  for (cx in seq_along(complexes)) {
+    Stocks <- dn$Stock[complexes[[cx]]]
+    Den <- Reduce(`+`, R0[Stocks])
+    for (f in seq_len(d[4])) {
+      Num <- Reduce(`+`, purrr::map(Stocks, \(st) R0[[st]] * Y[, st, , f]))
+      Out[, cx, , f] <- ifelse(Den > 0, Num / Den, NA_real_)
+    }
+  }
+  Out
 }
 
 # Recruitment-based reference points of a stock recruiting from another stock's

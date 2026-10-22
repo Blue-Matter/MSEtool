@@ -77,6 +77,13 @@ Only defined for \code{BevertonHolt} and \code{Ricker} stock-recruitment models.
 median historical recruits-per-spawner ratio.
 \item \code{BLow} (optional): see \code{\link[=CalcBLow]{CalcBLow()}}.
 }
+
+For a stock whose recruitment comes from a single other stock's spawning
+production (\code{SRR@SPFrom}), \verb{Fx\%SPR}, \code{Fcrash}, \code{SPRcrash}, and \code{Fmed} are
+those of the source stock, the spawning population that drives its
+recruitment. For a stock whose \code{SPFrom} is a weighted blend of several
+stocks, \verb{Fx\%SPR} uses the blended spawning potential ratio and \code{Fcrash},
+\code{SPRcrash}, and \code{Fmed} are \code{NA}.
 }
 \seealso{
 \code{\link[=CalcPerRecruit]{CalcPerRecruit()}}, \code{\link[=CalcMSY]{CalcMSY()}}, \code{\link[=CalcBLow]{CalcBLow()}}, \link[=reference-class]{reference},
