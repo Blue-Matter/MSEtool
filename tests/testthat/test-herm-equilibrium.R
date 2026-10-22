@@ -82,7 +82,7 @@ test_that("seasonal Herm equilibrium matches long-run dynamics", {
 test_that("Herm yield-per-recruit is lifetime yield including catch after sex change", {
   hist <- Simulate(.herm_om(R0Male = 0), silent = TRUE, control = SimControl(MSYRefs = FALSE))
   yr <- as.numeric(utils::tail(dimnames(hist@SProduction)$Year, 1))
-  Fg <- c(0.05, 0.2, 0.6)
+  Fg <- c(0.02, 0.08, 0.15)
   pr <- CalcPerRecruit(hist, apicalF = Fg, Years = yr)
   Lifetime <- MSEtool:::.AddHermLifetime(pr@Removals, pr@Misc$HermCross, 'Removals')
   eq <- CalcEquilibrium(hist, apicalF = Fg, Years = yr)
