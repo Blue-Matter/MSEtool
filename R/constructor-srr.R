@@ -53,8 +53,10 @@
 #'   index (`numeric`), or a weighted blend of multiple sources with a named
 #'   `numeric` vector, e.g. `c(Stock1 = 0.6, Stock2 = 0.4)`. Defaults to self
 #'   (the stock recruits from its own spawning production). Relevant only in
-#'   multi-stock operating models. See [srr-class] for details and
-#'   constraints on the weighted form. Default `NULL`.
+#'   multi-stock operating models. Weights set the relative contribution of
+#'   each source and do not scale recruitment, which is set by `R0`. See
+#'   [srr-class] for details and constraints on the weighted form. Default
+#'   `NULL`.
 #' @param ShareSPFrom `logical(1)`. When `SPFrom` names a single other stock,
 #'   copy that stock's `Pars`, `SD`, `AC`, and recruitment deviations into this
 #'   stock during [Populate()] (a user-supplied `RecDevHist` is kept). Set to

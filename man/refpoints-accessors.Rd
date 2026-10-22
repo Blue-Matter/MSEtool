@@ -30,8 +30,9 @@ BLow(Hist)
 }
 \value{
 A numeric array with dimensions \verb{Sim x Stock x Year} (\code{FSPR()}
-additionally has a \code{Target} dimension). Returns \code{NULL} if the slot has
-not yet been populated (i.e. \code{\link[=CalcRefPoints]{CalcRefPoints()}} has not been run).
+additionally has a \code{Target} dimension). For \code{F01()} and \code{FMax()} the
+\code{Stock} dimension is labelled by complex name. Returns \code{NULL} if the slot
+has not yet been populated (i.e. \code{\link[=CalcRefPoints]{CalcRefPoints()}} has not been run).
 }
 \description{
 Accessor functions for reference points stored in \code{Hist@Reference},
@@ -39,8 +40,9 @@ populated by \code{\link[=CalcRefPoints]{CalcRefPoints()}}.
 }
 \details{
 \itemize{
-\item \code{F01()}: apical F at 10\% of the yield-per-recruit slope at the origin.
-\item \code{FMax()}: apical F maximising yield-per-recruit.
+\item \code{F01()}: apical F at 10\% of the complex's yield-per-recruit slope at the
+origin.
+\item \code{FMax()}: apical F maximising the complex's yield-per-recruit.
 \item \code{FSPR()}: apical F at each requested SPR target.
 \item \code{FMed()}: apical F at the median historical replacement line.
 \item \code{FCrash()}: apical F at which the stock can no longer replace itself.

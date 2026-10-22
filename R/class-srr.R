@@ -50,6 +50,13 @@
 #'     (a warning is logged to `Log` if they don't); negative or non-finite
 #'     weights are not allowed. Every referenced source stock must itself be
 #'     self-recruiting.
+#'
+#'   Recruitment depends on spawning production relative to unfished
+#'   (`SP / SP0`), with both blended by the same weights, so the weights set
+#'   the relative contribution of each source and do not scale recruitment;
+#'   the size of this stock's recruitment is set by its `R0`. A weight on a
+#'   single source (e.g. `c(Stock1 = 0.3)`) has no effect. Spawning production
+#'   exported to this stock is not removed from the source stock.
 #' @slot ShareSPFrom `logical(1)`. Applies when `SPFrom` names a single other
 #'   stock. If `TRUE` (default), [Populate()] copies the source stock's `Pars`,
 #'   `SD`, `AC`, `RecDevInit`, `RecDevProj`, and `RecDevHist` into this stock,

@@ -58,13 +58,19 @@ All reference points except \code{BLow} are evaluated on the same per-recruit
 apical-F grid via \code{\link[=CalcPerRecruit]{CalcPerRecruit()}}, reusing a single evaluation rather
 than re-optimizing per reference point.
 \itemize{
-\item \code{F0.1}: apical F at which the slope of the yield-per-recruit curve is
-10\% of the slope at the origin. For stocks linked by \code{Herm},
-yield-per-recruit is the lifetime yield of a recruit to that stock,
-including catch taken after it transitions to another stock.
-\item \code{Fmax}: apical F maximising yield-per-recruit. Undefined (returned as
-the upper grid bound) for asymptotic selectivity, where
+\item \code{F0.1}: apical F at which the slope of the complex's yield-per-recruit
+curve is 10\% of the slope at the origin.
+\item \code{Fmax}: apical F maximising the complex's yield-per-recruit. Undefined
+(returned as the upper grid bound) for asymptotic selectivity, where
 yield-per-recruit has no interior maximum.
+
+\code{F0.1} and \code{Fmax} are calculated for each complex (\code{OM@Complexes}),
+whose stocks are fished together at a common apical F, and are reported
+under the complex name, as for \code{FMSY}. The complex's yield-per-recruit
+is total yield per unit of unfished recruitment,
+\eqn{\sum_k R0_k \, YPR_k / \sum_k R0_k}, where \eqn{YPR_k} is the
+lifetime yield of a recruit to stock \eqn{k}, including catch taken
+after it transitions to another stock via \code{Herm}.
 \item \verb{Fx\%SPR}: apical F at which spawning-per-recruit relative to unfished
 equals each value in \code{SPRTarget}.
 \item \code{Fcrash}/\code{SPRcrash}: the apical F (and corresponding relative SPR) at
@@ -78,6 +84,7 @@ median historical recruits-per-spawner ratio.
 \item \code{BLow} (optional): see \code{\link[=CalcBLow]{CalcBLow()}}.
 }
 
+\verb{Fx\%SPR}, \code{Fcrash}, \code{SPRcrash}, and \code{Fmed} are calculated for each stock.
 For a stock whose recruitment comes from a single other stock's spawning
 production (\code{SRR@SPFrom}), \verb{Fx\%SPR}, \code{Fcrash}, \code{SPRcrash}, and \code{Fmed} are
 those of the source stock, the spawning population that drives its
