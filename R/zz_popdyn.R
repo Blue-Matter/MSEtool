@@ -773,7 +773,9 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
 
     # Calculate F & Z by age class
     out$FM_P[SAYR] <- Ftot[S] * out$V_P_real_2[SAYt] * fishdist[SR]/StockPars$Asize[SR]
-    out$FM_Pret[SAYR] <- Ftot[S] * out$retA_P_real[SAYt] * fishdist[SR]/StockPars$Asize[SR]
+    # retention on the same scale as V_P_real_2
+    maxV <- apply(out$V_P_real[, , y + nyears, drop = FALSE], 1, max)
+    out$FM_Pret[SAYR] <- Ftot[S] * out$retA_P_real[SAYt]/maxV[S] * fishdist[SR]/StockPars$Asize[SR]
     #out$Z_P[SAYR] <- FM_P[SAYR] + StockPars$M_ageArray[SAYt] # calculate total mortality
     
     # Calculate total and retained catch
@@ -1096,7 +1098,9 @@ CalcMPDynamics_MF <- function(MPRecs_f, y, nyears, proyears, nsim,
         
         # Calculate F by age class (catch and Z later on)
         out[[f]]$FM_P[SAYR] <- Ftot[Sf] * out[[f]]$V_P_real_2[SAYt] * fishdist[SRf]/StockPars$Asize[SR]
-        out[[f]]$FM_Pret[SAYR] <- Ftot[Sf] * out[[f]]$retA_P_real[SAYt] * fishdist[SRf]/StockPars$Asize[SR]
+        # retention on the same scale as V_P_real_2
+        maxV <- apply(out[[f]]$V_P_real[, , y + nyears, drop = FALSE], 1, max)
+        out[[f]]$FM_Pret[SAYR] <- Ftot[Sf] * out[[f]]$retA_P_real[SAYt]/maxV[S] * fishdist[SRf]/StockPars$Asize[SR]
         
         # Effort relative to last historical with this catch
         Effort_req[, f] <- Ftot[, f]/(FleetPars_f[[f]]$FinF * FleetPars_f[[f]]$qs*FleetPars_f[[f]]$qvar[,y]*

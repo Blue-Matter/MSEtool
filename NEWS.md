@@ -5,6 +5,8 @@ The current version of the `MSEtool` package is available for download from [CRA
 ## Fixes 
 - Fix issue where `MMSE` objects could not handle `multiHist` objects from earlier versions
 - Fix to generating CAL data
+- `SS2OM` no longer applies selectivity twice to retention. Multi-fleet OMs stored realized retention (selectivity x retention) in `cpars$retA` and `cpars$retL`, which were then multiplied by selectivity again, so retained catch was understated even when the SS3 model has no discards. Retention-at-length is now taken from the SS3 `Ret` factor instead of `Keep`.
+- Under a TAC, projected retained catch in `Project` and `multiMSE` was scaled by the maximum of the realized selectivity curve, so retained catch was below removals whenever that maximum was below 1 (e.g., `SS2OM` sex-averaged selectivity, multi-fleet OMs). Retained F now uses the same scaling as removals. Effort-based MPs were not affected.
 
 # MSEtool 3.7.5
 

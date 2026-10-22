@@ -445,9 +445,13 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
       stop("Could not find selectivity/retention function for year: ", yy)
     }
   }
+  # Keep = selectivity x retention; Ret = retention probability
+  keepL <- vapply(mainyrs, loop_over_change_points, numeric(replist$nlbinspop),
+                  df = replist$sizeselex[replist$sizeselex$Fleet == ff & replist$sizeselex$Sex == i &
+                                           replist$sizeselex$Factor == "Keep", ])
   retL <- vapply(mainyrs, loop_over_change_points, numeric(replist$nlbinspop),
                  df = replist$sizeselex[replist$sizeselex$Fleet == ff & replist$sizeselex$Sex == i &
-                                          replist$sizeselex$Factor == "Keep", ])
+                                          replist$sizeselex$Factor == "Ret", ])
   if(proyears) {
     retLpro <- retL[, nyears] %>% matrix(nrow(retL), proyears)
     retL <- cbind(retL, retLpro)
@@ -510,7 +514,7 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
   retA <- Fdisc1 <- matrix(NA, nrow=n_age, ncol=nyears)
   Cat <- numeric(nyears)
   for(yy in 1:nyears) {
-    retA[,yy] <- colSums(retL[, yy] * ALK) # realized retention at-age
+    retA[,yy] <- colSums(keepL[, yy] * ALK) # realized retention at-age
     if(!is.numeric(retA[n_age,yy])) retA[n_age,yy] <- retA[n_age-1]
     Cat[yy] <- sum(meanN[yy, ] * Find[yy] * wt[yy, ] * retA[,yy] * V[, yy])
     
