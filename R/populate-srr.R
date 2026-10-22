@@ -104,7 +104,11 @@ PopulateSRR <- function(SRR,
 
   # TODO - should add some checks here to make sure parameters/model are ok
   SRR@Pars  <- .StructurePars(Pars = SRR@Pars, nSim, Years)
-  SRR@Model <- .FindModel(SRR)
+  Model     <- .FindModel(SRR)
+  # a stock sharing its SPFrom source's SRR may omit Pars; they are copied in PopulateOM()
+  if (is.null(Model) && .SharesSPFromSRR(SRR) && is.character(SRR@Model))
+    Model <- SRR@Model
+  SRR@Model <- Model
   
   # Load the Relative Recruitment function
   if (is.character(SRR@Model) && is.null(SRR@RelRecFun)) 
@@ -126,7 +130,8 @@ PopulateSRR <- function(SRR,
   names <- c('R0', 'SD', 'AC')
   defaults <- c(1000, 0.4, 0)
   for (i in seq_along(names))
-    SRR <- .CheckSRRPars(SRR, names[i], defaults[i])
+    SRR <- .CheckSRRPars(SRR, names[i], defaults[i],
+                         warn = !(names[i] == 'SD' && .SharesSPFromSRR(SRR)))
   
   pars   <- .StructurePars(Pars = list(SRR@R0, SRR@SD, SRR@AC), nSim, Years)
   SRR@R0 <- pars[[1]] 
@@ -207,14 +212,19 @@ PopulateSRR <- function(SRR,
   invisible(TRUE)
 }
 
-.CheckSRRPars <- function(SRR, name='R0', default=1000) {
+.CheckSRRPars <- function(SRR, name='R0', default=1000, warn = TRUE) {
   val <- slot(SRR, name)
   if (is.null(val)) {
-    if (name !='AC')
+    if (name !='AC' && warn)
       cli::cli_warn('{.val {name}} is missing in {.val SRR}; using default value {.val {default}}.')
     slot(SRR, name) <- default
   }
   SRR
+}
+
+# Single (unblended) SPFrom source with ShareSPFrom; self-references are excluded later
+.SharesSPFromSRR <- function(SRR) {
+  isTRUE(SRR@ShareSPFrom) && length(SRR@SPFrom) == 1L
 }
 
 

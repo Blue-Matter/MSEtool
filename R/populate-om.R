@@ -830,6 +830,14 @@ PopulateOM <- function(OM,
       type = 'assumption'
     )
   }
+
+  for (i in seq_len(nStock(OM))) {
+    if (anyNA(unlist(OM@Stock[[i]]@SRR@Pars)))
+      cli::cli_abort(c(
+        "x" = "Stock {.val {stockNames[i]}} has missing {.field SRR@Pars}.",
+        "i" = "Provide {.field Pars}, or recruit from another stock's spawning production with {.field SPFrom} and {.code ShareSPFrom = TRUE}."
+      ))
+  }
   OM
 }
 

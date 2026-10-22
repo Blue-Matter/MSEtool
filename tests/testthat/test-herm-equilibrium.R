@@ -62,7 +62,7 @@ test_that("Herm equilibrium matches long-run dynamics (all males from sex change
 })
 
 test_that("Herm equilibrium matches long-run dynamics (with primary males)", {
-  hist <- Simulate(.herm_om(nYear = 150, LongRun = TRUE), silent = TRUE,
+  hist <- Simulate(.herm_om(R0Male = 100, nYear = 150, LongRun = TRUE), silent = TRUE,
                    control = SimControl(MSYRefs = FALSE))
   for (res in .herm_compare(hist)) {
     expect_equal(unname(res$SBeq), unname(res$SBobs), tolerance = 1e-4)

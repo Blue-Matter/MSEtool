@@ -374,51 +374,54 @@
 "SeasonalSpatialExStock"
 
 
-#' Wrasse Example Stocks (Female / Male)
+#' Grouper Example Stocks (Female / Male)
 #'
-#' A pair of example [stock-class] objects representing the female and
-#' (terminal) male phase of a protogynous hermaphrodite wrasse (*Thalassoma*
-#' spp.), paired via [HermOM]'s [Herm()] transition and the male's
-#' `SRR@SPFrom`. Not intended to represent any specific stock; illustrates
-#' [SRR()]'s `SPFrom` cross-stock spawning-production sourcing and
-#' [Herm()]'s age-dependent stock transition together. See [HermOM] for the
-#' full worked example and how the two stocks and the transition are
-#' combined.
+#' A pair of example [stock-class] objects representing the female and male
+#' phases of a monandric protogynous grouper (*Epinephelus* spp.): every fish
+#' is born female, and males arise only through sex change. Paired via
+#' [HermOM]'s [Herm()] transition and the male's `SRR@SPFrom`. Not intended
+#' to represent any specific stock; illustrates [SRR()]'s `SPFrom`
+#' cross-stock spawning-production sourcing and [Herm()]'s age-dependent
+#' stock transition together. See [HermOM] for the full worked example.
 #'
 #' @format Each is a [stock-class] object with the following slots
 #'   populated:
 #'
-#' - `Name`: `"Example Wrasse Female Stock"` / `"Example Wrasse Male Stock"`.
-#' - `CommonName`: `"Wrasse"`.
-#' - `Species`: `"Thalassoma spp."`.
-#' - `Ages`: An [Ages()] object with `MaxAge = 15`, identical for both
+#' - `Name`: `"Example Grouper Female Stock"` / `"Example Grouper Male Stock"`.
+#' - `CommonName`: `"Grouper"`.
+#' - `Species`: `"Epinephelus spp."`.
+#' - `Ages`: An [Ages()] object with `MaxAge = 30`, identical for both
 #'   stocks - required for the [Herm()] transition, which reclassifies
 #'   individuals age-for-age between the two stocks.
-#' - `Length`: A [Length()] object with von Bertalanffy parameters. Terminal
-#'   males grow larger than females (`Linf` 30-35 cm vs 23-27 cm), typical
-#'   of this style of protogynous species; `K`/`t0` otherwise similar.
-#' - `Weight`, `Maturity`: [Weight()]/[Maturity()] objects; males mature
-#'   at a larger size than females, consistent with their larger size-at-age.
-#' - `NaturalMortality`: A [NaturalMortality()] object; males have somewhat
-#'   lower `M` (0.2-0.3 yr^-1^) than females (0.3-0.4 yr^-1^).
-#' - `SRR`: A [SRR()] object. The female is self-recruiting (`SPFrom`
-#'   unset) with `R0 = 5000`. The male's `SPFrom = "Example Wrasse Female
-#'   Stock"` sources its spawning production (`SP`/`SP0`) from the female stock. #'   
-#' - `Spatial`, `Depletion`: matching [Spatial()]/[Depletion()] objects for
-#'   both stocks.
+#' - `Length`: A [Length()] object with von Bertalanffy parameters. Males
+#'   reach a larger asymptotic length than females (`Linf` 95-110 cm vs
+#'   85-100 cm); `K` (0.10-0.15) and `t0` are the same for both.
+#' - `Weight`, `Maturity`, `NaturalMortality`: [Weight()], [Maturity()]
+#'   (`L50` 45-55 cm), and [NaturalMortality()] (`M` 0.12-0.18 yr^-1^)
+#'   objects, the same for both stocks.
+#' - `SRR`: A [SRR()] object. The female is self-recruiting with
+#'   Beverton-Holt steepness `h` 0.7-0.85, `R0 = 5000`, and log-normal
+#'   recruitment deviations. The male has `R0 = 0` and
+#'   `SPFrom = "Example Grouper Female Stock"`, so no fish are born male;
+#'   with `ShareSPFrom = TRUE` (default) the male uses the female's
+#'   stock-recruitment parameters and recruitment deviations.
+#' - `Spatial`: matching [Spatial()] objects for both stocks.
+#' - `Depletion`: the female has a [Depletion()] target; the male has none,
+#'   as its catchability follows the female's (see [HermOM]).
 #'
 #' @seealso [HermOM] for the full worked example (including the [Herm()]
-#'   transition curve linking these two stocks), [SRR()] for `SPFrom`,
-#'   [stocktransition-class] for the transition mechanism, [AlbacoreExStock]
-#'   for a single-stock example with the full per-slot `Populate*()` walk-through.
+#'   transition curve linking these two stocks), [SRR()] for `SPFrom` and
+#'   `ShareSPFrom`, [stocktransition-class] for the transition mechanism,
+#'   [AlbacoreExStock] for a single-stock example with the full per-slot
+#'   `Populate*()` walk-through.
 #'
 #' @examples
-#' WrasseFemaleExStock
-#' WrasseMaleExStock
+#' GrouperFemaleExStock
+#' GrouperMaleExStock
 #'
-#' @name WrasseExStock
-#' @aliases WrasseFemaleExStock WrasseMaleExStock
-"WrasseFemaleExStock"
+#' @name GrouperExStock
+#' @aliases GrouperFemaleExStock GrouperMaleExStock
+"GrouperFemaleExStock"
 
-#' @rdname WrasseExStock
-"WrasseMaleExStock"
+#' @rdname GrouperExStock
+"GrouperMaleExStock"

@@ -1544,9 +1544,13 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
   
   # SRR quantities needed for MSY recruitment scaling
   # For seasonal models, collapse to annual R0 and SPR0 for the equilibrium
-  R0SeasonalList <- purrr::map(StockList, \(Stock)
-    Stock@SRR@R0 |> .ArraySubsetYear(Years) |> ExtendSims(nSim_true)   # [Sim, Year(nSeason)]
-  )
+  SimNamesInputs <- dimnames(StockFleetAllocation)[['Sim']]
+  R0SeasonalList <- purrr::map(StockList, \(Stock) {
+    R0 <- Stock@SRR@R0 |> .ArraySubsetYear(Years) |> ExtendSims(nSim_true)   # [Sim, Year(nSeason)]
+    # a sim-invariant R0 collapsed to one sim carries a different Sim name after .SubsetSim()
+    if (dim(R0)[1] == length(SimNamesInputs)) dimnames(R0)[[1]] <- SimNamesInputs
+    R0
+  })
 
   if (nSeason > 1L) {
     nCalYears <- length(cal_years)
