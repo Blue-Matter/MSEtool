@@ -24,6 +24,8 @@
   if (EmptyObject(OM@StockTargeting))
     OM@StockTargeting <- new("stocktargeting")
 
+  .CheckNSimNotIncreased(OM)
+
   OM |>
     UpdateObject() |>
     .RepairSimDimnames() |>

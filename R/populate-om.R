@@ -60,8 +60,10 @@ PopulateOM <- function(OM,
   
   if (EmptyObject(OM)) return(OM)
   if (.CheckDigest(OM) & !force) return(OM)
-  
-  if (is.null(OM@Stock)) 
+
+  OM <- .DropStaleSims(OM)
+
+  if (is.null(OM@Stock))
     cli::cli_abort(c(
       "x" = "{.var OM} must have at least one stock",
       "i" = "See {.help MSEtool::OM} and {.help MSEtool::Stock}"
