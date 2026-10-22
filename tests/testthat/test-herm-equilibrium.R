@@ -20,6 +20,12 @@ skip_on_cran()
   om
 }
 
+# Stock x (all other dims) matrix of a reference point array
+.herm_by_stock <- function(arr) {
+  arr <- .Aperm(arr, c('Stock', setdiff(names(dimnames(arr)), 'Stock')))
+  matrix(arr, nrow = dim(arr)[1])
+}
+
 # Equilibrium at the apical F reproducing the female stock's terminal-year recruitment
 .herm_compare <- function(hist) {
   yrs    <- as.numeric(dimnames(hist@SProduction)$Year)
@@ -89,6 +95,26 @@ test_that("Herm yield-per-recruit is lifetime yield including catch after sex ch
   PerFemaleRecruit <- apply(eq@Removals, c(1, 3, 4), sum)[, 1, ] / eq@Recruits[, 1, 1, ]
   expect_equal(unname(Lifetime[, 1, 1, ]), unname(PerFemaleRecruit), tolerance = 1e-8)
   expect_true(all(Lifetime[, 1, 1, ] > pr@Removals[, 1, 1, ]))
+})
+
+test_that("a dependent stock's crash and replacement reference points are its source's", {
+  hist <- Simulate(.herm_om(R0Male = 0), silent = TRUE)
+  ref  <- hist@Reference
+  for (sl in c('FCrash', 'SPRcrash', 'FMed', 'FSPR')) {
+    arr <- .herm_by_stock(slot(ref, sl))
+    expect_identical(arr[2, ], arr[1, ], info = sl)
+  }
+  expect_true(all(ref@FCrash > 0, na.rm = TRUE))
+})
+
+test_that("crash reference points are NA for a weighted SPFrom blend", {
+  hist <- Simulate(.herm_om(), silent = TRUE, control = SimControl(MSYRefs = FALSE))
+  Blend <- c(0.5, 0.5) |> stats::setNames(StockNames(hist))
+  hist@OM@Stock[[2]]@SRR@SPFrom <- Blend
+  Fcrash <- MSEtool:::.SpawningSourceRefPoint(hist@Reference@FCrash, hist@OM) |>
+    .herm_by_stock()
+  expect_true(all(is.na(Fcrash[2, ])))
+  expect_false(anyNA(Fcrash[1, ]))
 })
 
 test_that("CalcMSYCpp uses the R implementation for Herm OMs", {

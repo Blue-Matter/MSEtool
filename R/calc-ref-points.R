@@ -47,6 +47,13 @@
 #'   median historical recruits-per-spawner ratio.
 #' - `BLow` (optional): see [CalcBLow()].
 #'
+#' For a stock whose recruitment comes from a single other stock's spawning
+#' production (`SRR@SPFrom`), `Fx%SPR`, `Fcrash`, `SPRcrash`, and `Fmed` are
+#' those of the source stock, the spawning population that drives its
+#' recruitment. For a stock whose `SPFrom` is a weighted blend of several
+#' stocks, `Fx%SPR` uses the blended spawning potential ratio and `Fcrash`,
+#' `SPRcrash`, and `Fmed` are `NA`.
+#'
 #' @return The input [hist-class] object with `Hist@Reference@F01`,
 #'   `@FMax`, `@FSPR`, `@FMed`, `@FCrash`, `@SPRcrash`, and (if
 #'   `BLow = TRUE`) `@BLow` populated.
@@ -113,12 +120,16 @@ CalcRefPoints <- function(Hist,
   FMed <- .ApplyOverF(RPS, Fgrid, .Interp1,
                         target = .BroadcastTo(MedTarget, RPS |> DropDimension('F', warn = FALSE)))
 
+  FMed     <- .SpawningSourceRefPoint(FMed, Hist@OM)
+  Fcrash   <- .SpawningSourceRefPoint(CrashRes$Fcrash, Hist@OM)
+  SPRcrash <- .SpawningSourceRefPoint(CrashRes$SPRcrash, Hist@OM)
+
   Hist@Reference@F01      <- ReduceDims(F01)
   Hist@Reference@FMax     <- ReduceDims(FMax)
   Hist@Reference@FSPR     <- ReduceDims(FSPR)
   Hist@Reference@FMed     <- ReduceDims(FMed)
-  Hist@Reference@FCrash   <- ReduceDims(CrashRes$Fcrash)
-  Hist@Reference@SPRcrash <- ReduceDims(CrashRes$SPRcrash)
+  Hist@Reference@FCrash   <- ReduceDims(Fcrash)
+  Hist@Reference@SPRcrash <- ReduceDims(SPRcrash)
 
   .MsgStepDone(step)
 
@@ -126,6 +137,24 @@ CalcRefPoints <- function(Hist,
     Hist <- CalcBLow(Hist, HZN = HZN, Bfrac = Bfrac, silent = silent)
 
   Hist
+}
+
+# Recruitment-based reference points of a stock recruiting from another stock's
+# spawning production are those of its source; NA for weighted blends
+.SpawningSourceRefPoint <- function(Arr, OM) {
+  StockNames <- StockNames(OM)
+  if (length(StockNames) < 2) return(Arr)
+  DimNames <- names(dimnames(Arr))
+  Perm <- .Aperm(Arr, c('Stock', setdiff(DimNames, 'Stock')))
+  Mat  <- matrix(Perm, nrow = dim(Perm)[1])
+  Src  <- Mat
+  for (i in seq_along(StockNames)) {
+    w <- .ResolveSPFromWeights(OM@Stock[[i]]@SRR@SPFrom, StockNames, i)
+    if (length(w$from) == 1L && w$from == i) next
+    Mat[i, ] <- if (length(w$from) == 1L) Src[w$from, ] else NA_real_
+  }
+  Perm[] <- Mat
+  .Aperm(Perm, DimNames)
 }
 
 .BroadcastTo <- function(x, template) {
