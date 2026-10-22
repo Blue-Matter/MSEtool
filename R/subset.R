@@ -310,7 +310,7 @@ Subset <- function(object,
   
   if (isS4(object)) {
     if (debug) cli::cli_alert("S4 Object")
-    slots <- slotNames(object)
+    slots <- setdiff(slotNames(object), 'Misc')
     for (s in slots) {
       if (debug) cli::cli_alert("Slot {.val {s}}")
       val <- slot(object, s)
