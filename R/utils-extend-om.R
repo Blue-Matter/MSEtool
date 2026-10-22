@@ -97,11 +97,13 @@
       if (show) {
         cli::cli_progress_update(id=id)
       }
+      # Obs arrays are ReduceDims() output of full-length arrays; step-fill inverts it
       OM@Obs[[st]] <- Extend(OM@Obs[[st]],
                              nSim = nSim,
                              AgeClasses = AgeClasses,
-                                  Years = Years,
-                                  Areas = Areas)
+                             Years = Years,
+                             Areas = Areas,
+                             maintain_seasonal_pattern = FALSE)
     }
 
 

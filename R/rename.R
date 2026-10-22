@@ -52,7 +52,8 @@ Rename <- function(object, Stocks=NULL, Fleets=NULL) {
   
   # Currently on supports OM objects
   .CheckClass(object, 'om', 'OM')
-  
+  object <- UpdateObject(object)
+
   if (!is.null(Stocks))
     object <- .RenameStock(object, .CheckRenameLookup(Stocks, StockNames(object), 'Stocks'))
 
