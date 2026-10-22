@@ -90,6 +90,8 @@ PopulateCompObs <- function(Comp,
         "i" = "Supply the age class vector (`AgeBins`) or length class vector (`SizeBins`) to `PopulateObs()`.")
     )
   
+  # first population sees raw user input; later ones see ReduceDims() output
+  Raw   <- is.null(Comp@Misc$UserSupplied)
   Comp  <- .RecordUserSupplied(Comp, c("SampleSize", "ESS", "Shift"))
   Years <- c(HistYears, ProjYears)
   nBin  <- length(Bins)
@@ -100,7 +102,8 @@ PopulateCompObs <- function(Comp,
       x     = Comp@SampleSize,
       nSim  = nSim,
       Years = Years,
-      label = "SampleSize"
+      label = "SampleSize",
+      pattern = Raw
     )
 
   if (!is.null(Comp@ESS))
@@ -108,7 +111,8 @@ PopulateCompObs <- function(Comp,
       x     = Comp@ESS,
       nSim  = nSim,
       Years = Years,
-      label = "ESS"
+      label = "ESS",
+      pattern = Raw
     )
 
   if (is.null(Comp@SampleSize))
@@ -133,7 +137,8 @@ PopulateCompObs <- function(Comp,
       x     = Comp@Theta,
       nSim  = nSim,
       Years = Years,
-      label = "Theta"
+      label = "Theta",
+      pattern = Raw
     )
     if (any(Comp@Theta <= 0) || any(Comp@Theta > 1))
       cli::cli_abort(
@@ -149,7 +154,8 @@ PopulateCompObs <- function(Comp,
       nSim    = nSim,
       Years   = Years,
       Bins    = Bins,
-      BinName = BinName
+      BinName = BinName,
+      pattern = Raw
     )
   }
   Comp

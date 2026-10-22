@@ -231,8 +231,8 @@
     
     ProjInd <- match(as.character(ProjYears), as.character(YearsAll))
     if (!is.null(UserShift)) {
-      ShiftArray[, ProjInd, ] <- UserShift[pmin(seq_len(nSim), dim(UserShift)[1]),
-                                           as.character(ProjYears), , drop = FALSE]
+      ShiftArray[, ProjInd, ] <- .PopulateObsShift(UserShift, nSim, YearsAll, BinNames,
+                                                   names(dimnames(ShiftArray))[3])[, ProjInd, , drop = FALSE]
     }
     CompObs@Shift <- ShiftArray
 

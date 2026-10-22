@@ -41,7 +41,7 @@ skip_on_cran()
                                              Units = 'cm'))
 
   Hist <- Simulate(OM, silent = TRUE)
-  list(Hist = Hist, NAYears = NAYears, HistYears = HistYears,
+  list(Hist = Hist, OM = OM, NAYears = NAYears, HistYears = HistYears,
        ProjYears = Years(OM, 'Projection'), nSim = nSim(OM))
 }
 
@@ -86,4 +86,17 @@ test_that("Project() generates comp data from conditioned LandingsAtAge/Landings
       expect_equal(unname(apply(val, 1, sum)), unname(round(ss)))
     }
   }
+})
+
+test_that("a user-supplied comp Shift is kept for projection years when conditioning", {
+  OM <- built$OM
+  o  <- OM@Obs
+  o[[1]][[1]]@LandingsAtAge@Shift <- 0.1
+  o[[1]][[1]]@LandingsAtAge@Misc$UserSupplied <- NULL
+  OM@Obs <- o
+
+  Hist <- expect_no_error(Simulate(OM, silent = TRUE))
+  sh   <- Obs(Hist@OM)[[1]][[1]]@LandingsAtAge@Shift
+  expect_true(all(sh[, as.character(built$ProjYears), ] == 0.1))
+  expect_s4_class(Project(Hist, 'CurrentCatch', silent = TRUE), 'mse')
 })

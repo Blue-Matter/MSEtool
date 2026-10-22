@@ -251,15 +251,37 @@
   Error
 }
 
- 
-.PopulateObsScalar <- function(x, nSim, Years, label = "value") {
+
+# Year labels already on the calendar of `Years`, e.g. ReduceDims() output
+.HasPopulatedYears <- function(x, Years) {
+  yr <- dimnames(x)$Year
+  !is.null(yr) && all(as.numeric(yr) %in% Years) && min(as.numeric(yr)) == min(Years)
+}
+
+# consecutive series from Years[1] covering a full year, so every season has a value to repeat
+.RepeatsSeasons <- function(x, Years) {
+  yr <- as.numeric(dimnames(x)$Year)
+  n  <- length(yr)
+  n < length(Years) && all(yr == Years[seq_len(n)]) &&
+    n >= sum(floor(Years) == floor(Years[1]))
+}
+
+# step-fill inverts ReduceDims(); `pattern` repeats the seasonal cycle of raw user input instead
+.FillYearsByName <- function(x, nSim, Years, pattern = FALSE) {
+  pattern <- pattern && .RepeatsSeasons(x, Years)
+  x <- ExtendSims(x, nSim) |> ExtendYears(Years, maintain_seasonal_pattern = pattern)
+  abind::asub(x, list(as.character(Years)), match("Year", names(dimnames(x))), drop = FALSE)
+}
+
+.PopulateObsScalar <- function(x, nSim, Years, label = "value", pattern = FALSE) {
   nYear <- length(Years)
   
   if (!is.null(dimnames(x))) {
     dd <- dim(x)
     
     if (length(dd) == 2) {
-      
+      if (identical(names(dimnames(x)), c("Sim", "Year")) && .HasPopulatedYears(x, Years))
+        return(.FillYearsByName(x, nSim, Years, pattern))
       dimnames(x) <- list(Sim = seq_len(dd[1]), Year = Years[seq_len(dd[2])])
       return(x)
     }
@@ -296,7 +318,7 @@
 }
 
  
-.PopulateObsShift <- function(Shift, nSim, Years, Bins, BinName = "Bin") {
+.PopulateObsShift <- function(Shift, nSim, Years, Bins, BinName = "Bin", pattern = FALSE) {
   nYear <- length(Years)
   nBin  <- length(Bins)
 
@@ -308,6 +330,16 @@
   }
 
   if (is.array(Shift) && length(dim(Shift)) == 3) {
+    dn <- names(dimnames(Shift))
+    if (all(c("Sim", "Year") %in% dn) && .HasPopulatedYears(Shift, Years)) {
+      ind   <- match(c("Sim", "Year"), dn)
+      Shift <- .Aperm(Shift, c(ind, setdiff(1:3, ind)))
+      if (dim(Shift)[3] == nBin) {
+        Shift <- .FillYearsByName(Shift, nSim, Years, pattern)
+        return(array(Shift[seq_len(nSim), , , drop = FALSE],
+                     dim = c(nSim, nYear, nBin), dimnames = DimNames()))
+      }
+    }
     if (dim(Shift)[1] >= nSim &&
         dim(Shift)[2] == nYear &&
         dim(Shift)[3] == nBin) {
