@@ -53,6 +53,8 @@
     NPR0_SPList               = purrr::map(inputs$NPR0_SPList, .FlattenAgeArray),
     SPR0_full                 = inputs$SPR0List |> List2Array('Stock', pos = 2),
     SPR0_target               = inputs$SPR0List |> List2Array('Stock', pos = 2) |> .ArraySubsetYear(inputs$Years),
+    SPR0Own_target            = .CalcSPR0Own(inputs$NPR0_SPList, inputs$FecundityList, inputs$Years) |>
+      List2Array('Stock', pos = 2) |> .ArraySubsetYear(inputs$Years),
     IsSpawnTimeFrac           = any(unlist(inputs$SpawnTimeFracList) != 0)
   )
 }
@@ -173,12 +175,16 @@
 
   SPR0_vals <- flat$SPR0_target[1, StockNames, 1]
   names(SPR0_vals) <- StockNames
+  SPR0Own_vals <- flat$SPR0Own_target[1, StockNames, 1]
+  names(SPR0Own_vals) <- StockNames
+  SelfOnly <- .SPFromSelfOnly(inputs$SPFrom, StockNames)
 
   SPR_vals <- purrr::map_dbl(StockNames, \(st) {
     w <- inputs$SPFrom[[st]]
     sum(purrr::map2_dbl(w$from, w$weight, \(idx, wt) {
       src <- StockNames[idx]
-      val <- SPRF_reordered[src] / SPR0_vals[src]
+      SPR0src <- if (SelfOnly[[src]]) SPR0_vals[src] else SPR0Own_vals[src]
+      val <- SPRF_reordered[src] / SPR0src
       if (!is.finite(val)) val <- 0
       wt * val
     }))
@@ -202,6 +208,7 @@
   PerRecruit@SProduction <- .Wrap(out$SProduction)
   PerRecruit@Removals    <- .Wrap(out$Removals)
   PerRecruit@Landings    <- .Wrap(out$Landings)
+  PerRecruit@Misc        <- list(SPR0Own = .Wrap(SPR0Own_vals))
   PerRecruit
 }
 
@@ -245,11 +252,17 @@
 
   IsSpawnTimeFrac <- flat$IsSpawnTimeFrac
 
+  SelfOnly  <- .SPFromSelfOnly(inputs$SPFrom, StockNames)
+  SPR0_vals <- out$SPR0f
+  names(SPR0_vals) <- StockNames
+  for (st in StockNames[!SelfOnly])
+    SPR0_vals[st] <- inputs$RecParsList[[st]]$SPR0[1, YearName]
+
   PerRecruit             <- new('perrecruit')
   PerRecruit@apicalF     <- apicalF
   PerRecruit@NPR0        <- .Wrap(out$NPR0)
   PerRecruit@NPR0_SP     <- .Wrap(out$NPR0_SP)
-  PerRecruit@SPR0        <- .Wrap(out$SPR0f)
+  PerRecruit@SPR0        <- .Wrap(SPR0_vals)
   PerRecruit@NPRF        <- .Wrap(out$NPRF)
   PerRecruit@NPRF_SP     <- if (IsSpawnTimeFrac) .Wrap(out$NPRF_SP) else .Wrap(out$NPRF)
   PerRecruit@SPRF        <- .Wrap(out$SPRFf)
@@ -261,7 +274,8 @@
   PerRecruit@Landings    <- .Wrap(out$Landings)
   F_annual_apical_val <- out$F_annual_apical
   names(F_annual_apical_val) <- SimName
-  PerRecruit@Misc        <- list(F_annual_apical = list(F_annual_apical_val))
+  PerRecruit@Misc        <- list(F_annual_apical = list(F_annual_apical_val),
+                                 SPR0Own = .Wrap(out$SPR0f))
   PerRecruit
 }
 
@@ -513,6 +527,11 @@ CalcMSYCpp <- function(Hist,
 
   type <- match.arg(type)
   .CheckClass(Hist, c('om', 'hist'))
+
+  # joint Herm per-recruit is implemented in the R path only
+  OMHerm <- if (inherits(Hist, 'om')) Hist@Herm else Hist@OM@Herm
+  if (length(OMHerm))
+    return(CalcMSY(Hist, Years = Years, type = type, parallel = parallel, silent = silent))
 
   .MsgStep("Calculating MSY reference points", "Calculated MSY reference points", silent)
 

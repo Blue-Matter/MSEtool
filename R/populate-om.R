@@ -89,6 +89,7 @@ PopulateOM <- function(OM,
     .ProcessDataNames() |>
     .UpdateSPFrom() |>
     .ValidateSPFrom() |>
+    .ShareSPFromSRR() |>
     .CheckAlphaBetaSRR() |>
     .RepairSimDimnames()
 
@@ -782,6 +783,56 @@ PopulateOM <- function(OM,
   OM
 }
 
+# Copy a single SPFrom source's SRR parameters and recruitment deviations into
+# the dependent stock when SRR@ShareSPFrom is TRUE
+.ShareSPFromSRR <- function(OM) {
+  if (nStock(OM) < 2) return(OM)
+  stockNames <- StockNames(OM)
+
+  for (i in seq_len(nStock(OM))) {
+    SRR <- OM@Stock[[i]]@SRR
+    if (!isTRUE(SRR@ShareSPFrom)) next
+    w <- .ResolveSPFromWeights(SRR@SPFrom, stockNames, i)
+    if (length(w$from) != 1L || w$from == i) next
+
+    k   <- w$from
+    Src <- OM@Stock[[k]]@SRR
+    st  <- stockNames[i]
+    src <- stockNames[k]
+
+    if (!identical(SRR@Model, Src@Model))
+      cli::cli_abort(c(
+        "x" = "Stock {.val {st}} shares {.field SRR} parameters with {.val {src}} ({.field ShareSPFrom = TRUE}), but the two use different SRR models.",
+        "i" = "Use the same {.field SRR@Model}, or set {.code ShareSPFrom = FALSE} for an independent stock-recruitment curve."
+      ))
+    if (!identical(OM@Stock[[i]]@Ages@Classes, OM@Stock[[k]]@Ages@Classes))
+      cli::cli_abort(c(
+        "x" = "Stock {.val {st}} shares recruitment deviations with {.val {src}} ({.field ShareSPFrom = TRUE}), but the two have different {.field Ages@Classes}.",
+        "i" = "Set {.code ShareSPFrom = FALSE} for independent recruitment deviations."
+      ))
+
+    ShareHist <- identical(SRR@Misc$RecDevHistSupplied, FALSE)
+    New <- SRR
+    New@Pars       <- Src@Pars
+    New@SD         <- Src@SD
+    New@AC         <- Src@AC
+    New@RecDevInit <- Src@RecDevInit
+    New@RecDevProj <- Src@RecDevProj
+    if (ShareHist) New@RecDevHist <- Src@RecDevHist
+
+    if (identical(New, SRR)) next
+    OM@Stock[[i]]@SRR <- New
+    OM <- .CaptureLog(
+      OM,
+      string = cli::format_inline(
+        "Stock {.val {st}} uses the stock-recruitment parameters and {if (ShareHist) 'recruitment deviations' else 'initial and projection recruitment deviations'} of {.val {src}} ({.field SRR@ShareSPFrom})."),
+      name = 'ShareSPFrom',
+      type = 'assumption'
+    )
+  }
+  OM
+}
+
 .CheckOMReady <- function(OM) {
   problems <- character(0)
 
@@ -866,6 +917,7 @@ PopulateOM <- function(OM,
     .PopulateStockList(silent = silent) |>
     .UpdateSPFrom() |>
     .ValidateSPFrom() |>
+    .ShareSPFromSRR() |>
     .CheckAlphaBetaSRR()
   if (adjust_fecundity)
     OM <- AdjustSeasonalFecundity(OM, silent = silent)

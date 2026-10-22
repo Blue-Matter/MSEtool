@@ -83,7 +83,8 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
       Years          = Years,
       SPR0List       = SPR0List[stockInd],
       RefSeason      = RefSeason,
-      RefEffortYears = RefEffortYears
+      RefEffortYears = RefEffortYears,
+      Herm           = .HermForStocks(Hist@OM, StockNames[stockInd])
     )
   })
   
@@ -101,14 +102,35 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
   PerRecruit@SProduction <- purrr::map(PRByComplex, \(pr) pr@SProduction) |> .JoinStockArrays(StockNames)
   PerRecruit@Removals    <- purrr::map(PRByComplex, \(pr) pr@Removals)    |> .JoinStockArrays(StockNames)
   PerRecruit@Landings    <- purrr::map(PRByComplex, \(pr) pr@Landings)    |> .JoinStockArrays(StockNames)
+  HermCross <- purrr::map(unname(PRByComplex), \(pr) pr@Misc$HermCross) |>
+    purrr::compact() |> purrr::list_flatten()
+  if (length(HermCross)) PerRecruit@Misc$HermCross <- HermCross
   PerRecruit
 }
 
+# Lifetime per-recruit quantity: for each stock receiving recruits, add the
+# amounts accrued after transitioning to other Herm-linked stocks
+.AddHermLifetime <- function(Arr, HermCross, Q) {
+  if (!length(HermCross)) return(Arr)
+  DimNames <- names(dimnames(Arr))
+  Out <- .Aperm(Arr, c('Sim', 'Stock', 'Year', 'F'))
+  for (k in names(HermCross)) {
+    Cross <- .Aperm(HermCross[[k]][[Q]], c('Sim', 'Stock', 'Year', 'F'))
+    Total <- apply(Cross, c(1, 3, 4), sum) |> AddDimension('Stock', val = k, pos = 2)
+    Slice <- Out[, k, , , drop = FALSE]
+    Ones  <- Slice
+    Ones[] <- 1
+    Out[, k, , ] <- Slice + .AlignToTemplate(Total, Ones)
+  }
+  .Aperm(Out, DimNames)
+}
+
 .CalcPerRecruitStockList <- function(StockList, FleetList, apicalF=0.1, Years, SPR0List,
-                                     RefSeason = NULL, RefEffortYears = NULL) {
+                                     RefSeason = NULL, RefEffortYears = NULL, Herm = NULL) {
 
   inputs <- .PrepPerRecruitInputs(StockList, FleetList, SPR0List, Years,
-                                  EffortYears = RefEffortYears, RefSeason = RefSeason)
+                                  EffortYears = RefEffortYears, RefSeason = RefSeason,
+                                  Herm = Herm)
 
   PR <- .CalcPerRecruitF(
     apicalF                   = apicalF,
@@ -134,7 +156,8 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
     CalendarYears             = inputs$CalendarYears,
     RefSeason                 = RefSeason,
     NPR0List                  = inputs$NPR0List,
-    NPR0_SPList               = inputs$NPR0_SPList
+    NPR0_SPList               = inputs$NPR0_SPList,
+    Herm                      = inputs$Herm
   )
 
   PR
@@ -274,6 +297,129 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
   }
 
   NPR   # [Sim, Age, BirthSeason]
+}
+
+# Joint numbers-per-recruit for a Herm-linked group of stocks over one cycle of
+# nSeason steps (nSeason = 1 for annual models). Follows a unit recruit entering
+# each stock: survival, then Herm transition at the new age, as in the engine.
+# Returns [Sim, Age, BirthSeason, To, From] arrays at the start of each step
+# (`no`) and at spawning (`sp`).
+.CalcNPRHermBlock <- function(ZList, SemelList, STFList, PlusGroupFlag, HazardList,
+                              From, To, CycleSemel = TRUE, tol = 1e-14, maxCycle = 20000) {
+  Stocks <- names(ZList)
+  nC     <- length(Stocks)
+  d      <- dim(ZList[[1]])
+  nSim   <- d[1]; nAge <- d[2]; nSeason <- d[3]
+
+  Z  <- array(unlist(ZList),     c(nSim, nAge, nSeason, nC))
+  Sm <- array(unlist(SemelList), c(nSim, nAge, nSeason, nC))
+  f  <- matrix(unlist(STFList),  nSim, nC)
+  PG <- as.numeric(unlist(PlusGroupFlag))
+  fi <- match(From, Stocks)
+  ti <- match(To, Stocks)
+
+  NO <- SP <- array(0, c(nSim, nAge, nSeason, nC, nC))
+  block <- if (any(PG > 0)) (nAge - nSeason + 1L):nAge else integer(0)
+
+  for (b in seq_len(nSeason)) {
+    sa <- ((b - 1L) + seq_len(nAge) - 1L) %% nSeason + 1L
+    Za <- \(a) matrix(Z[, a, sa[a], ], nSim, nC)
+    Sa <- \(a) matrix(Sm[, a, sa[a], ], nSim, nC)
+    Ha <- \(a) purrr::map(HazardList, \(h) h[, a, sa[a]])
+
+    St <- array(0, c(nSim, nC, nC))
+    for (k in seq_len(nC)) St[, k, k] <- 1
+
+    Path  <- c(seq_len(nAge), rep(block, length.out = length(block) * maxCycle))
+    Semel <- c(rep(TRUE, nAge), rep(CycleSemel, length(Path) - nAge))
+    Plus  <- c(rep(FALSE, nAge), rep(TRUE, length(Path) - nAge))
+
+    for (i in seq_along(Path)) {
+      a <- Path[i]
+      if (i > 1L) {
+        a_from <- Path[i - 1L]
+        surv <- .HermSurvival(Za(a_from), if (Semel[i]) Sa(a_from), if (Plus[i]) PG)
+        St   <- .HermMove(St * array(surv, c(nSim, nC, nC)), Ha(a), fi, ti)
+      }
+      NO[, a, b, , ] <- NO[, a, b, , ] + as.vector(St)
+      SP[, a, b, , ] <- SP[, a, b, , ] + as.vector(St * array(exp(-Za(a) * f), c(nSim, nC, nC)))
+      if (i > nAge && a == nAge && max(St) < tol) break
+    }
+    if (length(block) && max(St) >= tol)
+      cli::cli_warn("Herm per-recruit plus group did not converge for stocks {.val {Stocks}}.")
+  }
+  list(no = NO, sp = SP)
+}
+
+# Survival over one step for [Sim, Stock] mortality; Semel and PlusGroup optional
+.HermSurvival <- function(Z, Semel = NULL, PlusGroup = NULL) {
+  surv <- exp(-Z)
+  if (!is.null(Semel)) surv <- surv * (1 - Semel)
+  if (!is.null(PlusGroup)) surv <- sweep(surv, 2L, PlusGroup, `*`)
+  surv
+}
+
+# Herm transitions applied to St[Sim, To, From] with per-pair hazards
+.HermMove <- function(St, Hazard, FromIdx, ToIdx) {
+  for (p in seq_along(FromIdx)) {
+    Nmov <- St[, FromIdx[p], , drop = FALSE] * Hazard[[p]]
+    St[, ToIdx[p], ]   <- St[, ToIdx[p], , drop = FALSE] + Nmov
+    St[, FromIdx[p], ] <- St[, FromIdx[p], , drop = FALSE] - Nmov
+  }
+  St
+}
+
+# Annual joint numbers-per-recruit for Herm-linked stocks, one equilibrium per year.
+# Returns NPR[[from]][[to]] = list(no, sp) of [Sim, Age, Year] arrays.
+.CalcNPRHermAnnual <- function(comp, Herm, ZList, SemelparousList, SpawnTimeFracList,
+                               PlusGroupList) {
+  Z <- purrr::map(ZList[comp], \(x) .Aperm(x, c('Sim', 'Age', 'Year')))
+  nSim  <- max(purrr::map_int(Z, \(x) dim(x)[1]))
+  Z     <- purrr::map(Z, \(x) ExtendSims(x, nSim))
+  dn    <- dimnames(Z[[1]])
+  Years <- as.numeric(dn$Year)
+  AgeClasses <- as.numeric(dn$Age)
+  d     <- dim(Z[[1]])
+
+  Semel <- purrr::map(SemelparousList[comp], \(x)
+    .ProcessSemelparous(x, nSim, AgeClasses, Years) |> .SubsetYear(Years) |>
+      ExtendSims(nSim) |> .Aperm(c('Sim', 'Age', 'Year')))
+  STF <- purrr::map(SpawnTimeFracList[comp], \(x) rep(x, nSim)[seq_len(nSim)])
+  PG  <- purrr::map_lgl(PlusGroupList[comp], \(x) isTRUE(as.logical(x)))
+
+  pairs  <- which(Herm$From %in% comp & Herm$To %in% comp)
+  Hazard <- purrr::map(Herm$Hazard[pairs], \(h)
+    .ArraySubsetYear(h, Years) |> ExtendSims(nSim) |> .Aperm(c('Sim', 'Age', 'Year')))
+
+  out <- purrr::map(stats::setNames(comp, comp), \(k)
+    purrr::map(stats::setNames(comp, comp), \(s)
+      list(no = array(0, d, dn), sp = array(0, d, dn))))
+
+  for (y in seq_len(d[3])) {
+    res <- .CalcNPRHermBlock(
+      ZList         = purrr::map(Z, \(x) x[, , y, drop = FALSE]),
+      SemelList     = purrr::map(Semel, \(x) x[, , y, drop = FALSE]),
+      STFList       = STF,
+      PlusGroupFlag = PG,
+      HazardList    = purrr::map(Hazard, \(x) x[, , y, drop = FALSE]),
+      From          = Herm$From[pairs],
+      To            = Herm$To[pairs],
+      CycleSemel    = FALSE
+    )
+    for (ki in seq_along(comp)) for (si in seq_along(comp)) {
+      out[[ki]][[si]]$no[, , y] <- res$no[, , 1, si, ki]
+      out[[ki]][[si]]$sp[, , y] <- res$sp[, , 1, si, ki]
+    }
+  }
+  out
+}
+
+# Herm-linked components (2+ stocks) among `Stocks`, from inputs$Herm
+.HermComponents <- function(Herm, Stocks) {
+  if (is.null(Herm) || !length(Herm$From)) return(list())
+  comps <- .HermConnectedComponents(match(Herm$From, Stocks), match(Herm$To, Stocks),
+                                    length(Stocks))
+  purrr::keep(comps, \(x) length(x) > 1L) |> purrr::map(\(x) Stocks[x])
 }
 
 # Aggregate a seasonal per-recruit quantity to an annual [Sim] scalar,
@@ -507,13 +653,20 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
       pr@SProduction <- zero_fill(pr@SProduction)
       pr@Removals    <- zero_fill(pr@Removals)
       pr@Landings    <- zero_fill(pr@Landings)
+      if (length(pr@Misc$HermCross))
+        pr@Misc$HermCross <- purrr::map(pr@Misc$HermCross, \(x) {
+          Fixed <- x$SPR0
+          x <- purrr::map(x, zero_fill)
+          x$SPR0 <- Fixed
+          x
+        })
       PRList[[i]]    <- pr
     }
   }
 
   PerRecruit             <- new('perrecruit')
   PerRecruit@apicalF     <- apicalF
-  
+
   PerRecruit@NPR0        <- PRList[[1]]@NPR0
   PerRecruit@NPR0_SP     <- PRList[[1]]@NPR0_SP
   PerRecruit@SPR0        <- PRList[[1]]@SPR0 
@@ -527,7 +680,19 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
   PerRecruit@Removals    <- purrr::map(PRList, \(pr) pr@Removals)    |> List2Array('F')
   PerRecruit@Landings    <- purrr::map(PRList, \(pr) pr@Landings)    |> List2Array('F')
   PerRecruit@Misc        <- PRList[[1]]@Misc
+  PerRecruit@Misc$HermCross <- .BindHermCrossF(PRList)
   PerRecruit
+}
+
+# Herm cross per-recruit terms bound over the F grid (SPR0 is F-invariant)
+.BindHermCrossF <- function(PRList) {
+  Cross1 <- PRList[[1]]@Misc$HermCross
+  if (!length(Cross1)) return(NULL)
+  purrr::imap(Cross1, \(x, k) {
+    out <- purrr::imap(x, \(arr, v)
+      if (v == 'SPR0') arr else purrr::map(PRList, \(pr) pr@Misc$HermCross[[k]][[v]]) |> List2Array('F'))
+    out
+  })
 }
 
 
@@ -554,11 +719,13 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
                                    CalendarYears    = NULL,
                                    RefSeason        = NULL,
                                    NPR0List         = NULL,
-                                   NPR0_SPList      = NULL) {
+                                   NPR0_SPList      = NULL,
+                                   Herm             = NULL) {
 
   # Dispatch to seasonal implementation when there are multiple seasons.
   if (nSeason > 1L)
     return(.CalcPerRecruitFScalarSeasonal(
+      Herm                      = Herm,
       apicalF                   = apicalF,
       StockFleetAllocation      = StockFleetAllocation,
       NaturalMortalityList      = NaturalMortalityList,
@@ -696,6 +863,28 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
     NPRF_SPList <- NPRFList
   }
 
+  HermCrossNPR <- list()
+  for (comp in .HermComponents(Herm, names(NaturalMortalityList))) {
+    JointF <- .CalcNPRHermAnnual(comp, Herm, ZDeadTotalList, SemelparousList,
+                                 SpawnTimeFracList, PlusGroupList)
+    Joint0 <- .CalcNPRHermAnnual(comp, Herm, NaturalMortalityList, SemelparousList,
+                                 SpawnTimeFracList, PlusGroupList)
+    for (st in comp) {
+      NPRFList[[st]]    <- JointF[[st]][[st]]$no
+      NPRF_SPList[[st]] <- JointF[[st]][[st]]$sp
+      NPR0List[[st]]    <- Joint0[[st]][[st]]$no
+      NPR0_SPList[[st]] <- Joint0[[st]][[st]]$sp
+    }
+    for (k in comp) {
+      Others <- setdiff(comp, k)
+      HermCrossNPR[[k]] <- list(
+        NPRF    = purrr::map(stats::setNames(Others, Others), \(s) JointF[[k]][[s]]$no),
+        NPRF_SP = purrr::map(stats::setNames(Others, Others), \(s) JointF[[k]][[s]]$sp),
+        NPR0_SP = purrr::map(stats::setNames(Others, Others), \(s) Joint0[[k]][[s]]$sp)
+      )
+    }
+  }
+
   SPRFList <- purrr::map2(
     NPRF_SPList, FecundityList,
     \(NPRF_SP, Fecundity) {
@@ -712,22 +901,20 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
   }
 
   StockNamesOrdered <- names(NPRFList)
+  SPR0OwnList <- .CalcSPR0Own(NPR0_SPList, FecundityList, Years)
+  SelfOnly    <- .SPFromSelfOnly(SPFrom, StockNamesOrdered)
   SPR <- purrr::map(StockNamesOrdered, \(stock_name) {
     w <- SPFrom[[stock_name]]
     Reduce(`+`, purrr::map2(w$from, w$weight, \(idx, wt) {
       src <- StockNamesOrdered[idx]
-      wt * ArrayDivide(SPRFList[[src]], SPR0List[[src]])
+      SPR0src <- if (SelfOnly[[src]]) SPR0List[[src]] else SPR0OwnList[[src]]
+      wt * ArrayDivide(SPRFList[[src]], .ArraySubsetYear(SPR0src, Years))
     }))
   }) |>
     stats::setNames(StockNamesOrdered) |>
     List2Array('Stock', pos = 2) |>
     .ArraySubsetYear(Years)
   
-  NDeadList <- purrr::map2(
-    NPRFList, ZDeadTotalList,
-    \(NPRF, ZDeadTotal) ArrayMultiply(NPRF, (1 - exp(-ZDeadTotal)))
-  )
-
   ToFishingRatioList <- function(FList) {
     out <- purrr::map2(
       FList, ZDeadTotalList,
@@ -745,60 +932,90 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
   FishingRetainList   <- ToFishingRatioList(FRetainList)
   FishingDiscDeadList <- ToFishingRatioList(FDiscardDeadList)
 
-  Landings <- purrr::pmap(
-    list(FishingRetainList, NDeadList, WeightFleetRetainedList),
-    \(FishingRetain, NDead, WeightFleet) {
-      NDeadFleet <- AddDimension(NDead, 'Fleet') |>
-        .ExtendFleets(Fleets = FleetNames)
-      ArrayMultiply(FishingRetain, NDeadFleet) |>
-        ArrayMultiply(WeightFleet) |>
-        SumOverFleet() |>
+  .DerivePerRecruit <- function(NPRFList, NPRF_SPList) {
+    NDeadList <- purrr::map2(
+      NPRFList, ZDeadTotalList,
+      \(NPRF, ZDeadTotal) ArrayMultiply(NPRF, (1 - exp(-ZDeadTotal)))
+    )
+
+    Landings <- purrr::pmap(
+      list(FishingRetainList, NDeadList, WeightFleetRetainedList),
+      \(FishingRetain, NDead, WeightFleet) {
+        NDeadFleet <- AddDimension(NDead, 'Fleet') |>
+          .ExtendFleets(Fleets = FleetNames)
+        ArrayMultiply(FishingRetain, NDeadFleet) |>
+          ArrayMultiply(WeightFleet) |>
+          SumOverFleet() |>
+          SumOverAge()
+      }
+    ) |>
+      List2Array('Stock', pos = 2)
+
+    Discards <- purrr::pmap(
+      list(FishingInteractList, FishingRetainList, FishingDiscDeadList, NDeadList,
+          WeightFleetSelectedList, WeightFleetRetainedList),
+      \(FInteractRatio, FRetainRatio, FDiscDeadRatio, NDead, WSel, WRet) {
+        NDeadFleet <- AddDimension(NDead, 'Fleet') |>
+          .ExtendFleets(Fleets = FleetNames)
+        Inum <- ArrayMultiply(FInteractRatio, NDeadFleet)
+        Lnum <- ArrayMultiply(FRetainRatio, NDeadFleet)
+        Dnum <- ArrayMultiply(FDiscDeadRatio, NDeadFleet)
+        IW   <- ArrayMultiply(Inum, WSel)
+        LW   <- ArrayMultiply(Lnum, WRet)
+        discTotN <- ArraySubtract(Inum, Lnum)
+        DW <- ArrayDivide(ArrayMultiply(ArraySubtract(IW, LW), Dnum), discTotN)
+        SumOverFleet(DW) |> SumOverAge()
+      }
+    ) |>
+      List2Array('Stock', pos = 2)
+
+    Removals <- ArraySum(Landings, Discards)
+
+    Biomass <- purrr::map2(
+      NPRFList, WeightList,
+      \(NPRF, Weight) ArrayMultiply(NPRF, Weight) |> SumOverAge()
+    ) |>
+      List2Array("Stock", pos = 2)
+    
+    SBiomass <- purrr::pmap(
+      list(NPRF_SPList, WeightList, MaturityList),
+      \(NPRF_SP, Weight, Maturity)
+      ArrayMultiply(NPRF_SP, Weight) |>
+        ArrayMultiply(Maturity) |>
         SumOverAge()
-    }
-  ) |>
-    List2Array('Stock', pos = 2)
+    ) |>
+      List2Array("Stock", pos = 2)
+    
+    SProduction <- purrr::map2(
+      NPRF_SPList, FecundityList,
+      \(NPRF_SP, Fecundity) ArrayMultiply(NPRF_SP, Fecundity) |> SumOverAge()
+    ) |>
+      List2Array("Stock", pos = 2)
 
-  Discards <- purrr::pmap(
-    list(FishingInteractList, FishingRetainList, FishingDiscDeadList, NDeadList,
-        WeightFleetSelectedList, WeightFleetRetainedList),
-    \(FInteractRatio, FRetainRatio, FDiscDeadRatio, NDead, WSel, WRet) {
-      NDeadFleet <- AddDimension(NDead, 'Fleet') |>
-        .ExtendFleets(Fleets = FleetNames)
-      Inum <- ArrayMultiply(FInteractRatio, NDeadFleet)
-      Lnum <- ArrayMultiply(FRetainRatio, NDeadFleet)
-      Dnum <- ArrayMultiply(FDiscDeadRatio, NDeadFleet)
-      IW   <- ArrayMultiply(Inum, WSel)
-      LW   <- ArrayMultiply(Lnum, WRet)
-      discTotN <- ArraySubtract(Inum, Lnum)
-      DW <- ArrayDivide(ArrayMultiply(ArraySubtract(IW, LW), Dnum), discTotN)
-      SumOverFleet(DW) |> SumOverAge()
-    }
-  ) |>
-    List2Array('Stock', pos = 2)
+    NPRF <- purrr::map(NPRFList, SumOverAge) |> List2Array("Stock", pos = 2)
 
-  Removals <- ArraySum(Landings, Discards)
+    list(Landings = Landings, Removals = Removals, Biomass = Biomass,
+         SBiomass = SBiomass, SProduction = SProduction, NPRF = NPRF)
+  }
 
-  Biomass <- purrr::map2(
-    NPRFList, WeightList,
-    \(NPRF, Weight) ArrayMultiply(NPRF, Weight) |> SumOverAge()
-  ) |>
-    List2Array("Stock", pos = 2)
-  
-  SBiomass <- purrr::pmap(
-    list(NPRF_SPList, WeightList, MaturityList),
-    \(NPRF_SP, Weight, Maturity)
-    ArrayMultiply(NPRF_SP, Weight) |>
-      ArrayMultiply(Maturity) |>
-      SumOverAge()
-  ) |>
-    List2Array("Stock", pos = 2)
-  
-  SProduction <- purrr::map2(
-    NPRF_SPList, FecundityList,
-    \(NPRF_SP, Fecundity) ArrayMultiply(NPRF_SP, Fecundity) |> SumOverAge()
-  ) |>
-    List2Array("Stock", pos = 2)
-  
+  Derived     <- .DerivePerRecruit(NPRFList, NPRF_SPList)
+  Landings    <- Derived$Landings
+  Removals    <- Derived$Removals
+  Biomass     <- Derived$Biomass
+  SBiomass    <- Derived$SBiomass
+  SProduction <- Derived$SProduction
+
+  HermCross <- purrr::imap(HermCrossNPR, \(x, k) {
+    Full <- \(lst) purrr::map(stats::setNames(names(NPRFList), names(NPRFList)), \(s)
+      if (s %in% names(lst)) lst[[s]] else NPRFList[[s]] * 0)
+    Cross <- .DerivePerRecruit(Full(x$NPRF), Full(x$NPRF_SP))
+    Cross$SPRF <- Cross$SProduction
+    Cross$SPR0 <- purrr::map2(Full(x$NPR0_SP), FecundityList, \(NPR0_SP, Fecundity)
+      ArrayMultiply(NPR0_SP, Fecundity) |> SumOverAge()) |>
+      List2Array("Stock", pos = 2)
+    Cross
+  })
+
   NPR0    <- purrr::map(NPR0List, SumOverAge) |> List2Array("Stock", pos = 2)
   NPRF    <- purrr::map(NPRFList, SumOverAge) |> List2Array("Stock", pos = 2)
   
@@ -822,7 +1039,30 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
   PerRecruit@SProduction <- SProduction
   PerRecruit@Removals    <- Removals
   PerRecruit@Landings    <- Landings
+  SPR0Own <- SPR0OwnList[StockNamesOrdered] |> List2Array("Stock", pos = 2)
+  SPR0Own <- array(SPR0Own, dim = unname(dim(SPR0Own)), dimnames = dimnames(SPR0Own))
+  PerRecruit@Misc        <- list(SPR0Own = SPR0Own)
+  if (length(HermCross)) PerRecruit@Misc$HermCross <- HermCross
   PerRecruit
+}
+
+# Unfished spawning production per recruit from each stock's own numbers (annual models)
+.CalcSPR0Own <- function(NPR0_SPList, FecundityList, Years) {
+  out <- purrr::map2(NPR0_SPList, FecundityList, \(NPR0_SP, Fecundity) {
+    SPR0 <- ArrayMultiply(NPR0_SP, Fecundity) |> SumOverAge()
+    if (!is.array(SPR0))
+      SPR0 <- array(SPR0, length(SPR0), dimnames = list(Year = Years))
+    SPR0
+  })
+  names(out) <- names(NPR0_SPList)
+  out
+}
+
+.SPFromSelfOnly <- function(SPFrom, StockNames) {
+  purrr::map_lgl(stats::setNames(StockNames, StockNames), \(nm) {
+    w <- SPFrom[[nm]]
+    length(w$from) == 1L && identical(StockNames[w$from], nm)
+  })
 }
 
 
@@ -848,7 +1088,8 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
                                              nSeason,
                                              SeasonalWeightsList,
                                              CalendarYears,
-                                             RefSeason = NULL) {
+                                             RefSeason = NULL,
+                                             Herm      = NULL) {
 
   nStocks    <- length(NaturalMortalityList)
   nCalYears  <- length(CalendarYears)
@@ -918,6 +1159,12 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
 
   SimNames <- dimnames(NaturalMortalityList[[1]])[['Sim']]
 
+  HermComps  <- .HermComponents(Herm, StockNames)
+  HermPairs  <- purrr::map(HermComps, \(comp) which(Herm$From %in% comp & Herm$To %in% comp))
+  names(HermPairs) <- purrr::map_chr(HermComps, \(comp) paste(comp, collapse = '|'))
+  HermHazard <- if (length(HermComps))
+    purrr::map(Herm$Hazard, \(h) ExtendSims(h, nSimAll) |> .Aperm(c('Sim', 'Age', 'Year')))
+
   # For each calendar year, compute annual per-recruit quantities
   perYear <- purrr::map(seq_len(nCalYears), \(cy) {
 
@@ -926,50 +1173,74 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
     MaturityList_cy     <- purrr::map(MaturityList,  \(x) x[, , ts_idx, drop = FALSE])
     RefSeasonWeights_cy <- .RefSeasonWeights(FecundityList_cy, MaturityList_cy, nSeason, RefSeason)
 
-    purrr::pmap(
-      list(
-        ZDeadTotalList, NaturalMortalityList, PlusGroupList,
-        SemelparousList, SpawnTimeFracList, FecundityList, WeightList,
-        MaturityList, FDeadList, FDeadTotalList, FRetainList, FInteractList,
-        FDiscardDeadList, WeightFleetRetainedList, WeightFleetSelectedList,
-        SPR0List, SeasonalWeightsList
-      ),
-      \(Z_full, M_full, PlusGroup, Semel_full, STF, Fec_full, W_full,
-        Mat_full, FDead_full, FDeadTot_full, FRetain_full, FInteract_full,
-        FDiscDead_full, WF_full, WFSel_full, SPR0_full, pi_s_full) {
+    seas_ts <- Years[ts_idx]  # seasonal time step labels for this calendar year
+    Slice   <- \(x) if (is.array(x)) x[, , ts_idx, drop = FALSE] else x
 
-        nSim <- dim(Z_full)[1]
-        nAge <- dim(Z_full)[2]
+    # pi_s: seasonal recruitment weights [Sim, nSeason]
+    PiList <- purrr::map(SeasonalWeightsList, \(pi_s_full)
+      matrix(as.numeric(.ArraySubsetYear(pi_s_full, seas_ts)), nrow = nSimAll))
 
-        seas_ts <- Years[ts_idx]  # seasonal time step labels for this calendar year
+    NPRList <- purrr::map(stats::setNames(StockNames, StockNames), \(st) {
+      Z_cy     <- Slice(ZDeadTotalList[[st]])
+      Z0_cy    <- Slice(NaturalMortalityList[[st]])
+      Semel_cy <- Slice(SemelparousList[[st]])
+      STF      <- SpawnTimeFracList[[st]]
+      PG       <- PlusGroupList[[st]]
+      NPR0_no  <- .CalcNPRSeasonal(Z0_cy, PG, 0, Semel_cy)
+      NPRF_no  <- .CalcNPRSeasonal(Z_cy,  PG, 0, Semel_cy)
+      list(NPR0_no = NPR0_no,
+           NPR0_sp = if (IsSpawnTimeFrac) .CalcNPRSeasonal(Z0_cy, PG, STF, Semel_cy) else NPR0_no,
+           NPRF_no = NPRF_no,
+           NPRF_sp = if (IsSpawnTimeFrac) .CalcNPRSeasonal(Z_cy, PG, STF, Semel_cy) else NPRF_no)
+    })
 
-        # Extract this calendar year's seasons: [Sim, Age, nSeason]
-        Z_cy     <- Z_full[,  , ts_idx, drop = FALSE]
-        M_cy     <- M_full[,  , ts_idx, drop = FALSE]
-        Fec_cy   <- Fec_full[, , ts_idx, drop = FALSE]
-        W_cy     <- W_full[,  , ts_idx, drop = FALSE]
-        Mat_cy   <- Mat_full[, , ts_idx, drop = FALSE]
-        Semel_cy <- if (is.array(Semel_full)) Semel_full[, , ts_idx, drop=FALSE] else FALSE
+    CrossNPR <- list()
+    for (comp in HermComps) {
+      Args <- list(
+        SemelList     = purrr::map(SemelparousList[comp], \(x)
+          if (is.array(Slice(x))) Slice(x) else array(0, dim(Slice(ZDeadTotalList[[1]])))),
+        STFList       = purrr::map(SpawnTimeFracList[comp], \(x) rep(x, nSimAll)[seq_len(nSimAll)]),
+        PlusGroupFlag = purrr::map_lgl(PlusGroupList[comp], \(x) isTRUE(as.logical(x))),
+        HazardList    = purrr::map(HermHazard[HermPairs[[paste(comp, collapse = '|')]]], Slice),
+        From          = Herm$From[HermPairs[[paste(comp, collapse = '|')]]],
+        To            = Herm$To[HermPairs[[paste(comp, collapse = '|')]]],
+        CycleSemel    = TRUE
+      )
+      JointF <- do.call(.CalcNPRHermBlock, c(list(ZList = purrr::map(ZDeadTotalList[comp], Slice)), Args))
+      Joint0 <- do.call(.CalcNPRHermBlock, c(list(ZList = purrr::map(NaturalMortalityList[comp], Slice)), Args))
+      Get <- \(J, s, k, v) J[[v]][, , , match(s, comp), match(k, comp), drop = TRUE] |>
+        array(dim = c(nSimAll, dim(J[[v]])[2:3]))
+      for (s in comp)
+        NPRList[[s]] <- list(NPR0_no = Get(Joint0, s, s, 'no'), NPR0_sp = Get(Joint0, s, s, 'sp'),
+                             NPRF_no = Get(JointF, s, s, 'no'), NPRF_sp = Get(JointF, s, s, 'sp'))
+      for (k in comp) for (s in setdiff(comp, k))
+        CrossNPR[[k]][[s]] <- list(NPR0_no = Get(Joint0, s, k, 'no'), NPR0_sp = Get(Joint0, s, k, 'sp'),
+                                   NPRF_no = Get(JointF, s, k, 'no'), NPRF_sp = Get(JointF, s, k, 'sp'))
+    }
 
-        # pi_s: seasonal recruitment weights [Sim, nSeason]
-        pi_s_cy_arr <- .ArraySubsetYear(pi_s_full, seas_ts)
-        pi_s_cy     <- matrix(as.numeric(pi_s_cy_arr), nrow = nSim)
+    AggStock <- function(st, NPR, pi_s_cy) {
+        i        <- match(st, StockNames)
+        nSim     <- nSimAll
+        Z_cy     <- Slice(ZDeadTotalList[[i]])
+        Fec_cy   <- Slice(FecundityList[[i]])
+        W_cy     <- Slice(WeightList[[i]])
+        Mat_cy   <- Slice(MaturityList[[i]])
+        FDead_full     <- FDeadList[[i]]
+        FRetain_full   <- FRetainList[[i]]
+        FInteract_full <- FInteractList[[i]]
+        FDiscDead_full <- FDiscardDeadList[[i]]
+        WF_full        <- WeightFleetRetainedList[[i]]
+        WFSel_full     <- WeightFleetSelectedList[[i]]
 
         # Seasonal SPR0 [Sim, nSeason], weighted average gives annual SPR0 [Sim]
-        SPR0_cy_arr <- .ArraySubsetYear(SPR0_full, seas_ts)  # [Sim, nSeason]
+        SPR0_cy_arr <- .ArraySubsetYear(SPR0List[[i]], seas_ts)  # [Sim, nSeason]
         SPR0_cy_mat <- matrix(as.numeric(SPR0_cy_arr), nrow = nSim)
         SPR0_ann    <- rowSums(pi_s_cy * SPR0_cy_mat)
 
-        # NPR: F=0 (abundances), unfished
-        Z0_cy    <- M_cy
-        NPR0_no  <- .CalcNPRSeasonal(Z0_cy, PlusGroup, 0,   Semel_cy)
-        NPR0_sp  <- if (IsSpawnTimeFrac)
-          .CalcNPRSeasonal(Z0_cy, PlusGroup, STF, Semel_cy) else NPR0_no
-
-        # NPR: with fishing
-        NPRF_no  <- .CalcNPRSeasonal(Z_cy, PlusGroup, 0,   Semel_cy)
-        NPRF_sp  <- if (IsSpawnTimeFrac)
-          .CalcNPRSeasonal(Z_cy, PlusGroup, STF, Semel_cy) else NPRF_no
+        NPR0_no <- NPR$NPR0_no
+        NPR0_sp <- NPR$NPR0_sp
+        NPRF_no <- NPR$NPRF_no
+        NPRF_sp <- NPR$NPRF_sp
 
         # Annual aggregate quantities: [nSim] scalars
         ones_cy <- array(1, dim(Z_cy))   # for summing NPR over ages without weighting
@@ -1018,9 +1289,15 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
           Removals    = Removals_ann,
           Landings    = Landings_ann
         )
-      }
-    )  # list over stocks, each a named list of [nSim] vectors
+    }
+
+    Own   <- purrr::map(StockNames, \(st) AggStock(st, NPRList[[st]], PiList[[st]]))
+    Cross <- purrr::imap(CrossNPR, \(targets, k)
+      purrr::imap(targets, \(NPR, s) AggStock(s, NPR, PiList[[k]])))
+    list(Own = Own, Cross = Cross)
   })   # list over calendar years
+  HermCrossYear <- purrr::map(perYear, \(x) x$Cross)
+  perYear       <- purrr::map(perYear, \(x) x$Own)
 
   # Assemble into [Sim, Stock, Year(nCalYears)] arrays
   WrapSlot <- function(slot_name) {
@@ -1042,6 +1319,7 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
   NPRF        <- WrapSlot('NPRF')
   NPRF_SP     <- WrapSlot('NPRF_SP')
   SPR0f       <- WrapSlot('SPR0f')    # unfished SP per recruit, per stock
+  SPR0ann     <- WrapSlot('SPR0_ann')
   SPRFf       <- WrapSlot('SPRFf')    # fished SP per recruit, per stock
   Biomass     <- WrapSlot('Biomass')
   SBiomass    <- WrapSlot('SBiomass')
@@ -1073,11 +1351,15 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
     base::Reduce(pmax, f)  # max over stocks
   })
 
+  SelfOnly <- .SPFromSelfOnly(SPFrom, StockNames)
+  SPR0 <- SPR0f
+  SPR0[, !SelfOnly, ] <- SPR0ann[, !SelfOnly, ]
+
   PerRecruit             <- new('perrecruit')
   PerRecruit@apicalF     <- apicalF
   PerRecruit@NPR0        <- NPR0
   PerRecruit@NPR0_SP     <- NPR0_SP
-  PerRecruit@SPR0        <- SPR0f
+  PerRecruit@SPR0        <- SPR0
   PerRecruit@NPRF        <- NPRF
   PerRecruit@NPRF_SP     <- if (IsSpawnTimeFrac) NPRF_SP else NPRF
   PerRecruit@SPRF        <- SPRFf
@@ -1087,14 +1369,58 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
   PerRecruit@SProduction <- SProduction
   PerRecruit@Removals    <- Removals
   PerRecruit@Landings    <- Landings
-  PerRecruit@Misc        <- list(F_annual_apical = F_annual_apical)
+  PerRecruit@Misc        <- list(F_annual_apical = F_annual_apical, SPR0Own = SPR0f)
+
+  Sources <- names(HermCrossYear[[1]])
+  if (length(Sources)) {
+    Slots <- c(NPRF = 'NPRF', Biomass = 'Biomass', SBiomass = 'SBiomass',
+               SProduction = 'SProduction', Removals = 'Removals', Landings = 'Landings',
+               SPRF = 'SPRFf', SPR0 = 'SPR0f')
+    PerRecruit@Misc$HermCross <- purrr::map(stats::setNames(Sources, Sources), \(k)
+      purrr::map(Slots, \(v) {
+        arr <- array(0, dim = c(length(SimNames), nStocks, nCalYears),
+                     dimnames = list(Sim = SimNames, Stock = StockNames, Year = CalendarYears))
+        for (cy in seq_len(nCalYears))
+          for (s in names(HermCrossYear[[cy]][[k]]))
+            arr[, s, cy] <- HermCrossYear[[cy]][[k]][[s]][[v]]
+        arr
+      }))
+  }
   PerRecruit
 }
 
 
 
+.HermSubsetSim <- function(Herm, sim) {
+  if (is.null(Herm)) return(NULL)
+  Herm$Hazard <- purrr::map(Herm$Hazard, \(h) {
+    h <- .Aperm(h, c('Sim', 'Age', 'Year'))
+    h[min(sim, dim(h)[1]), , , drop = FALSE]
+  })
+  Herm
+}
+
+# Herm pairs among `Stocks` (one complex), for .PrepPerRecruitInputs()
+.HermForStocks <- function(OM, Stocks) {
+  Resolved <- .HermResolvePairs(OM, Years(OM, 'Hist'))
+  if (!length(Resolved$From)) return(NULL)
+  StockNms <- StockNames(OM)
+  From <- StockNms[Resolved$From]
+  To   <- StockNms[Resolved$To]
+  inFrom <- From %in% Stocks
+  inTo   <- To %in% Stocks
+  if (any(inFrom != inTo))
+    cli::cli_warn(c(
+      "!" = "{.field Herm}-linked stocks {.val {unique(c(From[inFrom != inTo], To[inFrom != inTo]))}} are in different complexes.",
+      "i" = "Per-recruit and MSY reference points ignore {.field Herm} transitions between complexes. Put {.field Herm}-linked stocks in the same {.field OM@Complexes} entry to include them."
+    ), .frequency = "once", .frequency_id = "MSEtool_herm_cross_complex")
+  keep <- inFrom & inTo
+  if (!any(keep)) return(NULL)
+  list(From = From[keep], To = To[keep], Hazard = Resolved$Hazard[keep])
+}
+
 .PrepPerRecruitInputs <- function(StockList, FleetList, SPR0List, Years, EffortYears = NULL,
-                                  RefSeason = NULL) {
+                                  RefSeason = NULL, Herm = NULL) {
 
   FleetNames <- names(FleetList[[1]])
 
@@ -1313,6 +1639,25 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
     Stock@SRR@RelRecFun
   })
 
+  SRRModelList <- purrr::map(StockList, \(Stock) {
+    mod <- Stock@SRR@Model
+    if (inherits(mod, 'character')) mod <- get(mod)
+    mod
+  })
+
+  if (!is.null(Herm)) {
+    nAgeHerm <- length(StockList[[match(Herm$From[1], names(StockList))]]@Ages@Classes)
+    HermPG   <- purrr::map_lgl(unique(c(Herm$From, Herm$To)), \(st)
+      isTRUE(as.logical(PlusGroupList[[st]])))
+    if (nSeason > 1L && length(unique(HermPG)) > 1L)
+      cli::cli_abort("{.field Herm}-linked stocks must all have the same {.field Ages@PlusGroup} in seasonal models.")
+    Herm$Hazard <- purrr::map(Herm$Hazard, \(h) {
+      h <- .ArraySubsetYear(h, Years) |> ExtendSims(nSim_true)
+      if (nSeason > 1L && all(HermPG)) h <- .ExtendPlusGroupSeasons(h, nSeason, nAgeHerm)
+      h
+    })
+  }
+
   if (nSeason > 1L) {
     for (st in seq_along(StockList)) {
       if (!isTRUE(as.logical(PlusGroupList[[st]]))) next
@@ -1350,6 +1695,7 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
     RecParsList               = RecParsList,
     R0                        = R0,
     RelRecFunList             = RelRecFunList,
+    SRRModelList              = SRRModelList,
     FleetNames                = FleetNames,
     Years                     = Years,
     nSeason                   = nSeason,
@@ -1357,6 +1703,7 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
     CalendarYears             = cal_years,
     RefSeason                 = RefSeason,
     NPR0List                  = NPR0List,
-    NPR0_SPList               = NPR0_SPList
+    NPR0_SPList               = NPR0_SPList,
+    Herm                      = Herm
   )
 }

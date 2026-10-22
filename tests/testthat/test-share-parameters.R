@@ -24,6 +24,7 @@ test_that("one-hop SPFrom validates and PopulateOM() succeeds", {
   sn <- StockNames(om)
 
   om@Stock[[2]]@SRR@SPFrom <- sn[1]
+  om@Stock[[2]]@SRR@ShareSPFrom <- FALSE
   out <- PopulateOM(om, silent = TRUE)
   expect_s4_class(out, "om")
 })

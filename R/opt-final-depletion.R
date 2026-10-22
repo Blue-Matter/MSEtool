@@ -33,6 +33,7 @@
 .OptFinalDepletion <- function(Hist, parallel=FALSE, silent=FALSE) {
 
   Groups <- .SPFromConnectedGroups(Hist@OM)
+  .CheckSelfBlendDepletion(Groups, Hist@OM)
 
   AnyActive <- any(purrr::map_lgl(Groups, \(g)
     any(purrr::map_lgl(g$sources, \(s) length(Hist@OM@Stock[[s]]@Depletion@Final) > 0))
@@ -157,6 +158,20 @@
     ))
 
   c(group, list(active = TRUE, value = vals[1], reference = refs[1]))
+}
+
+.CheckSelfBlendDepletion <- function(Groups, OM) {
+  for (g in Groups) {
+    self_blend <- g$dependents[purrr::map2_lgl(g$dependents, g$weights, \(d, w) d %in% w$from)]
+    if (!length(self_blend)) next
+    has_final <- purrr::map_lgl(g$members, \(s) length(OM@Stock[[s]]@Depletion@Final) > 0)
+    if (any(has_final))
+      cli::cli_abort(c(
+        "x" = "{.field Depletion@Final} cannot be fitted for stock{?s} {.val {StockNames(OM)[self_blend]}}: {.field SRR@SPFrom} blends the stock's own spawning production with another stock's.",
+        "i" = "Remove {.field Depletion@Final} from stocks {.val {StockNames(OM)[g$members]}} and set {.field Catchability@Efficiency} directly."
+      ))
+  }
+  invisible(TRUE)
 }
 
 .ActiveGroupInfo <- function(ResolvedGroups) {

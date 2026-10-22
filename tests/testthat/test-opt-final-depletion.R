@@ -26,6 +26,7 @@ skip_on_cran()
   if (!is.null(final1)) om@Stock[[1]]@Depletion@Reference <- 'B0'
 
   om@Stock[[2]]@SRR@SPFrom <- sn[1]
+  om@Stock[[2]]@SRR@ShareSPFrom <- FALSE
   om@Stock[[2]]@Depletion@Final <- final2
   if (!is.null(final2)) om@Stock[[2]]@Depletion@Reference <- 'B0'
 

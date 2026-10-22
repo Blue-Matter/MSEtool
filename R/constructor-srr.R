@@ -55,6 +55,11 @@
 #'   (the stock recruits from its own spawning production). Relevant only in
 #'   multi-stock operating models. See [srr-class] for details and
 #'   constraints on the weighted form. Default `NULL`.
+#' @param ShareSPFrom `logical(1)`. When `SPFrom` names a single other stock,
+#'   copy that stock's `Pars`, `SD`, `AC`, and recruitment deviations into this
+#'   stock during [Populate()] (a user-supplied `RecDevHist` is kept). Set to
+#'   `FALSE` for an independent stock-recruitment curve and recruitment
+#'   deviations. See [srr-class]. Default `TRUE`.
 #' @param TruncSD `numeric(1)`. Number of standard deviations at which the
 #'   log-normal recruitment deviation distribution is truncated. Default `2`.
 #' @param RecDevInit `matrix` or `NULL`. Pre-specified recruitment deviations
@@ -179,6 +184,20 @@
 #'             SPFrom = c(Stock1 = 0.6, Stock2 = 0.4))
 #' ```
 #'
+#' With a single source, the stock uses the source's stock-recruitment
+#' parameters and recruitment deviations by default (`ShareSPFrom = TRUE`),
+#' with its own `R0`. For example, a male stock recruiting from the female
+#' stock's spawning production follows the female's stock-recruitment curve
+#' and recruitment deviations, and `R0` sets the male share of recruits. Use
+#' `ShareSPFrom = FALSE` to give the stock its own `Pars`, `SD`, `AC`, and
+#' recruitment deviations:
+#'
+#' ```r
+#' # Sink population with its own steepness and recruitment variability
+#' srr_sink <- SRR(Pars = list(h = 0.5), R0 = 200, SD = 0.6,
+#'                 SPFrom = "Source", ShareSPFrom = FALSE)
+#' ```
+#'
 #' ## Pass-Through Access from a Stock
 #'
 #' When `Pars` is a non-list S4 object with an `SRR` slot, `SRR()` returns
@@ -203,6 +222,7 @@
 #' TruncSD(srr)       <- 2
 #' SpawnTimeFrac(srr) <- 0.5
 #' SPFrom(srr)        <- 1
+#' ShareSPFrom(srr)   <- FALSE
 #' RelRecFun(srr)     <- "Ricker_RelRec"
 #' RecDevHist(srr)    <- my_hist_matrix
 #' RecDevProj(srr)    <- my_proj_matrix
@@ -241,6 +261,7 @@ SRR <- function(Pars = list(h = NA),
                 SD = NULL,
                 AC = NULL,
                 SPFrom = NULL,
+                ShareSPFrom = TRUE,
                 TruncSD = 3,
                 RecDevInit = NULL,
                 RecDevHist = NULL,
@@ -265,6 +286,7 @@ SRR <- function(Pars = list(h = NA),
     SD            = SD,
     AC            = AC,
     SPFrom        = SPFrom,
+    ShareSPFrom   = ShareSPFrom,
     TruncSD       = TruncSD,
     RecDevInit    = RecDevInit,
     RecDevHist    = RecDevHist,
@@ -325,6 +347,22 @@ SPFrom <- function(x) {
 `SPFrom<-` <- function(x, value) {
   .CheckClass(x, "srr", "x")
   x@SPFrom <- value
+  methods::validObject(x)
+  x
+}
+
+#' @rdname SRR
+#' @export
+ShareSPFrom <- function(x) {
+  .CheckClass(x, "srr", "x")
+  x@ShareSPFrom
+}
+
+#' @rdname SRR
+#' @export
+`ShareSPFrom<-` <- function(x, value) {
+  .CheckClass(x, "srr", "x")
+  x@ShareSPFrom <- value
   methods::validObject(x)
   x
 }

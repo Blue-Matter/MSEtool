@@ -116,23 +116,26 @@ CalcMSY <- function(Hist,
   
   SPR0_Full_List <- Array2List(Hist@Reference@SPR0) |>
     .SubsetStock(Stocks = complex_stocks)
-  
+
+  HermComplex <- .HermForStocks(Hist@OM, complex_stocks)
+
   logApicalFRange <- log(c(1E-5, Hist@OM@maxF))
-  
+
   MSYRefPoints <- Hist@Reference@MSY
-  
+
   if (IdenticalHist) {
     .MsgStatus("Calculating MSY reference points for {.complex {complex_name}}", silent)
-    
+
     StockList_sim <- Subset(StockList,      Sims = 1)
     FleetList_sim <- Subset(FleetList,      Sims = 1)
     SPR0_List_sim <- Subset(SPR0_Full_List, Sims = 1)
-    
+
     results_sim1 <- purrr::map(seq_along(Years), \(ts) {
-      
+
       inputs <- .PrepPerRecruitInputs(StockList_sim, FleetList_sim,
                                      SPR0_List_sim, Years[ts],
-                                     EffortYears = RefEffortYears, RefSeason = RefSeason)
+                                     EffortYears = RefEffortYears, RefSeason = RefSeason,
+                                     Herm = .HermSubsetSim(HermComplex, 1))
 
       opt <- optimize(
         .OptCalcRefMSYSims,
@@ -178,8 +181,9 @@ CalcMSY <- function(Hist,
                                       FleetList   = FleetList_sim,
                                       SPR0List    = SPR0_List_sim,
                                       Years       = Years[ts],
-                                      EffortYears = RefEffortYears, 
-                                      RefSeason   = RefSeason)
+                                      EffortYears = RefEffortYears,
+                                      RefSeason   = RefSeason,
+                                      Herm        = .HermSubsetSim(HermComplex, sim))
 
       opt <- optimize(
         .OptCalcRefMSYSims,
@@ -225,7 +229,7 @@ CalcMSY <- function(Hist,
       .options = furrr::furrr_options(
         globals  = c('StockList', 'FleetList', 'SPR0_Full_List', 'Years',
                      'complex_name', 'type', 'logApicalFRange',
-                     'RefSeason', 'RefEffortYears'),
+                     'RefSeason', 'RefEffortYears', 'HermComplex'),
         packages = "MSEtool",
         seed     = 101
       )
@@ -287,7 +291,8 @@ CalcMSY <- function(Hist,
     CalendarYears             = inputs$CalendarYears,
     RefSeason                 = inputs$RefSeason,
     NPR0List                  = inputs$NPR0List,
-    NPR0_SPList               = inputs$NPR0_SPList
+    NPR0_SPList               = inputs$NPR0_SPList,
+    Herm                      = inputs$Herm
   )
 
 

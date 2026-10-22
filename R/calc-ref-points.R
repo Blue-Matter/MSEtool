@@ -29,7 +29,9 @@
 #' than re-optimizing per reference point.
 #'
 #' - `F0.1`: apical F at which the slope of the yield-per-recruit curve is
-#'   10% of the slope at the origin.
+#'   10% of the slope at the origin. For stocks linked by `Herm`,
+#'   yield-per-recruit is the lifetime yield of a recruit to that stock,
+#'   including catch taken after it transitions to another stock.
 #' - `Fmax`: apical F maximising yield-per-recruit. Undefined (returned as
 #'   the upper grid bound) for asymptotic selectivity, where
 #'   yield-per-recruit has no interior maximum.
@@ -87,6 +89,7 @@ CalcRefPoints <- function(Hist,
 
   PerRecruit <- CalcPerRecruit(Hist, apicalF = Fgrid, Years = Years)
   YPR  <- if (type == 'Removals') PerRecruit@Removals else PerRecruit@Landings
+  YPR  <- .AddHermLifetime(YPR, PerRecruit@Misc$HermCross, type)
   SPRF <- PerRecruit@SPRF
   SPR  <- PerRecruit@SPR
   RPS  <- 1 / SPRF

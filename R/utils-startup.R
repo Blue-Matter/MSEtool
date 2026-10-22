@@ -25,6 +25,7 @@
     OM@StockTargeting <- new("stocktargeting")
 
   OM |>
+    UpdateObject() |>
     .RepairSimDimnames() |>
     ReduceNSim(OM@nSim) |>
     PopulateOM(silent = silent) |>

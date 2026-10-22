@@ -50,6 +50,16 @@
 #'     (a warning is logged to `Log` if they don't); negative or non-finite
 #'     weights are not allowed. Every referenced source stock must itself be
 #'     self-recruiting.
+#' @slot ShareSPFrom `logical(1)`. Applies when `SPFrom` names a single other
+#'   stock. If `TRUE` (default), [Populate()] copies the source stock's `Pars`,
+#'   `SD`, `AC`, `RecDevInit`, `RecDevProj`, and `RecDevHist` into this stock,
+#'   so its recruitment follows the source's stock-recruitment curve and
+#'   recruitment deviations (e.g. males and females of one population). A
+#'   user-supplied `RecDevHist` for this stock is kept. `R0` is not copied.
+#'   The source and this stock must use the same SRR `Model` and age classes.
+#'   Set to `FALSE` for an independent stock-recruitment curve and recruitment
+#'   deviations (e.g. a spatially separate sink population). Ignored when
+#'   `SPFrom` is self or a weighted blend.
 #' @slot TruncSD `numeric(1)`. Number of standard deviations at which the
 #'   log-normal recruitment deviation distribution is truncated. Default `2`.
 #' @slot RecDevInit `matrix`. Recruitment deviations (`Sim × Age`) used to
@@ -122,6 +132,7 @@ setClass(
     SD            = "num.array.null",
     AC            = "num.array.null",
     SPFrom        = "char.num",
+    ShareSPFrom   = "logical",
     TruncSD       = "num.null",
     RecDevInit    = "num.array.list",
     RecDevHist    = "num.array.list",
@@ -131,7 +142,8 @@ setClass(
     RelRecFun     = "fun.char",
     Units         = "numeric",
     Misc          = "list"
-  )
+  ),
+  prototype = list(ShareSPFrom = TRUE)
 )
 
 

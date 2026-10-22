@@ -97,7 +97,11 @@ PopulateSRR <- function(SRR,
     return(SRR)
   
   .SetSeed(seed)
-  
+
+  # recorded on first population so later ShareSPFrom copies aren't mistaken for user input
+  if (is.null(SRR@Misc$RecDevHistSupplied))
+    SRR@Misc$RecDevHistSupplied <- !EmptyObject(SRR@RecDevHist)
+
   # TODO - should add some checks here to make sure parameters/model are ok
   SRR@Pars  <- .StructurePars(Pars = SRR@Pars, nSim, Years)
   SRR@Model <- .FindModel(SRR)

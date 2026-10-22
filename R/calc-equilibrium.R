@@ -106,9 +106,10 @@ CalcEquilibrium <- function(OM,
       SPR0List    = SPR0List[stockInd],
       Years       = Years,
       EffortYears = RefEffortYears,
-      RefSeason   = RefSeason
+      RefSeason   = RefSeason,
+      Herm        = .HermForStocks(OM, StockNames[stockInd])
     )
-    
+
     PerRecruit <- .CalcPerRecruitF(
       apicalF                   = apicalF,
       StockFleetAllocation      = inputs$StockFleetAllocation,
@@ -133,7 +134,8 @@ CalcEquilibrium <- function(OM,
       CalendarYears             = inputs$CalendarYears,
       RefSeason                 = inputs$RefSeason,
       NPR0List                  = inputs$NPR0List,
-      NPR0_SPList               = inputs$NPR0_SPList
+      NPR0_SPList               = inputs$NPR0_SPList,
+      Herm                      = inputs$Herm
     )
 
     .CalcEquilibriumInternal(PerRecruit, inputs)
@@ -189,21 +191,164 @@ CalcEquilibrium <- function(OM,
     }) |>
     List2Array('Stock') |>
     .Aperm(c('Sim', 'Stock', 'Year', 'F'))
-  
-  R0_f     <- AddDimension(inputs$R0, 'F', val = PerRecruit@apicalF) 
+
+  StockNms  <- dimnames(RelRecruits)[['Stock']]
+  SelfOnly  <- .SPFromSelfOnly(inputs$SPFrom, StockNms)
+  HermCross <- PerRecruit@Misc$HermCross
+  Simple    <- SelfOnly & !.HermInflow(HermCross, StockNms)
+  if (!all(Simple))
+    RelRecruits <- .SolveLinkedRelRecruits(RelRecruits, PerRecruit, inputs, Simple)
+
+  R0_f     <- AddDimension(inputs$R0, 'F', val = PerRecruit@apicalF)
   Recruits <- ArrayMultiply(R0_f, RelRecruits)
-  
+
+  EqQuantity <- \(PR, Q) .AddHermCross(ArrayMultiply(PR, Recruits), HermCross, Q, Recruits)
+
+  SProduction <- EqQuantity(PerRecruit@SProduction, 'SProduction')
+  if (!all(SelfOnly))
+    SProduction <- .BlendSPFrom(SProduction, inputs$SPFrom, SelfOnly)
+
   Eq             <- new('equilibrium')
   Eq@apicalF     <- PerRecruit@apicalF
   Eq@SPR0        <- PerRecruit@SPR0
   Eq@SPR         <- PerRecruit@SPR
   Eq@RelRecruits <- RelRecruits
   Eq@Recruits    <- Recruits
-  Eq@Number      <- ArrayMultiply(PerRecruit@NPRF, Recruits)
-  Eq@SProduction <- ArrayMultiply(PerRecruit@SProduction, Recruits)
-  Eq@Removals    <- ArrayMultiply(PerRecruit@Removals, Recruits)
-  Eq@Landings    <- ArrayMultiply(PerRecruit@Landings, Recruits)
-  Eq@Biomass     <- ArrayMultiply(PerRecruit@Biomass,  Recruits)
-  Eq@SBiomass    <- ArrayMultiply(PerRecruit@SBiomass, Recruits)
+  Eq@Number      <- EqQuantity(PerRecruit@NPRF, 'NPRF')
+  Eq@SProduction <- SProduction
+  Eq@Removals    <- EqQuantity(PerRecruit@Removals, 'Removals')
+  Eq@Landings    <- EqQuantity(PerRecruit@Landings, 'Landings')
+  Eq@Biomass     <- EqQuantity(PerRecruit@Biomass,  'Biomass')
+  Eq@SBiomass    <- EqQuantity(PerRecruit@SBiomass, 'SBiomass')
   Eq
+}
+
+# Stocks that receive individuals recruited into another stock via Herm
+.HermInflow <- function(HermCross, StockNames) {
+  Inflow <- stats::setNames(rep(FALSE, length(StockNames)), StockNames)
+  for (k in names(HermCross)) {
+    Arr <- .Aperm(HermCross[[k]]$NPRF, c('Sim', 'Stock', 'Year', 'F'))
+    for (s in setdiff(StockNames, k))
+      Inflow[s] <- Inflow[s] || any(Arr[, s, , ] > 0)
+  }
+  Inflow
+}
+
+# Repeat a single-stock [Sim, 1, Year, F] array across all stocks of `Template`
+.RepStock <- function(x, Template) {
+  out <- x[, rep(1L, dim(Template)[2]), , , drop = FALSE]
+  dimnames(out) <- dimnames(Template)
+  out
+}
+
+# Equilibrium quantity plus contributions from other stocks' recruits via Herm
+.AddHermCross <- function(Base, HermCross, Q, Recruits) {
+  if (!length(HermCross)) return(Base)
+  DimNames <- names(dimnames(Base))
+  Out  <- .Aperm(Base, c('Sim', 'Stock', 'Year', 'F'))
+  Ones <- Out
+  Ones[] <- 1
+  Rec <- .AlignToTemplate(Recruits, Ones)
+  for (k in names(HermCross))
+    Out <- Out + .AlignToTemplate(HermCross[[k]][[Q]], Ones) *
+      .RepStock(Rec[, k, , , drop = FALSE], Ones)
+  .Aperm(Out, DimNames)
+}
+
+.AlignToTemplate <- function(x, Ones) {
+  out <- ArrayMultiply(.BroadcastTo(x, Ones), Ones) |> .Aperm(names(dimnames(Ones)))
+  if (!identical(dim(out), dim(Ones)))
+    cli::cli_abort("Internal error: could not align an array to the equilibrium dimensions.")
+  out
+}
+
+# Relative recruitment of stocks whose spawning production comes from other stocks
+# (SPFrom) or includes individuals recruited into other stocks (Herm):
+# RR_i = SRR_i(x_i), x_i = sum_k w_ik SP_k / sum_k w_ik SP0_k, with
+# SP_k = sum_j R0_j RR_j SPRF_{k<-j} and SP0_k = sum_j R0_j SPR0_{k<-j}.
+# `SelfOnly` flags stocks solved in closed form by RelRecFun.
+.SolveLinkedRelRecruits <- function(RelRecruits, PerRecruit, inputs, SelfOnly,
+                                    tol = 1e-12, maxIter = 500) {
+  StockNames <- dimnames(RelRecruits)[['Stock']]
+  Years      <- as.numeric(dimnames(RelRecruits)[['Year']])
+  Ones       <- ArrayMultiply(AddDimension(inputs$R0, 'F', val = PerRecruit@apicalF), RelRecruits) |>
+    .Aperm(c('Sim', 'Stock', 'Year', 'F'))
+  Ones[]     <- 1
+
+  if (is.null(PerRecruit@Misc$SPR0Own))
+    cli::cli_abort("Internal error: `PerRecruit@Misc$SPR0Own` is required for {.field SRR@SPFrom}-linked stocks.")
+
+  SPRF    <- .AlignToTemplate(PerRecruit@SPRF, Ones)
+  R0      <- .AlignToTemplate(inputs$R0, Ones)
+  SPR0    <- .AlignToTemplate(.ArraySubsetYear(PerRecruit@SPR0, Years), Ones)
+  SPR0Own <- .AlignToTemplate(.ArraySubsetYear(PerRecruit@Misc$SPR0Own, Years), Ones)
+  SPR0[, !SelfOnly, , ] <- SPR0Own[, !SelfOnly, , ]
+
+  HermCross <- PerRecruit@Misc$HermCross
+  CrossSPRF <- purrr::map(HermCross, \(x) .AlignToTemplate(x$SPRF, Ones))
+  CrossSPR0 <- purrr::map(HermCross, \(x) .AlignToTemplate(.ArraySubsetYear(x$SPR0, Years), Ones))
+
+  .SP <- function(RR) {
+    SP <- R0 * RR * SPRF
+    for (j in names(HermCross))
+      SP <- SP + CrossSPRF[[j]] * .RepStock(R0[, j, , , drop = FALSE] * RR[, j, , , drop = FALSE], Ones)
+    SP
+  }
+  SP0 <- R0 * SPR0
+  for (j in names(HermCross))
+    SP0 <- SP0 + CrossSPR0[[j]] * .RepStock(R0[, j, , , drop = FALSE], Ones)
+  Linked <- StockNames[!SelfOnly]
+
+  .WeightedSum <- \(w, arr) Reduce(`+`, purrr::map2(w$from, w$weight, \(k, wt)
+    wt * arr[, k, , , drop = FALSE]))
+
+  Den <- purrr::map(stats::setNames(Linked, Linked), \(st)
+    .WeightedSum(inputs$SPFrom[[st]], SP0))
+
+  RR <- .AlignToTemplate(RelRecruits, Ones)
+  for (iter in seq_len(maxIter)) {
+    maxDiff <- 0
+    for (st in Linked) {
+      x <- .WeightedSum(inputs$SPFrom[[st]], .SP(RR)) / Den[[st]]
+      x[!is.finite(x)] <- 0
+      new <- .EvalRelativeSRR(inputs$SRRModelList[[st]], inputs$RecParsList[[st]], x, st)
+      maxDiff <- max(maxDiff, abs(new - RR[, st, , , drop = FALSE]))
+      RR[, st, , ] <- new
+    }
+    if (maxDiff < tol) break
+  }
+  if (maxDiff >= tol)
+    cli::cli_warn("Equilibrium recruitment for {.field SRR@SPFrom}-linked stock{?s} {.val {Linked}} did not converge (max change {.val {signif(maxDiff, 3)}}).")
+  RR
+}
+
+# Engine SRR evaluated at relative spawning production x (S0 = R0 = 1)
+.EvalRelativeSRR <- function(Model, RecPars, x, StockName) {
+  if (!is.function(Model))
+    cli::cli_abort("Stock {.val {StockName}}: {.field SRR@Model} must be one of {.val {SRRModels(FALSE, FALSE)}} when {.field SRR@SPFrom} is another stock.")
+  ParNames <- setdiff(names(formals(Model)), c('S', 'S0', 'R0'))
+  d   <- dim(x)
+  out <- x
+  for (s in seq_len(d[1])) {
+    for (y in seq_len(d[3])) {
+      Pars <- purrr::map(RecPars[ParNames], \(p) {
+        dd <- dim(p)
+        p[min(dd[1], s), min(dd[2], y)]
+      })
+      out[s, 1, y, ] <- do.call(Model, c(list(S = x[s, 1, y, ], S0 = 1, R0 = 1), Pars))
+    }
+  }
+  pmax(out, 0)
+}
+
+.BlendSPFrom <- function(SProduction, SPFrom, SelfOnly) {
+  DimNames <- names(dimnames(SProduction))
+  Raw <- .Aperm(SProduction, c('Sim', 'Stock', 'Year', 'F'))
+  Out <- Raw
+  for (st in names(SelfOnly)[!SelfOnly]) {
+    w <- SPFrom[[st]]
+    Out[, st, , ] <- Reduce(`+`, purrr::map2(w$from, w$weight, \(k, wt)
+      wt * Raw[, k, , , drop = FALSE]))
+  }
+  .Aperm(Out, DimNames)
 }
