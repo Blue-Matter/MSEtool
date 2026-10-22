@@ -4,11 +4,14 @@
 \alias{.PopulateClasses}
 \title{Populate Default Size Classes for a Length or Weight Object}
 \usage{
-.PopulateClasses(object)
+.PopulateClasses(object, MaxBin = NULL)
 }
 \arguments{
 \item{object}{A \code{\link[=Length]{Length()}} or \code{\link[=Weight]{Weight()}} object with slots \code{Classes},
 \code{MeanAtAge}, \code{CVatAge}, \code{TruncSD}, and \code{Dist}.}
+
+\item{MaxBin}{Optional upper bound for the classes (see \code{.SpecMaxBin()}).
+If \code{NULL}, it is calculated from \code{object@MeanAtAge} and \code{object@CVatAge}.}
 }
 \value{
 \code{object} with \code{object@Classes} populated if it was previously empty.

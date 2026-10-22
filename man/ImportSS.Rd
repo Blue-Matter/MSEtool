@@ -31,6 +31,7 @@ ImportSS(
   AllocationYears = 3,
   silent = FALSE,
   Populate = TRUE,
+  Seed = 101,
   ...
 )
 }
@@ -118,6 +119,14 @@ many years ending at the last historical year. Default \code{3}.}
 \item{Populate}{Logical; if \code{TRUE} (default), populate the OM using
 \code{PopulateOM()}. If \code{FALSE}, return the partially constructed OM.}
 
+\item{Seed}{Integer. Random number seed for the OM (\code{OM@Seed}), used for all
+stochastic values generated when the OM is populated (e.g., recruitment
+deviations, observation and implementation error, values sampled from
+parameter ranges) and for the random draws made in \code{\link[=Simulate]{Simulate()}} and
+\code{\link[=Project]{Project()}}. OMs imported with the same \code{Seed} share these random draws;
+use a different \code{Seed} for each OM (or each batch of OMs) to obtain
+independent draws. Default \code{101}.}
+
 \item{...}{Additional arguments passed to SS3 import functions.}
 }
 \value{
@@ -141,6 +150,12 @@ corresponding OM slots.
 \item Optional metadata describing authorship, region, and stock identity are stored in the resulting OM.
 \item By default, the OM is fully populated using \code{PopulateOM()}.
 \item Set \code{Populate = FALSE} to return the partially constructed OM.
+\item All stochastic values (e.g., projection recruitment deviations,
+observation and implementation error) are generated from \code{Seed}, so OMs
+imported with the same \code{Seed} share the same random draws. Performance
+averaged across such OMs is based on a single set of \code{nSim} random draws.
+Use a different \code{Seed} for each OM, or for each batch of OMs, to obtain
+independent draws. Simulation \code{i} is the same for any \code{nSim}.
 \item The numbers-at-age in the first historical year are the SS3 virgin
 numbers-at-age multiplied by \code{SRR@RecDevInit} and
 \code{Depletion@Misc$InitialAtAge}. \code{SRR@RecDevInit} holds the SS3 initial-age

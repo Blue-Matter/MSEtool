@@ -179,7 +179,15 @@ fishing gear; actual effective F may be lower if some fish are discarded
 and survive. Default \code{3}.}
 
 \item{Seed}{Integer. Random number generator seed for reproducibility.
-Default \code{101}.}
+All stochastic values are derived from \code{Seed}: those generated when the
+OM is populated (e.g., recruitment deviations, observation and
+implementation error, values sampled from parameter ranges) and the
+random draws made in \code{\link[=Simulate]{Simulate()}} and \code{\link[=Project]{Project()}}. Each simulation has
+its own random number streams, so simulation \code{i} is the same for any
+\code{nSim}. OMs with the same \code{Seed} share the same random draws; use a
+different \code{Seed} for each OM to obtain independent draws. \code{Seed} must be
+set before the OM is populated: values already generated are not redrawn
+when \code{Seed} is changed. Default \code{101}.}
 
 \item{Control}{Named list of optional operating model control settings.
 Default \code{list()}. See \link{OMControl} for the available settings.}

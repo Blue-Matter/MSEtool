@@ -41,9 +41,9 @@ is treated as inactive and receives \eqn{T_{s,t} = 0} throughout the
 projection. Default \code{NULL}, which falls back to
 \code{OM@Control$StockTargeting$n_recent}, then to \code{5}.}
 
-\item{seed}{\code{numeric(1)}. Offset added to \code{OM@Seed} for the random number
-generator, ensuring independence from other stochastic processes.
-Default \code{101}.}
+\item{seed}{\code{numeric(1)}. Combined with \code{OM@Seed} and the simulation number
+to seed each simulation's random number stream, keeping the draws
+independent from other stochastic processes. Default \code{101}.}
 }
 \value{
 The input \code{OM} object with updated \verb{@StockTargeting@Targeting}.

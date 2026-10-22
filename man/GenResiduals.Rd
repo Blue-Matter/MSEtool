@@ -12,7 +12,8 @@ GenResiduals(
   TruncSD = 2,
   nSeasons = 1,
   NA_Season = list(),
-  LastError = NULL
+  LastError = NULL,
+  Seed = NULL
 )
 }
 \arguments{
@@ -37,6 +38,11 @@ indicating which (if any) seasons have NA values for all years}
 \item{LastError}{Optional numeric vector of length nSim giving the starting
 value for the AR(1) recursion, in normal space; i.e. the last
 observed multiplicative residual. \code{NA} (default) means no prior state}
+
+\item{Seed}{Optional seed. If supplied, each simulation is drawn from its
+own random number stream derived from \code{Seed} and the simulation number,
+so simulation \code{i} is the same for any \code{nSim}. If \code{NULL} (default), the
+simulations are drawn in order from the current random number stream.}
 }
 \value{
 Numeric array of dimensions nSim x nYear containing multiplicative

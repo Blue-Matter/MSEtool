@@ -23,7 +23,8 @@ ImportBAM(
   MPStartYear = NULL,
   InterimAdvice = NULL,
   populate = TRUE,
-  silent = FALSE
+  silent = FALSE,
+  Seed = 101
 )
 
 GetBAMOutput(Stock = "Red Snapper", type = c("rdat", "dat"))
@@ -91,6 +92,14 @@ populate the OM after construction.}
 
 \item{silent}{Logical. If \code{TRUE}, suppresses console messages. Default
 \code{FALSE}.}
+
+\item{Seed}{Integer. Random number seed for the OM (\code{OM@Seed}), used for all
+stochastic values generated when the OM is populated (e.g., recruitment
+deviations, observation and implementation error, values sampled from
+parameter ranges) and for the random draws made in \code{\link[=Simulate]{Simulate()}} and
+\code{\link[=Project]{Project()}}. OMs imported with the same \code{Seed} share these random draws;
+use a different \code{Seed} for each OM (or each batch of OMs) to obtain
+independent draws. Default \code{101}.}
 
 \item{type}{Character. Format of BAM output to retrieve: \code{'rdat'}
 (default) returns the R data object; \code{'dat'} returns the raw input data.}

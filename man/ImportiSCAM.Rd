@@ -25,7 +25,8 @@ ImportiSCAM(
   MPStartYear = NULL,
   InterimAdvice = NULL,
   silent = FALSE,
-  Populate = TRUE
+  Populate = TRUE,
+  Seed = 101
 )
 }
 \arguments{
@@ -66,6 +67,14 @@ Default \code{NULL}.}
 
 \item{Populate}{Logical; if \code{TRUE} (default), populate the OM using
 \code{\link[=PopulateOM]{PopulateOM()}}. If \code{FALSE}, return the partially constructed OM.}
+
+\item{Seed}{Integer. Random number seed for the OM (\code{OM@Seed}), used for all
+stochastic values generated when the OM is populated (e.g., recruitment
+deviations, observation and implementation error, values sampled from
+parameter ranges) and for the random draws made in \code{\link[=Simulate]{Simulate()}} and
+\code{\link[=Project]{Project()}}. OMs imported with the same \code{Seed} share these random draws;
+use a different \code{Seed} for each OM (or each batch of OMs) to obtain
+independent draws. Default \code{101}.}
 }
 \value{
 An \link[=om-class]{om} object.

@@ -14,7 +14,8 @@ GenRecDevs(
   nSim = 48,
   RecDevInit = NULL,
   RecDevHist = NULL,
-  RecDevProj = NULL
+  RecDevProj = NULL,
+  Seed = NULL
 )
 }
 \arguments{
@@ -42,7 +43,14 @@ the marginal standard deviation, the realised bound is somewhat wider than
 
 \item{RecDevHist}{Optional array of historical recruitment deviations.}
 
-\item{RecDevProj}{Optional array of projected recruitment deviations.
+\item{RecDevProj}{Optional array of projected recruitment deviations.}
+
+\item{Seed}{Optional seed. If supplied, each simulation's deviations are
+drawn from random number streams derived from \code{Seed} and the simulation
+number, so simulation \code{i} is the same for any \code{nSim}, and the projection
+deviations don't depend on the number of historical years. If \code{NULL}
+(default), the simulations are drawn in order from the current random
+number stream.
 
 \code{GenRecDevs()} generates recruitment deviations across initial ages,
 historical years, and projected years.
