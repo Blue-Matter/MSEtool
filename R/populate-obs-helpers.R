@@ -51,12 +51,9 @@
     if (is.null(object@CV))
       return(object@Error)
     
+    CV <- rep_len(as.numeric(object@CV), nSim)
     Error <- array(
-      rlnorm(
-        nTS * nSim,
-        mconv(1, rep(object@CV, nTS)),
-        sdconv(1, rep(object@CV, nTS))
-      ),
+      .SimDraws(\(i, n) rlnorm(n, mconv(1, CV[i]), sdconv(1, CV[i])), nSim, nTS),
       dim      = c(nSim, nTS),
       dimnames = list(Sim = seq_len(nSim), Year = Years)
     )
@@ -125,7 +122,7 @@
   
   if (length(object@Bias) == 2 && nSim != 2)
     return(array(
-      stats::runif(nSim, min(object@Bias), max(object@Bias)),
+      .SimRunif(nSim, min(object@Bias), max(object@Bias)),
       dim      = nSim,
       dimnames = list(Sim = seq_len(nSim))
     ))
@@ -141,7 +138,7 @@
     ))
 
   array(
-    rlnorm(nSim, mconv(1, object@Bias), sdconv(1, object@Bias)),
+    .SimRlnorm(nSim, mconv(1, object@Bias), sdconv(1, object@Bias)),
     dim      = nSim,
     dimnames = list(Sim = seq_len(nSim))
   )
@@ -164,7 +161,7 @@
     DropDimension("Year", warn = FALSE)
   
   array(
-    rlnorm(nSim, mconv(1, CV), sdconv(1, CV)),
+    .SimRlnorm(nSim, mconv(1, CV), sdconv(1, CV)),
     dim      = nSim,
     dimnames = list(Sim = seq_len(nSim))
   )
@@ -206,7 +203,7 @@
         c("x" = "`AC` bounds must be within [-1, 1].",
           "i" = "Supplied bounds: [{AC[1]}, {AC[2]}].")
       )
-    vals <- runif(nSim, min = AC[1], max = AC[2])
+    vals <- .SimRunif(nSim, AC[1], AC[2])
     return(array(vals, dim = nSim, dimnames = list(Sim = seq_len(nSim))))
   }
   
@@ -301,7 +298,7 @@
   }
   
   if (length(x) == 2) {
-    vals <- runif(nSim, min = x[1], max = x[2])
+    vals <- .SimRunif(nSim, x[1], x[2])
     return(array(
       rep(vals, nYear),
       dim      = c(nSim, nYear),

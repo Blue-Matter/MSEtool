@@ -19,6 +19,10 @@
 #' @param LastError Optional numeric vector of length nSim giving the starting
 #'   value for the AR(1) recursion, in normal space; i.e. the last
 #'   observed multiplicative residual. `NA` (default) means no prior state
+#' @param Seed Optional seed. If supplied, each simulation is drawn from its
+#'   own random number stream derived from `Seed` and the simulation number,
+#'   so simulation `i` is the same for any `nSim`. If `NULL` (default), the
+#'   simulations are drawn in order from the current random number stream.
 #'
 #' @return Numeric array of dimensions nSim x nYear containing multiplicative
 #'   (normal-space) lognormal residuals with AR(1) autocorrelation `AC`
@@ -32,7 +36,8 @@ GenResiduals <- function(SD,
                          TruncSD = 2,
                          nSeasons = 1,
                          NA_Season = list(),
-                         LastError = NULL) {
+                         LastError = NULL,
+                         Seed = NULL) {
 
   if (any(SD < 0))
     cli::cli_abort("`SD` cannot be negative")
@@ -46,46 +51,28 @@ GenResiduals <- function(SD,
 
   if (is.null(LastError)) LastError <- rep(NA_real_, nSim)
 
-  Innov <- .InnovationPars(SD, AC, TruncSD)
+  SD <- rep_len(SD, nSim)
+  AC <- rep_len(AC, nSim)
+  LastError <- rep_len(LastError, nSim)
+  Innov  <- .InnovationPars(SD, AC, TruncSD)
+  Innov0 <- .InnovationPars(SD, rep(0, nSim), TruncSD)
 
-  # Expand mu, sigma, lower, upper for each year
-  mu_mat <- matrix(Innov$mu, nrow = nSim, ncol = nYear)
-  SD_mat <- matrix(Innov$sigma, nrow = nSim, ncol = nYear)
-  lower_mat <- matrix(Innov$lower, nrow = nSim, ncol = nYear)
-  upper_mat <- matrix(Innov$upper, nrow = nSim, ncol = nYear)
+  if (length(NA_Season) && length(NA_Season) != nSim)
+    cli::cli_abort("`NA_Season` must be a length {.val nSim ({nSim})}")
 
-  LogResid <- .Rtnorm(nSim * nYear,
-                as.vector(mu_mat),
-                as.vector(SD_mat),
-                as.vector(lower_mat),
-                as.vector(upper_mat))
-
-  arr <- array(LogResid, dim = c(nSim, nYear),
-               dimnames = list(Sim = seq_len(nSim), Year = Years))
-
-  if (length(NA_Season)) {
-    if (length(NA_Season)!=nSim)
-      cli::cli_abort("`NA_Season` must be a length {.val nSim ({nSim})}")
-
-    for (s in seq_along(NA_Season)) {
-      NA_ind <- .ExpandSeasons(NA_seas = NA_Season[[s]],
-                               nSeasons = nSeasons,
-                               nYear = nYear)
-
-      arr[s,NA_ind] <- NA
-    }
+  SimResid <- function(s, n) {
+    x <- .Rtnorm(n, Innov$mu[s], Innov$sigma[s], Innov$lower[s], Innov$upper[s])
+    if (length(NA_Season))
+      x[.ExpandSeasons(NA_seas = NA_Season[[s]], nSeasons = nSeasons, nYear = n)] <- NA
+    firstPos <- which(!is.na(x))[1]
+    if (is.na(LastError[s]) && !is.na(firstPos))
+      x[firstPos] <- .Rtnorm(1, Innov0$mu[s], Innov0$sigma[s], Innov0$lower[s], Innov0$upper[s])
+    x
   }
 
-  freshStart <- is.na(LastError)
-  if (any(freshStart)) {
-    Innov0 <- .InnovationPars(SD, rep(0, nSim), TruncSD)
-    for (s in which(freshStart)) {
-      firstPos <- which(!is.na(arr[s, ]))[1]
-      if (is.na(firstPos)) next
-      arr[s, firstPos] <- .Rtnorm(1, Innov0$mu[s], Innov0$sigma[s],
-                                  Innov0$lower[s], Innov0$upper[s])
-    }
-  }
+  Key <- if (!is.null(Seed)) paste(Seed, 'Residuals', sep = '_') else .NextDrawKey()
+  arr <- .SimDraws(SimResid, nSim, nYear, Key = Key)
+  dimnames(arr) <- list(Sim = seq_len(nSim), Year = Years)
 
   ApplyAC(Resid = exp(arr), AC = AC, LastError = LastError)
 }

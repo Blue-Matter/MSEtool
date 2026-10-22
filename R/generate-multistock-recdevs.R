@@ -47,7 +47,8 @@ GenMultiStockRecDevs <- function(OM, TruncSD = 3, silent = FALSE, overwrite = NU
   CheckPackage('MASS')
 
   .CheckClass(OM)
-  set.seed(OM@Seed)
+  Saved <- .SaveRNG()
+  on.exit(.RestoreRNG(Saved), add = TRUE)
 
   nSim      <- OM@nSim
   n_stock   <- nStock(OM)
@@ -73,6 +74,7 @@ GenMultiStockRecDevs <- function(OM, TruncSD = 3, silent = FALSE, overwrite = NU
   for (sim in seq_len(nSim)) {
     
     if (show) cli::cli_progress_update(pb, set = sim)
+    .SetRNG(.SeedInt(OM@Seed %||% 101, 'MultiStockRecDev', .GlobalSim(OM, sim)))
     
     # Extract stats 
     RecDevStats <- purrr::map(OM@Stock, \(stock) 

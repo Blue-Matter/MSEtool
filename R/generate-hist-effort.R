@@ -75,10 +75,8 @@ GenHistEffort <- function(Effort, nSim=5, Years=NULL) {
   }
   
   # Sample effort at control points
-  EffortPoints <- mapply(runif,
-                         n = nSim,
-                         min = Effort$Lower,
-                         max = Effort$Upper)
+  EffortPoints <- .SimDraws(\(i, n) stats::runif(n, Effort$Lower, Effort$Upper),
+                            nSim, length(Effort$Lower))
   
   # Interpolate to annual time series
   if (nSim > 1) {
@@ -108,7 +106,7 @@ GenHistEffort <- function(Effort, nSim=5, Years=NULL) {
   if (!is.null(Esd)) {
     Emu <- -0.5 * Esd^2
     EffortError <- array(
-      exp(rnorm(nYears * nSim, Emu, Esd)),
+      exp(.SimDraws(\(i, n) stats::rnorm(n, Emu, Esd), nSim, nYears)),
       dim = c(nSim, nYears)
     )
     EffortTS <- EffortTS * EffortError

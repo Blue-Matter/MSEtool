@@ -112,7 +112,7 @@ PopulateStock <- function(Stock,
     Years = Years,
     nSim = nSim,
     ALK = ALK,
-    seed = seed + 1,
+    seed = .SubSeed(seed, 'Length'),
     silent = silent,
     force = force
   ), "Length", nm)
@@ -125,7 +125,7 @@ PopulateStock <- function(Stock,
     Years = Years,
     nSim = nSim,
     AWK = AWK,
-    seed = seed + 2,
+    seed = .SubSeed(seed, 'Weight'),
     silent = silent,
     force = force,
     CalcAtLength = CalcAtLength
@@ -138,7 +138,7 @@ PopulateStock <- function(Stock,
     Length = Stock@Length,
     Years = Years,
     nSim = nSim,
-    seed = seed + 3,
+    seed = .SubSeed(seed, 'NaturalMortality'),
     silent = silent,
     force = force,
     CalcAtLength = CalcAtLength
@@ -152,7 +152,7 @@ PopulateStock <- function(Stock,
     Weight = Stock@Weight,
     Years = Years,
     nSim = nSim,
-    seed = seed + 4,
+    seed = .SubSeed(seed, 'Maturity'),
     silent = silent,
     force = force,
     CalcAtLength = CalcAtLength
@@ -167,14 +167,14 @@ PopulateStock <- function(Stock,
     Maturity = Stock@Maturity,
     Years = Years,
     nSim = nSim,
-    seed = seed + 5,
+    seed = .SubSeed(seed, 'Fecundity'),
     silent = silent,
     force = force,
     CalcAtLength = CalcAtLength
   ), "Fecundity", nm)
   .RequireArray(Stock@Fecundity, "MeanAtAge", "Fecundity", nm, optional = TRUE)
 
-  Stock <- .ConvertAlphaBetaSRR(Stock, nSim = nSim, Years = Years, seed = seed + 6, nm = nm)
+  Stock <- .ConvertAlphaBetaSRR(Stock, nSim = nSim, Years = Years, seed = .SubSeed(seed, 'AlphaBeta'), nm = nm)
 
   Stock@SRR <- .SafePopulate(\() PopulateSRR(
     SRR = Stock@SRR,
@@ -182,7 +182,7 @@ PopulateStock <- function(Stock,
     CurrentYear = Stock@CurrentYear,
     Years = Years,
     nSim = nSim,
-    seed = seed + 6,
+    seed = .SubSeed(seed, 'SRR'),
     silent = silent,
     force = force
   ), "SRR", nm)
@@ -196,7 +196,7 @@ PopulateStock <- function(Stock,
     Ages = Stock@Ages,
     Years = Years,
     nSim = nSim,
-    seed = seed + 7,
+    seed = .SubSeed(seed, 'Spatial'),
     silent = silent,
     force = force
   )
@@ -204,7 +204,7 @@ PopulateStock <- function(Stock,
   Stock@Depletion <- PopulateDepletion(
     Depletion = Stock@Depletion,
     nSim = nSim,
-    seed = seed + 8,
+    seed = .SubSeed(seed, 'Depletion'),
     silent = silent
   )
   

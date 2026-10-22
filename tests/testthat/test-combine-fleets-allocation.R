@@ -444,12 +444,12 @@ test_that("per-fleet InterimAdvice projects as the summed TAC for the combined f
   om <- .CombineAllocationOM()
   yr <- CurrentYear(om) + 1:2
   om@InterimAdvice <- data.frame(Year = rep(yr, each = 2), Fleet = FleetNames(om),
-                                 Type = "TAC", Mean = c(300, 700))
+                                 Type = "TAC", Mean = c(30, 70))
   omc <- CombineFleets(om, silent = TRUE)
   expect_equal(omc@InterimAdvice$Fleet, c("Combined", "Combined"))
 
   rem <- .InterimRemovals(omc)
-  expect_equal(unname(rem[, , "Combined"]), matrix(1000, 3, 2), tolerance = 1e-3)
+  expect_equal(unname(rem[, , "Combined"]), matrix(100, 3, 2), tolerance = 1e-3)
 })
 
 test_that("seasonal OM: combined fleet reproduces the per-fleet seasonal interim catch", {

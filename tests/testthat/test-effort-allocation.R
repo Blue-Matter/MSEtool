@@ -74,6 +74,7 @@ test_that("a scalar absolute Effort recommendation is split by EffortAllocation"
   skip_on_cran()
   om <- TwoFleetOM
   om@nSim <- 1
+  om@maxF <- 100 # keep the per-area maxF clamp from scaling the requested effort
   pYear(om) <- 1
   set.seed(1)
   hist <- Simulate(om, silent = TRUE)
@@ -96,6 +97,7 @@ test_that("a scalar relative Effort recommendation ignores EffortAllocation and 
   skip_on_cran()
   om <- TwoFleetOM
   om@nSim <- 1
+  om@maxF <- 100 # keep the per-area maxF clamp from scaling the requested effort
   pYear(om) <- 1
   set.seed(1)
   hist <- Simulate(om, silent = TRUE)
@@ -123,6 +125,7 @@ test_that("EffortAllocation is not required and not applied for single-fleet OMs
   data(SingleStockOM, envir = environment())
   om <- SingleStockOM
   om@nSim <- 1
+  om@maxF <- 100 # keep the per-area maxF clamp from scaling the requested effort
   pYear(om) <- 1
   set.seed(1)
   hist <- Simulate(om, silent = TRUE)

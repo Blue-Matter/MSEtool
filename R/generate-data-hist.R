@@ -160,7 +160,11 @@
                                        StockNames, 
                                        silent=FALSE, 
                                        id=NULL) {
-  
+
+  Saved <- .SaveRNG()
+  on.exit(.RestoreRNG(Saved), add = TRUE)
+  .SetRNG(.SeedInt(Hist@OM@Seed %||% 101, 'HistData', .GlobalSim(Hist@OM, sim)))
+
   Complexes <- Hist@OM@Complexes
   
   if (!is.null(Hist@OM@Data)) {

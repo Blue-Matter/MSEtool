@@ -82,10 +82,10 @@ PopulateImpSlot <- function(ImpSlot, nSim, Years) {
 
   # Error: [Sim x Year] lognormal draw from Mean/SD, unless supplied directly
   if (!length(ImpSlot@Error)) {
-    mean_vec <- rep(as.numeric(ImpSlot@Mean), nTS)
-    sd_vec   <- rep(if (length(ImpSlot@SD)) as.numeric(ImpSlot@SD) else rep(0, nSim), nTS)
+    Mean <- rep_len(as.numeric(ImpSlot@Mean), nSim)
+    SD   <- rep_len(if (length(ImpSlot@SD)) as.numeric(ImpSlot@SD) else 0, nSim)
     ImpSlot@Error <- array(
-      rlnorm(nSim * nTS, mconv(mean_vec, sd_vec), sdconv(mean_vec, sd_vec)),
+      .SimDraws(\(i, n) rlnorm(n, mconv(Mean[i], SD[i]), sdconv(Mean[i], SD[i])), nSim, nTS),
       dim      = c(nSim, nTS),
       dimnames = list(Sim = seq_len(nSim), Year = Years)
     )

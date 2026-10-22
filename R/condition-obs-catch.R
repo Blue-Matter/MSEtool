@@ -170,10 +170,8 @@
   if (.UserSupplied(object, "Error"))
     return(.ProjYearValues(object@Error, nSim, ProjYears))
   nProjTS <- length(ProjYears)
-  ErrorProj <- exp(matrix(rnorm(nSim * nProjTS,
-                                mean = rep(-(SD^2) / 2, each = nProjTS),
-                                sd   = rep(SD, each = nProjTS)),
-                          nrow = nSim, ncol = nProjTS, byrow = TRUE))
+  SD <- rep_len(as.numeric(SD), nSim)
+  ErrorProj <- exp(.SimDraws(\(i, n) stats::rnorm(n, -(SD[i]^2) / 2, SD[i]), nSim, nProjTS))
   dimnames(ErrorProj) <- list(Sim = seq_len(nSim), Year = ProjYears)
   ErrorProj
 }

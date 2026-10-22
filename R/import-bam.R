@@ -60,6 +60,13 @@
 #' @param populate Logical. If `TRUE` (default), calls [PopulateOM()] to
 #'   populate the OM after construction.
 #'
+#' @param Seed Integer. Random number seed for the OM (`OM@Seed`), used for all
+#'   stochastic values generated when the OM is populated (e.g., recruitment
+#'   deviations, observation and implementation error, values sampled from
+#'   parameter ranges) and for the random draws made in [Simulate()] and
+#'   [Project()]. OMs imported with the same `Seed` share these random draws;
+#'   use a different `Seed` for each OM (or each batch of OMs) to obtain
+#'   independent draws. Default `101`.
 #' @param silent Logical. If `TRUE`, suppresses console messages. Default
 #'   `FALSE`.
 #'
@@ -102,7 +109,8 @@ ImportBAM <- function(Stock='Red Snapper',
                       MPStartYear=NULL,
                       InterimAdvice=NULL,
                       populate=TRUE,
-                      silent=FALSE) {
+                      silent=FALSE,
+                      Seed=101) {
   
   CheckPackage('bamExtras', pkg.path="pak::pkg_install('nikolaifish/bamExtras')")
 
@@ -121,13 +129,14 @@ ImportBAM <- function(Stock='Red Snapper',
   }
 
   OM <- .SetupOMBAM(BAMdata, nSim, pYear, Source=Source,
-                    MPStartYear=MPStartYear, InterimAdvice=InterimAdvice)
+                    MPStartYear=MPStartYear, InterimAdvice=InterimAdvice, Seed=Seed)
   
   OM@Stock <- list()
   class(OM@Stock) <- 'StockList'
   OM@Stock[[BAMdata$info$species]] <- .BAM2Stock(BAMdata, 
                                                 nSim=nSim(OM),
-                                                Years=OM@Years)
+                                                Years=OM@Years,
+                                                Seed=OM@Seed)
   
   OM@Fleet <- list()
   class(OM@Fleet) <- 'StockFleetList'
@@ -227,10 +236,11 @@ ListBAMStocks <- function(type=c('rdat', 'dat')) {
 
 
 .SetupOMBAM <- function(BAMdata, nSim=48, pYear=30, Source=NULL,
-                        MPStartYear=NULL, InterimAdvice=NULL) {
+                        MPStartYear=NULL, InterimAdvice=NULL, Seed=101) {
   HistYears <- BAMdata$parms$styr:BAMdata$parms$endyr
   om <- OM(Name=paste(BAMdata$info$title, BAMdata$info$species),
            nSim=nSim,
+           Seed=Seed,
            nYear=length(HistYears),
            pYear=pYear,
            CurrentYear=max(HistYears),
@@ -246,7 +256,7 @@ ListBAMStocks <- function(type=c('rdat', 'dat')) {
 }
 
 
-.BAM2Stock <- function(BAMdata, nSim, Years) {
+.BAM2Stock <- function(BAMdata, nSim, Years, Seed = 101) {
   CurrentYear <- BAMdata$parms$endyr
   histTS <- Years[floor(Years)<=CurrentYear]
   nYear <- length(histTS)
@@ -372,7 +382,8 @@ ListBAMStocks <- function(type=c('rdat', 'dat')) {
                          nYear = stock@nYear, 
                          pYear = stock@pYear, 
                          CurrentYear = stock@CurrentYear,
-                         nSim = stock@nSim)
+                         nSim = stock@nSim,
+                         seed = paste(Seed, 'Stock', 1, sep = '_'))
   
   # Recruitment Deviations 
   UnfishedEq <- ArrayMultiply(array1=CalcUnfishedSurvival(stock, Years=Years, Extend = FALSE), 

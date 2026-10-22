@@ -4,11 +4,56 @@
           envir = parent.frame())
 }
 
-.SetSeed <- function(seed = NULL) {
-  if (is.null(seed)) {
-    seed <- 101
+.RNGContext <- new.env(parent = emptyenv())
+
+# Keys later .SimDraws() calls to `seed` and their call order until the calling function exits
+.SetSeed <- function(seed = NULL, envir = parent.frame()) {
+  Old <- as.list(.RNGContext)
+  do.call(on.exit, list(call('.RestoreSeedContext', Old), add = TRUE, after = FALSE),
+          envir = envir)
+  seed <- seed %||% 101
+  .RNGContext$Seed  <- seed
+  .RNGContext$Count <- 0L
+  .SetRNG(.SeedInt(seed))
+}
+
+.RestoreSeedContext <- function(Old) {
+  rm(list = ls(.RNGContext, all.names = TRUE), envir = .RNGContext)
+  list2env(Old, envir = .RNGContext)
+  invisible()
+}
+
+.SeedInt <- function(...) digest::digest2int(paste(..., sep = '_'))
+
+.SubSeed <- function(seed, Name) paste(seed %||% 101, Name, sep = '_')
+
+.SetRNG <- function(seed) {
+  set.seed(seed, kind = 'Mersenne-Twister', normal.kind = 'Inversion',
+           sample.kind = 'Rejection')
+}
+
+# NULL outside a .SetSeed() scope, so standalone calls draw from the session stream
+.NextDrawKey <- function() {
+  if (is.null(.RNGContext$Seed)) return(NULL)
+  .RNGContext$Count <- .RNGContext$Count + 1L
+  paste(.RNGContext$Seed, .RNGContext$Count, sep = '_')
+}
+
+# Returns a [nSim, n] matrix with row i from fun(i, n) drawn on a stream keyed to (Key, Sims[i]),
+# so sim i is the same for any nSim; Key = NULL draws sims in order from the session stream
+.SimDraws <- function(fun, nSim, n = 1, Key = .NextDrawKey(), Sims = seq_len(nSim)) {
+  force(Key)
+  out <- matrix(NA_real_, nSim, n)
+  if (!nSim || !n) return(out)
+  if (!is.null(Key)) {
+    Saved <- .SaveRNG()
+    on.exit(.RestoreRNG(Saved), add = TRUE)
   }
-  set.seed(seed)
+  for (i in seq_len(nSim)) {
+    if (!is.null(Key)) .SetRNG(.SeedInt(Key, Sims[i]))
+    out[i, ] <- fun(i, n)
+  }
+  out
 }
 
 .SaveRNG <- function() {
@@ -27,9 +72,18 @@
   }
 }
 
+.SimRunif <- function(nSim, min, max) {
+  .SimDraws(\(i, n) stats::runif(n, min, max), nSim)[, 1]
+}
+
+.SimRlnorm <- function(nSim, meanlog, sdlog) {
+  meanlog <- rep_len(as.numeric(meanlog), nSim)
+  sdlog   <- rep_len(as.numeric(sdlog), nSim)
+  .SimDraws(\(i, n) stats::rlnorm(n, meanlog[i], sdlog[i]), nSim)[, 1]
+}
+
 .SeedMP <- function(Seed) {
-  set.seed(Seed %||% 101, kind = 'Mersenne-Twister', normal.kind = 'Inversion',
-           sample.kind = 'Rejection')
+  .SetRNG(Seed %||% 101)
 }
 
 # Global sim ids of a sim chunk (see .ChunkProj()); identity when not chunked

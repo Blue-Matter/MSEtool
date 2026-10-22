@@ -87,7 +87,7 @@ PopulateFleet <- function(Fleet,
     ProjYears = ProjYears,
     nArea = nArea,
     nSim = nSim,
-    seed = seed
+    seed = .SubSeed(seed, 'Effort')
   ), "Effort", nm)
   .CheckPopulated(Fleet@Effort@Effort, "Effort", nm,
                   hint = cli::format_inline("Provide an {.var Effort} matrix ({.var Sim} x {.var Year}) for the fleet, then re-run."))
@@ -97,7 +97,7 @@ PopulateFleet <- function(Fleet,
     nSim = nSim,
     HistYears = HistYears,
     ProjYears = ProjYears,
-    seed = seed,
+    seed = .SubSeed(seed, 'Catchability'),
     silent = silent
   ), "Catchability", nm)
   .RequireArray(Fleet@Catchability, "Efficiency", "Catchability", nm, optional = TRUE,
@@ -113,7 +113,7 @@ PopulateFleet <- function(Fleet,
     Years = Years,
     nArea = nArea,
     CalcAtLength = TRUE,
-    seed = seed,
+    seed = .SubSeed(seed, 'Selectivity'),
     silent = silent
   ), "Selectivity", nm)
   .RequireArray(Fleet@Selectivity, "MeanAtAge", "Selectivity", nm)
@@ -129,7 +129,7 @@ PopulateFleet <- function(Fleet,
     Years = Years,
     nArea = nArea,
     CalcAtLength = TRUE,
-    seed = seed,
+    seed = .SubSeed(seed, 'Retention'),
     silent = silent,
     force = force
   ), "Retention", nm)
@@ -145,7 +145,7 @@ PopulateFleet <- function(Fleet,
     Years = Years,
     nArea = nArea,
     CalcAtLength = TRUE,
-    seed = seed,
+    seed = .SubSeed(seed, 'DiscardMortality'),
     silent = silent
   ), "DiscardMortality", nm)
   .RequireArray(Fleet@DiscardMortality, "MeanAtAge", "DiscardMortality", nm, optional = TRUE,

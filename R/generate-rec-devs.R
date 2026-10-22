@@ -19,6 +19,12 @@
 #' @param RecDevInit Optional array of initial age recruitment deviations.
 #' @param RecDevHist Optional array of historical recruitment deviations.
 #' @param RecDevProj Optional array of projected recruitment deviations.
+#' @param Seed Optional seed. If supplied, each simulation's deviations are
+#'   drawn from random number streams derived from `Seed` and the simulation
+#'   number, so simulation `i` is the same for any `nSim`, and the projection
+#'   deviations don't depend on the number of historical years. If `NULL`
+#'   (default), the simulations are drawn in order from the current random
+#'   number stream.
 #'
 #'
 #' `GenRecDevs()` generates recruitment deviations across initial ages,
@@ -57,7 +63,8 @@ GenRecDevs <- function(SD = 0.2,
                        nSim = 48,
                        RecDevInit = NULL,
                        RecDevHist = NULL,
-                       RecDevProj = NULL) {
+                       RecDevProj = NULL,
+                       Seed = NULL) {
   
   if (is.null(HistYears)) cli::cli_abort('`HistYears` cannot be NULL')
   if (is.null(ProjYears)) cli::cli_abort('`ProjYears` cannot be NULL')
@@ -123,8 +130,20 @@ GenRecDevs <- function(SD = 0.2,
   if (!is.numeric(TruncSD) || length(TruncSD) != 1 || TruncSD <= 0)
     cli::cli_abort("{.arg TruncSD} must be a positive scalar")
 
-  .SeedBlock <- function(x, req, n) {
-    mat <- array(stats::rnorm(nSim * n), dim = c(nSim, n))
+  nAll <- c(Init = nInitRecDev, Hist = nHistTS, Proj = nProjTS)
+  Seed <- Seed %||% .NextDrawKey()
+  Z <- if (is.null(Seed)) {
+    All <- .SimDraws(\(i, n) stats::rnorm(n), nSim, sum(nAll), Key = NULL)
+    Block <- rep(names(nAll), nAll)
+    lapply(names(nAll), \(nm) All[, Block == nm, drop = FALSE]) |>
+      stats::setNames(names(nAll))
+  } else {
+    lapply(names(nAll), \(nm) .SimDraws(\(i, n) stats::rnorm(n), nSim, nAll[[nm]],
+                                        Key = paste(Seed, 'RecDev', nm, sep = '_'))) |>
+      stats::setNames(names(nAll))
+  }
+
+  .SeedBlock <- function(x, req, n, mat) {
     known <- which(!req)
     if (length(known)) {
       nrowX <- nrow(x)
@@ -132,9 +151,9 @@ GenRecDevs <- function(SD = 0.2,
     }
     mat
   }
-  if (genInit) logRecDevInit <- .SeedBlock(RecDevInit, initReq, nInitRecDev)
-  if (genHist) logRecDevHist <- .SeedBlock(RecDevHist, histReq, nHistTS)
-  if (genProj) logRecDevProj <- .SeedBlock(RecDevProj, projReq, nProjTS)
+  if (genInit) logRecDevInit <- .SeedBlock(RecDevInit, initReq, nInitRecDev, Z$Init)
+  if (genHist) logRecDevHist <- .SeedBlock(RecDevHist, histReq, nHistTS, Z$Hist)
+  if (genProj) logRecDevProj <- .SeedBlock(RecDevProj, projReq, nProjTS, Z$Proj)
 
   period <- c(rep('Init', nInitRecDev), rep('Hist', nHistTS),
               rep('Proj', nProjTS))

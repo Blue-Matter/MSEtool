@@ -13,14 +13,16 @@
 #'
 #' @param object A [Length()] or [Weight()] object with slots `Classes`,
 #'   `MeanAtAge`, `CVatAge`, `TruncSD`, and `Dist`.
+#' @param MaxBin Optional upper bound for the classes (see `.SpecMaxBin()`).
+#'   If `NULL`, it is calculated from `object@MeanAtAge` and `object@CVatAge`.
 #'
 #' @return `object` with `object@Classes` populated if it was previously empty.
 #' @keywords internal
-.PopulateClasses <- function(object) {
+.PopulateClasses <- function(object, MaxBin = NULL) {
   if (!EmptyObject(object@Classes))
     return(object)
   
-  MaxBin <- .CalcMaxBin(
+  MaxBin <- MaxBin %||% .CalcMaxBin(
     MeanAtAge = object@MeanAtAge,
     CVatAge   = object@CVatAge,
     TruncSD   = object@TruncSD,
@@ -105,4 +107,61 @@
     )
   }
   MaxBin
+}
+
+
+#' Upper Size Bound from the Parameter Specification
+#'
+#' Calculates the upper bound for default size classes from the parameter
+#' specification rather than the values sampled for each simulation, so the
+#' classes are the same for any `nSim`. Each parameter given as a range or
+#' vector contributes its minimum and maximum, arrays are used as supplied,
+#' and the model is evaluated at every combination. Random-walk (`*SD`)
+#' parameters are not included; sizes above the bound fall in the final,
+#' open-ended class.
+#'
+#' @param object A partly populated [Length()] or [Weight()] object, with
+#'   `Model`, `TruncSD`, and `Dist` set.
+#' @param Pars The unpopulated `Pars` list.
+#' @param CVatAge The unpopulated `CVatAge`.
+#' @param Ages,Years Ages and years of the OM.
+#' @param Length Optional [Length()] object for models of size at length.
+#'
+#' @return The upper bound, or `NULL` if `Pars` is empty.
+#' @keywords internal
+.SpecMaxBin <- function(object, Pars, CVatAge, Ages, Years, Length = NULL) {
+  if (.ParsEmpty(Pars) || is.null(CVatAge))
+    return(NULL)
+  Pars <- Pars[!grepl("sd$", tolower(names(Pars)))]
+  CV <- if (is.array(CVatAge)) {
+    object@CVatAge
+  } else {
+    array(max(CVatAge), c(1, 1, 1),
+          dimnames = list(Sim = 1, Age = Ages@Classes[1], Year = Years[1]))
+  }
+  nRef <- max(1, vapply(Pars, \(p) if (is.array(p)) dim(p)[1] else 1, numeric(1)))
+
+  Bound <- vapply(.SpecCorners(Pars), \(Corner) {
+    tmp <- object
+    tmp@MeanAtAge <- NULL
+    tmp@Pars <- .StructurePars(Pars = Corner, nRef, Years)
+    tmp <- .PopulateMeanAtAge(tmp, Ages, Years, Length)
+    .CalcMaxBin(tmp@MeanAtAge, CV, object@TruncSD, object@Dist)
+  }, numeric(1))
+  max(Bound)
+}
+
+# every combination of each non-array parameter's minimum and maximum
+.SpecCorners <- function(Pars) {
+  Cand <- lapply(Pars, \(p) if (is.array(p) || !is.numeric(p)) list(p) else as.list(unique(range(p))))
+  Grid <- expand.grid(lapply(Cand, seq_along))
+  lapply(seq_len(nrow(Grid)), \(i)
+    stats::setNames(Map(\(cand, j) cand[[j]], Cand, unlist(Grid[i, ])), names(Pars)))
+}
+
+# size at the top of a length class structure; the final class is open-ended
+.MaxClassBound <- function(Classes) {
+  n <- length(Classes)
+  if (n < 2) return(max(Classes))
+  Classes[n] + diff(Classes)[n - 1]
 }

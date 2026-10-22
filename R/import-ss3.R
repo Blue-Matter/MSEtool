@@ -15,6 +15,12 @@
 #' * Optional metadata describing authorship, region, and stock identity are stored in the resulting OM.
 #' * By default, the OM is fully populated using `PopulateOM()`.
 #' * Set `Populate = FALSE` to return the partially constructed OM.
+#' * All stochastic values (e.g., projection recruitment deviations,
+#'   observation and implementation error) are generated from `Seed`, so OMs
+#'   imported with the same `Seed` share the same random draws. Performance
+#'   averaged across such OMs is based on a single set of `nSim` random draws.
+#'   Use a different `Seed` for each OM, or for each batch of OMs, to obtain
+#'   independent draws. Simulation `i` is the same for any `nSim`.
 #' * The numbers-at-age in the first historical year are the SS3 virgin
 #'   numbers-at-age multiplied by `SRR@RecDevInit` and
 #'   `Depletion@Misc$InitialAtAge`. `SRR@RecDevInit` holds the SS3 initial-age
@@ -83,6 +89,13 @@
 #'   total removals biomass (landings + discards), used to split an aggregate
 #'   TAC across fleets under multi-fleet TAC-based MPs. Averaged over this
 #'   many years ending at the last historical year. Default `3`.
+#' @param Seed Integer. Random number seed for the OM (`OM@Seed`), used for all
+#'   stochastic values generated when the OM is populated (e.g., recruitment
+#'   deviations, observation and implementation error, values sampled from
+#'   parameter ranges) and for the random draws made in [Simulate()] and
+#'   [Project()]. OMs imported with the same `Seed` share these random draws;
+#'   use a different `Seed` for each OM (or each batch of OMs) to obtain
+#'   independent draws. Default `101`.
 #' @param silent Logical; if `TRUE`, suppress informational output during import.
 #' @param Populate Logical; if `TRUE` (default), populate the OM using
 #'   `PopulateOM()`. If `FALSE`, return the partially constructed OM.
@@ -134,6 +147,7 @@ ImportSS <- function(SSDir,
                      AllocationYears = 3,
                      silent = FALSE,
                      Populate = TRUE,
+                     Seed = 101,
                      ...) {
 
   .OnExit()
@@ -197,6 +211,7 @@ ImportSS <- function(SSDir,
     MPStartYear = MPStartYear,
     InterimAdvice = InterimAdvice,
     nSim = nSim,
+    Seed = Seed,
     nYear = YearsList$nYear,
     pYear = YearsList$pYear,
     CurrentYear = YearsList$CurrentYear,

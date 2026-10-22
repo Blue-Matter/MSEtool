@@ -100,7 +100,15 @@
 #'   fishing gear; actual effective F may be lower if some fish are discarded
 #'   and survive. Default `3`.
 #' @param Seed Integer. Random number generator seed for reproducibility.
-#'   Default `101`.
+#'   All stochastic values are derived from `Seed`: those generated when the
+#'   OM is populated (e.g., recruitment deviations, observation and
+#'   implementation error, values sampled from parameter ranges) and the
+#'   random draws made in [Simulate()] and [Project()]. Each simulation has
+#'   its own random number streams, so simulation `i` is the same for any
+#'   `nSim`. OMs with the same `Seed` share the same random draws; use a
+#'   different `Seed` for each OM to obtain independent draws. `Seed` must be
+#'   set before the OM is populated: values already generated are not redrawn
+#'   when `Seed` is changed. Default `101`.
 #' @param Control Named list of optional operating model control settings.
 #'   Default `list()`. See [OMControl] for the available settings.
 #' @param Misc List. Miscellaneous objects or developer-use components.
@@ -1184,7 +1192,11 @@ Seed <- function(x) .IsHist(x, "Seed")
 
 #' @rdname OM-accessors
 #' @export
-`Seed<-` <- function(x, value) .AssignOMSlot(x, value, "Seed", "struct")
+`Seed<-` <- function(x, value) {
+  x <- .AssignOMSlot(x, value, "Seed", "struct")
+  .WarnSeedChanged(x)
+  x
+}
 
 #' @rdname OM-accessors
 #' @export

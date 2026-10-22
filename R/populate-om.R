@@ -54,12 +54,15 @@ PopulateOM <- function(OM,
                        adjust_fecundity = TRUE) {
   
   .CheckClass(OM)
+  Saved <- .SaveRNG()
+  on.exit(.RestoreRNG(Saved), add = TRUE)
   
   OM <- UpdateObject(OM) |> .RepairSimDimnames()
   if (!length(OM@maxF)) OM@maxF <- 3
   
   if (EmptyObject(OM)) return(OM)
   if (.CheckDigest(OM) & !force) return(OM)
+  .WarnSeedChanged(OM)
 
   OM <- .DropStaleSims(OM)
 
@@ -104,16 +107,30 @@ PopulateOM <- function(OM,
     OM <- StandardizeEffort(OM, populate=FALSE)
 
   OM <- .RefreshFleetDigests(OM)
+  OM@Misc$PopulatedSeed <- OM@Misc$PopulatedSeed %||% OM@Seed
 
   .SetDigest(OM)
 }
+
+.WarnSeedChanged <- function(OM) {
+  Old <- OM@Misc$PopulatedSeed
+  if (is.null(Old) || identical(as.numeric(Old), as.numeric(OM@Seed %||% 101)))
+    return(invisible())
+  cli::cli_warn(c(
+    "!" = "{.var Seed} was changed from {.val {Old}} to {.val {OM@Seed}} after the OM was populated.",
+    "i" = "Values already generated with {.code Seed = {Old}} (e.g., recruitment deviations, observation error) are not redrawn.",
+    "i" = "Set {.var Seed} before the OM is populated, e.g., import with {.code Seed = {OM@Seed}}, or with {.code Populate = FALSE}, then set {.var Seed} and call {.fn Populate}."
+  ), call = NULL)
+}
+
+.FleetSeed <- function(OM, st, fl) paste(OM@Seed %||% 101, 'Fleet', st, fl, sep = '_')
 
 .RefreshFleetDigests <- function(OM) {
   if (is.null(OM@Fleet) || !inherits(OM@Fleet, "StockFleetList")) return(OM)
   for (st in seq_along(OM@Fleet)) {
     Stock <- OM@Stock[[st]]
     for (fl in seq_along(OM@Fleet[[st]])) {
-      seed <- OM@Seed + st + fl
+      seed <- .FleetSeed(OM, st, fl)
       OM@Fleet[[st]][[fl]] <- .SetDigest(OM@Fleet[[st]][[fl]], .FleetArgList(Stock, seed))
     }
   }
@@ -273,7 +290,7 @@ PopulateOM <- function(OM,
       CurrentYear = OM@CurrentYear,
       nSim = OM@nSim,
       Seasons = OM@Seasons,
-      seed = OM@Seed + st,
+      seed = paste(OM@Seed %||% 101, 'Stock', st, sep = '_'),
       silent = silent,
       force = force
     )
@@ -353,7 +370,7 @@ PopulateOM <- function(OM,
     StockOrig <- StockList[[st]]
 
     needsUpdate <- force || any(vapply(seq_len(nFleets), function(fl) {
-      !.CheckDigest(FleetList[[st]][[fl]], .FleetArgList(StockOrig, OM@Seed + st + fl))
+      !.CheckDigest(FleetList[[st]][[fl]], .FleetArgList(StockOrig, .FleetSeed(OM, st, fl)))
     }, logical(1)))
 
     ExtendedLength <- NULL
@@ -382,7 +399,7 @@ PopulateOM <- function(OM,
       FleetList[[st]][[fl]] <- PopulateFleet(
         Fleet = FleetList[[st]][[fl]],
         Stock = StockOrig,
-        seed = OM@Seed + st + fl,
+        seed = .FleetSeed(OM, st, fl),
         silent = silent,
         force  = force,
         WeightFallback = WeightFallback,
@@ -540,6 +557,7 @@ PopulateOM <- function(OM,
     ImpList[[cx]]    <- vector("list", nFleet)
     names(ImpList[[cx]]) <- FleetNames
     for (fl in seq_len(nFleet)) {
+      .SetSeed(paste(OM@Seed %||% 101, 'Imp', cx, fl, sep = '_'))
       ImpList[[cx]][[fl]] <- PopulateImp(OM@Imp[[cx]][[fl]], OM@nSim, HistYears, ProjYears)
     }
   }
@@ -625,7 +643,7 @@ PopulateOM <- function(OM,
     AgeClasses           <- OM@Stock[[st]]@Ages@Classes
     
     for (fl in seq_len(nObs)) {
-      .SetSeed(OM@Seed + st + fl)
+      .SetSeed(paste(OM@Seed %||% 101, 'Obs', st, fl, sep = '_'))
       
       # Fleet obs use fleet-specific size classes; survey obs use NULL
       SizeClasses <- if (fl <= nFleet) {

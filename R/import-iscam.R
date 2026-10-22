@@ -64,6 +64,13 @@
 #' @param InterimAdvice A `data.frame` or `NULL`. Fixed or stochastic
 #'   TAC/Effort values for years before `MPStartYear`; see [InterimAdvice()].
 #'   Default `NULL`.
+#' @param Seed Integer. Random number seed for the OM (`OM@Seed`), used for all
+#'   stochastic values generated when the OM is populated (e.g., recruitment
+#'   deviations, observation and implementation error, values sampled from
+#'   parameter ranges) and for the random draws made in [Simulate()] and
+#'   [Project()]. OMs imported with the same `Seed` share these random draws;
+#'   use a different `Seed` for each OM (or each batch of OMs) to obtain
+#'   independent draws. Default `101`.
 #' @param silent Logical; if `TRUE`, suppress informational output.
 #' @param Populate Logical; if `TRUE` (default), populate the OM using
 #'   [PopulateOM()]. If `FALSE`, return the partially constructed OM.
@@ -93,7 +100,8 @@ ImportiSCAM <- function(iSCAMdir,
                         MPStartYear   = NULL,
                         InterimAdvice = NULL,
                         silent     = FALSE,
-                        Populate   = TRUE) {
+                        Populate   = TRUE,
+                        Seed       = 101) {
 
   .OnExit()
   replist <- if (is.character(iSCAMdir)) load.iscam.files(iSCAMdir) else iSCAMdir
@@ -186,6 +194,7 @@ ImportiSCAM <- function(iSCAMdir,
     MPStartYear   = MPStartYear,
     InterimAdvice = InterimAdvice,
     nSim        = nSim,
+    Seed        = Seed,
     nYear       = nYear,
     pYear       = pYear,
     CurrentYear = endYr

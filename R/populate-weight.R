@@ -84,6 +84,7 @@ PopulateWeight <- function(Weight,
   }
   
   .SetSeed(seed)
+  Spec <- list(Pars = Weight@Pars, CVatAge = Weight@CVatAge)
   
   Weight@Pars <- .StructurePars(Pars = Weight@Pars, nSim, Years)
   Weight@Model <- .FindModel(Weight)
@@ -148,9 +149,22 @@ PopulateWeight <- function(Weight,
   Weight <- .AddAtAgeDimnames(Weight, Ages, Years)
   
   if (AWK) {
-    Weight <- .PopulateClasses(Weight)
+    Weight <- .PopulateClasses(Weight, .SpecMaxBinWeight(Weight, Spec, Length, Ages, Years))
     Weight <- .PopulateASK(Weight, Ages, silent, type = "Weight")
   }
   
   .SetDigest(.SetAgeDimnames(Weight, Ages), argList)
+}
+
+# weight at the top of the length classes bounds weight-at-age for models of weight at length
+.SpecMaxBinWeight <- function(Weight, Spec, Length, Ages, Years) {
+  Model <- if (is.null(Weight@Model)) NULL else .FindModel(Weight)
+  if (is.null(Model) || !"Length" %in% names(formals(Model)))
+    return(.SpecMaxBin(Weight, Spec$Pars, Spec$CVatAge, Ages, Years))
+  if (is.null(Length@Classes))
+    return(NULL)
+  BoundLength <- Length
+  BoundLength@MeanAtAge <- array(.MaxClassBound(Length@Classes), c(1, 1, 1),
+                                 dimnames = list(Sim = 1, Age = Ages@Classes[1], Year = Years[1]))
+  .SpecMaxBin(Weight, Spec$Pars, Spec$CVatAge, Ages, Years, Length = BoundLength)
 }

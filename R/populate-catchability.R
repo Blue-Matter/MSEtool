@@ -51,6 +51,7 @@ PopulateCatchability <- function(Catchability,
   
   Years  <- c(HistYears, ProjYears)
   nSim   <- .GetNSim(Catchability, nSim)
+  .SetSeed(seed)
   
   if (is.null(Catchability@Efficiency)) {
     Catchability@Efficiency <- array(
@@ -128,7 +129,8 @@ PopulateCatchability <- function(Catchability,
   Multiplier <- if (nm == "qInc") {
     outer(Par, ProjYears - max(HistYears), .qIncMultiplier)
   } else {
-    matrix(exp(rnorm(pYears * nSim, rep(-0.5 * Par^2, pYears), rep(Par, pYears))), nrow = nSim)
+    SD <- rep_len(Par, nSim)
+    exp(.SimDraws(\(i, n) stats::rnorm(n, -0.5 * SD[i]^2, SD[i]), nSim, pYears))
   }
   dimnames(Multiplier) <- list(Sim = seq_len(nrow(Multiplier)), Year = ProjYears)
 

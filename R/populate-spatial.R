@@ -284,7 +284,7 @@ PopulateSpatial <- function(Spatial,
     } else if (length(Spatial@UnfishedDist) == 2) {
       # Sample from Uniform
       Bounds <- sort(Spatial@UnfishedDist)
-      Area_1 <- stats::runif(nSim, Bounds[1], Bounds[2])
+      Area_1 <- .SimRunif(nSim, Bounds[1], Bounds[2])
       Area_2 <- 1-Area_1
       Spatial@UnfishedDist <- array(cbind(Area_1, Area_2), 
                                     dim=c(nSim, 2, 1, 1),
@@ -341,7 +341,7 @@ PopulateSpatial <- function(Spatial,
     } else if (length(Spatial@ProbStaying) == 2) {
       # Sample from Uniform
       Bounds <- sort(Spatial@ProbStaying)
-      Area_1 <- stats::runif(nSim, Bounds[1], Bounds[2])
+      Area_1 <- .SimRunif(nSim, Bounds[1], Bounds[2])
       Spatial@ProbStaying <- array(cbind(Area_1), 
                                    dim=c(nSim, 1, 1, 1),
                                    dimnames = list(
@@ -458,7 +458,7 @@ PopulateSpatial <- function(Spatial,
     } else if (length(Spatial@RelativeSize) == 2) {
       # Sample from Uniform
       Bounds <- sort(Spatial@RelativeSize)
-      Area_1 <- stats::runif(nSim, Bounds[1], Bounds[2])
+      Area_1 <- .SimRunif(nSim, Bounds[1], Bounds[2])
       Area_2 <- 1-Area_1
       Spatial@RelativeSize <- array(cbind(Area_1, Area_2), 
                                     dim=c(nSim, 2),

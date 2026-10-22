@@ -24,9 +24,9 @@
 #'   is treated as inactive and receives \eqn{T_{s,t} = 0} throughout the
 #'   projection. Default `NULL`, which falls back to
 #'   `OM@Control$StockTargeting$n_recent`, then to `5`.
-#' @param seed `numeric(1)`. Offset added to `OM@Seed` for the random number
-#'   generator, ensuring independence from other stochastic processes.
-#'   Default `101`.
+#' @param seed `numeric(1)`. Combined with `OM@Seed` and the simulation number
+#'   to seed each simulation's random number stream, keeping the draws
+#'   independent from other stochastic processes. Default `101`.
 #'
 #' @return The input `OM` object with updated `@StockTargeting@Targeting`.
 #'
@@ -90,7 +90,8 @@ GenerateStockTargeting <- function(OM,
   Period <- match.arg(Period)
   n_recent <- n_recent %||NA% OM@Control$StockTargeting$n_recent %||NA% 5
   n_recent <- n_recent * OM@Seasons
-  .SetSeed(OM@Seed + seed)
+  Saved <- .SaveRNG()
+  on.exit(.RestoreRNG(Saved), add = TRUE)
   
   years   <- Years(OM, Period)
   n_years <- length(years)
@@ -120,6 +121,7 @@ GenerateStockTargeting <- function(OM,
                                       Year  = years))
   
   for (sim in seq_len(n_sim)) {
+    .SetRNG(.SeedInt(OM@Seed %||% 101, 'StockTargeting', Period, seed, .GlobalSim(OM, sim)))
     for (fl in seq_len(n_fleet)) {
       
       log_mean       <- log_mu_arr[sim, , fl]

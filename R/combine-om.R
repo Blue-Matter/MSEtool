@@ -233,7 +233,7 @@ CombineOMs <- function(
 }
 
 .OMExtend <- function(OM, HistYears, ProjYears, FillEffort, FillEfficiency) {
-  
+  .SetSeed(paste(OM@Seed %||% 101, 'Extend', paste(StockNames(OM), collapse = '/')))
   OM@CurrentYear <- max(HistYears)
   OM@nYear <- length(HistYears)
   OM@pYear <- length(ProjYears)
@@ -399,11 +399,8 @@ CombineOMs <- function(
   RecDevHist <- Extend(RecDevHist, nSim = nSim, Years=forward_years, default=NA)
   
   logrecdev <- array(
-    .Rtnorm(nSim * n_forward, 
-           mu = mu, 
-           sigma = sd, 
-           lower = lower, 
-           upper = upper),
+    .SimDraws(\(i, n) .Rtnorm(n, mu = mu[i], sigma = sd[i], lower = lower[i], upper = upper[i]),
+              nSim, n_forward),
     dim = c(nSim, n_forward),
     dimnames = list(Sim=seq_len(nSim), Year=forward_years)
   )
@@ -449,8 +446,10 @@ CombineOMs <- function(
     
     mu <- log(Mean) - 0.5 * SD^2
     
+    mu <- rep_len(as.numeric(mu), nSim)
+    SD <- rep_len(as.numeric(SD), nSim)
     Values <- array(
-      exp(rnorm(n_fill * nSim, rep(mu, n_fill), rep(SD, n_fill))),
+      exp(.SimDraws(\(i, n) stats::rnorm(n, mu[i], SD[i]), nSim, n_fill)),
       dim = c(nSim, n_fill)
     )
   }

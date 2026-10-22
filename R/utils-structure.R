@@ -39,7 +39,7 @@
 #' - If already an array, dimension names are assigned via
 #'   `.NameParDimensions()` if missing.
 #' - If length 2 (and `nSim != 2`), treated as uniform bounds and sampled
-#'   via [stats::runif()]. When `nSim == 1` the midpoint is used.
+#'   via [stats::runif()], one stream per simulation.
 #' - Otherwise, values are recycled or truncated to `nSim` and wrapped in a
 #'   1-year array.
 #'
@@ -66,7 +66,7 @@
         '`nSim` required to generate stochastic values.',
         'i' = 'Provide number of simulations to the `nSim` argument.'
       ))
-    val <- if (nSim == 1) mean(Par) else stats::runif(nSim, Par[1], Par[2])
+    val <- .SimDraws(\(i, n) stats::runif(n, Par[1], Par[2]), nSim)[, 1]
     if (is.null(nArea)) {
       Par <- array(val, dim=c(length(val), 1))
     } else {
@@ -211,9 +211,9 @@
 .RandomWalk <- function(targ, targsd, nSim, Years) {
   nTS    <- length(Years)
   targ   <- matrix(targ, nSim, nTS)
-  mutemp <- -0.5 * targsd^2
+  sdmat  <- matrix(as.numeric(targsd), nSim, nTS)
   temp   <- array(
-    exp(rnorm(nSim * nTS, mutemp, targsd)),
+    exp(.SimDraws(\(i, n) rnorm(n, -0.5 * sdmat[i, ]^2, sdmat[i, ]), nSim, nTS)),
     dim      = c(nSim, nTS),
     dimnames = list(Sim=seq_len(nSim), Year=Years)
   )

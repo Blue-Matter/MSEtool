@@ -77,7 +77,7 @@ PopulateDepletion <- function(Depletion,
       ))
     }
     Initial <- sort(Initial)
-    Initial <- stats::runif(nSim, Initial[1], Initial[2])
+    Initial <- .SimRunif(nSim, Initial[1], Initial[2])
   }
   nSim <- length(Initial)
   array(Initial, dim = nSim, dimnames = list(Sim = 1:nSim))

@@ -177,7 +177,8 @@ PopulateSRR <- function(SRR,
     nSim = nSim,
     RecDevInit = SRR@RecDevInit,
     RecDevHist = SRR@RecDevHist,
-    RecDevProj = SRR@RecDevProj
+    RecDevProj = SRR@RecDevProj,
+    Seed = seed %||% 101
   )
   
   SRR@RecDevInit <- RecDeviations$RecDevInit

@@ -73,6 +73,7 @@ PopulateLength <- function(Length,
     return(Length)
   
   .SetSeed(seed)
+  Spec <- list(Pars = Length@Pars, CVatAge = Length@CVatAge)
   
   Length@Pars    <- .StructurePars(Pars = Length@Pars, nSim, Years)
   Length@Model   <- .FindModel(Length)
@@ -93,7 +94,7 @@ PopulateLength <- function(Length,
     ALK <- FALSE
   
   if (!is.null(Length@CVatAge)) 
-    Length <- .PopulateClasses(Length)
+    Length <- .PopulateClasses(Length, .SpecMaxBin(Length, Spec$Pars, Spec$CVatAge, Ages, Years))
   
   Length <- .AddAtAgeDimnames(Length, Ages, Years)
   

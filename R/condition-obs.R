@@ -22,7 +22,11 @@
   HistYears <- Years(Hist,'H')
   ProjYears <- Years(Hist,'P')
   nSim <- Hist@OM@nSim
-  
+
+  Saved <- .SaveRNG()
+  on.exit(.RestoreRNG(Saved), add = TRUE)
+  .SetSeed(paste(Hist@OM@Seed %||% 101, 'ConditionObs'))
+
   FisheryDataList <- Hist@OM@Data
   nData <- length(FisheryDataList)
   
