@@ -6,6 +6,8 @@
 \alias{R0<-}
 \alias{SPFrom}
 \alias{SPFrom<-}
+\alias{ShareSPFrom}
+\alias{ShareSPFrom<-}
 \alias{RecDevInit}
 \alias{RecDevInit<-}
 \alias{RecDevHist}
@@ -28,6 +30,7 @@ SRR(
   SD = NULL,
   AC = NULL,
   SPFrom = NULL,
+  ShareSPFrom = TRUE,
   TruncSD = 3,
   RecDevInit = NULL,
   RecDevHist = NULL,
@@ -46,6 +49,10 @@ R0(x) <- value
 SPFrom(x)
 
 SPFrom(x) <- value
+
+ShareSPFrom(x)
+
+ShareSPFrom(x) <- value
 
 RecDevInit(x)
 
@@ -133,6 +140,12 @@ index (\code{numeric}), or a weighted blend of multiple sources with a named
 (the stock recruits from its own spawning production). Relevant only in
 multi-stock operating models. See \link[=srr-class]{srr} for details and
 constraints on the weighted form. Default \code{NULL}.}
+
+\item{ShareSPFrom}{\code{logical(1)}. When \code{SPFrom} names a single other stock,
+copy that stock's \code{Pars}, \code{SD}, \code{AC}, and recruitment deviations into this
+stock during \code{\link[=Populate]{Populate()}} (a user-supplied \code{RecDevHist} is kept). Set to
+\code{FALSE} for an independent stock-recruitment curve and recruitment
+deviations. See \link[=srr-class]{srr}. Default \code{TRUE}.}
 
 \item{TruncSD}{\code{numeric(1)}. Number of standard deviations at which the
 log-normal recruitment deviation distribution is truncated. Default \code{2}.}
@@ -288,6 +301,19 @@ srr2 <- SRR(Pars = list(h = 0.7), R0 = 500, SPFrom = "Stock1")
 srr3 <- SRR(Pars = list(h = 0.7), R0 = 500,
             SPFrom = c(Stock1 = 0.6, Stock2 = 0.4))
 }\if{html}{\out{</div>}}
+
+With a single source, the stock uses the source's stock-recruitment
+parameters and recruitment deviations by default (\code{ShareSPFrom = TRUE}),
+with its own \code{R0}. For example, a male stock recruiting from the female
+stock's spawning production follows the female's stock-recruitment curve
+and recruitment deviations, and \code{R0} sets the male share of recruits. Use
+\code{ShareSPFrom = FALSE} to give the stock its own \code{Pars}, \code{SD}, \code{AC}, and
+recruitment deviations:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{# Sink population with its own steepness and recruitment variability
+srr_sink <- SRR(Pars = list(h = 0.5), R0 = 200, SD = 0.6,
+                SPFrom = "Source", ShareSPFrom = FALSE)
+}\if{html}{\out{</div>}}
 }
 
 \subsection{Pass-Through Access from a Stock}{
@@ -313,6 +339,7 @@ AC(srr)            <- 0.3
 TruncSD(srr)       <- 2
 SpawnTimeFrac(srr) <- 0.5
 SPFrom(srr)        <- 1
+ShareSPFrom(srr)   <- FALSE
 RelRecFun(srr)     <- "Ricker_RelRec"
 RecDevHist(srr)    <- my_hist_matrix
 RecDevProj(srr)    <- my_proj_matrix

@@ -79,6 +79,17 @@ weights are not allowed. Every referenced source stock must itself be
 self-recruiting.
 }}
 
+\item{\code{ShareSPFrom}}{\code{logical(1)}. Applies when \code{SPFrom} names a single other
+stock. If \code{TRUE} (default), \code{\link[=Populate]{Populate()}} copies the source stock's \code{Pars},
+\code{SD}, \code{AC}, \code{RecDevInit}, \code{RecDevProj}, and \code{RecDevHist} into this stock,
+so its recruitment follows the source's stock-recruitment curve and
+recruitment deviations (e.g. males and females of one population). A
+user-supplied \code{RecDevHist} for this stock is kept. \code{R0} is not copied.
+The source and this stock must use the same SRR \code{Model} and age classes.
+Set to \code{FALSE} for an independent stock-recruitment curve and recruitment
+deviations (e.g. a spatially separate sink population). Ignored when
+\code{SPFrom} is self or a weighted blend.}
+
 \item{\code{TruncSD}}{\code{numeric(1)}. Number of standard deviations at which the
 log-normal recruitment deviation distribution is truncated. Default \code{2}.}
 

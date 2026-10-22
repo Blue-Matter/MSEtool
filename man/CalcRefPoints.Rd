@@ -59,7 +59,9 @@ apical-F grid via \code{\link[=CalcPerRecruit]{CalcPerRecruit()}}, reusing a sin
 than re-optimizing per reference point.
 \itemize{
 \item \code{F0.1}: apical F at which the slope of the yield-per-recruit curve is
-10\% of the slope at the origin.
+10\% of the slope at the origin. For stocks linked by \code{Herm},
+yield-per-recruit is the lifetime yield of a recruit to that stock,
+including catch taken after it transitions to another stock.
 \item \code{Fmax}: apical F maximising yield-per-recruit. Undefined (returned as
 the upper grid bound) for asymptotic selectivity, where
 yield-per-recruit has no interior maximum.
