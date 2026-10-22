@@ -77,7 +77,14 @@ be stock names or numeric-string indices. Weights need not sum to \code{1}
 (a warning is logged to \code{Log} if they don't); negative or non-finite
 weights are not allowed. Every referenced source stock must itself be
 self-recruiting.
-}}
+}
+
+Recruitment depends on spawning production relative to unfished
+(\code{SP / SP0}), with both blended by the same weights, so the weights set
+the relative contribution of each source and do not scale recruitment;
+the size of this stock's recruitment is set by its \code{R0}. A weight on a
+single source (e.g. \code{c(Stock1 = 0.3)}) has no effect. Spawning production
+exported to this stock is not removed from the source stock.}
 
 \item{\code{ShareSPFrom}}{\code{logical(1)}. Applies when \code{SPFrom} names a single other
 stock. If \code{TRUE} (default), \code{\link[=Populate]{Populate()}} copies the source stock's \code{Pars},

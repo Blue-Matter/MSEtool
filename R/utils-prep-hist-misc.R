@@ -97,15 +97,7 @@
   ## ---- SRR ----
   
   # Calculate recruitment lag
-  Hist@Misc$RecLag <- purrr::map(Hist@OM@Stock, \(stock) {
-    if (!is.null(stock@SRR@SpawnLag))
-      return(as.integer(round(stock@SRR@SpawnLag)))
-    MinAge <- min(stock@Ages@Classes)
-    MaxAge <- max(stock@Ages@Classes)
-    nSeasons <- stock@Seasons
-    AllAges <- seq(from = 0, to=MaxAge, by=1/nSeasons) |> round(3)
-    which(AllAges == MinAge) - 1
-  }) |> unlist()
+  Hist@Misc$RecLag <- .RecLag(Hist@OM@Stock)
   
   # SRR parameters
   Hist@Misc$SRR_Pars <- purrr::map(Hist@OM@Stock, \(stock) stock@SRR@Pars)
@@ -150,28 +142,12 @@
   Hist@Misc$R0 <- purrr::map(R0_list, \(st) ExtendSims(st, nSim_R0)) |>
     List2Array('Stock', pos=2)
 
-  RawSP0 <- Hist@Unfished@Equilibrium@SProduction |> ExtendSims(nSim = nSim(Hist))
-  SP0Dim <- which(names(dimnames(RawSP0)) == 'Year')
-  R0Dim  <- which(names(dimnames(Hist@Misc$R0)) == 'Year')
+  UnfishedSP <- Hist@Unfished@Equilibrium@SProduction |> ExtendSims(nSim = nSim(Hist))
+  AllYears   <- as.numeric(dimnames(UnfishedSP)[['Year']])
+  R0Shifted  <- .R0Shifted(Hist@Misc$R0, Hist@Misc$RecLag)
 
-  AllYears <- as.numeric(dimnames(RawSP0)[[SP0Dim]])
-  Yr1Ind   <- which(floor(AllYears) == floor(min(AllYears)))
-
-  nYearR0   <- dim(Hist@Misc$R0)[R0Dim]
-  R0Shifted <- Hist@Misc$R0
-  for (st in seq_len(nStock(Hist))) {
-    lag <- Hist@Misc$RecLag[st]
-    if (lag == 0) next
-    shiftInd <- pmin(seq_len(nYearR0) + lag, nYearR0)
-    R0Shifted[, st, ] <- Hist@Misc$R0[, st, shiftInd]
-  }
-
-  SP0Yr1      <- abind::asub(RawSP0,    Yr1Ind, SP0Dim, drop = FALSE)
-  R0Yr1       <- abind::asub(R0Shifted, Yr1Ind, R0Dim,  drop = FALSE)
-  Phi0RefSeed <- ArrayDivide(SP0Yr1, R0Yr1)
-
-  Phi0RefFull <- ExtendYears(Phi0RefSeed, Years = AllYears,
-                             maintain_seasonal_pattern = TRUE)
+  Phi0RefFull <- .Phi0RefSeed(UnfishedSP, Hist@Misc$R0, Hist@Misc$RecLag) |>
+    ExtendYears(Years = AllYears, maintain_seasonal_pattern = TRUE)
   Hist@Misc$SP0 <- ArrayMultiply(Phi0RefFull, R0Shifted)
 
   # Unfished distribution
@@ -318,6 +294,45 @@
       Hist@Misc[[nm]] <- saved[[nm]]
   }
   Hist
+}
+
+# Time steps between spawning and recruitment, per stock
+.RecLag <- function(StockList) {
+  purrr::map(StockList, \(stock) {
+    if (!is.null(stock@SRR@SpawnLag))
+      return(as.integer(round(stock@SRR@SpawnLag)))
+    MinAge <- min(stock@Ages@Classes)
+    MaxAge <- max(stock@Ages@Classes)
+    nSeasons <- stock@Seasons
+    AllAges <- seq(from = 0, to=MaxAge, by=1/nSeasons) |> round(3)
+    which(AllAges == MinAge) - 1
+  }) |> unlist()
+}
+
+# R0 of the cohort spawned in each time step [Sim, Stock, Year]
+.R0Shifted <- function(R0, RecLag) {
+  nYearR0   <- dim(R0)[which(names(dimnames(R0)) == 'Year')]
+  R0Shifted <- R0
+  for (st in seq_along(RecLag)) {
+    lag <- RecLag[st]
+    if (lag == 0) next
+    shiftInd <- pmin(seq_len(nYearR0) + lag, nYearR0)
+    R0Shifted[, st, ] <- R0[, st, shiftInd]
+  }
+  R0Shifted
+}
+
+# Unfished spawning production per recruit in the first historical year, by
+# time step: the reference against which the stock-recruitment relationship
+# is defined [Sim, Stock, Year]
+.Phi0RefSeed <- function(UnfishedSP, R0, RecLag) {
+  SP0Dim   <- which(names(dimnames(UnfishedSP)) == 'Year')
+  R0Dim    <- which(names(dimnames(R0)) == 'Year')
+  AllYears <- as.numeric(dimnames(UnfishedSP)[[SP0Dim]])
+  Yr1Ind   <- which(floor(AllYears) == floor(min(AllYears)))
+  SP0Yr1   <- abind::asub(UnfishedSP, Yr1Ind, SP0Dim, drop = FALSE)
+  R0Yr1    <- abind::asub(.R0Shifted(R0, RecLag), Yr1Ind, R0Dim, drop = FALSE)
+  ArrayDivide(SP0Yr1, R0Yr1)
 }
 
 # stocks without Length have no size classes

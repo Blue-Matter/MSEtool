@@ -405,16 +405,18 @@
 
   SPR0_Full_List <- Array2List(Hist@Reference@SPR0) |>
     .SubsetStock(Stocks = complex_stocks)
+  Phi0Ref <- .SRRPhi0Ref(Hist)[complex_stocks]
 
   logApicalFRange <- log(c(1E-5, Hist@OM@maxF))
 
   MSYRefPoints <- Hist@Reference@MSY
 
-  RunOneSim <- function(StockList_sim, FleetList_sim, SPR0_List_sim) {
+  RunOneSim <- function(StockList_sim, FleetList_sim, SPR0_List_sim, Phi0Ref_sim) {
     purrr::map(seq_along(Years), \(ts) {
       inputs <- .PrepPerRecruitInputs(StockList_sim, FleetList_sim,
                                       SPR0_List_sim, Years[ts],
-                                      EffortYears = RefEffortYears, RefSeason = RefSeason)
+                                      EffortYears = RefEffortYears, RefSeason = RefSeason,
+                                      Phi0Ref = Phi0Ref_sim)
       flat <- .FlattenPerRecruitInputsForCpp(inputs)
 
       opt <- optimize(
@@ -444,7 +446,8 @@
     results_sim1 <- RunOneSim(
       Subset(StockList,      Sims = 1),
       Subset(FleetList,      Sims = 1),
-      Subset(SPR0_Full_List, Sims = 1)
+      Subset(SPR0_Full_List, Sims = 1),
+      Subset(Phi0Ref,        Sims = 1)
     )
 
     for (sl in setdiff(slotNames(MSYRefPoints), 'Misc')) {
@@ -466,7 +469,8 @@
     RunOneSim(
       .SubsetSim(StockList,      Sims = sim, keep_sim_name = TRUE),
       .SubsetSim(FleetList,      Sims = sim, keep_sim_name = TRUE),
-      .SubsetSim(SPR0_Full_List, Sims = sim, keep_sim_name = TRUE)
+      .SubsetSim(SPR0_Full_List, Sims = sim, keep_sim_name = TRUE),
+      .SubsetSim(Phi0Ref,        Sims = sim, keep_sim_name = TRUE)
     )
   }
 
@@ -493,7 +497,7 @@
       seq_len(nSim),
       CalcRefMSY_Sim,
       .options = furrr::furrr_options(
-        globals  = c('StockList', 'FleetList', 'SPR0_Full_List', 'Years',
+        globals  = c('StockList', 'FleetList', 'SPR0_Full_List', 'Phi0Ref', 'Years',
                      'complex_name', 'type', 'logApicalFRange',
                      'RefSeason', 'RefEffortYears'),
         packages = "MSEtool",

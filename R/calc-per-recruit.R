@@ -1391,6 +1391,20 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
 
 
 
+# First-year unfished spawning production per recruit for each stock, as used
+# by the stock-recruitment relationship in the population dynamics
+.SRRPhi0Ref <- function(x) {
+  OM <- if (inherits(x, 'hist')) x@OM else x
+  UnfishedSP <- if (inherits(x, 'hist') && !EmptyObject(x@Unfished@Equilibrium))
+    x@Unfished@Equilibrium@SProduction else
+      CalcUnfished_Equilibrium(OM, silent = TRUE)@SProduction
+  R0List <- purrr::map(OM@Stock, \(stock) stock@SRR@R0)
+  nSimR0 <- max(purrr::map_int(R0List, \(r0) dim(r0)[1]), nSim(OM))
+  R0     <- purrr::map(R0List, \(r0) ExtendSims(r0, nSimR0)) |> List2Array('Stock', pos = 2)
+  .Phi0RefSeed(ExtendSims(UnfishedSP, nSimR0), R0, .RecLag(OM@Stock)) |>
+    Array2List('Stock')
+}
+
 .HermSubsetSim <- function(Herm, sim) {
   if (is.null(Herm)) return(NULL)
   Herm$Hazard <- purrr::map(Herm$Hazard, \(h) {
@@ -1420,7 +1434,7 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
 }
 
 .PrepPerRecruitInputs <- function(StockList, FleetList, SPR0List, Years, EffortYears = NULL,
-                                  RefSeason = NULL, Herm = NULL) {
+                                  RefSeason = NULL, Herm = NULL, Phi0Ref = NULL) {
 
   FleetNames <- names(FleetList[[1]])
 
@@ -1649,6 +1663,10 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
     mod
   })
 
+  Phi0SRR <- if (!is.null(Phi0Ref))
+    .AnnualPhi0Ref(Phi0Ref[names(StockList)], .RecLag(StockList), Years, nSim_true,
+                   SimNamesInputs, nSeason, SeasonalWeightsList, cal_years)
+
   if (!is.null(Herm)) {
     nAgeHerm <- length(StockList[[match(Herm$From[1], names(StockList))]]@Ages@Classes)
     HermPG   <- purrr::map_lgl(unique(c(Herm$From, Herm$To)), \(st)
@@ -1708,6 +1726,39 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
     RefSeason                 = RefSeason,
     NPR0List                  = NPR0List,
     NPR0_SPList               = NPR0_SPList,
-    Herm                      = Herm
+    Herm                      = Herm,
+    Phi0SRR                   = Phi0SRR
   )
+}
+
+# First-year unfished spawning production per recruit for each equilibrium year
+# [Sim, Stock, Year]. Seasonal: recruits in season s come from spawning in
+# season s - lag, weighted by the seasonal recruitment weights.
+.AnnualPhi0Ref <- function(Phi0Ref, RecLag, Years, nSim, SimNames, nSeason,
+                           SeasonalWeightsList, CalYears) {
+  nSimRef <- max(nSim, purrr::map_int(Phi0Ref, \(x) dim(x)[1]))
+  if (nSimRef > length(SimNames))
+    SimNames <- dimnames(Phi0Ref[[which.max(purrr::map_int(Phi0Ref, \(x) dim(x)[1]))]])[[1]]
+  purrr::imap(Phi0Ref, \(seed, st) {
+    seed <- matrix(as.numeric(ExtendSims(seed, nSimRef)), nrow = nSimRef)
+    if (nSeason <= 1L) {
+      out <- matrix(seed[, 1], nrow = nSimRef, ncol = length(Years))
+      dimnames(out) <- list(Sim = SimNames, Year = Years)
+      return(out)
+    }
+    pi_s <- matrix(as.numeric(SeasonalWeightsList[[st]]), ncol = nSeason * length(CalYears))
+    pi_s <- pi_s[pmin(seq_len(nSimRef), nrow(pi_s)), , drop = FALSE]
+    out  <- matrix(0, nrow = nSimRef, ncol = length(CalYears),
+                   dimnames = list(Sim = SimNames, Year = CalYears))
+    for (cy in seq_along(CalYears)) {
+      idx <- ((cy - 1L) * nSeason + 1L):(cy * nSeason)
+      for (s in seq_len(nSeason)) {
+        spawn <- ((s - 1L - RecLag[[st]]) %% nSeason) + 1L
+        out[, cy] <- out[, cy] + pi_s[, idx[s]] * seed[, spawn]
+      }
+    }
+    out
+  }) |>
+    List2Array('Stock') |>
+    .Aperm(c('Sim', 'Stock', 'Year'))
 }

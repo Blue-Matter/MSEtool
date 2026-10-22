@@ -74,7 +74,8 @@ CalcEquilibrium <- function(OM,
   SPR0 <- CalcSPR0(OM, silent = TRUE) |> .SubsetYear(Years = Years)
   
   SPR0List <- Array2List(SPR0)
-  
+  Phi0Ref  <- .SRRPhi0Ref(OM)
+
   complexes <- Complexes(OM)
   if (!is.null(Complex))
     complexes <- complexes[Complex]
@@ -107,7 +108,8 @@ CalcEquilibrium <- function(OM,
       Years       = Years,
       EffortYears = RefEffortYears,
       RefSeason   = RefSeason,
-      Herm        = .HermForStocks(OM, StockNames[stockInd])
+      Herm        = .HermForStocks(OM, StockNames[stockInd]),
+      Phi0Ref     = Phi0Ref[stockInd]
     )
 
     PerRecruit <- .CalcPerRecruitF(
@@ -159,8 +161,8 @@ CalcEquilibrium <- function(OM,
 
 
 .CalcEquilibriumInternal <- function(PerRecruit, inputs) {
-  
-  SPRList <- PerRecruit@SPR |> Array2List('Stock')
+
+  SPRList <- .SRRSpawningPerRecruit(PerRecruit, inputs) |> Array2List('Stock')
   
   RelRecruits <- purrr::pmap(
     list(inputs$RecParsList, SPRList, inputs$RelRecFunList),
@@ -223,6 +225,19 @@ CalcEquilibrium <- function(OM,
   Eq
 }
 
+# Spawning per recruit relative to the first-year unfished reference the
+# stock-recruitment relationship is defined against (current-year SPR if the
+# reference is not supplied)
+.SRRSpawningPerRecruit <- function(PerRecruit, inputs) {
+  if (is.null(inputs$Phi0SRR)) return(PerRecruit@SPR)
+  SPR  <- .Aperm(PerRecruit@SPR, c('Sim', 'Stock', 'Year', 'F'))
+  Ones <- SPR
+  Ones[] <- 1
+  Out <- .AlignToTemplate(PerRecruit@SPRF, Ones) / .AlignToTemplate(inputs$Phi0SRR, Ones)
+  Out[!is.finite(Out)] <- 0
+  Out
+}
+
 # Stocks that receive individuals recruited into another stock via Herm
 .HermInflow <- function(HermCross, StockNames) {
   Inflow <- stats::setNames(rep(FALSE, length(StockNames)), StockNames)
@@ -264,8 +279,8 @@ CalcEquilibrium <- function(OM,
 
 # Relative recruitment of stocks whose spawning production comes from other stocks
 # (SPFrom) or includes individuals recruited into other stocks (Herm):
-# RR_i = SRR_i(x_i), x_i = sum_k w_ik SP_k / sum_k w_ik SP0_k, with
-# SP_k = sum_j R0_j RR_j SPRF_{k<-j} and SP0_k = sum_j R0_j SPR0_{k<-j}.
+# RR_i = SRR_i(x_i), x_i = sum_k w_ik SP_k / SP0_i, with SP_k = sum_j R0_j RR_j SPRF_{k<-j}
+# and SP0_i the first-year unfished reference (sum_k w_ik SP0_k when not supplied).
 # `SelfOnly` flags stocks solved in closed form by RelRecFun.
 .SolveLinkedRelRecruits <- function(RelRecruits, PerRecruit, inputs, SelfOnly,
                                     tol = 1e-12, maxIter = 500) {
@@ -302,8 +317,10 @@ CalcEquilibrium <- function(OM,
   .WeightedSum <- \(w, arr) Reduce(`+`, purrr::map2(w$from, w$weight, \(k, wt)
     wt * arr[, k, , , drop = FALSE]))
 
+  # unfished reference: first-year SP0 per recruit x current R0, as in the dynamics
+  SP0Ref <- if (!is.null(inputs$Phi0SRR)) .AlignToTemplate(inputs$Phi0SRR, Ones) * R0
   Den <- purrr::map(stats::setNames(Linked, Linked), \(st)
-    .WeightedSum(inputs$SPFrom[[st]], SP0))
+    if (is.null(SP0Ref)) .WeightedSum(inputs$SPFrom[[st]], SP0) else SP0Ref[, st, , , drop = FALSE])
 
   RR <- .AlignToTemplate(RelRecruits, Ones)
   for (iter in seq_len(maxIter)) {

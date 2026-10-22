@@ -39,7 +39,7 @@ skip_on_cran()
   })
   RRobs <- sweep(R, 2, R0, "/")
   SPobs <- apply(hist@SProduction[, , idx, drop = FALSE], 1:2, mean)
-  eq <- CalcEquilibrium(hist, apicalF = exp(seq(log(1e-3), log(2), length.out = 200)),
+  eq <- CalcEquilibrium(hist, apicalF = exp(seq(log(1e-6), log(2), length.out = 300)),
                         Years = lastCY)
   purrr::map(seq_len(nrow(RRobs)), \(s) {
     rr <- eq@RelRecruits[s, 1, 1, ]

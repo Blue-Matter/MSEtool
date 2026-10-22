@@ -118,6 +118,7 @@ CalcMSY <- function(Hist,
     .SubsetStock(Stocks = complex_stocks)
 
   HermComplex <- .HermForStocks(Hist@OM, complex_stocks)
+  Phi0Ref     <- .SRRPhi0Ref(Hist)[complex_stocks]
 
   logApicalFRange <- log(c(1E-5, Hist@OM@maxF))
 
@@ -135,7 +136,8 @@ CalcMSY <- function(Hist,
       inputs <- .PrepPerRecruitInputs(StockList_sim, FleetList_sim,
                                      SPR0_List_sim, Years[ts],
                                      EffortYears = RefEffortYears, RefSeason = RefSeason,
-                                     Herm = .HermSubsetSim(HermComplex, 1))
+                                     Herm = .HermSubsetSim(HermComplex, 1),
+                                     Phi0Ref = Subset(Phi0Ref, Sims = 1))
 
       opt <- optimize(
         .OptCalcRefMSYSims,
@@ -183,7 +185,8 @@ CalcMSY <- function(Hist,
                                       Years       = Years[ts],
                                       EffortYears = RefEffortYears,
                                       RefSeason   = RefSeason,
-                                      Herm        = .HermSubsetSim(HermComplex, sim))
+                                      Herm        = .HermSubsetSim(HermComplex, sim),
+                                      Phi0Ref     = .SubsetSim(Phi0Ref, Sims = sim, keep_sim_name = TRUE))
 
       opt <- optimize(
         .OptCalcRefMSYSims,
@@ -229,7 +232,7 @@ CalcMSY <- function(Hist,
       .options = furrr::furrr_options(
         globals  = c('StockList', 'FleetList', 'SPR0_Full_List', 'Years',
                      'complex_name', 'type', 'logApicalFRange',
-                     'RefSeason', 'RefEffortYears', 'HermComplex'),
+                     'RefSeason', 'RefEffortYears', 'HermComplex', 'Phi0Ref'),
         packages = "MSEtool",
         seed     = 101
       )
