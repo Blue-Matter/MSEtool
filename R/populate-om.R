@@ -419,8 +419,26 @@ PopulateOM <- function(OM,
   }
   if (show) cli::cli_progress_done()
 
+  .CheckFleetMaximum(FleetList)
   OM@Fleet <- FleetList
   OM
+}
+
+# A fleet's maximum effort is a property of the fleet, so it must agree across stocks
+.CheckFleetMaximum <- function(FleetList) {
+  if (length(FleetList) < 2) return(invisible(TRUE))
+  for (fl in seq_along(FleetList[[1]])) {
+    Max <- purrr::map(FleetList, \(Fleets) Fleets[[fl]]@Effort@Maximum)
+    Set <- !purrr::map_lgl(Max, is.null)
+    if (!any(Set)) next
+    Same <- all(Set) && all(purrr::map_lgl(Max[-1], \(m) isTRUE(all.equal(unname(m), unname(Max[[1]])))))
+    if (!Same)
+      cli::cli_abort(c(
+        "x" = "Fleet {.val {FleetList[[1]][[fl]]@Name}}: {.code Effort@Maximum} differs between stocks.",
+        "i" = "Set the same maximum effort for the fleet in every stock."
+      ))
+  }
+  invisible(TRUE)
 }
 
 

@@ -110,6 +110,12 @@ the maximum proportional increase and decrease (\code{DeltaUp[2]} and
 
 With \code{IncludeFirst = TRUE}, \code{y-1} of the first management year in the
 evaluation window is the value in effect before it (see \link{PM}).
+
+\code{PM_TACAttained}: the probability that the catch reaches the TAC,
+\deqn{P\left(\frac{C_{s,y}}{TAC_{s,y}} \ge 1\right)}{P( C[s,y] / TAC[s,y] >= 1 )}
+where \eqn{C_{s,y}}{C[s,y]} and \eqn{TAC_{s,y}}{TAC[s,y]} are the catch
+and the TAC of complex \code{s} in year \code{y}, summed over fleets, in the units
+and catch type of the advice.
 }
 
 \section{Stat, Prob, and Mean}{

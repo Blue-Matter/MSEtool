@@ -71,6 +71,19 @@ engine.
 For \link[=hist-class]{hist} objects, \code{Hist@OM@Control} settings used in projections
 (e.g. \code{ProjectChunks}, \code{EffortOptim}, \code{DataOM}) are described in
 \link{OMControl}.
+
+For \link[=hist-class]{hist} objects, all projected values of an MP that fails for
+every simulation are \code{NA}, as are all projected values of the simulations
+an MP fails for. The errors are recorded in the \code{Log} slot of the returned
+object. They are not written to disk unless requested with the
+\code{MSEtool.WriteLog} option:
+\itemize{
+\item \code{options(MSEtool.WriteLog = "path/to/folder")} writes them to a file
+\verb{<MP>_<time>.log} in that folder, creating it if needed.
+\item \code{options(MSEtool.WriteLog = TRUE)} writes them to a \code{Log} folder in the
+working directory.
+\item \code{options(MSEtool.WriteLog = FALSE)} (the default) writes nothing.
+}
 }
 \seealso{
 \code{\link[=Simulate]{Simulate()}}, \code{\link[=runMSE]{runMSE()}}, \link{OMControl}

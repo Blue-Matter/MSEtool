@@ -228,6 +228,7 @@ Collate:
     'extract-number.R'
     'extract-recruits.R'
     'extract-relative.R'
+    'extract-tac-attainment.R'
     'extract-unfished.R'
     'find-model.R'
     'fit-sp-spict.R'

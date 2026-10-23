@@ -18,6 +18,7 @@
   Areas,
   Season = NULL,
   EverySeason = FALSE,
+  SeasonalEffortAllocation = NULL,
   lambda_scale = 1,
   n_recent = 5,
   maxEval = 500
@@ -45,6 +46,10 @@
 \item{Complexes}{List mapping complex indices to stock indices.}
 
 \item{Areas}{Integer vector of area indices.}
+
+\item{SeasonalEffortAllocation}{Named list (one element per complex) of
+\code{nSim} x \code{Seasons} x \code{nFleet} arrays splitting annual effort advice across
+seasons. See \code{.SeasonalEffortAllocation()}. Derived if \code{NULL}.}
 }
 \value{
 Updated \code{Proj} object.

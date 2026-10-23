@@ -3,11 +3,10 @@
 #' Reports how often the effort/TAC solver failed to converge within
 #' tolerance during a [Project()]/[runMSE()] run, and — where recorded — the
 #' per-fleet or per-complex TAC vs. achieved-catch shortfall behind each
-#' failure. TAC saturation (TAC unachievable within the effort ceiling, e.g.
-#' because the stock is too depleted) and expected multi-complex choke
-#' trade-offs are never logged, since they reflect stock dynamics or fleet
-#' allocation rather than a solver problem — every row returned here is a
-#' genuine solver failure.
+#' failure. A TAC that cannot be caught at the fleets' effort ceiling, and a
+#' multi-complex TAC not caught because another complex's TAC was reached
+#' first, are not solver failures and are not reported here; see
+#' [TACAttainment()] for every TAC shortfall and its cause.
 #'
 #' The `TAC` values reported are the *effective* TAC the solver actually
 #' targeted, i.e. after any implementation error (`OM@Imp`) has already been
@@ -24,7 +23,7 @@
 #'   `PctAchieved` are `NA` for log entries recorded before this per-
 #'   fleet/complex detail was captured.
 #'
-#' @seealso [Project()], [runMSE()], [MPFailureRate()]
+#' @seealso [Project()], [runMSE()], [MPFailureRate()], [TACAttainment()]
 #' @export
 SummarizeConvergence <- function(MSE, silent = FALSE) {
   .CheckClass(MSE, 'mse', 'MSE')

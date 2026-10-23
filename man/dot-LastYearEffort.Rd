@@ -18,12 +18,13 @@
 \item{nSeason}{Integer. Seasons per year.}
 }
 \value{
-List with \code{level} (length \code{nFleet}) and \code{shape} (\code{nSeason} x \code{nFleet}).
+List with \code{level} and \code{total} (length \code{nFleet}) and \code{shape}
+(\code{nSeason} x \code{nFleet}).
 }
 \description{
-Returns each fleet's mean effort over the last complete historical year, and
-that year's seasonal shape normalised to a mean of 1. For annual models the
-shape is a single 1 and \code{level} is the final year's effort, so behaviour is
-unchanged.
+Returns each fleet's mean and total effort over the last complete historical
+year, and that year's seasonal shape normalised to a mean of 1. For annual
+models the shape is a single 1 and \code{level} and \code{total} are the final year's
+effort.
 }
 \keyword{internal}

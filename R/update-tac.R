@@ -64,6 +64,7 @@
       StockNames      = StockNames,
       FleetNames      = FleetNames,
       Areas           = Areas,
+      YearIndex       = match(Year, YearsProj),
       lambda_scale    = lambda_scale,
       n_recent        = n_recent,
       maxEval         = maxEval
@@ -85,6 +86,7 @@
                            Areas,
                            Season      = NULL,
                            EverySeason = FALSE,
+                           YearIndex   = NA,
                            lambda_scale = 1,
                            n_recent     = 5,
                            maxEval      = 500) {
@@ -122,6 +124,8 @@
     rep(NA_real_, nFleet_loc)
   }
 
+  EffortMax <- .FleetMaximumEffort(Proj, sim, TSIndex)
+
   # Single-sim slice for the repeated fishery-dynamics probe calls inside
   # the optimisers below
   ProjSim <- .SliceSim(Proj, sim, .DynamicsProbeSlots)
@@ -135,9 +139,14 @@
                                     TAC_by_Complex,
                                     TACType_by_Complex,
                                     TACUnit_by_Complex,
-                                    MaxFleetEffort)
+                                    MaxFleetEffort,
+                                    EffortMax = EffortMax)
 
-    Proj@Effort[sim, TSIndex, ] <- Solved$Effort
+    Proj@Effort[sim, TSIndex, ] <- .ApplyEffortCeiling(Solved$Effort, EffortMax)
+    Proj <- .RecordTACAttainment(Proj, sim, YearIndex,
+                                 TAC       = matrix(Solved$TAC, nrow = 1),
+                                 Catch     = matrix(Solved$Catch, nrow = 1),
+                                 AtCeiling = Solved$AtCeiling)
     Proj <- .LogEffortConvergence(Proj, Solved$converged, Solved$saturated, sim, Year,
                                   TAC = Solved$TAC, Catch = Solved$Catch, FleetNames = FleetNames)
     return(Proj)
@@ -159,18 +168,49 @@
     TACUnit_by_Complex = TACUnit_by_Complex,
     Compliance         = Compliance,
     MaxFleetEffort     = MaxFleetEffort,
+    EffortMax          = EffortMax,
     lambda             = lambda,
     n_recent           = n_recent,
     maxEval            = maxEval
   )
   
-  Proj@Effort[sim, TSIndex, ] <- result$Effort
+  Proj@Effort[sim, TSIndex, ] <- .ApplyEffortCeiling(result$Effort, EffortMax)
   for (fl in seq_len(nFleet_loc))
     Proj@Misc$StockTargeting[sim, , fl, TSIndex] <- result$Delta[fl, ]
+
+  Proj <- .RecordTACAttainment(Proj, sim, YearIndex,
+                               TAC       = result$TACMatrix,
+                               Catch     = result$CatchMatrix,
+                               AtCeiling = result$AtCeiling)
 
   Proj <- .LogEffortConvergence(Proj, result$converged, result$saturated, sim, Year,
                                 TAC = result$TAC, Catch = result$Catch)
 
+  Proj
+}
+
+# Empty TAC attainment record for a projection: per complex, the effective
+# TAC and the catch at the solved effort ([Sim, Year, Fleet]), and whether
+# each fleet's effort is at its ceiling
+.InitTACAttainment <- function(Proj, YearsProj) {
+  DN  <- list(Sim = seq_len(Proj@OM@nSim), Year = YearsProj, Fleet = FleetNames(Proj))
+  arr <- array(NA_real_, lengths(DN), dimnames = DN)
+  Cx  <- names(Proj@OM@Complexes)
+  list(TAC       = stats::setNames(rep(list(arr), length(Cx)), Cx),
+       Catch     = stats::setNames(rep(list(arr), length(Cx)), Cx),
+       AtCeiling = array(NA, lengths(DN), dimnames = DN))
+}
+
+# TAC and Catch are [nComplex x nFleet]
+.RecordTACAttainment <- function(Proj, sim, YearIndex, TAC, Catch, AtCeiling) {
+  Rec <- Proj@Misc$TACAttainment
+  if (is.null(Rec) || is.na(YearIndex) || is.null(TAC)) return(Proj)
+  for (cx in seq_along(Rec$TAC)) {
+    Rec$TAC[[cx]][sim, YearIndex, ]   <- TAC[cx, ]
+    Rec$Catch[[cx]][sim, YearIndex, ] <- Catch[cx, ]
+  }
+  Rec$AtCeiling[sim, YearIndex, ] <- AtCeiling
+  Proj@Misc$TACAttainment <- Rec
   Proj
 }
 

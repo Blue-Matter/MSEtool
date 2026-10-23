@@ -39,7 +39,9 @@ subset reproduce those simulations of the full object.}
 
 \item{Fleets}{Character vector of fleets to retain. \code{NULL} skips.}
 
-\item{Stocks}{Character vector of stocks to retain. \code{NULL} skips.}
+\item{Stocks}{Character vector of stock names, or numeric vector of stock
+indices, to retain. For \code{om}, \code{hist}, and \code{mse} objects the retained
+stocks must form whole complexes. \code{NULL} skips.}
 
 \item{Impute}{Logical; only relevant when subsetting by \code{Years}. If \code{TRUE}
 (default), years not present in the object are imputed from the nearest

@@ -77,6 +77,38 @@
   headroom * out
 }
 
+# Per-fleet `Effort@Maximum` at this time step; NA where none is set
+.FleetMaximumEffort <- function(Proj, sim, TSIndex) {
+  FleetList <- Proj@OM@Fleet[[1]]
+  out <- rep(NA_real_, length(FleetList))
+  for (fl in seq_along(FleetList)) {
+    Max <- FleetList[[fl]]@Effort@Maximum
+    if (is.null(Max)) next
+    if (is.null(dim(Max))) Max <- matrix(Max, 1, 1)
+    out[fl] <- Max[min(sim, nrow(Max)), min(TSIndex, ncol(Max))]
+  }
+  out
+}
+
+# Effort ceiling per fleet for a TAC solve: the lowest of the effort at which
+# the fleet alone reaches maxF, the fleet's maximum effort, and effort advice
+.EffortCeiling <- function(Proj, sim, TSIndex, MaxFleetEffort = NULL,
+                           EffortMax = NULL, maxEffort = 1e6) {
+  nF   <- nFleet(Proj)
+  ceil <- rep(maxEffort, nF)
+  useful <- .MaxUsefulEffort(Proj, sim, TSIndex, headroom = 1)
+  if (!is.null(useful)) {
+    ok <- is.finite(useful) & useful > 0
+    ceil[ok] <- pmin(ceil[ok], useful[ok])
+  }
+  for (cap in list(EffortMax, MaxFleetEffort)) {
+    if (is.null(cap)) next
+    ok <- is.finite(cap)
+    ceil[ok] <- pmin(ceil[ok], cap[ok])
+  }
+  ceil
+}
+
 .ApplyEffortCeiling <- function(Effort, MaxFleetEffort) {
   if (is.null(MaxFleetEffort)) return(Effort)
   has_ceiling <- !is.na(MaxFleetEffort)
@@ -328,7 +360,7 @@
 
 .CheckComplexTACAttainment <- function(Proj, sim, TSIndex, Year, Effort_final, Delta_final,
                                        TAC_by_Complex, TACType_by_Complex, TACUnit_by_Complex,
-                                       EbyC_final) {
+                                       EbyC_final, Ceiling = NULL) {
 
   ComplexNames <- names(TAC_by_Complex)
   nComplex     <- length(TAC_by_Complex)
@@ -357,7 +389,12 @@
   converged <- all(hit)
   saturated <- if (converged) NA else !any(unresolved)
 
-  list(converged = converged, saturated = saturated, TAC = TAC_vec, Catch = Catch_vec)
+  TACMat <- do.call(rbind, lapply(TAC_by_Complex, function(x)
+    if (is.null(x)) rep(NA_real_, ncol(CatchMat)) else as.numeric(x)))
+  AtCeiling <- if (is.null(Ceiling)) rep(FALSE, ncol(CatchMat)) else Effort_final >= Ceiling * 0.99
+
+  list(converged = converged, saturated = saturated, TAC = TAC_vec, Catch = Catch_vec,
+       TACMatrix = TACMat, CatchMatrix = CatchMat, AtCeiling = AtCeiling)
 }
 
 .ResolveChokeEffort <- function(Proj, sim, TSIndex, Year, Delta,

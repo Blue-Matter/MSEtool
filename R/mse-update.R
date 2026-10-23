@@ -52,6 +52,10 @@
   
   MSE@Misc$Advice[[MPName]] <- Proj@Misc$MPAdvice
 
+  if (is.null(MSE@Misc$TACAttainment))
+    MSE@Misc$TACAttainment <- list()
+  MSE@Misc$TACAttainment[[MPName]] <- Proj@Misc$TACAttainment
+
   
   # TODO 
   # MSE@Misc$Failed[[MPName]] <- lapply(SimList_MP, slot, 'Misc') |>   lapply("[[", "Failed") |> 
@@ -215,5 +219,6 @@
   }
   for (sl in setdiff(methods::slotNames('timeseries'), 'Misc'))
     methods::slot(Proj, sl) <- Mask(methods::slot(Proj, sl))
+  Proj@Misc$TACAttainment <- Mask(Proj@Misc$TACAttainment)
   Proj
 }

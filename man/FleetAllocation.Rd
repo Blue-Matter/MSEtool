@@ -78,7 +78,7 @@ FleetAllocation(om)
 \itemize{
 \item \code{\link[=OM]{OM()}} for the constructor, \link[=om-class]{om} for the class definition.
 \item \code{\link[=HistoricalWeight]{HistoricalWeight()}}/\code{\link[=SeasonalAllocation]{SeasonalAllocation()}} for how a periodically-set
-TAC/Effort is further split across seasons.
+TAC or Effort is further split across seasons.
 \item \link{OM-accessors} for the remaining \code{OM} slot accessors.
 }
 

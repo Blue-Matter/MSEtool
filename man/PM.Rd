@@ -22,6 +22,7 @@
 \alias{PM_AAVE}
 \alias{PM_Stability}
 \alias{PM_TACLimited}
+\alias{PM_TACAttained}
 \title{Performance Metrics}
 \usage{
 PM_FFMSY(object, Ref = 1, Years = NULL, silent = TRUE)
@@ -128,6 +129,8 @@ PM_TACLimited(
   tol = 1e-06,
   silent = TRUE
 )
+
+PM_TACAttained(object, Years = NULL, Stocks = NULL, silent = TRUE)
 }
 \arguments{
 \item{object}{An \link[=mse-class]{mse} object, or a \code{list} of \link[=mse-class]{mse} objects.}
@@ -251,6 +254,13 @@ increases are compared with \code{DeltaUp[2]} and decreases with \code{DeltaDown
 (see \code{\link[=ConstrainTAC]{ConstrainTAC()}}). The limits are the defaults of the \code{DeltaUp} and
 \code{DeltaDown} arguments of each MP (e.g. as set with \code{\link[=SetMPArgs]{SetMPArgs()}}) unless
 given in \code{DeltaUp}/\code{DeltaDown}. MPs with no limits, or no TAC, are \code{NA}.
+
+\code{PM_TACAttained} is the proportion of years in each simulation in which the
+TAC was caught, at the complex level. A fleet that cannot catch its share
+of the TAC fishes at its effort ceiling (see \code{\link[=TACAttainment]{TACAttainment()}}); \code{Stat} is
+the catch as a proportion of the TAC, summed over fleets (and over seasons
+within each calendar year in seasonal models). Years with no TAC are
+excluded; MPs with no TAC are \code{NA}.
 
 \code{PM_Status}, \code{PM_Kobe}, \code{PM_MinStatus}, and \code{PM_Safety} accept a
 \code{Definition} argument selecting

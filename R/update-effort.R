@@ -245,6 +245,7 @@
     }
   }
 
+  EffortMat <- .CapEffortAtMaximum(Proj, sim, ProjInd, EffortMat)
   Proj@Effort[sim, ProjInd, ] <- EffortMat
 
   # Each fleet takes the area distribution of its binding complex, if one was specified
@@ -280,6 +281,13 @@
   }
 
   Proj
+}
+
+# Caps an [time step x fleet] effort matrix at each fleet's `Effort@Maximum`
+.CapEffortAtMaximum <- function(Proj, sim, TSInd, EffortMat) {
+  for (k in seq_along(TSInd))
+    EffortMat[k, ] <- .ApplyEffortCeiling(EffortMat[k, ], .FleetMaximumEffort(Proj, sim, TSInd[k]))
+  EffortMat
 }
 
 #' Distribute effort over areas and return relative area allocation

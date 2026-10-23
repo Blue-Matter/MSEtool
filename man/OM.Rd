@@ -133,8 +133,8 @@ pattern (vs. the population abundance pattern) when \code{SeasonalAllocation}
 is derived. Default \code{NULL}. See \code{\link[=SeasonalAllocation]{SeasonalAllocation()}}.}
 
 \item{SeasonalAllocation}{List. Named list of length 0 or the number of
-stock complexes, controlling how a periodically-set TAC/Effort is split
-across the seasons of the interval it covers. Default \code{NULL}. See
+stock complexes, controlling how a periodically-set TAC is split across
+the seasons of the interval it covers. Default \code{NULL}. See
 \code{\link[=SeasonalAllocation]{SeasonalAllocation()}}.}
 
 \item{EffortAllocation}{List. Named list of length 0 or the number of
@@ -285,7 +285,7 @@ Years(om)
 \item \code{\link[=InterimAdvice]{InterimAdvice()}} for populating interim TAC/Effort.
 \item \code{\link[=DataLag]{DataLag()}} for the data-lag applied to the MP's \code{Data}.
 \item \code{\link[=FleetAllocation]{FleetAllocation()}} for splitting a stock/complex TAC among fleets.
-\item \code{\link[=SeasonalAllocation]{SeasonalAllocation()}} for splitting a periodic TAC/Effort across
+\item \code{\link[=SeasonalAllocation]{SeasonalAllocation()}} for splitting a periodic TAC or Effort across
 seasons.
 \item \code{\link[=RefSeason]{RefSeason()}} for reference point season handling in seasonal OMs.
 \item \code{\link[=EffortAllocation]{EffortAllocation()}} for splitting a scalar absolute Effort

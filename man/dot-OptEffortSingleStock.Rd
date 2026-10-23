@@ -13,6 +13,7 @@
   TACType_by_Complex,
   TACUnit_by_Complex,
   MaxFleetEffort = NULL,
+  EffortMax = NULL,
   cx = 1L,
   Effort_start = NULL,
   minEffort = 1e-08,
@@ -43,8 +44,12 @@ in which case the previous year's effort is returned unchanged.}
 \code{"Removals"} or \code{"Landings"} for each complex.}
 
 \item{MaxFleetEffort}{Numeric vector (length \code{nFleet}). Optional per-fleet
-effort ceiling applied after optimisation; \code{NA} entries impose no ceiling.
+effort ceiling from effort advice; \code{NA} entries impose no ceiling.
 Fleets whose ceiling is exactly zero are excluded from optimisation.}
+
+\item{EffortMax}{Numeric vector (length \code{nFleet}), or \code{NULL}. Each fleet's
+\code{Effort@Maximum} at this time step (\code{.FleetMaximumEffort()}); \code{NA}
+entries impose no maximum.}
 
 \item{cx}{Integer. Index of the complex to solve against, within
 \code{TAC_by_Complex} and the rows of the catch matrix. Default \code{1}. Values
@@ -77,14 +82,16 @@ at \code{exp(max_log_step)} per iteration, preventing runaway effort when the
 Jacobian is near-singular (e.g. depleted stock). Default \code{log(10)}
 (i.e. at most a 10× change per iteration).}
 
-\item{maxEffort}{Numeric scalar. Hard upper bound on any fleet's effort.
-Applied via \code{clamp_effort()} at every step and used as the bracket ceiling
-in the single-fleet case. Fleets that reach \verb{99\%} of this value while
-their TAC residual remains positive are declared saturated. Default \code{1e6}.
-This is an arbitrary backstop: it is tightened per fleet to
-\code{.MaxUsefulEffort()}, the effort past which the \code{maxF} cap leaves catch
-unchanged, so saturation is reached in a step or two instead of by climbing
-several decades.
+\item{maxEffort}{Numeric scalar. Backstop upper bound on any fleet's
+effort, used only where \code{.MaxUsefulEffort()} cannot be computed. Default
+\code{1e6}.
+\subsection{Effort ceiling.}{
+
+Each fleet's ceiling is \code{.EffortCeiling()}: the lowest of the effort at
+which the fleet alone reaches \code{maxF} in every area it fishes, its
+\code{EffortMax}, and its \code{MaxFleetEffort}. Effort is clamped to the ceiling at
+every step. A fleet that cannot catch its TAC at its ceiling fishes at the
+ceiling; every other fleet still catches its own TAC.
 
 Effort is solved on the log scale so that candidate values are always
 positive. The workflow is:
@@ -102,13 +109,18 @@ does not converge, unless the reason is a genuine effort ceiling
 TAC is unreachable, so it always gets a further, less-local search
 before the solve is given up on.
 }
-\subsection{Unreachable combined TAC.}{
+}
+
+\subsection{Fleets that cannot reach their TAC.}{
 
 With multiple active fleets, the catch with every active fleet at its
-effort ceiling is calculated first. If the combined TAC exceeds that
-catch by more than the combined tolerance, the TAC cannot be reached at
-any effort: every active fleet is set to its ceiling and the solve is
-returned as saturated, without iterating.
+ceiling is calculated first. A fleet still short of its TAC there starts
+frozen at its ceiling, since more effort from the other fleets only lowers
+its catch; if every fleet is short, all are returned at their ceiling as
+saturated, without iterating. The remaining fleets are solved with the
+frozen ones fixed (Newton-Raphson, then BFGS over the free fleets only). A
+frozen fleet that then catches more than its TAC is released and the free
+fleets are solved again, at most once per fleet.
 }
 
 \subsection{Warm-start rescale.}{
@@ -130,7 +142,7 @@ Two distinct situations freeze a fleet out of
 further iteration, and are tracked separately:
 \itemize{
 \item \emph{Ceiling}: either (a) the fleet's effort reaches \verb{99\%} of
-\code{maxEffort_fl} (its \code{.MaxUsefulEffort()}-derived cap) while its TAC
+its effort ceiling while its TAC
 residual remains positive, or (b) after backtracking fails, the
 fleet's Jacobian entry is flat (\code{flat_grad}: near-zero derivative with
 a large residual). Both mean catch has genuinely stopped responding to
@@ -160,11 +172,7 @@ A list with:
 \item \code{Effort} - numeric vector of length \code{nFleet} giving optimised effort
 per fleet. For fleets with no TAC constraint (\code{BindingTAC} is \code{NA} or
 not in \code{pos_idx}), effort is carried forward from the previous time
-step. When the TAC is unachievable the two branches differ: the
-single-active-fleet branch cannot bracket the TAC and returns the
-previous time step's effort, while the multi-fleet Newton branch
-saturates and leaves effort at \code{maxEffort} (or \code{MaxFleetEffort[fl]}
-if lower).
+step. A fleet that cannot reach its TAC is at its effort ceiling.
 \item \code{converged} - \code{TRUE} if the solve met \code{tol}/\code{reltol}, \code{FALSE} if not,
 \code{NA} if there was no active TAC to solve for.
 \item \code{saturated} - \code{TRUE} if the TAC was unachievable within the effort
@@ -173,13 +181,15 @@ unresolved solver stall, even though \code{converged} is also \code{FALSE} in
 that case.
 \item \code{TAC}, \code{Catch} - numeric vectors (length \code{nFleet}, \code{NA} outside
 \code{pos_idx}) giving the target and achieved catch at the returned
-\code{Effort}, for diagnostic logging.
+\code{Effort}.
+\item \code{AtCeiling} - logical vector (length \code{nFleet}), \code{TRUE} for fleets with a
+TAC whose effort is at their ceiling.
 }
 
 \code{.CalcFisheryDynamics()}
 overwrites \code{Hist@Effort} with the effort implied by the F actually
-realised, so an unachievable TAC is reported as the effort corresponding
-to the capped F rather than as \code{maxEffort}. See that function's
+realised, so where the \code{maxF} cap binds the reported effort corresponds
+to the capped F. See that function's
 \code{DoBackCalcEffort}.
 }
 \description{

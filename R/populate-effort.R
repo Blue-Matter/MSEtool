@@ -6,7 +6,7 @@
 #' @param Effort An [effort-class] object to populate.
 #' @param HistYears Numeric vector of historical years to populate effort for.
 #' @param ProjYears Numeric vector of projected years. Used to extend
-#'   `TripsScalar`/`AnglerPerTrip`/`Theta` (if supplied) to cover the full
+#'   `Maximum`/`TripsScalar`/`AnglerPerTrip`/`Theta` (if supplied) to cover the full
 #'   model time series; not used for `Effort@Effort` itself.
 #' @param nArea Integer. Number of spatial areas.
 #' @param nSim Integer. Number of simulation replicates.
@@ -18,7 +18,7 @@
 #' * Generates historical effort if the `Effort` slot is a data frame.
 #' * Ensures the effort matrix has correct dimensions and names.
 #' * Validates fleet effort distribution and targeting across areas.
-#' * If supplied, extends `TripsScalar`/`AnglerPerTrip`/`Theta` to cover
+#' * If supplied, extends `Maximum`/`TripsScalar`/`AnglerPerTrip`/`Theta` to cover
 #'   historical and projected years (a bare scalar, length-2 uniform
 #'   bounds, or length-`nSim` vector for `Theta` is first resolved to a
 #'   single-year `Sim x Year` array, then replicated across all years).
@@ -96,6 +96,7 @@ PopulateEffort <- function(Effort,
   Years <- c(HistYears, ProjYears)
   Effort@TripsScalar   <- .PopulateEffortTrips(Effort@TripsScalar, nSim, Years, HistYears, "TripsScalar")
   Effort@AnglerPerTrip <- .PopulateEffortTrips(Effort@AnglerPerTrip, nSim, Years, HistYears, "AnglerPerTrip")
+  Effort@Maximum       <- .PopulateEffortMaximum(Effort@Maximum, nSim, Years, HistYears)
   Effort@Theta         <- .PopulateTheta(Effort@Theta, nSim, HistYears)
   Effort@StockTargetingLambda <-
     .PopulateStockTargetingLambda(Effort@StockTargetingLambda, nSim, HistYears)
@@ -115,6 +116,16 @@ PopulateEffort <- function(Effort,
     ))
 
   .StructurePar(x, nSim = nSim, Years = HistYears[1])
+}
+
+.PopulateEffortMaximum <- function(x, nSim, Years, HistYears) {
+  if (is.null(x)) return(x)
+  if (any(!is.na(x) & (!is.finite(x) | x <= 0)))
+    cli::cli_abort(c(
+      "x" = "{.arg Maximum} effort must be positive or {.val {NA}}.",
+      "i" = "{.val {NA}} means no maximum."
+    ))
+  .PopulateEffortTrips(x, nSim, Years, HistYears, "Maximum")
 }
 
 # Normalises a Sim x Year effort-behaviour array (TripsScalar/AnglerPerTrip):

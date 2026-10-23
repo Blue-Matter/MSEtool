@@ -43,8 +43,16 @@
 #'   during [PopulateEffort()]. See Details for how this parameter controls
 #'   the concentration of effort across areas.
 #'   
-#' @param Maximum Numeric array or `NULL`. Maximum allowable effort. Default
-#'   `NULL`. Not currently used.
+#' @param Maximum Numeric, numeric array, or `NULL`. Maximum allowable effort
+#'   in projections, in the units of `Effort`. A scalar, or an array with
+#'   dimensions `Sim x Year` and named dimnames; the `Sim` dimension may be
+#'   length 1 or `nSim`, and the `Year` dimension length 1 or the full model
+#'   time series. `NA` imposes no maximum. Effort set from effort advice or
+#'   solved to catch a TAC never exceeds it; a fleet that cannot catch its TAC
+#'   fishes at `Maximum`, or, where `Maximum` is `NULL` or `NA`, at the effort
+#'   where the fishing mortality cap (`OM@maxF`) is reached. A fleet that
+#'   fishes several stocks must have the same `Maximum` for each. Default
+#'   `NULL`.
 #'   
 #' @param Mode Character or `NULL`. Controls whether spatial utility is
 #'   calculated per unit area or as raw biomass. `"Density"` (default) divides

@@ -2,7 +2,7 @@
 % Please edit documentation in R/check-seasonal-allocation.R
 \name{.CheckSeasonalAllocation}
 \alias{.CheckSeasonalAllocation}
-\title{Check and validate seasonal TAC/Effort allocation for a \code{hist} object}
+\title{Check and validate seasonal TAC allocation for a \code{hist} object}
 \usage{
 .CheckSeasonalAllocation(Hist)
 }

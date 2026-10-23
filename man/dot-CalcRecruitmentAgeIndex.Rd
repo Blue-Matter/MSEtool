@@ -9,16 +9,17 @@
 \arguments{
 \item{OM}{An \code{om} or \code{hist} class object.}
 
-\item{st}{Integer or \code{NULL}. If provided, returns the recruitment age index
+\item{st}{Integer or \code{NULL}. If provided, returns the recruitment lag
 for stock \code{st} only. Default: \code{NULL} (all stocks).}
 }
 \value{
 If \code{st} is provided, a single integer. Otherwise, an array of
-recruitment age indices with a \code{Stock} dimension.
+recruitment lags with a \code{Stock} dimension.
 }
 \description{
-Returns the number of pre-recruit age classes (i.e. the age index at which
-recruitment occurs) for each stock in an \code{om} or \code{hist} class object. Pre-recruit
-classes are determined by the seasonal time step and the minimum age class.
+Returns the recruitment lag (in time steps) for each stock in an \code{om} or
+\code{hist} class object: \code{SRR@SpawnLag} when set, otherwise the number of time
+steps from spawning to the youngest age class. The first \code{lag} time steps of
+age-0 numbers are filled from the initial conditions.
 }
 \keyword{internal}

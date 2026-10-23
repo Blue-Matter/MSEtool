@@ -42,6 +42,13 @@
 #' `DeltaDown` arguments of each MP (e.g. as set with [SetMPArgs()]) unless
 #' given in `DeltaUp`/`DeltaDown`. MPs with no limits, or no TAC, are `NA`.
 #'
+#' `PM_TACAttained` is the proportion of years in each simulation in which the
+#' TAC was caught, at the complex level. A fleet that cannot catch its share
+#' of the TAC fishes at its effort ceiling (see [TACAttainment()]); `Stat` is
+#' the catch as a proportion of the TAC, summed over fleets (and over seasons
+#' within each calendar year in seasonal models). Years with no TAC are
+#' excluded; MPs with no TAC are `NA`.
+#'
 #' `PM_Status`, `PM_Kobe`, `PM_MinStatus`, and `PM_Safety` accept a
 #' `Definition` argument selecting
 #' whether stock status is assessed on spawning biomass (`SBiomass()`, the
@@ -225,6 +232,12 @@ NULL
 #'
 #' With `IncludeFirst = TRUE`, `y-1` of the first management year in the
 #' evaluation window is the value in effect before it (see [PM]).
+#'
+#' `PM_TACAttained`: the probability that the catch reaches the TAC,
+#' \deqn{P\left(\frac{C_{s,y}}{TAC_{s,y}} \ge 1\right)}{P( C[s,y] / TAC[s,y] >= 1 )}
+#' where \eqn{C_{s,y}}{C[s,y]} and \eqn{TAC_{s,y}}{TAC[s,y]} are the catch
+#' and the TAC of complex `s` in year `y`, summed over fleets, in the units
+#' and catch type of the advice.
 #'
 #' @section Stat, Prob, and Mean:
 #' Every `PM_*` function returns a [pm-class] object with three related
@@ -1065,6 +1078,30 @@ PM_TACLimited <- function(object, DeltaUp = NULL, DeltaDown = NULL, IncludeFirst
   out
 }
 class(PM_TACLimited) <- 'pm'
+
+#' @rdname PM
+#' @export
+PM_TACAttained <- function(object, Years = NULL, Stocks = NULL, silent = TRUE) {
+  object <- .CoercePMInput(object, silent)
+  df <- TACAttainment(object)
+  df <- df[!is.na(df$Catch), , drop = FALSE]
+
+  Sum <- function(col) {
+    x <- df[, c('Sim', 'Stock', 'Year', 'MP')]
+    x$Value <- df[[col]]
+    .GroupTACByStocks(.SumCalendarYearDF(x, object@OM), object@OM, Stocks)
+  }
+  TAC   <- Sum('TAC')
+  Catch <- Sum('Catch')
+  Key   <- \(x) paste(x$Sim, x$Stock, x$Year, x$MP)
+  TAC$Value <- Catch$Value[match(Key(TAC), Key(Catch))] / TAC$Value
+  TAC$Value[!is.finite(TAC$Value)] <- NA
+
+  .BuildPM(TAC[, c('Sim', 'Stock', 'Year', 'MP', 'Value')], Ref = 1, Years = Years,
+           op = \(x, r) x >= r - 1e-4, Name = 'TACAttained',
+           Caption = 'P(TAC caught)')
+}
+class(PM_TACAttained) <- 'pm'
 
 # Maximum proportional TAC change (`Arg[2]`) of each MP, from `Override` or the MP's formals.
 .MPDeltaLimit <- function(MPList, Arg, Override = NULL) {

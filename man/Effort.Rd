@@ -113,8 +113,16 @@ Default \code{NULL}; a value of \code{0.8} is applied to all simulations and yea
 during \code{\link[=PopulateEffort]{PopulateEffort()}}. See Details for how this parameter controls
 the concentration of effort across areas.}
 
-\item{Maximum}{Numeric array or \code{NULL}. Maximum allowable effort. Default
-\code{NULL}. Not currently used.}
+\item{Maximum}{Numeric, numeric array, or \code{NULL}. Maximum allowable effort
+in projections, in the units of \code{Effort}. A scalar, or an array with
+dimensions \verb{Sim x Year} and named dimnames; the \code{Sim} dimension may be
+length 1 or \code{nSim}, and the \code{Year} dimension length 1 or the full model
+time series. \code{NA} imposes no maximum. Effort set from effort advice or
+solved to catch a TAC never exceeds it; a fleet that cannot catch its TAC
+fishes at \code{Maximum}, or, where \code{Maximum} is \code{NULL} or \code{NA}, at the effort
+where the fishing mortality cap (\code{OM@maxF}) is reached. A fleet that
+fishes several stocks must have the same \code{Maximum} for each. Default
+\code{NULL}.}
 
 \item{Mode}{Character or \code{NULL}. Controls whether spatial utility is
 calculated per unit area or as raw biomass. \code{"Density"} (default) divides

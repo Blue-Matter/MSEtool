@@ -16,14 +16,17 @@
 #' @param Compliance `[nFleet x nComplex]` matrix from
 #'   `.ResolveComplianceMatrix()`.
 #' @param MaxFleetEffort Numeric vector (length `nFleet`), or `NULL`.
+#' @param EffortMax Numeric vector (length `nFleet`), or `NULL`. Each fleet's
+#'   `Effort@Maximum` at this time step; see `.OptEffortSingleStock()`.
 #' @param inner_reltol Numeric, or `NULL` (default). Relative convergence
 #'   tolerance for the per-complex root finds during optimisation, as a
 #'   fraction of the TAC being matched; `NULL` keeps `.OptEffortSingleStock()`'s
 #'   absolute `tol`.
 #'
 #' @return A named list with `Effort`, `Delta` (`[nFleet x nStock]`, broadcast
-#'   from the underlying per-complex solution), `converged` and
-#'   `ActiveComplex`.
+#'   from the underlying per-complex solution), `converged`, `saturated`,
+#'   `TAC`/`Catch` (per complex), `TACMatrix`/`CatchMatrix` (`[nComplex x
+#'   nFleet]`), `AtCeiling` (per fleet) and `ActiveComplex`.
 #' @keywords internal
 .OptEffortChoke <- function(Proj,
                             Year,
@@ -36,6 +39,7 @@
                             TACUnit_by_Complex,
                             Compliance,
                             MaxFleetEffort = NULL,
+                            EffortMax     = NULL,
                             lambda        = NULL,
                             n_recent      = 5,
                             minEffort     = 1e-8,
@@ -59,7 +63,8 @@
     res <- .ResolveChokeEffort(Proj, sim, TSIndex, Year, Delta,
                                TAC_by_Complex, TACType_by_Complex,
                                TACUnit_by_Complex, Compliance, MaxFleetEffort,
-                               Effort_start = cache$warm, reltol = reltol)
+                               Effort_start = cache$warm, reltol = reltol,
+                               EffortMax = EffortMax)
     cache$warm <- res$EffortByComplex
     res$Effort
   }
@@ -68,11 +73,14 @@
     res <- .ResolveChokeEffort(Proj, sim, TSIndex, Year, Delta,
                                TAC_by_Complex, TACType_by_Complex,
                                TACUnit_by_Complex, Compliance, MaxFleetEffort,
-                               Effort_start = cache$warm, reltol = NULL)
+                               Effort_start = cache$warm, reltol = NULL,
+                               EffortMax = EffortMax)
     cache$warm <- res$EffortByComplex
     Attainment <- .CheckComplexTACAttainment(Proj, sim, TSIndex, Year, res$Effort, Delta,
                                              TAC_by_Complex, TACType_by_Complex, TACUnit_by_Complex,
-                                             res$EffortByComplex)
+                                             res$EffortByComplex,
+                                             Ceiling = .EffortCeiling(res$Proj, sim, TSIndex,
+                                                                      MaxFleetEffort, EffortMax))
     list(Effort = res$Effort, Attainment = Attainment)
   }
 
@@ -88,6 +96,9 @@
                 saturated     = Final$Attainment$saturated,
                 TAC           = Final$Attainment$TAC,
                 Catch         = Final$Attainment$Catch,
+                TACMatrix     = Final$Attainment$TACMatrix,
+                CatchMatrix   = Final$Attainment$CatchMatrix,
+                AtCeiling     = Final$Attainment$AtCeiling,
                 ActiveComplex = state$active_complex))
   }
 
@@ -126,5 +137,8 @@
        saturated     = Final$Attainment$saturated,
        TAC           = Final$Attainment$TAC,
        Catch         = Final$Attainment$Catch,
+       TACMatrix     = Final$Attainment$TACMatrix,
+       CatchMatrix   = Final$Attainment$CatchMatrix,
+       AtCeiling     = Final$Attainment$AtCeiling,
        ActiveComplex = state$active_complex)
 }

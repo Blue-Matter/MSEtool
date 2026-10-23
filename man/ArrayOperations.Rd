@@ -42,7 +42,8 @@ The arrays must have the same named dimensions, but do not need to have
 the same length for each dimension.
 \itemize{
 \item \code{ArraySum}: Sum \code{array1} and \code{array2}
-\item \code{ArrayDivide}: Divide \code{array1} by \code{array2}
+\item \code{ArrayDivide}: Divide \code{array1} by \code{array2}. Division by zero returns
+\code{0}; \code{NA} values in either array remain \code{NA}.
 \item \code{ArrayMultiply}: Multiply \code{array1} and \code{array2}
 \item \code{ArraySubtract}: Subtract \code{array2} from \code{array1}
 \item \code{ArrayExtend}: extends the arrays to have matching dimensions (see \code{\link[=Extend]{Extend()}})

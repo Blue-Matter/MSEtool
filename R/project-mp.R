@@ -56,7 +56,7 @@
 .CompactMPProj <- function(Proj, YearsProj) {
   for (sl in setdiff(methods::slotNames('timeseries'), 'Misc'))
     methods::slot(Proj, sl) <- .SubsetYear(methods::slot(Proj, sl), YearsProj)
-  Proj@Misc      <- Proj@Misc[intersect(names(Proj@Misc), c('MPAdvice', 'MPAggBagLimit'))]
+  Proj@Misc      <- Proj@Misc[intersect(names(Proj@Misc), c('MPAdvice', 'MPAggBagLimit', 'TACAttainment'))]
   Proj@OM@Stock  <- NULL
   Proj@OM@Obs    <- NULL
   Proj@OM@Imp    <- NULL
@@ -89,6 +89,8 @@
   StartTime       <- Sys.time()
   StockNames      <- StockNames(Proj)
   FleetNames      <- FleetNames(Proj)
+
+  Proj@Misc$TACAttainment <- .InitTACAttainment(Proj, YearsProj)
 
   # initialise for debugging convenience
   Year <- YearsProj[1]; ts <- 1
@@ -273,6 +275,9 @@
   if (!Error)
     Proj <- .MaskFailedSims(Proj, .FailedSims(Proj@Log$error), YearsProj)
 
+  if (!Error && !silent)
+    .MsgTACAttainment(Proj@Misc$TACAttainment, MPName, mp, nMP, Proj@OM@Seasons)
+
   if (!Error)
     MSE <- .UpdateMSEObject(MSE,
                            Proj,
@@ -317,4 +322,30 @@
       class = "update_error"
     )
   )
+}
+
+# One console line per MP: sim-time steps where a fleet did not catch its TAC
+.MsgTACAttainment <- function(Rec, MPName, mp = 1, nMP = 1, Seasons = 1) {
+  if (is.null(Rec) || !length(Rec$TAC)) return(invisible(NULL))
+  Short <- HasTAC <- FALSE
+  for (cx in seq_along(Rec$TAC)) {
+    TAC   <- Rec$TAC[[cx]]
+    Catch <- Rec$Catch[[cx]]
+    HasTAC <- HasTAC | (is.finite(TAC) & is.finite(Catch))
+    Short  <- Short | (is.finite(TAC) & is.finite(Catch) & TAC - Catch > .TACShortfallTol(TAC))
+  }
+  AtCeiling <- !is.na(Rec$AtCeiling) & Rec$AtCeiling
+  AnyStep <- \(x) apply(x, c(1, 2), any)
+  nTotal   <- sum(AnyStep(HasTAC))
+  nShort   <- sum(AnyStep(Short))
+  if (!nShort) return(invisible(NULL))
+  nCeiling <- sum(AnyStep(Short & AtCeiling))
+  nOther   <- sum(AnyStep(Short & !AtCeiling))
+  Other    <- if (length(Rec$TAC) > 1) 'choke' else 'solver'
+  Unit     <- if (Seasons > 1) 'sim-time steps' else 'sim-years'
+  label    <- .MsgFormat("[{mp}/{nMP}] {.mp {MPName}}")
+  cli::cli_alert_warning(paste0(
+    "{label} TAC not caught in {nShort} of {nTotal} {Unit} ",
+    "(effort ceiling {nCeiling}, {Other} {nOther}); see {.fn TACAttainment}"))
+  invisible(NULL)
 }

@@ -16,6 +16,7 @@
   TACUnit_by_Complex,
   Compliance,
   MaxFleetEffort = NULL,
+  EffortMax = NULL,
   lambda = NULL,
   n_recent = 5,
   minEffort = 1e-08,
@@ -51,6 +52,9 @@ complex has no TAC.}
 
 \item{MaxFleetEffort}{Numeric vector (length \code{nFleet}), or \code{NULL}.}
 
+\item{EffortMax}{Numeric vector (length \code{nFleet}), or \code{NULL}. Each fleet's
+\code{Effort@Maximum} at this time step; see \code{.OptEffortSingleStock()}.}
+
 \item{lambda}{Numeric matrix \verb{[nFleet x nComplex]}, or a scalar or
 length-\code{nFleet} vector recycled across complexes, or \code{NULL} (default
 \code{1}). Ridge penalty weight controlling resistance to year-to-year
@@ -75,8 +79,8 @@ allowed across the BFGS and Nelder-Mead phases combined.}
 }
 \value{
 A named list with \code{Effort}, \code{Delta} (\verb{[nFleet x nStock]}, broadcast
-from the underlying per-complex solution), \code{converged} and
-\code{ActiveComplex}.
+from the underlying per-complex solution), \code{converged}, \code{saturated},
+\code{TAC}/\code{Catch} (per complex), \code{TACMatrix}/\code{CatchMatrix} (\verb{[nComplex x nFleet]}), \code{AtCeiling} (per fleet) and \code{ActiveComplex}.
 }
 \description{
 Solves fleet effort under TAC management in a multi-complex model.

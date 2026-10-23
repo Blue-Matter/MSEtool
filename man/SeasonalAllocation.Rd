@@ -36,7 +36,7 @@ corresponding slot updated.
 \description{
 Access or replace the \code{HistoricalWeight} and \code{SeasonalAllocation} slots of
 an \link[=om-class]{om} object. Only relevant for seasonal OMs (\code{Seasons > 1}):
-together they control how a periodically-set TAC or Effort (an MP is not
+together they control how a periodically-set TAC (an MP is not
 necessarily called every season - see \code{\link[=Interval]{Interval()}}) is split across the
 seasons of the interval it covers. Also accepts \link[=hist-class]{hist} and
 \link[=mse-class]{mse} objects, extracting the embedded \code{OM} slot transparently.
@@ -56,6 +56,12 @@ pooled over the last \code{OM@Control$SeasonalAllocationYears} years
 \code{HistoricalWeight = 1} (the default when unspecified) uses the historical
 removals pattern only; \code{HistoricalWeight = 0} uses the population biomass
 pattern only.
+
+Effort advice from an MP that is not called every season is an annual
+total effort for each fleet. \code{EffType = 'Rel'} is relative to the fleet's
+total effort in the last historical year. Each year's effort is split
+across seasons in proportion to the fleet's historical effort in each
+season, pooled over the last \code{OM@Control$SeasonalAllocationYears} years.
 }
 \examples{
 om <- OM(Seasons = 4)

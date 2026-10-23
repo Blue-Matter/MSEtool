@@ -55,7 +55,7 @@ Subset <- function(object,
   }
   if (!is.null(Years))  object <- .SubsetYear(object, Years, Impute)
   if (!is.null(Ages))   object <- .SubsetAge(object, Ages)
-  if (!is.null(MPs))    object <- .SubsetMP(object, MPs)
+  if (!is.null(MPs))    object <- .SubsetMP(object, .MPNamesFromIndex(object, MPs))
   if (!is.null(Fleets)) object <- .SubsetFleet(object, Fleets)
   if (!is.null(Stocks)) {
     OM <- .SimOM(object)
@@ -407,9 +407,13 @@ Subset <- function(object,
       if (!is.null(val))
         slot(object, s) <- Recall(val, Years, Impute, debug)
     }
+    # the per-time-step TAC record is the only year-indexed entry in Misc
+    if ('Misc' %in% slotNames(object) && is.list(object@Misc) &&
+        !is.null(object@Misc$TACAttainment))
+      object@Misc$TACAttainment <- .KeepYears(object@Misc$TACAttainment, Years)
     return(object)
   }
-  
+
   if (is.list(object)) {
     for (j in seq_along(object)) {
       if (!is.null(object[[j]]))
@@ -478,6 +482,15 @@ Subset <- function(object,
   if (all(idx)) return(array)
   do.call(`[`, c(list(array), .MakeDimIndex(idx, array, TSind),
                  list(drop = FALSE)))
+}
+
+# Keeps only the existing time steps in `Years`, without imputing missing ones
+.KeepYears <- function(x, Years) {
+  if (is.list(x)) return(lapply(x, .KeepYears, Years = Years))
+  TSind <- match("Year", names(dimnames(x)))
+  if (!is.array(x) || is.na(TSind)) return(x)
+  idx <- as.numeric(dimnames(x)[[TSind]]) %in% as.numeric(Years)
+  do.call(`[`, c(list(x), .MakeDimIndex(idx, x, TSind), list(drop = FALSE)))
 }
 
 .DropYearsAfter <- function(array, LastYear) {
@@ -555,6 +568,18 @@ Subset <- function(object,
   do.call(`[`, c(list(array), .MakeDimIndex(sel, array, AgeInd),
                  list(drop = FALSE)))
 
+}
+
+# Numeric MPs as names, so named lists are matched by MP name rather than position
+.MPNamesFromIndex <- function(object, MPs) {
+  if (!is.numeric(MPs) || !isS4(object) || !"MPs" %in% methods::slotNames(object))
+    return(MPs)
+  MPNames <- names(object@MPs)
+  if (is.null(MPNames)) return(MPs)
+  bad <- MPs[!MPs %in% seq_along(MPNames)]
+  if (length(bad))
+    cli::cli_abort("MP index {.val {bad}} out of range: the object has {length(MPNames)} MP{?s}")
+  MPNames[MPs]
 }
 
 .SubsetMP <- function(object, MPs=NULL, debug = FALSE) {

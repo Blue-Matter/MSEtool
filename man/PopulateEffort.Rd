@@ -19,7 +19,7 @@ PopulateEffort(
 \item{HistYears}{Numeric vector of historical years to populate effort for.}
 
 \item{ProjYears}{Numeric vector of projected years. Used to extend
-\code{TripsScalar}/\code{AnglerPerTrip}/\code{Theta} (if supplied) to cover the full
+\code{Maximum}/\code{TripsScalar}/\code{AnglerPerTrip}/\code{Theta} (if supplied) to cover the full
 model time series; not used for \code{Effort@Effort} itself.}
 
 \item{nArea}{Integer. Number of spatial areas.}
@@ -41,7 +41,7 @@ and populating distribution and targeting across areas and simulation replicates
 \item Generates historical effort if the \code{Effort} slot is a data frame.
 \item Ensures the effort matrix has correct dimensions and names.
 \item Validates fleet effort distribution and targeting across areas.
-\item If supplied, extends \code{TripsScalar}/\code{AnglerPerTrip}/\code{Theta} to cover
+\item If supplied, extends \code{Maximum}/\code{TripsScalar}/\code{AnglerPerTrip}/\code{Theta} to cover
 historical and projected years (a bare scalar, length-2 uniform
 bounds, or length-\code{nSim} vector for \code{Theta} is first resolved to a
 single-year \verb{Sim x Year} array, then replicated across all years).

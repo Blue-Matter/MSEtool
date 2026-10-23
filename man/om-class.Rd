@@ -128,8 +128,8 @@ pattern only. See \code{\link[=SeasonalAllocation]{SeasonalAllocation()}}.}
 \item{\code{SeasonalAllocation}}{List. Named list of length 0 or the number of
 stock complexes. Each element is an \code{nSim} (or 1, recycled) by
 \code{Seasons} by \code{nFleet} array, each \verb{[sim, , fleet]} column summing to 1,
-controlling how a periodically-set TAC/Effort is split across the
-seasons of the interval it covers. If unspecified it is derived from
+controlling how a periodically-set TAC is split across the seasons of
+the interval it covers. If unspecified it is derived from
 \code{HistoricalWeight}. See \code{\link[=SeasonalAllocation]{SeasonalAllocation()}}.}
 
 \item{\code{EffortAllocation}}{List. Named list of length 0 or the number of

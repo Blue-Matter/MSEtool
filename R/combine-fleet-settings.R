@@ -50,6 +50,8 @@
   used <- BagLimit[purrr::map_lgl(BagLimit, \(sl) any(purrr::map_lgl(Efforts, \(e) !is.null(slot(e, sl)))))]
   if (length(used))
     Abort("bag-limit effort settings ({.field {used}}) are defined per fleet and cannot be combined.")
+  if (any(purrr::map_lgl(Efforts, \(e) !is.null(e@Maximum))))
+    Abort("the maximum effort ({.field Maximum}) is in each fleet's own effort units and cannot be combined.")
 
   Distribution <- purrr::map(Efforts, \(e) e@Distribution)
   if (!all(purrr::map_lgl(Distribution, \(d) is.null(d) || all(is.na(d)))))

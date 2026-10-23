@@ -26,8 +26,8 @@ allocated to each spatial area (\verb{Sim x Year x Area}). See \code{\link[=Effo
 \item{\code{Targeting}}{\code{numeric} array or \code{NULL}. Fleet targeting concentration
 parameter (\verb{Sim x Year}). See \code{\link[=Effort]{Effort()}}.}
 
-\item{\code{Maximum}}{\code{numeric} array or \code{NULL}. Maximum allowable effort. See
-\code{\link[=Effort]{Effort()}}.}
+\item{\code{Maximum}}{\code{numeric} array or \code{NULL}. Maximum allowable effort in
+projections (\verb{Sim x Year}). See \code{\link[=Effort]{Effort()}}.}
 
 \item{\code{Mode}}{\code{character} or \code{NULL}. Spatial utility calculation mode:
 \code{"Density"} (default) or \code{"Biomass"}. See \code{\link[=Effort]{Effort()}}.}

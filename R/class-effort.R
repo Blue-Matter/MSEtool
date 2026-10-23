@@ -14,8 +14,8 @@
 #'   allocated to each spatial area (`Sim x Year x Area`). See [Effort()].
 #' @slot Targeting `numeric` array or `NULL`. Fleet targeting concentration
 #'   parameter (`Sim x Year`). See [Effort()].
-#' @slot Maximum `numeric` array or `NULL`. Maximum allowable effort. See
-#'   [Effort()].
+#' @slot Maximum `numeric` array or `NULL`. Maximum allowable effort in
+#'   projections (`Sim x Year`). See [Effort()].
 #' @slot Mode `character` or `NULL`. Spatial utility calculation mode:
 #'   `"Density"` (default) or `"Biomass"`. See [Effort()].
 #' @slot TripsScalar `numeric` array or `NULL`. Time-varying scalar

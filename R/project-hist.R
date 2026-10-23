@@ -257,6 +257,10 @@
     }
   }
 
+  # full Sim dimension: .BindSims() collapses identical single-sim pieces
+  Proj@Misc$TACAttainment <- .BindSims(lapply(Projs, \(x) x@Misc$TACAttainment), Sizes) |>
+    .ExtendSimsList(nSimAll)
+
   Errors    <- vapply(Results, `[[`, logical(1), 'Error')
   AllFailed <- Reduce(intersect, lapply(Results, `[[`, 'AllFailedYears'))
   CutYear   <- min(c(Inf, unlist(lapply(Results[Errors], `[[`, 'ErrorYear')), AllFailed))
@@ -279,6 +283,13 @@
        EndTime      = do.call(max, lapply(Results, `[[`, 'EndTime')),
        StockNames   = Results[[1]]$StockNames,
        FleetNames   = Results[[1]]$FleetNames)
+}
+
+# ExtendSims() every Sim-dimensioned array in a nested list
+.ExtendSimsList <- function(x, nSim) {
+  if (is.list(x)) return(lapply(x, .ExtendSimsList, nSim = nSim))
+  if (is.array(x) && 'Sim' %in% names(dimnames(x))) return(ExtendSims(x, nSim))
+  x
 }
 
 # Binds matching arrays from each chunk along `Sim`; recurses into S4 objects and lists
