@@ -19,6 +19,7 @@
 #' @param Years  Numeric vector of calendar years to retain. `NULL` skips.
 #' @param Ages   Numeric vector of age classes to retain. `NULL` skips.
 #' @param MPs    Integer or character vector of MPs to retain. `NULL` skips.
+#'   Retained MPs keep their order in the object.
 #' @param Fleets Character vector of fleets to retain. `NULL` skips.
 #' @param Stocks Character vector of stock names, or numeric vector of stock
 #'   indices, to retain. For `om`, `hist`, and `mse` objects the retained
@@ -27,10 +28,16 @@
 #'   (default), years not present in the object are imputed from the nearest
 #'   available past year. If `FALSE`, years earlier than the earliest available
 #'   year are dropped rather than imputed.
-#' 
+#'
+#' @details
 #' Subsetting is applied sequentially when multiple dimensions are supplied,
 #' allowing consistent extraction across simulations, years, and age classes in
 #' a single call.
+#'
+#' In the `Misc` slots, the records MSEtool writes (MP advice, TAC attainment,
+#' and changes to selectivity, retention, and discard mortality) are subset
+#' along every dimension. Other `Misc` content, including `Advice@@Misc` set by
+#' an MP, is subset only by `Sims` and `Stocks`.
 #'
 #' @return An object of the same class as `object`, subset according to the
 #'   supplied dimension arguments.
@@ -55,7 +62,11 @@ Subset <- function(object,
   }
   if (!is.null(Years))  object <- .SubsetYear(object, Years, Impute)
   if (!is.null(Ages))   object <- .SubsetAge(object, Ages)
-  if (!is.null(MPs))    object <- .SubsetMP(object, .MPNamesFromIndex(object, MPs))
+  if (!is.null(MPs)) {
+    MPs <- .SubsetMPNames(object, MPs)
+    if (inherits(object, "mse")) object <- .SubsetMPPPD(object, MPs)
+    object <- .SubsetMP(object, MPs)
+  }
   if (!is.null(Fleets)) object <- .SubsetFleet(object, Fleets)
   if (!is.null(Stocks)) {
     OM <- .SimOM(object)
@@ -211,6 +222,21 @@ Subset <- function(object,
   }
   for (s in slots)
     slot(object, s) <- .SubsetSim(slot(object, s), sim, keep_sim_name = FALSE, nSim = nSim)
+  object
+}
+
+# Engine-owned Misc entries each subsetter updates; other Misc content is left as supplied
+.MiscSelRet  <- c("Selectivity", "Retention", "DiscardMortality")
+.MiscByYear  <- c("Advice", "TACAttainment", .MiscSelRet)
+.MiscByAge   <- c("Advice", .MiscSelRet, "InitialAtAge")
+.MiscByMP    <- c("Advice", "TACAttainment", .MiscSelRet)
+.MiscByFleet <- c("Advice", "TACAttainment", .MiscSelRet, "AnnualTAC")
+
+.SubsetMiscEntries <- function(object, Keep, fn, ...) {
+  if (!"Misc" %in% methods::slotNames(object) || !is.list(object@Misc)) return(object)
+  for (nm in intersect(Keep, names(object@Misc)))
+    if (!is.null(object@Misc[[nm]]))
+      object@Misc[[nm]] <- fn(object@Misc[[nm]], ...)
   object
 }
 
@@ -407,10 +433,8 @@ Subset <- function(object,
       if (!is.null(val))
         slot(object, s) <- Recall(val, Years, Impute, debug)
     }
-    # the per-time-step TAC record is the only year-indexed entry in Misc
-    if ('Misc' %in% slotNames(object) && is.list(object@Misc) &&
-        !is.null(object@Misc$TACAttainment))
-      object@Misc$TACAttainment <- .KeepYears(object@Misc$TACAttainment, Years)
+    object <- .SubsetMiscEntries(object, "Advice", .KeepYearKeys, Years)
+    object <- .SubsetMiscEntries(object, setdiff(.MiscByYear, "Advice"), .KeepYears, Years)
     return(object)
   }
 
@@ -484,6 +508,11 @@ Subset <- function(object,
                  list(drop = FALSE)))
 }
 
+# Lists keyed by MP then time step keep only the existing time steps in `Years`
+.KeepYearKeys <- function(x, Years) {
+  lapply(x, \(byMP) byMP[as.numeric(names(byMP)) %in% as.numeric(Years)])
+}
+
 # Keeps only the existing time steps in `Years`, without imputing missing ones
 .KeepYears <- function(x, Years) {
   if (is.list(x)) return(lapply(x, .KeepYears, Years = Years))
@@ -508,14 +537,14 @@ Subset <- function(object,
   
   if (isS4(object)) {
     if (debug) cli::cli_alert("S4 Object")
-    slots <- slotNames(object)
+    slots <- setdiff(slotNames(object), 'Misc')
     for (s in slots) {
       if (debug) cli::cli_alert("Slot {.val {s}}")
       val <- slot(object, s)
       if (!is.null(val))
         slot(object, s) <- Recall(val, Ages, debug)
     }
-    return(object)
+    return(.SubsetMiscEntries(object, .MiscByAge, .SubsetAge, Ages))
   }
   
   if (is.list(object)) {
@@ -535,13 +564,7 @@ Subset <- function(object,
       object <- .ArraySubsetAge(object, Ages)
     return(object)
   }
-  
-  if (is.numeric(object) && !is.null(names(object))) {
-    age_names <- suppressWarnings(as.numeric(names(object)))
-    sel <- age_names %in% Ages
-    return(as.numeric(object[sel]))
-  }
-  
+
   object
 }
 
@@ -570,16 +593,36 @@ Subset <- function(object,
 
 }
 
-# Numeric MPs as names, so named lists are matched by MP name rather than position
-.MPNamesFromIndex <- function(object, MPs) {
-  if (!is.numeric(MPs) || !isS4(object) || !"MPs" %in% methods::slotNames(object))
-    return(MPs)
+# MP names in the object's order, so named lists and MP arrays are subset alike
+.SubsetMPNames <- function(object, MPs) {
+  if (!isS4(object) || !"MPs" %in% methods::slotNames(object)) return(MPs)
   MPNames <- names(object@MPs)
   if (is.null(MPNames)) return(MPs)
-  bad <- MPs[!MPs %in% seq_along(MPNames)]
+  if (is.numeric(MPs)) {
+    bad <- MPs[!MPs %in% seq_along(MPNames)]
+    if (length(bad))
+      cli::cli_abort("MP index {.val {bad}} out of range: the object has {length(MPNames)} MP{?s}")
+    MPs <- MPNames[MPs]
+  }
+  bad <- setdiff(MPs, MPNames)
   if (length(bad))
-    cli::cli_abort("MP index {.val {bad}} out of range: the object has {length(MPNames)} MP{?s}")
-  MPNames[MPs]
+    cli::cli_abort(c("MP{?s} {.val {bad}} not found", "i" = "MPs are {.val {MPNames}}"))
+  intersect(MPNames, MPs)
+}
+
+.KeepMPKeys <- function(x, MPs) {
+  if (is.numeric(MPs)) return(x[MPs[MPs %in% seq_along(x)]])
+  x[intersect(MPs, names(x))]
+}
+
+# Historical data are stored with the first MP's PPD, so they move to the first retained MP
+.SubsetMPPPD <- function(MSE, MPs) {
+  First <- intersect(names(MSE@PPD), MPs)[1]
+  if (length(MSE@PPD) < 2 || is.na(First) || First == names(MSE@PPD)[1])
+    return(MSE)
+  HistData <- .SubsetYear(MSE@PPD[[1]], Years = Years(MSE, 'H'))
+  MSE@PPD[[First]] <- JoinYear(HistData, MSE@PPD[[First]]) |> .SetPPDMisc(MSE@PPD[[First]])
+  MSE
 }
 
 .SubsetMP <- function(object, MPs=NULL, debug = FALSE) {
@@ -588,14 +631,14 @@ Subset <- function(object,
   
   if (isS4(object)) {
     if (debug) cli::cli_alert("S4 Object")
-    slots <- slotNames(object)
+    slots <- setdiff(slotNames(object), 'Misc')
     for (s in slots) {
       if (debug) cli::cli_alert("Slot {.val {s}}")
       val <- slot(object, s)
       if (!is.null(val))
         slot(object, s) <- Recall(val, MPs, debug)
     }
-    return(object)
+    return(.SubsetMiscEntries(object, .MiscByMP, .KeepMPKeys, MPs))
   }
   
   if (is.list(object)) {
@@ -682,14 +725,14 @@ Subset <- function(object,
   
   if (isS4(object)) {
     if (debug) cli::cli_alert("S4 Object")
-    slots <- slotNames(object)
+    slots <- setdiff(slotNames(object), 'Misc')
     for (s in slots) {
       if (debug) cli::cli_alert("Slot {.val {s}}")
       val <- slot(object, s)
       if (!is.null(val))
         slot(object, s) <- Recall(val, Fleets, debug)
     }
-    return(object)
+    return(.SubsetMiscEntries(object, .MiscByFleet, .SubsetFleet, Fleets))
   }
   
   if (is.list(object)) {

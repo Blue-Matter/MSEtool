@@ -1343,14 +1343,19 @@ Sense <- function(Data, MP, nsense = 6, reps = 100, perc = c(0.05, 0.5, 0.95), p
 #' A function that returns the stochastic TAC recommendations from a vector of
 #' output control MPs given a data object Data
 #'
+#' When `Data` is an [mse-class] object, `TAC()` returns the TAC recommendations
+#' of each MP, as [TACs()] does. When `Data` is an [advice-class] or [imp-class]
+#' object, it returns the `TAC` slot.
 #'
-#' @param Data A data-limited methods data object
+#' @param Data A data-limited methods data object, or an [mse-class],
+#'   [advice-class], or [imp-class] object
 #' @param MPs optional vector of MP names
 #' @param reps Number of repetitions
 #' @param timelimit The maximum time (seconds) taken to complete 10 reps
 #' @param checkMP Logical. Check if the MP can be run first?
 #' @param silent Logical. Suppress messages?
 #' @author T. Carruthers
+#' @seealso [TACs()]
 #' @examples
 #' \dontrun{
 #' library(MSEtool)
@@ -1359,7 +1364,10 @@ Sense <- function(Data, MP, nsense = 6, reps = 100, perc = c(0.05, 0.5, 0.95), p
 #' }
 #' @export
 TAC <- function(Data, MPs = NA, reps = 100, timelimit = 1, checkMP=TRUE, silent=FALSE) {
-  
+
+  if (inherits(Data, 'mse'))
+    return(TACs(Data))
+
   if (inherits(Data,'advice'))
     return(Data@TAC)
   

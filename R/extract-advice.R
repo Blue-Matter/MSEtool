@@ -17,6 +17,8 @@
 #' (i.e. the historical period, where no MP has run yet) are absent rather
 #' than filled with a placeholder.
 #'
+#' [TAC()] returns the same data frame when given an [mse-class] object.
+#'
 #' @return A data frame with columns:
 #'   - `Sim`: simulation index.
 #'   - `Stock`: stock complex name (`names(OM@Complexes)`). TAC advice is set
@@ -28,14 +30,13 @@
 #'   - `Value`: TAC recommendation in the units of the operating model.
 #'   - `Variable`: always `"TAC"`.
 #'
-#' @seealso [mse-class], [Advice()], [PPD()]
+#' @seealso [TAC()], [mse-class], [Advice()], [PPD()]
 #' @export
 TACs <- function(MSE) {
   .CheckClass(MSE, 'mse', 'MSE')
 
-  HistYears <- Years(MSE, 'Historical')
-  ProjYears <- Years(MSE, 'Projection')
-  AllYears  <- c(HistYears, ProjYears)
+  # the projection time steps the object holds, so a Subset() MSE is filled only to its own years
+  ProjYears <- as.numeric(dimnames(MSE@SBiomass)$Year)
 
   ppd     <- PPD(MSE)
   mpNames <- names(ppd)
@@ -47,7 +48,7 @@ TACs <- function(MSE) {
         tac <- dat@Advice@TAC
         if (is.null(tac) || !length(tac)) return(NULL)
 
-        tac <- ExtendYears(tac, Years = AllYears)
+        tac <- ExtendYears(tac, Years = ProjYears)
 
         Array2DF(tac) |>
           dplyr::mutate(

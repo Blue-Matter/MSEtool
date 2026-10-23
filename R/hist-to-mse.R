@@ -27,7 +27,7 @@
 
 #' Copy and Subset Historical Time-Series Slots into an `mse` Object
 #'
-#' Copies each slot from the [timeseries-class] inherited by `Hist` into the
+#' Copies each slot other than `Misc` from the [timeseries-class] inherited by `Hist` into the
 #' corresponding slot of `MSE@Hist`, subsetting each array to the historical
 #' years only via `.SubsetYear`.
 #'
@@ -39,7 +39,7 @@
 #' @keywords internal
 .CopyTimeseriesSlots <- function(MSE, Hist) {
   HistYears <- Years(Hist, 'H')
-  for (sl in slotNames(MSE@Hist)) {
+  for (sl in setdiff(slotNames(MSE@Hist), 'Misc')) {
     slot(MSE@Hist, sl) <- slot(Hist, sl) |> .SubsetYear(HistYears)
   }
   MSE
