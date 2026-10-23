@@ -20,7 +20,9 @@
 #' @param Ages   Numeric vector of age classes to retain. `NULL` skips.
 #' @param MPs    Integer or character vector of MPs to retain. `NULL` skips.
 #' @param Fleets Character vector of fleets to retain. `NULL` skips.
-#' @param Stocks Character vector of stocks to retain. `NULL` skips.
+#' @param Stocks Character vector of stock names, or numeric vector of stock
+#'   indices, to retain. For `om`, `hist`, and `mse` objects the retained
+#'   stocks must form whole complexes. `NULL` skips.
 #' @param Impute Logical; only relevant when subsetting by `Years`. If `TRUE`
 #'   (default), years not present in the object are imputed from the nearest
 #'   available past year. If `FALSE`, years earlier than the earliest available
@@ -55,8 +57,95 @@ Subset <- function(object,
   if (!is.null(Ages))   object <- .SubsetAge(object, Ages)
   if (!is.null(MPs))    object <- .SubsetMP(object, MPs)
   if (!is.null(Fleets)) object <- .SubsetFleet(object, Fleets)
-  if (!is.null(Stocks)) object <- .SubsetStock(object, Stocks)
-  
+  if (!is.null(Stocks)) {
+    OM <- .SimOM(object)
+    object <- if (is.null(OM)) .SubsetStock(object, Stocks) else .SubsetStockOM(object, OM, Stocks)
+  }
+
+  object
+}
+
+# Subsets an om/hist/mse to whole complexes and re-indexes `Complexes` to the retained stocks
+.SubsetStockOM <- function(object, OM, Stocks) {
+  OM        <- .UpdateSPFrom(OM)
+  AllStocks <- StockNames(OM)
+
+  if (is.numeric(Stocks)) {
+    bad <- Stocks[!Stocks %in% seq_along(AllStocks)]
+    if (length(bad))
+      cli::cli_abort("Stock index {.val {bad}} out of range: the object has {length(AllStocks)} stock{?s}")
+    Stocks <- AllStocks[Stocks]
+  }
+  bad <- setdiff(Stocks, AllStocks)
+  if (length(bad))
+    cli::cli_abort(c("Stock{?s} {.val {bad}} not found",
+                     "i" = "Stocks are {.val {AllStocks}}"))
+  Keep <- AllStocks[AllStocks %in% Stocks]
+
+  Complexes <- OM@Complexes %||% list()
+  KeptCx <- purrr::map_lgl(Complexes, \(ix) all(AllStocks[ix] %in% Keep))
+  Partial <- purrr::map_lgl(Complexes, \(ix) any(AllStocks[ix] %in% Keep)) & !KeptCx
+  if (any(Partial))
+    cli::cli_abort(c("`Stocks` must retain or drop whole complexes",
+                     "x" = "Complex{?es} {.val {names(Complexes)[Partial]}} would be split"))
+
+  OM@Herm <- purrr::map(OM@Herm, \(h) {
+    if (is.numeric(h@From)) h@From <- AllStocks[h@From]
+    if (is.numeric(h@To))   h@To   <- AllStocks[h@To]
+    h
+  })
+  HermStocks <- purrr::map(OM@Herm, \(h) c(h@From, h@To))
+  HermKept   <- purrr::map_lgl(HermStocks, \(s) all(s %in% Keep))
+  HermSplit  <- purrr::map_lgl(HermStocks, \(s) any(s %in% Keep)) & !HermKept
+  if (any(HermSplit))
+    cli::cli_abort("`Stocks` would split a {.field Herm} transition between {.val {HermStocks[HermSplit][[1]]}}")
+
+  for (st in match(Keep, AllStocks)) {
+    Src <- AllStocks[.ResolveSPFromWeights(OM@Stock[[st]]@SRR@SPFrom, AllStocks, st)$from]
+    if (!all(Src %in% Keep))
+      cli::cli_abort("Stock {.val {AllStocks[st]}} recruits from dropped stock{?s} {.val {setdiff(Src, Keep)}} via {.field SRR@SPFrom}")
+  }
+
+  OM@Herm      <- OM@Herm[HermKept]
+  OM@Complexes <- purrr::map(Complexes[KeptCx], \(ix) match(AllStocks[ix], Keep))
+  if (inherits(object, "om")) object <- OM else object@OM <- OM
+
+  KeepNames <- unique(c(Keep, names(Complexes)[KeptCx]))
+  AllNames  <- unique(c(AllStocks, names(Complexes)))
+  .SubsetStockNames(object, Keep, AllStocks, KeepNames, AllNames)
+}
+
+# Lists keyed by stock or complex names keep the retained names; `Stock` array dims keep retained stocks
+.SubsetStockNames <- function(object, Keep, AllStocks, KeepNames, AllNames) {
+  if (isS4(object)) {
+    for (s in methods::slotNames(object)) {
+      val <- methods::slot(object, s)
+      if (!is.null(val))
+        methods::slot(object, s) <- .SubsetStockNames(val, Keep, AllStocks, KeepNames, AllNames)
+    }
+    return(object)
+  }
+
+  if (is.list(object)) {
+    if (!length(object)) return(object)
+    nms <- names(object)
+    if (!is.null(nms) && all(nzchar(nms)) && all(nms %in% AllNames))
+      object <- object[nms %in% KeepNames]
+    for (i in seq_along(object)) {
+      el <- object[[i]]
+      if (!is.null(el))
+        object[[i]] <- .SubsetStockNames(el, Keep, AllStocks, KeepNames, AllNames)
+    }
+    return(object)
+  }
+
+  if (is.array(object)) {
+    StockDN <- dimnames(object)$Stock
+    if (!is.null(StockDN) && all(StockDN %in% AllStocks))
+      object <- .ArraySubsetStock(object, intersect(StockDN, Keep))
+    return(object)
+  }
+
   object
 }
 
