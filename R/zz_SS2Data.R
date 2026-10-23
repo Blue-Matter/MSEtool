@@ -22,7 +22,7 @@
 #' @param index_season Integer, for seasonal models, the season for which the value of the index will be used. By default, \code{"mean"}
 #' will take the average across seasons.
 #' @param silent Logical. Suppress all messages?
-#' @param ... Arguments to pass to \link[r4ss]{SS_output}
+#' @param ... Arguments to pass to [r4ss::SS_output](https://r4ss.github.io/r4ss/reference/SS_output.html)
 #' @return An object of class Data.
 #' @note Currently supports the version of r4ss on CRAN (v.1.24) and Github (v.1.34-40). Function may be incompatible with other versions of r4ss.
 #' @author T. Carruthers and Q. Huynh

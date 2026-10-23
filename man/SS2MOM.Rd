@@ -118,7 +118,7 @@ comps are used. If multiple codes are used, then comp matrix is the sum over all
 
 \item{Source}{Reference to assessment documentation e.g. a url}
 
-\item{...}{Arguments to pass to \link[r4ss]{SS_output}.}
+\item{...}{Arguments to pass to \href{https://r4ss.github.io/r4ss/reference/SS_output.html}{r4ss::SS_output}.}
 
 \item{x}{For \code{plot_SS2OM}, an object of either class \code{OM} or \code{Hist}.
 For \code{plot_SS2MOM}, an object of either class \code{MOM} or \code{multiHist}.}

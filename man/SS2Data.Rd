@@ -54,7 +54,7 @@ will take the average across seasons.}
 
 \item{silent}{Logical. Suppress all messages?}
 
-\item{...}{Arguments to pass to \link[r4ss]{SS_output}}
+\item{...}{Arguments to pass to \href{https://r4ss.github.io/r4ss/reference/SS_output.html}{r4ss::SS_output}}
 }
 \value{
 An object of class Data.

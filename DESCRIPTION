@@ -69,6 +69,7 @@ Suggests:
 LinkingTo: Rcpp, RcppArmadillo
 Remotes: DTUAqua/spict/spict
 BugReports: https://github.com/Blue-Matter/MSEtool/issues
+Additional_repositories: https://r4ss.r-universe.dev
 URL: https://msetool.openmse.com/
 Collate: 
     'MSEtool-package.R'

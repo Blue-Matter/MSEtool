@@ -112,6 +112,22 @@ ImportSSReport <- function(SSDir, parallel=FALSE, silent=FALSE, ...) {
   
 }
 
+# accessed at runtime: the CRAN r4ss is a placeholder that does not export SS_output
+.GetSSOutputFn <- function(MinVersion = "1.50") {
+  if (!requireNamespace("r4ss", quietly = TRUE) ||
+      utils::packageVersion("r4ss") < MinVersion ||
+      !"SS_output" %in% getNamespaceExports("r4ss")) {
+    Installed <- if (requireNamespace("r4ss", quietly = TRUE))
+      as.character(utils::packageVersion("r4ss")) else "none"
+    cli::cli_abort(c(
+      "Importing SS3 output requires {.pkg r4ss} version {.val {MinVersion}} or later.",
+      "i" = "Installed version: {.val {Installed}}.",
+      "i" = "Install it from r-universe: {.code install.packages('r4ss', repos = c('https://r4ss.r-universe.dev', 'https://cloud.r-project.org'))}"
+    ), call = NULL)
+  }
+  getExportedValue("r4ss", "SS_output")
+}
+
 .GetSSRepList <- function(SSDir, silent = FALSE, ...) {
   
   dots            <- list(dir = SSDir, ...)
@@ -126,7 +142,7 @@ ImportSSReport <- function(SSDir, parallel=FALSE, silent=FALSE, ...) {
       "Importing SS3 output from {.val {basename(SSDir)}}"
       )
 
-  replist <- try(do.call(r4ss::SS_output, dots), silent = TRUE)
+  replist <- try(do.call(.GetSSOutputFn(), dots), silent = TRUE)
 
   if (is.character(replist)) {
     cli::cli_abort(

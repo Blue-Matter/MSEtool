@@ -4,10 +4,8 @@ SS_import <- function(SSdir, silent = FALSE, ...) {
   if(inherits(SSdir, 'list'))
     return(SSdir)
   
-  if(!requireNamespace("r4ss", quietly = TRUE)) {
-    stop("Download the r4ss package to use this function. It is recommended to install the Github version with: remotes::install_github(\"r4ss/r4ss\")", call. = FALSE)
-  }
-  
+  SS_output <- .GetSSOutputFn()
+
   
 
   dots <- list(dir = SSdir, ...)
@@ -22,7 +20,7 @@ SS_import <- function(SSdir, silent = FALSE, ...) {
     message(paste("-- Using function SS_output of package r4ss version", packageVersion("r4ss"), "to extract data from SS file structure --"))
     message(paste("Reading directory:", SSdir))
   }
-  replist <- try(do.call(r4ss::SS_output, dots), silent = TRUE)
+  replist <- try(do.call(SS_output, dots), silent = TRUE)
   if(is.character(replist)) stop("r4ss::SS_output function returned an error -\n", replist, call. = FALSE)
   if(!silent) message("-- End of r4ss operations --\n")
 
