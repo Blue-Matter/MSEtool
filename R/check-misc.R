@@ -81,7 +81,7 @@
 .CheckDependency <- function(object, arraySlot, dependency, component) {
   .CheckPopulated(slot(object, arraySlot), dependency,
     hint = cli::format_inline(
-      "{.var {component}} requires a populated {.var {dependency}} — provide {.var Pars} for {.var {dependency}}, or set its {.var {arraySlot}} directly, then re-run."
+      "{.var {component}} requires a populated {.var {dependency}} \u2014 provide {.var Pars} for {.var {dependency}}, or set its {.var {arraySlot}} directly, then re-run."
     ))
 }
 

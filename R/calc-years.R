@@ -140,6 +140,7 @@ Years <- function(x, Period=NULL) {
     return(purrr::map(x, Years, Period))
 }
 
+#' @param value Numeric vector of years to assign to the `Years` slot.
 #' @rdname Years
 #' @export
 `Years<-` <- function(x, value) {

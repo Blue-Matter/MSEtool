@@ -304,7 +304,7 @@
 #' (juveniles) to Area 3 (adults) with age, specified via a `Sim × Area ×
 #' Age` array of Gaussian curves centred at months 1, 18, and 36
 #' respectively. Movement is constrained by adjacency: `FracOther`
-#' connects Areas 1↔2 and 2↔3 freely, while Areas 1↔3 are weakly
+#' connects Areas 1-2 and 2-3 freely, while Areas 1-3 are weakly
 #' connected (`FracOther = 0.02`). [PopulateSpatial()] fits the movement
 #' matrix to reproduce the target distribution at each age.
 #'

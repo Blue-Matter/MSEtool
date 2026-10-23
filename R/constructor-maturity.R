@@ -136,11 +136,11 @@
 #' Setting `Semelparous = TRUE` sets the array equal to `MeanAtAge` after
 #' population:
 #'
-#' - Fully mature ages (maturity ≈ 1): post-spawn survival ≈ 0 — complete
+#' - Fully mature ages (maturity near 1): post-spawn survival near 0 — complete
 #'   die-off.
 #' - Ages on the maturity ogive (0 < maturity < 1): proportional post-spawn
 #'   mortality.
-#' - Immature ages (maturity ≈ 0): post-spawn survival ≈ 1 — unaffected.
+#' - Immature ages (maturity near 0): post-spawn survival near 1 — unaffected.
 #'
 #' This assumption — that the post-spawn mortality schedule equals the maturity
 #' ogive — is appropriate for obligate semelparous species such as Pacific

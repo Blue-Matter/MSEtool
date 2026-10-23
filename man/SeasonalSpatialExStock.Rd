@@ -76,7 +76,7 @@ The three areas represent a linear inshore-to-offshore gradient:\tabular{clc}{
 The unfished biomass distribution shifts progressively from Area 1
 (juveniles) to Area 3 (adults) with age, specified via a \verb{Sim × Area × Age} array of Gaussian curves centred at months 1, 18, and 36
 respectively. Movement is constrained by adjacency: \code{FracOther}
-connects Areas 1↔2 and 2↔3 freely, while Areas 1↔3 are weakly
+connects Areas 1-2 and 2-3 freely, while Areas 1-3 are weakly
 connected (\code{FracOther = 0.02}). \code{\link[=PopulateSpatial]{PopulateSpatial()}} fits the movement
 matrix to reproduce the target distribution at each age.
 }

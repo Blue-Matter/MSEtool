@@ -74,14 +74,14 @@
 
   if (!base_unit %in% names(table)) {
     label <- if (isTRUE(scale == 1)) base_unit else
-      paste0(base_unit, ' × ', format(scale, big.mark = ',', scientific = FALSE))
+      paste0(base_unit, ' \u00d7 ', format(scale, big.mark = ',', scientific = FALSE))
     return(list(label = label, per_unit = NA_real_, convertible = FALSE))
   }
 
   per_unit <- unname(table[[base_unit]]) * scale
   nice  <- .NiceUnitName(table, per_unit)
   label <- if (!is.null(nice)) nice else if (isTRUE(scale == 1)) base_unit else
-    paste0(base_unit, ' × ', format(scale, big.mark = ',', scientific = FALSE))
+    paste0(base_unit, ' \u00d7 ', format(scale, big.mark = ',', scientific = FALSE))
 
   list(label = label, per_unit = per_unit, convertible = TRUE)
 }
@@ -111,7 +111,7 @@
   hit <- known_names[abs(known_vals - scale) / scale < 1e-6]
   if (length(hit))
     return(hit[1])
-  paste0('× ', format(scale, big.mark = ',', scientific = FALSE))
+  paste0('\u00d7 ', format(scale, big.mark = ',', scientific = FALSE))
 }
 
 .AppendUnits <- function(label, units) {

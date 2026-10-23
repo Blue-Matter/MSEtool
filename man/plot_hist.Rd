@@ -2,6 +2,8 @@
 % Please edit documentation in R/plot-hist.R
 \name{plot_hist}
 \alias{plot_hist}
+\alias{plot,hist,ANY-method}
+\alias{plot,mse,ANY-method}
 \alias{PlotNumber}
 \alias{PlotBiomass}
 \alias{PlotSBiomass}

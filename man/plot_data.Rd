@@ -59,6 +59,12 @@ into whole-year totals, since these are flow quantities. Default
 \item{showDiscards}{Logical. \code{PlotData()} only. By default (\code{FALSE}),
 the \code{Discards} panel is omitted when it's populated but every value
 (across sims/years/fleets) is zero. Set \code{TRUE} to always show it.}
+
+\item{x}{A \link[=data-class]{data} object.}
+
+\item{y}{Unused.}
+
+\item{...}{Additional arguments passed to \code{PlotData()}.}
 }
 \value{
 A \code{ggplot} object (a \code{patchwork} object for \code{PlotData()}), or

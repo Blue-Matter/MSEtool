@@ -27,6 +27,8 @@ See Details.}
 
 \item{x}{An \link[=om-class]{om}, \link[=hist-class]{hist}, or \link[=mse-class]{mse} object, or a list of
 such objects. (\code{Years()} only.)}
+
+\item{value}{Numeric vector of years to assign to the \code{Years} slot.}
 }
 \value{
 A numeric vector of time step values, or for \code{Years()} applied to

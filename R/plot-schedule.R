@@ -227,6 +227,9 @@ PlotDiscardMortalityCurve <- function(object, Sim = NULL, byStock = NULL, byFlee
 #' stock's `Length@CVatAge` isn't set (so `ALK` was not populated).
 #'
 #' @inheritParams plot_schedule
+#' @param byStock One of `TRUE`, `FALSE`, or `NULL` (default, facets
+#'   automatically when `object` has more than one stock). `TRUE`/`NULL`
+#'   facets by `Stock`; `FALSE` colors by `Stock`.
 #' @param object An [om-class], [hist-class], [mse-class], or
 #'   [stock-class] object.
 #'
@@ -266,6 +269,9 @@ PlotLengthCurve <- function(object, Sim = NULL, byStock = NULL, Years = NULL, un
 #' single figure with [patchwork::wrap_plots()].
 #'
 #' @inheritParams plot_schedule
+#' @param byStock One of `TRUE`, `FALSE`, or `NULL` (default, facets
+#'   automatically when `object` has more than one stock). `TRUE`/`NULL`
+#'   facets by `Stock`; `FALSE` colors by `Stock`.
 #' @param object An [om-class], [hist-class], [mse-class], or
 #'   [stock-class] object.
 #'
@@ -300,6 +306,9 @@ PlotWeightCurve <- function(object, Sim = NULL, byStock = NULL, Years = NULL, un
 #' [patchwork::wrap_plots()].
 #'
 #' @inheritParams plot_schedule
+#' @param byStock One of `TRUE`, `FALSE`, or `NULL` (default, facets
+#'   automatically when `object` has more than one stock). `TRUE`/`NULL`
+#'   facets by `Stock`; `FALSE` colors by `Stock`.
 #' @param object An [om-class], [hist-class], [mse-class], or
 #'   [stock-class] object.
 #'
@@ -336,6 +345,9 @@ PlotMaturityCurve <- function(object, Sim = NULL, byStock = NULL, Years = NULL, 
 #' single figure with [patchwork::wrap_plots()].
 #'
 #' @inheritParams plot_schedule
+#' @param byStock One of `TRUE`, `FALSE`, or `NULL` (default, facets
+#'   automatically when `object` has more than one stock). `TRUE`/`NULL`
+#'   facets by `Stock`; `FALSE` colors by `Stock`.
 #' @param object An [om-class], [hist-class], [mse-class], or
 #'   [stock-class] object.
 #'
@@ -369,6 +381,9 @@ PlotNaturalMortalityCurve <- function(object, Sim = NULL, byStock = NULL, Years 
 #' [patchwork::wrap_plots()].
 #'
 #' @inheritParams plot_schedule
+#' @param byStock One of `TRUE`, `FALSE`, or `NULL` (default, facets
+#'   automatically when `object` has more than one stock). `TRUE`/`NULL`
+#'   facets by `Stock`; `FALSE` colors by `Stock`.
 #' @param object An [om-class], [hist-class], [mse-class], or
 #'   [stock-class] object.
 #'

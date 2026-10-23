@@ -182,11 +182,11 @@ mortality, appropriate for iteroparous species.
 Setting \code{Semelparous = TRUE} sets the array equal to \code{MeanAtAge} after
 population:
 \itemize{
-\item Fully mature ages (maturity ≈ 1): post-spawn survival ≈ 0 — complete
+\item Fully mature ages (maturity near 1): post-spawn survival near 0 — complete
 die-off.
 \item Ages on the maturity ogive (0 < maturity < 1): proportional post-spawn
 mortality.
-\item Immature ages (maturity ≈ 0): post-spawn survival ≈ 1 — unaffected.
+\item Immature ages (maturity near 0): post-spawn survival near 1 — unaffected.
 }
 
 This assumption — that the post-spawn mortality schedule equals the maturity

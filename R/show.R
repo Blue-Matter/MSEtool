@@ -41,6 +41,9 @@
 #' @aliases show,stocktargeting-method
 #' @aliases show,stocktransition-method
 #' @aliases show,pm-method
+#' @aliases show,imp-method
+#' @aliases show,impslot-method
+#' @aliases show,reference-method
 #' @exportMethod show
 NULL
 

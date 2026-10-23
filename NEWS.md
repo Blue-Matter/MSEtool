@@ -1,12 +1,58 @@
 The current version of the `MSEtool` package is available for download from [CRAN](https://CRAN.R-project.org/package=MSEtool).
 
-# MSEtool 3.7.6 - Development Version
+# MSEtool 4.0.0
 
-## Fixes 
-- Fix issue where `MMSE` objects could not handle `multiHist` objects from earlier versions
-- Fix to generating CAL data
-- `SS2OM` no longer applies selectivity twice to retention. Multi-fleet OMs stored realized retention (selectivity x retention) in `cpars$retA` and `cpars$retL`, which were then multiplied by selectivity again, so retained catch was understated even when the SS3 model has no discards. Retention-at-length is now taken from the SS3 `Ret` factor instead of `Keep`.
-- Under a TAC, projected retained catch in `Project` and `multiMSE` was scaled by the maximum of the realized selectivity curve, so retained catch was below removals whenever that maximum was below 1 (e.g., `SS2OM` sex-averaged selectivity, multi-fleet OMs). Retained F now uses the same scaling as removals. Effort-based MPs were not affected.
+## Major update
+
+MSEtool 4.0.0 is a major release. It adds a new, more general simulation
+engine alongside the existing one:
+
+- Operating models are built from independent `Stock`, `Fleet`, `Obs`, and
+  `Imp` objects (`om-class`), supporting any number of stocks, fleets, areas,
+  and seasons, including multi-stock fleets with stock targeting and
+  multi-complex TAC management.
+- `Simulate()`, `Project()`, and `runMSE()` return the new `hist-class` and
+  `mse-class` objects, with extractor and plotting functions for each
+  component (e.g., `Biomass()`, `Landings()`, `PlotDynamics()`).
+- Management procedures take a `data-class` object and return an
+  `advice-class` object. The same `data-class` structure holds simulated and
+  real fishery data, so MPs can be applied directly to observed data.
+- Operating models and data can be imported from Stock Synthesis 3
+  (`ImportSS()`), BAM (`ImportBAM()`), and iSCAM (`ImportiSCAM()`).
+- New performance metric functions, and export of MSE results to Slick
+  (`MSE2Slick()`).
+- Legacy `OM`, `MOM`, `Hist`, `MSE`, and `Data` objects are still supported:
+  `Simulate()`, `Project()`, and `runMSE()` dispatch to the legacy engine for
+  legacy objects, and `Convert()` converts legacy objects to the new classes.
+
+See the documentation at <https://docs.openMSE.com> for details.
+
+## Fixes to legacy code
+
+- `SS2OM` no longer applies selectivity twice to retention. Multi-fleet OMs
+  stored realized retention (selectivity x retention) in `cpars$retA` and
+  `cpars$retL`, which were then multiplied by selectivity again, so retained
+  catch was understated even when the SS3 model has no discards.
+  Retention-at-length is now taken from the SS3 `Ret` factor instead of
+  `Keep`.
+- Under a TAC, projected retained catch in `Project` and `multiMSE` was scaled
+  by the maximum of the realized selectivity curve, so retained catch was
+  below removals whenever that maximum was below 1 (e.g., `SS2OM`
+  sex-averaged selectivity, multi-fleet OMs). Retained F now uses the same
+  scaling as removals. Effort-based MPs were not affected.
+- Fixes to `SS2OM`, `SS2MOM`, and `SS2Data` for multi-fleet and two-sex
+  models, including the index used for additional-index selectivity. New
+  `comp_partition` argument selects retained, discarded, or all composition
+  data.
+- Weight-at-age of retained and discarded catch accounts for size
+  selectivity and retention.
+- Fix issue where `MMSE` objects could not handle `multiHist` objects from
+  earlier versions.
+- Fix to generating CAL data.
+- Parallel processing in `runMSE` and `multiMSE` no longer fails when
+  `snowfall` is not installed. `snowfall` moved to Suggests.
+- The SS3 import functions require `r4ss` (>= 1.50), available from
+  <https://r4ss.r-universe.dev>.
 
 # MSEtool 3.7.5
 

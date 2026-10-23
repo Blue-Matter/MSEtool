@@ -305,6 +305,7 @@ importslot <- function(name, length=2, Data, Names, numeric=TRUE, essential=TRUE
 #' @export
 #'
 #' @name Stock-legacy-class
+#' @aliases Stock-class
 setClass("Stock", representation(Name = "character",
                                  Common_Name='character',
                                  Species="character",
@@ -404,6 +405,7 @@ setClassUnion(name="char.log", members=c("character", "logical"))
 #' The component of the operating model that controls fishing dynamics
 #'
 #' @name Fleet-legacy-class
+#' @aliases Fleet-class
 #' @template Fleet_template
 #'
 #' @section Creating Object:
@@ -558,6 +560,7 @@ NULL
 #' \code{new('Obs')}
 #' 
 #' @name Obs-legacy-class
+#' @aliases Obs-class
 #' @author T. Carruthers and A. Hordyk
 #' @export
 #' @examples
@@ -661,6 +664,7 @@ setMethod("initialize", "Obs", function(.Object, file = NA, dec=c(".", ",")) {
 #' \code{new('Imp')}#'
 #'
 #' @name Imp-legacy-class
+#' @aliases Imp-class
 #' @author T. Carruthers and A. Hordyk
 #' @export
 #' @examples
@@ -974,6 +978,7 @@ setMethod("initialize", "OM", function(.Object, Stock=NULL, Fleet=MSEtool::Gener
 #' @slot OM The `OM` object (without cpars)
 #' @slot Misc A list for additional information
 #' @name Hist-legacy-class
+#' @aliases Hist-class
 #' @author A. Hordyk
 setClass("Hist", representation(
   Data = 'Data',
@@ -995,6 +1000,7 @@ setClass("Hist", representation(
 #'
 #'
 #' @name MSE-legacy-class
+#' @aliases MSE-class
 #' @template MSE_template
 #'
 #'

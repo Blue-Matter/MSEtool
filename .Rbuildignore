@@ -12,9 +12,7 @@ man-roxygen
 ^\_pkgdown\.yml$
 ^docs$
 
-# Ignore tests
-tests\*.*
-^tests$
+^tests/manual$
 
 # Ignore DLL
 src\*.o
@@ -44,6 +42,7 @@ src\*.dll
 
 ^\.positai$
 ^\.claude$
+^CLAUDE\.md$
 
 ^_snaps$
 

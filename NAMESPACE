@@ -1078,6 +1078,7 @@ importFrom(grid,
   unit,
   unit.c
 )
+importFrom(lifecycle,deprecated)
 importFrom(lubridate,
   as_date,
   date_decimal,
@@ -1105,7 +1106,10 @@ importFrom(purrr,
   map_lgl,
   pmap
 )
-importFrom(rlang,caller_call)
+importFrom(rlang,
+  .data,
+  caller_call
+)
 importFrom(stats,
   SSasympOff,
   acf,

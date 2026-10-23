@@ -77,12 +77,14 @@ TruncSD(wt) <- 3
 # ---- Attaching to a Stock ----
 
 stk <- Stock(Name = "Example stock", Ages = Ages(MaxAge = 20))
+Length(stk) <- Length(Pars = list(Linf = 100, K = 0.2, t0 = -0.1))
 Weight(stk) <- Weight(Pars = list(a = 0.01, b = 3.0))
 Weight(stk)
 
 # ---- Populate ----
 
 ## The final populated object (typically done internally).
-## An at-length model requires a populated Length object.
-pop_wt <- Populate(Weight(stk), Ages = Ages(MaxAge = 20))
+## Weight-at-length is calculated from a populated Length object.
+pop_wt <- Populate(Weight(stk), Ages = Ages(MaxAge = 20),
+                   Length = Populate(Length(stk)))
 pop_wt

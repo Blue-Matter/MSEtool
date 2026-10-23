@@ -226,6 +226,7 @@
 #' @example man-examples/plot-hist.R
 #'
 #' @name plot_hist
+#' @aliases plot,hist,ANY-method plot,mse,ANY-method
 #' @seealso [Number()], [Biomass()], [SBiomass()], [SProduction()],
 #'   [FDead()], [FInteract()], [FRetain()], [VBiomass()], [Landings()],
 #'   [Discards()], [Interactions()], [Removals()], [Effort()], [B_B0()],

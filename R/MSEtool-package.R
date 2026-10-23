@@ -3,6 +3,7 @@
 
 ## usethis namespace: start
 #' @importFrom digest digest
+#' @importFrom lifecycle deprecated
 #' @importFrom lubridate as_date
 #' @importFrom lubridate date_decimal
 #' @importFrom lubridate decimal_date
@@ -14,6 +15,7 @@
 #' @importFrom purrr map2
 #' @importFrom purrr pmap
 #' @importFrom Rcpp sourceCpp
+#' @importFrom rlang .data
 #' @useDynLib MSEtool, .registration = TRUE
 ## usethis namespace: end
 NULL

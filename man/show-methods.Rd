@@ -37,6 +37,9 @@
 \alias{show,stocktargeting-method}
 \alias{show,stocktransition-method}
 \alias{show,pm-method}
+\alias{show,imp-method}
+\alias{show,impslot-method}
+\alias{show,reference-method}
 \title{Show Methods}
 \arguments{
 \item{object}{An S4 object of the relevant class.}

@@ -36,6 +36,7 @@ Imports:
 Suggests:
     boot,
     broom,
+    callr,
     covr,
     crayon,
     DT,
@@ -52,7 +53,8 @@ Suggests:
     openxlsx,
     pak,
     pbapply,
-    r4ss,
+    pkgload,
+    r4ss (>= 1.50),
     readxl,
     reshape2,
     rfishbase,
@@ -63,13 +65,11 @@ Suggests:
     spict,
     testthat,
     tibble,
-    tidyr,
     TMB,
     usethis
 LinkingTo: Rcpp, RcppArmadillo
-Remotes: DTUAqua/spict/spict
 BugReports: https://github.com/Blue-Matter/MSEtool/issues
-Additional_repositories: https://r4ss.r-universe.dev
+Additional_repositories: https://r4ss.r-universe.dev, https://flr.r-universe.dev
 URL: https://msetool.openmse.com/
 Collate: 
     'MSEtool-package.R'

@@ -44,6 +44,8 @@ test_that(".SpictInp() merges zero catch, and FitSP(Model = 'spict') converges w
   expect_equal(inp$obsC, unname(Prep$Catch[-c(1, 12)]))
   expect_equal(inp$dtc, replace(rep(1, length(Prep$Years) - 2), c(1, 10), 2))
 
+  # spict uses mgcv, which R CMD check --as-cran hides as an undeclared recommended package
+  skip_on_cran()
   skip_if_not_installed('spict')
   Fit <- FitSP(Sim$Data, Model = 'spict')
   expect_true(Fit$Converged)
@@ -51,6 +53,7 @@ test_that(".SpictInp() merges zero catch, and FitSP(Model = 'spict') converges w
 })
 
 test_that("FitSP(Model = 'spict') agrees with the internal model", {
+  skip_on_cran()
   skip_if_not_installed('spict')
   for (s in 1:3) {
     Sim <- SimSPData(Seed = s)

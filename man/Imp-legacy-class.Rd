@@ -3,6 +3,7 @@
 \docType{class}
 \name{Imp-legacy-class}
 \alias{Imp-legacy-class}
+\alias{Imp-class}
 \title{Class \code{'Imp'}}
 \description{
 An operating model component that specifies the degree of adherence to management recommendations (Implementation error)

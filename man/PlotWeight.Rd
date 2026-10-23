@@ -35,6 +35,10 @@ plot. \code{NULL} takes the median across all simulations, cell by cell, and
 adds a \code{probs} quantile ribbon behind it (unless \code{nSim == 1} or values
 constant across simulations.}
 
+\item{byStock}{One of \code{TRUE}, \code{FALSE}, or \code{NULL} (default, facets
+automatically when \code{object} has more than one stock). \code{TRUE}/\code{NULL}
+facets by \code{Stock}; \code{FALSE} colors by \code{Stock}.}
+
 \item{Years}{Optional numeric vector, or \code{"all"}. Default \code{NULL} shows
 each independent curve's own last calendar year, labelled by year in
 the legend (legend dropped if the curve is constant over that year).

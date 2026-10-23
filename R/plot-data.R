@@ -148,6 +148,9 @@ PlotData <- function(object, byFleet = NULL, AggregateYear = FALSE, Season = NUL
   p
 }
 
+#' @param x A [data-class] object.
+#' @param y Unused.
+#' @param ... Additional arguments passed to `PlotData()`.
 #' @rdname plot_data
 #' @export
 setMethod('plot', 'data', function(x, y, ...) {
