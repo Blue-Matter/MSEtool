@@ -83,7 +83,8 @@ CurrentCatch <- function(Data) {
   CheckCatch(Data)
 
   si <- SeasonOfYear(Data)
-  TargetRow <- LastHistYearInd(Data) - si$Seasons + si$SeasonInd
+  Season <- si$SeasonInd %% si$Seasons + 1L # managed season follows the last data time step
+  TargetRow <- LastHistYearInd(Data) - si$Seasons + Season
 
   LastHistLandings <- Data@Landings@Value[TargetRow, , drop=FALSE]
 
@@ -106,7 +107,8 @@ CurrentLandings <- function(Data) {
   CheckCatch(Data, slot_names = 'Landings')
 
   si <- SeasonOfYear(Data)
-  TargetRow <- LastHistYearInd(Data) - si$Seasons + si$SeasonInd
+  Season <- si$SeasonInd %% si$Seasons + 1L # managed season follows the last data time step
+  TargetRow <- LastHistYearInd(Data) - si$Seasons + Season
 
   LastHistLandings <- Data@Landings@Value[TargetRow, , drop=FALSE]
 
@@ -127,7 +129,8 @@ AverageCatch <- function(Data) {
   CheckCatch(Data)
 
   si <- SeasonOfYear(Data)
-  HistRows <- seq(si$SeasonInd, LastHistYearInd(Data), by = si$Seasons)
+  Season <- si$SeasonInd %% si$Seasons + 1L # managed season follows the last data time step
+  HistRows <- seq(Season, LastHistYearInd(Data), by = si$Seasons)
 
   HistLandings <- Data@Landings@Value[HistRows, , drop=FALSE]
   if (is.null(HistLandings) || !length(HistLandings))

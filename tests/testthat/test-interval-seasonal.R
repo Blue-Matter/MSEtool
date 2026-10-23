@@ -81,15 +81,26 @@ test_that("CurrentCatch reproduces the exact historical seasonal pattern under P
   hist <- Simulate(om, silent = TRUE)
   mse  <- Project(hist, MPs = "CurrentCatch", parallel = FALSE, silent = TRUE)
 
-  L <- mse@Landings[, , , , 1]  # Sim x Year (single stock/fleet)
-  Seasons <- om@Seasons
-  nYearProj <- dim(L)[2] / Seasons
+  Seasons   <- om@Seasons
+  ProjYears <- as.character(Years(hist@OM, "Projection"))
+  Advice    <- mse@Misc$Advice$CurrentCatch
+  Removals  <- ArraySum(mse@Landings, mse@Discards)
 
-  # realised landings must repeat the same Seasons-length cycle every year
-  first_cycle <- unname(L[1, seq_len(Seasons)])
-  for (yr in seq_len(nYearProj) - 1) {
-    idx <- yr * Seasons + seq_len(Seasons)
-    expect_equal(unname(L[1, idx]), first_cycle, tolerance = 1e-8)
+  for (sim in seq_len(om@nSim)) {
+    Data <- hist@Data[[sim]][[1]]
+    LHY  <- LastHistYearInd(Data)
+    Rows <- (LHY - Seasons + 1):LHY
+    Disc <- Data@Discards@Value[Rows, , drop = FALSE]
+    LastYear <- rowSums(Data@Landings@Value[Rows, , drop = FALSE], na.rm = TRUE) +
+      if (is.null(Disc)) 0 else rowSums(Disc, na.rm = TRUE)
+
+    # season s TAC repeats season s of the last historical year, every year
+    TAC <- vapply(ProjYears, \(y) sum(Advice[[y]][[sim]][[1]]@TAC), numeric(1))
+    expect_equal(unname(TAC), rep(unname(LastYear), length(ProjYears) / Seasons), tolerance = 1e-8)
+
+    # the first projection year can be caught in full
+    expect_equal(unname(Removals[sim, 1, ProjYears[seq_len(Seasons)], 1, 1]),
+                 unname(LastYear), tolerance = 1e-6)
   }
 })
 
