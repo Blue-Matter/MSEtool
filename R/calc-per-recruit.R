@@ -1136,6 +1136,12 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
 
   ActualApicalF <- apply(ActualApicalFByStock, c('Sim', 'Year'), max)
 
+  # one scale per sim and calendar year, so apicalF is the peak-season F and the seasonal pattern is kept
+  for (cy in seq_len(nCalYears)) {
+    ts_idx <- ((cy - 1L) * nSeason + 1L):(cy * nSeason)
+    ActualApicalF[, ts_idx] <- apply(ActualApicalF[, ts_idx, drop = FALSE], 1L, max)
+  }
+
   if (apicalF > 0 && any(abs(ActualApicalF / apicalF - 1) > 1E-2)) {
     apicalFSimTS <- array(apicalF, dim = dim(ActualApicalF), dimnames = dimnames(ActualApicalF))
     adjust <- ArrayDivide(apicalFSimTS, ActualApicalF) |>

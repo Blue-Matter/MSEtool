@@ -1,4 +1,5 @@
 #include <Rcpp.h>
+#include <algorithm>
 #include <cmath>
 #include <vector>
 using namespace Rcpp;
@@ -548,16 +549,11 @@ List CalcPerRecruitFScalarSeasonalCpp_(
   }
 
   // Conditional apical-F rescale (mirrors the `if` block in
-  // .CalcPerRecruitFScalarSeasonal()) 
-  bool anyOffTarget = false;
-  if (apicalF > 0) {
-    for (int se = 0; se < nSeason; se++) {
-      if (std::fabs(SafeDivide(ActualApicalF[se], apicalF) - 1.0) > 1E-2) { anyOffTarget = true; break; }
-    }
-  }
+  // .CalcPerRecruitFScalarSeasonal()); one scale from the peak season keeps the seasonal pattern
+  double PeakApicalF = *std::max_element(ActualApicalF.begin(), ActualApicalF.end());
+  bool anyOffTarget = apicalF > 0 && std::fabs(SafeDivide(PeakApicalF, apicalF) - 1.0) > 1E-2;
   if (anyOffTarget) {
-    std::vector<double> adjust(nSeason);
-    for (int se = 0; se < nSeason; se++) adjust[se] = SafeDivide(apicalF, ActualApicalF[se]);
+    std::vector<double> adjust(nSeason, SafeDivide(apicalF, PeakApicalF));
 
     for (int s = 0; s < nStock; s++) {
       int nAge = nAgeVec[s];
