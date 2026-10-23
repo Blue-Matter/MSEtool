@@ -60,7 +60,11 @@ Subset <- function(object,
     object <- .SubsetSim(object, Sims)
     if (!is.null(OM)) object <- .SetGlobalSims(object, OM, Sims)
   }
-  if (!is.null(Years))  object <- .SubsetYear(object, Years, Impute)
+  if (!is.null(Years)) {
+    Hist   <- if (inherits(object, "mse")) .SubsetHistYears(object@Hist, Years, Impute)
+    object <- .SubsetYear(object, Years, Impute)
+    if (!is.null(Hist)) object@Hist <- Hist
+  }
   if (!is.null(Ages))   object <- .SubsetAge(object, Ages)
   if (!is.null(MPs)) {
     MPs <- .SubsetMPNames(object, MPs)
@@ -74,6 +78,13 @@ Subset <- function(object,
   }
 
   object
+}
+
+# MSE@Hist holds only historical time steps, so later years are not imputed into it
+.SubsetHistYears <- function(Hist, Years, Impute) {
+  HistTS <- as.numeric(dimnames(Hist@SBiomass)$Year)
+  if (!length(HistTS)) return(.SubsetYear(Hist, Years, Impute))
+  .SubsetYear(Hist, Years[as.numeric(Years) <= max(HistTS)], Impute)
 }
 
 # Subsets an om/hist/mse to whole complexes and re-indexes `Complexes` to the retained stocks

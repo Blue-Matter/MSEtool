@@ -77,6 +77,24 @@ test_that("Subset(Years = ) trims the advice record and selectivity changes, not
   expect_identical(TAC(m), TACs(m))
 })
 
+test_that("Subset(Years = ) keeps only historical years in MSE@Hist", {
+  skip_on_cran()
+  mse <- .SubsetMiscMSE()$mse
+  HistYears <- Years(mse, "H")
+  ProjYears <- Years(mse, "P")
+  HistTS <- \(m) as.numeric(dimnames(m@Hist@SBiomass)$Year)
+  ProjTS <- \(m) as.numeric(dimnames(m@SBiomass)$Year)
+
+  m <- Subset(mse, Years = c(HistYears[-(1:3)], ProjYears[1:2]))
+  expect_equal(HistTS(m), HistYears[-(1:3)])
+  expect_equal(ProjTS(m), ProjYears[1:2])
+  expect_identical(m@Hist@Landings, .SubsetYear(mse@Hist@Landings, HistYears[-(1:3)]))
+
+  m <- Subset(mse, Years = ProjYears[2:3])
+  expect_length(HistTS(m), 0)
+  expect_equal(ProjTS(m), ProjYears[2:3])
+})
+
 test_that("Subset(Years = ) keeps a seasonal advice record consistent", {
   skip_on_cran()
   mse <- .SubsetMiscMSE("SeasonalSpatialOM")$mse
