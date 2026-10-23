@@ -40,3 +40,45 @@ test_that("refMSY* realises its annual MSY target on a seasonal OM", {
   # annual target closely (not the ~Seasons-fold overcatch of the bug).
   expect_equal(AnnualCatch, MSYTarget, tolerance = 0.01)
 })
+
+.ProjMean <- function(df, Years) {
+  df <- df[df$Period == 'Projection' & floor(df$Year) %in% Years, ]
+  as.vector(tapply(df$Value, df$Sim, mean))
+}
+
+test_that("refFMSY fishes a seasonal OM at FMSY and reaches SBMSY", {
+  skip_on_cran()
+  om <- SeasonalSpatialOM
+  om@nSim  <- 2
+  om@pYear <- 60
+  om@Stock[[1]]@SRR@SD <- 0
+  om@Stock[[1]]@Spatial <- new('spatial')
+  for (i in seq_along(om@Fleet[[1]]))
+    om@Fleet[[1]][[i]]@Closure <- NULL
+  hist <- Simulate(om, silent = TRUE)
+  mse  <- Project(hist, MPs = "refFMSY", parallel = FALSE, silent = TRUE)
+
+  LastYrs <- max(floor(Years(hist, 'P'))) - 4:0
+  expect_equal(.ProjMean(F_FMSY(mse), LastYrs), c(1, 1), tolerance = 1e-3)
+  expect_equal(.ProjMean(SB_SBMSY(mse), LastYrs), c(1, 1), tolerance = 0.01)
+})
+
+test_that("refFMSY reaches SBMSY and MSY on an annual OM", {
+  skip_on_cran()
+  om <- SingleStockOM
+  om@nSim  <- 3
+  om@pYear <- 80
+  om@Stock[[1]]@SRR@SD <- 0
+  om@Stock[[1]]@Spatial <- new('spatial')
+  om@Stock[[1]]@Depletion@Final <- 0.4
+  hist <- Simulate(om, silent = TRUE)
+  mse  <- Project(hist, MPs = "refFMSY", parallel = FALSE, silent = TRUE)
+
+  LastYr <- max(Years(hist, 'P'))
+  expect_equal(.ProjMean(SB_SBMSY(mse), LastYr), rep(1, 3), tolerance = 1e-3)
+
+  Removals <- ExtendSims(apply(ArraySum(mse@Landings, mse@Discards), c(1, 3), sum), 3)
+  MSY <- ExtendSims(hist@Reference@MSY@MSYLandings, 3)[, 1, 1] +
+    ExtendSims(hist@Reference@MSY@MSYDiscards, 3)[, 1, 1]
+  expect_equal(unname(Removals[, as.character(LastYr)] / MSY), rep(1, 3), tolerance = 1e-3)
+})
