@@ -441,3 +441,7 @@ LinInterp <- function(x, y, xlev, ascending = FALSE, zeroint = FALSE) {
     x[max(which(!is.na(x)))]
   })
 }
+
+# sum/mean ignoring NA, but NA (not 0/NaN) when every value is missing
+.SumNA <- function(x) if (all(is.na(x))) NA_real_ else sum(x, na.rm = TRUE)
+.MeanNA <- function(x) if (all(is.na(x))) NA_real_ else mean(x, na.rm = TRUE)

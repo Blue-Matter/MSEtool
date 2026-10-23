@@ -259,7 +259,7 @@ NULL
 .PMArray <- function(df, valcol, group_col = 'Stock') {
   agg <- df |>
     dplyr::group_by(.data$Sim, .data[[group_col]], .data$MP) |>
-    dplyr::summarise(Value = mean(.data[[valcol]], na.rm = TRUE), .groups = 'drop')
+    dplyr::summarise(Value = .MeanNA(.data[[valcol]]), .groups = 'drop')
 
   simN   <- sort(unique(agg$Sim))
   grpN   <- unique(agg[[group_col]])
@@ -279,7 +279,7 @@ NULL
 .PMMean <- function(ProbArr) {
   d  <- dim(ProbArr)
   dn <- dimnames(ProbArr)
-  out <- apply(ProbArr, c(2, 3), mean, na.rm = TRUE)
+  out <- apply(ProbArr, c(2, 3), .MeanNA)
   dim(out) <- d[c(2, 3)]
   dimnames(out) <- dn[c(2, 3)]
   out
@@ -421,7 +421,7 @@ NULL
     dplyr::mutate(Year = .CalendarYear(.data$Year)) |>
     dplyr::filter(.data$Year %in% complete) |>
     dplyr::group_by(dplyr::across(dplyr::all_of(grp)), .data$Year) |>
-    dplyr::summarise(Value = sum(.data$Value, na.rm = TRUE), .groups = 'drop')
+    dplyr::summarise(Value = .SumNA(.data$Value), .groups = 'drop')
 }
 
 .GroupCatchByStocks <- function(df, OM, Stocks) {
@@ -429,7 +429,7 @@ NULL
   purrr::imap(groups, \(stk, grpName) {
     df[df$Stock %in% stk, ] |>
       dplyr::group_by(.data$Sim, .data$Year, .data$MP) |>
-      dplyr::summarise(Value = sum(.data$Value, na.rm = TRUE), .groups = 'drop') |>
+      dplyr::summarise(Value = .SumNA(.data$Value), .groups = 'drop') |>
       dplyr::mutate(Stock = grpName)
   }) |> dplyr::bind_rows()
 }
@@ -482,7 +482,7 @@ NULL
     cx <- names(cxStocks)[purrr::map_lgl(cxStocks, \(s) any(s %in% stk))]
     df[df$Stock %in% cx, ] |>
       dplyr::group_by(.data$Sim, .data$Year, .data$MP) |>
-      dplyr::summarise(Value = sum(.data$Value, na.rm = TRUE), .groups = 'drop') |>
+      dplyr::summarise(Value = .SumNA(.data$Value), .groups = 'drop') |>
       dplyr::mutate(Stock = grpName)
   }) |> dplyr::bind_rows()
 }
@@ -558,7 +558,7 @@ NULL
 
   df |>
     dplyr::group_by(.data$Sim, .data$Year, .data$MP) |>
-    dplyr::summarise(Value = sum(.data$Value, na.rm = TRUE), .groups = 'drop') |>
+    dplyr::summarise(Value = .SumNA(.data$Value), .groups = 'drop') |>
     dplyr::mutate(Stock = 'All')
 }
 
@@ -902,7 +902,7 @@ PM_LogYield <- function(object, Years = NULL, Stocks = NULL,
   RefDF <- purrr::imap(groups, \(stk, grpName) {
     HistDF[HistDF$Stock %in% stk, ] |>
       dplyr::group_by(.data$Sim, .data$Year) |>
-      dplyr::summarise(Value = sum(.data$Value, na.rm = TRUE), .groups = 'drop') |>
+      dplyr::summarise(Value = .SumNA(.data$Value), .groups = 'drop') |>
       dplyr::group_by(.data$Sim) |>
       dplyr::summarise(HistMean = mean(.data$Value, na.rm = TRUE), .groups = 'drop') |>
       dplyr::mutate(Stock = grpName)

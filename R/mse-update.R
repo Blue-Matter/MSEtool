@@ -120,7 +120,8 @@
     .AddYearDimnames(Years=c(YearsHist, YearsProj)) |>
     .AddFleetDimnames(FleetNames = FleetNames(Proj))
   
-  if (mp > 1) 
+  # the first stored PPD carries the historical years, even if earlier MPs failed
+  if (length(MSE@PPD))
     PPD <- PPD |>
     .SubsetYear(Years=YearsProj)
   
@@ -190,4 +191,29 @@
   eval(as.call(list(as.name('<-'), as.call(c(list(as.name('['), as.name(Key)), Idx)), quote(.Value))),
        envir = Store)
   invisible(NULL)
+}
+
+# Simulations with a logged error
+.FailedSims <- function(ErrorEntries) {
+  Entries <- Filter(\(e) .IsLogEntry(e) && length(e$sim), ErrorEntries)
+  sort(unique(vapply(Entries, \(e) as.integer(e$sim[1]), integer(1))))
+}
+
+# Set all projection values of the failed sims to NA
+.MaskFailedSims <- function(Proj, Sims, YearsProj) {
+  if (!length(Sims)) return(Proj)
+  nSim <- Proj@OM@nSim
+  Mask <- function(x) {
+    if (is.list(x)) return(lapply(x, Mask))
+    DN <- names(dimnames(x))
+    if (!is.array(x) || !all(c('Sim', 'Year') %in% DN)) return(x)
+    if (dim(x)[match('Sim', DN)] == 1 && nSim > 1) x <- ExtendSims(x, nSim)
+    Idx <- rep(list(TRUE), length(DN))
+    Idx[[match('Sim', DN)]]  <- which(dimnames(x)[['Sim']] %in% as.character(Sims))
+    Idx[[match('Year', DN)]] <- which(as.numeric(dimnames(x)[['Year']]) %in% YearsProj)
+    do.call(`[<-`, c(list(x), Idx, list(value = NA)))
+  }
+  for (sl in setdiff(methods::slotNames('timeseries'), 'Misc'))
+    methods::slot(Proj, sl) <- Mask(methods::slot(Proj, sl))
+  Proj
 }

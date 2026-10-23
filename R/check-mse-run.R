@@ -59,18 +59,45 @@
   if (AllFailed) {
     cli::cli_alert_danger("{label} failed for all simulations; {.cls mse} not updated for this MP {.timestamp {el}}")
   } else {
-    cli::cli_alert_warning("{label} failed for {nFailed} of {nSim} simulation{?s} ({sims}); {.cls mse} not updated for {cli::qty(nFailed)}{?this/these} simulation{?s} {.timestamp {el}}")
+    cli::cli_alert_warning("{label} failed for {nFailed} of {nSim} simulation{?s} ({sims}); {.cls mse} values for {cli::qty(nFailed)}{?this/these} simulation{?s} are {.val NA} {.timestamp {el}}")
   }
   .MsgErrorDetails(ErrorEntries)
 
-  # Write log file
-  LogDir  <- file.path(getwd(), 'Log')
-  if (!dir.exists(LogDir))
-    dir.create(LogDir)
+  LogDir <- .MPErrorLogDir(getOption('MSEtool.WriteLog', FALSE))
+  if (!is.null(LogDir))
+    .WriteMPErrorLog(MPName, SimsFailed, ErrorEntries, LogDir)
 
-  logFile <- file.path(LogDir, paste0(MPName, '_',
-                                      format(Sys.time(), '%Y%m%d%H%M'),
-                                      '.log'))
+  list(Proj = Proj, AllFailed = AllFailed)
+}
+
+# distinct error messages as indented bullets under an MP failure line
+.MsgErrorDetails <- function(ErrorEntries, max = 3) {
+  msgs <- unique(vapply(ErrorEntries, \(e) gsub("\\s*\n\\s*", " ", trimws(.LogEntryMessage(e))),
+                        character(1)))
+  if (!length(msgs)) return(invisible(NULL))
+  shown <- utils::head(msgs, max)
+  bullets <- stats::setNames(.MsgEscape(shown), rep(" ", length(shown)))
+  if (length(msgs) > max)
+    bullets <- c(bullets, " " = paste0("... and ", length(msgs) - max, " more"))
+  cli::cli_bullets(bullets)
+  invisible(NULL)
+}
+
+# Folder for MP error logs from `options(MSEtool.WriteLog)`: NULL (none), `Log` in the working directory (TRUE), or a path
+.MPErrorLogDir <- function(Value) {
+  if (is.null(Value) || isFALSE(Value)) return(NULL)
+  if (isTRUE(Value)) return(file.path(getwd(), 'Log'))
+  if (is.character(Value) && length(Value) == 1 && !is.na(Value) && nzchar(Value))
+    return(Value)
+  cli::cli_abort("{.code options(MSEtool.WriteLog)} must be {.val {FALSE}}, {.val {TRUE}}, or the path of a folder.")
+}
+
+# Writes the per-sim MP errors to <LogDir>/<MP>_<time>.log
+.WriteMPErrorLog <- function(MPName, SimsFailed, ErrorEntries, LogDir) {
+  if (!dir.exists(LogDir))
+    dir.create(LogDir, recursive = TRUE)
+
+  logFile <- file.path(LogDir, paste0(MPName, '_', format(Sys.time(), '%Y%m%d%H%M'), '.log'))
   file.create(logFile)
 
   cat(paste0('MP: ', MPName), file=logFile, sep='\n', append=TRUE)
@@ -89,19 +116,5 @@
   }
 
   .MsgAlert('Error log written to {.file {logFile}}')
-
-  list(Proj = Proj, AllFailed = AllFailed)
-}
-
-# distinct error messages as indented bullets under an MP failure line
-.MsgErrorDetails <- function(ErrorEntries, max = 3) {
-  msgs <- unique(vapply(ErrorEntries, \(e) gsub("\\s*\n\\s*", " ", trimws(.LogEntryMessage(e))),
-                        character(1)))
-  if (!length(msgs)) return(invisible(NULL))
-  shown <- utils::head(msgs, max)
-  bullets <- stats::setNames(.MsgEscape(shown), rep(" ", length(shown)))
-  if (length(msgs) > max)
-    bullets <- c(bullets, " " = paste0("... and ", length(msgs) - max, " more"))
-  cli::cli_bullets(bullets)
-  invisible(NULL)
+  invisible(logFile)
 }

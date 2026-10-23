@@ -331,3 +331,25 @@ test_that("SRR@SPFrom is stored as a portable stock name after .OM2Hist(), not a
     CalcMSY(hist_no_msy, Years = MSYYears, type = 'Removals', parallel = FALSE, silent = TRUE)
   )
 })
+
+test_that("CalcMSY and CalcMSYCpp keep per-sim refs when only the fleet varies by sim", {
+  skip_on_cran()
+  om <- SeasonalSpatialOM
+  om@nSim <- 2
+  om@Stock[[1]]@Spatial <- new('spatial')
+  hist <- Simulate(om, silent = TRUE)
+
+  PerSim <- purrr::map(1:2, \(s) CalcMSY(Subset(hist, s), silent = TRUE))
+  expect_false(isTRUE(all.equal(c(PerSim[[1]]@FMSY), c(PerSim[[2]]@FMSY))))
+
+  Refs <- list(Hist = hist@Reference@MSY,
+               R    = CalcMSY(hist, silent = TRUE),
+               Cpp  = CalcMSYCpp(hist, silent = TRUE))
+  for (ref in Refs) {
+    for (sl in c('FMSY', 'BMSY', 'SBMSY', 'SPMSY', 'SPRMSY', 'MSYLandings', 'MSYDiscards')) {
+      Expected <- purrr::map_dbl(PerSim, \(x) c(slot(x, sl)))
+      expect_equal(unname(ExtendSims(slot(ref, sl), 2)[, 1, 1]), Expected,
+                   tolerance = 1e-6, label = sl)
+    }
+  }
+})

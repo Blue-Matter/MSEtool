@@ -61,12 +61,11 @@
       
       ref <- mat[1, , drop = TRUE]
       
-      col_na    <- colSums(!is.na(mat)) == 0L          
-      col_equal <- colSums(mat != matrix(ref, nrow = nrow(mat),
-                                         ncol = ncol(mat),
-                                         byrow = TRUE),
-                           na.rm = TRUE) == 0L         
-      
+      n_na      <- colSums(is.na(mat))
+      col_na    <- n_na == nrow(mat)
+      col_equal <- n_na == 0L &
+        colSums(mat != matrix(ref, nrow = nrow(mat), ncol = ncol(mat), byrow = TRUE)) == 0L
+
       if (!all(col_na | col_equal))
         return(FALSE)
     }

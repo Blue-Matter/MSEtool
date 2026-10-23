@@ -270,7 +270,7 @@ Removals <- function(object,
  cnames <- cnames[!cnames=='Value']
 
  out <- R |> dplyr::group_by(dplyr::across(dplyr::all_of(cnames))) |>
-   dplyr::summarise(Value = sum(Value, na.rm=TRUE), .groups='drop') |>
+   dplyr::summarise(Value = .SumNA(Value), .groups='drop') |>
    dplyr::mutate(Variable = 'Removals')
 
  .FinalizeTimeseriesDF(out, object@OM@nSim, Extend, silent)

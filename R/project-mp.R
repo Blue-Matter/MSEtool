@@ -271,6 +271,9 @@
   Error <- result$Error || CheckResult$AllFailed
 
   if (!Error)
+    Proj <- .MaskFailedSims(Proj, .FailedSims(Proj@Log$error), YearsProj)
+
+  if (!Error)
     MSE <- .UpdateMSEObject(MSE,
                            Proj,
                            MPName,

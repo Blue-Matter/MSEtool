@@ -93,11 +93,11 @@ test_that("ArrayMultiply's broadcast path matches the old materialize-then-opera
   expect_equal(as.numeric(fast), as.numeric(slow))
 })
 
-test_that("ArrayDivide zeroes NA/Inf results", {
-  a <- array(c(1, 0), dim = 2, dimnames = list(Sim = 1:2))
-  b <- array(c(0, 0), dim = 2, dimnames = list(Sim = 1:2))
+test_that("ArrayDivide zeroes division by zero and keeps NA inputs", {
+  a <- array(c(1, 0, NA, 2), dim = 4, dimnames = list(Sim = 1:4))
+  b <- array(c(0, 0, 1, NA), dim = 4, dimnames = list(Sim = 1:4))
   out <- ArrayDivide(a, b)
-  expect_equal(as.numeric(out), c(0, 0))
+  expect_equal(as.numeric(out), c(0, 0, NA, NA))
 })
 
 test_that("AddDimension attaches dimnames even when input array is unnamed", {

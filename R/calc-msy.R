@@ -246,8 +246,9 @@ CalcMSY <- function(Hist,
     for (sim in seq_len(nSim)) {
       for (ts in seq_along(Years)) {
         val <- slot(results_by_sim[[sim]][[ts]], sl)
+        # sim-invariant stock arrays label each sim's result Sim 1
         if (!is.null(val))
-          ArrayFill(arr) <- val
+          ArrayFill(arr) <- .ArraySubsetSim(val, sim, keep_sim_name = TRUE)
       }
     }
       

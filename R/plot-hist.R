@@ -1261,9 +1261,9 @@ setMethod('plot', 'mse', function(x, y, ...) {
   summ <- df |>
     dplyr::group_by(dplyr::across(dplyr::all_of(group_vars))) |>
     dplyr::summarise(
-      Lower  = stats::quantile(.data$Value, min(probs)),
-      Median = stats::median(.data$Value),
-      Upper  = stats::quantile(.data$Value, max(probs)),
+      Lower  = stats::quantile(.data$Value, min(probs), na.rm = TRUE),
+      Median = stats::median(.data$Value, na.rm = TRUE),
+      Upper  = stats::quantile(.data$Value, max(probs), na.rm = TRUE),
       .groups = 'drop'
     )
   

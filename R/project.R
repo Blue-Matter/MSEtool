@@ -48,6 +48,18 @@
 #' (e.g. `ProjectChunks`, `EffortOptim`, `DataOM`) are described in
 #' [OMControl].
 #'
+#' For [hist-class] objects, all projected values of an MP that fails for
+#' every simulation are `NA`, as are all projected values of the simulations
+#' an MP fails for. The errors are recorded in the `Log` slot of the returned
+#' object. They are not written to disk unless requested with the
+#' `MSEtool.WriteLog` option:
+#'
+#' - `options(MSEtool.WriteLog = "path/to/folder")` writes them to a file
+#'   `<MP>_<time>.log` in that folder, creating it if needed.
+#' - `options(MSEtool.WriteLog = TRUE)` writes them to a `Log` folder in the
+#'   working directory.
+#' - `options(MSEtool.WriteLog = FALSE)` (the default) writes nothing.
+#'
 #' @seealso [Simulate()], [runMSE()], [OMControl]
 #' 
 #' @export

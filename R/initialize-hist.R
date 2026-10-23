@@ -29,8 +29,9 @@
   isProj <- identical(Period, "Projection")
   if (!isProj) MPs <- 'temp'
   
-  default <- 0
-  
+  # an MP slice is only written when the MP succeeds, so a failed MP stays NA
+  default <- if (isProj) NA_real_ else 0
+
   ## --- Numbers at age (Sim × Age × Year × Area) ---
   
   Hist@Number <- if (isProj) {

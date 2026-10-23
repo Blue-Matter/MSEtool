@@ -6,7 +6,8 @@
 #' the same length for each dimension.
 #'
 #'  * `ArraySum`: Sum `array1` and `array2`
-#'  * `ArrayDivide`: Divide `array1` by `array2`
+#'  * `ArrayDivide`: Divide `array1` by `array2`. Division by zero returns
+#'    `0`; `NA` values in either array remain `NA`.
 #'  * `ArrayMultiply`: Multiply `array1` and `array2`
 #'  * `ArraySubtract`: Subtract `array2` from `array1` 
 #'  * `ArrayExtend`: extends the arrays to have matching dimensions (see [Extend()])
@@ -33,9 +34,8 @@ ArraySum <- function(array1, array2) {
 #' @export
 ArrayDivide <- function(array1, array2) {
   out <- .ArrayOperation(array1, array2, `/`)
-  if (anyNA(out)) out[is.na(out)] <- 0
-  inf_mask <- is.infinite(out)
-  if (any(inf_mask)) out[inf_mask] <- 0
+  zero_mask <- is.nan(out) | is.infinite(out)
+  if (any(zero_mask)) out[zero_mask] <- 0
   out
 }
 
