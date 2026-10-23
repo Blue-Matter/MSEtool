@@ -120,9 +120,7 @@
 
   # ---- reference points & ref yield ----
   if (!is.null(Hist@Reference@MSY))
-    Hist@Reference@MSY@Misc$FCurrent <- SumOverFleet(Hist@FInteract) |>
-    .AggregateFToComplex(Hist@OM) |>
-    .AlignDenomYears(as.character(MSYYears))
+    Hist@Reference@MSY@Misc$FCurrent <- .FCurrentApical(Hist, MSYYears)
 
   if (control$RefPoints)
     Hist <- CalcRefPoints(Hist,

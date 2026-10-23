@@ -35,6 +35,7 @@
   
   .OnExit()
   .CheckClass(Hist, 'hist', 'Hist')
+  .MPErrorLogDir(getOption('MSEtool.WriteLog', FALSE))
   MPList <- .ResolveMPs(MPs)
   MPs    <- names(MPList)
   if (!silent)
@@ -64,6 +65,7 @@
   Proj <- .CheckInterimAdvice(Proj)
 
   Proj <- .ExtendHist(Proj, Years = c(YearsHist, YearsProj), silent = silent)
+  Proj <- .FillProjectionRecruits(Proj, YearsHist)
   
   Proj <- .CalcFisheryDynamics(Proj, 
                               Years = c(utils::tail(YearsHist,1)), 
@@ -172,6 +174,21 @@
     .CheckLog(MSE, 'mse')
 
   .ReduceMSE(MSE, Reduce) 
+}
+
+# Recruits spawned in the last `RecLag - 1` historical steps, which enter after the historical period
+.FillProjectionRecruits <- function(Proj, YearsHist) {
+  nLag <- max(Proj@Misc$RecLag)
+  if (nLag < 2) return(Proj)
+  Years <- utils::tail(YearsHist, nLag)[-nLag]
+  Res <- CalcFisheryDynamics_(HistIn = Proj, Years = Years, AllYears = Years(Proj@OM),
+                              Sims = seq_len(nSim(Proj)), nSim = nSim(Proj),
+                              nStock = nStock(Proj), nFleet = nFleet(Proj), nArea = nArea(Proj),
+                              DoCalcCatch = 0, DoCalcSpawnProduction = 0, DoCalcRecruitment = 1,
+                              DoCalcNumberNext = 0, DoCalcTransition = 0, DoCalcBiomass = 0,
+                              DoCalcOverallF = 0, DoBackCalcEffort = 0, clone = 1L)
+  Proj@Number <- Res@Number
+  Proj
 }
 
 # ---- Sim chunks for parallel projection ----

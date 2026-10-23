@@ -87,8 +87,8 @@
 #' @slot SeasonalAllocation List. Named list of length 0 or the number of
 #'   stock complexes. Each element is an `nSim` (or 1, recycled) by
 #'   `Seasons` by `nFleet` array, each `[sim, , fleet]` column summing to 1,
-#'   controlling how a periodically-set TAC/Effort is split across the
-#'   seasons of the interval it covers. If unspecified it is derived from
+#'   controlling how a periodically-set TAC is split across the seasons of
+#'   the interval it covers. If unspecified it is derived from
 #'   `HistoricalWeight`. See [SeasonalAllocation()].
 #' @slot EffortAllocation List. Named list of length 0 or the number of
 #'   stock complexes. Each element is an `nSim` (or 1, recycled) by `nFleet`

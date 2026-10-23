@@ -533,16 +533,17 @@
 
 #' Calculate Recruitment Age Index for One or All Stocks
 #'
-#' Returns the number of pre-recruit age classes (i.e. the age index at which
-#' recruitment occurs) for each stock in an `om` or `hist` class object. Pre-recruit
-#' classes are determined by the seasonal time step and the minimum age class.
+#' Returns the recruitment lag (in time steps) for each stock in an `om` or
+#' `hist` class object: `SRR@SpawnLag` when set, otherwise the number of time
+#' steps from spawning to the youngest age class. The first `lag` time steps of
+#' age-0 numbers are filled from the initial conditions.
 #'
 #' @param OM  An `om` or `hist` class object.
-#' @param st  Integer or `NULL`. If provided, returns the recruitment age index
+#' @param st  Integer or `NULL`. If provided, returns the recruitment lag
 #'            for stock `st` only. Default: `NULL` (all stocks).
 #'
 #' @return If `st` is provided, a single integer. Otherwise, an array of
-#'   recruitment age indices with a `Stock` dimension.
+#'   recruitment lags with a `Stock` dimension.
 #'
 #' @keywords internal
 .CalcRecruitmentAgeIndex <- function(OM, st=NULL) {
@@ -551,20 +552,11 @@
   if (inherits(OM, 'hist'))
     OM <- OM@OM
 
-  if (!is.null(st)) {
-    Stock <- OM@Stock[[st]]
-    PreRecruit <- seq(0, by=1/Stock@Seasons, to=min(Stock@Ages@Classes))
-    # `-1`: `PreRecruit` includes timestep 0, which is not a bootstrap timestep
-    # it's populated directly from RecDevHist1/RecDevInit in .CalcDynamicInitial.
-    return(length(PreRecruit) - 1)
-  }
+  if (!is.null(st))
+    return(unname(.RecLag(OM@Stock[st])))
 
-  purrr::map(OM@Stock, \(Stock) {
-    PreRecruit <- seq(0, by=1/Stock@Seasons, to=min(Stock@Ages@Classes))
-    # see note above: exclude timestep 0 
-    length(PreRecruit) - 1
-  }) |>
+  .RecLag(OM@Stock) |>
+    as.list() |>
     List2Array('Stock') |>
     DropDimension('Sim')
-
 }

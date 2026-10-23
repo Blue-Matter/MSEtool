@@ -149,9 +149,9 @@ test_that("implementation error applies to fleet-by-area effort advice", {
   expect_equal(e_mat, e_vec, tolerance = 1e-8)
 
   # e_vec[1] = Effort[sim=1, first proj timestep, fleet=1]; EffVec has no
-  # `EverySeason`, so the framework's SeasonalAllocation weight for that
-  # sim/season/fleet applies on top of the 0.4 base and 0.5 impl. error.
-  seasonal_weight <- hist@OM@SeasonalAllocation[[1]][1, 1, 1]
+  # `EverySeason`, so its annual effort is split by the seasonal effort share
+  # for that sim/season/fleet on top of the 0.4 base and 0.5 impl. error.
+  seasonal_weight <- .SeasonalEffortAllocation(hist)[[1]][1, 1, 1]
   expect_equal(e_vec[1], 0.4 * 0.5 * seasonal_weight, tolerance = 1e-8)
 })
 

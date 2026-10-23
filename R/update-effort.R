@@ -43,6 +43,9 @@
   n_recent     <- n_recent * Proj@OM@Seasons
   maxEval      <- Proj@OM@Control$EffortOptim$maxEval      %||NA% 500
 
+  SeasonalEffortAllocation <- if (Proj@OM@Seasons > 1 && !EverySeason)
+    .SeasonalEffortAllocation(Proj)
+
   for (sim in seq_len(nSim)) {
     AdviceList <- AdviceSimList[[sim]]
     LastAdviceList <- LastAdviceSimList[[sim]]
@@ -61,6 +64,7 @@
       Areas          = Areas,
       Season         = Season,
       EverySeason    = EverySeason,
+      SeasonalEffortAllocation = SeasonalEffortAllocation,
       lambda_scale   = lambda_scale,
       n_recent       = n_recent,
       maxEval        = maxEval
@@ -92,6 +96,9 @@
 #' @param StockNames Character vector of stock names.
 #' @param Complexes List mapping complex indices to stock indices.
 #' @param Areas Integer vector of area indices.
+#' @param SeasonalEffortAllocation Named list (one element per complex) of
+#'   `nSim` x `Seasons` x `nFleet` arrays splitting annual effort advice across
+#'   seasons. See `.SeasonalEffortAllocation()`. Derived if `NULL`.
 #' @return Updated `Proj` object.
 #' @keywords internal
 .UpdateEffortSim <- function(Proj,
@@ -107,6 +114,7 @@
                               Areas,
                               Season       = NULL,
                               EverySeason  = FALSE,
+                              SeasonalEffortAllocation = NULL,
                               lambda_scale = 1,
                               n_recent     = 5,
                               maxEval      = 500) {
@@ -121,10 +129,13 @@
 
   Distribution <- MakeNamedList(names(Complexes))
 
-  # Relative effort is anchored to the last complete historical year; its
-  # seasonal shape is reapplied below so 'Rel' advice keeps the seasonal
-  # pattern rather than repeating the final season
-  LastEffort <- .LastYearEffort(Proj, sim, length(YearsHist), nFleet, nSeason)
+  # annual advice in a seasonal OM is an annual total, split across seasons below
+  SplitAnnual <- nSeason > 1L && !EverySeason
+  if (SplitAnnual && is.null(SeasonalEffortAllocation))
+    SeasonalEffortAllocation <- .SeasonalEffortAllocation(Proj)
+
+  LastEffort      <- .LastYearEffort(Proj, sim, length(YearsHist), nFleet, nSeason)
+  LastEffortLevel <- if (SplitAnnual) LastEffort$total else LastEffort$level
 
   # EffType per fleet per complex, to identify which fleets take the shape
   EffTypeMat <- matrix('Abs', nrow = nFleet, ncol = nComplex)
@@ -168,7 +179,7 @@
 
     # Convert relative fleets to absolute
     Advice <- .ConvertEffortAbs(Proj, sim, Advice, YearsHist, nFleet,
-                                LastEffortLevel = LastEffort$level)
+                                LastEffortLevel = LastEffortLevel)
 
     temp <- .DistributeEffortArea(Proj, sim, TSIndex, Advice, nFleet,
                                    nArea, FleetNames,
@@ -217,14 +228,11 @@
                       ncol  = nFleet,
                       byrow = TRUE)
 
-  if (nSeason > 1L && !EverySeason) {
+  if (SplitAnnual) {
     seas     <- ((ProjInd - 1L) %% nSeason) + 1L
     ShapeMat <- matrix(1, nrow = length(ProjInd), ncol = nFleet)
-    for (fl in seq_len(nFleet)) {
-      SA <- Proj@OM@SeasonalAllocation[[MinEffortInd[fl]]]
-      if (!is.null(SA))
-        ShapeMat[, fl] <- SA[sim, seas, fl]
-    }
+    for (fl in seq_len(nFleet))
+      ShapeMat[, fl] <- SeasonalEffortAllocation[[MinEffortInd[fl]]][sim, seas, fl]
     EffortMat <- EffortMat * ShapeMat
   } else if (nSeason > 1L) {
     RelFleet <- vapply(seq_len(nFleet),
@@ -262,7 +270,7 @@
       sim        = 1L,
       StockNames = StockNames,
       FleetNames = FleetNames,
-      Effort     = MinEffortValues,
+      Effort     = EffortMat[1, ],
       lambda     = lambda,
       n_recent   = n_recent,
       maxEval    = maxEval
@@ -344,17 +352,18 @@
 
 #' Effort level and seasonal shape from the last complete historical year
 #'
-#' Returns each fleet's mean effort over the last complete historical year, and
-#' that year's seasonal shape normalised to a mean of 1. For annual models the
-#' shape is a single 1 and `level` is the final year's effort, so behaviour is
-#' unchanged.
+#' Returns each fleet's mean and total effort over the last complete historical
+#' year, and that year's seasonal shape normalised to a mean of 1. For annual
+#' models the shape is a single 1 and `level` and `total` are the final year's
+#' effort.
 #'
 #' @param Proj A `Proj` object.
 #' @param sim Integer. Simulation index.
 #' @param nHistTS Integer. Number of historical time steps.
 #' @param nFleet Integer. Number of fleets.
 #' @param nSeason Integer. Seasons per year.
-#' @return List with `level` (length `nFleet`) and `shape` (`nSeason` x `nFleet`).
+#' @return List with `level` and `total` (length `nFleet`) and `shape`
+#'   (`nSeason` x `nFleet`).
 #' @keywords internal
 .LastYearEffort <- function(Proj, sim, nHistTS, nFleet, nSeason) {
   nSeason <- max(1L, as.integer(nSeason))
@@ -364,7 +373,7 @@
   level <- colMeans(E)
   shape <- sweep(E, 2, ifelse(level > 0, level, 1), "/")
 
-  list(level = level, shape = shape)
+  list(level = level, total = colSums(E), shape = shape)
 }
 
 .ConvertEffortAbs <- function(Proj,
@@ -383,8 +392,6 @@
   if (all(eff_type == 'Abs'))
     return(Advice)
 
-  # relative to the mean over the last complete historical year; the seasonal
-  # shape is reapplied by .UpdateEffortSim() when effort is written forward
   if (is.null(LastEffortLevel))
     LastEffortLevel <- Proj@Effort[sim, length(YearsHist), ]
 

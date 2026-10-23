@@ -65,8 +65,8 @@
 #'   pattern (vs. the population abundance pattern) when `SeasonalAllocation`
 #'   is derived. Default `NULL`. See [SeasonalAllocation()].
 #' @param SeasonalAllocation List. Named list of length 0 or the number of
-#'   stock complexes, controlling how a periodically-set TAC/Effort is split
-#'   across the seasons of the interval it covers. Default `NULL`. See
+#'   stock complexes, controlling how a periodically-set TAC is split across
+#'   the seasons of the interval it covers. Default `NULL`. See
 #'   [SeasonalAllocation()].
 #' @param EffortAllocation List. Named list of length 0 or the number of
 #'   stock complexes, splitting a scalar absolute Effort recommendation
@@ -183,7 +183,7 @@
 #' - [InterimAdvice()] for populating interim TAC/Effort.
 #' - [DataLag()] for the data-lag applied to the MP's `Data`.
 #' - [FleetAllocation()] for splitting a stock/complex TAC among fleets.
-#' - [SeasonalAllocation()] for splitting a periodic TAC/Effort across
+#' - [SeasonalAllocation()] for splitting a periodic TAC or Effort across
 #'   seasons.
 #' - [RefSeason()] for reference point season handling in seasonal OMs.
 #' - [EffortAllocation()] for splitting a scalar absolute Effort
@@ -752,7 +752,7 @@ DataLag <- function(x) {
 #' @seealso
 #' - [OM()] for the constructor, [om-class] for the class definition.
 #' - [HistoricalWeight()]/[SeasonalAllocation()] for how a periodically-set
-#'   TAC/Effort is further split across seasons.
+#'   TAC or Effort is further split across seasons.
 #' - [OM-accessors] for the remaining `OM` slot accessors.
 #'
 #' @family om
@@ -782,7 +782,7 @@ FleetAllocation <- function(x) .IsHist(x, "FleetAllocation")
 #'
 #' Access or replace the `HistoricalWeight` and `SeasonalAllocation` slots of
 #' an [om-class] object. Only relevant for seasonal OMs (`Seasons > 1`):
-#' together they control how a periodically-set TAC or Effort (an MP is not
+#' together they control how a periodically-set TAC (an MP is not
 #' necessarily called every season - see [Interval()]) is split across the
 #' seasons of the interval it covers. Also accepts [hist-class] and
 #' [mse-class] objects, extracting the embedded `OM` slot transparently.
@@ -808,6 +808,12 @@ FleetAllocation <- function(x) .IsHist(x, "FleetAllocation")
 #' `HistoricalWeight = 1` (the default when unspecified) uses the historical
 #' removals pattern only; `HistoricalWeight = 0` uses the population biomass
 #' pattern only.
+#'
+#' Effort advice from an MP that is not called every season is an annual
+#' total effort for each fleet. `EffType = 'Rel'` is relative to the fleet's
+#' total effort in the last historical year. Each year's effort is split
+#' across seasons in proportion to the fleet's historical effort in each
+#' season, pooled over the last `OM@Control$SeasonalAllocationYears` years.
 #'
 #' @return
 #' - `HistoricalWeight()`/`SeasonalAllocation()` return the value of the

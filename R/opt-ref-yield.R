@@ -49,7 +49,8 @@
   # Run fishery dynamics for this sim only
   ProjSim_opt <- .CalcFisheryDynamics(Hist = Proj,
                                      Sims = sim,
-                                     Years = c(utils::tail(HistYears, Proj@OM@Seasons), ProjYears),
+                                     Years = c(utils::tail(HistYears, max(Proj@OM@Seasons, Proj@Misc$RecLag)),
+                                               ProjYears),
                                      debug = debug)
   
   # Get total catch summed over age, fleet, area

@@ -1,4 +1,4 @@
-#' Check and validate seasonal TAC/Effort allocation for a `hist` object
+#' Check and validate seasonal TAC allocation for a `hist` object
 #'
 #' Validates the `SeasonalAllocation` slot in the operating model (OM) of a
 #' `hist` object. If unspecified, derives it from `HistoricalWeight`, blending
@@ -162,4 +162,44 @@
 
   dimnames(SA) <- list(Sim = 1:nSimTot, Season = 1:Seasons, Fleet = FleetNms)
   SA
+}
+
+#' Seasonal allocation of annual effort advice
+#'
+#' Derives, for each complex, the seasonal shares used to split annual effort
+#' advice across the seasons of each year: each fleet's historical effort in
+#' each season, pooled over the last `OM@Control$SeasonalAllocationYears`
+#' historical years (default 5), as a fraction of its total effort over those
+#' years. Fleets with no effort in that window are split evenly.
+#'
+#' @param Hist A `hist` object.
+#'
+#' @return Named list (one element per complex) of `nSim` x `Seasons` x
+#'   `nFleet` arrays, each `[sim, , fleet]` slice summing to 1.
+#'
+#' @keywords internal
+.SeasonalEffortAllocation <- function(Hist) {
+  nSimTot   <- nSim(Hist)
+  Seasons   <- max(1L, as.integer(Hist@OM@Seasons %||NA% 1))
+  nHistTS   <- length(Years(Hist, 'H'))
+  FleetNms  <- FleetNames(Hist@OM)
+  nFleetTot <- length(FleetNms)
+
+  nYears      <- Hist@OM@Control$SeasonalAllocationYears %||NA% 5
+  windowRows  <- utils::tail(seq_len(nHistTS), nYears * Seasons)
+  seasonOfRow <- ((windowRows - 1) %% Seasons) + 1
+
+  Effort <- ExtendSims(Hist@Effort, nSimTot)[, windowRows, , drop = FALSE]
+  Effort[is.na(Effort)] <- 0
+
+  Share <- array(0, dim = c(nSimTot, Seasons, nFleetTot),
+                 dimnames = list(Sim = 1:nSimTot, Season = 1:Seasons, Fleet = FleetNms))
+  for (s in seq_len(Seasons))
+    Share[, s, ] <- apply(Effort[, seasonOfRow == s, , drop = FALSE], c(1, 3), sum)
+  Total <- apply(Share, c(1, 3), sum)
+  Share <- sweep(Share, c(1, 3), Total, '/')
+  Share[!is.finite(Share)] <- 1 / Seasons
+
+  Complexes <- Hist@OM@Complexes
+  stats::setNames(rep(list(Share), length(Complexes)), names(Complexes))
 }

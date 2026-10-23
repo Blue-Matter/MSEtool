@@ -1,8 +1,9 @@
-# Seasonal allocation of periodically-set TAC/Effort: `.CheckSeasonalAllocation()`
+# Seasonal allocation of periodically-set TACs: `.CheckSeasonalAllocation()`
 # blends the historical seasonal removals pattern and the population biomass
 # pattern, weighted per-fleet by `OM@HistoricalWeight`, into `OM@SeasonalAllocation`
 # (a [Sim x Season x Fleet] array per complex), applied automatically to any
-# periodic (non-`EverySeason`) MP's TAC/Effort.
+# periodic (non-`EverySeason`) MP's TAC. Periodic Effort advice is an annual
+# total split by the historical seasonal effort pattern (`.SeasonalEffortAllocation()`).
 
 test_that(".ResolveHistoricalWeight() expands scalar/partial/NULL correctly", {
   fleets <- c("F1", "F2", "F3")
@@ -143,4 +144,52 @@ test_that("EverySeason MPs are unaffected by SeasonalAllocation", {
   mse_flat    <- Project(hist_flat, MPs = "CurrentCatch", parallel = FALSE, silent = TRUE)
 
   expect_equal(mse_default@Landings, mse_flat@Landings, tolerance = 1e-8)
+})
+
+test_that(".SeasonalEffortAllocation() pools the historical seasonal effort pattern", {
+  skip_on_cran()
+  om <- SeasonalSpatialOM
+  om@nSim <- 2
+  om@Control$SeasonalAllocationYears <- 3
+  hist <- Simulate(om, silent = TRUE)
+
+  Share <- .SeasonalEffortAllocation(hist)
+  expect_named(Share, names(hist@OM@Complexes))
+  Share <- Share[[1]]
+  Seasons <- om@Seasons
+  expect_equal(unname(dim(Share)), c(2, Seasons, nFleet(hist)))
+  expect_equal(unname(apply(Share, c(1, 3), sum)), matrix(1, 2, nFleet(hist)))
+
+  nHist  <- dim(hist@Effort)[2]
+  Window <- ExtendSims(hist@Effort, 2)[, nHist - 3 * Seasons + seq_len(3 * Seasons), 1]
+  Expect <- sapply(seq_len(Seasons), \(s) rowSums(Window[, seq(s, by = Seasons, length.out = 3)]))
+  expect_equal(unname(Share[, , 1]), unname(Expect / rowSums(Window)))
+})
+
+test_that("annual effort advice on a seasonal OM is an annual total split by the effort pattern", {
+  skip_on_cran()
+  om <- SeasonalSpatialOM
+  om@nSim  <- 2
+  om@pYear <- 2
+  Imp(om) <- FullComplianceImp
+  hist <- Simulate(om, silent = TRUE)
+
+  AnnualRel <- function(Data) Advice(Effort = 1, EffType = 'Rel')
+  AnnualAbs <- function(Data) Advice(Effort = 10, EffType = 'Abs')
+  class(AnnualRel) <- class(AnnualAbs) <- 'mp'
+  assign("AnnualRel", AnnualRel, envir = globalenv())
+  assign("AnnualAbs", AnnualAbs, envir = globalenv())
+  on.exit(rm("AnnualRel", "AnnualAbs", envir = globalenv()), add = TRUE)
+
+  mse <- Project(hist, MPs = c("AnnualRel", "AnnualAbs"), parallel = FALSE, silent = TRUE)
+
+  Seasons <- om@Seasons
+  nHist   <- dim(hist@Effort)[2]
+  LastYr  <- rowSums(ExtendSims(hist@Effort, 2)[, nHist - Seasons + seq_len(Seasons), 1])
+  Share   <- .SeasonalEffortAllocation(hist)[[1]][, , 1]
+  for (yr in seq_len(om@pYear) - 1) {
+    idx <- yr * Seasons + seq_len(Seasons)
+    expect_equal(as.vector(mse@Effort[, idx, 1, 1]), as.vector(LastYr * Share), tolerance = 1e-8)
+    expect_equal(as.vector(mse@Effort[, idx, 1, 2]), as.vector(10 * Share), tolerance = 1e-8)
+  }
 })
