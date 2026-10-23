@@ -184,7 +184,7 @@
     temp <- .DistributeEffortArea(Proj, sim, TSIndex, Advice, nFleet,
                                    nArea, FleetNames,
                                    YearsHist, YearsProj)
-    Distribution[[i]] <- temp$Distribution
+    Distribution[i] <- list(temp$Distribution)
     Advice          <- temp$Advice
 
 
@@ -247,11 +247,11 @@
 
   Proj@Effort[sim, ProjInd, ] <- EffortMat
 
-  # Apply spatial distribution if specified
-  # TODO - review indexing for multi-complex spatial effort distribution
-  if (!is.null(Distribution) && length(Distribution)) {
-    Distribution <- Distribution[[min(MinEffortInd)]]
-    ArrayFill(Proj@Distribution) <- Distribution
+  # Each fleet takes the area distribution of its binding complex, if one was specified
+  for (fl in seq_len(nFleet)) {
+    FleetDist <- Distribution[[MinEffortInd[fl]]]
+    if (is.null(FleetDist)) next
+    ArrayFill(Proj@Distribution) <- FleetDist[, , fl, , drop = FALSE]
   }
 
   # For multi-stock OMs, (re)optimise this fleet's stock-specific targeting
