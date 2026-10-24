@@ -43,7 +43,7 @@ The following legacy slots are mapped to their current equivalents:\tabular{ll}{
    \code{Size_area_1} \tab \code{Spatial@RelativeSize} \cr
    \code{Prob_staying} \tab \code{Spatial@ProbStaying} \cr
    \code{Frac_area_1} \tab \code{Spatial@UnfishedDist} \cr
-   \code{D} \tab \code{Depletion@Final} \cr
+   \code{D} \tab \code{Depletion@Final}, \verb{@Reference = "SB0"} \cr
 }
 
 }

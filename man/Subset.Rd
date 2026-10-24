@@ -35,7 +35,8 @@ subset reproduce those simulations of the full object.}
 
 \item{Ages}{Numeric vector of age classes to retain. \code{NULL} skips.}
 
-\item{MPs}{Integer or character vector of MPs to retain. \code{NULL} skips.}
+\item{MPs}{Integer or character vector of MPs to retain. \code{NULL} skips.
+Retained MPs keep their order in the object.}
 
 \item{Fleets}{Character vector of fleets to retain. \code{NULL} skips.}
 
@@ -46,11 +47,7 @@ stocks must form whole complexes. \code{NULL} skips.}
 \item{Impute}{Logical; only relevant when subsetting by \code{Years}. If \code{TRUE}
 (default), years not present in the object are imputed from the nearest
 available past year. If \code{FALSE}, years earlier than the earliest available
-year are dropped rather than imputed.
-
-Subsetting is applied sequentially when multiple dimensions are supplied,
-allowing consistent extraction across simulations, years, and age classes in
-a single call.}
+year are dropped rather than imputed.}
 }
 \value{
 An object of the same class as \code{object}, subset according to the
@@ -60,6 +57,16 @@ supplied dimension arguments.
 Recursively subsets an object along the \code{Sim}, \code{Year}, \code{Age}, \code{MP}, and/or
 \code{Fleet} & \code{Stock} dimensions. The function operates on arbitrarily nested structures
 including S4 objects, lists, arrays, and named numeric vectors.
+}
+\details{
+Subsetting is applied sequentially when multiple dimensions are supplied,
+allowing consistent extraction across simulations, years, and age classes in
+a single call.
+
+In the \code{Misc} slots, the records MSEtool writes (MP advice, TAC attainment,
+and changes to selectivity, retention, and discard mortality) are subset
+along every dimension. Other \code{Misc} content, including \code{Advice@Misc} set by
+an MP, is subset only by \code{Sims} and \code{Stocks}.
 }
 \examples{
 nSim(SingleStockOM) <- 10

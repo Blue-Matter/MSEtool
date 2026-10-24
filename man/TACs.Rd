@@ -38,7 +38,9 @@ returned series has one row per year the TAC was actually in effect, not
 just the years it changed. Years before an MP's first recommendation
 (i.e. the historical period, where no MP has run yet) are absent rather
 than filled with a placeholder.
+
+\code{\link[=TAC]{TAC()}} returns the same data frame when given an \link[=mse-class]{mse} object.
 }
 \seealso{
-\link[=mse-class]{mse}, \code{\link[=Advice]{Advice()}}, \code{\link[=PPD]{PPD()}}
+\code{\link[=TAC]{TAC()}}, \link[=mse-class]{mse}, \code{\link[=Advice]{Advice()}}, \code{\link[=PPD]{PPD()}}
 }

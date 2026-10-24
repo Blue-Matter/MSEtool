@@ -16,7 +16,7 @@
 historical period.
 }
 \description{
-Copies each slot from the \link[=timeseries-class]{timeseries} inherited by \code{Hist} into the
+Copies each slot other than \code{Misc} from the \link[=timeseries-class]{timeseries} inherited by \code{Hist} into the
 corresponding slot of \code{MSE@Hist}, subsetting each array to the historical
 years only via \code{.SubsetYear}.
 }

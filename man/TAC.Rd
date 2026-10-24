@@ -7,7 +7,8 @@
 TAC(Data, MPs = NA, reps = 100, timelimit = 1, checkMP = TRUE, silent = FALSE)
 }
 \arguments{
-\item{Data}{A data-limited methods data object}
+\item{Data}{A data-limited methods data object, or an \link[=mse-class]{mse},
+\link[=advice-class]{advice}, or \link[=imp-class]{imp} object}
 
 \item{MPs}{optional vector of MP names}
 
@@ -23,12 +24,20 @@ TAC(Data, MPs = NA, reps = 100, timelimit = 1, checkMP = TRUE, silent = FALSE)
 A function that returns the stochastic TAC recommendations from a vector of
 output control MPs given a data object Data
 }
+\details{
+When \code{Data} is an \link[=mse-class]{mse} object, \code{TAC()} returns the TAC recommendations
+of each MP, as \code{\link[=TACs]{TACs()}} does. When \code{Data} is an \link[=advice-class]{advice} or \link[=imp-class]{imp}
+object, it returns the \code{TAC} slot.
+}
 \examples{
 \dontrun{
 library(MSEtool)
 Data <- TAC(MSEtool::Cobia)
 plot(Data)
 }
+}
+\seealso{
+\code{\link[=TACs]{TACs()}}
 }
 \author{
 T. Carruthers

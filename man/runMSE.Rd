@@ -14,14 +14,7 @@ runMSE(
   checkMPs = FALSE,
   nSim = NULL,
   nsim = NULL,
-  DoDynamicUnfished = TRUE,
-  DoRefLandings = TRUE,
-  DoRefRemovals = FALSE,
-  DoConditionObs = TRUE,
-  DoGenerateData = TRUE,
-  DoMSYRefs = TRUE,
-  Reduce = TRUE,
-  ...
+  Reduce = TRUE
 )
 }
 \arguments{
@@ -43,62 +36,55 @@ with \code{\link[=Project]{Project()}}. Default \code{FALSE}.}
 \item{silent}{Logical. Suppress progress messages if \code{TRUE}. Default
 \code{FALSE}.}
 
-\item{parallel}{Logical or named list controlling parallel execution of
-MPs. For legacy \code{OM} and \code{Hist} objects only:
-\itemize{
-\item if \code{TRUE}, all MPs are run in parallel.
-\item if a named list, names correspond to individual MPs to run in parallel.
-\item pass \code{"sac"} to use the SAC parallel backend (\link[=OM-legacy-class]{OM-legacy} only).
-Default \code{FALSE}.
-}}
+\item{parallel}{Logical, named list, or \code{"sac"}, controlling parallel
+execution. Passed to \code{\link[=Simulate]{Simulate()}} and \code{\link[=Project]{Project()}}; see those functions for
+details. Parallel execution for \link[=om-class]{om} and \link[=hist-class]{hist} objects
+requires a plan established by \code{\link[=SetupParallel]{SetupParallel()}}. A named list is only
+accepted for \link[=hist-class]{hist}, \link[=OM-legacy-class]{OM-legacy}, and \link[=Hist-legacy-class]{Hist-legacy}
+objects. For \link[=OM-legacy-class]{OM-legacy} objects, \code{"sac"} splits the simulations
+into chunks and runs \code{\link[=Simulate]{Simulate()}} and \code{\link[=Project]{Project()}} for each chunk in
+parallel. Default \code{FALSE}.}
 
 \item{extended}{Logical. If \code{TRUE}, stores full age- and area-structured
-arrays for all years in \code{MSE@Misc$extended} (legacy only). Substantially increases
-object size. Default \code{FALSE}.}
+arrays for all years in \code{MSE@Misc$extended}. Substantially increases
+object size. Only used for \link[=OM-legacy-class]{OM-legacy} and \link[=Hist-legacy-class]{Hist-legacy}
+objects. Default \code{FALSE}.}
 
 \item{checkMPs}{Logical. Validate MP names and availability before
-projecting. Default \code{FALSE}. Legacy only.}
+projecting. Only used for \link[=OM-legacy-class]{OM-legacy} and \link[=Hist-legacy-class]{Hist-legacy}
+objects. Default \code{FALSE}.}
 
 \item{nSim}{Integer. Reduce the number of simulations to \code{nSim}. Passed to
-both \code{\link[=Simulate]{Simulate()}} and \code{\link[=Project]{Project()}}. If \code{NULL} (default), all simulations
-are used.}
+\code{\link[=Simulate]{Simulate()}} and \code{\link[=Project]{Project()}}. Used for \link[=om-class]{om}, \link[=hist-class]{hist}, and
+\link[=OM-legacy-class]{OM-legacy} objects (for the latter only if \code{nsim} is \code{NULL}). If
+\code{NULL} (default), all simulations are used.}
 
-\item{nsim}{Integer. Alternative to \code{nSim} for \link[=OM-legacy-class]{OM-legacy} objects.
-Sets \code{OM@nsim} before simulating. Default \code{NULL}.}
+\item{nsim}{Integer. Reduce the number of simulations of an
+\link[=OM-legacy-class]{OM-legacy} object to \code{nsim} if it is less than \code{OM@nsim}. Only used
+for \link[=OM-legacy-class]{OM-legacy} objects. Default \code{NULL}.}
 
-\item{DoDynamicUnfished}{Logical. Calculate dynamic unfished reference
-points? Passed to \code{\link[=Simulate]{Simulate()}}. Default \code{TRUE}. \code{om} and \code{hist} class only.}
-
-\item{DoRefLandings}{Logical. Calculate landings-based reference points?
-Passed to \code{\link[=Simulate]{Simulate()}}. Default \code{TRUE}. \code{om} and \code{hist} class only.}
-
-\item{DoRefRemovals}{Logical. Calculate removals-based reference points?
-Passed to \code{\link[=Simulate]{Simulate()}}. Default \code{FALSE}. \code{om} and \code{hist} class only.}
-
-\item{DoConditionObs}{Logical. Condition observation model on historical
-data? Passed to \code{\link[=Simulate]{Simulate()}}. Default \code{TRUE}. \code{om} and \code{hist} class only.}
-
-\item{DoGenerateData}{Logical. Generate observed data for MPs? Passed to
-\code{\link[=Simulate]{Simulate()}}. Default \code{TRUE}.  \code{om} and \code{hist} class only.}
-
-\item{DoMSYRefs}{Logical. Calculate MSY-based reference points? Passed to
-\code{\link[=Simulate]{Simulate()}}. Default \code{TRUE}. \code{om} and \code{hist} class only.}
-
-\item{Reduce}{Logical. Reserved for future use. Default \code{TRUE}.  \code{om} and \code{hist} class only.}
-
-\item{...}{Additional arguments. Reserved for future use.}
+\item{Reduce}{Logical. Reduce object size after simulation for memory
+efficiency? Passed to \code{\link[=Simulate]{Simulate()}} and \code{\link[=Project]{Project()}}. See \code{\link[=ReduceDims]{ReduceDims()}}.
+Only used for \link[=om-class]{om} and \link[=hist-class]{hist} objects. Default \code{TRUE}.}
 }
 \value{
-If \code{Hist = TRUE}, a \link[=hist-class]{hist} or \link[=Hist-legacy-class]{Hist-legacy} object containing
-the conditioned historical dynamics. Otherwise, a \link[=MSE-legacy-class]{MSE-legacy} object
-containing projection results for all MPs. If an error occurs during
-\code{\link[=Project]{Project()}}, the historical simulations are returned with a warning.
+\itemize{
+\item If \code{Hist = TRUE}: a \link[=hist-class]{hist} object for an \link[=om-class]{om} or \link[=hist-class]{hist}
+input, or a \link[=Hist-legacy-class]{Hist-legacy} object for an \link[=OM-legacy-class]{OM-legacy} or
+\link[=Hist-legacy-class]{Hist-legacy} input.
+\item Otherwise: an \link[=mse-class]{mse} object for an \link[=om-class]{om} or \link[=hist-class]{hist} input,
+or an \link[=MSE-legacy-class]{MSE-legacy} object for an \link[=OM-legacy-class]{OM-legacy} or
+\link[=Hist-legacy-class]{Hist-legacy} input.
+}
+
+If an error occurs during \code{\link[=Project]{Project()}}, the historical simulations are
+returned with a warning.
 }
 \description{
 The primary user-facing function for running a complete MSE. Simulates
 historical dynamics with \code{\link[=Simulate]{Simulate()}}, then projects forward under one or
-more management procedures (MPs) with \code{\link[=Project]{Project()}}, returning a completed
-\code{MSE} object.
+more management procedures (MPs) with \code{\link[=Project]{Project()}}, returning the
+projection results.
 }
 \details{
 Accepts either an operating model (\link[=om-class]{om} or \link[=OM-legacy-class]{OM-legacy}) or a
@@ -110,6 +96,12 @@ projecting new MPs.
 
 If \code{OM = NULL}, uses \link{SingleStockOM} and projects example MPs \link{CurrentEffort} and
 \link{CurrentCatch} as a quick demonstration.
+
+\code{runMSE()} runs \code{\link[=Simulate]{Simulate()}} with the default \code{\link[=SimControl]{SimControl()}} settings. To
+control which optional calculations are performed (e.g., MSY or
+landings-based reference points, observation model conditioning, data
+generation), call \code{\link[=Simulate]{Simulate()}} with \code{control = SimControl(...)} and pass the
+result to \code{\link[=Project]{Project()}}.
 }
 \seealso{
 \code{\link[=Simulate]{Simulate()}}, \code{\link[=Project]{Project()}}, \link{OMControl}

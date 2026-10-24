@@ -36,7 +36,8 @@ output files, or a list returned by \code{\link[=ImportSSReport]{ImportSSReport(
 
 \item{Hist}{A \code{hist-class} or \code{om-class} object. If an \code{om-class} object is
 supplied to \code{CompareSS()}, \code{\link[=Simulate]{Simulate()}} is called automatically before
-comparison.}
+comparison, with the reference point, observation conditioning, and data
+generation calculations switched off (see \code{\link[=SimControl]{SimControl()}}).}
 
 \item{sim}{Integer. Simulation index used to select both the SS3 report
 element and the OM simulation row. Default \code{1}. Only used where
