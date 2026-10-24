@@ -14,7 +14,8 @@
 #'   output files, or a list returned by [ImportSSReport()].
 #' @param Hist A `hist-class` or `om-class` object. If an `om-class` object is
 #'   supplied to `CompareSS()`, [Simulate()] is called automatically before
-#'   comparison.
+#'   comparison, with the reference point, observation conditioning, and data
+#'   generation calculations switched off (see [SimControl()]).
 #' @param sim Integer. Simulation index used to select both the SS3 report
 #'   element and the OM simulation row. Default `1`. Only used where
 #'   [ImportSSReport()] is applied to multiple SS3 output directories.
@@ -60,13 +61,13 @@ CompareSS <- function(SSDir, Hist, sim = 1, plot = FALSE, thresh = 1,
   .CheckClass(Hist, c('hist', 'om'), 'Hist')
   if (inherits(Hist, 'om'))
     Hist <- Simulate(Hist,
-                     DoDynamicUnfished = FALSE,
-                     DoRefLandings     = FALSE,
-                     DoRefRemovals     = FALSE,
-                     DoConditionObs    = FALSE,
-                     DoGenerateData    = FALSE,
-                     DoMSYRefs         = FALSE,
-                     silent = silent)
+                     control = SimControl(DynamicUnfished = FALSE,
+                                          ConditionObs    = FALSE,
+                                          GenerateData    = FALSE,
+                                          MSYRefs         = FALSE,
+                                          RefPoints       = FALSE,
+                                          MGT             = FALSE),
+                     silent  = silent)
 
   Out <- list()
   complex_nm   <- names(Hist@OM@Complexes)[1]

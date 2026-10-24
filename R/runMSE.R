@@ -2,8 +2,8 @@
 #'
 #' The primary user-facing function for running a complete MSE. Simulates
 #' historical dynamics with [Simulate()], then projects forward under one or
-#' more management procedures (MPs) with [Project()], returning a completed
-#' `MSE` object.
+#' more management procedures (MPs) with [Project()], returning the
+#' projection results.
 #'
 #' Accepts either an operating model ([om-class] or [OM-legacy-class]) or a
 #' pre-conditioned historical object ([hist-class] or [Hist-legacy-class]).
@@ -29,41 +29,49 @@
 #'   with [Project()]. Default `FALSE`.
 #' @param silent Logical. Suppress progress messages if `TRUE`. Default
 #'   `FALSE`.
-#' @param parallel Logical or named list controlling parallel execution of
-#'   MPs. For legacy `OM` and `Hist` objects only:
-#'   * if `TRUE`, all MPs are run in parallel. 
-#'   * if a named list, names correspond to individual MPs to run in parallel. 
-#'   * pass `"sac"` to use the SAC parallel backend ([OM-legacy-class] only). 
-#'   Default `FALSE`.
+#' @param parallel Logical, named list, or `"sac"`, controlling parallel
+#'   execution. Passed to [Simulate()] and [Project()]; see those functions for
+#'   details. Parallel execution for [om-class] and [hist-class] objects
+#'   requires a plan established by [SetupParallel()]. A named list is only
+#'   accepted for [hist-class], [OM-legacy-class], and [Hist-legacy-class]
+#'   objects. For [OM-legacy-class] objects, `"sac"` splits the simulations
+#'   into chunks and runs [Simulate()] and [Project()] for each chunk in
+#'   parallel. Default `FALSE`.
 #' @param extended Logical. If `TRUE`, stores full age- and area-structured
-#'   arrays for all years in `MSE@Misc$extended` (legacy only). Substantially increases
-#'   object size. Default `FALSE`.
+#'   arrays for all years in `MSE@Misc$extended`. Substantially increases
+#'   object size. Only used for [OM-legacy-class] and [Hist-legacy-class]
+#'   objects. Default `FALSE`.
 #' @param checkMPs Logical. Validate MP names and availability before
-#'   projecting. Default `FALSE`. Legacy only.
+#'   projecting. Only used for [OM-legacy-class] and [Hist-legacy-class]
+#'   objects. Default `FALSE`.
 #' @param nSim Integer. Reduce the number of simulations to `nSim`. Passed to
-#'   both [Simulate()] and [Project()]. If `NULL` (default), all simulations
-#'   are used.
-#' @param nsim Integer. Alternative to `nSim` for [OM-legacy-class] objects.
-#'   Sets `OM@nsim` before simulating. Default `NULL`.
-#' @param DoDynamicUnfished Logical. Calculate dynamic unfished reference
-#'   points? Passed to [Simulate()]. Default `TRUE`. `om` and `hist` class only.
-#' @param DoRefLandings Logical. Calculate landings-based reference points?
-#'   Passed to [Simulate()]. Default `TRUE`. `om` and `hist` class only.
-#' @param DoRefRemovals Logical. Calculate removals-based reference points?
-#'   Passed to [Simulate()]. Default `FALSE`. `om` and `hist` class only.
-#' @param DoConditionObs Logical. Condition observation model on historical
-#'   data? Passed to [Simulate()]. Default `TRUE`. `om` and `hist` class only.
-#' @param DoGenerateData Logical. Generate observed data for MPs? Passed to
-#'   [Simulate()]. Default `TRUE`.  `om` and `hist` class only.
-#' @param DoMSYRefs Logical. Calculate MSY-based reference points? Passed to
-#'   [Simulate()]. Default `TRUE`. `om` and `hist` class only.
-#' @param Reduce Logical. Reserved for future use. Default `TRUE`.  `om` and `hist` class only.
-#' @param ... Additional arguments. Reserved for future use.
+#'   [Simulate()] and [Project()]. Used for [om-class], [hist-class], and
+#'   [OM-legacy-class] objects (for the latter only if `nsim` is `NULL`). If
+#'   `NULL` (default), all simulations are used.
+#' @param nsim Integer. Reduce the number of simulations of an
+#'   [OM-legacy-class] object to `nsim` if it is less than `OM@nsim`. Only used
+#'   for [OM-legacy-class] objects. Default `NULL`.
+#' @param Reduce Logical. Reduce object size after simulation for memory
+#'   efficiency? Passed to [Simulate()] and [Project()]. See [ReduceDims()].
+#'   Only used for [om-class] and [hist-class] objects. Default `TRUE`.
 #'
-#' @return If `Hist = TRUE`, a [hist-class] or [Hist-legacy-class] object containing
-#'   the conditioned historical dynamics. Otherwise, a [MSE-legacy-class] object
-#'   containing projection results for all MPs. If an error occurs during
-#'   [Project()], the historical simulations are returned with a warning.
+#' @details
+#' `runMSE()` runs [Simulate()] with the default [SimControl()] settings. To
+#' control which optional calculations are performed (e.g., MSY or
+#' landings-based reference points, observation model conditioning, data
+#' generation), call [Simulate()] with `control = SimControl(...)` and pass the
+#' result to [Project()].
+#'
+#' @return
+#' - If `Hist = TRUE`: a [hist-class] object for an [om-class] or [hist-class]
+#'   input, or a [Hist-legacy-class] object for an [OM-legacy-class] or
+#'   [Hist-legacy-class] input.
+#' - Otherwise: an [mse-class] object for an [om-class] or [hist-class] input,
+#'   or an [MSE-legacy-class] object for an [OM-legacy-class] or
+#'   [Hist-legacy-class] input.
+#'
+#' If an error occurs during [Project()], the historical simulations are
+#' returned with a warning.
 #'
 #' @seealso [Simulate()], [Project()], [OMControl]
 #'
@@ -77,13 +85,7 @@ runMSE <- function(OM = NULL,
                    checkMPs = FALSE,
                    nSim = NULL,
                    nsim = NULL, 
-                   DoDynamicUnfished = TRUE, 
-                   DoRefLandings = TRUE, 
-                   DoRefRemovals = FALSE, 
-                   DoConditionObs = TRUE,
-                   DoGenerateData = TRUE, 
-                   DoMSYRefs      = TRUE,
-                   Reduce = TRUE, ...) {
+                   Reduce = TRUE) {
   
   
   if (is.null(OM))
@@ -120,17 +122,11 @@ runMSE <- function(OM = NULL,
   
   if (is_new_om || is_leg_om) {
     HistSims <- Simulate(OM, 
-                         parallel          = parallel, 
-                         silent            = silent, 
-                         nSim              = nSim, 
-                         nsim              = nsim, 
-                         DoDynamicUnfished = DoDynamicUnfished,
-                         DoRefLandings     = DoRefLandings, 
-                         DoRefRemovals     = DoRefRemovals,
-                         DoConditionObs    = DoConditionObs, 
-                         DoGenerateData    = DoGenerateData, 
-                         DoMSYRefs         = DoMSYRefs,
-                         Reduce            = Reduce)
+                         parallel = parallel, 
+                         silent   = silent, 
+                         nSim     = nSim, 
+                         nsim     = nsim, 
+                         Reduce   = Reduce)
     
   } else {
     # hist or Hist passed directly - use as-is
