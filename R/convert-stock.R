@@ -32,7 +32,7 @@
 #' | `Size_area_1` | `Spatial@RelativeSize` |
 #' | `Prob_staying` | `Spatial@ProbStaying` |
 #' | `Frac_area_1` | `Spatial@UnfishedDist` |
-#' | `D` | `Depletion@Final` |
+#' | `D` | `Depletion@Final`, `@Reference = "SB0"` |
 #'
 #' ## Maturity Priority
 #'
@@ -180,5 +180,6 @@ ConvertStock <- function(Stock, Seasons = 1, silent = FALSE) {
 .Stock2Depletion <- function(Stock) {
   Depletion <- Depletion()
   Depletion@Final <- Stock@D
+  Depletion@Reference <- 'SB0'
   Depletion
 }

@@ -213,6 +213,7 @@ ConvertData <- function(x, Seasons = 1, sim = 1, silent = FALSE) {
 
   if (!is.na(Data@Dep[sim])) {
     data@LifeHistory@Depletion@Final <- Data@Dep[sim]
+    data@LifeHistory@Depletion@Reference <- 'SB0'
   }
 
   data
