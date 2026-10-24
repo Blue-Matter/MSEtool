@@ -10,7 +10,7 @@
 #' @param Weight A [Weight()] object. Required if the selectivity model 
 #'   depends on weight-at-age.
 #' @param Maturity A [Maturity()] object. Required if `isRel = TRUE` to 
-#'   scale selectivity relative to maturity `L50.`
+#'   scale selectivity relative to maturity `L50`.
 #' @param nSim Integer. Number of simulation replicates.
 #' @param Years Numeric vector of model years.
 #' @param nArea Integer. Number of spatial areas.
@@ -95,19 +95,9 @@ PopulateSelectivity <- function(Selectivity,
   ModelClass <- .GetModelClass(Selectivity@Model)
   
   if (!is.null(ModelClass)) {
-    if (Selectivity@isRel) {
-      .CheckRequiredObject(Maturity, "maturity", "Maturity")
-      Maturity <- PopulateMaturity(Maturity, Ages, Length, Weight, Years, nSim)
-      .CheckDependency(Maturity, "MeanAtAge", "Maturity", "Selectivity")
-      L50 <- .FindL50(Maturity)
-      if (!is.null(dimnames(Selectivity@Pars$L5)$Area)) 
-        L50 <- AddDimension(L50, 'Area')
-        
-      Selectivity@Pars$L5 <- ArrayMultiply(Selectivity@Pars$L5, L50)  
-      Selectivity@Pars$LFS <- ArrayMultiply(Selectivity@Pars$LFS, L50)
-      Selectivity@isRel <- FALSE
-    }
-    
+    Selectivity <- .ScaleRelPars(Selectivity, Maturity, ModelClass, Ages, Length,
+                                 Weight, Years, nSim, "Selectivity")
+
     if (grepl("at-Length", ModelClass)) {
       Length <- PopulateLength(Length, Ages, Years, nSim)
       Selectivity <- .PopulateMeanAtLength(
@@ -181,6 +171,37 @@ PopulateSelectivity <- function(Selectivity,
   .SetDigest(.SetAgeDimnames(Selectivity, Ages), argList)
 }
 
+.RelLengthPars <- c('L5', 'LFS', 'SL50', 'SL50_95', 'SL',
+                    'LR5', 'LFR', 'RL50', 'RL50_95', 'RL')
+
+# multiply the length parameters of a relative (`isRel`) selectivity or retention model by maturity L50
+.ScaleRelPars <- function(object, Maturity, ModelClass, Ages, Length, Weight, Years, nSim,
+                          what = c('Selectivity', 'Retention')) {
+  what <- match.arg(what)
+  if (!isTRUE(as.logical(object@isRel))) return(object)
+
+  RelPars <- intersect(names(object@Pars), .RelLengthPars)
+  isLength <- any(ModelClass == "function") || any(grepl("at-Length", ModelClass))
+  if (!isLength || !length(RelPars))
+    cli::cli_abort(c(
+      "x" = "{.code isRel = TRUE} requires an at-length {what} model.",
+      "i" = "Relative parameters are multiples of maturity {.val L50}: {.val {(.RelLengthPars)}}.",
+      "i" = "Set {.code isRel = FALSE} and supply absolute values for other models."
+    ), call = NULL)
+
+  .CheckRequiredObject(Maturity, "maturity", "Maturity")
+  Maturity <- PopulateMaturity(Maturity, Ages, Length, Weight, Years, nSim)
+  .CheckDependency(Maturity, "MeanAtAge", "Maturity", what)
+  L50 <- .FindL50(Maturity)
+
+  for (p in RelPars) {
+    L50p <- if (!is.null(dimnames(object@Pars[[p]])$Area)) AddDimension(L50, 'Area') else L50
+    object@Pars[[p]] <- ArrayMultiply(object@Pars[[p]], L50p)
+  }
+  object@isRel <- FALSE
+  object
+}
+
 .FindL50Vec <- function(prob_vec) {
   classes <- names(prob_vec) |> as.numeric()
   .LinInterp(prob_vec, y=classes, 0.5)
@@ -193,7 +214,7 @@ PopulateSelectivity <- function(Selectivity,
   
   MaturityAtLength <- Maturity@MeanAtLength
   if (is.null(MaturityAtLength)) {
-    cli::cli_abort("Values required for `Maturity@MeanAtLength` if `Selectivity@isRel == TRUE`")
+    cli::cli_abort("Values required for `Maturity@MeanAtLength` if `isRel == TRUE`")
   }
   
   apply(Maturity@MeanAtLength, c('Sim', 'Year'), .FindL50Vec)

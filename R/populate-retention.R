@@ -9,8 +9,8 @@
 #'   on length-at-age.
 #' @param Weight A [Weight()] object. Required if the retention model depends 
 #'   on weight-at-age.
-#' @param Maturity A [Maturity()] object. Required if the retention model uses
-#'   relative selectivity.
+#' @param Maturity A [Maturity()] object. Required if `isRel = TRUE` to
+#'   scale retention relative to maturity `L50`.
 #' @param Selectivity A populated [Selectivity()] object. Optional, but
 #'   recommended whenever the retention model is defined at length or weight:
 #'   used to weight the age-length key when collapsing retention-at-length (or
@@ -34,7 +34,8 @@
 #' `PopulateRetention()` handles population of retention-at-age, retention-
 #' at-length, or retention-at-weight. Steps include:
 #' 
-#' * Resolving the retention model class
+#' * Resolving the retention model class and applying relative scaling to
+#'   maturity if `isRel = TRUE`
 #' * Generating mean retention at age, length, or weight as appropriate
 #' * Converting between mean-at-length/weight and mean-at-age
 #' * Adding stochastic variation
@@ -108,14 +109,9 @@ PopulateRetention <- function(Retention,
   ModelClass <- .GetModelClass(Retention@Model)
   
   if (!is.null(ModelClass)) {
-    if (Retention@isRel) {
-      .CheckRequiredObject(Maturity, "maturity", "Maturity")
-      .CheckDependency(Maturity, "MeanAtAge", "Maturity", "Retention")
-      L50 <- .FindL50(Maturity)
-      Retention@Pars$LR5 <- ArrayMultiply(Retention@Pars$LR5, L50)
-      Retention@Pars$LFR <- ArrayMultiply(Retention@Pars$LFR, L50)
-    }
-    
+    Retention <- .ScaleRelPars(Retention, Maturity, ModelClass, Ages, Length,
+                               Weight, Years, nSim, "Retention")
+
     if (grepl("at-Length", ModelClass)) {
       Retention <- .PopulateMeanAtLength(
         object = Retention, 

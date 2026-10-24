@@ -42,8 +42,8 @@
 #' @param Classes Numeric vector or `NULL`. Length or weight class midpoints
 #'   corresponding to the second dimension of `MeanAtLength` or
 #'   `MeanAtWeight`. Default `NULL`.
-#' @param isRel Logical. If `TRUE`, length-based parameters (e.g., `L5`,
-#'   `LFS`) are interpreted as multiples of the length-at-50%-maturity
+#' @param isRel Logical. If `TRUE`, the length parameters of an at-length
+#'   model (`L5`, `LFS`, `SL50`, `SL50_95`, `SL`) are interpreted as multiples of the length-at-50%-maturity
 #'   (`L50`) of the paired stock rather than absolute length values. A
 #'   [Maturity()] object must be available to [PopulateSelectivity()] for
 #'   scaling to occur. Default `FALSE`.
@@ -91,9 +91,12 @@
 #'
 #' ## Relative Parameters
 #'
-#' When `isRel = TRUE`, length-based parameters (e.g., `L5`, `LFS`) are
-#' scaled by the maturity `L50` of the paired stock before the selectivity
-#' curve is computed. This allows selectivity to be expressed as a fraction of
+#' When `isRel = TRUE`, the length parameters of an at-length model (`L5`,
+#' `LFS`, `SL50`, `SL50_95`, `SL`) are multiplied by the maturity `L50` of the
+#' paired stock before the selectivity curve is computed, and `isRel` is then
+#' set to `FALSE`. A custom model function is scaled the same way when its
+#' parameters use these names. `isRel = TRUE` with an at-age or at-weight
+#' model is an error. This allows selectivity to be expressed as a fraction of
 #' the length at 50% maturity rather than an absolute length, which is useful
 #' when the same fleet configuration is applied across stocks with different
 #' growth characteristics.
