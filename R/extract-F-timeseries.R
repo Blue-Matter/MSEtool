@@ -23,7 +23,9 @@
 #'    
 #' @param byArea Logical. If `TRUE` the `Area` dimension is retained.
 #'   When `byAge = TRUE` area is always included regardless of this
-#'   argument. Ignored when `df = FALSE`.
+#'   argument. If `FALSE`, fishing mortality-at-age is averaged over areas,
+#'   weighted by numbers-at-age, before the apical value is taken. Ignored
+#'   when `df = FALSE`.
 #' 
 #' @param byFleet Logical. If `TRUE` the `Fleet` dimension is retained.
 #'   If `FALSE` values are summed over fleets before the apical or
@@ -226,9 +228,11 @@ FRetain <- function(object,
   }
   
   
-  array <- slot(object, slot_name)
-  
-  if (!byFleet) array <- SumOverFleet(array)
+  array <- if (byFleet) {
+    slot(object, slot_name)
+  } else {
+    .ApicalFTotal(object, OM %||% object@OM, paste0(slot_name, 'Area'))
+  }
   
   if (Reduce)   array <- ReduceDims(array, IncYear = IncYear)
   

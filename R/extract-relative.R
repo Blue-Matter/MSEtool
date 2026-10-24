@@ -7,8 +7,10 @@
 #' `B_B0()`, `SB_SB0()`, and `SP_SP0()` divide the time series by the
 #' corresponding unfished level (`type = 'Equilibrium'` or `'Dynamic'`).
 #' `B_BMSY()`, `SB_SBMSY()`, and `SP_SPMSY()` divide by the corresponding
-#' MSY reference point. `F_FMSY()` divides total apical fishing mortality
-#' (summed over fleets) by `FMSY`.
+#' MSY reference point. `F_FMSY()` divides the apical fishing mortality of
+#' the fleet total by `FMSY`: the fishing mortality-at-age of fish killed by
+#' the gear is averaged over areas (weighted by numbers-at-age) and summed over
+#' fleets, and the numerator is its maximum over ages.
 #'
 #' When applied to an [mse-class] object the historical and projection periods
 #' are row-bound and labelled via the `Period` column; historical rows carry
@@ -26,8 +28,9 @@
 #' return one value per complete calendar year, with `Year` holding the
 #' calendar year:
 #'
-#' * `F_FMSY()`: apical fishing mortality summed over the seasons of each
-#'   calendar year, the same annual basis as `FMSY` (see [CalcMSY()]).
+#' * `F_FMSY()`: fishing mortality-at-age of the fleet total summed over the
+#'   seasons of each calendar year, then the maximum over ages, the same annual
+#'   basis as `FMSY` (see [CalcMSY()]).
 #' * `B_BMSY()`, `SB_SBMSY()`, `SP_SPMSY()`: biomass or spawning production
 #'   in the reference season(s) of each calendar year (see [RefSeason()]), the
 #'   same snapshot used for `BMSY`, `SBMSY`, and `SPMSY`.
@@ -287,11 +290,29 @@ F_FMSY <- function(object,
   .AggregateStockToComplex(f_arr, OM, max)
 }
 
-# Realised apical F on the basis of FMSY: summed over seasons within each
-# calendar year for seasonal OMs, then the controlling stock in each complex.
+# Apical F of the fleet total per stock [Sim, Stock, Year(, MP)]; `Annual` sums seasons within each calendar year
+.ApicalFTotal <- function(object, OM, AreaSlot = 'FDeadArea', Annual = FALSE) {
+  nSim <- OM@nSim
+  FApical <- purrr::map2(slot(object, AreaSlot), object@Number, \(FArea, Number) {
+    FS    <- SumOverFleet(ExtendSims(FArea, nSim))
+    N     <- ExtendSims(Number, nSim)
+    NTot  <- .SumOverDim(N, 'Area')
+    # number-weighted over areas, as in CalcOverallF; area mean where no fish remain
+    FAge  <- .SumOverDim(FS * N, 'Area') / NTot
+    empty <- which(NTot <= 0)
+    FAge[empty] <- (.SumOverDim(FS, 'Area') / dim(FS)[match('Area', names(dimnames(FS)))])[empty]
+    if (Annual)
+      FAge <- .AnnualMSYNumerator(FAge, 'FDead', OM)
+    dnm   <- names(dimnames(FAge))
+    apply(FAge, dnm[dnm != 'Age'], max)
+  })
+  names(FApical) <- StockNames(OM)
+  List2Array(FApical, 'Stock', pos = 2)
+}
+
+# Realised apical F_dead of the fleet total on the basis of FMSY [Sim, Stock(complex), Year(, MP)]
 .ApicalFByComplex <- function(object, OM) {
-  SumOverFleet(slot(object, 'FDead')) |>
-    .AnnualMSYNumerator('FDead', OM) |>
+  .ApicalFTotal(object, OM, Annual = TRUE) |>
     .AggregateFToComplex(OM)
 }
 

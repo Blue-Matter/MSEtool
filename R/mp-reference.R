@@ -149,28 +149,10 @@ ReferenceMPs <- function() {
 
 # Annual apical F_dead of the fleet total per calendar year, on the basis of FMSY [Sim, Stock, Year]
 .FCurrentApical <- function(Hist, Years) {
-  nSim    <- nSim(Hist)
-  Years   <- unique(floor(as.numeric(Years)))
-  TSYears <- floor(as.numeric(Years(Hist, 'H')))
-
-  FApical <- purrr::map(seq_len(nStock(Hist)), \(st) {
-    purrr::map(Years, \(yr) {
-      TS   <- which(TSYears == yr)
-      FD   <- ExtendSims(Hist@FDeadArea[[st]][, , TS, , , drop = FALSE], nSim) |>
-        apply(c(1, 2, 3, 5), sum)
-      N    <- ExtendSims(Hist@Number[[st]][, , TS, , drop = FALSE], nSim)
-      NTot <- apply(N, 1:3, sum)
-      FAge <- apply(FD * N, 1:3, sum) / pmax(NTot, 1e-12)
-      FAge[NTot <= 0] <- apply(FD, 1:3, mean)[NTot <= 0]
-      apply(apply(FAge, 1:2, sum), 1, max)
-    }) |> do.call(what = cbind)
-  })
-
-  FCurrent <- array(unlist(FApical), dim = c(nSim, length(Years), nStock(Hist)),
-                    dimnames = list(Sim = seq_len(nSim), Year = as.character(Years),
-                                    Stock = StockNames(Hist))) |>
-    aperm(c(1, 3, 2))
-  .AggregateFToComplex(FCurrent, Hist@OM)
+  FApical <- .ApicalFByComplex(Hist, Hist@OM)
+  Years   <- as.character(unique(floor(as.numeric(Years))))
+  FApical[, , match(Years, dimnames(FApical)[['Year']]), drop = FALSE] |>
+    `dimnames<-`(c(dimnames(FApical)[1:2], list(Year = Years)))
 }
 
 .RefFMSYAdvice <- function(Data, fraction) {

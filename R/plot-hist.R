@@ -420,7 +420,9 @@ PlotF <- function(object,
   } else {
     if (is.null(byFleet)) byFleet <- nFleet(object) > 1
     df   <- do.call(what, list(object = object, df = TRUE, byAge = FALSE,
-                               byArea = FALSE, byFleet = TRUE))
+                               byArea = FALSE, byFleet = byFleet))
+    if (!byFleet)
+      df$Fleet <- 'Total'
     ylab <- what
   }
 
@@ -431,8 +433,6 @@ PlotF <- function(object,
     .FilterSeason(Season, object) |>
     .FilterYears(Years)
 
-  if (relative == 'none' && !byFleet)
-    df <- .SumOverFleet(df)
   if (identical(byStock, 'sum'))
     df <- .SumOverStock(df)
 

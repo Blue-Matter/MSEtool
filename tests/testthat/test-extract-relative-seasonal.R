@@ -81,11 +81,13 @@ test_that("Seasonal MSY-relative ratios are annual and match the MSY reference b
   ts  <- dimnames(hist@SBiomass)$Year
   cal <- floor(as.numeric(ts) + 1e-8)
   CalYears <- unique(cal)
-  FTot <- SumOverFleet(hist@FDead)
+  FD   <- apply(ExtendSims(hist@FDeadArea[[1]], 3), c('Sim', 'Age', 'Year', 'Area'), sum)
+  N    <- ExtendSims(hist@Number[[1]], 3)
+  FAge <- apply(FD * N, c('Sim', 'Age', 'Year'), sum) / apply(N, c('Sim', 'Age', 'Year'), sum)
   SB   <- ExtendSims(hist@SBiomass, 3)
   SP   <- ExtendSims(hist@SProduction, 3)
 
-  ExpF  <- sapply(CalYears, \(y) rowSums(ExtendSims(FTot, 3)[, 1, cal == y])) / FMSY
+  ExpF  <- sapply(CalYears, \(y) apply(apply(FAge[, , cal == y], 1:2, sum), 1, max)) / FMSY
   ExpSB <- sapply(CalYears, \(y) SB[, 1, which(cal == y)[2]]) / SBMSY
   ExpSP <- sapply(CalYears, \(y) SP[, 1, which(cal == y)[2]]) / SPMSY
 
