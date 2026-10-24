@@ -109,23 +109,10 @@
   Reduce(`+`, totals_by_stock)
 }
 
-.ResolveCatchBiomass <- function(Proj, stocks, x, TSIndex, fl, nArea, Real_Catch_Number,
-                                type = c('Landings', 'Discards')) {
-  type <- match.arg(type)
-  weight_slot <- if (type == 'Landings') 'WeightFleetRetained' else 'WeightFleetSelected'
-  purrr::map2(Real_Catch_Number, Proj@OM@Fleet[stocks], \(catch_n, FleetList) {
-    fleet       <- FleetList[[fl]]
-    catch_fleet <- catch_n[, fl, , drop = FALSE] |> abind::adrop(2)
-    fleetwght   <- slot(fleet, weight_slot)
-    flwsim      <- min(dim(fleetwght)[1], x)
-    fleetwght   <- slot(fleet, weight_slot)[flwsim, , TSIndex, drop = FALSE] |>
-      abind::adrop(c(1, 3), one.d.array = TRUE) |>
-      AddDimension("Area") |>
-      ExtendAreas(1:nArea)
-    ArrayMultiply(catch_fleet, fleetwght) |> SumOverAge()
-  }) |>
-    List2Array("Stock") |>
-    sum()
+# length-nSim catch biomass of fleet `fl` from a [Sim, Stock, Year, Fleet] array of one year
+.ResolveCatchBiomass <- function(Real_Catch_Biomass_All, fl, nSim) {
+  totals <- apply(Real_Catch_Biomass_All[, , , fl, drop = FALSE], 1, sum)
+  as.numeric(totals[pmin(seq_len(nSim), length(totals))])
 }
 
 # calendar years between the last historical year and the last historical observation; Inf if none

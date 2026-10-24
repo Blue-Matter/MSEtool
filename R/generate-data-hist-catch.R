@@ -27,17 +27,14 @@
 #'
 #' ## True Catch Aggregation
 #'
-#' Before applying observation error, true catch is aggregated from
-#' `Hist@LandingsAtAge` or `Hist@DiscardsAtAge` (selected by `type`) across
-#' stocks, ages, and areas for replicate `x`. The aggregation depends on
+#' Before applying observation error, true catch for replicate `x` is
+#' aggregated over the stocks within the complex. The source depends on
 #' whether each fleet's `CatchObs@Units` is a count or a mass unit:
 #'
-#' - `"Number"`: catch-at-age is summed over age and area, then summed over
-#'   stocks within the complex.
-#' - `"Biomass"`: catch-at-age is multiplied by `WeightFleetRetained`
-#'   (`type = "Landings"`) or `WeightFleetSelected` (`type = "Discards"`)
-#'   before summing
-#'   over age and area, then summed over stocks within the complex. 
+#' - `"Number"`: `Hist@LandingsAtAge` or `Hist@DiscardsAtAge` (selected by
+#'   `type`), summed over age and area.
+#' - `"Biomass"`: the landed or discarded biomass `Hist@Landings` or
+#'   `Hist@Discards` (selected by `type`), subset to `HistYears`.
 #'
 #' `Units` that are not a recognized catch unit raise an error.
 #' Units default to `"Biomass"` unless specified in the [CatchObs()] object.
@@ -119,8 +116,10 @@
   CV   <- Value
   CV[] <- defaultCV
   
-  Real_Catch_Number <- slot(Hist, paste0(type, 'AtAge'))[stocks]
-  
+  Real_Catch_Number  <- slot(Hist, paste0(type, 'AtAge'))[stocks]
+  Real_Catch_Biomass <- slot(Hist, type)[, stocks, , , drop = FALSE] |>
+    .ArraySubsetYear(HistYears)
+
   # Loop over fleets and apply observation error
   for (fl in seq_len(nFleet)) {
     CatchObs <- slot(Hist@OM@Obs[[i]][[fl]], type)
@@ -133,30 +132,12 @@
     
     if (.CatchUnitType(CatchData@Units[fl]) == "Number") {
       real_catch <- purrr::map(Real_Catch_Number, \(catch_n) {
-        catch_n[min(x, dim(catch_n)[1]),,,fl,] |> SumOverAge() |> SumOverArea()
+        catch_n[min(x, dim(catch_n)[1]), , , fl, , drop = FALSE] |> SumOverAge() |> SumOverArea()
       }) |> List2Array('Stock') |>
-        apply('Year', sum) |> SumOverStock()
-      
+        apply('Year', sum)
+
     } else {
-      weight_slot <- if (type == 'Landings') 'WeightFleetRetained' else 'WeightFleetSelected'
-      real_catch <- purrr::map2(Real_Catch_Number, Hist@OM@Fleet[stocks],
-                                \(catch_n, fleet_list) {
-                                  fleet_weight <- slot(fleet_list[[fl]], weight_slot)
-                                  dd <- dim(fleet_weight)
-                                  fl_x <- min(x, dd[1])
-                                  
-                                  fleet_weight <- .SubsetYear(fleet_weight[fl_x,,,drop=FALSE], HistYears) |>
-                                    abind::adrop(1)
-                                  
-                                  dd <- dim(catch_n)
-                                  catch_x <- min(x, dd[1])
-                                  catch_age <- catch_n[catch_x,,,fl,, drop=FALSE] |> SumOverArea() |>
-                                    DropDimension('Sim') |>
-                                    DropDimension('Fleet')
-                                  catch_age_biomass <- ArrayMultiply(catch_age, fleet_weight)
-                                  SumOverAge(catch_age_biomass)
-                                  
-                                }) |> List2Array('Stock') |>
+      real_catch <- Real_Catch_Biomass[min(x, dim(Real_Catch_Biomass)[1]), , , fl, drop = FALSE] |>
         apply('Year', sum)
     }
     

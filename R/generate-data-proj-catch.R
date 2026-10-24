@@ -28,15 +28,13 @@
 #'
 #' ## True Catch Aggregation
 #'
-#' Catch-at-age for `DataYear` is extracted from `Proj@LandingsAtAge` or
-#' `Proj@DiscardsAtAge` (selected by `type`) for each stock in `stocks`,
-#' dropping the time dimension. Per-fleet aggregation then depends on
-#' `CatchData@Units[fl]`:
+#' True catch in `DataYear` is summed over the stocks in `stocks`, from a
+#' source that depends on `CatchData@Units[fl]`:
 #'
-#' - `"Number"`: summed over age and area for all simulations.
-#' - `"Biomass"`: multiplied by `WeightFleetRetained` (`type = "Landings"`) or
-#'   `WeightFleetSelected` (`type = "Discards"`) before summing over age and
-#'   area, one simulation at a time.
+#' - `"Number"`: `Proj@LandingsAtAge` or `Proj@DiscardsAtAge` (selected by
+#'   `type`), summed over age and area.
+#' - `"Biomass"`: the landed or discarded biomass `Proj@Landings` or
+#'   `Proj@Discards` (selected by `type`).
 #'
 #' ## Value Resolution
 #'
@@ -110,7 +108,6 @@
     }))
 
   TSIndex    <- match(DataYear, YearsAll)
-  nArea      <- nArea(Proj)
   FleetNames <- .ResolveFleetNames(CatchData1)
   nFleet     <- length(FleetNames)
   CatchData1 <- .ResolveUnits(CatchData1, nFleet)
@@ -120,6 +117,8 @@
                                         catch_n[,,TSIndex,,,drop=FALSE] |>
                                           abind::adrop(drop = 3)
                                       })
+  Real_Catch_Biomass_All <- slot(Proj, type)[, stocks, , , drop = FALSE] |>
+    .ArraySubsetYear(DataYear)
 
   NewValueAll <- matrix(NA_real_, nSim, nFleet)
   NewCVAll    <- matrix(NA_real_, nSim, nFleet)
@@ -143,13 +142,7 @@
 
       NewValueAll[, fl] <- switch(.CatchUnitType(CatchData1@Units[fl]),
         Number  = .ResolveCatchNumber(Real_Catch_Number_All, fl, nSim) * error * bias,
-        Biomass = vapply(seq_len(nSim), \(x) {
-          Real_Catch_Number_x <- purrr::map(Real_Catch_Number_All, \(a)
-            a[x, , , , drop = FALSE] |> abind::adrop(1)
-          )
-          .ResolveCatchBiomass(Proj, stocks, x, TSIndex, fl, nArea,
-                              Real_Catch_Number_x, type = type)
-        }, numeric(1)) * error * bias
+        Biomass = .ResolveCatchBiomass(Real_Catch_Biomass_All, fl, nSim) * error * bias
       )
     }
 

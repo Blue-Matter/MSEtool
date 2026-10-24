@@ -43,24 +43,8 @@
   Sim_Catch_Number_List <- slot(Hist, paste0(type,'AtAge'))[stocks]
   
   # catch biomass - sim, year, fleet
-  # Landings use the retention-weighted schedule; Discards use the
-  # selectivity-weighted schedule -- see the equivalent note in
-  # .GenHistDataCatch().
-  weight_slot <- if (type == 'Landings') 'WeightFleetRetained' else 'WeightFleetSelected'
-  Sim_Catch_Biomass <- purrr::map2(Sim_Catch_Number_List,
-                                   Hist@OM@Fleet[stocks],
-    \(catch_n_at_age_area, fleetlist) {
-
-          FleetWeight <- purrr::map(fleetlist, \(fleet) {
-            slot(fleet, weight_slot) |> Subset(Years=HistYears)
-          }) |> List2Array(pos=4)
-          
-          catch_n_at_age <- SumOverArea(catch_n_at_age_area)
-          
-          # sum over ages
-          SumOverAge(ArrayMultiply(catch_n_at_age, FleetWeight))
-    
-  }) |> List2Array('Stock', pos=2) |>
+  Sim_Catch_Biomass <- slot(Hist, type)[, stocks, , , drop = FALSE] |>
+    .ArraySubsetYear(HistYears) |>
     apply(c('Sim', 'Year', 'Fleet'), sum)
   
   # catch number - sim, stock, year, fleet
