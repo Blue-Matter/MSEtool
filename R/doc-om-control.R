@@ -15,7 +15,7 @@
 #' |---|---|---|
 #' | `MSYType` | `'Removals'` | `'Removals'` or `'Landings'`. Whether MSY-based and other F reference points are defined in terms of total removals (landings + dead discards) or landings only. Passed as `type` to [CalcMSY()] and [CalcRefPoints()]. |
 #' | `RefYears` | `NULL` | Year(s) of biological and fishery parameters used to calculate reference points. `NULL` uses the final historical year. Passed as `Years` to [CalcMSY()] and [CalcRefPoints()]. |
-#' | `CorrelatedRecDevs` | `TRUE` | Multi-stock OMs only. Whether projection recruitment deviations are correlated across stocks using the historical covariance; see [GenMultiStockRecDevs()]. |
+#' | `CorrelatedRecDevs` | `NULL` | Multi-stock OMs only. Which stocks' projection recruitment deviations are correlated, using the correlation of their historical deviations. `NULL`: stocks whose historical deviations (`SRR@RecDevHist`) were supplied, e.g. imported from an assessment. `TRUE`: all stocks. `FALSE`: none. Projection deviations always have standard deviation `SRR@SD` and autocorrelation `SRR@AC`, and stocks with identical historical deviations share one series; see [GenMultiStockRecDevs()]. |
 #' | `HistRel` | `TRUE` | Whether MICE `Relations` are applied in the historical period. |
 #' | `BackCalcEffort` | `TRUE` | Whether effort is replaced by the effort implied by realised F when the `maxF` constraint binds. Applies to historical and projection time steps. |
 #' | `RefYield` | `list(lastnTS = 5)` | Used when reference yield is calculated (see [SimControl()]). `lastnTS`: number of final projection *years* averaged. |
