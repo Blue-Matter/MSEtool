@@ -146,7 +146,8 @@ GenResiduals <- function(SD,
 #'
 #' @param Resid Numeric matrix of multiplicative (normal-space) residuals,
 #'   dimensions nSim x nYear.
-#' @param AC Numeric vector of length nSim, autocorrelation coefficient per simulation (must be in between -1 &  1).
+#' @param AC Numeric vector of length nSim, autocorrelation coefficient per
+#'   simulation (must be within -1 and 1, exclusive).
 #' @param LastError Numeric vector of length nSim giving the starting value for
 #'   the AR(1) recursion, in normal (natural) space — i.e. the last observed
 #'   multiplicative residual. 
@@ -163,8 +164,8 @@ ApplyAC <- function(Resid, AC, LastError) {
   nSim <- nrow(Resid)
   nYear <- ncol(Resid)
 
-  if (!is.numeric(AC) || length(AC) != nSim || any(abs(AC) > 1))
-    cli::cli_abort("`AC` must be a numeric vector of length {.val nSim ({nSim})} with values in [-1,1]")
+  if (!is.numeric(AC) || length(AC) != nSim || any(abs(AC) >= 1))
+    cli::cli_abort("`AC` must be a numeric vector of length {.val nSim ({nSim})} with values within (-1, 1), exclusive")
 
   if (!is.numeric(LastError) || length(LastError) != nSim)
     cli::cli_abort("`LastError` must be a numeric vector of length {.val nSim ({nSim})}")

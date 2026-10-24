@@ -593,12 +593,19 @@ ExploitationObs <- function(Selectivity      = list(),
 #' @param TruncSD `numeric(1)`. Number of standard deviations at which to
 #'   truncate the lognormal residual distribution when generating observation
 #'   errors for projection years via [GenResiduals()]. Default `2`.
-#' @param Ref `numeric` or `NULL`. Reference index value. Accepted forms:
+#' @param Ref `numeric` or `NULL`. Reference index value, reported in the
+#'   `Ref` slot of simulated index data. The reference value is the index
+#'   value expected when the total biomass of the stocks in the complex is at
+#'   `BMSY` (or, when `BMSY` is not available, in the historical year closest
+#'   to half of unfished biomass), on the scale of the simulated index
+#'   (`Efficiency * NomIndex^Beta`), multiplied by a per-simulation value.
+#'   Accepted forms:
 #'   - `NULL` (default): no reference value.
-#'   - Positive scalar: interpreted as the CV of a lognormal distribution; a
-#'     unique reference value is drawn per simulation as
-#'     `rlnorm(nSim, mconv(1, Ref), sdconv(1, Ref))` internally.
-#'   - Length-`nSim` vector or named array: used directly.
+#'   - Non-negative scalar: interpreted as the CV of a lognormal distribution;
+#'     a unique multiplier is drawn per simulation as
+#'     `rlnorm(nSim, mconv(1, Ref), sdconv(1, Ref))` internally. `0` gives a
+#'     multiplier of 1.
+#'   - Length-`nSim` vector or named array: multipliers used directly.
 #' @param DataCV `numeric` or `NULL`. Coefficient of variation reported in
 #'   the `CV` slot of the generated index data, which MPs can use. A scalar,
 #'   or values named by year that apply from that year onwards (e.g.
@@ -617,9 +624,15 @@ ExploitationObs <- function(Selectivity      = list(),
 #'   simulation by log-linear regression when conditioned -- otherwise it
 #'   stays at `1`.
 #' @param AC `numeric`, `array`, or `NULL`. Lag-1 autocorrelation of index
-#'   residuals, one value per simulation. When conditioning on real data, an
-#'   `AC` supplied here is used for projection years; otherwise `AC` is
-#'   estimated from the historical residuals.
+#'   residuals, one value per simulation. Values must be within (-1, 1),
+#'   exclusive. A scalar applies to all simulations, a length-2 vector
+#'   `c(lower, upper)` gives one value per simulation drawn from a uniform
+#'   distribution, and a length-`nSim` vector is used directly. Default `NULL`
+#'   (`AC = 0`, independent errors). When `Error` is generated from `CV`, the
+#'   log errors follow a stationary AR(1) process with this autocorrelation,
+#'   with mean error 1 and log-scale standard deviation `sdconv(1, CV)`. When
+#'   conditioning on real data, an `AC` supplied here is used for projection
+#'   years; otherwise `AC` is estimated from the historical residuals.
 #' @param qInc `numeric` or `NULL`. Annual percentage change in index
 #'   catchability during projection years (e.g. `2` = 2% per year; negative
 #'   values indicate declining catchability). Default `NULL` (no change).
@@ -669,8 +682,8 @@ ExploitationObs <- function(Selectivity      = list(),
 #'    Real Data").
 #'
 #' `Ref` is expanded internally: a scalar is treated as the CV of
-#' a lognormal from which one reference value per simulation is drawn; a
-#' length-`nSim` input is used directly.
+#' a lognormal from which one reference value multiplier per simulation is
+#' drawn; a length-`nSim` input is used directly.
 #'
 #' ## Conditioning on Real Data
 #'

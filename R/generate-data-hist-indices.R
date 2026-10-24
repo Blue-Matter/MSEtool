@@ -134,11 +134,10 @@
 
     # add error
     SimulatedIndexError <- BetaIndex *  .ArraySubsetYear(IndexObs@Error, HistYears)[min(sim, nrow(IndexObs@Error)),]
-    # mean 1
-    StIndex <- SimulatedIndexError/mean(SimulatedIndexError, na.rm=TRUE)
+    # mean 1; projection values are scaled by the same Efficiency
+    IndexObs@Efficiency <- 1/mean(SimulatedIndexError, na.rm=TRUE)
+    StIndex <- SimulatedIndexError * IndexObs@Efficiency
     Value[,fl] <- StIndex
-    NonNAInd <- which(!is.na(StIndex))
-    IndexObs@Efficiency <- mean(StIndex, na.rm=TRUE)/mean(BetaIndex[NonNAInd], na.rm=TRUE)
     IndexData@Misc$IndexObs[[fl]] <- IndexObs
     
     # Reference Value 
@@ -146,26 +145,26 @@
       # TODO - index ref value if units != Biomass - only does BMSY at the moment
       sim_b   <- min(sim, dim(Hist@Biomass)[1])
       ref_sim <- IndexObs@Ref[min(sim, length(IndexObs@Ref))]
+      Bhist   <- .SumStocksByYear(Hist@Biomass, sim_b, stocks)[as.character(HistYears)]
+      # nominal index per unit of complex biomass
+      adjust  <- mean(as.numeric(real_nom_index)/Bhist, na.rm=TRUE)
+      RefB    <- NA_real_
       if (length(Hist@Reference@MSY@BMSY)) {
         BMSY <- Hist@Reference@MSY@BMSY
-        adjust <- mean(real_nom_index/apply(Hist@Biomass[sim_b,i,,drop=FALSE], 'Year', mean, na.rm=TRUE), na.rm=TRUE)
-        IndexData@Ref[fl] <- array(mean(BMSY[min(sim, dim(BMSY)[1]),i,], na.rm=TRUE) *  adjust *IndexObs@Efficiency) * ref_sim
+        RefB <- mean(.SumStocksByYear(BMSY, min(sim, dim(BMSY)[1]), stocks), na.rm=TRUE)
       } else {
         # do B0
         Ref_Dep <- 0.5 # hard coded for now
         B0 <- Hist@Unfished@Equilibrium@Biomass
-        B0 <- B0[min(sim, dim(B0)[1]),i,,drop=FALSE]
-        Bhist <- Hist@Biomass[sim_b,i,,drop=FALSE]
-        B_B0 <- ArrayDivide(Bhist, B0) |> apply('Year', mean, na.rm=TRUE)
+        B0 <- .SumStocksByYear(B0, min(sim, dim(B0)[1]), stocks)
+        B0 <- if (all(names(Bhist) %in% names(B0))) B0[names(Bhist)] else B0[pmin(seq_along(Bhist), length(B0))]
+        B_B0 <- Bhist/B0
         ind <- which.min(abs(B_B0-Ref_Dep))
-        if (!is.null(ind) && length(ind)) {
-          adjust <- mean(real_nom_index/apply(Hist@Biomass[sim_b,i,,drop=FALSE], 'Year', mean, na.rm=TRUE), na.rm=TRUE)
-          IndexData@Ref[fl] <- array(mean(Hist@Biomass[sim_b,i, ind], na.rm=TRUE) *  adjust *IndexObs@Efficiency) * ref_sim
-        }
-        
-        
+        if (length(ind))
+          RefB <- Bhist[ind]
       }
-      
+      if (is.finite(RefB))
+        IndexData@Ref[fl] <- as.numeric(IndexObs@Efficiency * (RefB * adjust)^Beta * ref_sim)
     }
   }
   
@@ -176,3 +175,8 @@
   
   IndexData
 } 
+
+# [Year] total over the complex's stocks of a [Sim, Stock, Year] array for one sim
+.SumStocksByYear <- function(x, sim, stocks) {
+  apply(x[sim, stocks, , drop = FALSE], 'Year', sum)
+}

@@ -184,23 +184,26 @@
 }
 
 
+.CheckObsAC <- function(AC) {
+  if (any(abs(AC) >= 1, na.rm = TRUE))
+    cli::cli_abort(
+      c("x" = "`AC` values must be within (-1, 1), exclusive.",
+        "i" = "`AC = 0` gives independent errors; an AR(1) process with `abs(AC) >= 1` has no stationary distribution.")
+    )
+  invisible(AC)
+}
+
 .PopulateObsAC <- function(AC, nSim) {
   if (!length(AC))
     return(array(0, dim = nSim, dimnames = list(Sim = seq_len(nSim))))
   
-  if (!is.null(dimnames(AC))) {
-    if (any(AC < -1) || any(AC > 1))
-      cli::cli_abort(
-        c("x" = "`AC` values must be in [-1, 1].",
-          "i" = "`AC = 0` gives independent errors; `AC = 1` gives a random walk.")
-      )
-    return(AC)
-  }
+  if (!is.null(dimnames(AC)))
+    return(.CheckObsAC(AC))
   
   if (length(AC) == 2 && nSim != 2) {
-    if (AC[1] < -1 || AC[2] > 1)
+    if (AC[1] <= -1 || AC[2] >= 1)
       cli::cli_abort(
-        c("x" = "`AC` bounds must be within [-1, 1].",
+        c("x" = "`AC` bounds must be within (-1, 1), exclusive.",
           "i" = "Supplied bounds: [{AC[1]}, {AC[2]}].")
       )
     vals <- .SimRunif(nSim, AC[1], AC[2])
@@ -213,39 +216,19 @@
   if (length(AC) == 1)
     AC <- rep(AC, nSim)
   
-  if (any(AC < -1) || any(AC > 1))
-    cli::cli_abort(
-      c("x" = "`AC` values must be in [-1, 1].",
-        "i" = "`AC = 0` gives independent errors; `AC = 1` gives a random walk.")
-    )
-  
+  .CheckObsAC(AC)
   array(AC, dim = nSim, dimnames = list(Sim = seq_len(nSim)))
 }
 
- 
-.ApplyObsAC <- function(Error, AC) {
+# AR(1) on the zero-mean log errors, so E[Error] = 1 and the log-scale SD is kept for any AC
+.ApplyObsAC <- function(Error, AC, CV) {
   if (!length(Error) || all(AC == 0))
     return(Error)
   
-  nSim  <- nrow(Error)
-  nYear <- ncol(Error)
-  dns   <- dimnames(Error)
-  
-  log_err <- log(Error)
-  
-  for (s in seq_len(nSim)) {
-    ac_sim <- min(s, dim(AC)[1])
-    rho <- AC[ac_sim]
-    if (rho == 0) next
-    scale <- sqrt(1 - rho^2)
-    for (t in 2:nYear) {
-      log_err[s, t] <- rho * log_err[s, t - 1] + scale * log_err[s, t]
-    }
-  }
-  
-  Error <- exp(log_err)
-  dimnames(Error) <- dns
-  Error
+  nSim <- nrow(Error)
+  .CheckObsAC(AC)
+  Mean <- exp(mconv(1, rep_len(as.numeric(CV), nSim)))
+  ApplyAC(Error / Mean, AC = .SimValues(AC, nSim), LastError = rep(NA_real_, nSim)) * Mean
 }
 
 

@@ -248,9 +248,9 @@ setValidity("catchobs", function(object) {
 #'   `SimControl(EstimateBeta = TRUE)`, unless already supplied. See
 #'   [IndicesObs()].
 #' @slot AC `numeric` array or `NULL`. Lag-1 autocorrelation of index
-#'   residuals, one value per simulation. When supplied by the user, used for
-#'   projection years in place of the value estimated during conditioning.
-#'   See [IndicesObs()].
+#'   residuals, one value per simulation, within (-1, 1) exclusive. When
+#'   supplied by the user, used for projection years in place of the value
+#'   estimated during conditioning. See [IndicesObs()].
 #' @slot Years `numeric` or `NULL`. Calendar years over which the observation
 #'   error is conditioned. See [IndicesObs()].
 #' @slot Areas `numeric` or `NULL`. Integer indices of the spatial areas
@@ -260,8 +260,8 @@ setValidity("catchobs", function(object) {
 #' @slot Selectivity `array`, `character`, `numeric`, or `list`.
 #'   Selectivity-at-age of this index. See [IndicesObs()].
 #' @slot Type `character`. Index type identifier. See [IndicesObs()].
-#' @slot Ref `numeric` array or `NULL`. Reference index value, one per
-#'   simulation. See [IndicesObs()].
+#' @slot Ref `numeric` array or `NULL`. Multiplier on the reference index
+#'   value, one per simulation. See [IndicesObs()].
 #' @slot DataCV `numeric` or `NULL`. Coefficient of variation reported with
 #'   the generated data. See [IndicesObs()].
 #' @slot Efficiency `numeric` array or `NULL`. Catchability coefficient `q`
