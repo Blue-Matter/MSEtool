@@ -49,6 +49,7 @@ Suggests:
     gridExtra,
     Matrix,
     MASS,
+    mgcv,
     mvtnorm,
     openxlsx,
     pak,

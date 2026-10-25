@@ -335,9 +335,12 @@ test_that(".FindModels works when MSEtool is loaded but not attached", {
   skip_if_not_installed("pkgload")
   Expected <- .FindModels("Length-at-Age-Model")
   expect_gt(length(Expected), 0)
+  # source tree under devtools::test(), installed package under R CMD check
   Path <- normalizePath(testthat::test_path("..", ".."))
+  if (!file.exists(file.path(Path, "DESCRIPTION"))) Path <- NULL
   Out  <- callr::r(function(Path) {
-    pkgload::load_all(Path, attach = FALSE, quiet = TRUE)
+    if (is.null(Path)) loadNamespace("MSEtool") else
+      pkgload::load_all(Path, attach = FALSE, quiet = TRUE)
     c(attached = "package:MSEtool" %in% search(),
       MSEtool:::.FindModels("Length-at-Age-Model"))
   }, args = list(Path = Path))

@@ -44,9 +44,9 @@ test_that(".SpictInp() merges zero catch, and FitSP(Model = 'spict') converges w
   expect_equal(inp$obsC, unname(Prep$Catch[-c(1, 12)]))
   expect_equal(inp$dtc, replace(rep(1, length(Prep$Years) - 2), c(1, 10), 2))
 
-  # spict uses mgcv, which R CMD check --as-cran hides as an undeclared recommended package
   skip_on_cran()
   skip_if_not_installed('spict')
+  skip_if_not_installed('mgcv')
   Fit <- FitSP(Sim$Data, Model = 'spict')
   expect_true(Fit$Converged)
   expect_length(Fit$B, length(Prep$Years) + 1)
@@ -55,6 +55,7 @@ test_that(".SpictInp() merges zero catch, and FitSP(Model = 'spict') converges w
 test_that("FitSP(Model = 'spict') agrees with the internal model", {
   skip_on_cran()
   skip_if_not_installed('spict')
+  skip_if_not_installed('mgcv')
   for (s in 1:3) {
     Sim <- SimSPData(Seed = s)
     Sp  <- FitSP(Sim$Data, Model = 'spict')
@@ -77,6 +78,7 @@ test_that("FitSP(Model = 'spict') agrees with the internal model", {
 
 test_that("SurplusProduction(Model = 'spict') in a closed-loop projection", {
   skip_if_not_installed('spict')
+  skip_if_not_installed('mgcv')
   skip_on_cran()
   OM <- SingleStockOM
   OM@nSim <- 2

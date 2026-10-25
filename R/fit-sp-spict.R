@@ -197,6 +197,7 @@ SpictControl <- function(dteuler             = 1,
 .FitSPspict <- function(Prep, Shape, EstShape, Depletion, EstDepletion, IndexSD, Priors,
                         Control, Start, Uncertainty) {
   CheckPackage('spict', pkg.path = "pak::pkg_install('DTUAqua/spict/spict')")
+  CheckPackage('mgcv')
   StartTime <- proc.time()[[3]]
   Log       <- Prep$Log
 
