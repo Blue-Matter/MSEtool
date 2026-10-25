@@ -24,7 +24,15 @@ test_that(".AlignDenomYears repeats the last value for annual models", {
   expect_equal(as.numeric(out), c(1, 1, 1))
 })
 
-test_that("Projection denominators repeat the last historical year's seasonal values", {
+test_that(".AlignDenomYears with fill = FALSE gives NA for missing years of a year-varying denominator", {
+  out <- .AlignDenomYears(.DenomArray(as.character(2018:2021)), as.character(2020:2023), fill = FALSE)
+  expect_equal(as.numeric(out), c(3, 4, NA, NA))
+
+  out <- .AlignDenomYears(.DenomArray("2018"), as.character(2020:2022), fill = FALSE)
+  expect_equal(as.numeric(out), c(1, 1, 1))
+})
+
+test_that("Projection dynamic denominators are the dynamic unfished values of each projection time step", {
   skip_on_cran()
   data(TwoFleetOM, envir = environment())
   om <- TwoFleetOM
@@ -36,17 +44,16 @@ test_that("Projection denominators repeat the last historical year's seasonal va
   mse <- Project(hist, MPs = "CurrentEffort", parallel = FALSE, silent = TRUE)
 
   Denom <- ExtendSims(mse@Unfished@Dynamic@SBiomass, 3)
-  nHist <- dim(Denom)[3]
-  LastYear <- Denom[, , (nHist - 3):nHist, drop = FALSE]
-  expect_false(isTRUE(all.equal(as.numeric(LastYear[, , 1]), as.numeric(LastYear[, , 4]))))
+  SB <- mse@SBiomass
+  ProjYears <- dimnames(SB)$Year
+  expect_equal(length(ProjYears), 12)
+  expect_true(all(ProjYears %in% dimnames(Denom)$Year))
+  DenomProj <- abind::adrop(Denom[, , ProjYears, drop = FALSE], 2)
+  expect_false(isTRUE(all.equal(DenomProj[, 1], DenomProj[, 4])))
 
   Ratio <- SB_SB0(mse, type = "Dynamic", df = FALSE)
-  SB <- mse@SBiomass
   Implied <- SB[, , , 1] / Ratio[, , , 1]
-  nProj <- length(dimnames(SB)$Year)
-  expect_equal(nProj, 12)
-  for (y in 0:2)
-    expect_equal(unname(Implied[, 4 * y + 1:4]), unname(abind::adrop(LastYear, 2)))
+  expect_equal(unname(Implied), unname(DenomProj))
 })
 
 test_that(".SumWithinCalendarYear sums complete calendar years only", {

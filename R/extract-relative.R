@@ -16,10 +16,13 @@
 #' are row-bound and labelled via the `Period` column; historical rows carry
 #' `MP = "Historical"`.
 #'
-#' For the projection period of an [mse-class] object the denominator is
-#' extended to cover projection years by repeating the reference value from
-#' the last historical year. In seasonal models, each projection time step
-#' uses the value from the same season of the last historical year.
+#' Dynamic unfished levels are calculated for every historical and projection
+#' year (see [CalcUnfished_Dynamic()]). For the projection period of an
+#' [mse-class] object, a reference level available only for historical years,
+#' such as an MSY reference point, is extended to cover projection years by
+#' repeating the value from the last historical year. In seasonal models, each
+#' projection time step uses the value from the same season of the last
+#' historical year.
 #'
 #' ## Seasonal models
 #'
@@ -375,7 +378,8 @@ F_FMSY <- function(object,
 }
 
 
-.AlignDenomYears <- function(denom_arr, target_years) {
+# `fill = FALSE` gives NA for target years missing from a year-varying denominator
+.AlignDenomYears <- function(denom_arr, target_years, fill = TRUE) {
   denom_years <- dimnames(denom_arr)[['Year']]
   if (is.null(denom_years) || is.null(target_years)) return(denom_arr)
   if (identical(denom_years, target_years))            return(denom_arr)
@@ -390,6 +394,7 @@ F_FMSY <- function(object,
   year_idx <- vapply(target_nums, function(ty) {
     m <- which(denom_nums == ty)
     if (length(m)) return(m[1])
+    if (!fill && length(denom_nums) > 1) return(NA_integer_)
     last_idx[which.min(abs(last_frac - ty %% 1))]
   }, integer(1))
 
@@ -406,14 +411,14 @@ F_FMSY <- function(object,
 
 .ComputeRelative <- function(object, OM, num_slot, denom_arr, var_name,
                                Reduce, IncYear, stockNames = NULL, sumStock = FALSE,
-                               ref = 'Unfished') {
+                               ref = 'Unfished', fill = TRUE) {
   isMSE <- inherits(object, 'mse')
 
   arr          <- slot(object, num_slot)
   if (ref == 'MSY')
     arr <- .AnnualMSYNumerator(arr, num_slot, OM)
   target_years <- dimnames(arr)[['Year']]
-  denom_aligned <- .AlignDenomYears(denom_arr, target_years)
+  denom_aligned <- .AlignDenomYears(denom_arr, target_years, fill)
 
   if (isMSE) {
     MP_names <- dimnames(arr)[['MP']]
@@ -456,13 +461,14 @@ F_FMSY <- function(object,
     paste0('Reference@MSY@', denom_slot)
   }
   .CheckRefPopulated(denom_arr, ref, slot_label, var_name)
+  fill <- !(ref == 'Unfished' && identical(type, 'Dynamic'))
 
   if (!df) {
     arr          <- slot(object, num_slot)
     if (ref == 'MSY')
       arr <- .AnnualMSYNumerator(arr, num_slot, object@OM)
     target_years <- dimnames(arr)[['Year']]
-    denom_aligned <- .AlignDenomYears(denom_arr, target_years)
+    denom_aligned <- .AlignDenomYears(denom_arr, target_years, fill)
     if (inherits(object, 'mse'))
       denom_aligned <- AddDimension(denom_aligned, name = 'MP', val = dimnames(arr)[['MP']])
     if (sumStock) {
@@ -476,7 +482,7 @@ F_FMSY <- function(object,
 
   if (inherits(object, 'hist')) {
     out <- .ComputeRelative(object, OM, num_slot, denom_arr, var_name,
-                              Reduce, IncYear, stockNames, sumStock, ref)
+                              Reduce, IncYear, stockNames, sumStock, ref, fill)
     out <- .FinalizeTimeseriesDF(out, OM@nSim, Extend, silent)
     class(out) <- c(paste0(tolower(gsub('_', '', var_name)), '.df'), class(out))
     return(out)
@@ -484,11 +490,11 @@ F_FMSY <- function(object,
 
   # MSE: bind historical and projection periods
   hist_df <- .ComputeRelative(object@Hist, OM, num_slot, denom_arr, var_name,
-                                Reduce, IncYear, stockNames, sumStock, ref) |>
+                                Reduce, IncYear, stockNames, sumStock, ref, fill) |>
     dplyr::mutate(MP = 'Historical')
 
   proj_df <- .ComputeRelative(object, OM, num_slot, denom_arr, var_name,
-                                Reduce, IncYear, stockNames, sumStock, ref)
+                                Reduce, IncYear, stockNames, sumStock, ref, fill)
 
   out <- dplyr::bind_rows(hist_df, proj_df)
   out <- .FinalizeTimeseriesDF(out, OM@nSim, Extend, silent)

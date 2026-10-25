@@ -1,12 +1,13 @@
 #' Unfished Reference Point Quantities
 #'
-#' Extract unfished reference point quantities from a [hist-class] object.
+#' Extract unfished reference point quantities from a [hist-class] or
+#' [mse-class] object.
 #' `B0()` returns total biomass, `SB0()` spawning biomass, `SP0()` spawning
 #' production, and `N0()` numbers-at-age. All functions support both
 #' equilibrium and dynamic unfished calculations (see `type` argument).
 #'
-#' @param Hist A [hist-class] object; the output of [Simulate()], containing
-#'   the simulated historical fishery dynamics.
+#' @param Hist A [hist-class] object (the output of [Simulate()]) or an
+#'   [mse-class] object (the output of [Project()]).
 #' @param type Character. One of `'Equilibrium'` or `'Dynamic'`; partial
 #'   matching is supported.
 #'
@@ -14,8 +15,9 @@
 #'     recruitment deviations and all life-history parameters constant over
 #'     time.
 #'   - `'Dynamic'`: unfished values calculated by running the full population
-#'     dynamics model, including recruitment deviations and any time-varying
-#'     parameters.
+#'     dynamics model with no fishing, including recruitment deviations and any
+#'     time-varying parameters, over the historical and projection years. The
+#'     projection-year values are the same for all management procedures.
 #' @param Reduce Logical. If `TRUE` (default), calls [ReduceDims()] to
 #'   collapse any `Sim`, `Year`, or `Age` dimensions where values are
 #'   identical across that dimension, reducing array size. If `FALSE`, the
@@ -36,7 +38,7 @@
 NULL
 
 .UnfishedSlot <- function(Hist, type, slot_name, Reduce) {
-  .CheckClass(Hist, 'hist', 'Hist')
+  .CheckClass(Hist, c('hist', 'mse'), 'Hist')
   type <- match.arg(type, c('Equilibrium', 'Dynamic'))
   
   obj <- if (type == 'Equilibrium') {
