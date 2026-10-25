@@ -204,6 +204,7 @@
     if (inherits(Advice, 'advice')) {
       Misc <- Advice@Misc
       Misc$AnnualTAC <- NULL
+      Misc$StatusQuoEffort <- NULL
       Data@Misc <- Misc
     }
     Data
@@ -347,24 +348,19 @@
 
 
 
-.CheckTACEffort <- function(AdviceSimList, Proj, LHInd, FleetNames) {
-  purrr::imap(AdviceSimList, \(AdviceSim, sim) {
+# Empty advice is status-quo effort: relative effort 1, with the area split left to the engine
+.CheckTACEffort <- function(AdviceSimList, FleetNames) {
+  purrr::map(AdviceSimList, \(AdviceSim) {
     purrr::map(AdviceSim, \(Advice) {
       if (!inherits(Advice, 'advice')) return(Advice)
       if (is.null(Advice@TAC) && is.null(Advice@Effort)) {
-          lastdist <- abind::adrop(Proj@Distribution[sim, LHInd,,,drop=FALSE], 1:2)
-          lasteff <- array(Proj@Effort[sim, LHInd,], 
-                           dimnames = list(
-                             Fleet=FleetNames)
-                           )  |> AddDimension('Area')
-          Advice@Effort <- ArrayMultiply(lastdist, lasteff)
-          Advice@EffType <- 'Abs'
+        Advice@Effort  <- array(1, dim = length(FleetNames), dimnames = list(Fleet = FleetNames))
+        Advice@EffType <- 'Rel'
+        Advice@Misc$StatusQuoEffort <- TRUE
       }
-      
       Advice
     })
   })
-  
 }
 
 

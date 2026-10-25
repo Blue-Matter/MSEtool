@@ -5,10 +5,15 @@
 #' object. MPs are assigned `class "mp"` so they are recognised by the MSE
 #' framework.
 #'
-#' - `CurrentEffort`: Fixes fishing effort at 1 (last historical effort) for
-#'   all fleets, maintaining the spatial distribution of effort from the last
-#'   historical timestep, and (in a seasonal model) each season's own share
-#'   of that pattern - see *Seasonal models* below. The `Data` argument is
+#' - `CurrentEffort`: Keeps each fleet's fishing effort at its level in the
+#'   last historical year (relative effort 1). Each time step, the effort is
+#'   allocated across areas by the OM's spatial targeting (`Mode` and
+#'   `Targeting` in [Effort()]), as for any effort advice without an area
+#'   split. Fleets with a
+#'   historical spatial distribution specified in the OM (`Distribution` in
+#'   [Effort()]) keep their distribution from the last historical year. In a
+#'   seasonal model, each season repeats that season's effort from the last
+#'   historical year - see *Seasonal models* below. The `Data` argument is
 #'   accepted for framework compatibility but is not used.
 #' - `CurrentCatch`: Sets the TAC for each fleet to the removals observed in
 #'   the last historical year, in the same units as `Landings`. Returns
@@ -33,14 +38,12 @@
 #' each call can return the value for the specific season it is advising,
 #' rather than the same figure being reapplied to every season of the year.
 #'
-#' `CurrentEffort` always returns an empty [Advice()], which the framework's
-#' default fallback (used whenever neither `TAC` nor `Effort` is set)
-#' resolves to last year's effort, relative to the last complete historical
-#' year - separately season-matched by the framework itself so, e.g., this
-#' year's Q1 reuses last year's Q1 pattern rather than the historical
-#' period's final season. `CurrentEffort` carries the same `EverySeason`
-#' attribute as the other three for consistency, though - unlike them - its
-#' output does not actually depend on how often it is called.
+#' `CurrentEffort` returns an empty [Advice()]. Any MP that returns neither
+#' `TAC` nor `Effort` keeps status-quo effort: each fleet's effort in each
+#' season equals its effort in the same season of the last historical year,
+#' so this year's Q1 repeats last year's Q1. `CurrentEffort` also carries the
+#' `EverySeason` attribute, although its advice is the same whichever
+#' timestep it is called in.
 #'
 #' ## Data lag
 #'

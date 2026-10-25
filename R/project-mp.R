@@ -84,7 +84,6 @@
     .CalcManagementYears(YearsProj[!IsInterim], Interval, Proj@OM@Seasons)
   EverySeason     <- isTRUE(attr(MPfunction, 'EverySeason'))
   DataLag         <- attr(MPfunction, 'DataLag') %||% Proj@OM@DataLag
-  YearsAll       <- c(YearsHist, YearsProj)
   Areas           <- 1:nArea(Proj)
   StartTime       <- Sys.time()
   StockNames      <- StockNames(Proj)
@@ -168,18 +167,8 @@
     AdviceSimList      <- MPResult$AdviceSimList
     AggBagLimitSimList <- MPResult$AggBagLimitSimList
 
-    # If neither TAC or Effort are set, set Effort = 1
-    # (keep same as last historical time step - matching
-    #  both seasonal and spatial distributions)
-    Seasons   <- max(1L, as.integer(Proj@OM@Seasons))
-    LHIndLast <- match(max(YearsHist), YearsAll)
-    SeasonInd <- ((match(Year, YearsAll) - 1L) %% Seasons) + 1L
-    LHInd     <- LHIndLast - Seasons + SeasonInd
-
-    AdviceSimList <- .CheckTACEffort(AdviceSimList,
-                                    Proj,
-                                    LHInd = LHInd,
-                                    FleetNames)
+    # If neither TAC or Effort are set, keep status-quo effort
+    AdviceSimList <- .CheckTACEffort(AdviceSimList, FleetNames)
 
     # Save MP Advice
     Proj <- .StoreMPAdvice(Proj, Year, AdviceSimList, AggBagLimitSimList)

@@ -35,8 +35,12 @@
   nSim   <- Proj@OM@nSim
   Season <- SeasonOfYear(c(YearsHist, YearsProj), Proj@OM@Seasons, Year)$SeasonInd
 
-  if (.AllAdviceNull(AdviceSimList, 'Effort'))
+  # effort set by TAC advice takes the engine's area split
+  if (.AllAdviceNull(AdviceSimList, 'Effort')) {
+    TSIndex <- match(Year, c(YearsHist, YearsProj))
+    Proj@Distribution[, TSIndex:dim(Proj@Distribution)[2], , ] <- NA
     return(Proj)
+  }
 
   lambda_scale <- Proj@OM@Control$EffortOptim$lambda_scale %||NA% 1
   n_recent     <- Proj@OM@Control$EffortOptim$n_recent     %||NA% 5
@@ -79,9 +83,14 @@
 #'
 #' Converts effort advice to absolute values, optionally distributes it over
 #' areas, then writes the minimum prescribed effort across complexes into
-#' `Proj@Effort` and `Proj@Distribution` for all future time steps. Skips
-#' complexes where management is unchanged, effort is `NULL`, or the advice
-#' object is not of class `"advice"`. For multi-stock OMs, also
+#' `Proj@Effort` for all future time steps. Each fleet's `Proj@Distribution`
+#' for all future time steps is set from the area matrix of its binding
+#' complex, or to `NA` (area split computed by the engine) when that advice
+#' has no area matrix. Status-quo effort (empty advice, flagged by
+#' `.CheckTACEffort()`) is relative effort 1 with the last historical year's
+#' seasonal pattern; fleets with a user-specified historical distribution keep
+#' their last historical distribution. Skips complexes where effort is `NULL`
+#' or the advice object is not of class `"advice"`. For multi-stock OMs, also
 #' (re)optimises each fleet's stock-specific targeting weights for the
 #' current year at this fixed effort - see `.OptTargetingMultiStock()`.
 #'
@@ -150,6 +159,7 @@
 
     EffType <- Advice@EffType
     if (!length(EffType)) EffType <- 'Rel'
+    IsStatusQuo <- isTRUE(Advice@Misc$StatusQuoEffort)
 
     # A single scalar Effort value passed through `.CheckAdviceEffort()` is
     # tagged `dimnames(Effort)$Fleet == 'Total'`; any other 1-fleet array
@@ -187,6 +197,13 @@
     Distribution[i] <- list(temp$Distribution)
     Advice          <- temp$Advice
 
+    if (IsStatusQuo) {
+      if (SplitAnnual)
+        SeasonalEffortAllocation[[i]][sim, , ] <- LastEffort$shape / nSeason
+      Distribution[i] <- list(.StatusQuoDistribution(Proj, sim, ProjInd, length(YearsHist),
+                                                     nSeason, FleetNames, Areas))
+    }
+
 
     wrapped <- .ApplyImplementationError(
       setNames(list(Advice@Effort), complex_name),
@@ -197,6 +214,9 @@
     AdviceList[[i]] <- Advice
   }
   
+  # area split of future time steps is reset each step; NA leaves it to the engine
+  Proj@Distribution[sim, ProjInd, , ] <- NA
+
   # do Effort Regulation exist?
   effort_exists <- purrr::map_lgl(AdviceList, \(a) {
     inherits(a, 'advice') && !is.null(a@Effort)
@@ -251,8 +271,8 @@
   # Each fleet takes the area distribution of its binding complex, if one was specified
   for (fl in seq_len(nFleet)) {
     FleetDist <- Distribution[[MinEffortInd[fl]]]
-    if (is.null(FleetDist)) next
-    ArrayFill(Proj@Distribution) <- FleetDist[, , fl, , drop = FALSE]
+    if (!is.null(FleetDist))
+      Proj@Distribution[sim, ProjInd, fl, ] <- FleetDist[1, , fl, ]
   }
 
   # For multi-stock OMs, (re)optimise this fleet's stock-specific targeting
@@ -348,6 +368,24 @@
   list(Distribution = Distribution, Advice = Advice)
 }
 
+
+# Last historical area split (season-matched) for fleets with a user-specified
+# historical distribution; NA for other fleets. NULL if there are none.
+.StatusQuoDistribution <- function(Proj, sim, ProjInd, nHistTS, nSeason, FleetNames, Areas) {
+  UserDist <- vapply(seq_along(FleetNames), \(fl) {
+    dist <- Proj@OM@Fleet[[1]][[fl]]@Effort@Distribution
+    !is.null(dist) && any(!is.na(dist))
+  }, logical(1))
+  if (!any(UserDist))
+    return(NULL)
+
+  HistInd <- nHistTS - nSeason + ((ProjInd - 1L) %% nSeason) + 1L
+  Dist <- array(NA_real_, dim = c(1L, length(ProjInd), length(FleetNames), length(Areas)),
+                dimnames = list(Sim = sim, Year = dimnames(Proj@Distribution)[[2]][ProjInd],
+                                Fleet = FleetNames, Area = Areas))
+  Dist[1, , UserDist, ] <- Proj@Distribution[sim, HistInd, UserDist, , drop = FALSE]
+  Dist
+}
 
 .RelAreaEffort <- function(mat) {
   row_sums <- rowSums(mat)
