@@ -31,10 +31,12 @@
 #' @param IdenticalSim Logical; if `TRUE`, computes only simulation 1 and
 #'   broadcasts results to all simulations via `.CopyFirstSim`.
 #' @param debug Integer flag passed to C++; `1` enables verbose debug output.
-#' @param clone Integer or `NULL`; controls whether the internal `Hist` object
-#'   is deep-cloned before modification. `1` = always clone (safe, slower),
-#'   `0` = no clone (faster, mutates `HistIn` directly). If `NULL`, uses
-#'   `Hist@OM@Control$Clone` if set, otherwise defaults to `0`.
+#' @param InPlace Logical. `FALSE` (default) returns new copies of every slot
+#'   the engine writes, so `Hist` and any other object sharing its arrays are
+#'   unchanged. `TRUE` writes the output slots (biomass, catch and fishing
+#'   mortality) into `Hist`'s own arrays, and is only safe when no other
+#'   object shares those arrays. The state slots (`Number`, `Effort`,
+#'   `Distribution`, `SProduction`) are always copied.
 #'
 #' @return The `Hist` object with updated fishery dynamics slots.
 #' @keywords internal
@@ -51,18 +53,13 @@
                                 DoBackCalcEffort=0,
                                 IdenticalSim=FALSE,
                                 debug=0,
-                                clone=NULL) {
+                                InPlace=FALSE) {
   
   nStock   <- nStock(Hist)
   nFleet   <- nFleet(Hist)
   nArea    <- nArea(Hist)
   nSim     <- nSim(Hist)
   AllYears <- Years(Hist@OM)
-  if (!is.null(Hist@OM@Control$Clone)) {
-    clone <- Hist@OM@Control$Clone
-  } else if (is.null(clone)) {
-    clone <- 0L
-  }
   
   if (is.null(Years)) 
     Years <- Years(Hist@OM,'H')
@@ -88,8 +85,7 @@
                                    DoCalcBiomass=DoCalcBiomass,
                                    DoCalcOverallF=DoCalcOverallF,
                                    DoBackCalcEffort=DoBackCalcEffort,
-                                   debug=debug,
-                                   clone=1L)
+                                   debug=debug)
     
     ts_slots <- slotNames('timeseries')
     for (sl in ts_slots) {
@@ -117,7 +113,21 @@
                        DoCalcOverallF=DoCalcOverallF,
                        DoBackCalcEffort=DoBackCalcEffort,
                        debug=debug,
-                       clone=clone)
+                       InPlace=as.integer(InPlace))
+}
+
+# Slots written by the engine that `InPlace = TRUE` overwrites; must match OutputSlots in calc_fishery_dynamics.cpp
+.DynamicsOutputSlots <- c(
+  "Biomass", "SBiomass", "Interactions", "Landings", "Discards",
+  "InteractAtAge", "LandingsAtAge", "DiscardsAtAge",
+  "FInteract", "FDead", "FRetain", "FInteractArea", "FDeadArea", "FRetainArea"
+)
+
+# Gives `Hist` its own copy of the output slots so later InPlace calls cannot change any other object
+.OwnDynamicsSlots <- function(Hist) {
+  for (sl in .DynamicsOutputSlots)
+    methods::slot(Hist, sl) <- rlang::duplicate(methods::slot(Hist, sl), shallow = FALSE)
+  Hist
 }
 
 .BackCalcEffortFlag <- function(Hist) {

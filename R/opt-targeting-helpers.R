@@ -62,7 +62,8 @@
                               DoCalcRecruitment = 1,
                               DoCalcNumberNext = 0,
                               DoCalcBiomass = 0,
-                              DoCalcOverallF = 0)
+                              DoCalcOverallF = 0,
+                              InPlace = TRUE)
 
   fleet_catch_value <- function(fl, active_cx) {
     stock_idx <- unlist(Complexes[active_cx], use.names = FALSE)

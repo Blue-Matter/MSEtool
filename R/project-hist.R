@@ -69,8 +69,7 @@
   Proj <- .FillProjectionRecruits(Proj, YearsHist)
   
   Proj <- .CalcFisheryDynamics(Proj, 
-                              Years = c(utils::tail(YearsHist,1)), 
-                              clone = 1) 
+                              Years = c(utils::tail(YearsHist,1))) 
   
   MSE <- .Hist2MSE(Proj, MPs = MPList)
   Store <- new.env(parent = baseenv())
@@ -187,7 +186,7 @@
                               nStock = nStock(Proj), nFleet = nFleet(Proj), nArea = nArea(Proj),
                               DoCalcCatch = 0, DoCalcSpawnProduction = 0, DoCalcRecruitment = 1,
                               DoCalcNumberNext = 0, DoCalcTransition = 0, DoCalcBiomass = 0,
-                              DoCalcOverallF = 0, DoBackCalcEffort = 0, clone = 1L)
+                              DoCalcOverallF = 0, DoBackCalcEffort = 0)
   Proj@Number <- Res@Number
   Proj
 }

@@ -61,8 +61,8 @@ skip_on_cran()
   hist@Number[[1]][, , target_idx:length(HistYears), ] <- 0
   hist@Number[[2]][, , target_idx:length(HistYears), ] <- 0
 
-  withT <- .CalcFisheryDynamics(hist, Years = driver_year, DoCalcTransition = 1, clone = 1)
-  noT   <- .CalcFisheryDynamics(hist, Years = driver_year, DoCalcTransition = 0, clone = 1)
+  withT <- .CalcFisheryDynamics(hist, Years = driver_year, DoCalcTransition = 1)
+  noT   <- .CalcFisheryDynamics(hist, Years = driver_year, DoCalcTransition = 0)
 
   list(
     N1_withT = withT@Number[[1]][1, , target_idx, ],

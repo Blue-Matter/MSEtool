@@ -90,7 +90,7 @@
   # ---- historical fishery dynamics & catch-at-size ----
   step <- .MsgStep("Calculating historical fishery dynamics",
                    "Calculated historical fishery dynamics", silent)
-  Hist <- .CalcFisheryDynamics(Hist, IdenticalSim=IdenticalHist, clone = 1,
+  Hist <- .CalcFisheryDynamics(Hist, IdenticalSim=IdenticalHist,
                                DoBackCalcEffort = .BackCalcEffortFlag(Hist))
   .MsgStepDone(step)
 

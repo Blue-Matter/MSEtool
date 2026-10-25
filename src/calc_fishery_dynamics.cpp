@@ -37,7 +37,7 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
                               const int DoCalcOverallF=1,
                               const int DoBackCalcEffort=0,
                               const int debug=0,
-                              const int clone=1
+                              const int InPlace=0
 ) {
   
   
@@ -62,26 +62,26 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
   // zero index Sims
   NormalizeSims(Sims, nSim);
   
-  // Clone hist object if required (clone=1, default)
-  // clone=0 is faster but mutates HistIn directly - only use when 
-  // the caller does not need HistIn preserved after this call
-  // Rcpp::S4 Hist = clone ? Rcpp::clone(HistIn) : HistIn;
-  
-  Rcpp::S4 Hist = clone ? Rcpp::clone(HistIn) : Rcpp::S4(Rf_shallow_duplicate(HistIn));
-  
-  // Always ensure Effort and Distribution are independent copies
-  // this has been added after a lot of painful debugging - don't remove unless 
-  // you're 100% sure there aren't issues!!
-  if (!clone) {
-    SEXP effort_dup = PROTECT(Rf_duplicate(HistIn.slot("Effort")));
-    SEXP dist_dup   = PROTECT(Rf_duplicate(HistIn.slot("Distribution")));
-    SEXP num_dup    = PROTECT(Rf_duplicate(HistIn.slot("Number")));
-    
-    Hist.slot("Effort")       = effort_dup;
-    Hist.slot("Distribution") = dist_dup;
-    Hist.slot("Number")       = num_dup;
-    
-    UNPROTECT(3);
+  // existing values are read by the engine, so always copied; add any new read-before-write slot here
+  static const char* StateSlots[] = {"Number", "Effort", "Distribution", "SProduction"};
+
+  // overwritten for the computed sims and time steps; InPlace only for objects the caller owns
+  static const char* OutputSlots[] = {"Biomass", "SBiomass", "Interactions",
+                                      "Landings", "Discards", "InteractAtAge",
+                                      "LandingsAtAge", "DiscardsAtAge",
+                                      "FInteract", "FDead", "FRetain",
+                                      "FInteractArea", "FDeadArea", "FRetainArea"};
+
+  Rcpp::S4 Hist(Rf_shallow_duplicate(HistIn));
+  for (const char* sl : StateSlots) {
+    Rcpp::Shield<SEXP> dup(Rf_duplicate(HistIn.slot(sl)));
+    Hist.slot(sl) = dup;
+  }
+  if (!InPlace) {
+    for (const char* sl : OutputSlots) {
+      Rcpp::Shield<SEXP> dup(Rf_duplicate(HistIn.slot(sl)));
+      Hist.slot(sl) = dup;
+    }
   }
   
   // create HistView object 

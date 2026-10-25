@@ -100,7 +100,7 @@
                               DoCalcNumberNext = 0,
                               DoCalcBiomass = 0,
                               DoCalcOverallF = 0,
-                              clone = 1)
+                              InPlace = TRUE)
 
   Temp@LandingsAtAge[[st]][sim, , TSIndex, fl, , drop = FALSE] |>
     SumOverAge() |> SumOverArea() |> sum()

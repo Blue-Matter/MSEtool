@@ -178,8 +178,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // CalcFisheryDynamics_
-Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn, SEXP Years, SEXP AllYears, std::vector<int> Sims, const int nSim, const int nStock, const int nFleet, const int nArea, const int DoCalcCatch, const int DoCalcSpawnProduction, const int DoCalcRecruitment, const int DoCalcNumberNext, const int DoCalcTransition, const int DoCalcBiomass, const int DoCalcOverallF, const int DoBackCalcEffort, const int debug, const int clone);
-RcppExport SEXP _MSEtool_CalcFisheryDynamics_(SEXP HistInSEXP, SEXP YearsSEXP, SEXP AllYearsSEXP, SEXP SimsSEXP, SEXP nSimSEXP, SEXP nStockSEXP, SEXP nFleetSEXP, SEXP nAreaSEXP, SEXP DoCalcCatchSEXP, SEXP DoCalcSpawnProductionSEXP, SEXP DoCalcRecruitmentSEXP, SEXP DoCalcNumberNextSEXP, SEXP DoCalcTransitionSEXP, SEXP DoCalcBiomassSEXP, SEXP DoCalcOverallFSEXP, SEXP DoBackCalcEffortSEXP, SEXP debugSEXP, SEXP cloneSEXP) {
+Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn, SEXP Years, SEXP AllYears, std::vector<int> Sims, const int nSim, const int nStock, const int nFleet, const int nArea, const int DoCalcCatch, const int DoCalcSpawnProduction, const int DoCalcRecruitment, const int DoCalcNumberNext, const int DoCalcTransition, const int DoCalcBiomass, const int DoCalcOverallF, const int DoBackCalcEffort, const int debug, const int InPlace);
+RcppExport SEXP _MSEtool_CalcFisheryDynamics_(SEXP HistInSEXP, SEXP YearsSEXP, SEXP AllYearsSEXP, SEXP SimsSEXP, SEXP nSimSEXP, SEXP nStockSEXP, SEXP nFleetSEXP, SEXP nAreaSEXP, SEXP DoCalcCatchSEXP, SEXP DoCalcSpawnProductionSEXP, SEXP DoCalcRecruitmentSEXP, SEXP DoCalcNumberNextSEXP, SEXP DoCalcTransitionSEXP, SEXP DoCalcBiomassSEXP, SEXP DoCalcOverallFSEXP, SEXP DoBackCalcEffortSEXP, SEXP debugSEXP, SEXP InPlaceSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -200,8 +200,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const int >::type DoCalcOverallF(DoCalcOverallFSEXP);
     Rcpp::traits::input_parameter< const int >::type DoBackCalcEffort(DoBackCalcEffortSEXP);
     Rcpp::traits::input_parameter< const int >::type debug(debugSEXP);
-    Rcpp::traits::input_parameter< const int >::type clone(cloneSEXP);
-    rcpp_result_gen = Rcpp::wrap(CalcFisheryDynamics_(HistIn, Years, AllYears, Sims, nSim, nStock, nFleet, nArea, DoCalcCatch, DoCalcSpawnProduction, DoCalcRecruitment, DoCalcNumberNext, DoCalcTransition, DoCalcBiomass, DoCalcOverallF, DoBackCalcEffort, debug, clone));
+    Rcpp::traits::input_parameter< const int >::type InPlace(InPlaceSEXP);
+    rcpp_result_gen = Rcpp::wrap(CalcFisheryDynamics_(HistIn, Years, AllYears, Sims, nSim, nStock, nFleet, nArea, DoCalcCatch, DoCalcSpawnProduction, DoCalcRecruitment, DoCalcNumberNext, DoCalcTransition, DoCalcBiomass, DoCalcOverallF, DoBackCalcEffort, debug, InPlace));
     return rcpp_result_gen;
 END_RCPP
 }

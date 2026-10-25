@@ -124,7 +124,7 @@ test_that("an SPFrom-linked group's aggregate B0 depletion matches its source's 
   PopDyn <- CalcFisheryDynamics_(
     MSEtool:::.PrepHistMisc(Hist), Years = Years(Hist@OM, 'Historical'),
     AllYears = Years(Hist@OM, 'Historical'), Sims = seq_len(nSim(Hist)), nSim = nSim(Hist),
-    nStock(Hist@OM), nFleet(Hist@OM), nArea(Hist), DoCalcCatch = 1, clone = 1)
+    nStock(Hist@OM), nFleet(Hist@OM), nArea(Hist), DoCalcCatch = 1)
 
   AggDep <- (PopDyn@Biomass[, 1, TermInd] + PopDyn@Biomass[, 2, TermInd]) /
     (Hist@Unfished@Equilibrium@Biomass[, 1, TermInd] + Hist@Unfished@Equilibrium@Biomass[, 2, TermInd])
@@ -160,7 +160,7 @@ test_that("an unrelated independent stock is unaffected by a separate SPFrom-lin
   PopDyn <- CalcFisheryDynamics_(
     MSEtool:::.PrepHistMisc(Hist), Years = Years(Hist@OM, 'Historical'),
     AllYears = Years(Hist@OM, 'Historical'), Sims = 1, nSim = 1,
-    nStock(Hist@OM), nFleet(Hist@OM), nArea(Hist), DoCalcCatch = 1, clone = 1)
+    nStock(Hist@OM), nFleet(Hist@OM), nArea(Hist), DoCalcCatch = 1)
 
   DepC <- PopDyn@Biomass[1, 3, TermInd] / Hist@Unfished@Equilibrium@Biomass[1, 3, TermInd]
   expect_equal(DepC, 0.5, tolerance = 1e-3)

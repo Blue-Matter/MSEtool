@@ -289,11 +289,8 @@
   Scratch <- Hist
   Scratch@Effort <- Effort
   Scratch@Misc$RecDevs <- lapply(Hist@Misc$RecDevs, \(x) { x[] <- 1; x })
-  # slots written in place by CalcFisheryDynamics_(clone = 0)
-  for (sl in c('SBiomass', 'SProduction'))
-    methods::slot(Scratch, sl) <- methods::slot(Hist, sl) * 1
-  for (sl in c('FInteractArea', 'FDeadArea', 'FRetainArea'))
-    methods::slot(Scratch, sl) <- lapply(methods::slot(Hist, sl), \(x) x * 1)
+  # the spin-up calls run InPlace
+  Scratch <- .OwnDynamicsSlots(Scratch)
   # Number is duplicated on every call, so keep only the time steps the cycle uses
   nKeep <- min(Next + max(nCarry), length(HistYears))
   Scratch@Number <- lapply(Hist@Number, \(x) x[, , seq_len(nKeep), , drop = FALSE])
@@ -319,7 +316,7 @@
     Res <- CalcFisheryDynamics_(Scratch, Years = HistYears[Cyc], AllYears = HistYears,
                                 Sims = seq_len(nSim), nSim = nSim, nStock, nFleet, nArea,
                                 DoCalcCatch = 0, DoCalcBiomass = 0, DoCalcOverallF = 0,
-                                DoBackCalcEffort = 0, clone = 0)
+                                DoBackCalcEffort = 0, InPlace = 1)
     purrr::map(seq_len(nStock), \(st) {
       N <- Res@Number[[st]]
       Age0Pos <- if (Lag[st] > 0) Next + seq_len(Lag[st]) - 1L else i0
@@ -426,7 +423,7 @@
                                   Sims = seq_len(nSim), nSim = nSim, nStock, nFleet, nArea,
                                   DoCalcCatch = 0, DoCalcNumberNext = 0, DoCalcTransition = 0,
                                   DoCalcBiomass = 0, DoCalcOverallF = 0, DoBackCalcEffort = 0,
-                                  clone = 0)
+                                  InPlace = 1)
       for (st in Lag0)
         Init[[st]][, 1, ] <- Res@Number[[st]][, 1, i0, , drop = FALSE] * as.vector(RecDevHist[[st]][, i0])
     }

@@ -8,7 +8,7 @@
     .PrepHistMisc() |>
     .CheckInterimAdvice() |>
     .ExtendHist(Years = c(YearsHist, YearsProj), silent = TRUE) |>
-    .CalcFisheryDynamics(Years = utils::tail(YearsHist, 1), clone = 1)
+    .CalcFisheryDynamics(Years = utils::tail(YearsHist, 1))
 }
 
 # paths of arrays, vectors and lists that still carry the full sim count

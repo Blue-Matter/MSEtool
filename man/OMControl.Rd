@@ -96,7 +96,7 @@ attribute or from \code{OM@Control$DataOM}.
 
 \section{Internal settings}{
 
-\code{Clone}, \code{CalcCatchAtSizeNeeded}, \code{CalcCatchAtSizeCpp}, and \code{DataCV} are
+\code{CalcCatchAtSizeNeeded}, \code{CalcCatchAtSizeCpp}, and \code{DataCV} are
 set internally by \code{\link[=Simulate]{Simulate()}} and should not be modified. \code{DataCV} holds
 the default reported data CVs from \code{\link[=SimControl]{SimControl()}}.
 }

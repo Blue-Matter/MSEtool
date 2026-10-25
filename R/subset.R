@@ -224,19 +224,28 @@ Subset <- function(object,
 # Slice specific slots of an S4 object down to a single simulation.
 .SliceSim <- function(object, sim, slots) {
   nSim <- .TopNSim(object)
+  Source <- object
   if (isS4(object) && "OM" %in% slotNames(object) &&
       "nSim" %in% slotNames(object@OM)) {
     object@OM@nSim <- 1L
-    # the solvers index StockTargeting by the slice's sim (1)
     object@OM@StockTargeting <- .SubsetSim(object@OM@StockTargeting, sim, keep_sim_name = FALSE,
                                            nSim = nSim)
   }
   for (s in slots)
     slot(object, s) <- .SubsetSim(slot(object, s), sim, keep_sim_name = FALSE, nSim = nSim)
+  if (isS4(object))
+    for (s in intersect(.DynamicsOutputSlots, slotNames(object)))
+      if (.SharesArrays(slot(object, s), slot(Source, s)))
+        slot(object, s) <- rlang::duplicate(slot(object, s), shallow = FALSE)
   object
 }
 
-# Engine-owned Misc entries each subsetter updates; other Misc content is left as supplied
+.SharesArrays <- function(a, b) {
+  if (is.list(a) && is.list(b) && length(a) == length(b))
+    return(any(vapply(seq_along(a), \(i) .SharesArrays(a[[i]], b[[i]]), logical(1))))
+  identical(rlang::obj_address(a), rlang::obj_address(b))
+}
+
 .MiscSelRet  <- c("Selectivity", "Retention", "DiscardMortality")
 .MiscByYear  <- c("Advice", "TACAttainment", .MiscSelRet)
 .MiscByAge   <- c("Advice", .MiscSelRet, "InitialAtAge")
@@ -263,7 +272,6 @@ Subset <- function(object,
                        nSim = NULL) {
   Sims <- as.numeric(Sims)
   nSim <- nSim %||% .TopNSim(object)
-  # names a per-sim vector or list can carry: local sims, or the full run's sims in a chunk
   SimKeys <- if (!is.null(nSim)) {
     Keys <- list(as.character(seq_len(nSim)))
     OM <- .SimOM(object)

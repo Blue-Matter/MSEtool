@@ -226,7 +226,8 @@
                            DoCalcRecruitment = 1,
                            DoCalcNumberNext = 0,
                            DoCalcBiomass = 0,
-                           DoCalcOverallF = 0)
+                           DoCalcOverallF = 0,
+                           InPlace = TRUE)
   
   .CatchMatrix(Temp, sim, TSIndex, TACType_by_Complex, TACUnit_by_Complex)
 }

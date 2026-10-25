@@ -18,7 +18,7 @@
   DoBackCalcEffort = 0,
   IdenticalSim = FALSE,
   debug = 0,
-  clone = NULL
+  InPlace = FALSE
 )
 }
 \arguments{
@@ -64,10 +64,12 @@ broadcasts results to all simulations via \code{.CopyFirstSim}.}
 
 \item{debug}{Integer flag passed to C++; \code{1} enables verbose debug output.}
 
-\item{clone}{Integer or \code{NULL}; controls whether the internal \code{Hist} object
-is deep-cloned before modification. \code{1} = always clone (safe, slower),
-\code{0} = no clone (faster, mutates \code{HistIn} directly). If \code{NULL}, uses
-\code{Hist@OM@Control$Clone} if set, otherwise defaults to \code{0}.}
+\item{InPlace}{Logical. \code{FALSE} (default) returns new copies of every slot
+the engine writes, so \code{Hist} and any other object sharing its arrays are
+unchanged. \code{TRUE} writes the output slots (biomass, catch and fishing
+mortality) into \code{Hist}'s own arrays, and is only safe when no other
+object shares those arrays. The state slots (\code{Number}, \code{Effort},
+\code{Distribution}, \code{SProduction}) are always copied.}
 }
 \value{
 The \code{Hist} object with updated fishery dynamics slots.

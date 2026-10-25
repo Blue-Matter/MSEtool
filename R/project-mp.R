@@ -74,9 +74,8 @@
   on.exit(.RestoreRNG(OldRNG), add = TRUE)
   .SeedMP(Proj@OM@Seed)
 
-  # unshare them from the caller's Proj because C++ writes these in place when Control$Clone = 0
-  for (sl in setdiff(methods::slotNames('timeseries'), 'Misc'))
-    methods::slot(Proj, sl) <- rlang::duplicate(methods::slot(Proj, sl), shallow = FALSE)
+  # the per-step dynamics below run InPlace, so the caller's Proj must not share these arrays
+  Proj <- .OwnDynamicsSlots(Proj)
 
   Interval        <- .ResolveInterval(Proj@OM@Interval, MPName, MPfunction, Proj@OM@Seasons)
   IsInterim       <- YearsProj %in% .InterimTimesteps(Proj@OM)
@@ -229,7 +228,7 @@
     if (Error) break
 
     # Simulate Pop Dynamics for this Time Step
-    Proj <- .CalcFisheryDynamics(Proj, Year, clone=1,
+    Proj <- .CalcFisheryDynamics(Proj, Year, InPlace = TRUE,
                                  DoBackCalcEffort = .BackCalcEffortFlag(Proj))
 
     # Compute Catch & Discards at Size for this Time Step

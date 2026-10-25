@@ -57,8 +57,8 @@ CalcCatchAtSizeFleet_ <- function(key, key_dim, selectivity, sel_dim, sel_mode_l
     .Call(`_MSEtool_CalcCatchAtSizeFleet_`, key, key_dim, selectivity, sel_dim, sel_mode_length, landings_N, discards_N, N_dim)
 }
 
-CalcFisheryDynamics_ <- function(HistIn, Years, AllYears, Sims, nSim, nStock, nFleet, nArea, DoCalcCatch = 1L, DoCalcSpawnProduction = 1L, DoCalcRecruitment = 1L, DoCalcNumberNext = 1L, DoCalcTransition = 1L, DoCalcBiomass = 1L, DoCalcOverallF = 1L, DoBackCalcEffort = 0L, debug = 0L, clone = 1L) {
-    .Call(`_MSEtool_CalcFisheryDynamics_`, HistIn, Years, AllYears, Sims, nSim, nStock, nFleet, nArea, DoCalcCatch, DoCalcSpawnProduction, DoCalcRecruitment, DoCalcNumberNext, DoCalcTransition, DoCalcBiomass, DoCalcOverallF, DoBackCalcEffort, debug, clone)
+CalcFisheryDynamics_ <- function(HistIn, Years, AllYears, Sims, nSim, nStock, nFleet, nArea, DoCalcCatch = 1L, DoCalcSpawnProduction = 1L, DoCalcRecruitment = 1L, DoCalcNumberNext = 1L, DoCalcTransition = 1L, DoCalcBiomass = 1L, DoCalcOverallF = 1L, DoBackCalcEffort = 0L, debug = 0L, InPlace = 0L) {
+    .Call(`_MSEtool_CalcFisheryDynamics_`, HistIn, Years, AllYears, Sims, nSim, nStock, nFleet, nArea, DoCalcCatch, DoCalcSpawnProduction, DoCalcRecruitment, DoCalcNumberNext, DoCalcTransition, DoCalcBiomass, DoCalcOverallF, DoBackCalcEffort, debug, InPlace)
 }
 
 #' Internal C++ per-recruit calculation (annual/non-seasonal, parallel implementation)

@@ -341,8 +341,7 @@
                                                 nStock,
                                                 nFleet,
                                                 nArea,
-                                                DoCalcCatch=DoCalcCatch,
-                                                clone=1)
+                                                DoCalcCatch=DoCalcCatch)
 
 
   # Depletion objective: once per SPFrom-connected group

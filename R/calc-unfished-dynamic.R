@@ -71,8 +71,7 @@ CalcUnfished_Dynamic <- function(Hist, IdenticalHist=NULL, silent=FALSE) {
                          nStock,
                          nFleet,
                          nArea,
-                         DoCalcCatch=0,
-                         clone=1)
+                         DoCalcCatch=0)
   }
 
   out <- new("popdynamics")

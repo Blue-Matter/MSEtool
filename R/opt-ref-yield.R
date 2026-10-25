@@ -51,7 +51,8 @@
                                      Sims = sim,
                                      Years = c(utils::tail(HistYears, max(Proj@OM@Seasons, Proj@Misc$RecLag)),
                                                ProjYears),
-                                     debug = debug)
+                                     debug = debug,
+                                     InPlace = TRUE)
   
   # Get total catch summed over age, fleet, area
   Yield <- .GetCatch(ProjSim_opt, Units, type)

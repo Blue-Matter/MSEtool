@@ -16,12 +16,12 @@
 .StartUp <- function(OM, nSim=NULL, silent=FALSE) {
   .CheckClass(OM)
 
+  # set by earlier development versions; no longer used
+  OM@Control$Clone <- NULL
+
   .CheckOMControl(OM@Control)
 
   .CheckRelations(OM)
-
-  if (is.null(OM@Control$Clone))
-    OM@Control$Clone <- 0
 
   if (EmptyObject(OM@StockTargeting))
     OM@StockTargeting <- new("stocktargeting")
@@ -41,7 +41,7 @@
   'MSYType', 'RefYears', 'CorrelatedRecDevs', 'BackCalcEffort',
   'SeasonalAllocationYears', 'StockTargeting', 'EffortOptim', 'RefYield',
   'ProjectChunks', 'DataOM',
-  'Clone', 'CalcCatchAtSizeNeeded', 'CalcCatchAtSizeCpp', 'DataCV'
+  'CalcCatchAtSizeNeeded', 'CalcCatchAtSizeCpp', 'DataCV'
 )
 
 .CheckOMControl <- function(Control) {

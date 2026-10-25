@@ -85,7 +85,7 @@
 #' attribute or from `OM@Control$DataOM`.
 #'
 #' @section Internal settings:
-#' `Clone`, `CalcCatchAtSizeNeeded`, `CalcCatchAtSizeCpp`, and `DataCV` are
+#' `CalcCatchAtSizeNeeded`, `CalcCatchAtSizeCpp`, and `DataCV` are
 #' set internally by [Simulate()] and should not be modified. `DataCV` holds
 #' the default reported data CVs from [SimControl()].
 #'

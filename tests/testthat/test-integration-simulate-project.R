@@ -172,7 +172,7 @@ test_that(".ProjectMPCompute() leaves its input Proj and earlier MP results unch
     .PrepHistMisc() |>
     .CheckInterimAdvice() |>
     .ExtendHist(Years = Years(hist@OM), silent = TRUE) |>
-    .CalcFisheryDynamics(Years = utils::tail(YearsHist, 1), clone = 1)
+    .CalcFisheryDynamics(Years = utils::tail(YearsHist, 1))
   ProjCopy <- unserialize(serialize(Proj, NULL))
   MPs <- .AddMPFunctions(new("mse"), c("CurrentCatch", "CurrentEffort"))@MPs
 
