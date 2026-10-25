@@ -194,11 +194,11 @@
 # each fleet's effort is at its ceiling
 .InitTACAttainment <- function(Proj, YearsProj) {
   DN  <- list(Sim = seq_len(Proj@OM@nSim), Year = YearsProj, Fleet = FleetNames(Proj))
-  arr <- array(NA_real_, lengths(DN), dimnames = DN)
+  arr <- array(NA_real_, unname(lengths(DN)), dimnames = DN)
   Cx  <- names(Proj@OM@Complexes)
   list(TAC       = stats::setNames(rep(list(arr), length(Cx)), Cx),
        Catch     = stats::setNames(rep(list(arr), length(Cx)), Cx),
-       AtCeiling = array(NA, lengths(DN), dimnames = DN))
+       AtCeiling = array(NA, unname(lengths(DN)), dimnames = DN))
 }
 
 # TAC and Catch are [nComplex x nFleet]

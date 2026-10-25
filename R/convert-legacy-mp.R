@@ -30,7 +30,10 @@
   # default survives the environment swap because it needs no lookup
   wrapped <- function(Data, .LegacyMP) {
     LegacyData <- Convert(Data, silent = TRUE)
-    Rec <- .LegacyMP(x = 1, Data = LegacyData, reps = 1, plot = FALSE)
+    Rec <- tryCatch(
+      .LegacyMP(x = 1, Data = LegacyData, reps = 1, plot = FALSE),
+      error = \(e) .LegacyMPError(e, LegacyData)
+    )
     .Rec2Advice(Rec, LegacyData)
   }
   f <- formals(wrapped)
@@ -40,6 +43,20 @@
   attr(wrapped, 'LegacyMP') <- MP
   class(wrapped) <- 'mp'
   wrapped
+}
+
+# legacy Data life-history slots read by DLMtool/SAMtool MPs
+.LegacyLifeHistorySlots <- c('Mort', 'vbK', 'vbLinf', 'vbt0', 'L50', 'L95',
+                             'wla', 'wlb', 'steep', 'MaxAge')
+
+.LegacyMPError <- function(e, LegacyData) {
+  Slots <- .LegacyLifeHistorySlots[vapply(.LegacyLifeHistorySlots, \(sl)
+    methods::.hasSlot(LegacyData, sl) && all(is.na(methods::slot(LegacyData, sl))), logical(1))]
+  msg <- conditionMessage(e)
+  if (length(Slots))
+    msg <- paste0(msg, " (legacy `Data` life-history slots ", paste0("`", Slots, "`", collapse = ", "),
+                  " are NA: life-history data are not generated for simulated data, so legacy MPs that use them are not supported)")
+  stop(msg, call. = FALSE)
 }
 
 #' Convert a Legacy `Rec` Object to an `advice` Object

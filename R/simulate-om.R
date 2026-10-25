@@ -81,6 +81,7 @@
                                  type     = OM@Control$MSYType %||NA% 'Removals',
                                  parallel = parallel,
                                  silent   = silent)
+    Hist <- .LogFMSYAtMaxF(Hist)
   }
 
   if (control$MGT)

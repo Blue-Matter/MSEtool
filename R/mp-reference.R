@@ -8,11 +8,10 @@
 #' equals 100%, 75%, or 50% of `FMSY`, and default to being applied every
 #' year (like any MP, this can be overridden via `OM@Interval`).
 #'
-#' `refMSY`, `refMSY75`, `refMSY50` set TAC to 100%, 75%, or 50% of
-#' `MSY` (landings plus discards). `MSY` is an annual quantity, so on a
-#' seasonal `OM` (`OM@Seasons > 1`) the TAC returned at each call is `MSY`
-#' divided by the number of seasons, since [Advice()] returned by an MP is
-#' reapplied unchanged at every timestep until the MP is next called.
+#' `refMSY`, `refMSY75`, `refMSY50` set an annual removals TAC to 100%,
+#' 75%, or 50% of `MSY` (landings plus discards). On a seasonal `OM`
+#' (`OM@Seasons > 1`) the annual TAC is split across seasons by
+#' [SeasonalAllocation()].
 #'
 #' `refFCurr` fixes F at its last historical value. It is currently a wrapper
 #' around [CurrentEffort()], since `advice-class` has no way to specify
@@ -106,7 +105,8 @@ attr(NoFishing, 'Interval') <- 1
 #' @rdname ReferenceMPs
 #' @export
 ReferenceMPs <- function() {
-  c('refFMSY', 'refFMSY75', 'refFMSY50', 'refFCurr', 'NoFishing')
+  c('refFMSY', 'refFMSY75', 'refFMSY50', 'refMSY', 'refMSY75', 'refMSY50',
+    'refFCurr', 'NoFishing')
 }
 
 

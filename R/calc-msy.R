@@ -154,7 +154,7 @@ CalcMSY <- function(Hist,
         complex_name = complex_name,
         type         = type,
         option       = 2
-      )
+      ) |> .FlagFMSYAtMaxF(opt$minimum, logApicalFRange)
     })
     
     for (sl in setdiff(slotNames(MSYRefPoints), 'Misc')) {
@@ -167,6 +167,7 @@ CalcMSY <- function(Hist,
       }
       slot(MSYRefPoints, sl) <- arr
     }
+    MSYRefPoints <- .AddFMSYAtMaxF(MSYRefPoints, list(results_sim1), complex_name, Years, nSim)
 
     Hist@Reference@MSY <- ReduceDims(MSYRefPoints)
     return(Hist)
@@ -203,7 +204,7 @@ CalcMSY <- function(Hist,
         complex_name = complex_name,
         type         = type,
         option       = 2
-      )
+      ) |> .FlagFMSYAtMaxF(opt$minimum, logApicalFRange)
     })
   }
 
@@ -254,8 +255,48 @@ CalcMSY <- function(Hist,
       
     slot(MSYRefPoints, sl) <- arr
   }
+  MSYRefPoints <- .AddFMSYAtMaxF(MSYRefPoints, results_by_sim, complex_name, Years, nSim)
 
   Hist@Reference@MSY <- ReduceDims(MSYRefPoints)
+  Hist
+}
+
+# log-scale distance from maxF within which FMSY is at the upper search bound
+.FMSYBoundTol <- 1e-3
+
+.FlagFMSYAtMaxF <- function(MSYRefPoints, logApicalF, logApicalFRange) {
+  MSYRefPoints@Misc$AtMaxF <- logApicalF > logApicalFRange[2] - .FMSYBoundTol
+  MSYRefPoints
+}
+
+# results: list over sims (length 1 when sims are identical) of lists over Years
+.AddFMSYAtMaxF <- function(MSYRefPoints, results, complex_name, Years, nSim) {
+  Flags <- vapply(results, \(r) vapply(r, \(x) isTRUE(x@Misc$AtMaxF), logical(1)),
+                  logical(length(Years))) |>
+    matrix(nrow = length(Years))
+  if (ncol(Flags) == 1 && nSim > 1) Flags <- Flags[, rep(1, nSim), drop = FALSE]
+  Ind <- which(Flags, arr.ind = TRUE)
+  if (!nrow(Ind)) return(MSYRefPoints)
+  MSYRefPoints@Misc$FMSYAtMaxF <- rbind(
+    MSYRefPoints@Misc$FMSYAtMaxF,
+    data.frame(Complex = complex_name, Sim = Ind[, 2], Year = Years[Ind[, 1]])
+  )
+  MSYRefPoints
+}
+
+.LogFMSYAtMaxF <- function(Hist) {
+  AtMax <- Hist@Reference@MSY@Misc$FMSYAtMaxF
+  if (!length(AtMax) || !nrow(AtMax)) return(Hist)
+  nSim <- nSim(Hist)
+  maxF <- Hist@OM@maxF
+  for (rows in split(AtMax, factor(AtMax$Complex, levels = unique(AtMax$Complex)))) {
+    Sims <- sort(unique(rows$Sim))
+    Complex <- rows$Complex[1]
+    msg <- cli::format_inline(
+      "FMSY for {.val {Complex}} is at the upper bound of the search ({.code OM@maxF} = {maxF}) in {length(Sims)} of {nSim} simulation{?s}. Yield may still increase at higher F; consider increasing {.code maxF}."
+    )
+    Hist <- .CaptureLog(Hist, msg, name = 'FMSY', type = 'warning', sim = Sims)
+  }
   Hist
 }
 

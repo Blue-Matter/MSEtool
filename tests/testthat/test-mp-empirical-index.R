@@ -263,7 +263,8 @@ test_that("catch in the first projection years increases with tunepar for every 
     Fn <- get(MP)
     MPs <- list(Low = SetMPArgs(Fn, tunepar = 0.6), Mid = Fn, High = SetMPArgs(Fn, tunepar = 1.6))
     MSE <- Project(Hist, MPs = MPs, silent = TRUE)
-    Yield <- PM_Removals(MSE, Years = Years(OM, 'Projection')[1:10])@Mean[1, c('Low', 'Mid', 'High')]
+    # later years reflect the depletion caused by the higher early catches
+    Yield <- PM_Removals(MSE, Years = Years(OM, 'Projection')[1:5])@Mean[1, c('Low', 'Mid', 'High')]
     expect_true(all(diff(Yield) > 0), label = MP)
   }
 })

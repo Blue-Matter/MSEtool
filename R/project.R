@@ -15,7 +15,12 @@
 #'   named list of MP functions, optionally mixed with MP names, e.g.
 #'   `list(IR5 = SetMPArgs(IndexRate, CalibYears = 5), 'IndexTarget')`. List
 #'   names are used as the MP names. If `NULL` (default), projects
-#'   `c("CurrentEffort", "CurrentCatch")`.
+#'   `c("CurrentEffort", "CurrentCatch")`. For [hist-class] objects, MPs may
+#'   also be legacy functions of class `"MP"` (DLMtool/SAMtool), which are
+#'   called on a legacy `Data` object converted from the simulated data.
+#'   Life-history data (e.g. `Data@Mort`, `Data@vbK`, `Data@L50`) are not
+#'   generated for simulated data, so legacy MPs that need them are not
+#'   supported.
 #' @param parallel Logical or named list controlling parallel execution. For
 #'   [hist-class] objects, `TRUE` splits the simulations into chunks and
 #'   projects every MP x chunk combination in parallel on the active

@@ -78,7 +78,8 @@
 #'   of individuals between stocks (e.g. sequential hermaphroditism). Default
 #'   `NULL`.
 #' @param Relations List. Biological or ecological relationships among stocks
-#'   (e.g. predator-prey). Default `NULL`. Currently not used.
+#'   (e.g. predator-prey). Default `NULL`. Not currently used in simulations:
+#'   [Simulate()] stops with an error if `Relations` is not empty.
 #' @param StockTargeting A [stocktargeting-class] object. Defines fleet-level
 #'   stock targeting weights and deviations. Populated internally.
 #'    See [StockTargeting()].

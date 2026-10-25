@@ -30,9 +30,9 @@
 #'
 #' - `F0.1`: apical F at which the slope of the complex's yield-per-recruit
 #'   curve is 10% of the slope at the origin.
-#' - `Fmax`: apical F maximising the complex's yield-per-recruit. Undefined
-#'   (returned as the upper grid bound) for asymptotic selectivity, where
-#'   yield-per-recruit has no interior maximum.
+#' - `Fmax`: apical F maximising the complex's yield-per-recruit. `NA` when
+#'   yield-per-recruit has no maximum below `OM@maxF`, e.g. for asymptotic
+#'   selectivity.
 #'
 #'   `F0.1` and `Fmax` are calculated for each complex (`OM@Complexes`),
 #'   whose stocks are fished together at a common apical F, and are reported
@@ -237,9 +237,13 @@ CalcRefPoints <- function(Hist,
   .Interp1(slope, f[-length(f)], target = 0.1 * slope[1])
 }
 
+# NA when the maximum is at the upper grid bound (no interior maximum)
 .FindFmax <- function(ypr, Fgrid) {
-  if (!any(is.finite(ypr))) return(NA_real_)
-  Fgrid[which.max(ypr)]
+  ok <- which(is.finite(ypr))
+  if (!length(ok)) return(NA_real_)
+  i <- ok[which.max(ypr[ok])]
+  if (i == max(ok)) return(NA_real_)
+  Fgrid[i]
 }
 
 .CompensationRatio <- function(Hist, Years) {

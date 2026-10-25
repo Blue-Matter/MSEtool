@@ -35,6 +35,7 @@
   
   .OnExit()
   .CheckClass(Hist, 'hist', 'Hist')
+  .CheckHistData(Hist)
   .MPErrorLogDir(getOption('MSEtool.WriteLog', FALSE))
   MPList <- .ResolveMPs(MPs)
   MPs    <- names(MPList)
@@ -347,4 +348,14 @@
     if (any(Keep)) out[[type]] <- Entries[Keep][order(Year[Keep])]
   }
   out
+}
+
+
+.CheckHistData <- function(Hist) {
+  if (!length(Hist@Data) || all(lengths(Hist@Data) == 0))
+    cli::cli_abort(c(
+      "{.arg Hist} has no historical fishery data, which projections need.",
+      "i" = "Re-run {.fn Simulate} with {.code control = SimControl(GenerateData = TRUE)} (the default)."
+    ))
+  invisible(Hist)
 }

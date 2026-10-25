@@ -16,7 +16,6 @@
 #' | `MSYType` | `'Removals'` | `'Removals'` or `'Landings'`. Whether MSY-based and other F reference points are defined in terms of total removals (landings + dead discards) or landings only. Passed as `type` to [CalcMSY()] and [CalcRefPoints()]. |
 #' | `RefYears` | `NULL` | Year(s) of biological and fishery parameters used to calculate reference points. `NULL` uses the final historical year. Passed as `Years` to [CalcMSY()] and [CalcRefPoints()]. |
 #' | `CorrelatedRecDevs` | `NULL` | Multi-stock OMs only. Which stocks' projection recruitment deviations are correlated, using the correlation of their historical deviations. `NULL`: stocks whose historical deviations (`SRR@RecDevHist`) were supplied, e.g. imported from an assessment. `TRUE`: all stocks. `FALSE`: none. Projection deviations always have standard deviation `SRR@SD` and autocorrelation `SRR@AC`, and stocks with identical historical deviations share one series; see [GenMultiStockRecDevs()]. |
-#' | `HistRel` | `TRUE` | Whether MICE `Relations` are applied in the historical period. |
 #' | `BackCalcEffort` | `TRUE` | Whether effort is replaced by the effort implied by realised F when the `maxF` constraint binds. Applies to historical and projection time steps. |
 #' | `RefYield` | `list(lastnTS = 5)` | Used when reference yield is calculated (see [SimControl()]). `lastnTS`: number of final projection *years* averaged. |
 #' | `DataOM` | `NULL` | Operating model quantities passed to MPs; see the `DataOM` section. |
@@ -86,8 +85,9 @@
 #' attribute or from `OM@Control$DataOM`.
 #'
 #' @section Internal settings:
-#' `Clone`, `CalcCatchAtSizeNeeded`, and `CalcCatchAtSizeCpp` are set
-#' internally by [Simulate()] and should not be modified.
+#' `Clone`, `CalcCatchAtSizeNeeded`, `CalcCatchAtSizeCpp`, and `DataCV` are
+#' set internally by [Simulate()] and should not be modified. `DataCV` holds
+#' the default reported data CVs from [SimControl()].
 #'
 #' @seealso [OM()], [Simulate()], [Project()], [SimControl()]
 #'

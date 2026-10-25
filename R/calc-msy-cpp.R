@@ -436,7 +436,7 @@
         complex_name = complex_name,
         type         = type,
         option       = 2
-      )
+      ) |> .FlagFMSYAtMaxF(opt$minimum, logApicalFRange)
     })
   }
 
@@ -460,6 +460,7 @@
       }
       slot(MSYRefPoints, sl) <- arr
     }
+    MSYRefPoints <- .AddFMSYAtMaxF(MSYRefPoints, list(results_sim1), complex_name, Years, nSim)
 
     Hist@Reference@MSY <- ReduceDims(MSYRefPoints)
     return(Hist)
@@ -519,6 +520,7 @@
     }
     slot(MSYRefPoints, sl) <- arr
   }
+  MSYRefPoints <- .AddFMSYAtMaxF(MSYRefPoints, results_by_sim, complex_name, Years, nSim)
 
   Hist@Reference@MSY <- ReduceDims(MSYRefPoints)
   Hist

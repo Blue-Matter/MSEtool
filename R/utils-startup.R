@@ -18,6 +18,8 @@
 
   .CheckOMControl(OM@Control)
 
+  .CheckRelations(OM)
+
   if (is.null(OM@Control$Clone))
     OM@Control$Clone <- 0
 
@@ -36,10 +38,10 @@
 }
 
 .OMControlNames <- c(
-  'MSYType', 'RefYears', 'CorrelatedRecDevs', 'HistRel', 'BackCalcEffort',
+  'MSYType', 'RefYears', 'CorrelatedRecDevs', 'BackCalcEffort',
   'SeasonalAllocationYears', 'StockTargeting', 'EffortOptim', 'RefYield',
   'ProjectChunks', 'DataOM',
-  'Clone', 'CalcCatchAtSizeNeeded', 'CalcCatchAtSizeCpp'
+  'Clone', 'CalcCatchAtSizeNeeded', 'CalcCatchAtSizeCpp', 'DataCV'
 )
 
 .CheckOMControl <- function(Control) {

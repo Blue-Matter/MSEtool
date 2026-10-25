@@ -109,7 +109,8 @@
 #'   of individuals between stocks (e.g. sequential hermaphroditism). See
 #'   [OM()].
 #' @slot Relations List. Biological or ecological relationships among stocks.
-#'   See [OM()].
+#'   Not currently used in simulations; [Simulate()] stops with an error if it
+#'   is not empty. See [OM()].
 #'
 #' @slot StockTargeting A [stocktargeting-class] object. Defines fleet-level
 #'   stock targeting weights and deviations. Built by [StockTargeting()] when
