@@ -64,17 +64,14 @@ is a default (unconditioned) object, as determined by \code{isNewObject()}.
 
 \subsection{True Catch Aggregation}{
 
-Before applying observation error, true catch is aggregated from
-\code{Hist@LandingsAtAge} or \code{Hist@DiscardsAtAge} (selected by \code{type}) across
-stocks, ages, and areas for replicate \code{x}. The aggregation depends on
+Before applying observation error, true catch for replicate \code{x} is
+aggregated over the stocks within the complex. The source depends on
 whether each fleet's \code{CatchObs@Units} is a count or a mass unit:
 \itemize{
-\item \code{"Number"}: catch-at-age is summed over age and area, then summed over
-stocks within the complex.
-\item \code{"Biomass"}: catch-at-age is multiplied by \code{WeightFleetRetained}
-(\code{type = "Landings"}) or \code{WeightFleetSelected} (\code{type = "Discards"})
-before summing
-over age and area, then summed over stocks within the complex.
+\item \code{"Number"}: \code{Hist@LandingsAtAge} or \code{Hist@DiscardsAtAge} (selected by
+\code{type}), summed over age and area.
+\item \code{"Biomass"}: the landed or discarded biomass \code{Hist@Landings} or
+\code{Hist@Discards} (selected by \code{type}), subset to \code{HistYears}.
 }
 
 \code{Units} that are not a recognized catch unit raise an error.

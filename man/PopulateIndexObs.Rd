@@ -43,7 +43,8 @@ since it may already encode its own autocorrelation structure.
 \item \code{AC} — expanded to a named \verb{[nSim]} array.
 Accepted inputs: scalar applied to all simulations, length-2 vector
 \code{c(lower, upper)} for a per-simulation Uniform draw, or a vector of
-length \code{nSim} used directly. Defaults to 0 (no autocorrelation).
+length \code{nSim} used directly. Values must be within (-1, 1), exclusive.
+Defaults to 0 (no autocorrelation).
 \item \code{Ref} — generated as a lognormal draw from a CV, producing a named
 \verb{[nSim]} reference level error array.
 \item \code{qInc} — expanded to a named \verb{[nSim]} array (scalar, length-2 uniform
@@ -57,19 +58,21 @@ populated here: \code{Beta}, \code{Selectivity}, \code{Type}, \code{Efficiency}.
 
 When \code{AC} is non-zero and \code{Error} was freshly generated, the
 independently-drawn lognormal error series is transformed into a
-variance-preserving AR(1) process on the log scale.
+stationary AR(1) process on the log scale.
 Let \eqn{\varepsilon_t = \log(\mathrm{Error}_t)} be the raw log-errors
-drawn from \eqn{N(\mu, \sigma^2)} where \eqn{\mu} and \eqn{\sigma} are
-derived from \code{CV}. The AR(1) series is constructed as:
+drawn from \eqn{N(\mu, \sigma^2)}, where \eqn{\mu = -\sigma^2/2} and
+\eqn{\sigma} are derived from \code{CV}. The AR(1) series is constructed from
+the zero-mean errors as:
 
-\deqn{\varepsilon_t^* = \rho \, \varepsilon_{t-1}^* +
-  \sqrt{1 - \rho^2} \, \varepsilon_t}
+\deqn{z_t = \rho \, z_{t-1} +
+  \sqrt{1 - \rho^2} \, (\varepsilon_t - \mu)}
 
-where \eqn{\rho} is the per-simulation lag-1 autocorrelation coefficient
-(\code{AC}). This formulation preserves the marginal variance
-\eqn{\mathrm{Var}(\varepsilon_t^*) = \sigma^2} for all values of
-\eqn{\rho}. The AR(1) series is then exponentiated to return to the
-natural scale: \eqn{\mathrm{Error}_t^* = \exp(\varepsilon_t^*)}.
+with \eqn{z_1 = \varepsilon_1 - \mu}, where \eqn{\rho} is the
+per-simulation lag-1 autocorrelation coefficient (\code{AC}). The error is then
+\eqn{\mathrm{Error}_t^* = \exp(z_t + \mu)}, so that
+\eqn{\log(\mathrm{Error}_t^*)} has mean \eqn{\mu} and standard deviation
+\eqn{\sigma}, and \eqn{E[\mathrm{Error}_t^*] = 1}, for all values of
+\eqn{\rho}.
 }
 }
 \seealso{

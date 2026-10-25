@@ -57,9 +57,14 @@ Updated \code{Proj} object.
 \description{
 Converts effort advice to absolute values, optionally distributes it over
 areas, then writes the minimum prescribed effort across complexes into
-\code{Proj@Effort} and \code{Proj@Distribution} for all future time steps. Skips
-complexes where management is unchanged, effort is \code{NULL}, or the advice
-object is not of class \code{"advice"}. For multi-stock OMs, also
+\code{Proj@Effort} for all future time steps. Each fleet's \code{Proj@Distribution}
+for all future time steps is set from the area matrix of its binding
+complex, or to \code{NA} (area split computed by the engine) when that advice
+has no area matrix. Status-quo effort (empty advice, flagged by
+\code{.CheckTACEffort()}) is relative effort 1 with the last historical year's
+seasonal pattern; fleets with a user-specified historical distribution keep
+their last historical distribution. Skips complexes where effort is \code{NULL}
+or the advice object is not of class \code{"advice"}. For multi-stock OMs, also
 (re)optimises each fleet's stock-specific targeting weights for the
 current year at this fixed effort - see \code{.OptTargetingMultiStock()}.
 }

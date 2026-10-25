@@ -92,14 +92,17 @@ landings (per \code{Type}), or effort, across management intervals,
 \deqn{\frac{1}{|Y|-1}\sum_{y \in Y \setminus \{y_1\}} \frac{|C_{s,y} - C_{s,y-1}|}{C_{s,y-1}}}{(1/(|Y|-1)) * sum over y in Y (excluding the first year) of |C[s,y] - C[s,y-1]| / C[s,y-1]}
 
 where \code{Y} is the set of management years in the evaluation window and
-\code{y-1} denotes the preceding management year.
+\code{y-1} denotes the preceding management year. When
+\eqn{C_{s,y-1} = 0}{C[s,y-1] = 0}, e.g. after a closure, the relative
+change is 0 if \eqn{C_{s,y} = 0}{C[s,y] = 0} and 1 otherwise, the same as
+the change from a positive value to 0.
 
 \code{PM_Stability}: the probability that the series selected by \code{Type}
 changes by no more than a threshold amount between one management interval
 and the next,
 \deqn{P\left(\frac{|C_{s,y} - C_{s,y-1}|}{C_{s,y-1}} \le \mathrm{Threshold}\right)}{P( |C[s,y] - C[s,y-1]| / C[s,y-1] <= Threshold )}
 evaluated per interval \code{y} and averaged across the evaluation window and
-simulations.
+simulations. Relative changes from 0 are defined as for \code{PM_AAVY}.
 
 \code{PM_TACLimited}: the probability that the change in the TAC between one
 management interval and the next is at the limit of the MP,

@@ -150,7 +150,8 @@ of individuals between stocks (e.g. sequential hermaphroditism). Default
 \code{NULL}.}
 
 \item{Relations}{List. Biological or ecological relationships among stocks
-(e.g. predator-prey). Default \code{NULL}. Currently not used.}
+(e.g. predator-prey). Default \code{NULL}. Not currently used in simulations:
+\code{\link[=Simulate]{Simulate()}} stops with an error if \code{Relations} is not empty.}
 
 \item{StockTargeting}{A \link[=stocktargeting-class]{stocktargeting} object. Defines fleet-level
 stock targeting weights and deviations. Populated internally.

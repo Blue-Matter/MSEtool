@@ -33,7 +33,7 @@ depends on length-at-age.}
 depends on weight-at-age.}
 
 \item{Maturity}{A \code{\link[=Maturity]{Maturity()}} object. Required if \code{isRel = TRUE} to
-scale selectivity relative to maturity \code{L50.}}
+scale selectivity relative to maturity \code{L50}.}
 
 \item{nSim}{Integer. Number of simulation replicates.}
 

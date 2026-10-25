@@ -60,9 +60,9 @@ than re-optimizing per reference point.
 \itemize{
 \item \code{F0.1}: apical F at which the slope of the complex's yield-per-recruit
 curve is 10\% of the slope at the origin.
-\item \code{Fmax}: apical F maximising the complex's yield-per-recruit. Undefined
-(returned as the upper grid bound) for asymptotic selectivity, where
-yield-per-recruit has no interior maximum.
+\item \code{Fmax}: apical F maximising the complex's yield-per-recruit. \code{NA} when
+yield-per-recruit has no maximum below \code{OM@maxF}, e.g. for asymptotic
+selectivity.
 
 \code{F0.1} and \code{Fmax} are calculated for each complex (\code{OM@Complexes}),
 whose stocks are fished together at a common apical F, and are reported

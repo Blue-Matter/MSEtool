@@ -63,8 +63,8 @@ object's \code{AWK}. Default \code{NULL}.}
 corresponding to the second dimension of \code{MeanAtLength} or
 \code{MeanAtWeight}. Default \code{NULL}.}
 
-\item{isRel}{Logical. If \code{TRUE}, length-based parameters (e.g., \code{LR5},
-\code{LFR}) are interpreted as multiples of the length-at-50\%-maturity
+\item{isRel}{Logical. If \code{TRUE}, the length parameters of an at-length
+model (\code{LR5}, \code{LFR}, \code{RL50}, \code{RL50_95}, \code{RL}) are interpreted as multiples of the length-at-50\%-maturity
 (\code{L50}) of the paired stock rather than absolute length values. A
 \code{\link[=Maturity]{Maturity()}} object must be available to \code{\link[=PopulateRetention]{PopulateRetention()}} for
 scaling to occur. Default \code{FALSE}.}
@@ -132,9 +132,12 @@ These two approaches are mutually exclusive: if \code{Pars} is non-empty and
 
 \subsection{Relative Parameters}{
 
-When \code{isRel = TRUE}, length-based parameters (e.g., \code{LR5}, \code{LFR}) are
-scaled by the maturity \code{L50} of the paired stock before the retention curve
-is computed.
+When \code{isRel = TRUE}, the length parameters of an at-length model (\code{LR5},
+\code{LFR}, \code{RL50}, \code{RL50_95}, \code{RL}) are multiplied by the maturity \code{L50} of the
+paired stock before the retention curve is computed, and \code{isRel} is then
+set to \code{FALSE}. A custom model function is scaled the same way when its
+parameters use these names. \code{isRel = TRUE} with an at-age or at-weight
+model is an error.
 }
 
 \subsection{Attaching to a Fleet}{

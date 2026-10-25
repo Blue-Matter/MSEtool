@@ -69,8 +69,8 @@ object's \code{AWK}. Default \code{NULL}.}
 corresponding to the second dimension of \code{MeanAtLength} or
 \code{MeanAtWeight}. Default \code{NULL}.}
 
-\item{isRel}{Logical. If \code{TRUE}, length-based parameters (e.g., \code{L5},
-\code{LFS}) are interpreted as multiples of the length-at-50\%-maturity
+\item{isRel}{Logical. If \code{TRUE}, the length parameters of an at-length
+model (\code{L5}, \code{LFS}, \code{SL50}, \code{SL50_95}, \code{SL}) are interpreted as multiples of the length-at-50\%-maturity
 (\code{L50}) of the paired stock rather than absolute length values. A
 \code{\link[=Maturity]{Maturity()}} object must be available to \code{\link[=PopulateSelectivity]{PopulateSelectivity()}} for
 scaling to occur. Default \code{FALSE}.}
@@ -137,9 +137,12 @@ These two approaches are mutually exclusive: if \code{Pars} is non-empty and
 
 \subsection{Relative Parameters}{
 
-When \code{isRel = TRUE}, length-based parameters (e.g., \code{L5}, \code{LFS}) are
-scaled by the maturity \code{L50} of the paired stock before the selectivity
-curve is computed. This allows selectivity to be expressed as a fraction of
+When \code{isRel = TRUE}, the length parameters of an at-length model (\code{L5},
+\code{LFS}, \code{SL50}, \code{SL50_95}, \code{SL}) are multiplied by the maturity \code{L50} of the
+paired stock before the selectivity curve is computed, and \code{isRel} is then
+set to \code{FALSE}. A custom model function is scaled the same way when its
+parameters use these names. \code{isRel = TRUE} with an at-age or at-weight
+model is an error. This allows selectivity to be expressed as a fraction of
 the length at 50\% maturity rather than an absolute length, which is useful
 when the same fleet configuration is applied across stocks with different
 growth characteristics.

@@ -120,17 +120,22 @@ level.
 \code{B_B0()}, \code{SB_SB0()}, and \code{SP_SP0()} divide the time series by the
 corresponding unfished level (\code{type = 'Equilibrium'} or \code{'Dynamic'}).
 \code{B_BMSY()}, \code{SB_SBMSY()}, and \code{SP_SPMSY()} divide by the corresponding
-MSY reference point. \code{F_FMSY()} divides total apical fishing mortality
-(summed over fleets) by \code{FMSY}.
+MSY reference point. \code{F_FMSY()} divides the apical fishing mortality of
+the fleet total by \code{FMSY}: the fishing mortality-at-age of fish killed by
+the gear is averaged over areas (weighted by numbers-at-age) and summed over
+fleets, and the numerator is its maximum over ages.
 
 When applied to an \link[=mse-class]{mse} object the historical and projection periods
 are row-bound and labelled via the \code{Period} column; historical rows carry
 \code{MP = "Historical"}.
 
-For the projection period of an \link[=mse-class]{mse} object the denominator is
-extended to cover projection years by repeating the reference value from
-the last historical year. In seasonal models, each projection time step
-uses the value from the same season of the last historical year.
+Dynamic unfished levels are calculated for every historical and projection
+year (see \code{\link[=CalcUnfished_Dynamic]{CalcUnfished_Dynamic()}}). For the projection period of an
+\link[=mse-class]{mse} object, a reference level available only for historical years,
+such as an MSY reference point, is extended to cover projection years by
+repeating the value from the last historical year. In seasonal models, each
+projection time step uses the value from the same season of the last
+historical year.
 \subsection{Seasonal models}{
 
 In seasonal models (\code{Seasons > 1}) the MSY reference points are annual
@@ -138,8 +143,9 @@ quantities, so \code{B_BMSY()}, \code{SB_SBMSY()}, \code{SP_SPMSY()}, and \code{
 return one value per complete calendar year, with \code{Year} holding the
 calendar year:
 \itemize{
-\item \code{F_FMSY()}: apical fishing mortality summed over the seasons of each
-calendar year, the same annual basis as \code{FMSY} (see \code{\link[=CalcMSY]{CalcMSY()}}).
+\item \code{F_FMSY()}: fishing mortality-at-age of the fleet total summed over the
+seasons of each calendar year, then the maximum over ages, the same annual
+basis as \code{FMSY} (see \code{\link[=CalcMSY]{CalcMSY()}}).
 \item \code{B_BMSY()}, \code{SB_SBMSY()}, \code{SP_SPMSY()}: biomass or spawning production
 in the reference season(s) of each calendar year (see \code{\link[=RefSeason]{RefSeason()}}), the
 same snapshot used for \code{BMSY}, \code{SBMSY}, and \code{SPMSY}.

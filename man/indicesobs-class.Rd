@@ -29,9 +29,9 @@ simulation when conditioned on real data and
 \code{\link[=IndicesObs]{IndicesObs()}}.}
 
 \item{\code{AC}}{\code{numeric} array or \code{NULL}. Lag-1 autocorrelation of index
-residuals, one value per simulation. When supplied by the user, used for
-projection years in place of the value estimated during conditioning.
-See \code{\link[=IndicesObs]{IndicesObs()}}.}
+residuals, one value per simulation, within (-1, 1) exclusive. When
+supplied by the user, used for projection years in place of the value
+estimated during conditioning. See \code{\link[=IndicesObs]{IndicesObs()}}.}
 
 \item{\code{Years}}{\code{numeric} or \code{NULL}. Calendar years over which the observation
 error is conditioned. See \code{\link[=IndicesObs]{IndicesObs()}}.}
@@ -47,8 +47,8 @@ Selectivity-at-age of this index. See \code{\link[=IndicesObs]{IndicesObs()}}.}
 
 \item{\code{Type}}{\code{character}. Index type identifier. See \code{\link[=IndicesObs]{IndicesObs()}}.}
 
-\item{\code{Ref}}{\code{numeric} array or \code{NULL}. Reference index value, one per
-simulation. See \code{\link[=IndicesObs]{IndicesObs()}}.}
+\item{\code{Ref}}{\code{numeric} array or \code{NULL}. Multiplier on the reference index
+value, one per simulation. See \code{\link[=IndicesObs]{IndicesObs()}}.}
 
 \item{\code{DataCV}}{\code{numeric} or \code{NULL}. Coefficient of variation reported with
 the generated data. See \code{\link[=IndicesObs]{IndicesObs()}}.}

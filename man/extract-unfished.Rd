@@ -17,8 +17,8 @@ SP0(Hist, type = c("Equilibrium", "Dynamic"), Reduce = TRUE)
 N0(Hist, type = c("Equilibrium", "Dynamic"), Reduce = TRUE)
 }
 \arguments{
-\item{Hist}{A \link[=hist-class]{hist} object; the output of \code{\link[=Simulate]{Simulate()}}, containing
-the simulated historical fishery dynamics.}
+\item{Hist}{A \link[=hist-class]{hist} object (the output of \code{\link[=Simulate]{Simulate()}}) or an
+\link[=mse-class]{mse} object (the output of \code{\link[=Project]{Project()}}).}
 
 \item{type}{Character. One of \code{'Equilibrium'} or \code{'Dynamic'}; partial
 matching is supported.
@@ -27,8 +27,9 @@ matching is supported.
 recruitment deviations and all life-history parameters constant over
 time.
 \item \code{'Dynamic'}: unfished values calculated by running the full population
-dynamics model, including recruitment deviations and any time-varying
-parameters.
+dynamics model with no fishing, including recruitment deviations and any
+time-varying parameters, over the historical and projection years. The
+projection-year values are the same for all management procedures.
 }}
 
 \item{Reduce}{Logical. If \code{TRUE} (default), calls \code{\link[=ReduceDims]{ReduceDims()}} to
@@ -48,7 +49,8 @@ The \code{Sim} and \code{Year} dimensions are collapsed by \code{\link[=ReduceDi
 }
 }
 \description{
-Extract unfished reference point quantities from a \link[=hist-class]{hist} object.
+Extract unfished reference point quantities from a \link[=hist-class]{hist} or
+\link[=mse-class]{mse} object.
 \code{B0()} returns total biomass, \code{SB0()} spawning biomass, \code{SP0()} spawning
 production, and \code{N0()} numbers-at-age. All functions support both
 equilibrium and dynamic unfished calculations (see \code{type} argument).

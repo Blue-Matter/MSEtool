@@ -90,13 +90,20 @@ per age class.}
 truncate the lognormal residual distribution when generating observation
 errors for projection years via \code{\link[=GenResiduals]{GenResiduals()}}. Default \code{2}.}
 
-\item{Ref}{\code{numeric} or \code{NULL}. Reference index value. Accepted forms:
+\item{Ref}{\code{numeric} or \code{NULL}. Reference index value, reported in the
+\code{Ref} slot of simulated index data. The reference value is the index
+value expected when the total biomass of the stocks in the complex is at
+\code{BMSY} (or, when \code{BMSY} is not available, in the historical year closest
+to half of unfished biomass), on the scale of the simulated index
+(\code{Efficiency * NomIndex^Beta}), multiplied by a per-simulation value.
+Accepted forms:
 \itemize{
 \item \code{NULL} (default): no reference value.
-\item Positive scalar: interpreted as the CV of a lognormal distribution; a
-unique reference value is drawn per simulation as
-\code{rlnorm(nSim, mconv(1, Ref), sdconv(1, Ref))} internally.
-\item Length-\code{nSim} vector or named array: used directly.
+\item Non-negative scalar: interpreted as the CV of a lognormal distribution;
+a unique multiplier is drawn per simulation as
+\code{rlnorm(nSim, mconv(1, Ref), sdconv(1, Ref))} internally. \code{0} gives a
+multiplier of 1.
+\item Length-\code{nSim} vector or named array: multipliers used directly.
 }}
 
 \item{Beta}{\code{numeric} or \code{NULL}. Hyperstability/hyperdepletion parameter:
@@ -110,9 +117,15 @@ simulation by log-linear regression when conditioned -- otherwise it
 stays at \code{1}.}
 
 \item{AC}{\code{numeric}, \code{array}, or \code{NULL}. Lag-1 autocorrelation of index
-residuals, one value per simulation. When conditioning on real data, an
-\code{AC} supplied here is used for projection years; otherwise \code{AC} is
-estimated from the historical residuals.}
+residuals, one value per simulation. Values must be within (-1, 1),
+exclusive. A scalar applies to all simulations, a length-2 vector
+\code{c(lower, upper)} gives one value per simulation drawn from a uniform
+distribution, and a length-\code{nSim} vector is used directly. Default \code{NULL}
+(\code{AC = 0}, independent errors). When \code{Error} is generated from \code{CV}, the
+log errors follow a stationary AR(1) process with this autocorrelation,
+with mean error 1 and log-scale standard deviation \code{sdconv(1, CV)}. When
+conditioning on real data, an \code{AC} supplied here is used for projection
+years; otherwise \code{AC} is estimated from the historical residuals.}
 
 \item{qInc}{\code{numeric} or \code{NULL}. Annual percentage change in index
 catchability during projection years (e.g. \code{2} = 2\% per year; negative
@@ -190,8 +203,8 @@ Real Data").
 }
 
 \code{Ref} is expanded internally: a scalar is treated as the CV of
-a lognormal from which one reference value per simulation is drawn; a
-length-\code{nSim} input is used directly.
+a lognormal from which one reference value multiplier per simulation is
+drawn; a length-\code{nSim} input is used directly.
 }
 
 \subsection{Conditioning on Real Data}{

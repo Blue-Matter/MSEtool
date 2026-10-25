@@ -50,6 +50,13 @@ unfished trajectory (\code{Unfished@Dynamic}) after a run of poor recruitment,
 which no catchability can reach; the warning lists these separately.
 \code{\link[=Simulate]{Simulate()}} performs the same check itself, recording any misses to
 \code{Hist@Log} (see \code{\link[=Log]{Log()}}) rather than printing them.
+
+For stocks linked by \code{SRR@SPFrom}, the \code{Final} target of the source stock
+applies to the linked group, and is shown in its own panel labelled by the
+group's stocks: with \code{Reference = "B0"} the trajectory is the total biomass
+of the group relative to its total B0, and with \code{Reference = "SB0"} it is
+the spawning biomass of the source stock(s) relative to their SB0. \code{Initial}
+targets are shown and checked for each stock.
 }
 \seealso{
 \code{\link[=Depletion]{Depletion()}}, \code{\link[=B_B0]{B_B0()}}, \code{\link[=SB_SB0]{SB_SB0()}}, \code{\link[=PlotSRR]{PlotSRR()}}, \code{\link[=Stock]{Stock()}}

@@ -33,8 +33,8 @@ on length-at-age.}
 \item{Weight}{A \code{\link[=Weight]{Weight()}} object. Required if the retention model depends
 on weight-at-age.}
 
-\item{Maturity}{A \code{\link[=Maturity]{Maturity()}} object. Required if the retention model uses
-relative selectivity.}
+\item{Maturity}{A \code{\link[=Maturity]{Maturity()}} object. Required if \code{isRel = TRUE} to
+scale retention relative to maturity \code{L50}.}
 
 \item{Selectivity}{A populated \code{\link[=Selectivity]{Selectivity()}} object. Optional, but
 recommended whenever the retention model is defined at length or weight:
@@ -75,7 +75,8 @@ mean-at-weight values.
 \code{PopulateRetention()} handles population of retention-at-age, retention-
 at-length, or retention-at-weight. Steps include:
 \itemize{
-\item Resolving the retention model class
+\item Resolving the retention model class and applying relative scaling to
+maturity if \code{isRel = TRUE}
 \item Generating mean retention at age, length, or weight as appropriate
 \item Converting between mean-at-length/weight and mean-at-age
 \item Adding stochastic variation

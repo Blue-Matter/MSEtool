@@ -20,7 +20,6 @@ Used by \code{\link[=Simulate]{Simulate()}}:\tabular{lll}{
    \code{MSYType} \tab \code{'Removals'} \tab \code{'Removals'} or \code{'Landings'}. Whether MSY-based and other F reference points are defined in terms of total removals (landings + dead discards) or landings only. Passed as \code{type} to \code{\link[=CalcMSY]{CalcMSY()}} and \code{\link[=CalcRefPoints]{CalcRefPoints()}}. \cr
    \code{RefYears} \tab \code{NULL} \tab Year(s) of biological and fishery parameters used to calculate reference points. \code{NULL} uses the final historical year. Passed as \code{Years} to \code{\link[=CalcMSY]{CalcMSY()}} and \code{\link[=CalcRefPoints]{CalcRefPoints()}}. \cr
    \code{CorrelatedRecDevs} \tab \code{NULL} \tab Multi-stock OMs only. Which stocks' projection recruitment deviations are correlated, using the correlation of their historical deviations. \code{NULL}: stocks whose historical deviations (\code{SRR@RecDevHist}) were supplied, e.g. imported from an assessment. \code{TRUE}: all stocks. \code{FALSE}: none. Projection deviations always have standard deviation \code{SRR@SD} and autocorrelation \code{SRR@AC}, and stocks with identical historical deviations share one series; see \code{\link[=GenMultiStockRecDevs]{GenMultiStockRecDevs()}}. \cr
-   \code{HistRel} \tab \code{TRUE} \tab Whether MICE \code{Relations} are applied in the historical period. \cr
    \code{BackCalcEffort} \tab \code{TRUE} \tab Whether effort is replaced by the effort implied by realised F when the \code{maxF} constraint binds. Applies to historical and projection time steps. \cr
    \code{RefYield} \tab \code{list(lastnTS = 5)} \tab Used when reference yield is calculated (see \code{\link[=SimControl]{SimControl()}}). \code{lastnTS}: number of final projection \emph{years} averaged. \cr
    \code{DataOM} \tab \code{NULL} \tab Operating model quantities passed to MPs; see the \code{DataOM} section. \cr
@@ -97,8 +96,9 @@ attribute or from \code{OM@Control$DataOM}.
 
 \section{Internal settings}{
 
-\code{Clone}, \code{CalcCatchAtSizeNeeded}, and \code{CalcCatchAtSizeCpp} are set
-internally by \code{\link[=Simulate]{Simulate()}} and should not be modified.
+\code{Clone}, \code{CalcCatchAtSizeNeeded}, \code{CalcCatchAtSizeCpp}, and \code{DataCV} are
+set internally by \code{\link[=Simulate]{Simulate()}} and should not be modified. \code{DataCV} holds
+the default reported data CVs from \code{\link[=SimControl]{SimControl()}}.
 }
 
 \examples{

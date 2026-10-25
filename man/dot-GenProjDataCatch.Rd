@@ -59,15 +59,13 @@ generated.
 
 \subsection{True Catch Aggregation}{
 
-Catch-at-age for \code{DataYear} is extracted from \code{Proj@LandingsAtAge} or
-\code{Proj@DiscardsAtAge} (selected by \code{type}) for each stock in \code{stocks},
-dropping the time dimension. Per-fleet aggregation then depends on
-\code{CatchData@Units[fl]}:
+True catch in \code{DataYear} is summed over the stocks in \code{stocks}, from a
+source that depends on \code{CatchData@Units[fl]}:
 \itemize{
-\item \code{"Number"}: summed over age and area for all simulations.
-\item \code{"Biomass"}: multiplied by \code{WeightFleetRetained} (\code{type = "Landings"}) or
-\code{WeightFleetSelected} (\code{type = "Discards"}) before summing over age and
-area, one simulation at a time.
+\item \code{"Number"}: \code{Proj@LandingsAtAge} or \code{Proj@DiscardsAtAge} (selected by
+\code{type}), summed over age and area.
+\item \code{"Biomass"}: the landed or discarded biomass \code{Proj@Landings} or
+\code{Proj@Discards} (selected by \code{type}).
 }
 }
 

@@ -154,7 +154,8 @@ of individuals between stocks (e.g. sequential hermaphroditism). See
 \code{\link[=OM]{OM()}}.}
 
 \item{\code{Relations}}{List. Biological or ecological relationships among stocks.
-See \code{\link[=OM]{OM()}}.}
+Not currently used in simulations; \code{\link[=Simulate]{Simulate()}} stops with an error if it
+is not empty. See \code{\link[=OM]{OM()}}.}
 
 \item{\code{StockTargeting}}{A \link[=stocktargeting-class]{stocktargeting} object. Defines fleet-level
 stock targeting weights and deviations. Built by \code{\link[=StockTargeting]{StockTargeting()}} when

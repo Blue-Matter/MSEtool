@@ -36,10 +36,15 @@ framework.
 }
 \details{
 \itemize{
-\item \code{CurrentEffort}: Fixes fishing effort at 1 (last historical effort) for
-all fleets, maintaining the spatial distribution of effort from the last
-historical timestep, and (in a seasonal model) each season's own share
-of that pattern - see \emph{Seasonal models} below. The \code{Data} argument is
+\item \code{CurrentEffort}: Keeps each fleet's fishing effort at its level in the
+last historical year (relative effort 1). Each time step, the effort is
+allocated across areas by the OM's spatial targeting (\code{Mode} and
+\code{Targeting} in \code{\link[=Effort]{Effort()}}), as for any effort advice without an area
+split. Fleets with a
+historical spatial distribution specified in the OM (\code{Distribution} in
+\code{\link[=Effort]{Effort()}}) keep their distribution from the last historical year. In a
+seasonal model, each season repeats that season's effort from the last
+historical year - see \emph{Seasonal models} below. The \code{Data} argument is
 accepted for framework compatibility but is not used.
 \item \code{CurrentCatch}: Sets the TAC for each fleet to the removals observed in
 the last historical year, in the same units as \code{Landings}. Returns
@@ -64,14 +69,12 @@ of \code{Interval}. This is required so that, in a seasonal model (\code{Seasons
 each call can return the value for the specific season it is advising,
 rather than the same figure being reapplied to every season of the year.
 
-\code{CurrentEffort} always returns an empty \code{\link[=Advice]{Advice()}}, which the framework's
-default fallback (used whenever neither \code{TAC} nor \code{Effort} is set)
-resolves to last year's effort, relative to the last complete historical
-year - separately season-matched by the framework itself so, e.g., this
-year's Q1 reuses last year's Q1 pattern rather than the historical
-period's final season. \code{CurrentEffort} carries the same \code{EverySeason}
-attribute as the other three for consistency, though - unlike them - its
-output does not actually depend on how often it is called.
+\code{CurrentEffort} returns an empty \code{\link[=Advice]{Advice()}}. Any MP that returns neither
+\code{TAC} nor \code{Effort} keeps status-quo effort: each fleet's effort in each
+season equals its effort in the same season of the last historical year,
+so this year's Q1 repeats last year's Q1. \code{CurrentEffort} also carries the
+\code{EverySeason} attribute, although its advice is the same whichever
+timestep it is called in.
 }
 
 \subsection{Data lag}{

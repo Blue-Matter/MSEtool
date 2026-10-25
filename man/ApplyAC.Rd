@@ -10,7 +10,8 @@ ApplyAC(Resid, AC, LastError)
 \item{Resid}{Numeric matrix of multiplicative (normal-space) residuals,
 dimensions nSim x nYear.}
 
-\item{AC}{Numeric vector of length nSim, autocorrelation coefficient per simulation (must be in between -1 &  1).}
+\item{AC}{Numeric vector of length nSim, autocorrelation coefficient per
+simulation (must be within -1 and 1, exclusive).}
 
 \item{LastError}{Numeric vector of length nSim giving the starting value for
 the AR(1) recursion, in normal (natural) space — i.e. the last observed

@@ -33,14 +33,13 @@ the terminal historical time step, as a \code{nSim}-length array after
 \code{\link[=Populate]{Populate()}}. When populated, the \code{Efficiency} parameter in
 \code{\link[=Catchability]{Catchability()}} is optimised to achieve this depletion level, overwriting
 any existing \code{Efficiency} values. When \code{NULL}, no optimisation occurs and
-\code{\link[=Catchability]{Catchability()}} must be populated directly. See \code{\link[=Depletion]{Depletion()}} for full
-details.}
+\code{\link[=Catchability]{Catchability()}} must be populated directly. For stocks linked by
+\code{SRR@SPFrom}, the target of the source stock applies to the linked group.
+See \code{\link[=Depletion]{Depletion()}} for full details.}
 
 \item{\code{Reference}}{\code{character(1)}. Reference biomass used to scale depletion
-values. Currently implemented options are \code{"B0"} (total unfished biomass,
-default) and \code{"SB0"} (spawning biomass at unfished equilibrium). The
-options \code{"BMSY"}, \code{"SBMSY"}, \code{"SP0"}, and \code{"SPMSY"} are accepted by the
-validator but are reserved for future use.}
+values: \code{"B0"} (total unfished biomass, default) or \code{"SB0"} (spawning
+biomass at unfished equilibrium).}
 
 \item{\code{Misc}}{\code{list}. Used internally.}
 }}

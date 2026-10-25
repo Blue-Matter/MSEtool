@@ -56,7 +56,9 @@ ages — is returned. Ignored when \code{df = FALSE}.}
 
 \item{byArea}{Logical. If \code{TRUE} the \code{Area} dimension is retained.
 When \code{byAge = TRUE} area is always included regardless of this
-argument. Ignored when \code{df = FALSE}.}
+argument. If \code{FALSE}, fishing mortality-at-age is averaged over areas,
+weighted by numbers-at-age, before the apical value is taken. Ignored
+when \code{df = FALSE}.}
 
 \item{byFleet}{Logical. If \code{TRUE} the \code{Fleet} dimension is retained.
 If \code{FALSE} values are summed over fleets before the apical or

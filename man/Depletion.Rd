@@ -46,12 +46,11 @@ is optimised to achieve this depletion level, overwriting any existing
 \code{\link[=Catchability]{Catchability()}} must be populated directly with valid values.}
 
 \item{Reference}{\code{character(1)}. Reference biomass used to scale depletion.
-Currently implemented options:
+One of:
 \itemize{
 \item \code{"B0"} (default): total unfished equilibrium biomass.
 \item \code{"SB0"}: spawning biomass at unfished equilibrium.
-The options \code{"BMSY"}, \code{"SBMSY"}, \code{"SP0"}, and \code{"SPMSY"} are reserved for
-future use and currently pass validation but are not implemented.
+For stocks linked by \code{SRR@SPFrom}, see \emph{Stocks Linked by SPFrom}.
 }}
 
 \item{x}{A \link[=depletion-class]{depletion} object for slot accessors, or a \link[=stock-class]{stock}
@@ -137,6 +136,27 @@ dep <- Depletion(Initial = 0.9, Final = 0.4)
 # Relative to spawning biomass at unfished equilibrium
 dep <- Depletion(Final = 0.4, Reference = "SB0")
 }\if{html}{\out{</div>}}
+}
+
+\subsection{Stocks Linked by SPFrom}{
+
+Stocks linked by \code{SRR@SPFrom} (e.g., the sexes of a hermaphroditic or
+two-sex population, where recruitment of one stock comes from the spawning
+biomass of another) form a group, and \code{Final} applies to the group:
+\itemize{
+\item The target is set by \code{Final} and \code{Reference} of the source stock, the
+stock that produces the recruits. When a group has more than one source
+stock, their targets must agree.
+\item With \code{Reference = "B0"}, depletion is the total biomass of all stocks in
+the group relative to their total unfished equilibrium biomass.
+\item With \code{Reference = "SB0"}, depletion is the spawning biomass of the source
+stock(s) relative to their unfished equilibrium spawning biomass.
+\item \code{Final} and \code{Reference} of a dependent stock (one whose \code{SRR@SPFrom}
+names another stock) are ignored.
+}
+
+\code{Initial} applies to each stock individually, relative to the stock's own
+\code{Reference}.
 }
 
 \subsection{Pass-Through Access from a Stock}{

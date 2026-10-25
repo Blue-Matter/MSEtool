@@ -10,22 +10,33 @@ CalcUnfished_Dynamic(Hist, IdenticalHist = NULL, silent = FALSE)
 \item{Hist}{A \link[=hist-class]{hist} object, or an \link[=om-class]{om} object from which a
 \code{hist} object is built.}
 
-\item{IdenticalHist}{Logical; if \code{TRUE}, assumes all simulations are identical
-and calculates only a single simulation. If \code{NULL} (default), determined
-automatically by checking whether all simulations are identical.}
+\item{IdenticalHist}{Logical; if \code{TRUE}, assumes all simulations are
+identical apart from the projection recruitment deviations, and calculates
+the historical years for a single simulation. If \code{NULL} (default),
+determined automatically by checking whether all simulations are identical.}
 
 \item{silent}{Logical; if \code{TRUE}, suppress messages during calculation.}
 }
 \value{
-A \link[=popdynamics-class]{popdynamics} object containing dynamic unfished
-\code{Number}, \code{Biomass}, \code{SBiomass}, and \code{SProduction} arrays with dimensions
-\verb{Sim × Stock × Year}.
+A \link[=popdynamics-class]{popdynamics} object. \code{Number} is a list of length \code{nStock},
+each element an array with dimensions \verb{Sim × Age × Year × Area}. \code{Biomass},
+\code{SBiomass}, and \code{SProduction} are arrays with dimensions
+\verb{Sim × Stock × Year}. The \code{Year} dimension covers the historical and
+projection years, and is collapsed to a single year only when the values
+are constant over time. The \code{Sim} dimension is collapsed by \code{\link[=ReduceDims]{ReduceDims()}}
+when the values are identical across simulations.
 }
 \description{
 Calculate dynamic unfished population quantities for all \code{\link[=Stock]{Stock()}}
-objects in an operating model. Quantities include unfished number-at-age,
-total biomass, spawning biomass, and spawning production, evaluated dynamically
-over historical and projection years.
+objects in an operating model: number-at-age, total biomass, spawning
+biomass, and spawning production over the historical and projection years.
+}
+\details{
+The population dynamics model is run from the unfished initial state with
+no fishing mortality, using the historical and projection recruitment
+deviations (\code{RecDevHist} and \code{RecDevProj} in \code{\link[=SRR]{SRR()}}) and any time-varying
+life-history parameters. The projection-year values depend only on the
+operating model, so they are the same for all management procedures.
 }
 \seealso{
 \code{\link[=CalcUnfished_Equilibrium]{CalcUnfished_Equilibrium()}}

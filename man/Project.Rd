@@ -25,7 +25,12 @@ available in the current environment, or (for \link[=hist-class]{hist} objects) 
 named list of MP functions, optionally mixed with MP names, e.g.
 \code{list(IR5 = SetMPArgs(IndexRate, CalibYears = 5), 'IndexTarget')}. List
 names are used as the MP names. If \code{NULL} (default), projects
-\code{c("CurrentEffort", "CurrentCatch")}.}
+\code{c("CurrentEffort", "CurrentCatch")}. For \link[=hist-class]{hist} objects, MPs may
+also be legacy functions of class \code{"MP"} (DLMtool/SAMtool), which are
+called on a legacy \code{Data} object converted from the simulated data.
+Life-history data (e.g. \code{Data@Mort}, \code{Data@vbK}, \code{Data@L50}) are not
+generated for simulated data, so legacy MPs that need them are not
+supported.}
 
 \item{parallel}{Logical or named list controlling parallel execution. For
 \link[=hist-class]{hist} objects, \code{TRUE} splits the simulations into chunks and
