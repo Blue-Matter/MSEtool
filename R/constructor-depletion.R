@@ -25,11 +25,10 @@
 #'   `Efficiency` values. When `NULL` (default), no optimisation occurs and
 #'   [Catchability()] must be populated directly with valid values.
 #' @param Reference `character(1)`. Reference biomass used to scale depletion.
-#'   Currently implemented options:
+#'   One of:
 #'   - `"B0"` (default): total unfished equilibrium biomass.
 #'   - `"SB0"`: spawning biomass at unfished equilibrium.
-#'   The options `"BMSY"`, `"SBMSY"`, `"SP0"`, and `"SPMSY"` are reserved for
-#'   future use and currently pass validation but are not implemented.
+#'   For stocks linked by `SRR@SPFrom`, see *Stocks Linked by SPFrom*.
 #' @param x A [depletion-class] object for slot accessors, or a [stock-class]
 #'   object for `Depletion<-`.
 #' @param value For `Depletion<-`: a [depletion-class] object. For `Initial<-`
@@ -93,6 +92,25 @@
 #' # Relative to spawning biomass at unfished equilibrium
 #' dep <- Depletion(Final = 0.4, Reference = "SB0")
 #' ```
+#'
+#' ## Stocks Linked by SPFrom
+#'
+#' Stocks linked by `SRR@SPFrom` (e.g., the sexes of a hermaphroditic or
+#' two-sex population, where recruitment of one stock comes from the spawning
+#' biomass of another) form a group, and `Final` applies to the group:
+#'
+#' - The target is set by `Final` and `Reference` of the source stock, the
+#'   stock that produces the recruits. When a group has more than one source
+#'   stock, their targets must agree.
+#' - With `Reference = "B0"`, depletion is the total biomass of all stocks in
+#'   the group relative to their total unfished equilibrium biomass.
+#' - With `Reference = "SB0"`, depletion is the spawning biomass of the source
+#'   stock(s) relative to their unfished equilibrium spawning biomass.
+#' - `Final` and `Reference` of a dependent stock (one whose `SRR@SPFrom`
+#'   names another stock) are ignored.
+#'
+#' `Initial` applies to each stock individually, relative to the stock's own
+#' `Reference`.
 #'
 #' ## Pass-Through Access from a Stock
 #'

@@ -16,13 +16,12 @@
 #'   [Populate()]. When populated, the `Efficiency` parameter in
 #'   [Catchability()] is optimised to achieve this depletion level, overwriting
 #'   any existing `Efficiency` values. When `NULL`, no optimisation occurs and
-#'   [Catchability()] must be populated directly. See [Depletion()] for full
-#'   details.
+#'   [Catchability()] must be populated directly. For stocks linked by
+#'   `SRR@SPFrom`, the target of the source stock applies to the linked group.
+#'   See [Depletion()] for full details.
 #' @slot Reference `character(1)`. Reference biomass used to scale depletion
-#'   values. Currently implemented options are `"B0"` (total unfished biomass,
-#'   default) and `"SB0"` (spawning biomass at unfished equilibrium). The
-#'   options `"BMSY"`, `"SBMSY"`, `"SP0"`, and `"SPMSY"` are accepted by the
-#'   validator but are reserved for future use.
+#'   values: `"B0"` (total unfished biomass, default) or `"SB0"` (spawning
+#'   biomass at unfished equilibrium).
 #' @slot Misc `list`. Used internally.
 #'
 #' @details
@@ -55,9 +54,18 @@ setClass('depletion',
 )
 
 setValidity('depletion', function(object) {
-  # TODO 
-  TRUE
+  .CheckDepletionReference(object@Reference)
 })
+
+.ValidDepletionReference <- c('B0', 'SB0')
+
+.CheckDepletionReference <- function(Reference) {
+  if (!length(Reference)) return(TRUE)
+  if (length(Reference) == 1 && Reference %in% .ValidDepletionReference) return(TRUE)
+  paste0("`Reference` must be one of ",
+         paste0("'", .ValidDepletionReference, "'", collapse = ' or '),
+         ", not ", paste0("'", Reference, "'", collapse = ', '))
+}
 
 
 
