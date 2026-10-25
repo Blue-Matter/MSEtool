@@ -55,7 +55,7 @@
   msg <- conditionMessage(e)
   if (length(Slots))
     msg <- paste0(msg, " (legacy `Data` life-history slots ", paste0("`", Slots, "`", collapse = ", "),
-                  " are NA: life-history data are not generated for simulated data, so legacy MPs that use them are not supported)")
+                  " are NA: life-history data are not generated for simulated data unless the Obs of the OM sets LifeHistoryObs())")
   stop(msg, call. = FALSE)
 }
 

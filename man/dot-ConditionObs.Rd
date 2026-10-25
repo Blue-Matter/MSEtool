@@ -23,7 +23,7 @@ an operating model \code{Hist} object.
 }
 \details{
 Iterates over stock complexes and observed data sets, conditioning
-landings, discards, CPUE, and survey indices for historical years and
-generating observation error for projection years.
+life history, exploitation, landings, discards, CPUE, and survey indices
+for historical years and generating observation error for projection years.
 }
 \keyword{internal}

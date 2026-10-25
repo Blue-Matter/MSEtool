@@ -35,6 +35,8 @@ and applying default values where slots are unspecified.
 \code{PopulateObs()} coordinates population of all observation error components
 of an \link[=obs-class]{obs} object, calling a dedicated sub-function for each slot:
 \itemize{
+\item Life history observation error, checked by \code{\link[=LifeHistoryObs]{LifeHistoryObs()}} rules
+\item Exploitation observation error, checked by \code{\link[=ExploitationObs]{ExploitationObs()}} rules
 \item Effort observation error via \code{\link[=PopulateEffortObs]{PopulateEffortObs()}}
 \item Landed catch observation error via \code{\link[=PopulateCatchObs]{PopulateCatchObs()}}
 \item Discarded catch observation error via \code{\link[=PopulateCatchObs]{PopulateCatchObs()}}
@@ -46,8 +48,9 @@ of an \link[=obs-class]{obs} object, calling a dedicated sub-function for each s
 \item Discarded catch-at-size composition error via \code{\link[=PopulateCompObs]{PopulateCompObs()}}
 }
 
-Slots for \code{LifeHistory} and \code{Exploitation} observation error are reserved
-for future implementation and are not populated.
+The \code{LifeHistory} and \code{Exploitation} specifications are validated and kept
+as supplied; their random draws are made when the data are generated, from
+the \code{Seed} of the operating model.
 
 If a slot contains an empty object (as determined by \code{\link[=EmptyObject]{EmptyObject()}}), it
 is returned unchanged. Otherwise the slots set by the user before

@@ -158,6 +158,25 @@ PopulateOM <- function(OM,
     names(OM@Data) <- stocknames
   }
 
+  .ProcessDataBiology(OM)
+}
+
+# Data@LifeHistory by stock and Data@Exploitation by stock and fleet
+.ProcessDataBiology <- function(OM) {
+  Complexes <- OM@Complexes
+  StockNms  <- StockNames(OM)
+  FleetNms  <- FleetNames(OM)
+
+  for (i in seq_along(OM@Data)) {
+    Data <- OM@Data[[i]]
+    if (!isS4(Data) || i > length(Complexes)) next
+    Where <- paste0("OM@Data[[", i, "]]@")
+    Nms   <- StockNms[Complexes[[i]]]
+    Data@LifeHistory  <- .NormalizeLifeHistoryData(Data@LifeHistory, Nms, paste0(Where, "LifeHistory"))
+    Data@Exploitation <- .NormalizeExploitationData(Data@Exploitation, Nms, FleetNms,
+                                                    paste0(Where, "Exploitation"))
+    OM@Data[[i]] <- Data
+  }
   OM
 }
 

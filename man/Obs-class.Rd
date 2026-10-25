@@ -85,7 +85,7 @@ discarded catch-at-length composition. See \code{\link[=CompObs]{CompObs()}}.}
 \item \code{\link[=Obs]{Obs()}} for the constructor and accessor.
 \item \code{\link[=CatchObs]{CatchObs()}}, \code{\link[=EffortObs]{EffortObs()}}, \code{\link[=IndicesObs]{IndicesObs()}}, \code{\link[=CompObs]{CompObs()}} for
 sub-object constructors.
-\item \code{\link[=LifeHistoryObs]{LifeHistoryObs()}}, \code{\link[=ExploitationObs]{ExploitationObs()}} for placeholder sub-objects.
+\item \code{\link[=LifeHistoryObs]{LifeHistoryObs()}}, \code{\link[=ExploitationObs]{ExploitationObs()}} for the life history and exploitation sub-objects.
 \item \link[=data-class]{data} and \code{\link[=Data]{Data()}} for the complementary observed-values object.
 \item \code{\link[=OM]{OM()}} for the operating model constructor.
 \item \code{\link[=ConvertObs]{ConvertObs()}} for converting legacy \link[=Obs-legacy-class]{Obs-legacy} objects.

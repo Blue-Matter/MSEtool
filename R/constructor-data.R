@@ -376,8 +376,11 @@ IndicesData <- function(Name        = NULL,
 #'   Defaults to `1`.
 #' @param nArea A positive integer giving the number of spatial areas.
 #'   Defaults to `1`.
-#' @param LifeHistory Optional. An object of class [lifehistorydata-class] .
-#' @param Exploitation Optional. An object of class [exploitationdata-class].
+#' @param LifeHistory Optional. An object of class [lifehistorydata-class], or a
+#'   list of them named by stock. See *Life History and Exploitation* below.
+#' @param Exploitation Optional. An object of class [exploitationdata-class], a
+#'   list of them named by fleet, or a list named by stock of lists named by
+#'   fleet. See *Life History and Exploitation* below.
 #' @param Reference Optional. An object of class [referencedata-class].
 #' @param Effort Optional. An object of class [effortdata-class].
 #' @param Landings Optional. An object of class [catchdata-class] for landed catch.
@@ -402,6 +405,23 @@ IndicesData <- function(Name        = NULL,
 #' @param x An [om-class] object, for use with `Data<-`.
 #' @param value A [data-class] object, or a list of [data-class] objects for
 #'   multi-stock operating models, to assign to the `Data` slot.
+#'
+#' @details
+#' ## Life History and Exploitation
+#'
+#' `LifeHistory` holds one [lifehistorydata-class] object per stock and
+#' `Exploitation` one [exploitationdata-class] object per stock and fleet. When
+#' the data are attached to an operating model, a single object is converted
+#' to a list named by the stock (and, for `Exploitation`, a list of lists named
+#' by stock and fleet) if the stock complex has one stock and the OM has one
+#' fleet. Otherwise supply lists named by `StockNames()` and `FleetNames()`.
+#'
+#' Each component of the objects (e.g. `Length`, `NaturalMortality`,
+#' `Selectivity`) is described by `Pars` and `Model`, or by `MeanAtAge` or
+#' `MeanAtLength`. Uncertainty in a parameter is reported as a `Pars` entry
+#' named `<parameter>_CV`, e.g. `Linf_CV`. A component with values in
+#' `OM@@Data` is used as supplied; the observation model conditions on it
+#' (see [LifeHistoryObs()] and [ExploitationObs()]).
 #'
 #' @return A [data-class] object, or when `Name` is an [mse-class] object, a list
 #'   of [data-class] objects from the `@@PPD` slot. `Data<-` returns `x` with
@@ -452,6 +472,9 @@ Data <- function(Name = 'New Data Object',
 
   if (is.null(Exploitation))
     Exploitation <- new('exploitationdata')
+
+  .CheckLifeHistoryList(if (is.list(LifeHistory)) LifeHistory else NULL)
+  .CheckExploitationList(if (is.list(Exploitation)) Exploitation else NULL)
 
   if (is.null(Reference))
     Reference <- new('referencedata')

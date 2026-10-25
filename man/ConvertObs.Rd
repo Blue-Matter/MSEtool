@@ -37,21 +37,28 @@ The following legacy slots are mapped to their current equivalents:\tabular{ll}{
 Note that \code{Discards@CV} and \code{Discards@Bias} are set to the same values as
 \code{Landings} (\code{Cobs} and \code{Cbiascv}) because legacy objects do not distinguish
 between landings and discards observation error.
+
+The legacy bias CVs of life history and selectivity become the \code{Bias} of
+the named parameter in \code{\link[=LifeHistoryObs]{LifeHistoryObs()}} and \code{\link[=ExploitationObs]{ExploitationObs()}}. A legacy
+bias CV is the CV of the lognormal from which one bias per simulation is
+drawn, which is how a scalar \code{Bias} is interpreted:\tabular{ll}{
+   Legacy slot \tab New slot \cr
+   \code{Linfbiascv}, \code{Kbiascv}, \code{t0biascv} \tab \code{LifeHistory@Length}, \code{Bias} of \code{Linf}, \code{K}, \code{t0} \cr
+   \code{Mbiascv} \tab \code{LifeHistory@NaturalMortality}, \code{Bias} of \code{M} \cr
+   \code{LenMbiascv} \tab \code{LifeHistory@Maturity}, \code{Bias} of \code{L50} \cr
+   \code{hbiascv}, \code{sigmaRbiascv} \tab \code{LifeHistory@SRR}, \code{Bias} of \code{h} and \code{SD} \cr
+   \code{Dbiascv} \tab \code{LifeHistory@Depletion}, \code{Bias} of \code{Final} \cr
+   \code{LFCbiascv}, \code{LFSbiascv} \tab \code{Exploitation@Selectivity}, \code{Bias} of \code{L5} and \code{LFS} \cr
 }
 
-\subsection{Slots Not Yet Converted}{
+}
+
+\subsection{Slots Not Converted}{
 
 The following legacy slots do not have a corresponding slot in the current
-\link[=obs-class]{obs} and are silently dropped. They will be mapped once the
-\link[=lifehistoryobs-class]{lifehistoryobs} and \link[=exploitationobs-class]{exploitationobs} placeholders are fully
-implemented:
+\link[=obs-class]{obs} and are dropped:
 \itemize{
-\item Life-history bias CVs: \code{Linfbiascv}, \code{t0biascv}, \code{Kbiascv},
-\code{LenMbiascv}, \code{Mbiascv}
-\item Selectivity bias CVs: \code{LFCbiascv}, \code{LFSbiascv}
 \item Reference point bias CVs: \code{FMSY_Mbiascv}, \code{BMSY_B0biascv}
-\item Composition data: \code{CAA_nsamp}, \code{CAA_ESS}, \code{CAL_nsamp}, \code{CAL_ESS}
-(mapped to \code{LandingsAtAge} and \code{LandingsAtSize} once implemented)
 }
 }
 }

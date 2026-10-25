@@ -619,41 +619,39 @@ setMethod('show', 'obs', function(object) {
 })
 
 
-# TODO
+# summary of an observation specification: the parameters with a Bias or CV
+.ObsSpecSummary <- function(x) {
+  Fields <- intersect(names(x), c("Bias", "CV"))
+  Txt <- vapply(Fields, \(fl) {
+    Top <- .SpecAsList(x[[fl]])
+    Who <- if (is.list(Top)) paste(names(Top), collapse = ", ") else "all parameters"
+    paste0(fl, " (", Who, ")")
+  }, character(1))
+  if (!is.null(x[["Stock"]]))
+    Txt <- c(Txt, paste0("conditioned (", paste(names(x[["Stock"]]), collapse = ", "), ")"))
+  paste(Txt, collapse = "; ")
+}
+
+.ShowObsSpecs <- function(object, slots) {
+  for (name in slots) {
+    x <- methods::slot(object, name)
+    if (length(x) == 0) {
+      cli::cli_text("{.var {name}}: {.emph not specified}")
+    } else {
+      txt <- .ObsSpecSummary(x)
+      cli::cli_text("{.var {name}}: {.val {txt}}")
+    }
+  }
+}
+
 setMethod('show', 'lifehistoryobs', function(object) {
   cli::cli_h2("A {.help MSEtool::lifehistoryobs-class} Object")
-  cli::cli_text("{.emph Note: This class is a placeholder and is not currently populated.}")
-  cli::cli_text("")
-  
-  slots <- c('Ages', 'Length', 'Weight', 'NaturalMortality', 
-             'Maturity', 'Fecundity', 'SRR', 'Spatial', 'Depletion')
-  
-  for (name in slots) {
-    x <- slot(object, name)
-    if (length(x) == 0) {
-      cli::cli_text("{.var {name}}: {.emph not specified}")
-    } else {
-      cli::cli_text("{.var {name}}: {.val list length {length(x)}}")
-    }
-  }
+  .ShowObsSpecs(object, .LHComponents)
 })
 
-# TODO
 setMethod('show', 'exploitationobs', function(object) {
   cli::cli_h2("An {.help MSEtool::exploitationobs-class} Object")
-  cli::cli_text("{.emph Note: This class is a placeholder and is not currently populated.}")
-  cli::cli_text("")
-  
-  slots <- c('Selectivity', 'Retention', 'DiscardMortality')
-  
-  for (name in slots) {
-    x <- slot(object, name)
-    if (length(x) == 0) {
-      cli::cli_text("{.var {name}}: {.emph not specified}")
-    } else {
-      cli::cli_text("{.var {name}}: {.val list length {length(x)}}")
-    }
-  }
+  .ShowObsSpecs(object, .ExComponents)
 })
 
 setMethod('show', 'effortobs', function(object) {

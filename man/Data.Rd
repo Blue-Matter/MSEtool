@@ -73,9 +73,12 @@ Defaults to \code{1}.}
 \item{nArea}{A positive integer giving the number of spatial areas.
 Defaults to \code{1}.}
 
-\item{LifeHistory}{Optional. An object of class \link[=lifehistorydata-class]{lifehistorydata} .}
+\item{LifeHistory}{Optional. An object of class \link[=lifehistorydata-class]{lifehistorydata}, or a
+list of them named by stock. See \emph{Life History and Exploitation} below.}
 
-\item{Exploitation}{Optional. An object of class \link[=exploitationdata-class]{exploitationdata}.}
+\item{Exploitation}{Optional. An object of class \link[=exploitationdata-class]{exploitationdata}, a
+list of them named by fleet, or a list named by stock of lists named by
+fleet. See \emph{Life History and Exploitation} below.}
 
 \item{Reference}{Optional. An object of class \link[=referencedata-class]{referencedata}.}
 
@@ -141,6 +144,22 @@ the appropriate class is initialised automatically:
 \item \code{CPUE}, \code{Survey} → \link[=indicesdata-class]{indicesdata}
 \item \code{LandingsAtAge}, \code{DiscardsAtAge}, \code{LandingsAtSize}, \code{DiscardsAtSize} → \link[=compdata-class]{compdata}
 \item \code{Advice} → \link[=advicedata-class]{advicedata}
+}
+\subsection{Life History and Exploitation}{
+
+\code{LifeHistory} holds one \link[=lifehistorydata-class]{lifehistorydata} object per stock and
+\code{Exploitation} one \link[=exploitationdata-class]{exploitationdata} object per stock and fleet. When
+the data are attached to an operating model, a single object is converted
+to a list named by the stock (and, for \code{Exploitation}, a list of lists named
+by stock and fleet) if the stock complex has one stock and the OM has one
+fleet. Otherwise supply lists named by \code{StockNames()} and \code{FleetNames()}.
+
+Each component of the objects (e.g. \code{Length}, \code{NaturalMortality},
+\code{Selectivity}) is described by \code{Pars} and \code{Model}, or by \code{MeanAtAge} or
+\code{MeanAtLength}. Uncertainty in a parameter is reported as a \code{Pars} entry
+named \verb{<parameter>_CV}, e.g. \code{Linf_CV}. A component with values in
+\code{OM@Data} is used as supplied; the observation model conditions on it
+(see \code{\link[=LifeHistoryObs]{LifeHistoryObs()}} and \code{\link[=ExploitationObs]{ExploitationObs()}}).
 }
 }
 \seealso{

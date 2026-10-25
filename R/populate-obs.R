@@ -19,6 +19,8 @@
 #' `PopulateObs()` coordinates population of all observation error components
 #' of an [obs-class] object, calling a dedicated sub-function for each slot:
 #'
+#' * Life history observation error, checked by [LifeHistoryObs()] rules
+#' * Exploitation observation error, checked by [ExploitationObs()] rules
 #' * Effort observation error via [PopulateEffortObs()]
 #' * Landed catch observation error via [PopulateCatchObs()]
 #' * Discarded catch observation error via [PopulateCatchObs()]
@@ -29,8 +31,9 @@
 #' * Landed catch-at-size composition error via [PopulateCompObs()]
 #' * Discarded catch-at-size composition error via [PopulateCompObs()]
 #'
-#' Slots for `LifeHistory` and `Exploitation` observation error are reserved
-#' for future implementation and are not populated.
+#' The `LifeHistory` and `Exploitation` specifications are validated and kept
+#' as supplied; their random draws are made when the data are generated, from
+#' the `Seed` of the operating model.
 #'
 #' If a slot contains an empty object (as determined by [EmptyObject()]), it
 #' is returned unchanged. Otherwise the slots set by the user before
@@ -55,8 +58,8 @@ PopulateObs <- function(Obs,
   
   .CheckClass(Obs, "obs", "Obs")
   
-  # TODO: LifeHistory observation error 
-  # TODO: Exploitation observation error
+  Obs@LifeHistory  <- .PopulateLifeHistoryObs(Obs@LifeHistory)
+  Obs@Exploitation <- .PopulateExploitationObs(Obs@Exploitation)
   
   Obs@Effort <- PopulateEffortObs(
     Effort    = Obs@Effort,

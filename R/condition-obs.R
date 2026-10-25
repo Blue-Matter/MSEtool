@@ -5,8 +5,8 @@
 #' an operating model `Hist` object.
 #'
 #' Iterates over stock complexes and observed data sets, conditioning
-#' landings, discards, CPUE, and survey indices for historical years and
-#' generating observation error for projection years.
+#' life history, exploitation, landings, discards, CPUE, and survey indices
+#' for historical years and generating observation error for projection years.
 #'
 #' @param Hist Operating model history object
 #' @param silent Logical; if `TRUE`, suppress progress bars and status messages
@@ -51,9 +51,8 @@
     stocks      <- Complexes[[i]]
     FisheryData <- FisheryDataList[[i]]
     
-    # TODO
-    # - life history
-    # - exploitation
+    Hist <- .ConditionObsLifeHistory(Hist, FisheryData, HistYears, stocks, i)
+    Hist <- .ConditionObsExploitation(Hist, FisheryData, HistYears, stocks, i)
 
     Hist <- .ConditionObsEffort(Hist, FisheryData, HistYears, ProjYears, stocks, i)
 

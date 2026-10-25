@@ -12,7 +12,8 @@
   FleetNames,
   StockNames,
   silent = FALSE,
-  id = NULL
+  id = NULL,
+  Observed = NULL
 )
 }
 \arguments{
@@ -31,6 +32,9 @@
 \item{silent}{Logical; if \code{TRUE}, suppress progress bars and status messages}
 
 \item{id}{Optional progress bar ID from \code{cli::cli_progress_bar}}
+
+\item{Observed}{Observed life history and exploitation of all sims from
+\code{.GenerateObservedBiology()}}
 }
 \value{
 A list of \code{data} objects for each stock complex, containing

@@ -23,8 +23,8 @@ Internal wrapper function to generate historical fishery data
 for all simulation replicates in an operating model history object.
 }
 \details{
-Iterates over simulation replicates, generating effort, landings,
-discards, CPUE, and survey data for each stock or stock complex. If all
+Iterates over simulation replicates, generating life history, exploitation,
+effort, landings, discards, CPUE, and survey data for each stock or stock complex. If all
 simulation replicates produce identical data, only the first
 replicate is returned.
 }

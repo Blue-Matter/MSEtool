@@ -17,6 +17,20 @@ population dynamics. Each slot holds a dedicated sub-object defining
 the model and parameters for that process. Used in the \code{LifeHistory} slot
 of a \link[=data-class]{data} object.
 }
+\details{
+A \code{lifehistorydata} object describes the life history of one stock.
+\code{Data@LifeHistory} is an object, or a list of objects named by stock (see
+\code{\link[=Data]{Data()}}). Each component is described by \code{Pars} and \code{Model}, or by
+\code{MeanAtAge} or \code{MeanAtLength}. The uncertainty of a parameter is a \code{Pars}
+entry named \verb{<parameter>_CV}, e.g. \code{Linf_CV}.
+
+In simulated data, the components are the values observed in the last
+historical year with the error given by \code{\link[=LifeHistoryObs]{LifeHistoryObs()}}; \code{Pars} hold
+numbers, and components without observation error are empty. The same values
+are used in projection years.
+
+\code{LifeHistoryData()} creates a new \code{lifehistorydata} object.
+}
 \section{Slots}{
 
 \describe{
@@ -47,9 +61,7 @@ of the population, including movement and area allocation.}
 \item{\code{Depletion}}{An object of class \link[=depletion-class]{depletion} specifying the initial
 depletion level relative to unfished biomass.}
 
-\item{\code{Misc}}{A named list for any additional life-history metadata.
-
-\code{LifeHistoryData()} creates a new \code{lifehistorydata} object.}
+\item{\code{Misc}}{A named list for any additional life-history metadata.}
 }}
 
 \seealso{

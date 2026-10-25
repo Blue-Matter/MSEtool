@@ -282,7 +282,7 @@
 
   doOpt <- stats::optimize(.OptCatchability,
                            log(bounds),
-                           Hist=HistSim,
+                           HistSim=HistSim,
                            nStock=nStock,
                            nFleet=nFleet,
                            nArea=nArea,
@@ -297,7 +297,7 @@
     # more robust than optimize but slower
     doOpt <- stats::nlminb(mean(log(bounds)),
                            .OptCatchability,
-                           Hist=HistSim,
+                           HistSim=HistSim,
                            nStock=nStock,
                            nFleet=nFleet,
                            nArea=nArea,

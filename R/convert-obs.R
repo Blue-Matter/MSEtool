@@ -26,19 +26,26 @@
 #' `Landings` (`Cobs` and `Cbiascv`) because legacy objects do not distinguish
 #' between landings and discards observation error.
 #'
-#' ## Slots Not Yet Converted
+#' The legacy bias CVs of life history and selectivity become the `Bias` of
+#' the named parameter in [LifeHistoryObs()] and [ExploitationObs()]. A legacy
+#' bias CV is the CV of the lognormal from which one bias per simulation is
+#' drawn, which is how a scalar `Bias` is interpreted:
+#'
+#' | Legacy slot | New slot |
+#' |---|---|
+#' | `Linfbiascv`, `Kbiascv`, `t0biascv` | `LifeHistory@Length`, `Bias` of `Linf`, `K`, `t0` |
+#' | `Mbiascv` | `LifeHistory@NaturalMortality`, `Bias` of `M` |
+#' | `LenMbiascv` | `LifeHistory@Maturity`, `Bias` of `L50` |
+#' | `hbiascv`, `sigmaRbiascv` | `LifeHistory@SRR`, `Bias` of `h` and `SD` |
+#' | `Dbiascv` | `LifeHistory@Depletion`, `Bias` of `Final` |
+#' | `LFCbiascv`, `LFSbiascv` | `Exploitation@Selectivity`, `Bias` of `L5` and `LFS` |
+#'
+#' ## Slots Not Converted
 #'
 #' The following legacy slots do not have a corresponding slot in the current
-#' [obs-class] and are silently dropped. They will be mapped once the
-#' [lifehistoryobs-class] and [exploitationobs-class] placeholders are fully
-#' implemented:
+#' [obs-class] and are dropped:
 #'
-#' - Life-history bias CVs: `Linfbiascv`, `t0biascv`, `Kbiascv`,
-#'   `LenMbiascv`, `Mbiascv`
-#' - Selectivity bias CVs: `LFCbiascv`, `LFSbiascv`
 #' - Reference point bias CVs: `FMSY_Mbiascv`, `BMSY_B0biascv`
-#' - Composition data: `CAA_nsamp`, `CAA_ESS`, `CAL_nsamp`, `CAL_ESS`
-#'   (mapped to `LandingsAtAge` and `LandingsAtSize` once implemented)
 #'
 #' @return An [obs-class] object.
 #'
@@ -82,14 +89,24 @@ ConvertObs <- function(Obs, silent = FALSE) {
   obs@LandingsAtSize@ESS        <- Obs@CAL_ESS
   
   
-  # Life-history bias CVs 
-  # Obs@Linfbiascv, Obs@t0biascv, Obs@Kbiascv, Obs@LenMbiascv, Obs@Mbiascv
-  #
-  # Selectivity bias CVs 
-  # Obs@LFCbiascv, Obs@LFSbiascv
-  #
-  # Reference point bias CVs:
-  # Obs@FMSY_Mbiascv, Obs@BMSY_B0biascv
-  
+  obs@LifeHistory <- LifeHistoryObs(
+    Length           = .LegacyBias(Linf = Obs@Linfbiascv, K = Obs@Kbiascv, t0 = Obs@t0biascv),
+    NaturalMortality = .LegacyBias(M = Obs@Mbiascv),
+    Maturity         = .LegacyBias(L50 = Obs@LenMbiascv),
+    SRR              = .LegacyBias(h = Obs@hbiascv, SD = Obs@sigmaRbiascv),
+    Depletion        = .LegacyBias(Final = Obs@Dbiascv)
+  )
+
+  obs@Exploitation <- ExploitationObs(
+    Selectivity = .LegacyBias(L5 = Obs@LFCbiascv, LFS = Obs@LFSbiascv)
+  )
+
   obs
+}
+
+# `Bias` specification from legacy bias CVs; CVs that are missing or not positive are dropped
+.LegacyBias <- function(...) {
+  Bias <- list(...)
+  Bias <- Bias[vapply(Bias, \(x) length(x) == 1 && is.finite(x) && x > 0, logical(1))]
+  if (length(Bias)) list(Bias = lapply(Bias, as.numeric)) else list()
 }

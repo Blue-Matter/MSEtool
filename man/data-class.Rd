@@ -47,10 +47,17 @@ Defaults to \code{floor(max(Years))} when not supplied to \code{\link[=Data]{Dat
 \item{\code{nArea}}{Positive integer. Number of spatial areas. Defaults to \code{1}.}
 
 \item{\code{LifeHistory}}{An object of class \link[=lifehistorydata-class]{lifehistorydata} containing
-biological parameters such as growth, maturity, and natural mortality.}
+biological parameters such as growth, maturity, and natural mortality, or
+a list of them named by stock. In an \link[=om-class]{om}, a single object is
+converted to a list named by the stock when the complex has one stock.
+Simulated data hold one element per stock in the complex. See
+\code{\link[=LifeHistoryObs]{LifeHistoryObs()}}.}
 
 \item{\code{Exploitation}}{An object of class \link[=exploitationdata-class]{exploitationdata} containing
-selectivity, retention, and discard mortality parameters.}
+selectivity, retention, and discard mortality parameters, or a list of
+them named by fleet, or a list named by stock of lists named by fleet. In
+an \link[=om-class]{om}, a single object is converted to the nested list when the
+complex has one stock and the OM has one fleet. See \code{\link[=ExploitationObs]{ExploitationObs()}}.}
 
 \item{\code{Reference}}{An object of class \link[=referencedata-class]{referencedata} containing biological
 reference points such as unfished biomass and MSY-based quantities.}

@@ -20,7 +20,10 @@
 .StructurePars <- function(Pars, nSim=NULL, Years=NULL, nArea=NULL) {
   if (!length(Pars))
     return(Pars)
-  
+
+  if (!is.null(names(Pars)))
+    Pars <- Pars[!.IsCVPar(names(Pars))]
+
   Pars <- purrr::map(Pars, \(Par)
                      .StructurePar(Par, nSim, Years, nArea)
   )

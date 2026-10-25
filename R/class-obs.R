@@ -1,39 +1,32 @@
 #' The `lifehistoryobs` S4 Class
 #'
-#' Defines the observation error structure for life-history parameters
-#' (growth, maturity, natural mortality, etc.). Used in the `LifeHistory` slot
-#' of an [obs-class] object. Objects are created via [LifeHistoryObs()].
+#' Defines the observation error of the life history of a stock (growth,
+#' weight, natural mortality, maturity, fecundity, stock-recruit relationship
+#' and depletion). Used in the `LifeHistory` slot of an [obs-class] object.
+#' Objects are created via [LifeHistoryObs()], which documents the
+#' specification of each component.
 #'
-#' @slot Ages `list`. Observation error specification for age structure
-#'   parameters. See [LifeHistoryObs()].
-#' @slot Length `list`. Observation error specification for growth parameters.
-#'   See [LifeHistoryObs()].
-#' @slot Weight `list`. Observation error specification for weight-at-age or
-#'   length-weight parameters. See [LifeHistoryObs()].
-#' @slot NaturalMortality `list`. Observation error specification for natural
-#'   mortality. See [LifeHistoryObs()].
-#' @slot Maturity `list`. Observation error specification for maturity
-#'   schedules. See [LifeHistoryObs()].
-#' @slot Fecundity `list`. Observation error specification for fecundity
-#'   parameters. See [LifeHistoryObs()].
-#' @slot SRR `list`. Observation error specification for stock-recruitment
-#'   parameters. See [LifeHistoryObs()].
-#' @slot Spatial `list`. Observation error specification for spatial
-#'   parameters. See [LifeHistoryObs()].
-#' @slot Depletion `list`. Observation error specification for initial
-#'   depletion. See [LifeHistoryObs()].
+#' @slot Ages `list`. Not used.
+#' @slot Length `list`. Observation error of growth: `list(Bias = , CV = )`.
+#' @slot Weight `list`. Observation error of weight.
+#' @slot NaturalMortality `list`. Observation error of natural mortality.
+#' @slot Maturity `list`. Observation error of maturity.
+#' @slot Fecundity `list`. Observation error of fecundity.
+#' @slot SRR `list`. Observation error of the stock-recruit relationship.
+#' @slot Spatial `list`. Not used.
+#' @slot Depletion `list`. Observation error of the final depletion.
 #' @slot Misc `list`. Miscellaneous additional objects.
 #'
-#' This class is a placeholder. Each slot mirrors the corresponding sub-object
-#' of [lifehistorydata-class] and will eventually hold an error structure
-#' (bias, CV) for the associated life-history parameter. Slots are currently
-#' untyped lists and are not populated during model runs. See [LifeHistoryObs()]
-#' for further details.
+#' @details
+#' A component with a specification is observed and stored in
+#' `Data@LifeHistory`; a component with an empty list is not. After
+#' [Simulate()] conditions on real data, the `Stock` element of a component
+#' holds the `Bias` and `CV` of each stock. See [LifeHistoryObs()].
 #'
 #' @seealso
 #' - [LifeHistoryObs()] for the constructor.
 #' - [obs-class] for the enclosing object.
-#' - [lifehistorydata-class] for the complementary observed-values class.
+#' - [lifehistorydata-class] for the observed values.
 #'
 #' @family obs
 #'
@@ -58,29 +51,27 @@ setClass(
 
 #' The `exploitationobs` S4 Class
 #'
-#' Defines the observation error structure for exploitation process parameters
-#' (selectivity, retention, discard mortality). Used in the `Exploitation` slot
-#' of an [obs-class] object. Objects are created via [ExploitationObs()].
+#' Defines the observation error of the exploitation pattern of a fleet
+#' (selectivity, retention and discard mortality). Used in the `Exploitation`
+#' slot of an [obs-class] object. Objects are created via [ExploitationObs()],
+#' which documents the specification of each component.
 #'
-#' @slot Selectivity `list`. Observation error specification for selectivity.
-#'   See [ExploitationObs()].
-#' @slot Retention `list`. Observation error specification for retention.
-#'   See [ExploitationObs()].
-#' @slot DiscardMortality `list`. Observation error specification for discard
-#'   mortality. See [ExploitationObs()].
+#' @slot Selectivity `list`. Observation error of selectivity:
+#'   `list(Bias = , CV = )`.
+#' @slot Retention `list`. Observation error of retention.
+#' @slot DiscardMortality `list`. Observation error of discard mortality.
 #' @slot Misc `list`. Miscellaneous additional objects.
 #'
 #' @details
-#' This class is a placeholder. Each slot mirrors the corresponding sub-object
-#' of [exploitationdata-class] and will eventually hold an error structure for
-#' the associated exploitation parameter. Slots are currently untyped lists and
-#' are not populated during model runs. See [ExploitationObs()] for further
-#' details.
+#' A component with a specification is observed and stored in
+#' `Data@Exploitation`; a component with an empty list is not. After
+#' [Simulate()] conditions on real data, the `Stock` element of a component
+#' holds the `Bias` and `CV` of each stock. See [ExploitationObs()].
 #'
 #' @seealso
 #'  - [ExploitationObs()] for the constructor.
 #'  - [obs-class] for the enclosing object.
-#'  - [exploitationdata-class] for the complementary observed-values class.
+#'  - [exploitationdata-class] for the observed values.
 #'
 #' @family obs
 #'
@@ -552,7 +543,7 @@ methods::setClassUnion(name="compobs.CompObs", members=c('compobs', 'CompObs'))
 #' - [Obs()] for the constructor and accessor.
 #' - [CatchObs()], [EffortObs()], [IndicesObs()], [CompObs()] for
 #'   sub-object constructors.
-#' - [LifeHistoryObs()], [ExploitationObs()] for placeholder sub-objects.
+#' - [LifeHistoryObs()], [ExploitationObs()] for the life history and exploitation sub-objects.
 #' - [data-class] and [Data()] for the complementary observed-values object.
 #' - [OM()] for the operating model constructor.
 #' - [ConvertObs()] for converting legacy [Obs-legacy-class] objects.

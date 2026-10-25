@@ -18,32 +18,29 @@ LifeHistoryObs(
 )
 }
 \arguments{
-\item{Ages}{\code{list}. Observation error specification for age structure
-parameters. Default \code{list()}.}
+\item{Ages}{\code{list}. Not used: the ages are copied to the data without error
+when any component is observed.}
 
-\item{Length}{\code{list}. Observation error specification for growth parameters.
+\item{Length}{\code{list}. Observation error of growth, as
+\code{list(Bias = , CV = )}. Default \code{list()}: growth is not observed.}
+
+\item{Weight}{\code{list}. Observation error of the length-weight relationship or
+weight-at-age. Default \code{list()}.}
+
+\item{NaturalMortality}{\code{list}. Observation error of natural mortality.
 Default \code{list()}.}
 
-\item{Weight}{\code{list}. Observation error specification for weight-at-age
-or length-weight parameters. Default \code{list()}.}
+\item{Maturity}{\code{list}. Observation error of maturity. Default \code{list()}.}
 
-\item{NaturalMortality}{\code{list}. Observation error specification for natural
-mortality. Default \code{list()}.}
+\item{Fecundity}{\code{list}. Observation error of fecundity. Default \code{list()}.}
 
-\item{Maturity}{\code{list}. Observation error specification for maturity
-schedules. Default \code{list()}.}
+\item{SRR}{\code{list}. Observation error of the stock-recruit relationship.
+Default \code{list()}.}
 
-\item{Fecundity}{\code{list}. Observation error specification for fecundity
-parameters. Default \code{list()}.}
+\item{Spatial}{\code{list}. Not used: spatial structure is not observed.}
 
-\item{SRR}{\code{list}. Observation error specification for stock-recruitment
-parameters. Default \code{list()}.}
-
-\item{Spatial}{\code{list}. Observation error specification for spatial
-parameters. Default \code{list()}.}
-
-\item{Depletion}{\code{list}. Observation error specification for initial
-depletion. Default \code{list()}.}
+\item{Depletion}{\code{list}. Observation error of the final depletion. Default
+\code{list()}.}
 
 \item{Misc}{\code{list}. Miscellaneous additional objects. Default \code{list()}.}
 }
@@ -51,30 +48,90 @@ depletion. Default \code{list()}.}
 A \link[=lifehistoryobs-class]{lifehistoryobs} object.
 }
 \description{
-Construct a \link[=lifehistoryobs-class]{lifehistoryobs} object defining observation error for
-life-history parameters.
+Construct a \link[=lifehistoryobs-class]{lifehistoryobs} object defining the observation error of
+the life history of a stock (growth, weight, natural mortality, maturity,
+fecundity, stock-recruit relationship and depletion). The observed life
+history is stored in \code{Data@LifeHistory}.
 }
 \details{
-\strong{Placeholder.} This class and constructor are reserved for future
-development and are not currently used. Each slot will
-eventually mirror the structure of the corresponding slot in
-\link[=lifehistorydata-class]{lifehistorydata}, providing bias and CV specifications for
-life-history parameter estimation. Slots currently accept untyped lists and
-all values are silently ignored during simulation.
+\subsection{Specifying Observation Error}{
 
-When converted from a legacy \link[=Obs-legacy-class]{Obs-legacy} object via \code{\link[=ConvertObs]{ConvertObs()}},
-the life-history bias CVs (\code{Linfbiascv}, \code{Kbiascv}, \code{Mbiascv}, etc.) are
-not yet mapped to this class and are silently dropped.
+Each component is a list with the elements \code{Bias} and \code{CV}, or \code{list()} when
+the component is not observed. A component of the stock that has no
+observation error specified is not stored in \code{Data@LifeHistory}, unless it
+is supplied with the real data in \code{OM@Data}.
+
+\code{Bias} and \code{CV} are either one specification used for all parameters of the
+component, or a list (or named vector) with one specification per
+parameter, named by the names in the \code{Pars} of the stock's component, e.g.
+\code{Linf}, \code{K} and \code{t0} for \code{vonBert} growth. A parameter that is not named is
+observed without error. Besides \code{Pars}, these can be named:
+\code{CVatAge} for \code{Length}; \code{R0}, \code{SD} and \code{AC} for \code{SRR}; \code{Final} for
+\code{Depletion}. They are only observed when named.
+\itemize{
+\item \code{Bias}: multiplicative bias. A single number is the CV of a lognormal
+from which one bias per simulation is drawn; a vector \code{c(lower, upper)}
+draws one bias per simulation from a uniform distribution (use
+\code{c(1.2, 1.2)} for a bias of 1.2 in every simulation); a vector of length
+\code{nSim} gives the bias of each simulation.
+\item \code{CV}: coefficient of variation of the lognormal observation error, with
+one draw per simulation and parameter. A vector \code{c(mean, sd)} draws the
+CV of each simulation from a lognormal. The CV is stored with the
+observed parameter in \code{Pars}, as \verb{<parameter>_CV}.
+}
+
+The observed value of a parameter is its value in the last historical time
+step multiplied by the bias and the error. The observed schedules
+(\code{MeanAtAge}, \code{MeanAtLength}) are regenerated from the observed parameters
+in the order growth, weight, natural mortality, maturity and fecundity, so a
+component that depends on another, such as weight at age from length at age,
+follows the observed values. The steepness of a Beverton-Holt
+relationship is bounded to 0.2 to 0.999, and the autocorrelation to -0.99
+to 0.99. A simulation whose observed schedule is not valid is redrawn.
+
+A component that the stock defines by \code{MeanAtAge} or \code{MeanAtLength} without
+\code{Pars} takes an unnamed \code{Bias} or \code{CV}, which scales the whole schedule by a
+single factor per simulation, bounded to the range 0 to 1 for maturity.
+Without an observation error specification, a stock's schedule is not
+observed.
+
+The observed life history is fixed at the last historical year and is the
+same in projection years. The specification is read from the \code{Obs} of the
+first fleet of the stock complex that has one, and applies to every stock in
+the complex, with independent draws.
+}
+
+\subsection{Conditioning on Real Data}{
+
+Components supplied for a stock in \code{OM@Data} (see \code{\link[=Data]{Data()}}) are used as
+supplied. When the real data and the OM have the same parameter,
+\code{\link[=Simulate]{Simulate()}} sets the bias of each simulation to the ratio of the real value
+to the simulated value, and the CV to the reported \verb{<parameter>_CV}. The
+values are stored by stock in the \code{Stock} element of the component. Values
+supplied by the user in \code{Bias} and \code{CV} are kept. Components defined by
+schedules in both are compared through the sum of the final-year schedule.
+}
 }
 \examples{
-lho <- LifeHistoryObs()
+# Growth and natural mortality observed with error
+lho <- LifeHistoryObs(
+  Length           = list(CV = list(Linf = 0.05, K = 0.15)),
+  NaturalMortality = list(CV = 0.2)
+)
+
+# Natural mortality overestimated by 20\% in every simulation
+lho <- LifeHistoryObs(NaturalMortality = list(Bias = c(1.2, 1.2)))
+
+# Perfect knowledge of the maturity ogive
+lho <- LifeHistoryObs(Maturity = list(CV = 0))
 
 }
 \seealso{
 \itemize{
 \item \link[=lifehistoryobs-class]{lifehistoryobs} for the class definition.
 \item \code{\link[=Obs]{Obs()}} for the enclosing observation model constructor.
-\item \link[=lifehistorydata-class]{lifehistorydata} for the complementary observed-values class.
+\item \link[=lifehistorydata-class]{lifehistorydata} for the observed values.
+\item \code{\link[=ExploitationObs]{ExploitationObs()}} for the observation of selectivity and retention.
 }
 
 Other obs:

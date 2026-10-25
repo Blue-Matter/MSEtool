@@ -69,6 +69,7 @@
   ind <- which(tolower(ParNames) |> .SubstrRight(2) == 'sd')
   if (length(ind)>0)
     ParNames <- ParNames[-ind]
+  ParNames <- ParNames[!.IsCVPar(ParNames)]
   
   for (i in seq_along(matching_parameters)) {
     formals <- formals(get(models[i]))
@@ -90,6 +91,9 @@
   model
 }
 
+
+# `<name>_CV` and `CV_<name>` entries of Pars report the uncertainty of a parameter
+.IsCVPar <- function(Names) grepl("(_CV$|^CV_)", Names)
 
 #' Validate a `Pars` List
 #'

@@ -5,54 +5,47 @@
 \alias{lifehistoryobs-class}
 \title{The \code{lifehistoryobs} S4 Class}
 \description{
-Defines the observation error structure for life-history parameters
-(growth, maturity, natural mortality, etc.). Used in the \code{LifeHistory} slot
-of an \link[=obs-class]{obs} object. Objects are created via \code{\link[=LifeHistoryObs]{LifeHistoryObs()}}.
+Defines the observation error of the life history of a stock (growth,
+weight, natural mortality, maturity, fecundity, stock-recruit relationship
+and depletion). Used in the \code{LifeHistory} slot of an \link[=obs-class]{obs} object.
+Objects are created via \code{\link[=LifeHistoryObs]{LifeHistoryObs()}}, which documents the
+specification of each component.
+}
+\details{
+A component with a specification is observed and stored in
+\code{Data@LifeHistory}; a component with an empty list is not. After
+\code{\link[=Simulate]{Simulate()}} conditions on real data, the \code{Stock} element of a component
+holds the \code{Bias} and \code{CV} of each stock. See \code{\link[=LifeHistoryObs]{LifeHistoryObs()}}.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{Ages}}{\code{list}. Observation error specification for age structure
-parameters. See \code{\link[=LifeHistoryObs]{LifeHistoryObs()}}.}
+\item{\code{Ages}}{\code{list}. Not used.}
 
-\item{\code{Length}}{\code{list}. Observation error specification for growth parameters.
-See \code{\link[=LifeHistoryObs]{LifeHistoryObs()}}.}
+\item{\code{Length}}{\code{list}. Observation error of growth: \code{list(Bias = , CV = )}.}
 
-\item{\code{Weight}}{\code{list}. Observation error specification for weight-at-age or
-length-weight parameters. See \code{\link[=LifeHistoryObs]{LifeHistoryObs()}}.}
+\item{\code{Weight}}{\code{list}. Observation error of weight.}
 
-\item{\code{NaturalMortality}}{\code{list}. Observation error specification for natural
-mortality. See \code{\link[=LifeHistoryObs]{LifeHistoryObs()}}.}
+\item{\code{NaturalMortality}}{\code{list}. Observation error of natural mortality.}
 
-\item{\code{Maturity}}{\code{list}. Observation error specification for maturity
-schedules. See \code{\link[=LifeHistoryObs]{LifeHistoryObs()}}.}
+\item{\code{Maturity}}{\code{list}. Observation error of maturity.}
 
-\item{\code{Fecundity}}{\code{list}. Observation error specification for fecundity
-parameters. See \code{\link[=LifeHistoryObs]{LifeHistoryObs()}}.}
+\item{\code{Fecundity}}{\code{list}. Observation error of fecundity.}
 
-\item{\code{SRR}}{\code{list}. Observation error specification for stock-recruitment
-parameters. See \code{\link[=LifeHistoryObs]{LifeHistoryObs()}}.}
+\item{\code{SRR}}{\code{list}. Observation error of the stock-recruit relationship.}
 
-\item{\code{Spatial}}{\code{list}. Observation error specification for spatial
-parameters. See \code{\link[=LifeHistoryObs]{LifeHistoryObs()}}.}
+\item{\code{Spatial}}{\code{list}. Not used.}
 
-\item{\code{Depletion}}{\code{list}. Observation error specification for initial
-depletion. See \code{\link[=LifeHistoryObs]{LifeHistoryObs()}}.}
+\item{\code{Depletion}}{\code{list}. Observation error of the final depletion.}
 
-\item{\code{Misc}}{\code{list}. Miscellaneous additional objects.
-
-This class is a placeholder. Each slot mirrors the corresponding sub-object
-of \link[=lifehistorydata-class]{lifehistorydata} and will eventually hold an error structure
-(bias, CV) for the associated life-history parameter. Slots are currently
-untyped lists and are not populated during model runs. See \code{\link[=LifeHistoryObs]{LifeHistoryObs()}}
-for further details.}
+\item{\code{Misc}}{\code{list}. Miscellaneous additional objects.}
 }}
 
 \seealso{
 \itemize{
 \item \code{\link[=LifeHistoryObs]{LifeHistoryObs()}} for the constructor.
 \item \link[=obs-class]{obs} for the enclosing object.
-\item \link[=lifehistorydata-class]{lifehistorydata} for the complementary observed-values class.
+\item \link[=lifehistorydata-class]{lifehistorydata} for the observed values.
 }
 
 Other obs:

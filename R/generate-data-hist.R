@@ -4,8 +4,8 @@
 #' Internal wrapper function to generate historical fishery data
 #' for all simulation replicates in an operating model history object.
 #'
-#' Iterates over simulation replicates, generating effort, landings,
-#' discards, CPUE, and survey data for each stock or stock complex. If all
+#' Iterates over simulation replicates, generating life history, exploitation,
+#' effort, landings, discards, CPUE, and survey data for each stock or stock complex. If all
 #' simulation replicates produce identical data, only the first
 #' replicate is returned.
 #'
@@ -34,6 +34,8 @@
 
   parallel <- CheckParallel(parallel)
 
+  Observed <- .GenerateObservedBiology(Hist, HistYears)
+
   SimDataList <- if (parallel) {
     CheckPackage('furrr')
     # No live progress bar under parallel - workers can't update the
@@ -42,10 +44,10 @@
     furrr::future_map(
       seq_len(nSim), .GenerateHistoricalDataSim,
       Hist = Hist, HistYears = HistYears, nArea = nArea,
-      FleetNames = FleetNames, StockNames = StockNames,
+      FleetNames = FleetNames, StockNames = StockNames, Observed = Observed,
       silent = TRUE, id = NULL,
       .options = furrr::furrr_options(
-        globals  = c('Hist', 'HistYears', 'nArea', 'FleetNames', 'StockNames'),
+        globals  = c('Hist', 'HistYears', 'nArea', 'FleetNames', 'StockNames', 'Observed'),
         packages = "MSEtool",
         seed     = 101
       )
@@ -63,7 +65,8 @@
                                          nArea,
                                          FleetNames,
                                          StockNames,
-                                         !show, id))
+                                         !show, id,
+                                         Observed))
   }
   names(SimDataList) <- seq_len(nSim)
   
@@ -147,6 +150,8 @@
 #' @param StockNames Character vector of stock names
 #' @param silent Logical; if `TRUE`, suppress progress bars and status messages
 #' @param id Optional progress bar ID from `cli::cli_progress_bar`
+#' @param Observed Observed life history and exploitation of all sims from
+#'   `.GenerateObservedBiology()`
 #'
 #' @return A list of `data` objects for each stock complex, containing
 #'   simulated historical values for effort, catch, and indices
@@ -159,7 +164,8 @@
                                        FleetNames,
                                        StockNames, 
                                        silent=FALSE, 
-                                       id=NULL) {
+                                       id=NULL,
+                                       Observed=NULL) {
 
   Saved <- .SaveRNG()
   on.exit(.RestoreRNG(Saved), add = TRUE)
@@ -185,8 +191,10 @@
     Data <- DataList[[i]]
     Data@nArea <- nArea
     
-    # TODO Data@LifeHistory 
-    # TODO Data@Exploitation 
+    nSim <- Hist@OM@nSim
+    Data@LifeHistory  <- .GenHistDataLifeHistory(sim, Data, Observed$LH[[i]], StockNames[stocks], nSim)
+    Data@Exploitation <- .GenHistDataExploitation(sim, Data, Observed$Ex[[i]], StockNames[stocks],
+                                                  FleetNames, nSim)
     
     Data@Effort         <- .GenHistDataEffort(sim, Data, Hist, HistYears, i, 
                                               stocks, FleetNames)

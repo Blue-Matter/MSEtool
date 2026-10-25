@@ -35,11 +35,13 @@ Access} in Details.}
 
 \item{LifeHistory}{A \link[=lifehistoryobs-class]{lifehistoryobs} object, or \code{NULL} (default).
 When \code{NULL}, an empty \link[=lifehistoryobs-class]{lifehistoryobs} is created via
-\code{\link[=LifeHistoryObs]{LifeHistoryObs()}}. Currently a placeholder; see \code{\link[=LifeHistoryObs]{LifeHistoryObs()}}.}
+\code{\link[=LifeHistoryObs]{LifeHistoryObs()}}, which defines the observation error of the life history
+stored in \code{Data@LifeHistory}.}
 
 \item{Exploitation}{An \link[=exploitationobs-class]{exploitationobs} object, or \code{NULL} (default).
 When \code{NULL}, an empty \link[=exploitationobs-class]{exploitationobs} is created via
-\code{\link[=ExploitationObs]{ExploitationObs()}}. Currently a placeholder; see \code{\link[=ExploitationObs]{ExploitationObs()}}.}
+\code{\link[=ExploitationObs]{ExploitationObs()}}, which defines the observation error of the exploitation
+pattern stored in \code{Data@Exploitation}.}
 
 \item{Effort}{An \link[=effortobs-class]{effortobs} object, or \code{NULL} (default). When
 \code{NULL}, an empty \link[=effortobs-class]{effortobs} is created via \code{\link[=EffortObs]{EffortObs()}}.}
@@ -150,7 +152,7 @@ obs <- Obs(
 \item \link[=obs-class]{obs} for the class definition and slot-level documentation.
 \item \code{\link[=CatchObs]{CatchObs()}}, \code{\link[=EffortObs]{EffortObs()}}, \code{\link[=IndicesObs]{IndicesObs()}}, \code{\link[=CompObs]{CompObs()}} for
 sub-object constructors.
-\item \code{\link[=LifeHistoryObs]{LifeHistoryObs()}}, \code{\link[=ExploitationObs]{ExploitationObs()}} for placeholder sub-objects.
+\item \code{\link[=LifeHistoryObs]{LifeHistoryObs()}}, \code{\link[=ExploitationObs]{ExploitationObs()}} for the life history and exploitation sub-objects.
 \item \link[=data-class]{data} and \code{\link[=Data]{Data()}} for the complementary observed-values object.
 \item \code{\link[=OM]{OM()}} for the operating model constructor.
 \item \code{\link[=ConvertObs]{ConvertObs()}} for converting legacy \link[=Obs-legacy-class]{Obs-legacy} objects.

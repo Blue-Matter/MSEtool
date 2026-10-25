@@ -479,40 +479,85 @@ EffortObs <- function(CV    = NULL,
 
 #' ExploitationObs Constructor
 #'
-#' Construct an [exploitationobs-class] object defining observation error for
-#' exploitation process parameters.
+#' Construct an [exploitationobs-class] object defining the observation error
+#' of the exploitation pattern (selectivity, retention and discard mortality) of
+#' a fleet. The observed exploitation is stored in `Data@Exploitation`.
 #'
-#' @param Selectivity `list`. Observation error specification for selectivity.
+#' @param Selectivity `list`. Observation error of selectivity, as
+#'   `list(Bias = , CV = )`. Default `list()`: selectivity is not observed.
+#' @param Retention `list`. Observation error of retention. Default `list()`.
+#' @param DiscardMortality `list`. Observation error of discard mortality.
 #'   Default `list()`.
-#' @param Retention `list`. Observation error specification for retention.
-#'   Default `list()`.
-#' @param DiscardMortality `list`. Observation error specification for discard
-#'   mortality. Default `list()`.
 #' @param Misc `list`. Miscellaneous additional objects. Default `list()`.
 #'
 #' @details
-#' **Placeholder.** This class and constructor are reserved for future
-#' development and are not currently used during model runs. Each slot will
-#' eventually mirror the structure of the corresponding slot in
-#' [exploitationdata-class], providing bias and CV specifications for
-#' selectivity, retention, and discard mortality estimation. All slot values
-#' are silently ignored during simulation.
+#' ## Specifying Observation Error
 #'
-#' When converted from a legacy [Obs-legacy-class] object via [ConvertObs()],
-#' the selectivity bias CVs (`LFCbiascv`, `LFSbiascv`) are not yet mapped to
-#' this class and are silently dropped.
+#' Each component is a list with the elements `Bias` and `CV`, or `list()` when
+#' the component is not observed. A component of the fleet that has no
+#' observation error specified is not stored in `Data@Exploitation`, unless it
+#' is supplied with the real data in `OM@Data`.
+#'
+#' `Bias` and `CV` are either one specification used for all parameters of the
+#' component, or a list (or named vector) with one specification per
+#' parameter, named by the names in the `Pars` of the fleet's component, e.g.
+#' `L5`, `LFS` and `Vmaxlen` for `DoubleNormal` selectivity. A parameter that is
+#' not named is observed without error.
+#'
+#' - `Bias`: multiplicative bias. A single number is the CV of a lognormal
+#'   from which one bias per simulation is drawn; a vector `c(lower, upper)`
+#'   draws one bias per simulation from a uniform distribution (use
+#'   `c(1.2, 1.2)` for a bias of 1.2 in every simulation); a vector of length
+#'   `nSim` gives the bias of each simulation.
+#' - `CV`: coefficient of variation of the lognormal observation error, with
+#'   one draw per simulation and parameter. A vector `c(mean, sd)` draws the
+#'   CV of each simulation from a lognormal. The CV is stored with the
+#'   observed parameter in `Pars`, as `<parameter>_CV`.
+#'
+#' The observed value of a parameter is its value in the last historical time
+#' step multiplied by the bias and the error. The observed selectivity and
+#' retention are regenerated from the observed parameters, using the observed
+#' life history when it is available ([LifeHistoryObs()]).
+#'
+#' A component that the fleet defines by `MeanAtAge` or `MeanAtLength` without
+#' `Pars`, such as `DiscardMortality`, takes an unnamed `Bias` or `CV`, which
+#' scales the whole schedule by a single factor per simulation, bounded to
+#' the range 0 to 1.
+#'
+#' The observed exploitation is fixed at the last historical year and is the
+#' same in projection years. In an OM with several stocks, the specification of
+#' a fleet applies to every stock, with independent draws.
+#'
+#' ## Conditioning on Real Data
+#'
+#' Selectivity, retention and discard mortality supplied for a stock and fleet
+#' in `OM@Data` (see [Data()]) are used as supplied. When the real data and the
+#' OM have the same parameter, [Simulate()] sets the bias of each simulation to
+#' the ratio of the real value to the simulated value, and the CV to the
+#' reported `<parameter>_CV`. The values are stored by stock in the `Stock`
+#' element of the component. Values supplied by the user in `Bias` and `CV` are
+#' kept.
 #'
 #' @return An [exploitationobs-class] object.
 #'
 #' @seealso
 #' - [exploitationobs-class] for the class definition.
 #' - [Obs()] for the enclosing observation model constructor.
-#' - [exploitationdata-class] for the complementary observed-values class.
+#' - [exploitationdata-class] for the observed values.
+#' - [LifeHistoryObs()] for the observation of life history.
 #'
 #' @family obs
 #'
 #' @examples
-#' eo <- ExploitationObs()
+#' # Selectivity parameters observed with error; discard mortality known
+#' eo <- ExploitationObs(
+#'   Selectivity = list(CV = list(L5 = 0.1, LFS = 0.1))
+#' )
+#'
+#' # A bias of +20% in the length at full selection in every simulation
+#' eo <- ExploitationObs(
+#'   Selectivity = list(Bias = list(LFS = c(1.2, 1.2)))
+#' )
 #'
 #' @include class-unions.R
 #' @name ExploitationObs
@@ -521,13 +566,14 @@ ExploitationObs <- function(Selectivity      = list(),
                             Retention        = list(),
                             DiscardMortality = list(),
                             Misc             = list()) {
-  methods::new(
+  Object <- methods::new(
     "exploitationobs",
     Selectivity      = Selectivity,
     Retention        = Retention,
     DiscardMortality = DiscardMortality,
     Misc             = Misc
   )
+  .PopulateObsSpecs(Object, .ExComponents, "ExploitationObs")
 }
 
 
@@ -791,52 +837,106 @@ IndicesObs <- function(CV          = NULL,
 
 #' LifeHistoryObs Constructor
 #'
-#' Construct a [lifehistoryobs-class] object defining observation error for
-#' life-history parameters.
+#' Construct a [lifehistoryobs-class] object defining the observation error of
+#' the life history of a stock (growth, weight, natural mortality, maturity,
+#' fecundity, stock-recruit relationship and depletion). The observed life
+#' history is stored in `Data@LifeHistory`.
 #'
-#' @param Ages `list`. Observation error specification for age structure
-#'   parameters. Default `list()`.
-#' @param Length `list`. Observation error specification for growth parameters.
+#' @param Ages `list`. Not used: the ages are copied to the data without error
+#'   when any component is observed.
+#' @param Length `list`. Observation error of growth, as
+#'   `list(Bias = , CV = )`. Default `list()`: growth is not observed.
+#' @param Weight `list`. Observation error of the length-weight relationship or
+#'   weight-at-age. Default `list()`.
+#' @param NaturalMortality `list`. Observation error of natural mortality.
 #'   Default `list()`.
-#' @param Weight `list`. Observation error specification for weight-at-age
-#'   or length-weight parameters. Default `list()`.
-#' @param NaturalMortality `list`. Observation error specification for natural
-#'   mortality. Default `list()`.
-#' @param Maturity `list`. Observation error specification for maturity
-#'   schedules. Default `list()`.
-#' @param Fecundity `list`. Observation error specification for fecundity
-#'   parameters. Default `list()`.
-#' @param SRR `list`. Observation error specification for stock-recruitment
-#'   parameters. Default `list()`.
-#' @param Spatial `list`. Observation error specification for spatial
-#'   parameters. Default `list()`.
-#' @param Depletion `list`. Observation error specification for initial
-#'   depletion. Default `list()`.
+#' @param Maturity `list`. Observation error of maturity. Default `list()`.
+#' @param Fecundity `list`. Observation error of fecundity. Default `list()`.
+#' @param SRR `list`. Observation error of the stock-recruit relationship.
+#'   Default `list()`.
+#' @param Spatial `list`. Not used: spatial structure is not observed.
+#' @param Depletion `list`. Observation error of the final depletion. Default
+#'   `list()`.
 #' @param Misc `list`. Miscellaneous additional objects. Default `list()`.
 #'
 #' @details
-#' **Placeholder.** This class and constructor are reserved for future
-#' development and are not currently used. Each slot will
-#' eventually mirror the structure of the corresponding slot in
-#' [lifehistorydata-class], providing bias and CV specifications for
-#' life-history parameter estimation. Slots currently accept untyped lists and
-#' all values are silently ignored during simulation.
+#' ## Specifying Observation Error
 #'
-#' When converted from a legacy [Obs-legacy-class] object via [ConvertObs()],
-#' the life-history bias CVs (`Linfbiascv`, `Kbiascv`, `Mbiascv`, etc.) are
-#' not yet mapped to this class and are silently dropped.
+#' Each component is a list with the elements `Bias` and `CV`, or `list()` when
+#' the component is not observed. A component of the stock that has no
+#' observation error specified is not stored in `Data@LifeHistory`, unless it
+#' is supplied with the real data in `OM@Data`.
+#'
+#' `Bias` and `CV` are either one specification used for all parameters of the
+#' component, or a list (or named vector) with one specification per
+#' parameter, named by the names in the `Pars` of the stock's component, e.g.
+#' `Linf`, `K` and `t0` for `vonBert` growth. A parameter that is not named is
+#' observed without error. Besides `Pars`, these can be named:
+#' `CVatAge` for `Length`; `R0`, `SD` and `AC` for `SRR`; `Final` for
+#' `Depletion`. They are only observed when named.
+#'
+#' - `Bias`: multiplicative bias. A single number is the CV of a lognormal
+#'   from which one bias per simulation is drawn; a vector `c(lower, upper)`
+#'   draws one bias per simulation from a uniform distribution (use
+#'   `c(1.2, 1.2)` for a bias of 1.2 in every simulation); a vector of length
+#'   `nSim` gives the bias of each simulation.
+#' - `CV`: coefficient of variation of the lognormal observation error, with
+#'   one draw per simulation and parameter. A vector `c(mean, sd)` draws the
+#'   CV of each simulation from a lognormal. The CV is stored with the
+#'   observed parameter in `Pars`, as `<parameter>_CV`.
+#'
+#' The observed value of a parameter is its value in the last historical time
+#' step multiplied by the bias and the error. The observed schedules
+#' (`MeanAtAge`, `MeanAtLength`) are regenerated from the observed parameters
+#' in the order growth, weight, natural mortality, maturity and fecundity, so a
+#' component that depends on another, such as weight at age from length at age,
+#' follows the observed values. The steepness of a Beverton-Holt
+#' relationship is bounded to 0.2 to 0.999, and the autocorrelation to -0.99
+#' to 0.99. A simulation whose observed schedule is not valid is redrawn.
+#'
+#' A component that the stock defines by `MeanAtAge` or `MeanAtLength` without
+#' `Pars` takes an unnamed `Bias` or `CV`, which scales the whole schedule by a
+#' single factor per simulation, bounded to the range 0 to 1 for maturity.
+#' Without an observation error specification, a stock's schedule is not
+#' observed.
+#'
+#' The observed life history is fixed at the last historical year and is the
+#' same in projection years. The specification is read from the `Obs` of the
+#' first fleet of the stock complex that has one, and applies to every stock in
+#' the complex, with independent draws.
+#'
+#' ## Conditioning on Real Data
+#'
+#' Components supplied for a stock in `OM@Data` (see [Data()]) are used as
+#' supplied. When the real data and the OM have the same parameter,
+#' [Simulate()] sets the bias of each simulation to the ratio of the real value
+#' to the simulated value, and the CV to the reported `<parameter>_CV`. The
+#' values are stored by stock in the `Stock` element of the component. Values
+#' supplied by the user in `Bias` and `CV` are kept. Components defined by
+#' schedules in both are compared through the sum of the final-year schedule.
 #'
 #' @return A [lifehistoryobs-class] object.
 #'
 #' @seealso
 #' - [lifehistoryobs-class] for the class definition.
 #' - [Obs()] for the enclosing observation model constructor.
-#' - [lifehistorydata-class] for the complementary observed-values class.
+#' - [lifehistorydata-class] for the observed values.
+#' - [ExploitationObs()] for the observation of selectivity and retention.
 #'
 #' @family obs
 #'
 #' @examples
-#' lho <- LifeHistoryObs()
+#' # Growth and natural mortality observed with error
+#' lho <- LifeHistoryObs(
+#'   Length           = list(CV = list(Linf = 0.05, K = 0.15)),
+#'   NaturalMortality = list(CV = 0.2)
+#' )
+#'
+#' # Natural mortality overestimated by 20% in every simulation
+#' lho <- LifeHistoryObs(NaturalMortality = list(Bias = c(1.2, 1.2)))
+#'
+#' # Perfect knowledge of the maturity ogive
+#' lho <- LifeHistoryObs(Maturity = list(CV = 0))
 #'
 #' @include class-unions.R
 #' @name LifeHistoryObs
@@ -851,7 +951,7 @@ LifeHistoryObs <- function(Ages             = list(),
                            Spatial          = list(),
                            Depletion        = list(),
                            Misc             = list()) {
-  methods::new(
+  Object <- methods::new(
     "lifehistoryobs",
     Ages             = Ages,
     Length           = Length,
@@ -864,6 +964,7 @@ LifeHistoryObs <- function(Ages             = list(),
     Depletion        = Depletion,
     Misc             = Misc
   )
+  .PopulateObsSpecs(Object, .LHComponents, "LifeHistoryObs")
 }
 
 
@@ -884,11 +985,13 @@ LifeHistoryObs <- function(Ages             = list(),
 #'
 #' @param LifeHistory A [lifehistoryobs-class] object, or `NULL` (default).
 #'   When `NULL`, an empty [lifehistoryobs-class] is created via
-#'   [LifeHistoryObs()]. Currently a placeholder; see [LifeHistoryObs()].
+#'   [LifeHistoryObs()], which defines the observation error of the life history
+#'   stored in `Data@LifeHistory`.
 #'
 #' @param Exploitation An [exploitationobs-class] object, or `NULL` (default).
 #'   When `NULL`, an empty [exploitationobs-class] is created via
-#'   [ExploitationObs()]. Currently a placeholder; see [ExploitationObs()].
+#'   [ExploitationObs()], which defines the observation error of the exploitation
+#'   pattern stored in `Data@Exploitation`.
 #'
 #' @param Effort An [effortobs-class] object, or `NULL` (default). When
 #'   `NULL`, an empty [effortobs-class] is created via [EffortObs()].
@@ -969,7 +1072,7 @@ LifeHistoryObs <- function(Ages             = list(),
 #' - [obs-class] for the class definition and slot-level documentation.
 #' - [CatchObs()], [EffortObs()], [IndicesObs()], [CompObs()] for
 #'   sub-object constructors.
-#' - [LifeHistoryObs()], [ExploitationObs()] for placeholder sub-objects.
+#' - [LifeHistoryObs()], [ExploitationObs()] for the life history and exploitation sub-objects.
 #' - [data-class] and [Data()] for the complementary observed-values object.
 #' - [OM()] for the operating model constructor.
 #' - [ConvertObs()] for converting legacy [Obs-legacy-class] objects.

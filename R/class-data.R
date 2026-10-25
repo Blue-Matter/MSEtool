@@ -253,6 +253,18 @@ methods::setValidity("compdata", function(object) {
 #'   depletion level relative to unfished biomass.
 #' @slot Misc A named list for any additional life-history metadata.
 #'
+#' @details
+#' A `lifehistorydata` object describes the life history of one stock.
+#' `Data@@LifeHistory` is an object, or a list of objects named by stock (see
+#' [Data()]). Each component is described by `Pars` and `Model`, or by
+#' `MeanAtAge` or `MeanAtLength`. The uncertainty of a parameter is a `Pars`
+#' entry named `<parameter>_CV`, e.g. `Linf_CV`.
+#'
+#' In simulated data, the components are the values observed in the last
+#' historical year with the error given by [LifeHistoryObs()]; `Pars` hold
+#' numbers, and components without observation error are empty. The same values
+#' are used in projection years.
+#'
 #' `LifeHistoryData()` creates a new `lifehistorydata` object.
 #'
 #' @return `LifeHistoryData()` returns a `lifehistorydata` object.
@@ -284,6 +296,8 @@ LifeHistoryData <- function() {
   new('lifehistorydata')
 }
 
+methods::setClassUnion("LifeHistoryList", c("lifehistorydata", "list"))
+
 
 #' `exploitationdata` Class
 #'
@@ -298,6 +312,19 @@ LifeHistoryData <- function() {
 #' @slot DiscardMortality An object of class [discardmortality-class] defining
 #'   the mortality rate of discarded fish by age or length.
 #' @slot Misc A named list for any additional exploitation-level metadata.
+#'
+#' @details
+#' An `exploitationdata` object describes the exploitation pattern of one fleet
+#' on one stock. `Data@@Exploitation` is an object, a list of objects named by
+#' fleet, or a list named by stock of lists named by fleet (see [Data()]). Each
+#' component is described by `Pars` and `Model`, or by `MeanAtAge` or
+#' `MeanAtLength`. The uncertainty of a parameter is a `Pars` entry named
+#' `<parameter>_CV`, e.g. `LFS_CV`.
+#'
+#' In simulated data, the components are the values observed in the last
+#' historical year with the error given by [ExploitationObs()]; `Pars` hold
+#' numbers, and components without observation error are empty. The same values
+#' are used in projection years.
 #'
 #' `ExploitationData()` creates a new `exploitationdata` object.
 #'
@@ -325,6 +352,8 @@ setClass(
 ExploitationData <- function() {
   new('exploitationdata')
 }
+
+methods::setClassUnion("ExploitationList", c("exploitationdata", "list"))
 
 
 #' `referencedata` Class
@@ -429,9 +458,16 @@ AdviceData <- function() {
 #' @slot nArea Positive integer. Number of spatial areas. Defaults to `1`.
 #'
 #' @slot LifeHistory An object of class [lifehistorydata-class] containing
-#'   biological parameters such as growth, maturity, and natural mortality.
+#'   biological parameters such as growth, maturity, and natural mortality, or
+#'   a list of them named by stock. In an [om-class], a single object is
+#'   converted to a list named by the stock when the complex has one stock.
+#'   Simulated data hold one element per stock in the complex. See
+#'   [LifeHistoryObs()].
 #' @slot Exploitation An object of class [exploitationdata-class] containing
-#'   selectivity, retention, and discard mortality parameters.
+#'   selectivity, retention, and discard mortality parameters, or a list of
+#'   them named by fleet, or a list named by stock of lists named by fleet. In
+#'   an [om-class], a single object is converted to the nested list when the
+#'   complex has one stock and the OM has one fleet. See [ExploitationObs()].
 #' @slot Reference An object of class [referencedata-class] containing biological
 #'   reference points such as unfished biomass and MSY-based quantities.
 #'
@@ -487,8 +523,8 @@ setClass(
     Seasons = "num.null",
     nArea = "num.null",
 
-    LifeHistory = "lifehistorydata",
-    Exploitation = "exploitationdata",
+    LifeHistory = "LifeHistoryList",
+    Exploitation = "ExploitationList",
     Reference = "referencedata",
 
     Effort = "effortdata",
@@ -508,5 +544,9 @@ setClass(
     Advice = "advicedata",
     Log = "list",
     Misc = "list"
+  ),
+  prototype = list(
+    LifeHistory = new("lifehistorydata"),
+    Exploitation = new("exploitationdata")
   )
 )

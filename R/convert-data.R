@@ -187,7 +187,7 @@ ConvertData <- function(x, Seasons = 1, sim = 1, silent = FALSE) {
   if (!is.na(Data@Mort[sim])) {
     data@LifeHistory@NaturalMortality@Pars <- list(
       M    = Data@Mort[sim],
-      CV_M = Data@CV_Mort[sim]
+      M_CV = Data@CV_Mort[sim]
     )
   }
 
@@ -488,7 +488,7 @@ ConvertData <- function(x, Seasons = 1, sim = 1, silent = FALSE) {
 # ---- biology scalar-reduction ----
 
 .LegacyLifeHistory <- function(data, Data) {
-  LH <- data@LifeHistory
+  LH <- .FirstLifeHistory(data)
 
   MaxAge <- LH@Ages@MaxAge
   if (!length(MaxAge)) {
@@ -571,7 +571,7 @@ ConvertData <- function(x, Seasons = 1, sim = 1, silent = FALSE) {
   Pars <- NM@Pars
   if (length(Pars) && !is.null(Pars$M)) {
     Data@Mort    <- Pars$M
-    Data@CV_Mort <- Pars$CV_M %||NA% NA_real_
+    Data@CV_Mort <- Pars$M_CV %||NA% (Pars$CV_M %||NA% NA_real_)
     return(Data)
   }
 
@@ -652,7 +652,8 @@ ConvertData <- function(x, Seasons = 1, sim = 1, silent = FALSE) {
 }
 
 .LegacyExploitation <- function(data, Data) {
-  Pars <- data@Exploitation@Selectivity@Pars
+  Sel  <- .FirstExploitation(data)@Selectivity
+  Pars <- Sel@Pars
   if (length(Pars) && !is.null(Pars$L5)) {
     Data@LFC     <- Pars$L5
     Data@CV_LFC  <- Pars$L5_CV %||NA% NA_real_
@@ -662,7 +663,6 @@ ConvertData <- function(x, Seasons = 1, sim = 1, silent = FALSE) {
     return(Data)
   }
 
-  Sel <- data@Exploitation@Selectivity
   if (length(Sel@MeanAtLength) && !is.null(Sel@Classes)) {
     Ogive <- .TerminalValue(Sel@MeanAtLength)
     Mids  <- Sel@Classes[seq_along(Ogive)]
