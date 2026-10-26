@@ -43,13 +43,15 @@
 #'   survey indices found (i.e. indices not matched to any fleet name). Use
 #'   this to override the default names derived from column names. 
 #'   Used by [ImportBAMData()].
-#' @param UnitsLandings A character vector of length equal to the number of
-#'   landings fleets detected. Each element must be one of:
+#' @param UnitsLandings Optional named character vector (or list) of landings
+#'   units by fleet, with names matching the OM fleet names. Each element must
+#'   be one of:
 #'   - `"1000 lb"` — values will be converted from thousands of pounds to kg.
 #'   - `"1000 n"` — values will be multiplied by 1,000 (number in thousands).
+#'   Fleets not named here have their units detected from the BAM output.
 #'   Used by [ImportBAMData()].
-#' @param UnitsDiscards A character vector of length equal to the number of
-#'   discard fleets detected. Accepts the same values as `UnitsLandings`.
+#' @param UnitsDiscards Optional named character vector (or list) of discard
+#'   units by fleet, following the same convention as `UnitsLandings`.
 #'   Used by [ImportBAMData()].
 #'     
 #' @param MPStartYear Numeric or `NULL`. First calendar year in which MPs are

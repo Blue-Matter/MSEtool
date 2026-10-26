@@ -27,3 +27,46 @@ test_that("ImportBAM splits initial numbers-at-age into rec devs and InitialAtAg
   expect_equal(unname(apply(Unfished@Number[[1]][1, -1, 1, , drop = FALSE], 2, sum)),
                unname(Equil[-1] * Stock@SRR@RecDevInit[1, ]))
 })
+
+MockBAMUnitsData <- function() {
+  list(t.series = data.frame(year = 2000:2002,
+                             L.cHL.pr = c(10, 20, 30), L.rGN.pr = c(1, 2, 3),
+                             L.rHB.pr = c(2, 4, 6), D.rGN.pr = c(5, 6, 7)),
+       LD.pr.tseries = data.frame(year = 2000:2002,
+                                  L.cHL.klb = c(10, 20, 30), L.cHL.knum = c(5, 9, 14),
+                                  L.rGN.klb = c(4, 8, 12), L.rGN.knum = c(1, 2, 3),
+                                  D.rGN.gutklb = c(5, 6, 7), D.rGN.knum = c(1, 1, 1)),
+       info = list(units.landings = "1000 dead fish", units.discards = "1000 lb"))
+}
+
+test_that(".DetectBAMCatchUnits matches .pr series to LD.pr.tseries units", {
+  BAMdata <- MockBAMUnitsData()
+  expect_equal(.DetectBAMCatchUnits(BAMdata, c("cHL", "rGN"), c("cHL", "rGN"), "Landings"),
+               c(cHL = "1000 lb", rGN = "1000 n"))
+  expect_equal(.DetectBAMCatchUnits(BAMdata, "rGN", "rGN2", "Discards"),
+               c(rGN2 = "1000 lb"))
+  expect_message(Units <- .DetectBAMCatchUnits(BAMdata, "rHB", "rHB", "Landings"),
+                 "Could not detect")
+  expect_equal(Units, c(rHB = "1000 n"))
+})
+
+test_that("ImportBAM detects per-fleet catch units and keeps user overrides", {
+  skip_on_cran()
+  skip_if_not_installed("bamExtras")
+  BAMdata <- GetBAMOutput("RedSnapper")
+
+  OM <- suppressMessages(ImportBAM("RedSnapper", nSim = 2, pYear = 3, silent = TRUE,
+                                   populate = FALSE))
+  expect_equal(OM@Data[[1]]@Landings@Units,
+               c(cHL = "Biomass", rHB = "Number", rGN = "Number"))
+  expect_equal(OM@Data[[1]]@Discards@Units,
+               c(cHL = "Number", rHB = "Number", rGN = "Number"))
+  yr <- as.character(BAMdata$parms$styr:BAMdata$parms$endyr)
+  expect_equal(unname(OM@Data[[1]]@Landings@Value[yr, "rGN"]),
+               unname(BAMdata$t.series[yr, "L.rGN.ob"] * 1000))
+
+  OM <- suppressMessages(ImportBAM("RedSnapper", nSim = 2, pYear = 3, silent = TRUE,
+                                   populate = FALSE, UnitsLandings = c(rGN = "1000 lb")))
+  expect_equal(OM@Data[[1]]@Landings@Units,
+               c(cHL = "Biomass", rHB = "Number", rGN = "Biomass"))
+})

@@ -16,13 +16,13 @@
 #'   fleet name, excluding discard indices). Must have the same length as the
 #'   number of such surveys detected. If `NULL`, names are derived from the
 #'   BAM column names directly.
-#' @param UnitsLandings A named character vector or list mapping fleet names to
-#'   unit strings. Names must be a subset of [FleetNames()]; fleets not present
-#'   are assigned `NA` units with no conversion applied. Supported unit strings:
+#' @param UnitsLandings Optional named character vector or list mapping fleet
+#'   names to unit strings. Names must be a subset of [FleetNames()]. Supported
+#'   unit strings:
 #'   - `"1000 lb"`: converts from thousands of pounds to kg.
 #'   - `"1000 n"`: multiplies by 1,000 (numbers in thousands).
-#'   If `NULL`, `"1000 lb"` is assumed for all detected landings fleets with a
-#'   warning.
+#'   Fleets not named here (all fleets if `NULL`) have their units detected
+#'   from `BAMdata` - see *Unit conversion*.
 #' @param UnitsDiscards A named character vector or list following the same
 #'   convention as `UnitsLandings`, applied to discard columns (`D.*`). When
 #'   `DiscFleets` is supplied, names here must be the final (retained-fleet)
@@ -63,11 +63,16 @@
 #' `.D.`, which are discard CPUE) are stored in `@Survey`.
 #'
 #' ## Unit conversion
-#' Conversion is applied fleet-by-fleet using `UnitsLandings` and
-#' `UnitsDiscards`. Fleets present in the OM but absent from the units argument
-#' receive `NA` units and their values are left unconverted. For discards,
-#' any raw BAM column stub named in `DiscFleets` is remapped to its final
-#' fleet name before this matching happens (see `DiscFleets`).
+#' Conversion is applied fleet-by-fleet. Units given in `UnitsLandings` and
+#' `UnitsDiscards` are used as supplied. For all other fleets, the units are
+#' detected from `BAMdata$LD.pr.tseries`: the fleet's predicted series
+#' (`L.<fleet>.pr` or `D.<fleet>.pr` in `BAMdata$t.series`) is matched against
+#' the predictions in thousands of pounds (`.klb`, `.gutklb`; `"1000 lb"`) and
+#' thousands of fish (`.knum`; `"1000 n"`). If no match is found, the units
+#' are taken from `BAMdata$info$units.landings` or
+#' `BAMdata$info$units.discards`, with a warning. For discards, any raw BAM
+#' column stub named in `DiscFleets` is remapped to its final fleet name before
+#' units are matched (see `DiscFleets`).
 #'
 #' ## Age and length composition
 #' Composition data are not imported.
@@ -152,6 +157,44 @@ ImportBAMData <- function(OM,
 }
 
 
+# Units per fleet from the LD.pr.tseries column that reproduces the fleet's `.pr` series
+.DetectBAMCatchUnits <- function(BAMdata, raw.names, final.names, type) {
+  prefix   <- if (type == 'Landings') 'L' else 'D'
+  t.series <- BAMdata$t.series
+  ld       <- BAMdata$LD.pr.tseries
+  suffix.units <- c(klb = '1000 lb', gutklb = '1000 lb', knum = '1000 n')
+
+  units <- setNames(rep(NA_character_, length(raw.names)), final.names)
+  if (!is.null(ld) && !is.null(ld$year)) {
+    yr <- match(t.series$year, ld$year)
+    for (i in seq_along(raw.names)) {
+      stub <- paste0(prefix, '.', raw.names[i])
+      pr   <- t.series[[paste0(stub, '.pr')]]
+      if (is.null(pr)) next
+      err <- vapply(names(suffix.units), \(sfx) {
+        x <- ld[[paste0(stub, '.', sfx)]]
+        if (is.null(x)) return(Inf)
+        x  <- x[yr]
+        ok <- !is.na(pr) & !is.na(x) & pr > 0
+        if (!any(ok)) return(Inf)
+        stats::median(abs(x[ok] / pr[ok] - 1))
+      }, numeric(1))
+      if (min(err) < 1e-3) units[i] <- suffix.units[[which.min(err)]]
+    }
+  }
+
+  missing <- is.na(units)
+  if (any(missing)) {
+    info <- BAMdata$info[[paste0('units.', tolower(type))]]
+    fallback <- if (!is.null(info) && grepl('fish|num', info, ignore.case = TRUE)) '1000 n' else '1000 lb'
+    units[missing] <- fallback
+    cli::cli_alert_warning(
+      'Could not detect {tolower(type)} units for fleet{?s} {.val {final.names[missing]}} from `BAMdata$LD.pr.tseries`. Assuming {.val {fallback}}; set `{paste0("Units", type)}` to override.'
+    )
+  }
+  units
+}
+
 .ImportBAMCatch <- function(OM, BAMdata, Units, type=c('Landings', 'Discards'), DiscFleets = NULL) {
   type <- match.arg(type)
 
@@ -172,9 +215,11 @@ ImportBAMData <- function(OM,
   if (type=='Landings') {
     catch.names <- obs.names[grepl("^L\\.", obs.names)]
     catch.data.names <- gsub("^L\\.", "", gsub("\\.ob", "", catch.names))
+    raw.names <- catch.data.names
   } else {
     catch.names <- obs.names[grepl("^D\\.", obs.names)]
     catch.data.names <- gsub("^D\\.", "", gsub("\\.ob", "", catch.names))
+    raw.names <- catch.data.names
 
     # A BAM assessment's discard columns may use a different fleet code than
     # the corresponding retained fleet (e.g. Gray Triggerfish: `rHDs` discard
@@ -197,12 +242,7 @@ ImportBAMData <- function(OM,
 
   if (!n.catch) return(OM)
 
-  if (is.null(Units)) {
-    cli::cli_alert_warning(
-      '`{paste0("Units", type)}` not specified. Assuming `1000 lb` for all detected fleets.'
-    )
-    Units <- setNames(rep('1000 lb', n.catch), catch.data.names.matched)
-  } else if (is.null(names(Units))) {
+  if (!is.null(Units) && is.null(names(Units))) {
     cli::cli_abort(c(
       "x" = "`{paste0('Units', type)}` must be a named character vector.",
       "i" = "Names must be a subset of `FleetNames(OM)`: {.val {fleet.names}}."
@@ -216,6 +256,10 @@ ImportBAMData <- function(OM,
         "i" = "Valid fleet names: {.val {fleet.names}}."
       ))
   }
+
+  Detected <- .DetectBAMCatchUnits(BAMdata, raw.names[fleet.ind], catch.data.names.matched, type)
+  Units <- unlist(Units)
+  Units <- c(Units, Detected[setdiff(names(Detected), names(Units))])
 
   catchData <- CatchData(Name = fleet.names)
   catchData@Value <- array(NA, c(n.year, n.fleet),
