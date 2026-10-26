@@ -17,6 +17,9 @@
 #'   `NULL` (default), the model is inferred from `Pars`.
 #'   May be set to a character string naming a built-in model or to a custom
 #'   R function — see [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html).
+#'   A custom function takes the size argument `Ages` or `Length` (the basis it
+#'   is evaluated on) and one argument for each parameter in `Pars`. Arguments
+#'   with a default value are optional.
 #' @param Units `character(1)`. Physical unit of weight measurements. Must be
 #'   one of the strings returned by [ValidUnits()] (e.g., `"g"`, `"kg"`).
 #'   Default `"kg"`.

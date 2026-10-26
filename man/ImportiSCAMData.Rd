@@ -17,21 +17,20 @@ iSCAM output files, or a list already returned by \code{load.iscam.files()}.}
 
 \item{Name}{Character; name for the \code{Data} object.}
 
-\item{FleetName}{Character; name for the single aggregate fleet (must
-match the fleet name used by \code{\link[=ImportiSCAM]{ImportiSCAM()}} when combining the two).}
+\item{FleetName}{Character; name for the fleet.}
 
 \item{silent}{Logical; suppress informational output. Default \code{FALSE}.}
 }
 \value{
-A populated \code{\link[=Data]{Data()}} object with \verb{@Landings} and (if present in
-the iSCAM output) \verb{@Survey} populated. Age/size composition data is not
-yet imported -- see \code{\link[=ImportiSCAM]{ImportiSCAM()}} Details.
+None. The function stops with an error.
 }
 \description{
-Populates a \code{\link[=Data]{Data()}} object with observed time series extracted from an
-iSCAM assessment: aggregate landings (summed across gears, matching the
-single-fleet scope of \code{\link[=ImportiSCAM]{ImportiSCAM()}}) and abundance indices.
+\code{ImportiSCAMData()} is not currently available.
+The iSCAM importer is not yet implemented, and calling this function
+returns an error. Please contact Blue Matter support
+(\email{office@bluematterscience.com}) for help building an operating
+model from an iSCAM assessment.
 }
 \seealso{
-\code{\link[=ImportiSCAM]{ImportiSCAM()}}, \code{\link[=Data]{Data()}}, \code{\link[=CatchData]{CatchData()}}, \code{\link[=IndicesData]{IndicesData()}}
+\code{\link[=ImportiSCAM]{ImportiSCAM()}}
 }

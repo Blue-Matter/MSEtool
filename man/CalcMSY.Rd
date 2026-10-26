@@ -67,6 +67,19 @@ over ages), \code{MSYLandings}/\code{MSYDiscards} are annual totals, and
 \code{BMSY}/\code{SBMSY}/\code{SPMSY} are the biomass or spawning production in the
 reference season(s) (see \code{\link[=RefSeason]{RefSeason()}}).
 }
+
+\subsection{Spatial structure}{
+
+The reference points are calculated from equilibrium per-recruit dynamics
+with no spatial structure: the population is treated as a single unit,
+without areas or movement, and the fishing mortality at age of every fleet
+applies to the whole population. In a multi-area operating model the
+simulated and projected dynamics are spatial, and the fishing mortality a
+fleet exerts depends on how the population and fishing effort are
+distributed among areas (spatial targeting, closures, and movement).
+Fishing at \code{FMSY} in a multi-area operating model (e.g. with \code{refFMSY})
+therefore need not give \code{SB/SBMSY = 1} or a yield of \code{MSY}.
+}
 }
 \seealso{
 \code{\link[=CalcPerRecruit]{CalcPerRecruit()}}, \code{\link[=CalcSPR0]{CalcSPR0()}}, \link[=refpointsMSY-class]{refpointsMSY},

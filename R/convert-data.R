@@ -540,7 +540,7 @@ ConvertData <- function(x, Seasons = 1, sim = 1, silent = FALSE) {
 
 .LegacyWeight <- function(Weight, Data) {
   Pars <- Weight@Pars
-  if (length(Pars) && !is.null(Pars$alpha) && !is.null(Pars$beta)) {
+  if (length(Pars) && !is.function(Weight@Model) && !is.null(Pars$alpha) && !is.null(Pars$beta)) {
     Data@wla    <- Pars$alpha
     Data@CV_wla <- Pars$alpha_CV %||NA% NA_real_
     Data@wlb    <- Pars$beta
@@ -566,7 +566,7 @@ ConvertData <- function(x, Seasons = 1, sim = 1, silent = FALSE) {
 
 .LegacyMort <- function(NM, Data) {
   Pars <- NM@Pars
-  if (length(Pars) && !is.null(Pars$M)) {
+  if (length(Pars) && !is.function(NM@Model) && !is.null(Pars$M)) {
     Data@Mort    <- Pars$M
     Data@CV_Mort <- Pars$M_CV %||NA% (Pars$CV_M %||NA% NA_real_)
     return(Data)
@@ -586,7 +586,7 @@ ConvertData <- function(x, Seasons = 1, sim = 1, silent = FALSE) {
 
 .LegacyMaturity <- function(Mat, Data, MaxAge) {
   Pars <- Mat@Pars
-  if (length(Pars) && !is.null(Pars$L50)) {
+  if (length(Pars) && !is.function(Mat@Model) && !is.null(Pars$L50)) {
     Data@L50    <- Pars$L50
     Data@CV_L50 <- Pars$L50_CV %||NA% NA_real_
     Data@L95    <- Pars$L50 + (Pars$L50_95 %||NA% 0)
@@ -991,7 +991,7 @@ ConvertData <- function(x, Seasons = 1, sim = 1, silent = FALSE) {
 }
 
 .ModelName <- function(Model) {
-  if (is.function(Model)) return(deparse(substitute(Model)))
+  if (is.function(Model)) return('custom function')
   as.character(Model)
 }
 

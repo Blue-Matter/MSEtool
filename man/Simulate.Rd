@@ -78,6 +78,20 @@ such as the basis for MSY reference points (\code{MSYType}), the years they are
 calculated at (\code{RefYears}), and which operating model quantities are
 passed to MPs (\code{DataOM}). See \link{OMControl}.
 }
+
+\subsection{Reference points}{
+
+MSY reference points (\code{\link[=CalcMSY]{CalcMSY()}}) and the per-recruit reference points
+F0.1, Fmax, Fx\%SPR, Fmed, Fcrash, and SPRcrash (\code{\link[=CalcRefPoints]{CalcRefPoints()}}) are
+calculated from equilibrium per-recruit dynamics with no spatial
+structure: the population is treated as a single unit, without areas or
+movement. In a multi-area operating model the historical and projected
+dynamics are spatial, and the realised fishing mortality depends on the
+distribution of the population and fishing effort among areas (spatial
+targeting, closures, and movement), so fishing at \code{FMSY} (e.g. with
+\code{refFMSY}) need not give \code{SB/SBMSY = 1}. Which reference points are
+calculated is set by \code{control} (see \code{\link[=SimControl]{SimControl()}}).
+}
 }
 \examples{
 # Simulate using the default example OM

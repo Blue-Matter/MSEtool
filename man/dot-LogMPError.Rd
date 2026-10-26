@@ -24,5 +24,7 @@
 Internal helper function to standardize error handling for Management Procedures (MPs).
 If the MP returns a valid \code{Advice} object, it is returned unchanged. If the MP returns a
 different type or a \code{try-error}, a short error message is returned for the log.
+Validation failures from \code{.CheckAdvice()} report the validation message and
+the stock/complex name.
 }
 \keyword{internal}

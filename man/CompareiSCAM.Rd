@@ -21,12 +21,10 @@ CompareiSCAM(
 \item{iSCAMdir}{Character string giving the path to a directory containing
 iSCAM output files, or a list already returned by \code{load.iscam.files()}.}
 
-\item{OM}{Optional \link[=om-class]{om} or \link[=hist-class]{hist} object. If \code{NULL} (default),
-one is constructed internally via \code{\link[=ImportiSCAM]{ImportiSCAM()}}.}
+\item{OM}{Optional \link[=om-class]{om} or \link[=hist-class]{hist} object.}
 
 \item{sim}{Integer. Simulation index used to select the OM simulation row.
-Default \code{1} (iSCAM's MPD fit is a single point estimate, so there is
-only ever one iSCAM-side series to compare against).}
+Default \code{1}.}
 
 \item{plot}{Logical. Plot the timeseries for the \code{OM} and \code{iSCAM} output?
 If \code{FALSE} (default) plots are only printed if MARE exceeds \code{thresh}.}
@@ -46,19 +44,15 @@ files to \code{file.path(outdir, Stock)}. Default \code{FALSE}.}
 \item{silent}{Logical; suppress informational output. Default \code{FALSE}.}
 }
 \value{
-Invisibly returns a named list with elements \code{Stock}, \code{Recruits},
-\code{Biomass}, and \code{Landings}, each (other than \code{Stock}) a list with
-elements \code{df}, \code{MARE}, and \code{plot} -- the same shape as \code{\link[=CompareBAM]{CompareBAM()}}.
-Note: unlike \code{\link[=CompareBAM]{CompareBAM()}}/\code{\link[=CompareSS]{CompareSS()}}, there is no \code{Number}/\code{Discards}
-comparison, since \code{\link[=ImportiSCAM]{ImportiSCAM()}} only imports a single aggregate fleet
-and iSCAM's MPD output does not separately report discards.
+None. The function stops with an error.
 }
 \description{
-Compares key population time series between an iSCAM MPD fit and a
-simulated operating model, reporting the mean absolute relative error
-(MARE) for recruits, spawning biomass, and landings. Follows the same
-shape as \code{\link[=CompareBAM]{CompareBAM()}}/\code{\link[=CompareSS]{CompareSS()}}, sharing the same underlying engine.
+\code{CompareiSCAM()} is not currently available.
+The iSCAM importer is not yet implemented, and calling this function
+returns an error. Please contact Blue Matter support
+(\email{adrian@bluematterscience.com}) for help building an operating
+model from an iSCAM assessment.
 }
 \seealso{
-\code{\link[=ImportiSCAM]{ImportiSCAM()}}, \code{\link[=CompareBAM]{CompareBAM()}}, \code{\link[=CompareSS]{CompareSS()}}
+\code{\link[=ImportiSCAM]{ImportiSCAM()}}
 }

@@ -21,7 +21,9 @@ Maps the slots of a legacy \link[=Rec-class]{Rec} recommendation (returned by a
 equivalent \link[=advice-class]{advice} slots used by the new MP framework. Only slots
 the legacy MP actually populated are set; everything else remains \code{NULL}
 (unchanged from the previous timestep), matching \code{Rec}'s own "only some
-slots set" behaviour. \code{Rec@Fdisc}/\code{Rec@DR} (discard mortality) have no
+slots set" behaviour. \code{Rec@LR5}/\code{LFR}/\code{Rmaxlen} map to \code{\link[=DoubleNormalRetention]{DoubleNormalRetention()}}
+(with an upper harvest slot when \code{Rec@HS} is set) and \code{Rec@L5}/\code{LFS}/\code{Vmaxlen}
+to \code{\link[=DoubleNormal]{DoubleNormal()}} selectivity. \code{Rec@Fdisc}/\code{Rec@DR} (discard mortality) have no
 mapping in v1 and are recorded as an assumption if set. Any \code{Log} entries
 recorded on \code{LegacyData} (e.g. by \code{\link[=Convert]{Convert()}}/\code{.ConvertDataToLegacy()}) are folded
 into the returned \code{Advice@Log}.

@@ -91,6 +91,12 @@ those of the source stock, the spawning population that drives its
 recruitment. For a stock whose \code{SPFrom} is a weighted blend of several
 stocks, \verb{Fx\%SPR} uses the blended spawning potential ratio and \code{Fcrash},
 \code{SPRcrash}, and \code{Fmed} are \code{NA}.
+
+The per-recruit calculations have no spatial structure: the population is
+treated as a single unit, without areas or movement. In a multi-area
+operating model the simulated and projected dynamics are spatial, so
+fishing at one of these reference points need not give its equilibrium
+spawning-per-recruit or yield-per-recruit.
 }
 \seealso{
 \code{\link[=CalcPerRecruit]{CalcPerRecruit()}}, \code{\link[=CalcMSY]{CalcMSY()}}, \code{\link[=CalcBLow]{CalcBLow()}}, \link[=reference-class]{reference},

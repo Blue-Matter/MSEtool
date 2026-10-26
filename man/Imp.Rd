@@ -31,9 +31,9 @@ error for effort-based controls. When \code{NULL}, an empty \link[=impslot-class
 created via \code{\link[=ImpSlot]{ImpSlot()}}.}
 
 \item{Size}{An \link[=impslot-class]{impslot} object, or \code{NULL} (default). Implementation
-error for size-based regulations (e.g. minimum landing size), via its
-\code{Compliance} slot only (see Details). When \code{NULL}, an empty
-\link[=impslot-class]{impslot} is created via \code{\link[=ImpSlot]{ImpSlot()}}.}
+of size-based regulations (e.g. minimum landing size). Size-based
+regulations are currently always applied in full (see Details). When
+\code{NULL}, an empty \link[=impslot-class]{impslot} is created via \code{\link[=ImpSlot]{ImpSlot()}}.}
 
 \item{Misc}{List. Miscellaneous additional objects. Default \code{list()}.}
 
@@ -116,12 +116,10 @@ The default is asymmetric because a TAC is a cap rather than a target:
 landing under quota is routine, while exceeding it is a regulatory breach.
 Set \code{0.5} explicitly if you want the symmetric treatment.
 
-\code{Size@Compliance} (in \verb{[0, 1]}) is the fraction of the fleet that adopts a
-newly-advised size-based regulation (a change to \code{Advice@Retention}
-and/or \code{Advice@Selectivity}) in the year it changes; the remaining
-\code{1 - Compliance} fraction continues under the prior curve. Missing/\code{NA}
-defaults to \code{1} (full, immediate adoption).
-\code{Size@Mean}/\code{SD}/\code{Error} are not consumed.
+\code{Size@Compliance} is currently not applied: size-based regulations
+(\code{Advice@Retention} and \code{Advice@Selectivity}) are always adopted in full by
+the whole fleet in the year they change. A value other than \code{1} is ignored
+and recorded in the log. \code{Size@Mean}/\code{SD}/\code{Error} are not used.
 }
 }
 \seealso{

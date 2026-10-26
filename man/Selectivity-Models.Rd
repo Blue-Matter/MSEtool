@@ -25,9 +25,9 @@ SelectivityKnifeEdgeLength(Length, SL)
 
 SelectivityAtWeight(Weight, SW50, SW50_95)
 
-DoubleNormal(Length, L5, LFS, Vmaxlen)
+DoubleNormal(Length, L5, LFS, Vmaxlen = 1)
 
-DoubleNormalWeight(Weight, W5, WFS, Vmaxweight)
+DoubleNormalWeight(Weight, W5, WFS, Vmaxweight = 1)
 
 SelectivityModels(full = TRUE, print = TRUE)
 
@@ -70,14 +70,14 @@ selectivity (logistic-at-weight).}
 \item{LFS}{Numeric. Length at full selectivity (double-normal).}
 
 \item{Vmaxlen}{Numeric. Selectivity at \code{max(Length)} (double-normal).
-Values less than 1 produce a dome-shaped selectivity curve.}
+Default \code{1} (asymptotic). Values less than 1 produce a dome-shaped selectivity curve.}
 
 \item{W5}{Numeric. Weight at 5\% selectivity (double-normal).}
 
 \item{WFS}{Numeric. Weight at full selectivity (double-normal).}
 
 \item{Vmaxweight}{Numeric. Selectivity at \code{max(Weight)} (double-normal).
-Values less than 1 produce a dome-shaped selectivity curve.}
+Default \code{1} (asymptotic). Values less than 1 produce a dome-shaped selectivity curve.}
 
 \item{full}{Logical. If \code{TRUE} (default), returns a complete table of
 available models. If \code{FALSE}, returns model names only.}

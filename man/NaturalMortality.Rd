@@ -32,7 +32,10 @@ full set of accepted input formats. Default \code{list()}.}
 identifier. When \code{NULL} (default), the model is inferred from \code{Pars}.
 May be set to a character string naming a built-in model or
 to a custom R function — see
-\href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules}.}
+\href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules}.
+A custom function takes the size argument \code{Ages} or \code{Length} (the basis it
+is evaluated on) and one argument for each parameter in \code{Pars}. Arguments
+with a default value are optional.}
 
 \item{Units}{\code{character(1)}. Time unit in which mortality rates are
 expressed. Must be one of the strings returned by \code{\link[=ValidUnits]{ValidUnits()}} (e.g.,

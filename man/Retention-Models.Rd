@@ -25,9 +25,9 @@ RetentionKnifeEdgeLength(Length, RL)
 
 RetentionAtWeight(Weight, RW50, RW50_95, MaxRet = 1)
 
-DoubleNormalRetention(Length, LR5, LFR, Rmaxlen)
+DoubleNormalRetention(Length, LR5, LFR, Rmaxlen = 1)
 
-DoubleNormalRetentionWeight(Weight, WR5, WFR, Rmaxweight)
+DoubleNormalRetentionWeight(Weight, WR5, WFR, Rmaxweight = 1)
 
 RetentionModels(full = TRUE, print = TRUE)
 
@@ -73,15 +73,15 @@ length are fully retained.}
 
 \item{LFR}{Numeric. Length at full retention (double-normal).}
 
-\item{Rmaxlen}{Numeric. Retention at \code{max(Length)} (double-normal). Values
-less than 1 produce a dome-shaped retention curve.}
+\item{Rmaxlen}{Numeric. Retention at \code{max(Length)} (double-normal).
+Default \code{1} (asymptotic). Values less than 1 produce a dome-shaped retention curve.}
 
 \item{WR5}{Numeric. Weight at 5\% retention (double-normal).}
 
 \item{WFR}{Numeric. Weight at full retention (double-normal).}
 
 \item{Rmaxweight}{Numeric. Retention at \code{max(Weight)} (double-normal).
-Values less than 1 produce a dome-shaped retention curve.}
+Default \code{1} (asymptotic). Values less than 1 produce a dome-shaped retention curve.}
 
 \item{full}{Logical. If \code{TRUE} (default), returns a complete table of
 available models. If \code{FALSE}, returns model names only.}

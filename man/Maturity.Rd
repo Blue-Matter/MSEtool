@@ -41,7 +41,10 @@ identifier. When \code{NULL} (default), the model is inferred from \code{Pars}.
 May be set to a character string naming a built-in model or
 to a custom R function. When \code{Pars} is a list of \link[=stock-class]{stock} objects,
 \code{Model} is an integer index — see \emph{Pass-Through Access} and
-\href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules}.}
+\href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules}.
+A custom function takes the size argument \code{Ages}, \code{Length}, or \code{Weight}
+(the basis it is evaluated on) and one argument for each parameter in
+\code{Pars}. Arguments with a default value are optional.}
 
 \item{MeanAtAge}{\code{array} or \code{NULL}. Mean maturity-at-age with named
 dimensions \verb{Sim × Age × Year}. Values should range from 0 (immature) to 1

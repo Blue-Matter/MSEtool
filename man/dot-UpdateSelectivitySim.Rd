@@ -50,10 +50,7 @@ years, updating both \code{Proj@OM@Fleet} and the relevant \code{Proj@Misc} list
 Skips a complex when management is unchanged or advice is \code{NULL}.
 }
 \details{
-The fully-populated (fleet-wide-adoption) arrays are then blended against
-the pre-update, status-quo arrays using \code{Imp@Size@Compliance} -- the
-fraction of the fleet that adopts the new advice this year (default \code{1},
-i.e. full/immediate adoption, when \code{Imp}/\code{Compliance} is unset). See
-\link[=imp-class]{imp}.
+The advised arrays are applied in full; \code{Imp@Size@Compliance} is not
+applied and a value other than \code{1} is recorded once in \code{Proj@Log}.
 }
 \keyword{internal}

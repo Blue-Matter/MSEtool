@@ -21,6 +21,9 @@
 #'   to a custom R function. When `Pars` is a list of [stock-class] objects,
 #'   `Model` is an integer index — see *Pass-Through Access* and
 #'   [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html).
+#'   A custom function takes the size argument `Ages`, `Length`, or `Weight`
+#'   (the basis it is evaluated on) and one argument for each parameter in
+#'   `Pars`. Arguments with a default value are optional.
 #' @param MeanAtAge `array` or `NULL`. Mean maturity-at-age with named
 #'   dimensions `Sim × Age × Year`. Values should range from 0 (immature) to 1
 #'   (fully mature). Supply directly when bypassing the model-based approach

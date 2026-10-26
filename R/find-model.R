@@ -46,8 +46,10 @@
                       doCheck=TRUE) {
 
   
-  if (inherits(object@Model,'function'))
+  if (inherits(object@Model,'function')) {
+    if (doCheck) .CheckCustomModel(object, ignore)
     return(object@Model)
+  }
 
   if (any(is.na(object@Pars)))
     return(NULL)
@@ -69,11 +71,7 @@
 
   matching_parameters <- rep(TRUE, length(models))
 
-  ParNames <- names(object@Pars)
-  ind <- which(tolower(ParNames) |> .SubstrRight(2) == 'sd')
-  if (length(ind)>0)
-    ParNames <- ParNames[-ind]
-  ParNames <- ParNames[!.IsCVPar(ParNames)]
+  ParNames <- .ModelParNames(object@Pars)
   
   nOmitted <- rep(NA_integer_, length(models))
   for (i in seq_along(models)) {
@@ -126,9 +124,10 @@
                             ignore = c('Ages', 'MeanLength', 'Length', 'Weight', 'nage',
                                        'AtAge', 'MaxLen', 'S0', 'S', 'R0')) {
   Pars <- object@Pars
-  if (inherits(object@Model, 'function') || length(Pars) < 1 || any(is.na(Pars)))
+  if (length(Pars) < 1 || any(is.na(Pars)))
     return(Pars)
-  model <- .FindModel(object, ignore = ignore, doCheck = FALSE)
+  model <- if (is.function(object@Model)) object@Model else
+    .FindModel(object, ignore = ignore, doCheck = FALSE)
   if (length(model) != 1) return(Pars)
   Defaults <- .ModelFormals(model, ignore)$Defaults
   for (nm in setdiff(names(Defaults), names(Pars)))
@@ -136,15 +135,53 @@
   Pars
 }
 
-# model class, inferring the size basis of a custom function from its arguments
-.SizeModelClass <- function(Model) {
+# model class, inferring the size basis of a custom function from its arguments; errors if the basis is not `Allowed`
+.SizeModelClass <- function(Model, Allowed = c('Age', 'Length', 'Weight'), what = 'object') {
   cl <- .GetModelClass(Model)
-  if (!identical(cl, 'function')) return(cl)
-  args <- names(formals(Model))
-  if ('Length' %in% args) return('function-at-Length')
-  if ('Weight' %in% args) return('function-at-Weight')
-  if ('Ages' %in% args) return('function-at-Age')
-  cl
+  if (is.null(cl)) return(cl)
+  ArgNames <- c(Age = 'Ages', Length = 'Length', Weight = 'Weight')
+  if (!identical(cl, 'function')) {
+    basis <- regmatches(cl[1], regexpr('(?<=at-)(Age|Length|Weight)', cl[1], perl = TRUE))
+    if (length(basis) && !basis %in% Allowed)
+      cli::cli_abort(c(
+        'x' = '{.cls {what}} does not support at-{basis} models ({.val {Model}}).',
+        'i' = 'Use a model of {.or {Allowed}}.'),
+        call = NULL)
+    return(cl)
+  }
+  basis <- intersect(c('Length', 'Weight', 'Age'), names(ArgNames)[ArgNames %in% names(formals(Model))])[1]
+  if (is.na(basis) || !basis %in% Allowed)
+    cli::cli_abort(c(
+      'x' = 'A custom {what} {.arg Model} function must have one of the arguments {.or {.arg {ArgNames[Allowed]}}}.',
+      'i' = 'Its arguments are {.arg {names(formals(Model))}}.'),
+      call = NULL)
+  paste0('function-at-', basis)
+}
+
+# parameter names of Pars, excluding `<name>SD` and CV entries
+.ModelParNames <- function(Pars) {
+  ParNames <- names(Pars)
+  ParNames <- ParNames[tolower(ParNames) |> .SubstrRight(2) != 'sd']
+  ParNames[!.IsCVPar(ParNames)]
+}
+
+# a custom model function must take every parameter in Pars and have no unsupplied required argument
+.CheckCustomModel <- function(object, ignore) {
+  Pars <- object@Pars
+  if (inherits(object, 'srr') || length(Pars) < 1 || any(is.na(Pars)))
+    return(invisible(NULL))
+  .CheckPars(Pars)
+  ParNames <- .ModelParNames(Pars)
+  fm <- .ModelFormals(object@Model, ignore)
+  Unused <- if ('...' %in% names(formals(object@Model))) character() else setdiff(ParNames, fm$Names)
+  Missing <- setdiff(fm$Required, ParNames)
+  if (!length(Unused) && !length(Missing))
+    return(invisible(NULL))
+  cli::cli_abort(c(
+    'x' = 'The custom {.arg Model} function of this {.cls {class(object)}} object does not match {.arg Pars}.',
+    if (length(Unused)) c('i' = '{.arg Pars} not arguments of {.arg Model}: {.val {Unused}}.'),
+    if (length(Missing)) c('i' = 'Arguments of {.arg Model} missing from {.arg Pars}: {.val {Missing}}.')),
+    call = NULL)
 }
 
 # `<name>_CV` and `CV_<name>` entries of Pars report the uncertainty of a parameter

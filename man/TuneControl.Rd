@@ -78,8 +78,11 @@ Default \code{200}.}
 the historical data of the first \code{Hist} before projecting, to catch
 invalid arguments? Default \code{TRUE}.}
 
-\item{MaxFailRate}{Number in \verb{[0, 1]}. Candidates whose MP fails in a
-larger fraction of simulation-management years are infeasible. Default
+\item{MaxFailRate}{Number in \verb{[0, 1]}. Largest fraction of the
+simulations of a \code{Hist} in which the MP may fail (return an error in any
+year), for a single candidate or across the candidates of a stage, before
+\code{\link[=TuneMP]{TuneMP()}} stops with an error. The simulations in which the MP fails are
+excluded from the metrics of every candidate of the stage. Default
 \code{0.05}.}
 
 \item{KeepMSE}{Logical. Keep the \link[=mse-class]{mse} objects of every evaluation

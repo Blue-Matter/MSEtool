@@ -88,14 +88,14 @@ PopulateWeight <- function(Weight,
   
   Weight@Pars <- .StructurePars(Pars = .AddDefaultPars(Weight), nSim, Years)
   Weight@Model <- .FindModel(Weight)
+  ModelClass <- .SizeModelClass(Weight@Model, c('Age', 'Length'), 'Weight')
   Weight <- .PopulateMeanAtAge(object = Weight, 
                               Ages= Ages, 
                               Years = Years,
                               Length = Length)
   
-  ModelClass <- .GetModelClass(Weight@Model)
   if (!is.null(ModelClass)) {
-    if (grepl("at-Length", .GetModelClass(Weight@Model))) {
+    if (grepl("at-Length", ModelClass)) {
       .CheckRequiredObject(Length, "length", "Length")
       # chk <- Check(Length, silent=TRUE)
       # if (!chk@populated) {

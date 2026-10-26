@@ -29,7 +29,11 @@ empty or \code{NA}.
 \description{
 Attempts to identify the model function associated with \code{object} by matching
 the names of \code{object@Pars} against the formal arguments of candidate model
-functions returned by the relevant \verb{*Models()} function. If \code{object@Model}
+functions returned by the relevant \verb{*Models()} function. Formals with a
+default value are optional: a model matches when every supplied parameter is
+a formal and every formal without a default is supplied. If several models
+match, the one with the fewest omitted optional formals is chosen; a tie is
+an error. If \code{object@Model}
 is already a function it is returned directly. Returns \code{NULL} if \code{Pars} is
 empty or contains \code{NA}.
 }

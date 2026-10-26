@@ -24,6 +24,9 @@
 #'   in `Pars`. May also be supplied as a custom R function
 #'   with arguments matching those in `Pars`. See [SelectivityModels()] for
 #'   built-in options.
+#'   A custom function takes the size argument `Ages`, `Length`, or `Weight`
+#'   (the basis it is evaluated on) and one argument for each parameter in
+#'   `Pars`. Arguments with a default value are optional.
 #' @param MeanAtAge Numeric array or `NULL`. Mean selectivity-at-age with
 #'   dimensions `Sim x Age x Year` (area dimension added during population).
 #'   Used directly when `Pars` is empty and `MeanAtLength` is not supplied.

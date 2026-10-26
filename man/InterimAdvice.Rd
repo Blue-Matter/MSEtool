@@ -49,7 +49,8 @@ required when there is more than one.
 \item \code{Fleet}: optional; fleet name, or \code{NA} for a complex total. A \code{Fleet = NA}
 row gives the total for the fleets not listed individually in the same
 Year x Complex x Type, split among them by \code{\link[=FleetAllocation]{FleetAllocation()}} (TAC) or
-\code{\link[=EffortAllocation]{EffortAllocation()}} (absolute Effort).
+\code{\link[=EffortAllocation]{EffortAllocation()}} (absolute Effort). A relative Effort total applies
+to each of those fleets.
 \item \code{Type}: \code{"TAC"} or \code{"Effort"}.
 \item \code{Mean}: point estimate, natural scale. Must be \verb{>= 0} (e.g. \code{0} for a
 fleet with no historical catch, maintained as a closure in interim
@@ -75,7 +76,8 @@ rows.
 is in the OM's \code{Weight} units. May differ among fleets.
 \item \code{EffType}: \code{"Abs"} (default) or \code{"Rel"}; only used for \code{"Effort"} rows.
 \code{"Abs"} is absolute effort. \code{"Rel"} is a multiplier on the fleet's effort
-in the same season of the last historical year.
+in the last complete historical year, applied season by season, so \code{1}
+repeats that year's effort and seasonal pattern.
 }
 }
 
@@ -85,12 +87,22 @@ For each calendar year x Complex x Type x Fleet (with \code{Fleet = NA} treated
 as its own entry), supply either:
 \itemize{
 \item one row with the integer calendar year: an annual value. For seasonal
-OMs (\code{Seasons > 1}), an annual TAC or absolute Effort is split across
-seasons by \code{\link[=SeasonalAllocation]{SeasonalAllocation()}}; an annual relative Effort applies to
-every season; or
+OMs (\code{Seasons > 1}), an annual TAC is split across seasons by
+\code{\link[=SeasonalAllocation]{SeasonalAllocation()}}. An annual absolute Effort is the fleet's total
+effort for the year, split across seasons in proportion to the fleet's
+historical effort in each season over the last
+\code{OM@Control$SeasonalAllocationYears} historical years (default 5). An
+annual relative Effort multiplies the effort in each season of the last
+complete historical year; or
 \item one row for every timestep of that year (the integer year is the first
 season): a value for each season, used as given.
 }
+
+Interim Effort sets each fleet's total effort only. Its split across areas
+is calculated by the operating model in each timestep, as for effort
+advice from an MP, except for fleets with a user-specified historical
+\code{Distribution} in \code{\link[=Effort]{Effort()}}, which keep their area split from the same
+season of the last historical year.
 
 Different fleets in the same year may use different forms. Every complex
 must have rows in every interim year, and within each calendar year x

@@ -75,6 +75,7 @@ PopulateLength <- function(Length,
   
   Length@Pars    <- .StructurePars(Pars = .AddDefaultPars(Length), nSim, Years)
   Length@Model   <- .FindModel(Length)
+  .SizeModelClass(Length@Model, 'Age', 'Length')
   Length         <- .PopulateMeanAtAge(Length, Ages, Years)
   Length@CVatAge <- .StructureCV(Length@CVatAge, nSim)
   dd             <- dim(Length@CVatAge)

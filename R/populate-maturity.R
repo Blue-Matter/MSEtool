@@ -69,7 +69,7 @@ PopulateMaturity <- function(Maturity,
   Years <- DefaultYears(Years)
   nSim  <- .GetNSim(Maturity, nSim)
   
-  argList <- list(Ages, Length, nSim, Years, CalcAtLength, seed)
+  argList <- list(Ages, Length, Weight, nSim, Years, CalcAtLength, seed)
   
   if (EmptyObject(Maturity)) 
     cli::cli_abort('{.val Maturity} is required but is currently empty')
@@ -81,10 +81,10 @@ PopulateMaturity <- function(Maturity,
   
   Maturity@Pars  <- .StructurePars(Pars = .AddDefaultPars(Maturity), nSim, Years)
   Maturity@Model <- .FindModel(Maturity)
-  ModelClass     <- .GetModelClass(Maturity@Model)
+  ModelClass     <- .SizeModelClass(Maturity@Model, what = 'Maturity')
   
   if (!is.null(ModelClass)) {
-    if (grepl("at-Length", .GetModelClass(Maturity@Model))) {
+    if (grepl("at-Length", ModelClass)) {
       .CheckRequiredObject(Length, "length", "Length")
       .CheckRequiredObject(Ages, "ages", "Ages")
       Length <- PopulateLength(Length, 
@@ -104,7 +104,7 @@ PopulateMaturity <- function(Maturity,
         silent = silent
       )
       
-    } else if (grepl("at-Weight", .GetModelClass(Maturity@Model))) {
+    } else if (grepl("at-Weight", ModelClass)) {
       Maturity <- .PopulateMeanAtWeight(
         object = Maturity, 
         Weight = Weight, 

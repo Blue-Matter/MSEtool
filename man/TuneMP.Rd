@@ -99,6 +99,29 @@ from \code{OM@Seed} (see \code{\link[=Project]{Project()}}), so tuned performanc
 exactly by \code{Project()}.
 }
 
+\subsection{MP failures}{
+
+When an MP returns an error for a simulation in \code{\link[=Project]{Project()}}, every
+projection value of that simulation is \code{NA} for that MP. Within each stage
+(the comparison of configurations, then the tuning), the metrics of every
+candidate are calculated on the same simulations of each \code{Hist}: those in
+which the MP did not fail for any candidate evaluated in that stage. When a
+candidate fails in further simulations, they are removed from the metrics
+of every candidate of the stage.
+
+\code{TuneMP()} stops with an error when the MP fails in a larger fraction of
+the simulations of a \code{Hist} than \code{MaxFailRate} (see \code{\link[=TuneControl]{TuneControl()}}),
+for a single candidate or across the candidates of a stage. The error
+names the candidate, the \code{Hist}, the number of failed simulations, and the
+most common error messages. The excluded simulations are reported by
+\code{\link[=TuneTable]{TuneTable()}} (\code{'Excluded'}) and when the result is printed.
+
+Failures of the tuned MP for \code{ValidationHist} do not stop \code{TuneMP()}: the
+validation metrics are calculated on the simulations in which it did not
+fail, the number of failed simulations is reported in the \code{'Validation'}
+table, and a warning is given when their fraction exceeds \code{MaxFailRate}.
+}
+
 \subsection{Configurations (optional first stage)}{
 
 \code{Configs} gives candidate values of other MP arguments. It can be a named
@@ -147,7 +170,8 @@ may be unattainable for this MP.
 }
 
 \code{\link[=TuneTable]{TuneTable()}} returns the constraint table, the ranking of configurations,
-every evaluated candidate, and the validation results. The full
+every evaluated candidate, the validation results, and the excluded
+simulations. The full
 \link[=mse-class]{mse} objects of every evaluation are kept with \code{KeepMSE = TRUE} in
 \code{\link[=TuneControl]{TuneControl()}}. With \code{DryRun = TRUE}, \code{TuneMP()} instead returns (invisibly)
 a list with the number of projections in each stage and an estimate of the

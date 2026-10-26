@@ -36,18 +36,14 @@ iSCAM output files, or a list already returned by \code{load.iscam.files()}.}
 \item{Name}{Character string giving the name of the imported operating
 model.}
 
-\item{nSim}{Integer specifying the number of simulations. iSCAM's MPD fit
-is a single point estimate, so every simulation starts from the same
-biology/exploitation history; simulation-to-simulation variability comes
-from \code{\link[=Simulate]{Simulate()}}'s own process/observation error, not from iSCAM.}
+\item{nSim}{Integer specifying the number of simulations.}
 
 \item{pYear}{Integer specifying the number of projection years.}
 
 \item{Agency, Author, Email, Region, Latitude, Longitude, Sponsor}{Character/
 numeric metadata stored on the resulting \code{OM}, matching \code{\link[=ImportSS]{ImportSS()}}.}
 
-\item{StockName, FleetName}{Character. Names for the single stock/fleet
-built from the iSCAM model.}
+\item{StockName, FleetName}{Character. Names for the stock and fleet.}
 
 \item{CommonName, Species}{Optional character metadata for the stock.}
 
@@ -77,49 +73,15 @@ use a different \code{Seed} for each OM (or each batch of OMs) to obtain
 independent draws. Default \code{101}.}
 }
 \value{
-An \link[=om-class]{om} object.
+None. The function stops with an error.
 }
 \description{
-Import an iSCAM (Integrated Statistical Catch-Age Model) MPD fit and
-convert it into an \code{\link[=OM]{OM()}} object, targeting the current \code{om}/\code{hist}/\code{data}
-class system (unlike the legacy \code{\link[=iSCAM2OM]{iSCAM2OM()}}, which targets the older
-\code{OM}/\code{Data} classes).
-}
-\details{
-\code{ImportiSCAM()} reads iSCAM output files from \code{iSCAMdir} (via
-\code{load.iscam.files()}, the same reader used by the legacy \code{\link[=iSCAM2OM]{iSCAM2OM()}}) and
-constructs an \code{\link[=OM]{OM()}} object:
-\itemize{
-\item Growth (\code{Length}), weight-at-age, maturity-at-age, and natural
-mortality-at-age are read directly from the MPD fit
-(\code{replist$mpd$M}/\code{replist$mpd$d3_wt_mat}/\code{replist$mpd$ma}, and
-\code{replist$dat$linf}/\code{k}/\code{to} for the von Bertalanffy growth curve).
-\item The stock-recruit relationship uses iSCAM's fitted steepness and R0
-(\code{replist$mpd$steepness}/\code{replist$mpd$ro}).
-\item \strong{Only a single, aggregate fleet is built.} iSCAM's MPD reconstruction
-(\code{replist$mpd$F}) is a single combined fishing-mortality-at-age series,
-not broken out by gear -- this matches the scope of the legacy
-\code{\link[=iSCAM2OM]{iSCAM2OM()}}/\code{\link[=iSCAM2Data]{iSCAM2Data()}}, which also collapse multi-gear catch into
-one total rather than building per-gear \code{Fleet} dynamics. The fleet's
-relative selectivity-at-age is derived by normalising \code{replist$mpd$F}
-within each year (\verb{F_a,y / max_a(F_a,y)}), and its historical \code{Effort}
-is the resulting apical F series, normalised to its historical maximum
--- i.e. effort is assumed proportional to apical F under constant
-catchability. \strong{This approximates iSCAM's fitted exploitation history;
-it is not a byte-for-byte reconstruction of iSCAM's own (state-space)
-historical trajectory}, since \code{\link[=Simulate]{Simulate()}} derives numbers-at-age from
-this effort series and the biology above, rather than reusing
-\code{replist$mpd$N} directly.
-\item \code{ImportiSCAMData()} (called internally, or usable standalone) populates
-\code{OM@Data} with aggregate landings and any abundance indices
-(\code{replist$dat$indices}). Age and size composition data are not imported.
-}
-
-\strong{Not supported}: delay-difference models (\code{replist$mpd$F_dd}), for which
-\code{ImportiSCAM()} stops with an error, and MCMC output: the OM is built from
-the MPD estimates (\code{replist$mpd}). Use the legacy \code{\link[=iSCAM2OM]{iSCAM2OM()}} for either.
+\code{ImportiSCAM()} is not currently available.
+The iSCAM importer is not yet implemented, and calling this function
+returns an error. Please contact Blue Matter support
+(\email{adrian@bluematterscience.com}) for help building an operating
+model from an iSCAM assessment.
 }
 \seealso{
-\code{\link[=OM]{OM()}}, \code{\link[=PopulateOM]{PopulateOM()}}, \code{\link[=CompareiSCAM]{CompareiSCAM()}}, \code{\link[=iSCAM2OM]{iSCAM2OM()}} (legacy),
 \code{\link[=ImportSS]{ImportSS()}}, \code{\link[=ImportBAM]{ImportBAM()}}
 }

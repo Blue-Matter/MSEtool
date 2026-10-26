@@ -11,12 +11,10 @@ limits) are imperfectly applied in the operating model.
 }
 \details{
 \code{TAC} and \code{Effort} each use \code{Mean}/\code{SD}/\code{Error}: a multiplicative bias and
-its stochastic realisation applied to the advised TAC/effort. \code{Size}
-instead uses only \code{Compliance}: the
-fraction of the fleet that adopts a newly-advised size-based regulation
-(a change to \code{Advice@Retention} and/or \code{Advice@Selectivity}) in the year it
-changes, with the remainder of the fleet continuing under the prior
-(status-quo) Retention/Selectivity curve.
+its stochastic realisation applied to the advised TAC/effort. \code{Size} is
+currently not applied: size-based regulations (\code{Advice@Retention} and
+\code{Advice@Selectivity}) are adopted in full by the whole fleet in the year
+they change, and \code{Size@Compliance} is ignored.
 
 An \link[=imp-class]{imp} object can be attached to an \link[=om-class]{om} object and
 retrieved with \code{Imp(om)}.
@@ -33,8 +31,8 @@ allowable catch recommendations, via \code{Mean}/\code{SD}/\code{Error}. See \co
 \item{\code{Effort}}{An \link[=impslot-class]{impslot} object. Implementation error for
 effort-based controls, via \code{Mean}/\code{SD}/\code{Error}. See \code{\link[=Imp]{Imp()}}.}
 
-\item{\code{Size}}{An \link[=impslot-class]{impslot} object. Implementation error for size-based
-regulations (minimum legal size etc.), via \code{Compliance} only. See
+\item{\code{Size}}{An \link[=impslot-class]{impslot} object. Implementation of size-based
+regulations (minimum legal size etc.). Currently not applied; see
 \code{\link[=Imp]{Imp()}}.}
 
 \item{\code{Misc}}{List. Miscellaneous additional objects.}

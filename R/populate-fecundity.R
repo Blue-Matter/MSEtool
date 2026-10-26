@@ -98,9 +98,9 @@ PopulateFecundity <- function(Fecundity,
     }
   }
   
-  ModelClass <- .GetModelClass(Fecundity@Model)
+  ModelClass <- .SizeModelClass(Fecundity@Model, c('Age', 'Length'), 'Fecundity')
   if (!is.null(ModelClass)) {
-    if (grepl("at-Length", .GetModelClass(Fecundity@Model))) {
+    if (grepl("at-Length", ModelClass)) {
       .CheckRequiredObject(Length, "length", "Length")
       Length <- PopulateLength(Length, 
                                Ages = Ages, 

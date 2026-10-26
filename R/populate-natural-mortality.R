@@ -78,13 +78,14 @@ PopulateNaturalMortality <- function(NaturalMortality,
   
   NaturalMortality@Pars <- .StructurePars(Pars = .AddDefaultPars(NaturalMortality), nSim, Years)
   NaturalMortality@Model <- .FindModel(NaturalMortality)
-  NaturalMortality <- .PopulateMeanAtAge(object = NaturalMortality, 
-                                        Ages= Ages, 
-                                        Years = Years)
+  if (is.null(NaturalMortality@Model))
+    NaturalMortality <- .PopulateMeanAtAge(object = NaturalMortality, 
+                                          Ages= Ages, 
+                                          Years = Years)
   
-  ModelClass <- .GetModelClass(NaturalMortality@Model)
+  ModelClass <- .SizeModelClass(NaturalMortality@Model, c('Age', 'Length'), 'NaturalMortality')
   if (!is.null(ModelClass)) {
-    if (grepl("at-Length", .GetModelClass(NaturalMortality@Model))) {
+    if (grepl("at-Length", ModelClass)) {
       NaturalMortality <- .PopulateMeanAtLength(
         object = NaturalMortality, 
         Length = Length, 

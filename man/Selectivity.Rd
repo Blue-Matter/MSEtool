@@ -28,7 +28,9 @@ Selectivity(x) <- value
 \arguments{
 \item{Pars}{Named list of selectivity parameters passed to the selectivity
 model function. Parameter names must match the arguments of the chosen
-model (see \code{\link[=SelectivityModels]{SelectivityModels()}}). Each element may be a scalar, vector,
+model (see \code{\link[=SelectivityModels]{SelectivityModels()}}). Arguments with a default value (e.g.
+\code{Vmaxlen = 1}) are optional and take their default when omitted. Each
+element may be a scalar, vector,
 or array; see \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for accepted formats. Default \code{list()}
 (empty).
 
@@ -43,7 +45,10 @@ fleet is returned.}
 If \code{NULL} (default), the model is inferred automatically from the names
 in \code{Pars}. May also be supplied as a custom R function
 with arguments matching those in \code{Pars}. See \code{\link[=SelectivityModels]{SelectivityModels()}} for
-built-in options.}
+built-in options.
+A custom function takes the size argument \code{Ages}, \code{Length}, or \code{Weight}
+(the basis it is evaluated on) and one argument for each parameter in
+\code{Pars}. Arguments with a default value are optional.}
 
 \item{MeanAtAge}{Numeric array or \code{NULL}. Mean selectivity-at-age with
 dimensions \verb{Sim x Age x Year} (area dimension added during population).

@@ -72,8 +72,8 @@ bounded while the penalty on exceeding is not, so a sufficiently large
 weight makes zero effort the cheapest option and the fleet stops fishing
 altogether.
 
-For \code{Size}, it is the fraction of the fleet adopting a newly-advised size
-regulation.
+For \code{Size}, it is currently not applied: size-based regulations are always
+adopted in full.
 }
 }
 \examples{

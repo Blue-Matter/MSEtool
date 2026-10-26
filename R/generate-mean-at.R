@@ -59,7 +59,11 @@ GenMeanAtWeight <- function(Model, Pars, Weight) {
   
   # Determine function
   fun <- if (is.function(Model)) Model else get(Model)
-  
+
+  # CV/SD entries of Pars are not model arguments
+  if (!'...' %in% names(formals(fun)))
+    Pars <- Pars[names(Pars) %in% names(formals(fun))]
+
   arg_name <- names(dots)
   arg <- dots[[1]]
   

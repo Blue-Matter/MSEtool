@@ -4,15 +4,19 @@
 \alias{TuneTable}
 \title{Tables from a Tuned MP}
 \usage{
-TuneTable(x, What = c("Constraints", "Configs", "History", "Validation"))
+TuneTable(
+  x,
+  What = c("Constraints", "Configs", "History", "Validation", "Excluded")
+)
 }
 \arguments{
 \item{x}{A \link[=tunemp-class]{tunemp} object.}
 
 \item{What}{Character. \code{'Constraints'} (default; the tuned MP's metric
 values), \code{'Configs'} (the ranking of configurations), \code{'History'} (every
-evaluated candidate), or \code{'Validation'} (the tuned MP's metric values for
-\code{ValidationHist}). See Details.}
+evaluated candidate), \code{'Validation'} (the tuned MP's metric values for
+\code{ValidationHist}), or \code{'Excluded'} (the simulations excluded because the
+MP failed). See Details.}
 }
 \value{
 A \code{data.frame}; see Details for the columns.
@@ -20,8 +24,9 @@ A \code{data.frame}; see Details for the columns.
 \description{
 Returns one of the tables stored in a \link[=tunemp-class]{tunemp} object: the
 performance of the tuned MP, the ranking of candidate configurations, the
-record of every evaluated candidate, or the performance of the tuned MP on
-the validation operating models.
+record of every evaluated candidate, the performance of the tuned MP on
+the validation operating models, or the simulations excluded because the
+MP failed in them.
 }
 \details{
 Metric values are combined across stocks and \code{Hist} objects as specified
@@ -79,14 +84,15 @@ value, in the order they were evaluated.
 \item \code{Config}: index of the configuration (\code{1} without \code{Configs}).
 \item \code{x}: value of the tuning argument.
 \item \code{Objective}: value of the objective (\code{NA} without an objective, or when
-the candidate failed).
+it could not be calculated).
 \item \code{Slack}: smallest slack across the constraints (\code{Inf} without
-constraints, \code{-Inf} when the candidate failed).
+constraints, \code{-Inf} when a metric could not be calculated).
 \item \code{Feasible}: does the candidate meet every constraint (within \code{TolPM})?
 \item \code{FailRate}: largest fraction, across the \code{Hist} objects, of
-simulation-management years in which the MP returned an error (\code{1} when
-the projection failed). Candidates with a \code{FailRate} greater than
-\code{MaxFailRate} (see \code{\link[=TuneControl]{TuneControl()}}) fail.
+simulations in which the candidate MP returned an error in any year.
+\item \code{nExcluded}: number of simulations, summed across the \code{Hist} objects,
+excluded from the metrics because the MP failed in them for this or
+another candidate of the same stage (see \code{'Excluded'}).
 \item One column per metric, named by the metric, with its value.
 \item \code{Stage}: \code{'Configure'} (first stage, on the first \code{nSimConfig}
 simulations when set) or \code{'Tune'} (second stage, all simulations).
@@ -104,6 +110,23 @@ when unnamed).
 \item \code{Name}, \code{Type}, \code{Value}, \code{Min}, \code{Max}: as for \code{'Constraints'}.
 \item \code{Met}: is the constraint met (without tolerance)? \code{NA} for the
 objective.
+\item \code{nFailed}, \code{nSim}: number of simulations in which the tuned MP failed,
+and the number of simulations. Metrics are calculated on the
+simulations in which it did not fail.
+}
+}
+
+\subsection{\code{'Excluded'}}{
+
+One row per stage and \code{Hist} object. The metrics of every candidate in a
+stage are calculated on the same simulations: those in which the MP did
+not fail for any candidate evaluated in that stage.
+\itemize{
+\item \code{Stage}: \code{'Configure'} or \code{'Tune'}, as for \code{'History'}.
+\item \code{Hist}: name of the \code{Hist} object.
+\item \code{nSim}: number of simulations used in the stage.
+\item \code{nExcluded}: number of simulations excluded.
+\item \code{Sims}: the excluded simulations (empty when none).
 }
 }
 }
