@@ -214,6 +214,8 @@
   }
 
   Advice <- .CheckAdvice(Advice, Proj, FleetNames, Areas, sim, name = Complex)
+  if (!inherits(Advice, 'advice'))
+    return(.LogMPError(Advice, NULL, NULL, Sim = sim, Year = CalYear))
   if (!is.null(AnnualTAC)) {
     Annual   <- Advice@TAC
     Annual[] <- AnnualTAC
