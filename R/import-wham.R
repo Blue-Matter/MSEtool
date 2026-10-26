@@ -3,7 +3,7 @@
 #' @description
 #' `.ImportWHAM()` is not yet implemented. This is a placeholder documenting
 #' why, and what a real implementation needs, so the gap is discoverable
-#' rather than silent (see [ImportiSCAM()] and [ImportBAM()] for the
+#' rather than silent (see [ImportSS()] and [ImportBAM()] for the
 #' equivalent, implemented importers).
 #' 
 #' @param obj A fitted WHAM/TMB model object (`wham::fit_wham()`'s return
@@ -11,7 +11,7 @@
 #' @param ... Not currently used.
 #'
 #' @return Errors; see Details.
-#' @seealso [ImportiSCAM()], [ImportBAM()], [WHAM2OM()] (legacy, single-fleet
+#' @seealso [ImportSS()], [ImportBAM()], [WHAM2OM()] (legacy, single-fleet
 #'   only)
 #' @keywords internal
 .ImportWHAM <- function(obj, ...) {

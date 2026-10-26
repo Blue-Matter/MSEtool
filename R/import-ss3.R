@@ -597,7 +597,7 @@ ImportSS <- function(SSDir,
   Age_Beg <- NULL
   
   if (!is.null(replist$mean_body_wt)) {
-    cli::cli_abort("`replist$mean_body_wt` not currently supported.", .internal = TRUE)
+    cli::cli_abort("`replist$mean_body_wt` not currently supported.")
     # TODO - update
     # Wt_age_df <- replist$mean_body_wt[replist$mean_body_wt$Morph == st, ]
     # Wt_age_df <- Wt_age_df[findInterval(mainyrs, Wt_age_df$Yr), ]
@@ -679,7 +679,7 @@ ImportSS <- function(SSDir,
       dplyr::ungroup()
     return(DF2Array(M_at_ageDF_seasonal))
   } else {
-    cli::cli_abort("Currently only 'year' and 'quarter' are supported for `TimeUnits`", .internal = TRUE)
+    cli::cli_abort("Currently only 'year' and 'quarter' are supported for `TimeUnits`")
   }
 }
 
@@ -963,7 +963,7 @@ ImportSS <- function(SSDir,
     return(list(hR = h_out))
   } else if (replist$SRRtype == 7) {
     cli::cli_abort(
-      "SS3 `SRRtype == 7` currently not supported" ,.internal = TRUE
+      "SS3 `SRRtype == 7` currently not supported"
     )
     
     s_frac <- replist$parameters$Value[replist$parameters$Label == "SR_surv_Sfrac"]
@@ -1338,7 +1338,7 @@ ImportSS <- function(SSDir,
     length()
   
   if (nMorph > 1) 
-    cli::cli_abort("More than 1 Morph not currently supported", .internal = TRUE)
+    cli::cli_abort("More than 1 Morph not currently supported")
   
   FInteract <- t(FInteract[, as.character(AgeClasses)])
   dimnames(FInteract) <- list(
@@ -1723,8 +1723,7 @@ ImportSS <- function(SSDir,
   # SS3 fleet number of each survey index; fleets may be in any order
   SSFleets <- match(SurveyNames, RepList[[1]]$FleetNames)
   if (anyNA(SSFleets))
-    cli::cli_abort("Survey index {.val {SurveyNames[is.na(SSFleets)]}} not found in the SS3 fleet names.",
-                   .internal = TRUE)
+    cli::cli_abort("Survey index {.val {SurveyNames[is.na(SSFleets)]}} not found in the SS3 fleet names.")
 
   YearsList <- .GetSSYears(RepList[[1]], pYear = 1)
 

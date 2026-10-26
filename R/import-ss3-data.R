@@ -109,7 +109,7 @@ ImportSSData <- function(SSDir,
   CatchDF <- replist$catch |> dplyr::filter(Yr %in% YearsHist)
   
   if (length(unique(CatchDF$Area)) > 1) {
-    cli::cli_abort("`ImportSSData` currently does not support multiple areas", .internal = TRUE)
+    cli::cli_abort("`ImportSSData` currently does not support multiple areas")
   }
   
   # add missing column names
@@ -122,7 +122,7 @@ ImportSSData <- function(SSDir,
   }
   
   if (!"ret_bio" %in% CatchColNames) {
-    cli::cli_abort("'ret_bio' not found in `replist$catch` for this SS3 output", .internal = TRUE)
+    cli::cli_abort("'ret_bio' not found in `replist$catch` for this SS3 output")
   }
   
   # Loop over fleets
@@ -276,7 +276,7 @@ ImportSSData <- function(SSDir,
   if (length(Indices@Units) != length(CPUENames)) {
     cli::cli_abort(c(
       "x" = "CPUE/Survey units do not match fleets"
-    ), internal = TRUE)
+    ), .internal = TRUE)
   }
   Indices
 }

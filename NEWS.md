@@ -18,7 +18,7 @@ engine alongside the existing one:
   `advice-class` object. The same `data-class` structure holds simulated and
   real fishery data, so MPs can be applied directly to observed data.
 - Operating models and data can be imported from Stock Synthesis 3
-  (`ImportSS()`), BAM (`ImportBAM()`), and iSCAM (`ImportiSCAM()`).
+  (`ImportSS()`) and BAM (`ImportBAM()`).
 - New performance metric functions, and export of MSE results to Slick
   (`MSE2Slick()`).
 - Legacy `OM`, `MOM`, `Hist`, `MSE`, and `Data` objects are still supported:
