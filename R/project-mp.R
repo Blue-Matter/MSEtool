@@ -263,8 +263,8 @@
   if (!Error)
     Proj <- .MaskFailedSims(Proj, .FailedSims(Proj@Log$error), YearsProj)
 
-  if (!Error && !silent)
-    .MsgTACAttainment(Proj@Misc$TACAttainment, MPName, mp, nMP, Proj@OM@Seasons)
+  if (!Error)
+    Proj <- .LogTACAttainment(Proj, Proj@Misc$TACAttainment, Proj@OM@Seasons)
 
   if (!Error)
     MSE <- .UpdateMSEObject(MSE,
@@ -312,9 +312,9 @@
   )
 }
 
-# One console line per MP: sim-time steps where a fleet did not catch its TAC
-.MsgTACAttainment <- function(Rec, MPName, mp = 1, nMP = 1, Seasons = 1) {
-  if (is.null(Rec) || !length(Rec$TAC)) return(invisible(NULL))
+# One log warning per MP: sim-time steps where a fleet did not catch its TAC
+.LogTACAttainment <- function(Proj, Rec, Seasons = 1) {
+  if (is.null(Rec) || !length(Rec$TAC)) return(Proj)
   Short <- HasTAC <- FALSE
   for (cx in seq_along(Rec$TAC)) {
     TAC   <- Rec$TAC[[cx]]
@@ -326,14 +326,13 @@
   AnyStep <- \(x) apply(x, c(1, 2), any)
   nTotal   <- sum(AnyStep(HasTAC))
   nShort   <- sum(AnyStep(Short))
-  if (!nShort) return(invisible(NULL))
+  if (!nShort) return(Proj)
   nCeiling <- sum(AnyStep(Short & AtCeiling))
   nOther   <- sum(AnyStep(Short & !AtCeiling))
   Other    <- if (length(Rec$TAC) > 1) 'choke' else 'solver'
   Unit     <- if (Seasons > 1) 'sim-time steps' else 'sim-years'
-  label    <- .MsgFormat("[{mp}/{nMP}] {.mp {MPName}}")
-  cli::cli_alert_warning(paste0(
-    "{label} TAC not caught in {nShort} of {nTotal} {Unit} ",
-    "(effort ceiling {nCeiling}, {Other} {nOther}); see {.fn TACAttainment}"))
-  invisible(NULL)
+  msg <- paste0("TAC not caught in ", nShort, " of ", nTotal, " ", Unit,
+                " (effort ceiling ", nCeiling, ", ", Other, " ", nOther,
+                "); see `TACAttainment()`")
+  .CaptureLog(Proj, msg, name = 'TACAttainment', type = 'warning')
 }

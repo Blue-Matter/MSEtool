@@ -61,8 +61,14 @@
 #' * `ExampleMPs`: a character vector of the example MP names.
 #'
 #' @examples
+#' Hist <- Simulate(SingleStockOM, nSim = 2)
+#' Data <- Hist@@Data[[1]][[1]]
+#' CurrentEffort(Data)
+#' CurrentCatch(Data)
+#' AverageCatch(Data)
+#'
 #' \dontrun{
-#' MSE <- runMSE(SingleStockOM, MPs=ExampleMPs())
+#' MSE <- runMSE(SingleStockOM, MPs = ExampleMPs())
 #' }
 #'
 #'

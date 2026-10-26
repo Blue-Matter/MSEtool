@@ -28,9 +28,9 @@ names are used as the MP names. If \code{NULL} (default), projects
 \code{c("CurrentEffort", "CurrentCatch")}. For \link[=hist-class]{hist} objects, MPs may
 also be legacy functions of class \code{"MP"} (DLMtool/SAMtool), which are
 called on a legacy \code{Data} object converted from the simulated data.
-Life-history data (e.g. \code{Data@Mort}, \code{Data@vbK}, \code{Data@L50}) are not
-generated for simulated data, so legacy MPs that need them are not
-supported.}
+Legacy MPs that use life-history data (e.g. \code{Data@Mort}, \code{Data@vbK},
+\code{Data@L50}) need the \code{LifeHistory} slot of the OM's \link[=obs-class]{obs} objects to
+be set with \code{\link[=LifeHistoryObs]{LifeHistoryObs()}}; otherwise these slots are \code{NA}.}
 
 \item{parallel}{Logical or named list controlling parallel execution. For
 \link[=hist-class]{hist} objects, \code{TRUE} splits the simulations into chunks and
@@ -63,14 +63,15 @@ objects. Substantially increases object size. Default \code{FALSE}.}
 projecting. Only used for \link[=Hist-legacy-class]{Hist-legacy} objects. Default \code{FALSE}.}
 }
 \value{
-An \link[=mse-class]{mse} or a \link[=MSE-legacy-class]{MSE-legacy} object containing projection results for all MPs.
+An \link[=mse-class]{mse} object for a \link[=hist-class]{hist} object, or an
+\link[=MSE-legacy-class]{MSE-legacy} object for a \link[=Hist-legacy-class]{Hist-legacy} object, containing
+the projection results for all MPs.
 }
 \description{
 Runs the MSE projection loop for one or more management procedures (MPs)
-and returns a completed \link[=MSE-legacy-class]{MSE-legacy} object. Dispatches to the appropriate
-internal projection engine based on the class of \code{Hist}: \link[=hist-class]{hist}
-objects use the new \code{om}-based engine; \link[=Hist-legacy-class]{Hist-legacy} objects use the legacy
-engine.
+and returns the projection results: an \link[=mse-class]{mse} object for a
+\link[=hist-class]{hist} object, or an \link[=MSE-legacy-class]{MSE-legacy} object for a
+\link[=Hist-legacy-class]{Hist-legacy} object.
 }
 \details{
 For \link[=hist-class]{hist} objects, \code{Hist@OM@Control} settings used in projections

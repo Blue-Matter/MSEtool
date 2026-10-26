@@ -40,9 +40,8 @@
 #'   recalculated on `Classes`. Default `NULL`.
 #' @param Classes `numeric` or `NULL`. Age or length class midpoints
 #'   corresponding to the `MeanAt*` array in use. Default `NULL`.
-#' @param Timing `array` or `NULL`. Reserved for future use. Intended to
-#'   represent the timing of spawning within the time step. Currently stored
-#'   but not applied; spawning timing is controlled by [SRR()]. Default `NULL`.
+#' @param Timing `array` or `NULL`. Not used. Spawning time within the time
+#'   step is set by `SRR@SpawnTimeFrac` (see [SRR()]). Default `NULL`.
 #' @param Misc `list`. Used internally. Default `list()`.
 #' @param x A [fecundity-class] object for slot accessors, or a [stock-class]
 #'   object for `Fecundity<-`.

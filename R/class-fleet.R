@@ -34,9 +34,8 @@
 #'   residual between selected and retained biomass. If `NA`, computed from
 #'   selectivity and the stock's weight-at-length during [PopulateFleet()].
 #'   See [Fleet()].
-#' @slot Bioeconomic A [bioeconomic-class] object. Not currently used.
-#' @slot Dynamics List. Reserved for future use for fleet dynamics model
-#'   parameters. Default `list()`. Not currently used.#'   
+#' @slot Bioeconomic A [bioeconomic-class] object. Not used in simulations.
+#' @slot Dynamics List. Not used. Default `list()`.
 #' @slot nYear `numeric` or `NULL`. Number of years. Inherited from the paired
 #'   [stock-class] during [PopulateFleet()].
 #' @slot pYear `numeric` or `NULL`. Number of projection years. Inherited from

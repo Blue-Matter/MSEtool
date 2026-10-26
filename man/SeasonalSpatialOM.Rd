@@ -87,7 +87,7 @@ contrasting examples.
 SeasonalSpatialOM
 
 \dontrun{
-Hist <- runMSE(SeasonalSpatialOM, MPs = ExampleMPs())
+MSE <- runMSE(SeasonalSpatialOM, MPs = ExampleMPs())
 }
 
 }

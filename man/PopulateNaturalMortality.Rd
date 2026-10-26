@@ -59,17 +59,17 @@ and years. Steps include:
 }
 }
 \examples{
-\dontrun{
+Ages   <- AlbacoreExStock@Ages
+Length <- PopulateLength(AlbacoreExStock@Length, Ages = Ages, Years = 2000:2025, nSim = 10)
 NM <- PopulateNaturalMortality(
-  NaturalMortality,
+  AlbacoreExStock@NaturalMortality,
   Ages = Ages,
   Length = Length,
-  Years = Years,
-  nSim = 100,
+  Years = 2000:2025,
+  nSim = 10,
   CalcAtLength = TRUE,
   seed = 123
 )
-}
 
 }
 \seealso{

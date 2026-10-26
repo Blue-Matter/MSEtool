@@ -10,8 +10,7 @@ bioeconomic analyses. Objects are typically created via the \code{\link[=Bioecon
 constructor, which documents all parameters in detail.
 }
 \details{
-\strong{Note:} The \link[=bioeconomic-class]{bioeconomic} is not currently used by the MSE
-framework. It is included for future development.
+\strong{Note:} \link[=bioeconomic-class]{bioeconomic} objects are not used in simulations.
 }
 \section{Slots}{
 

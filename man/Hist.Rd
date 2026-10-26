@@ -26,11 +26,9 @@ object from an \link[=mse-class]{mse} object, combining the historical time-seri
 data stored in the \code{mse} object.
 }
 \examples{
-\dontrun{
-Hist <- Simulate(SingleStockOM)
+Hist <- Simulate(SingleStockOM, nSim = 2)
 MSE  <- Project(Hist, MPs = c('CurrentCatch', 'CurrentEffort'))
 MSE2 <- Project(Hist(MSE), MPs = 'NoFishing')
-}
 
 }
 \seealso{

@@ -196,7 +196,7 @@ FitMovement <-  function(Spatial, sim=1, age=1, year=1) {
   
   if (!is.null(FracOther)) {
     diag(FracOther) <- NA
-    mov <- FracOther/apply(FracOther,1,sum,na.rm=T)*left
+    mov <- FracOther/apply(FracOther,1,sum,na.rm=TRUE)*left
   } else {
     mov <- matrix(left, 2,2)
   }

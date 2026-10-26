@@ -60,9 +60,8 @@ recalculated on \code{Classes}. Default \code{NULL}.}
 \item{Classes}{\code{numeric} or \code{NULL}. Age or length class midpoints
 corresponding to the \verb{MeanAt*} array in use. Default \code{NULL}.}
 
-\item{Timing}{\code{array} or \code{NULL}. Reserved for future use. Intended to
-represent the timing of spawning within the time step. Currently stored
-but not applied; spawning timing is controlled by \code{\link[=SRR]{SRR()}}. Default \code{NULL}.}
+\item{Timing}{\code{array} or \code{NULL}. Not used. Spawning time within the time
+step is set by \code{SRR@SpawnTimeFrac} (see \code{\link[=SRR]{SRR()}}). Default \code{NULL}.}
 
 \item{Misc}{\code{list}. Used internally. Default \code{list()}.}
 

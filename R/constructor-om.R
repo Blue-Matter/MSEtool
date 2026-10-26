@@ -78,8 +78,9 @@
 #'   of individuals between stocks (e.g. sequential hermaphroditism). Default
 #'   `NULL`.
 #' @param Relations List. Biological or ecological relationships among stocks
-#'   (e.g. predator-prey). Default `NULL`. Not currently used in simulations:
-#'   [Simulate()] stops with an error if `Relations` is not empty.
+#'   (e.g. predator-prey). Default `NULL`. Not used: relationships among stocks
+#'   are not modelled, and [Simulate()] records a warning in the log (see
+#'   [Log()]) when `Relations` is not empty.
 #' @param StockTargeting A [stocktargeting-class] object. Defines fleet-level
 #'   stock targeting weights and deviations. Populated internally.
 #'    See [StockTargeting()].
@@ -93,9 +94,9 @@
 #'   TAC/Effort values for years before `MPStartYear`. Default `NULL`. See
 #'   [InterimAdvice()] for the required columns and how it is applied.
 #' @param nReps Positive integer. Number of stochastic replicates used for
-#'   generating management advice. Default `1`. Not currently used.
+#'   generating management advice. Default `1`. Not used in simulations.
 #' @param pStar Numeric in \eqn{[0, 1]}. Percentile applied to stochastic
-#'   management advice. Default `0.5`. Not currently used.
+#'   management advice. Default `0.5`. Not used in simulations.
 #' @param maxF Numeric. Maximum allowable instantaneous fishing mortality.
 #'   Applies to nominal fishing mortality for fish that interact with the
 #'   fishing gear; actual effective F may be lower if some fish are discarded

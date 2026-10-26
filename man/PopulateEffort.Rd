@@ -48,7 +48,6 @@ single-year \verb{Sim x Year} array, then replicated across all years).
 }
 }
 \examples{
-\dontrun{
 Eff <- Effort()
 Eff_pop <- PopulateEffort(
   Effort = Eff,
@@ -57,6 +56,5 @@ Eff_pop <- PopulateEffort(
   nSim = 50,
   seed = 123
 )
-}
 
 }

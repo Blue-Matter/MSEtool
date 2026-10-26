@@ -16,12 +16,12 @@
 .StartUp <- function(OM, nSim=NULL, silent=FALSE) {
   .CheckClass(OM)
 
-  # set by earlier development versions; no longer used
+  # saved OMs can carry a Clone entry, which is not an OMControl setting
   OM@Control$Clone <- NULL
 
   .CheckOMControl(OM@Control)
 
-  .CheckRelations(OM)
+  OM <- .CheckRelations(OM)
 
   if (EmptyObject(OM@StockTargeting))
     OM@StockTargeting <- new("stocktargeting")

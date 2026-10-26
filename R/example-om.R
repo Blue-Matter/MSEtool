@@ -82,9 +82,7 @@
 #' ComplexOM@Complexes
 #' nStock(ComplexOM)
 #'
-#' \dontrun{
-#' Hist <- runMSE(ComplexOM, MPs = ExampleMPs())
-#' }
+#' MSE <- runMSE(ComplexOM, MPs = 'CurrentEffort', nSim = 2)
 #'
 "ComplexOM"
 
@@ -177,7 +175,7 @@
 #' nFleet(MultiStockOM)
 #'
 #' \dontrun{
-#' Hist <- runMSE(MultiStockOM, MPs = ExampleMPs())
+#' MSE <- runMSE(MultiStockOM, MPs = ExampleMPs())
 #' }
 #'
 "MultiStockOM"
@@ -262,7 +260,7 @@
 #' SeasonalSpatialOM
 #'
 #' \dontrun{
-#' Hist <- runMSE(SeasonalSpatialOM, MPs = ExampleMPs())
+#' MSE <- runMSE(SeasonalSpatialOM, MPs = ExampleMPs())
 #' }
 #'
 "SeasonalSpatialOM"
@@ -332,9 +330,7 @@
 #' Stock(SingleStockOM)
 #' Fleet(SingleStockOM)
 #'
-#' \dontrun{
-#' Hist <- runMSE(SingleStockOM, MPs = ExampleMPs())
-#' }
+#' MSE <- runMSE(SingleStockOM, MPs = 'CurrentEffort', nSim = 2)
 #'
 "SingleStockOM"
 
@@ -413,8 +409,6 @@
 #' TwoFleetOM
 #' nFleet(TwoFleetOM)
 #'
-#' \dontrun{
-#' Hist <- runMSE(TwoFleetOM, MPs = ExampleMPs())
-#' }
+#' MSE <- runMSE(TwoFleetOM, MPs = 'CurrentEffort', nSim = 2)
 #'
 "TwoFleetOM"

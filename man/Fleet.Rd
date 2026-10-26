@@ -92,11 +92,10 @@ selected (encountered, before retention) by this fleet (\verb{Sim x Age x Year})
 compute discards biomass. If \code{NA} (default), \code{\link[=PopulateFleet]{PopulateFleet()}} computes it
 from selectivity and the stock's weight-at-length.}
 
-\item{Bioeconomic}{A \link[=bioeconomic-class]{bioeconomic} object. Not currently used.
+\item{Bioeconomic}{A \link[=bioeconomic-class]{bioeconomic} object. Not used in simulations.
 Default is an empty \link[=bioeconomic-class]{bioeconomic}.}
 
-\item{Dynamics}{List. Reserved for future use for fleet dynamics model
-parameters. Default \code{list()}.}
+\item{Dynamics}{List. Not used. Default \code{list()}.}
 
 \item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
 

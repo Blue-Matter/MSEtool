@@ -32,15 +32,11 @@
 #'   `replist$mpd$N` directly.
 #' - `ImportiSCAMData()` (called internally, or usable standalone) populates
 #'   `OM@Data` with aggregate landings and any abundance indices
-#'   (`replist$dat$indices`). Age/size composition data is not yet imported
-#'   -- like [ImportBAMData()]'s equivalent gap, this is a documented TODO;
-#'   see [compdata-class] for the per-fleet convention to follow.
+#'   (`replist$dat$indices`). Age and size composition data are not imported.
 #'
-#' **Not currently supported**: delay-difference models (`replist$mpd$F_dd`)
-#' and MCMC-based import (multiple simulation replicates drawn from
-#' `read.mcmc()`) -- both are handled by the legacy [iSCAM2OM()] but are out
-#' of scope for this first version; `ImportiSCAM()` errors if either
-#' is detected.
+#' **Not supported**: delay-difference models (`replist$mpd$F_dd`), for which
+#' `ImportiSCAM()` stops with an error, and MCMC output: the OM is built from
+#' the MPD estimates (`replist$mpd`). Use the legacy [iSCAM2OM()] for either.
 #'
 #' @param iSCAMdir Character string giving the path to a directory containing
 #'   iSCAM output files, or a list already returned by `load.iscam.files()`.

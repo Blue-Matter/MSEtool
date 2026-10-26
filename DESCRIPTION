@@ -55,7 +55,7 @@ Suggests:
     pak,
     pbapply,
     pkgload,
-    r4ss (>= 1.50),
+    r4ss (>= 1.52.1),
     readxl,
     reshape2,
     rfishbase,

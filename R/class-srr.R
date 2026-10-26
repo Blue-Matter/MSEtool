@@ -31,11 +31,11 @@
 #'   immediately rescales the stock-recruitment curve from that year on.
 #' @slot SD `array` or `numeric`. Log-space standard deviation of recruitment
 #'   deviations. May be a scalar, length-2 bounds vector, or length-`nSim`
-#'   vector. Fixed across years (currently not time-varying). When `NULL`,
+#'   vector. Fixed across years. When `NULL`,
 #'   recruitment is deterministic.
 #' @slot AC `array` or `numeric`. Lag-1 autocorrelation of log-space
 #'   recruitment deviations. Follows the same length conventions as `SD`.
-#'   Fixed across years (currently not time-varying). Defaults to `0`
+#'   Fixed across years. Defaults to `0`
 #'   (no autocorrelation) when `NULL`.
 #' @slot SPFrom `character(1)`, `numeric(1)`, or a named `numeric` vector.
 #'   Identifies which stock's spawning production drives this stock's
@@ -109,8 +109,7 @@
 #'
 #' Recruitment deviations are generated in log-space with standard deviation
 #' `SD` and lag-1 autocorrelation `AC`, truncated at `TruncSD` standard
-#' deviations. `SD` and `AC` are currently fixed across years; time-varying
-#' process variance is not yet supported.
+#' deviations. `SD` and `AC` are fixed across years.
 #'
 #' `RecDevInit`, `RecDevHist`, and `RecDevProj` may be supplied directly to
 #' override the internally generated deviations — for example, to condition

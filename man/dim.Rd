@@ -12,6 +12,10 @@ dim(x)
 This is a wrapper for \code{base::dim}. The only difference is that this function
 prints the dimension names (if applicable)}
 }
+\value{
+An integer vector of dimensions, named by the dimension names when
+\code{x} has them, or \code{NULL} if \code{x} has no dimensions.
+}
 \description{
 Retrieve or set the dimension of an object.
 }

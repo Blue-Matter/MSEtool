@@ -63,10 +63,7 @@ The following legacy slots do not have a corresponding slot in the current
 }
 }
 \examples{
-\dontrun{
-obs_legacy <- readRDS("MyLegacyObs.rds")
-obs_new <- ConvertObs(obs_legacy)
-}
+obs_new <- ConvertObs(Generic_Obs)
 
 }
 \seealso{

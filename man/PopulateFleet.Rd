@@ -55,10 +55,8 @@ over the age-length distribution.
 }
 }
 \examples{
-\dontrun{
-F <- Fleet()
-F_pop <- PopulateFleet(Fleet = F, Stock = Stock, seed = 123, nSim = 50)
-}
+Stock <- PopulateStock(AlbacoreExStock, nYear = 40, pYear = 20, nSim = 10)
+F_pop <- PopulateFleet(Fleet = AsympExFleet, Stock = Stock, seed = 123)
 }
 \seealso{
 \code{\link[=Populate]{Populate()}}, \code{\link[=PopulateStock]{PopulateStock()}}

@@ -36,7 +36,10 @@
   if (!is.null(Beta) && !length(Beta))
     Beta <- NULL
   if (is.null(Beta)) return(Beta)
-  
+
+  if (!is.null(dimnames(Beta)))
+    return(Beta)
+
   .StructurePars(list(Beta), nSim)[[1]] |>
     ExtendSims(nSim) |>
     DropDimension("Year", warn = FALSE)

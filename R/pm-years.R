@@ -25,14 +25,13 @@
 #' @return A numeric vector of calendar years.
 #'
 #' @examples
-#' \dontrun{
+#' MSE <- runMSE(SingleStockOM, MPs = ExampleMPs(), nSim = 2)
 #' PMYears(MSE)                      # all years the MPs are active
 #' PMYears(MSE, 'first', n = 10)     # the first 10
 #' PMYears(MSE, 'middle', n = 10)    # between the first 10 and the last 10
 #' PMYears(MSE, 'last', n = 1)       # the terminal year
 #' PMYears(MSE, Skip = 5)            # all but the first 5
 #' PM_Status(MSE, Years = PMYears(MSE, 'last', n = 15))
-#' }
 #'
 #' @seealso [PM]
 #' @export

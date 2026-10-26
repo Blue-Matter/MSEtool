@@ -24,10 +24,7 @@
 #' @return A function of class `"mp"` wrapping `MP`.
 #' @keywords internal
 .WrapLegacyMP <- function(MP) {
-  # `.LegacyMP` is stored as a literal (already-evaluated) default value, not
-  # a symbol - `.MakeSelfContained()` replaces `environment(wrapped)`, which
-  # would break lexical capture of `MP` from this enclosing scope; a literal
-  # default survives the environment swap because it needs no lookup
+  # MP is stored as a literal default so it survives `.MakeSelfContained()` replacing the environment
   wrapped <- function(Data, .LegacyMP) {
     LegacyData <- Convert(Data, silent = TRUE)
     Rec <- tryCatch(

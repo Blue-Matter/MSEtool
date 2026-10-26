@@ -15,17 +15,14 @@
 #' * Generating stochastic values if required  for `Initial` and 
 #'   `Final` slots.
 #' * Validating that the `Reference` slot is one of the accepted types:
-#'   `"B0"`, `"BMSY"`, `"SB0"`, or `"SBMSY"`.
+#'   `"B0"` or `"SB0"`.
 #' * Returning a fully populated `Depletion` object.
 #'
 #' @return
 #' A populated [Depletion()] object.
 #'
 #' @examples
-#' \dontrun{
-#' # Assuming a Depletion object `D` exists
-#' D_pop <- PopulateDepletion(D, nSim = 10, seed = 123)
-#' }
+#' D_pop <- PopulateDepletion(AlbacoreExStock@@Depletion, nSim = 10, seed = 123)
 #'
 #' @export
 PopulateDepletion <- function(Depletion,
@@ -43,7 +40,7 @@ PopulateDepletion <- function(Depletion,
   Depletion@Initial <- .PopulateInitial(Depletion@Initial, nSim)
   Depletion@Final <- .PopulateInitial(Depletion@Final, nSim, "Final")
   
-  validReference <- c("B0", "BMSY", "SB0", "SBMSY")
+  validReference <- .ValidDepletionReference
   if (!Depletion@Reference %in% validReference) {
     cli::cli_abort(c("Invalid value for `Reference`",
                      "x" = "Currently {.val {Depletion@Reference}}. Must be one of: {.val {validReference}}"

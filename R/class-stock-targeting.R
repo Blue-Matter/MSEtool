@@ -15,8 +15,7 @@
 #'   represent co-variation in targeting between pairs of stocks.
 #'
 #' @slot AC `array[sim, stock, fleet]`. Lag-1 autocorrelation of log targeting
-#'   deviations for each simulation, stock, and fleet. Currently not used
-#'  but retained for future implementation.
+#'   deviations for each simulation, stock, and fleet. Not used.
 #'
 #' @slot Targeting `array[sim, stock, fleet, year]`. Realised targeting
 #'   deviations in normal space. For each fleet and year, values represent each

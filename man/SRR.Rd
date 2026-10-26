@@ -123,8 +123,8 @@ Interpreted in units of \code{Units}. Must be \code{NULL} when \code{Pars} conta
 }}
 
 \item{SD}{\code{numeric} or \code{NULL}. Log-space standard deviation of recruitment
-deviations. Follows the same length conventions as \code{R0}. Currently fixed
-across years (time-varying \code{SD} is not yet supported). When \code{NULL},
+deviations. Follows the same length conventions as \code{R0}. Fixed across
+years. When \code{NULL},
 recruitment is deterministic (no process error). Default \code{NULL}.}
 
 \item{AC}{\code{numeric} or \code{NULL}. Lag-1 autocorrelation of log-space

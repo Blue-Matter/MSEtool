@@ -53,15 +53,13 @@ If a movement matrix is supplied, it is used to calculate unfished
 distribution.
 }
 \examples{
-\dontrun{
 Spatial <- PopulateSpatial(
-  Spatial,
-  Ages = Ages,
-  Years = Years,
-  nSim = 100,
+  AlbacoreExStock@Spatial,
+  Ages = AlbacoreExStock@Ages,
+  Years = 2000:2025,
+  nSim = 10,
   seed = 123
 )
-}
 
 }
 \seealso{

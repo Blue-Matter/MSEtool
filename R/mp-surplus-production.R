@@ -195,14 +195,12 @@
 #' @return An [advice-class] object.
 #'
 #' @examples
-#' \dontrun{
-#' Hist <- Simulate(SingleStockOM)
+#' Hist <- Simulate(SingleStockOM, nSim = 2)
 #' SurplusProduction(Hist@@Data[[1]][[1]])
 #'
 #' SP_Fox <- SetMPArgs(SurplusProduction, Shape = 1, FTarget = 0.8)
-#' MSE <- Project(Hist, MPs = list(SP = SurplusProduction, SP_Fox = SP_Fox))
+#' MSE <- Project(Hist, MPs = list(SP_Fox = SP_Fox))
 #' SPEstimates(MSE)
-#' }
 #'
 #' @seealso [FitSP()], [SPControl()], [SpictControl()], [AnnualData()],
 #'   [SPEstimates()], [Log()], [B_BMSY()], [F_FMSY()], [HockeyStickHCR()],
@@ -521,8 +519,7 @@ class(SurplusProduction) <- 'mp'
 #' `'full'`.
 #'
 #' @examples
-#' \dontrun{
-#' Hist <- Simulate(SingleStockOM)
+#' Hist <- Simulate(SingleStockOM, nSim = 2)
 #' MSE  <- Project(Hist, MPs = list(SP = SurplusProduction))
 #' Est  <- SPEstimates(MSE)
 #'
@@ -535,7 +532,6 @@ class(SurplusProduction) <- 'mp'
 #' # estimated vs operating model stock status
 #' plot(Est$OM_B_BMSY, Est$B_BMSY, xlab = 'OM B/BMSY', ylab = 'Estimated B/BMSY')
 #' abline(0, 1)
-#' }
 #'
 #' @seealso [SurplusProduction()], [Log()], [B_BMSY()], [F_FMSY()]
 #' @export

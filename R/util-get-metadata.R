@@ -22,11 +22,9 @@
 #' * `FleetNames` — character vector of fleet names (from the first stock)
 #'
 #' @examples
-#' \dontrun{
-#' meta <- GetMetaData(MyOM, Period = "Historical")
+#' meta <- GetMetaData(SingleStockOM, Period = "Historical")
 #' meta$nSim
 #' meta$AgeClasses
-#' }
 #'
 #' @export
 GetMetaData <- function(OM, Period=c('Historical', 'Projection', 'All'), Years=NULL) {

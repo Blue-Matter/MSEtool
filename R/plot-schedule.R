@@ -72,15 +72,13 @@
 #' @return A `ggplot` object.
 #'
 #' @examples
-#' \dontrun{
-#' Hist <- Simulate(SingleStockOM)
+#' Hist <- Simulate(SingleStockOM, nSim = 2)
 #' PlotSelectivityCurve(Hist)
 #' PlotMaturityCurve(Hist)
 #'
 #' MSE <- Project(Hist, ExampleMPs())
 #' PlotRetentionCurve(MSE)
-#' PlotWeightCurve(MSE, Sim = 3)
-#' }
+#' PlotWeightCurve(MSE, Sim = 2)
 #'
 #' @name plot_schedule
 #' @seealso [Fleet()], [Stock()], [VBiomass()], [PlotSelectivity()],
@@ -752,9 +750,7 @@ PlotFecundityCurve <- function(object, Sim = NULL, byStock = NULL, Years = NULL,
   nSim   <- if (hasSim) length(unique(df$Sim)) else 1L
 
   if (hasSim && !is.null(Sim)) {
-    if (!Sim %in% unique(df$Sim))
-      cli::cli_abort("`Sim = {Sim}` not found; {length(unique(df$Sim))} simulation{?s} available.")
-    df     <- dplyr::filter(df, .data$Sim == Sim)
+    df     <- .DFSubsetSim(df, Sim, keep_sim_name = TRUE)
     hasSim <- FALSE
   }
 

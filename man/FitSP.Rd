@@ -174,11 +174,9 @@ described in \code{\link[=SpictControl]{SpictControl()}}.
 }
 }
 \examples{
-\dontrun{
-Hist <- Simulate(SingleStockOM)
+Hist <- Simulate(SingleStockOM, nSim = 2)
 Fit  <- FitSP(Hist@Data[[1]][[1]])
 Fit$Terminal
-}
 
 }
 \references{

@@ -46,10 +46,7 @@ than 1. As an alternative, users can set the \code{MeanAtLength} or \code{MeanAt
 arrays directly in the \code{\link[=Selectivity]{Selectivity()}} and \code{\link[=Retention]{Retention()}} objects.
 }
 \examples{
-\dontrun{
-OMlegacy <- readRDS("MyLegacyOM.rds")
-om_new <- ConvertOM(OMlegacy)
-}
+om_new <- ConvertOM(testOM)
 
 }
 \seealso{

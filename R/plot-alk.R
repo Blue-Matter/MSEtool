@@ -107,11 +107,8 @@ PlotALK <- function(object, Sim = NULL, byStock = NULL, Stocks = NULL, Years = N
     df <- dplyr::filter(df, .data$Year == max(yrs))
   }
 
-  if (!is.null(Sim)) {
-    if (!Sim %in% unique(df$Sim))
-      cli::cli_abort("`Sim = {Sim}` not found; {length(unique(df$Sim))} simulation{?s} available.")
-    df <- dplyr::filter(df, .data$Sim == Sim)
-  }
+  if (!is.null(Sim))
+    df <- .DFSubsetSim(df, Sim, keep_sim_name = TRUE)
 
   df <- df |>
     dplyr::group_by(dplyr::across(dplyr::all_of(c('Age', 'Length', 'Year', 'LengthWidth', 'AgeWidth')))) |>

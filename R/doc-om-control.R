@@ -92,7 +92,6 @@
 #' @seealso [OM()], [Simulate()], [Project()], [SimControl()]
 #'
 #' @examples
-#' \dontrun{
 #' OM <- SingleStockOM
 #' Control(OM)$MSYType <- 'Landings'
 #' Control(OM)$DataOM  <- list(Reference = TRUE)
@@ -104,8 +103,7 @@
 #' class(myMP) <- 'mp'
 #' attr(myMP, 'DataOM') <- 'Biomass'
 #'
-#' Hist <- Simulate(OM)
+#' Hist <- Simulate(OM, nSim = 2)
 #' MSE  <- Project(Hist, MPs = c('refFMSY', 'myMP'))
-#' }
 #' @name OMControl
 NULL

@@ -13,6 +13,9 @@ CheckPackage(pkg, version = NULL, pkg.path = NULL)
 
 \item{pkg.path}{Optional. Character string specifying the install command. See \code{Examples}}
 }
+\value{
+\code{TRUE} if the package (and version) is installed; otherwise an error.
+}
 \description{
 Checks if a required package and (if applicable) package version are installed
 and if not, provides an error with installation instructions

@@ -30,7 +30,6 @@
 #' A populated [Catchability()] object.
 #'
 #' @examples
-#' \dontrun{
 #' Catch <- Catchability()
 #' Catch_pop <- PopulateCatchability(
 #'   Catchability = Catch,
@@ -39,7 +38,6 @@
 #'   ProjYears = 2021:2025,
 #'   seed = 123
 #' )
-#' }
 #'
 #' @export
 PopulateCatchability <- function(Catchability,

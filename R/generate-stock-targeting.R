@@ -71,10 +71,9 @@
 #' throughout.
 #'
 #' @examples
-#' \dontrun{
+#' OM <- StandardizeEffort(MultiStockOM)
 #' OM <- GenerateStockTargeting(OM, Period = "Projection")
 #' OM <- GenerateStockTargeting(OM, Period = "Projection", TruncSD = 2, n_recent = 5)
-#' }
 #'
 #' @seealso [FitStockTargeting()], [StandardizeEffort()]
 #'

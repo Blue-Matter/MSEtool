@@ -40,8 +40,8 @@
 #'   Interpreted in units of `Units`. Must be `NULL` when `Pars` contains
 #'   `alpha` and `beta`. Default `NULL`.
 #' @param SD `numeric` or `NULL`. Log-space standard deviation of recruitment
-#'   deviations. Follows the same length conventions as `R0`. Currently fixed
-#'   across years (time-varying `SD` is not yet supported). When `NULL`,
+#'   deviations. Follows the same length conventions as `R0`. Fixed across
+#'   years. When `NULL`,
 #'   recruitment is deterministic (no process error). Default `NULL`.
 #' @param AC `numeric` or `NULL`. Lag-1 autocorrelation of log-space
 #'   recruitment deviations. Follows the same length conventions as `R0`.

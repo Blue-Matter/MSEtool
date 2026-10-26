@@ -53,10 +53,7 @@
 #'   related legacy conversion functions.
 #'
 #' @examples
-#' \dontrun{
-#' obs_legacy <- readRDS("MyLegacyObs.rds")
-#' obs_new <- ConvertObs(obs_legacy)
-#' }
+#' obs_new <- ConvertObs(Generic_Obs)
 #'
 #' @export
 ConvertObs <- function(Obs, silent = FALSE) {

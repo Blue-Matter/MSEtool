@@ -27,8 +27,6 @@ defaults, recursing into nested S4 objects. Named arguments in \code{...} are
 then used to replace slots by name.
 }
 \examples{
-\dontrun{
-obj <- UpdateObject(obj, Fleet=newFleet)
-}
+om <- UpdateObject(SingleStockOM, Fleet = Fleet(TwoFleetOM))
 
 }

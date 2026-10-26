@@ -17,9 +17,10 @@
 #' in some years.
 #' @param thresh Numeric. MARE threshold (as a percentage) above which a
 #'   comparison is flagged, printed, and plotted. Default `1%`.
-#' @param save_plots Logical. If `TRUE` (default), diagnostic plots are
+#' @param save_plots Logical. If `TRUE`, diagnostic plots are
 #'   written as PNG files to `file.path(outdir, Stock)`, independently of
 #'   whether they are also printed to the active device (see `plot`).
+#'   Default `FALSE`.
 #' @param outdir Character. Base directory for saved plots. Defaults to
 #'   `"figures/diagnostics/BAM"`.
 #' @param width,height Numeric. Width/height (inches) passed to
@@ -39,7 +40,7 @@
 #' @seealso [ImportBAM()], [GetBAMOutput()]
 #' @export
 CompareBAM <- function(Stock, OM = NULL, plot = FALSE, thresh = 1,
-                       save_plots = TRUE, outdir = 'figures/diagnostics/BAM',
+                       save_plots = FALSE, outdir = 'figures/diagnostics/BAM',
                        width = NULL, height = NULL) {
 
   List <- .ProcessBAMArgs(Stock, OM)

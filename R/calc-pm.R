@@ -965,7 +965,6 @@ class(PM_LogYield) <- 'pm'
 #' @return A [pm-class] object.
 #'
 #' @examples
-#' \dontrun{
 #' PM_MinSB <- function(object, Years = NULL) {
 #'   df <- SB_SBMSY(object, df = TRUE, Reduce = FALSE)
 #'   df <- df[df$Period == 'Projection', ]
@@ -974,7 +973,6 @@ class(PM_LogYield) <- 'pm'
 #'   NewPM(df, Name = 'MinSB', Caption = 'P(min SB/SBMSY > 0.5)', Ref = 0.5, Op = `>`)
 #' }
 #' class(PM_MinSB) <- 'pm'
-#' }
 #'
 #' @seealso [PM], [TuneMP()]
 #' @export

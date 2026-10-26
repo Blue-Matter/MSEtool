@@ -107,8 +107,7 @@ omitted whenever it's populated but every value (across sims/years/
 fleets) is zero, unless \code{showDiscards = TRUE}.
 }
 \examples{
-\dontrun{
-Hist <- Simulate(SingleStockOM)
+Hist <- Simulate(SingleStockOM, nSim = 2)
 dat  <- Hist@Data[[1]][[1]]
 
 PlotLandings(dat)
@@ -120,7 +119,6 @@ PlotData(dat)
 
 PlotLandings(dat, byFleet = TRUE)
 PlotLandings(dat, byFleet = FALSE)
-}
 
 }
 \seealso{

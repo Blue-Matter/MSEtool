@@ -3,9 +3,8 @@
 #' Construct and manipulate a [bioeconomic-class] object storing revenue, cost,
 #' and investment dynamics for fleet-level or stock-level bioeconomic analyses.
 #'
-#' **Note:** The [bioeconomic-class] is not currently used by the MSE
-#' framework. It is included for future development and is available for
-#' custom analyses outside the standard model loop.
+#' **Note:** [bioeconomic-class] objects are not used in simulations; they
+#' can hold values for analyses outside [Simulate()] and [Project()].
 #'
 #' @param Revenue Numeric array or `NULL`. Revenue by simulation, fleet, and
 #'   year. Default `NULL`.
@@ -29,9 +28,6 @@
 #' A [bioeconomic-class] object stores parameters and outputs for fleet-level
 #' bioeconomic modelling, including revenue, effort costs, and discounting.
 #' All slots are optional and default to `NULL`.
-#'
-#' This class is not currently used by the MSE framework. It is included for
-#' future development.
 #'
 #' ## Attaching to a Fleet
 #'

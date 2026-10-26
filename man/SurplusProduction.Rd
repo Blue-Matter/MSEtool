@@ -318,14 +318,12 @@ target fishing mortality proportionally. See \code{\link[=TuneMP]{TuneMP()}}.
 }
 }
 \examples{
-\dontrun{
-Hist <- Simulate(SingleStockOM)
+Hist <- Simulate(SingleStockOM, nSim = 2)
 SurplusProduction(Hist@Data[[1]][[1]])
 
 SP_Fox <- SetMPArgs(SurplusProduction, Shape = 1, FTarget = 0.8)
-MSE <- Project(Hist, MPs = list(SP = SurplusProduction, SP_Fox = SP_Fox))
+MSE <- Project(Hist, MPs = list(SP_Fox = SP_Fox))
 SPEstimates(MSE)
-}
 
 }
 \seealso{

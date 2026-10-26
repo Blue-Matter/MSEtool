@@ -60,10 +60,8 @@ checked before population. If the digest is unchanged and \code{force = FALSE},
 the input object is returned unchanged.
 }
 \examples{
-\dontrun{
-OM <- PopulateOM(OM)
+OM <- PopulateOM(SingleStockOM)
 
-}
 
 }
 \seealso{

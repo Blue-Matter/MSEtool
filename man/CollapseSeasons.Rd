@@ -8,7 +8,7 @@ CollapseSeasons(OM, silent = FALSE)
 }
 \arguments{
 \item{OM}{A seasonal \code{\link[=OM]{OM()}} object (\code{OM@Seasons > 1}).
-Multi-area (\code{nArea > 1}) OMs are not yet supported.}
+Multi-area (\code{nArea > 1}) OMs are not supported.}
 
 \item{silent}{\code{logical(1)}. If \code{TRUE}, suppresses informational console
 messages. Defaults to \code{FALSE}.}

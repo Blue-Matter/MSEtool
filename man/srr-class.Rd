@@ -16,8 +16,7 @@ instead, which validates inputs and sets sensible defaults.
 
 Recruitment deviations are generated in log-space with standard deviation
 \code{SD} and lag-1 autocorrelation \code{AC}, truncated at \code{TruncSD} standard
-deviations. \code{SD} and \code{AC} are currently fixed across years; time-varying
-process variance is not yet supported.
+deviations. \code{SD} and \code{AC} are fixed across years.
 
 \code{RecDevInit}, \code{RecDevHist}, and \code{RecDevProj} may be supplied directly to
 override the internally generated deviations — for example, to condition
@@ -55,12 +54,12 @@ immediately rescales the stock-recruitment curve from that year on.}
 
 \item{\code{SD}}{\code{array} or \code{numeric}. Log-space standard deviation of recruitment
 deviations. May be a scalar, length-2 bounds vector, or length-\code{nSim}
-vector. Fixed across years (currently not time-varying). When \code{NULL},
+vector. Fixed across years. When \code{NULL},
 recruitment is deterministic.}
 
 \item{\code{AC}}{\code{array} or \code{numeric}. Lag-1 autocorrelation of log-space
 recruitment deviations. Follows the same length conventions as \code{SD}.
-Fixed across years (currently not time-varying). Defaults to \code{0}
+Fixed across years. Defaults to \code{0}
 (no autocorrelation) when \code{NULL}.}
 
 \item{\code{SPFrom}}{\code{character(1)}, \code{numeric(1)}, or a named \code{numeric} vector.

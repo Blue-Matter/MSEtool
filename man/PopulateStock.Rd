@@ -74,16 +74,13 @@ arguments is checked before population. If the digest is unchanged and
 \code{force = FALSE}, the input object is returned unchanged.
 }
 \examples{
-\dontrun{
 Stock <- PopulateStock(
-  Stock,
+  AlbacoreExStock,
   nYear = 40,
   pYear = 20,
-  nSim = 100,
+  nSim = 10,
   seed = 123
 )
-
-}
 
 }
 \seealso{

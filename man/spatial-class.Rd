@@ -61,8 +61,7 @@ from \code{ProbStaying}). Off-diagonal element \verb{[i, j]} gives the relative
 probability of moving from area \code{i} to area \code{j}. Used as a penalty-weight
 matrix during movement optimisation.}
 
-\item{\code{Arrangement}}{\code{array} or \code{NULL}. Spatial layout of areas for plotting
-purposes. Reserved for future use; currently stored but not applied.}
+\item{\code{Arrangement}}{\code{array} or \code{NULL}. Not used.}
 
 \item{\code{CVDist}}{\code{numeric(1)}. Standard deviation of the log-scale penalty on
 the difference between the optimised asymptotic distribution and the

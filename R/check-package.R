@@ -6,6 +6,7 @@
 #' @param pkg Character string with the name of the package
 #' @param version Optional. Character string specifying required version number
 #' @param pkg.path Optional. Character string specifying the install command. See `Examples`
+#' @return `TRUE` if the package (and version) is installed; otherwise an error.
 #' @export
 #' @example man-examples/CheckPackage.R
 CheckPackage <- function(pkg, version = NULL, pkg.path = NULL) {

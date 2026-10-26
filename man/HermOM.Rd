@@ -116,7 +116,7 @@ nStock(HermOM)
 HermOM@Herm
 
 \dontrun{
-Hist <- runMSE(HermOM, MPs = ExampleMPs())
+MSE <- runMSE(HermOM, MPs = ExampleMPs())
 }
 
 }

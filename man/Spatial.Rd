@@ -111,8 +111,7 @@ include \code{Age} and \code{Year} dimensions. Diagonal elements must be \code{N
 \code{j}; values need not sum to 1 as they are normalised internally. Default
 \code{NULL}.}
 
-\item{Arrangement}{\code{array} or \code{NULL}. Spatial layout of areas for plotting
-purposes. Reserved for future use; currently stored but not applied.
+\item{Arrangement}{\code{array} or \code{NULL}. Not used.
 Default \code{NULL}.}
 
 \item{CVDist}{\code{numeric(1)}. Standard deviation of the log-scale penalty on

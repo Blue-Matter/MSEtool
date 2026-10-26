@@ -27,7 +27,6 @@
 #' A populated [Effort()] object.
 #'
 #' @examples
-#' \dontrun{
 #' Eff <- Effort()
 #' Eff_pop <- PopulateEffort(
 #'   Effort = Eff,
@@ -36,7 +35,6 @@
 #'   nSim = 50,
 #'   seed = 123
 #' )
-#' }
 #'
 #' @export
 PopulateEffort <- function(Effort,

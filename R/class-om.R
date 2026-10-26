@@ -109,8 +109,8 @@
 #'   of individuals between stocks (e.g. sequential hermaphroditism). See
 #'   [OM()].
 #' @slot Relations List. Biological or ecological relationships among stocks.
-#'   Not currently used in simulations; [Simulate()] stops with an error if it
-#'   is not empty. See [OM()].
+#'   Not used: relationships among stocks are not modelled, and [Simulate()]
+#'   records a warning in the log (see [Log()]) when it is not empty. See [OM()].
 #'
 #' @slot StockTargeting A [stocktargeting-class] object. Defines fleet-level
 #'   stock targeting weights and deviations. Built by [StockTargeting()] when
@@ -132,9 +132,9 @@
 #'   stochastic TAC/Effort values for interim years (before `MPStartYear`).
 #'   See [InterimAdvice()] for the required columns.
 #' @slot nReps Positive integer. Number of stochastic replicates for
-#'   management advice. See [OM()]. Not currently used.
+#'   management advice. See [OM()]. Not used in simulations.
 #' @slot pStar Numeric. Percentile applied to stochastic management advice.
-#'   See [OM()]. Not currently used.
+#'   See [OM()]. Not used in simulations.
 #' @slot maxF Numeric. Maximum allowable instantaneous fishing mortality.
 #'   See [OM()].
 #' @slot Seed Integer. Random number generator seed. See [OM()].

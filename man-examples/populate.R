@@ -1,10 +1,8 @@
-\dontrun{
 # Populate a full operating model
-OM <- Populate(OM)
+OM <- Populate(SingleStockOM)
 
 # Populate a stock with specific arguments
-Stock <- Populate(Stock, nYear = 40, pYear = 20, nSim = 100)
+Stock <- Populate(AlbacoreExStock, nYear = 40, pYear = 20, nSim = 10)
 
 # Populate a fleet using an already-populated stock
-Fleet <- Populate(Fleet, Stock = Stock, nSim = 100)
-}
+Fleet <- Populate(AsympExFleet, Stock = Stock)

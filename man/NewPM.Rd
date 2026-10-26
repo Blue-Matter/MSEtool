@@ -42,7 +42,6 @@ A custom PM function takes an
 \code{\link[=SB_SBMSY]{SB_SBMSY()}} with \code{df = TRUE}), and returns \code{NewPM(...)}.
 }
 \examples{
-\dontrun{
 PM_MinSB <- function(object, Years = NULL) {
   df <- SB_SBMSY(object, df = TRUE, Reduce = FALSE)
   df <- df[df$Period == 'Projection', ]
@@ -51,7 +50,6 @@ PM_MinSB <- function(object, Years = NULL) {
   NewPM(df, Name = 'MinSB', Caption = 'P(min SB/SBMSY > 0.5)', Ref = 0.5, Op = `>`)
 }
 class(PM_MinSB) <- 'pm'
-}
 
 }
 \seealso{

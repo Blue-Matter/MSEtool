@@ -74,10 +74,7 @@ equivalent.
 }
 }
 \examples{
-\dontrun{
-fleet_legacy <- readRDS("MyLegacyFleet.rds")
-fleet_new <- ConvertFleet(fleet_legacy)
-}
+fleet_new <- ConvertFleet(Generic_Fleet)
 
 }
 \seealso{

@@ -100,14 +100,15 @@ the desired global configuration.
 }
 }
 \examples{
-\dontrun{
+om_a <- SingleStockOM
+om_b <- SingleStockOM
+Stock(om_b) <- ButterfishExStock
 combined <- CombineOMs(
   OM_List = list(StockA = om_a, StockB = om_b),
   Name = "Combined OM",
   FillEffort = list(nYears = 5, SD = 0.05),
   FillEfficiency = list(nYears = 5, SD = 0.05)
 )
-}
 
 }
 \seealso{

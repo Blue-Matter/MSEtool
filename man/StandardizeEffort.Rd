@@ -101,11 +101,9 @@ for each fleet. The function returns \code{OM} unchanged if \code{nStock == 1}
 it is not meaningful for single-stock models).
 }
 \examples{
-\dontrun{
-OM_standardized <- StandardizeEffort(OM)
+OM_standardized <- StandardizeEffort(MultiStockOM)
 # Inspect back-calculated targeting
 OM_standardized@StockTargeting@Targeting
-}
 }
 \seealso{
 \code{\link[=FitStockTargeting]{FitStockTargeting()}}, \code{\link[=GenerateStockTargeting]{GenerateStockTargeting()}}

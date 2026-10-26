@@ -39,10 +39,7 @@ attributes, updating year vectors, and optionally populating the object
 via \code{\link[=PopulateOM]{PopulateOM()}}.
 }
 \examples{
-\dontrun{
-MOMlegacy <- readRDS("MyLegacyMOM.rds")
-om_new <- ConvertMOM(MOMlegacy)
-}
+om_new <- ConvertMOM(Albacore_TwoFleet)
 
 }
 \seealso{

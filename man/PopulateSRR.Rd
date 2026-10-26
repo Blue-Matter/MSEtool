@@ -51,18 +51,14 @@ include:
 }
 }
 \examples{
-\dontrun{
-# Assuming `Ages` object exists
-SRR_obj <- SRR()
 SRR_pop <- PopulateSRR(
-  SRR_obj,
-  Ages = Ages,
+  AlbacoreExStock@SRR,
+  Ages = AlbacoreExStock@Ages,
   CurrentYear = 2025,
-  Years = 2000:2030,
+  Years = 2000:2045,
   nSim = 10,
   seed = 123
 )
-}
 
 }
 \seealso{

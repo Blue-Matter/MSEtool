@@ -51,10 +51,9 @@ residual between selected and retained biomass. If \code{NA}, computed from
 selectivity and the stock's weight-at-length during \code{\link[=PopulateFleet]{PopulateFleet()}}.
 See \code{\link[=Fleet]{Fleet()}}.}
 
-\item{\code{Bioeconomic}}{A \link[=bioeconomic-class]{bioeconomic} object. Not currently used.}
+\item{\code{Bioeconomic}}{A \link[=bioeconomic-class]{bioeconomic} object. Not used in simulations.}
 
-\item{\code{Dynamics}}{List. Reserved for future use for fleet dynamics model
-parameters. Default \code{list()}. Not currently used.#'}
+\item{\code{Dynamics}}{List. Not used. Default \code{list()}.}
 
 \item{\code{nYear}}{\code{numeric} or \code{NULL}. Number of years. Inherited from the paired
 \link[=stock-class]{stock} during \code{\link[=PopulateFleet]{PopulateFleet()}}.}

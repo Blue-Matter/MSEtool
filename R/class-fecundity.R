@@ -37,9 +37,8 @@
 #'   `k` spans `[Classes[k], Classes[k+1])`; the final bin is open-ended.
 #'   Values in `MeanAtLength` are evaluated at bin midpoints, not at these
 #'   lower bounds.
-#' @slot Timing `array` or `numeric`. Reserved for future use. Intended to
-#'   represent the timing of spawning within the time step. Currently stored
-#'   but not applied; spawning timing is controlled by [SRR()].
+#' @slot Timing `array` or `numeric`. Not used. Spawning time within the
+#'   time step is set by `SRR@SpawnTimeFrac` (see [SRR()]).
 #' @slot Misc `list`. Used internally.
 #'
 #' @details

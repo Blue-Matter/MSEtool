@@ -144,7 +144,6 @@ See also \code{\link[=SRRModels]{SRRModels()}}.
 \examples{
 SeasonalSpatialExStock
 
-\dontrun{
 PopulatedStock <- PopulateStock(
   SeasonalSpatialExStock,
   nYear = 20,
@@ -152,7 +151,6 @@ PopulatedStock <- PopulateStock(
   nSim  = 48,
   seed  = 42
 )
-}
 
 }
 \seealso{

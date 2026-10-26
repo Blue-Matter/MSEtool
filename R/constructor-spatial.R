@@ -43,8 +43,7 @@
 #'   `[i, j]` gives the relative probability of moving from area `i` to area
 #'   `j`; values need not sum to 1 as they are normalised internally. Default
 #'   `NULL`.
-#' @param Arrangement `array` or `NULL`. Spatial layout of areas for plotting
-#'   purposes. Reserved for future use; currently stored but not applied.
+#' @param Arrangement `array` or `NULL`. Not used.
 #'   Default `NULL`.
 #' @param CVDist `numeric(1)`. Standard deviation of the log-scale penalty on
 #'   the difference between the optimised asymptotic distribution and the

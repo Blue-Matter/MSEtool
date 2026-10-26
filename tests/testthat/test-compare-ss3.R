@@ -3,7 +3,7 @@ test_that("CompareSS() simulates an om with optional calculations switched off",
   SSDir <- file.path("../../..", "WCNPOSWO-2023", "Final Base-case") |>
     testthat::test_path()
   skip_if_not(file.exists(file.path(SSDir, "Report.sso")))
-  skip_if_not_installed("r4ss", "1.50")
+  skip_if_not_installed("r4ss", "1.52.1")
 
   OM <- suppressMessages(ImportSS(SSDir, nSim = 2, pYear = 2,
                                   CatchUnits = "Biomass", silent = TRUE))

@@ -16,11 +16,9 @@
 #' @return A [hist-class] object.
 #'
 #' @examples
-#' \dontrun{
-#' Hist <- Simulate(SingleStockOM)
+#' Hist <- Simulate(SingleStockOM, nSim = 2)
 #' MSE  <- Project(Hist, MPs = c('CurrentCatch', 'CurrentEffort'))
 #' MSE2 <- Project(Hist(MSE), MPs = 'NoFishing')
-#' }
 #'
 #' @seealso [hist-class], [mse-class], [Simulate()], [Project()]
 #' @include class-hist.R

@@ -16,12 +16,11 @@
   Given <- Given[!grepl("^[0-9]+$", Given)]
   Unknown <- setdiff(Given, Names)
   if (!length(Unknown)) return(invisible())
-  cli::cli_warn(c(
-    "!" = "{Label}: {.field {comp}} observation error for {.val {Unknown}} is ignored.",
-    "i" = if (identical(Implicit, ".All"))
-      "{.field {comp}} is a schedule: use an unnamed {.arg Bias} or {.arg CV}."
-    else "The parameters of {.field {comp}} are {.val {Names}}."
-  ), call = NULL)
+  Hint <- if (identical(Implicit, ".All"))
+    "{.field {comp}} is a schedule: use an unnamed {.arg Bias} or {.arg CV}."
+  else "The observable values of {.field {comp}} are {.val {Names}}."
+  cli::cli_warn(paste("{Label}: {.field {comp}} observation error for {.val {Unknown}} is ignored.", Hint),
+                call = NULL)
 }
 
 # Observe one component; `Build(Mult)` returns the observed object for the multipliers.
@@ -139,9 +138,28 @@
   !is.null(Real) && .HasSlot(Real, comp) && !EmptyObject(methods::slot(Real, comp))
 }
 
+# a component with nothing an observation spec can refer to
+.Unobservable <- function(Truth, comp)
+  EmptyObject(Truth) || !length(.ObsNames(Truth, comp)$Names)
+
+# realised B/B0 or SB/SB0 of a stock in `Year`, one value per sim; NULL when unavailable
+.RealisedDepletion <- function(Hist, StockName, Reference, Year, nSim) {
+  slt <- if (identical(Reference, "SB0")) "SBiomass" else "Biomass"
+  Num <- methods::slot(Hist, slt)
+  Den <- methods::slot(Hist@Unfished@Equilibrium, slt)
+  if (!length(Num) || !length(Den)) return(NULL)
+  Ratio <- ArrayDivide(.SubsetStockDim(Num, StockName), .SubsetStockDim(Den, StockName)) |>
+    .SnapshotYear(Year)
+  Val <- rep_len(as.numeric(Ratio), nSim)
+  if (!all(is.finite(Val))) return(NULL)
+  array(Val, dim = nSim, dimnames = list(Sim = seq_len(nSim)))
+}
+
 # Observed life history of a stock (all sims). `Obj` is NULL when nothing is observed.
-.ObserveStockBiology <- function(Stock, LHObs, Real, StockName, Year, nSim, Seed) {
+# `Depletion` replaces the input `Depletion@Final` with the realised depletion.
+.ObserveStockBiology <- function(Stock, LHObs, Real, StockName, Year, nSim, Seed, Depletion = NULL) {
   Truth <- .SnapshotComponents(Stock, .LHComponents, Year)
+  if (!is.null(Depletion)) Truth$Depletion@Final <- Depletion
   Ctx   <- Truth
   Obj   <- methods::new("lifehistorydata")
   ParCV <- list()
@@ -150,7 +168,7 @@
   for (comp in .LHComponents) {
     Spec <- methods::slot(LHObs, comp)
     if (!length(Spec) || .RealPopulated(Real, comp)) next
-    if (EmptyObject(Truth[[comp]])) {
+    if (.Unobservable(Truth[[comp]], comp)) {
       cli::cli_warn("{Label}: {.field {comp}} is not defined, so it is not observed.", call = NULL)
       next
     }
@@ -176,7 +194,7 @@
   for (comp in .ExComponents) {
     Spec <- methods::slot(ExObs, comp)
     if (!length(Spec) || .RealPopulated(Real, comp)) next
-    if (EmptyObject(Truth[[comp]])) {
+    if (.Unobservable(Truth[[comp]], comp)) {
       cli::cli_warn("{Label}: {.field {comp}} is not defined, so it is not observed.", call = NULL)
       next
     }
@@ -223,7 +241,9 @@
 
       Ctx <- NULL
       if (!is.null(LHSpec)) {
-        Res <- .ObserveStockBiology(Stock, LHSpec, RealLH, nm, Year, nSim, Seed)
+        Dep <- if (length(LHSpec@Depletion))
+          .RealisedDepletion(Hist, nm, Stock@Depletion@Reference, Year, nSim)
+        Res <- .ObserveStockBiology(Stock, LHSpec, RealLH, nm, Year, nSim, Seed, Dep)
         Ctx <- Res$Ctx
         if (!is.null(Res$Obj)) {
           LH[[i]][[nm]] <- Res[c("Obj", "ParCV")]

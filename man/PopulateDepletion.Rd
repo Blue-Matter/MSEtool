@@ -29,14 +29,11 @@ values. Steps include:
 \item Generating stochastic values if required  for \code{Initial} and
 \code{Final} slots.
 \item Validating that the \code{Reference} slot is one of the accepted types:
-\code{"B0"}, \code{"BMSY"}, \code{"SB0"}, or \code{"SBMSY"}.
+\code{"B0"} or \code{"SB0"}.
 \item Returning a fully populated \code{Depletion} object.
 }
 }
 \examples{
-\dontrun{
-# Assuming a Depletion object `D` exists
-D_pop <- PopulateDepletion(D, nSim = 10, seed = 123)
-}
+D_pop <- PopulateDepletion(AlbacoreExStock@Depletion, nSim = 10, seed = 123)
 
 }

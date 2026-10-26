@@ -148,7 +148,7 @@ test_that("ImportSS uses Seed for its generated values", {
   SSDir <- file.path("../../..", "WCNPOSWO-2023", "Final Base-case") |>
     testthat::test_path()
   skip_if_not(file.exists(file.path(SSDir, "Report.sso")))
-  skip_if_not_installed("r4ss", "1.50")
+  skip_if_not_installed("r4ss", "1.52.1")
 
   Import <- function(n, Seed)
     suppressMessages(ImportSS(SSDir, nSim = n, pYear = 5, silent = TRUE, Seed = Seed))

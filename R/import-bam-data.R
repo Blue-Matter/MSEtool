@@ -70,28 +70,22 @@
 #' fleet name before this matching happens (see `DiscFleets`).
 #'
 #' ## Age and length composition
-#' Composition data are not yet imported. Planned sources are
-#' `BAMdata$comp.mats$*age*` (age composition) and
-#' `BAMdata$comp.mats$lcomp.*.ob` (length composition). When implemented,
-#' length composition must follow the [compdata-class] convention used by
-#' `LandingsAtSize`/`DiscardsAtSize`: `Classes` is a named list, one vector
-#' per fleet, since fleets are not required to share a length-bin grid (see
-#' [compdata-class] for the fleet-relative-position convention on `Value`'s
-#' Class dimension). Age composition can keep the flat shared `Classes`
-#' vector, since ages are shared across fleets.
+#' Composition data are not imported.
 #'
 #' @seealso [GetBAMOutput()], [Data()], [CatchData()], [Obs()]
 #'
 #' @examples
 #' \dontrun{
 #' bam <- GetBAMOutput('Red Snapper')
+#' OM  <- ImportBAM(bam, nSim = 2, incData = FALSE)
+#'
+#' # landings in 1000 lb, discards in 1000 fish; surveys are the chevron trap and video indices
 #' OM <- ImportBAMData(
-#'   OM            = myOM,
+#'   OM            = OM,
 #'   BAMdata       = bam,
-#'   SurveyNames   = c("VideoSurvey", "TrawlSurvey"),
-#'   UnitsLandings = c(CommFleet = "1000 lb", RecFleet = "1000 lb"),
-#'   UnitsDiscards = c(CommFleet = "1000 n"),
-#'   DiscFleets    = c("F.CommFleet.D", "F.RecFleet.D")
+#'   SurveyNames   = c("ChevronTrap", "Video"),
+#'   UnitsLandings = c(cHL = "1000 lb", rHB = "1000 lb", rGN = "1000 lb"),
+#'   UnitsDiscards = c(cHL = "1000 n", rHB = "1000 n", rGN = "1000 n")
 #' )
 #' }
 #'

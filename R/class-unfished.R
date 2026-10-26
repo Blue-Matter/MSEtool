@@ -23,11 +23,10 @@
 #' - `Dynamic()` returns a [popdynamics-class] object
 #'
 #' @examples
-#' \dontrun{
+#' Hist <- Simulate(SingleStockOM, nSim = 2)
 #' unf  <- Unfished(Hist)
 #' eq   <- Equilibrium(unf)
 #' dyn  <- Dynamic(unf)
-#' }
 #'
 #' @seealso [popdynamics-class]
 #' @include class-unions.R

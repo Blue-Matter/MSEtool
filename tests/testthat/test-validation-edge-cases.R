@@ -19,11 +19,16 @@
 
 # ---- OM@Relations ----
 
-test_that("Simulate() aborts when OM@Relations is not empty", {
+test_that("Simulate() ignores a non-empty OM@Relations and logs it", {
   skip_on_cran()
   om <- .EdgeOM()
   om@Relations <- list(list(Stock = 1))
-  expect_error(Simulate(om, silent = TRUE), "Relations")
+  expect_silent(hist <- Simulate(om, silent = TRUE))
+  msgs <- vapply(hist@Log$warning, \(e) e$message, character(1))
+  expect_equal(sum(grepl("OM@Relations", msgs, fixed = TRUE)), 1)
+  hist2 <- Simulate(hist@OM, silent = TRUE)
+  msgs2 <- vapply(hist2@Log$warning, \(e) e$message, character(1))
+  expect_equal(sum(grepl("OM@Relations", msgs2, fixed = TRUE)), 1)
 })
 
 test_that("HistRel is no longer a recognised OM@Control setting", {

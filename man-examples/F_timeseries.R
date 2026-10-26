@@ -1,4 +1,4 @@
-Hist <- Simulate(SingleStockOM)
+Hist <- Simulate(SingleStockOM, nSim = 2)
 MSE <- Project(Hist, 'CurrentEffort')
 
 # Raw array slots

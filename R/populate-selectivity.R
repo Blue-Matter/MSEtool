@@ -40,19 +40,21 @@
 #' A populated [Selectivity()] object.
 #'
 #' @examples
-#' \dontrun{
-#' S <- Selectivity()
+#' Ages     <- AlbacoreExStock@@Ages
+#' Length   <- PopulateLength(AlbacoreExStock@@Length, Ages = Ages, Years = 2000:2025, nSim = 10)
+#' Weight   <- PopulateWeight(AlbacoreExStock@@Weight, Ages = Ages, Length = Length,
+#'   Years = 2000:2025, nSim = 10)
+#' Maturity <- PopulateMaturity(AlbacoreExStock@@Maturity, Ages = Ages,
+#'   Length = Length, Weight = Weight, Years = 2000:2025, nSim = 10)
 #' S_pop <- PopulateSelectivity(
-#'   Selectivity = S,
+#'   Selectivity = AsympExFleet@@Selectivity,
 #'   Ages = Ages,
 #'   Length = Length,
 #'   Weight = Weight,
 #'   Maturity = Maturity,
 #'   Years = 2000:2025,
-#'   nSim = 50,
-#'   nArea = 5
+#'   nSim = 10
 #' )
-#' }
 #'
 #' @export
 PopulateSelectivity <- function(Selectivity,

@@ -78,11 +78,8 @@
 #' @seealso [Convert()], [ConvertOM()], [ConvertMOM()], [joinData()]
 #'
 #' @examples
-#' \dontrun{
-#' Datalegacy <- readRDS("MyLegacyData.rds")
-#' data_new <- ConvertData(Datalegacy, sim = 1)
+#' data_new <- ConvertData(China_rockfish, sim = 1)
 #' Data_again <- ConvertData(data_new)
-#' }
 #'
 #' @export
 ConvertData <- function(x, Seasons = 1, sim = 1, silent = FALSE) {

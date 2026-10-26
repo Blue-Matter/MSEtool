@@ -32,10 +32,7 @@
 #'   `Classes`). Converted to `MeanAtAge` via the `ALK` during [Populate()]
 #'   when `MeanAtAge` is not already populated.
 #'   See [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html).
-#' @slot Random `array`. Reserved for future use. Intended to hold
-#'   simulation- and year-specific multipliers that add stochastic variation
-#'   around the average mortality schedule in `MeanAtAge`. Currently stored
-#'   but not applied during [Populate()].
+#' @slot Random `array`. Not used.
 #' @slot Classes `numeric`. Age classes (in years) or lower bounds of length
 #'   bins, corresponding to the `MeanAt*` array in use. For length bins, bin
 #'   `k` spans `[Classes[k], Classes[k+1])`; the final bin is open-ended.

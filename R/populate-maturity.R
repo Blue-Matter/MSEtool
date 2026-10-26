@@ -38,18 +38,20 @@
 #' [Populate()], [PopulateStock()], [PopulateLength()], [PopulateWeight()]
 #'
 #' @examples
-#' \dontrun{
+#' Ages   <- AlbacoreExStock@@Ages
+#' Length <- PopulateLength(AlbacoreExStock@@Length, Ages = Ages, Years = 2000:2025, nSim = 10)
+#' Weight <- PopulateWeight(AlbacoreExStock@@Weight, Ages = Ages, Length = Length,
+#'   Years = 2000:2025, nSim = 10)
 #' M <- PopulateMaturity(
-#'   Maturity,
+#'   AlbacoreExStock@@Maturity,
 #'   Ages = Ages,
 #'   Length = Length,
 #'   Weight = Weight,
-#'   Years = Years,
-#'   nSim = 100,
+#'   Years = 2000:2025,
+#'   nSim = 10,
 #'   CalcAtLength = TRUE,
 #'   seed = 123
 #' )
-#' }
 #'
 #' @export
 PopulateMaturity <- function(Maturity,

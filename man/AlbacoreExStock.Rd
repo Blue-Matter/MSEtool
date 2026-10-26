@@ -130,7 +130,6 @@ for a contrasting short-lived, fast-growing example.
 \examples{
 AlbacoreExStock
 
-\dontrun{
 PopulatedStock <- PopulateStock(
   AlbacoreExStock,
   nYear = 50,
@@ -138,7 +137,6 @@ PopulatedStock <- PopulateStock(
   nSim = 48,
   seed = 42
 )
-}
 
 }
 \seealso{

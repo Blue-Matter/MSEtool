@@ -54,9 +54,9 @@ value, one per simulation. See \code{\link[=IndicesObs]{IndicesObs()}}.}
 the generated data. See \code{\link[=IndicesObs]{IndicesObs()}}.}
 
 \item{\code{Efficiency}}{\code{numeric} array or \code{NULL}. Catchability coefficient \code{q}
-relating the nominal index to the population quantity. Calculated
-internally during conditioning as the ratio of mean observed index to
-mean simulated index; not set by the user.}
+relating the nominal index to the population quantity, one per
+simulation. Calculated internally when generating simulated index data
+or conditioning on real index data (see \code{\link[=IndicesObs]{IndicesObs()}}); not set by the user.}
 
 \item{\code{qInc}}{\code{numeric} array or \code{NULL}. Annual percentage change in index
 catchability during projection years, one value per simulation. See

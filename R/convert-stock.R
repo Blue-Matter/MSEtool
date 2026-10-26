@@ -55,10 +55,7 @@
 #'   [ConvertObs()], [ConvertImp()]
 #'
 #' @examples
-#' \dontrun{
-#' stock_legacy <- readRDS("MyLegacyStock.rds")
-#' stock_new <- ConvertStock(stock_legacy)
-#' }
+#' stock_new <- ConvertStock(Herring)
 #'
 #' @export
 ConvertStock <- function(Stock, Seasons = 1, silent = FALSE) {

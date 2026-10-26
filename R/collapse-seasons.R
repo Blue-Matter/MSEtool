@@ -8,7 +8,7 @@
 #' approximates the same annual-scale fishery dynamics. 
 #'
 #' @param OM A seasonal [OM()] object (`OM@Seasons > 1`). 
-#' Multi-area (`nArea > 1`) OMs are not yet supported.
+#' Multi-area (`nArea > 1`) OMs are not supported.
 #' @param silent `logical(1)`. If `TRUE`, suppresses informational console
 #'   messages. Defaults to `FALSE`.
 #'
@@ -62,7 +62,7 @@ CollapseSeasons <- function(OM, silent = FALSE) {
   for (st in seq_len(nStock(OM))) {
     if (nArea(OM, st) > 1)
       cli::cli_abort(c(
-        "x" = "{.fn CollapseSeasons} does not yet support multi-area OMs.",
+        "x" = "{.fn CollapseSeasons} does not support multi-area OMs.",
         "i" = "Stock {.val {st}} has {.val {nArea(OM, st)}} areas."
       ))
   }

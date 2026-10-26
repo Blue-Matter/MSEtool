@@ -46,10 +46,9 @@
 #'   Year`), selectivity-weighted only. Combined with `WeightFleetRetained` to
 #'   compute discards biomass. If `NA` (default), [PopulateFleet()] computes it
 #'   from selectivity and the stock's weight-at-length.
-#' @param Bioeconomic A [bioeconomic-class] object. Not currently used.
+#' @param Bioeconomic A [bioeconomic-class] object. Not used in simulations.
 #'   Default is an empty [bioeconomic-class].
-#' @param Dynamics List. Reserved for future use for fleet dynamics model
-#'   parameters. Default `list()`.
+#' @param Dynamics List. Not used. Default `list()`.
 #' @param Misc List. Miscellaneous additional inputs. Default `list()`.
 #' @param x A [fleet-class] object or an [om-class] object for `Fleet<-`.
 #' @param value A [fleet-class] object or named list of [fleet-class] objects

@@ -95,9 +95,7 @@ ComplexOM
 ComplexOM@Complexes
 nStock(ComplexOM)
 
-\dontrun{
-Hist <- runMSE(ComplexOM, MPs = ExampleMPs())
-}
+MSE <- runMSE(ComplexOM, MPs = 'CurrentEffort', nSim = 2)
 
 }
 \seealso{

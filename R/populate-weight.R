@@ -40,18 +40,18 @@
 #' [Populate()], [PopulateStock()], [PopulateLength()]
 #'
 #' @examples
-#' \dontrun{
+#' Ages   <- AlbacoreExStock@@Ages
+#' Length <- PopulateLength(AlbacoreExStock@@Length, Ages = Ages, Years = 2000:2025, nSim = 10)
 #' Weight <- PopulateWeight(
-#'   Weight,
+#'   AlbacoreExStock@@Weight,
 #'   Ages = Ages,
 #'   Length = Length,
-#'   Years = Years,
-#'   nSim = 100,
+#'   Years = 2000:2025,
+#'   nSim = 10,
 #'   AWK = TRUE,
 #'   CalcAtLength = TRUE,
 #'   seed = 123
 #' )
-#' }
 #'
 #' @export
 PopulateWeight <- function(Weight,
@@ -132,7 +132,6 @@ PopulateWeight <- function(Weight,
     Weight <- .MeanAtAge2MeanAtLength(Weight, Length)
   }
   
-  Weight <- .PopulateRandom(Weight)
   Weight@CVatAge <- .StructureCV(Weight@CVatAge, nSim)
   dd <- dim(Weight@CVatAge)
   if (!is.null(dd)) {

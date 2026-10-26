@@ -36,8 +36,7 @@
 #'   from `ProbStaying`). Off-diagonal element `[i, j]` gives the relative
 #'   probability of moving from area `i` to area `j`. Used as a penalty-weight
 #'   matrix during movement optimisation.
-#' @slot Arrangement `array` or `NULL`. Spatial layout of areas for plotting
-#'   purposes. Reserved for future use; currently stored but not applied.
+#' @slot Arrangement `array` or `NULL`. Not used.
 #' @slot CVDist `numeric(1)`. Standard deviation of the log-scale penalty on
 #'   the difference between the optimised asymptotic distribution and the
 #'   target `UnfishedDist` during multi-area movement optimisation. Larger

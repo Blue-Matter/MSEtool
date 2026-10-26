@@ -13,10 +13,7 @@
 #' @seealso [Convert()], [ConvertOM()], [ConvertMOM()], [ConvertObs()]
 #'
 #' @examples
-#' \dontrun{
-#' Implegacy <- readRDS("MyLegacyImp.rds")
-#' imp_new <- ConvertImp(Implegacy)
-#' }
+#' imp_new <- ConvertImp(Perfect_Imp)
 #'
 #' @export
 ConvertImp <- function(Imp, silent = FALSE) {

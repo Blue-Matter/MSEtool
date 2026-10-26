@@ -112,16 +112,12 @@ this effort series and the biology above, rather than reusing
 \code{replist$mpd$N} directly.
 \item \code{ImportiSCAMData()} (called internally, or usable standalone) populates
 \code{OM@Data} with aggregate landings and any abundance indices
-(\code{replist$dat$indices}). Age/size composition data is not yet imported
--- like \code{\link[=ImportBAMData]{ImportBAMData()}}'s equivalent gap, this is a documented TODO;
-see \link[=compdata-class]{compdata} for the per-fleet convention to follow.
+(\code{replist$dat$indices}). Age and size composition data are not imported.
 }
 
-\strong{Not currently supported}: delay-difference models (\code{replist$mpd$F_dd})
-and MCMC-based import (multiple simulation replicates drawn from
-\code{read.mcmc()}) -- both are handled by the legacy \code{\link[=iSCAM2OM]{iSCAM2OM()}} but are out
-of scope for this first version; \code{ImportiSCAM()} errors if either
-is detected.
+\strong{Not supported}: delay-difference models (\code{replist$mpd$F_dd}), for which
+\code{ImportiSCAM()} stops with an error, and MCMC output: the OM is built from
+the MPD estimates (\code{replist$mpd}). Use the legacy \code{\link[=iSCAM2OM]{iSCAM2OM()}} for either.
 }
 \seealso{
 \code{\link[=OM]{OM()}}, \code{\link[=PopulateOM]{PopulateOM()}}, \code{\link[=CompareiSCAM]{CompareiSCAM()}}, \code{\link[=iSCAM2OM]{iSCAM2OM()}} (legacy),

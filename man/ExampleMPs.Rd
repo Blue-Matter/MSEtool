@@ -87,8 +87,14 @@ historical effort directly and is likewise unaffected by \code{DataLag}.
 }
 }
 \examples{
+Hist <- Simulate(SingleStockOM, nSim = 2)
+Data <- Hist@Data[[1]][[1]]
+CurrentEffort(Data)
+CurrentCatch(Data)
+AverageCatch(Data)
+
 \dontrun{
-MSE <- runMSE(SingleStockOM, MPs=ExampleMPs())
+MSE <- runMSE(SingleStockOM, MPs = ExampleMPs())
 }
 
 

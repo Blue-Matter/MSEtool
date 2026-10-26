@@ -15,9 +15,8 @@
 #' IR5 <- SetMPArgs(IndexRate, CalibYears = 5, Smooth = FALSE)
 #' formals(IR5)$CalibYears
 #'
-#' \dontrun{
+#' Hist <- Simulate(SingleStockOM, nSim = 2)
 #' MSE <- Project(Hist, MPs = list(IR5 = IR5, IR2 = IndexRate))
-#' }
 #'
 #' @seealso [Project()], [TuneMP()]
 #' @export

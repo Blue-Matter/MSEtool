@@ -59,16 +59,14 @@ arguments is checked before population. If the digest is unchanged and
 \code{force = FALSE}, the input object is returned unchanged.
 }
 \examples{
-\dontrun{
 Length <- PopulateLength(
-  Length,
-  Ages = Ages,
-  Years = Years,
-  nSim = 100,
+  AlbacoreExStock@Length,
+  Ages = AlbacoreExStock@Ages,
+  Years = 2000:2025,
+  nSim = 10,
   ALK = TRUE,
   seed = 123
 )
-}
 
 }
 \seealso{

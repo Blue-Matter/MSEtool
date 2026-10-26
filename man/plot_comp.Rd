@@ -113,18 +113,16 @@ If the relevant \verb{*AtAge}/\verb{*AtSize} data is not populated for a
 returns \code{NULL} invisibly rather than plotting an empty panel.
 }
 \examples{
-\dontrun{
-Hist <- Simulate(SingleStockOM)
+Hist <- Simulate(SingleStockOM, nSim = 2, control = SimControl(CalcCatchAtSize = TRUE))
 PlotLandingsAtAge(Hist)
 PlotLandingsAtSize(Hist)
-PlotLandingsAtSize(Hist, Sim = 3)
+PlotLandingsAtSize(Hist, Sim = 2)
 
 MSE <- Project(Hist, ExampleMPs())
-PlotDiscardsAtSize(MSE, byMP = TRUE)
+PlotDiscardsAtSize(MSE)
 
 dat <- Hist@Data[[1]][[1]]
 PlotLandingsAtSize(dat)
-}
 
 }
 \seealso{

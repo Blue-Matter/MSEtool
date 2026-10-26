@@ -30,10 +30,12 @@
 #'   (with a message) if no selected stock has more than one area.
 #'
 #' @examples
+#' PlotSpatial(SeasonalSpatialOM)
+#' PlotSpatial(SeasonalSpatialOM, Stocks = 1, Age = 1)
+#'
 #' \dontrun{
 #' Hist <- Simulate(SeasonalSpatialOM)
 #' PlotSpatial(Hist)
-#' PlotSpatial(Hist, Stocks = 1, Age = 5)
 #' }
 #'
 #' @seealso [Movement()], [UnfishedDist()], [Populate()]

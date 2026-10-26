@@ -69,8 +69,7 @@
 #'   `NULL` invisibly if the relevant slot isn't populated.
 #'
 #' @examples
-#' \dontrun{
-#' Hist <- Simulate(SingleStockOM)
+#' Hist <- Simulate(SingleStockOM, nSim = 2)
 #' dat  <- Hist@Data[[1]][[1]]
 #'
 #' PlotLandings(dat)
@@ -82,7 +81,6 @@
 #'
 #' PlotLandings(dat, byFleet = TRUE)
 #' PlotLandings(dat, byFleet = FALSE)
-#' }
 #'
 #' @name plot_data
 #' @seealso [plot_hist], [Landings()], [Discards()], [CPUE()], [Survey()]

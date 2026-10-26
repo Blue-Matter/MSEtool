@@ -150,9 +150,13 @@
     
     ResidualsBeta <- CalcIndexResiduals(ObservedIndex, Nom_Index, beta=FixedBeta, FitInd=TSInd)
 
+    # smearing correction: historical errors have mean 1, as projection errors do
+    Smear <- rowMeans(exp(ResidualsBeta$LogResiduals[, TSInd, drop = FALSE]), na.rm = TRUE)
+    Smear[!is.finite(Smear) | Smear <= 0] <- 1
+
     Index_Obs@Beta       <- .NameSims(ResidualsBeta$Beta, nSim)
-    Index_Obs@Efficiency <- .NameSims(ResidualsBeta$Efficiency, nSim)
-    LogResiduals <- ResidualsBeta$LogResiduals
+    Index_Obs@Efficiency <- .NameSims(ResidualsBeta$Efficiency * Smear, nSim)
+    LogResiduals <- ResidualsBeta$LogResiduals - log(Smear)
 
     Index_Obs@Misc$BetaFit <- lapply(list(
       SE_Beta  = ResidualsBeta$SE_Beta,

@@ -38,12 +38,11 @@
 #' A populated [DiscardMortality()] object.
 #'
 #' @examples
-#' \dontrun{
-#' DM <- DiscardMortality()
+#' Ages   <- AlbacoreExStock@@Ages
+#' Length <- PopulateLength(AlbacoreExStock@@Length, Ages = Ages, Years = 2000:2025, nSim = 5)
 #' DM_pop <- PopulateDiscardMortality(
-#'   DM, Ages = Ages, Length = Length, Years = 2000:2025, nSim = 5
+#'   DomeExFleet@@DiscardMortality, Ages = Ages, Length = Length, Years = 2000:2025, nSim = 5
 #' )
-#' }
 #'
 #' @export
 PopulateDiscardMortality <- function(DiscardMortality,

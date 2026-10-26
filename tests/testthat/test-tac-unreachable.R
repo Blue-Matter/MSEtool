@@ -34,8 +34,11 @@ test_that("a single fleet that cannot catch its TAC fishes at maxF and is report
   Msg <- testthat::capture_messages(
     MSE <- Project(Hist, MPs = list(BigTAC = BigTAC, Half = Half), parallel = FALSE)
   )
-  expect_equal(sum(grepl("TAC not caught", Msg)), 1)
-  expect_true(any(grepl("BigTAC TAC not caught in 16 of 16 sim-years", Msg)))
+  expect_false(any(grepl("TAC not caught", Msg)))
+  TACLog <- Filter(\(e) identical(e$name, 'TACAttainment'), MSE@Log$warning)
+  expect_length(TACLog, 1)
+  expect_equal(TACLog[[1]]$mp, 'BigTAC')
+  expect_match(TACLog[[1]]$message, "TAC not caught in 16 of 16 sim-years", fixed = TRUE)
 
   expect_equal(range(.TotalF(MSE)[, , 'BigTAC']), c(3, 3), tolerance = 0.01)
   expect_length(.EffortConvergenceLog(MSE), 0)
@@ -176,10 +179,9 @@ test_that("seasonal TACs are per-season shares with no carryover", {
   Annual <- 0.5 * mean(apply(ArraySum(Hist@Landings, Hist@Discards)[, 1, LastYr, , drop = FALSE], 1, sum))
   Reach <- .TACMP(Annual)
 
-  Msg <- testthat::capture_messages(
-    MSE <- Project(Hist, MPs = list(BigTAC = BigTAC, Reach = Reach), parallel = FALSE)
-  )
-  expect_true(any(grepl("sim-time steps", Msg)))
+  MSE <- Project(Hist, MPs = list(BigTAC = BigTAC, Reach = Reach), parallel = FALSE, silent = TRUE)
+  TACLog <- Filter(\(e) identical(e$name, 'TACAttainment'), MSE@Log$warning)
+  expect_true(any(grepl("sim-time steps", vapply(TACLog, `[[`, character(1), 'message'))))
 
   df <- TACAttainment(MSE)
   SA <- Hist@OM@SeasonalAllocation[[1]]

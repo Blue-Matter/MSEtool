@@ -100,7 +100,7 @@ nStock(MultiStockOM)
 nFleet(MultiStockOM)
 
 \dontrun{
-Hist <- runMSE(MultiStockOM, MPs = ExampleMPs())
+MSE <- runMSE(MultiStockOM, MPs = ExampleMPs())
 }
 
 }

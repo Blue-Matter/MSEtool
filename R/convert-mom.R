@@ -21,10 +21,7 @@
 #'   [ConvertObs()], [ConvertImp()], [PopulateOM()]
 #'
 #' @examples
-#' \dontrun{
-#' MOMlegacy <- readRDS("MyLegacyMOM.rds")
-#' om_new <- ConvertMOM(MOMlegacy)
-#' }
+#' om_new <- ConvertMOM(Albacore_TwoFleet)
 #'
 #' @export
 ConvertMOM <- function(MOM, 

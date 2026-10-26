@@ -84,12 +84,17 @@ maturity if \code{isRel = TRUE}
 }
 }
 \examples{
-\dontrun{
-Ret <- Retention()
+Ages     <- AlbacoreExStock@Ages
+Length   <- PopulateLength(AlbacoreExStock@Length, Ages = Ages, Years = 2000:2025, nSim = 5)
+Weight   <- PopulateWeight(AlbacoreExStock@Weight, Ages = Ages, Length = Length,
+  Years = 2000:2025, nSim = 5)
+Maturity <- PopulateMaturity(AlbacoreExStock@Maturity, Ages = Ages,
+  Length = Length, Weight = Weight, Years = 2000:2025, nSim = 5)
+Sel      <- PopulateSelectivity(DomeExFleet@Selectivity, Ages = Ages,
+  Length = Length, Weight = Weight, Maturity = Maturity, Years = 2000:2025, nSim = 5)
 Ret_pop <- PopulateRetention(
-  Ret, Ages = Ages, Length = Length, Weight = Weight, 
-  Maturity = Maturity, Years = 2000:2025, nSim = 5
+  DomeExFleet@Retention, Ages = Ages, Length = Length, Weight = Weight,
+  Maturity = Maturity, Selectivity = Sel, Years = 2000:2025, nSim = 5
 )
-}
 
 }

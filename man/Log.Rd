@@ -40,10 +40,9 @@ object should not be trusted.
 }
 }
 \examples{
-\dontrun{
-  Log(my_object)
-  Log(my_object, type = 'error')
-}
+  Hist <- Simulate(SingleStockOM, nSim = 2)
+  Log(Hist)
+  Log(Hist, type = 'error')
 
 }
 \seealso{

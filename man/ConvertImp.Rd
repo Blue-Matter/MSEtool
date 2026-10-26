@@ -21,10 +21,7 @@ Converts a legacy \link[=Imp-legacy-class]{Imp-legacy} object to the current \li
 mapping implementation error parameters to their corresponding new S4 slots.
 }
 \examples{
-\dontrun{
-Implegacy <- readRDS("MyLegacyImp.rds")
-imp_new <- ConvertImp(Implegacy)
-}
+imp_new <- ConvertImp(Perfect_Imp)
 
 }
 \seealso{

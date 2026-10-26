@@ -11,9 +11,8 @@
 #' 
 #' @return A list of length [nStock()] with an array with the unfished survival for each Stocks
 #' @examples
-#' \dontrun{
-#' CalcUnfishedSurvival(OM)
-#' }
+#' CalcUnfishedSurvival(SingleStockOM)
+#' CalcUnfishedSurvival(AlbacoreExStock |> Populate(nYear = 40, pYear = 20))
 #' 
 #' @export
 CalcUnfishedSurvival <- function(OM, SP = FALSE, Years = NULL, silent = FALSE, Extend = TRUE) {

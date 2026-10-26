@@ -40,10 +40,7 @@
 #'   if supplied or the [length-class] object's own `Classes` otherwise; if
 #'   `Classes` differs from the [length-class] object's, the `ALK` is
 #'   recalculated on `Classes`. Default `NULL`.
-#' @param Random `array` or `NULL`. Reserved for future use. Intended to hold
-#'   simulation- and year-specific multipliers that add stochastic variation
-#'   around the average mortality schedule in `MeanAtAge`. Currently stored
-#'   but not applied during [Populate()]. Default `NULL`.
+#' @param Random `array` or `NULL`. Not used. Default `NULL`.
 #' @param Classes `numeric` or `NULL`. Age or length class midpoints
 #'   corresponding to the `MeanAt*` array in use. Default `NULL`.
 #' @param Misc `list`. Used internally. Default `list()`.

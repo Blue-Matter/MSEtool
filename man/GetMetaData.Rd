@@ -34,10 +34,8 @@ number of simulations, stock-specific age classes,
 number of areas, and stock names and fleet names
 }
 \examples{
-\dontrun{
-meta <- GetMetaData(MyOM, Period = "Historical")
+meta <- GetMetaData(SingleStockOM, Period = "Historical")
 meta$nSim
 meta$AgeClasses
-}
 
 }

@@ -1,10 +1,9 @@
 #' Project an Operating Model Over the Projection Period
 #'
 #' Runs the MSE projection loop for one or more management procedures (MPs)
-#' and returns a completed [MSE-legacy-class] object. Dispatches to the appropriate
-#' internal projection engine based on the class of `Hist`: [hist-class]
-#' objects use the new `om`-based engine; [Hist-legacy-class] objects use the legacy
-#' engine.
+#' and returns the projection results: an [mse-class] object for a
+#' [hist-class] object, or an [MSE-legacy-class] object for a
+#' [Hist-legacy-class] object.
 #'
 #'
 #' @param Hist A [hist-class] or [Hist-legacy-class] object containing the
@@ -18,9 +17,9 @@
 #'   `c("CurrentEffort", "CurrentCatch")`. For [hist-class] objects, MPs may
 #'   also be legacy functions of class `"MP"` (DLMtool/SAMtool), which are
 #'   called on a legacy `Data` object converted from the simulated data.
-#'   Life-history data (e.g. `Data@Mort`, `Data@vbK`, `Data@L50`) are not
-#'   generated for simulated data, so legacy MPs that need them are not
-#'   supported.
+#'   Legacy MPs that use life-history data (e.g. `Data@Mort`, `Data@vbK`,
+#'   `Data@L50`) need the `LifeHistory` slot of the OM's [obs-class] objects to
+#'   be set with [LifeHistoryObs()]; otherwise these slots are `NA`.
 #' @param parallel Logical or named list controlling parallel execution. For
 #'   [hist-class] objects, `TRUE` splits the simulations into chunks and
 #'   projects every MP x chunk combination in parallel on the active
@@ -46,7 +45,9 @@
 #' @param checkMPs Logical. Validate MP names and availability before
 #'   projecting. Only used for [Hist-legacy-class] objects. Default `FALSE`.
 #'
-#' @return An [mse-class] or a [MSE-legacy-class] object containing projection results for all MPs.
+#' @return An [mse-class] object for a [hist-class] object, or an
+#'   [MSE-legacy-class] object for a [Hist-legacy-class] object, containing
+#'   the projection results for all MPs.
 #'
 #' @details
 #' For [hist-class] objects, `Hist@OM@Control` settings used in projections

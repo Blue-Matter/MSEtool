@@ -34,9 +34,7 @@ Dimension names for \code{Sim}, \code{Year}, and \code{Area}
 are automatically added if missing.
 }
 \examples{
-\dontrun{
 Closure <- NULL
 Closure_pop <- PopulateClosure(Closure, nArea = 5, nSim = 3, Years = 2000:2025)
-}
 
 }

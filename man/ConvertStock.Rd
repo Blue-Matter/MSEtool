@@ -65,10 +65,7 @@ structure.
 }
 }
 \examples{
-\dontrun{
-stock_legacy <- readRDS("MyLegacyStock.rds")
-stock_new <- ConvertStock(stock_legacy)
-}
+stock_new <- ConvertStock(Herring)
 
 }
 \seealso{

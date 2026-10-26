@@ -29,8 +29,8 @@ combined landings across species). This indexing mirrors \code{OM@Data}.
 The slots \code{Effort}, \code{Landings}, \code{Discards}, \code{CPUE}, \code{Survey},
 \code{LandingsAtAge}, \code{DiscardsAtAge}, \code{LandingsAtSize}, and \code{DiscardsAtSize}
 are populated with empty sub-objects by \code{\link[=Obs]{Obs()}} when not supplied. The
-\code{LifeHistory} and \code{Exploitation} slots are reserved for future use and are
-not currently populated during model runs; see \code{\link[=LifeHistoryObs]{LifeHistoryObs()}} and
+\code{LifeHistory} and \code{Exploitation} slots generate \code{Data@LifeHistory} and
+\code{Data@Exploitation} when they are set; see \code{\link[=LifeHistoryObs]{LifeHistoryObs()}} and
 \code{\link[=ExploitationObs]{ExploitationObs()}}.
 
 Direct construction via \code{\link[methods:new]{methods::new()}} is not recommended; use \code{\link[=Obs]{Obs()}}

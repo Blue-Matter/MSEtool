@@ -81,11 +81,9 @@
 #' @seealso [FitStockTargeting()], [GenerateStockTargeting()]
 #'
 #' @examples
-#' \dontrun{
-#' OM_standardized <- StandardizeEffort(OM)
+#' OM_standardized <- StandardizeEffort(MultiStockOM)
 #' # Inspect back-calculated targeting
 #' OM_standardized@StockTargeting@Targeting
-#' }
 #' @export
 StandardizeEffort <- function(OM,
                               populate = TRUE,

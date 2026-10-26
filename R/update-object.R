@@ -14,9 +14,7 @@
 #'   replacements applied.
 #'
 #' @examples
-#' \dontrun{
-#' obj <- UpdateObject(obj, Fleet=newFleet)
-#' }
+#' om <- UpdateObject(SingleStockOM, Fleet = Fleet(TwoFleetOM))
 #'
 #' @export
 UpdateObject <- function(object, ...) {

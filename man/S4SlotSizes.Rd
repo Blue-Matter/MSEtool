@@ -40,13 +40,12 @@ their children, so a slot containing a large nested S4 object will itself
 appear large.
 }
 \examples{
-\dontrun{
-# Inspect top 10 slots of a complex S4 model object
-S4SlotSizes(my_model, n = 10)
+# Inspect the top 10 slots of a hist object
+Hist <- Simulate(SingleStockOM, nSim = 2)
+S4SlotSizes(Hist, n = 10)
 
 # Retrieve full results without printing
-sizes <- S4SlotSizes(my_model, verbose = FALSE)
+sizes <- S4SlotSizes(Hist, verbose = FALSE)
 sizes[sizes$mb > 1, ]  # slots larger than 1 MB
-}
 
 }

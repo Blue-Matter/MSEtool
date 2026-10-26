@@ -72,9 +72,7 @@ SingleStockOM
 Stock(SingleStockOM)
 Fleet(SingleStockOM)
 
-\dontrun{
-Hist <- runMSE(SingleStockOM, MPs = ExampleMPs())
-}
+MSE <- runMSE(SingleStockOM, MPs = 'CurrentEffort', nSim = 2)
 
 }
 \seealso{

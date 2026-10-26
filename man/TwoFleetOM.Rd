@@ -84,9 +84,7 @@ contrasting examples.
 TwoFleetOM
 nFleet(TwoFleetOM)
 
-\dontrun{
-Hist <- runMSE(TwoFleetOM, MPs = ExampleMPs())
-}
+MSE <- runMSE(TwoFleetOM, MPs = 'CurrentEffort', nSim = 2)
 
 }
 \seealso{

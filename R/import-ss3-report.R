@@ -113,7 +113,7 @@ ImportSSReport <- function(SSDir, parallel=FALSE, silent=FALSE, ...) {
 }
 
 # accessed at runtime: the CRAN r4ss is a placeholder that does not export SS_output
-.GetSSOutputFn <- function(MinVersion = "1.50") {
+.GetSSOutputFn <- function(MinVersion = "1.52.1") {
   if (!requireNamespace("r4ss", quietly = TRUE) ||
       utils::packageVersion("r4ss") < MinVersion ||
       !"SS_output" %in% getNamespaceExports("r4ss")) {

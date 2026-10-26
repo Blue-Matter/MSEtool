@@ -117,6 +117,12 @@
 #'   Results in Details.
 #'
 #' @examples
+#' Hist <- Simulate(SingleStockOM, nSim = 2)
+#'
+#' # check the run time first
+#' TuneMP(Hist, IndexTarget, Constraints = TuneConstraint(PM_SBSBMSY, Min = 0.6),
+#'        Control = TuneControl(DryRun = TRUE))
+#'
 #' \dontrun{
 #' Hist <- Simulate(SingleStockOM)
 #'
@@ -134,11 +140,14 @@
 #' TuneTable(Tuned, 'Configs')
 #' MSE <- Project(Hist, MPs = list(IT_Tuned = Tuned@@MP))
 #'
-#' # check the run time first
-#' TuneMP(Hist, IndexTarget, Constraints = TuneConstraint(PM_SBSBMSY, Min = 0.6),
-#'        Control = TuneControl(DryRun = TRUE))
-#'
 #' # tune over a reference set, validate on a robustness set
+#' OM_LowM <- SingleStockOM
+#' OM_LowM@@Stock[[1]]@@NaturalMortality@@Pars$M <- c(0.25, 0.3)
+#' OM_HighSteep <- SingleStockOM
+#' OM_HighSteep@@Stock[[1]]@@SRR@@Pars$h <- c(0.9, 0.95)
+#' HistBase      <- Simulate(SingleStockOM)
+#' HistLowM      <- Simulate(OM_LowM)
+#' HistHighSteep <- Simulate(OM_HighSteep)
 #' Tuned <- TuneMP(list(Base = HistBase, LowM = HistLowM), IndexTarget,
 #'                 Constraints    = TuneConstraint(PM_SBSBMSY, Min = 0.6, HistSummary = 'worst'),
 #'                 ValidationHist = list(HighSteep = HistHighSteep))

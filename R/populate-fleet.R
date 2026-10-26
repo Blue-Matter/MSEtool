@@ -32,10 +32,8 @@
 #' @seealso [Populate()], [PopulateStock()]
 #'
 #' @examples
-#' \dontrun{
-#' F <- Fleet()
-#' F_pop <- PopulateFleet(Fleet = F, Stock = Stock, seed = 123, nSim = 50)
-#' }
+#' Stock <- PopulateStock(AlbacoreExStock, nYear = 40, pYear = 20, nSim = 10)
+#' F_pop <- PopulateFleet(Fleet = AsympExFleet, Stock = Stock, seed = 123)
 #' @export
 PopulateFleet <- function(Fleet,
                           Stock,

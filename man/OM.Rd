@@ -150,8 +150,9 @@ of individuals between stocks (e.g. sequential hermaphroditism). Default
 \code{NULL}.}
 
 \item{Relations}{List. Biological or ecological relationships among stocks
-(e.g. predator-prey). Default \code{NULL}. Not currently used in simulations:
-\code{\link[=Simulate]{Simulate()}} stops with an error if \code{Relations} is not empty.}
+(e.g. predator-prey). Default \code{NULL}. Not used: relationships among stocks
+are not modelled, and \code{\link[=Simulate]{Simulate()}} records a warning in the log (see
+\code{\link[=Log]{Log()}}) when \code{Relations} is not empty.}
 
 \item{StockTargeting}{A \link[=stocktargeting-class]{stocktargeting} object. Defines fleet-level
 stock targeting weights and deviations. Populated internally.
@@ -169,10 +170,10 @@ TAC/Effort values for years before \code{MPStartYear}. Default \code{NULL}. See
 \code{\link[=InterimAdvice]{InterimAdvice()}} for the required columns and how it is applied.}
 
 \item{nReps}{Positive integer. Number of stochastic replicates used for
-generating management advice. Default \code{1}. Not currently used.}
+generating management advice. Default \code{1}. Not used in simulations.}
 
 \item{pStar}{Numeric in \eqn{[0, 1]}. Percentile applied to stochastic
-management advice. Default \code{0.5}. Not currently used.}
+management advice. Default \code{0.5}. Not used in simulations.}
 
 \item{maxF}{Numeric. Maximum allowable instantaneous fishing mortality.
 Applies to nominal fishing mortality for fish that interact with the

@@ -34,8 +34,7 @@
 #'   reference year as the `OM` supplied here; an incompatible object throws
 #'   an error rather than being silently ignored. Only used for [om-class]
 #'   objects.
-#' @param ... Additional arguments passed to sub-functions. Not currently
-#'   used
+#' @param ... Not used.
 #'
 #' @details
 #' `Simulate()` accepts both [om-class] and legacy [OM-legacy-class] objects,
@@ -55,17 +54,16 @@
 #' @seealso [OM()], [runMSE()]
 #'
 #' @examples
-#' \dontrun{
 #' # Simulate using the default example OM
-#' hist <- Simulate()
+#' hist <- Simulate(nSim = 2)
 #'
 #' # Simulate with specific options
 #' hist <- Simulate(
-#'   OM      = MyOM,
+#'   OM      = TwoFleetOM,
+#'   nSim    = 2,
 #'   control = SimControl(RefLandings = TRUE, GenerateData = FALSE),
 #'   silent  = TRUE
 #' )
-#' }
 #'
 #' @export
 Simulate <- function(OM           = NULL,

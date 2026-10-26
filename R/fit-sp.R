@@ -126,11 +126,9 @@
 #'   production model in continuous time. Fish and Fisheries 18: 226-243.
 #'
 #' @examples
-#' \dontrun{
-#' Hist <- Simulate(SingleStockOM)
+#' Hist <- Simulate(SingleStockOM, nSim = 2)
 #' Fit  <- FitSP(Hist@@Data[[1]][[1]])
 #' Fit$Terminal
-#' }
 #'
 #' @seealso [SurplusProduction()], [SPControl()], [SpictControl()],
 #'   [AnnualData()]

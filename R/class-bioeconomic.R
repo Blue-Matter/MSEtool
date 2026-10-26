@@ -4,8 +4,7 @@
 #' bioeconomic analyses. Objects are typically created via the [Bioeconomic()]
 #' constructor, which documents all parameters in detail.
 #'
-#' **Note:** The [bioeconomic-class] is not currently used by the MSE
-#' framework. It is included for future development.
+#' **Note:** [bioeconomic-class] objects are not used in simulations.
 #'
 #' @slot Revenue `numeric` array or `NULL`. Revenue by simulation, fleet, and
 #'   year. See [Bioeconomic()].

@@ -169,7 +169,7 @@ complex names, matching the convention already used for \code{FMSY} in
 \link[=refpointsMSY-class]{refpointsMSY}.
 }
 \examples{
-Hist <- Simulate(SingleStockOM)
+Hist <- Simulate(SingleStockOM, nSim = 2)
 B_B0(Hist)
 SB_SB0(Hist, type = 'Dynamic')
 F_FMSY(Hist)

@@ -154,8 +154,8 @@ of individuals between stocks (e.g. sequential hermaphroditism). See
 \code{\link[=OM]{OM()}}.}
 
 \item{\code{Relations}}{List. Biological or ecological relationships among stocks.
-Not currently used in simulations; \code{\link[=Simulate]{Simulate()}} stops with an error if it
-is not empty. See \code{\link[=OM]{OM()}}.}
+Not used: relationships among stocks are not modelled, and \code{\link[=Simulate]{Simulate()}}
+records a warning in the log (see \code{\link[=Log]{Log()}}) when it is not empty. See \code{\link[=OM]{OM()}}.}
 
 \item{\code{StockTargeting}}{A \link[=stocktargeting-class]{stocktargeting} object. Defines fleet-level
 stock targeting weights and deviations. Built by \code{\link[=StockTargeting]{StockTargeting()}} when
@@ -180,10 +180,10 @@ stochastic TAC/Effort values for interim years (before \code{MPStartYear}).
 See \code{\link[=InterimAdvice]{InterimAdvice()}} for the required columns.}
 
 \item{\code{nReps}}{Positive integer. Number of stochastic replicates for
-management advice. See \code{\link[=OM]{OM()}}. Not currently used.}
+management advice. See \code{\link[=OM]{OM()}}. Not used in simulations.}
 
 \item{\code{pStar}}{Numeric. Percentile applied to stochastic management advice.
-See \code{\link[=OM]{OM()}}. Not currently used.}
+See \code{\link[=OM]{OM()}}. Not used in simulations.}
 
 \item{\code{maxF}}{Numeric. Maximum allowable instantaneous fishing mortality.
 See \code{\link[=OM]{OM()}}.}

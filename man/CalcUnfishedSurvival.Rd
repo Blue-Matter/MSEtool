@@ -31,8 +31,7 @@ A list of length \code{\link[=nStock]{nStock()}} with an array with the unfished
 Calculate Unfished Survival
 }
 \examples{
-\dontrun{
-CalcUnfishedSurvival(OM)
-}
+CalcUnfishedSurvival(SingleStockOM)
+CalcUnfishedSurvival(AlbacoreExStock |> Populate(nYear = 40, pYear = 20))
 
 }

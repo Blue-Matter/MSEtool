@@ -45,10 +45,8 @@
 #' [Populate()], [PopulateStock()], [PopulateFleet()]
 #'
 #' @examples
-#' \dontrun{
-#' OM <- PopulateOM(OM)
+#' OM <- PopulateOM(SingleStockOM)
 #'
-#' }
 #'
 #' @export
 PopulateOM <- function(OM, 
@@ -146,16 +144,21 @@ PopulateOM <- function(OM,
     return(OM)
   }
   stocknames <- StockNames(OM)
+  # OM@Data is indexed by complex
+  cxnames <- names(OM@Complexes)
+  if (!length(cxnames)) cxnames <- stocknames
 
   if (isS4(OM@Data)) {
-    if (length(stocknames) > 1) {
-      stocknames <- paste(stocknames, collape = "-")
-    }
-    OM@Data <- MakeNamedList(stocknames, OM@Data)
+    OM@Data <- MakeNamedList(cxnames[1], OM@Data)
   }
 
   if (is.list(OM@Data) & is.null(names(OM@Data))) {
-    names(OM@Data) <- stocknames
+    if (length(OM@Data) > length(cxnames))
+      cli::cli_abort(c(
+        "x" = "{.code OM@Data} has {length(OM@Data)} element{?s} but {.code OM} has {length(cxnames)} stock complex{?es}.",
+        "i" = "Supply one {.cls data} object per complex: {.val {cxnames}}."
+      ))
+    names(OM@Data) <- cxnames[seq_along(OM@Data)]
   }
 
   .ProcessDataBiology(OM)
@@ -322,7 +325,7 @@ PopulateOM <- function(OM,
   if (show) cli::cli_progress_done()
 
   OM@Stock <- StockList
-  OM
+  .LogUnusedRandom(OM)
 }
 
 

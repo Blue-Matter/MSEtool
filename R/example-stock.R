@@ -106,7 +106,6 @@
 #' @examples
 #' AlbacoreExStock
 #'
-#' \dontrun{
 #' PopulatedStock <- PopulateStock(
 #'   AlbacoreExStock,
 #'   nYear = 50,
@@ -114,7 +113,6 @@
 #'   nSim = 48,
 #'   seed = 42
 #' )
-#' }
 #'
 "AlbacoreExStock"
 
@@ -222,7 +220,6 @@
 #' @examples
 #' ButterfishExStock
 #'
-#' \dontrun{
 #' PopulatedStock <- PopulateStock(
 #'   ButterfishExStock,
 #'   nYear = 50,
@@ -230,7 +227,6 @@
 #'   nSim = 48,
 #'   seed = 42
 #' )
-#' }
 #'
 "ButterfishExStock"
 
@@ -361,7 +357,6 @@
 #' @examples
 #' SeasonalSpatialExStock
 #'
-#' \dontrun{
 #' PopulatedStock <- PopulateStock(
 #'   SeasonalSpatialExStock,
 #'   nYear = 20,
@@ -369,7 +364,6 @@
 #'   nSim  = 48,
 #'   seed  = 42
 #' )
-#' }
 #'
 "SeasonalSpatialExStock"
 

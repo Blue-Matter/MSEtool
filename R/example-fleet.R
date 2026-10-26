@@ -88,10 +88,8 @@
 #' @examples
 #' AsympExFleet
 #'
-#' \dontrun{
 #' PopulatedStock <- PopulateStock(AlbacoreExStock, nYear = 50, pYear = 30, nSim = 48)
 #' PopulatedFleet <- PopulateFleet(AsympExFleet, Stock = PopulatedStock, seed = 42)
-#' }
 #'
 "AsympExFleet"
 
@@ -183,9 +181,7 @@
 #' @examples
 #' DomeExFleet
 #'
-#' \dontrun{
 #' PopulatedStock <- PopulateStock(AlbacoreExStock, nYear = 50, pYear = 30, nSim = 48)
 #' PopulatedFleet <- PopulateFleet(DomeExFleet, Stock = PopulatedStock, seed = 42)
-#' }
 #'
 "DomeExFleet"

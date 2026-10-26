@@ -45,16 +45,13 @@
 #' [Populate()], [PopulateOM()]
 #'
 #' @examples
-#' \dontrun{
 #' Stock <- PopulateStock(
-#'   Stock,
+#'   AlbacoreExStock,
 #'   nYear = 40,
 #'   pYear = 20,
-#'   nSim = 100,
+#'   nSim = 10,
 #'   seed = 123
 #' )
-#'
-#' }
 #'
 #' @export
 PopulateStock <- function(Stock,

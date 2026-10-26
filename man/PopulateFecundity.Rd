@@ -67,11 +67,14 @@ Steps include:
 }
 }
 \examples{
-\dontrun{
-# Assuming `Ages`, `Length`, `Weight`, and `Maturity` objects exist
-F <- Fecundity()
+Ages     <- AlbacoreExStock@Ages
+Length   <- PopulateLength(AlbacoreExStock@Length, Ages = Ages, Years = 2000:2025, nSim = 5)
+Weight   <- PopulateWeight(AlbacoreExStock@Weight, Ages = Ages, Length = Length,
+  Years = 2000:2025, nSim = 5)
+Maturity <- PopulateMaturity(AlbacoreExStock@Maturity, Ages = Ages,
+  Length = Length, Weight = Weight, Years = 2000:2025, nSim = 5)
 F_pop <- PopulateFecundity(
-  F,
+  AlbacoreExStock@Fecundity,
   Ages = Ages,
   Length = Length,
   Weight = Weight,
@@ -81,7 +84,6 @@ F_pop <- PopulateFecundity(
   seed = 123,
   CalcAtLength = TRUE
 )
-}
 
 }
 \seealso{

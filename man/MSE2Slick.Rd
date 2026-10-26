@@ -197,18 +197,30 @@ named list of MP or PI indices into that object's own \code{Code}; see
 \code{\link[Slick:Preset]{Slick::Preset()}}).
 }
 \examples{
+if (requireNamespace('Slick', quietly = TRUE)) {
+  MSE <- runMSE(SingleStockOM, MPs = c('CurrentEffort', 'CurrentCatch'), nSim = 2)
+  Slick <- MSE2Slick(MSE)
+}
+
 \dontrun{
-Slick <- MSE2Slick(MSE)
 Slick::App(slick=Slick)
 
 # Multiple OMs, custom PMs
+OM_LowM <- SingleStockOM
+OM_LowM@Stock[[1]]@NaturalMortality@Pars$M <- c(0.25, 0.3)
+OM_HighM <- SingleStockOM
+OM_HighM@Stock[[1]]@NaturalMortality@Pars$M <- c(0.5, 0.55)
+MSE_Base  <- runMSE(SingleStockOM, MPs = ExampleMPs())
+MSE_LowM  <- runMSE(OM_LowM, MPs = ExampleMPs())
+MSE_HighM <- runMSE(OM_HighM, MPs = ExampleMPs())
 Slick <- MSE2Slick(
   list(Base = MSE_Base, LowM = MSE_LowM, HighM = MSE_HighM),
   Design = list(M = c('Base', 'Low', 'High')),
   PMs = list(
-    PM_Status, PM_Safety,
-    list(fun = PM_Yield, args = list(Years = 2000:2009), Code = 'Yield_early'),
-    list(fun = PM_Yield, args = list(Years = 2010:2019), Code = 'Yield_late')
+    PM_Status,
+    list(PM = PM_Safety, Args = list(Lim = 0.4), Code = 'Safety'),
+    list(PM = PM_Yield, Args = list(Years = PMYears(MSE_Base, 'first', 10)), Code = 'Yield_early'),
+    list(PM = PM_Yield, Args = list(Years = PMYears(MSE_Base, 'last', 10)), Code = 'Yield_late')
   )
 )
 Slick::App(slick=Slick)

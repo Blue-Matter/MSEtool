@@ -108,10 +108,8 @@ rather than the stock's unselected mean weight-at-age.
 \examples{
 AsympExFleet
 
-\dontrun{
 PopulatedStock <- PopulateStock(AlbacoreExStock, nYear = 50, pYear = 30, nSim = 48)
 PopulatedFleet <- PopulateFleet(AsympExFleet, Stock = PopulatedStock, seed = 42)
-}
 
 }
 \seealso{

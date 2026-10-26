@@ -38,8 +38,7 @@ cycle of a projection, alongside the operating model values for
 comparison.
 }
 \examples{
-\dontrun{
-Hist <- Simulate(SingleStockOM)
+Hist <- Simulate(SingleStockOM, nSim = 2)
 MSE  <- Project(Hist, MPs = list(SP = SurplusProduction))
 Est  <- SPEstimates(MSE)
 
@@ -52,7 +51,6 @@ table(Est$Message[Est$Fallback])
 # estimated vs operating model stock status
 plot(Est$OM_B_BMSY, Est$B_BMSY, xlab = 'OM B/BMSY', ylab = 'Estimated B/BMSY')
 abline(0, 1)
-}
 
 }
 \seealso{

@@ -1,22 +1,17 @@
 
-# Stock 
+# Stock
 stock <- Convert(Herring)
 
-# Fleet 
+# Fleet
 fleet <- Convert(Generic_Fleet)
 
-# Obs 
+# Obs
 obs <- Convert(Generic_Obs)
 
-# Imp 
+# Imp
 imp <- Convert(Perfect_Imp)
 
-# OM 
-om <- Convert(testOM)
-
-# MOM 
-om <- Convert(Albacore_TwoFleet)
-
-# Data 
+# Data
 data <- Convert(China_rockfish)
 
+# OM and MOM objects: see ConvertOM() and ConvertMOM()

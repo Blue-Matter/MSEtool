@@ -256,9 +256,9 @@ setValidity("catchobs", function(object) {
 #' @slot DataCV `numeric` or `NULL`. Coefficient of variation reported with
 #'   the generated data. See [IndicesObs()].
 #' @slot Efficiency `numeric` array or `NULL`. Catchability coefficient `q`
-#'   relating the nominal index to the population quantity. Calculated
-#'   internally during conditioning as the ratio of mean observed index to
-#'   mean simulated index; not set by the user.
+#'   relating the nominal index to the population quantity, one per
+#'   simulation. Calculated internally when generating simulated index data
+#'   or conditioning on real index data (see [IndicesObs()]); not set by the user.
 #' @slot qInc `numeric` array or `NULL`. Annual percentage change in index
 #'   catchability during projection years, one value per simulation. See
 #'   [IndicesObs()].
@@ -532,8 +532,8 @@ methods::setClassUnion(name="compobs.CompObs", members=c('compobs', 'CompObs'))
 #' The slots `Effort`, `Landings`, `Discards`, `CPUE`, `Survey`,
 #' `LandingsAtAge`, `DiscardsAtAge`, `LandingsAtSize`, and `DiscardsAtSize`
 #' are populated with empty sub-objects by [Obs()] when not supplied. The
-#' `LifeHistory` and `Exploitation` slots are reserved for future use and are
-#' not currently populated during model runs; see [LifeHistoryObs()] and
+#' `LifeHistory` and `Exploitation` slots generate `Data@LifeHistory` and
+#' `Data@Exploitation` when they are set; see [LifeHistoryObs()] and
 #' [ExploitationObs()].
 #'
 #' Direct construction via [methods::new()] is not recommended; use [Obs()]

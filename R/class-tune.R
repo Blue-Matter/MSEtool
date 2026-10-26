@@ -155,6 +155,7 @@ setMethod('show', 'tunemp', function(object) {
 #'
 #' @examples
 #' \dontrun{
+#' Hist <- Simulate(SingleStockOM)
 #' Tuned <- TuneMP(Hist, IndexTarget,
 #'                 Constraints = TuneConstraint(PM_SBSBMSY, Min = 0.6),
 #'                 Configs     = list(RecentYears = 1:3))

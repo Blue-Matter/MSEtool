@@ -23,8 +23,7 @@ Diagonal entries represent per-stock variance; off-diagonal entries
 represent co-variation in targeting between pairs of stocks.}
 
 \item{\code{AC}}{\code{array[sim, stock, fleet]}. Lag-1 autocorrelation of log targeting
-deviations for each simulation, stock, and fleet. Currently not used
-but retained for future implementation.}
+deviations for each simulation, stock, and fleet. Not used.}
 
 \item{\code{Targeting}}{\code{array[sim, stock, fleet, year]}. Realised targeting
 deviations in normal space. For each fleet and year, values represent each

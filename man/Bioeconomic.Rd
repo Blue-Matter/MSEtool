@@ -96,16 +96,12 @@ Construct and manipulate a \link[=bioeconomic-class]{bioeconomic} object storing
 and investment dynamics for fleet-level or stock-level bioeconomic analyses.
 }
 \details{
-\strong{Note:} The \link[=bioeconomic-class]{bioeconomic} is not currently used by the MSE
-framework. It is included for future development and is available for
-custom analyses outside the standard model loop.
+\strong{Note:} \link[=bioeconomic-class]{bioeconomic} objects are not used in simulations; they
+can hold values for analyses outside \code{\link[=Simulate]{Simulate()}} and \code{\link[=Project]{Project()}}.
 
 A \link[=bioeconomic-class]{bioeconomic} object stores parameters and outputs for fleet-level
 bioeconomic modelling, including revenue, effort costs, and discounting.
 All slots are optional and default to \code{NULL}.
-
-This class is not currently used by the MSE framework. It is included for
-future development.
 \subsection{Attaching to a Fleet}{
 
 A \link[=bioeconomic-class]{bioeconomic} object can be attached to a \code{\link[=Fleet]{Fleet()}} with

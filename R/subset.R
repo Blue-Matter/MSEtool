@@ -397,6 +397,9 @@ Subset <- function(object,
 .DFSubsetSim <- function(df, Sims, keep_sim_name = FALSE) {
   if (!"Sim" %in% names(df) || !nrow(df) || length(unique(df$Sim)) == 1L)
     return(df)
+  Missing <- setdiff(Sims, df$Sim)
+  if (length(Missing))
+    cli::cli_abort("`Sims` {.val {Missing}} not found in a data frame with {length(unique(df$Sim))} sims.")
   Pos  <- lapply(Sims, \(s) which(df$Sim == s))
   Rows <- unlist(Pos)
   out  <- df[Rows, , drop = FALSE]

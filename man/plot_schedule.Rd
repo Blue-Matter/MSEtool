@@ -86,15 +86,13 @@ available for that schedule (the age-based curve, the length-based curve
 when populated, and an age-size key where one exists) into one figure.
 }
 \examples{
-\dontrun{
-Hist <- Simulate(SingleStockOM)
+Hist <- Simulate(SingleStockOM, nSim = 2)
 PlotSelectivityCurve(Hist)
 PlotMaturityCurve(Hist)
 
 MSE <- Project(Hist, ExampleMPs())
 PlotRetentionCurve(MSE)
-PlotWeightCurve(MSE, Sim = 3)
-}
+PlotWeightCurve(MSE, Sim = 2)
 
 }
 \seealso{

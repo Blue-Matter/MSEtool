@@ -62,9 +62,8 @@ bins, corresponding to the \verb{MeanAt*} array in use. For length bins, bin
 Values in \code{MeanAtLength} are evaluated at bin midpoints, not at these
 lower bounds.}
 
-\item{\code{Timing}}{\code{array} or \code{numeric}. Reserved for future use. Intended to
-represent the timing of spawning within the time step. Currently stored
-but not applied; spawning timing is controlled by \code{\link[=SRR]{SRR()}}.}
+\item{\code{Timing}}{\code{array} or \code{numeric}. Not used. Spawning time within the
+time step is set by \code{SRR@SpawnTimeFrac} (see \code{\link[=SRR]{SRR()}}).}
 
 \item{\code{Misc}}{\code{list}. Used internally.}
 }}

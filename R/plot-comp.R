@@ -56,18 +56,16 @@
 #'   [data-class] slot isn't populated.
 #'
 #' @examples
-#' \dontrun{
-#' Hist <- Simulate(SingleStockOM)
+#' Hist <- Simulate(SingleStockOM, nSim = 2, control = SimControl(CalcCatchAtSize = TRUE))
 #' PlotLandingsAtAge(Hist)
 #' PlotLandingsAtSize(Hist)
-#' PlotLandingsAtSize(Hist, Sim = 3)
+#' PlotLandingsAtSize(Hist, Sim = 2)
 #'
 #' MSE <- Project(Hist, ExampleMPs())
-#' PlotDiscardsAtSize(MSE, byMP = TRUE)
+#' PlotDiscardsAtSize(MSE)
 #'
 #' dat <- Hist@Data[[1]][[1]]
 #' PlotLandingsAtSize(dat)
-#' }
 #'
 #' @name plot_comp
 #' @seealso [Landings()], [Discards()], [compdata-class]
@@ -137,11 +135,8 @@ PlotDiscardsAtSize <- function(object, byStock = NULL, byFleet = NULL, Sim = NUL
   }
 
   hasSim <- 'Sim' %in% colnames(df)
-  if (hasSim && !is.null(Sim)) {
-    if (!Sim %in% unique(df$Sim))
-      cli::cli_abort("`Sim = {Sim}` not found; {length(unique(df$Sim))} simulation{?s} available.")
-    df <- dplyr::filter(df, .data$Sim == Sim)
-  }
+  if (!is.null(Sim))
+    df <- .DFSubsetSim(df, Sim, keep_sim_name = TRUE)
 
   propGroupVars <- intersect(c('Sim', 'Stock', 'Fleet', 'MP', 'Year'), colnames(df))
   df <- df |>

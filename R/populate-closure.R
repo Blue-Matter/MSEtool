@@ -22,10 +22,8 @@
 #' An array representing fleet area closures with proper dimensions and dimnames.
 #'
 #' @examples
-#' \dontrun{
 #' Closure <- NULL
 #' Closure_pop <- PopulateClosure(Closure, nArea = 5, nSim = 3, Years = 2000:2025)
-#' }
 #'
 #' @export
 PopulateClosure <- function(Closure, nArea, nSim = 5, Years, silent = FALSE) {

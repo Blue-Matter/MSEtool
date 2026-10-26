@@ -102,7 +102,6 @@ the default reported data CVs from \code{\link[=SimControl]{SimControl()}}.
 }
 
 \examples{
-\dontrun{
 OM <- SingleStockOM
 Control(OM)$MSYType <- 'Landings'
 Control(OM)$DataOM  <- list(Reference = TRUE)
@@ -114,9 +113,8 @@ myMP <- function(Data) {
 class(myMP) <- 'mp'
 attr(myMP, 'DataOM') <- 'Biomass'
 
-Hist <- Simulate(OM)
+Hist <- Simulate(OM, nSim = 2)
 MSE  <- Project(Hist, MPs = c('refFMSY', 'myMP'))
-}
 }
 \seealso{
 \code{\link[=OM]{OM()}}, \code{\link[=Simulate]{Simulate()}}, \code{\link[=Project]{Project()}}, \code{\link[=SimControl]{SimControl()}}

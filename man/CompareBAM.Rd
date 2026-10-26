@@ -9,7 +9,7 @@ CompareBAM(
   OM = NULL,
   plot = FALSE,
   thresh = 1,
-  save_plots = TRUE,
+  save_plots = FALSE,
   outdir = "figures/diagnostics/BAM",
   width = NULL,
   height = NULL
@@ -30,9 +30,10 @@ in some years.}
 \item{thresh}{Numeric. MARE threshold (as a percentage) above which a
 comparison is flagged, printed, and plotted. Default \verb{1\%}.}
 
-\item{save_plots}{Logical. If \code{TRUE} (default), diagnostic plots are
+\item{save_plots}{Logical. If \code{TRUE}, diagnostic plots are
 written as PNG files to \code{file.path(outdir, Stock)}, independently of
-whether they are also printed to the active device (see \code{plot}).}
+whether they are also printed to the active device (see \code{plot}).
+Default \code{FALSE}.}
 
 \item{outdir}{Character. Base directory for saved plots. Defaults to
 \code{"figures/diagnostics/BAM"}.}

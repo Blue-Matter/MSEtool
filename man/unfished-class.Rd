@@ -52,11 +52,10 @@ A \link[=popdynamics-class]{popdynamics} object.}
 }}
 
 \examples{
-\dontrun{
+Hist <- Simulate(SingleStockOM, nSim = 2)
 unf  <- Unfished(Hist)
 eq   <- Equilibrium(unf)
 dyn  <- Dynamic(unf)
-}
 
 }
 \seealso{

@@ -55,10 +55,7 @@ bounds); the \code{Class} dimension is labelled by bin lower bounds (see
 when \code{MeanAtAge} is not already populated.
 See \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules}.}
 
-\item{\code{Random}}{\code{array}. Reserved for future use. Intended to hold
-simulation- and year-specific multipliers that add stochastic variation
-around the average mortality schedule in \code{MeanAtAge}. Currently stored
-but not applied during \code{\link[=Populate]{Populate()}}.}
+\item{\code{Random}}{\code{array}. Not used.}
 
 \item{\code{Classes}}{\code{numeric}. Age classes (in years) or lower bounds of length
 bins, corresponding to the \verb{MeanAt*} array in use. For length bins, bin

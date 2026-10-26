@@ -125,7 +125,6 @@ of the operating model.
 \examples{
 ButterfishExStock
 
-\dontrun{
 PopulatedStock <- PopulateStock(
   ButterfishExStock,
   nYear = 50,
@@ -133,7 +132,6 @@ PopulatedStock <- PopulateStock(
   nSim = 48,
   seed = 42
 )
-}
 
 }
 \seealso{

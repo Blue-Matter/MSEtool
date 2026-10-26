@@ -54,8 +54,7 @@ reference year as the \code{OM} supplied here; an incompatible object throws
 an error rather than being silently ignored. Only used for \link[=om-class]{om}
 objects.}
 
-\item{...}{Additional arguments passed to sub-functions. Not currently
-used}
+\item{...}{Not used.}
 }
 \value{
 \itemize{
@@ -81,17 +80,16 @@ passed to MPs (\code{DataOM}). See \link{OMControl}.
 }
 }
 \examples{
-\dontrun{
 # Simulate using the default example OM
-hist <- Simulate()
+hist <- Simulate(nSim = 2)
 
 # Simulate with specific options
 hist <- Simulate(
-  OM      = MyOM,
+  OM      = TwoFleetOM,
+  nSim    = 2,
   control = SimControl(RefLandings = TRUE, GenerateData = FALSE),
   silent  = TRUE
 )
-}
 
 }
 \seealso{

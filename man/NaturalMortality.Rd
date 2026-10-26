@@ -59,10 +59,7 @@ if supplied or the \link[=length-class]{length} object's own \code{Classes} othe
 \code{Classes} differs from the \link[=length-class]{length} object's, the \code{ALK} is
 recalculated on \code{Classes}. Default \code{NULL}.}
 
-\item{Random}{\code{array} or \code{NULL}. Reserved for future use. Intended to hold
-simulation- and year-specific multipliers that add stochastic variation
-around the average mortality schedule in \code{MeanAtAge}. Currently stored
-but not applied during \code{\link[=Populate]{Populate()}}. Default \code{NULL}.}
+\item{Random}{\code{array} or \code{NULL}. Not used. Default \code{NULL}.}
 
 \item{Classes}{\code{numeric} or \code{NULL}. Age or length class midpoints
 corresponding to the \verb{MeanAt*} array in use. Default \code{NULL}.}

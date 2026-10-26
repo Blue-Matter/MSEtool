@@ -51,7 +51,6 @@ and \code{qCV} are unchanged. If either is modified, its previous multiplier is
 divided out of \code{Efficiency} before the new one is applied.
 }
 \examples{
-\dontrun{
 Catch <- Catchability()
 Catch_pop <- PopulateCatchability(
   Catchability = Catch,
@@ -60,6 +59,5 @@ Catch_pop <- PopulateCatchability(
   ProjYears = 2021:2025,
   seed = 123
 )
-}
 
 }

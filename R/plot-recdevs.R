@@ -46,9 +46,7 @@ PlotRecDevs <- function(object, Sim = NULL, byStock = NULL, Stocks = NULL, probs
 
   hasSim <- 'Sim' %in% colnames(df)
   if (hasSim && !is.null(Sim)) {
-    if (!Sim %in% unique(df$Sim))
-      cli::cli_abort("`Sim = {Sim}` not found; {length(unique(df$Sim))} simulation{?s} available.")
-    df     <- dplyr::filter(df, .data$Sim == Sim)
+    df     <- .DFSubsetSim(df, Sim, keep_sim_name = TRUE)
     hasSim <- FALSE
   }
 

@@ -19,13 +19,14 @@
 #' # Populate the global workspace with the default arguments of [CalcSurvival()],
 #' # without overwriting any variables that are already defined:
 #' \dontrun{
-#' NaturalMortality <- my_array   # already set; will not be overwritten
+#' NaturalMortality <- array(0.2, c(1, 5, 1),
+#'   dimnames = list(Sim = 1, Age = 0:4, Year = 2025))   # already set; will not be overwritten
 #' LoadArgs("CalcSurvival")
 #' # FishingMortality, PlusGroup, SpawnTimeFrac, and Semelparous are now
 #' # assigned their defaults in .GlobalEnv; NaturalMortality is unchanged.
 #' }
 #'
-#' @export
+#' @keywords internal
 LoadArgs <- function(fun="Simulate", envir=.GlobalEnv, debug=FALSE) {
   if (is.function(fun))
     fun <- deparse(substitute(fun))

@@ -28,10 +28,7 @@
 #'   [ConvertObs()], [ConvertImp()], [PopulateOM()]
 #'
 #' @examples
-#' \dontrun{
-#' OMlegacy <- readRDS("MyLegacyOM.rds")
-#' om_new <- ConvertOM(OMlegacy)
-#' }
+#' om_new <- ConvertOM(testOM)
 #'
 #' @export
 ConvertOM <- function(OM,

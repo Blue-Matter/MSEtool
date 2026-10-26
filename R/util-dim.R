@@ -7,6 +7,9 @@
 #' This is a wrapper for `base::dim`. The only difference is that this function
 #' prints the dimension names (if applicable)
 #'
+#' @return An integer vector of dimensions, named by the dimension names when
+#'   `x` has them, or `NULL` if `x` has no dimensions.
+#'
 #' @export
 #' @examples
 #' MyArray <- array(1:6,

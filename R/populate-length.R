@@ -38,16 +38,14 @@
 #' [Populate()], [PopulateStock()]
 #'
 #' @examples
-#' \dontrun{
 #' Length <- PopulateLength(
-#'   Length,
-#'   Ages = Ages,
-#'   Years = Years,
-#'   nSim = 100,
+#'   AlbacoreExStock@@Length,
+#'   Ages = AlbacoreExStock@@Ages,
+#'   Years = 2000:2025,
+#'   nSim = 10,
 #'   ALK = TRUE,
 #'   seed = 123
 #' )
-#' }
 #'
 #' @export
 PopulateLength <- function(Length,
@@ -78,7 +76,6 @@ PopulateLength <- function(Length,
   Length@Pars    <- .StructurePars(Pars = Length@Pars, nSim, Years)
   Length@Model   <- .FindModel(Length)
   Length         <- .PopulateMeanAtAge(Length, Ages, Years)
-  Length         <- .PopulateRandom(Length)
   Length@CVatAge <- .StructureCV(Length@CVatAge, nSim)
   dd             <- dim(Length@CVatAge)
   
