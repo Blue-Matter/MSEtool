@@ -70,3 +70,41 @@ test_that("ImportBAM detects per-fleet catch units and keeps user overrides", {
   expect_equal(OM@Data[[1]]@Landings@Units,
                c(cHL = "Biomass", rHB = "Number", rGN = "Biomass"))
 })
+
+test_that(".GetBAMSpawnOutput applies each year's Z, including the first year", {
+  skip_if_not_installed("bamExtras")
+  BAMdata <- GetBAMOutput("SnowyGrouper")
+  SSB <- .GetBAMSpawnOutput(BAMdata)
+  expect_equal(SSB[-1], BAMdata$t.series$SSB[-1], tolerance = 1e-5)
+  N1 <- BAMdata$N.age[1, ] * exp(-BAMdata$Z.age[1, ] * BAMdata$parms$spawn.time)
+  expect_equal(SSB[1], sum(N1 * BAMdata$a.series$reprod))
+})
+
+.BAMMaxMARE <- function(Out) {
+  vapply(c("Recruits", "Number", "Biomass", "Landings", "Discards"), \(s) {
+    m <- Out[[s]]$MARE$MARE
+    if (is.null(m) || all(is.na(m))) 0 else max(m, na.rm = TRUE)
+  }, numeric(1))
+}
+
+test_that("ImportBAM matches BAM with closed and discard-only fleets (Black Sea Bass)", {
+  skip_on_cran()
+  skip_if_not_installed("bamExtras")
+  DiscMortDF <- data.frame(Fleet = c("cHL", "rHB", "rGN", "cPT", "cPT"),
+                           Value = c(0.19, 0.152, 0.137, 0.14, 0.068),
+                           Year  = c(1977, 1977, 1977, 1977, 2006))
+  OM <- suppressMessages(ImportBAM("BlackSeaBass", nSim = 1, pYear = 1, silent = TRUE,
+                                   DiscMortDF = DiscMortDF))
+  expect_true(all(c("cTW", "cGN") %in% FleetNames(OM)))
+  expect_gt(OM@maxF, 3)
+  Out <- suppressMessages(CompareBAM("BlackSeaBass", OM))
+  expect_true(all(.BAMMaxMARE(Out) < 0.01))
+})
+
+test_that("ImportBAM matches BAM with a recruitment lag (Snowy Grouper)", {
+  skip_on_cran()
+  skip_if_not_installed("bamExtras")
+  OM <- suppressMessages(ImportBAM("SnowyGrouper", nSim = 1, pYear = 1, silent = TRUE))
+  Out <- suppressMessages(CompareBAM("SnowyGrouper", OM))
+  expect_true(all(.BAMMaxMARE(Out) < 0.01))
+})

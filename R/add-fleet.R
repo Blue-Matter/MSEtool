@@ -13,8 +13,9 @@
 #'   empty `obs` object is created with `Name = FleetName`.
 #' @param Imp Optional. An [imp-class] object. If `NULL` (default), an
 #'   empty `imp` object is created with `Name = FleetName`
-#' @return The `om` object with the new fleet appended to `OM@Fleet` and
-#'   `OM@Obs` for every stock.
+#' @return The `om` object with the new fleet appended to `OM@Fleet`,
+#'   `OM@Obs`, and `OM@Imp` for every stock, and an `NA` column for the new
+#'   fleet in the `Effort`, `Landings`, and `Discards` series of `OM@Data`.
 #' @examples
 #' OM <- SingleStockOM
 #' FleetNames(OM)
@@ -71,9 +72,36 @@ AddFleet <- function(OM, FleetName, Fleet=NULL, Obs=NULL, Imp=NULL) {
   names(newImp) <- FleetName
   OM@Imp <- purrr::map(OM@Imp, \(ImpList)
                        c(ImpList, newImp))
- 
-  
+
+  OM@Data <- purrr::map(OM@Data, \(Data)
+                        if (isS4(Data)) .AddFleetData(Data, FleetName) else Data)
+
   OM
+}
+
+# NA column for the new fleet in each per-fleet data series
+.AddFleetData <- function(Data, FleetName) {
+  for (sl in c("Effort", "Landings", "Discards")) {
+    obj <- slot(Data, sl)
+    if (is.null(obj@Value)) next
+    n <- ncol(obj@Value)
+    Names <- obj@Name %||% colnames(obj@Value)
+    for (vs in intersect(c("Value", "CV", "Ref", "RefCV"), methods::slotNames(obj))) {
+      x <- slot(obj, vs)
+      if (!.HasFleetColumns(x, n)) next
+      dn <- dimnames(x)
+      x <- cbind(x, NA)
+      dimnames(x) <- list(dn[[1]], c(Names, FleetName))
+      names(dimnames(x)) <- names(dn) %||% c("Year", "Fleet")
+      slot(obj, vs) <- x
+    }
+    if (length(obj@Units) == n)
+      obj@Units <- c(obj@Units, if (is.null(names(obj@Units))) NA_character_ else
+        stats::setNames(NA_character_, FleetName))
+    obj@Name <- c(Names, FleetName)
+    slot(Data, sl) <- obj
+  }
+  Data
 }
 
 .AddDummyEffort <- function(Fleet, OM) {

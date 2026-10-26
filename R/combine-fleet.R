@@ -386,7 +386,9 @@ CombineFleets <- function(OM, FleetList = NULL, silent = FALSE) {
       }
 
       units <- if (length(data@Units) == nFleet) data@Units[ind] else NULL
-      if (length(unique(units)) > 1) {
+      # fleets with no data for this type have NA units
+      units <- unique(units[!is.na(units)])
+      if (length(units) > 1) {
         if (type != 'Effort')
           cli::cli_abort(c('x'='{.val {type}}: Units must be the same for all combined fleets',
                            'i'='Units for Fleets {.val {combine_fleets}}: {.val {units}}'))
@@ -401,6 +403,7 @@ CombineFleets <- function(OM, FleetList = NULL, silent = FALSE) {
       if (.HasFleetColumns(data@CV, nFleet))
         data@CV[, ind[1]] <- .SumCV(values, data@CV[, ind, drop = FALSE])
       data@Value[, ind[1]] <- .SumOrNA(values)
+      if (length(units)) data@Units[ind[1]] <- units
 
       if (hasRef && .HasFleetColumns(data@Ref, nFleet)) {
         refs <- data@Ref[, ind, drop = FALSE]
@@ -608,6 +611,8 @@ CombineFleets <- function(OM, FleetList = NULL, silent = FALSE) {
       for (i in seq_along(FleetList)) {
         ind <- match(FleetList[[i]], data@Name)
         ind <- ind[!is.na(ind)]
+        # fleets with no data for this type have NA units
+        ind <- ind[!is.na(data@Units[ind])]
         if (length(ind) < 2) next
 
         units <- data@Units[ind]
