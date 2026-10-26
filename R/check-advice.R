@@ -1,34 +1,26 @@
-
 .CheckAdvice <- function(Advice, Proj, FleetNames, Areas, sim, name) {
   if (inherits(Advice, 'try-error'))
     return(Advice)
- 
+
   Advice <- try(.CheckAdviceTAC(Advice, Proj, FleetNames, Areas), silent=TRUE)
-  
-  if (!inherits(Advice, 'advice')) {
-    l <- list(Advice)
-    names(l) <- name
-    return(l)
-  }
-  
+  if (!inherits(Advice, 'advice'))
+    return(.AdviceCheckError(Advice, name))
+
   Advice <- try(.CheckAdviceEffort(Advice, Proj, FleetNames, Areas, sim), silent=TRUE)
-  
-  if (!inherits(Advice, 'advice')) {
-    l <- list(Advice)
-    names(l) <- name
-    return(l)
-  }
-  
+  if (!inherits(Advice, 'advice'))
+    return(.AdviceCheckError(Advice, name))
+
   Advice <- try(.CheckAdviceClosure(Advice, Proj, FleetNames, Areas), silent=TRUE)
-  
-  if (!inherits(Advice, 'advice')) {
-    l <- list(Advice)
-    names(l) <- name
-    return(l)
-  }
-  
+  if (!inherits(Advice, 'advice'))
+    return(.AdviceCheckError(Advice, name))
 
   Advice
+}
+
+# tags a validation failure with the stock/complex whose advice failed
+.AdviceCheckError <- function(Error, name) {
+  attr(Error, 'AdviceCheck') <- if (length(name)) as.character(name) else ''
+  Error
 }
 
 

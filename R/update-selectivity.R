@@ -98,11 +98,8 @@
 #' years, updating both `Proj@OM@Fleet` and the relevant `Proj@Misc` lists.
 #' Skips a complex when management is unchanged or advice is `NULL`.
 #'
-#' The fully-populated (fleet-wide-adoption) arrays are then blended against
-#' the pre-update, status-quo arrays using `Imp@Size@Compliance` -- the
-#' fraction of the fleet that adopts the new advice this year (default `1`,
-#' i.e. full/immediate adoption, when `Imp`/`Compliance` is unset). See
-#' [imp-class].
+#' The advised arrays are applied in full; `Imp@Size@Compliance` is not
+#' applied and a value other than `1` is recorded once in `Proj@Log`.
 #'
 #' @param Proj A `Proj` object.
 #' @param sim Integer. Simulation index.
@@ -281,17 +278,9 @@
         } else {
           NA_real_
         }
-        if (is.na(comp)) comp <- 1
-
-        if (comp < 1) {
-          baseline_age    <- Subset(target@MeanAtAge,    Sims = sim, Years = FutureYears)
-          baseline_length <- Subset(target@MeanAtLength, Sims = sim, Years = FutureYears)
-          baseline_weight <- Subset(target@MeanAtWeight, Sims = sim, Years = FutureYears)
-
-          select@MeanAtAge    <- comp * select@MeanAtAge    + (1 - comp) * baseline_age
-          select@MeanAtLength <- comp * select@MeanAtLength + (1 - comp) * baseline_length
-          select@MeanAtWeight <- comp * select@MeanAtWeight + (1 - comp) * baseline_weight
-        }
+        # size-regulation compliance is not yet applied; regulations are adopted in full
+        if (!is.na(comp) && comp != 1)
+          Proj <- .LogSizeComplianceIgnored(Proj)
 
         ArrayFill(target@MeanAtAge)    <- select@MeanAtAge
         ArrayFill(target@MeanAtLength) <- select@MeanAtLength
@@ -364,6 +353,16 @@
                      StockNames,
                      type = type)
   
+}
+
+# records once per projection that `Imp@Size@Compliance` was ignored
+.LogSizeComplianceIgnored <- function(Proj) {
+  name <- 'SizeCompliance'
+  if (any(vapply(Proj@Log$assumption, .LogEntryName, character(1)) == name))
+    return(Proj)
+  .CaptureLog(Proj,
+              "`Imp@Size@Compliance` is currently ignored: size regulations (`Advice@Retention`/`Advice@Selectivity`) are applied in full to the whole fleet.",
+              name = name, type = 'assumption')
 }
 
 .SetSimDimname <- function(x, sim) {

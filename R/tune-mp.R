@@ -42,6 +42,28 @@
 #' from `OM@@Seed` (see [Project()]), so tuned performance is reproduced
 #' exactly by `Project()`.
 #'
+#' ## MP failures
+#'
+#' When an MP returns an error for a simulation in [Project()], every
+#' projection value of that simulation is `NA` for that MP. Within each stage
+#' (the comparison of configurations, then the tuning), the metrics of every
+#' candidate are calculated on the same simulations of each `Hist`: those in
+#' which the MP did not fail for any candidate evaluated in that stage. When a
+#' candidate fails in further simulations, they are removed from the metrics
+#' of every candidate of the stage.
+#'
+#' `TuneMP()` stops with an error when the MP fails in a larger fraction of
+#' the simulations of a `Hist` than `MaxFailRate` (see [TuneControl()]),
+#' for a single candidate or across the candidates of a stage. The error
+#' names the candidate, the `Hist`, the number of failed simulations, and the
+#' most common error messages. The excluded simulations are reported by
+#' [TuneTable()] (`'Excluded'`) and when the result is printed.
+#'
+#' Failures of the tuned MP for `ValidationHist` do not stop `TuneMP()`: the
+#' validation metrics are calculated on the simulations in which it did not
+#' fail, the number of failed simulations is reported in the `'Validation'`
+#' table, and a warning is given when their fraction exceeds `MaxFailRate`.
+#'
 #' ## Configurations (optional first stage)
 #'
 #' `Configs` gives candidate values of other MP arguments. It can be a named
@@ -87,7 +109,8 @@
 #'   may be unattainable for this MP.
 #'
 #' [TuneTable()] returns the constraint table, the ranking of configurations,
-#' every evaluated candidate, and the validation results. The full
+#' every evaluated candidate, the validation results, and the excluded
+#' simulations. The full
 #' [mse-class] objects of every evaluation are kept with `KeepMSE = TRUE` in
 #' [TuneControl()]. With `DryRun = TRUE`, `TuneMP()` instead returns (invisibly)
 #' a list with the number of projections in each stage and an estimate of the
@@ -223,6 +246,8 @@ TuneMP <- function(Hist,
   State$MSE          <- list()
   State$HasObjective <- !is.null(Objective)
   State$nPerRound    <- nPerRound
+  State$Excluded     <- list(Configure = list(), Tune = list())
+  State$SimCount     <- list(Configure = list(), Tune = list())
 
   if (Control$ValidateConfigs)
     .TuneValidateConfigs(State)
@@ -247,6 +272,10 @@ TuneMP <- function(Hist,
     Res        <- .TuneSearch(Eval, Control, State$HasObjective, nPerRound)
     Res$Config <- cfg
     Res
+  })
+  Results <- lapply(Results, \(r) {
+    r$Points <- .TuneResummarise(State, r$Points)
+    r
   })
 
   Best  <- .TunePickBest(Results, State$HasObjective, Control$Direction)
@@ -273,7 +302,7 @@ TuneMP <- function(Hist,
   if (!is.null(ValidationHist))
     Validation <- .TuneValidate(State, Tuned, .TuneHistList(ValidationHist, 'Validation'))
 
-  History <- do.call(rbind, State$History)
+  History <- .TuneResummarise(State, do.call(rbind, State$History))
   rownames(History) <- NULL
 
   Out <- methods::new('tunemp',
@@ -286,6 +315,7 @@ TuneMP <- function(Hist,
                       Configs     = Ranking,
                       History     = History,
                       Validation  = Validation,
+                      Excluded    = .TuneExcludedTable(State),
                       MSE         = State$MSE,
                       Settings    = list(Metrics = Metrics, Control = Control,
                                          HistWeights = HistWeights, TuneArg = TuneArg))
@@ -423,8 +453,11 @@ print.tunemetric <- function(x, ...) {
 #' @param ValidateConfigs Logical. Apply the MP (with each configuration) to
 #'   the historical data of the first `Hist` before projecting, to catch
 #'   invalid arguments? Default `TRUE`.
-#' @param MaxFailRate Number in `[0, 1]`. Candidates whose MP fails in a
-#'   larger fraction of simulation-management years are infeasible. Default
+#' @param MaxFailRate Number in `[0, 1]`. Largest fraction of the
+#'   simulations of a `Hist` in which the MP may fail (return an error in any
+#'   year), for a single candidate or across the candidates of a stage, before
+#'   [TuneMP()] stops with an error. The simulations in which the MP fails are
+#'   excluded from the metrics of every candidate of the stage. Default
 #'   `0.05`.
 #' @param KeepMSE Logical. Keep the [mse-class] objects of every evaluation
 #'   (`@@MSE` of the result)? Default `FALSE`.
@@ -460,6 +493,8 @@ TuneControl <- function(Interval        = c(0.1, 10),
     if (get(nm) < 2) cli::cli_abort("{.arg {nm}} must be at least 2.")
   if (!(ExpandFactor > 1))
     cli::cli_abort("{.arg ExpandFactor} must be greater than 1.")
+  if (!is.numeric(MaxFailRate) || length(MaxFailRate) != 1 || !(MaxFailRate >= 0 && MaxFailRate <= 1))
+    cli::cli_abort("{.arg MaxFailRate} must be a number between 0 and 1.")
   structure(
     list(Interval = Interval, nGrid = as.integer(nGrid), Expand = Expand,
          ExpandFactor = ExpandFactor, MaxExpand = as.integer(MaxExpand), nPerRound = nPerRound,
@@ -558,7 +593,7 @@ TuneControl <- function(Interval        = c(0.1, 10),
   invisible(TRUE)
 }
 
-.TuneKey <- function(Config, x, nSim) paste(Config, format(x, digits = 15), nSim %||% 'all')
+.TuneKey <- function(Config, x, nSim) paste(Config, sprintf('%.15g', x), nSim %||% 'all')
 
 .TuneVariantName <- function(Config, x) sprintf('C%d_T%.10g', Config, x)
 
@@ -581,90 +616,196 @@ TuneControl <- function(Interval        = c(0.1, 10),
     names(Variants) <- VNames
     Raw <- .TuneProject(State, Variants, nSim)
     for (i in seq_along(VNames))
-      State$Cache[[Keys[New][i]]] <- lapply(Raw, \(r) list(Values = lapply(r$Values, \(v) v[, VNames[i]]),
-                                                         FailRate = r$FailRate[[VNames[i]]],
+      State$Cache[[Keys[New][i]]] <- lapply(Raw, \(r) list(PMs = lapply(r$PMs, .TunePMSelect, VNames[i]),
+                                                         Failed = r$Failed[[VNames[i]]],
+                                                         Messages = r$Messages[[VNames[i]]],
                                                          nSim = r$nSim))
   }
+  for (i in which(!duplicated(Keys)))
+    .TuneCheckFail(State, State$Cache[[Keys[i]]], Pairs$Config[i], Pairs$x[i], Stage)
   Out <- do.call(rbind, lapply(seq_len(nrow(Pairs)), \(i) {
-    .TuneSummarise(State, State$Cache[[Keys[i]]], Pairs$Config[i], Pairs$x[i])
+    .TuneSummarise(State, State$Cache[[Keys[i]]], Pairs$Config[i], Pairs$x[i], Stage)
   }))
   Out$Stage <- Stage
   State$History[[length(State$History) + 1]] <- Out[New, , drop = FALSE]
   Out
 }
 
+# re-summarise evaluated points on the current set of excluded sims
+.TuneResummarise <- function(State, Points) {
+  if (is.null(Points) || !nrow(Points)) return(Points)
+  do.call(rbind, lapply(seq_len(nrow(Points)), \(i) {
+    Stage <- Points$Stage[i]
+    nSim  <- if (Stage == 'Configure') State$Control$nSimConfig else NULL
+    Row   <- .TuneSummarise(State, State$Cache[[.TuneKey(Points$Config[i], Points$x[i], nSim)]],
+                            Points$Config[i], Points$x[i], Stage)
+    Row$Stage <- Stage
+    Row
+  }))
+}
+
 .TuneProject <- function(State, Variants, nSim) {
   HistNames <- unique(unlist(lapply(State$Metrics, `[[`, 'Hists')))
+  VNames    <- stats::setNames(names(Variants), names(Variants))
   Out       <- list()
   for (h in HistNames) {
     MSE <- tryCatch(Project(State$HistList[[h]], MPs = Variants, parallel = State$parallel,
                             silent = TRUE, nSim = nSim),
                     error = function(e) e)
-    Values   <- list()
-    FailRate <- stats::setNames(rep(1, length(Variants)), names(Variants))
-    nSimUsed <- nSim %||% State$HistList[[h]]@OM@nSim
-    if (!inherits(MSE, 'error')) {
-      if (State$Control$KeepMSE)
-        State$MSE[[length(State$MSE) + 1]] <- list(Hist = h, Variants = names(Variants), MSE = MSE)
-      for (m in State$Metrics) {
-        if (!h %in% m$Hists) next
-        Values[[m$Name]] <- .TuneMetricMatrix(m, MSE, names(Variants))
-      }
-      FailRate <- .TuneFailRate(MSE, Variants)
-      nSimUsed <- MSE@OM@nSim
-    } else {
-      for (m in State$Metrics) {
-        if (!h %in% m$Hists) next
-        Values[[m$Name]] <- matrix(NA_real_, 1, length(Variants), dimnames = list(NULL, names(Variants)))
-      }
+    if (inherits(MSE, 'error')) {
+      nSimH    <- nSim %||% State$HistList[[h]]@OM@nSim
+      Out[[h]] <- list(PMs = list(), Failed = lapply(VNames, \(v) seq_len(nSimH)),
+                       Messages = lapply(VNames, \(v) conditionMessage(MSE)), nSim = nSimH)
+      next
     }
-    Out[[h]] <- list(Values = Values, FailRate = FailRate, nSim = nSimUsed)
+    if (State$Control$KeepMSE)
+      State$MSE[[length(State$MSE) + 1]] <- list(Hist = h, Variants = names(Variants), MSE = MSE)
+    PMs <- list()
+    for (m in State$Metrics)
+      if (h %in% m$Hists) PMs[[m$Name]] <- .TuneMetricPM(m, MSE)
+    Out[[h]] <- list(PMs = PMs, Failed = lapply(VNames, \(v) .TuneFailedSims(MSE, v)),
+                     Messages = lapply(VNames, \(v) .TuneErrorMessages(.TuneMPErrors(MSE, v))),
+                     nSim = MSE@OM@nSim)
   }
   Out
 }
 
-.TuneMetricMatrix <- function(Metric, MSE, VNames) {
-  Res <- tryCatch({
-    pm  <- do.call(Metric$PM, c(list(MSE), Metric$Args))
-    Mat <- if (is.function(Metric$Value)) {
-      Metric$Value(pm)
-    } else if (Metric$Value == 'Mean') {
-      pm@Mean
-    } else {
-      apply(pm@Stat, c(2, 3), mean, na.rm = TRUE)
-    }
-    Mat <- as.matrix(Mat)
-    if (!is.null(Metric$Stocks)) {
-      Missing <- setdiff(Metric$Stocks, rownames(Mat))
-      if (length(Missing))
-        cli::cli_abort("{.arg Stocks} {.val {Missing}} not found for metric {.val {Metric$Name}}.")
-      Mat <- Mat[Metric$Stocks, , drop = FALSE]
-    }
-    Out    <- matrix(NA_real_, nrow(Mat), length(VNames), dimnames = list(rownames(Mat), VNames))
-    Common <- intersect(VNames, colnames(Mat))
-    Out[, Common] <- Mat[, Common]
-    Out
-  }, error = function(e) {
-    if (grepl('not found for metric', conditionMessage(e))) stop(e)
-    matrix(NA_real_, 1, length(VNames), dimnames = list(NULL, VNames))
-  })
-  Res
+.TuneMetricPM <- function(Metric, MSE) {
+  tryCatch(do.call(Metric$PM, c(list(MSE), Metric$Args)), error = function(e) NULL)
 }
 
-.TuneFailRate <- function(MSE, Variants) {
-  nSim      <- MSE@OM@nSim
-  YearsProj <- Years(MSE@OM, 'Projection')
-  YearsProj <- YearsProj[!YearsProj %in% .InterimTimesteps(MSE@OM)]
-  Errors    <- MSE@Log$error
-  ErrMP     <- vapply(Errors, \(e) if (is.list(e) && !is.null(e$mp)) as.character(e$mp) else NA_character_,
-                  character(1))
-  vapply(names(Variants), \(v) {
-    Interval <- .ResolveInterval(MSE@OM@Interval, v, Variants[[v]], MSE@OM@Seasons)
-    nMgmt    <- if (length(YearsProj)) length(.CalcManagementYears(YearsProj, Interval, MSE@OM@Seasons)) else 1
-    Failed   <- !v %in% names(MSE@MPs) || !v %in% dimnames(MSE@SBiomass)[['MP']]
-    if (Failed) return(1)
-    min(1, sum(ErrMP == v, na.rm = TRUE) / (nSim * nMgmt))
-  }, numeric(1))
+# pm object for one MP
+.TunePMSelect <- function(pm, v) {
+  if (!methods::is(pm, 'pm') || !v %in% colnames(pm@Mean)) return(NULL)
+  Sel <- function(a) if (length(dim(a)) == 3 && v %in% dimnames(a)[[3]]) a[, , v, drop = FALSE] else a
+  pm@Stat <- Sel(pm@Stat)
+  pm@Prob <- Sel(pm@Prob)
+  pm@Mean <- pm@Mean[, v, drop = FALSE]
+  pm@MPs  <- v
+  pm
+}
+
+# drop the excluded sims from a pm object and recompute its Mean
+.TunePMDropSims <- function(pm, Excluded, Name) {
+  Ex  <- as.character(Excluded)
+  Sub <- function(a) if (length(dim(a)) == 3) a[!dimnames(a)[[1]] %in% Ex, , , drop = FALSE] else a
+  if (!any(dimnames(pm@Stat)[[1]] %in% Ex)) return(pm)
+  Base <- function(p) if (all(is.na(p@Prob))) p@Stat else p@Prob
+  if (!isTRUE(all.equal(c(.PMMean(Base(pm))), c(pm@Mean), check.attributes = FALSE)))
+    cli::cli_abort(c("Metric {.val {Name}} cannot be calculated on the simulations in which the MP did not fail.",
+                     "i" = "Its {.code Mean} must be the mean over simulations of {.code Prob} (or of {.code Stat} when {.code Prob} is {.val NA}), as for metrics made with {.fn NewPM}."))
+  pm@Stat <- Sub(pm@Stat)
+  pm@Prob <- Sub(pm@Prob)
+  pm@Mean[] <- .PMMean(Base(pm))
+  pm
+}
+
+# metric value by stock for one MP, excluding sims
+.TuneMetricValues <- function(Metric, pm, Excluded = integer()) {
+  if (is.null(pm)) return(NA_real_)
+  pm  <- .TunePMDropSims(pm, Excluded, Metric$Name)
+  Mat <- tryCatch(as.matrix(if (is.function(Metric$Value)) {
+    Metric$Value(pm)
+  } else if (Metric$Value == 'Mean') {
+    pm@Mean
+  } else {
+    apply(pm@Stat, c(2, 3), mean, na.rm = TRUE)
+  }), error = function(e) NULL)
+  if (is.null(Mat) || !pm@MPs %in% colnames(Mat)) return(NA_real_)
+  if (!is.null(Metric$Stocks)) {
+    Missing <- setdiff(Metric$Stocks, rownames(Mat))
+    if (length(Missing))
+      cli::cli_abort("{.arg Stocks} {.val {Missing}} not found for metric {.val {Metric$Name}}.")
+    Mat <- Mat[Metric$Stocks, , drop = FALSE]
+  }
+  stats::setNames(Mat[, pm@MPs], rownames(Mat))
+}
+
+.TuneMPErrors <- function(MSE, v) {
+  Filter(\(e) .IsLogEntry(e) && identical(as.character(e$mp)[1], v), MSE@Log$error)
+}
+
+# sims in which MP `v` failed (all sims when it failed for every sim)
+.TuneFailedSims <- function(MSE, v) {
+  if (!v %in% names(MSE@MPs) || !v %in% dimnames(MSE@SBiomass)[['MP']])
+    return(seq_len(MSE@OM@nSim))
+  .FailedSims(.TuneMPErrors(MSE, v))
+}
+
+.TuneErrorMessages <- function(Entries, max = 3) {
+  Msg <- vapply(Entries, \(e) gsub("\\s*\n\\s*", " ", trimws(.LogEntryMessage(e))), character(1))
+  if (!length(Msg)) return(character())
+  Sim   <- vapply(Entries, \(e) if (length(e$sim)) as.character(e$sim[1]) else NA_character_, character(1))
+  Count <- vapply(split(Sim, Msg), \(s) max(1L, length(unique(s[!is.na(s)]))), integer(1))
+  Count <- sort(Count, decreasing = TRUE)
+  utils::head(sprintf('%s (%d simulation%s)', names(Count), Count, ifelse(Count > 1, 's', '')), max)
+}
+
+# abort when the MP fails in too many sims, alone or with the other candidates of the stage
+.TuneCheckFail <- function(State, Cached, Config, x, Stage) {
+  Max <- State$Control$MaxFailRate
+  for (h in names(Cached)) {
+    r <- Cached[[h]]
+    if (length(r$Failed) / r$nSim > Max)
+      .TuneFailAbort(State, h, Config, x, Stage, length(r$Failed), r$nSim, r$Messages)
+  }
+  for (h in names(Cached)) {
+    r    <- Cached[[h]]
+    Excl <- sort(union(State$Excluded[[Stage]][[h]], r$Failed))
+    if (length(Excl) / r$nSim > Max)
+      .TuneFailAbort(State, h, Config, x, Stage, length(Excl), r$nSim, r$Messages, Across = TRUE)
+    State$Excluded[[Stage]][[h]] <- Excl
+    State$SimCount[[Stage]][[h]] <- r$nSim
+  }
+  invisible(TRUE)
+}
+
+.TuneFailAbort <- function(State, Hist, Config, x, Stage, nFail, nSim, Messages, Across = FALSE) {
+  MPName <- State$MPName
+  Rate   <- State$Control$MaxFailRate
+  Label  <- .TuneConfigLabel(State$Configs[[Config]])
+  Arg    <- State$TuneArg
+  Value  <- signif(x, 6)
+  Step   <- if (Stage == 'Configure') 'comparing configurations' else 'tuning'
+  Need   <- ceiling(100 * nFail / nSim) / 100
+  Head   <- if (Across) {
+    "{.fn TuneMP} stopped: across the values evaluated so far, MP {.val {MPName}} failed in {nFail} of {nSim} simulations of Hist {.val {Hist}}, more than {.arg MaxFailRate} = {Rate}."
+  } else {
+    "{.fn TuneMP} stopped: MP {.val {MPName}} failed in {nFail} of {nSim} simulations of Hist {.val {Hist}}, more than {.arg MaxFailRate} = {Rate}."
+  }
+  Msgs <- if (length(Messages)) {
+    stats::setNames(.MsgEscape(Messages), rep('x', length(Messages)))
+  } else {
+    c(x = "No error message was logged.")
+  }
+  Hint <- if (nFail < nSim) {
+    "Fix the MP for the failing simulations, or use {.code TuneControl(MaxFailRate = {Need})} or higher to tune on the simulations in which it does not fail."
+  } else {
+    "Fix the MP: it failed in every simulation."
+  }
+  cli::cli_abort(c(Head,
+                   "i" = "Candidate: configuration {Label}, {.arg {Arg}} = {Value} ({Step}).",
+                   "i" = "Most common error messages:",
+                   Msgs,
+                   "i" = Hint),
+                 call = NULL)
+}
+
+.TuneExcludedTable <- function(State) {
+  Rows <- list()
+  for (Stage in c('Configure', 'Tune')) {
+    for (h in names(State$SimCount[[Stage]])) {
+      Excl <- State$Excluded[[Stage]][[h]] %||% integer()
+      Rows[[length(Rows) + 1]] <- data.frame(Stage = Stage, Hist = h,
+                                             nSim = State$SimCount[[Stage]][[h]],
+                                             nExcluded = length(Excl),
+                                             Sims = if (length(Excl)) .CompressRange(Excl) else '')
+    }
+  }
+  if (!length(Rows))
+    return(data.frame(Stage = character(), Hist = character(), nSim = numeric(),
+                      nExcluded = integer(), Sims = character()))
+  do.call(rbind, Rows)
 }
 
 .TuneSlack <- function(Value, Min, Max) {
@@ -706,13 +847,20 @@ TuneControl <- function(Interval        = c(0.1, 10),
   c(Value = Arr[k], Slack = Slack[k])
 }
 
-.TuneSummarise <- function(State, Cached, Config, x) {
-  nSims    <- vapply(Cached, `[[`, numeric(1), 'nSim')
-  FailRate <- max(vapply(Cached, \(r) r$FailRate %||% 1, numeric(1)))
-  Row      <- data.frame(Config = Config, x = x, Objective = NA_real_, Slack = Inf,
-                    Feasible = TRUE, FailRate = FailRate)
+.TuneSummarise <- function(State, Cached, Config, x, Stage) {
+  Hists    <- stats::setNames(names(Cached), names(Cached))
+  Excl     <- lapply(Hists, \(h) State$Excluded[[Stage]][[h]] %||% integer())
+  nSims    <- vapply(Cached, `[[`, numeric(1), 'nSim') - lengths(Excl)
+  FailRate <- max(vapply(Cached, \(r) length(r$Failed) / r$nSim, numeric(1)))
+  PerHist  <- lapply(Hists, \(h) {
+    Ms <- Filter(\(m) h %in% m$Hists, State$Metrics)
+    list(Values = stats::setNames(lapply(Ms, \(m) .TuneMetricValues(m, Cached[[h]]$PMs[[m$Name]], Excl[[h]])),
+                                  vapply(Ms, `[[`, character(1), 'Name')))
+  })
+  Row <- data.frame(Config = Config, x = x, Objective = NA_real_, Slack = Inf,
+                    Feasible = TRUE, FailRate = FailRate, nExcluded = sum(lengths(Excl)))
   for (m in State$Metrics) {
-    Agg <- .TuneAggregate(m, Cached, State$HistWeights, nSims)
+    Agg <- .TuneAggregate(m, PerHist, State$HistWeights, nSims)
     Row[[m$Name]] <- Agg[['Value']]
     if (m$Type == 'objective') {
       Row$Objective <- Agg[['Value']]
@@ -720,8 +868,7 @@ TuneControl <- function(Interval        = c(0.1, 10),
       Row$Slack <- min(Row$Slack, Agg[['Slack']])
     }
   }
-  Failed <- FailRate > State$Control$MaxFailRate ||
-    (State$HasObjective && !is.finite(Row$Objective))
+  Failed <- State$HasObjective && !is.finite(Row$Objective)
   if (Failed) {
     Row$Slack     <- -Inf
     Row$Objective <- NA_real_
@@ -783,8 +930,9 @@ TuneControl <- function(Interval        = c(0.1, 10),
 .TuneAdd <- function(Search, x) {
   Done <- log(Search$Points$x %||% numeric(0))
   x    <- x[!vapply(x, \(v) any(abs(log(v) - Done) < 1e-10), logical(1))]
+  # all points are re-evaluated so they share the sims excluded so far
   if (length(x))
-    Search$Points <- rbind(Search$Points, Search$Eval(x))
+    Search$Points <- Search$Eval(c(Search$Points$x, x))
   Search$Points <- Search$Points[order(Search$Points$x), , drop = FALSE]
   invisible(Search)
 }
@@ -959,16 +1107,26 @@ TuneControl <- function(Interval        = c(0.1, 10),
 .TuneValidate <- function(State, Tuned, ValidationList) {
   Rows <- list()
   for (h in names(ValidationList)) {
-    MSE <- Project(ValidationList[[h]], MPs = list(Tuned = Tuned), silent = TRUE)
+    MSE     <- Project(ValidationList[[h]], MPs = list(Tuned = Tuned), silent = TRUE)
+    nSim    <- MSE@OM@nSim
+    nFailed <- length(.TuneFailedSims(MSE, 'Tuned'))
+    if (nFailed / nSim > State$Control$MaxFailRate) {
+      MPName <- State$MPName
+      Rate   <- State$Control$MaxFailRate
+      cli::cli_warn("Tuned MP {.val {MPName}} failed in {nFailed} of {nSim} simulations of validation Hist {.val {h}}, more than {.arg MaxFailRate} = {Rate}; its validation metrics are calculated on the other simulations.")
+    }
     for (m in State$Metrics) {
-      V     <- .TuneMetricMatrix(m, MSE, 'Tuned')[, 'Tuned']
-      Value <- if (m$StockSummary == 'worst') {
+      V     <- .TuneMetricValues(m, .TunePMSelect(.TuneMetricPM(m, MSE), 'Tuned'))
+      Value <- if (all(is.na(V))) {
+        NA_real_
+      } else if (m$StockSummary == 'worst') {
         V[which.min(.TuneSlack(V, m$Min, m$Max))]
       } else {
         .TuneReduce(V, m$StockSummary)
       }
       Rows[[length(Rows) + 1]] <- data.frame(Hist = h, Name = m$Name, Type = m$Type, Value = Value,
-                                             Min = m$Min %||% NA_real_, Max = m$Max %||% NA_real_)
+                                             Min = m$Min %||% NA_real_, Max = m$Max %||% NA_real_,
+                                             nFailed = nFailed, nSim = nSim)
     }
   }
   Out     <- do.call(rbind, Rows)

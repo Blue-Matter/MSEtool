@@ -21,7 +21,9 @@
 #' @slot History `data.frame` of every evaluated candidate.
 #' @slot Validation `data.frame` of the tuned MP's metrics for
 #'   `ValidationHist` (empty without it). See [TuneTable()] for the columns
-#'   of these four tables.
+#'   of these tables.
+#' @slot Excluded `data.frame` of the simulations of each `Hist` excluded
+#'   from the metrics because the MP failed in them. See [TuneTable()].
 #' @slot MSE List of the [mse-class] objects of every evaluation, with
 #'   `KeepMSE = TRUE` in [TuneControl()].
 #' @slot Settings List of the metrics, [TuneControl()] settings,
@@ -40,6 +42,7 @@ setClass('tunemp',
                    Configs     = 'data.frame',
                    History     = 'data.frame',
                    Validation  = 'data.frame',
+                   Excluded    = 'data.frame',
                    MSE         = 'list',
                    Settings    = 'list'))
 
@@ -59,6 +62,10 @@ setMethod('show', 'tunemp', function(object) {
   Tab$Value <- signif(Tab$Value, 4)
   Tab$Slack <- signif(Tab$Slack, 3)
   print(Tab, row.names = FALSE)
+  Excl <- object@Excluded
+  Excl <- Excl[Excl$Stage == 'Tune' & Excl$nExcluded > 0, , drop = FALSE]
+  for (i in seq_len(nrow(Excl)))
+    cli::cli_alert_info("{Excl$nExcluded[i]} of {Excl$nSim[i]} simulations of Hist {.val {Excl$Hist[i]}} excluded (MP failed): {Excl$Sims[i]}.")
   if (object@Status == 'infeasible')
     cli::cli_alert_warning("No value of {.arg {Arg}} met every constraint.")
   if (object@Status == 'at_bound')
@@ -70,8 +77,9 @@ setMethod('show', 'tunemp', function(object) {
 #'
 #' Returns one of the tables stored in a [tunemp-class] object: the
 #' performance of the tuned MP, the ranking of candidate configurations, the
-#' record of every evaluated candidate, or the performance of the tuned MP on
-#' the validation operating models.
+#' record of every evaluated candidate, the performance of the tuned MP on
+#' the validation operating models, or the simulations excluded because the
+#' MP failed in them.
 #'
 #' Metric values are combined across stocks and `Hist` objects as specified
 #' in [TuneObjective()] and [TuneConstraint()]. With `'worst'`, the reported
@@ -122,14 +130,15 @@ setMethod('show', 'tunemp', function(object) {
 #' - `Config`: index of the configuration (`1` without `Configs`).
 #' - `x`: value of the tuning argument.
 #' - `Objective`: value of the objective (`NA` without an objective, or when
-#'   the candidate failed).
+#'   it could not be calculated).
 #' - `Slack`: smallest slack across the constraints (`Inf` without
-#'   constraints, `-Inf` when the candidate failed).
+#'   constraints, `-Inf` when a metric could not be calculated).
 #' - `Feasible`: does the candidate meet every constraint (within `TolPM`)?
 #' - `FailRate`: largest fraction, across the `Hist` objects, of
-#'   simulation-management years in which the MP returned an error (`1` when
-#'   the projection failed). Candidates with a `FailRate` greater than
-#'   `MaxFailRate` (see [TuneControl()]) fail.
+#'   simulations in which the candidate MP returned an error in any year.
+#' - `nExcluded`: number of simulations, summed across the `Hist` objects,
+#'   excluded from the metrics because the MP failed in them for this or
+#'   another candidate of the same stage (see `'Excluded'`).
 #' - One column per metric, named by the metric, with its value.
 #' - `Stage`: `'Configure'` (first stage, on the first `nSimConfig`
 #'   simulations when set) or `'Tune'` (second stage, all simulations).
@@ -144,12 +153,27 @@ setMethod('show', 'tunemp', function(object) {
 #' - `Name`, `Type`, `Value`, `Min`, `Max`: as for `'Constraints'`.
 #' - `Met`: is the constraint met (without tolerance)? `NA` for the
 #'   objective.
+#' - `nFailed`, `nSim`: number of simulations in which the tuned MP failed,
+#'   and the number of simulations. Metrics are calculated on the
+#'   simulations in which it did not fail.
+#'
+#' ## `'Excluded'`
+#'
+#' One row per stage and `Hist` object. The metrics of every candidate in a
+#' stage are calculated on the same simulations: those in which the MP did
+#' not fail for any candidate evaluated in that stage.
+#' - `Stage`: `'Configure'` or `'Tune'`, as for `'History'`.
+#' - `Hist`: name of the `Hist` object.
+#' - `nSim`: number of simulations used in the stage.
+#' - `nExcluded`: number of simulations excluded.
+#' - `Sims`: the excluded simulations (empty when none).
 #'
 #' @param x A [tunemp-class] object.
 #' @param What Character. `'Constraints'` (default; the tuned MP's metric
 #'   values), `'Configs'` (the ranking of configurations), `'History'` (every
-#'   evaluated candidate), or `'Validation'` (the tuned MP's metric values for
-#'   `ValidationHist`). See Details.
+#'   evaluated candidate), `'Validation'` (the tuned MP's metric values for
+#'   `ValidationHist`), or `'Excluded'` (the simulations excluded because the
+#'   MP failed). See Details.
 #'
 #' @return A `data.frame`; see Details for the columns.
 #'
@@ -173,7 +197,7 @@ setMethod('show', 'tunemp', function(object) {
 #'
 #' @seealso [TuneMP()], [tunemp-class]
 #' @export
-TuneTable <- function(x, What = c('Constraints', 'Configs', 'History', 'Validation')) {
+TuneTable <- function(x, What = c('Constraints', 'Configs', 'History', 'Validation', 'Excluded')) {
   .CheckClass(x, 'tunemp', 'x')
   What <- match.arg(What)
   slot(x, What)

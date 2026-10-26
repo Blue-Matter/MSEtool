@@ -21,7 +21,11 @@
 #'
 #' Attempts to identify the model function associated with `object` by matching
 #' the names of `object@Pars` against the formal arguments of candidate model
-#' functions returned by the relevant `*Models()` function. If `object@Model`
+#' functions returned by the relevant `*Models()` function. Formals with a
+#' default value are optional: a model matches when every supplied parameter is
+#' a formal and every formal without a default is supplied. If several models
+#' match, the one with the fewest omitted optional formals is chosen; a tie is
+#' an error. If `object@Model`
 #' is already a function it is returned directly. Returns `NULL` if `Pars` is
 #' empty or contains `NA`.
 #'
@@ -71,18 +75,26 @@
     ParNames <- ParNames[-ind]
   ParNames <- ParNames[!.IsCVPar(ParNames)]
   
-  for (i in seq_along(matching_parameters)) {
-    formals <- formals(get(models[i]))
-    formal_names <- NA
-    for (j in seq_along(formals)) {
-      formal_names[j] <- names(formals[j])
-    }
-    formal_names <- formal_names[!formal_names%in% ignore]
-    if (!(all(ParNames %in% formal_names)
-        & all(formal_names %in% ParNames)))
+  nOmitted <- rep(NA_integer_, length(models))
+  for (i in seq_along(models)) {
+    fm <- .ModelFormals(models[i], ignore)
+    if (all(ParNames %in% fm$Names) && all(fm$Required %in% ParNames)) {
+      matching_parameters[i] <- TRUE
+      nOmitted[i] <- length(setdiff(fm$Names, ParNames))
+    } else {
       matching_parameters[i] <- FALSE
+    }
   }
+  # prefer the model needing the fewest defaulted optional parameters
+  if (any(matching_parameters))
+    matching_parameters <- matching_parameters & nOmitted == min(nOmitted, na.rm = TRUE)
   model <- models[matching_parameters]
+
+  if (length(model) > 1)
+    cli::cli_abort(c(
+      'Parameters {.val {names(object@Pars)}} match more than one model for class {.val {class(object)}}: {.val {model}}.',
+      'i' = 'Supply the optional parameters that identify the model, or set `Model` explicitly.'),
+      call = NULL)
 
   if (doCheck && length(model)<1) {
     .CheckModel(object)
@@ -91,6 +103,49 @@
   model
 }
 
+
+# formal names of a model (excluding `ignore`) and those without a default
+.ModelFormals <- function(model, ignore = character()) {
+  fm <- formals(if (is.function(model)) model else get(model))
+  fm <- fm[!names(fm) %in% c(ignore, '...')]
+  required <- vapply(fm, \(x) is.symbol(x) && !nzchar(as.character(x)), logical(1))
+  list(Names = names(fm), Required = names(fm)[required], Defaults = fm[!required])
+}
+
+#' Add Default Values for Omitted Optional Model Parameters
+#'
+#' Appends the model's default value for every optional formal argument of the
+#' matched model that is missing from `object@Pars`.
+#'
+#' @param object An S4 object with slots `Model` and `Pars`.
+#' @param ignore Character vector of formal argument names to exclude.
+#'
+#' @return The `Pars` list with defaults added.
+#' @keywords internal
+.AddDefaultPars <- function(object,
+                            ignore = c('Ages', 'MeanLength', 'Length', 'Weight', 'nage',
+                                       'AtAge', 'MaxLen', 'S0', 'S', 'R0')) {
+  Pars <- object@Pars
+  if (inherits(object@Model, 'function') || length(Pars) < 1 || any(is.na(Pars)))
+    return(Pars)
+  model <- .FindModel(object, ignore = ignore, doCheck = FALSE)
+  if (length(model) != 1) return(Pars)
+  Defaults <- .ModelFormals(model, ignore)$Defaults
+  for (nm in setdiff(names(Defaults), names(Pars)))
+    Pars[[nm]] <- eval(Defaults[[nm]])
+  Pars
+}
+
+# model class, inferring the size basis of a custom function from its arguments
+.SizeModelClass <- function(Model) {
+  cl <- .GetModelClass(Model)
+  if (!identical(cl, 'function')) return(cl)
+  args <- names(formals(Model))
+  if ('Length' %in% args) return('function-at-Length')
+  if ('Weight' %in% args) return('function-at-Weight')
+  if ('Ages' %in% args) return('function-at-Age')
+  cl
+}
 
 # `<name>_CV` and `CV_<name>` entries of Pars report the uncertainty of a parameter
 .IsCVPar <- function(Names) grepl("(_CV$|^CV_)", Names)

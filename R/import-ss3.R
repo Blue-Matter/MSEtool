@@ -829,19 +829,14 @@ ImportSS <- function(SSDir,
     )
   }
 
-  if (identical(replist$SpawnOutputUnits, "biomass")) {
-    fec_age <- replist$endgrowth |>
-      dplyr::filter(Morph == 1, Sex == st) |>
-      dplyr::mutate(Fecundity = Wt_Beg * Len_Mat * Age_Mat) |>
-      dplyr::select(Age_Beg, Fecundity)
-  } else if (!is.null(replist$endgrowth[["Mat*Fecund"]])) {
-    fec_age <- replist$endgrowth |>
-      dplyr::filter(Morph == 1, Sex == st) |>
-      dplyr::select(Age = Age_Beg, Fecundity = `Mat*Fecund`)
-  } else if (!is.null(replist$endgrowth$Mat_F_wtatage)) {
-    fec_age <- replist$endgrowth |>
-      dplyr::filter(Morph == 1, Sex == st) |>
-      dplyr::select(Age_Beg, Fecundity = Mat_F_wtatage)
+  # Mat*Fecund is the SS3 spawning output per fish in either units; Age_Mat can be a -1 placeholder
+  endgrowth <- replist$endgrowth |> dplyr::filter(Morph == 1, Sex == st)
+  if (!is.null(endgrowth[["Mat*Fecund"]])) {
+    fec_age <- endgrowth |> dplyr::mutate(Fecundity = `Mat*Fecund`)
+  } else if (!is.null(endgrowth$Mat_F_wtatage)) {
+    fec_age <- endgrowth |> dplyr::mutate(Fecundity = Mat_F_wtatage)
+  } else {
+    fec_age <- endgrowth |> dplyr::mutate(Fecundity = Wt_Beg * abs(Len_Mat) * abs(Age_Mat))
   }
 
   array(fec_age$Fecundity,
@@ -868,15 +863,12 @@ ImportSS <- function(SSDir,
                  dimnames = list(Age = q_ages, Year = YearsList$YearsHist[1])))
   }
 
-  if (identical(replist$SpawnOutputUnits, "biomass")) {
-    endgrowth <- endgrowth |> dplyr::mutate(Value = Wt_Beg * Len_Mat * Age_Mat)
-  } else if (!is.null(endgrowth[["Mat*Fecund"]])) {
+  if (!is.null(endgrowth[["Mat*Fecund"]])) {
     endgrowth <- endgrowth |> dplyr::mutate(Value = `Mat*Fecund`)
   } else if (!is.null(endgrowth$Mat_F_wtatage)) {
     endgrowth <- endgrowth |> dplyr::mutate(Value = Mat_F_wtatage)
   } else {
-    return(array(0, dim = c(n_ages, 1L),
-                 dimnames = list(Age = q_ages, Year = YearsList$YearsHist[1])))
+    endgrowth <- endgrowth |> dplyr::mutate(Value = Wt_Beg * abs(Len_Mat) * abs(Age_Mat))
   }
 
   YearsHist <- YearsList$YearsHist

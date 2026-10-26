@@ -32,17 +32,13 @@
     msg <- as.character(ErrorMessage)
     cli::cli_alert_danger("{label} {msg} {.timestamp {el}}")
     .MsgErrorDetails(ErrorEntries)
+    .WriteMPErrorLogOption(MPName, ErrorEntries)
     return(list(Proj = Proj, AllFailed = TRUE))
   }
 
   # Check for simulation-level failures via Log - entries are tagged with
   # `sim` directly, so the failed sims are whichever appear here at all
-  SimsFailed <- ErrorEntries |>
-    purrr::map('sim') |>
-    purrr::compact() |>
-    unlist() |>
-    unique() |>
-    sort()
+  SimsFailed <- .ErrorSims(ErrorEntries)
 
   nFailed <- length(SimsFailed)
 
@@ -63,11 +59,27 @@
   }
   .MsgErrorDetails(ErrorEntries)
 
-  LogDir <- .MPErrorLogDir(getOption('MSEtool.WriteLog', FALSE))
-  if (!is.null(LogDir))
-    .WriteMPErrorLog(MPName, SimsFailed, ErrorEntries, LogDir)
+  .WriteMPErrorLogOption(MPName, ErrorEntries)
 
   list(Proj = Proj, AllFailed = AllFailed)
+}
+
+.ErrorSims <- function(ErrorEntries) {
+  ErrorEntries |>
+    purrr::map('sim') |>
+    purrr::compact() |>
+    unlist() |>
+    unique() |>
+    sort()
+}
+
+# writes the error log when `options(MSEtool.WriteLog)` is set and any sim failed
+.WriteMPErrorLogOption <- function(MPName, ErrorEntries) {
+  LogDir <- .MPErrorLogDir(getOption('MSEtool.WriteLog', FALSE))
+  SimsFailed <- .ErrorSims(ErrorEntries)
+  if (!is.null(LogDir) && length(SimsFailed))
+    .WriteMPErrorLog(MPName, SimsFailed, ErrorEntries, LogDir)
+  invisible(NULL)
 }
 
 # distinct error messages as indented bullets under an MP failure line

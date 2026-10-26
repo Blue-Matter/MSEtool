@@ -7,7 +7,9 @@
 #'
 #' @param Pars Named list of retention parameters passed to the retention
 #'   model function. Parameter names must match the arguments of the chosen
-#'   model (see [RetentionModels()]). Each element may be a scalar, vector, or
+#'   model (see [RetentionModels()]). Arguments with a default value (e.g.
+#'   `MaxRet = 1`, `Rmaxlen = 1`) are optional and take their default when
+#'   omitted. Each element may be a scalar, vector, or
 #'   array; see [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for accepted formats. Default `list()`
 #'   (empty).
 #'

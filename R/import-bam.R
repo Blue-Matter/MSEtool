@@ -281,7 +281,9 @@ ListBAMStocks <- function(type=c('rdat', 'dat')) {
   } else if (BAMdata$info$units.length == 'inch') {
     Linf <- inch2mm(BAMdata$parms$Linf[1])
   } else {
-    cli::cli_abort('`BAMdata$info$units.length`:  {.val {BAMdata$info$units.length}} currently not supported', .internal=TRUE)
+    cli::cli_abort(c('x' = '`BAMdata$info$units.length` {.val {BAMdata$info$units.length}} is not supported.',
+                     'i' = 'Supported values: {.val {c("mm", "inch")}}.'),
+                   call = NULL)
   }
   
   Length(stock) <- Length(Pars=list(Linf=Linf,
@@ -298,7 +300,9 @@ ListBAMStocks <- function(type=c('rdat', 'dat')) {
   } else if (BAMdata$info$units.weight == 'lb (gutted)') {
     WeightAtAge <- lb2kg(AgeSeries$weight)
   } else {
-    cli::cli_abort('`BAMdata$info$units.weight`:  {.val {BAMdata$info$units.weight}} currently not supported', .internal=TRUE)
+    cli::cli_abort(c('x' = '`BAMdata$info$units.weight` {.val {BAMdata$info$units.weight}} is not supported.',
+                     'i' = 'Supported values: {.val {c("kg", "lb", "lb (gutted)")}}.'),
+                   call = NULL)
   }
   
   Weight(stock) <- Weight(
@@ -365,7 +369,9 @@ ListBAMStocks <- function(type=c('rdat', 'dat')) {
   if (BAMdata$info$units.rec == "number fish") {
     NumberUnits <- 1
   } else {
-    cli::cli_abort('`BAMdata$info$units.rec`:  {.val {BAMdata$info$units.rec}} currently not supported', .internal=TRUE)
+    cli::cli_abort(c('x' = '`BAMdata$info$units.rec` {.val {BAMdata$info$units.rec}} is not supported.',
+                     'i' = 'Supported values: {.val {c("number fish")}}.'),
+                   call = NULL)
     
   }
   

@@ -145,7 +145,9 @@ CompareBAM <- function(Stock, OM = NULL, plot = FALSE, thresh = 1,
   } else if (BAMdata$info$units.biomass == 'metric tons') {
     BAMdata$t.series$B <- BAMdata$t.series$B * 1000
   } else {
-    cli::cli_abort('`BAMdata$info$units.biomass`:  {.val {BAMdata$info$units.biomass}} currently not supported', .internal=TRUE)
+    cli::cli_abort(c('x' = '`BAMdata$info$units.biomass` {.val {BAMdata$info$units.biomass}} is not supported.',
+                     'i' = 'Supported values: {.val {c("1000 lb", "metric tons")}}.'),
+                   call = NULL)
   }
 
   OM_Value <- Biomass(Hist, df=TRUE) |> dplyr::mutate(Model='OM') |>

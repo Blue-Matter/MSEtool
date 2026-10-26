@@ -10,10 +10,10 @@
     return(E)
 
   if (is.null(Eff@TripsScalar))
-    cli::cli_abort(
-      "`Fleet@Effort@TripsScalar` must be supplied when `Units != \"trips\"` for a bag-limit fleet",
-      .internal = TRUE
-    )
+    cli::cli_abort(c(
+      "x" = "Bag limits need the number of trips for fleet {.val {fl}} (stock {.val {st}}).",
+      "i" = "Set {.code Effort@TripsScalar} (trips per unit of effort) for this fleet, or {.code Effort@Units = \"trips\"} if effort is already in trips."
+    ), call = NULL)
 
   .GetEffortArrayValue(Eff@TripsScalar, sim, TSIndex) * E
 }
@@ -34,10 +34,10 @@
 
   Eff <- Proj@OM@Fleet[[st]][[fl]]@Effort
   if (is.null(Eff@AnglerPerTrip))
-    cli::cli_abort(
-      "`Fleet@Effort@AnglerPerTrip` must be supplied when `LimitType == \"angler\"`",
-      .internal = TRUE
-    )
+    cli::cli_abort(c(
+      "x" = "Per-angler bag limits need the number of anglers per trip for fleet {.val {fl}} (stock {.val {st}}).",
+      "i" = "Set {.code Effort@AnglerPerTrip} for this fleet, or use {.code LimitType = \"boat\"}."
+    ), call = NULL)
 
   BagLimit_fl * .GetEffortArrayValue(Eff@AnglerPerTrip, sim, TSIndex)
 }
@@ -66,10 +66,10 @@
 
   Eff <- Proj@OM@Fleet[[st]][[fl]]@Effort
   if (is.null(Eff@AnglerPerTrip))
-    cli::cli_abort(
-      "`Fleet@Effort@AnglerPerTrip` must be supplied when `LimitType == \"angler\"`",
-      .internal = TRUE
-    )
+    cli::cli_abort(c(
+      "x" = "Per-angler bag limits need the number of anglers per trip for fleet {.val {fl}} (stock {.val {st}}).",
+      "i" = "Set {.code Effort@AnglerPerTrip} for this fleet, or use {.code LimitType = \"boat\"}."
+    ), call = NULL)
 
   grp@BagLimit * .GetEffortArrayValue(Eff@AnglerPerTrip, sim, TSIndex)
 }

@@ -16,9 +16,9 @@
 #'   error for effort-based controls. When `NULL`, an empty [impslot-class] is
 #'   created via [ImpSlot()].
 #' @param Size An [impslot-class] object, or `NULL` (default). Implementation
-#'   error for size-based regulations (e.g. minimum landing size), via its
-#'   `Compliance` slot only (see Details). When `NULL`, an empty
-#'   [impslot-class] is created via [ImpSlot()].
+#'   of size-based regulations (e.g. minimum landing size). Size-based
+#'   regulations are currently always applied in full (see Details). When
+#'   `NULL`, an empty [impslot-class] is created via [ImpSlot()].
 #' @param Misc List. Miscellaneous additional objects. Default `list()`.
 #'
 #' @details
@@ -66,12 +66,10 @@
 #' landing under quota is routine, while exceeding it is a regulatory breach.
 #' Set `0.5` explicitly if you want the symmetric treatment.
 #'
-#' `Size@Compliance` (in `[0, 1]`) is the fraction of the fleet that adopts a
-#' newly-advised size-based regulation (a change to `Advice@Retention`
-#' and/or `Advice@Selectivity`) in the year it changes; the remaining
-#' `1 - Compliance` fraction continues under the prior curve. Missing/`NA`
-#' defaults to `1` (full, immediate adoption).
-#' `Size@Mean`/`SD`/`Error` are not consumed.
+#' `Size@Compliance` is currently not applied: size-based regulations
+#' (`Advice@Retention` and `Advice@Selectivity`) are always adopted in full by
+#' the whole fleet in the year they change. A value other than `1` is ignored
+#' and recorded in the log. `Size@Mean`/`SD`/`Error` are not used.
 #'
 #' @param x An [om-class] object, for `Imp<-`; an [imp-class] object, for
 #'   `TACImp()`/`TACImp<-`.

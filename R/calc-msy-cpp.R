@@ -526,6 +526,17 @@
   Hist
 }
 
+#' Calculate MSY Reference Points (C++)
+#'
+#' Calculates the MSY reference points of [CalcMSY()] with the per-recruit
+#' calculation in C++. As in [CalcMSY()], the equilibrium per-recruit
+#' calculation has no spatial structure (no areas or movement), so in a
+#' multi-area operating model fishing at `FMSY` need not give
+#' `SB/SBMSY = 1`. OMs with `Herm` use [CalcMSY()].
+#'
+#' @inheritParams CalcMSY
+#' @return A [refpointsMSY-class] object.
+#' @noRd
 CalcMSYCpp <- function(Hist,
                        Years = NULL,
                        type = c('Removals', 'Landings'),

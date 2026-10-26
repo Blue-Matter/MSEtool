@@ -47,6 +47,19 @@
 #' calculated at (`RefYears`), and which operating model quantities are
 #' passed to MPs (`DataOM`). See [OMControl].
 #'
+#' ## Reference points
+#'
+#' MSY reference points ([CalcMSY()]) and the per-recruit reference points
+#' F0.1, Fmax, Fx%SPR, Fmed, Fcrash, and SPRcrash ([CalcRefPoints()]) are
+#' calculated from equilibrium per-recruit dynamics with no spatial
+#' structure: the population is treated as a single unit, without areas or
+#' movement. In a multi-area operating model the historical and projected
+#' dynamics are spatial, and the realised fishing mortality depends on the
+#' distribution of the population and fishing effort among areas (spatial
+#' targeting, closures, and movement), so fishing at `FMSY` (e.g. with
+#' `refFMSY`) need not give `SB/SBMSY = 1`. Which reference points are
+#' calculated is set by `control` (see [SimControl()]).
+#'
 #' @return
 #' - If `OM` is an [om-class] object: a [hist-class] object.
 #' - If `OM` is an [OM-legacy-class] object: a [Hist-legacy-class] object.

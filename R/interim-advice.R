@@ -161,6 +161,7 @@
 
   ComplexNames <- names(OM@Complexes)
   last_ts <- .LastHistYearIndices(YearsHist, Seasons)
+  SEA <- if (Seasons > 1 && any(IA$Type == "Effort")) .SeasonalEffortAllocation(Proj)
 
   AdviceSimList <- MakeNamedList(seq_len(nSim))
   for (sim in seq_len(nSim)) {
@@ -171,7 +172,8 @@
         Proj, sim, CalYear, Season, i, cx, FleetNames, Areas,
         rows     = IA[IA$Complex == cx, , drop = FALSE],
         yearRows = IAYear[IAYear$Complex == cx, , drop = FALSE],
-        last_ts  = last_ts
+        last_ts  = last_ts,
+        SEA      = SEA[[i]]
       )
     }
     AdviceSimList[[sim]] <- AdviceList
@@ -184,7 +186,8 @@
 }
 
 .BuildInterimAdviceOne <- function(Proj, sim, CalYear, Season, cxInd, Complex,
-                                   FleetNames, Areas, rows, yearRows, last_ts) {
+                                   FleetNames, Areas, rows, yearRows, last_ts,
+                                   SEA = NULL) {
 
   Advice    <- methods::new("advice")
   AnnualTAC <- NULL
@@ -196,18 +199,17 @@
     keys <- .InterimFleetKey(yr$Fleet)
     z    <- vapply(unique(keys), \(k) .SampleInterimDeviate(
       Proj@OM, CalYear, Complex, Type, k, yr[keys == k, , drop = FALSE], sim), numeric(1))
-    vals <- .InterimFleetValues(Proj, sim, Season, cxInd, FleetNames, r, z, last_ts, Type)
+    vals <- .InterimFleetValues(Proj, sim, Season, cxInd, FleetNames, r, z, last_ts, Type, SEA)
     if (Type == "TAC") {
       Advice@TAC     <- vals$value
       Advice@TACType <- vals$TACType
       Advice@TACUnit <- vals$TACUnit
       AnnualTAC      <- .InterimAnnualTAC(Proj, sim, cxInd, FleetNames, yr, z, last_ts)
     } else {
-      dist_mat <- Proj@Distribution[sim, last_ts[Season], , , drop = FALSE]
-      dist_mat <- array(dist_mat, dim = dim(dist_mat)[3:4])  # Fleet x Area
-      Advice@Effort <- dist_mat * vals$value
-      dimnames(Advice@Effort) <- list(Fleet = FleetNames, Area = Areas)
+      Advice@Effort  <- array(vals$value, dimnames = list(Fleet = FleetNames))
       Advice@EffType <- "Abs"
+      # engine area split, except fleets with a user-specified historical distribution
+      Advice@Misc$StatusQuoEffort <- TRUE
     }
   }
 
@@ -229,13 +231,13 @@
   }))
 }
 
-# absolute per-fleet value for this timestep: annual rows split by SeasonalAllocation,
-# a Fleet = NA total split by Fleet/EffortAllocation over the fleets not listed;
-# z is the deviate for each .InterimFleetKey()
+# absolute per-fleet value for this timestep: annual rows split by SeasonalAllocation (TAC)
+# or the seasonal effort allocation SEA (Effort), a Fleet = NA total split by
+# Fleet/EffortAllocation over the fleets not listed; z is the deviate for each .InterimFleetKey()
 .InterimFleetValues <- function(Proj, sim, Season, cxInd, FleetNames, rows, z,
-                                last_ts, Type) {
+                                last_ts, Type, SEA = NULL) {
   nFleet  <- length(FleetNames)
-  SA      <- Proj@OM@SeasonalAllocation[[cxInd]]
+  SA      <- if (Type == "TAC") Proj@OM@SeasonalAllocation[[cxInd]] else SEA
   SAs     <- if (is.null(SA)) rep(1, nFleet) else SA[min(sim, dim(SA)[1]), Season, ]
   LastEff <- Proj@Effort[sim, last_ts[Season], ]
 
@@ -267,7 +269,7 @@
       Alloc <- if (Type == "TAC") Proj@OM@FleetAllocation[[cxInd]] else Proj@OM@EffortAllocation[[cxInd]]
       w <- if (is.null(Alloc)) rep(1, nFleet) else Alloc[min(sim, nrow(Alloc)), ]
       w <- w[rest]
-      if (total$Seasonal[1]) w <- w * SAs[rest]
+      if (Type == "TAC" && total$Seasonal[1]) w <- w * SAs[rest]
       w <- if (sum(w) > 0) w / sum(w) else rep(1 / length(rest), length(rest))
       value[rest] <- v * w
       if (!total$Seasonal[1]) value[rest] <- value[rest] * SAs[rest]

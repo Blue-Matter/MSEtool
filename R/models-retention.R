@@ -21,12 +21,12 @@
 #'   (logistic-at-weight).
 #' @param LR5 Numeric. Length at 5% retention (double-normal).
 #' @param LFR Numeric. Length at full retention (double-normal).
-#' @param Rmaxlen Numeric. Retention at `max(Length)` (double-normal). Values
-#'   less than 1 produce a dome-shaped retention curve.
+#' @param Rmaxlen Numeric. Retention at `max(Length)` (double-normal).
+#'   Default `1` (asymptotic). Values less than 1 produce a dome-shaped retention curve.
 #' @param WR5 Numeric. Weight at 5% retention (double-normal).
 #' @param WFR Numeric. Weight at full retention (double-normal).
 #' @param Rmaxweight Numeric. Retention at `max(Weight)` (double-normal).
-#'   Values less than 1 produce a dome-shaped retention curve.
+#'   Default `1` (asymptotic). Values less than 1 produce a dome-shaped retention curve.
 #' @param RL Numeric. Knife-edge length threshold; fish at or above this
 #'   length are fully retained.
 #' @param RA Numeric. Knife-edge age threshold; fish at or above this age are
@@ -130,7 +130,7 @@ class(RetentionAtWeight) <- 'Retention-at-Weight-Model'
 # Double-normal retention
 #' @rdname Retention-Models
 #' @export
-DoubleNormalRetention <- function(Length, LR5, LFR, Rmaxlen) {
+DoubleNormalRetention <- function(Length, LR5, LFR, Rmaxlen = 1) {
   double_normal(x=Length, x5=LR5, xF=LFR, xMax=Rmaxlen)
 }
 class(DoubleNormalRetention) <- 'Retention-at-Length-Model'
@@ -138,7 +138,7 @@ class(DoubleNormalRetention) <- 'Retention-at-Length-Model'
 # Double-normal retention at weight
 #' @rdname Retention-Models
 #' @export
-DoubleNormalRetentionWeight <- function(Weight, WR5, WFR, Rmaxweight) {
+DoubleNormalRetentionWeight <- function(Weight, WR5, WFR, Rmaxweight = 1) {
   double_normal(x    = Weight, 
                 x5   = WR5, 
                 xF   = WFR, 

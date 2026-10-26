@@ -19,11 +19,11 @@
 #' @param L5 Numeric. Length at 5% selectivity (double-normal).
 #' @param LFS Numeric. Length at full selectivity (double-normal).
 #' @param Vmaxlen Numeric. Selectivity at `max(Length)` (double-normal).
-#'   Values less than 1 produce a dome-shaped selectivity curve.
+#'   Default `1` (asymptotic). Values less than 1 produce a dome-shaped selectivity curve.
 #' @param W5 Numeric. Weight at 5% selectivity (double-normal).
 #' @param WFS Numeric. Weight at full selectivity (double-normal).
 #' @param Vmaxweight Numeric. Selectivity at `max(Weight)` (double-normal).
-#'   Values less than 1 produce a dome-shaped selectivity curve.
+#'   Default `1` (asymptotic). Values less than 1 produce a dome-shaped selectivity curve.
 #' @param SL Numeric. Knife-edge length threshold; fish at or above this
 #'   length are fully selected.
 #' @param SA Numeric. Knife-edge age threshold; fish at or above this age are
@@ -121,14 +121,14 @@ class(SelectivityAtWeight) <- 'Selectivity-at-Weight-Model'
 
 #' @rdname Selectivity-Models
 #' @export
-DoubleNormal <- function(Length, L5, LFS, Vmaxlen) {
+DoubleNormal <- function(Length, L5, LFS, Vmaxlen = 1) {
   double_normal(x = Length, x5 = L5, xF = LFS, xMax = Vmaxlen)
 }
 class(DoubleNormal) <- 'Selectivity-at-Length-Model'
 
 #' @rdname Selectivity-Models
 #' @export
-DoubleNormalWeight <- function(Weight, W5, WFS, Vmaxweight) {
+DoubleNormalWeight <- function(Weight, W5, WFS, Vmaxweight = 1) {
   double_normal(x = Weight, x5 = W5, xF = WFS, xMax = Vmaxweight)
 }
 class(DoubleNormalWeight) <- 'Selectivity-at-Weight-Model'

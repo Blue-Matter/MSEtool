@@ -5,6 +5,11 @@ MockEval <- function(Objective, Constraint, Min, TolPM = 0.005) {
   }
 }
 Always <- function(x) rep(1, length(x))
+ErrMsg <- function(expr) {
+  e <- tryCatch(expr, error = identity)
+  if (!inherits(e, 'error')) return('')
+  gsub('[[:space:]]+', ' ', cli::ansi_strip(conditionMessage(e)))
+}
 
 test_that(".TuneSearch() finds constraint boundaries and interior optima", {
   Ctl <- TuneControl()
@@ -181,6 +186,93 @@ test_that("TuneMP() compares configurations and reports validation", {
                 Configs = list(RecentYears = 1:2), Control = TuneControl(DryRun = TRUE),
                 silent = TRUE)
   expect_equal(Dry$Stage1Projections, 2 * TuneControl()$nGridConfig)
+})
+
+test_that(".TunePMDropSims() recalculates metrics on the remaining simulations", {
+  df <- expand.grid(Sim = 1:4, Stock = 'S', Year = 2030:2031, MP = 'A', stringsAsFactors = FALSE)
+  df$Value <- df$Sim
+  P <- NewPM(df, Name = 'Test', Ref = 2.5, Op = `>=`)
+  D <- .TunePMDropSims(P, c(1, 4), 'Test')
+  expect_equal(dimnames(D@Stat)[[1]], c('2', '3'))
+  expect_equal(c(D@Mean), 0.5)
+  NoOp <- NewPM(df, Name = 'Test')
+  expect_equal(.TuneMetricValues(list(Name = 'Test', Value = 'Mean'), NoOp, 4)[['S']], 2)
+  Odd <- P
+  Odd@Mean[] <- 0.9
+  expect_error(.TunePMDropSims(Odd, 1, 'Odd'), 'cannot be calculated')
+  expect_identical(.TunePMDropSims(Odd, integer(), 'Odd'), Odd)
+})
+
+test_that(".TuneCheckFail() stops on single and cumulative failures, per stage", {
+  State <- new.env()
+  State$MPName   <- 'MyMP'
+  State$TuneArg  <- 'tunepar'
+  State$Configs  <- list(list(), list(Smooth = FALSE))
+  State$Control  <- TuneControl(MaxFailRate = 0.25)
+  State$Excluded <- list(Configure = list(), Tune = list())
+  State$SimCount <- list(Configure = list(), Tune = list())
+  Cached <- function(Failed) list(H = list(Failed = Failed, Messages = 'MP error: boom (2 simulations)', nSim = 8))
+
+  .TuneCheckFail(State, Cached(c(2, 5)), 1, 1, 'Tune')
+  expect_equal(State$Excluded$Tune$H, c(2, 5))
+  .TuneCheckFail(State, Cached(c(3, 7)), 2, 1, 'Configure')
+  expect_equal(State$Excluded$Tune$H, c(2, 5))
+  expect_match(ErrMsg(.TuneCheckFail(State, Cached(1:3), 2, 0.5, 'Tune')),
+               'MyMP.*3 of 8 simulations.*Smooth = FALSE.*0.5.*boom.*MaxFailRate = 0.38')
+  expect_match(ErrMsg(.TuneCheckFail(State, Cached(c(2, 6)), 1, 3, 'Tune')),
+               'across the values evaluated so far.*3 of 8')
+  expect_match(ErrMsg(.TuneCheckFail(State, Cached(1:8), 1, 3, 'Tune')), 'every simulation')
+  Tab <- .TuneExcludedTable(State)
+  expect_equal(Tab$nExcluded[Tab$Stage == 'Tune'], 2)
+  expect_identical(Tab$Sims[Tab$Stage == 'Configure'], '3, 7')
+  expect_error(TuneControl(MaxFailRate = 1.5), 'MaxFailRate')
+})
+
+test_that("TuneMP() excludes the simulations in which the MP fails, or stops", {
+  skip_on_cran()
+  OM <- SingleStockOM
+  OM@nSim <- 8
+  Hist <- Simulate(OM, silent = TRUE)
+  # fails in `FailFor` sims, and in sim 3 when tunepar > 2
+  FailSims <- function(Data, tunepar = 1, FailFor = c(2, 5), ...) {
+    if (isTRUE(Data@Misc$Sim %in% FailFor) || (tunepar > 2 && isTRUE(Data@Misc$Sim == 3)))
+      stop('deliberate failure in sim ', Data@Misc$Sim)
+    IndexTarget(Data, tunepar = tunepar, ...)
+  }
+  class(FailSims) <- 'mp'
+  Con <- TuneConstraint(PM_SBSBMSY, Min = 0.6)
+  Ctl <- function(...) TuneControl(nGrid = 4, MaxIter = 2, ...)
+
+  Tuned <- suppressMessages(TuneMP(Hist, FailSims, Constraints = Con, Control = Ctl(MaxFailRate = 0.4),
+                                   ValidationHist = Hist, silent = TRUE))
+  Excl <- TuneTable(Tuned, 'Excluded')
+  expect_equal(Excl$nExcluded, 3)
+  expect_identical(Excl$Sims, '2-3, 5')
+  Hst <- TuneTable(Tuned, 'History')
+  expect_true(all(Hst$nExcluded == 3))
+  expect_equal(sort(unique(Hst$FailRate)), c(2, 3) / 8)
+  expect_message(utils::capture.output(methods::show(Tuned)), '3 of 8 simulations')
+
+  Low <- Hst[Hst$x < 2, ][1, ]
+  MSE <- Project(Hist, MPs = list(L = SetMPArgs(FailSims, tunepar = Low$x)), silent = TRUE)
+  Prob <- PM_SBSBMSY(MSE)@Prob[, 1, 'L']
+  expect_true(!is.na(Prob['3']))
+  expect_equal(Low$PM_SBSBMSY, mean(Prob[!names(Prob) %in% c('2', '3', '5')]))
+  Val <- TuneTable(Tuned, 'Validation')
+  expect_equal(unique(Val$nFailed), if (Tuned@Args$tunepar > 2) 3 else 2)
+
+  expect_match(ErrMsg(suppressMessages(TuneMP(Hist, FailSims, Constraints = Con, Control = Ctl(),
+                                              silent = TRUE))),
+               'failed in 2 of 8 simulations.*deliberate failure in sim.*MaxFailRate = 0.25')
+  Never <- function(Data, tunepar = 1, ...) stop('always fails')
+  class(Never) <- 'mp'
+  expect_match(ErrMsg(suppressMessages(TuneMP(Hist, Never, Constraints = Con, silent = TRUE,
+                                              Control = Ctl(ValidateConfigs = FALSE)))),
+               'failed in 8 of 8 simulations.*always fails.*every simulation')
+  AllNA <- suppressMessages(TuneMP(Hist, Never, Constraints = Con, silent = TRUE,
+                                   Control = Ctl(ValidateConfigs = FALSE, MaxFailRate = 1,
+                                                 Expand = FALSE)))
+  expect_identical(AllNA@Status, 'infeasible')
 })
 
 test_that(".SaveRNG()/.RestoreRNG() leave the global RNG state as they found it", {

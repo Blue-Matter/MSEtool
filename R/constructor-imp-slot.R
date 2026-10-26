@@ -49,8 +49,8 @@
 #' weight makes zero effort the cheapest option and the fleet stops fishing
 #' altogether.
 #'
-#' For `Size`, it is the fraction of the fleet adopting a newly-advised size
-#' regulation.
+#' For `Size`, it is currently not applied: size-based regulations are always
+#' adopted in full.
 #' 
 #' @return
 #' - `ImpSlot()` returns a new [impslot-class] object.

@@ -1,56 +1,20 @@
 #' Import an iSCAM Model into an Operating Model
 #'
-#' Import an iSCAM (Integrated Statistical Catch-Age Model) MPD fit and
-#' convert it into an [OM()] object, targeting the current `om`/`hist`/`data`
-#' class system (unlike the legacy [iSCAM2OM()], which targets the older
-#' `OM`/`Data` classes).
-#'
-#' @details
-#' `ImportiSCAM()` reads iSCAM output files from `iSCAMdir` (via
-#' `load.iscam.files()`, the same reader used by the legacy [iSCAM2OM()]) and
-#' constructs an [OM()] object:
-#'
-#' - Growth (`Length`), weight-at-age, maturity-at-age, and natural
-#'   mortality-at-age are read directly from the MPD fit
-#'   (`replist$mpd$M`/`replist$mpd$d3_wt_mat`/`replist$mpd$ma`, and
-#'   `replist$dat$linf`/`k`/`to` for the von Bertalanffy growth curve).
-#' - The stock-recruit relationship uses iSCAM's fitted steepness and R0
-#'   (`replist$mpd$steepness`/`replist$mpd$ro`).
-#' - **Only a single, aggregate fleet is built.** iSCAM's MPD reconstruction
-#'   (`replist$mpd$F`) is a single combined fishing-mortality-at-age series,
-#'   not broken out by gear -- this matches the scope of the legacy
-#'   [iSCAM2OM()]/[iSCAM2Data()], which also collapse multi-gear catch into
-#'   one total rather than building per-gear `Fleet` dynamics. The fleet's
-#'   relative selectivity-at-age is derived by normalising `replist$mpd$F`
-#'   within each year (`F_a,y / max_a(F_a,y)`), and its historical `Effort`
-#'   is the resulting apical F series, normalised to its historical maximum
-#'   -- i.e. effort is assumed proportional to apical F under constant
-#'   catchability. **This approximates iSCAM's fitted exploitation history;
-#'   it is not a byte-for-byte reconstruction of iSCAM's own (state-space)
-#'   historical trajectory**, since [Simulate()] derives numbers-at-age from
-#'   this effort series and the biology above, rather than reusing
-#'   `replist$mpd$N` directly.
-#' - `ImportiSCAMData()` (called internally, or usable standalone) populates
-#'   `OM@Data` with aggregate landings and any abundance indices
-#'   (`replist$dat$indices`). Age and size composition data are not imported.
-#'
-#' **Not supported**: delay-difference models (`replist$mpd$F_dd`), for which
-#' `ImportiSCAM()` stops with an error, and MCMC output: the OM is built from
-#' the MPD estimates (`replist$mpd`). Use the legacy [iSCAM2OM()] for either.
+#' `ImportiSCAM()` is not currently available.
+#' The iSCAM importer is not yet implemented, and calling this function
+#' returns an error. Please contact Blue Matter support
+#' (\email{adrian@bluematterscience.com}) for help building an operating
+#' model from an iSCAM assessment.
 #'
 #' @param iSCAMdir Character string giving the path to a directory containing
 #'   iSCAM output files, or a list already returned by `load.iscam.files()`.
 #' @param Name Character string giving the name of the imported operating
 #'   model.
-#' @param nSim Integer specifying the number of simulations. iSCAM's MPD fit
-#'   is a single point estimate, so every simulation starts from the same
-#'   biology/exploitation history; simulation-to-simulation variability comes
-#'   from [Simulate()]'s own process/observation error, not from iSCAM.
+#' @param nSim Integer specifying the number of simulations.
 #' @param pYear Integer specifying the number of projection years.
 #' @param Agency,Author,Email,Region,Latitude,Longitude,Sponsor Character/
 #'   numeric metadata stored on the resulting `OM`, matching [ImportSS()].
-#' @param StockName,FleetName Character. Names for the single stock/fleet
-#'   built from the iSCAM model.
+#' @param StockName,FleetName Character. Names for the stock and fleet.
 #' @param CommonName,Species Optional character metadata for the stock.
 #' @param Interval Integer specifying the number of years between management
 #'   actions.
@@ -71,10 +35,9 @@
 #' @param Populate Logical; if `TRUE` (default), populate the OM using
 #'   [PopulateOM()]. If `FALSE`, return the partially constructed OM.
 #'
-#' @return An [om-class] object.
+#' @return None. The function stops with an error.
 #'
-#' @seealso [OM()], [PopulateOM()], [CompareiSCAM()], [iSCAM2OM()] (legacy),
-#'   [ImportSS()], [ImportBAM()]
+#' @seealso [ImportSS()], [ImportBAM()]
 #' @export
 ImportiSCAM <- function(iSCAMdir,
                         Name       = "Imported iSCAM Model",
@@ -99,6 +62,7 @@ ImportiSCAM <- function(iSCAMdir,
                         Populate   = TRUE,
                         Seed       = 101) {
 
+  .iSCAMNotAvailable()
   .OnExit()
   replist <- if (is.character(iSCAMdir)) load.iscam.files(iSCAMdir) else iSCAMdir
 
@@ -221,4 +185,11 @@ ImportiSCAM <- function(iSCAMdir,
   out <- array(mat, dim = c(1, dim(mat)),
               dimnames = c(list(Sim = 1), dimnames(mat)))
   out
+}
+
+.iSCAMNotAvailable <- function() {
+  cli::cli_abort(c(
+    "x" = "The iSCAM importer is not yet implemented.",
+    "i" = "Please contact Blue Matter support ({.email office@bluematterscience.com}) for help importing iSCAM models."
+  ), call = NULL)
 }

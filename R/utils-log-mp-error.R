@@ -3,6 +3,8 @@
 #' Internal helper function to standardize error handling for Management Procedures (MPs).
 #' If the MP returns a valid `Advice` object, it is returned unchanged. If the MP returns a
 #' different type or a `try-error`, a short error message is returned for the log.
+#' Validation failures from `.CheckAdvice()` report the validation message and
+#' the stock/complex name.
 #'
 #' @param Advice The result returned by the MP. Should be of class `advice`.
 #' @param MPName Character. Name of the Management Procedure.
@@ -23,5 +25,8 @@
 
   cond <- attr(Advice, 'condition')
   msg  <- if (inherits(cond, 'condition')) conditionMessage(cond) else trimws(as.character(Advice))
-  paste0("MP error: ", msg)
+  name <- attr(Advice, 'AdviceCheck')
+  if (is.null(name))
+    return(paste0("MP error: ", msg))
+  paste0("Invalid `Advice`", if (nzchar(name)) paste0(" for ", name), ": ", msg)
 }

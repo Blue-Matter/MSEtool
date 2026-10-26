@@ -1,17 +1,16 @@
 #' Compare iSCAM and OM Output
 #'
-#' Compares key population time series between an iSCAM MPD fit and a
-#' simulated operating model, reporting the mean absolute relative error
-#' (MARE) for recruits, spawning biomass, and landings. Follows the same
-#' shape as [CompareBAM()]/[CompareSS()], sharing the same underlying engine.
+#' `CompareiSCAM()` is not currently available.
+#' The iSCAM importer is not yet implemented, and calling this function
+#' returns an error. Please contact Blue Matter support
+#' (\email{adrian@bluematterscience.com}) for help building an operating
+#' model from an iSCAM assessment.
 #'
 #' @param iSCAMdir Character string giving the path to a directory containing
 #'   iSCAM output files, or a list already returned by `load.iscam.files()`.
-#' @param OM Optional [om-class] or [hist-class] object. If `NULL` (default),
-#'   one is constructed internally via [ImportiSCAM()].
+#' @param OM Optional [om-class] or [hist-class] object.
 #' @param sim Integer. Simulation index used to select the OM simulation row.
-#'   Default `1` (iSCAM's MPD fit is a single point estimate, so there is
-#'   only ever one iSCAM-side series to compare against).
+#'   Default `1`.
 #' @param plot Logical. Plot the timeseries for the `OM` and `iSCAM` output?
 #'   If `FALSE` (default) plots are only printed if MARE exceeds `thresh`.
 #' @param thresh Numeric. MARE threshold (percentage) above which a
@@ -24,19 +23,15 @@
 #'   (default) sizes automatically.
 #' @param silent Logical; suppress informational output. Default `FALSE`.
 #'
-#' @return Invisibly returns a named list with elements `Stock`, `Recruits`,
-#'   `Biomass`, and `Landings`, each (other than `Stock`) a list with
-#'   elements `df`, `MARE`, and `plot` -- the same shape as [CompareBAM()].
-#'   Note: unlike [CompareBAM()]/[CompareSS()], there is no `Number`/`Discards`
-#'   comparison, since [ImportiSCAM()] only imports a single aggregate fleet
-#'   and iSCAM's MPD output does not separately report discards.
+#' @return None. The function stops with an error.
 #'
-#' @seealso [ImportiSCAM()], [CompareBAM()], [CompareSS()]
+#' @seealso [ImportiSCAM()]
 #' @export
 CompareiSCAM <- function(iSCAMdir, OM = NULL, sim = 1, plot = FALSE, thresh = 1,
                          save_plots = FALSE, outdir = 'figures/diagnostics/iSCAM',
                          width = NULL, height = NULL, silent = FALSE) {
 
+  .iSCAMNotAvailable()
   replist <- if (is.character(iSCAMdir)) load.iscam.files(iSCAMdir) else iSCAMdir
 
   if (is.null(OM))

@@ -1,27 +1,27 @@
 #' Import iSCAM Data into a Data Object
 #'
-#' Populates a [Data()] object with observed time series extracted from an
-#' iSCAM assessment: aggregate landings (summed across gears, matching the
-#' single-fleet scope of [ImportiSCAM()]) and abundance indices.
+#' `ImportiSCAMData()` is not currently available.
+#' The iSCAM importer is not yet implemented, and calling this function
+#' returns an error. Please contact Blue Matter support
+#' (\email{office@bluematterscience.com}) for help building an operating
+#' model from an iSCAM assessment.
 #'
 #' @param iSCAMdir Character string giving the path to a directory containing
 #'   iSCAM output files, or a list already returned by `load.iscam.files()`.
 #' @param Name Character; name for the `Data` object.
-#' @param FleetName Character; name for the single aggregate fleet (must
-#'   match the fleet name used by [ImportiSCAM()] when combining the two).
+#' @param FleetName Character; name for the fleet.
 #' @param silent Logical; suppress informational output. Default `FALSE`.
 #'
-#' @return A populated [Data()] object with `@Landings` and (if present in
-#'   the iSCAM output) `@Survey` populated. Age/size composition data is not
-#'   yet imported -- see [ImportiSCAM()] Details.
+#' @return None. The function stops with an error.
 #'
-#' @seealso [ImportiSCAM()], [Data()], [CatchData()], [IndicesData()]
+#' @seealso [ImportiSCAM()]
 #' @export
 ImportiSCAMData <- function(iSCAMdir,
                             Name      = "Imported by ImportiSCAMData",
                             FleetName = "iSCAM Fleet",
                             silent    = FALSE) {
 
+  .iSCAMNotAvailable()
   replist <- if (is.character(iSCAMdir)) load.iscam.files(iSCAMdir) else iSCAMdir
   dat <- replist$dat
   mpd <- replist$mpd

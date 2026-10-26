@@ -108,10 +108,10 @@ PopulateRetention <- function(Retention,
   
   .SetSeed(seed)
   
-  Retention@Pars <- .StructurePars(Pars = Retention@Pars, nSim, Years)
+  Retention@Pars <- .StructurePars(Pars = .AddDefaultPars(Retention), nSim, Years)
   Retention@Model <- .FindModel(Retention)
   
-  ModelClass <- .GetModelClass(Retention@Model)
+  ModelClass <- .SizeModelClass(Retention@Model)
   
   if (!is.null(ModelClass)) {
     Retention <- .ScaleRelPars(Retention, Maturity, ModelClass, Ages, Length,

@@ -6,7 +6,9 @@
 #'
 #' @param Pars Named list of selectivity parameters passed to the selectivity
 #'   model function. Parameter names must match the arguments of the chosen
-#'   model (see [SelectivityModels()]). Each element may be a scalar, vector,
+#'   model (see [SelectivityModels()]). Arguments with a default value (e.g.
+#'   `Vmaxlen = 1`) are optional and take their default when omitted. Each
+#'   element may be a scalar, vector,
 #'   or array; see [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for accepted formats. Default `list()`
 #'   (empty).
 #'

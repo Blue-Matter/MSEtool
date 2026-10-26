@@ -56,6 +56,15 @@
   stop(msg, call. = FALSE)
 }
 
+.RecSet <- function(x) length(x) > 0 && !all(is.na(x))
+
+# legacy double-normal retention (`LR5`, `LFR`, `Rmaxlen`) with an upper harvest slot `HS`
+.LegacySlotRetention <- function(Length, LR5, LFR, HS, Rmaxlen = 1) {
+  Ret <- DoubleNormalRetention(Length, LR5, LFR, Rmaxlen)
+  Ret[Length >= HS] <- 0
+  Ret
+}
+
 #' Convert a Legacy `Rec` Object to an `advice` Object
 #'
 #' Maps the slots of a legacy [Rec-class] recommendation (returned by a
@@ -63,7 +72,9 @@
 #' equivalent [advice-class] slots used by the new MP framework. Only slots
 #' the legacy MP actually populated are set; everything else remains `NULL`
 #' (unchanged from the previous timestep), matching `Rec`'s own "only some
-#' slots set" behaviour. `Rec@Fdisc`/`Rec@DR` (discard mortality) have no
+#' slots set" behaviour. `Rec@LR5`/`LFR`/`Rmaxlen` map to [DoubleNormalRetention()]
+#' (with an upper harvest slot when `Rec@HS` is set) and `Rec@L5`/`LFS`/`Vmaxlen`
+#' to [DoubleNormal()] selectivity. `Rec@Fdisc`/`Rec@DR` (discard mortality) have no
 #' mapping in v1 and are recorded as an assumption if set. Any `Log` entries
 #' recorded on `LegacyData` (e.g. by [Convert()]/`.ConvertDataToLegacy()`) are folded
 #' into the returned `Advice@Log`.
@@ -90,25 +101,40 @@
   if (length(Rec@Spatial) && !all(is.na(Rec@Spatial)))
     args$Closure <- as.numeric(Rec@Spatial)
 
-  if ((length(Rec@LR5) && !all(is.na(Rec@LR5))) ||
-      (length(Rec@LFR) && !all(is.na(Rec@LFR))))
-    args$Retention <- tryCatch(
-      Retention(Pars = list(L5 = Rec@LR5[1], LFS = Rec@LFR[1])),
-      error = function(e) NULL
-    )
+  Notes <- character()
 
-  if ((length(Rec@L5) && !all(is.na(Rec@L5))) ||
-      (length(Rec@LFS) && !all(is.na(Rec@LFS)))) {
-    Pars <- list(L5 = Rec@L5[1], LFS = Rec@LFS[1])
-    if (length(Rec@Vmaxlen) && !all(is.na(Rec@Vmaxlen)))
-      Pars$Vmaxlen <- Rec@Vmaxlen[1]
-    args$Selectivity <- tryCatch(Selectivity(Pars = Pars), error = function(e) NULL)
+  if (.RecSet(Rec@LR5) || .RecSet(Rec@LFR) || .RecSet(Rec@HS)) {
+    if (.RecSet(Rec@LR5) != .RecSet(Rec@LFR)) {
+      Notes <- c(Notes, "Legacy `Rec@LR5` and `Rec@LFR` must both be set; retention advice ignored.")
+    } else {
+      Pars <- if (.RecSet(Rec@LR5)) list(LR5 = Rec@LR5[1], LFR = Rec@LFR[1]) else list(LR5 = 0, LFR = 0)
+      if (.RecSet(Rec@Rmaxlen)) Pars$Rmaxlen <- Rec@Rmaxlen[1]
+      if (.RecSet(Rec@HS)) {
+        Pars$HS <- Rec@HS[1]
+        args$Retention <- Retention(Pars = Pars, Model = .LegacySlotRetention)
+      } else {
+        args$Retention <- Retention(Pars = Pars)
+      }
+    }
+  }
+
+  if (.RecSet(Rec@L5) || .RecSet(Rec@LFS)) {
+    if (.RecSet(Rec@L5) != .RecSet(Rec@LFS)) {
+      Notes <- c(Notes, "Legacy `Rec@L5` and `Rec@LFS` must both be set; selectivity advice ignored.")
+    } else {
+      Pars <- list(L5 = Rec@L5[1], LFS = Rec@LFS[1])
+      if (.RecSet(Rec@Vmaxlen)) Pars$Vmaxlen <- Rec@Vmaxlen[1]
+      args$Selectivity <- Selectivity(Pars = Pars)
+    }
   }
 
   if (length(Rec@Misc))
     args$Misc <- Rec@Misc
 
   Advice <- do.call(Advice, args)
+
+  for (note in Notes)
+    Advice <- .CaptureLog(Advice, note, name = ".Rec2Advice", type = "assumption")
 
   if ((length(Rec@Fdisc) && !all(is.na(Rec@Fdisc))) ||
       (length(Rec@DR) && !all(is.na(Rec@DR))))

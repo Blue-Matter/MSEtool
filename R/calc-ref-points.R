@@ -61,6 +61,12 @@
 #' stocks, `Fx%SPR` uses the blended spawning potential ratio and `Fcrash`,
 #' `SPRcrash`, and `Fmed` are `NA`.
 #'
+#' The per-recruit calculations have no spatial structure: the population is
+#' treated as a single unit, without areas or movement. In a multi-area
+#' operating model the simulated and projected dynamics are spatial, so
+#' fishing at one of these reference points need not give its equilibrium
+#' spawning-per-recruit or yield-per-recruit.
+#'
 #' @return The input [hist-class] object with `Hist@Reference@F01`,
 #'   `@FMax`, `@FSPR`, `@FMed`, `@FCrash`, `@SPRcrash`, and (if
 #'   `BLow = TRUE`) `@BLow` populated.

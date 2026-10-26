@@ -44,6 +44,17 @@
 #' `BMSY`/`SBMSY`/`SPMSY` are the biomass or spawning production in the
 #' reference season(s) (see [RefSeason()]).
 #'
+#' ## Spatial structure
+#' The reference points are calculated from equilibrium per-recruit dynamics
+#' with no spatial structure: the population is treated as a single unit,
+#' without areas or movement, and the fishing mortality at age of every fleet
+#' applies to the whole population. In a multi-area operating model the
+#' simulated and projected dynamics are spatial, and the fishing mortality a
+#' fleet exerts depends on how the population and fishing effort are
+#' distributed among areas (spatial targeting, closures, and movement).
+#' Fishing at `FMSY` in a multi-area operating model (e.g. with `refFMSY`)
+#' therefore need not give `SB/SBMSY = 1` or a yield of `MSY`.
+#'
 #' @return An a [refpointsMSY-class] object. 
 #'
 #' @seealso [CalcPerRecruit()], [CalcSPR0()], [refpointsMSY-class],

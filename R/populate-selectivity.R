@@ -87,14 +87,14 @@ PopulateSelectivity <- function(Selectivity,
   .SetSeed(seed)
   
   Selectivity@Pars <- .StructurePars(
-    Pars = Selectivity@Pars,
+    Pars = .AddDefaultPars(Selectivity),
     nSim = nSim,
     Years = Years,
     nArea = nArea
   )
   Selectivity@Model <- .FindModel(Selectivity)
   
-  ModelClass <- .GetModelClass(Selectivity@Model)
+  ModelClass <- .SizeModelClass(Selectivity@Model)
   
   if (!is.null(ModelClass)) {
     Selectivity <- .ScaleRelPars(Selectivity, Maturity, ModelClass, Ages, Length,
