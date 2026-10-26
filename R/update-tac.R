@@ -130,51 +130,89 @@
   # the optimisers below
   ProjSim <- .SliceSim(Proj, sim, .DynamicsProbeSlots)
 
+  # stop-mode bag limits shorten fishing time, so they scale the effort ceilings
+  ScaleCap <- function(x, TimeFrac) if (is.null(x)) NULL else x * TimeFrac
+
   if (nComplex == 1) {
+    SolveEffort <- function(P, TimeFrac = rep(1, nFleet_loc)) {
+      Cap <- ScaleCap(EffortMax, TimeFrac)
+      Res <- .OptEffortSingleStock(P,
+                                   Year,
+                                   TSIndex,
+                                   1L,
+                                   TAC_by_Complex,
+                                   TACType_by_Complex,
+                                   TACUnit_by_Complex,
+                                   MaxFleetEffort * TimeFrac,
+                                   EffortMax = Cap)
+      list(Effort = .ApplyEffortCeiling(Res$Effort, Cap), Proj = P, Res = Res)
+    }
+  } else {
+    Compliance <- .ResolveComplianceMatrix(Proj, FleetNames, names(Complexes), sim, Year)
+    lambda     <- .ResolveLambda(Proj, sim, TSIndex, Complexes, FleetNames, lambda_scale, n_recent)
 
-    Solved <- .OptEffortSingleStock(ProjSim,
-                                    Year,
-                                    TSIndex,
-                                    1L,
-                                    TAC_by_Complex,
-                                    TACType_by_Complex,
-                                    TACUnit_by_Complex,
-                                    MaxFleetEffort,
-                                    EffortMax = EffortMax)
+    SolveEffort <- function(P, TimeFrac = rep(1, nFleet_loc)) {
+      Cap <- ScaleCap(EffortMax, TimeFrac)
+      Res <- .OptEffortChoke(
+        Proj               = P,
+        Year               = Year,
+        TSIndex            = TSIndex,
+        sim                = 1L,
+        StockNames         = StockNames,
+        FleetNames         = FleetNames,
+        TAC_by_Complex     = TAC_by_Complex,
+        TACType_by_Complex = TACType_by_Complex,
+        TACUnit_by_Complex = TACUnit_by_Complex,
+        Compliance         = Compliance,
+        MaxFleetEffort     = MaxFleetEffort * TimeFrac,
+        EffortMax          = Cap,
+        lambda             = lambda,
+        n_recent           = n_recent,
+        maxEval            = maxEval
+      )
+      for (fl in seq_len(nFleet_loc))
+        P@Misc$StockTargeting[1, , fl, TSIndex] <- Res$Delta[fl, ]
+      list(Effort = .ApplyEffortCeiling(Res$Effort, Cap), Proj = P, Res = Res)
+    }
+  }
 
-    Proj@Effort[sim, TSIndex, ] <- .ApplyEffortCeiling(Solved$Effort, EffortMax)
+  BagCons <- .BagLimitConstraints(Proj, sim, TSIndex, AdviceList, .AggBagLimitSim(Proj, Year, sim),
+                                  FleetNames, StockNames)
+  HasTAC  <- any(!vapply(TAC_by_Complex, is.null, logical(1)))
+
+  if (length(BagCons) && HasTAC) {
+    # last step's effort is carried forward for fleets without a TAC: restore its trips,
+    # then shorten them by this step's stop-mode fishing-time fraction
+    PrevYear    <- as.numeric(dimnames(Proj@Effort)[[2]][TSIndex - 1L])
+    PrevNominal <- ProjSim@Effort[1, TSIndex - 1L, ] / .BagTimeFraction(Proj, PrevYear)[sim, ]
+    SolveBag <- function(P, TimeFrac) {
+      P@Effort[1, TSIndex - 1L, ] <- PrevNominal * TimeFrac
+      SolveEffort(P, TimeFrac)
+    }
+    Sol    <- .SolveBagLimit(ProjSim, Year, TSIndex, BagCons, SolveEffort = SolveBag)
+    Proj   <- .WriteBagLimitSolution(Proj, sim, TSIndex, Year, Sol, BagCons)
+    Proj   <- .LogBagLimitConvergence(Proj, Sol, sim, Year)
+    Solved <- Sol$Solved
+    if (is.null(Proj@Misc$BagLimitSolvedTS))
+      Proj@Misc$BagLimitSolvedTS <- rep(NA_integer_, Proj@OM@nSim)
+    Proj@Misc$BagLimitSolvedTS[sim] <- TSIndex
+  } else {
+    Solved <- SolveEffort(ProjSim)
+    Proj@Effort[sim, TSIndex, ] <- Solved$Effort
+  }
+
+  if (nComplex == 1) {
+    Res <- Solved$Res
     Proj <- .RecordTACAttainment(Proj, sim, YearIndex,
-                                 TAC       = matrix(Solved$TAC, nrow = 1),
-                                 Catch     = matrix(Solved$Catch, nrow = 1),
-                                 AtCeiling = Solved$AtCeiling)
-    Proj <- .LogEffortConvergence(Proj, Solved$converged, Solved$saturated, sim, Year,
-                                  TAC = Solved$TAC, Catch = Solved$Catch, FleetNames = FleetNames)
+                                 TAC       = matrix(Res$TAC, nrow = 1),
+                                 Catch     = matrix(Res$Catch, nrow = 1),
+                                 AtCeiling = Res$AtCeiling)
+    Proj <- .LogEffortConvergence(Proj, Res$converged, Res$saturated, sim, Year,
+                                  TAC = Res$TAC, Catch = Res$Catch, FleetNames = FleetNames)
     return(Proj)
   }
 
-  # Multi-complex
-  Compliance <- .ResolveComplianceMatrix(Proj, FleetNames, names(Complexes), sim, Year)
-  lambda     <- .ResolveLambda(Proj, sim, TSIndex, Complexes, FleetNames, lambda_scale, n_recent)
-
-  result <- .OptEffortChoke(
-    Proj               = ProjSim,
-    Year               = Year,
-    TSIndex            = TSIndex,
-    sim                = 1L,
-    StockNames         = StockNames,
-    FleetNames         = FleetNames,
-    TAC_by_Complex     = TAC_by_Complex,
-    TACType_by_Complex = TACType_by_Complex,
-    TACUnit_by_Complex = TACUnit_by_Complex,
-    Compliance         = Compliance,
-    MaxFleetEffort     = MaxFleetEffort,
-    EffortMax          = EffortMax,
-    lambda             = lambda,
-    n_recent           = n_recent,
-    maxEval            = maxEval
-  )
-  
-  Proj@Effort[sim, TSIndex, ] <- .ApplyEffortCeiling(result$Effort, EffortMax)
+  result <- Solved$Res
   for (fl in seq_len(nFleet_loc))
     Proj@Misc$StockTargeting[sim, , fl, TSIndex] <- result$Delta[fl, ]
 

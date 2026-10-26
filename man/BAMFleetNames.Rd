@@ -28,7 +28,7 @@ i.e. all fleets not classified as discard fleets.
 \item \verb{$DiscardFleets}: character vector of discard fleets, identified as
 those ending in \code{".D"} or, if none found, starting with \code{"D."}.
 \item \verb{$FleetNamesOrig}: character vector of original fleet names as they
-appear in \code{BAMdata$parms}, before cleaning.
+appear in \code{BAMdata$parms} or \code{BAMdata$t.series}, before cleaning.
 }
 
 \code{\link[=FixFleetNames]{FixFleetNames()}} returns a character vector the same length as
@@ -37,6 +37,9 @@ appear in \code{BAMdata$parms}, before cleaning.
 \description{
 \code{\link[=GetBAMFleetNames]{GetBAMFleetNames()}} extracts and classifies fleet names from a BAM stock
 assessment, separating retained (landings) fleets from discard fleets.
+Fleets are taken from the end-year F proportions (\verb{F.prop.*} in
+\code{BAMdata$parms}), plus any fleet with a fishing mortality series
+(\verb{F.*}) and observed landings (\code{L.*.ob}) in \code{BAMdata$t.series}.
 \code{\link[=FixFleetNames]{FixFleetNames()}} is a helper that standardises raw BAM fleet name strings
 by stripping leading \code{"L."} prefixes and converting leading \code{"D."} prefixes
 to trailing \code{".D"} suffixes.

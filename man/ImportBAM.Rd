@@ -68,16 +68,18 @@ survey indices found (i.e. indices not matched to any fleet name). Use
 this to override the default names derived from column names.
 Used by \code{\link[=ImportBAMData]{ImportBAMData()}}.}
 
-\item{UnitsLandings}{A character vector of length equal to the number of
-landings fleets detected. Each element must be one of:
+\item{UnitsLandings}{Optional named character vector (or list) of landings
+units by fleet, with names matching the OM fleet names. Each element must
+be one of:
 \itemize{
 \item \code{"1000 lb"} — values will be converted from thousands of pounds to kg.
 \item \code{"1000 n"} — values will be multiplied by 1,000 (number in thousands).
+Fleets not named here have their units detected from the BAM output.
 Used by \code{\link[=ImportBAMData]{ImportBAMData()}}.
 }}
 
-\item{UnitsDiscards}{A character vector of length equal to the number of
-discard fleets detected. Accepts the same values as \code{UnitsLandings}.
+\item{UnitsDiscards}{Optional named character vector (or list) of discard
+units by fleet, following the same convention as \code{UnitsLandings}.
 Used by \code{\link[=ImportBAMData]{ImportBAMData()}}.}
 
 \item{MPStartYear}{Numeric or \code{NULL}. First calendar year in which MPs are
@@ -140,6 +142,14 @@ deviations, \code{log.Nage.dev}) and \code{Depletion@Misc$InitialAtAge} (the rem
 age-specific depletion, e.g. from initial fishing mortality). The dynamic
 unfished conditions start from the equilibrium unfished numbers-at-age
 multiplied by \code{SRR@RecDevInit} only.
+
+Each retained fleet in the BAM output becomes an OM fleet, with its discard
+fishing mortality (\verb{F.<fleet>.D}, or the series named in \code{DiscFleets})
+included as discards. A discard fleet that is not linked to a retained fleet
+becomes a separate OM fleet with no retention and a discard mortality of 1,
+since BAM discard fishing mortality applies to dead discards.
+\code{OM@maxF} is increased above its default if the total apical fishing
+mortality across fleets in the BAM output exceeds it.
 }
 \seealso{
 \code{\link[=ImportBAMData]{ImportBAMData()}}

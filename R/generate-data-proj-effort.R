@@ -33,7 +33,9 @@
 #'
 #' \deqn{\tilde{E}_{x,t} = E_{x,t} \cdot b_x \cdot \varepsilon_{x,t}}
 #'
-#' - \eqn{E_{x,t}} — true OM effort for replicate \eqn{x} in year \eqn{t}
+#' - \eqn{E_{x,t}} — true OM effort for replicate \eqn{x} in year \eqn{t};
+#'   for a fleet under a stop-mode bag limit, the effort of its trips before
+#'   their fishing time is shortened
 #' - \eqn{b_x} — multiplicative bias (`effortobs@Bias[x]`); see [EffortObs()]
 #' - \eqn{\varepsilon_{x,t}} — lognormal error multiplier
 #'   (`effortobs@Error[x, t]`); see [EffortObs()]
@@ -89,11 +91,15 @@
   NewValueAll <- matrix(NA_real_, nSim, nFleet)
   NewCVAll    <- matrix(NA_real_, nSim, nFleet)
 
+  # observed effort counts trips; a stop-mode bag limit only shortens their fishing time
+  TimeFrac <- .BagTimeFraction(Proj, DataYear)
+
   for (fl in seq_len(nFleet)) {
     Obs <- Proj@OM@Obs[[i]][[fl]]@Effort
     if (EmptyObject(Obs) || length(Obs@Error) < 1) next
 
-    NewValueAll[, fl] <- .ResolveValue(Proj, 'Effort', i, fl, TSIndex, Obs, nSim, DataYear)
+    NewValueAll[, fl] <- .ResolveValue(Proj, 'Effort', i, fl, TSIndex, Obs, nSim, DataYear,
+                                       Divisor = TimeFrac[seq_len(nSim), fl])
 
     for (x in seq_len(nSim))
       NewCVAll[x, fl] <- .ResolveCV(Proj, 'Effort', i, fl, TSIndex, Proj@Data[[x]][[i]]@Effort, DataYear, Obs)

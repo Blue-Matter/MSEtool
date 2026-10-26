@@ -29,9 +29,9 @@ for any per-stock \code{BagLimit} set (as a species-specific sub-cap) on a
 stock included in \code{Stocks}.}
 
 \item{\code{ClosureMode}}{Character. \code{"discard"} or \code{"stop"} - see \code{\link[=Advice]{Advice()}}
-for the shared definition. Governs enforcement for the aggregate limit
-and for any per-stock \code{BagLimit} sub-cap on a stock included in
-\code{Stocks}.}
+for the shared definition. Governs enforcement for the aggregate limit.
+Fish beyond a per-stock \code{BagLimit} sub-cap on a stock included in
+\code{Stocks} are always released.}
 
 \item{\code{Misc}}{Miscellaneous list.}
 }}

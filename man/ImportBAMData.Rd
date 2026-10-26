@@ -25,14 +25,14 @@ fleet name, excluding discard indices). Must have the same length as the
 number of such surveys detected. If \code{NULL}, names are derived from the
 BAM column names directly.}
 
-\item{UnitsLandings}{A named character vector or list mapping fleet names to
-unit strings. Names must be a subset of \code{\link[=FleetNames]{FleetNames()}}; fleets not present
-are assigned \code{NA} units with no conversion applied. Supported unit strings:
+\item{UnitsLandings}{Optional named character vector or list mapping fleet
+names to unit strings. Names must be a subset of \code{\link[=FleetNames]{FleetNames()}}. Supported
+unit strings:
 \itemize{
 \item \code{"1000 lb"}: converts from thousands of pounds to kg.
 \item \code{"1000 n"}: multiplies by 1,000 (numbers in thousands).
-If \code{NULL}, \code{"1000 lb"} is assumed for all detected landings fleets with a
-warning.
+Fleets not named here (all fleets if \code{NULL}) have their units detected
+from \code{BAMdata} - see \emph{Unit conversion}.
 }}
 
 \item{UnitsDiscards}{A named character vector or list following the same
@@ -91,11 +91,16 @@ stored in \verb{@CPUE}; unmatched \verb{U.*} columns (excluding those containing
 
 \subsection{Unit conversion}{
 
-Conversion is applied fleet-by-fleet using \code{UnitsLandings} and
-\code{UnitsDiscards}. Fleets present in the OM but absent from the units argument
-receive \code{NA} units and their values are left unconverted. For discards,
-any raw BAM column stub named in \code{DiscFleets} is remapped to its final
-fleet name before this matching happens (see \code{DiscFleets}).
+Conversion is applied fleet-by-fleet. Units given in \code{UnitsLandings} and
+\code{UnitsDiscards} are used as supplied. For all other fleets, the units are
+detected from \code{BAMdata$LD.pr.tseries}: the fleet's predicted series
+(\verb{L.<fleet>.pr} or \verb{D.<fleet>.pr} in \code{BAMdata$t.series}) is matched against
+the predictions in thousands of pounds (\code{.klb}, \code{.gutklb}; \code{"1000 lb"}) and
+thousands of fish (\code{.knum}; \code{"1000 n"}). If no match is found, the units
+are taken from \code{BAMdata$info$units.landings} or
+\code{BAMdata$info$units.discards}, with a warning. For discards, any raw BAM
+column stub named in \code{DiscFleets} is remapped to its final fleet name before
+units are matched (see \code{DiscFleets}).
 }
 
 \subsection{Age and length composition}{

@@ -247,10 +247,10 @@ Subset <- function(object,
 }
 
 .MiscSelRet  <- c("Selectivity", "Retention", "DiscardMortality")
-.MiscByYear  <- c("Advice", "TACAttainment", .MiscSelRet)
+.MiscByYear  <- c("Advice", "TACAttainment", "BagLimit", .MiscSelRet)
 .MiscByAge   <- c("Advice", .MiscSelRet, "InitialAtAge")
-.MiscByMP    <- c("Advice", "TACAttainment", .MiscSelRet)
-.MiscByFleet <- c("Advice", "TACAttainment", .MiscSelRet, "AnnualTAC")
+.MiscByMP    <- c("Advice", "TACAttainment", "BagLimit", .MiscSelRet)
+.MiscByFleet <- c("Advice", "TACAttainment", "BagLimit", .MiscSelRet, "AnnualTAC")
 
 .SubsetMiscEntries <- function(object, Keep, fn, ...) {
   if (!"Misc" %in% methods::slotNames(object) || !is.list(object@Misc)) return(object)

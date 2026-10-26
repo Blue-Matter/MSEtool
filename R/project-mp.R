@@ -56,7 +56,7 @@
 .CompactMPProj <- function(Proj, YearsProj) {
   for (sl in setdiff(methods::slotNames('timeseries'), 'Misc'))
     methods::slot(Proj, sl) <- .SubsetYear(methods::slot(Proj, sl), YearsProj)
-  Proj@Misc      <- Proj@Misc[intersect(names(Proj@Misc), c('MPAdvice', 'MPAggBagLimit', 'TACAttainment'))]
+  Proj@Misc      <- Proj@Misc[intersect(names(Proj@Misc), c('MPAdvice', 'MPAggBagLimit', 'TACAttainment', 'BagLimit'))]
   Proj@OM@Stock  <- NULL
   Proj@OM@Obs    <- NULL
   Proj@OM@Imp    <- NULL
@@ -89,6 +89,7 @@
   FleetNames      <- FleetNames(Proj)
 
   Proj@Misc$TACAttainment <- .InitTACAttainment(Proj, YearsProj)
+  Proj@Misc$BagLimit      <- .InitBagLimitRecord(Proj, YearsProj)
 
   # initialise for debugging convenience
   Year <- YearsProj[1]; ts <- 1

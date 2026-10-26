@@ -224,6 +224,7 @@ Collate:
     'example-stock.R'
     'extract-F-timeseries.R'
     'extract-advice.R'
+    'extract-bag-limit.R'
     'extract-bio-timeseries.R'
     'extract-catch-timeseries.R'
     'extract-effort.R'

@@ -2,12 +2,12 @@
   x[min(sim, nrow(x)), TSIndex]
 }
 
-.CalcTrips <- function(Proj, sim, TSIndex, st, fl) {
+# Trips per unit of (nominal) effort
+.CalcTripsPerEffort <- function(Proj, sim, TSIndex, st, fl) {
   Eff <- Proj@OM@Fleet[[st]][[fl]]@Effort
-  E <- Proj@Effort[sim, TSIndex, fl]
 
   if (identical(Eff@Units, "trips"))
-    return(E)
+    return(1)
 
   if (is.null(Eff@TripsScalar))
     cli::cli_abort(c(
@@ -15,7 +15,32 @@
       "i" = "Set {.code Effort@TripsScalar} (trips per unit of effort) for this fleet, or {.code Effort@Units = \"trips\"} if effort is already in trips."
     ), call = NULL)
 
-  .GetEffortArrayValue(Eff@TripsScalar, sim, TSIndex) * E
+  .GetEffortArrayValue(Eff@TripsScalar, sim, TSIndex)
+}
+
+.CalcBagTheta <- function(Proj, sim, TSIndex, st, fl) {
+  Theta <- Proj@OM@Fleet[[st]][[fl]]@Effort@Theta
+  if (is.null(Theta))
+    cli::cli_abort(c(
+      "x" = "Bag limits need the catch-per-trip overdispersion for fleet {.val {fl}} (stock {.val {st}}).",
+      "i" = "Set {.code Effort@Theta} for this fleet (see {.help [Effort()](MSEtool::Effort)})."
+    ), call = NULL)
+  theta <- .GetEffortArrayValue(Theta, sim, TSIndex)
+  if (!is.numeric(theta) || is.na(theta) || theta <= 0)
+    cli::cli_abort("{.code Effort@Theta} must be positive for fleet {.val {fl}} (stock {.val {st}})",
+                   call = NULL)
+  theta
+}
+
+.CalcAnglerCap <- function(BagLimit, Proj, sim, TSIndex, st, fl) {
+  Eff <- Proj@OM@Fleet[[st]][[fl]]@Effort
+  if (is.null(Eff@AnglerPerTrip))
+    cli::cli_abort(c(
+      "x" = "Per-angler bag limits need the number of anglers per trip for fleet {.val {fl}} (stock {.val {st}}).",
+      "i" = "Set {.code Effort@AnglerPerTrip} for this fleet, or use {.code LimitType = \"boat\"}."
+    ), call = NULL)
+
+  BagLimit * .GetEffortArrayValue(Eff@AnglerPerTrip, sim, TSIndex)
 }
 
 .CalcBagLimitCap <- function(Advice, Proj, sim, TSIndex, st, fl, LimitTypeOverride = NULL) {
@@ -32,14 +57,14 @@
   if (identical(LimitType_fl, "boat"))
     return(BagLimit_fl)
 
-  Eff <- Proj@OM@Fleet[[st]][[fl]]@Effort
-  if (is.null(Eff@AnglerPerTrip))
-    cli::cli_abort(c(
-      "x" = "Per-angler bag limits need the number of anglers per trip for fleet {.val {fl}} (stock {.val {st}}).",
-      "i" = "Set {.code Effort@AnglerPerTrip} for this fleet, or use {.code LimitType = \"boat\"}."
-    ), call = NULL)
+  .CalcAnglerCap(BagLimit_fl, Proj, sim, TSIndex, st, fl)
+}
 
-  BagLimit_fl * .GetEffortArrayValue(Eff@AnglerPerTrip, sim, TSIndex)
+.CalcGroupBagLimitCap <- function(grp, Proj, sim, TSIndex, st, fl) {
+  if (identical(grp@LimitType, "boat"))
+    return(grp@BagLimit)
+
+  .CalcAnglerCap(grp@BagLimit, Proj, sim, TSIndex, st, fl)
 }
 
 .ResolveIndex <- function(x, names) {
@@ -54,148 +79,291 @@
     if (!inherits(grp, 'aggbaglimit')) next
     fl     <- .ResolveIndex(grp@Fleet, FleetNames)
     stocks <- .ResolveIndex(grp@Stocks, StockNames)
-    for (st in stocks)
-      lookup[[.GroupKey(st, fl)]] <- grp
+    if (is.na(fl) || anyNA(stocks))
+      cli::cli_abort("`AggregateBagLimit()` names a fleet or stock that is not in the OM", call = NULL)
+    for (st in stocks) {
+      key <- .GroupKey(st, fl)
+      if (!is.null(lookup[[key]]))
+        cli::cli_abort(c(
+          "x" = "Stock {.val {StockNames[st]}} is in more than one `AggregateBagLimit()` for fleet {.val {FleetNames[fl]}}.",
+          "i" = "Each stock can be pooled in at most one aggregate bag limit per fleet."
+        ), call = NULL)
+      lookup[[key]] <- grp
+    }
   }
   lookup
 }
 
-.CalcGroupBagLimitCap <- function(grp, Proj, sim, TSIndex, st, fl) {
-  if (identical(grp@LimitType, "boat"))
-    return(grp@BagLimit)
+# E[min(X, Bcap)] for X ~ NB(mu, theta): integral of P(X > t) over [0, Bcap]
+.CalcExpectedMinNB <- function(mu, theta, Bcap) {
+  if (mu <= 0 || Bcap <= 0) return(0)
+  if (!is.finite(Bcap)) return(mu)
 
-  Eff <- Proj@OM@Fleet[[st]][[fl]]@Effort
-  if (is.null(Eff@AnglerPerTrip))
-    cli::cli_abort(c(
-      "x" = "Per-angler bag limits need the number of anglers per trip for fleet {.val {fl}} (stock {.val {st}}).",
-      "i" = "Set {.code Effort@AnglerPerTrip} for this fleet, or use {.code LimitType = \"boat\"}."
-    ), call = NULL)
+  Surv <- if (is.finite(theta))
+    \(q) stats::pnbinom(q, size = theta, mu = mu, lower.tail = FALSE) else
+    \(q) stats::ppois(q, lambda = mu, lower.tail = FALSE)
+  # terms beyond this have P(X > k) < 1e-15
+  kmax <- if (is.finite(theta))
+    stats::qnbinom(1 - 1e-15, size = theta, mu = mu) else stats::qpois(1 - 1e-15, mu)
 
-  grp@BagLimit * .GetEffortArrayValue(Eff@AnglerPerTrip, sim, TSIndex)
+  n <- floor(Bcap)
+  k <- if (n > 0) 0:min(n - 1, kmax) else integer(0)
+  partial <- if (n <= kmax) (Bcap - n) * Surv(n) else 0
+  min(sum(Surv(k)) + partial, mu)
 }
 
-.CalcNegBinExcess <- function(mu, theta, Bcap, quantile = 0.9999) {
-  if (mu <= 0 || Bcap < 0) return(0)
-
-  xmax <- stats::qnbinom(quantile, size = theta, mu = mu)
-  if (xmax <= Bcap) return(0)
-
-  x <- (floor(Bcap) + 1):xmax
-  sum((x - Bcap) * stats::dnbinom(x, size = theta, mu = mu))
-}
-
-.CalcDiscardModeRetention <- function(mu, Bcap, theta) {
+# Fraction of the pre-bag catch per trip kept under a bag limit
+.CalcBagLimitRho <- function(mu, Bcap, theta) {
   if (mu <= 0) return(1)
-  excess <- .CalcNegBinExcess(mu, theta, Bcap)
-  min(max((mu - excess) / mu, 0), 1)
+  min(max(.CalcExpectedMinNB(mu, theta, Bcap) / mu, 0), 1)
 }
 
+# One bag-limit constraint per regulated stock-fleet and per aggregate group
+.BagLimitConstraints <- function(Proj, sim, TSIndex, AdviceList, AggBagLimit,
+                                 FleetNames, StockNames) {
+  Complexes   <- Proj@OM@Complexes
+  GroupLookup <- .BuildGroupLookup(AggBagLimit, FleetNames, StockNames)
+  Cons <- list()
 
-.CalcRetainedNumbers <- function(Proj, sim, TSIndex, Year, st, fl) {
+  NewCon <- function(stocks, fl, cap, mode, level)
+    list(stocks = stocks, fleet = fl, cap = cap, mode = mode, level = level,
+         theta = .CalcBagTheta(Proj, sim, TSIndex, stocks[1], fl),
+         TripsPerEffort = .CalcTripsPerEffort(Proj, sim, TSIndex, stocks[1], fl))
+
+  for (i in seq_along(AdviceList)) {
+    Advice <- AdviceList[[i]]
+    if (!inherits(Advice, 'advice') || is.null(Advice@BagLimit)) next
+    ClosureMode <- Advice@ClosureMode %||% 'discard'
+
+    for (st in Complexes[[i]]) {
+      for (fl in seq_along(FleetNames)) {
+        BagLimit_fl <- if (length(Advice@BagLimit) == 1) Advice@BagLimit else Advice@BagLimit[fl]
+        if (is.na(BagLimit_fl)) next
+
+        # a species sub-cap inside an aggregate limit always releases its excess
+        grp <- GroupLookup[[.GroupKey(st, fl)]]
+        if (!is.null(grp)) {
+          mode <- 'discard'
+          cap  <- .CalcBagLimitCap(Advice, Proj, sim, TSIndex, st, fl, LimitTypeOverride = grp@LimitType)
+        } else {
+          mode <- if (length(ClosureMode) == 1) ClosureMode else ClosureMode[fl]
+          cap  <- .CalcBagLimitCap(Advice, Proj, sim, TSIndex, st, fl)
+        }
+        Cons[[length(Cons) + 1]] <- NewCon(st, fl, cap, mode, 'stock')
+      }
+    }
+  }
+
+  for (grp in AggBagLimit) {
+    if (!inherits(grp, 'aggbaglimit') || is.na(grp@BagLimit)) next
+    fl     <- .ResolveIndex(grp@Fleet, FleetNames)
+    stocks <- .ResolveIndex(grp@Stocks, StockNames)
+    cap    <- .CalcGroupBagLimitCap(grp, Proj, sim, TSIndex, stocks[1], fl)
+    Cons[[length(Cons) + 1]] <- NewCon(stocks, fl, cap, grp@ClosureMode %||% 'discard', 'group')
+  }
+
+  Cons
+}
+
+# Retained numbers in time step TSIndex for a single-sim Proj (`Retained`,
+# [Stock, Fleet]) and the realised effort after any maxF clamp (`Effort`)
+.CalcRetainedNumbersAll <- function(Proj, TSIndex, Year) {
   Temp <- .CalcFisheryDynamics(Proj,
-                              Years = Year,
-                              Sims = sim,
-                              DoCalcSpawnProduction = 1,
-                              DoCalcRecruitment = 1,
-                              DoCalcNumberNext = 0,
-                              DoCalcBiomass = 0,
-                              DoCalcOverallF = 0,
-                              InPlace = TRUE)
-
-  Temp@LandingsAtAge[[st]][sim, , TSIndex, fl, , drop = FALSE] |>
-    SumOverAge() |> SumOverArea() |> sum()
+                               Years = Year,
+                               Sims = 1,
+                               DoCalcSpawnProduction = 1,
+                               DoCalcRecruitment = 1,
+                               DoCalcNumberNext = 0,
+                               DoCalcBiomass = 0,
+                               DoCalcOverallF = 0,
+                               DoBackCalcEffort = .BackCalcEffortFlag(Proj),
+                               InPlace = TRUE)
+  nFleet <- dim(Proj@Effort)[3]
+  out <- vapply(Temp@LandingsAtAge, \(x) apply(x[1, , TSIndex, , , drop = FALSE], 4, sum),
+                numeric(nFleet))
+  list(Retained = matrix(out, ncol = nFleet, byrow = TRUE),
+       Effort   = Temp@Effort[1, TSIndex, ])
 }
 
-.BisectBagLimitEffort <- function(residual, E_curr, Bcap_total, minEffort = 1e-8,
-                                  reltol = 1e-3, maxit = 40) {
-  lo <- minEffort
-  hi <- E_curr
-  if (residual(lo) >= 0) return(lo)  # cap already non-binding at ~zero effort
-
-  target <- reltol * max(Bcap_total, .Machine$double.eps)
-
-  for (i in seq_len(maxit)) {
-    mid   <- (lo + hi) / 2
-    r_mid <- residual(mid)
-    if (abs(r_mid) <= target) return(mid)
-    if (r_mid > 0) hi <- mid else lo <- mid
+.BagRetentionScale <- function(Cons, d, nStock, nFleet) {
+  Scale <- matrix(1, nStock, nFleet)
+  for (i in seq_along(Cons)) {
+    if (Cons[[i]]$mode != 'discard') next
+    Scale[Cons[[i]]$stocks, Cons[[i]]$fleet] <- Scale[Cons[[i]]$stocks, Cons[[i]]$fleet] * d[i]
   }
-  (lo + hi) / 2
+  Scale
 }
 
-# ClosureMode = "stop"
-.SolveBagLimitEffort <- function(Proj, sim, Year, TSIndex, st, fl, Advice,
-                                  minEffort = 1e-8, reltol = 1e-3,
-                                  LimitTypeOverride = NULL) {
-  E_curr <- Proj@Effort[sim, TSIndex, fl]
-  if (E_curr <= minEffort) return(E_curr)
-
-  Bcap       <- .CalcBagLimitCap(Advice, Proj, sim, TSIndex, st, fl, LimitTypeOverride = LimitTypeOverride)
-  Trips_curr <- .CalcTrips(Proj, sim, TSIndex, st, fl)
-  Bcap_total <- Bcap * Trips_curr
-
-  ProjSim <- .SliceSim(Proj, sim, .DynamicsProbeSlots)
-
-  residual <- function(E) {
-    Eff <- ProjSim@Effort[1, TSIndex, ]
-    Eff[fl] <- E
-    ProjE <- .WriteStateToProj(ProjSim, 1, TSIndex, Effort = Eff)
-    .CalcRetainedNumbers(ProjE, 1, TSIndex, Year, st, fl) - Bcap_total
+# Sets retention at TSIndex to Base x Scale for the stock-fleets in Cons
+.SetBagRetention <- function(Proj, sim, TSIndex, Base, Scale, Cons) {
+  for (st in unique(unlist(lapply(Cons, `[[`, 'stocks')))) {
+    fls <- unique(unlist(lapply(Cons, \(con) if (st %in% con$stocks) con$fleet)))
+    RetAge <- Proj@Misc$RetAgeList[[st]]
+    if (!is.null(RetAge)) {
+      for (fl in fls)
+        RetAge[sim, , TSIndex, fl, ] <- Base$RetAge[[st]][sim, , TSIndex, fl, ] * Scale[st, fl]
+      Proj@Misc$RetAgeList[[st]] <- RetAge
+    }
+    for (fl in fls) {
+      RetSize <- Proj@Misc$RetSizeList[[st]][[fl]]
+      if (is.null(RetSize)) next
+      RetSize[sim, , TSIndex, ] <- Base$RetSize[[st]][[fl]][sim, , TSIndex, ] * Scale[st, fl]
+      Proj@Misc$RetSizeList[[st]][[fl]] <- RetSize
+    }
   }
-
-  if (residual(E_curr) <= 0)
-    return(E_curr)
-
-  .BisectBagLimitEffort(residual, E_curr, Bcap_total, minEffort = minEffort, reltol = reltol)
-}
-
-.CalcRetainedNumbersGroup <- function(Proj, sim, TSIndex, Year, stocks, fl) {
-  sum(vapply(stocks, \(st) .CalcRetainedNumbers(Proj, sim, TSIndex, Year, st, fl), numeric(1)))
-}
-
-# Group version of .SolveBagLimitEffort()
-.SolveBagLimitEffortGroup <- function(Proj, sim, Year, TSIndex, stocks, fl, Bcap,
-                                        minEffort = 1e-8, reltol = 1e-3) {
-  E_curr <- Proj@Effort[sim, TSIndex, fl]
-  if (E_curr <= minEffort) return(E_curr)
-
-  Trips_curr <- .CalcTrips(Proj, sim, TSIndex, stocks[1], fl)
-  Bcap_total <- Bcap * Trips_curr
-
-  ProjSim <- .SliceSim(Proj, sim, .DynamicsProbeSlots)
-
-  residual <- function(E) {
-    Eff <- ProjSim@Effort[1, TSIndex, ]
-    Eff[fl] <- E
-    ProjE <- .WriteStateToProj(ProjSim, 1, TSIndex, Effort = Eff)
-    .CalcRetainedNumbersGroup(ProjE, 1, TSIndex, Year, stocks, fl) - Bcap_total
-  }
-
-  if (residual(E_curr) <= 0)
-    return(E_curr)
-
-  .BisectBagLimitEffort(residual, E_curr, Bcap_total, minEffort = minEffort, reltol = reltol)
-}
-
-# Scales retention by rho for this sim/Year only (a proportional reduction,
-# so age/length/weight-at-age shape is preserved).
-.CalcScaleRetention <- function(Proj, sim, TSIndex, Year, st, fl, rho) {
-  RetAge <- Proj@Misc$RetAgeList[[st]]
-  if (!is.null(RetAge)) {
-    RetAge[sim, , TSIndex, fl, ] <- RetAge[sim, , TSIndex, fl, ] * rho
-    Proj@Misc$RetAgeList[[st]] <- RetAge
-  }
-
-  RetSize <- Proj@Misc$RetSizeList[[st]][[fl]]
-  if (!is.null(RetSize)) {
-    RetSize[sim, , TSIndex, ] <- RetSize[sim, , TSIndex, ] * rho
-    Proj@Misc$RetSizeList[[st]][[fl]] <- RetSize
-  }
-
   Proj
 }
 
+#' Solve the bag-limit regulations for one simulation and time step
+#'
+#' Every constraint `c` gives a kept fraction \eqn{\rho_c = E[\min(X, B_c)] /
+#' \mu_c}, with \eqn{X \sim NB(\mu_c, \theta_c)} the per-trip catch of fish
+#' that clear all other retention rules. `"discard"` constraints scale
+#' retention by \eqn{\rho_c}; `"stop"` constraints scale the fleet's fishing
+#' time (effort) by the smallest \eqn{\rho_c} on that fleet, with the number of
+#' trips unchanged. \eqn{\mu_c} is recomputed from the realised dynamics until
+#' all \eqn{\rho_c} are self-consistent, so lower total mortality under the
+#' bag limit is accounted for.
+#'
+#' @param Proj Single-sim `Proj` (from `.SliceSim()`).
+#' @param Year,TSIndex Time step.
+#' @param Cons Constraints from `.BagLimitConstraints()`.
+#' @param EffortNominal Numeric `nFleet`. Effort before the bag limit, used
+#'   when `SolveEffort` is `NULL`.
+#' @param SolveEffort `NULL`, or `function(Proj, TimeFrac)` returning
+#'   `list(Effort, Proj)`: effort (on the fishing-time scale) solved given the
+#'   bag-limit retention already in `Proj` and the stop-mode fishing-time
+#'   fraction `TimeFrac`. Used to nest the bag limit inside the TAC solve.
+#' @return List with `Proj` (retention and effort for the solution), `Effort`,
+#'   `Scale` (`[Stock, Fleet]` retention multiplier), `TimeFrac`, `Trips`
+#'   (nominal trips per fleet, `NA` for fleets without a bag limit), `Solved`
+#'   (last `SolveEffort()` result) and `converged`.
+#' @keywords internal
+.SolveBagLimit <- function(Proj, Year, TSIndex, Cons, EffortNominal = NULL,
+                           SolveEffort = NULL, maxit = 50, tol = 1e-7) {
+  nStock <- length(Proj@Misc$RetAgeList)
+  nFleet <- dim(Proj@Effort)[3]
+  Base   <- list(RetAge = Proj@Misc$RetAgeList, RetSize = Proj@Misc$RetSizeList)
+  IsStop <- vapply(Cons, \(con) con$mode == 'stop', logical(1))
+
+  d        <- rep(1, length(Cons))
+  TimeFrac <- rep(1, nFleet)
+  Solved   <- NULL
+  converged <- FALSE
+
+  for (it in seq_len(maxit)) {
+    Scale <- .BagRetentionScale(Cons, d, nStock, nFleet)
+    P <- .SetBagRetention(Proj, 1, TSIndex, Base, Scale, Cons)
+    if (is.null(SolveEffort)) {
+      Effort <- EffortNominal * TimeFrac
+    } else {
+      Solved <- SolveEffort(P, TimeFrac)
+      Effort <- Solved$Effort
+      P      <- Solved$Proj
+    }
+    P@Effort[1, TSIndex, ] <- Effort
+    Probe    <- .CalcRetainedNumbersAll(P, TSIndex, Year)
+    Retained <- Probe$Retained
+
+    rho <- vapply(seq_along(Cons), \(i) {
+      con   <- Cons[[i]]
+      fl    <- con$fleet
+      Trips <- con$TripsPerEffort * Probe$Effort[fl] / TimeFrac[fl]
+      if (con$cap <= 0) return(0)
+      if (!is.finite(Trips) || Trips <= 0) return(1)
+      # undo this constraint's own effect (and, for a stock, any group above it)
+      Undo <- if (con$level == 'stock') Scale[con$stocks, fl] else if (IsStop[i]) 1 else d[i]
+      if (IsStop[i]) Undo <- Undo * TimeFrac[fl]
+      # everything already released by a zero bag: nothing left to measure
+      if (Undo <= 0) return(if (IsStop[i]) TimeFrac[fl] else d[i])
+      mu <- sum(Retained[con$stocks, fl]) / Trips / Undo
+      .CalcBagLimitRho(mu, con$cap, con$theta)
+    }, numeric(1))
+
+    d_new        <- ifelse(IsStop, 1, rho)
+    TimeFrac_new <- rep(1, nFleet)
+    for (i in which(IsStop))
+      TimeFrac_new[Cons[[i]]$fleet] <- min(TimeFrac_new[Cons[[i]]$fleet], rho[i])
+
+    # the returned state is the one built from TimeFrac, not TimeFrac_new
+    TimeFracUsed <- TimeFrac
+    converged <- max(abs(c(d_new - d, TimeFrac_new - TimeFrac))) < tol
+    if (converged) break
+    d        <- d_new
+    TimeFrac <- TimeFrac_new
+  }
+
+  Trips <- rep(NA_real_, nFleet)
+  for (con in Cons)
+    Trips[con$fleet] <- con$TripsPerEffort * Probe$Effort[con$fleet] / TimeFracUsed[con$fleet]
+
+  list(Proj = P, Effort = Effort, Scale = Scale, TimeFrac = TimeFracUsed, Trips = Trips,
+       Solved = Solved, converged = converged)
+}
+
+# Write a single-sim bag-limit solution back to sim `sim` of the full Proj
+.WriteBagLimitSolution <- function(Proj, sim, TSIndex, Year, Sol, Cons) {
+  Base <- list(RetAge = Proj@Misc$RetAgeList, RetSize = Proj@Misc$RetSizeList)
+  Proj <- .SetBagRetention(Proj, sim, TSIndex, Base, Sol$Scale, Cons)
+  Proj@Effort[sim, TSIndex, ] <- Sol$Effort
+  .RecordBagLimit(Proj, sim, Year, Sol)
+}
+
+# Bag-limit record for a projection ([Sim, Year, Fleet] arrays): nominal trips
+# (`NA` where no bag limit applied), the stop-mode fraction of each trip's
+# fishing time, and per stock the discard-mode fraction of retention kept
+.InitBagLimitRecord <- function(Proj, YearsProj) {
+  DN  <- list(Sim = seq_len(Proj@OM@nSim), Year = YearsProj, Fleet = FleetNames(Proj))
+  arr <- \(value) array(value, unname(lengths(DN)), dimnames = DN)
+  list(Trips             = arr(NA_real_),
+       TimeFraction      = arr(1),
+       RetentionFraction = stats::setNames(rep(list(arr(1)), nStock(Proj)), StockNames(Proj)))
+}
+
+.RecordBagLimit <- function(Proj, sim, Year, Sol) {
+  Rec <- Proj@Misc$BagLimit
+  if (is.null(Rec)) return(Proj)
+  y <- match(round(Year, 6), round(as.numeric(dimnames(Rec$Trips)$Year), 6))
+  if (is.na(y)) return(Proj)
+  Rec$Trips[sim, y, ]        <- Sol$Trips
+  Rec$TimeFraction[sim, y, ] <- Sol$TimeFrac
+  for (st in seq_along(Rec$RetentionFraction))
+    Rec$RetentionFraction[[st]][sim, y, ] <- Sol$Scale[st, ]
+  Proj@Misc$BagLimit <- Rec
+  Proj
+}
+
+# Stop-mode fishing-time fraction for the projection time step `Year` ([Sim, Fleet]); 1 elsewhere
+.BagTimeFraction <- function(Proj, Year) {
+  TF <- Proj@Misc$BagLimit$TimeFraction
+  nFleet <- dim(Proj@Effort)[3]
+  out <- matrix(1, Proj@OM@nSim, nFleet)
+  if (is.null(TF)) return(out)
+  y <- match(round(Year, 6), round(as.numeric(dimnames(TF)$Year), 6))
+  if (is.na(y)) return(out)
+  out[] <- TF[rep_len(seq_len(dim(TF)[1]), Proj@OM@nSim), y, ]
+  out
+}
+
+.LogBagLimitConvergence <- function(Proj, Sol, sim, Year) {
+  if (Sol$converged) return(Proj)
+  msg <- "Bag-limit solver: kept fractions did not converge; realised retention may not match the bag limit."
+  Proj@Log$warning <- c(Proj@Log$warning,
+                        list(.NewLogEntry(msg, name = 'BagLimitConvergence', sim = sim, year = Year)))
+  Proj
+}
+
+.AggBagLimitSim <- function(Proj, Year, sim) {
+  AggBagLimitSimList <- Proj@Misc$MPAggBagLimit[[as.character(Year)]]
+  if (length(AggBagLimitSimList) < sim) NULL else AggBagLimitSimList[[sim]]
+}
+
 #' Apply bag-limit regulations across all simulations
+#'
+#' Applies bag limits for simulations without a TAC this time step. Where a
+#' TAC applies, the bag limit is solved inside the TAC solve
+#' (`.UpdateTACSim()`), so the TAC is caught given the bag-limited retention
+#' and fishing time.
 #'
 #' @param Proj A `Proj` object.
 #' @param Year Integer. Current projection year.
@@ -229,23 +397,20 @@
   if (no_advice_bag && no_agg_bag)
     return(Proj)
 
+  SolvedTS <- Proj@Misc$BagLimitSolvedTS
+
   for (sim in seq_len(Proj@OM@nSim)) {
-    AdviceList     <- AdviceSimList[[sim]]
-    LastAdviceList <- LastAdviceSimList[[sim]]
-    AggBagLimit    <- if (!is.null(AggBagLimitSimList)) AggBagLimitSimList[[sim]] else NULL
+    if (!is.null(SolvedTS) && identical(SolvedTS[sim], TSIndex)) next
 
     Proj <- .UpdateBagLimitSim(
-      Proj           = Proj,
-      sim            = sim,
-      Year           = Year,
-      TSIndex        = TSIndex,
-      AdviceList     = AdviceList,
-      LastAdviceList = LastAdviceList,
-      AggBagLimit    = AggBagLimit,
-      FleetNames     = FleetNames,
-      StockNames     = StockNames,
-      Complexes      = Proj@OM@Complexes,
-      Areas          = Areas
+      Proj        = Proj,
+      sim         = sim,
+      Year        = Year,
+      TSIndex     = TSIndex,
+      AdviceList  = AdviceSimList[[sim]],
+      AggBagLimit = .AggBagLimitSim(Proj, Year, sim),
+      FleetNames  = FleetNames,
+      StockNames  = StockNames
     )
   }
 
@@ -253,92 +418,21 @@
 }
 
 .UpdateBagLimitSim <- function(Proj,
-                                sim,
-                                Year,
-                                TSIndex,
-                                AdviceList,
-                                LastAdviceList,
-                                AggBagLimit,
-                                FleetNames,
-                                StockNames,
-                                Complexes,
-                                Areas) {
+                               sim,
+                               Year,
+                               TSIndex,
+                               AdviceList,
+                               AggBagLimit,
+                               FleetNames,
+                               StockNames) {
 
-  nFleet <- length(FleetNames)
+  Cons <- .BagLimitConstraints(Proj, sim, TSIndex, AdviceList, AggBagLimit, FleetNames, StockNames)
+  if (!length(Cons)) return(Proj)
 
-  GroupLookup <- .BuildGroupLookup(AggBagLimit, FleetNames, StockNames)
+  ProjSim <- .SliceSim(Proj, sim, .DynamicsProbeSlots)
+  Sol <- .SolveBagLimit(ProjSim, Year, TSIndex, Cons,
+                        EffortNominal = Proj@Effort[sim, TSIndex, ])
 
-  for (i in seq_along(AdviceList)) {
-    stocks <- Complexes[[i]]
-    Advice <- AdviceList[[i]]
-
-    if (!inherits(Advice, 'advice')) next
-    if (is.null(Advice@BagLimit))    next
-
-    ClosureMode <- Advice@ClosureMode
-
-    for (st in stocks) {
-      for (fl in seq_len(nFleet)) {
-        BagLimit_fl <- if (length(Advice@BagLimit) == 1) Advice@BagLimit else Advice@BagLimit[fl]
-        if (is.na(BagLimit_fl)) next
-
-        grp <- GroupLookup[[.GroupKey(st, fl)]]
-
-        if (!is.null(grp)) {
-          ClosureMode_fl    <- grp@ClosureMode
-          LimitTypeOverride <- grp@LimitType
-        } else {
-          ClosureMode_fl    <- if (length(ClosureMode) == 1) ClosureMode else ClosureMode[fl]
-          LimitTypeOverride <- NULL
-        }
-
-        if (identical(ClosureMode_fl, "stop")) {
-          Proj@Effort[sim, TSIndex, fl] <- .SolveBagLimitEffort(
-            Proj, sim, Year, TSIndex, st, fl, Advice, LimitTypeOverride = LimitTypeOverride
-          )
-          next
-        }
-
-        # ClosureMode == "discard" (default)
-        Trips <- .CalcTrips(Proj, sim, TSIndex, st, fl)
-        if (Trips <= 0) next
-
-        mu    <- .CalcRetainedNumbers(Proj, sim, TSIndex, Year, st, fl) / Trips
-        Bcap  <- .CalcBagLimitCap(Advice, Proj, sim, TSIndex, st, fl, LimitTypeOverride = LimitTypeOverride)
-        theta <- .GetEffortArrayValue(Proj@OM@Fleet[[st]][[fl]]@Effort@Theta, sim, TSIndex)
-        rho   <- .CalcDiscardModeRetention(mu, Bcap, theta)
-
-        Proj <- .CalcScaleRetention(Proj, sim, TSIndex, Year, st, fl, rho)
-      }
-    }
-  }
-
-  for (grp in AggBagLimit) {
-    if (!inherits(grp, 'aggbaglimit')) next
-
-    fl     <- .ResolveIndex(grp@Fleet, FleetNames)
-    stocks <- .ResolveIndex(grp@Stocks, StockNames)
-
-    if (identical(grp@ClosureMode, "stop")) {
-      Bcap <- .CalcGroupBagLimitCap(grp, Proj, sim, TSIndex, stocks[1], fl)
-      Proj@Effort[sim, TSIndex, fl] <- .SolveBagLimitEffortGroup(
-        Proj, sim, Year, TSIndex, stocks, fl, Bcap
-      )
-      next
-    }
-
-    # ClosureMode == "discard" (default)
-    Trips <- .CalcTrips(Proj, sim, TSIndex, stocks[1], fl)
-    if (Trips <= 0) next
-
-    mu    <- .CalcRetainedNumbersGroup(Proj, sim, TSIndex, Year, stocks, fl) / Trips
-    Bcap  <- .CalcGroupBagLimitCap(grp, Proj, sim, TSIndex, stocks[1], fl)
-    theta <- .GetEffortArrayValue(Proj@OM@Fleet[[stocks[1]]][[fl]]@Effort@Theta, sim, TSIndex)
-    rho   <- .CalcDiscardModeRetention(mu, Bcap, theta)
-
-    for (st in stocks)
-      Proj <- .CalcScaleRetention(Proj, sim, TSIndex, Year, st, fl, rho)
-  }
-
-  Proj
+  Proj <- .WriteBagLimitSolution(Proj, sim, TSIndex, Year, Sol, Cons)
+  .LogBagLimitConvergence(Proj, Sol, sim, Year)
 }

@@ -123,16 +123,16 @@ retention cap is \eqn{B_f \cdot A_{f,t} \cdot T_{f,t}}, where
 is \eqn{B_f \cdot T_{f,t)}}, and \code{\link[=AnglerPerTrip]{AnglerPerTrip()}} is not used.
 }}
 
-\item{ClosureMode}{Character or \code{NULL}. Determines how the OM handles catch
-that exceeds the bag limit. Either length 1 (applied to all fleets) or a
+\item{ClosureMode}{Character or \code{NULL}. Determines what happens to fish
+caught beyond the bag limit. Either length 1 (applied to all fleets) or a
 character vector of length \code{nFleet}. Valid values:
 \itemize{
-\item \code{"discard"} (default): catch exceeding the bag limit is converted to
-discards; discard mortality is applied via the fleet's
-\code{\link[=DiscardMortality]{DiscardMortality()}} object.
-\item \code{"stop"}: effort is reduced so that projected catch does not exceed the
-bag limit retention cap; no additional discards are generated beyond the
-baseline discard rate from non-retention of undersized fish.
+\item \code{"discard"} (default): anglers keep fishing and release fish beyond the
+bag; discard mortality is applied via the fleet's \code{\link[=DiscardMortality]{DiscardMortality()}}
+object.
+\item \code{"stop"}: anglers stop fishing once the bag is reached, so fish beyond
+the bag, and any undersized fish that would have been caught in the
+remaining fishing time, are never caught.
 }}
 
 \item{Misc}{Miscellaneous list. Will be passed to \code{Data@Misc} in following
@@ -260,17 +260,53 @@ regulation for this stock's catch by each fleet: the number of fish an
 angler (or vessel) may retain per trip. \code{NA} in a fleet position of
 \code{BagLimit} means no limit applies for that fleet.
 
-When \code{ClosureMode = "discard"}, catch exceeding the retention cap is
-converted to discards and discard mortality is applied via the fleet's
-\code{\link[=DiscardMortality]{DiscardMortality()}} object. When \code{ClosureMode = "stop"}, effort is
-reduced to prevent exceeding the bag limit and no additional discards are
-generated.
+The number of fish per trip that would be kept without the bag limit
+(those that pass all other retention rules) is negative binomial,
+\eqn{X \sim NB(\mu, \theta)}, with mean \eqn{\mu} and overdispersion
+\eqn{\theta} from the fleet's \code{\link[=Theta]{Theta()}}. Fish caught but not kept for other
+reasons (e.g. undersized) do not count toward the bag. Each trip keeps
+\eqn{\min(X, B)} fish for a bag \eqn{B} (per vessel, or anglers per trip
+times the per-angler limit), so the fraction of the catch kept is
+
+\deqn{\rho = \frac{E[\min(X, B)]}{\mu}}
+
+The bag limit binds whenever some trips would exceed it, even when the
+mean catch per trip is below the bag.
+\itemize{
+\item \code{ClosureMode = "discard"}: retention is multiplied by \eqn{\rho}. The
+released fish are subject to the fleet's \code{\link[=DiscardMortality]{DiscardMortality()}}.
+\item \code{ClosureMode = "stop"}: fishing time per trip is multiplied by
+\eqn{\rho} with the number of trips unchanged, so fishing mortality on
+all fish the fleet encounters falls by \eqn{\rho}. Where several
+stop-mode limits apply to one fleet, the most restrictive sets its
+fishing time. The fleet's effort in the projection is the shortened
+fishing effort; observed effort data are based on trips.
+}
+
+\code{\link[=BagLimitEffect]{BagLimitEffect()}} reports the trips, fishing-time fraction and retention
+fraction for each simulation, time step, fleet and stock.
+
+\eqn{\mu} is the catch per trip at full retention and fishing time given
+the population under the bag limit, so \eqn{\rho} accounts for the lower
+fishing mortality the limit itself causes. The number of trips is the
+fleet's effort converted with \code{\link[=TripsScalar]{TripsScalar()}} (or the effort itself when
+its units are trips). Bag limits are in numbers of fish.
+
+When the MP also sets a \code{TAC}, the fleet's effort is solved so that the
+TAC is caught given the bag limit. A bag limit lowers the catch per trip,
+so catching the TAC takes more trips; with \code{"discard"} the released fish
+add to the removals, and a \code{TACType = "Removals"} TAC includes them. With
+\code{"stop"}, the fleet's maximum effort (\code{\link[=Maximum]{Maximum()}}, or advised \code{Effort}) is
+reached sooner: where the TAC cannot be caught within it, the fleet fishes
+at that maximum (see \code{\link[=TACAttainment]{TACAttainment()}}).
 
 A bag limit pooling catch across several stocks for one fleet (rather
 than a single stock's own catch) is declared separately via
 \code{AggregateBagLimit()}, available to \code{mmp}-class management procedures. A
 stock's own \code{BagLimit} may still be set for any stock included in such a
-group, acting as a species-specific sub-cap within the pooled limit.
+group, acting as a species-specific sub-cap within the pooled limit: fish
+of that stock beyond its sub-cap are always released, and only the kept
+fish count toward the pooled limit.
 }
 
 \subsection{Misc}{

@@ -54,7 +54,9 @@ Otherwise:
 
 \deqn{\tilde{E}_{x,t} = E_{x,t} \cdot b_x \cdot \varepsilon_{x,t}}
 \itemize{
-\item \eqn{E_{x,t}} — true OM effort for replicate \eqn{x} in year \eqn{t}
+\item \eqn{E_{x,t}} — true OM effort for replicate \eqn{x} in year \eqn{t};
+for a fleet under a stop-mode bag limit, the effort of its trips before
+their fishing time is shortened
 \item \eqn{b_x} — multiplicative bias (\code{effortobs@Bias[x]}); see \code{\link[=EffortObs]{EffortObs()}}
 \item \eqn{\varepsilon_{x,t}} — lognormal error multiplier
 (\code{effortobs@Error[x, t]}); see \code{\link[=EffortObs]{EffortObs()}}

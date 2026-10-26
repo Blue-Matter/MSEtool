@@ -22,8 +22,9 @@ empty \code{obs} object is created with \code{Name = FleetName}.}
 empty \code{imp} object is created with \code{Name = FleetName}}
 }
 \value{
-The \code{om} object with the new fleet appended to \code{OM@Fleet} and
-\code{OM@Obs} for every stock.
+The \code{om} object with the new fleet appended to \code{OM@Fleet},
+\code{OM@Obs}, and \code{OM@Imp} for every stock, and an \code{NA} column for the new
+fleet in the \code{Effort}, \code{Landings}, and \code{Discards} series of \code{OM@Data}.
 }
 \description{
 Adds a new fleet to an \link[=om-class]{om} object, appending a

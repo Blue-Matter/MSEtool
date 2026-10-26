@@ -40,6 +40,9 @@
 Updated \code{Proj} object.
 }
 \description{
-Apply bag-limit regulations across all simulations
+Applies bag limits for simulations without a TAC this time step. Where a
+TAC applies, the bag limit is solved inside the TAC solve
+(\code{.UpdateTACSim()}), so the TAC is caught given the bag-limited retention
+and fishing time.
 }
 \keyword{internal}

@@ -21,6 +21,7 @@ inline void CalcSpatialDistribution(
     Array4D& Distribution,                                // sim, year, fleet, area
     const std::vector<Array4D>& Number,                   // [stock] sim, age, year, area
     const std::vector<ConstArrayView4D>& WeightFleetRetained,     // [stock] sim, age, year, fleet
+    const std::vector<ConstArrayView4D>& WeightFleetSelected,     // [stock] sim, age, year, fleet
     const std::vector<ConstArrayView5D>& SelAge,          // [stock] sim, age, year, fleet, area
     const std::vector<ConstArrayView5D>& RetAge,          // [stock] sim, age, year, fleet, area
     const ConstArrayView4D& q,                            // sim, stock, year, fleet
@@ -54,6 +55,8 @@ inline void CalcSpatialDistribution(
   std::vector<double> U_tilde_buf(SFA,0.0);
   std::vector<double> weights_buf(nArea, 0.0);
   std::vector<double> B_stock_buf(BSFA, 0.0);
+  std::vector<double> B_hat_sel_buf(SFA, 0.0);
+  std::vector<double> B_stock_sel_buf(BSFA, 0.0);
   
   auto sfa_idx = [&](int sim, int fl, int ar) -> int {
     return sim * nFleet * nArea + fl * nArea + ar;
@@ -68,6 +71,7 @@ inline void CalcSpatialDistribution(
       for (int ar = 0; ar < nArea; ++ar) {
         const int i = sfa_idx(sim, fl, ar);
         B_hat_buf[i] = 0.0;
+        B_hat_sel_buf[i] = 0.0;
         D0_buf[i]    = 0.0;
         U_buf[i]     = 0.0;
         U_tilde_buf[i] = 0.0;
@@ -78,7 +82,7 @@ inline void CalcSpatialDistribution(
     for (int sim : Sims)
       for (int fl = 0; fl < nFleet; ++fl)
         for (int ar = 0; ar < nArea; ++ar)
-          B_stock_buf[bst_idx(st, sim, fl, ar)] = 0.0;
+          B_stock_buf[bst_idx(st, sim, fl, ar)] = B_stock_sel_buf[bst_idx(st, sim, fl, ar)] = 0.0;
 
 
   // Stage 1 — Raw exploitable biomass B_hat(sim, fl, ar)
@@ -86,6 +90,7 @@ inline void CalcSpatialDistribution(
   for (int st = 0; st < nStock; ++st) {
     const Array4D&          Num_st = Number[st];
     const ConstArrayView4D& Wgt_st = WeightFleetRetained[st];
+    const ConstArrayView4D& WgtS_st = WeightFleetSelected[st];
     const ConstArrayView5D& Sel_st = SelAge[st];
     const ConstArrayView5D& Ret_st = RetAge[st];
     const int nAge = Num_st.dim[1];
@@ -94,6 +99,7 @@ inline void CalcSpatialDistribution(
       const int sim_num = sim_index<4>(sim, Num_st);
       const int sim_cl  = sim_index<5>(sim, Closure);
       const int sim_wgt = sim_index<4>(sim, Wgt_st);
+      const int sim_wgts = sim_index<4>(sim, WgtS_st);
       const int sim_sel = sim_index<5>(sim, Sel_st);
       const int sim_ret = sim_index<5>(sim, Ret_st);
       const int sim_q   = sim_index<4>(sim, q);
@@ -106,20 +112,41 @@ inline void CalcSpatialDistribution(
           if (Closure(sim_cl, st, y, fl, ar) <= 0.0) continue;
         
           double B_sfra = 0.0;
+          double B_sel  = 0.0;
           for (int age = 0; age < nAge; ++age) {
             B_sfra +=
               Num_st(sim_num, age, y, ar)        *
               Wgt_st(sim_wgt, age, y, fl)        *
               Sel_st(sim_sel, age, y, fl, ar)    *
               Ret_st(sim_ret, age, y, fl, ar);
+            const double NS = Num_st(sim_num, age, y, ar) * Sel_st(sim_sel, age, y, fl, ar);
+            if (NS > 0.0) B_sel += NS * WgtS_st(sim_wgts, age, y, fl);
           } 
           const double qB = q_val * B_sfra;
           B_stock_buf[bst_idx(st, sim, fl, ar)] = qB;
           B_hat_buf[sfa_idx(sim, fl, ar)]       += qB;
+          B_stock_sel_buf[bst_idx(st, sim, fl, ar)] = q_val * B_sel;
+          B_hat_sel_buf[sfa_idx(sim, fl, ar)]       += q_val * B_sel;
         }
       }
     }
   } // end stage 1
+
+  // A fleet that retains nothing in any area (e.g. catch-and-release only)
+  // still fishes: distribute it by the biomass it selects instead
+  for (int sim : Sims) {
+    for (int fl = 0; fl < nFleet; ++fl) {
+      double total = 0.0;
+      for (int ar = 0; ar < nArea; ++ar)
+        total += B_hat_buf[sfa_idx(sim, fl, ar)];
+      if (total > 0.0) continue;
+      for (int ar = 0; ar < nArea; ++ar) {
+        B_hat_buf[sfa_idx(sim, fl, ar)] = B_hat_sel_buf[sfa_idx(sim, fl, ar)];
+        for (int st = 0; st < nStock; ++st)
+          B_stock_buf[bst_idx(st, sim, fl, ar)] = B_stock_sel_buf[bst_idx(st, sim, fl, ar)];
+      }
+    }
+  }
    
   // Optionally convert B_hat to density (divide by relative area size)
   for (int sim : Sims) {

@@ -260,6 +260,8 @@
   # full Sim dimension: .BindSims() collapses identical single-sim pieces
   Proj@Misc$TACAttainment <- .BindSims(lapply(Projs, \(x) x@Misc$TACAttainment), Sizes) |>
     .ExtendSimsList(nSimAll)
+  Proj@Misc$BagLimit <- .BindSims(lapply(Projs, \(x) x@Misc$BagLimit), Sizes) |>
+    .ExtendSimsList(nSimAll)
 
   Errors    <- vapply(Results, `[[`, logical(1), 'Error')
   AllFailed <- Reduce(intersect, lapply(Results, `[[`, 'AllFailedYears'))

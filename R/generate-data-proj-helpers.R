@@ -47,7 +47,7 @@
   match(round(DataYear, 6), round(as.numeric(dimnames(arr)[[1]]), 6))
 }
 
-.ResolveValue <- function(Proj, slotname, i, fl, TSIndex, Obs, nSim, DataYear) {
+.ResolveValue <- function(Proj, slotname, i, fl, TSIndex, Obs, nSim, DataYear, Divisor = 1) {
   omData <- Proj@OM@Data[[i]]
   omRow  <- .OMDataRow(omData, slotname, DataYear)
   if (!is.na(omRow) && ncol(slot(omData, slotname)@Value) >= fl)
@@ -60,7 +60,7 @@
   sim_ind_bias <- pmin(seq_len(nSim), length(Obs@Bias))
   obsBias      <- Obs@Bias[sim_ind_bias]
 
-  projValue <- slot(Proj, slotname)[seq_len(nSim), TSIndex, fl]
+  projValue <- slot(Proj, slotname)[seq_len(nSim), TSIndex, fl] / Divisor
   projValue * obsError * obsBias
 }
 

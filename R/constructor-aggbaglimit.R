@@ -20,9 +20,11 @@
 #'   per-stock `BagLimit` set as a species-specific sub-cap on a stock
 #'   included in `Stocks` (that stock's own `LimitType` is ignored).
 #' @param ClosureMode Character. `"discard"` (default) or `"stop"` - see
-#'   [Advice()] for the shared definition. Also governs enforcement of any
-#'   per-stock `BagLimit` sub-cap on a stock included in `Stocks` (that
-#'   stock's own `ClosureMode` is ignored).
+#'   [Advice()] for the shared definition. Governs enforcement of the
+#'   aggregate limit: with `"stop"`, fishing on a trip ends once the pooled
+#'   bag is reached. Fish beyond a per-stock `BagLimit` sub-cap on a stock
+#'   included in `Stocks` are always released, since anglers keep fishing
+#'   for the other stocks; that stock's own `ClosureMode` is ignored.
 #' @param Misc Miscellaneous list. Default `list()`.
 #'
 #' @details

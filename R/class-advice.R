@@ -71,12 +71,12 @@ methods::setClassUnion(
 #'   Either length 1 (applied to all fleets) or a character vector of length
 #'   `nFleet`. See [Advice()].
 #'
-#' @slot ClosureMode Character or `NULL`. Determines how the OM handles catch
-#'   that exceeds the bag limit: `"discard"` (default) converts excess catch
-#'   to discards, with discard mortality applied via the fleet's
-#'   [DiscardMortality()] object; `"stop"` reduces effort to prevent the
-#'   limit from being exceeded. Either length 1 (applied to all fleets) or a
-#'   character vector of length `nFleet`. See [Advice()].
+#' @slot ClosureMode Character or `NULL`. Determines what happens to fish
+#'   beyond the bag limit: `"discard"` (default) releases them, with discard
+#'   mortality applied via the fleet's [DiscardMortality()] object; `"stop"`
+#'   ends fishing on a trip once the bag is reached, so they are never caught.
+#'   Either length 1 (applied to all fleets) or a character vector of length
+#'   `nFleet`. See [Advice()].
 #'   
 #' @slot Misc Miscellaneous list. Will be passed to `Data@Misc` in following time steps.
 #'

@@ -31,9 +31,11 @@ per-stock \code{BagLimit} set as a species-specific sub-cap on a stock
 included in \code{Stocks} (that stock's own \code{LimitType} is ignored).}
 
 \item{ClosureMode}{Character. \code{"discard"} (default) or \code{"stop"} - see
-\code{\link[=Advice]{Advice()}} for the shared definition. Also governs enforcement of any
-per-stock \code{BagLimit} sub-cap on a stock included in \code{Stocks} (that
-stock's own \code{ClosureMode} is ignored).}
+\code{\link[=Advice]{Advice()}} for the shared definition. Governs enforcement of the
+aggregate limit: with \code{"stop"}, fishing on a trip ends once the pooled
+bag is reached. Fish beyond a per-stock \code{BagLimit} sub-cap on a stock
+included in \code{Stocks} are always released, since anglers keep fishing
+for the other stocks; that stock's own \code{ClosureMode} is ignored.}
 
 \item{Misc}{Miscellaneous list. Default \code{list()}.}
 }

@@ -17,9 +17,9 @@
 #'   for any per-stock `BagLimit` set (as a species-specific sub-cap) on a
 #'   stock included in `Stocks`.
 #' @slot ClosureMode Character. `"discard"` or `"stop"` - see [Advice()]
-#'   for the shared definition. Governs enforcement for the aggregate limit
-#'   and for any per-stock `BagLimit` sub-cap on a stock included in
-#'   `Stocks`.
+#'   for the shared definition. Governs enforcement for the aggregate limit.
+#'   Fish beyond a per-stock `BagLimit` sub-cap on a stock included in
+#'   `Stocks` are always released.
 #' @slot Misc Miscellaneous list.
 #'
 #' @seealso [AggregateBagLimit()], [advice-class]

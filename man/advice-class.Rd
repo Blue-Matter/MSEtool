@@ -64,12 +64,12 @@ per-angler (\code{"angler"}; default) or per-vessel (\code{"boat"}) regulations.
 Either length 1 (applied to all fleets) or a character vector of length
 \code{nFleet}. See \code{\link[=Advice]{Advice()}}.}
 
-\item{\code{ClosureMode}}{Character or \code{NULL}. Determines how the OM handles catch
-that exceeds the bag limit: \code{"discard"} (default) converts excess catch
-to discards, with discard mortality applied via the fleet's
-\code{\link[=DiscardMortality]{DiscardMortality()}} object; \code{"stop"} reduces effort to prevent the
-limit from being exceeded. Either length 1 (applied to all fleets) or a
-character vector of length \code{nFleet}. See \code{\link[=Advice]{Advice()}}.}
+\item{\code{ClosureMode}}{Character or \code{NULL}. Determines what happens to fish
+beyond the bag limit: \code{"discard"} (default) releases them, with discard
+mortality applied via the fleet's \code{\link[=DiscardMortality]{DiscardMortality()}} object; \code{"stop"}
+ends fishing on a trip once the bag is reached, so they are never caught.
+Either length 1 (applied to all fleets) or a character vector of length
+\code{nFleet}. See \code{\link[=Advice]{Advice()}}.}
 
 \item{\code{Misc}}{Miscellaneous list. Will be passed to \code{Data@Misc} in following time steps.}
 
