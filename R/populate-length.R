@@ -73,7 +73,7 @@ PopulateLength <- function(Length,
   .SetSeed(seed)
   Spec <- list(Pars = Length@Pars, CVatAge = Length@CVatAge)
   
-  Length@Pars    <- .StructurePars(Pars = Length@Pars, nSim, Years)
+  Length@Pars    <- .StructurePars(Pars = .AddDefaultPars(Length), nSim, Years)
   Length@Model   <- .FindModel(Length)
   Length         <- .PopulateMeanAtAge(Length, Ages, Years)
   Length@CVatAge <- .StructureCV(Length@CVatAge, nSim)

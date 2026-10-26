@@ -189,3 +189,31 @@ test_that("MP-thrown errors keep the MP error message", {
   MSE <- suppressMessages(Project(Hist, MPs = list(FailMP = FailMP), silent = TRUE))
   expect_true(all(.Messages(MSE@Log$error) == 'MP error: deliberate failure'))
 })
+
+test_that("omitted optional parameters are filled in for stock model objects", {
+  Ages <- Ages(10)
+  Years <- 2000:2004
+  Len <- PopulateLength(Length(Pars = list(Linf = 100, K = 0.2), CVatAge = 0.1),
+                        Ages = Ages, Years = Years, nSim = 3, silent = TRUE)
+  Ref <- PopulateLength(Length(Pars = list(Linf = 100, K = 0.2, t0 = 0), CVatAge = 0.1),
+                        Ages = Ages, Years = Years, nSim = 3, silent = TRUE)
+  expect_true(all(Len@Pars$t0 == 0))
+  expect_equal(Len@MeanAtAge, Ref@MeanAtAge)
+})
+
+test_that("an invalid interim advice is logged with its validation message", {
+  OM <- .SizeOM(nSim = 3, pYear = 4)
+  Hist <- Simulate(OM, silent = TRUE)
+  yp <- Years(Hist, 'P')
+  Hist@OM@MPStartYear <- floor(yp[1]) + 2
+  Hist@OM@InterimAdvice <- data.frame(Year = yp[1:2], Fleet = NA, Type = 'TAC', Mean = 500)
+
+  local_mocked_bindings(.CheckAdviceTAC = function(...) stop('bad interim TAC'))
+  MSE <- suppressMessages(Project(Hist, MPs = 'CurrentEffort', parallel = FALSE, silent = TRUE))
+
+  Msgs <- .Messages(MSE@Log$error)
+  StockName <- names(Hist@OM@Complexes)[1]
+  expect_true(length(Msgs) > 0)
+  expect_true(any(grepl(paste0('Invalid `Advice` for ', StockName, ': bad interim TAC'), Msgs, fixed = TRUE)))
+  expect_false(any(grepl('no applicable method', Msgs)))
+})

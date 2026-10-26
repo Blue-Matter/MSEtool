@@ -76,7 +76,7 @@ PopulateNaturalMortality <- function(NaturalMortality,
   
   .SetSeed(seed)
   
-  NaturalMortality@Pars <- .StructurePars(Pars = NaturalMortality@Pars, nSim, Years)
+  NaturalMortality@Pars <- .StructurePars(Pars = .AddDefaultPars(NaturalMortality), nSim, Years)
   NaturalMortality@Model <- .FindModel(NaturalMortality)
   NaturalMortality <- .PopulateMeanAtAge(object = NaturalMortality, 
                                         Ages= Ages, 

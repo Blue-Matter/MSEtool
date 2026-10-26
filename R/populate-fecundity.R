@@ -87,7 +87,7 @@ PopulateFecundity <- function(Fecundity,
   
   .SetSeed(seed)
   
-  Fecundity@Pars <- .StructurePars(Pars = Fecundity@Pars, nSim, Years)
+  Fecundity@Pars <- .StructurePars(Pars = .AddDefaultPars(Fecundity), nSim, Years)
   Fecundity@Model <- .FindModel(Fecundity)
   
   if (is.null(Fecundity@Model) | all(is.na(Fecundity@Pars))) {

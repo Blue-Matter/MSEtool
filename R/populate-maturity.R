@@ -79,7 +79,7 @@ PopulateMaturity <- function(Maturity,
   
   .SetSeed(seed)
   
-  Maturity@Pars  <- .StructurePars(Pars = Maturity@Pars, nSim, Years)
+  Maturity@Pars  <- .StructurePars(Pars = .AddDefaultPars(Maturity), nSim, Years)
   Maturity@Model <- .FindModel(Maturity)
   ModelClass     <- .GetModelClass(Maturity@Model)
   

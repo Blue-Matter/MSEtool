@@ -86,7 +86,7 @@ PopulateWeight <- function(Weight,
   .SetSeed(seed)
   Spec <- list(Pars = Weight@Pars, CVatAge = Weight@CVatAge)
   
-  Weight@Pars <- .StructurePars(Pars = Weight@Pars, nSim, Years)
+  Weight@Pars <- .StructurePars(Pars = .AddDefaultPars(Weight), nSim, Years)
   Weight@Model <- .FindModel(Weight)
   Weight <- .PopulateMeanAtAge(object = Weight, 
                               Ages= Ages, 
