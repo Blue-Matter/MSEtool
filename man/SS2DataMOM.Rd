@@ -17,7 +17,7 @@ comps are used. If multiple codes are used, then comp matrix is the sum over all
 
 \item{silent}{Logical. Suppress messages?}
 
-\item{...}{Arguments to pass to \link[r4ss]{SS_output}}
+\item{...}{Arguments to pass to \code{r4ss::SS_output()}}
 }
 \value{
 A nested list of Data objects, with the first index by stock/sex and the second index by fleet.

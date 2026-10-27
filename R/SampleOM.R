@@ -764,7 +764,7 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
         cli::cli_alert("Optimizing for user-specified movement")
     }
     nareas <- 2 # default is a 2 area model
-    if(snowfall::sfIsRunning()) {
+    if(.sfIsRunning()) {
       mov1 <- array(t(snowfall::sfSapply(1:nsim, getmov2, Frac_area_1 = Frac_area_1,
                              Prob_staying = Prob_staying)), dim = c(nsim, nareas, nareas))
     } else {
@@ -1159,7 +1159,7 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
 
   if (!exists("V", inherits = FALSE)) {
     # calculate selectivity-at-age from selectivity-at-length
-    if (snowfall::sfIsRunning()) {
+    if (.sfIsRunning()) {
       VList <- snowfall::sfLapply(1:nsim, calcV, Len_age=StockPars$Len_age,
                                   LatASD=StockPars$LatASD, SLarray=SLarray,
                                   n_age=n_age, nyears=nyears, proyears=proyears,
@@ -1323,7 +1323,7 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
 
   if (!exists("retA", inherits = FALSE)) {
     # calculate retention-at-age from retention-at-length
-    if (snowfall::sfIsRunning()) {
+    if (.sfIsRunning()) {
       VList <- snowfall::sfLapply(1:nsim, calcV, Len_age=StockPars$Len_age,
                                   LatASD=StockPars$LatASD, SLarray=retL,
                                   n_age=n_age, nyears=nyears, proyears=proyears,

@@ -725,17 +725,19 @@ Required <- function(funcs = NA, noCV=FALSE) {
 #' }
 #' @export
 setup <- function(cpus=NULL, logical=FALSE, ...) {
+  if (!requireNamespace('snowfall', quietly = TRUE))
+    stop("Package 'snowfall' is required for parallel processing. Install it with install.packages('snowfall')", call. = FALSE)
   if (is.null(cpus))
     cpus <- parallel::detectCores(logical=logical)
-  if(snowfall::sfIsRunning())
+  if(.sfIsRunning())
     snowfall::sfStop()
   snowfall::sfInit(parallel=TRUE,cpus=cpus, ...)
-  sfLibrary("MSEtool", character.only = TRUE, verbose=FALSE)
+  snowfall::sfLibrary("MSEtool", character.only = TRUE, verbose=FALSE)
   pkgs <- search()
   if ("package:DLMtool" %in% pkgs)
-    sfLibrary("DLMtool", character.only = TRUE, verbose=FALSE)
+    snowfall::sfLibrary("DLMtool", character.only = TRUE, verbose=FALSE)
   if ("package:SAMtool" %in% pkgs)
-    sfLibrary("SAMtool", character.only = TRUE, verbose=FALSE)
+    snowfall::sfLibrary("SAMtool", character.only = TRUE, verbose=FALSE)
 
 }
 
@@ -1338,7 +1340,7 @@ optCPU <- function(nsim=96, thresh=5, plot=TRUE, msg=TRUE, maxn=NULL) {
   for (n in cpus) {
     if (msg) message('Running MSE with ', nsim, ' simulations and ', n, ' of ', max(cpus), ' cpus')
     if (n == 1) {
-      snowfall::sfStop()
+      if (.sfIsRunning()) snowfall::sfStop()
       st <- Sys.time()
       tt <- runMSE(OM, silent = TRUE)
       time[n] <- difftime(Sys.time(), st, units='secs')

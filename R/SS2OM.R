@@ -45,7 +45,7 @@ SS2OM <- function(SSdir, nsim = 48, proyears = 50, reps = 1,
   }
   if(report) plot_SS2OM(OM, replist, gender, filename, dir, open_file, silent)
 
-  OM@cpars$Data <- SS2Data(replist, silent=TRUE)
+  OM@cpars$Data <- SS2Data(replist, gender = gender, silent=TRUE)
   return(OM)
 }
 
@@ -199,9 +199,9 @@ SSMOM2OM <- function(MOM, SSdir, gender = 1:2, import_mov = TRUE, seed = 1, sile
     cpars_out$Fdisc_array1 <- lapply(sel_par, getElement, "Fdisc_array1") %>% mean_array2()
     cpars_out$Fdisc_array2 <- lapply(sel_par, getElement, "Fdisc_array2") %>% mean_array2()
   
-    cpars_out$retA <- lapply(sel_par, getElement, "retA_real") %>% mean_array2()
+    cpars_out$retA <- lapply(sel_par, getElement, "retA") %>% mean_array2()
     cpars_out$V <- lapply(sel_par, getElement, "V_real") %>% mean_array2()
-    cpars_out$retL <- lapply(sel_par, getElement, "retL_real") %>% mean_array2()
+    cpars_out$retL <- lapply(sel_par, getElement, "retL") %>% mean_array2()
     cpars_out$SLarray <- lapply(sel_par, getElement, "SLarray_real") %>% mean_array2()
     
   } else { # Calc V from the F-at-age matrix (no discards modeled in the OM object)
@@ -354,8 +354,6 @@ calculate_single_fleet_dynamics <- function(x) {
     Find_out <- apply(F_at_age, c(1, 3), max) # F_at_age already includes discards
     V_avg <- single_fleet_V(F_at_age, retA = retA_avg, Find = Find_out, nsim = nsim)
     
-    retA_avg <- retA_avg*V_avg
-    
     # maxA <- apply(retA_avg, c(1,3), max)
     # nage <- dim(retA_avg)[2]
     # maxA <- aperm(replicate(nage, maxA), c(1,3,2))
@@ -375,17 +373,20 @@ calculate_single_fleet_dynamics <- function(x) {
     Find_out_L <- apply(F_at_length, c(1, 3), max) 
     SL_avg <- single_fleet_V(F_at_age = F_at_length, retA = retL_avg, 
                              Find = Find_out_L, nsim = nsim)
-    out <- list(Find = Find_out, 
-                V_real = abind::abind(V_avg, replicate(proyears, V_avg[, , nyears]), along = 3),
-                retA_real = abind::abind(retA_avg, replicate(proyears, retA_avg[, , nyears]), along = 3),
+    ext <- function(a) abind::abind(a, replicate(proyears, a[, , nyears]), along = 3)
+    out <- list(Find = Find_out,
+                V_real = ext(V_avg),
+                retA = ext(retA_avg),
+                retA_real = ext(retA_avg * V_avg),
                 Fdisc = Fdisc_avg,
-                SLarray_real = abind::abind(SL_avg, replicate(proyears, SL_avg[, , nyears]), along = 3),
-                retL_real = abind::abind(retL_avg, replicate(proyears, retL_avg[, , nyears]), along = 3),
+                SLarray_real = ext(SL_avg),
+                retL = ext(retL_avg),
+                retL_real = ext(retL_avg * SL_avg),
                 Fdisc_array1 = abind::abind(Fdisc1_avg, replicate(proyears, Fdisc1_avg[, , nyears]), along = 3),
                 Fdisc_array2 = abind::abind(Fdisc2_avg, replicate(proyears, Fdisc2_avg[, , nyears]), along = 3))
 
   } else {
-    fvar <- c("Find", "V_real", "retA_real", "Fdisc", "SLarray_real", "retL_real", "Fdisc_array1", "Fdisc_array2")
+    fvar <- c("Find", "V_real", "retA", "retA_real", "Fdisc", "SLarray_real", "retL", "retL_real", "Fdisc_array1", "Fdisc_array2")
     out <- lapply(fvar, function(xx) getElement(x[[1]], xx)) %>% structure(names = fvar)
   }
   return(out)
@@ -417,7 +418,7 @@ single_fleet_Fdisc <- function(Find, V, retA, Fdisc1, nsim, nyears) {
       num <- Find[i, j, ] * t(V[i, , j, ] * (1 - retA[i, , j, ]) * Fdisc1[i, , j, ])
       den <- Find[i, j, ] * t(V[i, , j, ] * (1 - retA[i, , j, ]))
       out <- colSums(num)/colSums(den)
-      out[is.na(out)] <- mean(out, na.rm = TRUE) # Denominator is zero because retention = 1
+      out[is.na(out)] <- rowMeans(matrix(Fdisc1[i, , j, ], nrow = dim(Fdisc1)[2]))[is.na(out)] # Denominator is zero because retention = 1
       return(out)
     })
     if(any(is.na(res))) { # There are years with entirely NA vectors, return mean of time series
@@ -447,7 +448,8 @@ single_fleet_retA <- function(Find, V, retA, Fdisc1_avg, F_at_age, nsim, nyears)
   
   sapply(1:nsim, function(i) {
     res <- sapply(1:nyears, function(j) {
-      out <- Fretain[i, , j] * Fdisc1_avg[i, , j]/(Fdiscard[i, , j] + Fretain[i, , j] * Fdisc1_avg[i, , j])
+      Fdead_disc <- pmax(Fdiscard[i, , j], 0)
+      out <- Fretain[i, , j]/(Fretain[i, , j] + ifelse(Fdead_disc > 0, Fdead_disc/Fdisc1_avg[i, , j], 0))
       out[is.na(out)] <- mean(out, na.rm = TRUE) # Denominator is zero because F = 0, should ensure that: all(out > 0)
       return(out)
     })

@@ -28,8 +28,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NULL
     .sapply <- pbapply::pbsapply
     
     # Argument to pass parallel cluster (if running)
-    formals(.lapply)$cl <- formals(.sapply)$cl <- substitute(if (snowfall::sfIsRunning()) snowfall::sfGetCluster() else NULL)
-  } else if (snowfall::sfIsRunning()) {
+    formals(.lapply)$cl <- formals(.sapply)$cl <- substitute(if (requireNamespace('snowfall', quietly = TRUE) && snowfall::sfIsRunning()) snowfall::sfGetCluster() else NULL)
+  } else if (.sfIsRunning()) {
     .lapply <- snowfall::sfLapply
     .sapply <- snowfall::sfSapply
   } else {
@@ -521,7 +521,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NULL
       FleetPars$dFfinal[probQ] <- ResampFleetPars$dFfinal
 
       # Optimize for q
-      if (!snowfall::sfIsRunning()) {
+      if (!.sfIsRunning()) {
         qs[probQ] <- sapply(probQ, CalculateQ, StockPars, FleetPars,
                             pyears=nyears, bounds, control)
       } else {
@@ -711,7 +711,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NULL
       cli::cli_alert("Calculating B-low reference points")
     
     MGThorizon<-floor(HZN*MGT)
-    if (!snowfall::sfIsRunning()) {
+    if (!.sfIsRunning()) {
       Blow <- sapply(1:nsim,getBlow,
                      StockPars$N,
                      StockPars$Asize,
@@ -744,7 +744,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NULL
                      SRRpars=StockPars$SRRpars,
                      spawn_time_frac=StockPars$spawn_time_frac)
     } else {
-      Blow <- sfSapply(1:nsim,getBlow,
+      Blow <- snowfall::sfSapply(1:nsim,getBlow,
                        StockPars$N,
                        StockPars$Asize,
                        StockPars$SSBMSY,
@@ -784,11 +784,11 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NULL
   # --- Calculate Reference Yield ----
   if(!silent) 
     cli::cli_alert("Calculating reference yield - best fixed F strategy")
-  if (!snowfall::sfIsRunning()) {
+  if (!.sfIsRunning()) {
     RefY <- sapply(1:nsim, calcRefYield, StockPars, FleetPars, proyears,
                    Ncurr=StockPars$N[,,nyears,], nyears, proyears)
   } else {
-    RefY <- sfSapply(1:nsim, calcRefYield, StockPars, FleetPars, proyears,
+    RefY <- snowfall::sfSapply(1:nsim, calcRefYield, StockPars, FleetPars, proyears,
                    Ncurr=StockPars$N[,,nyears,], nyears, proyears)
   }
   
@@ -1117,7 +1117,7 @@ Project <- function (Hist=NULL,
   nMP <- length(MPs)  # the total number of methods used
   if (nMP < 1) stop("No valid MPs found", call.=FALSE)
 
-  isrunning <- snowfall::sfIsRunning()
+  isrunning <- .sfIsRunning()
   if (!runparallel & isrunning) snowfall::sfStop()
 
   # Don't run MPs in parallel unless specified

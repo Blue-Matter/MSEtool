@@ -773,7 +773,9 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
 
     # Calculate F & Z by age class
     out$FM_P[SAYR] <- Ftot[S] * out$V_P_real_2[SAYt] * fishdist[SR]/StockPars$Asize[SR]
-    out$FM_Pret[SAYR] <- Ftot[S] * out$retA_P_real[SAYt] * fishdist[SR]/StockPars$Asize[SR]
+    # retention on the same scale as V_P_real_2
+    maxV <- apply(out$V_P_real[, , y + nyears, drop = FALSE], 1, max)
+    out$FM_Pret[SAYR] <- Ftot[S] * out$retA_P_real[SAYt]/maxV[S] * fishdist[SR]/StockPars$Asize[SR]
     #out$Z_P[SAYR] <- FM_P[SAYR] + StockPars$M_ageArray[SAYt] # calculate total mortality
     
     # Calculate total and retained catch
@@ -1096,7 +1098,9 @@ CalcMPDynamics_MF <- function(MPRecs_f, y, nyears, proyears, nsim,
         
         # Calculate F by age class (catch and Z later on)
         out[[f]]$FM_P[SAYR] <- Ftot[Sf] * out[[f]]$V_P_real_2[SAYt] * fishdist[SRf]/StockPars$Asize[SR]
-        out[[f]]$FM_Pret[SAYR] <- Ftot[Sf] * out[[f]]$retA_P_real[SAYt] * fishdist[SRf]/StockPars$Asize[SR]
+        # retention on the same scale as V_P_real_2
+        maxV <- apply(out[[f]]$V_P_real[, , y + nyears, drop = FALSE], 1, max)
+        out[[f]]$FM_Pret[SAYR] <- Ftot[Sf] * out[[f]]$retA_P_real[SAYt]/maxV[S] * fishdist[SRf]/StockPars$Asize[SR]
         
         # Effort relative to last historical with this catch
         Effort_req[, f] <- Ftot[, f]/(FleetPars_f[[f]]$FinF * FleetPars_f[[f]]$qs*FleetPars_f[[f]]$qvar[,y]*
@@ -1423,7 +1427,7 @@ CalcMPDynamics_MF <- function(MPRecs_f, y, nyears, proyears, nsim,
       } 
       
       # calculate selectivity-at-age from selectivity-at-length
-      if (snowfall::sfIsRunning()) {
+      if (.sfIsRunning()) {
         VList <- snowfall::sfLapply(1:nsim, calcV, Len_age=StockPars$Len_age[,,allyrs, drop=FALSE],
                                     LatASD=StockPars$LatASD[,,allyrs, drop=FALSE], SLarray=SLarray_P[,,allyrs, drop=FALSE],
                                     n_age=n_age, nyears=0, proyears=length(allyrs),
@@ -1456,7 +1460,7 @@ CalcMPDynamics_MF <- function(MPRecs_f, y, nyears, proyears, nsim,
       }
       
       # calculate retention-at-age from retention-at-length
-      if (snowfall::sfIsRunning()) {
+      if (.sfIsRunning()) {
         VList <- snowfall::sfLapply(1:nsim, calcV, Len_age=StockPars$Len_age[,,allyrs, drop=FALSE],
                                     LatASD=StockPars$LatASD[,,allyrs, drop=FALSE], SLarray=retL_P[,,allyrs, drop=FALSE],
                                     n_age=n_age, nyears=0, proyears=length(allyrs),
@@ -1862,7 +1866,7 @@ runInMP <- function(Data, MPs = NA, reps = 100) {
   returnList <- list() # a list nMPs long containing MPs recommendations
   recList <- list() # a list containing nsim recommendations from a single MP
 
-  if (!sfIsRunning() | (nMPs < 8 & nsims < 8)) {
+  if (!.sfIsRunning() | (nMPs < 8 & nsims < 8)) {
     for (ff in 1:nMPs) {
       temp <- sapply(1:nsims, MPs[ff], Data = Data, reps = reps)
       slots <- slotNames(temp[[1]])
@@ -1883,9 +1887,9 @@ runInMP <- function(Data, MPs = NA, reps = 100) {
       returnList[[ff]] <- recList
     }
   } else {
-    sfExport(list = "Data")
+    snowfall::sfExport(list = "Data")
     for (ff in 1:nMPs) {
-      temp <- sfSapply(1:nsims, MPs[ff], Data = Data, reps = reps)
+      temp <- snowfall::sfSapply(1:nsims, MPs[ff], Data = Data, reps = reps)
       slots <- slotNames(temp[[1]])
       for (X in slots) { # sequence along recommendation slots
         if (X == "Misc") { # convert to a list nsim by nareas

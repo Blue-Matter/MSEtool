@@ -10,7 +10,7 @@ applyMP(
   reps = 100,
   nsims = NA,
   silent = FALSE,
-  parallel = snowfall::sfIsRunning()
+  parallel = .sfIsRunning()
 )
 }
 \arguments{

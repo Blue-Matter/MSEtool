@@ -113,7 +113,7 @@ MOM_agg_fleets(MOM)
 
 \item{Source}{Reference to assessment documentation e.g. a url}
 
-\item{...}{Arguments to pass to \link[r4ss]{SS_output}.}
+\item{...}{Arguments to pass to \code{r4ss::SS_output()}.}
 
 \item{x}{For \code{plot_SS2OM}, an object of either class \linkS4class{OM} or \linkS4class{Hist}.
 For \code{plot_SS2MOM}, an object of either class \linkS4class{MOM} or \code{multiHist}.}

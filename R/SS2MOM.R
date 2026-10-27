@@ -22,7 +22,7 @@
 #' @param silent Whether to silence messages to the console.
 #' @param Name The name of the operating model
 #' @param Source Reference to assessment documentation e.g. a url
-#' @param ... Arguments to pass to \link[r4ss]{SS_output}.
+#' @param ... Arguments to pass to `r4ss::SS_output()`.
 #' @note Currently tested on r4ss version 1.38.1-40.0 and SS 3.30.14.
 #' @return SS2MOM returns an object of class \linkS4class{MOM}. SS2OM returns an object of class \linkS4class{OM}.
 #' @author Q. Huynh
@@ -102,7 +102,7 @@ SS2MOM <- function(SSdir, nsim = 48, proyears = 50, reps = 1, maxF = 3, seed = 1
 #' @param comp_partition Integer vector for selecting length/age observations that are retained (2), discarded (1), or both (0). By default, only retained
 #' comps are used. If multiple codes are used, then comp matrix is the sum over all codes.
 #' @param silent Logical. Suppress messages?
-#' @param ... Arguments to pass to \link[r4ss]{SS_output}
+#' @param ... Arguments to pass to `r4ss::SS_output()`
 #' @return A nested list of Data objects, with the first index by stock/sex and the second index by fleet.
 #' @note Currently tested on r4ss version 1.38.1-41 and SS 3.30.14.
 #'

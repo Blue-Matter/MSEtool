@@ -716,7 +716,7 @@ simCAL <- function(nsim, nyears, maxage,  CAL_ESS, CAL_nsamp, nCALbins, CAL_bins
   CAL <- array(NA, dim=c(nsim,  nyears, nCALbins))
  
   # Generate size comp data with variability in age
-  runParallel <- snowfall::sfIsRunning()
+  runParallel <- .sfIsRunning()
   if (runParallel) {
     tempSize <- snowfall::sfLapply(1:nsim, genSizeCompWrap, vn, CAL_binsmid, CAL_bins,
                                    retL, CAL_ESS, CAL_nsamp,

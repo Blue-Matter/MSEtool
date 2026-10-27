@@ -1,14 +1,21 @@
 
+# accessed at runtime: the CRAN r4ss does not export SS_output
+GetSSOutputFn <- function() {
+  if(!requireNamespace("r4ss", quietly = TRUE) || !"SS_output" %in% getNamespaceExports("r4ss")) {
+    Installed <- if(requireNamespace("r4ss", quietly = TRUE)) as.character(packageVersion("r4ss")) else "none"
+    stop("Importing SS3 output requires a version of r4ss that exports SS_output (installed version: ", Installed, ").\n",
+         "Install r4ss from r-universe: install.packages(\"r4ss\", repos = c(\"https://r4ss.r-universe.dev\", \"https://cloud.r-project.org\"))\n",
+         "or from GitHub: remotes::install_github(\"r4ss/r4ss\")", call. = FALSE)
+  }
+  getExportedValue("r4ss", "SS_output")
+}
+
 SS_import <- function(SSdir, silent = FALSE, ...) {
   
   if(inherits(SSdir, 'list'))
     return(SSdir)
   
-  if(!requireNamespace("r4ss", quietly = TRUE)) {
-    stop("Download the r4ss package to use this function. It is recommended to install the Github version with: remotes::install_github(\"r4ss/r4ss\")", call. = FALSE)
-  }
-  
-  
+  SS_output <- GetSSOutputFn()
 
   dots <- list(dir = SSdir, ...)
   if(!any(names(dots) == "covar")) dots$covar <- FALSE
@@ -22,7 +29,7 @@ SS_import <- function(SSdir, silent = FALSE, ...) {
     message(paste("-- Using function SS_output of package r4ss version", packageVersion("r4ss"), "to extract data from SS file structure --"))
     message(paste("Reading directory:", SSdir))
   }
-  replist <- try(do.call(r4ss::SS_output, dots), silent = TRUE)
+  replist <- try(do.call(SS_output, dots), silent = TRUE)
   if(is.character(replist)) stop("r4ss::SS_output function returned an error -\n", replist, call. = FALSE)
   if(!silent) message("-- End of r4ss operations --\n")
 
@@ -172,7 +179,7 @@ SS_steepness <- function(replist, mainyrs, mean_h = TRUE, nsim, seed = 1, i=1) {
     if(mean_h) {
       h_out <- SRopt(1, SSB, rec, SpR0, plot = FALSE, type = ifelse(SRrel == 1, "BH", "Ricker")) %>% rep(nsim)
     } else {
-      h_out <- SRopt(1:nsim, SSB, rec, SpR0, plot = FALSE, type = ifelse(SRrel == 1, "BH", "Ricker"))
+      h_out <- SRopt(nsim, SSB, rec, SpR0, plot = FALSE, type = ifelse(SRrel == 1, "BH", "Ricker"))
     }
   }
 
@@ -548,9 +555,13 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
       stop("Could not find selectivity/retention function for year: ", yy)
     }
   }
+  # Keep = selectivity x retention; Ret = retention probability
+  keepL <- vapply(mainyrs, loop_over_change_points, numeric(replist$nlbinspop),
+                  df = replist$sizeselex[replist$sizeselex$Fleet == ff & replist$sizeselex$Sex == i &
+                                           replist$sizeselex$Factor == "Keep", ])
   retL <- vapply(mainyrs, loop_over_change_points, numeric(replist$nlbinspop),
                  df = replist$sizeselex[replist$sizeselex$Fleet == ff & replist$sizeselex$Sex == i &
-                                          replist$sizeselex$Factor == "Keep", ])
+                                          replist$sizeselex$Factor == "Ret", ])
   if(proyears) {
     retLpro <- retL[, nyears] %>% matrix(nrow(retL), proyears)
     retL <- cbind(retL, retLpro)
@@ -613,7 +624,7 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
   retA <- Fdisc1 <- matrix(NA, nrow=n_age, ncol=nyears)
   Cat <- numeric(nyears)
   for(yy in 1:nyears) {
-    retA[,yy] <- colSums(retL[, yy] * ALK) # realized retention at-age
+    retA[,yy] <- colSums(keepL[, yy] * ALK) # realized retention at-age
     if(!is.numeric(retA[n_age,yy])) retA[n_age,yy] <- retA[n_age-1]
     Cat[yy] <- sum(meanN[yy, ] * Find[yy] * wt[yy, ] * retA[,yy] * V[, yy])
     
@@ -827,7 +838,7 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
         cpars_fleet$Data@CV_AddInd <- lapply(survey_ind, get_index) %>% lapply(getElement, "CV") %>% unlist() %>%
           array(c(nyears, length(survey_ind), 1)) %>% aperm(3:1)
 
-        cpars_fleet$Data@AddIndV <- lapply(survey_ind, get_V_from_Asel2, i = 1, replist = replist, mainyrs = mainyrs,
+        cpars_fleet$Data@AddIndV <- lapply(survey_ind, get_V_from_Asel2, i = i, replist = replist, mainyrs = mainyrs,
                                            maxage = Stock@maxage,rescale = TRUE) %>% lapply(function(x) x[, nyears]) %>%
           unlist() %>% array(c(n_age, length(survey_ind), 1)) %>% aperm(3:1)
 

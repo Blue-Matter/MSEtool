@@ -31,7 +31,7 @@ getDataList<-function(MSElist,mm){
 #'
 #' @return A hierarchical list of management recommendations (object class Rec), Fleets nested in Stocks
 #'
-applyMMP <- function(DataList, MP = NA, reps = 1, nsims = NA, silent = FALSE, parallel = snowfall::sfIsRunning()) {
+applyMMP <- function(DataList, MP = NA, reps = 1, nsims = NA, silent = FALSE, parallel = .sfIsRunning()) {
 
   if (is.na(nsims)) nsims <- length(DataList[[1]][[1]]@Mort)
   nMPs <- length(MP)

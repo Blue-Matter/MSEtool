@@ -617,9 +617,12 @@ CalcDistribution <- function(StockPars, FleetPars, SampCpars, nyears, maxF, plus
   initdist
 }
 
+# FALSE when snowfall is not installed
+.sfIsRunning <- function() requireNamespace('snowfall', quietly = TRUE) && snowfall::sfIsRunning()
+
 set_parallel <- function(parallel, msg=TRUE) {
   if (any(parallel)) {
-    if (snowfall::sfIsRunning()) {
+    if (.sfIsRunning()) {
       ncpus <- snowfall::sfCpus()
     } else {
       if (msg)
@@ -628,7 +631,7 @@ set_parallel <- function(parallel, msg=TRUE) {
       ncpus <- snowfall::sfCpus()
     }
   } else {
-    if (snowfall::sfIsRunning()) {
+    if (.sfIsRunning()) {
       if (msg)
         cli::cli_alert('Stopping parallel processing')
       snowfall::sfStop()
