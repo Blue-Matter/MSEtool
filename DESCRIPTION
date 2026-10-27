@@ -39,6 +39,7 @@ Suggests:
     callr,
     covr,
     crayon,
+    DLMtool,
     DT,
     furrr,
     future,
