@@ -168,9 +168,9 @@ CalcEquilibrium <- function(OM,
     list(inputs$RecParsList, SPRList, inputs$RelRecFunList),
     \(RecPars, SPR, RelRecFun) {
       
-      sims  <- seq_len(dim(SPR)['Sim'])
-      years <- seq_len(dim(SPR)['Year'])
-      fs    <- seq_len(dim(SPR)['F'])
+      sims  <- seq_len(Dim(SPR)['Sim'])
+      years <- seq_len(Dim(SPR)['Year'])
+      fs    <- seq_len(Dim(SPR)['F'])
       
       grid <- expand.grid(sim = sims, year = years, f = fs,
                           stringsAsFactors = FALSE)

@@ -43,7 +43,7 @@ ASK <- CalcAgeSizeKey(
   Dist = Dist
 )
 
-dim(ASK)
+Dim(ASK)
 
 
 # Inspect first simulation, first year

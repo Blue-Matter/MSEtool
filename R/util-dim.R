@@ -1,11 +1,9 @@
-#' Dimensions of an Object
+#' Named Dimensions of an Object
 #'
-#' Retrieve or set the dimension of an object.
+#' A wrapper for `base::dim` that names the returned dimensions by the
+#' dimension names (if applicable).
 #'
 #' @param x an R object, for example a matrix, array or data frame.
-#'
-#' This is a wrapper for `base::dim`. The only difference is that this function
-#' prints the dimension names (if applicable)
 #'
 #' @return An integer vector of dimensions, named by the dimension names when
 #'   `x` has them, or `NULL` if `x` has no dimensions.
@@ -19,8 +17,8 @@
 #'     Year = c(2025, 2026)
 #'   )
 #' )
-#' dim(MyArray)
-dim <- function(x) {
+#' Dim(MyArray)
+Dim <- function(x) {
   dnames <- dimnames(x) |> names()
   d <- base::dim(x)
   if (is.null(dnames)) {

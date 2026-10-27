@@ -575,7 +575,7 @@ reference:
   - CheckOM
   - CheckMSERun
   - CheckPackage
-  - dim
+  - Dim
   - EmptyObject
   - GenResiduals
   - GetMetaData

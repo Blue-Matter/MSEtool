@@ -22,7 +22,7 @@ test_that("PopulateImpSlot treats a scalar Mean as a literal fixed value, not a 
   sl <- ImpSlot(Mean = 0.9, SD = 0.05)
   out <- PopulateImpSlot(sl, nSim = 4, Years = 2020:2024)
   expect_equal(as.numeric(out@Mean), rep(0.9, 4))
-  expect_equal(dim(out@Error), c(Sim = 4L, Year = 5L))
+  expect_equal(Dim(out@Error), c(Sim = 4L, Year = 5L))
   expect_equal(mean(as.numeric(out@Error)), 0.9, tolerance = 0.05)
 })
 
@@ -73,14 +73,14 @@ test_that(".CombineEffortByCompliance ignores complexes with no TAC", {
 test_that("PopulateImpSlot expands a scalar Compliance to [Sim x Year], constant across sims/years", {
   sl <- ImpSlot(Compliance = 0.7)
   out <- PopulateImpSlot(sl, nSim = 3, Years = 2020:2022)
-  expect_equal(dim(out@Compliance), c(Sim = 3L, Year = 3L))
+  expect_equal(Dim(out@Compliance), c(Sim = 3L, Year = 3L))
   expect_true(all(out@Compliance == 0.7))
 })
 
 test_that("PopulateImpSlot samples a length-2 Compliance once per sim, constant across years", {
   sl <- ImpSlot(Compliance = c(0.2, 0.8))
   out <- PopulateImpSlot(sl, nSim = 4, Years = 2020:2023)
-  expect_equal(dim(out@Compliance), c(Sim = 4L, Year = 4L))
+  expect_equal(Dim(out@Compliance), c(Sim = 4L, Year = 4L))
   # constant across years within a sim
   expect_true(all(apply(out@Compliance, 1, function(x) length(unique(x))) == 1))
   # varies across sims (not all identical)
@@ -92,7 +92,7 @@ test_that("PopulateImpSlot forward-fills a breakpoint Compliance array across Ye
   arr <- array(c(0.5, 0.9), dim = c(1, 2), dimnames = list(Sim = 1, Year = c(2020, 2022)))
   sl <- ImpSlot(Compliance = arr)
   out <- PopulateImpSlot(sl, nSim = 2, Years = 2020:2023)
-  expect_equal(dim(out@Compliance), c(Sim = 2L, Year = 4L))
+  expect_equal(Dim(out@Compliance), c(Sim = 2L, Year = 4L))
   expect_equal(as.numeric(out@Compliance["1", c("2020", "2021")]), c(0.5, 0.5))
   expect_equal(as.numeric(out@Compliance["1", c("2022", "2023")]), c(0.9, 0.9))
   # broadcast to sim 2

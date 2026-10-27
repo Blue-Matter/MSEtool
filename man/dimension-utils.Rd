@@ -58,13 +58,13 @@ dim(Arr)
 # ---- AddDimension ----
 
 # Append an Area dimension at the end (default pos)
-AddDimension(Arr, 'Area') |> dim()
+AddDimension(Arr, 'Area') |> Dim()
 
 # Append an Area dimension with two values
-AddDimension(Arr, 'Area', val = 1:2) |> dim()
+AddDimension(Arr, 'Area', val = 1:2) |> Dim()
 
 # Adding a dimension that already exists returns the array unchanged
-AddDimension(Arr, 'Sim') |> dim()
+AddDimension(Arr, 'Sim') |> Dim()
 
 # ---- DropDimension ----
 

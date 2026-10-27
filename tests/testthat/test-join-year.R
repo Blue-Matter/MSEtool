@@ -10,7 +10,7 @@ test_that("JoinYear joins arrays along the Year dimension", {
   a <- array(1:2, dim = c(1, 2), dimnames = list(Sim = 1, Year = c("2001", "2002")))
   b <- array(3:4, dim = c(1, 2), dimnames = list(Sim = 1, Year = c("2003", "2004")))
   out <- JoinYear(a, b)
-  expect_equal(dim(out), c(Sim = 1L, Year = 4L))
+  expect_equal(Dim(out), c(Sim = 1L, Year = 4L))
   expect_equal(as.numeric(out), 1:4)
 })
 
@@ -20,7 +20,7 @@ test_that("JoinYear falls back to object2 when object1 has zero Year rows", {
   empty <- array(numeric(0), dim = c(1, 0), dimnames = list(Sim = 1, Year = character(0)))
   full  <- array(1:3, dim = c(1, 3), dimnames = list(Sim = 1, Year = c("2001", "2002", "2003")))
   out <- JoinYear(empty, full)
-  expect_equal(dim(out), c(Sim = 1L, Year = 3L))
+  expect_equal(Dim(out), c(Sim = 1L, Year = 3L))
   expect_equal(as.numeric(out), 1:3)
 })
 
@@ -51,7 +51,7 @@ test_that("JoinYear recurses through lists element-wise", {
   a <- list(x = array(1, dim = c(1, 1), dimnames = list(Sim = 1, Year = "2001")))
   b <- list(x = array(2, dim = c(1, 1), dimnames = list(Sim = 1, Year = "2002")))
   out <- JoinYear(a, b)
-  expect_equal(dim(out$x), c(Sim = 1L, Year = 2L))
+  expect_equal(Dim(out$x), c(Sim = 1L, Year = 2L))
 })
 
 test_that("JoinYear does not duplicate identical non-year numeric vectors", {

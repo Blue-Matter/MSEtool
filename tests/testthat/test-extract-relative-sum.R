@@ -36,7 +36,7 @@ test_that(".SubsetStockDim subsets the named Stock dimension, preserving other d
   arr <- array(1:24, dim = c(Sim = 2, Stock = 3, Year = 4),
                dimnames = list(Sim = 1:2, Stock = c('A', 'B', 'C'), Year = 2020:2023))
   sub <- MSEtool:::.SubsetStockDim(arr, c('A', 'C'))
-  expect_equal(dim(sub), c(Sim = 2, Stock = 2, Year = 4))
+  expect_equal(Dim(sub), c(Sim = 2, Stock = 2, Year = 4))
   expect_equal(dimnames(sub)$Stock, c('A', 'C'))
   expect_equal(sub[, 'A', ], arr[, 'A', ])
 })

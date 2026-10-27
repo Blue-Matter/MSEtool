@@ -3,7 +3,7 @@ test_that("ArrayMultiply/ArrayDivide/ArraySum/ArraySubtract broadcast by dimname
   b <- array(c(1, 1), dim = c(2, 1), dimnames = list(Sim = 1:2, Year = 2001))
 
   out_mult <- ArrayMultiply(a, b)
-  expect_equal(dim(out_mult), c(Sim = 2L, Year = 2L))
+  expect_equal(Dim(out_mult), c(Sim = 2L, Year = 2L))
   expect_equal(as.numeric(out_mult), as.numeric(a))
 
   out_sum <- ArraySum(a, b)
@@ -38,7 +38,7 @@ test_that("ArrayMultiply gives the same result via the fast and slow (extend) pa
   fast_result <- ArrayMultiply(a, b_same)
   slow_result <- MSEtool:::.ArrayOperation(a, b_diff)
   # sanity: the slow path still broadcasts correctly on genuinely mismatched dims
-  expect_equal(dim(slow_result), c(Sim = 2L, Year = 2L))
+  expect_equal(Dim(slow_result), c(Sim = 2L, Year = 2L))
   expect_equal(as.numeric(fast_result), as.numeric(a) * as.numeric(b_same))
 })
 
@@ -47,7 +47,7 @@ test_that("ArrayMultiply broadcasts a Fleet dimension (previously errored)", {
   b <- array(c(10, 100), dim = c(Sim = 2, Fleet = 1), dimnames = list(Sim = 1:2, Fleet = 1))
 
   out <- ArrayMultiply(a, b)
-  expect_equal(dim(out), c(Sim = 2L, Fleet = 4L))
+  expect_equal(Dim(out), c(Sim = 2L, Fleet = 4L))
   expect_equal(as.numeric(out), as.numeric(a) * as.numeric(b)[c(1, 2, 1, 2, 1, 2, 1, 2)])
 })
 
@@ -58,7 +58,7 @@ test_that("ArraySum broadcasts a Stock dimension with character labels (previous
              dimnames = list(Sim = 1:2, Stock = "north"))
 
   out <- ArraySum(a, b)
-  expect_equal(dim(out), c(Sim = 2L, Stock = 3L))
+  expect_equal(Dim(out), c(Sim = 2L, Stock = 3L))
   expect_equal(dimnames(out)$Stock, c("north", "south", "east"))
   expect_equal(as.numeric(out), as.numeric(a) + as.numeric(b)[c(1, 2, 1, 2, 1, 2)])
 })
@@ -70,7 +70,7 @@ test_that("ArrayMultiply broadcasts two dimensions simultaneously (Sim on one si
              dimnames = list(Sim = 1, Age = 1:4, Year = 2020:2021))
 
   out <- ArrayMultiply(a, b)
-  expect_equal(dim(out), c(Sim = 3L, Age = 4L, Year = 2L))
+  expect_equal(Dim(out), c(Sim = 3L, Age = 4L, Year = 2L))
 
   expected <- array(NA_real_, dim = c(3, 4, 2))
   for (s in 1:3) for (ag in 1:4) for (y in 1:2)
@@ -103,7 +103,7 @@ test_that("ArrayDivide zeroes division by zero and keeps NA inputs", {
 test_that("AddDimension attaches dimnames even when input array is unnamed", {
   x <- array(5, dim = 1)
   out <- AddDimension(x, "Year", 2027, pos = 1)
-  expect_equal(dim(out), c(Year = 1L, 1L))
+  expect_equal(Dim(out), c(Year = 1L, 1L))
   expect_equal(dimnames(out)$Year, "2027")
 })
 
@@ -118,13 +118,13 @@ test_that("DropDimension removes a named dimension", {
   x <- array(1:4, dim = c(2, 2), dimnames = list(Sim = 1:2, Year = 2001:2002))
   out <- DropDimension(x, "Year", warn = FALSE)
   expect_equal(names(dimnames(out)), "Sim")
-  expect_equal(dim(out), c(Sim = 2L))
+  expect_equal(Dim(out), c(Sim = 2L))
 })
 
 test_that("ExtendSims replicates a length-1 Sim dimension", {
   x <- array(0.5, dim = 1, dimnames = list(Sim = "1"))
   out <- ExtendSims(x, 3)
-  expect_equal(dim(out), c(Sim = 3L))
+  expect_equal(Dim(out), c(Sim = 3L))
   expect_equal(as.numeric(out), rep(0.5, 3))
 })
 
@@ -209,7 +209,7 @@ test_that("List2Array takes the identical-dims fast path when all elements alrea
   b <- array(5:8, dim = c(2, 2), dimnames = list(Sim = 1:2, Year = 2001:2002))
   out <- List2Array(list(A = a, B = b), name = "Fleet")
 
-  expect_equal(dim(out), c(Sim = 2L, Year = 2L, Fleet = 2L))
+  expect_equal(Dim(out), c(Sim = 2L, Year = 2L, Fleet = 2L))
   expect_equal(names(dimnames(out)), c("Sim", "Year", "Fleet"))
   expect_equal(as.numeric(out[, , "A"]), as.numeric(a))
   expect_equal(as.numeric(out[, , "B"]), as.numeric(b))
@@ -224,8 +224,8 @@ test_that("List2Array gives the same result whether elements already conform or 
   out_fast <- List2Array(list(A = a, B = b_same), name = "Fleet")
   out_slow <- List2Array(list(A = a, B = b_diff), name = "Fleet")
 
-  expect_equal(dim(out_fast), c(Sim = 2L, Year = 2L, Fleet = 2L))
-  expect_equal(dim(out_slow), c(Sim = 2L, Year = 2L, Fleet = 2L))
+  expect_equal(Dim(out_fast), c(Sim = 2L, Year = 2L, Fleet = 2L))
+  expect_equal(Dim(out_slow), c(Sim = 2L, Year = 2L, Fleet = 2L))
   # b_diff's single Year (2001) is forward-filled to 2002, matching its own value
   expect_equal(out_slow[, "2001", "B"], b_diff[, "2001"])
   expect_equal(out_slow[, "2002", "B"], b_diff[, "2001"])

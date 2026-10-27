@@ -211,7 +211,7 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
   }
 
   FDistributionTotal <- SumOverFleet(FDistribution)  # [Sim, Year]
-  nYear <- dim(FDistributionTotal)[['Year']]
+  nYear <- Dim(FDistributionTotal)[['Year']]
 
   if (nYear > 1L) {
     # Seasonal: normalise by the peak-season total so apicalF = peak-season F.
