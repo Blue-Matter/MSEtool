@@ -163,7 +163,7 @@ Extend <- function(array,
   }
 
   n  <- length(target_values)
-  d  <- dim(array)
+  d  <- base::dim(array)
   dn <- dimnames(array)
 
   if (is.null(dn) || !dimname %in% names(dn)) return(array)
