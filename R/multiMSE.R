@@ -1712,6 +1712,8 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         FleetPars[[p]][[f]]$retL_P <- HistFleetPars[[p]][[f]]$retL_real
         # Discard ratio for projections
         FleetPars[[p]][[f]]$DR_P <- HistFleetPars[[p]][[f]]$DR
+        FleetPars[[p]][[f]]$Fdisc_P <- HistFleetPars[[p]][[f]]$Fdisc_array1
+        FleetPars[[p]][[f]]$SelRetBase <- init_SelRetBase(HistFleetPars[[p]][[f]], nsim)
 
         FleetPars[[p]][[f]]$FM_P <- array(NA,
                                           dim = c(nsim, n_age, proyears, nareas))
@@ -1954,6 +1956,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       for(p in 1:np)  {
         for(f in 1:nf){
           MPRecs_A[[p]][[f]]<-runMP[[1]][[1]]
+          MPRecs_A[[p]][[f]]$Misc <- runMP[[2]]@Misc[seq_len(nsim)] # Rec@Misc by simulation
           MPRecs_A[[p]][[f]]$TAC<-runMP[[1]][[1]]$TAC*MOM@Allocation[[p]][,f]*
             Stock_Alloc[,p,1]
           MPRecs_A[[p]][[f]]$Effort<-runMP[[1]][[1]]$Effort*MOM@Efactor[[p]][,f]
@@ -2002,6 +2005,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
           for(f in 1:nf){
             MPRecs_A[[p]][[f]]<-runMP[[1]][[1]]
+            MPRecs_A[[p]][[f]]$Misc <- runMP[[2]]@Misc[seq_len(nsim)] # Rec@Misc by simulation
             MPRecs_A[[p]][[f]]$TAC<-matrix(TAC_A[,p,f],nrow=1) # copy allocated TAC
             MPRecs_A[[p]][[f]]$Effort<-matrix(TAE_A[,p,f],nrow=1)
             # This next line is to make the NULL effort recommendations of an
@@ -2029,6 +2033,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                                       parallel = parallel_MPs[match(MPrefs[mm,f,p], names(parallel_MPs))],
                                       silent=TRUE)  # Apply MP
             MPRecs_A[[p]][[f]]<-runMP[[1]][[1]]
+            MPRecs_A[[p]][[f]]$Misc <- runMP[[2]]@Misc[seq_len(nsim)] # Rec@Misc by simulation
             Data_p_A[[p]][[f]]<-runMP[[2]]
             Data_p_A[[p]][[f]]@TAC <- MPRecs_A[[p]][[f]]$TAC
           }
@@ -2158,6 +2163,15 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         
         VF[,p,f,,]<- MPCalcs_MF[[f]]$V_P
         FleetPars[[p]][[f]]$SLarray_P <- MPCalcs_MF[[f]]$SLarray_P # vulnerable-at-length
+        FleetPars[[p]][[f]]$LR5_P <- MPCalcs_MF[[f]]$LR5_P
+        FleetPars[[p]][[f]]$LFR_P <- MPCalcs_MF[[f]]$LFR_P
+        FleetPars[[p]][[f]]$Rmaxlen_P <- MPCalcs_MF[[f]]$Rmaxlen_P
+        FleetPars[[p]][[f]]$L5_P <- MPCalcs_MF[[f]]$L5_P
+        FleetPars[[p]][[f]]$LFS_P <- MPCalcs_MF[[f]]$LFS_P
+        FleetPars[[p]][[f]]$Vmaxlen_P <- MPCalcs_MF[[f]]$Vmaxlen_P
+        FleetPars[[p]][[f]]$Fdisc_P <- MPCalcs_MF[[f]]$Fdisc_P
+        FleetPars[[p]][[f]]$DR_P <- MPCalcs_MF[[f]]$DR_P
+        FleetPars[[p]][[f]]$SelRetBase <- MPCalcs_MF[[f]]$SelRetBase
         FMa[,p,f,mm,y] <- MPCalcs_MF[[f]]$Ftot # Total fishing mortality (by stock & fleet)
       }
       MPCalcs_list[[p]] <- MPCalcs_MF
@@ -2436,12 +2450,10 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       CBret_P <- array(0, dim=c(nsim, np, nf, n_age, proyears, nareas))
       for (p in 1:np) {
         for(f in 1:nf) {
-          if (!is.null(control$TAC)) {
-            if (control$TAC=="removals") {
-              CBret_P[,p,f,,,] <-FleetPars[[p]][[f]]$CB_P    
-            }
+          if (identical(control$TAC, "removals")) {
+            CBret_P[,p,f,,,] <-FleetPars[[p]][[f]]$CB_P
           } else {
-            CBret_P[,p,f,,,] <-FleetPars[[p]][[f]]$CB_Pret  
+            CBret_P[,p,f,,,] <-FleetPars[[p]][[f]]$CB_Pret
           }
         }
       }
@@ -2558,6 +2570,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
           
           for(p in 1:np) for(f in 1:nf){
             MPRecs_A[[p]][[f]] <- runMP[[1]][[1]]
+            MPRecs_A[[p]][[f]]$Misc <- runMP[[2]]@Misc[seq_len(nsim)] # Rec@Misc by simulation
             MPRecs_A[[p]][[f]]$TAC <- runMP[[1]][[1]]$TAC *
               MOM@Allocation[[p]][,f] * Stock_Alloc[,p,1]
             MPRecs_A[[p]][[f]]$Effort <- runMP[[1]][[1]]$Effort * MOM@Efactor[[p]][,f]
@@ -2603,6 +2616,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
               for(f in 1:nf){
                 MPRecs_A[[p]][[f]]<-runMP[[1]][[1]]
+                MPRecs_A[[p]][[f]]$Misc <- runMP[[2]]@Misc[seq_len(nsim)] # Rec@Misc by simulation
                 MPRecs_A[[p]][[f]]$TAC<-matrix(TAC_A[,p,f],nrow=1) # Just pass the allocated TAC
                 MPRecs_A[[p]][[f]]$Effort<-matrix(TAE_A[,p,f],nrow=1)
                 # This next line is to make the NULL effort recommendations of
@@ -2629,6 +2643,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                                  parallel = parallel_MPs[match(MPrefs[mm,f,p], names(parallel_MPs))],
                                  reps = MOM@reps, silent=TRUE)  # Apply MP
                 MPRecs_A[[p]][[f]]<-runMP[[1]][[1]]
+                MPRecs_A[[p]][[f]]$Misc <- runMP[[2]]@Misc[seq_len(nsim)] # Rec@Misc by simulation
                 Data_p_A[[p]][[f]]<-runMP[[2]]
                 Data_p_A[[p]][[f]]@TAC <- MPRecs_A[[p]][[f]]$TAC
               }
@@ -2702,6 +2717,15 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
             
             VF[,p,f,,]<- MPCalcs_MF[[f]]$V_P
             FleetPars[[p]][[f]]$SLarray_P <- MPCalcs_MF[[f]]$SLarray_P # vulnerable-at-length
+            FleetPars[[p]][[f]]$LR5_P <- MPCalcs_MF[[f]]$LR5_P
+            FleetPars[[p]][[f]]$LFR_P <- MPCalcs_MF[[f]]$LFR_P
+            FleetPars[[p]][[f]]$Rmaxlen_P <- MPCalcs_MF[[f]]$Rmaxlen_P
+            FleetPars[[p]][[f]]$L5_P <- MPCalcs_MF[[f]]$L5_P
+            FleetPars[[p]][[f]]$LFS_P <- MPCalcs_MF[[f]]$LFS_P
+            FleetPars[[p]][[f]]$Vmaxlen_P <- MPCalcs_MF[[f]]$Vmaxlen_P
+            FleetPars[[p]][[f]]$Fdisc_P <- MPCalcs_MF[[f]]$Fdisc_P
+            FleetPars[[p]][[f]]$DR_P <- MPCalcs_MF[[f]]$DR_P
+            FleetPars[[p]][[f]]$SelRetBase <- MPCalcs_MF[[f]]$SelRetBase
             FMa[,p,f,mm,y] <- MPCalcs_MF[[f]]$Ftot # Total fishing mortality (by stock & fleet)
             
             #MPCalcs_list[[p]][[f]] <- MPCalcs
@@ -2768,6 +2792,15 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
             
             VF[,p,f,,]<- MPCalcs_MF[[f]]$V_P
             FleetPars[[p]][[f]]$SLarray_P <- MPCalcs_MF[[f]]$SLarray_P # vulnerable-at-length
+            FleetPars[[p]][[f]]$LR5_P <- MPCalcs_MF[[f]]$LR5_P
+            FleetPars[[p]][[f]]$LFR_P <- MPCalcs_MF[[f]]$LFR_P
+            FleetPars[[p]][[f]]$Rmaxlen_P <- MPCalcs_MF[[f]]$Rmaxlen_P
+            FleetPars[[p]][[f]]$L5_P <- MPCalcs_MF[[f]]$L5_P
+            FleetPars[[p]][[f]]$LFS_P <- MPCalcs_MF[[f]]$LFS_P
+            FleetPars[[p]][[f]]$Vmaxlen_P <- MPCalcs_MF[[f]]$Vmaxlen_P
+            FleetPars[[p]][[f]]$Fdisc_P <- MPCalcs_MF[[f]]$Fdisc_P
+            FleetPars[[p]][[f]]$DR_P <- MPCalcs_MF[[f]]$DR_P
+            FleetPars[[p]][[f]]$SelRetBase <- MPCalcs_MF[[f]]$SelRetBase
             FMa[,p,f,mm,y] <- MPCalcs_MF[[f]]$Ftot # Total fishing mortality (by stock & fleet)
 
           } # end of fleets

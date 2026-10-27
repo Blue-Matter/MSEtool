@@ -515,10 +515,7 @@ setMethod("initialize", "Fleet", function(.Object, file = NA, dec=c(".", ",")) {
 #' ~~ Methods for Function \code{initialize} ~~
 #'
 #' @name initialize-methods
-#' @aliases initialize-methods initialize,Data-method
-#' initialize,Fleet-method initialize,MSE-method initialize,Obs-method
-#' initialize,OM-method initialize,Stock-method initialize
-#' initialize,Fease-method initialize,DLM_general-method
+#' @aliases initialize-methods initialize,Data-method initialize,Fleet-method initialize,MSE-method initialize,Obs-method initialize,OM-method initialize,Stock-method initialize initialize,Fease-method initialize,DLM_general-method
 #' @docType methods
 #' @section Methods: \describe{
 #'
@@ -1743,7 +1740,12 @@ setMethod("summary",
 #' @slot Vmaxlen selection of the largest size class - fraction between 0 and 1
 #' @slot Fdisc fraction of discarded fish that die - fraction between 0 and 1
 #' @slot DR Discard rate - the fraction of caught fish that are discarded
-#' @slot Misc An empty list that can be used to store information and pass on to MPs in future
+#' @slot Misc An empty list that can be used to store information and pass on to MPs in future.
+#' Selectivity-at-age and retention-at-age (vectors of length `maxage+1`) for the projection can be set directly
+#' with `Misc$V_age` and `Misc$R_age`, and discard mortality-at-age with `Misc$Fdisc`. These replace the selectivity
+#' and retention parameters in the other slots. The discard ratio is applied to `Misc$R_age`, and the discard
+#' mortality of the operating model is used if `Misc$Fdisc` is not provided. The at-length curves used to generate
+#' length composition data are not updated.
 #' @author A. Hordyk
 #' @keywords classes
 setClass("Rec", representation(

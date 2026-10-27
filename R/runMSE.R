@@ -1286,6 +1286,7 @@ Project <- function (Hist=NULL,
     retL_P <- FleetPars$retL_real # retention at length array - projections
     Fdisc_P <- FleetPars$Fdisc_array1 # Discard mortality for projections - by age and year
     DR_P <- FleetPars$DR_y # Discard ratio for projections by year
+    SelRetBase <- init_SelRetBase(FleetPars, nsim)
     LatentEff_MP <- LatentEff # Historical latent effort
 
     # projection arrays
@@ -1363,6 +1364,7 @@ Project <- function (Hist=NULL,
                      parallel = parallel_MPs[mm])  # Apply MP
 
     MPRecs <- runMP[[1]][[1]] # MP recommendations
+    MPRecs$Misc <- runMP[[2]]@Misc[seq_len(nsim)] # Rec@Misc by simulation
     Data_p <- runMP[[2]] # Data object object with saved info from MP
     Data_p@TAC <- MPRecs$TAC
 
@@ -1406,7 +1408,7 @@ Project <- function (Hist=NULL,
                               V_P, V_P_real, V_P_real_2,
                               Fdisc_P, DR_P, FM_P,
                               FM_Pret, Z_P, CB_P, CB_Pret, Effort_pot,
-                              StockPars, FleetPars, ImpPars, control=control)
+                              StockPars, FleetPars, ImpPars, control=control, SelRetBase=SelRetBase)
 
     TACa[, mm, y] <- MPCalcs$TACrec # recommended TAC
     LastSpatial <- MPCalcs$Si
@@ -1440,6 +1442,7 @@ Project <- function (Hist=NULL,
     Vmaxlen_P <- MPCalcs$Vmaxlen_P
     Fdisc_P <- MPCalcs$Fdisc_P
     DR_P <- MPCalcs$DR_P
+    SelRetBase <- MPCalcs$SelRetBase
     
     # ---- Account for timing of spawning (if spawn_time_frac >0) ----
     N_Psp <- N_P
@@ -1601,6 +1604,7 @@ Project <- function (Hist=NULL,
         runMP <- applyMP(Data=Data_MP, MPs = MPs[mm], reps = reps, silent=TRUE, 
                          parallel = parallel_MPs[mm])  # Apply MP
         MPRecs <- runMP[[1]][[1]] # MP recommendations
+        MPRecs$Misc <- runMP[[2]]@Misc[seq_len(nsim)] # Rec@Misc by simulation
         Data_p <- runMP[[2]] # Data object object with saved info from MP
         Data_p@TAC <- MPRecs$TAC
       }
@@ -1625,7 +1629,7 @@ Project <- function (Hist=NULL,
                                 V_P, V_P_real, V_P_real_2,
                                 Fdisc_P, DR_P, FM_P,
                                 FM_Pret, Z_P, CB_P, CB_Pret, Effort_pot,
-                                StockPars, FleetPars, ImpPars, control=control)
+                                StockPars, FleetPars, ImpPars, control=control, SelRetBase=SelRetBase)
      
       LastSpatial <- MPCalcs$Si
       LastAllocat <- MPCalcs$Ai
@@ -1657,6 +1661,7 @@ Project <- function (Hist=NULL,
       Vmaxlen_P <- MPCalcs$Vmaxlen_P
       Fdisc_P <- MPCalcs$Fdisc_P
       DR_P <- MPCalcs$DR_P
+      SelRetBase <- MPCalcs$SelRetBase
       
       
       # ---- Account for timing of spawning (if spawn_time_frac >0) ----

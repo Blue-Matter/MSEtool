@@ -1844,10 +1844,10 @@ SampleImpPars <- function(Imp, nsim=NULL, cpars=NULL, nyears=NULL, proyears=NULL
 #' 
 #' @section Control list:
 #' 
-#' A named list for `control`, for example, `OM@cpars$control <- list(TAC = "removals", CAL = "removals")`, can be
+#' A named list for `control`, for example, `OM@cpars$control <- list(TAC = "retained", CAL = "removals")`, can be
 #' specified to override default settings in the MSE simulation. Possible names in the `control` list are:
 #'
-#' - `TAC` Character, set to `"removals"` so that the TAC is applied to the sum of retained + discarded catch. Default only applies the TAC to the retained catch.
+#' - `TAC` Character, the catch that the TAC applies to. `"removals"` (default) applies the TAC to the retained catch plus dead discards. `"retained"` applies the TAC to the retained catch only, so that removals exceed the TAC when there are dead discards.
 #' - `CAL` Character, set to `"removals"` to sample the catch-at-length from retained + discarded catch. Default only samples from retained catch.
 #' - `D` Character, set to `"VB"` so that historical depletion `OM@D` corresponds to vulnerable biomass depletion (only used when `OM@cpars$qs = NULL`).
 #' - `optVB` Logical, set to `TRUE` so that historical depletion `OM@D` corresponds to vulnerable biomass depletion. Default sets depletion according to spawning biomasss when `OM@cpars$qs = NULL`.

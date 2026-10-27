@@ -45,7 +45,8 @@ CalcMPDynamics(
   FleetPars,
   ImpPars,
   checks = FALSE,
-  control = list()
+  control = list(),
+  SelRetBase = NULL
 )
 }
 \arguments{
@@ -107,7 +108,8 @@ MPs must either return a recommendation or no recommendation for every simulatio
 
 \item{V_P_real_2}{An array with dimensions \code{nsim}, \code{maxage} and \code{nyears+proyears}. \code{V_P_real} standardized to max 1}
 
-\item{Fdisc_P}{vector of length \code{nsim} with discard mortality. From \code{OM@Fdisc} but can be updated by MP (\code{Rec@Fdisc})}
+\item{Fdisc_P}{An array with dimensions \code{nsim}, \code{maxage} and \code{nyears+proyears} (or a vector of length \code{nsim}) with discard mortality.
+From \code{OM@Fdisc} but can be updated by MP (\code{Rec@Fdisc})}
 
 \item{DR_P}{A matrix with \code{nyears+proyears} rows and \code{nsim} columns with the fraction discarded.}
 
@@ -132,6 +134,9 @@ MPs must either return a recommendation or no recommendation for every simulatio
 \item{checks}{Logical. Run internal checks? Currently not used.}
 
 \item{control}{List of control parameters used internally.}
+
+\item{SelRetBase}{List of selectivity-at-length, retention-at-length, harvest slot and discard mortality-at-length
+before accounting for retention and discard mortality, returned by the previous call. Created from \code{FleetPars} if \code{NULL}.}
 }
 \value{
 A named list with updated population dynamics

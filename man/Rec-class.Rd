@@ -36,7 +36,12 @@ An object for storing the MP recommendations
 
 \item{\code{DR}}{Discard rate - the fraction of caught fish that are discarded}
 
-\item{\code{Misc}}{An empty list that can be used to store information and pass on to MPs in future}
+\item{\code{Misc}}{An empty list that can be used to store information and pass on to MPs in future.
+Selectivity-at-age and retention-at-age (vectors of length \code{maxage+1}) for the projection can be set directly
+with \code{Misc$V_age} and \code{Misc$R_age}, and discard mortality-at-age with \code{Misc$Fdisc}. These replace the selectivity
+and retention parameters in the other slots. The discard ratio is applied to \code{Misc$R_age}, and the discard
+mortality of the operating model is used if \code{Misc$Fdisc} is not provided. The at-length curves used to generate
+length composition data are not updated.}
 }}
 
 \section{Objects from the Class}{

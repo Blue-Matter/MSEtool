@@ -26,10 +26,10 @@ Valid custom parameters (cpars)
 \section{Control list}{
 
 
-A named list for \code{control}, for example, \code{OM@cpars$control <- list(TAC = "removals", CAL = "removals")}, can be
+A named list for \code{control}, for example, \code{OM@cpars$control <- list(TAC = "retained", CAL = "removals")}, can be
 specified to override default settings in the MSE simulation. Possible names in the \code{control} list are:
 \itemize{
-\item \code{TAC} Character, set to \code{"removals"} so that the TAC is applied to the sum of retained + discarded catch. Default only applies the TAC to the retained catch.
+\item \code{TAC} Character, the catch that the TAC applies to. \code{"removals"} (default) applies the TAC to the retained catch plus dead discards. \code{"retained"} applies the TAC to the retained catch only, so that removals exceed the TAC when there are dead discards.
 \item \code{CAL} Character, set to \code{"removals"} to sample the catch-at-length from retained + discarded catch. Default only samples from retained catch.
 \item \code{D} Character, set to \code{"VB"} so that historical depletion \code{OM@D} corresponds to vulnerable biomass depletion (only used when \code{OM@cpars$qs = NULL}).
 \item \code{optVB} Logical, set to \code{TRUE} so that historical depletion \code{OM@D} corresponds to vulnerable biomass depletion. Default sets depletion according to spawning biomasss when \code{OM@cpars$qs = NULL}.

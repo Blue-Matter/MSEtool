@@ -1,10 +1,26 @@
 The current version of the `MSEtool` package is available for download from [CRAN](https://CRAN.R-project.org/package=MSEtool).
 
-# MSEtool 3.7.6 - Development Version
+# MSEtool 3.7.6
+
+MSEtool 3.7.6 is the final release of the 3.x series.
 
 ## Fixes 
 - Fix issue where `MMSE` objects could not handle `multiHist` objects from earlier versions
 - Fix to generating CAL data
+- The SS3 import functions (`SS2OM`, `SS2MOM`, `SS2Data`, `SS2DataMOM`, etc.) access `r4ss::SS_output()` at run time. The CRAN version of `r4ss` does not export `SS_output`; these functions now stop with an error explaining how to install `r4ss` from r-universe (<https://r4ss.r-universe.dev>) or GitHub.
+- `SS2OM` no longer applies selectivity twice to retention. Multi-fleet OMs stored realized retention (selectivity x retention) in `cpars$retA` and `cpars$retL`, which were then multiplied by selectivity again, so retained catch was understated even when the SS3 model has no discards. Retention-at-length is now taken from the SS3 `Ret` factor instead of `Keep`.
+- Updated `OM@cpars$control$TAC` so that `"removals"` (default) applies the TAC to retained catch plus dead discards, and `"retained"` applies the TAC to the retained catch only. Previously only worked on multi-stock OMs.
+- MPs that changed retention (`LR5`, `LFR`, `Rmaxlen`, `HS`, `DR`, `Fdisc`) also rebuilt the projection selectivity-at-age from `L5`, `LFS` and `Vmaxlen`, replacing age-based selectivity from `cpars$V` (e.g., `SS2OM`, `RCM`) even when the MP did not change selectivity. Selectivity is now rebuilt only when `L5`, `LFS` or `Vmaxlen` change, and retention only when `LR5`, `LFR`, `Rmaxlen` or `HS` change. 
+- When an MP changed retention, the retention-at-age of the update year was used for all later projection years. Retention-at-age is now calculated for each year, consistent with selectivity-at-age.
+- Selectivity and retention-at-age provided in `Rec@Misc$V_age` and `Rec@Misc$R_age` were ignored in `runMSE` and `Project`, and in `multiMSE` for MPs of class `MP`. These are now used in the projections. The discard ratio and discard mortality of the OM are applied unless `Rec@Misc$Fdisc` is provided.
+- `multiMSE` now keeps selectivity and retention parameters set by an MP between management updates.
+- Under a TAC, projected retained catch in `Project` and `multiMSE` was scaled by the maximum of the realized selectivity curve, so retained catch was below removals whenever that maximum was below 1 (e.g., `SS2OM` sex-averaged selectivity, multi-fleet OMs). Retained F now uses the same scaling as removals. Effort-based MPs were not affected.
+- `SS2OM` with discards: when fleets are aggregated, the discard mortality of ages with no discards is now taken from the input discard mortality at that age instead of the mean across ages, and retention-at-age is now retained F divided by the sum of retained and discarded F.
+- `SS2Data` and `SS2OM` with `gender = 1:2` no longer fail when selecting growth parameters. `SS2OM` passes `gender` to `SS2Data`, and the selectivity of additional indices uses the requested sex(es), averaged across sexes.
+- `SS2MOM`: the selectivity of additional indices for the male stock now uses the male selectivity.
+- Internal function `SS_steepness` with `mean_h = FALSE` estimated steepness for only one simulation for SS3 stock-recruit relationships other than Beverton-Holt and Ricker.
+- Historical spatial closures (`MPA`) that close all areas no longer produce `NaN` effort distribution in the historical period.
+- `snowfall` moved from Depends to Suggests. Sequential runs no longer need `snowfall`; `setup()` gives an informative error when it is not installed. Call `library(snowfall)` to use `snowfall` functions such as `sfExport()` directly.
 
 # MSEtool 3.7.5
 
