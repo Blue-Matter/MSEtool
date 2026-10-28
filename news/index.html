@@ -36,17 +36,12 @@
 <p>MSEtool 3.7.6 is the final release of the 3.x series.</p>
 <div class="section level3">
 <h3 id="fixes-3-7-6">Fixes<a class="anchor" aria-label="anchor" href="#fixes-3-7-6"></a></h3>
-<ul><li>Fix issue where <code>MMSE</code> objects could not handle <code>multiHist</code> objects from earlier versions</li>
-<li>Fix to generating CAL data</li>
-<li>The SS3 import functions (<code>SS2OM</code>, <code>SS2MOM</code>, <code>SS2Data</code>, <code>SS2DataMOM</code>, etc.) access <code>r4ss::SS_output()</code> at run time. The CRAN version of <code>r4ss</code> does not export <code>SS_output</code>; these functions now stop with an error explaining how to install <code>r4ss</code> from r-universe (<a href="https://r4ss.r-universe.dev" class="external-link uri">https://r4ss.r-universe.dev</a>) or GitHub.</li>
+<ul><li>The SS3 import functions (<code>SS2OM</code>, <code>SS2MOM</code>, <code>SS2Data</code>, <code>SS2DataMOM</code>, etc.) access <code>r4ss::SS_output()</code> at run time. The CRAN version of <code>r4ss</code> does not export <code>SS_output</code>; these functions now stop with an error explaining how to install <code>r4ss</code> from r-universe (<a href="https://r4ss.r-universe.dev" class="external-link uri">https://r4ss.r-universe.dev</a>) or GitHub.</li>
 <li>
 <code>SS2OM</code> no longer applies selectivity twice to retention. Multi-fleet OMs stored realized retention (selectivity x retention) in <code>cpars$retA</code> and <code>cpars$retL</code>, which were then multiplied by selectivity again, so retained catch was understated even when the SS3 model has no discards. Retention-at-length is now taken from the SS3 <code>Ret</code> factor instead of <code>Keep</code>.</li>
 <li>Updated <code>OM@cpars$control$TAC</code> so that <code>"removals"</code> (default) applies the TAC to retained catch plus dead discards, and <code>"retained"</code> applies the TAC to the retained catch only. Previously only worked on multi-stock OMs.</li>
 <li>MPs that changed retention (<code>LR5</code>, <code>LFR</code>, <code>Rmaxlen</code>, <code>HS</code>, <code>DR</code>, <code>Fdisc</code>) also rebuilt the projection selectivity-at-age from <code>L5</code>, <code>LFS</code> and <code>Vmaxlen</code>, replacing age-based selectivity from <code>cpars$V</code> (e.g., <code>SS2OM</code>, <code>RCM</code>) even when the MP did not change selectivity. Selectivity is now rebuilt only when <code>L5</code>, <code>LFS</code> or <code>Vmaxlen</code> change, and retention only when <code>LR5</code>, <code>LFR</code>, <code>Rmaxlen</code> or <code>HS</code> change.</li>
-<li>When an MP changed retention, the retention-at-age of the update year was used for all later projection years. Retention-at-age is now calculated for each year, consistent with selectivity-at-age.</li>
 <li>Selectivity and retention-at-age provided in <code>Rec@Misc$V_age</code> and <code>Rec@Misc$R_age</code> were ignored in <code>runMSE</code> and <code>Project</code>, and in <code>multiMSE</code> for MPs of class <code>MP</code>. These are now used in the projections. The discard ratio and discard mortality of the OM are applied unless <code>Rec@Misc$Fdisc</code> is provided.</li>
-<li>
-<code>multiMSE</code> now keeps selectivity and retention parameters set by an MP between management updates.</li>
 <li>Under a TAC, projected retained catch in <code>Project</code> and <code>multiMSE</code> was scaled by the maximum of the realized selectivity curve, so retained catch was below removals whenever that maximum was below 1 (e.g., <code>SS2OM</code> sex-averaged selectivity, multi-fleet OMs). Retained F now uses the same scaling as removals. Effort-based MPs were not affected.</li>
 <li>
 <code>SS2OM</code> with discards: when fleets are aggregated, the discard mortality of ages with no discards is now taken from the input discard mortality at that age instead of the mean across ages, and retention-at-age is now retained F divided by the sum of retained and discarded F.</li>
@@ -58,6 +53,8 @@
 <li>Historical spatial closures (<code>MPA</code>) that close all areas no longer produce <code>NaN</code> effort distribution in the historical period.</li>
 <li>
 <code>snowfall</code> moved from Depends to Suggests. Sequential runs no longer need <code>snowfall</code>; <code><a href="../reference/setup.html">setup()</a></code> gives an informative error when it is not installed. Call <code><a href="https://rdrr.io/r/base/library.html" class="external-link">library(snowfall)</a></code> to use <code>snowfall</code> functions such as <code>sfExport()</code> directly.</li>
+<li>Fix issue where <code>MMSE</code> objects could not handle <code>multiHist</code> objects from earlier versions</li>
+<li>Fix to generating CAL data</li>
 </ul></div>
 </div>
     <div class="section level2">

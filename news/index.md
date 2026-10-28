@@ -6,9 +6,6 @@ MSEtool 3.7.6 is the final release of the 3.x series.
 
 ### Fixes
 
-- Fix issue where `MMSE` objects could not handle `multiHist` objects
-  from earlier versions
-- Fix to generating CAL data
 - The SS3 import functions (`SS2OM`, `SS2MOM`, `SS2Data`, `SS2DataMOM`,
   etc.) access `r4ss::SS_output()` at run time. The CRAN version of
   `r4ss` does not export `SS_output`; these functions now stop with an
@@ -30,16 +27,11 @@ MSEtool 3.7.6 is the final release of the 3.x series.
   (e.g., `SS2OM`, `RCM`) even when the MP did not change selectivity.
   Selectivity is now rebuilt only when `L5`, `LFS` or `Vmaxlen` change,
   and retention only when `LR5`, `LFR`, `Rmaxlen` or `HS` change.
-- When an MP changed retention, the retention-at-age of the update year
-  was used for all later projection years. Retention-at-age is now
-  calculated for each year, consistent with selectivity-at-age.
 - Selectivity and retention-at-age provided in `Rec@Misc$V_age` and
   `Rec@Misc$R_age` were ignored in `runMSE` and `Project`, and in
   `multiMSE` for MPs of class `MP`. These are now used in the
   projections. The discard ratio and discard mortality of the OM are
   applied unless `Rec@Misc$Fdisc` is provided.
-- `multiMSE` now keeps selectivity and retention parameters set by an MP
-  between management updates.
 - Under a TAC, projected retained catch in `Project` and `multiMSE` was
   scaled by the maximum of the realized selectivity curve, so retained
   catch was below removals whenever that maximum was below 1 (e.g.,
@@ -67,6 +59,9 @@ MSEtool 3.7.6 is the final release of the 3.x series.
   informative error when it is not installed. Call
   [`library(snowfall)`](https://rdrr.io/r/base/library.html) to use
   `snowfall` functions such as `sfExport()` directly.
+- Fix issue where `MMSE` objects could not handle `multiHist` objects
+  from earlier versions
+- Fix to generating CAL data
 
 ## MSEtool 3.7.5
 
