@@ -488,5 +488,6 @@ Collate:
     'zz_simulate-OM.R'
     'zz_spatial_targ_opt.R'
     'zz_utils.R'
+    'zzz.R'
 Config/roxygen2/version: 8.1.0
 Config/testthat/edition: 3

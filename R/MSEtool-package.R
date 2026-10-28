@@ -1,3 +1,7 @@
+#' @section Startup message:
+#' Attaching MSEtool, directly or with `library(openMSE)`, prints a short
+#' message about Blue Matter Science. Hide it with
+#' [suppressPackageStartupMessages()] or `options(openMSE.quiet = TRUE)`.
 #' @keywords internal
 "_PACKAGE"
 

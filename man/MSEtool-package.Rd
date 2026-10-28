@@ -10,6 +10,13 @@
 
 Development, simulation testing, and implementation of management procedures for fisheries (see Carruthers & Hordyk (2018) \doi{10.1111/2041-210X.13081}).
 }
+\section{Startup message}{
+
+Attaching MSEtool, directly or with \code{library(openMSE)}, prints a short
+message about Blue Matter Science. Hide it with
+\code{\link[=suppressPackageStartupMessages]{suppressPackageStartupMessages()}} or \code{options(openMSE.quiet = TRUE)}.
+}
+
 \seealso{
 Useful links:
 \itemize{
