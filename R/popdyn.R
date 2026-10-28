@@ -790,10 +790,21 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
     # ratio <- actualremovals/retained # ratio of actual removals to retained catch
     # 
     # Effort relative to last historical with this catch
-    Effort_req <- Ftot/(FleetPars$FinF * FleetPars$qs*FleetPars$qvar[,y]*
+    # effort is relative to F on V_P_real, Ftot is on V_P_real_2
+    maxV <- apply(out$V_P_real[, , y + nyears, drop = FALSE], 1, max)
+    Effort_req <- Ftot/maxV/(FleetPars$FinF * FleetPars$qs*FleetPars$qvar[,y]*
                           (1 + FleetPars$qinc/100)^y) * apply(fracE2, 1, sum) # effort required
     Effort_req[Ftot<=tiny] <- tiny
-    
+
+    # TAE caps the effort required to catch the TAC
+    TAE <- as.numeric(out$TAE_err)
+    capE <- !is.na(TAE) & Effort_req > TAE
+    if (any(capE)) {
+      Escale <- rep(1, nsim)
+      Escale[capE] <- TAE[capE]/Effort_req[capE]
+      out$FM_P[SAYR] <- out$FM_P[SAYR] * Escale[S1]
+      out$FM_Pret[SAYR] <- out$FM_Pret[SAYR] * Escale[S1]
+    }
   }
 
   # Effort_req - effort required to catch TAC
@@ -1106,9 +1117,21 @@ CalcMPDynamics_MF <- function(MPRecs_f, y, nyears, proyears, nsim,
         out[[f]]$FM_Pret[SAYR] <- Ftot[Sf] * retA_P_real_V[[f]][SAYt] * fishdist[SRf]/StockPars$Asize[SR]
         
         # Effort relative to last historical with this catch
-        Effort_req[, f] <- Ftot[, f]/(FleetPars_f[[f]]$FinF * FleetPars_f[[f]]$qs*FleetPars_f[[f]]$qvar[,y]*
+        # effort is relative to F on V_P_real, Ftot is on V_P_real_2
+        maxV <- apply(out[[f]]$V_P_real[, , y + nyears, drop = FALSE], 1, max)
+        Effort_req[, f] <- Ftot[, f]/maxV/(FleetPars_f[[f]]$FinF * FleetPars_f[[f]]$qs*FleetPars_f[[f]]$qvar[,y]*
                                         (1 + FleetPars_f[[f]]$qinc/100)^y) * apply(fracE2[, , f], 1, sum) # effort required
         Effort_req[Ftot[, f] <= tiny, f] <- tiny
+
+        # TAE caps the effort required to catch the TAC
+        TAE <- as.numeric(out[[f]]$TAE_err)
+        capE <- !is.na(TAE) & Effort_req[, f] > TAE
+        if (any(capE)) {
+          Escale <- rep(1, nsim)
+          Escale[capE] <- TAE[capE]/Effort_req[capE, f]
+          out[[f]]$FM_P[SAYR] <- out[[f]]$FM_P[SAYR] * Escale[S1]
+          out[[f]]$FM_Pret[SAYR] <- out[[f]]$FM_Pret[SAYR] * Escale[S1]
+        }
       }
     }
   }
