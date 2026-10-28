@@ -1,7 +1,8 @@
 ## Note to CRAN Maintainers
 
-Major release (4.0.0). Fixes the issues on the CRAN Package Check page for
-3.7.5 (missing Rd link and missing object `r4ss::SS_output`).
+Major release (4.0.0). 
+
+Adds a new simulation engine; legacy objects remain supported.
 
 ## Test environments
 * local - Windows, R 4.6.0
