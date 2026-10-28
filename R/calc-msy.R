@@ -171,6 +171,7 @@ CalcMSY <- function(Hist,
     for (sl in setdiff(slotNames(MSYRefPoints), 'Misc')) {
       arr <- slot(MSYRefPoints, sl)
       if (is.null(arr)) next
+      arr <- .ArraySubsetSim(arr, 1, keep_sim_name = TRUE)
       for (ts in seq_along(Years)) {
         val <- slot(results_sim1[[ts]], sl)
         if (!is.null(val))

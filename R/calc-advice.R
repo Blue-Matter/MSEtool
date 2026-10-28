@@ -332,12 +332,14 @@
 
   Slots <- if (isTRUE(DataOM)) .DataOMSlots() else intersect(DataOM, .DataOMSlots())
 
-  if (!isTRUE(DataOM) && 'Reference' %in% Slots && !.RefPointsAvailable(Hist@Reference)) {
-    if (!is.null(Year) && sim == 1 && Year == min(Years))
+  if (!isTRUE(DataOM) && 'Reference' %in% Slots) {
+    Missing <- .RefPointsMissingSims(Hist@Reference, nSim(Hist))
+    if (length(Missing) && !is.null(Year) && sim == 1 && Year == min(Years))
       cli::cli_alert_warning(
-        "MSY reference points ({.field Hist@Reference@MSY@FMSY}) are not available for this OM. Skipping reference MP(s) that require them."
+        "MSY reference points ({.field Hist@Reference@MSY@FMSY}) are not available for {length(Missing)} of {nSim(Hist)} simulations. Reference MP(s) that require them return no advice where they are missing."
       )
-    Slots <- setdiff(Slots, 'Reference')
+    if (sim %in% Missing)
+      Slots <- setdiff(Slots, 'Reference')
   }
 
   TimeSeries <- setdiff(methods::slotNames('timeseries'), 'Misc')
@@ -370,7 +372,9 @@
   do.call(`[`, c(list(object), .MakeDimIndex(idx, object, TSind), list(drop = FALSE)))
 }
 
-.RefPointsAvailable <- function(Reference) {
+.RefPointsMissingSims <- function(Reference, nSim) {
   fmsy <- Reference@MSY@FMSY
-  length(fmsy) > 0 && !all(is.na(fmsy))
+  if (!length(fmsy)) return(seq_len(nSim))
+  Avail <- apply(!is.na(fmsy), match('Sim', names(dimnames(fmsy))), any)
+  which(!rep_len(Avail, nSim))
 }

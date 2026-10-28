@@ -3,6 +3,7 @@
 \name{MSY-accessors}
 \alias{MSY-accessors}
 \alias{MSYRefs}
+\alias{MSY}
 \alias{FMSY}
 \alias{BMSY}
 \alias{SBMSY}
@@ -13,6 +14,8 @@
 \title{Access MSY Reference Point Slots}
 \usage{
 MSYRefs(Hist)
+
+MSY(Hist)
 
 FMSY(Hist)
 
@@ -29,7 +32,9 @@ MSYLandings(Hist)
 MSYDiscards(Hist)
 }
 \arguments{
-\item{Hist}{A \link[=hist-class]{hist} or \link[=mse-class]{mse} object.}
+\item{Hist}{A \link[=hist-class]{hist} or \link[=mse-class]{mse} object. \code{MSY()} and the
+individual reference point accessors also accept a \link[=reference-class]{reference} or
+\link[=refpointsMSY-class]{refpointsMSY} object.}
 }
 \value{
 A numeric array with dimensions \verb{Sim × Stock × Year}, except
@@ -45,6 +50,8 @@ a \link[=hist-class]{hist} or \link[=mse-class]{mse} object.
 The available accessor functions and the quantities they return are:
 \itemize{
 \item \code{MSYRefs()}: the full \link[=refpointsMSY-class]{refpointsMSY} object containing all slots.
+\item \code{MSY()}: the same \link[=refpointsMSY-class]{refpointsMSY} object; also accepts a
+\link[=reference-class]{reference} object, e.g. \code{Reference(Hist) |> MSY()}.
 \item \code{FMSY()}: apical fishing mortality at MSY, defined at the complex
 level (\verb{Sim × Complex × Year}).
 \item \code{BMSY()}: total biomass at MSY.

@@ -101,6 +101,7 @@
 
   TAC_by_Complex     <- .ResolveTACByComplex(AdviceList, LastAdviceList,
                                             Complexes, Proj, sim, FleetNames)
+  if (all(vapply(TAC_by_Complex, is.null, logical(1)))) return(Proj)
   TAC_by_Complex     <- .ApplyImplementationError(TAC_by_Complex, Proj, FleetNames,
                                                  names(Complexes), sim, Year, 'TAC')
 

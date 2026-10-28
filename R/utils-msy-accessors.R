@@ -4,7 +4,9 @@
 #' `Hist@Reference@MSY`. Each function returns the corresponding array from
 #' a [hist-class] or [mse-class] object.
 #'
-#' @param Hist A [hist-class] or [mse-class] object.
+#' @param Hist A [hist-class] or [mse-class] object. `MSY()` and the
+#'   individual reference point accessors also accept a [reference-class] or
+#'   [refpointsMSY-class] object.
 #'
 #' @return A numeric array with dimensions `Sim × Stock × Year`, except
 #'   `FMSY()` which returns `Sim × Complex × Year`. Returns `NULL` if the
@@ -14,6 +16,8 @@
 #' The available accessor functions and the quantities they return are:
 #'
 #' - `MSYRefs()`: the full [refpointsMSY-class] object containing all slots.
+#' - `MSY()`: the same [refpointsMSY-class] object; also accepts a
+#'   [reference-class] object, e.g. `Reference(Hist) |> MSY()`.
 #' - `FMSY()`: apical fishing mortality at MSY, defined at the complex
 #'   level (`Sim × Complex × Year`).
 #' - `BMSY()`: total biomass at MSY.
@@ -33,6 +37,12 @@ NULL
 MSYRefs <- function(Hist) {
   .CheckClass(Hist, c('hist', 'mse'), 'Hist')
   .AccessSlot(Hist@Reference, 'MSY')
+}
+
+#' @rdname MSY-accessors
+#' @export
+MSY <- function(Hist) {
+  .ResolveRefpointsMSY(Hist, 'MSY')
 }
 
 

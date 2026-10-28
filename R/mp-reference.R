@@ -25,8 +25,9 @@
 #' historical year (or `OM@Control$RefYears`) and held fixed for the whole
 #' projection; i.e., they are not recalculated per projection year.
 #'
-#' If reference points are not available for an `OM`  each reference MP returns
-#' empty advice and a single warning is issued the first time it is called.
+#' In simulations where reference points are not available, each reference MP
+#' returns empty advice, and a single warning listing those simulations is
+#' issued in the first projection year.
 #'
 #' The `refFMSY*` and `refMSY*` MPs read reference points from
 #' `Data@Misc$DataOM@Reference`, requested by their
