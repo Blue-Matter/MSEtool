@@ -255,7 +255,21 @@ IndexRate <- function(Data,
   Catch       <- .AnnualCatchByType(Data, TACType)
   CalibCatch  <- mean(Catch[CalibRows], na.rm = TRUE)
   CalibIndex  <- rowMeans(IndexHist[, CalibRows, drop = FALSE], na.rm = TRUE)
+  NoCalib <- !is.finite(CalibIndex) | CalibIndex <= 0
+  if (any(NoCalib)) {
+    NoCalibNames <- Selected$Name[Keep][NoCalib]
+    CalibRange <- range(Data@Years[CalibRows])
+    Consequence <- if (all(NoCalib)) {
+      "The previous TAC is kept."
+    } else {
+      "{cli::qty(sum(NoCalib))}{?This index is/These indices are} ignored."
+    }
+    cli::cli_warn(c("!" = "No positive {.arg CalibYears} values ({CalibRange[1]}-{CalibRange[2]}) for {cli::qty(sum(NoCalib))}ind{?ex/ices} {.val {NoCalibNames}}.",
+                    "i" = Consequence,
+                    "i" = "Increase {.arg CalibYears} or check {.arg IndexSource}/{.arg Indices}."))
+  }
   CatchPerIndex <- CalibCatch / CalibIndex
+  CatchPerIndex[NoCalib] <- NA
 
   IndexSmooth <- .SmoothIndices(IndexHist, Smooth, ENPMult)
 

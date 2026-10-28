@@ -142,7 +142,8 @@ test_that("IndexRate's default HCR cuts the rate linearly below half the target"
 
 test_that("IndexRate keeps the previous TAC when the trial TAC is infinite", {
   D <- .AnnualIndexData(c(rep(1, 18), 0, 0))
-  expect_equal(IndexRate(D, Smooth = FALSE, RecentYears = 3)@TAC, 100)
+  expect_warning(TAC <- IndexRate(D, Smooth = FALSE, RecentYears = 3)@TAC, "CalibYears")
+  expect_equal(TAC, 100)
 })
 
 test_that("IndexSource = 'auto' uses Survey, else CPUE", {
