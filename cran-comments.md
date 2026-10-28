@@ -7,7 +7,7 @@ The release also fixes several bugs in the legacy code and moves snowfall from D
 This is the final release of the 3.x series. A major version (MSEtool 4.0.0) will be submitted in the coming weeks.
 
 ## Test environments
-* local - Windows, R 4.6.0
+* local - Windows, R 4.6.1
 * Github actions - windows-latest (release)
 * Github actions - windows-latest (devel)
 * Github actions - macOS-latest (release)
