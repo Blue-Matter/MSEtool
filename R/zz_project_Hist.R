@@ -322,7 +322,7 @@ Project_Hist <- function (Hist=NULL,
     LastTAC <- LastCatch <- apply(StockPars$CBret[,,nyears,], 1, sum)
     
     # calculate pstar quantile of TAC recommendation dist
-    TACused <- apply(Data_p@TAC, 2, quantile, p = pstar, na.rm = T)
+    TACused <- apply(Data_p@TAC, 2, quantile, probs = pstar, na.rm = T)
     if (length(MPRecs$TAC) >0) {
       # a TAC has been recommended
       checkNA[y] <- sum(is.na(TACused))
@@ -557,7 +557,7 @@ Project_Hist <- function (Hist=NULL,
       }
       
       # calculate pstar quantile of TAC recommendation dist
-      TACused <- apply(Data_p@TAC, 2, quantile, p = pstar, na.rm = T)
+      TACused <- apply(Data_p@TAC, 2, quantile, probs = pstar, na.rm = T)
       if (length(MPRecs$TAC) >0) {
         # a TAC has been recommended
         checkNA[y] <- sum(is.na(TACused))

@@ -15,3 +15,5 @@ if (!identical(Sys.getenv("NOT_CRAN"), "true")) {
     "------------------------------------------------------------------\n"
   )
 }
+
+options(warnPartialMatchDollar = TRUE, warnPartialMatchArgs = TRUE)

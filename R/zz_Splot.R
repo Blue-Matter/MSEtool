@@ -15,7 +15,7 @@
 #' @export
 quantile_plot = function(datmat, xvals, p = c(0.05,0.25,0.5,0.75,0.95),  tcol, ylim, sims=1:3, refline=NA, dox=F, doy=F){
   doborder = function(){for(i in 1:4){axis(i,c(-1E10,1E10),c(-1E10,1E10))}}
-  qs = apply(datmat, 2,quantile,p=p)
+  qs = apply(datmat, 2,quantile,probs = p)
   plot(range(xvals),range(qs),col="white",ylim=ylim, yaxs ="i",xlab="",ylab="",main="", axes=F)
   doborder(); 
   if(dox){axis(1,las=2)}; if(doy){axis(2)}
@@ -64,7 +64,7 @@ Splot = function(MSEobj, MPs = 5,
     vnam = vars[vv]
     vval = slot(subMSE, vnam)
     mus = apply(vval,2:3,mean)
-    qs = apply(vval,2:3,quantile,p=p)
+    qs = apply(vval,2:3,quantile,probs = p)
     ymax = quantile(qs,0.98)
     
     matplot(yrs,t(mus),col="white",xlab="",ylab="",main="",ylim=c(0,ymax),yaxs ="i",axes=F)

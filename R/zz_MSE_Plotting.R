@@ -2036,8 +2036,8 @@ VOI <- function(MSEobj, ncomp = 6, nbins = 8, maxrow = 8, Ut = NA, Utnam = "Util
   # MSEobj@OM<- MSEobj@OM[,(!names(MSEobj@OM)%in%onlycor)&vargood]
   vargood[grep("qvar", names(MSEobj@OM))] <- FALSE
   MSEobj@OM <- MSEobj@OM[, which((!names(MSEobj@OM) %in% onlycor) & vargood)]
-  OMp <- apply(MSEobj@OM, 2, quantile, p = seq(0, 1, length.out = nbins + 1), na.rm = TRUE)
-  Obsp <- apply(MSEobj@Obs, 2, quantile, p = seq(0, 1, length.out = nbins + 1), na.rm = TRUE)
+  OMp <- apply(MSEobj@OM, 2, quantile, probs = seq(0, 1, length.out = nbins + 1), na.rm = TRUE)
+  Obsp <- apply(MSEobj@Obs, 2, quantile, probs = seq(0, 1, length.out = nbins + 1), na.rm = TRUE)
   OMv <- array(NA, c(nMPs, ncol(MSEobj@OM), nbins))
   Obsv <- array(NA, c(nMPs, ncol(MSEobj@Obs), nbins))
 
@@ -2281,7 +2281,7 @@ VOI2 <- function(MSEobj, ncomp = 6, nbins = 4, Ut = NA, Utnam = "yield",
 
   Obsd <- apply(MSEobj@Obs, 2, sd, na.rm = TRUE)
   Obm <- apply(MSEobj@Obs, 2, mean, na.rm = TRUE)
-  Obmd <- apply(MSEobj@Obs, 2, quantile, p = 0.5, na.rm = TRUE)
+  Obmd <- apply(MSEobj@Obs, 2, quantile, probs = 0.5, na.rm = TRUE)
 
   maxcomp <- length(Obsnam2)
   Obsv <- array(NA, c(nMPs, maxcomp, nbins))

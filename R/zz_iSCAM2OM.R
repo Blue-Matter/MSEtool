@@ -1281,7 +1281,7 @@ calc.mcmc <- function(model,
                                           "bo"))]
   p.names <- names(p.dat)
   p.dat <- mcmc.thin(p.dat)
-  p.quants <- apply(p.dat, 2, quantile, prob = probs)
+  p.quants <- apply(p.dat, 2, quantile, probs = probs)
 
   ## Reference points
   r.dat <- params.dat[ , which(nm %in% c("msy",
@@ -1291,14 +1291,14 @@ calc.mcmc <- function(model,
                                          "bo"))]
   r.names <- names(r.dat)
   r.dat <- mcmc.thin(r.dat)
-  r.quants <- apply(r.dat, 2, quantile, prob = probs)
+  r.quants <- apply(r.dat, 2, quantile, probs = probs)
 
   ## Spawning biomass
   sbt.dat <- mcmc.thin(mc$sbt[[1]])
   sbt.quants <- apply(sbt.dat,
                       2,
                       quantile,
-                      prob = probs)
+                      probs = probs)
   ## Depletion
   depl.dat <- apply(sbt.dat,
                     2,
@@ -1306,7 +1306,7 @@ calc.mcmc <- function(model,
   depl.quants <- apply(sbt.dat / r.dat$bo,
                        2,
                        quantile,
-                       prob = probs)
+                       probs = probs)
   ## Recruitment
   recr.dat <- mcmc.thin(mc$rt[[1]])
   recr.mean <- apply(recr.dat,
@@ -1315,13 +1315,13 @@ calc.mcmc <- function(model,
   recr.quants <- apply(recr.dat,
                        2,
                        quantile,
-                       prob = probs)
+                       probs = probs)
   ## Recruitment deviations
   recr.devs.dat <- mcmc.thin(mc$rdev[[1]])
   recr.devs.quants <- apply(recr.devs.dat,
                             2,
                             quantile,
-                            prob = probs)
+                            probs = probs)
   ## Vulnerable biomass by gear (list of data frames)
   vuln.dat <- lapply(mc$vbt[[1]], mcmc.thin)
   vuln.quants <- lapply(vuln.dat,
@@ -1329,7 +1329,7 @@ calc.mcmc <- function(model,
                           apply(x,
                                 2,
                                 quantile,
-                                prob = lower,
+                                probs = lower,
                                 na.rm = TRUE)})
   ## Fishing mortalities by gear (list of data frames)
   f.mort.dat <- lapply(mc$ft[[1]], mcmc.thin)
@@ -1338,7 +1338,7 @@ calc.mcmc <- function(model,
                             apply(x,
                                   2,
                                   quantile,
-                                  prob = lower,
+                                  probs = lower,
                                   na.rm = TRUE)})
 
   u.mort.dat <- lapply(mc$ut[[1]], mcmc.thin)
@@ -1347,7 +1347,7 @@ calc.mcmc <- function(model,
                             apply(x,
                                   2,
                                   quantile,
-                                  prob = lower,
+                                  probs = lower,
                                   na.rm = TRUE)})
 
   sapply(c("p.dat",

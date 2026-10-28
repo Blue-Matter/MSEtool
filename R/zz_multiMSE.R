@@ -341,7 +341,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     SSBpRa <- array(SSB0_a/matrix(StockPars[[p]]$R0, nrow=nsim, ncol=nyears+proyears),
                     dim = c(nsim, nyears+proyears))
 
-    UnfishedRefs <- sapply(1:nsim, CalcUnfishedRefs, ageM=StockPars[[p]]$ageM, N0_a=N0_a, SSN0_a=SSN0_a,
+    UnfishedRefs <- sapply(1:nsim, CalcUnfishedRefs, ageM=StockPars[[p]]$ageMarray, N0_a=N0_a, SSN0_a=SSN0_a,
                            SSB0_a=SSB0_a, B0_a=B0_a, VB0_a=VB0_a, SSBpRa=SSBpRa, SSB0a_a=SSB0a_a)
 
     N0 <- UnfishedRefs[1,] %>% unlist() # average unfished numbers
@@ -790,7 +790,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                            SSBMSY_y=StockPars[[p]]$SSBMSY_y,
                            BMSY_y=StockPars[[p]]$BMSY_y,
                            VBMSY_y=StockPars[[p]]$VBMSY_y,
-                           ageM=StockPars[[p]]$ageM,
+                           ageM=StockPars[[p]]$ageMarray,
                            nyears=nyears)
 
     MSY <- MSYRefPoints[1,] %>% unlist() # record the MSY results (Vulnerable)
@@ -1689,9 +1689,9 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     for (p in 1:np) {
       for (f in 1:nf) {
         # reset selectivity parameters for projections
-        FleetPars[[p]][[f]]$L5_P <- HistFleetPars[[p]][[f]]$L5
-        FleetPars[[p]][[f]]$LFS_P <- HistFleetPars[[p]][[f]]$LFS
-        FleetPars[[p]][[f]]$Vmaxlen_P <- HistFleetPars[[p]][[f]]$Vmaxlen
+        FleetPars[[p]][[f]]$L5_P <- HistFleetPars[[p]][[f]]$L5_y
+        FleetPars[[p]][[f]]$LFS_P <- HistFleetPars[[p]][[f]]$LFS_y
+        FleetPars[[p]][[f]]$Vmaxlen_P <- HistFleetPars[[p]][[f]]$Vmaxlen_y
         # selectivity at length array - projections
         FleetPars[[p]][[f]]$SLarray_P <- HistFleetPars[[p]][[f]]$SLarray_real
         #  selectivity at age array - projections
@@ -1700,9 +1700,9 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         FleetPars[[p]][[f]]$V_P_real_2 <- HistFleetPars[[p]][[f]]$V_real_2  #  selectivity at age array - realized selectivity (max = 1)
         
         # reset retention parameters for projections
-        FleetPars[[p]][[f]]$LR5_P <- HistFleetPars[[p]][[f]]$LR5
-        FleetPars[[p]][[f]]$LFR_P <- HistFleetPars[[p]][[f]]$LFR
-        FleetPars[[p]][[f]]$Rmaxlen_P <- HistFleetPars[[p]][[f]]$Rmaxlen
+        FleetPars[[p]][[f]]$LR5_P <- HistFleetPars[[p]][[f]]$LR5_y
+        FleetPars[[p]][[f]]$LFR_P <- HistFleetPars[[p]][[f]]$LFR_y
+        FleetPars[[p]][[f]]$Rmaxlen_P <- HistFleetPars[[p]][[f]]$Rmaxlen_y
         # retention at age array - projections
         FleetPars[[p]][[f]]$retA_P <- HistFleetPars[[p]][[f]]$retA # retention at age array - projections
         FleetPars[[p]][[f]]$retA_P_real <- HistFleetPars[[p]][[f]]$retA_real # retention at age array -  realized selectivity (max may be less than 1) 
@@ -1711,7 +1711,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         # retention at length array - projections
         FleetPars[[p]][[f]]$retL_P <- HistFleetPars[[p]][[f]]$retL_real
         # Discard ratio for projections
-        FleetPars[[p]][[f]]$DR_P <- HistFleetPars[[p]][[f]]$DR
+        FleetPars[[p]][[f]]$DR_P <- HistFleetPars[[p]][[f]]$DR_y
 
         FleetPars[[p]][[f]]$FM_P <- array(NA,
                                           dim = c(nsim, n_age, proyears, nareas))
@@ -2096,7 +2096,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       
       for(f in 1:nf) {
         TACused[,p,f] <- apply(Data_p_A[[p]][[f]]@TAC, 2, quantile,
-                               p = MOM@pstar, na.rm = T)
+                               probs = MOM@pstar, na.rm = T)
         checkNA[p,f,y] <- sum(is.na(TACused[,p,f]))
         LastTAE[,p,f] <-  rep(NA, nsim) # no current TAE exists
         histTAE[,p,f] <- rep(NA, nsim) # no existing TAE
@@ -2648,7 +2648,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
           for(f in 1:nf){
             # calculate pstar quantile of TAC recommendation dist
             TACused[,p,f] <- apply(Data_p_A[[p]][[f]]@TAC, 2, quantile,
-                                   p = MOM@pstar, na.rm = T)
+                                   probs = MOM@pstar, na.rm = T)
             checkNA[p,f,y] <-checkNA[p,f,y] + sum(is.na(TACused[,p,f]))
           }
           

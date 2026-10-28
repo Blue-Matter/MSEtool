@@ -11,14 +11,14 @@
 #' @export
 plotquant<-function(x,p=c(0.05,0.25,0.75,0.95),yrs,qcol,lcol,addline=T,ablines=NA){
   ny<-length(yrs)
-  qs<-apply(x,2,quantile,p=p[c(1,4)],na.rm=T)
-  qsi<-apply(x,2,quantile,p=p[2:3],na.rm=T)
+  qs<-apply(x,2,quantile,probs = p[c(1,4)],na.rm=T)
+  qsi<-apply(x,2,quantile,probs = p[2:3],na.rm=T)
   if (all(qs[1,]==qs[2,])) {
     lines(yrs, qs[1,], lwd=2, col=qcol)
   } else {
     polygon(c(yrs,yrs[ny:1]),c(qs[1,],qs[2,ny:1]),border=NA,col='#b3ecff')
     polygon(c(yrs,yrs[ny:1]),c(qsi[1,],qsi[2,ny:1]),border=NA,col=qcol)
-    lines(yrs,apply(x,2,quantile,p=0.5,na.rm=T),lwd=2,col="white")
+    lines(yrs,apply(x,2,quantile,probs = 0.5,na.rm=T),lwd=2,col="white")
   }
 
   if(!is.na(ablines[1]))abline(h=ablines,col='#99999980')

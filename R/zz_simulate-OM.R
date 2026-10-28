@@ -223,7 +223,7 @@ SimulateOM <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NU
   SSBpRa <- array(SSB0_a/matrix(StockPars$R0, nrow=nsim, ncol=nyears+proyears),
                   dim = c(nsim, nyears+proyears))
   
-  UnfishedRefs <- sapply(1:nsim, CalcUnfishedRefs, ageM=StockPars$ageM, N0_a=N0_a, SSN0_a=SSN0_a,
+  UnfishedRefs <- sapply(1:nsim, CalcUnfishedRefs, ageM=StockPars$ageMarray, N0_a=N0_a, SSN0_a=SSN0_a,
                          SSB0_a=SSB0_a, B0_a=B0_a, VB0_a=VB0_a, SSBpRa=SSBpRa, SSB0a_a=SSB0a_a)
   N0 <- UnfishedRefs[1,] %>% unlist() # average unfished numbers
   SSN0 <- UnfishedRefs[2,] %>% unlist() # average unfished spawning numbers
@@ -380,7 +380,7 @@ SimulateOM <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NU
   # --- MSY reference points ----
   MSYRefPoints <- sapply(1:nsim, CalcMSYRefs_legacy, MSY_y=MSY_y, FMSY_y=FMSY_y,
                          SSBMSY_y=SSBMSY_y, BMSY_y=BMSY_y, VBMSY_y=VBMSY_y,
-                         ageM=StockPars$ageM, nyears=nyears)
+                         ageM=StockPars$ageMarray, nyears=nyears)
   
   MSY <- MSYRefPoints[1,] %>% unlist() # record the MSY results (Vulnerable)
   FMSY <- MSYRefPoints[2,] %>% unlist()  # instantaneous FMSY (Vulnerable)

@@ -1170,7 +1170,7 @@ plotOFL <- function(Data, xlims = NA, perc = 0.5) {
                   sep = ""))
     }
     if (!is.na(perc[1]))
-      abline(v = quantile(Data@TAC[m, , 1], p = perc, na.rm = T),
+      abline(v = quantile(Data@TAC[m, , 1], probs = perc, na.rm = T),
              col = cols[m], lty = 2)
   }
 
@@ -1290,7 +1290,7 @@ Sense <- function(Data, MP, nsense = 6, reps = 100, perc = c(0.05, 0.5, 0.95), p
 
   # TACa <- getTAC(Data, MPs = MP, reps = reps)[[1]]
   TACa <- applyMP(Data, MPs=MP, reps=reps)[[1]][[1]]$TAC
-  TACa <- apply(TACa, 2, quantile, p = perc, na.rm = T)
+  TACa <- apply(TACa, 2, quantile, probs = perc, na.rm = T)
   LB <- ((1:nslots) - 1) * 4 + 1
   UB <- (1:nslots) * 4
   sense <- matrix(data = NA, nrow = 4 * nslots, ncol = nsense + 1)
@@ -1625,7 +1625,7 @@ Uses <- function(slot, silent=FALSE) {
 #   Data <- temp[[2]]
 #   nsim <- length(Data@Mort)
 #   ref <- array(rep(Data@Ref, nMPs), c(nsim, nMPs))
-#   TACm <- apply(TACa, c(3, 1), quantile, p = perc, na.rm = T)
+#   TACm <- apply(TACa, c(3, 1), quantile, probs = perc, na.rm = T)
 #   TACbias <- (TACm - ref)/ref * 100
 #   POF <- round(apply(TACbias > 0, 2, sum)/length(Data@Mort) * 100,
 #     1)

@@ -180,7 +180,7 @@ DFO_bar<-function(MSEobj,yres=10){
 
   for(i in 1:nsec){
     yind <- (sections[i]+1):sections[i+1]
-    POF[,,i]<-t(apply(MSEobj@SB_SBMSY[,,yind] ,2,quantile,p=c(0.05,0.25,0.5,0.75,0.95), na.rm = T))
+    POF[,,i]<-t(apply(MSEobj@SB_SBMSY[,,yind] ,2,quantile,probs = c(0.05,0.25,0.5,0.75,0.95), na.rm = T))
   }
 
   xlim<-c(0,min(2.5,max(POF)))
@@ -631,17 +631,17 @@ DFO_quant<-function(MSEobj,maxcol=6,qcol=rgb(0.4,0.8,0.95), lcol= "dodgerblue4",
 
 plotquant<-function(x,p=c(0.1,0.9),yrs,qcol,lcol,addline=T){
   ny<-length(yrs)
-  qs<-apply(x,2,quantile,p=p)
+  qs<-apply(x,2,quantile,probs = p)
   polygon(c(yrs,yrs[ny:1]),c(qs[1,],qs[2,ny:1]),border=NA,col=qcol)
 
   if(addline)for(i in 1:2)lines(yrs,x[i,],col=lcol,lty=i)
-  lines(yrs,apply(x,2,quantile,p=0.5),lwd=2,col="white")
+  lines(yrs,apply(x,2,quantile,probs = 0.5),lwd=2,col="white")
 }
 
 
 plotquant2<-function(x,p=c(0.1,0.9),yrs,qcol,lcol,addline=T){
   ny<-length(yrs)
-  qs<-apply(x,2,quantile,p=p)
+  qs<-apply(x,2,quantile,probs = p)
   #polygon(c(yrs,yrs[ny:1]),c(qs[1,],qs[5,ny:1]),border=lcol,col=NA)
  # lines(yrs,qs[1,],lwd=1,col=lcol)
   #lines(yrs,qs[5,],lwd=1,col=lcol)
