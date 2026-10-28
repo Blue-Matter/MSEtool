@@ -38,3 +38,5 @@ src\*.dll
 ^README\.Rmd$
 ^codecov\.yml$
 ^CRAN-SUBMISSION$
+^\.positai$
+^\.claude$
