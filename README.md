@@ -8,7 +8,9 @@
 [![CRAN
 status](https://www.r-pkg.org/badges/version/MSEtool)](https://CRAN.R-project.org/package=MSEtool)
 [![R-CMD-check](https://github.com/Blue-Matter/MSEtool/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Blue-Matter/MSEtool/actions/workflows/R-CMD-check.yaml)
-[![](https://img.shields.io/badge/devel%20version-4.0.0-blue.svg)](https://github.com/blue-matter/MSEtool)
+[![](https://img.shields.io/badge/devel%20version-3.7.6-blue.svg)](https://github.com/blue-matter/MSEtool)
+[![Codecov test
+coverage](https://codecov.io/gh/Blue-Matter/MSEtool/graph/badge.svg)](https://app.codecov.io/gh/Blue-Matter/MSEtool)
 <!-- badges: end -->
 
 `MSEtool` is the core package in the [openMSE](https://openMSE.com)
