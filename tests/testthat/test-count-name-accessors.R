@@ -69,3 +69,46 @@ test_that("FleetNames IncSurvey adds index names from data", {
   expect_equal(FleetNames(d, IncSurvey = TRUE), c("F1", "Acoustic"))
   expect_equal(nFleet(d), 1)
 })
+
+test_that("nAge and AgeClasses work for om, hist, stock, and data objects", {
+  expect_equal(nAge(SingleStockOM), 21)
+  expect_equal(nAge(Ages(MaxAge = 5)), 6)
+  expect_type(nAge(MultiStockOM), "list")
+  expect_length(nAge(MultiStockOM), 2)
+  expect_equal(nAge(MultiStockOM, st = 2), nAge(MultiStockOM@Stock[[2]]))
+  expect_equal(nAge(MultiStockOM, st = StockNames(MultiStockOM)[2]), nAge(MultiStockOM, st = 2))
+  expect_error(nAge(MultiStockOM, st = 3), "not found")
+  expect_equal(AgeClasses(SingleStockOM), SingleStockOM@Stock[[1]]@Ages@Classes)
+
+  Hist <- Simulate(MultiStockOM, silent = TRUE)
+  Data <- Hist@Data[[1]][[1]]
+  expect_equal(nAge(Data), nAge(MultiStockOM, st = 1))
+  expect_equal(AgeClasses(Data), AgeClasses(MultiStockOM, st = 1))
+  expect_equal(nAge(Hist@Data[[1]])[[1]], nAge(MultiStockOM)[[1]])
+  expect_length(nAge(Hist@Data[[1]]), 2)
+
+  Data@LandingsAtAge <- CompData()
+  Data@DiscardsAtAge <- CompData()
+  expect_null(AgeClasses(Data))
+  Data@LifeHistory@Ages <- Ages(MaxAge = 3)
+  expect_equal(nAge(Data), 4)
+})
+
+test_that("nLength and LengthClasses work for stock and data objects", {
+  stock <- SingleStockOM@Stock[[1]]
+  stock@Length@Classes <- seq(0, 100, by = 5)
+  expect_equal(nLength(stock), 21)
+  expect_equal(LengthClasses(stock), seq(0, 100, by = 5))
+  expect_equal(nLength(stock@Length), 21)
+
+  d <- Data()
+  expect_equal(nLength(d), 0)
+  d@LifeHistory@Length@Classes <- c(10, 20, 30)
+  expect_equal(nLength(d), 3)
+  d@LandingsAtSize@Name <- c("F1", "F2")
+  d@LandingsAtSize@Classes <- list(F1 = c(1, 2), F2 = c(1, 2))
+  expect_equal(LengthClasses(d), c(1, 2))
+  d@LandingsAtSize@Classes <- list(F1 = c(1, 2), F2 = c(1, 2, 3))
+  expect_equal(nLength(d), c(F1 = 2L, F2 = 3L))
+  expect_type(LengthClasses(d), "list")
+})

@@ -34,15 +34,17 @@ NULL
 
 #' Object Dimensions and Names
 #'
-#' Return the number of simulations, stocks, fleets, areas, ages, or complexes
-#' in an object, and the names of its stocks and fleets.
+#' Return the number of simulations, stocks, fleets, areas, ages, length
+#' classes, or complexes in an object, its age and length classes, and the names
+#' of its stocks and fleets.
 #'
 #' @param x An [om-class], [hist-class], or [mse-class] object, or a component
 #'   object or list as described under Value.
 #' @param value Integer. The number of simulations to assign.
 #' @param st Integer or character. Stock index or name used when `x` contains
-#'   multiple stocks. Default `1` for `nArea()` and `NULL` for `nAge()`
-#'   (returns all stocks as a list when `NULL`).
+#'   multiple stocks. Default `1` for `nArea()` and `NULL` for `nAge()`,
+#'   `nLength()`, `AgeClasses()`, and `LengthClasses()` (returns all stocks as
+#'   a list when `NULL` and `x` has more than one stock).
 #'
 #' @return
 #' - `nSim()` returns the number of simulations in an [om-class],
@@ -59,9 +61,17 @@ NULL
 #'   `mse` object), or `1` when no spatial structure is specified. It gives an
 #'   error if the populated slots imply different numbers of areas. For a
 #'   [data-class] object it returns the `nArea` slot.
-#' - `nAge()` returns the number of age classes in an [ages-class] or
-#'   [stock-class] object, or in each stock of an [om-class], [hist-class], or
-#'   [mse-class] object.
+#' - `AgeClasses()` and `LengthClasses()` return the age classes and the lower
+#'   bounds of the length bins, and `nAge()` and `nLength()` return their
+#'   number. They accept an [ages-class] or [length-class] object
+#'   respectively, a [stock-class] or [data-class] object, or an [om-class],
+#'   [hist-class], or [mse-class] object or list of stock or data objects, for
+#'   which the result is a list with one element per stock when there is more
+#'   than one stock and `st` is `NULL`. For a [data-class] object the classes
+#'   are taken from the age or size composition data, or else from
+#'   `LifeHistory`. When the size compositions of different fleets use
+#'   different bins, `LengthClasses()` returns a list and `nLength()` an
+#'   integer vector, with one element per fleet.
 #' - `nComplex()` returns the number of stock complexes in an [om-class],
 #'   [hist-class], or [mse-class] object.
 #' - `StockNames()` returns a character vector of stock names.
@@ -80,6 +90,7 @@ NULL
 #' nStock(SingleStockOM)
 #' nFleet(SingleStockOM)
 #' nAge(SingleStockOM)
+#' AgeClasses(SingleStockOM)
 #' StockNames(SingleStockOM)
 #' FleetNames(SingleStockOM)
 #'
@@ -653,22 +664,95 @@ nArea <- function(x, st = 1) {
 nAge <- function(x, st = NULL) {
   if (inherits(x, 'ages'))
     return(length(x@Classes))
-  
-  if (inherits(x, 'hist') || inherits(x, 'mse'))
-    x <- x@OM
-  
-  if (inherits(x, 'om')) {
-    stock <- x@Stock
-    if (is.list(stock)) {
-      if (!is.null(st))
-        return(length(stock[[st]]@Ages@Classes))
-      return(lapply(stock, nAge))
-    }
-    return(length(stock@Ages@Classes))
+  .MapStocks(x, st, \(s) length(.AgeClasses(s)))
+}
+
+#' @rdname Dimensions
+#' @export
+nLength <- function(x, st = NULL) {
+  if (inherits(x, 'length'))
+    return(length(x@Classes))
+  .MapStocks(x, st, \(s) {
+    Classes <- .LengthClasses(s)
+    if (is.list(Classes)) lengths(Classes) else length(Classes)
+  })
+}
+
+#' @rdname Dimensions
+#' @export
+AgeClasses <- function(x, st = NULL) {
+  if (inherits(x, 'ages'))
+    return(x@Classes)
+  .MapStocks(x, st, .AgeClasses)
+}
+
+#' @rdname Dimensions
+#' @export
+LengthClasses <- function(x, st = NULL) {
+  if (inherits(x, 'length'))
+    return(x@Classes)
+  .MapStocks(x, st, .LengthClasses)
+}
+
+# apply `fn` to a stock or data object, or to each (or stock `st`) of an om/hist/mse or list
+.MapStocks <- function(x, st, fn) {
+  if (inherits(x, c('stock', 'data')))
+    return(fn(x))
+  if (!is.list(x) || isS4(x))
+    .CheckClass(x, c('om', 'hist', 'mse', 'stock', 'data'), 'x')
+
+  Stocks <- .StockList(x)
+  if (!is.null(st)) {
+    if (is.numeric(st) && st > length(Stocks) || is.character(st) && !st %in% names(Stocks))
+      cli::cli_abort("Stock {.val {st}} not found", call = NULL)
+    return(fn(Stocks[[st]]))
   }
-  
+  out <- purrr::map(Stocks, fn)
+  if (length(out) == 1)
+    return(out[[1]])
+  out
+}
+
+.AgeClasses <- function(x) {
   if (inherits(x, 'stock'))
-    return(length(x@Ages@Classes))
+    return(x@Ages@Classes)
+
+  for (sl in c('LandingsAtAge', 'DiscardsAtAge')) {
+    Comp <- methods::slot(x, sl)
+    Classes <- Comp@Classes %||% dimnames(Comp@Value)[['Age']]
+    if (length(Classes))
+      return(as.numeric(Classes))
+  }
+  .DataLifeHistoryClasses(x, 'Ages')
+}
+
+# a list (one per fleet) when the size compositions use different bins
+.LengthClasses <- function(x) {
+  if (inherits(x, 'stock'))
+    return(x@Length@Classes)
+
+  for (sl in c('LandingsAtSize', 'DiscardsAtSize')) {
+    Classes <- methods::slot(x, sl)@Classes
+    if (!length(Classes))
+      next
+    if (!is.list(Classes))
+      return(Classes)
+    Classes <- unique(Classes)
+    if (length(Classes) == 1)
+      return(Classes[[1]])
+    return(methods::slot(x, sl)@Classes)
+  }
+  .DataLifeHistoryClasses(x, 'Length')
+}
+
+.DataLifeHistoryClasses <- function(x, SlotName) {
+  LH <- x@LifeHistory
+  if (!is.list(LH))
+    LH <- list(LH)
+  Classes <- purrr::map(LH, \(lh) methods::slot(lh, SlotName)@Classes) |> purrr::compact() |> unique()
+  if (length(Classes) == 1)
+    return(Classes[[1]])
+  NULL
 }
 
 #' @rdname Dimensions

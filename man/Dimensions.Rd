@@ -6,6 +6,9 @@
 \alias{nSim<-}
 \alias{nArea}
 \alias{nAge}
+\alias{nLength}
+\alias{AgeClasses}
+\alias{LengthClasses}
 \alias{nComplex}
 \alias{nStock}
 \alias{nFleet}
@@ -20,6 +23,12 @@ nSim(x) <- value
 nArea(x, st = 1)
 
 nAge(x, st = NULL)
+
+nLength(x, st = NULL)
+
+AgeClasses(x, st = NULL)
+
+LengthClasses(x, st = NULL)
 
 nComplex(x)
 
@@ -38,8 +47,9 @@ object or list as described under Value.}
 \item{value}{Integer. The number of simulations to assign.}
 
 \item{st}{Integer or character. Stock index or name used when \code{x} contains
-multiple stocks. Default \code{1} for \code{nArea()} and \code{NULL} for \code{nAge()}
-(returns all stocks as a list when \code{NULL}).}
+multiple stocks. Default \code{1} for \code{nArea()} and \code{NULL} for \code{nAge()},
+\code{nLength()}, \code{AgeClasses()}, and \code{LengthClasses()} (returns all stocks as
+a list when \code{NULL} and \code{x} has more than one stock).}
 
 \item{object}{An \link[=om-class]{om}, \link[=hist-class]{hist}, \link[=mse-class]{mse}, \link[=stock-class]{stock},
 \link[=fleet-class]{fleet}, or \link[=data-class]{data} object, or a list of these objects.}
@@ -62,9 +72,17 @@ the \link[=spatial-class]{spatial} object (from a \code{spatial}, \code{stock}, 
 \code{mse} object), or \code{1} when no spatial structure is specified. It gives an
 error if the populated slots imply different numbers of areas. For a
 \link[=data-class]{data} object it returns the \code{nArea} slot.
-\item \code{nAge()} returns the number of age classes in an \link[=ages-class]{ages} or
-\link[=stock-class]{stock} object, or in each stock of an \link[=om-class]{om}, \link[=hist-class]{hist}, or
-\link[=mse-class]{mse} object.
+\item \code{AgeClasses()} and \code{LengthClasses()} return the age classes and the lower
+bounds of the length bins, and \code{nAge()} and \code{nLength()} return their
+number. They accept an \link[=ages-class]{ages} or \link[=length-class]{length} object
+respectively, a \link[=stock-class]{stock} or \link[=data-class]{data} object, or an \link[=om-class]{om},
+\link[=hist-class]{hist}, or \link[=mse-class]{mse} object or list of stock or data objects, for
+which the result is a list with one element per stock when there is more
+than one stock and \code{st} is \code{NULL}. For a \link[=data-class]{data} object the classes
+are taken from the age or size composition data, or else from
+\code{LifeHistory}. When the size compositions of different fleets use
+different bins, \code{LengthClasses()} returns a list and \code{nLength()} an
+integer vector, with one element per fleet.
 \item \code{nComplex()} returns the number of stock complexes in an \link[=om-class]{om},
 \link[=hist-class]{hist}, or \link[=mse-class]{mse} object.
 \item \code{StockNames()} returns a character vector of stock names.
@@ -75,14 +93,16 @@ taken from the catch, effort, and composition data, and
 }
 }
 \description{
-Return the number of simulations, stocks, fleets, areas, ages, or complexes
-in an object, and the names of its stocks and fleets.
+Return the number of simulations, stocks, fleets, areas, ages, length
+classes, or complexes in an object, its age and length classes, and the names
+of its stocks and fleets.
 }
 \examples{
 nSim(SingleStockOM)
 nStock(SingleStockOM)
 nFleet(SingleStockOM)
 nAge(SingleStockOM)
+AgeClasses(SingleStockOM)
 StockNames(SingleStockOM)
 FleetNames(SingleStockOM)
 
