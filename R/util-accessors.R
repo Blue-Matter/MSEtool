@@ -16,6 +16,10 @@
 #'   `Sim x Stock x MP` (or `Stock x MP`) array is converted to a tidy
 #'   data frame via [Array2DF()] instead of being returned as a raw array.
 #' - Replacement functions return `x` with the named slot updated to `value`.
+#' - `nArea()` returns the number of areas implied by the populated slots of
+#'   the [spatial-class] object (from a `spatial`, `stock`, `om`, `hist`, or
+#'   `mse` object), or `1` when no spatial structure is specified. It gives an
+#'   error if the populated slots imply different numbers of areas.
 #'
 #' @examples
 #' MyLength <- Length()
@@ -438,23 +442,21 @@ nArea <- function(x, st = 1) {
     return(x@nArea)
   
   if (inherits(x, 'om')) {
-    stock <- x@Stock
-    if (is.list(stock))
-      stock <- stock[[st]]
-  } else {
-    stock <- x
+    x <- x@Stock
+    if (is.null(x) || (is.list(x) && !length(x)))
+      return(1)
+    if (is.list(x)) {
+      if (is.numeric(st) && st > length(x) || is.character(st) && !st %in% names(x))
+        cli::cli_abort("Stock {.val {st}} not found in {.code OM@Stock}", call = NULL)
+      x <- x[[st]]
+    }
   }
-  
-  dd <- dim(stock@Spatial@UnfishedDist)
-  d1 <- length(stock@Spatial@UnfishedDist)
-  
-  if (length(dd) < 1) {
-    if (length(d1) > 0) return(d1)
-    return(1)
-  }
-  
-  nms <- names(dimnames(stock@Spatial@UnfishedDist))
-  as.numeric(dd[which(nms == 'Area')])
+
+  if (inherits(x, 'stock'))
+    x <- x@Spatial
+
+  .CheckClass(x, c('spatial', 'stock', 'om', 'hist', 'mse', 'data'), 'x')
+  .SpatialNArea(x)
 }
 
 #' @rdname Access

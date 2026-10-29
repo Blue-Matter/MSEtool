@@ -56,9 +56,10 @@ PopulateSpatial <- function(Spatial,
   
   argList <- list(Ages, Years, nSim, seed)
   
-  if (.CheckDigest(Spatial, argList)) 
+  if (.CheckDigest(Spatial, argList))
     return(Spatial)
-  
+
+  .SpatialNArea(Spatial)
   .SetSeed(seed)
   
   if (EmptyObject(Spatial)) {
@@ -113,6 +114,77 @@ PopulateSpatial <- function(Spatial,
   Spatial <- .ProcessRelativeSize(Spatial, nSim)
   
   .SetDigest(.SetAgeDimnames(Spatial, Ages), argList)
+}
+
+.AreaDim <- function(x, nm, pos) {
+  i <- match(nm, names(dimnames(x)))
+  if (is.na(i)) i <- pos
+  as.integer(dim(x)[i])
+}
+
+.SquareAreaDim <- function(x, sl) {
+  if (length(dim(x)) < 3)
+    cli::cli_abort(c("x" = "Incorrect dimensions on {.code Spatial@{sl}}",
+                     "i" = "Must be an array with dimensions {.val {c('Sim', 'FromArea', 'ToArea')}} or {.val {c('Sim', 'FromArea', 'ToArea', 'Age', 'Year')}}"),
+                   call = NULL)
+  From <- .AreaDim(x, "FromArea", 2)
+  To   <- .AreaDim(x, "ToArea", 3)
+  if (From != To)
+    cli::cli_abort(c("x" = "Incorrect dimensions on {.code Spatial@{sl}}",
+                     "i" = "{.code FromArea} has length {.val {From}} but {.code ToArea} has length {.val {To}}"),
+                   call = NULL)
+  From
+}
+
+# Number of areas implied by each populated slot, following the PopulateSpatial() input conventions
+.SpatialAreaLengths <- function(Spatial) {
+  Areas <- integer()
+  IsSet <- \(x) !is.null(x) && length(x) > 0 && !all(is.na(x))
+  IsArr <- \(x) is.array(x) && length(dim(x)) > 1
+
+  if (IsSet(Spatial@Movement))
+    Areas["Movement"] <- .SquareAreaDim(Spatial@Movement, "Movement")
+
+  if (IsSet(Spatial@FracOther))
+    Areas["FracOther"] <- .SquareAreaDim(Spatial@FracOther, "FracOther")
+
+  x <- Spatial@UnfishedDist
+  if (IsSet(x)) {
+    if (IsArr(x)) {
+      Areas["UnfishedDist"] <- .AreaDim(x, "Area", 2)
+    } else {
+      if (length(x) > 2)
+        cli::cli_abort("If `UnfishedDist(Spatial)` is a numeric value, it must be length 1 or length 2", call = NULL)
+      Areas["UnfishedDist"] <- 2L
+    }
+  }
+
+  for (sl in c("ProbStaying", "RelativeSize")) {
+    x <- methods::slot(Spatial, sl)
+    if (!IsSet(x) || is.character(x)) next
+    Areas[sl] <- if (IsArr(x)) .AreaDim(x, "Area", 2) else if (length(x) <= 2) 2L else length(x)
+  }
+  Areas
+}
+
+.SpatialNArea <- function(Spatial) {
+  Areas <- .SpatialAreaLengths(Spatial)
+  if (!length(Areas))
+    return(1)
+
+  nArea <- max(Areas)
+  # two-area ProbStaying arrays hold Area 1 only
+  OK <- Areas == nArea | (names(Areas) == "ProbStaying" & Areas == 1L & nArea == 2L)
+  if (all(OK))
+    return(as.numeric(nArea))
+
+  Bullets <- vapply(names(Areas), \(sl) cli::format_inline("{.code {sl}}: {.val {Areas[[sl]]}}"), character(1))
+  names(Bullets) <- ifelse(OK, "v", "x")
+  Bad <- names(Areas)[!OK]
+  cli::cli_abort(c("Inconsistent number of areas in {.code Spatial} slots (expected {.val {nArea}}):",
+                   Bullets,
+                   "i" = "Correct the Area dimension of {.code {Bad}}, or set {?it/them} to {.code NULL} to be recalculated by {.fn Populate}"),
+                 call = NULL)
 }
 
 
