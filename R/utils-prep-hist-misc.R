@@ -105,12 +105,12 @@
   # SRR rec devs
   LastHistYear <- max(as.numeric(Years(Hist, 'Historical')))
   Hist@Misc$RecDevs <- purrr::map(Hist@OM@Stock, \(stock) {
-    dd <- dim(stock@SRR@RecDevProj)
     # MSE objects from older versions have RecDevHist extended over projection years
     hist <- .DropYearsAfter(stock@SRR@RecDevHist, LastHistYear)
-    hist <- ExtendSims(hist, dd[1])
-    proj <- stock@SRR@RecDevProj 
-    abind::abind(hist, proj, along=2, 
+    proj <- stock@SRR@RecDevProj
+    # either may be reduced to 1 sim by ReduceDims()
+    nSimDev <- max(nrow(hist), nrow(proj))
+    abind::abind(ExtendSims(hist, nSimDev), ExtendSims(proj, nSimDev), along=2,
                  use.first.dimnames=TRUE,
                  use.dnns=TRUE) 
   })
