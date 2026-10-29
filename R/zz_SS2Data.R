@@ -361,6 +361,7 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
   if(packageVersion("r4ss") == '1.24') {
     Data@Cref <- replist$derived_quants$Value[replist$derived_quants$LABEL == "TotYield_MSY"] * ifelse(season_as_years, nseas, 1)
     FMSY <- replist$derived_quants$Value[replist$derived_quants$LABEL == "Fstd_MSY"] * ifelse(season_as_years, nseas, 1)
+    if(length(FMSY) == 0) FMSY <- replist$derived_quants$Value[replist$derived_quants$LABEL == "annF_MSY"] * ifelse(season_as_years, nseas, 1)
     Data@Bref <- replist$derived_quants$Value[replist$derived_quants$LABEL == "SSB_MSY"]
     SSB0 <- replist$derived_quants$Value[replist$derived_quants$LABEL == "SSB_Unfished"]
   } else {
@@ -368,7 +369,8 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
     if(length(Cref) == 0) Cref <- replist$derived_quants$Value[replist$derived_quants$Label == "Dead_Catch_MSY"] * ifelse(season_as_years, nseas, 1)
     Data@Cref <- Cref
 
-    FMSY <- replist$derived_quants$Value[replist$derived_quants$Label == "Fstd_MSY"] * ifelse(season_as_years, nseas, 1)
+    FMSY <- replist$derived_quants$Value[replist$derived_quants$Label == "annF_MSY"] * ifelse(season_as_years, nseas, 1)
+    if(length(FMSY) == 0) FMSY <- replist$derived_quants$Value[replist$derived_quants$Label == "Fstd_MSY"] * ifelse(season_as_years, nseas, 1)
     Data@Bref <- replist$derived_quants$Value[replist$derived_quants$Label == "SSB_MSY"]
     SSB0 <- replist$derived_quants$Value[replist$derived_quants$Label == "SSB_Unfished"]
     if(length(SSB0) == 0) SSB0 <- replist$derived_quants$Value[replist$derived_quants$Label == "SSB_unfished"]
@@ -376,8 +378,12 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
   if (!silent) message("Reference catch set to MSY, Data@Cref = ", Data@Cref)
   if (!silent) message("Reference biomass set to spawning biomass at MSY, Data@Bref = ", Data@Bref)
 
-  Data@FMSY_M <- FMSY/Data@Mort
-  if (!silent) message("FMSY = ", FMSY, ", Data@FMSY_M = ", round(Data@FMSY_M, 2))
+  if(length(FMSY) == 0) {
+    warning("FMSY not found in SS derived quantities (annF_MSY or Fstd_MSY). Data@FMSY_M not set.")
+  } else {
+    Data@FMSY_M <- FMSY/Data@Mort
+    if (!silent) message("FMSY = ", FMSY, ", Data@FMSY_M = ", round(Data@FMSY_M, 2))
+  }
 
   Data@BMSY_B0 <- Data@Bref/SSB0
   if (!silent) message("Data@BMSY_B0 = ", Data@BMSY_B0)

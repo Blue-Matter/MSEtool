@@ -1833,6 +1833,9 @@ ImportSS <- function(SSDir,
 #'   - `"SSB_MSY"`, `"SPR_MSY"`, `"annF_MSY"`, `"Dead_Catch_MSY"`,
 #'     `"Ret_Catch_MSY"` — SSB, SPR, F, dead catch, and retained catch at MSY.
 #'
+#'   Labels from older SS3 versions (`Fstd_`, `TotYield_`, `RetYield_`) are
+#'   returned under their current names (`annF_`, `Dead_Catch_`, `Ret_Catch_`).
+#'
 #' @return If `SSDir` contains a single model, a data frame with columns:
 #'
 #'   - `Label` — the `derived_quants` label.
@@ -1864,8 +1867,17 @@ GetSSRefPoints <- function(SSDir, Labels = c("annF_F01",
     cli::cli_abort(c('x'='`SSDir` must be a path to SS3 output or a `RepList` object returned by `ImportSSReport`'))
   }
 
+  # older SS3 versions use Fstd_, TotYield_ and RetYield_ labels
+  NewLabel <- function(x) {
+    x <- sub("^Fstd_", "annF_", x)
+    x <- sub("^TotYield_", "Dead_Catch_", x)
+    sub("^RetYield_", "Ret_Catch_", x)
+  }
+  Labels <- NewLabel(Labels)
+
   out <- purrr::map(RepList, \(replist) {
-    replist$derived_quants |> dplyr::filter(Label %in% Labels) |>
+    replist$derived_quants |> dplyr::mutate(Label = NewLabel(Label)) |>
+      dplyr::filter(Label %in% Labels) |>
       dplyr::select(Label, Value, StdDev) |>
       dplyr::mutate(Value = round(Value, 2), StdDev = round(StdDev, 2))
   })

@@ -677,7 +677,13 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
   cpars_fleet$Data@SpAbun <- replist$timeseries$SpawnBio[ts_Yr] %>% mean(na.rm = TRUE)
   cpars_fleet$Data@Abun <- parse(text = paste0("replist$timeseries$`sel(B):_", ff, "`[ts_Yr]")) %>% eval() %>% mean(na.rm = TRUE)
 
-  cpars_fleet$Data@FMSY_M <- replist$derived_quants$Value[replist$derived_quants$Label == "Fstd_MSY"]/cpars_fleet$Data@Mort
+  FMSY <- replist$derived_quants$Value[replist$derived_quants$Label == "annF_MSY"]
+  if(!length(FMSY)) FMSY <- replist$derived_quants$Value[replist$derived_quants$Label == "Fstd_MSY"]
+  if(length(FMSY)) {
+    cpars_fleet$Data@FMSY_M <- FMSY/cpars_fleet$Data@Mort
+  } else {
+    warning("FMSY not found in SS derived quantities (annF_MSY or Fstd_MSY). Data@FMSY_M not set.")
+  }
 
   BMSY_B0 <- replist$derived_quants$Value[replist$derived_quants$Label == "B_MSY/SSB_unfished"]
   if(!length(BMSY_B0)) {
@@ -687,7 +693,7 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
   cpars_fleet$Data@BMSY_B0 <- BMSY_B0
 
   Cref <- replist$derived_quants$Value[replist$derived_quants$Label == "Ret_Catch_MSY"]
-  if(!length(Cref)) replist$derived_quants$Value[replist$derived_quants$Label == "RetYield_MSY"]
+  if(!length(Cref)) Cref <- replist$derived_quants$Value[replist$derived_quants$Label == "RetYield_MSY"]
   cpars_fleet$Data@Cref <- Cref
 
   cpars_fleet$Data@t <- length(mainyrs)
