@@ -567,6 +567,7 @@ reference:
 - title: Log
   desc: Logging utilities.
   contents:
+  - DebugMP
   - DeleteLogs
   - Log
 

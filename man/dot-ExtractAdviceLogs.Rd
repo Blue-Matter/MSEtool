@@ -4,7 +4,13 @@
 \alias{.ExtractAdviceLogs}
 \title{Extract Advice Logs and Detect Total MP Failure}
 \usage{
-.ExtractAdviceLogs(AdviceSimList, Proj, Year, MPName = NULL)
+.ExtractAdviceLogs(
+  AdviceSimList,
+  Proj,
+  Year,
+  MPName = NULL,
+  DebugSimList = NULL
+)
 }
 \arguments{
 \item{AdviceSimList}{Nested list of \code{Advice} objects (or \code{try-error}/
@@ -15,6 +21,10 @@ character failures), one per sim, then per stock/complex.}
 \item{Year}{Integer. Current projection year.}
 
 \item{MPName}{Character. Name of the management procedure.}
+
+\item{DebugSimList}{List of debug records of the failed MP calls, one
+element per sim (see \code{.SplitMPDebug()}). Records are stored as the
+\code{debug} field of the error entries, as set by \code{options(MSEtool.DebugMP)}.}
 }
 \value{
 A list with \code{Proj} (updated) and \code{AllFailed} (logical - \code{TRUE} if

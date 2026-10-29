@@ -98,9 +98,11 @@
 #'
 #' @return A list with elements `AdviceSimList` (a list of length
 #'   `length(DataSimList)`, each element a named list of `Advice` objects
-#'   for the stocks/complexes) and `AggBagLimitSimList` (a list of the same
+#'   for the stocks/complexes), `AggBagLimitSimList` (a list of the same
 #'   length, each element a list of `aggbaglimit` objects returned by an
-#'   `mmp`-class MP, or `NULL`).
+#'   `mmp`-class MP, or `NULL`) and `DebugSimList` (a list of the same
+#'   length, each element the debug records of the failed MP calls of that
+#'   sim, see `.SplitMPDebug()`).
 #'
 #' @keywords internal
 #'
@@ -115,6 +117,7 @@
 
   AdviceSimList      <- MakeNamedList(1:nSim)
   AggBagLimitSimList <- MakeNamedList(1:nSim)
+  DebugSimList       <- MakeNamedList(1:nSim)
 
   for (sim in seq_along(AdviceSimList)) {
     DataList <- DataSimList[[sim]]
@@ -156,9 +159,13 @@
         silent=TRUE
       )
     }
+    Split <- .SplitMPDebug(AdviceSimList[[sim]])
+    AdviceSimList[sim] <- list(Split$Value)
+    DebugSimList[sim]  <- list(Split$Debug)
   }
 
-  list(AdviceSimList = AdviceSimList, AggBagLimitSimList = AggBagLimitSimList)
+  list(AdviceSimList = AdviceSimList, AggBagLimitSimList = AggBagLimitSimList,
+       DebugSimList = DebugSimList)
 }
 
 #' Calculate MP Advice for a Single Simulation
@@ -211,10 +218,12 @@
     Data@Misc$StockName  <- names(DataList)[i]
     Data@Misc$AdviceYear <- Year
     Data@Misc$Interval   <- Interval
-    Advice <- try(.WithMPSeed(MPfunction(Data=Data), Proj@OM@Seed, .GlobalSim(Proj@OM, sim), Year, nms[i]),
-                  silent=TRUE)
-    Advice <- .CheckAdvice(Advice, Proj, FleetNames, Areas, sim, name=nms[i])
+    Result <- .TryMP(.WithMPSeed(MPfunction(Data=Data), Proj@OM@Seed, .GlobalSim(Proj@OM, sim), Year, nms[i]))
+    Advice <- .CheckAdvice(Result, Proj, FleetNames, Areas, sim, name=nms[i])
     Advice <- .LogMPError(Advice, MPName, Data, Sim=sim, Year)
+    if (!inherits(Advice, 'advice'))
+      attr(Advice, 'Debug') <- .MPDebugRecord(MPName, MPfunction, Data, nms[i], Proj, sim, Year,
+                                              Key = nms[i], Result = Result)
     AdviceList[[i]] <- Advice
   }
   AdviceList
@@ -266,8 +275,31 @@
     Data
   })
 
-  result <- .WithMPSeed(MPfunction(DataList = DataList), Proj@OM@Seed, .GlobalSim(Proj@OM, sim), Year, "mmp")
+  result <- .TryMP(.WithMPSeed(MPfunction(DataList = DataList), Proj@OM@Seed, .GlobalSim(Proj@OM, sim), Year, "mmp"))
+  Debug  <- \(Stock = '') .MPDebugRecord(MPName, MPfunction, DataList, Stock, Proj, sim, Year,
+                                         Key = "mmp", Result = result)
+  if (inherits(result, 'try-error'))
+    return(structure(result, Debug = Debug()))
 
+  Checked <- try(.CheckMMPResult(result, MPName, nms), silent = TRUE)
+  if (inherits(Checked, 'try-error'))
+    return(structure(Checked, Debug = Debug()))
+  AdviceList  <- Checked$AdviceList
+  AggBagLimit <- Checked$AggBagLimit
+
+  AdviceList <- purrr::imap(AdviceList, \(Advice, nm) {
+    Advice <- .CheckAdvice(Advice, Proj, FleetNames, Areas, sim, name = nm)
+    Advice <- .LogMPError(Advice, MPName, DataList[[nm]], Sim = sim, Year)
+    if (!inherits(Advice, 'advice'))
+      attr(Advice, 'Debug') <- Debug(nm)
+    Advice
+  })
+
+  list(AdviceList = AdviceList, AggBagLimit = AggBagLimit)
+}
+
+# splits an mmp result into its Advice list and aggregate bag limits
+.CheckMMPResult <- function(result, MPName, nms) {
   is_bare <- is.list(result) && length(result) &&
     all(vapply(result, inherits, logical(1), what = "advice"))
 
@@ -292,14 +324,7 @@
       call = NULL
     )
 
-  AdviceList <- AdviceList[nms]
-
-  AdviceList <- purrr::imap(AdviceList, \(Advice, nm) {
-    Advice <- .CheckAdvice(Advice, Proj, FleetNames, Areas, sim, name = nm)
-    .LogMPError(Advice, MPName, DataList[[nm]], Sim = sim, Year)
-  })
-
-  list(AdviceList = AdviceList, AggBagLimit = AggBagLimit)
+  list(AdviceList = AdviceList[nms], AggBagLimit = AggBagLimit)
 }
 
 #' Add Population Dynamics Data to a Data Object

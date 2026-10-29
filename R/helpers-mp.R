@@ -225,15 +225,30 @@
 #' @param Proj `Hist` object to record log entries onto.
 #' @param Year Integer. Current projection year.
 #' @param MPName Character. Name of the management procedure.
+#' @param DebugSimList List of debug records of the failed MP calls, one
+#'   element per sim (see `.SplitMPDebug()`). Records are stored as the
+#'   `debug` field of the error entries, as set by `options(MSEtool.DebugMP)`.
 #'
 #' @return A list with `Proj` (updated) and `AllFailed` (logical - `TRUE` if
 #'   every sim/stock combination in `AdviceSimList` was a failure).
 #' @keywords internal
-.ExtractAdviceLogs <- function(AdviceSimList, Proj, Year, MPName = NULL) {
+.ExtractAdviceLogs <- function(AdviceSimList, Proj, Year, MPName = NULL, DebugSimList = NULL) {
 
   IsFailure <- function(Advice) inherits(Advice, c('try-error', 'character'))
 
   LogName <- function(...) paste(Filter(nzchar, c(MPName %||% '', ...)), collapse = ' - ')
+
+  DebugMode <- if (length(DebugSimList)) .MPDebugMode() else 'none'
+  HasDebug  <- DebugMode == 'first' && .HasMPDebug(Proj@Log$error)
+  ErrorEntry <- function(msg, name, sim, stockName = '') {
+    entry <- .NewLogEntry(msg, name = name, sim = sim, year = Year, mp = MPName)
+    if (DebugMode == 'none' || HasDebug) return(entry)
+    Debug <- DebugSimList[[sim]]
+    rec   <- if (nzchar(stockName)) Debug[[stockName]]
+    entry$debug <- rec %||% Debug[['.Sim']]
+    if (!is.null(entry$debug) && DebugMode == 'first') HasDebug <<- TRUE
+    entry
+  }
 
   CollectType <- function(type) {
     entries <- list()
@@ -242,7 +257,7 @@
 
       if (inherits(AdviceList, 'try-error')) {
         if (type == 'error')
-          entries <- c(entries, list(.NewLogEntry(as.character(AdviceList), name = LogName(), sim = sim, year = Year, mp = MPName)))
+          entries <- c(entries, list(ErrorEntry(as.character(AdviceList), LogName(), sim)))
         next
       }
 
@@ -259,7 +274,7 @@
             entries <- c(entries, list(.NewLogEntry(msg, name = nm, sim = sim, year = Year, mp = MPName)))
           }
         } else if (IsFailure(Advice) && type == 'error') {
-          entries <- c(entries, list(.NewLogEntry(as.character(Advice), name = LogName(stockName), sim = sim, year = Year, mp = MPName)))
+          entries <- c(entries, list(ErrorEntry(as.character(Advice), LogName(stockName), sim, stockName)))
         }
       }
     }

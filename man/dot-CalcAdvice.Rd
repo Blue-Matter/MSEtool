@@ -35,9 +35,11 @@
 \value{
 A list with elements \code{AdviceSimList} (a list of length
 \code{length(DataSimList)}, each element a named list of \code{Advice} objects
-for the stocks/complexes) and \code{AggBagLimitSimList} (a list of the same
+for the stocks/complexes), \code{AggBagLimitSimList} (a list of the same
 length, each element a list of \code{aggbaglimit} objects returned by an
-\code{mmp}-class MP, or \code{NULL}).
+\code{mmp}-class MP, or \code{NULL}) and \code{DebugSimList} (a list of the same
+length, each element the debug records of the failed MP calls of that
+sim, see \code{.SplitMPDebug()}).
 }
 \description{
 Runs a management procedure (\code{MP}) across all simulations in \code{DataSimList}

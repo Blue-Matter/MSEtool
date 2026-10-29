@@ -32,6 +32,7 @@
     msg <- as.character(ErrorMessage)
     cli::cli_alert_danger("{label} {msg} {.timestamp {el}}")
     .MsgErrorDetails(ErrorEntries)
+    .MsgDebugHint(ErrorEntries)
     .WriteMPErrorLogOption(MPName, ErrorEntries)
     return(list(Proj = Proj, AllFailed = TRUE))
   }
@@ -58,6 +59,7 @@
     cli::cli_alert_warning("{label} failed for {nFailed} of {nSim} simulation{?s} ({sims}); {.cls mse} values for {cli::qty(nFailed)}{?this/these} simulation{?s} are {.val NA} {.timestamp {el}}")
   }
   .MsgErrorDetails(ErrorEntries)
+  .MsgDebugHint(ErrorEntries)
 
   .WriteMPErrorLogOption(MPName, ErrorEntries)
 

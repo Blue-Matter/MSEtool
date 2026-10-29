@@ -179,7 +179,7 @@
     )
     
     # Save Advice@Log to Proj@Log for each sim and stock
-    ExtractResult <- .ExtractAdviceLogs(AdviceSimList, Proj, Year, MPName)
+    ExtractResult <- .ExtractAdviceLogs(AdviceSimList, Proj, Year, MPName, MPResult$DebugSimList)
     Proj <- ExtractResult$Proj
 
     # a sim chunk only records the year; the master decides whether every sim failed
@@ -253,6 +253,8 @@
 
 .MergeMPResult <- function(MSE, result, MPName, mp, YearsHist, YearsProj, silent = FALSE,
                            nMP = 1, Store = NULL) {
+
+  result$Proj@Log$error <- .CapMPDebug(result$Proj@Log$error)
 
   CheckResult <- .CheckMSERun(result$Proj, MSE, MPName,
                               result$StartTime, result$EndTime,
