@@ -106,8 +106,8 @@
 #'
 #' The slots `nYear`, `pYear`, `nSim`, `CurrentYear`, and `Years` are
 #' initialised to working defaults (`20`, `30`, `48`, the current calendar
-#' year, and the corresponding year vector). These are overwritten automatically
-#' when the stock is attached to an [OM()], so they need not be set manually.
+#' year, and the corresponding year vector). These are set from the [OM()] by
+#' [Simulate()], so they need not be set manually.
 #'
 #' @return
 #' - `Stock()` returns a [stock-class] object. If `Name` is an S4 object with

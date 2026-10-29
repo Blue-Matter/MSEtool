@@ -165,8 +165,8 @@ The index \code{i} is passed via the \code{CommonName} argument.
 
 The slots \code{nYear}, \code{pYear}, \code{nSim}, \code{CurrentYear}, and \code{Years} are
 initialised to working defaults (\code{20}, \code{30}, \code{48}, the current calendar
-year, and the corresponding year vector). These are overwritten automatically
-when the stock is attached to an \code{\link[=OM]{OM()}}, so they need not be set manually.
+year, and the corresponding year vector). These are set from the \code{\link[=OM]{OM()}} by
+\code{\link[=Simulate]{Simulate()}}, so they need not be set manually.
 }
 }
 \examples{

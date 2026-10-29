@@ -111,7 +111,9 @@
 #'  * single numeric value: global TAC distributed across
 #' the stocks and fleets in the [Data()] object according to `FleetAllocation(OM)`.
 #'
-#'  * numeric vector length `nFleet`: fleet-specific TAC.
+#'  * numeric vector length `nFleet`: fleet-specific TAC. A vector named by
+#'  fleet (see [FleetNames()]) is matched to the fleets by name, e.g.
+#'  `TAC = c(Longline = 1000, Purse = 500)`.
 #'
 #' ## Effort
 #'
@@ -135,10 +137,12 @@
 #'    which is already fleet-specific). Note that in this case all fleets in
 #'    the OM must have the same units for `Effort`).
 #'
-#' * numeric vector length `nFleet`: Fleet-specific relative or absolute Effort. 
+#' * numeric vector length `nFleet`: Fleet-specific relative or absolute Effort.
+#' A vector named by fleet is matched to the fleets by name.
 #'
 #' * numeric matrix: Fleet- and Area-specific absolute Effort.
-#' Must have `nFleet` rows and `nArea` columns.  
+#' Must have `nFleet` rows and `nArea` columns. Rows named by fleet are
+#' matched to the fleets by name.
 #' 
 #' ## Closure
 #' 

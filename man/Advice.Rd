@@ -191,7 +191,9 @@ Total allowable catch in units of \code{"Biomass"} (default) or \code{"Number"}
 \itemize{
 \item single numeric value: global TAC distributed across
 the stocks and fleets in the \code{\link[=Data]{Data()}} object according to \code{FleetAllocation(OM)}.
-\item numeric vector length \code{nFleet}: fleet-specific TAC.
+\item numeric vector length \code{nFleet}: fleet-specific TAC. A vector named by
+fleet (see \code{\link[=FleetNames]{FleetNames()}}) is matched to the fleets by name, e.g.
+\code{TAC = c(Longline = 1000, Purse = 500)}.
 }
 }
 
@@ -217,8 +219,10 @@ which is already fleet-specific). Note that in this case all fleets in
 the OM must have the same units for \code{Effort}).
 }
 \item numeric vector length \code{nFleet}: Fleet-specific relative or absolute Effort.
+A vector named by fleet is matched to the fleets by name.
 \item numeric matrix: Fleet- and Area-specific absolute Effort.
-Must have \code{nFleet} rows and \code{nArea} columns.
+Must have \code{nFleet} rows and \code{nArea} columns. Rows named by fleet are
+matched to the fleets by name.
 }
 }
 

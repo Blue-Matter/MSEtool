@@ -30,17 +30,17 @@
 #'   is determined by the [Fleet()] and [Catchability()] parameters.
 #'   See [Depletion()].
 #' @slot nYear `numeric(1)`. Number of historical years. Initialised to `20`
-#'   by [Stock()] and overridden when attached to an [OM()].
+#'   by [Stock()] and set from the [OM()] by [Simulate()].
 #' @slot pYear `numeric(1)`. Number of projection years. Initialised to `30`
-#'   by [Stock()] and overridden when attached to an [OM()].
+#'   by [Stock()] and set from the [OM()] by [Simulate()].
 #' @slot nSim `numeric(1)`. Number of stochastic simulations. Initialised to
-#'   `48` by [Stock()] and overridden when attached to an [OM()].
+#'   `48` by [Stock()] and set from the [OM()] by [Simulate()].
 #' @slot CurrentYear `numeric(1)`. Final calendar year of the historical
 #'   period. Initialised to the current system year by [Stock()] and
-#'   overridden when attached to an [OM()].
+#'   set from the [OM()] by [Simulate()].
 #' @slot Years `numeric`. Vector of all model years (historical + projection),
-#'   derived from `nYear`, `pYear`, `CurrentYear`, and `Seasons`. Overridden
-#'   when attached to an [OM()].
+#'   derived from `nYear`, `pYear`, `CurrentYear`, and `Seasons`. Set from
+#'   the [OM()] by [Simulate()].
 #' @slot Seasons `numeric(1)`. Number of seasons per calendar year.
 #' @slot Misc `list`. Used internally.
 #' @slot Log `list`. Internal named list storing diagnostics, warnings, and
@@ -50,8 +50,8 @@
 #' @details
 #' This class is the central biological object in the operating model framework.
 #' The bookkeeping slots `nYear`, `pYear`, `nSim`, `CurrentYear`, and `Years`
-#' are populated with working defaults by [Stock()] and overridden automatically
-#' when the stock is attached to an [OM()]; they need not be set manually.
+#' are populated with working defaults by [Stock()] and set from the [OM()] by
+#' [Simulate()]; they need not be set manually.
 #'
 #' Direct construction via [methods::new()] is not recommended; use [Stock()]
 #' instead, which validates inputs and initialises all sub-objects.

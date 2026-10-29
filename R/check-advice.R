@@ -32,6 +32,8 @@
   nFleet <- length(FleetNames)
   nArea <- length(Areas)
   
+  Advice@TAC <- .MatchAdviceFleets(Advice@TAC, FleetNames, 'TAC')
+
   if (is.array(Advice@TAC)) {
     dd <- dim(Advice@TAC)
     if (dd[1]!=nFleet || dd[2]!=nArea) 
@@ -60,7 +62,9 @@
   
   if (is.null(Effort))
     return(Advice)
-  
+
+  Effort <- .MatchAdviceFleets(Effort, FleetNames, 'Effort')
+
   if (is.numeric(Effort) && !is.array(Effort)) {
     if (length(Effort)==1) {
       Effort <- array(Effort, dim=1, dimnames=list(Fleet='Total'))
@@ -97,6 +101,26 @@
  
 }
 
+
+# reorder a TAC or Effort vector (or the rows of an array) named by fleet to the order of `FleetNames`
+.MatchAdviceFleets <- function(x, FleetNames, SlotName) {
+  nFleet <- length(FleetNames)
+  Names <- if (is.array(x)) dimnames(x)[[1]] else names(x)
+  if (nFleet < 2 || NROW(x) != nFleet || is.null(Names) || identical(Names, FleetNames) ||
+      !any(Names %in% FleetNames))
+    return(x)
+
+  if (!setequal(Names, FleetNames))
+    stop(paste0("Names of `Advice@", SlotName, "` (", paste(Names, collapse = ", "),
+                ") must match the fleet names: ", paste(FleetNames, collapse = ", ")))
+
+  ind <- match(FleetNames, Names)
+  if (is.array(x) && length(dim(x)) == 2)
+    return(x[ind, , drop = FALSE])
+  if (is.array(x))
+    return(array(x[ind], dim = nFleet, dimnames = list(FleetNames)))
+  x[ind]
+}
 
 .CheckAdviceClosure <- function(Advice, Proj, FleetNames, Areas) {
   Closure <- Advice@Closure

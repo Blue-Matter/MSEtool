@@ -12,8 +12,8 @@ documents all parameters in detail and initialises sub-objects automatically.
 \details{
 This class is the central biological object in the operating model framework.
 The bookkeeping slots \code{nYear}, \code{pYear}, \code{nSim}, \code{CurrentYear}, and \code{Years}
-are populated with working defaults by \code{\link[=Stock]{Stock()}} and overridden automatically
-when the stock is attached to an \code{\link[=OM]{OM()}}; they need not be set manually.
+are populated with working defaults by \code{\link[=Stock]{Stock()}} and set from the \code{\link[=OM]{OM()}} by
+\code{\link[=Simulate]{Simulate()}}; they need not be set manually.
 
 Direct construction via \code{\link[methods:new]{methods::new()}} is not recommended; use \code{\link[=Stock]{Stock()}}
 instead, which validates inputs and initialises all sub-objects.
@@ -59,21 +59,21 @@ is determined by the \code{\link[=Fleet]{Fleet()}} and \code{\link[=Catchability
 See \code{\link[=Depletion]{Depletion()}}.}
 
 \item{\code{nYear}}{\code{numeric(1)}. Number of historical years. Initialised to \code{20}
-by \code{\link[=Stock]{Stock()}} and overridden when attached to an \code{\link[=OM]{OM()}}.}
+by \code{\link[=Stock]{Stock()}} and set from the \code{\link[=OM]{OM()}} by \code{\link[=Simulate]{Simulate()}}.}
 
 \item{\code{pYear}}{\code{numeric(1)}. Number of projection years. Initialised to \code{30}
-by \code{\link[=Stock]{Stock()}} and overridden when attached to an \code{\link[=OM]{OM()}}.}
+by \code{\link[=Stock]{Stock()}} and set from the \code{\link[=OM]{OM()}} by \code{\link[=Simulate]{Simulate()}}.}
 
 \item{\code{nSim}}{\code{numeric(1)}. Number of stochastic simulations. Initialised to
-\code{48} by \code{\link[=Stock]{Stock()}} and overridden when attached to an \code{\link[=OM]{OM()}}.}
+\code{48} by \code{\link[=Stock]{Stock()}} and set from the \code{\link[=OM]{OM()}} by \code{\link[=Simulate]{Simulate()}}.}
 
 \item{\code{CurrentYear}}{\code{numeric(1)}. Final calendar year of the historical
 period. Initialised to the current system year by \code{\link[=Stock]{Stock()}} and
-overridden when attached to an \code{\link[=OM]{OM()}}.}
+set from the \code{\link[=OM]{OM()}} by \code{\link[=Simulate]{Simulate()}}.}
 
 \item{\code{Years}}{\code{numeric}. Vector of all model years (historical + projection),
-derived from \code{nYear}, \code{pYear}, \code{CurrentYear}, and \code{Seasons}. Overridden
-when attached to an \code{\link[=OM]{OM()}}.}
+derived from \code{nYear}, \code{pYear}, \code{CurrentYear}, and \code{Seasons}. Set from
+the \code{\link[=OM]{OM()}} by \code{\link[=Simulate]{Simulate()}}.}
 
 \item{\code{Seasons}}{\code{numeric(1)}. Number of seasons per calendar year.}
 
