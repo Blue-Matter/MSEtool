@@ -501,7 +501,7 @@
     AgeClasses <- as.numeric(dimnames(dims$ASK)[['Age']])
     dn <- list(Sim=dims$sims, Age=AgeClasses, Year=dims$Years)
     if (byArea) dn$Area <- seq_len(nArea)
-    out <- array(val, dim=lengths(dn), dimnames=dn)
+    out <- array(val, dim=unname(lengths(dn)), dimnames=dn)
     object@MeanAtAge <<- out
   }
 
@@ -525,7 +525,7 @@
   # Allocate output 
   dn <- list(Sim=sims, Age=AgeClasses, Year=Years)
   if (byArea) dn$Area <- seq_len(nArea)
-  MeanAtAge <- array(0, dim=lengths(dn), dimnames=dn)
+  MeanAtAge <- array(0, dim=unname(lengths(dn)), dimnames=dn)
   
   object@MeanAtAge <- .AtSize2AtAgeCore(
     MeanAtAge, MeanAtSize, ASK,

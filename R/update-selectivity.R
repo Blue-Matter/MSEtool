@@ -77,7 +77,7 @@
   if (!is.null(dn) && 'Area' %in% dn)
     RetAge <- apply(RetAge, setdiff(dn, 'Area'), max)
   
-  if (!identical(dim(RetAge), dim(WSel)) || !identical(dim(WRet), dim(WSel)))
+  if (!.SameDim(RetAge, WSel) || !.SameDim(WRet, WSel))
     return(invisible(NULL))
   
   bad <- WSel + 1e-8 < RetAge * WRet

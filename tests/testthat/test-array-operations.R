@@ -89,7 +89,7 @@ test_that("ArrayMultiply's broadcast path matches the old materialize-then-opera
   ArrayList <- ArrayExtend(a, b)
   slow <- ArrayList$array1 * ArrayList$array2
 
-  expect_equal(dim(fast), dim(slow))
+  expect_equal(Dim(fast), Dim(slow))
   expect_equal(as.numeric(fast), as.numeric(slow))
 })
 

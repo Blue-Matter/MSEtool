@@ -237,6 +237,7 @@
     )
   }
   
+  dim(MeanAtAge) <- unname(dim(MeanAtAge))
   dimnames(MeanAtAge) <- dnames
   object@MeanAtAge <- MeanAtAge
   object

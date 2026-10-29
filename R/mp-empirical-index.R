@@ -468,7 +468,7 @@ class(IndexTarget) <- 'mp'
     Ref <- IndexData@Ref
     if (is.null(Ref)) Ref <- rep(NA_real_, nIndex)
     CV <- IndexData@CV
-    if (is.null(CV) || !identical(dim(CV), dim(IndexData@Value)))
+    if (is.null(CV) || !.SameDim(CV, IndexData@Value))
       CV <- array(NA_real_, dim(IndexData@Value))
     Timing <- IndexData@Timing
     if (!length(Timing)) Timing <- 0

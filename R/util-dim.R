@@ -28,6 +28,9 @@ Dim <- function(x) {
   d
 }
 
+# same extents, ignoring names on the dim attribute
+.SameDim <- function(a, b) identical(unname(dim(a)), unname(dim(b)))
+
 
 .SetDnames <- function(dnames, BySim=TRUE) {
   if (BySim & !"Sim" %in% dnames) 

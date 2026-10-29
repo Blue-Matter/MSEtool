@@ -272,7 +272,7 @@ CalcEquilibrium <- function(OM,
 
 .AlignToTemplate <- function(x, Ones) {
   out <- ArrayMultiply(.BroadcastTo(x, Ones), Ones) |> .Aperm(names(dimnames(Ones)))
-  if (!identical(dim(out), dim(Ones)))
+  if (!.SameDim(out, Ones))
     cli::cli_abort("Internal error: could not align an array to the equilibrium dimensions.")
   out
 }

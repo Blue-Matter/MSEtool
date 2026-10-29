@@ -138,7 +138,7 @@ ArrayExtend <- function(array1, array2) {
   dn1 <- dimnames(array1)
   dn2 <- dimnames(array2)
 
-  if (identical(dim(array1), dim(array2)) && identical(names(dn1), names(dn2))) {
+  if (.SameDim(array1, array2) && identical(names(dn1), names(dn2))) {
     same_year <- if ("Year" %in% names(dn1)) identical(dn1$Year, dn2$Year) else TRUE
     if (same_year)
       return(operation(array1, array2))

@@ -156,7 +156,7 @@ AnnualData <- function(Data, IndexSeasons = NULL, CompleteYears = TRUE) {
     if (is.null(obj@Value)) next
     RowYears <- .AnnualRowYears(obj@Value, Data@Years)
     if (!is.null(obj@CV)) {
-      obj@CV <- if (identical(dim(obj@CV), dim(obj@Value))) {
+      obj@CV <- if (.SameDim(obj@CV, obj@Value)) {
         Var <- .AnnualSum((obj@CV * obj@Value)^2, RowYears, AnnualYears)
         sqrt(Var) / .AnnualSum(obj@Value, RowYears, AnnualYears)
       } else {

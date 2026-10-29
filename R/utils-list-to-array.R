@@ -67,13 +67,13 @@ List2Array <- function(x, name = "Fleet", dim1='Sim', pos = NULL) {
     
     names(dimnames(out)) <- c(dim1, name)
   } else {  ## list of arrays
-    d  <- dim(first)
+    d  <- unname(dim(first))
     dn <- dimnames(first)
 
     if (is.null(dn))
       cli::cli_abort("arrays must have named dimensions")
 
-    already_conformable <- purrr::map_lgl(x, \(a) identical(dim(a), d) &&
+    already_conformable <- purrr::map_lgl(x, \(a) identical(unname(dim(a)), d) &&
                                             identical(dimnames(a), dn))
 
     if (!all(already_conformable)) {
@@ -91,10 +91,10 @@ List2Array <- function(x, name = "Fleet", dim1='Sim', pos = NULL) {
       if (length(areas)) x <- purrr::map(x, ExtendAreas, Areas = areas)
 
       first <- x[[1]]
-      d     <- dim(first)
+      d     <- unname(dim(first))
       dn    <- dimnames(first)
 
-      conformable <- purrr::map_lgl(x, \(a) identical(dim(a), d))
+      conformable <- purrr::map_lgl(x, \(a) identical(unname(dim(a)), d))
       if (!all(conformable))
         cli::cli_abort("all arrays in `x` must have identical dimensions")
     }

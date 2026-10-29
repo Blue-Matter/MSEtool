@@ -258,7 +258,7 @@ AddAgeIndices <- function(OM,
   Ages <- colnames(Value)
   if (anyDuplicated(Ages))
     cli::cli_abort("{.arg Value} has duplicated age class{?es} {.val {unique(Ages[duplicated(Ages)])}}.")
-  if (!is.null(CV) && length(CV) != 1 && !identical(dim(CV), dim(Value)))
+  if (!is.null(CV) && length(CV) != 1 && !.SameDim(CV, Value))
     cli::cli_abort("{.arg CV} must be {.code NULL}, a scalar, or a matrix with the same dimensions as {.arg Value}.")
 
   Complexes <- .AddIndexComplexes(OM)

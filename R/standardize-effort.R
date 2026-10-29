@@ -138,7 +138,7 @@ StandardizeEffort <- function(OM,
     # Validate Distribution arrays are identical across stocks
     ref_dist <- DistArrayList[[1]]
     for (st in stock_seq[-1]) {
-      if (!identical(dim(DistArrayList[[st]]), dim(ref_dist))) {
+      if (!.SameDim(DistArrayList[[st]], ref_dist)) {
         cli::cli_abort(c(
           "Effort {.val Distribution} dimensions differ across stocks for Fleet {fl}.",
           "i" = "{.code Fleet |> Effort() |> Distribution()} must be identical across stocks."
