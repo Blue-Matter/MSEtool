@@ -31,17 +31,15 @@ Optimisation is performed with \code{\link[stats:optim]{stats::optim()}} using t
 method. The two free parameters are the logit-transformed diagonal entries
 (staying probabilities for Area 1 and Area 2).
 
-When \code{UnfishedDist} has more than one age class and \code{age} is not the last
-age class (plus group), a one-step objective is used: the penalty is on
-the deviation of \code{UnfishedDist[age] \%*\% M} from \code{UnfishedDist[age + 1]}.
-This ensures the fitted matrix correctly maps the current age's equilibrium
-distribution to the next age's in a single time step, consistent with how
-the movement matrix is applied in the population dynamics.
+When \code{UnfishedDist} has more than one age class and \code{age} is neither the
+first age class nor the plus group, a one-step objective is used: the
+penalty is on the deviation of \code{UnfishedDist[age - 1] \%*\% M} from
+\code{UnfishedDist[age]}. In the population dynamics the movement matrix of age
+\code{age} is applied to fish as they enter that age class.
 
-For the plus group (\code{age == nAge}) and for age-invariant movement
-(\code{nAge == 1}), the objective falls back to penalising the deviation of the
-asymptotic (stationary) distribution from \code{UnfishedDist[age]}, since
-fish in the plus group apply the same movement matrix repeatedly.
+For the first age class, the plus group (\code{age == nAge}), and age-invariant
+movement (\code{nAge == 1}), the objective penalises the deviation of the
+asymptotic (stationary) distribution from \code{UnfishedDist[age]}.
 
 Dimension indices are clamped to the size of each slot's array, so a slot
 with a singleton dimension is treated as constant across that index.

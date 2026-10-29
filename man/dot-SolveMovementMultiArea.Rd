@@ -28,7 +28,7 @@ area.}
 probabilities. Diagonal elements must be \code{NA}.}
 
 \item{UnfishedDistNext}{\code{numeric(nArea)} or \code{NULL}. Target unfished
-distribution for the \strong{next} age class. When supplied, a one-step penalty
+distribution one age class after \code{UnfishedDist}. When supplied, a one-step penalty
 replaces the asymptotic-distribution penalty: \code{UnfishedDist \%*\% M} should
 equal \code{UnfishedDistNext}. When \code{NULL} (plus-group or age-invariant
 movement), the asymptotic distribution of \code{M} is penalised against
@@ -65,8 +65,8 @@ where \eqn{\pi_i} is the implied asymptotic distribution. When
 \code{UnfishedDistNext} is supplied, it is replaced by:
 
 \deqn{
-  -\sum_i \log \mathcal{N}\!\left(\log(\boldsymbol{u}_a \mathbf{M})_i
-  \mid \log u_{a+1,i},\, \sigma_{\text{dist}}^2\right)
+  -\sum_i \log \mathcal{N}\!\left(\log(\boldsymbol{u}_{a-1} \mathbf{M})_i
+  \mid \log u_{a,i},\, \sigma_{\text{dist}}^2\right)
 }
 
 In both cases the staying-probability penalty is:

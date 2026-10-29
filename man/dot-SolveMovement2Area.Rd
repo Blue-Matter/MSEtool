@@ -17,12 +17,13 @@ Area 1 and Area 2. The off-diagonal entries are set to
 \code{1 - ilogit(LogitProbs)}.}
 
 \item{UnfishedDist}{\code{numeric(2)}. Target unfished distribution across areas
-for the current age class.}
+for the current age class, or for the previous age class when
+\code{UnfishedDistNext} is supplied.}
 
 \item{ProbStaying}{\code{numeric(1)}. Target probability of remaining in Area 1.}
 
 \item{UnfishedDistNext}{\code{numeric(2)} or \code{NULL}. Target unfished distribution
-for the \strong{next} age class. When supplied, a one-step penalty is used:
+one age class after \code{UnfishedDist}. When supplied, a one-step penalty is used:
 \code{UnfishedDist \%*\% M} should equal \code{UnfishedDistNext}. When \code{NULL}
 (plus-group or age-invariant movement), the asymptotic distribution of \code{M}
 is compared to \code{UnfishedDist} instead.}

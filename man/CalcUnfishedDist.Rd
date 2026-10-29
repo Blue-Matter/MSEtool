@@ -4,7 +4,13 @@
 \alias{CalcUnfishedDist}
 \title{Calculate the Unfished Spatial Distribution}
 \usage{
-CalcUnfishedDist(Spatial, Ages = NULL, Years = NULL)
+CalcUnfishedDist(
+  Spatial,
+  Ages = NULL,
+  Years = NULL,
+  Number = NULL,
+  Survival = NULL
+)
 }
 \arguments{
 \item{Spatial}{A \code{\link[=Spatial]{Spatial()}} object with a populated \code{Movement} slot. The
@@ -13,8 +19,14 @@ CalcUnfishedDist(Spatial, Ages = NULL, Years = NULL)
 \item{Ages}{An \link[=ages-class]{ages} object supplying age class labels. If \code{NULL}
 (default), \code{\link[=DefaultAges]{DefaultAges()}} is used.}
 
-\item{Years}{Numeric vector of year labels. If \code{NULL} (default),
+\item{Years}{Numeric vector of time steps. If \code{NULL} (default),
 \code{\link[=DefaultYears]{DefaultYears()}} is used.}
+
+\item{Number}{Optional unfished numbers-at-age, \verb{Sim × Age × Year}, summed
+over areas.}
+
+\item{Survival}{Optional unfished survival-at-age over one time step,
+\verb{Sim × Age × Year}.}
 }
 \value{
 \code{Spatial} with \code{Spatial@UnfishedDist} populated as a named
@@ -22,25 +34,35 @@ CalcUnfishedDist(Spatial, Ages = NULL, Years = NULL)
 }
 \description{
 Computes the unfished spatial distribution for each simulation, age class,
-and year from \code{Spatial@Movement}. The result is stored in
+and time step from \code{Spatial@Movement}. The result is stored in
 \code{Spatial@UnfishedDist}.
 }
 \details{
-For a single-area model, all values are set to 1. For multi-area models,
-two modes are available:
+For a single-area model, all values are set to 1. For multi-area models the
+distribution is the equilibrium reached when the movement matrices of a
+calendar year are repeated indefinitely, following each cohort through the
+time steps of the year. Movement is applied as in the population dynamics:
+fish of age \eqn{a} in time step \eqn{t} are distributed as
+\deqn{\boldsymbol{\pi}_{a,t} = \boldsymbol{\pi}_{a-1,t-1} \mathbf{M}_{a,t}}
+where \eqn{t-1} is the previous time step within the repeated annual cycle.
 \itemize{
-\item \strong{Age-invariant movement} (\code{Movement} Age dimension = 1): the stationary
-(asymptotic) distribution of the single movement matrix is computed and
-applied uniformly across all age classes using \code{\link[=CalcAsymDist]{CalcAsymDist()}}.
-\item \strong{Age-varying movement} (\code{Movement} Age dimension > 1): a sequential
-chain propagates the analyst-specified recruit distribution forward through
-age classes. For age \eqn{a}:
-\deqn{\boldsymbol{\pi}_a = \boldsymbol{\pi}_{a-1} \mathbf{M}_{a-1}}
-The plus-group distribution is computed as the stationary distribution of
-\code{M[nAge]}, since fish remain in that age class across multiple time steps.
-The starting point \eqn{\boldsymbol{\pi}_1} is taken from the recruit
-distribution already stored in \code{Spatial@UnfishedDist[, , 1, ]}.
+\item \strong{Age-invariant movement} (\code{Movement} Age dimension = 1): all ages share
+the periodic stationary distribution of the annual cycle of movement
+matrices. For annual models this is the stationary distribution of the
+movement matrix (\code{\link[=CalcAsymDist]{CalcAsymDist()}}).
+\item \strong{Age-varying movement} (\code{Movement} Age dimension > 1): recruits take the
+age-0 distribution in \code{Spatial@UnfishedDist[, , 1, ]} when it is populated,
+otherwise the periodic stationary distribution of the age-0 movement
+matrices. Older ages follow the cohort recursion above. The plus group
+combines fish entering from the previous age class with fish remaining in
+the plus group. When \code{Number} and \code{Survival} are supplied, these are
+weighted by their unfished numbers; otherwise the plus group takes the
+periodic stationary distribution of its own movement matrices.
 }
+
+The distribution is calculated for each calendar year in the \code{Year}
+dimension of \code{Movement} (or of \code{Number}, when supplied), with all time
+steps of that year.
 }
 \seealso{
 \code{\link[=CalcAsymDist]{CalcAsymDist()}}, \code{\link[=FitMovement]{FitMovement()}}, \code{\link[=Spatial]{Spatial()}}
