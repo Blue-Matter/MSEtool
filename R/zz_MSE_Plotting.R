@@ -1085,7 +1085,7 @@ NOAA_plot <- function(MSEobj, nam = NA, type = NA, panel = T) {
 Pplot <- function(MSEobj, nam = NA, maxMP = 10,MPs=NA,maxsims=20) {
   op <- par(no.readonly = TRUE)
   on.exit(par(op))
-  if(!is.na(MPs)){
+  if(!all(is.na(MPs))){
     maxMP<-length(MPs)
     MSEobj<-Sub(MSEobj,MPs=MPs)
   } else{
@@ -3162,9 +3162,9 @@ custombar<-function(dat,MPnams,tickwd1=0.1,tickwd2=0.05,lwd1=2,lwd2=2,xlab=T,bco
 
 # A simulation by simulation approach to plotting results
 comp <- function(MSEobj, MPs = NA) {
-  if (is.na(MPs))
+  if (all(is.na(MPs)))
     MPs <- MSEobj@MPs
-  notm <- MPs[!(MPs %in% MSEobj@MPs)]
+  notm <-MPs[!(MPs %in% MSEobj@MPs)]
   canm <- MPs[MPs %in% MSEobj@MPs]
   if (length(notm) > 0)
     print(paste("Methods", paste(notm, collapse = ", "), "were not carried out in MSE",
