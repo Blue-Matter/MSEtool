@@ -72,12 +72,13 @@
 #' and recorded in the log. `Size@Mean`/`SD`/`Error` are not used.
 #'
 #' @param x An [om-class] object, for `Imp<-`; an [imp-class] object, for
-#'   `TACImp()`/`TACImp<-`.
+#'   `TACImp()`/`TACImp<-` and `Size()`/`Size<-`.
 #' @param value For `Imp<-`: a single [imp-class] object (replicated across
 #'   every complex/fleet), a flat list of [imp-class] objects of length
 #'   `nFleet` (replicated across every complex), or a nested list
 #'   `[[complex]][[fleet]]` of [imp-class] objects. For `TACImp<-`: an
-#'   [impslot-class] object to assign to the `TAC` slot.
+#'   [impslot-class] object to assign to the `TAC` slot. For `Size<-`: an
+#'   [impslot-class] object to assign to the `Size` slot.
 #'
 #' @return
 #' - `Imp()` returns a new [imp-class] object when `Name` is `NULL` or a

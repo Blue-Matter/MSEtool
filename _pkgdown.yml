@@ -106,6 +106,7 @@ reference:
   - SRR
   - Stock
   - Weight
+  - Model-accessors
 
 - subtitle: Fleet
   contents:
@@ -126,6 +127,7 @@ reference:
   - ExploitationObs
   - IndicesObs
   - LifeHistoryObs
+  - Obs-accessors
 
 - subtitle: Implementation
   contents:
@@ -136,7 +138,7 @@ reference:
   contents:
   - OM
   - OM-accessors
-  - name-accessors
+  - Dimensions
 
 - subtitle: Hist
   contents:
@@ -154,6 +156,7 @@ reference:
   - ExploitationData
   - LifeHistoryData
   - ReferenceData
+  - Data-accessors
 
 - subtitle: Advice
   contents:
@@ -170,7 +173,7 @@ reference:
   - Recruits
   - Interactions
 
-- subtitle: Miscellaneous Slot Access
+- subtitle: Other Slot Access
   contents:
   - Access
   - Bioeconomic
@@ -613,6 +616,7 @@ reference:
   - PM
   - PM-equations
   - NewPM
+  - PM-accessors
   - TACs
 
 

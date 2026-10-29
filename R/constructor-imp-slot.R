@@ -22,6 +22,8 @@
 #'   stochastically generated from
 #'   `Mean` and `SD` at simulation time (see [PopulateImpSlot()]).
 #' @param Misc List. Miscellaneous additional objects. Default `list()`.
+#' @param x An [impslot-class] object.
+#' @param value The value to assign to the slot.
 #'
 #' @details
 #' ## Mean, SD, and Error
@@ -54,10 +56,10 @@
 #' 
 #' @return
 #' - `ImpSlot()` returns a new [impslot-class] object.
-#' - `Mean()`, `SD()`, `Compliance()`, `Error()` return the corresponding slot
-#'   from an [impslot-class] object `x`.
-#' - `Mean<-`, `SD<-`, `Compliance<-`, `Error<-` return `x` with the named
-#'   slot replaced.
+#' - `Compliance()` returns the `Compliance` slot of an [impslot-class]
+#'   object `x`, and `Compliance<-` returns `x` with the slot replaced. The
+#'   `Mean`, `SD`, and `Error` slots are accessed with [Mean()], [SD()], and
+#'   [Error()].
 #'
 #' @seealso
 #' - [impslot-class] for the class definition.

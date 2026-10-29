@@ -1,307 +1,491 @@
-#' Access and Assign Slots from Compatible S4 Objects
+#' Common Slot Accessors
 #'
-#' Generic accessor and replacement functions to retrieve and assign named
-#' slots from compatible S4 objects across the `openMSE` package ecosystem.
-#' Functions work on any S4 object that contains the corresponding slot.
+#' Access and replace the `Name` and `Misc` slots, which are shared by most S4
+#' objects in the `openMSE` package ecosystem.
+#'
+#' Slot accessors for specific object types are documented by topic:
+#' - [Dimensions] for the number of simulations, stocks, fleets, areas, ages,
+#'   and complexes, and stock and fleet names.
+#' - [Model-accessors] for the slots of stock and fleet model components
+#'   (e.g. [Pars()], [MeanAtAge()]).
+#' - [Obs-accessors] for observation-error settings (e.g. [CV()], [Bias()]).
+#' - [Data-accessors] for the slots of [obs-class] and [data-class] objects and
+#'   their components (e.g. [CPUE()], [Value()]).
+#' - [PM-accessors] for performance metric objects (e.g. [Prob()]).
+#' - [OM-accessors] for operating model settings and metadata.
+#' - [ImpSlot()] and [Imp()] for implementation objects.
 #'
 #' @param x An S4 object with the corresponding slot.
-#' @param value The value to assign to the slot
-#' @param st Integer. Stock index used when `x` contains multiple stocks.
-#'   Default `1` for `nArea()` and `NULL` for `nAge()` (returns all stocks as
-#'   a list when `NULL`).
+#' @param value The value to assign to the slot.
 #'
 #' @return
-#' - Accessor functions return the value stored in the named slot of `x`.
-#'   For `Stat()`, `Prob()`, and `Mean()` on a [pm-class] object, the named
-#'   `Sim x Stock x MP` (or `Stock x MP`) array is converted to a tidy
-#'   data frame via [Array2DF()] instead of being returned as a raw array.
+#' - `Name()` and `Misc()` return the value stored in the named slot of `x`.
+#'   `Name()` on a [hist-class] or [mse-class] object returns the names of the
+#'   embedded `OM`, and on a list returns a list of names.
 #' - Replacement functions return `x` with the named slot updated to `value`.
-#' - `nArea()` returns the number of areas implied by the populated slots of
-#'   the [spatial-class] object (from a `spatial`, `stock`, `om`, `hist`, or
-#'   `mse` object), or `1` when no spatial structure is specified. It gives an
-#'   error if the populated slots imply different numbers of areas.
-#' - `nStock()` and `nFleet()` return the number of stocks and fleets in an
-#'   [om-class], [hist-class], or [mse-class] object, a [stock-class] or
-#'   [fleet-class] object, or a list of these objects, and `0` when none are
-#'   specified. For a [data-class] object, `nStock()` returns `1` and
-#'   `nFleet()` returns the number of fleets given by [FleetNames()].
+#'
+#' @family slot-accessors
 #'
 #' @examples
-#' MyLength <- Length()
-#' MeanAtAge(MyLength)
+#' Name(SingleStockOM)
 #'
 #' @name Access
 NULL
 
+#' Object Dimensions and Names
+#'
+#' Return the number of simulations, stocks, fleets, areas, ages, or complexes
+#' in an object, and the names of its stocks and fleets.
+#'
+#' @param x An [om-class], [hist-class], or [mse-class] object, or a component
+#'   object or list as described under Value.
+#' @param value Integer. The number of simulations to assign.
+#' @param st Integer or character. Stock index or name used when `x` contains
+#'   multiple stocks. Default `1` for `nArea()` and `NULL` for `nAge()`
+#'   (returns all stocks as a list when `NULL`).
+#'
+#' @return
+#' - `nSim()` returns the number of simulations in an [om-class],
+#'   [stock-class], or [fleet-class] object (or the `OM` of a [hist-class] or
+#'   [mse-class] object), or the length of the `Sim` dimension of an array.
+#'   `nSim<-` returns `x` with the `nSim` slot replaced.
+#' - `nStock()` and `nFleet()` return the number of stocks and fleets in an
+#'   [om-class], [hist-class], or [mse-class] object, a [stock-class] or
+#'   [fleet-class] object, or a list of these objects, and `0` when none are
+#'   specified. For a [data-class] object, `nStock()` returns `1` and
+#'   `nFleet()` returns the number of fleets given by `FleetNames()`.
+#' - `nArea()` returns the number of areas implied by the populated slots of
+#'   the [spatial-class] object (from a `spatial`, `stock`, `om`, `hist`, or
+#'   `mse` object), or `1` when no spatial structure is specified. It gives an
+#'   error if the populated slots imply different numbers of areas. For a
+#'   [data-class] object it returns the `nArea` slot.
+#' - `nAge()` returns the number of age classes in an [ages-class] or
+#'   [stock-class] object, or in each stock of an [om-class], [hist-class], or
+#'   [mse-class] object.
+#' - `nComplex()` returns the number of stock complexes in an [om-class],
+#'   [hist-class], or [mse-class] object.
+#' - `StockNames()` returns a character vector of stock names.
+#' - `FleetNames()` returns a character vector of fleet names, taken from the
+#'   first stock. For a [data-class] object (or a list of them) the names are
+#'   taken from the catch, effort, and composition data, and
+#'   `IncSurvey = TRUE` adds the names of the `CPUE` and `Survey` indices.
+#'
+#' @seealso [OM-accessors] for the number of historical and projection years
+#'   and seasons; [Years()] for the year values.
+#'
+#' @family slot-accessors
+#'
+#' @examples
+#' nSim(SingleStockOM)
+#' nStock(SingleStockOM)
+#' nFleet(SingleStockOM)
+#' nAge(SingleStockOM)
+#' StockNames(SingleStockOM)
+#' FleetNames(SingleStockOM)
+#'
+#' @name Dimensions
+NULL
 
-#' @rdname Access
+#' Stock and Fleet Model Component Accessors
+#'
+#' Access and replace the slots of the stock and fleet model components:
+#' [ages-class], [length-class], [weight-class], [maturity-class],
+#' [fecundity-class], [naturalmortality-class], [srr-class],
+#' [selectivity-class], [retention-class], and [discardmortality-class].
+#' Functions work on any S4 object that contains the corresponding slot.
+#'
+#' | Function | Slot of |
+#' |---|---|
+#' | `Pars()`, `Model()` | all model components except `ages` and `discardmortality` |
+#' | `Units()` | `ages`, `length`, `weight`, `fecundity`, `naturalmortality`, `srr`; also observation and data components |
+#' | `Classes()` | all model components except `srr`; also [compdata-class]; for a [stock-class] object returns `Ages@Classes` |
+#' | `MeanAtAge()` | all model components except `ages` and `srr` |
+#' | `MeanAtLength()` | all model components except `ages`, `length`, and `srr` |
+#' | `MeanAtWeight()` | `maturity`, `selectivity`, `retention` |
+#' | `CVatAge()`, `Dist()` | `length`, `weight` |
+#' | `Random()` | `length`, `weight`, `naturalmortality` |
+#' | `Timing()` | `length`, `weight`, `fecundity`; also [indicesdata-class] |
+#' | `TruncSD()` | `length`, `weight`, `srr`; also [indicesobs-class] |
+#' | `SD()` | `srr`; also [impslot-class] |
+#'
+#' @param x An S4 object with the corresponding slot.
+#' @param value The value to assign to the slot.
+#'
+#' @return
+#' - Accessor functions return the value stored in the named slot of `x`.
+#' - Replacement functions return `x` with the named slot updated to `value`.
+#'
+#' @family slot-accessors
+#'
+#' @examples
+#' len <- Length(Pars = list(Linf = 80, K = 0.2, t0 = -0.5))
+#' Pars(len)
+#' Model(len)
+#' Units(len) <- "cm"
+#'
+#' @name Model-accessors
+NULL
+
+#' Observation Model Accessors
+#'
+#' Access and replace the observation-error settings of the observation model
+#' components: [catchobs-class], [effortobs-class], [indicesobs-class], and
+#' [compobs-class]. Functions work on any S4 object that contains the
+#' corresponding slot.
+#'
+#' | Function | Slot of |
+#' |---|---|
+#' | `Bias()` | `catchobs`, `effortobs` |
+#' | `CV()` | `catchobs`, `effortobs`, `indicesobs`; also the data components |
+#' | `DataCV()` | `catchobs`, `effortobs`, `indicesobs` |
+#' | `Error()` | `catchobs`, `effortobs`, `indicesobs`; also [impslot-class] |
+#' | `AC()` | `indicesobs`; also [srr-class] and [stocktargeting-class] |
+#' | `Beta()`, `Areas()`, `Stats()`, `Type()` | `indicesobs` |
+#' | `MaxGap()` | `indicesobs`, `compobs` |
+#' | `ESS()`, `SampleSize()`, `Shift()` | `compobs` |
+#'
+#' @param x An S4 object with the corresponding slot.
+#' @param value The value to assign to the slot.
+#'
+#' @return
+#' - Accessor functions return the value stored in the named slot of `x`.
+#' - Replacement functions return `x` with the named slot updated to `value`.
+#'
+#' @seealso [Obs()], [CatchObs()], [EffortObs()], [IndicesObs()],
+#'   [CompObs()]
+#'
+#' @family slot-accessors
+#'
+#' @examples
+#' obs <- CatchObs()
+#' CV(obs) <- 0.2
+#' CV(obs)
+#'
+#' @name Obs-accessors
+NULL
+
+#' Observation and Data Accessors
+#'
+#' Access and replace the slots of [obs-class] and [data-class] objects and
+#' their data components ([catchdata-class], [effortdata-class],
+#' [indicesdata-class], [compdata-class]). Functions work on any S4 object
+#' that contains the corresponding slot.
+#'
+#' | Function | Slot of |
+#' |---|---|
+#' | `CPUE()`, `Survey()`, `LifeHistory()`, `Exploitation()` | `obs`, `data` |
+#' | `LandingsAtAge()`, `LandingsAtSize()`, `DiscardsAtAge()`, `DiscardsAtSize()` | `obs`, `data`, [hist-class], [mse-class], [timeseries-class] |
+#' | `Reference()` | `data`, `hist`, `mse`, [depletion-class] |
+#' | `Value()` | the data components |
+#' | `Ref()` | `catchdata`, `indicesdata`; also the observation components and [pm-class] |
+#' | `RefCV()` | `catchdata`, `indicesdata` |
+#' | `YearLH()` | `data` |
+#'
+#' @param x An S4 object with the corresponding slot.
+#' @param value The value to assign to the slot.
+#'
+#' @return
+#' - Accessor functions return the value stored in the named slot of `x`.
+#' - Replacement functions return `x` with the named slot updated to `value`.
+#'
+#' @seealso [Data()], [Obs()], [CatchData()], [EffortData()], [CompData()]
+#'
+#' @family slot-accessors
+#'
+#' @name Data-accessors
+NULL
+
+#' Performance Metric Accessors
+#'
+#' Access and replace the slots of [pm-class] objects.
+#'
+#' @param x A [pm-class] object, or another S4 object with the corresponding
+#'   slot. `Mean()` also applies to [impslot-class] and
+#'   [stocktargeting-class] objects, and `MPs()` to [mse-class] objects.
+#' @param value The value to assign to the slot.
+#'
+#' @return
+#' - `Stat()`, `Prob()`, and `Mean()` on a [pm-class] object convert the
+#'   named `Sim x Stock x MP` (or `Stock x MP`) array to a tidy data frame
+#'   via [Array2DF()]. On other objects they return the slot value.
+#' - `Caption()` and `MPs()` return the value stored in the named slot of `x`.
+#' - Replacement functions return `x` with the named slot updated to `value`.
+#'
+#' @seealso [PM()], [PerformanceMetric()]
+#'
+#' @family slot-accessors
+#'
+#' @name PM-accessors
+NULL
+
+
+#' @rdname Obs-accessors
 #' @export
 AC <- function(x) {
   .AccessSlot(x, 'AC')
 }
 
-#' @rdname Access
+#' @rdname Obs-accessors
 #' @export
 `AC<-` <- function(x, value) {
   .AssignSlot(x, value, 'AC')
 }
 
-#' @rdname Access
+#' @rdname Obs-accessors
 #' @export
 Areas <- function(x) {
   .AccessSlot(x, 'Areas')
 }
 
-#' @rdname Access
+#' @rdname Obs-accessors
 #' @export
 `Areas<-` <- function(x, value) {
   .AssignSlot(x, value, 'Areas')
 }
 
-#' @rdname Access
+#' @rdname Obs-accessors
 #' @export
 Beta <- function(x) {
   .AccessSlot(x, 'Beta')
 }
 
-#' @rdname Access
+#' @rdname Obs-accessors
 #' @export
 `Beta<-` <- function(x, value) {
   .AssignSlot(x, value, 'Beta')
 }
 
-#' @rdname Access
+#' @rdname Obs-accessors
 #' @export
 Bias <- function(x) {
   .AccessSlot(x, 'Bias')
 }
 
-#' @rdname Access
+#' @rdname Obs-accessors
 #' @export
 `Bias<-` <- function(x, value) {
   .AssignSlot(x, value, 'Bias')
 }
 
-#' @rdname Access
+#' @rdname PM-accessors
 #' @export
 Caption <- function(x) {
   .AccessSlot(x, 'Caption')
 }
 
-#' @rdname Access
+#' @rdname PM-accessors
 #' @export
 `Caption<-` <- function(x, value) {
   .AssignSlot(x, value, 'Caption')
 }
 
 
-#' @rdname Access
+#' @rdname Model-accessors
 #' @export
 Classes <- function(x) {
-  validclasses <- c('ages', 'length', 'weight', 'maturity', 'fecundity',
-                    'selectivity', 'discardmortality', 'retention')
-  .CheckClass(x, c('stock', 'StockList', validclasses), 'x')
-  
-  if (inherits(x, validclasses))
-    return(x@Classes)
-  
   if (inherits(x, 'stock'))
     return(x@Ages@Classes)
-  
+
   if (inherits(x, 'StockList'))
-    return(purrr::map(x, Recall))
+    return(purrr::map(x, Classes))
+
+  if (isS4(x) && methods::.hasSlot(x, 'Classes'))
+    return(x@Classes)
+
+  cli::cli_abort(c("Argument {.arg x} must be a {.cls stock} or an object with a {.code Classes} slot",
+                   "x" = "You've supplied an object of class {.cls {class(x)}}"), call = NULL)
 }
 
-#' @rdname Access
+#' @rdname Model-accessors
 #' @export
 `Classes<-` <- function(x, value) {
   .AssignSlot(x, value, 'Classes')
 }
 
-#' @rdname Access
+#' @rdname ImpSlot
 #' @export
 Compliance <- function(x) {
   .AccessSlot(x, 'Compliance')
 }
 
-#' @rdname Access
+#' @rdname ImpSlot
 #' @export
 `Compliance<-` <- function(x, value) {
   .AssignSlot(x, value, 'Compliance')
 }
 
-#' @rdname Access
+#' @rdname Data-accessors
 #' @export
 CPUE <- function(x) {
   .AccessSlot(x, 'CPUE')
 }
 
-#' @rdname Access
+#' @rdname Data-accessors
 #' @export
 `CPUE<-` <- function(x, value) {
   .AssignSlot(x, value, 'CPUE')
 }
 
-#' @rdname Access
+#' @rdname Obs-accessors
 #' @export
 CV <- function(x) {
   .AccessSlot(x, 'CV')
 }
 
-#' @rdname Access
+#' @rdname Obs-accessors
 #' @export
 `CV<-` <- function(x, value) {
   .AssignSlot(x, value, 'CV')
 }
 
-#' @rdname Access
+#' @rdname Model-accessors
 #' @export
 CVatAge <- function(x) {
   .AccessSlot(x, 'CVatAge')
 }
 
-#' @rdname Access
+#' @rdname Model-accessors
 #' @export
 `CVatAge<-` <- function(x, value) {
   .AssignSlot(x, value, 'CVatAge')
 }
 
-#' @rdname Access
+#' @rdname Obs-accessors
 #' @export
 DataCV <- function(x) {
   .AccessSlot(x, 'DataCV')
 }
 
-#' @rdname Access
+#' @rdname Obs-accessors
 #' @export
 `DataCV<-` <- function(x, value) {
   .AssignSlot(x, value, 'DataCV')
 }
 
-#' @rdname Access
+#' @rdname Model-accessors
 #' @export
 Dist <- function(x) {
   .AccessSlot(x, 'Dist')
 }
 
-#' @rdname Access
+#' @rdname Model-accessors
 #' @export
 `Dist<-` <- function(x, value) {
   .AssignSlot(x, value, 'Dist')
 }
 
-#' @rdname Access
+#' @rdname Data-accessors
 #' @export
 DiscardsAtAge <- function(x) {
   .AccessSlot(x, 'DiscardsAtAge')
 }
 
-#' @rdname Access
+#' @rdname Data-accessors
 #' @export
 `DiscardsAtAge<-` <- function(x, value) {
   .AssignSlot(x, value, 'DiscardsAtAge')
 }
 
-#' @rdname Access
+#' @rdname Data-accessors
 #' @export
 DiscardsAtSize <- function(x) {
   .AccessSlot(x, 'DiscardsAtSize')
 }
 
-#' @rdname Access
+#' @rdname Data-accessors
 #' @export
 `DiscardsAtSize<-` <- function(x, value) {
   .AssignSlot(x, value, 'DiscardsAtSize')
 }
 
-#' @rdname Access
+#' @rdname Obs-accessors
 #' @export
 ESS <- function(x) {
   .AccessSlot(x, 'ESS')
 }
 
-#' @rdname Access
+#' @rdname Obs-accessors
 #' @export
 `ESS<-` <- function(x, value) {
   .AssignSlot(x, value, 'ESS')
 }
 
-#' @rdname Access
+#' @rdname Obs-accessors
 #' @export
 Error <- function(x) {
   .AccessSlot(x, 'Error')
 }
 
-#' @rdname Access
+#' @rdname Obs-accessors
 #' @export
 `Error<-` <- function(x, value) {
   .AssignSlot(x, value, 'Error')
 }
 
-#' @rdname Access
+#' @rdname Data-accessors
 #' @export
 Exploitation <- function(x) {
   .AccessSlot(x, 'Exploitation')
 }
 
-#' @rdname Access
+#' @rdname Data-accessors
 #' @export
 `Exploitation<-` <- function(x, value) {
   .AssignSlot(x, value, 'Exploitation')
 }
 
 
-#' @rdname Access
+#' @rdname Data-accessors
 #' @export
 LandingsAtAge <- function(x) {
   .AccessSlot(x, 'LandingsAtAge')
 }
 
-#' @rdname Access
+#' @rdname Data-accessors
 #' @export
 `LandingsAtAge<-` <- function(x, value) {
   .AssignSlot(x, value, 'LandingsAtAge')
 }
 
-#' @rdname Access
+#' @rdname Data-accessors
 #' @export
 LandingsAtSize <- function(x) {
   .AccessSlot(x, 'LandingsAtSize')
 }
 
-#' @rdname Access
+#' @rdname Data-accessors
 #' @export
 `LandingsAtSize<-` <- function(x, value) {
   .AssignSlot(x, value, 'LandingsAtSize')
 }
 
-#' @rdname Access
+#' @rdname Data-accessors
 #' @export
 LifeHistory <- function(x) {
   .AccessSlot(x, 'LifeHistory')
 }
 
-#' @rdname Access
+#' @rdname Data-accessors
 #' @export
 `LifeHistory<-` <- function(x, value) {
   .AssignSlot(x, value, 'LifeHistory')
 }
 
 
-#' @rdname Access
+#' @rdname Obs-accessors
 #' @export
 MaxGap <- function(x) {
   .AccessSlot(x, 'MaxGap')
 }
 
-#' @rdname Access
+#' @rdname Obs-accessors
 #' @export
 `MaxGap<-` <- function(x, value) {
   if (!is.null(value)) value <- as.numeric(value)
   .AssignSlot(x, value, 'MaxGap')
 }
 
-#' @rdname Access
+#' @rdname PM-accessors
 #' @export
 Mean <- function(x) {
   if (inherits(x, 'pm'))
@@ -309,44 +493,44 @@ Mean <- function(x) {
   .AccessSlot(x, 'Mean')
 }
 
-#' @rdname Access
+#' @rdname PM-accessors
 #' @export
 `Mean<-` <- function(x, value) {
   .AssignSlot(x, value, 'Mean')
 }
 
 
-#' @rdname Access
+#' @rdname Model-accessors
 #' @export
 MeanAtAge <- function(x) {
   .AccessSlot(x, 'MeanAtAge')
 }
 
-#' @rdname Access
+#' @rdname Model-accessors
 #' @export
 `MeanAtAge<-` <- function(x, value) {
   .AssignSlot(x, value, 'MeanAtAge')
 }
 
-#' @rdname Access
+#' @rdname Model-accessors
 #' @export
 MeanAtLength <- function(x) {
   .AccessSlot(x, 'MeanAtLength')
 }
 
-#' @rdname Access
+#' @rdname Model-accessors
 #' @export
 `MeanAtLength<-` <- function(x, value) {
   .AssignSlot(x, value, 'MeanAtLength')
 }
 
-#' @rdname Access
+#' @rdname Model-accessors
 #' @export
 MeanAtWeight <- function(x) {
   .AccessSlot(x, 'MeanAtWeight')
 }
 
-#' @rdname Access
+#' @rdname Model-accessors
 #' @export
 `MeanAtWeight<-` <- function(x, value) {
   .AssignSlot(x, value, 'MeanAtWeight')
@@ -364,7 +548,7 @@ Misc <- function(x) {
   .AssignSlot(x, value, 'Misc')
 }
 
-#' @rdname Access
+#' @rdname PM-accessors
 #' @export
 MPs <- function(x) {
   if (!isS4(x) && is.list(x))
@@ -372,20 +556,20 @@ MPs <- function(x) {
   .AccessSlot(x, 'MPs')
 }
 
-#' @rdname Access
+#' @rdname PM-accessors
 #' @export
 `MPs<-` <- function(x, value) {
   .AssignSlot(x, value, 'MPs')
 }
 
-#' @rdname Access
+#' @rdname Model-accessors
 #' @export
 Model <- function(x) {
   .AccessSlot(x, 'Model')
 }
 
 
-#' @rdname Access
+#' @rdname Model-accessors
 #' @export
 `Model<-` <- function(x, value) {
   .AssignSlot(x, value, 'Model')
@@ -413,7 +597,7 @@ Name <- function(x) {
   .AssignSlotRecursive(x, value, 'Name')
 }
 
-#' @rdname Access
+#' @rdname Dimensions
 #' @export
 nSim <- function(x) {
   if (isS4(x)) {
@@ -431,13 +615,13 @@ nSim <- function(x) {
     return(length(dnames[['Sim']]))
 }
 
-#' @rdname Access
+#' @rdname Dimensions
 #' @export
 `nSim<-` <- function(x, value) {
   .AssignSlot(x, value, 'nSim')
 }
 
-#' @rdname Access
+#' @rdname Dimensions
 #' @export
 nArea <- function(x, st = 1) {
   if (inherits(x, 'hist') || inherits(x, 'mse'))
@@ -464,7 +648,7 @@ nArea <- function(x, st = 1) {
   .SpatialNArea(x)
 }
 
-#' @rdname Access
+#' @rdname Dimensions
 #' @export
 nAge <- function(x, st = NULL) {
   if (inherits(x, 'ages'))
@@ -487,7 +671,7 @@ nAge <- function(x, st = NULL) {
     return(length(x@Ages@Classes))
 }
 
-#' @rdname Access
+#' @rdname Dimensions
 #' @export
 nComplex <- function(x) {
   .CheckClass(x, c('om', 'hist', 'mse'), 'x')
@@ -502,7 +686,7 @@ nComplex <- function(x) {
     return(length(x@OM@Complexes))
 }
 
-#' @rdname Access
+#' @rdname Dimensions
 #' @export
 nStock <- function(x) {
   if (inherits(x, c('stock', 'data')))
@@ -512,7 +696,7 @@ nStock <- function(x) {
   length(.StockList(x))
 }
 
-#' @rdname Access
+#' @rdname Dimensions
 #' @export
 nFleet <- function(x) {
   if (inherits(x, 'data') || .IsDataList(x))
@@ -559,31 +743,19 @@ nFleet <- function(x) {
   is.list(x) && !isS4(x) && length(x) > 0 && all(purrr::map_lgl(x, \(d) inherits(d, 'data')))
 }
 
-#' @rdname Access
+#' @rdname Model-accessors
 #' @export
 Pars <- function(x) {
   .AccessSlot(x, 'Pars')
 }
 
-#' @rdname Access
+#' @rdname Model-accessors
 #' @export
 `Pars<-` <- function(x, value) {
   .AssignSlot(x, value, 'Pars')
 }
 
-#' @rdname Access
-#' @export
-Period <- function(x) {
-  .AccessSlot(x, 'Period')
-}
-
-#' @rdname Access
-#' @export
-`Period<-` <- function(x, value) {
-  .AssignSlot(x, value, 'Period')
-}
-
-#' @rdname Access
+#' @rdname PM-accessors
 #' @export
 Prob <- function(x) {
   if (inherits(x, 'pm'))
@@ -591,91 +763,91 @@ Prob <- function(x) {
   .AccessSlot(x, 'Prob')
 }
 
-#' @rdname Access
+#' @rdname PM-accessors
 #' @export
 `Prob<-` <- function(x, value) {
   .AssignSlot(x, value, 'Prob')
 }
 
-#' @rdname Access
+#' @rdname Model-accessors
 #' @export
 Random <- function(x) {
   .AccessSlot(x, 'Random')
 }
 
-#' @rdname Access
+#' @rdname Data-accessors
 #' @export
 Ref <- function(x) {
   .AccessSlot(x, 'Ref')
 }
 
-#' @rdname Access
+#' @rdname Data-accessors
 #' @export
 `Ref<-` <- function(x, value) {
   .AssignSlot(x, value, 'Ref')
 }
 
-#' @rdname Access
+#' @rdname Data-accessors
 #' @export
 RefCV <- function(x) {
   .AccessSlot(x, 'RefCV')
 }
 
-#' @rdname Access
+#' @rdname Data-accessors
 #' @export
 `RefCV<-` <- function(x, value) {
   .AssignSlot(x, value, 'RefCV')
 }
 
-#' @rdname Access
+#' @rdname Data-accessors
 #' @export
 Reference <- function(x) {
   .AccessSlot(x, 'Reference')
 }
 
-#' @rdname Access
+#' @rdname Data-accessors
 #' @export
 `Reference<-` <- function(x, value) {
   .AssignSlot(x, value, 'Reference')
 }
 
-#' @rdname Access
+#' @rdname Obs-accessors
 #' @export
 SampleSize <- function(x) {
   .AccessSlot(x, 'SampleSize')
 }
 
-#' @rdname Access
+#' @rdname Obs-accessors
 #' @export
 `SampleSize<-` <- function(x, value) {
   .AssignSlot(x, value, 'SampleSize')
 }
 
-#' @rdname Access
+#' @rdname Imp
 #' @export
 Size <- function(x) {
   .AccessSlot(x, 'Size')
 }
 
-#' @rdname Access
+#' @rdname Imp
 #' @export
 `Size<-` <- function(x, value) {
   .AssignSlot(x, value, 'Size')
 }
 
-#' @rdname Access
+#' @rdname Model-accessors
 #' @export
 SD <- function(x) {
   .AccessSlot(x, 'SD')
 }
 
-#' @rdname Access
+#' @rdname Model-accessors
 #' @export
 `SD<-` <- function(x, value) {
   .AssignSlot(x, value, 'SD')
 }
 
-#' @rdname Access
+#' @rdname PM-accessors
 #' @export
 Stat <- function(x) {
   if (inherits(x, 'pm'))
@@ -683,109 +855,109 @@ Stat <- function(x) {
   .AccessSlot(x, 'Stat')
 }
 
-#' @rdname Access
+#' @rdname PM-accessors
 #' @export
 `Stat<-` <- function(x, value) {
   .AssignSlot(x, value, 'Stat')
 }
 
-#' @rdname Access
+#' @rdname Obs-accessors
 #' @export
 Shift <- function(x) {
   .AccessSlot(x, 'Shift')
 }
 
-#' @rdname Access
+#' @rdname Obs-accessors
 #' @export
 `Shift<-` <- function(x, value) {
   .AssignSlot(x, value, 'Shift')
 }
 
-#' @rdname Access
+#' @rdname Obs-accessors
 #' @export
 Stats <- function(x) {
   .AccessSlot(x, 'Stats')
 }
 
-#' @rdname Access
+#' @rdname Obs-accessors
 #' @export
 `Stats<-` <- function(x, value) {
   .AssignSlot(x, value, 'Stats')
 }
 
-#' @rdname Access
+#' @rdname Data-accessors
 #' @export
 Survey <- function(x) {
   .AccessSlot(x, 'Survey')
 }
 
-#' @rdname Access
+#' @rdname Data-accessors
 #' @export
 `Survey<-` <- function(x, value) {
   .AssignSlot(x, value, 'Survey')
 }
 
-#' @rdname Access
+#' @rdname Model-accessors
 #' @export
 Timing <- function(x) {
   .AccessSlot(x, 'Timing')
 }
 
-#' @rdname Access
+#' @rdname Model-accessors
 #' @export
 TruncSD <- function(x) {
   .AccessSlot(x, 'TruncSD')
 }
 
-#' @rdname Access
+#' @rdname Model-accessors
 #' @export
 `TruncSD<-` <- function(x, value) {
   .AssignSlot(x, value, 'TruncSD')
 }
 
-#' @rdname Access
+#' @rdname Obs-accessors
 #' @export
 Type <- function(x) {
   .AccessSlot(x, 'Type')
 }
 
-#' @rdname Access
+#' @rdname Obs-accessors
 #' @export
 `Type<-` <- function(x, value) {
   .AssignSlot(x, value, 'Type')
 }
 
-#' @rdname Access
+#' @rdname Model-accessors
 #' @export
 Units <- function(x) {
   .AccessSlot(x, 'Units')
 }
 
-#' @rdname Access
+#' @rdname Model-accessors
 #' @export
 `Units<-` <- function(x, value) {
   .AssignSlot(x, value, 'Units')
 }
 
-#' @rdname Access
+#' @rdname Data-accessors
 #' @export
 Value <- function(x) {
   .AccessSlot(x, 'Value')
 }
 
-#' @rdname Access
+#' @rdname Data-accessors
 #' @export
 `Value<-` <- function(x, value) {
   .AssignSlot(x, value, 'Value')
 }
 
-#' @rdname Access
+#' @rdname Data-accessors
 #' @export
 YearLH <- function(x) {
   .AccessSlot(x, 'YearLH')
 }
 
-#' @rdname Access
+#' @rdname Data-accessors
 #' @export
 `YearLH<-` <- function(x, value) {
   .AssignSlot(x, value, 'YearLH')

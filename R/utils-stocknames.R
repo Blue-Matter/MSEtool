@@ -1,35 +1,6 @@
-#' Access Stock or Fleet Names 
-#'
-#' @details
-#' These functions extract stock or fleet names from objects used in the MSE
-#' framework, including [om-class], [hist-class], [mse-class], [stock-class],
-#' [fleet-class], and [data-class] objects, or lists of these objects.
-#'
-#' **StockNames**
-#'
-#' Returns the names of stocks contained in the object.
-#'
-#' **FleetNames**
-#'
-#' Returns the names of fleets contained in the object. For a [data-class]
-#' object (or a list of them) the names are taken from the catch, effort, and
-#' composition data, and `IncSurvey = TRUE` adds the names of the `CPUE` and
-#' `Survey` indices.
-#'
 #' @param object An [om-class], [hist-class], [mse-class], [stock-class],
 #'   [fleet-class], or [data-class] object, or a list of these objects.
-#'
-#' @return
-#' * `StockNames()`: a character vector of stock names
-#' * `FleetNames()`: a character vector of fleet names (always taken from the first stock)
-#'
-#'
-#' @examples
-#' StockNames(SingleStockOM)
-#' FleetNames(SingleStockOM)
-#'
-#' @name name-accessors
-#' @rdname name-accessors
+#' @rdname Dimensions
 #' @export
 StockNames <- function(object) {
   if (inherits(object, c("stock", "data")))
@@ -46,7 +17,7 @@ StockNames <- function(object) {
   purrr::map_chr(stocks, Name)
 }
 
-#' @rdname name-accessors
+#' @rdname Dimensions
 #' @param IncSurvey Logical. Include names of survey (non-fishing) fleets? Default: FALSE
 #' @export
 FleetNames <- function(object, IncSurvey = FALSE) {

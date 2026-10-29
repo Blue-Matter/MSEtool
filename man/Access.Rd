@@ -2,351 +2,62 @@
 % Please edit documentation in R/util-accessors.R
 \name{Access}
 \alias{Access}
-\alias{AC}
-\alias{AC<-}
-\alias{Areas}
-\alias{Areas<-}
-\alias{Beta}
-\alias{Beta<-}
-\alias{Bias}
-\alias{Bias<-}
-\alias{Caption}
-\alias{Caption<-}
-\alias{Classes}
-\alias{Classes<-}
-\alias{Compliance}
-\alias{Compliance<-}
-\alias{CPUE}
-\alias{CPUE<-}
-\alias{CV}
-\alias{CV<-}
-\alias{CVatAge}
-\alias{CVatAge<-}
-\alias{DataCV}
-\alias{DataCV<-}
-\alias{Dist}
-\alias{Dist<-}
-\alias{DiscardsAtAge}
-\alias{DiscardsAtAge<-}
-\alias{DiscardsAtSize}
-\alias{DiscardsAtSize<-}
-\alias{ESS}
-\alias{ESS<-}
-\alias{Error}
-\alias{Error<-}
-\alias{Exploitation}
-\alias{Exploitation<-}
-\alias{LandingsAtAge}
-\alias{LandingsAtAge<-}
-\alias{LandingsAtSize}
-\alias{LandingsAtSize<-}
-\alias{LifeHistory}
-\alias{LifeHistory<-}
-\alias{MaxGap}
-\alias{MaxGap<-}
-\alias{Mean}
-\alias{Mean<-}
-\alias{MeanAtAge}
-\alias{MeanAtAge<-}
-\alias{MeanAtLength}
-\alias{MeanAtLength<-}
-\alias{MeanAtWeight}
-\alias{MeanAtWeight<-}
 \alias{Misc}
 \alias{Misc<-}
-\alias{MPs}
-\alias{MPs<-}
-\alias{Model}
-\alias{Model<-}
 \alias{Name}
 \alias{Name<-}
-\alias{nSim}
-\alias{nSim<-}
-\alias{nArea}
-\alias{nAge}
-\alias{nComplex}
-\alias{nStock}
-\alias{nFleet}
-\alias{Pars}
-\alias{Pars<-}
-\alias{Period}
-\alias{Period<-}
-\alias{Prob}
-\alias{Prob<-}
-\alias{Random}
-\alias{Ref}
-\alias{Ref<-}
-\alias{RefCV}
-\alias{RefCV<-}
-\alias{Reference}
-\alias{Reference<-}
-\alias{SampleSize}
-\alias{SampleSize<-}
-\alias{Size}
-\alias{Size<-}
-\alias{SD}
-\alias{SD<-}
-\alias{Stat}
-\alias{Stat<-}
-\alias{Shift}
-\alias{Shift<-}
-\alias{Stats}
-\alias{Stats<-}
-\alias{Survey}
-\alias{Survey<-}
-\alias{Timing}
-\alias{TruncSD}
-\alias{TruncSD<-}
-\alias{Type}
-\alias{Type<-}
-\alias{Units}
-\alias{Units<-}
-\alias{Value}
-\alias{Value<-}
-\alias{YearLH}
-\alias{YearLH<-}
-\title{Access and Assign Slots from Compatible S4 Objects}
+\title{Common Slot Accessors}
 \usage{
-AC(x)
-
-AC(x) <- value
-
-Areas(x)
-
-Areas(x) <- value
-
-Beta(x)
-
-Beta(x) <- value
-
-Bias(x)
-
-Bias(x) <- value
-
-Caption(x)
-
-Caption(x) <- value
-
-Classes(x)
-
-Classes(x) <- value
-
-Compliance(x)
-
-Compliance(x) <- value
-
-CPUE(x)
-
-CPUE(x) <- value
-
-CV(x)
-
-CV(x) <- value
-
-CVatAge(x)
-
-CVatAge(x) <- value
-
-DataCV(x)
-
-DataCV(x) <- value
-
-Dist(x)
-
-Dist(x) <- value
-
-DiscardsAtAge(x)
-
-DiscardsAtAge(x) <- value
-
-DiscardsAtSize(x)
-
-DiscardsAtSize(x) <- value
-
-ESS(x)
-
-ESS(x) <- value
-
-Error(x)
-
-Error(x) <- value
-
-Exploitation(x)
-
-Exploitation(x) <- value
-
-LandingsAtAge(x)
-
-LandingsAtAge(x) <- value
-
-LandingsAtSize(x)
-
-LandingsAtSize(x) <- value
-
-LifeHistory(x)
-
-LifeHistory(x) <- value
-
-MaxGap(x)
-
-MaxGap(x) <- value
-
-Mean(x)
-
-Mean(x) <- value
-
-MeanAtAge(x)
-
-MeanAtAge(x) <- value
-
-MeanAtLength(x)
-
-MeanAtLength(x) <- value
-
-MeanAtWeight(x)
-
-MeanAtWeight(x) <- value
-
 Misc(x)
 
 Misc(x) <- value
 
-MPs(x)
-
-MPs(x) <- value
-
-Model(x)
-
-Model(x) <- value
-
 Name(x)
 
 Name(x) <- value
-
-nSim(x)
-
-nSim(x) <- value
-
-nArea(x, st = 1)
-
-nAge(x, st = NULL)
-
-nComplex(x)
-
-nStock(x)
-
-nFleet(x)
-
-Pars(x)
-
-Pars(x) <- value
-
-Period(x)
-
-Period(x) <- value
-
-Prob(x)
-
-Prob(x) <- value
-
-Random(x)
-
-Ref(x)
-
-Ref(x) <- value
-
-RefCV(x)
-
-RefCV(x) <- value
-
-Reference(x)
-
-Reference(x) <- value
-
-SampleSize(x)
-
-SampleSize(x) <- value
-
-Size(x)
-
-Size(x) <- value
-
-SD(x)
-
-SD(x) <- value
-
-Stat(x)
-
-Stat(x) <- value
-
-Shift(x)
-
-Shift(x) <- value
-
-Stats(x)
-
-Stats(x) <- value
-
-Survey(x)
-
-Survey(x) <- value
-
-Timing(x)
-
-TruncSD(x)
-
-TruncSD(x) <- value
-
-Type(x)
-
-Type(x) <- value
-
-Units(x)
-
-Units(x) <- value
-
-Value(x)
-
-Value(x) <- value
-
-YearLH(x)
-
-YearLH(x) <- value
 }
 \arguments{
 \item{x}{An S4 object with the corresponding slot.}
 
-\item{value}{The value to assign to the slot}
-
-\item{st}{Integer. Stock index used when \code{x} contains multiple stocks.
-Default \code{1} for \code{nArea()} and \code{NULL} for \code{nAge()} (returns all stocks as
-a list when \code{NULL}).}
+\item{value}{The value to assign to the slot.}
 }
 \value{
 \itemize{
-\item Accessor functions return the value stored in the named slot of \code{x}.
-For \code{Stat()}, \code{Prob()}, and \code{Mean()} on a \link[=pm-class]{pm} object, the named
-\verb{Sim x Stock x MP} (or \verb{Stock x MP}) array is converted to a tidy
-data frame via \code{\link[=Array2DF]{Array2DF()}} instead of being returned as a raw array.
+\item \code{Name()} and \code{Misc()} return the value stored in the named slot of \code{x}.
+\code{Name()} on a \link[=hist-class]{hist} or \link[=mse-class]{mse} object returns the names of the
+embedded \code{OM}, and on a list returns a list of names.
 \item Replacement functions return \code{x} with the named slot updated to \code{value}.
-\item \code{nArea()} returns the number of areas implied by the populated slots of
-the \link[=spatial-class]{spatial} object (from a \code{spatial}, \code{stock}, \code{om}, \code{hist}, or
-\code{mse} object), or \code{1} when no spatial structure is specified. It gives an
-error if the populated slots imply different numbers of areas.
-\item \code{nStock()} and \code{nFleet()} return the number of stocks and fleets in an
-\link[=om-class]{om}, \link[=hist-class]{hist}, or \link[=mse-class]{mse} object, a \link[=stock-class]{stock} or
-\link[=fleet-class]{fleet} object, or a list of these objects, and \code{0} when none are
-specified. For a \link[=data-class]{data} object, \code{nStock()} returns \code{1} and
-\code{nFleet()} returns the number of fleets given by \code{\link[=FleetNames]{FleetNames()}}.
 }
 }
 \description{
-Generic accessor and replacement functions to retrieve and assign named
-slots from compatible S4 objects across the \code{openMSE} package ecosystem.
-Functions work on any S4 object that contains the corresponding slot.
+Access and replace the \code{Name} and \code{Misc} slots, which are shared by most S4
+objects in the \code{openMSE} package ecosystem.
+}
+\details{
+Slot accessors for specific object types are documented by topic:
+\itemize{
+\item \link{Dimensions} for the number of simulations, stocks, fleets, areas, ages,
+and complexes, and stock and fleet names.
+\item \link{Model-accessors} for the slots of stock and fleet model components
+(e.g. \code{\link[=Pars]{Pars()}}, \code{\link[=MeanAtAge]{MeanAtAge()}}).
+\item \link{Obs-accessors} for observation-error settings (e.g. \code{\link[=CV]{CV()}}, \code{\link[=Bias]{Bias()}}).
+\item \link{Data-accessors} for the slots of \link[=obs-class]{obs} and \link[=data-class]{data} objects and
+their components (e.g. \code{\link[=CPUE]{CPUE()}}, \code{\link[=Value]{Value()}}).
+\item \link{PM-accessors} for performance metric objects (e.g. \code{\link[=Prob]{Prob()}}).
+\item \link{OM-accessors} for operating model settings and metadata.
+\item \code{\link[=ImpSlot]{ImpSlot()}} and \code{\link[=Imp]{Imp()}} for implementation objects.
+}
 }
 \examples{
-MyLength <- Length()
-MeanAtAge(MyLength)
+Name(SingleStockOM)
 
 }
+\seealso{
+Other slot-accessors:
+\code{\link{Data-accessors}},
+\code{\link{Dimensions}},
+\code{\link{Model-accessors}},
+\code{\link{Obs-accessors}},
+\code{\link{PM-accessors}}
+}
+\concept{slot-accessors}
