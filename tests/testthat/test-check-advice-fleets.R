@@ -12,6 +12,10 @@ test_that("fleet-specific TAC and Effort are matched by fleet name", {
   Advice <- .CheckAdviceTAC(Advice(TAC = c(`Fleet 1` = 10, `Fleet 2` = 5)), NULL, FleetNames, Areas)
   expect_equal(as.numeric(Advice@TAC), c(10, 5))
 
+  # partly named, e.g. c(L[1], NA) from fleet-named data, is positional
+  Advice <- .CheckAdviceTAC(Advice(TAC = c(PS = 5, NA)), NULL, FleetNames, Areas)
+  expect_equal(as.numeric(Advice@TAC), c(5, NA))
+
   expect_error(.CheckAdviceTAC(Advice(TAC = c(PS = 5, LX = 10)), NULL, FleetNames, Areas),
                "must match the fleet names")
 

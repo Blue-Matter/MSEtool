@@ -107,7 +107,7 @@
   nFleet <- length(FleetNames)
   Names <- if (is.array(x)) dimnames(x)[[1]] else names(x)
   if (nFleet < 2 || NROW(x) != nFleet || is.null(Names) || identical(Names, FleetNames) ||
-      !any(Names %in% FleetNames))
+      any(is.na(Names) | !nzchar(Names)) || !any(Names %in% FleetNames))
     return(x)
 
   if (!setequal(Names, FleetNames))

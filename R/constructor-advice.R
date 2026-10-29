@@ -113,7 +113,8 @@
 #'
 #'  * numeric vector length `nFleet`: fleet-specific TAC. A vector named by
 #'  fleet (see [FleetNames()]) is matched to the fleets by name, e.g.
-#'  `TAC = c(Longline = 1000, Purse = 500)`.
+#'  `TAC = c(Longline = 1000, Purse = 500)`. If any element is unnamed, the
+#'  values are taken in fleet order.
 #'
 #' ## Effort
 #'
@@ -138,7 +139,8 @@
 #'    the OM must have the same units for `Effort`).
 #'
 #' * numeric vector length `nFleet`: Fleet-specific relative or absolute Effort.
-#' A vector named by fleet is matched to the fleets by name.
+#' A vector named by fleet is matched to the fleets by name. If any element
+#' is unnamed, the values are taken in fleet order.
 #'
 #' * numeric matrix: Fleet- and Area-specific absolute Effort.
 #' Must have `nFleet` rows and `nArea` columns. Rows named by fleet are
