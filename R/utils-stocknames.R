@@ -2,8 +2,8 @@
 #'
 #' @details
 #' These functions extract stock or fleet names from objects used in the MSE
-#' framework, including [om-class], [hist-class], [stock-class], [fleet-class], and [mse-class]
-#' objects
+#' framework, including [om-class], [hist-class], [mse-class], [stock-class],
+#' [fleet-class], and [data-class] objects, or lists of these objects.
 #'
 #' **StockNames**
 #'
@@ -11,10 +11,13 @@
 #'
 #' **FleetNames**
 #'
-#' Returns the names of fleets contained in the object. For objects containing
-#' multiple stocks, a list of character vectors is returned.
+#' Returns the names of fleets contained in the object. For a [data-class]
+#' object (or a list of them) the names are taken from the catch, effort, and
+#' composition data, and `IncSurvey = TRUE` adds the names of the `CPUE` and
+#' `Survey` indices.
 #'
-#' @param object An [om-class], [hist-class], [stock-class], [fleet-class], or [mse-class] object.
+#' @param object An [om-class], [hist-class], [mse-class], [stock-class],
+#'   [fleet-class], or [data-class] object, or a list of these objects.
 #'
 #' @return
 #' * `StockNames()`: a character vector of stock names
@@ -29,72 +32,62 @@
 #' @rdname name-accessors
 #' @export
 StockNames <- function(object) {
-  if (inherits(object, c("hist", "mse"))) {
-    return(names(object@OM@Stock))
-  }
-  
-  if (inherits(object, "om")) {
-    if (inherits(object@Stock, 'stock')) 
-      return(object@Stock@Name)
-      
-    nms <- names(object@Stock)
-    if (!is.null(nms))
-      return(nms)
-    
-    return(
-      purrr::map_chr(object@Stock, Name)  
-    )
-    
-  }
-  
-  if (inherits(object, "StockList")) {
-    return(names(object))
-  }
-  
-  NULL
+  if (inherits(object, c("stock", "data")))
+    return(object@Name)
+
+  if (!is.list(object) && !inherits(object, c("om", "hist", "mse")))
+    return(NULL)
+
+  stocks <- .StockList(object)
+  nms <- names(stocks)
+  if (!is.null(nms))
+    return(nms)
+
+  purrr::map_chr(stocks, Name)
 }
 
 #' @rdname name-accessors
 #' @param IncSurvey Logical. Include names of survey (non-fishing) fleets? Default: FALSE
 #' @export
 FleetNames <- function(object, IncSurvey = FALSE) {
-  
-  if (inherits(object, c("hist", "mse")))
-    return(Recall(object@OM, IncSurvey = IncSurvey))
-  
-  if (inherits(object, "om")) {
-    
-    if (inherits(object@Fleet, "fleet")) {
-      fleetnames <- object@Fleet@Name
-    } else if (is.list(object@Fleet)) {
-      fleetnames <- names(object@Fleet[[1]])  
-      if (is.null(fleetnames)) {
-        fleetnames <- purrr::map_chr(object@Fleet[[1]], Name)
-      }
-    } else {
-      cli::cli_alert_warning("Unrecognised structure in {.val object@Fleet}; cannot extract fleet names.")
-      return(NULL)
-    }
-    
-    if (IncSurvey && !is.null(object@Data)) {
-      surveynames <- lapply(object@Data, \(st) st@Survey@Name) |>
-        unlist() |> unique()
-      
-      cpuenames <- lapply(object@Data, \(st) st@CPUE@Name) |>
-        unlist() |> unique()
-      
-      fleetnames <- unique(c(fleetnames, surveynames, cpuenames))
-    }
-    return(fleetnames)
+
+  if (inherits(object, "data"))
+    object <- list(object)
+
+  if (.IsDataList(object)) {
+    slots <- c("Landings", "Discards", "Effort", "LandingsAtAge", "DiscardsAtAge",
+               "LandingsAtSize", "DiscardsAtSize")
+    if (IncSurvey)
+      slots <- c(slots, "CPUE", "Survey")
+    fleetnames <- purrr::map(object, \(d) purrr::map(slots, \(sl) .DataFleetNames(methods::slot(d, sl))))
+    return(as.character(unique(unlist(fleetnames))))
   }
- 
-  if (inherits(object, "FleetList"))
-    return(names(object))
-  
-  if (inherits(object, "StockList"))
-    return(lapply(object, names))  
-  
-  cli::cli_alert_warning("No FleetNames method for object of class {.cls {class(object)}}")
-  
-  invisible(NULL)
+
+  if (!is.list(object))
+    .CheckClass(object, c("om", "hist", "mse", "fleet", "data"), "object")
+
+  fleets <- .FleetList(object)
+  fleetnames <- names(fleets)
+  if (is.null(fleetnames))
+    fleetnames <- purrr::map_chr(fleets, \(fl) if (length(fl@Name)) fl@Name[1] else NA_character_)
+  fleetnames <- as.character(fleetnames)
+
+  if (inherits(object, c("hist", "mse")))
+    object <- object@OM
+
+  if (IncSurvey && inherits(object, "om") && !is.null(object@Data)) {
+    DataList <- if (inherits(object@Data, "data")) list(object@Data) else object@Data
+    surveynames <- lapply(DataList, \(d) c(d@Survey@Name, d@CPUE@Name)) |> unlist()
+    fleetnames <- unique(c(fleetnames, surveynames))
+  }
+  fleetnames
+}
+
+.DataFleetNames <- function(DataSlot) {
+  if (!is.null(DataSlot@Name))
+    return(DataSlot@Name)
+  Value <- DataSlot@Value
+  if (is.null(Value))
+    return(NULL)
+  dimnames(Value)[["Fleet"]] %||% paste("Fleet", seq_len(NCOL(Value)))
 }

@@ -17,6 +17,7 @@ A named list of MP functions.
 Accepts a character vector of MP function names, a named list of MP
 functions, or a list mixing both. Character elements are looked up with
 \code{\link[=get]{get()}} and named by themselves unless a name is given; function elements
-must be named. Validates each with \code{.CheckMPClass()}.
+must be named. Warns via \code{.WarnIdenticalMPs()} if the same function is
+supplied under more than one name, and validates each with \code{.CheckMPClass()}.
 }
 \keyword{internal}

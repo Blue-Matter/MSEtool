@@ -333,6 +333,11 @@ data frame via \code{\link[=Array2DF]{Array2DF()}} instead of being returned as 
 the \link[=spatial-class]{spatial} object (from a \code{spatial}, \code{stock}, \code{om}, \code{hist}, or
 \code{mse} object), or \code{1} when no spatial structure is specified. It gives an
 error if the populated slots imply different numbers of areas.
+\item \code{nStock()} and \code{nFleet()} return the number of stocks and fleets in an
+\link[=om-class]{om}, \link[=hist-class]{hist}, or \link[=mse-class]{mse} object, a \link[=stock-class]{stock} or
+\link[=fleet-class]{fleet} object, or a list of these objects, and \code{0} when none are
+specified. For a \link[=data-class]{data} object, \code{nStock()} returns \code{1} and
+\code{nFleet()} returns the number of fleets given by \code{\link[=FleetNames]{FleetNames()}}.
 }
 }
 \description{

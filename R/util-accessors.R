@@ -20,6 +20,11 @@
 #'   the [spatial-class] object (from a `spatial`, `stock`, `om`, `hist`, or
 #'   `mse` object), or `1` when no spatial structure is specified. It gives an
 #'   error if the populated slots imply different numbers of areas.
+#' - `nStock()` and `nFleet()` return the number of stocks and fleets in an
+#'   [om-class], [hist-class], or [mse-class] object, a [stock-class] or
+#'   [fleet-class] object, or a list of these objects, and `0` when none are
+#'   specified. For a [data-class] object, `nStock()` returns `1` and
+#'   `nFleet()` returns the number of fleets given by [FleetNames()].
 #'
 #' @examples
 #' MyLength <- Length()
@@ -500,49 +505,58 @@ nComplex <- function(x) {
 #' @rdname Access
 #' @export
 nStock <- function(x) {
-  .CheckClass(x, c('om', 'hist', 'mse'), 'x')
-  
-  if (inherits(x, 'om'))
-    return(length(x@Stock))
-  
-  if (inherits(x, 'hist'))
-    return(length(x@OM@Stock))
-  
-  if (inherits(x, 'mse'))
-    return(length(x@OM@Stock))
+  if (inherits(x, c('stock', 'data')))
+    return(1)
+  if (!is.list(x))
+    .CheckClass(x, c('om', 'hist', 'mse', 'stock', 'data'), 'x')
+  length(.StockList(x))
 }
 
 #' @rdname Access
 #' @export
 nFleet <- function(x) {
-  .CheckClass(x, c('om', 'hist', 'mse', 'data'), 'x')
-  
-  if (inherits(x, 'om')) {
-    fleet <- x@Fleet
-    if (is.null(fleet))
-      return(0)
-    if (inherits(fleet, 'fleet'))
-      return(1)
-    if (is.list(fleet[[1]]))
-      return(length(fleet[[1]]))
-    if (isS4(fleet[[1]])) {
-      dd <- dim(x@Fleet[[1]]@Selectivity@MeanAtAge)
-      return(dd[3])
-    }
-  }
-  
-  if (inherits(x, 'data')) {
-    return(
-      lapply(list(x@Landings@Value,
-                  x@Discards@Value,
-                  x@Survey@Value,
-                  x@CPUE@Value,
-                  NULL), ncol) |>
-        unlist() |> max()
-    )
-  }
-  
-  return(dim(x@LandingsAtAge[[1]])[[4]])
+  if (inherits(x, 'data') || .IsDataList(x))
+    return(length(FleetNames(x)))
+  if (!is.list(x))
+    .CheckClass(x, c('om', 'hist', 'mse', 'fleet', 'data'), 'x')
+
+  if (inherits(x, c('hist', 'mse')) && length(x@LandingsAtAge) &&
+      length(dim(x@LandingsAtAge[[1]])) >= 4)
+    return(dim(x@LandingsAtAge[[1]])[[4]])
+
+  length(.FleetList(x))
+}
+
+# named list of stock objects from an om/hist/mse, a single stock, or a list
+.StockList <- function(x) {
+  if (inherits(x, c('hist', 'mse')))
+    x <- x@OM
+  if (inherits(x, 'om'))
+    x <- x@Stock
+  if (is.null(x))
+    return(list())
+  if (!is.list(x))
+    x <- list(x)
+  x
+}
+
+# flat list of fleet objects (first stock) from an om/hist/mse, a fleet, or a flat/nested list
+.FleetList <- function(x) {
+  if (inherits(x, c('hist', 'mse')))
+    x <- x@OM
+  if (inherits(x, 'om'))
+    x <- x@Fleet
+  if (is.null(x))
+    return(list())
+  if (!is.list(x))
+    return(list(x))
+  if (length(x) && is.list(x[[1]]))
+    return(x[[1]])
+  x
+}
+
+.IsDataList <- function(x) {
+  is.list(x) && !isS4(x) && length(x) > 0 && all(purrr::map_lgl(x, \(d) inherits(d, 'data')))
 }
 
 #' @rdname Access

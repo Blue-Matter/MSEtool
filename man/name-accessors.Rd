@@ -11,7 +11,8 @@ StockNames(object)
 FleetNames(object, IncSurvey = FALSE)
 }
 \arguments{
-\item{object}{An \link[=om-class]{om}, \link[=hist-class]{hist}, \link[=stock-class]{stock}, \link[=fleet-class]{fleet}, or \link[=mse-class]{mse} object.}
+\item{object}{An \link[=om-class]{om}, \link[=hist-class]{hist}, \link[=mse-class]{mse}, \link[=stock-class]{stock},
+\link[=fleet-class]{fleet}, or \link[=data-class]{data} object, or a list of these objects.}
 
 \item{IncSurvey}{Logical. Include names of survey (non-fishing) fleets? Default: FALSE}
 }
@@ -26,8 +27,8 @@ Access Stock or Fleet Names
 }
 \details{
 These functions extract stock or fleet names from objects used in the MSE
-framework, including \link[=om-class]{om}, \link[=hist-class]{hist}, \link[=stock-class]{stock}, \link[=fleet-class]{fleet}, and \link[=mse-class]{mse}
-objects
+framework, including \link[=om-class]{om}, \link[=hist-class]{hist}, \link[=mse-class]{mse}, \link[=stock-class]{stock},
+\link[=fleet-class]{fleet}, and \link[=data-class]{data} objects, or lists of these objects.
 
 \strong{StockNames}
 
@@ -35,8 +36,10 @@ Returns the names of stocks contained in the object.
 
 \strong{FleetNames}
 
-Returns the names of fleets contained in the object. For objects containing
-multiple stocks, a list of character vectors is returned.
+Returns the names of fleets contained in the object. For a \link[=data-class]{data}
+object (or a list of them) the names are taken from the catch, effort, and
+composition data, and \code{IncSurvey = TRUE} adds the names of the \code{CPUE} and
+\code{Survey} indices.
 }
 \examples{
 StockNames(SingleStockOM)
