@@ -912,7 +912,7 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   #out$Ai <- Ai
   #out$TAE <- TAE
   out$Effort <- Effort_act # actual effort this year
-  out$Ftot <- Ftot 
+  out$Ftot <- Ftot2 
 
   #out$LR5_P <- LR5_P
   #out$LFR_P <- LFR_P
@@ -1221,8 +1221,8 @@ CalcMPDynamics_MF <- function(MPRecs_f, y, nyears, proyears, nsim,
                                        (1 + FleetPars_f[[f]]$qinc/100)^y)  # effort required - already accounts for effort-by-area
       
       Effort_act[Ftot2[f, ] <= 1E-3, f] <- tiny
-      out[[f]]$Ftot <- Ftot[f, ]
-      
+      # out[[f]]$Ftot <- Ftot[f, ]
+      out[[f]]$Ftot <- Ftot2[f, ]
       out[[f]]$TACrec <- TACused[, f]
       out[[f]]$Effort <- Effort_act[, f]
     } else {
@@ -1230,7 +1230,7 @@ CalcMPDynamics_MF <- function(MPRecs_f, y, nyears, proyears, nsim,
                                   (1 + FleetPars_f[[f]]$qinc/100)^y)  # effort required - already accounts for effort-by-area
       
       Effort_act[Ftot2 <= 1E-3, f] <- tiny
-      out[[f]]$Ftot <- Ftot
+      out[[f]]$Ftot <- Ftot2
       
       out[[f]]$TACrec <- TACused[, f]
       out[[f]]$Effort <- Effort_act[, f]

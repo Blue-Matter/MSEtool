@@ -507,38 +507,31 @@ setMethod("initialize", "Fleet", function(.Object, file = NA, dec=c(".", ",")) {
 
 
 
-#' ~~ Methods for Function \code{initialize} ~~
+#' Methods for Function \code{initialize} 
 #'
 #' @name initialize-methods
 #' @aliases initialize-methods initialize,Data-method initialize,Fleet-method initialize,MSE-method initialize,Obs-method initialize,OM-method initialize,Stock-method initialize initialize,Fease-method initialize,DLM_general-method
 #' @docType methods
 #' @section Methods: \describe{
 #'
-#' \item{list('signature(.Object = \'DLM\')')}{ %% ~~describe this method
-#' here~~ }
+#' \item{list('signature(.Object = \'DLM\')')}{ }
 #'
-#' \item{list('signature(.Object = \'Fleet\')')}{ %% ~~describe this method
-#' here~~ }
+#' \item{list('signature(.Object = \'Fleet\')')}{  }
 #'
-#' \item{list('signature(.Object = \'MSE\')')}{ %% ~~describe this method
-#' here~~ }
+#' \item{list('signature(.Object = \'MSE\')')}{ }
 #'
-#' \item{list('signature(.Object = \'Obs\')')}{ %% ~~describe this
-#' method here~~ }
+#' \item{list('signature(.Object = \'Obs\')')}{ }
 #'
-#' \item{list('signature(.Object = \'OM\')')}{ %% ~~describe this method here~~
-#' }
+#' \item{list('signature(.Object = \'OM\')')}{ }
 #'
-#' \item{list('signature(.Object = \'Stock\')')}{ %% ~~describe this method
-#' here~~ }
+#' \item{list('signature(.Object = \'Stock\')')}{ }
 #'
 #'
-#' \item{list('signature(.Object = \'Fease\')')}{ %% ~~describe this method
-#' here~~ } \item{list('signature(.Object = \'DLM_general\')')}{ %% ~~describe
-#' this method here~~ }
+#' \item{list('signature(.Object = \'Fease\')')}{ }
+#' \item{list('signature(.Object = \'DLM_general\')')}{ }
 #'
 #' }
-#' @keywords methods ~~ other possible keyword(s) ~~
+#' @keywords methods 
 NULL
 
 

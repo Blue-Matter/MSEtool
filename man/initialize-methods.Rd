@@ -3,40 +3,38 @@
 \docType{methods}
 \name{initialize-methods}
 \alias{initialize-methods}
-\title{~~ Methods for Function \code{initialize} ~~}
+\alias{initialize,Data-method}
+\alias{initialize,Fleet-method}
+\alias{initialize,MSE-method}
+\alias{initialize,Obs-method}
+\alias{initialize,OM-method}
+\alias{initialize,Stock-method}
+\alias{initialize}
+\alias{initialize,Fease-method}
+\alias{initialize,DLM_general-method}
+\title{Methods for Function \code{initialize}}
 \description{
-~~ Methods for Function \code{initialize} ~~
+Methods for Function \code{initialize}
 }
 \section{Methods}{
  \describe{
 
-\item{list('signature(.Object = \'DLM\')')}{ \%\% ~~describe this method
-here~~ }
+\item{list('signature(.Object = \'DLM\')')}{ }
 
-\item{list('signature(.Object = \'Fleet\')')}{ \%\% ~~describe this method
-here~~ }
+\item{list('signature(.Object = \'Fleet\')')}{  }
 
-\item{list('signature(.Object = \'MSE\')')}{ \%\% ~~describe this method
-here~~ }
+\item{list('signature(.Object = \'MSE\')')}{ }
 
-\item{list('signature(.Object = \'Obs\')')}{ \%\% ~~describe this
-method here~~ }
+\item{list('signature(.Object = \'Obs\')')}{ }
 
-\item{list('signature(.Object = \'OM\')')}{ \%\% ~~describe this method here~~
-}
+\item{list('signature(.Object = \'OM\')')}{ }
 
-\item{list('signature(.Object = \'Stock\')')}{ \%\% ~~describe this method
-here~~ }
+\item{list('signature(.Object = \'Stock\')')}{ }
 
-\item{list('signature(.Object = \'Fease\')')}{ \%\% ~~describe this method
-here~~ } \item{list('signature(.Object = \'DLM_general\')')}{ \%\% ~~describe
-this method here~~ }
+\item{list('signature(.Object = \'Fease\')')}{ }
+\item{list('signature(.Object = \'DLM_general\')')}{ }
 
 }
 }
 
-\keyword{keyword(s)}
 \keyword{methods}
-\keyword{other}
-\keyword{possible}
-\keyword{~~}
