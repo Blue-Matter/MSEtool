@@ -47,15 +47,17 @@ SS_steepness <- function(replist, mainyrs, mean_h = TRUE, nsim, seed = 1, i=1) {
   } else if(replist$SRRtype == 2) {
     SRrel <- 2L
     par <- replist$parameters[grepl("SR_Ricker", rownames(replist$parameters)), ]
-
-    h <- par$Value
-    hsd <- ifelse(is.na(par$Parm_StDev), 0, par$Parm_StDev)
+    beta <- par$Value
+    betasd <- ifelse(is.na(par$Parm_StDev), 0, par$Parm_StDev)
+    
     if(mean_h) {
-      h_out <- rep(h, nsim)
+      beta_out <- rep(beta, nsim)
     } else{
       set.seed(seed)
-      h_out <- rnorm(nsim, h, hsd)
+      beta_out <- rnorm(nsim, beta, betasd)
     }
+    h_out <- 0.2 * exp(0.8 * beta_out)
+    
   } else if(replist$SRRtype == 7) {
     
     SRrel <- 3L

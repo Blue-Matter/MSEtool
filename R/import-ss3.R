@@ -958,8 +958,7 @@ ImportSS <- function(SSDir,
     return(list(h = h_out))
   } else if (replist$SRRtype == 2) {
     par <- replist$parameters[grepl("SR_Ricker", rownames(replist$parameters)), ]
-    h_out <- par$Value
-    h_out[h_out < 0.2] <- 0.2
+    h_out <- 0.2 * exp(0.8 * par$Value)
     return(list(hR = h_out))
   } else if (replist$SRRtype == 7) {
     cli::cli_abort(
