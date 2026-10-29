@@ -660,7 +660,7 @@ nArea <- function(x, st = 1) {
     x <- x@OM
   
   if (.IsDataList(x))
-    x <- x[[.CheckStock(st, x)]]
+    x <- x[[.ValidStock(st, x)]]
 
   if (inherits(x, 'data'))
     return(x@nArea)
@@ -670,7 +670,7 @@ nArea <- function(x, st = 1) {
     if (is.null(x) || (is.list(x) && !length(x)))
       return(1)
     if (is.list(x))
-      x <- x[[.CheckStock(st, x)]]
+      x <- x[[.ValidStock(st, x)]]
   }
 
   if (inherits(x, 'stock'))
@@ -724,7 +724,7 @@ LengthClasses <- function(x, st = NULL) {
 
   Stocks <- .StockList(x)
   if (!is.null(st))
-    return(fn(Stocks[[.CheckStock(st, Stocks)]]))
+    return(fn(Stocks[[.ValidStock(st, Stocks)]]))
   out <- purrr::map(Stocks, fn)
   if (length(out) == 1)
     return(out[[1]])
@@ -883,7 +883,7 @@ nFleet <- function(x) {
   out
 }
 
-.CheckStock <- function(st, Stocks) {
+.ValidStock <- function(st, Stocks) {
   if (is.numeric(st) && st > length(Stocks) || is.character(st) && !st %in% names(Stocks))
     cli::cli_abort("Stock {.val {st}} not found", call = NULL)
   st
