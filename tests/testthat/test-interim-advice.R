@@ -331,6 +331,8 @@ test_that("DataTrim keeps the full Advice record", {
 
 test_that(".FindModels works when MSEtool is loaded but not attached", {
   skip_on_cran()
+  # subprocess cannot load covr's instrumented build
+  skip_on_covr()
   skip_if_not_installed("callr")
   skip_if_not_installed("pkgload")
   Expected <- .FindModels("Length-at-Age-Model")
