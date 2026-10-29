@@ -47,7 +47,7 @@ CalcUnfished_Equilibrium <- function(OM, silent=FALSE) {
     UnfishedNumberAtAge,
     OM@Stock,
     \(N, Stock) {
-      UD <- Stock@Spatial@UnfishedDist |>
+      UD <- .UnfishedDistPlusGroup(Stock, N, Years(OM, 'Hist')) |>
         .Aperm(c('Sim', 'Age', 'Year', 'Area'))
       ArrayMultiply(N |> AddDimension('Area'), UD) |> ReduceDims()
     }
@@ -109,4 +109,22 @@ CalcUnfished_Equilibrium <- function(OM, silent=FALSE) {
 
 
   EquilibriumUnfished
+}
+
+# Spatial@UnfishedDist with the plus group weighted by unfished numbers entering from the previous age
+.UnfishedDistPlusGroup <- function(Stock, Number, Years) {
+  Spatial <- Stock@Spatial
+  Mov <- Spatial@Movement
+  if (is.null(dim(Mov)) || dim(Mov)[2] < 2L || dim(Mov)[4] < 2L || !isTRUE(Stock@Ages@PlusGroup))
+    return(Spatial@UnfishedDist)
+
+  nSim <- Stock@nSim
+  AgeClasses <- Stock@Ages@Classes
+  Ext <- \(x) Extend(x, nSim = nSim, AgeClasses = AgeClasses, Years = Years)
+  Survival <- exp(-Ext(Stock@NaturalMortality@MeanAtAge))
+  Semel <- Stock@Maturity@Semelparous
+  if (length(Semel))
+    Survival <- ArrayMultiply(Survival, 1 - Ext(Semel))
+
+  CalcUnfishedDist(Spatial, Stock@Ages, Years, Number = Number, Survival = Survival)@UnfishedDist
 }

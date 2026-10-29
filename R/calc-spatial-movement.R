@@ -66,17 +66,15 @@ FitMovement <-  function(Spatial, sim=1, age=1, year=1) {
 #' method. The two free parameters are the logit-transformed diagonal entries
 #' (staying probabilities for Area 1 and Area 2).
 #'
-#' When `UnfishedDist` has more than one age class and `age` is not the last
-#' age class (plus group), a one-step objective is used: the penalty is on
-#' the deviation of `UnfishedDist[age] %*% M` from `UnfishedDist[age + 1]`.
-#' This ensures the fitted matrix correctly maps the current age's equilibrium
-#' distribution to the next age's in a single time step, consistent with how
-#' the movement matrix is applied in the population dynamics.
+#' When `UnfishedDist` has more than one age class and `age` is neither the
+#' first age class nor the plus group, a one-step objective is used: the
+#' penalty is on the deviation of `UnfishedDist[age - 1] %*% M` from
+#' `UnfishedDist[age]`. In the population dynamics the movement matrix of age
+#' `age` is applied to fish as they enter that age class.
 #'
-#' For the plus group (`age == nAge`) and for age-invariant movement
-#' (`nAge == 1`), the objective falls back to penalising the deviation of the
-#' asymptotic (stationary) distribution from `UnfishedDist[age]`, since
-#' fish in the plus group apply the same movement matrix repeatedly.
+#' For the first age class, the plus group (`age == nAge`), and age-invariant
+#' movement (`nAge == 1`), the objective penalises the deviation of the
+#' asymptotic (stationary) distribution from `UnfishedDist[age]`.
 #'
 #' Dimension indices are clamped to the size of each slot's array, so a slot
 #' with a singleton dimension is treated as constant across that index.
@@ -100,14 +98,10 @@ FitMovement <-  function(Spatial, sim=1, age=1, year=1) {
   UD_year <- min(year, UD_dim[4])
   nAgeUD  <- UD_dim[3]
 
-  UnfishedDist <- Spatial@UnfishedDist[UD_sim, , UD_age, UD_year]
-
-  # One-step objective for non-plus-group ages with age-varying distribution
-  UnfishedDistNext <- if (nAgeUD > 1L && age < nAgeUD) {
-    Spatial@UnfishedDist[UD_sim, , age + 1L, UD_year]
-  } else {
-    NULL
-  }
+  # One-step objective for ages 1+ below the plus group: fish entering age `age` move with this matrix
+  OneStep <- nAgeUD > 1L && age > 1L && age < nAgeUD
+  UnfishedDist <- Spatial@UnfishedDist[UD_sim, , if (OneStep) age - 1L else UD_age, UD_year]
+  UnfishedDistNext <- if (OneStep) Spatial@UnfishedDist[UD_sim, , age, UD_year]
 
   optMovement <- stats::optim(
     logit(rep(Spatial@ProbStaying[PS_sim, 1, PS_age, PS_year], 2)),
@@ -132,10 +126,11 @@ FitMovement <-  function(Spatial, sim=1, age=1, year=1) {
 #'   Area 1 and Area 2. The off-diagonal entries are set to
 #'   `1 - ilogit(LogitProbs)`.
 #' @param UnfishedDist `numeric(2)`. Target unfished distribution across areas
-#'   for the current age class.
+#'   for the current age class, or for the previous age class when
+#'   `UnfishedDistNext` is supplied.
 #' @param ProbStaying `numeric(1)`. Target probability of remaining in Area 1.
 #' @param UnfishedDistNext `numeric(2)` or `NULL`. Target unfished distribution
-#'   for the **next** age class. When supplied, a one-step penalty is used:
+#'   one age class after `UnfishedDist`. When supplied, a one-step penalty is used:
 #'   `UnfishedDist %*% M` should equal `UnfishedDistNext`. When `NULL`
 #'   (plus-group or age-invariant movement), the asymptotic distribution of `M`
 #'   is compared to `UnfishedDist` instead.
@@ -259,14 +254,10 @@ FitMovement <-  function(Spatial, sim=1, age=1, year=1) {
 
   nArea <- UD_dim[2]
 
-  UnfishedDist <- Spatial@UnfishedDist[UD_sim, , UD_age, UD_year]
-
-  # One-step objective for non-plus-group ages with age-varying distribution
-  UnfishedDistNext <- if (nAgeUD > 1L && age < nAgeUD) {
-    Spatial@UnfishedDist[UD_sim, , age + 1L, UD_year]
-  } else {
-    NULL
-  }
+  # One-step objective for ages 1+ below the plus group: fish entering age `age` move with this matrix
+  OneStep <- nAgeUD > 1L && age > 1L && age < nAgeUD
+  UnfishedDist <- Spatial@UnfishedDist[UD_sim, , if (OneStep) age - 1L else UD_age, UD_year]
+  UnfishedDistNext <- if (OneStep) Spatial@UnfishedDist[UD_sim, , age, UD_year]
 
   optMovement <- stats::nlminb(
     rep(0, nArea),
@@ -308,7 +299,7 @@ FitMovement <-  function(Spatial, sim=1, age=1, year=1) {
 #'   penalty on the staying probabilities. Larger values allow greater
 #'   deviation from `ProbStaying`. Default `1`.
 #' @param UnfishedDistNext `numeric(nArea)` or `NULL`. Target unfished
-#'   distribution for the **next** age class. When supplied, a one-step penalty
+#'   distribution one age class after `UnfishedDist`. When supplied, a one-step penalty
 #'   replaces the asymptotic-distribution penalty: `UnfishedDist %*% M` should
 #'   equal `UnfishedDistNext`. When `NULL` (plus-group or age-invariant
 #'   movement), the asymptotic distribution of `M` is penalised against
@@ -326,8 +317,8 @@ FitMovement <-  function(Spatial, sim=1, age=1, year=1) {
 #' `UnfishedDistNext` is supplied, it is replaced by:
 #'
 #' \deqn{
-#'   -\sum_i \log \mathcal{N}\!\left(\log(\boldsymbol{u}_a \mathbf{M})_i
-#'   \mid \log u_{a+1,i},\, \sigma_{\text{dist}}^2\right)
+#'   -\sum_i \log \mathcal{N}\!\left(\log(\boldsymbol{u}_{a-1} \mathbf{M})_i
+#'   \mid \log u_{a,i},\, \sigma_{\text{dist}}^2\right)
 #' }
 #'
 #' In both cases the staying-probability penalty is:
