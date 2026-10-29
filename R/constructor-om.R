@@ -359,7 +359,9 @@ OM <- function(Name        = "A new OM object",
 #' All accessors also accept [hist-class] and [mse-class] objects, extracting
 #' the embedded `OM` slot transparently.
 #'
-#' @param x An [om-class], [hist-class], or [mse-class] object.
+#' @param x An [om-class], [hist-class], or [mse-class] object. `nYear()`,
+#'   `pYear()`, `CurrentYear()`, and `Seasons()` also accept a [data-class]
+#'   object or a list of them.
 #' @param value Replacement value for the corresponding slot.
 #'
 #' @details
@@ -394,6 +396,11 @@ OM <- function(Name        = "A new OM object",
 #'
 #' @return
 #' - Accessor functions return the value of the named slot.
+#' - For a [data-class] object, `nYear()` returns the number of historical
+#'   years up to `YearLH`, `CurrentYear()` returns `YearLH`, and `Seasons()`
+#'   returns the `Seasons` slot. For a list of [data-class] objects they return
+#'   a single value when it is the same for every object, and otherwise a list.
+#'   `pYear()` gives an error for [data-class] objects; see [ProjectionYear()].
 #' - Replacement functions return `x` with the named slot updated.
 #'
 #' @seealso
@@ -489,7 +496,14 @@ Source <- function(x) .IsHist(x, "Source")
 
 #' @rdname OM-accessors
 #' @export
-nYear <- function(x) .IsHist(x, "nYear")
+nYear <- function(x) {
+  if (inherits(x, "data") || .IsDataList(x))
+    return(.DataValue(x, \(d) {
+      YearLH <- d@YearLH %||% floor(max(d@Years, -Inf))
+      length(unique(floor(d@Years[d@Years < YearLH + 1])))
+    }))
+  .IsHist(x, "nYear")
+}
 
 #' @rdname OM-accessors
 #' @export
@@ -497,7 +511,13 @@ nYear <- function(x) .IsHist(x, "nYear")
 
 #' @rdname OM-accessors
 #' @export
-pYear <- function(x) .IsHist(x, "pYear")
+pYear <- function(x) {
+  if (inherits(x, "data") || .IsDataList(x))
+    cli::cli_abort(c("{.code pYear} is not stored in {.cls data} objects",
+                     "i" = "Use {.fn ProjectionYear} for the number of projection time steps in the data"),
+                   call = NULL)
+  .IsHist(x, "pYear")
+}
 
 #' @rdname OM-accessors
 #' @export
@@ -505,7 +525,11 @@ pYear <- function(x) .IsHist(x, "pYear")
 
 #' @rdname OM-accessors
 #' @export
-CurrentYear <- function(x) .IsHist(x, "CurrentYear")
+CurrentYear <- function(x) {
+  if (inherits(x, "data") || .IsDataList(x))
+    return(.DataValue(x, \(d) d@YearLH))
+  .IsHist(x, "CurrentYear")
+}
 
 #' @rdname OM-accessors
 #' @export
@@ -513,7 +537,11 @@ CurrentYear <- function(x) .IsHist(x, "CurrentYear")
 
 #' @rdname OM-accessors
 #' @export
-Seasons <- function(x) .IsHist(x, "Seasons")
+Seasons <- function(x) {
+  if (.IsDataList(x))
+    return(.DataValue(x, \(d) d@Seasons))
+  .IsHist(x, "Seasons")
+}
 
 #' @rdname OM-accessors
 #' @export

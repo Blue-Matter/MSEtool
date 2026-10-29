@@ -50,6 +50,9 @@ NULL
 #' - `nSim()` returns the number of simulations in an [om-class],
 #'   [stock-class], or [fleet-class] object (or the `OM` of a [hist-class] or
 #'   [mse-class] object), or the length of the `Sim` dimension of an array.
+#'   A [data-class] object, or a list of them (one per stock), holds one
+#'   simulation, so `nSim()` returns `1`; for a list by simulation such as
+#'   `Hist@Data` it returns the length of the list.
 #'   `nSim<-` returns `x` with the `nSim` slot replaced.
 #' - `nStock()` and `nFleet()` return the number of stocks and fleets in an
 #'   [om-class], [hist-class], or [mse-class] object, a [stock-class] or
@@ -60,7 +63,8 @@ NULL
 #'   the [spatial-class] object (from a `spatial`, `stock`, `om`, `hist`, or
 #'   `mse` object), or `1` when no spatial structure is specified. It gives an
 #'   error if the populated slots imply different numbers of areas. For a
-#'   [data-class] object it returns the `nArea` slot.
+#'   [data-class] object it returns the `nArea` slot, and for a list of them
+#'   the `nArea` slot of stock `st`.
 #' - `AgeClasses()` and `LengthClasses()` return the age classes and the lower
 #'   bounds of the length bins, and `nAge()` and `nLength()` return their
 #'   number. They accept an [ages-class] or [length-class] object
@@ -611,6 +615,11 @@ Name <- function(x) {
 #' @rdname Dimensions
 #' @export
 nSim <- function(x) {
+  if (inherits(x, 'data') || .IsDataList(x))
+    return(1)
+  if (.IsSimDataList(x))
+    return(length(x))
+
   if (isS4(x)) {
     slots <- slotNames(x)
     if ('nSim' %in% slots)
@@ -638,18 +647,18 @@ nArea <- function(x, st = 1) {
   if (inherits(x, 'hist') || inherits(x, 'mse'))
     x <- x@OM
   
+  if (.IsDataList(x))
+    x <- x[[.CheckStock(st, x)]]
+
   if (inherits(x, 'data'))
     return(x@nArea)
-  
+
   if (inherits(x, 'om')) {
     x <- x@Stock
     if (is.null(x) || (is.list(x) && !length(x)))
       return(1)
-    if (is.list(x)) {
-      if (is.numeric(st) && st > length(x) || is.character(st) && !st %in% names(x))
-        cli::cli_abort("Stock {.val {st}} not found in {.code OM@Stock}", call = NULL)
-      x <- x[[st]]
-    }
+    if (is.list(x))
+      x <- x[[.CheckStock(st, x)]]
   }
 
   if (inherits(x, 'stock'))
@@ -702,11 +711,8 @@ LengthClasses <- function(x, st = NULL) {
     .CheckClass(x, c('om', 'hist', 'mse', 'stock', 'data'), 'x')
 
   Stocks <- .StockList(x)
-  if (!is.null(st)) {
-    if (is.numeric(st) && st > length(Stocks) || is.character(st) && !st %in% names(Stocks))
-      cli::cli_abort("Stock {.val {st}} not found", call = NULL)
-    return(fn(Stocks[[st]]))
-  }
+  if (!is.null(st))
+    return(fn(Stocks[[.CheckStock(st, Stocks)]]))
   out <- purrr::map(Stocks, fn)
   if (length(out) == 1)
     return(out[[1]])
@@ -825,6 +831,28 @@ nFleet <- function(x) {
 
 .IsDataList <- function(x) {
   is.list(x) && !isS4(x) && length(x) > 0 && all(purrr::map_lgl(x, \(d) inherits(d, 'data')))
+}
+
+# list by simulation of data objects or lists of data objects, e.g. `Hist@Data`
+.IsSimDataList <- function(x) {
+  is.list(x) && !isS4(x) && length(x) > 0 &&
+    all(purrr::map_lgl(x, \(d) inherits(d, 'data') || .IsDataList(d)))
+}
+
+# `fn` applied to a data object or each of a list; a single value when all are identical
+.DataValue <- function(x, fn) {
+  if (inherits(x, 'data'))
+    return(fn(x))
+  out <- purrr::map(x, fn)
+  if (length(unique(out)) == 1)
+    return(out[[1]])
+  out
+}
+
+.CheckStock <- function(st, Stocks) {
+  if (is.numeric(st) && st > length(Stocks) || is.character(st) && !st %in% names(Stocks))
+    cli::cli_abort("Stock {.val {st}} not found", call = NULL)
+  st
 }
 
 #' @rdname Model-accessors

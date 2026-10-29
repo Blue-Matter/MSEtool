@@ -61,6 +61,9 @@ a list when \code{NULL} and \code{x} has more than one stock).}
 \item \code{nSim()} returns the number of simulations in an \link[=om-class]{om},
 \link[=stock-class]{stock}, or \link[=fleet-class]{fleet} object (or the \code{OM} of a \link[=hist-class]{hist} or
 \link[=mse-class]{mse} object), or the length of the \code{Sim} dimension of an array.
+A \link[=data-class]{data} object, or a list of them (one per stock), holds one
+simulation, so \code{nSim()} returns \code{1}; for a list by simulation such as
+\code{Hist@Data} it returns the length of the list.
 \verb{nSim<-} returns \code{x} with the \code{nSim} slot replaced.
 \item \code{nStock()} and \code{nFleet()} return the number of stocks and fleets in an
 \link[=om-class]{om}, \link[=hist-class]{hist}, or \link[=mse-class]{mse} object, a \link[=stock-class]{stock} or
@@ -71,7 +74,8 @@ specified. For a \link[=data-class]{data} object, \code{nStock()} returns \code{
 the \link[=spatial-class]{spatial} object (from a \code{spatial}, \code{stock}, \code{om}, \code{hist}, or
 \code{mse} object), or \code{1} when no spatial structure is specified. It gives an
 error if the populated slots imply different numbers of areas. For a
-\link[=data-class]{data} object it returns the \code{nArea} slot.
+\link[=data-class]{data} object it returns the \code{nArea} slot, and for a list of them
+the \code{nArea} slot of stock \code{st}.
 \item \code{AgeClasses()} and \code{LengthClasses()} return the age classes and the lower
 bounds of the length bins, and \code{nAge()} and \code{nLength()} return their
 number. They accept an \link[=ages-class]{ages} or \link[=length-class]{length} object

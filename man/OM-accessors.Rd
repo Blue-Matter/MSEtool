@@ -122,13 +122,20 @@ Control(x)
 Control(x) <- value
 }
 \arguments{
-\item{x}{An \link[=om-class]{om}, \link[=hist-class]{hist}, or \link[=mse-class]{mse} object.}
+\item{x}{An \link[=om-class]{om}, \link[=hist-class]{hist}, or \link[=mse-class]{mse} object. \code{nYear()},
+\code{pYear()}, \code{CurrentYear()}, and \code{Seasons()} also accept a \link[=data-class]{data}
+object or a list of them.}
 
 \item{value}{Replacement value for the corresponding slot.}
 }
 \value{
 \itemize{
 \item Accessor functions return the value of the named slot.
+\item For a \link[=data-class]{data} object, \code{nYear()} returns the number of historical
+years up to \code{YearLH}, \code{CurrentYear()} returns \code{YearLH}, and \code{Seasons()}
+returns the \code{Seasons} slot. For a list of \link[=data-class]{data} objects they return
+a single value when it is the same for every object, and otherwise a list.
+\code{pYear()} gives an error for \link[=data-class]{data} objects; see \code{\link[=ProjectionYear]{ProjectionYear()}}.
 \item Replacement functions return \code{x} with the named slot updated.
 }
 }

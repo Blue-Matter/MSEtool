@@ -112,3 +112,33 @@ test_that("nLength and LengthClasses work for stock and data objects", {
   expect_equal(nLength(d), c(F1 = 2L, F2 = 3L))
   expect_type(LengthClasses(d), "list")
 })
+
+test_that("year, season, sim, and area helpers work for data objects", {
+  Hist <- Simulate(MultiStockOM, silent = TRUE)
+  Data <- Hist@Data[[1]][[1]]
+
+  expect_equal(nYear(Data), nYear(MultiStockOM))
+  expect_equal(CurrentYear(Data), CurrentYear(MultiStockOM))
+  expect_equal(Seasons(Data), Seasons(MultiStockOM))
+  expect_equal(nYear(Hist@Data[[1]]), nYear(MultiStockOM))
+  expect_equal(CurrentYear(Hist@Data[[1]]), CurrentYear(MultiStockOM))
+  expect_equal(Seasons(Hist@Data[[1]]), Seasons(MultiStockOM))
+  expect_error(pYear(Data), "ProjectionYear")
+
+  expect_equal(nSim(Data), 1)
+  expect_equal(nSim(Hist@Data[[1]]), 1)
+  expect_equal(nSim(Hist@Data), nSim(Hist))
+
+  expect_equal(nArea(Hist@Data[[1]]), Hist@Data[[1]][[1]]@nArea)
+  expect_equal(nArea(Hist@Data[[1]], st = 2), Hist@Data[[1]][[2]]@nArea)
+  expect_error(nArea(Hist@Data[[1]], st = 3), "not found")
+
+  d1 <- Data(Years = 2001:2010)
+  d2 <- Data(Years = 2001:2015)
+  expect_equal(nYear(d1), 10)
+  expect_equal(nYear(list(d1, d2)), list(10, 15))
+
+  ds <- Data(Years = seq(2001, by = 0.25, length.out = 16), YearLH = 2003, Seasons = 4)
+  expect_equal(nYear(ds), 3)
+  expect_equal(CurrentYear(ds), 2003)
+})
