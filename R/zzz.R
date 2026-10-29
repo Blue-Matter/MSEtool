@@ -10,9 +10,9 @@
     cli::rule(left = Header, width = 60),
     cli::format_inline("{.strong openMSE} is developed and maintained by {.strong Blue Matter Science}."),
     "",
-    "For training, operating model development, MP design and",
-    "evaluation, or end-to-end MSE support, visit",
-    cli::format_inline("{.url https://www.bluematterscience.com}"),
+    "We offer training, operating model development, MP design",
+    "and evaluation, and end-to-end MSE support.",
+    cli::format_inline("Contact us via {.url https://www.bluematterscience.com}"),
     "",
     cli::col_grey(cli::format_inline("Hide this message with {.code options(openMSE.quiet = TRUE)}."))
   )
