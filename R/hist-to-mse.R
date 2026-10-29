@@ -77,7 +77,8 @@
 #' Accepts a character vector of MP function names, a named list of MP
 #' functions, or a list mixing both. Character elements are looked up with
 #' [get()] and named by themselves unless a name is given; function elements
-#' must be named. Validates each with `.CheckMPClass()`.
+#' must be named. Warns via `.WarnIdenticalMPs()` if the same function is
+#' supplied under more than one name, and validates each with `.CheckMPClass()`.
 #'
 #' @param MPs Character vector, or list of character strings and/or
 #'   functions.
@@ -119,8 +120,43 @@
   if (length(Dup))
     cli::cli_abort("Duplicated MP name{?s}: {.val {Dup}}.")
 
+  .WarnIdenticalMPs(Fns)
   .CheckMPClass(Fns)
   Fns
+}
+
+#' Warn When Identical MP Functions are Supplied Under Different Names
+#'
+#' Compares each MP function with those before it using [identical()],
+#' ignoring bytecode and source references, and warns once listing each MP
+#' that duplicates an earlier one.
+#'
+#' @param MPs Named list of MP functions.
+#'
+#' @return `NULL` invisibly.
+#' @keywords internal
+.WarnIdenticalMPs <- function(MPs) {
+  Nms   <- names(MPs)
+  First <- rep(NA_character_, length(MPs))
+  for (i in seq_along(MPs)[-1]) {
+    for (j in seq_len(i - 1)) {
+      if (is.na(First[j]) &&
+          identical(MPs[[i]], MPs[[j]], ignore.bytecode = TRUE, ignore.srcref = TRUE)) {
+        First[i] <- Nms[j]
+        break
+      }
+    }
+  }
+  if (all(is.na(First))) return(invisible(NULL))
+
+  Groups <- split(Nms[!is.na(First)], First[!is.na(First)])
+  Msg <- purrr::imap_chr(Groups, \(dup, orig)
+    cli::format_inline("{.val {dup}} {?is/are} identical to {.val {orig}}."))
+  cli::cli_warn(c(
+    "Identical MP functions supplied under different names; each will be projected separately with identical results.",
+    stats::setNames(Msg, rep('!', length(Msg)))
+  ))
+  invisible(NULL)
 }
 
 #' Check That All MPs are of Class `"mp"`, `"mmp"`, `"MP"`, or `"MMP"`

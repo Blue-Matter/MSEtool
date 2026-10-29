@@ -28,7 +28,9 @@ test_that(".ResolveMPs() accepts names, named functions, and a mix", {
   Res <- .ResolveMPs(c('IndexTarget', 'CurrentCatch'))
   expect_named(Res, c('IndexTarget', 'CurrentCatch'))
 
-  Res <- .ResolveMPs(list(IT05 = Variant, 'CurrentCatch', CC = 'CurrentCatch'))
+  expect_warning(
+    Res <- .ResolveMPs(list(IT05 = Variant, 'CurrentCatch', CC = 'CurrentCatch')),
+    'Identical MP functions')
   expect_named(Res, c('IT05', 'CurrentCatch', 'CC'))
   expect_identical(formals(Res$IT05)$Responsiveness, 0.5)
 
@@ -37,6 +39,18 @@ test_that(".ResolveMPs() accepts names, named functions, and a mix", {
   expect_error(.ResolveMPs(list(A = function(Data) Advice())), 'class')
   expect_error(.ResolveMPs(Variant), 'named list')
   expect_error(.ResolveMPs('NoSuchMPFunction'), 'not found')
+})
+
+test_that(".ResolveMPs() warns about identical MP functions under different names", {
+  MyMP <- function(Data) Advice()
+  class(MyMP) <- 'mp'
+  Copy <- function(Data)    Advice()
+  class(Copy) <- 'mp'
+
+  expect_warning(.ResolveMPs(list(A = MyMP, B = MyMP, C = Copy)), '"B" and "C" are identical to "A"')
+  expect_warning(.ResolveMPs(list('IndexTarget', IT = IndexTarget)), '"IT" is identical to "IndexTarget"')
+  expect_no_warning(.ResolveMPs(list('IndexTarget', IT05 = SetMPArgs(IndexTarget, Responsiveness = 0.5))))
+  expect_no_warning(.ResolveMPs(c('IndexTarget', 'CurrentCatch')))
 })
 
 test_that("Project() with MP functions matches name-based projection and passes advice timing", {

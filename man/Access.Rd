@@ -329,6 +329,10 @@ For \code{Stat()}, \code{Prob()}, and \code{Mean()} on a \link[=pm-class]{pm} ob
 \verb{Sim x Stock x MP} (or \verb{Stock x MP}) array is converted to a tidy
 data frame via \code{\link[=Array2DF]{Array2DF()}} instead of being returned as a raw array.
 \item Replacement functions return \code{x} with the named slot updated to \code{value}.
+\item \code{nArea()} returns the number of areas implied by the populated slots of
+the \link[=spatial-class]{spatial} object (from a \code{spatial}, \code{stock}, \code{om}, \code{hist}, or
+\code{mse} object), or \code{1} when no spatial structure is specified. It gives an
+error if the populated slots imply different numbers of areas.
 }
 }
 \description{

@@ -16,13 +16,9 @@ value). Not currently supported.}
 Errors; see Details.
 }
 \description{
-\code{ImportWHAM()} is not yet implemented. This is a placeholder documenting
-why, and what a real implementation needs, so the gap is discoverable
-rather than silent (see \code{\link[=ImportSS]{ImportSS()}} and \code{\link[=ImportBAM]{ImportBAM()}} for the
-equivalent, implemented importers).
+\code{ImportWHAM()} is not yet implemented.
 }
 \seealso{
 \code{\link[=ImportSS]{ImportSS()}}, \code{\link[=ImportBAM]{ImportBAM()}}, \code{\link[=WHAM2OM]{WHAM2OM()}} (legacy, single-fleet
 only)
 }
-\keyword{internal}
