@@ -1,0 +1,182 @@
+#' Generate Historical Index Data
+#'
+#' Internal function to generate simulated historical index data
+#' (`CPUE` or `Survey`) when real observations are not available.
+#'
+#' Uses conditioned observation objects to apply selectivity,
+#' efficiency, and observation error to simulated population
+#' numbers or biomass, aggregated over age, area, and stocks.
+#'
+#' Supports indices in number, biomass, or recruitment units,
+#' applies fleet-specific selectivity-at-age, and standardizes
+#' generated indices to mean 1.
+#'
+#' If no observation structure is defined at all, the existing data are
+#' returned unchanged. Otherwise, generation happens per fleet.
+#'
+#' @param sim Integer index of the simulation replicate to extract
+#' @param Data Fishery data object to populate
+#' @param Hist Operating model history object
+#' @param HistYears Numeric vector of historical years
+#' @param i Integer index of observed data set
+#' @param stocks Integer vector of stock indices in the complex
+#' @param StockNames Character vector of stock names
+#' @param nArea Integer number of spatial areas
+#' @param defaultCV Numeric default coefficient of variation applied
+#'   when neither real data nor the [IndicesObs()] `DataCV` provide one.
+#'   Default `SimControl(DataCV)`.
+#' @param type Character, either `CPUE` or `Survey`
+#'
+#' @return An object of class `indicesdata` containing simulated
+#'   historical index values and CVs
+#'
+#' @keywords internal
+.GenHistDataIndices <- function(sim, Data, Hist, HistYears, i, stocks, StockNames, 
+                                nArea,
+                                defaultCV = .DefaultDataCV(Hist, type),
+                                type = c('CPUE', 'Survey')) {
+  
+  type <- match.arg(type, c('CPUE', 'Survey'))
+
+  RealData <- slot(Data, type)
+
+  AllObs <- lapply(Hist@OM@Obs[[i]], slot, type)
+  no_obs <- all(lapply(AllObs, isNewObject) |> unlist()  == TRUE)
+
+  # no Obs specified, don't simulate
+  if (no_obs)
+    return(RealData)
+
+  # check which Obs objects have Obs@Error for `type`
+  TypeFleets <- purrr::map(AllObs, \(obs) !is.null(obs@Error)) |> unlist() |> which()
+  FleetNames <- names(AllObs)[TypeFleets]
+  nFleet <- length(FleetNames)
+
+  if (!nFleet)
+    return(RealData)
+
+  RealFleetIdx  <- if (!is.null(RealData@Value)) match(FleetNames, RealData@Name) else rep(NA_integer_, nFleet)
+  HasRealColumn <- !is.na(RealFleetIdx)
+
+  if (all(HasRealColumn))
+    return(RealData)
+
+  nTS <- length(HistYears)
+
+  IndexData <- new('indicesdata')
+  IndexData@Name <- FleetNames
+  Value <- CV <- array(NA, dim=c(nTS, nFleet),
+                           dimnames=list(Year=HistYears,
+                                         Fleet=FleetNames))
+
+  CV[] <- defaultCV
+  IndexData@Units <- rep('Biomass', nFleet)
+  
+  IndexData@Ref <- rep(NA_real_, nFleet) 
+  if (length(RealData@Timing)) IndexData@Timing <- rep(0, nFleet)
+  
+  Real_Pop_Number <- Hist@Number[stocks]
+  
+  IndexData@Misc$IndexObs <- list()
+  
+  for (fl in 1:nFleet) {
+
+    if (HasRealColumn[fl]) {
+      ri <- RealFleetIdx[fl]
+      yearIdx <- match(as.character(HistYears), rownames(RealData@Value))
+      Value[, fl] <- RealData@Value[yearIdx, ri]
+      IndexObs <- slot(Hist@OM@Obs[[i]][[FleetNames[fl]]], type)
+      CV[, fl] <- .DataCVYears(IndexObs, HistYears, defaultCV)
+      if (!is.null(RealData@CV)) {
+        RealCV <- RealData@CV[yearIdx, ri]
+        CV[!is.na(RealCV), fl] <- RealCV[!is.na(RealCV)]
+      }
+      if (length(RealData@Units) >= ri) IndexData@Units[fl] <- RealData@Units[ri]
+      if (length(RealData@Ref) >= ri) IndexData@Ref[fl] <- RealData@Ref[ri]
+      if (length(RealData@Timing) >= ri) IndexData@Timing[fl] <- RealData@Timing[ri]
+      # one value per sim; recombined across sims in .GenerateHistoricalData()
+      if (length(IndexObs@Efficiency))
+        IndexObs@Efficiency <- IndexObs@Efficiency[min(sim, length(IndexObs@Efficiency))]
+      IndexData@Misc$IndexObs[[fl]] <- IndexObs
+      next()
+    }
+
+    IndexObs <- slot(Hist@OM@Obs[[i]][[FleetNames[fl]]],type)
+
+    if (EmptyObject(IndexObs)) 
+      next()
+
+    CV[, fl] <- .DataCVYears(IndexObs, HistYears, defaultCV)
+    if (!is.null(IndexObs@Units))
+      IndexData@Units[fl] <- IndexObs@Units
+    
+    Units <- IndexData@Units[fl]
+    
+    if (is.null(IndexObs@Areas))
+      IndexObs@Areas <- 1:nArea
+
+    timing <- if (length(IndexData@Timing) >= fl) IndexData@Timing[fl] else NA_real_
+
+    real_nom_index <- .CalcNomIndex(
+      Number_List      = Real_Pop_Number,
+      object           = Hist,
+      stocks           = stocks,
+      fleet            = FleetNames[fl],
+      IndexObs         = IndexObs,
+      Years            = HistYears,
+      sim              = sim,
+      timing           = timing,
+      Units            = Units
+    )
+    
+    Beta <- if (is.null(IndexObs@Beta)) 1 else IndexObs@Beta[min(sim, length(IndexObs@Beta))]
+    BetaIndex <- real_nom_index^Beta
+
+    # add error
+    SimulatedIndexError <- BetaIndex *  .ArraySubsetYear(IndexObs@Error, HistYears)[min(sim, nrow(IndexObs@Error)),]
+    # mean 1; projection values are scaled by the same Efficiency
+    IndexObs@Efficiency <- 1/mean(SimulatedIndexError, na.rm=TRUE)
+    StIndex <- SimulatedIndexError * IndexObs@Efficiency
+    Value[,fl] <- StIndex
+    IndexData@Misc$IndexObs[[fl]] <- IndexObs
+    
+    # Reference Value 
+    if (length(IndexObs@Ref)) {
+      # TODO - index ref value if units != Biomass - only does BMSY at the moment
+      sim_b   <- min(sim, dim(Hist@Biomass)[1])
+      ref_sim <- IndexObs@Ref[min(sim, length(IndexObs@Ref))]
+      Bhist   <- .SumStocksByYear(Hist@Biomass, sim_b, stocks)[as.character(HistYears)]
+      # nominal index per unit of complex biomass
+      adjust  <- mean(as.numeric(real_nom_index)/Bhist, na.rm=TRUE)
+      RefB    <- NA_real_
+      if (length(Hist@Reference@MSY@BMSY)) {
+        BMSY <- Hist@Reference@MSY@BMSY
+        RefB <- mean(.SumStocksByYear(BMSY, min(sim, dim(BMSY)[1]), stocks), na.rm=TRUE)
+      } else {
+        # do B0
+        Ref_Dep <- 0.5 # hard coded for now
+        B0 <- Hist@Unfished@Equilibrium@Biomass
+        B0 <- .SumStocksByYear(B0, min(sim, dim(B0)[1]), stocks)
+        B0 <- if (all(names(Bhist) %in% names(B0))) B0[names(Bhist)] else B0[pmin(seq_along(Bhist), length(B0))]
+        B_B0 <- Bhist/B0
+        ind <- which.min(abs(B_B0-Ref_Dep))
+        if (length(ind))
+          RefB <- Bhist[ind]
+      }
+      if (is.finite(RefB))
+        IndexData@Ref[fl] <- as.numeric(IndexObs@Efficiency * (RefB * adjust)^Beta * ref_sim)
+    }
+  }
+  
+  names(IndexData@Misc$IndexObs) <- FleetNames
+  
+  IndexData@Value <- Value
+  IndexData@CV <- CV
+  
+  IndexData
+} 
+
+# [Year] total over the complex's stocks of a [Sim, Stock, Year] array for one sim
+.SumStocksByYear <- function(x, sim, stocks) {
+  apply(x[sim, stocks, , drop = FALSE], 'Year', sum)
+}

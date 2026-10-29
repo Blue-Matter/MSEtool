@@ -1,0 +1,217 @@
+# Small-scale (nSim = 1) end-to-end integration tests. Real Simulate()/
+# Project() calls, so kept out of the CRAN check budget -- see
+# skip_on_cran() below. Not a substitute for the full multi-OM, realistic-
+# scale regression sweep run by hand before a release (see tests/manual/).
+
+test_that("Simulate() completes for a single-stock OM and produces valid output", {
+  skip_on_cran()
+  data(SingleStockOM, envir = environment())
+  om <- SingleStockOM
+  om@nSim <- 1
+  set.seed(1)
+  hist <- Simulate(om, silent = TRUE)
+
+  expect_s4_class(hist, "hist")
+  expect_false(is.null(hist@Reference@SPR0))
+  expect_false(is.null(hist@Reference@MSY))
+  expect_false(anyNA(hist@SBiomass))
+})
+
+test_that("Project() completes and produces a valid mse object", {
+  skip_on_cran()
+  data(SingleStockOM, envir = environment())
+  om <- SingleStockOM
+  om@nSim <- 1
+  set.seed(1)
+  hist <- Simulate(om, silent = TRUE)
+  mse <- Project(hist, MPs = "CurrentCatch", parallel = FALSE, silent = TRUE)
+
+  expect_s4_class(mse, "mse")
+  expect_false(anyNA(mse@SBiomass))
+})
+
+test_that("CalcRefPoints() runs end-to-end and produces internally consistent output", {
+  skip_on_cran()
+  data(SingleStockOM, envir = environment())
+  om <- SingleStockOM
+  om@nSim <- 1
+  set.seed(1)
+  hist <- Simulate(om, silent = TRUE)
+  hist <- CalcRefPoints(hist, silent = TRUE)
+
+  expect_false(is.null(F01(hist)))
+  expect_false(is.null(FMax(hist)))
+  # F0.1 occurs before the yield-per-recruit peak
+  expect_lt(as.numeric(F01(hist))[1], as.numeric(FMax(hist))[1])
+})
+
+test_that("Imp Compliance does not crash a multi-stock projection", {
+  skip_on_cran()
+  data(MultiStockOM, envir = environment())
+  om <- MultiStockOM
+  om@nSim <- 1
+  set.seed(1)
+  hist0 <- Simulate(om, silent = TRUE)
+  ComplexNames <- names(Complexes(hist0@OM))
+  FleetNames <- FleetNames(hist0@OM)
+
+  om@Imp <- stats::setNames(
+    list(MakeNamedList(FleetNames, Imp(TAC = ImpSlot(Compliance = 1))),
+         MakeNamedList(FleetNames, Imp())),
+    ComplexNames
+  )
+  set.seed(1)
+  hist <- Simulate(om, silent = TRUE)
+  mse <- Project(hist, MPs = "CurrentCatch", parallel = FALSE, silent = TRUE)
+
+  expect_s4_class(mse, "mse")
+  expect_true(length(hist@OM@Imp) == length(ComplexNames))
+})
+
+test_that("Seasonal OM completes Simulate()+Project() without error", {
+  skip_on_cran()
+  data(SeasonalSpatialOM, envir = environment())
+  om <- SeasonalSpatialOM
+  om@nSim <- 1
+  set.seed(1)
+  hist <- Simulate(om, silent = TRUE)
+  mse <- Project(hist, MPs = "CurrentCatch", parallel = FALSE, silent = TRUE)
+
+  expect_s4_class(mse, "mse")
+})
+
+test_that("back-calculated effort reproduces requested effort when maxF does not bind", {
+  skip_on_cran()
+  # The historical period takes effort as given, so back-calculating it from the
+  # realised F must return the same numbers unless the maxF clamp binds. Covers
+  # the multi-area sum and the density weighting.
+  data(SeasonalSpatialOM, envir = environment())
+  om <- SeasonalSpatialOM
+  om@nSim <- 2
+  expect_gt(nArea(om), 1L)
+
+  om@Control$BackCalcEffort <- FALSE
+  set.seed(1)
+  hist_off <- Simulate(om, silent = TRUE)
+
+  om@Control$BackCalcEffort <- TRUE
+  set.seed(1)
+  hist_on <- Simulate(om, silent = TRUE)
+
+  expect_equal(hist_on@Effort, hist_off@Effort, tolerance = 1e-10)
+})
+
+test_that("back-calculated effort keeps an unachievable TAC off the maxEffort cap", {
+  skip_on_cran()
+  # CurrentCatch on a stock that cannot sustain it drives effort to maxEffort;
+  # the back-calculation reports the effort matching the capped F instead.
+  data(MultiStockOM, envir = environment())
+  om <- MultiStockOM
+  om@nSim <- 2
+  set.seed(1)
+  hist <- Simulate(om, silent = TRUE)
+
+  hist@OM@Control$BackCalcEffort <- TRUE
+  mse <- Project(hist, MPs = "CurrentCatch", parallel = FALSE, silent = TRUE)
+
+  expect_true(all(is.finite(mse@Effort)))
+  expect_lt(max(mse@Effort), 1e6)
+})
+
+test_that("implementation error applies to fleet-by-area effort advice", {
+  skip_on_cran()
+  # Imp@Effort@Error is a per-fleet multiplier on effort magnitude, so advice
+  # given as a [nFleet x nArea] matrix must be scaled the same as the
+  # equivalent per-fleet vector - it used to be skipped entirely.
+  data(SeasonalSpatialOM, envir = environment())
+  om <- SeasonalSpatialOM
+  om@nSim <- 2
+  set.seed(1)
+  hist <- Simulate(om, silent = TRUE)
+
+  nF <- length(FleetNames(hist)); nA <- nArea(hist); ns <- nSim(hist)
+  AllY <- Years(hist@OM)
+  Err <- array(0.5, dim = c(ns, length(AllY)),
+               dimnames = list(Sim = seq_len(ns), Year = as.character(AllY)))
+  for (fl in seq_len(nF)) hist@OM@Imp[[1]][[fl]]@Effort@Error <- Err
+
+  EffVec <- function(Data) Advice(Effort = rep(0.4, 1), EffType = "Abs")
+  EffMat <- function(Data) Advice(Effort = matrix(0.4 / 3, nrow = 1, ncol = 3),
+                                  EffType = "Abs")
+  class(EffVec) <- class(EffMat) <- "mp"
+  assign("EffVec", EffVec, envir = globalenv())
+  assign("EffMat", EffMat, envir = globalenv())
+  on.exit(rm("EffVec", "EffMat", envir = globalenv()), add = TRUE)
+
+  e_vec <- as.vector(Project(hist, MPs = "EffVec", silent = TRUE)@Effort)
+  e_mat <- as.vector(Project(hist, MPs = "EffMat", silent = TRUE)@Effort)
+
+  expect_equal(e_mat, e_vec, tolerance = 1e-8)
+
+  # e_vec[1] = Effort[sim=1, first proj timestep, fleet=1]; EffVec has no
+  # `EverySeason`, so its annual effort is split by the seasonal effort share
+  # for that sim/season/fleet on top of the 0.4 base and 0.5 impl. error.
+  seasonal_weight <- .SeasonalEffortAllocation(hist)[[1]][1, 1, 1]
+  expect_equal(e_vec[1], 0.4 * 0.5 * seasonal_weight, tolerance = 1e-8)
+})
+
+test_that(".ProjectMPCompute() leaves its input Proj and earlier MP results unchanged", {
+  skip_on_cran()
+  data(SingleStockOM, envir = environment())
+  om <- SingleStockOM
+  om@nSim <- 4
+  set.seed(1)
+  hist <- Simulate(om, silent = TRUE)
+
+  YearsHist <- Years(hist@OM, "Historical")
+  YearsProj <- Years(hist@OM, "Projection")[1:5]
+  Proj <- hist |>
+    .CheckFleetAllocation() |>
+    .CheckSeasonalAllocation() |>
+    .CheckEffortAllocation() |>
+    .PrepHistMisc() |>
+    .CheckInterimAdvice() |>
+    .ExtendHist(Years = Years(hist@OM), silent = TRUE) |>
+    .CalcFisheryDynamics(Years = utils::tail(YearsHist, 1))
+  ProjCopy <- unserialize(serialize(Proj, NULL))
+  MPs <- .AddMPFunctions(new("mse"), c("CurrentCatch", "CurrentEffort"))@MPs
+
+  # a parallel worker runs its MPs back to back on one shared Proj
+  First <- .ProjectMPCompute(Proj, "CurrentCatch", MPs$CurrentCatch, YearsHist, YearsProj,
+                             silent = TRUE)$Proj
+  FirstCopy <- unserialize(serialize(First, NULL))
+  Second <- .ProjectMPCompute(Proj, "CurrentEffort", MPs$CurrentEffort, YearsHist, YearsProj,
+                              silent = TRUE)$Proj
+
+  expect_identical(Proj, ProjCopy)
+  expect_identical(First@Biomass, FirstCopy@Biomass)
+  expect_identical(First@Landings, FirstCopy@Landings)
+  expect_identical(First@FDeadArea, FirstCopy@FDeadArea)
+  expect_false(identical(First@Biomass, Second@Biomass))
+})
+
+test_that("a stochastic MP's draws for a sim do not depend on nSim", {
+  skip_on_cran()
+  data(SingleStockOM, envir = environment())
+  om <- SingleStockOM
+  om@nSim <- 6
+  set.seed(1)
+  hist <- Simulate(om, silent = TRUE)
+
+  StochCatch <- function(Data) {
+    Adv <- CurrentCatch(Data)
+    Adv@TAC <- Adv@TAC * stats::rlnorm(1, 0, 0.3)
+    Adv
+  }
+  class(StochCatch) <- "mp"
+  assign("StochCatch", StochCatch, envir = globalenv())
+  on.exit(rm("StochCatch", envir = globalenv()), add = TRUE)
+
+  Full <- Project(hist, MPs = "StochCatch", silent = TRUE, Reduce = FALSE)
+  Sub  <- Project(hist, MPs = "StochCatch", silent = TRUE, Reduce = FALSE, nSim = 3)
+  Det  <- Project(hist, MPs = "CurrentCatch", silent = TRUE, Reduce = FALSE)
+
+  expect_identical(Sub@Biomass, Full@Biomass[1:3, , , , drop = FALSE])
+  expect_identical(Sub@Effort, Full@Effort[1:3, , , , drop = FALSE])
+  expect_false(isTRUE(all.equal(Full@Biomass, Det@Biomass, check.attributes = FALSE)))
+})

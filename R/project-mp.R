@@ -1,0 +1,341 @@
+
+# TODO
+# - apply Bioeconomic to Effort
+
+
+#' Project a `Hist` Object for a Single Management Procedure
+#'
+#' Runs the projection loop for a single MP over all projection years.
+#' In each year, data are simulated, the MP is applied (if a management
+#' year), advice is stored, population dynamics are updated, and fishery
+#' dynamics are simulated. Returns an updated `MSE` object.
+#'
+#' @param Proj      `Hist` object containing the operating model state.
+#' @param MSE       `MSE` object to be updated with projection results.
+#' @param MPName    Character. Name of the management procedure.
+#' @param MPfunction Function. The MP to apply; must accept a `Data` object
+#'                  and return an `Advice` object.
+#' @param mp        Integer. Index of the MP within the `MSE` object.
+#'                  Default: `1`.
+#' @param YearsHist Integer vector. Historical (conditioning) years.
+#' @param YearsProj Integer vector. Projection years to iterate over.
+#' @param silent    Logical. If `TRUE`, suppresses the progress bar.
+#'                  Default: `FALSE`.
+#' @param nMP       Integer. Total number of MPs being projected. Default: `1`.
+#'
+#' @return An updated `MSE` object. If an error occurs during projection,
+#'   the error is logged and the partial `MSE` object is returned.
+#'
+#' @keywords internal
+.ProjectMP <- function(Proj,
+                       MSE,
+                       MPName,
+                       MPfunction,
+                       mp = 1,
+                       YearsHist,
+                       YearsProj,
+                       silent=FALSE,
+                       nMP = 1,
+                       Store = NULL) {
+
+  result <- .ProjectMPCompute(Proj, MPName, MPfunction, YearsHist, YearsProj,
+                              silent, mp = mp, nMP = nMP)
+  .MergeMPResult(MSE, result, MPName, mp, YearsHist, YearsProj, silent, nMP = nMP,
+                 Store = Store)
+}
+
+.ProjectMPTask <- function(mp, MPName, MPfunction, Proj, YearsHist, YearsProj,
+                           silent = TRUE, nMP = 1, StopIfAllFailed = TRUE) {
+  result <- .ProjectMPCompute(Proj, MPName, MPfunction, YearsHist, YearsProj,
+                              silent, mp = mp, nMP = nMP, StopIfAllFailed = StopIfAllFailed)
+  result$Proj <- .CompactMPProj(result$Proj, YearsProj)
+  result
+}
+
+
+.CompactMPProj <- function(Proj, YearsProj) {
+  for (sl in setdiff(methods::slotNames('timeseries'), 'Misc'))
+    methods::slot(Proj, sl) <- .SubsetYear(methods::slot(Proj, sl), YearsProj)
+  Proj@Misc      <- Proj@Misc[intersect(names(Proj@Misc), c('MPAdvice', 'MPAggBagLimit', 'TACAttainment', 'BagLimit'))]
+  Proj@OM@Stock  <- NULL
+  Proj@OM@Obs    <- NULL
+  Proj@OM@Imp    <- NULL
+  Proj@OM@Data   <- NULL
+  Proj@Unfished  <- methods::new('unfished')
+  Proj@Reference <- methods::new('reference')
+  Proj
+}
+
+
+.ProjectMPCompute <- function(Proj, MPName, MPfunction, YearsHist, YearsProj,
+                              silent = FALSE, mp = 1, nMP = 1, StopIfAllFailed = TRUE) {
+
+  OldRNG <- .SaveRNG()
+  on.exit(.RestoreRNG(OldRNG), add = TRUE)
+  .SeedMP(Proj@OM@Seed)
+
+  # the per-step dynamics below run InPlace, so the caller's Proj must not share these arrays
+  Proj <- .OwnDynamicsSlots(Proj)
+
+  Interval        <- .ResolveInterval(Proj@OM@Interval, MPName, MPfunction, Proj@OM@Seasons)
+  IsInterim       <- YearsProj %in% .InterimTimesteps(Proj@OM)
+  ManagementYears <- if (all(IsInterim)) YearsProj[0] else
+    .CalcManagementYears(YearsProj[!IsInterim], Interval, Proj@OM@Seasons)
+  EverySeason     <- isTRUE(attr(MPfunction, 'EverySeason'))
+  DataLag         <- attr(MPfunction, 'DataLag') %||% Proj@OM@DataLag
+  Areas           <- 1:nArea(Proj)
+  StartTime       <- Sys.time()
+  StockNames      <- StockNames(Proj)
+  FleetNames      <- FleetNames(Proj)
+
+  Proj@Misc$TACAttainment <- .InitTACAttainment(Proj, YearsProj)
+  Proj@Misc$BagLimit      <- .InitBagLimitRecord(Proj, YearsProj)
+
+  # initialise for debugging convenience
+  Year <- YearsProj[1]; ts <- 1
+
+  show <- .MsgShowProgress(silent)
+  if (show)
+    cli::cli_progress_bar(
+      format = "[{mp}/{nMP}] {.mp {MPName}} {cli::pb_bar} Year {cli::pb_extra$year} ({cli::pb_current}/{cli::pb_total})",
+      total  = length(YearsProj),
+      extra  = list(year = YearsProj[1])
+    )
+  
+  Error <- FALSE
+  ErrorMessage <- NULL
+  AllFailedYears <- YearsProj[0]
+  ErrorYear <- NULL
+  
+  update_funs <- list(
+    .UpdateClosure          = .UpdateClosure,
+    .UpdateSelectivity      = .UpdateSelectivity,
+    .UpdateRetention        = .UpdateRetention,
+    .UpdateDiscardMortality = .UpdateDiscardMortality,
+    .UpdateEffort           = .UpdateEffort,
+    .UpdateTAC              = .UpdateTAC,
+    .UpdateBagLimit         = .UpdateBagLimit
+  )
+
+  CatchAtSizeNeeded <- Proj@OM@Control$CalcCatchAtSizeNeeded %||NA%
+    .NeedsCatchAtSize(Proj@OM, SimControl())
+  CatchAtSizeCpp <- Proj@OM@Control$CalcCatchAtSizeCpp %||NA% TRUE
+
+  for (ts in seq_along(YearsProj)) {
+    
+    Year <- YearsProj[ts]
+    if (show) cli::cli_progress_update(extra = list(year = Year))
+
+    # Simulate data for the previous time step 
+    Proj <- .GenerateProjectionData(Proj, Year, YearsHist, YearsProj)
+  
+    # Get previous advice; interim advice is never carried forward
+    LastAdviceSimList      <- .GetLastMPAdvice(Proj)
+    LastAggBagLimitSimList <- .GetLastMPAggBagLimit(Proj)
+    if (IsInterim[ts] || (ts > 1 && IsInterim[ts - 1]))
+      LastAdviceSimList <- NULL
+    # interim advice is already per timestep, so no seasonal re-split
+    EverySeasonTS <- EverySeason || IsInterim[ts]
+
+    # Data year accounting for lag
+    DataYear <- .CalcDataYear(Year     = Year,
+                             YearsAll = Proj@Data[[1]][[1]]@Years,
+                             DataLag  = DataLag,
+                             Seasons  = Proj@OM@Seasons)
+
+    # Trim Data to `DataYear` if applicable
+    DataSimList <- .TrimMPData(Proj, DataYear)
+
+    # Check data exists for every stock/complex
+    .CheckMPDataCompleteness(DataSimList, Complexes=Proj@OM@Complexes)
+
+    # Run MP and return nested lists of Advice and aggregate bag limit objects
+    MPResult <- .ApplyMP(Year,
+                         ManagementYears,
+                         LastAdviceSimList,
+                         LastAggBagLimitSimList,
+                         MPName,
+                         MPfunction,
+                         DataSimList,
+                         Proj,
+                         YearsProj,
+                         mp,
+                         FleetNames,
+                         Areas,
+                         Interval)
+    
+    AdviceSimList      <- MPResult$AdviceSimList
+    AggBagLimitSimList <- MPResult$AggBagLimitSimList
+
+    # If neither TAC or Effort are set, keep status-quo effort
+    AdviceSimList <- .CheckTACEffort(AdviceSimList, FleetNames)
+
+    # Save MP Advice
+    Proj <- .StoreMPAdvice(Proj, Year, AdviceSimList, AggBagLimitSimList)
+   
+    # Save Advice@Misc to Data@Misc for each sim and stock
+    Proj@Data <- purrr::map2(Proj@Data, AdviceSimList, \(DataList, AdviceList)
+                             .ApplyAdviceMiscToData(DataList, AdviceList)
+    )
+    
+    # Save Advice@Log to Proj@Log for each sim and stock
+    ExtractResult <- .ExtractAdviceLogs(AdviceSimList, Proj, Year, MPName, MPResult$DebugSimList)
+    Proj <- ExtractResult$Proj
+
+    # a sim chunk only records the year; the master decides whether every sim failed
+    if (ExtractResult$AllFailed && !StopIfAllFailed)
+      AllFailedYears <- c(AllFailedYears, Year)
+
+    if (ExtractResult$AllFailed && StopIfAllFailed) {
+      Error        <- TRUE
+      ErrorMessage <- sprintf("failed for all simulations in %s", Year)
+      ErrorYear    <- Year
+      break
+    }
+    
+    # Save TAC and Effort
+    Proj@Data <- purrr::map2(Proj@Data, AdviceSimList,\(DataList, AdviceList) {
+      if (!inherits(AdviceList, 'try-error'))
+        purrr::map2(DataList, AdviceList, \(Data, Advice) 
+                    .AddAdviceToData(Data, Advice, Year)
+        )
+      }
+    )
+    
+    # Update population dynamics with MP advice
+    for (fun_name in names(update_funs)) {
+   
+      result <- .RunUpdateStep(fun=update_funs[[fun_name]],
+                                fun_name,
+                                Proj, Year, AdviceSimList, LastAdviceSimList,
+                                YearsHist, YearsProj, Areas, FleetNames, StockNames,
+                                EverySeasonTS)
+
+      if (inherits(result, "update_error")) {
+        Error        <- TRUE
+        ErrorMessage <- sprintf("failed in %s (%s): %s", result$step, Year, result$message)
+        ErrorYear    <- Year
+        Proj <- .CaptureLog(Proj,
+                          string = sprintf("%s failed: %s", result$step, result$message),
+                          name = paste(MPName, 'UpdateError', sep = ' - '),
+                          type = 'error',
+                          year = Year,
+                          mp   = MPName)
+        break
+      }
+      Proj <- result
+    }
+    
+    if (Error) break
+
+    # Simulate Pop Dynamics for this Time Step
+    Proj <- .CalcFisheryDynamics(Proj, Year, InPlace = TRUE,
+                                 DoBackCalcEffort = .BackCalcEffortFlag(Proj))
+
+    # Compute Catch & Discards at Size for this Time Step
+    Proj <- .CalcCatchAtSize(Proj, Years = Year, needed = CatchAtSizeNeeded,
+                             useCpp = CatchAtSizeCpp)
+
+  }
+
+  # final-timestep data are never seen by an MP but are reported in PPD
+  if (!Error)
+    Proj <- .GenerateProjectionData(Proj, Year, YearsHist, YearsProj,
+                                    DataYear = YearsProj[length(YearsProj)])
+
+  EndTime <- Sys.time()
+
+  list(Proj = Proj, Error = Error, ErrorMessage = ErrorMessage,
+       StartTime = StartTime, EndTime = EndTime,
+       StockNames = StockNames, FleetNames = FleetNames, AllFailedYears = AllFailedYears,
+       ErrorYear = ErrorYear)
+}
+
+.MergeMPResult <- function(MSE, result, MPName, mp, YearsHist, YearsProj, silent = FALSE,
+                           nMP = 1, Store = NULL) {
+
+  result$Proj@Log$error <- .CapMPDebug(result$Proj@Log$error)
+
+  CheckResult <- .CheckMSERun(result$Proj, MSE, MPName,
+                              result$StartTime, result$EndTime,
+                              result$Error, result$ErrorMessage,
+                              silent = silent, mp = mp, nMP = nMP)
+  Proj  <- CheckResult$Proj
+  Error <- result$Error || CheckResult$AllFailed
+
+  if (!Error)
+    Proj <- .MaskFailedSims(Proj, .FailedSims(Proj@Log$error), YearsProj)
+
+  if (!Error)
+    Proj <- .LogTACAttainment(Proj, Proj@Misc$TACAttainment, Proj@OM@Seasons)
+
+  if (!Error)
+    MSE <- .UpdateMSEObject(MSE,
+                           Proj,
+                           MPName,
+                           mp,
+                           YearsHist,
+                           YearsProj,
+                           result$StockNames,
+                           result$FleetNames,
+                           Store = Store)
+
+  for (type in c('error', 'warning', 'assumption')) {
+    entries <- Proj@Log[[type]]
+    if (is.null(entries)) next
+    
+    entries <- purrr::map(entries, \(e) {
+      if (.IsLogEntry(e) && is.null(e$mp)) e$mp <- MPName
+      e
+    })
+    MSE@Log[[type]] <- c(MSE@Log[[type]], entries)
+  }
+
+  MSE
+}
+
+.RunUpdateStep <- function(fun, fun_name, Proj, Year, AdviceSimList, LastAdviceSimList,
+                            YearsHist, YearsProj, Areas, FleetNames, StockNames,
+                            EverySeason = FALSE) {
+  tryCatch(
+    fun(Proj,
+        Year,
+        AdviceSimList,
+        LastAdviceSimList,
+        YearsHist,
+        YearsProj,
+        Areas,
+        FleetNames,
+        StockNames,
+        EverySeason),
+    error = function(e) structure(
+      list(step = fun_name, message = conditionMessage(e)),
+      class = "update_error"
+    )
+  )
+}
+
+# One log warning per MP: sim-time steps where a fleet did not catch its TAC
+.LogTACAttainment <- function(Proj, Rec, Seasons = 1) {
+  if (is.null(Rec) || !length(Rec$TAC)) return(Proj)
+  Short <- HasTAC <- FALSE
+  for (cx in seq_along(Rec$TAC)) {
+    TAC   <- Rec$TAC[[cx]]
+    Catch <- Rec$Catch[[cx]]
+    HasTAC <- HasTAC | (is.finite(TAC) & is.finite(Catch))
+    Short  <- Short | (is.finite(TAC) & is.finite(Catch) & TAC - Catch > .TACShortfallTol(TAC))
+  }
+  AtCeiling <- !is.na(Rec$AtCeiling) & Rec$AtCeiling
+  AnyStep <- \(x) apply(x, c(1, 2), any)
+  nTotal   <- sum(AnyStep(HasTAC))
+  nShort   <- sum(AnyStep(Short))
+  if (!nShort) return(Proj)
+  nCeiling <- sum(AnyStep(Short & AtCeiling))
+  nOther   <- sum(AnyStep(Short & !AtCeiling))
+  Other    <- if (length(Rec$TAC) > 1) 'choke' else 'solver'
+  Unit     <- if (Seasons > 1) 'sim-time steps' else 'sim-years'
+  msg <- paste0("TAC not caught in ", nShort, " of ", nTotal, " ", Unit,
+                " (effort ceiling ", nCeiling, ", ", Other, " ", nOther,
+                "); see `TACAttainment()`")
+  .CaptureLog(Proj, msg, name = 'TACAttainment', type = 'warning')
+}

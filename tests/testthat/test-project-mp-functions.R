@@ -1,0 +1,113 @@
+test_that("SetMPArgs() bakes argument values and keeps class and attributes", {
+  Variant <- SetMPArgs(IndexRate, CalibYears = 5, IndexWeight = c(2, 1), TACRange = NULL)
+  expect_s3_class(Variant, 'mp')
+  expect_identical(formals(Variant)$CalibYears, 5)
+  expect_identical(formals(Variant)$IndexWeight, c(2, 1))
+  expect_true('TACRange' %in% names(formals(Variant)))
+  expect_null(formals(Variant)$TACRange)
+
+  Ref <- SetMPArgs(refFMSY75)
+  expect_identical(attr(Ref, 'Interval'), 1)
+
+  WithAttr <- IndexTarget
+  attr(WithAttr, 'Interval') <- 3
+  WithAttr <- SetMPArgs(WithAttr, Responsiveness = 0.5)
+  expect_identical(attr(WithAttr, 'Interval'), 3)
+  expect_s3_class(WithAttr, 'mp')
+
+  SelfContained <- .MakeSelfContained(Variant)
+  expect_identical(formals(SelfContained)$CalibYears, 5)
+
+  expect_error(SetMPArgs(IndexRate, NotAnArg = 1), 'not an argument')
+  expect_error(SetMPArgs(IndexRate, 5), 'must be named')
+})
+
+test_that(".ResolveMPs() accepts names, named functions, and a mix", {
+  Variant <- SetMPArgs(IndexTarget, Responsiveness = 0.5)
+
+  Res <- .ResolveMPs(c('IndexTarget', 'CurrentCatch'))
+  expect_named(Res, c('IndexTarget', 'CurrentCatch'))
+
+  expect_warning(
+    Res <- .ResolveMPs(list(IT05 = Variant, 'CurrentCatch', CC = 'CurrentCatch')),
+    'Identical MP functions')
+  expect_named(Res, c('IT05', 'CurrentCatch', 'CC'))
+  expect_identical(formals(Res$IT05)$Responsiveness, 0.5)
+
+  expect_error(.ResolveMPs(list(Variant)), 'must be named')
+  expect_error(.ResolveMPs(list(A = Variant, A = IndexTarget)), 'Duplicated')
+  expect_error(.ResolveMPs(list(A = function(Data) Advice())), 'class')
+  expect_error(.ResolveMPs(Variant), 'named list')
+  expect_error(.ResolveMPs('NoSuchMPFunction'), 'not found')
+})
+
+test_that(".ResolveMPs() warns about identical MP functions under different names", {
+  MyMP <- function(Data) Advice()
+  class(MyMP) <- 'mp'
+  Copy <- function(Data)    Advice()
+  class(Copy) <- 'mp'
+
+  expect_warning(.ResolveMPs(list(A = MyMP, B = MyMP, C = Copy)), '"B" and "C" are identical to "A"')
+  expect_warning(.ResolveMPs(list('IndexTarget', IT = IndexTarget)), '"IT" is identical to "IndexTarget"')
+  expect_no_warning(.ResolveMPs(list('IndexTarget', IT05 = SetMPArgs(IndexTarget, Responsiveness = 0.5))))
+  expect_no_warning(.ResolveMPs(c('IndexTarget', 'CurrentCatch')))
+})
+
+test_that("Project() with MP functions matches name-based projection and passes advice timing", {
+  skip_on_cran()
+  OM <- SingleStockOM
+  OM@nSim <- 3
+  OM@DataLag <- 1
+  OM@Interval <- 2
+  Hist <- Simulate(OM, silent = TRUE)
+
+  Spy <- function(Data) {
+    Advice(TAC = LastTAC(Data),
+           Misc = list(Seen = c(Data@Misc$AdviceYear, Data@Misc$Interval, max(Data@Years))))
+  }
+  class(Spy) <- 'mp'
+
+  ByName <- Project(Hist, MPs = 'IndexTarget', silent = TRUE)
+  ByFun  <- Project(Hist, MPs = list(IndexTarget = IndexTarget, Spy = Spy), silent = TRUE)
+
+  expect_identical(names(ByFun@MPs), c('IndexTarget', 'Spy'))
+
+  L1 <- Landings(ByName, df = TRUE)
+  L2 <- Landings(ByFun, df = TRUE)
+  L1 <- L1[L1$Period == 'Projection', ]
+  L2 <- L2[L2$Period == 'Projection' & L2$MP == 'IndexTarget', ]
+  expect_equal(L1$Value, L2$Value)
+
+  Seen <- ByFun@Misc$Advice$Spy
+  YearsProj <- Years(OM, 'Projection')
+  First <- Seen[[as.character(YearsProj[1])]][[1]][[1]]@Misc$Seen
+  expect_equal(First[1], YearsProj[1])
+  expect_equal(First[2], 2)
+  expect_equal(First[3], YearsProj[1] - 2)
+})
+
+test_that("Project() seeds MP random draws from OM@Seed and restores the global RNG", {
+  skip_on_cran()
+  OM <- SingleStockOM
+  OM@nSim <- 3
+  Hist <- Simulate(OM, silent = TRUE)
+  RandMP <- function(Data, ...) {
+    Advice <- IndexTarget(Data, ...)
+    Advice@TAC <- Advice@TAC * exp(stats::rnorm(length(Advice@TAC), 0, 0.2))
+    Advice
+  }
+  class(RandMP) <- class(IndexTarget)
+
+  set.seed(1)
+  A <- Project(Hist, MPs = list(R = RandMP), silent = TRUE)
+  set.seed(999)
+  Before <- get('.Random.seed', envir = globalenv())
+  B <- Project(Hist, MPs = list(I = IndexTarget, R = RandMP), silent = TRUE)
+  expect_identical(get('.Random.seed', envir = globalenv()), Before)
+  expect_identical(unname(A@Landings[, , , , 'R']), unname(B@Landings[, , , , 'R']))
+
+  Hist2 <- Hist
+  Hist2@OM@Seed <- Hist@OM@Seed + 1
+  C <- Project(Hist2, MPs = list(R = RandMP), silent = TRUE)
+  expect_false(isTRUE(all.equal(A@Landings, C@Landings)))
+})

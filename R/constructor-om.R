@@ -1,0 +1,1327 @@
+#' OM Constructor and Accessor
+#'
+#' Construct an [om-class] object defining the complete specification of an
+#' operating model (OM) for use in Management Strategy Evaluation (MSE), or
+#' extract the `OM` slot from an enclosing object.
+#'
+#' @param Name Character. Name of the operating model. Default
+#'   `"A new OM object"`.
+#'
+#'   If `Name` is an S4 object with an `OM` slot (e.g. a [hist-class] or
+#'   [mse-class] object), `OM()` returns that slot directly rather than
+#'   constructing a new object. See *Pass-Through Access* in Details.
+#' @param Agency Character. Name of the agency responsible for management.
+#'   Supports Markdown. Default `""`.
+#' @param Author Character vector. Name(s) of the author(s) of the operating
+#'   model. Default `""`.
+#' @param Email Character vector. Email address(es) corresponding to `Author`.
+#'   Supports Markdown. Default `""`.
+#' @param Region Character. Name of the geographic region of the fishery.
+#'   Default `""`.
+#' @param Latitude Numeric. Latitude (decimal degrees) of the centre of
+#'   `Region`. Default `NULL`.
+#' @param Longitude Numeric. Longitude (decimal degrees) of the centre of
+#'   `Region`. Default `NULL`.
+#' @param Sponsor Character. Organisation sponsoring development of the
+#'   operating model. Supports Markdown. Default `""`.
+#' @param nSim Positive integer. Number of stochastic simulations. Default
+#'   `48`.
+#' @param nYear Numeric. Number of historical years. Default `20`.
+#' @param pYear Numeric. Number of projection years. Default `30`.
+#' @param CurrentYear Integer. Final historical calendar year of the operating
+#'   model. Default is the current system year.
+#' @param Seasons Integer. Number of seasons per year. Default `1`.
+#' @param RefSeason Integer vector or `NULL`. Only used for `Seasons > 1`.
+#'   Reference season(s) for reporting equilibrium/MSY reference points.
+#'   Default `NULL`. See [RefSeason()].
+#' @param RefEffortYears Numeric vector or `NULL`. Only used for
+#'   `Seasons > 1`. Historical year(s) fixing the seasonal shape of fishing
+#'   mortality for reference point calculation. Default `NULL`. See
+#'   [RefSeason()].
+#' @param Stock A [stock-class] object or named list of [stock-class] objects.
+#'   Default `NULL`. See [Stock()] for construction and pass-through access.
+#' @param Fleet A hierarchical named list of [fleet-class] objects indexed by
+#'   stock then fleet. Each stock must have the same number of fleets. Default
+#'   `NULL`. See [Fleet()] for construction and pass-through access.
+#' @param Obs A hierarchical named list of [obs-class] objects indexed by
+#'   stock and fleet. Default `NULL`. See [Obs()] for construction and
+#'   pass-through access.
+#' @param Imp A hierarchical named list of [imp-class] objects indexed by
+#'   stock and fleet. Default `NULL`. See [Imp()] for construction and
+#'   pass-through access.
+#' @param Data A [data-class] object or list of [data-class] objects
+#'   associated with the operating model. Default `NULL`. See [Data()] for
+#'   construction and pass-through access.
+#' @param DataLag Integer. Number of years that data are lagged relative
+#'   to management implementation. Default `0`. See [DataLag()].
+#' @param CatchFrac List. Named list of length 0 or `nStock(OM)`, giving the
+#'   historical fleet split of catch used as a catchability calibration
+#'   target. Default `NULL`. See [FleetAllocation()].
+#' @param FleetAllocation List. Named list of length 0 or the number of stock
+#'   complexes, controlling how the TAC is split among fleets during
+#'   projection. Default `NULL`. See [FleetAllocation()].
+#' @param HistoricalWeight List. Named list of length 0 or the number of
+#'   stock complexes, giving the weight placed on the historical seasonal
+#'   pattern (vs. the population abundance pattern) when `SeasonalAllocation`
+#'   is derived. Default `NULL`. See [SeasonalAllocation()].
+#' @param SeasonalAllocation List. Named list of length 0 or the number of
+#'   stock complexes, controlling how a periodically-set TAC is split across
+#'   the seasons of the interval it covers. Default `NULL`. See
+#'   [SeasonalAllocation()].
+#' @param EffortAllocation List. Named list of length 0 or the number of
+#'   stock complexes, splitting a scalar absolute Effort recommendation
+#'   across fleets. Default `NULL`. See [EffortAllocation()].
+#' @param Complexes List. Defines stock complexes for data aggregation and
+#'   management. Default `NULL`.
+#' @param Herm A list of [stocktransition-class] objects (built via [Herm()]),
+#'   one per `From`/`To` stock pair, defining age-dependent reclassification
+#'   of individuals between stocks (e.g. sequential hermaphroditism). Default
+#'   `NULL`.
+#' @param Relations List. Biological or ecological relationships among stocks
+#'   (e.g. predator-prey). Default `NULL`. Not used: relationships among stocks
+#'   are not modelled, and [Simulate()] records a warning in the log (see
+#'   [Log()]) when `Relations` is not empty.
+#' @param StockTargeting A [stocktargeting-class] object. Defines fleet-level
+#'   stock targeting weights and deviations. Populated internally.
+#'    See [StockTargeting()].
+#'   
+#' @param Interval Numeric scalar or named numeric vector. Management update
+#'   interval in years. Default `1`. A named vector
+#'   gives a per-MP interval, e.g. `c(MP1 = 1, MP2 = 4)`. See [Interval()].
+#' @param MPStartYear Numeric or `NULL`. First calendar year in which MPs are
+#'   applied. Default `NULL`. See [MPStartYear()].
+#' @param InterimAdvice A `data.frame` or `NULL`. Fixed or stochastic
+#'   TAC/Effort values for years before `MPStartYear`. Default `NULL`. See
+#'   [InterimAdvice()] for the required columns and how it is applied.
+#' @param nReps Positive integer. Number of stochastic replicates used for
+#'   generating management advice. Default `1`. Not used in simulations.
+#' @param pStar Numeric in \eqn{[0, 1]}. Percentile applied to stochastic
+#'   management advice. Default `0.5`. Not used in simulations.
+#' @param maxF Numeric. Maximum allowable instantaneous fishing mortality.
+#'   Applies to nominal fishing mortality for fish that interact with the
+#'   fishing gear; actual effective F may be lower if some fish are discarded
+#'   and survive. Default `3`.
+#' @param Seed Integer. Random number generator seed for reproducibility.
+#'   All stochastic values are derived from `Seed`: those generated when the
+#'   OM is populated (e.g., recruitment deviations, observation and
+#'   implementation error, values sampled from parameter ranges) and the
+#'   random draws made in [Simulate()] and [Project()]. Each simulation has
+#'   its own random number streams, so simulation `i` is the same for any
+#'   `nSim`. OMs with the same `Seed` share the same random draws; use a
+#'   different `Seed` for each OM to obtain independent draws. `Seed` must be
+#'   set before the OM is populated: values already generated are not redrawn
+#'   when `Seed` is changed. Default `101`.
+#' @param Control Named list of optional operating model control settings.
+#'   Default `list()`. See [OMControl] for the available settings.
+#' @param Misc List. Miscellaneous objects or developer-use components.
+#'   Default `list()`.
+#' @param Source Character. References to data sources or documentation.
+#'   Supports Markdown. Default `NULL`.
+#'
+#' @details
+#' ## Pass-Through Access
+#'
+#' When `Name` is an S4 object with an `OM` slot, `OM()` returns that slot
+#' directly rather than constructing a new object. This allows a consistent
+#' interface for both construction and retrieval:
+#'
+#' ```r
+#' om  <- OM(hist_obj)    # extract from `hist` or `mse`
+#' ```
+#'
+#' ## Derived Slots
+#'
+#' The `Years` slot is not a constructor parameter. It is derived
+#' automatically from `nYear`, `pYear`, `CurrentYear`, and `Seasons` via
+#' [CalcYears()] and is read-only. Use [Years()] to extract it from a
+#' constructed object.
+#'
+#' ## Interim Advice
+#'
+#' When the historical period ends before MPs should actually start being
+#' applied (e.g. the OM is conditioned on data to 2024 but MPs will not be
+#' implemented until 2028), set `MPStartYear` to the first calendar year MPs
+#' should run. Projection years before `MPStartYear` are "interim" years:
+#' the MP is not called, and advice is instead taken from `InterimAdvice`.
+#' See [InterimAdvice()] for how interim years are resolved and the
+#' `data.frame` format used to populate them.
+#'
+#'
+#' ## Sub-Object Slots
+#'
+#' `Stock`, `Fleet`, `Obs`, `Imp`, and `Data` each have dedicated constructor
+#' functions that also act as pass-through accessors when called with an
+#' [om-class] argument. Replacement is handled by the corresponding
+#' replacement functions in each constructor file:
+#'
+#' ```r
+#' Stock(om)  <- Stock("MyStock", ...)
+#' Fleet(om)  <- list(s1 = list(f1 = Fleet("MyFleet", ...)))
+#' Obs(om)    <- Obs("MyObs", ...)
+#' Imp(om)    <- Imp("MyImp", ...)
+#' Data(om)   <- Data(...)
+#' ```
+#'
+#' ## Accessing and Assigning Slots
+#'
+#' All remaining slots in [om-class] objects can be accessed or assigned
+#' using functions matching the slot names. See [OM-accessors] for the full
+#' list:
+#'
+#' ```r
+#' Agency(om)
+#' Agency(om) <- "DFO"
+#' ```
+#'
+#' @return
+#' - `OM()` returns a new [om-class] object when `Name` is a character string
+#'   or `NULL`.
+#' - `OM()` returns `Name@OM` (an [om-class] object) when `Name` is an S4
+#'   object with an `OM` slot.
+#'
+#' @seealso
+#' - [om-class] for the class definition.
+#' - [OM-accessors] for slot accessor and replacement functions.
+#' - [InterimAdvice()] for populating interim TAC/Effort.
+#' - [DataLag()] for the data-lag applied to the MP's `Data`.
+#' - [FleetAllocation()] for splitting a stock/complex TAC among fleets.
+#' - [SeasonalAllocation()] for splitting a periodic TAC or Effort across
+#'   seasons.
+#' - [RefSeason()] for reference point season handling in seasonal OMs.
+#' - [EffortAllocation()] for splitting a scalar absolute Effort
+#'   recommendation among fleets.
+#' - [Stock()], [Fleet()], [Obs()], [Imp()], [Data()] for sub-object
+#'   constructors and their pass-through accessors.
+#' - [Years()], [CalcYears()] for the derived time-step vector.
+#' - [StockTargeting()] for the stock targeting sub-object.
+#' - [Log()] for accessing runtime diagnostics.
+#' - [PopulateOM()], [runMSE()] for downstream use of the operating model.
+#' - [ConvertOM()], [ConvertMOM()] for converting legacy objects.
+#'
+#' @family om
+#'
+#' @examples
+#' om <- OM()
+#' Agency(om)
+#' Agency(om) <- "DFO"
+#'
+#' nSim(om)
+#' nSim(om) <- 100
+#'
+#' Years(om)
+#'
+#' @export
+OM <- function(Name        = "A new OM object",
+               Agency      = "",
+               Author      = "",
+               Email       = "",
+               Region      = "",
+               Latitude    = NULL,
+               Longitude   = NULL,
+               Sponsor     = "",
+               
+               nSim        = 48,
+               nYear       = 20,
+               pYear       = 30,
+               CurrentYear = as.numeric(format(Sys.Date(), "%Y")),
+               Seasons     = 1,
+               RefSeason      = NULL,
+               RefEffortYears = NULL,
+
+               Stock       = NULL,
+               Fleet       = NULL,
+               Obs         = NULL,
+               Imp         = NULL,
+               
+               Data        = NULL,
+               DataLag     = 0,
+               
+               CatchFrac   = NULL,
+               FleetAllocation  = NULL,
+               HistoricalWeight   = NULL,
+               SeasonalAllocation = NULL,
+               EffortAllocation = NULL,
+
+               Complexes   = NULL,
+               Herm        = NULL,
+               Relations   = NULL,
+               
+               StockTargeting = NULL,
+               
+               Interval    = 1,
+               MPStartYear = NULL,
+               InterimAdvice = NULL,
+               nReps       = 1,
+               pStar       = 0.5,
+               maxF        = 3,
+               Seed        = 101,
+               
+               Control     = NULL,
+               Misc        = list(),
+               Source      = NULL) {
+  
+  if (!inherits(Name, "character")) {
+    if (!"OM" %in% slotNames(Name))
+      cli::cli_abort(c("x" = "No slot {.val OM} found in object class {.val {class(Name)}}"))
+    return(Name@OM)
+  }
+  
+  .Object <- new("om")
+  .Object@Name        <- Name
+  .Object@Agency      <- Agency
+  .Object@Author      <- Author
+  .Object@Email       <- Email
+  .Object@Region      <- Region
+  .Object@Latitude    <- Latitude
+  .Object@Longitude   <- Longitude
+  .Object@Sponsor     <- Sponsor
+  
+  .Object@nSim        <- nSim
+  .Object@nYear       <- nYear
+  .Object@pYear       <- pYear
+  .Object@CurrentYear <- CurrentYear
+  .Object@Seasons     <- Seasons
+  .Object@RefSeason      <- RefSeason
+  .Object@RefEffortYears <- RefEffortYears
+  .Object@Years       <- CalcYears(nYear, pYear, CurrentYear, Seasons)
+  
+  Stock     <- if (!is.null(Stock)) .ToNamedList(Stock, 'stock') else NULL
+  stock_nms <- names(Stock)
+  compx_nms <- names(Complexes)
+  if (is.null(compx_nms))
+    compx_nms <- stock_nms
+  
+  Fleet     <- .ToNestedList(Fleet, 'fleet', stock_nms)
+  fleet_nms <- if (!is.null(Fleet)) purrr::map(Fleet, names) else NULL
+
+  # Obs/Imp are indexed by complex, not stock. When Complexes is explicit,
+  # map each complex to the fleet names of its first stock. Full validation of
+  # Complexes (names, index coverage) happens in .PopulateComplexes(); here we
+  # are permissive so that stocks/obs/complexes can be added incrementally.
+  obs_fleet_nms <- if (!is.null(Complexes) && !is.null(fleet_nms) && length(stock_nms) > 0) {
+    purrr::map(setNames(nm = compx_nms), function(cx) {
+      first_stk_idx <- Complexes[[cx]][1]
+      stk_nm        <- if (!is.null(first_stk_idx) && first_stk_idx <= length(stock_nms))
+                         stock_nms[[first_stk_idx]] else NULL
+      if (is.null(stk_nm)) NULL else fleet_nms[[stk_nm]]
+    })
+  } else {
+    fleet_nms
+  }
+
+  Obs       <- .ToNestedList(Obs,   'obs',   compx_nms, obs_fleet_nms)
+  Imp       <- .ToNestedList(Imp,   'imp',   compx_nms, obs_fleet_nms)
+                          
+  .Object@Stock       <- Stock
+  .Object@Fleet       <- Fleet
+  .Object@Obs         <- Obs
+  .Object@Imp         <- Imp
+  
+  .Object@Data        <- Data
+  .Object@DataLag     <- DataLag
+  
+  .Object@CatchFrac   <- CatchFrac
+  .Object@FleetAllocation  <- FleetAllocation
+  .Object@HistoricalWeight   <- HistoricalWeight
+  .Object@SeasonalAllocation <- SeasonalAllocation
+  .Object@EffortAllocation <- EffortAllocation
+  
+  .Object@Complexes   <- Complexes
+  .Object@Herm        <- Herm
+  .Object@Relations   <- Relations
+  
+  if (is.null(StockTargeting))
+    StockTargeting <- new("stocktargeting")
+  .Object@StockTargeting <- StockTargeting
+  
+  .Object@Interval    <- Interval
+  .Object@MPStartYear <- MPStartYear
+  .Object@InterimAdvice <- InterimAdvice
+  .Object@nReps       <- nReps
+  .Object@pStar       <- pStar
+  .Object@maxF        <- maxF
+  .Object@Seed        <- Seed
+  
+  .Object@Control     <- if (!is.null(Control)) Control else list()
+  
+  .Object@Misc        <- Misc
+  .Object@Source      <- Source
+  
+  methods::validObject(.Object)
+  .Object
+}
+
+
+#' Access and Modify OM Slots
+#'
+#' Accessor and replacement functions for slots in [om-class] objects.
+#' Each function retrieves or replaces the value of the corresponding slot.
+#' All accessors also accept [hist-class] and [mse-class] objects, extracting
+#' the embedded `OM` slot transparently.
+#'
+#' @param x An [om-class], [hist-class], or [mse-class] object. `nYear()`,
+#'   `pYear()`, `CurrentYear()`, and `Seasons()` also accept a [data-class]
+#'   object or a list of them.
+#' @param value Replacement value for the corresponding slot.
+#'
+#' @details
+#' ## Sub-Object Slots
+#'
+#' The `Stock`, `Fleet`, `Obs`, `Imp`, and `Data` slots are accessed and
+#' replaced via their own constructor functions, which act as pass-through
+#' accessors when called with an [om-class] argument. They are not listed
+#' here. See [Stock()], [Fleet()], [Obs()], [Imp()], [Data()].
+#'
+#' ## Read-Only Slots
+#'
+#' `Years` is derived automatically from `nYear`, `pYear`, `CurrentYear`, and
+#' `Seasons` and is read-only. Use [Years()] to extract it.
+#'
+#' ## Replacing Slots in `hist` and `mse` Objects
+#'
+#' Replacement functions called on a [hist-class] or [mse-class] object
+#' modify its embedded `OM`, subject to when the slot is used:
+#'
+#' - Metadata (`Agency`, `Author`, `Email`, `Region`, `Latitude`,
+#'   `Longitude`, `Sponsor`, `Source`): can be replaced in [om-class],
+#'   [hist-class], and [mse-class] objects.
+#' - Settings used in projections (`Control`, `Interval`, `MPStartYear`,
+#'   `InterimAdvice`, `DataLag`, `FleetAllocation`, `SeasonalAllocation`,
+#'   `HistoricalWeight`, `EffortAllocation`, `nReps`, `pStar`): can be
+#'   replaced in [om-class] and [hist-class] objects, and take effect in the
+#'   next [Project()].
+#' - All other slots (e.g. `Seed`, `nYear`, `Seasons`, `maxF`, `Complexes`)
+#'   are used to simulate the historical dynamics and can only be replaced
+#'   in [om-class] objects; re-run [Simulate()] after changing them.
+#'
+#' @return
+#' - Accessor functions return the value of the named slot.
+#' - For a [data-class] object, `nYear()` returns the number of historical
+#'   years up to `YearLH`, `CurrentYear()` returns `YearLH`, and `Seasons()`
+#'   returns the `Seasons` slot. For a list of [data-class] objects they return
+#'   a single value when it is the same for every object, and otherwise a list.
+#'   `pYear()` gives an error for [data-class] objects; see [ProjectionYear()].
+#' - Replacement functions return `x` with the named slot updated.
+#'
+#' @seealso
+#' - [OM()] for the constructor.
+#' - [om-class] for the class definition.
+#' - [Stock()], [Fleet()], [Obs()], [Imp()], [Data()] for sub-object
+#'   pass-through accessors.
+#' - [Years()] for the read-only time-step vector.
+#' - [Log()] for runtime diagnostics.
+#'
+#' @family om
+#'
+#' @examples
+#' om <- OM()
+#'
+#' Agency(om)
+#' Agency(om) <- "DFO"
+#'
+#' nSim(om)
+#' nSim(om) <- 100
+#'
+#' maxF(om)
+#' maxF(om) <- 5
+#'
+#' @name OM-accessors
+NULL
+
+
+#' @rdname OM-accessors
+#' @export
+Agency <- function(x) .IsHist(x, "Agency")
+
+#' @rdname OM-accessors
+#' @export
+`Agency<-` <- function(x, value) .AssignOMSlot(x, value, "Agency", "meta")
+
+#' @rdname OM-accessors
+#' @export
+Author <- function(x) .IsHist(x, "Author")
+
+#' @rdname OM-accessors
+#' @export
+`Author<-` <- function(x, value) .AssignOMSlot(x, value, "Author", "meta")
+
+#' @rdname OM-accessors
+#' @export
+Email <- function(x) .IsHist(x, "Email")
+
+#' @rdname OM-accessors
+#' @export
+`Email<-` <- function(x, value) .AssignOMSlot(x, value, "Email", "meta")
+
+#' @rdname OM-accessors
+#' @export
+Region <- function(x) .IsHist(x, "Region")
+
+#' @rdname OM-accessors
+#' @export
+`Region<-` <- function(x, value) .AssignOMSlot(x, value, "Region", "meta")
+
+#' @rdname OM-accessors
+#' @export
+Latitude <- function(x) .IsHist(x, "Latitude")
+
+#' @rdname OM-accessors
+#' @export
+`Latitude<-` <- function(x, value) .AssignOMSlot(x, value, "Latitude", "meta")
+
+#' @rdname OM-accessors
+#' @export
+Longitude <- function(x) .IsHist(x, "Longitude")
+
+#' @rdname OM-accessors
+#' @export
+`Longitude<-` <- function(x, value) .AssignOMSlot(x, value, "Longitude", "meta")
+
+#' @rdname OM-accessors
+#' @export
+Sponsor <- function(x) .IsHist(x, "Sponsor")
+
+#' @rdname OM-accessors
+#' @export
+`Sponsor<-` <- function(x, value) .AssignOMSlot(x, value, "Sponsor", "meta")
+
+#' @rdname OM-accessors
+#' @export
+Source <- function(x) .IsHist(x, "Source")
+
+#' @rdname OM-accessors
+#' @export
+`Source<-` <- function(x, value) .AssignOMSlot(x, value, "Source", "meta")
+
+
+#' @rdname OM-accessors
+#' @export
+nYear <- function(x) {
+  if (inherits(x, "data") || .IsDataList(x))
+    return(.DataValue(x, \(d) {
+      YearLH <- d@YearLH %||% floor(max(d@Years, -Inf))
+      length(unique(floor(d@Years[d@Years < YearLH + 1])))
+    }))
+  .IsHist(x, "nYear")
+}
+
+#' @rdname OM-accessors
+#' @export
+`nYear<-` <- function(x, value) .AssignOMSlot(x, value, "nYear", "struct")
+
+#' @rdname OM-accessors
+#' @export
+pYear <- function(x) {
+  if (inherits(x, "data") || .IsDataList(x))
+    cli::cli_abort(c("{.code pYear} is not stored in {.cls data} objects",
+                     "i" = "Use {.fn ProjectionYear} for the number of projection time steps in the data"),
+                   call = NULL)
+  .IsHist(x, "pYear")
+}
+
+#' @rdname OM-accessors
+#' @export
+`pYear<-` <- function(x, value) .AssignOMSlot(x, value, "pYear", "struct")
+
+#' @rdname OM-accessors
+#' @export
+CurrentYear <- function(x) {
+  if (inherits(x, "data") || .IsDataList(x))
+    return(.DataValue(x, \(d) d@YearLH))
+  .IsHist(x, "CurrentYear")
+}
+
+#' @rdname OM-accessors
+#' @export
+`CurrentYear<-` <- function(x, value) .AssignOMSlot(x, value, "CurrentYear", "struct")
+
+#' @rdname OM-accessors
+#' @export
+Seasons <- function(x) {
+  if (.IsDataList(x))
+    return(.DataValue(x, \(d) d@Seasons))
+  .IsHist(x, "Seasons")
+}
+
+#' @rdname OM-accessors
+#' @export
+`Seasons<-` <- function(x, value) .AssignOMSlot(x, value, "Seasons", "struct")
+
+#' Reference Point Season Handling for OM Objects
+#'
+#' Access or replace the `RefSeason` and `RefEffortYears` slots of an
+#' [om-class] object. Only relevant for seasonal OMs (`Seasons > 1`): both
+#' control how equilibrium/MSY reference points (e.g. `BMSY`, `SBMSY`, `B0`,
+#' `SB0`, `BLow`) are calculated from a seasonal per-recruit model. Also
+#' accepts [hist-class] and [mse-class] objects, extracting the embedded
+#' `OM` slot transparently.
+#'
+#' @param x An [om-class], [hist-class], or [mse-class] object.
+#' @param value Replacement value; an integer vector of season indices
+#'   (`RefSeason`, in `1..Seasons`) or a numeric vector of historical
+#'   calendar years (`RefEffortYears`). `NULL` restores the default
+#'   behaviour described in *Details*.
+#'
+#' @details
+#' ## `RefSeason`
+#'
+#' Reference point biomass quantities are a cross-sectional snapshot within
+#' the annual cycle, so a season (or seasons) must be chosen at which to take
+#' that snapshot. `NULL` (default) auto-detects, independently per
+#' simulation, which season(s) have nonzero spawning contribution, and
+#' averages the cross-sectional snapshot across them when more than one is
+#' detected. Set `RefSeason` explicitly to override the auto-detection with a
+#' fixed season index/indices.
+#'
+#' ## `RefEffortYears`
+#'
+#' One or more historical calendar years whose relative seasonal
+#' effort/catchability pattern fixes the seasonal *shape* of fishing
+#' mortality used during per-recruit and MSY reference point optimization -
+#' decoupled from the year used for the biological parameters themselves.
+#' `NULL` (default) reuses the same year as the biological parameters. When
+#' more than one year is given, the per-season effort is averaged across
+#' those years before use.
+#'
+#' @return
+#' - `RefSeason()`/`RefEffortYears()` return the value of the corresponding
+#'   slot.
+#' - `RefSeason<-()`/`RefEffortYears<-()` return `x` with the corresponding
+#'   slot updated.
+#'
+#' @seealso
+#' - [OM()] for the constructor, [om-class] for the class definition.
+#' - [CalcEquilibrium()], [CalcMSY()] for the reference point calculations
+#'   that use these slots.
+#' - [OM-accessors] for the remaining `OM` slot accessors.
+#'
+#' @family om
+#'
+#' @examples
+#' om <- OM(Seasons = 4)
+#' RefSeason(om) <- 1L
+#' RefSeason(om)
+#'
+#' @rdname RefSeason
+#' @export
+RefSeason <- function(x) .IsHist(x, "RefSeason")
+
+#' @rdname RefSeason
+#' @export
+`RefSeason<-` <- function(x, value) .AssignOMSlot(x, value, "RefSeason", "struct")
+
+#' @rdname RefSeason
+#' @export
+RefEffortYears <- function(x) .IsHist(x, "RefEffortYears")
+
+#' @rdname RefSeason
+#' @export
+`RefEffortYears<-` <- function(x, value) .AssignOMSlot(x, value, "RefEffortYears", "struct")
+
+
+#' Data Lag for OM Objects
+#'
+#' Access or replace the `DataLag` slot of an [om-class] object: the number
+#' of additional whole years that the `Data` seen by an MP is lagged behind
+#' the timestep at which its advice takes effect. Also accepts [hist-class]
+#' and [mse-class] objects, extracting the embedded `OM` slot transparently.
+#'
+#' Use [ManagementScheduleTable()] to see which data year is used at each
+#' management year for a given OM.
+#'
+#' @param x An [om-class], [hist-class], or [mse-class] object.
+#' @param value Replacement value; a non-negative integer, in years.
+#'
+#' @details
+#' In a real fishery, management advice is never based on fully up to date
+#' data. Even without any extra delay, an MP can only ever see data through
+#' the timestep immediately before the one at which its advice takes effect,
+#' since a timestep's data cannot be complete until that timestep has ended.
+#' `DataLag` adds a further, deliberate delay on top of that unavoidable
+#' one-timestep gap: `DataLag = 0` is that minimum unavoidable gap, and each
+#' extra year of `DataLag` pushes the data the MP sees one further whole
+#' year into the past.
+#'
+#' ## Management years and when advice takes effect
+#'
+#' A "management year" is a projection year in which the MP is actually
+#' called to produce new advice. Which years are management years is
+#' controlled by `Interval`: with `Interval = 1` every projection year is a
+#' management year, with `Interval = 2` every second year is, and so on. In
+#' a year that is not a management year, the TAC or Effort from the most
+#' recent management year simply carries forward unchanged. Whatever advice
+#' is produced for a management year takes effect starting in that same
+#' calendar year, not the year after. Before `MPStartYear` (if it is set),
+#' the MP is not called at all; advice instead comes from `InterimAdvice`.
+#'
+#' ## Which data year the MP sees
+#'
+#' The MP is given data up to and including the timestep immediately before
+#' the current management timestep, shifted back by a further `DataLag`
+#' whole years. This applies uniformly from the very first management year
+#' onward, reaching back into the operating model's historical data if
+#' needed, and it does not depend on `Interval`: the one-timestep minimum
+#' gap is always relative to the single timestep before the current
+#' management timestep, not to whenever the MP was previously called.
+#'
+#' For an annual OM (`Seasons = 1`), a timestep is a calendar year, so this
+#' is simply: with a last historical year of 2026, `MPStartYear = NULL` (so
+#' MPs start in 2027), `Interval = 1`, and `DataLag = 1`, the very first
+#' management year (2027) is based on data up to 2025 (2026 is the year
+#' immediately before 2027, and shifting that back one further year for the
+#' lag lands on 2025).
+#'
+#' If `MPStartYear` is set, the years before it are "interim" years in which
+#' [InterimAdvice()] is used instead of the MP, but the operating model
+#' still simulates real catch and effort for those years and records data
+#' for them (f they are missing in the OM Data). Once the MP starts being called 
+#' at `MPStartYear`, `DataLag` counts back from the timestep before that 
+#' management year in exactly the same way, reaching into the interim period's 
+#' data rather than treating the operating model's original historical period as
+#' the most recent data available.
+#'
+#' ## Seasonal OMs
+#'
+#' For a seasonal OM (`Seasons > 1`), `DataLag` is still always specified in
+#' whole years; internally it is converted to `DataLag * Seasons` timesteps.
+#' For example, in a quarterly OM (`Seasons = 4`), a management timestep of 
+#' quarter 1, 2028 with `DataLag = 1` uses data up to quarter 4, 2026 
+#' (quarter 4, 2027 is the timestep immediately before quarter 1, 2028, and shifting that back one
+#' further year lands on quarter 4, 2026). 
+#'
+#' ## Per-MP override
+#'
+#' An MP can declare `attr(mp, 'DataLag') <- value` to use that lag in place
+#' of the OM's `DataLag`. The status-quo MPs [CurrentCatch()],
+#' [CurrentLandings()], and [AverageCatch()] set it to `0`.
+#'
+#' `DataLag` combines with `Interval` and `MPStartYear` to determine the
+#' full management timeline. [ManagementScheduleTable()] shows, for a given
+#' OM, which years are management years and which data year `DataLag` calls
+#' for at each one.
+#'
+#' @return
+#' - `DataLag()` returns the value of the `DataLag` slot.
+#' - `DataLag<-()` returns `x` with the `DataLag` slot updated.
+#'
+#' @seealso
+#' - [OM()] for the constructor, [om-class] for the class definition.
+#' - [ManagementScheduleTable()] for previewing the resulting data/management
+#'   year schedule.
+#' - [Interval()], [MPStartYear()] for the other slots controlling the
+#'   management timeline.
+#' - [OM-accessors] for the remaining `OM` slot accessors.
+#'
+#' @family om
+#'
+#' @examples
+#' om <- OM(DataLag = 1)
+#' DataLag(om)
+#' DataLag(om) <- 2
+#'
+#' # Preview which years are management years, and which data year each uses
+#' om <- OM(CurrentYear = 2026, DataLag = 1, Interval = 1)
+#' ManagementScheduleTable(om)
+#'
+#' @rdname DataLag
+#' @export
+DataLag <- function(x) {
+  .IsHist(x, "DataLag")
+}
+
+#' @rdname DataLag
+#' @export
+`DataLag<-` <- function(x, value) .AssignOMSlot(x, value, "DataLag", "proj")
+
+#' Fleet Allocation of TAC for OM Objects
+#'
+#' Access or replace the `CatchFrac` and `FleetAllocation` slots of an
+#' [om-class] object, which together control how catch is split among
+#' fleets: `CatchFrac` as a historical calibration target, `FleetAllocation`
+#' as the split applied to a stock/complex-level TAC during projection.
+#' Also accepts [hist-class] and [mse-class] objects, extracting the
+#' embedded `OM` slot transparently.
+#'
+#' @param x An [om-class], [hist-class], or [mse-class] object.
+#' @param value Replacement value; a named list of length 0 or `nStock(OM)`
+#'   (`CatchFrac`) / the number of stock complexes (`FleetAllocation`), each
+#'   element an `nSim` by `nFleet` matrix (or a single row recycled across
+#'   sims) with rows summing to 1. `NULL` clears it.
+#'
+#' @details
+#' ## `CatchFrac`
+#'
+#' Only relevant when there is more than one fleet and a historical
+#' `Depletion@Final` target is set for at least one stock. In that case,
+#' catchability is calibrated during conditioning so that the modelled catch
+#' split across fleets in the final historical year reproduces `CatchFrac`.
+#' If left unspecified for a stock, `CatchFrac` is instead derived from
+#' relative Effort times Catchability in the final historical year, and used
+#' as-is (no calibration target).
+#'
+#' ## `FleetAllocation`
+#'
+#' Controls how a stock/complex-level TAC is split among fleets during
+#' projection - both TAC advice returned by an MP and `InterimAdvice`. For
+#' each stock/complex, resolved in this order:
+#' 1. Use `FleetAllocation` if specified.
+#' 2. Fall back to the deprecated `Allocation` slot if specified (retained
+#'    only so that objects saved before the `FleetAllocation` rename still
+#'    carry their data; not user-facing, set `FleetAllocation` directly
+#'    instead).
+#' 3. Fall back to `CatchFrac` if specified.
+#' 4. Derive from the mean relative removals (landings + discards) over the
+#'    last five historical years.
+#'
+#' @return
+#' - `CatchFrac()`/`FleetAllocation()` return the value of the corresponding
+#'   slot.
+#' - `CatchFrac<-()`/`FleetAllocation<-()` return `x` with the corresponding
+#'   slot updated.
+#'
+#' @seealso
+#' - [OM()] for the constructor, [om-class] for the class definition.
+#' - [HistoricalWeight()]/[SeasonalAllocation()] for how a periodically-set
+#'   TAC or Effort is further split across seasons.
+#' - [OM-accessors] for the remaining `OM` slot accessors.
+#'
+#' @family om
+#'
+#' @examples
+#' om <- OM(nSim = 10)
+#' FleetAllocation(om) <- list(Stock1 = matrix(c(0.7, 0.3), 10, 2, byrow = TRUE))
+#' FleetAllocation(om)
+#'
+#' @rdname FleetAllocation
+#' @export
+CatchFrac <- function(x) .IsHist(x, "CatchFrac")
+
+#' @rdname FleetAllocation
+#' @export
+`CatchFrac<-` <- function(x, value) .AssignOMSlot(x, value, "CatchFrac", "struct")
+
+#' @rdname FleetAllocation
+#' @export
+FleetAllocation <- function(x) .IsHist(x, "FleetAllocation")
+
+#' @rdname FleetAllocation
+#' @export
+`FleetAllocation<-` <- function(x, value) .AssignOMSlot(x, value, "FleetAllocation", "proj")
+
+#' Seasonal Allocation of TAC/Effort for OM Objects
+#'
+#' Access or replace the `HistoricalWeight` and `SeasonalAllocation` slots of
+#' an [om-class] object. Only relevant for seasonal OMs (`Seasons > 1`):
+#' together they control how a periodically-set TAC (an MP is not
+#' necessarily called every season - see [Interval()]) is split across the
+#' seasons of the interval it covers. Also accepts [hist-class] and
+#' [mse-class] objects, extracting the embedded `OM` slot transparently.
+#'
+#' @param x An [om-class], [hist-class], or [mse-class] object.
+#' @param value Replacement value; a named list of length 0 or the number of
+#'   stock complexes. For `HistoricalWeight`, each element is a named numeric
+#'   vector over fleet names with values in `[0,1]` (or a single unnamed
+#'   value applied to every fleet). For `SeasonalAllocation`, each element is
+#'   an `nSim` (or 1, recycled) by `Seasons` by `nFleet` array, each
+#'   `[sim, , fleet]` slice summing to 1. `NULL` clears it.
+#'
+#' @details
+#' For each stock complex, `SeasonalAllocation` is resolved in this order:
+#' 1. Use `SeasonalAllocation` if specified.
+#' 2. Derive it from `HistoricalWeight`, blending, per fleet, the historical
+#'    seasonal share of removals with the seasonal share of population
+#'    biomass:
+#'    `HistoricalWeight * historical_share + (1 - HistoricalWeight) * biomass_share`,
+#'    pooled over the last `OM@Control$SeasonalAllocationYears` years
+#'    (default `5`).
+#'
+#' `HistoricalWeight = 1` (the default when unspecified) uses the historical
+#' removals pattern only; `HistoricalWeight = 0` uses the population biomass
+#' pattern only.
+#'
+#' Effort advice from an MP that is not called every season is an annual
+#' total effort for each fleet. `EffType = 'Rel'` is relative to the fleet's
+#' total effort in the last historical year. Each year's effort is split
+#' across seasons in proportion to the fleet's historical effort in each
+#' season, pooled over the last `OM@Control$SeasonalAllocationYears` years.
+#'
+#' @return
+#' - `HistoricalWeight()`/`SeasonalAllocation()` return the value of the
+#'   corresponding slot.
+#' - `HistoricalWeight<-()`/`SeasonalAllocation<-()` return `x` with the
+#'   corresponding slot updated.
+#'
+#' @seealso
+#' - [OM()] for the constructor, [om-class] for the class definition.
+#' - [FleetAllocation()] for how a stock/complex TAC is split among fleets.
+#' - [Interval()] for the management update frequency that determines how
+#'   many seasons a single TAC/Effort value covers.
+#' - [OM-accessors] for the remaining `OM` slot accessors.
+#'
+#' @family om
+#'
+#' @examples
+#' om <- OM(Seasons = 4)
+#' HistoricalWeight(om) <- list(Stock1 = c(F1 = 0.8, F2 = 1))
+#' HistoricalWeight(om)
+#'
+#' @rdname SeasonalAllocation
+#' @export
+HistoricalWeight <- function(x) .IsHist(x, "HistoricalWeight")
+
+#' @rdname SeasonalAllocation
+#' @export
+`HistoricalWeight<-` <- function(x, value) .AssignOMSlot(x, value, "HistoricalWeight", "proj")
+
+#' @rdname SeasonalAllocation
+#' @export
+SeasonalAllocation <- function(x) .IsHist(x, "SeasonalAllocation")
+
+#' @rdname SeasonalAllocation
+#' @export
+`SeasonalAllocation<-` <- function(x, value) .AssignOMSlot(x, value, "SeasonalAllocation", "proj")
+
+#' Fleet Allocation of Absolute Effort for OM Objects
+#'
+#' Access or replace the `EffortAllocation` slot of an [om-class] object:
+#' the fleet-level split applied when an MP returns a single, scalar,
+#' absolute Effort recommendation (`EffType = "Abs"`) for a complex with
+#' more than one fleet. Also accepts [hist-class] and [mse-class] objects,
+#' extracting the embedded `OM` slot transparently.
+#'
+#' @param x An [om-class], [hist-class], or [mse-class] object.
+#' @param value Replacement value; a named list of length 0 or the number of
+#'   stock complexes, each element an `nSim` (or 1, recycled) by `nFleet`
+#'   matrix with rows summing to 1. `NULL` clears it.
+#'
+#' @details
+#' A scalar `Advice@Effort` value is interpreted differently depending on
+#' `EffType`:
+#' - `EffType = "Rel"` (the default): the scalar is a fraction of the last
+#'   historical year's effort, applied per fleet to that fleet's own
+#'   historical level. Each fleet's share of total effort is preserved
+#'   automatically, with no allocation step needed.
+#' - `EffType = "Abs"`: the scalar is a single total effort value to be
+#'   split across fleets. `EffortAllocation` supplies that split: for a
+#'   complex with `nFleet > 1`, the total is multiplied by
+#'   `EffortAllocation[[complex]][sim, ]` to get each fleet's absolute
+#'   effort.
+#'
+#' `EffortAllocation` is only consulted for this scalar-plus-`"Abs"` case.
+#' It is ignored for scalar `"Rel"` effort, a length-`nFleet` effort vector
+#' (already fleet-specific), a fleet x area effort matrix (already
+#' fleet-specific), and any complex with only one fleet.
+#'
+#' If unspecified for a complex, `EffortAllocation` falls back to the mean relative effort
+#' by fleet over the last five historical years, i.e. absolute effort is
+#' split in the same proportions the fleets have historically fished in.
+#'
+#' @return
+#' - `EffortAllocation()` returns the value of the `EffortAllocation` slot.
+#' - `EffortAllocation<-()` returns `x` with the `EffortAllocation` slot
+#'   updated.
+#'
+#' @seealso
+#' - [OM()] for the constructor, [om-class] for the class definition.
+#' - [Advice()] for the interpretation of scalar Effort advice.
+#' - [FleetAllocation()] for the equivalent split applied to TAC.
+#' - [OM-accessors] for the remaining `OM` slot accessors.
+#'
+#' @family om
+#'
+#' @examples
+#' om <- OM(nSim = 10)
+#' EffortAllocation(om) <- list(Stock1 = matrix(c(0.3, 0.7), 10, 2, byrow = TRUE))
+#' EffortAllocation(om)
+#'
+#' @rdname EffortAllocation
+#' @export
+EffortAllocation <- function(x) .IsHist(x, "EffortAllocation")
+
+#' @rdname EffortAllocation
+#' @export
+`EffortAllocation<-` <- function(x, value) .AssignOMSlot(x, value, "EffortAllocation", "proj")
+
+
+#' @rdname OM-accessors
+#' @export
+Complexes <- function(x) .IsHist(x, "Complexes")
+
+#' @rdname OM-accessors
+#' @export
+`Complexes<-` <- function(x, value) .AssignOMSlot(x, value, "Complexes", "struct")
+
+#' @rdname OM-accessors
+#' @export
+`Herm<-` <- function(x, value) .AssignOMSlot(x, value, "Herm", "struct")
+
+#' @rdname OM-accessors
+#' @export
+Relations <- function(x) .IsHist(x, "Relations")
+
+#' @rdname OM-accessors
+#' @export
+`Relations<-` <- function(x, value) .AssignOMSlot(x, value, "Relations", "struct")
+
+
+#' Management Interval for OM Objects
+#'
+#' Access or replace the `Interval` slot of an [om-class] object: how often,
+#' in years, an MP is called to produce new advice during projection. Also
+#' accepts [hist-class] and [mse-class] objects, extracting the embedded `OM`
+#' slot transparently.
+#'
+#' Use [ManagementScheduleTable()] to see which years are management years
+#' for a given OM.
+#'
+#' @param x An [om-class], [hist-class], or [mse-class] object.
+#' @param value Replacement value; a positive numeric scalar, or a named
+#'   numeric vector giving a per-MP interval.
+#'
+#' @details
+#' `Interval` is always in years, regardless of `Seasons`: `Interval = 1`
+#' calls the MP once a year, `Interval = 2` every second year, and so on.
+#' The first management year is the first projection year, or `MPStartYear`
+#' if it is set. In projection years that are not management years, the TAC
+#' or Effort from the most recent management year carries forward unchanged.
+#'
+#' ## Per-MP intervals
+#'
+#' A named vector sets the interval by MP name, e.g.
+#' `c(MP1 = 1, MP2 = 4)`. An unnamed element (e.g. `c(2, MP2 = 4)`) is the
+#' default for MPs not named. For each MP, the interval is resolved in this
+#' order:
+#' 1. The element of `Interval` named for the MP.
+#' 2. `1 / Seasons` if the MP has `attr(mp, 'EverySeason') <- TRUE`.
+#' 3. The MP's `attr(mp, 'Interval')`, if set.
+#' 4. The unnamed element of `Interval`, or its first element.
+#'
+#' ## Seasonal OMs
+#'
+#' For a seasonal OM (`Seasons > 1`), `Interval * Seasons` must be a whole
+#' number of timesteps. MPs that must be called at every timestep (e.g.
+#' because they return a season-specific value) should declare
+#' `attr(mp, 'EverySeason') <- TRUE`, since `1 / Seasons` depends on the OM
+#' the MP is run with. Advice set for a multi-season interval is split across
+#' seasons by [SeasonalAllocation()].
+#'
+#' @return
+#' - `Interval()` returns the value of the `Interval` slot. For an [mse-class]
+#'   object it returns a named numeric vector of the interval (years) each MP
+#'   was projected with.
+#' - `Interval<-()` returns `x` with the `Interval` slot updated.
+#'
+#' @seealso
+#' - [OM()] for the constructor, [om-class] for the class definition.
+#' - [MPStartYear()], [DataLag()] for the other slots controlling the
+#'   management timeline.
+#' - [ManagementScheduleTable()] for previewing the resulting schedule.
+#' - [OM-accessors] for the remaining `OM` slot accessors.
+#'
+#' @family om
+#'
+#' @examples
+#' om <- OM(Interval = 2)
+#' Interval(om)
+#' Interval(om) <- c(3, MP2 = 1)
+#'
+#' # Preview which years are management years
+#' om <- OM(CurrentYear = 2026, Interval = 2)
+#' ManagementScheduleTable(om)
+#'
+#' @rdname Interval
+#' @export
+Interval <- function(x) {
+  if (inherits(x, "mse"))
+    return(vapply(names(x@MPs), \(mp) .MSEInterval(x, mp), numeric(1)))
+  .IsHist(x, "Interval")
+}
+
+#' @rdname Interval
+#' @export
+`Interval<-` <- function(x, value) .AssignOMSlot(x, value, "Interval", "proj")
+
+#' MP Start Year for OM Objects
+#'
+#' Access or replace the `MPStartYear` slot of an [om-class] object: the
+#' first calendar year in which MPs are called during projection. Also
+#' accepts [hist-class] and [mse-class] objects, extracting the embedded `OM`
+#' slot transparently.
+#'
+#' @param x An [om-class], [hist-class], or [mse-class] object.
+#' @param value Replacement value; a single calendar year after
+#'   `CurrentYear`, or `NULL`.
+#'
+#' @details
+#' `MPStartYear = NULL` (the default) calls MPs from the first projection
+#' year (`CurrentYear + 1`).
+#'
+#' When the historical period ends before MPs will actually be applied (e.g.
+#' the OM is conditioned on data to 2024 but MPs will not be implemented
+#' until 2028), set `MPStartYear` to the first calendar year MPs should run.
+#' Projection years before `MPStartYear` are "interim" years:
+#' - the MP is not called, and the TAC or Effort is instead taken from
+#'   [InterimAdvice()], which must then be supplied for every interim year;
+#' - implementation error (`Imp`) is not applied;
+#' - the OM still simulates the fishery and generates data for those years,
+#'   so the MP's first call at `MPStartYear` sees data from the interim
+#'   period (subject to [DataLag()]).
+#'
+#' `MPStartYear` is the first management year; later management years follow
+#' every [Interval()] years from it. Performance metrics exclude interim
+#' years (see [PM()]).
+#'
+#' @return
+#' - `MPStartYear()` returns the value of the `MPStartYear` slot.
+#' - `MPStartYear<-()` returns `x` with the `MPStartYear` slot updated.
+#'
+#' @seealso
+#' - [OM()] for the constructor, [om-class] for the class definition.
+#' - [InterimAdvice()] for the TAC/Effort used in interim years.
+#' - [Interval()], [DataLag()] for the other slots controlling the
+#'   management timeline.
+#' - [ManagementScheduleTable()] for previewing the resulting schedule.
+#' - [OM-accessors] for the remaining `OM` slot accessors.
+#'
+#' @family om
+#'
+#' @examples
+#' om <- OM(CurrentYear = 2023, MPStartYear = 2028)
+#' MPStartYear(om)
+#' InterimAdvice(om) <- data.frame(Year = 2024:2027, Type = "TAC", Mean = 1000)
+#' ManagementScheduleTable(om)
+#'
+#' @rdname MPStartYear
+#' @export
+MPStartYear <- function(x) .IsHist(x, "MPStartYear")
+
+#' @rdname MPStartYear
+#' @export
+`MPStartYear<-` <- function(x, value) .AssignOMSlot(x, value, "MPStartYear", "proj")
+
+#' Interim Advice for OM Objects
+#'
+#' Access or replace the `InterimAdvice` slot of an [om-class] object:
+#' analyst-supplied fixed or stochastic TAC/Effort values used for
+#' "interim" projection years, i.e. years before `MPStartYear` in which the
+#' MP is not called (see [MPStartYear()]). Also accepts [hist-class] and
+#' [mse-class] objects, extracting the embedded `OM` slot transparently.
+#'
+#' @param x An [om-class], [hist-class], or [mse-class] object.
+#' @param value Replacement value; a `data.frame` as described in *Format*
+#'   below, or `NULL`.
+#'
+#' @details
+#' When the historical period ends before MPs should actually start being
+#' applied (e.g. the OM is conditioned on data to 2024 but MPs will not be
+#' implemented until 2028), set `MPStartYear` to the first calendar year MPs
+#' should run. Projection years before `MPStartYear` are "interim" years:
+#' the MP is not called, `Imp` (implementation error) is bypassed since these
+#' values represent actual/plausible realised catch or effort rather than a
+#' management recommendation, and advice is instead taken from
+#' `InterimAdvice`.
+#'
+#' ## Format
+#'
+#' `InterimAdvice` is a `data.frame` with columns:
+#' - `Year`: an interim timestep, i.e. a value of `Years(OM, "Projection")`
+#'   before `MPStartYear`. See *Annual and seasonal values* below.
+#' - `Complex`: stock complex name, matching `names(OM@Complexes)`. Optional
+#'   when the OM has a single complex, in which case every row applies to it;
+#'   required when there is more than one.
+#' - `Fleet`: optional; fleet name, or `NA` for a complex total. A `Fleet = NA`
+#'   row gives the total for the fleets not listed individually in the same
+#'   Year x Complex x Type, split among them by [FleetAllocation()] (TAC) or
+#'   [EffortAllocation()] (absolute Effort). A relative Effort total applies
+#'   to each of those fleets.
+#' - `Type`: `"TAC"` or `"Effort"`.
+#' - `Mean`: point estimate, natural scale. Must be `>= 0` (e.g. `0` for a
+#'   fleet with no historical catch, maintained as a closure in interim
+#'   years).
+#' - `CV`: optional; coefficient of variation of a lognormal multiplier with
+#'   mean 1. `NA`/`0` (default) gives a fixed, deterministic value. May differ
+#'   among rows, e.g. `0` for fleets with reported catch and `> 0` for fleets
+#'   with assumed catch. One standard-normal deviate is drawn per simulation
+#'   for each calendar year x Complex x Type x Fleet and shared by that
+#'   fleet's seasonal rows; each row converts it to a multiplier with its own
+#'   `CV`. Draws are independent among fleets. A `Fleet = NA` total is one
+#'   draw, split among its fleets as described above.
+#' - `Max`: optional; upper bound on the drawn value. A fleet's deviate is
+#'   truncated so that none of its rows in the calendar year exceeds its
+#'   `Max`. `Mean` is the mean before truncation; the realised mean is lower.
+#'   `NA` (default) gives no bound. If supplied, must be `>= Mean`.
+#' - `TACType`: `"Removals"` (default) or `"Landings"`; only used for `"TAC"`
+#'   rows.
+#' - `TACUnit`: units of `Mean` and `Max` for `"TAC"` rows, as in [Advice()]:
+#'   `"Biomass"` (default), `"Number"`, or a catch unit such as
+#'   `Data@Landings@Units` (e.g. `"t"`, `"kg"`, `"n"`), which is stored as
+#'   `"Biomass"` or `"Number"`. The TAC is not rescaled, so a TAC in biomass
+#'   is in the OM's `Weight` units. May differ among fleets.
+#' - `EffType`: `"Abs"` (default) or `"Rel"`; only used for `"Effort"` rows.
+#'   `"Abs"` is absolute effort. `"Rel"` is a multiplier on the fleet's effort
+#'   in the last complete historical year, applied season by season, so `1`
+#'   repeats that year's effort and seasonal pattern.
+#'
+#' ## Annual and seasonal values
+#'
+#' For each calendar year x Complex x Type x Fleet (with `Fleet = NA` treated
+#' as its own entry), supply either:
+#' - one row with the integer calendar year: an annual value. For seasonal
+#'   OMs (`Seasons > 1`), an annual TAC is split across seasons by
+#'   [SeasonalAllocation()]. An annual absolute Effort is the fleet's total
+#'   effort for the year, split across seasons in proportion to the fleet's
+#'   historical effort in each season over the last
+#'   `OM@Control$SeasonalAllocationYears` historical years (default 5). An
+#'   annual relative Effort multiplies the effort in each season of the last
+#'   complete historical year; or
+#' - one row for every timestep of that year (the integer year is the first
+#'   season): a value for each season, used as given.
+#'
+#' Interim Effort sets each fleet's total effort only. Its split across areas
+#' is calculated by the operating model in each timestep, as for effort
+#' advice from an MP, except for fleets with a user-specified historical
+#' `Distribution` in [Effort()], which keep their area split from the same
+#' season of the last historical year.
+#'
+#' Different fleets in the same year may use different forms. Every complex
+#' must have rows in every interim year, and within each calendar year x
+#' Complex x Type every fleet must be covered, either by its own rows or by a
+#' `Fleet = NA` row. `InterimAdvice` must be supplied if and only if
+#' `MPStartYear` leaves at least one interim year. These rules are checked at
+#' the start of [Project()], and any violation is an error.
+#'
+#' @return
+#' - `InterimAdvice()` returns the value of the `InterimAdvice` slot.
+#' - `InterimAdvice<-()` returns `x` with the `InterimAdvice` slot updated.
+#'
+#' @seealso
+#' - [OM()] for the constructor, [om-class] for the class definition.
+#' - [MPStartYear()] for the slot controlling when interim years end.
+#' - [OM-accessors] for the remaining `OM` slot accessors.
+#'
+#' @family om
+#'
+#' @examples
+#' om <- OM(CurrentYear = 2023, MPStartYear = 2028)
+#' InterimAdvice(om) <- data.frame(
+#'   Year = 2024:2027, Type = "TAC", Mean = 1000, CV = 0.2, Max = 1200
+#' )
+#' InterimAdvice(om)
+#'
+#' @rdname InterimAdvice
+#' @export
+InterimAdvice <- function(x) .IsHist(x, "InterimAdvice")
+
+#' @rdname InterimAdvice
+#' @export
+`InterimAdvice<-` <- function(x, value) .AssignOMSlot(x, value, "InterimAdvice", "proj")
+
+#' @rdname OM-accessors
+#' @export
+nReps <- function(x) .IsHist(x, "nReps")
+
+#' @rdname OM-accessors
+#' @export
+`nReps<-` <- function(x, value) .AssignOMSlot(x, value, "nReps", "proj")
+
+#' @rdname OM-accessors
+#' @export
+pStar <- function(x) .IsHist(x, "pStar")
+
+#' @rdname OM-accessors
+#' @export
+`pStar<-` <- function(x, value) .AssignOMSlot(x, value, "pStar", "proj")
+
+#' @rdname OM-accessors
+#' @export
+maxF <- function(x) .IsHist(x, "maxF")
+
+#' @rdname OM-accessors
+#' @export
+`maxF<-` <- function(x, value) .AssignOMSlot(x, value, "maxF", "struct")
+
+#' @rdname OM-accessors
+#' @export
+Seed <- function(x) .IsHist(x, "Seed")
+
+#' @rdname OM-accessors
+#' @export
+`Seed<-` <- function(x, value) {
+  x <- .AssignOMSlot(x, value, "Seed", "struct")
+  .WarnSeedChanged(x)
+  x
+}
+
+#' @rdname OM-accessors
+#' @export
+Control <- function(x) .IsHist(x, "Control")
+
+#' @rdname OM-accessors
+#' @export
+`Control<-` <- function(x, value) .AssignOMSlot(x, value, "Control", "proj")
+
+
+.IsHist <- function(x, slot_name) {
+  if (inherits(x, "hist") || inherits(x, "mse"))
+    x <- x@OM
+  .AccessSlot(x, slot_name)
+}
+
+# `Type`: "meta" can be set on om/hist/mse, "proj" (read at projection time) on
+# om/hist, "struct" (baked into simulated dynamics) on om only
+.AssignOMSlot <- function(x, value, slot, Type = c("struct", "proj", "meta")) {
+  Type <- match.arg(Type)
+  if (!inherits(x, "hist") && !inherits(x, "mse"))
+    return(.AssignSlot(x, value, slot))
+
+  Allowed <- Type == "meta" || (Type == "proj" && !inherits(x, "mse"))
+  if (!Allowed)
+    cli::cli_abort(c(
+      "{.code {slot}} cannot be changed on a {.cls {class(x)}} object.",
+      "i" = if (Type == "struct")
+        "It is used to simulate the historical dynamics. Change it in the {.cls om} object and re-run {.fn Simulate}."
+      else
+        "The projections have already been run. Change it in the {.cls hist} object and re-run {.fn Project}."
+    ), call = NULL)
+
+  x@OM <- .AssignSlot(x@OM, value, slot)
+  x
+}
+
+.ToNamedList <- function(x, cls) {
+  if (inherits(x, cls))
+    return(setNames(list(x), x@Name))
+  if (is.null(names(x)) || any(names(x) == ""))
+    names(x) <- purrr::map_chr(x, ~ .x@Name)
+  x
+}
+
+.ToNestedList <- function(x, cls, stock_nms, fleet_nms = NULL) {
+  if (is.null(x)) return(NULL)
+
+  is_flat <- inherits(x, cls) ||
+    (is.list(x) && all(purrr::map_lgl(x, ~ inherits(.x, cls))))
+
+  if (is_flat) {
+    if (inherits(x, cls)) x <- list(x)
+
+    return(purrr::map(setNames(nm = stock_nms), function(stk) {
+      flt_nms <- fleet_nms[[stk]]
+      if (!is.null(flt_nms) && length(x) == 1) {
+        setNames(rep(x, length(flt_nms)), flt_nms)
+      } else {
+        setNames(x, purrr::map_chr(x, ~ .x@Name))
+      }
+    }))
+  }
+
+  if (is.null(names(x))) names(x) <- stock_nms[seq_along(x)]
+
+  purrr::imap(x, function(inner, stk) {
+    if (inherits(inner, cls))
+      inner <- setNames(list(inner), inner@Name)
+    if (is.null(names(inner)) || any(names(inner) == ""))
+      names(inner) <- (fleet_nms[[stk]] %||NA% purrr::map_chr(inner, ~ .x@Name))[seq_along(inner)]
+    inner
+  })
+}

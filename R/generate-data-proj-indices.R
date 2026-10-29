@@ -1,0 +1,130 @@
+#' Generate Projected Index Data for a Stock/Complex
+#'
+#' Appends a new year of observed index data (`Value` and `CV`) to the
+#' `CPUE` or `Survey` data object of every simulation for a given
+#' stock/complex.
+#'
+#' @param Proj A `Hist` object used in the projection.
+#' @param DataYear Numeric. The calendar year to generate data for.
+#' @param YearsAll Numeric. All calendar years in the historical
+#'  and projection years
+#' @param i Integer. Stock/complex index.
+#' @param stocks `integer`. Stock indices used to subset population arrays.
+#' @param StockNames Character. Names of all stocks in the model.
+#' @param FleetNames Character. Names of all fleets, used to match
+#'   fleet-specific selectivity from `Proj@OM@Fleet`.
+#' @param nSim Integer. Number of simulation replicates.
+#' @param type Character. One of `"CPUE"` or `"Survey"`.
+#'
+#' @details
+#' Simulated values are multiplied by `(1 + qInc / 100)^(DataYear - t_H)`,
+#' where `t_H` is the last historical time step, when the index's
+#' [indicesobs-class] `qInc` is set.
+#'
+#' The existing objects are returned unchanged if the index data of
+#' simulation 1 is empty or already contains `DataYear`. Index values supplied
+#' for projection years in `OM@Data` are used as-is. Otherwise, for each
+#' simulation, an index is not simulated if it has no historical observations,
+#' or if the number of calendar years between its last historical observation
+#' and the last historical year exceeds the [indicesobs-class] `MaxGap`.
+#'
+#' @return A list of length `nSim` of updated `CPUE` or `Survey` objects.
+#' @keywords internal
+.GenProjDataIndex <- function(Proj, DataYear, YearsAll, i, stocks, StockNames,
+                                 FleetNames, nSim, type = c('CPUE', 'Survey')) {
+  type <- match.arg(type)
+
+  IndexData1 <- slot(Proj@Data[[1]][[i]], type)
+  unchanged  <- EmptyObject(IndexData1) || DataYear %in% dimnames(IndexData1@Value)[[1]]
+  if (unchanged)
+    return(purrr::map(Proj@Data, \(DataList) slot(DataList[[i]], type)))
+
+  TSIndex    <- match(DataYear, YearsAll)
+  nArea      <- nArea(Proj)
+  nFleet     <- ncol(IndexData1@Value)
+  FleetIndex <- match(IndexData1@Name, names(Proj@OM@Obs[[i]]))
+
+  if (length(FleetIndex) != nFleet)
+    cli::cli_abort(
+      "Mismatch in number of fleets in `Obs` and `Data[[x]]@{type}`",
+      .internal = TRUE
+    )
+
+  IndexData1 <- .ResolveUnits(IndexData1, nFleet, valid = c("Biomass", "Number", "Recruitment"))
+
+  Real_Pop_Number_All <- purrr::map(Proj@Number[stocks], \(stock_n) {
+    stock_n[, , TSIndex, seq_len(nArea), drop = FALSE] |> abind::adrop(drop = 3)
+  })
+
+  NewValueAll <- matrix(NA_real_, nSim, nFleet)
+  NewCVAll    <- matrix(NA_real_, nSim, nFleet)
+  omData      <- Proj@OM@Data[[i]]
+  LastHistYear <- max(Years(Proj@OM, 'Historical'))
+  Elapsed     <- DataYear - LastHistYear
+
+  for (fl in seq_len(nFleet)) {
+    IndexObs <- slot(Proj@OM@Obs[[i]][[FleetIndex[fl]]], type)
+    if (EmptyObject(IndexObs)) next
+    if (is.null(IndexObs@Areas)) IndexObs@Areas <- seq_len(nArea)
+
+    omRow <- .OMDataRow(omData, type, DataYear)
+
+    if (!is.na(omRow) && ncol(slot(omData, type)@Value) >= fl) {
+      for (x in seq_len(nSim)) {
+        NewValueAll[x, fl] <- slot(omData, type)@Value[omRow, fl]
+        NewCVAll[x, fl]    <- .ResolveCV(Proj, type, i, fl, TSIndex,
+                                        slot(Proj@Data[[x]][[i]], type), DataYear, IndexObs)
+      }
+      next
+    }
+
+    timing <- if (length(IndexData1@Timing) >= fl) IndexData1@Timing[fl] else NA_real_
+
+    for (x in seq_len(nSim)) {
+      Value_x <- slot(Proj@Data[[x]][[i]], type)@Value
+      Gap <- .ObsGap(dimnames(Value_x)[[1]], is.finite(Value_x[, fl]), LastHistYear)
+      if (is.infinite(Gap) || .ExceedsMaxGap(IndexObs, Gap)) next
+
+      Pop_Number <- purrr::map(Real_Pop_Number_All, \(a)
+        a[x, , IndexObs@Areas %||NA% seq_len(nArea), drop = FALSE] |> abind::adrop(1)
+      )
+
+      real_nom_index <- .CalcNomIndex(
+        Number_List      = Pop_Number,
+        object           = Proj,
+        stocks           = stocks,
+        fleet            = IndexData1@Name[fl],
+        IndexObs         = IndexObs,
+        Years            = DataYear,
+        sim              = x,
+        timing           = timing,
+        TSIndex          = TSIndex,
+        Units            = IndexData1@Units[fl]
+      )
+
+      Beta <- if (is.null(IndexObs@Beta)) 1 else IndexObs@Beta[min(x, length(IndexObs@Beta))]
+
+      NewValueAll[x, fl] <- real_nom_index^Beta *
+        .ArraySubsetYear(IndexObs@Error, DataYear)[min(x, nrow(IndexObs@Error))] *
+        IndexObs@Efficiency[min(x, length(IndexObs@Efficiency))]
+      if (!is.null(IndexObs@qInc))
+        NewValueAll[x, fl] <- NewValueAll[x, fl] *
+          .qIncMultiplier(IndexObs@qInc[min(x, length(IndexObs@qInc))], Elapsed)
+      NewCVAll[x, fl]    <- .ResolveCV(Proj, type, i, fl, TSIndex,
+                                      slot(Proj@Data[[x]][[i]], type), DataYear, IndexObs)
+    }
+  }
+
+  purrr::map(seq_len(nSim), \(x) {
+    IndexData <- slot(Proj@Data[[x]][[i]], type)
+    IndexData <- .ResolveUnits(IndexData, nFleet, valid = c("Biomass", "Number", "Recruitment"))
+    NewValue <- .EmptyFleetArray(DataYear, IndexData@Name)
+    NewCV    <- .EmptyFleetArray(DataYear, IndexData@Name)
+    NewValue[1, ] <- NewValueAll[x, ]
+    NewCV[1, ]    <- NewCVAll[x, ]
+    IndexData@Value <- abind::abind(IndexData@Value, NewValue, along = 1, use.dnns = TRUE)
+    if (!is.null(IndexData@CV))
+      IndexData@CV <- abind::abind(IndexData@CV, NewCV, along = 1, use.dnns = TRUE)
+    IndexData
+  })
+}

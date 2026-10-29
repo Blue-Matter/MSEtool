@@ -1,0 +1,451 @@
+#' Update fishing effort across all simulations
+#'
+#' Loops over simulations and delegates to `.UpdateEffortSim()`.
+#'
+#' @param Proj A `Proj` object.
+#' @param Year Integer. Current projection year.
+#' @param AdviceSimList Nested list of `advice` objects, indexed by sim then complex.
+#' @param LastAdviceSimList Same structure as `AdviceSimList` for the previous year.
+#' @param YearsHist Integer vector of historical years.
+#' @param YearsProj Integer vector of projection years.
+#' @param Areas Integer vector of area indices.
+#' @param FleetNames Character vector of fleet names.
+#' @param StockNames Character vector of stock names. Used to (re)optimise
+#'   stock-specific targeting weights for multi-stock OMs - see
+#'   `.OptTargetingMultiStock()`.
+#' @return Updated `Proj` object.
+#'
+#' @details
+#' For multi-stock/multi-complex `OM`s, the choke/targeting optimizer used
+#' to (re)optimise stock-specific targeting weights is tuned by
+#' `OM@Control$EffortOptim`.  See `.UpdateTAC()` for the recognized elements
+#' (`lambda_scale`, `n_recent`, `maxEval`).
+#' @keywords internal
+.UpdateEffort <- function(Proj,
+                          Year,
+                          AdviceSimList,
+                          LastAdviceSimList,
+                          YearsHist,
+                          YearsProj,
+                          Areas,
+                          FleetNames,
+                          StockNames,
+                          EverySeason = FALSE) {
+
+  nSim   <- Proj@OM@nSim
+  Season <- SeasonOfYear(c(YearsHist, YearsProj), Proj@OM@Seasons, Year)$SeasonInd
+
+  # effort set by TAC advice takes the engine's area split
+  if (.AllAdviceNull(AdviceSimList, 'Effort')) {
+    TSIndex <- match(Year, c(YearsHist, YearsProj))
+    Proj@Distribution[, TSIndex:dim(Proj@Distribution)[2], , ] <- NA
+    return(Proj)
+  }
+
+  lambda_scale <- Proj@OM@Control$EffortOptim$lambda_scale %||NA% 1
+  n_recent     <- Proj@OM@Control$EffortOptim$n_recent     %||NA% 5
+  n_recent     <- n_recent * Proj@OM@Seasons
+  maxEval      <- Proj@OM@Control$EffortOptim$maxEval      %||NA% 500
+
+  SeasonalEffortAllocation <- if (Proj@OM@Seasons > 1 && !EverySeason)
+    .SeasonalEffortAllocation(Proj)
+
+  for (sim in seq_len(nSim)) {
+    AdviceList <- AdviceSimList[[sim]]
+    LastAdviceList <- LastAdviceSimList[[sim]]
+
+    Proj <- .UpdateEffortSim(
+      Proj           = Proj,
+      sim            = sim,
+      Year           = Year,
+      YearsHist      = YearsHist,
+      YearsProj      = YearsProj,
+      AdviceList     = AdviceList,
+      LastAdviceList = LastAdviceList,
+      FleetNames     = FleetNames,
+      StockNames     = StockNames,
+      Complexes      = Proj@OM@Complexes,
+      Areas          = Areas,
+      Season         = Season,
+      EverySeason    = EverySeason,
+      SeasonalEffortAllocation = SeasonalEffortAllocation,
+      lambda_scale   = lambda_scale,
+      n_recent       = n_recent,
+      maxEval        = maxEval
+    )
+  }
+
+  Proj
+
+}
+
+#' Update fishing effort for a single simulation
+#'
+#' Converts effort advice to absolute values, optionally distributes it over
+#' areas, then writes the minimum prescribed effort across complexes into
+#' `Proj@Effort` for all future time steps. Each fleet's `Proj@Distribution`
+#' for all future time steps is set from the area matrix of its binding
+#' complex, or to `NA` (area split computed by the engine) when that advice
+#' has no area matrix. Status-quo effort (empty advice, flagged by
+#' `.CheckTACEffort()`) is relative effort 1 with the last historical year's
+#' seasonal pattern; fleets with a user-specified historical distribution keep
+#' their last historical distribution. Skips complexes where effort is `NULL`
+#' or the advice object is not of class `"advice"`. For multi-stock OMs, also
+#' (re)optimises each fleet's stock-specific targeting weights for the
+#' current year at this fixed effort - see `.OptTargetingMultiStock()`.
+#'
+#' @param Proj A `Proj` object.
+#' @param sim Integer. Simulation index.
+#' @param Year Integer. Current projection year.
+#' @param YearsHist Integer vector of historical years.
+#' @param YearsProj Integer vector of projection years.
+#' @param AdviceList List of `advice` objects for this simulation, one per complex.
+#' @param LastAdviceList Same structure as `AdviceList` for the previous year.
+#' @param FleetNames Character vector of fleet names.
+#' @param StockNames Character vector of stock names.
+#' @param Complexes List mapping complex indices to stock indices.
+#' @param Areas Integer vector of area indices.
+#' @param SeasonalEffortAllocation Named list (one element per complex) of
+#'   `nSim` x `Seasons` x `nFleet` arrays splitting annual effort advice across
+#'   seasons. See `.SeasonalEffortAllocation()`. Derived if `NULL`.
+#' @return Updated `Proj` object.
+#' @keywords internal
+.UpdateEffortSim <- function(Proj,
+                              sim,
+                              Year,
+                              YearsHist,
+                              YearsProj,
+                              AdviceList,
+                              LastAdviceList,
+                              FleetNames,
+                              StockNames,
+                              Complexes,
+                              Areas,
+                              Season       = NULL,
+                              EverySeason  = FALSE,
+                              SeasonalEffortAllocation = NULL,
+                              lambda_scale = 1,
+                              n_recent     = 5,
+                              maxEval      = 500) {
+
+  nFleet   <- length(FleetNames)
+  nArea    <- length(Areas)
+  AllYears <- c(YearsHist, YearsProj)
+  TSIndex  <- match(Year, AllYears)
+  ProjInd  <- TSIndex:length(AllYears)
+  nComplex <- length(Complexes)
+  nSeason  <- max(1L, as.integer(Proj@OM@Seasons))
+
+  Distribution <- MakeNamedList(names(Complexes))
+
+  # annual advice in a seasonal OM is an annual total, split across seasons below
+  SplitAnnual <- nSeason > 1L && !EverySeason
+  if (SplitAnnual && is.null(SeasonalEffortAllocation))
+    SeasonalEffortAllocation <- .SeasonalEffortAllocation(Proj)
+
+  LastEffort      <- .LastYearEffort(Proj, sim, length(YearsHist), nFleet, nSeason)
+  LastEffortLevel <- if (SplitAnnual) LastEffort$total else LastEffort$level
+
+  # EffType per fleet per complex, to identify which fleets take the shape
+  EffTypeMat <- matrix('Abs', nrow = nFleet, ncol = nComplex)
+
+  for (i in seq_len(nComplex)) {
+    Advice         <- AdviceList[[i]]
+    AdvicePrevious <- LastAdviceList[[i]]
+    complex_name   <- names(Complexes)[i]
+
+    if (!inherits(Advice, "advice"))                              next
+    if (is.null(Advice@Effort))                                   next
+
+    EffType <- Advice@EffType
+    if (!length(EffType)) EffType <- 'Rel'
+    IsStatusQuo <- isTRUE(Advice@Misc$StatusQuoEffort)
+
+    # A single scalar Effort value passed through `.CheckAdviceEffort()` is
+    # tagged `dimnames(Effort)$Fleet == 'Total'`; any other 1-fleet array
+    # (a genuine nFleet=1 OM) keeps its real fleet name.
+    IsScalarTotal <- is.array(Advice@Effort) && length(Advice@Effort) == 1 &&
+      identical(unname(dimnames(Advice@Effort)$Fleet), "Total")
+    IsRawScalar   <- !is.array(Advice@Effort) && length(Advice@Effort) == 1
+
+    if ((IsScalarTotal || IsRawScalar) && nFleet > 1 &&
+        length(EffType) == 1 && EffType == 'Abs') {
+      # A scalar absolute Effort recommendation is a total to be split
+      # across fleets, the same way a scalar TAC is - see `EffortAllocation()`.
+      EffortAllocationMat <- Proj@OM@EffortAllocation[[complex_name]]
+      if (is.null(EffortAllocationMat))
+        cli::cli_abort(
+          "Proj@OM@EffortAllocation[[{complex_name}]] is NULL but Effort is a scalar Abs value with nFleet > 1",
+          .internal = TRUE
+        )
+      alloc_sim <- min(nrow(EffortAllocationMat), sim)
+      Advice@Effort <- as.numeric(Advice@Effort) * EffortAllocationMat[alloc_sim, ]
+    } else if (IsScalarTotal || IsRawScalar) {
+      # Scalar effort expanded to nFleet (skip if already fleet-specific)
+      Advice@Effort <- rep(as.numeric(Advice@Effort), nFleet)[seq_len(nFleet)]
+    }
+
+    EffTypeMat[, i] <- .RecycleToFleets(EffType, nFleet, 'EffType')
+
+    # Convert relative fleets to absolute
+    Advice <- .ConvertEffortAbs(Proj, sim, Advice, YearsHist, nFleet,
+                                LastEffortLevel = LastEffortLevel)
+
+    temp <- .DistributeEffortArea(Proj, sim, TSIndex, Advice, nFleet,
+                                   nArea, FleetNames,
+                                   YearsHist, YearsProj)
+    Distribution[i] <- list(temp$Distribution)
+    Advice          <- temp$Advice
+
+    if (IsStatusQuo) {
+      if (SplitAnnual)
+        SeasonalEffortAllocation[[i]][sim, , ] <- LastEffort$shape / nSeason
+      Distribution[i] <- list(.StatusQuoDistribution(Proj, sim, ProjInd, length(YearsHist),
+                                                     nSeason, FleetNames, Areas))
+    }
+
+
+    wrapped <- .ApplyImplementationError(
+      setNames(list(Advice@Effort), complex_name),
+      Proj, FleetNames, complex_name, sim, Year, 'Effort'
+    )
+    Advice@Effort <- wrapped[[1]]
+
+    AdviceList[[i]] <- Advice
+  }
+  
+  # area split of future time steps is reset each step; NA leaves it to the engine
+  Proj@Distribution[sim, ProjInd, , ] <- NA
+
+  # do Effort Regulation exist?
+  effort_exists <- purrr::map_lgl(AdviceList, \(a) {
+    inherits(a, 'advice') && !is.null(a@Effort)
+  })
+
+  if (!any(effort_exists))
+    return(Proj)
+
+  # Determine minimum effort across complexes with existing Effort advice, per fleet.
+  effort_idx      <- which(effort_exists)
+  EffortArray     <- purrr::map(AdviceList[effort_idx], slot, "Effort") |> List2Array('Stock') 
+
+  EffectiveArray <- EffortArray
+
+  if (nComplex > 1L) {
+    Compliance <- .ResolveComplianceMatrix(Proj, FleetNames,
+                                           names(Complexes)[effort_idx],
+                                           sim, Year, 'Effort')
+    compset <- !is.na(Compliance)
+    EffectiveArray[compset] <- EffortArray[compset] / pmax(Compliance[compset], 1e-3)
+  }
+
+  MinEffortInd    <- apply(EffectiveArray, 1, which.min) |> as.numeric()
+  MinEffortValues <- EffectiveArray[cbind(seq_len(nrow(EffectiveArray)), MinEffortInd)]
+  MinEffortInd    <- effort_idx[MinEffortInd]
+
+  EffortMat <- matrix(MinEffortValues,
+                      nrow  = length(ProjInd),
+                      ncol  = nFleet,
+                      byrow = TRUE)
+
+  if (SplitAnnual) {
+    seas     <- ((ProjInd - 1L) %% nSeason) + 1L
+    ShapeMat <- matrix(1, nrow = length(ProjInd), ncol = nFleet)
+    for (fl in seq_len(nFleet))
+      ShapeMat[, fl] <- SeasonalEffortAllocation[[MinEffortInd[fl]]][sim, seas, fl]
+    EffortMat <- EffortMat * ShapeMat
+  } else if (nSeason > 1L) {
+    RelFleet <- vapply(seq_len(nFleet),
+                       \(fl) identical(EffTypeMat[fl, MinEffortInd[fl]], 'Rel'),
+                       logical(1))
+    if (any(RelFleet)) {
+      seas <- ((ProjInd - 1L) %% nSeason) + 1L
+      EffortMat[, RelFleet] <- EffortMat[, RelFleet, drop = FALSE] *
+        LastEffort$shape[seas, RelFleet, drop = FALSE]
+    }
+  }
+
+  EffortMat <- .CapEffortAtMaximum(Proj, sim, ProjInd, EffortMat)
+  Proj@Effort[sim, ProjInd, ] <- EffortMat
+
+  # Each fleet takes the area distribution of its binding complex, if one was specified
+  for (fl in seq_len(nFleet)) {
+    FleetDist <- Distribution[[MinEffortInd[fl]]]
+    if (!is.null(FleetDist))
+      Proj@Distribution[sim, ProjInd, fl, ] <- FleetDist[1, , fl, ]
+  }
+
+  # For multi-stock OMs, (re)optimise this fleet's stock-specific targeting
+  # weights at the now-fixed effort
+  if (isTRUE(Proj@Misc$StockTargetingFlag == 1) && TSIndex > 1) {
+    lambda <- .ResolveLambda(Proj, sim, TSIndex, Complexes, FleetNames,
+                            lambda_scale, n_recent)
+
+    # Single-sim slice for the repeated fishery-dynamics calls 
+    ProjSim <- .SliceSim(Proj, sim, .DynamicsProbeSlots)
+
+    result <- .OptTargetingMultiStock(
+      Proj       = ProjSim,
+      Year       = Year,
+      TSIndex    = TSIndex,
+      sim        = 1L,
+      StockNames = StockNames,
+      FleetNames = FleetNames,
+      Effort     = EffortMat[1, ],
+      lambda     = lambda,
+      n_recent   = n_recent,
+      maxEval    = maxEval
+    )
+
+    Proj@Misc$StockTargeting[sim, , , TSIndex] <- t(result$Delta)
+  }
+
+  Proj
+}
+
+# Caps an [time step x fleet] effort matrix at each fleet's `Effort@Maximum`
+.CapEffortAtMaximum <- function(Proj, sim, TSInd, EffortMat) {
+  for (k in seq_along(TSInd))
+    EffortMat[k, ] <- .ApplyEffortCeiling(EffortMat[k, ], .FleetMaximumEffort(Proj, sim, TSInd[k]))
+  EffortMat
+}
+
+#' Distribute effort over areas and return relative area allocation
+#'
+#' If `Advice@Effort` is a matrix of dimensions `[nFleet, nArea]`, computes
+#' relative area allocations, stores them in `Distribution`, and collapses
+#' `Advice@Effort` to a per-fleet total. Returns the advice unchanged when
+#' effort is not a matrix or has only one dimension.
+#'
+#' @param Proj A `Proj` object.
+#' @param sim Integer. Simulation index.
+#' @param TSIndex Integer. Time-step index of the current year in `AllYears`.
+#' @param Advice An `advice` object.
+#' @param nFleet Integer. Number of fleets.
+#' @param nArea Integer. Number of areas.
+#' @return A named list with elements `Distribution` (array or `NULL`) and
+#'   `Advice` (updated `advice` object).
+#' @keywords internal
+.DistributeEffortArea <- function(Proj,
+                                   sim,
+                                   TSIndex,
+                                   Advice,
+                                   nFleet,
+                                   nArea,
+                                   FleetNames,
+                                   YearsHist,
+                                   YearsProj) {
+  
+  no_change <- list(Distribution = NULL, Advice = Advice)
+  
+  if (!is.array(Advice@Effort))  {
+    Advice@Effort <- array(.RecycleToFleets(Advice@Effort, nFleet, "Advice@Effort"), dimnames=list(Fleet=FleetNames))
+    return(list(Distribution = NULL, Advice = Advice))
+  }
+
+  if (length(dim(Advice@Effort)) == 1) {
+    Advice@Effort <- array(.RecycleToFleets(Advice@Effort, nFleet, "Advice@Effort"), dimnames=list(Fleet=FleetNames))
+    return(list(Distribution = NULL, Advice = Advice))
+  }
+  
+  if (!all(dim(Advice@Effort) == c(nFleet, nArea)))
+    stop("If `Advice@Effort` is a matrix it must have dimensions ",
+         "[nFleet, nArea] = [", nFleet, ", ", nArea, "]")
+  
+
+  ProjInd      <- TSIndex:dim(Proj@Distribution)[2]
+  n            <- length(ProjInd)
+  mat          <- .RelAreaEffort(Advice@Effort)                          # fleet x area
+  Distribution          <- array(rep(mat, each = n), dim = c(n, nrow(mat), ncol(mat))) # year x fleet x area
+  dimnames(Distribution) <- list(Year=c(YearsHist,YearsProj)[ProjInd],
+                        Fleet=FleetNames,
+                        Area=seq_len(nArea))
+  Distribution <- AddDimension(Distribution, name='Sim', val=sim, pos=1)
+  
+  Advice@Effort <- array(rowSums(Advice@Effort))
+  dimnames(Advice@Effort) <- list(Fleet=FleetNames)
+  
+  list(Distribution = Distribution, Advice = Advice)
+}
+
+
+# Last historical area split (season-matched) for fleets with a user-specified
+# historical distribution; NA for other fleets. NULL if there are none.
+.StatusQuoDistribution <- function(Proj, sim, ProjInd, nHistTS, nSeason, FleetNames, Areas) {
+  UserDist <- vapply(seq_along(FleetNames), \(fl) {
+    dist <- Proj@OM@Fleet[[1]][[fl]]@Effort@Distribution
+    !is.null(dist) && any(!is.na(dist))
+  }, logical(1))
+  if (!any(UserDist))
+    return(NULL)
+
+  HistInd <- nHistTS - nSeason + ((ProjInd - 1L) %% nSeason) + 1L
+  Dist <- array(NA_real_, dim = c(1L, length(ProjInd), length(FleetNames), length(Areas)),
+                dimnames = list(Sim = sim, Year = dimnames(Proj@Distribution)[[2]][ProjInd],
+                                Fleet = FleetNames, Area = Areas))
+  Dist[1, , UserDist, ] <- Proj@Distribution[sim, HistInd, UserDist, , drop = FALSE]
+  Dist
+}
+
+.RelAreaEffort <- function(mat) {
+  row_sums <- rowSums(mat)
+  rel_mat <- mat
+  nonzero <- row_sums != 0
+  rel_mat[nonzero, ] <- mat[nonzero, , drop = FALSE] / row_sums[nonzero]
+  rel_mat
+}
+
+
+#' Effort level and seasonal shape from the last complete historical year
+#'
+#' Returns each fleet's mean and total effort over the last complete historical
+#' year, and that year's seasonal shape normalised to a mean of 1. For annual
+#' models the shape is a single 1 and `level` and `total` are the final year's
+#' effort.
+#'
+#' @param Proj A `Proj` object.
+#' @param sim Integer. Simulation index.
+#' @param nHistTS Integer. Number of historical time steps.
+#' @param nFleet Integer. Number of fleets.
+#' @param nSeason Integer. Seasons per year.
+#' @return List with `level` and `total` (length `nFleet`) and `shape`
+#'   (`nSeason` x `nFleet`).
+#' @keywords internal
+.LastYearEffort <- function(Proj, sim, nHistTS, nFleet, nSeason) {
+  nSeason <- max(1L, as.integer(nSeason))
+  idx     <- seq(max(1L, nHistTS - nSeason + 1L), nHistTS)
+
+  E     <- matrix(Proj@Effort[sim, idx, ], nrow = length(idx), ncol = nFleet)
+  level <- colMeans(E)
+  shape <- sweep(E, 2, ifelse(level > 0, level, 1), "/")
+
+  list(level = level, total = colSums(E), shape = shape)
+}
+
+.ConvertEffortAbs <- function(Proj,
+                               sim,
+                               Advice,
+                               YearsHist,
+                               nFleet,
+                               LastEffortLevel = NULL) {
+
+  if (is.array(Advice@Effort) && length(dim(Advice@Effort)) > 1)
+    return(Advice)
+
+  # Recycle EffType to nFleet
+  eff_type <- .RecycleToFleets(Advice@EffType, nFleet, 'EffType')
+
+  if (all(eff_type == 'Abs'))
+    return(Advice)
+
+  if (is.null(LastEffortLevel))
+    LastEffortLevel <- Proj@Effort[sim, length(YearsHist), ]
+
+  effort <- rep(Advice@Effort, nFleet)[seq_len(nFleet)]
+
+  rel_idx          <- eff_type == 'Rel'
+  effort[rel_idx]  <- effort[rel_idx] * LastEffortLevel[rel_idx]
+
+  Advice@Effort <- effort
+  Advice
+}

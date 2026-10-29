@@ -1,0 +1,125 @@
+#' Calculate an Age-Size Key
+#'
+#' Generates an Age-Size key given mean and standard deviation of size-at-age. The size-at-age
+#' can be normally or log-normally distributed. By default the distribution is truncated at 2
+#' standard deviations.
+#'
+#' Each bin `k` spans `[Classes[k], Classes[k+1])`. The final bin captures all
+#' probability above `Classes[nClass]`. Bins need not be equal width.
+#'
+#' @param MeanAtAge Numeric vector, matrix, or 3D array of mean size-at-age, or
+#'  a [Length()] object.
+#' @param CVatAge Numeric vector, matrix, or 3D array of coefficient of variation (CV)
+#'   at age. Same structure as `MeanAtAge`.
+#' @param Classes Numeric vector of lower bounds of size classes. Must be strictly
+#'   increasing and non-negative. Bins need not be equal width.
+#' @param TruncSD Numeric value for the number of standard deviations at which the
+#'   distribution is truncated.
+#' @param Dist Character string, either `"normal"` or `"lognormal"` indicating
+#'   the distribution of size-at-age.
+#' @param silent Logical; if `TRUE`, suppress progress bar.
+#'
+#' @return A 4D array with dimensions `Sim`, `Age`, `Class`, and `Year`.
+#'
+#' @example man-examples/calc-age-size-key.R
+#' @export
+CalcAgeSizeKey <- function(MeanAtAge,
+                           CVatAge,
+                           Classes,
+                           TruncSD = 2,
+                           Dist = c("normal", "lognormal"),
+                           silent = FALSE) {
+  
+  Dist <- match.arg(Dist, c("normal", "lognormal"))
+
+  if (inherits(MeanAtAge, "length")) {
+    LengthObject <- MeanAtAge
+    MeanAtAge    <- LengthObject@MeanAtAge
+    CVatAge      <- LengthObject@CVatAge
+    Classes      <- LengthObject@Classes
+    TruncSD      <- LengthObject@TruncSD
+    Dist         <- LengthObject@Dist
+  }
+  
+  # Checks
+  if (any(Classes < 0)) {
+    cli::cli_abort("Some `Classes` < 0 ")
+  }
+  if (length(Classes) < 3) {
+    cli::cli_abort("`length(Classes)<3`")
+  }
+  if (length(TruncSD) > 1) {
+    TruncSD <- TruncSD[1]
+  }
+  
+  if (TruncSD < 0) {
+    cli::cli_abort("`TruncSD` < 0 ")
+  }
+
+  MeanAtAge <- .Structure(MeanAtAge)
+  SDatAge <- ArrayMultiply(MeanAtAge, CVatAge)
+
+  dim_MeanAtAge <- dim(MeanAtAge)
+  nage <- dim_MeanAtAge[2]
+  dim_SDatAge <- dim(SDatAge)
+
+  if (dim_MeanAtAge[2] != dim_SDatAge[2]) {
+    if (dim_SDatAge[2] == 1) {
+      SDatAge <- .Structure(replicate(nage, SDatAge))
+    } else {
+      cli::cli_abort("`dim(MeanAtAge)[2] != dim(SDatAge)[2]`")
+    }
+  }
+  
+  nSim <- max(dim_MeanAtAge[1], dim_SDatAge[1])
+  MeanAtAge <- ExtendSims(MeanAtAge, nSim)
+  SDatAge <- ExtendSims(SDatAge, nSim)
+
+  YearsList <- list(
+    dimnames(MeanAtAge)[["Year"]],
+    dimnames(SDatAge)[["Year"]]
+  )
+
+  ind <- unlist(lapply(YearsList, length)) |> which.max()
+  Years <- YearsList[[ind]]
+
+  if (!is.null(Years)) {
+    MeanAtAge <- MeanAtAge |> ExtendYears(Years)
+    SDatAge <- SDatAge |> ExtendYears(Years)
+  }
+
+  MeanAtAgeList <- MeanAtAge |> Array2List(pos = 1)
+  SDatAgeList <- SDatAge |> Array2List(pos = 1)
+
+
+  if (silent) {
+    ASKList <- purrr::map2(MeanAtAgeList, SDatAgeList, \(x, y)
+    CalcAgeSizeKey_(x, y, Classes, TruncSD, Dist))
+  } else {
+    ASKList <- purrr::map2(MeanAtAgeList, SDatAgeList, \(x, y)
+    CalcAgeSizeKey_(x, y, Classes, TruncSD, Dist),
+    .progress = list(
+      type = "iterator",
+      format = "Calculating Age-Size Key {cli::pb_bar} {cli::pb_percent}",
+      clear = TRUE
+    )
+    )
+  }
+
+  AgeClasses <- dimnames(MeanAtAge)[['Age']]
+  
+  ASKList <- purrr::map(ASKList, \(ask) {
+    if (is.null(dimnames(ask))) {
+      dd <- dim(ask)
+      dimnames(ask) <- list(
+        Age=AgeClasses,
+        Class=Classes,
+        Year=dimnames(MeanAtAgeList[[1]])$Year[1:dd[3]]
+      )
+    }
+    ask
+  })
+  names(ASKList) <- seq_along(ASKList)
+
+  List2Array(ASKList, "Sim", pos=1) 
+}

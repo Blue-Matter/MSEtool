@@ -1,0 +1,342 @@
+# Prepares Misc slot in Hist for temp objects that appropriately structured for
+# C++ code
+
+# This prepares arrays for easy access in the C++ code
+# temporary elements of Misc are removed later
+.PrepHistMisc <- function(Hist, Period = c('Historical', 'Projection')) {
+  Period <- match.arg(Period)
+  
+  YearVec        <- Years(Hist, Period)
+  saveMisc       <- Hist@Misc
+  Hist@Misc      <- list()
+  Hist@Misc$SAVE <- saveMisc
+  
+  stock_names <- StockNames(Hist)
+  nStock      <- length(stock_names)
+  fleet_names <- FleetNames(Hist)
+  nFleet      <- length(fleet_names)
+  
+  Hist@Misc$maxF <- Hist@OM@maxF
+
+  # ---- Stock -----
+  
+  ## ---- Vector ----
+  
+  SPFromResolved <- purrr::map2(Hist@OM@Stock, seq_len(nStock), \(stock, i)
+    .ResolveSPFromWeights(stock@SRR@SPFrom, stock_names, i)
+  )
+  Hist@Misc$SPFromToStock   <- purrr::map2(SPFromResolved, seq_len(nStock), \(w, i) rep(i, length(w$from))) |> unlist()
+  Hist@Misc$SPFromFromStock <- purrr::map(SPFromResolved, \(w) w$from) |> unlist()
+  Hist@Misc$SPFromWeight    <- purrr::map(SPFromResolved, \(w) w$weight) |> unlist()
+  
+  Hist@Misc$PlusGroup <- purrr::map(Hist@OM@Stock, \(stock) {
+    stock@Ages@PlusGroup
+  }) |> unlist() |> as.numeric() |> array(dim=nStock(Hist), dimnames = list(Stock=StockNames(Hist)))
+
+  Hist@Misc$Mode <- purrr::map_int(Hist@OM@Fleet[[1]], \(fleet) {
+    mode <- fleet@Effort@Mode
+    if (mode == 'Density') return(1)
+    0
+    })
+  
+  ## ---- 2D Array ----
+  # Sim, Year 
+  Hist@Misc$RelSize <- Hist@OM@Stock[[1]]@Spatial@RelativeSize
+  
+  # Sim Stock
+  Hist@Misc$SpawnTimeFrac <- purrr::map(Hist@OM@Stock, \(stock) {
+    array(rep(stock@SRR@SpawnTimeFrac, Hist@OM@nSim)[1:Hist@OM@nSim],
+          dim=Hist@OM@nSim, 
+          dimnames = list(Sim=1:Hist@OM@nSim)
+    )
+  }) |> List2Array('Stock') |>
+    ReduceDims(IncYear=FALSE)
+  
+  ## ---- Stock Lists ----
+  
+  # Sim, Age, Year
+  Hist@Misc$LengthList <- purrr::map(Hist@OM@Stock, \(stock) {
+    if (!is.null(stock@Length@MeanAtAge))
+      return(stock@Length@MeanAtAge)
+
+    # hasn't been specified. Make a dummy array
+    array(0, dim=c(1, 1, 1))
+    
+  })
+ 
+  # Sim, Age, Year
+  Hist@Misc$WeightList <- purrr::map(Hist@OM@Stock, \(stock) {
+    stock@Weight@MeanAtAge
+  })
+ 
+  # Sim, Age, Year
+  Hist@Misc$NaturalMortalityList <- purrr::map(Hist@OM@Stock, \(stock) {
+    stock@NaturalMortality@MeanAtAge
+  })
+  
+  # Sim, Age, Year
+  Hist@Misc$MaturityList <- purrr::map(Hist@OM@Stock, \(stock) {
+    stock@Maturity@MeanAtAge
+  })
+  
+  # Sim, Age, Year
+  Hist@Misc$SemelparousList <- purrr::map(Hist@OM@Stock, \(stock) {
+    stock@Maturity@Semelparous
+  })
+  
+  #  Sim, Age, Year
+  Hist@Misc$FecundityList <- purrr::map(Hist@OM@Stock, \(stock) {
+    stock@Fecundity@MeanAtAge
+  })
+  
+  #  Sim, FromArea, ToArea, Age, Year
+  Hist@Misc$MovementList <- purrr::map(Hist@OM@Stock, \(stock) {
+    stock@Spatial@Movement
+  })
+  
+  ## ---- SRR ----
+  
+  # Calculate recruitment lag
+  Hist@Misc$RecLag <- .RecLag(Hist@OM@Stock)
+  
+  # SRR parameters
+  Hist@Misc$SRR_Pars <- purrr::map(Hist@OM@Stock, \(stock) stock@SRR@Pars)
+  
+  # SRR rec devs
+  LastHistYear <- max(as.numeric(Years(Hist, 'Historical')))
+  Hist@Misc$RecDevs <- purrr::map(Hist@OM@Stock, \(stock) {
+    # MSE objects from older versions have RecDevHist extended over projection years
+    hist <- .DropYearsAfter(stock@SRR@RecDevHist, LastHistYear)
+    proj <- stock@SRR@RecDevProj
+    # either may be reduced to 1 sim by ReduceDims()
+    nSimDev <- max(nrow(hist), nrow(proj))
+    abind::abind(ExtendSims(hist, nSimDev), ExtendSims(proj, nSimDev), along=2,
+                 use.first.dimnames=TRUE,
+                 use.dnns=TRUE) 
+  })
+  
+  # SRR Model
+  Hist@Misc$SRR_Model <- purrr::map(Hist@OM@Stock, \(stock) {
+    stock@SRR@Model
+  }) |> unlist()
+
+  srr_models <- SRRModels(FALSE, FALSE)  
+  if (!all(Hist@Misc$SRR_Model %in% srr_models)) {
+    cli::cli_abort(c("x" = "Invalid SRR model(s). Must be one of {.val {srr_models}}",
+                   "i"= "Currently: {.val { Hist@Misc$SRR_Model}}")
+    )
+  }
+  for (i in seq_along(Hist@Misc$SRR_Model)) {
+    Hist@Misc$SRR_Model[i] <- switch( Hist@Misc$SRR_Model[i],
+                                      "BevertonHolt"=0,
+                                      "Ricker"=1,
+                                      "HockeyStick"=2)
+  }
+  Hist@Misc$SRR_Model <- as.numeric(Hist@Misc$SRR_Model)
+
+  # Unfished Recruitment (R0)
+  R0_list <- purrr::map(Hist@OM@Stock, \(stock){
+    stock@SRR@R0
+  })
+  nSim_R0 <- lapply(R0_list, dim) |> lapply('[',1) |> unlist() |> max()
+  Hist@Misc$R0 <- purrr::map(R0_list, \(st) ExtendSims(st, nSim_R0)) |>
+    List2Array('Stock', pos=2)
+
+  UnfishedSP <- Hist@Unfished@Equilibrium@SProduction |> ExtendSims(nSim = nSim(Hist))
+  AllYears   <- as.numeric(dimnames(UnfishedSP)[['Year']])
+  R0Shifted  <- .R0Shifted(Hist@Misc$R0, Hist@Misc$RecLag)
+
+  Phi0RefFull <- .Phi0RefSeed(UnfishedSP, Hist@Misc$R0, Hist@Misc$RecLag) |>
+    ExtendYears(Years = AllYears, maintain_seasonal_pattern = TRUE)
+  Hist@Misc$SP0 <- ArrayMultiply(Phi0RefFull, R0Shifted)
+
+  # Unfished distribution
+  Hist@Misc$RecDist <- purrr::map(Hist@OM@Stock, \(stock) {
+    abind::adrop(stock@Spatial@UnfishedDist[,,1,, drop=FALSE], 3) 
+  }) |> List2Array("Stock", pos=2) |>
+    .Aperm(c('Sim', 'Stock', 'Year', 'Area'))
+  
+  
+  # ---- Fleet ----
+  
+  # 4D Array: Sim, Stock, Year, Fleet
+  Hist@Misc$Catchability <- purrr::map(Hist@OM@Fleet, \(FleetList) {
+    purrr::map(FleetList, \(fleet) {
+      Extend(fleet@Catchability@Efficiency, nSim = Hist@OM@nSim)
+    }) |> List2Array(pos = 3) # Sim, Year, Fleet
+  }) |> List2Array(pos = 2, "Stock") # Sim, Stock, Year, Fleet
+  
+  # 5D Array: Sim, Stock, Year, Fleet, Area
+  Hist@Misc$Closure <- purrr::map(Hist@OM@Fleet, \(FleetList) {
+    purrr::map(FleetList, \(fleet) {
+      fleet@Closure
+    }) |> List2Array(pos = 3) # Sim, Year, Fleet, Area
+  }) |> List2Array(pos = 2, "Stock") # Sim, Stock, Year, Fleet, Area
+  
+  # 3D Array: Sim, Year, Fleet
+  Hist@Misc$Spatial_Targeting <- purrr::map(Hist@OM@Fleet[[1]], \(fleet) {
+    fleet@Effort@Targeting
+  }) |> List2Array(pos = 3) # Sim, Year, Fleet
+
+  # 4D Array: Sim, Stock, Year, Fleet. Multiplier on the derived stock-targeting
+  # resistance; NULL anywhere defaults to 1 (derived value unchanged)
+  Hist@Misc$StockTargetingLambda <- purrr::map(Hist@OM@Fleet, \(FleetList) {
+    purrr::map(FleetList, \(fleet) {
+      lam <- fleet@Effort@StockTargetingLambda
+      if (is.null(lam))
+        lam <- array(1, c(1, 1), dimnames = list(Sim = 1, Year = YearVec[1]))
+      lam
+    }) |> List2Array(pos = 3) # Sim, Year, Fleet
+  }) |> List2Array(pos = 2, "Stock") # Sim, Stock, Year, Fleet
+  
+  ##  ---- Lists - length nStock ---- 
+  Hist@Misc$WeightFleetRetainedList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
+    purrr::map(FleetList, \(fleet) {
+      fleet@WeightFleetRetained
+    }) |> List2Array(pos = 4) # Sim, Age, Year, Fleet
+  })
+
+  Hist@Misc$WeightFleetSelectedList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
+    purrr::map(FleetList, \(fleet) {
+      fleet@WeightFleetSelected
+    }) |> List2Array(pos = 4) # Sim, Age, Year, Fleet
+  })
+
+
+  Hist@Misc$SelAgeList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
+    purrr::map(FleetList, \(fleet) {
+      fleet@Selectivity@MeanAtAge
+    }) |> List2Array(pos = 4) # Sim, Age, Year, Fleet, Area
+  })
+  
+  Hist@Misc$SelSizeList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
+    purrr::map(FleetList, \(fleet) {
+      if (!is.null(  fleet@Selectivity@MeanAtLength))
+      return(.SizeArrayOrNull(fleet@Selectivity@MeanAtLength)) # Sim, Age, Year, Area
+      .SizeArrayOrNull(fleet@Selectivity@MeanAtWeight)
+    })
+  })
+  
+  Hist@Misc$RetAgeList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
+    purrr::map(FleetList, \(fleet) {
+      fleet@Retention@MeanAtAge
+    }) |> List2Array(pos = 4) # Sim, Age, Year, Fleet, Area
+  })
+  
+  Hist@Misc$RetSizeList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
+    purrr::map(FleetList, \(fleet) {
+      if (!is.null(  fleet@Retention@MeanAtLength))
+        return(.SizeArrayOrNull(fleet@Retention@MeanAtLength)) # Sim, Age, Year, Area
+      .SizeArrayOrNull(fleet@Retention@MeanAtWeight)
+    })
+  })
+  
+  Hist@Misc$DiscMortList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
+    purrr::map(FleetList, \(fleet) {
+      fleet@DiscardMortality@MeanAtAge
+    }) |> List2Array(pos = 4) # Sim, Age, Year, Fleet, Area
+  })
+  
+  Hist@Misc$DiscMortSizeList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
+    purrr::map(FleetList, \(fleet) {
+      .SizeArrayOrNull(fleet@DiscardMortality@MeanAtLength)  # Sim, Class, Year, Area
+    })
+  })
+  
+  if (nComplex(Hist) == 1 || is.null(Hist@OM@StockTargeting@Targeting)) {
+    # single complex - no targeting choice for any fleet to make
+    Hist@Misc$StockTargeting <- array(1,
+                                      dim = c(1, nStock, nFleet, 1),
+                                      dimnames = list(
+                                        Sim   = 1,
+                                        Stock = stock_names,
+                                        Fleet = fleet_names,
+                                        Year  = YearVec[1]
+
+                                      ))
+    Hist@Misc$StockTargetingFlag <- 0
+  } else {
+    Hist@Misc$StockTargeting <- Hist@OM@StockTargeting@Targeting
+    Hist@Misc$StockTargetingFlag <- 1
+  }
+
+  # OM-level: Herm / stock transition
+  HermResolved <- .HermResolvePairs(Hist@OM, YearVec)
+  if (!length(HermResolved$From)) {
+    Hist@Misc$TransitionHazard    <- list()
+    Hist@Misc$TransitionToStock   <- integer(0)
+    Hist@Misc$TransitionFromStock <- integer(0)
+    Hist@Misc$TransitionFlag      <- 0
+  } else {
+    Hist@Misc$TransitionToStock   <- HermResolved$To
+    Hist@Misc$TransitionFromStock <- HermResolved$From
+    Hist@Misc$TransitionHazard    <- HermResolved$Hazard
+    Hist@Misc$TransitionFlag      <- 1
+  }
+
+  Hist@Misc <- ExtendYears(Hist@Misc, Years=YearVec)
+  .CheckHistMisc(Hist, Period)
+  Hist
+}
+
+
+.RestoreHistMisc <- function(Hist) {
+  preserved_names <- c('Advice', 'TACAttainment', 'BagLimit', 'Interval', 'Selectivity', 'Retention', 'DiscardMortality')
+  saved <- purrr::map(
+    c('SAVE', preserved_names),
+    \(nm) Hist@Misc[[nm]]
+  ) |> purrr::set_names(c('SAVE', preserved_names))
+  
+  Hist@Misc <- saved$SAVE %||NA% list()
+  
+  for (nm in preserved_names) {
+    if (!is.null(saved[[nm]]))
+      Hist@Misc[[nm]] <- saved[[nm]]
+  }
+  Hist
+}
+
+# Time steps between spawning and recruitment, per stock
+.RecLag <- function(StockList) {
+  purrr::map(StockList, \(stock) {
+    if (!is.null(stock@SRR@SpawnLag))
+      return(as.integer(round(stock@SRR@SpawnLag)))
+    MinAge <- min(stock@Ages@Classes)
+    MaxAge <- max(stock@Ages@Classes)
+    nSeasons <- stock@Seasons
+    AllAges <- seq(from = 0, to=MaxAge, by=1/nSeasons) |> round(3)
+    which(AllAges == MinAge) - 1
+  }) |> unlist()
+}
+
+# R0 of the cohort spawned in each time step [Sim, Stock, Year]
+.R0Shifted <- function(R0, RecLag) {
+  nYearR0   <- dim(R0)[which(names(dimnames(R0)) == 'Year')]
+  R0Shifted <- R0
+  for (st in seq_along(RecLag)) {
+    lag <- RecLag[st]
+    if (lag == 0) next
+    shiftInd <- pmin(seq_len(nYearR0) + lag, nYearR0)
+    R0Shifted[, st, ] <- R0[, st, shiftInd]
+  }
+  R0Shifted
+}
+
+# Unfished spawning production per recruit in the first historical year, by
+# time step: the reference against which the stock-recruitment relationship
+# is defined [Sim, Stock, Year]
+.Phi0RefSeed <- function(UnfishedSP, R0, RecLag) {
+  SP0Dim   <- which(names(dimnames(UnfishedSP)) == 'Year')
+  R0Dim    <- which(names(dimnames(R0)) == 'Year')
+  AllYears <- as.numeric(dimnames(UnfishedSP)[[SP0Dim]])
+  Yr1Ind   <- which(floor(AllYears) == floor(min(AllYears)))
+  SP0Yr1   <- abind::asub(UnfishedSP, Yr1Ind, SP0Dim, drop = FALSE)
+  R0Yr1    <- abind::asub(.R0Shifted(R0, RecLag), Yr1Ind, R0Dim, drop = FALSE)
+  ArrayDivide(SP0Yr1, R0Yr1)
+}
+
+# stocks without Length have no size classes
+.SizeArrayOrNull <- function(x) {
+  if (is.null(x) || !length(x)) return(NULL)
+  x
+}

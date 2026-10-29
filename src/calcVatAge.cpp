@@ -3,16 +3,16 @@ using namespace Rcpp;
 
 // [[Rcpp::export]]
 NumericMatrix calcVatAge(NumericMatrix len_at_age,
-                     NumericMatrix len_aa_sd,
-                     NumericMatrix sel_at_length,
-                     int n_age,
-                     int nyears,
-                     int proyears,
-                     NumericVector CAL_binsmid) {
+                         NumericMatrix len_aa_sd,
+                         NumericMatrix sel_at_length,
+                         int n_age,
+                         int nyears,
+                         int proyears,
+                         NumericVector CAL_binsmid) {
   int totyears = nyears+proyears;
   NumericMatrix V(n_age, totyears);
   int nbins = CAL_binsmid.length();
-
+  
   for (int yr=0; yr<totyears; yr++) {
     NumericMatrix ALK(n_age, nbins);
     NumericMatrix ALKs(n_age, nbins);
@@ -25,7 +25,7 @@ NumericMatrix calcVatAge(NumericMatrix len_at_age,
     if (is_false(all(b1))) {
       ALK(0,0) = 1;
     }
-
+    
     NumericVector sela(n_age);
     for (int age=0; age<n_age; age++) {
       if (page(age)>0) {
@@ -36,11 +36,10 @@ NumericMatrix calcVatAge(NumericMatrix len_at_age,
       }
     }
     V(_,yr) = sela;
-
+    
   }
-
+  
   return(V);
-
+  
 }
-
 

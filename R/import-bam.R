@@ -1,0 +1,918 @@
+#' Import BAM Output into an Operating Model
+#'
+#' Imports output from the Beaufort Assessment Model
+#' ([BAM](https://repository.library.noaa.gov/view/noaa/4847)) and converts it
+#' into an operating model ([OM()]) object. Stock and fleet objects are populated
+#' from BAM parameters and time series, including selectivity, retention,
+#' discard mortality, recruitment deviations, and stock-recruitment
+#' relationships.
+#'
+#' The numbers-at-age in the first historical year are the equilibrium unfished
+#' numbers-at-age multiplied by `SRR@RecDevInit` (the BAM initial-age
+#' deviations, `log.Nage.dev`) and `Depletion@Misc$InitialAtAge` (the remaining
+#' age-specific depletion, e.g. from initial fishing mortality). The dynamic
+#' unfished conditions start from the equilibrium unfished numbers-at-age
+#' multiplied by `SRR@RecDevInit` only.
+#'
+#' Each retained fleet in the BAM output becomes an OM fleet, with its discard
+#' fishing mortality (`F.<fleet>.D`, or the series named in `DiscFleets`)
+#' included as discards. A discard fleet that is not linked to a retained fleet
+#' becomes a separate OM fleet with no retention and a discard mortality of 1,
+#' since BAM discard fishing mortality applies to dead discards.
+#' `OM@maxF` is increased above its default if the total apical fishing
+#' mortality across fleets in the BAM output exceeds it.
+#'
+#' @param Stock Character string matching a stock name available in `bamExtras`
+#'   (e.g., `'Red Snapper'`), or a list of BAM output objects containing
+#'   elements `rdat` and `dat`.
+#' @param nSim Integer. Number of simulations. Default `48`.
+#' @param pYear Integer. Number of projection years. Default `30`.
+#' @param StockName Optional character string to override the species name taken
+#'   from the BAM output.
+#' @param Source Optional. Character string specifying the source (usually 
+#' a link) for the OM.
+#' @param DiscMortDF Optional data.frame with columns `Fleet`, `Value`, and
+#'   `Year` specifying discard mortality rates by fleet and time block. If
+#'   `NULL`, values are extracted directly from BAM parameters. 
+#'   
+#' @param DiscFleets Optional named character vector mapping retain fleet names
+#'   to their corresponding discard fleet names in the BAM output, for cases
+#'   where naming conventions differ.
+#'   
+#' @param DiscSelFleets Optional named character vector mapping retain fleet
+#'   names to the selectivity series to use for discards.
+#'   
+#' @param RetSelFleets Optional named character vector mapping retain fleet
+#'   names to alternative retention selectivity series.
+#'   
+#' @param incData Logical. Include `Data` in the input? Default = `TRUE`
+#' @param SurveyNames A character vector of user-facing names for survey
+#'   indices detected in `BAMdata`. Must have the same length as the number of
+#'   survey indices found (i.e. indices not matched to any fleet name). Use
+#'   this to override the default names derived from column names. 
+#'   Used by [ImportBAMData()].
+#' @param UnitsLandings Optional named character vector (or list) of landings
+#'   units by fleet, with names matching the OM fleet names. Each element must
+#'   be one of:
+#'   - `"1000 lb"` — values will be converted from thousands of pounds to kg.
+#'   - `"1000 n"` — values will be multiplied by 1,000 (number in thousands).
+#'   Fleets not named here have their units detected from the BAM output.
+#'   Used by [ImportBAMData()].
+#' @param UnitsDiscards Optional named character vector (or list) of discard
+#'   units by fleet, following the same convention as `UnitsLandings`.
+#'   Used by [ImportBAMData()].
+#'     
+#' @param MPStartYear Numeric or `NULL`. First calendar year in which MPs are
+#'   applied; see [OM()]/[om-class]. Default `NULL`.
+#' @param InterimAdvice A `data.frame` or `NULL`. Fixed or stochastic
+#'   TAC/Effort values for years before `MPStartYear`; see [InterimAdvice()].
+#'   Default `NULL`.
+#' @param populate Logical. If `TRUE` (default), calls [PopulateOM()] to
+#'   populate the OM after construction.
+#'
+#' @param Seed Integer. Random number seed for the OM (`OM@Seed`), used for all
+#'   stochastic values generated when the OM is populated (e.g., recruitment
+#'   deviations, observation and implementation error, values sampled from
+#'   parameter ranges) and for the random draws made in [Simulate()] and
+#'   [Project()]. OMs imported with the same `Seed` share these random draws;
+#'   use a different `Seed` for each OM (or each batch of OMs) to obtain
+#'   independent draws. Default `101`.
+#' @param silent Logical. If `TRUE`, suppresses console messages. Default
+#'   `FALSE`.
+#'
+#' @return `ImportBAM()` returns a populated OM object. `GetBAMOutput()` returns
+#'   a BAM output list of class `BAMdata` (for `type = 'rdat'`).
+#'   `ListBAMStocks()` returns a character vector of available stock names.
+#'
+#' `ImportBAM()` requires the `bamExtras` package, which can be installed with
+#' `pak::pkg_install('nikolaifish/bamExtras')`.
+#'
+#' The `DiscMortDF` argument accepts a data.frame with columns:
+#' \describe{
+#'   \item{Fleet}{Fleet name matching the retain fleet names in the OM.}
+#'   \item{Value}{Discard mortality rate (0--1).}
+#'   \item{Year}{The year which the value takes effect (i.e., the
+#'     value applies to all years after this year).}
+#' }
+#'
+#' When `DiscFleets`, `DiscSelFleets`, or `RetSelFleets` are provided, they
+#' should be named character vectors where names are the retain fleet names and
+#' values are the corresponding BAM fleet/selectivity names to use instead of
+#' the defaults.
+#' 
+#' @seealso [ImportBAMData()]
+#'
+#' @export
+ImportBAM <- function(Stock='Red Snapper',     
+                      nSim=48,
+                      pYear=30,
+                      StockName=NULL,
+                      Source=NULL,
+                      DiscMortDF=NULL,
+                      DiscFleets=NULL,
+                      DiscSelFleets=NULL,
+                      RetSelFleets=NULL,
+                      incData = TRUE,
+                      SurveyNames=NULL,
+                      UnitsLandings=NULL,
+                      UnitsDiscards=NULL,
+                      MPStartYear=NULL,
+                      InterimAdvice=NULL,
+                      populate=TRUE,
+                      silent=FALSE,
+                      Seed=101) {
+  
+  CheckPackage('bamExtras', pkg.path="pak::pkg_install('nikolaifish/bamExtras')")
+
+  BAMdata <- GetBAMOutput(Stock)
+  
+  if (!is.null(StockName))
+    BAMdata$info$species <- StockName
+  
+  if (!silent) {
+    cli::cli_h3('Importing OM from {.href [BAM](https://repository.library.noaa.gov/view/noaa/4847)} Output')
+    cli::cli_ul()
+    cli::cli_li('Name: {.val {BAMdata$info$title}}')
+    cli::cli_li('Species: {.val {BAMdata$info$species}}')
+    cli::cli_li('Years: {.val {BAMdata$parms$styr} - {BAMdata$parms$endyr}}')
+    cli::cli_end()
+  }
+
+  OM <- .SetupOMBAM(BAMdata, nSim, pYear, Source=Source,
+                    MPStartYear=MPStartYear, InterimAdvice=InterimAdvice, Seed=Seed)
+  
+  OM@Stock <- list()
+  class(OM@Stock) <- 'StockList'
+  OM@Stock[[BAMdata$info$species]] <- .BAM2Stock(BAMdata, 
+                                                nSim=nSim(OM),
+                                                Years=OM@Years,
+                                                Seed=OM@Seed)
+  
+  OM@Fleet <- list()
+  class(OM@Fleet) <- 'StockFleetList'
+  OM@Fleet[[BAMdata$info$species]] <- .BAM2Fleet(Stock, 
+                                                OM, 
+                                                DiscMortDF,
+                                                DiscFleets,
+                                                DiscSelFleets,
+                                                RetSelFleets)
+
+  # maxF caps total apical F across fleets; keep it above the BAM history
+  HistMaxF <- purrr::map(OM@Fleet[[1]], \(fleet) fleet@Effort@Effort) |>
+    Reduce(f = `+`) |>
+    max()
+  if (HistMaxF > OM@maxF)
+    OM@maxF <- ceiling(HistMaxF * 1.1)
+  
+  if (BAMdata$parms$spawn.time>0) {
+    OM@Misc$SProduction <- data.frame(Sim=1,
+                                      Stock=BAMdata$info$species,
+                                      Year=BAMdata$t.series$year[1], 
+                                      Value=BAMdata$t.series$SSB[1])
+  }
+  
+  
+  
+  if (incData) {
+    if (!silent) cli::cli_alert("Importing Data")
+    OM <- ImportBAMData(OM, 
+                        BAMdata,
+                        SurveyNames   = SurveyNames,
+                        UnitsLandings = UnitsLandings,
+                        UnitsDiscards = UnitsDiscards,
+                        DiscFleets    = DiscFleets)
+    
+  }
+  
+  if (populate) 
+    OM <- PopulateOM(OM, silent = TRUE)
+  
+  OM
+}
+
+
+
+
+#' @rdname ImportBAM
+#'
+#' @param type Character. Format of BAM output to retrieve: `'rdat'`
+#'   (default) returns the R data object; `'dat'` returns the raw input data.
+#'
+#' @export
+GetBAMOutput <- function(Stock='Red Snapper', type=c('rdat', 'dat')) {
+  type <- match.arg(type)
+  
+  if (inherits(Stock, 'BAMdata'))
+    return(Stock)
+  
+  if (!is.list(Stock) && !is.character(Stock))
+    cli::cli_abort("`Stock` must be a character string matching a stock in `bamExtras` or a list of BAM output objects")
+  
+  if (inherits(Stock, 'character')) {
+    stockName <- gsub(' ', '',Stock)
+    BAMdata <- try(eval(parse(text=paste0('bamExtras::',paste0(type, '_', stockName)))), silent=TRUE)
+    if (inherits(BAMdata, 'try-error'))
+      cli::cli_abort(c('Could not import {.val {Stock}} from `bamExtras`',
+                       'x'=BAMdata,
+                       'i'='Valid stocks in `bamExtras` are: {.val {ListBAMStocks()}}')
+      )
+    
+    class(BAMdata) <- 'BAMdata'
+    return(BAMdata)
+  }
+  
+  if (is.list(Stock)) {
+    nms <- names(Stock)
+    if (!all(c('rdat', 'dat') %in% nms)) {
+      cli::cli_abort(c('`Stock` is a list but does not appear to be valid BAM output',
+                       'i'='Could not find elements `rdat` and `dat` in list names')
+      )
+    }
+    BAMdata <- Stock[[type]]
+    if (type=='rdat')
+      class(BAMdata) <- 'BAMdata'
+    return(BAMdata)
+  }
+  
+  cli::cli_abort("Function terminated without returning object. Is `Stock` a character string or a list of BAM output objects?")
+}
+
+
+#' @rdname ImportBAM
+#' @export
+ListBAMStocks <- function(type=c('rdat', 'dat')) {
+  type <- match.arg(type)
+  type <- paste0(type,'_')
+  d <- utils::data(package = "bamExtras")
+  nms <- d$results[,3]
+  val_nms <- nms[grepl(type, nms)]
+  gsub(type, '', val_nms)
+}
+
+
+
+
+.SetupOMBAM <- function(BAMdata, nSim=48, pYear=30, Source=NULL,
+                        MPStartYear=NULL, InterimAdvice=NULL, Seed=101) {
+  HistYears <- BAMdata$parms$styr:BAMdata$parms$endyr
+  om <- OM(Name=paste(BAMdata$info$title, BAMdata$info$species),
+           nSim=nSim,
+           Seed=Seed,
+           nYear=length(HistYears),
+           pYear=pYear,
+           CurrentYear=max(HistYears),
+           Source=Source,
+           MPStartYear=MPStartYear,
+           InterimAdvice=InterimAdvice
+  )
+  
+  om@Years <- CalcYears(nYear=om@nYear,
+                                pYear=om@pYear,
+                                CurrentYear=om@CurrentYear)
+  om
+}
+
+
+.BAM2Stock <- function(BAMdata, nSim, Years, Seed = 101) {
+  CurrentYear <- BAMdata$parms$endyr
+  histTS <- Years[floor(Years)<=CurrentYear]
+  nYear <- length(histTS)
+  pYear <- length(Years) - nYear
+  
+  stock <- Stock(Name=BAMdata$info$species)
+  
+  stock@nSim <- nSim
+  stock@CurrentYear <- CurrentYear
+  nYear(stock) <- nYear
+  pYear(stock) <- pYear
+
+  AgeSeries <- BAMdata$a.series
+  BAM_Ages <-AgeSeries$age
+  Ages(stock) <- Ages(MinAge=min(BAM_Ages), MaxAge=max(BAM_Ages)) 
+  AgeClasses <- stock |> Ages() |> Classes()
+  nAgeClasses <- length(AgeClasses)
+  
+  
+  if (BAMdata$info$units.length == 'mm') {
+    Linf <- BAMdata$parms$Linf[1]
+  } else if (BAMdata$info$units.length == 'inch') {
+    Linf <- inch2mm(BAMdata$parms$Linf[1])
+  } else {
+    cli::cli_abort(c('x' = '`BAMdata$info$units.length` {.val {BAMdata$info$units.length}} is not supported.',
+                     'i' = 'Supported values: {.val {c("mm", "inch")}}.'),
+                   call = NULL)
+  }
+  
+  Length(stock) <- Length(Pars=list(Linf=Linf,
+                                    K=BAMdata$parms$K[1],
+                                    t0=BAMdata$parms$t0[1]),
+                          Units= 'mm',
+                          CVatAge=AgeSeries$length.cv,
+                          Timing=0.5)
+  
+  if (BAMdata$info$units.weight == 'kg') {
+    WeightAtAge <- AgeSeries$weight
+  } else if (BAMdata$info$units.weight == 'lb') {
+    WeightAtAge <- lb2kg(AgeSeries$weight)
+  } else if (BAMdata$info$units.weight == 'lb (gutted)') {
+    WeightAtAge <- lb2kg(AgeSeries$weight)
+  } else {
+    cli::cli_abort(c('x' = '`BAMdata$info$units.weight` {.val {BAMdata$info$units.weight}} is not supported.',
+                     'i' = 'Supported values: {.val {c("kg", "lb", "lb (gutted)")}}.'),
+                   call = NULL)
+  }
+  
+  Weight(stock) <- Weight(
+    Pars=list(),
+    MeanAtAge = array(WeightAtAge,
+                      dim=c(1, length(AgeClasses), 1),
+                      dimnames=list(Sim=1,
+                                    Age=AgeClasses,
+                                    Year=histTS[1])
+    ),
+    Units = 'kg')
+  
+  
+  NaturalMortality(stock) <- NaturalMortality(
+    Pars=list(), 
+    MeanAtAge=array(AgeSeries$M,
+                    dim=c(1, length(AgeClasses), 1),
+                    dimnames=list(Sim=1,
+                                  Age=AgeClasses,
+                                  Year=histTS[1])
+    )
+  )
+  
+  
+  if (is.null(AgeSeries$mat.male)) {
+    MaturityAtAge <- AgeSeries$mat.female
+  } else {
+    if (is.null(AgeSeries$mat.female))
+      AgeSeries$mat.female <- AgeSeries$mat.fem.endyr
+    
+    MaturityAtAge <-  c(AgeSeries$mat.female * AgeSeries$prop.female + 
+                          AgeSeries$mat.male * (1 - AgeSeries$prop.female))
+  }
+  
+  Maturity(stock) <- Maturity(
+    Pars=list(), 
+    MeanAtAge=array(MaturityAtAge,
+                    dim=c(1, length(AgeClasses), 1),
+                    dimnames=list(Sim=1,
+                                  Age=AgeClasses,
+                                  Year=histTS[1])
+    )
+  )
+  
+  
+  Fecundity(stock) <- Fecundity(
+    Pars=list(),
+    MeanAtAge=array(AgeSeries$reprod,
+                    dim=c(1, length(AgeClasses), 1),
+                    dimnames=list(Sim=1,
+                                  Age=AgeClasses,
+                                  Year=histTS[1])
+    ),
+    Units=BAMdata$info$units.ssb,
+  )
+  
+  h <- ifelse(is.null(BAMdata$parms[["BH.steep"]]), 0.99,
+              BAMdata$parms[["BH.steep"]])
+  
+  R0 <- BAMdata$parms[["R.virgin.bc"]]
+  SD <- BAMdata$parms[["R.sigma.logdevs"]]
+  ACF <- acf(BAMdata$t.series$logR.dev, lag.max = 1, plot = FALSE, na.action =na.pass)$acf[2]
+  
+  if (BAMdata$info$units.rec == "number fish") {
+    NumberUnits <- 1
+  } else {
+    cli::cli_abort(c('x' = '`BAMdata$info$units.rec` {.val {BAMdata$info$units.rec}} is not supported.',
+                     'i' = 'Supported values: {.val {c("number fish")}}.'),
+                   call = NULL)
+    
+  }
+  
+  
+  SRR(stock) <- SRR(Pars=list(h=h),
+                    R0=R0,
+                    SD=SD,
+                    AC=ACF,
+                    SpawnTimeFrac = BAMdata$parms$spawn.time,
+                    Units=NumberUnits
+  )
+  
+  stock <- PopulateStock(Stock = stock, 
+                         nYear = stock@nYear, 
+                         pYear = stock@pYear, 
+                         CurrentYear = stock@CurrentYear,
+                         nSim = stock@nSim,
+                         seed = paste(Seed, 'Stock', 1, sep = '_'))
+  
+  # Recruitment Deviations 
+  UnfishedEq <- ArrayMultiply(array1=CalcUnfishedSurvival(stock, Years=Years, Extend = FALSE), 
+                              array2=.Aperm(AddDimension(stock@SRR@R0, 'Age'), c(1,3,2))
+  )
+  
+  N.age <- BAMdata$N.age
+  InitRatio <- N.age[1,]/UnfishedEq[1,,1]
+  InitRecDevs <- .GetBAMInitRecDevs(BAMdata, AgeClasses)
+  
+  stock@SRR@RecDevInit <- array(InitRecDevs[-1],
+                                dim=c(1, nAgeClasses-1),
+                                dimnames = list(Sim=1,
+                                                Age=AgeClasses[-1]))  
+  
+  InitialAtAge <- InitRatio[-1]/InitRecDevs[-1]
+  if (!all(InitialAtAge == 1))
+    stock@Depletion@Misc$InitialAtAge <- array(InitialAtAge,
+                                               dim=c(1, nAgeClasses-1),
+                                               dimnames = list(Sim=1,
+                                                               Age=AgeClasses[-1]))
+  
+  # equilibrium recruitment
+  SSB0 <- BAMdata$eq.series$SSB.eq[1]
+  RecruitsHistEq <- BevertonHolt(.GetBAMSpawnOutput(BAMdata)[1:nYear],
+                                 SSB0, 
+                                 stock@SRR@R0[1,1], 
+                                 stock@SRR@Pars$h[1,1])
+  
+  recruits <- N.age[,1]
+  RecYears <- histTS # + BAMdata$parms$rec.lag
+  rowInd <- match(RecYears, names(recruits))
+  
+  ageRec <- colnames(N.age) |> as.numeric() |> min()
+  if (ageRec>0) {
+    # Calculate equilibrium numbers
+    RecruitsHistEq <- c(rep(BAMdata$eq.series$R.eq[1], ageRec), RecruitsHistEq)
+    RecruitsHistEq <- RecruitsHistEq[rowInd]
+  }
+  
+  RecDevHist <- recruits[rowInd]/RecruitsHistEq
+  
+  # first-year age-0 numbers come from the unfished initial vector, not the SRR
+  if (ageRec == 0)
+    RecDevHist[1] <- N.age[1, 1] / UnfishedEq[1, 1, 1]
+  
+  stock@SRR@RecDevHist <- array(RecDevHist,
+                                dim=c(1, nYear),
+                                dimnames=list(Sim=1,
+                                              Year=histTS))
+  
+  
+  
+  stock@SRR@RecDevProj <- NULL # reset so it's populated again in Populate(stock)
+  stock
+}
+
+# Spawning output with each year's Z (BAM uses Z.initial for the first year)
+.GetBAMSpawnOutput <- function(BAMdata) {
+  SSB <- BAMdata$t.series$SSB
+  N <- BAMdata$N.age
+  Z <- BAMdata$Z.age
+  if (is.null(N) || is.null(Z) || !identical(colnames(N), colnames(Z)))
+    return(SSB)
+  yr <- intersect(rownames(N), rownames(Z))
+  Calc <- rowSums(N[yr, , drop = FALSE] * exp(-Z[yr, , drop = FALSE] * BAMdata$parms$spawn.time) *
+                    rep(BAMdata$a.series$reprod, each = length(yr)))
+  ind <- match(yr, as.character(BAMdata$t.series$year))
+  Later <- utils::tail(seq_along(ind), -1)
+  if (any(is.na(ind)) || !isTRUE(all(abs(Calc[Later] / SSB[ind[Later]] - 1) < 1e-4)))
+    return(SSB)
+  SSB[ind] <- Calc
+  SSB
+}
+
+.GetBAMInitRecDevs <- function(BAMdata, AgeClasses) {
+  dev <- rep(1, length(AgeClasses))
+  avec <- BAMdata$parm.avec
+  if (!is.null(avec$age) && !is.null(avec$log.Nage.dev)) {
+    ind <- match(avec$age, AgeClasses)
+    val <- exp(avec$log.Nage.dev)
+    ok <- !is.na(ind) & is.finite(val)
+    dev[ind[ok]] <- val[ok]
+  }
+  dev
+}
+
+.GetBAMDiscardMortality <- function(Stock, Years, RetainFleets, DiscardFleets, OM, DiscMortDF=NULL) {
+  
+  BAMdata <- GetBAMOutput(Stock)
+  nFleet <- length(RetainFleets)
+  
+  ind <- grep('D.mort.', names(BAMdata$parms))
+  
+  if (!length(ind)) { # No discard mortality parameters
+    AgesClasses <- OM@Stock[[1]]@Ages@Classes
+    nAgeClasses <- length(AgesClasses)
+    nYears <- nYear(OM@Stock[[1]])
+    
+    DiscardMortArray <- array(0, dim=c(nAgeClasses, 1, nFleet))
+    dimnames(DiscardMortArray) <- list(Age=AgesClasses, 
+                                       Year=Years[1],
+                                       Fleet=RetainFleets)
+    
+
+    
+    return(DiscardMortArray)
+  }
+  
+  RawData <- GetBAMOutput(Stock, 'dat')
+  
+  if (is.null(DiscMortDF)) {
+    DMValues <- BAMdata$parms[ind]
+    DMFleets <- gsub('D.mort.', '', names(DMValues))
+    DMFleets <- gsub("[0-9]+", '', DMFleets)
+    DiscMortDF <- data.frame(Fleet=DMFleets, Value=as.numeric(DMValues))
+    DiscMortDF$Year <- Years[1]-1
+    
+    if (!all(DMFleets %in% RetainFleets))
+      cli::cli_abort(c('x'="Could not match fleet names for discard mortality: {.val {DMFleets}} with Fleet Names: {.val {RetainFleets}}",
+                       "i"= 'Use argument {.arg DiscMortDF} to provide a data.frame with columns: {.val {c("Fleet", "Value", "Year")}} with {.val {"Fleet"}} matching Fleet Names: {.val {RetainFleets}}',
+                       ">"= 'The current {.arg DiscMortDF} looks like this: ',
+                       "*"= '{.var Fleet:}  {.val {DiscMortDF$Fleet}}',
+                       "*"= '{.var Value:}  {.val {DiscMortDF$Value}}',
+                       "*"= '{.var Year:}  {.val {DiscMortDF$Year}}'),
+                     call=NULL
+      )
+    
+    ind1 <- grep('discard mortality', RawData)
+    ind2 <- grep('#Discard mortality', RawData) 
+    
+    if (length(ind1) & length(ind2)) {
+      text <- RawData[(ind1+1): (ind2-1)]  
+      DiscMortDF$Year[(nFleet+1):nrow(DiscMortDF)] <- substr(text, start = 1, stop = 4) |> 
+        as.numeric()
+    }
+  } 
+  
+  if (!all(c("Fleet", "Value", "Year") %in% colnames(DiscMortDF)))
+    cli::cli_abort(c('x'='Incorrect or missing columns in `DiscMortDF`',
+                     'i'='Columns must be {.val {c("Fleet", "Value", "Year")}}'),
+                   call=NULL)
+  
+  if (!all(DiscMortDF$Fleet %in% RetainFleets))
+    cli::cli_abort(c('x'="Could not match fleet names for discard mortality: {.val {DiscMortDF$Fleet}} with Fleet Names: {.val {RetainFleets}}",
+                     "i"= 'Use argument {.arg DiscMortDF} to provide a data.frame with columns: {.val {c("Fleet", "Value", "Year")}} with {.val {"Fleet"}} matching Fleet Names: {.val {RetainFleets}}',
+                     ">"= 'The current {.arg DiscMortDF} looks like this: ',
+                     "*"= '{.var Fleet:}  {.val {DiscMortDF$Fleet}}',
+                     "*"= '{.var Value:}  {.val {DiscMortDF$Value}}',
+                     "*"= '{.var Year:}  {.val {DiscMortDF$Year}}'),
+                   call=NULL
+    )
+  
+  
+  AgesClasses <- OM@Stock[[1]]@Ages@Classes
+  nAgeClasses <- length(AgesClasses)
+  nYears <- nYear(OM@Stock[[1]])
+  DiscardMortArray <- array(0, dim=c(nAgeClasses, nYears, nFleet))
+  dimnames(DiscardMortArray) <- list(Age=AgesClasses, 
+                                     Year=Years[1:nYears],
+                                     Fleet=RetainFleets)
+  
+  
+  for (i in 1:nrow(DiscMortDF)) {
+    TSind <- which(dimnames(DiscardMortArray)$Year > DiscMortDF$Year[i])
+    fillvalue <- abind::asub(DiscardMortArray,
+                             list(TSind, DiscMortDF$Fleet[i]),
+                             2:3, drop=FALSE) 
+    fillvalue[] <- DiscMortDF$Value[i]
+    abind::afill(DiscardMortArray) <- fillvalue
+  }
+  DiscardMortArray
+}
+
+.LookupBAMFleetWeight <- function(BAMdata, candidates) {
+  nms <- names(BAMdata$size.age.fishery)
+  for (nm in candidates) {
+    if (nm %in% nms) {
+      arr <- BAMdata$size.age.fishery[[nm]]
+      scale <- if (grepl('klb$', nm)) 1000 else 1
+      return(lb2kg(arr * scale))
+    }
+  }
+  NULL
+}
+
+.GetBAMFleetWeight <- function(BAMdata, fleet) {
+  .LookupBAMFleetWeight(BAMdata, c(
+    paste0('wholewgt.', fleet, '.lb'),
+    paste0('wgt.', fleet, '.klb'),
+    paste0('wholewgt.lb.', fleet),
+    paste0('gutwgt.', fleet, '.lb')
+  ))
+}
+
+.GetBAMFleetDiscardWeight <- function(BAMdata, fleet, discard_stub) {
+  .LookupBAMFleetWeight(BAMdata, c(
+    paste0('wholewgt.', fleet, '.D.lb'),
+    paste0('wgt.', fleet, '.D.klb'),
+    paste0('wholewgt.lb.', discard_stub),
+    paste0('gutwgt.', fleet, '.D.lb')
+  ))
+}
+
+.BlendBAMFleetWeight <- function(retWeight, discWeight, retainedFraction) {
+  if (is.null(discWeight)) return(retWeight)
+
+  years <- rownames(retWeight)
+  ages  <- colnames(retWeight)
+
+  disc_yr  <- match(years, rownames(discWeight))
+  disc_age <- match(ages, colnames(discWeight))
+  if (anyNA(disc_yr) || anyNA(disc_age)) return(retWeight)
+  discAligned <- discWeight[disc_yr, disc_age, drop = FALSE]
+
+  retFrac <- t(retainedFraction)  # Age x Year -> Year x Age
+  frac_yr  <- match(years, rownames(retFrac))
+  frac_age <- match(ages, colnames(retFrac))
+  if (anyNA(frac_yr) || anyNA(frac_age)) return(retWeight)
+  retFracAligned <- retFrac[frac_yr, frac_age, drop = FALSE]
+
+  out <- retFracAligned * retWeight + (1 - retFracAligned) * discAligned
+  dimnames(out) <- dimnames(retWeight)
+  out
+}
+
+.BAMFleetWeightToArray <- function(arr) {
+  dimnames(arr) <- list(Year = dimnames(arr)[[1]], Age = as.numeric(dimnames(arr)[[2]]))
+  t(arr) |> AddDimension('Sim', pos = 1) |> .Aperm(c('Sim', 'Age', 'Year'))
+}
+
+.BAM2Fleet <- function(Stock,
+                      OM,
+                      DiscMortDF=NULL,
+                      DiscFleets=NULL,
+                      DiscSelFleets=NULL,
+                      RetSelFleets=NULL,
+                      silent=FALSE) {
+  
+  BAMdata <- GetBAMOutput(Stock)
+  Years <- Years(OM)
+  
+  # Combines Retention and Discard fleets 
+  FleetNamesList <- GetBAMFleetNames(BAMdata)
+  FleetNames     <- FleetNamesList$FleetNames
+  FleetNamesOrig <- FleetNamesList$FleetNamesOrig
+  RetainFleets  <- FleetNamesList$RetainFleets
+  DiscardFleets  <- FleetNamesList$DiscardFleets
+  
+  HistTS <- Years[Years<=OM@Stock[[1]]@CurrentYear]
+  nHist <- length(HistTS)
+  
+  # Discard Mortality Values and Time Blocks
+  DiscardMortArray <- .GetBAMDiscardMortality(Stock, 
+                                             Years,
+                                             RetainFleets, 
+                                             DiscardFleets,
+                                             OM, 
+                                             DiscMortDF)
+
+  # discard fleets not linked to a retained fleet become discard-only fleets
+  Claimed <- c(paste0(RetainFleets, '.D'), sub('^F[.]', '', as.character(DiscFleets)))
+  DiscOnlyFleets <- sub('[.]D$', '', setdiff(DiscardFleets, Claimed))
+  if (length(DiscOnlyFleets)) {
+    # BAM discard F is dead-discard F
+    DiscOnlyMort <- array(1, dim = c(dim(DiscardMortArray)[1:2], length(DiscOnlyFleets)),
+                          dimnames = c(dimnames(DiscardMortArray)[1:2], list(Fleet = DiscOnlyFleets)))
+    DiscardMortArray <- abind::abind(DiscardMortArray, DiscOnlyMort, along = 3)
+    names(dimnames(DiscardMortArray)) <- c('Age', 'Year', 'Fleet')
+    RetainFleets <- c(RetainFleets, DiscOnlyFleets)
+  }
+  nFleet <- length(RetainFleets)
+  
+  # Selectivity, Retention, Effort, Catchability 
+  year <- NULL # CRAN check hack
+  TimeSeries <- BAMdata$t.series |> dplyr::filter(year %in% HistTS)
+  FCols <- paste0('F.', FleetNames)
+  chk <- any(!FCols %in% names(TimeSeries))
+  if (chk) 
+    FCols <- paste0('F.', FleetNamesOrig)
+  
+  ApicalF <- TimeSeries[FCols]
+  names(ApicalF) <- paste0('F.', FleetNames)
+  
+  AgeSeries <- BAMdata$a.series
+  BAM_Ages <- AgeSeries$age
+  nAgeClasses <- length(BAM_Ages)
+  
+  FDeadatAge <- FRetainatAge <- array(0, dim=c(nAgeClasses, 
+                                               nHist, 
+                                               length(RetainFleets)),
+                                      dimnames = list(Age=BAM_Ages,
+                                                      Year=Years[1:nHist],
+                                                      Fleet=RetainFleets))
+  
+  for (fl in seq_along(RetainFleets)) {
+    fleet <- RetainFleets[fl]
+    retain <- paste0('F.', fleet)
+    discard <- paste0('F.', fleet, '.D')
+    
+    if (!is.null(DiscFleets)) {
+      ind <- match(fleet, names(DiscFleets))
+      if (!is.na(ind)) {
+        discard <- as.character(DiscFleets[ind])
+      }
+    }
+    
+    selretain <- paste0('sel.m.', fleet)
+    if (!is.null(RetSelFleets)) {
+      ind <- match(fleet, names(RetSelFleets))
+      if (!is.na(ind)) {
+        selretain <- paste0('sel.m.', as.character(RetSelFleets[ind]))
+      }
+    }
+    RetainSelect <- BAMdata$sel.age[[selretain]]
+    
+    seldiscard <- paste0('sel.m.', fleet, '.D')
+    if (!is.null(DiscSelFleets)) {
+      ind <- match(fleet, names(DiscSelFleets))
+      if (!is.na(ind)) {
+        seldiscard <- as.character(DiscSelFleets[ind])
+      }
+    }
+    DiscardSelect <- BAMdata$sel.age[[seldiscard]]
+    
+    if (is.null(DiscardSelect))
+      DiscardSelect <- BAMdata$sel.age[["sel.m.D"]]
+    
+    if (is.null(DiscardSelect)) {
+      if (!is.null(ApicalF[[discard]]) && any(ApicalF[[discard]] > 0, na.rm = TRUE))
+        cli::cli_warn(c("!" = "No discard selectivity {.val {seldiscard}} found for fleet {.val {fleet}}, so its discard fishing mortality ({.val {discard}}) is not included.",
+                        "i" = "Use {.arg DiscSelFleets} to name the selectivity series BAM applies to these discards."))
+      DiscardSelect <- RetainSelect
+      DiscardSelect[] <- 0
+    }
+    
+    ApicalFSelect <- ApicalF[[retain]]
+    ApicalFDiscard <- ApicalF[[discard]]
+    
+    if (is.null(ApicalFDiscard)) {
+      ApicalFDiscard <- ApicalFSelect
+      ApicalFDiscard[] <- 0
+    }
+
+    # discard-only fleet
+    if (is.null(ApicalFSelect)) {
+      ApicalFSelect <- ApicalFDiscard * 0
+      RetainSelect  <- DiscardSelect * 0
+    }
+    
+    FRetainatAge[,,fl] <- t(ApicalFSelect * RetainSelect)
+    FDeadatAge[,,fl] <-  FRetainatAge[,,fl] + t(ApicalFDiscard * DiscardSelect)
+  }
+  
+  FDeadDiscard <- ArraySubtract(FDeadatAge, FRetainatAge)
+  FDiscardTotal <- ArrayDivide(FDeadDiscard, DiscardMortArray)
+  FDiscardTotal[!is.finite(FDiscardTotal)] <- 0
+  FInteractatAge <- ArraySum(FRetainatAge, FDiscardTotal)
+  apicalEffort <- apply(FInteractatAge, 2:3, max, na.rm=TRUE)
+
+  FInteractMax <- replicate(nAgeClasses, apply(FInteractatAge, 2:3, max)) |> 
+    .Aperm(c(3,1,2)) 
+  dimnames(FInteractMax) <-  dimnames(FInteractatAge)
+  
+  SelectivityAtAge <- ArrayDivide(FInteractatAge, FInteractMax) 
+  SelectivityAtAge[!is.finite(SelectivityAtAge)] <- 0
+  
+  RetentionAtAge <- ArrayDivide(FRetainatAge, FInteractatAge)
+  RetentionAtAge[!is.finite(RetentionAtAge)] <- 0
+  
+  FleetList <- MakeNamedList(RetainFleets)
+  class(FleetList) <- 'FleetList'
+  
+  for (fl in seq_along(RetainFleets)) {
+    fleet <- Fleet(Name=RetainFleets[fl])
+    
+    fleet@Catchability@Efficiency <- array(1, c(1,1),
+                                           dimnames = list(
+                                             Sim = 1,
+                                             Year = Years[1]
+                                           ))
+    
+    thisFleetF <- apicalEffort[,fl, drop=FALSE] |> DropDimension('Fleet')
+    fleet@Effort@Effort <- AddDimension(thisFleetF, 'Sim', pos=1) 
+
+    fleet@Selectivity@MeanAtAge <- SelectivityAtAge[,,fl, drop=FALSE] |>
+      abind::adrop(3) |>
+      AddDimension('Sim') |>
+      .Aperm(c('Sim', 'Age', 'Year'))
+
+    fleet@Selectivity@isAtLength <- FALSE
+
+    fleet@Retention@MeanAtAge <- RetentionAtAge[,,fl, drop=FALSE] |>
+      abind::adrop(3) |>
+      AddDimension('Sim') |>
+      .Aperm(c('Sim', 'Age', 'Year'))
+    fleet@Retention@isAtLength <- FALSE
+
+    fleet@DiscardMortality@MeanAtAge <- DiscardMortArray[,,fl, drop=FALSE] |>
+      abind::adrop(3) |>
+      AddDimension('Sim') |>
+      .Aperm(c('Sim', 'Age', 'Year'))
+
+    fleetName <- RetainFleets[fl]
+    discardStub <- fleetName
+    if (!is.null(DiscFleets)) {
+      ind <- match(fleetName, names(DiscFleets))
+      if (!is.na(ind)) discardStub <- .StripBetweenPeriods(as.character(DiscFleets[ind]))
+    }
+
+    retWeight  <- .GetBAMFleetWeight(BAMdata, fleetName)
+    discWeight <- .GetBAMFleetDiscardWeight(BAMdata, fleetName, discardStub)
+
+    if (!is.null(retWeight)) {
+      fleet@WeightFleetRetained <- .BAMFleetWeightToArray(retWeight)
+      selWeight <- .BlendBAMFleetWeight(retWeight, discWeight, RetentionAtAge[,,fl])
+      fleet@WeightFleetSelected <- .BAMFleetWeightToArray(selWeight)
+    }
+
+    FleetList[[fleet@Name]] <- fleet
+  }
+  FleetList
+}
+
+
+#' Get and Fix BAM Fleet Names
+#'
+#' [GetBAMFleetNames()] extracts and classifies fleet names from a BAM stock
+#' assessment, separating retained (landings) fleets from discard fleets.
+#' Fleets are taken from the end-year F proportions (`F.prop.*` in
+#' `BAMdata$parms`), plus any fleet with a fishing mortality series
+#' (`F.*`) and observed landings (`L.*.ob`) in `BAMdata$t.series`.
+#' [FixFleetNames()] is a helper that standardises raw BAM fleet name strings
+#' by stripping leading `"L."` prefixes and converting leading `"D."` prefixes
+#' to trailing `".D"` suffixes.
+#'
+#' @param Stock A character string matching a stock name available in
+#'   `bamExtras` (e.g., `'Red Snapper'`), or a list of BAM output objects
+#'   containing elements `rdat` and `dat`.
+#' @param FleetNames A character vector of raw fleet name strings as extracted
+#'   from BAM output.
+#'
+#' @return
+#'
+#' [GetBAMFleetNames()] returns a named list with four elements:
+#'   - `$FleetNames`: character vector of all fleet names, cleaned via
+#'     [FixFleetNames()].
+#'   - `$RetainFleets`: character vector of landings (retained catch) fleets,
+#'     i.e. all fleets not classified as discard fleets.
+#'   - `$DiscardFleets`: character vector of discard fleets, identified as
+#'     those ending in `".D"` or, if none found, starting with `"D."`.
+#'   - `$FleetNamesOrig`: character vector of original fleet names as they
+#'     appear in `BAMdata$parms` or `BAMdata$t.series`, before cleaning.
+#'
+#' [FixFleetNames()] returns a character vector the same length as
+#' `FleetNames` with standardised names.
+#'
+#' @seealso [GetBAMOutput()]
+#'
+#' @examples
+#' \dontrun{
+#' GetBAMFleetNames('Red Snapper')
+#' }
+#'
+#' FixFleetNames(c('L.cHL', 'D.rHB', 'cPT'))
+#'
+#' @name BAMFleetNames
+#' @export
+GetBAMFleetNames <- function(Stock) {
+  BAMdata <- GetBAMOutput(Stock)
+  FleetNamesOrig <- names(BAMdata$parms)[grepl("F.prop", names(BAMdata$parms))] |>
+    vapply(function(x) strsplit(x, "F.prop.")[[1]][2], character(1)) |>
+    as.character()
+
+  # fleets with landings but no end-year F.prop (e.g. fleets that stopped fishing)
+  FCols  <- sub('^F[.]', '', grep('^F[.]', names(BAMdata$t.series), value = TRUE))
+  Landed <- FCols[paste0('L.', FixFleetNames(FCols), '.ob') %in% names(BAMdata$t.series)]
+  FleetNamesOrig <- c(FleetNamesOrig,
+                      Landed[!FixFleetNames(Landed) %in% FixFleetNames(FleetNamesOrig)])
+
+  FleetNames <- FixFleetNames(FleetNamesOrig)
+  
+  DiscardFleets <- as.character(FleetNames[endsWith(FleetNames, '.D')])
+  
+  if (is.null(DiscardFleets) || !length(DiscardFleets)) 
+    DiscardFleets <- as.character(FleetNames[startsWith(FleetNames, 'D.')])
+  
+  RetainFleets <- FleetNames[!FleetNames %in% DiscardFleets] |> as.character()
+  
+  
+  list(FleetNames = FleetNames, 
+       RetainFleets = RetainFleets,
+       DiscardFleets = DiscardFleets,
+       FleetNamesOrig = FleetNamesOrig)
+}
+
+
+#' @rdname BAMFleetNames
+#' @export
+FixFleetNames <- function(FleetNames) {
+  ind <- which(startsWith(FleetNames, 'D.'))
+  if (length(ind)) {
+    for (i in ind) {
+      FleetNames[i] <- gsub('^D.', '',   FleetNames[i])
+      FleetNames[i] <- paste0( FleetNames[i], '.D')
+    }
+  }
+  gsub('^L.', '', FleetNames) |> as.character()
+}

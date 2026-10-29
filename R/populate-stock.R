@@ -1,0 +1,209 @@
+#' Populate a Stock Object
+#'
+#' Populate a `Stock` object by generating stochastic biological quantities,
+#' expanding values across simulation replicates and years, and filling
+#' derived age- and length-based components.
+#'
+#' @param Stock A [Stock()] object to populate.
+#' @param nYear Integer. Number of historical years.
+#' @param pYear Integer. Number of projection years.
+#' @param CurrentYear Numeric or character. Calendar year of the final
+#'   historical year. Defaults to the current system year if `NULL`.
+#' @param nSim Integer. Number of simulation replicates.
+#' @param Seasons Integer. Number of seasons per year.
+#' @param ALK Logical. If `TRUE`, populate age–length keys.
+#' @param AWK Logical. If `TRUE`, populate age–weight keys.
+#' @param seed Integer. Random seed used for stochastic generation.
+#' @param silent Logical. If `TRUE`, suppress informational messages.
+#' @param force Logical. If `TRUE`, force re-population even if the object
+#'   digest is unchanged.
+#' @param CalcAtLength Logical. If `TRUE`, calculate at-length quantities
+#'   from at-age arrays where applicable
+#'
+#' @details
+#' `PopulateStock()` coordinates population of all biological components
+#' associated with a stock, including:
+#'
+#' * Length-at-age via [PopulateLength()]
+#' * Weight-at-age via [PopulateWeight()]
+#' * Natural mortality via [PopulateNaturalMortality()]
+#' * Maturity via [PopulateMaturity()]
+#' * Fecundity via [PopulateFecundity()]
+#' * Stock–recruitment via [PopulateSRR()]
+#' * Spatial structure via [PopulateSpatial()]
+#' * Initial depletion via [PopulateDepletion()]
+#'
+#'
+#' To avoid unnecessary recomputation, a digest of the stock object and key
+#' arguments is checked before population. If the digest is unchanged and
+#' `force = FALSE`, the input object is returned unchanged.
+#'
+#' @return
+#' A populated [Stock()] object.
+#'
+#' @seealso
+#' [Populate()], [PopulateOM()]
+#'
+#' @examples
+#' Stock <- PopulateStock(
+#'   AlbacoreExStock,
+#'   nYear = 40,
+#'   pYear = 20,
+#'   nSim = 10,
+#'   seed = 123
+#' )
+#'
+#' @export
+PopulateStock <- function(Stock,
+                          nYear,
+                          pYear,
+                          CurrentYear = NULL,
+                          nSim = 5,
+                          Seasons = 1,
+                          ALK = TRUE,
+                          AWK = TRUE,
+                          seed = 102,
+                          silent = FALSE,
+                          force = FALSE,
+                          CalcAtLength = TRUE) {
+  
+  if (is.null(seed))  seed <- 102
+  CalcAtLength <- CalcAtLength && !EmptyObject(Stock@Length)
+  
+  argList <- list(seed, ALK, AWK, nYear, pYear, CurrentYear, nSim)
+  
+  if (EmptyObject(Stock)) 
+    return(Stock)
+  
+  if (.CheckDigest(Stock, argList) & !force) 
+    return(Stock)
+  
+  if (is.null(CurrentYear)) 
+    CurrentYear <- as.numeric(format(Sys.Date(), "%Y"))
+  
+  Stock@nYear <- nYear
+  Stock@pYear <- pYear
+  Stock@CurrentYear <- CurrentYear
+  Stock@nSim <- nSim
+  Stock@Seasons <- Seasons
+  
+  .SetSeed(seed)
+  
+  Stock@Years <- CalcYears(
+    nYear = Stock@nYear,
+    pYear = Stock@pYear,
+    CurrentYear = Stock@CurrentYear,
+    Seasons = Stock@Seasons
+  )
+  
+  nm <- cli::format_inline("Stock {.val {Stock@Name %||NA% 'Stock'}}")
+
+  Years <- Stock@Years
+  Stock@Ages@Classes <- CalcAgeClasses(Stock@Ages)
+  .CheckPopulated(Stock@Ages@Classes, "Ages", nm,
+    hint = cli::format_inline("Provide {.var MinAge}, {.var MaxAge}, and {.var Units} for {.var Ages}, then re-run."))
+
+  Stock@Length <- .SafePopulate(\() PopulateLength(
+    Length = Stock@Length,
+    Ages = Stock@Ages,
+    Years = Years,
+    nSim = nSim,
+    ALK = ALK,
+    seed = .SubSeed(seed, 'Length'),
+    silent = silent,
+    force = force
+  ), "Length", nm)
+  .RequireArray(Stock@Length, "MeanAtAge", "Length", nm, optional = TRUE)
+
+  Stock@Weight <- .SafePopulate(\() PopulateWeight(
+    Weight = Stock@Weight,
+    Ages = Stock@Ages,
+    Length = Stock@Length,
+    Years = Years,
+    nSim = nSim,
+    AWK = AWK,
+    seed = .SubSeed(seed, 'Weight'),
+    silent = silent,
+    force = force,
+    CalcAtLength = CalcAtLength
+  ), "Weight", nm)
+  .RequireArray(Stock@Weight, "MeanAtAge", "Weight", nm)
+
+  Stock@NaturalMortality <- .SafePopulate(\() PopulateNaturalMortality(
+    NaturalMortality = Stock@NaturalMortality,
+    Ages = Stock@Ages,
+    Length = Stock@Length,
+    Years = Years,
+    nSim = nSim,
+    seed = .SubSeed(seed, 'NaturalMortality'),
+    silent = silent,
+    force = force,
+    CalcAtLength = CalcAtLength
+  ), "NaturalMortality", nm)
+  .RequireArray(Stock@NaturalMortality, "MeanAtAge", "NaturalMortality", nm)
+
+  Stock@Maturity <- .SafePopulate(\() PopulateMaturity(
+    Maturity = Stock@Maturity,
+    Ages = Stock@Ages,
+    Length = Stock@Length,
+    Weight = Stock@Weight,
+    Years = Years,
+    nSim = nSim,
+    seed = .SubSeed(seed, 'Maturity'),
+    silent = silent,
+    force = force,
+    CalcAtLength = CalcAtLength
+  ), "Maturity", nm)
+  .RequireArray(Stock@Maturity, "MeanAtAge", "Maturity", nm)
+
+  Stock@Fecundity <- .SafePopulate(\() PopulateFecundity(
+    Fecundity = Stock@Fecundity,
+    Ages = Stock@Ages,
+    Length = Stock@Length,
+    Weight = Stock@Weight,
+    Maturity = Stock@Maturity,
+    Years = Years,
+    nSim = nSim,
+    seed = .SubSeed(seed, 'Fecundity'),
+    silent = silent,
+    force = force,
+    CalcAtLength = CalcAtLength
+  ), "Fecundity", nm)
+  .RequireArray(Stock@Fecundity, "MeanAtAge", "Fecundity", nm, optional = TRUE)
+
+  Stock <- .ConvertAlphaBetaSRR(Stock, nSim = nSim, Years = Years, seed = .SubSeed(seed, 'AlphaBeta'), nm = nm)
+
+  Stock@SRR <- .SafePopulate(\() PopulateSRR(
+    SRR = Stock@SRR,
+    Ages = Stock@Ages,
+    CurrentYear = Stock@CurrentYear,
+    Years = Years,
+    nSim = nSim,
+    seed = .SubSeed(seed, 'SRR'),
+    silent = silent,
+    force = force
+  ), "SRR", nm)
+  .CheckPopulated(Stock@SRR@Model, "SRR", nm,
+    hint = cli::format_inline("Provide {.var Pars} for {.var SRR} (to look up a {.var Model}), or set {.var Model} directly, then re-run."))
+  .CheckPopulated(Stock@SRR@R0, "SRR", nm,
+    hint = cli::format_inline("Provide {.var R0} (or {.var Pars} it can default from) for {.var SRR}, then re-run."))
+
+  Stock@Spatial <- PopulateSpatial(
+    Spatial = Stock@Spatial,
+    Ages = Stock@Ages,
+    Years = Years,
+    nSim = nSim,
+    seed = .SubSeed(seed, 'Spatial'),
+    silent = silent,
+    force = force
+  )
+  
+  Stock@Depletion <- PopulateDepletion(
+    Depletion = Stock@Depletion,
+    nSim = nSim,
+    seed = .SubSeed(seed, 'Depletion'),
+    silent = silent
+  )
+  
+  .SetDigest(Stock, argList)
+}

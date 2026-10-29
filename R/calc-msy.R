@@ -1,0 +1,396 @@
+#' Calculate MSY Reference Points
+#'
+#' Computes maximum sustainable yield (MSY) biological reference points for
+#' all complexes in a [hist-class] or [om-class] object by identifying the
+#' apical fishing mortality that maximises total yield, accounting for the
+#' stock-recruitment relationship. Results are stored in
+#' `Hist@Reference@MSY` and the updated [hist-class] object is returned.
+#'
+#' @param Hist  A [hist-class] or [om-class] object. If an `om` is supplied
+#'   it is first converted to a `hist` object.
+#' @param Years Integer vector of years for which reference points are
+#'   evaluated. Biological and fishery parameters are subset to these years. 
+#'   If `NULL` (default), the final
+#'   historical year is used.
+#' @param type  Character. Whether MSY is defined in terms of total removals
+#'   (landings plus dead discards) or landings only. One of `'Removals'`
+#'   (default) or `'Landings'`.
+#' @param parallel Logical. If `TRUE`, calculates reference points across
+#'   simulations in parallel using a `future` plan established by
+#'   [SetupParallel()]. Falls back to sequential execution with a warning if
+#'   no parallel plan is active. Default `FALSE`.
+#' @param silent Logical. If `TRUE`, suppresses progress messages. Default
+#'   `FALSE`.
+#'
+#'
+#' @details
+#'
+#' ## Complexes
+#' Reference points are calculated separately for each complex defined in
+#' `Hist@OM@Complexes`. Within each complex:
+#'
+#' - `FMSY` is the single apical fishing mortality maximising total yield
+#'   across all stocks in the complex.
+#' - Fleet-specific F is distributed according to effort-weighted
+#'   catchability and selectivity.
+#' - Stock-level quantities (`BMSY`, `SBMSY`, etc.) are reported for each
+#'   stock evaluated at the complex-level `FMSY`.
+#'
+#' ## Seasonal models
+#' For seasonal models (`Seasons > 1`) the reference points are annual
+#' quantities: `FMSY` is the annual apical fishing mortality (seasonal
+#' fishing mortality at age summed over the seasons of the year, maximum
+#' over ages), `MSYLandings`/`MSYDiscards` are annual totals, and
+#' `BMSY`/`SBMSY`/`SPMSY` are the biomass or spawning production in the
+#' reference season(s) (see [RefSeason()]).
+#'
+#' ## Spatial structure
+#' The reference points are calculated from equilibrium per-recruit dynamics
+#' with no spatial structure: the population is treated as a single unit,
+#' without areas or movement, and the fishing mortality at age of every fleet
+#' applies to the whole population. In a multi-area operating model the
+#' simulated and projected dynamics are spatial, and the fishing mortality a
+#' fleet exerts depends on how the population and fishing effort are
+#' distributed among areas (spatial targeting, closures, and movement).
+#' Fishing at `FMSY` in a multi-area operating model (e.g. with `refFMSY`)
+#' therefore need not give `SB/SBMSY = 1` or a yield of `MSY`.
+#'
+#' @return An a [refpointsMSY-class] object. 
+#'
+#' @seealso [CalcPerRecruit()], [CalcSPR0()], [refpointsMSY-class],
+#'   [SetupParallel()]
+#'
+#' @export
+CalcMSY <- function(Hist,
+                    Years = NULL,
+                    type = c('Removals', 'Landings'),
+                    parallel = FALSE,
+                    silent = FALSE) {
+
+  type <- match.arg(type)
+  .CheckClass(Hist, c('om', 'hist'))
+
+  .MsgStep("Calculating MSY reference points", "Calculated MSY reference points", silent)
+
+  if (inherits(Hist, 'om'))
+    Hist <- .OM2Hist(Hist, silent=TRUE)
+
+  .CheckClass(Hist, 'hist', 'Hist')
+  
+  nSeason        <- Hist@OM@Seasons
+  RefSeason      <- Hist@OM@RefSeason
+  RefEffortYears <- Hist@OM@RefEffortYears
+
+  if (is.null(Years)) {
+    Years <- utils::tail(Years(Hist@OM, 'Historical'), 1)
+    if (nSeason > 1L) Years <- unique(floor(Years))
+  }
+
+  if (is.null(Hist@Reference@SPR0))
+    Hist@Reference@SPR0 <- CalcSPR0(Hist, silent=TRUE)
+
+  Hist <- .InitMSYRefPoints(Hist, Years)
+
+  StockNames <- StockNames(Hist)
+
+  complexes <- Complexes(Hist)
+
+  for (i in seq_along(complexes)) {
+    Hist <- .CalcRefMSYComplex(Hist,
+                               complex_stocks = StockNames[complexes[[i]]],
+                               complex_name   = names(complexes)[i],
+                               Years          = Years,
+                               type           = type,
+                               parallel       = parallel,
+                               silent         = silent,
+                               RefSeason      = RefSeason,
+                               RefEffortYears = RefEffortYears)
+  }
+
+  Hist@Reference@MSY
+}
+
+.CalcRefMSYComplex <- function(Hist, complex_stocks, complex_name, Years,
+                               type, parallel = FALSE, silent = FALSE,
+                               RefSeason = NULL, RefEffortYears = NULL) {
+  
+  StockList <- Hist@OM@Stock[complex_stocks]
+  FleetList <- Hist@OM@Fleet[complex_stocks]
+  
+  nSim          <- nSim(Hist)
+  IdenticalHist <- .IdenticalSims(Hist@OM, ignore=c('RecDevInit', 
+                                                   'RecDevHist', 
+                                                   'RecDevProj',
+                                                   'Allocation',
+                                                   'Obs',
+                                                   'Data'))
+  
+  SPR0_Full_List <- Array2List(Hist@Reference@SPR0) |>
+    .SubsetStock(Stocks = complex_stocks)
+
+  HermComplex <- .HermForStocks(Hist@OM, complex_stocks)
+  Phi0Ref     <- .SRRPhi0Ref(Hist)[complex_stocks]
+
+  logApicalFRange <- log(c(1E-5, Hist@OM@maxF))
+
+  MSYRefPoints <- Hist@Reference@MSY
+
+  if (IdenticalHist) {
+    .MsgStatus("Calculating MSY reference points for {.complex {complex_name}}", silent)
+
+    StockList_sim <- Subset(StockList,      Sims = 1)
+    FleetList_sim <- Subset(FleetList,      Sims = 1)
+    SPR0_List_sim <- Subset(SPR0_Full_List, Sims = 1)
+
+    results_sim1 <- purrr::map(seq_along(Years), \(ts) {
+
+      inputs <- .PrepPerRecruitInputs(StockList_sim, FleetList_sim,
+                                     SPR0_List_sim, Years[ts],
+                                     EffortYears = RefEffortYears, RefSeason = RefSeason,
+                                     Herm = .HermSubsetSim(HermComplex, 1),
+                                     Phi0Ref = Subset(Phi0Ref, Sims = 1))
+
+      opt <- optimize(
+        .OptCalcRefMSYSims,
+        logApicalFRange,
+        inputs       = inputs,
+        complex_name = complex_name,
+        type         = type,
+        option       = 1
+      )
+      
+      .OptCalcRefMSYSims(
+        logApicalF   = opt$minimum,
+        inputs       = inputs,
+        complex_name = complex_name,
+        type         = type,
+        option       = 2
+      ) |> .FlagFMSYAtMaxF(opt$minimum, logApicalFRange)
+    })
+    
+    for (sl in setdiff(slotNames(MSYRefPoints), 'Misc')) {
+      arr <- slot(MSYRefPoints, sl)
+      if (is.null(arr)) next
+      arr <- .ArraySubsetSim(arr, 1, keep_sim_name = TRUE)
+      for (ts in seq_along(Years)) {
+        val <- slot(results_sim1[[ts]], sl)
+        if (!is.null(val))
+          ArrayFill(arr) <- val
+      }
+      slot(MSYRefPoints, sl) <- arr
+    }
+    MSYRefPoints <- .AddFMSYAtMaxF(MSYRefPoints, list(results_sim1), complex_name, Years, nSim)
+
+    Hist@Reference@MSY <- ReduceDims(MSYRefPoints)
+    return(Hist)
+  }
+  
+  CalcRefMSY_Sim <- function(sim) {
+    StockList_sim  <- .SubsetSim(StockList,      Sims = sim, keep_sim_name = TRUE)
+    FleetList_sim  <- .SubsetSim(FleetList,      Sims = sim, keep_sim_name = TRUE)
+    SPR0_List_sim  <- .SubsetSim(SPR0_Full_List, Sims = sim, keep_sim_name = TRUE)
+
+    purrr::map(seq_along(Years), \(ts) {
+
+      inputs <- .PrepPerRecruitInputs(StockList   = StockList_sim,
+                                      FleetList   = FleetList_sim,
+                                      SPR0List    = SPR0_List_sim,
+                                      Years       = Years[ts],
+                                      EffortYears = RefEffortYears,
+                                      RefSeason   = RefSeason,
+                                      Herm        = .HermSubsetSim(HermComplex, sim),
+                                      Phi0Ref     = .SubsetSim(Phi0Ref, Sims = sim, keep_sim_name = TRUE))
+
+      opt <- optimize(
+        .OptCalcRefMSYSims,
+        logApicalFRange,
+        inputs       = inputs,
+        complex_name = complex_name,
+        type         = type,
+        option       = 1
+      )
+
+      .OptCalcRefMSYSims(
+        logApicalF   = opt$minimum,
+        inputs       = inputs,
+        complex_name = complex_name,
+        type         = type,
+        option       = 2
+      ) |> .FlagFMSYAtMaxF(opt$minimum, logApicalFRange)
+    })
+  }
+
+  parallel <- CheckParallel(parallel)
+
+  if (!parallel) {
+    if (.MsgShowProgress(silent)) {
+      id <- cli::cli_progress_bar(
+        name   = paste0("Calculating MSY reference points: ", complex_name),
+        total  = nSim,
+        format = "{cli::pb_name} {cli::pb_bar} {cli::pb_current}/{cli::pb_total} sims | {cli::pb_elapsed}"
+      )
+    }
+
+    results_by_sim <- purrr::map(seq_len(nSim), \(sim) {
+      result <- CalcRefMSY_Sim(sim)
+      if (.MsgShowProgress(silent)) cli::cli_progress_update(id = id)
+      result
+    })
+  } else {
+    .MsgStatus("Calculating MSY reference points for {.complex {complex_name}} ({nSim} simulation{?s} in parallel)", silent)
+    CheckPackage('furrr')
+    results_by_sim <- furrr::future_map(
+      seq_len(nSim),
+      CalcRefMSY_Sim,
+      .options = furrr::furrr_options(
+        globals  = c('StockList', 'FleetList', 'SPR0_Full_List', 'Years',
+                     'complex_name', 'type', 'logApicalFRange',
+                     'RefSeason', 'RefEffortYears', 'HermComplex', 'Phi0Ref'),
+        packages = "MSEtool",
+        seed     = 101
+      )
+    )
+  }
+
+  for (sl in setdiff(slotNames(MSYRefPoints), 'Misc')) {
+    arr <- slot(MSYRefPoints, sl)
+    if (is.null(arr)) next
+    
+    for (sim in seq_len(nSim)) {
+      for (ts in seq_along(Years)) {
+        val <- slot(results_by_sim[[sim]][[ts]], sl)
+        # sim-invariant stock arrays label each sim's result Sim 1
+        if (!is.null(val))
+          ArrayFill(arr) <- .ArraySubsetSim(val, sim, keep_sim_name = TRUE)
+      }
+    }
+      
+    slot(MSYRefPoints, sl) <- arr
+  }
+  MSYRefPoints <- .AddFMSYAtMaxF(MSYRefPoints, results_by_sim, complex_name, Years, nSim)
+
+  Hist@Reference@MSY <- ReduceDims(MSYRefPoints)
+  Hist
+}
+
+# log-scale distance from maxF within which FMSY is at the upper search bound
+.FMSYBoundTol <- 1e-3
+
+.FlagFMSYAtMaxF <- function(MSYRefPoints, logApicalF, logApicalFRange) {
+  MSYRefPoints@Misc$AtMaxF <- logApicalF > logApicalFRange[2] - .FMSYBoundTol
+  MSYRefPoints
+}
+
+# results: list over sims (length 1 when sims are identical) of lists over Years
+.AddFMSYAtMaxF <- function(MSYRefPoints, results, complex_name, Years, nSim) {
+  Flags <- vapply(results, \(r) vapply(r, \(x) isTRUE(x@Misc$AtMaxF), logical(1)),
+                  logical(length(Years))) |>
+    matrix(nrow = length(Years))
+  if (ncol(Flags) == 1 && nSim > 1) Flags <- Flags[, rep(1, nSim), drop = FALSE]
+  Ind <- which(Flags, arr.ind = TRUE)
+  if (!nrow(Ind)) return(MSYRefPoints)
+  MSYRefPoints@Misc$FMSYAtMaxF <- rbind(
+    MSYRefPoints@Misc$FMSYAtMaxF,
+    data.frame(Complex = complex_name, Sim = Ind[, 2], Year = Years[Ind[, 1]])
+  )
+  MSYRefPoints
+}
+
+.LogFMSYAtMaxF <- function(Hist) {
+  AtMax <- Hist@Reference@MSY@Misc$FMSYAtMaxF
+  if (!length(AtMax) || !nrow(AtMax)) return(Hist)
+  nSim <- nSim(Hist)
+  maxF <- Hist@OM@maxF
+  for (rows in split(AtMax, factor(AtMax$Complex, levels = unique(AtMax$Complex)))) {
+    Sims <- sort(unique(rows$Sim))
+    Complex <- rows$Complex[1]
+    msg <- cli::format_inline(
+      "FMSY for {.val {Complex}} is at the upper bound of the search ({.code OM@maxF} = {maxF}) in {length(Sims)} of {nSim} simulation{?s}. Yield may still increase at higher F; consider increasing {.code maxF}."
+    )
+    Hist <- .CaptureLog(Hist, msg, name = 'FMSY', type = 'warning', sim = Sims)
+  }
+  Hist
+}
+
+.OptCalcRefMSYSims <- function(logApicalF, inputs, complex_name,
+                               type = c('Removals', 'Landings'),
+                               option = 1) {
+  type <- match.arg(type)
+  
+  if (length(logApicalF) > 1) {
+    cli::cli_alert_danger(
+      '{.var logApicalF} must be length 1. Using first value {.val {logApicalF[1]}}')
+    logApicalF <- logApicalF[1]
+  }
+  apicalF <- exp(logApicalF)
+  
+  PerRecruit <- .CalcPerRecruitF(
+    apicalF                   = apicalF,
+    StockFleetAllocation      = inputs$StockFleetAllocation,
+    NaturalMortalityList      = inputs$NaturalMortalityList,
+    PlusGroupList             = inputs$PlusGroupList,
+    MaturityList              = inputs$MaturityList,
+    SemelparousList           = inputs$SemelparousList,
+    WeightList                = inputs$WeightList,
+    SpawnTimeFracList         = inputs$SpawnTimeFracList,
+    SPFrom                    = inputs$SPFrom,
+    SPR0List                  = inputs$SPR0List,
+    FecundityList             = inputs$FecundityList,
+    WeightFleetRetainedList   = inputs$WeightFleetRetainedList,
+    WeightFleetSelectedList   = inputs$WeightFleetSelectedList,
+    SelectivityFleetList      = inputs$SelectivityFleetList,
+    RetentionFleetList        = inputs$RetentionFleetList,
+    DiscardMortalityFleetList = inputs$DiscardMortalityFleetList,
+    FleetNames                = inputs$FleetNames,
+    Years                     = inputs$Years,
+    nSeason                   = inputs$nSeason,
+    SeasonalWeightsList       = inputs$SeasonalWeightsList,
+    CalendarYears             = inputs$CalendarYears,
+    RefSeason                 = inputs$RefSeason,
+    NPR0List                  = inputs$NPR0List,
+    NPR0_SPList               = inputs$NPR0_SPList,
+    Herm                      = inputs$Herm
+  )
+
+
+  if (option == 1) {
+    Eq <- .CalcEquilibriumInternal(PerRecruit, inputs)
+    Removals <- Eq@Removals |> DropDimension("F")
+    Landings <- Eq@Landings |> DropDimension("F")
+  
+    if (type == 'Removals') {
+      Catch <- SumOverStock(Removals)
+    } else {
+      Catch <- SumOverStock(Landings)
+    }
+    return(-Catch)
+  }
+  
+  Eq <- .CalcEquilibriumInternal(PerRecruit, inputs)
+
+  Removals <- Eq@Removals |> DropDimension("F")
+  Landings <- Eq@Landings |> DropDimension("F")
+  Discards <- ArraySubtract(Removals, Landings)
+
+  # Report annual apical F for seasonal models (sum of seasonal rates at the
+  # apical age); fall back to the raw scalar for annual models.
+  fmsy_val <- if (!is.null(PerRecruit@Misc$F_annual_apical)) {
+    PerRecruit@Misc$F_annual_apical[[1L]]   # nCalYears=1 for MSY; [Sim] vector
+  } else {
+    apicalF
+  }
+  FMSY <- array(fmsy_val, dim(Eq@Biomass |> DropDimension("F")),
+                dimnames = dimnames(Eq@Biomass |> DropDimension("F"))) |>
+    DropDimension('Stock', warn = FALSE) |>
+    AddDimension('Stock', complex_name, pos = 2)
+
+  MSYRefPoints             <- new("refpointsMSY")
+  MSYRefPoints@FMSY        <- FMSY
+  MSYRefPoints@BMSY        <- Eq@Biomass     |> DropDimension("F")
+  MSYRefPoints@SBMSY       <- Eq@SBiomass    |> DropDimension("F")
+  MSYRefPoints@SPMSY       <- Eq@SProduction |> DropDimension("F")
+  MSYRefPoints@SPRMSY      <- Eq@SPR         |> DropDimension("F") |> .Aperm(c('Sim', 'Stock', 'Year'))
+  MSYRefPoints@MSYLandings <- Landings
+  MSYRefPoints@MSYDiscards <- Discards
+  MSYRefPoints
+}

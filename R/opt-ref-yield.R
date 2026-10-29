@@ -1,0 +1,75 @@
+#' Optimize Reference Yield for a Single Simulation
+#'
+#' Internal helper function called by `.CalcRefYield()` to optimize
+#' fishing effort for a single simulation replicate.
+#'
+#' Scales historical effort by a log scalar, projects forward,
+#' calculates total yield (summed over age, fleet, and area),
+#' and returns either the negative objective function for optimization
+#' or the mean yield per stock.
+#'
+#' @param logScalar Numeric scalar applied to scale historical effort
+#' @param Proj `hist` class object containing historical fishery dynamics
+#' @param HistYears Numeric vector of historical years
+#' @param ProjYears Numeric vector of projection years
+#' @param nFleet Integer number of fleets
+#' @param Units Character; either `Biomass` or `Number`
+#' @param type Character; either `Landings` or `Removals`
+#' @param opt Integer; if 1, return objective for optimization; if 2, return yields
+#'
+#' @return Numeric; either negative sum of mean yields (opt=1) or vector of mean yields per stock (opt=2)
+#'
+#' @keywords internal
+.OptRefYield <- function(logScalar,
+                        Proj,
+                        sim,
+                        HistYears, 
+                        ProjYears, 
+                        ProjYearInd,
+                        nFleet,
+                        Units,
+                        type,
+                        baseEffort,
+                        debug = 0,
+                        opt = 1) {
+  
+
+  scaledEffort <- baseEffort * exp(logScalar)
+  nSeason_eff  <- dim(scaledEffort)[2]         
+  nProjTS      <- length(ProjYears)
+  tile_idx     <- rep(seq_len(nSeason_eff), ceiling(nProjTS / nSeason_eff))[seq_len(nProjTS)]
+  scaledEffort <- scaledEffort[, tile_idx, , drop = FALSE]
+  dnames       <- dimnames(scaledEffort)
+  dnames[[2]]  <- as.character(ProjYears)
+  dnames$Sim   <- dimnames(Proj@Effort)$Sim
+  dimnames(scaledEffort) <- dnames
+
+  ArrayFill(Proj@Effort) <- scaledEffort
+  
+  # Run fishery dynamics for this sim only
+  ProjSim_opt <- .CalcFisheryDynamics(Hist = Proj,
+                                     Sims = sim,
+                                     Years = c(utils::tail(HistYears, max(Proj@OM@Seasons, Proj@Misc$RecLag)),
+                                               ProjYears),
+                                     debug = debug,
+                                     InPlace = TRUE)
+  
+  # Get total catch summed over age, fleet, area
+  Yield <- .GetCatch(ProjSim_opt, Units, type)
+  
+  # Take mean over last few calendar years. `lastnTS` is specified in years;
+  # convert to time steps so seasonal models average whole years, not
+  # individual season-steps.
+  lastnTS <- Proj@OM@Control$RefYield$lastnTS %||NA% 5
+  lastnTS <- lastnTS * Proj@OM@Seasons
+  lastnTS <- min(lastnTS, dim(Yield)[3])
+  TSmean <- (dim(Yield)[3]-lastnTS+1):dim(Yield)[3]
+  
+  # Compute mean yield by stock (over years)
+  mean_Yield <- rowMeans(Yield[sim, , TSmean, drop = FALSE], dims = 2)
+  
+  if (opt == 1) return(-sum(mean_Yield))
+  mean_Yield
+}
+
+

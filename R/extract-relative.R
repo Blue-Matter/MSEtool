@@ -1,0 +1,630 @@
+#' Biomass and Fishing Mortality Relative to Reference Points
+#'
+#' Extract time series of biomass, spawning biomass, spawning production, or
+#' fishing mortality expressed as a fraction of an unfished or MSY reference
+#' level.
+#'
+#' `B_B0()`, `SB_SB0()`, and `SP_SP0()` divide the time series by the
+#' corresponding unfished level (`type = 'Equilibrium'` or `'Dynamic'`).
+#' `B_BMSY()`, `SB_SBMSY()`, and `SP_SPMSY()` divide by the corresponding
+#' MSY reference point. `F_FMSY()` divides the apical fishing mortality of
+#' the fleet total by `FMSY`: the fishing mortality-at-age of fish killed by
+#' the gear is averaged over areas (weighted by numbers-at-age) and summed over
+#' fleets, and the numerator is its maximum over ages.
+#'
+#' When applied to an [mse-class] object the historical and projection periods
+#' are row-bound and labelled via the `Period` column; historical rows carry
+#' `MP = "Historical"`.
+#'
+#' Dynamic unfished levels are calculated for every historical and projection
+#' year (see [CalcUnfished_Dynamic()]). For the projection period of an
+#' [mse-class] object, a reference level available only for historical years,
+#' such as an MSY reference point, is extended to cover projection years by
+#' repeating the value from the last historical year. In seasonal models, each
+#' projection time step uses the value from the same season of the last
+#' historical year.
+#'
+#' ## Seasonal models
+#'
+#' In seasonal models (`Seasons > 1`) the MSY reference points are annual
+#' quantities, so `B_BMSY()`, `SB_SBMSY()`, `SP_SPMSY()`, and `F_FMSY()`
+#' return one value per complete calendar year, with `Year` holding the
+#' calendar year:
+#'
+#' * `F_FMSY()`: fishing mortality-at-age of the fleet total summed over the
+#'   seasons of each calendar year, then the maximum over ages, the same annual
+#'   basis as `FMSY` (see [CalcMSY()]).
+#' * `B_BMSY()`, `SB_SBMSY()`, `SP_SPMSY()`: biomass or spawning production
+#'   in the reference season(s) of each calendar year (see [RefSeason()]), the
+#'   same snapshot used for `BMSY`, `SBMSY`, and `SPMSY`.
+#'
+#' `B_B0()`, `SB_SB0()`, and `SP_SP0()` are reported per time step. The
+#' per-time-step series are available from [Biomass()], [SBiomass()],
+#' [SProduction()], and [FDead()].
+#'
+#' @param object A [hist-class] or [mse-class] object.
+#' @param type Character. One of `'Equilibrium'` or `'Dynamic'`. Controls
+#'   which unfished baseline is used. See [B0()] for details.
+#'   Only applies to the `*_*0` family.
+#' @param df Logical. If `FALSE` returns the raw ratio array.
+#'   If `TRUE` (default) returns a tidy `data.frame`.
+#' @param Reduce Logical. If `TRUE` (default) simulation dimensions are
+#'   reduced using [ReduceDims()] before conversion to a data frame.
+#' @param IncYear Logical. Passed to [ReduceDims()]; controls whether the
+#'   year dimension is retained during reduction. Default `FALSE`.
+#' @param Extend Logical. If `TRUE`, rows sharing one value across every
+#'   simulation (e.g. the historical period, or any deterministic quantity --
+#'   see `Reduce`/[ReduceDims()]) are broadcast to all `nSim` simulations via
+#'   [ExtendSims()], rather than appearing once with `Sim = 1`. Default
+#'   `FALSE`. Ignored when `df = FALSE`.
+#' @param silent Logical. If `FALSE` and `Extend = FALSE`, emits a message
+#'   when the returned data frame has rows sharing one value across every
+#'   simulation, pointing at `Extend = TRUE`. Default `TRUE`. Ignored when
+#'   `df = FALSE`.
+#'
+#' @return
+#' * `df = FALSE`: a numeric array of ratios with dimensions `Sim × Stock × Year`.
+#' * `df = TRUE`: a tidy `data.frame` with columns `Sim`, `Stock`, `Year`,
+#'   `Period`, `MP` (MSE only), `Value`, `Variable`.
+#'
+#' @examples
+#' Hist <- Simulate(SingleStockOM, nSim = 2)
+#' B_B0(Hist)
+#' SB_SB0(Hist, type = 'Dynamic')
+#' F_FMSY(Hist)
+#'
+#' MSE <- Project(Hist, 'CurrentEffort')
+#' B_BMSY(MSE, df = TRUE)
+#' SB_SBMSY(MSE, df = TRUE)
+#' SP_SPMSY(MSE, df = TRUE)
+#' F_FMSY(MSE, df = TRUE)
+#'
+#' @name relative_ref
+#' @seealso [Biomass()], [B0()], [BMSY()], [FDead()], [FMSY()], [ExtendSims()]
+#' @export
+B_B0 <- function(object,
+                 type    = c('Equilibrium', 'Dynamic'),
+                 df      = TRUE,
+                 Reduce  = TRUE,
+                 IncYear = FALSE,
+                 Extend  = FALSE,
+                 silent  = TRUE) {
+  .ExtractRelative(object,
+                   num_slot   = 'Biomass',
+                   denom_slot = 'Biomass',
+                   ref        = 'Unfished',
+                   type       = match.arg(type),
+                   df = df, Reduce = Reduce, IncYear = IncYear,
+                   Extend = Extend, silent = silent,
+                   var_name   = 'B_B0')
+}
+
+#' @rdname relative_ref
+#' @export
+SB_SB0 <- function(object,
+                   type    = c('Equilibrium', 'Dynamic'),
+                   df      = TRUE,
+                   Reduce  = TRUE,
+                   IncYear = FALSE,
+                   Extend  = FALSE,
+                   silent  = TRUE) {
+  .ExtractRelative(object,
+                   num_slot   = 'SBiomass',
+                   denom_slot = 'SBiomass',
+                   ref        = 'Unfished',
+                   type       = match.arg(type),
+                   df = df, Reduce = Reduce, IncYear = IncYear,
+                   Extend = Extend, silent = silent,
+                   var_name   = 'SB_SB0')
+}
+
+#' @rdname relative_ref
+#' @export
+SP_SP0 <- function(object,
+                   type    = c('Equilibrium', 'Dynamic'),
+                   df      = TRUE,
+                   Reduce  = TRUE,
+                   IncYear = FALSE,
+                   Extend  = FALSE,
+                   silent  = TRUE) {
+  .ExtractRelative(object,
+                   num_slot   = 'SProduction',
+                   denom_slot = 'SProduction',
+                   ref        = 'Unfished',
+                   type       = match.arg(type),
+                   df = df, Reduce = Reduce, IncYear = IncYear,
+                   Extend = Extend, silent = silent,
+                   var_name   = 'SP_SP0')
+}
+
+#' @rdname relative_ref
+#' @export
+B_BMSY <- function(object,
+                   df      = TRUE,
+                   Reduce  = TRUE,
+                   IncYear = FALSE,
+                   Extend  = FALSE,
+                   silent  = TRUE) {
+  .ExtractRelative(object,
+                   num_slot   = 'Biomass',
+                   denom_slot = 'BMSY',
+                   ref        = 'MSY',
+                   type       = NULL,
+                   df = df, Reduce = Reduce, IncYear = IncYear,
+                   Extend = Extend, silent = silent,
+                   var_name   = 'B_BMSY')
+}
+
+#' @rdname relative_ref
+#' @export
+SB_SBMSY <- function(object,
+                     df      = TRUE,
+                     Reduce  = TRUE,
+                     IncYear = FALSE,
+                     Extend  = FALSE,
+                     silent  = TRUE) {
+  .ExtractRelative(object,
+                   num_slot   = 'SBiomass',
+                   denom_slot = 'SBMSY',
+                   ref        = 'MSY',
+                   type       = NULL,
+                   df = df, Reduce = Reduce, IncYear = IncYear,
+                   Extend = Extend, silent = silent,
+                   var_name   = 'SB_SBMSY')
+}
+
+#' @rdname relative_ref
+#' @export
+SP_SPMSY <- function(object,
+                     df      = TRUE,
+                     Reduce  = TRUE,
+                     IncYear = FALSE,
+                     Extend  = FALSE,
+                     silent  = TRUE) {
+  .ExtractRelative(object,
+                   num_slot   = 'SProduction',
+                   denom_slot = 'SPMSY',
+                   ref        = 'MSY',
+                   type       = NULL,
+                   df = df, Reduce = Reduce, IncYear = IncYear,
+                   Extend = Extend, silent = silent,
+                   var_name   = 'SP_SPMSY')
+}
+
+#' @rdname relative_ref
+#'
+#' @details
+#' `FMSY` is a single "apical fishing mortality" optimised jointly across all
+#' stocks in a complex (see [CalcMSY()]) -- there is no separate `FMSY` for an
+#' individual stock within a multi-stock complex. `F_FMSY()` therefore reports
+#' its ratio at the *complex* level (`OM@Complexes`), not the stock level: the
+#' numerator is the controlling (maximum) realised apical F across the stocks
+#' in each complex -- the same quantity [CalcMSY()] itself optimises against
+#' -- divided by that complex's `FMSY`. For a complex containing a single
+#' stock this is identical to the stock's own F/FMSY. The `Stock` column of
+#' the returned `data.frame` (and dimension of the `df = FALSE` array) holds
+#' complex names, matching the convention already used for `FMSY` in
+#' [refpointsMSY-class].
+#' @export
+F_FMSY <- function(object,
+                   df      = TRUE,
+                   Reduce  = TRUE,
+                   IncYear = FALSE,
+                   Extend  = FALSE,
+                   silent  = TRUE) {
+  .CheckClass(object, c('hist', 'mse'), 'object')
+
+  fmsy_arr <- object@Reference@MSY@FMSY
+  .CheckRefPopulated(fmsy_arr, 'MSY', 'Reference@MSY@FMSY', 'F_FMSY')
+
+  if (!df) {
+    f_arr <- .ApicalFByComplex(object, object@OM)
+
+    if (inherits(object, 'mse')) {
+      MP_names <- dimnames(f_arr)[['MP']]
+      fmsy_arr <- AddDimension(fmsy_arr, name = 'MP', val = MP_names)
+    }
+
+    target_years  <- dimnames(f_arr)[['Year']]
+    denom_aligned <- .AlignDenomYears(fmsy_arr, target_years)
+    return(ArrayDivide(f_arr, denom_aligned))
+  }
+
+  if (inherits(object, 'hist')) {
+    out <- .ComputeFFMSY(object, fmsy_arr, Reduce, IncYear, object@OM)
+    out <- .FinalizeTimeseriesDF(out, object@OM@nSim, Extend, silent)
+    class(out) <- c('ffmsy.df', class(out))
+    return(out)
+  }
+
+  hist_df <- .ComputeFFMSY(object@Hist, fmsy_arr, Reduce, IncYear, object@OM) |>
+    dplyr::mutate(MP = 'Historical')
+  proj_df <- .ComputeFFMSY(object, fmsy_arr, Reduce, IncYear, object@OM)
+
+  out <- dplyr::bind_rows(hist_df, proj_df)
+  out <- .FinalizeTimeseriesDF(out, object@OM@nSim, Extend, silent)
+  class(out) <- c('ffmsy.df', class(out))
+  out
+}
+
+# Reduce a per-stock array to one value per complex in `OM@Complexes` via
+# `FUN`. `strict = FALSE` aggregates over whichever member stocks are
+# present (dropping a complex if none are), for use when `arr` has already
+# been filtered to a subset of stocks before aggregating.
+.AggregateStockToComplex <- function(arr, OM, FUN, strict = TRUE) {
+  dn        <- dimnames(arr)
+  stock_pos <- match('Stock', names(dn))
+  if (is.na(stock_pos))
+    cli::cli_abort("`arr` has no `Stock` dimension.", .internal = TRUE)
+
+  stockNms  <- StockNames(OM)
+  complexes <- OM@Complexes
+  if (!length(complexes))
+    complexes <- stats::setNames(as.list(seq_along(stockNms)), stockNms)
+
+  margin <- setdiff(names(dn), 'Stock')
+
+  out_list <- purrr::map(complexes, \(idx) {
+    nms     <- stockNms[idx]
+    sub_idx <- match(nms, dn[[stock_pos]])
+
+    if (!strict) {
+      sub_idx <- sub_idx[!is.na(sub_idx)]
+      if (!length(sub_idx)) return(NULL)
+    } else if (anyNA(sub_idx)) {
+      cli::cli_abort("Cannot locate stock(s) {.val {nms[is.na(sub_idx)]}} in the array.")
+    }
+
+    idx_list              <- rep(list(quote(expr = )), length(dn))
+    idx_list[[stock_pos]] <- sub_idx
+    sub_arr <- do.call('[', c(list(arr), idx_list, list(drop = FALSE)))
+
+    apply(sub_arr, margin, FUN)
+  })
+
+  List2Array(purrr::compact(out_list), 'Stock', pos = stock_pos)
+}
+
+# F is not additive across stocks with different selectivity -- the complex's
+# realised apical F is the *maximum* across member stocks, the same
+# "controlling stock" logic CalcMSY()/.OptCalcRefMSYSims() use to define
+# ActualApicalF for the complex.
+.AggregateFToComplex <- function(f_arr, OM) {
+  .AggregateStockToComplex(f_arr, OM, max)
+}
+
+# Apical F of the fleet total per stock [Sim, Stock, Year(, MP)]; `Annual` sums seasons within each calendar year
+.ApicalFTotal <- function(object, OM, AreaSlot = 'FDeadArea', Annual = FALSE) {
+  nSim <- OM@nSim
+  FApical <- purrr::map2(slot(object, AreaSlot), object@Number, \(FArea, Number) {
+    FS    <- SumOverFleet(ExtendSims(FArea, nSim))
+    N     <- ExtendSims(Number, nSim)
+    NTot  <- .SumOverDim(N, 'Area')
+    # number-weighted over areas, as in CalcOverallF; area mean where no fish remain
+    FAge  <- .SumOverDim(FS * N, 'Area') / NTot
+    empty <- which(NTot <= 0)
+    FAge[empty] <- (.SumOverDim(FS, 'Area') / dim(FS)[match('Area', names(dimnames(FS)))])[empty]
+    if (Annual)
+      FAge <- .AnnualMSYNumerator(FAge, 'FDead', OM)
+    dnm   <- names(dimnames(FAge))
+    apply(FAge, dnm[dnm != 'Age'], max)
+  })
+  names(FApical) <- StockNames(OM)
+  List2Array(FApical, 'Stock', pos = 2)
+}
+
+# Realised apical F_dead of the fleet total on the basis of FMSY [Sim, Stock(complex), Year(, MP)]
+.ApicalFByComplex <- function(object, OM) {
+  .ApicalFTotal(object, OM, Annual = TRUE) |>
+    .AggregateFToComplex(OM)
+}
+
+.ComputeFFMSY <- function(object, fmsy_arr, Reduce, IncYear, OM) {
+  isMSE <- inherits(object, 'mse')
+
+  f_arr <- .ApicalFByComplex(object, OM)
+
+  if (isMSE) {
+    MP_names <- dimnames(f_arr)[['MP']]
+    fmsy_arr <- AddDimension(fmsy_arr, name = 'MP', val = MP_names)
+  }
+
+  target_years  <- dimnames(f_arr)[['Year']]
+  denom_aligned <- .AlignDenomYears(fmsy_arr, target_years)
+  ratio         <- ArrayDivide(f_arr, denom_aligned)
+
+  if (Reduce)
+    ratio <- ReduceDims(ratio, IncYear = IncYear)
+
+  Array2DF(ratio) |>
+    dplyr::mutate(Variable = 'F_FMSY',
+                  Period   = ifelse(isMSE, 'Projection', 'Historical')) |>
+    dplyr::relocate('Sim', 'Stock', 'Year', 'Period')
+}
+
+
+.CheckRefPopulated <- function(arr, ref, slot_label, fn_name) {
+  if (!is.null(arr)) return(invisible(arr))
+  if (ref == 'Unfished') {
+    cli::cli_abort(c(
+      "{.fn {fn_name}}: unfished slot {.field {slot_label}} has not been calculated.",
+      "i" = "Run {.fn Simulate} with unfished reference points enabled."
+    ), call = NULL)
+  } else {
+    cli::cli_abort(c(
+      "{.fn {fn_name}}: MSY reference point {.field {slot_label}} has not been calculated.",
+      "i" = "Run {.fn CalcMSY} on the object before calling {.fn {fn_name}}."
+    ), call = NULL)
+  }
+}
+
+.GetDenomArr <- function(object, ref, type, denom_slot) {
+  if (ref == 'Unfished') {
+    slot(slot(object@Unfished, type), denom_slot)
+  } else {
+    slot(object@Reference@MSY, denom_slot)
+  }
+}
+
+# Subset an array's "Stock" dimension to `stockNames` (no-op if NULL or absent).
+.SubsetStockDim <- function(x, stockNames) {
+  if (is.null(stockNames)) return(x)
+  dn <- dimnames(x)
+  stock_pos <- match('Stock', names(dn))
+  if (is.na(stock_pos)) return(x)
+  idx <- rep(list(quote(expr = )), length(dim(x)))
+  idx[[stock_pos]] <- stockNames
+  do.call('[', c(list(x), idx, list(drop = FALSE)))
+}
+
+
+# `fill = FALSE` gives NA for target years missing from a year-varying denominator
+.AlignDenomYears <- function(denom_arr, target_years, fill = TRUE) {
+  denom_years <- dimnames(denom_arr)[['Year']]
+  if (is.null(denom_years) || is.null(target_years)) return(denom_arr)
+  if (identical(denom_years, target_years))            return(denom_arr)
+
+  year_pos    <- which(names(dimnames(denom_arr)) == 'Year')
+  denom_nums  <- as.numeric(denom_years)
+  target_nums <- as.numeric(target_years)
+
+  last_idx  <- which(floor(denom_nums) == floor(denom_nums[length(denom_nums)]))
+  last_frac <- denom_nums[last_idx] %% 1
+
+  year_idx <- vapply(target_nums, function(ty) {
+    m <- which(denom_nums == ty)
+    if (length(m)) return(m[1])
+    if (!fill && length(denom_nums) > 1) return(NA_integer_)
+    last_idx[which.min(abs(last_frac - ty %% 1))]
+  }, integer(1))
+
+  nd  <- length(dim(denom_arr))
+  idx <- vector('list', nd)
+  for (j in seq_len(nd)) idx[[j]] <- if (j == year_pos) year_idx else TRUE
+
+  out <- do.call('[', c(list(denom_arr), idx, list(drop = FALSE)))
+  dn <- dimnames(out)
+  dn[['Year']] <- target_years
+  dimnames(out) <- dn
+  out
+}
+
+.ComputeRelative <- function(object, OM, num_slot, denom_arr, var_name,
+                               Reduce, IncYear, stockNames = NULL, sumStock = FALSE,
+                               ref = 'Unfished', fill = TRUE) {
+  isMSE <- inherits(object, 'mse')
+
+  arr          <- slot(object, num_slot)
+  if (ref == 'MSY')
+    arr <- .AnnualMSYNumerator(arr, num_slot, OM)
+  target_years <- dimnames(arr)[['Year']]
+  denom_aligned <- .AlignDenomYears(denom_arr, target_years, fill)
+
+  if (isMSE) {
+    MP_names <- dimnames(arr)[['MP']]
+    denom_aligned <- AddDimension(denom_aligned, name = 'MP', val = MP_names)
+  }
+
+  if (sumStock) {
+    arr           <- SumOverStock(.SubsetStockDim(arr, stockNames))
+    denom_aligned <- SumOverStock(.SubsetStockDim(denom_aligned, stockNames))
+  }
+
+  ratio <- ArrayDivide(arr, denom_aligned)
+
+  if (Reduce)
+    ratio <- ReduceDims(ratio, IncYear = IncYear)
+
+  out <- Array2DF(ratio) |>
+    dplyr::mutate(Variable = var_name,
+                  Period   = ifelse(isMSE, 'Projection', 'Historical'))
+  if (sumStock) out$Stock <- 'Total'
+  out |> dplyr::relocate('Sim', 'Stock', 'Year', 'Period')
+}
+
+.ExtractRelative <- function(object, num_slot, denom_slot, ref, var_name,
+                              type       = NULL,
+                              df         = TRUE,
+                              Reduce     = TRUE,
+                              IncYear    = FALSE,
+                              Extend     = FALSE,
+                              silent     = TRUE,
+                              stockNames = NULL,
+                              sumStock   = FALSE) {
+
+  .CheckClass(object, c('hist', 'mse'), 'object')
+
+  denom_arr <- .GetDenomArr(object, ref, type, denom_slot)
+  slot_label <- if (ref == 'Unfished') {
+    paste0('Unfished@', type, '@', denom_slot)
+  } else {
+    paste0('Reference@MSY@', denom_slot)
+  }
+  .CheckRefPopulated(denom_arr, ref, slot_label, var_name)
+  fill <- !(ref == 'Unfished' && identical(type, 'Dynamic'))
+
+  if (!df) {
+    arr          <- slot(object, num_slot)
+    if (ref == 'MSY')
+      arr <- .AnnualMSYNumerator(arr, num_slot, object@OM)
+    target_years <- dimnames(arr)[['Year']]
+    denom_aligned <- .AlignDenomYears(denom_arr, target_years, fill)
+    if (inherits(object, 'mse'))
+      denom_aligned <- AddDimension(denom_aligned, name = 'MP', val = dimnames(arr)[['MP']])
+    if (sumStock) {
+      arr           <- SumOverStock(.SubsetStockDim(arr, stockNames))
+      denom_aligned <- SumOverStock(.SubsetStockDim(denom_aligned, stockNames))
+    }
+    return(ArrayDivide(arr, denom_aligned))
+  }
+
+  OM <- object@OM
+
+  if (inherits(object, 'hist')) {
+    out <- .ComputeRelative(object, OM, num_slot, denom_arr, var_name,
+                              Reduce, IncYear, stockNames, sumStock, ref, fill)
+    out <- .FinalizeTimeseriesDF(out, OM@nSim, Extend, silent)
+    class(out) <- c(paste0(tolower(gsub('_', '', var_name)), '.df'), class(out))
+    return(out)
+  }
+
+  # MSE: bind historical and projection periods
+  hist_df <- .ComputeRelative(object@Hist, OM, num_slot, denom_arr, var_name,
+                                Reduce, IncYear, stockNames, sumStock, ref, fill) |>
+    dplyr::mutate(MP = 'Historical')
+
+  proj_df <- .ComputeRelative(object, OM, num_slot, denom_arr, var_name,
+                                Reduce, IncYear, stockNames, sumStock, ref, fill)
+
+  out <- dplyr::bind_rows(hist_df, proj_df)
+  out <- .FinalizeTimeseriesDF(out, OM@nSim, Extend, silent)
+  class(out) <- c(paste0(tolower(gsub('_', '', var_name)), '.df'), class(out))
+  out
+}
+
+# ---- Seasonal OMs: MSY-relative quantities on a calendar-year basis ---------
+
+.IsSeasonal <- function(OM) isTRUE(OM@Seasons > 1)
+
+# Seasonal time-step array on the basis of its MSY reference point: F summed
+# within each calendar year, biomass and production taken at the RefSeason
+# snapshot.
+.AnnualMSYNumerator <- function(arr, num_slot, OM) {
+  if (!.IsSeasonal(OM)) return(arr)
+  if (num_slot %in% c('Biomass', 'SBiomass', 'SProduction'))
+    arr <- .ApplyRefSeasonWeights(arr, OM)
+  .SumWithinCalendarYear(arr, OM@Seasons)
+}
+
+# Sum over the time steps of each complete calendar year; Year relabelled to
+# the calendar year.
+.SumWithinCalendarYear <- function(arr, nSeason) {
+  dn     <- dimnames(arr)
+  yr_pos <- match('Year', names(dn))
+  ts     <- as.numeric(dn[[yr_pos]])
+  cal    <- floor(ts + 1e-8)
+  calYrs <- unique(cal)
+  calYrs <- calYrs[tabulate(match(cal, calYrs), length(calYrs)) == nSeason]
+
+  G    <- outer(cal, calYrs, `==`) * 1
+  perm <- c(setdiff(seq_along(dn), yr_pos), yr_pos)
+  a    <- aperm(arr, perm)
+  d    <- dim(a)
+  m    <- matrix(a, ncol = d[length(d)]) %*% G
+
+  out_dn <- c(dn[perm[-length(perm)]], list(Year = as.character(calYrs)))
+  out    <- array(m, dim = c(d[-length(d)], length(calYrs)), dimnames = out_dn)
+  aperm(out, order(perm))
+}
+
+.ApplyRefSeasonWeights <- function(arr, OM) {
+  nSim <- OM@nSim
+  if (dim(arr)[match('Sim', names(dimnames(arr)))] < nSim)
+    arr <- ExtendSims(arr, nSim)
+  dn <- dimnames(arr)
+  W  <- .RefSeasonWeightArray(OM, dn[['Year']])[, dn[['Stock']], , drop = FALSE]
+
+  lead <- match(c('Sim', 'Stock', 'Year'), names(dn))
+  perm <- c(lead, setdiff(seq_along(dn), lead))
+  a    <- aperm(arr, perm) * as.vector(W)
+  aperm(a, order(perm))
+}
+
+# Annual values of a time-step data frame (`Sim`, `Stock`, `Year`, `Value`):
+# the value in the RefSeason, the mean over the seasons, or the sum within
+# each complete calendar year. `Stock` may hold stock or complex names.
+.AnnualDF <- function(df, OM, Basis = c('RefSeason', 'Mean', 'Sum')) {
+  Basis <- match.arg(Basis)
+  if (!.IsSeasonal(OM) || !nrow(df))
+    return(df)
+  if (Basis == 'Sum')
+    return(.SumCalendarYearDF(df, OM))
+
+  df  <- as.data.frame(df)
+  grp <- intersect(c('Sim', 'Stock', 'MP', 'Period'), names(df))
+  ts  <- sort(unique(df$Year))
+  nTS <- table(.CalendarYear(ts))
+  complete <- as.numeric(names(nTS)[nTS == OM@Seasons])
+  df <- df[.CalendarYear(df$Year) %in% complete, ]
+
+  if (Basis == 'RefSeason') {
+    df$Stock <- as.character(df$Stock)
+    df$.Key  <- round(df$Year, 6)
+    df <- dplyr::left_join(df, .RefSeasonWeightDF(OM, sort(unique(df$Year))),
+                           by = c('Sim', 'Stock', '.Key'))
+    df$Value <- df$Value * df$.W
+  }
+  FUN <- if (Basis == 'Mean') mean else sum
+  df |>
+    dplyr::mutate(Year = .CalendarYear(.data$Year)) |>
+    dplyr::group_by(dplyr::across(dplyr::all_of(grp)), .data$Year) |>
+    dplyr::summarise(Value = FUN(.data$Value), .groups = 'drop')
+}
+
+# RefSeason weights as a data frame, with rows for both stock and complex names.
+.RefSeasonWeightDF <- function(OM, Years) {
+  W <- Array2DF(.RefSeasonWeightArray(OM, as.character(Years)))
+  W$Stock <- as.character(W$Stock)
+  cx  <- .StockComplexMap(OM)
+  Wcx <- W[W$Stock %in% names(cx)[!duplicated(cx)], ]
+  Wcx$Stock <- unname(cx[Wcx$Stock])
+  W <- dplyr::bind_rows(W, Wcx)
+  W <- W[!duplicated(W[, c('Sim', 'Stock', 'Year')]), ]
+  data.frame(Sim = as.numeric(W$Sim), Stock = W$Stock,
+             .Key = round(as.numeric(W$Year), 6), .W = W$Value)
+}
+
+# Weight of each time step in its calendar year's RefSeason snapshot
+# (`Sim x Stock x Year`), using the same per-complex season detection as the
+# seasonal per-recruit model.
+.RefSeasonWeightArray <- function(OM, Years) {
+  nSim      <- OM@nSim
+  nSeason   <- OM@Seasons
+  stockNms  <- StockNames(OM)
+  complexes <- OM@Complexes
+  if (!length(complexes))
+    complexes <- stats::setNames(as.list(seq_along(stockNms)), stockNms)
+
+  ts  <- as.numeric(Years)
+  cal <- floor(ts + 1e-8)
+  W   <- array(0, dim = c(nSim, length(stockNms), length(ts)),
+               dimnames = list(Sim = seq_len(nSim), Stock = stockNms, Year = Years))
+
+  StockAtTS <- function(x, idx) {
+    if (!length(x)) return(x)
+    .ArraySubsetYear(x, ts[idx]) |> ExtendSims(nSim)
+  }
+
+  for (cx in complexes) {
+    StockList <- OM@Stock[stockNms[cx]]
+    for (cy in unique(cal)) {
+      idx <- which(cal == cy)
+      if (length(idx) != nSeason) next
+      Fec <- purrr::map(StockList, \(st) StockAtTS(st@Fecundity@MeanAtAge, idx))
+      Mat <- purrr::map(StockList, \(st) StockAtTS(st@Maturity@MeanAtAge, idx))
+      w   <- .RefSeasonWeights(Fec, Mat, nSeason, OM@RefSeason)
+      for (st in stockNms[cx]) W[, st, idx] <- w
+    }
+  }
+  W
+}

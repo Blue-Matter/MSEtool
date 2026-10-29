@@ -1,0 +1,280 @@
+.OnExit <- function() {
+  do.call(on.exit, list(cli::stop_app(),
+                        add = TRUE),
+          envir = parent.frame())
+}
+
+.RNGContext <- new.env(parent = emptyenv())
+
+# Keys later .SimDraws() calls to `seed` and their call order until the calling function exits
+.SetSeed <- function(seed = NULL, envir = parent.frame()) {
+  Old <- as.list(.RNGContext)
+  do.call(on.exit, list(call('.RestoreSeedContext', Old), add = TRUE, after = FALSE),
+          envir = envir)
+  seed <- seed %||% 101
+  .RNGContext$Seed  <- seed
+  .RNGContext$Count <- 0L
+  .SetRNG(.SeedInt(seed))
+}
+
+.RestoreSeedContext <- function(Old) {
+  rm(list = ls(.RNGContext, all.names = TRUE), envir = .RNGContext)
+  list2env(Old, envir = .RNGContext)
+  invisible()
+}
+
+.SeedInt <- function(...) digest::digest2int(paste(..., sep = '_'))
+
+.SubSeed <- function(seed, Name) paste(seed %||% 101, Name, sep = '_')
+
+.SetRNG <- function(seed) {
+  set.seed(seed, kind = 'Mersenne-Twister', normal.kind = 'Inversion',
+           sample.kind = 'Rejection')
+}
+
+# NULL outside a .SetSeed() scope, so standalone calls draw from the session stream
+.NextDrawKey <- function() {
+  if (is.null(.RNGContext$Seed)) return(NULL)
+  .RNGContext$Count <- .RNGContext$Count + 1L
+  paste(.RNGContext$Seed, .RNGContext$Count, sep = '_')
+}
+
+# Returns a [nSim, n] matrix with row i from fun(i, n) drawn on a stream keyed to (Key, Sims[i]),
+# so sim i is the same for any nSim; Key = NULL draws sims in order from the session stream
+.SimDraws <- function(fun, nSim, n = 1, Key = .NextDrawKey(), Sims = seq_len(nSim)) {
+  force(Key)
+  out <- matrix(NA_real_, nSim, n)
+  if (!nSim || !n) return(out)
+  if (!is.null(Key)) {
+    Saved <- .SaveRNG()
+    on.exit(.RestoreRNG(Saved), add = TRUE)
+  }
+  for (i in seq_len(nSim)) {
+    if (!is.null(Key)) .SetRNG(.SeedInt(Key, Sims[i]))
+    out[i, ] <- fun(i, n)
+  }
+  out
+}
+
+.SaveRNG <- function() {
+  list(Kind = RNGkind(),
+       Seed = if (exists('.Random.seed', envir = globalenv(), inherits = FALSE))
+         get('.Random.seed', envir = globalenv(), inherits = FALSE))
+}
+
+.RestoreRNG <- function(Saved) {
+  do.call(RNGkind, as.list(Saved$Kind))
+  if (is.null(Saved$Seed)) {
+    if (exists('.Random.seed', envir = globalenv(), inherits = FALSE))
+      rm('.Random.seed', envir = globalenv())
+  } else {
+    assign('.Random.seed', Saved$Seed, envir = globalenv())
+  }
+}
+
+.SimRunif <- function(nSim, min, max) {
+  .SimDraws(\(i, n) stats::runif(n, min, max), nSim)[, 1]
+}
+
+.SimRlnorm <- function(nSim, meanlog, sdlog) {
+  meanlog <- rep_len(as.numeric(meanlog), nSim)
+  sdlog   <- rep_len(as.numeric(sdlog), nSim)
+  .SimDraws(\(i, n) stats::rlnorm(n, meanlog[i], sdlog[i]), nSim)[, 1]
+}
+
+.SeedMP <- function(Seed) {
+  .SetRNG(Seed %||% 101)
+}
+
+# Global sim ids of a sim chunk (see .ChunkProj()); identity when not chunked
+.GlobalSim <- function(OM, sim) {
+  ids <- OM@Misc$SimIDs
+  if (is.null(ids)) return(sim)
+  ids[sim]
+}
+
+.GlobalNSim <- function(OM) OM@Misc$nSimGlobal %||% OM@nSim
+
+# Evaluates one MP call with a seed keyed to (Seed, sim, Year, Key), so its draws don't depend on nSim or sim order
+.WithMPSeed <- function(expr, Seed, sim, Year, Key = '') {
+  Saved <- .SaveRNG()
+  on.exit(.RestoreRNG(Saved), add = TRUE)
+  set.seed(digest::digest2int(paste(Seed %||% 101, sim, Year, Key, sep = '_')),
+           kind = 'Mersenne-Twister', normal.kind = 'Inversion', sample.kind = 'Rejection')
+  expr
+}
+
+.Aperm <- function(a, perm, ...) {
+  if (is.null(a) || length(a) < 1) {
+    return(a)
+  }
+  base::aperm(a, perm, ...)
+}
+
+
+#' Distribution Function for a Symmetric Truncated Normal
+#'
+#' Evaluates the cumulative distribution function of a normal distribution
+#' truncated symmetrically around the mean at `± truncsd * sd`.
+#'
+#' For each element, probabilities are rescaled to the truncated support so
+#' that the CDF is 0 below the lower bound and 1 above the upper bound.
+#'
+#' @param q Quantile at which to evaluate the truncated CDF.
+#' @param mean Mean of the normal distribution.
+#' @param sd Standard deviation of the normal distribution.
+#' @param truncsd Truncation distance in units of standard deviations.
+#'
+#' @return
+#' A numeric vector of truncated cumulative probabilities, with length equal
+#' to the recycled length of the input arguments.
+#'
+#' @details
+#' The truncation interval is defined as
+#' `mean ± truncsd * sd`. Values of `q` below this interval return 0,
+#' and values above return 1. Within the interval, probabilities are
+#' computed by rescaling the normal CDF using `pnorm()`.
+#'
+#' This is an internal helper used for likelihood and probability
+#' calculations involving symmetrically truncated normal distributions.
+#'
+#' @keywords internal
+.Ptnorm <- function(q, mean, sd, truncsd) {
+  a <- (-truncsd * sd) + mean
+  b <- (truncsd * sd) + mean
+  out <- vector("numeric", length(a))
+  for (i in seq_along(a)) {
+    if (q < a[i]) {
+      out[i] <- 0
+    } else if (q > b[i]) {
+      out[i] <- 1
+    } else {
+      p1 <- stats::pnorm(q, mean[i], sd[i], TRUE, FALSE)
+      p2 <- stats::pnorm(a[i], mean[i], sd[i], TRUE, FALSE)
+      p3 <- stats::pnorm(b[i], mean[i], sd[i], TRUE, FALSE)
+      out[i] <- (p1 - p2) / (p3 - p2)
+    }
+  }
+  out
+}
+
+
+#' Draw from a Truncated Normal Distribution
+#'
+#' Generates random deviates from a normal distribution with mean `mu`
+#' and standard deviation `sigma`, truncated to the interval
+#' `lower`, `upper`.
+#'
+#' Arguments `mu`, `sigma`, `lower`, and `upper` follow standard R recycling
+#' rules. An error is raised if the truncation interval has zero probability
+#' mass or if invalid parameter values are supplied.
+#' 
+#' @param n Number of random values to generate. Must be a non-negative scalar.
+#' @param mu Mean of the normal distribution.
+#' @param sigma Standard deviation of the normal distribution. Must be strictly positive.
+#' @param lower Lower truncation bound.
+#' @param upper Upper truncation bound.
+#'
+#' @return A numeric vector of length `n` containing truncated normal draws
+#' 
+#' @keywords internal
+.Rtnorm <- function(n, mu, sigma, lower, upper) {
+  
+  if (!is.numeric(n) || length(n) != 1 || n < 0) {
+    cli::cli_abort("`n` must be a non-negative scalar integer.", .internal = TRUE)
+  }
+  
+  if (any(sigma <= 0, na.rm = TRUE)) {
+    cli::cli_abort("`sigma` must be strictly positive.", .internal = TRUE)
+  }
+  
+  if (any(lower >= upper, na.rm = TRUE)) {
+    cli::cli_abort("`lower` must be strictly less than `upper`.", .internal = TRUE)
+  }
+  
+  p_lower <- pnorm(lower, mu, sigma)
+  p_upper <- pnorm(upper, mu, sigma)
+  
+  if (any(p_lower >= p_upper, na.rm = TRUE)) {
+    cli::cli_abort(
+      "Truncation bounds result in zero probability mass.",
+      .internal = TRUE
+    )
+  }
+  
+  qnorm(runif(n, p_lower, p_upper), mu, sigma)
+}
+
+.FirstUp <- function(x, n = 1) {
+  substr(x, 1, n) <- toupper(substr(x, 1, n))
+  x
+}
+
+.GetModelClass <- function(Model = NULL) {
+  if (is.null(Model)) {
+    return(NULL)
+  }
+  if (inherits(Model, "function")) {
+    return("function")
+  }
+  class(get(Model))
+}
+
+
+.ParsEmpty <- function(Pars) {
+  !.ParsNotEmpty(Pars)
+}
+
+.ParsNotEmpty <- function(Pars) {
+  if (length(Pars) == 0) {
+    return(FALSE)
+  }
+  !prod(unlist(lapply(Pars, is.na)))
+}
+
+
+.IdenticalS4 <- function(object1, object2) {
+  digest::digest(object1, algo = "spookyhash") == digest::digest(object2, algo = "spookyhash")
+}
+
+.SetDigest <- function(object, argList = list()) {
+  # object@Created <- NULL
+  # object@Modified <- NULL
+
+  if (is.list(argList)) {
+    for (i in seq_along(argList)) {
+      if (isS4(argList[[i]])) {
+        # argList[[i]]@Created <- NULL
+        # argList[[i]]@Modified <- NULL
+      }
+    }
+  }
+
+  attributes(object)$digest <- NULL
+  attributes(object)$digest <- digest::digest(list(argList, object), algo = "spookyhash")
+  object
+}
+
+
+.CheckDigest <- function(object, argList = list()) {
+  if (is.null(attributes(object)$digest)) {
+    return(FALSE)
+  }
+  .SetDigest <- .SetDigest(object, argList)
+
+  if (attributes(.SetDigest)$digest == attributes(object)$digest) {
+    return(TRUE)
+  }
+  FALSE
+}
+
+
+.ValorNULL <- function(Value) {
+  if (all(is.na(Value))) {
+    return(NULL)
+  }
+  if (length(Value) < 1) {
+    return(NULL)
+  }
+  Value
+}

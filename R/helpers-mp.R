@@ -1,0 +1,478 @@
+
+.CalcManagementYears <- function(YearsProj, Interval, Seasons = 1) {
+  step   <- Interval * Seasons
+  step_i <- round(step)
+
+  if (abs(step - step_i) > 1e-6)
+    cli::cli_abort(c(
+      "`Interval` must correspond to a whole number of timesteps.",
+      "x" = "Interval = {Interval} years x Seasons = {Seasons} = {step} timesteps."
+    ))
+
+  if (Seasons > 1 && step_i > 1 && step_i %% Seasons != 0)
+    cli::cli_alert_info(
+      "Management timing will rotate across different calendar seasons over successive cycles (Interval = {Interval} years is not a whole number of years)."
+    )
+
+  ind <- seq(1, by = max(1L, step_i), to = length(YearsProj))
+  YearsProj[ind]
+}
+
+.ResolveInterval <- function(OMInterval, MPName, MPfunction, Seasons = 1) {
+
+  nms <- names(OMInterval)
+
+  if (!is.null(nms) && MPName %in% nms)
+    return(unname(OMInterval[[MPName]]))
+
+  if (isTRUE(attr(MPfunction, 'EverySeason')))
+    return(1 / Seasons)
+
+  MPDefault <- attr(MPfunction, 'Interval')
+  if (!is.null(MPDefault))
+    return(MPDefault)
+
+  if (!is.null(nms)) {
+    unnamed <- OMInterval[nms == '']
+    if (length(unnamed))
+      return(unname(unnamed[[1]]))
+  }
+
+  unname(OMInterval[[1]])
+}
+
+.MPIntervals <- function(OM, MPs) {
+  vapply(names(MPs), \(mp) .ResolveInterval(OM@Interval, mp, MPs[[mp]], OM@Seasons), numeric(1))
+}
+
+# falls back to resolving from OM@Interval for `mse` objects saved without `Misc$Interval`
+.MSEInterval <- function(MSE, MPName) {
+  Recorded <- MSE@Misc$Interval
+  if (!is.null(Recorded) && MPName %in% names(Recorded))
+    return(unname(Recorded[[MPName]]))
+  .ResolveInterval(MSE@OM@Interval, MPName, MSE@MPs[[MPName]], MSE@OM@Seasons)
+}
+
+#' Resolve the `Hist` Slots Passed to an MP via `Data@Misc$DataOM`
+#'
+#' Combines `OM@Control$DataOM` with the MP's `DataOM` attribute. A
+#' per-MP entry in `OM@Control$DataOM` (named by `MPName`) is used on its
+#' own; otherwise the OM-wide default is unioned with the MP attribute.
+#' With `MPName = NULL`, only the OM-wide default is returned. See
+#' [OMControl].
+#'
+#' @param OMControlDataOM Value of `OM@Control$DataOM`.
+#' @param MPName Character MP name, or `NULL`.
+#' @param MPfunction MP function, or `NULL`.
+#'
+#' @return `NULL` (nothing), `TRUE` (all slots), or a character vector of
+#'   `hist` slot names.
+#' @keywords internal
+.ResolveDataOM <- function(OMControlDataOM, MPName = NULL, MPfunction = NULL) {
+  Split <- .SplitDataOM(OMControlDataOM)
+
+  if (!is.null(MPName) && MPName %in% names(Split$PerMP))
+    return(.NormaliseDataOM(Split$PerMP[[MPName]]))
+
+  .UnionDataOM(.NormaliseDataOM(Split$Default),
+               .NormaliseDataOM(attr(MPfunction, 'DataOM')))
+}
+
+.DataOMSlots <- function() setdiff(methods::slotNames('hist'), 'Data')
+
+# Separate OM-wide (hist slot names) from per-MP (any other name) entries
+.SplitDataOM <- function(x) {
+  if (!is.list(x) && (is.null(names(x)) || is.character(x)))
+    return(list(Default = x, PerMP = list()))
+
+  nms <- names(x)
+  if (is.null(nms) || any(!nzchar(nms)))
+    cli::cli_abort(c("All elements of {.code OM@Control$DataOM} must be named when it is a list.",
+                     "i" = "See {.topic MSEtool::OMControl}."), call = NULL)
+
+  x      <- as.list(x)
+  IsSlot <- nms %in% methods::slotNames('hist')
+  list(Default = if (any(IsSlot)) x[IsSlot] else NULL,
+       PerMP   = x[!IsSlot])
+}
+
+.NormaliseDataOM <- function(x) {
+  if (!length(x) || isFALSE(x))
+    return(NULL)
+  if (isTRUE(x) && is.null(names(x)))
+    return(TRUE)
+  if (is.character(x))
+    return(unique(x))
+  if ((is.list(x) || is.logical(x)) && !is.null(names(x))) {
+    Keep <- vapply(x, isTRUE, logical(1))
+    return(if (any(Keep)) names(x)[Keep] else NULL)
+  }
+  cli::cli_abort(c("Invalid {.code DataOM} value.",
+                   "i" = "Use {.code TRUE}, a character vector of {.cls hist} slot names, or a named logical list. See {.topic MSEtool::OMControl}."),
+                 call = NULL)
+}
+
+.UnionDataOM <- function(a, b) {
+  if (isTRUE(a) || isTRUE(b))
+    return(TRUE)
+  out <- unique(c(a, b))
+  if (length(out)) out else NULL
+}
+
+# Warn about DataOM names that are neither hist slots nor (if known) MP names
+.CheckDataOM <- function(OMControlDataOM, MPList = NULL) {
+  Split  <- .SplitDataOM(OMControlDataOM)
+  Values <- c(list(Split$Default), Split$PerMP)
+
+  if (!is.null(MPList)) {
+    BadMP <- setdiff(names(Split$PerMP), names(MPList))
+    if (length(BadMP))
+      cli::cli_alert_warning(
+        "{.code OM@Control$DataOM} entr{?y/ies} {.val {BadMP}} {?is/are} neither a {.cls hist} slot nor an MP being projected. Ignoring."
+      )
+    Values <- c(Values, lapply(MPList, attr, 'DataOM'))
+  }
+
+  BadSlots <- unique(unlist(lapply(Values, \(v) {
+    v <- .NormaliseDataOM(v)
+    if (is.character(v)) setdiff(v, methods::slotNames('hist'))
+  })))
+  if (length(BadSlots))
+    cli::cli_alert_warning(
+      "{.val {BadSlots}} {?is not a/are not} valid {.cls hist} slot name{?s} for {.code DataOM}. Ignoring."
+    )
+  invisible()
+}
+
+.GetLastMPAdvice <- function(Proj) {
+  adv <- Proj@Misc$MPAdvice
+  if (is.null(adv))
+    return(NULL)
+  adv[[length(adv)]]
+}
+
+.GetLastMPAggBagLimit <- function(Proj) {
+  agg <- Proj@Misc$MPAggBagLimit
+  if (is.null(agg))
+    return(NULL)
+  agg[[length(agg)]]
+}
+
+.CalcDataYear <- function(Year, YearsAll, DataLag, Seasons) {
+  nYears  <- length(YearsAll)
+  lagStep <- DataLag * Seasons
+  lagYear <- nYears - lagStep
+
+  if (lagYear < 1) {
+    maxDataLag <- floor((nYears - 1) / Seasons)
+    cli::cli_abort(c(
+      "x" = "`DataLag` = {.val {DataLag}} requires data further back than is available at Year {.val {Year}}.",
+      "i" = "At most {.val {maxDataLag}} year(s) of `DataLag` can currently be used ({.val {nYears}} timestep(s) of data available, {.val {Seasons}} per year)."
+    ))
+  }
+
+  YearsAll[lagYear]
+}
+
+.TrimMPData <- function(Proj, DataYear) {
+  Proj <- .AddSimNumber(Proj)
+  purrr::map(Proj@Data, \(DataSim) {
+    purrr::map(DataSim, \(Data) {
+      DataTrim(Data, Year = DataYear)
+    })
+  })
+}
+
+.CheckMPDataCompleteness <- function(DataSimList, Complexes) {
+  purrr::walk(DataSimList, \(DataComplex) {
+    if (length(DataComplex) != length(Complexes)) {
+      cli::cli_abort(
+        "length(MPData) != length(Complexes)"
+      )
+    }
+  })
+  invisible(TRUE)
+}
+
+.StoreMPAdvice <- function(Proj, Year, AdviceSimList, AggBagLimitSimList = NULL) {
+  if (is.null(Proj@Misc$MPAdvice)) {
+    Proj@Misc$MPAdvice <- list()
+  }
+  Proj@Misc$MPAdvice[[as.character(Year)]] <- AdviceSimList
+
+  if (is.null(Proj@Misc$MPAggBagLimit)) {
+    Proj@Misc$MPAggBagLimit <- list()
+  }
+  Proj@Misc$MPAggBagLimit[[as.character(Year)]] <- AggBagLimitSimList
+
+  Proj
+}
+
+.ApplyAdviceMiscToData <- function(DataList, AdviceList) {
+  if (!is.list(AdviceList))
+    return(DataList)
+    
+  purrr::map2(DataList, AdviceList, \(Data, Advice) {
+    if (inherits(Advice, 'advice')) {
+      Misc <- Advice@Misc
+      Misc$AnnualTAC <- NULL
+      Misc$StatusQuoEffort <- NULL
+      Data@Misc <- Misc
+    }
+    Data
+  })
+}
+
+#' Extract Advice Logs and Detect Total MP Failure
+#'
+#' Flattens per-sim, per-stock `Advice@Log` entries (and any `try-error`/
+#' non-`advice` results) into `Proj@Log`, tagging each entry with `sim`,
+#' `year`, and `mp` for later filtering. Also determines, directly from
+#' `AdviceSimList` rather than from the Log content, whether every sim/stock
+#' failed this year - keeping that control-flow decision independent of
+#' what an MP chooses to log as a warning or assumption on its own `Advice`.
+#'
+#' @param AdviceSimList Nested list of `Advice` objects (or `try-error`/
+#'   character failures), one per sim, then per stock/complex.
+#' @param Proj `Hist` object to record log entries onto.
+#' @param Year Integer. Current projection year.
+#' @param MPName Character. Name of the management procedure.
+#' @param DebugSimList List of debug records of the failed MP calls, one
+#'   element per sim (see `.SplitMPDebug()`). Records are stored as the
+#'   `debug` field of the error entries, as set by `options(MSEtool.DebugMP)`.
+#'
+#' @return A list with `Proj` (updated) and `AllFailed` (logical - `TRUE` if
+#'   every sim/stock combination in `AdviceSimList` was a failure).
+#' @keywords internal
+.ExtractAdviceLogs <- function(AdviceSimList, Proj, Year, MPName = NULL, DebugSimList = NULL) {
+
+  IsFailure <- function(Advice) inherits(Advice, c('try-error', 'character'))
+
+  LogName <- function(...) paste(Filter(nzchar, c(MPName %||% '', ...)), collapse = ' - ')
+
+  DebugMode <- if (length(DebugSimList)) .MPDebugMode() else 'none'
+  HasDebug  <- DebugMode == 'first' && .HasMPDebug(Proj@Log$error)
+  ErrorEntry <- function(msg, name, sim, stockName = '') {
+    entry <- .NewLogEntry(msg, name = name, sim = sim, year = Year, mp = MPName)
+    if (DebugMode == 'none' || HasDebug) return(entry)
+    Debug <- DebugSimList[[sim]]
+    rec   <- if (nzchar(stockName)) Debug[[stockName]]
+    entry$debug <- rec %||% Debug[['.Sim']]
+    if (!is.null(entry$debug) && DebugMode == 'first') HasDebug <<- TRUE
+    entry
+  }
+
+  CollectType <- function(type) {
+    entries <- list()
+    for (sim in seq_along(AdviceSimList)) {
+      AdviceList <- AdviceSimList[[sim]]
+
+      if (inherits(AdviceList, 'try-error')) {
+        if (type == 'error')
+          entries <- c(entries, list(ErrorEntry(as.character(AdviceList), LogName(), sim)))
+        next
+      }
+
+      nms <- names(AdviceList)
+      for (j in seq_along(AdviceList)) {
+        Advice    <- AdviceList[[j]]
+        stockName <- if (!is.null(nms)) nms[j] else ''
+
+        if (inherits(Advice, 'advice')) {
+          log <- Advice@Log[[type]]
+          for (entry in log) {
+            msg <- .LogEntryMessage(entry)
+            nm  <- LogName(stockName, .LogEntryName(entry))
+            entries <- c(entries, list(.NewLogEntry(msg, name = nm, sim = sim, year = Year, mp = MPName)))
+          }
+        } else if (IsFailure(Advice) && type == 'error') {
+          entries <- c(entries, list(ErrorEntry(as.character(Advice), LogName(stockName), sim, stockName)))
+        }
+      }
+    }
+    entries
+  }
+
+  for (type in c('error', 'warning', 'assumption')) {
+    entries <- CollectType(type)
+    if (length(entries))
+      Proj@Log[[type]] <- c(Proj@Log[[type]], entries)
+  }
+
+  AllFailed <- length(AdviceSimList) > 0 && all(purrr::map_lgl(AdviceSimList, \(AdviceList) {
+    if (inherits(AdviceList, 'try-error')) return(TRUE)
+    if (!length(AdviceList)) return(FALSE)
+    all(purrr::map_lgl(AdviceList, IsFailure))
+  }))
+
+  list(Proj = Proj, AllFailed = AllFailed)
+}
+
+.UpdateAdviceArray <- function(Current, New, Year) {
+  if (!length(New))
+    return(Current)
+
+  New <- AddDimension(New, 'Year', Year, pos = 1)
+  if (is.null(Current)) {
+    return(New)
+  }
+  if (is.null(dimnames(Current)))
+    return(Current)
+
+  if (!identical(names(dimnames(Current)), names(dimnames(New)))) {
+    reconciled <- .ReconcileAdviceShapes(Current, New)
+    Current <- reconciled$Current
+    New     <- reconciled$New
+  }
+
+  ArrayFill(Current) <- New
+  Current
+}
+
+.ReconcileAdviceShapes <- function(Current, New) {
+  nmC <- names(dimnames(Current))
+  nmN <- names(dimnames(New))
+
+  if (identical(c(nmC, "Area"), nmN) && !"Area" %in% nmC)
+    return(list(Current = AddDimension(Current, "Area", val = dimnames(New)[["Area"]]), New = New))
+
+  if (identical(c(nmN, "Area"), nmC) && !"Area" %in% nmN)
+    return(list(Current = Current, New = AddDimension(New, "Area", val = dimnames(Current)[["Area"]])))
+
+  cli::cli_abort(c(
+    "Cannot reconcile `Advice` record shapes across years.",
+    "x" = "Dimensions are {.val {nmC}} vs {.val {nmN}}."
+  ))
+}
+
+.AddAdviceToData <- function(Data, Advice, Year) {
+  if (!inherits(Advice, 'advice'))
+    return(Data)
+  TAC <- Advice@Misc$AnnualTAC %||% Advice@TAC
+  Data@Advice@TAC <- .UpdateAdviceArray(Current=Data@Advice@TAC, New=TAC, Year)
+  Data@Advice@Effort <- .UpdateAdviceArray(Data@Advice@Effort, Advice@Effort, Year)
+  Data
+}
+
+.UnchangedManagement <- function(Current, Previous, slotName) {
+  
+  if (is.null(Current))
+    return(TRUE)
+  
+  if (!.hasSlot(Current, slotName))
+    return(TRUE)
+  
+  cur <- slot(Current, slotName)
+  
+  if (is.null(cur) || !length(cur))
+    return(TRUE)
+  
+  if (is.null(Previous) || !.hasSlot(Previous, slotName))
+    return(FALSE)
+  
+  .IdenticalS4(cur, slot(Previous, slotName))
+}
+
+
+
+# Empty advice is status-quo effort: relative effort 1, with the area split left to the engine
+.CheckTACEffort <- function(AdviceSimList, FleetNames) {
+  purrr::map(AdviceSimList, \(AdviceSim) {
+    purrr::map(AdviceSim, \(Advice) {
+      if (!inherits(Advice, 'advice')) return(Advice)
+      if (is.null(Advice@TAC) && is.null(Advice@Effort)) {
+        Advice@Effort  <- array(1, dim = length(FleetNames), dimnames = list(Fleet = FleetNames))
+        Advice@EffType <- 'Rel'
+        Advice@Misc$StatusQuoEffort <- TRUE
+      }
+      Advice
+    })
+  })
+}
+
+
+.ProcessSelectMeanAt <- function(select, Classes, nArea, type, Year,
+                                slot_name, dim_name) {
+  
+  Values <- slot(select, slot_name)
+  if (is.null(Values))
+    return(select)
+  
+  nClass     <- length(Classes)
+  dim_names  <- list(Classes, Area=seq_len(nArea))
+  names(dim_names)[1] <- dim_name
+  
+  if (is.array(Values) && length(dim(Values)) == 2) {
+    dd <- dim(Values)
+    if (!all(dd == c(nClass, nArea)))
+      cli::cli_abort(c(
+        "{type} {slot_name} array has incorrect dimensions.",
+        "x" = "Expected {nClass} rows ({.field nClass}) and {nArea} columns ({.field nArea}).",
+        "i" = "Current dimensions: {paste(dd, collapse = ' x ')}."
+      ))
+    dimnames(Values) <- dim_names
+    Values <- ExtendAreas(Values, seq_len(nArea))
+    
+  } else {
+    # vector or 1-D array - validate length then broadcast over areas
+    if (length(Values)==1) {
+      Values <- rep(Values, nClass)
+    }
+    if (length(Values) != nClass ) {
+      cli::cli_abort(c('x' = "{type}@{slot_name} must be length `nClass` ({.val {nClass}})",
+                       'i' = "Currently: {.val {length(Values)}}")
+      )
+      # Values <- rep(Values, nClass)[seq_len(nClass)]
+    }
+      
+    Values <- array(as.numeric(Values),
+                    dim      = c(nClass, 1),
+                    dimnames = list(Classes, Area = 1)) |>
+      ExtendAreas(seq_len(nArea))
+    names(dimnames(Values))[1] <- dim_name
+  }
+  
+  slot(select, slot_name) <- Values |>
+    AddDimension('Sim', pos=1) |>
+    AddDimension('Year', val=Year, pos=3)
+  
+  if (type!='DiscardMortality')
+    select@Pars <- list()
+  select
+}
+
+.ProcessSelectMeanAtAge <- function(select, Ages, nArea, type, Year) {
+  
+  
+  .ProcessSelectMeanAt(select,
+                      Classes   = Ages@Classes,
+                      nArea     = nArea,
+                      type      = type,
+                      Year      = Year,
+                      slot_name = 'MeanAtAge',
+                      dim_name  = 'Age')
+}
+
+.ProcessSelectMeanAtLength <- function(select, Length, nArea, type, Year) {
+  if (is.null(select@Classes))
+    select@Classes <- Length@Classes
+  .ProcessSelectMeanAt(select,
+                      Classes   = select@Classes,
+                      nArea     = nArea,
+                      type      = type,
+                      Year      = Year,
+                      slot_name = 'MeanAtLength',
+                      dim_name  = 'Class')
+}
+
+.ProcessSelectMeanAtWeight <- function(select, Weight, nArea, type, Year) {
+  if (is.null(select@Classes))
+    select@Classes <- Weight@Classes
+  .ProcessSelectMeanAt(select,
+                      Classes   = select@Classes,
+                      nArea     = nArea,
+                      type      = type,
+                      Year      = Year,
+                      slot_name = 'MeanAtWeight',
+                      dim_name  = 'Class')
+}

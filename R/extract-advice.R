@@ -1,0 +1,74 @@
+#' Extract TAC Recommendations from an MSE Object
+#'
+#' Extracts the total allowable catch (TAC) recommendations issued by each
+#' management procedure (MP) in each simulation, year, stock complex, and
+#' fleet from the `PPD` slot of an [mse-class] object. Returns a tidy data
+#' frame suitable for plotting and performance indicator calculations.
+#'
+#' @param MSE An [mse-class] object.
+#'
+#' @details
+#' An MP's `Advice(TAC = ...)` only gets recorded in the year it actually
+#' changes (see [Advice()]: a TAC applies from the year it's issued "until a
+#' new Advice object is returned"), so the raw recommendation history is
+#' sparse. `TACs()` forward-fills each gap (via [ExtendYears()]) so the
+#' returned series has one row per year the TAC was actually in effect, not
+#' just the years it changed. Years before an MP's first recommendation
+#' (i.e. the historical period, where no MP has run yet) are absent rather
+#' than filled with a placeholder.
+#'
+#' [TAC()] returns the same data frame when given an [mse-class] object.
+#'
+#' @return A data frame with columns:
+#'   - `Sim`: simulation index.
+#'   - `Stock`: stock complex name (`names(OM@Complexes)`). TAC advice is set
+#'     per complex; for single-stock complexes this is the stock name.
+#'   - `MP`: management procedure name.
+#'   - `Year`: calendar year (or decimal date for sub-annual time steps).
+#'   - `Period`: always `"Projection"` for the reasons above.
+#'   - `Fleet`: fleet name.
+#'   - `Value`: TAC recommendation in the units of the operating model.
+#'   - `Variable`: always `"TAC"`.
+#'
+#' @seealso [TAC()], [mse-class], [Advice()], [PPD()]
+#' @export
+TACs <- function(MSE) {
+  .CheckClass(MSE, 'mse', 'MSE')
+
+  # the projection time steps the object holds, so a Subset() MSE is filled only to its own years
+  ProjYears <- as.numeric(dimnames(MSE@SBiomass)$Year)
+
+  ppd     <- PPD(MSE)
+  mpNames <- names(ppd)
+
+  out <- purrr::map(mpNames, \(mp) {
+    simNames <- names(ppd[[mp]])
+    purrr::map(simNames, \(sim) {
+      purrr::imap(ppd[[mp]][[sim]], \(dat, cx) {
+        tac <- dat@Advice@TAC
+        if (is.null(tac) || !length(tac)) return(NULL)
+
+        tac <- ExtendYears(tac, Years = ProjYears)
+
+        Array2DF(tac) |>
+          dplyr::mutate(
+            Sim      = as.numeric(sim),
+            Stock    = cx,
+            MP       = mp,
+            Period   = ifelse(.data$Year %in% ProjYears, 'Projection', 'Historical'),
+            Variable = 'TAC',
+            Fleet    = as.character(.data$Fleet)
+          )
+      }) |> dplyr::bind_rows()
+    }) |> dplyr::bind_rows()
+  }) |> dplyr::bind_rows()
+
+  if (!nrow(out))
+    return(data.frame(Sim = numeric(0), Stock = character(0), MP = character(0),
+                      Year = numeric(0), Period = character(0), Fleet = character(0),
+                      Value = numeric(0), Variable = character(0)))
+
+  out |>
+    dplyr::relocate('Sim', 'Stock', 'MP', 'Year', 'Period') |>
+    dplyr::arrange(.data$Sim, .data$Stock, .data$MP, .data$Year)
+}

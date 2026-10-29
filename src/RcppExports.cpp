@@ -11,17 +11,6 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// vecminInd
-int vecminInd(NumericVector x);
-RcppExport SEXP _MSEtool_vecminInd(SEXP xSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(vecminInd(x));
-    return rcpp_result_gen;
-END_RCPP
-}
 // LinInterp_cpp
 double LinInterp_cpp(NumericVector x, NumericVector y, double xlev);
 RcppExport SEXP _MSEtool_LinInterp_cpp(SEXP xSEXP, SEXP ySEXP, SEXP xlevSEXP) {
@@ -84,6 +73,75 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// ArrayBroadcastOp_
+NumericVector ArrayBroadcastOp_(NumericVector x, IntegerVector dimx, NumericVector y, IntegerVector dimy, int op);
+RcppExport SEXP _MSEtool_ArrayBroadcastOp_(SEXP xSEXP, SEXP dimxSEXP, SEXP ySEXP, SEXP dimySEXP, SEXP opSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type dimx(dimxSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type y(ySEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type dimy(dimySEXP);
+    Rcpp::traits::input_parameter< int >::type op(opSEXP);
+    rcpp_result_gen = Rcpp::wrap(ArrayBroadcastOp_(x, dimx, y, dimy, op));
+    return rcpp_result_gen;
+END_RCPP
+}
+// AtAge2AtSizeCore_
+NumericVector AtAge2AtSizeCore_(const NumericVector& ObjectMeanAtAge, const IntegerVector& dimOMA, const NumericVector& ASK, const IntegerVector& dimASK, int nSim, int nYear, bool hasArea, int nArea);
+RcppExport SEXP _MSEtool_AtAge2AtSizeCore_(SEXP ObjectMeanAtAgeSEXP, SEXP dimOMASEXP, SEXP ASKSEXP, SEXP dimASKSEXP, SEXP nSimSEXP, SEXP nYearSEXP, SEXP hasAreaSEXP, SEXP nAreaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type ObjectMeanAtAge(ObjectMeanAtAgeSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type dimOMA(dimOMASEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type ASK(ASKSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type dimASK(dimASKSEXP);
+    Rcpp::traits::input_parameter< int >::type nSim(nSimSEXP);
+    Rcpp::traits::input_parameter< int >::type nYear(nYearSEXP);
+    Rcpp::traits::input_parameter< bool >::type hasArea(hasAreaSEXP);
+    Rcpp::traits::input_parameter< int >::type nArea(nAreaSEXP);
+    rcpp_result_gen = Rcpp::wrap(AtAge2AtSizeCore_(ObjectMeanAtAge, dimOMA, ASK, dimASK, nSim, nYear, hasArea, nArea));
+    return rcpp_result_gen;
+END_RCPP
+}
+// AtSize2AtAgeCore_
+NumericVector AtSize2AtAgeCore_(const NumericVector& MeanAtSize, const IntegerVector& dimMeanAtSize, const NumericVector& ASK, const IntegerVector& dimASK, int nSim, int nAge, int nTS, int nArea, bool bySim, bool byArea, bool allow_shortcut);
+RcppExport SEXP _MSEtool_AtSize2AtAgeCore_(SEXP MeanAtSizeSEXP, SEXP dimMeanAtSizeSEXP, SEXP ASKSEXP, SEXP dimASKSEXP, SEXP nSimSEXP, SEXP nAgeSEXP, SEXP nTSSEXP, SEXP nAreaSEXP, SEXP bySimSEXP, SEXP byAreaSEXP, SEXP allow_shortcutSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type MeanAtSize(MeanAtSizeSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type dimMeanAtSize(dimMeanAtSizeSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type ASK(ASKSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type dimASK(dimASKSEXP);
+    Rcpp::traits::input_parameter< int >::type nSim(nSimSEXP);
+    Rcpp::traits::input_parameter< int >::type nAge(nAgeSEXP);
+    Rcpp::traits::input_parameter< int >::type nTS(nTSSEXP);
+    Rcpp::traits::input_parameter< int >::type nArea(nAreaSEXP);
+    Rcpp::traits::input_parameter< bool >::type bySim(bySimSEXP);
+    Rcpp::traits::input_parameter< bool >::type byArea(byAreaSEXP);
+    Rcpp::traits::input_parameter< bool >::type allow_shortcut(allow_shortcutSEXP);
+    rcpp_result_gen = Rcpp::wrap(AtSize2AtAgeCore_(MeanAtSize, dimMeanAtSize, ASK, dimASK, nSim, nAge, nTS, nArea, bySim, byArea, allow_shortcut));
+    return rcpp_result_gen;
+END_RCPP
+}
+// CalcAgeSizeKey_
+Rcpp::NumericVector CalcAgeSizeKey_(const Rcpp::NumericMatrix& MeanAtAge, const Rcpp::NumericMatrix& SDatAge, const Rcpp::NumericVector& Classes, const double TruncSD, const std::string& Dist);
+RcppExport SEXP _MSEtool_CalcAgeSizeKey_(SEXP MeanAtAgeSEXP, SEXP SDatAgeSEXP, SEXP ClassesSEXP, SEXP TruncSDSEXP, SEXP DistSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Rcpp::NumericMatrix& >::type MeanAtAge(MeanAtAgeSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericMatrix& >::type SDatAge(SDatAgeSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type Classes(ClassesSEXP);
+    Rcpp::traits::input_parameter< const double >::type TruncSD(TruncSDSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type Dist(DistSEXP);
+    rcpp_result_gen = Rcpp::wrap(CalcAgeSizeKey_(MeanAtAge, SDatAge, Classes, TruncSD, Dist));
+    return rcpp_result_gen;
+END_RCPP
+}
 // calcVatAge
 NumericMatrix calcVatAge(NumericMatrix len_at_age, NumericMatrix len_aa_sd, NumericMatrix sel_at_length, int n_age, int nyears, int proyears, NumericVector CAL_binsmid);
 RcppExport SEXP _MSEtool_calcVatAge(SEXP len_at_ageSEXP, SEXP len_aa_sdSEXP, SEXP sel_at_lengthSEXP, SEXP n_ageSEXP, SEXP nyearsSEXP, SEXP proyearsSEXP, SEXP CAL_binsmidSEXP) {
@@ -101,28 +159,109 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// combine
-NumericVector combine(const List& list);
-RcppExport SEXP _MSEtool_combine(SEXP listSEXP) {
+// CalcCatchAtSizeFleet_
+Rcpp::List CalcCatchAtSizeFleet_(const Rcpp::NumericVector& key, const Rcpp::IntegerVector& key_dim, const Rcpp::NumericVector& selectivity, const Rcpp::IntegerVector& sel_dim, const bool sel_mode_length, const Rcpp::NumericVector& landings_N, const Rcpp::NumericVector& discards_N, const Rcpp::IntegerVector& N_dim);
+RcppExport SEXP _MSEtool_CalcCatchAtSizeFleet_(SEXP keySEXP, SEXP key_dimSEXP, SEXP selectivitySEXP, SEXP sel_dimSEXP, SEXP sel_mode_lengthSEXP, SEXP landings_NSEXP, SEXP discards_NSEXP, SEXP N_dimSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const List& >::type list(listSEXP);
-    rcpp_result_gen = Rcpp::wrap(combine(list));
+    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type key(keySEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector& >::type key_dim(key_dimSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type selectivity(selectivitySEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector& >::type sel_dim(sel_dimSEXP);
+    Rcpp::traits::input_parameter< const bool >::type sel_mode_length(sel_mode_lengthSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type landings_N(landings_NSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type discards_N(discards_NSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector& >::type N_dim(N_dimSEXP);
+    rcpp_result_gen = Rcpp::wrap(CalcCatchAtSizeFleet_(key, key_dim, selectivity, sel_dim, sel_mode_length, landings_N, discards_N, N_dim));
     return rcpp_result_gen;
 END_RCPP
 }
-// get_freq
-NumericVector get_freq(NumericVector x, double width, double origin, int outlen);
-RcppExport SEXP _MSEtool_get_freq(SEXP xSEXP, SEXP widthSEXP, SEXP originSEXP, SEXP outlenSEXP) {
+// CalcFisheryDynamics_
+Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn, SEXP Years, SEXP AllYears, std::vector<int> Sims, const int nSim, const int nStock, const int nFleet, const int nArea, const int DoCalcCatch, const int DoCalcSpawnProduction, const int DoCalcRecruitment, const int DoCalcNumberNext, const int DoCalcTransition, const int DoCalcBiomass, const int DoCalcOverallF, const int DoBackCalcEffort, const int debug, const int InPlace);
+RcppExport SEXP _MSEtool_CalcFisheryDynamics_(SEXP HistInSEXP, SEXP YearsSEXP, SEXP AllYearsSEXP, SEXP SimsSEXP, SEXP nSimSEXP, SEXP nStockSEXP, SEXP nFleetSEXP, SEXP nAreaSEXP, SEXP DoCalcCatchSEXP, SEXP DoCalcSpawnProductionSEXP, SEXP DoCalcRecruitmentSEXP, SEXP DoCalcNumberNextSEXP, SEXP DoCalcTransitionSEXP, SEXP DoCalcBiomassSEXP, SEXP DoCalcOverallFSEXP, SEXP DoBackCalcEffortSEXP, SEXP debugSEXP, SEXP InPlaceSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
-    Rcpp::traits::input_parameter< double >::type width(widthSEXP);
-    Rcpp::traits::input_parameter< double >::type origin(originSEXP);
-    Rcpp::traits::input_parameter< int >::type outlen(outlenSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_freq(x, width, origin, outlen));
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type HistIn(HistInSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type Years(YearsSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type AllYears(AllYearsSEXP);
+    Rcpp::traits::input_parameter< std::vector<int> >::type Sims(SimsSEXP);
+    Rcpp::traits::input_parameter< const int >::type nSim(nSimSEXP);
+    Rcpp::traits::input_parameter< const int >::type nStock(nStockSEXP);
+    Rcpp::traits::input_parameter< const int >::type nFleet(nFleetSEXP);
+    Rcpp::traits::input_parameter< const int >::type nArea(nAreaSEXP);
+    Rcpp::traits::input_parameter< const int >::type DoCalcCatch(DoCalcCatchSEXP);
+    Rcpp::traits::input_parameter< const int >::type DoCalcSpawnProduction(DoCalcSpawnProductionSEXP);
+    Rcpp::traits::input_parameter< const int >::type DoCalcRecruitment(DoCalcRecruitmentSEXP);
+    Rcpp::traits::input_parameter< const int >::type DoCalcNumberNext(DoCalcNumberNextSEXP);
+    Rcpp::traits::input_parameter< const int >::type DoCalcTransition(DoCalcTransitionSEXP);
+    Rcpp::traits::input_parameter< const int >::type DoCalcBiomass(DoCalcBiomassSEXP);
+    Rcpp::traits::input_parameter< const int >::type DoCalcOverallF(DoCalcOverallFSEXP);
+    Rcpp::traits::input_parameter< const int >::type DoBackCalcEffort(DoBackCalcEffortSEXP);
+    Rcpp::traits::input_parameter< const int >::type debug(debugSEXP);
+    Rcpp::traits::input_parameter< const int >::type InPlace(InPlaceSEXP);
+    rcpp_result_gen = Rcpp::wrap(CalcFisheryDynamics_(HistIn, Years, AllYears, Sims, nSim, nStock, nFleet, nArea, DoCalcCatch, DoCalcSpawnProduction, DoCalcRecruitment, DoCalcNumberNext, DoCalcTransition, DoCalcBiomass, DoCalcOverallF, DoBackCalcEffort, debug, InPlace));
+    return rcpp_result_gen;
+END_RCPP
+}
+// CalcPerRecruitFScalarCpp_
+List CalcPerRecruitFScalarCpp_(double apicalF, NumericMatrix StockFleetAllocation, List NaturalMortalityList, LogicalVector PlusGroupVec, List MaturityList, List SemelparousList, List WeightList, NumericVector SpawnTimeFracVec, List FecundityList, List WeightFleetRetainedList, List WeightFleetSelectedList, List SelectivityFleetList, List RetentionFleetList, List DiscardMortalityFleetList, List NPR0List, List NPR0_SPList, bool IsSpawnTimeFrac);
+RcppExport SEXP _MSEtool_CalcPerRecruitFScalarCpp_(SEXP apicalFSEXP, SEXP StockFleetAllocationSEXP, SEXP NaturalMortalityListSEXP, SEXP PlusGroupVecSEXP, SEXP MaturityListSEXP, SEXP SemelparousListSEXP, SEXP WeightListSEXP, SEXP SpawnTimeFracVecSEXP, SEXP FecundityListSEXP, SEXP WeightFleetRetainedListSEXP, SEXP WeightFleetSelectedListSEXP, SEXP SelectivityFleetListSEXP, SEXP RetentionFleetListSEXP, SEXP DiscardMortalityFleetListSEXP, SEXP NPR0ListSEXP, SEXP NPR0_SPListSEXP, SEXP IsSpawnTimeFracSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type apicalF(apicalFSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type StockFleetAllocation(StockFleetAllocationSEXP);
+    Rcpp::traits::input_parameter< List >::type NaturalMortalityList(NaturalMortalityListSEXP);
+    Rcpp::traits::input_parameter< LogicalVector >::type PlusGroupVec(PlusGroupVecSEXP);
+    Rcpp::traits::input_parameter< List >::type MaturityList(MaturityListSEXP);
+    Rcpp::traits::input_parameter< List >::type SemelparousList(SemelparousListSEXP);
+    Rcpp::traits::input_parameter< List >::type WeightList(WeightListSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type SpawnTimeFracVec(SpawnTimeFracVecSEXP);
+    Rcpp::traits::input_parameter< List >::type FecundityList(FecundityListSEXP);
+    Rcpp::traits::input_parameter< List >::type WeightFleetRetainedList(WeightFleetRetainedListSEXP);
+    Rcpp::traits::input_parameter< List >::type WeightFleetSelectedList(WeightFleetSelectedListSEXP);
+    Rcpp::traits::input_parameter< List >::type SelectivityFleetList(SelectivityFleetListSEXP);
+    Rcpp::traits::input_parameter< List >::type RetentionFleetList(RetentionFleetListSEXP);
+    Rcpp::traits::input_parameter< List >::type DiscardMortalityFleetList(DiscardMortalityFleetListSEXP);
+    Rcpp::traits::input_parameter< List >::type NPR0List(NPR0ListSEXP);
+    Rcpp::traits::input_parameter< List >::type NPR0_SPList(NPR0_SPListSEXP);
+    Rcpp::traits::input_parameter< bool >::type IsSpawnTimeFrac(IsSpawnTimeFracSEXP);
+    rcpp_result_gen = Rcpp::wrap(CalcPerRecruitFScalarCpp_(apicalF, StockFleetAllocation, NaturalMortalityList, PlusGroupVec, MaturityList, SemelparousList, WeightList, SpawnTimeFracVec, FecundityList, WeightFleetRetainedList, WeightFleetSelectedList, SelectivityFleetList, RetentionFleetList, DiscardMortalityFleetList, NPR0List, NPR0_SPList, IsSpawnTimeFrac));
+    return rcpp_result_gen;
+END_RCPP
+}
+// CalcPerRecruitFScalarSeasonalCpp_
+List CalcPerRecruitFScalarSeasonalCpp_(double apicalF, List StockFleetAllocationList, List NaturalMortalityList, LogicalVector PlusGroupVec, List MaturityList, List SemelparousList, List WeightList, NumericVector SpawnTimeFracVec, List FecundityList, List WeightFleetRetainedList, List WeightFleetSelectedList, List SelectivityFleetList, List RetentionFleetList, List DiscardMortalityFleetList, List SeasonalWeightsList, List NPR0_noList, List NPR0_spList, NumericVector RefSeasonWeights, IntegerVector SPFromToStock, IntegerVector SPFromFromStock, NumericVector SPFromWeight, bool IsSpawnTimeFrac, int nSeason);
+RcppExport SEXP _MSEtool_CalcPerRecruitFScalarSeasonalCpp_(SEXP apicalFSEXP, SEXP StockFleetAllocationListSEXP, SEXP NaturalMortalityListSEXP, SEXP PlusGroupVecSEXP, SEXP MaturityListSEXP, SEXP SemelparousListSEXP, SEXP WeightListSEXP, SEXP SpawnTimeFracVecSEXP, SEXP FecundityListSEXP, SEXP WeightFleetRetainedListSEXP, SEXP WeightFleetSelectedListSEXP, SEXP SelectivityFleetListSEXP, SEXP RetentionFleetListSEXP, SEXP DiscardMortalityFleetListSEXP, SEXP SeasonalWeightsListSEXP, SEXP NPR0_noListSEXP, SEXP NPR0_spListSEXP, SEXP RefSeasonWeightsSEXP, SEXP SPFromToStockSEXP, SEXP SPFromFromStockSEXP, SEXP SPFromWeightSEXP, SEXP IsSpawnTimeFracSEXP, SEXP nSeasonSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type apicalF(apicalFSEXP);
+    Rcpp::traits::input_parameter< List >::type StockFleetAllocationList(StockFleetAllocationListSEXP);
+    Rcpp::traits::input_parameter< List >::type NaturalMortalityList(NaturalMortalityListSEXP);
+    Rcpp::traits::input_parameter< LogicalVector >::type PlusGroupVec(PlusGroupVecSEXP);
+    Rcpp::traits::input_parameter< List >::type MaturityList(MaturityListSEXP);
+    Rcpp::traits::input_parameter< List >::type SemelparousList(SemelparousListSEXP);
+    Rcpp::traits::input_parameter< List >::type WeightList(WeightListSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type SpawnTimeFracVec(SpawnTimeFracVecSEXP);
+    Rcpp::traits::input_parameter< List >::type FecundityList(FecundityListSEXP);
+    Rcpp::traits::input_parameter< List >::type WeightFleetRetainedList(WeightFleetRetainedListSEXP);
+    Rcpp::traits::input_parameter< List >::type WeightFleetSelectedList(WeightFleetSelectedListSEXP);
+    Rcpp::traits::input_parameter< List >::type SelectivityFleetList(SelectivityFleetListSEXP);
+    Rcpp::traits::input_parameter< List >::type RetentionFleetList(RetentionFleetListSEXP);
+    Rcpp::traits::input_parameter< List >::type DiscardMortalityFleetList(DiscardMortalityFleetListSEXP);
+    Rcpp::traits::input_parameter< List >::type SeasonalWeightsList(SeasonalWeightsListSEXP);
+    Rcpp::traits::input_parameter< List >::type NPR0_noList(NPR0_noListSEXP);
+    Rcpp::traits::input_parameter< List >::type NPR0_spList(NPR0_spListSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type RefSeasonWeights(RefSeasonWeightsSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type SPFromToStock(SPFromToStockSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type SPFromFromStock(SPFromFromStockSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type SPFromWeight(SPFromWeightSEXP);
+    Rcpp::traits::input_parameter< bool >::type IsSpawnTimeFrac(IsSpawnTimeFracSEXP);
+    Rcpp::traits::input_parameter< int >::type nSeason(nSeasonSEXP);
+    rcpp_result_gen = Rcpp::wrap(CalcPerRecruitFScalarSeasonalCpp_(apicalF, StockFleetAllocationList, NaturalMortalityList, PlusGroupVec, MaturityList, SemelparousList, WeightList, SpawnTimeFracVec, FecundityList, WeightFleetRetainedList, WeightFleetSelectedList, SelectivityFleetList, RetentionFleetList, DiscardMortalityFleetList, SeasonalWeightsList, NPR0_noList, NPR0_spList, RefSeasonWeights, SPFromToStock, SPFromFromStock, SPFromWeight, IsSpawnTimeFrac, nSeason));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -136,19 +275,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericVector >::type CAL_bins(CAL_binsSEXP);
     Rcpp::traits::input_parameter< int >::type outlen(outlenSEXP);
     rcpp_result_gen = Rcpp::wrap(get_freq2(x, CAL_bins, outlen));
-    return rcpp_result_gen;
-END_RCPP
-}
-// rnormSelect2
-NumericVector rnormSelect2(int N, int mi, int ma);
-RcppExport SEXP _MSEtool_rnormSelect2(SEXP NSEXP, SEXP miSEXP, SEXP maSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type N(NSEXP);
-    Rcpp::traits::input_parameter< int >::type mi(miSEXP);
-    Rcpp::traits::input_parameter< int >::type ma(maSEXP);
-    rcpp_result_gen = Rcpp::wrap(rnormSelect2(N, mi, ma));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -304,17 +430,129 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// SPModel_cpp
+List SPModel_cpp(NumericVector Pars, NumericVector Catch, NumericMatrix Index, NumericMatrix SD, NumericVector Timing, NumericVector Weight, LogicalVector EstSD, int nSub, int nItF, double Fmax, double FPenalty, double FoxTol, double MinSD, bool Report);
+RcppExport SEXP _MSEtool_SPModel_cpp(SEXP ParsSEXP, SEXP CatchSEXP, SEXP IndexSEXP, SEXP SDSEXP, SEXP TimingSEXP, SEXP WeightSEXP, SEXP EstSDSEXP, SEXP nSubSEXP, SEXP nItFSEXP, SEXP FmaxSEXP, SEXP FPenaltySEXP, SEXP FoxTolSEXP, SEXP MinSDSEXP, SEXP ReportSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type Pars(ParsSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type Catch(CatchSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type Index(IndexSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type SD(SDSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type Timing(TimingSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type Weight(WeightSEXP);
+    Rcpp::traits::input_parameter< LogicalVector >::type EstSD(EstSDSEXP);
+    Rcpp::traits::input_parameter< int >::type nSub(nSubSEXP);
+    Rcpp::traits::input_parameter< int >::type nItF(nItFSEXP);
+    Rcpp::traits::input_parameter< double >::type Fmax(FmaxSEXP);
+    Rcpp::traits::input_parameter< double >::type FPenalty(FPenaltySEXP);
+    Rcpp::traits::input_parameter< double >::type FoxTol(FoxTolSEXP);
+    Rcpp::traits::input_parameter< double >::type MinSD(MinSDSEXP);
+    Rcpp::traits::input_parameter< bool >::type Report(ReportSEXP);
+    rcpp_result_gen = Rcpp::wrap(SPModel_cpp(Pars, Catch, Index, SD, Timing, Weight, EstSD, nSub, nItF, Fmax, FPenalty, FoxTol, MinSD, Report));
+    return rcpp_result_gen;
+END_RCPP
+}
+// SPModelDeriv_cpp
+List SPModelDeriv_cpp(NumericVector Pars, IntegerVector Active, NumericVector Catch, NumericMatrix Index, NumericMatrix SD, NumericVector Timing, NumericVector Weight, LogicalVector EstSD, int nSub, int nItF, double Fmax, double FPenalty, double FoxTol, double MinSD);
+RcppExport SEXP _MSEtool_SPModelDeriv_cpp(SEXP ParsSEXP, SEXP ActiveSEXP, SEXP CatchSEXP, SEXP IndexSEXP, SEXP SDSEXP, SEXP TimingSEXP, SEXP WeightSEXP, SEXP EstSDSEXP, SEXP nSubSEXP, SEXP nItFSEXP, SEXP FmaxSEXP, SEXP FPenaltySEXP, SEXP FoxTolSEXP, SEXP MinSDSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type Pars(ParsSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type Active(ActiveSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type Catch(CatchSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type Index(IndexSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type SD(SDSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type Timing(TimingSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type Weight(WeightSEXP);
+    Rcpp::traits::input_parameter< LogicalVector >::type EstSD(EstSDSEXP);
+    Rcpp::traits::input_parameter< int >::type nSub(nSubSEXP);
+    Rcpp::traits::input_parameter< int >::type nItF(nItFSEXP);
+    Rcpp::traits::input_parameter< double >::type Fmax(FmaxSEXP);
+    Rcpp::traits::input_parameter< double >::type FPenalty(FPenaltySEXP);
+    Rcpp::traits::input_parameter< double >::type FoxTol(FoxTolSEXP);
+    Rcpp::traits::input_parameter< double >::type MinSD(MinSDSEXP);
+    rcpp_result_gen = Rcpp::wrap(SPModelDeriv_cpp(Pars, Active, Catch, Index, SD, Timing, Weight, EstSD, nSub, nItF, Fmax, FPenalty, FoxTol, MinSD));
+    return rcpp_result_gen;
+END_RCPP
+}
+// SPProject_cpp
+List SPProject_cpp(NumericVector Pars, double B0, NumericVector Value, IntegerVector Type, int nSub, int nItF, double Fmax, double FoxTol);
+RcppExport SEXP _MSEtool_SPProject_cpp(SEXP ParsSEXP, SEXP B0SEXP, SEXP ValueSEXP, SEXP TypeSEXP, SEXP nSubSEXP, SEXP nItFSEXP, SEXP FmaxSEXP, SEXP FoxTolSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type Pars(ParsSEXP);
+    Rcpp::traits::input_parameter< double >::type B0(B0SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type Value(ValueSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type Type(TypeSEXP);
+    Rcpp::traits::input_parameter< int >::type nSub(nSubSEXP);
+    Rcpp::traits::input_parameter< int >::type nItF(nItFSEXP);
+    Rcpp::traits::input_parameter< double >::type Fmax(FmaxSEXP);
+    Rcpp::traits::input_parameter< double >::type FoxTol(FoxTolSEXP);
+    rcpp_result_gen = Rcpp::wrap(SPProject_cpp(Pars, B0, Value, Type, nSub, nItF, Fmax, FoxTol));
+    return rcpp_result_gen;
+END_RCPP
+}
+// BevertonHolt_cpp
+NumericVector BevertonHolt_cpp(const NumericVector& S, const double S0, const double R0, const double h);
+RcppExport SEXP _MSEtool_BevertonHolt_cpp(SEXP SSEXP, SEXP S0SEXP, SEXP R0SEXP, SEXP hSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type S(SSEXP);
+    Rcpp::traits::input_parameter< const double >::type S0(S0SEXP);
+    Rcpp::traits::input_parameter< const double >::type R0(R0SEXP);
+    Rcpp::traits::input_parameter< const double >::type h(hSEXP);
+    rcpp_result_gen = Rcpp::wrap(BevertonHolt_cpp(S, S0, R0, h));
+    return rcpp_result_gen;
+END_RCPP
+}
+// Ricker_cpp
+NumericVector Ricker_cpp(const NumericVector& S, const double S0, const double R0, const double hR);
+RcppExport SEXP _MSEtool_Ricker_cpp(SEXP SSEXP, SEXP S0SEXP, SEXP R0SEXP, SEXP hRSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type S(SSEXP);
+    Rcpp::traits::input_parameter< const double >::type S0(S0SEXP);
+    Rcpp::traits::input_parameter< const double >::type R0(R0SEXP);
+    Rcpp::traits::input_parameter< const double >::type hR(hRSEXP);
+    rcpp_result_gen = Rcpp::wrap(Ricker_cpp(S, S0, R0, hR));
+    return rcpp_result_gen;
+END_RCPP
+}
+// HockeyStick_cpp
+NumericVector HockeyStick_cpp(const NumericVector& S, const double S0, const double R0, const double Shinge);
+RcppExport SEXP _MSEtool_HockeyStick_cpp(SEXP SSEXP, SEXP S0SEXP, SEXP R0SEXP, SEXP ShingeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type S(SSEXP);
+    Rcpp::traits::input_parameter< const double >::type S0(S0SEXP);
+    Rcpp::traits::input_parameter< const double >::type R0(R0SEXP);
+    Rcpp::traits::input_parameter< const double >::type Shinge(ShingeSEXP);
+    rcpp_result_gen = Rcpp::wrap(HockeyStick_cpp(S, S0, R0, Shinge));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_MSEtool_vecminInd", (DL_FUNC) &_MSEtool_vecminInd, 1},
     {"_MSEtool_LinInterp_cpp", (DL_FUNC) &_MSEtool_LinInterp_cpp, 3},
     {"_MSEtool_MSYCalcs", (DL_FUNC) &_MSEtool_MSYCalcs, 17},
     {"_MSEtool_Ref_int_cpp", (DL_FUNC) &_MSEtool_Ref_int_cpp, 12},
+    {"_MSEtool_ArrayBroadcastOp_", (DL_FUNC) &_MSEtool_ArrayBroadcastOp_, 5},
+    {"_MSEtool_AtAge2AtSizeCore_", (DL_FUNC) &_MSEtool_AtAge2AtSizeCore_, 8},
+    {"_MSEtool_AtSize2AtAgeCore_", (DL_FUNC) &_MSEtool_AtSize2AtAgeCore_, 11},
+    {"_MSEtool_CalcAgeSizeKey_", (DL_FUNC) &_MSEtool_CalcAgeSizeKey_, 5},
     {"_MSEtool_calcVatAge", (DL_FUNC) &_MSEtool_calcVatAge, 7},
-    {"_MSEtool_combine", (DL_FUNC) &_MSEtool_combine, 1},
-    {"_MSEtool_get_freq", (DL_FUNC) &_MSEtool_get_freq, 4},
+    {"_MSEtool_CalcCatchAtSizeFleet_", (DL_FUNC) &_MSEtool_CalcCatchAtSizeFleet_, 8},
+    {"_MSEtool_CalcFisheryDynamics_", (DL_FUNC) &_MSEtool_CalcFisheryDynamics_, 18},
+    {"_MSEtool_CalcPerRecruitFScalarCpp_", (DL_FUNC) &_MSEtool_CalcPerRecruitFScalarCpp_, 17},
+    {"_MSEtool_CalcPerRecruitFScalarSeasonalCpp_", (DL_FUNC) &_MSEtool_CalcPerRecruitFScalarSeasonalCpp_, 23},
     {"_MSEtool_get_freq2", (DL_FUNC) &_MSEtool_get_freq2, 3},
-    {"_MSEtool_rnormSelect2", (DL_FUNC) &_MSEtool_rnormSelect2, 3},
     {"_MSEtool_tdnorm", (DL_FUNC) &_MSEtool_tdnorm, 3},
     {"_MSEtool_genSizeComp", (DL_FUNC) &_MSEtool_genSizeComp, 11},
     {"_MSEtool_genSizeComp2", (DL_FUNC) &_MSEtool_genSizeComp2, 11},
@@ -323,6 +561,12 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MSEtool_popdynOneTScpp", (DL_FUNC) &_MSEtool_popdynOneTScpp, 5},
     {"_MSEtool_movestockCPP", (DL_FUNC) &_MSEtool_movestockCPP, 4},
     {"_MSEtool_popdynCPP", (DL_FUNC) &_MSEtool_popdynCPP, 31},
+    {"_MSEtool_SPModel_cpp", (DL_FUNC) &_MSEtool_SPModel_cpp, 14},
+    {"_MSEtool_SPModelDeriv_cpp", (DL_FUNC) &_MSEtool_SPModelDeriv_cpp, 14},
+    {"_MSEtool_SPProject_cpp", (DL_FUNC) &_MSEtool_SPProject_cpp, 8},
+    {"_MSEtool_BevertonHolt_cpp", (DL_FUNC) &_MSEtool_BevertonHolt_cpp, 4},
+    {"_MSEtool_Ricker_cpp", (DL_FUNC) &_MSEtool_Ricker_cpp, 4},
+    {"_MSEtool_HockeyStick_cpp", (DL_FUNC) &_MSEtool_HockeyStick_cpp, 4},
     {NULL, NULL, 0}
 };
 

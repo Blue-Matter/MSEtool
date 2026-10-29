@@ -1,0 +1,71 @@
+#' Unfished Reference Point Quantities
+#'
+#' Extract unfished reference point quantities from a [hist-class] or
+#' [mse-class] object.
+#' `B0()` returns total biomass, `SB0()` spawning biomass, `SP0()` spawning
+#' production, and `N0()` numbers-at-age. All functions support both
+#' equilibrium and dynamic unfished calculations (see `type` argument).
+#'
+#' @param Hist A [hist-class] object (the output of [Simulate()]) or an
+#'   [mse-class] object (the output of [Project()]).
+#' @param type Character. One of `'Equilibrium'` or `'Dynamic'`; partial
+#'   matching is supported.
+#'
+#'   - `'Equilibrium'`: unfished values assuming equilibrium conditions — no
+#'     recruitment deviations and all life-history parameters constant over
+#'     time.
+#'   - `'Dynamic'`: unfished values calculated by running the full population
+#'     dynamics model with no fishing, including recruitment deviations and any
+#'     time-varying parameters, over the historical and projection years. The
+#'     projection-year values are the same for all management procedures.
+#' @param Reduce Logical. If `TRUE` (default), calls [ReduceDims()] to
+#'   collapse any `Sim`, `Year`, or `Age` dimensions where values are
+#'   identical across that dimension, reducing array size. If `FALSE`, the
+#'   slot contents are returned as-is with all dimensions intact.
+#'
+#' @return
+#' - `N0()`: a named list with one element per Stock. Each element is an array
+#'   with dimensions `[Sim, Age, Year]`. The `Sim` and `Year` dimensions are
+#'   collapsed by [ReduceDims()] when `Reduce = TRUE` and values do not vary
+#'   across those dimensions.
+#' - `B0()`, `SB0()`, `SP0()`: an array with dimensions `[Sim, Stock, Year]`.
+#'   The `Sim` and `Year` dimensions are collapsed by [ReduceDims()] when
+#'   `Reduce = TRUE` and values do not vary across those dimensions.
+#'
+#' @seealso [ReduceDims()] for details on dimension collapsing.
+#'
+#' @name extract-unfished
+NULL
+
+.UnfishedSlot <- function(Hist, type, slot_name, Reduce) {
+  .CheckClass(Hist, c('hist', 'mse'), 'Hist')
+  type <- match.arg(type, c('Equilibrium', 'Dynamic'))
+  
+  obj <- if (type == 'Equilibrium') {
+    slot(Hist@Unfished@Equilibrium, slot_name)
+  } else {
+    slot(Hist@Unfished@Dynamic, slot_name)
+  }
+  
+  if (Reduce) ReduceDims(obj, IncYear = FALSE) else obj
+}
+
+#' @export
+#' @rdname extract-unfished
+B0  <- function(Hist, type=c('Equilibrium','Dynamic'), Reduce=TRUE) 
+  .UnfishedSlot(Hist, type, 'Biomass', Reduce)
+
+#' @export
+#' @rdname extract-unfished
+SB0 <- function(Hist, type=c('Equilibrium','Dynamic'), Reduce=TRUE) 
+  .UnfishedSlot(Hist, type, 'SBiomass', Reduce)
+
+#' @export
+#' @rdname extract-unfished
+SP0 <- function(Hist, type=c('Equilibrium','Dynamic'), Reduce=TRUE) 
+  .UnfishedSlot(Hist, type, 'SProduction', Reduce)
+
+#' @export
+#' @rdname extract-unfished
+N0 <- function(Hist, type=c('Equilibrium','Dynamic'), Reduce=TRUE) 
+  .UnfishedSlot(Hist, type, 'Number', Reduce)

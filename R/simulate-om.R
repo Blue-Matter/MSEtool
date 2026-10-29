@@ -1,0 +1,170 @@
+
+.SimulateOM <- function(OM           = NULL,
+                        parallel     = FALSE,
+                        silent       = FALSE,
+                        nSim         = NULL,
+                        control      = SimControl(),
+                        Reduce       = TRUE,
+                        refpointsMSY = NULL,
+                        ...) {
+
+  # ---- setup & validation ----
+  StartTime <- Sys.time()
+  .OnExit()
+  .CheckClass(OM)
+  OM <- UpdateObject(OM)
+
+  .MsgTheme()
+  .MsgStart('Simulate', OM, nSim, silent)
+
+  OM <- .StartUp(OM, nSim, silent=silent)
+  .CheckZeroEffort(OM)
+
+  if (is.null(OM@Name) || nchar(OM@Name) < 2)
+    OM@Name <- 'Unnamed OM'
+
+  HistYears <- Years(OM, "Historical")
+  ProjYears <- Years(OM, "Projection")
+
+  # sims identical (aside from proj rec devs) can skip redundant per-sim work below
+  IdenticalHist <- .IdenticalSims(OM, ignore='RecDevProj')
+
+  # ---- build hist object ----
+  Hist <- .OM2Hist(OM, silent)
+
+  # calculate unfished - equilibrium 
+  Hist@Unfished@Equilibrium <- CalcUnfished_Equilibrium(OM, silent)
+
+  # calculate initial time step
+  Hist <- .CalcDynamicInitial(Hist)
+
+  # prepare hist@Misc list - used for access in C++  - removed later
+  Hist <- .PrepHistMisc(Hist)
+
+  # fished equilibrium initial conditions for Depletion@Initial
+  Hist <- .CalcInitialFishedEquilibrium(Hist, silent = silent)
+
+  # calculate unfished - dynamics
+  if (control$DynamicUnfished)
+    Hist@Unfished@Dynamic <- CalcUnfished_Dynamic(Hist = Hist,
+                                                  IdenticalHist = IdenticalHist,
+                                                  silent = silent)
+
+  # ---- optimize q for specified depletion (if applicable)
+  qInit <- Hist@Misc$Catchability
+  Hist <- .OptFinalDepletion(Hist, parallel = parallel, silent = silent)
+
+  # initial equilibrium depends on the relative fleet q, so repeat once with the optimized q
+  if (nFleet(Hist) > 1 && any(.FishedInitStocks(Hist)) &&
+      !isTRUE(all.equal(qInit, Hist@Misc$Catchability))) {
+    Hist <- .CalcInitialFishedEquilibrium(Hist, silent = silent)
+    Hist <- .OptFinalDepletion(Hist, parallel = parallel, silent = silent)
+  }
+
+  # ---- calculate unfished spawning per recruit ----
+  Hist@Reference@SPR0 <- CalcSPR0(Hist)
+
+  # ---- MSY reference points ----
+  MSYYears <- OM@Control$RefYears %||NA% utils::tail(Years(Hist@OM, 'Historical'), 1)
+  if (Hist@OM@Seasons > 1L) MSYYears <- unique(floor(MSYYears)) # collapse sub-annual time steps to whole years
+
+  if (!is.null(refpointsMSY)) {
+    # user-supplied refpoints: validate and reuse instead of recalculating MSY
+    .ValidateRefpointsMSY(Hist, refpointsMSY, MSYYears)
+    Hist@Reference@MSY <- refpointsMSY
+    .MsgAlert('Using user-supplied {.cls refpointsMSY}; skipped MSY reference point calculation',
+              silent = silent)
+  } else if (control$MSYRefs) {
+    MSYFun <- if (control$MSYRefsCpp) CalcMSYCpp else CalcMSY
+    Hist@Reference@MSY <- MSYFun(Hist,
+                                 Years    = MSYYears,
+                                 type     = OM@Control$MSYType %||NA% 'Removals',
+                                 parallel = parallel,
+                                 silent   = silent)
+    Hist <- .LogFMSYAtMaxF(Hist)
+  }
+
+  if (control$MGT)
+    Hist@Reference@MGT <- CalcMGT(Hist, silent = silent)
+
+  # ---- historical fishery dynamics & catch-at-size ----
+  step <- .MsgStep("Calculating historical fishery dynamics",
+                   "Calculated historical fishery dynamics", silent)
+  Hist <- .CalcFisheryDynamics(Hist, IdenticalSim=IdenticalHist,
+                               DoBackCalcEffort = .BackCalcEffortFlag(Hist))
+  .MsgStepDone(step)
+
+  CatchAtSizeNeeded <- .NeedsCatchAtSize(OM, control)
+  CatchAtSizeCpp    <- control$CalcCatchAtSizeCpp %||NA% TRUE
+  Hist@OM@Control$CalcCatchAtSizeNeeded <- CatchAtSizeNeeded
+  Hist@OM@Control$CalcCatchAtSizeCpp    <- CatchAtSizeCpp
+
+  if (is.na(control$CalcCatchAtSize %||NA% NA) && !all(CatchAtSizeNeeded)) {
+    SkipStocks <- if (length(CatchAtSizeNeeded) > 1)
+      cli::format_inline(" for {.val {StockNames(OM)[!CatchAtSizeNeeded]}}") else ""
+    Hist <- .CaptureLog(Hist,
+      string = cli::format_inline(
+        "No size-composition observation model or real data configured{SkipStocks}, so skipping computationally expensive generation of catch-at-size. Set {.code SimControl(CalcCatchAtSize = TRUE)} to force it."
+      ),
+      name = 'CatchAtSize',
+      type = 'assumption'
+    )
+  }
+
+  AnyCatchAtSizeNeeded <- any(CatchAtSizeNeeded)
+
+  step <- .MsgStep("Calculating historical catch-at-size",
+                   "Calculated historical catch-at-size", silent || !AnyCatchAtSizeNeeded)
+  Hist <- .CalcCatchAtSize(Hist, Years = HistYears, needed = CatchAtSizeNeeded,
+                           useCpp = CatchAtSizeCpp)
+  .MsgStepDone(step)
+
+  # ---- reference points & ref yield ----
+  if (!is.null(Hist@Reference@MSY))
+    Hist@Reference@MSY@Misc$FCurrent <- .FCurrentApical(Hist, MSYYears)
+
+  if (control$RefPoints)
+    Hist <- CalcRefPoints(Hist,
+                          Years  = OM@Control$RefYears,
+                          type   = OM@Control$MSYType %||NA% 'Removals',
+                          silent = silent)
+
+  ref_types <- c(
+    if (control$RefLandings) 'Landings',
+    if (control$RefRemovals) 'Removals'
+  )
+
+  if (length(ref_types) > 0)
+    Hist <- .CalcRefYield(Hist, type=ref_types, Units='Biomass', parallel=parallel, silent=silent)
+
+  Hist <- .RestoreHistMisc(Hist) # undo .PrepHistMisc above
+
+  # ---- observation conditioning & data generation ----
+  Hist@OM@Control$DataCV <- control$DataCV %||% 0.2
+  if (control$ConditionObs)
+    Hist <- .ConditionObs(Hist, silent, EstimateBeta = control$EstimateBeta %||NA% TRUE)
+
+  if (control$GenerateData)
+    Hist <- .GenerateHistoricalData(Hist, parallel=parallel, silent=silent)
+
+  if (control$BLow)
+    Hist <- CalcBLow(Hist, silent = silent)
+
+  # ---- finalize ----
+  Hist <- .AddSimNumber(Hist)
+  Hist <- .CheckFleetAllocation(Hist)
+  Hist <- .CheckSeasonalAllocation(Hist)
+  Hist <- .CheckEffortAllocation(Hist)
+  Hist <- .LogDepletionAchievement(Hist)
+  Hist <- .ReduceHist(Hist, Reduce)
+
+  .MsgDone('Simulate', StartTime, silent)
+
+  Hist@Log <- .JoinLog(OM@Log, Hist@Log)
+
+  if (!silent)
+    .CheckLog(Hist, 'hist')
+
+  .SetDigest(Hist) 
+}
+

@@ -1,0 +1,108 @@
+#' Project an Operating Model Over the Projection Period
+#'
+#' Runs the MSE projection loop for one or more management procedures (MPs)
+#' and returns the projection results: an [mse-class] object for a
+#' [hist-class] object, or an [MSE-legacy-class] object for a
+#' [Hist-legacy-class] object.
+#'
+#'
+#' @param Hist A [hist-class] or [Hist-legacy-class] object containing the
+#'   conditioned operating model and historical dynamics, as returned by
+#'   [Simulate()].
+#' @param MPs MPs to project: a character vector of names of MP functions
+#'   available in the current environment, or (for [hist-class] objects) a
+#'   named list of MP functions, optionally mixed with MP names, e.g.
+#'   `list(IR5 = SetMPArgs(IndexRate, CalibYears = 5), 'IndexTarget')`. List
+#'   names are used as the MP names. If `NULL` (default), projects
+#'   `c("CurrentEffort", "CurrentCatch")`. For [hist-class] objects, MPs may
+#'   also be legacy functions of class `"MP"` (DLMtool/SAMtool), which are
+#'   called on a legacy `Data` object converted from the simulated data.
+#'   Legacy MPs that use life-history data (e.g. `Data@Mort`, `Data@vbK`,
+#'   `Data@L50`) need the `LifeHistory` slot of the OM's [obs-class] objects to
+#'   be set with [LifeHistoryObs()]; otherwise these slots are `NA`.
+#' @param parallel Logical or named list controlling parallel execution. For
+#'   [hist-class] objects, `TRUE` splits the simulations into chunks and
+#'   projects every MP x chunk combination in parallel on the active
+#'   [SetupParallel()] plan. The number of chunks defaults to the number of
+#'   workers; set `Hist@OM@Control$ProjectChunks` to change it. Results do not
+#'   depend on the number of chunks. A named list is accepted and runs all MPs
+#'   in parallel if any element is `TRUE`. Objects an MP uses (helper
+#'   functions, global variables) are sent to the workers with it when they
+#'   are referenced by name in its code; objects referenced only as strings,
+#'   e.g. `do.call("f", ...)`, are not. For [Hist-legacy-class] objects,
+#'   `TRUE` runs all MPs in parallel, and a named list selects individual MPs
+#'   to run in parallel. Default `FALSE`.
+#' @param silent Logical. Suppress progress messages if `TRUE`. Default
+#'   `FALSE`.
+#' @param nSim Integer. If provided, reduces the number of simulations to
+#'   `nSim` before projecting. Only used for [hist-class] objects. If `NULL`
+#'   (default), all simulations in `Hist` are used.
+#' @param Reduce Logical. Reduce object size after simulation for memory
+#'   efficiency? Default `TRUE`. See [ReduceDims()]. Only for  [hist-class] objects.
+#' @param extended Logical. If `TRUE`, stores full age- and area-structured
+#'   arrays for all years in `MSE@Misc$extended`. Only used for [Hist-legacy-class]
+#'   objects. Substantially increases object size. Default `FALSE`.
+#' @param checkMPs Logical. Validate MP names and availability before
+#'   projecting. Only used for [Hist-legacy-class] objects. Default `FALSE`.
+#'
+#' @return An [mse-class] object for a [hist-class] object, or an
+#'   [MSE-legacy-class] object for a [Hist-legacy-class] object, containing
+#'   the projection results for all MPs.
+#'
+#' @details
+#' For [hist-class] objects, `Hist@OM@Control` settings used in projections
+#' (e.g. `ProjectChunks`, `EffortOptim`, `DataOM`) are described in
+#' [OMControl].
+#'
+#' For [hist-class] objects, all projected values of an MP that fails for
+#' every simulation are `NA`, as are all projected values of the simulations
+#' an MP fails for. The errors are recorded in the `Log` slot of the returned
+#' object. They are not written to disk unless requested with the
+#' `MSEtool.WriteLog` option:
+#'
+#' - `options(MSEtool.WriteLog = "path/to/folder")` writes them to a file
+#'   `<MP>_<time>.log` in that folder, creating it if needed.
+#' - `options(MSEtool.WriteLog = TRUE)` writes them to a `Log` folder in the
+#'   working directory.
+#' - `options(MSEtool.WriteLog = FALSE)` (the default) writes nothing.
+#'
+#' @seealso [Simulate()], [runMSE()], [OMControl]
+#' 
+#' @export
+Project <- function(Hist,
+                    MPs = NULL, 
+                    parallel=FALSE, 
+                    silent=FALSE, 
+                    nSim=NULL, 
+                    Reduce=TRUE,
+                    extended=FALSE,
+                    checkMPs=FALSE) {
+  
+  .CheckClass(Hist, c('hist', 'Hist'), 'Hist')
+  
+  if (is.null(MPs))
+    MPs <- c('CurrentEffort', 'CurrentCatch')
+  
+  if (inherits(Hist, 'hist'))
+    return(
+      .ProjectHist(Hist,
+                   MPs = MPs, 
+                   parallel=parallel, 
+                   silent=silent, 
+                   nSim=nSim, 
+                   Reduce=Reduce)
+    )
+  
+  Project_Hist(Hist,
+               MPs = MPs, 
+               parallel=parallel, 
+               silent=silent, 
+               extended=extended, 
+               checkMPs=checkMPs)
+}
+
+
+
+
+
+  

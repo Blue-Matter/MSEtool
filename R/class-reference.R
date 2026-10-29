@@ -1,0 +1,64 @@
+
+#' Reference Points Object
+#'
+#' The `reference` class stores biological and management reference points
+#' derived from per-recruit, equilibrium, or dynamic population analyses.
+#' These reference points are typically used for management strategy
+#' evaluation, harvest control rules, and performance metrics.
+#'
+#' @slot SPR0 List or array of unfished spawning potential ratio (SPR0),
+#' by stock and simulation.
+#'
+#' @slot MSY An object containing MSY-based reference points
+#' such as FMSY, BMSY, and MSY.
+#'
+#' @slot Landings List or array of reference landings values.
+#'
+#' @slot Removals List or array of reference removals values.
+#'
+#' @slot F01 List or array of fishing mortality corresponding to the
+#' 0.1 slope reference point.
+#'
+#' @slot FMax List or array of fishing mortality at maximum yield-per-recruit.
+#'
+#' @slot FSPR List or array of fishing mortality at user-specified
+#' spawning-potential-ratio targets, with a `Target` dimension.
+#'
+#' @slot FMed List or array of fishing mortality at the empirical replacement
+#' line (median historical recruits-per-spawner).
+#'
+#' @slot FCrash List or array of fishing mortality leading to population collapse.
+#'
+#' @slot SPRcrash List or array of spawning potential ratio at collapse.
+#'
+#' @slot MGT List or array of mean generation time reference points.
+#'
+#' @slot BLow List or array defining the B-Low biomass reference points.
+#'
+#' @slot Misc Miscellaneous list for additional reference quantities or
+#' diagnostics.
+#'
+#'
+#' @include class-unions.R
+#' @include class-popdynamics.R
+#' @include class-refpointsMSY.R
+#' @export
+setClass("reference",
+         slots = c(
+           SPR0          = "array.list.null",
+           MSY           = "refpointsMSY",
+           Landings      = "array.list.null",
+           Removals      = "array.list.null",
+           
+           F01           = "array.list.null",
+           FMax          = "array.list.null",
+           FSPR          = "array.list.null",
+           FMed          = "array.list.null",
+           FCrash        = "array.list.null",
+           SPRcrash      = "array.list.null",
+           MGT           = "array.list.null",
+           BLow          = "array.list.null",
+           
+           Misc          = "list"
+         )
+)

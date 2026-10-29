@@ -1,0 +1,263 @@
+
+#' Generate Historical Fishery Data
+#'
+#' Internal wrapper function to generate historical fishery data
+#' for all simulation replicates in an operating model history object.
+#'
+#' Iterates over simulation replicates, generating life history, exploitation,
+#' effort, landings, discards, CPUE, and survey data for each stock or stock complex. If all
+#' simulation replicates produce identical data, only the first
+#' replicate is returned.
+#'
+#'
+#' @param Hist `Hist` object populated with historical fishery dynamics
+#' @param parallel Logical; if `TRUE`, generates data across simulations in
+#'   parallel using a `future` plan established by [SetupParallel()].
+#'   Default `FALSE`.
+#' @param silent Logical; if `TRUE`, suppress progress bars and status messages
+#'
+#' @return Updated `Hist` object with `Hist@Data` containing simulated historical data
+#'
+#' @keywords internal
+.GenerateHistoricalData <- function(Hist, parallel=FALSE, silent=FALSE) {
+
+  .MsgStep("Generating historical data", "Generated historical data", silent)
+
+  Hist <- .CheckObs(Hist, silent)
+
+  HistYears <- Years(Hist,'H')
+  nSim <- Hist@OM@nSim
+  nArea <- nArea(Hist)
+
+  FleetNames <- FleetNames(Hist@OM)
+  StockNames <- StockNames(Hist@OM)
+
+  parallel <- CheckParallel(parallel)
+
+  Observed <- withCallingHandlers(
+    .GenerateObservedBiology(Hist, HistYears),
+    warning = function(w) {
+      Hist <<- .CaptureLog(Hist, cli::ansi_strip(conditionMessage(w)),
+                           name = "Observed biology", type = "warning")
+      invokeRestart("muffleWarning")
+    })
+
+  SimDataList <- if (parallel) {
+    CheckPackage('furrr')
+    # No live progress bar under parallel - workers can't update the
+    # parent's cli::cli_progress_bar (id=NULL below, per .GenerateHistoricalDataSim).
+    .MsgStatus("Generating historical data ({nSim} simulation{?s} in parallel)", silent)
+    furrr::future_map(
+      seq_len(nSim), .GenerateHistoricalDataSim,
+      Hist = Hist, HistYears = HistYears, nArea = nArea,
+      FleetNames = FleetNames, StockNames = StockNames, Observed = Observed,
+      silent = TRUE, id = NULL,
+      .options = furrr::furrr_options(
+        globals  = c('Hist', 'HistYears', 'nArea', 'FleetNames', 'StockNames', 'Observed'),
+        packages = "MSEtool",
+        seed     = 101
+      )
+    )
+  } else {
+    id <- NULL
+    show <- .MsgShowProgress(silent)
+    if (show)
+      id <- cli::cli_progress_bar("Generating historical data")
+
+    purrr::map(seq_len(nSim), \(sim)
+              .GenerateHistoricalDataSim(sim,
+                                         Hist,
+                                         HistYears,
+                                         nArea,
+                                         FleetNames,
+                                         StockNames,
+                                         !show, id,
+                                         Observed))
+  }
+  names(SimDataList) <- seq_len(nSim)
+  
+  # Check if all `nSim` data objects are identical and if so, only return sim 1
+  identical <- rep(TRUE, nSim)
+  if (nSim>1) {
+    for (sim in seq(2, nSim)) {
+      identical[sim] <- .IdenticalS4(SimDataList[[1]], SimDataList[[sim]])
+    }
+  }
+
+  if (prod(identical)) {
+    Hist@Data <- list("1"= SimDataList[[1]])
+  } else {
+    Hist@Data <- SimDataList
+  }
+  
+  # update Index Obs 
+  Survey_Efficiency <- purrr::map(SimDataList, \(DataList) {
+    purrr::map(DataList, \(Data) {
+      purrr::map(Data@Survey@Misc$IndexObs, \(fl) {
+        fl@Efficiency
+      })    
+    }) 
+  }) |> .ReverseList() |>
+    purrr::map(.ReverseList)
+  
+  CPUE_Efficiency <- purrr::map(SimDataList, \(DataList) {
+    purrr::map(DataList, \(Data) {
+      purrr::map(Data@CPUE@Misc$IndexObs, \(fl) {
+        fl@Efficiency
+      })    
+    }) 
+  }) |> .ReverseList() |>
+    purrr::map(.ReverseList)
+
+
+  for (i in seq_along(SimDataList)) {
+    for (st in seq_along(SimDataList[[i]])) {
+      # Survey
+      IndexObs <- SimDataList[[i]][[st]]@Survey@Misc$IndexObs
+      if (!is.null(IndexObs)) {
+        for (fl in seq_along(IndexObs)) {
+          fl_ind <- names(IndexObs)[fl]
+          Hist@OM@Obs[[st]][[fl_ind]]@Survey <- IndexObs[[fl]]
+          Hist@OM@Obs[[st]][[fl_ind]]@Survey@Efficiency <- .NameSims(unlist(Survey_Efficiency[[st]][[fl]], use.names = FALSE), nSim)
+        }
+        Hist@Data[[i]][[st]]@Survey@Misc$IndexObs <- NULL
+      }
+  
+      # CPUE
+      IndexObs <- SimDataList[[i]][[st]]@CPUE@Misc$IndexObs
+      if (!is.null(IndexObs)) {
+        for (fl in seq_along(IndexObs)) {
+          fl_ind <- names(IndexObs)[fl]
+          Hist@OM@Obs[[st]][[fl_ind]]@CPUE <- IndexObs[[fl]]
+          Hist@OM@Obs[[st]][[fl_ind]]@CPUE@Efficiency <- .NameSims(unlist(CPUE_Efficiency[[st]][[fl]], use.names = FALSE), nSim)
+          
+        }
+        Hist@Data[[i]][[st]]@CPUE@Misc$IndexObs <- NULL
+      }
+    }
+    
+  }
+  
+  Hist
+}
+
+#' Generate Historical Data for a Single Simulation
+#'
+#' Internal function to generate historical data for a single simulation
+#'
+#' Applies the appropriate observation bias, error, and selectivity for
+#' each data type and updates metadata such as names, years, and seasons.
+#'
+#' @param sim Integer index of the simulation 
+#' @param Hist Operating model history object
+#' @param HistYears Numeric vector of historical years
+#' @param nArea Integer number of spatial areas
+#' @param FleetNames Character vector of fleet names
+#' @param StockNames Character vector of stock names
+#' @param silent Logical; if `TRUE`, suppress progress bars and status messages
+#' @param id Optional progress bar ID from `cli::cli_progress_bar`
+#' @param Observed Observed life history and exploitation of all sims from
+#'   `.GenerateObservedBiology()`
+#'
+#' @return A list of `data` objects for each stock complex, containing
+#'   simulated historical values for effort, catch, and indices
+#'
+#' @keywords internal
+.GenerateHistoricalDataSim <- function(sim, 
+                                       Hist, 
+                                       HistYears, 
+                                       nArea,
+                                       FleetNames,
+                                       StockNames, 
+                                       silent=FALSE, 
+                                       id=NULL,
+                                       Observed=NULL) {
+
+  Saved <- .SaveRNG()
+  on.exit(.RestoreRNG(Saved), add = TRUE)
+  .SetRNG(.SeedInt(Hist@OM@Seed %||% 101, 'HistData', .GlobalSim(Hist@OM, sim)))
+
+  Complexes <- Hist@OM@Complexes
+  
+  if (!is.null(Hist@OM@Data)) {
+    # real data exists
+   DataList <- Hist@OM@Data
+  } else {
+    # make Data object for each stock complex
+    DataList <- MakeNamedList(names(Complexes), new('data'))  
+  }
+  
+  nStockData <- length(DataList)
+  
+  for (i in seq_len(nStockData)) {
+    
+    if (!silent) cli::cli_progress_update(id=id)
+
+    stocks <- Complexes[[i]]
+    Data <- DataList[[i]]
+    Data@nArea <- nArea
+    
+    nSim <- Hist@OM@nSim
+    Data@LifeHistory  <- .GenHistDataLifeHistory(sim, Data, Observed$LH[[i]], StockNames[stocks], nSim)
+    Data@Exploitation <- .GenHistDataExploitation(sim, Data, Observed$Ex[[i]], StockNames[stocks],
+                                                  FleetNames, nSim)
+    
+    Data@Effort         <- .GenHistDataEffort(sim, Data, Hist, HistYears, i, 
+                                              stocks, FleetNames)
+
+    Data@Landings       <- .GenHistDataCatch(sim, Data, Hist, HistYears, i,
+                                             stocks, FleetNames,
+                                             type = 'Landings')
+    
+    Data@Discards       <- .GenHistDataCatch(sim, Data, Hist, HistYears, i, 
+                                             stocks, FleetNames, 
+                                             type = 'Discards')
+    
+    Data@CPUE           <- .GenHistDataIndices(sim, Data, Hist, HistYears, i, 
+                                               stocks, StockNames, nArea,
+                                               type = 'CPUE')
+    
+    Data@Survey         <- .GenHistDataIndices(sim, Data, Hist, HistYears, i, 
+                                                stocks, StockNames, nArea, 
+                                                type = 'Survey')
+    
+    Data@LandingsAtAge  <- .GenHistDataAgeComp(sim, Data, Hist, HistYears, i,
+                                               stocks, FleetNames,
+                                               type = 'LandingsAtAge')
+    
+    Data@DiscardsAtAge  <- .GenHistDataAgeComp(sim, Data, Hist, HistYears, i,
+                                              stocks, FleetNames,
+                                              type = 'DiscardsAtAge')
+    
+    Data@LandingsAtSize <- .GenHistDataSizeComp(sim, Data, Hist, HistYears, i,
+                                               stocks, FleetNames,
+                                               type = 'LandingsAtSize')
+    
+    Data@DiscardsAtSize <- .GenHistDataSizeComp(sim, Data, Hist, HistYears, i,
+                                                stocks, FleetNames,
+                                                type = 'DiscardsAtSize')
+    
+    # Metadata
+    if (is.null(Data@Name)) 
+      Data@Name <- purrr::map(Hist@OM@Stock[stocks], slot, 'Name') |> unlist() |> paste(collapse='-')
+    
+    if (is.null(Data@Years))
+      Data@Years <- HistYears
+
+    # projection years are appended by .GenerateProjectionData()
+    Data@Years <- Data@Years[Data@Years <= max(HistYears)]
+
+    if (is.null(Data@Seasons)) 
+      Data@Seasons <- Hist@OM@Seasons
+    
+    if (is.null(Data@YearLH) || Data@YearLH > max(HistYears))
+      Data@YearLH <- floor(Data@Years[length(Data@Years)])
+    
+    # Add Pop Dyn if specified
+    Data <- .AddPopDyn(Data, Hist, sim, DataOM = .ResolveDataOM(Hist@OM@Control$DataOM))
+    
+    DataList[[i]] <- Data
+  }
+  
+  DataList
+}

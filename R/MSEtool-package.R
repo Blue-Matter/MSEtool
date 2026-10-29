@@ -1,0 +1,25 @@
+#' @section Startup message:
+#' Attaching MSEtool, directly or with `library(openMSE)`, prints a short
+#' message about Blue Matter Science. Hide it with
+#' [suppressPackageStartupMessages()] or `options(openMSE.quiet = TRUE)`.
+#' @keywords internal
+"_PACKAGE"
+
+## usethis namespace: start
+#' @importFrom digest digest
+#' @importFrom lifecycle deprecated
+#' @importFrom lubridate as_date
+#' @importFrom lubridate date_decimal
+#' @importFrom lubridate decimal_date
+#' @importFrom lubridate ymd
+#' @importFrom methods validObject
+#' @importFrom purrr imap
+#' @importFrom purrr map
+#' @importFrom purrr map_lgl
+#' @importFrom purrr map2
+#' @importFrom purrr pmap
+#' @importFrom Rcpp sourceCpp
+#' @importFrom rlang .data
+#' @useDynLib MSEtool, .registration = TRUE
+## usethis namespace: end
+NULL

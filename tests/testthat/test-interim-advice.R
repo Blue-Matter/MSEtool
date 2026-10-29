@@ -1,0 +1,349 @@
+
+.InterimRows <- function(Mean, CV = NA_real_, Max = NA_real_)
+  data.frame(Mean = Mean, CV = CV, Max = Max)
+
+.DrawInterimMultipliers <- function(om, rows, CalYear = 2025, Complex = "S", Type = "TAC", Fleet = "F1") {
+  z <- .SampleInterimDeviate(om, CalYear, Complex, Type, Fleet, rows, seq_len(om@nSim))
+  vapply(rows$CV, .InterimMultiplier, numeric(om@nSim), z = z)
+}
+
+test_that("interim multiplier is deterministic when CV is NA/0 or all Mean are 0", {
+  data(SingleStockOM, envir = environment())
+  om <- SingleStockOM
+  om@nSim <- 10
+  expect_equal(.SampleInterimDeviate(om, 2025, "S", "TAC", "F1", .InterimRows(100), 1), 0)
+  expect_equal(.SampleInterimDeviate(om, 2025, "S", "TAC", "F1", .InterimRows(100, 0), 1), 0)
+  expect_equal(.SampleInterimDeviate(om, 2025, "S", "TAC", "F1", .InterimRows(c(0, 0), 0.3), 1), 0)
+  expect_equal(.InterimMultiplier(c(NA, 0), 1.5), c(1, 1))
+})
+
+test_that("interim multiplier has mean 1 and the requested CV", {
+  data(SingleStockOM, envir = environment())
+  om <- SingleStockOM
+  om@nSim <- 20000
+  m <- .DrawInterimMultipliers(om, .InterimRows(600, 0.2))
+  expect_equal(mean(m), 1, tolerance = 0.01)
+  expect_equal(sd(m), 0.2, tolerance = 0.03)
+})
+
+test_that("interim multiplier: a fleet's seasonal rows share a deviate, each with its own CV", {
+  data(SingleStockOM, envir = environment())
+  om <- SingleStockOM
+  om@nSim <- 20000
+  m <- .DrawInterimMultipliers(om, .InterimRows(c(600, 400, 300, 0), c(0, 0.1, 0.4, 0.2)))
+  expect_true(all(m[, 1] == 1))
+  expect_equal(colMeans(m[, 2:3]), c(1, 1), tolerance = 0.01)
+  expect_equal(apply(m[, 2:3], 2, sd), c(0.1, 0.4), tolerance = 0.03)
+  expect_equal(cor(log(m[, 2]), log(m[, 3])), 1)
+})
+
+test_that("interim multiplier is independent among fleets", {
+  data(SingleStockOM, envir = environment())
+  om <- SingleStockOM
+  om@nSim <- 20000
+  rows <- .InterimRows(600, 0.3)
+  mA <- .DrawInterimMultipliers(om, rows, Fleet = "A")
+  mB <- .DrawInterimMultipliers(om, rows, Fleet = "B")
+  mT <- .DrawInterimMultipliers(om, rows, Fleet = .InterimFleetKey(NA))
+  expect_lt(abs(cor(log(mA), log(mB))), 0.03)
+  expect_lt(abs(cor(log(mA), log(mT))), 0.03)
+})
+
+test_that("interim multiplier is truncated at the smallest Max / Mean of the fleet's rows", {
+  data(SingleStockOM, envir = environment())
+  om <- SingleStockOM
+  om@nSim <- 5000
+  m <- .DrawInterimMultipliers(om, .InterimRows(c(600, 400, 0), 0.3, c(720, 500, NA)))
+  expect_true(all(m[, 1:2] <= 1.2))
+  expect_true(mean(m[, 1]) < 1)
+
+  m <- .DrawInterimMultipliers(om, .InterimRows(c(600, 400, 200), c(0.1, 0.4, 0), c(Inf, 500, 200)))
+  expect_true(all(m[, 2] <= 1.25 + 1e-12))
+  expect_true(all(m[, 3] == 1))
+})
+
+test_that("interim multiplier is a truncated mean-1 lognormal draw", {
+  data(SingleStockOM, envir = environment())
+  om <- SingleStockOM
+  om@nSim <- 50
+  sigma <- sqrt(log(1 + 0.3^2))
+  mu <- -sigma^2 / 2
+  set.seed(digest::digest2int(paste(om@Seed, 2025, "S", "TAC", "F1", sep = "_")))
+  ref <- stats::qlnorm(stats::runif(om@nSim, 0, stats::plnorm(1.2, mu, sigma)), mu, sigma)
+  m <- .DrawInterimMultipliers(om, .InterimRows(600, 0.3, 720))
+  expect_equal(m[, 1], ref)
+})
+
+test_that("interim multiplier seeds differ across years, complexes, types, and fleets", {
+  data(SingleStockOM, envir = environment())
+  om <- SingleStockOM
+  om@nSim <- 5
+  rows <- .InterimRows(100, 0.3)
+  draw <- function(y, s, t, f = "F1") .DrawInterimMultipliers(om, rows, y, s, t, f)
+  expect_false(isTRUE(all.equal(draw(2024, "S", "TAC"), draw(2042, "S", "TAC"))))
+  expect_false(isTRUE(all.equal(draw(2025, "S1", "TAC"), draw(2024, "S2", "TAC"))))
+  expect_false(isTRUE(all.equal(draw(2025, "S", "TAC"), draw(2025, "S", "Effort"))))
+  expect_false(isTRUE(all.equal(draw(2025, "S", "TAC", "F1"), draw(2025, "S", "TAC", "F2"))))
+  expect_equal(draw(2025, "S", "TAC"), draw(2025, "S", "TAC"))
+})
+
+test_that("InterimAdvice validation rejects SD, negative CV, and Max < Mean", {
+  data(SingleStockOM, envir = environment())
+  om <- SingleStockOM
+  yr <- CurrentYear(om) + 1
+  MPStartYear(om) <- yr + 1
+  set_ia <- function(df) { om@InterimAdvice <- df; methods::validObject(om) }
+
+  expect_error(set_ia(data.frame(Year = yr, Type = "TAC", Mean = 100, SD = 10)), "use `CV`")
+  expect_error(set_ia(data.frame(Year = yr, Type = "TAC", Mean = 100, CV = -0.1)), "CV")
+  expect_error(set_ia(data.frame(Year = yr, Type = "TAC", Mean = 100, Max = 90)), "Max")
+
+  expect_no_error(set_ia(data.frame(Year = yr, Type = "TAC", Fleet = c("A", "B"),
+                                    Mean = c(100, 50), CV = c(0, 0.2))))
+
+  expect_no_error(set_ia(data.frame(Year = yr, Type = "TAC", Fleet = c("A", "B", "C"),
+                                Mean = c(100, 50, 0), CV = c(0.2, 0.2, NA), Max = c(100, NA, NA))))
+})
+
+test_that("InterimAdvice Complex column: Stock is deprecated, both is an error, names are validated", {
+  data(SingleStockOM, envir = environment())
+  om <- SingleStockOM
+  yr <- CurrentYear(om) + 1
+  MPStartYear(om) <- yr + 1
+  om <- PopulateOM(om, silent = TRUE)
+  cx <- names(om@Complexes)
+  set_ia <- function(df) { om@InterimAdvice <- df; methods::validObject(om); om }
+
+  expect_error(set_ia(data.frame(Year = yr, Type = "TAC", Mean = 100, Complex = cx, Stock = cx)),
+               "both `Complex` and `Stock`")
+
+  proj <- methods::new("hist")
+  proj@OM <- set_ia(data.frame(Year = yr, Type = "TAC", Mean = 100, Stock = cx))
+  expect_warning(out <- .CheckInterimAdvice(proj), "deprecated")
+  expect_true("Complex" %in% names(out@OM@InterimAdvice))
+  expect_false("Stock" %in% names(out@OM@InterimAdvice))
+
+  proj@OM <- set_ia(data.frame(Year = yr, Type = "TAC", Mean = 100, Complex = "NotAComplex"))
+  expect_error(.CheckInterimAdvice(proj), "NotAComplex")
+
+  proj@OM <- set_ia(data.frame(Year = yr, Type = "TAC", Mean = 100, Complex = cx))
+  expect_no_warning(.CheckInterimAdvice(proj))
+})
+
+.InterimSeasonalHist <- function(Seasons = 4) {
+  data(TwoFleetOM, envir = environment())
+  om <- TwoFleetOM
+  om@nSim <- 3
+  om@pYear <- 4
+  om@Seasons <- Seasons
+  set.seed(1)
+  Simulate(om, silent = TRUE)
+}
+
+.InterimCheck <- function(hist, IA, MPStartYear = floor(Years(hist, "P")[1]) + 2) {
+  hist@OM@MPStartYear <- MPStartYear
+  hist@OM@InterimAdvice <- IA
+  .CheckInterimAdvice(hist)
+}
+
+test_that("InterimAdvice seasonal/annual form, coverage, and MPStartYear pairing are enforced", {
+  skip_on_cran()
+  hist <- .InterimSeasonalHist()
+  yp <- Years(hist, "P")
+  fl <- FleetNames(hist)
+  ok <- data.frame(Year = c(2027, 2028), Type = "TAC", Mean = 1000)
+
+  expect_no_error(.InterimCheck(hist, ok))
+  expect_no_error(.InterimCheck(hist, rbind(
+    data.frame(Year = yp[1:4], Fleet = fl[1], Type = "TAC", Mean = 100),
+    data.frame(Year = 2027, Fleet = fl[2], Type = "TAC", Mean = 400),
+    data.frame(Year = 2028, Fleet = NA, Type = "TAC", Mean = 1000))))
+
+  expect_error(.InterimCheck(hist, rbind(ok, data.frame(Year = yp[2], Type = "TAC", Mean = 10))),
+               "single row for the calendar year")
+  expect_error(.InterimCheck(hist, rbind(ok[2, ], data.frame(Year = yp[2:4], Type = "TAC", Mean = 10))),
+               "single row for the calendar year")
+  expect_error(.InterimCheck(hist, rbind(ok, data.frame(Year = 2027.3, Type = "TAC", Mean = 10))),
+               "not interim timesteps")
+  expect_error(.InterimCheck(hist, rbind(ok, data.frame(Year = 2029, Type = "TAC", Mean = 10))),
+               "not interim timesteps")
+  expect_error(.InterimCheck(hist, ok[1, ]), "no rows for Complex")
+  expect_error(.InterimCheck(hist, data.frame(Year = c(2027, 2028), Fleet = fl[1], Type = "TAC", Mean = 10)),
+               "do not cover fleet")
+  expect_error(.InterimCheck(hist, rbind(data.frame(Year = 2027, Fleet = c(fl, NA), Type = "TAC", Mean = 10),
+                                         ok[2, , drop = FALSE] |> transform(Fleet = NA))),
+               "also a `Fleet = NA` total")
+  expect_error(.InterimCheck(hist, ok, MPStartYear = NULL), "no interim years")
+  expect_error(.InterimCheck(hist, NULL), "not specified")
+  expect_no_error(.InterimCheck(hist, NULL, MPStartYear = NULL))
+})
+
+test_that("seasonal OM: seasonal rows used as given, annual rows split by SeasonalAllocation, totals by FleetAllocation", {
+  skip_on_cran()
+  hist <- .InterimSeasonalHist()
+  yp <- Years(hist, "P")
+  fl <- FleetNames(hist)
+  hist@OM@MPStartYear <- 2029
+  hist@OM@InterimAdvice <- rbind(
+    data.frame(Year = yp[1:4], Fleet = fl[1], Type = "TAC", Mean = c(300, 400, 500, 200)),
+    data.frame(Year = 2027, Fleet = fl[2], Type = "TAC", Mean = 1200),
+    data.frame(Year = 2028, Fleet = NA, Type = "TAC", Mean = 500)
+  )
+  alloc <- .CheckFleetAllocation(hist) |> .CheckSeasonalAllocation()
+  SA <- alloc@OM@SeasonalAllocation[[1]]
+  FA <- alloc@OM@FleetAllocation[[1]]
+
+  removals <- function(mp) {
+    mse <- Project(hist, MPs = mp, parallel = FALSE, silent = TRUE)
+    rem <- ArraySum(mse@Landings, mse@Discards)
+    apply(rem[, , as.character(yp[1:8]), , 1, drop = FALSE], c(1, 3, 4), sum)
+  }
+  rem <- removals("refMSY50")
+
+  for (sim in 1:3) {
+    expect_equal(unname(rem[sim, 1:4, fl[1]]), c(300, 400, 500, 200), tolerance = 1e-3)
+    expect_equal(unname(rem[sim, 1:4, fl[2]]), 1200 * unname(SA[sim, , fl[2]]), tolerance = 1e-3)
+    expected <- 500 * cbind(FA[sim, 1] * SA[sim, , fl[1]], FA[sim, 2] * SA[sim, , fl[2]])
+    expect_equal(unname(rem[sim, 5:8, ]), unname(expected), tolerance = 1e-3)
+  }
+
+  # interim years do not depend on the MP's EverySeason attribute
+  expect_equal(removals("CurrentCatch"), rem, tolerance = 1e-6)
+})
+
+test_that("seasonal OM: per-fleet CVs, reported catch fixed and assumed catch drawn independently", {
+  skip_on_cran()
+  hist <- .InterimSeasonalHist()
+  yp <- Years(hist, "P")
+  fl <- FleetNames(hist)
+  hist@OM@MPStartYear <- 2029
+  CV <- c(0, 0.3, 0.2, 0.3)
+  hist@OM@InterimAdvice <- data.frame(Year = rep(2027:2028, each = 2), Fleet = fl, Type = "TAC",
+                                      Mean = c(300, 150, 300, 150), CV = CV)
+  SA <- (.CheckFleetAllocation(hist) |> .CheckSeasonalAllocation())@OM@SeasonalAllocation[[1]]
+
+  mse <- Project(hist, MPs = "refMSY50", parallel = FALSE, silent = TRUE)
+  rem <- ArraySum(mse@Landings, mse@Discards)
+  rem <- apply(rem[, , as.character(yp[1:8]), , 1, drop = FALSE], c(1, 3, 4), sum)
+
+  cx <- names(hist@OM@Complexes)[1]
+  Mean <- c(300, 150)
+  for (y in 1:2) {
+    cv <- CV[(y - 1) * 2 + 1:2]
+    ts <- (y - 1) * 4 + 1:4
+    for (f in 1:2) {
+      z <- .SampleInterimDeviate(hist@OM, 2026 + y, cx, "TAC", fl[f],
+                                 data.frame(Mean = Mean[f], CV = cv[f], Max = NA), 1:3) |> rep_len(3)
+      if (cv[f] > 0) expect_length(unique(z), 3)
+      for (sim in 1:3)
+        expect_equal(unname(rem[sim, ts, fl[f]]),
+                     Mean[f] * .InterimMultiplier(cv[f], z[sim]) * unname(SA[sim, , fl[f]]),
+                     tolerance = 1e-3)
+    }
+  }
+})
+
+test_that("annual OM: per-fleet TAC and relative/absolute Effort are applied", {
+  skip_on_cran()
+  hist <- .InterimSeasonalHist(Seasons = 1)
+  fl <- FleetNames(hist)
+  hist@OM@MPStartYear <- 2029
+  hist@OM@InterimAdvice <- rbind(
+    data.frame(Year = 2027, Fleet = fl, Type = "TAC", Mean = c(300, 150), EffType = NA),
+    data.frame(Year = 2028, Fleet = fl, Type = "Effort", Mean = c(0.5, 0.2), EffType = c("Rel", "Abs"))
+  )
+  mse <- Project(hist, MPs = "refMSY50", parallel = FALSE, silent = TRUE)
+  rem <- ArraySum(mse@Landings, mse@Discards)
+  rem27 <- apply(rem[, , "2027", , 1, drop = FALSE], c(1, 4), sum)
+  for (sim in 1:3) expect_equal(unname(rem27[sim, ]), c(300, 150), tolerance = 1e-3)
+
+  nH <- length(Years(hist, "H"))
+  expect_equal(unname(mse@Effort[, "2028", fl[1], 1]), 0.5 * unname(hist@Effort[, nH, fl[1]]), tolerance = 1e-6)
+  expect_equal(unname(mse@Effort[, "2028", fl[2], 1]), rep(0.2, 3), tolerance = 1e-6)
+})
+
+test_that("InterimAdvice TACUnit accepts catch units and validates TACType", {
+  skip_on_cran()
+  hist <- .InterimSeasonalHist(Seasons = 1)
+  fl <- FleetNames(hist)
+  IA <- data.frame(Year = rep(2027:2028, each = 2), Fleet = fl, Type = "TAC", Mean = 100,
+                   TACUnit = c("t", "1000 n", NA, "Number"))
+  out <- .InterimCheck(hist, IA)
+  expect_identical(out@OM@InterimAdvice$TACUnit, c("Biomass", "Number", "Biomass", "Number"))
+
+  expect_error(.InterimCheck(hist, transform(IA, TACUnit = "tonnes")), "TACUnit")
+  expect_error(.InterimCheck(hist, transform(IA, TACType = "Catch")), "TACType")
+})
+
+test_that("annual OM: interim TAC in numbers and biomass are applied per fleet", {
+  skip_on_cran()
+  hist <- .InterimSeasonalHist(Seasons = 1)
+  fl <- FleetNames(hist)
+  hist@OM@MPStartYear <- 2029
+  hist@OM@InterimAdvice <- data.frame(Year = rep(2027:2028, each = 2), Fleet = fl, Type = "TAC",
+                                      Mean = c(20, 100, 100, 10),
+                                      TACUnit = c("n", "t", "Biomass", "Number"))
+  mse <- Project(hist, MPs = "refMSY50", parallel = FALSE, silent = TRUE)
+  remB <- apply(ArraySum(mse@Landings, mse@Discards)[, , c("2027", "2028"), , 1, drop = FALSE], c(1, 3, 4), sum)
+  remN <- ArraySum(mse@LandingsAtAge[[1]], mse@DiscardsAtAge[[1]])
+  remN <- apply(remN[, , c("2027", "2028"), , , 1, drop = FALSE], c(1, 3, 4), sum)
+  for (sim in 1:3) {
+    expect_equal(unname(remN[sim, "2027", fl[1]]), 20, tolerance = 1e-3)
+    expect_equal(unname(remB[sim, "2027", fl[2]]), 100, tolerance = 1e-3)
+    expect_equal(unname(remB[sim, "2028", fl[1]]), 100, tolerance = 1e-3)
+    expect_equal(unname(remN[sim, "2028", fl[2]]), 10, tolerance = 1e-3)
+  }
+})
+
+test_that("seasonal OM: the first MP sees the annual TAC of the latest interim year, despite DataLag", {
+  skip_on_cran()
+  hist <- .InterimSeasonalHist()
+  fl <- FleetNames(hist)
+  hist@OM@MPStartYear <- 2029
+  hist@OM@DataLag <- 1
+  hist@OM@InterimAdvice <- data.frame(Year = rep(2027:2028, each = 2), Fleet = fl, Type = "TAC",
+                                      Mean = c(300, 150, 600, 250))
+  SeenTAC <- function(Data) Advice(TAC = LastTAC(Data))
+  class(SeenTAC) <- "mp"
+  mse <- Project(hist, MPs = list(SeenTAC = SeenTAC), parallel = FALSE, silent = TRUE)
+
+  for (sim in 1:3) {
+    TAC <- mse@PPD[[1]][[sim]][[1]]@Advice@TAC
+    Yr  <- as.numeric(rownames(TAC))
+    Row <- rowSums(TAC, na.rm = TRUE)
+    expect_equal(unname(Row[floor(Yr) == 2027]), rep(450, 4))
+    expect_equal(unname(Row[floor(Yr) == 2028]), rep(850, 4))
+    expect_equal(unname(Row[Yr == 2029]), 850)
+  }
+})
+
+test_that("DataTrim keeps the full Advice record", {
+  Years <- 2000:2005
+  d <- new("data")
+  d@Years <- Years
+  d@YearLH <- 2003
+  d@Landings@Value <- array(1, c(6, 1), dimnames = list(Year = Years, Fleet = "F1"))
+  d@Advice@TAC <- array(1:6, c(6, 1), dimnames = list(Year = Years, Fleet = "Total"))
+  out <- DataTrim(d, 2003)
+  expect_equal(out@Years, 2000:2003)
+  expect_identical(out@Advice, d@Advice)
+})
+
+test_that(".FindModels works when MSEtool is loaded but not attached", {
+  skip_on_cran()
+  skip_if_not_installed("callr")
+  skip_if_not_installed("pkgload")
+  Expected <- .FindModels("Length-at-Age-Model")
+  expect_gt(length(Expected), 0)
+  # source tree under devtools::test(), installed package under R CMD check
+  Path <- normalizePath(testthat::test_path("..", ".."))
+  if (!file.exists(file.path(Path, "DESCRIPTION"))) Path <- NULL
+  Out  <- callr::r(function(Path) {
+    if (is.null(Path)) loadNamespace("MSEtool") else
+      pkgload::load_all(Path, attach = FALSE, quiet = TRUE)
+    c(attached = "package:MSEtool" %in% search(),
+      MSEtool:::.FindModels("Length-at-Age-Model"))
+  }, args = list(Path = Path))
+  expect_identical(Out[["attached"]], "FALSE")
+  expect_identical(unname(Out[-1]), Expected)
+})

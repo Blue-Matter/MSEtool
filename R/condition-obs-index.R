@@ -1,0 +1,536 @@
+
+#' Condition Observed Index for a Stock or Stock Complex
+#'
+#' Internal function to condition observation error from provided indices (CPUE or Survey)
+#' including residuals and autocorrelated errors.
+#'
+#' @param Hist A [Hist()] object populated with historical fishery dynamics.
+#' @param FisheryData A [Data()] object with real fishery data
+#' @param HistYears Numeric vector of historical years
+#' @param ProjYears Numeric vector of projection years
+#' @param stocks Integer vector of stock indices in the complex
+#' @param i Integer index of observed data set
+#' @param type Character, either `CPUE` or `Survey`
+#' @param EstimateBeta Logical. Estimate the hyperstability/hyperdepletion
+#'   parameter `Beta` by regression? If `FALSE`, `Beta` is fixed at `1` unless
+#'   the user has already supplied a value on the `Obs` object. Default `TRUE`
+#'   for this function; [Simulate()] passes `SimControl(EstimateBeta)`, which
+#'   defaults to `FALSE`.
+#' @param silent Logical. Suppress the console message for indices skipped
+#'   because of unsupported `Units`? The skip is always recorded in the log.
+#'
+#' @keywords internal
+.ConditionObsIndex <- function(Hist,
+                               FisheryData,
+                               HistYears,
+                               ProjYears,
+                               stocks,    # stocks in this complex
+                               i,         # observe data set number
+                               type=c('CPUE', 'Survey'),
+                               EstimateBeta=TRUE,
+                               silent=FALSE) {
+  
+  type <- match.arg(type, c('CPUE', 'Survey'))
+  
+  nHistTS <- length(HistYears)
+  nProjTS <- length(ProjYears)
+  nArea <- nArea(Hist)
+  Areas <- 1:nArea
+  nSeasons <- Seasons(Hist)
+   
+  nSim <- nSim(Hist)
+  
+  if (is.null(slot(FisheryData, type)@Value)) return(Hist)
+
+  Aligned <- .AlignIndicesData(slot(FisheryData, type), HistYears, ProjYears,
+                               Where = paste0("OM@Data[[", i, "]]@", type))
+  if (!is.null(Aligned$Assumption))
+    Hist <- .CaptureLog(Hist, string = Aligned$Assumption, name = '.ConditionObsIndex', type = 'assumption')
+  IndicesData <- Aligned$Indices
+  slot(FisheryData, type) <- IndicesData
+  slot(Hist@OM@Data[[i]], type) <- IndicesData
+
+  Indices_Name  <- IndicesData@Name
+  Indices_Value <- IndicesData@Value
+  nFleet <- ncol(Indices_Value)
+
+  Indices_Hist <- Indices_Value |> .ArraySubsetYear(Years=HistYears)
+  
+  Sim_Number_List <- Hist@Number[stocks]
+  
+  for (fl in 1:nFleet) {
+    
+    ObsObject <- Hist@OM@Obs[[i]][[Indices_Name[fl]]]
+    if (is.null(ObsObject)) {
+      ObsObject <- Obs(Name = Indices_Name[fl])
+      Hist@OM@Obs[[i]][[Indices_Name[fl]]] <- ObsObject
+    }
+
+    Index_Obs <- slot(ObsObject,type)
+    ObservedIndex <- Indices_Value[,fl]
+    if (all(is.na(ObservedIndex))) next
+
+    Units <- slot(FisheryData, type)@Units[fl] %||NA% 'Biomass'
+    if (!Units %in% c('Biomass', 'Number', 'Recruitment')) {
+      msg <- cli::format_inline(
+        "{type} index {.val {Indices_Name[fl]}} has unsupported {.field Units} {.val {Units}}; skipped conditioning and simulating this index (supported: {.val {c('Biomass', 'Number', 'Recruitment')}})."
+      )
+      .MsgAlert(msg, 'warning', silent = silent)
+      Hist <- .CaptureLog(Hist, string = msg, name = '.ConditionObsIndex', type = 'warning')
+      next
+    }
+
+    BadInd <- which(!is.na(ObservedIndex) & ObservedIndex <= 0)
+    if (length(BadInd)) {
+      Hist <- .CaptureLog(Hist,
+                          string = cli::format_inline(
+                            "{.val {type}} index {.val {Indices_Name[fl]}} has non-positive value{?s} in year{?s} {.val {HistYears[BadInd]}}; treating as missing (NA)."
+                          ),
+                          name = '.ConditionObsIndex',
+                          type = 'assumption')
+      ObservedIndex[BadInd] <- NA
+    }
+    
+    
+    if (!is.null(attr(slot(FisheryData, type), 'Selectivity')))
+      cli::cli_warn(c("!" = "{.code Data@{type}@Selectivity} is no longer used and is ignored.",
+                      "i" = "Set selectivity on the Obs object instead: {.code OM@Obs[[{i}]][['{Indices_Name[fl]}']]@{type}@Selectivity}."),
+                    .frequency = 'once', .frequency_id = paste0('DataSelectivity', type))
+
+    if (is.null(Index_Obs@Selectivity) && !Indices_Name[fl] %in% FleetNames(Hist@OM))
+      cli::cli_abort(.MsgIndexNotFleet(Indices_Name[fl], FleetNames(Hist@OM)))
+
+    Index_Obs@Units <- Units
+
+    timing <- slot(FisheryData, type)@Timing
+    timing <- if (length(timing) >= fl) timing[fl] else NA_real_
+
+    # Areas
+    if (is.null(Index_Obs@Areas)) {
+      Index_Obs@Areas <- Areas
+    } else {
+      OutOfBounds <- setdiff(Index_Obs@Areas, Areas)
+      if (length(OutOfBounds))
+        cli::cli_abort("`Index_Obs@Areas` outside bounds: {.val {OutOfBounds}}",
+                       .internal = TRUE)
+
+      if (anyDuplicated(Index_Obs@Areas))
+        cli::cli_abort("`Index_Obs@Areas` contains duplicate areas: {.val {unique(Index_Obs@Areas[duplicated(Index_Obs@Areas)])}}",
+                       .internal = TRUE)
+    }
+
+    recruitment_years <- if (Units == 'Recruitment' && nSeasons > 1) {
+      names(ObservedIndex[!is.na(ObservedIndex)])
+    } else {
+      NULL
+    }
+
+    Nom_Index <- .CalcNomIndex(
+      Number_List         = Sim_Number_List,
+      object              = Hist,
+      stocks              = stocks,
+      fleet               = Indices_Name[fl],
+      IndexObs            = Index_Obs,
+      Years               = HistYears,
+      timing              = timing,
+      Units               = Units,
+      recruitment_years   = recruitment_years
+    )
+    
+    NonNAInd <- which(!is.na(ObservedIndex) & ObservedIndex > 0)
+
+    if (is.null(Index_Obs@Years))
+      Index_Obs@Years <- HistYears[NonNAInd]
+
+    TSInd <- match(Index_Obs@Years, HistYears)
+
+    # Observed_t = Efficiency * Nom_Index_t^Beta * exp(residual_t) (Harley et al. 2001).
+    # Fit jointly unless Beta is fixed by the user or EstimateBeta = FALSE.
+    FixedBeta <- if (EstimateBeta) Index_Obs@Beta else (Index_Obs@Beta %||NA% 1)
+    
+    ResidualsBeta <- CalcIndexResiduals(ObservedIndex, Nom_Index, beta=FixedBeta, FitInd=TSInd)
+
+    # smearing correction: historical errors have mean 1, as projection errors do
+    Smear <- rowMeans(exp(ResidualsBeta$LogResiduals[, TSInd, drop = FALSE]), na.rm = TRUE)
+    Smear[!is.finite(Smear) | Smear <= 0] <- 1
+
+    Index_Obs@Beta       <- .NameSims(ResidualsBeta$Beta, nSim)
+    Index_Obs@Efficiency <- .NameSims(ResidualsBeta$Efficiency * Smear, nSim)
+    LogResiduals <- ResidualsBeta$LogResiduals - log(Smear)
+
+    Index_Obs@Misc$BetaFit <- lapply(list(
+      SE_Beta  = ResidualsBeta$SE_Beta,
+      CI_Lower = ResidualsBeta$CI_Lower,
+      CI_Upper = ResidualsBeta$CI_Upper,
+      R2       = ResidualsBeta$R2,
+      PValue   = ResidualsBeta$PValue,
+      nPoints  = ResidualsBeta$nPoints,
+      Status   = ResidualsBeta$Status
+    ), .NameSims, nSim = nSim)
+
+    if (is.null(FixedBeta)) {
+      FellBack <- ResidualsBeta$Status != "estimated"
+      if (any(FellBack)) {
+        StatusTable <- table(ResidualsBeta$Status[FellBack])
+        StatusMsg <- paste(names(StatusTable), StatusTable, sep = ": ", collapse = ", ")
+        Hist <- .CaptureLog(Hist,
+                            string = cli::format_inline(
+                              "{.val {type}} index {.val {Indices_Name[fl]}}: {.val Beta} could not be freely estimated for {sum(FellBack)}/{length(FellBack)} simulation{?s} ({StatusMsg}); fixed at 1 (or bounds-clamped) for those."
+                            ),
+                            name = '.ConditionObsIndex',
+                            type = 'assumption')
+      }
+    }
+
+    Stats <- CalcResidualStats(LogResiduals=LogResiduals[, TSInd, drop=FALSE],
+                               nSeasons=nSeasons)
+    
+    Index_Obs@Stats <- Stats
+    if (!.UserSupplied(Index_Obs, "AC"))
+      Index_Obs@AC <- .NameSims(Stats$AC, nSim)
+    if (!.UserSupplied(Index_Obs, "CV"))
+      Index_Obs@CV <- .NameSims(sqrt(exp(Stats$SD^2) - 1), nSim)
+
+    if (is.null(Index_Obs@TruncSD))
+      Index_Obs@TruncSD <- 2
+
+    ProjSD <- if (.UserSupplied(Index_Obs, "CV")) sdconv(1, .SimValues(Index_Obs@CV, nSim)) else Stats$SD
+    ProjAC <- if (.UserSupplied(Index_Obs, "AC")) .SimValues(Index_Obs@AC, nSim) else Stats$AC
+
+    ResidualsProjection <- if (.UserSupplied(Index_Obs, "Error")) {
+      .ProjYearValues(Index_Obs@Error, nSim, ProjYears)
+    } else {
+      GenResiduals(SD = ProjSD,
+                   AC = ProjAC,
+                   Years = ProjYears,
+                   TruncSD = Index_Obs@TruncSD,
+                   nSeasons = nSeasons,
+                   NA_Season = Stats$NA_Season,
+                   LastError = exp(.LastResidual(LogResiduals)))
+    }
+
+    ResidualsHistorical <- exp(LogResiduals)
+    
+    Index_Obs@Error <- abind::abind(ResidualsHistorical, ResidualsProjection,
+                                    along=2, use.dnns=TRUE) 
+    dimnames(Index_Obs@Error) <- list(Sim = seq_len(nSim),
+                                     Year=c(HistYears, ProjYears))
+    
+    slot(Hist@OM@Obs[[i]][[Indices_Name[fl]]],type) <- Index_Obs
+    
+  
+ } # end fleet loop
+  
+  Hist
+}
+
+
+
+
+#' Calculate log residuals for standardized index, fitting hyperstability (beta)
+#'
+#' Computes log-scale residuals under the hyperstability model
+#' `Observed_t = Efficiency * Simulated_t^Beta * exp(residual_t)` (Harley et
+#' al. 2001). `Efficiency` is fit per simulation by log-linear regression;
+#' `Beta` estimation (or fixing) is delegated to [EstimateBeta()].
+#'
+#' @param ObservedIndex Numeric vector of length nYear with observed index values.
+#' @param SimulatedIndex Numeric matrix or array of dimensions nSim x nYear with simulated index values.
+#' @param beta `NULL`, numeric scalar, or length-nSim vector. Passed through
+#'   to [EstimateBeta()].
+#' @param MinPoints Integer. Passed through to [EstimateBeta()]. Default `8`.
+#' @param FitInd Integer vector or `NULL`. Year positions to restrict fitting
+#'   to (e.g. `Index_Obs@Years`). `NULL` (default) uses every non-NA, positive year.
+#' @param alpha Numeric. Passed through to `EstimateBeta()`. Default `0.05`.
+#'
+#' @details
+#' `NA` or non-positive years are dropped before fitting. See
+#' [EstimateBeta()] for when `Beta` is fixed at `1` rather than freely
+#' estimated.
+#'
+#' @return A list with elements:
+#' * `LogResiduals`: matrix nSim x nYear of log residuals (`log(Observed) - fitted log(Observed)`)
+#' * `Beta`: numeric vector length nSim, the fitted or supplied beta values.
+#' * `Efficiency`: numeric vector length nSim, the fitted catchability `q`.
+#' * `SE_Beta`, `CI_Lower`, `CI_Upper`, `R2`, `PValue`, `nPoints`, `Status`: fit
+#'   diagnostics from [EstimateBeta()], passed through unchanged.
+#'
+#' @export
+CalcIndexResiduals <- function(ObservedIndex, SimulatedIndex, beta = NULL,
+                                MinPoints = 8, FitInd = NULL, alpha = 0.05) {
+
+  if (any(ObservedIndex < 0, na.rm = TRUE)) {
+    cli::cli_abort(
+      "`ObservedIndex` cannot have negative values. Standardize to positive values with mean 1."
+    )
+  }
+
+  nSim <- nrow(SimulatedIndex)
+  n_ts <- ncol(SimulatedIndex)
+  ObservedIndex <- ObservedIndex[seq_len(n_ts)]
+
+  ValidInd <- which(!is.na(ObservedIndex) & ObservedIndex > 0)
+  if (!is.null(FitInd)) ValidInd <- intersect(ValidInd, FitInd)
+
+  logObs <- log(ObservedIndex[ValidInd])
+  logSim <- log(SimulatedIndex[, ValidInd, drop = FALSE])
+  logSim[!is.finite(logSim)] <- NA
+
+  BetaFit <- EstimateBeta(logObs, logSim, beta = beta, MinPoints = MinPoints, alpha = alpha)
+  Beta <- BetaFit$Beta
+
+  if (length(ValidInd) == 0) {
+    LogResiduals <- matrix(NA_real_, nrow = nSim, ncol = n_ts)
+    return(list(LogResiduals = LogResiduals,
+                Beta = Beta,
+                Efficiency = rep(0, nSim),
+                SE_Beta  = BetaFit$SE_Beta,
+                CI_Lower = BetaFit$CI_Lower,
+                CI_Upper = BetaFit$CI_Upper,
+                R2       = BetaFit$R2,
+                PValue   = BetaFit$PValue,
+                nPoints  = BetaFit$nPoints,
+                Status   = BetaFit$Status))
+  }
+
+
+  ybar <- mean(logObs, na.rm = TRUE)
+  xbar <- rowMeans(logSim, na.rm = TRUE)
+
+  logQ <- ybar - Beta * xbar
+  Efficiency <- exp(logQ)
+  Efficiency[!is.finite(Efficiency)] <- 0
+
+  logSimAll <- log(SimulatedIndex)
+  fitted <- logQ + Beta * logSimAll
+  LogResiduals <- sweep(-fitted, 2, log(ObservedIndex), FUN = "+")
+
+  list(
+    LogResiduals = LogResiduals,
+    Beta         = Beta,
+    Efficiency   = Efficiency,
+    SE_Beta      = BetaFit$SE_Beta,
+    CI_Lower     = BetaFit$CI_Lower,
+    CI_Upper     = BetaFit$CI_Upper,
+    R2           = BetaFit$R2,
+    PValue       = BetaFit$PValue,
+    nPoints      = BetaFit$nPoints,
+    Status       = BetaFit$Status
+  )
+}
+
+
+#' Estimate (or Fix) the Hyperstability Parameter Beta
+#'
+#' Fits `Beta` per simulation by OLS regression of `log(Observed)` on
+#' `log(Simulated)`, or returns a supplied fixed value.
+#'
+#' When estimating, `Beta` is fixed at `1` when there isn't enough evidence to
+#' distinguish it from `1`, or clamped to `[0.1, 3]` when the fit is
+#' significant but extreme. The `Status` element records which of these
+#' happened for each simulation, so callers can surface it rather than have
+#' `Beta` silently fall back to `1`.
+#'
+#' @param logObs Numeric vector, length n. `log(Observed)` for the years
+#'   being fit (already subset to valid/fitted years).
+#' @param logSim Numeric matrix, nSim x n. `log(Simulated)` for the same
+#'   years, one row per simulation.
+#' @param beta `NULL`, numeric scalar, or length-nSim vector. When `NULL`
+#'   (default), `Beta` is estimated as described above. Otherwise the
+#'   supplied value(s) are used directly (recycled to nSim) and no fitting
+#'   or testing is performed (`Status = "fixed_user"`).
+#' @param MinPoints Integer. Minimum usable years required before attempting
+#'   a free fit. Default `8`.
+#' @param MinLogSD Numeric. Minimum standard deviation of `log(Simulated)`
+#'   (per simulation) required before attempting a free fit -- guards against
+#'   an unstable slope estimate from a near-flat nominal index. Default `0.1`.
+#' @param alpha Numeric. Two-sided significance level for testing whether
+#'   the fitted slope differs from `1`. Default `0.05`.
+#' @param Bounds Numeric length 2. Lower/upper clamp applied to a significant,
+#'   freely estimated `Beta`. Default `c(0.1, 3)`.
+#'
+#' @return A list with elements, each numeric length nSim unless noted:
+#' * `Beta`: the fitted or supplied `Beta`.
+#' * `SE_Beta`: standard error of the OLS slope. `NA` unless `Status == "estimated"`.
+#' * `CI_Lower`, `CI_Upper`: two-sided `1 - alpha` confidence interval on the
+#'   OLS slope (pre-clamping). `NA` unless `Status == "estimated"` or `"fixed_bounds"`.
+#' * `R2`: fit R-squared. `NA` unless `Status == "estimated"` or `"fixed_bounds"`.
+#' * `PValue`: two-sided p-value for `Beta == 1`. `NA` unless `Status ==
+#'   "estimated"` or `"fixed_bounds"`.
+#' * `nPoints`: scalar integer, the number of years used in the fit (`n`).
+#' * `Status`: character. One of `"estimated"`, `"fixed_user"` (`Beta` was
+#'   supplied), `"fixed_insufficient_data"` (`n < MinPoints`),
+#'   `"fixed_low_variance"` (nominal index too flat to fit reliably),
+#'   `"fixed_not_significant"` (slope not distinguishable from `1` at
+#'   `alpha`), or `"fixed_bounds"` (significant slope clamped to `Bounds`).
+#'
+#' @export
+EstimateBeta <- function(logObs, logSim, beta = NULL, MinPoints = 8,
+                          MinLogSD = 0.1, alpha = 0.05, Bounds = c(0.1, 3)) {
+
+  nSim <- nrow(logSim)
+  n    <- length(logObs)
+
+  NAVec <- rep(NA_real_, nSim)
+
+  if (!is.null(beta)) {
+    Beta <- rep(beta, length.out = nSim)
+    return(list(Beta = Beta, SE_Beta = NAVec, CI_Lower = NAVec, CI_Upper = NAVec,
+                R2 = NAVec, PValue = NAVec, nPoints = n,
+                Status = rep("fixed_user", nSim)))
+  }
+
+  if (n < MinPoints) {
+    return(list(Beta = rep(1, nSim), SE_Beta = NAVec, CI_Lower = NAVec, CI_Upper = NAVec,
+                R2 = NAVec, PValue = NAVec, nPoints = n,
+                Status = rep("fixed_insufficient_data", nSim)))
+  }
+
+  ybar <- mean(logObs, na.rm = TRUE)
+  xbar <- rowMeans(logSim, na.rm = TRUE)
+
+  xc <- logSim - xbar
+  yc <- matrix(logObs - ybar, nrow = nSim, ncol = n, byrow = TRUE)
+
+  Sxy <- rowSums(xc * yc, na.rm = TRUE)
+  Sxx <- rowSums(xc^2, na.rm = TRUE)
+  Syy <- rowSums(yc^2, na.rm = TRUE)
+
+  Degenerate <- !(Sxx > 1e-8)
+  SDx        <- sqrt(Sxx / pmax(n - 1, 1))
+  LowVar     <- Degenerate | (SDx < MinLogSD)
+
+  BetaOLS <- ifelse(Degenerate, 1, Sxy / pmax(Sxx, 1e-12))
+  R2      <- ifelse(Degenerate | !(Syy > 1e-8), 0, (Sxy^2) / (Sxx * Syy))
+
+  # SE of the slope: SE(beta) = sqrt(s2 / Sxx), s2 = SSE / (n-2)
+  resid_c <- yc - BetaOLS * xc
+  SSE     <- rowSums(resid_c^2, na.rm = TRUE)
+  s2      <- SSE / pmax(n - 2, 1)
+  SE_beta <- sqrt(s2 / pmax(Sxx, 1e-12))
+
+  DF    <- max(n - 2, 1)
+  CritT <- stats::qt(1 - alpha / 2, df = DF)
+
+  tstat  <- ifelse(SE_beta > 0, (BetaOLS - 1) / SE_beta,
+                   ifelse(BetaOLS == 1, 0, Inf))
+  PValue <- ifelse(is.finite(tstat), 2 * stats::pt(abs(tstat), df = DF, lower.tail = FALSE), 0)
+
+  CI_Lower <- BetaOLS - CritT * SE_beta
+  CI_Upper <- BetaOLS + CritT * SE_beta
+
+  NotSignificant <- !LowVar & is.finite(tstat) & (abs(tstat) < CritT)
+  OutOfBounds    <- !LowVar & !NotSignificant & (BetaOLS < Bounds[1] | BetaOLS > Bounds[2])
+
+  Status <- ifelse(LowVar, "fixed_low_variance",
+             ifelse(NotSignificant, "fixed_not_significant",
+              ifelse(OutOfBounds, "fixed_bounds", "estimated")))
+
+  Beta <- ifelse(Status %in% c("fixed_low_variance", "fixed_not_significant"), 1,
+           ifelse(Status == "fixed_bounds", pmin(pmax(BetaOLS, Bounds[1]), Bounds[2]),
+            BetaOLS))
+
+  # Diagnostics are only meaningful where a slope was actually fit and used.
+  Blank <- LowVar
+  SE_beta[Blank]  <- NA_real_
+  CI_Lower[Blank] <- NA_real_
+  CI_Upper[Blank] <- NA_real_
+  PValue[Blank]   <- NA_real_
+  R2[Blank]       <- NA_real_
+
+  list(
+    Beta     = Beta,
+    SE_Beta  = SE_beta,
+    CI_Lower = CI_Lower,
+    CI_Upper = CI_Upper,
+    R2       = R2,
+    PValue   = PValue,
+    nPoints  = n,
+    Status   = Status
+  )
+}
+
+
+#' Align and validate observed index data
+#'
+#' Matches the rows of `Indices@Value` (and `Indices@CV`) to the model time
+#' steps by row name, and checks that the per-index entries (`Units`,
+#' `Timing`, `Ref`) have one value per index. Length-1 `Units` and `Timing`
+#' are recycled to all indices.
+#'
+#' @param Indices An [indicesdata-class] object with non-`NULL` `Value`.
+#' @param HistYears,ProjYears Model time steps of the historical and
+#'   projection periods.
+#' @param Where Location of `Indices` in the OM, for error messages.
+#'
+#' @return A list with `Indices` (rows covering the time steps from the first
+#'   historical year to the last observation, at least all historical years,
+#'   named by time step) and `Assumption` (a message when rows were matched by
+#'   position because `Value` has no row names, otherwise `NULL`).
+#' @keywords internal
+.AlignIndicesData <- function(Indices, HistYears, ProjYears, Where = "Indices") {
+  Value    <- Indices@Value
+  AllYears <- c(HistYears, ProjYears)
+  nIndex   <- ncol(Value)
+  Name     <- Indices@Name %||% colnames(Value)
+
+  if (length(Name) != nIndex)
+    cli::cli_abort("{.code {Where}@Name} has {length(Name)} element{?s} but {.code {Where}@Value} has {nIndex} column{?s}.")
+
+  .MatchRows <- function(x, label) {
+    rn <- rownames(x)
+    if (is.null(rn)) {
+      if (nrow(x) < length(HistYears) || nrow(x) > length(AllYears))
+        cli::cli_abort(c("x" = "{.code {Where}@{label}} has no row names and {nrow(x)} rows; without row names it needs one row per model time step from the first historical year ({length(HistYears)} historical).",
+                         "i" = "Name the rows by year (values of {.code Years(OM, 'Historical')}) to supply only some years."))
+      return(seq_len(nrow(x)))
+    }
+    yrs <- suppressWarnings(as.numeric(rn))
+    idx <- vapply(yrs, \(y) {
+      d <- abs(AllYears - y)
+      if (!is.na(y) && min(d) < 1e-6) which.min(d) else NA_integer_
+    }, integer(1))
+    if (anyNA(idx))
+      cli::cli_abort(c("x" = "{.code {Where}@{label}} has {cli::qty(sum(is.na(idx)))}row name{?s} {.val {rn[is.na(idx)]}} that {?is/are} not model time steps.",
+                       "i" = "Row names must be values of {.code Years(OM, 'Historical')} (or {.code 'Projection'})."))
+    if (anyDuplicated(idx))
+      cli::cli_abort("{.code {Where}@{label}} has duplicated row{?s} for time step{?s} {.val {unique(rn[duplicated(idx)])}}.")
+    idx
+  }
+
+  .Full <- function(x, idx, nRow) {
+    out <- matrix(NA_real_, nRow, nIndex,
+                  dimnames = list(Year = AllYears[seq_len(nRow)], Fleet = Name))
+    out[idx, ] <- as.matrix(x)
+    out
+  }
+
+  ValIdx <- .MatchRows(Value, "Value")
+  CV     <- Indices@CV
+  CVIdx  <- NULL
+  if (!is.null(CV)) {
+    if (length(dim(CV)) != 2 || ncol(CV) != nIndex)
+      cli::cli_abort("{.code {Where}@CV} must be a matrix with one column per index ({nIndex}).")
+    CVIdx <- if (is.null(rownames(CV)) && nrow(CV) == nrow(Value)) ValIdx else .MatchRows(CV, "CV")
+  }
+  nRow <- max(length(HistYears), ValIdx, CVIdx)
+
+  Assumption <- if (is.null(rownames(Value)))
+    cli::format_inline("{.code {Where}@Value} has no row names; its rows are assumed to start in the first historical year ({.val {HistYears[1]}}).")
+
+  .PerIndex <- function(x, label, recycle) {
+    if (!length(x)) return(x)
+    if (recycle && length(x) == 1) return(rep(x, nIndex))
+    if (length(x) != nIndex)
+      cli::cli_abort("{.code {Where}@{label}} has {length(x)} value{?s}; needs one per index ({nIndex}){if (recycle) ' or a single value' else ''}.")
+    x
+  }
+
+  Indices@Value  <- .Full(Value, ValIdx, nRow)
+  if (!is.null(CV)) Indices@CV <- .Full(CV, CVIdx, nRow)
+  Indices@Name   <- Name
+  Indices@Units  <- .PerIndex(Indices@Units, "Units", TRUE)
+  Indices@Timing <- .PerIndex(Indices@Timing, "Timing", TRUE)
+  Indices@Ref    <- .PerIndex(Indices@Ref, "Ref", FALSE)
+  list(Indices = Indices, Assumption = Assumption)
+}
