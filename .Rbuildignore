@@ -40,4 +40,4 @@ src\*.dll
 ^CRAN-SUBMISSION$
 ^\.positai$
 ^\.claude$
-
+^man-examples$

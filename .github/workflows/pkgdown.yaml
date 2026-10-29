@@ -12,7 +12,7 @@ jobs:
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
 
       - uses: r-lib/actions/setup-tinytex@v2
 
@@ -21,6 +21,7 @@ jobs:
       - uses: r-lib/actions/setup-r@v2
         with:
           use-public-rspm: true
+          extra-repositories: 'https://r4ss.r-universe.dev https://flr.r-universe.dev'
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
