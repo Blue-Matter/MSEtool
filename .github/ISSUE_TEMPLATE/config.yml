@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: openMSE documentation
+    url: https://docs.openmse.com
+    about: User guides and tutorials for building operating models and running MSEs.
+  - name: MSEtool function reference
+    url: https://msetool.openmse.com
+    about: Documentation for every MSEtool function and class.
