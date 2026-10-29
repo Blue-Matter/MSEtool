@@ -432,7 +432,7 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
     if (!silent) message("Beverton-Holt steepness = ", Data@steep)
   } else if(replist$SRRtype == 2) { # Ricker
     steep <- replist$parameters[grepl("SR_Ricker", rownames(replist$parameters)), ]
-    Data@steep <- steep$Value
+    Data@steep <- 0.2 * exp(0.8 * steep$Value)
 
     if (!silent) message("Ricker steepness = ", Data@steep)
   } else if(replist$SRRtype == 7) {
