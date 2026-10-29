@@ -29,7 +29,7 @@ CheckOM <- function(OM, msg=TRUE, stop_if_missing=TRUE) {
   OM <- UpdateObject(OM)
   
   # Stock 
-  MissingStock <- .CheckStock(Stock=OM@Stock)
+  MissingStock <- .CheckStock(OM@Stock)
   if (!length(MissingStock))
     MissingStock <- NULL
   
