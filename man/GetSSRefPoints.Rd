@@ -27,7 +27,10 @@ Defaults to a standard set of F, catch, and biomass reference points:
 at the SPR target.
 \item \code{"SSB_MSY"}, \code{"SPR_MSY"}, \code{"annF_MSY"}, \code{"Dead_Catch_MSY"},
 \code{"Ret_Catch_MSY"} — SSB, SPR, F, dead catch, and retained catch at MSY.
-}}
+}
+
+Labels from older SS3 versions (\code{Fstd_}, \code{TotYield_}, \code{RetYield_}) are
+returned under their current names (\code{annF_}, \code{Dead_Catch_}, \code{Ret_Catch_}).}
 }
 \value{
 If \code{SSDir} contains a single model, a data frame with columns:

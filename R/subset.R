@@ -249,7 +249,7 @@ Subset <- function(object,
 .MiscSelRet  <- c("Selectivity", "Retention", "DiscardMortality")
 .MiscByYear  <- c("Advice", "TACAttainment", "BagLimit", .MiscSelRet)
 .MiscByAge   <- c("Advice", .MiscSelRet, "InitialAtAge")
-.MiscByMP    <- c("Advice", "TACAttainment", "BagLimit", .MiscSelRet)
+.MiscByMP    <- c("Advice", "TACAttainment", "BagLimit", "Interval", .MiscSelRet)
 .MiscByFleet <- c("Advice", "TACAttainment", "BagLimit", .MiscSelRet, "AnnualTAC")
 
 .SubsetMiscEntries <- function(object, Keep, fn, ...) {

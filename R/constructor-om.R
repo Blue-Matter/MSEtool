@@ -1006,7 +1006,9 @@ Relations <- function(x) .IsHist(x, "Relations")
 #' seasons by [SeasonalAllocation()].
 #'
 #' @return
-#' - `Interval()` returns the value of the `Interval` slot.
+#' - `Interval()` returns the value of the `Interval` slot. For an [mse-class]
+#'   object it returns a named numeric vector of the interval (years) each MP
+#'   was projected with.
 #' - `Interval<-()` returns `x` with the `Interval` slot updated.
 #'
 #' @seealso
@@ -1029,7 +1031,11 @@ Relations <- function(x) .IsHist(x, "Relations")
 #'
 #' @rdname Interval
 #' @export
-Interval <- function(x) .IsHist(x, "Interval")
+Interval <- function(x) {
+  if (inherits(x, "mse"))
+    return(vapply(names(x@MPs), \(mp) .MSEInterval(x, mp), numeric(1)))
+  .IsHist(x, "Interval")
+}
 
 #' @rdname Interval
 #' @export

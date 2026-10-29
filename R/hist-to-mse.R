@@ -3,7 +3,8 @@
 #' Constructs a skeleton [mse-class] object from a completed [hist-class]
 #' object by copying the operating model, unfished reference state, reference
 #' points, and historical time-series slots via `.CopyTimeseriesSlots()`. MP
-#' functions are attached via `.AddMPFunctions()` and projection-period
+#' functions are attached via `.AddMPFunctions()`, the management interval
+#' resolved for each MP is stored in `MSE@Misc$Interval`, and projection-period
 #' arrays are pre-allocated via `.InitializeTimeSeries()`.
 #'
 #' @param Hist A populated [hist-class] object.
@@ -21,6 +22,7 @@
   MSE@Reference <- Hist@Reference
   MSE           <- .CopyTimeseriesSlots(MSE, Hist)
   MSE           <- .AddMPFunctions(MSE, MPs)
+  MSE@Misc$Interval <- .MPIntervals(MSE@OM, MSE@MPs)
   MSE           <- .InitializeTimeSeries(MSE, 'Projection', MPs = names(MPs))
   MSE
 }

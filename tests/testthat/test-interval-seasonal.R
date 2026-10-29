@@ -168,3 +168,40 @@ test_that("a custom MP with a multi-year Interval stays phase-aligned on a seaso
   expect_true(all(is.finite(mse@SBiomass)))
   expect_gt(min(mse@SBiomass), 0)
 })
+
+test_that("the mse records the interval each MP was projected with", {
+  skip_on_cran()
+  data(SeasonalSpatialOM, envir = environment())
+  om <- SeasonalSpatialOM
+  om@nSim <- 2
+  set.seed(1)
+  hist <- Simulate(om, silent = TRUE)
+  hist@OM@Interval <- c(2, B = 4)
+
+  A <- function(Data) Advice(TAC = 100 + ProjectionYear(Data), TACUnit = Data@Landings@Units)
+  class(A) <- 'mp'
+  attr(A, 'Interval') <- 3
+  B <- A
+  C <- A
+  attr(C, 'Interval') <- NULL
+
+  mse <- suppressWarnings(Project(hist, MPs = list(A = A, B = B, C = C), silent = TRUE))
+
+  expect_equal(mse@Misc$Interval, c(A = 3, B = 4, C = 2))
+  expect_equal(Interval(mse), c(A = 3, B = 4, C = 2))
+
+  tac <- TAC(mse)
+  for (mp in names(Interval(mse))) {
+    d <- tac[tac$MP == mp & tac$Sim == 1, ]
+    d <- d[order(d$Year), ]
+    changes <- d$Year[c(TRUE, diff(d$Value) != 0)]
+    expect_equal(unique(diff(changes)), Interval(mse)[[mp]])
+  }
+
+  sub <- Subset(mse, MPs = c("C", "A"))
+  expect_equal(Interval(sub), c(A = 3, C = 2))
+
+  # objects saved without Misc$Interval resolve from OM@Interval and the MP attributes
+  mse@Misc$Interval <- NULL
+  expect_equal(Interval(mse), c(A = 3, B = 4, C = 2))
+})

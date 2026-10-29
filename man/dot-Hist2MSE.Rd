@@ -20,7 +20,8 @@ projection arrays initialised, ready for closed-loop simulation.
 Constructs a skeleton \link[=mse-class]{mse} object from a completed \link[=hist-class]{hist}
 object by copying the operating model, unfished reference state, reference
 points, and historical time-series slots via \code{.CopyTimeseriesSlots()}. MP
-functions are attached via \code{.AddMPFunctions()} and projection-period
+functions are attached via \code{.AddMPFunctions()}, the management interval
+resolved for each MP is stored in \code{MSE@Misc$Interval}, and projection-period
 arrays are pre-allocated via \code{.InitializeTimeSeries()}.
 }
 \keyword{internal}

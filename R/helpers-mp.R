@@ -41,6 +41,18 @@
   unname(OMInterval[[1]])
 }
 
+.MPIntervals <- function(OM, MPs) {
+  vapply(names(MPs), \(mp) .ResolveInterval(OM@Interval, mp, MPs[[mp]], OM@Seasons), numeric(1))
+}
+
+# falls back to resolving from OM@Interval for `mse` objects saved without `Misc$Interval`
+.MSEInterval <- function(MSE, MPName) {
+  Recorded <- MSE@Misc$Interval
+  if (!is.null(Recorded) && MPName %in% names(Recorded))
+    return(unname(Recorded[[MPName]]))
+  .ResolveInterval(MSE@OM@Interval, MPName, MSE@MPs[[MPName]], MSE@OM@Seasons)
+}
+
 #' Resolve the `Hist` Slots Passed to an MP via `Data@Misc$DataOM`
 #'
 #' Combines `OM@Control$DataOM` with the MP's `DataOM` attribute. A

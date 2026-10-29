@@ -17,7 +17,9 @@ numeric vector giving a per-MP interval.}
 }
 \value{
 \itemize{
-\item \code{Interval()} returns the value of the \code{Interval} slot.
+\item \code{Interval()} returns the value of the \code{Interval} slot. For an \link[=mse-class]{mse}
+object it returns a named numeric vector of the interval (years) each MP
+was projected with.
 \item \verb{Interval<-()} returns \code{x} with the \code{Interval} slot updated.
 }
 }

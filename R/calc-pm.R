@@ -416,7 +416,7 @@ NULL
   YearsProj <- YearsProj[!YearsProj %in% .InterimTimesteps(object@OM)]
   mpNames   <- unique(df$MP)
   keep <- lapply(mpNames, function(mp) {
-    Interval  <- .ResolveInterval(object@OM@Interval, mp, object@MPs[[mp]], object@OM@Seasons)
+    Interval  <- .MSEInterval(object, mp)
     ManageYrs <- if (length(YearsProj)) .CalcManagementYears(YearsProj, Interval, object@OM@Seasons) else YearsProj
     if (Calendar)
       return(df$MP == mp & df$Year %in% .CalendarYear(ManageYrs))
