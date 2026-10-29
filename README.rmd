@@ -20,6 +20,7 @@ knitr::opts_chunk$set(
 [![CRAN status](https://www.r-pkg.org/badges/version/MSEtool)](https://CRAN.R-project.org/package=MSEtool)
 [![R-CMD-check](https://github.com/Blue-Matter/MSEtool/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Blue-Matter/MSEtool/actions/workflows/R-CMD-check.yaml)
 `r badger::badge_devel("blue-matter/MSEtool", "blue")`
+[![Codecov test coverage](https://codecov.io/gh/Blue-Matter/MSEtool/graph/badge.svg)](https://app.codecov.io/gh/Blue-Matter/MSEtool)
 <!-- badges: end -->
 
 `MSEtool` is the core package in the [openMSE](https://openMSE.com) collection of R packages for fisheries management strategy evaluation (MSE). It provides a complete framework for building operating models, simulating fishery dynamics, and testing the performance of alternative management procedures using closed-loop simulation.
