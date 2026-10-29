@@ -162,7 +162,8 @@ PopulateSpatial <- function(Spatial,
   for (sl in c("ProbStaying", "RelativeSize")) {
     x <- methods::slot(Spatial, sl)
     if (!IsSet(x) || is.character(x)) next
-    Areas[sl] <- if (IsArr(x)) .AreaDim(x, "Area", 2) else if (length(x) <= 2) 2L else length(x)
+    Short <- if (sl == "ProbStaying") 1L else 2L
+    Areas[sl] <- if (IsArr(x)) .AreaDim(x, "Area", 2) else if (length(x) <= 2) Short else length(x)
   }
   Areas
 }
@@ -173,8 +174,8 @@ PopulateSpatial <- function(Spatial,
     return(1)
 
   nArea <- max(Areas)
-  # two-area ProbStaying arrays hold Area 1 only
-  OK <- Areas == nArea | (names(Areas) == "ProbStaying" & Areas == 1L & nArea == 2L)
+  # single-area ProbStaying is Area 1 (2 areas) or recycled across areas
+  OK <- Areas == nArea | (names(Areas) == "ProbStaying" & Areas == 1L)
   if (all(OK))
     return(as.numeric(nArea))
 

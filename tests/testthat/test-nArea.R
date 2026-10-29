@@ -30,6 +30,8 @@ test_that("nArea accepts the two-area ProbStaying convention", {
   sp <- Spatial(UnfishedDist = 0.6, ProbStaying = 0.9)
   expect_equal(nArea(sp), 2)
   expect_equal(nArea(Populate(sp, silent = TRUE)), 2)
+  expect_equal(nArea(Spatial(UnfishedDist = array(1/3, c(1, 3, 1, 1)), ProbStaying = 0.5)), 3)
+  expect_equal(nArea(Spatial(UnfishedDist = array(1/3, c(1, 3, 1, 1)), ProbStaying = c(0.4, 0.6))), 3)
 })
 
 test_that("nArea errors on inconsistent Area dimensions", {
