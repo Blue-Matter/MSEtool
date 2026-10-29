@@ -9,7 +9,7 @@
   nSim      <- nSim(Hist)
   HistYears <- Years(Hist, 'H')
 
-  ComplexNames <- names(Hist@OM@Complexes)
+  ComplexNames <- ComplexNames(Hist)
 
   if (!length(EffortAllocation))
     EffortAllocation <- MakeNamedList(ComplexNames)

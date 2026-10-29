@@ -10,10 +10,14 @@
 \alias{AgeClasses}
 \alias{LengthClasses}
 \alias{nComplex}
+\alias{ComplexNames}
+\alias{nMP}
+\alias{MPNames}
 \alias{nStock}
 \alias{nFleet}
 \alias{StockNames}
 \alias{FleetNames}
+\alias{IndexNames}
 \title{Object Dimensions and Names}
 \usage{
 nSim(x)
@@ -32,6 +36,12 @@ LengthClasses(x, st = NULL)
 
 nComplex(x)
 
+ComplexNames(x)
+
+nMP(x)
+
+MPNames(x)
+
 nStock(x)
 
 nFleet(x)
@@ -39,6 +49,8 @@ nFleet(x)
 StockNames(object)
 
 FleetNames(object, IncSurvey = FALSE)
+
+IndexNames(x, Type = c("CPUE", "Survey"))
 }
 \arguments{
 \item{x}{An \link[=om-class]{om}, \link[=hist-class]{hist}, or \link[=mse-class]{mse} object, or a component
@@ -55,6 +67,9 @@ a list when \code{NULL} and \code{x} has more than one stock).}
 \link[=fleet-class]{fleet}, or \link[=data-class]{data} object, or a list of these objects.}
 
 \item{IncSurvey}{Logical. Include names of survey (non-fishing) fleets? Default: FALSE}
+
+\item{Type}{Character. The index types returned by \code{IndexNames()}: \code{"CPUE"},
+\code{"Survey"}, or both (default).}
 }
 \value{
 \itemize{
@@ -87,8 +102,17 @@ are taken from the age or size composition data, or else from
 \code{LifeHistory}. When the size compositions of different fleets use
 different bins, \code{LengthClasses()} returns a list and \code{nLength()} an
 integer vector, with one element per fleet.
-\item \code{nComplex()} returns the number of stock complexes in an \link[=om-class]{om},
-\link[=hist-class]{hist}, or \link[=mse-class]{mse} object.
+\item \code{nComplex()} and \code{ComplexNames()} return the number and names of the
+stock complexes in an \link[=om-class]{om}, \link[=hist-class]{hist}, or \link[=mse-class]{mse} object.
+When \code{Complexes} is not specified, these are the complexes created by
+\code{\link[=Simulate]{Simulate()}}.
+\item \code{nMP()} and \code{MPNames()} return the number and names of the management
+procedures in an \link[=mse-class]{mse} or \link[=pm-class]{pm} object.
+\item \code{IndexNames()} returns the names of the \code{CPUE} and/or \code{Survey} indices.
+For a \link[=data-class]{data} object (or a list of them) these are the indices in
+the data. For an \link[=om-class]{om} object they are the indices in \code{Data}, and for
+a \link[=hist-class]{hist} or \link[=mse-class]{mse} object also the indices simulated from
+\code{Obs}.
 \item \code{StockNames()} returns a character vector of stock names.
 \item \code{FleetNames()} returns a character vector of fleet names, taken from the
 first stock. For a \link[=data-class]{data} object (or a list of them) the names are
@@ -98,8 +122,9 @@ taken from the catch, effort, and composition data, and
 }
 \description{
 Return the number of simulations, stocks, fleets, areas, ages, length
-classes, or complexes in an object, its age and length classes, and the names
-of its stocks and fleets.
+classes, complexes, or management procedures in an object, its age and length
+classes, and the names of its stocks, fleets, complexes, indices, and
+management procedures.
 }
 \examples{
 nSim(SingleStockOM)

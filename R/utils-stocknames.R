@@ -62,3 +62,34 @@ FleetNames <- function(object, IncSurvey = FALSE) {
     return(NULL)
   dimnames(Value)[["Fleet"]] %||% paste("Fleet", seq_len(NCOL(Value)))
 }
+
+#' @rdname Dimensions
+#' @export
+IndexNames <- function(x, Type = c("CPUE", "Survey")) {
+  Type <- match.arg(Type, several.ok = TRUE)
+
+  if (inherits(x, "data"))
+    x <- list(x)
+  if (.IsDataList(x))
+    return(purrr::map(x, \(d) purrr::map(Type, \(type) .DataFleetNames(methods::slot(d, type)))) |>
+             unlist() |> unique() |> as.character())
+
+  .CheckClass(x, c("om", "hist", "mse", "data"), "x")
+  Simulated <- inherits(x, c("hist", "mse"))
+  if (Simulated)
+    x <- x@OM
+
+  DataList <- x@Data
+  if (inherits(DataList, "data"))
+    DataList <- list(DataList)
+  Names <- if (length(DataList)) IndexNames(DataList, Type) else character(0)
+
+  if (Simulated) {
+    ObsNames <- purrr::map(x@Obs, \(ObsList) {
+      HasIndex <- purrr::map_lgl(ObsList, \(obs) any(purrr::map_lgl(Type, \(type) !is.null(methods::slot(obs, type)@Error))))
+      names(ObsList)[HasIndex]
+    })
+    Names <- c(Names, unlist(ObsNames))
+  }
+  unique(as.character(Names))
+}

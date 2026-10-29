@@ -41,7 +41,7 @@
   nSim      <- nSim(Hist)
   HistYears <- Years(Hist,'H')
 
-  ComplexNames  <- names(Hist@OM@Complexes)
+  ComplexNames  <- ComplexNames(Hist)
 
   if (!length(Allocation))
     Allocation <- MakeNamedList(ComplexNames)

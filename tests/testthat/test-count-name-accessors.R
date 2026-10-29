@@ -142,3 +142,44 @@ test_that("year, season, sim, and area helpers work for data objects", {
   expect_equal(nYear(ds), 3)
   expect_equal(CurrentYear(ds), 2003)
 })
+
+test_that("nComplex and ComplexNames match before and after Simulate", {
+  expect_equal(nComplex(OM()), 0)
+  expect_equal(ComplexNames(OM()), character(0))
+  expect_equal(nComplex(SingleStockOM), 1)
+  expect_equal(ComplexNames(SingleStockOM), StockNames(SingleStockOM))
+  expect_equal(nComplex(MultiStockOM), 2)
+
+  Hist <- Simulate(MultiStockOM, silent = TRUE)
+  expect_equal(nComplex(Hist), nComplex(MultiStockOM))
+  expect_equal(ComplexNames(Hist), ComplexNames(MultiStockOM))
+
+  om <- MultiStockOM
+  om@Complexes <- list(Both = 1:2)
+  expect_equal(nComplex(om), 1)
+  expect_equal(ComplexNames(om), "Both")
+  expect_error(nComplex(Stock()), "must be class")
+})
+
+test_that("IndexNames returns data and simulated index names", {
+  d <- Data()
+  d@Survey@Name <- "Acoustic"
+  d@Survey@Value <- array(1, c(2, 1))
+  d@CPUE@Name <- "LL CPUE"
+  d@CPUE@Value <- array(1, c(2, 1))
+  expect_equal(IndexNames(d), c("LL CPUE", "Acoustic"))
+  expect_equal(IndexNames(d, "Survey"), "Acoustic")
+  expect_equal(IndexNames(list(d, d)), c("LL CPUE", "Acoustic"))
+
+  Hist <- Simulate(TwoFleetOM, silent = TRUE)
+  Data <- Hist@Data[[1]][[1]]
+  expect_setequal(IndexNames(Hist), IndexNames(Data))
+  expect_equal(IndexNames(Hist, "Survey"), Data@Survey@Name)
+})
+
+test_that("nMP and MPNames work for mse and pm objects", {
+  pm <- new("pm", MPs = c("A", "B"))
+  expect_equal(MPNames(pm), c("A", "B"))
+  expect_equal(nMP(pm), 2)
+  expect_error(nMP(SingleStockOM), "must be class")
+})

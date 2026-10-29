@@ -35,12 +35,15 @@ NULL
 #' Object Dimensions and Names
 #'
 #' Return the number of simulations, stocks, fleets, areas, ages, length
-#' classes, or complexes in an object, its age and length classes, and the names
-#' of its stocks and fleets.
+#' classes, complexes, or management procedures in an object, its age and length
+#' classes, and the names of its stocks, fleets, complexes, indices, and
+#' management procedures.
 #'
 #' @param x An [om-class], [hist-class], or [mse-class] object, or a component
 #'   object or list as described under Value.
 #' @param value Integer. The number of simulations to assign.
+#' @param Type Character. The index types returned by `IndexNames()`: `"CPUE"`,
+#'   `"Survey"`, or both (default).
 #' @param st Integer or character. Stock index or name used when `x` contains
 #'   multiple stocks. Default `1` for `nArea()` and `NULL` for `nAge()`,
 #'   `nLength()`, `AgeClasses()`, and `LengthClasses()` (returns all stocks as
@@ -76,8 +79,17 @@ NULL
 #'   `LifeHistory`. When the size compositions of different fleets use
 #'   different bins, `LengthClasses()` returns a list and `nLength()` an
 #'   integer vector, with one element per fleet.
-#' - `nComplex()` returns the number of stock complexes in an [om-class],
-#'   [hist-class], or [mse-class] object.
+#' - `nComplex()` and `ComplexNames()` return the number and names of the
+#'   stock complexes in an [om-class], [hist-class], or [mse-class] object.
+#'   When `Complexes` is not specified, these are the complexes created by
+#'   [Simulate()].
+#' - `nMP()` and `MPNames()` return the number and names of the management
+#'   procedures in an [mse-class] or [pm-class] object.
+#' - `IndexNames()` returns the names of the `CPUE` and/or `Survey` indices.
+#'   For a [data-class] object (or a list of them) these are the indices in
+#'   the data. For an [om-class] object they are the indices in `Data`, and for
+#'   a [hist-class] or [mse-class] object also the indices simulated from
+#'   `Obs`.
 #' - `StockNames()` returns a character vector of stock names.
 #' - `FleetNames()` returns a character vector of fleet names, taken from the
 #'   first stock. For a [data-class] object (or a list of them) the names are
@@ -764,16 +776,38 @@ LengthClasses <- function(x, st = NULL) {
 #' @rdname Dimensions
 #' @export
 nComplex <- function(x) {
+  length(.ComplexList(x))
+}
+
+#' @rdname Dimensions
+#' @export
+ComplexNames <- function(x) {
+  names(.ComplexList(x)) %||% character(0)
+}
+
+# OM@Complexes, or the complexes `Simulate()` will create when not yet populated
+.ComplexList <- function(x) {
   .CheckClass(x, c('om', 'hist', 'mse'), 'x')
-  
-  if (inherits(x, 'om'))
-    return(length(x@Complexes))
-  
-  if (inherits(x, 'hist'))
-    return(length(x@OM@Complexes))
-  
-  if (inherits(x, 'mse'))
-    return(length(x@OM@Complexes))
+  if (inherits(x, c('hist', 'mse')))
+    x <- x@OM
+  if (!length(x@Complexes) && nStock(x) > 0)
+    x <- .PopulateComplexes(x)
+  x@Complexes
+}
+
+#' @rdname Dimensions
+#' @export
+nMP <- function(x) {
+  length(MPNames(x))
+}
+
+#' @rdname Dimensions
+#' @export
+MPNames <- function(x) {
+  .CheckClass(x, c('mse', 'pm'), 'x')
+  if (inherits(x, 'pm'))
+    return(x@MPs)
+  names(x@MPs) %||% character(0)
 }
 
 #' @rdname Dimensions
