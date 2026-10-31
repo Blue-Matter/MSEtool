@@ -1062,7 +1062,7 @@ CalcMPDynamics_MF <- function(MPRecs_f, y, nyears, proyears, nsim,
     }
     
     # a TAC has been set
-    if (!TACused_NA[f]) {
+    if (any(is.na(TACused[, f]))) {
       # if MP returns NA - TAC is set to TAC from last year
       TACused[is.na(TACused[, f]), f] <- LastTAC[is.na(TACused[, f]), f]
       TACusedE[, f] <- out[[f]]$TAC_Imp_Error[, y] * TACused[, f]   # TAC taken after implementation error
