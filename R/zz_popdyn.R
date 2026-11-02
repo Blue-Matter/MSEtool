@@ -750,6 +750,10 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   if (!all(is.na(TACused))) { # a TAC has been set
     # if MP returns NA - TAC is set to TAC from last year
     TACused[is.na(TACused)] <- LastTAC[is.na(TACused)]
+    if (anyNA(TACused) && y > 1) { # no last TAC (effort-managed last year): use last year's catch
+      LastCatch <- apply(switch(TAC_type(control), removals = CB_P, retained = CB_Pret)[, , y - 1, , drop = FALSE], 1, sum)
+      TACused[is.na(TACused)] <- LastCatch[is.na(TACused)]
+    }
     TACusedE <- out$TAC_Imp_Error[,y]*TACused   # TAC taken after implementation error
 
 
@@ -1065,6 +1069,11 @@ CalcMPDynamics_MF <- function(MPRecs_f, y, nyears, proyears, nsim,
     if (!TACused_NA[f]) {
       # if MP returns NA - TAC is set to TAC from last year
       TACused[is.na(TACused[, f]), f] <- LastTAC[is.na(TACused[, f]), f]
+      if (anyNA(TACused[, f]) && y > 1) { # no last TAC (effort-managed last year): use last year's catch
+        CBlast <- switch(TAC_type(control), removals = FleetPars_f[[f]]$CB_P, retained = FleetPars_f[[f]]$CB_Pret)
+        LastCatch <- apply(CBlast[, , y - 1, , drop = FALSE], 1, sum)
+        TACused[is.na(TACused[, f]), f] <- LastCatch[is.na(TACused[, f])]
+      }
       TACusedE[, f] <- out[[f]]$TAC_Imp_Error[, y] * TACused[, f]   # TAC taken after implementation error
     }
   }
@@ -1079,7 +1088,8 @@ CalcMPDynamics_MF <- function(MPRecs_f, y, nyears, proyears, nsim,
     
     # Calculate total F (using Steve Martell's approach http://api.admb-project.org/baranov_8cpp_source.html)
     expC <- TACusedE
-    expC[TACusedE > availB] <- availB[TACusedE > availB] * 0.999
+    ind <- which(TACusedE > availB) # NA for effort-managed fleets
+    expC[ind] <- availB[ind] * 0.999
     
     retA_P_real_V <- lapply(out, function(o) scale_retA_real(o$retA_P_real, o$V_P_real))
     Ftot <- sapply(1:nsim, calcF_MF, expC,
@@ -1695,7 +1705,7 @@ calcF_MF <- function(x, TACusedE, V_P, retA_P, Biomass_P, fishdist, FM_P, FM_Pre
   fishdist_prop <- matrix(fishdist[x, , ], nareas, nf)
   fishdist_prop <- apply(fishdist_prop, 2, function(i) i/sum(i)) # Ensure proportions sum to 1 across areas
   
-  if (all(ct <= 1E-9) || all(ft <= 1E-9)) return(rep(tiny, nf))
+  if (all(ct <= 1E-9, na.rm = TRUE) || all(ft <= 1E-9, na.rm = TRUE)) return(rep(tiny, nf))
   Fmat <- Fmat_ret <- predC <- array(NA, c(maxage+1, nareas, nf))
   dct <- pct <- numeric(nf)
   for (i in 1:maxiterF) {
