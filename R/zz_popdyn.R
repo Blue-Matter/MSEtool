@@ -878,9 +878,10 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
                  M_ageArray=StockPars$M_ageArray,nyears, y, maxF, control_rem) # update if effort has changed
 
   # total fishing mortality (proxy for effort) for realized selectivity curve that doesn't asymptote at 1
+  # removals already maxF-capped by age/area; back-solve uncapped
   Ftot2 <- sapply(1:nsim, calcF, removedCatch, out$V_P_real, out$retA_P_real, Biomass_P, fishdist,
                  Asize=StockPars$Asize, maxage=StockPars$maxage, StockPars$nareas,
-                 M_ageArray=StockPars$M_ageArray,nyears, y, maxF, control_rem) # update if effort has changed
+                 M_ageArray=StockPars$M_ageArray,nyears, y, maxF = Inf, control_rem) # update if effort has changed
   
   # Effort relative to last historical with this catch
   Effort_act <- Ftot2/(FleetPars$FinF * FleetPars$qs*FleetPars$qvar[,y]*
@@ -1206,10 +1207,11 @@ CalcMPDynamics_MF <- function(MPRecs_f, y, nyears, proyears, nsim,
                  M_ageArray=StockPars$M_ageArray,nyears, y, maxF, control_rem) # update if effort has changed
 
   # total fishing mortality (proxy for effort) for realized selectivity curve that doesn't asymptote at 1
+  # removals already maxF-capped by age/area; back-solve uncapped
   Ftot2 <- sapply(1:nsim, calcF_MF, removedCatch, V_P = lapply(out, getElement, "V_P_real"),
                   retA_P = lapply(out, getElement, "retA_P_real"), Biomass_P, fishdist, FM_P = NULL, FM_Pret = NULL,
                   Asize=StockPars$Asize, maxage=StockPars$maxage, StockPars$nareas,
-                  M_ageArray=StockPars$M_ageArray,nyears, y, maxF, control_rem) # update if effort has changed
+                  M_ageArray=StockPars$M_ageArray,nyears, y, maxF = Inf, control_rem) # update if effort has changed
   
   Ftot <- matrix(Ftot, nf, nsim)
   Ftot2 <- matrix(Ftot2, nf, nsim)
