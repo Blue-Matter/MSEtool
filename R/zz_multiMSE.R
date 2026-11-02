@@ -1711,7 +1711,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         # retention at length array - projections
         FleetPars[[p]][[f]]$retL_P <- HistFleetPars[[p]][[f]]$retL_real
         # Discard ratio for projections
-        FleetPars[[p]][[f]]$DR_P <- HistFleetPars[[p]][[f]]$DR
+        FleetPars[[p]][[f]]$DR_P <- HistFleetPars[[p]][[f]]$DR_y
         FleetPars[[p]][[f]]$Fdisc_P <- HistFleetPars[[p]][[f]]$Fdisc_array1
         FleetPars[[p]][[f]]$SelRetBase <- init_SelRetBase(HistFleetPars[[p]][[f]], nsim)
 
