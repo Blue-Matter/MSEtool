@@ -44,6 +44,12 @@ See the documentation at <https://docs.openMSE.com> for details.
   models, including the index used for additional-index selectivity. New
   `comp_partition` argument selects retained, discarded, or all composition
   data.
+- `multiMSE` and `ProjectMOM` no longer fail when an MP returns an NA TAC for
+  every simulation of one fleet and a TAC for another (e.g., one fleet managed
+  by TAC and the other by effort). The fleet with the NA TAC is managed by
+  effort (#161). NA TACs in some simulations after a year of effort
+  management now fall back to the previous year's catch in `Project` and
+  `multiMSE`.
 - Weight-at-age of retained and discarded catch accounts for size
   selectivity and retention.
 - Fix issue where `MMSE` objects could not handle `multiHist` objects from
