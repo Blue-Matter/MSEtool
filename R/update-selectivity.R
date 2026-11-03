@@ -238,19 +238,26 @@
         select <- .ProcessSelectMeanAtAge(select,    Ages,   nArea, type, Year=FutureYears[1])
         select <- .ProcessSelectMeanAtLength(select, FleetLength, nArea, type, Year=FutureYears[1])
         select <- .ProcessSelectMeanAtWeight(select, Weight, nArea, type, Year=FutureYears[1])
-        
-        select <- populate(select,
-                           Ages     = Ages,
-                           Length   = FleetLength,
-                           Weight   = Weight,
-                           Maturity = Maturity,
-                           nSim     = 1,
-                           Years    = FutureYears,
-                           nArea    = nArea,
-                           CalcAtLength = TRUE,
-                           silent   = TRUE,
-                           replace  = TRUE,
-                           ASKOverride = ALK)
+
+        FleetObj <- Proj@OM@Fleet[[st]][[fl]]
+        populateArgs <- list(select,
+                             Ages     = Ages,
+                             Length   = FleetLength,
+                             Weight   = Weight,
+                             Maturity = Maturity,
+                             nSim     = 1,
+                             Years    = FutureYears,
+                             nArea    = nArea,
+                             CalcAtLength = TRUE,
+                             silent   = TRUE,
+                             replace  = TRUE,
+                             ASKOverride = ALK)
+        # selectivity-weighted retention-at-age, consistent with WeightFleetRetained
+        if (type == 'Retention')
+          populateArgs$Selectivity <- .SelectivityOnClasses(FleetObj@Selectivity,
+                                                            sim, FutureYears,
+                                                            Classes)
+        select <- do.call(populate, populateArgs)
         
         select@MeanAtAge <- .SetSimDimname(select@MeanAtAge, sim) |> 
           ExtendAreas(1:nArea) |> 
@@ -299,6 +306,22 @@
           Subset(FleetObj@Selectivity, Sims = sim, Years = FutureYears)
         RetObj   <- if (type == 'Retention') select else
           Subset(FleetObj@Retention,   Sims = sim, Years = FutureYears)
+
+        # re-weight retention-at-age by the new selectivity
+        if (type == 'Selectivity' && !is.null(RetObj@MeanAtLength) &&
+            !is.null(.SelectivityOnClasses(RetObj, sim, FutureYears, Classes))) {
+          RetAge <- .WeightedAtSize2AtAge(RetObj, select, FleetLength)@MeanAtAge |>
+            .SetSimDimname(sim) |>
+            ExtendAreas(1:nArea) |>
+            ExtendYears(FutureYears)
+          RetObj@MeanAtAge <- RetAge
+          FleetObj@Retention@MeanAtAge <- Extend(FleetObj@Retention@MeanAtAge,
+                                                 nSim = nSim, Years = FutureYears)
+          ArrayFill(FleetObj@Retention@MeanAtAge) <- RetAge
+          ArrayFill(Proj@Misc$RetAgeList[[st]]) <- AddDimension(RetAge, 'Fleet',
+                                                                val = FleetNames[fl],
+                                                                pos = 4)
+        }
 
         WSel <- .CalcFleetWeightAtAge(SelObj, Weight, FleetLength)
         WRet <- .CalcFleetWeightAtAge(SelObj, Weight, FleetLength,
@@ -363,6 +386,16 @@
   .CaptureLog(Proj,
               "`Imp@Size@Compliance` is currently ignored: size regulations (`Advice@Retention`/`Advice@Selectivity`) are applied in full to the whole fleet.",
               name = name, type = 'assumption')
+}
+
+# at-length object for one sim, or NULL when its at-length classes differ from `Classes`
+.SelectivityOnClasses <- function(Selectivity, sim, Years, Classes) {
+  if (is.null(Selectivity@MeanAtLength)) return(NULL)
+  SelClasses <- dimnames(Selectivity@MeanAtLength)$Class
+  if (length(SelClasses) != length(Classes) ||
+      !isTRUE(all.equal(as.numeric(SelClasses), as.numeric(Classes))))
+    return(NULL)
+  Subset(Selectivity, Sims = sim, Years = Years)
 }
 
 .SetSimDimname <- function(x, sim) {

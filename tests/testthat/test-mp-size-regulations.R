@@ -71,6 +71,41 @@ test_that("MP retention advice without MaxRet is applied in the projection", {
   expect_equal(unname(Frac[, 'CurrentEffort']), rep(1, nrow(Frac)), tolerance = 1e-6)
 })
 
+test_that("retention advice with dome-shaped selectivity gives non-negative discards", {
+  OM <- .SizeOM(nSim = 2)
+  Fl <- OM@Fleet[[1]][[1]]
+  Fl@Selectivity <- Selectivity(Pars = list(L5 = 30, LFS = 50, Vmaxlen = 0.05))
+  OM@Fleet[[1]][[1]] <- Fl
+  Hist <- Simulate(OM, silent = TRUE)
+  KnifeEdgeMP <- function(Data) {
+    Advice <- CurrentEffort(Data)
+    Classes <- Hist@OM@Stock[[1]]@Length@Classes
+    Advice@Retention <- Retention(MeanAtLength = as.numeric(Classes >= 75), Classes = Classes)
+    Advice
+  }
+  class(KnifeEdgeMP) <- 'mp'
+  MSE <- suppressMessages(Project(Hist, MPs = list(KnifeEdgeMP = KnifeEdgeMP), silent = TRUE))
+  expect_length(MSE@Log$error, 0)
+  expect_true(all(Discards(MSE)$Value >= -1e-8, na.rm = TRUE))
+})
+
+test_that("selectivity advice re-weights existing retention-at-age", {
+  OM <- .SizeOM(nSim = 2)
+  Fl <- OM@Fleet[[1]][[1]]
+  Fl@Retention <- Retention(Pars = list(RL50 = 75, RL50_95 = 1))
+  OM@Fleet[[1]][[1]] <- Fl
+  Hist <- Simulate(OM, silent = TRUE)
+  DomeSelMP <- function(Data) {
+    Advice <- CurrentEffort(Data)
+    Advice@Selectivity <- Selectivity(Pars = list(L5 = 30, LFS = 50, Vmaxlen = 0.05))
+    Advice
+  }
+  class(DomeSelMP) <- 'mp'
+  MSE <- suppressMessages(Project(Hist, MPs = list(DomeSelMP = DomeSelMP), silent = TRUE))
+  expect_length(MSE@Log$error, 0)
+  expect_true(all(Discards(MSE)$Value >= -1e-8, na.rm = TRUE))
+})
+
 test_that("Size compliance is ignored for size regulations and logged once", {
   Hist <- Simulate(.SizeOM(), silent = TRUE)
   Ref <- suppressMessages(Project(Hist, MPs = list(SizeLimitMP = SizeLimitMP), silent = TRUE))
