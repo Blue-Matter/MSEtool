@@ -546,7 +546,7 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
 
   if (is.na(Data@MPeff) || length(Data@MPeff)==0) Data@MPeff <- 1
 
-  Data@Log[[1]] <- paste("Created:", Sys.time())
+  Data@Log[[1]] <- paste("Created:", format(Sys.time(), tz = .SafeTZ()))
   Data@params <- new("list")
   Data@OM <- data.frame(NA)
   Data@Obs <- data.frame(NA)

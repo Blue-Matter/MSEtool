@@ -159,6 +159,25 @@ DefaultYears <- function(Years=NULL) {
   seq(1950, CurrentYear + 5)
 }
 
+.TZCache <- new.env(parent = emptyenv())
+
+# system timezone if R recognises it, otherwise UTC (R's own fallback, without the warning)
+.SafeTZ <- function() {
+  if (is.null(.TZCache$tz)) {
+    tz <- Sys.timezone()
+    Known <- !is.na(tz) && tz %in% OlsonNames()
+    .TZCache$tz <- if (Known) tz else "UTC"
+    # base format() warns once per session about an unknown system timezone; absorb it here
+    if (!Known)
+      withCallingHandlers(format(Sys.time(), "%Y", tz = "UTC"), warning = function(w)
+        if (grepl("unknown timezone", conditionMessage(w))) invokeRestart("muffleWarning"))
+  }
+  .TZCache$tz
+}
+
+# masks base::Sys.Date() inside the namespace so an unrecognised system timezone does not warn
+Sys.Date <- function() as.Date(Sys.time(), tz = .SafeTZ())
+
 
 
 #' Convert Between Season Count and Time Unit Labels

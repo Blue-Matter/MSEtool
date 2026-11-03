@@ -111,7 +111,7 @@
   if (!dir.exists(LogDir))
     dir.create(LogDir, recursive = TRUE)
 
-  logFile <- file.path(LogDir, paste0(MPName, '_', format(Sys.time(), '%Y%m%d%H%M'), '.log'))
+  logFile <- file.path(LogDir, paste0(MPName, '_', format(Sys.time(), '%Y%m%d%H%M', tz = .SafeTZ()), '.log'))
   file.create(logFile)
 
   cat(paste0('MP: ', MPName), file=logFile, sep='\n', append=TRUE)
