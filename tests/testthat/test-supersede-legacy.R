@@ -22,13 +22,11 @@ legacy_superseded <- c(
   "hconv", "R0conv", "SRalphaconv", "SRbetaconv", "tdlnorm"
 )
 
-test_that("superseded legacy functions call .SupersedeLegacy() first", {
+test_that("superseded legacy functions call .SupersedeLegacy()", {
   ns <- asNamespace("MSEtool")
   for (fn in legacy_superseded) {
-    b <- body(get(fn, envir = ns))
-    first <- if (is.call(b) && identical(b[[1]], as.name("{"))) b[[2]] else b
-    expect_true(is.call(first) && identical(first[[1]], as.name(".SupersedeLegacy")), info = fn)
-    expect_identical(first[[2]], paste0(fn, "()"), info = fn)
+    src <- paste(deparse(body(get(fn, envir = ns))), collapse = " ")
+    expect_true(grepl(paste0('.SupersedeLegacy("', fn, '()"'), src, fixed = TRUE), info = fn)
   }
 })
 

@@ -330,7 +330,7 @@ optMSY_eq <- function(x, yr.ind=1, StockPars, V, Wt_age_C) {
     names(MSYs) <- c("Yield", "F", "SB", "SB_SB0", "B_B0", "B", "VB", "VB_VB0",
                       "RelRec", "SB0", "B0", "R0", "h", "N0", "SN0")
  
-    if(!opt$objective || is.na(doopt$objective)) MSYs[] <- 0 # Assume stock crashes regardless of F
+    if(!opt$objective || is.na(opt$objective)) MSYs[] <- 0 # Assume stock crashes regardless of F
   }
   
   return(MSYs)

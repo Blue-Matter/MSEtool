@@ -767,7 +767,7 @@ Dom <- function(MSEobj, ..., PMlist=NULL, Refs=NULL, Yrs=NULL) {
   DomList <- list()
   for (i in 1:MSEobj@nMPs) {
     # ind <- which(DF$DataClass == DF$DataClass[i] & DF$Rec == DF$Rec[i] & DF$Type ==DF$Type[i])
-    ind <- which(DF$Rec == DF$Rec[i] & DF$Type ==DF$Type[i]) # group MPs by Rec Type
+    ind <- which(DF$Recs == DF$Recs[i] & DF$Type ==DF$Type[i]) # group MPs by Rec Type
     ind <- ind[!ind==i]
     if (length(ind)>0) {
       df1 <- DF[i,] %>%
@@ -796,7 +796,11 @@ Dom <- function(MSEobj, ..., PMlist=NULL, Refs=NULL, Yrs=NULL) {
       DomList2[[i]] <- data.frame(MP=DomMPs[i], By=By, stringsAsFactors = FALSE)
   }
 
-  DomDF <- do.call("rbind", DomList2) %>% as.data.frame() %>% dplyr::arrange(MP)
+  if (length(DomList2)) {
+    DomDF <- do.call("rbind", DomList2) %>% as.data.frame() %>% dplyr::arrange(MP)
+  } else {
+    DomDF <- data.frame(MP = character(), By = character())
+  }
   NonDom <- NonDom %>% sort()
 
   list(MPs=NonDom, DomMPs=DomDF)
