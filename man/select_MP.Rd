@@ -17,3 +17,8 @@ A nested list \code{Data} objects (\code{nstock} by \code{nfleet})
 \description{
 Select DataList for an MP from \code{MMSE@PPD}
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{select_MP()} is superseded as of MSEtool 4.0.0 and will be removed in a future release.
+}
+

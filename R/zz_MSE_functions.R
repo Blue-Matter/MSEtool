@@ -44,8 +44,11 @@
 #' @author A. Hordyk
 #' @export
 #'
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `Converge()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 Converge <- function(MSEobj, PMs=c('Yield', 'P10', 'AAVY'), maxMP=15, thresh=0.5, ref.it=20,
                      inc.leg=FALSE, all.its=FALSE, nrow=NULL, ncol=NULL, silent=FALSE) {
+  .SupersedeLegacy("Converge()")
 
 
   if(!methods::is(MSEobj, "MSE")) stop("MSEobj must be object of class 'MSE'", call.=FALSE)

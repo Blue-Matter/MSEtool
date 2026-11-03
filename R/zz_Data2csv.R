@@ -10,7 +10,10 @@
 #' @param keepNAs Boolean. Should slots with NAs still be written to the data file.
 #' @author T. Carruthers
 #' @export
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `Data2csv()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 Data2csv<-function(Data, file=NULL, simno = 1, overwrite=F, keepNAs=T) {
+  .SupersedeLegacy("Data2csv()")
 
   if(!inherits(Data,'Data')) stop("First argument 'Data' not an object of class 'Data' ")
 
@@ -157,7 +160,10 @@ Data2csv<-function(Data, file=NULL, simno = 1, overwrite=F, keepNAs=T) {
 #' @param simno Integer. An optional argument to specify the simulation number if writing simulated data
 #' @author T. Carruthers
 #' @export
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `CALsimp()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 CALsimp<-function(Data,nbins=10,simno=1){
+  .SupersedeLegacy("CALsimp()")
 
   oldbins<-Data@CAL_bins
   nold<-length(oldbins)

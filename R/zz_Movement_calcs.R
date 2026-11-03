@@ -31,7 +31,12 @@
 #'
 #' }
 #' @describeIn simmov Estimation function for creating movement matrix.
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` These functions are superseded as of MSEtool 4.0.0 and will be removed in a future release:
+#' - `simmov()`
+#' - `plot_mov()`
 simmov <- function(OM, dist = c(0.1, 0.2, 0.3, 0.4), prob = 0.5, distE = 0.1, probE = 0.1, prob2 = NA, figure = TRUE) {
+  .SupersedeLegacy("simmov()")
 
   nareas <- length(dist)
   if(nareas < 2) stop("Error: nareas, i.e., length(dist), is less than 2.")
@@ -86,7 +91,10 @@ opt_mov <- function(x, fracs, prob, nareas) {
 #' @author T. Carruthers
 #' @export
 #' @seealso \link{simmov}
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `makemov()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 makemov <- function(fracs = c(0.1, 0.2, 0.3, 0.4), prob = c(0.5, 0.8, 0.9, 0.95)) {
+  .SupersedeLegacy("makemov()")
 
   nareas <- length(fracs)
   nprob <- length(prob)
@@ -105,29 +113,6 @@ makemov <- function(fracs = c(0.1, 0.2, 0.3, 0.4), prob = c(0.5, 0.8, 0.9, 0.95)
 # #' @param obj A list object arising from MakeADFun from either grav.h or grav_Pbyarea.h
 # #' @author T. Carruthers
 # #' @export validateTMB
-validateTMB <- function(obj) {
-
-  log_grav<-obj$report()$log_grav
-  log_visc<-obj$report()$log_visc
-  nareas<-length(log_grav)+1
-
-  grav<-array(0,c(nareas,nareas))
-  grav[,2:nareas]<-rep(log_grav,each=nareas)
-  grav[cbind(1:nareas,1:nareas)]<-grav[cbind(1:nareas,1:nareas)]+log_visc
-
-  mov<-exp(grav)/apply(exp(grav),1,sum)
-
-  idist<-rep(1/nareas,nareas)
-  for(i in 1:50)idist<-apply(idist*mov,2,sum)
-
-  print(obj$report()$idist)
-  print(idist)
-  print(obj$report()$fracs)
-
-  print(obj$report()$mov)
-  print(mov)
-
-}
 
 # Simmov2   =========================================================================================================
 
@@ -163,10 +148,13 @@ validateTMB <- function(obj) {
 #'
 #' }
 #' @describeIn simmov2 Estimation function for creating movement matrix.
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `simmov2()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 simmov2 <- function(OM,dist=c(0.05,0.6,0.35), distE = 0.01,
                     frac_other = matrix(c(NA,2,1, 3,NA,1, 1,4,NA),nrow=3, byrow=T),
                     frac_otherE = 0.01, prob = 0.8, probE = 1, 
                     figure = TRUE) {
+  .SupersedeLegacy("simmov2()")
   
   nareas <- length(dist)
   if(nareas < 2) stop("Error: nareas, i.e., length(dist), is less than 2.")
@@ -218,10 +206,13 @@ opt_mov2 <- function(x, dist, prob, probE, frac_other, nits = 50) {
 #' @author T. Carruthers
 #' @export
 #' @seealso \link{simmov2}
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `makemov2()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 makemov2 <- function(dist = c(0.05, 0.6, 0.35), prob = 0.5,
                      probE = 1, 
                      frac_other = matrix(c(NA,2,1, 2,NA,1, 1,2,NA),nrow=3, byrow=T),
                      plot=F){
+  .SupersedeLegacy("makemov2()")
   nareas <- length(dist)
   opt <- stats::nlminb(rep(0,nareas), opt_mov2, dist = dist, prob = prob, probE = probE, frac_other = frac_other, 
                        control = list(iter.max = 5e3, eval.max = 1e4))
@@ -242,7 +233,10 @@ makemov2 <- function(dist = c(0.05, 0.6, 0.35), prob = 0.5,
 #' @export
 #' @seealso \link{simmov2}
 #' @keywords internal
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `CalcAsymptoticDist()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 CalcAsymptoticDist = function(M,V=NULL,nits=50,plot=F){
+  .SupersedeLegacy("CalcAsymptoticDist()")
   
   if(is.null(V)) V = rep(1/dim(M)[1],dim(M)[1])
   if(!all(length(V)==dim(M))) stop("Error in CalcAsymptoticDist(): the length of the distribution vector V is not the same as the dimensions of the square movement matrix M")
@@ -276,6 +270,7 @@ CalcAsymptoticDist = function(M,V=NULL,nits=50,plot=F){
 #' @describeIn simmov Plotting function.
 #' @export
 plot_mov <- function(mov, age = 1, type = c("matrix", "all"), year = 1, qval = 0.9) {
+  .SupersedeLegacy("plot_mov()")
   type <- match.arg(type)
   nsim <- dim(mov)[1]
   maxage <- dim(mov)[2] - 1

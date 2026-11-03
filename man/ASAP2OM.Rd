@@ -55,6 +55,15 @@ sampled from a lognormal distribution with autocorrelation. \code{ASAP2Data} imp
 Length at age is not used in ASAP so arbitrary placeholder values are used for length-based parameters. Update
 these parameters to model length in the operating model.
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} These functions are superseded as of MSEtool 4.0.0 and will be removed in a future release:
+\itemize{
+\item \code{ASAP2OM()}
+\item \code{ASAP2Data()}
+}
+}
+
 \seealso{
 \link{Assess2OM}
 }

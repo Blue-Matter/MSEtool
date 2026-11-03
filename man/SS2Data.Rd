@@ -66,6 +66,11 @@ the various slots of an Data object.
 \note{
 Currently supports the version of r4ss on CRAN (v.1.24) and Github (v.1.34-40). Function may be incompatible with other versions of r4ss.
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{SS2Data()} is superseded as of MSEtool 4.0.0 and will be removed in a future release. Use \code{\link[=ImportSSData]{ImportSSData()}} instead.
+}
+
 \seealso{
 \link{SS2OM}
 }

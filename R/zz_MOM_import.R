@@ -14,7 +14,10 @@
 #' @export
 #' @author A. Hordyk
 #'
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `XL2Stock()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 XL2Stock <- function(name=NULL, cpars=NULL, msg=TRUE) {
+  .SupersedeLegacy("XL2Stock()")
   if (!requireNamespace("readxl", quietly = TRUE)) {
     stop("Package \"readxl\" needed for this function to work. Please install it.",
          call. = FALSE)
@@ -81,7 +84,10 @@ XL2Stock <- function(name=NULL, cpars=NULL, msg=TRUE) {
 #' @export
 #' @author A. Hordyk
 #'
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `XL2Fleet()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 XL2Fleet <- function(name=NULL, cpars=NULL, msg=TRUE) {
+  .SupersedeLegacy("XL2Fleet()")
   if (!requireNamespace("readxl", quietly = TRUE)) {
     stop("Package \"readxl\" needed for this function to work. Please install it.",
          call. = FALSE)

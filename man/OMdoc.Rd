@@ -51,6 +51,11 @@ Nothing. Always errors.
 \code{OMdoc} has been deprecated and is no longer available. Install an earlier version of
 MSEtool (e.g. \code{remotes::install_version('MSEtool', version = '3.7.0')}) to use it.
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{OMdoc()} is superseded as of MSEtool 4.0.0 and will be removed in a future release.
+}
+
 \author{
 A. Hordyk
 }

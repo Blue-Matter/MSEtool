@@ -47,6 +47,15 @@ recent projects. It is named after the Turing test, developed by Alan Turing in
 1950, which is designed to see if a human can detect the difference between
 human and machine generated information.
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} These functions are superseded as of MSEtool 4.0.0 and will be removed in a future release:
+\itemize{
+\item \code{Turing()}
+\item \code{TuringMOM()}
+}
+}
+
 \examples{
 \dontrun{
 Turing(MSEtool::testOM, MSEtool::SimulatedData, wait=FALSE)

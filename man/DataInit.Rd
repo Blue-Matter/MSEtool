@@ -23,6 +23,11 @@ Nothing. Creates template data files in the working directory.
 Creates template for the Data input file (Excel or CSV) and Data documentation file (Markdown)
 in the working directory or the directory specified by the \code{dir} argument
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{DataInit()} is superseded as of MSEtool 4.0.0 and will be removed in a future release.
+}
+
 \examples{
 \dontrun{
 DataInit("Example") # populated example

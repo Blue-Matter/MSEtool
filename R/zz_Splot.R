@@ -13,7 +13,10 @@
 #' @param doy Logical, should the y axis labels be plotted. 
 #' @author T. Carruthers
 #' @export
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `quantile_plot()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 quantile_plot = function(datmat, xvals, p = c(0.05,0.25,0.5,0.75,0.95),  tcol, ylim, sims=1:3, refline=NA, dox=F, doy=F){
+  .SupersedeLegacy("quantile_plot()")
   doborder = function(){for(i in 1:4){axis(i,c(-1E10,1E10),c(-1E10,1E10))}}
   qs = apply(datmat, 2,quantile,probs = p)
   plot(range(xvals),range(qs),col="white",ylim=ylim, yaxs ="i",xlab="",ylab="",main="", axes=F)
@@ -35,8 +38,11 @@ quantile_plot = function(datmat, xvals, p = c(0.05,0.25,0.5,0.75,0.95),  tcol, y
 #' @param p Vector of quantiles five positions long. Defaults to c(0.05,0.25,0.5,0.75,0.95) so the 90% and 50% intervals with the median plotted  in white. 
 #' @author T. Carruthers
 #' @export
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `Splot()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 Splot = function(MSEobj, MPs = 5,
                  p = c(0.05,0.25,0.5,0.75,0.95)){
+  .SupersedeLegacy("Splot()")
   
   if(methods::is(MPs[1],"character")){
     MPind = MSEobj@MPs %in% MPs

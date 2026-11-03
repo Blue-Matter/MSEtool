@@ -45,6 +45,8 @@
 #' @aliases VPA2OM
 #' @export
 #' @seealso \link{SS2OM} \link{iSCAM2OM} \link{WHAM2OM} \link{ASAP2OM}
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `Assess2OM()` and `VPA2OM()` are superseded as of MSEtool 4.0.0 and will be removed in a future release.
 Assess2OM <- function(Name="A fishery made by VPA2OM",
                       proyears=50, interval=2, CurrentYr=as.numeric(format(Sys.Date(), "%Y")),
                       h=0.999,
@@ -53,6 +55,7 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
                       nyr_par_mu = 3, LowerTri=1,
                       recind=0, plusgroup=TRUE, altinit=0, fixq1=TRUE,
                       report=FALSE, silent=FALSE, ...) {
+  .SupersedeLegacy("Assess2OM()")
 
   simup<-function(param, OM, do_slot = TRUE){   # Generic function for converting VPA outputs to an OM
     paramnam<-deparse(substitute(param))
@@ -417,7 +420,10 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
 
 #' @rdname Assess2OM
 #' @export
-VPA2OM <- Assess2OM
+VPA2OM <- function(...) {
+  .SupersedeLegacy("VPA2OM()")
+  Assess2OM(...)
+}
 
 
 
@@ -469,6 +475,8 @@ VPA2OM <- Assess2OM
 #' @author Q. Huynh
 #' @export
 #' @seealso \link{SS2MOM} \link{multiMSE} \link{Assess2OM}
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `Assess2MOM()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 Assess2MOM <- function(Name = "MOM created by Assess2MOM",
                        proyears = 50, interval = 2, CurrentYr = as.numeric(format(Sys.Date(), "%Y")),
                        h = 0.999,
@@ -477,6 +485,7 @@ Assess2MOM <- function(Name = "MOM created by Assess2MOM",
                        nyr_par_mu = 3, LowerTri = 1,
                        recind = 0, plusgroup = TRUE, altinit = 0, fixq1 = TRUE,
                        report = FALSE, silent = FALSE, ...) {
+  .SupersedeLegacy("Assess2MOM()")
   np <- dim(naa)[4]
   ny <- dim(naa)[3]
   nf <- dim(faa)[5]

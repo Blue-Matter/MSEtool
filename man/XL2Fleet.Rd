@@ -24,6 +24,11 @@ Imports a Fleet Object from a correctly formatted Excel file.
 An error message will alert if any slots are missing values, or if the Excel file is missing
 the required tabs.
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{XL2Fleet()} is superseded as of MSEtool 4.0.0 and will be removed in a future release.
+}
+
 \author{
 A. Hordyk
 }

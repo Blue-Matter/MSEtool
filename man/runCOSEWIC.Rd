@@ -132,6 +132,21 @@ to inform COSEWIC processes in Canadian fish stocks).
 color coded by thresholds.
 
 }}
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} These functions are superseded as of MSEtool 4.0.0 and will be removed in a future release:
+\itemize{
+\item \code{runCOSEWIC()}
+\item \code{COSEWIC_Pplot()}
+\item \code{COSEWIC_Dplot()}
+\item \code{COSEWIC_Blow()}
+\item \code{COSEWIC_Hplot()}
+\item \code{COSEWIC_report()}
+\item \code{COSEWIC_tab()}
+\item \code{COSEWIC_tab_formatted()}
+}
+}
+
 \references{
 \url{https://cosewic.ca/index.php/en/}
 }

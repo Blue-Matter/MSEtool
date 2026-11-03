@@ -399,7 +399,10 @@ plot.OM <- function(x, nsamp=3, nsim=200, nyears=50,
 #'
 #' @export
 #'
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `hist2()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 hist2 <- function(x, col, axes=FALSE, main="", breaks=10,cex.main=1) {
+  .SupersedeLegacy("hist2()")
   if (mean(x) == x[1]) {
 
     plot(mean(x)*c(0.9,1.1),c(0,1000),col="white",axes=F,main=main,xlab="",ylab="")

@@ -36,6 +36,11 @@ methods that ended up in each quadrant.
 \note{
 Apologies for the nauseating shading.
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{Kplot()} is superseded as of MSEtool 4.0.0 and will be removed in a future release.
+}
+
 \author{
 T. Carruthers with some additions from A. Hordyk
 }

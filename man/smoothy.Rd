@@ -24,6 +24,11 @@ smoothy(xx, plot = F, enp_mult, plotname = "", xlab = "x", ylab = "y", x = NA)
 \description{
 Polynomial smoother (no gradient prediction) applied to a vector that can include NA values. Intended to be rapid for use in management procedures
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{smoothy()} is superseded as of MSEtool 4.0.0 and will be removed in a future release.
+}
+
 \author{
 T. Carruthers
 }

@@ -261,9 +261,14 @@ Replace <- function(OM, from,Sub=c("Stock", "Fleet", "Obs", "Imp"),  Name=NULL, 
 #' to the predicted M or K values
 #' 
 #' @export
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` These functions are superseded as of MSEtool 4.0.0 and will be removed in a future release:
+#' - `LH2OM()`
+#' - `predictLH()`
 LH2OM <- function(OM, dist=c("unif", "norm"), filterMK=FALSE, plot=TRUE,
                   Class = "predictive", Order = "predictive",
                   Family = "predictive", msg=TRUE, db=MSEtool::LHdatabase) {
+  .SupersedeLegacy("LH2OM()")
   if (!methods::is(OM, 'OM')) stop("OM must be class 'OM'")
   dist <- match.arg(dist)
   set.seed(OM@seed)
@@ -347,6 +352,7 @@ predictLH <- function(inpars=list(), Genus="predictive", Species="predictive", n
                       db=MSEtool::LHdatabase, dist=c("unif", "norm"),
                       filterMK=TRUE, plot=TRUE, Class = "predictive", Order = "predictive",
                       Family = "predictive", msg=TRUE) {
+  .SupersedeLegacy("predictLH()")
 
   if (!requireNamespace("MASS", quietly = TRUE)) {
     stop("Package \"MASS\" needed for this function to work. Please install it.",

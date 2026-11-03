@@ -32,6 +32,11 @@ plotquant(
 \description{
 A fairly tidy time-series quantile plot
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{plotquant()} is superseded as of MSEtool 4.0.0 and will be removed in a future release.
+}
+
 \author{
 T.Carruthers
 }

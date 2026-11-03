@@ -7,7 +7,10 @@
 #' \dontrun{
 #' OMexample()
 #' }
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `OMexample()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 OMexample <- function(dir=getwd()) {
+  .SupersedeLegacy("OMexample()")
   fromRMD <- system.file("Example_Chile_Hake.Rmd", package="MSEtool")
   tt <- file.copy(fromRMD, dir, overwrite = TRUE)
   fromXL <- system.file("Example_Chile_hake.xlsx", package="MSEtool")
@@ -53,7 +56,10 @@ OMexample <- function(dir=getwd()) {
 #' OMinit('myOM', Herring, Generic_obs)
 #' }
 #'
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `OMinit()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 OMinit <- function(name=NULL, ..., files=c('xlsx', 'rmd'), dir=NULL, overwrite=FALSE) {
+  .SupersedeLegacy("OMinit()")
   files <- match.arg(files, several.ok = TRUE)
 
   if (!requireNamespace("openxlsx", quietly = TRUE)) {
@@ -385,10 +391,13 @@ OMinit <- function(name=NULL, ..., files=c('xlsx', 'rmd'), dir=NULL, overwrite=F
 #' @return Nothing. Always errors.
 #' @export
 #' @author A. Hordyk
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `OMdoc()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 OMdoc <- function(OM=NULL, rmd.source=NULL, overwrite=FALSE, out.file=NULL,
                   inc.plot=TRUE, render=TRUE, output="html_document",
                   openFile=TRUE, quiet=FALSE,
                   dir=NULL, ...) {
+  .SupersedeLegacy("OMdoc()")
   stop("'OMdoc' has been deprecated and is no longer available in this version of MSEtool. ",
        "To use 'OMdoc', install an earlier version of the package, e.g.:\n",
        "remotes::install_version('MSEtool', version = '3.7.0')", call.=FALSE)
@@ -438,7 +447,10 @@ writeCSV2 <- function(inobj, tmpfile = NULL, objtype = c("Stock", "Fleet",
 #' }
 #'
 #' @export
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `Data_xl()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 Data_xl <- function(fname, stkname, fpath = "", saveCSV = FALSE) {
+  .SupersedeLegacy("Data_xl()")
   if (!requireNamespace("readxl", quietly = TRUE)) {
     stop("Package \"readxl\" needed for this function to work. Please install it.",
          call. = FALSE)

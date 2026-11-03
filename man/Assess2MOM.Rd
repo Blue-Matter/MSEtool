@@ -100,6 +100,11 @@ needs to parameterize most of the observation and implementation portions of the
 \details{
 Use a seed for the random number generator to sample future recruitment.
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{Assess2MOM()} is superseded as of MSEtool 4.0.0 and will be removed in a future release.
+}
+
 \seealso{
 \link{SS2MOM} \link{multiMSE} \link{Assess2OM}
 }

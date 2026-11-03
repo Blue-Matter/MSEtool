@@ -25,6 +25,11 @@ using \code{OMinit} and document each slot in the corresponding text file.
 An error message will alert if any slots are missing values, or if the Excel file is missing
 the required tabs.
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{XL2OM()} is superseded as of MSEtool 4.0.0 and will be removed in a future release.
+}
+
 \examples{
 \dontrun{
 OMinit('myOM', templates=list(Stock='Herring', Fleet='Generic_Fleet', Obs='Generic_Obs',

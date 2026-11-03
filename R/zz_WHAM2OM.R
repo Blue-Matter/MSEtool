@@ -26,11 +26,14 @@
 #' @author T. Carruthers
 #' @export
 #' @seealso \link{Assess2OM}
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `WHAM2OM()` is superseded as of MSEtool 4.0.0 and will be removed in a future release. Use [ImportWHAM()] instead.
 WHAM2OM<-function(obj, nsim=3, proyears=30, interval=2, Name = NULL, WLa=1, WLb=3,
                   WAAind = 1,
                   Obs = MSEtool::Imprecise_Unbiased, Imp=MSEtool::Perfect_Imp,
                   nyr_par_mu = 3, LowerTri=2, plusgroup=T, altinit=0, 
                   fixq1 = T, report = FALSE, silent = FALSE, ...){
+  .SupersedeLegacy("WHAM2OM()", "ImportWHAM()")
   
   # nsim=3; proyears=30; interval=2; Name = NULL; WLa=1; WLb=3; WAAind = 1;  Obs = MSEtool::Imprecise_Unbiased; Imp=MSEtool::Perfect_Imp; nyr_par_mu = 3; LowerTri=2; recind=1; plusgroup=T; altinit=0; fixq1 = T; report = TRUE; silent = FALSE
   if(!requireNamespace("TMB", quietly = TRUE) || !requireNamespace("mvtnorm", quietly = TRUE)) {

@@ -10,7 +10,10 @@
 #' MOM <- makeMOM(testOM)
 #' @author Q. Huynh
 #' @export
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `makeMOM()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 makeMOM <- function(..., silent = FALSE) {
+  .SupersedeLegacy("makeMOM()")
   dots <- list(...)
   
   if (length(dots) == 1 && is(dots[[1]], "OM")) {
@@ -84,7 +87,10 @@ OM2MOM <- function(OM) {
 #' Pacific groundfish stocks with uncertain natural mortality: Bias, robustness and trade-offs. 
 #' Fisheries Research 206: 259–286. \doi{10.1016/j.fishres.2018.04.007}
 #' @export
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `makeRel()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 makeRel <- function(type = "DDM", stock = 1, CV = 0, ...) {
+  .SupersedeLegacy("makeRel()")
   type <- match.arg(type)
   dots <- list(...)
   

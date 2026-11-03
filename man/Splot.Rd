@@ -16,6 +16,11 @@ Splot(MSEobj, MPs = 5, p = c(0.05, 0.25, 0.5, 0.75, 0.95))
 \description{
 Plots projections of F/FMSY, SB/SBMSY and Yield
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{Splot()} is superseded as of MSEtool 4.0.0 and will be removed in a future release.
+}
+
 \author{
 T. Carruthers
 }

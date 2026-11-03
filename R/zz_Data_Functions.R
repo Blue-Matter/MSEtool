@@ -21,7 +21,10 @@
 #' DataInit("Example") # populated example
 #' DataInit("myData") # empty template
 #' }
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `DataInit()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 DataInit <- function(name="Data", ext=c("xlsx", "csv"), overwrite=FALSE, dir=NULL) {
+  .SupersedeLegacy("DataInit()")
   ext <- match.arg(ext)
   if (is.null(dir)) dir <- getwd()
   mdname <- paste(name, "md", sep=".")
@@ -75,7 +78,6 @@ DataInit <- function(name="Data", ext=c("xlsx", "csv"), overwrite=FALSE, dir=NUL
 }
 
 
-
 #' Import a Data object from Excel file
 #'
 #' @param name Name of the data file, with or without file extension.
@@ -90,7 +92,10 @@ DataInit <- function(name="Data", ext=c("xlsx", "csv"), overwrite=FALSE, dir=NUL
 #' \dontrun{
 #' MyData <- XL2Data("MyData.xlsx")
 #' }
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `XL2Data()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
+  .SupersedeLegacy("XL2Data()")
   if (!requireNamespace("readxl", quietly = TRUE)) {
     stop("Package \"readxl\" needed for this function to work. Please install it.",
          call. = FALSE)
@@ -611,9 +616,6 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
 # }
 
 
-
-
-
 # importnewXLData_old <- function(dir,name, NewSheetNames) {
 #   Data <- new("Data", silent=TRUE)
 #   BlankDat <-new("Data", silent=TRUE)
@@ -731,8 +733,6 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
 # }
 
 
-
-
 #' Run a Management Procedure
 #'
 #' @param Data A MSEtool Data object
@@ -794,7 +794,6 @@ runMP <- function(Data, MPs = NA, reps = 100, perc=0.5, chkMPs=FALSE, silent=FAL
 
   invisible(MPrecs[[2]])
 }
-
 
 
 # applyMP2 <- function(Data, MPs = NA, reps = 100, nsims=NA, silent=FALSE) {
@@ -902,8 +901,11 @@ Cant <- function(Data, timelimit = 1, silent=FALSE) {
 #' @param funcs1 A character vector of the MP names (optional)
 #' @param silent Logical Display messages?
 #' @export
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `DLMdiag()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 DLMdiag <- function(Data, command = c("available", "not available", "needed"), reps = 5,
                     timelimit = 1, funcs1=NA, dev=FALSE, silent=FALSE) {
+  .SupersedeLegacy("DLMdiag()")
   command <- match.arg(command)
   if (!methods::is(Data,"Data")) stop("First argument must be object of class 'Data'", call.=FALSE)
   set.seed(101)
@@ -1064,7 +1066,6 @@ needed <- function(Data, funcs) {
 }
 
 
-
 # Internal function for:
 ## Required():
 ## needed(): matches slotnames of Data class to those that are required in an MP func
@@ -1102,7 +1103,10 @@ Needed <- function(Data, timelimit = 1, silent=FALSE) {
 #' @author T. Carruthers
 #' @export
 #' @keywords internal
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `OneRep()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 OneRep <- function(Data) {
+  .SupersedeLegacy("OneRep()")
   if (!methods::is(Data,"Data")) stop("First argument must be object of class 'Data'", call.=FALSE)
   Data <- updateMSE(Data)
   Data@CV_Cat =  Data@CV_Ind = Data@CV_Rec = matrix(tiny, nrow=1, ncol=1)
@@ -1112,7 +1116,6 @@ OneRep <- function(Data) {
     Data@CV_LFS = Data@CV_wla = Data@CV_wlb = Data@CV_steep = tiny
   Data
 }
-
 
 
 #' A generic OFL plot for NOAA use
@@ -1126,7 +1129,10 @@ OneRep <- function(Data) {
 #' @return A table of performance metrics.
 #' @author T. Carruthers
 #' @export
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `plotOFL()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 plotOFL <- function(Data, xlims = NA, perc = 0.5) {
+  .SupersedeLegacy("plotOFL()")
   if (!methods::is(Data, "Data")) stop("First argument must be object of class 'Data'", call.=FALSE)
   Data <- updateMSE(Data)
   cols <- rep(c("black", "red", "green", "blue", "orange", "brown", "purple",
@@ -1194,7 +1200,10 @@ plotOFL <- function(Data, xlims = NA, perc = 0.5) {
 #' @param nrep The number of positions to expand the DLM object to
 #' @author T. Carruthers
 #' @export
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `replic8()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 replic8 <- function(Data, nrep) {
+  .SupersedeLegacy("replic8()")
 
   slotnam <- slotNames(Data)
   slotnam <- slotnam[slotnam != "Ref" & slotnam != "OM" & slotnam !=
@@ -1236,7 +1245,10 @@ replic8 <- function(Data, nrep) {
 #' \dontrun{
 #' Data <- Sense(MSEtool::Cobia, "AvC")
 #' }
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `Sense()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 Sense <- function(Data, MP, nsense = 6, reps = 100, perc = c(0.05, 0.5, 0.95), ploty = T) {
+  .SupersedeLegacy("Sense()")
   if (!methods::is(Data, "Data")) stop("First argument must be object of class 'Data'", call.=FALSE)
   Data <- updateMSE(Data)
 
@@ -1335,7 +1347,6 @@ Sense <- function(Data, MP, nsense = 6, reps = 100, perc = c(0.05, 0.5, 0.95), p
   # assign(nm,DLM2,envir=.GlobalEnv)
   DLM_data2
 }
-
 
 
 #' Calculate TAC recommendations for more than one MP
@@ -1517,9 +1528,6 @@ Uses <- function(slot, silent=FALSE) {
     return(NULL)
   }
 }
-
-
-
 
 
 # parallelMPs <- function(x, Data, reps, MPs, ss) sapply(ss, MPs[x], Data, reps = reps)
@@ -1821,7 +1829,6 @@ Report <- function(Data=NULL, md=NULL, name="Data-Report",
   }
 
 
-
   cat("```{r, echo=FALSE} \n", file = rmdfile, sep = " ", append = TRUE)
   cat("ts_data <- ts_plots(Data,fignum=fignum+1)\n", file = rmdfile, sep = " ", append = TRUE)
   cat("DF <- ts_data[[1]] \n", file = rmdfile, sep = " ", append = TRUE)
@@ -1838,7 +1845,6 @@ Report <- function(Data=NULL, md=NULL, name="Data-Report",
   cat("fignum <- vuln_addInd_plot(Data,fignum=fignum)\n", file = rmdfile, sep = " ", append = TRUE)
   cat("fignum <- meanLen_plot(Data,fignum=fignum)\n", file = rmdfile, sep = " ", append = TRUE)
   cat("```\n\n", file = rmdfile, sep = " ", append = TRUE)
-
 
 
   # Catch-at-Age section
@@ -1928,273 +1934,6 @@ Report <- function(Data=NULL, md=NULL, name="Data-Report",
 }
 
 
-metadatatable <- function(Data, i=1, output_format) {
-  df <- data.frame(Data@Name[1],
-                   Data@Common_Name[1],
-                   Data@Species[1],
-                   Data@Region[1],
-                   Data@LHYear[1],
-                   Data@MPrec[i],
-                   Data@Units[1],
-                   Data@MPeff[i],
-                   Data@nareas[1])
-  df <- t(df)
-  rownames(df) = c(
-    'Name',
-    'Common Name',
-    'Species',
-    'Region',
-    'Last Historical Year',
-    'Last TAC',
-    'Units',
-    'Last TAE',
-    'Number of areas')
-
-  if (output_format == "html_document") {
-    suppressWarnings(tab <- knitr::kable(df, caption='Table 1. Summary of metadata'))
-  }
-  if (output_format == "pdf_document") {
-    suppressWarnings(tab <- knitr::kable(df, caption='Table 1. Summary of metadata', format='markdown'))
-  }
-  suppressWarnings(
-    tab %>%
-      kableExtra::kable_styling(
-        bootstrap_options = c("striped", "hover", "responsive"), full_width = F,
-        position = "left"
-      ) %>%
-      kableExtra::column_spec(1, bold=TRUE))
-}
-
-biology_plots <- function(Data, i=1, n=20000) {
-  Var <- val <- ..scaled.. <- Text <- NA
-
-  slots <- c("Mort", "vbLinf", 'vbK', 'vbt0', 'wla', 'wlb', 'steep', 'sigmaR',
-             'L50', 'L95')
-
-  lout <- list()
-  for (x in seq_along(slots)) {
-    sl <- slots[x]
-    mean <- slot(Data, sl)[i]
-    if (sl == "L95") {
-      cv <- slot(Data, "CV_L50")[i]
-    } else {
-      cv <- slot(Data, paste0("CV_",sl))[i]
-    }
-
-    if (is.na(cv) | length(cv)<1) {
-      vals <- rep(mean,n)
-    } else {
-      if (is.na(mean)) {
-        vals <- NA
-      } else {
-        if (sl =="steep") {
-          vals <- sample_steepness2(n, mean, cv)
-        } else {
-
-          if (mean < 0) {
-            vals <- -trlnorm(n, -mean, cv)
-          } else {
-            vals <- trlnorm(n, mean, cv)
-          }
-        }
-      }
-    }
-    lout[[x]] <- data.frame(Var=sl, val=vals, mean=mean, cv=cv)
-  }
-
-  plist <- do.call("rbind", lout)
-  df <- plist %>% group_by(Var) %>% dplyr::distinct(mean, cv)
-  df$x <- df$mean
-  # df$mean[df$mean>0.01] <-round(df$mean[df$mean>0.01],)
-  # df$mean[df$mean < -0.01] <-round(df$mean[df$mean < -0.01],2)
-  df$cv <- round(df$cv,2)
-  lab <- sprintf("mu ==%G", df$mean)
-  lab2 <- sprintf("CV ==%G", df$cv)
-
-  plist <- dplyr::distinct(plist)
-  if (all(is.na(plist$mean))) return(0)
-
-  addText <- FALSE
-  textdf <- plist %>% filter(is.na(val))
-  if (nrow(textdf) > 0) {
-    textdf$Text <- "No values"
-    textdf <- dplyr::distinct(textdf)
-    addText <- TRUE
-  }
-
-  fignum <- 1
-  p1 <- ggplot2::ggplot(plist, ggplot2::aes(x=val, y=..scaled..)) +
-    ggplot2::geom_density(show.legend = F, fill="lightgray") +
-    ggplot2::facet_wrap(~Var, scales="free") +
-    ggplot2::theme_minimal() + ggplot2::theme(axis.title.y = ggplot2::element_blank(),
-                                              axis.text.y = ggplot2::element_blank(),
-                                              axis.title.x=ggplot2::element_blank()) +
-    ggplot2::geom_text(data=df, ggplot2::aes(x=x, y=1.3), parse=TRUE, label=lab) +
-    ggplot2::geom_text(data=df, ggplot2::aes(x=x, y=1.1), parse=TRUE, label=lab2) +
-
-    ggplot2::labs(title=paste0('Figure ', fignum, '. Density plots of biological parameters')) +
-    ggplot2::expand_limits(y=1.4) +
-    ggplot2::theme(strip.text = ggplot2::element_text(size=14))
-  if (addText) p1 <- p1 + ggplot2::geom_text(data=textdf, ggplot2::aes(x=0, y=3, label=Text) )
-  suppressWarnings(plot(p1))
-  fignum
-
-
-}
-
-growth_plots <- function(Data, i=1, fignum=1) {
-  # Mean length-at-age
-  lo <- up <- NA
-  doGrowth <- FALSE
-  if (length(Data@vbLinf[i]) > 0 && !is.na(Data@vbLinf[i])) {
-    doGrowth <- TRUE
-    fignum <- fignum+1
-    vonB <- function(Linf, t0, K, ages) Linf * (1-exp(-K*(ages-t0)))
-
-    meanL <- vonB(Data@vbLinf[i], Data@vbt0[i], Data@vbK[i], 0:Data@MaxAge)
-    Lup <- meanL + 1.96*meanL * Data@LenCV[i]
-    Llow <- meanL - 1.96*meanL * Data@LenCV[i]
-    df <- data.frame(mean=meanL, up=Lup, lo=Llow)
-
-    p2 <- ggplot2::ggplot(df, ggplot2::aes(x=0:Data@MaxAge, ymin=lo, ymax=up)) +
-      ggplot2::geom_ribbon() +
-      ggplot2::geom_line(ggplot2::aes(y=mean), size=1.2) +
-      ggplot2::expand_limits(y=0) +
-      ggplot2::labs(x="Age", y="Length",
-                    title=paste0('\n\nFigure ', fignum, '. Distribution of length-at-age'),
-                    subtitle='Mean length-at-age (solid line) and  2 standard deviations (shaded region)') +
-      ggplot2::theme_minimal() +
-      ggplot2::geom_text(x=0.75*Data@MaxAge, y=0.5*Data@vbLinf[i],
-                         label=paste0("LenCV = ", round(Data@LenCV[i],3)))
-    suppressWarnings(plot(p2))
-  }
-  fignum
-}
-
-select_plots <- function(Data, i=1, n=20000, fignum=1) {
-  Var <- val <- ..scaled.. <- Text <- Select <- Length <- NA
-  lout <- list()
-  slots <- c('LFC', 'LFS', 'Vmaxlen')
-  for (x in seq_along(slots)) {
-    sl <- slots[x]
-    mean <- slot(Data, sl)[i]
-    if (sl == "L95") {
-      cv <- slot(Data, "CV_L50")[i]
-    } else if (sl=="Vmaxlen"){
-      cv <- NA
-    } else {
-      cv <- slot(Data, paste0("CV_",sl))[i]
-    }
-
-    if (is.na(cv) | length(cv)<1) {
-      vals <- rep(mean,n)
-    } else {
-      if (is.na(mean)) {
-        vals <- NA
-      } else {
-        if (sl =="steep") {
-          vals <- sample_steepness2(n, mean, cv)
-        } else {
-
-          if (mean < 0) {
-            vals <- -trlnorm(n, -mean, cv)
-          } else {
-            vals <- trlnorm(n, mean, cv)
-          }
-        }
-      }
-    }
-    lout[[x]] <- data.frame(Var=sl, val=vals, mean=mean, cv=cv)
-  }
-
-  plist <- do.call("rbind", lout)
-
-
-  df <- plist %>% group_by(Var) %>% dplyr::distinct(mean, cv)
-  df$x <- df$mean
-  # df$mean[df$mean>0.01] <-round(df$mean[df$mean>0.01],)
-  # df$mean[df$mean < -0.01] <-round(df$mean[df$mean < -0.01],2)
-  df$cv <- round(df$cv,2)
-  lab <- sprintf("mu ==%G", df$mean)
-  lab2 <- sprintf("CV ==%G", df$cv)
-  lab2[3] <- ''
-
-  addText <- FALSE
-  textdf <- plist %>% filter(is.na(val))
-  if (nrow(textdf) > 0) {
-    textdf$Text <- "No values"
-    textdf <- dplyr::distinct(textdf)
-    addText <- TRUE
-  }
-
-  inc <- 0
-  if (!all(is.na(plist$mean))) {
-    inc <- 1
-    p3 <- ggplot2::ggplot(plist, ggplot2::aes(x=val, y=..scaled..)) +
-      ggplot2::geom_density(show.legend = F, fill="lightgray") +
-      ggplot2::facet_wrap(~Var, scales="free") +
-      ggplot2::theme_minimal() + ggplot2::theme(axis.title.y = ggplot2::element_blank(),
-                                                axis.text.y = ggplot2::element_blank(),
-                                                axis.title.x=ggplot2::element_blank()) +
-      ggplot2::geom_text(data=df, ggplot2::aes(x=x, y=1.3), parse=TRUE, label=lab) +
-      ggplot2::geom_text(data=df, ggplot2::aes(x=x, y=1.1), parse=TRUE, label=lab2) +
-
-      ggplot2::labs(title=paste0('Figure ', fignum, '. Density plots of selectivity parameters')) +
-      ggplot2::expand_limits(y=1.4) +
-      ggplot2::theme(strip.text = ggplot2::element_text(size=14))
-    if (addText) p3 <- p3 + ggplot2::geom_text(data=textdf, ggplot2::aes(x=0, y=3, label=Text) )
-
-    suppressWarnings(plot(p3))
-  }
-
-
-  if (all(!is.na(df$mean)) && all(df$mean >0) ) {
-    if(!is.na(Data@MaxAge) & !is.na(Data@vbLinf[i])) {
-      # selectivity-at-age
-
-      Lens <- 0:Data@vbLinf[i]
-      iVB2 <- function(t0, K, Linf, L) {
-        (-log(1 - L/Linf))/K + t0
-      }
-      Age <- sapply(seq_along(Lens), function(x) iVB2(Data@vbt0[i], Data@vbK[i],
-                                                      Data@vbLinf[i], Lens[x]))
-      srs <- (Data@vbLinf[i] - Data@LFS[i]) / ((-log(Data@Vmaxlen[i],2))^0.5)
-      srs[!is.finite(srs)] <- Inf
-      sls <- (Data@LFS[i] - Data@LFC[i]) /((-log(0.05,2))^0.5)
-      SelA <- getsel(lens=Lens[Age>0], lfs=Data@LFS[i], sls=sls, srs=srs)
-      SelL <- getsel(lens=Lens, lfs=Data@LFS[i], sls=sls, srs=srs)
-
-      DF <- data.frame(Age=Age[Age>0], Select=SelA)
-
-      fignum <- fignum +inc
-      p4 <- ggplot2::ggplot(DF, ggplot2::aes(x=Age, y=Select)) +
-        ggplot2::geom_line(size=1.2) +
-        ggplot2::expand_limits(y=c(0,1), x=0) +
-        ggplot2::theme_minimal() +
-        ggplot2::labs(x="Age", y="Selectivity",
-                      title=paste0('\n\nFigure ', fignum, '. Selectivity-at-age '))+
-        ggplot2::theme(strip.text = ggplot2::element_text(size=14))
-
-
-      DF <- data.frame(Length=Lens, Select=SelL)
-
-      fignum <- fignum +1
-      p5 <- ggplot2::ggplot(DF, ggplot2::aes(x=Length, y=Select)) +
-        ggplot2::geom_line(size=1.2) +
-        ggplot2::expand_limits(y=c(0,1), x=0) +
-        ggplot2::theme_minimal() +
-        ggplot2::labs(x="Length", y="Selectivity",
-                      title=paste0('\n\nFigure ', fignum, '. Selectivity-at-length '))+
-        ggplot2::theme(strip.text = ggplot2::element_text(size=14))
-
-      suppressWarnings(plot(p4))
-      suppressWarnings(plot(p5))
-    }
-  }
-  fignum
-}
-
-
 makeDF <- function(Data, slot, i ) {
   Year <- Data@Year
   if (slot=="AddInd") {
@@ -2246,422 +1985,6 @@ makeDF <- function(Data, slot, i ) {
 
   DF
 }
-
-ts_plots <- function(Data, i=1, fignum=1) {
-  if (!requireNamespace("tidyr", quietly = TRUE)) {
-    stop("Package \"tidyr\" needed for this function to work. Please install it.",
-         call. = FALSE)
-  }
-  Year <- y <- dw <- up <- X <- Ind <- value <- key <- NA
-  DF <- makeDF(Data, "Cat", i)
-  DF <- rbind(DF, makeDF(Data, "Effort", i))
-  DF <- rbind(DF, makeDF(Data, "Ind", i))
-  DF <- rbind(DF, makeDF(Data, "VInd", i))
-  DF <- rbind(DF, makeDF(Data, "SpInd", i))
-
-  AddInd <- makeDF(Data, "AddInd", i)
-  vDF <- NULL
-  if (!is.null(AddInd)) {
-    DF <- rbind(DF, AddInd[[1]])
-    vDF <- AddInd[[2]]
-  }
-
-  DF <- rbind(DF, makeDF(Data, "Rec", i))
-
-  DF$Data[DF$Data == "Cat"] <- paste0("Catch (", Data@Units, ")")
-  DF$Data[DF$Data == "Ind"] <- "Index"
-  DF$Data[DF$Data == "VInd"] <- "Vulnerable Index"
-  DF$Data[DF$Data == "SpInd"] <- "Spawning Index"
-  DF$Data[DF$Data == "Rec"] <- "Recruitment"
-  DF$Data <- factor(DF$Data, ordered = TRUE,
-                    levels=unique(DF$Data))
-
-  # drop NAs
-  Range <- suppressWarnings(
-    DF %>% dplyr::group_by(Data) %>% dplyr::summarise(Range=range(y, na.rm=T), .groups="keep")
-  )
-  Groups <- Range %>% dplyr::filter(is.finite(Range)==TRUE)
-  DF <- DF %>% dplyr::filter(DF$Data %in% unique(Groups$Data))
-
-  p1 <- ggplot2::ggplot(DF, ggplot2::aes(x=Year, y=y, ymin=dw, ymax=up)) +
-    ggplot2::facet_wrap(~Data, scales="free", ncol=2) +
-    ggplot2::expand_limits(y=0) +
-    ggplot2::geom_ribbon(fill='lightgray') + ggplot2::geom_line(size=1.1) +
-    ggplot2::geom_point() +
-    ggplot2::labs(x="Year", y="Mean (95% intervals)",
-                  title=paste0('Figure ', fignum, '. Time-Series Data')) +
-    ggplot2::theme_minimal() +
-    ggplot2::theme(strip.text = ggplot2::element_text(size=14))
-
-
-  p1
-
-  list(DF, p1, fignum+1)
-}
-
-
-vuln_addInd_plot <- function(Data, i=1, fignum=1) {
-  Year <- y <- dw <- up <- X <- Ind <- value <- key <- NA
-  AddInd <- makeDF(Data, "AddInd", i)
-  vDF <- NULL
-  if (!is.null(AddInd)) {
-    vDF <- AddInd[[2]]
-  }
-
-  p2 <- NULL
-  if (!is.null(vDF)) {
-    fignum <- fignum+1
-    vDF$Ind <- factor(vDF$Ind)
-    nind <- length(levels(vDF$Ind))
-    vDF$X <- rep(1:(Data@MaxAge+1), nind)
-    p2 <- ggplot2::ggplot(vDF, ggplot2::aes(x=X, y=V, linetype=Ind)) +
-      ggplot2::geom_line() +
-      ggplot2::expand_limits(y=c(0,1)) +
-      ggplot2::labs(x="Age", y="Vulnerability",
-                    title=paste0('\n\nFigure ',
-                                 fignum, '. Vulnerability-at-age schedules for Additional Indices'),
-                    linetype="Additional Index") +
-      ggplot2::theme_minimal()
-
-  }
-
-  if (!is.null(p2)) suppressWarnings(plot(p2))
-  fignum
-}
-
-
-meanLen_plot <- function(Data, i=1, fignum=1) {
-  Year <- y <- dw <- up <- X <- Ind <- value <- key <- NA
-  DF <- data.frame(Year=Data@Year, ML=Data@ML[i,], Lc=Data@Lc[i,], Lbar=Data@Lbar[i,])
-  p3 <- NULL
-  if (!all(is.na(DF[,2:4]))) {
-    fignum <- fignum+1
-    DF <- tidyr::gather(DF, "key", "value", 2:4)
-    DF$key[DF$key == "ML"] <- "Mean length"
-    DF$key[DF$key == "Lc"] <- "Modal length (Lc)"
-    DF$key[DF$key == "Lbar"] <- "Mean length above Lc"
-    DF$key <- factor(DF$key, ordered = TRUE,
-                     levels=c("Mean length",
-                              "Modal length (Lc)",
-                              "Mean length above Lc"))
-
-    p3 <- ggplot2::ggplot(DF, ggplot2::aes(x=Year, y=value, linetype=key)) +
-      ggplot2::geom_line(size=1.1) +
-      ggplot2::expand_limits(y=0) +
-      ggplot2::labs(y="Length", linetype="Legend",
-                    title=paste0('\n\nFigure ', fignum, '. Mean Length Time-Series')) +
-      ggplot2::theme_minimal()
-
-  }
-
-  if (!is.null(p3)) suppressWarnings(plot(p3))
-
-  fignum
-}
-
-
-
-
-caa_plot <- function(Data, i=1, fignum=1) {
-  # CAA
-  Year <- Freq <- n <- NA
-  CAA <- Data@CAA[i,,]
-  nyrs <- nrow(CAA); maxage <- ncol(CAA)
-  if  (all(is.na(CAA))){
-    P2 <- NULL
-  } else {
-    P2 <- TRUE
-    dimnames(CAA) <- list(1:nyrs, 1:maxage)
-
-    df1 <- as.data.frame.table(CAA, stringsAsFactors = FALSE)
-    colnames(df1) <- c("Year", "Val", "Freq")
-    df1$Val <- as.numeric(df1$Val)
-
-    df1$Year <- as.numeric(df1$Year)
-    df1$Year <- Data@Year
-
-    yr.n <- df1 %>% dplyr::group_by(Year) %>% dplyr::summarise(n=sum(Freq))
-    yr.ind <- yr.n %>% dplyr::filter(n>0) %>% dplyr::select(Year)
-
-    Years <- Data@Year
-    nyears <- length(unique(df1$Year))
-    df1$Year_val <- (Years[(length(Years)-nyears+1):length(Years)])
-
-    if (nrow(df1)>0 ) {
-      nyears <- length(unique(df1$Year))
-      nayears <- df1 %>% group_by(Year) %>% summarize(isna=all(is.na(Freq)))
-      nyears <- sum(!nayears$isna)
-
-      nbins <- length(unique(df1$Val))
-      tplot <- 16 # total plots per page
-
-      if (nyears > tplot) {
-        npages <- ceiling(nyears/tplot)
-        ncol <- 4
-        nrow <- 4
-        nplot <- ncol * nrow
-      } else {
-        npages <- 1
-        nrow <- ceiling(sqrt(nyears))
-        ncol <- ceiling(nyears/nrow)
-        nplot <- nyears
-      }
-      pmat <- matrix(1:(nrow*ncol), nrow=nrow, ncol=ncol, byrow=TRUE)
-      pmat[pmat >nplot] <- NA
-
-      op <- par(mfrow=c(nrow, ncol), no.readonly = TRUE, mar=c(2,2,2,1), oma=c(4,4,4,0))
-      on.exit(par(op))
-
-      yr1 <- 1
-      col <- "grey"
-      for (pg in 1:npages) {
-        if (pg ==1) {
-          yrind <- yr.ind$Year[1:(nplot)]
-        } else {
-          t1 <- nplot * (pg-1) +1
-          t2 <- t1+nplot
-          yrind <- yr.ind$Year[t1:t2]
-        }
-        yr1 <- max(yrind) + 1
-        dat <- df1 %>% dplyr::filter(Year %in% yrind)
-        un.yrs_val <- as.numeric(unique(dat$Year_val))
-        un.yrs <- as.numeric(unique(dat$Year))
-
-        if (pg >1 && pg == npages) {
-          nplot <- nyears - (npages-1) * tplot
-          ncol <- ceiling(sqrt(nplot))
-          nrow <- ceiling(nplot/ncol)
-          op <- par(mfrow=c(nrow, ncol), no.readonly = TRUE, mar=c(2,2,2,1), oma=c(4,4,4,0))
-          on.exit(par(op))
-          suppressWarnings(
-            pmat <- matrix(1:nplot, nrow=nrow, ncol=ncol, byrow=TRUE))
-          pmat[pmat>nplot] <- NA
-        }
-        for (p in 1:nplot) {
-          pdat <- dat %>% dplyr::filter(Year==un.yrs[p])
-          if (nrow(pdat) > 0) {
-            if (all(is.na(pdat$Freq))) {
-
-            } else{
-
-              if (p %in% pmat[nrow,]) {
-                barplot(pdat$Freq, names=round(pdat$Val, 2), axes=FALSE, col=col)
-              } else {
-                barplot(pdat$Freq, names=FALSE, axes=FALSE, col=col)
-              }
-              if (p %in% pmat[,1]) axis(side=2)
-              if (!p %in% pmat[,1]) axis(side=2, labels=TRUE)
-              ncount <- round(sum(pdat$Freq),0)
-              title(un.yrs_val[p])
-              text(max(pdat$Val), max(pdat$Freq), paste('n = ', ncount),
-                   xpd=NA)
-            }
-          }
-          if (p == 1) {
-            title(main=paste0('Figure ', fignum, ". Catch-at-Age (Years ", min(un.yrs), " - ", max(un.yrs), ")"),
-                  xpd=NA, line=1, outer=TRUE)
-            fignum <- fignum + 1
-          }
-        }
-        mtext(side=1, outer=TRUE, "Age", line=2, cex=1.1)
-        mtext(side=2, outer=TRUE, "Frequency", line=2, cex=1.1)
-
-      }
-    }
-  }
-
-  fignum
-}
-
-
-cal_plot <- function(Data, i=1, fignum=1) {
-  Year <- Freq <- n <- NA
-  CAL <- Data@CAL[i,,]
-  if (all(is.na(CAL))) {
-    P3 <- NULL
-  } else {
-    P3 <- TRUE
-    nyrs <- nrow(CAL); nbins <- length(Data@CAL_bins) - 1
-    By <- Data@CAL_bins[2] - Data@CAL_bins[1]
-    BinsMid <- seq(Data@CAL_bins[1] + 0.5*By, by=By,length.out = nbins)
-    dimnames(CAL) <- list(1:nyrs, BinsMid)
-
-    df1 <- as.data.frame.table(CAL, stringsAsFactors = FALSE)
-    colnames(df1) <- c("Year", "Val", "Freq")
-    df1$Val <- as.numeric(df1$Val)
-
-    df1$Year <- as.numeric(df1$Year)
-    df1$Year <- Data@Year
-
-    yr.n <- df1 %>% dplyr::group_by(Year) %>% dplyr::summarise(n=sum(Freq))
-    yr.ind <- yr.n %>% dplyr::filter(n>0) %>% dplyr::select(Year)
-
-    Years <- Data@Year
-    nyears <- length(unique(df1$Year))
-    df1$Year_val <- (Years[(length(Years)-nyears+1):length(Years)])
-
-    if (nrow(df1) > 0) {
-      nyears <- length(unique(df1$Year))
-      nayears <- df1 %>% group_by(Year) %>% summarize(isna=all(is.na(Freq)))
-      nyears <- sum(!nayears$isna)
-
-      nbins <- length(unique(df1$Val))
-      tplot <- 16 # total plots per page
-      if (nyears > tplot) {
-        npages <- ceiling(nyears/tplot)
-        ncol <- 4
-        nrow <- 4
-        nplot <- ncol * nrow
-      } else {
-        npages <- 1
-        nrow <- ceiling(sqrt(nyears))
-        ncol <- ceiling(nyears/nrow)
-        nplot <- nyears
-      }
-      pmat <- matrix(1:(ncol*nrow), nrow=nrow, ncol=ncol, byrow=TRUE)
-      pmat[pmat>nplot] <- NA
-
-      op <- par(mfrow=c(nrow, ncol), no.readonly = TRUE, mar=c(2,2,2,1), oma=c(4,4,4,0))
-      on.exit(par(op))
-
-      yr1 <- 1
-      col <- "grey"
-      for (pg in 1:npages) {
-        if (pg ==1) {
-          yrind <- yr.ind$Year[1:(nplot)]
-        } else {
-          t1 <- nplot * (pg-1) +1
-          t2 <- t1+nplot
-          yrind <- yr.ind$Year[t1:t2]
-        }
-
-        yr1 <- max(yrind) + 1
-        dat <- df1 %>% dplyr::filter(Year %in% yrind)
-        un.yrs_val <- as.numeric(unique(dat$Year_val))
-        un.yrs <- as.numeric(unique(dat$Year))
-
-        if (pg >1 && pg == npages) {
-          nplot <- nyears - (npages-1) * tplot
-          ncol <- ceiling(sqrt(nplot))
-          nrow <- ceiling(nplot/ncol)
-          op <- par(mfrow=c(nrow, ncol), no.readonly = TRUE, mar=c(2,2,2,1), oma=c(4,4,4,0))
-          on.exit(par(op))
-          suppressWarnings(
-            pmat <- matrix(1:(ncol*nrow), nrow=nrow, ncol=ncol, byrow=TRUE)
-          )
-          pmat[pmat>nplot] <- NA
-        }
-        for (p in 1:nplot) {
-          pdat <- dat %>% dplyr::filter(Year==un.yrs[p])
-          if (nrow(pdat) > 0) {
-            if (all(is.na(pdat$Freq))) {
-
-            } else{
-              if (p %in% pmat[nrow,]) {
-                barplot(pdat$Freq, names.arg=round(pdat$Val, 2), axes=FALSE, col=col, las=2)
-              } else {
-                barplot(pdat$Freq, names.arg=FALSE, axes=FALSE, col=col)
-              }
-              if (p %in% pmat[,1]) axis(side=2)
-              if (!p %in% pmat[,1]) axis(side=2, labels=TRUE)
-              ncount <- round(sum(pdat$Freq),0)
-              title(un.yrs_val[p])
-              text(length(unique(df1$Val)), max(pdat$Freq), paste('n = ', ncount), xpd=NA)
-            }
-
-          }
-          if (p == 1) {
-            title(main=paste0('Figure ', fignum, ". Catch-at-Length (Years ", min(un.yrs), " - ", max(un.yrs), ")"),
-                  xpd=NA, line=1, outer=TRUE)
-            fignum <- fignum + 1
-          }
-        }
-        mtext(side=1, outer=TRUE, "Length", line=2, cex=1.1)
-        mtext(side=2, outer=TRUE, "Frequency", line=2, cex=1.1)
-
-      }
-    }
-  }
-
-  fignum
-}
-
-ref_plots <- function(Data, i=1, n=20000, fignum=1) {
-  Var <- val <- ..scaled.. <- Text <- NA
-  slots <- c('Dep', 'Abun', 'SpAbun', 'FMSY_M', 'BMSY_B0', 'Cref', 'Bref', 'Iref',
-             't', "AvC", 'Dt', 'Ref')
-
-  lout <- list()
-  for (x in seq_along(slots)) {
-    sl <- slots[x]
-    mean <- slot(Data, sl)[i]
-    if (sl %in% c("t", "Ref")) {
-      cv <- NA
-    } else {
-      cv <- slot(Data, paste0("CV_",sl))[i]
-    }
-
-
-    if (is.na(cv) | length(cv)<1) {
-      vals <- rep(mean,n)
-    } else {
-      if (is.na(mean)) {
-        vals <- NA
-      } else {
-        if (mean < 0) {
-          vals <- -trlnorm(n, -mean, cv)
-        } else {
-          vals <- trlnorm(n, mean, cv)
-        }
-      }
-
-    }
-    lout[[x]] <- data.frame(Var=sl, val=vals, mean=mean, cv=cv)
-  }
-
-  plist <- do.call("rbind", lout)
-  df <- plist %>% group_by(Var) %>% dplyr::distinct(mean, cv)
-  df$x <- df$mean
-  # df$mean[df$mean>0.01] <-round(df$mean[df$mean>0.01],)
-  # df$mean[df$mean < -0.01] <-round(df$mean[df$mean < -0.01],2)
-  df$cv <- round(df$cv,2)
-  lab <- sprintf("mu ==%G", df$mean)
-  lab2 <- sprintf("CV ==%G", df$cv)
-
-  # plist <- dplyr::distinct(plist)
-
-  addText <- FALSE
-  textdf <- plist %>% filter(is.na(val))
-  if (nrow(textdf) > 0) {
-    textdf$Text <- "No values"
-    textdf <- dplyr::distinct(textdf)
-    addText <- TRUE
-  }
-
-  if (!all(is.na(plist$mean))) {
-    p1 <- ggplot2::ggplot(plist, ggplot2::aes(x=val, y=..scaled..)) +
-      ggplot2::geom_density(show.legend = F, fill="lightgray") +
-      ggplot2::facet_wrap(~Var, scales="free") +
-      ggplot2::theme_minimal() + ggplot2::theme(axis.title.y = ggplot2::element_blank(),
-                                                axis.text.y = ggplot2::element_blank(),
-                                                axis.title.x=ggplot2::element_blank()) +
-      ggplot2::geom_text(data=df, ggplot2::aes(x=x, y=1.3), parse=TRUE, label=lab) +
-      ggplot2::geom_text(data=df, ggplot2::aes(x=x, y=1.1), parse=TRUE, label=lab2) +
-
-      ggplot2::labs(title=paste0('Figure ', fignum, '. Density plots of Reference parameters')) +
-      ggplot2::expand_limits(y=1.4) +
-      ggplot2::theme(strip.text = ggplot2::element_text(size=14))
-    if (addText) p1 <- p1 + ggplot2::geom_text(data=textdf, ggplot2::aes(x=0, y=3, label=Text) )
-
-    suppressWarnings(plot(p1))
-  }
-
-
-  fignum
-
-
-}
-
 
 
 #' Apply Management Procedures to an object of class Data
@@ -2825,12 +2148,6 @@ SubData_sim <- function(x, Data) {
     }
   }
   subdata
-}
-
-MP_wrapper <- function(x, Data, MP, ...) {
-  subdat <- SubData_sim(x, Data)
-  fun <- get(MP)
-  fun(1, subdat, ...)
 }
 
 

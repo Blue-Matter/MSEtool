@@ -15,8 +15,11 @@
 #' @return An object of class `MOM`
 #' @importFrom stats na.pass
 #' @export
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `BAM2MOM()` is superseded as of MSEtool 4.0.0 and will be removed in a future release. Use [ImportBAM()] instead.
 BAM2MOM <- function(rdat, nsim = 48, proyears = 50, interval = 1,
                     stock_name=NULL, fleet_name=NULL, LowerTri=0, report = FALSE, ...) {
+  .SupersedeLegacy("BAM2MOM()", "ImportBAM()")
   
   parms <- rdat[["parms"]]
   
@@ -254,153 +257,6 @@ BAM2MOM <- function(rdat, nsim = 48, proyears = 50, interval = 1,
   MOM@maxF <- 5
   MOM
 }
-
-
-#' @describeIn BAM2MOM Create a single stock/fleet OM from a BAM object
-BAM2OM <- function(rdat, nsim = 48, proyears = 50, interval = 2, report = FALSE, ...) {
-  
-  a.series <- rdat[["a.series"]] # age data frame
-  maxage <- max(a.series$age)
-  n_age <- maxage + 1
-  sage <- min(a.series$age) # First age class in BAM
-  BAM_age <- a.series$age
-  
-  t.series <- rdat[["t.series"]] # time data frame
-  
-  parms <- rdat[["parms"]]
-  
-  nyears <- length(parms$styr:parms$endyr)
-  CurrentYr <- parms$endyr
-  
-  maa <- local({
-    M <- array(tiny + .Machine$double.eps, c(nsim, n_age, nyears))
-    M[, BAM_age + 1, ] <- array(a.series$M, c(length(BAM_age), nsim, nyears)) |>
-      aperm(c(2, 1, 3))
-    M
-  })
-  
-  faa <- local({
-    FM <- array(0, c(nsim, n_age, nyears))
-    FM[, BAM_age + 1, ] <- replicate(nsim, rdat[["F.age"]]) |> aperm(3:1)
-    FM
-  })
-  
-  waa <- local({
-    Wt <- array(0, c(nsim, n_age, nyears))
-    Wt[, BAM_age + 1, ] <- array(a.series$weight, c(length(BAM_age), nsim, nyears)) |>
-      aperm(c(2, 1, 3))
-    Wt
-  })
-  
-  mataa <- local({
-    if (is.null(a.series$mat.male)) {
-      mat_vec <- a.series$mat.female
-      # mat_vec <- a.series$mat.female * a.series$prop.female
-    } else {
-      mat_vec <- a.series$mat.female * a.series$prop.female + a.series$mat.male * (1 - a.series$prop.female)
-    }
-    mat <- array(0, c(nsim, n_age, nyears))
-    mat[, BAM_age + 1, ] <- array(mat_vec, c(length(BAM_age), nsim, nyears)) |>
-      aperm(c(2, 1, 3))
-    mat
-  })
-  
-  laa <- local({
-    len <- array(0, c(nsim, n_age, nyears))
-    len[, BAM_age + 1, ] <- array(a.series$length, c(length(BAM_age), nsim, nyears)) |>
-      aperm(c(2, 1, 3))
-    len
-  })
-  
-  naa <- local({
-    N <- array(NA_real_, c(nsim, n_age, nyears + 1))
-    N[, BAM_age + 1, ] <- replicate(nsim, rdat[["N.age"]]) |> aperm(3:1)
-    if(sage > 0) {
-      aind_missing <- sage:1 # Missing cohorts to be filled in
-      for(i in 1:length(aind_missing)) {
-        N[, aind_missing[i], 1:nyears] <- N[, aind_missing[i] + 1, 1 + 1:nyears] *
-          exp(maa[, aind_missing[i], 1:nyears])
-      }
-    }
-    N[, , 1:nyears]
-  })
-  
-  if (is.null(a.series$prop.male)) {
-    ##### For red snapper
-    # a.series$reprod is the product of batch fecundity, n batches per year, proportion female
-    fecaa <- local({
-      bfec <- array(0, c(nsim, n_age, nyears))
-      
-      bfec[, BAM_age + 1, ] <- array(a.series$reprod, c(length(BAM_age), nsim, nyears)) |>
-        aperm(c(2, 1, 3))
-      bfec * mataa
-    })
-  } else {
-    ##### For gag
-    # a.series$reprod = weight * (mat.female * prop.female + mat.male * (1 - prop.female))
-    fecaa <- local({
-      fec <- array(0, c(nsim, n_age, nyears))
-      
-      fec[, BAM_age + 1, ] <- array(a.series$reprod, c(length(BAM_age), nsim, nyears)) |>
-        aperm(c(2, 1, 3))
-      fec
-    })
-  }
-  
-  # Compare SSB
-  #OM_SSB <- apply(naa * fecaa * exp(-parms[["spawn.time"]] * (faa + maa)), c(1, 3), sum)
-  #plot(OM_SSB[1, ], typ = 'o')
-  #lines(t.series$SSB, pch = 16)
-  
-  R0 <- parms[["BH.R0"]]
-  
-  h <- parms[["BH.steep"]]
-  if(is.null(h)) h <- 0.999
-  
-  phi0 <- parms[["BH.Phi0"]]
-  if(is.null(phi0)) phi0 <-  parms[["Phi0"]]
-  
-  Perr <- parms[["R.sigma.logdevs"]]
-  AC <- acf(t.series$logR.dev, lag.max = 1, plot = FALSE)$acf[2]
-  
-  OM <- Assess2OM(Name = paste(rdat$info$title, rdat$info$species),
-                  proyears = proyears,
-                  interval = interval,
-                  CurrentYr = CurrentYr,
-                  h = h,
-                  naa = naa,
-                  faa = faa,
-                  waa = waa,
-                  Mataa = mataa,
-                  Maa = maa,
-                  laa = laa,
-                  nyr_par_mu = 1,
-                  report = report,
-                  silent = TRUE,
-                  R0 = R0,
-                  phi0 = phi0,
-                  Perr = Perr,
-                  AC = AC,
-                  fecaa = fecaa
-  )
-  
-  OM@cpars$LatASD <- local({
-    lsd <- array(0, c(nsim, n_age, nyears + proyears))
-    lsd[, BAM_age + 1, ] <- array(a.series$length.sd, c(length(BAM_age), nsim, nyears + proyears)) |>
-      aperm(c(2, 1, 3))
-    lsd
-  })
-  OM@cpars$Linf <- rep(parms$Linf, nsim)
-  OM@cpars$K <- rep(parms$K, nsim)
-  OM@cpars$t0 <- rep(parms$t0, nsim)
-  
-  OM@a <- parms$wgt.a
-  OM@b <- parms$wgt.b
-  
-  return(OM)
-}
-
-
 
 
 

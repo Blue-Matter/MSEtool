@@ -16,6 +16,11 @@ CALsimp(Data, nbins = 10, simno = 1)
 \description{
 A function that condenses the number of catch-at-length bins in a data object
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{CALsimp()} is superseded as of MSEtool 4.0.0 and will be removed in a future release.
+}
+
 \author{
 T. Carruthers
 }

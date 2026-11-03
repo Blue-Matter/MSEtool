@@ -19,6 +19,11 @@ A table of performance metrics.
 \description{
 As title.
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{plotOFL()} is superseded as of MSEtool 4.0.0 and will be removed in a future release.
+}
+
 \author{
 T. Carruthers
 }

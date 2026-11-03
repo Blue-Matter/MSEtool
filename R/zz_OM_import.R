@@ -22,7 +22,10 @@
 #' myOM <- XL2OM('myOM.xlsx')
 #' 
 #' }
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `XL2OM()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 XL2OM <- function(name=NULL, cpars=NULL, msg=TRUE) {
+  .SupersedeLegacy("XL2OM()")
   if (!requireNamespace("readxl", quietly = TRUE)) {
     stop("Package \"readxl\" needed for this function to work. Please install it.",
          call. = FALSE)
