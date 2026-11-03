@@ -152,23 +152,9 @@
   MeanAtSize <- slot(object, slotName)
 
   if (!is.null(MeanAtSize)) {
-    if (!is.array(MeanAtSize)) {
-      Classes <- if (!EmptyObject(object@Classes)) object@Classes else Length@Classes
-      if (length(MeanAtSize) != length(Classes))
-        cli::cli_abort(c(
-          "x" = "If `{slotName}` is a numeric vector it must have length matching `Classes` ({.val {length(Classes)}}).",
-          "i" = "Error occurred on object of class {.cls {class(object)}}."
-        ))
-      Year <- dimnames(.GetASK(Length))[['Year']][1]
-      MeanAtSize <- array(
-        MeanAtSize,
-        dim      = c(1L, length(Classes), 1L),
-        dimnames = list(Sim=1, Class=Classes, Year=Year)
-      )
-      slot(object, slotName) <- MeanAtSize
-      object@Classes <- Classes
-    }
-    return(object)
+    Classes <- if (!EmptyObject(object@Classes)) object@Classes else Length@Classes
+    return(.MeanAtSizeVector2Array(object, slotName, Classes,
+                                   dimnames(.GetASK(Length))[['Year']][1]))
   }
 
   ObjectMeanAtAge <- object@MeanAtAge |> ReduceDims()
@@ -476,21 +462,8 @@
     )
   }
 
-  if (!is.array(MeanAtSize)) {
-    if (length(MeanAtSize) != length(Classes))
-      cli::cli_abort(c(
-        "x" = "If `{slotName}` is a numeric vector it must have length matching `Classes` ({.val {length(Classes)}}).",
-        "i" = "Error occurred on object of class {.cls {class(object)}}."
-      ))
-    Year <- dimnames(ASK)[['Year']][1]
-    MeanAtSize <- array(
-      MeanAtSize,
-      dim      = c(1L, length(Classes), 1L),
-      dimnames = list(Sim=1, Class=Classes, Year=Year)
-    )
-    slot(object, slotName) <- MeanAtSize
-    object@Classes <- Classes
-  }
+  object     <- .MeanAtSizeVector2Array(object, slotName, Classes, dimnames(ASK)[['Year']][1])
+  MeanAtSize <- slot(object, slotName)
 
   byArea <- "Area" %in% names(dimnames(MeanAtSize))
   nArea  <- if (byArea) dim(MeanAtSize)[4] else 1L
@@ -564,6 +537,12 @@
 .WeightedAtSize2AtAge <- function(object, Weighting, Length, Fallback = NULL) {
   slotName <- if (inherits(Length, 'weight')) 'MeanAtWeight' else 'MeanAtLength'
 
+  if (!is.null(slot(object, slotName))) {
+    Classes <- if (!EmptyObject(object@Classes)) object@Classes else Length@Classes
+    object  <- .MeanAtSizeVector2Array(object, slotName, Classes,
+                                       dimnames(.GetASK(Length))[['Year']][1])
+  }
+
   wt_at_size  <- slot(Weighting, slotName)
   obj_at_size <- slot(object, slotName)
 
@@ -572,8 +551,16 @@
   if (is.null(wt_at_size) || is.null(obj_at_size))
     return(fallback)
 
-  if ('Area' %in% names(dimnames(wt_at_size)))
+  if (!identical(as.numeric(dimnames(wt_at_size)[['Class']]),
+                 as.numeric(dimnames(obj_at_size)[['Class']])))
+    return(fallback)
+
+  objHasArea <- 'Area' %in% names(dimnames(obj_at_size))
+  wtHasArea  <- 'Area' %in% names(dimnames(wt_at_size))
+  if (wtHasArea && !objHasArea)
     wt_at_size <- DropDimension(wt_at_size, 'Area', warn = FALSE)
+  if (objHasArea && !wtHasArea)
+    wt_at_size <- AddDimension(wt_at_size, 'Area')
 
   # constant input: skip division to avoid floating-point rounding outside range
   const_val <- obj_at_size[1]
@@ -605,6 +592,24 @@
   eff[bad] <- fallbackAtAge[bad]
 
   object@MeanAtAge <- eff
+  object
+}
+
+# promote a numeric-vector at-size schedule to a `Sim x Class x Year` array
+.MeanAtSizeVector2Array <- function(object, slotName, Classes, Year) {
+  MeanAtSize <- slot(object, slotName)
+  if (is.null(MeanAtSize) || is.array(MeanAtSize)) return(object)
+  if (length(MeanAtSize) != length(Classes))
+    cli::cli_abort(c(
+      "x" = "If `{slotName}` is a numeric vector it must have length matching `Classes` ({.val {length(Classes)}}).",
+      "i" = "Error occurred on object of class {.cls {class(object)}}."
+    ))
+  slot(object, slotName) <- array(
+    MeanAtSize,
+    dim      = c(1L, length(Classes), 1L),
+    dimnames = list(Sim=1, Class=Classes, Year=Year)
+  )
+  object@Classes <- Classes
   object
 }
 
