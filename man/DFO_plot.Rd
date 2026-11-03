@@ -16,6 +16,11 @@ A plot of mean biomass relative to BMSY and fishing mortality rate relative to F
 over the final 5 years of the projection
 http://www.dfo-mpo.gc.ca/reports-rapports/regs/sff-cpd/precaution-eng.htm
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{DFO_plot()} is superseded as of MSEtool 4.0.0 and will be removed in a future release.
+}
+
 \author{
 T. Carruthers
 }

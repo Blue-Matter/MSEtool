@@ -60,6 +60,11 @@ biomass per recruit at M = M0. Vector \verb{[nsim]}
 }
 }
 
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{makeRel()} is superseded as of MSEtool 4.0.0 and will be removed in a future release.
+}
+
 \examples{
 # Depensatory natural mortality
 Rel <- makeRel(type = "DDM", M0 = 0.8, M1 = 0.2, CV = 0.1)

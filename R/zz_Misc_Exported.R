@@ -159,7 +159,6 @@ MSEextra <- function(silent=FALSE) {
 }
 
 
-
 #' @rdname SubCpars
 #' @include zz_Class_definitions.R
 #' @export
@@ -331,7 +330,6 @@ SubCpars_proyears <- function(xx, yr_diff, cpars) {
           
 
 
-
 #' @rdname tinyErr
 #' @include zz_Class_definitions.R
 #' @export
@@ -409,7 +407,6 @@ setMethod("tinyErr", signature(x = "OM"),
             }
             OMout
           })
-
 
 
 #' Management Procedure Type
@@ -525,7 +522,10 @@ NAor0 <- function(x) {
 #' functions are missed. Let us know if you find any and we will add them.
 #' @author A. Hordyk
 #' @export
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `plotFun()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 plotFun <- function(class = c("MSE", "Data"), msg = TRUE) {
+  .SupersedeLegacy("plotFun()")
   class <- match.arg(class)
   tt <- lsf.str("package:MSEtool")
   p <- p2 <- rep(FALSE, length(tt))
@@ -710,8 +710,6 @@ Required <- function(funcs = NA, noCV=FALSE) {
 }
 
 
-
-
 #' Setup parallel processing
 #'
 #' Sets up parallel processing using the snowfall package
@@ -745,7 +743,6 @@ setup <- function(cpus=NULL, logical=FALSE, ...) {
     snowfall::sfLibrary("SAMtool", character.only = TRUE, verbose=FALSE)
 
 }
-
 
 
 # #' Open the DLMtool User Guide
@@ -866,8 +863,6 @@ updateMSE <- function(MSEobj, save.name=NULL) {
 }
 
 
-
-
 #' Calculate CV from vector of values
 #'
 #'
@@ -917,10 +912,12 @@ trlnorm <- function(reps, mu, cv) {
 }
 
 
-
 #' @describeIn trlnorm Calculate density of log-normally distributed random numbers
 #' @export
-tdlnorm <- function(x, mu, cv) dlnorm(x, mconv(mu, mu * cv), sdconv(mu, mu * cv))
+tdlnorm <- function(x, mu, cv) {
+  .SupersedeLegacy("tdlnorm()")
+  dlnorm(x, mconv(mu, mu * cv), sdconv(mu, mu * cv))
+}
 
 
 #' Stock recruit parameterization
@@ -948,7 +945,14 @@ tdlnorm <- function(x, mu, cv) dlnorm(x, mconv(mu, mu * cv), sdconv(mu, mu * cv)
 #' @author Q. Huynh
 #' @describeIn hconv Returns steepness (h) from \code{alpha} and \code{phi0}
 #' @export
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` These functions are superseded as of MSEtool 4.0.0 and will be removed in a future release:
+#' - `hconv()`
+#' - `R0conv()`
+#' - `SRalphaconv()`
+#' - `SRbetaconv()`
 hconv <- function(alpha, phi0, SR = 1, type = 1) {
+  .SupersedeLegacy("hconv()")
   if(SR == 1) {
     type <- match.arg(as.character(type), choices = as.character(1:2))
     h <- switch(type,
@@ -963,6 +967,7 @@ hconv <- function(alpha, phi0, SR = 1, type = 1) {
 #' @describeIn hconv Returns unfished recruitment (R0) from \code{alpha}, \code{beta}, and \code{phi0}
 #' @export
 R0conv <- function(alpha, beta, phi0, SR = 1, type = 1) {
+  .SupersedeLegacy("R0conv()")
   if(SR == 1) {
     type <- match.arg(as.character(type), choices = as.character(1:2))
     R0 <- switch(type,
@@ -977,6 +982,7 @@ R0conv <- function(alpha, beta, phi0, SR = 1, type = 1) {
 #' @describeIn hconv Returns \code{alpha} from \code{h} and \code{phi0}
 #' @export
 SRalphaconv <- function(h, phi0, SR = 1, type = 1) {
+  .SupersedeLegacy("SRalphaconv()")
   if(SR == 1) {
     type <- match.arg(as.character(type), choices = as.character(1:2))
     alpha <- switch(type,
@@ -991,6 +997,7 @@ SRalphaconv <- function(h, phi0, SR = 1, type = 1) {
 #' @describeIn hconv Returns \code{beta} from \code{h}, \code{R0}, and \code{phi0}
 #' @export
 SRbetaconv <- function(h, R0, phi0, SR = 1, type = 1) {
+  .SupersedeLegacy("SRbetaconv()")
   if(SR == 1) {
     type <- match.arg(as.character(type), choices = as.character(1:2))
     beta <- switch(type,
@@ -1017,7 +1024,10 @@ SRbetaconv <- function(h, R0, phi0, SR = 1, type = 1) {
 #' @return An object of class 'OM' with 'D' slot populated
 #' @author T. Carruthers
 #' @export
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `ML2D()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 ML2D <- function(OM, ML, nsim = 100, ploty = T, Dlim = c(0.05, 0.6)) {
+  .SupersedeLegacy("ML2D()")
 
   nsim2<-nsim*10
   maxage <- OM@maxage
@@ -1137,8 +1147,11 @@ ML2D <- function(OM, ML, nsim = 100, ploty = T, Dlim = c(0.05, 0.6)) {
 #' @author T. Carruthers
 #' @export CSRA
 #' @keywords internal
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `CSRA()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 CSRA <- function(M, h, Linf, K, t0, AM, a, b, vuln, mat, ML, CAL, CAA,
                  maxage, nyears) {
+  .SupersedeLegacy("CSRA()")
   nsim <- length(M)
   Dep <- rep(NA, nsim)
   Fm <- rep(NA, nsim)
@@ -1241,30 +1254,6 @@ CSRAfunc <- function(lnF, Mc, hc, maxage, nyears, AFSc, AFCc, Linfc, Kc,
 
 # Stochastic inverse growth curve used to back-calculate age at first
 # capture from length at first capture
-#' Calculate age at first capture from length at first capture and growth
-#'
-#' As title.
-#'
-#' @param t0c A vector of theoretical age at length zero (von Bertalanffy
-#' growth)
-#' @param Linfc A vector of maximum length (von Bertalanffy growth)
-#' @param Kc A vector of maximum growth rate (von Bertalanffy growth)
-#' @param LFC A vector of length at first capture
-#' @param maxage Maximum age
-#' @author T. Carruthers
-#' @keywords internal
-getAFC <- function(t0c, Linfc, Kc, LFC, maxage) {
-  nsim <- length(t0c)
-  agev <- c(1e-04, 0:maxage)
-  agearray <- matrix(rep(agev, each = nsim), nrow = nsim)
-  Larray <- Linfc * (1 - exp(-Kc * (agearray - t0c)))
-  matplot(agev, t(Larray), type = "l")
-  abline(h = LFC, col = "#ff000030", lwd = 2)
-  AFC <- (log(1 - (LFC/Linfc))/-Kc) + t0c
-  abline(v = AFC, col = "#0000ff30", lwd = 2)
-  AFC
-}
-
 
 
 #' Length to age conversion
@@ -1296,8 +1285,6 @@ L2A <- function(t0c, Linfc, Kc, Len, maxage, ploty=F) {
   }
   age
 }
-
-
 
 
 # #' Convert an MMSE object to an MSE object
@@ -1403,8 +1390,11 @@ L2A <- function(t0c, Linfc, Kc, Len, maxage, ploty=F) {
 #' @export
 #'
 #' @keywords internal
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `MPurl()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 MPurl <- function(topic, url='https://dlmtool.openmse.com/reference/',
                   nameonly=FALSE) {
+  .SupersedeLegacy("MPurl()")
 
   paths <- file.path(.libPaths()[1], "DLMtool")
 
@@ -1494,7 +1484,6 @@ derive_beta_par <- function(mu, sigma) {
 }
 
 
-
 #' TAC Filter
 #'
 #' Filters vector of TAC recommendations by replacing negatives with NA and
@@ -1516,7 +1505,10 @@ TACfilter <- function(TAC) {
 #' @param MP Numeric value indicating the MP to return DataList
 #' @return A nested list `Data` objects (`nstock` by `nfleet`)
 #' @export
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `select_MP()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 select_MP <- function(PPD, MP=1) {
+  .SupersedeLegacy("select_MP()")
   DataList <- vector('list', length(PPD))
   for (s in 1:length(DataList)) {
     DataList[[s]] <- vector('list', length(PPD[[s]]))

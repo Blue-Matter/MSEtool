@@ -20,6 +20,11 @@ SSBrefplot(MSE, simno = 1, ystart = 1, log = F, leg = T)
 \description{
 Plot Spawning stock biomass and reference points for both historical and projected period
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{SSBrefplot()} is superseded as of MSEtool 4.0.0 and will be removed in a future release.
+}
+
 \author{
 T. Carruthers
 }

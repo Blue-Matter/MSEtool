@@ -22,6 +22,11 @@ management recommendations and it should be noted that this process
 is important and in a real application would require due diligence (ie
 peer reviewed data workshop).
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{iSCAMinds()} is superseded as of MSEtool 4.0.0 and will be removed in a future release.
+}
+
 \author{
 T. Carruthers
 }

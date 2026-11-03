@@ -1607,8 +1607,6 @@ AddRealData_MS <- function(SimData,
                             msg=msg) 
     Data_out <- fit_ind$Data_out
     ObsPars <- fit_ind$ObsPars
-    
-    fit_ind$ObsPars[[1]][[1]]$VIerr_y[,1:69]
   }
   
   # ---- Add Additional Indices ----
@@ -1769,7 +1767,7 @@ AddRealData_MS <- function(SimData,
     Data_out@CV_Rec <- matrix(RealData@CV_Rec[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
     
     # Calculate Error
-    Rec <- apply(StockPars[[p]]$N[, map.stocks, 1, , ], c(1, 3), sum) # simulated recruitment
+    Rec <- apply(StockPars[[p]]$N[, map.stocks, 1, , , drop = FALSE], c(1, 4), sum) # simulated recruitment
     
     Recbias <- matrix(apply(Data_out@Rec, 1, mean)/apply(Rec, 1, mean),
                       nrow=nsim, ncol=nyears+proyears)

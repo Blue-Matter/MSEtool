@@ -64,7 +64,10 @@ int_tune = function(par, MP_parname, MP, Hist_list,minfunc,parallel){
 #' @author T. Carruthers
 #' @export
 #'
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `tune_MP()` is superseded as of MSEtool 4.0.0 and will be removed in a future release. Use [TuneMP()] instead.
 tune_MP = function(Hist_list, MP, MP_parname, interval, minfunc, tol=1E-2, parallel=F){
+ .SupersedeLegacy("tune_MP()", "TuneMP()")
  opt = optimize(int_tune, interval=interval,MP_parname = MP_parname, MP = MP, 
                 Hist_list=Hist_list, minfunc=minfunc, tol=tol, parallel = parallel)
  MPout = get(MP)

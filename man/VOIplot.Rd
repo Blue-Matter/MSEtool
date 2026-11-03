@@ -58,6 +58,11 @@ A list of all the information included in the plot
 A function that relates parameters of the observation model and the
 operating model parameters to yield.
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{VOIplot()} is superseded as of MSEtool 4.0.0 and will be removed in a future release.
+}
+
 \author{
 A. Hordyk
 }

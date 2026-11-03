@@ -18,6 +18,11 @@ CalcAsymptoticDist(M, V = NULL, nits = 50, plot = F)
 \description{
 Calculates the asymptotic distribution from an initial distribution vector (V) and a markov movement matrix (M) (rows sum to 1).
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{CalcAsymptoticDist()} is superseded as of MSEtool 4.0.0 and will be removed in a future release.
+}
+
 \seealso{
 \link{simmov2}
 }

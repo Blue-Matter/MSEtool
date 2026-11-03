@@ -28,6 +28,11 @@ The Excel spreadsheet must have tabs named with the following convention.
 For example if \code{stkname} is 'myFish', the Data parameters are in a tab
 named 'myFishData'.
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{Data_xl()} is superseded as of MSEtool 4.0.0 and will be removed in a future release.
+}
+
 \examples{
 
 \dontrun{

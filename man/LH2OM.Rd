@@ -101,6 +101,15 @@ or \code{OM@L50} are ignored.
 hierarchical model fitted to FishBase life-history parameters
 
 }}
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} These functions are superseded as of MSEtool 4.0.0 and will be removed in a future release:
+\itemize{
+\item \code{LH2OM()}
+\item \code{predictLH()}
+}
+}
+
 \references{
 Thorson, J. T., S. B. Munch, J. M. Cope, and J. Gao. 2017.
 Predicting life history parameters for all fishes worldwide. Ecological Applications. 27(8): 2262--2276

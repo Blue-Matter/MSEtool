@@ -23,6 +23,11 @@ A thinned ector I_hist long of index observations.
 \description{
 Given an index (historical period and projected period) this function creates sparsity in the projected index to simulate varying frequency (intensity) of data collection.
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{doIfreq()} is superseded as of MSEtool 4.0.0 and will be removed in a future release.
+}
+
 \author{
 T. Carruthers
 }

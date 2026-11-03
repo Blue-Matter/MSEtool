@@ -16,11 +16,21 @@
 #'   `FALSE`.
 #'
 #' @details
-#' Maximum length slots (`Vmaxlen` and `Rmaxlen`) are updated to reflect the
-#' maximum length class rather than `Linf` as in legacy objects. This changes
-#' the selectivity and retention curves if `Vmaxlen` or `Rmaxlen` are less
-#' than 1. As an alternative, users can set the `MeanAtLength` or `MeanAtAge`
-#' arrays directly in the [Selectivity()] and [Retention()] objects.
+#' The converted `om` reproduces the legacy schedules:
+#'
+#' - Maturity uses the [MaturityAtAge()] model. `A50` and `A50_95` are the
+#'   ages at which mean length-at-age equals `L50` and `L95`, for each
+#'   simulation and year. When `cpars$Mat_age` is supplied it is used directly.
+#' - Effort control points in `EffYears` are placed in the same historical
+#'   years as in the legacy `OM`.
+#' - Relative selectivity and retention parameters (`OM@isRel = TRUE`) are
+#'   multiplied by the sampled `L50` of each simulation.
+#' - `Vmaxlen` and `Rmaxlen` are rescaled from selectivity at `Linf` to
+#'   selectivity at the maximum length class, so the descending limb of
+#'   dome-shaped curves is unchanged.
+#'
+#' Effort is allocated across areas by the spatial targeting model described
+#' in [Effort()]; `OM@Spat_targ` is not converted.
 #'
 #' @return An [om-class] object.
 #'
@@ -174,7 +184,7 @@ ConvertOM <- function(OM,
   
   for (st in 1:nStock) {
     for (fl in 1:nFleet) {
-      L50 <- .GetLengthClass(om@Stock[[st]]@Maturity, 0.5)
+      L50 <- .LegacyL50(om@Stock[[st]], om@nSim)
       om@Fleet[[st]][[fl]]@Selectivity@Pars <- .StructurePars(Pars=om@Fleet[[st]][[fl]]@Selectivity@Pars,
                                                  nSim=om@nSim, 
                                                  Years=om@Years)
@@ -195,35 +205,37 @@ ConvertOM <- function(OM,
   om
 }
 
-#' Get Length Class Corresponding to a Reference Value
+#' Length at 50% Maturity Used by Legacy Relative Selectivity
 #'
-#' Finds the length class in a `MeanAtLength` array that most closely
-#' corresponds to a given reference value (e.g., 0.5 for length-at-50%-maturity).
-#' Called internally by `.UpdateSelRet()`.
+#' Returns the per-simulation length at 50% maturity that legacy `OM` objects
+#' multiply relative selectivity and retention parameters by. Called internally
+#' by `.UpdateSelRet()`.
 #'
-#' @param object An S4 object with a `MeanAtLength` array (Sim × Length × Year)
-#'   and a `Classes` slot of length classes.
-#' @param RefValue Numeric. The reference value to match in `MeanAtLength`.
-#'   Default `0.5`.
+#' @param Stock A populated [stock-class] object.
+#' @param nSim Integer. Number of simulations.
 #'
-#' @return A numeric array of dimensions (Sim × Year) giving the length class
-#'   closest to `RefValue` for each simulation and time step.
+#' @return A `Sim x Year` array, constant over years. Uses the legacy L50
+#'   stored by the maturity conversion, otherwise `Maturity@Pars$L50`,
+#'   otherwise the length at which maturity-at-age reaches 0.5 in the last
+#'   historical year.
 #'
 #' @seealso `.UpdateSelRet()`, [ConvertOM()]
 #' @keywords internal
-.GetLengthClass <- function(object, RefValue=0.5) {
-  array <- object@MeanAtLength
-  dd <- dim(array)
-  
-  out <- array(0, dim=dd[c(1,3)], dimnames=dimnames(array)[c(1,3)])
-  
-  for (s in seq_len(dd[1])) {
-    for (ts in seq_len(dd[3])) {
-      ind <- which.min(abs(array[s,,ts]-RefValue))
-      out[s,ts] <- object@Classes[ind]
-    }
+.LegacyL50 <- function(Stock, nSim) {
+  Maturity <- Stock@Maturity
+  Years <- Stock@Years
+  L50 <- Maturity@Misc$LegacyL50 %||% Maturity@Pars$L50
+  if (!is.null(L50)) {
+    L50 <- Extend(L50, nSim)
+    L50 <- if (is.array(L50)) L50[, 1] else rep(L50, length.out = nSim)
+  } else {
+    MatAge <- Extend(Maturity@MeanAtAge, nSim, Years = Years)
+    LenAge <- Extend(Stock@Length@MeanAtAge, nSim, Years = Years)
+    yr <- Stock@nYear
+    L50 <- vapply(seq_len(nSim), \(s) .LinInterp(MatAge[s, , yr], LenAge[s, , yr], 0.5), numeric(1))
   }
-  out
+  array(rep(L50, length(Years)), c(nSim, length(Years)),
+        dimnames = list(Sim = seq_len(nSim), Year = Years))
 }
 
 
@@ -277,6 +289,7 @@ ConvertOM <- function(OM,
     dd <- prod(dim(Linf)) * nFleet
     
     for (fl in seq_len(nFleet)) {
+      Original <- slot(om@Fleet[[st]][[fl]], type)
       cli::cli_progress_bar('Calculating {.var {Var_Vmax}} for Stock: {.val {StockNames[st]}} Fleet:  {.val {FleetNames[fl]}}', total=dd)
       
       if (type=='Selectivity') {
@@ -330,74 +343,51 @@ ConvertOM <- function(OM,
       LFS <- LFS |> Extend(nsim, Years=Years)
       Vmaxlen <- Vmaxlen |> Extend(nsim, Years=Years)
       
+      MaxLen <- max(.ClassMidpoints(slot(om@Fleet[[st]][[fl]], type)@Classes))
       VmaxlenOut <- array(0, dim=dim(Linf))
       dimnames(VmaxlenOut) <- dimnames(Linf)
       
       for (s in 1:nsim) {
         for (ts in seq_along(Years)) {
-          VmaxlenOut[s,ts] <- .VmaxLenOpt(L5[s,ts], 
-                                         LFS[s,ts],
+          VmaxlenOut[s,ts] <- .VmaxLenOpt(LFS[s,ts],
                                          Vmaxlen[s, ts],
-                                         Linf[s,ts])
+                                         Linf[s,ts],
+                                         MaxLen)
           cli::cli_progress_update()
         }
       }
-      slot(om@Fleet[[st]][[fl]], type)@Pars[[Var_Vmax]] <- VmaxlenOut
+      Updated <- slot(om@Fleet[[st]][[fl]], type)
+      Updated@Pars[[Var_Vmax]] <- VmaxlenOut
+      # drop at-size schedules generated from the old Vmaxlen
+      if (is.null(Original@MeanAtAge)) Updated@MeanAtAge <- NULL
+      if (is.null(Original@MeanAtLength)) Updated@MeanAtLength <- NULL
+      slot(om@Fleet[[st]][[fl]], type) <- Updated
       cli::cli_progress_done()
     }
   }
   om
 }
 
-#' Optimise Vmaxlen at the Maximum Length Bin
+#' Rescale Vmaxlen from Linf to the Maximum Length Class
 #'
-#' Finds the `Vmaxlen` value (on the logit scale) that reproduces the original
-#' selectivity at the maximum length bin (`Linf`) under the double-normal curve.
-#' Called internally by `.SolveForVmaxlen()`.
+#' Returns the double-normal `Vmaxlen` at `maxlen` that gives the same
+#' descending limb as selectivity `vmaxlen` at `linf`. Called internally by
+#' `.SolveForVmaxlen()`.
 #'
-#' @param l5 Numeric. Length at 5% selectivity.
 #' @param lfs Numeric. Length at full selectivity.
-#' @param vmaxlen Numeric. Original selectivity at `Linf` (between 0 and 1).
+#' @param vmaxlen Numeric. Selectivity at `linf` (between 0 and 1).
 #' @param linf Numeric. Asymptotic length (`Linf`).
+#' @param maxlen Numeric. Largest length-class midpoint.
 #'
-#' @return Numeric. The optimised `Vmaxlen` value on the probability scale
-#'   (0–1). Returns `vmaxlen` unchanged if it exceeds 0.99.
+#' @return Numeric. `Vmaxlen` at `maxlen`. Returns `vmaxlen` unchanged if
+#'   `lfs >= linf`.
 #'
-#' @seealso `.SolveForVmaxlen()`, `.OptForVmaxLen()`
+#' @seealso `.SolveForVmaxlen()`
 #' @keywords internal
-.VmaxLenOpt <- function(l5, lfs, vmaxlen, linf) {
-  if (vmaxlen > 0.99)
+.VmaxLenOpt <- function(lfs, vmaxlen, linf, maxlen) {
+  if (!is.finite(lfs) || lfs >= linf)
     return(vmaxlen)
-  opt <- optimize(.OptForVmaxLen,
-                  interval=logit(c(0.001, 0.999)),
-                  l5=l5,
-                  lfs=lfs,
-                  linf=linf,
-                  vmaxlen=vmaxlen)
-  return(ilogit(opt$minimum))
-}
-
-#' Objective Function for Vmaxlen Optimisation
-#'
-#' Computes the squared difference between the double-normal selectivity at
-#' `Linf` and the target `vmaxlen`, used by `.VmaxLenOpt()` via [stats::optimize()].
-#'
-#' @param logitTrial Numeric. Trial value of `Vmaxlen` on the logit scale.
-#' @param l5 Numeric. Length at 5% selectivity.
-#' @param lfs Numeric. Length at full selectivity.
-#' @param linf Numeric. Asymptotic length (`Linf`).
-#' @param vmaxlen Numeric. Target selectivity at `Linf`.
-#'
-#' @return Numeric. Squared difference between predicted and target selectivity
-#'   at `Linf`.
-#'
-#' @seealso `.VmaxLenOpt()`, `.SolveForVmaxlen()`
-#' @keywords internal
-.OptForVmaxLen <- function(logitTrial, l5, lfs, linf, vmaxlen) {
-  trial <- ilogit(logitTrial)
-  lens <- seq(0, linf,length.out=100)
-  sel <- DoubleNormal(lens,l5, lfs, trial)
-  (sel[length(sel)] - vmaxlen)^2
+  max(max(vmaxlen, 1e-15)^(((maxlen - lfs) / (linf - lfs))^2), 1e-15)
 }
 
 

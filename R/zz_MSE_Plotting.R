@@ -11,8 +11,6 @@ plot.MSE <- function(x, ...) {
 }
 
 
-
-
 #' Plot several plots with a shared legend
 #'
 #' @param plots list of plot objects of class `gg` or `ggplot`
@@ -23,8 +21,11 @@ plot.MSE <- function(x, ...) {
 #' @export
 #'
 #' @note modified from https://github.com/tidyverse/ggplot2/wiki/share-a-legend-between-two-ggplot2-graphs
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `join_plots()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 join_plots <- function(plots, ncol = length(plots), nrow = 1, position = c("right", "bottom"),
                        legend=TRUE) {
+  .SupersedeLegacy("join_plots()")
   if (!requireNamespace("gridExtra", quietly = TRUE)) {
     stop("Package \"gridExtra\" needed for this function to work. Please install it.",
          call. = FALSE)
@@ -861,8 +862,11 @@ join_plots <- function(plots, ncol = length(plots), nrow = 1, position = c("righ
 #' @note Apologies for the nauseating shading.
 #' @author T. Carruthers with some additions from A. Hordyk
 #' @export Kplot
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `Kplot()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 Kplot <- function(MSEobj, maxsim = 60, MPs = NA, sims = NULL, maxMP = 9,
                   nam = NA, cex.leg = 1.5) {
+  .SupersedeLegacy("Kplot()")
 
   # png('Kplot.png')
 
@@ -993,7 +997,6 @@ Kplot <- function(MSEobj, maxsim = 60, MPs = NA, sims = NULL, maxMP = 9,
 }
 
 
-
 #' National Oceanographic and Atmospheric Administration default plot 1
 #'
 #' A preliminary plot for returning trade-offs plots and performance table for
@@ -1010,7 +1013,10 @@ Kplot <- function(MSEobj, maxsim = 60, MPs = NA, sims = NULL, maxMP = 9,
 #' @return A table of performance metrics.
 #' @author T. Carruthers
 #' @export NOAA_plot
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `NOAA_plot()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 NOAA_plot <- function(MSEobj, nam = NA, type = NA, panel = T) {
+  .SupersedeLegacy("NOAA_plot()")
   Yd <- rep(NA, MSEobj@nMPs)
   B50 <- rep(NA, MSEobj@nMPs)
   PNOF <- rep(NA, MSEobj@nMPs)
@@ -1068,7 +1074,6 @@ NOAA_plot <- function(MSEobj, nam = NA, type = NA, panel = T) {
 }
 
 
-
 #' A projection by projection plot of F/FMSY and B/BMSY
 #'
 #' A shorter version of the plot method for MSEs that just shows the projected
@@ -1082,7 +1087,10 @@ NOAA_plot <- function(MSEobj, nam = NA, type = NA, panel = T) {
 #' @param maxsims Integer, the maximum number of simulations to plot
 #' @author T. Carruthers
 #' @export Pplot
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `Pplot()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 Pplot <- function(MSEobj, nam = NA, maxMP = 10,MPs=NA,maxsims=20) {
+  .SupersedeLegacy("Pplot()")
   op <- par(no.readonly = TRUE)
   on.exit(par(op))
   if(!all(is.na(MPs))){
@@ -1225,6 +1233,8 @@ Pplot <- function(MSEobj, nam = NA, maxMP = 10,MPs=NA,maxsims=20) {
 #' @param ...  Additional arguments to be passed to plotting functions
 #' @author T. Carruthers & A.Hordyk
 #' @export Pplot2
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `Pplot2()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 Pplot2 <- function(MSEobj, YVar = c("F_FMSY", "SSB_SSBMSY"), MPs = NA, sims = NULL,
                    traj = c("all", "quant", "both"), quants = c(0.1, 0.9), incquant = TRUE,
                    quantcol = "lightgray",
@@ -1234,6 +1244,7 @@ Pplot2 <- function(MSEobj, YVar = c("F_FMSY", "SSB_SSBMSY"), MPs = NA, sims = NU
                    MPcol='black',
                    incLeg = TRUE, cex.leg = 1.5, legPos = "topleft", yline = NULL, xline=NULL, parOR = FALSE,
                    xaxis = TRUE, yaxis = TRUE, oneIt=TRUE, ...) {
+  .SupersedeLegacy("Pplot2()")
   old_par <- par(no.readonly = TRUE)
   on.exit(par(old_par))
 
@@ -1438,7 +1449,6 @@ Pplot2 <- function(MSEobj, YVar = c("F_FMSY", "SSB_SSBMSY"), MPs = NA, sims = NU
 }
 
 
-
 #' Performance Whisker Plot
 #'
 #' A NAFO / ICCAT / SSB style MSE performance whisker plot
@@ -1448,7 +1458,10 @@ Pplot2 <- function(MSEobj, YVar = c("F_FMSY", "SSB_SSBMSY"), MPs = NA, sims = NU
 #' @return A box plot of performance
 #' @author T. Carruthers
 #' @export PWhisker
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `PWhisker()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 PWhisker<-function(MSEobj){#},Pnames=c("POF","C30","D30","LD","DNC","LDNC","PGK","AAVC")){
+  .SupersedeLegacy("PWhisker()")
 
   P10 <- P50 <- PNOF <- LTY <- STY <- AAVY <- VY <- array(NA,c(MSEobj@nsim, MSEobj@nMPs))
   Pnames<-c("B10","B50","PNOF","LTY","AAVY")
@@ -1713,7 +1726,6 @@ PWhisker<-function(MSEobj){#},Pnames=c("POF","C30","D30","LD","DNC","LDNC","PGK"
 #     mtext(nam, 3, outer = T, line = 0.3, font = 2)
 #   return(invisible())
 # }
-
 
 
 # #' @describeIn Tplot Simpler plot that compares long-term yield (LTY:
@@ -2011,7 +2023,10 @@ PWhisker<-function(MSEobj){#},Pnames=c("POF","C30","D30","LD","DNC","LDNC","PGK"
 #' @param plot Logical. Show the plot?
 #' @author T. Carruthers
 #' @export VOI
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `VOI()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 VOI <- function(MSEobj, ncomp = 6, nbins = 8, maxrow = 8, Ut = NA, Utnam = "Utility", plot=TRUE) {
+  .SupersedeLegacy("VOI()")
   objnam <- deparse(substitute(MSEobj))
   nsim <- MSEobj@nsim
 
@@ -2204,7 +2219,6 @@ VOI <- function(MSEobj, ncomp = 6, nbins = 8, maxrow = 8, Ut = NA, Utnam = "Util
 }  # VOI
 
 
-
 #' Calculate Value Of Information 2
 #'
 #' A function that relates operating model parameters and parameters of the
@@ -2226,8 +2240,11 @@ VOI <- function(MSEobj, ncomp = 6, nbins = 8, maxrow = 8, Ut = NA, Utnam = "Util
 #' 1/(newCV/oldCV)^2
 #' @author T. Carruthers
 #' @export VOI2
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `VOI2()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 VOI2 <- function(MSEobj, ncomp = 6, nbins = 4, Ut = NA, Utnam = "yield",
                  lay = F) {
+  .SupersedeLegacy("VOI2()")
   op <- par(no.readonly=TRUE)
   on.exit(par(op))
   objnam <- deparse(substitute(MSEobj))
@@ -2481,10 +2498,13 @@ VOI2 <- function(MSEobj, ncomp = 6, nbins = 4, Ut = NA, Utnam = "yield",
 #' @return A list of all the information included in the plot
 #' @author A. Hordyk
 #' @export VOIplot
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `VOIplot()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 VOIplot <- function(MSEobj, MPs = NA, nvars = 5, nMP = 4,
                     Par = c("Obs", "OM"), YVar = c("Y", "B"), doPlot = TRUE, incStat = FALSE,
                     availMP = NULL, acceptMP = NULL, incNames = TRUE, labcex = 0.8,
                     quants = c(0.05, 0.95)) {
+  .SupersedeLegacy("VOIplot()")
 
   YVar <- match.arg(YVar)
   nvars <- max(nvars, 2)  # maximum number of variables
@@ -2717,8 +2737,6 @@ VOIplot <- function(MSEobj, MPs = NA, nvars = 5, nMP = 4,
 }
 
 
-
-
 #' Biomass wormplot
 #'
 #' A worm plot for plotting the likelihood of meeting biomass targets in future
@@ -2736,7 +2754,10 @@ VOIplot <- function(MSEobj, MPs = NA, nvars = 5, nMP = 4,
 #' (good) colored segments
 #' @author T. Carruthers
 #' @export wormplot
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `wormplot()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 wormplot <- function(MSEobj, Bref = 0.5, LB = 0.25, UB = 0.75) {
+  .SupersedeLegacy("wormplot()")
 
   if (UB < LB)
     stop("LB parameter must be lower than UB parameter")
@@ -3260,65 +3281,6 @@ tradeoffplot3 <- function(x, y, xlab, ylab, labs, cex, vl, hl, xlim, ylim) {
   text(x, y, labs, font = 2, col = coly, cex = 1)
 }
 
-tradeoffplot4 <- function(x, y, xlab, ylab, labs, cex, vl, hl, ShowLabs = FALSE,
-                          ShowCols = FALSE, AvailMPs = NULL) {
-  adjj <- c(0.9, 1.1)
-  XLim <- c(min(c(-10, min(x, na.rm = T) * adjj)), max(c(max(x, na.rm = T) *
-                                                           adjj, 110)))
-  YLim <- c(min(c(-10, min(y, na.rm = T) * adjj)), max(c(max(y, na.rm = T) *
-                                                           adjj, 110)))
-
-  # Which MPs meet minimum PMs
-  ind <- which(x >= vl & y >= hl)
-  coly <- rep("darkgray", length(labs))
-  coly[ind] <- "black"
-  # coly[labs%in%c('AvC','curE','FMSYref')]<-'black'
-
-  Pch <- rep(21, length(labs))
-  # Pch[labs%in%c('AvC','curE','FMSYref')] <- 17
-  coly[grep("FMSY", labs)] <- "black"
-  Pch[grep("FMSY", labs)] <- 24
-  if (!is.null(AvailMPs))
-    Pch[labs %in% AvailMPs] <- 21
-  if (!is.null(AvailMPs))
-    coly[labs %in% AvailMPs & (x >= vl & y >= hl)] <- "green"
-  # coly<-rep(c('#0000ff95','#ff000095','#20ff1095'),50)[1:length(labs)]
-
-  plot(NA, xlim = XLim, ylim = YLim, xlab = xlab, ylab = ylab, bty = "l",
-       las = 1)
-  abline(v = vl, col = "#99999940", lwd = 2)
-  abline(h = hl, col = "#99999940", lwd = 2)
-
-  Alpha <- 30
-  # polygons
-  LeftCol <- rgb(red = 255, green = 0, blue = 0, alpha = Alpha, names = NULL,
-                 maxColorValue = 255)
-  RightCol <- rgb(red = 0, green = 255, blue = 0, alpha = Alpha, names = NULL,
-                  maxColorValue = 255)
-
-  if (ShowCols) {
-    polygon(x = c(0, vl, vl, 0), y = c(0, 0, hl, hl), col = LeftCol,
-            border = NA)
-    polygon(x = c(0, vl, vl, 0), y = c(0, 0, 100, 100), col = LeftCol,
-            border = NA)
-    polygon(x = c(vl, 100, 100, vl), y = c(0, 0, 100, 100), col = RightCol,
-            border = NA)
-    polygon(x = c(vl, 100, 100, vl), y = c(hl, hl, 100, 100), col = RightCol,
-            border = NA)
-  }
-
-  Cex <- 1.5
-  if (!ShowLabs)
-    points(x, y, bg = coly, pch = Pch, cex = Cex, col = "black")
-  if (ShowLabs)
-    text(x, y, labs, font = 2, col = coly, cex = 1)
-  # if(IdPoints) { message('Click points on plot to display MP name')
-  # message('Click Stop to finish') flush.console() identify(x,y,
-  # labels=labs) }
-
-  labs[ind]
-
-}
 
 #' Plot Spawning stock biomass and reference points for both historical and projected period
 #'
@@ -3330,7 +3292,10 @@ tradeoffplot4 <- function(x, y, xlab, ylab, labs, cex, vl, hl, ShowLabs = FALSE,
 #' @param leg Boolean, should a legend be included in the plot?
 #' @author T. Carruthers
 #' @export SSBrefplot
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `SSBrefplot()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 SSBrefplot<-function(MSE,simno=1,ystart=1,log=F,leg=T){
+  .SupersedeLegacy("SSBrefplot()")
 
   ylaby<-ystart-1+(1:(MSE@nyears+MSE@proyears))
   SSB   <- c(MSE@SSB_hist[simno,],MSE@SSB[simno,1,])
@@ -3367,10 +3332,6 @@ SSBrefplot<-function(MSE,simno=1,ystart=1,log=F,leg=T){
 }
 
 
-
-
-
-
 #' Make colors transparent
 #'
 #'
@@ -3387,17 +3348,4 @@ makeTransparent <- function(someColor, alpha = 100) {
 }
 
 
-euc.dist <- function(x1, x2) sqrt(sum((x1 - x2)^2))
 
-GetStat <- function(PM, LTY, STY, PNOF, BMSYref, B0ref, VY) {
-  switch(PM, `Long-term Yield` = LTY, `Short-term Yield` = STY, Overfishing = PNOF,
-         `Biomass:BMSY` = BMSYref, `Biomass:B0` = B0ref, AnnualVar = VY)
-}
-
-StatLab <- function(PM, maxVar, BmsyRef, B0Ref) {
-  switch(PM, `Long-term Yield` = "Long-term Yield", `Short-term Yield` = "Short-term Yield",
-         Overfishing = "Prob. of Not Overfishing (%)", `Biomass:BMSY` = paste0("Prob. Biomass >",
-                                                                               BmsyRef, "BMSY (%)"), `Biomass:B0` = paste0("Prob. Biomass >",
-                                                                                                                           B0Ref, "B0 (%)"), AnnualVar = paste0("Prob. AAVY <", maxVar,
-                                                                                                                                                                "%"))
-}

@@ -2,7 +2,6 @@
 % Please edit documentation in R/zz_BAM2OM.R
 \name{BAM2MOM}
 \alias{BAM2MOM}
-\alias{BAM2OM}
 \title{Import a multi-stock, multi-fleet OM from a BAM object}
 \usage{
 BAM2MOM(
@@ -16,8 +15,6 @@ BAM2MOM(
   report = FALSE,
   ...
 )
-
-BAM2OM(rdat, nsim = 48, proyears = 50, interval = 2, report = FALSE, ...)
 }
 \arguments{
 \item{rdat}{A list object from the \code{BAMextras} package. Use \code{bamExtras::standardize_rdat(rdat)}}
@@ -44,8 +41,8 @@ An object of class \code{MOM}
 \description{
 Import a multi-stock, multi-fleet OM from a BAM object
 }
-\section{Functions}{
-\itemize{
-\item \code{BAM2OM()}: Create a single stock/fleet OM from a BAM object
+\section{Superseded}{
 
-}}
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{BAM2MOM()} is superseded as of MSEtool 4.0.0 and will be removed in a future release. Use \code{\link[=ImportBAM]{ImportBAM()}} instead.
+}
+

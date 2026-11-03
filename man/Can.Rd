@@ -60,6 +60,11 @@ the MPs that are currently not able to run given a Data
 object
 
 }}
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{DLMdiag()} is superseded as of MSEtool 4.0.0 and will be removed in a future release.
+}
+
 \examples{
 CanMPs <- Can(MSEtool::Cobia)
 CantMPs <- Cant(MSEtool::Cobia)

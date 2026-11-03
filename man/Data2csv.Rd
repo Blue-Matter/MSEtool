@@ -20,6 +20,11 @@ Data2csv(Data, file = NULL, simno = 1, overwrite = F, keepNAs = T)
 \description{
 A function that writes a correctly formatted .csv file from a MSEtool Data object
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{Data2csv()} is superseded as of MSEtool 4.0.0 and will be removed in a future release.
+}
+
 \author{
 T. Carruthers
 }

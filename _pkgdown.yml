@@ -300,7 +300,6 @@ reference:
 - subtitle: Spatial
   contents:
   - CalcAsymDist
-  - CalcAsymptoticDist
   - CalcUnfishedDist
   - FitMovement
 
@@ -544,7 +543,6 @@ reference:
   desc: Unit conversions, parameter transformations, and statistical distribution helpers.
   contents:
   - CR2h
-  - hconv
   - logit
   - unit-conversions
   - alphaconv
@@ -588,7 +586,6 @@ reference:
   - LoadArgs
   - MakeNamedList
   - NAor0
-  - OneRep
   - PPD
   - ReduceNSim
   - Rename
@@ -601,7 +598,6 @@ reference:
   - SampleStockPars
   - Save
   - UpdateObject
-  - CSRA
 
 
 - title: Parallel Processing
@@ -660,33 +656,7 @@ reference:
 
 - subtitle: Legacy OM Functions
   contents:
-  - OMdoc
   - testOM
-
-- subtitle: Legacy Import
-  desc: Convert stock assessment output, i.e., stock, fleet, and some observation error parameters, into an operating model
-  contents:
-  - ASAP2OM
-  - Assess2MOM
-  - Assess2OM
-  - Awatea2OM
-  - BAM2MOM
-  - iSCAM2OM
-  - SS2MOM
-  - WHAM2OM
-
-- subtitle: Legacy Manual Configuration
-  desc: Manually parameterize the operating model
-  contents:
-  - Choose
-  - LH2OM
-  - makemov
-  - ML2D
-  - SketchFun
-  - Turing
-  - XL2Fleet
-  - XL2OM
-  - XL2Stock
 
 - subtitle: Legacy Objects
   contents:
@@ -700,36 +670,23 @@ reference:
   contents:
   - boxplot.Data
   - Data-class-objects
-  - Data2csv
-  - DataInit
   - DataSlots
-  - Data_xl
   - Lag_Data
   - plot.Data
-  - plotOFL
   - Report
-  - select_MP
   - SimulatedData
-  - SS2Data
-  - SS2DataMOM
   - summary,Data-method
-  - XL2Data
 
 - subtitle: Legacy MP General Functions
   contents:
   - Can
-  - Fease
   - Input
   - MPtype
-  - MPurl
-  - RealFease
   - Required
   - runInMP
   - runMP
-  - Sense
   - TAC
   - TACfilter
-  - tune_MP
   - Uses
 
 - subtitle: Legacy Reference Management Procedures
@@ -737,66 +694,26 @@ reference:
   contents:
   - FMSYref
 
-- subtitle: Other Legacy Management Procedures
-  contents:
-  - Emp
-
 - subtitle: Legacy Run MSE Simulation
   contents:
-  - runCOSEWIC
   - setup
 
 - subtitle: General and Diagnostic Functions
   contents:
-  - Converge
   - Dom
   - summary,MSE-method
-  - VOI
-  - VOI2
 
 - subtitle: Legacy Plot MSE Output (General)
   contents:
-  - Cplot
-  - Kplot
   - plot.MSE
-  - PMLimit
-  - Pplot
-  - Pplot2
-  - PWhisker
-  - Splot
-  - SSBrefplot
-  - TradePlot
-  - VOIplot
-  - wormplot
-
-- subtitle: Legacy Plot MSE Output (Management Areas)
-  contents:
-  - Cos_thresh_tab
-  - DFO_bar
-  - DFO_hist
-  - DFO_plot
-  - DFO_plot2
-  - DFO_proj
-  - DFO_quant
-  - DFO_report
-  - DFO_spider
-  - DFO_tab
-  - DFO_tab_formatted
-  - NOAA_plot
-  - Thresh_tab
 
 - subtitle: Legacy multiMSE
   desc: Multi-population (two-sex or multi-stock), multi-fleet operating models (class MOM) and corresponding MSE object (class MMSE)
   contents:
-  - makeMOM
-  - makeRel
   - MOM-class-objects
-  - multidebug
   - multiMSE
   - plot.MMSE
   - plot.MOM
-  - plotmulti
-  - plotRel
   - summary,MMSE-method
 
 - subtitle: Legacy Miscellaneous
@@ -817,17 +734,11 @@ reference:
 
 - subtitle: Legacy Data Functions
   contents:
-  - CALsimp
   - CheckMPs
-  - replic8
 
 - subtitle: Legacy MP Functions
   contents:
   - CombineMMP
-  - doHCR
-  - doIfreq
-  - doRec
-  - smoothy
 
 - subtitle: Legacy MSE Functions
   contents:
@@ -852,7 +763,6 @@ reference:
   - MSYCalcs
   - simCAA
   - simCAL
-  - simmov
 
 - subtitle: Legacy Internal multiMSE
   contents:
@@ -862,12 +772,94 @@ reference:
 
 - subtitle: Legacy Figures
   contents:
-  - join_plots
   - makeTransparent
-  - plotFun
-  - plotquant
-  - quantile_plot
 
+
+- subtitle: Superseded Legacy Functions
+  desc: >
+    Legacy functions superseded in MSEtool 4.0.0. They will be removed in a
+    future release.
+  contents:
+  - ASAP2OM
+  - Assess2MOM
+  - Assess2OM
+  - Awatea2OM
+  - BAM2MOM
+  - CalcAsymptoticDist
+  - CALsimp
+  - Choose
+  - Converge
+  - Cos_thresh_tab
+  - Cplot
+  - CSRA
+  - Data2csv
+  - Data_xl
+  - DataInit
+  - DFO_bar
+  - DFO_hist
+  - DFO_plot
+  - DFO_plot2
+  - DFO_proj
+  - DFO_quant
+  - DFO_report
+  - DFO_spider
+  - DFO_tab
+  - DFO_tab_formatted
+  - doHCR
+  - doIfreq
+  - doRec
+  - Emp
+  - Fease
+  - hconv
+  - iSCAM2OM
+  - join_plots
+  - Kplot
+  - LH2OM
+  - makeMOM
+  - makemov
+  - makeRel
+  - ML2D
+  - MPurl
+  - multidebug
+  - NOAA_plot
+  - OMdoc
+  - OneRep
+  - plotFun
+  - plotmulti
+  - plotOFL
+  - plotquant
+  - plotRel
+  - PMLimit
+  - Pplot
+  - Pplot2
+  - PWhisker
+  - quantile_plot
+  - RealFease
+  - replic8
+  - runCOSEWIC
+  - select_MP
+  - Sense
+  - simmov
+  - SketchFun
+  - smoothy
+  - Splot
+  - SS2Data
+  - SS2DataMOM
+  - SS2MOM
+  - SSBrefplot
+  - Thresh_tab
+  - TradePlot
+  - tune_MP
+  - Turing
+  - VOI
+  - VOI2
+  - VOIplot
+  - WHAM2OM
+  - wormplot
+  - XL2Data
+  - XL2Fleet
+  - XL2OM
+  - XL2Stock
 
 - title: internal
   contents:

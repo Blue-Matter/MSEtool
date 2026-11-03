@@ -31,30 +31,7 @@ Assess2OM(
   ...
 )
 
-VPA2OM(
-  Name = "A fishery made by VPA2OM",
-  proyears = 50,
-  interval = 2,
-  CurrentYr = as.numeric(format(Sys.Date(), "\%Y")),
-  h = 0.999,
-  Obs = MSEtool::Imprecise_Unbiased,
-  Imp = MSEtool::Perfect_Imp,
-  naa,
-  faa,
-  waa,
-  Mataa,
-  Maa,
-  laa,
-  nyr_par_mu = 3,
-  LowerTri = 1,
-  recind = 0,
-  plusgroup = TRUE,
-  altinit = 0,
-  fixq1 = TRUE,
-  report = FALSE,
-  silent = FALSE,
-  ...
-)
+VPA2OM(...)
 }
 \arguments{
 \item{Name}{Character string. The name of the operating model.}
@@ -124,6 +101,11 @@ needs to parameterize most of the observation and implementation portions of the
 \details{
 Use a seed for the random number generator to sample future recruitment.
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{Assess2OM()} and \code{VPA2OM()} are superseded as of MSEtool 4.0.0 and will be removed in a future release.
+}
+
 \seealso{
 \link{SS2OM} \link{iSCAM2OM} \link{WHAM2OM} \link{ASAP2OM}
 }

@@ -28,10 +28,13 @@
 #' @author T. Carruthers and Q. Huynh
 #' @export
 #' @seealso \link{SS2OM}
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `SS2Data()` is superseded as of MSEtool 4.0.0 and will be removed in a future release. Use [ImportSSData()] instead.
 SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Species = "", Region = "",
                     min_age_M = 1, gender = 1,
                     comp_fleet = "all", comp_season = "sum", comp_partition = "all", comp_gender = "all",
                     index_season = "mean", silent=FALSE, ...) {
+  .SupersedeLegacy("SS2Data()", "ImportSSData()")
 
   if(!requireNamespace("reshape2", quietly = TRUE)) {
     stop("Package `reshape2` is required for this function. Install with `install.packages('reshape2')`", call. = FALSE)

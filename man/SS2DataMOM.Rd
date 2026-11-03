@@ -31,6 +31,11 @@ Currently tested on r4ss version 1.38.1-41 and SS 3.30.14.
 
 Catches in \code{Data@Cat} are the predicted sex-specific catch calculated from the SS output.
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{SS2DataMOM()} is superseded as of MSEtool 4.0.0 and will be removed in a future release. Use \code{\link[=ImportSSData]{ImportSSData()}} instead.
+}
+
 \seealso{
 \link{SS2MOM}
 }

@@ -239,7 +239,10 @@ getnIVs<-function(x,Rel){
 #' @param extras Integer. The number of blank plots to create at the end.
 #' @author T.Carruthers
 #' @export
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `plotRel()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 plotRel<-function(Stocks,Rel,Relno,Snams,leg=F,extras=0){
+  .SupersedeLegacy("plotRel()")
   
   Reli<-Rel[[Relno]]
   

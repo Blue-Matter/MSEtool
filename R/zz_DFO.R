@@ -32,7 +32,18 @@
 #' @references
 #' \url{https://cosewic.ca/index.php/en/}
 #' @export runCOSEWIC
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` These functions are superseded as of MSEtool 4.0.0 and will be removed in a future release:
+#' - `runCOSEWIC()`
+#' - `COSEWIC_Pplot()`
+#' - `COSEWIC_Dplot()`
+#' - `COSEWIC_Blow()`
+#' - `COSEWIC_Hplot()`
+#' - `COSEWIC_report()`
+#' - `COSEWIC_tab()`
+#' - `COSEWIC_tab_formatted()`
 runCOSEWIC<-function(OM, ...){
+  .SupersedeLegacy("runCOSEWIC()")
 
   if(OM@nsim<100)message(paste0("Your operating model specifies only ",OM@nsim," simulations. You may wish to do 200+ simulations to ensure suitably precise probability calculations"))
   OM@interval=2
@@ -57,8 +68,11 @@ runCOSEWIC<-function(OM, ...){
 #' by OM@nsim where cpars is specified)
 #' @author T. Carruthers
 #' @export DFO_hist
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `DFO_hist()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 
 DFO_hist <- function(OM, panel= T,nsim=48) {
+  .SupersedeLegacy("DFO_hist()")
   if (!methods::is(OM,"OM")) stop("Object must be class `OM`", call.=FALSE)
   if(length(OM@cpars)>0){
     message("cpars slot is specified, OM@nsim used for historical simulations")
@@ -94,7 +108,10 @@ DFO_hist <- function(OM, panel= T,nsim=48) {
 #' @param maxplot The maximum number of MPs to be plotted per figure
 #' @author T. Carruthers
 #' @export DFO_proj
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `DFO_proj()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 DFO_proj <- function(MSEobj,maxplot=6) {
+  .SupersedeLegacy("DFO_proj()")
   if (!methods::is(MSEobj,"MSE")) stop("Object must be class `MSE`", call.=FALSE)
   maxplot<-min(maxplot,MSEobj@nMPs)
   nsim<-MSEobj@nsim
@@ -134,7 +151,10 @@ DFO_proj <- function(MSEobj,maxplot=6) {
 #' @param zero_origin Logical: should plots have a zero-zero origin?
 #' @author T. Carruthers
 #' @export DFO_plot
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `DFO_plot()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 DFO_plot<-function(MSEobj,zero_origin=T){
+  .SupersedeLegacy("DFO_plot()")
   if (!methods::is(MSEobj, "MSE")) stop("Object must be class `MSE`", call.=FALSE)
   op<-par(mai=c(1,1,0.02,0.02))
   yend <- max(MSEobj@proyears - 4, 1):MSEobj@proyears
@@ -169,7 +189,10 @@ DFO_plot<-function(MSEobj,zero_origin=T){
 #' @param yres Integer: the year interval over which to calculate B/BMSY in future years
 #' @author T. Carruthers
 #' @export DFO_bar
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `DFO_bar()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 DFO_bar<-function(MSEobj,yres=10){
+  .SupersedeLegacy("DFO_bar()")
   if (!methods::is(MSEobj, "MSE")) stop("Object must be class `MSE`", call.=FALSE)
   sections<-(0:floor(MSEobj@proyears/yres))*yres
   nsec<-length(sections)-1
@@ -473,7 +496,10 @@ encircle<-function(x,y,col="red",perc=0.05,xrange=NA,yrange=NA,log=F,lty=1,lwd=1
 #' @return A table of performance metrics.
 #' @author T. Carruthers
 #' @export DFO_plot2
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `DFO_plot2()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 DFO_plot2 <- function(MSEobj, nam = NA,panel = T,Bcut=50, Ycut=50) {
+  .SupersedeLegacy("DFO_plot2()")
 
   Yd <- rep(NA, MSEobj@nMPs)
   B50 <- rep(NA, MSEobj@nMPs)
@@ -561,7 +587,10 @@ DFO_plot2 <- function(MSEobj, nam = NA,panel = T,Bcut=50, Ycut=50) {
 #' @param forreport Logical. Is it for a report? If true, one plot of six MPs in a row will be provided one after another.
 #' @author T. Carruthers
 #' @export DFO_quant
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `DFO_quant()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 DFO_quant<-function(MSEobj,maxcol=6,qcol=rgb(0.4,0.8,0.95), lcol= "dodgerblue4",curyr=2018,quants=c(0.05,0.25,0.75,0.95),addline=T, forreport=T){
+  .SupersedeLegacy("DFO_quant()")
 
   if(is.na(maxcol))maxcol=ceiling(length(MSEobj@MPs)/0.5) # defaults to portrait 1:2
   MPs<-MSEobj@MPs
@@ -734,6 +763,7 @@ DFO_cosplot<-function(SSBd,qcol,lcol,Blims,yrs,quants=c(0.05,0.25,0.5,0.75,0.95)
 #' no catch, FMSY fishing and status quo fishing effort.
 #' @export COSEWIC_Pplot
 COSEWIC_Pplot<-function(MSEobj,syear=2017,qcol='#FFCB62', quants=c(0.05,0.25,0.5,0.75,0.95)){
+  .SupersedeLegacy("COSEWIC_Pplot()")
   lcol<-makeTransparent(qcol,85)
   if(!methods::is(MSEobj,"COSEWIC"))stop("The MSE object you have provided is not of class COSEWIC,
                                       please create a COSEWIC class MSE object using the function runCOSEWIC()")
@@ -780,6 +810,7 @@ COSEWIC_Pplot<-function(MSEobj,syear=2017,qcol='#FFCB62', quants=c(0.05,0.25,0.5
 #' occurred over three generation times in both historical and projection years.
 #' @export
 COSEWIC_Dplot<-function(MSEobj,syear=2017,qcol='#79F48D', quants=c(0.05,0.25,0.5,0.75,0.95),nGT=3){
+  .SupersedeLegacy("COSEWIC_Dplot()")
 
   lcol<-makeTransparent(qcol,85)
   if(!methods::is(MSEobj, "COSEWIC")) stop("The MSE object you have provided is not of class COSEWIC,
@@ -825,6 +856,7 @@ COSEWIC_Dplot<-function(MSEobj,syear=2017,qcol='#79F48D', quants=c(0.05,0.25,0.5
 #' by default, biomass that takes 3 generation times to reach half BMSY with zero fishing
 #' @export
 COSEWIC_Blow<-function(MSEobj,syear=2017,qcol=rgb(0.4,0.8,0.95), quants=c(0.05,0.25,0.5,0.75,0.95),nGT=3){
+  .SupersedeLegacy("COSEWIC_Blow()")
 
   lcol<-makeTransparent(qcol,85)
   if(!methods::is(MSEobj, "COSEWIC")) stop("The MSE object you have provided is not of class COSEWIC,
@@ -882,6 +914,7 @@ COSEWIC_Blow<-function(MSEobj,syear=2017,qcol=rgb(0.4,0.8,0.95), quants=c(0.05,0
 #' @describeIn runCOSEWIC Plots of historical spawning stock  relative to unfished and MSY levels.
 #' @export
 COSEWIC_Hplot<-function(MSEobj,syear=2017,qcol=rgb(0.4,0.8,0.95), quants=c(0.05,0.25,0.5,0.75,0.95)){
+  .SupersedeLegacy("COSEWIC_Hplot()")
 
   lcol<-makeTransparent(qcol,85)
   op<-par(mai=c(0.6,0.6,0.05,0.05),omi=c(0.05,0.05,0.3,0.05))
@@ -933,7 +966,10 @@ COSEWIC_Hplot<-function(MSEobj,syear=2017,qcol=rgb(0.4,0.8,0.95), quants=c(0.05,
 #' @param maxMPs Maximum number of MPs to plot
 #' @author T. Carruthers
 #' @export DFO_report
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `DFO_report()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 DFO_report<-function(MSEobj,output_file=NA,author="Author not specified",title=NA,maxMPs=15){
+  .SupersedeLegacy("DFO_report()")
 
   if (!requireNamespace("rmarkdown", quietly = TRUE)) {
     stop("Package \"rmarkdown\" needed for this function to work. Please install it.",
@@ -957,6 +993,7 @@ DFO_report<-function(MSEobj,output_file=NA,author="Author not specified",title=N
 #' to inform COSEWIC processes in Canadian fish stocks).
 #' @export COSEWIC_report
 COSEWIC_report<-function(MSEobj,output_file=NA,author="Author not specified",title=NA){
+  .SupersedeLegacy("COSEWIC_report()")
 
   if (!requireNamespace("rmarkdown", quietly = TRUE)) {
     stop("Package \"rmarkdown\" needed for this function to work. Please install it.",
@@ -995,7 +1032,10 @@ COSEWIC_report<-function(MSEobj,output_file=NA,author="Author not specified",tit
 #' @param rnd The number of significant figures for rounding.
 #' @author T. Carruthers
 #' @export DFO_tab
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `DFO_tab()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 DFO_tab<-function(MSEobj,maxMPs=15, rnd=0){
+  .SupersedeLegacy("DFO_tab()")
 
   shortterm<-1:min(10,MSEobj@proyears)
   P_Cr_S<-round(apply(MSEobj@SB_SBMSY[,,shortterm]<0.4,2,mean)*100,rnd)
@@ -1054,7 +1094,10 @@ DFO_tab<-function(MSEobj,maxMPs=15, rnd=0){
 #' @author T. Carruthers
 #'
 #' @export
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `DFO_tab_formatted()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 DFO_tab_formatted<-function(Ptab1,thresh=c(30,     50,     40,    60,    50,  20,     40,     50,    60,    50,  30,   50),ret_thresh=F){
+  .SupersedeLegacy("DFO_tab_formatted()")
   #                                       P_Cr_S, P_Ct_S, P_H_S, POF_S, STY, P_Cr_L, P_Ct_L, P_H_L, POF_L, LTY, AAVY, P_Reb
 
   if(ret_thresh){
@@ -1168,7 +1211,10 @@ DFO_tab_formatted<-function(Ptab1,thresh=c(30,     50,     40,    60,    50,  20
 #' @author T. Carruthers
 #'
 #' @export
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `DFO_spider()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 DFO_spider<-function(MSEobj){
+  .SupersedeLegacy("DFO_spider()")
 
   if (!requireNamespace("fmsb", quietly = TRUE)) {
     stop("fmsb is needed for this function to work. Please install it.",
@@ -1242,7 +1288,10 @@ DFO_spider<-function(MSEobj){
 #' @importFrom dplyr %>% mutate
 #'
 #' @export
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `Thresh_tab()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 Thresh_tab<-function(Ptab1){
+  .SupersedeLegacy("Thresh_tab()")
   MP <- MP_Type <- Crit_S <- Caut_S <- Health_S <- OvFish_S <- Yield_S <- Crit <- Caut <- Health <- OvFish <- Reb <- NULL # cran check hacks
   thresh<-DFO_tab_formatted(Ptab1,ret_thresh=T)
   Ptab2<-as.data.frame(matrix(c("NANANAN     ","NA   ",thresh),nrow=1))
@@ -1297,6 +1346,7 @@ Thresh_tab<-function(Ptab1){
 #' }
 #' @export
 COSEWIC_tab<-function(MSEobj,rnd=0,GTs=c(3,6),syear=2017,nGT=3){
+  .SupersedeLegacy("COSEWIC_tab()")
 
   if(!methods::is(MSEobj,"COSEWIC"))stop("The MSE object you have provided is not of class COSEWIC,
                                       please create a COSEWIC class MSE object using the function runCOSEWIC()")
@@ -1382,6 +1432,7 @@ COSEWIC_tab<-function(MSEobj,rnd=0,GTs=c(3,6),syear=2017,nGT=3){
 
 #' @export
 COSEWIC_tab_formatted<-function(Ptab1,thresh=c(20,     40,     40,    20,       40,       40,      40,   30,   5),ret_thresh=F){
+  .SupersedeLegacy("COSEWIC_tab_formatted()")
   #                                            P_Cr,   P_Ct,   P_H,   P_Cr_MSY, P_Ct_MSY, P_H_MSY, P_A1, P_A2, Blow
 
   # save(Ptab1,file="Ptab1")
@@ -1450,7 +1501,10 @@ COSEWIC_tab_formatted<-function(Ptab1,thresh=c(20,     40,     40,    20,       
 #' @importFrom dplyr %>% mutate
 #'
 #' @export
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `Cos_thresh_tab()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 Cos_thresh_tab<-function(Ptab1){
+  .SupersedeLegacy("Cos_thresh_tab()")
   if (!requireNamespace("kableExtra", quietly = TRUE)) {
     stop("Package \"kableExtra\" needed for this function to work. Please install it.",
          call. = FALSE)

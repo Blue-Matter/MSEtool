@@ -21,6 +21,11 @@ Pplot(MSEobj, nam = NA, maxMP = 10, MPs = NA, maxsims = 20)
 A shorter version of the plot method for MSEs that just shows the projected
 trends in stock status and over exploitation
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{Pplot()} is superseded as of MSEtool 4.0.0 and will be removed in a future release.
+}
+
 \author{
 T. Carruthers
 }

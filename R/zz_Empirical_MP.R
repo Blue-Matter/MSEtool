@@ -11,7 +11,10 @@
 #' @param x Numeric vector same length as xx, in case you want to have a custom xaxis (e.g. years)
 #' @author T. Carruthers
 #' @export
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `smoothy()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 smoothy<-function(xx,plot=F,enp_mult,plotname="",xlab="x",ylab="y",x = NA){
+  .SupersedeLegacy("smoothy()")
   tofill<-!is.na(xx)
   xx[xx==0]<-1E3
   predout<-rep(NA,length(xx))
@@ -40,7 +43,10 @@ smoothy<-function(xx,plot=F,enp_mult,plotname="",xlab="x",ylab="y",x = NA){
 #' @return A thinned ector I_hist long of index observations. 
 #' @author T. Carruthers
 #' @export
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `doIfreq()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 doIfreq=function(I_hist, I_freq, LHYr, CurYr, Year){
+  .SupersedeLegacy("doIfreq()")
   I_hist[I_hist < 0] <- NA
   nI = nrow(I_hist)
   ny <- ncol(I_hist)
@@ -77,7 +83,10 @@ doIfreq=function(I_hist, I_freq, LHYr, CurYr, Year){
 #' @return n object of class `Rec`.
 #' @author T. Carruthers
 #' @export
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `doRec()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 doRec = function(MPrec, mod, delta_down, delta_up, TACrng){ 
+  .SupersedeLegacy("doRec()")
 
   # TAC change
   minchng_down = delta_down[1]
@@ -114,7 +123,10 @@ doRec = function(MPrec, mod, delta_down, delta_up, TACrng){
 #' @return A real number (TAC advice but theoretically could be used for effort, size limits etc).
 #' @author T. Carruthers
 #' @export
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `doHCR()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 doHCR = function(trial_TAC, est, ref, CP = c(0,1), CPy = c(0,1)){
+  .SupersedeLegacy("doHCR()")
   lev = est / ref
   if(lev <= CP[1]) TAC = trial_TAC*CPy[1]
   if(lev >= CP[2]) TAC = trial_TAC*CPy[2]
@@ -147,6 +159,8 @@ doHCR = function(trial_TAC, est, ref, CP = c(0,1), CPy = c(0,1)){
 #' @return An object of class `MP`.
 #' @author T. Carruthers
 #' @export
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `Emp()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 Emp <- function (x, Data, reps = 1, 
                       Inds = NA,               # use these indices  (6) Survey_spring, (5) Survey_Aut, (3) UKR_fleet,  (2) ROM_Trawl, (1) TUR_East_Trawl
                       I_freq=NA,               # how often are the data collected n the future (0 = never, 1 = every year, 2 = every 2 years, etc)
@@ -163,6 +177,7 @@ Emp <- function (x, Data, reps = 1,
                       HCR_CP_TAC=c(0,1),       # increase from zero FMSY to MSY frac from position 1 to position 2. c(0,0) is a constant F policy at MSY frac
                       Mode = 1                 # 1 is rate, 2 is target level
                  ){     
+  .SupersedeLegacy("Emp()")
   # x=readRDS("C:/temp/x.rds"); Data = readRDS("C:/temp/Data.rds"); reps = 1; Inds = NA; I_freq=NA; I_wt = NA; calib_yrs = 2; enp_mult = 0.3; Ind_fac = NA; TACrng = NA; delta_down = c(0.01,0.5); delta_up = c(0.01,0.5); resp = 1; curI_2_target = NA;  HCR_CP_B = c(0,0); HCR_CP_TAC=c(0,1); Mode = 1
   #saveRDS(Data, "C:/temp/Data.rds")# ;stop()
   #saveRDS(x, "C:/temp/x.rds")

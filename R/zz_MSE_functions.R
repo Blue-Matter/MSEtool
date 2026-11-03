@@ -44,8 +44,11 @@
 #' @author A. Hordyk
 #' @export
 #'
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `Converge()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 Converge <- function(MSEobj, PMs=c('Yield', 'P10', 'AAVY'), maxMP=15, thresh=0.5, ref.it=20,
                      inc.leg=FALSE, all.its=FALSE, nrow=NULL, ncol=NULL, silent=FALSE) {
+  .SupersedeLegacy("Converge()")
 
 
   if(!methods::is(MSEobj, "MSE")) stop("MSEobj must be object of class 'MSE'", call.=FALSE)
@@ -764,7 +767,7 @@ Dom <- function(MSEobj, ..., PMlist=NULL, Refs=NULL, Yrs=NULL) {
   DomList <- list()
   for (i in 1:MSEobj@nMPs) {
     # ind <- which(DF$DataClass == DF$DataClass[i] & DF$Rec == DF$Rec[i] & DF$Type ==DF$Type[i])
-    ind <- which(DF$Rec == DF$Rec[i] & DF$Type ==DF$Type[i]) # group MPs by Rec Type
+    ind <- which(DF$Recs == DF$Recs[i] & DF$Type ==DF$Type[i]) # group MPs by Rec Type
     ind <- ind[!ind==i]
     if (length(ind)>0) {
       df1 <- DF[i,] %>%
@@ -793,7 +796,11 @@ Dom <- function(MSEobj, ..., PMlist=NULL, Refs=NULL, Yrs=NULL) {
       DomList2[[i]] <- data.frame(MP=DomMPs[i], By=By, stringsAsFactors = FALSE)
   }
 
-  DomDF <- do.call("rbind", DomList2) %>% as.data.frame() %>% dplyr::arrange(MP)
+  if (length(DomList2)) {
+    DomDF <- do.call("rbind", DomList2) %>% as.data.frame() %>% dplyr::arrange(MP)
+  } else {
+    DomDF <- data.frame(MP = character(), By = character())
+  }
   NonDom <- NonDom %>% sort()
 
   list(MPs=NonDom, DomMPs=DomDF)

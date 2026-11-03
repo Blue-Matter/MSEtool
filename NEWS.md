@@ -24,6 +24,10 @@ engine alongside the existing one:
 - Legacy `OM`, `MOM`, `Hist`, `MSE`, and `Data` objects are still supported:
   `Simulate()`, `Project()`, and `runMSE()` dispatch to the legacy engine for
   legacy objects, and `Convert()` converts legacy objects to the new classes.
+- Legacy importers with a new equivalent (e.g., `SS2OM()`, `BAM2MOM()`), the
+  Excel OM workflow (`OMinit()`, `XL2OM()`), the DFO, COSEWIC, and NOAA
+  reporting functions, and most legacy plotting functions are superseded. They
+  work unchanged in 4.0.0 and will be removed in a future release.
 
 See the documentation at <https://docs.openMSE.com> for details.
 
