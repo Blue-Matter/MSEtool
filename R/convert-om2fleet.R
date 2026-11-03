@@ -23,15 +23,16 @@
 
 .OM2Effort <- function(OM, cpars=list(), YearsList=NULL) {
   Effort <- .Fleet2Effort(OM)
-  if (!length(cpars)) {
-    return(Effort)
-  }
-
   
   if (is.null(YearsList)) {
     Years <- .GetOMYears(OM, "H")
   } else {
     Years <- YearsList$HistTS
+  }
+  Effort@Effort$Year <- Years[.LegacyEffortYears(OM@EffYears, length(Years))]
+  
+  if (!length(cpars)) {
+    return(Effort)
   }
   
   if (!is.null(cpars$Find)) {
@@ -45,6 +46,28 @@
       ReduceDims()
   }
   Effort
+}
+
+#' Historical Year Index of Legacy Effort Control Points
+#'
+#' Maps legacy `EffYears` to historical year indices the way legacy `OM`
+#' objects do. Called internally by `.OM2Effort()`.
+#'
+#' @param EffYears Numeric vector of legacy effort control points.
+#' @param nYear Integer. Number of historical years.
+#'
+#' @return Integer vector of indices in `1:nYear`.
+#' @keywords internal
+.LegacyEffortYears <- function(EffYears, nYear) {
+  if (EffYears[1] == 1 && EffYears[length(EffYears)] == nYear && length(EffYears) == nYear)
+    return(EffYears)
+  if (length(EffYears) == 1)
+    return(nYear)
+  x <- EffYears + 0.5
+  refYear <- ceiling((x - min(x)) / (max(x) - min(x)) * nYear)
+  refYear[1] <- 1
+  refYear[length(refYear)] <- nYear
+  refYear
 }
 
 .OM2Catchability <- function(OM, cpars=list(), YearsList=NULL) {

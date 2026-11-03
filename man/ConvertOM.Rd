@@ -39,11 +39,22 @@ copying attributes, updating year vectors, and optionally populating the
 object via \code{\link[=PopulateOM]{PopulateOM()}}.
 }
 \details{
-Maximum length slots (\code{Vmaxlen} and \code{Rmaxlen}) are updated to reflect the
-maximum length class rather than \code{Linf} as in legacy objects. This changes
-the selectivity and retention curves if \code{Vmaxlen} or \code{Rmaxlen} are less
-than 1. As an alternative, users can set the \code{MeanAtLength} or \code{MeanAtAge}
-arrays directly in the \code{\link[=Selectivity]{Selectivity()}} and \code{\link[=Retention]{Retention()}} objects.
+The converted \code{om} reproduces the legacy schedules:
+\itemize{
+\item Maturity uses the \code{\link[=MaturityAtAge]{MaturityAtAge()}} model. \code{A50} and \code{A50_95} are the
+ages at which mean length-at-age equals \code{L50} and \code{L95}, for each
+simulation and year. When \code{cpars$Mat_age} is supplied it is used directly.
+\item Effort control points in \code{EffYears} are placed in the same historical
+years as in the legacy \code{OM}.
+\item Relative selectivity and retention parameters (\code{OM@isRel = TRUE}) are
+multiplied by the sampled \code{L50} of each simulation.
+\item \code{Vmaxlen} and \code{Rmaxlen} are rescaled from selectivity at \code{Linf} to
+selectivity at the maximum length class, so the descending limb of
+dome-shaped curves is unchanged.
+}
+
+Effort is allocated across areas by the spatial targeting model described
+in \code{\link[=Effort]{Effort()}}; \code{OM@Spat_targ} is not converted.
 }
 \examples{
 om_new <- ConvertOM(testOM)
