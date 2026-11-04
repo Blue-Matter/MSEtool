@@ -731,7 +731,10 @@ DataLag <- function(x) {
 
 #' @rdname DataLag
 #' @export
-`DataLag<-` <- function(x, value) .AssignOMSlot(x, value, "DataLag", "proj")
+`DataLag<-` <- function(x, value) {
+  .CheckDataLag(value)
+  .AssignOMSlot(x, value, "DataLag", "proj")
+}
 
 #' Fleet Allocation of TAC for OM Objects
 #'

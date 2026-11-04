@@ -246,6 +246,7 @@
 
     # projection years are appended by .GenerateProjectionData()
     Data@Years <- Data@Years[Data@Years <= max(HistYears)]
+    Data <- .DropDataYearsAfter(Data, max(HistYears))
 
     if (is.null(Data@Seasons)) 
       Data@Seasons <- Hist@OM@Seasons

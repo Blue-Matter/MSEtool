@@ -307,5 +307,21 @@ setValidity("om", function(object) {
         any(object@RefEffortYears > max(object@Years)))
       errors <- c(errors, "`RefEffortYears` must be within the range of `Years`")
 
+  if (!.ValidDataLag(object@DataLag))
+    errors <- c(errors, "`DataLag` must be a single whole number `>= 0`")
+
   if (length(errors)) errors else TRUE
 })
+
+.ValidDataLag <- function(x) {
+  is.numeric(x) && length(x) == 1 && !is.na(x) && x >= 0 && x == round(x)
+}
+
+.CheckDataLag <- function(x, Where = "DataLag") {
+  if (!.ValidDataLag(x))
+    cli::cli_abort(c(
+      "x" = "{.code {Where}} must be a single whole number {.code >= 0}.",
+      "i" = "Got {.val {format(x)}}."
+    ), call = NULL)
+  invisible(x)
+}

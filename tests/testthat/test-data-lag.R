@@ -193,3 +193,78 @@ test_that("DataLag applies correctly on a seasonal OM, preserving the season", {
   expect_equal(seasonFrac, rep(seasonFrac[1], length(seasonFrac)), tolerance = 1e-3)
   expect_equal(diff(floor(dataYearsUsed)), rep(1, length(dataYearsUsed) - 1))
 })
+
+test_that("DataLag must be a whole number >= 0", {
+  expect_error(OM(DataLag = -1), "DataLag")
+  expect_error(OM(DataLag = 1.5), "DataLag")
+  om <- OM()
+  expect_error(DataLag(om) <- -1, "whole number")
+  expect_equal(.CheckDataLag(2), 2)
+  expect_error(.CheckDataLag(NA), "whole number")
+  expect_error(.CheckDataLag(c(0, 1)), "whole number")
+})
+
+test_that("negative DataLag is rejected when projecting", {
+  skip_on_cran()
+  data(SingleStockOM, envir = environment())
+  om <- SingleStockOM
+  om@nSim <- 2
+  pYear(om) <- 2
+  hist <- Simulate(om, silent = TRUE)
+
+  hist@OM@DataLag <- -1
+  expect_error(Project(hist, MPs = "CurrentEffort", silent = TRUE), "OM@DataLag")
+})
+
+test_that("user Data after the last historical year is hidden from the MP until it is due", {
+  skip_on_cran()
+  data(SingleStockOM, envir = environment())
+  om <- SingleStockOM
+  om@nSim <- 2
+  pYear(om) <- 2
+  LastHist <- max(Years(om, 'H'))
+
+  d <- Simulate(om, silent = TRUE)@Data[[1]][[1]]
+  d <- Extend(d, Years = c(d@Years, LastHist + 1), default = NA, skip_data = FALSE)
+  d@Years <- c(d@Years, LastHist + 1)
+  d@Landings@Value[as.character(LastHist + 1), ] <- 999
+  om@Data <- list(d)
+
+  hist <- Simulate(om, silent = TRUE)
+  expect_equal(max(as.numeric(rownames(hist@Data[[1]][[1]]@Landings@Value))), LastHist)
+
+  assign(".seenData", list(), envir = globalenv())
+  on.exit(rm(".seenData", envir = globalenv()), add = TRUE)
+  seeMP <- function(Data) {
+    s <- get(".seenData", envir = globalenv())
+    s[[length(s) + 1]] <- Data@Landings@Value
+    assign(".seenData", s, envir = globalenv())
+    Advice(Effort = 1, EffType = 'Rel')
+  }
+  class(seeMP) <- 'mp'
+  assign(".seeMP_dataLag", seeMP, envir = globalenv())
+  on.exit(rm(".seeMP_dataLag", envir = globalenv()), add = TRUE)
+  invisible(Project(hist, MPs = ".seeMP_dataLag", silent = TRUE))
+
+  seen <- get(".seenData", envir = globalenv())
+  expect_equal(max(as.numeric(rownames(seen[[1]]))), LastHist)
+  expect_equal(unname(seen[[3]][as.character(LastHist + 1), 1]), 999)
+})
+
+test_that("user Data missing historical years is an error", {
+  skip_on_cran()
+  data(SingleStockOM, envir = environment())
+  om <- SingleStockOM
+  om@nSim <- 2
+  LastHist <- max(Years(om, 'H'))
+  d <- Simulate(om, silent = TRUE)@Data[[1]][[1]]
+
+  om1 <- om
+  om1@Data <- list(DataTrim(d, LastHist - 2))
+  expect_error(Simulate(om1, silent = TRUE), "missing historical years")
+
+  om2 <- om
+  om2@Data <- list(d)
+  om2@Data[[1]]@Years <- setdiff(d@Years, d@Years[3])
+  expect_error(Populate(om2, silent = TRUE), "missing historical year")
+})

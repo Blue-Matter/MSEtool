@@ -199,11 +199,26 @@ PopulateOM <- function(OM,
         "x" = "{.code OM@Data[[{i}]]@Years} is not set.",
         "i" = "Set {.code Years} in {.fn Data} to the calendar years covered by the data."
       ))
+    .CheckDataYearsComplete(Data@Years, Years(OM, 'H'), i)
     for (sl in Slots[HasValue])
       slot(Data, sl) <- .ResolveDataNames(slot(Data, sl), Data@Years, FleetNms, sl, i)
     OM@Data[[i]] <- Data
   }
   OM
+}
+
+.CheckDataYearsComplete <- function(DataYears, HistYears, i) {
+  if (!length(DataYears) || !length(HistYears)) return(invisible(TRUE))
+  Need    <- HistYears[HistYears >= min(DataYears) - 1e-8]
+  Missing <- Need[!round(Need, 6) %in% round(DataYears, 6)]
+  nMiss <- length(Missing)
+  if (nMiss)
+    cli::cli_abort(c(
+      "x" = "{.code OM@Data[[{i}]]@Years} is missing {cli::qty(nMiss)}historical year{?s} {.val {Missing}}.",
+      "i" = "{.code Data@Years} must include every historical year from {min(DataYears)} to {max(HistYears)}.",
+      "i" = "Add the missing {cli::qty(nMiss)}year{?s} to {.code Data@Years}, with {.code NA} for unobserved values."
+    ))
+  invisible(TRUE)
 }
 
 .ResolveDataNames <- function(obj, Years, FleetNms, slotName, i) {
