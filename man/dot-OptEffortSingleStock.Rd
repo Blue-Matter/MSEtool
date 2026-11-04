@@ -107,17 +107,19 @@ search (see below). Effort values are clamped to \verb{[minEffort, maxEffort]} t
 does not converge, unless the reason is a genuine effort ceiling
 (see "Saturation vs. stall" below). A solver stall is not evidence the
 TAC is unreachable, so it always gets a further, less-local search
-before the solve is given up on.
+before the solve is given up on. Effort is bounded by the fleet
+ceilings, and the BFGS solution is kept only if it reduces the squared
+residual of the Newton-Raphson solution.
 }
 }
 
 \subsection{Fleets that cannot reach their TAC.}{
 
-With multiple active fleets, the catch with every active fleet at its
-ceiling is calculated first. A fleet still short of its TAC there starts
-frozen at its ceiling, since more effort from the other fleets only lowers
-its catch; if every fleet is short, all are returned at their ceiling as
-saturated, without iterating. The remaining fleets are solved with the
+With multiple active fleets, each fleet's catch is first calculated at its
+own ceiling with the other TAC fleets at minimum effort, the most catch it
+can take. A fleet still short of its TAC there starts frozen at its ceiling;
+if every fleet is short, all are returned at their ceiling as saturated,
+without iterating. The remaining fleets are solved with the
 frozen ones fixed (Newton-Raphson, then BFGS over the free fleets only). A
 frozen fleet that then catches more than its TAC is released and the free
 fleets are solved again, at most once per fleet.
