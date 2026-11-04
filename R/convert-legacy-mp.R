@@ -27,8 +27,11 @@
   # MP is stored as a literal default so it survives `.MakeSelfContained()` replacing the environment
   wrapped <- function(Data, .LegacyMP) {
     LegacyData <- Convert(Data, silent = TRUE)
+    # SAMtool MPs have no `plot` argument
+    Args <- list(x = 1, Data = LegacyData, reps = 1)
+    if (any(c("plot", "...") %in% names(formals(.LegacyMP)))) Args$plot <- FALSE
     Rec <- tryCatch(
-      .LegacyMP(x = 1, Data = LegacyData, reps = 1, plot = FALSE),
+      do.call(.LegacyMP, Args),
       error = \(e) .LegacyMPError(e, LegacyData, .LegacyMP)
     )
     .Rec2Advice(Rec, LegacyData)
