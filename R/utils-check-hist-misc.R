@@ -122,7 +122,7 @@
     "SemelparousList", "FecundityList", "MovementList",
     "SRR_Pars", "RecDevs", "RecLag", "SRR_Model",
     "SP0", "R0", "RecDist",
-    "Catchability", "Closure", "Spatial_Targeting",
+    "Catchability", "Closure", "Spatial_Targeting", "ReleaseValue",
     "StockTargeting", "StockTargetingFlag",
     "TransitionHazard", "TransitionToStock", "TransitionFromStock", "TransitionFlag",
     "WeightFleetRetainedList", "WeightFleetSelectedList", "SelAgeList", "RetAgeList", "DiscMortList")
@@ -247,6 +247,12 @@
   check_array(Misc$Spatial_Targeting, "Hist@Misc$Spatial_Targeting",
               c(nSim, nyears, nFleet), Years)
   check_values(Misc$Spatial_Targeting, "Hist@Misc$Spatial_Targeting",
+               allow_neg = FALSE)
+
+  # ReleaseValue: (sim, year, fleet)
+  check_array(Misc$ReleaseValue, "Hist@Misc$ReleaseValue",
+              c(nSim, nyears, nFleet), Years)
+  check_values(Misc$ReleaseValue, "Hist@Misc$ReleaseValue",
                allow_neg = FALSE)
   
   flush_errors("3D Misc arrays")

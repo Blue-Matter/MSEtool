@@ -35,14 +35,23 @@
 #'   value are treated as fixed overrides and are not modified by the
 #'   algorithm.
 #'   
-#' @param Targeting Numeric array or `NULL`. Spatial targeting concentration
-#'   parameter (`lambda >= 0`) with dimensions `Sim x Year`. The `Sim`
-#'   dimension may be length 1 or match `nSim`. The `Year` dimension must be
-#'   length 1, match the historical years, or have named `Year` dimnames.
-#'   Default `NULL`; a value of `0.8` is applied to all simulations and years
-#'   during [PopulateEffort()]. See Details for how this parameter controls
-#'   the concentration of effort across areas.
-#'   
+#' @param Targeting Numeric, numeric array, or `NULL`. Spatial targeting
+#'   exponent (`lambda >= 0`). A scalar, a length-2 vector of uniform bounds
+#'   sampled per simulation, a length-`nSim` vector, or an array with
+#'   dimensions `Sim x Year`. The `Sim` dimension may be length 1 or match
+#'   `nSim`. The `Year` dimension must be length 1, match the historical
+#'   years, or have named `Year` dimnames. Default `NULL`; a value of `1`
+#'   (effort follows exploitable biomass) is applied during
+#'   [PopulateEffort()]. See the Spatial Effort Allocation section.
+#'
+#' @param ReleaseValue Numeric, numeric array, or `NULL`. Value of a unit of
+#'   released catch relative to a unit of retained catch when the fleet chooses
+#'   where to fish. Accepts the same forms as `Targeting`. `0` (the default
+#'   when `NULL`) means only retained catch attracts effort, as for a
+#'   commercial fleet; `1` means released and retained catch attract effort
+#'   equally, as for a catch-and-release recreational fleet. A fleet that
+#'   retains nothing in any area is always attracted by the biomass it selects.
+#'
 #' @param Maximum Numeric, numeric array, or `NULL`. Maximum allowable effort
 #'   in projections, in the units of `Effort`. A scalar, or an array with
 #'   dimensions `Sim x Year` and named dimnames; the `Sim` dimension may be
@@ -54,14 +63,15 @@
 #'   fishes several stocks must have the same `Maximum` for each. Default
 #'   `NULL`.
 #'   
-#' @param Mode Character or `NULL`. Controls whether spatial utility is
-#'   calculated per unit area or as raw biomass. `"Density"` (default) divides
-#'   exploitable biomass by the relative area size (`RelSize`) before computing
-#'   utility, so fleets are attracted to areas with high biomass concentration
-#'   regardless of area size. `"Biomass"` uses raw exploitable biomass, so
-#'   larger areas are intrinsically more attractive. See the Technical Manual
-#'   for equations.
-#'   
+#' @param Mode Character or `NULL`. How effort in an area becomes fishing
+#'   mortality. `"Density"` (default): fishing mortality in an area is
+#'   proportional to effort per unit area (effort share divided by
+#'   `Spatial@RelativeSize`), so effort spread evenly over space gives the same
+#'   fishing mortality in every area. `"Biomass"`: each area is a discrete
+#'   fishing ground and fishing mortality is proportional to the effort share
+#'   in that area, regardless of its size. See the Spatial Effort Allocation
+#'   section.
+#'
 #' @param TripsScalar Numeric array or `NULL`. Time-varying scalar
 #'   \eqn{\alpha_f(t)} converting the effort index to absolute angler trip
 #'   counts via \eqn{T_f(t) = \alpha_f(t) \cdot E_f(t)}. Must have dimensions
@@ -153,46 +163,48 @@
 #' are left unchanged and act as fixed overrides for those 
 #' simulation-year-area combinations.
 #'
-#' ## Spatial Utility and Effort Allocation
+#' ## Spatial Effort Allocation
 #'
-#' When `Distribution` cells are `NA`, effort allocation across areas is
-#' determined internally at each timestep by a two-stage algorithm:
+#' When `Distribution` cells are `NA`, effort is allocated across the open
+#' areas at each time step as
 #'
-#' **Stage 1 — Exploitable biomass.** For each fleet and area, raw exploitable
-#' biomass is computed as the sum over ages of abundance × weight ×
-#' selectivity × retention, scaled by catchability (`q`). When
-#' `Mode = "Density"` (default), this biomass is divided by the relative area
-#' size (`RelSize`) to give biomass density; when `Mode = "Biomass"`, raw
-#' biomass is used. 
+#' \deqn{D_{f,k} \propto w_k \, u_{f,k}^{\lambda_f}}
 #'
-#' **Stage 2 — Depletion-adjusted utility.** A depletion discount
-#' `h(phi) = (1 - exp(-phi)) / phi` is applied, where `phi` is the local
-#' fishing pressure (own-fleet effort × `q` × `D0` in the area, plus a
-#' one-timestep-lagged contribution from competing fleets). This discounts
-#' utility in heavily fished areas, approximating an ideal free distribution
-#' under depletion.
+#' where \eqn{\lambda_f} is `Targeting`, \eqn{w_k} is the relative area size
+#' (`Spatial@RelativeSize`) for `Mode = "Density"` and 1 for
+#' `Mode = "Biomass"`, and \eqn{u_{f,k}} is the expected catch per unit of
+#' effort intensity in area \eqn{k}:
 #'
-#' **Stage 3 — Softmax targeting.** The depletion-adjusted utilities are
-#' normalised and passed through a softmax function with concentration
-#' parameter `lambda` (`Targeting`). The resulting probabilities are written
-#' to `Distribution`.
+#' \deqn{u_{f,k} = \frac{1}{w_k} \sum_{s} q_{s,f} \sum_a N_{a,k} v_{a,f,k}
+#'   \left[ r_{a,f,k} W^{\mathrm{ret}}_{a,f} + \omega_f (1 - r_{a,f,k})
+#'   W^{\mathrm{sel}}_{a,f} \right] h(F_{s,k})}
 #'
-#' ## Targeting
+#' with selectivity \eqn{v}, retention \eqn{r}, `ReleaseValue`
+#' \eqn{\omega_f}, and depletion discount \eqn{h(F) = (1 - e^{-F}) / F}, the
+#' mean fraction of the biomass available over the time step. \eqn{F_{s,k}} is
+#' the total apical fishing mortality on stock \eqn{s} in area \eqn{k} from all
+#' fleets in the same time step, capped at `OM@maxF`, so the allocations of all
+#' fleets are solved jointly.
 #'
-#' `Targeting` (lambda) is a non-negative concentration parameter controlling
-#' how strongly effort is concentrated in high-utility areas. At `lambda = 0`,
-#' effort is distributed uniformly across all accessible areas regardless of
-#' their relative utility. As `lambda` increases, effort becomes progressively
-#' more concentrated in the highest-utility area. The default value of `0.8`
-#' produces moderate concentration, broadly consistent with opportunistic
-#' targeting behaviour where fleets favour productive areas but do not
-#' exclusively fish the single best one. 
-#' 
-#' Values around `0.5` approach near-uniform allocation; values above `2`–`3` 
-#' produce strongly directed behaviour where most effort concentrates in the 
-#' top one or two areas. The parameter is open-ended with no fixed upper bound,
-#' but very large values (e.g. `> 5`) effectively collapse all effort to the 
-#' single highest-utility area in most configurations.
+#' `Targeting` is the elasticity of effort intensity with respect to catch
+#' rate:
+#'
+#' - `0`: effort is spread evenly over space (in proportion to \eqn{w_k}),
+#'   regardless of where the fish are.
+#' - `1` (default): each area's share of effort is proportional to its
+#'   exploitable biomass, discounted for the depletion caused by fishing within
+#'   the time step; with light fishing this is its share of exploitable
+#'   biomass. For `Mode = "Density"`, fishing mortality is then proportional to
+#'   exploitable biomass density.
+#' - Larger values concentrate effort in the areas with the highest catch
+#'   rates; as `Targeting` increases the allocation approaches the ideal free
+#'   distribution, where catch rates are equal across all fished areas.
+#'
+#' The allocation does not depend on the number of areas: splitting an area
+#' into identical parts leaves the effort and fishing mortality in it
+#' unchanged. Areas with no exploitable biomass receive no effort when
+#' `Targeting > 0`. Areas closed to the fleet for every stock (`Closure = 0`)
+#' receive no effort.
 #'
 #' ## Effort-to-Trips Conversion and Angler Scaling
 #'
@@ -300,7 +312,7 @@
 #'   object, the `Effort` slot of that object is returned (as a `data.frame`
 #'   or array for [hist-class] and [mse-class] depending on `df`).
 #' - `Effort<-` returns `x` with the `Effort` slot replaced by `value`.
-#' - `Distribution()`, `Targeting()`, `Maximum()`, `Mode()`,
+#' - `Distribution()`, `Targeting()`, `ReleaseValue()`, `Maximum()`, `Mode()`,
 #'   `TripsScalar()`, `AnglerPerTrip()`, `Theta()`,
 #'   `StockTargetingLambda()` return the corresponding slot from the
 #'   [effort-class] object `x`.
@@ -327,6 +339,7 @@ Effort <- function(Effort         = NULL,
                    Units          = NULL,
                    Distribution   = NULL,
                    Targeting      = NULL,
+                   ReleaseValue   = NULL,
                    Maximum        = NULL,
                    Mode           = NULL,
                    TripsScalar    = NULL,
@@ -358,6 +371,7 @@ Effort <- function(Effort         = NULL,
     Units         = Units,
     Distribution  = Distribution,
     Targeting     = Targeting,
+    ReleaseValue  = ReleaseValue,
     Maximum       = Maximum,
     Mode          = Mode,
     TripsScalar   = TripsScalar,
@@ -403,6 +417,18 @@ Targeting <- function(x) {
   x@Targeting <- value
   methods::validObject(x)
   x
+}
+
+#' @rdname Effort
+#' @export
+ReleaseValue <- function(x) {
+  .AccessSlot(x, 'ReleaseValue')
+}
+
+#' @rdname Effort
+#' @export
+`ReleaseValue<-` <- function(x, value) {
+  .AssignSlot(x, value, 'ReleaseValue')
 }
 
 #' @rdname Effort

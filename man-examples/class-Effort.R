@@ -51,22 +51,24 @@ e_dist <- Effort(Effort = effort_df, Distribution = dist_array, Units = "hours")
 e_dist_pop <- Populate(e_dist, HistYears = hist_years, nSim = nSim, nArea = 3, seed = 42)
 Distribution(e_dist_pop)
 
-## ---- Targeting: concentration of effort across areas ----
-# Targeting (lambda) controls how strongly effort concentrates in
-# high-utility areas via a softmax function.
-# lambda = 0  : uniform distribution across accessible areas
-# lambda = 0.8: moderate concentration (default)
-# lambda = 3  : strongly directed effort toward highest-utility area
+## ---- Targeting: how strongly effort follows the fish ----
+# lambda = 0: effort spread evenly over space (equal F at equal density)
+# lambda = 1: effort follows exploitable biomass (default)
+# lambda = 3: effort concentrated where catch rates are highest
 yr1 <- array(0, dim = c(1, 1), dimnames = list(Sim = 1, Year = hist_years[1]))
 
-e_low  <- Effort(Effort = effort_df, Targeting = yr1)          # near-uniform
-e_high <- Effort(Effort = effort_df, Targeting = yr1 + 3)      # concentrated
+e_even  <- Effort(Effort = effort_df, Targeting = yr1)
+e_high  <- Effort(Effort = effort_df, Targeting = yr1 + 3)
+
+## ---- ReleaseValue: catch-and-release fleets ----
+# 0 (default): only retained catch attracts effort
+# 1: released catch attracts effort as much as retained catch
+e_release <- Effort(Effort = effort_df, ReleaseValue = 1)
 
 ## ---- Mode: Density vs Biomass ----
-# Mode = "Density" (default) divides exploitable biomass by relative area
-# size before computing utility, attracting fleets to high-concentration
-# areas regardless of area size. Mode = "Biomass" uses raw exploitable
-# biomass, making larger areas intrinsically more attractive.
+# Mode = "Density" (default): F in an area is proportional to effort per unit
+# area. Mode = "Biomass": each area is a discrete fishing ground and F is
+# proportional to the effort share in that area.
 e_density <- Effort(Effort = effort_df, Mode = "Density")
 e_biomass <- Effort(Effort = effort_df, Mode = "Biomass")
 
@@ -76,6 +78,7 @@ e <- Effort(Effort = effort_df, Units = "hours")
 Mode(e)
 Units(e)
 Targeting(e)
+ReleaseValue(e)
 Distribution(e)
 Maximum(e)
 

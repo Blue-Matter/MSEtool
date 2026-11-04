@@ -31,6 +31,7 @@ The following legacy slots are mapped to their current equivalents:\tabular{ll}{
    \code{qcv}, \code{qinc} \tab \code{Catchability@qCV}, \verb{@qInc} \cr
    \code{L5}, \code{LFS}, \code{Vmaxlen} \tab \code{Selectivity@Pars}, \verb{@Model = DoubleNormal} \cr
    \code{LR5}, \code{LFR}, \code{Rmaxlen} \tab \code{Retention@Pars}, \verb{@Model = DoubleNormalRetention} \cr
+   \code{Spat_targ} \tab \code{Effort@Targeting} \cr
 }
 
 }
@@ -42,6 +43,10 @@ Historical effort is constructed as a data frame with columns \code{Year},
 contains a two-element vector of lower and upper bounds for a uniform
 distribution of effort variability. Only \code{Esd[1]} is currently used as a
 scalar CV; \code{Esd[2]} is silently dropped.
+
+\code{Spat_targ} maps to \code{Effort@Targeting}, sampled per simulation from its
+bounds. \code{Effort@ReleaseValue} is set to \code{1}, so effort is attracted by the
+biomass the fleet selects, retained or not.
 }
 
 \subsection{Selectivity}{
@@ -67,7 +72,6 @@ and retain their default values in the converted object:
 \itemize{
 \item \code{DiscardMortality}: new functionality; no legacy equivalent.
 \item \code{Closure}: new functionality; no legacy equivalent.
-\item \code{Targeting}: new functionality; no legacy equivalent.
 \item \code{WeightFleetRetained}/\code{WeightFleetSelected}: new functionality; no legacy
 equivalent.
 }

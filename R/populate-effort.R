@@ -17,7 +17,11 @@
 #'
 #' * Generates historical effort if the `Effort` slot is a data frame.
 #' * Ensures the effort matrix has correct dimensions and names.
-#' * Validates fleet effort distribution and targeting across areas.
+#' * Validates the fleet's effort `Distribution` across areas.
+#' * Resolves `Targeting` (default `1`) and `ReleaseValue` (default `0`) to
+#'   `Sim x Year` arrays. Each accepts a scalar, length-2 uniform bounds
+#'   sampled per simulation, a length-`nSim` vector, or a `Sim x Year` array;
+#'   negative or non-finite values are an error.
 #' * If supplied, extends `Maximum`/`TripsScalar`/`AnglerPerTrip`/`Theta` to cover
 #'   historical and projected years (a bare scalar, length-2 uniform
 #'   bounds, or length-`nSim` vector for `Theta` is first resolved to a
@@ -78,11 +82,8 @@ PopulateEffort <- function(Effort,
     nArea = nArea
   )
 
-  Effort@Targeting <- .PopulateTargeting(
-    Targeting = Effort@Targeting,
-    nSim = nSim,
-    Years = HistYears
-  )
+  Effort@Targeting <- .PopulateTargeting(Effort@Targeting, nSim, HistYears, 1, "Targeting")
+  Effort@ReleaseValue <- .PopulateTargeting(.EffortReleaseValue(Effort), nSim, HistYears, 0, "ReleaseValue")
 
 
   if (is.null(Effort@Mode))
@@ -167,33 +168,26 @@ PopulateEffort <- function(Effort,
 
 
 
-.PopulateTargeting <- function(Targeting, nSim, Years) {
-  if (is.null(Targeting)) {
-    return(
-      array(0.8, c(1,1), 
-            dimnames = list(Sim=1, Year=Years[1]))  
-    )
-  }
-  
-  if (is.array(Targeting)) {
-    dd <- dim(Targeting)
-    dnames <- dimnames(Targeting)
-    if (length(dd)>2) {
-      cli::cli_abort("`Targeting` must be numeric or an array with dimensions: Sim x Year")
-    }
-    
-    if ((dd[2] != 1 && dd[2] != length(Years)) & is.null(dnames[['Year']])) {
-      cli::cli_abort("Year dimension of `Targeting`array must be length 1, length `Years(OM)` or have named dimensions.")
-    }
-    
-    if (is.null(dnames)) {
-      dimnames(Targeting) <- list(
-        Sim=1:dd[1],
-        Year=Years[1:dd[2]]
-      )
-    }
-    
-  }
+.PopulateTargeting <- function(Targeting, nSim, Years, default = 1, name = "Targeting") {
+  if (is.null(Targeting))
+    return(array(default, c(1, 1), dimnames = list(Sim = 1, Year = Years[1])))
+
+  if (!is.numeric(Targeting) || any(!is.finite(Targeting)) || any(Targeting < 0))
+    cli::cli_abort("`{name}` must be non-negative and finite")
+
+  if (!is.array(Targeting))
+    return(.StructurePar(Targeting, nSim = nSim, Years = Years[1]))
+
+  dd <- dim(Targeting)
+  dnames <- dimnames(Targeting)
+  if (length(dd) > 2)
+    cli::cli_abort("`{name}` must be numeric or an array with dimensions: Sim x Year")
+
+  if ((dd[2] != 1 && dd[2] != length(Years)) & is.null(dnames[['Year']]))
+    cli::cli_abort("Year dimension of `{name}` array must be length 1, length `Years(OM)` or have named dimensions.")
+
+  if (is.null(dnames))
+    dimnames(Targeting) <- list(Sim = 1:dd[1], Year = Years[1:dd[2]])
   Targeting
 }
 
@@ -218,4 +212,9 @@ PopulateEffort <- function(Effort,
   }
   
   Distribution
+}
+
+# objects saved before the ReleaseValue slot existed do not have it
+.EffortReleaseValue <- function(Effort) {
+  if (methods::.hasSlot(Effort, "ReleaseValue")) Effort@ReleaseValue
 }

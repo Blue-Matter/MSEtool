@@ -18,7 +18,9 @@
 #'   the Area 2 value is solved internally. See [Spatial()] for accepted input
 #'   formats.
 #' @slot RelativeSize `numeric`, `array`, or `character(1)`. Relative size of
-#'   each area, used to compute biomass density. After [Populate()], a named
+#'   each area, used to convert effort to effort per unit area and biomass to
+#'   density in the spatial effort allocation (see [Effort()]). After
+#'   [Populate()], a named
 #'   `Sim × Area` array. The special value `"EqualDensity"` sets
 #'   `RelativeSize` equal to the mean `UnfishedDist` across ages and years,
 #'   producing constant density across areas. When `NULL`, all areas are

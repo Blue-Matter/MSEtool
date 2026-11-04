@@ -88,7 +88,11 @@ Area 2 value is solved internally. Accepts the same formats as
 \code{UnfishedDist}. Default \code{NULL}.}
 
 \item{RelativeSize}{\code{numeric}, \code{array}, \code{character(1)}, or \code{NULL}. Relative
-size of each area, used for biomass density calculations. For two-area
+size of each area. For fleets with \code{Effort@Mode = "Density"}, fishing
+mortality in an area is proportional to effort per unit area, so a fleet
+that spreads its effort in proportion to \code{RelativeSize} fishes every area
+at the same rate; it is also used to convert biomass to density when
+allocating effort (see \code{\link[=Effort]{Effort()}}). For two-area
 models, a single value gives the fraction of Area 1 (Area 2 = \code{1 - RelativeSize}). For multi-area models, a vector of length \code{nArea} summing
 to 1, or a \verb{Sim × Area} array. The special value \code{"EqualDensity"} sets
 \code{RelativeSize} equal to the mean \code{UnfishedDist} across ages and years,

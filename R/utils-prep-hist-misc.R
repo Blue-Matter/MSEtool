@@ -33,6 +33,7 @@
     stock@Ages@PlusGroup
   }) |> unlist() |> as.numeric() |> array(dim=nStock(Hist), dimnames = list(Stock=StockNames(Hist)))
 
+  .CheckEffortAcrossStocks(Hist@OM@Fleet)
   Hist@Misc$Mode <- purrr::map_int(Hist@OM@Fleet[[1]], \(fleet) {
     mode <- fleet@Effort@Mode
     if (mode == 'Density') return(1)
@@ -176,6 +177,11 @@
   # 3D Array: Sim, Year, Fleet
   Hist@Misc$Spatial_Targeting <- purrr::map(Hist@OM@Fleet[[1]], \(fleet) {
     fleet@Effort@Targeting
+  }) |> List2Array(pos = 3) # Sim, Year, Fleet
+
+  Hist@Misc$ReleaseValue <- purrr::map(Hist@OM@Fleet[[1]], \(fleet) {
+    .EffortReleaseValue(fleet@Effort) %||%
+      array(0, c(1, 1), dimnames = list(Sim = 1, Year = YearVec[1]))
   }) |> List2Array(pos = 3) # Sim, Year, Fleet
 
   # 4D Array: Sim, Stock, Year, Fleet. Multiplier on the derived stock-targeting
@@ -339,4 +345,22 @@
 .SizeArrayOrNull <- function(x) {
   if (is.null(x) || !length(x)) return(NULL)
   x
+}
+
+# spatial effort settings are read from the first stock's fleets, so they must agree across stocks
+.CheckEffortAcrossStocks <- function(FleetList) {
+  if (length(FleetList) < 2) return(invisible(NULL))
+  Values <- list(
+    Mode = \(e) e@Mode %||% "Density",
+    Targeting = \(e) sort(unique(c(e@Targeting %||% 1))),
+    ReleaseValue = \(e) sort(unique(c(.EffortReleaseValue(e) %||% 0))))
+  for (fl in seq_along(FleetList[[1]])) {
+    for (sl in names(Values)) {
+      v <- purrr::map(FleetList, \(Fleets) Values[[sl]](Fleets[[fl]]@Effort))
+      if (!all(purrr::map_lgl(v[-1], \(x) isTRUE(all.equal(x, v[[1]])))))
+        cli::cli_abort(c("`Effort@{sl}` for fleet {.val {names(FleetList[[1]])[fl] %||% fl}} differs between stocks.",
+                         "i" = "A fleet allocates its effort across areas once for all stocks, so set the same value for every stock."))
+    }
+  }
+  invisible(NULL)
 }

@@ -21,6 +21,7 @@
 #' | `qcv`, `qinc` | `Catchability@qCV`, `@qInc` |
 #' | `L5`, `LFS`, `Vmaxlen` | `Selectivity@Pars`, `@Model = DoubleNormal` |
 #' | `LR5`, `LFR`, `Rmaxlen` | `Retention@Pars`, `@Model = DoubleNormalRetention` |
+#' | `Spat_targ` | `Effort@Targeting` |
 #'
 #' ## Effort
 #'
@@ -28,7 +29,11 @@
 #' `Lower`, `Upper`, and `CV`, passed to [Effort()]. The legacy `Esd` slot
 #' contains a two-element vector of lower and upper bounds for a uniform
 #' distribution of effort variability. Only `Esd[1]` is currently used as a
-#' scalar CV; `Esd[2]` is silently dropped. 
+#' scalar CV; `Esd[2]` is silently dropped.
+#'
+#' `Spat_targ` maps to `Effort@Targeting`, sampled per simulation from its
+#' bounds. `Effort@ReleaseValue` is set to `1`, so effort is attracted by the
+#' biomass the fleet selects, retained or not.
 #'
 #' ## Selectivity
 #'
@@ -51,7 +56,6 @@
 #'
 #' - `DiscardMortality`: new functionality; no legacy equivalent.
 #' - `Closure`: new functionality; no legacy equivalent.
-#' - `Targeting`: new functionality; no legacy equivalent.
 #' - `WeightFleetRetained`/`WeightFleetSelected`: new functionality; no legacy
 #'   equivalent.
 #'
@@ -80,7 +84,6 @@ ConvertFleet <- function(Fleet, silent = FALSE) {
   # Not converted:
   # fleet@DiscardMortality
   # fleet@Closure
-  # fleet@Targeting
   # fleet@WeightFleetRetained
   # fleet@WeightFleetSelected
   fleet
@@ -100,10 +103,14 @@ ConvertFleet <- function(Fleet, silent = FALSE) {
 }
 
 .Fleet2Effort <- function(Fleet) {
+  Targ <- Fleet@Spat_targ
+  if (length(Targ) && diff(range(Targ)) == 0) Targ <- Targ[1]
   Effort(Effort=data.frame(Year=Fleet@EffYears,
                           Lower=Fleet@EffLower,
                           Upper=Fleet@EffUpper,
-                          CV=Fleet@Esd[1]))
+                          CV=Fleet@Esd[1]),
+         Targeting = if (length(Targ)) Targ,
+         ReleaseValue = 1)
 }
 
 .Fleet2Catchability <- function(Fleet) {

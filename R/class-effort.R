@@ -12,12 +12,17 @@
 #'   management procedures. See [Effort()].
 #' @slot Distribution `numeric` array or `NULL`. Fraction of total effort
 #'   allocated to each spatial area (`Sim x Year x Area`). See [Effort()].
-#' @slot Targeting `numeric` array or `NULL`. Fleet targeting concentration
-#'   parameter (`Sim x Year`). See [Effort()].
+#' @slot Targeting `numeric` array or `NULL`. Spatial targeting exponent
+#'   (`Sim x Year`). See [Effort()].
+#' @slot ReleaseValue `numeric` array or `NULL`. Value of released catch
+#'   relative to retained catch in the spatial effort utility (`Sim x Year`).
+#'   See [Effort()].
 #' @slot Maximum `numeric` array or `NULL`. Maximum allowable effort in
 #'   projections (`Sim x Year`). See [Effort()].
-#' @slot Mode `character` or `NULL`. Spatial utility calculation mode:
-#'   `"Density"` (default) or `"Biomass"`. See [Effort()].
+#' @slot Mode `character` or `NULL`. How effort in an area becomes fishing
+#'   mortality: `"Density"` (default), in proportion to effort per unit area,
+#'   or `"Biomass"`, in proportion to the effort share in the area regardless
+#'   of its size. See [Effort()].
 #' @slot TripsScalar `numeric` array or `NULL`. Time-varying scalar
 #'   \eqn{\alpha_f(t)} converting the effort index to absolute angler trip
 #'   counts via \eqn{T_f(t) = \alpha_f(t) \cdot E_f(t)} (`Sim x Year`).
@@ -57,6 +62,7 @@ setClass(
     Units          = "char.null",
     Distribution   = "num.array.null",
     Targeting      = "num.array.null",
+    ReleaseValue   = "num.array.null",
     Maximum        = "num.array.null",
     Mode           = "char.null",
     TripsScalar    = "num.array.null",

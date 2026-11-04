@@ -21,7 +21,11 @@
 #'   Area 2 value is solved internally. Accepts the same formats as
 #'   `UnfishedDist`. Default `NULL`.
 #' @param RelativeSize `numeric`, `array`, `character(1)`, or `NULL`. Relative
-#'   size of each area, used for biomass density calculations. For two-area
+#'   size of each area. For fleets with `Effort@Mode = "Density"`, fishing
+#'   mortality in an area is proportional to effort per unit area, so a fleet
+#'   that spreads its effort in proportion to `RelativeSize` fishes every area
+#'   at the same rate; it is also used to convert biomass to density when
+#'   allocating effort (see [Effort()]). For two-area
 #'   models, a single value gives the fraction of Area 1 (Area 2 = `1 -
 #'   RelativeSize`). For multi-area models, a vector of length `nArea` summing
 #'   to 1, or a `Sim × Area` array. The special value `"EqualDensity"` sets

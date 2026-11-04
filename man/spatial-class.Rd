@@ -41,7 +41,9 @@ the Area 2 value is solved internally. See \code{\link[=Spatial]{Spatial()}} for
 formats.}
 
 \item{\code{RelativeSize}}{\code{numeric}, \code{array}, or \code{character(1)}. Relative size of
-each area, used to compute biomass density. After \code{\link[=Populate]{Populate()}}, a named
+each area, used to convert effort to effort per unit area and biomass to
+density in the spatial effort allocation (see \code{\link[=Effort]{Effort()}}). After
+\code{\link[=Populate]{Populate()}}, a named
 \verb{Sim × Area} array. The special value \code{"EqualDensity"} sets
 \code{RelativeSize} equal to the mean \code{UnfishedDist} across ages and years,
 producing constant density across areas. When \code{NULL}, all areas are

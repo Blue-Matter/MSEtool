@@ -43,7 +43,7 @@
 
   Mode <- unique(purrr::map_chr(Efforts, \(e) e@Mode %||NA% "Density"))
   if (length(Mode) > 1)
-    Abort("their spatial utility `Mode` differs ({.val {Mode}}).")
+    Abort("their spatial effort `Mode` differs ({.val {Mode}}).")
   Effort@Mode <- Mode
 
   BagLimit <- c("TripsScalar", "AnglerPerTrip", "Theta")
@@ -59,6 +59,11 @@
 
   Effort@Targeting <- .FleetWeightedMean(
     purrr::map(Efforts, \(e) .AsSimYear(e@Targeting, HistYears)), w)
+
+  Release <- purrr::map(Efforts, .EffortReleaseValue)
+  if (!all(purrr::map_lgl(Release, is.null)))
+    Effort@ReleaseValue <- .FleetWeightedMean(
+      purrr::map(Release, \(r) .AsSimYear(r %||% 0, HistYears)), w)
 
   Lambda <- purrr::map(Efforts, \(e) e@StockTargetingLambda)
   if (!all(purrr::map_lgl(Lambda, is.null))) {

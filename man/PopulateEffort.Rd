@@ -40,7 +40,11 @@ and populating distribution and targeting across areas and simulation replicates
 \itemize{
 \item Generates historical effort if the \code{Effort} slot is a data frame.
 \item Ensures the effort matrix has correct dimensions and names.
-\item Validates fleet effort distribution and targeting across areas.
+\item Validates the fleet's effort \code{Distribution} across areas.
+\item Resolves \code{Targeting} (default \code{1}) and \code{ReleaseValue} (default \code{0}) to
+\verb{Sim x Year} arrays. Each accepts a scalar, length-2 uniform bounds
+sampled per simulation, a length-\code{nSim} vector, or a \verb{Sim x Year} array;
+negative or non-finite values are an error.
 \item If supplied, extends \code{Maximum}/\code{TripsScalar}/\code{AnglerPerTrip}/\code{Theta} to cover
 historical and projected years (a bare scalar, length-2 uniform
 bounds, or length-\code{nSim} vector for \code{Theta} is first resolved to a
