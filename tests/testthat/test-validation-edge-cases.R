@@ -181,15 +181,19 @@ test_that("wrapped legacy MP errors say life-history data are not generated", {
   Wrapped <- MSEtool:::.WrapLegacyMP(NeedsM)
   for (sim in seq_along(hist@Data))
     expect_error(Wrapped(hist@Data[[sim]][[1]]),
-                 "natural mortality is missing.*life-history data are not generated")
+                 "natural mortality is missing.*`Mort` is NA; life-history data are not generated")
 
+  LegacyData <- Convert(hist@Data[[1]][[1]], silent = TRUE)
+  LegacyData@Mort <- NA_real_
   Plain <- function(x, Data, reps = 1, plot = FALSE) stop('unrelated failure')
   class(Plain) <- 'MP'
-  LegacyData <- Convert(hist@Data[[1]][[1]], silent = TRUE)
-  LegacyData@Mort <- LegacyData@vbK <- LegacyData@vbLinf <- LegacyData@vbt0 <- 1
-  LegacyData@L50 <- LegacyData@L95 <- LegacyData@wla <- LegacyData@wlb <- 1
-  LegacyData@steep <- LegacyData@MaxAge <- 1
-  Err <- tryCatch(MSEtool:::.LegacyMPError(simpleError('unrelated failure'), LegacyData),
+  Err <- tryCatch(MSEtool:::.LegacyMPError(simpleError('unrelated failure'), LegacyData, Plain),
                   error = conditionMessage)
   expect_identical(Err, 'unrelated failure')
+
+  NeedsRef <- function(x, Data, reps = 1, plot = FALSE) Data@FMSY_M[x] * Data@Mort[x]
+  LegacyData@FMSY_M <- NA_real_
+  Err <- tryCatch(MSEtool:::.LegacyMPError(simpleError('failed'), LegacyData, NeedsRef),
+                  error = conditionMessage)
+  expect_identical(Err, "failed (legacy `Data` slots used by the MP `Mort`, `FMSY_M` are NA; life-history data are not generated for simulated data unless the Obs of the OM sets LifeHistoryObs())")
 })

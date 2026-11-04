@@ -213,6 +213,8 @@
   nms <- names(DataList)
   for (i in seq_along(DataList)) {
     Data <- DataList[[i]] |> .AddPopDyn(Proj, sim, Year, YearsProj, mp, DataOM = DataOM)
+    if (!is.null(attr(MPfunction, 'LegacyMP')))
+      Data <- .AddLegacyReference(Data, Proj, sim, nms[i])
 
     Data@Misc$MPName     <- MPName
     Data@Misc$StockName  <- names(DataList)[i]

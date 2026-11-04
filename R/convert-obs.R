@@ -21,6 +21,7 @@
 #' | `Cobs` | `Landings@CV` and `Discards@CV` |
 #' | `Cbiascv` | `Landings@Bias` and `Discards@Bias` |
 #' | `Iobs` | `CPUE@CV` and `Survey@CV` |
+#' | `Irefbiascv` | `CPUE@Ref` and `Survey@Ref` |
 #'
 #' Note that `Discards@CV` and `Discards@Bias` are set to the same values as
 #' `Landings` (`Cobs` and `Cbiascv`) because legacy objects do not distinguish
@@ -34,18 +35,24 @@
 #' | Legacy slot | New slot |
 #' |---|---|
 #' | `Linfbiascv`, `Kbiascv`, `t0biascv` | `LifeHistory@Length`, `Bias` of `Linf`, `K`, `t0` |
+#' | (none) | `LifeHistory@Weight`, observed without error |
 #' | `Mbiascv` | `LifeHistory@NaturalMortality`, `Bias` of `M` |
 #' | `LenMbiascv` | `LifeHistory@Maturity`, `Bias` of `L50` |
 #' | `hbiascv`, `sigmaRbiascv` | `LifeHistory@SRR`, `Bias` of `h` and `SD` |
 #' | `Dbiascv` | `LifeHistory@Depletion`, `Bias` of `Final` |
 #' | `LFCbiascv`, `LFSbiascv` | `Exploitation@Selectivity`, `Bias` of `L5` and `LFS` |
 #'
+#' A component whose legacy bias CVs are missing or zero is observed without
+#' error.
+#'
 #' ## Slots Not Converted
 #'
 #' The following legacy slots do not have a corresponding slot in the current
 #' [obs-class] and are dropped:
 #'
-#' - Reference point bias CVs: `FMSY_Mbiascv`, `BMSY_B0biascv`
+#' - Reference point bias CVs: `FMSY_Mbiascv`, `BMSY_B0biascv`, `Crefbiascv`,
+#'   `Brefbiascv`. The MSY reference points in simulated data are reported
+#'   without error.
 #'
 #' @return An [obs-class] object.
 #'
@@ -77,6 +84,8 @@ ConvertObs <- function(Obs, silent = FALSE) {
   
   obs@CPUE@CV   <- Obs@Iobs
   obs@Survey@CV <- Obs@Iobs
+  obs@CPUE@Ref   <- .LegacyRefCV(Obs@Irefbiascv)
+  obs@Survey@Ref <- .LegacyRefCV(Obs@Irefbiascv)
   
 
   # Composition slots 
@@ -88,6 +97,7 @@ ConvertObs <- function(Obs, silent = FALSE) {
   
   obs@LifeHistory <- LifeHistoryObs(
     Length           = .LegacyBias(Linf = Obs@Linfbiascv, K = Obs@Kbiascv, t0 = Obs@t0biascv),
+    Weight           = .LegacyBias(),
     NaturalMortality = .LegacyBias(M = Obs@Mbiascv),
     Maturity         = .LegacyBias(L50 = Obs@LenMbiascv),
     SRR              = .LegacyBias(h = Obs@hbiascv, SD = Obs@sigmaRbiascv),
@@ -101,9 +111,15 @@ ConvertObs <- function(Obs, silent = FALSE) {
   obs
 }
 
-# `Bias` specification from legacy bias CVs; CVs that are missing or not positive are dropped
+# reference index CV of a legacy bias CV; missing or negative is no error
+.LegacyRefCV <- function(x) {
+  x <- as.numeric(x)[1]
+  if (length(x) && is.finite(x) && x > 0) x else 0
+}
+
+# `Bias` specification from legacy bias CVs; parameters with a missing or non-positive CV are observed without error
 .LegacyBias <- function(...) {
   Bias <- list(...)
   Bias <- Bias[vapply(Bias, \(x) length(x) == 1 && is.finite(x) && x > 0, logical(1))]
-  if (length(Bias)) list(Bias = lapply(Bias, as.numeric)) else list()
+  if (length(Bias)) list(Bias = lapply(Bias, as.numeric)) else list(Bias = 0)
 }
