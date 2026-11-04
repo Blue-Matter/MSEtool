@@ -2,9 +2,12 @@
 % Please edit documentation in R/combine-mse.R
 \name{CombineMSE}
 \alias{CombineMSE}
-\title{Combine Multiple \code{mse} Objects Across Simulations}
+\alias{CombineMP}
+\title{Combine Multiple \code{mse} Objects Across Simulations or MPs}
 \usage{
 CombineMSE(MSE_List, silent = FALSE)
+
+CombineMP(MSE_List, silent = FALSE)
 }
 \arguments{
 \item{MSE_List}{A list of \link[=mse-class]{mse} objects.}
@@ -16,12 +19,15 @@ A single \link[=mse-class]{mse} object spanning all simulations in
 \code{MSE_List}.
 }
 \description{
-Combines a list of \link[=mse-class]{mse} objects into a single \code{MSE} object, by
-concatenating every simulation-indexed array along the \code{Sim} dimension.
+{
+Combines a list of \link[=mse-class]{mse} objects into a single \code{MSE} object:
+\itemize{
+\item \code{CombineMSE()} concatenates every simulation-indexed array along the \code{Sim} dimension. All elements of
+\code{MSE_List} must share the same MPs (same names, same order), the same stock names, and the same historical/projection years.
+\item \code{CombineMP()} concatenates every MP-indexed array along the \code{MP} dimension. All elements of
+\code{MSE_List} must share the same OM (number of simulations), the same stock names, and the same historical/projection years.
 }
-\details{
-All elements of \code{MSE_List} must share the same MPs (same names, same
-order), the same stock names, and the same historical/projection years.
+}
 }
 \seealso{
 \code{\link[=CombineOMs]{CombineOMs()}}, \code{\link[=CombineFleets]{CombineFleets()}}
