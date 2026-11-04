@@ -63,6 +63,16 @@ function replaces 'nyears' in the Fleet object with the value defined here
 (FstYr:current year). \cr
 }
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} These functions are superseded as of MSEtool 4.0.0 and will be removed in a future release:
+\itemize{
+\item \code{ChooseEffort()}
+\item \code{ChooseM()}
+\item \code{ChooseSelect()}
+}
+}
+
 \author{
 A. Hordyk
 }

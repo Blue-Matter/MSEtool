@@ -5,12 +5,9 @@
 # Data@VInd, Data@CV_VInd
 # Data@AddInd, Data@AddIndType, Data@AddIndV, Data@AddIunits, Data@CV_AddInd
 # Data@Rec, Data@CV_Rec
-# Data@ML, Data@Lc, Data@Lbar
 # Data@Abun, Data@CV_Abun, Data@SpAbun, Data@CV_SpAbun
-# Data@FMSY_M, Data@CV_FMSY_M, Data@BMSY_B0, Data@CV_BMSY_B0
 # Data@Bref, Data@CV_Bref
-# Data@t, Data@AvC, Data@CV_AvC
-# Data@Dt, Data@CV_Dt
+# Data@t
 # Data@Ref, Data@Ref_type
 #
 # TODO - legacy `Data` slots not yet mapped by `.Data2data()` (legacy -> new
@@ -67,6 +64,15 @@
 #' complete, then longest span). Slots with no equivalent in `data` (see
 #' `Data@Misc$UnmappedSlots` on the result) are left `NA`. Every lossy or
 #' approximated mapping is recorded in `Data@Log` (see [Log()]).
+#'
+#' `FMSY_M` is `Reference@FMSY` divided by `Mort`, `BMSY_B0` is
+#' `Reference@SBMSY` divided by the unfished spawning biomass
+#' (`Reference@Misc$SB0`), and `Cref` is `Reference@MSYLandings` when
+#' `Landings@Ref` is not set. `ML`, `Lc` (modal length) and `Lbar` (mean
+#' length above `Lc`) are calculated from `CAL`, `AvC` is the mean of `Cat`,
+#' and `Dt` is `Dep`. Years with a missing `CV_Cat` take the mean of the
+#' other years. Life-history CVs not given in `data` keep the legacy `Data`
+#' defaults.
 #'
 #' @return
 #' - Legacy `Data` -> `data`: a [data-class] object populated from
@@ -460,6 +466,9 @@ ConvertData <- function(x, Seasons = 1, sim = 1, silent = FALSE) {
   Data <- .LegacyCAA(data, Data)
   Data <- .LegacyCAL(data, Data)
   Data <- .LegacyAdvice(data, Data)
+  Data <- .LegacyReference(data, Data)
+  Data <- .LegacyLengthStats(Data)
+  Data <- .LegacyDerived(Data)
   Data <- .FinalizeUnmappedSlots(Data)
   Data
 }
@@ -509,11 +518,11 @@ ConvertData <- function(x, Seasons = 1, sim = 1, silent = FALSE) {
   Pars <- Length@Pars
   if (length(Pars) && identical(Length@Model, 'vonBert') && !is.null(Pars$Linf)) {
     Data@vbLinf     <- Pars$Linf
-    Data@CV_vbLinf  <- Pars$Linf_CV %||NA% NA_real_
+    Data@CV_vbLinf  <- Pars$Linf_CV %||NA% Data@CV_vbLinf
     Data@vbK        <- Pars$K
-    Data@CV_vbK     <- Pars$K_CV %||NA% NA_real_
+    Data@CV_vbK     <- Pars$K_CV %||NA% Data@CV_vbK
     Data@vbt0       <- Pars$t0 %||NA% 0
-    Data@CV_vbt0    <- Pars$t0_CV %||NA% NA_real_
+    Data@CV_vbt0    <- Pars$t0_CV %||NA% Data@CV_vbt0
     if (length(Length@CVatAge))
       Data@LenCV    <- .TerminalValue(Length@CVatAge)
     return(Data)
@@ -527,11 +536,10 @@ ConvertData <- function(x, Seasons = 1, sim = 1, silent = FALSE) {
     Data@vbLinf <- fit$Linf
     Data@vbK    <- fit$K
     Data@vbt0   <- fit$t0
-    Data@CV_vbLinf <- NA_real_
     Data@CV_vbK    <- NA_real_
     Data@CV_vbt0   <- NA_real_
     Data <- .CaptureLog(
-      Data, "`vbLinf`/`vbK`/`vbt0` estimated by refitting a von Bertalanffy curve to the terminal-year `Length@MeanAtAge` schedule (no CVs available).",
+      Data, "`vbLinf`/`vbK`/`vbt0` estimated by refitting a von Bertalanffy curve to the terminal-year `Length@MeanAtAge` schedule (default CVs kept).",
       name = ".ConvertDataToLegacy::Length", type = "assumption"
     )
   }
@@ -542,9 +550,9 @@ ConvertData <- function(x, Seasons = 1, sim = 1, silent = FALSE) {
   Pars <- Weight@Pars
   if (length(Pars) && !is.function(Weight@Model) && !is.null(Pars$alpha) && !is.null(Pars$beta)) {
     Data@wla    <- Pars$alpha
-    Data@CV_wla <- Pars$alpha_CV %||NA% NA_real_
+    Data@CV_wla <- Pars$alpha_CV %||NA% Data@CV_wla
     Data@wlb    <- Pars$beta
-    Data@CV_wlb <- Pars$beta_CV %||NA% NA_real_
+    Data@CV_wlb <- Pars$beta_CV %||NA% Data@CV_wlb
     return(Data)
   }
 
@@ -554,10 +562,8 @@ ConvertData <- function(x, Seasons = 1, sim = 1, silent = FALSE) {
     fit <- .FitLengthWeight(Mids[seq_along(WAL)], WAL)
     Data@wla <- fit$alpha
     Data@wlb <- fit$beta
-    Data@CV_wla <- NA_real_
-    Data@CV_wlb <- NA_real_
     Data <- .CaptureLog(
-      Data, "`wla`/`wlb` estimated by refitting a length-weight regression to the terminal-year `Weight@MeanAtLength` schedule (no CVs available).",
+      Data, "`wla`/`wlb` estimated by refitting a length-weight regression to the terminal-year `Weight@MeanAtLength` schedule (default CVs kept).",
       name = ".ConvertDataToLegacy::Weight", type = "assumption"
     )
   }
@@ -568,14 +574,13 @@ ConvertData <- function(x, Seasons = 1, sim = 1, silent = FALSE) {
   Pars <- NM@Pars
   if (length(Pars) && !is.function(NM@Model) && !is.null(Pars$M)) {
     Data@Mort    <- Pars$M
-    Data@CV_Mort <- Pars$M_CV %||NA% (Pars$CV_M %||NA% NA_real_)
+    Data@CV_Mort <- Pars$M_CV %||NA% (Pars$CV_M %||NA% Data@CV_Mort)
     return(Data)
   }
 
   if (length(NM@MeanAtAge)) {
     MAA <- .TerminalValue(NM@MeanAtAge)
     Data@Mort    <- mean(MAA, na.rm = TRUE)
-    Data@CV_Mort <- NA_real_
     Data <- .CaptureLog(
       Data, "`Mort` set to the mean of the terminal-year, age-varying `NaturalMortality@MeanAtAge` schedule (age structure lost, no CV available).",
       name = ".ConvertDataToLegacy::NaturalMortality", type = "assumption"
@@ -588,7 +593,7 @@ ConvertData <- function(x, Seasons = 1, sim = 1, silent = FALSE) {
   Pars <- Mat@Pars
   if (length(Pars) && !is.function(Mat@Model) && !is.null(Pars$L50)) {
     Data@L50    <- Pars$L50
-    Data@CV_L50 <- Pars$L50_CV %||NA% NA_real_
+    Data@CV_L50 <- Pars$L50_CV %||NA% Data@CV_L50
     Data@L95    <- Pars$L50 + (Pars$L50_95 %||NA% 0)
     return(Data)
   }
@@ -598,9 +603,8 @@ ConvertData <- function(x, Seasons = 1, sim = 1, silent = FALSE) {
     Mids  <- Mat@Classes[seq_along(Ogive)]
     Data@L50 <- .InterpolateOgive(Mids, Ogive, 0.5)
     Data@L95 <- .InterpolateOgive(Mids, Ogive, 0.95)
-    Data@CV_L50 <- NA_real_
     Data <- .CaptureLog(
-      Data, "`L50`/`L95` interpolated from the terminal-year empirical `Maturity@MeanAtLength` ogive (no CV available).",
+      Data, "`L50`/`L95` interpolated from the terminal-year empirical `Maturity@MeanAtLength` ogive (default CV kept).",
       name = ".ConvertDataToLegacy::Maturity", type = "assumption"
     )
     return(Data)
@@ -613,9 +617,8 @@ ConvertData <- function(x, Seasons = 1, sim = 1, silent = FALSE) {
     A95   <- .InterpolateOgive(Ages, Ogive, 0.95)
     Data@L50 <- .VonBertLength(A50, Data@vbLinf, Data@vbK, Data@vbt0)
     Data@L95 <- .VonBertLength(A95, Data@vbLinf, Data@vbK, Data@vbt0)
-    Data@CV_L50 <- NA_real_
     Data <- .CaptureLog(
-      Data, "`L50`/`L95` converted from an age-based `Maturity@MeanAtAge` ogive via the fitted/estimated growth curve (no CV available).",
+      Data, "`L50`/`L95` converted from an age-based `Maturity@MeanAtAge` ogive via the fitted/estimated growth curve (default CV kept).",
       name = ".ConvertDataToLegacy::Maturity", type = "assumption"
     )
   }
@@ -627,7 +630,7 @@ ConvertData <- function(x, Seasons = 1, sim = 1, silent = FALSE) {
   Model <- SRR@Model
   if (length(Pars) && (identical(Model, 'BevertonHolt') || is.null(Model)) && !is.null(Pars$h)) {
     Data@steep    <- Pars$h
-    Data@CV_steep <- Pars$h_CV %||NA% NA_real_
+    Data@CV_steep <- Pars$h_CV %||NA% Data@CV_steep
   } else if (length(Pars) && !is.null(Model) && !identical(Model, 'BevertonHolt')) {
     Data <- .CaptureLog(
       Data, sprintf("`SRR@Model` is '%s'; not directly convertible to legacy Beverton-Holt-style `steep` - left NA.", .ModelName(Model)),
@@ -653,9 +656,9 @@ ConvertData <- function(x, Seasons = 1, sim = 1, silent = FALSE) {
   Pars <- Sel@Pars
   if (length(Pars) && !is.null(Pars$L5)) {
     Data@LFC     <- Pars$L5
-    Data@CV_LFC  <- Pars$L5_CV %||NA% NA_real_
+    Data@CV_LFC  <- Pars$L5_CV %||NA% Data@CV_LFC
     Data@LFS     <- Pars$LFS
-    Data@CV_LFS  <- Pars$LFS_CV %||NA% NA_real_
+    Data@CV_LFS  <- Pars$LFS_CV %||NA% Data@CV_LFS
     Data@Vmaxlen <- Pars$Vmaxlen %||NA% NA_real_
     return(Data)
   }
@@ -666,7 +669,7 @@ ConvertData <- function(x, Seasons = 1, sim = 1, silent = FALSE) {
     Data@LFC <- .InterpolateOgive(Mids, Ogive, 0.05)
     Data@LFS <- Mids[which.max(Ogive)]
     Data <- .CaptureLog(
-      Data, "`LFC`/`LFS` interpolated from the terminal-year empirical selectivity-at-length ogive (no CV available).",
+      Data, "`LFC`/`LFS` interpolated from the terminal-year empirical selectivity-at-length ogive (default CV kept).",
       name = ".ConvertDataToLegacy::Exploitation", type = "assumption"
     )
   }
@@ -941,6 +944,74 @@ ConvertData <- function(x, Seasons = 1, sim = 1, silent = FALSE) {
     effVals <- unlist(eff)
     effVals <- effVals[!is.na(effVals)]
     if (length(effVals)) Data@MPeff <- utils::tail(effVals, 1)
+  }
+  Data
+}
+
+# sum over the stocks of a [Sim, Stock, Year] reference point; NA when absent
+.SumReference <- function(x) {
+  if (!length(x)) return(NA_real_)
+  x <- as.numeric(x)
+  if (all(is.na(x))) NA_real_ else sum(x, na.rm = TRUE)
+}
+
+.FirstReference <- function(x) if (length(x)) as.numeric(x)[1] else NA_real_
+
+.LegacyReference <- function(data, Data) {
+  Ref <- data@Reference
+  if (is.null(Ref)) return(Data)
+
+  FMSY <- .FirstReference(Ref@FMSY)
+  if (all(is.na(Data@FMSY_M)) && is.finite(FMSY) && length(Data@Mort) && is.finite(Data@Mort[1]) && Data@Mort[1] > 0)
+    Data@FMSY_M <- FMSY / Data@Mort[1]
+
+  SBMSY <- .SumReference(Ref@SBMSY)
+  SB0   <- .SumReference(Ref@Misc$SB0)
+  if (all(is.na(Data@BMSY_B0)) && is.finite(SBMSY) && is.finite(SB0) && SB0 > 0)
+    Data@BMSY_B0 <- SBMSY / SB0
+
+  MSY <- .SumReference(Ref@MSYLandings)
+  if (all(is.na(Data@Cref)) && is.finite(MSY))
+    Data@Cref <- MSY
+
+  Data
+}
+
+# mean length, modal length and mean length above the modal length of the catch-at-length
+.LegacyLengthStats <- function(Data) {
+  CAL <- Data@CAL
+  Mids <- Data@CAL_mids
+  if (!length(CAL) || all(is.na(CAL)) || length(Mids) != dim(CAL)[3]) return(Data)
+
+  nYear <- dim(CAL)[2]
+  ML <- Lc <- Lbar <- rep(NA_real_, nYear)
+  for (y in seq_len(nYear)) {
+    n <- CAL[1, y, ]
+    n[!is.finite(n)] <- 0
+    if (sum(n) <= 0) next
+    ML[y] <- sum(n * Mids) / sum(n)
+    Mode  <- which.max(n)
+    Lc[y] <- Mids[Mode]
+    Above <- seq_along(n) >= Mode
+    Lbar[y] <- sum(n[Above] * Mids[Above]) / sum(n[Above])
+  }
+  Data@ML   <- matrix(ML, nrow = 1)
+  Data@Lc   <- matrix(Lc, nrow = 1)
+  Data@Lbar <- matrix(Lbar, nrow = 1)
+  Data
+}
+
+.LegacyDerived <- function(Data) {
+  if (length(Data@Cat) && any(is.finite(Data@Cat)) && all(is.na(Data@AvC)))
+    Data@AvC <- mean(Data@Cat, na.rm = TRUE)
+
+  if (all(is.na(Data@Dt)) && length(Data@Dep) && is.finite(Data@Dep[1]))
+    Data@Dt <- Data@Dep[1]
+
+  CV <- Data@CV_Cat
+  if (length(CV) && any(is.na(CV)) && any(is.finite(CV))) {
+    CV[is.na(CV)] <- mean(CV, na.rm = TRUE)
+    Data@CV_Cat <- CV
   }
   Data
 }

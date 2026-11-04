@@ -167,6 +167,19 @@ implementation portions. \code{SSMOM2OM} is the internal function that simplifie
 \note{
 Currently tested on r4ss version 1.38.1-40.0 and SS 3.30.14.
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} These functions are superseded as of MSEtool 4.0.0 and will be removed in a future release:
+\itemize{
+\item \code{SS2MOM()} (use \code{\link[=ImportSS]{ImportSS()}} instead)
+\item \code{plot_SS2MOM()} (use \code{\link[=CompareSS]{CompareSS()}} instead)
+\item \code{SS2OM()} (use \code{\link[=ImportSS]{ImportSS()}} instead)
+\item \code{SSMOM2OM()}
+\item \code{plot_SS2OM()} (use \code{\link[=CompareSS]{CompareSS()}} instead)
+\item \code{MOM_agg_fleets()}
+}
+}
+
 \seealso{
 \link{SS2Data} \link{SS2DataMOM}
 }

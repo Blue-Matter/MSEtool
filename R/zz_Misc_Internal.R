@@ -167,8 +167,6 @@ getsel <- function(x, lens, lfs, sls, srs) {
 }
 
 
-
-
 # calcV <- function(x, Len_age, LatASD, SLarray, n_age, nyears, proyears, CAL_binsmid) {
 #   len_at_age <- Len_age[x,,]
 #   len_aa_sd <- LatASD[x,,]
@@ -247,7 +245,6 @@ CalcMSYRefs_legacy <- function(x, MSY_y, FMSY_y, SSBMSY_y, BMSY_y, VBMSY_y, ageM
   VBMSY <- mean(VBMSY_y[x, avg.ind])
   data.frame(MSY=MSY, FMSY=FMSY, SSBMSY=SSBMSY, BMSY=BMSY, VBMSY=VBMSY)
 }
-
 
 
 calcRecruitment <- function(x, SRrel, SSBcurr, recdev, hs, aR, bR, R0a, SSBpR, 
@@ -363,11 +360,6 @@ indfit <- function(sim.index,obs.ind, Year, plot=FALSE, lcex=0.8){
 getbeta<-function(beta,x,y)sum((y-x^beta)^2, na.rm=TRUE)
 
 
-
-
-
-
-
 PackageFuns <- function() {
   pkg.funs <- as.vector(ls.str('package:MSEtool'))
   if ('package:DLMtool' %in% search())
@@ -406,7 +398,6 @@ CheckDuplicate <- function(MPs) {
     }
   }
 }
-
 
 
 #' Search R session for MP
@@ -783,17 +774,6 @@ join_HistSampPars <- function(Hist_List) {
 }
 
 
-agg_data <- function(array, out.dim, map.stocks) {
-  # way faster than apply ...
-  out <- array(0, dim=out.dim)
-  for (pp in seq_along(map.stocks)) {
-    out <- out + array[,map.stocks[pp],,,]
-  }
-  out 
-}
-
-
-
 Check_custom_SRR <- function(StockPars, SampCpars, nsim) {
   if (!is.null(SampCpars$SRR)) {
     req_names <- c('SRRfun', 'SRRpars')
@@ -881,7 +861,6 @@ Check_custom_SRR <- function(StockPars, SampCpars, nsim) {
   
   StockPars
 }
-
 
 
 calc_survival <- function(x, StockPars, plusgroup=TRUE, inc_spawn_time=FALSE) {

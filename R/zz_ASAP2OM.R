@@ -25,9 +25,14 @@
 #' @author Q. Huynh
 #' @seealso \link{Assess2OM}
 #' @export
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` These functions are superseded as of MSEtool 4.0.0 and will be removed in a future release:
+#' - `ASAP2OM()`
+#' - `ASAP2Data()`
 ASAP2OM <- function(asap, nsim = 48, proyears = 50, mcmc = FALSE, 
                     spawn_time_frac = 0, Name = "ASAP Model", Source = "No source provided",
                     nyr_par_mu = 3, Author = "No author provided", report = FALSE, silent = FALSE) {
+  .SupersedeLegacy("ASAP2OM()")
   
   # get dimensions
   nyears <- asap$parms$nyears
@@ -148,6 +153,7 @@ ASAP2OM <- function(asap, nsim = 48, proyears = 50, mcmc = FALSE,
 #' @rdname ASAP2OM
 #' @export  
 ASAP2Data <- function(asap, Name = "ASAP assessment") {
+  .SupersedeLegacy("ASAP2Data()")
   
   Data <- new("Data")
   Data@Name <- Name

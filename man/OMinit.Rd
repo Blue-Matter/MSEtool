@@ -32,6 +32,11 @@ name.xlsx and name.rmd files are created in the working directory.
 Generates an Excel spreadsheet and a source.rmd file in the current working directory for
 specifying and documenting a MSEtool Operating Model.
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{OMinit()} is superseded as of MSEtool 4.0.0 and will be removed in a future release.
+}
+
 \examples{
 \dontrun{
 # Create an Excel OM template and rmd file called 'myOM.xlsx' and 'myOM.rmd':

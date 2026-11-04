@@ -23,6 +23,11 @@ A real number (TAC advice but theoretically could be used for effort, size limit
 \description{
 A hockey stick (2 inflection points) HCR that accepts estimated level relative to reference level and modifies a proposed TAC based on control points for the x axis (est/ref) and y axis (fraction of TAC)
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{doHCR()} is superseded as of MSEtool 4.0.0 and will be removed in a future release.
+}
+
 \author{
 T. Carruthers
 }

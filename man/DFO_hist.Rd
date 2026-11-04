@@ -19,6 +19,11 @@ A plot of current and historical stock status by simulation according to the
 stock status zones and reference points of DFO.
 http://www.dfo-mpo.gc.ca/reports-rapports/regs/sff-cpd/precaution-eng.htm
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{DFO_hist()} is superseded as of MSEtool 4.0.0 and will be removed in a future release.
+}
+
 \author{
 T. Carruthers
 }

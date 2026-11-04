@@ -50,7 +50,12 @@
 #' Turing(MSEtool::testOM, MSEtool::SimulatedData, wait=FALSE)
 #' }
 #'
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` These functions are superseded as of MSEtool 4.0.0 and will be removed in a future release:
+#' - `Turing()`
+#' - `TuringMOM()`
 Turing <- function(OM, Data, wait=TRUE) {
+  .SupersedeLegacy("Turing()")
   if (methods::is(OM, "multiHist"))
     return(TuringMOM (OM, Data, wait))
   if (!methods::is(OM,"OM")) stop("OM must be class 'OM'")
@@ -125,6 +130,7 @@ Turing <- function(OM, Data, wait=TRUE) {
 #' @param multiHist An object of class `multiHist`. The output of `SimulateMOM`
 #' @export
 TuringMOM <- function(multiHist, Data, wait=TRUE) {
+  .SupersedeLegacy("TuringMOM()")
 
   if (!'multiHist' %in% class(multiHist)) stop("multiHist must be class multiHist`")
   if (!methods::is(Data,'list')) stop("Data must be list")

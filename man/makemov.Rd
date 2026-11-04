@@ -15,6 +15,11 @@ makemov(fracs = c(0.1, 0.2, 0.3, 0.4), prob = c(0.5, 0.8, 0.9, 0.95))
 A function for calculating a movement matrix from user specified unfished stock biomass fraction in each area.
 Used by \link{simmov} to generate movement matrices for an operating model.
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{makemov()} is superseded as of MSEtool 4.0.0 and will be removed in a future release.
+}
+
 \seealso{
 \link{simmov}
 }

@@ -31,6 +31,13 @@
 #' the ggplot objects for the plots
 #' @export
 #'
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` These functions are superseded as of MSEtool 4.0.0 and will be removed in a future release:
+#' - `TradePlot()`
+#' - `Tplot()`
+#' - `Tplot2()`
+#' - `Tplot3()`
+#' - `NOAA_plot2()`
 TradePlot <- function(MSEobj, ..., Lims=c(0.2, 0.2, 0.8, 0.8),
                       Title=NULL,
                       Labels=NULL,
@@ -50,6 +57,7 @@ TradePlot <- function(MSEobj, ..., Lims=c(0.2, 0.2, 0.8, 0.8),
                       Refs=NULL,
                       Yrs=NULL
                       ) {
+  .SupersedeLegacy("TradePlot()")
   if (!methods::is(MSEobj, 'MSE') & !methods::is(MSEobj,'MMSE'))
     stop("Object must be class `MSE` or class `MMSE`", call.=FALSE)
 
@@ -270,6 +278,7 @@ TradePlot <- function(MSEobj, ..., Lims=c(0.2, 0.2, 0.8, 0.8),
 #'
 #' @export
 Tplot <- function(MSEobj, Lims=c(0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5), ...) {
+  .SupersedeLegacy("Tplot()")
   if (!methods::is(Lims,"numeric")) stop("Second argument must be numeric")
   TradePlot(MSEobj, Lims=Lims, PMlist=list("PNOF", "LTY", "P100", "LTY", "P50", "LTY", "P10", "LTY"),  ...)
 }
@@ -282,6 +291,7 @@ Tplot <- function(MSEobj, Lims=c(0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5), ...) {
 #'
 #' @export
 Tplot2 <- function(MSEobj, Lims=c(0.2, 0.2, 0.8, 0.8), ...) {
+  .SupersedeLegacy("Tplot2()")
   if (!methods::is(Lims,"numeric"))stop("Second argument must be numeric")
   TradePlot(MSEobj, Lims=Lims, PMlist=list("STY", "LTY", "P10", "AAVY"), ...)
 }
@@ -294,6 +304,7 @@ Tplot2 <- function(MSEobj, Lims=c(0.2, 0.2, 0.8, 0.8), ...) {
 #'
 #' @export
 Tplot3 <- function(MSEobj, Lims=c(0.5, 0.5, 0.8, 0.5), ...) {
+  .SupersedeLegacy("Tplot3()")
   if (!methods::is(Lims,"numeric")) stop("Second argument must be numeric")
   TradePlot(MSEobj, Lims=Lims, PMlist=list("PNOF", "LTY", "P50", "AAVY"), ...)
 }
@@ -308,6 +319,7 @@ Tplot3 <- function(MSEobj, Lims=c(0.5, 0.5, 0.8, 0.5), ...) {
 #'
 #' @export
 NOAA_plot2 <- function(MSEobj) {
+  .SupersedeLegacy("NOAA_plot2()")
   TradePlot(MSEobj, Lims=c(0.5, 0, 0.8, 0.5), PMlist=list("PNOF", "LTY", "P50", "AAVY"), Refs=list(AAVY=0.15))
 }
 
@@ -334,12 +346,15 @@ NOAA_plot2 <- function(MSEobj) {
 #' MSE <- runMSE()
 #' Cplot(MSE)
 #' }
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `Cplot()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 Cplot <- function(MSEobj, MPs = NA, lastYrs = 5,
                   point.size=2,
                   lab.size=4,
                   axis.title.size=12,
                   axis.text.size=10,
                   legend.title.size=12) {
+  .SupersedeLegacy("Cplot()")
   if (!all(is.na(MPs))) MSEobj <- Sub(MSEobj, MPs = MPs)
 
   if (!requireNamespace("ggrepel", quietly = TRUE)) {

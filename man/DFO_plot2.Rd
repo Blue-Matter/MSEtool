@@ -25,6 +25,11 @@ A preliminary plot for returning trade-offs plots and performance table for
 probability of obtaining half reference (FMSY) yield and probability of biomass
 dropping below 50 per cent BMSY
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{DFO_plot2()} is superseded as of MSEtool 4.0.0 and will be removed in a future release.
+}
+
 \author{
 T. Carruthers
 }

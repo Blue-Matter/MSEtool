@@ -30,14 +30,77 @@
   stock@Spatial          <- .OM2Spatial(OM, cpars)
   stock@Depletion        <- .OM2Depletion(OM, cpars)
   
-  PopulateStock(Stock = stock, 
-                nYear = nYear,
-                pYear = pYear,
-                CurrentYear = CurrentYear,
-                nSim = nSim,
-                Seasons = YearsList$Seasons,
-                seed = seed, 
-                silent = TRUE)
+  Populate <- \(stock) PopulateStock(Stock = stock, 
+                                     nYear = nYear,
+                                     pYear = pYear,
+                                     CurrentYear = CurrentYear,
+                                     nSim = nSim,
+                                     Seasons = YearsList$Seasons,
+                                     seed = seed, 
+                                     silent = TRUE)
+  populated <- Populate(stock)
+  if (!is.null(cpars$Mat_age))
+    return(populated)
+  
+  Maturity <- .LegacyMaturityAtAge(populated)
+  if (is.null(Maturity))
+    return(populated)
+  Maturity@Semelparous <- stock@Maturity@Semelparous
+  stock@Maturity <- Maturity
+  Populate(stock)
+}
+
+#' Legacy Maturity-at-Age Schedule
+#'
+#' Builds the logistic maturity-at-age model that legacy `OM` objects use:
+#' `L50` and `L95` are converted to ages with the von Bertalanffy growth
+#' parameters of each simulation and year. Called internally by `.OM2stock()`.
+#'
+#' @param Stock A populated [stock-class] object with length-based maturity
+#'   parameters (`L50`, `L50_95`) and von Bertalanffy growth parameters.
+#'
+#' @return A [Maturity()] object with `Model = MaturityAtAge`, `A50` and
+#'   `A50_95` as `Sim x Year` arrays, and the per-simulation `L50` in
+#'   `Misc$LegacyL50`; or `NULL` if `Stock` lacks the required parameters.
+#'
+#' @seealso [ConvertOM()], [MaturityAtAge()]
+#' @keywords internal
+.LegacyMaturityAtAge <- function(Stock) {
+  MatPars <- Stock@Maturity@Pars
+  LenPars <- Stock@Length@Pars
+  if (Stock@Seasons != 1 ||
+      !all(c('L50', 'L50_95') %in% names(MatPars)) ||
+      !all(c('Linf', 'K', 't0') %in% names(LenPars)))
+    return(NULL)
+  
+  nSim <- Stock@nSim
+  Years <- Stock@Years
+  MaxAge <- max(Stock@Ages@Classes)
+  Full <- \(x) Extend(x, nSim, Years = Years)
+  Linf <- Full(LenPars$Linf)
+  K <- Full(LenPars$K)
+  t0 <- Full(LenPars$t0)
+  LinfBase <- rowMeans(Linf)
+  
+  L50 <- pmin(Full(MatPars$L50)[, 1], 0.95 * LinfBase)
+  L95 <- pmin(L50 + Full(MatPars$L50_95)[, 1], 0.99 * LinfBase)
+  
+  L50array <- Linf * (L50 / LinfBase)
+  L95array <- L50array + (L95 - L50)
+  L95array[L95array > Linf] <- 0.99 * Linf[L95array > Linf]
+  
+  A50 <- -log(1 - L50array / Linf) / K + t0
+  A95 <- -log(1 - L95array / Linf) / K + t0
+  A50[A50 < 0] <- 0
+  A95[A95 < 1] <- 1
+  A50[A50 >= MaxAge - 1] <- MaxAge - 1
+  A95[A95 >= MaxAge] <- MaxAge
+  
+  Maturity <- Maturity(Pars = list(A50 = A50, A50_95 = A95 - A50),
+                       Model = 'MaturityAtAge')
+  Maturity@Misc$LegacyL50 <- array(L50, c(nSim, 1), 
+                                   dimnames = list(Sim = seq_len(nSim), Year = Years[1]))
+  Maturity
 }
 
 .GetOMYears <- function(OM, Period = NULL) {

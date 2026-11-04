@@ -33,6 +33,11 @@ is linearly related to the number of samples (e.g. nCAAobs) or square
 function of improved precision and bias e.g.: relative cost=
 1/(newCV/oldCV)^2
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{VOI2()} is superseded as of MSEtool 4.0.0 and will be removed in a future release.
+}
+
 \author{
 T. Carruthers
 }

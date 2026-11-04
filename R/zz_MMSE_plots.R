@@ -9,7 +9,10 @@
 #' @param ablines Numeric vector. Horizontal lines to be added to the plot.
 #' @author T.Carruthers
 #' @export
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `plotquant()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 plotquant<-function(x,p=c(0.05,0.25,0.75,0.95),yrs,qcol,lcol,addline=T,ablines=NA){
+  .SupersedeLegacy("plotquant()")
   ny<-length(yrs)
   qs<-apply(x,2,quantile,probs = p[c(1,4)],na.rm=T)
   qsi<-apply(x,2,quantile,probs = p[2:3],na.rm=T)
@@ -209,7 +212,10 @@ plot.MMSE <- function(x=NULL, maxcol = 6, qcol = rgb(0.4, 0.8, 0.95), lcol = "do
 #' @param maxsims Integer. The maximum number of simulations to plot.
 #' @author T.Carruthers
 #' @export
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `multidebug()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 multidebug<-function(MSEsingle,MSEmulti,p=1,f=1,MPno=1,maxsims=4){
+  .SupersedeLegacy("multidebug()")
 
   MPno=1
   p=1
@@ -235,7 +241,10 @@ multidebug<-function(MSEsingle,MSEmulti,p=1,f=1,MPno=1,maxsims=4){
 #' @param maxsim Integer. The number of simulations to plot
 #' @author T.Carruthers
 #' @export
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `plotmulti()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 plotmulti<-function(MSEmulti,maxsim=8){
+  .SupersedeLegacy("plotmulti()")
 
   np<-MSEmulti@nstocks
   nMPs<-MSEmulti@nMPs

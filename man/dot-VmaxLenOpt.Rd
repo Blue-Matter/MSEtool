@@ -2,29 +2,29 @@
 % Please edit documentation in R/convert-om.R
 \name{.VmaxLenOpt}
 \alias{.VmaxLenOpt}
-\title{Optimise Vmaxlen at the Maximum Length Bin}
+\title{Rescale Vmaxlen from Linf to the Maximum Length Class}
 \usage{
-.VmaxLenOpt(l5, lfs, vmaxlen, linf)
+.VmaxLenOpt(lfs, vmaxlen, linf, maxlen)
 }
 \arguments{
-\item{l5}{Numeric. Length at 5\% selectivity.}
-
 \item{lfs}{Numeric. Length at full selectivity.}
 
-\item{vmaxlen}{Numeric. Original selectivity at \code{Linf} (between 0 and 1).}
+\item{vmaxlen}{Numeric. Selectivity at \code{linf} (between 0 and 1).}
 
 \item{linf}{Numeric. Asymptotic length (\code{Linf}).}
+
+\item{maxlen}{Numeric. Largest length-class midpoint.}
 }
 \value{
-Numeric. The optimised \code{Vmaxlen} value on the probability scale
-(0–1). Returns \code{vmaxlen} unchanged if it exceeds 0.99.
+Numeric. \code{Vmaxlen} at \code{maxlen}. Returns \code{vmaxlen} unchanged if
+\code{lfs >= linf}.
 }
 \description{
-Finds the \code{Vmaxlen} value (on the logit scale) that reproduces the original
-selectivity at the maximum length bin (\code{Linf}) under the double-normal curve.
-Called internally by \code{.SolveForVmaxlen()}.
+Returns the double-normal \code{Vmaxlen} at \code{maxlen} that gives the same
+descending limb as selectivity \code{vmaxlen} at \code{linf}. Called internally by
+\code{.SolveForVmaxlen()}.
 }
 \seealso{
-\code{.SolveForVmaxlen()}, \code{.OptForVmaxLen()}
+\code{.SolveForVmaxlen()}
 }
 \keyword{internal}

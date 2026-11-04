@@ -23,6 +23,11 @@ n object of class \code{Rec}.
 \description{
 Creates a TAC management recommendation given constraints on how much that can change from previous TAC and contraints on minimum and maximum TAC
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{doRec()} is superseded as of MSEtool 4.0.0 and will be removed in a future release.
+}
+
 \author{
 T. Carruthers
 }

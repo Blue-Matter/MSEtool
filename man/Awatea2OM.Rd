@@ -37,6 +37,11 @@ Code optimized for the BC Pacific ocean perch assessment (Haigh et al. 2018).
 This function averages biological parameters across sex and then sends arrays to \link{VPA2OM}, assumes
 unfished status (B/B0 = 1) in the first year, and assumes a single fishing fleet.
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{Awatea2OM()} is superseded as of MSEtool 4.0.0 and will be removed in a future release.
+}
+
 \references{
 Haigh, R., et al. 2018. Stock assessment for Pacific Ocean Perch (\emph{Sebastes alutus}) in Queen Charlotte Sound, British Columbia in 2017.
 Canadian Science Advisory Secretariat (CSAS) Research Document 2018/038. 232 pp.

@@ -41,6 +41,11 @@ Either a vector of MP names that are feasible for the fishery (default) or a 3 c
 What MPs may be run (best case scenario) for various data-availability
 scenarios and management constraints?
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{Fease()} is superseded as of MSEtool 4.0.0 and will be removed in a future release.
+}
+
 \examples{
 \dontrun{
 Fease(TAC=FALSE)

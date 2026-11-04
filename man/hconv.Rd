@@ -58,6 +58,17 @@ The Ricker equation is
 \item \code{SRbetaconv()}: Returns \code{beta} from \code{h}, \code{R0}, and \code{phi0}
 
 }}
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} These functions are superseded as of MSEtool 4.0.0 and will be removed in a future release:
+\itemize{
+\item \code{hconv()}
+\item \code{R0conv()}
+\item \code{SRalphaconv()}
+\item \code{SRbetaconv()}
+}
+}
+
 \author{
 Q. Huynh
 }

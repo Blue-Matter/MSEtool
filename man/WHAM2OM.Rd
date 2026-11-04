@@ -72,6 +72,11 @@ Maturity-at-age-year, Mortality-at-age-year and weight-at-age-year are identical
 \details{
 Use a seed for the random number generator to sample future recruitment.
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{WHAM2OM()} is superseded as of MSEtool 4.0.0 and will be removed in a future release. Use \code{\link[=ImportWHAM]{ImportWHAM()}} instead.
+}
+
 \seealso{
 \link{Assess2OM}
 }

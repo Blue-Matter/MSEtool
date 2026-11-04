@@ -21,6 +21,11 @@ Basically the function looks for any functions in the MSEtool that
 have the word \code{plot} in them.  There is a chance that some plotting
 functions are missed. Let us know if you find any and we will add them.
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{plotFun()} is superseded as of MSEtool 4.0.0 and will be removed in a future release.
+}
+
 \author{
 A. Hordyk
 }

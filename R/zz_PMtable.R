@@ -29,11 +29,16 @@
 #' 
 #' @export
 #'
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` These functions are superseded as of MSEtool 4.0.0 and will be removed in a future release:
+#' - `PMLimit()`
+#' - `PMObj()`
 PMLimit <- function(MSE, ..., Prob=NULL, Labels=NULL, FeaseMPs=NULL,
                     out.file=NULL,
                       output_format="html_document", openFile=TRUE,
                       quiet=TRUE, dir=NULL, RMDfile=NULL, font_size=14,
                       auto_width=FALSE, enableSearch=TRUE, PMlist=NULL, build=TRUE) {
+  .SupersedeLegacy("PMLimit()")
 
   if (!requireNamespace("DT", quietly = TRUE)) {
     stop("DT is needed for this function to work. Please install it.",
@@ -174,6 +179,7 @@ PMObj <- function(MSE, ..., Labels=NULL, out.file=NULL,
                   cols=NULL, show.legend=TRUE,
                   auto_width=FALSE, enableSearch=TRUE, PMlist=NULL, build=TRUE,
                   cex.tex=0.75, inc.title=TRUE, title="Legend") {
+  .SupersedeLegacy("PMObj()")
   
   MP <- prob <- NULL # hacks for cran checks
   

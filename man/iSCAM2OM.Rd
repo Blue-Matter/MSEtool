@@ -122,6 +122,15 @@ R0 and h are recalculated for the operating model by obtaining the stock-recruit
 iSCAM parameters and the mean unfished spawners per recruit in the first \code{ageM} (age of 50\% maturity) years.
 }
 
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} These functions are superseded as of MSEtool 4.0.0 and will be removed in a future release:
+\itemize{
+\item \code{iSCAM2OM()}
+\item \code{iSCAM2Data()} (use \code{\link[=ImportiSCAMData]{ImportiSCAMData()}} instead)
+}
+}
+
 \author{
 T. Carruthers, Q. Huynh
 }

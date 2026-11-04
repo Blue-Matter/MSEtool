@@ -19,8 +19,11 @@
 #' 
 #' @author Q. Huynh and T. Carruthers
 #' @export
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `Awatea2OM()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 Awatea2OM <- function(AwateaDir, nsim = 48, proyears = 50, Name = "OM made by Awatea2OM",
                       Source = "No source provided", Author = "No author provided", verbose = TRUE) {
+  .SupersedeLegacy("Awatea2OM()")
 
   Aenv <- new.env()
   

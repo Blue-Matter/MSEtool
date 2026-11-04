@@ -22,3 +22,8 @@ hist2(x, col, axes = FALSE, main = "", breaks = 10, cex.main = 1)
 \description{
 Produces a blank plot if all values in x are equal
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{hist2()} is superseded as of MSEtool 4.0.0 and will be removed in a future release.
+}
+

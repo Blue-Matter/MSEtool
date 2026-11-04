@@ -25,7 +25,10 @@
 #' Fease(Atlantic_mackerel, TAE=FALSE, names.only=FALSE)
 #' }
 #' @export
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `Fease()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 Fease <- function(Data=NULL, TAC=TRUE, TAE=TRUE, SL=TRUE, Spatial=TRUE, names.only=TRUE, msg=TRUE, include.ref=FALSE) {
+  .SupersedeLegacy("Fease()")
   if (msg) {
     message("Feasible management: ")
     if (TAC) message("TAC - total allowable catch")
@@ -78,7 +81,10 @@ Fease <- function(Data=NULL, TAC=TRUE, TAE=TRUE, SL=TRUE, Spatial=TRUE, names.on
 #' @return a vector of MP names that calculate without errors for the specific data.
 #' @author T. Carruthers
 #' @export
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `RealFease()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 RealFease <- function(Data=NULL){
+  .SupersedeLegacy("RealFease()")
   if(is.null(Data))stop('no data provided')
   if(!methods::is(Data, "Data"))stop('object not of class Data')
   MPs <- avail('MP')

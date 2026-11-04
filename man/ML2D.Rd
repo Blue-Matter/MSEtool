@@ -26,6 +26,11 @@ A highly dubious means of getting very uncertain estimates of current stock
 biomass and (equilibrium) fishing mortality rate from growth, natural
 mortality rate, recruitment and fishing selectivity.
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{ML2D()} is superseded as of MSEtool 4.0.0 and will be removed in a future release.
+}
+
 \author{
 T. Carruthers
 }

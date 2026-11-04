@@ -105,6 +105,15 @@ Create a table of Performance Limits and Performance Objectives
 \item \code{PMObj()}: Create a table of Performance Objectives.
 
 }}
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} These functions are superseded as of MSEtool 4.0.0 and will be removed in a future release:
+\itemize{
+\item \code{PMLimit()}
+\item \code{PMObj()}
+}
+}
+
 \examples{
 \dontrun{
 MSE <- runMSE()

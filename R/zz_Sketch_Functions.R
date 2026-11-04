@@ -45,7 +45,13 @@ NULL
 
 #' @rdname Choose
 #' @export ChooseEffort
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` These functions are superseded as of MSEtool 4.0.0 and will be removed in a future release:
+#' - `ChooseEffort()`
+#' - `ChooseM()`
+#' - `ChooseSelect()`
 ChooseEffort <- function(Fleet, Years = NULL) {
+  .SupersedeLegacy("ChooseEffort()")
   nyears <- Fleet@nyears
   runSketch <- SketchFun(nyears, Years)
   if (!is.null(Years)) Fleet@nyears <- length(Years)
@@ -66,7 +72,10 @@ ChooseEffort <- function(Fleet, Years = NULL) {
 #' @param Years An optional vector of years. Should be nyears long.
 #' @author A. Hordyk
 #' @export SketchFun
+#' @section Superseded:
+#' `r lifecycle::badge("superseded")` `SketchFun()` is superseded as of MSEtool 4.0.0 and will be removed in a future release.
 SketchFun <- function(nyears = NULL, Years = NULL) {
+  .SupersedeLegacy("SketchFun()")
   
   if (length(Years) == 0 & length(nyears) == 0) 
     stop()
@@ -172,6 +181,7 @@ identifyPch <- function(x, y = NULL, n = length(x), pch = 19, ...) {
 #' @rdname Choose
 #' @export ChooseM
 ChooseM <- function(OM, type=c("age", "length"), x=NULL, y=NULL) {
+  .SupersedeLegacy("ChooseM()")
   
   type <- match.arg(type)
   if (methods::is(OM,"OM")) stop("First argument must be object of class 'OM'", call.=FALSE)
@@ -267,6 +277,7 @@ SketchM <- function(x, y, xlab, ylab) {
 #' @rdname Choose
 #' @export ChooseSelect
 ChooseSelect <- function(Fleet, Stock, FstYr = NULL, SelYears = NULL) {
+  .SupersedeLegacy("ChooseSelect()")
   # chk <- class(Fleet@isRel)
   # if (chk == "character") {
   # chkrel <- tolower(Fleet@isRel)
@@ -501,35 +512,6 @@ ChooseVmaxlen <- function(Fleet, Stock, isRel) {
 # #'
 # #' @author A. Hordyk
 # #' @keywords internal
-CheckSelect <- function(Fleet, Stock = NULL) {
-  # NEEDS TO BE FIXED
-  if (length(Fleet@SelYears) < 1) 
-    stop("No break points in selectivity pattern")
-  n <- length(Fleet@SelYears)
-  if (n < 4) 
-    par(mfrow = c(n, 1), mar = c(4, 4, 1, 1), oma = c(2, 3, 1, 1), 
-        bty = "l")
-  if (n >= 4) {
-    N <- ceiling(n/2)
-    par(mfrow = c(N, 2), mar = c(4, 4, 1, 1), oma = c(2, 3, 1, 1), 
-        bty = "l")
-  }
-  for (X in 1:n) {
-    plot(c(0, 3), c(0, 1), type = "n", xlab = "", ylab = "")
-    if (length(Fleet@AbsSelYears) > 0) 
-      title(Fleet@AbsSelYears[X])
-    if (length(Fleet@AbsSelYears) == 0) 
-      title(Fleet@SelYears[X])
-    polygon(x = c(0, max(Fleet@L5[X, ]), max(Fleet@LFS[X, ]), 3, rev(c(0, 
-                                                                       min(Fleet@L5[X, ]), min(Fleet@LFS[X, ]), 3))), y = c(0, 0.05, 
-                                                                                                                            1, min(Fleet@Vmaxlen[X, ]), rev(c(0, 0.05, 1, max(Fleet@Vmaxlen[X, 
-                                                                                                                                                                                            ])))), col = "grey")
-    lines(c(1, 1), c(0, 1), lty = 3)
-    text(1.1, 0.2, "L50", cex = 1.25)
-  }
-  mtext(side = 2, outer = TRUE, "Selectivity", cex = 1.25, xpd = NA)
-  mtext(side = 1, outer = TRUE, "Relative Length", cex = 1.25, xpd = NA)
-}
 
 
 

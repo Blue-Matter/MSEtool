@@ -1205,7 +1205,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
           }
           
           DataList[[p]][[f]] <- updatedData$Data
-          ObsPars <- updatedData$ObsPar
+          ObsPars <- updatedData$ObsPars
         }
       }
     }

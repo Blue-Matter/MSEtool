@@ -30,6 +30,11 @@ A function of class MP with argument MP_parname tuned by optim to minimize minfu
 A generic function that uses optimize to tune a single MP parameter to minimize a
 user-specified function (e.g. squared distance from a mean yield, PGK = 60\%, etc.)
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{tune_MP()} is superseded as of MSEtool 4.0.0 and will be removed in a future release. Use \code{\link[=TuneMP]{TuneMP()}} instead.
+}
+
 \examples{
 \dontrun{
 testOM@cpars$Data = new('Data')

@@ -28,6 +28,11 @@ A function for calculating a movement matrix from user specified distribution am
 Used by \link{simmov2} to generate movement matrices for an operating model. There must be a prior on the positive diagonal of the movement matrix or these will tend to 1
 and hence perfectly satisfy the requirement V = MV.
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{makemov2()} is superseded as of MSEtool 4.0.0 and will be removed in a future release.
+}
+
 \seealso{
 \link{simmov2}
 }

@@ -46,6 +46,11 @@ of the stock recruitment curve, maximum length, maximum growth rate, age at
 maturity, age based vulnerability, maturity at age, maximum age and number
 of historical years of fishing.
 }
+\section{Superseded}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} \code{CSRA()} is superseded as of MSEtool 4.0.0 and will be removed in a future release.
+}
+
 \author{
 T. Carruthers
 }
