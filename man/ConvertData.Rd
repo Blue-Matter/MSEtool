@@ -67,6 +67,15 @@ selected for \code{Data@Ind} (\code{Survey} preferred over \code{CPUE}, then mos
 complete, then longest span). Slots with no equivalent in \code{data} (see
 \code{Data@Misc$UnmappedSlots} on the result) are left \code{NA}. Every lossy or
 approximated mapping is recorded in \code{Data@Log} (see \code{\link[=Log]{Log()}}).
+
+\code{FMSY_M} is \code{Reference@FMSY} divided by \code{Mort}, \code{BMSY_B0} is
+\code{Reference@SBMSY} divided by the unfished spawning biomass
+(\code{Reference@Misc$SB0}), and \code{Cref} is \code{Reference@MSYLandings} when
+\code{Landings@Ref} is not set. \code{ML}, \code{Lc} (modal length) and \code{Lbar} (mean
+length above \code{Lc}) are calculated from \code{CAL}, \code{AvC} is the mean of \code{Cat},
+and \code{Dt} is \code{Dep}. Years with a missing \code{CV_Cat} take the mean of the
+other years. Life-history CVs not given in \code{data} keep the legacy \code{Data}
+defaults.
 }
 }
 \examples{
