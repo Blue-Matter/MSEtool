@@ -31,6 +31,7 @@ The following legacy slots are mapped to their current equivalents:\tabular{ll}{
    \code{Cobs} \tab \code{Landings@CV} and \code{Discards@CV} \cr
    \code{Cbiascv} \tab \code{Landings@Bias} and \code{Discards@Bias} \cr
    \code{Iobs} \tab \code{CPUE@CV} and \code{Survey@CV} \cr
+   \code{Irefbiascv} \tab \code{CPUE@Ref} and \code{Survey@Ref} \cr
 }
 
 
@@ -44,6 +45,7 @@ bias CV is the CV of the lognormal from which one bias per simulation is
 drawn, which is how a scalar \code{Bias} is interpreted:\tabular{ll}{
    Legacy slot \tab New slot \cr
    \code{Linfbiascv}, \code{Kbiascv}, \code{t0biascv} \tab \code{LifeHistory@Length}, \code{Bias} of \code{Linf}, \code{K}, \code{t0} \cr
+   (none) \tab \code{LifeHistory@Weight}, observed without error \cr
    \code{Mbiascv} \tab \code{LifeHistory@NaturalMortality}, \code{Bias} of \code{M} \cr
    \code{LenMbiascv} \tab \code{LifeHistory@Maturity}, \code{Bias} of \code{L50} \cr
    \code{hbiascv}, \code{sigmaRbiascv} \tab \code{LifeHistory@SRR}, \code{Bias} of \code{h} and \code{SD} \cr
@@ -51,6 +53,9 @@ drawn, which is how a scalar \code{Bias} is interpreted:\tabular{ll}{
    \code{LFCbiascv}, \code{LFSbiascv} \tab \code{Exploitation@Selectivity}, \code{Bias} of \code{L5} and \code{LFS} \cr
 }
 
+
+A component whose legacy bias CVs are missing or zero is observed without
+error.
 }
 
 \subsection{Slots Not Converted}{
@@ -58,7 +63,9 @@ drawn, which is how a scalar \code{Bias} is interpreted:\tabular{ll}{
 The following legacy slots do not have a corresponding slot in the current
 \link[=obs-class]{obs} and are dropped:
 \itemize{
-\item Reference point bias CVs: \code{FMSY_Mbiascv}, \code{BMSY_B0biascv}
+\item Reference point bias CVs: \code{FMSY_Mbiascv}, \code{BMSY_B0biascv}, \code{Crefbiascv},
+\code{Brefbiascv}. The MSY reference points in simulated data are reported
+without error.
 }
 }
 }
