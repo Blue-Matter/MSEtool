@@ -29,7 +29,7 @@
     LegacyData <- Convert(Data, silent = TRUE)
     Rec <- tryCatch(
       .LegacyMP(x = 1, Data = LegacyData, reps = 1, plot = FALSE),
-      error = \(e) .LegacyMPError(e, LegacyData)
+      error = \(e) .LegacyMPError(e, LegacyData, .LegacyMP)
     )
     .Rec2Advice(Rec, LegacyData)
   }
@@ -42,17 +42,65 @@
   wrapped
 }
 
-# legacy Data life-history slots read by DLMtool/SAMtool MPs
+# [1, Stock, 1] array of one sim at the last historical year
+.ReferenceSnapshot <- function(x, sim, stocks, Year, Complex = NULL) {
+  if (!length(x) || length(dim(x)) != 3) return(NULL)
+  StockDim <- dimnames(x)[[2]]
+  Ind <- if (!is.null(Complex) && Complex %in% StockDim) match(Complex, StockDim) else stocks
+  if (max(Ind) > dim(x)[2]) return(NULL)
+  x <- .SnapshotYear(x, Year)
+  x <- x[min(sim, dim(x)[1]), Ind, , drop = FALSE]
+  dimnames(x)[[1]] <- "1"
+  x
+}
+
+# `Data@Reference` with the MSY reference points and unfished biomass of a complex in the last historical year, without observation error
+.AddLegacyReference <- function(Data, Hist, sim, Complex) {
+  Ref <- Data@Reference
+  MSY <- Hist@Reference@MSY
+  if (is.null(MSY) || !length(MSY@FMSY)) return(Data)
+  stocks <- Hist@OM@Complexes[[Complex]]
+  if (is.null(stocks)) return(Data)
+  Year <- max(Years(Hist, 'H'))
+  for (s in c("FMSY", "BMSY", "SBMSY", "SPRMSY", "MSYLandings", "MSYDiscards")) {
+    if (length(methods::slot(Ref, s))) next
+    Val <- .ReferenceSnapshot(methods::slot(MSY, s), sim, stocks, Year, Complex)
+    if (!is.null(Val)) methods::slot(Ref, s) <- Val
+  }
+  Eq <- Hist@Unfished@Equilibrium
+  for (s in c("Biomass", "SBiomass")) {
+    nm <- if (s == "Biomass") "B0" else "SB0"
+    if (is.null(Ref@Misc[[nm]]))
+      Ref@Misc[[nm]] <- .ReferenceSnapshot(methods::slot(Eq, s), sim, stocks, Year)
+  }
+  Data@Reference <- Ref
+  Data
+}
+
 .LegacyLifeHistorySlots <- c('Mort', 'vbK', 'vbLinf', 'vbt0', 'L50', 'L95',
                              'wla', 'wlb', 'steep', 'MaxAge')
 
-.LegacyMPError <- function(e, LegacyData) {
-  Slots <- .LegacyLifeHistorySlots[vapply(.LegacyLifeHistorySlots, \(sl)
-    methods::.hasSlot(LegacyData, sl) && all(is.na(methods::slot(LegacyData, sl))), logical(1))]
+# legacy `Data` slots an MP refers to as `Data@<slot>`
+.LegacyMPSlots <- function(MP) {
+  Src <- paste(deparse(MP), collapse = " ")
+  Slots <- methods::slotNames("Data")
+  Slots[vapply(Slots, \(sl) grepl(paste0("Data@", sl, "([^A-Za-z0-9_.]|$)"), Src), logical(1))]
+}
+
+.LegacyMPError <- function(e, LegacyData, MP = NULL) {
+  Used <- if (is.function(MP)) .LegacyMPSlots(MP) else character()
+  Slots <- Used[vapply(Used, \(sl) {
+    v <- methods::slot(LegacyData, sl)
+    (is.numeric(v) || is.logical(v)) && length(v) > 0 && all(is.na(v))
+  }, logical(1))]
   msg <- conditionMessage(e)
-  if (length(Slots))
-    msg <- paste0(msg, " (legacy `Data` life-history slots ", paste0("`", Slots, "`", collapse = ", "),
-                  " are NA: life-history data are not generated for simulated data unless the Obs of the OM sets LifeHistoryObs())")
+  if (length(Slots)) {
+    LH <- if (any(Slots %in% .LegacyLifeHistorySlots))
+      "; life-history data are not generated for simulated data unless the Obs of the OM sets LifeHistoryObs()"
+    msg <- paste0(msg, " (legacy `Data` slot", if (length(Slots) > 1) "s", " used by the MP ",
+                  paste0("`", Slots, "`", collapse = ", "), if (length(Slots) > 1) " are" else " is",
+                  " NA", LH, ")")
+  }
   stop(msg, call. = FALSE)
 }
 
