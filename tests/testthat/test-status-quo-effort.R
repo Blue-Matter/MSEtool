@@ -11,11 +11,11 @@
   names(MPs)
 }
 
-test_that(".CheckTACEffort() turns empty advice into flagged relative effort 1", {
+test_that(".CheckTACEffort() turns empty advice into flagged effort that is not set", {
   Fleets <- c("F1", "F2")
   Out <- .CheckTACEffort(list(list(A = Advice(), B = Advice(TAC = 10))), Fleets)
   sq <- Out[[1]]$A
-  expect_equal(as.numeric(sq@Effort), c(1, 1))
+  expect_equal(as.numeric(sq@Effort), c(NA_real_, NA_real_))
   expect_identical(names(dimnames(sq@Effort)), "Fleet")
   expect_identical(sq@EffType, "Rel")
   expect_true(sq@Misc$StatusQuoEffort)
@@ -155,9 +155,13 @@ test_that("an area-matrix effort advice sets the area split only while it is in 
 
     expect_equal(range(Eff[, First, 1, mp]), c(0.2, 0.2), tolerance = 1e-8)
     expect_equal(range(Eff[, First, 2, mp]), c(0.4, 0.4), tolerance = 1e-8)
-    for (fl in 1:2)
-      expect_equal(unname(Eff[, Later, fl, mp]),
-                   matrix(LastEff[, fl], om@nSim, length(Later)), ignore_attr = TRUE,
-                   tolerance = 1e-8)
+  }
+
+  # relative effort is relative to the last historical year; empty advice keeps last year's effort
+  for (fl in 1:2) {
+    expect_equal(unname(Eff[, Later, fl, "MatThenRel"]),
+                 matrix(LastEff[, fl], om@nSim, length(Later)), ignore_attr = TRUE,
+                 tolerance = 1e-8)
+    expect_equal(range(Eff[, Later, fl, "MatThenEmpty"]), rep(c(0.2, 0.4)[fl], 2), tolerance = 1e-8)
   }
 })

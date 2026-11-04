@@ -116,14 +116,10 @@
   TACType_by_Complex <- .ResolveTACTypeByComplex(AdviceList, Complexes, nFleet_loc)
   TACUnit_by_Complex <- .ResolveTACUnitByComplex(AdviceList, Complexes, nFleet_loc)
 
-  HasEffortAdvice <- any(purrr::map_lgl(AdviceList, \(a) {
-    inherits(a, 'advice') && !is.null(a@Effort)
-  }))
-  MaxFleetEffort <- if (HasEffortAdvice) {
-    Proj@Effort[sim, TSIndex, ]
-  } else {
-    rep(NA_real_, nFleet_loc)
-  }
+  # an effort control caps a fleet's TAC effort; fleets without one have NA
+  EffortSet <- Proj@Misc$EffortSet
+  EffortSet <- if (is.null(EffortSet)) rep(FALSE, nFleet_loc) else EffortSet[sim, ]
+  MaxFleetEffort <- ifelse(EffortSet, Proj@Effort[sim, TSIndex, ], NA_real_)
 
   EffortMax <- .FleetMaximumEffort(Proj, sim, TSIndex)
 
@@ -182,12 +178,10 @@
   HasTAC  <- any(!vapply(TAC_by_Complex, is.null, logical(1)))
 
   if (length(BagCons) && HasTAC) {
-    # last step's effort is carried forward for fleets without a TAC: restore its trips,
-    # then shorten them by this step's stop-mode fishing-time fraction
-    PrevYear    <- as.numeric(dimnames(Proj@Effort)[[2]][TSIndex - 1L])
-    PrevNominal <- ProjSim@Effort[1, TSIndex - 1L, ] / .BagTimeFraction(Proj, PrevYear)[sim, ]
+    # fleets without a TAC fish their nominal effort, shortened by this step's stop-mode fishing time
+    Nominal <- ProjSim@Effort[1, TSIndex, ]
     SolveBag <- function(P, TimeFrac) {
-      P@Effort[1, TSIndex - 1L, ] <- PrevNominal * TimeFrac
+      P@Effort[1, TSIndex, ] <- Nominal * TimeFrac
       SolveEffort(P, TimeFrac)
     }
     Sol    <- .SolveBagLimit(ProjSim, Year, TSIndex, BagCons, SolveEffort = SolveBag)

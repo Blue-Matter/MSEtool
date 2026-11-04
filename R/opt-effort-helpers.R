@@ -160,7 +160,11 @@
     if (is.null(TAC_by_Complex[[cx]])) next
 
     start_cx <- if (is.null(Effort_start)) NULL else Effort_start[cx, ]
-    if (!is.null(start_cx) && !all(is.finite(start_cx))) start_cx <- NULL
+    if (!is.null(start_cx) && !any(is.finite(start_cx))) start_cx <- NULL
+    if (!is.null(start_cx)) {
+      miss <- !is.finite(start_cx)
+      start_cx[miss] <- Proj@Effort[sim, TSIndex, miss]
+    }
 
     solved <- .OptEffortSingleStock(
       Proj               = Proj,
@@ -176,6 +180,8 @@
       ...
     )
     out[cx, ]        <- solved$Effort
+    # a fleet without a TAC in this complex is not limited by it
+    out[cx, !is.finite(TAC_by_Complex[[cx]])] <- NA
     converged_cx[cx] <- solved$converged
     saturated_cx[cx] <- solved$saturated
   }
@@ -401,23 +407,37 @@
 .ResolveChokeEffort <- function(Proj, sim, TSIndex, Year, Delta,
                                 TAC_by_Complex, TACType_by_Complex,
                                 TACUnit_by_Complex, Compliance,
-                                MaxFleetEffort = NULL, Effort_start = NULL, ...) {
+                                MaxFleetEffort = NULL, Effort_start = NULL,
+                                maxMixedIter = 20L, mixed_tol = 1e-6, ...) {
 
   Effort_curr <- Proj@Effort[sim, TSIndex, ]
   ProjTmp     <- .WriteStateToProj(Proj, sim, TSIndex,
                                    Effort = Effort_curr, Delta = Delta)
 
-  EbyC <- .SolveEffortByComplex(ProjTmp, Year, TSIndex, sim,
-                                TAC_by_Complex, TACType_by_Complex,
-                                TACUnit_by_Complex, MaxFleetEffort,
-                                Effort_start = Effort_start, ...)
+  # fleets with a TAC in one complex but not another fish their combined effort in the
+  # complex without one, so those complexes are re-solved until that effort settles
+  HasTAC <- do.call(rbind, lapply(TAC_by_Complex, \(x) if (is.null(x)) NULL else is.finite(x)))
+  Mixed  <- if (is.null(HasTAC)) logical(0) else apply(HasTAC, 2, any) & !apply(HasTAC, 2, all)
 
-  Effort <- .CombineEffortByCompliance(EbyC, Compliance)
+  for (it in seq_len(if (any(Mixed)) maxMixedIter else 1L)) {
+    EbyC <- .SolveEffortByComplex(ProjTmp, Year, TSIndex, sim,
+                                  TAC_by_Complex, TACType_by_Complex,
+                                  TACUnit_by_Complex, MaxFleetEffort,
+                                  Effort_start = Effort_start, ...)
 
-  unset <- !is.finite(Effort)
-  if (any(unset)) Effort[unset] <- Effort_curr[unset]
+    Effort <- .CombineEffortByCompliance(EbyC, Compliance)
 
-  Effort  <- .ApplyEffortCeiling(Effort, MaxFleetEffort)
+    unset <- !is.finite(Effort)
+    if (any(unset)) Effort[unset] <- Effort_curr[unset]
+
+    Effort <- .ApplyEffortCeiling(Effort, MaxFleetEffort)
+    if (!any(Mixed)) break
+
+    Assumed <- ProjTmp@Effort[sim, TSIndex, Mixed]
+    if (all(abs(Effort[Mixed] - Assumed) <= mixed_tol * pmax(abs(Assumed), 1e-8))) break
+    ProjTmp@Effort[sim, TSIndex, Mixed] <- Effort[Mixed]
+    Effort_start <- EbyC
+  }
   ProjTmp <- .WriteStateToProj(ProjTmp, sim, TSIndex,
                                Effort = Effort, Delta = Delta)
 

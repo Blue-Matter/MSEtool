@@ -32,12 +32,14 @@
                           StockNames,
                           EverySeason = FALSE) {
 
-  nSim   <- Proj@OM@nSim
-  Season <- SeasonOfYear(c(YearsHist, YearsProj), Proj@OM@Seasons, Year)$SeasonInd
+  nSim    <- Proj@OM@nSim
+  Season  <- SeasonOfYear(c(YearsHist, YearsProj), Proj@OM@Seasons, Year)$SeasonInd
+  TSIndex <- match(Year, c(YearsHist, YearsProj))
+
+  Proj <- .SetCarryForwardEffort(Proj, TSIndex, c(YearsHist, YearsProj))
 
   # effort set by TAC advice takes the engine's area split
   if (.AllAdviceNull(AdviceSimList, 'Effort')) {
-    TSIndex <- match(Year, c(YearsHist, YearsProj))
     Proj@Distribution[, TSIndex:dim(Proj@Distribution)[2], , ] <- NA
     return(Proj)
   }
@@ -148,6 +150,7 @@
 
   # EffType per fleet per complex, to identify which fleets take the shape
   EffTypeMat <- matrix('Abs', nrow = nFleet, ncol = nComplex)
+  StatusQuoDist <- NULL
 
   for (i in seq_len(nComplex)) {
     Advice         <- AdviceList[[i]]
@@ -202,6 +205,7 @@
         SeasonalEffortAllocation[[i]][sim, , ] <- LastEffort$shape / nSeason
       Distribution[i] <- list(.StatusQuoDistribution(Proj, sim, ProjInd, length(YearsHist),
                                                      nSeason, FleetNames, Areas))
+      StatusQuoDist <- Distribution[[i]]
     }
 
 
@@ -239,8 +243,26 @@
     EffectiveArray[compset] <- EffortArray[compset] / pmax(Compliance[compset], 1e-3)
   }
 
-  MinEffortInd    <- apply(EffectiveArray, 1, which.min) |> as.numeric()
-  MinEffortValues <- EffectiveArray[cbind(seq_len(nrow(EffectiveArray)), MinEffortInd)]
+  # NA effort is not set: a fleet is controlled by the lowest effort among complexes that set it
+  MinEffortInd <- vapply(seq_len(nFleet), \(fl) {
+    ok <- which(is.finite(EffectiveArray[fl, ]))
+    if (length(ok)) ok[which.min(EffectiveArray[fl, ok])] else NA_integer_
+  }, integer(1))
+  Set <- !is.na(MinEffortInd)
+
+  if (is.null(Proj@Misc$EffortSet))
+    Proj@Misc$EffortSet <- matrix(FALSE, Proj@OM@nSim, nFleet)
+  Proj@Misc$EffortSet[sim, ] <- Set
+
+  # fleets with no effort control take the status-quo area split, if any complex asked for one
+  if (!is.null(StatusQuoDist))
+    for (fl in which(!Set))
+      Proj@Distribution[sim, ProjInd, fl, ] <- StatusQuoDist[1, , fl, ]
+
+  if (!any(Set))
+    return(Proj)
+
+  MinEffortValues <- EffectiveArray[cbind(seq_len(nFleet), MinEffortInd)]
   MinEffortInd    <- effort_idx[MinEffortInd]
 
   EffortMat <- matrix(MinEffortValues,
@@ -251,12 +273,12 @@
   if (SplitAnnual) {
     seas     <- ((ProjInd - 1L) %% nSeason) + 1L
     ShapeMat <- matrix(1, nrow = length(ProjInd), ncol = nFleet)
-    for (fl in seq_len(nFleet))
+    for (fl in which(Set))
       ShapeMat[, fl] <- SeasonalEffortAllocation[[MinEffortInd[fl]]][sim, seas, fl]
     EffortMat <- EffortMat * ShapeMat
   } else if (nSeason > 1L) {
     RelFleet <- vapply(seq_len(nFleet),
-                       \(fl) identical(EffTypeMat[fl, MinEffortInd[fl]], 'Rel'),
+                       \(fl) Set[fl] && identical(EffTypeMat[fl, MinEffortInd[fl]], 'Rel'),
                        logical(1))
     if (any(RelFleet)) {
       seas <- ((ProjInd - 1L) %% nSeason) + 1L
@@ -266,10 +288,10 @@
   }
 
   EffortMat <- .CapEffortAtMaximum(Proj, sim, ProjInd, EffortMat)
-  Proj@Effort[sim, ProjInd, ] <- EffortMat
+  Proj@Effort[sim, ProjInd, Set] <- EffortMat[, Set]
 
   # Each fleet takes the area distribution of its binding complex, if one was specified
-  for (fl in seq_len(nFleet)) {
+  for (fl in which(Set)) {
     FleetDist <- Distribution[[MinEffortInd[fl]]]
     if (!is.null(FleetDist))
       Proj@Distribution[sim, ProjInd, fl, ] <- FleetDist[1, , fl, ]
@@ -291,7 +313,7 @@
       sim        = 1L,
       StockNames = StockNames,
       FleetNames = FleetNames,
-      Effort     = EffortMat[1, ],
+      Effort     = Proj@Effort[sim, TSIndex, ],
       lambda     = lambda,
       n_recent   = n_recent,
       maxEval    = maxEval
@@ -300,6 +322,19 @@
     Proj@Misc$StockTargeting[sim, , , TSIndex] <- t(result$Delta)
   }
 
+  Proj
+}
+
+# Effort for this time step before any control applies: last year's nominal effort in the same
+# season, capped at `Effort@Maximum`; no fleet has an effort control yet
+.SetCarryForwardEffort <- function(Proj, TSIndex, AllYears) {
+  nSim   <- Proj@OM@nSim
+  nFleet <- dim(Proj@Effort)[3]
+  Prev   <- max(1L, TSIndex - max(1L, as.integer(Proj@OM@Seasons)))
+  Effort <- matrix(Proj@Effort[, Prev, ], nSim, nFleet) / .BagTimeFraction(Proj, AllYears[Prev])
+  for (sim in seq_len(nSim))
+    Proj@Effort[sim, TSIndex, ] <- .ApplyEffortCeiling(Effort[sim, ], .FleetMaximumEffort(Proj, sim, TSIndex))
+  Proj@Misc$EffortSet <- matrix(FALSE, nSim, nFleet)
   Proj
 }
 
@@ -355,14 +390,20 @@
 
   ProjInd      <- TSIndex:dim(Proj@Distribution)[2]
   n            <- length(ProjInd)
+  # NA cells are not set: an all-NA row leaves the fleet uncontrolled, other NA cells get no effort
+  NotSet       <- apply(is.na(Advice@Effort), 1, all)
+  Advice@Effort[is.na(Advice@Effort)] <- 0
   mat          <- .RelAreaEffort(Advice@Effort)                          # fleet x area
+  mat[NotSet, ] <- NA
   Distribution          <- array(rep(mat, each = n), dim = c(n, nrow(mat), ncol(mat))) # year x fleet x area
   dimnames(Distribution) <- list(Year=c(YearsHist,YearsProj)[ProjInd],
                         Fleet=FleetNames,
                         Area=seq_len(nArea))
   Distribution <- AddDimension(Distribution, name='Sim', val=sim, pos=1)
   
-  Advice@Effort <- array(rowSums(Advice@Effort))
+  Total         <- rowSums(Advice@Effort)
+  Total[NotSet] <- NA
+  Advice@Effort <- array(Total)
   dimnames(Advice@Effort) <- list(Fleet=FleetNames)
   
   list(Distribution = Distribution, Advice = Advice)
