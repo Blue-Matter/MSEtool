@@ -23,7 +23,8 @@
 #'
 #' The existing objects are returned unchanged if the index data of
 #' simulation 1 is empty or already contains `DataYear`. Index values supplied
-#' for projection years in `OM@Data` are used as-is. Otherwise, for each
+#' for projection years in `OM@Data` are matched by index name and used as-is;
+#' an index with no value for `DataYear` is simulated. Otherwise, for each
 #' simulation, an index is not simulated if it has no historical observations,
 #' or if the number of calendar years between its last historical observation
 #' and the last historical year exceeds the [indicesobs-class] `MaxGap`.
@@ -67,13 +68,15 @@
     if (EmptyObject(IndexObs)) next
     if (is.null(IndexObs@Areas)) IndexObs@Areas <- seq_len(nArea)
 
-    omRow <- .OMDataRow(omData, type, DataYear)
+    omRow   <- .OMDataRow(omData, type, DataYear)
+    omCol   <- if (is.null(omData)) NA_integer_ else match(IndexData1@Name[fl], slot(omData, type)@Name)
+    omValue <- if (!is.na(omRow) && !is.na(omCol)) slot(omData, type)@Value[omRow, omCol] else NA_real_
 
-    if (!is.na(omRow) && ncol(slot(omData, type)@Value) >= fl) {
+    if (is.finite(omValue)) {
       for (x in seq_len(nSim)) {
-        NewValueAll[x, fl] <- slot(omData, type)@Value[omRow, fl]
+        NewValueAll[x, fl] <- omValue
         NewCVAll[x, fl]    <- .ResolveCV(Proj, type, i, fl, TSIndex,
-                                        slot(Proj@Data[[x]][[i]], type), DataYear, IndexObs)
+                                        slot(Proj@Data[[x]][[i]], type), DataYear, IndexObs, omCol)
       }
       next
     }
@@ -85,9 +88,7 @@
       Gap <- .ObsGap(dimnames(Value_x)[[1]], is.finite(Value_x[, fl]), LastHistYear)
       if (is.infinite(Gap) || .ExceedsMaxGap(IndexObs, Gap)) next
 
-      Pop_Number <- purrr::map(Real_Pop_Number_All, \(a)
-        a[x, , IndexObs@Areas %||NA% seq_len(nArea), drop = FALSE] |> abind::adrop(1)
-      )
+      Pop_Number <- purrr::map(Real_Pop_Number_All, \(a) a[x, , , drop = FALSE] |> abind::adrop(1))
 
       real_nom_index <- .CalcNomIndex(
         Number_List      = Pop_Number,
@@ -111,7 +112,7 @@
         NewValueAll[x, fl] <- NewValueAll[x, fl] *
           .qIncMultiplier(IndexObs@qInc[min(x, length(IndexObs@qInc))], Elapsed)
       NewCVAll[x, fl]    <- .ResolveCV(Proj, type, i, fl, TSIndex,
-                                      slot(Proj@Data[[x]][[i]], type), DataYear, IndexObs)
+                                      slot(Proj@Data[[x]][[i]], type), DataYear, IndexObs, omCol)
     }
   }
 

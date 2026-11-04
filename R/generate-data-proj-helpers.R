@@ -64,12 +64,12 @@
   projValue * obsError * obsBias
 }
 
-.ResolveCV <- function(Proj, slotname, i, fl, TSIndex, DataObject, DataYear, Obs = NULL) {
+.ResolveCV <- function(Proj, slotname, i, fl, TSIndex, DataObject, DataYear, Obs = NULL, omCol = fl) {
   omData <- Proj@OM@Data[[i]]
   omRow  <- .OMDataRow(omData, slotname, DataYear, "CV")
-  if (!is.na(omRow) && ncol(slot(omData, slotname)@CV) >= fl &&
-      !is.na(slot(omData, slotname)@CV[omRow, fl]))
-    return(slot(omData, slotname)@CV[omRow, fl])
+  if (!is.na(omRow) && !is.na(omCol) && ncol(slot(omData, slotname)@CV) >= omCol &&
+      !is.na(slot(omData, slotname)@CV[omRow, omCol]))
+    return(slot(omData, slotname)@CV[omRow, omCol])
 
   ObsCV <- .DataCVYears(Obs, DataYear, NA_real_)
   if (!is.na(ObsCV)) return(ObsCV)

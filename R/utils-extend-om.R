@@ -97,13 +97,15 @@
       if (show) {
         cli::cli_progress_update(id=id)
       }
+      IndexSel <- .GetIndexSelectivity(OM@Obs[[st]])
       # Obs arrays are ReduceDims() output of full-length arrays; step-fill inverts it
-      OM@Obs[[st]] <- Extend(OM@Obs[[st]],
+      OM@Obs[[st]] <- Extend(.SetIndexSelectivity(OM@Obs[[st]]),
                              nSim = nSim,
                              AgeClasses = AgeClasses,
                              Years = Years,
                              Areas = Areas,
                              maintain_seasonal_pattern = FALSE)
+      OM@Obs[[st]] <- .SetIndexSelectivity(OM@Obs[[st]], IndexSel, Years)
     }
 
 
@@ -121,4 +123,32 @@
   OM@StockTargeting <- Extend(OM@StockTargeting, nSim=nSim, Years=Years)
   
   OM
+}
+
+# index Selectivity by fleet and type; NULL for non-obs elements
+.GetIndexSelectivity <- function(ObsList) {
+  lapply(ObsList, \(obs) {
+    if (!methods::is(obs, 'obs')) return(NULL)
+    list(CPUE = obs@CPUE@Selectivity, Survey = obs@Survey@Selectivity)
+  })
+}
+
+# sets index Selectivity from `Sel` (NULL clears it)
+.SetIndexSelectivity <- function(ObsList, Sel = NULL, Years = NULL) {
+  for (fl in seq_along(ObsList)) {
+    if (!methods::is(ObsList[[fl]], 'obs')) next
+    for (type in c('CPUE', 'Survey'))
+      slot(ObsList[[fl]], type)@Selectivity <- .ExtendIndexSelectivityYears(Sel[[fl]][[type]], Years)
+  }
+  ObsList
+}
+
+# step-fills reduced years through the last calendar year, then repeats the seasonal pattern (seasonal age classes)
+.ExtendIndexSelectivityYears <- function(sel, Years) {
+  if (is.list(sel)) return(lapply(sel, .ExtendIndexSelectivityYears, Years = Years))
+  yr <- dimnames(sel)[['Year']]
+  if (is.null(Years) || is.null(yr)) return(sel)
+  Within <- Years[Years < floor(max(as.numeric(yr))) + 1]
+  ExtendYears(sel, Within, maintain_seasonal_pattern = FALSE) |>
+    ExtendYears(Years, maintain_seasonal_pattern = TRUE)
 }
