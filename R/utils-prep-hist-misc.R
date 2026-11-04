@@ -352,8 +352,8 @@
   if (length(FleetList) < 2) return(invisible(NULL))
   Values <- list(
     Mode = \(e) e@Mode %||% "Density",
-    Targeting = \(e) sort(unique(c(e@Targeting %||% 1))),
-    ReleaseValue = \(e) sort(unique(c(.EffortReleaseValue(e) %||% 0))))
+    Targeting = \(e) .UniqueTol(e@Targeting %||% 1),
+    ReleaseValue = \(e) .UniqueTol(.EffortReleaseValue(e) %||% 0))
   for (fl in seq_along(FleetList[[1]])) {
     for (sl in names(Values)) {
       v <- purrr::map(FleetList, \(Fleets) Values[[sl]](Fleets[[fl]]@Effort))
@@ -363,4 +363,11 @@
     }
   }
   invisible(NULL)
+}
+
+# sorted unique values, treating values within a relative `tol` as equal
+.UniqueTol <- function(x, tol = sqrt(.Machine$double.eps)) {
+  x <- sort(unique(as.vector(x)))
+  if (length(x) < 2) return(x)
+  x[c(TRUE, diff(x) > tol * pmax(1, abs(x[-1])))]
 }

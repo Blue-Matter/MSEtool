@@ -87,6 +87,29 @@ test_that("a fleet with a reachable TAC catches it while another fishes to its c
   expect_length(.EffortConvergenceLog(MSE), 0)
 })
 
+test_that("a TAC reachable only while the other fleet fishes lightly is caught", {
+  skip_on_cran()
+  om <- TwoFleetOM
+  nSim(om) <- 3
+  pYear(om) <- 2
+  Hist <- Simulate(om, silent = TRUE)
+  Alone <- TACAttainment(Project(Hist, MPs = list(OneFleet = .TACMP(c(1e9, 0))),
+                                 parallel = FALSE, silent = TRUE))
+  Alone <- Alone[Alone$Fleet == FleetNames(Hist)[1] & Alone$Year == min(Alone$Year), ]
+  TAC2  <- 0.1 * mean(.LastCatch(Hist)[, 2])
+  assign('.TACAlone', cbind(0.8 * Alone$Catch[order(Alone$Sim)], TAC2), globalenv())
+  on.exit(rm('.TACAlone', envir = globalenv()), add = TRUE)
+  Near <- function(Data) Advice(TAC = .TACAlone[Data@Misc$Sim, ])
+  class(Near) <- 'mp'
+
+  MSE <- Project(Hist, MPs = list(Near = Near), parallel = FALSE, silent = TRUE)
+  df  <- TACAttainment(MSE)
+  df  <- df[df$Year == min(df$Year), ]
+  expect_true(all(df$Limit == 'None'))
+  expect_equal(df$Catch, df$TAC, tolerance = 1e-3)
+  expect_length(.EffortConvergenceLog(MSE), 0)
+})
+
 test_that("Effort@Maximum caps effort for TACs and effort advice", {
   skip_on_cran()
   om <- SingleStockOM
