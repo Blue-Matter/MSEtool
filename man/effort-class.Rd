@@ -23,14 +23,20 @@ management procedures. See \code{\link[=Effort]{Effort()}}.}
 \item{\code{Distribution}}{\code{numeric} array or \code{NULL}. Fraction of total effort
 allocated to each spatial area (\verb{Sim x Year x Area}). See \code{\link[=Effort]{Effort()}}.}
 
-\item{\code{Targeting}}{\code{numeric} array or \code{NULL}. Fleet targeting concentration
-parameter (\verb{Sim x Year}). See \code{\link[=Effort]{Effort()}}.}
+\item{\code{Targeting}}{\code{numeric} array or \code{NULL}. Spatial targeting exponent
+(\verb{Sim x Year}). See \code{\link[=Effort]{Effort()}}.}
+
+\item{\code{ReleaseValue}}{\code{numeric} array or \code{NULL}. Value of released catch
+relative to retained catch in the spatial effort utility (\verb{Sim x Year}).
+See \code{\link[=Effort]{Effort()}}.}
 
 \item{\code{Maximum}}{\code{numeric} array or \code{NULL}. Maximum allowable effort in
 projections (\verb{Sim x Year}). See \code{\link[=Effort]{Effort()}}.}
 
-\item{\code{Mode}}{\code{character} or \code{NULL}. Spatial utility calculation mode:
-\code{"Density"} (default) or \code{"Biomass"}. See \code{\link[=Effort]{Effort()}}.}
+\item{\code{Mode}}{\code{character} or \code{NULL}. How effort in an area becomes fishing
+mortality: \code{"Density"} (default), in proportion to effort per unit area,
+or \code{"Biomass"}, in proportion to the effort share in the area regardless
+of its size. See \code{\link[=Effort]{Effort()}}.}
 
 \item{\code{TripsScalar}}{\code{numeric} array or \code{NULL}. Time-varying scalar
 \eqn{\alpha_f(t)} converting the effort index to absolute angler trip

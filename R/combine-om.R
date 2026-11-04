@@ -287,6 +287,10 @@ CombineOMs <- function(
                                    Years = HistYears, backfill = TRUE) |>
     ReduceDims(IncYear = TRUE)
 
+  Fleet@Effort@ReleaseValue <- Extend(.EffortReleaseValue(Fleet@Effort),
+                                      Years = HistYears, backfill = TRUE) |>
+    ReduceDims(IncYear = TRUE)
+
   Fleet@Effort@StockTargetingLambda <- Extend(Fleet@Effort@StockTargetingLambda,
                                               Years = HistYears, backfill = TRUE) |>
     ReduceDims(IncYear = TRUE)

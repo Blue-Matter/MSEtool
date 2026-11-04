@@ -62,6 +62,8 @@ test_that("spatial OM: interim Effort leaves the area split to the engine, as MP
   skip_on_cran()
   om <- SingleStockOM
   om@nSim <- 3
+  # area 1 holds 10% of the fish in 30% of the habitat, so effort follows changing density
+  om@Stock[[1]]@Spatial@RelativeSize <- 0.3
   pYear(om) <- 4
   Imp(om) <- FullComplianceImp
   set.seed(1)

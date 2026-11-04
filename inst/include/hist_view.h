@@ -22,6 +22,7 @@ struct HistView {
   bool StockTargetingFlag;
   ConstArrayView5D Closure;
   ConstArrayView3D Spatial_Targeting;
+  ConstArrayView3D ReleaseValue;
   
   std::vector<bool> UseDensity;
   
@@ -76,7 +77,8 @@ inline HistView::HistView(Rcpp::S4& Hist, int nSim_, int nStock_, int nFleet_, i
     q(                GetMisc_ConstArrayView<4>(Hist, "Catchability")),
     StockTargeting(   GetMisc_ConstArrayView<4>(Hist, "StockTargeting")),
     Closure(          GetMisc_ConstArrayView<5>(Hist, "Closure")),
-    Spatial_Targeting(GetMisc_ConstArrayView<3>(Hist, "Spatial_Targeting"))
+    Spatial_Targeting(GetMisc_ConstArrayView<3>(Hist, "Spatial_Targeting")),
+    ReleaseValue(     GetMisc_ConstArrayView<3>(Hist, "ReleaseValue"))
 {
   // Mutable slots
   Biomass      = Slot2Array3D(Hist, "Biomass");

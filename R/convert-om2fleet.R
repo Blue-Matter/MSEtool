@@ -44,6 +44,9 @@
     ) |>
       ReduceDims()
   }
+  if (!is.null(cpars$Spat_targ))
+    Effort@Targeting <- array(cpars$Spat_targ, c(length(cpars$Spat_targ), 1),
+                              dimnames = list(Sim = seq_along(cpars$Spat_targ), Year = Years[1]))
   Effort
 }
 
