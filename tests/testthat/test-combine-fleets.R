@@ -53,3 +53,34 @@ test_that(".FillZeroWeights() fills only the (sim, year) cells where weights sum
   expect_equal(eq[[1]], array(c(1, 1, 1, 2), c(2, 2), dn))
   expect_equal(eq[[2]], array(c(1, 3, 1, 0), c(2, 2), dn))
 })
+
+test_that(".FleetCommonOrWeightedMean() keeps a value shared by every fleet exactly", {
+  dn <- list(Sim = 1, Year = 2001:2003)
+  w  <- list(array(c(0.1, 0.7, 1/3), c(1, 3), dn), array(c(0.9, 0.3, 2/3), c(1, 3), dn))
+
+  same <- list(array(1, c(1, 3), dn), array(1, c(1, 3), dn))
+  expect_identical(.FleetCommonOrWeightedMean(same, w), same[[1]])
+
+  diff <- list(array(1, c(1, 3), dn), array(2, c(1, 3), dn))
+  expect_equal(.FleetCommonOrWeightedMean(diff, w), .FleetWeightedMean(diff, w))
+})
+
+test_that(".CheckEffortAcrossStocks() ignores rounding differences between stocks", {
+  FleetWithTargeting <- function(Targeting) {
+    fleet <- methods::new('fleet')
+    fleet@Effort@Targeting <- Targeting
+    fleet
+  }
+  dn <- list(Sim = 1, Year = 2001:2006)
+  # F-weighted mean of Targeting = 1 for every fleet, as CombineFleets() made it
+  stock1 <- array(1 + c(-3, 0, 4, -1, 2, 0) * 1e-16, c(1, 6), dn)
+  stock2 <- array(1 + c(-2, 0, 4, 0, 0, 0) * 1e-16, c(1, 6), dn)
+  expect_no_error(.CheckEffortAcrossStocks(list(
+    Female = list(Combined = FleetWithTargeting(stock1)),
+    Male   = list(Combined = FleetWithTargeting(stock2)))))
+
+  expect_error(.CheckEffortAcrossStocks(list(
+    Female = list(Combined = FleetWithTargeting(1)),
+    Male   = list(Combined = FleetWithTargeting(2)))),
+    "differs between stocks")
+})
