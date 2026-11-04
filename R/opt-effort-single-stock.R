@@ -13,7 +13,7 @@
 #' @param sim Integer. Simulation index.
 #' @param TAC_by_Complex Named list of numeric vectors (length `nFleet`), one
 #'   per complex. `NULL` entries indicate no TAC constraint for that complex,
-#'   in which case the previous year's effort is returned unchanged.
+#'   in which case the effort in `Proj@Effort` at `TSIndex` is returned.
 #' @param TACType_by_Complex Character vector (length `nComplex`).
 #'   `"Removals"` or `"Landings"` for each complex.
 #' @param MaxFleetEffort Numeric vector (length `nFleet`). Optional per-fleet
@@ -126,9 +126,9 @@
 #'
 #' @return A list with:
 #'   * `Effort` - numeric vector of length `nFleet` giving optimised effort
-#'     per fleet. For fleets with no TAC constraint (`BindingTAC` is `NA` or
-#'     not in `pos_idx`), effort is carried forward from the previous time
-#'     step. A fleet that cannot reach its TAC is at its effort ceiling.
+#'     per fleet. Fleets with no TAC (`NA`) keep the effort already set for
+#'     this time step in `Proj@Effort`: their effort advice, else last year's
+#'     effort. A fleet that cannot reach its TAC is at its effort ceiling.
 #'   * `converged` - `TRUE` if the solve met `tol`/`reltol`, `FALSE` if not,
 #'     `NA` if there was no active TAC to solve for.
 #'   * `saturated` - `TRUE` if the TAC was unachievable within the effort
@@ -172,8 +172,13 @@
   if (is.null(MaxFleetEffort))
     MaxFleetEffort <- rep(NA_real_, nFleet)
 
-  # start from the previous solution when one is supplied
-  Effort_ref <- if (is.null(Effort_start)) Proj@Effort[sim, TSIndex - 1L, ] else Effort_start
+  # fleets without a TAC fish this step's effort (`.SetCarryForwardEffort()`, effort advice)
+  Effort_fixed <- Proj@Effort[sim, TSIndex, ]
+  Prev         <- Proj@Effort[sim, TSIndex - 1L, ]
+  Effort_fixed[!is.finite(Effort_fixed)] <- Prev[!is.finite(Effort_fixed)]
+
+  # TAC fleets start from the previous solution when one is supplied
+  Effort_ref <- if (is.null(Effort_start)) Prev else Effort_start
 
   maxEffort_fl <- .EffortCeiling(Proj, sim, TSIndex, MaxFleetEffort, EffortMax, maxEffort)
 
@@ -185,23 +190,17 @@
 
   tac_vec <- TAC_by_Complex[[cx]]
 
-  if (is.null(tac_vec)) {
-    # No TAC has been set for any fleets
-    # return previous effort unless an effort rec. has already been applied
-    Effort_base <- pmax(Effort_ref, minEffort)
-    has_ceiling <- !is.na(MaxFleetEffort)
-    if (any(has_ceiling))
-      Effort_base[has_ceiling] <- MaxFleetEffort[has_ceiling]
-    return(list(Effort = Effort_base, converged = NA, saturated = FALSE,
+  if (is.null(tac_vec))
+    return(list(Effort = Effort_fixed, converged = NA, saturated = FALSE,
                 TAC = rep(NA_real_, nFleet), Catch = rep(NA_real_, nFleet),
                 AtCeiling = rep(FALSE, nFleet)))
-  }
 
   BindingTAC <- tac_vec
   pos_idx    <- which(is.finite(BindingTAC) & BindingTAC > 0)
   zero_idx   <- which(is.finite(BindingTAC) & BindingTAC == 0)
 
-  Effort_base           <- pmax(Effort_ref, minEffort)
+  Effort_base           <- Effort_fixed
+  Effort_base[pos_idx]  <- pmax(Effort_ref[pos_idx], minEffort)
   Effort_base[zero_idx] <- 0
   Effort_curr           <- Effort_base
 

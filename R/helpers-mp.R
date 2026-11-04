@@ -375,13 +375,14 @@
 
 
 
-# Empty advice is status-quo effort: relative effort 1, with the area split left to the engine
+# Empty advice is status quo: no effort control, so each fleet keeps last year's effort
+# (`.SetCarryForwardEffort()`), with the status-quo area split
 .CheckTACEffort <- function(AdviceSimList, FleetNames) {
   purrr::map(AdviceSimList, \(AdviceSim) {
     purrr::map(AdviceSim, \(Advice) {
       if (!inherits(Advice, 'advice')) return(Advice)
       if (is.null(Advice@TAC) && is.null(Advice@Effort)) {
-        Advice@Effort  <- array(1, dim = length(FleetNames), dimnames = list(Fleet = FleetNames))
+        Advice@Effort  <- array(NA_real_, dim = length(FleetNames), dimnames = list(Fleet = FleetNames))
         Advice@EffType <- 'Rel'
         Advice@Misc$StatusQuoEffort <- TRUE
       }
