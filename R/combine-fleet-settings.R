@@ -31,6 +31,15 @@
     ReduceDims()
 }
 
+# the common value when every fleet has the same value, otherwise the F-weighted
+# mean; a weighted mean of equal values isn't exactly equal to them, and the
+# rounding differs among stocks (the weights are by stock)
+.FleetCommonOrWeightedMean <- function(arrays, w) {
+  if (length(unique(unlist(purrr::map(arrays, as.vector)))) == 1)
+    return(arrays[[1]])
+  .FleetWeightedMean(arrays, w)
+}
+
 .CombineFleetsEffortSettings <- function(Effort, Fleets, w, HistYears, Name) {
   Abort <- \(msg) cli::cli_abort(c(
     "x" = "Cannot combine fleets {.val {names(Fleets)}} into {.val {Name}}: {msg}",
@@ -57,18 +66,18 @@
   if (!all(purrr::map_lgl(Distribution, \(d) is.null(d) || all(is.na(d)))))
     Effort@Distribution <- .FleetWeightedMean(Distribution, w)
 
-  Effort@Targeting <- .FleetWeightedMean(
+  Effort@Targeting <- .FleetCommonOrWeightedMean(
     purrr::map(Efforts, \(e) .AsSimYear(e@Targeting, HistYears)), w)
 
   Release <- purrr::map(Efforts, .EffortReleaseValue)
   if (!all(purrr::map_lgl(Release, is.null)))
-    Effort@ReleaseValue <- .FleetWeightedMean(
+    Effort@ReleaseValue <- .FleetCommonOrWeightedMean(
       purrr::map(Release, \(r) .AsSimYear(r %||% 0, HistYears)), w)
 
   Lambda <- purrr::map(Efforts, \(e) e@StockTargetingLambda)
   if (!all(purrr::map_lgl(Lambda, is.null))) {
     Lambda <- purrr::map(Lambda, \(l) .AsSimYear(l %||% 1, HistYears))
-    Effort@StockTargetingLambda <- .FleetWeightedMean(Lambda, w)
+    Effort@StockTargetingLambda <- .FleetCommonOrWeightedMean(Lambda, w)
   }
   Effort
 }
