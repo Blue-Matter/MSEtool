@@ -498,6 +498,26 @@ Subset <- function(object,
   object
 }
 
+# drops Year rows after MaxYear from every year-indexed array; Misc untouched
+.DropDataYearsAfter <- function(object, MaxYear) {
+  if (isS4(object)) {
+    for (s in setdiff(slotNames(object), 'Misc')) {
+      val <- slot(object, s)
+      if (!is.null(val) && (isS4(val) || is.list(val) || is.array(val)))
+        slot(object, s) <- .DropDataYearsAfter(val, MaxYear)
+    }
+    return(object)
+  }
+  if (is.list(object)) {
+    for (j in seq_along(object))
+      if (!is.null(object[[j]]))
+        object[[j]] <- .DropDataYearsAfter(object[[j]], MaxYear)
+    return(object)
+  }
+  if (!is.array(object) || is.null(dimnames(object)[["Year"]])) return(object)
+  .DropYearsAfter(object, MaxYear + 1e-8)
+}
+
 .ArraySubsetYear<- function(array, Years = NULL, Impute = TRUE) {
   
   if (is.null(Years)) return(array)

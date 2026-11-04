@@ -23,13 +23,14 @@ test_that("combining fleets ignores units of fleets with no data", {
 test_that("AddFleet() adds an NA data column for the new fleet", {
   om <- TwoFleetOM
   Fleets <- FleetNames(om)
+  Yrs <- tail(Years(om, "H"), 2)
   Landings <- CatchData(Name = Fleets)
   Landings@Value <- array(c(1, 2, 3, 4), c(2, 2),
-                          dimnames = list(Year = 2001:2002, Fleet = Fleets))
+                          dimnames = list(Year = Yrs, Fleet = Fleets))
   Landings@CV <- Landings@Value * 0 + 0.1
   Landings@Units <- setNames(c("Biomass", "Biomass"), Fleets)
   Data <- Data(Name = "x")
-  Data@Years <- 2001:2002
+  Data@Years <- Yrs
   Data@Landings <- Landings
   om@Data <- list(Data)
 
