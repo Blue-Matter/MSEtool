@@ -255,7 +255,9 @@ print.mpdebug <- function(x, ...) {
   Legacy <- attr(Fun, 'LegacyMP', exact = TRUE)
   if (is.function(Legacy)) {
     Fun  <- Legacy
-    Call <- \() Fun(x = 1, Data = Convert(x$Data, silent = TRUE), reps = 1, plot = FALSE)
+    Args <- list(x = 1, Data = Convert(x$Data, silent = TRUE), reps = 1)
+    if (any(c("plot", "...") %in% names(formals(Fun)))) Args$plot <- FALSE
+    Call <- \() do.call(Fun, Args)
   } else if (inherits(Fun, 'mmp')) {
     Call <- \() Fun(DataList = x$Data)
   } else {
