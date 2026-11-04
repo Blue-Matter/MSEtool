@@ -83,6 +83,8 @@
     .CalcManagementYears(YearsProj[!IsInterim], Interval, Proj@OM@Seasons)
   EverySeason     <- isTRUE(attr(MPfunction, 'EverySeason'))
   DataLag         <- attr(MPfunction, 'DataLag') %||% Proj@OM@DataLag
+  .CheckDataLag(DataLag, if (is.null(attr(MPfunction, 'DataLag'))) "OM@DataLag" else
+    paste0("attr(", MPName, ", 'DataLag')"))
   Areas           <- 1:nArea(Proj)
   StartTime       <- Sys.time()
   StockNames      <- StockNames(Proj)

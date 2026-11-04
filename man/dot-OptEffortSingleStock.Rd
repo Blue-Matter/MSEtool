@@ -38,7 +38,7 @@ dynamics.}
 
 \item{TAC_by_Complex}{Named list of numeric vectors (length \code{nFleet}), one
 per complex. \code{NULL} entries indicate no TAC constraint for that complex,
-in which case the previous year's effort is returned unchanged.}
+in which case the effort in \code{Proj@Effort} at \code{TSIndex} is returned.}
 
 \item{TACType_by_Complex}{Character vector (length \code{nComplex}).
 \code{"Removals"} or \code{"Landings"} for each complex.}
@@ -170,9 +170,9 @@ Default \code{6} (i.e. steps as small as \code{1/64} of the original are tried).
 A list with:
 \itemize{
 \item \code{Effort} - numeric vector of length \code{nFleet} giving optimised effort
-per fleet. For fleets with no TAC constraint (\code{BindingTAC} is \code{NA} or
-not in \code{pos_idx}), effort is carried forward from the previous time
-step. A fleet that cannot reach its TAC is at its effort ceiling.
+per fleet. Fleets with no TAC (\code{NA}) keep the effort already set for
+this time step in \code{Proj@Effort}: their effort advice, else last year's
+effort. A fleet that cannot reach its TAC is at its effort ceiling.
 \item \code{converged} - \code{TRUE} if the solve met \code{tol}/\code{reltol}, \code{FALSE} if not,
 \code{NA} if there was no active TAC to solve for.
 \item \code{saturated} - \code{TRUE} if the TAC was unachievable within the effort
