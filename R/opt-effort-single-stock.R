@@ -73,15 +73,17 @@
 #'    does not converge, unless the reason is a genuine effort ceiling
 #'    (see "Saturation vs. stall" below). A solver stall is not evidence the
 #'    TAC is unreachable, so it always gets a further, less-local search
-#'    before the solve is given up on.
+#'    before the solve is given up on. Effort is bounded by the fleet
+#'    ceilings, and the BFGS solution is kept only if it reduces the squared
+#'    residual of the Newton-Raphson solution.
 #'
 #' ## Fleets that cannot reach their TAC.
 #'
-#' With multiple active fleets, the catch with every active fleet at its
-#' ceiling is calculated first. A fleet still short of its TAC there starts
-#' frozen at its ceiling, since more effort from the other fleets only lowers
-#' its catch; if every fleet is short, all are returned at their ceiling as
-#' saturated, without iterating. The remaining fleets are solved with the
+#' With multiple active fleets, each fleet's catch is first calculated at its
+#' own ceiling with the other TAC fleets at minimum effort, the most catch it
+#' can take. A fleet still short of its TAC there starts frozen at its ceiling;
+#' if every fleet is short, all are returned at their ceiling as saturated,
+#' without iterating. The remaining fleets are solved with the
 #' frozen ones fixed (Newton-Raphson, then BFGS over the free fleets only). A
 #' frozen fleet that then catches more than its TAC is released and the free
 #' fleets are solved again, at most once per fleet.
@@ -293,14 +295,24 @@
 
   Effort_curr[pos_idx] <- clamp_effort(Effort_curr[pos_idx], pos_idx)
 
-  # Fleets still short of their TAC with every fleet at its ceiling start
-  # frozen there: more effort from the others only lowers their catch
+  # A fleet short of its TAC at its ceiling with the other TAC fleets at minimum effort cannot reach it;
+  # only fleets short with every fleet at its ceiling can be
   Effort_cap          <- Effort_curr
   Effort_cap[pos_idx] <- maxEffort_fl[pos_idx]
-  residual_cap        <- residual_fn(Effort_cap)
-  short_cap           <- is.finite(residual_cap) & residual_cap > tol_vec
+  residual_all        <- residual_fn(Effort_cap)
+  short_cap           <- is.finite(residual_all) & residual_all > tol_vec
+  if (any(short_cap) && length(pos_idx) > 1L) {
+    Effort_min          <- Effort_curr
+    Effort_min[pos_idx] <- minEffort
+    for (k in which(short_cap)) {
+      E <- Effort_min
+      E[pos_idx[k]] <- maxEffort_fl[pos_idx[k]]
+      r <- residual_fn(E)[k]
+      short_cap[k] <- is.finite(r) && r > tol_vec[k]
+    }
+  }
   if (all(short_cap))
-    return(OutputList(Effort_cap, residual_cap, converged = FALSE, saturated = TRUE))
+    return(OutputList(Effort_cap, residual_all, converged = FALSE, saturated = TRUE))
 
   # Backtracking line search: halves a proposed log-scale step (for the
   # active fleets) up to `max_backtrack` times until it reduces the total
@@ -446,24 +458,29 @@
     # ceiling so a reachable fleet is never traded off against one that isn't
     if (any(free) && !all(abs(final_residual[free]) < tol_vec[free])) {
       free_idx <- pos_idx[free]
-      obj_bfgs <- function(log_scale_vec) {
-        log_scale_vec      <- clamp_step(log_scale_vec)
+      bfgs_effort <- function(log_scale_vec) {
         Eff_test           <- Effort_curr
         Eff_test[free_idx] <- clamp_effort(Effort_base[free_idx] * exp(log_scale_vec), free_idx)
-        sum(residual_fn(Eff_test)[free]^2)
+        Eff_test
       }
+      obj_bfgs <- function(log_scale_vec) sum(residual_fn(bfgs_effort(log_scale_vec))[free]^2)
 
       par_init <- log(pmax(Effort_curr[free_idx], minEffort) /
                         pmax(Effort_base[free_idx], minEffort))
       par_init[!is.finite(par_init)] <- 0
-      par_init <- clamp_step(par_init)
 
       opt <- optim(par_init, obj_bfgs,
                    method  = "BFGS",
                    control = list(maxit = 200))
 
-      Effort_curr[free_idx] <- clamp_effort(Effort_base[free_idx] * exp(clamp_step(opt$par)), free_idx)
-      final_residual <- residual_fn(Effort_curr)
+      # keep the BFGS solution only if it improves on Newton-Raphson
+      Effort_bfgs   <- bfgs_effort(opt$par)
+      residual_bfgs <- residual_fn(Effort_bfgs)
+      if (is.finite(sum(residual_bfgs[free]^2)) &&
+          sum(residual_bfgs[free]^2) < sum(final_residual[free]^2)) {
+        Effort_curr    <- Effort_bfgs
+        final_residual <- residual_bfgs
+      }
     }
 
     # Release ceiling fleets the others now leave room for: they overcatch
