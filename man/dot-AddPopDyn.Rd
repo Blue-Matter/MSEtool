@@ -4,7 +4,16 @@
 \alias{.AddPopDyn}
 \title{Add Population Dynamics Data to a Data Object}
 \usage{
-.AddPopDyn(Data, Hist, sim, Year = NULL, Years = NULL, mp = 1, DataOM = NULL)
+.AddPopDyn(
+  Data,
+  Hist,
+  sim,
+  Year = NULL,
+  Years = NULL,
+  mp = 1,
+  DataOM = NULL,
+  PopDyn = .BuildDataOM(Hist, sim, Year, Years, DataOM)
+)
 }
 \arguments{
 \item{Data}{A \code{Data} S4 object.}
@@ -21,8 +30,11 @@ gate one-time warnings.}
 
 \item{mp}{Integer. Current MP index. Not currently used.}
 
-\item{DataOM}{\code{NULL}, \code{TRUE}, or a character vector of \code{hist} slot names,
+\item{DataOM}{\code{NULL}, \code{TRUE}, or a character vector of \code{hist} slot paths,
 as returned by \code{.ResolveDataOM()}.}
+
+\item{PopDyn}{Optional result of \code{.BuildDataOM()} for the same arguments,
+reused across stocks.}
 }
 \value{
 The \code{Data} object, with \code{Data@Misc$DataOM} set to a \link[=hist-class]{hist}

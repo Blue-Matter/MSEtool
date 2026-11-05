@@ -55,6 +55,21 @@ Any slot of \link[=hist-class]{hist} except \code{Data} can be requested, e.g.
 Elements set to \code{FALSE} are not included.
 }
 
+Parts of a slot can be requested with a slot path, either as a string
+with \code{@} between slot names or as a nested named list. For example, the
+true fleet selectivity only:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{Control(OM)$DataOM <- 'OM@Fleet@Selectivity'
+Control(OM)$DataOM <- list(OM = list(Fleet = list(Selectivity = TRUE)))
+}\if{html}{\out{</div>}}
+
+Only the requested slots are filled; all other slots keep their empty
+defaults. A path through a list of stocks or fleets (e.g. \code{OM@Stock},
+\code{OM@Fleet}) applies to every element, so the example above gives
+\code{Data@Misc$DataOM@OM@Fleet[[stock]][[fleet]]@Selectivity} for every stock
+and fleet. Requesting a smaller part of the \code{OM} slot reduces the time
+and memory used by each MP call, especially for multi-stock OMs.
+
 In \code{OM@Control$DataOM}, elements named after a \link[=hist-class]{hist} slot apply to
 every MP. Any other element name is treated as the name of an MP, and its
 value (in any of the forms above, or \code{FALSE}) applies to that MP only:
@@ -69,7 +84,7 @@ Control(OM)$DataOM <- list(Reference = TRUE,             # every MP
 MP functions can also request slots with a \code{DataOM} attribute, in the
 same forms:
 
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{attr(myMP, 'DataOM') <- c('Reference', 'Biomass')
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{attr(myMP, 'DataOM') <- c('Reference', 'Biomass', 'OM@Fleet@Selectivity')
 }\if{html}{\out{</div>}}
 
 The slots passed to an MP are:
@@ -86,7 +101,7 @@ attribute or OM-wide slots for MPs that are tuned.
 During projections, time-series slots (e.g. \code{Number}, \code{Biomass},
 \code{Landings}, \code{Effort}) include only the time steps before the one the
 advice applies to (\code{Data@Misc$AdviceYear}). \code{OM}, \code{Unfished}, and
-\code{Reference} are passed in full.
+\code{Reference} (and any paths within them) include all time steps.
 
 The reference MPs (see \link{ReferenceMPs}) set
 \code{attr(MP, 'DataOM') <- list(Reference = TRUE)}. An MP that calls one of

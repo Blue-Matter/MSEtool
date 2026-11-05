@@ -104,7 +104,7 @@ DebugMP <- function(MSE, MP = NULL, Sim = NULL, Year = NULL, run = FALSE) {
   ), class = 'mpdebug')
 
   if (isTRUE(run))
-    return(.RerunMP(out, Browse = interactive()))
+    return(.RerunMP(out, Browse = rlang::is_interactive()))
   out
 }
 

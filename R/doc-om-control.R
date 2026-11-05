@@ -46,6 +46,22 @@
 #' - A named logical list, e.g. `list(Biomass = TRUE, Number = TRUE)`.
 #'   Elements set to `FALSE` are not included.
 #'
+#' Parts of a slot can be requested with a slot path, either as a string
+#' with `@` between slot names or as a nested named list. For example, the
+#' true fleet selectivity only:
+#'
+#' ```r
+#' Control(OM)$DataOM <- 'OM@Fleet@Selectivity'
+#' Control(OM)$DataOM <- list(OM = list(Fleet = list(Selectivity = TRUE)))
+#' ```
+#'
+#' Only the requested slots are filled; all other slots keep their empty
+#' defaults. A path through a list of stocks or fleets (e.g. `OM@Stock`,
+#' `OM@Fleet`) applies to every element, so the example above gives
+#' `Data@Misc$DataOM@OM@Fleet[[stock]][[fleet]]@Selectivity` for every stock
+#' and fleet. Requesting a smaller part of the `OM` slot reduces the time
+#' and memory used by each MP call, especially for multi-stock OMs.
+#'
 #' In `OM@Control$DataOM`, elements named after a [hist-class] slot apply to
 #' every MP. Any other element name is treated as the name of an MP, and its
 #' value (in any of the forms above, or `FALSE`) applies to that MP only:
@@ -62,7 +78,7 @@
 #' same forms:
 #'
 #' ```r
-#' attr(myMP, 'DataOM') <- c('Reference', 'Biomass')
+#' attr(myMP, 'DataOM') <- c('Reference', 'Biomass', 'OM@Fleet@Selectivity')
 #' ```
 #'
 #' The slots passed to an MP are:
@@ -77,7 +93,7 @@
 #' During projections, time-series slots (e.g. `Number`, `Biomass`,
 #' `Landings`, `Effort`) include only the time steps before the one the
 #' advice applies to (`Data@Misc$AdviceYear`). `OM`, `Unfished`, and
-#' `Reference` are passed in full.
+#' `Reference` (and any paths within them) include all time steps.
 #'
 #' The reference MPs (see [ReferenceMPs]) set
 #' `attr(MP, 'DataOM') <- list(Reference = TRUE)`. An MP that calls one of

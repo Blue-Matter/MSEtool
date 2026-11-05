@@ -101,22 +101,118 @@
     return(NULL)
   if (isTRUE(x) && is.null(names(x)))
     return(TRUE)
+  .CollapseDataOMPaths(.DataOMPaths(x))
+}
+
+# Slot paths ("OM@Fleet@Selectivity") from a character vector or nested named list
+.DataOMPaths <- function(x) {
   if (is.character(x))
     return(unique(x))
-  if ((is.list(x) || is.logical(x)) && !is.null(names(x))) {
-    Keep <- vapply(x, isTRUE, logical(1))
-    return(if (any(Keep)) names(x)[Keep] else NULL)
+  if ((is.list(x) || is.logical(x)) && !is.null(names(x)) && all(nzchar(names(x)))) {
+    Paths <- lapply(names(x), \(nm) {
+      v <- x[[nm]]
+      if (isTRUE(v)) return(nm)
+      if (!length(v) || isFALSE(v)) return(NULL)
+      Sub <- .DataOMPaths(v)
+      if (length(Sub)) paste(nm, Sub, sep = '@')
+    })
+    return(unique(unlist(Paths)))
   }
   cli::cli_abort(c("Invalid {.code DataOM} value.",
-                   "i" = "Use {.code TRUE}, a character vector of {.cls hist} slot names, or a named logical list. See {.topic MSEtool::OMControl}."),
+                   "i" = "Use {.code TRUE}, a character vector of {.cls hist} slot names or paths (e.g. {.code 'OM@Fleet@Selectivity'}), or a (nested) named logical list. See {.topic MSEtool::OMControl}."),
                  call = NULL)
+}
+
+# Drop paths already covered by a shorter path ("OM" covers "OM@Fleet")
+.CollapseDataOMPaths <- function(Paths) {
+  Paths <- unique(Paths)
+  if (!length(Paths)) return(NULL)
+  Covered <- vapply(Paths, \(p) any(startsWith(p, paste0(setdiff(Paths, p), '@'))), logical(1))
+  Paths[!Covered]
 }
 
 .UnionDataOM <- function(a, b) {
   if (isTRUE(a) || isTRUE(b))
     return(TRUE)
-  out <- unique(c(a, b))
-  if (length(out)) out else NULL
+  .CollapseDataOMPaths(c(a, b))
+}
+
+# Nested list of path steps with TRUE leaves
+.DataOMTree <- function(Paths) {
+  Tree <- list()
+  for (p in strsplit(Paths, '@', fixed = TRUE)) {
+    if (length(p) == 1) {
+      Tree[[p]] <- TRUE
+    } else if (!isTRUE(Tree[[p[1]]])) {
+      Tree[[p[1]]] <- .MergeDataOMTree(Tree[[p[1]]], .DataOMTree(paste(p[-1], collapse = '@')))
+    }
+  }
+  Tree
+}
+
+.MergeDataOMTree <- function(a, b) {
+  for (nm in names(b))
+    a[[nm]] <- if (isTRUE(a[[nm]]) || isTRUE(b[[nm]])) TRUE else .MergeDataOMTree(a[[nm]], b[[nm]])
+  a
+}
+
+# Copy of `object` with only the slots in `Tree` filled; plain lists apply `Tree` to each element
+.PruneDataOM <- function(object, Tree) {
+  if (isS4(object)) {
+    Out <- methods::new(class(object))
+    for (nm in intersect(names(Tree), methods::slotNames(object))) {
+      val <- methods::slot(object, nm)
+      methods::slot(Out, nm, check = FALSE) <- if (isTRUE(Tree[[nm]])) val else .PruneDataOM(val, Tree[[nm]])
+    }
+    return(Out)
+  }
+  if (is.list(object) && !is.data.frame(object)) {
+    object[] <- lapply(object, .PruneDataOM, Tree = Tree)
+    return(object)
+  }
+  object
+}
+
+# Slot names reachable from a class, resolving class unions to their lower-case S4 members
+.DataOMClassSlots <- function(cls) {
+  if (!methods::isClass(cls)) return(character())
+  Def <- methods::getClass(cls)
+  if (!methods::isVirtualClass(cls)) return(names(Def@slots))
+  Members <- names(Def@subclasses)
+  Members <- Members[vapply(Members, \(m) methods::isClass(m) && !methods::isVirtualClass(m) &&
+                              length(methods::getClass(m)@slots) > 0 && !m %in% c('data.frame', 'OM'),
+                            logical(1))]
+  Lower <- Members[Members == tolower(Members)]
+  if (length(Lower)) Members <- Lower
+  unique(unlist(lapply(Members, \(m) names(methods::getClass(m)@slots))))
+}
+
+.DataOMSlotClass <- function(cls, nm) {
+  if (!methods::isClass(cls)) return(NULL)
+  Def <- methods::getClass(cls)
+  Members <- if (methods::isVirtualClass(cls)) names(Def@subclasses) else cls
+  Members <- Members[Members == tolower(Members) | Members == cls]
+  for (m in Members) {
+    if (!methods::isClass(m)) next
+    s <- methods::getClass(m)@slots
+    if (nm %in% names(s)) return(unname(s[[nm]]))
+  }
+  NULL
+}
+
+# NULL if the path is valid, otherwise the first invalid step and its parent
+.DataOMBadStep <- function(Path) {
+  Steps <- strsplit(Path, '@', fixed = TRUE)[[1]]
+  cls <- 'hist'
+  Parent <- '<hist>'
+  for (i in seq_along(Steps)) {
+    Valid <- setdiff(.DataOMClassSlots(cls), if (i == 1) 'Data')
+    if (!Steps[i] %in% Valid)
+      return(list(Path = Path, Step = Steps[i], Parent = Parent))
+    Parent <- paste(Steps[seq_len(i)], collapse = '@')
+    cls <- .DataOMSlotClass(cls, Steps[i])
+  }
+  NULL
 }
 
 # Warn about DataOM names that are neither hist slots nor (if known) MP names
@@ -133,14 +229,17 @@
     Values <- c(Values, lapply(MPList, attr, 'DataOM'))
   }
 
-  BadSlots <- unique(unlist(lapply(Values, \(v) {
+  Paths <- unique(unlist(lapply(Values, \(v) {
     v <- .NormaliseDataOM(v)
-    if (is.character(v)) setdiff(v, methods::slotNames('hist'))
+    if (is.character(v)) v
   })))
-  if (length(BadSlots))
-    cli::cli_alert_warning(
-      "{.val {BadSlots}} {?is not a/are not} valid {.cls hist} slot name{?s} for {.code DataOM}. Ignoring."
-    )
+  for (p in Paths) {
+    Bad <- .DataOMBadStep(p)
+    if (!is.null(Bad))
+      cli::cli_alert_warning(
+        "{.code DataOM} path {.val {Bad$Path}}: {.val {Bad$Step}} is not a slot of {.code {Bad$Parent}}. Ignoring."
+      )
+  }
   invisible()
 }
 
