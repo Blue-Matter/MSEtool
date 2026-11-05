@@ -139,9 +139,23 @@ CombineMP <- function(MSE_List, silent = FALSE) {
       # Do nothing
       #purrr::map(MSE_List, methods::slot, name = sl) |> reduce(identical)
       
-    } else if (sl %in% c("MPs", "PPD")) {
+    } else if (sl == "MPs") {
       # Concatenate by MP
       slot(out, sl) <- purrr::map(MSE_List, methods::slot, name = sl) |> purrr::list_c()
+    } else if (sl == "PPD") {
+      # Concatenate by MP
+      PPDlist <- purrr::map(MSE_List, methods::slot, name = sl) 
+      
+      # Remove historical years in MSE_List[-1]
+      ProjYears <- Years(MSE_List[[1]], "P")
+      PPDlist[-1] <- purrr::map(PPDlist[-1], \(ProjDataList1) {
+        purrr::map(ProjDataList1, \(ProjDataList2) {
+          purrr::map(ProjDataList2, \(ProjDataList3) {
+            purrr::map(ProjDataList3, \(ProjData) Subset(ProjData, Years = ProjYears))
+          })
+        })
+      })
+      slot(out, sl) <- purrr::list_c(PPDlist)
     } else if (sl == "Misc") {
       
       Misc_slots <- names(ref@Misc)
