@@ -139,3 +139,54 @@ test_that("DataOM reaches MPs in projections, trimmed to past time steps", {
     expect_gt(cl$Number, 0)
   }
 })
+
+test_that("DataOM slot paths normalise from strings and nested lists, and collapse", {
+  Nested <- list(OM = list(Fleet = list(Selectivity = TRUE), Stock = c('Length', 'Weight')),
+                 Reference = TRUE, Biomass = FALSE)
+  expect_setequal(.NormaliseDataOM(Nested),
+                  c('OM@Fleet@Selectivity', 'OM@Stock@Length', 'OM@Stock@Weight', 'Reference'))
+  expect_equal(.NormaliseDataOM(list(OM = list(Fleet = list(Selectivity = FALSE)))), NULL)
+  expect_equal(.NormaliseDataOM(c('OM@Fleet@Selectivity', 'OM@Fleet')), 'OM@Fleet')
+  expect_setequal(.UnionDataOM('OM@Fleet@Selectivity', c('OM', 'Biomass')), c('OM', 'Biomass'))
+  expect_equal(.UnionDataOM('OM@Fleet', 'OM@FleetX'), c('OM@Fleet', 'OM@FleetX'))
+  # nested per-MP entry
+  Ctl <- list(Reference = TRUE, myMP = list(OM = list(Fleet = list(Selectivity = TRUE))))
+  expect_equal(.ResolveDataOM(Ctl, 'myMP', MakeMP()), 'OM@Fleet@Selectivity')
+  expect_setequal(.ResolveDataOM(Ctl, 'Other', MakeMP('OM@Fleet')), c('Reference', 'OM@Fleet'))
+  expect_equal(.DataOMTree(c('OM@Fleet@Selectivity', 'OM@Fleet@Retention', 'Reference')),
+               list(OM = list(Fleet = list(Selectivity = TRUE, Retention = TRUE)), Reference = TRUE))
+})
+
+test_that("invalid DataOM path steps are reported", {
+  expect_null(.DataOMBadStep('OM@Fleet@Selectivity@MeanAtAge'))
+  expect_null(.DataOMBadStep('Reference@MSY'))
+  expect_message(.CheckDataOM('OM@Fleet@Selectivty'), 'Selectivty')
+  expect_message(.CheckDataOM('Data'), 'Data')
+  expect_message(.CheckDataOM('Biomass@x'), 'x')
+  expect_no_message(.CheckDataOM(list(OM = list(Fleet = list(Selectivity = TRUE)), Reference = TRUE)))
+})
+
+test_that("DataOM slot paths fill only the requested OM slots for one sim", {
+  skip_on_cran()
+  OM <- MultiStockOM
+  OM@nSim <- 3
+  Hist <- Simulate(OM, silent = TRUE)
+  Full <- .BuildDataOM(Hist, 2, DataOM = 'OM')
+  Sel  <- .BuildDataOM(Hist, 2, DataOM = 'OM@Fleet@Selectivity')
+
+  expect_equal(names(Sel@OM@Fleet), names(Hist@OM@Fleet))
+  for (s in seq_along(Hist@OM@Fleet)) {
+    expect_equal(names(Sel@OM@Fleet[[s]]), names(Hist@OM@Fleet[[s]]))
+    for (f in seq_along(Hist@OM@Fleet[[s]])) {
+      expect_equal(Sel@OM@Fleet[[s]][[f]]@Selectivity@MeanAtAge,
+                   Full@OM@Fleet[[s]][[f]]@Selectivity@MeanAtAge)
+      expect_length(Sel@OM@Fleet[[s]][[f]]@Effort@Effort, 0)
+    }
+  }
+  expect_length(Sel@OM@Stock, 0)
+  expect_length(Sel@Reference@MSY@FMSY, 0)
+  expect_lt(as.numeric(object.size(Sel)), as.numeric(object.size(Full)) / 2)
+
+  Data <- .AddPopDyn(Hist@Data[[1]][[1]], Hist, 2, DataOM = NULL)
+  expect_null(Data@Misc$DataOM)
+})

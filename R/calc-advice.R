@@ -208,11 +208,12 @@
   
   AdviceList <- MakeNamedList(names(DataList))
   DataOM <- .ResolveDataOM(Proj@OM@Control$DataOM, MPName, MPfunction)
+  PopDyn <- .BuildDataOM(Proj, sim, Year, YearsProj, DataOM)
 
   # loop over stocks/complexes
   nms <- names(DataList)
   for (i in seq_along(DataList)) {
-    Data <- DataList[[i]] |> .AddPopDyn(Proj, sim, Year, YearsProj, mp, DataOM = DataOM)
+    Data <- DataList[[i]] |> .AddPopDyn(Proj, sim, Year, YearsProj, mp, DataOM = DataOM, PopDyn = PopDyn)
     if (!is.null(attr(MPfunction, 'LegacyMP')))
       Data <- .AddLegacyReference(Data, Proj, sim, nms[i])
 
@@ -267,9 +268,10 @@
 
   nms <- names(DataList)
   DataOM <- .ResolveDataOM(Proj@OM@Control$DataOM, MPName, MPfunction)
+  PopDyn <- .BuildDataOM(Proj, sim, Year, YearsProj, DataOM)
 
   DataList <- purrr::imap(DataList, \(Data, nm) {
-    Data <- Data |> .AddPopDyn(Proj, sim, Year, YearsProj, mp, DataOM = DataOM)
+    Data <- Data |> .AddPopDyn(Proj, sim, Year, YearsProj, mp, DataOM = DataOM, PopDyn = PopDyn)
     Data@Misc$MPName     <- MPName
     Data@Misc$StockName  <- nm
     Data@Misc$AdviceYear <- Year
@@ -344,42 +346,60 @@
 #' @param Years Numeric vector or `NULL`. All projection time steps. Used to
 #'   gate one-time warnings.
 #' @param mp Integer. Current MP index. Not currently used.
-#' @param DataOM `NULL`, `TRUE`, or a character vector of `hist` slot names,
+#' @param DataOM `NULL`, `TRUE`, or a character vector of `hist` slot paths,
 #'   as returned by `.ResolveDataOM()`.
+#' @param PopDyn Optional result of `.BuildDataOM()` for the same arguments,
+#'   reused across stocks.
 #'
 #' @return The `Data` object, with `Data@Misc$DataOM` set to a [hist-class]
 #'   object, or removed if `DataOM` is `NULL`.
 #' @keywords internal
-.AddPopDyn <- function(Data, Hist, sim, Year=NULL, Years=NULL, mp=1, DataOM=NULL) {
+.AddPopDyn <- function(Data, Hist, sim, Year=NULL, Years=NULL, mp=1, DataOM=NULL,
+                       PopDyn = .BuildDataOM(Hist, sim, Year, Years, DataOM)) {
+  Data@Misc$DataOM <- PopDyn
+  Data
+}
 
-  if (!length(DataOM)) {
-    Data@Misc$DataOM <- NULL
-    return(Data)
+# hist object holding the DataOM slot paths for one sim, or NULL
+.BuildDataOM <- function(Hist, sim, Year=NULL, Years=NULL, DataOM=NULL) {
+  if (!length(DataOM))
+    return(NULL)
+
+  Tree <- if (isTRUE(DataOM)) {
+    sapply(.DataOMSlots(), \(x) TRUE, simplify = FALSE)
+  } else {
+    .DataOMTree(DataOM)
   }
+  Tree <- Tree[intersect(names(Tree), .DataOMSlots())]
 
-  Slots <- if (isTRUE(DataOM)) .DataOMSlots() else intersect(DataOM, .DataOMSlots())
-
-  if (!isTRUE(DataOM) && 'Reference' %in% Slots) {
+  if (!isTRUE(DataOM) && 'Reference' %in% names(Tree)) {
     Missing <- .RefPointsMissingSims(Hist@Reference, nSim(Hist))
     if (length(Missing) && !is.null(Year) && sim == 1 && Year == min(Years))
       cli::cli_alert_warning(
         "MSY reference points ({.field Hist@Reference@MSY@FMSY}) are not available for {length(Missing)} of {nSim(Hist)} simulations. Reference MP(s) that require them return no advice where they are missing."
       )
     if (sim %in% Missing)
-      Slots <- setdiff(Slots, 'Reference')
+      Tree$Reference <- NULL
   }
 
   TimeSeries <- setdiff(methods::slotNames('timeseries'), 'Misc')
   PopDyn <- new('hist')
-  for (nm in Slots) {
-    val <- .SubsetSim(slot(Hist, nm), Sims = sim, nSim = nSim(Hist))
+  for (nm in names(Tree)) {
+    val <- slot(Hist, nm)
+    if (!isTRUE(Tree[[nm]])) {
+      val <- .PruneDataOM(val, Tree[[nm]])
+      # sim keys for .SubsetSim()
+      if (inherits(val, 'om')) {
+        val@nSim <- Hist@OM@nSim
+        val@Misc$SimIDs <- Hist@OM@Misc$SimIDs
+      }
+    }
+    val <- .SubsetSim(val, Sims = sim, nSim = nSim(Hist))
     if (!is.null(Year) && nm %in% TimeSeries)
       val <- .DropYearsFrom(val, Year)
     slot(PopDyn, nm) <- val
   }
-
-  Data@Misc$DataOM <- PopDyn
-  Data
+  PopDyn
 }
 
 # Drop time steps >= `Year` from every array with a `Year` dimension
