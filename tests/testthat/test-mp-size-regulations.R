@@ -14,6 +14,12 @@ data(SeasonalSpatialOM, envir = environment())
 
 .RetFrac <- function(MSE) apply(MSE@FRetain, c(3, 5), mean) / apply(MSE@FInteract, c(3, 5), mean)
 
+# landings by year relative to the `CurrentEffort` MP at the same effort
+.LandFrac <- function(MSE) {
+  L <- apply(MSE@Landings, c(3, 5), sum)
+  L / L[, 'CurrentEffort']
+}
+
 .Messages <- function(entries) vapply(entries, \(e) e$message, character(1))
 
 SizeLimitMP <- function(Data) {
@@ -66,8 +72,8 @@ test_that("MP retention advice without MaxRet is applied in the projection", {
   Hist <- Simulate(.SizeOM(), silent = TRUE)
   MSE <- suppressMessages(Project(Hist, MPs = list(SizeLimitMP = SizeLimitMP, CurrentEffort = CurrentEffort), silent = TRUE))
   expect_length(MSE@Log$error, 0)
+  expect_true(all(.LandFrac(MSE)[, 'SizeLimitMP'] < 0.95))
   Frac <- .RetFrac(MSE)
-  expect_true(all(Frac[, 'SizeLimitMP'] < 0.99))
   expect_equal(unname(Frac[, 'CurrentEffort']), rep(1, nrow(Frac)), tolerance = 1e-6)
 })
 
@@ -159,11 +165,11 @@ test_that("legacy DLMtool size-limit MPs project and change retention", {
   OM@Obs <- Obs
   Hist <- Simulate(OM, silent = TRUE)
 
-  MPs <- list(matlenlim = DLMtool::matlenlim, slotlim = DLMtool::slotlim,
-              minlenLopt1 = DLMtool::minlenLopt1)
+  MPs <- list(CurrentEffort = CurrentEffort, matlenlim = DLMtool::matlenlim,
+              slotlim = DLMtool::slotlim, minlenLopt1 = DLMtool::minlenLopt1)
   MSE <- suppressMessages(Project(Hist, MPs = MPs, silent = TRUE))
   expect_length(MSE@Log$error, 0)
-  Frac <- .RetFrac(MSE)
+  Frac <- .LandFrac(MSE)[, -1]
   expect_true(all(Frac < 0.99))
   expect_true(all(Frac[, 'slotlim'] < Frac[, 'matlenlim']))
 })

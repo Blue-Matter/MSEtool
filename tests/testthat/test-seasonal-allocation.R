@@ -124,8 +124,9 @@ test_that("a periodic TAC MP with no seasonal logic still produces the historica
   first_cycle  <- unname(L[seq_len(Seasons)])
   second_cycle <- unname(L[Seasons + seq_len(Seasons)])
 
-  # Not flat: the historical seasonal shape should be present, not an equal split.
-  expect_gt(max(first_cycle) / min(first_cycle), 1.3)
+  Alloc <- unname(hist@OM@SeasonalAllocation[[1]][1, , 1])
+  expect_gt(max(Alloc) / min(Alloc), 1.1)
+  expect_equal(first_cycle / sum(first_cycle), Alloc / sum(Alloc), tolerance = 1e-4)
   # Repeats identically within the 3-year block.
   expect_equal(second_cycle, first_cycle, tolerance = 1e-8)
 })
