@@ -641,12 +641,14 @@ SPControl <- function(nSubStep   = 4,
 
 .SPNewtonStep <- function(g, H) {
   if (!.SPPosDef(H)) return(rep(Inf, length(g)))
-  drop(solve(H, g))
+  # a numerically singular Hessian can pass the eigenvalue check; treat it as not positive definite
+  tryCatch(drop(solve(H, g)), error = function(e) rep(Inf, length(g)))
 }
 
 .SPDeltaSE <- function(E, Est, Default) {
   if (!.SPPosDef(E$H)) return(Default)
-  V    <- solve(E$H)
+  V    <- tryCatch(solve(E$H), error = function(e) NULL)
+  if (is.null(V)) return(Default)
   Unit <- function(nm) as.numeric(Est == nm)
   J    <- rbind(E$D$GradLogB - Unit('MSY') + Unit('FMSY'), Unit('FMSY'),
                 E$D$GradLogF - Unit('FMSY'), Unit('MSY'))
