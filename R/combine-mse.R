@@ -94,8 +94,8 @@ CombineMSE <- function(MSE_List, silent = FALSE) {
 #' @rdname CombineMSE
 #' @export
 CombineMP <- function(MSE_List, silent = FALSE) {
-  MSEtool:::.CheckClass(MSE_List, 'list', 'MSE_List')
-  purrr::walk(MSE_List, MSEtool:::.CheckClass, class = 'mse', name = 'element of `MSE_List`')
+  .CheckClass(MSE_List, 'list', 'MSE_List')
+  purrr::walk(MSE_List, .CheckClass, class = 'mse', name = 'element of `MSE_List`')
   
   n <- length(MSE_List)
   
@@ -118,6 +118,11 @@ CombineMP <- function(MSE_List, silent = FALSE) {
     if (!identical(OM(m), RefOM))
       cli::cli_abort("All `mse` objects in `MSE_List` must share the same operating model.")
   })
+
+  MPNames <- purrr::map(MSE_List, \(m) names(MPs(m))) |> unlist()
+  Dup <- unique(MPNames[duplicated(MPNames)])
+  if (length(Dup))
+    cli::cli_abort("MP names must be unique across `MSE_List`. Duplicated: {.val {Dup}}")
   
   out   <- ref
   slots <- methods::slotNames(ref)
@@ -135,7 +140,9 @@ CombineMP <- function(MSE_List, silent = FALSE) {
   
   for (sl in slots) {
     
-    if (sl %in% c("OM", "Unfished", "Reference", "Hist", "Log")) {
+    if (sl == "Log") {
+      slot(out, sl) <- .CombineMPLogs(purrr::map(MSE_List, methods::slot, 'Log'))
+    } else if (sl %in% c("OM", "Unfished", "Reference", "Hist")) {
       # Do nothing
       #purrr::map(MSE_List, methods::slot, name = sl) |> reduce(identical)
       
@@ -206,6 +213,14 @@ CombineMP <- function(MSE_List, silent = FALSE) {
     cli::cli_alert_success("Combined {length(MSE_List)} `MSE` objects into a single object with {totalMPs} total MPs")
   
   out
+}
+
+# entries of every object by type; entries shared by all (e.g. from the common Hist) kept once
+.CombineMPLogs <- function(LogList) {
+  types <- unique(unlist(purrr::map(LogList, names)))
+  out <- purrr::map(types, \(type) unique(purrr::list_c(purrr::map(LogList, \(Log) Log[[type]] %||% list()))))
+  names(out) <- types
+  out[lengths(out) > 0]
 }
 
 .CombineLogs <- function(LogList, sim_offsets) {
