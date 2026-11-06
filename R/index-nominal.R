@@ -151,7 +151,7 @@
 #' @return An array with an `Age` dimension ordered as `AgeClasses`.
 #' @keywords internal
 .IndexSelectivityArray <- function(sel, AgeClasses, Index = NULL, Stock = NULL) {
-  where <- cli::format_inline("index {.val {Index}}, stock {.val {Stock}}")
+  delayedAssign("where", cli::format_inline("index {.val {Index}}, stock {.val {Stock}}"))
   if (!is.numeric(sel))
     cli::cli_abort("{.field Selectivity} for {where} must be numeric, not {.cls {class(sel)}}.")
   if (any(!is.finite(sel)) || any(sel < 0))
