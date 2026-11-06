@@ -569,7 +569,9 @@ MOM_agg_fleets <- function(MOM) {
   
   MOM_aggfleet@cpars[[1]][[1]] <- MOM@cpars[[1]][[1]]
   MOM_aggfleet@cpars[[2]][[1]] <- MOM@cpars[[2]][[1]]
-  
+  if (!is.null(MOM_aggfleet@cpars[[1]][[1]]$Real.Data.Map))
+    MOM_aggfleet@cpars[[1]][[1]]$Real.Data.Map <- matrix(1, 1, n.stock)
+
   MOM_aggfleet@CatchFrac <- vector('list', 2)
   # update cpars 
   for (st in 1:2) {
