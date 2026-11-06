@@ -99,6 +99,8 @@ SS2MOM <- function(SSdir, nsim = 48, proyears = 50, reps = 1, maxF = 3, seed = 1
                             structure(dimnames = list(NULL, names(MOM@Fleets[[1]])))) %>%
     structure(names = c("Female", "Male")[seq_len(replist$nsexes)])
 
+  if(replist$nsexes == 2) MOM@cpars <- SS_combine_sex_data(MOM@cpars, replist, mainyrs, proyears, nsim)
+
   return(MOM)
 }
 

@@ -1166,6 +1166,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
           DataList[[p]][[f]] <- new('Data')
           DataList[[p]][[f]]@OM <- om
           ObsPars[[p]][[f]] <- ObsPars[[mapped.to]][[f]]
+          ObsPars[[p]][[f]]$AddIV <- SampCpars[[p]][[f]]$AddIV
         } else {
           
           ObsPars[[p]][[f]]$CAA_ESS <- apply(CAA_ESS_array[,map.stocks,, drop=FALSE], 1, sum)

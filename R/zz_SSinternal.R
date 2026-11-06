@@ -756,10 +756,8 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
     if(nrow(CAA) > 0) {
       CAA <- CAA %>% dplyr::mutate(Nout = Obs * Nsamp_adj) %>% reshape2::acast(list("Yr", "Bin"), value.var = "Nout", fun.aggregate = sum)
 
-      CAAout <- matrix(NA, nyears, n_age)
-      CAAout[match(as.numeric(rownames(CAA)), mainyrs), match(as.numeric(colnames(CAA)), 0:Stock@maxage)] <- CAA
-      CAA2 <- apply(CAAout, 1, function(x) {x[is.na(x)] <- 0; return(x)})
-      cpars_fleet$Data@CAA <- CAA %>% array(c(n_age, nyears, 1)) %>% aperm(3:1)
+      CAAout <- SS_comp_fill(CAA, mainyrs, 0:Stock@maxage)
+      cpars_fleet$Data@CAA <- array(CAAout, c(1, nyears, n_age))
     }
 
   }
@@ -777,16 +775,9 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
 
       CAL <- CAL %>% dplyr::mutate(Nout = Obs * Nsamp_adj) %>% reshape2::acast(list("Yr", "Bin"), value.var = "Nout", fun.aggregate = sum)
 
-      CALout <- matrix(NA_real_, nyears, length(cpars_fleet$Data@CAL_mids))
-      CALout[mainyrs %in% as.numeric(rownames(CAL)) %in% mainyrs,
-             cpars_fleet$CAL_bins[-length(cpars_fleet$CAL_bins)] %in% as.numeric(colnames(CAL))] <- CAL
-      CAL2 <- apply(CALout, 1, function(x) {
-        if(!all(is.na(x))) x[is.na(x)] <- 0
-        return(x)
-      })
-      cpars_fleet$Data@CAL <- CAL2 %>% array(c(length(cpars_fleet$Data@CAL_mids), nyears, 1)) %>% aperm(3:1)
-
-      cpars_fleet$Data@ML <- apply(CAL2, 2, function(xx) weighted.mean(x = cpars_fleet$Data@CAL_mids, w = xx)) %>% matrix(1)
+      CALout <- SS_comp_fill(CAL, mainyrs, cpars_fleet$CAL_bins[-length(cpars_fleet$CAL_bins)])
+      cpars_fleet$Data@CAL <- array(CALout, c(1, nyears, length(cpars_fleet$Data@CAL_mids)))
+      cpars_fleet$Data@ML <- apply(CALout, 1, function(xx) weighted.mean(x = cpars_fleet$Data@CAL_mids, w = xx)) %>% matrix(1)
     }
   }
 
@@ -813,6 +804,73 @@ sample_recruitment <- function(Perr_hist, proyears, procsd, AC, seed) {
   for(y in 2:ncol(Perr_proj)) Perr_proj[, y] <- AC * Perr_proj[, y-1] + Perr_delta[, y] * sqrt(1 - AC^2)
 
   return(Perr_proj)
+}
+
+# Two-sex MOM: combined-sex observed data for both stocks, per-sex survey selectivity (AddIV),
+# and data mapped to stock 1 so simulated catches, comps and indices are summed over sexes
+SS_combine_sex_data <- function(cpars, replist, mainyrs, proyears, nsim) {
+  nyears <- length(mainyrs)
+  nf <- length(cpars[[1]])
+
+  sum_comp <- function(a, b) {
+    if (all(is.na(a))) return(b)
+    if (all(is.na(b))) return(a)
+    out <- a + b
+    out[is.na(a)] <- b[is.na(a)]
+    out[is.na(b)] <- a[is.na(b)]
+    out
+  }
+
+  for (f in seq_len(nf)) {
+    D <- cpars[[1]][[f]]$Data
+    D2 <- cpars[[2]][[f]]$Data
+    D@Cat <- D@Cat + D2@Cat
+    D@AvC <- mean(D@Cat, na.rm = TRUE)
+    D@CAA <- sum_comp(D@CAA, D2@CAA)
+    if (all(is.na(D@CAL))) {
+      D@CAL_bins <- D2@CAL_bins
+      D@CAL_mids <- D2@CAL_mids
+    }
+    D@CAL <- sum_comp(D@CAL, D2@CAL)
+    if (!all(is.na(D@CAL))) {
+      CAL <- matrix(D@CAL[1, , ], nrow = dim(D@CAL)[2])
+      D@ML <- apply(CAL, 1, function(xx) weighted.mean(x = D@CAL_mids, w = xx)) %>% matrix(1)
+    }
+    cpars[[1]][[f]]$Data <- cpars[[2]][[f]]$Data <- D
+  }
+
+  survey_ind <- which(!replist$IsFishFleet)
+  if (length(survey_ind) && !all(is.na(cpars[[1]][[1]]$Data@AddInd))) {
+    n_age <- dim(cpars[[1]][[1]]$Data@AddIndV)[3]
+    n_ind <- length(survey_ind)
+    V <- lapply(1:2, function(i) {
+      vapply(survey_ind, get_V_from_Asel2, matrix(0, n_age, nyears), i = i, replist = replist,
+             mainyrs = mainyrs, maxage = n_age - 1) %>% aperm(c(1, 3, 2))
+    })
+    for (p in 1:2) {
+      AddIV <- array(NA_real_, c(n_age, n_ind, nyears + proyears))
+      AddIV[, , 1:nyears] <- V[[p]]
+      AddIV[, , nyears + seq_len(proyears)] <- V[[p]][, , nyears]
+      cpars[[p]][[1]]$AddIV <- array(rep(AddIV, each = nsim), c(nsim, dim(AddIV)))
+    }
+
+    Vmean <- (V[[1]][, , nyears] + V[[2]][, , nyears])/2
+    Vmean <- t(Vmean)/apply(Vmean, 2, max)
+    for (p in 1:2) cpars[[p]][[1]]$Data@AddIndV <- array(Vmean, c(1, n_ind, n_age))
+  }
+
+  cpars[[1]][[1]]$Real.Data.Map <- matrix(1, nf, 2)
+  cpars
+}
+
+# Year x bin matrix of comp counts; NA rows for unobserved years, zero for unobserved bins
+SS_comp_fill <- function(comp, mainyrs, bins) {
+  out <- matrix(NA_real_, length(mainyrs), length(bins))
+  yr <- match(as.numeric(rownames(comp)), mainyrs)
+  bn <- match(as.numeric(colnames(comp)), bins)
+  out[yr[!is.na(yr)], ] <- 0
+  out[yr[!is.na(yr)], bn[!is.na(bn)]] <- comp[!is.na(yr), !is.na(bn), drop = FALSE]
+  out
 }
 
 get_V_from_Asel2 <- function(ff, i, replist, mainyrs, maxage, rescale = FALSE) {
