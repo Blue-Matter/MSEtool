@@ -22,7 +22,6 @@ IndexRate(
   IndexTarget = NULL,
   HCRControlPointsIndex = c(0, 0.5),
   HCRControlPointsRate = c(0, 1),
-  RampType = c("linear", "smooth"),
   Responsiveness = 1,
   DeltaDown = c(0.01, 0.5),
   DeltaUp = c(0.01, 0.5),
@@ -30,7 +29,8 @@ IndexRate(
   Allocation = NULL,
   TACType = c("Removals", "Landings"),
   IndexSeasons = NULL,
-  tunepar = 1
+  tunepar = 1,
+  plot = FALSE
 )
 
 IndexTarget(
@@ -46,9 +46,8 @@ IndexTarget(
   TrendYears = NULL,
   TrendHorizon = 1,
   IndexTarget = NULL,
-  HCRControlPointsIndex = c(0, 0.25, 0.5, 1, 2),
-  HCRControlPointsRate = c(0, 0.125, 0.5, 1, 1.5),
-  RampType = c("linear", "smooth"),
+  HCRControlPointsIndex = c(0, 1, 2),
+  HCRControlPointsRate = c(0, 1, 1.5),
   Responsiveness = 1,
   DeltaDown = c(0.01, 0.5),
   DeltaUp = c(0.01, 0.5),
@@ -56,7 +55,8 @@ IndexTarget(
   Allocation = NULL,
   TACType = c("Removals", "Landings"),
   IndexSeasons = NULL,
-  tunepar = 1
+  tunepar = 1,
+  plot = FALSE
 )
 }
 \arguments{
@@ -139,27 +139,23 @@ fractions of \code{IndexTarget} (i.e. in units of \code{status / IndexTarget}).
 At or below the first control point the catch-per-index rate
 (\code{IndexRate()}) or reference catch (\code{IndexTarget()}) is multiplied by
 the first value of \code{HCRControlPointsRate}; at or above the last, by the
-last value; in between, the multiplier is interpolated (see
-\code{RampType}). See \code{\link[=HockeyStickHCR]{HockeyStickHCR()}}.
+last value; in between, the multiplier is interpolated linearly. See
+\code{\link[=HockeyStickHCR]{HockeyStickHCR()}}.
 \itemize{
 \item \code{IndexRate()}: default \code{c(0, 0.5)}. E.g. \code{c(0.2, 0.8)} with
 \code{HCRControlPointsRate = c(0, 1)} closes the fishery below 20\% of
 \code{IndexTarget} and applies the full rate above 80\%. \code{c(0, 0)} makes the
 multiplier \code{1} for any positive status, disabling the harvest control
 rule.
-\item \code{IndexTarget()}: default \code{c(0, 0.25, 0.5, 1, 2)}. The multiplier
+\item \code{IndexTarget()}: default \code{c(0, 1, 2)}. The multiplier
 applies to the reference catch, so the control points define the TAC
 as a function of \code{status / IndexTarget}.
 }}
 
 \item{HCRControlPointsRate}{Numeric vector, same length as
 \code{HCRControlPointsIndex}, giving the multiplier at each control point.
-Default \code{c(0, 1)} for \code{IndexRate()} and \code{c(0, 0.125, 0.5, 1, 1.5)} for
+Default \code{c(0, 1)} for \code{IndexRate()} and \code{c(0, 1, 1.5)} for
 \code{IndexTarget()}.}
-
-\item{RampType}{Character. Shape of the harvest control rule between
-control points: \code{'linear'} (default) or \code{'smooth'} (a cubic smoothstep,
-with zero slope at each control point).}
 
 \item{Responsiveness}{Positive number. Exponent applied to the proposed
 TAC ratio, \verb{(trial TAC / previous TAC) ^ Responsiveness}, before
@@ -199,10 +195,16 @@ seasons applied to every selected index, or a list with one element
 larger values give higher catches. \code{1} (default) applies the MP as
 specified. It multiplies the catch-per-index rate (\code{IndexRate()}) or
 the reference catch (\code{IndexTarget()}).}
+
+\item{plot}{\code{TRUE} draws the figures of how the TAC was calculated from
+\code{Data}, or a character vector of figure names (\code{'Index'}, \code{'HCR'},
+\code{'Catch'}) draws only those; see Details, Figure. Ignored when the MP is
+run by \code{\link[=Project]{Project()}}. Default \code{FALSE}.}
 }
 \value{
 An \link[=advice-class]{advice} object with \code{TAC} and \code{TACType} set, and
-\code{TACUnit} taken from \code{Data@Landings@Units}.
+\code{TACUnit} taken from \code{Data@Landings@Units}. When figures are drawn,
+\code{Misc$Plots} holds them as a named list of \code{ggplot} objects.
 }
 \description{
 Management procedures that set a TAC from one or more relative abundance
@@ -235,6 +237,29 @@ calendar years with \code{\link[=AnnualData]{AnnualData()}}: catches are summed 
 each index is averaged over the seasons in \code{IndexSeasons}. All arguments
 given in years (\code{CalibYears}, \code{RecentYears}, \code{TrendYears}, \code{TrendHorizon},
 \code{IndexFreq}) therefore refer to calendar years, and the TAC is annual.
+\subsection{Figure}{
+
+With \code{plot = TRUE}, both MPs draw three figures of the calculation for
+\code{Data}:
+\itemize{
+\item \code{Index}: the selected indices (observed and smoothed), the \code{RecentYears}
+status window and status, the projected status when \code{TrendYears} is
+set, and \code{IndexTarget} with the harvest control rule control points;
+\item \code{HCR}: the harvest control rule as a function of
+\code{status / IndexTarget}, with the current status marked;
+\item \code{Catch}: the catch of type \code{TACType}, the \code{CalibYears} window and the
+calibrated mean (\code{IndexRate()}) or reference (\code{IndexTarget()}) catch,
+and the previous, trial, and final TAC.
+}
+
+The \code{Index} and \code{Catch} figures show the last 15 years, or more when
+\code{CalibYears}, \code{RecentYears}, or \code{TrendYears} extend further back. Set
+\code{plot} to some of the figure names to draw only those. The figures are
+\code{ggplot} objects returned in \code{Misc$Plots} of the advice object. The values
+used at each step, and whether \code{Responsiveness}, \code{DeltaDown}/\code{DeltaUp}, or
+\code{TACRange} changed the trial TAC, are printed to the console.
+}
+
 \subsection{IndexRate}{
 
 \code{IndexRate()} fishes at a catch-per-index rate, so the TAC follows the
@@ -271,9 +296,8 @@ index is away from \code{IndexTarget}.
 With the default control points, the trial TAC as a fraction of the
 reference catch is:
 \itemize{
-\item \code{status / IndexTarget} between half the target and the target;
-\item falling to zero below half the target along a piecewise-linear
-approximation of a quadratic (\code{0.125} at a quarter of the target);
+\item \code{status / IndexTarget} below the target, so the TAC is proportional to
+the index and is zero only when the index is zero;
 \item increasing at half that slope above the target, capped at \code{1.5} from
 twice the target.
 }
@@ -283,6 +307,14 @@ which is at \code{IndexTarget} only when the reference catch is sustainable
 there. Tune \code{tunepar} (see \code{\link[=TuneMP]{TuneMP()}}) so that the index fluctuates around
 \code{IndexTarget}.
 }
+}
+\examples{
+Hist <- Simulate(SingleStockOM, nSim = 2)
+Data <- Hist@Data[[1]][[1]]
+Adv <- IndexRate(Data, plot = TRUE)
+Adv@Misc$Plots$HCR
+IndexTarget(Data, TrendYears = 5, plot = 'Index')
+
 }
 \seealso{
 \code{\link[=Advice]{Advice()}}, \code{\link[=CheckCatch]{CheckCatch()}}, \code{\link[=LastTAC]{LastTAC()}}, \code{\link[=FilterTAC]{FilterTAC()}},

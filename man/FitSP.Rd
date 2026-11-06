@@ -99,6 +99,8 @@ fitted year and after the last), and \code{F}, \code{F_FMSY}, and \code{CatchPre
 \item \code{BMSY}, \code{FMSY}, \code{MSY}, \code{K}, \code{Shape}, \code{Depletion}
 \item \code{q}, \code{Sigma}: catchability and observation standard deviation of each
 index
+\item \code{IndexPred}: fitted value of each index (\verb{[nYear x nIndex]}): the
+catchability times the biomass at the index timing
 \item \code{Indices}: a \code{data.frame} with one row per index used in the fit:
 \code{Index} (name), \code{Source} (\code{'Survey'} or \code{'CPUE'}), \code{Units}, \code{Timing},
 \code{Weight} (the \code{IndexWeight} multiplier of its negative

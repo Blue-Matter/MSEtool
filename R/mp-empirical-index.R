@@ -31,6 +31,25 @@
 #' given in years (`CalibYears`, `RecentYears`, `TrendYears`, `TrendHorizon`,
 #' `IndexFreq`) therefore refer to calendar years, and the TAC is annual.
 #'
+#' ## Figure
+#' With `plot = TRUE`, both MPs draw three figures of the calculation for
+#' `Data`:
+#' - `Index`: the selected indices (observed and smoothed), the `RecentYears`
+#'   status window and status, the projected status when `TrendYears` is
+#'   set, and `IndexTarget` with the harvest control rule control points;
+#' - `HCR`: the harvest control rule as a function of
+#'   `status / IndexTarget`, with the current status marked;
+#' - `Catch`: the catch of type `TACType`, the `CalibYears` window and the
+#'   calibrated mean (`IndexRate()`) or reference (`IndexTarget()`) catch,
+#'   and the previous, trial, and final TAC.
+#'
+#' The `Index` and `Catch` figures show the last 15 years, or more when
+#' `CalibYears`, `RecentYears`, or `TrendYears` extend further back. Set
+#' `plot` to some of the figure names to draw only those. The figures are
+#' `ggplot` objects returned in `Misc$Plots` of the advice object. The values
+#' used at each step, and whether `Responsiveness`, `DeltaDown`/`DeltaUp`, or
+#' `TACRange` changed the trial TAC, are printed to the console.
+#'
 #' ## IndexRate
 #' `IndexRate()` fishes at a catch-per-index rate, so the TAC follows the
 #' index.
@@ -63,9 +82,8 @@
 #'
 #' With the default control points, the trial TAC as a fraction of the
 #' reference catch is:
-#' - `status / IndexTarget` between half the target and the target;
-#' - falling to zero below half the target along a piecewise-linear
-#'   approximation of a quadratic (`0.125` at a quarter of the target);
+#' - `status / IndexTarget` below the target, so the TAC is proportional to
+#'   the index and is zero only when the index is zero;
 #' - increasing at half that slope above the target, capped at `1.5` from
 #'   twice the target.
 #'
@@ -137,23 +155,20 @@
 #'   At or below the first control point the catch-per-index rate
 #'   (`IndexRate()`) or reference catch (`IndexTarget()`) is multiplied by
 #'   the first value of `HCRControlPointsRate`; at or above the last, by the
-#'   last value; in between, the multiplier is interpolated (see
-#'   `RampType`). See [HockeyStickHCR()].
+#'   last value; in between, the multiplier is interpolated linearly. See
+#'   [HockeyStickHCR()].
 #'   - `IndexRate()`: default `c(0, 0.5)`. E.g. `c(0.2, 0.8)` with
 #'     `HCRControlPointsRate = c(0, 1)` closes the fishery below 20% of
 #'     `IndexTarget` and applies the full rate above 80%. `c(0, 0)` makes the
 #'     multiplier `1` for any positive status, disabling the harvest control
 #'     rule.
-#'   - `IndexTarget()`: default `c(0, 0.25, 0.5, 1, 2)`. The multiplier
+#'   - `IndexTarget()`: default `c(0, 1, 2)`. The multiplier
 #'     applies to the reference catch, so the control points define the TAC
 #'     as a function of `status / IndexTarget`.
 #' @param HCRControlPointsRate Numeric vector, same length as
 #'   `HCRControlPointsIndex`, giving the multiplier at each control point.
-#'   Default `c(0, 1)` for `IndexRate()` and `c(0, 0.125, 0.5, 1, 1.5)` for
+#'   Default `c(0, 1)` for `IndexRate()` and `c(0, 1, 1.5)` for
 #'   `IndexTarget()`.
-#' @param RampType Character. Shape of the harvest control rule between
-#'   control points: `'linear'` (default) or `'smooth'` (a cubic smoothstep,
-#'   with zero slope at each control point).
 #' @param Responsiveness Positive number. Exponent applied to the proposed
 #'   TAC ratio, `(trial TAC / previous TAC) ^ Responsiveness`, before
 #'   `DeltaDown`/`DeltaUp` are applied. Values below `1` damp the change;
@@ -186,9 +201,21 @@
 #'   larger values give higher catches. `1` (default) applies the MP as
 #'   specified. It multiplies the catch-per-index rate (`IndexRate()`) or
 #'   the reference catch (`IndexTarget()`).
+#' @param plot `TRUE` draws the figures of how the TAC was calculated from
+#'   `Data`, or a character vector of figure names (`'Index'`, `'HCR'`,
+#'   `'Catch'`) draws only those; see Details, Figure. Ignored when the MP is
+#'   run by [Project()]. Default `FALSE`.
 #'
 #' @return An [advice-class] object with `TAC` and `TACType` set, and
-#'   `TACUnit` taken from `Data@Landings@Units`.
+#'   `TACUnit` taken from `Data@Landings@Units`. When figures are drawn,
+#'   `Misc$Plots` holds them as a named list of `ggplot` objects.
+#'
+#' @examples
+#' Hist <- Simulate(SingleStockOM, nSim = 2)
+#' Data <- Hist@@Data[[1]][[1]]
+#' Adv <- IndexRate(Data, plot = TRUE)
+#' Adv@@Misc$Plots$HCR
+#' IndexTarget(Data, TrendYears = 5, plot = 'Index')
 #'
 #' @seealso [Advice()], [CheckCatch()], [LastTAC()], [FilterTAC()],
 #'   [HockeyStickHCR()], [ConstrainTAC()], [SmoothSeries()], [data-class],
@@ -217,7 +244,6 @@ IndexRate <- function(Data,
                       IndexTarget           = NULL,
                       HCRControlPointsIndex = c(0, 0.5),
                       HCRControlPointsRate  = c(0, 1),
-                      RampType              = c('linear', 'smooth'),
                       Responsiveness        = 1,
                       DeltaDown             = c(0.01, 0.5),
                       DeltaUp               = c(0.01, 0.5),
@@ -225,13 +251,82 @@ IndexRate <- function(Data,
                       Allocation            = NULL,
                       TACType               = c('Removals', 'Landings'),
                       IndexSeasons          = NULL,
-                      tunepar               = 1) {
+                      tunepar               = 1,
+                      plot                  = FALSE) {
 
   .CheckClass(Data, 'data', 'Data')
-  RampType <- match.arg(RampType, c('linear', 'smooth'))
   TACType  <- match.arg(TACType, c('Removals', 'Landings'))
   .CheckTunePar(tunepar)
 
+  Calc <- .IndexMPCalc('Rate', Data, Indices, IndexSource, IndexFreq, IndexWeight, CalibYears,
+                       Smooth, ENPMult, RecentYears, TrendYears, TrendHorizon, IndexFactor,
+                       IndexTarget, HCRControlPointsIndex, HCRControlPointsRate,
+                       Responsiveness, DeltaDown, DeltaUp, TACRange, TACType, IndexSeasons,
+                       tunepar)
+  TAC <- .ApplyAllocation(Calc$TAC, Allocation, Calc$Data)
+  .RecordIndexMP(Calc)
+  Plots <- .MPPlot(plot, \() .PlotIndexMP(Calc, 'IndexRate', Data))
+  .AddPlots(Advice(TAC = TAC, TACType = TACType, TACUnit = Calc$Data@Landings@Units), Plots)
+}
+class(IndexRate) <- 'mp'
+
+
+#' @rdname IndexMPs
+#' @export
+IndexTarget <- function(Data,
+                        Indices               = NULL,
+                        IndexSource           = 'auto',
+                        IndexFreq             = NULL,
+                        IndexWeight           = NULL,
+                        CalibYears            = 5,
+                        Smooth                = TRUE,
+                        ENPMult               = 0.3,
+                        RecentYears           = 1,
+                        TrendYears            = NULL,
+                        TrendHorizon          = 1,
+                        IndexTarget           = NULL,
+                        HCRControlPointsIndex = c(0, 1, 2),
+                        HCRControlPointsRate  = c(0, 1, 1.5),
+                        Responsiveness        = 1,
+                        DeltaDown             = c(0.01, 0.5),
+                        DeltaUp               = c(0.01, 0.5),
+                        TACRange              = NULL,
+                        Allocation            = NULL,
+                        TACType               = c('Removals', 'Landings'),
+                        IndexSeasons          = NULL,
+                        tunepar               = 1,
+                        plot                  = FALSE) {
+
+  .CheckClass(Data, 'data', 'Data')
+  TACType  <- match.arg(TACType, c('Removals', 'Landings'))
+  .CheckTunePar(tunepar)
+
+  Calc <- .IndexMPCalc('Target', Data, Indices, IndexSource, IndexFreq, IndexWeight, CalibYears,
+                       Smooth, ENPMult, RecentYears, TrendYears, TrendHorizon, IndexFactor = 1,
+                       IndexTarget, HCRControlPointsIndex, HCRControlPointsRate,
+                       Responsiveness, DeltaDown, DeltaUp, TACRange, TACType, IndexSeasons,
+                       tunepar)
+  TAC <- .ApplyAllocation(Calc$TAC, Allocation, Calc$Data)
+  .RecordIndexMP(Calc)
+  Plots <- .MPPlot(plot, \() .PlotIndexMP(Calc, 'IndexTarget', Data))
+  .AddPlots(Advice(TAC = TAC, TACType = TACType, TACUnit = Calc$Data@Landings@Units), Plots)
+}
+class(IndexTarget) <- 'mp'
+
+
+#' Calculations of `IndexRate()` and `IndexTarget()`
+#'
+#' @param Type `'Rate'` ([IndexRate()]) or `'Target'` ([IndexTarget()]).
+#' @param Data,Indices,IndexSource,IndexFreq,IndexWeight,CalibYears,Smooth,ENPMult,RecentYears,TrendYears,TrendHorizon,IndexFactor,IndexTarget,HCRControlPointsIndex,HCRControlPointsRate,Responsiveness,DeltaDown,DeltaUp,TACRange,TACType,IndexSeasons,tunepar
+#'   See [IndexRate()].
+#' @return A list with the stock-wide `TAC` (before allocation), the
+#'   annual `Data`, and the intermediate values used by `.PlotIndexMP()`.
+#' @keywords internal
+.IndexMPCalc <- function(Type, Data, Indices, IndexSource, IndexFreq, IndexWeight, CalibYears,
+                         Smooth, ENPMult, RecentYears, TrendYears, TrendHorizon, IndexFactor,
+                         IndexTarget, HCRControlPointsIndex, HCRControlPointsRate,
+                         Responsiveness, DeltaDown, DeltaUp, TACRange, TACType, IndexSeasons,
+                         tunepar) {
   CheckCatch(Data)
   IndexSource <- .ResolveIndexSource(Data, IndexSource)
   Data <- AnnualData(Data, .IndexSeasonsBySource(Data, IndexSource, Indices, IndexSeasons))
@@ -251,25 +346,29 @@ IndexRate <- function(Data,
   Ref <- .ResolveIndexTarget(Selected$Ref, IndexTarget, Keep, IndexHist, LHInd,
                              Smooth, ENPMult, RecentYears)
 
-  CalibRows   <- seq(max(1, LHInd - CalibYears + 1), LHInd)
-  Catch       <- .AnnualCatchByType(Data, TACType)
-  CalibCatch  <- mean(Catch[CalibRows], na.rm = TRUE)
-  CalibIndex  <- rowMeans(IndexHist[, CalibRows, drop = FALSE], na.rm = TRUE)
-  NoCalib <- !is.finite(CalibIndex) | CalibIndex <= 0
-  if (any(NoCalib)) {
-    NoCalibNames <- Selected$Name[Keep][NoCalib]
-    CalibRange <- range(Data@Years[CalibRows])
-    Consequence <- if (all(NoCalib)) {
-      "The previous TAC is kept."
-    } else {
-      "{cli::qty(sum(NoCalib))}{?This index is/These indices are} ignored."
+  CalibRows  <- seq(max(1, LHInd - CalibYears + 1), LHInd)
+  Catch      <- .AnnualCatchByType(Data, TACType)
+  CalibCatch <- mean(Catch[CalibRows], na.rm = TRUE)
+
+  CalibIndex <- CatchPerIndex <- NULL
+  if (Type == 'Rate') {
+    CalibIndex <- rowMeans(IndexHist[, CalibRows, drop = FALSE], na.rm = TRUE)
+    NoCalib <- !is.finite(CalibIndex) | CalibIndex <= 0
+    if (any(NoCalib)) {
+      NoCalibNames <- Selected$Name[Keep][NoCalib]
+      CalibRange <- range(Data@Years[CalibRows])
+      Consequence <- if (all(NoCalib)) {
+        "The previous TAC is kept."
+      } else {
+        "{cli::qty(sum(NoCalib))}{?This index is/These indices are} ignored."
+      }
+      cli::cli_warn(c("!" = "No positive {.arg CalibYears} values ({CalibRange[1]}-{CalibRange[2]}) for {cli::qty(sum(NoCalib))}ind{?ex/ices} {.val {NoCalibNames}}.",
+                      "i" = Consequence,
+                      "i" = "Increase {.arg CalibYears} or check {.arg IndexSource}/{.arg Indices}."))
     }
-    cli::cli_warn(c("!" = "No positive {.arg CalibYears} values ({CalibRange[1]}-{CalibRange[2]}) for {cli::qty(sum(NoCalib))}ind{?ex/ices} {.val {NoCalibNames}}.",
-                    "i" = Consequence,
-                    "i" = "Increase {.arg CalibYears} or check {.arg IndexSource}/{.arg Indices}."))
+    CatchPerIndex <- CalibCatch / CalibIndex
+    CatchPerIndex[NoCalib] <- NA
   }
-  CatchPerIndex <- CalibCatch / CalibIndex
-  CatchPerIndex[NoCalib] <- NA
 
   IndexSmooth <- .SmoothIndices(IndexHist, Smooth, ENPMult)
 
@@ -280,21 +379,29 @@ IndexRate <- function(Data,
   Slope       <- .TrendSlope(IndexSmooth, TrendYears)
   StatusTrend <- Status * exp(Slope * TrendHorizon)
 
-  Est      <- stats::weighted.mean(StatusTrend/Ref, IndexWeight, na.rm = TRUE)
-  RefLevel <- 1
+  HCR <- function(x, Est, RefLevel)
+    HockeyStickHCR(x, Est = Est, Ref = RefLevel,
+                   ControlPointsIndex = HCRControlPointsIndex,
+                   ControlPointsRate  = HCRControlPointsRate)
 
-  TrialRate <- CatchPerIndex * IndexFactor * tunepar
-  AdjRate   <- HockeyStickHCR(TrialRate, 
-                              Est = Est, 
-                              Ref = RefLevel,
-                              ControlPointsIndex = HCRControlPointsIndex,
-                              ControlPointsRate  = HCRControlPointsRate,
-                              RampType           = RampType)
+  RefCatch <- NULL
+  if (Type == 'Rate') {
+    Est      <- stats::weighted.mean(StatusTrend/Ref, IndexWeight, na.rm = TRUE)
+    RefLevel <- 1
+    AdjRate  <- HCR(CatchPerIndex * IndexFactor * tunepar, Est, RefLevel)
+    TrialTAC <- stats::weighted.mean(Status * AdjRate, IndexWeight, na.rm = TRUE)
+  } else {
+    Est      <- stats::weighted.mean(StatusTrend, IndexWeight, na.rm = TRUE)
+    RefLevel <- stats::weighted.mean(Ref, IndexWeight, na.rm = TRUE)
+    RefCatch <- CalibCatch * tunepar
+    TrialTAC <- HCR(RefCatch, Est, RefLevel)
+  }
+  HCRMult <- HCR(1, Est, RefLevel)
 
-  TrialTAC <- stats::weighted.mean(Status * AdjRate, IndexWeight, na.rm = TRUE)
   PrevTAC  <- LastTAC(Data, TACType)
   TrialTAC <- FilterTAC(TrialTAC)
-  if (is.na(TrialTAC)) TrialTAC <- PrevTAC
+  TrialKept <- is.na(TrialTAC)
+  if (TrialKept) TrialTAC <- PrevTAC
 
   Mod <- exp(log(TrialTAC / PrevTAC) * Responsiveness)
 
@@ -302,99 +409,20 @@ IndexRate <- function(Data,
     TACRange <- c(0, 100 * max(Catch, na.rm = TRUE))
 
   TAC <- ConstrainTAC(PrevTAC, Mod, DeltaDown, DeltaUp, TACRange)
-  TAC <- .ApplyAllocation(TAC, Allocation, Data)
 
-  Advice(TAC = TAC, TACType = TACType, TACUnit = Data@Landings@Units)
+  list(Type = Type, Data = Data, TAC = TAC, TrialTAC = TrialTAC, TrialKept = TrialKept,
+       PrevTAC = PrevTAC, Mod = Mod, Years = Data@Years, YearLH = Data@YearLH,
+       Name = Selected$Name[Keep], Units = Selected$Units[Keep], Source = Selected$Source[Keep],
+       IndexHist = IndexHist, IndexSmooth = IndexSmooth, Smooth = Smooth, Weight = IndexWeight,
+       Ref = Ref, Status = Status, StatusTrend = StatusTrend, RecentYears = RecentYears,
+       TrendYears = TrendYears, TrendHorizon = TrendHorizon, CalibRows = CalibRows,
+       Catch = Catch, CalibCatch = CalibCatch, CalibIndex = CalibIndex,
+       CatchPerIndex = CatchPerIndex, IndexFactor = IndexFactor, RefCatch = RefCatch,
+       tunepar = tunepar, Est = Est, RefLevel = RefLevel, HCRMult = HCRMult,
+       HCRControlPointsIndex = HCRControlPointsIndex, HCRControlPointsRate = HCRControlPointsRate,
+       RampType = 'linear', Responsiveness = Responsiveness, DeltaDown = DeltaDown,
+       DeltaUp = DeltaUp, TACRange = TACRange, TACType = TACType)
 }
-class(IndexRate) <- 'mp'
-
-
-#' @rdname IndexMPs
-#' @export
-IndexTarget <- function(Data,
-                        Indices               = NULL,
-                        IndexSource           = 'auto',
-                        IndexFreq             = NULL,
-                        IndexWeight           = NULL,
-                        CalibYears            = 5,
-                        Smooth                = TRUE,
-                        ENPMult               = 0.3,
-                        RecentYears           = 1,
-                        TrendYears            = NULL,
-                        TrendHorizon          = 1,
-                        IndexTarget           = NULL,
-                        HCRControlPointsIndex = c(0, 0.25, 0.5, 1, 2),
-                        HCRControlPointsRate  = c(0, 0.125, 0.5, 1, 1.5),
-                        RampType              = c('linear', 'smooth'),
-                        Responsiveness        = 1,
-                        DeltaDown             = c(0.01, 0.5),
-                        DeltaUp               = c(0.01, 0.5),
-                        TACRange              = NULL,
-                        Allocation            = NULL,
-                        TACType               = c('Removals', 'Landings'),
-                        IndexSeasons          = NULL,
-                        tunepar               = 1) {
-
-  .CheckClass(Data, 'data', 'Data')
-  RampType <- match.arg(RampType, c('linear', 'smooth'))
-  TACType  <- match.arg(TACType, c('Removals', 'Landings'))
-  .CheckTunePar(tunepar)
-  CheckCatch(Data)
-  IndexSource <- .ResolveIndexSource(Data, IndexSource)
-  Data <- AnnualData(Data, .IndexSeasonsBySource(Data, IndexSource, Indices, IndexSeasons))
-
-  Selected <- .SelectIndices(Data, IndexSource, Indices)
-  nSel <- ncol(Selected$Value)
-  if (is.null(IndexFreq))   IndexFreq   <- rep(1, nSel)
-  if (is.null(IndexWeight)) IndexWeight <- rep(1, nSel)
-
-  LHInd     <- LastHistYearInd(Data)
-  YearCur   <- max(Data@Years)
-  IndexHist <- .ApplyIndexFrequency(t(Selected$Value), IndexFreq, Data@YearLH, YearCur, Data@Years)
-
-  Keep        <- IndexFreq > 0
-  IndexWeight <- IndexWeight[Keep]
-  Ref <- .ResolveIndexTarget(Selected$Ref, IndexTarget, Keep, IndexHist, LHInd,
-                             Smooth, ENPMult, RecentYears)
-
-  IndexSmooth <- .SmoothIndices(IndexHist, Smooth, ENPMult)
-
-  Status <- .RecentStatus(IndexSmooth, RecentYears)
-  if (all(is.na(Status)))
-    cli::cli_abort("All index values are {.val NA} over the {.arg RecentYears} status window.")
-
-  Slope       <- .TrendSlope(IndexSmooth, TrendYears)
-  StatusTrend <- Status * exp(Slope * TrendHorizon)
-
-  Est      <- stats::weighted.mean(StatusTrend, IndexWeight, na.rm = TRUE)
-  RefLevel <- stats::weighted.mean(Ref, IndexWeight, na.rm = TRUE)
-
-  CalibRows <- seq(max(1, LHInd - CalibYears + 1), LHInd)
-  Catch     <- .AnnualCatchByType(Data, TACType)
-  RefCatch  <- mean(Catch[CalibRows], na.rm = TRUE) * tunepar
-
-  TrialTAC <- HockeyStickHCR(RefCatch,
-                             Est = Est,
-                             Ref = RefLevel,
-                             ControlPointsIndex = HCRControlPointsIndex,
-                             ControlPointsRate  = HCRControlPointsRate,
-                             RampType           = RampType)
-
-  PrevTAC  <- LastTAC(Data, TACType)
-  TrialTAC <- FilterTAC(TrialTAC)
-  if (is.na(TrialTAC)) TrialTAC <- PrevTAC
-
-  Mod <- exp(log(TrialTAC / PrevTAC) * Responsiveness)
-
-  if (is.null(TACRange))
-    TACRange <- c(0, 100 * max(Catch, na.rm = TRUE))
-
-  TAC <- ConstrainTAC(PrevTAC, Mod, DeltaDown, DeltaUp, TACRange)
-  TAC <- .ApplyAllocation(TAC, Allocation, Data)
-
-  Advice(TAC = TAC, TACType = TACType, TACUnit = Data@Landings@Units)
-}
-class(IndexTarget) <- 'mp'
 
 
 #' Annual Catch Summed Over Fleets

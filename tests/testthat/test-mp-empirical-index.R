@@ -22,8 +22,7 @@
   D
 }
 
-.AnnualIndexData <- function(IndexValue, Ref = NULL) {
-  Years <- 2001:2020
+.AnnualIndexData <- function(IndexValue, Ref = NULL, Years = 2001:2020) {
   n     <- length(Years)
   rn    <- list(Year = as.character(Years), Fleet = 'F1')
   D <- Data(Years = Years, YearLH = 2020,
@@ -106,7 +105,7 @@ test_that("IndexTarget scales the reference catch by the HCR, independent of the
   D@Advice@TAC <- array(1000, c(1, 1), list(Year = '2020', Fleet = 'Total'))
   expect_equal(do.call(IndexTarget, c(list(D), Free))@TAC, 50)
 
-  expect_equal(do.call(IndexTarget, c(list(D, IndexTarget = 4), Free))@TAC, 12.5)
+  expect_equal(do.call(IndexTarget, c(list(D, IndexTarget = 4), Free))@TAC, 25)
   expect_equal(do.call(IndexTarget, c(list(D, IndexTarget = 2 / 3), Free))@TAC, 125)
   expect_equal(do.call(IndexTarget, c(list(D, IndexTarget = 0.2), Free))@TAC, 150)
   expect_equal(do.call(IndexTarget, c(list(D, IndexTarget = 0.2, HCRControlPointsIndex = c(0, 1, 3),
@@ -268,4 +267,58 @@ test_that("catch in the first projection years increases with tunepar for every 
     Yield <- PM_Removals(MSE, Years = Years(OM, 'Projection')[1:5])@Mean[1, c('Low', 'Mid', 'High')]
     expect_true(all(diff(Yield) > 0), label = MP)
   }
+})
+
+NoPlots <- function(A) {
+  A@Misc <- A@Misc[setdiff(names(A@Misc), 'Plots')]
+  if (!length(A@Misc)) A@Misc <- list()
+  A
+}
+
+test_that("plot = TRUE draws the index MP figures without changing the advice", {
+  D <- .AnnualIndexData(seq(2, 1, length.out = 20))
+  D2 <- .SeasonalIndexData()
+  pdf(NULL)
+  on.exit(grDevices::dev.off())
+  for (MP in list(IndexRate, IndexTarget)) {
+    for (Args in list(list(), list(TrendYears = 5, Smooth = FALSE),
+                      list(DeltaUp = c(0.01, 0.05), DeltaDown = c(0.01, 0.05)))) {
+      Off <- do.call(MP, c(list(D), Args))
+      expect_no_warning(On <- do.call(MP, c(list(D, plot = TRUE), Args)))
+      expect_named(On@Misc$Plots, c('Index', 'HCR', 'Catch'))
+      expect_identical(NoPlots(On), Off)
+    }
+    expect_identical(NoPlots(MP(D2, IndexSource = 'Survey', Smooth = FALSE, plot = TRUE)),
+                     MP(D2, IndexSource = 'Survey', Smooth = FALSE))
+  }
+})
+
+test_that("the index MP figure reports the calculation", {
+  D <- .AnnualIndexData(seq(2, 1, length.out = 20))
+  Calc <- MSEtool:::.IndexMPCalc('Target', D, NULL, 'auto', NULL, NULL, 5, TRUE, 0.3, 1, NULL, 1, 1,
+                                 NULL, c(0, 1, 2), c(0, 1, 1.5), 1,
+                                 c(0.01, 0.5), c(0.01, 0.5), NULL, 'Removals', NULL, 1)
+  expect_equal(Calc$TAC, IndexTarget(D)@TAC)
+  Figs <- MSEtool:::.PlotIndexMP(Calc, 'IndexTarget', D)
+  expect_named(Figs, c('Index', 'HCR', 'Catch'))
+  for (p in Figs) expect_s3_class(p, 'ggplot')
+  expect_match(attr(Figs, 'Heading'), 'IndexTarget: TAC for 2021')
+})
+
+test_that("the index status and catch figures show recent years", {
+  D <- .AnnualIndexData(seq(10, 1, length.out = 40), Years = 1981:2020)
+  FirstYear <- function(p) min(unlist(lapply(p$layers, \(l) if (is.data.frame(l$data)) l$data$Year)))
+  pdf(NULL)
+  on.exit(grDevices::dev.off())
+  Figs <- IndexRate(D, plot = 'HCR')@Misc$Plots
+  expect_equal(FirstYear(Figs$Index), max(D@Years) - 14)
+  expect_equal(FirstYear(Figs$Catch), max(D@Years) - 14)
+  Figs <- IndexRate(D, plot = 'HCR', CalibYears = 30)@Misc$Plots
+  expect_equal(FirstYear(Figs$Index), max(D@Years) - 29)
+  expect_warning(IndexRate(D, plot = 'Biomass'), 'No figure')
+})
+
+test_that(".MPPlot ignores plot inside Project()", {
+  .CalcAdviceSimMP <- function() MSEtool:::.MPPlot(TRUE, \() stop('drawn'))
+  expect_message(.CalcAdviceSimMP(), 'ignored')
 })

@@ -144,3 +144,34 @@ test_that("SurplusProduction() on a seasonal OM with a CPUE index", {
   expect_true(all(E$AdviceYear == floor(E$AdviceYear)))
   expect_gt(mean(E$Converged), 0.8)
 })
+
+test_that("SurplusProduction(plot = TRUE) draws the figure without changing the advice", {
+  Sim <- SimSPData(Seed = 7)
+  pdf(NULL)
+  on.exit(grDevices::dev.off())
+  expect_no_warning(On <- SurplusProduction(Sim$Data, plot = TRUE))
+  expect_named(On@Misc$Plots, c('Index', 'Biomass', 'HCR', 'Catch'))
+  On@Misc$Plots <- NULL
+  expect_identical(On, SurplusProduction(Sim$Data))
+
+  expect_no_warning(Fall <- SurplusProduction(Sim$Data, MinIndexYears = 1000, OnFail = 'trend', plot = TRUE))
+  expect_true(Fall@Misc$SurplusProduction$Summary$Fallback)
+  expect_named(Fall@Misc$Plots, c('Index', 'Catch'))
+  expect_no_warning(SurplusProduction(Sim$Data, AdviceType = 'Effort', plot = TRUE))
+})
+
+test_that("FitSP() stores the fitted index", {
+  Sim <- SimSPData(Seed = 7)
+  Fit <- FitSP(Sim$Data)
+  expect_identical(dim(Fit$IndexPred), dim(Fit$Prep$Index))
+  ok <- is.finite(Fit$Prep$Index) & Fit$Prep$Index > 0
+  expect_equal(mean(log(Fit$Prep$Index[ok] / Fit$IndexPred[ok])), 0, tolerance = 1e-6)
+})
+
+test_that("plot = TRUE prints the calculation steps", {
+  Sim <- SimSPData(Seed = 7)
+  pdf(NULL)
+  on.exit(grDevices::dev.off())
+  expect_message(SurplusProduction(Sim$Data, plot = TRUE), 'HCR multiplier')
+  expect_message(IndexRate(Sim$Data, plot = TRUE), 'Catch-per-index rate')
+})
