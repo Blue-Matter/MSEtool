@@ -369,6 +369,11 @@ PopulateOM <- function(OM,
   nFleets <- nFleet(OM)
   
   FleetInput <- OM@Fleet
+  if (is.list(FleetInput) && inherits(FleetInput[[1]], 'fleet')) {
+    class(FleetInput) <- "FleetList"
+  }
+  
+  
   if (isS4(FleetInput)) {
     # OM@Fleet = single `fleet` object: replicate across stocks
     FleetInput <- replicate(nStocks, list(FleetInput), simplify = FALSE)
@@ -437,6 +442,15 @@ PopulateOM <- function(OM,
 
     for (fl in seq_len(nFleets)) {
       if (show) cli::cli_progress_update()
+      
+      fleet_name <- FleetList[[st]][[fl]]@Name
+      if (is.na(fleet_name) || !is.character(fleet_name)) {
+        cli::cli_abort(c('x' = "Invalid or missing fleet name for Fleet: {fl} Stock: {st}",
+                         'i' = 'Must be a unique character string. Currently {.val {fleet_name}}.'
+                         
+        ))
+      }
+      
       FleetList[[st]][[fl]] <- PopulateFleet(
         Fleet = FleetList[[st]][[fl]],
         Stock = StockOrig,
@@ -447,7 +461,7 @@ PopulateOM <- function(OM,
         ExtendedLength = ExtendedLength,
         ExtendedWeight = ExtendedWeight
       )
-
+      
       # extract warning logs - only selectivity for now
       if (!is.null(FleetList[[st]][[fl]]@Selectivity@Misc$warning)) {
         warns <- FleetList[[st]][[fl]]@Selectivity@Misc
@@ -455,9 +469,10 @@ PopulateOM <- function(OM,
         OM@Log <- .JoinLog(OM@Log, warns)
       }
       
-      names(FleetList[[st]])[fl] <- FleetList[[st]][[fl]]@Name
+      names(FleetList[[st]])[fl] <- fleet_name
     }
   }
+  
   if (show) cli::cli_progress_done()
 
   .CheckFleetMaximum(FleetList)
