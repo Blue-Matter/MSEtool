@@ -10,8 +10,8 @@
 #'   to the console and the selected figures are drawn.
 #' @keywords internal
 .MPPlot <- function(plot, Build) {
-  if (isTRUE(.MPReplayState$Capture)) {
-    .MPReplayState$Env <- environment(Build)
+  if (.Recording()) {
+    if (is.null(.MPReplayState$Record)) .RecordFromPlot(environment(Build))
     return(NULL)
   }
   if (is.null(plot) || isFALSE(plot) || !length(plot))
@@ -230,7 +230,7 @@
 
 .HistBoundary <- function(p, Years, YearLH) {
   if (max(Years) > YearLH)
-    p <- p + ggplot2::geom_vline(xintercept = YearLH + 0.5, linetype = 'dotted', colour = 'grey40')
+    p <- p + ggplot2::geom_vline(xintercept = YearLH + 0.5, colour = 'grey70', linewidth = 0.5)
   p
 }
 

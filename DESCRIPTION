@@ -354,6 +354,7 @@ Collate:
     'project-hist.R'
     'project-mp.R'
     'project.R'
+    'record-mp.R'
     'reduce-nSim.R'
     'reduce.R'
     'rename.R'

@@ -291,7 +291,10 @@ SurplusProduction <- function(Data,
   }
   .CheckTunePar(tunepar)
   Env    <- environment()
-  Finish <- function(A) .AddPlots(A, .MPPlot(plot, \() .PlotSPMP(A, Env, Data)))
+  Finish <- function(A) {
+    .RecordSP(A, Env)
+    .AddPlots(A, .MPPlot(plot, \() .PlotSPMP(A, Env, Data)))
+  }
 
   CheckCatch(Data)
   State <- Data@Misc$SurplusProduction

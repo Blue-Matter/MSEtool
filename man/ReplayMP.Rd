@@ -30,16 +30,17 @@ management year of the projection.}
 (spawning biomass, default) or \code{'B'} (total biomass). \code{NULL} leaves out
 the \code{Status} animation.}
 
-\item{IndexCap}{For \code{\link[=IndexRate]{IndexRate()}} and \code{\link[=IndexTarget]{IndexTarget()}}, the \code{Index}
-animation starts in the historical year when the observed index last
-comes down to \code{IndexCap} times the largest \code{IndexTarget} of the index
-(the earliest such year over indices), so the target and control points
-stay visible. \code{Inf} shows the full series. Default \code{1.5}.}
+\item{IndexCap}{For MPs that record an \code{IndexTarget} (e.g. \code{\link[=IndexRate]{IndexRate()}}
+and \code{\link[=IndexTarget]{IndexTarget()}}), the \code{Index} animation starts in the historical
+year when the observed index last comes down to \code{IndexCap} times the
+largest \code{IndexTarget} of the index (the earliest such year over
+indices), so the target and control points stay visible. \code{Inf} shows
+the full series. Default \code{1.5}.}
 }
 \value{
 An object of class \code{mpreplay}: a list with \code{MP}, \code{Sim}, \code{Stock},
 \code{Table} (a \code{data.frame} with one row per management year: the replayed
-\code{Advice}, the \code{Recorded} advice, and the values used by the MP), and
+\code{Advice}, the \code{Recorded} advice, and the values recorded by the MP), and
 \code{Animations} (a named list of \code{gganim} objects).
 }
 \description{
@@ -63,15 +64,17 @@ The animations have one frame per management year. They are \code{gganim}
 objects: printing one renders it, \code{\link[gganimate:animate]{gganimate::animate()}} sets the speed
 and renderer, and \code{\link[gganimate:anim_save]{gganimate::anim_save()}} saves it.
 \itemize{
-\item \code{\link[=IndexRate]{IndexRate()}} and \code{\link[=IndexTarget]{IndexTarget()}}: \code{Index} (the indices, status, and
-\code{IndexTarget} at each decision, with the operating model population
-each index tracks), \code{Status}, \code{HCR} (the path of the decisions along
-the harvest control rule), and \code{Catch}.
-\item \code{\link[=SurplusProduction]{SurplusProduction()}}: \code{Index} (observed and fitted indices, with the
-operating model population each index tracks), \code{Status} (also with the
-estimated \code{B/BMSY} at each decision), \code{HCR}, and \code{Catch}.
-\item Other MPs: \code{Status} and \code{Catch}.
+\item \code{Status} and \code{Catch}, for every MP.
+\item \code{Index}, \code{HCR}, and the estimated \code{B/BMSY} on the \code{Status} plot, from
+the values the MP records with \code{\link[=RecordMP]{RecordMP()}}. \code{\link[=IndexRate]{IndexRate()}},
+\code{\link[=IndexTarget]{IndexTarget()}}, and \code{\link[=SurplusProduction]{SurplusProduction()}} record the indices (with
+their status and \code{IndexTarget}, or their fitted values), the harvest
+control rule, and the estimated \code{B/BMSY} (\code{\link[=SurplusProduction]{SurplusProduction()}}). See
+\code{\link[=RecordMP]{RecordMP()}} to add these to other MPs.
 }
+
+The columns of \code{Table} after \code{Recorded} are the \code{Values} and \code{TrialTAC}
+recorded by the MP.
 
 \code{Index} shows each index in its own panel. The orange bar is the status
 over the \code{RecentYears} window, the arrow the projected status when
@@ -109,12 +112,16 @@ population of an index is the index-selected population on the scale of
 the index (\code{Efficiency * NomIndex^Beta}, see \code{\link[=PlotIndexFit]{PlotIndexFit()}}), shown up
 to the last year of data available to the MP.
 
+In the \code{Index}, \code{Biomass}, \code{Status}, and \code{Catch} plots, a light solid
+line marks the end of the historical period and, when the OM has an
+\code{MPStartYear} after the first projection year (with interim advice
+before it), a light dashed line the year MPs are first applied.
+
 \code{\link[=ReplayAnimate]{ReplayAnimate()}} shows the animations side by side, and \code{\link[=ReplayPlot]{ReplayPlot()}}
 returns the plots of a single year.
 
-The MP is run with the version of MSEtool currently loaded. MPs without
-a \code{plot} argument give the \code{Catch} animation only. Multi-stock (\code{mmp})
-MPs are not supported.
+The MP is run with the version of MSEtool currently loaded. Multi-stock
+(\code{mmp}) MPs are not supported.
 }
 \examples{
 \donttest{
@@ -128,6 +135,6 @@ if (requireNamespace('gganimate', quietly = TRUE))
 
 }
 \seealso{
-\code{\link[=ReplayAnimate]{ReplayAnimate()}}, \code{\link[=ReplayPlot]{ReplayPlot()}}, \code{\link[=IndexRate]{IndexRate()}},
+\code{\link[=RecordMP]{RecordMP()}}, \code{\link[=ReplayAnimate]{ReplayAnimate()}}, \code{\link[=ReplayPlot]{ReplayPlot()}}, \code{\link[=IndexRate]{IndexRate()}},
 \code{\link[=SurplusProduction]{SurplusProduction()}}, \code{\link[=PPD]{PPD()}}
 }

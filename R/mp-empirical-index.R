@@ -264,6 +264,7 @@ IndexRate <- function(Data,
                        Responsiveness, DeltaDown, DeltaUp, TACRange, TACType, IndexSeasons,
                        tunepar)
   TAC <- .ApplyAllocation(Calc$TAC, Allocation, Calc$Data)
+  .RecordIndexMP(Calc)
   Plots <- .MPPlot(plot, \() .PlotIndexMP(Calc, 'IndexRate', Data))
   .AddPlots(Advice(TAC = TAC, TACType = TACType, TACUnit = Calc$Data@Landings@Units), Plots)
 }
@@ -306,6 +307,7 @@ IndexTarget <- function(Data,
                        Responsiveness, DeltaDown, DeltaUp, TACRange, TACType, IndexSeasons,
                        tunepar)
   TAC <- .ApplyAllocation(Calc$TAC, Allocation, Calc$Data)
+  .RecordIndexMP(Calc)
   Plots <- .MPPlot(plot, \() .PlotIndexMP(Calc, 'IndexTarget', Data))
   .AddPlots(Advice(TAC = TAC, TACType = TACType, TACUnit = Calc$Data@Landings@Units), Plots)
 }

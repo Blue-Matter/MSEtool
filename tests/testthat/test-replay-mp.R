@@ -1,3 +1,10 @@
+# data of the first layer of a plot with all of Cols
+.LayerData <- function(p, Cols) {
+  for (L in p$layers)
+    if (is.data.frame(L$data) && all(Cols %in% names(L$data))) return(L$data)
+  NULL
+}
+
 test_that("ReplayMP() reproduces the recorded advice and builds the animations", {
   skip_on_cran()
   skip_if_not_installed('gganimate')
@@ -16,7 +23,10 @@ test_that("ReplayMP() reproduces the recorded advice and builds the animations",
   expect_equal(R$Table$Advice, R$Table$Recorded, tolerance = 1e-8)
   expect_named(R$Animations, c('Index', 'Status', 'HCR', 'Catch'))
   for (a in R$Animations) expect_s3_class(a, 'gganim')
-  Lines <- R$Animations$Status$layers[[2]]$data
+  for (a in R$Animations[c('Index', 'Status', 'Catch')])
+    expect_true(any(vapply(a$layers, \(L) inherits(L$geom, 'GeomVline'), logical(1))))
+  Lines <- .LayerData(R$Animations$Status, c('Year', 'Value', 'Series', 'Frame'))
+  expect_gt(nrow(Lines), 0)
   expect_true(all(as.numeric(Lines$Year) <= as.numeric(as.character(Lines$Frame))))
   OMS <- MSEtool:::.ReplayOMStatus(MSE, 'IndexRate', 2, R$Stock, 'SB')
   K <- attr(OMS, 'K')
@@ -24,9 +34,10 @@ test_that("ReplayMP() reproduces the recorded advice and builds the animations",
   MSY <- MSEtool:::.ReplayOMRelative(MSE, 'IndexRate', 2, R$Stock, 'SB_SBMSY')
   Both <- merge(OMS, MSY, by = 'Year')
   expect_equal(Both$Value.x, Both$Value.y * K, tolerance = 0.05)
-  OMI <- R$Animations$Index$layers[[2]]$data
+  OMI <- .LayerData(R$Animations$Index, c('Name', 'Year', 'Value', 'Frame'))
+  expect_gt(nrow(OMI), 0)
   expect_true(all(OMI$Year < as.numeric(as.character(OMI$Frame))))
-  CatchSeries <- unique(as.character(R$Animations$Catch$layers[[1]]$data$Series))
+  CatchSeries <- unique(as.character(.LayerData(R$Animations$Catch, c('Series', 'Value'))$Series))
   expect_true(all(c('Landings', 'Past TACs') %in% CatchSeries))
   expect_named(ReplayMP(MSE, 'IndexRate', Sim = 2, Years = Proj[1:2], Status = NULL)$Animations,
                c('Index', 'HCR', 'Catch'))
@@ -45,9 +56,9 @@ test_that("ReplayMP() reproduces the recorded advice and builds the animations",
   expect_s3_class(ReplayPlot(R, Proj[3], 'Catch'), 'ggplot')
   Full <- ReplayMP(MSE, 'IndexRate', Sim = 2, Years = Proj[1:2], IndexCap = Inf)$Animations$Index
   Cut  <- ReplayMP(MSE, 'IndexRate', Sim = 2, Years = Proj[1:2], IndexCap = 0.5)$Animations$Index
-  First <- \(a) min(a$layers[[2]]$data$Year)
+  First <- \(a) min(.LayerData(a, 'Observed')$Year)
   expect_gt(First(Cut), First(Full))
-  expect_equal(min(diff(sort(unique(Cut$layers[[2]]$data$Year)))), 1)
+  expect_equal(min(diff(sort(unique(.LayerData(Cut, 'Observed')$Year)))), 1)
   expect_error(ReplayMP(MSE, 1, IndexCap = 0), 'IndexCap')
   expect_error(ReplayPlot(R, 1900), 'management years')
 
@@ -95,4 +106,75 @@ test_that(".TrimAdviceHistory keeps only earlier advice", {
   A <- Advice(TAC = array(1:3, c(3, 1), list(Year = c('2001', '2002', '2003'), Fleet = 'F1')))
   expect_equal(as.vector(MSEtool:::.TrimAdviceHistory(A, 2003)@TAC), 1:2)
   expect_null(MSEtool:::.TrimAdviceHistory(A, 2001)@TAC)
+})
+
+test_that("RecordMP() adds a custom MP's calculations to ReplayMP()", {
+  skip_on_cran()
+  skip_if_not_installed('gganimate')
+  RatioMP <- function(Data, Target = 0.1) {
+    Index  <- Data@Survey@Value[, 1]
+    Years  <- Data@Years
+    Recent <- utils::tail(seq_along(Index), 3)
+    Status <- mean(Index[Recent], na.rm = TRUE)
+    Mult   <- HockeyStickHCR(1, Est = Status, Ref = Target, ControlPointsIndex = c(0.2, 0.8))
+    Trial  <- mean(utils::tail(rowSums(Data@Landings@Value, na.rm = TRUE), 3)) * Mult
+    RecordMP(Values = list(Status = Status, Multiplier = Mult), TrialTAC = Trial,
+             HCR = RecordHCR(Est = Status, Ref = Target, Value = Mult, ControlPointsIndex = c(0.2, 0.8),
+                             xlab = 'Index / target', ylab = 'TAC multiplier'),
+             Index = RecordIndex(Index, Years, Name = Data@Survey@Name[1], Status = Status,
+                                 StatusYears = Years[Recent], IndexTarget = Target,
+                                 ControlPointsIndex = c(0.2, 0.8)))
+    Advice(TAC = ConstrainTAC(LastTAC(Data), Trial / LastTAC(Data), c(0.01, 0.2), c(0.01, 0.2), c(0, Inf)))
+  }
+  class(RatioMP) <- 'mp'
+
+  # no effect outside ReplayMP()
+  expect_null(RecordMP(Values = list(a = 1)))
+  expect_null(RecordHCR(Est = 1, Value = 1))
+
+  Hist <- Simulate(SingleStockOM, nSim = 1, silent = TRUE)
+  MSE  <- Project(Hist, list(RatioMP = RatioMP), silent = TRUE)
+  Proj <- Years(MSE@OM, 'Projection')
+  R <- expect_no_warning(ReplayMP(MSE, 'RatioMP', Years = Proj[1:4]))
+  expect_equal(R$Table$Advice, R$Table$Recorded, tolerance = 1e-8)
+  expect_named(R$Table, c('Year', 'AdviceType', 'Advice', 'Recorded', 'Status', 'Multiplier', 'TrialTAC'))
+  expect_named(R$Animations, c('Index', 'Status', 'HCR', 'Catch'))
+  expect_equal(R$Animations$HCR$labels$x, 'Index / target')
+  Pts <- Filter(\(L) all(c('x', 'y') %in% names(L$data)) && nrow(L$data) == 4, R$Animations$HCR$layers)[[1]]$data
+  expect_equal(Pts$x, R$Table$Status / 0.1)
+  expect_equal(Pts$y, R$Table$Multiplier)
+
+  # invalid records are reported by ReplayMP() as failed replays
+  BadMP <- function(Data) {
+    RecordMP(HCR = list(x = 1))
+    Advice(TAC = LastTAC(Data))
+  }
+  class(BadMP) <- 'mp'
+  MSE2 <- Project(Hist, list(BadMP = BadMP), silent = TRUE)
+  expect_error(suppressWarnings(ReplayMP(MSE2, 'BadMP', Years = Proj[1:2])), 'could not be replayed')
+})
+
+test_that("MPs stored before they called RecordMP() are recorded through .MPPlot()", {
+  Hist <- Simulate(SingleStockOM, nSim = 1, silent = TRUE)
+  D <- Hist@Data[[1]][[1]]
+  Calc <- MSEtool:::.IndexMPCalc('Rate', D, NULL, 'auto', NULL, NULL, 2, TRUE, 0.3, 1, NULL, 1, 1, NULL,
+                                 c(0, 0.5), c(0, 1), 1, c(0.01, 0.5), c(0.01, 0.5), NULL, 'Removals', NULL, 1)
+  State <- MSEtool:::.MPReplayState
+  State$Capture <- TRUE
+  State$Record  <- NULL
+  on.exit({ State$Capture <- FALSE; State$Record <- NULL })
+  expect_null(MSEtool:::.MPPlot(TRUE, \() .PlotIndexMP(Calc, 'IndexRate', D)))
+  expect_s3_class(State$Record$HCR, 'mprecord_hcr')
+  expect_s3_class(State$Record$Index, 'mprecord_index')
+  expect_equal(State$Record$TrialTAC, Calc$TrialTAC)
+})
+
+test_that("replay plots mark the end of the historical period and the MP start year", {
+  B <- MSEtool:::.ReplayBoundaries(2026, 2030, 2027:2056)
+  expect_equal(unname(B), c(2026.5, 2029.5))
+  expect_equal(names(B), c('End of historical period', 'MP start year'))
+  expect_length(MSEtool:::.ReplayBoundaries(2026, NULL, 2027:2056), 1)
+  expect_length(MSEtool:::.ReplayBoundaries(2026, 2027, 2027:2056), 1)
+  L <- MSEtool:::.ReplayBoundaryLayer(B)
+  expect_s3_class(L$geom, 'GeomVline')
 })

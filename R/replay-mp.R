@@ -15,11 +15,12 @@
 #' @param Status Biomass shown in the `Status` animation: `'SB'`
 #'   (spawning biomass, default) or `'B'` (total biomass). `NULL` leaves out
 #'   the `Status` animation.
-#' @param IndexCap For [IndexRate()] and [IndexTarget()], the `Index`
-#'   animation starts in the historical year when the observed index last
-#'   comes down to `IndexCap` times the largest `IndexTarget` of the index
-#'   (the earliest such year over indices), so the target and control points
-#'   stay visible. `Inf` shows the full series. Default `1.5`.
+#' @param IndexCap For MPs that record an `IndexTarget` (e.g. [IndexRate()]
+#'   and [IndexTarget()]), the `Index` animation starts in the historical
+#'   year when the observed index last comes down to `IndexCap` times the
+#'   largest `IndexTarget` of the index (the earliest such year over
+#'   indices), so the target and control points stay visible. `Inf` shows
+#'   the full series. Default `1.5`.
 #'
 #' @details
 #' Every management year up to the last of `Years` is run in order, so
@@ -36,14 +37,16 @@
 #' The animations have one frame per management year. They are `gganim`
 #' objects: printing one renders it, [gganimate::animate()] sets the speed
 #' and renderer, and [gganimate::anim_save()] saves it.
-#' - [IndexRate()] and [IndexTarget()]: `Index` (the indices, status, and
-#'   `IndexTarget` at each decision, with the operating model population
-#'   each index tracks), `Status`, `HCR` (the path of the decisions along
-#'   the harvest control rule), and `Catch`.
-#' - [SurplusProduction()]: `Index` (observed and fitted indices, with the
-#'   operating model population each index tracks), `Status` (also with the
-#'   estimated `B/BMSY` at each decision), `HCR`, and `Catch`.
-#' - Other MPs: `Status` and `Catch`.
+#' - `Status` and `Catch`, for every MP.
+#' - `Index`, `HCR`, and the estimated `B/BMSY` on the `Status` plot, from
+#'   the values the MP records with [RecordMP()]. [IndexRate()],
+#'   [IndexTarget()], and [SurplusProduction()] record the indices (with
+#'   their status and `IndexTarget`, or their fitted values), the harvest
+#'   control rule, and the estimated `B/BMSY` ([SurplusProduction()]). See
+#'   [RecordMP()] to add these to other MPs.
+#'
+#' The columns of `Table` after `Recorded` are the `Values` and `TrialTAC`
+#' recorded by the MP.
 #'
 #' `Index` shows each index in its own panel. The orange bar is the status
 #' over the `RecentYears` window, the arrow the projected status when
@@ -81,16 +84,20 @@
 #' the index (`Efficiency * NomIndex^Beta`, see [PlotIndexFit()]), shown up
 #' to the last year of data available to the MP.
 #'
+#' In the `Index`, `Biomass`, `Status`, and `Catch` plots, a light solid
+#' line marks the end of the historical period and, when the OM has an
+#' `MPStartYear` after the first projection year (with interim advice
+#' before it), a light dashed line the year MPs are first applied.
+#'
 #' [ReplayAnimate()] shows the animations side by side, and [ReplayPlot()]
 #' returns the plots of a single year.
 #'
-#' The MP is run with the version of MSEtool currently loaded. MPs without
-#' a `plot` argument give the `Catch` animation only. Multi-stock (`mmp`)
-#' MPs are not supported.
+#' The MP is run with the version of MSEtool currently loaded. Multi-stock
+#' (`mmp`) MPs are not supported.
 #'
 #' @return An object of class `mpreplay`: a list with `MP`, `Sim`, `Stock`,
 #'   `Table` (a `data.frame` with one row per management year: the replayed
-#'   `Advice`, the `Recorded` advice, and the values used by the MP), and
+#'   `Advice`, the `Recorded` advice, and the values recorded by the MP), and
 #'   `Animations` (a named list of `gganim` objects).
 #'
 #' @examples
@@ -103,7 +110,7 @@
 #'   gganimate::animate(R$Animations$HCR, nframes = nrow(R$Table), fps = 2)
 #' }
 #'
-#' @seealso [ReplayAnimate()], [ReplayPlot()], [IndexRate()],
+#' @seealso [RecordMP()], [ReplayAnimate()], [ReplayPlot()], [IndexRate()],
 #'   [SurplusProduction()], [PPD()]
 #' @export
 ReplayMP <- function(MSE, MP = 1, Sim = 1, Stock = 1, Years = NULL,
@@ -143,7 +150,7 @@ ReplayMP <- function(MSE, MP = 1, Sim = 1, Stock = 1, Years = NULL,
   .MPReplayState$Capture <- TRUE
   on.exit({
     .MPReplayState$Capture <- FALSE
-    .MPReplayState$Env <- NULL
+    .MPReplayState$Record <- NULL
   }, add = TRUE)
 
   # every management year up to the last requested one is run, so Advice@Misc carries forward as in Project()
@@ -156,7 +163,7 @@ ReplayMP <- function(MSE, MP = 1, Sim = 1, Stock = 1, Years = NULL,
     DataY <- .ReplayData(D, Y, DataLag, Seasons)
     DataY@Misc <- utils::modifyList(Misc, list(Sim = Sim, MPName = MPName, StockName = StockName,
                                                AdviceYear = Y, Interval = Interval))
-    .MPReplayState$Env <- NULL
+    .MPReplayState$Record <- NULL
     Adv <- tryCatch(suppressMessages(.WithMPSeed(MPfun(Data = DataY), OM@Seed, .GlobalSim(OM, Sim),
                                                  Y, StockName)),
                     error = function(e) e)
@@ -165,7 +172,8 @@ ReplayMP <- function(MSE, MP = 1, Sim = 1, Stock = 1, Years = NULL,
       Misc$AnnualTAC <- Misc$StatusQuoEffort <- NULL
     }
     if (Y %in% Years)
-      Runs[[length(Runs) + 1]] <- list(Year = Y, Data = DataY, Advice = Adv, Env = .MPReplayState$Env,
+      Runs[[length(Runs) + 1]] <- list(Year = Y, YearLH = DataY@YearLH, Advice = Adv,
+                                       Record = .MPReplayState$Record,
                                        Recorded = .ReplayRecorded(D@Advice, Y))
   }
   cli::cli_progress_done(id = PB)
@@ -178,16 +186,15 @@ ReplayMP <- function(MSE, MP = 1, Sim = 1, Stock = 1, Years = NULL,
   if (!length(Runs))
     cli::cli_abort("{.val {MPName}} could not be replayed in any year.")
 
-  Kind <- .ReplayKind(Runs[[1]]$Env)
-  if (Kind == 'Other')
-    cli::cli_inform(c("i" = "{.val {MPName}} has no {.arg plot} option: only the {.val Catch} animation is available."))
-  Rows <- lapply(Runs, \(r) .ReplayFrame(r, Kind))
+  if (all(vapply(Runs, \(r) is.null(r$Record), logical(1))))
+    cli::cli_inform(c("i" = "{.val {MPName}} does not record its calculations with {.fn RecordMP}: only the {.val Status} and {.val Catch} animations are available."))
+  Rows <- lapply(Runs, .ReplayFrame)
+  P <- list(YearLH = Runs[[1]]$YearLH)
   rm(Runs)
-  Parts <- c('Table', 'Index', 'Status', 'Target', 'Point', 'TACs', 'Biomass', 'BPoint')
-  P <- lapply(stats::setNames(Parts, Parts), \(nm) do.call(rbind, lapply(Rows, `[[`, nm)))
-  P$Years    <- vapply(Rows, \(r) r$TACs$Year, numeric(1))
-  P$Curves   <- Filter(Negate(is.null), lapply(Rows, `[[`, 'Curve'))
-  P$Settings <- Rows[[1]]$Settings
+  Parts <- c('Table', 'Index', 'IndexStatus', 'Target', 'Point', 'TACs', 'Biomass', 'BPoint')
+  P[Parts] <- lapply(Parts, \(nm) do.call(rbind, lapply(Rows, `[[`, nm)))
+  P$Years  <- vapply(Rows, \(r) r$TACs$Year, numeric(1))
+  P$Curves <- Filter(Negate(is.null), lapply(Rows, `[[`, 'Curve'))
   rm(Rows)
 
   Table <- P$Table
@@ -198,22 +205,26 @@ ReplayMP <- function(MSE, MP = 1, Sim = 1, Stock = 1, Years = NULL,
     cli::cli_warn(c("!" = "Replayed advice differs from the advice recorded in the projection in {.val {Table$Year[Diff]}}.",
                     "i" = "The MP may use information not stored in the MSE object (e.g. {.code Data@Misc$DataOM})."))
 
-  OMIndex  <- if (Kind == 'Other') NULL else .ReplayOMIndex(MSE, MPName, Sim, StockName)
   P$OMCatch    <- .ReplayOMCatch(MSE, MPName, Sim, StockName)
   P$TACHistory <- .ReplayTACHistory(D@Advice@TAC)
+  P$Boundaries  <- .ReplayBoundaries(P$YearLH, OM@MPStartYear, YearsProj)
   OMStatus <- if (length(Status)) .ReplayOMStatus(MSE, MPName, Sim, StockName, Status)
-  # surplus production estimates go on the Status plot when it has an MSY axis
-  EstOnStatus <- Kind == 'SP' && !is.null(P$Biomass) && is.finite(attr(OMStatus, 'K') %||% NA)
-  Animations <- switch(Kind,
-                       Index = .ReplayAnimIndexMP(P, IndexCap, OMIndex),
-                       SP    = .ReplayAnimSP(P, .ReplayOMBBMSY(MSE, MPName, Sim, StockName), OMIndex,
-                                             Biomass = !EstOnStatus),
-                       list(Catch = .ReplayAnimCatch(P)))
-  if (!is.null(OMStatus)) {
-    Est <- if (EstOnStatus) list(Biomass = P$Biomass, Point = P$BPoint)
-    Animations <- append(Animations, list(Status = .ReplayAnimStatus(OMStatus, P$Years, Est)),
-                         after = max(0, match(c('Index', 'Biomass'), names(Animations)), na.rm = TRUE))
-  }
+  # estimated B/BMSY goes on the Status plot when it has an MSY axis
+  HasBiomass  <- !is.null(P$Biomass) || !is.null(P$BPoint)
+  EstOnStatus <- HasBiomass && is.finite(attr(OMStatus, 'K') %||% NA)
+
+  Animations <- list()
+  if (!is.null(P$Index))
+    Animations$Index <- .ReplayAnimIndex(P, IndexCap, .ReplayOMIndex(MSE, MPName, Sim, StockName))
+  if (HasBiomass && !EstOnStatus)
+    Animations$Biomass <- .ReplayAnimBiomass(P, .ReplayOMBBMSY(MSE, MPName, Sim, StockName))
+  if (!is.null(OMStatus))
+    Animations$Status <- .ReplayAnimStatus(OMStatus, P$Years,
+                                           if (EstOnStatus) list(Biomass = P$Biomass, Point = P$BPoint),
+                                           P$Boundaries)
+  if (!is.null(P$Point))
+    Animations$HCR <- .ReplayAnimHCR(P)
+  Animations$Catch <- .ReplayAnimCatch(P)
 
   structure(list(MP = MPName, Sim = Sim, Stock = StockName, Table = Table,
                  Animations = Animations),
@@ -295,129 +306,60 @@ print.mpreplay <- function(x, ...) {
   if (identical(Type, 'TAC')) sum(x, na.rm = TRUE) else mean(x, na.rm = TRUE)
 }
 
-.ReplayKind <- function(E) {
-  if (is.null(E)) return('Other')
-  if (!is.null(get0('Calc', envir = E))) return('Index')
-  if (!is.null(get0('A', envir = E)) && is.environment(get0('Env', envir = E))) return('SP')
-  'Other'
-}
-
-# per-year values and plotting data
-.ReplayFrame <- function(r, Kind) {
+# per-year values and plotting data, from the advice and the record of RecordMP()
+.ReplayFrame <- function(r) {
   Y   <- r$Year
   Adv <- r$Advice
+  Rec <- r$Record %||% list()
   Type <- r$Recorded$Type
   if (is.na(Type)) Type <- if (!is.null(Adv@TAC)) 'TAC' else 'Effort'
   Base <- data.frame(Year = Y, AdviceType = Type,
                      Advice = .ReplayTotal(Type, methods::slot(Adv, Type)),
                      Recorded = r$Recorded$Value)
-  Out <- switch(Kind,
-                Index = .ReplayFrameIndexMP(get0('Calc', envir = r$Env), Y),
-                SP    = .ReplayFrameSP(get0('A', envir = r$Env), get0('Env', envir = r$Env), Y),
-                .ReplayFrameOther(r$Data, Y, Base))
-  Out$Table <- if (is.null(Out$Table)) Base else cbind(Base, Out$Table)
+  Tab <- if (length(Rec$Values)) as.data.frame(Rec$Values, stringsAsFactors = FALSE, check.names = FALSE)
+  if (!is.null(Rec$TrialTAC) && !'TrialTAC' %in% names(Tab))
+    Tab <- if (is.null(Tab)) data.frame(TrialTAC = Rec$TrialTAC) else cbind(Tab, TrialTAC = Rec$TrialTAC)
+  Unused <- isTRUE(Rec$Unused)
+  Out <- list(Table = if (is.null(Tab)) Base else cbind(Base, Tab),
+              TACs  = data.frame(Year = Y, TrialTAC = Rec$TrialTAC %||% NA_real_,
+                                 TAC = if (Type == 'TAC') Base$Advice else NA_real_, Unused = Unused))
+  if (!is.null(Rec$Index))
+    Out <- c(Out, .ReplayFrameIndex(Rec$Index, Y))
+  if (!is.null(Rec$HCR)) {
+    Out$Point <- data.frame(Frame = Y, x = Rec$HCR$x, y = Rec$HCR$y)
+    Out$Curve <- c(list(Frame = Y), unclass(Rec$HCR))
+  }
+  B <- Rec$Biomass
+  if (!is.null(B)) {
+    Out$Biomass <- rbind(
+      if (length(B$Value)) data.frame(Frame = Y, Year = B$Years, Value = B$Value, Series = 'Estimated'),
+      if (length(B$Projected)) data.frame(Frame = Y, Year = B$ProjectedYears, Value = B$Projected,
+                                          Series = 'Projected'))
+    if (length(B$Est) && is.finite(B$Est))
+      Out$BPoint <- data.frame(Frame = Y, Year = B$EstYear, Value = B$Est, Unused = Unused)
+  }
   Out
 }
 
-# Unused: the MP's model was not used for the TAC (e.g. a failed fit)
-.ReplayCatchTACs <- function(Y, Prev, Trial, TAC, Unused = FALSE)
-  data.frame(Year = Y, PrevTAC = Prev, TrialTAC = Trial, TAC = TAC, Unused = Unused)
-
-.ReplayFrameOther <- function(Data, Y, Base) {
-  list(Table = NULL,
-       TACs  = .ReplayCatchTACs(Y, NA_real_, NA_real_, if (Base$AdviceType == 'TAC') Base$Advice else NA_real_))
-}
-
-.ReplayFrameIndexMP <- function(Calc, Y) {
-  Years  <- Calc$Years
-  nIndex <- length(Calc$Name)
-  Name   <- factor(Calc$Name, levels = Calc$Name)
-  StatusCols <- seq(max(1, length(Years) - Calc$RecentYears + 1), length(Years))
-  CP <- Calc$HCRControlPointsIndex[Calc$HCRControlPointsIndex > 0]
-  Level <- Calc$Est / Calc$RefLevel
-  list(
-    Table = data.frame(IndexRatio = Level, HCRMultiplier = Calc$HCRMult, PrevTAC = Calc$PrevTAC,
-                       TrialTAC = Calc$TrialTAC, TAC = Calc$TAC,
-                       Constraint = .TACConstraintNote(Calc$PrevTAC, Calc$TrialTAC, Calc$Mod, Calc$TAC,
-                                                       Calc$DeltaDown, Calc$DeltaUp, Calc$TACRange,
-                                                       Calc$Responsiveness, Calc$TrialKept)),
-    Index = data.frame(Frame = Y, Name = rep(Name, each = length(Years)), Year = rep(Years, nIndex),
-                       Observed = as.vector(t(Calc$IndexHist)),
-                       Smoothed = if (Calc$Smooth) as.vector(t(Calc$IndexSmooth)) else NA_real_),
-    Status = data.frame(Frame = Y, Name = Name, From = Years[min(StatusCols)] - 0.5,
-                        To = Years[max(StatusCols)] + 0.5, Year = max(Years),
-                        Value = Calc$Status, Trend = Calc$StatusTrend,
-                        TrendYear = max(Years) + if (is.null(Calc$TrendYears)) 0 else Calc$TrendHorizon),
-    Target = rbind(data.frame(Frame = Y, Name = Name, Value = Calc$Ref, Series = 'IndexTarget'),
-                   data.frame(Frame = Y, Name = rep(Name, each = length(CP)),
-                              Value = as.vector(outer(CP, Calc$Ref)), Series = 'HCR control points')),
-    Point = data.frame(Frame = Y, x = Level, y = Calc$HCRMult),
-    Curve = NULL,
-    TACs  = .ReplayCatchTACs(Y, Calc$PrevTAC, Calc$TrialTAC, Calc$TAC),
-    Settings = Calc[c('Type', 'Years', 'YearLH', 'CalibRows', 'TrendYears', 'HCRControlPointsIndex',
-                      'HCRControlPointsRate', 'RampType')]
-  )
-}
-
-.ReplayFrameSP <- function(A, Env, Y) {
-  V <- function(nm) get0(nm, envir = Env, inherits = FALSE)
-  Prep    <- V('Prep')
-  Fit     <- V('Fit')
-  Summary <- A@Misc$SurplusProduction$Summary
-  HasFit  <- is.list(Prep) && inherits(Fit, 'spfit') && isTRUE(Fit$Converged) &&
-    isFALSE(Summary$Fallback)
-  AdviceType <- V('AdviceType')
-  PrevTAC <- V('PrevTAC') %||% NA_real_
-  Trial   <- if (HasFit && AdviceType == 'TAC') V('ModelTAC') / (V('ToModel') %||% 1) else NA_real_
-  TAC     <- if (AdviceType == 'TAC') Summary$Advice else NA_real_
-  FMSY    <- if (HasFit) Fit$FMSY else NA_real_
-  Fallback <- isTRUE(Summary$Fallback)
-  TrialNA  <- HasFit && AdviceType == 'TAC' && !is.finite(Trial)
-
-  Out <- list(
-    Table = data.frame(Converged = inherits(Fit, 'spfit') && isTRUE(Fit$Converged),
-                       Fallback = isTRUE(Summary$Fallback),
-                       BBMSY = if (HasFit) V('EstB') else NA_real_,
-                       FFMSY = if (HasFit) V('FAdvice') / FMSY else NA_real_,
-                       PrevTAC = PrevTAC, TrialTAC = Trial, TAC = TAC,
-                       Constraint = if (AdviceType == 'TAC' && HasFit)
-                         .TACConstraintNote(PrevTAC, Trial, exp(log(Trial / PrevTAC) * V('Responsiveness')),
-                                            TAC, V('DeltaDown'), V('DeltaUp'), V('TACRange') %||% c(0, Inf),
-                                            V('Responsiveness'), TrialKept = TrialNA)
-                       else if (Fallback) paste0('OnFail = "', V('OnFail'), '": ', Summary$Message)
-                       else NA_character_),
-    TACs  = .ReplayCatchTACs(Y, PrevTAC, Trial, TAC, Unused = Fallback || TrialNA)
-  )
-  # B/BMSY of a fit that was not used: its last estimate
-  if (Fallback && inherits(Fit, 'spfit') && length(Fit$B_BMSY)) {
-    Last <- utils::tail(which(is.finite(Fit$B_BMSY)), 1)
-    if (length(Last))
-      Out$BPoint <- data.frame(Frame = Y, Year = as.numeric(names(Fit$B))[Last], Value = unname(Fit$B_BMSY[Last]),
-                               Unused = TRUE)
-  }
-  if (!is.list(Prep))
-    return(Out)
-
-  nIndex <- ncol(Prep$Index)
-  Name   <- factor(Prep$Name, levels = Prep$Name)
-  Out$Index <- data.frame(Frame = Y, Name = rep(Name, each = nrow(Prep$Index)),
-                          Year = rep(Prep$Years, nIndex), Observed = as.vector(Prep$Index),
-                          Fitted = if (HasFit && !is.null(Fit$IndexPred)) as.vector(Fit$IndexPred) else NA_real_)
-  Out$Index$Observed[!(Out$Index$Observed > 0)] <- NA
-  if (HasFit) {
-    Gap  <- V('Gap')
-    Proj <- V('Proj')
-    BMSY <- Fit$BMSY
-    LastYear <- max(Prep$Years)
-    AdviceYear <- V('AdviceYear')
-    Out$Biomass <- rbind(
-      data.frame(Frame = Y, Year = as.numeric(names(Fit$B)), Value = unname(Fit$B_BMSY), Series = 'Estimated'),
-      data.frame(Frame = Y, Year = c(LastYear + seq_along(Gap$B), AdviceYear + seq_along(Proj$B) - 1),
-                 Value = c(Gap$B, Proj$B) / BMSY, Series = 'Projected'))
-    Out$BPoint <- data.frame(Frame = Y, Year = AdviceYear, Value = V('EstB'), Unused = FALSE)
-    Out$Point  <- data.frame(Frame = Y, x = V('EstB'), y = V('FAdvice') / FMSY)
-    Out$Curve  <- list(Frame = Y, CP = V('HCRControlPointsBiomass'), Rates = V('HCRControlPointsRate'),
-                       RampType = V('RampType'), Scale = V('tunepar') * V('FTarget') * V('FMSYHCR') / FMSY)
+.ReplayFrameIndex <- function(I, Y) {
+  nYear  <- length(I$Years)
+  nIndex <- length(I$Name)
+  Name   <- factor(I$Name, levels = I$Name)
+  Col    <- function(x) if (is.null(x)) NA_real_ else as.vector(x)
+  Out <- list(Index = data.frame(Frame = Y, Name = rep(Name, each = nYear), Year = rep(I$Years, nIndex),
+                                 Observed = as.vector(I$Value), Smoothed = Col(I$Smoothed),
+                                 Fitted = Col(I$Fitted)))
+  if (!is.null(I$Status))
+    Out$IndexStatus <- data.frame(Frame = Y, Name = Name, From = min(I$StatusYears) - 0.5,
+                                  To = max(I$StatusYears) + 0.5, Year = max(I$Years), Value = I$Status,
+                                  Trend = I$StatusTrend %||% NA_real_,
+                                  TrendYear = max(I$Years) + I$TrendHorizon)
+  if (!is.null(I$IndexTarget)) {
+    CP <- I$ControlPointsIndex[I$ControlPointsIndex > 0]
+    Out$Target <- rbind(data.frame(Frame = Y, Name = Name, Value = I$IndexTarget, Series = 'IndexTarget'),
+                        if (length(CP)) data.frame(Frame = Y, Name = rep(Name, each = length(CP)),
+                                                   Value = as.vector(outer(CP, I$IndexTarget)),
+                                                   Series = 'HCR control points'))
   }
   Out
 }
@@ -441,6 +383,20 @@ print.mpreplay <- function(x, ...) {
 }
 .ReplayCatchColours <- c(Landings = '#264653', 'Dead discards' = '#9c6644', Removals = '#2a9d8f',
                          'Past TACs' = '#e67e22')
+
+# end of the historical period and, when later, the first year MPs are applied
+.ReplayBoundaries <- function(YearLH, MPStartYear, YearsProj) {
+  Out <- c('End of historical period' = floor(YearLH) + 0.5)
+  if (length(MPStartYear) && is.finite(MPStartYear) && MPStartYear > min(floor(YearsProj)))
+    Out <- c(Out, 'MP start year' = MPStartYear - 0.5)
+  Out
+}
+
+.ReplayBoundaryLayer <- function(Boundaries) {
+  if (!length(Boundaries)) return(NULL)
+  ggplot2::geom_vline(xintercept = unname(Boundaries), colour = 'grey70', linewidth = 0.5,
+                      linetype = ifelse(names(Boundaries) == 'MP start year', 'dashed', 'solid'))
+}
 
 .ReplayFrames <- function(x, Years) {
   x$Frame <- factor(x$Frame, levels = Years)
@@ -541,17 +497,32 @@ print.mpreplay <- function(x, ...) {
 .ReplayOMBBMSY <- function(MSE, MPName, Sim, StockName)
   .ReplayOMRelative(MSE, MPName, Sim, StockName, 'B_BMSY')
 
-.ReplayAnimHCR <- function(Points, Curve, Years, xlab, ylab) {
+.ReplayAnimHCR <- function(P) {
+  Years  <- P$Years
+  Points <- P$Point
+  Rules  <- P$Curves
+  xMax   <- max(c(1.5, 1.25 * Rules[[1]]$ControlPointsIndex, 1.15 * Points$x), na.rm = TRUE)
+  Curve  <- do.call(rbind, lapply(Rules, \(H) {
+    C <- if (!is.null(H$Fun)) {
+      x <- seq(0, xMax, length.out = 400)
+      data.frame(x = x, y = H$Scale * vapply(x, H$Fun, numeric(1)))
+    } else if (!is.null(H$ControlPointsIndex)) {
+      .HCRCurve(H$ControlPointsIndex, H$ControlPointsRate, H$RampType, xMax, H$Scale)
+    }
+    if (!is.null(C)) cbind(C, Frame = H$Frame)
+  }))
   Points$Year <- as.numeric(as.character(Points$Frame))
   Trail <- .ReplayTrail(Points[, c('Year', 'x', 'y')], Years)
-  ggplot2::ggplot(mapping = ggplot2::aes(x = .data$x, y = .data$y)) +
-    ggplot2::geom_line(data = .ReplayFrames(Curve, Years), linewidth = 1.2) +
+  p <- ggplot2::ggplot(mapping = ggplot2::aes(x = .data$x, y = .data$y))
+  if (!is.null(Curve))
+    p <- p + ggplot2::geom_line(data = .ReplayFrames(Curve, Years), linewidth = 1.2)
+  p +
     ggplot2::geom_path(data = .ReplayFrames(.ReplayLines(Trail), Years), colour = 'grey60', linewidth = 0.7) +
     ggplot2::geom_point(data = .ReplayFrames(Trail, Years), colour = 'grey50', size = 1.8) +
     ggplot2::geom_point(data = .ReplayFrames(Points, Years), colour = .MPColours[['Status']], size = 4) +
     ggplot2::expand_limits(x = 0, y = 0) +
     .MPXScale0() + .MPYScale0() +
-    ggplot2::labs(x = xlab, y = ylab, title = .ReplayTitle('Harvest control rule')) +
+    ggplot2::labs(x = Rules[[1]]$xlab, y = Rules[[1]]$ylab, title = .ReplayTitle('Harvest control rule')) +
     .MPTheme() +
     gganimate::transition_manual(Frame)
 }
@@ -579,6 +550,7 @@ print.mpreplay <- function(x, ...) {
   Now$What <- factor(Now$What, levels = c('Trial TAC', 'TAC', 'TAC (fit not used)'))
 
   p <- ggplot2::ggplot(mapping = ggplot2::aes(x = .data$Year, y = .data$Value)) +
+    .ReplayBoundaryLayer(P$Boundaries) +
     ggplot2::geom_line(data = .ReplayFrames(Lines, Years), ggplot2::aes(colour = .data$Series), linewidth = 1.1)
   if (nrow(Trail))
     p <- p + ggplot2::geom_point(data = .ReplayFrames(Trail, Years), colour = .ReplayCatchColours[['Past TACs']],
@@ -604,7 +576,7 @@ print.mpreplay <- function(x, ...) {
 
 # depletion on the left axis, the same line in MSY units on the right axis;
 # Est: surplus production B/BMSY estimates, drawn against the right axis
-.ReplayAnimStatus <- function(S, Years, Est = NULL) {
+.ReplayAnimStatus <- function(S, Years, Est = NULL, Boundaries = NULL) {
   Type <- attr(S, 'Type')
   K    <- attr(S, 'K')
   HasK <- is.finite(K) && K > 0
@@ -613,7 +585,7 @@ print.mpreplay <- function(x, ...) {
   Now   <- Shown[Shown$Year == Shown$Frame, ]
   Cols  <- stats::setNames('grey10', OMLabel)
   Lty   <- stats::setNames('solid', OMLabel)
-  if (HasK && !is.null(Est)) {
+  if (HasK && !is.null(Est$Biomass)) {
     B <- Est$Biomass
     B$Series <- ifelse(B$Series == 'Projected', 'Projected B/BMSY', 'Estimated B/BMSY')
     B$Value  <- B$Value * K
@@ -626,7 +598,8 @@ print.mpreplay <- function(x, ...) {
     labels = .MPNumberLabels, expand = ggplot2::expansion(mult = c(0, 0.05)),
     sec.axis = if (HasK) ggplot2::sec_axis(~ . / K, name = paste0(Type, '/', Type, 'MSY'),
                                            labels = .MPNumberLabels) else ggplot2::waiver())
-  p <- ggplot2::ggplot(mapping = ggplot2::aes(x = .data$Year, y = .data$Value))
+  p <- ggplot2::ggplot(mapping = ggplot2::aes(x = .data$Year, y = .data$Value)) +
+    .ReplayBoundaryLayer(Boundaries)
   if (HasK)
     p <- p + ggplot2::geom_hline(yintercept = K, colour = .MPColours[['Target']], linetype = 'dashed',
                                  linewidth = 0.8)
@@ -658,123 +631,95 @@ print.mpreplay <- function(x, ...) {
                      linetype = 'dashed', linewidth = 0.9)
 }
 
-.ReplayAnimIndexMP <- function(P, IndexCap = Inf, OMIndex = NULL) {
-  Years <- P$Years
-  Calc  <- P$Settings
-
+# indices with, where recorded, the smoothed and fitted values, status, trend, target, and control points
+.ReplayAnimIndex <- function(P, IndexCap = Inf, OMIndex = NULL) {
+  Years  <- P$Years
   Index  <- P$Index
-  Cap    <- IndexCap * tapply(P$Target$Value[P$Target$Series == 'IndexTarget'],
-                              P$Target$Name[P$Target$Series == 'IndexTarget'], max, na.rm = TRUE)
-  Start  <- .ReplayIndexStart(Index[Index$Frame == max(Index$Frame), ], Cap, Calc$YearLH)
-  Index  <- Index[Index$Year >= Start, ]
-  Status <- P$Status
   Target <- P$Target
+  Status <- P$IndexStatus
+  Start  <- min(Index$Year)
+  if (!is.null(Target) && is.finite(IndexCap)) {
+    Ref <- Target[Target$Series == 'IndexTarget', ]
+    Cap <- IndexCap * tapply(Ref$Value, as.character(Ref$Name), max, na.rm = TRUE)
+    Start <- .ReplayIndexStart(Index[Index$Frame == max(Index$Frame), ], Cap[is.finite(Cap)], P$YearLH)
+  }
+  Index  <- Index[Index$Year >= Start, ]
   nIndex <- length(unique(Index$Name))
 
-  pI <- ggplot2::ggplot(mapping = ggplot2::aes(x = .data$Year)) +
-    ggplot2::geom_hline(data = .ReplayFrames(Target, Years),
-                        ggplot2::aes(yintercept = .data$Value, linetype = .data$Series),
-                        colour = .MPColours[['Target']], linewidth = 0.8) +
+  p <- ggplot2::ggplot(mapping = ggplot2::aes(x = .data$Year)) +
+    .ReplayBoundaryLayer(P$Boundaries[P$Boundaries > Start])
+  if (!is.null(Target))
+    p <- p + ggplot2::geom_hline(data = .ReplayFrames(Target, Years),
+                                 ggplot2::aes(yintercept = .data$Value, linetype = .data$Series),
+                                 colour = .MPColours[['Target']], linewidth = 0.8)
+  p <- p +
     .ReplayOMIndexLayer(OMIndex, Index, Start, Years) +
     ggplot2::geom_point(data = .ReplayFrames(Index[is.finite(Index$Observed), ], Years),
                         ggplot2::aes(y = .data$Observed, colour = 'Observed'), size = 1.8)
-  if (any(is.finite(Index$Smoothed)))
-    pI <- pI + ggplot2::geom_line(data = .ReplayFrames(Index[is.finite(Index$Smoothed), ], Years),
-                                  ggplot2::aes(y = .data$Smoothed, colour = 'Smoothed'), linewidth = 1.2)
-  pI <- pI +
-    ggplot2::geom_segment(data = .ReplayFrames(Status, Years),
-                          ggplot2::aes(x = .data$From, xend = .data$To, y = .data$Value, yend = .data$Value),
-                          colour = .MPColours[['Status']], linewidth = 1.6) +
-    ggplot2::geom_point(data = .ReplayFrames(Status, Years), ggplot2::aes(y = .data$Value),
-                        colour = .MPColours[['Status']], size = 3.5)
-  if (!is.null(Calc$TrendYears))
-    pI <- pI + ggplot2::geom_segment(data = .ReplayFrames(Status, Years),
+  for (S in c('Smoothed', 'Fitted'))
+    if (any(is.finite(Index[[S]])))
+      p <- p + ggplot2::geom_line(data = .ReplayFrames(Index[is.finite(Index[[S]]), ], Years),
+                                  ggplot2::aes(y = .data[[!!S]], colour = !!S), linewidth = 1.2)
+  if (!is.null(Status)) {
+    p <- p +
+      ggplot2::geom_segment(data = .ReplayFrames(Status, Years),
+                            ggplot2::aes(x = .data$From, xend = .data$To, y = .data$Value, yend = .data$Value),
+                            colour = .MPColours[['Status']], linewidth = 1.6) +
+      ggplot2::geom_point(data = .ReplayFrames(Status, Years), ggplot2::aes(y = .data$Value),
+                          colour = .MPColours[['Status']], size = 3.5)
+    Trend <- Status[is.finite(Status$Trend), ]
+    if (nrow(Trend))
+      p <- p + ggplot2::geom_segment(data = .ReplayFrames(Trend, Years),
                                      ggplot2::aes(x = .data$Year, xend = .data$TrendYear, y = .data$Value,
                                                   yend = .data$Trend),
                                      colour = .MPColours[['Status']], linewidth = 0.9,
                                      arrow = ggplot2::arrow(length = ggplot2::unit(0.2, 'cm')))
-  pI <- pI +
-    ggplot2::scale_colour_manual(values = c(.MPColours[c('Observed', 'Smoothed')], 'Operating model' = 'grey10'),
-                                 breaks = c('Observed', 'Smoothed', 'Operating model')) +
-    ggplot2::scale_linetype_manual(values = c('IndexTarget' = 'solid', 'HCR control points' = 'dashed')) +
+  }
+  Series <- c('Observed', if (any(is.finite(Index$Smoothed))) 'Smoothed', if (any(is.finite(Index$Fitted))) 'Fitted',
+              if (!is.null(OMIndex)) 'Operating model')
+  Title <- if (!is.null(Target) || !is.null(Status)) 'Index status' else if ('Fitted' %in% Series) 'Index fit' else 'Indices'
+  p <- p +
+    ggplot2::scale_colour_manual(values = c(.MPColours[c('Observed', 'Smoothed', 'Fitted')], 'Operating model' = 'grey10'),
+                                 breaks = Series) +
     ggplot2::guides(colour = ggplot2::guide_legend(order = 1), linetype = ggplot2::guide_legend(order = 2)) +
     ggplot2::expand_limits(y = 0) +
     .MPYearScale(n = if (nIndex > 1) 3 else 6) + .MPYScale0() +
-    ggplot2::labs(x = 'Year', y = 'Index', title = .ReplayTitle('Index status')) +
+    ggplot2::labs(x = 'Year', y = 'Index', title = .ReplayTitle(Title)) +
     .MPTheme() +
     gganimate::transition_manual(Frame)
+  if (!is.null(Target))
+    p <- p + ggplot2::scale_linetype_manual(values = c('IndexTarget' = 'solid', 'HCR control points' = 'dashed'))
   if (nIndex > 1)
-    pI <- pI + ggplot2::facet_wrap(~Name, scales = 'free_y', ncol = min(nIndex, 2))
-
-  Points <- P$Point
-  xMax  <- max(c(1.5, 1.25 * Calc$HCRControlPointsIndex, 1.15 * Points$x), na.rm = TRUE)
-  Curve <- .HCRCurve(Calc$HCRControlPointsIndex, Calc$HCRControlPointsRate, Calc$RampType, xMax)
-  Curve <- do.call(rbind, lapply(Years, \(f) cbind(Curve, Frame = f)))
-  pH <- .ReplayAnimHCR(Points, Curve, Years, 'Index / IndexTarget',
-                       if (Calc$Type == 'Rate') 'Multiplier of catch-per-index rate' else 'TAC / reference catch')
-
-  list(Index = pI, HCR = pH, Catch = .ReplayAnimCatch(P))
+    p <- p + ggplot2::facet_wrap(~Name, scales = 'free_y', ncol = min(nIndex, 2))
+  p
 }
 
-.ReplayAnimSP <- function(P, OMB, OMIndex = NULL, Biomass = TRUE) {
+# estimated B/BMSY with the operating model B/BMSY, when there is no Status plot to draw it on
+.ReplayAnimBiomass <- function(P, OMB) {
   Years <- P$Years
-  Out <- list()
-
-  Index <- P$Index
-  if (!is.null(Index)) {
-    nIndex <- length(unique(Index$Name))
-    p <- ggplot2::ggplot(mapping = ggplot2::aes(x = .data$Year)) +
-      .ReplayOMIndexLayer(OMIndex, Index, min(Index$Year), Years) +
-      ggplot2::geom_point(data = .ReplayFrames(Index[is.finite(Index$Observed), ], Years),
-                          ggplot2::aes(y = .data$Observed, colour = 'Observed'), size = 1.8)
-    if (any(is.finite(Index$Fitted)))
-      p <- p + ggplot2::geom_line(data = .ReplayFrames(Index[is.finite(Index$Fitted), ], Years),
-                                  ggplot2::aes(y = .data$Fitted, colour = 'Fitted'), linewidth = 1.2)
-    Out$Index <- p +
-      ggplot2::scale_colour_manual(values = c(.MPColours[c('Observed', 'Fitted')], 'Operating model' = 'grey10'),
-                                   breaks = c('Observed', 'Fitted', 'Operating model')) +
-      ggplot2::expand_limits(y = 0) +
-      .MPYearScale(n = if (nIndex > 1) 3 else 6) + .MPYScale0() +
-      ggplot2::labs(x = 'Year', y = 'Index', title = .ReplayTitle('Index fit')) +
-      .MPTheme() +
-      gganimate::transition_manual(Frame)
-    if (nIndex > 1)
-      Out$Index <- Out$Index + ggplot2::facet_wrap(~Name, scales = 'free_y', ncol = min(nIndex, 2))
-  }
-
+  p <- ggplot2::ggplot(mapping = ggplot2::aes(x = .data$Year, y = .data$Value)) +
+    .ReplayBoundaryLayer(P$Boundaries) +
+    ggplot2::geom_hline(yintercept = 1, colour = 'grey50')
+  if (!is.null(OMB))
+    p <- p + ggplot2::geom_line(data = .ReplayFrames(.ReplayTrail(OMB, Years), Years),
+                                ggplot2::aes(linetype = 'Operating model'), colour = 'grey10', linewidth = 0.9)
   B <- P$Biomass
-  if (Biomass && !is.null(B)) {
+  if (!is.null(B)) {
     B$Series <- factor(B$Series, levels = c('Estimated', 'Projected'))
-    p <- ggplot2::ggplot(mapping = ggplot2::aes(x = .data$Year, y = .data$Value)) +
-      ggplot2::geom_hline(yintercept = 1, colour = 'grey50')
-    if (!is.null(OMB))
-      p <- p + ggplot2::geom_line(data = .ReplayFrames(.ReplayTrail(OMB, Years), Years),
-                                  ggplot2::aes(linetype = 'Operating model'), colour = 'grey10', linewidth = 0.9)
-    Out$Biomass <- p +
-      ggplot2::geom_line(data = .ReplayFrames(B, Years),
-                         ggplot2::aes(colour = .data$Series, group = .data$Series), linewidth = 1.2) +
-      .ReplayBPointLayers(P$BPoint, Years) +
-      ggplot2::scale_colour_manual(values = c(Estimated = .MPColours[['Fitted']],
-                                              Projected = .MPColours[['Projected']])) +
-      ggplot2::scale_linetype_manual(values = c('Operating model' = 'dashed')) +
-      ggplot2::expand_limits(y = 0) +
-      .MPYearScale() + .MPYScale0() +
-      ggplot2::labs(x = 'Year', y = 'B / BMSY', title = .ReplayTitle('Estimated biomass')) +
-      .MPTheme() +
-      gganimate::transition_manual(Frame)
+    p <- p + ggplot2::geom_line(data = .ReplayFrames(B, Years),
+                                ggplot2::aes(colour = .data$Series, group = .data$Series), linewidth = 1.2)
   }
-
-  Points <- P$Point
-  if (!is.null(Points)) {
-    Curves <- P$Curves
-    xMax <- max(c(1.5, 1.25 * Curves[[1]]$CP, 1.15 * Points$x), na.rm = TRUE)
-    Curve <- do.call(rbind, lapply(Curves, \(C)
-      cbind(.HCRCurve(C$CP, C$Rates, C$RampType, xMax, C$Scale), Frame = C$Frame)))
-    Out$HCR <- .ReplayAnimHCR(Points, Curve, Years, 'B / BMSY', 'F / FMSY')
-  }
-
-  Out$Catch <- .ReplayAnimCatch(P)
-  Out
+  if (!is.null(P$BPoint))
+    p <- p + .ReplayBPointLayers(P$BPoint, Years)
+  p +
+    ggplot2::scale_colour_manual(values = c(Estimated = .MPColours[['Fitted']],
+                                            Projected = .MPColours[['Projected']])) +
+    ggplot2::scale_linetype_manual(values = c('Operating model' = 'dashed')) +
+    ggplot2::expand_limits(y = 0) +
+    .MPYearScale() + .MPYScale0() +
+    ggplot2::labs(x = 'Year', y = 'B / BMSY', title = .ReplayTitle('Estimated biomass')) +
+    .MPTheme() +
+    gganimate::transition_manual(Frame)
 }
 
 
