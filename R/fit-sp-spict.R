@@ -315,13 +315,15 @@ SpictControl <- function(dteuler             = 1,
   qOut  <- SigOut <- rep(NA_real_, nIdx)
   qOut[Used]   <- rep_len(q, length(Used))
   SigOut[Used] <- rep_len(Sigma, length(Used))
+  IndexPred <- matrix(vapply(seq_len(nIdx), \(i) qOut[i] * vapply(Years + Prep$Timing[i], At, numeric(1)),
+                             numeric(length(Years))), nrow = length(Years))
 
   par <- c(FMSY = FMSY, MSY = m, Depletion = B[1] / K, Shape = n)
   Out <- .NewSPFit(Model = 'spict', Converged = Converged, Message = Message, par = par,
                    Est = c('FMSY', 'MSY', 'Depletion', if (Fit$inp$phases$logn > 0) 'Shape'),
                    Prep = Prep, B = B, F = F, CatchPred = rep(NA_real_, length(Years)), K = K,
                    q = qOut, Sigma = SigOut, SE = SE, NLL = Fit$opt$objective, Log = Log,
-                   StartTime = StartTime, Control = Control)
+                   StartTime = StartTime, Control = Control, IndexPred = IndexPred)
   Out$Spict <- Fit
   Out
 }

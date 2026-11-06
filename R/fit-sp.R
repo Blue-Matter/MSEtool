@@ -104,6 +104,8 @@
 #'   - `BMSY`, `FMSY`, `MSY`, `K`, `Shape`, `Depletion`
 #'   - `q`, `Sigma`: catchability and observation standard deviation of each
 #'     index
+#'   - `IndexPred`: fitted value of each index (`[nYear x nIndex]`): the
+#'     catchability times the biomass at the index timing
 #'   - `Indices`: a `data.frame` with one row per index used in the fit:
 #'     `Index` (name), `Source` (`'Survey'` or `'CPUE'`), `Units`, `Timing`,
 #'     `Weight` (the `IndexWeight` multiplier of its negative
@@ -581,7 +583,8 @@ SPControl <- function(nSubStep   = 4,
             par = p, Est = Est, Prep = Prep, B = Rep$B * Scale, F = Rep$F,
             CatchPred = Rep$CatchPred * Scale, K = Rep$K * Scale, q = Rep$q / Scale,
             Sigma = Rep$Sigma, SE = SE, NLL = Best$objective, Log = Log,
-            StartTime = StartTime, Control = Control)
+            StartTime = StartTime, Control = Control,
+            IndexPred = sweep(Rep$BIndex, 2, Rep$q, '*'))
 }
 
 .SPGridStarts <- function(Objective, Est, Base, MeanCatch, Control, Lower, Upper) {
@@ -657,12 +660,13 @@ SPControl <- function(nSubStep   = 4,
 }
 
 .NewSPFit <- function(Model, Converged, Message, par, Est, Prep, B, F, CatchPred, K, q,
-                      Sigma, SE, NLL, Log, StartTime, Control) {
+                      Sigma, SE, NLL, Log, StartTime, Control, IndexPred = NULL) {
   BMSY  <- par[['MSY']] / par[['FMSY']]
   Years <- Prep$Years
   names(B) <- c(Years, max(Years) + 1)
   names(F) <- names(CatchPred) <- Years
   names(q) <- names(Sigma) <- Prep$Name
+  if (!is.null(IndexPred)) dimnames(IndexPred) <- dimnames(Prep$Index)
   structure(
     list(Model = Model, Converged = Converged, Message = Message,
          par = par, Est = Est, Years = Years,
@@ -670,7 +674,7 @@ SPControl <- function(nSubStep   = 4,
          B_BMSY = B / BMSY, F_FMSY = F / par[['FMSY']],
          BMSY = BMSY, FMSY = par[['FMSY']], MSY = par[['MSY']], K = K,
          Shape = par[['Shape']], Depletion = par[['Depletion']],
-         q = q, Sigma = Sigma, Indices = .SPIndexTable(Prep, q, Sigma),
+         q = q, Sigma = Sigma, IndexPred = IndexPred, Indices = .SPIndexTable(Prep, q, Sigma),
          Terminal = c(B_BMSY = unname(utils::tail(B, 1)) / BMSY,
                       F_FMSY = unname(utils::tail(F, 1)) / par[['FMSY']]),
          SE = SE, NLL = NLL, Time = proc.time()[[3]] - StartTime,

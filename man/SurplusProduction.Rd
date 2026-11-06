@@ -45,7 +45,8 @@ SurplusProduction(
   Allocation = NULL,
   OnFail = c("hold", "trend"),
   FallbackYears = c(2, 3),
-  Diagnostics = c("min", "none", "full")
+  Diagnostics = c("min", "none", "full"),
+  plot = FALSE
 )
 }
 \arguments{
@@ -178,9 +179,15 @@ estimates, a one-row summary, and a table of the indices used, used by
 parameter estimates only, used to start the next fit), or \code{'full'} (also
 the \code{spfit} object, without \code{Prep} and \code{Spict}; see \code{\link[=FitSP]{FitSP()}}). When the
 advice is set by \code{OnFail}, \code{'min'} is used. See Details, Diagnostics.}
+
+\item{plot}{\code{TRUE} draws the figures of how the advice was calculated
+from \code{Data}, or a character vector of figure names (\code{'Index'},
+\code{'Biomass'}, \code{'HCR'}, \code{'Catch'}) draws only those; see Details, Figure.
+Ignored when the MP is run by \code{\link[=Project]{Project()}}. Default \code{FALSE}.}
 }
 \value{
-An \link[=advice-class]{advice} object.
+An \link[=advice-class]{advice} object. When figures are drawn, \code{Misc$Plots}
+holds them as a named list of \code{ggplot} objects.
 }
 \description{
 A model-based management procedure that fits a surplus production model to
@@ -311,6 +318,27 @@ simulation. The \code{Converged} and \code{Fallback} columns of \code{\link[=SPE
 give the same information as a \code{data.frame}.
 }
 
+\subsection{Figure}{
+
+With \code{plot = TRUE}, the MP draws four figures of the calculation for
+\code{Data}:
+\itemize{
+\item \code{Index}: the observed and fitted indices;
+\item \code{Biomass}: the estimated \code{B/BMSY} with the projection to and from
+\code{AdviceYear};
+\item \code{HCR}: the harvest control rule (\code{F/FMSY} against \code{B/BMSY}), with the
+estimated trajectory and the advice point;
+\item \code{Catch}: the observed, fitted, and projected catch with the previous,
+trial, and final TAC.
+}
+
+When the advice is set by \code{OnFail}, only the \code{Index} and \code{Catch} figures
+are drawn. Set \code{plot} to some of the figure names to draw only those. The
+figures are \code{ggplot} objects returned in \code{Misc$Plots} of the advice
+object. The values used at each step, or the reason the advice was set by
+\code{OnFail}, are printed to the console.
+}
+
 \subsection{Tuning}{
 
 \code{tunepar = 1} applies the MP as specified; larger values increase the
@@ -319,7 +347,8 @@ target fishing mortality proportionally. See \code{\link[=TuneMP]{TuneMP()}}.
 }
 \examples{
 Hist <- Simulate(SingleStockOM, nSim = 2)
-SurplusProduction(Hist@Data[[1]][[1]])
+Adv <- SurplusProduction(Hist@Data[[1]][[1]], plot = TRUE)
+names(Adv@Misc$Plots)
 
 SP_Fox <- SetMPArgs(SurplusProduction, Shape = 1, FTarget = 0.8)
 MSE <- Project(Hist, MPs = list(SP_Fox = SP_Fox))

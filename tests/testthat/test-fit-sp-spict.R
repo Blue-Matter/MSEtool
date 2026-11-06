@@ -66,6 +66,8 @@ test_that("FitSP(Model = 'spict') agrees with the internal model", {
     expect_equal(Sp$MSY, Int$MSY, tolerance = 0.1)
     expect_equal(Sp$Terminal[['B_BMSY']], Int$Terminal[['B_BMSY']], tolerance = 0.15)
     expect_named(Sp$q, names(Int$q))
+    expect_identical(dim(Sp$IndexPred), dim(Int$IndexPred))
+    expect_equal(Sp$IndexPred, Int$IndexPred, tolerance = 0.15)
   }
 
   Sim <- SimSPData(Seed = 4)

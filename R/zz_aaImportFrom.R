@@ -43,7 +43,8 @@ Names <- c("maxage", "R0", "Mexp", "Msd", "dep", "D", "Mgrad", "SRrel", "hs", "p
            'Bio_all', 'B', 'C', 'Catch', 'Exp', 'Fleet', 'Model', 'N', 'R', 'SB',
            'SB0', 'Sim', 'age', 'name', 'seas', 'Seas', 'Morph', 'value', 'Value',
            'AlbacoreExStock', 'Bin', 'BinMid', 'Class', 'Count', 'Label', 'Part',
-           'StdDev', 'Task', 'Value_dead', 'Value_ret', 'Variable', 'dead_bio', 'kill_bio'
+           'StdDev', 'Task', 'Value_dead', 'Value_ret', 'Variable', 'dead_bio', 'kill_bio',
+           'Frame'
 )
 
 if(getRversion() >= "2.15.1") utils::globalVariables(Names)

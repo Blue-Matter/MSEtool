@@ -121,6 +121,24 @@
 #' simulation. The `Converged` and `Fallback` columns of [SPEstimates()]
 #' give the same information as a `data.frame`.
 #'
+#' ## Figure
+#'
+#' With `plot = TRUE`, the MP draws four figures of the calculation for
+#' `Data`:
+#' - `Index`: the observed and fitted indices;
+#' - `Biomass`: the estimated `B/BMSY` with the projection to and from
+#'   `AdviceYear`;
+#' - `HCR`: the harvest control rule (`F/FMSY` against `B/BMSY`), with the
+#'   estimated trajectory and the advice point;
+#' - `Catch`: the observed, fitted, and projected catch with the previous,
+#'   trial, and final TAC.
+#'
+#' When the advice is set by `OnFail`, only the `Index` and `Catch` figures
+#' are drawn. Set `plot` to some of the figure names to draw only those. The
+#' figures are `ggplot` objects returned in `Misc$Plots` of the advice
+#' object. The values used at each step, or the reason the advice was set by
+#' `OnFail`, are printed to the console.
+#'
 #' ## Tuning
 #'
 #' `tunepar = 1` applies the MP as specified; larger values increase the
@@ -191,12 +209,18 @@
 #'   parameter estimates only, used to start the next fit), or `'full'` (also
 #'   the `spfit` object, without `Prep` and `Spict`; see [FitSP()]). When the
 #'   advice is set by `OnFail`, `'min'` is used. See Details, Diagnostics.
+#' @param plot `TRUE` draws the figures of how the advice was calculated
+#'   from `Data`, or a character vector of figure names (`'Index'`,
+#'   `'Biomass'`, `'HCR'`, `'Catch'`) draws only those; see Details, Figure.
+#'   Ignored when the MP is run by [Project()]. Default `FALSE`.
 #'
-#' @return An [advice-class] object.
+#' @return An [advice-class] object. When figures are drawn, `Misc$Plots`
+#'   holds them as a named list of `ggplot` objects.
 #'
 #' @examples
 #' Hist <- Simulate(SingleStockOM, nSim = 2)
-#' SurplusProduction(Hist@@Data[[1]][[1]])
+#' Adv <- SurplusProduction(Hist@@Data[[1]][[1]], plot = TRUE)
+#' names(Adv@@Misc$Plots)
 #'
 #' SP_Fox <- SetMPArgs(SurplusProduction, Shape = 1, FTarget = 0.8)
 #' MSE <- Project(Hist, MPs = list(SP_Fox = SP_Fox))
@@ -246,7 +270,8 @@ SurplusProduction <- function(Data,
                               Allocation              = NULL,
                               OnFail                  = c('hold', 'trend'),
                               FallbackYears           = c(2, 3),
-                              Diagnostics             = c('min', 'none', 'full')) {
+                              Diagnostics             = c('min', 'none', 'full'),
+                              plot                    = FALSE) {
 
   .CheckClass(Data, 'data', 'Data')
   CatchType   <- match.arg(CatchType, c('Removals', 'Landings'))
@@ -265,6 +290,8 @@ SurplusProduction <- function(Data,
       cli::cli_abort("{.arg {nm}} must be {.code NULL} or a single probability in (0, 1).")
   }
   .CheckTunePar(tunepar)
+  Env    <- environment()
+  Finish <- function(A) .AddPlots(A, .MPPlot(plot, \() .PlotSPMP(A, Env, Data)))
 
   CheckCatch(Data)
   State <- Data@Misc$SurplusProduction
@@ -283,17 +310,17 @@ SurplusProduction <- function(Data,
     error = function(e) conditionMessage(e)
   )
   if (is.character(Prep))
-    return(.SPFallback(Data, NULL, PrevTAC, PrevEffort, OnFail, FallbackYears, Responsiveness,
+    return(Finish(.SPFallback(Data, NULL, PrevTAC, PrevEffort, OnFail, FallbackYears, Responsiveness,
                        DeltaDown, DeltaUp, TACRange, Allocation, AdviceType, TACType, Misc,
-                       State, AdviceYear, paste('Data preparation failed:', Prep)))
+                       State, AdviceYear, paste('Data preparation failed:', Prep))))
 
   nIndexYears <- sum(rowSums(!is.na(Prep$Index) & Prep$Index > 0) > 0)
   if (nIndexYears < MinIndexYears)
-    return(.SPFallback(Data, Prep, PrevTAC, PrevEffort, OnFail, FallbackYears, Responsiveness,
+    return(Finish(.SPFallback(Data, Prep, PrevTAC, PrevEffort, OnFail, FallbackYears, Responsiveness,
                        DeltaDown, DeltaUp, TACRange, Allocation, AdviceType, TACType, Misc,
                        State, AdviceYear,
                        sprintf('%d year(s) with index observations (MinIndexYears = %d).',
-                               nIndexYears, MinIndexYears)))
+                               nIndexYears, MinIndexYears))))
 
   WarmStart   <- if (is.null(Control)) TRUE else isTRUE(Control$WarmStart)
   Start       <- if (WarmStart && identical(State$Model, Model)) State$par else NULL
@@ -305,11 +332,11 @@ SurplusProduction <- function(Data,
     error = function(e) conditionMessage(e)
   )
   if (is.character(Fit) || !Fit$Converged)
-    return(.SPFallback(Data, Prep, PrevTAC, PrevEffort, OnFail, FallbackYears, Responsiveness,
+    return(Finish(.SPFallback(Data, Prep, PrevTAC, PrevEffort, OnFail, FallbackYears, Responsiveness,
                        DeltaDown, DeltaUp, TACRange, Allocation, AdviceType, TACType, Misc,
                        State, AdviceYear,
                        paste('Model fit failed:', if (is.character(Fit)) Fit else Fit$Message),
-                       Fit = if (is.character(Fit)) NULL else Fit))
+                       Fit = if (is.character(Fit)) NULL else Fit)))
 
   LandedFrac <- .SPLandedFraction(Prep, LandedFracYears)
   ToModel    <- .SPTypeConversion(TACType, CatchType, LandedFrac)
@@ -327,10 +354,10 @@ SurplusProduction <- function(Data,
   if (!is.null(FractileF))
     FMSYHCR <- .SPFractile(FMSYHCR, Fit$SE[['logFMSY']], FractileF)
   if (!is.finite(EstB) || !is.finite(FMSYHCR))
-    return(.SPFallback(Data, Prep, PrevTAC, PrevEffort, OnFail, FallbackYears, Responsiveness,
+    return(Finish(.SPFallback(Data, Prep, PrevTAC, PrevEffort, OnFail, FallbackYears, Responsiveness,
                        DeltaDown, DeltaUp, TACRange, Allocation, AdviceType, TACType, Misc,
                        State, AdviceYear, 'Standard errors for the fractile rule are not available.',
-                       Fit = Fit))
+                       Fit = Fit)))
 
   FAdvice <- HockeyStickHCR(tunepar * FTarget * FMSYHCR, Est = EstB, Ref = 1,
                             ControlPointsIndex = HCRControlPointsBiomass,
@@ -349,11 +376,11 @@ SurplusProduction <- function(Data,
   if (AdviceType == 'Effort') {
     FLH <- .SPFYearLH(Fit, Prep$YearLH)
     if (!(FLH > 0))
-      return(.SPFallback(Data, Prep, PrevTAC, PrevEffort, OnFail, FallbackYears, Responsiveness,
+      return(Finish(.SPFallback(Data, Prep, PrevTAC, PrevEffort, OnFail, FallbackYears, Responsiveness,
                          DeltaDown, DeltaUp, TACRange, Allocation, AdviceType, TACType, Misc,
                          State, AdviceYear,
                          'Estimated fishing mortality in the last historical year is zero.',
-                         Fit = Fit))
+                         Fit = Fit)))
     Mod            <- exp(log((FAdvice / FLH) / PrevEffort) * Responsiveness)
     Effort         <- ConstrainTAC(PrevEffort, Mod, DeltaDown, DeltaUp, c(0, Inf))
     Summary$Advice <- Effort
@@ -377,7 +404,7 @@ SurplusProduction <- function(Data,
   if (First)
     for (msg in Prep$Log)
       Advice <- .CaptureLog(Advice, msg, name = 'SurplusProduction', type = 'assumption')
-  Advice
+  Finish(Advice)
 }
 class(SurplusProduction) <- 'mp'
 

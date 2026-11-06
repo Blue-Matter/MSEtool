@@ -44,6 +44,8 @@ Suggests:
     furrr,
     future,
     fmsb,
+    gganimate,
+    gifski,
     kableExtra,
     knitr,
     ggrepel,
@@ -310,6 +312,7 @@ Collate:
     'plot-fleet.R'
     'plot-hist.R'
     'plot-index-fit.R'
+    'plot-mp.R'
     'plot-recdevs.R'
     'plot-schedule.R'
     'plot-spatial.R'
@@ -355,6 +358,7 @@ Collate:
     'reduce.R'
     'rename.R'
     'reorder.R'
+    'replay-mp.R'
     'runMSE.R'
     'set-seasonal-R0.R'
     'show.R'
