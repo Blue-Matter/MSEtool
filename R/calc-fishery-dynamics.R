@@ -57,7 +57,7 @@
   
   nStock   <- nStock(Hist)
   nFleet   <- nFleet(Hist)
-  nArea    <- nArea(Hist)
+  nArea    <- dim(Hist@Number[[1]])[4]
   nSim     <- nSim(Hist)
   AllYears <- Years(Hist@OM)
   
