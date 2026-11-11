@@ -770,7 +770,14 @@ CombineFleets <- function(OM, FleetList = NULL, silent = FALSE) {
   if (all(is.na(ST@Targeting))) return(OM)
   
   nStock <- nStock(OM)
-  
+
+  # Neutral targeting (e.g. a common effort across stocks) can be stored with a
+  # single Sim row; extend to nSim so the per-Sim assignments below work
+  nSim <- nSim(OM)
+  if (dim(ST@Targeting)[1] < nSim) ST@Targeting <- ExtendSims(ST@Targeting, nSim)
+  if (!is.null(ST@Mean) && dim(ST@Mean)[1] < nSim) ST@Mean <- ExtendSims(ST@Mean, nSim)
+  if (!is.null(ST@Covariance) && dim(ST@Covariance)[1] < nSim) ST@Covariance <- ExtendSims(ST@Covariance, nSim)
+
   for (i in seq_along(FleetList)) {
     replaceInd <- FleetIndList[[i]][1]
     FleetInds  <- FleetIndList[[i]]
