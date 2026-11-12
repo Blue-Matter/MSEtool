@@ -84,8 +84,10 @@ year, \code{2} = every 2 years, \code{0} = not used). Historical values are
 always used. \code{NULL} (default) assumes every year.}
 
 \item{IndexWeight}{Positive numeric vector, one per selected index, giving
-each index's weight when combining indices. \code{NULL} (default) weights
-indices equally.}
+each index's weight in the weighted mean of \code{status / IndexTarget} over
+indices (and, in \code{IndexRate()}, of the per-index trial TAC). \code{NULL}
+(default) weights indices equally. Weights apply to the index relative
+to its target, so they are independent of the index units or scale.}
 
 \item{CalibYears}{Positive integer. Number of most recent historical years
 used to calculate the catch-per-index rate (\code{IndexRate()}, default \code{2})
@@ -124,8 +126,8 @@ catch-per-index rate. \code{1} (default) keeps the rate observed over
 
 \item{IndexTarget}{\code{NULL} (default), or a positive number (or vector, one
 per selected index) giving the target index level, in the units of the
-(annual) index. Targets of multiple indices are combined with
-\code{IndexWeight}. When \code{NULL}, \code{Ref} on the selected \code{IndexSource} object
+(annual) index. Each index's status is divided by its own target, and
+these ratios are averaged over indices with \code{IndexWeight}. When \code{NULL}, \code{Ref} on the selected \code{IndexSource} object
 (see \code{\link[=IndicesData]{IndicesData()}}) is used, and an index with no \code{Ref} uses its
 status at the end of the historical period: the historical index,
 smoothed as set by \code{Smooth}/\code{ENPMult}, averaged over the \code{RecentYears}
@@ -215,8 +217,12 @@ Both MPs estimate the current status of each selected index as its
 (optionally loess-smoothed, see \code{Smooth}) value averaged over the
 \code{RecentYears} most recent years. When \code{TrendYears} is set, that status is
 projected forward \code{TrendHorizon} years along a log-linear trend before it
-is compared with the index target. Per-index values are combined with
-\code{IndexWeight}.
+is compared with the index target. The status used by the harvest control
+rule is the weighted mean, over indices, of \code{status / IndexTarget}, with
+weights \code{IndexWeight}. Indices with no status (all \code{NA} over the
+\code{RecentYears} window) are excluded from the mean. Because each index is
+divided by its own target first, the scale of an index does not affect its
+weight.
 
 The harvest control rules of both MPs are expressed relative to
 \code{IndexTarget}. With no \code{IndexTarget} or \code{Ref}, the target is the index at
@@ -287,8 +293,9 @@ trial TAC is \verb{rate x current status} and \code{IndexTarget} has no effect.
 The reference catch is the mean catch of type \code{TACType} (summed over
 fleets) over the last \code{CalibYears} historical years, multiplied by
 \code{tunepar}. A hockey-stick harvest control rule (\code{\link[=HockeyStickHCR]{HockeyStickHCR()}}),
-evaluated at \code{status / IndexTarget}, scales the reference catch to give the
-trial TAC. With control points passing through \verb{(1, 1)}, the trial TAC is
+evaluated at \code{status / IndexTarget} (the \code{IndexWeight}-weighted mean of
+each index's status divided by its \code{IndexTarget}), scales the reference
+catch to give the trial TAC. With control points passing through \verb{(1, 1)}, the trial TAC is
 the reference catch when the index is at \code{IndexTarget}. The trial TAC does
 not depend on the previous TAC, so TAC changes do not accumulate while the
 index is away from \code{IndexTarget}.
