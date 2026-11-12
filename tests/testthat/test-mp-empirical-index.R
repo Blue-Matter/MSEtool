@@ -115,6 +115,70 @@ test_that("IndexTarget scales the reference catch by the HCR, independent of the
                                            HCRControlPointsRate = c(0, 1)), Free))@TAC, 0)
 })
 
+.TwoIndexData <- function(I1, I2, Years = 2001:2020) {
+  D <- .AnnualIndexData(I1, Years = Years)
+  D@Survey <- IndicesData(Name = c('S1', 'S2'),
+                          Value = array(c(I1, I2), c(length(Years), 2),
+                                        list(Year = as.character(Years), Fleet = c('S1', 'S2'))))
+  D
+}
+
+.TargetCalc <- function(D, IndexWeight = NULL, IndexTarget = NULL, RecentYears = 1)
+  MSEtool:::.IndexMPCalc('Target', D, NULL, 'Survey', NULL, IndexWeight, 5, FALSE, 0.3, RecentYears,
+                         NULL, 1, 1, IndexTarget, c(0, 1, 2), c(0, 1, 1.5), 1,
+                         c(0, 1), c(0, 10), NULL, 'Removals', NULL, 1)
+
+test_that("IndexTarget status is the weighted mean of index / IndexTarget, independent of index scale", {
+  I1 <- seq(2, 1, length.out = 20)
+  I2 <- seq(20, 45, length.out = 20)
+  Target <- c(2, 30)
+  Free <- list(IndexSource = 'Survey', Smooth = FALSE, DeltaUp = c(0, 10), DeltaDown = c(0, 1))
+
+  D <- .TwoIndexData(I1, I2)
+  Calc <- .TargetCalc(D, IndexTarget = Target)
+  expect_equal(Calc$Est, mean(c(I1[20], I2[20]) / Target))
+  expect_equal(Calc$RefLevel, 1)
+  expect_equal(Calc$TrialTAC, 100 * HockeyStickHCR(1, Calc$Est, 1, c(0, 1, 2), c(0, 1, 1.5)))
+
+  Calc <- .TargetCalc(D, IndexWeight = c(3, 1), IndexTarget = Target)
+  expect_equal(Calc$Est, weighted.mean(c(I1[20], I2[20]) / Target, c(3, 1)))
+
+  TAC <- do.call(IndexTarget, c(list(D, IndexTarget = Target), Free))@TAC
+  D100 <- .TwoIndexData(I1, 100 * I2)
+  expect_equal(do.call(IndexTarget, c(list(D100, IndexTarget = Target * c(1, 100)), Free))@TAC, TAC)
+  expect_equal(do.call(IndexTarget, c(list(D100, IndexTarget = Target * c(1, 100),
+                                           IndexWeight = c(2, 5)), Free))@TAC,
+               do.call(IndexTarget, c(list(D, IndexTarget = Target, IndexWeight = c(2, 5)), Free))@TAC)
+
+  # default targets (last historical status) put every index on target
+  expect_equal(.TargetCalc(D100)$Est, 1)
+})
+
+test_that("IndexTarget status ignores indices with no recent values and NA years", {
+  I1 <- seq(2, 1, length.out = 20)
+  I2 <- seq(20, 45, length.out = 20)
+  Target <- c(2, 30)
+
+  # S2 missing over the status window: only S1 contributes, with its own weight
+  I2NA <- replace(I2, 18:20, NA)
+  D <- .TwoIndexData(I1, I2NA)
+  expect_equal(.TargetCalc(D, IndexTarget = Target)$Est, I1[20] / 2)
+  expect_equal(.TargetCalc(D, IndexWeight = c(1, 10), IndexTarget = Target)$Est, I1[20] / 2)
+  expect_equal(IndexTarget(D, IndexSource = 'Survey', Smooth = FALSE, IndexTarget = Target,
+                           DeltaUp = c(0, 10), DeltaDown = c(0, 1))@TAC, 100 * I1[20] / 2)
+
+  # default target of S2 falls back to its last observed value
+  expect_equal(.TargetCalc(D)$Ref, c(I1[20], I2[17]))
+  expect_equal(.TargetCalc(D)$Est, 1)
+
+  # NA years within the status window are skipped
+  I1NA <- replace(I1, 19, NA)
+  D <- .TwoIndexData(I1NA, I2NA)
+  Calc <- .TargetCalc(D, IndexTarget = Target, RecentYears = 4)
+  expect_equal(Calc$Est, mean(c(mean(I1[c(17, 18, 20)]) / 2, I2[17] / 30)))
+  expect_true(is.finite(Calc$TAC))
+})
+
 test_that("TACType sets the catch used for calibration, the previous TAC, and the advice", {
   D <- .AnnualIndexData(rep(1, 20))
   D@Discards@Value[] <- 50

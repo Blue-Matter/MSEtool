@@ -8,8 +8,12 @@
 #' (optionally loess-smoothed, see `Smooth`) value averaged over the
 #' `RecentYears` most recent years. When `TrendYears` is set, that status is
 #' projected forward `TrendHorizon` years along a log-linear trend before it
-#' is compared with the index target. Per-index values are combined with
-#' `IndexWeight`.
+#' is compared with the index target. The status used by the harvest control
+#' rule is the weighted mean, over indices, of `status / IndexTarget`, with
+#' weights `IndexWeight`. Indices with no status (all `NA` over the
+#' `RecentYears` window) are excluded from the mean. Because each index is
+#' divided by its own target first, the scale of an index does not affect its
+#' weight.
 #'
 #' The harvest control rules of both MPs are expressed relative to
 #' `IndexTarget`. With no `IndexTarget` or `Ref`, the target is the index at
@@ -74,8 +78,9 @@
 #' The reference catch is the mean catch of type `TACType` (summed over
 #' fleets) over the last `CalibYears` historical years, multiplied by
 #' `tunepar`. A hockey-stick harvest control rule ([HockeyStickHCR()]),
-#' evaluated at `status / IndexTarget`, scales the reference catch to give the
-#' trial TAC. With control points passing through `(1, 1)`, the trial TAC is
+#' evaluated at `status / IndexTarget` (the `IndexWeight`-weighted mean of
+#' each index's status divided by its `IndexTarget`), scales the reference
+#' catch to give the trial TAC. With control points passing through `(1, 1)`, the trial TAC is
 #' the reference catch when the index is at `IndexTarget`. The trial TAC does
 #' not depend on the previous TAC, so TAC changes do not accumulate while the
 #' index is away from `IndexTarget`.
@@ -112,8 +117,10 @@
 #'   year, `2` = every 2 years, `0` = not used). Historical values are
 #'   always used. `NULL` (default) assumes every year.
 #' @param IndexWeight Positive numeric vector, one per selected index, giving
-#'   each index's weight when combining indices. `NULL` (default) weights
-#'   indices equally.
+#'   each index's weight in the weighted mean of `status / IndexTarget` over
+#'   indices (and, in `IndexRate()`, of the per-index trial TAC). `NULL`
+#'   (default) weights indices equally. Weights apply to the index relative
+#'   to its target, so they are independent of the index units or scale.
 #' @param Smooth Logical. Whether to smooth each selected index with
 #'   [SmoothSeries()] before calculating its status and trend. `TRUE`
 #'   (default). `FALSE` uses the observed index values, e.g. for a series too
@@ -137,8 +144,8 @@
 #'   `TrendYears` is `NULL`.
 #' @param IndexTarget `NULL` (default), or a positive number (or vector, one
 #'   per selected index) giving the target index level, in the units of the
-#'   (annual) index. Targets of multiple indices are combined with
-#'   `IndexWeight`. When `NULL`, `Ref` on the selected `IndexSource` object
+#'   (annual) index. Each index's status is divided by its own target, and
+#'   these ratios are averaged over indices with `IndexWeight`. When `NULL`, `Ref` on the selected `IndexSource` object
 #'   (see [IndicesData()]) is used, and an index with no `Ref` uses its
 #'   status at the end of the historical period: the historical index,
 #'   smoothed as set by `Smooth`/`ENPMult`, averaged over the `RecentYears`
@@ -385,14 +392,12 @@ class(IndexTarget) <- 'mp'
                    ControlPointsRate  = HCRControlPointsRate)
 
   RefCatch <- NULL
+  Est      <- stats::weighted.mean(StatusTrend/Ref, IndexWeight, na.rm = TRUE)
+  RefLevel <- 1
   if (Type == 'Rate') {
-    Est      <- stats::weighted.mean(StatusTrend/Ref, IndexWeight, na.rm = TRUE)
-    RefLevel <- 1
     AdjRate  <- HCR(CatchPerIndex * IndexFactor * tunepar, Est, RefLevel)
     TrialTAC <- stats::weighted.mean(Status * AdjRate, IndexWeight, na.rm = TRUE)
   } else {
-    Est      <- stats::weighted.mean(StatusTrend, IndexWeight, na.rm = TRUE)
-    RefLevel <- stats::weighted.mean(Ref, IndexWeight, na.rm = TRUE)
     RefCatch <- CalibCatch * tunepar
     TrialTAC <- HCR(RefCatch, Est, RefLevel)
   }
