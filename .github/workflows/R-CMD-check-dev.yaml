@@ -1,0 +1,56 @@
+# Single-config check for dev. PRs and pushes run the smoke test tier
+# (see tests/testthat.R); the weekly schedule runs the full suite.
+on:
+  push:
+    branches: [dev]
+  pull_request:
+    branches: [dev]
+  schedule:
+    - cron: '0 5 * * 1'
+  workflow_dispatch:
+    inputs:
+      tier:
+        description: 'Test tier'
+        type: choice
+        options: [smoke, full]
+        default: smoke
+
+name: R-CMD-check-dev
+
+permissions: read-all
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
+
+jobs:
+  R-CMD-check:
+    runs-on: ubuntu-latest
+
+    name: ubuntu-latest (release, ${{ (github.event_name == 'schedule' || inputs.tier == 'full') && 'full' || 'smoke' }})
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      R_KEEP_PKG_SOURCE: yes
+      MSETOOL_TEST_TIER: ${{ (github.event_name == 'schedule' || inputs.tier == 'full') && 'full' || 'smoke' }}
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: release
+          use-public-rspm: true
+          extra-repositories: 'https://r4ss.r-universe.dev https://flr.r-universe.dev'
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck
+          needs: check
+
+      - uses: r-lib/actions/check-r-package@v2
+        with:
+          upload-snapshots: true
+          build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
