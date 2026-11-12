@@ -9,7 +9,7 @@ JoinYear(object1, object2)
 \arguments{
 \item{object1}{The earlier object. Must have years that precede those in
 \code{object2}. Can be an S4 object, a \code{list}, a named \code{array} with a \code{"Year"}
-dimension, or a \code{numeric} vector.}
+dimension, a \code{data.frame} with a \code{Year} column, or a \code{numeric} vector.}
 
 \item{object2}{The later object with the same structure as \code{object1}.
 Its years must be strictly greater than those in \code{object1}.}
@@ -38,6 +38,12 @@ result is \code{object2}'s value rather than \code{NULL}.
 \item \strong{Named arrays with a \code{"Year"} dimension} — joined along the year
 axis using \code{\link[abind:abind]{abind::abind()}}. An error is thrown if years are not
 strictly increasing across \code{object1} and \code{object2}.
+\item \strong{Data frames with a \code{Year} column} — rows of \code{object2} are appended
+to \code{object1} with \code{\link[=rbind]{rbind()}}, matching columns by name. An error is thrown
+if the latest year in \code{object1} is not earlier than the earliest year in
+\code{object2}. Identical data frames, and data frames without a \code{Year}
+column, are returned unchanged from \code{object1}; a zero-row \code{object1}
+returns \code{object2}.
 \item \strong{Numeric vectors} — if \code{object1} and \code{object2} are identical (e.g.
 static per-fleet metadata such as a \code{compdata}'s \code{Classes} bin
 boundaries, unchanged between the historical and projection segments),
