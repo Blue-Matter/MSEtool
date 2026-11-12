@@ -8,7 +8,7 @@
 #'
 #' @param object1 The earlier object. Must have years that precede those in
 #'   `object2`. Can be an S4 object, a `list`, a named `array` with a `"Year"`
-#'   dimension, or a `numeric` vector.
+#'   dimension, a `data.frame` with a `Year` column, or a `numeric` vector.
 #' @param object2 The later object with the same structure as `object1`.
 #'   Its years must be strictly greater than those in `object1`.
 #'
@@ -28,6 +28,12 @@
 #' - **Named arrays with a `"Year"` dimension** — joined along the year
 #'   axis using [abind::abind()]. An error is thrown if years are not
 #'   strictly increasing across `object1` and `object2`.
+#' - **Data frames with a `Year` column** — rows of `object2` are appended
+#'   to `object1` with [rbind()], matching columns by name. An error is thrown
+#'   if the latest year in `object1` is not earlier than the earliest year in
+#'   `object2`. Identical data frames, and data frames without a `Year`
+#'   column, are returned unchanged from `object1`; a zero-row `object1`
+#'   returns `object2`.
 #' - **Numeric vectors** — if `object1` and `object2` are identical (e.g.
 #'   static per-fleet metadata such as a `compdata`'s `Classes` bin
 #'   boundaries, unchanged between the historical and projection segments),
@@ -90,6 +96,27 @@ JoinYear <- function(object1, object2) {
 
     }
     return(object1)
+  }
+
+  if (is.data.frame(object1)) {
+    if (!is.data.frame(object2) || identical(object1, object2))
+      return(object1)
+    if (!nrow(object1))
+      return(object2)
+    if (!'Year' %in% names(object1) || !nrow(object2))
+      return(object1)
+
+    years1 <- as.numeric(as.character(object1$Year))
+    years2 <- as.numeric(as.character(object2$Year))
+    if (max(years1, na.rm=TRUE) >= min(years2, na.rm=TRUE))
+      cli::cli_abort(c('x'='Years are not increasing. Did you pass early years as `object1`?',
+                       'i'="`Years 1` = {.val {unique(years1)}}",
+                       'i'="`Years 2` = {.val {unique(years2)}}"
+      ))
+
+    out <- rbind(object1, object2[names(object1)])
+    rownames(out) <- NULL
+    return(out)
   }
 
   if (all(is.na(object1)))

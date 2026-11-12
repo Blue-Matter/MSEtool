@@ -67,3 +67,51 @@ test_that("JoinYear still concatenates differing non-year numeric vectors", {
   out <- JoinYear(c(1, 2, 3), c(4, 5))
   expect_equal(out, c(1, 2, 3, 4, 5))
 })
+
+test_that("JoinYear row-binds long-format data.frames with a Year column", {
+  d1 <- expand.grid(Sim = 1:2, Year = 2001:2002, Fleet = c("A", "B"), stringsAsFactors = FALSE)
+  d1$Value <- seq_len(nrow(d1))
+  d2 <- expand.grid(Sim = 1:2, Year = 2003, Fleet = c("A", "B"), stringsAsFactors = FALSE)
+  d2$Value <- 100 + seq_len(nrow(d2))
+  out <- JoinYear(d1, d2[, rev(names(d2))])
+  expect_equal(nrow(out), nrow(d1) + nrow(d2))
+  expect_equal(names(out), names(d1))
+  expect_equal(out$Value, c(d1$Value, d2$Value))
+  expect_equal(rownames(out), as.character(seq_len(nrow(out))))
+})
+
+test_that("JoinYear aborts on non-increasing data.frame years", {
+  d1 <- data.frame(Year = 2003:2004, Value = 1:2)
+  d2 <- data.frame(Year = 2004:2005, Value = 3:4)
+  expect_error(JoinYear(d1, d2), "not increasing")
+})
+
+test_that("JoinYear returns object2 for a zero-row data.frame object1", {
+  d2 <- data.frame(Year = 2001:2002, Value = 1:2)
+  expect_equal(JoinYear(d2[0, ], d2), d2)
+})
+
+test_that("JoinYear leaves identical or Year-less data.frames unchanged", {
+  stats1 <- data.frame(Sim = 1:2, SD = c(0.2, 0.3))
+  stats2 <- data.frame(Sim = 1:2, SD = c(0.4, 0.5))
+  expect_equal(JoinYear(stats1, stats2), stats1)
+  d <- data.frame(Year = 2001:2002, Value = 1:2)
+  expect_equal(JoinYear(d, d), d)
+})
+
+test_that("JoinYear joins data.frames nested in lists", {
+  a <- list(x = data.frame(Year = 2001, Fleet = "A", Value = 1))
+  b <- list(x = data.frame(Year = 2002, Fleet = "A", Value = 2))
+  out <- JoinYear(a, b)
+  expect_equal(out$x$Year, c(2001, 2002))
+  expect_equal(out$x$Fleet, c("A", "A"))
+})
+
+test_that("JoinYear compares character and factor Year columns numerically", {
+  d1 <- data.frame(Year = factor(c("2009", "2010")), Value = 1:2)
+  d2 <- data.frame(Year = factor("2011"), Value = 3)
+  out <- JoinYear(d1, d2)
+  expect_equal(as.character(out$Year), c("2009", "2010", "2011"))
+  expect_error(JoinYear(data.frame(Year = "2010", Value = 1),
+                        data.frame(Year = "9", Value = 2)), "not increasing")
+})
