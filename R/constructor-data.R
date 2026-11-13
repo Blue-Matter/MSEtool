@@ -515,6 +515,8 @@ Data <- function(Name = 'New Data Object',
   object <- methods::new(
     "data",
     Name = Name,
+    CommonName = CommonName,
+    Species = Species,
     Agency = Agency,
     Author = Author,
     Email = Email,
