@@ -22,8 +22,8 @@ Fecundity(x) <- value
 \item{Pars}{\code{list}. Named list of fecundity parameters. Element names must
 match the arguments of a built-in fecundity model (see \code{\link[=FecundityModels]{FecundityModels()}}).
 When \code{Pars} is non-empty and \code{Model} is \code{NULL}, the model is inferred
-automatically from the parameter names. When \code{Pars} is a \link[=stock-class]{stock} object,
-\code{Fecundity()} acts as a pass-through accessor and returns \code{x@Fecundity}.
+automatically from the parameter names. An object that contains \code{Fecundity} objects returns them;
+see \emph{Pass-Through Access}.
 See also
 \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for the
 full set of accepted input formats. A length-2 value is \code{Uniform(lower, upper)} bounds, except when \code{nSim = 2}, where it is one value per simulation. Default \code{list()}.}
@@ -68,16 +68,17 @@ step is set by \code{SRR@SpawnTimeFrac} (see \code{\link[=SRR]{SRR()}}). Default
 
 \item{Misc}{\code{list}. Used internally. Default \code{list()}.}
 
-\item{x}{A \link[=fecundity-class]{fecundity} object for slot accessors, or a \link[=stock-class]{stock}
-object for \verb{Fecundity<-}.}
+\item{x}{A \link[=fecundity-class]{fecundity} object for slot accessors, or an object that contains
+\code{Fecundity} objects for \verb{Fecundity<-} (see \emph{Pass-Through Access}).}
 
-\item{value}{For \verb{Fecundity<-}: a \link[=fecundity-class]{fecundity} object.}
+\item{value}{For \verb{Fecundity<-}: a \link[=fecundity-class]{fecundity} object, or a list of them named by
+stock (see \emph{Pass-Through Access}).}
 }
 \value{
 \itemize{
-\item \code{Fecundity()} returns a \link[=fecundity-class]{fecundity} object. If \code{Pars} is a
-\link[=stock-class]{stock}, returns \code{x@Fecundity}.
-\item \verb{Fecundity<-} returns the \link[=stock-class]{stock} \code{x} with the \code{Fecundity} slot
+\item \code{Fecundity()} returns a \link[=fecundity-class]{fecundity} object. If \code{Pars} contains \code{Fecundity}
+objects, returns them (see \emph{Pass-Through Access}).
+\item \verb{Fecundity<-} returns \code{x} with the \code{Fecundity} slot
 replaced and the object re-validated.
 }
 }
@@ -152,19 +153,6 @@ converted to \code{MeanAtAge} via the \code{ALK} — a populated \code{\link[=Le
 be passed to \code{\link[=Populate]{Populate()}}.
 }
 
-\subsection{Pass-Through Access from a Stock}{
-
-When \code{Pars} is a \link[=stock-class]{stock} object, \code{Fecundity()} returns the \code{Fecundity}
-slot directly:
-
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{Fecundity(my_stock)             # returns my_stock@Fecundity
-Fecundity(my_stock) <- my_fec   # replaces my_stock@Fecundity
-}\if{html}{\out{</div>}}
-
-A \link[=lifehistorydata-class]{lifehistorydata} or \link[=lifehistoryobs-class]{lifehistoryobs} object, or a list of
-them (the \code{LifeHistory} slot of a \link[=data-class]{data} or \link[=obs-class]{obs} object), returns its \code{Fecundity} slot in the same way.
-}
-
 \subsection{Slot Accessors}{
 
 Individual slots can be read or replaced using generic functions matching
@@ -179,6 +167,28 @@ Classes(fec)       <- 0:20
 }\if{html}{\out{</div>}}
 }
 }
+\section{Pass-Through Access}{
+
+When \code{Pars} is an object that contains \code{Fecundity} objects,
+\code{Fecundity()} returns them instead of constructing a new object:
+\itemize{
+\item a \link[=stock-class]{stock} object: its \code{Fecundity} slot.
+\item an \link[=om-class]{om}, \link[=hist-class]{hist}, or \link[=mse-class]{mse} object, or a list of
+\link[=stock-class]{stock} objects: a list with the \code{Fecundity} slot of each stock.
+\item a \link[=data-class]{data} or \link[=obs-class]{obs} object, or a \link[=lifehistorydata-class]{lifehistorydata} or
+\link[=lifehistoryobs-class]{lifehistoryobs} object or a list of them: the \code{Fecundity} slot
+of the life-history information.
+}
+
+\code{Fecundity(x) <- value} replaces the slot of a \link[=stock-class]{stock},
+\link[=om-class]{om}, \link[=data-class]{data}, \link[=obs-class]{obs}, \link[=lifehistorydata-class]{lifehistorydata}, or
+\link[=lifehistoryobs-class]{lifehistoryobs} object, or of each object in a list of them. When
+\code{x} has more than one stock, \code{value} must be a list named by stock (see
+\code{\link[=StockNames]{StockNames()}}). The slot cannot be replaced in a \link[=hist-class]{hist} or
+\link[=mse-class]{mse} object, because it was used to simulate the historical
+dynamics.
+}
+
 \examples{
 # See FecundityModels() for all available built-in fecundity models and the
 # parameter names required for each. All models use a logistic 50/95

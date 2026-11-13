@@ -146,6 +146,7 @@ Other om:
 \code{\link[=RefSeason]{RefSeason()}},
 \code{\link{SeasonalSpatialOM}},
 \code{\link{SingleStockOM}},
+\code{\link[=StockTargeting]{StockTargeting()}},
 \code{\link{TwoFleetOM}},
 \code{\link{om-class}},
 \code{\link{stocktransition-class}}

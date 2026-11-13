@@ -41,8 +41,8 @@ WeightFleetSelected(x) <- value
 Fleet(x) <- value
 }
 \arguments{
-\item{Name}{Character or \code{NULL}. Fleet name, or an \link[=om-class]{om} object for
-pass-through access (see Details).}
+\item{Name}{Character or \code{NULL}. Fleet name, or an \link[=om-class]{om},
+\link[=hist-class]{hist}, or \link[=mse-class]{mse} object for pass-through access (see Details).}
 
 \item{Effort}{An \link[=effort-class]{effort} object defining historical fishing effort,
 spatial distribution, and targeting. See \code{\link[=Effort]{Effort()}} for full
@@ -141,7 +141,8 @@ retention, and the stock's weight-at-length.
 
 \subsection{Pass-Through Access from an OM}{
 
-When \code{Name} is an \link[=om-class]{om} object, \code{Fleet()} acts as an accessor rather
+When \code{Name} is an \link[=om-class]{om} object, or a \link[=hist-class]{hist} or \link[=mse-class]{mse}
+object (using its embedded \code{OM}), \code{Fleet()} acts as an accessor rather
 than a constructor:
 \itemize{
 \item \code{Fleet(om)} returns the full fleet list (\code{om@Fleet}).
@@ -151,6 +152,13 @@ than a constructor:
 (\code{om@Fleet[[st]][[fl]]}), where \code{fl} is passed via the \code{Catchability}
 argument.
 }
+
+\code{Closure()}, \code{WeightFleetRetained()}, and \code{WeightFleetSelected()} accept
+a \link[=fleet-class]{fleet} object, or an \link[=om-class]{om}, \link[=hist-class]{hist}, or \link[=mse-class]{mse}
+object or a list of fleets, for which they return a list with the slot of
+each fleet. Their replacement forms follow the rules for fleet components
+described in \code{\link[=Selectivity]{Selectivity()}} under \emph{Pass-Through Access}; \verb{Closure<-} also
+accepts an \link[=advice-class]{advice} object.
 }
 
 \subsection{Assigning Fleets to an OM}{

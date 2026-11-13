@@ -2,31 +2,99 @@
 % Please edit documentation in R/constructor-stock-targeting.R
 \name{StockTargeting}
 \alias{StockTargeting}
-\title{Stock Targeting Constructor}
+\alias{StockTargeting<-}
+\alias{Covariance}
+\alias{Covariance<-}
+\title{Stock Targeting Constructor and Accessors}
 \usage{
-StockTargeting(OM)
+StockTargeting(
+  Mean = NULL,
+  Covariance = NULL,
+  AC = NULL,
+  Targeting = NULL,
+  Misc = list()
+)
+
+StockTargeting(x) <- value
+
+Covariance(x)
+
+Covariance(x) <- value
 }
 \arguments{
-\item{OM}{An \link[=om-class]{om} object. Must have at least one stock and one fleet.}
+\item{Mean}{\code{array[sim, stock, fleet]} or \code{NULL}. Mean targeting weight
+for each simulation, stock, and fleet. When \code{Mean} is an \link[=om-class]{om},
+\link[=hist-class]{hist}, or \link[=mse-class]{mse} object, \code{StockTargeting()} returns its
+\code{StockTargeting} slot (of the embedded \code{OM} for \code{hist} and \code{mse}).}
+
+\item{Covariance}{\code{array[sim, stock_i, stock_j, fleet]} or \code{NULL}.
+Log-space residual covariance of the targeting weights.}
+
+\item{AC}{\code{array[sim, stock, fleet]} or \code{NULL}. Lag-1 autocorrelation of
+the log targeting residuals.}
+
+\item{Targeting}{\code{array[sim, stock, fleet, year]} or \code{NULL}. Realised
+targeting deviations.}
+
+\item{Misc}{\code{list}. Used internally. Default \code{list()}.}
+
+\item{x}{An \link[=om-class]{om} object, for \verb{StockTargeting<-}; a
+\link[=stocktargeting-class]{stocktargeting} object, for \code{Covariance()} and \verb{Covariance<-}.}
+
+\item{value}{A \link[=stocktargeting-class]{stocktargeting} object, for \verb{StockTargeting<-}; an
+array, for \verb{Covariance<-}.}
 }
 \value{
-A \code{stocktargeting} object with:
 \itemize{
-\item \code{Mean}: \code{NA} array of dimension \verb{[nSim, nStock, nFleet]}
-\item \code{Covariance}: \code{NA} array of dimension \verb{[nSim, nStock, nStock, nFleet]}
-\item \code{AC}: \code{NA} array of dimension \verb{[nSim, nStock, nFleet]}
-\item \code{Targeting}: \code{NA} array of dimension \verb{[nSim, nStock, nFleet, nHistYear]}
-\item \code{Misc}: empty list
+\item \code{StockTargeting()} returns a \link[=stocktargeting-class]{stocktargeting} object.
+\item \verb{StockTargeting<-} returns the \link[=om-class]{om} object \code{x} with the
+\code{StockTargeting} slot replaced; it can only be replaced in \link[=om-class]{om}
+objects.
+\item \code{Covariance()} returns the \code{Covariance} slot, and \verb{Covariance<-} returns
+\code{x} with the slot replaced.
 }
-
-If \code{nFleet < 1} or \code{nStock < 1} an empty (default) \code{stocktargeting} object
-is returned with a warning.
 }
 \description{
-Initialises a \code{stocktargeting} object with \code{NA}-filled arrays sized to the
-supplied operating model. All arrays are dimensioned and named but left
-unpopulated.
+Construct a \link[=stocktargeting-class]{stocktargeting} object, which describes how a fleet's
+fishing effort is distributed among the stocks of a multi-stock operating
+model, or access the \code{StockTargeting} slot of an operating model and the
+slots of a \link[=stocktargeting-class]{stocktargeting} object.
+}
+\details{
+The slots are populated by \code{\link[=Simulate]{Simulate()}} (see \code{\link[=FitStockTargeting]{FitStockTargeting()}} and
+\code{\link[=GenerateStockTargeting]{GenerateStockTargeting()}}), so they rarely need to be set manually.
+
+\code{Mean()}, \code{AC()}, and \code{Targeting()} also access the corresponding slots of
+a \link[=stocktargeting-class]{stocktargeting} object.
+}
+\examples{
+st <- StockTargeting(MultiStockOM)
+
 }
 \seealso{
-\link[=stocktargeting-class]{stocktargeting}
+\link[=stocktargeting-class]{stocktargeting}, \code{\link[=GenerateStockTargeting]{GenerateStockTargeting()}},
+\code{\link[=FitStockTargeting]{FitStockTargeting()}}, \code{\link[=StockTargetingLambda]{StockTargetingLambda()}}
+
+Other om:
+\code{\link[=CatchFrac]{CatchFrac()}},
+\code{\link{ComplexOM}},
+\code{\link[=Complexes]{Complexes()}},
+\code{\link[=DataLag]{DataLag()}},
+\code{\link[=EffortAllocation]{EffortAllocation()}},
+\code{\link[=Herm]{Herm()}},
+\code{\link{HermOM}},
+\code{\link[=HistoricalWeight]{HistoricalWeight()}},
+\code{\link[=InterimAdvice]{InterimAdvice()}},
+\code{\link[=Interval]{Interval()}},
+\code{\link[=MPStartYear]{MPStartYear()}},
+\code{\link{MultiStockOM}},
+\code{\link[=OM]{OM()}},
+\code{\link{OMControl}},
+\code{\link[=RefSeason]{RefSeason()}},
+\code{\link{SeasonalSpatialOM}},
+\code{\link{SingleStockOM}},
+\code{\link{TwoFleetOM}},
+\code{\link{om-class}},
+\code{\link{stocktransition-class}}
 }
+\concept{om}

@@ -17,8 +17,8 @@
 #'   model and any values already in `MeanAtAge` are overwritten. To preserve
 #'   a user-specified `MeanAtAge`, leave `Pars = list()` (the default).
 #'
-#'   If `Pars` is a [fleet-class] object, the `Retention` slot of that fleet
-#'   is returned.
+#'   An object that contains `Retention` objects returns them; see
+#'   *Pass-Through Access*.
 #'
 #' @param Model Character or function or `NULL`. Retention model identifier.
 #'   If `NULL` (default), the model is inferred automatically from the names
@@ -61,9 +61,10 @@
 #'   schedule and use the stock's plain weight-at-age
 #'   instead. Default `TRUE`.
 #' @param Misc List. Miscellaneous additional inputs. Default `list()`.
-#' @param x A [retention-class] object, or a [fleet-class] object for
-#'   `Retention<-`.
-#' @param value For `Retention<-`: a [retention-class] object.
+#' @param x A [retention-class] object, or an object that contains
+#'   `Retention` objects for `Retention<-` (see *Pass-Through Access*).
+#' @param value For `Retention<-`: a [retention-class] object, or a list of them named by
+#'   fleet or by stock and fleet (see *Pass-Through Access*).
 #'
 #' @details
 #' Retention is optional for all [fleet-class] objects. It defines the
@@ -115,13 +116,18 @@
 #' Individual slots may be accessed or modified using [Pars()], [Model()],
 #' [MeanAtAge()], [MeanAtLength()], [MeanAtWeight()], and [Classes()].
 #'
-#' An [exploitationdata-class] or [exploitationobs-class] object, or a list
-#' of them (the `Exploitation` slot of a [data-class] or [obs-class] object),
-#' returns its `Retention` slot in the same way.
+#' The `isRel` and `isAtLength` slots are accessed with [isRel()] and
+#' [isAtLength()].
+#'
+#' @template passthrough-fleet
+#' @templateVar slot Retention
+#' @templateVar arg Pars
+#' @templateVar containers yes
+#' @templateVar extra an [advice-class] object: the retention set by an MP. The slot of these objects can also be replaced.
 #'
 #' @return
-#' - `Retention()` returns a [retention-class] object. If `Pars` is a
-#'   [fleet-class] object, the `Retention` slot of that fleet is returned.
+#' - `Retention()` returns a [retention-class] object. If `Pars` contains `Retention`
+#'   objects, returns them (see *Pass-Through Access*).
 #' - `Retention<-` returns `x` with the `Retention` slot replaced by `value`.
 #'
 #' @seealso
@@ -148,14 +154,8 @@ Retention <- function(Pars         = list(),
                       isAtLength   = TRUE,
                       Misc         = list()) {
 
-  if (.IsFleetOrList(Pars))
-    return(.ExtractFleetSlot(Pars, 'Retention'))
-
-  if (.IsDataContainer(Pars, c('exploitationdata', 'exploitationobs')))
-    return(.AccessSlotRecursive(Pars, 'Retention'))
-
-  if (inherits(Pars, 'advice'))
-    return(.AccessSlot(Pars, 'Retention'))
+  if (.IsFleetComponentSource(Pars, Extra = 'advice'))
+    return(.GetFleetSlot(Pars, 'Retention'))
 
   if (!inherits(Pars, 'list'))
     cli::cli_abort(c(
@@ -181,7 +181,7 @@ Retention <- function(Pars         = list(),
 #' @rdname Retention
 #' @export
 `Retention<-` <- function(x,value) {
-  .AssignFleetSlot(x, value, 'Retention')
+  .AssignFleetSlot(x, value, 'Retention', Extra = 'advice')
 }
 
 

@@ -60,6 +60,12 @@
 #' - `BLow()`: spawning biomass rebuilding threshold (see [CalcBLow()]).
 #'   Only populated when computed explicitly, since it is substantially
 #'   more expensive than the other reference points here.
+#' - `SPR0()`: unfished spawning potential ratio (spawning production per
+#'   recruit).
+#' - `MGT()`: mean generation time (see [CalcMGT()]).
+#'
+#' [Landings()] and [Removals()] return the `Landings` and `Removals` slots
+#' of a [reference-class] object.
 #'
 #' ## Unfished Reference Points
 #'
@@ -217,6 +223,14 @@ SPRcrash <- function(Hist) .AccessRefSlot(Hist, 'SPRcrash')
 #' @rdname RefPoint-accessors
 #' @export
 BLow <- function(Hist) .AccessRefSlot(Hist, 'BLow')
+
+#' @rdname RefPoint-accessors
+#' @export
+SPR0 <- function(Hist) .AccessRefSlot(Hist, 'SPR0')
+
+#' @rdname RefPoint-accessors
+#' @export
+MGT <- function(Hist) .AccessRefSlot(Hist, 'MGT')
 
 .UnfishedSlot <- function(Hist, type, slot_name, Reduce) {
   .CheckClass(Hist, c('hist', 'mse'), 'Hist')

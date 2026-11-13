@@ -108,12 +108,6 @@
   .IsTypeList(x, 'stock')
 }
 
-.IsStockOrList <- function(x) {
-  inherits(x, 'stock') ||
-    inherits(x, 'om')    ||
-    .IsStockList(x)
-}
-
 .IsFleetList <- function(x) {
   .IsTypeList(x, 'fleet')
 }
@@ -123,80 +117,3 @@
     all(vapply(x, .IsFleetList, logical(1)))
 }
 
-.IsFleetOrList <- function(x) {
-  inherits(x, 'fleet') ||
-    inherits(x, 'om')    ||
-    .IsFleetList(x)        ||
-    .IsStockFleetList(x)
-}
-
-.ExtractStockSlot <- function(x, SlotName) {
-  if (inherits(x, 'stock'))
-    return(slot(x, SlotName))
-  
-  if (inherits(x, 'om')) {
-    out <- purrr::map(x@Stock, slot, SlotName)
-    if (!length(out))
-      return(NULL)
-    
-    class(out) <- 'StockList'
-    return(out)
-  }
-  
-  if (.IsStockList(x)) {
-    out <- purrr::map(x, slot, SlotName)
-    if (!length(out))
-      return(NULL)
-    class(out) <- 'StockList'
-    return(out)
-  }
-  
-  NULL
-}
-
-.ExtractFleetSlot <- function(x, SlotName) {
-  if (inherits(x, 'fleet'))
-    return(slot(x, SlotName))
-  
-  if (inherits(x, 'om')) {
-    out <- purrr::map(x@Fleet, \(FleetList) {
-      fl <- purrr::map(FleetList, slot, SlotName)
-      class(fl) <- 'FleetList'
-      fl
-    })
-    if (!length(out))
-      return(NULL)
-    class(out) <- 'StockFleetList'
-    return(out)
-  }
-  
-  if (.IsStockFleetList(x)) {
-    out <- purrr::map(x, \(FleetList) {
-      fl <- purrr::map(FleetList, slot, SlotName)
-      class(fl) <- 'FleetList'
-      fl
-    })
-    if (!length(out))
-      return(NULL)
-    class(out) <- 'StockFleetList'
-    return(out)
-  }
-  
-  if (.IsFleetList(x)) {
-    out <- purrr::map(x, slot, SlotName)
-    if (!length(out))
-      return(NULL)
-    class(out) <- 'FleetList'
-    return(out)
-  }
-  
-  NULL
-}
-
-.AssignFleetSlot <- function(x, value, SlotName) {
-  if (inherits(x, 'om')) {
-    x@Fleet <- .AssignSlotRecursive(x@Fleet, value, SlotName)
-    return(x)
-  }
-  .AssignSlotRecursive(x, value, SlotName)
-}

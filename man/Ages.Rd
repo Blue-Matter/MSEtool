@@ -32,8 +32,7 @@ PlusGroup(x) <- value
 \code{PlusGroup = TRUE} (the default), fish at or older than this age are
 pooled into an open-ended plus group. Required for a non-empty object;
 if omitted the constructor returns an uninitialised \link[=ages-class]{ages} suitable
-for placeholder use inside a \link[=stock-class]{stock}. Alternatively, a
-\link[=stock-class]{stock} object, in which case \code{Ages()} returns \code{x@Ages} directly —
+for placeholder use inside a \link[=stock-class]{stock}. An object that contains \code{Ages} objects returns them;
 see \emph{Pass-Through Access}.}
 
 \item{MinAge}{\code{numeric(1)}. Minimum (youngest) age class in units of
@@ -49,17 +48,18 @@ group that accumulates all fish at or beyond that age. If \code{FALSE}, the
 age classes terminate at exactly \code{MaxAge} with no pooling. Default \code{TRUE}.}
 
 \item{x}{An \link[=ages-class]{ages} object for slot accessors (\code{MaxAge()},
-\code{MinAge()}, \code{PlusGroup()}), or a \link[=stock-class]{stock} object for \verb{Ages<-}.}
+\code{MinAge()}, \code{PlusGroup()}), or an object that contains
+\code{Ages} objects for \verb{Ages<-} (see \emph{Pass-Through Access}).}
 
 \item{value}{For \verb{Ages<-}: an \link[=ages-class]{ages} object. For \verb{MaxAge<-},
 \verb{MinAge<-}, \verb{PlusGroup<-}: the replacement value for the corresponding
 slot (see \emph{Slot Accessors}).}
 }
 \value{
-\code{Ages()} returns an \link[=ages-class]{ages} object. If \code{MaxAge} is a \link[=stock-class]{stock},
-returns \code{x@Ages}.
+\code{Ages()} returns an \link[=ages-class]{ages} object. If \code{MaxAge} contains \code{Ages}
+objects, returns them (see \emph{Pass-Through Access}).
 
-\verb{Ages<-} returns the \link[=stock-class]{stock} \code{x} with the \code{Ages} slot replaced by
+\verb{Ages<-} returns \code{x} with the \code{Ages} slot replaced by
 \code{value} and the object re-validated.
 
 \code{MaxAge()}, \code{MinAge()}, \code{PlusGroup()} return the value of the corresponding
@@ -100,18 +100,6 @@ objects, so they can be stored as placeholders inside a \link[=stock-class]{stoc
 parameters are specified. The model will not run until \code{MaxAge} is supplied.
 }
 
-\subsection{Pass-Through Access from a Stock}{
-
-When \code{MaxAge} is a \link[=stock-class]{stock} object, \code{Ages()} acts as an accessor:
-
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{Ages(my_stock)          # returns my_stock@Ages
-Ages(my_stock) <- a     # replaces my_stock@Ages with ages-class object `a`
-}\if{html}{\out{</div>}}
-
-A \link[=lifehistorydata-class]{lifehistorydata} or \link[=lifehistoryobs-class]{lifehistoryobs} object, or a list of
-them (the \code{LifeHistory} slot of a \link[=data-class]{data} or \link[=obs-class]{obs} object), returns its \code{Ages} slot in the same way.
-}
-
 \subsection{Slot Accessors}{
 
 Individual slots can be read or replaced using functions that match the slot
@@ -123,6 +111,28 @@ PlusGroup(a)     <- FALSE
 }\if{html}{\out{</div>}}
 }
 }
+\section{Pass-Through Access}{
+
+When \code{MaxAge} is an object that contains \code{Ages} objects,
+\code{Ages()} returns them instead of constructing a new object:
+\itemize{
+\item a \link[=stock-class]{stock} object: its \code{Ages} slot.
+\item an \link[=om-class]{om}, \link[=hist-class]{hist}, or \link[=mse-class]{mse} object, or a list of
+\link[=stock-class]{stock} objects: a list with the \code{Ages} slot of each stock.
+\item a \link[=data-class]{data} or \link[=obs-class]{obs} object, or a \link[=lifehistorydata-class]{lifehistorydata} or
+\link[=lifehistoryobs-class]{lifehistoryobs} object or a list of them: the \code{Ages} slot
+of the life-history information.
+}
+
+\code{Ages(x) <- value} replaces the slot of a \link[=stock-class]{stock},
+\link[=om-class]{om}, \link[=data-class]{data}, \link[=obs-class]{obs}, \link[=lifehistorydata-class]{lifehistorydata}, or
+\link[=lifehistoryobs-class]{lifehistoryobs} object, or of each object in a list of them. When
+\code{x} has more than one stock, \code{value} must be a list named by stock (see
+\code{\link[=StockNames]{StockNames()}}). The slot cannot be replaced in a \link[=hist-class]{hist} or
+\link[=mse-class]{mse} object, because it was used to simulate the historical
+dynamics.
+}
+
 \examples{
 # Basic construction
 a <- Ages(MaxAge = 20)

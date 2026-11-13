@@ -29,8 +29,8 @@ Wrapped internally to a \verb{1 x nAge x 1} array.
 \item Numeric array with dimensions \verb{Sim x Age x Year} and named dimnames.
 }
 
-If \code{MeanAtAge} is a \link[=fleet-class]{fleet} object, the \code{DiscardMortality} slot of
-that fleet is returned.
+An object that contains \code{DiscardMortality} objects returns them; see
+\emph{Pass-Through Access}.
 
 Unlike \code{\link[=Selectivity]{Selectivity()}} and \code{\link[=Retention]{Retention()}}, \code{DiscardMortality} does not
 support model-based population via \code{Pars} and \code{Model}. Values must be
@@ -50,26 +50,21 @@ corresponding to the second dimension of \code{MeanAtLength}. Default \code{NULL
 
 \item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
 
-\item{x}{A \link[=discardmortality-class]{discardmortality} object, or a \link[=fleet-class]{fleet},
-\code{FleetList}, \code{StockFleetList}, or \link[=om-class]{om} object for
-\verb{DiscardMortality<-}.}
+\item{x}{A \link[=discardmortality-class]{discardmortality} object, or an object that contains
+\code{DiscardMortality} objects for \verb{DiscardMortality<-} (see
+\emph{Pass-Through Access}).}
 
-\item{value}{For \verb{DiscardMortality<-}: a \link[=discardmortality-class]{discardmortality} object
-when \code{x} is a \link[=fleet-class]{fleet}; a flat list of \link[=discardmortality-class]{discardmortality}
-objects when \code{x} is a \code{FleetList}; a nested stock-fleet list of
-\link[=discardmortality-class]{discardmortality} objects when \code{x} is a \code{StockFleetList} or
-\link[=om-class]{om}.}
+\item{value}{For \verb{DiscardMortality<-}: a \link[=discardmortality-class]{discardmortality} object,
+or a list of them named by fleet or by stock and fleet (see
+\emph{Pass-Through Access}).}
 }
 \value{
 \itemize{
 \item \code{DiscardMortality()} returns a \link[=discardmortality-class]{discardmortality} object. If
-\code{MeanAtAge} is a \link[=fleet-class]{fleet} object, the \code{DiscardMortality} slot of
-that fleet is returned.
+\code{MeanAtAge} contains \code{DiscardMortality} objects, returns them (see
+\emph{Pass-Through Access}).
 \item \verb{DiscardMortality<-} returns \code{x} with the \code{DiscardMortality} slot
-replaced by \code{value}. When \code{x} is an \link[=om-class]{om} or \code{StockFleetList},
-each fleet's slot is updated from the corresponding element of the
-nested list \code{value}. When \code{x} is a \code{FleetList}, each fleet's slot is
-updated from the corresponding element of the flat list \code{value}.
+replaced by \code{value}.
 }
 }
 \description{
@@ -107,12 +102,36 @@ A \link[=discardmortality-class]{discardmortality} object can be attached to a \
 
 Individual slots may be accessed or modified using \code{\link[=MeanAtAge]{MeanAtAge()}},
 \code{\link[=MeanAtLength]{MeanAtLength()}}, and \code{\link[=Classes]{Classes()}}.
+}
+}
+\section{Pass-Through Access}{
 
-An \link[=exploitationdata-class]{exploitationdata} or \link[=exploitationobs-class]{exploitationobs} object, or a list
-of them (the \code{Exploitation} slot of a \link[=data-class]{data} or \link[=obs-class]{obs} object),
-returns its \code{DiscardMortality} slot in the same way.
+When \code{MeanAtAge} is an object that contains \code{DiscardMortality} objects,
+\code{DiscardMortality()} returns them instead of constructing a new object:
+\itemize{
+\item a \link[=fleet-class]{fleet} object: its \code{DiscardMortality} slot.
+\item an \link[=om-class]{om}, \link[=hist-class]{hist}, or \link[=mse-class]{mse} object: a list by stock of
+lists by fleet, with the \code{DiscardMortality} slot of each fleet. A list of
+\link[=fleet-class]{fleet} objects, or a list of them by stock, returns a list with
+the same structure.
+\item a \link[=data-class]{data} or \link[=obs-class]{obs} object, or an \link[=exploitationdata-class]{exploitationdata} or
+\link[=exploitationobs-class]{exploitationobs} object or a list of them: the \code{DiscardMortality} slot
+of the exploitation information.
+\item an \link[=advice-class]{advice} object: the discard mortality set by an MP. The slot of these objects can also be replaced.
 }
+
+\code{DiscardMortality(x) <- value} replaces the slot of a \link[=fleet-class]{fleet} or
+\link[=om-class]{om} object, a \link[=data-class]{data} or \link[=obs-class]{obs} object, an
+\link[=exploitationdata-class]{exploitationdata} or \link[=exploitationobs-class]{exploitationobs} object, or of
+each object in a list of them. For an \link[=om-class]{om} object, \code{value} is a
+single object when the OM has one stock and one fleet, a list named by
+fleet (see \code{\link[=FleetNames]{FleetNames()}}) when it has one stock and several fleets, and a
+list named by stock (see \code{\link[=StockNames]{StockNames()}}) of lists named by fleet when it
+has several stocks. The slot cannot be replaced in a \link[=hist-class]{hist} or
+\link[=mse-class]{mse} object, because it was used to simulate the historical
+dynamics.
 }
+
 \examples{
 ## ---- Default: zero discard mortality ----
 # An empty DiscardMortality object causes PopulateDiscardMortality() to set

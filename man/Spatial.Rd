@@ -78,8 +78,8 @@ multi-area models, must sum to 1 across areas. Accepted formats:
 simulation (two-area models only).
 \item Named array \verb{Sim × Area × Age} or \verb{Sim × Area × Age × Year}: full
 age- and time-varying specification.
-When \code{UnfishedDist} is a \link[=stock-class]{stock} object, \code{Spatial()} acts as a
-pass-through accessor and returns \code{x@Spatial}. Default \code{NULL}.
+An object that contains \code{Spatial} objects returns them;
+see \emph{Pass-Through Access}. Default \code{NULL}.
 }}
 
 \item{ProbStaying}{\code{numeric} or \code{array}. Probability of remaining in an
@@ -132,17 +132,18 @@ effect for two-area models. Default \code{1}.}
 
 \item{Misc}{\code{list}. Used internally. Default \code{list()}.}
 
-\item{x}{A \link[=spatial-class]{spatial} object for slot accessors, or a \link[=stock-class]{stock}
-object for \verb{Spatial<-}.}
+\item{x}{A \link[=spatial-class]{spatial} object for slot accessors, or an object that contains
+\code{Spatial} objects for \verb{Spatial<-} (see \emph{Pass-Through Access}).}
 
-\item{value}{For \verb{Spatial<-}: a \link[=spatial-class]{spatial} object. For slot
+\item{value}{For \verb{Spatial<-}: a \link[=spatial-class]{spatial} object, or a list of them named by
+stock (see \emph{Pass-Through Access}). For slot
 replacement functions: the replacement value for the corresponding slot.}
 }
 \value{
 \itemize{
-\item \code{Spatial()} returns a \link[=spatial-class]{spatial} object. If \code{UnfishedDist} is a
-\link[=stock-class]{stock}, returns \code{x@Spatial}.
-\item \verb{Spatial<-} returns the \link[=stock-class]{stock} \code{x} with the \code{Spatial} slot
+\item \code{Spatial()} returns a \link[=spatial-class]{spatial} object. If \code{UnfishedDist} contains \code{Spatial}
+objects, returns them (see \emph{Pass-Through Access}).
+\item \verb{Spatial<-} returns \code{x} with the \code{Spatial} slot
 replaced and the object re-validated.
 \item \code{UnfishedDist()}, \code{ProbStaying()}, \code{RelativeSize()}, \code{Movement()},
 \code{FracOther()}, \code{Arrangement()}, \code{CVDist()}, \code{CVStay()} return the value
@@ -260,19 +261,6 @@ are defined by biomass share rather than physical extent:
 }\if{html}{\out{</div>}}
 }
 
-\subsection{Pass-Through Access from a Stock}{
-
-When \code{UnfishedDist} is a \link[=stock-class]{stock} object, \code{Spatial()} returns the
-\code{Spatial} slot directly:
-
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{Spatial(my_stock)             # returns my_stock@Spatial
-Spatial(my_stock) <- my_sp   # replaces my_stock@Spatial
-}\if{html}{\out{</div>}}
-
-A \link[=lifehistorydata-class]{lifehistorydata} or \link[=lifehistoryobs-class]{lifehistoryobs} object, or a list of
-them (the \code{LifeHistory} slot of a \link[=data-class]{data} or \link[=obs-class]{obs} object), returns its \code{Spatial} slot in the same way.
-}
-
 \subsection{Slot Accessors}{
 
 Individual slots can be read or replaced using generic functions matching
@@ -288,6 +276,28 @@ CVStay(sp)        <- 0.5
 }\if{html}{\out{</div>}}
 }
 }
+\section{Pass-Through Access}{
+
+When \code{UnfishedDist} is an object that contains \code{Spatial} objects,
+\code{Spatial()} returns them instead of constructing a new object:
+\itemize{
+\item a \link[=stock-class]{stock} object: its \code{Spatial} slot.
+\item an \link[=om-class]{om}, \link[=hist-class]{hist}, or \link[=mse-class]{mse} object, or a list of
+\link[=stock-class]{stock} objects: a list with the \code{Spatial} slot of each stock.
+\item a \link[=data-class]{data} or \link[=obs-class]{obs} object, or a \link[=lifehistorydata-class]{lifehistorydata} or
+\link[=lifehistoryobs-class]{lifehistoryobs} object or a list of them: the \code{Spatial} slot
+of the life-history information.
+}
+
+\code{Spatial(x) <- value} replaces the slot of a \link[=stock-class]{stock},
+\link[=om-class]{om}, \link[=data-class]{data}, \link[=obs-class]{obs}, \link[=lifehistorydata-class]{lifehistorydata}, or
+\link[=lifehistoryobs-class]{lifehistoryobs} object, or of each object in a list of them. When
+\code{x} has more than one stock, \code{value} must be a list named by stock (see
+\code{\link[=StockNames]{StockNames()}}). The slot cannot be replaced in a \link[=hist-class]{hist} or
+\link[=mse-class]{mse} object, because it was used to simulate the historical
+dynamics.
+}
+
 \examples{
 # ---- Default behaviour (non-spatial models) ----
 

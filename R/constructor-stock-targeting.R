@@ -1,24 +1,83 @@
-#' Stock Targeting Constructor
+#' Stock Targeting Constructor and Accessors
 #'
-#' Initialises a `stocktargeting` object with `NA`-filled arrays sized to the
-#' supplied operating model. All arrays are dimensioned and named but left
-#' unpopulated.
+#' Construct a [stocktargeting-class] object, which describes how a fleet's
+#' fishing effort is distributed among the stocks of a multi-stock operating
+#' model, or access the `StockTargeting` slot of an operating model and the
+#' slots of a [stocktargeting-class] object.
 #'
-#' @param OM An [om-class] object. Must have at least one stock and one fleet.
+#' The slots are populated by [Simulate()] (see [FitStockTargeting()] and
+#' [GenerateStockTargeting()]), so they rarely need to be set manually.
 #'
-#' @return A `stocktargeting` object with:
-#' - `Mean`: `NA` array of dimension `[nSim, nStock, nFleet]`
-#' - `Covariance`: `NA` array of dimension `[nSim, nStock, nStock, nFleet]`
-#' - `AC`: `NA` array of dimension `[nSim, nStock, nFleet]`
-#' - `Targeting`: `NA` array of dimension `[nSim, nStock, nFleet, nHistYear]`
-#' - `Misc`: empty list
+#' @param Mean `array[sim, stock, fleet]` or `NULL`. Mean targeting weight
+#'   for each simulation, stock, and fleet. When `Mean` is an [om-class],
+#'   [hist-class], or [mse-class] object, `StockTargeting()` returns its
+#'   `StockTargeting` slot (of the embedded `OM` for `hist` and `mse`).
+#' @param Covariance `array[sim, stock_i, stock_j, fleet]` or `NULL`.
+#'   Log-space residual covariance of the targeting weights.
+#' @param AC `array[sim, stock, fleet]` or `NULL`. Lag-1 autocorrelation of
+#'   the log targeting residuals.
+#' @param Targeting `array[sim, stock, fleet, year]` or `NULL`. Realised
+#'   targeting deviations.
+#' @param Misc `list`. Used internally. Default `list()`.
+#' @param x An [om-class] object, for `StockTargeting<-`; a
+#'   [stocktargeting-class] object, for `Covariance()` and `Covariance<-`.
+#' @param value A [stocktargeting-class] object, for `StockTargeting<-`; an
+#'   array, for `Covariance<-`.
 #'
-#' If `nFleet < 1` or `nStock < 1` an empty (default) `stocktargeting` object
-#' is returned with a warning.
+#' @details
+#' `Mean()`, `AC()`, and `Targeting()` also access the corresponding slots of
+#' a [stocktargeting-class] object.
 #'
-#' @seealso [stocktargeting-class]
+#' @return
+#' - `StockTargeting()` returns a [stocktargeting-class] object.
+#' - `StockTargeting<-` returns the [om-class] object `x` with the
+#'   `StockTargeting` slot replaced; it can only be replaced in [om-class]
+#'   objects.
+#' - `Covariance()` returns the `Covariance` slot, and `Covariance<-` returns
+#'   `x` with the slot replaced.
+#'
+#' @seealso [stocktargeting-class], [GenerateStockTargeting()],
+#'   [FitStockTargeting()], [StockTargetingLambda()]
+#'
+#' @family om
+#'
+#' @examples
+#' st <- StockTargeting(MultiStockOM)
+#'
 #' @export
-StockTargeting <- function(OM) {
+StockTargeting <- function(Mean       = NULL,
+                           Covariance = NULL,
+                           AC         = NULL,
+                           Targeting  = NULL,
+                           Misc       = list()) {
+  if (inherits(Mean, c('om', 'hist', 'mse')))
+    return(.IsHist(Mean, 'StockTargeting'))
+
+  methods::new('stocktargeting',
+               Mean       = Mean,
+               Covariance = Covariance,
+               AC         = AC,
+               Targeting  = Targeting,
+               Misc       = Misc)
+}
+
+#' @rdname StockTargeting
+#' @export
+`StockTargeting<-` <- function(x, value) {
+  .CheckClass(value, 'stocktargeting', 'value')
+  .AssignOMSlot(x, value, 'StockTargeting', 'struct')
+}
+
+#' @rdname StockTargeting
+#' @export
+Covariance <- function(x) .AccessSlot(x, 'Covariance')
+
+#' @rdname StockTargeting
+#' @export
+`Covariance<-` <- function(x, value) .AssignSlot(x, value, 'Covariance')
+
+# stocktargeting object with NA arrays dimensioned to `OM`
+.InitStockTargeting <- function(OM) {
   nSim      <- nSim(OM)
   nStock    <- nStock(OM)
   nFleet    <- nFleet(OM)

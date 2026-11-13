@@ -27,8 +27,9 @@ Stock(x) <- value
 \arguments{
 \item{Name}{\code{character(1)}. Unique stock identifier used throughout model
 output. Alternatively, an S4 object that contains a \code{Stock} slot (e.g.,
-an \link[=om-class]{om} object), in which case \code{Stock()} acts as a pass-through
-accessor — see \emph{Pass-Through Access}. Default \code{"New Stock Object"}.}
+an \link[=om-class]{om} object), or a \link[=hist-class]{hist} or \link[=mse-class]{mse} object, in which
+case \code{Stock()} acts as a pass-through accessor — see \emph{Pass-Through
+Access}. Default \code{"New Stock Object"}.}
 
 \item{CommonName}{\code{character(1)}. Common name of the species (e.g.,
 \code{"Atlantic cod"}). When \code{Name} is an S4 object and \code{CommonName} is
@@ -137,8 +138,9 @@ determined by the \code{\link[=Fleet]{Fleet()}} and \code{\link[=Catchability]{C
 
 \subsection{Pass-Through Access from an Enclosing Object}{
 
-When \code{Name} is an S4 object with a \code{Stock} slot (e.g., an \link[=om-class]{om}),
-\code{Stock()} returns the slot rather than constructing a new object:
+When \code{Name} is an S4 object with a \code{Stock} slot (e.g., an \link[=om-class]{om}), or
+a \link[=hist-class]{hist} or \link[=mse-class]{mse} object (using its embedded \code{OM}), \code{Stock()}
+returns the slot rather than constructing a new object:
 \itemize{
 \item \code{Stock(om)} returns \code{om@Stock}.
 \item \code{Stock(om, i)} returns \code{om@Stock[[i]]} when \code{om@Stock} is a list

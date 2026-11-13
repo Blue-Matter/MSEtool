@@ -79,6 +79,7 @@ Collate:
     'MSEtool-package.R'
     'RcppExports.R'
     'accessors-complexes.R'
+    'accessors-components.R'
     'accessors-data.R'
     'accessors-dimensions.R'
     'accessors-internal.R'

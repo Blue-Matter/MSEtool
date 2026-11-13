@@ -25,6 +25,8 @@
 \alias{FCrash}
 \alias{SPRcrash}
 \alias{BLow}
+\alias{SPR0}
+\alias{MGT}
 \alias{B0}
 \alias{SB0}
 \alias{SP0}
@@ -76,6 +78,10 @@ FCrash(Hist)
 SPRcrash(Hist)
 
 BLow(Hist)
+
+SPR0(Hist)
+
+MGT(Hist)
 
 B0(Hist, type = c("Equilibrium", "Dynamic"), Reduce = TRUE)
 
@@ -173,7 +179,13 @@ origin.
 \item \code{BLow()}: spawning biomass rebuilding threshold (see \code{\link[=CalcBLow]{CalcBLow()}}).
 Only populated when computed explicitly, since it is substantially
 more expensive than the other reference points here.
+\item \code{SPR0()}: unfished spawning potential ratio (spawning production per
+recruit).
+\item \code{MGT()}: mean generation time (see \code{\link[=CalcMGT]{CalcMGT()}}).
 }
+
+\code{\link[=Landings]{Landings()}} and \code{\link[=Removals]{Removals()}} return the \code{Landings} and \code{Removals} slots
+of a \link[=reference-class]{reference} object.
 }
 
 \subsection{Unfished Reference Points}{

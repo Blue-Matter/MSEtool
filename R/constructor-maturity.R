@@ -8,18 +8,14 @@
 #' @param Pars `list`. Named list of maturity parameters. Element names must
 #'   match the arguments of a built-in maturity model (see [MaturityModels()]).
 #'   When `Pars` is non-empty and `Model` is `NULL`, the model is inferred
-#'   automatically from the parameter names. When `Pars` is a [stock-class] object,
-#'   `Maturity()` acts as a pass-through accessor and returns `x@Maturity`;
-#'   when `Pars` is a list of [stock-class] objects, `Model` is treated as an
-#'   integer index selecting which stock's `Maturity` slot to return — see
-#'   *Pass-Through Access*. See also
+#'   automatically from the parameter names. An object that contains `Maturity` objects returns them;
+#'   see *Pass-Through Access*. See also
 #'   [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for the
 #'   full set of accepted input formats. A length-2 value is `Uniform(lower, upper)` bounds, except when `nSim = 2`, where it is one value per simulation. Default `list()`.
-#' @param Model `character(1)`, `function`, or `integer(1)`. Maturity model
+#' @param Model `character(1)` or `function`. Maturity model
 #'   identifier. When `NULL` (default), the model is inferred from `Pars`.
 #'   May be set to a character string naming a built-in model or
-#'   to a custom R function. When `Pars` is a list of [stock-class] objects,
-#'   `Model` is an integer index — see *Pass-Through Access* and
+#'   to a custom R function. See
 #'   [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html).
 #'   A custom function takes the size argument `Ages`, `Length`, or `Weight`
 #'   (the basis it is evaluated on) and one argument for each parameter in
@@ -64,9 +60,10 @@
 #'   mortality that differs from the maturity schedule.
 #' @param Misc `list`. Named list of optional user-defined inputs stored on the
 #'   object and passed through to custom model functions. Default `list()`.
-#' @param x A [maturity-class] object for slot accessors, or a [stock-class]
-#'   object for `Maturity<-`.
-#' @param value For `Maturity<-`: a [maturity-class] object. For
+#' @param x A [maturity-class] object for slot accessors, or an object that contains
+#'   `Maturity` objects for `Maturity<-` (see *Pass-Through Access*).
+#' @param value For `Maturity<-`: a [maturity-class] object, or a list of them named by
+#'   stock (see *Pass-Through Access*). For
 #'   `Semelparous<-`: a `logical(1)` or a `Sim × Age × Year` array.
 #'
 #' @details
@@ -176,26 +173,6 @@
 #' The same conversions apply when `MeanAtLength` or `MeanAtWeight` are
 #' supplied directly by the user.
 #'
-#' ## Pass-Through Access from a Stock
-#'
-#' When `Pars` is a [stock-class] object, `Maturity()` returns the `Maturity`
-#' slot directly:
-#'
-#' ```r
-#' Maturity(my_stock)             # returns my_stock@Maturity
-#' Maturity(my_stock) <- my_mat   # replaces my_stock@Maturity
-#' ```
-#'
-#' When `Pars` is a list of [stock-class] objects, `Model` is an integer index
-#' selecting which stock's slot to return:
-#'
-#' ```r
-#' Maturity(stock_list, 2)   # returns stock_list[[2]]@Maturity
-#' ```
-#'
-#' A [lifehistorydata-class] or [lifehistoryobs-class] object, or a list of
-#' them (the `LifeHistory` slot of a [data-class] or [obs-class] object), returns its `Maturity` slot in the same way.
-#'
 #' ## Slot Accessors
 #'
 #' Individual slots can be read or replaced using generic functions matching
@@ -211,10 +188,14 @@
 #' Classes(mat)         <- seq(0, 80, by = 5)
 #' ```
 #'
+#' @template passthrough-stock
+#' @templateVar slot Maturity
+#' @templateVar arg Pars
+#'
 #' @return
-#' - `Maturity()` returns a [maturity-class] object. If `Pars` is a
-#'   [stock-class], returns `x@Maturity`.
-#' - `Maturity<-` returns the [stock-class] `x` with the `Maturity` slot
+#' - `Maturity()` returns a [maturity-class] object. If `Pars` contains `Maturity`
+#'   objects, returns them (see *Pass-Through Access*).
+#' - `Maturity<-` returns `x` with the `Maturity` slot
 #'   replaced
 #' - `Semelparous()` returns the `Semelparous` slot from `x` (a scalar before
 #'   [Populate()], a `Sim × Age × Year` array after).
@@ -246,11 +227,8 @@ Maturity <- function(Pars = list(),
                      Semelparous = FALSE,
                      Misc = list()) {
   
-  if (.IsStockOrList(Pars)) 
-    return(.ExtractStockSlot(Pars, "Maturity"))
-
-  if (.IsDataContainer(Pars, c('lifehistorydata', 'lifehistoryobs')))
-    return(.AccessSlotRecursive(Pars, 'Maturity'))
+  if (.IsStockComponentSource(Pars))
+    return(.GetStockSlot(Pars, 'Maturity'))
   
   if (is.null(Pars))
     return(NULL)
@@ -299,5 +277,5 @@ Semelparous <- function(x) {
 #' @rdname Maturity
 #' @export
 `Maturity<-` <- function(x, value) {
-  .AssignSlotRecursive(x, value, 'Maturity')
+  .AssignStockSlot(x, value, 'Maturity')
 }

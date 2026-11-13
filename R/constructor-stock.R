@@ -6,8 +6,9 @@
 #'
 #' @param Name `character(1)`. Unique stock identifier used throughout model
 #'   output. Alternatively, an S4 object that contains a `Stock` slot (e.g.,
-#'   an [om-class] object), in which case `Stock()` acts as a pass-through
-#'   accessor — see *Pass-Through Access*. Default `"New Stock Object"`.
+#'   an [om-class] object), or a [hist-class] or [mse-class] object, in which
+#'   case `Stock()` acts as a pass-through accessor — see *Pass-Through
+#'   Access*. Default `"New Stock Object"`.
 #' @param CommonName `character(1)`. Common name of the species (e.g.,
 #'   `"Atlantic cod"`). When `Name` is an S4 object and `CommonName` is
 #'   `numeric`, it is treated as a list index for multi-stock `Stock` slots —
@@ -92,8 +93,9 @@
 #'
 #' ## Pass-Through Access from an Enclosing Object
 #'
-#' When `Name` is an S4 object with a `Stock` slot (e.g., an [om-class]),
-#' `Stock()` returns the slot rather than constructing a new object:
+#' When `Name` is an S4 object with a `Stock` slot (e.g., an [om-class]), or
+#' a [hist-class] or [mse-class] object (using its embedded `OM`), `Stock()`
+#' returns the slot rather than constructing a new object:
 #'
 #' - `Stock(om)` returns `om@Stock`.
 #' - `Stock(om, i)` returns `om@Stock[[i]]` when `om@Stock` is a list
@@ -147,6 +149,9 @@ Stock <- function(Name = "New Stock Object",
                   Misc = list()) {
   
   
+  if (inherits(Name, c("hist", "mse")))
+    Name <- Name@OM
+
   if (!inherits(Name, "character")) {
     if (!"Stock" %in% slotNames(Name))
       cli::cli_abort(c("x" = "No slot {.val Stock} found in object class {.cls {class(Name)}}"))
