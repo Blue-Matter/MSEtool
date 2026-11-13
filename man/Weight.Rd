@@ -37,7 +37,7 @@ automatically from the parameter names. When \code{Pars} is a \link[=stock-class
 \code{Weight()} acts as a pass-through accessor and returns \code{x@Weight}.
 See \emph{Specifying Weight-at-Age} and
 \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for the
-full set of accepted input formats. Default \code{list()}.}
+full set of accepted input formats. A length-2 value is \code{Uniform(lower, upper)} bounds, except when \code{nSim = 2}, where it is one value per simulation. Default \code{list()}.}
 
 \item{Model}{\code{character(1)} or \code{function}. Weight model identifier. When
 \code{NULL} (default), the model is inferred from \code{Pars}.
@@ -74,7 +74,8 @@ otherwise; if \code{Classes} differs from the \link[=length-class]{length} objec
 Coefficient of variation of weight-at-age, used to parameterise the
 within-age-class weight distribution and to build the age-weight key
 (\code{AWK}). A length-2 vector is treated as \code{Uniform(lower, upper)} bounds
-sampled once per simulation. When \code{NULL} (default), no \code{AWK} is
+sampled once per simulation, except when \code{nSim = 2}, where it is one
+value per simulation. When \code{NULL} (default), no \code{AWK} is
 constructed; for most models weight variability is propagated through the
 \code{ALK} and a length-weight relationship rather than through \code{CVatAge}
 directly.}
@@ -192,6 +193,9 @@ slot directly:
 \if{html}{\out{<div class="sourceCode r">}}\preformatted{Weight(my_stock)           # returns my_stock@Weight
 Weight(my_stock) <- my_wt  # replaces my_stock@Weight
 }\if{html}{\out{</div>}}
+
+A \link[=lifehistorydata-class]{lifehistorydata} object, or a list of them (the \code{LifeHistory} slot of a
+\link[=data-class]{data} object), returns its \code{Weight} slot in the same way.
 }
 
 \subsection{Slot Accessors}{

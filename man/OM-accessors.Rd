@@ -2,6 +2,7 @@
 % Please edit documentation in R/constructor-om.R
 \name{OM-accessors}
 \alias{OM-accessors}
+\alias{OM<-}
 \alias{Agency}
 \alias{Agency<-}
 \alias{Author}
@@ -43,6 +44,8 @@
 \alias{Control<-}
 \title{Access and Modify OM Slots}
 \usage{
+OM(x) <- value
+
 Agency(x)
 
 Agency(x) <- value
@@ -177,6 +180,14 @@ next \code{\link[=Project]{Project()}}.
 are used to simulate the historical dynamics and can only be replaced
 in \link[=om-class]{om} objects; re-run \code{\link[=Simulate]{Simulate()}} after changing them.
 }
+}
+
+\subsection{Replacing the OM}{
+
+\code{OM(x) <- value} replaces the \code{OM} slot of an S4 object that has one with
+the \link[=om-class]{om} object \code{value}. The \code{OM} of a \link[=hist-class]{hist} or \link[=mse-class]{mse}
+object cannot be replaced, because it was used to simulate the dynamics
+stored in that object.
 }
 }
 \examples{

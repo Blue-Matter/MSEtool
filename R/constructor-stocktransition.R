@@ -12,7 +12,8 @@
 #'   age" curve - `[sim, age]` or `[sim, age, year]`, values in `[0, 1]`.
 #'   Starts near `1` at the youngest ages (almost no one has transitioned
 #'   yet) and decreases toward `0` at older ages (nearly everyone has
-#'   transitioned out of `From`). Default `NULL`.
+#'   transitioned out of `From`). Default `NULL`. See *Transition in the
+#'   Plus Group* in Details.
 #' @param Misc `list`. Used internally. Default `list()`.
 #'
 #' @return A [stocktransition-class] object. When `From` is an [om-class],
@@ -32,6 +33,27 @@
 #' 
 #' `om@Herm` takes a list of `stocktransition` objects (one per `From`/`To`
 #' pair), supporting multiple simultaneous transition relationships.
+#'
+#' ## Transition in the Plus Group
+#'
+#' `Frac` is converted to a per-age hazard, the fraction of `From` at age
+#' `a - 1` that moves to `To` on reaching age `a`:
+#' `1 - Frac[, a] / Frac[, a - 1]`. When the oldest age of `From` is a plus
+#' group, its hazard `1 - Frac[, maxage] / Frac[, maxage - 1]` is applied
+#' every year to the whole plus group, including fish already in it.
+#'
+#' With a plus-group hazard strictly between 0 and 1, fish in the plus group
+#' keep moving from `From` to `To` every year they survive, so the split of
+#' the plus group between the two stocks depends on how long fish survive
+#' in it, and changes with fishing mortality. Age-structured models that set
+#' the sex ratio at age from a fixed schedule do
+#' not have this behaviour, and cannot be reproduced exactly. [Simulate()]
+#' gives a warning in this case when more than 0.1% of `From` remains at the
+#' plus group (`Frac[, maxage] > 0.001`).
+#'
+#' To stop transitions within the plus group, set `Frac[, maxage]` equal to
+#' `Frac[, maxage - 1]` (no transition in the plus group), or to `0`
+#' (transition complete by the plus group).
 #'
 #' @examples
 #' # Protogynous transition: female stock transitions into male stock,

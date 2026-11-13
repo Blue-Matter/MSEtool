@@ -26,7 +26,7 @@ automatically from the parameter names. When \code{Pars} is a \link[=stock-class
 \code{Fecundity()} acts as a pass-through accessor and returns \code{x@Fecundity}.
 See also
 \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for the
-full set of accepted input formats. Default \code{list()}.}
+full set of accepted input formats. A length-2 value is \code{Uniform(lower, upper)} bounds, except when \code{nSim = 2}, where it is one value per simulation. Default \code{list()}.}
 
 \item{Model}{\code{character(1)} or \code{function}. Fecundity model identifier. When
 \code{NULL} (default), the model is inferred from \code{Pars}.
@@ -160,6 +160,9 @@ slot directly:
 \if{html}{\out{<div class="sourceCode r">}}\preformatted{Fecundity(my_stock)             # returns my_stock@Fecundity
 Fecundity(my_stock) <- my_fec   # replaces my_stock@Fecundity
 }\if{html}{\out{</div>}}
+
+A \link[=lifehistorydata-class]{lifehistorydata} object, or a list of them (the \code{LifeHistory} slot of a
+\link[=data-class]{data} object), returns its \code{Fecundity} slot in the same way.
 }
 
 \subsection{Slot Accessors}{

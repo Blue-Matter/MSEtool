@@ -21,7 +21,9 @@
 #'   This is *not* transitioned/mover fraction: it starts near `1` (almost
 #'   no one has transitioned yet) and decreases toward `0` as age increases
 #'   (nearly everyone has transitioned out of `From` by the oldest ages).
-#'   Converted internally to a per-age hazard rate applied each year.
+#'   Converted internally to a per-age hazard rate applied each year. In a
+#'   plus group the hazard applies every year to the whole plus group; see
+#'   *Transition in the Plus Group* in [Herm()].
 #' @slot Misc `list`. Reserved for additional information or user-defined
 #'   extensions. Not used internally.
 #'

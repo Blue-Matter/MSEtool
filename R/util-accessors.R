@@ -196,7 +196,8 @@ NULL
 #' Access and replace the slots of [obs-class] and [data-class] objects and
 #' their data components ([catchdata-class], [effortdata-class],
 #' [indicesdata-class], [compdata-class]). Functions work on any S4 object
-#' that contains the corresponding slot.
+#' that contains the corresponding slot, and on a list of [data-class]
+#' objects, where they return a list with the slot of each.
 #'
 #' | Function | Slot of |
 #' |---|---|
@@ -1112,6 +1113,8 @@ YearLH <- function(x) {
 
 .AccessSlot <- function(x, slotname) {
   if (is.null(x)) return(NULL)
+  if (.IsDataList(x))
+    return(purrr::map(x, \(d) .AccessSlot(d, slotname)))
   .CheckClass(slotname, 'character', 'slotname')
   if (!isS4(x))
     cli::cli_abort("{.arg x} is not an S4 object.")
@@ -1151,6 +1154,14 @@ YearLH <- function(x) {
 .IsTypeList <- function(x, what) {
   is.list(x) && length(x) > 0 &&
     all(vapply(x, inherits, logical(1), what = what))
+}
+
+# object of class `what`, or a (nested) list of them
+.IsDataContainer <- function(x, what) {
+  if (inherits(x, what))
+    return(TRUE)
+  is.list(x) && !isS4(x) && length(x) > 0 &&
+    all(vapply(x, .IsDataContainer, logical(1), what = what))
 }
 
 .IsStockList <- function(x) {

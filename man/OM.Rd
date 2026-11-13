@@ -222,6 +222,10 @@ interface for both construction and retrieval:
 
 \if{html}{\out{<div class="sourceCode r">}}\preformatted{om  <- OM(hist_obj)    # extract from `hist` or `mse`
 }\if{html}{\out{</div>}}
+
+A list of such objects returns a list of their \code{OM} slots. Use \code{\link{OM<-}} to
+replace the \code{OM} slot of an object other than a \link[=hist-class]{hist} or
+\link[=mse-class]{mse} object.
 }
 
 \subsection{Derived Slots}{

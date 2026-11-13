@@ -37,7 +37,7 @@
 #'   
 #' @param Targeting Numeric, numeric array, or `NULL`. Spatial targeting
 #'   exponent (`lambda >= 0`). A scalar, a length-2 vector of uniform bounds
-#'   sampled per simulation, a length-`nSim` vector, or an array with
+#'   sampled per simulation (one value per simulation when `nSim = 2`), a length-`nSim` vector, or an array with
 #'   dimensions `Sim x Year`. The `Sim` dimension may be length 1 or match
 #'   `nSim`. The `Year` dimension must be length 1, match the historical
 #'   years, or have named `Year` dimnames. Default `NULL`; a value of `1`
@@ -100,7 +100,7 @@
 #'     all simulations and years.
 #'   - Numeric vector length 2. Treated as lower and upper bounds of a
 #'     uniform distribution, sampled once per simulation and held constant
-#'     across years.
+#'     across years. When `nSim = 2`, it is one value per simulation instead.
 #'   - Numeric vector length `nSim`. One value per simulation, held
 #'     constant across years.
 #'   - Numeric array with dimensions `Sim x Year` and named dimnames, for
@@ -268,7 +268,8 @@
 #' ## Pass-Through Extraction
 #'
 #' When `Effort` is a [fleet-class], [effort-class], [hist-class],
-#' [obs-class], or [mse-class] object, `Effort()` returns the `Effort` slot
+#' [obs-class], [data-class], [advicedata-class], or [mse-class] object (or a
+#' list of [data-class] objects), `Effort()` returns the `Effort` slot
 #' of that object rather than constructing a new one. For [hist-class] and
 #' [mse-class] objects, the `df` argument controls whether a tidy
 #' `data.frame` (`TRUE`) or the raw array (`FALSE`) is returned.
@@ -308,8 +309,8 @@
 #'
 #' @return
 #' - `Effort()` returns an [effort-class] object. If `Effort` is a
-#'   [fleet-class], [effort-class], [hist-class], [obs-class], or [mse-class]
-#'   object, the `Effort` slot of that object is returned (as a `data.frame`
+#'   [fleet-class], [effort-class], [hist-class], [obs-class], [data-class],
+#'   [advicedata-class], or [mse-class] object, the `Effort` slot of that object is returned (as a `data.frame`
 #'   or array for [hist-class] and [mse-class] depending on `df`).
 #' - `Effort<-` returns `x` with the `Effort` slot replaced by `value`.
 #' - `Distribution()`, `Targeting()`, `ReleaseValue()`, `Maximum()`, `Mode()`,
@@ -352,7 +353,7 @@ Effort <- function(Effort         = NULL,
   if (.IsFleetOrList(Effort))
     return(.ExtractFleetSlot(Effort, 'Effort'))
 
-  if (inherits(Effort, 'advice'))
+  if (inherits(Effort, c('advice', 'data', 'advicedata')) || .IsDataList(Effort))
     return(.AccessSlot(Effort, 'Effort'))
 
   if (inherits(Effort, c('fleet', 'effort', 'hist', 'obs', 'imp', 'mse')))

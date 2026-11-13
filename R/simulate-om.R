@@ -40,6 +40,10 @@
 
   # prepare hist@Misc list - used for access in C++  - removed later
   Hist <- .PrepHistMisc(Hist)
+  if (Hist@Misc$TransitionFlag == 1)
+    .CheckHermPlusGroup(Hist@OM, list(From   = Hist@Misc$TransitionFromStock,
+                                 To     = Hist@Misc$TransitionToStock,
+                                 Hazard = Hist@Misc$TransitionHazard))
 
   # fished equilibrium initial conditions for Depletion@Initial
   Hist <- .CalcInitialFishedEquilibrium(Hist, silent = silent)

@@ -116,6 +116,9 @@
 #' [MeanAtAge()], [MeanAtLength()], [MeanAtWeight()], [Classes()], and
 #' [isRel()].
 #'
+#' An [exploitationdata-class] object, or a list of them (the `Exploitation` slot of a
+#' [data-class] object), returns its `Selectivity` slot in the same way.
+#'
 #' @return
 #' - `Selectivity()` returns a [selectivity-class] object. If `Pars` is a
 #'   [fleet-class] object, the `Selectivity` slot of that fleet is returned.
@@ -151,6 +154,9 @@ Selectivity <- function(Pars         = list(),
 
   if (.IsFleetOrList(Pars))
     return(.ExtractFleetSlot(Pars, 'Selectivity'))
+
+  if (.IsDataContainer(Pars, 'exploitationdata'))
+    return(.AccessSlotRecursive(Pars, 'Selectivity'))
 
   if (inherits(Pars, 'advice'))
     return(.AccessSlot(Pars, 'Selectivity'))

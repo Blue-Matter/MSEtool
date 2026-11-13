@@ -17,7 +17,8 @@ stock name or 1-based integer index. Must differ from \code{From}.}
 age" curve - \verb{[sim, age]} or \verb{[sim, age, year]}, values in \verb{[0, 1]}.
 Starts near \code{1} at the youngest ages (almost no one has transitioned
 yet) and decreases toward \code{0} at older ages (nearly everyone has
-transitioned out of \code{From}). Default \code{NULL}.}
+transitioned out of \code{From}). Default \code{NULL}. See \emph{Transition in the
+Plus Group} in Details.}
 
 \item{Misc}{\code{list}. Used internally. Default \code{list()}.}
 }
@@ -43,6 +44,27 @@ stage transitions modelled as separate stocks).
 
 \code{om@Herm} takes a list of \code{stocktransition} objects (one per \code{From}/\code{To}
 pair), supporting multiple simultaneous transition relationships.
+\subsection{Transition in the Plus Group}{
+
+\code{Frac} is converted to a per-age hazard, the fraction of \code{From} at age
+\code{a - 1} that moves to \code{To} on reaching age \code{a}:
+\code{1 - Frac[, a] / Frac[, a - 1]}. When the oldest age of \code{From} is a plus
+group, its hazard \code{1 - Frac[, maxage] / Frac[, maxage - 1]} is applied
+every year to the whole plus group, including fish already in it.
+
+With a plus-group hazard strictly between 0 and 1, fish in the plus group
+keep moving from \code{From} to \code{To} every year they survive, so the split of
+the plus group between the two stocks depends on how long fish survive
+in it, and changes with fishing mortality. Age-structured models that set
+the sex ratio at age from a fixed schedule do
+not have this behaviour, and cannot be reproduced exactly. \code{\link[=Simulate]{Simulate()}}
+gives a warning in this case when more than 0.1\% of \code{From} remains at the
+plus group (\code{Frac[, maxage] > 0.001}).
+
+To stop transitions within the plus group, set \code{Frac[, maxage]} equal to
+\code{Frac[, maxage - 1]} (no transition in the plus group), or to \code{0}
+(transition complete by the plus group).
+}
 }
 \examples{
 # Protogynous transition: female stock transitions into male stock,

@@ -36,7 +36,7 @@ automatically from the parameter names. When \code{Pars} is a \link[=stock-class
 \code{Length()} acts as a pass-through accessor and returns \code{x@Length}.
 See \emph{Specifying the Length-at-Age} and
 \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for the full
-set of accepted input formats. Default \code{list()}.}
+set of accepted input formats. A length-2 value is \code{Uniform(lower, upper)} bounds, except when \code{nSim = 2}, where it is one value per simulation. Default \code{list()}.}
 
 \item{Model}{\code{character(1)} or \code{function}. Growth model identifier. When
 \code{NULL} (default), the model is inferred from \code{Pars}.
@@ -62,7 +62,8 @@ A numeric vector of length \code{nAge} is also accepted and is converted to a
 of variation of length-at-age within each age class, used to parameterise
 the within-age-class length distribution and to build the age-length key
 (\code{ALK}). A length-2 vector is treated as \code{Uniform(lower, upper)} bounds
-sampled once per simulation. Default \code{0.1}.}
+sampled once per simulation, except when \code{nSim = 2}, where it is one
+value per simulation. Default \code{0.1}.}
 
 \item{Dist}{\code{character(1)}. Parametric distribution for length-at-age
 variability. Options are: \code{"normal"} (default) and \code{"lognormal"}).}
@@ -152,6 +153,9 @@ slot directly:
 \if{html}{\out{<div class="sourceCode r">}}\preformatted{Length(my_stock)           # returns my_stock@Length
 Length(my_stock) <- my_L   # replaces my_stock@Length
 }\if{html}{\out{</div>}}
+
+A \link[=lifehistorydata-class]{lifehistorydata} object, or a list of them (the \code{LifeHistory} slot of a
+\link[=data-class]{data} object), returns its \code{Length} slot in the same way.
 }
 
 \subsection{Slot Accessors}{

@@ -12,7 +12,7 @@
 #'   is a [stock-class] object, `NaturalMortality()` acts as a pass-through
 #'   accessor and returns `x@NaturalMortality`. See also
 #'   [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for the
-#'   full set of accepted input formats. Default `list()`.
+#'   full set of accepted input formats. A length-2 value is `Uniform(lower, upper)` bounds, except when `nSim = 2`, where it is one value per simulation. Default `list()`.
 #' @param Model `character(1)` or `function`. Natural mortality model
 #'   identifier. When `NULL` (default), the model is inferred from `Pars`.
 #'   May be set to a character string naming a built-in model or
@@ -121,6 +121,9 @@
 #' NaturalMortality(my_stock) <- my_M   # replaces it
 #' ```
 #'
+#' A [lifehistorydata-class] object, or a list of them (the `LifeHistory` slot of a
+#' [data-class] object), returns its `NaturalMortality` slot in the same way.
+#'
 #' ## Slot Accessors
 #'
 #' Individual slots can be read or replaced using generic functions matching
@@ -168,6 +171,9 @@ NaturalMortality <- function(Pars = list(),
   
   if (.IsStockOrList(Pars)) 
     return(.ExtractStockSlot(Pars, "NaturalMortality"))
+
+  if (.IsDataContainer(Pars, 'lifehistorydata'))
+    return(.AccessSlotRecursive(Pars, 'NaturalMortality'))
   
   if (is.null(Pars))
     return(NULL)

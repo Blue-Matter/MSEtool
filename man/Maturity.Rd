@@ -34,7 +34,7 @@ when \code{Pars} is a list of \link[=stock-class]{stock} objects, \code{Model} i
 integer index selecting which stock's \code{Maturity} slot to return — see
 \emph{Pass-Through Access}. See also
 \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for the
-full set of accepted input formats. Default \code{list()}.}
+full set of accepted input formats. A length-2 value is \code{Uniform(lower, upper)} bounds, except when \code{nSim = 2}, where it is one value per simulation. Default \code{list()}.}
 
 \item{Model}{\code{character(1)}, \code{function}, or \code{integer(1)}. Maturity model
 identifier. When \code{NULL} (default), the model is inferred from \code{Pars}.
@@ -238,6 +238,9 @@ selecting which stock's slot to return:
 
 \if{html}{\out{<div class="sourceCode r">}}\preformatted{Maturity(stock_list, 2)   # returns stock_list[[2]]@Maturity
 }\if{html}{\out{</div>}}
+
+A \link[=lifehistorydata-class]{lifehistorydata} object, or a list of them (the \code{LifeHistory} slot of a
+\link[=data-class]{data} object), returns its \code{Maturity} slot in the same way.
 }
 
 \subsection{Slot Accessors}{

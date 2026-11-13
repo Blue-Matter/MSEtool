@@ -74,6 +74,9 @@
 #' Individual slots may be accessed or modified using [MeanAtAge()],
 #' [MeanAtLength()], and [Classes()].
 #'
+#' An [exploitationdata-class] object, or a list of them (the `Exploitation` slot of a
+#' [data-class] object), returns its `DiscardMortality` slot in the same way.
+#'
 #' @return
 #' - `DiscardMortality()` returns a [discardmortality-class] object. If
 #'   `MeanAtAge` is a [fleet-class] object, the `DiscardMortality` slot of
@@ -103,6 +106,9 @@ DiscardMortality <- function(MeanAtAge    = NULL,
   
   if (.IsFleetOrList(MeanAtAge))
     return(.ExtractFleetSlot(MeanAtAge, 'DiscardMortality'))
+
+  if (.IsDataContainer(MeanAtAge, 'exploitationdata'))
+    return(.AccessSlotRecursive(MeanAtAge, 'DiscardMortality'))
 
   if (inherits(MeanAtAge, 'advice'))
     return(.AccessSlot(MeanAtAge, 'DiscardMortality'))

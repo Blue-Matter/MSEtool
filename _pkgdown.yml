@@ -147,6 +147,7 @@ reference:
 - subtitle: Data
   contents:
   - Data
+  - ReadDataCSV
   - DataHelpers
   - AnnualData
   - DataTrim

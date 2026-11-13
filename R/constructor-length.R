@@ -12,7 +12,7 @@
 #'   `Length()` acts as a pass-through accessor and returns `x@Length`.
 #'   See *Specifying the Length-at-Age* and 
 #'   [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for the full
-#'   set of accepted input formats. Default `list()`.
+#'   set of accepted input formats. A length-2 value is `Uniform(lower, upper)` bounds, except when `nSim = 2`, where it is one value per simulation. Default `list()`.
 #' @param Model `character(1)` or `function`. Growth model identifier. When
 #'   `NULL` (default), the model is inferred from `Pars`.
 #'   May be set to a character string naming a built-in model or to a custom
@@ -34,7 +34,8 @@
 #'   of variation of length-at-age within each age class, used to parameterise
 #'   the within-age-class length distribution and to build the age-length key
 #'   (`ALK`). A length-2 vector is treated as `Uniform(lower, upper)` bounds
-#'   sampled once per simulation. Default `0.1`.
+#'   sampled once per simulation, except when `nSim = 2`, where it is one
+#'   value per simulation. Default `0.1`.
 #' @param Dist `character(1)`. Parametric distribution for length-at-age
 #'   variability. Options are: `"normal"` (default) and `"lognormal"`).
 #' @param TruncSD `numeric(1)`. Number of standard deviations at which the
@@ -99,6 +100,9 @@
 #' Length(my_stock) <- my_L   # replaces my_stock@Length
 #' ```
 #'
+#' A [lifehistorydata-class] object, or a list of them (the `LifeHistory` slot of a
+#' [data-class] object), returns its `Length` slot in the same way.
+#'
 #' ## Slot Accessors
 #'
 #' Individual slots can be read or replaced using generic functions matching
@@ -153,6 +157,9 @@ Length <- function(Pars = list(),
   
   if (.IsStockOrList(Pars)) 
     return(.ExtractStockSlot(Pars, "Length"))
+
+  if (.IsDataContainer(Pars, 'lifehistorydata'))
+    return(.AccessSlotRecursive(Pars, 'Length'))
   
   if (is.null(Pars))
     return(NULL)

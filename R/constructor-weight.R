@@ -12,7 +12,7 @@
 #'   `Weight()` acts as a pass-through accessor and returns `x@Weight`.
 #'   See *Specifying Weight-at-Age* and
 #'   [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for the
-#'   full set of accepted input formats. Default `list()`.
+#'   full set of accepted input formats. A length-2 value is `Uniform(lower, upper)` bounds, except when `nSim = 2`, where it is one value per simulation. Default `list()`.
 #' @param Model `character(1)` or `function`. Weight model identifier. When
 #'   `NULL` (default), the model is inferred from `Pars`.
 #'   May be set to a character string naming a built-in model or to a custom
@@ -44,7 +44,8 @@
 #'   Coefficient of variation of weight-at-age, used to parameterise the
 #'   within-age-class weight distribution and to build the age-weight key
 #'   (`AWK`). A length-2 vector is treated as `Uniform(lower, upper)` bounds
-#'   sampled once per simulation. When `NULL` (default), no `AWK` is
+#'   sampled once per simulation, except when `nSim = 2`, where it is one
+#'   value per simulation. When `NULL` (default), no `AWK` is
 #'   constructed; for most models weight variability is propagated through the
 #'   `ALK` and a length-weight relationship rather than through `CVatAge`
 #'   directly.
@@ -137,6 +138,9 @@
 #' Weight(my_stock) <- my_wt  # replaces my_stock@Weight
 #' ```
 #'
+#' A [lifehistorydata-class] object, or a list of them (the `LifeHistory` slot of a
+#' [data-class] object), returns its `Weight` slot in the same way.
+#'
 #' ## Slot Accessors
 #'
 #' Individual slots can be read or replaced using generic functions matching
@@ -196,6 +200,9 @@ Weight <- function(Pars = list(),
   
   if (.IsStockOrList(Pars)) 
     return(.ExtractStockSlot(Pars, "Weight"))
+
+  if (.IsDataContainer(Pars, 'lifehistorydata'))
+    return(.AccessSlotRecursive(Pars, 'Weight'))
   
   if (is.null(Pars))
     return(NULL)

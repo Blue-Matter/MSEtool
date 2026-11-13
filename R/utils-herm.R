@@ -86,6 +86,30 @@
   list(From = From, To = To, Hazard = Hazard)
 }
 
+# warn when the plus-group hazard of a `From` stock is strictly between 0 and 1
+# and more than `MinFrac` of `From` remains at the plus group
+.CheckHermPlusGroup <- function(OM, Resolved, tol = 1e-8, MinFrac = 1e-3) {
+  StockNms <- StockNames(OM)
+  HermList <- OM@Herm
+  if (inherits(HermList, 'stocktransition')) HermList <- list(HermList)
+  for (i in seq_along(Resolved$From)) {
+    st <- Resolved$From[i]
+    if (!isTRUE(OM@Stock[[st]]@Ages@PlusGroup)) next
+    Hazard <- Resolved$Hazard[[i]]
+    PlusGroup <- Hazard[, dim(Hazard)[2], ]
+    Frac <- HermList[[i]]@Frac
+    FracPlus <- apply(Frac, setdiff(seq_along(dim(Frac)), 2), \(x) x[length(x)])
+    if (!any(PlusGroup > tol & PlusGroup < 1 - tol, na.rm = TRUE) ||
+        !any(FracPlus > MinFrac, na.rm = TRUE)) next
+    cli::cli_warn(c(
+      "!" = "Part of the plus group of stock {.val {StockNms[st]}} transitions to stock {.val {StockNms[Resolved$To[i]]}} each year.",
+      "i" = "The split of the plus group between the two stocks then changes with fishing.",
+      "i" = "To stop transitions within the plus group, set {.code Frac} at the plus group equal to {.code Frac} at the previous age, or to 0. See {.help MSEtool::Herm}."
+    ), call = NULL)
+  }
+  invisible()
+}
+
 #' Connected Components of the Herm Pair Graph
 #'
 #' @param From,To Integer vectors of 1-based stock indices, one per pair.

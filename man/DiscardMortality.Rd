@@ -107,6 +107,9 @@ A \link[=discardmortality-class]{discardmortality} object can be attached to a \
 
 Individual slots may be accessed or modified using \code{\link[=MeanAtAge]{MeanAtAge()}},
 \code{\link[=MeanAtLength]{MeanAtLength()}}, and \code{\link[=Classes]{Classes()}}.
+
+An \link[=exploitationdata-class]{exploitationdata} object, or a list of them (the \code{Exploitation} slot of a
+\link[=data-class]{data} object), returns its \code{DiscardMortality} slot in the same way.
 }
 }
 \examples{

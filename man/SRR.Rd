@@ -101,6 +101,7 @@ When \code{Pars} is a non-list S4 object with an \code{SRR} slot (e.g., a
 \link[=stock-class]{stock}), \code{SRR()} acts as a pass-through accessor and returns that
 slot. See \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules}
 for accepted input formats (scalar, bounds vector, \code{nSim}-length vector).
+A length-2 value is \code{Uniform(lower, upper)} bounds, except when \code{nSim = 2}, where it is one value per simulation.
 Default \code{list(h = NA)}.
 }}
 
@@ -113,7 +114,7 @@ May be:
 \itemize{
 \item A scalar: same value for all simulations and years.
 \item A length-2 bounds vector: sampled from \code{Uniform(lower, upper)} once per
-simulation.
+simulation. When \code{nSim = 2}, it is one value per simulation instead.
 \item A length-\code{nSim} vector: one value per simulation, constant over years.
 \item A \verb{Sim x Year} array: deliberately time-varying, e.g. to model a
 regime shift in carrying capacity. See \link[=srr-class]{srr} for how this
@@ -326,6 +327,9 @@ that slot directly:
 \if{html}{\out{<div class="sourceCode r">}}\preformatted{SRR(my_stock)           # returns my_stock@SRR
 SRR(my_stock) <- my_srr # replaces my_stock@SRR
 }\if{html}{\out{</div>}}
+
+A \link[=lifehistorydata-class]{lifehistorydata} object, or a list of them (the \code{LifeHistory} slot of a
+\link[=data-class]{data} object), returns its \code{SRR} slot in the same way.
 }
 
 \subsection{Slot Accessors}{

@@ -129,6 +129,10 @@
 #' om  <- OM(hist_obj)    # extract from `hist` or `mse`
 #' ```
 #'
+#' A list of such objects returns a list of their `OM` slots. Use [`OM<-`] to
+#' replace the `OM` slot of an object other than a [hist-class] or
+#' [mse-class] object.
+#'
 #' ## Derived Slots
 #'
 #' The `Years` slot is not a constructor parameter. It is derived
@@ -261,6 +265,9 @@ OM <- function(Name        = "A new OM object",
                Source      = NULL) {
   
   if (!inherits(Name, "character")) {
+    if (is.list(Name) && !isS4(Name) && length(Name) &&
+        all(purrr::map_lgl(Name, \(x) isS4(x) && methods::.hasSlot(x, "OM"))))
+      return(purrr::map(Name, \(x) x@OM))
     if (!"OM" %in% slotNames(Name))
       cli::cli_abort(c("x" = "No slot {.val OM} found in object class {.val {class(Name)}}"))
     return(Name@OM)
@@ -427,6 +434,25 @@ OM <- function(Name        = "A new OM object",
 #'
 #' @name OM-accessors
 NULL
+
+#' @rdname OM-accessors
+#' @details
+#' ## Replacing the OM
+#'
+#' `OM(x) <- value` replaces the `OM` slot of an S4 object that has one with
+#' the [om-class] object `value`. The `OM` of a [hist-class] or [mse-class]
+#' object cannot be replaced, because it was used to simulate the dynamics
+#' stored in that object.
+#' @export
+`OM<-` <- function(x, value) {
+  if (inherits(x, c("hist", "mse")))
+    cli::cli_abort(c(
+      "The {.code OM} of a {.cls {class(x)}} object cannot be replaced.",
+      "i" = "It was used to simulate the dynamics in {.arg x}. Change the {.cls om} object and re-run {.fn Simulate}."
+    ), call = NULL)
+  .CheckClass(value, "om", "value")
+  .AssignSlot(x, value, "OM")
+}
 
 
 #' @rdname OM-accessors

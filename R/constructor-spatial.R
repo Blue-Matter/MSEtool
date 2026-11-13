@@ -177,6 +177,9 @@
 #' Spatial(my_stock) <- my_sp   # replaces my_stock@Spatial
 #' ```
 #'
+#' A [lifehistorydata-class] object, or a list of them (the `LifeHistory` slot of a
+#' [data-class] object), returns its `Spatial` slot in the same way.
+#'
 #' ## Slot Accessors
 #'
 #' Individual slots can be read or replaced using generic functions matching
@@ -226,6 +229,9 @@ Spatial <- function(UnfishedDist = NULL,
   
   if (.IsStockOrList(UnfishedDist)) 
     return(.ExtractStockSlot(UnfishedDist, "Spatial"))
+
+  if (.IsDataContainer(UnfishedDist, 'lifehistorydata'))
+    return(.AccessSlotRecursive(UnfishedDist, 'Spatial'))
   
   object <- methods::new(
     "spatial",
