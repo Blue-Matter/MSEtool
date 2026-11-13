@@ -8,8 +8,8 @@
 #' @param Pars `list`. Named list of allometric parameters. Element names must
 #'   match the arguments of a built-in weight model (see [WeightModels()]).
 #'   When `Pars` is non-empty and `Model` is `NULL`, the model is inferred
-#'   automatically from the parameter names. When `Pars` is a [stock-class] object,
-#'   `Weight()` acts as a pass-through accessor and returns `x@Weight`.
+#'   automatically from the parameter names. An object that contains `Weight` objects returns them;
+#'   see *Pass-Through Access*.
 #'   See *Specifying Weight-at-Age* and
 #'   [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for the
 #'   full set of accepted input formats. A length-2 value is `Uniform(lower, upper)` bounds, except when `nSim = 2`, where it is one value per simulation. Default `list()`.
@@ -68,9 +68,10 @@
 #'   `Units`. Populated automatically during [Populate()] when `CVatAge` is
 #'   non-`NULL` and `Classes` is `NULL`. Default `NULL`.
 #' @param Misc `list`. Used internally. Default `list()`.
-#' @param x A [weight-class] object for slot accessors, or a [stock-class]
-#'   object for `Weight<-`.
-#' @param value For `Weight<-`: a [weight-class] object. For `AWK<-`: a
+#' @param x A [weight-class] object for slot accessors, or an object that contains
+#'   `Weight` objects for `Weight<-` (see *Pass-Through Access*).
+#' @param value For `Weight<-`: a [weight-class] object, or a list of them named by
+#'   stock (see *Pass-Through Access*). For `AWK<-`: a
 #'   replacement age-weight key array.
 #'
 #' @details
@@ -128,19 +129,6 @@
 #' length-weight relationship, so `CVatAge` is typically left at its default
 #' of `NULL`.
 #'
-#' ## Pass-Through Access from a Stock
-#'
-#' When `Pars` is a [stock-class] object, `Weight()` returns the `Weight`
-#' slot directly:
-#'
-#' ```r
-#' Weight(my_stock)           # returns my_stock@Weight
-#' Weight(my_stock) <- my_wt  # replaces my_stock@Weight
-#' ```
-#'
-#' A [lifehistorydata-class] or [lifehistoryobs-class] object, or a list of
-#' them (the `LifeHistory` slot of a [data-class] or [obs-class] object), returns its `Weight` slot in the same way.
-#'
 #' ## Slot Accessors
 #'
 #' Individual slots can be read or replaced using generic functions matching
@@ -160,10 +148,14 @@
 #' Classes(wt)       <- seq(0, 5, by = 0.5)
 #' ```
 #'
+#' @template passthrough-stock
+#' @templateVar slot Weight
+#' @templateVar arg Pars
+#'
 #' @return
-#' - `Weight()` returns a [weight-class] object. If `Pars` is a [stock-class],
-#'   returns `x@Weight`.
-#' - `Weight<-` returns the [stock-class] `x` with the `Weight` slot replaced
+#' - `Weight()` returns a [weight-class] object. If `Pars` contains `Weight`
+#'   objects, returns them (see *Pass-Through Access*).
+#' - `Weight<-` returns `x` with the `Weight` slot replaced
 #'   and the object re-validated.
 #' - `AWK()` returns the age-weight key array from `x`.
 #' - `AWK<-` returns `x` with the `AWK` slot updated and the object
@@ -198,11 +190,8 @@ Weight <- function(Pars = list(),
                    Classes = NULL,
                    Misc = list()) {
   
-  if (.IsStockOrList(Pars)) 
-    return(.ExtractStockSlot(Pars, "Weight"))
-
-  if (.IsDataContainer(Pars, c('lifehistorydata', 'lifehistoryobs')))
-    return(.AccessSlotRecursive(Pars, 'Weight'))
+  if (.IsStockComponentSource(Pars))
+    return(.GetStockSlot(Pars, 'Weight'))
   
   if (is.null(Pars))
     return(NULL)
@@ -237,7 +226,7 @@ Weight <- function(Pars = list(),
 #' @rdname Weight
 #' @export
 `Weight<-` <- function(x, value) {
-  .AssignSlotRecursive(x, value, 'Weight')
+  .AssignStockSlot(x, value, 'Weight')
 }
 
 

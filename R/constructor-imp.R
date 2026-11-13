@@ -7,8 +7,9 @@
 #' @param Name `character(1)` or an S4 object. Unique identifier for this
 #'   implementation error model. Default `NULL`.
 #'
-#'   If `Name` is an [om-class] object, `Imp()` returns `Name@Imp` rather than
-#'   constructing a new object. See *Pass-Through Access* in Details.
+#'   If `Name` is an [om-class] object, or a [hist-class] or [mse-class]
+#'   object (using its embedded `OM`), `Imp()` returns its `Imp` slot rather
+#'   than constructing a new object. See *Pass-Through Access* in Details.
 #' @param TAC An [impslot-class] object, or `NULL` (default). Implementation
 #'   error for total allowable catch recommendations. When `NULL`, an empty
 #'   [impslot-class] is created via [ImpSlot()].
@@ -23,8 +24,9 @@
 #'
 #' @details
 #' ## Pass-Through Access
-#' When `Name` is an [om-class] object, `Imp()` acts as an accessor and
-#' returns `Name@Imp` directly. This allows a consistent interface for both
+#' When `Name` is an [om-class] object, or a [hist-class] or [mse-class]
+#' object (using its embedded `OM`), `Imp()` acts as an accessor and returns
+#' its `Imp` slot directly. This allows a consistent interface for both
 #' construction and retrieval:
 #'
 #' ```r
@@ -83,8 +85,8 @@
 #' @return
 #' - `Imp()` returns a new [imp-class] object when `Name` is `NULL` or a
 #'   character string.
-#' - `Imp()` returns `Name@Imp` (an [imp-class] object) when `Name` is an
-#'   [om-class] object.
+#' - `Imp()` returns the `Imp` slot when `Name` is an [om-class],
+#'   [hist-class], or [mse-class] object.
 #' - `Imp<-` returns `x` with the `Imp` slot replaced.
 #' - `TACImp()`, `Effort()`, `Size()` return the corresponding
 #'   [impslot-class] slot from an [imp-class] object `x`. (`TAC()` is not
@@ -113,6 +115,8 @@ Imp <- function(Name   = NULL,
                 Effort = NULL,
                 Size   = NULL,
                 Misc   = list()) {
+  if (inherits(Name, c("hist", "mse")))
+    Name <- Name@OM
   if (inherits(Name, "om"))
     return(Name@Imp)
   

@@ -17,8 +17,8 @@
 #'     Wrapped internally to a `1 x nAge x 1` array.
 #'   - Numeric array with dimensions `Sim x Age x Year` and named dimnames.
 #'
-#'   If `MeanAtAge` is a [fleet-class] object, the `DiscardMortality` slot of
-#'   that fleet is returned.
+#'   An object that contains `DiscardMortality` objects returns them; see
+#'   *Pass-Through Access*.
 #'
 #'   Unlike [Selectivity()] and [Retention()], `DiscardMortality` does not
 #'   support model-based population via `Pars` and `Model`. Values must be
@@ -35,14 +35,12 @@
 #' @param Classes Numeric vector or `NULL`. Length class midpoints
 #'   corresponding to the second dimension of `MeanAtLength`. Default `NULL`.
 #' @param Misc List. Miscellaneous additional inputs. Default `list()`.
-#' @param x A [discardmortality-class] object, or a [fleet-class],
-#'   `FleetList`, `StockFleetList`, or [om-class] object for
-#'   `DiscardMortality<-`.
-#' @param value For `DiscardMortality<-`: a [discardmortality-class] object
-#'   when `x` is a [fleet-class]; a flat list of [discardmortality-class]
-#'   objects when `x` is a `FleetList`; a nested stock-fleet list of
-#'   [discardmortality-class] objects when `x` is a `StockFleetList` or
-#'   [om-class].
+#' @param x A [discardmortality-class] object, or an object that contains
+#'   `DiscardMortality` objects for `DiscardMortality<-` (see
+#'   *Pass-Through Access*).
+#' @param value For `DiscardMortality<-`: a [discardmortality-class] object,
+#'   or a list of them named by fleet or by stock and fleet (see
+#'   *Pass-Through Access*).
 #'
 #' @details
 #' Discard mortality defines the proportion of discarded catch that dies.
@@ -74,19 +72,18 @@
 #' Individual slots may be accessed or modified using [MeanAtAge()],
 #' [MeanAtLength()], and [Classes()].
 #'
-#' An [exploitationdata-class] or [exploitationobs-class] object, or a list
-#' of them (the `Exploitation` slot of a [data-class] or [obs-class] object),
-#' returns its `DiscardMortality` slot in the same way.
+#' @template passthrough-fleet
+#' @templateVar slot DiscardMortality
+#' @templateVar arg MeanAtAge
+#' @templateVar containers yes
+#' @templateVar extra an [advice-class] object: the discard mortality set by an MP. The slot of these objects can also be replaced.
 #'
 #' @return
 #' - `DiscardMortality()` returns a [discardmortality-class] object. If
-#'   `MeanAtAge` is a [fleet-class] object, the `DiscardMortality` slot of
-#'   that fleet is returned.
+#'   `MeanAtAge` contains `DiscardMortality` objects, returns them (see
+#'   *Pass-Through Access*).
 #' - `DiscardMortality<-` returns `x` with the `DiscardMortality` slot
-#'   replaced by `value`. When `x` is an [om-class] or `StockFleetList`,
-#'   each fleet's slot is updated from the corresponding element of the
-#'   nested list `value`. When `x` is a `FleetList`, each fleet's slot is
-#'   updated from the corresponding element of the flat list `value`.
+#'   replaced by `value`.
 #'
 #' @seealso
 #' - [discardmortality-class] for the class definition and slot-level
@@ -105,14 +102,8 @@ DiscardMortality <- function(MeanAtAge    = NULL,
                              Classes      = NULL,
                              Misc         = list()) {
   
-  if (.IsFleetOrList(MeanAtAge))
-    return(.ExtractFleetSlot(MeanAtAge, 'DiscardMortality'))
-
-  if (.IsDataContainer(MeanAtAge, c('exploitationdata', 'exploitationobs')))
-    return(.AccessSlotRecursive(MeanAtAge, 'DiscardMortality'))
-
-  if (inherits(MeanAtAge, 'advice'))
-    return(.AccessSlot(MeanAtAge, 'DiscardMortality'))
+  if (.IsFleetComponentSource(MeanAtAge, Extra = 'advice'))
+    return(.GetFleetSlot(MeanAtAge, 'DiscardMortality'))
 
   methods::new(
     "discardmortality",
@@ -127,6 +118,6 @@ DiscardMortality <- function(MeanAtAge    = NULL,
 #' @rdname DiscardMortality
 #' @export
 `DiscardMortality<-` <- function(x, value) {
-  .AssignFleetSlot(x, value, 'DiscardMortality')
+  .AssignFleetSlot(x, value, 'DiscardMortality', Extra = 'advice')
 }
   

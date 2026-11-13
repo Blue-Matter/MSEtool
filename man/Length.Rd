@@ -32,8 +32,8 @@ ALK(x) <- value
 \item{Pars}{\code{list}. Named list of growth parameters. Element names must
 match the arguments of a built-in growth model (see \code{\link[=LengthModels]{LengthModels()}}).
 When \code{Pars} is non-empty and \code{Model} is \code{NULL}, the model is inferred
-automatically from the parameter names. When \code{Pars} is a \link[=stock-class]{stock} object,
-\code{Length()} acts as a pass-through accessor and returns \code{x@Length}.
+automatically from the parameter names. An object that contains \code{Length} objects returns them;
+see \emph{Pass-Through Access}.
 See \emph{Specifying the Length-at-Age} and
 \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for the full
 set of accepted input formats. A length-2 value is \code{Uniform(lower, upper)} bounds, except when \code{nSim = 2}, where it is one value per simulation. Default \code{list()}.}
@@ -94,17 +94,18 @@ when overriding the computed key. Default \code{NULL}.}
 
 \item{Misc}{\code{list}. Used internally. Default \code{list()}.}
 
-\item{x}{A \link[=length-class]{length} object for slot accessors, or a \link[=stock-class]{stock}
-object for \verb{Length<-}.}
+\item{x}{A \link[=length-class]{length} object for slot accessors, or an object that contains
+\code{Length} objects for \verb{Length<-} (see \emph{Pass-Through Access}).}
 
-\item{value}{For \verb{Length<-}: a \link[=length-class]{length} object. For \verb{ALK<-}: a
+\item{value}{For \verb{Length<-}: a \link[=length-class]{length} object, or a list of them named by
+stock (see \emph{Pass-Through Access}). For \verb{ALK<-}: a
 replacement age-length key array.}
 }
 \value{
 \itemize{
-\item \code{Length()} returns a \link[=length-class]{length} object. If \code{Pars} is a \link[=stock-class]{stock},
-returns \code{x@Length}.
-\item \verb{Length<-} returns the \link[=stock-class]{stock} \code{x} with the \code{Length} slot replaced by
+\item \code{Length()} returns a \link[=length-class]{length} object. If \code{Pars} contains \code{Length}
+objects, returns them (see \emph{Pass-Through Access}).
+\item \verb{Length<-} returns \code{x} with the \code{Length} slot replaced by
 \code{value} and the object re-validated.
 \item \code{ALK()} returns the age-length key array from \code{x}.
 \item \verb{ALK<-} returns \code{x} with the \code{ALK} slot updated and the object
@@ -145,19 +146,6 @@ quantities throughout the operating model. Retrieve the computed key with
 \code{ALK(x)}.
 }
 
-\subsection{Pass-Through Access from a Stock}{
-
-When \code{Pars} is a \link[=stock-class]{stock} object, \code{Length()} returns the \code{Length}
-slot directly:
-
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{Length(my_stock)           # returns my_stock@Length
-Length(my_stock) <- my_L   # replaces my_stock@Length
-}\if{html}{\out{</div>}}
-
-A \link[=lifehistorydata-class]{lifehistorydata} or \link[=lifehistoryobs-class]{lifehistoryobs} object, or a list of
-them (the \code{LifeHistory} slot of a \link[=data-class]{data} or \link[=obs-class]{obs} object), returns its \code{Length} slot in the same way.
-}
-
 \subsection{Slot Accessors}{
 
 Individual slots can be read or replaced using generic functions matching
@@ -176,6 +164,28 @@ Classes(len)      <- seq(5, 80, by = 5)
 }\if{html}{\out{</div>}}
 }
 }
+\section{Pass-Through Access}{
+
+When \code{Pars} is an object that contains \code{Length} objects,
+\code{Length()} returns them instead of constructing a new object:
+\itemize{
+\item a \link[=stock-class]{stock} object: its \code{Length} slot.
+\item an \link[=om-class]{om}, \link[=hist-class]{hist}, or \link[=mse-class]{mse} object, or a list of
+\link[=stock-class]{stock} objects: a list with the \code{Length} slot of each stock.
+\item a \link[=data-class]{data} or \link[=obs-class]{obs} object, or a \link[=lifehistorydata-class]{lifehistorydata} or
+\link[=lifehistoryobs-class]{lifehistoryobs} object or a list of them: the \code{Length} slot
+of the life-history information.
+}
+
+\code{Length(x) <- value} replaces the slot of a \link[=stock-class]{stock},
+\link[=om-class]{om}, \link[=data-class]{data}, \link[=obs-class]{obs}, \link[=lifehistorydata-class]{lifehistorydata}, or
+\link[=lifehistoryobs-class]{lifehistoryobs} object, or of each object in a list of them. When
+\code{x} has more than one stock, \code{value} must be a list named by stock (see
+\code{\link[=StockNames]{StockNames()}}). The slot cannot be replaced in a \link[=hist-class]{hist} or
+\link[=mse-class]{mse} object, because it was used to simulate the historical
+dynamics.
+}
+
 \examples{
 # See LengthModels() for all available built-in growth models and the
 # parameter names required for each.

@@ -17,8 +17,8 @@
 #'     [PopulateCatchability()] extends it to cover all historical and
 #'     projected years.
 #'
-#'   If `Efficiency` is a [fleet-class] object, the `Catchability` slot of
-#'   that fleet is returned (see Details).
+#'   An object that contains `Catchability` objects returns them; see
+#'   *Pass-Through Access*.
 #'
 #' @param qCV Numeric or `NULL`. Coefficient of variation for lognormal
 #'   stochastic variation in catchability. Applied to projected years only
@@ -36,8 +36,11 @@
 #' 
 #' @param x A [catchability-class] object for accessor and replacement
 #'   functions, or an [indicesobs-class] object for `Efficiency()`, `qInc()`,
-#'   and their replacement forms.
-#' @param value The replacement value for the corresponding slot.
+#'   and their replacement forms. For `Catchability<-`, an object that
+#'   contains `Catchability` objects (see *Pass-Through Access*).
+#' @param value The replacement value for the corresponding slot. For
+#'   `Catchability<-`, a [catchability-class] object, or a list of them named
+#'   by fleet or by stock and fleet (see *Pass-Through Access*).
 #'
 #' @details
 #' 
@@ -90,10 +93,14 @@
 #' `Catchability(Fleet) <- MyCatchability` and retrieved with
 #' `Catchability(Fleet)`.
 #'
+#' @template passthrough-fleet
+#' @templateVar slot Catchability
+#' @templateVar arg Efficiency
+#' @templateVar containers no
+#'
 #' @return
-#' - `Catchability()` returns a [catchability-class] object. If `Efficiency`
-#'   is a [fleet-class] object, the `Catchability` slot of that fleet is
-#'   returned.
+#' - `Catchability()` returns a [catchability-class] object. If `Efficiency` contains `Catchability`
+#'   objects, returns them (see *Pass-Through Access*).
 #' - `Catchability<-` returns `x` with the `Catchability` slot replaced by
 #'   `value`.
 #' - `Efficiency()`, `qCV()`, `qInc()` return the corresponding slot from
@@ -120,8 +127,9 @@ Catchability <- function(Efficiency = NULL,
                          qInc       = NULL,
                          Misc       = list()) {
   
-  if (.IsFleetOrList(Efficiency))
-    return(.ExtractFleetSlot(Efficiency, 'Catchability'))
+  if (.IsFleetComponentSource(Efficiency, Containers = FALSE))
+    return(.GetFleetSlot(Efficiency, 'Catchability'))
+
     
   object <- methods::new(
     "catchability",

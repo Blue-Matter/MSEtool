@@ -375,9 +375,19 @@ to test management performance against this uncertainty.
 \subsection{Pass-Through Extraction}{
 
 When \code{Effort} is a \link[=fleet-class]{fleet}, \link[=effort-class]{effort}, \link[=hist-class]{hist},
-\link[=obs-class]{obs}, \link[=data-class]{data}, \link[=advicedata-class]{advicedata}, or \link[=mse-class]{mse} object (or a
-list of \link[=data-class]{data} objects), \code{Effort()} returns the \code{Effort} slot
-of that object rather than constructing a new one. For \link[=hist-class]{hist} and
+\link[=obs-class]{obs}, \link[=data-class]{data}, \link[=advice-class]{advice}, \link[=advicedata-class]{advicedata},
+\link[=imp-class]{imp}, or \link[=mse-class]{mse} object (or a list of \link[=data-class]{data} objects),
+\code{Effort()} returns the \code{Effort} slot of that object rather than
+constructing a new one. For an \link[=om-class]{om} object, or a list of
+\link[=fleet-class]{fleet} objects or a list of them by stock, it returns a list with
+the \code{Effort} slot of each fleet, with the same structure as \code{OM@Fleet}.
+
+\code{Effort(x) <- value} replaces the \code{Effort} slot of any of these objects
+except \link[=hist-class]{hist} and \link[=mse-class]{mse} objects. For an \link[=om-class]{om} object,
+\code{value} is a single \link[=effort-class]{effort} object when the OM has one stock and
+one fleet, a list named by fleet when it has one stock and several
+fleets, and a list named by stock of lists named by fleet when it has
+several stocks. For \link[=hist-class]{hist} and
 \link[=mse-class]{mse} objects, the \code{df} argument controls whether a tidy
 \code{data.frame} (\code{TRUE}) or the raw array (\code{FALSE}) is returned.
 }

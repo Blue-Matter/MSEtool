@@ -20,9 +20,8 @@
 #'   the scale set by `Units`. Not available for seasonal stocks, stocks in a
 #'   [Herm()] complex, or stocks that recruit from another stock's spawning
 #'   production (`SPFrom`).
-#'   When `Pars` is a non-list S4 object with an `SRR` slot (e.g., a
-#'   [stock-class]), `SRR()` acts as a pass-through accessor and returns that
-#'   slot. See [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html)
+#'   An object that contains `SRR` objects returns them;
+#'   see *Pass-Through Access*. See [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html)
 #'   for accepted input formats (scalar, bounds vector, `nSim`-length vector).
 #'   A length-2 value is `Uniform(lower, upper)` bounds, except when `nSim = 2`, where it is one value per simulation.
 #'   Default `list(h = NA)`.
@@ -106,9 +105,10 @@
 #'   thousands of fish. Does not affect internal calculations — used only to
 #'   set the interpretation of numbers in [hist-class] output. Default `1`.
 #' @param Misc `list`. Used internally. Default `list()`.
-#' @param x A [srr-class] object for slot accessors, or a [stock-class] object
-#'   for `SRR<-`.
-#' @param value For `SRR<-`: a [srr-class] object. For slot replacement
+#' @param x A [srr-class] object for slot accessors, or an object that contains
+#'   `SRR` objects for `SRR<-` (see *Pass-Through Access*).
+#' @param value For `SRR<-`: a [srr-class] object, or a list of them named by
+#'   stock (see *Pass-Through Access*). For slot replacement
 #'   functions: the replacement value for the corresponding slot.
 #'
 #' @details
@@ -201,19 +201,6 @@
 #'                 SPFrom = "Source", ShareSPFrom = FALSE)
 #' ```
 #'
-#' ## Pass-Through Access from a Stock
-#'
-#' When `Pars` is a non-list S4 object with an `SRR` slot, `SRR()` returns
-#' that slot directly:
-#'
-#' ```r
-#' SRR(my_stock)           # returns my_stock@SRR
-#' SRR(my_stock) <- my_srr # replaces my_stock@SRR
-#' ```
-#'
-#' A [lifehistorydata-class] or [lifehistoryobs-class] object, or a list of
-#' them (the `LifeHistory` slot of a [data-class] or [obs-class] object), returns its `SRR` slot in the same way.
-#'
 #' ## Slot Accessors
 #'
 #' Individual slots can be read or replaced using generic functions matching
@@ -235,10 +222,14 @@
 #' RecDevInit(srr)    <- my_init_matrix
 #' ```
 #'
+#' @template passthrough-stock
+#' @templateVar slot SRR
+#' @templateVar arg Pars
+#'
 #' @return
-#' - `SRR()` returns a [srr-class] object. If `Pars` is a non-list S4 object
-#'   with an `SRR` slot, returns that slot.
-#' - `SRR<-` returns the [stock-class] `x` with the `SRR` slot replaced and
+#' - `SRR()` returns a [srr-class] object. If `Pars` contains `SRR`
+#'   objects, returns them (see *Pass-Through Access*).
+#' - `SRR<-` returns `x` with the `SRR` slot replaced and
 #'   the object re-validated.
 #' - `R0()`, `SPFrom()`, `RecDevInit()`, `RecDevHist()`, `RecDevProj()`,
 #'   `SpawnTimeFrac()`, `RelRecFun()` return the value of the corresponding
@@ -278,11 +269,8 @@ SRR <- function(Pars = list(h = NA),
                 Units = 1,
                 Misc = list()) {
   
-  if (.IsStockOrList(Pars)) 
-    return(.ExtractStockSlot(Pars, "SRR"))
-
-  if (.IsDataContainer(Pars, c('lifehistorydata', 'lifehistoryobs')))
-    return(.AccessSlotRecursive(Pars, 'SRR'))
+  if (.IsStockComponentSource(Pars))
+    return(.GetStockSlot(Pars, 'SRR'))
   
   if (is.null(Pars))
     return(NULL)
@@ -475,7 +463,7 @@ RelRecFun <- function(x) {
 #' @rdname SRR
 #' @export
 `SRR<-` <- function(x, value) {
-  .AssignSlotRecursive(x, value, 'SRR')
+  .AssignStockSlot(x, value, 'SRR')
 }
 
 

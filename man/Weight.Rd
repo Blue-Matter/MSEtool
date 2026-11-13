@@ -33,8 +33,8 @@ AWK(x) <- value
 \item{Pars}{\code{list}. Named list of allometric parameters. Element names must
 match the arguments of a built-in weight model (see \code{\link[=WeightModels]{WeightModels()}}).
 When \code{Pars} is non-empty and \code{Model} is \code{NULL}, the model is inferred
-automatically from the parameter names. When \code{Pars} is a \link[=stock-class]{stock} object,
-\code{Weight()} acts as a pass-through accessor and returns \code{x@Weight}.
+automatically from the parameter names. An object that contains \code{Weight} objects returns them;
+see \emph{Pass-Through Access}.
 See \emph{Specifying Weight-at-Age} and
 \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for the
 full set of accepted input formats. A length-2 value is \code{Uniform(lower, upper)} bounds, except when \code{nSim = 2}, where it is one value per simulation. Default \code{list()}.}
@@ -106,17 +106,18 @@ non-\code{NULL} and \code{Classes} is \code{NULL}. Default \code{NULL}.}
 
 \item{Misc}{\code{list}. Used internally. Default \code{list()}.}
 
-\item{x}{A \link[=weight-class]{weight} object for slot accessors, or a \link[=stock-class]{stock}
-object for \verb{Weight<-}.}
+\item{x}{A \link[=weight-class]{weight} object for slot accessors, or an object that contains
+\code{Weight} objects for \verb{Weight<-} (see \emph{Pass-Through Access}).}
 
-\item{value}{For \verb{Weight<-}: a \link[=weight-class]{weight} object. For \verb{AWK<-}: a
+\item{value}{For \verb{Weight<-}: a \link[=weight-class]{weight} object, or a list of them named by
+stock (see \emph{Pass-Through Access}). For \verb{AWK<-}: a
 replacement age-weight key array.}
 }
 \value{
 \itemize{
-\item \code{Weight()} returns a \link[=weight-class]{weight} object. If \code{Pars} is a \link[=stock-class]{stock},
-returns \code{x@Weight}.
-\item \verb{Weight<-} returns the \link[=stock-class]{stock} \code{x} with the \code{Weight} slot replaced
+\item \code{Weight()} returns a \link[=weight-class]{weight} object. If \code{Pars} contains \code{Weight}
+objects, returns them (see \emph{Pass-Through Access}).
+\item \verb{Weight<-} returns \code{x} with the \code{Weight} slot replaced
 and the object re-validated.
 \item \code{AWK()} returns the age-weight key array from \code{x}.
 \item \verb{AWK<-} returns \code{x} with the \code{AWK} slot updated and the object
@@ -185,19 +186,6 @@ length-weight relationship, so \code{CVatAge} is typically left at its default
 of \code{NULL}.
 }
 
-\subsection{Pass-Through Access from a Stock}{
-
-When \code{Pars} is a \link[=stock-class]{stock} object, \code{Weight()} returns the \code{Weight}
-slot directly:
-
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{Weight(my_stock)           # returns my_stock@Weight
-Weight(my_stock) <- my_wt  # replaces my_stock@Weight
-}\if{html}{\out{</div>}}
-
-A \link[=lifehistorydata-class]{lifehistorydata} or \link[=lifehistoryobs-class]{lifehistoryobs} object, or a list of
-them (the \code{LifeHistory} slot of a \link[=data-class]{data} or \link[=obs-class]{obs} object), returns its \code{Weight} slot in the same way.
-}
-
 \subsection{Slot Accessors}{
 
 Individual slots can be read or replaced using generic functions matching
@@ -217,6 +205,28 @@ Classes(wt)       <- seq(0, 5, by = 0.5)
 }\if{html}{\out{</div>}}
 }
 }
+\section{Pass-Through Access}{
+
+When \code{Pars} is an object that contains \code{Weight} objects,
+\code{Weight()} returns them instead of constructing a new object:
+\itemize{
+\item a \link[=stock-class]{stock} object: its \code{Weight} slot.
+\item an \link[=om-class]{om}, \link[=hist-class]{hist}, or \link[=mse-class]{mse} object, or a list of
+\link[=stock-class]{stock} objects: a list with the \code{Weight} slot of each stock.
+\item a \link[=data-class]{data} or \link[=obs-class]{obs} object, or a \link[=lifehistorydata-class]{lifehistorydata} or
+\link[=lifehistoryobs-class]{lifehistoryobs} object or a list of them: the \code{Weight} slot
+of the life-history information.
+}
+
+\code{Weight(x) <- value} replaces the slot of a \link[=stock-class]{stock},
+\link[=om-class]{om}, \link[=data-class]{data}, \link[=obs-class]{obs}, \link[=lifehistorydata-class]{lifehistorydata}, or
+\link[=lifehistoryobs-class]{lifehistoryobs} object, or of each object in a list of them. When
+\code{x} has more than one stock, \code{value} must be a list named by stock (see
+\code{\link[=StockNames]{StockNames()}}). The slot cannot be replaced in a \link[=hist-class]{hist} or
+\link[=mse-class]{mse} object, because it was used to simulate the historical
+dynamics.
+}
+
 \examples{
 # See WeightModels() for all available built-in weight models and the
 # parameter names required for each.

@@ -55,7 +55,8 @@ Discount(x) <- value
 }
 \arguments{
 \item{Revenue}{Numeric array or \code{NULL}. Revenue by simulation, fleet, and
-year. Default \code{NULL}.}
+year. Default \code{NULL}. An object that contains \code{Bioeconomic} objects
+returns them; see \emph{Pass-Through Access}.}
 
 \item{Cost}{Numeric or \code{NULL}. Operating cost per unit of effort. Default
 \code{NULL}.}
@@ -74,16 +75,17 @@ Default \code{NULL}.}
 
 \item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
 
-\item{x}{A \link[=bioeconomic-class]{bioeconomic} object, or a \link[=fleet-class]{fleet} object for
-\verb{Bioeconomic<-}.}
+\item{x}{A \link[=bioeconomic-class]{bioeconomic} object, or an object that contains
+\code{Bioeconomic} objects for \verb{Bioeconomic<-} (see \emph{Pass-Through Access}).}
 
-\item{value}{For \verb{Bioeconomic<-}: a \link[=bioeconomic-class]{bioeconomic} object. For slot
+\item{value}{For \verb{Bioeconomic<-}: a \link[=bioeconomic-class]{bioeconomic} object, or a list of them named by
+fleet or by stock and fleet (see \emph{Pass-Through Access}). For slot
 replacement functions: the new value for the corresponding slot.}
 }
 \value{
 \itemize{
-\item \code{Bioeconomic()} returns a \link[=bioeconomic-class]{bioeconomic} object. If \code{Revenue} is a
-\link[=fleet-class]{fleet} object, the \code{Bioeconomic} slot of that fleet is returned.
+\item \code{Bioeconomic()} returns a \link[=bioeconomic-class]{bioeconomic} object. If \code{Revenue} contains \code{Bioeconomic}
+objects, returns them (see \emph{Pass-Through Access}).
 \item \verb{Bioeconomic<-} returns \code{x} with the \code{Bioeconomic} slot replaced by
 \code{value}.
 \item \code{Revenue()}, \code{Cost()}, \code{Investment()}, \code{Disinvestment()},
@@ -112,6 +114,29 @@ Individual slots may be accessed or modified using \code{\link[=Revenue]{Revenue
 \code{\link[=Investment]{Investment()}}, \code{\link[=Disinvestment]{Disinvestment()}}, \code{\link[=Depreciation]{Depreciation()}}, and \code{\link[=Discount]{Discount()}}.
 }
 }
+\section{Pass-Through Access}{
+
+When \code{Revenue} is an object that contains \code{Bioeconomic} objects,
+\code{Bioeconomic()} returns them instead of constructing a new object:
+\itemize{
+\item a \link[=fleet-class]{fleet} object: its \code{Bioeconomic} slot.
+\item an \link[=om-class]{om}, \link[=hist-class]{hist}, or \link[=mse-class]{mse} object: a list by stock of
+lists by fleet, with the \code{Bioeconomic} slot of each fleet. A list of
+\link[=fleet-class]{fleet} objects, or a list of them by stock, returns a list with
+the same structure.
+}
+
+\code{Bioeconomic(x) <- value} replaces the slot of a \link[=fleet-class]{fleet} or
+\link[=om-class]{om} object or of
+each object in a list of them. For an \link[=om-class]{om} object, \code{value} is a
+single object when the OM has one stock and one fleet, a list named by
+fleet (see \code{\link[=FleetNames]{FleetNames()}}) when it has one stock and several fleets, and a
+list named by stock (see \code{\link[=StockNames]{StockNames()}}) of lists named by fleet when it
+has several stocks. The slot cannot be replaced in a \link[=hist-class]{hist} or
+\link[=mse-class]{mse} object, because it was used to simulate the historical
+dynamics.
+}
+
 \examples{
 b <- Bioeconomic(Cost = 100, Discount = 0.05)
 Cost(b)

@@ -8,8 +8,8 @@
 #' @param Pars `list`. Named list of fecundity parameters. Element names must
 #'   match the arguments of a built-in fecundity model (see [FecundityModels()]).
 #'   When `Pars` is non-empty and `Model` is `NULL`, the model is inferred
-#'   automatically from the parameter names. When `Pars` is a [stock-class] object,
-#'   `Fecundity()` acts as a pass-through accessor and returns `x@Fecundity`.
+#'   automatically from the parameter names. An object that contains `Fecundity` objects returns them;
+#'   see *Pass-Through Access*.
 #'   See also
 #'   [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for the
 #'   full set of accepted input formats. A length-2 value is `Uniform(lower, upper)` bounds, except when `nSim = 2`, where it is one value per simulation. Default `list()`.
@@ -46,9 +46,10 @@
 #' @param Timing `array` or `NULL`. Not used. Spawning time within the time
 #'   step is set by `SRR@SpawnTimeFrac` (see [SRR()]). Default `NULL`.
 #' @param Misc `list`. Used internally. Default `list()`.
-#' @param x A [fecundity-class] object for slot accessors, or a [stock-class]
-#'   object for `Fecundity<-`.
-#' @param value For `Fecundity<-`: a [fecundity-class] object.
+#' @param x A [fecundity-class] object for slot accessors, or an object that contains
+#'   `Fecundity` objects for `Fecundity<-` (see *Pass-Through Access*).
+#' @param value For `Fecundity<-`: a [fecundity-class] object, or a list of them named by
+#'   stock (see *Pass-Through Access*).
 #'
 #' @details
 #' ## Default Behaviour When Omitted
@@ -114,19 +115,6 @@
 #' converted to `MeanAtAge` via the `ALK` — a populated [Length()] object must
 #' be passed to [Populate()].
 #'
-#' ## Pass-Through Access from a Stock
-#'
-#' When `Pars` is a [stock-class] object, `Fecundity()` returns the `Fecundity`
-#' slot directly:
-#'
-#' ```r
-#' Fecundity(my_stock)             # returns my_stock@Fecundity
-#' Fecundity(my_stock) <- my_fec   # replaces my_stock@Fecundity
-#' ```
-#'
-#' A [lifehistorydata-class] or [lifehistoryobs-class] object, or a list of
-#' them (the `LifeHistory` slot of a [data-class] or [obs-class] object), returns its `Fecundity` slot in the same way.
-#'
 #' ## Slot Accessors
 #'
 #' Individual slots can be read or replaced using generic functions matching
@@ -141,10 +129,14 @@
 #' Classes(fec)       <- 0:20
 #' ```
 #'
+#' @template passthrough-stock
+#' @templateVar slot Fecundity
+#' @templateVar arg Pars
+#'
 #' @return
-#' - `Fecundity()` returns a [fecundity-class] object. If `Pars` is a
-#'   [stock-class], returns `x@Fecundity`.
-#' - `Fecundity<-` returns the [stock-class] `x` with the `Fecundity` slot
+#' - `Fecundity()` returns a [fecundity-class] object. If `Pars` contains `Fecundity`
+#'   objects, returns them (see *Pass-Through Access*).
+#' - `Fecundity<-` returns `x` with the `Fecundity` slot
 #'   replaced and the object re-validated.
 #'
 #' @seealso
@@ -173,11 +165,8 @@ Fecundity <- function(Pars = list(),
                       Timing = NULL,
                       Misc = list()) {
   
-  if (.IsStockOrList(Pars)) 
-    return(.ExtractStockSlot(Pars, "Fecundity"))
-
-  if (.IsDataContainer(Pars, c('lifehistorydata', 'lifehistoryobs')))
-    return(.AccessSlotRecursive(Pars, 'Fecundity'))
+  if (.IsStockComponentSource(Pars))
+    return(.GetStockSlot(Pars, 'Fecundity'))
   
   if (is.null(Pars))
     return(NULL)
@@ -211,5 +200,5 @@ Fecundity <- function(Pars = list(),
 #' @rdname Fecundity
 #' @export
 `Fecundity<-` <- function(x, value) {
-  .AssignSlotRecursive(x, value, 'Fecundity')
+  .AssignStockSlot(x, value, 'Fecundity')
 }

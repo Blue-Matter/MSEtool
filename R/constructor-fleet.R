@@ -3,8 +3,8 @@
 #' Construct and manipulate a [fleet-class] object defining the exploitation
 #' characteristics of a fleet for a stock in an operating model.
 #'
-#' @param Name Character or `NULL`. Fleet name, or an [om-class] object for
-#'   pass-through access (see Details).
+#' @param Name Character or `NULL`. Fleet name, or an [om-class],
+#'   [hist-class], or [mse-class] object for pass-through access (see Details).
 #' @param Effort An [effort-class] object defining historical fishing effort,
 #'   spatial distribution, and targeting. See [Effort()] for full
 #'   documentation. Default is an empty [effort-class]. When `Name` is an
@@ -73,7 +73,8 @@
 #'
 #' ## Pass-Through Access from an OM
 #'
-#' When `Name` is an [om-class] object, `Fleet()` acts as an accessor rather
+#' When `Name` is an [om-class] object, or a [hist-class] or [mse-class]
+#' object (using its embedded `OM`), `Fleet()` acts as an accessor rather
 #' than a constructor:
 #' - `Fleet(om)` returns the full fleet list (`om@Fleet`).
 #' - `Fleet(om, st)` returns all fleets for stock index `st`
@@ -81,6 +82,13 @@
 #' - `Fleet(om, st, fl)` returns fleet `fl` for stock `st`
 #'   (`om@Fleet[[st]][[fl]]`), where `fl` is passed via the `Catchability`
 #'   argument.
+#'
+#' `Closure()`, `WeightFleetRetained()`, and `WeightFleetSelected()` accept
+#' a [fleet-class] object, or an [om-class], [hist-class], or [mse-class]
+#' object or a list of fleets, for which they return a list with the slot of
+#' each fleet. Their replacement forms follow the rules for fleet components
+#' described in [Selectivity()] under *Pass-Through Access*; `Closure<-` also
+#' accepts an [advice-class] object.
 #'
 #' ## Assigning Fleets to an OM
 #'
@@ -145,6 +153,9 @@ Fleet <- function(Name = NULL,
                   Misc = list()) {
   
 
+  if (inherits(Name, c("hist", "mse")))
+    Name <- Name@OM
+
   if (inherits(Name, "om")) {
     if (inherits(Effort, 'numeric')) {
       if (inherits(Catchability, 'catchability'))
@@ -177,44 +188,37 @@ Fleet <- function(Name = NULL,
 #' @rdname Fleet
 #' @export
 Closure <- function(x) {
-  if (.IsFleetOrList(x))
-    return(.ExtractFleetSlot(x, 'Closure'))
-  
-  .AccessSlot(x, 'Closure')
+  .GetFleetSlot(x, 'Closure')
 }
 
 #' @rdname Fleet
 #' @export
 `Closure<-` <- function(x, value) {
-  .AssignSlot(x, value, 'Closure')
+  .AssignFleetSlot(x, value, 'Closure', Extra = 'advice')
 }
 
 #' @rdname Fleet
 #' @export
 WeightFleetRetained <- function(x) {
-  if (.IsFleetOrList(x))
-    return(.ExtractFleetSlot(x, 'WeightFleetRetained'))
-  .AccessSlot(x, 'WeightFleetRetained')
+  .GetFleetSlot(x, 'WeightFleetRetained')
 }
 
 #' @rdname Fleet
 #' @export
 `WeightFleetRetained<-` <- function(x,value) {
-  .AssignSlot(x, value, 'WeightFleetRetained')
+  .AssignFleetSlot(x, value, 'WeightFleetRetained')
 }
 
 #' @rdname Fleet
 #' @export
 WeightFleetSelected <- function(x) {
-  if (.IsFleetOrList(x))
-    return(.ExtractFleetSlot(x, 'WeightFleetSelected'))
-  .AccessSlot(x, 'WeightFleetSelected')
+  .GetFleetSlot(x, 'WeightFleetSelected')
 }
 
 #' @rdname Fleet
 #' @export
 `WeightFleetSelected<-` <- function(x,value) {
-  .AssignSlot(x, value, 'WeightFleetSelected')
+  .AssignFleetSlot(x, value, 'WeightFleetSelected')
 }
 
 #' @rdname Fleet

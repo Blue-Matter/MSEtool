@@ -115,6 +115,7 @@ Other om:
 \code{\link{OMControl}},
 \code{\link[=RefSeason]{RefSeason()}},
 \code{\link{SingleStockOM}},
+\code{\link[=StockTargeting]{StockTargeting()}},
 \code{\link{TwoFleetOM}},
 \code{\link{om-class}},
 \code{\link{stocktransition-class}}

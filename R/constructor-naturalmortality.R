@@ -8,9 +8,8 @@
 #' @param Pars `list`. Named list of natural mortality parameters. Element
 #'   names must match the arguments of a built-in mortality model (see
 #'   [NaturalMortalityModels()]). When `Pars` is non-empty and `Model` is
-#'   `NULL`, the model is inferred automatically from the parameter names. When `Pars`
-#'   is a [stock-class] object, `NaturalMortality()` acts as a pass-through
-#'   accessor and returns `x@NaturalMortality`. See also
+#'   `NULL`, the model is inferred automatically from the parameter names. An object that contains `NaturalMortality` objects returns them;
+#'   see *Pass-Through Access*. See also
 #'   [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for the
 #'   full set of accepted input formats. A length-2 value is `Uniform(lower, upper)` bounds, except when `nSim = 2`, where it is one value per simulation. Default `list()`.
 #' @param Model `character(1)` or `function`. Natural mortality model
@@ -47,9 +46,10 @@
 #' @param Classes `numeric` or `NULL`. Age or length class midpoints
 #'   corresponding to the `MeanAt*` array in use. Default `NULL`.
 #' @param Misc `list`. Used internally. Default `list()`.
-#' @param x A [naturalmortality-class] object for slot accessors, or a
-#'   [stock-class] object for `NaturalMortality<-`.
-#' @param value For `NaturalMortality<-`: a [naturalmortality-class] object.
+#' @param x A [naturalmortality-class] object for slot accessors, or an object that contains
+#'   `NaturalMortality` objects for `NaturalMortality<-` (see *Pass-Through Access*).
+#' @param value For `NaturalMortality<-`: a [naturalmortality-class] object, or a list of them named by
+#'   stock (see *Pass-Through Access*).
 #'
 #' @details
 #' ## Specifying Natural Mortality
@@ -111,19 +111,6 @@
 #' be passed to [Populate()]. The same conversion applies when `MeanAtLength`
 #' is supplied directly by the user.
 #'
-#' ## Pass-Through Access from a Stock
-#'
-#' When `Pars` is a [stock-class] object, `NaturalMortality()` returns the
-#' `NaturalMortality` slot directly:
-#'
-#' ```r
-#' NaturalMortality(my_stock)           # returns my_stock@NaturalMortality
-#' NaturalMortality(my_stock) <- my_M   # replaces it
-#' ```
-#'
-#' A [lifehistorydata-class] or [lifehistoryobs-class] object, or a list of
-#' them (the `LifeHistory` slot of a [data-class] or [obs-class] object), returns its `NaturalMortality` slot in the same way.
-#'
 #' ## Slot Accessors
 #'
 #' Individual slots can be read or replaced using generic functions matching
@@ -138,10 +125,15 @@
 #' Classes(nm)       <- 0:20
 #' ```
 #'
+#' @template passthrough-stock
+#' @templateVar slot NaturalMortality
+#' @templateVar arg Pars
+#'
 #' @return
 #' - `NaturalMortality()` returns a [naturalmortality-class] object. If `Pars`
-#'   is a [stock-class], returns `x@NaturalMortality`.
-#' - `NaturalMortality<-` returns the [stock-class] `x` with the
+#'   contains `NaturalMortality` objects, returns them (see
+#'   *Pass-Through Access*).
+#' - `NaturalMortality<-` returns `x` with the
 #'   `NaturalMortality` slot replaced and the object re-validated.
 #'
 #' @seealso
@@ -169,11 +161,8 @@ NaturalMortality <- function(Pars = list(),
                              Classes = NULL,
                              Misc = list()) {
   
-  if (.IsStockOrList(Pars)) 
-    return(.ExtractStockSlot(Pars, "NaturalMortality"))
-
-  if (.IsDataContainer(Pars, c('lifehistorydata', 'lifehistoryobs')))
-    return(.AccessSlotRecursive(Pars, 'NaturalMortality'))
+  if (.IsStockComponentSource(Pars))
+    return(.GetStockSlot(Pars, 'NaturalMortality'))
   
   if (is.null(Pars))
     return(NULL)
@@ -205,5 +194,5 @@ NaturalMortality <- function(Pars = list(),
 #' @rdname NaturalMortality
 #' @export
 `NaturalMortality<-` <- function(x, value) {
-  .AssignSlotRecursive(x, value, 'NaturalMortality')
+  .AssignStockSlot(x, value, 'NaturalMortality')
 }

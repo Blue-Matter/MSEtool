@@ -8,8 +8,8 @@
 #' @param Pars `list`. Named list of growth parameters. Element names must
 #'   match the arguments of a built-in growth model (see [LengthModels()]).
 #'   When `Pars` is non-empty and `Model` is `NULL`, the model is inferred
-#'   automatically from the parameter names. When `Pars` is a [stock-class] object,
-#'   `Length()` acts as a pass-through accessor and returns `x@Length`.
+#'   automatically from the parameter names. An object that contains `Length` objects returns them;
+#'   see *Pass-Through Access*.
 #'   See *Specifying the Length-at-Age* and 
 #'   [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for the full
 #'   set of accepted input formats. A length-2 value is `Uniform(lower, upper)` bounds, except when `nSim = 2`, where it is one value per simulation. Default `list()`.
@@ -58,9 +58,10 @@
 #'   `Units`. Populated automatically during [Populate()] if `NULL`. Default
 #'   `NULL`.
 #' @param Misc `list`. Used internally. Default `list()`.
-#' @param x A [length-class] object for slot accessors, or a [stock-class]
-#'   object for `Length<-`.
-#' @param value For `Length<-`: a [length-class] object. For `ALK<-`: a
+#' @param x A [length-class] object for slot accessors, or an object that contains
+#'   `Length` objects for `Length<-` (see *Pass-Through Access*).
+#' @param value For `Length<-`: a [length-class] object, or a list of them named by
+#'   stock (see *Pass-Through Access*). For `ALK<-`: a
 #'   replacement age-length key array.
 #'
 #' @details
@@ -90,19 +91,6 @@
 #' quantities throughout the operating model. Retrieve the computed key with
 #' `ALK(x)`.
 #'
-#' ## Pass-Through Access from a Stock
-#'
-#' When `Pars` is a [stock-class] object, `Length()` returns the `Length`
-#' slot directly:
-#'
-#' ```r
-#' Length(my_stock)           # returns my_stock@Length
-#' Length(my_stock) <- my_L   # replaces my_stock@Length
-#' ```
-#'
-#' A [lifehistorydata-class] or [lifehistoryobs-class] object, or a list of
-#' them (the `LifeHistory` slot of a [data-class] or [obs-class] object), returns its `Length` slot in the same way.
-#'
 #' ## Slot Accessors
 #'
 #' Individual slots can be read or replaced using generic functions matching
@@ -121,10 +109,14 @@
 #' Classes(len)      <- seq(5, 80, by = 5)
 #' ```
 #'
+#' @template passthrough-stock
+#' @templateVar slot Length
+#' @templateVar arg Pars
+#'
 #' @return
-#' - `Length()` returns a [length-class] object. If `Pars` is a [stock-class],
-#' returns `x@Length`.
-#' - `Length<-` returns the [stock-class] `x` with the `Length` slot replaced by
+#' - `Length()` returns a [length-class] object. If `Pars` contains `Length`
+#'   objects, returns them (see *Pass-Through Access*).
+#' - `Length<-` returns `x` with the `Length` slot replaced by
 #' `value` and the object re-validated.
 #' - `ALK()` returns the age-length key array from `x`.
 #' - `ALK<-` returns `x` with the `ALK` slot updated and the object
@@ -155,11 +147,8 @@ Length <- function(Pars = list(),
                    Classes = NULL,
                    Misc = list()) {
   
-  if (.IsStockOrList(Pars)) 
-    return(.ExtractStockSlot(Pars, "Length"))
-
-  if (.IsDataContainer(Pars, c('lifehistorydata', 'lifehistoryobs')))
-    return(.AccessSlotRecursive(Pars, 'Length'))
+  if (.IsStockComponentSource(Pars))
+    return(.GetStockSlot(Pars, 'Length'))
   
   if (is.null(Pars))
     return(NULL)
@@ -193,7 +182,7 @@ Length <- function(Pars = list(),
 #' @rdname Length
 #' @export
 `Length<-` <- function(x, value) {
-  .AssignSlotRecursive(x, value, 'Length')
+  .AssignStockSlot(x, value, 'Length')
 }
 
 

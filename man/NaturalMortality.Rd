@@ -22,9 +22,8 @@ NaturalMortality(x) <- value
 \item{Pars}{\code{list}. Named list of natural mortality parameters. Element
 names must match the arguments of a built-in mortality model (see
 \code{\link[=NaturalMortalityModels]{NaturalMortalityModels()}}). When \code{Pars} is non-empty and \code{Model} is
-\code{NULL}, the model is inferred automatically from the parameter names. When \code{Pars}
-is a \link[=stock-class]{stock} object, \code{NaturalMortality()} acts as a pass-through
-accessor and returns \code{x@NaturalMortality}. See also
+\code{NULL}, the model is inferred automatically from the parameter names. An object that contains \code{NaturalMortality} objects returns them;
+see \emph{Pass-Through Access}. See also
 \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for the
 full set of accepted input formats. A length-2 value is \code{Uniform(lower, upper)} bounds, except when \code{nSim = 2}, where it is one value per simulation. Default \code{list()}.}
 
@@ -69,16 +68,18 @@ corresponding to the \verb{MeanAt*} array in use. Default \code{NULL}.}
 
 \item{Misc}{\code{list}. Used internally. Default \code{list()}.}
 
-\item{x}{A \link[=naturalmortality-class]{naturalmortality} object for slot accessors, or a
-\link[=stock-class]{stock} object for \verb{NaturalMortality<-}.}
+\item{x}{A \link[=naturalmortality-class]{naturalmortality} object for slot accessors, or an object that contains
+\code{NaturalMortality} objects for \verb{NaturalMortality<-} (see \emph{Pass-Through Access}).}
 
-\item{value}{For \verb{NaturalMortality<-}: a \link[=naturalmortality-class]{naturalmortality} object.}
+\item{value}{For \verb{NaturalMortality<-}: a \link[=naturalmortality-class]{naturalmortality} object, or a list of them named by
+stock (see \emph{Pass-Through Access}).}
 }
 \value{
 \itemize{
 \item \code{NaturalMortality()} returns a \link[=naturalmortality-class]{naturalmortality} object. If \code{Pars}
-is a \link[=stock-class]{stock}, returns \code{x@NaturalMortality}.
-\item \verb{NaturalMortality<-} returns the \link[=stock-class]{stock} \code{x} with the
+contains \code{NaturalMortality} objects, returns them (see
+\emph{Pass-Through Access}).
+\item \verb{NaturalMortality<-} returns \code{x} with the
 \code{NaturalMortality} slot replaced and the object re-validated.
 }
 }
@@ -149,19 +150,6 @@ be passed to \code{\link[=Populate]{Populate()}}. The same conversion applies wh
 is supplied directly by the user.
 }
 
-\subsection{Pass-Through Access from a Stock}{
-
-When \code{Pars} is a \link[=stock-class]{stock} object, \code{NaturalMortality()} returns the
-\code{NaturalMortality} slot directly:
-
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{NaturalMortality(my_stock)           # returns my_stock@NaturalMortality
-NaturalMortality(my_stock) <- my_M   # replaces it
-}\if{html}{\out{</div>}}
-
-A \link[=lifehistorydata-class]{lifehistorydata} or \link[=lifehistoryobs-class]{lifehistoryobs} object, or a list of
-them (the \code{LifeHistory} slot of a \link[=data-class]{data} or \link[=obs-class]{obs} object), returns its \code{NaturalMortality} slot in the same way.
-}
-
 \subsection{Slot Accessors}{
 
 Individual slots can be read or replaced using generic functions matching
@@ -176,6 +164,28 @@ Classes(nm)       <- 0:20
 }\if{html}{\out{</div>}}
 }
 }
+\section{Pass-Through Access}{
+
+When \code{Pars} is an object that contains \code{NaturalMortality} objects,
+\code{NaturalMortality()} returns them instead of constructing a new object:
+\itemize{
+\item a \link[=stock-class]{stock} object: its \code{NaturalMortality} slot.
+\item an \link[=om-class]{om}, \link[=hist-class]{hist}, or \link[=mse-class]{mse} object, or a list of
+\link[=stock-class]{stock} objects: a list with the \code{NaturalMortality} slot of each stock.
+\item a \link[=data-class]{data} or \link[=obs-class]{obs} object, or a \link[=lifehistorydata-class]{lifehistorydata} or
+\link[=lifehistoryobs-class]{lifehistoryobs} object or a list of them: the \code{NaturalMortality} slot
+of the life-history information.
+}
+
+\code{NaturalMortality(x) <- value} replaces the slot of a \link[=stock-class]{stock},
+\link[=om-class]{om}, \link[=data-class]{data}, \link[=obs-class]{obs}, \link[=lifehistorydata-class]{lifehistorydata}, or
+\link[=lifehistoryobs-class]{lifehistoryobs} object, or of each object in a list of them. When
+\code{x} has more than one stock, \code{value} must be a list named by stock (see
+\code{\link[=StockNames]{StockNames()}}). The slot cannot be replaced in a \link[=hist-class]{hist} or
+\link[=mse-class]{mse} object, because it was used to simulate the historical
+dynamics.
+}
+
 \examples{
 # See NaturalMortalityModels() for all available built-in natural mortality
 # models and the parameter names required for each.

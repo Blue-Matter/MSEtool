@@ -55,7 +55,7 @@ test_that("Simulate() works after raising nSim on a user-built multi-stock OM", 
 test_that("Simulate() drops StockTargeting placeholders sized to an earlier nSim", {
   skip_on_cran()
   om <- MultiStockOM
-  om@StockTargeting <- StockTargeting(om)
+  om@StockTargeting <- .InitStockTargeting(om)
   om@nSim <- nSim(om) + 2
 
   hist <- Simulate(om, silent = TRUE)
