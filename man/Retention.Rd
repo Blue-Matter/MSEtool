@@ -153,8 +153,9 @@ A \link[=retention-class]{retention} object can be attached to a \code{\link[=Fl
 Individual slots may be accessed or modified using \code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}},
 \code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=MeanAtLength]{MeanAtLength()}}, \code{\link[=MeanAtWeight]{MeanAtWeight()}}, and \code{\link[=Classes]{Classes()}}.
 
-An \link[=exploitationdata-class]{exploitationdata} object, or a list of them (the \code{Exploitation} slot of a
-\link[=data-class]{data} object), returns its \code{Retention} slot in the same way.
+An \link[=exploitationdata-class]{exploitationdata} or \link[=exploitationobs-class]{exploitationobs} object, or a list
+of them (the \code{Exploitation} slot of a \link[=data-class]{data} or \link[=obs-class]{obs} object),
+returns its \code{Retention} slot in the same way.
 }
 }
 \examples{

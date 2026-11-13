@@ -163,8 +163,10 @@ Individual slots may be accessed or modified using \code{\link[=Pars]{Pars()}}, 
 \code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=MeanAtLength]{MeanAtLength()}}, \code{\link[=MeanAtWeight]{MeanAtWeight()}}, \code{\link[=Classes]{Classes()}}, and
 \code{\link[=isRel]{isRel()}}.
 
-An \link[=exploitationdata-class]{exploitationdata} object, or a list of them (the \code{Exploitation} slot of a
-\link[=data-class]{data} object), returns its \code{Selectivity} slot in the same way.
+An \link[=exploitationdata-class]{exploitationdata} or \link[=exploitationobs-class]{exploitationobs} object, or a list
+of them (the \code{Exploitation} slot of a \link[=data-class]{data} or \link[=obs-class]{obs} object),
+returns its \code{Selectivity} slot in the same way, as does an
+\link[=indicesobs-class]{indicesobs} object (see also \code{\link[=IndexSelectivity]{IndexSelectivity()}}).
 }
 }
 \examples{

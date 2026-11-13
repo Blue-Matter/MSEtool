@@ -35,7 +35,8 @@
 #' @param Misc List. Miscellaneous additional inputs. Default `list()`.
 #' 
 #' @param x A [catchability-class] object for accessor and replacement
-#'   functions, or an [indicesobs-class] object for `qInc()` and `qInc<-`.
+#'   functions, or an [indicesobs-class] object for `Efficiency()`, `qInc()`,
+#'   and their replacement forms.
 #' @param value The replacement value for the corresponding slot.
 #'
 #' @details
@@ -144,14 +145,14 @@ Catchability <- function(Efficiency = NULL,
 #' @rdname Catchability
 #' @export
 Efficiency <- function(x) {
-  .CheckClass(x, "catchability", "x")
+  .CheckClass(x, c("catchability", "indicesobs"), "x")
   x@Efficiency
 }
 
 #' @rdname Catchability
 #' @export
 `Efficiency<-` <- function(x, value) {
-  .CheckClass(x, "catchability", "x")
+  .CheckClass(x, c("catchability", "indicesobs"), "x")
   x@Efficiency <- value
   methods::validObject(x)
   x

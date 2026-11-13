@@ -1,5 +1,19 @@
 #' Operating Model Control Settings
 #'
+#' Access and replace the simulation control slots of an [om-class] object:
+#' `Control`, `maxF`, `Seed`, and `pStar`. Each accessor also accepts a
+#' [hist-class] or [mse-class] object, acting on its embedded `OM`.
+#'
+#' - `maxF()`: maximum allowable instantaneous fishing mortality.
+#' - `Seed()`: random number generator seed. Changing `Seed` after the OM is
+#'   populated does not redraw values already generated; see [OM()].
+#' - `pStar()`: percentile applied to stochastic management advice.
+#' - `Control()`: the named list of optional settings described below.
+#'
+#' `maxF` and `Seed` can only be replaced in [om-class] objects. `Control` and
+#' `pStar` can also be replaced in [hist-class] objects, and take effect in
+#' the next [Project()].
+#'
 #' `OM@Control` is a named list of optional settings that modify how an
 #' [om-class] operating model is simulated and projected. Every setting has
 #' a default, so `OM@Control` can be empty.
@@ -105,10 +119,21 @@
 #' set internally by [Simulate()] and should not be modified. `DataCV` holds
 #' the default reported data CVs from [SimControl()].
 #'
+#' @param x An [om-class], [hist-class], or [mse-class] object.
+#' @param value The value to assign to the slot.
+#'
+#' @return
+#' - `Control()`, `maxF()`, `Seed()`, and `pStar()` return the value of the
+#'   slot.
+#' - Replacement functions return `x` with the slot updated to `value`.
+#'
 #' @seealso [OM()], [Simulate()], [Project()], [SimControl()]
+#'
+#' @family om
 #'
 #' @examples
 #' OM <- SingleStockOM
+#' maxF(OM) <- 2
 #' Control(OM)$MSYType <- 'Landings'
 #' Control(OM)$DataOM  <- list(Reference = TRUE)
 #'
@@ -123,3 +148,39 @@
 #' MSE  <- Project(Hist, MPs = c('refFMSY', 'myMP'))
 #' @name OMControl
 NULL
+
+#' @rdname OMControl
+#' @export
+pStar <- function(x) .IsHist(x, "pStar")
+
+#' @rdname OMControl
+#' @export
+`pStar<-` <- function(x, value) .AssignOMSlot(x, value, "pStar", "proj")
+
+#' @rdname OMControl
+#' @export
+maxF <- function(x) .IsHist(x, "maxF")
+
+#' @rdname OMControl
+#' @export
+`maxF<-` <- function(x, value) .AssignOMSlot(x, value, "maxF", "struct")
+
+#' @rdname OMControl
+#' @export
+Seed <- function(x) .IsHist(x, "Seed")
+
+#' @rdname OMControl
+#' @export
+`Seed<-` <- function(x, value) {
+  x <- .AssignOMSlot(x, value, "Seed", "struct")
+  .WarnSeedChanged(x)
+  x
+}
+
+#' @rdname OMControl
+#' @export
+Control <- function(x) .IsHist(x, "Control")
+
+#' @rdname OMControl
+#' @export
+`Control<-` <- function(x, value) .AssignOMSlot(x, value, "Control", "proj")

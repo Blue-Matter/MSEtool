@@ -4,13 +4,37 @@
 \alias{Years}
 \alias{CalcYears}
 \alias{Years<-}
-\title{Calculate or Extract Time Step Values}
+\alias{nYear}
+\alias{nYear<-}
+\alias{pYear}
+\alias{pYear<-}
+\alias{CurrentYear}
+\alias{CurrentYear<-}
+\alias{Seasons}
+\alias{Seasons<-}
+\title{Time Steps of an Operating Model}
 \usage{
 CalcYears(nYear, pYear, CurrentYear, Seasons = 1, Period = NULL)
 
 Years(x, Period = NULL)
 
 Years(x) <- value
+
+nYear(x)
+
+nYear(x) <- value
+
+pYear(x)
+
+pYear(x) <- value
+
+CurrentYear(x)
+
+CurrentYear(x) <- value
+
+Seasons(x)
+
+Seasons(x) <- value
 }
 \arguments{
 \item{nYear}{Integer. Number of historical time steps.}
@@ -26,16 +50,30 @@ Years(x) <- value
 See Details.}
 
 \item{x}{An \link[=om-class]{om}, \link[=hist-class]{hist}, or \link[=mse-class]{mse} object, or a list of
-such objects. (\code{Years()} only.)}
+such objects. \code{Years()}, \code{nYear()}, \code{CurrentYear()}, and \code{Seasons()} also
+accept a \link[=data-class]{data} object or a list of them.}
 
-\item{value}{Numeric vector of years to assign to the \code{Years} slot.}
+\item{value}{The value to assign: a numeric vector of years for \verb{Years<-},
+or a single number for the other replacement functions.}
 }
 \value{
-A numeric vector of time step values, or for \code{Years()} applied to
-a list, a list of such vectors.
+\itemize{
+\item \code{CalcYears()} and \code{Years()} return a numeric vector of time step values,
+or for \code{Years()} applied to a list, a list of such vectors.
+\item \code{nYear()}, \code{pYear()}, \code{CurrentYear()}, and \code{Seasons()} return the value
+of the slot of an \link[=om-class]{om} object, or of the embedded \code{OM} of a
+\link[=hist-class]{hist} or \link[=mse-class]{mse} object.
+\item For a \link[=data-class]{data} object, \code{nYear()} returns the number of historical
+years up to \code{YearLH}, \code{CurrentYear()} returns \code{YearLH}, and \code{Seasons()}
+returns the \code{Seasons} slot. For a list of \link[=data-class]{data} objects they return
+a single value when it is the same for every object, and otherwise a list.
+\code{pYear()} gives an error for \link[=data-class]{data} objects; see \code{\link[=ProjectionYear]{ProjectionYear()}}.
+\item Replacement functions return \code{x} with the slot updated. \code{nYear}, \code{pYear},
+\code{CurrentYear}, and \code{Seasons} can only be replaced in \link[=om-class]{om} objects.
+}
 }
 \description{
-Two related functions for working with historical and projection time steps:
+Functions for the historical and projection time steps:
 }
 \details{
 \itemize{
@@ -43,7 +81,11 @@ Two related functions for working with historical and projection time steps:
 explicit parameters.
 \item \code{Years()} extracts time step values from an \link[=om-class]{om}, \link[=hist-class]{hist}, or
 \link[=mse-class]{mse} object, or a list of such objects, by delegating to
-\code{CalcYears()}.
+\code{CalcYears()}. For other objects with a \code{Years} slot (e.g. \link[=data-class]{data},
+\link[=pm-class]{pm}, and the observation components) it returns that slot.
+\item \code{nYear()}, \code{pYear()}, \code{CurrentYear()}, and \code{Seasons()} access and
+replace the number of historical and projection years, the final
+historical year, and the number of seasons per year.
 }
 
 The historical period spans \code{nYear} time steps ending at \code{CurrentYear}.

@@ -211,8 +211,8 @@
 #' SRR(my_stock) <- my_srr # replaces my_stock@SRR
 #' ```
 #'
-#' A [lifehistorydata-class] object, or a list of them (the `LifeHistory` slot of a
-#' [data-class] object), returns its `SRR` slot in the same way.
+#' A [lifehistorydata-class] or [lifehistoryobs-class] object, or a list of
+#' them (the `LifeHistory` slot of a [data-class] or [obs-class] object), returns its `SRR` slot in the same way.
 #'
 #' ## Slot Accessors
 #'
@@ -281,7 +281,7 @@ SRR <- function(Pars = list(h = NA),
   if (.IsStockOrList(Pars)) 
     return(.ExtractStockSlot(Pars, "SRR"))
 
-  if (.IsDataContainer(Pars, 'lifehistorydata'))
+  if (.IsDataContainer(Pars, c('lifehistorydata', 'lifehistoryobs')))
     return(.AccessSlotRecursive(Pars, 'SRR'))
   
   if (is.null(Pars))

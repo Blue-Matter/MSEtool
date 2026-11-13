@@ -138,8 +138,8 @@
 #' Weight(my_stock) <- my_wt  # replaces my_stock@Weight
 #' ```
 #'
-#' A [lifehistorydata-class] object, or a list of them (the `LifeHistory` slot of a
-#' [data-class] object), returns its `Weight` slot in the same way.
+#' A [lifehistorydata-class] or [lifehistoryobs-class] object, or a list of
+#' them (the `LifeHistory` slot of a [data-class] or [obs-class] object), returns its `Weight` slot in the same way.
 #'
 #' ## Slot Accessors
 #'
@@ -201,7 +201,7 @@ Weight <- function(Pars = list(),
   if (.IsStockOrList(Pars)) 
     return(.ExtractStockSlot(Pars, "Weight"))
 
-  if (.IsDataContainer(Pars, 'lifehistorydata'))
+  if (.IsDataContainer(Pars, c('lifehistorydata', 'lifehistoryobs')))
     return(.AccessSlotRecursive(Pars, 'Weight'))
   
   if (is.null(Pars))

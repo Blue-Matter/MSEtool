@@ -100,8 +100,8 @@
 #' Length(my_stock) <- my_L   # replaces my_stock@Length
 #' ```
 #'
-#' A [lifehistorydata-class] object, or a list of them (the `LifeHistory` slot of a
-#' [data-class] object), returns its `Length` slot in the same way.
+#' A [lifehistorydata-class] or [lifehistoryobs-class] object, or a list of
+#' them (the `LifeHistory` slot of a [data-class] or [obs-class] object), returns its `Length` slot in the same way.
 #'
 #' ## Slot Accessors
 #'
@@ -158,7 +158,7 @@ Length <- function(Pars = list(),
   if (.IsStockOrList(Pars)) 
     return(.ExtractStockSlot(Pars, "Length"))
 
-  if (.IsDataContainer(Pars, 'lifehistorydata'))
+  if (.IsDataContainer(Pars, c('lifehistorydata', 'lifehistoryobs')))
     return(.AccessSlotRecursive(Pars, 'Length'))
   
   if (is.null(Pars))

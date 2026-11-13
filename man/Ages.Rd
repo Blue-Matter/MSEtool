@@ -108,8 +108,8 @@ When \code{MaxAge} is a \link[=stock-class]{stock} object, \code{Ages()} acts as
 Ages(my_stock) <- a     # replaces my_stock@Ages with ages-class object `a`
 }\if{html}{\out{</div>}}
 
-A \link[=lifehistorydata-class]{lifehistorydata} object, or a list of them (the \code{LifeHistory} slot of a
-\link[=data-class]{data} object), returns its \code{Ages} slot in the same way.
+A \link[=lifehistorydata-class]{lifehistorydata} or \link[=lifehistoryobs-class]{lifehistoryobs} object, or a list of
+them (the \code{LifeHistory} slot of a \link[=data-class]{data} or \link[=obs-class]{obs} object), returns its \code{Ages} slot in the same way.
 }
 
 \subsection{Slot Accessors}{

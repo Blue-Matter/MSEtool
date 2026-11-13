@@ -152,13 +152,13 @@
 #' instead, which populates defaults and derives `Years`.
 #'
 #' All slots can be accessed or replaced using functions matching the slot
-#' name. See [OM-accessors] for the full list. Slots belonging to sub-objects
+#' name. See [OM()] for the full list. Slots belonging to sub-objects
 #' (`Stock`, `Fleet`, `Obs`, `Imp`, `Data`) are accessed via their own
 #' constructors, which also serve as pass-through accessors when called with
 #' an [om-class] argument.
 #'
 #' @seealso
-#' - [OM()] for the constructor and [OM-accessors] for slot accessors.
+#' - [OM()] for the constructor and slot accessors.
 #' - [Stock()], [Fleet()], [Obs()], [Imp()], [Data()] for sub-object
 #'   constructors and their pass-through accessors.
 #' - [Years()], [CalcYears()] for the derived time-step vector.

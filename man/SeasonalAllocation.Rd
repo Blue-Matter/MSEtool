@@ -75,12 +75,13 @@ HistoricalWeight(om)
 \item \code{\link[=FleetAllocation]{FleetAllocation()}} for how a stock/complex TAC is split among fleets.
 \item \code{\link[=Interval]{Interval()}} for the management update frequency that determines how
 many seasons a single TAC/Effort value covers.
-\item \link{OM-accessors} for the remaining \code{OM} slot accessors.
+\item \code{\link[=OM]{OM()}} for the accessors of the other \code{OM} slots.
 }
 
 Other om:
 \code{\link[=CatchFrac]{CatchFrac()}},
 \code{\link{ComplexOM}},
+\code{\link[=Complexes]{Complexes()}},
 \code{\link[=DataLag]{DataLag()}},
 \code{\link[=EffortAllocation]{EffortAllocation()}},
 \code{\link[=Herm]{Herm()}},
@@ -90,7 +91,7 @@ Other om:
 \code{\link[=MPStartYear]{MPStartYear()}},
 \code{\link{MultiStockOM}},
 \code{\link[=OM]{OM()}},
-\code{\link{OM-accessors}},
+\code{\link{OMControl}},
 \code{\link[=RefSeason]{RefSeason()}},
 \code{\link{SeasonalSpatialOM}},
 \code{\link{SingleStockOM}},

@@ -327,7 +327,7 @@
 #' [TACs()] returns the TAC advice alone.
 #'
 #' @param x An [advice-class] object, for the accessor and replacement
-#'   functions below.
+#'   functions below; a [data-class] object, for `Advice<-`.
 #' @param value The replacement value, for the replacement functions below.
 #'
 #' @return
@@ -340,6 +340,8 @@
 #'   corresponding slot from an [advice-class] object `x`.
 #' - Their replacement forms (e.g. `TAC<-`) return `x` with the corresponding
 #'   slot updated.
+#' - `Advice<-` returns the [data-class] object `x` with its `Advice` slot
+#'   replaced by the [advicedata-class] object `value`.
 #'
 #' @seealso
 #' - [advice-class] for the class definition and slot-level documentation.
@@ -519,4 +521,11 @@ ClosureMode <- function(x) {
 #' @export
 `ClosureMode<-` <- function(x, value) {
   .AssignSlot(x, value, 'ClosureMode')
+}
+
+#' @rdname Advice
+#' @export
+`Advice<-` <- function(x, value) {
+  .CheckClass(x, 'data', 'x')
+  .AssignSlot(x, value, 'Advice')
 }

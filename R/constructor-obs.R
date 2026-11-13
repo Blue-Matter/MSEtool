@@ -153,7 +153,6 @@ CatchObs <- function(CV    = NULL,
   .Object
 }
 
-
 #' CompObs Constructor and Accessors
 #'
 #' Construct a [compobs-class] object defining the observation error structure
@@ -288,13 +287,21 @@ CatchObs <- function(CV    = NULL,
 #' LandingsAtSize(obs) <- CompObs(SampleSize = 150, ESS = 40, Theta = 0.5)
 #' ```
 #'
+#' @param x A [compobs-class] object, for the accessor and replacement
+#'   functions.
+#' @param value The value to assign to the slot.
+#'
 #' @return
 #' - `CompObs()` returns a [compobs-class] object.
-#' - `LandingsAtAge()`, `DiscardsAtAge()`, `LandingsAtSize()`,
-#'   `DiscardsAtSize()` return the corresponding [compobs-class] slot from
-#'   an [obs-class] object `x`.
+#' - `SampleSize()`, `ESS()`, and `Shift()` return the corresponding slot of
+#'   a [compobs-class] object `x`.
 #' - Their replacement forms return `x` with the corresponding slot updated
 #'   and the object revalidated.
+#'
+#' The settings shared with other observation components (`MaxGap`) are
+#' documented in [Obs-accessors], and the `Theta` slot in [Theta()].
+#' [LandingsAtAge()] and the other composition slots of an [obs-class]
+#' object are documented in [Data-accessors].
 #'
 #' @seealso
 #' - [compobs-class] for the class definition and slot descriptions.
@@ -327,7 +334,6 @@ CompObs <- function(SampleSize = NULL,
   methods::validObject(.Object)
   .Object
 }
-
 
 #' EffortObs Constructor and Accessors
 #'
@@ -476,7 +482,6 @@ EffortObs <- function(CV    = NULL,
   .Object
 }
 
-
 #' ExploitationObs Constructor
 #'
 #' Construct an [exploitationobs-class] object defining the observation error
@@ -575,7 +580,6 @@ ExploitationObs <- function(Selectivity      = list(),
   )
   .PopulateObsSpecs(Object, .ExComponents, "ExploitationObs")
 }
-
 
 #' IndicesObs Constructor and Accessors
 #'
@@ -784,11 +788,22 @@ ExploitationObs <- function(Selectivity      = list(),
 #' Survey(obs) <- IndicesObs(Selectivity = c('3' = 1, '4' = 1, '5' = 1))
 #' ```
 #'
+#' @param x An [indicesobs-class] object, for the accessor and replacement
+#'   functions.
+#' @param value The value to assign to the slot.
+#'
 #' @return
 #' - `IndicesObs()` returns an [indicesobs-class] object.
-#' - `CPUE()`, `Survey()` return the corresponding [indicesobs-class] slot
-#'   from an [obs-class] object `x`.
-#' - `CPUE<-`, `Survey<-` return `x` with the slot replaced.
+#' - `Areas()`, `Beta()`, `Stats()`, and `Type()` return the corresponding
+#'   slot of an [indicesobs-class] object `x`.
+#' - Their replacement forms return `x` with the slot replaced.
+#'
+#' The settings shared with other observation components (`CV`, `Error`,
+#' `AC`, `DataCV`, `MaxGap`) are documented in [Obs-accessors]; `Efficiency`
+#' and `qInc` in [Catchability()]; `Selectivity` in [IndexSelectivity()]; and
+#' `TruncSD` and `Units` in [Model-accessors]. [CPUE()] and [Survey()], which
+#' access the [indicesobs-class] slots of an [obs-class] object, are
+#' documented in [Data-accessors].
 #'
 #' @seealso
 #' - [indicesobs-class] for the class definition and slot-level documentation.
@@ -835,7 +850,6 @@ IndicesObs <- function(CV          = NULL,
   methods::validObject(.Object)
   .Object
 }
-
 
 #' LifeHistoryObs Constructor
 #'
@@ -968,7 +982,6 @@ LifeHistoryObs <- function(Ages             = list(),
   )
   .PopulateObsSpecs(Object, .LHComponents, "LifeHistoryObs")
 }
-
 
 #' Obs Constructor and Accessor
 #'
@@ -1240,4 +1253,88 @@ Obs <- function(Name           = NULL,
   }
 
   .AssignSlot(OM, Obs, 'Obs')
+}
+
+#' @rdname IndicesObs
+#' @export
+Areas <- function(x) {
+  .AccessSlot(x, 'Areas')
+}
+
+#' @rdname IndicesObs
+#' @export
+`Areas<-` <- function(x, value) {
+  .AssignSlot(x, value, 'Areas')
+}
+
+#' @rdname IndicesObs
+#' @export
+Beta <- function(x) {
+  .AccessSlot(x, 'Beta')
+}
+
+#' @rdname IndicesObs
+#' @export
+`Beta<-` <- function(x, value) {
+  .AssignSlot(x, value, 'Beta')
+}
+
+#' @rdname IndicesObs
+#' @export
+Stats <- function(x) {
+  .AccessSlot(x, 'Stats')
+}
+
+#' @rdname IndicesObs
+#' @export
+`Stats<-` <- function(x, value) {
+  .AssignSlot(x, value, 'Stats')
+}
+
+#' @rdname IndicesObs
+#' @export
+Type <- function(x) {
+  .AccessSlot(x, 'Type')
+}
+
+#' @rdname IndicesObs
+#' @export
+`Type<-` <- function(x, value) {
+  .AssignSlot(x, value, 'Type')
+}
+
+#' @rdname CompObs
+#' @export
+ESS <- function(x) {
+  .AccessSlot(x, 'ESS')
+}
+
+#' @rdname CompObs
+#' @export
+`ESS<-` <- function(x, value) {
+  .AssignSlot(x, value, 'ESS')
+}
+
+#' @rdname CompObs
+#' @export
+SampleSize <- function(x) {
+  .AccessSlot(x, 'SampleSize')
+}
+
+#' @rdname CompObs
+#' @export
+`SampleSize<-` <- function(x, value) {
+  .AssignSlot(x, value, 'SampleSize')
+}
+
+#' @rdname CompObs
+#' @export
+Shift <- function(x) {
+  .AccessSlot(x, 'Shift')
+}
+
+#' @rdname CompObs
+#' @export
+`Shift<-` <- function(x, value) {
+  .AssignSlot(x, value, 'Shift')
 }

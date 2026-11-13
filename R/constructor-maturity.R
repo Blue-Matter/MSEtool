@@ -193,8 +193,8 @@
 #' Maturity(stock_list, 2)   # returns stock_list[[2]]@Maturity
 #' ```
 #'
-#' A [lifehistorydata-class] object, or a list of them (the `LifeHistory` slot of a
-#' [data-class] object), returns its `Maturity` slot in the same way.
+#' A [lifehistorydata-class] or [lifehistoryobs-class] object, or a list of
+#' them (the `LifeHistory` slot of a [data-class] or [obs-class] object), returns its `Maturity` slot in the same way.
 #'
 #' ## Slot Accessors
 #'
@@ -249,7 +249,7 @@ Maturity <- function(Pars = list(),
   if (.IsStockOrList(Pars)) 
     return(.ExtractStockSlot(Pars, "Maturity"))
 
-  if (.IsDataContainer(Pars, 'lifehistorydata'))
+  if (.IsDataContainer(Pars, c('lifehistorydata', 'lifehistoryobs')))
     return(.AccessSlotRecursive(Pars, 'Maturity'))
   
   if (is.null(Pars))

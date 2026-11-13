@@ -123,8 +123,8 @@
 #' Depletion(my_stock) <- my_dep   # replaces my_stock@Depletion
 #' ```
 #'
-#' A [lifehistorydata-class] object, or a list of them (the `LifeHistory` slot of a
-#' [data-class] object), returns its `Depletion` slot in the same way.
+#' A [lifehistorydata-class] or [lifehistoryobs-class] object, or a list of
+#' them (the `LifeHistory` slot of a [data-class] or [obs-class] object), returns its `Depletion` slot in the same way.
 #'
 #' ## Slot Accessors
 #'
@@ -165,7 +165,7 @@ Depletion <- function(Initial = NULL,
   if (.IsStockOrList(Initial)) 
     return(.ExtractStockSlot(Initial, "Depletion"))
 
-  if (.IsDataContainer(Initial, 'lifehistorydata'))
+  if (.IsDataContainer(Initial, c('lifehistorydata', 'lifehistoryobs')))
     return(.AccessSlotRecursive(Initial, 'Depletion'))
   
   methods::new("depletion",

@@ -169,13 +169,44 @@
 #' ## Accessing and Assigning Slots
 #'
 #' All remaining slots in [om-class] objects can be accessed or assigned
-#' using functions matching the slot names. See [OM-accessors] for the full
-#' list:
+#' using functions matching the slot names, e.g. `Agency(om)` and
+#' `Agency(om) <- "DFO"`. Each accessor also accepts a [hist-class] or
+#' [mse-class] object, acting on its embedded `OM`.
 #'
-#' ```r
-#' Agency(om)
-#' Agency(om) <- "DFO"
-#' ```
+#' | Slots | Help page |
+#' |---|---|
+#' | `Name`, `Agency`, `Author`, `Email`, `Region`, `Latitude`, `Longitude`, `Sponsor`, `Source`, `Misc` | [Metadata] |
+#' | `nSim`, `nReps` | [Dimensions] |
+#' | `nYear`, `pYear`, `CurrentYear`, `Seasons`, `Years` | [Years] |
+#' | `RefSeason`, `RefEffortYears` | [RefSeason()] |
+#' | `DataLag` | [DataLag()] |
+#' | `CatchFrac`, `FleetAllocation` | [FleetAllocation()] |
+#' | `HistoricalWeight`, `SeasonalAllocation` | [SeasonalAllocation()] |
+#' | `EffortAllocation` | [EffortAllocation()] |
+#' | `Complexes`, `Relations` | [Complexes()] |
+#' | `Herm` | [Herm()] |
+#' | `StockTargeting` | [StockTargeting()] |
+#' | `Interval` | [Interval()] |
+#' | `MPStartYear` | [MPStartYear()] |
+#' | `InterimAdvice` | [InterimAdvice()] |
+#' | `pStar`, `maxF`, `Seed`, `Control` | [OMControl] |
+#'
+#' ## Replacing Slots in `hist` and `mse` Objects
+#'
+#' Replacement functions called on a [hist-class] or [mse-class] object
+#' modify its embedded `OM`, subject to when the slot is used:
+#'
+#' - Metadata (`Name`, `Agency`, `Author`, `Email`, `Region`, `Latitude`,
+#'   `Longitude`, `Sponsor`, `Source`): can be replaced in [om-class],
+#'   [hist-class], and [mse-class] objects.
+#' - Settings used in projections (`Control`, `Interval`, `MPStartYear`,
+#'   `InterimAdvice`, `DataLag`, `FleetAllocation`, `SeasonalAllocation`,
+#'   `HistoricalWeight`, `EffortAllocation`, `nReps`, `pStar`): can be
+#'   replaced in [om-class] and [hist-class] objects, and take effect in the
+#'   next [Project()].
+#' - All other slots (e.g. `Seed`, `nYear`, `Seasons`, `maxF`, `Complexes`)
+#'   are used to simulate the historical dynamics and can only be replaced
+#'   in [om-class] objects; re-run [Simulate()] after changing them.
 #'
 #' @return
 #' - `OM()` returns a new [om-class] object when `Name` is a character string
@@ -185,7 +216,6 @@
 #'
 #' @seealso
 #' - [om-class] for the class definition.
-#' - [OM-accessors] for slot accessor and replacement functions.
 #' - [InterimAdvice()] for populating interim TAC/Effort.
 #' - [DataLag()] for the data-lag applied to the MP's `Data`.
 #' - [FleetAllocation()] for splitting a stock/complex TAC among fleets.
@@ -358,84 +388,9 @@ OM <- function(Name        = "A new OM object",
   .Object
 }
 
-
-#' Access and Modify OM Slots
-#'
-#' Accessor and replacement functions for slots in [om-class] objects.
-#' Each function retrieves or replaces the value of the corresponding slot.
-#' All accessors also accept [hist-class] and [mse-class] objects, extracting
-#' the embedded `OM` slot transparently.
-#'
-#' @param x An [om-class], [hist-class], or [mse-class] object. `nYear()`,
-#'   `pYear()`, `CurrentYear()`, and `Seasons()` also accept a [data-class]
-#'   object or a list of them.
-#' @param value Replacement value for the corresponding slot.
-#'
-#' @details
-#' ## Sub-Object Slots
-#'
-#' The `Stock`, `Fleet`, `Obs`, `Imp`, and `Data` slots are accessed and
-#' replaced via their own constructor functions, which act as pass-through
-#' accessors when called with an [om-class] argument. They are not listed
-#' here. See [Stock()], [Fleet()], [Obs()], [Imp()], [Data()].
-#'
-#' ## Read-Only Slots
-#'
-#' `Years` is derived automatically from `nYear`, `pYear`, `CurrentYear`, and
-#' `Seasons` and is read-only. Use [Years()] to extract it.
-#'
-#' ## Replacing Slots in `hist` and `mse` Objects
-#'
-#' Replacement functions called on a [hist-class] or [mse-class] object
-#' modify its embedded `OM`, subject to when the slot is used:
-#'
-#' - Metadata (`Agency`, `Author`, `Email`, `Region`, `Latitude`,
-#'   `Longitude`, `Sponsor`, `Source`): can be replaced in [om-class],
-#'   [hist-class], and [mse-class] objects.
-#' - Settings used in projections (`Control`, `Interval`, `MPStartYear`,
-#'   `InterimAdvice`, `DataLag`, `FleetAllocation`, `SeasonalAllocation`,
-#'   `HistoricalWeight`, `EffortAllocation`, `nReps`, `pStar`): can be
-#'   replaced in [om-class] and [hist-class] objects, and take effect in the
-#'   next [Project()].
-#' - All other slots (e.g. `Seed`, `nYear`, `Seasons`, `maxF`, `Complexes`)
-#'   are used to simulate the historical dynamics and can only be replaced
-#'   in [om-class] objects; re-run [Simulate()] after changing them.
-#'
-#' @return
-#' - Accessor functions return the value of the named slot.
-#' - For a [data-class] object, `nYear()` returns the number of historical
-#'   years up to `YearLH`, `CurrentYear()` returns `YearLH`, and `Seasons()`
-#'   returns the `Seasons` slot. For a list of [data-class] objects they return
-#'   a single value when it is the same for every object, and otherwise a list.
-#'   `pYear()` gives an error for [data-class] objects; see [ProjectionYear()].
-#' - Replacement functions return `x` with the named slot updated.
-#'
-#' @seealso
-#' - [OM()] for the constructor.
-#' - [om-class] for the class definition.
-#' - [Stock()], [Fleet()], [Obs()], [Imp()], [Data()] for sub-object
-#'   pass-through accessors.
-#' - [Years()] for the read-only time-step vector.
-#' - [Log()] for runtime diagnostics.
-#'
-#' @family om
-#'
-#' @examples
-#' om <- OM()
-#'
-#' Agency(om)
-#' Agency(om) <- "DFO"
-#'
-#' nSim(om)
-#' nSim(om) <- 100
-#'
-#' maxF(om)
-#' maxF(om) <- 5
-#'
-#' @name OM-accessors
-NULL
-
-#' @rdname OM-accessors
+#' @rdname OM
+#' @param x An S4 object with an `OM` slot, for `OM<-`.
+#' @param value An [om-class] object, for `OM<-`.
 #' @details
 #' ## Replacing the OM
 #'
@@ -453,125 +408,6 @@ NULL
   .CheckClass(value, "om", "value")
   .AssignSlot(x, value, "OM")
 }
-
-
-#' @rdname OM-accessors
-#' @export
-Agency <- function(x) .IsHist(x, "Agency")
-
-#' @rdname OM-accessors
-#' @export
-`Agency<-` <- function(x, value) .AssignOMSlot(x, value, "Agency", "meta")
-
-#' @rdname OM-accessors
-#' @export
-Author <- function(x) .IsHist(x, "Author")
-
-#' @rdname OM-accessors
-#' @export
-`Author<-` <- function(x, value) .AssignOMSlot(x, value, "Author", "meta")
-
-#' @rdname OM-accessors
-#' @export
-Email <- function(x) .IsHist(x, "Email")
-
-#' @rdname OM-accessors
-#' @export
-`Email<-` <- function(x, value) .AssignOMSlot(x, value, "Email", "meta")
-
-#' @rdname OM-accessors
-#' @export
-Region <- function(x) .IsHist(x, "Region")
-
-#' @rdname OM-accessors
-#' @export
-`Region<-` <- function(x, value) .AssignOMSlot(x, value, "Region", "meta")
-
-#' @rdname OM-accessors
-#' @export
-Latitude <- function(x) .IsHist(x, "Latitude")
-
-#' @rdname OM-accessors
-#' @export
-`Latitude<-` <- function(x, value) .AssignOMSlot(x, value, "Latitude", "meta")
-
-#' @rdname OM-accessors
-#' @export
-Longitude <- function(x) .IsHist(x, "Longitude")
-
-#' @rdname OM-accessors
-#' @export
-`Longitude<-` <- function(x, value) .AssignOMSlot(x, value, "Longitude", "meta")
-
-#' @rdname OM-accessors
-#' @export
-Sponsor <- function(x) .IsHist(x, "Sponsor")
-
-#' @rdname OM-accessors
-#' @export
-`Sponsor<-` <- function(x, value) .AssignOMSlot(x, value, "Sponsor", "meta")
-
-#' @rdname OM-accessors
-#' @export
-Source <- function(x) .IsHist(x, "Source")
-
-#' @rdname OM-accessors
-#' @export
-`Source<-` <- function(x, value) .AssignOMSlot(x, value, "Source", "meta")
-
-
-#' @rdname OM-accessors
-#' @export
-nYear <- function(x) {
-  if (inherits(x, "data") || .IsDataList(x))
-    return(.DataValue(x, \(d) {
-      YearLH <- d@YearLH %||% floor(max(d@Years, -Inf))
-      length(unique(floor(d@Years[d@Years < YearLH + 1])))
-    }))
-  .IsHist(x, "nYear")
-}
-
-#' @rdname OM-accessors
-#' @export
-`nYear<-` <- function(x, value) .AssignOMSlot(x, value, "nYear", "struct")
-
-#' @rdname OM-accessors
-#' @export
-pYear <- function(x) {
-  if (inherits(x, "data") || .IsDataList(x))
-    cli::cli_abort(c("{.code pYear} is not stored in {.cls data} objects",
-                     "i" = "Use {.fn ProjectionYear} for the number of projection time steps in the data"),
-                   call = NULL)
-  .IsHist(x, "pYear")
-}
-
-#' @rdname OM-accessors
-#' @export
-`pYear<-` <- function(x, value) .AssignOMSlot(x, value, "pYear", "struct")
-
-#' @rdname OM-accessors
-#' @export
-CurrentYear <- function(x) {
-  if (inherits(x, "data") || .IsDataList(x))
-    return(.DataValue(x, \(d) d@YearLH))
-  .IsHist(x, "CurrentYear")
-}
-
-#' @rdname OM-accessors
-#' @export
-`CurrentYear<-` <- function(x, value) .AssignOMSlot(x, value, "CurrentYear", "struct")
-
-#' @rdname OM-accessors
-#' @export
-Seasons <- function(x) {
-  if (.IsDataList(x))
-    return(.DataValue(x, \(d) d@Seasons))
-  .IsHist(x, "Seasons")
-}
-
-#' @rdname OM-accessors
-#' @export
-`Seasons<-` <- function(x, value) .AssignOMSlot(x, value, "Seasons", "struct")
 
 #' Reference Point Season Handling for OM Objects
 #'
@@ -619,7 +455,7 @@ Seasons <- function(x) {
 #' - [OM()] for the constructor, [om-class] for the class definition.
 #' - [CalcEquilibrium()], [CalcMSY()] for the reference point calculations
 #'   that use these slots.
-#' - [OM-accessors] for the remaining `OM` slot accessors.
+#' - [OM()] for the accessors of the other `OM` slots.
 #'
 #' @family om
 #'
@@ -643,7 +479,6 @@ RefEffortYears <- function(x) .IsHist(x, "RefEffortYears")
 #' @rdname RefSeason
 #' @export
 `RefEffortYears<-` <- function(x, value) .AssignOMSlot(x, value, "RefEffortYears", "struct")
-
 
 #' Data Lag for OM Objects
 #'
@@ -736,7 +571,7 @@ RefEffortYears <- function(x) .IsHist(x, "RefEffortYears")
 #'   year schedule.
 #' - [Interval()], [MPStartYear()] for the other slots controlling the
 #'   management timeline.
-#' - [OM-accessors] for the remaining `OM` slot accessors.
+#' - [OM()] for the accessors of the other `OM` slots.
 #'
 #' @family om
 #'
@@ -812,7 +647,7 @@ DataLag <- function(x) {
 #' - [OM()] for the constructor, [om-class] for the class definition.
 #' - [HistoricalWeight()]/[SeasonalAllocation()] for how a periodically-set
 #'   TAC or Effort is further split across seasons.
-#' - [OM-accessors] for the remaining `OM` slot accessors.
+#' - [OM()] for the accessors of the other `OM` slots.
 #'
 #' @family om
 #'
@@ -885,7 +720,7 @@ FleetAllocation <- function(x) .IsHist(x, "FleetAllocation")
 #' - [FleetAllocation()] for how a stock/complex TAC is split among fleets.
 #' - [Interval()] for the management update frequency that determines how
 #'   many seasons a single TAC/Effort value covers.
-#' - [OM-accessors] for the remaining `OM` slot accessors.
+#' - [OM()] for the accessors of the other `OM` slots.
 #'
 #' @family om
 #'
@@ -954,7 +789,7 @@ SeasonalAllocation <- function(x) .IsHist(x, "SeasonalAllocation")
 #' - [OM()] for the constructor, [om-class] for the class definition.
 #' - [Advice()] for the interpretation of scalar Effort advice.
 #' - [FleetAllocation()] for the equivalent split applied to TAC.
-#' - [OM-accessors] for the remaining `OM` slot accessors.
+#' - [OM()] for the accessors of the other `OM` slots.
 #'
 #' @family om
 #'
@@ -970,28 +805,6 @@ EffortAllocation <- function(x) .IsHist(x, "EffortAllocation")
 #' @rdname EffortAllocation
 #' @export
 `EffortAllocation<-` <- function(x, value) .AssignOMSlot(x, value, "EffortAllocation", "proj")
-
-
-#' @rdname OM-accessors
-#' @export
-Complexes <- function(x) .IsHist(x, "Complexes")
-
-#' @rdname OM-accessors
-#' @export
-`Complexes<-` <- function(x, value) .AssignOMSlot(x, value, "Complexes", "struct")
-
-#' @rdname OM-accessors
-#' @export
-`Herm<-` <- function(x, value) .AssignOMSlot(x, value, "Herm", "struct")
-
-#' @rdname OM-accessors
-#' @export
-Relations <- function(x) .IsHist(x, "Relations")
-
-#' @rdname OM-accessors
-#' @export
-`Relations<-` <- function(x, value) .AssignOMSlot(x, value, "Relations", "struct")
-
 
 #' Management Interval for OM Objects
 #'
@@ -1045,7 +858,7 @@ Relations <- function(x) .IsHist(x, "Relations")
 #' - [MPStartYear()], [DataLag()] for the other slots controlling the
 #'   management timeline.
 #' - [ManagementScheduleTable()] for previewing the resulting schedule.
-#' - [OM-accessors] for the remaining `OM` slot accessors.
+#' - [OM()] for the accessors of the other `OM` slots.
 #'
 #' @family om
 #'
@@ -1110,7 +923,7 @@ Interval <- function(x) {
 #' - [Interval()], [DataLag()] for the other slots controlling the
 #'   management timeline.
 #' - [ManagementScheduleTable()] for previewing the resulting schedule.
-#' - [OM-accessors] for the remaining `OM` slot accessors.
+#' - [OM()] for the accessors of the other `OM` slots.
 #'
 #' @family om
 #'
@@ -1226,7 +1039,7 @@ MPStartYear <- function(x) .IsHist(x, "MPStartYear")
 #' @seealso
 #' - [OM()] for the constructor, [om-class] for the class definition.
 #' - [MPStartYear()] for the slot controlling when interim years end.
-#' - [OM-accessors] for the remaining `OM` slot accessors.
+#' - [OM()] for the accessors of the other `OM` slots.
 #'
 #' @family om
 #'
@@ -1244,51 +1057,6 @@ InterimAdvice <- function(x) .IsHist(x, "InterimAdvice")
 #' @rdname InterimAdvice
 #' @export
 `InterimAdvice<-` <- function(x, value) .AssignOMSlot(x, value, "InterimAdvice", "proj")
-
-#' @rdname OM-accessors
-#' @export
-nReps <- function(x) .IsHist(x, "nReps")
-
-#' @rdname OM-accessors
-#' @export
-`nReps<-` <- function(x, value) .AssignOMSlot(x, value, "nReps", "proj")
-
-#' @rdname OM-accessors
-#' @export
-pStar <- function(x) .IsHist(x, "pStar")
-
-#' @rdname OM-accessors
-#' @export
-`pStar<-` <- function(x, value) .AssignOMSlot(x, value, "pStar", "proj")
-
-#' @rdname OM-accessors
-#' @export
-maxF <- function(x) .IsHist(x, "maxF")
-
-#' @rdname OM-accessors
-#' @export
-`maxF<-` <- function(x, value) .AssignOMSlot(x, value, "maxF", "struct")
-
-#' @rdname OM-accessors
-#' @export
-Seed <- function(x) .IsHist(x, "Seed")
-
-#' @rdname OM-accessors
-#' @export
-`Seed<-` <- function(x, value) {
-  x <- .AssignOMSlot(x, value, "Seed", "struct")
-  .WarnSeedChanged(x)
-  x
-}
-
-#' @rdname OM-accessors
-#' @export
-Control <- function(x) .IsHist(x, "Control")
-
-#' @rdname OM-accessors
-#' @export
-`Control<-` <- function(x, value) .AssignOMSlot(x, value, "Control", "proj")
-
 
 .IsHist <- function(x, slot_name) {
   if (inherits(x, "hist") || inherits(x, "mse"))
