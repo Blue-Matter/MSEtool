@@ -114,7 +114,7 @@ algorithm.}
 
 \item{Targeting}{Numeric, numeric array, or \code{NULL}. Spatial targeting
 exponent (\code{lambda >= 0}). A scalar, a length-2 vector of uniform bounds
-sampled per simulation, a length-\code{nSim} vector, or an array with
+sampled per simulation (one value per simulation when \code{nSim = 2}), a length-\code{nSim} vector, or an array with
 dimensions \verb{Sim x Year}. The \code{Sim} dimension may be length 1 or match
 \code{nSim}. The \code{Year} dimension must be length 1, match the historical
 years, or have named \code{Year} dimnames. Default \code{NULL}; a value of \code{1}
@@ -178,7 +178,7 @@ procedures will error if \code{Theta} is required and not supplied.
 all simulations and years.
 \item Numeric vector length 2. Treated as lower and upper bounds of a
 uniform distribution, sampled once per simulation and held constant
-across years.
+across years. When \code{nSim = 2}, it is one value per simulation instead.
 \item Numeric vector length \code{nSim}. One value per simulation, held
 constant across years.
 \item Numeric array with dimensions \verb{Sim x Year} and named dimnames, for
@@ -217,8 +217,8 @@ returned. If \code{FALSE}, the raw \code{Effort} array is returned.}
 \value{
 \itemize{
 \item \code{Effort()} returns an \link[=effort-class]{effort} object. If \code{Effort} is a
-\link[=fleet-class]{fleet}, \link[=effort-class]{effort}, \link[=hist-class]{hist}, \link[=obs-class]{obs}, or \link[=mse-class]{mse}
-object, the \code{Effort} slot of that object is returned (as a \code{data.frame}
+\link[=fleet-class]{fleet}, \link[=effort-class]{effort}, \link[=hist-class]{hist}, \link[=obs-class]{obs}, \link[=data-class]{data},
+\link[=advicedata-class]{advicedata}, or \link[=mse-class]{mse} object, the \code{Effort} slot of that object is returned (as a \code{data.frame}
 or array for \link[=hist-class]{hist} and \link[=mse-class]{mse} depending on \code{df}).
 \item \verb{Effort<-} returns \code{x} with the \code{Effort} slot replaced by \code{value}.
 \item \code{Distribution()}, \code{Targeting()}, \code{ReleaseValue()}, \code{Maximum()}, \code{Mode()},
@@ -375,7 +375,8 @@ to test management performance against this uncertainty.
 \subsection{Pass-Through Extraction}{
 
 When \code{Effort} is a \link[=fleet-class]{fleet}, \link[=effort-class]{effort}, \link[=hist-class]{hist},
-\link[=obs-class]{obs}, or \link[=mse-class]{mse} object, \code{Effort()} returns the \code{Effort} slot
+\link[=obs-class]{obs}, \link[=data-class]{data}, \link[=advicedata-class]{advicedata}, or \link[=mse-class]{mse} object (or a
+list of \link[=data-class]{data} objects), \code{Effort()} returns the \code{Effort} slot
 of that object rather than constructing a new one. For \link[=hist-class]{hist} and
 \link[=mse-class]{mse} objects, the \code{df} argument controls whether a tidy
 \code{data.frame} (\code{TRUE}) or the raw array (\code{FALSE}) is returned.

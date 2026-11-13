@@ -78,7 +78,8 @@ CombineMSE <- function(MSE_List, silent = FALSE) {
     }
     if (!silent) cli::cli_progress_update(id = combine_id, extra = list(slot = sl))
   }
-  
+  out@Misc$Advice <- .CombineAdviceSims(purrr::map(MSE_List, \(m) m@Misc$Advice))
+
   totalSim       <- sum(purrr::map_dbl(MSE_List, nSim))
   out            <- .RelabelSim(out, totalSim)
   out@OM@nSim    <- totalSim
@@ -165,7 +166,8 @@ CombineMP <- function(MSE_List, silent = FALSE) {
       slot(out, sl) <- purrr::list_c(PPDlist)
     } else if (sl == "Misc") {
       
-      Misc_slots <- names(ref@Misc)
+      Misc_slots <- union(names(ref@Misc),
+                          intersect(unlist(purrr::map(MSE_List, \(m) names(m@Misc))), .MiscByMP))
       slot(out, sl) <- purrr::map(Misc_slots, \(i) {
         purrr::map(MSE_List, \(m) methods::slot(m, "Misc")[[i]]) |> purrr::list_c()
       }) |>
@@ -244,6 +246,20 @@ CombineMP <- function(MSE_List, silent = FALSE) {
   lapply(entries, \(entry) {
     if (.IsLogEntry(entry) && !is.null(entry$sim)) entry$sim <- entry$sim + offset
     entry
+  })
+}
+
+# MSE@Misc$Advice ([[MP]][[Year]][[Sim]]) with the sims of each object appended in order
+.CombineAdviceSims <- function(AdviceList) {
+  AdviceList <- purrr::compact(AdviceList)
+  if (!length(AdviceList)) return(NULL)
+  Ref <- AdviceList[[1]]
+  purrr::map(stats::setNames(names(Ref), names(Ref)), \(mp) {
+    purrr::map(stats::setNames(names(Ref[[mp]]), names(Ref[[mp]])), \(yr) {
+      out <- do.call(c, unname(purrr::map(AdviceList, \(A) A[[mp]][[yr]])))
+      names(out) <- seq_along(out)
+      out
+    })
   })
 }
 

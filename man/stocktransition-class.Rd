@@ -32,7 +32,9 @@ age" curve - \verb{[sim, age]} or \verb{[sim, age, year]}, values in \verb{[0, 1
 This is \emph{not} transitioned/mover fraction: it starts near \code{1} (almost
 no one has transitioned yet) and decreases toward \code{0} as age increases
 (nearly everyone has transitioned out of \code{From} by the oldest ages).
-Converted internally to a per-age hazard rate applied each year.}
+Converted internally to a per-age hazard rate applied each year. In a
+plus group the hazard applies every year to the whole plus group; see
+\emph{Transition in the Plus Group} in \code{\link[=Herm]{Herm()}}.}
 
 \item{\code{Misc}}{\code{list}. Reserved for additional information or user-defined
 extensions. Not used internally.}

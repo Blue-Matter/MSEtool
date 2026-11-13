@@ -145,7 +145,9 @@ functions below.}
 }
 \value{
 \itemize{
-\item \code{Advice()} returns an \link[=advice-class]{advice} object.
+\item \code{Advice()} returns an \link[=advice-class]{advice} object; an \link[=advicedata-class]{advicedata} object
+(or a list of them) when \code{TAC} is a \link[=data-class]{data} object or list; and a
+data frame when \code{TAC} is an \link[=mse-class]{mse} object.
 \item \code{TAC()}, \code{TACType()}, \code{TACUnit()}, \code{Effort()}, \code{EffType()}, \code{Closure()},
 \code{Selectivity()}, \code{Retention()}, \code{DiscardMortality()},
 \code{BagLimit()}, \code{LimitType()}, \code{ClosureMode()}, \code{Misc()} return the
@@ -379,6 +381,44 @@ of built-in models.
 
 \code{Pars} should be a named list of parameters, where each parameter can be either
 a single numeric value, or a numeric vector length \code{nArea} for area-specific schedules.
+}
+
+\subsection{Pass-Through Extraction}{
+
+When \code{TAC} is a \link[=data-class]{data} object (or a list of them), \code{Advice()} returns
+its \code{Advice} slot, an \link[=advicedata-class]{advicedata} object.
+
+When \code{TAC} is an \link[=mse-class]{mse} object, \code{Advice()} returns a data frame of
+the advice applied in each projection time step for each MP, simulation,
+and fleet, with one row per value. In time steps between management
+updates, the advice is the advice last returned by the MP. Columns:\tabular{ll}{
+   Column \tab Description \cr
+   \code{Sim} \tab Simulation \cr
+   \code{Stock} \tab Stock complex for \code{TAC}, \code{Effort}, \code{Closure}, and \code{BagLimit}; stock for the size regulations \cr
+   \code{MP} \tab Management procedure \cr
+   \code{Year} \tab Time step \cr
+   \code{Period} \tab \code{"Projection"} \cr
+   \code{Fleet} \tab Fleet \cr
+   \code{Area} \tab Area, for area-specific advice and the size regulations; otherwise \code{NA} \cr
+   \code{Variable} \tab \code{"TAC"}, \code{"Effort"}, \code{"Closure"}, \code{"BagLimit"}, \code{"Selectivity"}, \code{"Retention"}, or \code{"DiscardMortality"} \cr
+   \code{Type} \tab \code{TACType} for \code{TAC}; \code{EffType} for \code{Effort}; \code{LimitType} and \code{ClosureMode} for \code{BagLimit}; \code{"Age"} or \code{"Length"} for the size regulations \cr
+   \code{Units} \tab \code{TACUnit} for \code{TAC}; \code{"Number"} for \code{BagLimit} \cr
+   \code{Class} \tab Age or length class, for the size regulations \cr
+   \code{Value} \tab Value of the advice \cr
+}
+
+\itemize{
+\item \code{TAC} and \code{Effort} are the values the MP returned. \code{NA} effort means
+the MP returned no TAC or effort, so each fleet kept its previous effort.
+\item A \code{Closure} applies until the MP returns a new one, so it is filled
+forward from the time step it was returned.
+\item \code{BagLimit} applies only in time steps where the advice includes it.
+\item \code{Selectivity}, \code{Retention}, and \code{DiscardMortality} are the at-age and
+at-length schedules applied in each projection time step, for MPs that
+changed them from the operating model.
+}
+
+\code{\link[=TACs]{TACs()}} returns the TAC advice alone.
 }
 }
 \examples{

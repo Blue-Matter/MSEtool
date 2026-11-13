@@ -40,6 +40,8 @@ just the years it changed. Years before an MP's first recommendation
 than filled with a placeholder.
 
 \code{\link[=TAC]{TAC()}} returns the same data frame when given an \link[=mse-class]{mse} object.
+\code{\link[=Advice]{Advice()}} returns all of the advice issued by each MP, including effort,
+closures, bag limits, and size regulations.
 }
 \seealso{
 \code{\link[=TAC]{TAC()}}, \link[=mse-class]{mse}, \code{\link[=Advice]{Advice()}}, \code{\link[=PPD]{PPD()}}

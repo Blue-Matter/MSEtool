@@ -97,7 +97,8 @@ YearLH(x) <- value
 Access and replace the slots of \link[=obs-class]{obs} and \link[=data-class]{data} objects and
 their data components (\link[=catchdata-class]{catchdata}, \link[=effortdata-class]{effortdata},
 \link[=indicesdata-class]{indicesdata}, \link[=compdata-class]{compdata}). Functions work on any S4 object
-that contains the corresponding slot.
+that contains the corresponding slot, and on a list of \link[=data-class]{data}
+objects, where they return a list with the slot of each.
 }
 \details{
 \tabular{ll}{

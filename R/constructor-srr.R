@@ -24,6 +24,7 @@
 #'   [stock-class]), `SRR()` acts as a pass-through accessor and returns that
 #'   slot. See [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html)
 #'   for accepted input formats (scalar, bounds vector, `nSim`-length vector).
+#'   A length-2 value is `Uniform(lower, upper)` bounds, except when `nSim = 2`, where it is one value per simulation.
 #'   Default `list(h = NA)`.
 #' @param Model `character(1)` or `function`. SRR model identifier. Must match
 #'   one of the models listed in [SRRModels()], or be a custom R function.
@@ -32,7 +33,7 @@
 #'   May be:
 #'   - A scalar: same value for all simulations and years.
 #'   - A length-2 bounds vector: sampled from `Uniform(lower, upper)` once per
-#'     simulation.
+#'     simulation. When `nSim = 2`, it is one value per simulation instead.
 #'   - A length-`nSim` vector: one value per simulation, constant over years.
 #'   - A `Sim x Year` array: deliberately time-varying, e.g. to model a
 #'     regime shift in carrying capacity. See [srr-class] for how this
@@ -210,6 +211,9 @@
 #' SRR(my_stock) <- my_srr # replaces my_stock@SRR
 #' ```
 #'
+#' A [lifehistorydata-class] object, or a list of them (the `LifeHistory` slot of a
+#' [data-class] object), returns its `SRR` slot in the same way.
+#'
 #' ## Slot Accessors
 #'
 #' Individual slots can be read or replaced using generic functions matching
@@ -276,6 +280,9 @@ SRR <- function(Pars = list(h = NA),
   
   if (.IsStockOrList(Pars)) 
     return(.ExtractStockSlot(Pars, "SRR"))
+
+  if (.IsDataContainer(Pars, 'lifehistorydata'))
+    return(.AccessSlotRecursive(Pars, 'SRR'))
   
   if (is.null(Pars))
     return(NULL)

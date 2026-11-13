@@ -216,6 +216,7 @@ Collate:
     'convert-stock.R'
     'zz_MOM_object.r'
     'convert.R'
+    'data-csv.R'
     'data-trim.R'
     'debug-mp.R'
     'doc-om-control.R'

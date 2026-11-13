@@ -289,13 +289,51 @@
 #'   
 #'   `Pars` should be a named list of parameters, where each parameter can be either
 #'   a single numeric value, or a numeric vector length `nArea` for area-specific schedules.
-#'  
+#'
+#' ## Pass-Through Extraction
+#'
+#' When `TAC` is a [data-class] object (or a list of them), `Advice()` returns
+#' its `Advice` slot, an [advicedata-class] object.
+#'
+#' When `TAC` is an [mse-class] object, `Advice()` returns a data frame of
+#' the advice applied in each projection time step for each MP, simulation,
+#' and fleet, with one row per value. In time steps between management
+#' updates, the advice is the advice last returned by the MP. Columns:
+#'
+#' | Column | Description |
+#' |---|---|
+#' | `Sim` | Simulation |
+#' | `Stock` | Stock complex for `TAC`, `Effort`, `Closure`, and `BagLimit`; stock for the size regulations |
+#' | `MP` | Management procedure |
+#' | `Year` | Time step |
+#' | `Period` | `"Projection"` |
+#' | `Fleet` | Fleet |
+#' | `Area` | Area, for area-specific advice and the size regulations; otherwise `NA` |
+#' | `Variable` | `"TAC"`, `"Effort"`, `"Closure"`, `"BagLimit"`, `"Selectivity"`, `"Retention"`, or `"DiscardMortality"` |
+#' | `Type` | `TACType` for `TAC`; `EffType` for `Effort`; `LimitType` and `ClosureMode` for `BagLimit`; `"Age"` or `"Length"` for the size regulations |
+#' | `Units` | `TACUnit` for `TAC`; `"Number"` for `BagLimit` |
+#' | `Class` | Age or length class, for the size regulations |
+#' | `Value` | Value of the advice |
+#'
+#' - `TAC` and `Effort` are the values the MP returned. `NA` effort means
+#'   the MP returned no TAC or effort, so each fleet kept its previous effort.
+#' - A `Closure` applies until the MP returns a new one, so it is filled
+#'   forward from the time step it was returned.
+#' - `BagLimit` applies only in time steps where the advice includes it.
+#' - `Selectivity`, `Retention`, and `DiscardMortality` are the at-age and
+#'   at-length schedules applied in each projection time step, for MPs that
+#'   changed them from the operating model.
+#'
+#' [TACs()] returns the TAC advice alone.
+#'
 #' @param x An [advice-class] object, for the accessor and replacement
 #'   functions below.
 #' @param value The replacement value, for the replacement functions below.
 #'
 #' @return
-#' - `Advice()` returns an [advice-class] object.
+#' - `Advice()` returns an [advice-class] object; an [advicedata-class] object
+#'   (or a list of them) when `TAC` is a [data-class] object or list; and a
+#'   data frame when `TAC` is an [mse-class] object.
 #' - `TAC()`, `TACType()`, `TACUnit()`, `Effort()`, `EffType()`, `Closure()`,
 #'   `Selectivity()`, `Retention()`, `DiscardMortality()`,
 #'   `BagLimit()`, `LimitType()`, `ClosureMode()`, `Misc()` return the
@@ -327,7 +365,13 @@ Advice <- function(TAC              = NULL,
                    LimitType        = 'angler',
                    ClosureMode      = 'discard',
                    Misc             = list()) {
-  
+
+  if (inherits(TAC, 'mse'))
+    return(.ExtractAllAdvice(TAC))
+
+  if (inherits(TAC, 'data') || .IsDataList(TAC))
+    return(.AccessSlot(TAC, 'Advice'))
+
   match_arg_vec <- function(x, choices, arg_name) {
     bad <- !x %in% choices
     if (any(bad))

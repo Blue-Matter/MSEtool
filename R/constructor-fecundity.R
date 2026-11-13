@@ -12,7 +12,7 @@
 #'   `Fecundity()` acts as a pass-through accessor and returns `x@Fecundity`.
 #'   See also
 #'   [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for the
-#'   full set of accepted input formats. Default `list()`.
+#'   full set of accepted input formats. A length-2 value is `Uniform(lower, upper)` bounds, except when `nSim = 2`, where it is one value per simulation. Default `list()`.
 #' @param Model `character(1)` or `function`. Fecundity model identifier. When
 #'   `NULL` (default), the model is inferred from `Pars`.
 #'   May be set to a character string naming a built-in model or to a custom
@@ -124,6 +124,9 @@
 #' Fecundity(my_stock) <- my_fec   # replaces my_stock@Fecundity
 #' ```
 #'
+#' A [lifehistorydata-class] object, or a list of them (the `LifeHistory` slot of a
+#' [data-class] object), returns its `Fecundity` slot in the same way.
+#'
 #' ## Slot Accessors
 #'
 #' Individual slots can be read or replaced using generic functions matching
@@ -172,6 +175,9 @@ Fecundity <- function(Pars = list(),
   
   if (.IsStockOrList(Pars)) 
     return(.ExtractStockSlot(Pars, "Fecundity"))
+
+  if (.IsDataContainer(Pars, 'lifehistorydata'))
+    return(.AccessSlotRecursive(Pars, 'Fecundity'))
   
   if (is.null(Pars))
     return(NULL)

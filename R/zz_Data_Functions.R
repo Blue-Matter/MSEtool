@@ -1379,7 +1379,7 @@ TAC <- function(Data, MPs = NA, reps = 100, timelimit = 1, checkMP=TRUE, silent=
   if (inherits(Data, 'mse'))
     return(TACs(Data))
 
-  if (inherits(Data,'advice'))
+  if (inherits(Data, c('advice', 'advicedata')))
     return(Data@TAC)
   
   if (inherits(Data,'imp'))

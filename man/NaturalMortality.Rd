@@ -26,7 +26,7 @@ names must match the arguments of a built-in mortality model (see
 is a \link[=stock-class]{stock} object, \code{NaturalMortality()} acts as a pass-through
 accessor and returns \code{x@NaturalMortality}. See also
 \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for the
-full set of accepted input formats. Default \code{list()}.}
+full set of accepted input formats. A length-2 value is \code{Uniform(lower, upper)} bounds, except when \code{nSim = 2}, where it is one value per simulation. Default \code{list()}.}
 
 \item{Model}{\code{character(1)} or \code{function}. Natural mortality model
 identifier. When \code{NULL} (default), the model is inferred from \code{Pars}.
@@ -157,6 +157,9 @@ When \code{Pars} is a \link[=stock-class]{stock} object, \code{NaturalMortality(
 \if{html}{\out{<div class="sourceCode r">}}\preformatted{NaturalMortality(my_stock)           # returns my_stock@NaturalMortality
 NaturalMortality(my_stock) <- my_M   # replaces it
 }\if{html}{\out{</div>}}
+
+A \link[=lifehistorydata-class]{lifehistorydata} object, or a list of them (the \code{LifeHistory} slot of a
+\link[=data-class]{data} object), returns its \code{NaturalMortality} slot in the same way.
 }
 
 \subsection{Slot Accessors}{

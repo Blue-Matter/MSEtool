@@ -59,6 +59,9 @@
 #' Ages(my_stock) <- a     # replaces my_stock@Ages with ages-class object `a`
 #' ```
 #'
+#' A [lifehistorydata-class] object, or a list of them (the `LifeHistory` slot of a
+#' [data-class] object), returns its `Ages` slot in the same way.
+#'
 #' ## Slot Accessors
 #'
 #' Individual slots can be read or replaced using functions that match the slot
@@ -103,6 +106,9 @@ Ages <- function(MaxAge,
   
   if (.IsStockOrList(MaxAge)) 
     return(.ExtractStockSlot(MaxAge, 'Ages'))
+
+  if (.IsDataContainer(MaxAge, 'lifehistorydata'))
+    return(.AccessSlotRecursive(MaxAge, 'Ages'))
   
   if (is.null(MaxAge))
     return(NULL)

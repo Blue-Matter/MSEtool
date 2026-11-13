@@ -11,7 +11,8 @@
 #'     historical period. No adjustment to recruitment deviations.
 #'   - Scalar: same depletion for all simulations.
 #'   - Length-2 bounds vector: depletion sampled from `Uniform(lower, upper)`
-#'     independently for each simulation.
+#'     independently for each simulation. When `nSim = 2`, a length-2 vector
+#'     is one value per simulation.
 #'   - Length-`nSim` vector: one value per simulation.
 #'   When provided, the historical period starts from a fished equilibrium
 #'   with biomass relative to `Reference` in the first time step equal to the
@@ -122,6 +123,9 @@
 #' Depletion(my_stock) <- my_dep   # replaces my_stock@Depletion
 #' ```
 #'
+#' A [lifehistorydata-class] object, or a list of them (the `LifeHistory` slot of a
+#' [data-class] object), returns its `Depletion` slot in the same way.
+#'
 #' ## Slot Accessors
 #'
 #' Individual slots can be read or replaced using generic functions matching
@@ -160,6 +164,9 @@ Depletion <- function(Initial = NULL,
   
   if (.IsStockOrList(Initial)) 
     return(.ExtractStockSlot(Initial, "Depletion"))
+
+  if (.IsDataContainer(Initial, 'lifehistorydata'))
+    return(.AccessSlotRecursive(Initial, 'Depletion'))
   
   methods::new("depletion",
                Initial   = Initial,

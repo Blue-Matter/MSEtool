@@ -66,9 +66,13 @@ PopulateDepletion <- function(Depletion,
     nSim <- 1
   }
   
-  if (length(Initial) == 2) {
+  if (length(Initial) == 2 && identical(as.numeric(nSim), 2))
+    cli::cli_inform(c("i" = "With {.code nSim = 2}, a length-2 parameter value is used as one value per simulation, not as uniform bounds."),
+                    .frequency = "once", .frequency_id = "MSEtool_length2_nSim2")
+
+  if (length(Initial) == 2 && !identical(as.numeric(nSim), 2)) {
     # sample from uniform distribution
-    if (is.na(nSim)) {
+    if (is.null(nSim) || is.na(nSim)) {
       cli::cli_abort(c("`nSim` required to generate stochastic values",
                        "i" = "Provide number of simulations to `nSim` argument"
       ))

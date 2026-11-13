@@ -29,7 +29,8 @@ the start of the historical period. Accepted formats:
 historical period. No adjustment to recruitment deviations.
 \item Scalar: same depletion for all simulations.
 \item Length-2 bounds vector: depletion sampled from \code{Uniform(lower, upper)}
-independently for each simulation.
+independently for each simulation. When \code{nSim = 2}, a length-2 vector
+is one value per simulation.
 \item Length-\code{nSim} vector: one value per simulation.
 When provided, the historical period starts from a fished equilibrium
 with biomass relative to \code{Reference} in the first time step equal to the
@@ -167,6 +168,9 @@ When \code{Initial} is a \link[=stock-class]{stock} object, \code{Depletion()} r
 \if{html}{\out{<div class="sourceCode r">}}\preformatted{Depletion(my_stock)             # returns my_stock@Depletion
 Depletion(my_stock) <- my_dep   # replaces my_stock@Depletion
 }\if{html}{\out{</div>}}
+
+A \link[=lifehistorydata-class]{lifehistorydata} object, or a list of them (the \code{LifeHistory} slot of a
+\link[=data-class]{data} object), returns its \code{Depletion} slot in the same way.
 }
 
 \subsection{Slot Accessors}{

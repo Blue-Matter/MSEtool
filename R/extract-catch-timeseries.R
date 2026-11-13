@@ -38,7 +38,7 @@
 #' `MP = "Historical"`.
 #'
 #' @param object A [hist-class], [mse-class], [obs-class], or [data-class]
-#'   object.
+#'   object, or a list of [data-class] objects.
 #' @param df Logical. Applies to [hist-class] and [mse-class] objects only.
 #'   If `FALSE` the raw array slot is returned. If `TRUE` (default) a tidy
 #'   `data.frame` is returned. Ignored for [obs-class] and [data-class]
@@ -138,6 +138,9 @@ Landings <- function(object,
   if (inherits(object, 'obs'))
     return(object@Landings)
 
+  if (.IsDataList(object))
+    return(purrr::map(object, \(d) Landings(d, byAge = byAge, bySize = bySize, byFleet = byFleet)))
+
   if (byAge)  bySize <- FALSE
   if (bySize) byAge  <- FALSE
 
@@ -190,6 +193,9 @@ Discards <- function(object,
 
   if (inherits(object, 'obs'))
     return(object@Discards)
+
+  if (.IsDataList(object))
+    return(purrr::map(object, \(d) Discards(d, byAge = byAge, bySize = bySize, byFleet = byFleet)))
 
   if (byAge)  bySize <- FALSE
   if (bySize) byAge  <- FALSE

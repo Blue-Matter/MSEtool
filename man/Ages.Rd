@@ -107,6 +107,9 @@ When \code{MaxAge} is a \link[=stock-class]{stock} object, \code{Ages()} acts as
 \if{html}{\out{<div class="sourceCode r">}}\preformatted{Ages(my_stock)          # returns my_stock@Ages
 Ages(my_stock) <- a     # replaces my_stock@Ages with ages-class object `a`
 }\if{html}{\out{</div>}}
+
+A \link[=lifehistorydata-class]{lifehistorydata} object, or a list of them (the \code{LifeHistory} slot of a
+\link[=data-class]{data} object), returns its \code{Ages} slot in the same way.
 }
 
 \subsection{Slot Accessors}{

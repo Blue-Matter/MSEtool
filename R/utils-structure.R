@@ -61,8 +61,12 @@
   if (inherits(Par, 'array'))
     return(.NameParDimensions(Par, nSim, Years, nArea))
   
+  if (length(Par) == 2 && identical(as.numeric(nSim), 2))
+    cli::cli_inform(c("i" = "With {.code nSim = 2}, a length-2 parameter value is used as one value per simulation, not as uniform bounds."),
+                    .frequency = "once", .frequency_id = "MSEtool_length2_nSim2")
+
   # Length-2 vector: sample from uniform distribution
-  if (length(Par) == 2 && nSim != 2) {
+  if (length(Par) == 2 && (is.null(nSim) || nSim != 2)) {
     Par <- sort(Par)
     if (is.null(nSim))
       cli::cli_abort(c(
