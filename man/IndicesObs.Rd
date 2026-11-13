@@ -2,6 +2,14 @@
 % Please edit documentation in R/constructor-obs.R
 \name{IndicesObs}
 \alias{IndicesObs}
+\alias{Areas}
+\alias{Areas<-}
+\alias{Beta}
+\alias{Beta<-}
+\alias{Stats}
+\alias{Stats<-}
+\alias{Type}
+\alias{Type<-}
 \title{IndicesObs Constructor and Accessors}
 \usage{
 IndicesObs(
@@ -19,6 +27,22 @@ IndicesObs(
   DataCV = NULL,
   Misc = list()
 )
+
+Areas(x)
+
+Areas(x) <- value
+
+Beta(x)
+
+Beta(x) <- value
+
+Stats(x)
+
+Stats(x) <- value
+
+Type(x)
+
+Type(x) <- value
 }
 \arguments{
 \item{CV}{\code{numeric} or \code{NULL}. Coefficient of variation of the lognormal
@@ -160,14 +184,26 @@ CV of the last historical year where there is one, otherwise
 \code{SimControl(DataCV)}. Also get or set with \code{\link[=DataCV]{DataCV()}} and \verb{DataCV<-}.}
 
 \item{Misc}{\code{list}. Miscellaneous additional objects. Default \code{list()}.}
+
+\item{x}{An \link[=indicesobs-class]{indicesobs} object, for the accessor and replacement
+functions.}
+
+\item{value}{The value to assign to the slot.}
 }
 \value{
 \itemize{
 \item \code{IndicesObs()} returns an \link[=indicesobs-class]{indicesobs} object.
-\item \code{CPUE()}, \code{Survey()} return the corresponding \link[=indicesobs-class]{indicesobs} slot
-from an \link[=obs-class]{obs} object \code{x}.
-\item \verb{CPUE<-}, \verb{Survey<-} return \code{x} with the slot replaced.
+\item \code{Areas()}, \code{Beta()}, \code{Stats()}, and \code{Type()} return the corresponding
+slot of an \link[=indicesobs-class]{indicesobs} object \code{x}.
+\item Their replacement forms return \code{x} with the slot replaced.
 }
+
+The settings shared with other observation components (\code{CV}, \code{Error},
+\code{AC}, \code{DataCV}, \code{MaxGap}) are documented in \link{Obs-accessors}; \code{Efficiency}
+and \code{qInc} in \code{\link[=Catchability]{Catchability()}}; \code{Selectivity} in \code{\link[=IndexSelectivity]{IndexSelectivity()}}; and
+\code{TruncSD} and \code{Units} in \link{Model-accessors}. \code{\link[=CPUE]{CPUE()}} and \code{\link[=Survey]{Survey()}}, which
+access the \link[=indicesobs-class]{indicesobs} slots of an \link[=obs-class]{obs} object, are
+documented in \link{Data-accessors}.
 }
 \description{
 Construct an \link[=indicesobs-class]{indicesobs} object defining observation error for a

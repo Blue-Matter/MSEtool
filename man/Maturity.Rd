@@ -28,19 +28,15 @@ Maturity(x) <- value
 \item{Pars}{\code{list}. Named list of maturity parameters. Element names must
 match the arguments of a built-in maturity model (see \code{\link[=MaturityModels]{MaturityModels()}}).
 When \code{Pars} is non-empty and \code{Model} is \code{NULL}, the model is inferred
-automatically from the parameter names. When \code{Pars} is a \link[=stock-class]{stock} object,
-\code{Maturity()} acts as a pass-through accessor and returns \code{x@Maturity};
-when \code{Pars} is a list of \link[=stock-class]{stock} objects, \code{Model} is treated as an
-integer index selecting which stock's \code{Maturity} slot to return — see
-\emph{Pass-Through Access}. See also
+automatically from the parameter names. An object that contains \code{Maturity} objects returns them;
+see \emph{Pass-Through Access}. See also
 \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for the
 full set of accepted input formats. A length-2 value is \code{Uniform(lower, upper)} bounds, except when \code{nSim = 2}, where it is one value per simulation. Default \code{list()}.}
 
-\item{Model}{\code{character(1)}, \code{function}, or \code{integer(1)}. Maturity model
+\item{Model}{\code{character(1)} or \code{function}. Maturity model
 identifier. When \code{NULL} (default), the model is inferred from \code{Pars}.
 May be set to a character string naming a built-in model or
-to a custom R function. When \code{Pars} is a list of \link[=stock-class]{stock} objects,
-\code{Model} is an integer index — see \emph{Pass-Through Access} and
+to a custom R function. See
 \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules}.
 A custom function takes the size argument \code{Ages}, \code{Length}, or \code{Weight}
 (the basis it is evaluated on) and one argument for each parameter in
@@ -92,17 +88,18 @@ mortality that differs from the maturity schedule.}
 \item{Misc}{\code{list}. Named list of optional user-defined inputs stored on the
 object and passed through to custom model functions. Default \code{list()}.}
 
-\item{x}{A \link[=maturity-class]{maturity} object for slot accessors, or a \link[=stock-class]{stock}
-object for \verb{Maturity<-}.}
+\item{x}{A \link[=maturity-class]{maturity} object for slot accessors, or an object that contains
+\code{Maturity} objects for \verb{Maturity<-} (see \emph{Pass-Through Access}).}
 
-\item{value}{For \verb{Maturity<-}: a \link[=maturity-class]{maturity} object. For
+\item{value}{For \verb{Maturity<-}: a \link[=maturity-class]{maturity} object, or a list of them named by
+stock (see \emph{Pass-Through Access}). For
 \verb{Semelparous<-}: a \code{logical(1)} or a \verb{Sim × Age × Year} array.}
 }
 \value{
 \itemize{
-\item \code{Maturity()} returns a \link[=maturity-class]{maturity} object. If \code{Pars} is a
-\link[=stock-class]{stock}, returns \code{x@Maturity}.
-\item \verb{Maturity<-} returns the \link[=stock-class]{stock} \code{x} with the \code{Maturity} slot
+\item \code{Maturity()} returns a \link[=maturity-class]{maturity} object. If \code{Pars} contains \code{Maturity}
+objects, returns them (see \emph{Pass-Through Access}).
+\item \verb{Maturity<-} returns \code{x} with the \code{Maturity} slot
 replaced
 \item \code{Semelparous()} returns the \code{Semelparous} slot from \code{x} (a scalar before
 \code{\link[=Populate]{Populate()}}, a \verb{Sim × Age × Year} array after).
@@ -224,25 +221,6 @@ The same conversions apply when \code{MeanAtLength} or \code{MeanAtWeight} are
 supplied directly by the user.
 }
 
-\subsection{Pass-Through Access from a Stock}{
-
-When \code{Pars} is a \link[=stock-class]{stock} object, \code{Maturity()} returns the \code{Maturity}
-slot directly:
-
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{Maturity(my_stock)             # returns my_stock@Maturity
-Maturity(my_stock) <- my_mat   # replaces my_stock@Maturity
-}\if{html}{\out{</div>}}
-
-When \code{Pars} is a list of \link[=stock-class]{stock} objects, \code{Model} is an integer index
-selecting which stock's slot to return:
-
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{Maturity(stock_list, 2)   # returns stock_list[[2]]@Maturity
-}\if{html}{\out{</div>}}
-
-A \link[=lifehistorydata-class]{lifehistorydata} object, or a list of them (the \code{LifeHistory} slot of a
-\link[=data-class]{data} object), returns its \code{Maturity} slot in the same way.
-}
-
 \subsection{Slot Accessors}{
 
 Individual slots can be read or replaced using generic functions matching
@@ -258,6 +236,28 @@ Classes(mat)         <- seq(0, 80, by = 5)
 }\if{html}{\out{</div>}}
 }
 }
+\section{Pass-Through Access}{
+
+When \code{Pars} is an object that contains \code{Maturity} objects,
+\code{Maturity()} returns them instead of constructing a new object:
+\itemize{
+\item a \link[=stock-class]{stock} object: its \code{Maturity} slot.
+\item an \link[=om-class]{om}, \link[=hist-class]{hist}, or \link[=mse-class]{mse} object, or a list of
+\link[=stock-class]{stock} objects: a list with the \code{Maturity} slot of each stock.
+\item a \link[=data-class]{data} or \link[=obs-class]{obs} object, or a \link[=lifehistorydata-class]{lifehistorydata} or
+\link[=lifehistoryobs-class]{lifehistoryobs} object or a list of them: the \code{Maturity} slot
+of the life-history information.
+}
+
+\code{Maturity(x) <- value} replaces the slot of a \link[=stock-class]{stock},
+\link[=om-class]{om}, \link[=data-class]{data}, \link[=obs-class]{obs}, \link[=lifehistorydata-class]{lifehistorydata}, or
+\link[=lifehistoryobs-class]{lifehistoryobs} object, or of each object in a list of them. When
+\code{x} has more than one stock, \code{value} must be a list named by stock (see
+\code{\link[=StockNames]{StockNames()}}). The slot cannot be replaced in a \link[=hist-class]{hist} or
+\link[=mse-class]{mse} object, because it was used to simulate the historical
+dynamics.
+}
+
 \examples{
 # See MaturityModels() for all available built-in maturity models and the
 # parameter names required for each.

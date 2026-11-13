@@ -101,6 +101,7 @@ structural variants.
 Other om:
 \code{\link[=CatchFrac]{CatchFrac()}},
 \code{\link{ComplexOM}},
+\code{\link[=Complexes]{Complexes()}},
 \code{\link[=DataLag]{DataLag()}},
 \code{\link[=EffortAllocation]{EffortAllocation()}},
 \code{\link[=Herm]{Herm()}},
@@ -111,9 +112,10 @@ Other om:
 \code{\link[=MPStartYear]{MPStartYear()}},
 \code{\link{MultiStockOM}},
 \code{\link[=OM]{OM()}},
-\code{\link{OM-accessors}},
+\code{\link{OMControl}},
 \code{\link[=RefSeason]{RefSeason()}},
 \code{\link{SingleStockOM}},
+\code{\link[=StockTargeting]{StockTargeting()}},
 \code{\link{TwoFleetOM}},
 \code{\link{om-class}},
 \code{\link{stocktransition-class}}

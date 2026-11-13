@@ -44,8 +44,8 @@ simulations and years.
 projected years.
 }
 
-If \code{Efficiency} is a \link[=fleet-class]{fleet} object, the \code{Catchability} slot of
-that fleet is returned (see Details).}
+An object that contains \code{Catchability} objects returns them; see
+\emph{Pass-Through Access}.}
 
 \item{qCV}{Numeric or \code{NULL}. Coefficient of variation for lognormal
 stochastic variation in catchability. Applied to projected years only
@@ -62,15 +62,18 @@ supply a fully specified \code{Efficiency} array directly.}
 \item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
 
 \item{x}{A \link[=catchability-class]{catchability} object for accessor and replacement
-functions, or an \link[=indicesobs-class]{indicesobs} object for \code{qInc()} and \verb{qInc<-}.}
+functions, or an \link[=indicesobs-class]{indicesobs} object for \code{Efficiency()}, \code{qInc()},
+and their replacement forms. For \verb{Catchability<-}, an object that
+contains \code{Catchability} objects (see \emph{Pass-Through Access}).}
 
-\item{value}{The replacement value for the corresponding slot.}
+\item{value}{The replacement value for the corresponding slot. For
+\verb{Catchability<-}, a \link[=catchability-class]{catchability} object, or a list of them named
+by fleet or by stock and fleet (see \emph{Pass-Through Access}).}
 }
 \value{
 \itemize{
-\item \code{Catchability()} returns a \link[=catchability-class]{catchability} object. If \code{Efficiency}
-is a \link[=fleet-class]{fleet} object, the \code{Catchability} slot of that fleet is
-returned.
+\item \code{Catchability()} returns a \link[=catchability-class]{catchability} object. If \code{Efficiency} contains \code{Catchability}
+objects, returns them (see \emph{Pass-Through Access}).
 \item \verb{Catchability<-} returns \code{x} with the \code{Catchability} slot replaced by
 \code{value}.
 \item \code{Efficiency()}, \code{qCV()}, \code{qInc()} return the corresponding slot from
@@ -134,6 +137,29 @@ A \link[=catchability-class]{catchability} object can be attached to a \code{\li
 \code{Catchability(Fleet)}.
 }
 }
+\section{Pass-Through Access}{
+
+When \code{Efficiency} is an object that contains \code{Catchability} objects,
+\code{Catchability()} returns them instead of constructing a new object:
+\itemize{
+\item a \link[=fleet-class]{fleet} object: its \code{Catchability} slot.
+\item an \link[=om-class]{om}, \link[=hist-class]{hist}, or \link[=mse-class]{mse} object: a list by stock of
+lists by fleet, with the \code{Catchability} slot of each fleet. A list of
+\link[=fleet-class]{fleet} objects, or a list of them by stock, returns a list with
+the same structure.
+}
+
+\code{Catchability(x) <- value} replaces the slot of a \link[=fleet-class]{fleet} or
+\link[=om-class]{om} object or of
+each object in a list of them. For an \link[=om-class]{om} object, \code{value} is a
+single object when the OM has one stock and one fleet, a list named by
+fleet (see \code{\link[=FleetNames]{FleetNames()}}) when it has one stock and several fleets, and a
+list named by stock (see \code{\link[=StockNames]{StockNames()}}) of lists named by fleet when it
+has several stocks. The slot cannot be replaced in a \link[=hist-class]{hist} or
+\link[=mse-class]{mse} object, because it was used to simulate the historical
+dynamics.
+}
+
 \examples{
 ## ---- Empty Catchability object ----
 # An empty Catchability object is created by default when constructing a Fleet.

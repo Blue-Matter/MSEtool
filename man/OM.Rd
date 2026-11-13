@@ -2,6 +2,7 @@
 % Please edit documentation in R/constructor-om.R
 \name{OM}
 \alias{OM}
+\alias{OM<-}
 \title{OM Constructor and Accessor}
 \usage{
 OM(
@@ -46,6 +47,8 @@ OM(
   Misc = list(),
   Source = NULL
 )
+
+OM(x) <- value
 }
 \arguments{
 \item{Name}{Character. Name of the operating model. Default
@@ -199,6 +202,10 @@ Default \code{list()}.}
 
 \item{Source}{Character. References to data sources or documentation.
 Supports Markdown. Default \code{NULL}.}
+
+\item{x}{An S4 object with an \code{OM} slot, for \verb{OM<-}.}
+
+\item{value}{An \link[=om-class]{om} object, for \verb{OM<-}.}
 }
 \value{
 \itemize{
@@ -265,12 +272,54 @@ Data(om)   <- Data(...)
 \subsection{Accessing and Assigning Slots}{
 
 All remaining slots in \link[=om-class]{om} objects can be accessed or assigned
-using functions matching the slot names. See \link{OM-accessors} for the full
-list:
+using functions matching the slot names, e.g. \code{Agency(om)} and
+\code{Agency(om) <- "DFO"}. Each accessor also accepts a \link[=hist-class]{hist} or
+\link[=mse-class]{mse} object, acting on its embedded \code{OM}.\tabular{ll}{
+   Slots \tab Help page \cr
+   \code{Name}, \code{Agency}, \code{Author}, \code{Email}, \code{Region}, \code{Latitude}, \code{Longitude}, \code{Sponsor}, \code{Source}, \code{Misc} \tab \link{Metadata} \cr
+   \code{nSim}, \code{nReps} \tab \link{Dimensions} \cr
+   \code{nYear}, \code{pYear}, \code{CurrentYear}, \code{Seasons}, \code{Years} \tab \link{Years} \cr
+   \code{RefSeason}, \code{RefEffortYears} \tab \code{\link[=RefSeason]{RefSeason()}} \cr
+   \code{DataLag} \tab \code{\link[=DataLag]{DataLag()}} \cr
+   \code{CatchFrac}, \code{FleetAllocation} \tab \code{\link[=FleetAllocation]{FleetAllocation()}} \cr
+   \code{HistoricalWeight}, \code{SeasonalAllocation} \tab \code{\link[=SeasonalAllocation]{SeasonalAllocation()}} \cr
+   \code{EffortAllocation} \tab \code{\link[=EffortAllocation]{EffortAllocation()}} \cr
+   \code{Complexes}, \code{Relations} \tab \code{\link[=Complexes]{Complexes()}} \cr
+   \code{Herm} \tab \code{\link[=Herm]{Herm()}} \cr
+   \code{StockTargeting} \tab \code{\link[=StockTargeting]{StockTargeting()}} \cr
+   \code{Interval} \tab \code{\link[=Interval]{Interval()}} \cr
+   \code{MPStartYear} \tab \code{\link[=MPStartYear]{MPStartYear()}} \cr
+   \code{InterimAdvice} \tab \code{\link[=InterimAdvice]{InterimAdvice()}} \cr
+   \code{pStar}, \code{maxF}, \code{Seed}, \code{Control} \tab \link{OMControl} \cr
+}
 
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{Agency(om)
-Agency(om) <- "DFO"
-}\if{html}{\out{</div>}}
+}
+
+\subsection{Replacing Slots in \code{hist} and \code{mse} Objects}{
+
+Replacement functions called on a \link[=hist-class]{hist} or \link[=mse-class]{mse} object
+modify its embedded \code{OM}, subject to when the slot is used:
+\itemize{
+\item Metadata (\code{Name}, \code{Agency}, \code{Author}, \code{Email}, \code{Region}, \code{Latitude},
+\code{Longitude}, \code{Sponsor}, \code{Source}): can be replaced in \link[=om-class]{om},
+\link[=hist-class]{hist}, and \link[=mse-class]{mse} objects.
+\item Settings used in projections (\code{Control}, \code{Interval}, \code{MPStartYear},
+\code{InterimAdvice}, \code{DataLag}, \code{FleetAllocation}, \code{SeasonalAllocation},
+\code{HistoricalWeight}, \code{EffortAllocation}, \code{nReps}, \code{pStar}): can be
+replaced in \link[=om-class]{om} and \link[=hist-class]{hist} objects, and take effect in the
+next \code{\link[=Project]{Project()}}.
+\item All other slots (e.g. \code{Seed}, \code{nYear}, \code{Seasons}, \code{maxF}, \code{Complexes})
+are used to simulate the historical dynamics and can only be replaced
+in \link[=om-class]{om} objects; re-run \code{\link[=Simulate]{Simulate()}} after changing them.
+}
+}
+
+\subsection{Replacing the OM}{
+
+\code{OM(x) <- value} replaces the \code{OM} slot of an S4 object that has one with
+the \link[=om-class]{om} object \code{value}. The \code{OM} of a \link[=hist-class]{hist} or \link[=mse-class]{mse}
+object cannot be replaced, because it was used to simulate the dynamics
+stored in that object.
 }
 }
 \examples{
@@ -287,7 +336,6 @@ Years(om)
 \seealso{
 \itemize{
 \item \link[=om-class]{om} for the class definition.
-\item \link{OM-accessors} for slot accessor and replacement functions.
 \item \code{\link[=InterimAdvice]{InterimAdvice()}} for populating interim TAC/Effort.
 \item \code{\link[=DataLag]{DataLag()}} for the data-lag applied to the MP's \code{Data}.
 \item \code{\link[=FleetAllocation]{FleetAllocation()}} for splitting a stock/complex TAC among fleets.
@@ -308,6 +356,7 @@ constructors and their pass-through accessors.
 Other om:
 \code{\link[=CatchFrac]{CatchFrac()}},
 \code{\link{ComplexOM}},
+\code{\link[=Complexes]{Complexes()}},
 \code{\link[=DataLag]{DataLag()}},
 \code{\link[=EffortAllocation]{EffortAllocation()}},
 \code{\link[=Herm]{Herm()}},
@@ -317,10 +366,11 @@ Other om:
 \code{\link[=Interval]{Interval()}},
 \code{\link[=MPStartYear]{MPStartYear()}},
 \code{\link{MultiStockOM}},
-\code{\link{OM-accessors}},
+\code{\link{OMControl}},
 \code{\link[=RefSeason]{RefSeason()}},
 \code{\link{SeasonalSpatialOM}},
 \code{\link{SingleStockOM}},
+\code{\link[=StockTargeting]{StockTargeting()}},
 \code{\link{TwoFleetOM}},
 \code{\link{om-class}},
 \code{\link{stocktransition-class}}

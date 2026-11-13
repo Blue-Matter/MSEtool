@@ -12,7 +12,7 @@ Direct construction via \code{\link[methods:new]{methods::new()}} is not recomme
 instead, which populates defaults and derives \code{Years}.
 
 All slots can be accessed or replaced using functions matching the slot
-name. See \link{OM-accessors} for the full list. Slots belonging to sub-objects
+name. See \code{\link[=OM]{OM()}} for the full list. Slots belonging to sub-objects
 (\code{Stock}, \code{Fleet}, \code{Obs}, \code{Imp}, \code{Data}) are accessed via their own
 constructors, which also serve as pass-through accessors when called with
 an \link[=om-class]{om} argument.
@@ -204,7 +204,7 @@ Supports Markdown. See \code{\link[=OM]{OM()}}.}
 
 \seealso{
 \itemize{
-\item \code{\link[=OM]{OM()}} for the constructor and \link{OM-accessors} for slot accessors.
+\item \code{\link[=OM]{OM()}} for the constructor and slot accessors.
 \item \code{\link[=Stock]{Stock()}}, \code{\link[=Fleet]{Fleet()}}, \code{\link[=Obs]{Obs()}}, \code{\link[=Imp]{Imp()}}, \code{\link[=Data]{Data()}} for sub-object
 constructors and their pass-through accessors.
 \item \code{\link[=Years]{Years()}}, \code{\link[=CalcYears]{CalcYears()}} for the derived time-step vector.
@@ -216,6 +216,7 @@ constructors and their pass-through accessors.
 Other om:
 \code{\link[=CatchFrac]{CatchFrac()}},
 \code{\link{ComplexOM}},
+\code{\link[=Complexes]{Complexes()}},
 \code{\link[=DataLag]{DataLag()}},
 \code{\link[=EffortAllocation]{EffortAllocation()}},
 \code{\link[=Herm]{Herm()}},
@@ -226,10 +227,11 @@ Other om:
 \code{\link[=MPStartYear]{MPStartYear()}},
 \code{\link{MultiStockOM}},
 \code{\link[=OM]{OM()}},
-\code{\link{OM-accessors}},
+\code{\link{OMControl}},
 \code{\link[=RefSeason]{RefSeason()}},
 \code{\link{SeasonalSpatialOM}},
 \code{\link{SingleStockOM}},
+\code{\link[=StockTargeting]{StockTargeting()}},
 \code{\link{TwoFleetOM}},
 \code{\link{stocktransition-class}}
 }

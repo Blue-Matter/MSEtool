@@ -97,9 +97,8 @@ spawning production and \code{beta} is in units of 1/spawning production, on
 the scale set by \code{Units}. Not available for seasonal stocks, stocks in a
 \code{\link[=Herm]{Herm()}} complex, or stocks that recruit from another stock's spawning
 production (\code{SPFrom}).
-When \code{Pars} is a non-list S4 object with an \code{SRR} slot (e.g., a
-\link[=stock-class]{stock}), \code{SRR()} acts as a pass-through accessor and returns that
-slot. See \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules}
+An object that contains \code{SRR} objects returns them;
+see \emph{Pass-Through Access}. See \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules}
 for accepted input formats (scalar, bounds vector, \code{nSim}-length vector).
 A length-2 value is \code{Uniform(lower, upper)} bounds, except when \code{nSim = 2}, where it is one value per simulation.
 Default \code{list(h = NA)}.
@@ -203,17 +202,18 @@ set the interpretation of numbers in \link[=hist-class]{hist} output. Default \c
 
 \item{Misc}{\code{list}. Used internally. Default \code{list()}.}
 
-\item{x}{A \link[=srr-class]{srr} object for slot accessors, or a \link[=stock-class]{stock} object
-for \verb{SRR<-}.}
+\item{x}{A \link[=srr-class]{srr} object for slot accessors, or an object that contains
+\code{SRR} objects for \verb{SRR<-} (see \emph{Pass-Through Access}).}
 
-\item{value}{For \verb{SRR<-}: a \link[=srr-class]{srr} object. For slot replacement
+\item{value}{For \verb{SRR<-}: a \link[=srr-class]{srr} object, or a list of them named by
+stock (see \emph{Pass-Through Access}). For slot replacement
 functions: the replacement value for the corresponding slot.}
 }
 \value{
 \itemize{
-\item \code{SRR()} returns a \link[=srr-class]{srr} object. If \code{Pars} is a non-list S4 object
-with an \code{SRR} slot, returns that slot.
-\item \verb{SRR<-} returns the \link[=stock-class]{stock} \code{x} with the \code{SRR} slot replaced and
+\item \code{SRR()} returns a \link[=srr-class]{srr} object. If \code{Pars} contains \code{SRR}
+objects, returns them (see \emph{Pass-Through Access}).
+\item \verb{SRR<-} returns \code{x} with the \code{SRR} slot replaced and
 the object re-validated.
 \item \code{R0()}, \code{SPFrom()}, \code{RecDevInit()}, \code{RecDevHist()}, \code{RecDevProj()},
 \code{SpawnTimeFrac()}, \code{RelRecFun()} return the value of the corresponding
@@ -319,19 +319,6 @@ srr_sink <- SRR(Pars = list(h = 0.5), R0 = 200, SD = 0.6,
 }\if{html}{\out{</div>}}
 }
 
-\subsection{Pass-Through Access from a Stock}{
-
-When \code{Pars} is a non-list S4 object with an \code{SRR} slot, \code{SRR()} returns
-that slot directly:
-
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{SRR(my_stock)           # returns my_stock@SRR
-SRR(my_stock) <- my_srr # replaces my_stock@SRR
-}\if{html}{\out{</div>}}
-
-A \link[=lifehistorydata-class]{lifehistorydata} object, or a list of them (the \code{LifeHistory} slot of a
-\link[=data-class]{data} object), returns its \code{SRR} slot in the same way.
-}
-
 \subsection{Slot Accessors}{
 
 Individual slots can be read or replaced using generic functions matching
@@ -353,6 +340,28 @@ RecDevInit(srr)    <- my_init_matrix
 }\if{html}{\out{</div>}}
 }
 }
+\section{Pass-Through Access}{
+
+When \code{Pars} is an object that contains \code{SRR} objects,
+\code{SRR()} returns them instead of constructing a new object:
+\itemize{
+\item a \link[=stock-class]{stock} object: its \code{SRR} slot.
+\item an \link[=om-class]{om}, \link[=hist-class]{hist}, or \link[=mse-class]{mse} object, or a list of
+\link[=stock-class]{stock} objects: a list with the \code{SRR} slot of each stock.
+\item a \link[=data-class]{data} or \link[=obs-class]{obs} object, or a \link[=lifehistorydata-class]{lifehistorydata} or
+\link[=lifehistoryobs-class]{lifehistoryobs} object or a list of them: the \code{SRR} slot
+of the life-history information.
+}
+
+\code{SRR(x) <- value} replaces the slot of a \link[=stock-class]{stock},
+\link[=om-class]{om}, \link[=data-class]{data}, \link[=obs-class]{obs}, \link[=lifehistorydata-class]{lifehistorydata}, or
+\link[=lifehistoryobs-class]{lifehistoryobs} object, or of each object in a list of them. When
+\code{x} has more than one stock, \code{value} must be a list named by stock (see
+\code{\link[=StockNames]{StockNames()}}). The slot cannot be replaced in a \link[=hist-class]{hist} or
+\link[=mse-class]{mse} object, because it was used to simulate the historical
+dynamics.
+}
+
 \examples{
 # See SRRModels() for all available stock-recruitment models and their
 # required parameters. Note: R0 always goes in its own slot, not in Pars.

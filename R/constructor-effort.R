@@ -268,9 +268,19 @@
 #' ## Pass-Through Extraction
 #'
 #' When `Effort` is a [fleet-class], [effort-class], [hist-class],
-#' [obs-class], [data-class], [advicedata-class], or [mse-class] object (or a
-#' list of [data-class] objects), `Effort()` returns the `Effort` slot
-#' of that object rather than constructing a new one. For [hist-class] and
+#' [obs-class], [data-class], [advice-class], [advicedata-class],
+#' [imp-class], or [mse-class] object (or a list of [data-class] objects),
+#' `Effort()` returns the `Effort` slot of that object rather than
+#' constructing a new one. For an [om-class] object, or a list of
+#' [fleet-class] objects or a list of them by stock, it returns a list with
+#' the `Effort` slot of each fleet, with the same structure as `OM@Fleet`.
+#'
+#' `Effort(x) <- value` replaces the `Effort` slot of any of these objects
+#' except [hist-class] and [mse-class] objects. For an [om-class] object,
+#' `value` is a single [effort-class] object when the OM has one stock and
+#' one fleet, a list named by fleet when it has one stock and several
+#' fleets, and a list named by stock of lists named by fleet when it has
+#' several stocks. For [hist-class] and
 #' [mse-class] objects, the `df` argument controls whether a tidy
 #' `data.frame` (`TRUE`) or the raw array (`FALSE`) is returned.
 #'
@@ -350,8 +360,8 @@ Effort <- function(Effort         = NULL,
                    Misc           = list(),
                    df             = TRUE) {
   
-  if (.IsFleetOrList(Effort))
-    return(.ExtractFleetSlot(Effort, 'Effort'))
+  if (inherits(Effort, c('fleet', 'om')) || .IsFleetList(Effort) || .IsStockFleetList(Effort))
+    return(.GetFleetSlot(Effort, 'Effort'))
 
   if (inherits(Effort, c('advice', 'data', 'advicedata')) || .IsDataList(Effort))
     return(.AccessSlot(Effort, 'Effort'))
@@ -385,13 +395,15 @@ Effort <- function(Effort         = NULL,
 #' @rdname Effort
 #' @export
 `Effort<-` <- function(x, value) {
+  if (inherits(x, 'om') || .IsFleetList(x) || .IsStockFleetList(x))
+    return(.AssignFleetSlot(x, value, 'Effort'))
   .AssignSlot(x, value, 'Effort')
 }
 
 #' @rdname Effort
 #' @export
 Distribution <- function(x) {
-  .CheckClass(x, "effort", "x")
+  .CheckClass(x, c("effort", "hist", "mse"), "x")
   x@Distribution
 }
 
@@ -407,14 +419,14 @@ Distribution <- function(x) {
 #' @rdname Effort
 #' @export
 Targeting <- function(x) {
-  .CheckClass(x, "effort", "x")
+  .CheckClass(x, c("effort", "stocktargeting"), "x")
   x@Targeting
 }
 
 #' @rdname Effort
 #' @export
 `Targeting<-` <- function(x, value) {
-  .CheckClass(x, "effort", "x")
+  .CheckClass(x, c("effort", "stocktargeting"), "x")
   x@Targeting <- value
   methods::validObject(x)
   x

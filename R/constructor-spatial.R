@@ -14,8 +14,8 @@
 #'     simulation (two-area models only).
 #'   - Named array `Sim × Area × Age` or `Sim × Area × Age × Year`: full
 #'     age- and time-varying specification.
-#'   When `UnfishedDist` is a [stock-class] object, `Spatial()` acts as a
-#'   pass-through accessor and returns `x@Spatial`. Default `NULL`.
+#'   An object that contains `Spatial` objects returns them;
+#'   see *Pass-Through Access*. Default `NULL`.
 #' @param ProbStaying `numeric` or `array`. Probability of remaining in an
 #'   area between time steps. For two-area models, specifies Area 1 only; the
 #'   Area 2 value is solved internally. Accepts the same formats as
@@ -60,9 +60,10 @@
 #'   values allow more deviation from the target staying probability. Has no
 #'   effect for two-area models. Default `1`.
 #' @param Misc `list`. Used internally. Default `list()`.
-#' @param x A [spatial-class] object for slot accessors, or a [stock-class]
-#'   object for `Spatial<-`.
-#' @param value For `Spatial<-`: a [spatial-class] object. For slot
+#' @param x A [spatial-class] object for slot accessors, or an object that contains
+#'   `Spatial` objects for `Spatial<-` (see *Pass-Through Access*).
+#' @param value For `Spatial<-`: a [spatial-class] object, or a list of them named by
+#'   stock (see *Pass-Through Access*). For slot
 #'   replacement functions: the replacement value for the corresponding slot.
 #'
 #' @details
@@ -167,19 +168,6 @@
 #'               RelativeSize = "EqualDensity")
 #' ```
 #'
-#' ## Pass-Through Access from a Stock
-#'
-#' When `UnfishedDist` is a [stock-class] object, `Spatial()` returns the
-#' `Spatial` slot directly:
-#'
-#' ```r
-#' Spatial(my_stock)             # returns my_stock@Spatial
-#' Spatial(my_stock) <- my_sp   # replaces my_stock@Spatial
-#' ```
-#'
-#' A [lifehistorydata-class] object, or a list of them (the `LifeHistory` slot of a
-#' [data-class] object), returns its `Spatial` slot in the same way.
-#'
 #' ## Slot Accessors
 #'
 #' Individual slots can be read or replaced using generic functions matching
@@ -195,10 +183,14 @@
 #' CVStay(sp)        <- 0.5
 #' ```
 #'
+#' @template passthrough-stock
+#' @templateVar slot Spatial
+#' @templateVar arg UnfishedDist
+#'
 #' @return
-#' - `Spatial()` returns a [spatial-class] object. If `UnfishedDist` is a
-#'   [stock-class], returns `x@Spatial`.
-#' - `Spatial<-` returns the [stock-class] `x` with the `Spatial` slot
+#' - `Spatial()` returns a [spatial-class] object. If `UnfishedDist` contains `Spatial`
+#'   objects, returns them (see *Pass-Through Access*).
+#' - `Spatial<-` returns `x` with the `Spatial` slot
 #'   replaced and the object re-validated.
 #' - `UnfishedDist()`, `ProbStaying()`, `RelativeSize()`, `Movement()`,
 #'   `FracOther()`, `Arrangement()`, `CVDist()`, `CVStay()` return the value
@@ -227,11 +219,8 @@ Spatial <- function(UnfishedDist = NULL,
                     CVStay = 1,
                     Misc = list()) {
   
-  if (.IsStockOrList(UnfishedDist)) 
-    return(.ExtractStockSlot(UnfishedDist, "Spatial"))
-
-  if (.IsDataContainer(UnfishedDist, 'lifehistorydata'))
-    return(.AccessSlotRecursive(UnfishedDist, 'Spatial'))
+  if (.IsStockComponentSource(UnfishedDist))
+    return(.GetStockSlot(UnfishedDist, 'Spatial'))
   
   object <- methods::new(
     "spatial",
@@ -386,7 +375,7 @@ CVStay <- function(x) {
 #' @rdname Spatial
 #' @export
 `Spatial<-` <- function(x, value) {
-  .AssignSlotRecursive(x, value, 'Spatial')
+  .AssignStockSlot(x, value, 'Spatial')
 }
 
 

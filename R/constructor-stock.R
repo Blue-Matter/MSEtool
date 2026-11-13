@@ -6,8 +6,9 @@
 #'
 #' @param Name `character(1)`. Unique stock identifier used throughout model
 #'   output. Alternatively, an S4 object that contains a `Stock` slot (e.g.,
-#'   an [om-class] object), in which case `Stock()` acts as a pass-through
-#'   accessor — see *Pass-Through Access*. Default `"New Stock Object"`.
+#'   an [om-class] object), or a [hist-class] or [mse-class] object, in which
+#'   case `Stock()` acts as a pass-through accessor — see *Pass-Through
+#'   Access*. Default `"New Stock Object"`.
 #' @param CommonName `character(1)`. Common name of the species (e.g.,
 #'   `"Atlantic cod"`). When `Name` is an S4 object and `CommonName` is
 #'   `numeric`, it is treated as a list index for multi-stock `Stock` slots —
@@ -61,8 +62,7 @@
 #' @param x A [stock-class] object, or an S4 object with a `Stock` slot, for
 #'   use with accessor and replacement functions.
 #' @param value For `Stock<-`: a [stock-class] object, or a list of
-#'   [stock-class] objects for multi-stock operating models. For `CommonName<-`
-#'   and `Species<-`: a `character(1)` string.
+#'   [stock-class] objects for multi-stock operating models.
 #'
 #' @details
 #' ## Object Structure
@@ -93,8 +93,9 @@
 #'
 #' ## Pass-Through Access from an Enclosing Object
 #'
-#' When `Name` is an S4 object with a `Stock` slot (e.g., an [om-class]),
-#' `Stock()` returns the slot rather than constructing a new object:
+#' When `Name` is an S4 object with a `Stock` slot (e.g., an [om-class]), or
+#' a [hist-class] or [mse-class] object (using its embedded `OM`), `Stock()`
+#' returns the slot rather than constructing a new object:
 #'
 #' - `Stock(om)` returns `om@Stock`.
 #' - `Stock(om, i)` returns `om@Stock[[i]]` when `om@Stock` is a list
@@ -114,9 +115,9 @@
 #'   a `Stock` slot, returns that slot (or an indexed element for list-valued
 #'   slots).
 #' - `Stock<-` returns `x` with the `Stock` slot replaced by `value`.
-#' - `CommonName()` and `Species()` return a `character(1)` string from the
-#'   corresponding slot of `x`.
-#' - `CommonName<-` and `Species<-` return `x` with the named slot updated.
+#'
+#' `Name`, `CommonName`, and `Species` are accessed with the [Metadata]
+#' accessors.
 #'
 #' @seealso
 #' - [stock-class] for the class definition and slot-level documentation.
@@ -148,6 +149,9 @@ Stock <- function(Name = "New Stock Object",
                   Misc = list()) {
   
   
+  if (inherits(Name, c("hist", "mse")))
+    Name <- Name@OM
+
   if (!inherits(Name, "character")) {
     if (!"Stock" %in% slotNames(Name))
       cli::cli_abort(c("x" = "No slot {.val Stock} found in object class {.cls {class(Name)}}"))
@@ -207,33 +211,8 @@ Stock <- function(Name = "New Stock Object",
   object
 }
 
-
 #' @rdname Stock
 #' @export
 `Stock<-` <- function(x, value) {
   .AssignSlotRecursive(x, value, 'Stock')
-}
-
-#' @rdname Stock
-#' @export
-CommonName <- function(x) {
-  .AccessSlotRecursive(x, 'CommonName')
-}
-
-#' @rdname Stock
-#' @export
-`CommonName<-` <- function(x, value) {
-  .AssignSlotRecursive(x, value, 'CommonName')
-}
-
-#' @rdname Stock
-#' @export
-Species <- function(x) {
-  .AccessSlotRecursive(x, 'Species')
-}
-
-#' @rdname Stock
-#' @export
-`Species<-` <- function(x, value) {
-  .AssignSlotRecursive(x, value, 'Species')
 }

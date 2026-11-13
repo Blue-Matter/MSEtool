@@ -16,8 +16,8 @@
 #'   model and any values already in `MeanAtAge` are overwritten. To preserve
 #'   a user-specified `MeanAtAge`, leave `Pars = list()` (the default).
 #'
-#'   If `Pars` is a [fleet-class] object, the `Selectivity` slot of that
-#'   fleet is returned.
+#'   An object that contains `Selectivity` objects returns them; see
+#'   *Pass-Through Access*.
 #'
 #' @param Model Character or function or `NULL`. Selectivity model identifier.
 #'   If `NULL` (default), the model is inferred automatically from the names
@@ -60,10 +60,11 @@
 #'   schedule and use the stock's plain weight-at-age
 #'   instead. Default `TRUE`.
 #' @param Misc List. Miscellaneous additional inputs. Default `list()`.
-#' @param x A [selectivity-class] object, or a [fleet-class] object for
-#'   `Selectivity<-`.
-#' @param value For `Selectivity<-`: a [selectivity-class] object. For
-#'   `isRel<-`: a logical value.
+#' @param x A [selectivity-class] object, or an object that contains
+#'   `Selectivity` objects for `Selectivity<-` (see *Pass-Through Access*).
+#' @param value For `Selectivity<-`: a [selectivity-class] object, or a list of them named by
+#'   fleet or by stock and fleet (see *Pass-Through Access*). For
+#'   `isRel<-` and `isAtLength<-`: a logical value.
 #'
 #' @details
 #' Selectivity is required for all [fleet-class] objects. It defines the
@@ -116,16 +117,20 @@
 #' [MeanAtAge()], [MeanAtLength()], [MeanAtWeight()], [Classes()], and
 #' [isRel()].
 #'
-#' An [exploitationdata-class] object, or a list of them (the `Exploitation` slot of a
-#' [data-class] object), returns its `Selectivity` slot in the same way.
+#' @template passthrough-fleet
+#' @templateVar slot Selectivity
+#' @templateVar arg Pars
+#' @templateVar containers yes
+#' @templateVar extra an [advice-class] object: the selectivity set by an MP, and an [indicesobs-class] object: the selectivity of the index (see also [IndexSelectivity()]). The slot of these objects can also be replaced.
 #'
 #' @return
-#' - `Selectivity()` returns a [selectivity-class] object. If `Pars` is a
-#'   [fleet-class] object, the `Selectivity` slot of that fleet is returned.
+#' - `Selectivity()` returns a [selectivity-class] object. If `Pars` contains `Selectivity`
+#'   objects, returns them (see *Pass-Through Access*).
 #' - `Selectivity<-` returns `x` with the `Selectivity` slot replaced by
 #'   `value`.
-#' - `isRel()` returns the `isRel` slot from `x`.
-#' - `isRel<-` returns `x` with the `isRel` slot updated.
+#' - `isRel()` and `isAtLength()` return the `isRel` and `isAtLength` slots
+#'   of a [selectivity-class] or [retention-class] object `x`.
+#' - `isRel<-` and `isAtLength<-` return `x` with the slot updated.
 #'
 #' @seealso
 #' - [selectivity-class] for the class definition and slot-level
@@ -152,14 +157,8 @@ Selectivity <- function(Pars         = list(),
                         isAtLength   = TRUE,
                         Misc         = list()) {
 
-  if (.IsFleetOrList(Pars))
-    return(.ExtractFleetSlot(Pars, 'Selectivity'))
-
-  if (.IsDataContainer(Pars, 'exploitationdata'))
-    return(.AccessSlotRecursive(Pars, 'Selectivity'))
-
-  if (inherits(Pars, 'advice'))
-    return(.AccessSlot(Pars, 'Selectivity'))
+  if (.IsFleetComponentSource(Pars, Extra = c('advice', 'indicesobs')))
+    return(.GetFleetSlot(Pars, 'Selectivity'))
 
   if (!inherits(Pars, 'list'))
     cli::cli_abort(c(
@@ -185,14 +184,14 @@ Selectivity <- function(Pars         = list(),
 #' @rdname Selectivity
 #' @export
 isRel <- function(x) {
-  .CheckClass(x, "selectivity", "x")
+  .CheckClass(x, c("selectivity", "retention"), "x")
   x@isRel
 }
 
 #' @rdname Selectivity
 #' @export
 `isRel<-` <- function(x, value) {
-  .CheckClass(x, "selectivity", "x")
+  .CheckClass(x, c("selectivity", "retention"), "x")
   x@isRel <- value
   methods::validObject(x)
   x
@@ -201,16 +200,21 @@ isRel <- function(x) {
 #' @rdname Selectivity
 #' @export
 `Selectivity<-`<- function(x,value) {
-  .AssignFleetSlot(x, value, 'Selectivity')
+  .AssignFleetSlot(x, value, 'Selectivity', Extra = c('advice', 'indicesobs'))
 }
 
+#' @rdname Selectivity
+#' @export
+isAtLength <- function(x) {
+  .CheckClass(x, c("selectivity", "retention"), "x")
+  x@isAtLength
+}
 
-
-
-
-
-
-
-
-
-
+#' @rdname Selectivity
+#' @export
+`isAtLength<-` <- function(x, value) {
+  .CheckClass(x, c("selectivity", "retention"), "x")
+  x@isAtLength <- value
+  methods::validObject(x)
+  x
+}

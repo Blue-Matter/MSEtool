@@ -107,7 +107,7 @@ StandardizeEffort <- function(OM,
   fleet_names <- FleetNames(OM)
   
   if (n_stock == 1) {
-    OM@StockTargeting <- StockTargeting(OM)
+    OM@StockTargeting <- .InitStockTargeting(OM)
     return(OM)
   }
   
@@ -122,7 +122,7 @@ StandardizeEffort <- function(OM,
   STarget <- OM@StockTargeting
   
   if (EmptyObject(STarget))
-    STarget <- StockTargeting(OM)
+    STarget <- .InitStockTargeting(OM)
   
   for (fl in fleet_seq) {
     Fleet_fl_all_stocks <- purrr::map(FleetList, `[[`, fl)

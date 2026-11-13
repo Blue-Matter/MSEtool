@@ -1,6 +1,48 @@
+#' Stock, Fleet, Index, Complex, and MP Names
+#'
+#' Return the names of the stocks, fleets, indices, stock complexes, and
+#' management procedures in an object.
+#'
 #' @param object An [om-class], [hist-class], [mse-class], [stock-class],
 #'   [fleet-class], or [data-class] object, or a list of these objects.
-#' @rdname Dimensions
+#' @param x For `IndexNames()`, an [om-class], [hist-class], [mse-class], or
+#'   [data-class] object, or a list of [data-class] objects. For
+#'   `ComplexNames()`, an [om-class], [hist-class], or [mse-class] object. For
+#'   `MPNames()`, an [mse-class] or [pm-class] object.
+#' @param IncSurvey Logical. Include the names of the `CPUE` and `Survey`
+#'   indices? Default `FALSE`.
+#' @param Type Character. The index types returned by `IndexNames()`: `"CPUE"`,
+#'   `"Survey"`, or both (default).
+#'
+#' @return
+#' - `StockNames()` returns a character vector of stock names.
+#' - `FleetNames()` returns a character vector of fleet names, taken from the
+#'   first stock. For a [data-class] object (or a list of them) the names are
+#'   taken from the catch, effort, and composition data, and
+#'   `IncSurvey = TRUE` adds the names of the `CPUE` and `Survey` indices.
+#' - `IndexNames()` returns the names of the `CPUE` and/or `Survey` indices.
+#'   For a [data-class] object (or a list of them) these are the indices in
+#'   the data. For an [om-class] object they are the indices in `Data`, and for
+#'   a [hist-class] or [mse-class] object also the indices simulated from
+#'   `Obs`.
+#' - `ComplexNames()` returns the names of the stock complexes. When
+#'   `Complexes` is not specified, these are the complexes created by
+#'   [Simulate()] (see [Complexes()]).
+#' - `MPNames()` returns the names of the management procedures.
+#'
+#' @seealso [Dimensions] for the number of stocks, fleets, complexes, and
+#'   management procedures; [Name()] for the `Name` slot of an object.
+#'
+#' @family slot-accessors
+#'
+#' @examples
+#' StockNames(SingleStockOM)
+#' FleetNames(SingleStockOM)
+#'
+#' @name Names
+NULL
+
+#' @rdname Names
 #' @export
 StockNames <- function(object) {
   if (inherits(object, c("stock", "data")))
@@ -17,8 +59,7 @@ StockNames <- function(object) {
   purrr::map_chr(stocks, Name)
 }
 
-#' @rdname Dimensions
-#' @param IncSurvey Logical. Include names of survey (non-fishing) fleets? Default: FALSE
+#' @rdname Names
 #' @export
 FleetNames <- function(object, IncSurvey = FALSE) {
 
@@ -63,7 +104,7 @@ FleetNames <- function(object, IncSurvey = FALSE) {
   dimnames(Value)[["Fleet"]] %||% paste("Fleet", seq_len(NCOL(Value)))
 }
 
-#' @rdname Dimensions
+#' @rdname Names
 #' @export
 IndexNames <- function(x, Type = c("CPUE", "Survey")) {
   Type <- match.arg(Type, several.ok = TRUE)
@@ -92,4 +133,19 @@ IndexNames <- function(x, Type = c("CPUE", "Survey")) {
     Names <- c(Names, unlist(ObsNames))
   }
   unique(as.character(Names))
+}
+
+#' @rdname Names
+#' @export
+ComplexNames <- function(x) {
+  names(.ComplexList(x)) %||% character(0)
+}
+
+#' @rdname Names
+#' @export
+MPNames <- function(x) {
+  .CheckClass(x, c('mse', 'pm'), 'x')
+  if (inherits(x, 'pm'))
+    return(x@MPs)
+  names(x@MPs) %||% character(0)
 }

@@ -76,7 +76,6 @@ CatchData <- function(Name  = NULL,
   .Object
 }
 
-
 #' CompData Constructor
 #'
 #' Construct a [compdata-class] object storing age or size composition
@@ -173,7 +172,6 @@ CompData <- function(Name    = NULL,
   .Object
 }
 
-
 #' EffortData Constructor and Accessors
 #'
 #' Construct an [effortdata-class] object storing observed fishing effort and
@@ -244,7 +242,6 @@ EffortData <- function(Name  = NULL,
   methods::validObject(.Object)
   .Object
 }
-
 
 #' IndicesData Constructor
 #'
@@ -331,7 +328,6 @@ IndicesData <- function(Name        = NULL,
   .Object
 }
 
-
 #' Constructor and Accessor for `Data`
 #'
 #' Creates a new [data-class] object, or extracts the `Data` or `PPD` slot from
@@ -402,9 +398,11 @@ IndicesData <- function(Name        = NULL,
 #'   related advice.
 #' @param Misc A named list for any additional user-defined data. Defaults to
 #'   `list()`.
-#' @param x An [om-class] object, for use with `Data<-`.
-#' @param value A [data-class] object, or a list of [data-class] objects for
-#'   multi-stock operating models, to assign to the `Data` slot.
+#' @param x An [om-class] object, for use with `Data<-`; a [data-class]
+#'   object or a list of them, for `YearLH()` and `YearLH<-`.
+#' @param value For `Data<-`: a [data-class] object, or a list of
+#'   [data-class] objects for multi-stock operating models, to assign to the
+#'   `Data` slot. For `YearLH<-`: the last historical year.
 #'
 #' @details
 #' ## Life History and Exploitation
@@ -425,7 +423,13 @@ IndicesData <- function(Name        = NULL,
 #'
 #' @return A [data-class] object, or when `Name` is an [mse-class] object, a list
 #'   of [data-class] objects from the `@@PPD` slot. `Data<-` returns `x` with
-#'   the `Data` slot replaced by `value`.
+#'   the `Data` slot replaced by `value`. `YearLH()` returns the last
+#'   historical year of the data, and `YearLH<-` returns `x` with the
+#'   `YearLH` slot replaced.
+#'
+#' The other slots of a [data-class] object are accessed with the
+#' [Metadata], [Data-accessors], [Years], and [Dimensions] accessors, and
+#' with [Landings()], [Discards()], [Effort()], and [Advice()].
 #'
 #' @seealso [data-class], [LastTAC()], [LastHistYearInd()], [ProjectionYear()]
 #' @name Data
@@ -559,4 +563,16 @@ Data <- function(Name = 'New Data Object',
 #' @export
 `Data<-` <- function(x, value) {
   .AssignSlotRecursive(x, value, 'Data')
+}
+
+#' @rdname Data
+#' @export
+YearLH <- function(x) {
+  .AccessSlot(x, 'YearLH')
+}
+
+#' @rdname Data
+#' @export
+`YearLH<-` <- function(x, value) {
+  .AssignSlot(x, value, 'YearLH')
 }

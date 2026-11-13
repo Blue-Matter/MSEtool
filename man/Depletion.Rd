@@ -34,9 +34,8 @@ is one value per simulation.
 \item Length-\code{nSim} vector: one value per simulation.
 When provided, the historical period starts from a fished equilibrium
 with biomass relative to \code{Reference} in the first time step equal to the
-specified value (see \emph{Initial Depletion}). When \code{Initial} is a
-\link[=stock-class]{stock} object, \code{Depletion()}
-acts as a pass-through accessor and returns \code{x@Depletion}.
+specified value (see \emph{Initial Depletion}). An object that contains \code{Depletion} objects returns them;
+see \emph{Pass-Through Access}.
 }}
 
 \item{Final}{\code{numeric} or \code{NULL}. Target depletion relative to \code{Reference}
@@ -54,18 +53,19 @@ One of:
 For stocks linked by \code{SRR@SPFrom}, see \emph{Stocks Linked by SPFrom}.
 }}
 
-\item{x}{A \link[=depletion-class]{depletion} object for slot accessors, or a \link[=stock-class]{stock}
-object for \verb{Depletion<-}.}
+\item{x}{A \link[=depletion-class]{depletion} object for slot accessors, or an object that contains
+\code{Depletion} objects for \verb{Depletion<-} (see \emph{Pass-Through Access}).}
 
-\item{value}{For \verb{Depletion<-}: a \link[=depletion-class]{depletion} object. For \verb{Initial<-}
+\item{value}{For \verb{Depletion<-}: a \link[=depletion-class]{depletion} object, or a list of them named by
+stock (see \emph{Pass-Through Access}). For \verb{Initial<-}
 and \verb{Final<-}: a numeric scalar, length-2 bounds vector, or
 length-\code{nSim} vector.}
 }
 \value{
 \itemize{
-\item \code{Depletion()} returns a \link[=depletion-class]{depletion} object. If \code{Initial} is a
-\link[=stock-class]{stock}, returns \code{x@Depletion}.
-\item \verb{Depletion<-} returns the \link[=stock-class]{stock} \code{x} with the \code{Depletion} slot
+\item \code{Depletion()} returns a \link[=depletion-class]{depletion} object. If \code{Initial} contains \code{Depletion}
+objects, returns them (see \emph{Pass-Through Access}).
+\item \verb{Depletion<-} returns \code{x} with the \code{Depletion} slot
 replaced and the object re-validated.
 \item \code{Initial()} and \code{Final()} return the value of the corresponding slot
 from \code{x} (a \code{nSim}-length array after \code{\link[=Populate]{Populate()}}, or \code{NULL}).
@@ -160,19 +160,6 @@ names another stock) are ignored.
 \code{Reference}.
 }
 
-\subsection{Pass-Through Access from a Stock}{
-
-When \code{Initial} is a \link[=stock-class]{stock} object, \code{Depletion()} returns the
-\code{Depletion} slot directly:
-
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{Depletion(my_stock)             # returns my_stock@Depletion
-Depletion(my_stock) <- my_dep   # replaces my_stock@Depletion
-}\if{html}{\out{</div>}}
-
-A \link[=lifehistorydata-class]{lifehistorydata} object, or a list of them (the \code{LifeHistory} slot of a
-\link[=data-class]{data} object), returns its \code{Depletion} slot in the same way.
-}
-
 \subsection{Slot Accessors}{
 
 Individual slots can be read or replaced using generic functions matching
@@ -183,6 +170,28 @@ Final(dep)     <- 0.4
 }\if{html}{\out{</div>}}
 }
 }
+\section{Pass-Through Access}{
+
+When \code{Initial} is an object that contains \code{Depletion} objects,
+\code{Depletion()} returns them instead of constructing a new object:
+\itemize{
+\item a \link[=stock-class]{stock} object: its \code{Depletion} slot.
+\item an \link[=om-class]{om}, \link[=hist-class]{hist}, or \link[=mse-class]{mse} object, or a list of
+\link[=stock-class]{stock} objects: a list with the \code{Depletion} slot of each stock.
+\item a \link[=data-class]{data} or \link[=obs-class]{obs} object, or a \link[=lifehistorydata-class]{lifehistorydata} or
+\link[=lifehistoryobs-class]{lifehistoryobs} object or a list of them: the \code{Depletion} slot
+of the life-history information.
+}
+
+\code{Depletion(x) <- value} replaces the slot of a \link[=stock-class]{stock},
+\link[=om-class]{om}, \link[=data-class]{data}, \link[=obs-class]{obs}, \link[=lifehistorydata-class]{lifehistorydata}, or
+\link[=lifehistoryobs-class]{lifehistoryobs} object, or of each object in a list of them. When
+\code{x} has more than one stock, \code{value} must be a list named by stock (see
+\code{\link[=StockNames]{StockNames()}}). The slot cannot be replaced in a \link[=hist-class]{hist} or
+\link[=mse-class]{mse} object, because it was used to simulate the historical
+dynamics.
+}
+
 \examples{
 # Default (Depletion omitted): stock starts unfished, terminal depletion
 # determined by Fleet and Catchability parameters.

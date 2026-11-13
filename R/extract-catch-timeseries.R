@@ -38,7 +38,9 @@
 #' `MP = "Historical"`.
 #'
 #' @param object A [hist-class], [mse-class], [obs-class], or [data-class]
-#'   object, or a list of [data-class] objects.
+#'   object, or a list of [data-class] objects. `Landings()` and `Removals()`
+#'   also accept a [reference-class] object, and return its `Landings` or
+#'   `Removals` slot.
 #' @param df Logical. Applies to [hist-class] and [mse-class] objects only.
 #'   If `FALSE` the raw array slot is returned. If `TRUE` (default) a tidy
 #'   `data.frame` is returned. Ignored for [obs-class] and [data-class]
@@ -135,7 +137,7 @@ Landings <- function(object,
                      Extend  = FALSE,
                      silent  = TRUE) {
 
-  if (inherits(object, 'obs'))
+  if (inherits(object, c('obs', 'reference')))
     return(object@Landings)
 
   if (.IsDataList(object))
@@ -244,6 +246,8 @@ Removals <- function(object,
                      IncYear = FALSE,
                      Extend  = FALSE,
                      silent  = TRUE) {
+  if (inherits(object, 'reference'))
+    return(object@Removals)
   if (byAge)  bySize <- FALSE
   if (bySize) byAge  <- FALSE
 

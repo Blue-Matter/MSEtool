@@ -3,10 +3,6 @@
 \name{Stock}
 \alias{Stock}
 \alias{Stock<-}
-\alias{CommonName}
-\alias{CommonName<-}
-\alias{Species}
-\alias{Species<-}
 \title{Stock Constructor and Accessors}
 \usage{
 Stock(
@@ -27,20 +23,13 @@ Stock(
 )
 
 Stock(x) <- value
-
-CommonName(x)
-
-CommonName(x) <- value
-
-Species(x)
-
-Species(x) <- value
 }
 \arguments{
 \item{Name}{\code{character(1)}. Unique stock identifier used throughout model
 output. Alternatively, an S4 object that contains a \code{Stock} slot (e.g.,
-an \link[=om-class]{om} object), in which case \code{Stock()} acts as a pass-through
-accessor — see \emph{Pass-Through Access}. Default \code{"New Stock Object"}.}
+an \link[=om-class]{om} object), or a \link[=hist-class]{hist} or \link[=mse-class]{mse} object, in which
+case \code{Stock()} acts as a pass-through accessor — see \emph{Pass-Through
+Access}. Default \code{"New Stock Object"}.}
 
 \item{CommonName}{\code{character(1)}. Common name of the species (e.g.,
 \code{"Atlantic cod"}). When \code{Name} is an S4 object and \code{CommonName} is
@@ -98,8 +87,7 @@ seasons). Default \code{1}. Must match the time units set in \code{\link[=Ages]{
 use with accessor and replacement functions.}
 
 \item{value}{For \verb{Stock<-}: a \link[=stock-class]{stock} object, or a list of
-\link[=stock-class]{stock} objects for multi-stock operating models. For \verb{CommonName<-}
-and \verb{Species<-}: a \code{character(1)} string.}
+\link[=stock-class]{stock} objects for multi-stock operating models.}
 }
 \value{
 \itemize{
@@ -107,10 +95,10 @@ and \verb{Species<-}: a \code{character(1)} string.}
 a \code{Stock} slot, returns that slot (or an indexed element for list-valued
 slots).
 \item \verb{Stock<-} returns \code{x} with the \code{Stock} slot replaced by \code{value}.
-\item \code{CommonName()} and \code{Species()} return a \code{character(1)} string from the
-corresponding slot of \code{x}.
-\item \verb{CommonName<-} and \verb{Species<-} return \code{x} with the named slot updated.
 }
+
+\code{Name}, \code{CommonName}, and \code{Species} are accessed with the \link{Metadata}
+accessors.
 }
 \description{
 Construct a \link[=stock-class]{stock} object defining the biological and
@@ -150,8 +138,9 @@ determined by the \code{\link[=Fleet]{Fleet()}} and \code{\link[=Catchability]{C
 
 \subsection{Pass-Through Access from an Enclosing Object}{
 
-When \code{Name} is an S4 object with a \code{Stock} slot (e.g., an \link[=om-class]{om}),
-\code{Stock()} returns the slot rather than constructing a new object:
+When \code{Name} is an S4 object with a \code{Stock} slot (e.g., an \link[=om-class]{om}), or
+a \link[=hist-class]{hist} or \link[=mse-class]{mse} object (using its embedded \code{OM}), \code{Stock()}
+returns the slot rather than constructing a new object:
 \itemize{
 \item \code{Stock(om)} returns \code{om@Stock}.
 \item \code{Stock(om, i)} returns \code{om@Stock[[i]]} when \code{om@Stock} is a list

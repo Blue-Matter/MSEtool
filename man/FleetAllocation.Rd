@@ -79,11 +79,12 @@ FleetAllocation(om)
 \item \code{\link[=OM]{OM()}} for the constructor, \link[=om-class]{om} for the class definition.
 \item \code{\link[=HistoricalWeight]{HistoricalWeight()}}/\code{\link[=SeasonalAllocation]{SeasonalAllocation()}} for how a periodically-set
 TAC or Effort is further split across seasons.
-\item \link{OM-accessors} for the remaining \code{OM} slot accessors.
+\item \code{\link[=OM]{OM()}} for the accessors of the other \code{OM} slots.
 }
 
 Other om:
 \code{\link{ComplexOM}},
+\code{\link[=Complexes]{Complexes()}},
 \code{\link[=DataLag]{DataLag()}},
 \code{\link[=EffortAllocation]{EffortAllocation()}},
 \code{\link[=Herm]{Herm()}},
@@ -94,10 +95,11 @@ Other om:
 \code{\link[=MPStartYear]{MPStartYear()}},
 \code{\link{MultiStockOM}},
 \code{\link[=OM]{OM()}},
-\code{\link{OM-accessors}},
+\code{\link{OMControl}},
 \code{\link[=RefSeason]{RefSeason()}},
 \code{\link{SeasonalSpatialOM}},
 \code{\link{SingleStockOM}},
+\code{\link[=StockTargeting]{StockTargeting()}},
 \code{\link{TwoFleetOM}},
 \code{\link{om-class}},
 \code{\link{stocktransition-class}}

@@ -32,8 +32,8 @@ If \code{Pars} and \code{Model} are both provided, \code{MeanAtAge} is computed 
 model and any values already in \code{MeanAtAge} are overwritten. To preserve
 a user-specified \code{MeanAtAge}, leave \code{Pars = list()} (the default).
 
-If \code{Pars} is a \link[=fleet-class]{fleet} object, the \code{Retention} slot of that fleet
-is returned.}
+An object that contains \code{Retention} objects returns them; see
+\emph{Pass-Through Access}.}
 
 \item{Model}{Character or function or \code{NULL}. Retention model identifier.
 If \code{NULL} (default), the model is inferred automatically from the names
@@ -84,15 +84,16 @@ instead. Default \code{TRUE}.}
 
 \item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
 
-\item{x}{A \link[=retention-class]{retention} object, or a \link[=fleet-class]{fleet} object for
-\verb{Retention<-}.}
+\item{x}{A \link[=retention-class]{retention} object, or an object that contains
+\code{Retention} objects for \verb{Retention<-} (see \emph{Pass-Through Access}).}
 
-\item{value}{For \verb{Retention<-}: a \link[=retention-class]{retention} object.}
+\item{value}{For \verb{Retention<-}: a \link[=retention-class]{retention} object, or a list of them named by
+fleet or by stock and fleet (see \emph{Pass-Through Access}).}
 }
 \value{
 \itemize{
-\item \code{Retention()} returns a \link[=retention-class]{retention} object. If \code{Pars} is a
-\link[=fleet-class]{fleet} object, the \code{Retention} slot of that fleet is returned.
+\item \code{Retention()} returns a \link[=retention-class]{retention} object. If \code{Pars} contains \code{Retention}
+objects, returns them (see \emph{Pass-Through Access}).
 \item \verb{Retention<-} returns \code{x} with the \code{Retention} slot replaced by \code{value}.
 }
 }
@@ -153,10 +154,38 @@ A \link[=retention-class]{retention} object can be attached to a \code{\link[=Fl
 Individual slots may be accessed or modified using \code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}},
 \code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=MeanAtLength]{MeanAtLength()}}, \code{\link[=MeanAtWeight]{MeanAtWeight()}}, and \code{\link[=Classes]{Classes()}}.
 
-An \link[=exploitationdata-class]{exploitationdata} object, or a list of them (the \code{Exploitation} slot of a
-\link[=data-class]{data} object), returns its \code{Retention} slot in the same way.
+The \code{isRel} and \code{isAtLength} slots are accessed with \code{\link[=isRel]{isRel()}} and
+\code{\link[=isAtLength]{isAtLength()}}.
 }
 }
+\section{Pass-Through Access}{
+
+When \code{Pars} is an object that contains \code{Retention} objects,
+\code{Retention()} returns them instead of constructing a new object:
+\itemize{
+\item a \link[=fleet-class]{fleet} object: its \code{Retention} slot.
+\item an \link[=om-class]{om}, \link[=hist-class]{hist}, or \link[=mse-class]{mse} object: a list by stock of
+lists by fleet, with the \code{Retention} slot of each fleet. A list of
+\link[=fleet-class]{fleet} objects, or a list of them by stock, returns a list with
+the same structure.
+\item a \link[=data-class]{data} or \link[=obs-class]{obs} object, or an \link[=exploitationdata-class]{exploitationdata} or
+\link[=exploitationobs-class]{exploitationobs} object or a list of them: the \code{Retention} slot
+of the exploitation information.
+\item an \link[=advice-class]{advice} object: the retention set by an MP. The slot of these objects can also be replaced.
+}
+
+\code{Retention(x) <- value} replaces the slot of a \link[=fleet-class]{fleet} or
+\link[=om-class]{om} object, a \link[=data-class]{data} or \link[=obs-class]{obs} object, an
+\link[=exploitationdata-class]{exploitationdata} or \link[=exploitationobs-class]{exploitationobs} object, or of
+each object in a list of them. For an \link[=om-class]{om} object, \code{value} is a
+single object when the OM has one stock and one fleet, a list named by
+fleet (see \code{\link[=FleetNames]{FleetNames()}}) when it has one stock and several fleets, and a
+list named by stock (see \code{\link[=StockNames]{StockNames()}}) of lists named by fleet when it
+has several stocks. The slot cannot be replaced in a \link[=hist-class]{hist} or
+\link[=mse-class]{mse} object, because it was used to simulate the historical
+dynamics.
+}
+
 \examples{
 ## ---- List available retention models ----
 RetentionModels()

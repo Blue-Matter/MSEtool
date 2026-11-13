@@ -95,3 +95,15 @@ ImpSlot <- function(Mean       = NULL,
   methods::validObject(.Object)
   .Object
 }
+
+#' @rdname ImpSlot
+#' @export
+Compliance <- function(x) {
+  .AccessSlot(x, 'Compliance')
+}
+
+#' @rdname ImpSlot
+#' @export
+`Compliance<-` <- function(x, value) {
+  .AssignSlot(x, value, 'Compliance')
+}

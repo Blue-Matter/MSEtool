@@ -8,8 +8,7 @@
 #'   `PlusGroup = TRUE` (the default), fish at or older than this age are
 #'   pooled into an open-ended plus group. Required for a non-empty object;
 #'   if omitted the constructor returns an uninitialised [ages-class] suitable
-#'   for placeholder use inside a [stock-class]. Alternatively, a
-#'   [stock-class] object, in which case `Ages()` returns `x@Ages` directly —
+#'   for placeholder use inside a [stock-class]. An object that contains `Ages` objects returns them;
 #'   see *Pass-Through Access*.
 #' @param MinAge `numeric(1)`. Minimum (youngest) age class in units of
 #'   `Units`. Must be non-negative and less than or equal to `MaxAge`. Default
@@ -21,7 +20,8 @@
 #'   group that accumulates all fish at or beyond that age. If `FALSE`, the
 #'   age classes terminate at exactly `MaxAge` with no pooling. Default `TRUE`.
 #' @param x An [ages-class] object for slot accessors (`MaxAge()`,
-#'   `MinAge()`, `PlusGroup()`), or a [stock-class] object for `Ages<-`.
+#'   `MinAge()`, `PlusGroup()`), or an object that contains
+#'   `Ages` objects for `Ages<-` (see *Pass-Through Access*).
 #' @param value For `Ages<-`: an [ages-class] object. For `MaxAge<-`,
 #'   `MinAge<-`, `PlusGroup<-`: the replacement value for the corresponding
 #'   slot (see *Slot Accessors*).
@@ -50,18 +50,6 @@
 #' objects, so they can be stored as placeholders inside a [stock-class] before
 #' parameters are specified. The model will not run until `MaxAge` is supplied.
 #'
-#' ## Pass-Through Access from a Stock
-#'
-#' When `MaxAge` is a [stock-class] object, `Ages()` acts as an accessor:
-#'
-#' ```r
-#' Ages(my_stock)          # returns my_stock@Ages
-#' Ages(my_stock) <- a     # replaces my_stock@Ages with ages-class object `a`
-#' ```
-#'
-#' A [lifehistorydata-class] object, or a list of them (the `LifeHistory` slot of a
-#' [data-class] object), returns its `Ages` slot in the same way.
-#'
 #' ## Slot Accessors
 #'
 #' Individual slots can be read or replaced using functions that match the slot
@@ -73,11 +61,15 @@
 #' PlusGroup(a)     <- FALSE
 #' ```
 #'
-#' @return
-#' `Ages()` returns an [ages-class] object. If `MaxAge` is a [stock-class],
-#' returns `x@Ages`.
+#' @template passthrough-stock
+#' @templateVar slot Ages
+#' @templateVar arg MaxAge
 #'
-#' `Ages<-` returns the [stock-class] `x` with the `Ages` slot replaced by
+#' @return
+#' `Ages()` returns an [ages-class] object. If `MaxAge` contains `Ages`
+#'   objects, returns them (see *Pass-Through Access*).
+#'
+#' `Ages<-` returns `x` with the `Ages` slot replaced by
 #' `value` and the object re-validated.
 #'
 #' `MaxAge()`, `MinAge()`, `PlusGroup()` return the value of the corresponding
@@ -104,11 +96,8 @@ Ages <- function(MaxAge,
   if (missing(MaxAge))
     MaxAge <- numeric()
   
-  if (.IsStockOrList(MaxAge)) 
-    return(.ExtractStockSlot(MaxAge, 'Ages'))
-
-  if (.IsDataContainer(MaxAge, 'lifehistorydata'))
-    return(.AccessSlotRecursive(MaxAge, 'Ages'))
+  if (.IsStockComponentSource(MaxAge))
+    return(.GetStockSlot(MaxAge, 'Ages'))
   
   if (is.null(MaxAge))
     return(NULL)
@@ -132,7 +121,7 @@ Ages <- function(MaxAge,
 #' @rdname Ages
 #' @export
 `Ages<-` <- function(x, value) {
-  .AssignSlotRecursive(x, value, 'Ages')
+  .AssignStockSlot(x, value, 'Ages')
 }
 
 #' @rdname Ages

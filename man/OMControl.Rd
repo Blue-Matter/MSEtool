@@ -2,13 +2,66 @@
 % Please edit documentation in R/doc-om-control.R
 \name{OMControl}
 \alias{OMControl}
+\alias{pStar}
+\alias{pStar<-}
+\alias{maxF}
+\alias{maxF<-}
+\alias{Seed}
+\alias{Seed<-}
+\alias{Control}
+\alias{Control<-}
 \title{Operating Model Control Settings}
+\usage{
+pStar(x)
+
+pStar(x) <- value
+
+maxF(x)
+
+maxF(x) <- value
+
+Seed(x)
+
+Seed(x) <- value
+
+Control(x)
+
+Control(x) <- value
+}
+\arguments{
+\item{x}{An \link[=om-class]{om}, \link[=hist-class]{hist}, or \link[=mse-class]{mse} object.}
+
+\item{value}{The value to assign to the slot.}
+}
+\value{
+\itemize{
+\item \code{Control()}, \code{maxF()}, \code{Seed()}, and \code{pStar()} return the value of the
+slot.
+\item Replacement functions return \code{x} with the slot updated to \code{value}.
+}
+}
 \description{
+Access and replace the simulation control slots of an \link[=om-class]{om} object:
+\code{Control}, \code{maxF}, \code{Seed}, and \code{pStar}. Each accessor also accepts a
+\link[=hist-class]{hist} or \link[=mse-class]{mse} object, acting on its embedded \code{OM}.
+}
+\details{
+\itemize{
+\item \code{maxF()}: maximum allowable instantaneous fishing mortality.
+\item \code{Seed()}: random number generator seed. Changing \code{Seed} after the OM is
+populated does not redraw values already generated; see \code{\link[=OM]{OM()}}.
+\item \code{pStar()}: percentile applied to stochastic management advice.
+\item \code{Control()}: the named list of optional settings described below.
+}
+
+\code{maxF} and \code{Seed} can only be replaced in \link[=om-class]{om} objects. \code{Control} and
+\code{pStar} can also be replaced in \link[=hist-class]{hist} objects, and take effect in
+the next \code{\link[=Project]{Project()}}.
+
 \code{OM@Control} is a named list of optional settings that modify how an
 \link[=om-class]{om} operating model is simulated and projected. Every setting has
 a default, so \code{OM@Control} can be empty.
-}
-\details{
+
 Add or change individual settings with \code{Control(OM)$Setting <- value}.
 \code{Control(OM) <- list(...)} replaces the whole list. Unrecognised names
 produce a warning in \code{\link[=Simulate]{Simulate()}} and are otherwise ignored.
@@ -118,6 +171,7 @@ the default reported data CVs from \code{\link[=SimControl]{SimControl()}}.
 
 \examples{
 OM <- SingleStockOM
+maxF(OM) <- 2
 Control(OM)$MSYType <- 'Landings'
 Control(OM)$DataOM  <- list(Reference = TRUE)
 
@@ -133,4 +187,27 @@ MSE  <- Project(Hist, MPs = c('refFMSY', 'myMP'))
 }
 \seealso{
 \code{\link[=OM]{OM()}}, \code{\link[=Simulate]{Simulate()}}, \code{\link[=Project]{Project()}}, \code{\link[=SimControl]{SimControl()}}
+
+Other om:
+\code{\link[=CatchFrac]{CatchFrac()}},
+\code{\link{ComplexOM}},
+\code{\link[=Complexes]{Complexes()}},
+\code{\link[=DataLag]{DataLag()}},
+\code{\link[=EffortAllocation]{EffortAllocation()}},
+\code{\link[=Herm]{Herm()}},
+\code{\link{HermOM}},
+\code{\link[=HistoricalWeight]{HistoricalWeight()}},
+\code{\link[=InterimAdvice]{InterimAdvice()}},
+\code{\link[=Interval]{Interval()}},
+\code{\link[=MPStartYear]{MPStartYear()}},
+\code{\link{MultiStockOM}},
+\code{\link[=OM]{OM()}},
+\code{\link[=RefSeason]{RefSeason()}},
+\code{\link{SeasonalSpatialOM}},
+\code{\link{SingleStockOM}},
+\code{\link[=StockTargeting]{StockTargeting()}},
+\code{\link{TwoFleetOM}},
+\code{\link{om-class}},
+\code{\link{stocktransition-class}}
 }
+\concept{om}

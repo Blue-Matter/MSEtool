@@ -78,12 +78,13 @@ ManagementScheduleTable(om)
 \item \code{\link[=MPStartYear]{MPStartYear()}}, \code{\link[=DataLag]{DataLag()}} for the other slots controlling the
 management timeline.
 \item \code{\link[=ManagementScheduleTable]{ManagementScheduleTable()}} for previewing the resulting schedule.
-\item \link{OM-accessors} for the remaining \code{OM} slot accessors.
+\item \code{\link[=OM]{OM()}} for the accessors of the other \code{OM} slots.
 }
 
 Other om:
 \code{\link[=CatchFrac]{CatchFrac()}},
 \code{\link{ComplexOM}},
+\code{\link[=Complexes]{Complexes()}},
 \code{\link[=DataLag]{DataLag()}},
 \code{\link[=EffortAllocation]{EffortAllocation()}},
 \code{\link[=Herm]{Herm()}},
@@ -93,10 +94,11 @@ Other om:
 \code{\link[=MPStartYear]{MPStartYear()}},
 \code{\link{MultiStockOM}},
 \code{\link[=OM]{OM()}},
-\code{\link{OM-accessors}},
+\code{\link{OMControl}},
 \code{\link[=RefSeason]{RefSeason()}},
 \code{\link{SeasonalSpatialOM}},
 \code{\link{SingleStockOM}},
+\code{\link[=StockTargeting]{StockTargeting()}},
 \code{\link{TwoFleetOM}},
 \code{\link{om-class}},
 \code{\link{stocktransition-class}}

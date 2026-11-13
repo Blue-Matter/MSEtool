@@ -16,9 +16,8 @@
 #'   - Length-`nSim` vector: one value per simulation.
 #'   When provided, the historical period starts from a fished equilibrium
 #'   with biomass relative to `Reference` in the first time step equal to the
-#'   specified value (see *Initial Depletion*). When `Initial` is a
-#'   [stock-class] object, `Depletion()`
-#'   acts as a pass-through accessor and returns `x@Depletion`.
+#'   specified value (see *Initial Depletion*). An object that contains `Depletion` objects returns them;
+#'   see *Pass-Through Access*.
 #' @param Final `numeric` or `NULL`. Target depletion relative to `Reference`
 #'   in the terminal historical time step. Accepts the same formats as
 #'   `Initial`. When populated, the `Efficiency` parameter in [Catchability()]
@@ -30,9 +29,10 @@
 #'   - `"B0"` (default): total unfished equilibrium biomass.
 #'   - `"SB0"`: spawning biomass at unfished equilibrium.
 #'   For stocks linked by `SRR@SPFrom`, see *Stocks Linked by SPFrom*.
-#' @param x A [depletion-class] object for slot accessors, or a [stock-class]
-#'   object for `Depletion<-`.
-#' @param value For `Depletion<-`: a [depletion-class] object. For `Initial<-`
+#' @param x A [depletion-class] object for slot accessors, or an object that contains
+#'   `Depletion` objects for `Depletion<-` (see *Pass-Through Access*).
+#' @param value For `Depletion<-`: a [depletion-class] object, or a list of them named by
+#'   stock (see *Pass-Through Access*). For `Initial<-`
 #'   and `Final<-`: a numeric scalar, length-2 bounds vector, or
 #'   length-`nSim` vector.
 #'
@@ -113,19 +113,6 @@
 #' `Initial` applies to each stock individually, relative to the stock's own
 #' `Reference`.
 #'
-#' ## Pass-Through Access from a Stock
-#'
-#' When `Initial` is a [stock-class] object, `Depletion()` returns the
-#' `Depletion` slot directly:
-#'
-#' ```r
-#' Depletion(my_stock)             # returns my_stock@Depletion
-#' Depletion(my_stock) <- my_dep   # replaces my_stock@Depletion
-#' ```
-#'
-#' A [lifehistorydata-class] object, or a list of them (the `LifeHistory` slot of a
-#' [data-class] object), returns its `Depletion` slot in the same way.
-#'
 #' ## Slot Accessors
 #'
 #' Individual slots can be read or replaced using generic functions matching
@@ -136,10 +123,14 @@
 #' Final(dep)     <- 0.4
 #' ```
 #'
+#' @template passthrough-stock
+#' @templateVar slot Depletion
+#' @templateVar arg Initial
+#'
 #' @return
-#' - `Depletion()` returns a [depletion-class] object. If `Initial` is a
-#'   [stock-class], returns `x@Depletion`.
-#' - `Depletion<-` returns the [stock-class] `x` with the `Depletion` slot
+#' - `Depletion()` returns a [depletion-class] object. If `Initial` contains `Depletion`
+#'   objects, returns them (see *Pass-Through Access*).
+#' - `Depletion<-` returns `x` with the `Depletion` slot
 #'   replaced and the object re-validated.
 #' - `Initial()` and `Final()` return the value of the corresponding slot
 #'   from `x` (a `nSim`-length array after [Populate()], or `NULL`).
@@ -162,11 +153,8 @@ Depletion <- function(Initial = NULL,
                       Final = NULL,
                       Reference = "B0") {
   
-  if (.IsStockOrList(Initial)) 
-    return(.ExtractStockSlot(Initial, "Depletion"))
-
-  if (.IsDataContainer(Initial, 'lifehistorydata'))
-    return(.AccessSlotRecursive(Initial, 'Depletion'))
+  if (.IsStockComponentSource(Initial))
+    return(.GetStockSlot(Initial, 'Depletion'))
   
   methods::new("depletion",
                Initial   = Initial,
@@ -214,5 +202,5 @@ Final <- function(x) {
 #' @rdname Depletion
 #' @export
 `Depletion<-`<- function(x, value) {
-  .AssignSlotRecursive(x, value, 'Depletion')
+  .AssignStockSlot(x, value, 'Depletion')
 }

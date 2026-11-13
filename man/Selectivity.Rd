@@ -5,6 +5,8 @@
 \alias{isRel}
 \alias{isRel<-}
 \alias{Selectivity<-}
+\alias{isAtLength}
+\alias{isAtLength<-}
 \title{Selectivity}
 \usage{
 Selectivity(
@@ -24,6 +26,10 @@ isRel(x)
 isRel(x) <- value
 
 Selectivity(x) <- value
+
+isAtLength(x)
+
+isAtLength(x) <- value
 }
 \arguments{
 \item{Pars}{Named list of selectivity parameters passed to the selectivity
@@ -38,8 +44,8 @@ If \code{Pars} and \code{Model} are both provided, \code{MeanAtAge} is computed 
 model and any values already in \code{MeanAtAge} are overwritten. To preserve
 a user-specified \code{MeanAtAge}, leave \code{Pars = list()} (the default).
 
-If \code{Pars} is a \link[=fleet-class]{fleet} object, the \code{Selectivity} slot of that
-fleet is returned.}
+An object that contains \code{Selectivity} objects returns them; see
+\emph{Pass-Through Access}.}
 
 \item{Model}{Character or function or \code{NULL}. Selectivity model identifier.
 If \code{NULL} (default), the model is inferred automatically from the names
@@ -90,20 +96,22 @@ instead. Default \code{TRUE}.}
 
 \item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
 
-\item{x}{A \link[=selectivity-class]{selectivity} object, or a \link[=fleet-class]{fleet} object for
-\verb{Selectivity<-}.}
+\item{x}{A \link[=selectivity-class]{selectivity} object, or an object that contains
+\code{Selectivity} objects for \verb{Selectivity<-} (see \emph{Pass-Through Access}).}
 
-\item{value}{For \verb{Selectivity<-}: a \link[=selectivity-class]{selectivity} object. For
-\verb{isRel<-}: a logical value.}
+\item{value}{For \verb{Selectivity<-}: a \link[=selectivity-class]{selectivity} object, or a list of them named by
+fleet or by stock and fleet (see \emph{Pass-Through Access}). For
+\verb{isRel<-} and \verb{isAtLength<-}: a logical value.}
 }
 \value{
 \itemize{
-\item \code{Selectivity()} returns a \link[=selectivity-class]{selectivity} object. If \code{Pars} is a
-\link[=fleet-class]{fleet} object, the \code{Selectivity} slot of that fleet is returned.
+\item \code{Selectivity()} returns a \link[=selectivity-class]{selectivity} object. If \code{Pars} contains \code{Selectivity}
+objects, returns them (see \emph{Pass-Through Access}).
 \item \verb{Selectivity<-} returns \code{x} with the \code{Selectivity} slot replaced by
 \code{value}.
-\item \code{isRel()} returns the \code{isRel} slot from \code{x}.
-\item \verb{isRel<-} returns \code{x} with the \code{isRel} slot updated.
+\item \code{isRel()} and \code{isAtLength()} return the \code{isRel} and \code{isAtLength} slots
+of a \link[=selectivity-class]{selectivity} or \link[=retention-class]{retention} object \code{x}.
+\item \verb{isRel<-} and \verb{isAtLength<-} return \code{x} with the slot updated.
 }
 }
 \description{
@@ -162,11 +170,36 @@ A \link[=selectivity-class]{selectivity} object can be attached to a \code{\link
 Individual slots may be accessed or modified using \code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}},
 \code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=MeanAtLength]{MeanAtLength()}}, \code{\link[=MeanAtWeight]{MeanAtWeight()}}, \code{\link[=Classes]{Classes()}}, and
 \code{\link[=isRel]{isRel()}}.
+}
+}
+\section{Pass-Through Access}{
 
-An \link[=exploitationdata-class]{exploitationdata} object, or a list of them (the \code{Exploitation} slot of a
-\link[=data-class]{data} object), returns its \code{Selectivity} slot in the same way.
+When \code{Pars} is an object that contains \code{Selectivity} objects,
+\code{Selectivity()} returns them instead of constructing a new object:
+\itemize{
+\item a \link[=fleet-class]{fleet} object: its \code{Selectivity} slot.
+\item an \link[=om-class]{om}, \link[=hist-class]{hist}, or \link[=mse-class]{mse} object: a list by stock of
+lists by fleet, with the \code{Selectivity} slot of each fleet. A list of
+\link[=fleet-class]{fleet} objects, or a list of them by stock, returns a list with
+the same structure.
+\item a \link[=data-class]{data} or \link[=obs-class]{obs} object, or an \link[=exploitationdata-class]{exploitationdata} or
+\link[=exploitationobs-class]{exploitationobs} object or a list of them: the \code{Selectivity} slot
+of the exploitation information.
+\item an \link[=advice-class]{advice} object: the selectivity set by an MP, and an \link[=indicesobs-class]{indicesobs} object: the selectivity of the index (see also \code{\link[=IndexSelectivity]{IndexSelectivity()}}). The slot of these objects can also be replaced.
 }
+
+\code{Selectivity(x) <- value} replaces the slot of a \link[=fleet-class]{fleet} or
+\link[=om-class]{om} object, a \link[=data-class]{data} or \link[=obs-class]{obs} object, an
+\link[=exploitationdata-class]{exploitationdata} or \link[=exploitationobs-class]{exploitationobs} object, or of
+each object in a list of them. For an \link[=om-class]{om} object, \code{value} is a
+single object when the OM has one stock and one fleet, a list named by
+fleet (see \code{\link[=FleetNames]{FleetNames()}}) when it has one stock and several fleets, and a
+list named by stock (see \code{\link[=StockNames]{StockNames()}}) of lists named by fleet when it
+has several stocks. The slot cannot be replaced in a \link[=hist-class]{hist} or
+\link[=mse-class]{mse} object, because it was used to simulate the historical
+dynamics.
 }
+
 \examples{
 ## ---- List available selectivity models ----
 SelectivityModels()

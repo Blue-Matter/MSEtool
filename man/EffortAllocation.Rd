@@ -65,12 +65,13 @@ EffortAllocation(om)
 \item \code{\link[=OM]{OM()}} for the constructor, \link[=om-class]{om} for the class definition.
 \item \code{\link[=Advice]{Advice()}} for the interpretation of scalar Effort advice.
 \item \code{\link[=FleetAllocation]{FleetAllocation()}} for the equivalent split applied to TAC.
-\item \link{OM-accessors} for the remaining \code{OM} slot accessors.
+\item \code{\link[=OM]{OM()}} for the accessors of the other \code{OM} slots.
 }
 
 Other om:
 \code{\link[=CatchFrac]{CatchFrac()}},
 \code{\link{ComplexOM}},
+\code{\link[=Complexes]{Complexes()}},
 \code{\link[=DataLag]{DataLag()}},
 \code{\link[=Herm]{Herm()}},
 \code{\link{HermOM}},
@@ -80,10 +81,11 @@ Other om:
 \code{\link[=MPStartYear]{MPStartYear()}},
 \code{\link{MultiStockOM}},
 \code{\link[=OM]{OM()}},
-\code{\link{OM-accessors}},
+\code{\link{OMControl}},
 \code{\link[=RefSeason]{RefSeason()}},
 \code{\link{SeasonalSpatialOM}},
 \code{\link{SingleStockOM}},
+\code{\link[=StockTargeting]{StockTargeting()}},
 \code{\link{TwoFleetOM}},
 \code{\link{om-class}},
 \code{\link{stocktransition-class}}

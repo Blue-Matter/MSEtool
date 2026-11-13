@@ -67,7 +67,9 @@ Removals(
 }
 \arguments{
 \item{object}{A \link[=hist-class]{hist}, \link[=mse-class]{mse}, \link[=obs-class]{obs}, or \link[=data-class]{data}
-object, or a list of \link[=data-class]{data} objects.}
+object, or a list of \link[=data-class]{data} objects. \code{Landings()} and \code{Removals()}
+also accept a \link[=reference-class]{reference} object, and return its \code{Landings} or
+\code{Removals} slot.}
 
 \item{df}{Logical. Applies to \link[=hist-class]{hist} and \link[=mse-class]{mse} objects only.
 If \code{FALSE} the raw array slot is returned. If \code{TRUE} (default) a tidy

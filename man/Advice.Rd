@@ -15,6 +15,7 @@
 \alias{LimitType<-}
 \alias{ClosureMode}
 \alias{ClosureMode<-}
+\alias{Advice<-}
 \title{Management Advice Constructor and Accessors}
 \usage{
 Advice(
@@ -58,6 +59,8 @@ LimitType(x) <- value
 ClosureMode(x)
 
 ClosureMode(x) <- value
+
+Advice(x) <- value
 }
 \arguments{
 \item{TAC}{Numeric vector or matrix specifying total allowable catch.
@@ -139,7 +142,7 @@ remaining fishing time, are never caught.
 time steps.}
 
 \item{x}{An \link[=advice-class]{advice} object, for the accessor and replacement
-functions below.}
+functions below; a \link[=data-class]{data} object, for \verb{Advice<-}.}
 
 \item{value}{The replacement value, for the replacement functions below.}
 }
@@ -154,6 +157,8 @@ data frame when \code{TAC} is an \link[=mse-class]{mse} object.
 corresponding slot from an \link[=advice-class]{advice} object \code{x}.
 \item Their replacement forms (e.g. \verb{TAC<-}) return \code{x} with the corresponding
 slot updated.
+\item \verb{Advice<-} returns the \link[=data-class]{data} object \code{x} with its \code{Advice} slot
+replaced by the \link[=advicedata-class]{advicedata} object \code{value}.
 }
 }
 \description{

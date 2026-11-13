@@ -7,7 +7,8 @@
 #' can hold values for analyses outside [Simulate()] and [Project()].
 #'
 #' @param Revenue Numeric array or `NULL`. Revenue by simulation, fleet, and
-#'   year. Default `NULL`.
+#'   year. Default `NULL`. An object that contains `Bioeconomic` objects
+#'   returns them; see *Pass-Through Access*.
 #' @param Cost Numeric or `NULL`. Operating cost per unit of effort. Default
 #'   `NULL`.
 #' @param Investment Numeric or `NULL`. Cost of adding a unit of effort.
@@ -19,9 +20,10 @@
 #' @param Discount Numeric or `NULL`. Discount factor applied to future values.
 #'   Default `NULL`.
 #' @param Misc List. Miscellaneous additional inputs. Default `list()`.
-#' @param x A [bioeconomic-class] object, or a [fleet-class] object for
-#'   `Bioeconomic<-`.
-#' @param value For `Bioeconomic<-`: a [bioeconomic-class] object. For slot
+#' @param x A [bioeconomic-class] object, or an object that contains
+#'   `Bioeconomic` objects for `Bioeconomic<-` (see *Pass-Through Access*).
+#' @param value For `Bioeconomic<-`: a [bioeconomic-class] object, or a list of them named by
+#'   fleet or by stock and fleet (see *Pass-Through Access*). For slot
 #'   replacement functions: the new value for the corresponding slot.
 #'
 #' @details
@@ -38,9 +40,14 @@
 #' Individual slots may be accessed or modified using [Revenue()], [Cost()],
 #' [Investment()], [Disinvestment()], [Depreciation()], and [Discount()].
 #'
+#' @template passthrough-fleet
+#' @templateVar slot Bioeconomic
+#' @templateVar arg Revenue
+#' @templateVar containers no
+#'
 #' @return
-#' - `Bioeconomic()` returns a [bioeconomic-class] object. If `Revenue` is a
-#'   [fleet-class] object, the `Bioeconomic` slot of that fleet is returned.
+#' - `Bioeconomic()` returns a [bioeconomic-class] object. If `Revenue` contains `Bioeconomic`
+#'   objects, returns them (see *Pass-Through Access*).
 #' - `Bioeconomic<-` returns `x` with the `Bioeconomic` slot replaced by
 #'   `value`.
 #' - `Revenue()`, `Cost()`, `Investment()`, `Disinvestment()`,
@@ -75,8 +82,9 @@ Bioeconomic <- function(Revenue       = NULL,
                         Discount      = NULL,
                         Misc          = list()) {
   
-  if (.IsFleetOrList(Revenue))
-    return(.ExtractFleetSlot(Revenue, 'Bioeconomic'))
+  if (.IsFleetComponentSource(Revenue, Containers = FALSE))
+    return(.GetFleetSlot(Revenue, 'Bioeconomic'))
+
   
   methods::new(
     "bioeconomic",
