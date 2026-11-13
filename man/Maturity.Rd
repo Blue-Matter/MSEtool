@@ -239,8 +239,8 @@ selecting which stock's slot to return:
 \if{html}{\out{<div class="sourceCode r">}}\preformatted{Maturity(stock_list, 2)   # returns stock_list[[2]]@Maturity
 }\if{html}{\out{</div>}}
 
-A \link[=lifehistorydata-class]{lifehistorydata} object, or a list of them (the \code{LifeHistory} slot of a
-\link[=data-class]{data} object), returns its \code{Maturity} slot in the same way.
+A \link[=lifehistorydata-class]{lifehistorydata} or \link[=lifehistoryobs-class]{lifehistoryobs} object, or a list of
+them (the \code{LifeHistory} slot of a \link[=data-class]{data} or \link[=obs-class]{obs} object), returns its \code{Maturity} slot in the same way.
 }
 
 \subsection{Slot Accessors}{

@@ -1,12 +1,16 @@
-#' Calculate or Extract Time Step Values
+#' Time Steps of an Operating Model
 #'
-#' Two related functions for working with historical and projection time steps:
+#' Functions for the historical and projection time steps:
 #'
 #' - `CalcYears()` generates a numeric vector of time step values from
 #'   explicit parameters.
 #' - `Years()` extracts time step values from an [om-class], [hist-class], or
 #'   [mse-class] object, or a list of such objects, by delegating to
-#'   `CalcYears()`.
+#'   `CalcYears()`. For other objects with a `Years` slot (e.g. [data-class],
+#'   [pm-class], and the observation components) it returns that slot.
+#' - `nYear()`, `pYear()`, `CurrentYear()`, and `Seasons()` access and
+#'   replace the number of historical and projection years, the final
+#'   historical year, and the number of seasons per year.
 #'
 #' @details
 #' The historical period spans `nYear` time steps ending at `CurrentYear`.
@@ -35,10 +39,22 @@
 #' @param Period Character or `NULL`. Controls which time steps are returned.
 #'   See Details.
 #' @param x An [om-class], [hist-class], or [mse-class] object, or a list of
-#'   such objects. (`Years()` only.)
+#'   such objects. `Years()`, `nYear()`, `CurrentYear()`, and `Seasons()` also
+#'   accept a [data-class] object or a list of them.
 #'
-#' @return A numeric vector of time step values, or for `Years()` applied to
-#'   a list, a list of such vectors.
+#' @return
+#' - `CalcYears()` and `Years()` return a numeric vector of time step values,
+#'   or for `Years()` applied to a list, a list of such vectors.
+#' - `nYear()`, `pYear()`, `CurrentYear()`, and `Seasons()` return the value
+#'   of the slot of an [om-class] object, or of the embedded `OM` of a
+#'   [hist-class] or [mse-class] object.
+#' - For a [data-class] object, `nYear()` returns the number of historical
+#'   years up to `YearLH`, `CurrentYear()` returns `YearLH`, and `Seasons()`
+#'   returns the `Seasons` slot. For a list of [data-class] objects they return
+#'   a single value when it is the same for every object, and otherwise a list.
+#'   `pYear()` gives an error for [data-class] objects; see [ProjectionYear()].
+#' - Replacement functions return `x` with the slot updated. `nYear`, `pYear`,
+#'   `CurrentYear`, and `Seasons` can only be replaced in [om-class] objects.
 #'
 #' @examples
 #' # Annual time steps
@@ -130,7 +146,7 @@ CalcYears <- function(nYear, pYear, CurrentYear, Seasons=1, Period=NULL) {
 #' @export
 Years <- function(x, Period=NULL) {
   if (isS4(x)) {
-    if (inherits(x, c('data', 'pm')))
+    if (!methods::.hasSlot(x, 'nYear') && methods::.hasSlot(x, 'Years'))
       return(x@Years)
     if (inherits(x, 'mse') || inherits(x, 'hist'))
       x <- x@OM
@@ -140,9 +156,65 @@ Years <- function(x, Period=NULL) {
     return(purrr::map(x, Years, Period))
 }
 
-#' @param value Numeric vector of years to assign to the `Years` slot.
+#' @param value The value to assign: a numeric vector of years for `Years<-`,
+#'   or a single number for the other replacement functions.
 #' @rdname Years
 #' @export
 `Years<-` <- function(x, value) {
   .AssignSlot(x, value, 'Years')
 }
+
+#' @rdname Years
+#' @export
+nYear <- function(x) {
+  if (inherits(x, "data") || .IsDataList(x))
+    return(.DataValue(x, \(d) {
+      if (!length(d@Years))
+        return(0L)
+      YearLH <- d@YearLH %||% floor(max(d@Years, -Inf))
+      length(unique(floor(d@Years[d@Years < YearLH + 1])))
+    }))
+  .IsHist(x, "nYear")
+}
+
+#' @rdname Years
+#' @export
+`nYear<-` <- function(x, value) .AssignOMSlot(x, value, "nYear", "struct")
+
+#' @rdname Years
+#' @export
+pYear <- function(x) {
+  if (inherits(x, "data") || .IsDataList(x))
+    cli::cli_abort(c("{.code pYear} is not stored in {.cls data} objects",
+                     "i" = "Use {.fn ProjectionYear} for the number of projection time steps in the data"),
+                   call = NULL)
+  .IsHist(x, "pYear")
+}
+
+#' @rdname Years
+#' @export
+`pYear<-` <- function(x, value) .AssignOMSlot(x, value, "pYear", "struct")
+
+#' @rdname Years
+#' @export
+CurrentYear <- function(x) {
+  if (inherits(x, "data") || .IsDataList(x))
+    return(.DataValue(x, \(d) d@YearLH))
+  .IsHist(x, "CurrentYear")
+}
+
+#' @rdname Years
+#' @export
+`CurrentYear<-` <- function(x, value) .AssignOMSlot(x, value, "CurrentYear", "struct")
+
+#' @rdname Years
+#' @export
+Seasons <- function(x) {
+  if (.IsDataList(x))
+    return(.DataValue(x, \(d) d@Seasons))
+  .IsHist(x, "Seasons")
+}
+
+#' @rdname Years
+#' @export
+`Seasons<-` <- function(x, value) .AssignOMSlot(x, value, "Seasons", "struct")

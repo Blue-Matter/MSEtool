@@ -3,10 +3,6 @@
 \name{Stock}
 \alias{Stock}
 \alias{Stock<-}
-\alias{CommonName}
-\alias{CommonName<-}
-\alias{Species}
-\alias{Species<-}
 \title{Stock Constructor and Accessors}
 \usage{
 Stock(
@@ -27,14 +23,6 @@ Stock(
 )
 
 Stock(x) <- value
-
-CommonName(x)
-
-CommonName(x) <- value
-
-Species(x)
-
-Species(x) <- value
 }
 \arguments{
 \item{Name}{\code{character(1)}. Unique stock identifier used throughout model
@@ -98,8 +86,7 @@ seasons). Default \code{1}. Must match the time units set in \code{\link[=Ages]{
 use with accessor and replacement functions.}
 
 \item{value}{For \verb{Stock<-}: a \link[=stock-class]{stock} object, or a list of
-\link[=stock-class]{stock} objects for multi-stock operating models. For \verb{CommonName<-}
-and \verb{Species<-}: a \code{character(1)} string.}
+\link[=stock-class]{stock} objects for multi-stock operating models.}
 }
 \value{
 \itemize{
@@ -107,10 +94,10 @@ and \verb{Species<-}: a \code{character(1)} string.}
 a \code{Stock} slot, returns that slot (or an indexed element for list-valued
 slots).
 \item \verb{Stock<-} returns \code{x} with the \code{Stock} slot replaced by \code{value}.
-\item \code{CommonName()} and \code{Species()} return a \code{character(1)} string from the
-corresponding slot of \code{x}.
-\item \verb{CommonName<-} and \verb{Species<-} return \code{x} with the named slot updated.
 }
+
+\code{Name}, \code{CommonName}, and \code{Species} are accessed with the \link{Metadata}
+accessors.
 }
 \description{
 Construct a \link[=stock-class]{stock} object defining the biological and

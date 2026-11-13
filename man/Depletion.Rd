@@ -169,8 +169,8 @@ When \code{Initial} is a \link[=stock-class]{stock} object, \code{Depletion()} r
 Depletion(my_stock) <- my_dep   # replaces my_stock@Depletion
 }\if{html}{\out{</div>}}
 
-A \link[=lifehistorydata-class]{lifehistorydata} object, or a list of them (the \code{LifeHistory} slot of a
-\link[=data-class]{data} object), returns its \code{Depletion} slot in the same way.
+A \link[=lifehistorydata-class]{lifehistorydata} or \link[=lifehistoryobs-class]{lifehistoryobs} object, or a list of
+them (the \code{LifeHistory} slot of a \link[=data-class]{data} or \link[=obs-class]{obs} object), returns its \code{Depletion} slot in the same way.
 }
 
 \subsection{Slot Accessors}{

@@ -62,7 +62,8 @@ supply a fully specified \code{Efficiency} array directly.}
 \item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
 
 \item{x}{A \link[=catchability-class]{catchability} object for accessor and replacement
-functions, or an \link[=indicesobs-class]{indicesobs} object for \code{qInc()} and \verb{qInc<-}.}
+functions, or an \link[=indicesobs-class]{indicesobs} object for \code{Efficiency()}, \code{qInc()},
+and their replacement forms.}
 
 \item{value}{The replacement value for the corresponding slot.}
 }

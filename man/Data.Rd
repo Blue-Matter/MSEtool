@@ -3,6 +3,8 @@
 \name{Data}
 \alias{Data}
 \alias{Data<-}
+\alias{YearLH}
+\alias{YearLH<-}
 \title{Constructor and Accessor for \code{Data}}
 \usage{
 Data(
@@ -36,6 +38,10 @@ Data(
 )
 
 Data(x) <- value
+
+YearLH(x)
+
+YearLH(x) <- value
 }
 \arguments{
 \item{Name}{Either a character string naming the new \link[=data-class]{data} object, or an
@@ -113,15 +119,23 @@ related advice.}
 \item{Misc}{A named list for any additional user-defined data. Defaults to
 \code{list()}.}
 
-\item{x}{An \link[=om-class]{om} object, for use with \verb{Data<-}.}
+\item{x}{An \link[=om-class]{om} object, for use with \verb{Data<-}; a \link[=data-class]{data}
+object or a list of them, for \code{YearLH()} and \verb{YearLH<-}.}
 
-\item{value}{A \link[=data-class]{data} object, or a list of \link[=data-class]{data} objects for
-multi-stock operating models, to assign to the \code{Data} slot.}
+\item{value}{For \verb{Data<-}: a \link[=data-class]{data} object, or a list of
+\link[=data-class]{data} objects for multi-stock operating models, to assign to the
+\code{Data} slot. For \verb{YearLH<-}: the last historical year.}
 }
 \value{
 A \link[=data-class]{data} object, or when \code{Name} is an \link[=mse-class]{mse} object, a list
 of \link[=data-class]{data} objects from the \verb{@PPD} slot. \verb{Data<-} returns \code{x} with
-the \code{Data} slot replaced by \code{value}.
+the \code{Data} slot replaced by \code{value}. \code{YearLH()} returns the last
+historical year of the data, and \verb{YearLH<-} returns \code{x} with the
+\code{YearLH} slot replaced.
+
+The other slots of a \link[=data-class]{data} object are accessed with the
+\link{Metadata}, \link{Data-accessors}, \link{Years}, and \link{Dimensions} accessors, and
+with \code{\link[=Landings]{Landings()}}, \code{\link[=Discards]{Discards()}}, \code{\link[=Effort]{Effort()}}, and \code{\link[=Advice]{Advice()}}.
 }
 \description{
 Creates a new \link[=data-class]{data} object, or extracts the \code{Data} or \code{PPD} slot from

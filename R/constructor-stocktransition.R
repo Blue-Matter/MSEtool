@@ -15,11 +15,16 @@
 #'   transitioned out of `From`). Default `NULL`. See *Transition in the
 #'   Plus Group* in Details.
 #' @param Misc `list`. Used internally. Default `list()`.
+#' @param x An [om-class] object, for `Herm<-`.
+#' @param value A list of [stocktransition-class] objects, or `NULL`, for
+#'   `Herm<-`.
 #'
 #' @return A [stocktransition-class] object. When `From` is an [om-class],
 #'   [hist-class], or [mse-class] object (and `To` is not supplied), `Herm()`
 #'   instead acts as a pass-through accessor and returns that object's
-#'   `Herm` slot (a list of `stocktransition` objects, or `NULL`).
+#'   `Herm` slot (a list of `stocktransition` objects, or `NULL`). `Herm<-`
+#'   returns `x` with the `Herm` slot replaced; it can only be replaced in
+#'   [om-class] objects.
 #'
 #' @details
 #' 
@@ -96,3 +101,7 @@ Herm <- function(From, To, Frac = NULL, Misc = list()) {
   methods::validObject(obj)
   obj
 }
+
+#' @rdname Herm
+#' @export
+`Herm<-` <- function(x, value) .AssignOMSlot(x, value, "Herm", "struct")

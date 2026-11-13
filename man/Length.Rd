@@ -154,8 +154,8 @@ slot directly:
 Length(my_stock) <- my_L   # replaces my_stock@Length
 }\if{html}{\out{</div>}}
 
-A \link[=lifehistorydata-class]{lifehistorydata} object, or a list of them (the \code{LifeHistory} slot of a
-\link[=data-class]{data} object), returns its \code{Length} slot in the same way.
+A \link[=lifehistorydata-class]{lifehistorydata} or \link[=lifehistoryobs-class]{lifehistoryobs} object, or a list of
+them (the \code{LifeHistory} slot of a \link[=data-class]{data} or \link[=obs-class]{obs} object), returns its \code{Length} slot in the same way.
 }
 
 \subsection{Slot Accessors}{

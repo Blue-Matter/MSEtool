@@ -2,6 +2,12 @@
 % Please edit documentation in R/constructor-obs.R
 \name{CompObs}
 \alias{CompObs}
+\alias{ESS}
+\alias{ESS<-}
+\alias{SampleSize}
+\alias{SampleSize<-}
+\alias{Shift}
+\alias{Shift<-}
 \title{CompObs Constructor and Accessors}
 \usage{
 CompObs(
@@ -13,6 +19,18 @@ CompObs(
   MaxGap = NULL,
   Misc = list()
 )
+
+ESS(x)
+
+ESS(x) <- value
+
+SampleSize(x)
+
+SampleSize(x) <- value
+
+Shift(x)
+
+Shift(x) <- value
 }
 \arguments{
 \item{SampleSize}{\code{numeric} or \code{NULL}. Nominal sample size (number of fish
@@ -82,16 +100,25 @@ no historical observations are generated whenever \code{SampleSize} is set. Also
 or set with \code{\link[=MaxGap]{MaxGap()}} and \verb{MaxGap<-}.}
 
 \item{Misc}{\code{list}. Reserved for internal use. Default \code{list()}.}
+
+\item{x}{A \link[=compobs-class]{compobs} object, for the accessor and replacement
+functions.}
+
+\item{value}{The value to assign to the slot.}
 }
 \value{
 \itemize{
 \item \code{CompObs()} returns a \link[=compobs-class]{compobs} object.
-\item \code{LandingsAtAge()}, \code{DiscardsAtAge()}, \code{LandingsAtSize()},
-\code{DiscardsAtSize()} return the corresponding \link[=compobs-class]{compobs} slot from
-an \link[=obs-class]{obs} object \code{x}.
+\item \code{SampleSize()}, \code{ESS()}, and \code{Shift()} return the corresponding slot of
+a \link[=compobs-class]{compobs} object \code{x}.
 \item Their replacement forms return \code{x} with the corresponding slot updated
 and the object revalidated.
 }
+
+The settings shared with other observation components (\code{MaxGap}) are
+documented in \link{Obs-accessors}, and the \code{Theta} slot in \code{\link[=Theta]{Theta()}}.
+\code{\link[=LandingsAtAge]{LandingsAtAge()}} and the other composition slots of an \link[=obs-class]{obs}
+object are documented in \link{Data-accessors}.
 }
 \description{
 Construct a \link[=compobs-class]{compobs} object defining the observation error structure

@@ -106,6 +106,7 @@ MSE <- runMSE(ComplexOM, MPs = 'CurrentEffort', nSim = 2)
 
 Other om:
 \code{\link[=CatchFrac]{CatchFrac()}},
+\code{\link[=Complexes]{Complexes()}},
 \code{\link[=DataLag]{DataLag()}},
 \code{\link[=EffortAllocation]{EffortAllocation()}},
 \code{\link[=Herm]{Herm()}},
@@ -116,7 +117,7 @@ Other om:
 \code{\link[=MPStartYear]{MPStartYear()}},
 \code{\link{MultiStockOM}},
 \code{\link[=OM]{OM()}},
-\code{\link{OM-accessors}},
+\code{\link{OMControl}},
 \code{\link[=RefSeason]{RefSeason()}},
 \code{\link{SeasonalSpatialOM}},
 \code{\link{SingleStockOM}},

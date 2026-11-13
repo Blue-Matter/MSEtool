@@ -115,8 +115,9 @@
 #' Individual slots may be accessed or modified using [Pars()], [Model()],
 #' [MeanAtAge()], [MeanAtLength()], [MeanAtWeight()], and [Classes()].
 #'
-#' An [exploitationdata-class] object, or a list of them (the `Exploitation` slot of a
-#' [data-class] object), returns its `Retention` slot in the same way.
+#' An [exploitationdata-class] or [exploitationobs-class] object, or a list
+#' of them (the `Exploitation` slot of a [data-class] or [obs-class] object),
+#' returns its `Retention` slot in the same way.
 #'
 #' @return
 #' - `Retention()` returns a [retention-class] object. If `Pars` is a
@@ -150,7 +151,7 @@ Retention <- function(Pars         = list(),
   if (.IsFleetOrList(Pars))
     return(.ExtractFleetSlot(Pars, 'Retention'))
 
-  if (.IsDataContainer(Pars, 'exploitationdata'))
+  if (.IsDataContainer(Pars, c('exploitationdata', 'exploitationobs')))
     return(.AccessSlotRecursive(Pars, 'Retention'))
 
   if (inherits(Pars, 'advice'))

@@ -215,3 +215,15 @@ TACImp <- function(x) {
 `TACImp<-` <- function(x, value) {
   .AssignSlot(x, value, 'TAC')
 }
+
+#' @rdname Imp
+#' @export
+Size <- function(x) {
+  .AccessSlot(x, 'Size')
+}
+
+#' @rdname Imp
+#' @export
+`Size<-` <- function(x, value) {
+  .AssignSlot(x, value, 'Size')
+}

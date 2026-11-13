@@ -2,9 +2,12 @@
 % Please edit documentation in R/constructor-stocktransition.R
 \name{Herm}
 \alias{Herm}
+\alias{Herm<-}
 \title{Stock Transition Constructor}
 \usage{
 Herm(From, To, Frac = NULL, Misc = list())
+
+Herm(x) <- value
 }
 \arguments{
 \item{From}{\code{character(1)} or \code{numeric(1)}. Source stock, specified by
@@ -21,12 +24,19 @@ transitioned out of \code{From}). Default \code{NULL}. See \emph{Transition in t
 Plus Group} in Details.}
 
 \item{Misc}{\code{list}. Used internally. Default \code{list()}.}
+
+\item{x}{An \link[=om-class]{om} object, for \verb{Herm<-}.}
+
+\item{value}{A list of \link[=stocktransition-class]{stocktransition} objects, or \code{NULL}, for
+\verb{Herm<-}.}
 }
 \value{
 A \link[=stocktransition-class]{stocktransition} object. When \code{From} is an \link[=om-class]{om},
 \link[=hist-class]{hist}, or \link[=mse-class]{mse} object (and \code{To} is not supplied), \code{Herm()}
 instead acts as a pass-through accessor and returns that object's
-\code{Herm} slot (a list of \code{stocktransition} objects, or \code{NULL}).
+\code{Herm} slot (a list of \code{stocktransition} objects, or \code{NULL}). \verb{Herm<-}
+returns \code{x} with the \code{Herm} slot replaced; it can only be replaced in
+\link[=om-class]{om} objects.
 }
 \description{
 Construct a \link[=stocktransition-class]{stocktransition} object defining an age-dependent
@@ -82,6 +92,7 @@ herm <- Herm(From = 1, To = 2, Frac = Frac)
 Other om:
 \code{\link[=CatchFrac]{CatchFrac()}},
 \code{\link{ComplexOM}},
+\code{\link[=Complexes]{Complexes()}},
 \code{\link[=DataLag]{DataLag()}},
 \code{\link[=EffortAllocation]{EffortAllocation()}},
 \code{\link{HermOM}},
@@ -91,7 +102,7 @@ Other om:
 \code{\link[=MPStartYear]{MPStartYear()}},
 \code{\link{MultiStockOM}},
 \code{\link[=OM]{OM()}},
-\code{\link{OM-accessors}},
+\code{\link{OMControl}},
 \code{\link[=RefSeason]{RefSeason()}},
 \code{\link{SeasonalSpatialOM}},
 \code{\link{SingleStockOM}},

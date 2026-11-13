@@ -61,8 +61,7 @@
 #' @param x A [stock-class] object, or an S4 object with a `Stock` slot, for
 #'   use with accessor and replacement functions.
 #' @param value For `Stock<-`: a [stock-class] object, or a list of
-#'   [stock-class] objects for multi-stock operating models. For `CommonName<-`
-#'   and `Species<-`: a `character(1)` string.
+#'   [stock-class] objects for multi-stock operating models.
 #'
 #' @details
 #' ## Object Structure
@@ -114,9 +113,9 @@
 #'   a `Stock` slot, returns that slot (or an indexed element for list-valued
 #'   slots).
 #' - `Stock<-` returns `x` with the `Stock` slot replaced by `value`.
-#' - `CommonName()` and `Species()` return a `character(1)` string from the
-#'   corresponding slot of `x`.
-#' - `CommonName<-` and `Species<-` return `x` with the named slot updated.
+#'
+#' `Name`, `CommonName`, and `Species` are accessed with the [Metadata]
+#' accessors.
 #'
 #' @seealso
 #' - [stock-class] for the class definition and slot-level documentation.
@@ -207,33 +206,8 @@ Stock <- function(Name = "New Stock Object",
   object
 }
 
-
 #' @rdname Stock
 #' @export
 `Stock<-` <- function(x, value) {
   .AssignSlotRecursive(x, value, 'Stock')
-}
-
-#' @rdname Stock
-#' @export
-CommonName <- function(x) {
-  .AccessSlotRecursive(x, 'CommonName')
-}
-
-#' @rdname Stock
-#' @export
-`CommonName<-` <- function(x, value) {
-  .AssignSlotRecursive(x, value, 'CommonName')
-}
-
-#' @rdname Stock
-#' @export
-Species <- function(x) {
-  .AccessSlotRecursive(x, 'Species')
-}
-
-#' @rdname Stock
-#' @export
-`Species<-` <- function(x, value) {
-  .AssignSlotRecursive(x, value, 'Species')
 }
