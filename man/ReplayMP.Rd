@@ -21,7 +21,8 @@ ReplayMP(
 
 \item{Sim}{Simulation number.}
 
-\item{Stock}{Name or number of the stock (or stock complex).}
+\item{Stock}{Name or number of the stock complex (\code{names(OM@Complexes)};
+the stock name for a complex of one stock).}
 
 \item{Years}{Management years to replay. \code{NULL} (default) replays every
 management year of the projection.}
@@ -58,7 +59,11 @@ the years before the management year, and the MP stored in \code{MSE} (with any
 arguments set by \code{\link[=SetMPArgs]{SetMPArgs()}} or \code{\link[=TuneMP]{TuneMP()}}) is run again. The replayed
 advice is compared with the advice recorded in the projection, and a
 warning lists the years where they differ, e.g. for MPs that use
-\code{Data@Misc$DataOM}.
+\code{Data@Misc$DataOM}. \code{Data@Misc} holds the same values as in the
+projection: on the first MP call the \code{Misc} of the conditioning data
+(\code{OM@Data}, empty when interim advice precedes the MPs), and afterwards the
+\code{Advice@Misc} of the previous call, with \code{Sim}, \code{FirstAdvice}, \code{MPName},
+\code{StockName}, \code{AdviceYear}, and \code{Interval}.
 
 The animations have one frame per management year. They are \code{gganim}
 objects: printing one renders it, \code{\link[gganimate:animate]{gganimate::animate()}} sets the speed
@@ -99,18 +104,38 @@ are shown in a separate \code{Biomass} plot with the operating model
 \code{B/BMSY} with the operating model \code{SB/SBMSY}; use \code{Status = 'B'} to
 compare like with like.
 
-\code{Status} shows the operating model depletion (\code{SB/SB0} or \code{B/B0}, see
-\code{\link[=SB_SB0]{SB_SB0()}}) up to each management year, with a right axis in MSY units
-(\code{SB/SBMSY} or \code{B/BMSY}) and a dashed line at the MSY level. The right
-axis is scaled by the median ratio of \code{SBMSY/SB0} (or \code{BMSY/B0}) over the
-years. \code{Catch} shows the operating model landings, and the dead discards
-and removals when there are dead discards (see \code{\link[=Landings]{Landings()}}), up to the
-year before each management year, the TAC recorded in the projection for
-each year up to the management year (including years between management
-years), and the trial TAC and TAC of each management year. The operating model
-population of an index is the index-selected population on the scale of
-the index (\code{Efficiency * NomIndex^Beta}, see \code{\link[=PlotIndexFit]{PlotIndexFit()}}), shown up
-to the last year of data available to the MP.
+\code{Status} shows the operating model depletion (\code{SB/SB0} or \code{B/B0}, with the
+equilibrium unfished \code{SB0} or \code{B0}) up to each management year, with a
+right axis in MSY units (\code{SB/SBMSY} or \code{B/BMSY}) and a dashed line at the
+MSY level. The right axis is scaled by the median ratio of \code{SBMSY/SB0} (or
+\code{BMSY/B0}) over the years. For a complex of several stocks (e.g. the two
+sexes of a stock), the biomass and its reference point are each summed over
+the stocks before dividing: \code{SB/SB0} and \code{SB/SBMSY} sum over the spawning
+stocks (the female stock of a two-sex complex), and \code{B/B0} and \code{B/BMSY} over
+every stock in the complex, the population that a surplus production model
+fitted to the complex's catch and indices describes.
+
+\code{Catch} shows the operating model landings, and the dead discards and
+removals when there are dead discards (see \code{\link[=Landings]{Landings()}}), summed over the
+fleets and the stocks of the complex, up to the year before each
+management year. It also shows the TAC recorded in the projection for each
+year up to the management year (including years between management years
+and interim years), and the trial TAC and TAC of each management year.
+
+The operating model population of an index is the index-selected
+population on the scale of the index (\code{Efficiency * NomIndex^Beta}, see
+\code{\link[=PlotIndexFit]{PlotIndexFit()}}), shown up to the last time step of data available to the
+MP (accounting for \code{DataLag}).
+
+In seasonal OMs (\code{Seasons > 1}), the \code{Status} and \code{Catch} plots are annual:
+depletion and MSY ratios use the biomass in the reference season(s) of each
+calendar year (see \code{\link[=RefSeason]{RefSeason()}}), the basis of the MSY reference points;
+catches are summed over the seasons of each calendar year; and the TAC of a
+year is the annual TAC. Both plots show the complete calendar years before
+each management year. An index recorded by the MP on an annual basis (e.g.
+after \code{\link[=AnnualData]{AnnualData()}}) is compared with the operating model population
+averaged over the seasons with observations in each year; an index recorded
+by time step with the operating model population of each time step.
 
 In the \code{Index}, \code{Biomass}, \code{Status}, and \code{Catch} plots, a light solid
 line marks the end of the historical period and, when the OM has an
