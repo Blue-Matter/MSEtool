@@ -9,7 +9,8 @@
 #' @param MSE An [mse-class] object returned by [Project()].
 #' @param MP Name or number of the MP in `MSE`.
 #' @param Sim Simulation number.
-#' @param Stock Name or number of the stock (or stock complex).
+#' @param Stock Name or number of the stock complex (`names(OM@@Complexes)`;
+#'   the stock name for a complex of one stock).
 #' @param Years Management years to replay. `NULL` (default) replays every
 #'   management year of the projection.
 #' @param Status Biomass shown in the `Status` animation: `'SB'`
@@ -32,7 +33,11 @@
 #' arguments set by [SetMPArgs()] or [TuneMP()]) is run again. The replayed
 #' advice is compared with the advice recorded in the projection, and a
 #' warning lists the years where they differ, e.g. for MPs that use
-#' `Data@@Misc$DataOM`.
+#' `Data@@Misc$DataOM`. `Data@@Misc` holds the same values as in the
+#' projection: on the first MP call the `Misc` of the conditioning data
+#' (`OM@@Data`, empty when interim advice precedes the MPs), and afterwards the
+#' `Advice@@Misc` of the previous call, with `Sim`, `FirstAdvice`, `MPName`,
+#' `StockName`, `AdviceYear`, and `Interval`.
 #'
 #' The animations have one frame per management year. They are `gganim`
 #' objects: printing one renders it, [gganimate::animate()] sets the speed
@@ -71,18 +76,38 @@
 #' `B/BMSY` with the operating model `SB/SBMSY`; use `Status = 'B'` to
 #' compare like with like.
 #'
-#' `Status` shows the operating model depletion (`SB/SB0` or `B/B0`, see
-#' [SB_SB0()]) up to each management year, with a right axis in MSY units
-#' (`SB/SBMSY` or `B/BMSY`) and a dashed line at the MSY level. The right
-#' axis is scaled by the median ratio of `SBMSY/SB0` (or `BMSY/B0`) over the
-#' years. `Catch` shows the operating model landings, and the dead discards
-#' and removals when there are dead discards (see [Landings()]), up to the
-#' year before each management year, the TAC recorded in the projection for
-#' each year up to the management year (including years between management
-#' years), and the trial TAC and TAC of each management year. The operating model
-#' population of an index is the index-selected population on the scale of
-#' the index (`Efficiency * NomIndex^Beta`, see [PlotIndexFit()]), shown up
-#' to the last year of data available to the MP.
+#' `Status` shows the operating model depletion (`SB/SB0` or `B/B0`, with the
+#' equilibrium unfished `SB0` or `B0`) up to each management year, with a
+#' right axis in MSY units (`SB/SBMSY` or `B/BMSY`) and a dashed line at the
+#' MSY level. The right axis is scaled by the median ratio of `SBMSY/SB0` (or
+#' `BMSY/B0`) over the years. For a complex of several stocks (e.g. the two
+#' sexes of a stock), the biomass and its reference point are each summed over
+#' the stocks before dividing: `SB/SB0` and `SB/SBMSY` sum over the spawning
+#' stocks (the female stock of a two-sex complex), and `B/B0` and `B/BMSY` over
+#' every stock in the complex, the population that a surplus production model
+#' fitted to the complex's catch and indices describes.
+#'
+#' `Catch` shows the operating model landings, and the dead discards and
+#' removals when there are dead discards (see [Landings()]), summed over the
+#' fleets and the stocks of the complex, up to the year before each
+#' management year. It also shows the TAC recorded in the projection for each
+#' year up to the management year (including years between management years
+#' and interim years), and the trial TAC and TAC of each management year.
+#'
+#' The operating model population of an index is the index-selected
+#' population on the scale of the index (`Efficiency * NomIndex^Beta`, see
+#' [PlotIndexFit()]), shown up to the last time step of data available to the
+#' MP (accounting for `DataLag`).
+#'
+#' In seasonal OMs (`Seasons > 1`), the `Status` and `Catch` plots are annual:
+#' depletion and MSY ratios use the biomass in the reference season(s) of each
+#' calendar year (see [RefSeason()]), the basis of the MSY reference points;
+#' catches are summed over the seasons of each calendar year; and the TAC of a
+#' year is the annual TAC. Both plots show the complete calendar years before
+#' each management year. An index recorded by the MP on an annual basis (e.g.
+#' after [AnnualData()]) is compared with the operating model population
+#' averaged over the seasons with observations in each year; an index recorded
+#' by time step with the operating model population of each time step.
 #'
 #' In the `Index`, `Biomass`, `Status`, and `Catch` plots, a light solid
 #' line marks the end of the historical period and, when the OM has an
@@ -134,6 +159,8 @@ ReplayMP <- function(MSE, MP = 1, Sim = 1, Stock = 1, Years = NULL,
   D <- PPDs[[Sim]][[StockName]]
 
   OM        <- MSE@OM
+  ComplexOf <- .StockComplexMap(OM)
+  Stocks    <- names(ComplexOf)[ComplexOf == StockName]
   Seasons   <- OM@Seasons
   YearsProj <- Years(OM, 'Projection')
   Interval  <- .ResolveInterval(OM@Interval, MPName, MPfun, Seasons)
@@ -156,12 +183,16 @@ ReplayMP <- function(MSE, MP = 1, Sim = 1, Stock = 1, Years = NULL,
   # every management year up to the last requested one is run, so Advice@Misc carries forward as in Project()
   RunYears <- MgmtYears[MgmtYears <= max(Years)]
   PB   <- cli::cli_progress_bar(paste("Replaying", MPName), total = length(RunYears), clear = TRUE)
-  Misc <- list()
+  # as in Project(): the conditioning Data@Misc on the first MP call, unless interim advice replaced it
+  Misc <- if (any(Interim)) list() else
+    tryCatch(OM@Data[[StockName]]@Misc, error = function(e) NULL) %||% list()
   Runs <- list()
   for (Y in RunYears) {
     cli::cli_progress_update(id = PB)
     DataY <- .ReplayData(D, Y, DataLag, Seasons)
-    DataY@Misc <- utils::modifyList(Misc, list(Sim = Sim, MPName = MPName, StockName = StockName,
+    DataY@Misc <- utils::modifyList(Misc, list(Sim = .GlobalSim(OM, Sim),
+                                               FirstAdvice = abs(Y - min(MgmtYears)) < 1e-6,
+                                               MPName = MPName, StockName = StockName,
                                                AdviceYear = Y, Interval = Interval))
     .MPReplayState$Record <- NULL
     Adv <- tryCatch(suppressMessages(.WithMPSeed(MPfun(Data = DataY), OM@Seed, .GlobalSim(OM, Sim),
@@ -172,7 +203,8 @@ ReplayMP <- function(MSE, MP = 1, Sim = 1, Stock = 1, Years = NULL,
       Misc$AnnualTAC <- Misc$StatusQuoEffort <- NULL
     }
     if (Y %in% Years)
-      Runs[[length(Runs) + 1]] <- list(Year = Y, YearLH = DataY@YearLH, Advice = Adv,
+      Runs[[length(Runs) + 1]] <- list(Year = Y, YearLH = DataY@YearLH, LastData = max(DataY@Years),
+                                       Advice = Adv,
                                        Record = .MPReplayState$Record,
                                        Recorded = .ReplayRecorded(D@Advice, Y))
   }
@@ -189,7 +221,8 @@ ReplayMP <- function(MSE, MP = 1, Sim = 1, Stock = 1, Years = NULL,
   if (all(vapply(Runs, \(r) is.null(r$Record), logical(1))))
     cli::cli_inform(c("i" = "{.val {MPName}} does not record its calculations with {.fn RecordMP}: only the {.val Status} and {.val Catch} animations are available."))
   Rows <- lapply(Runs, .ReplayFrame)
-  P <- list(YearLH = Runs[[1]]$YearLH)
+  P <- list(YearLH = Runs[[1]]$YearLH, Seasons = Seasons,
+            LastData = vapply(Runs, \(r) r$LastData, numeric(1)))
   rm(Runs)
   Parts <- c('Table', 'Index', 'IndexStatus', 'Target', 'Point', 'TACs', 'Biomass', 'BPoint')
   P[Parts] <- lapply(Parts, \(nm) do.call(rbind, lapply(Rows, `[[`, nm)))
@@ -205,23 +238,28 @@ ReplayMP <- function(MSE, MP = 1, Sim = 1, Stock = 1, Years = NULL,
     cli::cli_warn(c("!" = "Replayed advice differs from the advice recorded in the projection in {.val {Table$Year[Diff]}}.",
                     "i" = "The MP may use information not stored in the MSE object (e.g. {.code Data@Misc$DataOM})."))
 
-  P$OMCatch    <- .ReplayOMCatch(MSE, MPName, Sim, StockName)
+  P$OMCatch    <- .ReplayOMCatch(MSE, MPName, Sim, Stocks)
   P$TACHistory <- .ReplayTACHistory(D@Advice@TAC)
-  P$Boundaries  <- .ReplayBoundaries(P$YearLH, OM@MPStartYear, YearsProj)
-  OMStatus <- if (length(Status)) .ReplayOMStatus(MSE, MPName, Sim, StockName, Status)
+  P$Boundaries <- .ReplayBoundaries(P$YearLH, OM@MPStartYear, YearsProj)
+  # annual OM values of a seasonal OM are shown for complete calendar years before each decision
+  P$StatusLast <- if (Seasons > 1) .CalendarYear(P$Years) - 1 else P$Years
+  OMStatus <- if (length(Status)) .ReplayOMStatus(MSE, MPName, Sim, Stocks, Status)
   # estimated B/BMSY goes on the Status plot when it has an MSY axis
   HasBiomass  <- !is.null(P$Biomass) || !is.null(P$BPoint)
   EstOnStatus <- HasBiomass && is.finite(attr(OMStatus, 'K') %||% NA)
 
   Animations <- list()
-  if (!is.null(P$Index))
-    Animations$Index <- .ReplayAnimIndex(P, IndexCap, .ReplayOMIndex(MSE, MPName, Sim, StockName))
+  if (!is.null(P$Index)) {
+    AnnualIndex <- Seasons > 1 && all(abs(P$Index$Year - round(P$Index$Year)) < 1e-6)
+    P$IndexLast <- if (AnnualIndex) .ReplayLastCompleteYear(P$LastData, Seasons) else P$LastData
+    Animations$Index <- .ReplayAnimIndex(P, IndexCap, .ReplayOMIndex(MSE, MPName, Sim, StockName, D, AnnualIndex))
+  }
   if (HasBiomass && !EstOnStatus)
-    Animations$Biomass <- .ReplayAnimBiomass(P, .ReplayOMBBMSY(MSE, MPName, Sim, StockName))
+    Animations$Biomass <- .ReplayAnimBiomass(P, .ReplayOMBBMSY(MSE, MPName, Sim, Stocks))
   if (!is.null(OMStatus))
     Animations$Status <- .ReplayAnimStatus(OMStatus, P$Years,
                                            if (EstOnStatus) list(Biomass = P$Biomass, Point = P$BPoint),
-                                           P$Boundaries)
+                                           P$Boundaries, P$StatusLast)
   if (!is.null(P$Point))
     Animations$HCR <- .ReplayAnimHCR(P)
   Animations$Catch <- .ReplayAnimCatch(P)
@@ -394,8 +432,9 @@ print.mpreplay <- function(x, ...) {
 
 .ReplayBoundaryLayer <- function(Boundaries) {
   if (!length(Boundaries)) return(NULL)
-  ggplot2::geom_vline(xintercept = unname(Boundaries), colour = 'grey70', linewidth = 0.5,
-                      linetype = ifelse(names(Boundaries) == 'MP start year', 'dashed', 'solid'))
+  lapply(names(Boundaries), \(nm)
+    ggplot2::geom_vline(xintercept = Boundaries[[nm]], colour = 'grey70', linewidth = 0.5,
+                        linetype = if (nm == 'MP start year') 'dashed' else 'solid'))
 }
 
 .ReplayFrames <- function(x, Years) {
@@ -405,13 +444,19 @@ print.mpreplay <- function(x, ...) {
 
 .ReplayTitle <- function(Title) paste0(Title, ': advice for {current_frame}')
 
-# rows up to and including each frame (Before = TRUE: years before each frame)
-.ReplayTrail <- function(Points, Years, Before = FALSE) {
-  do.call(rbind, lapply(Years, \(f) {
-    P <- Points[if (Before) Points$Year < f else Points$Year <= f, , drop = FALSE]
-    if (nrow(P)) P$Frame <- f
+# rows up to and including Last[i] in each frame Years[i]
+.ReplayTrail <- function(Points, Years, Last = Years) {
+  do.call(rbind, lapply(seq_along(Years), \(i) {
+    P <- Points[Points$Year <= Last[i] + 1e-6, , drop = FALSE]
+    if (nrow(P)) P$Frame <- Years[i]
     P
   }))
+}
+
+# last complete calendar year up to time step x
+.ReplayLastCompleteYear <- function(x, Seasons) {
+  Cal <- .CalendarYear(x)
+  ifelse(.SeasonOfTimestep(x, Seasons) == Seasons, Cal, Cal - 1)
 }
 
 # year the index plot starts: per index, the year nearest the last historical drop to the cap
@@ -431,35 +476,76 @@ print.mpreplay <- function(x, ...) {
 # frames with at least two points, for lines
 .ReplayLines <- function(x) x[x$Frame %in% names(which(table(x$Frame) > 1)), , drop = FALSE]
 
-# operating model population of each index, on the index scale
-.ReplayOMIndex <- function(MSE, MPName, Sim, StockName) {
+# time steps of the observed indices of a Data object, as Fleet-Key strings
+.ReplayIndexObsKeys <- function(D) {
+  unlist(lapply(c('CPUE', 'Survey'), \(ty) {
+    V <- methods::slot(D, ty)@Value
+    if (is.null(V) || !length(V)) return(NULL)
+    Yr <- .AnnualRowYears(V, D@Years)
+    Nm <- methods::slot(D, ty)@Name
+    unlist(lapply(seq_len(ncol(V)), \(j) {
+      Ok <- !is.na(V[, j]) & V[, j] >= 0
+      if (any(Ok)) paste(Nm[j], round(Yr[Ok], 3))
+    }))
+  }))
+}
+
+# operating model population of each index, on the index scale; Annual: averaged over the
+# observed time steps of each calendar year (all time steps in years without observations), as AnnualData()
+.ReplayOMIndex <- function(MSE, MPName, Sim, Complex, D, Annual = FALSE) {
   X <- do.call(rbind, lapply(c('CPUE', 'Survey'), \(ty)
     tryCatch(.BuildIndexFitDF(MSE, ty), error = function(e) NULL)))
   if (is.null(X)) return(NULL)
-  X <- X[X$Series == 'True' & X$Sim == Sim & as.character(X$Stock) == StockName &
+  X <- X[X$Series == 'True' & X$Sim == Sim & as.character(X$Stock) == Complex &
            X$MP %in% c('Historical', MPName) & is.finite(X$Value), ]
   if (!nrow(X)) return(NULL)
-  X <- stats::aggregate(Value ~ Fleet + Year, data = data.frame(Fleet = X$Fleet, Year = floor(X$Year),
-                                                                Value = X$Value), FUN = mean)
+  X <- data.frame(Fleet = as.character(X$Fleet), Year = as.numeric(X$Year), Value = X$Value)
+  if (Annual) {
+    X$Observed <- paste(X$Fleet, round(X$Year, 3)) %in% .ReplayIndexObsKeys(D)
+    X$Year <- .CalendarYear(X$Year)
+    AnyObs <- stats::ave(X$Observed, X$Fleet, X$Year, FUN = any)
+    X <- X[X$Observed | !AnyObs, ]
+  }
+  X <- stats::aggregate(Value ~ Fleet + Year, data = X, FUN = mean)
   data.frame(Name = X$Fleet, Year = X$Year, Value = X$Value)
 }
 
-.ReplayOMRelative <- function(MSE, MPName, Sim, StockName, Var) {
-  X <- tryCatch(as.data.frame(switch(Var, SB_SBMSY = SB_SBMSY(MSE), SB_SB0 = SB_SB0(MSE),
-                                     B_BMSY = B_BMSY(MSE), B_B0 = B_B0(MSE))),
+.ReplayRelative <- list(SB_SB0 = c('SBiomass', 'SBiomass', 'Unfished'), SB_SBMSY = c('SBiomass', 'SBMSY', 'MSY'),
+                        B_B0 = c('Biomass', 'Biomass', 'Unfished'), B_BMSY = c('Biomass', 'BMSY', 'MSY'))
+
+# value summed over Stocks relative to the reference summed over Stocks; for seasonal OMs one
+# value per calendar year in the reference season(s), the basis of the MSY reference points
+.ReplayOMRelative <- function(MSE, MPName, Sim, Stocks, Var) {
+  Spec <- .ReplayRelative[[Var]]
+  OM   <- MSE@OM
+  X <- tryCatch(.ExtractRelative(MSE, num_slot = Spec[1], denom_slot = Spec[2], ref = Spec[3],
+                                 var_name = Var, type = if (Spec[3] == 'Unfished') 'Equilibrium',
+                                 Reduce = FALSE, Extend = TRUE, stockNames = Stocks, sumStock = TRUE),
                 error = function(e) NULL)
   if (is.null(X)) return(NULL)
-  X <- X[X$Sim == Sim & as.character(X$Stock) == StockName & X$MP %in% c('Historical', MPName) &
-           is.finite(X$Value), ]
+  X <- as.data.frame(X)
+  X <- X[as.numeric(as.character(X$Sim)) == Sim & X$MP %in% c('Historical', MPName) & is.finite(X$Value), ]
   if (!nrow(X)) return(NULL)
-  stats::aggregate(Value ~ Year, data = data.frame(Year = floor(X$Year), Value = X$Value), FUN = mean)
+  X <- data.frame(Sim = Sim, Stock = .StockComplexMap(OM)[[Stocks[1]]], MP = X$MP, Period = X$Period,
+                  Year = as.numeric(as.character(X$Year)), Value = X$Value)
+  if (Spec[3] == 'Unfished')
+    X <- .AnnualDF(X, OM, 'RefSeason')
+  stats::aggregate(Value ~ Year, data = X, FUN = mean)
+}
+
+# stocks summed for the status of a complex: the spawning stocks for SB, every stock for B
+.ReplayStatusStocks <- function(OM, Stocks, Type) {
+  if (Type == 'B') return(Stocks)
+  Spawning <- intersect(Stocks, .SpawningStockNames(OM))
+  if (length(Spawning)) Spawning else Stocks
 }
 
 # depletion of SB or B, with the MSY level on the depletion scale (e.g. SBMSY/SB0) in attr K
-.ReplayOMStatus <- function(MSE, MPName, Sim, StockName, Type = 'SB') {
-  Dep <- .ReplayOMRelative(MSE, MPName, Sim, StockName, paste0(Type, '_', Type, '0'))
+.ReplayOMStatus <- function(MSE, MPName, Sim, Stocks, Type = 'SB') {
+  Stocks <- .ReplayStatusStocks(MSE@OM, Stocks, Type)
+  Dep <- .ReplayOMRelative(MSE, MPName, Sim, Stocks, paste0(Type, '_', Type, '0'))
   if (is.null(Dep)) return(NULL)
-  MSY <- .ReplayOMRelative(MSE, MPName, Sim, StockName, paste0(Type, '_', Type, 'MSY'))
+  MSY <- .ReplayOMRelative(MSE, MPName, Sim, Stocks, paste0(Type, '_', Type, 'MSY'))
   K <- NA_real_
   if (!is.null(MSY)) {
     M <- merge(Dep, MSY, by = 'Year')
@@ -468,22 +554,25 @@ print.mpreplay <- function(x, ...) {
   structure(Dep, Type = Type, K = K)
 }
 
-# TAC recorded in the projection for every year, summed over fleets
+# annual TAC summed over fleets; every time step of a calendar year holds the annual TAC
 .ReplayTACHistory <- function(TAC) {
   if (!is.array(TAC) || !identical(names(dimnames(TAC))[1], 'Year')) return(NULL)
-  Out <- data.frame(Year = floor(as.numeric(dimnames(TAC)[[1]])), Value = apply(TAC, 1, sum, na.rm = TRUE))
-  stats::aggregate(Value ~ Year, data = Out[is.finite(Out$Value), ], FUN = sum)
+  Total <- apply(TAC, 1, \(x) if (all(is.na(x))) NA_real_ else sum(x, na.rm = TRUE))
+  Out <- data.frame(Year = .CalendarYear(as.numeric(dimnames(TAC)[[1]])), Value = Total)
+  stats::aggregate(Value ~ Year, data = Out[is.finite(Out$Value), ], FUN = mean)
 }
 
-# operating model landings, dead discards, and removals, summed over fleets
-.ReplayOMCatch <- function(MSE, MPName, Sim, StockName) {
+# operating model landings, dead discards, and removals, summed over fleets, Stocks, and the
+# time steps of each complete calendar year
+.ReplayOMCatch <- function(MSE, MPName, Sim, Stocks) {
   Get <- function(Fn, Series) {
     X <- tryCatch(as.data.frame(Fn(MSE)), error = function(e) NULL)
     if (is.null(X)) return(NULL)
-    X <- X[X$Sim == Sim & as.character(X$Stock) == StockName & X$MP %in% c('Historical', MPName) &
+    X <- X[X$Sim == Sim & as.character(X$Stock) %in% Stocks & X$MP %in% c('Historical', MPName) &
              is.finite(X$Value), ]
     if (!nrow(X)) return(NULL)
-    Out <- stats::aggregate(Value ~ Year, data = data.frame(Year = floor(X$Year), Value = X$Value), FUN = sum)
+    Out <- stats::aggregate(Value ~ Year, data = data.frame(Year = as.numeric(X$Year), Value = X$Value), FUN = sum)
+    Out <- as.data.frame(.SumCalendarYearDF(Out, MSE@OM))
     Out$Series <- Series
     attr(Out, 'Units') <- unique(X$Units)[1]
     Out
@@ -494,8 +583,8 @@ print.mpreplay <- function(x, ...) {
   Out
 }
 
-.ReplayOMBBMSY <- function(MSE, MPName, Sim, StockName)
-  .ReplayOMRelative(MSE, MPName, Sim, StockName, 'B_BMSY')
+.ReplayOMBBMSY <- function(MSE, MPName, Sim, Stocks)
+  .ReplayOMRelative(MSE, MPName, Sim, Stocks, 'B_BMSY')
 
 .ReplayAnimHCR <- function(P) {
   Years  <- P$Years
@@ -529,7 +618,7 @@ print.mpreplay <- function(x, ...) {
 
 .ReplayAnimCatch <- function(P) {
   Years <- P$TACs$Year
-  OM    <- if (is.null(P$OMCatch)) NULL else .ReplayTrail(P$OMCatch, Years, Before = TRUE)
+  OM    <- if (is.null(P$OMCatch)) NULL else .ReplayTrail(P$OMCatch, Years, .CalendarYear(Years) - 1)
   Catch <- OM[is.finite(OM$Value), c('Frame', 'Year', 'Value', 'Series')]
   if (!any(Catch$Series == 'Dead discards' & Catch$Value > 0))
     Catch <- Catch[!Catch$Series %in% c('Dead discards', 'Removals'), ]
@@ -576,13 +665,13 @@ print.mpreplay <- function(x, ...) {
 
 # depletion on the left axis, the same line in MSY units on the right axis;
 # Est: surplus production B/BMSY estimates, drawn against the right axis
-.ReplayAnimStatus <- function(S, Years, Est = NULL, Boundaries = NULL) {
+.ReplayAnimStatus <- function(S, Years, Est = NULL, Boundaries = NULL, Last = Years) {
   Type <- attr(S, 'Type')
   K    <- attr(S, 'K')
   HasK <- is.finite(K) && K > 0
   OMLabel <- paste0('Operating model ', Type, '/', Type, '0')
-  Shown <- .ReplayTrail(data.frame(Year = S$Year, Value = S$Value, Series = OMLabel), Years)
-  Now   <- Shown[Shown$Year == Shown$Frame, ]
+  Shown <- .ReplayTrail(data.frame(Year = S$Year, Value = S$Value, Series = OMLabel), Years, Last)
+  Now   <- Shown[Shown$Year == stats::ave(Shown$Year, Shown$Frame, FUN = max), ]
   Cols  <- stats::setNames('grey10', OMLabel)
   Lty   <- stats::setNames('solid', OMLabel)
   if (HasK && !is.null(Est$Biomass)) {
@@ -620,13 +709,13 @@ print.mpreplay <- function(x, ...) {
     gganimate::transition_manual(Frame)
 }
 
-# operating model index population, revealed up to the last data year of each frame
-.ReplayOMIndexLayer <- function(OMIndex, Index, Start, Years) {
+# operating model index population, revealed up to the last data year of each frame (Last)
+.ReplayOMIndexLayer <- function(OMIndex, Index, Start, Years, Last) {
   if (is.null(OMIndex)) return(NULL)
   X <- OMIndex[OMIndex$Name %in% levels(Index$Name) & OMIndex$Year >= Start, ]
   if (!nrow(X)) return(NULL)
   X$Name <- factor(X$Name, levels = levels(Index$Name))
-  X <- .ReplayTrail(X, Years, Before = TRUE)
+  X <- .ReplayTrail(X, Years, Last)
   ggplot2::geom_line(data = .ReplayFrames(X, Years), ggplot2::aes(y = .data$Value, colour = 'Operating model'),
                      linetype = 'dashed', linewidth = 0.9)
 }
@@ -653,7 +742,7 @@ print.mpreplay <- function(x, ...) {
                                  ggplot2::aes(yintercept = .data$Value, linetype = .data$Series),
                                  colour = .MPColours[['Target']], linewidth = 0.8)
   p <- p +
-    .ReplayOMIndexLayer(OMIndex, Index, Start, Years) +
+    .ReplayOMIndexLayer(OMIndex, Index, Start, Years, P$IndexLast %||% (Years - 1)) +
     ggplot2::geom_point(data = .ReplayFrames(Index[is.finite(Index$Observed), ], Years),
                         ggplot2::aes(y = .data$Observed, colour = 'Observed'), size = 1.8)
   for (S in c('Smoothed', 'Fitted'))
@@ -701,7 +790,7 @@ print.mpreplay <- function(x, ...) {
     .ReplayBoundaryLayer(P$Boundaries) +
     ggplot2::geom_hline(yintercept = 1, colour = 'grey50')
   if (!is.null(OMB))
-    p <- p + ggplot2::geom_line(data = .ReplayFrames(.ReplayTrail(OMB, Years), Years),
+    p <- p + ggplot2::geom_line(data = .ReplayFrames(.ReplayTrail(OMB, Years, P$StatusLast %||% Years), Years),
                                 ggplot2::aes(linetype = 'Operating model'), colour = 'grey10', linewidth = 0.9)
   B <- P$Biomass
   if (!is.null(B)) {

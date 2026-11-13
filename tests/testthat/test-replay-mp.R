@@ -176,5 +176,110 @@ test_that("replay plots mark the end of the historical period and the MP start y
   expect_length(MSEtool:::.ReplayBoundaries(2026, NULL, 2027:2056), 1)
   expect_length(MSEtool:::.ReplayBoundaries(2026, 2027, 2027:2056), 1)
   L <- MSEtool:::.ReplayBoundaryLayer(B)
-  expect_s3_class(L$geom, 'GeomVline')
+  expect_length(L, 2)
+  for (l in L) expect_s3_class(l$geom, 'GeomVline')
+  expect_equal(vapply(L, \(l) l$aes_params$linetype, character(1)), c('solid', 'dashed'))
+})
+
+# two sexes in one complex named by both, as from ImportSS(), with 4 seasons, interim years, and a data lag
+.ReplayTwoSexOM <- function() {
+  om <- SingleStockOM
+  om@nSim <- 2; om@pYear <- 6; om@Seasons <- 4
+  Fe <- om@Stock[[1]]; Fe@Name <- 'Female'
+  Ma <- Fe; Ma@Name <- 'Male'; Ma@SRR@SPFrom <- 'Female'
+  om@Stock <- list(Female = Fe, Male = Ma)
+  om@Fleet <- list(Female = om@Fleet[[1]], Male = om@Fleet[[1]])
+  om@Complexes <- list('Female Male' = 1:2)
+  om@Obs <- list('Female Male' = om@Obs[[1]])
+  om@Imp <- list()
+  TS <- Years(om, 'Historical')
+  Season3 <- abs(TS - floor(TS) - 0.5) < 0.01
+  om <- AddIndex(om, stats::setNames(ifelse(Season3, seq(1.5, 0.6, length.out = length(TS)), NA), TS),
+                 Name = 'Annual', Selectivity = 'SBiomass', CV = 0.15)
+  P1 <- floor(min(Years(om, 'Projection')))
+  om@MPStartYear <- P1 + 2
+  om@DataLag <- 1
+  om@InterimAdvice <- data.frame(Year = P1:(P1 + 1), Type = 'TAC', Mean = 1500, EffType = NA)
+  om
+}
+
+test_that("ReplayMP() replays a two-sex seasonal stock complex with interim years and a data lag", {
+  skip_on_cran()
+  skip_if_not_installed('gganimate')
+  Hist <- Simulate(.ReplayTwoSexOM(), silent = TRUE)
+  MPs  <- c('IndexRate', 'IndexTarget', 'SurplusProduction')
+  MSE  <- suppressWarnings(Project(Hist, MPs, silent = TRUE))
+  Cx   <- names(MSE@OM@Complexes)
+  OM   <- MSE@OM
+  expect_equal(MSEtool:::.ReplayStatusStocks(OM, c('Female', 'Male'), 'SB'), 'Female')
+  expect_equal(MSEtool:::.ReplayStatusStocks(OM, c('Female', 'Male'), 'B'), c('Female', 'Male'))
+  Annual <- TACs(MSE) |>
+    dplyr::mutate(Year = floor(.data$Year + 1e-6)) |>
+    dplyr::group_by(.data$MP, .data$Sim, .data$Year, .data$Fleet) |>
+    dplyr::summarise(Value = mean(.data$Value), .groups = 'drop')
+
+  for (mp in MPs) {
+    R <- suppressWarnings(ReplayMP(MSE, mp, Sim = 1))
+    expect_equal(R$Stock, Cx)
+    expect_equal(R$Table$Advice, R$Table$Recorded, tolerance = 1e-8)
+    expect_named(R$Animations, c('Index', 'Status', 'HCR', 'Catch'))
+    Years <- R$Table$Year
+    Last  <- as.character(max(Years))
+
+    # past TACs: the annual TAC, not the sum over seasons
+    Lines <- .LayerData(R$Animations$Catch, c('Series', 'Value', 'Frame'))
+    Past  <- Lines[Lines$Series == 'Past TACs' & as.character(Lines$Frame) == Last, ]
+    expect_equal(Past$Value[match(Years, Past$Year)], R$Table$Advice, tolerance = 1e-8)
+    A <- Annual[Annual$MP == mp & Annual$Sim == 1, ]
+    expect_equal(Past$Value[match(A$Year, Past$Year)], A$Value, tolerance = 1e-8)
+    expect_equal(Past$Value[Past$Year < min(Years)], rep(1500, 2), tolerance = 1e-8)
+
+    # operating model catch of both sexes, summed over seasons, before each decision
+    Land <- Lines[Lines$Series == 'Landings', ]
+    expect_gt(nrow(Land), 0)
+    expect_true(all(Land$Year < as.numeric(as.character(Land$Frame))))
+    Interim <- Land[as.character(Land$Frame) == Last & Land$Year %in% (min(Years) - 1:2), ]
+    expect_equal(Interim$Value, rep(1500, 2), tolerance = 1e-3)
+
+    # status for complete calendar years before each decision
+    S <- .LayerData(R$Animations$Status, c('Series', 'Value', 'Frame'))
+    S <- S[grepl('^Operating model', S$Series), ]
+    expect_gt(nrow(S), 0)
+    expect_true(all(S$Year < as.numeric(as.character(S$Frame))))
+    expect_true(all(S$Year == round(S$Year)))
+    OMS <- MSEtool:::.ReplayOMStatus(MSE, mp, 1, c('Female', 'Male'), 'SB')
+    MSY <- MSEtool:::.ReplayOMRelative(MSE, mp, 1, 'Female', 'SB_SBMSY')
+    Both <- merge(OMS, MSY, by = 'Year')
+    expect_equal(Both$Value.x, Both$Value.y * attr(OMS, 'K'), tolerance = 1e-4)
+
+    # operating model index ends at the last data year of each frame (DataLag = 1)
+    OMI <- .LayerData(R$Animations$Index, c('Name', 'Year', 'Value', 'Frame'))
+    Obs <- .LayerData(R$Animations$Index, 'Observed')
+    LastObs <- tapply(Obs$Year, as.character(Obs$Frame), max)
+    LastOM  <- tapply(OMI$Year, as.character(OMI$Frame), max)
+    expect_equal(LastOM[names(LastObs)], LastObs, tolerance = 1e-3)
+    expect_true(all(LastOM < as.numeric(names(LastOM)) - 1))
+
+    for (f in ReplayPlot(R, Years[2])) expect_no_error(ggplot2::ggplot_build(f))
+  }
+  skip_if_not_installed('gifski')
+  expect_true(file.exists(ReplayAnimate(R, fps = 4, file = tempfile(fileext = '.gif'))))
+})
+
+test_that("ReplayMP() passes the MP the Data@Misc of the projection", {
+  skip_on_cran()
+  skip_if_not_installed('gganimate')
+  om <- SingleStockOM
+  om@nSim <- 2
+  om@pYear <- 4
+  Yr <- Years(om, 'Historical')
+  om <- AddIndex(om, stats::setNames(seq(1.5, 0.6, length.out = length(Yr)), Yr), Name = 'Extra', Selectivity = 'Biomass')
+  om@Data[[1]]@Misc$Key <- 7
+  MiscMP <- function(Data)
+    Advice(TAC = 100 + (Data@Misc$Key %||% 0) + 10 * isTRUE(Data@Misc$FirstAdvice) + Data@Misc$Sim)
+  class(MiscMP) <- 'mp'
+  MSE <- Project(Simulate(om, silent = TRUE), list(MiscMP = MiscMP), silent = TRUE)
+  R <- expect_no_warning(suppressMessages(ReplayMP(MSE, 'MiscMP', Sim = 2)))
+  expect_equal(R$Table$Advice, R$Table$Recorded)
+  expect_equal(R$Table$Advice[1:2], c(119, 102))
 })
