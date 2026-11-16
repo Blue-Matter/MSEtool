@@ -87,9 +87,13 @@ PopulateDiscardMortality <- function(DiscardMortality,
       Year = Years[1],
       Area = 1
     )
-    return(.SetDigest(DiscardMortality, argList))
+    return(.SetDigest(.CheckOutput(DiscardMortality, nSim, Ages, Years, nArea), argList))
   }
   
+  .CheckInputs(DiscardMortality)
+  .CheckSimsNotIncreased(DiscardMortality, nSim)
+  DiscardMortality@MeanAtAge <- .NameAtAge(DiscardMortality@MeanAtAge, Ages, Years, nArea, cl = 'discardmortality')
+  DiscardMortality <- .NameAtSize(DiscardMortality, 'MeanAtLength', Length, Years, nArea)
   .SetSeed(seed)
 
   # Discard mortality applies only to fish caught and released, so the
@@ -130,5 +134,5 @@ PopulateDiscardMortality <- function(DiscardMortality,
   DiscardMortality <- .AddAtAgeDimnames(DiscardMortality, Ages, Years)
   DiscardMortality <- .AddAtLengthDimnames(DiscardMortality, Years)
   
-  .SetDigest(.SetAgeDimnames(DiscardMortality, Ages), argList)
+  .SetDigest(.CheckOutput(.SetAgeDimnames(DiscardMortality, Ages), nSim, Ages, Years, nArea), argList)
 }

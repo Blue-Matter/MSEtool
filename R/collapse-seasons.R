@@ -383,6 +383,8 @@ CollapseSeasons <- function(OM, silent = FALSE) {
   NewStock <- Stock
   NewStock@Ages    <- AgeMap$AnnualAgesObj
   NewStock@Seasons <- 1
+  if (length(Stock@Years))
+    NewStock@Years <- CalcYears(Stock@nYear, Stock@pYear, Stock@CurrentYear, Seasons = 1)
 
   NewStock@NaturalMortality <- NaturalMortality(MeanAtAge = M_annual, Units = "year")
 

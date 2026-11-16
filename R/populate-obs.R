@@ -61,76 +61,76 @@ PopulateObs <- function(Obs,
   Obs@LifeHistory  <- .PopulateLifeHistoryObs(Obs@LifeHistory)
   Obs@Exploitation <- .PopulateExploitationObs(Obs@Exploitation)
   
-  Obs@Effort <- PopulateEffortObs(
+  Obs@Effort <- .SafePopulate(\() PopulateEffortObs(
     Effort    = Obs@Effort,
     nSim      = nSim,
     HistYears = HistYears,
     ProjYears = ProjYears
-  )
+  ), "Effort")
   
-  Obs@Landings <- PopulateCatchObs(
+  Obs@Landings <- .SafePopulate(\() PopulateCatchObs(
     Catch     = Obs@Landings,
     nSim      = nSim,
     HistYears = HistYears,
     ProjYears = ProjYears
-  )
+  ), "Landings")
   
-  Obs@Discards <- PopulateCatchObs(
+  Obs@Discards <- .SafePopulate(\() PopulateCatchObs(
     Catch     = Obs@Discards,
     nSim      = nSim,
     HistYears = HistYears,
     ProjYears = ProjYears
-  )
+  ), "Discards")
   
-  Obs@CPUE <- PopulateIndexObs(
+  Obs@CPUE <- .SafePopulate(\() PopulateIndexObs(
     Index     = Obs@CPUE,
     nSim      = nSim,
     HistYears = HistYears,
     ProjYears = ProjYears
-  )
+  ), "CPUE")
   
-  Obs@Survey <- PopulateIndexObs(
+  Obs@Survey <- .SafePopulate(\() PopulateIndexObs(
     Index     = Obs@Survey,
     nSim      = nSim,
     HistYears = HistYears,
     ProjYears = ProjYears
-  )
+  ), "Survey")
   
-  Obs@LandingsAtAge <- PopulateCompObs(
+  Obs@LandingsAtAge <- .SafePopulate(\() PopulateCompObs(
     Comp      = Obs@LandingsAtAge,
     nSim      = nSim,
     HistYears = HistYears,
     ProjYears = ProjYears,
     Bins      = AgeBins,
     BinName   = "Age"
-  )
+  ), "LandingsAtAge")
   
-  Obs@DiscardsAtAge <- PopulateCompObs(
+  Obs@DiscardsAtAge <- .SafePopulate(\() PopulateCompObs(
     Comp      = Obs@DiscardsAtAge,
     nSim      = nSim,
     HistYears = HistYears,
     ProjYears = ProjYears,
     Bins      = AgeBins,
     BinName   = "Age"
-  )
+  ), "DiscardsAtAge")
   
-  Obs@LandingsAtSize <- PopulateCompObs(
+  Obs@LandingsAtSize <- .SafePopulate(\() PopulateCompObs(
     Comp      = Obs@LandingsAtSize,
     nSim      = nSim,
     HistYears = HistYears,
     ProjYears = ProjYears,
     Bins      = SizeBins,
     BinName   = "Class"
-  )
+  ), "LandingsAtSize")
   
-  Obs@DiscardsAtSize <- PopulateCompObs(
+  Obs@DiscardsAtSize <- .SafePopulate(\() PopulateCompObs(
     Comp      = Obs@DiscardsAtSize,
     nSim      = nSim,
     HistYears = HistYears,
     ProjYears = ProjYears,
     Bins      = SizeBins,
     BinName   = "Class"
-  )
+  ), "DiscardsAtSize")
   
   ReduceDims(Obs, IncYear = TRUE)
 }

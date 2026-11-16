@@ -83,6 +83,9 @@
       matching_parameters[i] <- FALSE
     }
   }
+  Named <- object@Model
+  if (is.character(Named) && length(Named) == 1 && Named %in% models[matching_parameters])
+    return(Named)
   # prefer the model needing the fewest defaulted optional parameters
   if (any(matching_parameters))
     matching_parameters <- matching_parameters & nOmitted == min(nOmitted, na.rm = TRUE)

@@ -8,6 +8,8 @@
 #' @param Ages An [Ages()] object defining age classes. 
 #' @param Length A [Length()] object. Required if the mortality model depends on
 #'   length-at-age.
+#' @param Weight A [Weight()] object. Required if the mortality model depends on
+#'   weight, or `MeanAtWeight` is supplied.
 #' @param Years Numeric vector of model years. 
 #' @param nSim Integer. Number of simulation replicates.
 #' @param CalcAtLength Logical. If `TRUE`, calculate mortality-at-length values
@@ -52,6 +54,7 @@
 PopulateNaturalMortality <- function(NaturalMortality,
                                      Ages = NULL,
                                      Length = NULL,
+                                     Weight = NULL,
                                      Years = NULL,
                                      nSim = 5,
                                      CalcAtLength = FALSE,
@@ -59,11 +62,12 @@ PopulateNaturalMortality <- function(NaturalMortality,
                                      silent = FALSE,
                                      force = FALSE) {
   
+  NaturalMortality <- UpdateSlots(NaturalMortality)
   Ages  <- DefaultAges(Ages)
   Years <- DefaultYears(Years)
   nSim  <- .GetNSim(NaturalMortality, nSim)
   
-  argList <- list(Ages, Length, nSim, Years, CalcAtLength, seed)
+  argList <- list(Ages, Length, Weight, nSim, Years, CalcAtLength, seed)
   
   if (EmptyObject(NaturalMortality)) {
     cli::cli_abort('{.val NaturalMortality} is required but is currently empty')
@@ -74,6 +78,11 @@ PopulateNaturalMortality <- function(NaturalMortality,
     return(NaturalMortality)
   }
   
+  .CheckInputs(NaturalMortality)
+  .CheckSimsNotIncreased(NaturalMortality, nSim)
+  NaturalMortality@MeanAtAge <- .NameAtAge(NaturalMortality@MeanAtAge, Ages, Years, cl = 'naturalmortality')
+  NaturalMortality <- .NameAtSize(NaturalMortality, 'MeanAtLength', Length, Years)
+  NaturalMortality <- .NameAtSize(NaturalMortality, 'MeanAtWeight', Weight, Years)
   .SetSeed(seed)
   
   NaturalMortality@Pars <- .StructurePars(Pars = .AddDefaultPars(NaturalMortality), nSim, Years)
@@ -83,7 +92,7 @@ PopulateNaturalMortality <- function(NaturalMortality,
                                           Ages= Ages, 
                                           Years = Years)
   
-  ModelClass <- .SizeModelClass(NaturalMortality@Model, c('Age', 'Length'), 'NaturalMortality')
+  ModelClass <- .SizeModelClass(NaturalMortality@Model, what = 'NaturalMortality')
   if (!is.null(ModelClass)) {
     if (grepl("at-Length", ModelClass)) {
       NaturalMortality <- .PopulateMeanAtLength(
@@ -92,6 +101,15 @@ PopulateNaturalMortality <- function(NaturalMortality,
         Years = Years, 
         Ages = Ages, 
         seed = seed,
+        silent = silent
+      )
+    } else if (grepl("at-Weight", ModelClass)) {
+      NaturalMortality <- .PopulateMeanAtWeight(
+        object = NaturalMortality,
+        Weight = Weight,
+        Years  = Years,
+        Ages   = Ages,
+        seed   = seed,
         silent = silent
       )
     } else {
@@ -103,12 +121,13 @@ PopulateNaturalMortality <- function(NaturalMortality,
   }
   
   NaturalMortality <- .MeanAtLength2MeanAtAge(NaturalMortality, Length)
+  NaturalMortality <- .MeanAtWeight2MeanAtAge(NaturalMortality, Weight)
   if (CalcAtLength) {
     NaturalMortality <- .MeanAtAge2MeanAtLength(NaturalMortality, Length)
   }
   
   
   
-  .SetDigest(.SetAgeDimnames(NaturalMortality, Ages), argList)
+  .SetDigest(.CheckOutput(.SetAgeDimnames(NaturalMortality, Ages), nSim, Ages, Years), argList)
   
 }

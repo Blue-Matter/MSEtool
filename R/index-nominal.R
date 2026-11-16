@@ -86,8 +86,11 @@
   }
 
   .user_sel <- function(sel, st, st_idx) {
+    SelYears <- .WithNHist(Years(object@OM), length(Years(object@OM, 'H')))
     arr <- .IndexSelectivityArray(sel, object@OM@Stock[[st]]@Ages@Classes,
-                                  Index = fleet, Stock = StockNames[st_idx]) |>
+                                  Index = fleet,
+                                  Stock = StockNames[st_idx],
+                                  Years = SelYears) |>
       .subset_years() |>
       AddDimension('Year', val = Years[1])
     if (is.null(sim)) arr <- AddDimension(arr, 'Sim', pos = 1)
@@ -147,10 +150,11 @@
 #'   optionally `Sim`, `Year`, and `Area`.
 #' @param AgeClasses Age classes of the stock.
 #' @param Index,Stock Index and stock names, for error messages.
+#' @param Years Model years, used to label the `Year` dimension of an unnamed array.
 #'
 #' @return An array with an `Age` dimension ordered as `AgeClasses`.
 #' @keywords internal
-.IndexSelectivityArray <- function(sel, AgeClasses, Index = NULL, Stock = NULL) {
+.IndexSelectivityArray <- function(sel, AgeClasses, Index = NULL, Stock = NULL, Years = NULL) {
   delayedAssign("where", cli::format_inline("index {.val {Index}}, stock {.val {Stock}}"))
   if (!is.numeric(sel))
     cli::cli_abort("{.field Selectivity} for {where} must be numeric, not {.cls {class(sel)}}.")
@@ -172,6 +176,21 @@
     out <- stats::setNames(rep(0, length(Ages)), Ages)
     out[nms] <- as.numeric(sel)
     return(array(out, dim = length(Ages), dimnames = list(Age = Ages)))
+  }
+
+  if (is.null(names(dimnames(sel)))) {
+    dd <- dim(sel)
+    if (length(dd) > 4 || dd[2] != length(Ages))
+      cli::cli_abort("Unnamed {.field Selectivity} array for {where} is read by position as {.code Sim x Age x Year x Area}; it has dimensions {.val {dd}} but needs {length(Ages)} values in the second ({.code Age}) dimension and at most 4 dimensions.")
+    YearLabels <- Years %||% seq_len(dd[3] %|NA|% 1)
+    if (length(dd) >= 3 && !dd[3] %in% c(1, .YearSizes(YearLabels)))
+      cli::cli_abort("Unnamed {.field Selectivity} array for {where} has {dd[3]} years; an unnamed {.code Year} dimension must have 1, the historical, or all time steps ({.val {unique(c(1, .YearSizes(YearLabels)))}}). Name the {.code Year} dimension to give other years.")
+    dimnames(sel) <- list(
+      Sim  = seq_len(dd[1]),
+      Age  = Ages,
+      Year = YearLabels[seq_len(dd[3] %|NA|% 1)],
+      Area = seq_len(dd[4] %|NA|% 1)
+    )[seq_along(dd)]
   }
 
   DN <- dimnames(sel)
@@ -198,6 +217,8 @@
 .CheckIndexSelectivity <- function(spec, OM, stocks, Index) {
   if (is.null(spec)) return(invisible(spec))
   StockNms <- StockNames(OM)[stocks]
+  SelYears <- if (length(OM@nYear) && length(OM@CurrentYear))
+    .WithNHist(Years(OM), length(Years(OM, 'H')))
   if (is.character(spec)) {
     if (length(spec) != 1 || !spec %in% c('Biomass', 'SBiomass'))
       cli::cli_abort(c("x" = "Unknown {.field Selectivity} {.val {spec}} for index {.val {Index}}.",
@@ -211,7 +232,10 @@
       if (is.null(sel))
         cli::cli_abort("{.field Selectivity} list for index {.val {Index}} has no entry for stock {.val {StockNms[i]}}.")
     }
-    .IndexSelectivityArray(sel, .ConvertToList(OM@Stock)[[stocks[i]]]@Ages@Classes, Index = Index, Stock = StockNms[i])
+    .IndexSelectivityArray(sel, .ConvertToList(OM@Stock)[[stocks[i]]]@Ages@Classes,
+                           Index = Index,
+                           Stock = StockNms[i],
+                           Years = SelYears)
   }
   invisible(spec)
 }

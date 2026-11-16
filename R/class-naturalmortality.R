@@ -25,16 +25,25 @@
 #'   existing values are overwritten.
 #'   See [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html).
 #' @slot MeanAtLength `array`. Mean natural mortality at length with named
-#'   dimensions `Sim`, `Length`, and `Year`. Populated automatically when an
+#'   dimensions `Sim`, `Class`, and `Year`. Populated automatically when an
 #'   at-length mortality model is used, or may be supplied directly. Values are
 #'   evaluated at the midpoint of each bin (halfway between consecutive lower
 #'   bounds); the `Class` dimension is labelled by bin lower bounds (see
 #'   `Classes`). Converted to `MeanAtAge` via the `ALK` during [Populate()]
 #'   when `MeanAtAge` is not already populated.
 #'   See [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html).
+#' @slot MeanAtWeight `array`. Mean natural mortality at weight with named dimensions
+#'   `Sim`, `Class`, and `Year`. Populated automatically when an at-weight
+#'   mortality model is used, or may be supplied directly. Values are evaluated
+#'   at the midpoint of each bin; the `Class` dimension is labelled by bin lower
+#'   bounds (see `Classes`). Converted to `MeanAtAge` via the `AWK` during
+#'   [Populate()] when `MeanAtAge` is not already populated. Requires a
+#'   populated [weight-class] object with a non-`NULL` `CVatAge` slot (so that
+#'   the `AWK` exists).
+#'   See [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html).
 #' @slot Random `array`. Not used.
 #' @slot Classes `numeric`. Age classes (in years) or lower bounds of length
-#'   bins, corresponding to the `MeanAt*` array in use. For length bins, bin
+#'   or weight bins, corresponding to the `MeanAt*` array in use. For length bins, bin
 #'   `k` spans `[Classes[k], Classes[k+1])`; the final bin is open-ended.
 #'   Values in `MeanAtLength` are evaluated at bin midpoints, not at these
 #'   lower bounds.
@@ -74,6 +83,7 @@ setClass(
     Units         = "char.null",
     MeanAtAge     = "num.array.null",
     MeanAtLength  = "num.array.null",
+    MeanAtWeight  = "num.array.null",
     Random        = "num.array.null",
     Classes       = "num.null",
     Misc          = "list"

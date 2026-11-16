@@ -316,12 +316,14 @@ ConvertOM <- function(OM,
       }
       
       
+      NoArea <- function(x) if ('Area' %in% names(dimnames(x))) DropDimension(x, 'Area', warn = FALSE) else x
       L5 <- slot(om@Fleet[[st]][[fl]], type)@Pars[[Var_L5]]
       
       if (is.null(L5)) next
       
-      LFS <- slot(om@Fleet[[st]][[fl]], type)@Pars[[Var_LFR]]
-      Vmaxlen <- slot(om@Fleet[[st]][[fl]], type)@Pars[[Var_Vmax]]
+      L5      <- NoArea(L5)
+      LFS     <- NoArea(slot(om@Fleet[[st]][[fl]], type)@Pars[[Var_LFR]])
+      Vmaxlen <- NoArea(slot(om@Fleet[[st]][[fl]], type)@Pars[[Var_Vmax]])
       
       if (all(L5==0) && all(LFS==0)) next
         

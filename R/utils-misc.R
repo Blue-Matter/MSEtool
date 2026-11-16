@@ -72,8 +72,10 @@
   }
 }
 
-.SimRunif <- function(nSim, min, max) {
-  .SimDraws(\(i, n) stats::runif(n, min, max), nSim)[, 1]
+# with one simulation the bounds give their mean; the keyed draw is still made so later draws are unchanged
+.SimRunif <- function(nSim, min, max, Key = .NextDrawKey()) {
+  Draws <- .SimDraws(\(i, n) stats::runif(n, min, max), nSim, Key = Key)[, 1]
+  if (nSim == 1) (min + max) / 2 else Draws
 }
 
 .SimRlnorm <- function(nSim, meanlog, sdlog) {

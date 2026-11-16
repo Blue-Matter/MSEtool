@@ -22,6 +22,8 @@
 #' value of 1 across age classes.
 #' @param replace Used interally.
 #' @param ASKOverride Used internally.
+#' @param force Logical. If `TRUE`, force re-population even if the object
+#'   digest is unchanged.
 #'
 #' @details
 #' `PopulateSelectivity()` performs the following steps:
@@ -70,7 +72,8 @@ PopulateSelectivity <- function(Selectivity,
                                 silent = FALSE,
                                 CheckMaxValue = TRUE,
                                 replace = FALSE,
-                                ASKOverride = NULL) {
+                                ASKOverride = NULL,
+                                force = FALSE) {
   
   argList <- list(
     Ages, Length, Weight, Years, nArea, nSim, CalcAtLength, seed
@@ -82,8 +85,13 @@ PopulateSelectivity <- function(Selectivity,
   if (EmptyObject(Selectivity)) 
     cli::cli_abort('{.val Selectivity} is required but is currently empty')
 
-  if (.CheckDigest(Selectivity, argList))  return(Selectivity)
+  if (.CheckDigest(Selectivity, argList) & !force) return(Selectivity)
   
+  .CheckInputs(Selectivity)
+  .CheckSimsNotIncreased(Selectivity, nSim)
+  Selectivity@MeanAtAge <- .NameAtAge(Selectivity@MeanAtAge, Ages, Years, nArea, cl = 'selectivity')
+  Selectivity <- .NameAtSize(Selectivity, 'MeanAtLength', Length, Years, nArea)
+  Selectivity <- .NameAtSize(Selectivity, 'MeanAtWeight', Weight, Years, nArea)
   .SetSeed(seed)
   
   Selectivity@Pars <- .StructurePars(
@@ -170,7 +178,7 @@ PopulateSelectivity <- function(Selectivity,
   Selectivity <- .AddAtWeightDimnames(Selectivity, Years)
 
   
-  .SetDigest(.SetAgeDimnames(Selectivity, Ages), argList)
+  .SetDigest(.CheckOutput(.SetAgeDimnames(Selectivity, Ages), nSim, Ages, Years, nArea), argList)
 }
 
 .RelLengthPars <- c('L5', 'LFS', 'SL50', 'SL50_95', 'SL',

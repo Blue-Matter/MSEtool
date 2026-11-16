@@ -42,7 +42,7 @@ a matched model, any existing values are overwritten.
 See \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules}.}
 
 \item{\code{MeanAtLength}}{\code{array}. Mean maturity-at-length with named dimensions
-\code{Sim}, \code{Length}, and \code{Year}. Populated automatically when an at-length
+\code{Sim}, \code{Class}, and \code{Year}. Populated automatically when an at-length
 maturity model is used, or may be supplied directly. Values are evaluated
 at the midpoint of each bin (halfway between consecutive lower bounds);
 the \code{Class} dimension is labelled by bin lower bounds (see \code{Classes}).
@@ -51,7 +51,7 @@ is not already populated.
 See \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules}.}
 
 \item{\code{MeanAtWeight}}{\code{array}. Mean maturity-at-weight with named dimensions
-\code{Sim}, \code{Weight}, and \code{Year}. Populated automatically when an at-weight
+\code{Sim}, \code{Class}, and \code{Year}. Populated automatically when an at-weight
 maturity model is used, or may be supplied directly. Values are evaluated
 at the midpoint of each bin; the \code{Class} dimension is labelled by bin lower
 bounds (see \code{Classes}). Converted to \code{MeanAtAge} via the \code{AWK} during

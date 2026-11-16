@@ -67,6 +67,7 @@ PopulateStock <- function(Stock,
                           force = FALSE,
                           CalcAtLength = TRUE) {
   
+  Stock <- UpdateSlots(Stock)
   if (is.null(seed))  seed <- 102
   CalcAtLength <- CalcAtLength && !EmptyObject(Stock@Length)
   
@@ -78,9 +79,14 @@ PopulateStock <- function(Stock,
   if (.CheckDigest(Stock, argList) & !force) 
     return(Stock)
   
-  if (is.null(CurrentYear)) 
+  if (is.null(CurrentYear))
     CurrentYear <- as.numeric(format(Sys.Date(), "%Y"))
-  
+
+  nm <- cli::format_inline("Stock {.val {Stock@Name %||NA% 'Stock'}}")
+  .CheckStockArgs(nYear, pYear, CurrentYear, nSim, Seasons, nm)
+  .CheckYearsNotChanged(Stock, CalcYears(nYear, pYear, CurrentYear, Seasons = Seasons), 'Stock')
+  .CheckSimsNotIncreased(Stock, nSim, nm)
+
   Stock@nYear <- nYear
   Stock@pYear <- pYear
   Stock@CurrentYear <- CurrentYear
@@ -96,9 +102,8 @@ PopulateStock <- function(Stock,
     Seasons = Stock@Seasons
   )
   
-  nm <- cli::format_inline("Stock {.val {Stock@Name %||NA% 'Stock'}}")
-
-  Years <- Stock@Years
+  Years <- .WithNHist(Stock@Years, Stock@nYear * Stock@Seasons)
+  .SafePopulate(\() .CheckInputs(Stock@Ages), "Ages", nm)
   Stock@Ages@Classes <- CalcAgeClasses(Stock@Ages)
   .CheckPopulated(Stock@Ages@Classes, "Ages", nm,
     hint = cli::format_inline("Provide {.var MinAge}, {.var MaxAge}, and {.var Units} for {.var Ages}, then re-run."))
@@ -133,6 +138,7 @@ PopulateStock <- function(Stock,
     NaturalMortality = Stock@NaturalMortality,
     Ages = Stock@Ages,
     Length = Stock@Length,
+    Weight = Stock@Weight,
     Years = Years,
     nSim = nSim,
     seed = .SubSeed(seed, 'NaturalMortality'),
@@ -188,7 +194,7 @@ PopulateStock <- function(Stock,
   .CheckPopulated(Stock@SRR@R0, "SRR", nm,
     hint = cli::format_inline("Provide {.var R0} (or {.var Pars} it can default from) for {.var SRR}, then re-run."))
 
-  Stock@Spatial <- PopulateSpatial(
+  Stock@Spatial <- .SafePopulate(\() PopulateSpatial(
     Spatial = Stock@Spatial,
     Ages = Stock@Ages,
     Years = Years,
@@ -196,14 +202,15 @@ PopulateStock <- function(Stock,
     seed = .SubSeed(seed, 'Spatial'),
     silent = silent,
     force = force
-  )
-  
-  Stock@Depletion <- PopulateDepletion(
+  ), "Spatial", nm)
+
+  Stock@Depletion <- .SafePopulate(\() PopulateDepletion(
     Depletion = Stock@Depletion,
     nSim = nSim,
     seed = .SubSeed(seed, 'Depletion'),
-    silent = silent
-  )
+    silent = silent,
+    force = force
+  ), "Depletion", nm)
   
   .SetDigest(Stock, argList)
 }

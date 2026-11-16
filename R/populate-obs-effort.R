@@ -33,10 +33,12 @@ PopulateEffortObs <- function(Effort, nSim, HistYears, ProjYears) {
 
   if (EmptyObject(Effort))
     return(Effort)
+  .CheckInputs(Effort)
+  .CheckSimsNotIncreased(Effort, nSim)
 
   Effort       <- .RecordUserSupplied(Effort, c("CV", "Error", "Bias"))
   Effort@CV    <- .PopulateObsCV(Effort@CV, nSim)
   Effort@Error <- .PopulateObsError(Effort, nSim, c(HistYears, ProjYears))
   Effort@Bias  <- .PopulateObsBias(Effort, nSim)
-  Effort
+  .CheckOutput(Effort, nSim, Years = c(HistYears, ProjYears))
 }

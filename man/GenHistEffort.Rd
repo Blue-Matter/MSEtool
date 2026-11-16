@@ -9,7 +9,9 @@ GenHistEffort(Effort, nSim = 5, Years = NULL)
 \arguments{
 \item{Effort}{A \code{data.frame} with columns:
 \describe{
-\item{Year}{Calendar years or indices defining effort control points.}
+\item{Year}{Effort control points, either as calendar years or as
+relative times between 0 (first historical year) and 1 (last
+historical year).}
 \item{Lower}{Lower bound on relative effort at each control year.}
 \item{Upper}{Upper bound on relative effort at each control year.}
 \item{CV}{Coefficient of variation for lognormal annual effort noise

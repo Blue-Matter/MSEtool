@@ -56,15 +56,18 @@ PopulateSpatial <- function(Spatial,
   
   argList <- list(Ages, Years, nSim, seed)
   
-  if (.CheckDigest(Spatial, argList))
+  if (.CheckDigest(Spatial, argList) && !force)
     return(Spatial)
 
+  Spatial <- .NameSpatial(Spatial, Ages, Years)
   .SpatialNArea(Spatial)
+  .CheckInputs(Spatial)
+  .CheckSimsNotIncreased(Spatial, nSim)
   .SetSeed(seed)
   
   if (EmptyObject(Spatial)) {
     Spatial <- .DefaultSpatial(Ages, Years)
-    return(.SetDigest(Spatial, argList))
+    return(.SetDigest(.CheckOutput(Spatial, nSim, Ages, Years), argList))
   }
   
   hasMovement <- !is.null(Spatial@Movement)
@@ -75,7 +78,7 @@ PopulateSpatial <- function(Spatial,
     Spatial <- CalcUnfishedDist(Spatial, Ages, Years)
     Spatial <- .ProcessRelativeSize(Spatial, nSim)
     
-    return(.SetDigest(Spatial, argList))
+    return(.SetDigest(.CheckOutput(Spatial, nSim, Ages, Years), argList))
   }
   
 
@@ -113,7 +116,7 @@ PopulateSpatial <- function(Spatial,
   Spatial <- CalcUnfishedDist(Spatial, Ages, Years)
   Spatial <- .ProcessRelativeSize(Spatial, nSim)
   
-  .SetDigest(.SetAgeDimnames(Spatial, Ages), argList)
+  .SetDigest(.CheckOutput(.SetAgeDimnames(Spatial, Ages), nSim, Ages, Years), argList)
 }
 
 .AreaDim <- function(x, nm, pos) {
@@ -508,8 +511,15 @@ PopulateSpatial <- function(Spatial,
   
   if (is.array(Spatial@RelativeSize)) {
     .CheckRelativeSize(Spatial)
+    if (is.null(dimnames(Spatial@RelativeSize))) {
+      dd <- dim(Spatial@RelativeSize)
+      dimnames(Spatial@RelativeSize) <- list(
+        Sim  = seq_len(dd[1]),
+        Area = seq_len(dd[2])
+      )
+    }
     return(Spatial)
-  } 
+  }
   
   
   if (is.numeric(Spatial@RelativeSize)) {

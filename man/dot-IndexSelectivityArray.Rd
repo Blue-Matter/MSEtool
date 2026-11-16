@@ -4,7 +4,13 @@
 \alias{.IndexSelectivityArray}
 \title{Coerce a user-supplied index selectivity to a named array}
 \usage{
-.IndexSelectivityArray(sel, AgeClasses, Index = NULL, Stock = NULL)
+.IndexSelectivityArray(
+  sel,
+  AgeClasses,
+  Index = NULL,
+  Stock = NULL,
+  Years = NULL
+)
 }
 \arguments{
 \item{sel}{Numeric vector (named by age, or unnamed of length
@@ -14,6 +20,8 @@ optionally \code{Sim}, \code{Year}, and \code{Area}.}
 \item{AgeClasses}{Age classes of the stock.}
 
 \item{Index, Stock}{Index and stock names, for error messages.}
+
+\item{Years}{Model years, used to label the \code{Year} dimension of an unnamed array.}
 }
 \value{
 An array with an \code{Age} dimension ordered as \code{AgeClasses}.

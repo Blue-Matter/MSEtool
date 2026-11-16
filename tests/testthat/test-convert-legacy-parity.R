@@ -66,8 +66,8 @@ test_that("converted OM reproduces legacy relative selectivity", {
     P <- .ParityPair(MatCpars)
     FP <- P$Hist@SampPars$Fleet
     Sel <- P$hist@OM@Fleet[[1]][[1]]@Selectivity
-    expect_equal(as.numeric(Sel@Pars$L5[1, 1]), FP$L5_y[1, 1], tolerance = 1e-6)
-    expect_equal(as.numeric(Sel@Pars$LFS[1, 1]), FP$LFS_y[1, 1], tolerance = 1e-6)
+    expect_equal(as.numeric(Sel@Pars$L5[1, 1, 1]), FP$L5_y[1, 1], tolerance = 1e-6)
+    expect_equal(as.numeric(Sel@Pars$LFS[1, 1, 1]), FP$LFS_y[1, 1], tolerance = 1e-6)
     v4 <- Sel@MeanAtAge[1, , 1, 1]
     legacy <- FP$V_real[1, , 1]
     expect_equal(as.numeric(v4 / max(v4)), legacy / max(legacy), tolerance = 0.01)

@@ -49,7 +49,11 @@ PopulateCatchability <- function(Catchability,
   
   Years  <- c(HistYears, ProjYears)
   nSim   <- .GetNSim(Catchability, nSim)
+  .CheckInputs(Catchability)
+  .CheckSimsNotIncreased(Catchability, nSim)
   .SetSeed(seed)
+  Catchability@Efficiency <- .NameSimYear(Catchability@Efficiency, Years, 'Efficiency', 'catchability',
+                                          nHist = length(HistYears))
   
   if (is.null(Catchability@Efficiency)) {
     Catchability@Efficiency <- array(
@@ -98,7 +102,7 @@ PopulateCatchability <- function(Catchability,
     Catchability <- .ApplyqAdjust(Catchability, nm, nSim, HistYears, ProjYears)
   }
 
-  Catchability
+  .CheckOutput(Catchability, nSim, Years = Years)
 }
 
 # Misc$qAdjust records the multiplier already in projection Efficiency so re-populating never compounds it

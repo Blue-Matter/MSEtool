@@ -18,7 +18,8 @@ PopulateSelectivity(
   silent = FALSE,
   CheckMaxValue = TRUE,
   replace = FALSE,
-  ASKOverride = NULL
+  ASKOverride = NULL,
+  force = FALSE
 )
 }
 \arguments{
@@ -54,6 +55,9 @@ value of 1 across age classes.}
 \item{replace}{Used interally.}
 
 \item{ASKOverride}{Used internally.}
+
+\item{force}{Logical. If \code{TRUE}, force re-population even if the object
+digest is unchanged.}
 }
 \value{
 A populated \code{\link[=Selectivity]{Selectivity()}} object.

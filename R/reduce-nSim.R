@@ -39,6 +39,7 @@ ReduceNSim <- function(object, nSim = NULL) {
 # aborts if a populated OM holds fewer, since drawn values replace the sampling inputs
 .DropStaleSims <- function(OM) {
   .CheckNSimNotIncreased(OM)
+  .CheckYearsNotChanged(OM)
   nOld <- .GetNSim(OM)
   if (is.null(nOld) || nOld <= OM@nSim) return(OM)
   .SubsetSim(OM, Sims = seq_len(OM@nSim), nSim = nOld)
@@ -55,6 +56,51 @@ ReduceNSim <- function(object, nSim = NULL) {
     "i" = "Populating replaces sampling inputs (e.g. parameter bounds) with the drawn values.",
     "i" = "Set {.code nSim} on the OM before calling {.fn Populate} or {.fn Simulate}."
   ), call = NULL)
+}
+
+# years are fixed once populated: drawn and conditioned arrays are labelled by the years they were populated for
+.CheckYearsNotChanged <- function(object, Years = NULL, what = 'OM') {
+  if (is.null(attr(object, "digest"))) return(invisible())
+  Years  <- Years %||% CalcYears(object@nYear, object@pYear, object@CurrentYear, Seasons = object@Seasons %||% 1)
+  Stocks <- if (methods::is(object, 'om')) .ConvertToList(object@Stock) else list(object)
+  Old    <- NULL
+  for (st in Stocks)
+    if (length(st@Years) && !isTRUE(all.equal(as.numeric(st@Years), as.numeric(Years)))) {
+      Old <- st@Years
+      break
+    }
+  if (is.null(Old)) return(invisible())
+  cli::cli_abort(c(
+    "x" = "The years of a populated {what} cannot be changed: it was populated for {min(Old)}-{max(Old)}, but {.code nYear}, {.code pYear}, {.code CurrentYear}, and {.code Seasons} now give {min(Years)}-{max(Years)}.",
+    "i" = "Populating labels drawn and conditioned values by year.",
+    "i" = "Set the years on the unpopulated {what} before calling {.fn Populate} or {.fn Simulate}."
+  ), call = NULL)
+}
+
+# a populated array has 1 simulation (constant) or nSim; more than 1 but fewer than nSim means nSim was increased after populating
+.CheckSimsNotIncreased <- function(object, nSim, label = NULL) {
+  if (is.null(nSim)) return(invisible())
+  Problems <- .SimIncreaseProblems(object, nSim)
+  if (!length(Problems))
+    return(invisible())
+  Fix <- paste0('`nSim` cannot be increased after an object is populated: arrays must have 1 simulation ',
+                '(constant across simulations) or `nSim` (', nSim, '). Set `nSim` before populating.')
+  .AbortInvalidInputs(c(Problems, Fix), class(object)[1], label)
+}
+
+.SimIncreaseProblems <- function(x, nSim, name = NULL) {
+  if (is.null(x) || is.function(x) || is.environment(x)) return(NULL)
+  if (isS4(x))
+    return(unlist(lapply(setdiff(methods::slotNames(x), c('Misc', 'Log')), \(s) {
+      if (isS4(methods::slot(x, s))) NULL else .SimIncreaseProblems(methods::slot(x, s), nSim, s)
+    })))
+  if (is.list(x) && !is.data.frame(x)) {
+    Nms <- names(x) %||% seq_along(x)
+    return(unlist(lapply(seq_along(x), \(i) .SimIncreaseProblems(x[[i]], nSim, paste0(name, '$', Nms[i])))))
+  }
+  n <- if (is.array(x)) length(dimnames(x)$Sim) else 0
+  if (n > 1 && n < nSim)
+    paste0('`', name, '` has ', n, ' simulations but `nSim` is ', nSim, '.')
 }
 
 .LongestSimDim <- function(x) {

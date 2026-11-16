@@ -41,6 +41,16 @@
 #'   if supplied or the [length-class] object's own `Classes` otherwise; if
 #'   `Classes` differs from the [length-class] object's, the `ALK` is
 #'   recalculated on `Classes`. Default `NULL`.
+#' @param MeanAtWeight `array` or `NULL`. Mean fecundity at weight with named
+#'   dimensions `Sim × Class × Year`. Populated automatically during
+#'   [Populate()] when an at-weight fecundity model is used; may also be
+#'   supplied directly. When `MeanAtWeight` is populated and `MeanAtAge` is
+#'   not, [Populate()] converts it to `MeanAtAge` via the age-weight key
+#'   (`AWK`) from a [weight-class] object. Requires a populated [weight-class]
+#'   with a non-`NULL` `CVatAge` slot so that the `AWK` exists. A numeric
+#'   vector is also accepted and converted to a `1 × nClass × 1` array
+#'   automatically, using `Classes` if supplied or the [weight-class]
+#'   object's own `Classes` otherwise. Default `NULL`.
 #' @param Classes `numeric` or `NULL`. Age or length class midpoints
 #'   corresponding to the `MeanAt*` array in use. Default `NULL`.
 #' @param Timing `array` or `NULL`. Not used. Spawning time within the time
@@ -161,6 +171,7 @@ Fecundity <- function(Pars = list(),
                       Units = "eggs",
                       MeanAtAge = NULL,
                       MeanAtLength = NULL,
+                      MeanAtWeight = NULL,
                       Classes = NULL,
                       Timing = NULL,
                       Misc = list()) {
@@ -181,6 +192,7 @@ Fecundity <- function(Pars = list(),
     Units        = Units,
     MeanAtAge    = MeanAtAge,
     MeanAtLength = MeanAtLength,
+    MeanAtWeight = MeanAtWeight,
     Classes      = Classes,
     Timing       = Timing,
     Misc         = Misc

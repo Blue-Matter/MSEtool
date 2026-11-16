@@ -10,7 +10,9 @@
 #'
 #' @param Effort A `data.frame` with columns:
 #'   \describe{
-#'     \item{Year}{Calendar years or indices defining effort control points.}
+#'     \item{Year}{Effort control points, either as calendar years or as
+#'       relative times between 0 (first historical year) and 1 (last
+#'       historical year).}
 #'     \item{Lower}{Lower bound on relative effort at each control year.}
 #'     \item{Upper}{Upper bound on relative effort at each control year.}
 #'     \item{CV}{Coefficient of variation for lognormal annual effort noise
@@ -58,7 +60,11 @@ GenHistEffort <- function(Effort, nSim=5, Years=NULL) {
         "`Effort$Year` must be calendar years, or `Years` must be supplied",  call = NULL
       )
     }
-    Effort$Year <- c(min(Years), Years[Effort$Year * length(Years)])
+    if (any(Effort$Year < 0 | Effort$Year > 1))
+      cli::cli_abort(c(
+        "x" = "`Effort$Year` must be calendar years or relative times between 0 and 1.",
+        "i" = "Found {.val {Effort$Year[Effort$Year < 0 | Effort$Year > 1]}}."), call = NULL)
+    Effort$Year <- min(Years) + Effort$Year * (max(Years) - min(Years))
   }
   
   if (is.null(Years)) {
@@ -77,6 +83,8 @@ GenHistEffort <- function(Effort, nSim=5, Years=NULL) {
   # Sample effort at control points
   EffortPoints <- .SimDraws(\(i, n) stats::runif(n, Effort$Lower, Effort$Upper),
                             nSim, length(Effort$Lower))
+  if (nSim == 1)
+    EffortPoints[] <- (Effort$Lower + Effort$Upper) / 2
   
   # Interpolate to annual time series
   if (nSim > 1) {
