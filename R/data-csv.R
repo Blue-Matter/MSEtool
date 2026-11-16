@@ -224,17 +224,19 @@ ReadDataCSV <- function(file, Years = NULL, silent = FALSE) {
   CatchData(Name = nms, Value = Value, CV = CV, Units = Units)
 }
 
-# Composition slots: Value array [Year, Fleet, Class]
+# Composition slots: Value array [Year, Fleet, Age] for age compositions,
+# [Year, Fleet, Class] for size compositions, as elsewhere in MSEtool
 .CSV2CompData <- function(d, sl, Years, nms = unique(d$Name)) {
   cls <- sort(unique(d$Class))
-  Value <- array(NA_real_, c(length(Years), length(nms), length(cls)),
-                 dimnames = list(Year = Years, Fleet = nms, Class = cls))
+  at_age <- grepl("AtAge", sl)
+  dn <- list(Year = Years, Fleet = nms, cls)
+  names(dn)[3] <- if (at_age) "Age" else "Class"
+  Value <- array(NA_real_, c(length(Years), length(nms), length(cls)), dimnames = dn)
   # Year x fleet with any observation: unlisted classes are zero
   obs_yf <- unique(cbind(match(d$Year, Years), match(d$Name, nms)))
   for (k in seq_len(nrow(obs_yf))) Value[obs_yf[k, 1], obs_yf[k, 2], ] <- 0
   Value[cbind(match(d$Year, Years), match(d$Name, nms), match(d$Class, cls))] <- d$Value
 
-  at_age <- grepl("AtAge", sl)
   Units <- .CSVUnits(d, nms)
   if (is.null(Units)) Units <- if (at_age) "years" else NULL
   else if (length(unique(stats::na.omit(Units))) == 1) Units <- unique(stats::na.omit(Units))

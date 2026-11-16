@@ -56,6 +56,28 @@ test_that("unlisted classes in an observed year and fleet are zero", {
   expect_equal(unname(v["2001", "F1", ]), c(0, 4, 0))
 })
 
+test_that("age compositions use an Age dimension, size compositions Class", {
+  rows <- rbind(.Row("LandingsAtAge", "F1", 2000, 1, 5), .Row("LandingsAtAge", "F1", 2001, 2, 4),
+                .Row("LandingsAtSize", "F1", 2000, 10, 3), .Row("LandingsAtSize", "F1", 2001, 20, 1))
+  dat <- ReadDataCSV(.WriteRows(rows), silent = TRUE)
+  expect_identical(names(dimnames(Value(LandingsAtAge(dat)))), c("Year", "Fleet", "Age"))
+  expect_identical(names(dimnames(Value(LandingsAtSize(dat)))), c("Year", "Fleet", "Class"))
+  expect_true("Age" %in% colnames(Landings(dat, byAge = TRUE)))
+  expect_no_error(ggplot2::ggplot_build(PlotLandingsAtAge(dat)))
+  expect_no_error(ggplot2::ggplot_build(PlotLandingsAtSize(dat)))
+})
+
+test_that("age compositions read with a Class dimension still plot", {
+  # objects read by ReadDataCSV() before it named the age dimension `Age`
+  rows <- rbind(.Row("LandingsAtAge", "F1", 2000, 1, 5), .Row("LandingsAtAge", "F1", 2001, 2, 4))
+  dat <- ReadDataCSV(.WriteRows(rows), silent = TRUE)
+  names(dimnames(dat@LandingsAtAge@Value))[3] <- "Class"
+  df <- Landings(dat, byAge = TRUE)
+  expect_true("Age" %in% colnames(df))
+  expect_setequal(unique(df$Age), c(1, 2))
+  expect_no_error(ggplot2::ggplot_build(PlotLandingsAtAge(dat)))
+})
+
 test_that("invalid files give informative errors", {
   ok <- .Row("Landings", "F1", 2000)
   expect_error(ReadDataCSV(.WriteRows(.Row("Catch", "F1", 2000)), silent = TRUE), "Unknown")

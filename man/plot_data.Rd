@@ -8,17 +8,33 @@
 \alias{plot,data,ANY-method}
 \title{Plot Observed Fishery Data}
 \usage{
-PlotCPUE(object, byFleet = NULL, Season = NULL, units = TRUE)
+PlotCPUE(
+  object,
+  byFleet = NULL,
+  Season = NULL,
+  units = TRUE,
+  AggregateYear = NULL,
+  IncCV = TRUE
+)
 
-PlotSurvey(object, byFleet = NULL, Season = NULL, units = TRUE)
+PlotSurvey(
+  object,
+  byFleet = NULL,
+  Season = NULL,
+  units = TRUE,
+  AggregateYear = NULL,
+  IncCV = TRUE
+)
 
 PlotData(
   object,
   byFleet = NULL,
-  AggregateYear = FALSE,
+  AggregateYear = NULL,
   Season = NULL,
   units = TRUE,
-  showDiscards = FALSE
+  showDiscards = FALSE,
+  IncCV = TRUE,
+  IncComp = TRUE
 )
 
 \S4method{plot}{data,ANY}(x, y, ...)
@@ -26,18 +42,38 @@ PlotData(
 \arguments{
 \item{object}{A \link[=data-class]{data} object.}
 
-\item{byFleet}{Logical. Controls how multiple fleets are displayed.
-Default (\code{NULL}) draws every fleet as its own colored line in a single
-panel. \code{TRUE} facets by fleet instead (one panel per fleet). \code{FALSE}
-sums across fleets and draws a single total line. No effect when the
-slot has only one fleet.}
+\item{byFleet}{Logical. Controls how multiple fleets (or indices) are
+displayed. Default (\code{NULL}) draws every fleet as its own colored line
+in a single panel. \code{TRUE} facets by fleet instead (one panel per
+fleet). \code{FALSE} sums across fleets and draws a single total line, for
+\code{Landings}/\code{Discards}/\code{Effort} only: \code{CPUE} and \code{Survey} indices have
+different scales and units and are never summed, so \code{FALSE} draws them
+the same as \code{NULL}. No effect when the slot has only one fleet.
+In \code{PlotData()}, a fleet or index keeps the same color in every panel.}
 
-\item{Season}{Integer. For seasonal data (\code{object@Seasons > 1}), restrict
-\code{PlotCPUE()}/\code{PlotSurvey()} to a single season (1 = the first timestep
-of each year), giving one snapshot per year instead of the full
-sub-annual series. Default \code{NULL} (no filtering). Ignored for
-non-seasonal data and by \code{PlotLandings()}/\code{PlotDiscards()}/
-\code{PlotEffort()} (see \code{AggregateYear}).}
+\item{Season}{For seasonal data (\code{object@Seasons > 1}), the season(s)
+(1 = the first timestep of each year) used for \code{CPUE}/\code{Survey}. When
+aggregating (see \code{AggregateYear}), the annual index is the mean over
+these seasons; with \code{AggregateYear = FALSE}, only time steps in these
+seasons are plotted. One of:
+\itemize{
+\item \code{NULL} (default): all seasons.
+\item An integer vector, applied to every index.
+\item For \code{PlotData()}, a list with elements \code{CPUE} and/or \code{Survey}, each
+an integer vector for every index in that slot, or a list with one
+element per index (in index order, or named by index; \code{NULL} for all
+seasons), e.g. \code{list(Survey = list(Spring = 2, Autumn = 4))}. For
+\code{PlotCPUE()}/\code{PlotSurvey()}, the per-index list is given directly,
+e.g. \code{list(Spring = 2, Autumn = 4)}.
+}
+
+An index observed in only one season always uses that season, unless a
+season was set for that index specifically: it can't be averaged over
+other seasons, and a \code{Season} meant for the other indices shouldn't
+blank it. A message lists any index left with no observations in its
+selected season(s). Ignored for non-seasonal data and by
+\code{PlotLandings()}/\code{PlotDiscards()}/\code{PlotRemovals()}/\code{PlotEffort()},
+which are always summed when aggregated.}
 
 \item{units}{Logical or a character unit string. \code{TRUE} (default) labels
 the y-axis with the slot's own \code{Units} (e.g. \code{object@CPUE@Units},
@@ -50,15 +86,27 @@ values into that unit; requesting a character unit for \code{PlotCPUE()}/
 aren't in a recognized conversion table. No effect on \code{PlotEffort()},
 which has no unit concept for a single \code{data-class} object.}
 
-\item{AggregateYear}{Logical. For seasonal data (\code{object@Seasons > 1}),
-sum \code{PlotLandings()}/\code{PlotDiscards()}/\code{PlotEffort()} sub-annual values
-into whole-year totals, since these are flow quantities. Default
-\code{FALSE}. Ignored for non-seasonal data and by \code{PlotCPUE()}/
-\code{PlotSurvey()} (see \code{Season}).}
+\item{AggregateYear}{Logical or \code{NULL}. For seasonal data
+(\code{object@Seasons > 1}), whether to aggregate to calendar years with
+\code{\link[=AnnualData]{AnnualData()}} before plotting: \code{Landings}, \code{Discards}, and \code{Effort}
+are summed over the seasons of each year, and \code{CPUE}/\code{Survey} are
+averaged over the seasons in \code{Season} (all seasons by default).
+Incomplete calendar years (e.g. a partially observed final year) are
+dropped, so a partial year isn't read as a low annual total. \code{NULL}
+(default) aggregates and prints a note on how to plot by season
+instead; \code{TRUE} aggregates without the note; \code{FALSE} plots every
+seasonal time step. Ignored for non-seasonal data.}
+
+\item{IncCV}{Logical. Draw the observation uncertainty from the slot's
+\code{CV} as a shaded band (see Details)? Default \code{TRUE}.}
 
 \item{showDiscards}{Logical. \code{PlotData()} only. By default (\code{FALSE}),
 the \code{Discards} panel is omitted when it's populated but every value
 (across sims/years/fleets) is zero. Set \code{TRUE} to always show it.}
+
+\item{IncComp}{Logical. \code{PlotData()} only. Add bubble plots of the
+populated composition slots below the timeseries panels? Default
+\code{TRUE}.}
 
 \item{x}{A \link[=data-class]{data} object.}
 
@@ -91,11 +139,29 @@ plots \code{Landings} \code{+} \code{Discards}; it's omitted (with the same mess
 only when \emph{both} are unpopulated, and silently treats either as \code{0} when
 just one is populated.
 
+For seasonal data (\code{object@Seasons > 1}), every function aggregates to
+calendar years by default (catch and effort summed, indices averaged; see
+\code{AggregateYear}) and prints a note pointing to \code{AggregateYear = FALSE}
+and \code{Season} for plotting by season.
+
+Each timeseries panel shows the observation uncertainty from the slot's
+\code{CV} (when populated and positive) as a shaded lognormal 95\% interval,
+\verb{Value * exp(+/- 1.96 * sqrt(log(1 + CV^2)))}, or as an error bar for an
+isolated observation. When fleets are summed (\code{byFleet = FALSE}), and
+for \code{PlotRemovals()}, the CV of the total assumes independent errors.
+Set \code{IncCV = FALSE} to omit it.
+
 \code{PlotData()} arranges whichever of \code{Landings}, \code{Discards}, \code{Effort},
 \code{CPUE}, and \code{Survey} are populated into a single figure with
 \code{\link[patchwork:wrap_plots]{patchwork::wrap_plots()}}, silently omitting panels for slots that
 aren't; unlike the individual \verb{Plot*()} functions it does not print a
-message for missing slots. Fleet color legends are collected into a
+message for missing slots. Below them (with \code{IncComp = TRUE}, the
+default), it adds a bubble plot for each populated composition slot
+(\code{LandingsAtAge}, \code{DiscardsAtAge}, \code{LandingsAtSize}, \code{DiscardsAtSize};
+see \link{plot_comp}), omitting any whose values are all zero or missing.
+With \code{byFleet = FALSE}, size compositions whose fleets use different
+size-class grids are shown by fleet instead of summed, with a message.
+Fleet color legends are collected into a
 single shared legend (\code{patchwork::plot_layout(guides = 'collect')}) only
 when every panel with a color legend maps the same set of fleets;
 otherwise each panel keeps its own legend, since a shared one would
@@ -122,5 +188,5 @@ PlotLandings(dat, byFleet = FALSE)
 
 }
 \seealso{
-\link{plot_hist}, \code{\link[=Landings]{Landings()}}, \code{\link[=Discards]{Discards()}}, \code{\link[=CPUE]{CPUE()}}, \code{\link[=Survey]{Survey()}}
+\link{plot_hist}, \link{plot_comp}, \code{\link[=Landings]{Landings()}}, \code{\link[=Discards]{Discards()}}, \code{\link[=CPUE]{CPUE()}}, \code{\link[=Survey]{Survey()}}
 }

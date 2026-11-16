@@ -119,7 +119,14 @@
 #'   `PlotRemovals()`/`PlotEffort()` sub-annual values into whole-year
 #'   totals, unlike `Season` above (these are flows, so summing across a
 #'   year is valid, unlike the point-in-time state variables). Default
-#'   `FALSE`. Ignored for non-seasonal models.
+#'   `NULL` (treated as `FALSE`) plots every seasonal time step for
+#'   [hist-class]/[mse-class] objects. For a seasonal [data-class] object,
+#'   `NULL` instead aggregates to calendar years and prints a note on
+#'   plotting by season; see [plot_data]. Ignored for non-seasonal models.
+#' @param IncCV Logical. For a [data-class] `object` only, draw a shaded
+#'   band showing the observation uncertainty from the slot's `CV`; see
+#'   [plot_data]. Default `TRUE`. Ignored for [hist-class]/[mse-class]
+#'   objects.
 #' @param Stocks Character or numeric vector. Restrict the plot to specific
 #'   stocks, either by name (matching [StockNames()]) or by index. Default
 #'   `NULL` (all stocks). `byStock` and, for `PlotSBiomass()`/
@@ -496,12 +503,13 @@ PlotLandings <- function(object,
                          free_y        = NULL,
                          IncHist       = TRUE,
                          byMP          = FALSE,
-                         AggregateYear = FALSE,
+                         AggregateYear = NULL,
                          units         = TRUE,
-                         Stocks        = NULL) {
+                         Stocks        = NULL,
+                         IncCV         = TRUE) {
   if (inherits(object, 'data'))
     return(.PlotDataTs(object, 'Landings', 'Landings', byFleet = byFleet,
-                         AggregateYear = AggregateYear, units = units))
+                         AggregateYear = AggregateYear, units = units, IncCV = IncCV))
 
   if (is.null(free_y)) free_y <- TRUE
   .PlotCatch(object, slot_name = 'Landings', ylab = 'Landings',
@@ -522,12 +530,13 @@ PlotDiscards <- function(object,
                          free_y        = NULL,
                          IncHist       = TRUE,
                          byMP          = FALSE,
-                         AggregateYear = FALSE,
+                         AggregateYear = NULL,
                          units         = TRUE,
-                         Stocks        = NULL) {
+                         Stocks        = NULL,
+                         IncCV         = TRUE) {
   if (inherits(object, 'data'))
     return(.PlotDataTs(object, 'Discards', 'Discards', byFleet = byFleet,
-                         AggregateYear = AggregateYear, units = units))
+                         AggregateYear = AggregateYear, units = units, IncCV = IncCV))
 
   if (is.null(free_y)) free_y <- TRUE
   .PlotCatch(object, slot_name = 'Discards', ylab = 'Discards',
@@ -548,7 +557,7 @@ PlotInteractions <- function(object,
                              free_y        = NULL,
                              IncHist       = TRUE,
                              byMP          = FALSE,
-                             AggregateYear = FALSE,
+                             AggregateYear = NULL,
                              Stocks        = NULL) {
   if (is.null(free_y)) free_y <- TRUE
   .PlotCatch(object, slot_name = 'Interactions', ylab = 'Interactions',
@@ -569,12 +578,13 @@ PlotRemovals <- function(object,
                          free_y        = NULL,
                          IncHist       = TRUE,
                          byMP          = FALSE,
-                         AggregateYear = FALSE,
+                         AggregateYear = NULL,
                          units         = TRUE,
-                         Stocks        = NULL) {
+                         Stocks        = NULL,
+                         IncCV         = TRUE) {
   if (inherits(object, 'data'))
     return(.PlotDataRemovals(object, byFleet = byFleet,
-                               AggregateYear = AggregateYear, units = units))
+                               AggregateYear = AggregateYear, units = units, IncCV = IncCV))
 
   .CheckClass(object, c('hist', 'mse'), 'object')
   stockNames <- .ResolveStocks(object, Stocks)
@@ -651,8 +661,12 @@ PlotRemovals <- function(object,
 #'   every available year.
 #' @param free_y Logical. Free the y-axis scale across facets? Default
 #'   `NULL` resolves to `TRUE`.
-#' @param IncHist,byMP,AggregateYear Used only when `object` is a
-#'   [hist-class]/[mse-class] object; see [plot_hist].
+#' @param IncHist,byMP Used only when `object` is a [hist-class]/[mse-class]
+#'   object; see [plot_hist].
+#' @param AggregateYear For seasonal models, sum effort to calendar years;
+#'   see [plot_hist] and, for a [data-class] `object`, [plot_data].
+#' @param IncCV Logical. For a [data-class] `object`, draw a band showing the
+#'   observation CV; see [plot_data]. Ignored otherwise.
 #'
 #' @return `PlotEffortCurve()` returns a `ggplot` object; `PlotEffort()`
 #'   returns a `ggplot` object of realised effort when `object` is a
@@ -672,10 +686,11 @@ PlotEffort <- function(object,
                        free_y        = NULL,
                        IncHist       = TRUE,
                        byMP          = FALSE,
-                       AggregateYear = FALSE) {
+                       AggregateYear = NULL,
+                       IncCV         = TRUE) {
   if (inherits(object, 'data'))
     return(.PlotDataTs(object, 'Effort', 'Effort', byFleet = byFleet,
-                         AggregateYear = AggregateYear))
+                         AggregateYear = AggregateYear, IncCV = IncCV))
 
   .CheckClass(object, c('fleet', 'om', 'hist', 'mse'), 'object')
   wasFleet <- inherits(object, 'fleet')
@@ -1190,9 +1205,14 @@ setMethod('plot', 'mse', function(x, y, ...) {
   whole  <- ok & abs(breaks - round(breaks)) < 1e-6
   labels[whole] <- format(round(breaks[whole]))
 
+  # year-month of a decimal year; computed directly rather than via a
+  # date-time, which warns when R doesn't recognise the system timezone
   frac <- ok & !whole
-  if (any(frac))
-    labels[frac] <- format(lubridate::date_decimal(breaks[frac]), '%Y-%m')
+  if (any(frac)) {
+    yr    <- floor(breaks[frac])
+    month <- pmin(floor((breaks[frac] - yr) * 12 + 1e-6) + 1, 12)
+    labels[frac] <- sprintf('%d-%02d', as.integer(yr), as.integer(month))
+  }
 
   labels
 }

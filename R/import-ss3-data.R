@@ -321,7 +321,7 @@ ImportSSData <- function(SSDir,
       NA_real_,
       nrow     = nTS,
       ncol     = nAge,
-      dimnames = list(Year = YearsHist, Class = AgeClasses)
+      dimnames = list(Year = YearsHist, Age = AgeClasses)
     )
     if (!nrow(df)) return(mat)
 
@@ -345,7 +345,7 @@ ImportSSData <- function(SSDir,
     dimnames = list(
       Year   = YearsHist,
       Fleet  = FleetNames,
-      Class  = AgeClasses
+      Age    = AgeClasses
     )
   )
 

@@ -15,7 +15,8 @@ PlotLandingsAtAge(
   Sim = NULL,
   Years = NULL,
   IncHist = TRUE,
-  Stocks = NULL
+  Stocks = NULL,
+  AggregateYear = NULL
 )
 
 PlotDiscardsAtAge(
@@ -25,7 +26,8 @@ PlotDiscardsAtAge(
   Sim = NULL,
   Years = NULL,
   IncHist = TRUE,
-  Stocks = NULL
+  Stocks = NULL,
+  AggregateYear = NULL
 )
 
 PlotLandingsAtSize(
@@ -35,7 +37,8 @@ PlotLandingsAtSize(
   Sim = NULL,
   Years = NULL,
   IncHist = TRUE,
-  Stocks = NULL
+  Stocks = NULL,
+  AggregateYear = NULL
 )
 
 PlotDiscardsAtSize(
@@ -45,7 +48,8 @@ PlotDiscardsAtSize(
   Sim = NULL,
   Years = NULL,
   IncHist = TRUE,
-  Stocks = NULL
+  Stocks = NULL,
+  AggregateYear = NULL
 )
 }
 \arguments{
@@ -81,6 +85,14 @@ period? Default \code{TRUE}. No effect for \link[=hist-class]{hist} objects.}
 \item{Stocks}{Character or numeric vector. Restrict the plot to specific
 stocks, either by name (matching \code{\link[=StockNames]{StockNames()}}) or by index. Default
 \code{NULL} (all stocks).}
+
+\item{AggregateYear}{Logical or \code{NULL}. For a seasonal \link[=data-class]{data}
+object (\code{object@Seasons > 1}), whether to sum the composition counts
+over the seasons of each calendar year (via \code{\link[=AnnualData]{AnnualData()}}) before
+computing proportions. \code{NULL} (default) aggregates and prints a note on
+how to plot by season instead; \code{TRUE} aggregates without the note;
+\code{FALSE} plots every seasonal time step. No effect for non-seasonal data
+or for \link[=hist-class]{hist}/\link[=mse-class]{mse} objects.}
 }
 \value{
 A \code{ggplot} object, or \code{NULL} invisibly if the relevant
@@ -109,8 +121,12 @@ objects have more than one MP -- there is no color channel free for it,
 since bubble size already encodes proportion).
 
 If the relevant \verb{*AtAge}/\verb{*AtSize} data is not populated for a
-\link[=data-class]{data} object, the function prints an informational message and
-returns \code{NULL} invisibly rather than plotting an empty panel.
+\link[=data-class]{data} object, or every value is zero or missing, the function
+prints an informational message and returns \code{NULL} invisibly rather than
+plotting an empty panel. Years (per fleet) with no catch sampled are
+omitted. For a \link[=data-class]{data} object the plot is titled with the slot
+(e.g. "Landings at Age"), and the y-axis label includes the slot's
+\code{Units} (e.g. "Age (years)") when set.
 }
 \examples{
 Hist <- Simulate(SingleStockOM, nSim = 2, control = SimControl(CalcCatchAtSize = TRUE))
