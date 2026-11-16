@@ -7,6 +7,8 @@
 #' @param nSim Integer. Number of simulation replicates.
 #' @param seed Integer. Random seed used for stochastic generation.
 #' @param silent Logical. If `TRUE`, suppress informational messages.
+#' @param force Logical. If `TRUE`, force re-population even if the object
+#'   digest is unchanged.
 #'
 #' @details
 #' `PopulateDepletion()` handles population of initial and final depletion
@@ -28,25 +30,24 @@
 PopulateDepletion <- function(Depletion,
                               nSim = 5,
                               seed = NULL,
-                              silent = FALSE) {
-  argList <- list(nSim, seed)
+                              silent = FALSE,
+                              force = FALSE) {
   nSim    <- .GetNSim(Depletion, nSim)
+  argList <- list(nSim, seed)
   
-  if (.CheckDigest(Depletion, argList) | EmptyObject(Depletion)) 
+  if (EmptyObject(Depletion)) 
     return(Depletion)
   
+  if (.CheckDigest(Depletion, argList) & !force) 
+    return(Depletion)
+  
+  .CheckInputs(Depletion)
+  .CheckSimsNotIncreased(Depletion, nSim)
   .SetSeed(seed)
   
   Depletion@Initial <- .PopulateInitial(Depletion@Initial, nSim)
   Depletion@Final <- .PopulateInitial(Depletion@Final, nSim, "Final")
-  
-  validReference <- .ValidDepletionReference
-  if (!Depletion@Reference %in% validReference) {
-    cli::cli_abort(c("Invalid value for `Reference`",
-                     "x" = "Currently {.val {Depletion@Reference}}. Must be one of: {.val {validReference}}"
-    ))
-  }
-  .SetDigest(Depletion, argList)
+  .SetDigest(.CheckOutput(Depletion, nSim), argList)
 }
 
 

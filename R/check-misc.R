@@ -61,13 +61,17 @@
 
 .SafePopulate <- function(fn, component, label = NULL) {
   tryCatch(fn(), error = function(e) {
+    if (inherits(e, "MSEtool_invalid_input"))
+      .AbortInvalidInputs(e$problems, e$object_class,
+                          c(label, component, e$where), e$stage %||% 'input')
+
     prefix <- if (is.null(label)) "" else paste0(label, ": ")
 
     if (inherits(e, "rlang_error")) {
-      header <- unname(rlang::cnd_header(e))
-      body   <- unname(rlang::cnd_body(e))
+      header <- .EscapeBraces(unname(rlang::cnd_header(e)))
+      body   <- .EscapeBraces(unname(rlang::cnd_body(e)))
     } else {
-      header <- conditionMessage(e)
+      header <- .EscapeBraces(conditionMessage(e))
       body   <- character(0)
     }
     msg <- c("x" = paste0(prefix, cli::format_inline("{.var {component}} failed to populate.")))

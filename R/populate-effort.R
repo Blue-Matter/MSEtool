@@ -48,6 +48,8 @@ PopulateEffort <- function(Effort,
                            nSim = 5,
                            seed = NULL) {
 
+  .CheckInputs(Effort)
+  .CheckSimsNotIncreased(Effort, nSim)
   .SetSeed(seed)
 
   nSim  <- .GetNSim(Effort, nSim)
@@ -65,6 +67,7 @@ PopulateEffort <- function(Effort,
     Effort@Units <- "unitless"
   }
 
+  Effort@Effort <- .NameSimYear(Effort@Effort, HistYears, 'Effort', 'effort')
   dd <- dim(Effort@Effort)
   if (dd[2] != length(HistYears)) {
     cli::cli_abort("`ncol(Effort@Effort)` is not equal to `length(HistYears)`")
@@ -100,7 +103,7 @@ PopulateEffort <- function(Effort,
   Effort@StockTargetingLambda <-
     .PopulateStockTargetingLambda(Effort@StockTargetingLambda, nSim, HistYears)
 
-  Effort
+  .CheckOutput(Effort, nSim, Years = Years, nArea = nArea)
 }
 
 # Resolved like Theta, but validated first: a negative or non-finite multiplier
@@ -205,10 +208,8 @@ PopulateEffort <- function(Effort,
                           )
     )
   } else {
-    .CheckClass(Distribution, c("array", "matrix"))
-    dd <- dim(Distribution)
-    # TODO check dimensions
-    # TODO add dimnames if needed
+    .CheckClass(Distribution, c("numeric", "array", "matrix"), "Distribution")
+    Distribution <- .NameSimYearArea(Distribution, HistYears, nArea, 'Distribution', 'effort')
   }
   
   Distribution

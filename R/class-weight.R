@@ -21,7 +21,7 @@
 #'   When `Pars` contains a matched model, any existing values are overwritten.
 #'   See [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html).
 #' @slot MeanAtLength `array`. Mean weight at length with named dimensions
-#'   `Sim`, `Length`, and `Year`. Populated automatically when an at-length
+#'   `Sim`, `Class`, and `Year`. Populated automatically when an at-length
 #'   weight model is used, or may be supplied directly. Values are evaluated at
 #'   the midpoint of each bin (halfway between consecutive lower bounds); the
 #'   `Class` dimension is labelled by bin lower bounds (see `Classes`).

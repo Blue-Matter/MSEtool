@@ -84,6 +84,10 @@
 
 
   # Update Hist object
+  for (st in 1:nStock)
+    for (fl in 1:nFleet)
+      Hist@OM@Fleet[[st]][[fl]]@Catchability@Efficiency <-
+        ExtendSims(Hist@OM@Fleet[[st]][[fl]]@Catchability@Efficiency, length(opt_q))
   for (s in seq_along(opt_q)) {
     for (st in 1:nStock) {
       for (fl in 1:nFleet) {

@@ -66,7 +66,8 @@ for (nm in names(.Schedules)) {
 
   test_that(paste(nm, "vectors of the wrong length are rejected"), {
     expect_error(.VecFleet(nm, sc$fn(MeanAtLength = sc$len[1:3], Classes = .VecLC)),
-                 'must have length matching `Classes`')
-    expect_error(.VecFleet(nm, sc$fn(MeanAtAge = sc$age[1:3])), 'nAge')
+                 'values in its Class dimension; must have 1 or', class = 'MSEtool_invalid_input')
+    expect_error(.VecFleet(nm, sc$fn(MeanAtAge = sc$age[1:3])), 'values in its Age dimension; must have 1 or',
+                 class = 'MSEtool_invalid_input')
   })
 }

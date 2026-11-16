@@ -70,6 +70,9 @@ PopulateLength <- function(Length,
   if (.CheckDigest(Length, argList) & !force) 
     return(Length)
   
+  .CheckInputs(Length)
+  .CheckSimsNotIncreased(Length, nSim)
+  Length@MeanAtAge <- .NameAtAge(Length@MeanAtAge, Ages, Years, cl = 'length')
   .SetSeed(seed)
   Spec <- list(Pars = Length@Pars, CVatAge = Length@CVatAge)
   
@@ -77,6 +80,7 @@ PopulateLength <- function(Length,
   Length@Model   <- .FindModel(Length)
   .SizeModelClass(Length@Model, 'Age', 'Length')
   Length         <- .PopulateMeanAtAge(Length, Ages, Years)
+  .CheckCVatAgeLength(Length@CVatAge, Ages, 'length')
   Length@CVatAge <- .StructureCV(Length@CVatAge, nSim)
   dd             <- dim(Length@CVatAge)
   
@@ -102,7 +106,7 @@ PopulateLength <- function(Length,
                           silent = silent)
   }
     
-  .SetDigest(.SetAgeDimnames(Length, Ages), argList)
+  .SetDigest(.CheckOutput(.SetAgeDimnames(Length, Ages), nSim, Ages, Years), argList)
 }
 
 

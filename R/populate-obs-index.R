@@ -71,6 +71,8 @@ PopulateIndexObs <- function(Index, nSim, HistYears, ProjYears) {
 
   if (EmptyObject(Index))
     return(Index)
+  .CheckInputs(Index)
+  .CheckSimsNotIncreased(Index, nSim)
 
   Index <- .RecordUserSupplied(Index, c("CV", "Error", "AC"))
   Years <- c(HistYears, ProjYears)
@@ -89,5 +91,5 @@ PopulateIndexObs <- function(Index, nSim, HistYears, ProjYears) {
     Index@Years <- HistYears
   
   # TODO: Selectivity, Type, Efficiency — used internally, not populated here
-  Index
+  .CheckOutput(Index, nSim, Years = Years)
 }

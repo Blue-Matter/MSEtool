@@ -579,16 +579,19 @@
   num_at_age <- .AtSize2AtAge(NumObj, Length, allow_shortcut=FALSE)@MeanAtAge
   den_at_age <- .AtSize2AtAge(DenObj, Length, allow_shortcut=FALSE)@MeanAtAge
 
-  eff <- num_at_age / den_at_age
+  # spatial numerator and non-spatial weighting (or the reverse) broadcast over Area
+  eff        <- ArrayDivide(num_at_age, den_at_age)
+  Ones       <- array(1, dim(eff), dimnames(eff))
+  den_at_age <- ArrayMultiply(Ones, den_at_age)
   negligible <- abs(den_at_age) < 1e-8 * max(abs(den_at_age), na.rm = TRUE)
-  bad <- !is.finite(eff) | negligible
+  bad        <- !is.finite(eff) | negligible
 
   fallbackAtAge <- Extend(
     fallback@MeanAtAge,
     nSim  = dim(eff)[names(dimnames(eff)) == 'Sim'],
     Years = as.numeric(dimnames(eff)[['Year']]),
     backfill = TRUE
-  )
+  ) |> ArrayMultiply(Ones, array2 = _)
   eff[bad] <- fallbackAtAge[bad]
 
   object@MeanAtAge <- eff

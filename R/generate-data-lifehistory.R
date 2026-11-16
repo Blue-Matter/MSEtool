@@ -80,7 +80,7 @@
     return(if (x == 0) rep(1, nSim) else
       .SimDraws(\(i, n) stats::rlnorm(n, mconv(1, x), sdconv(1, x)), nSim, 1, Key = Key)[, 1])
   if (length(x) == 2 && nSim != 2)
-    return(.SimDraws(\(i, n) stats::runif(n, min(x), max(x)), nSim, 1, Key = Key)[, 1])
+    return(.SimRunif(nSim, min(x), max(x), Key = Key))
   if (length(x) < nSim)
     cli::cli_abort("{.arg Bias} must have length 1, 2 or {nSim}, not {length(x)}.", call = NULL)
   x[seq_len(nSim)]

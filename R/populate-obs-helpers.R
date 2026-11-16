@@ -63,6 +63,7 @@
     return(Error)
   }
   
+  object@Error <- .NameSimYear(object@Error, Years, 'Error', class(object)[1])
   if (!inherits(object@Error, "array"))
     cli::cli_abort(
       c("x" = "`{class(object)}@Error` must be an array.",
@@ -204,6 +205,7 @@
     return(.CheckObsAC(AC))
   
   if (length(AC) == 2 && nSim != 2) {
+    AC <- sort(AC)
     if (AC[1] <= -1 || AC[2] >= 1)
       cli::cli_abort(
         c("x" = "`AC` bounds must be within (-1, 1), exclusive.",
@@ -284,6 +286,7 @@
   }
   
   if (length(x) == 2) {
+    x <- sort(x)
     vals <- .SimRunif(nSim, x[1], x[2])
     return(array(
       rep(vals, nYear),

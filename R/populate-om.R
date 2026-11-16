@@ -64,6 +64,7 @@ PopulateOM <- function(OM,
   
   if (EmptyObject(OM)) return(OM)
   if (.CheckDigest(OM) & !force) return(OM)
+  .CheckInputs(OM)
   .WarnSeedChanged(OM)
 
   OM <- .DropStaleSims(OM)
@@ -632,7 +633,13 @@ PopulateOM <- function(OM,
     names(ImpList[[cx]]) <- FleetNames
     for (fl in seq_len(nFleet)) {
       .SetSeed(paste(OM@Seed %||% 101, 'Imp', cx, fl, sep = '_'))
-      ImpList[[cx]][[fl]] <- PopulateImp(OM@Imp[[cx]][[fl]], OM@nSim, HistYears, ProjYears)
+      nm <- cli::format_inline("Complex {.val {ComplexNames[cx]}}, fleet {.val {FleetNames[fl]}}")
+      ImpList[[cx]][[fl]] <- .SafePopulate(\() PopulateImp(
+        Imp       = OM@Imp[[cx]][[fl]],
+        nSim      = OM@nSim,
+        HistYears = HistYears,
+        ProjYears = ProjYears
+      ), "Imp", nm)
     }
   }
 
@@ -726,12 +733,15 @@ PopulateOM <- function(OM,
         NULL
       }
       
-      ObsList[[st]][[fl]] <- PopulateObs(Obs       = OM@Obs[[st]][[fl]],
-                                         HistYears = Years(OM, "H"),
-                                         ProjYears = Years(OM, "P"),
-                                         nSim      = OM@nSim,
-                                         AgeBins   = AgeClasses,
-                                         SizeBins  = SizeClasses)
+      nm <- cli::format_inline("Complex {.val {ComplexNames[st]}}, obs {.val {obs_names[fl]}}")
+      ObsList[[st]][[fl]] <- .SafePopulate(\() PopulateObs(
+        Obs       = OM@Obs[[st]][[fl]],
+        HistYears = Years(OM, "H"),
+        ProjYears = Years(OM, "P"),
+        nSim      = OM@nSim,
+        AgeBins   = AgeClasses,
+        SizeBins  = SizeClasses
+      ), "Obs", nm)
     }
   }
   

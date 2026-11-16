@@ -83,6 +83,10 @@ PopulateWeight <- function(Weight,
     return(Weight)
   }
   
+  .CheckInputs(Weight)
+  .CheckSimsNotIncreased(Weight, nSim)
+  Weight@MeanAtAge <- .NameAtAge(Weight@MeanAtAge, Ages, Years, cl = 'weight')
+  Weight <- .NameAtSize(Weight, 'MeanAtLength', Length, Years)
   .SetSeed(seed)
   Spec <- list(Pars = Weight@Pars, CVatAge = Weight@CVatAge)
   
@@ -132,6 +136,7 @@ PopulateWeight <- function(Weight,
     Weight <- .MeanAtAge2MeanAtLength(Weight, Length)
   }
   
+  .CheckCVatAgeLength(Weight@CVatAge, Ages, 'weight')
   Weight@CVatAge <- .StructureCV(Weight@CVatAge, nSim)
   dd <- dim(Weight@CVatAge)
   if (!is.null(dd)) {
@@ -152,7 +157,7 @@ PopulateWeight <- function(Weight,
     Weight <- .PopulateASK(Weight, Ages, silent, type = "Weight")
   }
   
-  .SetDigest(.SetAgeDimnames(Weight, Ages), argList)
+  .SetDigest(.CheckOutput(.SetAgeDimnames(Weight, Ages), nSim, Ages, Years), argList)
 }
 
 # weight at the top of the length classes bounds weight-at-age for models of weight at length

@@ -64,7 +64,7 @@ PopulateFleet <- function(Fleet,
   )
   
   nSim <- Fleet@nSim
-  Years <- Fleet@Years
+  Years <- .WithNHist(Fleet@Years, Stock@nYear * Stock@Seasons)
   HistYears <- Years(Fleet, "Historical")
   ProjYears <- Years[!Years %in% HistYears]
   nArea <- ncol(RelativeSize)
@@ -78,7 +78,9 @@ PopulateFleet <- function(Fleet,
   .SetSeed(seed)
   
   nm <- cli::format_inline("Fleet {.val {Fleet@Name %||NA% 'Fleet'}} (stock {.val {Stock@Name %||NA% 'Stock'}})")
-  
+  .CheckInputs(Fleet, nm)
+  .CheckSimsNotIncreased(Fleet, nSim, nm)
+
   Fleet@Effort <- .SafePopulate(\() PopulateEffort(
     Effort = Fleet@Effort,
     HistYears = HistYears,
@@ -112,7 +114,8 @@ PopulateFleet <- function(Fleet,
     nArea = nArea,
     CalcAtLength = TRUE,
     seed = .SubSeed(seed, 'Selectivity'),
-    silent = silent
+    silent = silent,
+    force = force
   ), "Selectivity", nm)
   .RequireArray(Fleet@Selectivity, "MeanAtAge", "Selectivity", nm)
   
@@ -144,18 +147,19 @@ PopulateFleet <- function(Fleet,
     nArea = nArea,
     CalcAtLength = TRUE,
     seed = .SubSeed(seed, 'DiscardMortality'),
-    silent = silent
+    silent = silent,
+    force = force
   ), "DiscardMortality", nm)
   .RequireArray(Fleet@DiscardMortality, "MeanAtAge", "DiscardMortality", nm, optional = TRUE,
                 hint = cli::format_inline("Provide {.var MeanAtAge} for {.var DiscardMortality}, or leave it fully unset, then re-run."))
   
-  Fleet@Closure <- PopulateClosure(
+  Fleet@Closure <- .SafePopulate(\() PopulateClosure(
     Closure = Fleet@Closure,
     nArea = nArea,
     nSim = nSim,
     Years = Years,
     silent = silent
-  )
+  ), "Closure", nm)
   
   WeightAtAgeLength <- if (is.null(ExtendedLength)) Length else ExtendedLength
   WeightAtAgeWeight <- if (is.null(ExtendedWeight)) Weight else ExtendedWeight
@@ -183,10 +187,13 @@ PopulateFleet <- function(Fleet,
     )
   }
   
+  Fleet@WeightFleetSelected <- .NameAtAge(Fleet@WeightFleetSelected, Ages, Years, name = 'WeightFleetSelected', cl = 'fleet')
+  Fleet@WeightFleetRetained <- .NameAtAge(Fleet@WeightFleetRetained, Ages, Years, name = 'WeightFleetRetained', cl = 'fleet')
   Fleet@WeightFleetSelected <- .SetAgeDimnames(Fleet@WeightFleetSelected, Ages)
   Fleet@WeightFleetRetained <- .SetAgeDimnames(Fleet@WeightFleetRetained, Ages)
   
   
+  .CheckOutput(Fleet, nSim, Ages, Years, nArea, nm)
   .SetDigest(Fleet, argList)
 }
 

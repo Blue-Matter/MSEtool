@@ -4,7 +4,13 @@
 \alias{PopulateDepletion}
 \title{Populate a Depletion Object}
 \usage{
-PopulateDepletion(Depletion, nSim = 5, seed = NULL, silent = FALSE)
+PopulateDepletion(
+  Depletion,
+  nSim = 5,
+  seed = NULL,
+  silent = FALSE,
+  force = FALSE
+)
 }
 \arguments{
 \item{Depletion}{A \code{\link[=Depletion]{Depletion()}} object to populate.}
@@ -14,6 +20,9 @@ PopulateDepletion(Depletion, nSim = 5, seed = NULL, silent = FALSE)
 \item{seed}{Integer. Random seed used for stochastic generation.}
 
 \item{silent}{Logical. If \code{TRUE}, suppress informational messages.}
+
+\item{force}{Logical. If \code{TRUE}, force re-population even if the object
+digest is unchanged.}
 }
 \value{
 A populated \code{\link[=Depletion]{Depletion()}} object.

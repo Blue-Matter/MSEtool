@@ -14,11 +14,16 @@
 #' @export
 PopulateImp <- function(Imp, nSim, HistYears, ProjYears) {
   .CheckClass(Imp, 'imp', 'Imp')
-  Years <- c(HistYears, ProjYears)
+  .CheckInputs(Imp)
+  for (sl in c('TAC', 'Effort', 'Size'))
+    .CheckSimsNotIncreased(methods::slot(Imp, sl), nSim, sl)
+  Years <- .WithNHist(c(HistYears, ProjYears), length(HistYears))
 
   Imp@TAC    <- PopulateImpSlot(Imp@TAC,    nSim, Years)
   Imp@Effort <- PopulateImpSlot(Imp@Effort, nSim, Years)
   Imp@Size   <- PopulateImpSlot(Imp@Size,   nSim, Years)
+  for (sl in c('TAC', 'Effort', 'Size'))
+    .CheckOutput(methods::slot(Imp, sl), nSim, Years = Years, label = sl)
   Imp
 }
 
@@ -81,6 +86,7 @@ PopulateImpSlot <- function(ImpSlot, nSim, Years) {
   }
 
   # Error: [Sim x Year] lognormal draw from Mean/SD, unless supplied directly
+  ImpSlot@Error <- .NameSimYear(ImpSlot@Error, Years, 'Error', 'impslot')
   if (!length(ImpSlot@Error)) {
     Mean <- rep_len(as.numeric(ImpSlot@Mean), nSim)
     SD   <- rep_len(if (length(ImpSlot@SD)) as.numeric(ImpSlot@SD) else 0, nSim)

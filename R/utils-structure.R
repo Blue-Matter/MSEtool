@@ -24,13 +24,18 @@
   if (!is.null(names(Pars)))
     Pars <- Pars[!.IsCVPar(names(Pars))]
 
-  Pars <- purrr::map(Pars, \(Par)
-                     .StructurePar(Par, nSim, Years, nArea)
-  )
-  
-  if (is.null(nArea))
-    Pars <- .ApplyRandomWalk(Pars, Years)
-  
+  # Area is added after the random walk, so `<Par>SD` applies with or without areas
+  HasArea <- \(Par) is.array(Par) && (length(dim(Par)) == 3 || 'Area' %in% names(dimnames(Par)))
+  Pars    <- Map(\(Par, nm) {
+    if (is.array(Par) && !is.null(names(dimnames(Par))))
+      Par <- .OrderNamedDims(Par, c('Sim', 'Year', if (HasArea(Par)) 'Area'),
+                             character(), list(Year = Years), paste0('Pars$', nm), 'Pars')
+    .StructurePar(Par, nSim, Years, if (HasArea(Par)) nArea)
+  }, Pars, names(Pars) %||% seq_along(Pars))
+  Pars    <- .ApplyRandomWalk(Pars, Years)
+  if (!is.null(nArea))
+    Pars <- purrr::map(Pars, \(Par) if (length(dim(Par)) == 2) AddDimension(Par, 'Area') else Par)
+
   .ExtendPars(Pars)
 }
 
@@ -73,7 +78,7 @@
         '`nSim` required to generate stochastic values.',
         'i' = 'Provide number of simulations to the `nSim` argument.'
       ))
-    val <- .SimDraws(\(i, n) stats::runif(n, Par[1], Par[2]), nSim)[, 1]
+    val <- .SimRunif(nSim, Par[1], Par[2])
     if (is.null(nArea)) {
       Par <- array(val, dim=c(length(val), 1))
     } else {
@@ -118,6 +123,10 @@
     nm_sd   <- names(Pars)[i]
     nm_par  <- strsplit(nm_sd, split="(?<=.)(?=.{2}$)", perl=TRUE)[[1]][1]
     par_ind <- match(nm_par, names(Pars))
+    if (is.na(par_ind) || length(dim(Pars[[par_ind]])) != 2) {
+      Pars[[i]] <- NA
+      next
+    }
     
     dnames <- dimnames(Pars[[par_ind]])
     nSim   <- length(dnames[['Sim']])

@@ -48,12 +48,22 @@ When \code{Pars} contains a matched model, any existing values are overwritten.
 See \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules}.}
 
 \item{\code{MeanAtLength}}{\code{array}. Mean fecundity-at-length with named dimensions
-\code{Sim}, \code{Length}, and \code{Year}. Populated automatically when an at-length
+\code{Sim}, \code{Class}, and \code{Year}. Populated automatically when an at-length
 fecundity model is used, or may be supplied directly. Values are evaluated
 at the midpoint of each bin (halfway between consecutive lower bounds);
 the \code{Class} dimension is labelled by bin lower bounds (see \code{Classes}).
 Converted to \code{MeanAtAge} via the \code{ALK} during \code{\link[=Populate]{Populate()}} when \code{MeanAtAge}
 is not already populated.
+See \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules}.}
+
+\item{\code{MeanAtWeight}}{\code{array}. Mean fecundity at weight with named dimensions
+\code{Sim}, \code{Class}, and \code{Year}. Populated automatically when an at-weight
+fecundity model is used, or may be supplied directly. Values are evaluated
+at the midpoint of each bin; the \code{Class} dimension is labelled by bin lower
+bounds (see \code{Classes}). Converted to \code{MeanAtAge} via the \code{AWK} during
+\code{\link[=Populate]{Populate()}} when \code{MeanAtAge} is not already populated. Requires a
+populated \link[=weight-class]{weight} object with a non-\code{NULL} \code{CVatAge} slot (so that
+the \code{AWK} exists).
 See \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules}.}
 
 \item{\code{Classes}}{\code{numeric}. Age classes (in years) or lower bounds of length

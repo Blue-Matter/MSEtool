@@ -48,9 +48,15 @@
 
     if (is.null(dimnames(object@MeanAtAge))) {
       dd <- dim(object@MeanAtAge)
+      Sizes <- list(
+        Sim  = NA,
+        Age  = nAge(Ages),
+        Year = .YearSizes(Years)
+      )
+      .CheckUnnamedDims(dd, 'MeanAtAge', class(object)[1], Sizes)
       dimnames(object@MeanAtAge) <- list(
         Sim  = seq_len(dd[1]),
-        Age  = Ages@Classes,
+        Age  = Ages@Classes[seq_len(dd[2])],
         Year = Years[seq_len(dd[3])]
       )
     }

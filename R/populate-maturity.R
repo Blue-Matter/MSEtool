@@ -77,6 +77,11 @@ PopulateMaturity <- function(Maturity,
   if (.CheckDigest(Maturity, argList) & !force) 
     return(Maturity)
   
+  .CheckInputs(Maturity)
+  .CheckSimsNotIncreased(Maturity, nSim)
+  Maturity@MeanAtAge <- .NameAtAge(Maturity@MeanAtAge, Ages, Years, cl = 'maturity')
+  Maturity <- .NameAtSize(Maturity, 'MeanAtLength', Length, Years)
+  Maturity <- .NameAtSize(Maturity, 'MeanAtWeight', Weight, Years)
   .SetSeed(seed)
   
   Maturity@Pars  <- .StructurePars(Pars = .AddDefaultPars(Maturity), nSim, Years)
@@ -149,5 +154,5 @@ PopulateMaturity <- function(Maturity,
     )
   }
   
-  .SetDigest(.SetAgeDimnames(Maturity, Ages), argList)
+  .SetDigest(.CheckOutput(.SetAgeDimnames(Maturity, Ages), nSim, Ages, Years), argList)
 }

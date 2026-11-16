@@ -92,13 +92,14 @@ PopulateSRR <- function(SRR,
   if ((.CheckDigest(SRR, argList) && !force) | EmptyObject(SRR))
     return(SRR)
   
+  .CheckInputs(SRR)
+  .CheckSimsNotIncreased(SRR, nSim)
   .SetSeed(seed)
 
   # recorded on first population so later ShareSPFrom copies aren't mistaken for user input
   if (is.null(SRR@Misc$RecDevHistSupplied))
     SRR@Misc$RecDevHistSupplied <- !EmptyObject(SRR@RecDevHist)
 
-  # TODO - should add some checks here to make sure parameters/model are ok
   SRR@Pars  <- .StructurePars(Pars = SRR@Pars, nSim, Years)
   Model     <- .FindModel(SRR)
   # a stock sharing its SPFrom source's SRR may omit Pars; they are copied in PopulateOM()
@@ -160,7 +161,7 @@ PopulateSRR <- function(SRR,
       Sim = 1:dd[1],
       Year = ProjTS
     )
-    return(.SetDigest(SRR, argList))
+    return(.SetDigest(.CheckOutput(SRR, nSim, Ages, Years), argList))
   }
   
   RecDeviations <- GenRecDevs(
@@ -194,7 +195,7 @@ PopulateSRR <- function(SRR,
     Sim = 1:nrow(SRR@RecDevProj),
     Year = ProjTS
   )
-  .SetDigest(SRR, argList)
+  .SetDigest(.CheckOutput(SRR, nSim, Ages, Years), argList)
 }
 
 

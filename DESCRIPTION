@@ -123,6 +123,7 @@ Collate:
     'check-data-catch.R'
     'check-effort-allocation.R'
     'check-fleet-allocation.R'
+    'check-inputs.R'
     'check-misc.R'
     'check-mse-run.R'
     'check-obs.R'

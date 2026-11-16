@@ -136,7 +136,7 @@ test_that("Effort@Maximum caps effort for TACs and effort advice", {
   expect_error(CombineFleets(om2, silent = TRUE), "Maximum")
 
   Eff <- Effort(Effort = matrix(1, 1, 3, dimnames = list(Sim = 1, Year = 2001:2003)), Maximum = -1)
-  expect_error(PopulateEffort(Eff, HistYears = 2001:2003, nSim = 1), "positive")
+  expect_error(PopulateEffort(Eff, HistYears = 2001:2003, nSim = 1), "`Maximum` must be > 0", fixed = TRUE)
 })
 
 test_that("multi-complex: an unreachable complex never binds under full compliance", {

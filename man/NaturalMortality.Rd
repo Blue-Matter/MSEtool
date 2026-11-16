@@ -11,6 +11,7 @@ NaturalMortality(
   Units = "year",
   MeanAtAge = NULL,
   MeanAtLength = NULL,
+  MeanAtWeight = NULL,
   Random = NULL,
   Classes = NULL,
   Misc = list()
@@ -60,6 +61,17 @@ and converted to a \verb{1 × nClass × 1} array automatically, using \code{Clas
 if supplied or the \link[=length-class]{length} object's own \code{Classes} otherwise; if
 \code{Classes} differs from the \link[=length-class]{length} object's, the \code{ALK} is
 recalculated on \code{Classes}. Default \code{NULL}.}
+
+\item{MeanAtWeight}{\code{array} or \code{NULL}. Mean natural mortality at weight with named
+dimensions \verb{Sim × Class × Year}. Populated automatically during
+\code{\link[=Populate]{Populate()}} when an at-weight mortality model is used; may also be
+supplied directly. When \code{MeanAtWeight} is populated and \code{MeanAtAge} is
+not, \code{\link[=Populate]{Populate()}} converts it to \code{MeanAtAge} via the age-weight key
+(\code{AWK}) from a \link[=weight-class]{weight} object. Requires a populated \link[=weight-class]{weight}
+with a non-\code{NULL} \code{CVatAge} slot so that the \code{AWK} exists. A numeric
+vector is also accepted and converted to a \verb{1 × nClass × 1} array
+automatically, using \code{Classes} if supplied or the \link[=weight-class]{weight}
+object's own \code{Classes} otherwise. Default \code{NULL}.}
 
 \item{Random}{\code{array} or \code{NULL}. Not used. Default \code{NULL}.}
 

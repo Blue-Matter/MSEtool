@@ -8,6 +8,7 @@ PopulateNaturalMortality(
   NaturalMortality,
   Ages = NULL,
   Length = NULL,
+  Weight = NULL,
   Years = NULL,
   nSim = 5,
   CalcAtLength = FALSE,
@@ -23,6 +24,9 @@ PopulateNaturalMortality(
 
 \item{Length}{A \code{\link[=Length]{Length()}} object. Required if the mortality model depends on
 length-at-age.}
+
+\item{Weight}{A \code{\link[=Weight]{Weight()}} object. Required if the mortality model depends on
+weight, or \code{MeanAtWeight} is supplied.}
 
 \item{Years}{Numeric vector of model years.}
 

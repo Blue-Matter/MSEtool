@@ -70,6 +70,7 @@ PopulateFecundity <- function(Fecundity,
                               silent = FALSE,
                               CalcAtLength = FALSE,
                               force = FALSE) {
+  Fecundity <- UpdateSlots(Fecundity)
   Ages  <- DefaultAges(Ages)
   Years <- DefaultYears(Years)
   nSim  <- .GetNSim(Fecundity, nSim)
@@ -79,12 +80,17 @@ PopulateFecundity <- function(Fecundity,
   if (EmptyObject(Fecundity)) {
     Fecundity@MeanAtAge <- .FecundityFromWeightMaturity(Ages, Length, Weight, Maturity,
                                                         Years, nSim, seed)
-    return(.SetDigest(Fecundity, argList))
+    return(.SetDigest(.CheckOutput(Fecundity, nSim, Ages, Years), argList))
   }
   
   if (.CheckDigest(Fecundity, argList) & !force) 
     return(Fecundity)
   
+  .CheckInputs(Fecundity)
+  .CheckSimsNotIncreased(Fecundity, nSim)
+  Fecundity@MeanAtAge <- .NameAtAge(Fecundity@MeanAtAge, Ages, Years, cl = 'fecundity')
+  Fecundity <- .NameAtSize(Fecundity, 'MeanAtLength', Length, Years)
+  Fecundity <- .NameAtSize(Fecundity, 'MeanAtWeight', Weight, Years)
   .SetSeed(seed)
   
   Fecundity@Pars <- .StructurePars(Pars = .AddDefaultPars(Fecundity), nSim, Years)
@@ -94,11 +100,11 @@ PopulateFecundity <- function(Fecundity,
     if (is.null(Fecundity@MeanAtAge)) {
       Fecundity@MeanAtAge <- .FecundityFromWeightMaturity(Ages, Length, Weight, Maturity,
                                                           Years, nSim, seed)
-      return(.SetDigest(Fecundity, argList))
+      return(.SetDigest(.CheckOutput(Fecundity, nSim, Ages, Years), argList))
     }
   }
   
-  ModelClass <- .SizeModelClass(Fecundity@Model, c('Age', 'Length'), 'Fecundity')
+  ModelClass <- .SizeModelClass(Fecundity@Model, what = 'Fecundity')
   if (!is.null(ModelClass)) {
     if (grepl("at-Length", ModelClass)) {
       .CheckRequiredObject(Length, "length", "Length")
@@ -115,12 +121,22 @@ PopulateFecundity <- function(Fecundity,
         seed = seed,
         silent = silent
       )
+    } else if (grepl("at-Weight", ModelClass)) {
+      Fecundity <- .PopulateMeanAtWeight(
+        object = Fecundity,
+        Weight = Weight,
+        Years  = Years,
+        Ages   = Ages,
+        seed   = seed,
+        silent = silent
+      )
     } else {
       Fecundity <- .PopulateMeanAtAge(Fecundity, Ages, Years)
     }
   }
   
   Fecundity <- .MeanAtLength2MeanAtAge(Fecundity, Length)
+  Fecundity <- .MeanAtWeight2MeanAtAge(Fecundity, Weight)
 
   Fecundity <- .AddAtAgeDimnames(Fecundity, Ages, Years)
   
@@ -129,7 +145,7 @@ PopulateFecundity <- function(Fecundity,
   
   Fecundity <- .AddAtLengthDimnames(Fecundity, Years, 'Fecundity')
   
-  .SetDigest(.SetAgeDimnames(Fecundity, Ages), argList)
+  .SetDigest(.CheckOutput(.SetAgeDimnames(Fecundity, Ages), nSim, Ages, Years), argList)
 }
 
 .FecundityFromWeightMaturity <- function(Ages, Length, Weight, Maturity, Years, nSim, seed) {

@@ -26,7 +26,8 @@ Yrs <- as.numeric(dimnames(St@Length@MeanAtAge)$Year)
     Weight = PopulateWeight(Obj, Ages = St@Ages, Length = St@Length, Years = Yrs, nSim = nSim,
                             silent = TRUE),
     NaturalMortality = PopulateNaturalMortality(Obj, Ages = St@Ages, Length = St@Length,
-                                                Years = Yrs, nSim = nSim, silent = TRUE),
+                                                Weight = St@Weight, Years = Yrs, nSim = nSim,
+                                                silent = TRUE),
     Maturity = PopulateMaturity(Obj, Ages = St@Ages, Length = St@Length, Weight = St@Weight,
                                 Years = Yrs, nSim = nSim, silent = TRUE),
     Fecundity = do.call(PopulateFecundity, args),
@@ -117,15 +118,12 @@ test_that("custom function size basis is checked", {
                '`Ages`')
   WtOfWt <- function(Weight, a) a * Weight
   expect_error(.Repop('Weight', Weight(Pars = list(a = 2), Model = WtOfWt)), '`Ages` or `Length`')
-  MOfWt <- function(Weight, m) m * Weight
-  expect_error(.Repop('NaturalMortality', NaturalMortality(Pars = list(m = 0.2), Model = MOfWt)),
-               '`Ages` or `Length`')
+  MOfWt <- function(Weight, m) m * Weight^-0.25
+  expect_false(is.null(.Repop('NaturalMortality', NaturalMortality(Pars = list(m = 0.2), Model = MOfWt))@MeanAtAge))
 
-  # NaturalMortality and Fecundity have no at-weight schedule
-  expect_error(.Repop('NaturalMortality', NaturalMortality(Pars = list(Mref = 0.3, Wref = 5))),
-               'does not support at-Weight')
-  expect_error(.Repop('Fecundity', Fecundity(Pars = list(W50 = 4, W50_95 = 2, MaxFec = 1))),
-               'does not support at-Weight')
+  # at-weight schedules of NaturalMortality and Fecundity are converted to at-age via the AWK
+  expect_false(is.null(.Repop('NaturalMortality', NaturalMortality(Pars = list(Mref = 0.3, Wref = 5)))@MeanAtWeight))
+  expect_false(is.null(.Repop('Fecundity', Fecundity(Pars = list(W50 = 4, W50_95 = 2, MaxFec = 1)))@MeanAtWeight))
 })
 
 test_that("omitted optional arguments of a custom function are filled from its defaults", {

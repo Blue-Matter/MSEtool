@@ -103,12 +103,17 @@ PopulateRetention <- function(Retention,
       Area = 1
     )
     
-    return(.SetDigest(Retention, argList))
+    return(.SetDigest(.CheckOutput(Retention, nSim, Ages, Years, nArea), argList))
   }
   
+  .CheckInputs(Retention)
+  .CheckSimsNotIncreased(Retention, nSim)
+  Retention@MeanAtAge <- .NameAtAge(Retention@MeanAtAge, Ages, Years, nArea, cl = 'retention')
+  Retention <- .NameAtSize(Retention, 'MeanAtLength', Length, Years, nArea)
+  Retention <- .NameAtSize(Retention, 'MeanAtWeight', Weight, Years, nArea)
   .SetSeed(seed)
   
-  Retention@Pars <- .StructurePars(Pars = .AddDefaultPars(Retention), nSim, Years)
+  Retention@Pars <- .StructurePars(Pars = .AddDefaultPars(Retention), nSim, Years, nArea)
   Retention@Model <- .FindModel(Retention)
   
   ModelClass <- .SizeModelClass(Retention@Model)
@@ -178,5 +183,5 @@ PopulateRetention <- function(Retention,
   Retention <- .AddAtLengthDimnames(Retention, Years)
   Retention <- .AddAtWeightDimnames(Retention, Years)
   
-  .SetDigest(.SetAgeDimnames(Retention, Ages), argList)
+  .SetDigest(.CheckOutput(.SetAgeDimnames(Retention, Ages), nSim, Ages, Years, nArea), argList)
 }

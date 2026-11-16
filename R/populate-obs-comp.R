@@ -83,6 +83,8 @@ PopulateCompObs <- function(Comp,
   
   if (EmptyObject(Comp))
     return(Comp)
+  .CheckInputs(Comp)
+  .CheckSimsNotIncreased(Comp, nSim)
   
   if (is.null(Bins))
     cli::cli_abort(
@@ -158,7 +160,7 @@ PopulateCompObs <- function(Comp,
       pattern = Raw
     )
   }
-  Comp
+  .CheckOutput(Comp, nSim, Years = Years)
 }
 
 
