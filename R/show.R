@@ -811,8 +811,17 @@ setMethod('show', 'stocktransition', function(object) {
 
   cli::cli_text("")
 
+  if (!is.null(object@FracAtLength)) {
+    .ShowArray(object@FracAtLength, 'FracAtLength')
+    if (!is.null(object@Classes))
+      cli::cli_text("Length range: {.val {range(object@Classes)}}")
+  }
+
   if (is.null(object@Frac)) {
-    cli::cli_text("`Frac`: {.emph not specified}")
+    if (is.null(object@FracAtLength))
+      cli::cli_text("`Frac`: {.emph not specified}")
+    else
+      cli::cli_text("`Frac`: {.emph calculated from `FracAtLength` by {.fn Populate}}")
     return(invisible(NULL))
   }
 

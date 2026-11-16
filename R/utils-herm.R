@@ -37,6 +37,92 @@
   Hazard
 }
 
+#' Convert a Herm `FracAtLength` Curve to `Frac` at Age
+#'
+#' Passes `FracAtLength` through the age-length key of the `From` stock,
+#' using the same at-length to at-age conversion as the other at-length
+#' schedules (e.g. `Maturity@MeanAtLength`).
+#'
+#' @param Herm A [stocktransition-class] object with `FracAtLength` set.
+#' @param Stock The populated `From` [stock-class] object.
+#' @param Years Numeric vector of model years.
+#' @return A `[Sim, Age, Year]` array of the fraction remaining in `From` by
+#'   age, values in `[0, 1]`.
+#' @keywords internal
+.HermFracAtLength2AtAge <- function(Herm, Stock, Years) {
+  Length <- Stock@Length
+  if (EmptyObject(Length) || is.null(Length@ALK))
+    cli::cli_abort(c(
+      "x" = "{.field FracAtLength} requires a populated age-length key for stock {.val {Stock@Name}}.",
+      "i" = "Specify {.field Length} for stock {.val {Stock@Name}} and populate the OM with {.fn Populate}."
+    ), call = NULL)
+
+  # carry `FracAtLength` in an at-size object to reuse the at-length conversion
+  Carrier <- methods::new('maturity', MeanAtLength = Herm@FracAtLength,
+                          Classes = Herm@Classes)
+  Carrier <- .NameAtSize(Carrier, 'MeanAtLength', Length, Years)
+  Frac    <- .AtSize2AtAge(Carrier, Length, allow_shortcut = FALSE)@MeanAtAge
+  Frac[]  <- pmin(pmax(Frac, 0), 1)
+  Frac
+}
+
+# warn when a `Frac` converted from `FracAtLength` increases with age; no
+# individuals move back to `From`, so these ages get a hazard of 0
+.CheckHermFracDecreasing <- function(Frac, From, To, tol = 1e-3) {
+  Increase <- apply(Frac, setdiff(seq_along(dim(Frac)), 2), \(x) max(diff(x)))
+  if (!any(Increase > tol, na.rm = TRUE)) return(invisible())
+  cli::cli_warn(c(
+    "!" = "{.field Frac} converted from {.field FracAtLength} for transition {.val {From}} -> {.val {To}} increases with age.",
+    "i" = "Individuals do not move back to {.val {From}}, so these ages have no transition, and the fraction remaining in {.val {From}} will differ from {.field Frac}.",
+    "i" = "This can happen when the CV of length-at-age increases steeply with age. See {.help MSEtool::Herm}."
+  ), call = NULL)
+  invisible()
+}
+
+#' Populate `Frac` for Length-Based `om@Herm` Transitions
+#'
+#' Converts `FracAtLength` to `Frac` for each [stocktransition-class] object
+#' in `OM@Herm` that has `FracAtLength` set, replacing any existing `Frac`.
+#' Requires populated stocks.
+#'
+#' @param OM An [om-class] object with populated stocks.
+#' @param silent Logical. If `TRUE`, suppress warnings about increasing `Frac`.
+#' @return `OM` with `Frac` populated.
+#' @keywords internal
+.PopulateHerm <- function(OM, silent = FALSE) {
+  HermList <- OM@Herm
+  if (!length(HermList)) return(OM)
+  IsSingle <- inherits(HermList, 'stocktransition')
+  if (IsSingle) HermList <- list(HermList)
+
+  StockNms <- StockNames(OM)
+  Years    <- Years(OM)
+  for (i in seq_along(HermList)) {
+    h <- HermList[[i]]
+    if (is.null(h@FracAtLength)) next
+    From   <- .HermStockIndex(h@From, StockNms)
+    h@Frac <- .HermFracAtLength2AtAge(h, OM@Stock[[From]], Years)
+    if (!silent)
+      .CheckHermFracDecreasing(h@Frac, StockNms[From],
+                               StockNms[.HermStockIndex(h@To, StockNms)])
+    HermList[[i]] <- h
+  }
+  OM@Herm <- if (IsSingle) HermList[[1]] else HermList
+  OM
+}
+
+# 1-based stock index of a `Herm` `From`/`To` stock given by name or index
+.HermStockIndex <- function(x, StockNames) {
+  if (is.character(x)) {
+    ind <- match(x, StockNames)
+    if (is.na(ind))
+      cli::cli_abort(c("x" = "`Herm` stock {.val {x}} not found.",
+                       "i" = "Known stocks are {.val {StockNames}}"))
+    return(ind)
+  }
+  as.integer(x)
+}
+
 #' Resolve `om@Herm` Pairs to Stock Indices and Broadcast Hazard Arrays
 #'
 #' @param OM An [om-class] object.
@@ -52,20 +138,12 @@
     return(list(From = integer(0), To = integer(0), Hazard = list()))
 
   stock_names <- StockNames(OM)
-  ResolveHermStock <- function(x) {
-    if (is.character(x)) {
-      ind <- match(x, stock_names)
-      if (is.na(ind))
-        cli::cli_abort(c("x" = "`Herm` stock {.val {x}} not found.",
-                         "i" = "Known stocks are {.val {stock_names}}"))
-      return(ind)
-    }
-    as.integer(x)
-  }
 
-  From <- purrr::map_int(HermList, \(h) ResolveHermStock(h@From))
-  To   <- purrr::map_int(HermList, \(h) ResolveHermStock(h@To))
-  Hazard <- purrr::map(HermList, \(h) {
+  From <- purrr::map_int(HermList, \(h) .HermStockIndex(h@From, stock_names))
+  To   <- purrr::map_int(HermList, \(h) .HermStockIndex(h@To, stock_names))
+  Hazard <- purrr::map2(HermList, From, \(h, st) {
+    if (is.null(h@Frac) && !is.null(h@FracAtLength))
+      h@Frac <- .HermFracAtLength2AtAge(h, OM@Stock[[st]], Years(OM))
     hazard <- .HermHazardRate(h@Frac)
     d   <- dim(hazard)
     hdn <- dimnames(hazard)
@@ -97,7 +175,10 @@
     if (!isTRUE(OM@Stock[[st]]@Ages@PlusGroup)) next
     Hazard <- Resolved$Hazard[[i]]
     PlusGroup <- Hazard[, dim(Hazard)[2], ]
+    # length-based: plus-group transitions are expected as fish keep growing
+    if (!is.null(HermList[[i]]@FracAtLength)) next
     Frac <- HermList[[i]]@Frac
+    if (is.null(Frac)) next
     FracPlus <- apply(Frac, setdiff(seq_along(dim(Frac)), 2), \(x) x[length(x)])
     if (!any(PlusGroup > tol & PlusGroup < 1 - tol, na.rm = TRUE) ||
         !any(FracPlus > MinFrac, na.rm = TRUE)) next

@@ -172,3 +172,94 @@ test_that(".PrepHistMisc() sets TransitionFlag = 0 and empty entries with no Her
 
   expect_no_error(.CheckHistMisc(hist2, 'Historical'))
 })
+
+# Length-based transitions: FracAtLength converted to Frac with the From
+# stock's ALK during Populate() (R/utils-herm.R .PopulateHerm())
+
+.HermFracAtLengthOM <- function(nSim = 2) {
+  om <- HermOM
+  om@nSim <- nSim
+  Classes <- Populate(om, silent = TRUE)@Stock[[1]]@Length@Classes
+  FracAtLength <- 1 / (1 + exp((Classes - stats::median(Classes)) / 3))
+  sn <- StockNames(om)
+  om@Herm <- list(Herm(From = sn[1], To = sn[2],
+                       FracAtLength = FracAtLength, Classes = Classes))
+  list(om = om, Classes = Classes, FracAtLength = FracAtLength)
+}
+
+test_that("Herm() accepts FracAtLength and Classes", {
+  Classes <- seq(0, 100, by = 10)
+  FracAtLength <- seq(1, 0, length.out = length(Classes))
+  h <- Herm(From = 1, To = 2, FracAtLength = FracAtLength, Classes = Classes)
+
+  expect_s4_class(h, "stocktransition")
+  expect_null(h@Frac)
+  expect_equal(h@FracAtLength, FracAtLength)
+  expect_equal(h@Classes, Classes)
+})
+
+test_that("Herm() rejects invalid FracAtLength inputs", {
+  Classes <- seq(0, 100, by = 10)
+  expect_error(Herm(From = 1, To = 2, Frac = array(1, dim = c(1, 5)),
+                    FracAtLength = rep(1, length(Classes))))
+  expect_error(Herm(From = 1, To = 2, FracAtLength = rep(1.5, length(Classes))))
+  expect_error(Herm(From = 1, To = 2, FracAtLength = rep(1, 3), Classes = Classes))
+  expect_error(Herm(From = 1, To = 2, Classes = Classes))
+})
+
+test_that("Populate() converts FracAtLength to Frac with the From stock's ALK", {
+  skip_on_cran()
+  x  <- .HermFracAtLengthOM()
+  om <- Populate(x$om, silent = TRUE)
+  h  <- om@Herm[[1]]
+
+  expect_false(is.null(h@Frac))
+  expect_equal(names(dimnames(h@Frac)), c("Sim", "Age", "Year"))
+  expect_true(all(h@Frac >= 0 & h@Frac <= 1))
+
+  # hand computation: Frac[s, a, y] = sum_L ALK[s, a, L, y] * FracAtLength[L]
+  ALK <- om@Stock[[1]]@Length@ALK
+  Expected <- apply(ALK, c(1, 2, 4), \(p) sum(p * x$FracAtLength))
+  expect_equal(as.numeric(h@Frac[1, , 1]), as.numeric(Expected[1, , 1]),
+               tolerance = 1e-8)
+
+  # largely decreasing with age: mostly in `From` at age 0, mostly moved by max age
+  expect_gt(h@Frac[1, 1, 1], 0.9)
+  expect_lt(h@Frac[1, dim(h@Frac)[2], 1], 0.1)
+})
+
+test_that("Simulate() runs with a length-based Herm transition", {
+  skip_on_cran()
+  x    <- .HermFracAtLengthOM()
+  # no plus-group warning for length-based transitions
+  expect_no_warning(hist <- Simulate(x$om, silent = TRUE))
+
+  expect_s4_class(hist, "hist")
+  expect_true(all(is.finite(Biomass(hist)$Value)))
+
+  hist2 <- .PrepHistMisc(hist)
+  expect_equal(hist2@Misc$TransitionFlag, 1)
+  expect_equal(
+    as.numeric(hist2@Misc$TransitionHazard[[1]][1, , 1]),
+    as.numeric(.HermHazardRate(hist@OM@Herm[[1]]@Frac)[1, , 1])
+  )
+})
+
+test_that(".HermResolvePairs() converts FracAtLength when Frac is not populated", {
+  skip_on_cran()
+  x  <- .HermFracAtLengthOM()
+  om <- Populate(x$om, silent = TRUE)
+  Populated <- .HermResolvePairs(om, Years(om, 'Hist'))
+
+  om@Herm[[1]]@Frac <- NULL
+  OnTheFly <- .HermResolvePairs(om, Years(om, 'Hist'))
+  expect_equal(OnTheFly$Hazard, Populated$Hazard)
+})
+
+test_that(".CheckHermFracDecreasing() warns when Frac increases with age", {
+  Frac <- array(c(1, 0.5, 0.8, 0), dim = c(1, 4, 1),
+                dimnames = list(Sim = 1, Age = 0:3, Year = 2000))
+  expect_warning(.CheckHermFracDecreasing(Frac, "Female", "Male"), "increases with age")
+  Frac[1, 3, 1] <- 0.4
+  expect_no_warning(.CheckHermFracDecreasing(Frac, "Female", "Male"))
+})
