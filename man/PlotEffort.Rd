@@ -18,7 +18,7 @@ PlotEffort(
   free_y = NULL,
   IncHist = TRUE,
   byMP = FALSE,
-  AggregateYear = FALSE
+  AggregateYear = NULL
 )
 
 PlotEffortCurve(

@@ -33,6 +33,13 @@
 #' @param Stocks Character or numeric vector. Restrict the plot to specific
 #'   stocks, either by name (matching [StockNames()]) or by index. Default
 #'   `NULL` (all stocks).
+#' @param AggregateYear Logical or `NULL`. For a seasonal [data-class]
+#'   object (`object@Seasons > 1`), whether to sum the composition counts
+#'   over the seasons of each calendar year (via [AnnualData()]) before
+#'   computing proportions. `NULL` (default) aggregates and prints a note on
+#'   how to plot by season instead; `TRUE` aggregates without the note;
+#'   `FALSE` plots every seasonal time step. No effect for non-seasonal data
+#'   or for [hist-class]/[mse-class] objects.
 #'
 #' @details
 #' Proportions are computed within each `Year` (and `Stock`/`Fleet`/`MP`
@@ -74,41 +81,45 @@ NULL
 #' @rdname plot_comp
 #' @export
 PlotLandingsAtAge <- function(object, byStock = NULL, byFleet = NULL, Sim = NULL,
-                              Years = NULL, IncHist = TRUE, Stocks = NULL) {
+                              Years = NULL, IncHist = TRUE, Stocks = NULL,
+                              AggregateYear = NULL) {
   .PlotCompBubble(object, 'LandingsAtAge', 'Age',
-                    byStock, byFleet, Sim, Years, IncHist, Stocks)
+                    byStock, byFleet, Sim, Years, IncHist, Stocks, AggregateYear)
 }
 
 #' @rdname plot_comp
 #' @export
 PlotDiscardsAtAge <- function(object, byStock = NULL, byFleet = NULL, Sim = NULL,
-                              Years = NULL, IncHist = TRUE, Stocks = NULL) {
+                              Years = NULL, IncHist = TRUE, Stocks = NULL,
+                              AggregateYear = NULL) {
   .PlotCompBubble(object, 'DiscardsAtAge', 'Age',
-                    byStock, byFleet, Sim, Years, IncHist, Stocks)
+                    byStock, byFleet, Sim, Years, IncHist, Stocks, AggregateYear)
 }
 
 #' @rdname plot_comp
 #' @export
 PlotLandingsAtSize <- function(object, byStock = NULL, byFleet = NULL, Sim = NULL,
-                               Years = NULL, IncHist = TRUE, Stocks = NULL) {
+                               Years = NULL, IncHist = TRUE, Stocks = NULL,
+                               AggregateYear = NULL) {
   .PlotCompBubble(object, 'LandingsAtSize', 'Size Class',
-                    byStock, byFleet, Sim, Years, IncHist, Stocks)
+                    byStock, byFleet, Sim, Years, IncHist, Stocks, AggregateYear)
 }
 
 #' @rdname plot_comp
 #' @export
 PlotDiscardsAtSize <- function(object, byStock = NULL, byFleet = NULL, Sim = NULL,
-                               Years = NULL, IncHist = TRUE, Stocks = NULL) {
+                               Years = NULL, IncHist = TRUE, Stocks = NULL,
+                               AggregateYear = NULL) {
   .PlotCompBubble(object, 'DiscardsAtSize', 'Size Class',
-                    byStock, byFleet, Sim, Years, IncHist, Stocks)
+                    byStock, byFleet, Sim, Years, IncHist, Stocks, AggregateYear)
 }
 
 # ---- internal helpers ----
 
 .PlotCompBubble <- function(object, what, ylab, byStock, byFleet, Sim,
-                             Years, IncHist, Stocks) {
+                             Years, IncHist, Stocks, AggregateYear = NULL) {
   if (inherits(object, 'data'))
-    return(.PlotDataCompBubble(object, what, ylab, byFleet))
+    return(.PlotDataCompBubble(object, what, ylab, byFleet, AggregateYear))
 
   .CheckClass(object, c('hist', 'mse'), 'object')
   isAtSize <- grepl('AtSize$', what)
@@ -154,8 +165,12 @@ PlotDiscardsAtSize <- function(object, byStock = NULL, byFleet = NULL, Sim = NUL
   .BuildCompBubblePlot(df, classCol, ylab)
 }
 
-.PlotDataCompBubble <- function(object, what, ylab, byFleet) {
+.PlotDataCompBubble <- function(object, what, ylab, byFleet, AggregateYear = NULL) {
   .CheckClass(object, 'data', 'object')
+  # skip the seasonal note when there's nothing to plot
+  silent   <- EmptyObject(slot(object, what))
+  object   <- .SeasonalPlotData(object, AggregateYear, silent = silent,
+                                sources = character(0))$object
   isAtSize <- grepl('AtSize$', what)
   classCol <- if (isAtSize) 'Class' else 'Age'
   fn       <- if (grepl('^Landings', what)) 'Landings' else 'Discards'

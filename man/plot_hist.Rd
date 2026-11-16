@@ -123,7 +123,7 @@ PlotLandings(
   free_y = NULL,
   IncHist = TRUE,
   byMP = FALSE,
-  AggregateYear = FALSE,
+  AggregateYear = NULL,
   units = TRUE,
   Stocks = NULL
 )
@@ -138,7 +138,7 @@ PlotDiscards(
   free_y = NULL,
   IncHist = TRUE,
   byMP = FALSE,
-  AggregateYear = FALSE,
+  AggregateYear = NULL,
   units = TRUE,
   Stocks = NULL
 )
@@ -153,7 +153,7 @@ PlotInteractions(
   free_y = NULL,
   IncHist = TRUE,
   byMP = FALSE,
-  AggregateYear = FALSE,
+  AggregateYear = NULL,
   Stocks = NULL
 )
 
@@ -167,7 +167,7 @@ PlotRemovals(
   free_y = NULL,
   IncHist = TRUE,
   byMP = FALSE,
-  AggregateYear = FALSE,
+  AggregateYear = NULL,
   units = TRUE,
   Stocks = NULL
 )
@@ -333,7 +333,10 @@ discarded) or \code{"Landings"} (weights by landed fish only); see
 \code{PlotRemovals()}/\code{PlotEffort()} sub-annual values into whole-year
 totals, unlike \code{Season} above (these are flows, so summing across a
 year is valid, unlike the point-in-time state variables). Default
-\code{FALSE}. Ignored for non-seasonal models.}
+\code{NULL} (treated as \code{FALSE}) plots every seasonal time step for
+\link[=hist-class]{hist}/\link[=mse-class]{mse} objects. For a seasonal \link[=data-class]{data} object,
+\code{NULL} instead aggregates to calendar years and prints a note on
+plotting by season; see \link{plot_data}. Ignored for non-seasonal models.}
 }
 \value{
 A \code{ggplot} object (a \code{patchwork} object for \code{PlotDynamics()}).
