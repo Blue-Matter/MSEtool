@@ -5,7 +5,7 @@
 \alias{stocktransition-class}
 \title{The \code{stocktransition} S4 Class}
 \description{
-The \code{stocktransition} object defines an age-dependent reclassification of
+The \code{stocktransition} object defines an age- or length-dependent reclassification of
 individuals from one stock's numbers-at-age bookkeeping into another's,
 e.g. sequential hermaphroditism (protogynous/protandrous sex change), or
 any other ontogenetic-stage or stock-of-origin transition modelled as
@@ -34,7 +34,20 @@ no one has transitioned yet) and decreases toward \code{0} as age increases
 (nearly everyone has transitioned out of \code{From} by the oldest ages).
 Converted internally to a per-age hazard rate applied each year. In a
 plus group the hazard applies every year to the whole plus group; see
-\emph{Transition in the Plus Group} in \code{\link[=Herm]{Herm()}}.}
+\emph{Transition in the Plus Group} in \code{\link[=Herm]{Herm()}}. Populated from
+\code{FracAtLength} during \code{\link[=Populate]{Populate()}} when \code{FracAtLength} is used.}
+
+\item{\code{FracAtLength}}{\code{array}, \code{numeric}, or \code{NULL}. Cumulative "fraction
+remaining in \code{From} by length" curve - a numeric vector of length
+\code{length(Classes)}, or an array with named dimensions \code{Sim}, \code{Class},
+and \code{Year}, values in \verb{[0, 1]}. Converted to \code{Frac} with the age-length
+key (\code{Length@ALK}) of the \code{From} stock during \code{\link[=Populate]{Populate()}}, replacing
+any existing values in \code{Frac}. See \emph{Length-Based Transitions} in
+\code{\link[=Herm]{Herm()}}.}
+
+\item{\code{Classes}}{\code{numeric} or \code{NULL}. Lower bounds of the length bins for
+\code{FracAtLength}. Defaults to \code{Length@Classes} of the \code{From} stock when
+\code{NULL}. Values in \code{FracAtLength} are evaluated at bin midpoints.}
 
 \item{\code{Misc}}{\code{list}. Reserved for additional information or user-defined
 extensions. Not used internally.}

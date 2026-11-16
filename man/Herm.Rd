@@ -5,7 +5,7 @@
 \alias{Herm<-}
 \title{Stock Transition Constructor}
 \usage{
-Herm(From, To, Frac = NULL, Misc = list())
+Herm(From, To, Frac = NULL, FracAtLength = NULL, Classes = NULL, Misc = list())
 
 Herm(x) <- value
 }
@@ -23,6 +23,17 @@ yet) and decreases toward \code{0} at older ages (nearly everyone has
 transitioned out of \code{From}). Default \code{NULL}. See \emph{Transition in the
 Plus Group} in Details.}
 
+\item{FracAtLength}{\code{numeric}, \code{array}, or \code{NULL}. Cumulative "fraction
+remaining in \code{From} by length" curve - a numeric vector of length
+\code{length(Classes)}, or an array with named dimensions \code{Sim}, \code{Class},
+and \code{Year}, values in \verb{[0, 1]}. Alternative to \code{Frac}; only one of
+\code{Frac} and \code{FracAtLength} can be supplied. Default \code{NULL}. See
+\emph{Length-Based Transitions} in Details.}
+
+\item{Classes}{\code{numeric} or \code{NULL}. Lower bounds of the length bins for
+\code{FracAtLength}. Default \code{NULL} uses \code{Length@Classes} of the \code{From}
+stock.}
+
 \item{Misc}{\code{list}. Used internally. Default \code{list()}.}
 
 \item{x}{An \link[=om-class]{om} object, for \verb{Herm<-}.}
@@ -39,9 +50,9 @@ returns \code{x} with the \code{Herm} slot replaced; it can only be replaced in
 \link[=om-class]{om} objects.
 }
 \description{
-Construct a \link[=stocktransition-class]{stocktransition} object defining an age-dependent
-reclassification of individuals from one stock's numbers-at-age into
-another's.
+Construct a \link[=stocktransition-class]{stocktransition} object defining an age- or
+length-dependent reclassification of individuals from one stock's
+numbers-at-age into another's.
 }
 \details{
 \code{Herm()} is the general mechanism, not exclusive to biological
@@ -69,11 +80,37 @@ in it, and changes with fishing mortality. Age-structured models that set
 the sex ratio at age from a fixed schedule do
 not have this behaviour, and cannot be reproduced exactly. \code{\link[=Simulate]{Simulate()}}
 gives a warning in this case when more than 0.1\% of \code{From} remains at the
-plus group (\code{Frac[, maxage] > 0.001}).
+plus group (\code{Frac[, maxage] > 0.001}), except for length-based transitions
+(\code{FracAtLength}).
 
 To stop transitions within the plus group, set \code{Frac[, maxage]} equal to
 \code{Frac[, maxage - 1]} (no transition in the plus group), or to \code{0}
 (transition complete by the plus group).
+}
+
+\subsection{Length-Based Transitions}{
+
+When \code{FracAtLength} is supplied, \code{\link[=Populate]{Populate()}} converts it to \code{Frac} with
+the age-length key (\code{Length@ALK}) of the \code{From} stock, as for other
+at-length schedules (e.g. \code{\link[=Maturity]{Maturity()}}):
+\verb{Frac[, a, ] = sum_L ALK[, a, L, ] * FracAtLength[, L, ]}. Time-varying
+growth gives a time-varying \code{Frac}.
+
+The model does not track length within an age class, so \code{Frac} is the
+expected fraction remaining in \code{From} at age given the unfished length
+distribution at age. Size-selective fishing, which removes the larger
+individuals within an age class, does not change the transition.
+
+Individuals cannot move back from \code{To} to \code{From}, so ages where the
+converted \code{Frac} increases (e.g. when the CV of length-at-age increases
+steeply with age) have a hazard of 0. \code{\link[=Populate]{Populate()}} gives a warning in
+this case.
+
+The converted \code{Frac} is usually above 0 at the plus group, so the plus
+group keeps transitioning every year (see \emph{Transition in the Plus Group}).
+This is expected for length-based transitions, as individuals in the
+plus group continue to grow, and \code{\link[=Simulate]{Simulate()}} does not give the plus group
+warning.
 }
 }
 \examples{
@@ -84,6 +121,13 @@ herm <- Herm(From = "Female", To = "Male", Frac = Frac)
 
 # equivalent, specified by stock index
 herm <- Herm(From = 1, To = 2, Frac = Frac)
+
+# length-based transition: logistic decline in the fraction remaining
+# female, centred on 60 cm
+Classes <- seq(0, 120, by = 5)
+herm <- Herm(From = "Female", To = "Male",
+             FracAtLength = 1 / (1 + exp((Classes - 60) / 4)),
+             Classes = Classes)
 
 }
 \seealso{
