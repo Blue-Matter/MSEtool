@@ -18,7 +18,8 @@ PlotEffort(
   free_y = NULL,
   IncHist = TRUE,
   byMP = FALSE,
-  AggregateYear = NULL
+  AggregateYear = NULL,
+  IncCV = TRUE
 )
 
 PlotEffortCurve(
@@ -70,8 +71,14 @@ every available year.}
 \item{free_y}{Logical. Free the y-axis scale across facets? Default
 \code{NULL} resolves to \code{TRUE}.}
 
-\item{IncHist, byMP, AggregateYear}{Used only when \code{object} is a
-\link[=hist-class]{hist}/\link[=mse-class]{mse} object; see \link{plot_hist}.}
+\item{IncHist, byMP}{Used only when \code{object} is a \link[=hist-class]{hist}/\link[=mse-class]{mse}
+object; see \link{plot_hist}.}
+
+\item{AggregateYear}{For seasonal models, sum effort to calendar years;
+see \link{plot_hist} and, for a \link[=data-class]{data} \code{object}, \link{plot_data}.}
+
+\item{IncCV}{Logical. For a \link[=data-class]{data} \code{object}, draw a band showing the
+observation CV; see \link{plot_data}. Ignored otherwise.}
 }
 \value{
 \code{PlotEffortCurve()} returns a \code{ggplot} object; \code{PlotEffort()}

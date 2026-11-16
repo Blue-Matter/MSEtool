@@ -121,8 +121,12 @@ objects have more than one MP -- there is no color channel free for it,
 since bubble size already encodes proportion).
 
 If the relevant \verb{*AtAge}/\verb{*AtSize} data is not populated for a
-\link[=data-class]{data} object, the function prints an informational message and
-returns \code{NULL} invisibly rather than plotting an empty panel.
+\link[=data-class]{data} object, or every value is zero or missing, the function
+prints an informational message and returns \code{NULL} invisibly rather than
+plotting an empty panel. Years (per fleet) with no catch sampled are
+omitted. For a \link[=data-class]{data} object the plot is titled with the slot
+(e.g. "Landings at Age"), and the y-axis label includes the slot's
+\code{Units} (e.g. "Age (years)") when set.
 }
 \examples{
 Hist <- Simulate(SingleStockOM, nSim = 2, control = SimControl(CalcCatchAtSize = TRUE))

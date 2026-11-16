@@ -13,7 +13,8 @@ PlotCPUE(
   byFleet = NULL,
   Season = NULL,
   units = TRUE,
-  AggregateYear = NULL
+  AggregateYear = NULL,
+  IncCV = TRUE
 )
 
 PlotSurvey(
@@ -21,7 +22,8 @@ PlotSurvey(
   byFleet = NULL,
   Season = NULL,
   units = TRUE,
-  AggregateYear = NULL
+  AggregateYear = NULL,
+  IncCV = TRUE
 )
 
 PlotData(
@@ -30,7 +32,9 @@ PlotData(
   AggregateYear = NULL,
   Season = NULL,
   units = TRUE,
-  showDiscards = FALSE
+  showDiscards = FALSE,
+  IncCV = TRUE,
+  IncComp = TRUE
 )
 
 \S4method{plot}{data,ANY}(x, y, ...)
@@ -93,9 +97,16 @@ dropped, so a partial year isn't read as a low annual total. \code{NULL}
 instead; \code{TRUE} aggregates without the note; \code{FALSE} plots every
 seasonal time step. Ignored for non-seasonal data.}
 
+\item{IncCV}{Logical. Draw the observation uncertainty from the slot's
+\code{CV} as a shaded band (see Details)? Default \code{TRUE}.}
+
 \item{showDiscards}{Logical. \code{PlotData()} only. By default (\code{FALSE}),
 the \code{Discards} panel is omitted when it's populated but every value
 (across sims/years/fleets) is zero. Set \code{TRUE} to always show it.}
+
+\item{IncComp}{Logical. \code{PlotData()} only. Add bubble plots of the
+populated composition slots below the timeseries panels? Default
+\code{TRUE}.}
 
 \item{x}{A \link[=data-class]{data} object.}
 
@@ -133,11 +144,24 @@ calendar years by default (catch and effort summed, indices averaged; see
 \code{AggregateYear}) and prints a note pointing to \code{AggregateYear = FALSE}
 and \code{Season} for plotting by season.
 
+Each timeseries panel shows the observation uncertainty from the slot's
+\code{CV} (when populated and positive) as a shaded lognormal 95\% interval,
+\verb{Value * exp(+/- 1.96 * sqrt(log(1 + CV^2)))}, or as an error bar for an
+isolated observation. When fleets are summed (\code{byFleet = FALSE}), and
+for \code{PlotRemovals()}, the CV of the total assumes independent errors.
+Set \code{IncCV = FALSE} to omit it.
+
 \code{PlotData()} arranges whichever of \code{Landings}, \code{Discards}, \code{Effort},
 \code{CPUE}, and \code{Survey} are populated into a single figure with
 \code{\link[patchwork:wrap_plots]{patchwork::wrap_plots()}}, silently omitting panels for slots that
 aren't; unlike the individual \verb{Plot*()} functions it does not print a
-message for missing slots. Fleet color legends are collected into a
+message for missing slots. Below them (with \code{IncComp = TRUE}, the
+default), it adds a bubble plot for each populated composition slot
+(\code{LandingsAtAge}, \code{DiscardsAtAge}, \code{LandingsAtSize}, \code{DiscardsAtSize};
+see \link{plot_comp}), omitting any whose values are all zero or missing.
+With \code{byFleet = FALSE}, size compositions whose fleets use different
+size-class grids are shown by fleet instead of summed, with a message.
+Fleet color legends are collected into a
 single shared legend (\code{patchwork::plot_layout(guides = 'collect')}) only
 when every panel with a color legend maps the same set of fleets;
 otherwise each panel keeps its own legend, since a shared one would
@@ -164,5 +188,5 @@ PlotLandings(dat, byFleet = FALSE)
 
 }
 \seealso{
-\link{plot_hist}, \code{\link[=Landings]{Landings()}}, \code{\link[=Discards]{Discards()}}, \code{\link[=CPUE]{CPUE()}}, \code{\link[=Survey]{Survey()}}
+\link{plot_hist}, \link{plot_comp}, \code{\link[=Landings]{Landings()}}, \code{\link[=Discards]{Discards()}}, \code{\link[=CPUE]{CPUE()}}, \code{\link[=Survey]{Survey()}}
 }

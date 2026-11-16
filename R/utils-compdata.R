@@ -47,6 +47,18 @@
   list(Value = Value, Classes = classesList)
 }
 
+
+.AgeCompArray <- function(compdata) {
+  Value <- compdata@Value
+  dn    <- dimnames(Value) %||% vector('list', 3)
+  if (is.null(dn[[1]])) dn[[1]] <- seq_len(dim(Value)[1])
+  if (is.null(dn[[2]])) dn[[2]] <- compdata@Name %||% paste('Fleet', seq_len(dim(Value)[2]))
+  if (is.null(dn[[3]])) dn[[3]] <- compdata@Classes %||% (seq_len(dim(Value)[3]) - 1)
+  names(dn) <- c('Year', 'Fleet', 'Age')
+  dimnames(Value) <- dn
+  Value
+}
+
 .ExtractDataCompTimeseries <- function(object, slot_name, byFleet = TRUE) {
   compdata <- slot(object, slot_name)
   isAtSize <- grepl('AtSize$', slot_name)
@@ -62,7 +74,7 @@
   }
 
   if (!isAtSize) {
-    array <- compdata@Value
+    array <- .AgeCompArray(compdata)
     if (!byFleet) array <- SumOverFleet(array)
     return(Array2DF(array) |> dplyr::mutate(Variable = varName))
   }

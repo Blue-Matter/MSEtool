@@ -125,7 +125,8 @@ PlotLandings(
   byMP = FALSE,
   AggregateYear = NULL,
   units = TRUE,
-  Stocks = NULL
+  Stocks = NULL,
+  IncCV = TRUE
 )
 
 PlotDiscards(
@@ -140,7 +141,8 @@ PlotDiscards(
   byMP = FALSE,
   AggregateYear = NULL,
   units = TRUE,
-  Stocks = NULL
+  Stocks = NULL,
+  IncCV = TRUE
 )
 
 PlotInteractions(
@@ -169,7 +171,8 @@ PlotRemovals(
   byMP = FALSE,
   AggregateYear = NULL,
   units = TRUE,
-  Stocks = NULL
+  Stocks = NULL,
+  IncCV = TRUE
 )
 
 PlotDynamics(
@@ -337,6 +340,11 @@ year is valid, unlike the point-in-time state variables). Default
 \link[=hist-class]{hist}/\link[=mse-class]{mse} objects. For a seasonal \link[=data-class]{data} object,
 \code{NULL} instead aggregates to calendar years and prints a note on
 plotting by season; see \link{plot_data}. Ignored for non-seasonal models.}
+
+\item{IncCV}{Logical. For a \link[=data-class]{data} \code{object} only, draw a shaded
+band showing the observation uncertainty from the slot's \code{CV}; see
+\link{plot_data}. Default \code{TRUE}. Ignored for \link[=hist-class]{hist}/\link[=mse-class]{mse}
+objects.}
 }
 \value{
 A \code{ggplot} object (a \code{patchwork} object for \code{PlotDynamics()}).
