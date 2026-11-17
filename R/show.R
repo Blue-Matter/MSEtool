@@ -30,6 +30,14 @@
 #' @aliases show,catchobs-method
 #' @aliases show,indicesobs-method
 #' @aliases show,compobs-method
+#' @aliases show,lifehistorydata-method
+#' @aliases show,exploitationdata-method
+#' @aliases show,effortdata-method
+#' @aliases show,catchdata-method
+#' @aliases show,indicesdata-method
+#' @aliases show,compdata-method
+#' @aliases show,advicedata-method
+#' @aliases show,referencedata-method
 #' @aliases show,hist-method
 #' @aliases show,mse-method
 #' @aliases show,data-method
