@@ -1,6 +1,6 @@
 # ReadDataCSV() / WriteDataCSV(): long-format CSV round trips for data objects.
 
-.ExampleCSV <- function() test_path("../../inst/extdata/ExampleData.csv")
+.ExampleCSV <- function() system.file("extdata", "ExampleData.csv", package = "MSEtool", mustWork = TRUE)
 
 .CSVSlots <- c("Landings", "Discards", "Effort", "CPUE", "Survey",
                "LandingsAtAge", "DiscardsAtAge", "LandingsAtSize", "DiscardsAtSize")
