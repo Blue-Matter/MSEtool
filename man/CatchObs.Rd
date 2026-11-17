@@ -87,9 +87,11 @@ the \code{CV} slot of the generated catch data, which MPs can use. A scalar,
 or values named by year that apply from that year onwards (e.g.
 \code{c('1990' = 0.4, '2010' = 0.2)}). Real data CVs take precedence in
 historical years, and CVs supplied for projection years in \code{OM@Data}
-take precedence in projection years. \code{NULL} (default) uses the real data
-CV of the last historical year where there is one, otherwise
-\code{SimControl(DataCV)}. Also get or set with \code{\link[=DataCV]{DataCV()}} and \verb{DataCV<-}.}
+take precedence in projection years. \code{NULL} (default): in projection
+years, a series with real historical data reports the observation-error
+CV of each simulation (\code{CV}, conditioned on the real data unless
+supplied), and a simulated series reports \code{SimControl(DataCV)}. Also get
+or set with \code{\link[=DataCV]{DataCV()}} and \verb{DataCV<-}.}
 
 \item{Misc}{\code{list}. Miscellaneous additional objects. Default \code{list()}.}
 }

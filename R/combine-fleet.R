@@ -328,14 +328,14 @@ CombineFleets <- function(OM, FleetList = NULL, silent = FALSE) {
   out
 }
 
-# CV of a sum of independent observations (mean CV where the sum is zero); NA where an observed value has no CV
+# CV of a sum of independent observations (mean CV where the sum is zero); NA where a non-zero observed value has no CV
 .SumCV <- function(values, cvs) {
   observed <- !is.na(values)
   total <- rowSums(values, na.rm = TRUE)
   out <- sqrt(rowSums((cvs * values)^2, na.rm = TRUE)) / total
   zero <- total == 0
   out[zero] <- rowMeans(ifelse(observed, cvs, NA), na.rm = TRUE)[zero]
-  out[rowSums(observed & is.na(cvs)) > 0 | rowSums(observed) == 0 | !is.finite(out)] <- NA
+  out[rowSums(observed & values != 0 & is.na(cvs)) > 0 | rowSums(observed) == 0 | !is.finite(out)] <- NA
   out
 }
 

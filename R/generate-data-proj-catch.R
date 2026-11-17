@@ -148,7 +148,7 @@
 
     for (x in seq_len(nSim))
       NewCVAll[x, fl] <- .ResolveCV(Proj, type, i, fl, TSIndex,
-                                    slot(Proj@Data[[x]][[i]], type), DataYear, Obs)
+                                    slot(Proj@Data[[x]][[i]], type), DataYear, Obs, sim = x)
   }
 
   purrr::map(seq_len(nSim), \(x) {

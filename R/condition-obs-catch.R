@@ -141,7 +141,7 @@
   if (.UserSupplied(object, "CV")) {
     SD <- sdconv(1, .SimValues(object@CV, nSim))
   } else {
-    object@CV <- .NameSims(SD, nSim)
+    object@CV <- .NameSims(sqrt(exp(SD^2) - 1), nSim)
   }
 
   ErrorProj <- .ProjObsError(object, SD, nSim, ProjYears)

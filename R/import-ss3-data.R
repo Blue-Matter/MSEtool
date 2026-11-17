@@ -86,8 +86,7 @@ ImportSSData <- function(SSDir,
   # Landings, Dead Discards
   Landings <- new("catchdata")
   Landings@Name <- FleetNames
-  # TODO
-  Landings@Value <- Landings@CV <- array(0.2,
+  Landings@Value <- Landings@CV <- array(NA_real_,
                                          dim = c(nTS, nFleet),
                                          dimnames = list(
                                            Year = YearsHist,
@@ -104,6 +103,7 @@ ImportSSData <- function(SSDir,
     Landings@Units[] <- 'Biomass'
 
   Discards <- Landings
+  Discards@CV <- .SSDiscardCV(replist, YearsHist, FishFleets, FleetNames)
   
   CatchColNames <- names(replist$catch)
   CatchDF <- replist$catch |> dplyr::filter(Yr %in% YearsHist)
@@ -156,6 +156,12 @@ ImportSSData <- function(SSDir,
     
     Landings@Value[, fl] <- Retain$Obs
     Discards@Value[, fl] <- Dead$Obs - Retain$Obs
+
+    if ("se" %in% CatchColNames) {
+      FleetCatch <- CatchDF |> dplyr::filter(Fleet == FishFleets[fl])
+      Landings@CV[, fl] <- .SSFillTimeSteps(.SSLogSE2CV(FleetCatch$se),
+                                            FleetCatch$Yr, FleetCatch$Seas, YearsHist)
+    }
   }
   list(
     Landings = Landings,
@@ -163,6 +169,74 @@ ImportSSData <- function(SSDir,
   )
 }
 
+
+# CV of a lognormal observation from its SS3 log-scale SE; NA where SS3 gives no SE (missing or 0)
+.SSLogSE2CV <- function(se) {
+  se  <- suppressWarnings(as.numeric(se))
+  out <- sqrt(exp(se^2) - 1)
+  out[!is.finite(out) | se <= 0] <- NA_real_
+  out
+}
+
+# length(YearsHist) vector of `x` placed at the time steps of SS3 rows `Yr`, `Seas`; NA elsewhere
+.SSFillTimeSteps <- function(x, Yr, Seas, YearsHist) {
+  out <- rep(NA_real_, length(YearsHist))
+  ind <- match(Yr, YearsHist) + Seas - 1
+  ok  <- !is.na(ind) & ind >= 1 & ind <= length(YearsHist)
+  out[ind[ok]] <- x[ok]
+  out
+}
+
+# [nTS x nFleet] CV of the SS3 discard observations, from the SD used in the fit (`Std_use`) and the fleet's discard error type
+.SSDiscardCV <- function(replist, YearsHist, FishFleets, FleetNames) {
+  CV <- array(NA_real_, dim = c(length(YearsHist), length(FleetNames)),
+              dimnames = list(Year = YearsHist, Fleet = FleetNames))
+  Disc <- replist$discard
+  if (!is.data.frame(Disc) || !nrow(Disc) || !all(c("Fleet", "Yr", "Obs") %in% names(Disc)) ||
+      !any(c("Std_use", "Std_in") %in% names(Disc)))
+    return(CV)
+  if (!"Seas" %in% names(Disc)) Disc$Seas <- 1
+  Num  <- function(x) suppressWarnings(as.numeric(x))
+  Spec <- replist$discard_spec
+  for (fl in seq_along(FishFleets)) {
+    Rows <- Disc[Num(Disc$Fleet) %in% FishFleets[fl], , drop = FALSE]
+    if (!nrow(Rows)) next
+    ErrType <- if (is.data.frame(Spec) && "errtype" %in% names(Spec))
+      Spec$errtype[match(FishFleets[fl], Num(Spec$Fleet))] else replist$DF_discard
+    ErrType <- Num(ErrType)
+    if (!length(ErrType) || is.na(ErrType)) ErrType <- 0
+    Obs <- Num(Rows$Obs)
+    # SD in log space for lognormal (-2), natural space otherwise; Std_in is a CV for errtype >= 0 and -3
+    SD <- if ("Std_use" %in% names(Rows)) Num(Rows$Std_use) else
+      if (ErrType >= 0 || ErrType == -3) Num(Rows$Std_in) * Obs else Num(Rows$Std_in)
+    cv <- if (ErrType == -2) .SSLogSE2CV(SD) else SD / Obs
+    if ("Use" %in% names(Rows)) cv[Num(Rows$Use) < 0] <- NA_real_
+    cv[!is.finite(cv) | cv <= 0] <- NA_real_
+    CV[, fl] <- .SSFillTimeSteps(cv, Num(Rows$Yr), Num(Rows$Seas), YearsHist)
+  }
+  CV
+}
+
+# TRUE for the dummy observations of an SS3 super-period (value ignored by SS3, SE field holds a weight)
+.SSSuperPeriodDummy <- function(x) {
+  if (!all(c("SuprPer", "Use") %in% names(x))) return(rep(FALSE, nrow(x)))
+  Dummy <- !is.na(x$SuprPer) & !x$SuprPer %in% c("_", "No") & suppressWarnings(as.numeric(x$Use)) < 0
+  Dummy %in% TRUE
+}
+
+# CV of SS3 index observations; `SE` is log-scale for lognormal and T errors, natural-scale for normal (errtype < 0);
+# NA for super-period dummy observations
+.SSIndexCV <- function(cpue, replist) {
+  Num <- function(x) suppressWarnings(as.numeric(x))
+  ErrType <- Num(replist$survey_error %||% 0)[cpue$Fleet]
+  SE  <- Num(cpue$SE)
+  cv  <- .SSLogSE2CV(SE)
+  Normal <- !is.na(ErrType) & ErrType < 0
+  cv[Normal] <- SE[Normal] / Num(cpue$Obs)[Normal]
+  cv[.SSSuperPeriodDummy(cpue)] <- NA_real_
+  cv[!is.finite(cv) | cv <= 0] <- NA_real_
+  cv
+}
 
 .ImportSSDataIndex <- function(replist, Type = c("CPUE", "Survey"), FleetNames = NULL) {
   Type <- match.arg(Type, c("CPUE", "Survey"))
@@ -218,7 +292,7 @@ ImportSSData <- function(SSDir,
   Value <- purrr::imap(CPUE_Split, \(cpue, idx) {
     ind <- match(cpue$Yr, YearsHist) + cpue$Seas - 1
     Years <- YearsHist[ind]
-    index <- array(cpue$Obs, c(length(Years), 1),
+    index <- array(ifelse(.SSSuperPeriodDummy(cpue), NA_real_, cpue$Obs), c(length(Years), 1),
                    dimnames = list(
                      Year = Years,
                      Fleet = idx
@@ -230,7 +304,7 @@ ImportSSData <- function(SSDir,
   CV <- purrr::imap(CPUE_Split, \(cpue, idx) {
     ind <- match(cpue$Yr, YearsHist) + cpue$Seas - 1
     Years <- YearsHist[ind]
-    index <- array(cpue$SE, c(length(Years), 1),
+    index <- array(.SSIndexCV(cpue, replist), c(length(Years), 1),
                    dimnames = list(
                      Year = Years,
                      Fleet = idx

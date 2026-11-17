@@ -76,7 +76,7 @@
       for (x in seq_len(nSim)) {
         NewValueAll[x, fl] <- omValue
         NewCVAll[x, fl]    <- .ResolveCV(Proj, type, i, fl, TSIndex,
-                                        slot(Proj@Data[[x]][[i]], type), DataYear, IndexObs, omCol)
+                                        slot(Proj@Data[[x]][[i]], type), DataYear, IndexObs, omCol, sim = x)
       }
       next
     }
@@ -112,7 +112,7 @@
         NewValueAll[x, fl] <- NewValueAll[x, fl] *
           .qIncMultiplier(IndexObs@qInc[min(x, length(IndexObs@qInc))], Elapsed)
       NewCVAll[x, fl]    <- .ResolveCV(Proj, type, i, fl, TSIndex,
-                                      slot(Proj@Data[[x]][[i]], type), DataYear, IndexObs, omCol)
+                                      slot(Proj@Data[[x]][[i]], type), DataYear, IndexObs, omCol, sim = x)
     }
   }
 

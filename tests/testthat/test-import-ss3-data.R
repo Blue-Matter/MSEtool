@@ -37,6 +37,62 @@ test_that(".ImportSSDataCatch imports every fleet in biomass with CatchUnits = '
                with(Catch[Catch$Fleet == 2, ], kill_bio - ret_bio))
 })
 
+test_that(".ImportSSDataCatch sets the landings CV from the SS3 catch se and the discard CV from the discard data", {
+  replist <- MockSSCatchReplist()
+  replist$catch$se <- c(0.05, 0.1, 0, 0.01, NA, 0.2)
+  Out <- .ImportSSDataCatch(replist)
+  expect_equal(unname(Out$Landings@CV[, 'F1_Biomass']), c(sqrt(exp(0.05^2) - 1), sqrt(exp(0.1^2) - 1), NA))
+  expect_equal(unname(Out$Landings@CV[, 'F2_Number']), c(sqrt(exp(0.01^2) - 1), NA, sqrt(exp(0.2^2) - 1)))
+  expect_true(all(is.na(Out$Discards@CV)))
+
+  replist$discard <- data.frame(Fleet = c(1, 2, 2), Yr = c(2001, 2000, 2002), Seas = 1,
+                                Obs = c(10, 4, 5), Std_in = c(0.3, 0.2, 1))
+  replist$discard_spec <- data.frame(Fleet = 1:2, units = 1, errtype = c(0, -1))
+  Out <- .ImportSSDataCatch(replist)
+  expect_equal(unname(Out$Discards@CV[, 'F1_Biomass']), c(NA, 0.3, NA))
+  expect_equal(unname(Out$Discards@CV[, 'F2_Number']), c(0.05, NA, 0.2))
+  replist$discard_spec$errtype <- -2
+  Out <- .ImportSSDataCatch(replist)
+  expect_equal(unname(Out$Discards@CV[, 'F1_Biomass']), c(NA, sqrt(exp(0.3^2) - 1), NA))
+  # errtype -3 reads Std_in as a CV
+  replist$discard_spec$errtype <- -3
+  Out <- .ImportSSDataCatch(replist)
+  expect_equal(unname(Out$Discards@CV[, 'F2_Number']), c(0.2, NA, 1))
+
+  # Std_use (SD used in the fit) takes precedence; rows excluded from the likelihood are NA
+  replist$discard$Std_use <- c(3.5, 0.6, 0)
+  replist$discard$Use <- c(1, 1, -1)
+  replist$discard_spec$errtype <- c(0, -2)
+  Out <- .ImportSSDataCatch(replist)
+  expect_equal(unname(Out$Discards@CV[, 'F1_Biomass']), c(NA, 0.35, NA))
+  expect_equal(unname(Out$Discards@CV[, 'F2_Number']), c(sqrt(exp(0.6^2) - 1), NA, NA))
+})
+
+test_that(".ImportSSDataIndex converts the SS3 log-scale SE to a CV", {
+  replist <- MockSSCatchReplist()
+  replist$IsFishFleet <- c(TRUE, FALSE)
+  replist$FleetNames <- c("F1", "S1")
+  replist$survey_units <- c(1, 1)
+  replist$cpue <- data.frame(Fleet = 2, Fleet_name = "S1", Yr = 2000:2002, Seas = 1,
+                             Obs = 1:3, SE = c(0.2, 0.3, 0))
+  Survey <- .ImportSSDataIndex(replist, "Survey")
+  expect_equal(unname(Survey@CV[, 1]), c(sqrt(exp(0.2^2) - 1), sqrt(exp(0.3^2) - 1), NA))
+
+  # normal error: SE is a natural-scale SD
+  replist$survey_error <- c(0, -1)
+  Survey <- .ImportSSDataIndex(replist, "Survey")
+  expect_equal(unname(Survey@CV[, 1]), c(0.2, 0.15, NA))
+
+  # dummy observations of a super-period are dropped (their SE field holds a weight)
+  replist$survey_error <- c(0, 0)
+  replist$cpue$SE <- 0.2
+  replist$cpue$SuprPer <- c("beg_SuprPer", "end_SuprPer", NA)
+  replist$cpue$Use <- c(1, -1, -1)
+  Survey <- .ImportSSDataIndex(replist, "Survey")
+  expect_equal(unname(Survey@CV[, 1]), sqrt(exp(0.2^2) - 1) * c(1, NA, 1))
+  expect_equal(unname(Survey@Value[, 1]), c(1, NA, 3))
+})
+
 test_that("ImportSSData rejects unknown CatchUnits", {
   expect_error(ImportSSData(list(), CatchUnits = 'Numbers'), "should be one of")
 })
