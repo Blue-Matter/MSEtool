@@ -11,10 +11,12 @@ FleetName <- FleetNames(OM0)[1]
 
 # reported CVs of a data series, sim 1, split into historical and projection years
 .ReportedCV <- function(OM, type, column = FleetName, control = SimControl()) {
-  MSE <- Project(Simulate(OM, silent = TRUE, control = control), MPs = 'refFCurr', silent = TRUE)
+  Hist <- Simulate(OM, silent = TRUE, control = control)
+  MSE <- Project(Hist, MPs = 'refFCurr', silent = TRUE)
   CV  <- slot(Data(MSE)[[1]][[1]][[1]], type)@CV[, column]
   Yr  <- as.numeric(names(CV))
-  list(Hist = CV[Yr %in% HistYears], Proj = CV[Yr %in% ProjYears])
+  list(Hist = CV[Yr %in% HistYears], Proj = CV[Yr %in% ProjYears],
+       ObsCV = as.numeric(slot(Hist@OM@Obs[[1]][[column]], type)@CV)[1])
 }
 
 test_that("SimControl(DataCV) sets the default reported CV", {
@@ -56,7 +58,7 @@ test_that("an Obs DataCV overrides the default, including by year", {
   expect_true(all(CV$Proj == 0.1))
 })
 
-test_that("real index CVs are kept, with missing ones and projections from the default or DataCV", {
+test_that("real index CVs are kept, with missing ones from the default and projections from the conditioned CV or DataCV", {
   set.seed(7)
   Value <- stats::setNames(runif(length(HistYears), 0.5, 1.5), HistYears)
   RealCV <- stats::setNames(rep(0.15, length(HistYears)), HistYears)
@@ -66,7 +68,8 @@ test_that("real index CVs are kept, with missing ones and projections from the d
   CV <- .ReportedCV(OM, 'Survey', 'Surv', control = SimControl(DataCV = 0.3))
   expect_true(all(CV$Hist[1:3] == 0.3))
   expect_true(all(CV$Hist[-(1:3)] == 0.15))
-  expect_true(all(CV$Proj == 0.15))
+  expect_true(CV$ObsCV != 0.15)
+  expect_true(all(CV$Proj == CV$ObsCV))
 
   OM@Obs[[1]][['Surv']]@Survey@DataCV <- 0.25
   CV <- .ReportedCV(OM, 'Survey', 'Surv')

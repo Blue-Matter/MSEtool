@@ -15,6 +15,17 @@
 #' | `AC()` | `indicesobs`; also [srr-class] and [stocktargeting-class] |
 #' | `MaxGap()` | `indicesobs`, `compobs` |
 #'
+#' `CV` is the observation-error CV used to simulate the data. `DataCV` is
+#' the CV reported with the simulated data in the `CV` slot of the
+#' [data-class] components, which MPs can use. Where `DataCV` is `NULL`, the
+#' reported CV is:
+#'
+#' - historical years: the real data CV, otherwise `SimControl(DataCV)`;
+#' - projection years: the CV supplied for that year in `OM@Data`; otherwise,
+#'   for a series with real historical data, the `CV` of each simulation
+#'   (conditioned on the real data unless supplied), and for a simulated
+#'   series `SimControl(DataCV)`.
+#'
 #' @param x An S4 object with the corresponding slot.
 #' @param value The value to assign to the slot.
 #'

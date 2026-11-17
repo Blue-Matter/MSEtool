@@ -81,8 +81,9 @@ instead of its pure-R equivalent? Default
 \item{DataCV}{Default coefficient of variation reported in the \code{CV} slot
 of generated effort, catch, and index data, used where neither real data
 nor the series' \code{DataCV} (see \code{\link[=IndicesObs]{IndicesObs()}}, \code{\link[=CatchObs]{CatchObs()}}, \code{\link[=EffortObs]{EffortObs()}})
-give one. It sets the reported CV only; observation error is set by the
-observation model. Either a non-negative number for all data types, or a
+give one. In projection years, series with real historical data report
+their observation-error CV instead (see \code{\link[=DataCV]{DataCV()}}). It sets the
+reported CV only; observation error is set by the observation model. Either a non-negative number for all data types, or a
 list named by data type (\code{"Effort"}, \code{"Landings"}, \code{"Discards"}, \code{"CPUE"},
 \code{"Survey"}), with \code{0.2} for types not named. Default \code{0.2}.}
 

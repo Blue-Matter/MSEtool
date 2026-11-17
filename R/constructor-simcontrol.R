@@ -49,8 +49,9 @@
 #' @param DataCV Default coefficient of variation reported in the `CV` slot
 #'   of generated effort, catch, and index data, used where neither real data
 #'   nor the series' `DataCV` (see [IndicesObs()], [CatchObs()], [EffortObs()])
-#'   give one. It sets the reported CV only; observation error is set by the
-#'   observation model. Either a non-negative number for all data types, or a
+#'   give one. In projection years, series with real historical data report
+#'   their observation-error CV instead (see [DataCV()]). It sets the
+#'   reported CV only; observation error is set by the observation model. Either a non-negative number for all data types, or a
 #'   list named by data type (`"Effort"`, `"Landings"`, `"Discards"`, `"CPUE"`,
 #'   `"Survey"`), with `0.2` for types not named. Default `0.2`.
 #' @param ... Additional named arguments. Any unrecognised names trigger a
