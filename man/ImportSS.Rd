@@ -165,6 +165,20 @@ the initial equilibrium without fishing (e.g. a regime parameter).
 the initial numbers-at-age, e.g. from initial equilibrium fishing
 mortality. The dynamic unfished conditions start from the virgin
 numbers-at-age multiplied by \code{SRR@RecDevInit} only.
+\item SS3 recruitment deviations are penalized estimates, shrunk toward zero
+by an amount that increases with their SE, so their standard deviation
+underestimates the recruitment variability. \code{SRR@SD} is
+\code{sqrt(var(dev) + mean(SE^2))} (Methot and Taylor 2011), calculated from
+the estimated Main-era recruitment deviations and their SEs
+(\code{Parm_StDev}). This is the \code{alternative_sigma_R} that \code{r4ss} reports in
+\code{sigma_R_info} for the Main period. If the SEs are not available (e.g.
+no Hessian), they are approximated from the SS3 bias adjustment,
+\code{SE^2 = sigma_R_in^2 * (1 - biasadjuster)}. If neither is available,
+\code{SRR@SD} is the SS3 input \code{sigma_R} (\code{sigma_R_in}). A warning is given
+when the SEs are not available.
+\code{SRR@AC} is the lag-1 autocorrelation of the recruitment deviations in
+the years with full bias adjustment. Shrinkage can inflate this
+autocorrelation.
 \item The CVs of the imported data (\code{Data@Landings@CV}, \code{Data@Discards@CV},
 \code{Data@CPUE@CV}, \code{Data@Survey@CV}) are calculated from the error SS3 uses
 in the fit. A log-scale SE is converted to a CV with
