@@ -26,6 +26,14 @@
 \alias{show,catchobs-method}
 \alias{show,indicesobs-method}
 \alias{show,compobs-method}
+\alias{show,lifehistorydata-method}
+\alias{show,exploitationdata-method}
+\alias{show,effortdata-method}
+\alias{show,catchdata-method}
+\alias{show,indicesdata-method}
+\alias{show,compdata-method}
+\alias{show,advicedata-method}
+\alias{show,referencedata-method}
 \alias{show,hist-method}
 \alias{show,mse-method}
 \alias{show,data-method}
