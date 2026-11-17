@@ -263,8 +263,7 @@ setValidity("om", function(object) {
 
     required_cols <- c("Year", "Type", "Mean")
     missing_cols  <- setdiff(required_cols, ia_names)
-    nCx <- if (length(object@Complexes)) length(object@Complexes) else length(object@Stock)
-    if (nCx > 1 && is.na(cx_col))
+    if (length(object@Complexes) > 1 && is.na(cx_col))
       missing_cols <- c(missing_cols, "Complex")
     if (length(missing_cols))
       errors <- c(errors, paste0(
