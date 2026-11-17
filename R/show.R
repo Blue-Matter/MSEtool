@@ -670,6 +670,60 @@ setMethod('show', 'compobs', function(object) {
   .ShowObject(object, 'compobs')
 })
 
+# lists the populated slots of each component
+.ShowDataComponents <- function(object) {
+  for (name in setdiff(slotNames(object), 'Misc')) {
+    x <- methods::slot(object, name)
+    if (EmptyObject(x) || identical(x, methods::new(class(x)))) {
+      cli::cli_text("{.var {name}}: {.emph not specified}")
+      next
+    }
+    filled <- Filter(function(sl) {
+      val <- methods::slot(x, sl)
+      is.function(val) || !EmptyObject(val)
+    }, setdiff(slotNames(x), c('Misc', 'Log')))
+    if (length(filled) == 0) {
+      cli::cli_text("{.var {name}}: {.emph not specified}")
+    } else {
+      cli::cli_text("{.var {name}}: {.val {filled}}")
+    }
+  }
+}
+
+setMethod('show', 'lifehistorydata', function(object) {
+  cli::cli_h2("A {.help MSEtool::lifehistorydata-class} Object")
+  .ShowDataComponents(object)
+})
+
+setMethod('show', 'exploitationdata', function(object) {
+  cli::cli_h2("An {.help MSEtool::exploitationdata-class} Object")
+  .ShowDataComponents(object)
+})
+
+setMethod('show', 'effortdata', function(object) {
+  .ShowObject(object, 'effortdata')
+})
+
+setMethod('show', 'catchdata', function(object) {
+  .ShowObject(object, 'catchdata')
+})
+
+setMethod('show', 'indicesdata', function(object) {
+  .ShowObject(object, 'indicesdata')
+})
+
+setMethod('show', 'compdata', function(object) {
+  .ShowObject(object, 'compdata')
+})
+
+setMethod('show', 'advicedata', function(object) {
+  .ShowObject(object, 'advicedata')
+})
+
+setMethod('show', 'referencedata', function(object) {
+  .ShowObject(object, 'referencedata')
+})
+
 
 setMethod('show', 'imp', function(object) {
   object <- UpdateObject(object)
