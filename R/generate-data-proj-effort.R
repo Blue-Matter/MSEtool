@@ -102,7 +102,7 @@
                                        Divisor = TimeFrac[seq_len(nSim), fl])
 
     for (x in seq_len(nSim))
-      NewCVAll[x, fl] <- .ResolveCV(Proj, 'Effort', i, fl, TSIndex, Proj@Data[[x]][[i]]@Effort, DataYear, Obs)
+      NewCVAll[x, fl] <- .ResolveCV(Proj, 'Effort', i, fl, TSIndex, Proj@Data[[x]][[i]]@Effort, DataYear, Obs, sim = x)
   }
 
   purrr::map(seq_len(nSim), \(x) {

@@ -64,7 +64,7 @@
   projValue * obsError * obsBias
 }
 
-.ResolveCV <- function(Proj, slotname, i, fl, TSIndex, DataObject, DataYear, Obs = NULL, omCol = fl) {
+.ResolveCV <- function(Proj, slotname, i, fl, TSIndex, DataObject, DataYear, Obs = NULL, omCol = fl, sim = 1) {
   omData <- Proj@OM@Data[[i]]
   omRow  <- .OMDataRow(omData, slotname, DataYear, "CV")
   if (!is.na(omRow) && !is.na(omCol) && ncol(slot(omData, slotname)@CV) >= omCol &&
@@ -74,6 +74,10 @@
   ObsCV <- .DataCVYears(Obs, DataYear, NA_real_)
   if (!is.na(ObsCV)) return(ObsCV)
 
+  Name   <- if (methods::.hasSlot(DataObject, "Name") && length(DataObject@Name) >= fl) DataObject@Name[fl]
+  CondCV <- .ConditionedCV(omData, slotname, Name, Obs, sim)
+  if (!is.na(CondCV)) return(CondCV)
+
   # use the CV from last time step
   previouscv <- DataObject@CV[, fl]
   previouscv <- previouscv[!is.na(previouscv)]
@@ -81,6 +85,21 @@
     return(as.numeric(utils::tail(previouscv, 1)))
 
   .DefaultDataCV(Proj, slotname)
+}
+
+# observation-error CV (`Obs@CV`) of simulation `sim` for series `Name` when it has real historical data; NA otherwise
+.ConditionedCV <- function(omData, slotname, Name, Obs, sim) {
+  if (is.null(omData) || is.null(Obs) || !length(Name) || is.na(Name) ||
+      !methods::.hasSlot(Obs, "CV") || !length(Obs@CV))
+    return(NA_real_)
+  Real  <- slot(omData, slotname)
+  Value <- Real@Value
+  if (is.null(Value)) return(NA_real_)
+  Col <- match(Name, if (length(Real@Name) == NCOL(Value)) Real@Name else colnames(Value))
+  if (is.na(Col) || !any(is.finite(as.matrix(Value)[, Col])))
+    return(NA_real_)
+  CV <- .SimValues(Obs@CV, sim)[sim]
+  if (is.finite(CV) && CV >= 0) CV else NA_real_
 }
 
 .DefaultDataCV <- function(object, type) {

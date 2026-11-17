@@ -68,6 +68,19 @@ are documented with its constructor: \code{\link[=IndicesObs]{IndicesObs()}} and
    \code{AC()} \tab \code{indicesobs}; also \link[=srr-class]{srr} and \link[=stocktargeting-class]{stocktargeting} \cr
    \code{MaxGap()} \tab \code{indicesobs}, \code{compobs} \cr
 }
+
+
+\code{CV} is the observation-error CV used to simulate the data. \code{DataCV} is
+the CV reported with the simulated data in the \code{CV} slot of the
+\link[=data-class]{data} components, which MPs can use. Where \code{DataCV} is \code{NULL}, the
+reported CV is:
+\itemize{
+\item historical years: the real data CV, otherwise \code{SimControl(DataCV)};
+\item projection years: the CV supplied for that year in \code{OM@Data}; otherwise,
+for a series with real historical data, the \code{CV} of each simulation
+(conditioned on the real data unless supplied), and for a simulated
+series \code{SimControl(DataCV)}.
+}
 }
 \examples{
 obs <- CatchObs()

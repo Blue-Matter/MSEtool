@@ -62,9 +62,11 @@
 #'   or values named by year that apply from that year onwards (e.g.
 #'   `c('1990' = 0.4, '2010' = 0.2)`). Real data CVs take precedence in
 #'   historical years, and CVs supplied for projection years in `OM@Data`
-#'   take precedence in projection years. `NULL` (default) uses the real data
-#'   CV of the last historical year where there is one, otherwise
-#'   `SimControl(DataCV)`. Also get or set with [DataCV()] and `DataCV<-`.
+#'   take precedence in projection years. `NULL` (default): in projection
+#'   years, a series with real historical data reports the observation-error
+#'   CV of each simulation (`CV`, conditioned on the real data unless
+#'   supplied), and a simulated series reports `SimControl(DataCV)`. Also get
+#'   or set with [DataCV()] and `DataCV<-`.
 #' @param Misc `list`. Miscellaneous additional objects. Default `list()`.
 #'
 #' @details
@@ -383,9 +385,11 @@ CompObs <- function(SampleSize = NULL,
 #'   or values named by year that apply from that year onwards (e.g.
 #'   `c('1990' = 0.4, '2010' = 0.2)`). Real data CVs take precedence in
 #'   historical years, and CVs supplied for projection years in `OM@Data`
-#'   take precedence in projection years. `NULL` (default) uses the real data
-#'   CV of the last historical year where there is one, otherwise
-#'   `SimControl(DataCV)`. Also get or set with [DataCV()] and `DataCV<-`.
+#'   take precedence in projection years. `NULL` (default): in projection
+#'   years, a series with real historical data reports the observation-error
+#'   CV of each simulation (`CV`, conditioned on the real data unless
+#'   supplied), and a simulated series reports `SimControl(DataCV)`. Also get
+#'   or set with [DataCV()] and `DataCV<-`.
 #' @param Misc `list`. Miscellaneous additional objects. Default `list()`.
 #'
 #' @details
@@ -661,9 +665,11 @@ ExploitationObs <- function(Selectivity      = list(),
 #'   or values named by year that apply from that year onwards (e.g.
 #'   `c('1990' = 0.4, '2010' = 0.2)`). Real data CVs take precedence in
 #'   historical years, and CVs supplied for projection years in `OM@Data`
-#'   take precedence in projection years. `NULL` (default) uses the real data
-#'   CV of the last historical year where there is one, otherwise
-#'   `SimControl(DataCV)`. Also get or set with [DataCV()] and `DataCV<-`.
+#'   take precedence in projection years. `NULL` (default): in projection
+#'   years, a series with real historical data reports the observation-error
+#'   CV of each simulation (`CV`, conditioned on the real data unless
+#'   supplied), and a simulated series reports `SimControl(DataCV)`. Also get
+#'   or set with [DataCV()] and `DataCV<-`.
 #' @param Beta `numeric` or `NULL`. Hyperstability/hyperdepletion parameter:
 #'   `Observed_t = Efficiency * NomIndex_t^Beta * Error_t` (Harley et al.
 #'   2001). `Beta < 1` is hyperstable, `Beta > 1` hyperdeplete. Must be
