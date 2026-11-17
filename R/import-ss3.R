@@ -30,6 +30,20 @@
 #'   the initial numbers-at-age, e.g. from initial equilibrium fishing
 #'   mortality. The dynamic unfished conditions start from the virgin
 #'   numbers-at-age multiplied by `SRR@RecDevInit` only.
+#' * SS3 recruitment deviations are penalized estimates, shrunk toward zero
+#'   by an amount that increases with their SE, so their standard deviation
+#'   underestimates the recruitment variability. `SRR@SD` is
+#'   `sqrt(var(dev) + mean(SE^2))` (Methot and Taylor 2011), calculated from
+#'   the estimated Main-era recruitment deviations and their SEs
+#'   (`Parm_StDev`). This is the `alternative_sigma_R` that `r4ss` reports in
+#'   `sigma_R_info` for the Main period. If the SEs are not available (e.g.
+#'   no Hessian), they are approximated from the SS3 bias adjustment,
+#'   `SE^2 = sigma_R_in^2 * (1 - biasadjuster)`. If neither is available,
+#'   `SRR@SD` is the SS3 input `sigma_R` (`sigma_R_in`). A warning is given
+#'   when the SEs are not available.
+#'   `SRR@AC` is the lag-1 autocorrelation of the recruitment deviations in
+#'   the years with full bias adjustment. Shrinkage can inflate this
+#'   autocorrelation.
 #' * The CVs of the imported data (`Data@Landings@CV`, `Data@Discards@CV`,
 #'   `Data@CPUE@CV`, `Data@Survey@CV`) are calculated from the error SS3 uses
 #'   in the fit. A log-scale SE is converted to a CV with
@@ -1168,10 +1182,20 @@ ImportSS <- function(SSDir,
        trailing_unsupported = YearsHist[YearsHist > last_full])
 }
 
-# SD/AC of log recruitment deviations, estimated from the plateau years only
-# so the ramp-up/ramp-down years (shrunk toward the deterministic S-R
-# prediction, not genuinely data-informed) don't pull the estimates toward
-# zero.
+# Estimated rec-dev parameters (value, SE) by era and year
+.GetSSRecDevPars <- function(replist) {
+  pars <- replist$parameters
+  if (is.null(pars) || !all(c("Label", "Value") %in% names(pars)))
+    return(data.frame(Era = character(0), Yr = numeric(0), Value = numeric(0), SE = numeric(0)))
+  pars <- pars[grepl("^(Early|Main|Late)_RecrDev_[0-9]+$", pars$Label), , drop = FALSE]
+  SE <- if ("Parm_StDev" %in% names(pars)) suppressWarnings(as.numeric(pars$Parm_StDev)) else rep(NA_real_, nrow(pars))
+  data.frame(Era   = sub("_RecrDev_[0-9]+$", "", pars$Label),
+             Yr    = as.numeric(sub("^.*_RecrDev_", "", pars$Label)),
+             Value = as.numeric(pars$Value),
+             SE    = SE)
+}
+
+# SD of log rec devs sqrt(var + mean SE^2) (Methot & Taylor 2011) from Main-era devs; AC from plateau years
 .GetSSRecDevStats <- function(replist, YearsList, Ages) {
   dev     <- .GetSSRecDevsRaw(replist, YearsList, Ages)
   AnnualYearsHist <- unique(floor(YearsList$YearsHist))
@@ -1179,12 +1203,29 @@ ImportSS <- function(SSDir,
 
   logdev <- log(dev[as.character(plateau)])
   logdev <- logdev[is.finite(logdev)]
+  AC <- if (length(logdev) < 2) 0 else stats::acf(logdev, lag.max = 1, plot = FALSE)$acf[2]
 
-  if (length(logdev) < 2)
-    return(list(SD = NA_real_, AC = 0))
+  NoSD <- list(SD = NA_real_, AC = AC, Method = "Input")
 
-  list(SD = stats::sd(logdev),
-       AC = stats::acf(logdev, lag.max = 1, plot = FALSE)$acf[2])
+  pars <- .GetSSRecDevPars(replist)
+  pars <- pars[pars$Yr %in% AnnualYearsHist & is.finite(pars$Value), , drop = FALSE]
+  use <- pars[pars$Era == "Main", , drop = FALSE]
+  if (nrow(use) < 2)
+    use <- pars[pars$Yr %in% plateau & !duplicated(pars$Yr), , drop = FALSE]
+  if (nrow(use) < 2)
+    return(NoSD)
+
+  if (all(is.finite(use$SE)))
+    return(list(SD = sqrt(stats::var(use$Value) + mean(use$SE^2)), AC = AC, Method = "SE"))
+
+  # bias adjustment b = 1 - SE^2/sigma_R^2
+  sigmaR <- as.numeric(replist$sigma_R_in)[1]
+  b <- replist$recruit$biasadjuster[match(use$Yr, replist$recruit$Yr)]
+  if (!length(sigmaR) || !is.finite(sigmaR) || is.null(b) || any(!is.finite(b)) || max(b) <= 0)
+    return(NoSD)
+
+  SE2 <- sigmaR^2 * pmax(0, 1 - pmin(b, 1))
+  list(SD = sqrt(stats::var(use$Value) + mean(SE2)), AC = AC, Method = "BiasAdj")
 }
 
 .GetSSRecDevs <- function(replist, YearsList, Ages) {
@@ -1257,8 +1298,21 @@ ImportSS <- function(SSDir,
   SD <- purrr::map_dbl(RecDevStats, "SD")
   AC <- purrr::map_dbl(RecDevStats, "AC")
 
-  # Fall back to the input prior where the plateau didn't yield enough years
-  # to estimate SD directly
+  Method <- purrr::map_chr(RecDevStats, "Method")
+  if (st == 1 && any(Method != "SE")) {
+    Runs <- purrr::imap_chr(RepList, \(replist, i)
+      if (is.null(replist$inputs$dir)) paste("run", i) else basename(replist$inputs$dir))
+    BiasAdj <- Runs[Method == "BiasAdj"]
+    Input <- Runs[Method == "Input"]
+    Msg <- "Recruitment deviation SEs not available for some SS3 runs. {.code SRR@SD} is calculated from:"
+    if (length(BiasAdj))
+      Msg <- c(Msg, "*" = "SE^2 = sigma_R_in^2 * (1 - biasadjuster) for {.val {BiasAdj}}")
+    if (length(Input))
+      Msg <- c(Msg, "*" = "{.code sigma_R_in} for {.val {Input}}")
+    cli::cli_warn(Msg)
+  }
+
+  # Input sigma_R where SD could not be calculated
   SDPrior <- purrr::map(RepList, \(replist) replist$sigma_R_in) |>
     unlist() |>
     as.numeric()
