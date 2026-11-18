@@ -23,8 +23,13 @@
 #' * Generating movement probabilities and movement matrices when required
 #' * Expanding spatial objects across simulations and years
 #'
-#' If a movement matrix is supplied, it is used to calculate unfished 
-#' distribution.
+#' If a movement matrix is supplied, it takes precedence and everything that
+#' can be derived from it is updated, replacing any existing values:
+#' `UnfishedDist` is set to the equilibrium distribution under `Movement`
+#' ([CalcUnfishedDist()]) and `ProbStaying` to the diagonal of `Movement` (the
+#' probability of remaining in each area). The only supplied value still used
+#' is an `UnfishedDist` with the same number of areas, which sets the age-0
+#' distribution when `Movement` varies by age.
 #'
 #' @return
 #' A populated [Spatial()] object.
@@ -59,6 +64,7 @@ PopulateSpatial <- function(Spatial,
   if (.CheckDigest(Spatial, argList) && !force)
     return(Spatial)
 
+  Spatial <- .DropStaleUnfishedDist(Spatial)
   Spatial <- .NameSpatial(Spatial, Ages, Years)
   .SpatialNArea(Spatial)
   .CheckInputs(Spatial)
@@ -76,8 +82,9 @@ PopulateSpatial <- function(Spatial,
     # Movement matrix supplied: validate + derive implied quantities
     Spatial <- .CheckMovementDimensions(Spatial, Ages, Years)
     Spatial <- CalcUnfishedDist(Spatial, Ages, Years)
+    Spatial@ProbStaying <- .ProbStayingFromMovement(Spatial@Movement)
     Spatial <- .ProcessRelativeSize(Spatial, nSim)
-    
+
     return(.SetDigest(.CheckOutput(Spatial, nSim, Ages, Years), argList))
   }
   
@@ -119,6 +126,18 @@ PopulateSpatial <- function(Spatial,
   .SetDigest(.CheckOutput(.SetAgeDimnames(Spatial, Ages), nSim, Ages, Years), argList)
 }
 
+# probability of staying in each area: the diagonal of a named Sim x FromArea x ToArea x Age x Year
+# Movement array, returned as Sim x Area x Age x Year
+.ProbStayingFromMovement <- function(Mov) {
+  dd <- dim(Mov)
+  DN <- dimnames(Mov)
+  Out <- array(NA_real_, dd[c(1, 2, 4, 5)],
+               list(Sim = DN$Sim, Area = DN$FromArea, Age = DN$Age, Year = DN$Year))
+  for (a in seq_len(dd[2]))
+    Out[, a, , ] <- Mov[, a, a, , , drop = FALSE]
+  Out
+}
+
 .AreaDim <- function(x, nm, pos) {
   i <- match(nm, names(dimnames(x)))
   if (is.na(i)) i <- pos
@@ -152,7 +171,7 @@ PopulateSpatial <- function(Spatial,
     Areas["FracOther"] <- .SquareAreaDim(Spatial@FracOther, "FracOther")
 
   x <- Spatial@UnfishedDist
-  if (IsSet(x)) {
+  if (IsSet(x) && !.StaleUnfishedDist(Spatial)) {
     if (IsArr(x)) {
       Areas["UnfishedDist"] <- .AreaDim(x, "Area", 2)
     } else {
@@ -169,6 +188,23 @@ PopulateSpatial <- function(Spatial,
     Areas[sl] <- if (IsArr(x)) .AreaDim(x, "Area", 2) else if (length(x) <= 2) Short else length(x)
   }
   Areas
+}
+
+# TRUE when Movement is supplied and UnfishedDist has a different number of areas; UnfishedDist is
+# recalculated from Movement, so a mismatched one (e.g. left over from an earlier non-spatial Populate) is stale
+.StaleUnfishedDist <- function(Spatial) {
+  Mov <- Spatial@Movement
+  UD  <- Spatial@UnfishedDist
+  if (length(dim(Mov)) < 3 || is.null(UD) || !length(UD) || all(is.na(UD)))
+    return(FALSE)
+  nUD <- if (is.array(UD) && length(dim(UD)) > 1) .AreaDim(UD, "Area", 2) else 2L
+  nUD != .SquareAreaDim(Mov, "Movement")
+}
+
+.DropStaleUnfishedDist <- function(Spatial) {
+  if (.StaleUnfishedDist(Spatial))
+    Spatial@UnfishedDist <- NULL
+  Spatial
 }
 
 .SpatialNArea <- function(Spatial) {

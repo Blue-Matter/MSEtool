@@ -76,3 +76,74 @@ test_that("Unfished spatial distribution is stationary under seasonal and age-va
   Last <- (nT - om@Seasons + 1):nT
   expect_lt(max(abs(Dyn[1, , Last, ] - Eq[1, , 1:om@Seasons, ]), na.rm = TRUE), 1e-6)
 })
+
+test_that("CalcUnfishedDist names an unnamed Movement array by position", {
+  mov <- array(Mov2(0.2, 0.3), c(1, 2, 2))
+  ud <- CalcUnfishedDist(Spatial(Movement = mov), Ages(MaxAge = 5), 2000:2010)@UnfishedDist
+  expect_equal(names(dimnames(ud)), c('Sim', 'Area', 'Age', 'Year'))
+  expect_equal(as.vector(ud[1, , 1, 1]), CalcAsymDist(Mov2(0.2, 0.3)))
+})
+
+test_that("Unnamed Movement dimnames are ignored when the Year length is 1, nHist, or all time steps", {
+  Years <- 2000:2003
+  mov <- array(Mov2(0.2, 0.3), c(1, 2, 2, 1, 4),
+               list('sim_1', c('a', 'b'), c('a', 'b'), 'age_1', paste0('1986_', 1:4)))
+  out <- PopulateSpatial(Spatial(Movement = mov, RelativeSize = c(0.5, 0.5)),
+                         Ages(MaxAge = 5), Years, nSim = 1, silent = TRUE)
+  expect_equal(as.numeric(dimnames(out@Movement)$Year), Years)
+  expect_equal(names(dimnames(out@Movement)), c('Sim', 'FromArea', 'ToArea', 'Age', 'Year'))
+})
+
+test_that("Unnamed Movement dimnames give change-point years when they match the model years", {
+  Years <- 2000:2009
+  mov <- array(Mov2(0.2, 0.3), c(1, 2, 2, 1, 2), list(1, 1:2, 1:2, 0, c(2000, 2005)))
+  out <- PopulateSpatial(Spatial(Movement = mov, RelativeSize = c(0.5, 0.5)),
+                         Ages(MaxAge = 5), Years, nSim = 1, silent = TRUE)
+  expect_equal(as.numeric(dimnames(out@Movement)$Year), c(2000, 2005))
+
+  # change-point labels that are not model years
+  dimnames(mov)[[5]] <- c(1990, 1995)
+  expect_error(PopulateSpatial(Spatial(Movement = mov), Ages(MaxAge = 5), Years, nSim = 1, silent = TRUE),
+               class = 'MSEtool_invalid_input', regexp = 'not all model years')
+})
+
+test_that("CalcUnfishedDist gives a clear error for Movement it cannot read", {
+  # named, but Year labels are not numeric
+  mov <- array(Mov2(0.2, 0.3), c(1, 2, 2, 1, 4),
+               list(Sim = 1, FromArea = 1:2, ToArea = 1:2, Age = 0, Year = paste0('1986_', 1:4)))
+  expect_error(CalcUnfishedDist(Spatial(Movement = mov), Ages(MaxAge = 5), 2000:2003),
+               class = 'MSEtool_invalid_input', regexp = 'must be numeric')
+
+  # unnamed, wrong number of time steps
+  mov <- array(Mov2(0.2, 0.3), c(1, 2, 2, 1, 7))
+  expect_error(CalcUnfishedDist(Spatial(Movement = mov), Ages(MaxAge = 5), 2000:2003),
+               class = 'MSEtool_invalid_input', regexp = 'unnamed Year dimension')
+})
+
+test_that("PopulateSpatial drops an UnfishedDist whose areas do not match Movement", {
+  Years <- 2000:2003
+  mov <- array(Mov2(0.2, 0.3), c(1, 2, 2, 1, 1),
+               list(Sim = 1, FromArea = 1:2, ToArea = 1:2, Age = 0, Year = 2000))
+  stale <- array(1, c(1, 1, 1, 1), list(Sim = 1, Area = 1, Age = 0, Year = 2000))
+  sp <- Spatial(Movement = mov, UnfishedDist = stale, RelativeSize = c(0.5, 0.5))
+  expect_equal(nArea(sp), 2)
+  expect_silent(out <- PopulateSpatial(sp, Ages(MaxAge = 5), Years, nSim = 1))
+  expect_equal(dim(out@UnfishedDist)[2], 2)
+  expect_equal(as.vector(out@UnfishedDist[1, , 1, 1]), CalcAsymDist(Mov2(0.2, 0.3)))
+})
+
+test_that("PopulateSpatial sets ProbStaying to the diagonal of a supplied Movement", {
+  Years <- 2000:2003
+  mov <- array(NA, c(1, 2, 2, 1, 2),
+               list(Sim = 1, FromArea = 1:2, ToArea = 1:2, Age = 0, Year = c(2000, 2002)))
+  mov[1, , , 1, 1] <- Mov2(0.2, 0.3)
+  mov[1, , , 1, 2] <- Mov2(0.4, 0.1)
+  stale <- array(1, c(1, 1, 1, 1), list(Sim = 1, Area = 1, Age = 0, Year = 2000))
+  out <- PopulateSpatial(Spatial(Movement = mov, ProbStaying = stale, RelativeSize = c(0.5, 0.5)),
+                         Ages(MaxAge = 5), Years, nSim = 1, silent = TRUE)
+  ps <- out@ProbStaying
+  expect_equal(names(dimnames(ps)), c('Sim', 'Area', 'Age', 'Year'))
+  expect_equal(as.numeric(dimnames(ps)$Year), c(2000, 2002))
+  expect_equal(as.vector(ps[1, , 1, 1]), c(0.8, 0.7))
+  expect_equal(as.vector(ps[1, , 1, 2]), c(0.6, 0.9))
+})

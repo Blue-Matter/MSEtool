@@ -30,8 +30,9 @@
 #'   probabilities of moving from area `i` to each other area; rows sum to 1.
 #'   Populated automatically during [Populate()] from `UnfishedDist`,
 #'   `ProbStaying`, and optionally `FracOther`. May also be supplied directly,
-#'   in which case the asymptotic unfished distribution is derived from
-#'   `Movement` and assigned to `UnfishedDist`.
+#'   in which case [Populate()] derives `UnfishedDist` and `ProbStaying` from
+#'   `Movement`, replacing any existing values (see the `Movement` argument of
+#'   [Spatial()]).
 #' @slot FracOther `array` or `NULL`. Required for models with more than two
 #'   areas. Named array with dimensions `Sim × FromArea × ToArea × Age ×
 #'   Year`. Diagonal elements must be `NA` (probability of staying is taken

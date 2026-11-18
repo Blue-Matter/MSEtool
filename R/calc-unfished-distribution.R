@@ -50,15 +50,16 @@ CalcUnfishedDist <- function(Spatial, Ages=NULL, Years=NULL, Number=NULL, Surviv
   Ages  <- DefaultAges(Ages)
   Years <- DefaultYears(Years)
 
-  Mov <- Spatial@Movement
-  dims <- dim(Mov)
-  if (is.null(dims))
+  if (is.null(dim(Spatial@Movement)))
     return(Spatial)
+  Spatial@Movement <- .NameMovement(Spatial@Movement, Ages, Years)
+  Mov  <- Spatial@Movement
+  dims <- dim(Mov)
 
   nSim  <- dims[1]
   nArea <- dims[2]
   nAge  <- dims[4]
-  MovYears <- as.numeric(dimnames(Mov)[['Year']] %||% Years[seq_len(dims[5])])
+  MovYears <- as.numeric(dimnames(Mov)[['Year']])
   AgeClasses <- Ages@Classes[seq_len(nAge)]
 
   if (nArea == 1L) {
@@ -136,6 +137,31 @@ CalcUnfishedDist <- function(Spatial, Ages=NULL, Years=NULL, Number=NULL, Surviv
 
   Spatial@UnfishedDist <- Out
   Spatial
+}
+
+# Movement as a named Sim x FromArea x ToArea x Age x Year array, read as in PopulateSpatial()
+.NameMovement <- function(Mov, Ages, Years) {
+  Dims <- c('Sim', 'FromArea', 'ToArea', 'Age', 'Year')
+  Mov  <- .NameByPosition(Mov, Dims, c('FromArea', 'ToArea'),
+                          Labels = list(Age = Ages@Classes, Year = as.numeric(Years)),
+                          Sizes  = list(Sim = NA, FromArea = NA, ToArea = NA,
+                                        Age = length(Ages@Classes), Year = .YearSizes(Years)),
+                          name = 'Movement', cl = 'spatial')
+  DN <- dimnames(Mov)
+  Problems <- c(
+    if (length(DN$FromArea) != length(DN$ToArea))
+      paste0('`Movement` has ', length(DN$FromArea), ' FromArea and ', length(DN$ToArea),
+             ' ToArea values; they must be equal.'),
+    if (anyNA(suppressWarnings(as.numeric(DN$Year))))
+      paste0('`Movement` Year labels must be numeric time steps; found ',
+             .FormatVals(DN$Year[is.na(suppressWarnings(as.numeric(DN$Year)))]), '.'),
+    if (length(DN$Age) != 1 && length(DN$Age) != length(Ages@Classes))
+      paste0('`Movement` has ', length(DN$Age), ' age classes; must have 1 or ',
+             length(Ages@Classes), '.')
+  )
+  if (length(Problems))
+    .AbortInvalidInputs(Problems, 'spatial')
+  Mov
 }
 
 # Equilibrium distribution over one repeated annual cycle for one sim; returns Area x Age x Step

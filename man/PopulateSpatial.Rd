@@ -49,8 +49,13 @@ Steps include:
 \item Expanding spatial objects across simulations and years
 }
 
-If a movement matrix is supplied, it is used to calculate unfished
-distribution.
+If a movement matrix is supplied, it takes precedence and everything that
+can be derived from it is updated, replacing any existing values:
+\code{UnfishedDist} is set to the equilibrium distribution under \code{Movement}
+(\code{\link[=CalcUnfishedDist]{CalcUnfishedDist()}}) and \code{ProbStaying} to the diagonal of \code{Movement} (the
+probability of remaining in each area). The only supplied value still used
+is an \code{UnfishedDist} with the same number of areas, which sets the age-0
+distribution when \code{Movement} varies by age.
 }
 \examples{
 Spatial <- PopulateSpatial(
