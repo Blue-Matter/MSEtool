@@ -54,8 +54,9 @@ dimensions \verb{Sim × FromArea × ToArea × Age × Year}. Row \verb{[i, ]} giv
 probabilities of moving from area \code{i} to each other area; rows sum to 1.
 Populated automatically during \code{\link[=Populate]{Populate()}} from \code{UnfishedDist},
 \code{ProbStaying}, and optionally \code{FracOther}. May also be supplied directly,
-in which case the asymptotic unfished distribution is derived from
-\code{Movement} and assigned to \code{UnfishedDist}.}
+in which case \code{\link[=Populate]{Populate()}} derives \code{UnfishedDist} and \code{ProbStaying} from
+\code{Movement}, replacing any existing values (see the \code{Movement} argument of
+\code{\link[=Spatial]{Spatial()}}).}
 
 \item{\code{FracOther}}{\code{array} or \code{NULL}. Required for models with more than two
 areas. Named array with dimensions \verb{Sim × FromArea × ToArea × Age × Year}. Diagonal elements must be \code{NA} (probability of staying is taken

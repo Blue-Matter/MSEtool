@@ -35,11 +35,16 @@
 #' @param Movement `array` or `NULL`. Movement probability matrix with
 #'   dimensions `Sim × FromArea × ToArea`, optionally extended to `Sim ×
 #'   FromArea × ToArea × Age × Year`. Row `[i, ]` gives the probabilities of
-#'   moving from area `i` to each area; rows must sum to 1. When supplied, the
-#'   asymptotic unfished distribution is derived from `Movement` and assigned
-#'   to `UnfishedDist`, overwriting any existing values. When `NULL` (default),
-#'   the movement matrix is fitted during [Populate()] from `UnfishedDist`,
-#'   `ProbStaying`, and `FracOther`.
+#'   moving from area `i` to each area; rows must sum to 1. When supplied,
+#'   `Movement` takes precedence and [Populate()] updates everything that can
+#'   be derived from it, replacing any existing values: `UnfishedDist` is set
+#'   to the equilibrium distribution under `Movement` (see
+#'   [CalcUnfishedDist()]) and `ProbStaying` to the diagonal of `Movement`.
+#'   The only supplied value still used is an `UnfishedDist` with the same
+#'   number of areas, which sets the age-0 distribution when `Movement` varies
+#'   by age. `FracOther`, `CVDist`, and `CVStay` are not used. When `NULL`
+#'   (default), the movement matrix is fitted during [Populate()] from
+#'   `UnfishedDist`, `ProbStaying`, and `FracOther`.
 #' @param FracOther `array` or `NULL`. Required for models with more than two
 #'   areas. Array with dimensions `Sim × Area × Area`, optionally extended to
 #'   include `Age` and `Year` dimensions. Diagonal elements must be `NA`

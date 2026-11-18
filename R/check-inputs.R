@@ -205,7 +205,7 @@
 })
 
 # an unnamed array is labelled by position: each dimension must have length 1 or one of the expected sizes (NA = any)
-.CheckUnnamedDims <- function(dd, name, cl, Expected) {
+.CheckUnnamedDims <- function(dd, name, cl, Expected, YearLabels = NULL) {
   Shape    <- paste(names(Expected), collapse = ' x ')
   Problems <- if (length(dd) != length(Expected)) {
     paste0('`', name, '` must be a ', Shape, ' array; found ', length(dd), ' dimension(s).')
@@ -218,7 +218,10 @@
       if (d == 'Year')
         return(paste0('`', name, '` has ', k, ' values in its unnamed Year dimension; must have ',
                       paste(Sizes, collapse = ', '), ' (one, the historical, or all time steps), ',
-                      'or name the Year dimension to give other years.'))
+                      if (length(YearLabels))
+                        paste0('or be labelled with model years (its labels ', .FormatVals(YearLabels),
+                               ' are not all model years).')
+                      else 'or name the Year dimension to give other years.'))
       paste0('`', name, '` has ', k, ' values in its ', d, ' dimension; must have ',
              paste(Sizes, collapse = ' or '), '.')
     }))
@@ -801,13 +804,38 @@
                                paste(Dims, collapse = ' x '), ' and must include ',
                                paste(Required, collapse = ' x '), '.'), cl)
   Use <- Dims[Dims %in% c(Required, Optional[seq_len(k - length(Required))])]
-  .CheckUnnamedDims(dd, name, cl, Sizes[Use])
+  ChangeYears <- .UnnamedChangeYears(x, Use, Labels, Sizes)
+  if (!is.null(ChangeYears)) {
+    Sizes$Year  <- NA
+    Labels$Year <- ChangeYears
+  }
+  YearLabels <- if ('Year' %in% Use) dimnames(x)[[match('Year', Use)]]
+  .CheckUnnamedDims(dd, name, cl, Sizes[Use], YearLabels)
   DN  <- stats::setNames(lapply(seq_along(Use), \(i) {
     Lab <- Labels[[Use[i]]]
     if (is.null(Lab)) seq_len(dd[i]) else Lab[seq_len(dd[i])]
   }), Use)
   Out <- array(as.numeric(x), dim = dd, dimnames = DN)
   .AddMissingDims(Out, Dims, Labels)
+}
+
+# an unnamed Year dimension of length 1, nHist, or all time steps is read by position and its labels are
+# ignored; any other length is a set of change-point years, which must come from the array's own labels
+# and match the model years. Returns those model years, or NULL to read by position (or abort on size)
+.UnnamedChangeYears <- function(x, Use, Labels, Sizes) {
+  i   <- match('Year', Use)
+  Pos <- Labels$Year
+  Lab <- if (!is.na(i)) dimnames(x)[[i]]
+  if (is.null(Lab) || is.null(Pos) || anyNA(Sizes$Year) || length(Lab) %in% c(1, Sizes$Year))
+    return(NULL)
+  Yr  <- suppressWarnings(as.numeric(Lab))
+  Ind <- vapply(Yr, \(y) {
+    m <- which(abs(y - Pos) < 1e-6)
+    if (length(m)) m[1] else NA_integer_
+  }, integer(1))
+  if (anyNA(Ind) || anyDuplicated(Ind))
+    return(NULL)
+  Pos[Ind]
 }
 
 # number of historical time steps attached to `Years` by PopulateStock()/PopulateFleet()

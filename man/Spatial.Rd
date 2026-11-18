@@ -101,11 +101,16 @@ When \code{NULL} (default), all areas are assumed equal in size.}
 
 \item{Movement}{\code{array} or \code{NULL}. Movement probability matrix with
 dimensions \verb{Sim × FromArea × ToArea}, optionally extended to \verb{Sim × FromArea × ToArea × Age × Year}. Row \verb{[i, ]} gives the probabilities of
-moving from area \code{i} to each area; rows must sum to 1. When supplied, the
-asymptotic unfished distribution is derived from \code{Movement} and assigned
-to \code{UnfishedDist}, overwriting any existing values. When \code{NULL} (default),
-the movement matrix is fitted during \code{\link[=Populate]{Populate()}} from \code{UnfishedDist},
-\code{ProbStaying}, and \code{FracOther}.}
+moving from area \code{i} to each area; rows must sum to 1. When supplied,
+\code{Movement} takes precedence and \code{\link[=Populate]{Populate()}} updates everything that can
+be derived from it, replacing any existing values: \code{UnfishedDist} is set
+to the equilibrium distribution under \code{Movement} (see
+\code{\link[=CalcUnfishedDist]{CalcUnfishedDist()}}) and \code{ProbStaying} to the diagonal of \code{Movement}.
+The only supplied value still used is an \code{UnfishedDist} with the same
+number of areas, which sets the age-0 distribution when \code{Movement} varies
+by age. \code{FracOther}, \code{CVDist}, and \code{CVStay} are not used. When \code{NULL}
+(default), the movement matrix is fitted during \code{\link[=Populate]{Populate()}} from
+\code{UnfishedDist}, \code{ProbStaying}, and \code{FracOther}.}
 
 \item{FracOther}{\code{array} or \code{NULL}. Required for models with more than two
 areas. Array with dimensions \verb{Sim × Area × Area}, optionally extended to
