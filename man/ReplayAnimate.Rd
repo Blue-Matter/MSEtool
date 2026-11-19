@@ -35,7 +35,7 @@ one row, and more in two rows.}
 \item{file}{Path of the GIF. \code{NULL} (default) writes a temporary file.}
 
 \item{...}{Arguments passed to \code{\link[=ReplayPlot]{ReplayPlot()}}: \code{Title}, \code{Subtitle},
-\code{Caption}, \code{Timeline}, and \code{IndexLabels}.}
+\code{Caption}, \code{Timeline}, \code{IndexLabels}, and \code{Modify}.}
 }
 \value{
 A \code{gif_image} object (see \code{\link[gganimate:gif_file]{gganimate::gif_file()}}): printing it

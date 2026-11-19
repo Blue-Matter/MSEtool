@@ -87,6 +87,15 @@ test_that("ReplayMP() reproduces the recorded advice and builds the animations",
   expect_null(Bare$patches$annotation$subtitle)
   expect_null(Bare$patches$annotation$caption)
   expect_length(Bare$patches$plots, 1)
+  Relabel <- function(Panels, Year) {
+    Panels$HCR <- Panels$HCR + ggplot2::labs(x = paste('Status in', Year))
+    Panels
+  }
+  Mod <- ReplayPlot(R, Proj[3], Panels = c('HCR', 'Catch'), Timeline = FALSE, Subtitle = FALSE,
+                    Modify = Relabel)
+  expect_equal(Mod$patches$plots[[1]]$labels$x, paste('Status in', Proj[3]))
+  expect_error(ReplayPlot(R, Proj[3], Modify = 'x'), 'Modify')
+  expect_error(ReplayPlot(R, Proj[3], Modify = \(P, Y) NULL), 'list of')
   expect_error(ReplayPlot(R, Proj[3], Caption = 1), 'Caption')
   expect_error(ReplayPlot(R, Proj[3], IndexLabels = 'x'), 'IndexLabels')
 
