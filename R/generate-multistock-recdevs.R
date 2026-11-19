@@ -176,7 +176,7 @@ GenMultiStockRecDevs <- function(OM, TruncSD = NULL, silent = FALSE, overwrite =
       active_cols <- which(ActiveHist[g, ])
       if (!length(active_cols)) return(0)
       z_last <- log(as.numeric(RecDevHistGrp[g, max(active_cols)]))
-      if (!is.finite(z_last)) return(0)
+      if (is.na(z_last)) return(0)
       .DevToLatent(z_last, sd_grp[g], TruncGrp[g])
     }, numeric(1))
 
@@ -234,7 +234,7 @@ GenMultiStockRecDevs <- function(OM, TruncSD = NULL, silent = FALSE, overwrite =
   R <- diag(n)
   use_cols <- which(vapply(seq_len(ncol(RecDevHist)), function(j) {
     col <- as.numeric(RecDevHist[, j])
-    !any(col == 1 | is.na(col)) && all(ActiveHist[, j])
+    !any(col == 1 | col <= 0 | is.na(col)) && all(ActiveHist[, j])
   }, logical(1)))
   if (length(use_cols) < 3) return(R)
 

@@ -120,7 +120,7 @@ PopulateSRR <- function(SRR,
     logDevs <- c(log(SRR@RecDevHist), log(SRR@RecDevProj))
     if (!EmptyObject(SRR@RecDevInit) && !anyNA(SRR@RecDevInit))
       logDevs <- c(logDevs, log(SRR@RecDevInit))
-    SRR@SD <- stats::sd(logDevs)
+    SRR@SD <- stats::sd(logDevs[is.finite(logDevs)])
   }
 
   # checks

@@ -385,8 +385,8 @@
   if (any(!is.finite(Vals)))
     return(paste0('`', name, '` must be finite.'))
   Tol <- 1e-8 * pmax(1, abs(Vals))
-  Bad <- Vals[(Vals < lower - Tol) | (lowerOpen & abs(Vals - lower) <= Tol) |
-                (Vals > upper + Tol) | (upperOpen & abs(Vals - upper) <= Tol)]
+  Bad <- Vals[(!lowerOpen & Vals < lower - Tol) | (lowerOpen & Vals <= lower) |
+                (!upperOpen & Vals > upper + Tol) | (upperOpen & Vals >= upper)]
   if (length(Bad))
     return(paste0('`', name, '` must be ', .RangeText(lower, upper, lowerOpen, upperOpen),
                   '; found ', .FormatVals(Bad), '.'))
@@ -632,9 +632,9 @@
     .CheckNum(object@Units, 'Units', 0, lowerOpen = TRUE),
     .CheckFlag(object@ShareSPFrom, 'ShareSPFrom'),
     .RelRecFunProblems(object@RelRecFun),
-    .CheckNum(object@RecDevInit, 'RecDevInit', 0, lowerOpen = TRUE, na = 'any'),
-    .CheckNum(object@RecDevHist, 'RecDevHist', 0, lowerOpen = TRUE, na = 'any'),
-    .CheckNum(object@RecDevProj, 'RecDevProj', 0, lowerOpen = TRUE, na = 'any'))
+    .CheckNum(object@RecDevInit, 'RecDevInit', 0, na = 'any'),
+    .CheckNum(object@RecDevHist, 'RecDevHist', 0, na = 'any'),
+    .CheckNum(object@RecDevProj, 'RecDevProj', 0, na = 'any'))
 }
 
 .RelRecFunProblems <- function(RelRecFun) {
