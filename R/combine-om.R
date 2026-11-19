@@ -416,7 +416,7 @@ CombineOMs <- function(
   for (i in seq_len(nSim)) {
     for (t in years_ind) {
       RecDevHist[i, t] <- exp(
-        ac[i] * log(RecDevHist[i, t - 1]) +
+        ac[i] * max(log(RecDevHist[i, t - 1]), lower[i]) +
           log(RecDevHist[i, t]) * sqrt(1 - ac[i]^2)
       )
     }
