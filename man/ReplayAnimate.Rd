@@ -2,24 +2,25 @@
 % Please edit documentation in R/replay-mp.R
 \name{ReplayAnimate}
 \alias{ReplayAnimate}
-\title{Animate the Plots of an MP Replay Side by Side}
+\title{Animate the Plots of an MP Replay}
 \usage{
 ReplayAnimate(
   Replay,
-  Plot = NULL,
+  Panels = NULL,
   ncol = NULL,
   fps = 2,
   width = NULL,
   height = NULL,
   res = 96,
-  file = NULL
+  file = NULL,
+  ...
 )
 }
 \arguments{
 \item{Replay}{An object returned by \code{\link[=ReplayMP]{ReplayMP()}}.}
 
-\item{Plot}{Names of the animations to include, in order. \code{NULL}
-(default) includes all of them.}
+\item{Panels}{Names of the panels to include (\code{names(Replay$Animations)}),
+in order. \code{NULL} (default) includes all of them.}
 
 \item{ncol}{Number of columns. \code{NULL} (default) puts up to three plots in
 one row, and more in two rows.}
@@ -27,19 +28,22 @@ one row, and more in two rows.}
 \item{fps}{Frames (management years) per second.}
 
 \item{width, height}{Size of each frame in pixels. \code{NULL} (default) gives
-450 x 420 pixels per plot.}
+520 x 450 pixels per plot, plus room for the timeline and text.}
 
 \item{res}{Resolution in pixels per inch.}
 
 \item{file}{Path of the GIF. \code{NULL} (default) writes a temporary file.}
+
+\item{...}{Arguments passed to \code{\link[=ReplayPlot]{ReplayPlot()}}: \code{Title}, \code{Subtitle},
+\code{Caption}, \code{Timeline}, and \code{IndexLabels}.}
 }
 \value{
 A \code{gif_image} object (see \code{\link[gganimate:gif_file]{gganimate::gif_file()}}): printing it
 shows the GIF in the viewer, and \code{\link[gganimate:anim_save]{gganimate::anim_save()}} saves it.
 }
 \description{
-Draws the \code{\link[=ReplayMP]{ReplayMP()}} plots for each management year next to each other
-and writes them to a GIF, so the plots stay in step.
+Writes the \code{\link[=ReplayPlot]{ReplayPlot()}} of each management year to a GIF, so the panels
+stay in step.
 }
 \examples{
 \donttest{
@@ -53,5 +57,5 @@ if (requireNamespace('gganimate', quietly = TRUE) && requireNamespace('gifski', 
 
 }
 \seealso{
-\code{\link[=ReplayMP]{ReplayMP()}}, \code{\link[=ReplayPlot]{ReplayPlot()}}
+\code{\link[=ReplayMP]{ReplayMP()}}, \code{\link[=ReplayPlot]{ReplayPlot()}}, \code{\link[=ReplayPanels]{ReplayPanels()}}
 }
