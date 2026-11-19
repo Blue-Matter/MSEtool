@@ -14,7 +14,8 @@ ReplayPlot(
   Subtitle = TRUE,
   Caption = TRUE,
   Timeline = TRUE,
-  IndexLabels = NULL
+  IndexLabels = NULL,
+  Modify = NULL
 )
 
 \method{plot}{mpreplay}(x, Year, ...)
@@ -43,6 +44,11 @@ replaces the text.}
 \item{IndexLabels}{Named character vector of panel labels for the \code{Index}
 plot, e.g. \code{c(CPUE = 'Longline CPUE')}. Indices that are not named keep
 their names.}
+
+\item{Modify}{A function with arguments for the list of panels (\code{ggplot}
+objects named as in \code{Replay$Animations}) and the management year, that
+returns the list of panels to draw, e.g. with added layers or changed
+labels. \code{NULL} (default) draws the panels unchanged.}
 
 \item{x}{An object returned by \code{\link[=ReplayMP]{ReplayMP()}}.}
 
