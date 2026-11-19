@@ -2,37 +2,87 @@
 % Please edit documentation in R/replay-mp.R
 \name{ReplayPlot}
 \alias{ReplayPlot}
+\alias{plot.mpreplay}
 \title{Plot One Year of an MP Replay}
 \usage{
-ReplayPlot(Replay, Year, Plot = NULL)
+ReplayPlot(
+  Replay,
+  Year,
+  Panels = NULL,
+  ncol = NULL,
+  Title = TRUE,
+  Subtitle = TRUE,
+  Caption = TRUE,
+  Timeline = TRUE,
+  IndexLabels = NULL
+)
+
+\method{plot}{mpreplay}(x, Year, ...)
 }
 \arguments{
 \item{Replay}{An object returned by \code{\link[=ReplayMP]{ReplayMP()}}.}
 
 \item{Year}{A management year in \code{Replay$Table$Year}.}
 
-\item{Plot}{Names of the animations to return. \code{NULL} (default) returns
-all of them.}
+\item{Panels}{Names of the panels to include (\code{names(Replay$Animations)}),
+in order. \code{NULL} (default) includes all of them.}
+
+\item{ncol}{Number of columns. \code{NULL} (default) puts up to three plots in
+one row, and more in two rows.}
+
+\item{Title, Subtitle, Caption}{Text above (\code{Title}, \code{Subtitle}) and below
+(\code{Caption}) the figure. \code{TRUE} (default) gives the MP name (\code{Title}), the
+advice in orange with how it was calculated above the timeline
+(\code{Subtitle}), and the simulation with a key to the shading and lines
+(\code{Caption}). \code{FALSE} leaves the text out,
+e.g. when the figure has a caption in a report. A character string
+replaces the text.}
+
+\item{Timeline}{Logical. Draw the management timeline above the plots?}
+
+\item{IndexLabels}{Named character vector of panel labels for the \code{Index}
+plot, e.g. \code{c(CPUE = 'Longline CPUE')}. Indices that are not named keep
+their names.}
+
+\item{x}{An object returned by \code{\link[=ReplayMP]{ReplayMP()}}.}
+
+\item{...}{For \code{plot()}, arguments passed to \code{ReplayPlot()}.}
 }
 \value{
-A \code{ggplot} object when \code{Plot} names one animation, otherwise a
-named list of \code{ggplot} objects.
+A \code{patchwork} object.
 }
 \description{
-Returns the frames of \code{\link[=ReplayMP]{ReplayMP()}} animations for one management year as
-ordinary \code{ggplot} objects, with the same axes as the animations.
+Draws the \code{\link[=ReplayMP]{ReplayMP()}} panels of one management year together, below a
+timeline of when the advice is calculated, the data available to the MP,
+and the period the advice applies to.
 }
+\details{
+The timeline shows the data available to the MP (blue), the time steps
+without data when the advice is calculated (grey, the \code{DataLag}), the time
+step the advice is calculated (triangle), and the period it applies to
+(orange), up to the next management year. The \code{Index}, \code{Biomass},
+\code{Status}, and \code{Catch} plots are shaded over the same grey and orange
+periods, and the TAC is drawn over the period it applies to in the \code{Catch}
+plot.
+}
+\section{Functions}{
+\itemize{
+\item \code{plot(mpreplay)}: \code{plot()} method for objects returned by \code{\link[=ReplayMP]{ReplayMP()}}.
+
+}}
 \examples{
 \donttest{
 Hist <- Simulate(SingleStockOM, nSim = 2)
 MSE <- Project(Hist, 'IndexRate')
 if (requireNamespace('gganimate', quietly = TRUE)) {
   R <- ReplayMP(MSE, 'IndexRate', Sim = 1)
-  ReplayPlot(R, R$Table$Year[5], 'HCR')
+  ReplayPlot(R, R$Table$Year[3])
+  ReplayPlot(R, R$Table$Year[3], Title = 'IndexRate', Caption = FALSE)
+  plot(R, R$Table$Year[3], Panels = c('Status', 'Catch'))
 }
 }
 
 }
 \seealso{
-\code{\link[=ReplayMP]{ReplayMP()}}
+\code{\link[=ReplayMP]{ReplayMP()}}, \code{\link[=ReplayAnimate]{ReplayAnimate()}}, \code{\link[=ReplayPanels]{ReplayPanels()}}
 }

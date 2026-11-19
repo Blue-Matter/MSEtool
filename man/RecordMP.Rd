@@ -148,8 +148,9 @@ indices of the operating model), its status, and its target;
 \item \code{Biomass}: the estimated \code{B/BMSY} on the \code{Status} plot.
 }
 
-\code{\link[=ReplayAnimate]{ReplayAnimate()}} shows these plots side by side as an animation, and
-\code{\link[=ReplayPlot]{ReplayPlot()}} returns the plots of a single management year.
+\code{\link[=ReplayPlot]{ReplayPlot()}} draws these plots for a single management year,
+\code{\link[=ReplayAnimate]{ReplayAnimate()}} as an animation, and \code{\link[=ReplayPanels]{ReplayPanels()}} returns them as
+separate \code{ggplot} objects.
 
 Calling \code{RecordMP()} more than once in a call of the MP adds to the
 record: \code{Values} are combined, and the other arguments replace those of
@@ -218,5 +219,5 @@ if (requireNamespace('gganimate', quietly = TRUE)) {
 
 }
 \seealso{
-\code{\link[=ReplayMP]{ReplayMP()}}, \code{\link[=ReplayAnimate]{ReplayAnimate()}}, \code{\link[=ReplayPlot]{ReplayPlot()}}, \code{\link[=HockeyStickHCR]{HockeyStickHCR()}}
+\code{\link[=ReplayMP]{ReplayMP()}}, \code{\link[=ReplayPlot]{ReplayPlot()}}, \code{\link[=ReplayAnimate]{ReplayAnimate()}}, \code{\link[=ReplayPanels]{ReplayPanels()}}, \code{\link[=HockeyStickHCR]{HockeyStickHCR()}}
 }

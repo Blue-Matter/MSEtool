@@ -43,7 +43,7 @@ test_that("ReplayMP() reproduces the recorded advice and builds the animations",
                c('Index', 'HCR', 'Catch'))
   expect_error(ReplayMP(MSE, 1, Status = 'SB_SBMSY'), 'Status')
 
-  Figs <- ReplayPlot(R, Proj[3])
+  Figs <- ReplayPanels(R, Proj[3])
   expect_named(Figs, c('Index', 'Status', 'HCR', 'Catch'))
   for (f in Figs) {
     expect_s3_class(f, 'ggplot')
@@ -53,23 +53,51 @@ test_that("ReplayMP() reproduces the recorded advice and builds the animations",
   Pts <- Figs$HCR$layers[[length(Figs$HCR$layers) - 1]]$data
   expect_equal(unique(as.character(Pts$Frame)), as.character(Proj[3]))
   expect_length(unique(R$Animations$HCR$layers[[4]]$data$Frame), length(Proj))
-  expect_s3_class(ReplayPlot(R, Proj[3], 'Catch'), 'ggplot')
+  expect_s3_class(ReplayPanels(R, Proj[3], 'Catch'), 'ggplot')
   Full <- ReplayMP(MSE, 'IndexRate', Sim = 2, Years = Proj[1:2], IndexCap = Inf)$Animations$Index
   Cut  <- ReplayMP(MSE, 'IndexRate', Sim = 2, Years = Proj[1:2], IndexCap = 0.5)$Animations$Index
   First <- \(a) min(.LayerData(a, 'Observed')$Year)
   expect_gt(First(Cut), First(Full))
   expect_equal(min(diff(sort(unique(.LayerData(Cut, 'Observed')$Year)))), 1)
   expect_error(ReplayMP(MSE, 1, IndexCap = 0), 'IndexCap')
-  expect_error(ReplayPlot(R, 1900), 'management years')
+  expect_error(ReplayPanels(R, 1900), 'management years')
+
+  # one-year figure with timeline, shading, and text
+  Tm <- R$Timing
+  expect_equal(Tm$Year, R$Table$Year)
+  expect_equal(Tm$Calc, Tm$Year - 1)
+  expect_equal(Tm$LastData, Tm$Year - DataLag(MSE@OM) - 1)
+  expect_equal(Tm$Last[-nrow(Tm)], Tm$Year[-1] - 1)
+  Fig <- ReplayPlot(R, Proj[3], IndexLabels = c(Foo = 'Not an index'))
+  expect_s3_class(Fig, 'patchwork')
+  expect_equal(Fig$patches$annotation$title, 'IndexRate')
+  # advice in the subtitle, calculation details heading the timeline
+  expect_match(Fig$patches$annotation$subtitle,
+               sprintf('^TAC for %s = [^\n]*$', MSEtool:::.ReplaySpan(Proj[3], Tm$Last[3])))
+  Detail <- sprintf('^Calculated in %d from the data up to %d\\.', Proj[3] - 1, Tm$LastData[3])
+  expect_match(Fig$patches$plots[[1]]$labels$title, Detail)
+  expect_match(Fig$patches$annotation$caption, '^Simulation 2\\.')
+  expect_no_error(ggplot2::ggsave(tempfile(fileext = '.png'), Fig, width = 10, height = 9, dpi = 40))
+  NoLine <- ReplayPlot(R, Proj[3], Timeline = FALSE)
+  expect_match(NoLine$patches$plots[[1]]$labels$title, Detail)
+  expect_equal(plot(R, Proj[3])$patches$annotation, Fig$patches$annotation)
+  Bare <- ReplayPlot(R, Proj[3], Panels = c('Status', 'Catch'), Title = 'My MP', Subtitle = FALSE,
+                       Caption = FALSE, Timeline = FALSE)
+  expect_equal(Bare$patches$annotation$title, 'My MP')
+  expect_null(Bare$patches$annotation$subtitle)
+  expect_null(Bare$patches$annotation$caption)
+  expect_length(Bare$patches$plots, 1)
+  expect_error(ReplayPlot(R, Proj[3], Caption = 1), 'Caption')
+  expect_error(ReplayPlot(R, Proj[3], IndexLabels = 'x'), 'IndexLabels')
 
   skip_if_not_installed('gifski')
   Short <- ReplayMP(MSE, 'IndexRate', Sim = 2, Years = Proj[1:3])
   File  <- tempfile(fileext = '.gif')
-  G <- ReplayAnimate(Short, Plot = c('HCR', 'Catch'), fps = 4, width = 500, height = 250, file = File)
+  G <- ReplayAnimate(Short, Panels = c('HCR', 'Catch'), fps = 4, width = 500, height = 250, file = File)
   expect_s3_class(G, 'gif_image')
   expect_true(file.exists(File))
-  expect_error(ReplayAnimate(Short, Plot = 'Biomass'), 'No animation')
-  expect_error(ReplayPlot(R, Proj[3], 'Biomass'), 'No animation')
+  expect_error(ReplayAnimate(Short, Panels = 'Biomass'), 'No panel')
+  expect_error(ReplayPanels(R, Proj[3], 'Biomass'), 'No panel')
 
   R <- expect_no_warning(ReplayMP(MSE, 2, Years = Proj[c(1, 5)]))
   expect_equal(R$Table$Year, Proj[c(1, 5)])
@@ -86,7 +114,7 @@ test_that("ReplayMP() reproduces the recorded advice and builds the animations",
   Now <- Filter(\(L) 'What' %in% names(L$data), R$Animations$Catch$layers)[[1]]$data
   Flagged <- unique(as.numeric(as.character(Now$Frame[Now$What == 'TAC (fit not used)'])))
   expect_equal(Flagged, Proj[1:3])
-  expect_no_warning(for (y in Proj[c(1, 6)]) ggplot2::ggplot_build(ReplayPlot(R, y, 'Status')))
+  expect_no_warning(for (y in Proj[c(1, 6)]) ggplot2::ggplot_build(ReplayPanels(R, y, 'Status')))
 
   R <- expect_no_warning(ReplayMP(MSE, 'IR3', Sim = 2))
   expect_equal(R$Table$Year, Proj[seq(1, length(Proj), by = 3)])
@@ -260,7 +288,12 @@ test_that("ReplayMP() replays a two-sex seasonal stock complex with interim year
     expect_equal(LastOM[names(LastObs)], LastObs, tolerance = 1e-3)
     expect_true(all(LastOM < as.numeric(names(LastOM)) - 1))
 
-    for (f in ReplayPlot(R, Years[2])) expect_no_error(ggplot2::ggplot_build(f))
+    for (f in ReplayPanels(R, Years[2])) expect_no_error(ggplot2::ggplot_build(f))
+    # timing on calendar-year boundaries is labelled in calendar years
+    Fig <- ReplayPlot(R, Years[2])
+    expect_match(Fig$patches$annotation$subtitle, sprintf('^TAC for %d = ', Years[2]))
+    expect_match(Fig$patches$annotation$caption, '^Simulation 1\\.')
+    expect_no_error(suppressWarnings(ggplot2::ggsave(tempfile(fileext = '.png'), Fig, width = 10, height = 9, dpi = 40)))
   }
   skip_if_not_installed('gifski')
   expect_true(file.exists(ReplayAnimate(R, fps = 4, file = tempfile(fileext = '.gif'))))

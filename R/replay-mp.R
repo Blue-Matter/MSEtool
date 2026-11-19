@@ -114,16 +114,23 @@
 #' `MPStartYear` after the first projection year (with interim advice
 #' before it), a light dashed line the year MPs are first applied.
 #'
-#' [ReplayAnimate()] shows the animations side by side, and [ReplayPlot()]
-#' returns the plots of a single year.
+#' [ReplayPlot()] (or `plot()`) draws the panels of a single year together
+#' with the management timeline, [ReplayAnimate()] writes these figures to a
+#' GIF, and [ReplayPanels()] returns the panels of a single year as separate
+#' `ggplot` objects.
 #'
 #' The MP is run with the version of MSEtool currently loaded. Multi-stock
 #' (`mmp`) MPs are not supported.
 #'
 #' @return An object of class `mpreplay`: a list with `MP`, `Sim`, `Stock`,
 #'   `Table` (a `data.frame` with one row per management year: the replayed
-#'   `Advice`, the `Recorded` advice, and the values recorded by the MP), and
-#'   `Animations` (a named list of `gganim` objects).
+#'   `Advice`, the `Recorded` advice, and the values recorded by the MP),
+#'   `Animations` (a named list of `gganim` objects), and the management timing
+#'   used by [ReplayPlot()]: `Timing` (a `data.frame` with the management
+#'   `Year`, the last time step of data available to the MP, `LastData`, the
+#'   time step the advice is calculated, `Calc`, and the last time step it
+#'   applies to, `Last`), `DataLag`, `Seasons`, `Boundaries`, the catch
+#'   `Units`, and the number of stock complexes, `nComplex`.
 #'
 #' @examples
 #' \donttest{
@@ -135,7 +142,7 @@
 #'   gganimate::animate(R$Animations$HCR, nframes = nrow(R$Table), fps = 2)
 #' }
 #'
-#' @seealso [RecordMP()], [ReplayAnimate()], [ReplayPlot()], [IndexRate()],
+#' @seealso [RecordMP()], [ReplayPlot()], [ReplayAnimate()], [ReplayPanels()], [IndexRate()],
 #'   [SurplusProduction()], [PPD()]
 #' @export
 ReplayMP <- function(MSE, MP = 1, Sim = 1, Stock = 1, Years = NULL,
@@ -264,8 +271,15 @@ ReplayMP <- function(MSE, MP = 1, Sim = 1, Stock = 1, Years = NULL,
     Animations$HCR <- .ReplayAnimHCR(P)
   Animations$Catch <- .ReplayAnimCatch(P)
 
+  Step <- 1 / Seasons
+  Next <- vapply(Table$Year, \(Y) c(MgmtYears[MgmtYears > Y + 1e-6], Y + Interval)[1], numeric(1))
+  Timing <- data.frame(Year = Table$Year, LastData = P$LastData, Calc = Table$Year - Step,
+                       Last = pmin(Next - Step, max(YearsProj)))
+
   structure(list(MP = MPName, Sim = Sim, Stock = StockName, Table = Table,
-                 Animations = Animations),
+                 Animations = Animations, Timing = Timing, DataLag = DataLag, Seasons = Seasons,
+                 Boundaries = P$Boundaries, Units = attr(P$OMCatch, 'Units'),
+                 nComplex = length(PPDs[[Sim]])),
             class = 'mpreplay')
 }
 
@@ -812,17 +826,18 @@ print.mpreplay <- function(x, ...) {
 }
 
 
-#' Plot One Year of an MP Replay
+#' Panels of One Year of an MP Replay
 #'
 #' Returns the frames of [ReplayMP()] animations for one management year as
-#' ordinary `ggplot` objects, with the same axes as the animations.
+#' separate `ggplot` objects, with the same axes as the animations. Use
+#' [ReplayPlot()] for the panels drawn together as one figure.
 #'
 #' @param Replay An object returned by [ReplayMP()].
 #' @param Year A management year in `Replay$Table$Year`.
-#' @param Plot Names of the animations to return. `NULL` (default) returns
-#'   all of them.
+#' @param Panels Names of the panels to return (`names(Replay$Animations)`).
+#'   `NULL` (default) returns all of them.
 #'
-#' @return A `ggplot` object when `Plot` names one animation, otherwise a
+#' @return A `ggplot` object when `Panels` names one panel, otherwise a
 #'   named list of `ggplot` objects.
 #'
 #' @examples
@@ -831,24 +846,18 @@ print.mpreplay <- function(x, ...) {
 #' MSE <- Project(Hist, 'IndexRate')
 #' if (requireNamespace('gganimate', quietly = TRUE)) {
 #'   R <- ReplayMP(MSE, 'IndexRate', Sim = 1)
-#'   ReplayPlot(R, R$Table$Year[5], 'HCR')
+#'   ReplayPanels(R, R$Table$Year[5], 'HCR')
 #' }
 #' }
 #'
 #' @seealso [ReplayMP()]
 #' @export
-ReplayPlot <- function(Replay, Year, Plot = NULL) {
-  if (!inherits(Replay, 'mpreplay'))
-    cli::cli_abort("{.arg Replay} must be an object returned by {.fn ReplayMP}.")
+ReplayPanels <- function(Replay, Year, Panels = NULL) {
+  Panels <- .ReplayCheckPanels(Replay, Panels)
   if (length(Year) != 1 || !Year %in% Replay$Table$Year)
     cli::cli_abort(c("{.arg Year} must be one of the replayed management years.",
                      "i" = "Years: {.val {Replay$Table$Year}}."))
-  Plot <- Plot %||% names(Replay$Animations)
-  Unknown <- setdiff(Plot, names(Replay$Animations))
-  if (length(Unknown))
-    cli::cli_abort(c("No animation{?s} named {.val {Unknown}}.",
-                     "i" = "Available: {.val {names(Replay$Animations)}}."))
-  Out <- lapply(Replay$Animations[Plot], \(a) .ReplayStatic(a, Year))
+  Out <- lapply(Replay$Animations[Panels], \(a) .ReplayStatic(a, Year))
   if (length(Out) == 1) Out[[1]] else Out
 }
 
@@ -892,21 +901,281 @@ ReplayPlot <- function(Replay, Year, Plot = NULL) {
 }
 
 
-#' Animate the Plots of an MP Replay Side by Side
+#' Plot One Year of an MP Replay
 #'
-#' Draws the [ReplayMP()] plots for each management year next to each other
-#' and writes them to a GIF, so the plots stay in step.
+#' Draws the [ReplayMP()] panels of one management year together, below a
+#' timeline of when the advice is calculated, the data available to the MP,
+#' and the period the advice applies to.
 #'
 #' @param Replay An object returned by [ReplayMP()].
-#' @param Plot Names of the animations to include, in order. `NULL`
-#'   (default) includes all of them.
+#' @param Year A management year in `Replay$Table$Year`.
+#' @param Panels Names of the panels to include (`names(Replay$Animations)`),
+#'   in order. `NULL` (default) includes all of them.
+#' @param ncol Number of columns. `NULL` (default) puts up to three plots in
+#'   one row, and more in two rows.
+#' @param Title,Subtitle,Caption Text above (`Title`, `Subtitle`) and below
+#'   (`Caption`) the figure. `TRUE` (default) gives the MP name (`Title`), the
+#'   advice in orange with how it was calculated above the timeline
+#'   (`Subtitle`), and the simulation with a key to the shading and lines
+#'   (`Caption`). `FALSE` leaves the text out,
+#'   e.g. when the figure has a caption in a report. A character string
+#'   replaces the text.
+#' @param Timeline Logical. Draw the management timeline above the plots?
+#' @param IndexLabels Named character vector of panel labels for the `Index`
+#'   plot, e.g. `c(CPUE = 'Longline CPUE')`. Indices that are not named keep
+#'   their names.
+#'
+#' @details
+#' The timeline shows the data available to the MP (blue), the time steps
+#' without data when the advice is calculated (grey, the `DataLag`), the time
+#' step the advice is calculated (triangle), and the period it applies to
+#' (orange), up to the next management year. The `Index`, `Biomass`,
+#' `Status`, and `Catch` plots are shaded over the same grey and orange
+#' periods, and the TAC is drawn over the period it applies to in the `Catch`
+#' plot.
+#'
+#' @return A `patchwork` object.
+#'
+#' @examples
+#' \donttest{
+#' Hist <- Simulate(SingleStockOM, nSim = 2)
+#' MSE <- Project(Hist, 'IndexRate')
+#' if (requireNamespace('gganimate', quietly = TRUE)) {
+#'   R <- ReplayMP(MSE, 'IndexRate', Sim = 1)
+#'   ReplayPlot(R, R$Table$Year[3])
+#'   ReplayPlot(R, R$Table$Year[3], Title = 'IndexRate', Caption = FALSE)
+#'   plot(R, R$Table$Year[3], Panels = c('Status', 'Catch'))
+#' }
+#' }
+#'
+#' @seealso [ReplayMP()], [ReplayAnimate()], [ReplayPanels()]
+#' @export
+ReplayPlot <- function(Replay, Year, Panels = NULL, ncol = NULL, Title = TRUE, Subtitle = TRUE,
+                         Caption = TRUE, Timeline = TRUE, IndexLabels = NULL) {
+  Panels <- .ReplayCheckPanels(Replay, Panels)
+  if (!is.null(IndexLabels) && (!is.character(IndexLabels) || is.null(names(IndexLabels))))
+    cli::cli_abort("{.arg IndexLabels} must be a named character vector.")
+  Figs <- ReplayPanels(Replay, Year, Panels) |> .ReplayAsList(Panels)
+  Figs <- lapply(Figs, \(p) p + ggplot2::labs(title = sub(': advice for .*$', '', p$labels$title)))
+  Row  <- Replay$Table[abs(Replay$Table$Year - Year) < 1e-6, ][1, ]
+  Tm   <- .ReplayTiming(Replay, Year)
+
+  if (!is.null(Tm)) {
+    for (nm in intersect(names(Figs), c('Index', 'Biomass', 'Status', 'Catch')))
+      Figs[[nm]] <- .ReplayBelow(Figs[[nm]], .ReplayShade(Tm))
+    if ('Catch' %in% names(Figs) && Row$AdviceType == 'TAC' && is.finite(Row$Advice))
+      Figs$Catch <- Figs$Catch +
+        ggplot2::annotate('segment', x = Tm$Year - Tm$Half, xend = Tm$Last + Tm$Half, y = Row$Advice,
+                          yend = Row$Advice, colour = .ReplayCatchColours[['Past TACs']], linewidth = 1.4)
+  }
+  if (!is.null(IndexLabels) && 'Index' %in% names(Figs)) {
+    Lab <- \(x) ifelse(x %in% names(IndexLabels), IndexLabels[x], x)
+    Figs$Index <- Figs$Index +
+      ggplot2::facet_wrap(~Name, scales = 'free_y', ncol = min(.ReplayIndexCount(Figs$Index), 2),
+                          labeller = ggplot2::as_labeller(Lab))
+  }
+
+  ncol <- ncol %||% .ReplayDefaultCols(length(Figs))
+  nrow <- ceiling(length(Figs) / ncol)
+  Out  <- patchwork::wrap_plots(Figs, ncol = ncol)
+  Sub  <- .ReplaySubtitle(Replay, Row, Tm)
+  # the calculation details head the timeline, or a text row without it
+  Detail <- if (isTRUE(Subtitle)) Sub$Detail
+  DetailTheme <- ggplot2::theme(plot.title = ggplot2::element_text(size = 12, colour = 'grey25', face = 'plain',
+                                                                   margin = ggplot2::margin(0, 0, 4, 0)),
+                                plot.title.position = 'plot')
+  if (isTRUE(Timeline) && !is.null(Tm)) {
+    Top <- .ReplayTimelinePlot(Replay, Row, Tm) + ggplot2::labs(title = Detail) + DetailTheme
+    Out <- patchwork::wrap_plots(Top, Out, ncol = 1, heights = c(if (is.null(Detail)) 0.2 else 0.28, nrow))
+  } else if (!is.null(Detail)) {
+    Top <- ggplot2::ggplot() + ggplot2::theme_void() + ggplot2::labs(title = Detail) + DetailTheme
+    Out <- patchwork::wrap_plots(Top, Out, ncol = 1, heights = c(0.01, nrow))
+  }
+  Out + patchwork::plot_annotation(
+    title    = .ReplayText(Title, Replay$MP, 'Title'),
+    subtitle = .ReplayText(Subtitle, Sub$Head, 'Subtitle'),
+    caption  = .ReplayText(Caption, .ReplayCaption(Replay, Tm), 'Caption'),
+    theme = ggplot2::theme(plot.title = ggplot2::element_text(face = 'bold', size = 17),
+                           plot.subtitle = ggplot2::element_text(face = 'bold', size = 15, colour = '#a04f0b',
+                                                                 margin = ggplot2::margin(2, 0, 6, 0)),
+                           plot.caption = ggplot2::element_text(size = 10, colour = 'grey30', hjust = 0)))
+}
+
+#' @describeIn ReplayPlot `plot()` method for objects returned by [ReplayMP()].
+#' @param x An object returned by [ReplayMP()].
+#' @param ... For `plot()`, arguments passed to `ReplayPlot()`.
+#' @method plot mpreplay
+#' @export
+plot.mpreplay <- function(x, Year, ...) ReplayPlot(x, Year, ...)
+
+.ReplayCheckPanels <- function(Replay, Panels) {
+  if (!inherits(Replay, 'mpreplay'))
+    cli::cli_abort("{.arg Replay} must be an object returned by {.fn ReplayMP}.")
+  Panels <- Panels %||% names(Replay$Animations)
+  Unknown <- setdiff(Panels, names(Replay$Animations))
+  if (length(Unknown))
+    cli::cli_abort(c("No panel{?s} named {.val {Unknown}}.",
+                     "i" = "Available: {.val {names(Replay$Animations)}}."))
+  Panels
+}
+
+.ReplayDefaultCols <- function(n) if (n <= 3) n else ceiling(n / 2)
+
+.ReplayText <- function(x, Default, Arg) {
+  if (isTRUE(x)) return(Default)
+  if (is.null(x) || isFALSE(x)) return(NULL)
+  if (is.character(x) && length(x) == 1) return(x)
+  cli::cli_abort("{.arg {Arg}} must be {.code TRUE}, {.code FALSE}, or a character string.")
+}
+
+# timing of management year Year; NULL for replays made before Timing was stored
+.ReplayTiming <- function(Replay, Year) {
+  Tm <- Replay$Timing
+  if (is.null(Tm)) return(NULL)
+  Tm <- as.list(Tm[abs(Tm$Year - Year) < 1e-6, ][1, ])
+  S  <- Replay$Seasons %||% 1
+  # on calendar-year boundaries, timing in calendar years to match the annual plots
+  if (S > 1 && abs(Tm$Year - round(Tm$Year)) < 1e-6 &&
+      all(.SeasonOfTimestep(c(Tm$LastData, Tm$Calc, Tm$Last), S) == S)) {
+    Tm[c('LastData', 'Calc', 'Last')] <- lapply(Tm[c('LastData', 'Calc', 'Last')], .CalendarYear)
+    S <- 1
+  }
+  Tm$Seasons <- S
+  Tm$Half <- 0.5 / S
+  Tm
+}
+
+.ReplayShade <- function(Tm) {
+  Lag <- if (Tm$Calc > Tm$LastData + 1e-6)
+    ggplot2::annotate('rect', xmin = Tm$LastData + Tm$Half, xmax = Tm$Calc + Tm$Half, ymin = -Inf, ymax = Inf,
+                      fill = 'grey55', alpha = 0.2)
+  list(Lag, ggplot2::annotate('rect', xmin = Tm$Year - Tm$Half, xmax = Tm$Last + Tm$Half, ymin = -Inf, ymax = Inf,
+                              fill = .MPColours[['Status']], alpha = 0.15))
+}
+
+# add layers below the existing layers
+.ReplayBelow <- function(p, Layers) {
+  n <- length(p$layers)
+  for (L in Filter(Negate(is.null), Layers)) p <- p + L
+  New <- seq_len(length(p$layers) - n) + n
+  p$layers <- c(p$layers[New], p$layers[seq_len(n)])
+  p
+}
+
+.ReplayIndexCount <- function(p) {
+  Names <- unlist(lapply(p$layers, \(L) if (is.data.frame(L$data) && 'Name' %in% names(L$data))
+    as.character(L$data$Name)))
+  max(1, length(unique(Names)))
+}
+
+.ReplayTimeLabel <- function(x, Seasons = 1) {
+  if (Seasons == 1) return(format(round(x), scientific = FALSE, trim = TRUE))
+  paste0(.CalendarYear(x), ' S', .SeasonOfTimestep(x, Seasons))
+}
+
+.ReplaySpan <- function(First, Last, Seasons = 1) {
+  if (abs(Last - First) < 1e-6) return(.ReplayTimeLabel(First, Seasons))
+  paste0(.ReplayTimeLabel(First, Seasons), '-', .ReplayTimeLabel(Last, Seasons))
+}
+
+.ReplayNumber <- function(x) {
+  if (!length(x) || !is.finite(x)) return('NA')
+  if (abs(x) >= 100) format(round(x), big.mark = ',', scientific = FALSE, trim = TRUE)
+  else format(signif(x, 3), scientific = FALSE, trim = TRUE)
+}
+
+.ReplayAdviceName <- function(Row) if (identical(Row$AdviceType, 'TAC')) 'TAC' else 'Relative effort'
+
+.ReplaySubtitle <- function(Replay, Row, Tm) {
+  S    <- Tm$Seasons %||% Replay$Seasons %||% 1
+  Unit <- if (identical(Row$AdviceType, 'TAC') && length(Replay$Units) && !is.na(Replay$Units[1]))
+    paste0(' ', Replay$Units[1]) else ''
+  Span <- if (is.null(Tm)) .ReplayTimeLabel(Row$Year, S) else .ReplaySpan(Tm$Year, Tm$Last, S)
+  Head <- sprintf('%s for %s = %s%s', .ReplayAdviceName(Row), Span, .ReplayNumber(Row$Advice), Unit)
+  Parts <- if (!is.null(Tm))
+    sprintf('Calculated in %s from the data up to %s.', .ReplayTimeLabel(Tm$Calc, S), .ReplayTimeLabel(Tm$LastData, S))
+  Trial <- Row$TrialTAC
+  Con   <- Row$Constraint
+  if (length(Trial) && is.finite(Trial)) {
+    Txt <- paste0('Trial TAC ', .ReplayNumber(Trial), Unit)
+    if (length(Con) && !is.na(Con) && nzchar(Con))
+      Txt <- if (Con == 'Trial TAC applied without constraint.') paste0(Txt, ', applied without constraint') else
+        paste0(Txt, '; ', tolower(substring(Con, 1, 1)), sub('\\.$', '', substring(Con, 2)))
+    Parts <- c(Parts, paste0(Txt, '.'))
+  }
+  list(Head = Head, Detail = if (length(Parts)) paste(strwrap(paste(Parts, collapse = ' '), 130), collapse = '\n'))
+}
+
+.ReplayCaption <- function(Replay, Tm) {
+  Out <- if (isTRUE(Replay$nComplex > 1)) sprintf('Simulation %s, %s.', Replay$Sim, Replay$Stock) else
+    sprintf('Simulation %s.', Replay$Sim)
+  if (!is.null(Tm)) {
+    if (Tm$Calc > Tm$LastData + 1e-6)
+      Out <- c(Out, sprintf('Grey shading: no data available when the advice is calculated (%s-year data lag).',
+                            Replay$DataLag))
+    Out <- c(Out, 'Orange shading: the period the advice applies to.')
+  }
+  B <- names(Replay$Boundaries)
+  if ('MP start year' %in% B) {
+    Out <- c(Out, 'Vertical lines: end of the historical period (solid) and first year of MP advice (dashed).')
+  } else if (length(B)) {
+    Out <- c(Out, 'Vertical line: end of the historical period.')
+  }
+  paste(strwrap(paste(Out, collapse = ' '), 150), collapse = '\n')
+}
+
+# data available (blue), years without data (grey), calculation (triangle), and advice period (orange)
+.ReplayTimelinePlot <- function(Replay, Row, Tm) {
+  S   <- Tm$Seasons
+  x0  <- floor(min(Replay$Timing$LastData)) - 6
+  x1  <- ceiling(max(Replay$Timing$Last)) + 1
+  At  <- Tm$Calc + Tm$Half
+  Box <- data.frame(xmin = c(x0, Tm$LastData + Tm$Half, Tm$Year - Tm$Half),
+                    xmax = c(Tm$LastData + Tm$Half, Tm$Calc + Tm$Half, Tm$Last + Tm$Half),
+                    Fill = c('Data', 'Lag', 'Advice'))
+  Box <- Box[Box$xmax > Box$xmin + 1e-6, ]
+  Label <- sprintf('%s calculated in %s for %s', .ReplayAdviceName(Row), .ReplayTimeLabel(Tm$Calc, S),
+                   .ReplaySpan(Tm$Year, Tm$Last, S))
+  ggplot2::ggplot() +
+    ggplot2::geom_rect(data = Box, ggplot2::aes(xmin = .data$xmin, xmax = .data$xmax, ymin = 0.15, ymax = 0.75,
+                                                fill = .data$Fill), alpha = 0.85) +
+    ggplot2::annotate('text', x = Tm$LastData + Tm$Half - 0.3, y = 0.45, hjust = 1, size = 3.6,
+                      label = paste('Data up to', .ReplayTimeLabel(Tm$LastData, S))) +
+    ggplot2::annotate('point', x = At, y = 0.95, shape = 25, size = 3, fill = 'black') +
+    ggplot2::annotate('text', x = At, y = 1.25, label = Label, hjust = (At - x0) / (x1 - x0), size = 3.6,
+                      colour = '#a04f0b', fontface = 'bold') +
+    ggplot2::scale_fill_manual(values = c(Data = '#9ecae1', Lag = 'grey55', Advice = .MPColours[['Status']]),
+                               guide = 'none') +
+    ggplot2::scale_x_continuous(limits = c(x0, x1), expand = c(0, 0), breaks = \(l) {
+      b <- pretty(l, 8)
+      b[b == round(b)]
+    }) +
+    ggplot2::scale_y_continuous(limits = c(0, 1.5), expand = c(0, 0)) +
+    ggplot2::labs(x = NULL, y = NULL) +
+    ggplot2::theme_minimal(base_size = 11) +
+    ggplot2::theme(panel.grid = ggplot2::element_blank(), axis.text.y = ggplot2::element_blank(),
+                   axis.line.x = ggplot2::element_line(colour = 'grey60'),
+                   axis.ticks.x = ggplot2::element_line(colour = 'grey60'))
+}
+
+
+#' Animate the Plots of an MP Replay
+#'
+#' Writes the [ReplayPlot()] of each management year to a GIF, so the panels
+#' stay in step.
+#'
+#' @param Replay An object returned by [ReplayMP()].
+#' @param Panels Names of the panels to include (`names(Replay$Animations)`),
+#'   in order. `NULL` (default) includes all of them.
 #' @param ncol Number of columns. `NULL` (default) puts up to three plots in
 #'   one row, and more in two rows.
 #' @param fps Frames (management years) per second.
 #' @param width,height Size of each frame in pixels. `NULL` (default) gives
-#'   450 x 420 pixels per plot.
+#'   520 x 450 pixels per plot, plus room for the timeline and text.
 #' @param res Resolution in pixels per inch.
 #' @param file Path of the GIF. `NULL` (default) writes a temporary file.
+#' @param ... Arguments passed to [ReplayPlot()]: `Title`, `Subtitle`,
+#'   `Caption`, `Timeline`, and `IndexLabels`.
 #'
 #' @return A `gif_image` object (see [gganimate::gif_file()]): printing it
 #'   shows the GIF in the viewer, and [gganimate::anim_save()] saves it.
@@ -921,49 +1190,31 @@ ReplayPlot <- function(Replay, Year, Plot = NULL) {
 #' }
 #' }
 #'
-#' @seealso [ReplayMP()], [ReplayPlot()]
+#' @seealso [ReplayMP()], [ReplayPlot()], [ReplayPanels()]
 #' @export
-ReplayAnimate <- function(Replay, Plot = NULL, ncol = NULL, fps = 2, width = NULL, height = NULL,
-                          res = 96, file = NULL) {
-  if (!inherits(Replay, 'mpreplay'))
-    cli::cli_abort("{.arg Replay} must be an object returned by {.fn ReplayMP}.")
+ReplayAnimate <- function(Replay, Panels = NULL, ncol = NULL, fps = 2, width = NULL, height = NULL,
+                          res = 96, file = NULL, ...) {
+  Panels <- .ReplayCheckPanels(Replay, Panels)
   CheckPackage('gifski')
-  Plot <- Plot %||% names(Replay$Animations)
-  Unknown <- setdiff(Plot, names(Replay$Animations))
-  if (length(Unknown))
-    cli::cli_abort(c("No animation{?s} named {.val {Unknown}}.",
-                     "i" = "Available: {.val {names(Replay$Animations)}}."))
   if (!is.numeric(fps) || length(fps) != 1 || !is.finite(fps) || fps <= 0)
     cli::cli_abort("{.arg fps} must be a single positive number.")
-  ncol   <- ncol %||% (if (length(Plot) <= 3) length(Plot) else ceiling(length(Plot) / 2))
-  nrow   <- ceiling(length(Plot) / ncol)
-  width  <- width %||% (450 * ncol)
-  height <- height %||% (420 * nrow)
+  ncol   <- ncol %||% .ReplayDefaultCols(length(Panels))
+  nrow   <- ceiling(length(Panels) / ncol)
+  width  <- width %||% (520 * ncol)
+  height <- height %||% (450 * nrow + 150)
   file   <- file %||% tempfile(fileext = '.gif')
 
-  Subtitle <- sprintf('Simulation %s, %s', Replay$Sim, Replay$Stock)
-  Advice   <- stats::setNames(Replay$Table$Advice, Replay$Table$Year)
-  Type     <- stats::setNames(ifelse(Replay$Table$AdviceType == 'TAC', 'TAC', 'relative effort'),
-                              Replay$Table$Year)
-  TitleTheme <- ggplot2::theme(plot.title = ggplot2::element_text(face = 'bold', size = 20),
-                               plot.subtitle = ggplot2::element_text(size = 14, colour = 'grey30'))
   PB <- cli::cli_progress_bar("Drawing frames", total = nrow(Replay$Table), clear = TRUE)
   on.exit(cli::cli_progress_done(id = PB), add = TRUE)
   gifski::save_gif({
     for (Y in Replay$Table$Year) {
       cli::cli_progress_update(id = PB)
-      Figs <- ReplayPlot(Replay, Y, Plot) |> .ReplayAsList(Plot)
-      Figs <- lapply(Figs, \(p) p + ggplot2::labs(title = sub(': advice for .*$', '', p$labels$title)))
-      Key  <- as.character(Y)
-      print(patchwork::wrap_plots(Figs, ncol = ncol) +
-              patchwork::plot_annotation(title = sprintf('%s: %s %s = %s', Replay$MP, Key, Type[[Key]],
-                                                         .MPFormat(Advice[[Key]])),
-                                         subtitle = Subtitle, theme = TitleTheme))
+      print(ReplayPlot(Replay, Y, Panels, ncol = ncol, ...))
     }
   }, gif_file = file, width = width, height = height, delay = 1 / fps, progress = FALSE, res = res)
   gganimate::gif_file(file)
 }
 
-.ReplayAsList <- function(x, Plot) {
-  if (inherits(x, 'ggplot')) stats::setNames(list(x), Plot) else x
+.ReplayAsList <- function(x, Panels) {
+  if (inherits(x, 'ggplot')) stats::setNames(list(x), Panels) else x
 }

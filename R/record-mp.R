@@ -38,8 +38,9 @@
 #'   indices of the operating model), its status, and its target;
 #' - `Biomass`: the estimated `B/BMSY` on the `Status` plot.
 #'
-#' [ReplayAnimate()] shows these plots side by side as an animation, and
-#' [ReplayPlot()] returns the plots of a single management year.
+#' [ReplayPlot()] draws these plots for a single management year,
+#' [ReplayAnimate()] as an animation, and [ReplayPanels()] returns them as
+#' separate `ggplot` objects.
 #'
 #' Calling `RecordMP()` more than once in a call of the MP adds to the
 #' record: `Values` are combined, and the other arguments replace those of
@@ -105,7 +106,7 @@
 #' }
 #' }
 #'
-#' @seealso [ReplayMP()], [ReplayAnimate()], [ReplayPlot()], [HockeyStickHCR()]
+#' @seealso [ReplayMP()], [ReplayPlot()], [ReplayAnimate()], [ReplayPanels()], [HockeyStickHCR()]
 #' @export
 RecordMP <- function(Values = NULL, TrialTAC = NULL, HCR = NULL, Index = NULL, Biomass = NULL,
                      Unused = FALSE) {

@@ -41,8 +41,13 @@ the full series. Default \code{1.5}.}
 \value{
 An object of class \code{mpreplay}: a list with \code{MP}, \code{Sim}, \code{Stock},
 \code{Table} (a \code{data.frame} with one row per management year: the replayed
-\code{Advice}, the \code{Recorded} advice, and the values recorded by the MP), and
-\code{Animations} (a named list of \code{gganim} objects).
+\code{Advice}, the \code{Recorded} advice, and the values recorded by the MP),
+\code{Animations} (a named list of \code{gganim} objects), and the management timing
+used by \code{\link[=ReplayPlot]{ReplayPlot()}}: \code{Timing} (a \code{data.frame} with the management
+\code{Year}, the last time step of data available to the MP, \code{LastData}, the
+time step the advice is calculated, \code{Calc}, and the last time step it
+applies to, \code{Last}), \code{DataLag}, \code{Seasons}, \code{Boundaries}, the catch
+\code{Units}, and the number of stock complexes, \code{nComplex}.
 }
 \description{
 Runs a management procedure again on the data it received in each
@@ -142,8 +147,10 @@ line marks the end of the historical period and, when the OM has an
 \code{MPStartYear} after the first projection year (with interim advice
 before it), a light dashed line the year MPs are first applied.
 
-\code{\link[=ReplayAnimate]{ReplayAnimate()}} shows the animations side by side, and \code{\link[=ReplayPlot]{ReplayPlot()}}
-returns the plots of a single year.
+\code{\link[=ReplayPlot]{ReplayPlot()}} (or \code{plot()}) draws the panels of a single year together
+with the management timeline, \code{\link[=ReplayAnimate]{ReplayAnimate()}} writes these figures to a
+GIF, and \code{\link[=ReplayPanels]{ReplayPanels()}} returns the panels of a single year as separate
+\code{ggplot} objects.
 
 The MP is run with the version of MSEtool currently loaded. Multi-stock
 (\code{mmp}) MPs are not supported.
@@ -160,6 +167,6 @@ if (requireNamespace('gganimate', quietly = TRUE))
 
 }
 \seealso{
-\code{\link[=RecordMP]{RecordMP()}}, \code{\link[=ReplayAnimate]{ReplayAnimate()}}, \code{\link[=ReplayPlot]{ReplayPlot()}}, \code{\link[=IndexRate]{IndexRate()}},
+\code{\link[=RecordMP]{RecordMP()}}, \code{\link[=ReplayPlot]{ReplayPlot()}}, \code{\link[=ReplayAnimate]{ReplayAnimate()}}, \code{\link[=ReplayPanels]{ReplayPanels()}}, \code{\link[=IndexRate]{IndexRate()}},
 \code{\link[=SurplusProduction]{SurplusProduction()}}, \code{\link[=PPD]{PPD()}}
 }
