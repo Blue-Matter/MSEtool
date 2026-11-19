@@ -924,6 +924,10 @@ ReplayPanels <- function(Replay, Year, Panels = NULL) {
 #' @param IndexLabels Named character vector of panel labels for the `Index`
 #'   plot, e.g. `c(CPUE = 'Longline CPUE')`. Indices that are not named keep
 #'   their names.
+#' @param Modify A function with arguments for the list of panels (`ggplot`
+#'   objects named as in `Replay$Animations`) and the management year, that
+#'   returns the list of panels to draw, e.g. with added layers or changed
+#'   labels. `NULL` (default) draws the panels unchanged.
 #'
 #' @details
 #' The timeline shows the data available to the MP (blue), the time steps
@@ -951,8 +955,10 @@ ReplayPanels <- function(Replay, Year, Panels = NULL) {
 #' @seealso [ReplayMP()], [ReplayAnimate()], [ReplayPanels()]
 #' @export
 ReplayPlot <- function(Replay, Year, Panels = NULL, ncol = NULL, Title = TRUE, Subtitle = TRUE,
-                         Caption = TRUE, Timeline = TRUE, IndexLabels = NULL) {
+                         Caption = TRUE, Timeline = TRUE, IndexLabels = NULL, Modify = NULL) {
   Panels <- .ReplayCheckPanels(Replay, Panels)
+  if (!is.null(Modify) && !is.function(Modify))
+    cli::cli_abort("{.arg Modify} must be a function of the panels and the management year.")
   if (!is.null(IndexLabels) && (!is.character(IndexLabels) || is.null(names(IndexLabels))))
     cli::cli_abort("{.arg IndexLabels} must be a named character vector.")
   Figs <- ReplayPanels(Replay, Year, Panels) |> .ReplayAsList(Panels)
@@ -973,6 +979,11 @@ ReplayPlot <- function(Replay, Year, Panels = NULL, ncol = NULL, Title = TRUE, S
     Figs$Index <- Figs$Index +
       ggplot2::facet_wrap(~Name, scales = 'free_y', ncol = min(.ReplayIndexCount(Figs$Index), 2),
                           labeller = ggplot2::as_labeller(Lab))
+  }
+  if (!is.null(Modify)) {
+    Figs <- Modify(Figs, Year)
+    if (!is.list(Figs) || !length(Figs) || !all(vapply(Figs, \(p) inherits(p, 'ggplot'), logical(1))))
+      cli::cli_abort("{.arg Modify} must return a list of {.cls ggplot} objects.")
   }
 
   ncol <- ncol %||% .ReplayDefaultCols(length(Figs))
@@ -1175,7 +1186,7 @@ plot.mpreplay <- function(x, Year, ...) ReplayPlot(x, Year, ...)
 #' @param res Resolution in pixels per inch.
 #' @param file Path of the GIF. `NULL` (default) writes a temporary file.
 #' @param ... Arguments passed to [ReplayPlot()]: `Title`, `Subtitle`,
-#'   `Caption`, `Timeline`, and `IndexLabels`.
+#'   `Caption`, `Timeline`, `IndexLabels`, and `Modify`.
 #'
 #' @return A `gif_image` object (see [gganimate::gif_file()]): printing it
 #'   shows the GIF in the viewer, and [gganimate::anim_save()] saves it.
