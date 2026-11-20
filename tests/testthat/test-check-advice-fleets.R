@@ -30,3 +30,17 @@ test_that("fleet-specific TAC and Effort are matched by fleet name", {
   Advice <- .CheckAdviceTAC(Advice(TAC = c(Stock = 10)), NULL, "LL", Areas)
   expect_equal(as.numeric(Advice@TAC), 10)
 })
+
+test_that("1D TAC arrays are accepted and 2D TAC arrays are rejected", {
+  FleetNames <- c("LL", "PS")
+  Areas <- c("1", "2")
+
+  TAC1D <- array(c(5, 10), 2, dimnames = list(Fleet = c("PS", "LL")))
+  Advice <- .CheckAdviceTAC(Advice(TAC = TAC1D), NULL, FleetNames, Areas)
+  expect_equal(as.numeric(Advice@TAC), c(10, 5))
+  expect_equal(dimnames(Advice@TAC)$Fleet, FleetNames)
+
+  TAC2D <- matrix(1:4, 2, 2, dimnames = list(Fleet = FleetNames, Area = Areas))
+  expect_error(.CheckAdviceTAC(Advice(TAC = TAC2D), NULL, FleetNames, Areas),
+               "TACs by area are not supported")
+})
