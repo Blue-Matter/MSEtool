@@ -3,7 +3,7 @@
 #' Construct an [advice-class] object defining management advice returned by a
 #' management procedure.
 #'
-#' @param TAC Numeric vector or matrix specifying total allowable catch.
+#' @param TAC Numeric vector specifying total allowable catch.
 #'  See `Details`
 #'
 #' @param TACType Character. Does the TAC refer to `"Removals"` (default) or
@@ -158,10 +158,22 @@
 #' ## Selectivity
 #' 
 #' Either a [Selectivity()] object, or a list length `nFleet` of
-#' `Selectivity` objects. 
+#' `Selectivity` objects, one per fleet.
 #' 
 #' If a single `Selectivity` object, the prescribed selectivity schedule
-#' is applied to all fleets.  
+#' is applied to all fleets.
+#' 
+#' A list is matched to the fleets by name if it is named with the fleet
+#' names, and by position otherwise. A `NULL` element leaves that fleet's
+#' current schedule unchanged, e.g.
+#' `list(Longline = Selectivity(Pars = list(L5 = 40, LFS = 60)), Trawl = NULL)`.
+#' 
+#' A `MeanAtLength` (or `MeanAtWeight`) schedule is applied on the size classes
+#' the fleet already uses (the stock's classes unless the fleet defines its
+#' own). If `Classes` is omitted, the schedule must have one value per fleet
+#' class. If `Classes` differ from the fleet's classes, each fleet class takes
+#' the value of the supplied bin containing its midpoint.
+#' 
 #' 
 #' See section below for more details.
 #'
