@@ -19,7 +19,7 @@ PopulateObs(Obs, HistYears, ProjYears, nSim, AgeBins = NULL, SizeBins = NULL)
 the \code{Bin} dimension of populated age-composition arrays. Required when
 \code{Obs@LandingsAtAge} or \code{Obs@DiscardsAtAge} is non-empty.}
 
-\item{SizeBins}{Numeric vector. Length class midpoints, used to name the
+\item{SizeBins}{Numeric vector. Lower bounds of the length bins, used to name the
 \code{Bin} dimension of populated size-composition arrays. Required when
 \code{Obs@LandingsAtSize} or \code{Obs@DiscardsAtSize} is non-empty.}
 }

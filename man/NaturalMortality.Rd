@@ -75,8 +75,9 @@ object's own \code{Classes} otherwise. Default \code{NULL}.}
 
 \item{Random}{\code{array} or \code{NULL}. Not used. Default \code{NULL}.}
 
-\item{Classes}{\code{numeric} or \code{NULL}. Age or length class midpoints
-corresponding to the \verb{MeanAt*} array in use. Default \code{NULL}.}
+\item{Classes}{\code{numeric} or \code{NULL}. Age classes, or lower bounds of the
+length bins, corresponding to the \verb{MeanAt*} array in use. For length bins,
+Bin \code{k} spans \verb{[Classes[k], Classes[k+1])}; the final bin is open-ended. Default \code{NULL}.}
 
 \item{Misc}{\code{list}. Used internally. Default \code{list()}.}
 

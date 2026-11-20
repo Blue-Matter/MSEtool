@@ -39,7 +39,7 @@ A \link[=compdata-class]{compdata} object with:
 \item \verb{@Value}: \verb{[nYear x nFleet x nSize]} array of composition counts,
 \code{nSize} being the largest class count among the fleets (see
 \link[=compdata-class]{compdata} for the fleet-relative position convention)
-\item \verb{@Classes}: named list, one numeric vector of size class midpoints per
+\item \verb{@Classes}: named list, one numeric vector of size bin lower bounds per
 fleet
 \item \verb{@Units}: the stock's \code{Length@Units} (e.g. \code{"cm"}), shared by every fleet
 }

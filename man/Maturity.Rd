@@ -75,8 +75,9 @@ object's own \code{Classes} otherwise; if \code{Classes} differs from the
 \link[=weight-class]{weight} object's, the \code{AWK} is recalculated on \code{Classes}. Default
 \code{NULL}.}
 
-\item{Classes}{\code{numeric} or \code{NULL}. Age, length, or weight class midpoints
-corresponding to the \verb{MeanAt*} array in use. Default \code{NULL}.}
+\item{Classes}{\code{numeric} or \code{NULL}. Age classes, or lower bounds of the
+length or weight bins, corresponding to the \verb{MeanAt*} array in use. For
+size bins, Bin \code{k} spans \verb{[Classes[k], Classes[k+1])}; the final bin is open-ended. Default \code{NULL}.}
 
 \item{Semelparous}{\code{logical(1)} or \code{array}. Controls post-spawning
 mortality. \code{FALSE} (default) disables post-spawn mortality. \code{TRUE} sets

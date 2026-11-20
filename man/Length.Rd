@@ -88,8 +88,8 @@ individual of a given age belongs to each length class
 from \code{MeanAtAge}, \code{CVatAge}, \code{Dist}, and \code{TruncSD}; supply directly only
 when overriding the computed key. Default \code{NULL}.}
 
-\item{Classes}{\code{numeric} or \code{NULL}. Length class midpoints in units of
-\code{Units}. Populated automatically during \code{\link[=Populate]{Populate()}} if \code{NULL}. Default
+\item{Classes}{\code{numeric} or \code{NULL}. Lower bounds of the length bins in
+units of \code{Units}. Bin \code{k} spans \verb{[Classes[k], Classes[k+1])}; the final bin is open-ended. Populated automatically during \code{\link[=Populate]{Populate()}} if \code{NULL}. Default
 \code{NULL}.}
 
 \item{Misc}{\code{list}. Used internally. Default \code{list()}.}

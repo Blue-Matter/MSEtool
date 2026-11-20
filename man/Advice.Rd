@@ -63,7 +63,7 @@ ClosureMode(x) <- value
 Advice(x) <- value
 }
 \arguments{
-\item{TAC}{Numeric vector or matrix specifying total allowable catch.
+\item{TAC}{Numeric vector specifying total allowable catch.
 See \code{Details}}
 
 \item{TACType}{Character. Does the TAC refer to \code{"Removals"} (default) or
@@ -248,10 +248,28 @@ Can only be \code{0} (closed) or \code{1} (open). Otherwise will be converted to
 \subsection{Selectivity}{
 
 Either a \code{\link[=Selectivity]{Selectivity()}} object, or a list length \code{nFleet} of
-\code{Selectivity} objects.
+\code{Selectivity} objects, one per fleet.
 
 If a single \code{Selectivity} object, the prescribed selectivity schedule
 is applied to all fleets.
+
+A list is matched to the fleets by name if it is named with the fleet
+names, and by position otherwise. A \code{NULL} element leaves that fleet's
+current schedule unchanged, e.g.
+\code{list(Longline = Selectivity(Pars = list(L5 = 40, LFS = 60)), Trawl = NULL)}.
+
+A \code{MeanAtLength} (or \code{MeanAtWeight}) schedule is applied on the size classes
+the fleet already uses (the stock's classes unless the fleet defines its
+own). If \code{Classes} is omitted, the schedule must have one value per fleet
+class. If \code{Classes} differ from the fleet's classes, each fleet class takes
+the value of the supplied bin containing its midpoint.
+
+For a stock complex, the schedule applies to every stock in the complex. A
+\code{MeanAtAge} schedule (other than a single value for all ages) requires the
+stocks to share the same age classes, and a \code{MeanAtLength} or
+\code{MeanAtWeight} schedule without \code{Classes} requires them to share the same
+size classes. Otherwise use \code{Pars}, or give \code{Classes} with the at-size
+schedule.
 
 See section below for more details.
 }
