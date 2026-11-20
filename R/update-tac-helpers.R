@@ -39,12 +39,6 @@
         cli::cli_abort("Advice@TAC for complex {i} must be length 1 or length nFleet ({nFleet}); got {length(TAC)}", .internal=TRUE)
       }
       
-    } else if (length(dd) == 2) {
-      # Fleet x Area TAC 
-      if (!all(dd == c(nFleet, nArea(Proj@OM)))) 
-        cli::cli_abort("Advice@TAC for complex {i} must be nFleet x nArea ({nFleet} x {length(nArea(Proj@OM))})", .internal=TRUE)
-      cli::cli_abort("TAC by Fleet x Area optimization is not yet implemented")
-      
     } else {
       cli::cli_abort("Advice@TAC for complex {i} has unexpected dimensions", .internal=TRUE)
     }
