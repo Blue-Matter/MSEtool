@@ -434,3 +434,48 @@ test_that("at-weight advice on other weight classes is mapped onto the fleet's w
   expect_equal(as.numeric(dimnames(Rec$MeanAtLength)$Class), .ArrCl)
   expect_false(anyNA(Rec$MeanAtLength))
 })
+
+test_that("schedules in a complex of stocks with different age and length classes need Pars or Classes", {
+  OM <- ComplexOM
+  nSim(OM) <- 2
+  pYear(OM) <- 2
+  Hist <- Simulate(OM, silent = TRUE)
+  St <- Hist@OM@Stock
+  expect_false(identical(St[[1]]@Ages@Classes, St[[2]]@Ages@Classes))
+  Ag <- St[[1]]@Ages@Classes
+  Cl <- St[[1]]@Length@Classes
+  MPs <- list(
+    AgeVec   = .ArrMP('Selectivity', Selectivity(MeanAtAge = pmin(1, Ag / 4))),
+    LenNoCl  = .ArrMP('Retention', Retention(MeanAtLength = as.numeric(Cl >= 20))),
+    DMAgeVec = .ArrMP('DiscardMortality', list(DiscardMortality(MeanAtAge = rep(0.4, length(Ag))))),
+    LenCl    = .ArrMP('Selectivity', Selectivity(MeanAtLength = pmin(1, Cl / 20), Classes = Cl)),
+    Pars     = .ArrMP('Selectivity', Selectivity(Pars = list(L5 = 10, LFS = 20))),
+    AgeOne   = .ArrMP('DiscardMortality', DiscardMortality(MeanAtAge = 0.5))
+  )
+  MSE <- suppressMessages(Project(Hist, MPs = MPs, parallel = FALSE, silent = TRUE))
+  Expected <- c(AgeVec   = 'sets MeanAtAge for complex',
+                LenNoCl  = 'sets MeanAtLength without Classes for complex',
+                DMAgeVec = 'sets MeanAtAge for complex')
+  for (mp in names(Expected)) {
+    Msgs <- .ArrErrors(MSE, mp)
+    expect_true(length(Msgs) > 0, label = mp)
+    expect_true(all(grepl(Expected[[mp]], Msgs, fixed = TRUE)), label = mp)
+    expect_true(all(grepl('Invalid `Advice`', Msgs, fixed = TRUE)), label = mp)
+  }
+  for (mp in c('LenCl', 'Pars', 'AgeOne')) {
+    expect_length(.ArrErrors(MSE, mp), 0)
+    for (st in 1:2) expect_false(is.null(MSE@Misc[[if (mp == 'AgeOne') 'DiscardMortality' else 'Selectivity']][[mp]][[st]][[1]]),
+                                 label = paste(mp, st))
+  }
+  # each stock gets the at-length schedule on its own fleet classes
+  for (st in 1:2) {
+    AtLen <- MSE@Misc$Selectivity$LenCl[[st]][[1]]$MeanAtLength
+    FleetCl <- as.numeric(dimnames(Hist@OM@Fleet[[st]][[1]]@Selectivity@MeanAtLength)$Class)
+    expect_equal(as.numeric(dimnames(AtLen)$Class), FleetCl)
+  }
+})
+
+test_that("an at-age schedule of the wrong length names the number of ages", {
+  MSE <- .ArrProject(list(Short = .ArrMP('Selectivity', Selectivity(MeanAtAge = c(0.5, 1)))))
+  expect_true(all(grepl('must be length `nAge`', .ArrErrors(MSE, 'Short'), fixed = TRUE)))
+})

@@ -262,6 +262,8 @@
     .ExtendSimsList(nSimAll)
   Proj@Misc$BagLimit <- .BindSims(lapply(Projs, \(x) x@Misc$BagLimit), Sizes) |>
     .ExtendSimsList(nSimAll)
+  Proj@Misc$MaxF <- .BindSims(lapply(Projs, \(x) x@Misc$MaxF), Sizes) |>
+    .ExtendSimsList(nSimAll)
 
   Errors    <- vapply(Results, `[[`, logical(1), 'Error')
   AllFailed <- Reduce(intersect, lapply(Results, `[[`, 'AllFailedYears'))

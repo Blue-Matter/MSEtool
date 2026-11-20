@@ -64,8 +64,8 @@
 #'   (`Sim × Age × Class × Year`). Only populated during [Populate()] when
 #'   `CVatAge` is non-`NULL`; supply directly only when overriding the
 #'   computed key. Default `NULL`.
-#' @param Classes `numeric` or `NULL`. Weight class midpoints in units of
-#'   `Units`. Populated automatically during [Populate()] when `CVatAge` is
+#' @param Classes `numeric` or `NULL`. Lower bounds of the weight bins in
+#'   units of `Units`. Bin `k` spans `[Classes[k], Classes[k+1])`; the final bin is open-ended. Populated automatically during [Populate()] when `CVatAge` is
 #'   non-`NULL` and `Classes` is `NULL`. Default `NULL`.
 #' @param Misc `list`. Used internally. Default `list()`.
 #' @param x A [weight-class] object for slot accessors, or an object that contains

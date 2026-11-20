@@ -12,7 +12,7 @@
 #' @param HistYears Integer vector. Calendar years of the historical period.
 #' @param ProjYears Integer vector. Calendar years of the projection period.
 #' @param Bins Numeric vector. Age classes for age composition 
-#' slots, or length class midpoints for size
+#' slots, or lower bounds of the length bins for size
 #'   composition slots. Used to set the length of the `Bin` dimension and to
 #'   name it in the populated `Shift` array. `NULL` is accepted only when
 #'   [EmptyObject()] returns `TRUE` for `Comp`.

@@ -76,7 +76,7 @@
 #' - `@Value`: `[nYear x nFleet x nSize]` array of composition counts,
 #'   `nSize` being the largest class count among the fleets (see
 #'   [compdata-class] for the fleet-relative position convention)
-#' - `@Classes`: named list, one numeric vector of size class midpoints per
+#' - `@Classes`: named list, one numeric vector of size bin lower bounds per
 #'   fleet
 #' - `@Units`: the stock's `Length@Units` (e.g. `"cm"`), shared by every fleet
 #'

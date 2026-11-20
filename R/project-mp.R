@@ -56,7 +56,7 @@
 .CompactMPProj <- function(Proj, YearsProj) {
   for (sl in setdiff(methods::slotNames('timeseries'), 'Misc'))
     methods::slot(Proj, sl) <- .SubsetYear(methods::slot(Proj, sl), YearsProj)
-  Proj@Misc      <- Proj@Misc[intersect(names(Proj@Misc), c('MPAdvice', 'MPAggBagLimit', 'TACAttainment', 'BagLimit'))]
+  Proj@Misc      <- Proj@Misc[intersect(names(Proj@Misc), c('MPAdvice', 'MPAggBagLimit', 'TACAttainment', 'BagLimit', 'MaxF'))]
   Proj@OM@Stock  <- NULL
   Proj@OM@Obs    <- NULL
   Proj@OM@Imp    <- NULL
@@ -92,6 +92,7 @@
 
   Proj@Misc$TACAttainment <- .InitTACAttainment(Proj, YearsProj)
   Proj@Misc$BagLimit      <- .InitBagLimitRecord(Proj, YearsProj)
+  Proj@Misc$MaxF          <- .InitMaxFRecord(Proj, YearsProj)
 
   # initialise for debugging convenience
   Year <- YearsProj[1]; ts <- 1
@@ -231,8 +232,12 @@
     if (Error) break
 
     # Simulate Pop Dynamics for this Time Step
-    Proj <- .CalcFisheryDynamics(Proj, Year, InPlace = TRUE,
-                                 DoBackCalcEffort = .BackCalcEffortFlag(Proj))
+    TSIndex   <- match(Year, c(YearsHist, YearsProj))
+    Requested <- Proj@Effort[, TSIndex, , drop = FALSE]
+    BackCalc  <- .BackCalcEffortFlag(Proj)
+    Proj <- .CalcFisheryDynamics(Proj, Year, InPlace = TRUE, DoBackCalcEffort = BackCalc)
+    if (BackCalc)
+      Proj <- .RecordMaxF(Proj, ts, TSIndex, Requested)
 
     # Compute Catch & Discards at Size for this Time Step
     Proj <- .CalcCatchAtSize(Proj, Years = Year, needed = CatchAtSizeNeeded,
@@ -270,6 +275,9 @@
 
   if (!Error)
     Proj <- .LogTACAttainment(Proj, Proj@Misc$TACAttainment, Proj@OM@Seasons)
+
+  if (!Error)
+    Proj <- .LogMaxF(Proj, Proj@OM@Seasons)
 
   if (!Error)
     MSE <- .UpdateMSEObject(MSE,

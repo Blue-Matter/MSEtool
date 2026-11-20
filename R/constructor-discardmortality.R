@@ -32,8 +32,9 @@
 #'   using `Classes` if supplied or the [length-class] object's own `Classes`
 #'   otherwise; if `Classes` differs from the [length-class] object's, the
 #'   `ALK` is recalculated on `Classes`.
-#' @param Classes Numeric vector or `NULL`. Length class midpoints
-#'   corresponding to the second dimension of `MeanAtLength`. Default `NULL`.
+#' @param Classes Numeric vector or `NULL`. Lower bounds of the length bins
+#'   corresponding to the second dimension of `MeanAtLength`. Bin `k` spans `[Classes[k], Classes[k+1])`; the final bin is open-ended.
+#'   Default `NULL`.
 #' @param Misc List. Miscellaneous additional inputs. Default `list()`.
 #' @param x A [discardmortality-class] object, or an object that contains
 #'   `DiscardMortality` objects for `DiscardMortality<-` (see

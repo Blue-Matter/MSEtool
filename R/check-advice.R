@@ -14,7 +14,7 @@
   if (!inherits(Advice, 'advice'))
     return(.AdviceCheckError(Advice, name))
 
-  Advice <- try(.CheckAdviceSchedules(Advice, FleetNames), silent=TRUE)
+  Advice <- try(.CheckAdviceSchedules(Advice, FleetNames, Proj, name), silent=TRUE)
   if (!inherits(Advice, 'advice'))
     return(.AdviceCheckError(Advice, name))
 
@@ -186,12 +186,16 @@
 }
 
 # Selectivity/Retention/DiscardMortality: one object, or a list by fleet of objects or NULL (fleet unchanged)
-.CheckAdviceSchedules <- function(Advice, FleetNames) {
+.CheckAdviceSchedules <- function(Advice, FleetNames, Proj = NULL, name = NULL) {
   nFleet <- length(FleetNames)
   for (sl in c('Selectivity', 'Retention', 'DiscardMortality')) {
     x   <- methods::slot(Advice, sl)
     cls <- tolower(sl)
-    if (is.null(x) || inherits(x, cls)) next
+    if (is.null(x)) next
+    if (inherits(x, cls)) {
+      .CheckComplexSchedules(x, sl, Proj, name)
+      next
+    }
     Valid <- vapply(x, \(xi) is.null(xi) || inherits(xi, cls), logical(1))
     Bad <- which(!Valid)
     if (length(Bad))
@@ -220,6 +224,41 @@
       if (all(vapply(x, is.null, logical(1)))) x <- NULL
     }
     methods::slot(Advice, sl) <- x
+    .CheckComplexSchedules(x, sl, Proj, name)
   }
   Advice
+}
+
+# an at-age schedule, or an at-size schedule without `Classes`, applies to every stock in a
+# complex only if the stocks share those classes
+.CheckComplexSchedules <- function(x, sl, Proj, name) {
+  if (is.null(x) || is.null(Proj) || !length(name)) return(invisible(NULL))
+  Stocks <- Proj@OM@Complexes[[as.character(name)]]
+  if (length(Stocks) < 2) return(invisible(NULL))
+  StockNms <- StockNames(Proj@OM)[Stocks]
+  Objects  <- if (is.list(x)) x else rep(list(x), length(Proj@OM@Fleet[[Stocks[1]]]))
+
+  Differ <- \(Get) length(unique(lapply(Stocks, \(st) as.numeric(Get(st))))) > 1
+  for (fl in seq_along(Objects)) {
+    obj <- Objects[[fl]]
+    if (is.null(obj)) next
+    if (length(obj@MeanAtAge) > 1 && Differ(\(st) Proj@OM@Stock[[st]]@Ages@Classes))
+      cli::cli_abort(c(
+        "x" = "{.code Advice@{sl}} sets {.field MeanAtAge} for complex {.val {name}}, whose stocks have different age classes.",
+        "i" = "Stocks: {.val {StockNms}}",
+        "i" = "Use {.field Pars}, or {.field MeanAtLength} with {.field Classes}, which apply to each stock's sizes."
+      ), call = NULL)
+    for (SizeSlot in intersect(c('MeanAtLength', 'MeanAtWeight'), methods::slotNames(obj))) {
+      if (length(methods::slot(obj, SizeSlot)) < 2 || length(obj@Classes)) next
+      Default <- if (SizeSlot == 'MeanAtLength') 'Length' else 'Weight'
+      if (Differ(\(st) .FleetScheduleClasses(methods::slot(Proj@OM@Fleet[[st]][[fl]], sl), SizeSlot,
+                                               methods::slot(Proj@OM@Stock[[st]], Default)@Classes)))
+        cli::cli_abort(c(
+          "x" = "{.code Advice@{sl}} sets {.field {SizeSlot}} without {.field Classes} for complex {.val {name}}, whose stocks have different size classes.",
+          "i" = "Stocks: {.val {StockNms}}",
+          "i" = "Supply {.field Classes} (the lower bounds of the bins) so the schedule is placed on each stock's classes."
+        ), call = NULL)
+    }
+  }
+  invisible(NULL)
 }

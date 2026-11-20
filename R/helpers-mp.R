@@ -499,6 +499,7 @@
     return(select)
   
   nClass     <- length(Classes)
+  nLabel     <- if (dim_name == 'Age') 'nAge' else 'nClass'
   dim_names  <- list(Classes, Area=seq_len(nArea))
   names(dim_names)[1] <- dim_name
   
@@ -507,7 +508,7 @@
     if (!all(dd == c(nClass, nArea)))
       cli::cli_abort(c(
         "{type} {slot_name} array has incorrect dimensions.",
-        "x" = "Expected {nClass} rows ({.field nClass}) and {nArea} columns ({.field nArea}).",
+        "x" = "Expected {nClass} rows ({.field {nLabel}}) and {nArea} columns ({.field nArea}).",
         "i" = "Current dimensions: {paste(dd, collapse = ' x ')}."
       ))
     dimnames(Values) <- dim_names
@@ -519,7 +520,7 @@
       Values <- rep(Values, nClass)
     }
     if (length(Values) != nClass ) {
-      cli::cli_abort(c('x' = "{type}@{slot_name} must be length `nClass` ({.val {nClass}})",
+      cli::cli_abort(c('x' = "{type}@{slot_name} must be length {.code {nLabel}} ({.val {nClass}})",
                        'i' = "Currently: {.val {length(Values)}}")
       )
       # Values <- rep(Values, nClass)[seq_len(nClass)]

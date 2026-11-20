@@ -50,8 +50,9 @@
 #'   object's own `Classes` otherwise; if `Classes` differs from the
 #'   [weight-class] object's, the `AWK` is recalculated on `Classes`. Default
 #'   `NULL`.
-#' @param Classes `numeric` or `NULL`. Age, length, or weight class midpoints
-#'   corresponding to the `MeanAt*` array in use. Default `NULL`.
+#' @param Classes `numeric` or `NULL`. Age classes, or lower bounds of the
+#'   length or weight bins, corresponding to the `MeanAt*` array in use. For
+#'   size bins, Bin `k` spans `[Classes[k], Classes[k+1])`; the final bin is open-ended. Default `NULL`.
 #' @param Semelparous `logical(1)` or `array`. Controls post-spawning
 #'   mortality. `FALSE` (default) disables post-spawn mortality. `TRUE` sets
 #'   post-spawn mortality equal to the maturity ogive after [Populate()] — see

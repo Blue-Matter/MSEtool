@@ -11,7 +11,7 @@
 #' @param AgeBins Numeric vector. Age class values used to name
 #'   the `Bin` dimension of populated age-composition arrays. Required when
 #'   `Obs@LandingsAtAge` or `Obs@DiscardsAtAge` is non-empty.
-#' @param SizeBins Numeric vector. Length class midpoints, used to name the
+#' @param SizeBins Numeric vector. Lower bounds of the length bins, used to name the
 #'   `Bin` dimension of populated size-composition arrays. Required when
 #'   `Obs@LandingsAtSize` or `Obs@DiscardsAtSize` is non-empty.
 #'

@@ -54,8 +54,8 @@
 #'   (`Sim × Age × Class × Year`). Populated automatically during [Populate()]
 #'   from `MeanAtAge`, `CVatAge`, `Dist`, and `TruncSD`; supply directly only
 #'   when overriding the computed key. Default `NULL`.
-#' @param Classes `numeric` or `NULL`. Length class midpoints in units of
-#'   `Units`. Populated automatically during [Populate()] if `NULL`. Default
+#' @param Classes `numeric` or `NULL`. Lower bounds of the length bins in
+#'   units of `Units`. Bin `k` spans `[Classes[k], Classes[k+1])`; the final bin is open-ended. Populated automatically during [Populate()] if `NULL`. Default
 #'   `NULL`.
 #' @param Misc `list`. Used internally. Default `list()`.
 #' @param x A [length-class] object for slot accessors, or an object that contains

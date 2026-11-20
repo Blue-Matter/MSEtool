@@ -174,6 +174,13 @@
 #' class. If `Classes` differ from the fleet's classes, each fleet class takes
 #' the value of the supplied bin containing its midpoint.
 #' 
+#' For a stock complex, the schedule applies to every stock in the complex. A
+#' `MeanAtAge` schedule (other than a single value for all ages) requires the
+#' stocks to share the same age classes, and a `MeanAtLength` or
+#' `MeanAtWeight` schedule without `Classes` requires them to share the same
+#' size classes. Otherwise use `Pars`, or give `Classes` with the at-size
+#' schedule.
+#' 
 #' 
 #' See section below for more details.
 #'
