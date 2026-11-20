@@ -56,10 +56,11 @@
 #' @param isAtLength Logical. Whether `MeanAtLength`/`MeanAtWeight` (or an
 #'   at-length/at-weight `Model`) reflect a genuinely length- or weight-
 #'   retention schedule. Set `FALSE` when retention is only meaningfully
-#'   defined at age (e.g. imported from an age-structured assessment) so that
-#'   fleet weight-at-age calculations skip weighting by this object's at-length
-#'   schedule and use the stock's plain weight-at-age
-#'   instead. Default `TRUE`.
+#'   defined at age (e.g. imported from an age-structured assessment); fleet
+#'   retained weight-at-age then equals the selected weight-at-age. Set to
+#'   `FALSE` automatically when retention is supplied only as `MeanAtAge` or
+#'   `MeanAtWeight`.
+#'   Default `TRUE`.
 #' @param Misc List. Miscellaneous additional inputs. Default `list()`.
 #' @param x A [retention-class] object, or an object that contains
 #'   `Retention` objects for `Retention<-` (see *Pass-Through Access*).
@@ -162,6 +163,7 @@ Retention <- function(Pars         = list(),
       'x' = '`Pars` must be a list',
       'i' = 'Currently as {.cls {class(Pars)}} object'
     ))
+  .CheckScheduleNotList('Retention', MeanAtAge, MeanAtLength, MeanAtWeight)
 
   object <- methods::new(
     "retention",
