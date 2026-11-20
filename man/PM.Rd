@@ -5,6 +5,8 @@
 \alias{PM_FFMSY}
 \alias{PM_SBSBMSY}
 \alias{PM_SPSPMSY}
+\alias{PM_SBSB0}
+\alias{PM_SPSP0}
 \alias{PM_Kobe}
 \alias{PM_Status}
 \alias{PM_Red}
@@ -30,6 +32,22 @@ PM_FFMSY(object, Ref = 1, Years = NULL, silent = TRUE)
 PM_SBSBMSY(object, Ref = 1, Years = NULL, silent = TRUE)
 
 PM_SPSPMSY(object, Ref = 1, Years = NULL, silent = TRUE)
+
+PM_SBSB0(
+  object,
+  Ref = 0.2,
+  type = c("Equilibrium", "Dynamic"),
+  Years = NULL,
+  silent = TRUE
+)
+
+PM_SPSP0(
+  object,
+  Ref = 0.2,
+  type = c("Equilibrium", "Dynamic"),
+  Years = NULL,
+  silent = TRUE
+)
 
 PM_Kobe(
   object,
@@ -57,23 +75,47 @@ PM_MinStatus(
   object,
   Reference = c("MSY", "Unfished"),
   Definition = c("SBiomass", "SProduction"),
+  type = c("Equilibrium", "Dynamic"),
   Years = NULL,
   silent = TRUE
 )
 
-PM_SBSBlim(object, Lim, Years = NULL, silent = TRUE)
+PM_SBSBlim(
+  object,
+  Lim,
+  Reference = c("MSY", "Unfished"),
+  type = c("Equilibrium", "Dynamic"),
+  Years = NULL,
+  silent = TRUE
+)
 
-PM_SPSPlim(object, Lim, Years = NULL, silent = TRUE)
+PM_SPSPlim(
+  object,
+  Lim,
+  Reference = c("MSY", "Unfished"),
+  type = c("Equilibrium", "Dynamic"),
+  Years = NULL,
+  silent = TRUE
+)
 
 PM_Safety(
   object,
   Lim,
   Definition = c("SBiomass", "SProduction"),
+  Reference = c("MSY", "Unfished"),
+  type = c("Equilibrium", "Dynamic"),
   Years = NULL,
   silent = TRUE
 )
 
-PM_Rebuild(object, Year, Target = 1, silent = TRUE)
+PM_Rebuild(
+  object,
+  Year,
+  Target = NULL,
+  Reference = c("MSY", "Unfished"),
+  type = c("Equilibrium", "Dynamic"),
+  silent = TRUE
+)
 
 PM_Removals(object, Years = NULL, Stocks = NULL, silent = TRUE)
 
@@ -135,8 +177,9 @@ PM_TACAttained(object, Years = NULL, Stocks = NULL, silent = TRUE)
 \arguments{
 \item{object}{An \link[=mse-class]{mse} object, or a \code{list} of \link[=mse-class]{mse} objects.}
 
-\item{Ref}{Numeric, or \code{NULL}. Reference/threshold value for \code{PM_FFMSY}/
-\code{PM_SBSBMSY}/\code{PM_SPSPMSY}'s probability metric (default \code{1}). Pass
+\item{Ref}{Numeric, or \code{NULL}. Reference/threshold value for the
+probability metric of \code{PM_FFMSY}, \code{PM_SBSBMSY}, and \code{PM_SPSPMSY}
+(default \code{1}), and \code{PM_SBSB0} and \code{PM_SPSP0} (default \code{0.2}). Pass
 \code{Ref = NULL} instead to get the mean projected ratio itself (\code{Stat}
 averaged across simulations, on its natural scale) rather than a
 probability against a threshold -- \code{Prob} is left \code{NA} in that case,
@@ -150,6 +193,11 @@ excluding any "interim" years before \code{OM@MPStartYear} (see
 \item{silent}{Logical. Suppress the \code{\link[=CombineMSE]{CombineMSE()}} summary message when
 \code{object} is a \code{list}. Default \code{TRUE}.}
 
+\item{type}{Character. The unfished reference level of \code{PM_SBSB0},
+\code{PM_SPSP0}, and the metrics with \code{Reference = "Unfished"}:
+\code{"Equilibrium"} (\code{SB0}, default) or \code{"Dynamic"} (\code{dSB0}). Ignored when
+\code{Reference = "MSY"}.}
+
 \item{Quadrant}{Character. The Kobe quadrant of \code{PM_Kobe}: \code{"green"},
 \code{"red"}, \code{"yellow"}, or \code{"orange"}. See Details.}
 
@@ -158,20 +206,22 @@ excluding any "interim" years before \code{OM@MPStartYear} (see
 \code{"SBiomass"} (spawning biomass, default) or \code{"SProduction"} (spawning
 production).}
 
-\item{Reference}{Character. The reference point of \code{PM_MinStatus}:
-\code{"MSY"} (\code{SBMSY}, default) or \code{"Unfished"} (equilibrium unfished
-spawning biomass, \code{SB0}).}
+\item{Reference}{Character. The reference point of \code{PM_MinStatus},
+\code{PM_SBSBlim}, \code{PM_SPSPlim}, \code{PM_Safety}, and \code{PM_Rebuild}: \code{"MSY"}
+(\code{SBMSY}/\code{SPMSY}, default) or \code{"Unfished"} (unfished spawning biomass or
+production, \code{SB0}/\code{SP0}).}
 
 \item{Lim}{Numeric, or a named numeric vector keyed by stock name. Limit
-reference point, expressed as a fraction of \code{SBMSY} (\code{PM_SBSBlim}) or
-\code{SPMSY} (\code{PM_SPSPlim}), or of \code{SBMSY}/\code{SPMSY} per \code{Definition}
-(\code{PM_Safety}) -- e.g. \code{Lim = 0.5} tests against half of \code{SBMSY}.}
+reference point, expressed as a fraction of the reference level selected
+by \code{Reference} -- e.g. \code{Lim = 0.5} tests against half of \code{SBMSY}, and
+\code{Lim = 0.2} with \code{Reference = "Unfished"} against 20\% of \code{SB0}.}
 
 \item{Year}{Numeric. The single projection year in which to evaluate
 rebuilding, used by \code{PM_Rebuild}.}
 
-\item{Target}{Numeric. Rebuilding target, expressed as a multiple of
-\code{SBMSY}, used by \code{PM_Rebuild}. Default \code{1}.}
+\item{Target}{Numeric. Rebuilding target of \code{PM_Rebuild}, expressed as a
+multiple of the reference level selected by \code{Reference}. Default \code{NULL}
+is \code{1} for \code{Reference = "MSY"}; required for \code{Reference = "Unfished"}.}
 
 \item{Stocks}{Character vector of stock names to include. Default \code{NULL}
 uses the automatic complex/spawning-stock grouping described above.}
@@ -244,9 +294,21 @@ quadrants partition every year: \code{"green"} (\code{SB > SBMSY} and \code{F < 
 green quadrant and \code{PM_Red} the red quadrant.
 
 \code{PM_MinStatus} is the lowest annual stock status in each simulation over
-\code{Years}, relative to \code{SBMSY} (\code{Reference = "MSY"}) or to the equilibrium
-unfished spawning biomass \code{SB0} (\code{Reference = "Unfished"}), at the complex
+\code{Years}, relative to \code{SBMSY} (\code{Reference = "MSY"}) or to the unfished
+spawning biomass \code{SB0} (\code{Reference = "Unfished"}), at the complex
 level. It is a statistic, not a probability (\code{Prob} is \code{NA}).
+
+\code{PM_SBSB0} and \code{PM_SPSP0} are spawning biomass and spawning production
+relative to the unfished level, per spawning stock. \code{PM_SBSBlim},
+\code{PM_SPSPlim}, \code{PM_Safety}, and \code{PM_Rebuild} are relative to \code{SBMSY} by
+default, or to the unfished level with \code{Reference = "Unfished"}. For all
+unfished-based metrics, \code{type = "Equilibrium"} (default) uses the
+equilibrium unfished level \code{SB0}, and \code{type = "Dynamic"} uses the dynamic
+unfished level \code{dSB0}, the spawning biomass of the population projected with
+no fishing and the same recruitment deviations (see
+\code{\link[=CalcUnfished_Dynamic]{CalcUnfished_Dynamic()}}). \code{dSB0} is calculated for every historical and
+projection year, so the status in each year is relative to \code{dSB0} in the
+same year.
 
 \code{PM_TACLimited} is the proportion of management cycles in each simulation
 in which the change in the TAC is at the maximum allowed by the MP:
@@ -275,9 +337,10 @@ points (\code{PM_FFMSY}, \code{PM_SBSBMSY}, \code{PM_SPSPMSY}, \code{PM_Status},
 \code{PM_MinStatus}, \code{PM_SBSBlim}, \code{PM_SPSPlim}, \code{PM_Safety}, and \code{PM_Rebuild})
 are evaluated on annual status per calendar year, as returned by
 \code{\link[=F_FMSY]{F_FMSY()}}, \code{\link[=SB_SBMSY]{SB_SBMSY()}}, and \code{\link[=SP_SPMSY]{SP_SPMSY()}}, and \code{Years}/\code{Year} refer to
-calendar years. \code{PM_MinStatus} with \code{Reference = "Unfished"} uses the
-ratio to unfished spawning biomass in the reference season of each year
-(see \code{\link[=RefSeason]{RefSeason()}}), the season used for \code{SB/SBMSY}. The catch-based
+calendar years. \code{PM_SBSB0}, \code{PM_SPSP0}, and the metrics with
+\code{Reference = "Unfished"} use the ratio to unfished spawning biomass in the
+reference season of each year (see \code{\link[=RefSeason]{RefSeason()}}), the season used for
+\code{SB/SBMSY}. The catch-based
 metrics (\code{PM_Yield}, \code{PM_Removals}, \code{PM_Landings}, \code{PM_LogYield},
 \code{PM_RelYield}, and \code{PM_AAVY}/\code{PM_Stability} with \code{Type = "Removals"} or
 \code{"Landings"}) use annual catch, summed over the seasons of each complete

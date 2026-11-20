@@ -31,9 +31,21 @@
 #' green quadrant and `PM_Red` the red quadrant.
 #'
 #' `PM_MinStatus` is the lowest annual stock status in each simulation over
-#' `Years`, relative to `SBMSY` (`Reference = "MSY"`) or to the equilibrium
-#' unfished spawning biomass `SB0` (`Reference = "Unfished"`), at the complex
+#' `Years`, relative to `SBMSY` (`Reference = "MSY"`) or to the unfished
+#' spawning biomass `SB0` (`Reference = "Unfished"`), at the complex
 #' level. It is a statistic, not a probability (`Prob` is `NA`).
+#'
+#' `PM_SBSB0` and `PM_SPSP0` are spawning biomass and spawning production
+#' relative to the unfished level, per spawning stock. `PM_SBSBlim`,
+#' `PM_SPSPlim`, `PM_Safety`, and `PM_Rebuild` are relative to `SBMSY` by
+#' default, or to the unfished level with `Reference = "Unfished"`. For all
+#' unfished-based metrics, `type = "Equilibrium"` (default) uses the
+#' equilibrium unfished level `SB0`, and `type = "Dynamic"` uses the dynamic
+#' unfished level `dSB0`, the spawning biomass of the population projected with
+#' no fishing and the same recruitment deviations (see
+#' [CalcUnfished_Dynamic()]). `dSB0` is calculated for every historical and
+#' projection year, so the status in each year is relative to `dSB0` in the
+#' same year.
 #'
 #' `PM_TACLimited` is the proportion of management cycles in each simulation
 #' in which the change in the TAC is at the maximum allowed by the MP:
@@ -62,9 +74,10 @@
 #' `PM_MinStatus`, `PM_SBSBlim`, `PM_SPSPlim`, `PM_Safety`, and `PM_Rebuild`)
 #' are evaluated on annual status per calendar year, as returned by
 #' [F_FMSY()], [SB_SBMSY()], and [SP_SPMSY()], and `Years`/`Year` refer to
-#' calendar years. `PM_MinStatus` with `Reference = "Unfished"` uses the
-#' ratio to unfished spawning biomass in the reference season of each year
-#' (see [RefSeason()]), the season used for `SB/SBMSY`. The catch-based
+#' calendar years. `PM_SBSB0`, `PM_SPSP0`, and the metrics with
+#' `Reference = "Unfished"` use the ratio to unfished spawning biomass in the
+#' reference season of each year (see [RefSeason()]), the season used for
+#' `SB/SBMSY`. The catch-based
 #' metrics (`PM_Yield`, `PM_Removals`, `PM_Landings`, `PM_LogYield`,
 #' `PM_RelYield`, and `PM_AAVY`/`PM_Stability` with `Type = "Removals"` or
 #' `"Landings"`) use annual catch, summed over the seasons of each complete
@@ -72,25 +85,31 @@
 #' [PMYears()] for the years in which the MPs are active, or a window of them.
 #'
 #' @param object An [mse-class] object, or a `list` of [mse-class] objects.
-#' @param Ref Numeric, or `NULL`. Reference/threshold value for `PM_FFMSY`/
-#'   `PM_SBSBMSY`/`PM_SPSPMSY`'s probability metric (default `1`). Pass
+#' @param Ref Numeric, or `NULL`. Reference/threshold value for the
+#'   probability metric of `PM_FFMSY`, `PM_SBSBMSY`, and `PM_SPSPMSY`
+#'   (default `1`), and `PM_SBSB0` and `PM_SPSP0` (default `0.2`). Pass
 #'   `Ref = NULL` instead to get the mean projected ratio itself (`Stat`
 #'   averaged across simulations, on its natural scale) rather than a
 #'   probability against a threshold -- `Prob` is left `NA` in that case,
 #'   consistent with other natural-scale metrics such as `PM_Yield()`.
 #' @param Lim Numeric, or a named numeric vector keyed by stock name. Limit
-#'   reference point, expressed as a fraction of `SBMSY` (`PM_SBSBlim`) or
-#'   `SPMSY` (`PM_SPSPlim`), or of `SBMSY`/`SPMSY` per `Definition`
-#'   (`PM_Safety`) -- e.g. `Lim = 0.5` tests against half of `SBMSY`.
+#'   reference point, expressed as a fraction of the reference level selected
+#'   by `Reference` -- e.g. `Lim = 0.5` tests against half of `SBMSY`, and
+#'   `Lim = 0.2` with `Reference = "Unfished"` against 20% of `SB0`.
 #' @param Definition Character. Which stock-status metric to use in
 #'   `PM_Status`, `PM_Kobe`, `PM_Red`, `PM_MinStatus`, and `PM_Safety`:
 #'   `"SBiomass"` (spawning biomass, default) or `"SProduction"` (spawning
 #'   production).
 #' @param Quadrant Character. The Kobe quadrant of `PM_Kobe`: `"green"`,
 #'   `"red"`, `"yellow"`, or `"orange"`. See Details.
-#' @param Reference Character. The reference point of `PM_MinStatus`:
-#'   `"MSY"` (`SBMSY`, default) or `"Unfished"` (equilibrium unfished
-#'   spawning biomass, `SB0`).
+#' @param Reference Character. The reference point of `PM_MinStatus`,
+#'   `PM_SBSBlim`, `PM_SPSPlim`, `PM_Safety`, and `PM_Rebuild`: `"MSY"`
+#'   (`SBMSY`/`SPMSY`, default) or `"Unfished"` (unfished spawning biomass or
+#'   production, `SB0`/`SP0`).
+#' @param type Character. The unfished reference level of `PM_SBSB0`,
+#'   `PM_SPSP0`, and the metrics with `Reference = "Unfished"`:
+#'   `"Equilibrium"` (`SB0`, default) or `"Dynamic"` (`dSB0`). Ignored when
+#'   `Reference = "MSY"`.
 #' @param IncludeFirst Logical. In `PM_AAVY`, `PM_Stability`, and
 #'   `PM_TACLimited`, include the change from the value in effect before the
 #'   first management cycle in `Years` to the first value: for the first
@@ -111,8 +130,9 @@
 #'   `"Removals"`, or `"Landings"`.
 #' @param Year Numeric. The single projection year in which to evaluate
 #'   rebuilding, used by `PM_Rebuild`.
-#' @param Target Numeric. Rebuilding target, expressed as a multiple of
-#'   `SBMSY`, used by `PM_Rebuild`. Default `1`.
+#' @param Target Numeric. Rebuilding target of `PM_Rebuild`, expressed as a
+#'   multiple of the reference level selected by `Reference`. Default `NULL`
+#'   is `1` for `Reference = "MSY"`; required for `Reference = "Unfished"`.
 #' @param Threshold Numeric. Maximum acceptable interval-to-interval change
 #'   in the series selected by `Type`, used by `PM_Stability`.
 #' @param Fleets Character vector of fleet names to include in `PM_AAVE`.
@@ -151,6 +171,13 @@ NULL
 #' with the probability metric \eqn{P(SB/SB_{MSY} > Ref)}{P(SB/SBMSY > Ref)}
 #' (or the SP equivalent).
 #'
+#' `PM_SBSB0` / `PM_SPSP0`: spawning biomass or spawning production relative
+#' to its unfished level,
+#' \deqn{SB_{s,y} / SB_{0,s,y} \quad\text{or}\quad SP_{s,y} / SP_{0,s,y}}{SB[s,y] / SB0[s,y]  or  SP[s,y] / SP0[s,y]}
+#' with the probability metric \eqn{P(SB/SB_0 > Ref)}{P(SB/SB0 > Ref)} (or
+#' the SP equivalent), where \eqn{SB_0}{SB0} is the equilibrium or dynamic
+#' unfished level according to `type`.
+#'
 #' `PM_Status`: the joint probability that a complex is neither overfished
 #' nor experiencing overfishing,
 #' \deqn{P\left(\frac{SB_{y}}{SB_{MSY}} > 1 \ \text{and}\ \frac{F_{y}}{F_{MSY}} < 1\right)}{P( SB/SBMSY > 1  and  F/FMSY < 1 )}
@@ -168,6 +195,10 @@ NULL
 #' according to `Reference`.
 #'
 #' @section Safety:
+#' The Safety and Rebuild metrics are shown relative to MSY; with
+#' `Reference = "Unfished"`, \eqn{SB_{MSY}}{SBMSY} is replaced by the
+#' unfished level \eqn{SB_{0,s,y}}{SB0[s,y]} selected by `type`.
+#'
 #' `PM_SBSBlim` / `PM_SPSPlim`: spawning biomass or spawning production
 #' relative to MSY, relative in turn to a limit fraction `Lim` of `SBMSY`/
 #' `SPMSY`,
@@ -184,8 +215,9 @@ NULL
 #' `Definition`.
 #'
 #' @section Rebuild:
-#' `PM_Rebuild`: for stocks overfished (\eqn{SB/SB_{MSY} < 1}{SB/SBMSY < 1})
-#' at the end of the historical period, the probability that the stock has
+#' `PM_Rebuild`: for stocks overfished (\eqn{SB/SB_{MSY} < 1}{SB/SBMSY < 1},
+#' or \eqn{SB/SB_0 < \mathrm{Target}}{SB/SB0 < Target} with
+#' `Reference = "Unfished"`) at the end of the historical period, the probability that the stock has
 #' rebuilt to a target multiple of \eqn{SB_{MSY}}{SBMSY} by a target year,
 #' \deqn{P\left(\frac{SB_{s,\mathrm{Year}}}{SB_{MSY,s}} > \mathrm{Target}\right)}{P( SB[s,Year] / SBMSY[s] > Target )}
 #'
@@ -644,6 +676,61 @@ PM_SPSPMSY <- function(object, Ref = 1, Years = NULL, silent = TRUE) {
 }
 class(PM_SPSPMSY) <- 'pm'
 
+# Annual status per spawning stock relative to MSY or unfished.
+.StockStatusDF <- function(object, Definition = 'SBiomass', Reference = 'MSY',
+                           type = 'Equilibrium') {
+  OM <- object@OM
+  df <- if (Reference == 'MSY') {
+    FUN <- if (Definition == 'SProduction') SP_SPMSY else SB_SBMSY
+    FUN(object, df = TRUE, Reduce = FALSE)
+  } else {
+    FUN <- if (Definition == 'SProduction') SP_SP0 else SB_SB0
+    FUN(object, type = type, df = TRUE, Reduce = FALSE)
+  }
+  df <- df[df$Stock %in% .SpawningStockNames(OM), ]
+  if (Reference == 'Unfished')
+    df <- .AnnualDF(df, OM, 'RefSeason')
+  df
+}
+
+# e.g. 'SBMSY', 'SB0', 'dSB0'
+.StatusRefLabel <- function(Metric, Reference, type = 'Equilibrium') {
+  if (Reference == 'MSY')
+    return(paste0(Metric, 'MSY'))
+  paste0(if (type == 'Dynamic') 'd' else '', Metric, '0')
+}
+
+.UnfishedPM <- function(object, Definition, Ref, type, Years, silent) {
+  type   <- match.arg(type, c('Equilibrium', 'Dynamic'))
+  object <- .CoercePMInput(object, silent)
+  df     <- .StockStatusDF(object, Definition, 'Unfished', type)
+
+  Metric <- if (Definition == 'SProduction') 'SP' else 'SB'
+  RefNm  <- .StatusRefLabel(Metric, 'Unfished', type)
+  Name   <- paste0(Metric, '_', RefNm)
+  if (is.null(Ref))
+    return(.BuildPM(df, Ref = NA_real_, Years = Years, op = NULL, Name = Name,
+                    Caption = paste0('Mean projected ', Metric, '/', RefNm), OM = object@OM))
+  .BuildPM(df, Ref = Ref, Years = Years, op = `>`, Name = Name,
+           Caption = paste0('P(', Metric, ' > ', Ref, ' ', RefNm, ')'), OM = object@OM)
+}
+
+#' @rdname PM
+#' @export
+PM_SBSB0 <- function(object, Ref = 0.2, type = c('Equilibrium', 'Dynamic'),
+                     Years = NULL, silent = TRUE) {
+  .UnfishedPM(object, 'SBiomass', Ref, type, Years, silent)
+}
+class(PM_SBSB0) <- 'pm'
+
+#' @rdname PM
+#' @export
+PM_SPSP0 <- function(object, Ref = 0.2, type = c('Equilibrium', 'Dynamic'),
+                     Years = NULL, silent = TRUE) {
+  .UnfishedPM(object, 'SProduction', Ref, type, Years, silent)
+}
+class(PM_SPSP0) <- 'pm'
+
 
 .StockStatusSeries <- function(object, Definition) {
   if (Definition == 'SProduction') {
@@ -734,15 +821,17 @@ class(PM_Red) <- 'pm'
 #' @export
 PM_MinStatus <- function(object, Reference = c('MSY', 'Unfished'),
                          Definition = c('SBiomass', 'SProduction'),
+                         type = c('Equilibrium', 'Dynamic'),
                          Years = NULL, silent = TRUE) {
   Reference  <- match.arg(Reference)
   Definition <- match.arg(Definition)
+  type       <- match.arg(type)
   object <- .CoercePMInput(object, silent)
 
   df <- if (Reference == 'MSY') {
     Array2DF(.ComplexStatusSeries(object, Definition))
   } else {
-    .ComplexDepletionDF(object, Definition)
+    .ComplexDepletionDF(object, Definition, type = type)
   }
   if ('Period' %in% names(df))
     df <- df[df$Period == 'Projection', ]
@@ -756,9 +845,9 @@ PM_MinStatus <- function(object, Reference = c('MSY', 'Unfished'),
     dplyr::summarise(Value = min(.data$Value), Year = max(.data$Year), .groups = 'drop')
 
   Metric <- if (Definition == 'SProduction') 'SP' else 'SB'
-  RefNm  <- if (Reference == 'MSY') 'MSY' else '0'
   out <- .BuildPM(df, Ref = NA_real_, Years = NULL, op = NULL, Name = 'MinStatus',
-                  Caption = paste0('Minimum ', Metric, '/', Metric, RefNm))
+                  Caption = paste0('Minimum ', Metric, '/',
+                                   .StatusRefLabel(Metric, Reference, type)))
   out@Years <- YearsOut
   out
 }
@@ -766,52 +855,54 @@ class(PM_MinStatus) <- 'pm'
 
 # ---- Safety: limit reference points ----------------------------------------
 
-#' @rdname PM
-#' @export
-PM_SBSBlim <- function(object, Lim, Years = NULL, silent = TRUE) {
+.LimPM <- function(object, Lim, Definition, Reference, type, Years, silent) {
   if (missing(Lim) || is.null(Lim))
     cli::cli_abort("`Lim` must be supplied.")
+  Reference <- match.arg(Reference, c('MSY', 'Unfished'))
+  type      <- match.arg(type, c('Equilibrium', 'Dynamic'))
   object <- .CoercePMInput(object, silent)
 
-  df <- SB_SBMSY(object, df = TRUE, Reduce = FALSE)
-  df <- df[df$Stock %in% .SpawningStockNames(object@OM), ]
+  df <- .StockStatusDF(object, Definition, Reference, type)
   df$Value <- df$Value / .ResolveRefByStock(Lim, df$Stock)
 
-  .BuildPM(df, Ref = 1, Years = Years, op = `>`,
-           Name = 'SB_SBlim', Caption = 'P(SB/SBMSY > Lim)', OM = object@OM)
+  Metric <- if (Definition == 'SProduction') 'SP' else 'SB'
+  RefNm  <- .StatusRefLabel(Metric, Reference, type)
+  Name   <- if (Reference == 'MSY') paste0(Metric, '_', Metric, 'lim') else paste0(Metric, '_', RefNm, 'lim')
+  .BuildPM(df, Ref = 1, Years = Years, op = `>`, Name = Name,
+           Caption = paste0('P(', Metric, '/', RefNm, ' > Lim)'), OM = object@OM)
+}
+
+#' @rdname PM
+#' @export
+PM_SBSBlim <- function(object, Lim, Reference = c('MSY', 'Unfished'),
+                       type = c('Equilibrium', 'Dynamic'), Years = NULL, silent = TRUE) {
+  .LimPM(object, Lim, 'SBiomass', Reference, type, Years, silent)
 }
 class(PM_SBSBlim) <- 'pm'
 
 #' @rdname PM
 #' @export
-PM_SPSPlim <- function(object, Lim, Years = NULL, silent = TRUE) {
-  if (missing(Lim) || is.null(Lim))
-    cli::cli_abort("`Lim` must be supplied.")
-  object <- .CoercePMInput(object, silent)
-
-  df <- SP_SPMSY(object, df = TRUE, Reduce = FALSE)
-  df <- df[df$Stock %in% .SpawningStockNames(object@OM), ]
-  df$Value <- df$Value / .ResolveRefByStock(Lim, df$Stock)
-
-  .BuildPM(df, Ref = 1, Years = Years, op = `>`,
-           Name = 'SP_SPlim', Caption = 'P(SP/SPMSY > Lim)', OM = object@OM)
+PM_SPSPlim <- function(object, Lim, Reference = c('MSY', 'Unfished'),
+                       type = c('Equilibrium', 'Dynamic'), Years = NULL, silent = TRUE) {
+  .LimPM(object, Lim, 'SProduction', Reference, type, Years, silent)
 }
 class(PM_SPSPlim) <- 'pm'
 
 #' @rdname PM
 #' @export
 PM_Safety <- function(object, Lim, Definition = c('SBiomass', 'SProduction'),
-                       Years = NULL, silent = TRUE) {
+                      Reference = c('MSY', 'Unfished'),
+                      type = c('Equilibrium', 'Dynamic'),
+                      Years = NULL, silent = TRUE) {
   if (missing(Lim) || is.null(Lim))
     cli::cli_abort("`Lim` must be supplied.")
   Definition <- match.arg(Definition)
+  Reference  <- match.arg(Reference)
+  type       <- match.arg(type)
   object <- .CoercePMInput(object, silent)
 
-  df <- if (Definition == 'SProduction')
-    SP_SPMSY(object, df = TRUE, Reduce = FALSE)
-  else
-    SB_SBMSY(object, df = TRUE, Reduce = FALSE)
-  df <- df[df$Period == 'Projection' & df$Stock %in% .SpawningStockNames(object@OM), ]
+  df <- .StockStatusDF(object, Definition, Reference, type)
+  df <- df[df$Period == 'Projection', ]
   df <- .FilterMPActiveYears(df, object@OM)
   if (!is.null(Years))
     df <- df[df$Year %in% Years, ]
@@ -827,10 +918,12 @@ PM_Safety <- function(object, Lim, Definition = c('SBiomass', 'SProduction'),
   ProbArr <- .PMArray(safe_df, 'Met')
   MeanArr <- .PMMean(ProbArr)
 
-  metric <- if (Definition == 'SProduction') 'SP' else 'SB'
+  Metric <- if (Definition == 'SProduction') 'SP' else 'SB'
+  RefNm  <- .StatusRefLabel(Metric, Reference, type)
+  Name   <- paste0(Metric, '_Safety', if (Reference == 'MSY') '' else paste0('_', RefNm))
   methods::new('pm',
-               Name = paste0(metric, '_Safety'),
-               Caption = paste0('P(', metric, '/', metric, 'MSY never drops below Lim during the projection)'),
+               Name = Name,
+               Caption = paste0('P(', Metric, '/', RefNm, ' never drops below Lim during the projection)'),
                Stat = StatArr, Ref = NA_real_, Prob = ProbArr, Mean = MeanArr,
                MPs = sort(unique(df$MP)), Years = YearsOut)
 }
@@ -838,22 +931,31 @@ class(PM_Safety) <- 'pm'
 
 #' @rdname PM
 #' @export
-PM_Rebuild <- function(object, Year, Target = 1, silent = TRUE) {
+PM_Rebuild <- function(object, Year, Target = NULL, Reference = c('MSY', 'Unfished'),
+                       type = c('Equilibrium', 'Dynamic'), silent = TRUE) {
   if (missing(Year))
     cli::cli_abort("`Year` (the rebuilding target year) must be supplied.")
+  Reference <- match.arg(Reference)
+  type      <- match.arg(type)
+  if (is.null(Target)) {
+    if (Reference == 'Unfished')
+      cli::cli_abort("`Target` must be supplied when `Reference = \"Unfished\"`.")
+    Target <- 1
+  }
   object <- .CoercePMInput(object, silent)
 
-  sb <- SB_SBMSY(object, df = TRUE, Reduce = FALSE)
-  sb <- sb[sb$Stock %in% .SpawningStockNames(object@OM), ]
+  sb <- .StockStatusDF(object, 'SBiomass', Reference, type)
+  RefNm <- .StatusRefLabel('SB', Reference, type)
+  Threshold <- if (Reference == 'MSY') 1 else Target
 
   lastHistYr <- max(floor(Years(object@OM, 'Historical')))
   baseline <- sb[sb$Period == 'Historical' & sb$Year == lastHistYr, ] |>
     dplyr::group_by(.data$Stock) |>
-    dplyr::summarise(Overfished = mean(.data$Value) < 1, .groups = 'drop')
+    dplyr::summarise(Overfished = mean(.data$Value) < Threshold, .groups = 'drop')
   overfished_stocks <- baseline$Stock[baseline$Overfished]
 
   if (!length(overfished_stocks))
-    cli::cli_alert_info("No stocks are overfished (SB < SBMSY) at the end of the historical period.")
+    cli::cli_alert_info("No stocks are overfished (SB < {if (Reference == 'MSY') '' else paste0(Threshold, ' ')}{RefNm}) at the end of the historical period.")
 
   target_df <- sb[sb$Period == 'Projection' & sb$Year == Year &
                     sb$Stock %in% overfished_stocks, ]
@@ -861,7 +963,8 @@ PM_Rebuild <- function(object, Year, Target = 1, silent = TRUE) {
   target_df$Value <- target_df$Value / Target
 
   .BuildPM(target_df, Ref = 1, Years = Year, op = `>`,
-           Name = 'Rebuild', Caption = paste0('P(SB > ', Target, ' SBMSY by ', Year, ')'))
+           Name = if (Reference == 'MSY') 'Rebuild' else paste0('Rebuild_', RefNm),
+           Caption = paste0('P(SB > ', Target, ' ', RefNm, ' by ', Year, ')'))
 }
 class(PM_Rebuild) <- 'pm'
 

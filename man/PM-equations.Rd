@@ -21,6 +21,13 @@ relative to its value at MSY,
 with the probability metric \eqn{P(SB/SB_{MSY} > Ref)}{P(SB/SBMSY > Ref)}
 (or the SP equivalent).
 
+\code{PM_SBSB0} / \code{PM_SPSP0}: spawning biomass or spawning production relative
+to its unfished level,
+\deqn{SB_{s,y} / SB_{0,s,y} \quad\text{or}\quad SP_{s,y} / SP_{0,s,y}}{SB[s,y] / SB0[s,y]  or  SP[s,y] / SP0[s,y]}
+with the probability metric \eqn{P(SB/SB_0 > Ref)}{P(SB/SB0 > Ref)} (or
+the SP equivalent), where \eqn{SB_0}{SB0} is the equilibrium or dynamic
+unfished level according to \code{type}.
+
 \code{PM_Status}: the joint probability that a complex is neither overfished
 nor experiencing overfishing,
 \deqn{P\left(\frac{SB_{y}}{SB_{MSY}} > 1 \ \text{and}\ \frac{F_{y}}{F_{MSY}} < 1\right)}{P( SB/SBMSY > 1  and  F/FMSY < 1 )}
@@ -40,6 +47,10 @@ according to \code{Reference}.
 
 \section{Safety}{
 
+The Safety and Rebuild metrics are shown relative to MSY; with
+\code{Reference = "Unfished"}, \eqn{SB_{MSY}}{SBMSY} is replaced by the
+unfished level \eqn{SB_{0,s,y}}{SB0[s,y]} selected by \code{type}.
+
 \code{PM_SBSBlim} / \code{PM_SPSPlim}: spawning biomass or spawning production
 relative to MSY, relative in turn to a limit fraction \code{Lim} of \code{SBMSY}/
 \code{SPMSY},
@@ -58,8 +69,9 @@ where \code{SB} is spawning biomass or spawning production according to
 
 \section{Rebuild}{
 
-\code{PM_Rebuild}: for stocks overfished (\eqn{SB/SB_{MSY} < 1}{SB/SBMSY < 1})
-at the end of the historical period, the probability that the stock has
+\code{PM_Rebuild}: for stocks overfished (\eqn{SB/SB_{MSY} < 1}{SB/SBMSY < 1},
+or \eqn{SB/SB_0 < \mathrm{Target}}{SB/SB0 < Target} with
+\code{Reference = "Unfished"}) at the end of the historical period, the probability that the stock has
 rebuilt to a target multiple of \eqn{SB_{MSY}}{SBMSY} by a target year,
 \deqn{P\left(\frac{SB_{s,\mathrm{Year}}}{SB_{MSY,s}} > \mathrm{Target}\right)}{P( SB[s,Year] / SBMSY[s] > Target )}
 }
