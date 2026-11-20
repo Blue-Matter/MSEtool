@@ -204,7 +204,8 @@
 #' into identical parts leaves the effort and fishing mortality in it
 #' unchanged. Areas with no exploitable biomass receive no effort when
 #' `Targeting > 0`. Areas closed to the fleet for every stock (`Closure = 0`)
-#' receive no effort.
+#' receive no effort, including under a user-specified `Distribution`, whose
+#' share for a closed area goes to the fleet's open areas.
 #'
 #' ## Effort-to-Trips Conversion and Angler Scaling
 #'

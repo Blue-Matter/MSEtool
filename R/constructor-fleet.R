@@ -31,7 +31,9 @@
 #'   Default is an empty [discardmortality-class].
 #' @param Closure Numeric array or `NULL`. Spatio-temporal closure schedule
 #'   with dimensions `Sim x Year x Area`. Values of 1 indicate an open area;
-#'   0 indicates a closed area. The `Sim` and `Year` dimensions may be length
+#'   0 indicates a closed area. The fleet does not fish an area closed for every
+#'   stock it catches; in an area closed for some stocks only, it releases
+#'   those stocks. The `Sim` and `Year` dimensions may be length
 #'   1 (replicated internally). Default is an empty array; if not specified,
 #'   [PopulateClosure()] sets all areas to open (1) across all simulations and
 #'   years.

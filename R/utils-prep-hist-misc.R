@@ -173,7 +173,16 @@
       fleet@Closure
     }) |> List2Array(pos = 3) # Sim, Year, Fleet, Area
   }) |> List2Array(pos = 2, "Stock") # Sim, Stock, Year, Fleet, Area
-  
+
+  if (length(dim(Hist@Distribution)) == 4) {
+    Before <- Hist@Distribution
+    for (sim in seq_len(dim(Before)[1]))
+      Hist <- .MaskClosedDistribution(Hist, sim, seq_len(dim(Before)[2]))
+    if (!identical(Before, Hist@Distribution))
+      cli::cli_warn(c("!" = "{.code Effort@Distribution} puts effort in areas closed to the fleet.",
+                      "i" = "That effort is moved to the fleet's open areas."), call = NULL)
+  }
+
   # 3D Array: Sim, Year, Fleet
   Hist@Misc$Spatial_Targeting <- purrr::map(Hist@OM@Fleet[[1]], \(fleet) {
     fleet@Effort@Targeting

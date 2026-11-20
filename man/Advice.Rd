@@ -243,6 +243,13 @@ Can only be \code{0} (closed) or \code{1} (open). Otherwise will be converted to
 \item vector length \code{nArea}
 \item matrix with \code{nFleet} rows and \code{nArea} columns: fleet-specific closures.
 }
+
+The closure applies to the stocks in the complex that returned it. A fleet
+does not fish an area that is closed to it for every stock it catches; any
+effort it would have put there, including a fleet- and area-specific
+\code{Effort}, goes to its open areas. In an area closed for some of its stocks
+only, the fleet keeps fishing and releases the closed stocks, with discard
+mortality from the fleet's \code{\link[=DiscardMortality]{DiscardMortality()}} object.
 }
 
 \subsection{Selectivity}{

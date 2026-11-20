@@ -24,6 +24,7 @@ inline void CalcArea_F(
     const std::vector<ConstArrayView5D>& DiscMort,    // [stock] sim, age, year, fleet, area
     const Array4D& Distribution,                      // sim, year, fleet, area
     const ConstArrayView4D& q,                        // sim, stock, year, fleet          
+    const ConstArrayView5D& Closure,                  // sim, stock, year, fleet, area
     const Array3D& Effort,                            // sim, year, fleet
     const ConstArrayView2D& RelSize,                  // sim, area
     const std::vector<bool>& UseDensity,              // [fleet]
@@ -76,6 +77,7 @@ inline void CalcArea_F(
       const int sim_dist  = sim_index<4>(sim, Distribution);
       const int sim_rs = sim_index<2>(sim, RelSize);
       const int sim_st = sim_index<4>(sim, StockTargeting);
+      const int sim_cl = sim_index<5>(sim, Closure);
       
       // Apical F per fleet per area, before the maxF constraint
       std::fill(q_buf.begin(), q_buf.end(), 0.0);
@@ -127,11 +129,13 @@ inline void CalcArea_F(
 
           const double q_eff = q_buf[fl * nArea + ar] * scale;
           if (q_eff <= 0.0) continue;
+          // a stock closed in an open cell is caught and released
+          const double open = (nArea == 1 || Closure(sim_cl, st, y, fl, ar) > 0.0) ? 1.0 : 0.0;
 
           for (int age = 0; age < nAge; ++age) {
 
             const double sel = S(sim_sel, age, y, fl, ar);
-            const double ret = R(sim_ret, age, y, fl, ar);
+            const double ret = R(sim_ret, age, y, fl, ar) * open;
             const double dm  = DM(sim_dm, age, y, fl, ar);
 
             const double F_interact = q_eff * sel;

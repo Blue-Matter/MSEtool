@@ -258,6 +258,7 @@
   if (!is.null(StatusQuoDist))
     for (fl in which(!Set))
       Proj@Distribution[sim, ProjInd, fl, ] <- StatusQuoDist[1, , fl, ]
+  Proj <- .MaskClosedDistribution(Proj, sim, ProjInd)
 
   if (!any(Set))
     return(Proj)
@@ -296,6 +297,7 @@
     if (!is.null(FleetDist))
       Proj@Distribution[sim, ProjInd, fl, ] <- FleetDist[1, , fl, ]
   }
+  Proj <- .MaskClosedDistribution(Proj, sim, ProjInd)
 
   # For multi-stock OMs, (re)optimise this fleet's stock-specific targeting
   # weights at the now-fixed effort

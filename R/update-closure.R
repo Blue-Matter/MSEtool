@@ -107,24 +107,22 @@
     
     # apply closure to all future time steps
     for (st in stocks) {
+      ArrayFill(Proj@Misc$Closure) <- AddDimension(NewClosure, 'Stock',
+                                                   val=StockNames[st],
+                                                   pos=2)
       for (fl in seq_along(FleetNames)) {
         Current <- Proj@OM@Fleet[[st]][[fl]]@Closure
-        
+
         if (dim(Current)[1] < sim)
           Current <- ExtendSims(Current, nSim)
-        
-        ArrayFill(Current) <- DropDimension(NewClosure, 'Fleet', FALSE)
-        
+
+        ArrayFill(Current) <- DropDimension(NewClosure[, , fl, , drop = FALSE], 'Fleet', FALSE)
+
         Proj@OM@Fleet[[st]][[fl]]@Closure <- Current
-        ArrayFill(Proj@Misc$Closure) <- AddDimension(NewClosure, 'Stock',
-                                                     val=StockNames[st],
-                                                     pos=2)
-     
-        
-  
       }
     }
   }
+  Proj <- .MaskClosedDistribution(Proj, sim, match(Year, dimnames(Proj@Distribution)$Year):dim(Proj@Distribution)[2])
   Proj
 }
 
@@ -137,4 +135,52 @@
     stop("Closure dimension does not match number of areas")
   
   invisible(TRUE)
+}
+
+# [Year, Fleet, Area] TRUE where the fleet is closed for every stock it can catch (q > 0)
+.ClosedFleetAreas <- function(Closure, q, sim, Years) {
+  Ind <- \(x, n) { i <- match(as.character(Years), dimnames(x)$Year); i[is.na(i)] <- n; i }
+  cl <- Closure[min(sim, dim(Closure)[1]), , Ind(Closure, dim(Closure)[3]), , , drop = FALSE]
+  qq <- q[min(sim, dim(q)[1]), , Ind(q, dim(q)[3]), , drop = FALSE]
+  dd <- dim(cl)[3:5]
+  Open <- Catch <- array(FALSE, dd)
+  for (st in seq_len(dim(cl)[2])) {
+    Fishes <- array(qq[1, st, , ] > 0, dd)
+    Fishes[is.na(Fishes)] <- FALSE
+    Catch <- Catch | Fishes
+    Open  <- Open | (Fishes & array(cl[1, st, , , ], dd) > 0)
+  }
+  Catch & !Open
+}
+
+# fixed area shares in closed cells move to the fleet's other fixed open cells; if none
+# hold effort the row is left to the engine, which allocates over open cells only
+.MaskDistributionRows <- function(Dist, Closed) {
+  for (y in seq_len(dim(Dist)[1])) for (fl in seq_len(dim(Dist)[2])) {
+    d <- Dist[y, fl, ]
+    cl <- Closed[y, fl, ]
+    Fixed <- !is.na(d)
+    if (!any(Fixed & cl & d > 0)) next
+    Mass <- sum(d[Fixed])
+    d[cl & Fixed] <- 0
+    OpenMass <- sum(d[Fixed & !cl])
+    Dist[y, fl, ] <- if (OpenMass > 0) {
+      d[Fixed & !cl] <- d[Fixed & !cl] * Mass / OpenMass
+      d
+    } else NA
+  }
+  Dist
+}
+
+.MaskClosedDistribution <- function(Proj, sim, TSInd) {
+  Closure <- Proj@Misc$Closure
+  if (is.null(Closure) || dim(Proj@Distribution)[4] < 2 || all(Closure > 0) || !length(TSInd))
+    return(Proj)
+  Dist <- Proj@Distribution[sim, TSInd, , , drop = FALSE]
+  if (all(is.na(Dist))) return(Proj)
+  Years <- dimnames(Proj@Distribution)[[2]][TSInd]
+  Closed <- .ClosedFleetAreas(Closure, Proj@Misc$Catchability, sim, Years)
+  Proj@Distribution[sim, TSInd, , ] <- .MaskDistributionRows(
+    array(Dist, dim(Dist)[-1]), Closed)
+  Proj
 }

@@ -553,12 +553,15 @@
   Dist <- get_slot("Distribution")
   if (!is.null(Dist)) {
     check_array(Dist, "Hist@Distribution", c(nSim, nyears, nFleet, nArea), Years)
-    if (nFleet > 1L && is.numeric(Dist) && length(dim(Dist)) == 4L) {
-      n_nan <- sum(is.nan(Dist[, 1L, , , drop = FALSE]))
-      if (n_nan > 0L)
-        add_err("Hist@Distribution: ", n_nan, " NaN value(s) in year-1 slice;",
-                " the competitor-fleet lag term reads Distribution[sim, y-1, fl, ar]",
-                " when y > 0, so year 1 must be initialised (0 is fine, NaN is not)")
+    if (is.numeric(Dist) && length(dim(Dist)) == 4L && nArea > 1L &&
+        is.numeric(Misc$Closure) && is.numeric(Misc$Catchability)) {
+      n_closed <- sum(vapply(seq_len(dim(Dist)[1]), \(s) {
+        Closed <- .ClosedFleetAreas(Misc$Closure, Misc$Catchability, s, dimnames(Dist)[[2]])
+        sum(array(Dist[s, , , ], dim(Dist)[-1]) > 0 & Closed, na.rm = TRUE)
+      }, numeric(1)))
+      if (n_closed > 0L)
+        add_err("Hist@Distribution: ", n_closed, " fixed area share(s) in areas ",
+                "closed to the fleet for every stock it catches")
     }
 
     if (is.numeric(Dist) && length(dim(Dist)) == 4L && nArea > 1L) {

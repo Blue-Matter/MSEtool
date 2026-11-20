@@ -20,7 +20,8 @@
 #' @slot Closure `numeric` array or `NULL`. Spatio-temporal closure schedule
 #'   with dimensions `Sim x Year x Area`. Values of 1 indicate an open area;
 #'   0 indicates a closed area. Defaults to 1 (all areas open) if not
-#'   supplied. See [Fleet()].
+#'   supplied. A closed stock is released in an area the fleet still fishes
+#'   for other stocks. See [Fleet()].
 #' @slot WeightFleetRetained `numeric` array or `NULL`. Mean weight-at-age of
 #'   fish *retained* (landed) by this fleet (`Sim x Age x Year`) --
 #'   selectivity- and retention-weighted. Used to convert landed numbers-at-age

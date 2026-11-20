@@ -75,7 +75,9 @@ Default is an empty \link[=discardmortality-class]{discardmortality}.}
 
 \item{Closure}{Numeric array or \code{NULL}. Spatio-temporal closure schedule
 with dimensions \verb{Sim x Year x Area}. Values of 1 indicate an open area;
-0 indicates a closed area. The \code{Sim} and \code{Year} dimensions may be length
+0 indicates a closed area. The fleet does not fish an area closed for every
+stock it catches; in an area closed for some stocks only, it releases
+those stocks. The \code{Sim} and \code{Year} dimensions may be length
 1 (replicated internally). Default is an empty array; if not specified,
 \code{\link[=PopulateClosure]{PopulateClosure()}} sets all areas to open (1) across all simulations and
 years.}

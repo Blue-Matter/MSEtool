@@ -106,14 +106,15 @@ inline void CalcSpatialDistribution(
         const double omega = ReleaseValue(sim_rv, y, fl);
 
         for (int ar = 0; ar < nArea; ++ar) {
-          if (Closure(sim_cl, st, y, fl, ar) <= 0.0) continue;
-          isOpen[ia(fl, ar)] = 1;
+          // a cell is open if any stock is open; a closed stock there is valued as released
+          const double open = Closure(sim_cl, st, y, fl, ar) > 0.0 ? 1.0 : 0.0;
+          if (open > 0.0) isOpen[ia(fl, ar)] = 1;
 
           double B_val = 0.0, B_sel = 0.0;
           for (int age = 0; age < nAge; ++age) {
             const double NS = Num_st(sim_num, age, y, ar) * Sel_st(sim_sel, age, y, fl, ar);
             if (NS <= 0.0) continue;
-            const double r  = Ret_st(sim_ret, age, y, fl, ar);
+            const double r  = Ret_st(sim_ret, age, y, fl, ar) * open;
             const double Ws = WgtS_st(sim_wgts, age, y, fl);
             B_val += NS * r * Wgt_st(sim_wgt, age, y, fl);
             if (omega > 0.0) B_val += omega * NS * (1.0 - r) * Ws;
