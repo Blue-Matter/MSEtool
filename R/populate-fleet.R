@@ -241,7 +241,8 @@ PopulateFleet <- function(Fleet,
   if (is.null(Length@ALK)) return(fallback)
 
   if (identical(Selectivity@isAtLength, FALSE)) return(fallback)
-  if (!is.null(Retention) && identical(Retention@isAtLength, FALSE)) return(fallback)
+  # retention defined only at age does not change weight-at-age within an age
+  if (!is.null(Retention) && identical(Retention@isAtLength, FALSE)) Retention <- NULL
 
   if (is.null(Weight@MeanAtLength)) {
     Years <- as.numeric(dimnames(Weight@MeanAtAge)$Year)
@@ -266,6 +267,12 @@ PopulateFleet <- function(Fleet,
     if (!is.null(ret_at_len)) {
       if ('Area' %in% names(dimnames(ret_at_len)))
         ret_at_len <- DropDimension(ret_at_len, 'Area', warn = FALSE)
+      SelClasses <- dimnames(sel_at_len)$Class
+      if (!.OnClasses(ret_at_len, SelClasses)) {
+        Retention@MeanAtLength <- ret_at_len
+        Retention@Classes      <- as.numeric(dimnames(ret_at_len)$Class)
+        ret_at_len <- .MapScheduleClasses(Retention, SelClasses)@MeanAtLength
+      }
       Weighting@MeanAtLength <- ArrayMultiply(Weighting@MeanAtLength, ret_at_len)
     }
   }
