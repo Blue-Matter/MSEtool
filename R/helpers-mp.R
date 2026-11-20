@@ -554,6 +554,8 @@
 }
 
 .ProcessSelectMeanAtLength <- function(select, Length, nArea, type, Year) {
+  if (is.null(select@MeanAtLength))
+    return(select)
   if (is.null(select@Classes))
     select@Classes <- Length@Classes
   .ProcessSelectMeanAt(select,
@@ -566,13 +568,77 @@
 }
 
 .ProcessSelectMeanAtWeight <- function(select, Weight, nArea, type, Year) {
-  if (is.null(select@Classes))
-    select@Classes <- Weight@Classes
+  if (is.null(select@MeanAtWeight))
+    return(select)
+  # `Classes` belongs to MeanAtLength when both are supplied
+  Classes <- if (is.null(select@MeanAtLength) && !is.null(select@Classes)) select@Classes else Weight@Classes
   .ProcessSelectMeanAt(select,
-                      Classes   = select@Classes,
+                      Classes   = Classes,
                       nArea     = nArea,
                       type      = type,
                       Year      = Year,
                       slot_name = 'MeanAtWeight',
                       dim_name  = 'Class')
+}
+
+# `select` with its at-size schedule on the fleet's classes: each fleet bin takes the advised
+# bin containing its midpoint. `slot_name` is 'MeanAtLength' or 'MeanAtWeight'.
+.MapScheduleClasses <- function(select, FleetClasses, slot_name = 'MeanAtLength') {
+  Values <- methods::slot(select, slot_name)
+  Own    <- select@Classes
+  if (slot_name == 'MeanAtWeight' && !is.null(select@MeanAtLength)) return(select)
+  if (is.null(Values) || is.null(Own) || is.null(FleetClasses)) return(select)
+  FleetClasses <- as.numeric(FleetClasses)
+  if (.SameClasses(Own, FleetClasses))
+    return(select)
+
+  Dims <- dim(Values)
+  ClassDim <- if (is.null(Dims)) 1L else match('Class', names(dimnames(Values)), nomatch = 1L)
+  nOwn <- if (is.null(Dims)) length(Values) else Dims[ClassDim]
+  if (nOwn != length(Own)) return(select)
+
+  idx <- pmax(findInterval(.ClassMidpoints(FleetClasses), as.numeric(Own)), 1L)
+  if (is.null(Dims)) {
+    Values <- Values[idx]
+  } else {
+    Index <- rep(list(TRUE), length(Dims))
+    Index[[ClassDim]] <- idx
+    Values <- do.call(`[`, c(list(Values), Index, list(drop = FALSE)))
+    if (!is.null(dimnames(Values)))
+      dimnames(Values)[[ClassDim]] <- as.character(FleetClasses)
+  }
+  methods::slot(select, slot_name) <- Values
+  select@Classes <- FleetClasses
+  select
+}
+
+# at-size classes of a fleet's current schedule, or `Default`
+.FleetScheduleClasses <- function(object, slot_name, Default) {
+  x <- methods::slot(object, slot_name)
+  Cls <- if (!is.null(x)) dimnames(x)$Class
+  if (length(Cls)) as.numeric(Cls) else Default
+}
+
+# advised schedules for each fleet of one stock, on that fleet's current classes;
+# returns list(Advice = list by fleet (NULL = unchanged), Classes = fleet length classes)
+.MapAdviceToFleets <- function(AdviceSlot, FleetList, type, Length, Weight) {
+  nFleet  <- length(FleetList)
+  Out     <- vector('list', nFleet)
+  Classes <- vector('list', nFleet)
+  for (fl in seq_len(nFleet)) {
+    Target        <- methods::slot(FleetList[[fl]], type)
+    Classes[[fl]] <- .FleetScheduleClasses(Target, 'MeanAtLength', Length@Classes)
+    select        <- if (is.list(AdviceSlot)) AdviceSlot[[fl]] else AdviceSlot
+    if (is.null(select)) next
+    if (!is.null(select@MeanAtLength)) {
+      select <- .MapScheduleClasses(select, Classes[[fl]], 'MeanAtLength')
+    } else if (methods::.hasSlot(select, 'MeanAtWeight') && !is.null(select@MeanAtWeight)) {
+      select <- .MapScheduleClasses(select, .FleetScheduleClasses(Target, 'MeanAtWeight', Weight@Classes),
+                                    'MeanAtWeight')
+    } else {
+      select@Classes <- Classes[[fl]]
+    }
+    Out[[fl]] <- select
+  }
+  list(Advice = Out, Classes = Classes)
 }
