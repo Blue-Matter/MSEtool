@@ -147,10 +147,6 @@
     
     SelectList <- slot(Advice, type) 
     
-    if (length(SelectList) > 1 && length(SelectList) != nFleet)
-      stop("Advice@", type, " must be a `", type, "()` object or a list of ",
-           "`", type, "()` objects of length nFleet (", nFleet, ")")
-    
     for (st in stocks) {
       Stock    <- Proj@OM@Stock[[st]]
       Ages     <- Stock@Ages
@@ -158,37 +154,19 @@
       Weight   <- Subset(Stock@Weight,   Sims=sim, Years=FutureYears)
       Maturity <- Subset(Stock@Maturity, Sims=sim, Years=FutureYears)
       
-      ReComputeALKList <- vector('list', length(SelectList))
-      
-      if (is.list(SelectList)) {
-        ClassesList <- purrr::map(SelectList, slot, 'Classes') 
-      } else {
-        ClassesList <- list(SelectList@Classes)
-      }
-      
-      for (fl in seq_along(ClassesList)) {
-        if (is.null(ClassesList[[fl]])) 
-          ClassesList[[fl]]  <- Length@Classes
-         
-        ReComputeALKList[[fl]] <- !setequal(Length@Classes, ClassesList[[fl]])
-      }
-      
-      all_same <- all(sapply(ReComputeALKList[-1], identical, ReComputeALKList[[1]]))
-      if (all_same) ReComputeALKList <- list(ReComputeALKList[[1]])
-      
-      all_same <- all(sapply(ClassesList[-1], identical, ClassesList[[1]]))
-      if (all_same) ClassesList <- list(ClassesList[[1]])
-    
+      Mapped    <- .MapAdviceToFleets(SelectList, Proj@OM@Fleet[[st]], type, Length, Weight)
       LinIntAge <- length(Ages@Classes) < 50
+      ALK_1     <- NULL
       
       for (fl in seq_along(FleetNames)) {
-        select <- if (is.list(SelectList)) SelectList[[fl]] else SelectList
+        select <- Mapped$Advice[[fl]]
+        if (is.null(select)) next
         
         # Compute ALK with new size classes and finer temporal resolution
         FleetLength  <- Length 
-        Classes      <- ClassesList[[min(length(ClassesList), fl)]]
-        ReComputeALK <- ReComputeALKList[[min(length(ReComputeALKList), fl)]]
-        if (fl == 1) {
+        Classes      <- Mapped$Classes[[fl]]
+        ReComputeALK <- !.SameClasses(Classes, Length@Classes)
+        if (is.null(ALK_1)) {
           # Get ALK using Length@Classes
           if (LinIntAge) {
             # Increases the temporal resolution of `ObjectMeanAtAge` and `ASK`
@@ -238,6 +216,7 @@
         select <- .ProcessSelectMeanAtAge(select,    Ages,   nArea, type, Year=FutureYears[1])
         select <- .ProcessSelectMeanAtLength(select, FleetLength, nArea, type, Year=FutureYears[1])
         select <- .ProcessSelectMeanAtWeight(select, Weight, nArea, type, Year=FutureYears[1])
+        select@Classes <- Classes
 
         FleetObj <- Proj@OM@Fleet[[st]][[fl]]
         populateArgs <- list(select,
@@ -258,6 +237,9 @@
                                                             sim, FutureYears,
                                                             Classes)
         select <- do.call(populate, populateArgs)
+        # at-weight schedules: at-length derived from the new at-age schedule
+        if (is.null(select@MeanAtLength))
+          select <- .MeanAtAge2MeanAtLength(select, FleetLength, ASK = FleetLength@ALK)
         
         select@MeanAtAge <- .SetSimDimname(select@MeanAtAge, sim) |> 
           ExtendAreas(1:nArea) |> 
@@ -292,6 +274,7 @@
         ArrayFill(target@MeanAtAge)    <- select@MeanAtAge
         ArrayFill(target@MeanAtLength) <- select@MeanAtLength
         ArrayFill(target@MeanAtWeight) <- select@MeanAtWeight
+        target@isAtLength <- select@isAtLength
         slot(Proj@OM@Fleet[[st]][[fl]], type) <- target
         
         ArrayFill(Proj@Misc[[age_misc]][[st]]) <- AddDimension(select@MeanAtAge,
@@ -309,6 +292,7 @@
 
         # re-weight retention-at-age by the new selectivity
         if (type == 'Selectivity' && !is.null(RetObj@MeanAtLength) &&
+            !identical(RetObj@isAtLength, FALSE) &&
             !is.null(.SelectivityOnClasses(RetObj, sim, FutureYears, Classes))) {
           RetAge <- .WeightedAtSize2AtAge(RetObj, select, FleetLength)@MeanAtAge |>
             .SetSimDimname(sim) |>
@@ -323,9 +307,14 @@
                                                                 pos = 4)
         }
 
-        WSel <- .CalcFleetWeightAtAge(SelObj, Weight, FleetLength)
-        WRet <- .CalcFleetWeightAtAge(SelObj, Weight, FleetLength,
-                                      Retention = RetObj)
+        # fleet weight-at-age on the advised length classes
+        SelW    <- .AtLengthOnClasses(SelObj, FleetLength)
+        RetW    <- .AtLengthOnClasses(RetObj, FleetLength)
+        WeightW <- Weight
+        if (!.OnClasses(WeightW@MeanAtLength, Classes)) WeightW@MeanAtLength <- NULL
+        WSel <- .CalcFleetWeightAtAge(SelW, WeightW, FleetLength)
+        WRet <- .CalcFleetWeightAtAge(SelW, WeightW, FleetLength,
+                                      Retention = RetW)
 
         .CheckFleetWeightConsistency(WSel, WRet, RetObj@MeanAtAge,
                                      st, FleetNames[fl])
@@ -408,4 +397,19 @@
   dn[["Sim"]] <- sim
   dimnames(x) <- dn
   x
+}
+
+# is the Class dimension of at-length array `x` equal to `Classes`?
+.OnClasses <- function(x, Classes) .SameClasses(dimnames(x)$Class, Classes)
+
+.SameClasses <- function(a, b)
+  length(a) == length(b) && isTRUE(all.equal(as.numeric(a), as.numeric(b)))
+
+# `obj` with its at-length schedule on `Length@Classes`, derived from at-age when its classes differ
+.AtLengthOnClasses <- function(obj, Length) {
+  if (is.null(obj@MeanAtLength) || .OnClasses(obj@MeanAtLength, Length@Classes))
+    return(obj)
+  obj@Classes      <- Length@Classes
+  obj@MeanAtLength <- NULL
+  .MeanAtAge2MeanAtLength(obj, Length)
 }
