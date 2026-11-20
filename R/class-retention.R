@@ -28,11 +28,10 @@
 #'   Values in `MeanAtLength`/`MeanAtWeight` are evaluated at bin midpoints,
 #'   not at these lower bounds.
 #' @slot isAtLength `logical`. Whether `MeanAtLength`/`MeanAtWeight` reflect a
-#'   genuinely length- (or weight-) retention schedule, as opposed to a
-#'   one derived from an age-only schedule (e.g. via the age-length
-#'   key). Controls whether fleet weight-at-age calculations
-#'   (`WeightFleetRetained`) weight by this object's at-length schedule or
-#'   fall back to the stock's plain weight-at-age. Default `TRUE`. 
+#'   genuinely length- (or weight-) retention schedule. When `FALSE`, fleet
+#'   retained weight-at-age (`WeightFleetRetained`) equals the selected
+#'   weight-at-age (`WeightFleetSelected`). Set to `FALSE` when the object is
+#'   populated from `MeanAtAge` or `MeanAtWeight` alone. Default `TRUE`.
 #' @slot Misc `list`. Miscellaneous additional inputs. For internal use.
 #'
 #' @seealso
