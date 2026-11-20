@@ -165,7 +165,8 @@ Selectivity <- function(Pars         = list(),
       'x' = '`Pars` must be a list',
       'i' = 'Currently as {.cls {class(Pars)}} object'
     ))
-    
+  .CheckScheduleNotList('Selectivity', MeanAtAge, MeanAtLength, MeanAtWeight)
+
   methods::new(
     "selectivity",
     Pars         = Pars,
