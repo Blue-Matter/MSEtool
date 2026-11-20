@@ -31,7 +31,10 @@ before it is subset. Subsetting an \code{om}, \code{hist}, or \code{mse}
 object records the original simulation numbers, so projections of the
 subset reproduce those simulations of the full object.}
 
-\item{Years}{Numeric vector of calendar years to retain. \code{NULL} skips.}
+\item{Years}{Numeric vector of calendar years to retain. \code{NULL} skips.
+An \code{om} or \code{hist} subset by \code{Years} keeps the years of its operating
+model, so it can be summarised and plotted but not simulated or projected.
+Historical values are not imputed for years after the historical period.}
 
 \item{Ages}{Numeric vector of age classes to retain. \code{NULL} skips.}
 
