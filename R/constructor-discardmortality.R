@@ -104,6 +104,7 @@ DiscardMortality <- function(MeanAtAge    = NULL,
   
   if (.IsFleetComponentSource(MeanAtAge, Extra = 'advice'))
     return(.GetFleetSlot(MeanAtAge, 'DiscardMortality'))
+  .CheckScheduleNotList('DiscardMortality', MeanAtAge, MeanAtLength)
 
   methods::new(
     "discardmortality",
@@ -120,4 +121,15 @@ DiscardMortality <- function(MeanAtAge    = NULL,
 `DiscardMortality<-` <- function(x, value) {
   .AssignFleetSlot(x, value, 'DiscardMortality', Extra = 'advice')
 }
-  
+
+# per-fleet schedules are a list of objects, not a list inside one object's slot
+.CheckScheduleNotList <- function(Type, MeanAtAge = NULL, MeanAtLength = NULL, MeanAtWeight = NULL) {
+  Vals <- list(MeanAtAge = MeanAtAge, MeanAtLength = MeanAtLength, MeanAtWeight = MeanAtWeight)
+  Bad  <- names(Vals)[vapply(Vals, \(v) is.list(v) && !is.data.frame(v), logical(1))]
+  if (!length(Bad)) return(invisible(NULL))
+  cli::cli_abort(c(
+    "x" = "{.arg {Bad[1]}} must be a numeric vector or array, not a list.",
+    "i" = "For a different schedule for each fleet, use a list of {.fn {Type}} objects, one per fleet:",
+    " " = "{.code list(Fleet1 = {Type}({Bad[1]} = ...), Fleet2 = {Type}({Bad[1]} = ...))}"
+  ), call = NULL)
+}
