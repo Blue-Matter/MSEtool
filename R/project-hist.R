@@ -35,6 +35,7 @@
   
   .OnExit()
   .CheckClass(Hist, 'hist', 'Hist')
+  .CheckHistYears(Hist)
   .CheckHistData(Hist)
   .MPErrorLogDir(getOption('MSEtool.WriteLog', FALSE))
   MPList <- .ResolveMPs(MPs)

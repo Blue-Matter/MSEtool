@@ -515,6 +515,7 @@ TuneControl <- function(Interval        = c(0.1, 10),
   if (is.null(nms)) nms <- rep('', length(Hist))
   nms[!nzchar(nms)] <- paste0(Label, seq_along(Hist))[!nzchar(nms)]
   names(Hist) <- make.unique(nms)
+  for (nm in names(Hist)) .CheckHistYears(Hist[[nm]], nm)
   Hist
 }
 
