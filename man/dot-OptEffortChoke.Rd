@@ -71,8 +71,7 @@ to the optimiser.}
 
 \item{inner_reltol}{Numeric, or \code{NULL} (default). Relative convergence
 tolerance for the per-complex root finds during optimisation, as a
-fraction of the TAC being matched; \code{NULL} keeps \code{.OptEffortSingleStock()}'s
-absolute \code{tol}.}
+fraction of the TAC being matched; \code{NULL} uses \code{1e-6}.}
 
 \item{maxEval}{Integer (default \code{500}). Maximum function evaluations
 allowed across the BFGS and Nelder-Mead phases combined.}
