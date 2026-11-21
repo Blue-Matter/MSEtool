@@ -253,12 +253,24 @@
       }
     }
 
-    opt <- optimize(
-      function(ls) ((catch_fl(ls) - tac) / tac)^2,
-      interval = c(log_lo, log_hi),
-      tol = 1e-8
-    )
-    Effort_curr[fl] <- min(Effort_base[fl] * exp(opt$minimum), maxEffort_fl[fl])
+    Resid <- function(ls) (catch_fl(ls) - tac) / tac
+    f_lo  <- Resid(log_lo)
+    f_hi  <- Resid(log_hi)
+
+    log_best <- NA_real_
+    if (is.finite(f_lo) && is.finite(f_hi) && f_lo <= 0 && f_hi >= 0) {
+      root <- tryCatch(stats::uniroot(Resid, c(log_lo, log_hi), f.lower = f_lo, f.upper = f_hi,
+                                      tol = 1e-10, maxiter = 200),
+                       error = function(e) NULL)
+      if (!is.null(root)) log_best <- root$root
+    }
+
+    if (!is.finite(log_best) || abs(Resid(log_best)) > reltol) {
+      opt <- optimize(function(ls) Resid(ls)^2, interval = c(log_lo, log_hi), tol = 1e-8)
+      if (!is.finite(log_best) || abs(Resid(opt$minimum)) < abs(Resid(log_best)))
+        log_best <- opt$minimum
+    }
+    Effort_curr[fl] <- min(Effort_base[fl] * exp(log_best), maxEffort_fl[fl])
 
     Catch_out <- rep(NA_real_, nFleet); Catch_out[fl] <- catch_fl(log(Effort_curr[fl] / Effort_base[fl]))
     converged <- is.finite(Catch_out[fl]) && abs(Catch_out[fl] - tac) <= reltol * tac
