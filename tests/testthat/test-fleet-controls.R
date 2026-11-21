@@ -106,3 +106,27 @@ test_that("a fleet with no TAC in one complex is not limited by that complex", {
   expect_equal(Set$Catch, Set$TAC, tolerance = 1e-3)
   expect_true(all(Set$Limit == 'None'))
 })
+
+test_that("effort compliance does not rescale an effort that no other complex competes with", {
+  skip_on_cran()
+  for (k in c(0.7, 0.3)) {
+    om <- MultiStockOM
+    nSim(om) <- 2
+    pYear(om) <- 2
+    for (cx in seq_along(om@Imp))
+      for (fl in seq_along(om@Imp[[cx]]))
+        om@Imp[[cx]][[fl]]@Effort@Compliance <- k
+    Hist  <- Simulate(om, silent = TRUE)
+    First <- names(Hist@OM@Complexes)[1]
+    MP <- function(Data) {
+      if (identical(Data@Misc$StockName, First))
+        Advice(Effort = 0.8, EffType = 'Rel')
+      else
+        Advice(Effort = NA_real_, EffType = 'Rel')
+    }
+    class(MP) <- 'mp'
+    MSE  <- suppressMessages(Project(Hist, MPs = list(A = MP), parallel = FALSE, silent = TRUE))
+    Last <- Hist@Effort[1, dim(Hist@Effort)[2], ]
+    expect_equal(unname(MSE@Effort[1, 1, , 1]), unname(0.8 * Last), tolerance = 1e-8, label = paste('Compliance', k))
+  }
+})
