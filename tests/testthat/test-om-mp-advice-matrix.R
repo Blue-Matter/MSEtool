@@ -15,7 +15,10 @@ skip_on_cran()
 .MatrixMMP <- c('TACFleet', 'EffFleetArea', 'TACClose', 'TACAll')
 
 .MatrixCtx <- function(Name, n = 2) {
-  OM <- local({ data(list = Name, envir = environment()); get(Name) })
+  OM <- local({
+    data(list = Name, envir = environment())
+    get(Name)
+  })
   nSim(OM)  <- n
   pYear(OM) <- 2
   OM@maxF   <- 10
@@ -104,7 +107,8 @@ for (Name in .MatrixOMs) local({
   })
 
   test_that(paste(Name, ": removals stay within the biomass available"), {
-    B <- Biomass(MSE); B <- B[B$Period == 'Projection', ]
+    B <- Biomass(MSE)
+    B <- B[B$Period == 'Projection', ]
     R <- merge(aggregate(Value ~ MP + Year + Stock, rbind(Landings(MSE), Discards(MSE))[, c('MP', 'Year', 'Stock', 'Value', 'Period')] |>
                            (\(x) x[x$Period == 'Projection', ])(), FUN = sum),
                aggregate(Value ~ MP + Year + Stock, B, FUN = max),
@@ -178,7 +182,8 @@ for (Name in .MatrixOMs) local({
   })
 
   test_that(paste(Name, ": size limits and discard mortality change what is landed and discarded"), {
-    L <- Landings(MSE); D <- Discards(MSE)
+    L <- Landings(MSE)
+    D <- Discards(MSE)
     expect_gt(.MatrixTotal(D, 'EffSize'), .MatrixTotal(D, 'EffRel'))
     expect_false(isTRUE(all.equal(.MatrixTotal(L, 'EffSize'), .MatrixTotal(L, 'EffRel'))))
     for (sl in c('Selectivity', 'Retention'))
@@ -209,13 +214,65 @@ for (Name in c('TwoFleetOM', 'MultiStockOM', 'ComplexOM')) local({
     MPs  <- Full@MPs
     One  <- suppressMessages(Project(Subset(Hist, Sims = 2), MPs = MPs, parallel = FALSE, silent = TRUE))
     for (fn in c('Landings', 'Discards')) {
-      a <- get(fn)(Full); a <- a[a$Sim == 2 & a$Period == 'Projection', ]
-      b <- get(fn)(One);  b <- b[b$Period == 'Projection', ]
+      a <- get(fn)(Full)
+      a <- a[a$Sim == 2 & a$Period == 'Projection', ]
+      b <- get(fn)(One)
+      b <- b[b$Period == 'Projection', ]
       for (mp in names(MPs)) {
-        x <- a[a$MP == mp, ]; y <- b[b$MP == mp, ]
-        x <- x[order(x$Year, x$Stock, x$Fleet), ]; y <- y[order(y$Year, y$Stock, y$Fleet), ]
+        x <- a[a$MP == mp, ]
+        y <- b[b$MP == mp, ]
+        x <- x[order(x$Year, x$Stock, x$Fleet), ]
+        y <- y[order(y$Year, y$Stock, y$Fleet), ]
         expect_equal(x$Value, y$Value, tolerance = 1e-6, label = paste(fn, mp))
       }
     }
   })
+})
+
+# management advised in the first year only stays in place until changed
+for (Name in c('SingleStockOM', 'TwoFleetOM')) local({
+  Name <- Name
+  test_that(paste(Name, ": management advised once stays in place"), {
+    Ctx  <- .MatrixCtx(Name)
+    Hist <- Ctx$Hist
+    Ctx$Hist <- NULL
+    Ctrls <- c('EffAbsFleet', 'EffClose', 'EffSize', 'TACFleet', 'TACLandings', 'TACClose', 'TACSizeDM', 'TACAll', 'TACEffortCap')
+    Every <- lapply(Ctrls, \(ct) {
+      f <- function(Data) .MatrixAdvice(ct, Ctx, Data@Misc$StockName)
+      class(f) <- 'mp'
+      f
+    })
+    Once  <- lapply(Ctrls, \(ct) {
+      f <- function(Data) if (isTRUE(Data@Misc$FirstAdvice)) .MatrixAdvice(ct, Ctx, Data@Misc$StockName) else Advice()
+      class(f) <- 'mp'
+      f
+    })
+    MPs <- c(stats::setNames(Every, paste0(Ctrls, '_every')), stats::setNames(Once, paste0(Ctrls, '_once')))
+    MSE <- suppressMessages(Project(Hist, MPs = MPs, parallel = FALSE, silent = TRUE))
+    for (fn in c('Landings', 'Discards')) {
+      x <- get(fn)(MSE)
+      x <- x[x$Period == 'Projection', ]
+      for (ct in Ctrls)
+        expect_equal(x$Value[x$MP == paste0(ct, '_once')], x$Value[x$MP == paste0(ct, '_every')],
+                     tolerance = 1e-8, label = paste(fn, ct))
+    }
+  })
+})
+
+test_that("empty advice before any TAC or bag limit is status-quo effort", {
+  Ctx  <- .MatrixCtx('TwoFleetOM')
+  Hist <- Ctx$Hist
+  Ctx$Hist <- NULL
+  Late <- function(Data)
+    if (isTRUE(Data@Misc$FirstAdvice)) Advice() else .MatrixAdvice('TACFleet', Ctx, Data@Misc$StockName)
+  class(Late) <- 'mp'
+  None <- .MatrixMP('None', Ctx)
+  MSE  <- suppressMessages(Project(Hist, MPs = list(None = None, Late = Late), parallel = FALSE, silent = TRUE))
+  x <- Landings(MSE)
+  x <- x[x$Period == 'Projection', ]
+  y1 <- min(x$Year)
+  expect_equal(x$Value[x$MP == 'Late' & x$Year == y1], x$Value[x$MP == 'None' & x$Year == y1], tolerance = 1e-8)
+  Att <- TACAttainment(MSE)
+  expect_true(all(Att$MP[Att$Year == y1] != 'Late'))
+  expect_true(any(Att$MP == 'Late' & Att$Year > y1))
 })

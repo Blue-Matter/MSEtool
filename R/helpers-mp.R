@@ -491,6 +491,53 @@
 }
 
 
+# A TAC (with its type, unit and effort cap) or a bag limit that the MP leaves
+# unset stays in place from the previous time step; an advised effort control replaces the TAC
+.CarryForwardAdvice <- function(AdviceSimList, LastAdviceSimList) {
+  if (is.null(LastAdviceSimList)) return(AdviceSimList)
+
+  Carry <- function(Advice, Prev) {
+    if (!inherits(Advice, 'advice') || !inherits(Prev, 'advice')) return(Advice)
+
+    if (is.null(Advice@TAC) && is.null(Advice@Effort) && !is.null(Prev@TAC)) {
+      Advice@TAC     <- Prev@TAC
+      Advice@TACType <- Prev@TACType
+      Advice@TACUnit <- Prev@TACUnit
+      if (!is.null(Prev@Misc$AnnualTAC))
+        Advice@Misc$AnnualTAC <- Prev@Misc$AnnualTAC
+      if (!is.null(Prev@Effort) && !isTRUE(Prev@Misc$StatusQuoEffort)) {
+        Advice@Effort  <- Prev@Effort
+        Advice@EffType <- Prev@EffType
+      }
+    }
+
+    if (is.null(Advice@BagLimit) && !is.null(Prev@BagLimit)) {
+      Advice@BagLimit    <- Prev@BagLimit
+      Advice@LimitType   <- Prev@LimitType
+      Advice@ClosureMode <- Prev@ClosureMode
+    }
+    Advice
+  }
+
+  for (sim in seq_along(AdviceSimList)) {
+    Last <- LastAdviceSimList[[sim]]
+    if (!is.list(Last) || !is.list(AdviceSimList[[sim]])) next
+    for (i in seq_along(AdviceSimList[[sim]]))
+      if (i <= length(Last))
+        AdviceSimList[[sim]][[i]] <- Carry(AdviceSimList[[sim]][[i]], Last[[i]])
+  }
+  AdviceSimList
+}
+
+.CarryForwardAggBagLimit <- function(AggBagLimitSimList, LastAggBagLimitSimList) {
+  if (is.null(LastAggBagLimitSimList)) return(AggBagLimitSimList)
+  if (is.null(AggBagLimitSimList)) AggBagLimitSimList <- list()
+  for (nm in names(LastAggBagLimitSimList))
+    if (length(LastAggBagLimitSimList[[nm]]) && !length(AggBagLimitSimList[[nm]]))
+      AggBagLimitSimList[[nm]] <- LastAggBagLimitSimList[[nm]]
+  AggBagLimitSimList
+}
+
 .ProcessSelectMeanAt <- function(select, Classes, nArea, type, Year,
                                 slot_name, dim_name) {
   

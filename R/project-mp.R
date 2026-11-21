@@ -170,6 +170,10 @@
     AdviceSimList      <- MPResult$AdviceSimList
     AggBagLimitSimList <- MPResult$AggBagLimitSimList
 
+    # TACs and bag limits stay in place until the MP changes them
+    AdviceSimList      <- .CarryForwardAdvice(AdviceSimList, LastAdviceSimList)
+    AggBagLimitSimList <- .CarryForwardAggBagLimit(AggBagLimitSimList, LastAggBagLimitSimList)
+
     # If neither TAC or Effort are set, keep status-quo effort
     AdviceSimList <- .CheckTACEffort(AdviceSimList, FleetNames)
 

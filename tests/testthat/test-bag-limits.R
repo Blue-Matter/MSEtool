@@ -753,3 +753,47 @@ test_that("a stop-mode bag on a fleet without a TAC keeps its trips when another
   expect_equal(c(t(E)), B$Trips / .BagTrips * B$TimeFraction, tolerance = 1e-6, ignore_attr = TRUE)
   expect_true(all(B$TimeFraction < 1))
 })
+
+test_that("a sim's bag-limit projection is the same alone as within a larger run", {
+  skip_on_cran()
+  for (Name in c('SingleStockOM', 'TwoFleetOM')) {
+    om   <- .BagOM(get(Name), nsim = 3, py = 3, DM = 0.5)
+    Hist <- .BagHist(paste0('subset_', Name), om)
+    MPs  <- list(Disc    = .BagMP(BagLimit = 2, LimitType = 'boat'),
+                 Angler  = .BagMP(BagLimit = 2, LimitType = 'angler'),
+                 Stop    = .BagMP(BagLimit = 2, LimitType = 'boat', ClosureMode = 'stop'),
+                 TACBag  = .BagMP(TAC = 100, TACType = 'Landings', BagLimit = 2, LimitType = 'boat'),
+                 TACStop = .BagMP(TAC = 100, TACType = 'Landings', BagLimit = 2, LimitType = 'boat',
+                                  ClosureMode = 'stop'))
+    Full <- .BagProject(Hist, MPs)
+    One  <- .BagProject(Subset(Hist, Sims = 2), MPs)
+    for (fn in c('Landings', 'Discards')) {
+      a <- get(fn)(Full)
+      a <- a[a$Sim == 2 & a$Period == 'Projection', ]
+      b <- get(fn)(One)
+      b <- b[b$Period == 'Projection', ]
+      for (mp in names(MPs)) {
+        x <- a[a$MP == mp, ]
+        y <- b[b$MP == mp, ]
+        x <- x[order(x$Year, x$Stock, x$Fleet), ]
+        y <- y[order(y$Year, y$Stock, y$Fleet), ]
+        expect_equal(x$Value, y$Value, tolerance = 1e-6, label = paste(Name, fn, mp))
+      }
+    }
+  }
+})
+
+test_that("a bag limit advised once stays in place until changed", {
+  skip_on_cran()
+  om   <- .BagOM(SingleStockOM, nsim = 2, py = 3, DM = 0.5)
+  Hist <- .BagHist('persist', om)
+  Once <- function(Data)
+    if (isTRUE(Data@Misc$FirstAdvice)) Advice(BagLimit = 2, LimitType = 'boat') else Advice()
+  class(Once) <- 'mp'
+  MSE <- .BagProject(Hist, list(Every = .BagMP(BagLimit = 2, LimitType = 'boat'), Once = Once))
+  for (fn in c('Landings', 'Discards')) {
+    x <- get(fn)(MSE)
+    x <- x[x$Period == 'Projection', ]
+    expect_equal(x$Value[x$MP == 'Once'], x$Value[x$MP == 'Every'], tolerance = 1e-8, label = fn)
+  }
+})
