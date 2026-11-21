@@ -285,3 +285,22 @@ test_that("TAC attainment survives Subset, CombineMSE, chunking and failed sims"
   expect_equal(Key(Comb), Key(dplyr::arrange(Ref2, Sim, Stock, MP, Year, Fleet)),
                ignore_attr = TRUE)
 })
+
+test_that("a TAC just below the maximum catch is caught exactly", {
+  skip_on_cran()
+  om <- SingleStockOM
+  nSim(om) <- 2
+  pYear(om) <- 2
+  om@maxF <- 10
+  Hist <- Simulate(om, silent = TRUE)
+  nH   <- dim(Hist@Effort)[2]
+  TAC1 <- 0.5 * sum(Hist@Landings[, , nH, ]) / nSim(Hist)
+  MP <- function(Data) Advice(TAC = TAC1, Closure = c(1, 0))
+  class(MP) <- 'mp'
+  MSE <- Project(Hist, MPs = list(Near = MP), parallel = FALSE, silent = TRUE)
+  df  <- TACAttainment(MSE)
+  df  <- df[df$Limit == 'None', ]
+  expect_gt(nrow(df), 0)
+  expect_equal(df$Catch, df$TAC, tolerance = 1e-5)
+  expect_length(.EffortConvergenceLog(MSE), 0)
+})
