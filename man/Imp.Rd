@@ -99,31 +99,29 @@ always fully populated and valid.
 \code{TAC@Mean}/\code{SD}/\code{Error} and \code{Effort@Mean}/\code{SD}/\code{Error} are applied as a
 multiplicative implementation-error factor to the advised TAC/effort
 before effort-solving (\code{Error} is generated from \code{Mean}/\code{SD} if not
-supplied directly -- see \code{\link[=PopulateImpSlot]{PopulateImpSlot()}}). \code{TAC@Compliance} and
-\code{Effort@Compliance} (\verb{[Sim x Year]} within each fleet/complex's
-\code{impslot}, in \verb{[0, 1]}) govern how a
-fleet reconciles competing TAC/effort recommendations across multiple
-stocks or complexes -- meaningless (and not consulted) for a
-single-stock/single-complex OM, since there is nothing to reconcile
-against.
+supplied directly -- see \code{\link[=PopulateImpSlot]{PopulateImpSlot()}}).
 
-For \code{TAC@Compliance}, a fleet that cannot satisfy every complex's TAC at
-once must trade off falling short of one against exceeding another.
-\code{Compliance} sets how heavily exceeding this complex's TAC is penalised,
-relative to falling short of it:
+\code{TAC@Compliance} and \code{Effort@Compliance} (\verb{[Sim x Year]} within each
+fleet/complex's \code{impslot}, in \verb{[0, 1]}) govern how a fleet combines the
+controls set by several complexes. They apply to OMs with more than one
+complex, and are not consulted for a fleet that only one complex controls.
+
+For each fleet, a complex \code{c} that sets a control implies an effort
+\eqn{E_c}: the advised effort, or the effort at which the fleet's catch of
+that complex reaches its TAC. With compliance \eqn{\kappa_c} and
+\eqn{E_{max}} the largest \eqn{E_c}, the fleet fishes at
+
+\deqn{E = \min_c \left[ \kappa_c E_c + (1 - \kappa_c) E_{max} \right]}
 \itemize{
-\item \code{0}: exceeding this TAC costs nothing, so the fleet effectively ignores
-it and fishes to satisfy its other quotas.
-\item \code{0.5}: exceeding and falling short are weighted equally.
-\item \code{0.7} (the default when unset): exceeding is penalised about 2.3 times
-more heavily than falling short, so the fleet stops at whichever quota
-binds first rather than overshooting it to fill the others.
-\item Approaching \code{1}: an effective hard choke.
+\item \code{1} for every complex: the fleet fishes at the lowest \eqn{E_c}, so it
+stops when the first control is reached.
+\item \code{0} for a complex: that complex does not restrain the fleet. If it is
+\code{0} for every complex the fleet fishes at the highest \eqn{E_c}.
+\item Values between \code{0} and \code{1} restrain the fleet partially.
 }
 
-The default is asymmetric because a TAC is a cap rather than a target:
-landing under quota is routine, while exceeding it is a regulatory breach.
-Set \code{0.5} explicitly if you want the symmetric treatment.
+Unset compliance is treated as \code{1}. A complex that sets no control for a
+fleet is not included.
 
 \code{Size@Compliance} is currently not applied: size-based regulations
 (\code{Advice@Retention} and \code{Advice@Selectivity}) are always adopted in full by

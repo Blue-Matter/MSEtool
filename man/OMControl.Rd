@@ -85,7 +85,7 @@ Used by \code{\link[=Project]{Project()}} and \code{\link[=runMSE]{runMSE()}}:\t
    Setting \tab Default \tab Description \cr
    \code{SeasonalAllocationYears} \tab \code{5} \tab Seasonal OMs only. Number of recent historical years pooled to derive the seasonal allocation of annual advice. \cr
    \code{StockTargeting} \tab \code{list(n_recent = 5)} \tab Multi-stock OMs only. \code{n_recent}: number of recent historical years used to identify stocks that are no longer targeted; see \code{\link[=GenerateStockTargeting]{GenerateStockTargeting()}}. \cr
-   \code{EffortOptim} \tab \code{list(lambda_scale = 1, n_recent = 5, maxEval = 500)} \tab Multi-complex OMs only. Settings for the solver that resolves fleet effort from TACs across complexes. \code{lambda_scale}: scales the complex-compliance penalty. \code{n_recent}: number of recent years used to determine which complexes are active. \code{maxEval}: maximum solver evaluations. \cr
+   \code{EffortOptim} \tab \code{list(lambda_scale = 1, n_recent = 5, maxEval = 500)} \tab Multi-complex OMs only. Settings for the solver that resolves fleet effort from TACs across complexes. \code{lambda_scale}: scales the penalty on year-to-year change in a fleet's targeting mix. \code{n_recent}: number of recent years used to determine which complexes are active. \code{maxEval}: maximum solver evaluations. \cr
    \code{ProjectChunks} \tab \code{NULL} \tab Number of simulation chunks projected per MP. \code{NULL} uses one chunk per parallel worker, or one chunk when \code{parallel = FALSE}. Results do not depend on the number of chunks. \cr
    \code{DataOM} \tab \code{NULL} \tab See the \code{DataOM} section. \cr
 }

@@ -43,30 +43,28 @@
 #' `TAC@Mean`/`SD`/`Error` and `Effort@Mean`/`SD`/`Error` are applied as a
 #' multiplicative implementation-error factor to the advised TAC/effort
 #' before effort-solving (`Error` is generated from `Mean`/`SD` if not
-#' supplied directly -- see [PopulateImpSlot()]). `TAC@Compliance` and
-#' `Effort@Compliance` (`[Sim x Year]` within each fleet/complex's
-#' `impslot`, in `[0, 1]`) govern how a
-#' fleet reconciles competing TAC/effort recommendations across multiple
-#' stocks or complexes -- meaningless (and not consulted) for a
-#' single-stock/single-complex OM, since there is nothing to reconcile
-#' against.
+#' supplied directly -- see [PopulateImpSlot()]).
 #'
-#' For `TAC@Compliance`, a fleet that cannot satisfy every complex's TAC at
-#' once must trade off falling short of one against exceeding another.
-#' `Compliance` sets how heavily exceeding this complex's TAC is penalised,
-#' relative to falling short of it:
+#' `TAC@Compliance` and `Effort@Compliance` (`[Sim x Year]` within each
+#' fleet/complex's `impslot`, in `[0, 1]`) govern how a fleet combines the
+#' controls set by several complexes. They apply to OMs with more than one
+#' complex, and are not consulted for a fleet that only one complex controls.
 #'
-#' - `0`: exceeding this TAC costs nothing, so the fleet effectively ignores
-#'   it and fishes to satisfy its other quotas.
-#' - `0.5`: exceeding and falling short are weighted equally.
-#' - `0.7` (the default when unset): exceeding is penalised about 2.3 times
-#'   more heavily than falling short, so the fleet stops at whichever quota
-#'   binds first rather than overshooting it to fill the others.
-#' - Approaching `1`: an effective hard choke.
+#' For each fleet, a complex `c` that sets a control implies an effort
+#' \eqn{E_c}: the advised effort, or the effort at which the fleet's catch of
+#' that complex reaches its TAC. With compliance \eqn{\kappa_c} and
+#' \eqn{E_{max}} the largest \eqn{E_c}, the fleet fishes at
 #'
-#' The default is asymmetric because a TAC is a cap rather than a target:
-#' landing under quota is routine, while exceeding it is a regulatory breach.
-#' Set `0.5` explicitly if you want the symmetric treatment.
+#' \deqn{E = \min_c \left[ \kappa_c E_c + (1 - \kappa_c) E_{max} \right]}
+#'
+#' - `1` for every complex: the fleet fishes at the lowest \eqn{E_c}, so it
+#'   stops when the first control is reached.
+#' - `0` for a complex: that complex does not restrain the fleet. If it is
+#'   `0` for every complex the fleet fishes at the highest \eqn{E_c}.
+#' - Values between `0` and `1` restrain the fleet partially.
+#'
+#' Unset compliance is treated as `1`. A complex that sets no control for a
+#' fleet is not included.
 #'
 #' `Size@Compliance` is currently not applied: size-based regulations
 #' (`Advice@Retention` and `Advice@Selectivity`) are always adopted in full by

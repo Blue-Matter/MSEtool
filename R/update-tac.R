@@ -17,8 +17,9 @@
 #' For multi-complex `OM`s, the choke/targeting optimizer used to resolve
 #' effort across complexes is tuned by `OM@Control$EffortOptim`, a named
 #' list with elements:
-#' - `lambda_scale`: `numeric(1)`, default `1`. Scales the complex-compliance
-#'   penalty `lambda` passed to [.OptEffortChoke()].
+#' - `lambda_scale`: `numeric(1)`, default `1`. Scales the penalty `lambda`
+#'   on year-to-year change in a fleet's targeting mix, passed to
+#'   [.OptEffortChoke()].
 #' - `n_recent`: `integer(1)`, default `5`. Number of recent *years* used to
 #'   determine which complexes are currently active; converted to time
 #'   steps (`n_recent * OM@Seasons`) 

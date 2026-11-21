@@ -233,21 +233,16 @@
   effort_idx      <- which(effort_exists)
   EffortArray     <- purrr::map(AdviceList[effort_idx], slot, "Effort") |> List2Array('Stock') 
 
-  EffectiveArray <- EffortArray
-
-  if (nComplex > 1L) {
-    Compliance <- .ResolveComplianceMatrix(Proj, FleetNames,
-                                           names(Complexes)[effort_idx],
-                                           sim, Year, 'Effort')
-    compset <- !is.na(Compliance)
-    EffectiveArray[compset] <- EffortArray[compset] / pmax(Compliance[compset], 1e-3)
+  Compliance <- if (nComplex > 1L) {
+    .ResolveComplianceMatrix(Proj, FleetNames, names(Complexes)[effort_idx], sim, Year, 'Effort')
+  } else {
+    matrix(NA_real_, nFleet, length(effort_idx))
   }
 
-  # NA effort is not set: a fleet is controlled by the lowest effort among complexes that set it
-  MinEffortInd <- vapply(seq_len(nFleet), \(fl) {
-    ok <- which(is.finite(EffectiveArray[fl, ]))
-    if (length(ok)) ok[which.min(EffectiveArray[fl, ok])] else NA_integer_
-  }, integer(1))
+  # NA effort is not set: a fleet is controlled by the complex with the lowest compliance-blended effort
+  Blend          <- .BlendEffortByCompliance(t(EffortArray), Compliance)
+  EffortCombined <- Blend$Effort
+  MinEffortInd   <- Blend$Binding
   Set <- !is.na(MinEffortInd)
 
   if (is.null(Proj@Misc$EffortSet))
@@ -263,7 +258,7 @@
   if (!any(Set))
     return(Proj)
 
-  MinEffortValues <- EffectiveArray[cbind(seq_len(nFleet), MinEffortInd)]
+  MinEffortValues <- as.numeric(EffortCombined)
   MinEffortInd    <- effort_idx[MinEffortInd]
 
   EffortMat <- matrix(MinEffortValues,

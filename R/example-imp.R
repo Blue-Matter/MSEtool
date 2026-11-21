@@ -13,9 +13,8 @@
 #'   always equals the advised TAC exactly, no bias or stochastic error.
 #' - **`Effort`** ([impslot-class]): `Mean = 1`, `SD = 0` -- same, for
 #'   effort-based advice.
-#' - **`Size`** ([impslot-class]): `Compliance = 1` -- 100% of the fleet
-#'   adopts a newly-advised size regulation in the year it changes; there is
-#'   no partial/lagged uptake.
+#' - **`Size`** ([impslot-class]): `Compliance = 1`. A newly-advised size
+#'   regulation takes effect for the whole fleet in the year it changes.
 #'
 #' @details
 #' Because this is behaviourally identical to leaving `Imp` unspecified
@@ -23,8 +22,8 @@
 #' treated as full compliance throughout the simulation -- attaching
 #' `FullComplianceImp` makes that default explicit rather than implicit. See
 #' [OverageImp] and [UnderageImp] for TAC/effort implementation error
-#' examples, and [PartialSizeComplianceImp] for a partial size-regulation
-#' adoption example.
+#' examples, and [PartialSizeComplianceImp] for an example with
+#' `Size@Compliance` below 1.
 #'
 #' @seealso
 #' [imp-class], [Imp()], [ImpSlot()], [OverageImp], [UnderageImp],
@@ -73,9 +72,10 @@
 
 #' Partial Size-Regulation Compliance Implementation Error
 #'
-#' An [imp-class] object isolating partial fleet adoption of a size-based
-#' regulation (a change to `Advice@Retention` and/or `Advice@Selectivity`),
-#' while TAC and effort advice are still implemented perfectly.
+#' An [imp-class] object with `Size@Compliance` below 1 and perfect
+#' implementation of TAC and effort advice. Size-based regulations (a change to
+#' `Advice@Retention` and/or `Advice@Selectivity`) are adopted in full by the
+#' whole fleet; see [Imp()].
 #'
 #' @format An [imp-class] object. Populated slots:
 #'
@@ -83,11 +83,9 @@
 #'   implementation, as in [FullComplianceImp].
 #' - **`Effort`** ([impslot-class]): `Mean = 1`, `SD = 0` -- perfect effort
 #'   implementation, as in [FullComplianceImp].
-#' - **`Size`** ([impslot-class]): `Compliance = 0.6` -- only 60% of the
-#'   fleet adopts a newly-advised size regulation in the year it changes; the
-#'   remaining 40% continues fishing under the previous Retention/Selectivity
-#'   curve. Selectivity and retention in that year are the
-#'   compliance-weighted average of the new and previous curves.
+#' - **`Size`** ([impslot-class]): `Compliance = 0.6`. `Size@Compliance` is
+#'   not applied, so a newly-advised size regulation takes effect for the
+#'   whole fleet in the year it changes.
 #'
 #' @seealso
 #' [imp-class], [Imp()], [ImpSlot()], [FullComplianceImp], [OverageImp],

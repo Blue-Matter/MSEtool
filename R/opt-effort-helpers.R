@@ -199,11 +199,15 @@
 #
 # \deqn{E^*_f = \min_c \left[ \kappa_{fc} E_{fc} +
 #   (1 - \kappa_{fc}) \max_c E_{fc} \right]}
-.CombineEffortByCompliance <- function(EffortByComplex, Compliance,
-                                       default = 1) {
+.CombineEffortByCompliance <- function(EffortByComplex, Compliance, default = 1)
+  .BlendEffortByCompliance(EffortByComplex, Compliance, default)$Effort
 
-  nFleet <- ncol(EffortByComplex)
-  out    <- rep(NA_real_, nFleet)
+# also returns the complex whose blended effort binds each fleet
+.BlendEffortByCompliance <- function(EffortByComplex, Compliance, default = 1) {
+
+  nFleet  <- ncol(EffortByComplex)
+  out     <- rep(NA_real_, nFleet)
+  binding <- rep(NA_integer_, nFleet)
 
   for (fl in seq_len(nFleet)) {
     E_c <- EffortByComplex[, fl]
@@ -215,10 +219,12 @@
     k <- pmin(pmax(k, 0), 1)
 
     E_max <- max(E_c[ok])
-    out[fl] <- min(k * E_c[ok] + (1 - k) * E_max)
+    Blend <- k * E_c[ok] + (1 - k) * E_max
+    out[fl]     <- min(Blend)
+    binding[fl] <- ok[which.min(Blend)]
   }
 
-  out
+  list(Effort = out, Binding = binding)
 }
 
 .CalcFleetCatch <- function(Proj, sim, TSIndex, Year,

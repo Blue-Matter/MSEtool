@@ -41,7 +41,7 @@
 #' |---|---|---|
 #' | `SeasonalAllocationYears` | `5` | Seasonal OMs only. Number of recent historical years pooled to derive the seasonal allocation of annual advice. |
 #' | `StockTargeting` | `list(n_recent = 5)` | Multi-stock OMs only. `n_recent`: number of recent historical years used to identify stocks that are no longer targeted; see [GenerateStockTargeting()]. |
-#' | `EffortOptim` | `list(lambda_scale = 1, n_recent = 5, maxEval = 500)` | Multi-complex OMs only. Settings for the solver that resolves fleet effort from TACs across complexes. `lambda_scale`: scales the complex-compliance penalty. `n_recent`: number of recent years used to determine which complexes are active. `maxEval`: maximum solver evaluations. |
+#' | `EffortOptim` | `list(lambda_scale = 1, n_recent = 5, maxEval = 500)` | Multi-complex OMs only. Settings for the solver that resolves fleet effort from TACs across complexes. `lambda_scale`: scales the penalty on year-to-year change in a fleet's targeting mix. `n_recent`: number of recent years used to determine which complexes are active. `maxEval`: maximum solver evaluations. |
 #' | `ProjectChunks` | `NULL` | Number of simulation chunks projected per MP. `NULL` uses one chunk per parallel worker, or one chunk when `parallel = FALSE`. Results do not depend on the number of chunks. |
 #' | `DataOM` | `NULL` | See the `DataOM` section. |
 #'

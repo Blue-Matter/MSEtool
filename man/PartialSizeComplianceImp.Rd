@@ -11,20 +11,19 @@ An \link[=imp-class]{imp} object. Populated slots:
 implementation, as in \link{FullComplianceImp}.
 \item \strong{\code{Effort}} (\link[=impslot-class]{impslot}): \code{Mean = 1}, \code{SD = 0} -- perfect effort
 implementation, as in \link{FullComplianceImp}.
-\item \strong{\code{Size}} (\link[=impslot-class]{impslot}): \code{Compliance = 0.6} -- only 60\% of the
-fleet adopts a newly-advised size regulation in the year it changes; the
-remaining 40\% continues fishing under the previous Retention/Selectivity
-curve. Selectivity and retention in that year are the
-compliance-weighted average of the new and previous curves.
+\item \strong{\code{Size}} (\link[=impslot-class]{impslot}): \code{Compliance = 0.6}. \code{Size@Compliance} is
+not applied, so a newly-advised size regulation takes effect for the
+whole fleet in the year it changes.
 }
 }
 \usage{
 PartialSizeComplianceImp
 }
 \description{
-An \link[=imp-class]{imp} object isolating partial fleet adoption of a size-based
-regulation (a change to \code{Advice@Retention} and/or \code{Advice@Selectivity}),
-while TAC and effort advice are still implemented perfectly.
+An \link[=imp-class]{imp} object with \code{Size@Compliance} below 1 and perfect
+implementation of TAC and effort advice. Size-based regulations (a change to
+\code{Advice@Retention} and/or \code{Advice@Selectivity}) are adopted in full by the
+whole fleet; see \code{\link[=Imp]{Imp()}}.
 }
 \examples{
 PartialSizeComplianceImp

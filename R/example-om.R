@@ -63,7 +63,7 @@
 #' [FullComplianceImp] models perfect implementation: `TAC@Mean = 1`/
 #' `SD = 0` and `Effort@Mean = 1`/`SD = 0` mean realised TAC/effort always
 #' equal advice exactly, and
-#' `Size@Compliance = 1` means any size-regulation advice (a change to
+#' any size-regulation advice (a change to
 #' `Advice@Retention`/`Advice@Selectivity`) is adopted immediately by the
 #' whole fleet. See [Imp()] for details,
 #' and [OverageImp], [UnderageImp], [PartialSizeComplianceImp] for
@@ -154,7 +154,7 @@
 #' [FullComplianceImp] models perfect implementation: `TAC@Mean = 1`/
 #' `SD = 0` and `Effort@Mean = 1`/`SD = 0` mean realised TAC/effort always
 #' equal advice exactly, and
-#' `Size@Compliance = 1` means any size-regulation advice (a change to
+#' any size-regulation advice (a change to
 #' `Advice@Retention`/`Advice@Selectivity`) is adopted immediately by the
 #' whole fleet. See [Imp()] for details,
 #' and [OverageImp], [UnderageImp], [PartialSizeComplianceImp] for
@@ -241,7 +241,7 @@
 #' [FullComplianceImp] models perfect implementation: `TAC@Mean = 1`/
 #' `SD = 0` and `Effort@Mean = 1`/`SD = 0` mean realised TAC/effort always
 #' equal advice exactly, and
-#' `Size@Compliance = 1` means any size-regulation advice (a change to
+#' any size-regulation advice (a change to
 #' `Advice@Retention`/`Advice@Selectivity`) is adopted immediately by the
 #' whole fleet. See [Imp()] for details,
 #' and [OverageImp], [UnderageImp], [PartialSizeComplianceImp] for
@@ -311,7 +311,7 @@
 #' [FullComplianceImp] models perfect implementation: `TAC@Mean = 1`/
 #' `SD = 0` and `Effort@Mean = 1`/`SD = 0` mean realised TAC/effort always
 #' equal advice exactly, and
-#' `Size@Compliance = 1` means any size-regulation advice (a change to
+#' any size-regulation advice (a change to
 #' `Advice@Retention`/`Advice@Selectivity`) is adopted immediately by the
 #' whole fleet. See [Imp()] for details,
 #' and [OverageImp], [UnderageImp], [PartialSizeComplianceImp] for
@@ -391,7 +391,7 @@
 #' [FullComplianceImp] models perfect implementation: `TAC@Mean = 1`/
 #' `SD = 0` and `Effort@Mean = 1`/`SD = 0` mean realised TAC/effort always
 #' equal advice exactly, and
-#' `Size@Compliance = 1` means any size-regulation advice (a change to
+#' any size-regulation advice (a change to
 #' `Advice@Retention`/`Advice@Selectivity`) is adopted immediately by the
 #' whole fleet. See [Imp()] for details,
 #' and [OverageImp], [UnderageImp], [PartialSizeComplianceImp] for

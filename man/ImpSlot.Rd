@@ -67,23 +67,18 @@ to \code{Error}.
 
 \subsection{Compliance}{
 
-For \code{TAC}/\code{Effort}, only meaningful for multi-stock/multi-complex OMs,
-where it governs how a fleet reconciles competing TAC or effort
-recommendations across stocks.
+For \code{TAC} and \code{Effort}, \code{Compliance} applies to multi-complex OMs, where it
+governs how a fleet combines the controls set by different complexes. A
+fleet's effort is the lowest of
+\eqn{\kappa_c E_c + (1 - \kappa_c) E_{max}} across the complexes that set a
+control, where \eqn{E_c} is the effort implied by complex \code{c} (the advised
+effort, or the effort at which its TAC is reached), \eqn{\kappa_c} is this
+\code{Compliance} and \eqn{E_{max}} is the largest \eqn{E_c}. \code{1} makes the
+complex a hard limit, \code{0} removes its influence, and unset is treated as
+\code{1}. See \code{\link[=Imp]{Imp()}}.
 
-For \code{TAC} it sets how heavily exceeding this complex's TAC is penalised
-relative to falling short of it: \code{0} makes exceeding it free, \code{0.5} weights
-the two equally, and values approaching \code{1} act as a hard choke. Unset
-defaults to \code{0.7}, penalising overshoot about 2.3 times more than
-undershoot, since a TAC is a cap rather than a target. See \code{\link[=Imp]{Imp()}}.
-
-Values close to \code{1} are not recommended: the penalty on falling short is
-bounded while the penalty on exceeding is not, so a sufficiently large
-weight makes zero effort the cheapest option and the fleet stops fishing
-altogether.
-
-For \code{Size}, it is currently not applied: size-based regulations are always
-adopted in full.
+For \code{Size}, it is not applied: size-based regulations are always adopted in
+full.
 }
 }
 \examples{
