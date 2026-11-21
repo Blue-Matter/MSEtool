@@ -312,9 +312,11 @@
         RetW    <- .AtLengthOnClasses(RetObj, FleetLength)
         WeightW <- Weight
         if (!.OnClasses(WeightW@MeanAtLength, Classes)) WeightW@MeanAtLength <- NULL
-        WSel <- .CalcFleetWeightAtAge(SelW, WeightW, FleetLength)
+        WSel <- .CalcFleetWeightAtAge(SelW, WeightW, FleetLength) |>
+          .SetSimDimname(sim)
         WRet <- .CalcFleetWeightAtAge(SelW, WeightW, FleetLength,
-                                      Retention = RetW)
+                                      Retention = RetW) |>
+          .SetSimDimname(sim)
 
         .CheckFleetWeightConsistency(WSel, WRet, RetObj@MeanAtAge,
                                      st, FleetNames[fl])
