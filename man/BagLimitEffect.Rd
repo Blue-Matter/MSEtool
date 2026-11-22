@@ -40,5 +40,5 @@ projection (\code{Effort(MSE)}) is \code{TimeFraction} times the effort of its t
 Observed effort data generated in the projection are based on trips.
 }
 \seealso{
-\code{\link[=Advice]{Advice()}}, \code{\link[=AggregateBagLimit]{AggregateBagLimit()}}, \code{\link[=TACAttainment]{TACAttainment()}}
+\code{\link[=Advice]{Advice()}}, \code{\link[=AggregateBagLimit]{AggregateBagLimit()}}, \code{\link[=TACAttainment]{TACAttainment()}}, \code{\link[=EffortAttainment]{EffortAttainment()}}
 }

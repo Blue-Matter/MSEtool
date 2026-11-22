@@ -48,8 +48,9 @@ For multi-complex \code{OM}s, the choke/targeting optimizer used to resolve
 effort across complexes is tuned by \code{OM@Control$EffortOptim}, a named
 list with elements:
 \itemize{
-\item \code{lambda_scale}: \code{numeric(1)}, default \code{1}. Scales the complex-compliance
-penalty \code{lambda} passed to \code{\link[=.OptEffortChoke]{.OptEffortChoke()}}.
+\item \code{lambda_scale}: \code{numeric(1)}, default \code{1}. Scales the penalty \code{lambda}
+on year-to-year change in a fleet's targeting mix, passed to
+\code{\link[=.OptEffortChoke]{.OptEffortChoke()}}.
 \item \code{n_recent}: \code{integer(1)}, default \code{5}. Number of recent \emph{years} used to
 determine which complexes are currently active; converted to time
 steps (\code{n_recent * OM@Seasons})

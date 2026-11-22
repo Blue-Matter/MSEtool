@@ -9,14 +9,11 @@
 #' @slot SD Numeric array or list of arrays. Standard deviation of
 #'   implementation error around `Mean`. See [ImpSlot()].
 #' @slot Compliance Numeric array or list of arrays, populated to `[Sim x
-#'   Year]` by [PopulateImpSlot()]. Meaning is context-dependent on which
-#'   [imp-class] control this `impslot` belongs to: for `TAC`/`Effort`,
-#'   governs multi-stock reconciliation; for `Size`, is the fraction of the fleet
-#'   adopting a newly-advised size regulation (see [Imp()]). See
-#'   [ImpSlot()].
+#'   Year]` by [PopulateImpSlot()]. For `TAC` and `Effort`, governs how a
+#'   fleet combines the controls set by several complexes; for `Size`, it is
+#'   not applied (see [Imp()]). See [ImpSlot()].
 #' @slot Error Numeric array or list of arrays. Realised implementation error,
-#'   typically derived from `Mean`, `SD`, and `Compliance` during simulation.
-#'   See [ImpSlot()].
+#'   generated from `Mean` and `SD` during simulation. See [ImpSlot()].
 #' @slot Misc List. Miscellaneous additional objects.
 #'
 #' @details

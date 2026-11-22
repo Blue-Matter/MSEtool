@@ -71,8 +71,7 @@ to the optimiser.}
 
 \item{inner_reltol}{Numeric, or \code{NULL} (default). Relative convergence
 tolerance for the per-complex root finds during optimisation, as a
-fraction of the TAC being matched; \code{NULL} keeps \code{.OptEffortSingleStock()}'s
-absolute \code{tol}.}
+fraction of the TAC being matched; \code{NULL} uses \code{1e-6}.}
 
 \item{maxEval}{Integer (default \code{500}). Maximum function evaluations
 allowed across the BFGS and Nelder-Mead phases combined.}
@@ -80,7 +79,9 @@ allowed across the BFGS and Nelder-Mead phases combined.}
 \value{
 A named list with \code{Effort}, \code{Delta} (\verb{[nFleet x nStock]}, broadcast
 from the underlying per-complex solution), \code{converged}, \code{saturated},
-\code{TAC}/\code{Catch} (per complex), \code{TACMatrix}/\code{CatchMatrix} (\verb{[nComplex x nFleet]}), \code{AtCeiling} (per fleet) and \code{ActiveComplex}.
+\code{TAC}/\code{Catch} (per complex), \code{TACMatrix}/\code{CatchMatrix} (\verb{[nComplex x nFleet]}), \code{AtCeiling} (per fleet), \code{Unresolved} (per complex), \code{Binding}
+(per fleet, the index of the complex whose TAC sets its effort) and
+\code{ActiveComplex}.
 }
 \description{
 Solves fleet effort under TAC management in a multi-complex model.

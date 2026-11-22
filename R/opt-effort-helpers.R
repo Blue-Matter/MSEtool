@@ -199,11 +199,15 @@
 #
 # \deqn{E^*_f = \min_c \left[ \kappa_{fc} E_{fc} +
 #   (1 - \kappa_{fc}) \max_c E_{fc} \right]}
-.CombineEffortByCompliance <- function(EffortByComplex, Compliance,
-                                       default = 1) {
+.CombineEffortByCompliance <- function(EffortByComplex, Compliance, default = 1)
+  .BlendEffortByCompliance(EffortByComplex, Compliance, default)$Effort
 
-  nFleet <- ncol(EffortByComplex)
-  out    <- rep(NA_real_, nFleet)
+# also returns the complex whose blended effort binds each fleet
+.BlendEffortByCompliance <- function(EffortByComplex, Compliance, default = 1) {
+
+  nFleet  <- ncol(EffortByComplex)
+  out     <- rep(NA_real_, nFleet)
+  binding <- rep(NA_integer_, nFleet)
 
   for (fl in seq_len(nFleet)) {
     E_c <- EffortByComplex[, fl]
@@ -215,10 +219,12 @@
     k <- pmin(pmax(k, 0), 1)
 
     E_max <- max(E_c[ok])
-    out[fl] <- min(k * E_c[ok] + (1 - k) * E_max)
+    Blend <- k * E_c[ok] + (1 - k) * E_max
+    out[fl]     <- min(Blend)
+    binding[fl] <- ok[which.min(Blend)]
   }
 
-  out
+  list(Effort = out, Binding = binding)
 }
 
 .CalcFleetCatch <- function(Proj, sim, TSIndex, Year,
@@ -367,7 +373,8 @@
 
 .CheckComplexTACAttainment <- function(Proj, sim, TSIndex, Year, Effort_final, Delta_final,
                                        TAC_by_Complex, TACType_by_Complex, TACUnit_by_Complex,
-                                       EbyC_final, Ceiling = NULL) {
+                                       EbyC_final, Ceiling = NULL, tol = 1e-3,
+                                       Compliance = NULL, Binding = NULL) {
 
   ComplexNames <- names(TAC_by_Complex)
   nComplex     <- length(TAC_by_Complex)
@@ -389,59 +396,106 @@
   if (is.null(saturated_cx))
     saturated_cx <- rep(NA, nComplex)
 
-  choke_ok   <- !hit & !is.na(converged_cx) & converged_cx
-  cap_ok     <- !hit & !is.na(saturated_cx) & saturated_cx
-  unresolved <- !hit & !choke_ok & !cap_ok
-
-  converged <- all(hit)
-  saturated <- if (converged) NA else !any(unresolved)
-
   TACMat <- do.call(rbind, lapply(TAC_by_Complex, function(x)
     if (is.null(x)) rep(NA_real_, ncol(CatchMat)) else as.numeric(x)))
+  # a fleet with compliance below 1 is allowed to catch more than a complex's TAC
+  Strict  <- if (is.null(Compliance)) TRUE else t(!is.finite(Compliance) | Compliance >= 1)
+  OverTAC <- rowSums(CatchMat > TACMat * (1 + tol) + 1e-8 & Strict, na.rm = TRUE) > 0
+
+  # converged is NA for a complex with no fleet left to solve (all bound by other complexes)
+  choke_ok   <- !hit & !OverTAC & (is.na(converged_cx) | converged_cx)
+  cap_ok     <- !hit & !is.na(saturated_cx) & saturated_cx
+  unresolved <- (!hit & !choke_ok & !cap_ok) | OverTAC
+
+  converged <- all(hit) && !any(OverTAC)
+  saturated <- if (converged) NA else !any(unresolved)
+
   AtCeiling <- if (is.null(Ceiling)) rep(FALSE, ncol(CatchMat)) else Effort_final >= Ceiling * 0.99
 
   list(converged = converged, saturated = saturated, TAC = TAC_vec, Catch = Catch_vec,
-       TACMatrix = TACMat, CatchMatrix = CatchMat, AtCeiling = AtCeiling)
+       TACMatrix = TACMat, CatchMatrix = CatchMat, AtCeiling = AtCeiling,
+       Unresolved = unresolved, Binding = Binding)
 }
 
 .ResolveChokeEffort <- function(Proj, sim, TSIndex, Year, Delta,
                                 TAC_by_Complex, TACType_by_Complex,
                                 TACUnit_by_Complex, Compliance,
                                 MaxFleetEffort = NULL, Effort_start = NULL,
-                                maxMixedIter = 20L, mixed_tol = 1e-6, ...) {
+                                maxMixedIter = 20L, tol = 1e-3, ...) {
 
   Effort_curr <- Proj@Effort[sim, TSIndex, ]
   ProjTmp     <- .WriteStateToProj(Proj, sim, TSIndex,
                                    Effort = Effort_curr, Delta = Delta)
 
-  # fleets with a TAC in one complex but not another fish their combined effort in the
-  # complex without one, so those complexes are re-solved until that effort settles
+  # each complex solves only the fleets it binds, repeated until the combined effort settles
   HasTAC <- do.call(rbind, lapply(TAC_by_Complex, \(x) if (is.null(x)) NULL else is.finite(x)))
   Mixed  <- if (is.null(HasTAC)) logical(0) else apply(HasTAC, 2, any) & !apply(HasTAC, 2, all)
 
-  for (it in seq_len(if (any(Mixed)) maxMixedIter else 1L)) {
+  TACMat    <- do.call(rbind, lapply(TAC_by_Complex, \(x) if (is.null(x)) rep(NA_real_, length(Effort_curr)) else as.numeric(x)))
+  TAC_solve <- TAC_by_Complex
+  EbyC_prev <- NULL
+  LastKey   <- vector('list', length(TAC_by_Complex))
+  for (it in seq_len(maxMixedIter)) {
+    # a complex whose free fleets and held efforts are unchanged keeps its last solution
+    Solve <- TAC_solve
+    Reuse <- rep(FALSE, length(Solve))
+    for (cx in seq_along(Solve)) {
+      if (is.null(Solve[[cx]])) next
+      Key <- list(Free = is.finite(Solve[[cx]]),
+                  HeldE = ProjTmp@Effort[sim, TSIndex, !is.finite(Solve[[cx]])])
+      Reuse[cx] <- !is.null(EbyC_prev) && identical(Key, LastKey[[cx]])
+      if (Reuse[cx]) Solve[cx] <- list(NULL) else LastKey[[cx]] <- Key
+    }
+
     EbyC <- .SolveEffortByComplex(ProjTmp, Year, TSIndex, sim,
-                                  TAC_by_Complex, TACType_by_Complex,
+                                  Solve, TACType_by_Complex,
                                   TACUnit_by_Complex, MaxFleetEffort,
                                   Effort_start = Effort_start, ...)
+    Held <- matrix(FALSE, nrow(EbyC), ncol(EbyC))
+    if (!is.null(EbyC_prev)) {
+      for (attr_name in c('converged', 'saturated'))
+        attr(EbyC, attr_name)[Reuse] <- attr(EbyC_prev, attr_name)[Reuse]
+      EbyC[Reuse, ] <- EbyC_prev[Reuse, ]
+      Held <- is.na(EbyC) & is.finite(EbyC_prev)
+      EbyC[Held] <- EbyC_prev[Held]
+    }
 
-    Effort <- .CombineEffortByCompliance(EbyC, Compliance)
+    Blend  <- .BlendEffortByCompliance(EbyC, Compliance)
+    Effort <- Blend$Effort
 
     unset <- !is.finite(Effort)
     if (any(unset)) Effort[unset] <- Effort_curr[unset]
 
     Effort <- .ApplyEffortCeiling(Effort, MaxFleetEffort)
-    if (!any(Mixed)) break
 
-    Assumed <- ProjTmp@Effort[sim, TSIndex, Mixed]
-    if (all(abs(Effort[Mixed] - Assumed) <= mixed_tol * pmax(abs(Assumed), 1e-8))) break
-    ProjTmp@Effort[sim, TSIndex, Mixed] <- Effort[Mixed]
+    BoundElsewhere <- is.finite(EbyC) & row(EbyC) != matrix(Blend$Binding, nrow(EbyC), ncol(EbyC), byrow = TRUE)
+    BoundElsewhere[is.na(BoundElsewhere)] <- FALSE
+    if (!any(Mixed) && !any(BoundElsewhere)) break
+
+    # a held fleet whose catch now exceeds its TAC in a complex is solved by that complex again
+    Over <- Held
+    if (any(Held)) {
+      CatchNow <- .CalcFleetCatch(.WriteStateToProj(ProjTmp, sim, TSIndex, Effort = Effort),
+                                  sim, TSIndex, Year, TACType_by_Complex, TACUnit_by_Complex)
+      Over <- Held & is.finite(TACMat) & CatchNow > TACMat * (1 + tol)
+      BoundElsewhere[Over] <- FALSE
+    }
+
+    Assumed <- ProjTmp@Effort[sim, TSIndex, ]
+    Settled <- all(abs(Effort - Assumed) <= tol * pmax(abs(Assumed), 1e-8))
+    if (it > 1L && Settled && !any(Over)) break
+    ProjTmp@Effort[sim, TSIndex, ] <- Effort
+    TAC_solve <- TAC_by_Complex
+    for (cx in seq_along(TAC_solve))
+      if (!is.null(TAC_solve[[cx]]))
+        TAC_solve[[cx]][BoundElsewhere[cx, ]] <- NA
+    EbyC_prev    <- EbyC
     Effort_start <- EbyC
   }
   ProjTmp <- .WriteStateToProj(ProjTmp, sim, TSIndex,
                                Effort = Effort, Delta = Delta)
 
-  list(Effort = Effort, Proj = ProjTmp, EffortByComplex = EbyC)
+  list(Effort = Effort, Proj = ProjTmp, EffortByComplex = EbyC, Binding = Blend$Binding)
 }
 
 

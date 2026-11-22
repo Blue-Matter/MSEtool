@@ -26,7 +26,7 @@ landed catch-at-size (\code{Obs@LandingsAtSize}), and discarded catch-at-size
 \item{ProjYears}{Integer vector. Calendar years of the projection period.}
 
 \item{Bins}{Numeric vector. Age classes for age composition
-slots, or length class midpoints for size
+slots, or lower bounds of the length bins for size
 composition slots. Used to set the length of the \code{Bin} dimension and to
 name it in the populated \code{Shift} array. \code{NULL} is accepted only when
 \code{\link[=EmptyObject]{EmptyObject()}} returns \code{TRUE} for \code{Comp}.}

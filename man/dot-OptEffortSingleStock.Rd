@@ -17,8 +17,7 @@
   cx = 1L,
   Effort_start = NULL,
   minEffort = 1e-08,
-  tol = 0.001,
-  reltol = NULL,
+  reltol = 1e-05,
   maxIter = 100,
   max_log_step = log(10),
   maxEffort = 1e+06,
@@ -65,13 +64,10 @@ problem each call - see \code{.OptEffortChoke()}.}
 values throughout; prevents log-scale arithmetic from collapsing to
 \code{-Inf}. Default \code{1e-8}.}
 
-\item{tol}{Numeric scalar. Convergence tolerance: Newton-Raphson is
-considered converged when all active-fleet residuals satisfy
-\verb{|TAC - catch| < tol}. Default \code{1e-3}.}
-
-\item{reltol}{Numeric, or \code{NULL} (default). When supplied, convergence is
-judged relative to each fleet's TAC rather than against the absolute \code{tol},
-making the criterion invariant to the units catch is measured in.}
+\item{reltol}{Numeric. Convergence tolerance relative to each fleet's TAC:
+the solve has converged when \verb{|TAC - catch| < reltol * TAC} for every active
+fleet, which does not depend on the units catch is measured in. \code{NULL}
+uses the default \code{1e-5}.}
 
 \item{maxIter}{Integer. Maximum Newton-Raphson iterations before the BFGS
 fallback is attempted. Default \code{100}.}
@@ -175,7 +171,7 @@ A list with:
 per fleet. Fleets with no TAC (\code{NA}) keep the effort already set for
 this time step in \code{Proj@Effort}: their effort advice, else last year's
 effort. A fleet that cannot reach its TAC is at its effort ceiling.
-\item \code{converged} - \code{TRUE} if the solve met \code{tol}/\code{reltol}, \code{FALSE} if not,
+\item \code{converged} - \code{TRUE} if the solve met \code{reltol}, \code{FALSE} if not,
 \code{NA} if there was no active TAC to solve for.
 \item \code{saturated} - \code{TRUE} if the TAC was unachievable within the effort
 ceiling (see "Saturation vs. stall" above) — \code{FALSE} for an

@@ -100,8 +100,8 @@ individual of a given age belongs to each weight class
 \code{CVatAge} is non-\code{NULL}; supply directly only when overriding the
 computed key. Default \code{NULL}.}
 
-\item{Classes}{\code{numeric} or \code{NULL}. Weight class midpoints in units of
-\code{Units}. Populated automatically during \code{\link[=Populate]{Populate()}} when \code{CVatAge} is
+\item{Classes}{\code{numeric} or \code{NULL}. Lower bounds of the weight bins in
+units of \code{Units}. Bin \code{k} spans \verb{[Classes[k], Classes[k+1])}; the final bin is open-ended. Populated automatically during \code{\link[=Populate]{Populate()}} when \code{CVatAge} is
 non-\code{NULL} and \code{Classes} is \code{NULL}. Default \code{NULL}.}
 
 \item{Misc}{\code{list}. Used internally. Default \code{list()}.}

@@ -27,7 +27,7 @@
 #'   - `RetentionFraction`: fraction of the stock's retained catch kept, the
 #'     rest released (`1` without a discard-mode bag limit on the stock).
 #'
-#' @seealso [Advice()], [AggregateBagLimit()], [TACAttainment()]
+#' @seealso [Advice()], [AggregateBagLimit()], [TACAttainment()], [EffortAttainment()]
 #' @export
 BagLimitEffect <- function(MSE) {
   .CheckClass(MSE, 'mse', 'MSE')

@@ -63,7 +63,7 @@ ClosureMode(x) <- value
 Advice(x) <- value
 }
 \arguments{
-\item{TAC}{Numeric vector or matrix specifying total allowable catch.
+\item{TAC}{Numeric vector specifying total allowable catch.
 See \code{Details}}
 
 \item{TACType}{Character. Does the TAC refer to \code{"Removals"} (default) or
@@ -105,8 +105,8 @@ forms:
 for a given fleet position means no limit applies to that fleet.
 }
 
-The bag limit regulation persists across time steps until a new
-\code{\link[=Advice]{Advice()}} object is returned by the MP. See Details.
+The bag limit stays in place until the MP returns another \code{BagLimit};
+\code{NA} removes the limit for that fleet. See Details.
 
 An aggregate bag limit pooling catch across several stocks for one
 fleet is declared separately via \code{AggregateBagLimit()}, available to
@@ -233,6 +233,31 @@ is unnamed, the values are taken in fleet order.
 Must have \code{nFleet} rows and \code{nArea} columns. Rows named by fleet are
 matched to the fleets by name.
 }
+
+Effort given as a single value or a fleet vector is distributed across
+areas by the operating model in every time step.
+}
+
+\subsection{TAC and Effort in later time steps}{
+
+A \code{TAC} or \code{Effort} advised for a fleet stays in place until the MP
+replaces it:
+\itemize{
+\item An \code{Advice} object with neither \code{TAC} nor \code{Effort} repeats the previous
+\code{TAC} (with its \code{TACType}, \code{TACUnit} and any \code{Effort} cap) and the
+previous \code{Effort}.
+\item A fleet with no \code{TAC} (\code{NULL} or \code{NA}) and no \code{Effort} keeps the last
+\code{Effort} advised for it, including its split across areas when \code{Effort}
+was a fleet x area matrix. If no \code{Effort} has been advised for the fleet,
+or a \code{TAC} replaced it, the fleet fishes the effort of the same season in
+the last historical year.
+\item A \code{TAC} for a fleet replaces that fleet's earlier \code{Effort} (an \code{Effort}
+returned with the \code{TAC} is a cap on the effort used to catch it). An
+\code{Effort} without a \code{TAC} replaces the earlier \code{TAC}.
+}
+
+Implementation error is applied to a repeated \code{TAC} or \code{Effort} in each
+year. A \code{TAC} from interim advice is not repeated.
 }
 
 \subsection{Closure}{
@@ -243,15 +268,40 @@ Can only be \code{0} (closed) or \code{1} (open). Otherwise will be converted to
 \item vector length \code{nArea}
 \item matrix with \code{nFleet} rows and \code{nArea} columns: fleet-specific closures.
 }
+
+The closure applies to the stocks in the complex that returned it. A fleet
+does not fish an area that is closed to it for every stock it catches; any
+effort it would have put there, including a fleet- and area-specific
+\code{Effort}, goes to its open areas. In an area closed for some of its stocks
+only, the fleet keeps fishing and releases the closed stocks, with discard
+mortality from the fleet's \code{\link[=DiscardMortality]{DiscardMortality()}} object.
 }
 
 \subsection{Selectivity}{
 
 Either a \code{\link[=Selectivity]{Selectivity()}} object, or a list length \code{nFleet} of
-\code{Selectivity} objects.
+\code{Selectivity} objects, one per fleet.
 
 If a single \code{Selectivity} object, the prescribed selectivity schedule
 is applied to all fleets.
+
+A list is matched to the fleets by name if it is named with the fleet
+names, and by position otherwise. A \code{NULL} element leaves that fleet's
+current schedule unchanged, e.g.
+\code{list(Longline = Selectivity(Pars = list(L5 = 40, LFS = 60)), Trawl = NULL)}.
+
+A \code{MeanAtLength} (or \code{MeanAtWeight}) schedule is applied on the size classes
+the fleet already uses (the stock's classes unless the fleet defines its
+own). If \code{Classes} is omitted, the schedule must have one value per fleet
+class. If \code{Classes} differ from the fleet's classes, each fleet class takes
+the value of the supplied bin containing its midpoint.
+
+For a stock complex, the schedule applies to every stock in the complex. A
+\code{MeanAtAge} schedule (other than a single value for all ages) requires the
+stocks to share the same age classes, and a \code{MeanAtLength} or
+\code{MeanAtWeight} schedule without \code{Classes} requires them to share the same
+size classes. Otherwise use \code{Pars}, or give \code{Classes} with the at-size
+schedule.
 
 See section below for more details.
 }

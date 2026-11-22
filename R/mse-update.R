@@ -60,6 +60,14 @@
     MSE@Misc$BagLimit <- list()
   MSE@Misc$BagLimit[[MPName]] <- Proj@Misc$BagLimit
 
+  if (is.null(MSE@Misc$MaxF))
+    MSE@Misc$MaxF <- list()
+  MSE@Misc$MaxF[MPName] <- list(Proj@Misc$MaxF)
+
+  if (is.null(MSE@Misc$EffortAttainment))
+    MSE@Misc$EffortAttainment <- list()
+  MSE@Misc$EffortAttainment[MPName] <- list(Proj@Misc$EffortAttainment)
+
   
   # TODO 
   # MSE@Misc$Failed[[MPName]] <- lapply(SimList_MP, slot, 'Misc') |>   lapply("[[", "Failed") |> 
@@ -225,5 +233,7 @@
     methods::slot(Proj, sl) <- Mask(methods::slot(Proj, sl))
   Proj@Misc$TACAttainment <- Mask(Proj@Misc$TACAttainment)
   Proj@Misc$BagLimit      <- Mask(Proj@Misc$BagLimit)
+  Proj@Misc$MaxF          <- Mask(Proj@Misc$MaxF)
+  Proj@Misc$EffortAttainment <- Mask(Proj@Misc$EffortAttainment)
   Proj
 }

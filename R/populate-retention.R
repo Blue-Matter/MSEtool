@@ -108,6 +108,8 @@ PopulateRetention <- function(Retention,
   
   .CheckInputs(Retention)
   .CheckSimsNotIncreased(Retention, nSim)
+  if (.NotAtLength(Retention))
+    Retention@isAtLength <- FALSE
   Retention@MeanAtAge <- .NameAtAge(Retention@MeanAtAge, Ages, Years, nArea, cl = 'retention')
   Retention <- .NameAtSize(Retention, 'MeanAtLength', Length, Years, nArea)
   Retention <- .NameAtSize(Retention, 'MeanAtWeight', Weight, Years, nArea)
@@ -184,4 +186,10 @@ PopulateRetention <- function(Retention,
   Retention <- .AddAtWeightDimnames(Retention, Years)
   
   .SetDigest(.CheckOutput(.SetAgeDimnames(Retention, Ages), nSim, Ages, Years, nArea), argList)
+}
+
+# schedule supplied only at age or at weight: no Pars, Model, or at-length values
+.NotAtLength <- function(object) {
+  (!is.null(object@MeanAtAge) || !is.null(object@MeanAtWeight)) && is.null(object@MeanAtLength) &&
+    !length(object@Pars) && is.null(object@Model)
 }

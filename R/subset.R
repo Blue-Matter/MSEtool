@@ -17,6 +17,9 @@
 #'   object records the original simulation numbers, so projections of the
 #'   subset reproduce those simulations of the full object.
 #' @param Years  Numeric vector of calendar years to retain. `NULL` skips.
+#'   An `om` or `hist` subset by `Years` keeps the years of its operating
+#'   model, so it can be summarised and plotted but not simulated or projected.
+#'   Historical values are not imputed for years after the historical period.
 #' @param Ages   Numeric vector of age classes to retain. `NULL` skips.
 #' @param MPs    Integer or character vector of MPs to retain. `NULL` skips.
 #'   Retained MPs keep their order in the object.
@@ -61,9 +64,15 @@ Subset <- function(object,
     if (!is.null(OM)) object <- .SetGlobalSims(object, OM, Sims)
   }
   if (!is.null(Years)) {
-    Hist   <- if (inherits(object, "mse")) .SubsetHistYears(object@Hist, Years, Impute)
-    object <- .SubsetYear(object, Years, Impute)
-    if (!is.null(Hist)) object@Hist <- Hist
+    if (inherits(object, "hist")) {
+      object <- .SubsetHistObjYears(object, Years, Impute)
+    } else {
+      Hist   <- if (inherits(object, "mse")) .SubsetHistYears(object@Hist, Years, Impute)
+      OM     <- .SimOM(object)
+      object <- .SubsetYear(object, Years, Impute)
+      if (!is.null(Hist)) object@Hist <- Hist
+      if (!is.null(OM) && !inherits(object, "om")) object@OM <- .KeepRecDevHistYears(object@OM, OM, Years, Impute)
+    }
   }
   if (!is.null(Ages))   object <- .SubsetAge(object, Ages)
   if (!is.null(MPs)) {
@@ -85,6 +94,29 @@ Subset <- function(object,
   HistTS <- as.numeric(dimnames(Hist@SBiomass)$Year)
   if (!length(HistTS)) return(.SubsetYear(Hist, Years, Impute))
   .SubsetYear(Hist, Years[as.numeric(Years) <= max(HistTS)], Impute)
+}
+
+# historical outputs are not extended past their last year
+.SubsetHistObjYears <- function(Hist, Years, Impute) {
+  OM <- Hist@OM
+  for (s in setdiff(slotNames(Hist), c("OM", "Misc"))) {
+    val <- slot(Hist, s)
+    if (!is.null(val)) slot(Hist, s) <- .SubsetYear(val, Years, Impute, Extend = FALSE)
+  }
+  Hist <- .SubsetMiscEntries(Hist, "Advice", .KeepYearKeys, Years)
+  Hist <- .SubsetMiscEntries(Hist, setdiff(.MiscByYear, "Advice"), .KeepYears, Years)
+  Hist@OM <- .KeepRecDevHistYears(.SubsetYear(OM, Years, Impute), OM, Years, Impute)
+  Hist
+}
+
+# RecDevHist holds historical years only, so years after its last are not imputed into it
+.KeepRecDevHistYears <- function(OMSub, OM, Years, Impute) {
+  for (st in seq_along(OMSub@Stock)) {
+    Dev <- OM@Stock[[st]]@SRR@RecDevHist
+    if (!is.null(Dev))
+      OMSub@Stock[[st]]@SRR@RecDevHist <- .SubsetYear(Dev, Years, Impute, Extend = FALSE)
+  }
+  OMSub
 }
 
 # Subsets an om/hist/mse to whole complexes and re-indexes `Complexes` to the retained stocks
@@ -247,10 +279,10 @@ Subset <- function(object,
 }
 
 .MiscSelRet  <- c("Selectivity", "Retention", "DiscardMortality")
-.MiscByYear  <- c("Advice", "TACAttainment", "BagLimit", .MiscSelRet)
+.MiscByYear  <- c("Advice", "TACAttainment", "BagLimit", "MaxF", "EffortAttainment", .MiscSelRet)
 .MiscByAge   <- c("Advice", .MiscSelRet, "InitialAtAge")
-.MiscByMP    <- c("Advice", "TACAttainment", "BagLimit", "Interval", .MiscSelRet)
-.MiscByFleet <- c("Advice", "TACAttainment", "BagLimit", .MiscSelRet, "AnnualTAC")
+.MiscByMP    <- c("Advice", "TACAttainment", "BagLimit", "MaxF", "EffortAttainment", "Interval", .MiscSelRet)
+.MiscByFleet <- c("Advice", "TACAttainment", "BagLimit", "MaxF", "EffortAttainment", .MiscSelRet, "AnnualTAC")
 
 .SubsetMiscEntries <- function(object, Keep, fn, ...) {
   if (!"Misc" %in% methods::slotNames(object) || !is.list(object@Misc)) return(object)
@@ -441,7 +473,7 @@ Subset <- function(object,
   out
 }
 
-.SubsetYear <- function(object, Years, Impute=TRUE, debug=FALSE) {
+.SubsetYear <- function(object, Years, Impute=TRUE, debug=FALSE, Extend=TRUE) {
   
   if (debug) cli::cli_alert('Class {.val {class(object)}}')
   
@@ -453,7 +485,7 @@ Subset <- function(object,
       val <- slot(object, s)
       if (debug) cli::cli_alert('Class val {.val {class(val)}}')
       if (!is.null(val))
-        slot(object, s) <- Recall(val, Years, Impute, debug)
+        slot(object, s) <- Recall(val, Years, Impute, debug, Extend)
     }
     object <- .SubsetMiscEntries(object, "Advice", .KeepYearKeys, Years)
     object <- .SubsetMiscEntries(object, setdiff(.MiscByYear, "Advice"), .KeepYears, Years)
@@ -463,7 +495,7 @@ Subset <- function(object,
   if (is.list(object)) {
     for (j in seq_along(object)) {
       if (!is.null(object[[j]]))
-        object[[j]] <- Recall(object[[j]], Years, Impute, debug)
+        object[[j]] <- Recall(object[[j]], Years, Impute, debug, Extend)
     }
     return(object)
   }
@@ -472,7 +504,7 @@ Subset <- function(object,
     dnames <- dimnames(object)
     if (!is.null(dnames) && "Year" %in% names(dnames) &&
         !is.null(dnames[["Year"]])) {
-      object <- .ArraySubsetYear(object, Years, Impute = Impute)
+      object <- .ArraySubsetYear(object, Years, Impute = Impute, Extend = Extend)
     }
     return(object)
   }
@@ -518,7 +550,8 @@ Subset <- function(object,
   .DropYearsAfter(object, MaxYear + 1e-8)
 }
 
-.ArraySubsetYear<- function(array, Years = NULL, Impute = TRUE) {
+# Extend = FALSE: years after the last year of a multi-year array are dropped, not imputed
+.ArraySubsetYear<- function(array, Years = NULL, Impute = TRUE, Extend = TRUE) {
   
   if (is.null(Years)) return(array)
 
@@ -538,6 +571,8 @@ Subset <- function(object,
   
   if (!Impute && length(TSexist)) 
     TSimpute <- TSimpute[TSimpute >= min(YearVals)]
+  if (!Extend && length(YearVals) > 1)
+    TSimpute <- TSimpute[TSimpute <= max(YearVals)]
   
   if (length(TSimpute)) {
     array <- ExtendYears(array, TSimpute)

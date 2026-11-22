@@ -72,8 +72,9 @@ vector is also accepted and converted to a \verb{1 × nClass × 1} array
 automatically, using \code{Classes} if supplied or the \link[=weight-class]{weight}
 object's own \code{Classes} otherwise. Default \code{NULL}.}
 
-\item{Classes}{\code{numeric} or \code{NULL}. Age or length class midpoints
-corresponding to the \verb{MeanAt*} array in use. Default \code{NULL}.}
+\item{Classes}{\code{numeric} or \code{NULL}. Age classes, or lower bounds of the
+length bins, corresponding to the \verb{MeanAt*} array in use. For length bins,
+Bin \code{k} spans \verb{[Classes[k], Classes[k+1])}; the final bin is open-ended. Default \code{NULL}.}
 
 \item{Timing}{\code{array} or \code{NULL}. Not used. Spawning time within the time
 step is set by \code{SRR@SpawnTimeFrac} (see \code{\link[=SRR]{SRR()}}). Default \code{NULL}.}

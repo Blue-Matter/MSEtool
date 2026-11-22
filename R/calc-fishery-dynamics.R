@@ -38,6 +38,14 @@
 #'   object shares those arrays. The state slots (`Number`, `Effort`,
 #'   `Distribution`, `SProduction`) are always copied.
 #'
+#' @details Numbers already in `Hist@Number` are kept, per simulation and
+#'   stock. Recruitment is not calculated for a simulation when age 0 in any
+#'   area at the recruitment time step is above zero, and survival, ageing and
+#'   movement are not calculated when any age 1+ value in any area at the next
+#'   time step is above zero. Pre-set numbers must fill the whole time step:
+#'   every area for recruits, and every age 1+ and area for numbers. Zero
+#'   values in a pre-set time step are kept.
+#'
 #' @return The `Hist` object with updated fishery dynamics slots.
 #' @keywords internal
 .CalcFisheryDynamics <- function(Hist,

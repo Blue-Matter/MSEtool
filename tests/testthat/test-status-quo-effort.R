@@ -117,7 +117,7 @@ test_that("a user-specified historical distribution is kept under CurrentEffort"
     expect_gt(max(abs(Dist[sim, , 2, 1, 1] - hist@Distribution[sim, nHist, 2, 1])), 1e-4)
 })
 
-test_that("an area-matrix effort advice sets the area split only while it is in force", {
+test_that("an area-matrix effort advice sets the area split until new effort advice replaces it", {
   skip_on_cran()
   om <- TwoFleetOM
   om@nSim <- 3
@@ -149,15 +149,21 @@ test_that("an area-matrix effort advice sets the area split only while it is in 
     Dist <- mse@Distribution[, , , , mp]
     expect_equal(range(Dist[, First, 1, 1]), c(0.25, 0.25), tolerance = 1e-8)
     expect_equal(range(Dist[, First, 2, 1]), c(0.75, 0.75), tolerance = 1e-8)
-    expect_gt(min(abs(Dist[, Later, 1, 1] - 0.25)), 1e-4)
-    expect_gt(min(abs(Dist[, Later, 2, 1] - 0.75)), 1e-4)
     expect_false(anyNA(Dist[, Later, , ]))
 
     expect_equal(range(Eff[, First, 1, mp]), c(0.2, 0.2), tolerance = 1e-8)
     expect_equal(range(Eff[, First, 2, mp]), c(0.4, 0.4), tolerance = 1e-8)
   }
 
-  # relative effort is relative to the last historical year; empty advice keeps last year's effort
+  # new relative effort takes the engine's area split; empty advice keeps the area-matrix split
+  Rel   <- mse@Distribution[, , , , "MatThenRel"]
+  Empty <- mse@Distribution[, , , , "MatThenEmpty"]
+  expect_gt(min(abs(Rel[, Later, 1, 1] - 0.25)), 1e-4)
+  expect_gt(min(abs(Rel[, Later, 2, 1] - 0.75)), 1e-4)
+  expect_equal(range(Empty[, Later, 1, 1]), c(0.25, 0.25), tolerance = 1e-8)
+  expect_equal(range(Empty[, Later, 2, 1]), c(0.75, 0.75), tolerance = 1e-8)
+
+  # relative effort is relative to the last historical year; empty advice keeps the advised effort
   for (fl in 1:2) {
     expect_equal(unname(Eff[, Later, fl, "MatThenRel"]),
                  matrix(LastEff[, fl], om@nSim, length(Later)), ignore_attr = TRUE,

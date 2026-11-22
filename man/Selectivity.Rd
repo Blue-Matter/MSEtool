@@ -76,9 +76,9 @@ with dimensions \verb{Sim x Class x Year}. A numeric vector is also accepted
 and converted the same way as \code{MeanAtLength}, using the \link[=weight-class]{weight}
 object's \code{AWK}. Default \code{NULL}.}
 
-\item{Classes}{Numeric vector or \code{NULL}. Length or weight class midpoints
-corresponding to the second dimension of \code{MeanAtLength} or
-\code{MeanAtWeight}. Default \code{NULL}.}
+\item{Classes}{Numeric vector or \code{NULL}. Lower bounds of the length or
+weight bins corresponding to the second dimension of \code{MeanAtLength} or
+\code{MeanAtWeight}. Bin \code{k} spans \verb{[Classes[k], Classes[k+1])}; the final bin is open-ended. Default \code{NULL}.}
 
 \item{isRel}{Logical. If \code{TRUE}, the length parameters of an at-length
 model (\code{L5}, \code{LFS}, \code{SL50}, \code{SL50_95}, \code{SL}) are interpreted as multiples of the length-at-50\%-maturity

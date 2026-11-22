@@ -63,17 +63,40 @@ ReduceNSim <- function(object, nSim = NULL) {
   if (is.null(attr(object, "digest"))) return(invisible())
   Years  <- Years %||% CalcYears(object@nYear, object@pYear, object@CurrentYear, Seasons = object@Seasons %||% 1)
   Stocks <- if (methods::is(object, 'om')) .ConvertToList(object@Stock) else list(object)
-  Old    <- NULL
-  for (st in Stocks)
-    if (length(st@Years) && !isTRUE(all.equal(as.numeric(st@Years), as.numeric(Years)))) {
-      Old <- st@Years
-      break
-    }
+  Old    <- .StockYearsMismatch(Stocks, Years)
   if (is.null(Old)) return(invisible())
   cli::cli_abort(c(
     "x" = "The years of a populated {what} cannot be changed: it was populated for {min(Old)}-{max(Old)}, but {.code nYear}, {.code pYear}, {.code CurrentYear}, and {.code Seasons} now give {min(Years)}-{max(Years)}.",
     "i" = "Populating labels drawn and conditioned values by year.",
+    "i" = "An {.cls om} subset with {.code Subset(Years = )} keeps its original years and cannot be simulated.",
     "i" = "Set the years on the unpopulated {what} before calling {.fn Populate} or {.fn Simulate}."
+  ), call = NULL)
+}
+
+# the stored years of the first stock that differ from `Years`, or NULL
+.StockYearsMismatch <- function(Stocks, Years) {
+  for (st in Stocks)
+    if (length(st@Years) && !isTRUE(all.equal(as.numeric(st@Years), as.numeric(Years))))
+      return(st@Years)
+  NULL
+}
+
+# a hist subset with Subset(Years = ) no longer matches the years of its OM
+.CheckHistYears <- function(Hist, Label = 'Hist') {
+  YearsAll  <- Years(Hist)
+  YearsHist <- as.numeric(Years(Hist, 'Historical'))
+  Held <- .StockYearsMismatch(.ConvertToList(Hist@OM@Stock), YearsAll)
+  if (is.null(Held)) {
+    SBYears <- suppressWarnings(as.numeric(dimnames(Hist@SBiomass)$Year))
+    if (length(SBYears) > 1 && !isTRUE(all.equal(SBYears, YearsHist)))
+      Held <- SBYears
+  }
+  if (is.null(Held)) return(invisible())
+  Held <- as.numeric(Held)
+  cli::cli_abort(c(
+    "x" = "{.arg {Label}} holds years {min(Held)}-{max(Held)}, but its OM's years are {min(YearsAll)}-{max(YearsAll)} (historical {min(YearsHist)}-{max(YearsHist)}).",
+    "i" = "A {.cls hist} subset with {.code Subset(Years = )} can be summarised and plotted, but not projected.",
+    "i" = "Project the full {.cls hist} object, then subset the resulting {.cls mse} object."
   ), call = NULL)
 }
 

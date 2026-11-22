@@ -3,7 +3,7 @@
 #' Construct an [advice-class] object defining management advice returned by a
 #' management procedure.
 #'
-#' @param TAC Numeric vector or matrix specifying total allowable catch.
+#' @param TAC Numeric vector specifying total allowable catch.
 #'  See `Details`
 #'
 #' @param TACType Character. Does the TAC refer to `"Removals"` (default) or
@@ -44,8 +44,8 @@
 #'   - Numeric vector of length `nFleet`: fleet-specific bag limits. `NA`
 #'     for a given fleet position means no limit applies to that fleet.
 #'
-#'   The bag limit regulation persists across time steps until a new
-#'   [Advice()] object is returned by the MP. See Details.
+#'   The bag limit stays in place until the MP returns another `BagLimit`;
+#'   `NA` removes the limit for that fleet. See Details.
 #'
 #'   An aggregate bag limit pooling catch across several stocks for one
 #'   fleet is declared separately via `AggregateBagLimit()`, available to
@@ -145,6 +145,29 @@
 #' * numeric matrix: Fleet- and Area-specific absolute Effort.
 #' Must have `nFleet` rows and `nArea` columns. Rows named by fleet are
 #' matched to the fleets by name.
+#'
+#' Effort given as a single value or a fleet vector is distributed across
+#' areas by the operating model in every time step.
+#'
+#' ## TAC and Effort in later time steps
+#'
+#' A `TAC` or `Effort` advised for a fleet stays in place until the MP
+#' replaces it:
+#'
+#' * An `Advice` object with neither `TAC` nor `Effort` repeats the previous
+#'   `TAC` (with its `TACType`, `TACUnit` and any `Effort` cap) and the
+#'   previous `Effort`.
+#' * A fleet with no `TAC` (`NULL` or `NA`) and no `Effort` keeps the last
+#'   `Effort` advised for it, including its split across areas when `Effort`
+#'   was a fleet x area matrix. If no `Effort` has been advised for the fleet,
+#'   or a `TAC` replaced it, the fleet fishes the effort of the same season in
+#'   the last historical year.
+#' * A `TAC` for a fleet replaces that fleet's earlier `Effort` (an `Effort`
+#'   returned with the `TAC` is a cap on the effort used to catch it). An
+#'   `Effort` without a `TAC` replaces the earlier `TAC`.
+#'
+#' Implementation error is applied to a repeated `TAC` or `Effort` in each
+#' year. A `TAC` from interim advice is not repeated.
 #' 
 #' ## Closure
 #' 
@@ -155,13 +178,39 @@
 #' 
 #' * matrix with `nFleet` rows and `nArea` columns: fleet-specific closures.
 #' 
+#' The closure applies to the stocks in the complex that returned it. A fleet
+#' does not fish an area that is closed to it for every stock it catches; any
+#' effort it would have put there, including a fleet- and area-specific
+#' `Effort`, goes to its open areas. In an area closed for some of its stocks
+#' only, the fleet keeps fishing and releases the closed stocks, with discard
+#' mortality from the fleet's [DiscardMortality()] object.
+#' 
 #' ## Selectivity
 #' 
 #' Either a [Selectivity()] object, or a list length `nFleet` of
-#' `Selectivity` objects. 
+#' `Selectivity` objects, one per fleet.
 #' 
 #' If a single `Selectivity` object, the prescribed selectivity schedule
-#' is applied to all fleets.  
+#' is applied to all fleets.
+#' 
+#' A list is matched to the fleets by name if it is named with the fleet
+#' names, and by position otherwise. A `NULL` element leaves that fleet's
+#' current schedule unchanged, e.g.
+#' `list(Longline = Selectivity(Pars = list(L5 = 40, LFS = 60)), Trawl = NULL)`.
+#' 
+#' A `MeanAtLength` (or `MeanAtWeight`) schedule is applied on the size classes
+#' the fleet already uses (the stock's classes unless the fleet defines its
+#' own). If `Classes` is omitted, the schedule must have one value per fleet
+#' class. If `Classes` differ from the fleet's classes, each fleet class takes
+#' the value of the supplied bin containing its midpoint.
+#' 
+#' For a stock complex, the schedule applies to every stock in the complex. A
+#' `MeanAtAge` schedule (other than a single value for all ages) requires the
+#' stocks to share the same age classes, and a `MeanAtLength` or
+#' `MeanAtWeight` schedule without `Classes` requires them to share the same
+#' size classes. Otherwise use `Pars`, or give `Classes` with the at-size
+#' schedule.
+#' 
 #' 
 #' See section below for more details.
 #'

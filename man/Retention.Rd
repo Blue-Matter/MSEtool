@@ -64,9 +64,9 @@ dimensions \verb{Sim x Class x Year}. A numeric vector is also accepted and
 converted the same way as \code{MeanAtLength}, using the \link[=weight-class]{weight}
 object's \code{AWK}. Default \code{NULL}.}
 
-\item{Classes}{Numeric vector or \code{NULL}. Length or weight class midpoints
-corresponding to the second dimension of \code{MeanAtLength} or
-\code{MeanAtWeight}. Default \code{NULL}.}
+\item{Classes}{Numeric vector or \code{NULL}. Lower bounds of the length or
+weight bins corresponding to the second dimension of \code{MeanAtLength} or
+\code{MeanAtWeight}. Bin \code{k} spans \verb{[Classes[k], Classes[k+1])}; the final bin is open-ended. Default \code{NULL}.}
 
 \item{isRel}{Logical. If \code{TRUE}, the length parameters of an at-length
 model (\code{LR5}, \code{LFR}, \code{RL50}, \code{RL50_95}, \code{RL}) are interpreted as multiples of the length-at-50\%-maturity
@@ -77,10 +77,11 @@ scaling to occur. Default \code{FALSE}.}
 \item{isAtLength}{Logical. Whether \code{MeanAtLength}/\code{MeanAtWeight} (or an
 at-length/at-weight \code{Model}) reflect a genuinely length- or weight-
 retention schedule. Set \code{FALSE} when retention is only meaningfully
-defined at age (e.g. imported from an age-structured assessment) so that
-fleet weight-at-age calculations skip weighting by this object's at-length
-schedule and use the stock's plain weight-at-age
-instead. Default \code{TRUE}.}
+defined at age (e.g. imported from an age-structured assessment); fleet
+retained weight-at-age then equals the selected weight-at-age. Set to
+\code{FALSE} automatically when retention is supplied only as \code{MeanAtAge} or
+\code{MeanAtWeight}.
+Default \code{TRUE}.}
 
 \item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
 

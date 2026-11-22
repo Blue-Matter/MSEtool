@@ -34,5 +34,6 @@ applied — the same target realised landings/removals should be compared
 against.
 }
 \seealso{
-\code{\link[=Project]{Project()}}, \code{\link[=runMSE]{runMSE()}}, \code{\link[=MPFailureRate]{MPFailureRate()}}, \code{\link[=TACAttainment]{TACAttainment()}}
+\code{\link[=Project]{Project()}}, \code{\link[=runMSE]{runMSE()}}, \code{\link[=MPFailureRate]{MPFailureRate()}}, \code{\link[=TACAttainment]{TACAttainment()}},
+\code{\link[=EffortAttainment]{EffortAttainment()}}
 }

@@ -25,9 +25,9 @@ same units as each other. Missing \code{Discards} alone is not a problem: TACs
 are then set from \code{Landings}.
 }
 \details{
-If no catch data are available, and a finite TAC value cannot be produced,
-the MP will likely fall back to setting effort to last historical effort -
-ie same as \code{\link[=CurrentEffort]{CurrentEffort()}} (the default for empty \code{\link[=Advice]{Advice()}} objects).
+If no catch data are available and the MP cannot produce a finite TAC,
+fleets with no \code{TAC} or \code{Effort} advised fish the effort of the last
+historical year, as under \code{\link[=CurrentEffort]{CurrentEffort()}}.
 
 If \code{Landings} and \code{Discards} are not in the same units (e.g. one in
 \code{Biomass} and the other in \code{Number}, or one in \code{"t"} and the other in

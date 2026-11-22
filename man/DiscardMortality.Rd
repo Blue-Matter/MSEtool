@@ -45,8 +45,9 @@ using \code{Classes} if supplied or the \link[=length-class]{length} object's ow
 otherwise; if \code{Classes} differs from the \link[=length-class]{length} object's, the
 \code{ALK} is recalculated on \code{Classes}.}
 
-\item{Classes}{Numeric vector or \code{NULL}. Length class midpoints
-corresponding to the second dimension of \code{MeanAtLength}. Default \code{NULL}.}
+\item{Classes}{Numeric vector or \code{NULL}. Lower bounds of the length bins
+corresponding to the second dimension of \code{MeanAtLength}. Bin \code{k} spans \verb{[Classes[k], Classes[k+1])}; the final bin is open-ended.
+Default \code{NULL}.}
 
 \item{Misc}{List. Miscellaneous additional inputs. Default \code{list()}.}
 

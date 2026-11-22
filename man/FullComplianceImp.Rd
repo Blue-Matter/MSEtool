@@ -11,9 +11,8 @@ An \link[=imp-class]{imp} object. Populated slots:
 always equals the advised TAC exactly, no bias or stochastic error.
 \item \strong{\code{Effort}} (\link[=impslot-class]{impslot}): \code{Mean = 1}, \code{SD = 0} -- same, for
 effort-based advice.
-\item \strong{\code{Size}} (\link[=impslot-class]{impslot}): \code{Compliance = 1} -- 100\% of the fleet
-adopts a newly-advised size regulation in the year it changes; there is
-no partial/lagged uptake.
+\item \strong{\code{Size}} (\link[=impslot-class]{impslot}): \code{Compliance = 1}. A newly-advised size
+regulation takes effect for the whole fleet in the year it changes.
 }
 }
 \usage{
@@ -28,13 +27,11 @@ the \link[=imp-class]{imp} object assigned to every built-in example \link[=om-c
 object (e.g. \link{SingleStockOM}, \link{TwoFleetOM}).
 }
 \details{
-Because this is behaviourally identical to leaving \code{Imp} unspecified
-(\code{NULL}) on an \link[=om-class]{om} object -- a missing \code{Imp} entry is already
-treated as full compliance throughout the simulation -- attaching
-\code{FullComplianceImp} makes that default explicit rather than implicit. See
+An \link[=om-class]{om} object with an empty \code{Imp} slot gives the same results as one
+with \code{FullComplianceImp} for every stock and fleet. See
 \link{OverageImp} and \link{UnderageImp} for TAC/effort implementation error
-examples, and \link{PartialSizeComplianceImp} for a partial size-regulation
-adoption example.
+examples, and \link{PartialSizeComplianceImp} for an example with
+\code{Size@Compliance} below 1.
 }
 \examples{
 FullComplianceImp

@@ -106,10 +106,6 @@
     
     DiscardMortalityList <- Advice@DiscardMortality
     
-    if (length(DiscardMortalityList) > 1 && length(DiscardMortalityList) != nFleet)
-      stop("Advice@DiscardMortality must be a `DiscardMortality()` object or a list of ",
-           "`DiscardMortality()` objects of length nFleet (", nFleet, ")")
-    
     for (st in stocks) {
       Stock    <- Proj@OM@Stock[[st]]
       Ages     <- Stock@Ages
@@ -117,38 +113,18 @@
       Weight   <- Subset(Stock@Weight,   Sims = sim, Years = FutureYears)
       Maturity <- Subset(Stock@Maturity, Sims = sim, Years = FutureYears)
   
-      ReComputeALKList <- vector('list', length(DiscardMortalityList))
-      
-      if (is.list(DiscardMortalityList)) {
-        ClassesList <- purrr::map(DiscardMortalityList, slot, 'Classes') 
-      } else {
-        ClassesList <- list(DiscardMortalityList@Classes)
-      }
-      
-      for (fl in seq_along(ClassesList)) {
-        if (is.null(ClassesList[[fl]])) 
-          ClassesList[[fl]]  <- Length@Classes
-        
-        ReComputeALKList[[fl]] <- !setequal(Length@Classes, ClassesList[[fl]])
-      }
-      
-      all_same <- all(sapply(ReComputeALKList[-1], identical, ReComputeALKList[[1]]))
-      if (all_same) ReComputeALKList <- list(ReComputeALKList[[1]])
-      
-      all_same <- all(sapply(ClassesList[-1], identical, ClassesList[[1]])) &&
-        all(sapply(ClassesList, setequal, Length@Classes))
-      
-      if (all_same) ClassesList <- list(ClassesList[[1]])
-      
+      Mapped <- .MapAdviceToFleets(DiscardMortalityList, Proj@OM@Fleet[[st]], 'DiscardMortality', Length, Weight)
       LinIntAge <- length(Ages@Classes) < 50
+      ALK_1     <- NULL
 
       for (fl in seq_len(nFleet)) {
-        dm <- if (is.list(DiscardMortalityList)) DiscardMortalityList[[fl]] else DiscardMortalityList
+        dm <- Mapped$Advice[[fl]]
+        if (is.null(dm)) next
         
         FleetLength  <- Length 
-        Classes      <- ClassesList[[min(length(ClassesList), fl)]]
-        ReComputeALK <- ReComputeALKList[[min(length(ReComputeALKList), fl)]]
-        if (fl == 1) {
+        Classes      <- Mapped$Classes[[fl]]
+        ReComputeALK <- !.SameClasses(Classes, Length@Classes)
+        if (is.null(ALK_1)) {
           # Get ALK using Length@Classes
           if (LinIntAge) {
             # Increases the temporal resolution of `ObjectMeanAtAge` and `ASK`

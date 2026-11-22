@@ -73,7 +73,7 @@ and a biomass-proportional survey index only, with no composition data.
 \link{FullComplianceImp} models perfect implementation: \code{TAC@Mean = 1}/
 \code{SD = 0} and \code{Effort@Mean = 1}/\code{SD = 0} mean realised TAC/effort always
 equal advice exactly, and
-\code{Size@Compliance = 1} means any size-regulation advice (a change to
+any size-regulation advice (a change to
 \code{Advice@Retention}/\code{Advice@Selectivity}) is adopted immediately by the
 whole fleet. See \code{\link[=Imp]{Imp()}} for details,
 and \link{OverageImp}, \link{UnderageImp}, \link{PartialSizeComplianceImp} for

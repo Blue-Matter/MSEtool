@@ -32,8 +32,9 @@
 #'   using `Classes` if supplied or the [length-class] object's own `Classes`
 #'   otherwise; if `Classes` differs from the [length-class] object's, the
 #'   `ALK` is recalculated on `Classes`.
-#' @param Classes Numeric vector or `NULL`. Length class midpoints
-#'   corresponding to the second dimension of `MeanAtLength`. Default `NULL`.
+#' @param Classes Numeric vector or `NULL`. Lower bounds of the length bins
+#'   corresponding to the second dimension of `MeanAtLength`. Bin `k` spans `[Classes[k], Classes[k+1])`; the final bin is open-ended.
+#'   Default `NULL`.
 #' @param Misc List. Miscellaneous additional inputs. Default `list()`.
 #' @param x A [discardmortality-class] object, or an object that contains
 #'   `DiscardMortality` objects for `DiscardMortality<-` (see
@@ -104,6 +105,7 @@ DiscardMortality <- function(MeanAtAge    = NULL,
   
   if (.IsFleetComponentSource(MeanAtAge, Extra = 'advice'))
     return(.GetFleetSlot(MeanAtAge, 'DiscardMortality'))
+  .CheckScheduleNotList('DiscardMortality', MeanAtAge, MeanAtLength)
 
   methods::new(
     "discardmortality",
@@ -120,4 +122,15 @@ DiscardMortality <- function(MeanAtAge    = NULL,
 `DiscardMortality<-` <- function(x, value) {
   .AssignFleetSlot(x, value, 'DiscardMortality', Extra = 'advice')
 }
-  
+
+# per-fleet schedules are a list of objects, not a list inside one object's slot
+.CheckScheduleNotList <- function(Type, MeanAtAge = NULL, MeanAtLength = NULL, MeanAtWeight = NULL) {
+  Vals <- list(MeanAtAge = MeanAtAge, MeanAtLength = MeanAtLength, MeanAtWeight = MeanAtWeight)
+  Bad  <- names(Vals)[vapply(Vals, \(v) is.list(v) && !is.data.frame(v), logical(1))]
+  if (!length(Bad)) return(invisible(NULL))
+  cli::cli_abort(c(
+    "x" = "{.arg {Bad[1]}} must be a numeric vector or array, not a list.",
+    "i" = "For a different schedule for each fleet, use a list of {.fn {Type}} objects, one per fleet:",
+    " " = "{.code list(Fleet1 = {Type}({Bad[1]} = ...), Fleet2 = {Type}({Bad[1]} = ...))}"
+  ), call = NULL)
+}

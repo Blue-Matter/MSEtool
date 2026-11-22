@@ -34,7 +34,8 @@ discards survive) if not supplied. See \code{\link[=DiscardMortality]{DiscardMor
 \item{\code{Closure}}{\code{numeric} array or \code{NULL}. Spatio-temporal closure schedule
 with dimensions \verb{Sim x Year x Area}. Values of 1 indicate an open area;
 0 indicates a closed area. Defaults to 1 (all areas open) if not
-supplied. See \code{\link[=Fleet]{Fleet()}}.}
+supplied. A closed stock is released in an area the fleet still fishes
+for other stocks. See \code{\link[=Fleet]{Fleet()}}.}
 
 \item{\code{WeightFleetRetained}}{\code{numeric} array or \code{NULL}. Mean weight-at-age of
 fish \emph{retained} (landed) by this fleet (\verb{Sim x Age x Year}) --

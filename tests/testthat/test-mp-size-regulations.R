@@ -20,7 +20,7 @@ data(SeasonalSpatialOM, envir = environment())
   L / L[, 'CurrentEffort']
 }
 
-.Messages <- function(entries) vapply(entries, \(e) e$message, character(1))
+.Messages <- function(entries) vapply(entries, \(e) gsub('\\s+', ' ', e$message), character(1))
 
 SizeLimitMP <- function(Data) {
   Advice <- CurrentEffort(Data)
@@ -203,7 +203,7 @@ test_that("advice validation errors reach the log, console, and error log file",
   Errors <- MSE@Log$error
   Msgs <- .Messages(Errors)
   Expected <- c(BadClosure = 'must be length `nArea`',
-                BadTAC = 'TAC is numeric vector, it must be either length 1 or length `nFleet`',
+                BadTAC = 'must be length 1 or length `nFleet`',
                 BadEffort = 'second dimension must be length `nArea`')
   StockName <- names(Hist@OM@Complexes)[1]
   for (mp in names(Expected)) {
@@ -218,7 +218,7 @@ test_that("advice validation errors reach the log, console, and error log file",
 
   Files <- list.files(LogDir, full.names = TRUE)
   expect_length(Files, 3)
-  Lines <- unlist(lapply(Files, readLines))
+  Lines <- gsub('\\s+', ' ', paste(unlist(lapply(Files, readLines)), collapse = ' '))
   for (mp in names(Expected))
     expect_true(any(grepl(Expected[[mp]], Lines, fixed = TRUE)), label = mp)
 })

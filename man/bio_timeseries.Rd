@@ -110,6 +110,10 @@ spawning biomass, and spawning production, respectively, from a
 biomass (biomass weighted by fleet selectivity/retention).
 }
 \details{
+\code{Biomass()} uses the stock's mean weight-at-age. Catches use each fleet's
+weight-at-age (see \code{\link[=Removals]{Removals()}}), so removals in a time step can exceed
+\code{Biomass()} at high fishing mortality.
+
 When applied to an \link[=mse-class]{mse} object the historical and projection
 periods are row-bound and labelled via the \code{Period} column; historical
 rows carry \code{MP = "Historical"}.

@@ -474,8 +474,8 @@
 
 
 
-# Empty advice is status quo: no effort control, so each fleet keeps last year's effort
-# (`.SetCarryForwardEffort()`), with the status-quo area split
+# Empty advice with nothing to carry forward: fleets without a recorded effort fish the last
+# historical year's effort (`.SetCarryForwardEffort()`), with the status-quo area split
 .CheckTACEffort <- function(AdviceSimList, FleetNames) {
   purrr::map(AdviceSimList, \(AdviceSim) {
     purrr::map(AdviceSim, \(Advice) {
@@ -491,6 +491,53 @@
 }
 
 
+# A TAC (with its type, unit and effort cap) or a bag limit that the MP leaves
+# unset stays in place from the previous time step; an advised effort control replaces the TAC
+.CarryForwardAdvice <- function(AdviceSimList, LastAdviceSimList) {
+  if (is.null(LastAdviceSimList)) return(AdviceSimList)
+
+  Carry <- function(Advice, Prev) {
+    if (!inherits(Advice, 'advice') || !inherits(Prev, 'advice')) return(Advice)
+
+    if (is.null(Advice@TAC) && is.null(Advice@Effort) && !is.null(Prev@TAC)) {
+      Advice@TAC     <- Prev@TAC
+      Advice@TACType <- Prev@TACType
+      Advice@TACUnit <- Prev@TACUnit
+      if (!is.null(Prev@Misc$AnnualTAC))
+        Advice@Misc$AnnualTAC <- Prev@Misc$AnnualTAC
+      if (!is.null(Prev@Effort) && !isTRUE(Prev@Misc$StatusQuoEffort)) {
+        Advice@Effort  <- Prev@Effort
+        Advice@EffType <- Prev@EffType
+      }
+    }
+
+    if (is.null(Advice@BagLimit) && !is.null(Prev@BagLimit)) {
+      Advice@BagLimit    <- Prev@BagLimit
+      Advice@LimitType   <- Prev@LimitType
+      Advice@ClosureMode <- Prev@ClosureMode
+    }
+    Advice
+  }
+
+  for (sim in seq_along(AdviceSimList)) {
+    Last <- LastAdviceSimList[[sim]]
+    if (!is.list(Last) || !is.list(AdviceSimList[[sim]])) next
+    for (i in seq_along(AdviceSimList[[sim]]))
+      if (i <= length(Last))
+        AdviceSimList[[sim]][[i]] <- Carry(AdviceSimList[[sim]][[i]], Last[[i]])
+  }
+  AdviceSimList
+}
+
+.CarryForwardAggBagLimit <- function(AggBagLimitSimList, LastAggBagLimitSimList) {
+  if (is.null(LastAggBagLimitSimList)) return(AggBagLimitSimList)
+  if (is.null(AggBagLimitSimList)) AggBagLimitSimList <- list()
+  for (nm in names(LastAggBagLimitSimList))
+    if (length(LastAggBagLimitSimList[[nm]]) && !length(AggBagLimitSimList[[nm]]))
+      AggBagLimitSimList[[nm]] <- LastAggBagLimitSimList[[nm]]
+  AggBagLimitSimList
+}
+
 .ProcessSelectMeanAt <- function(select, Classes, nArea, type, Year,
                                 slot_name, dim_name) {
   
@@ -499,6 +546,7 @@
     return(select)
   
   nClass     <- length(Classes)
+  nLabel     <- if (dim_name == 'Age') 'nAge' else 'nClass'
   dim_names  <- list(Classes, Area=seq_len(nArea))
   names(dim_names)[1] <- dim_name
   
@@ -507,7 +555,7 @@
     if (!all(dd == c(nClass, nArea)))
       cli::cli_abort(c(
         "{type} {slot_name} array has incorrect dimensions.",
-        "x" = "Expected {nClass} rows ({.field nClass}) and {nArea} columns ({.field nArea}).",
+        "x" = "Expected {nClass} rows ({.field {nLabel}}) and {nArea} columns ({.field nArea}).",
         "i" = "Current dimensions: {paste(dd, collapse = ' x ')}."
       ))
     dimnames(Values) <- dim_names
@@ -519,7 +567,7 @@
       Values <- rep(Values, nClass)
     }
     if (length(Values) != nClass ) {
-      cli::cli_abort(c('x' = "{type}@{slot_name} must be length `nClass` ({.val {nClass}})",
+      cli::cli_abort(c('x' = "{type}@{slot_name} must be length {.code {nLabel}} ({.val {nClass}})",
                        'i' = "Currently: {.val {length(Values)}}")
       )
       # Values <- rep(Values, nClass)[seq_len(nClass)]
@@ -554,6 +602,8 @@
 }
 
 .ProcessSelectMeanAtLength <- function(select, Length, nArea, type, Year) {
+  if (is.null(select@MeanAtLength))
+    return(select)
   if (is.null(select@Classes))
     select@Classes <- Length@Classes
   .ProcessSelectMeanAt(select,
@@ -566,13 +616,77 @@
 }
 
 .ProcessSelectMeanAtWeight <- function(select, Weight, nArea, type, Year) {
-  if (is.null(select@Classes))
-    select@Classes <- Weight@Classes
+  if (is.null(select@MeanAtWeight))
+    return(select)
+  # `Classes` belongs to MeanAtLength when both are supplied
+  Classes <- if (is.null(select@MeanAtLength) && !is.null(select@Classes)) select@Classes else Weight@Classes
   .ProcessSelectMeanAt(select,
-                      Classes   = select@Classes,
+                      Classes   = Classes,
                       nArea     = nArea,
                       type      = type,
                       Year      = Year,
                       slot_name = 'MeanAtWeight',
                       dim_name  = 'Class')
+}
+
+# `select` with its at-size schedule on the fleet's classes: each fleet bin takes the advised
+# bin containing its midpoint. `slot_name` is 'MeanAtLength' or 'MeanAtWeight'.
+.MapScheduleClasses <- function(select, FleetClasses, slot_name = 'MeanAtLength') {
+  Values <- methods::slot(select, slot_name)
+  Own    <- select@Classes
+  if (slot_name == 'MeanAtWeight' && !is.null(select@MeanAtLength)) return(select)
+  if (is.null(Values) || is.null(Own) || is.null(FleetClasses)) return(select)
+  FleetClasses <- as.numeric(FleetClasses)
+  if (.SameClasses(Own, FleetClasses))
+    return(select)
+
+  Dims <- dim(Values)
+  ClassDim <- if (is.null(Dims)) 1L else match('Class', names(dimnames(Values)), nomatch = 1L)
+  nOwn <- if (is.null(Dims)) length(Values) else Dims[ClassDim]
+  if (nOwn != length(Own)) return(select)
+
+  idx <- pmax(findInterval(.ClassMidpoints(FleetClasses), as.numeric(Own)), 1L)
+  if (is.null(Dims)) {
+    Values <- Values[idx]
+  } else {
+    Index <- rep(list(TRUE), length(Dims))
+    Index[[ClassDim]] <- idx
+    Values <- do.call(`[`, c(list(Values), Index, list(drop = FALSE)))
+    if (!is.null(dimnames(Values)))
+      dimnames(Values)[[ClassDim]] <- as.character(FleetClasses)
+  }
+  methods::slot(select, slot_name) <- Values
+  select@Classes <- FleetClasses
+  select
+}
+
+# at-size classes of a fleet's current schedule, or `Default`
+.FleetScheduleClasses <- function(object, slot_name, Default) {
+  x <- methods::slot(object, slot_name)
+  Cls <- if (!is.null(x)) dimnames(x)$Class
+  if (length(Cls)) as.numeric(Cls) else Default
+}
+
+# advised schedules for each fleet of one stock, on that fleet's current classes;
+# returns list(Advice = list by fleet (NULL = unchanged), Classes = fleet length classes)
+.MapAdviceToFleets <- function(AdviceSlot, FleetList, type, Length, Weight) {
+  nFleet  <- length(FleetList)
+  Out     <- vector('list', nFleet)
+  Classes <- vector('list', nFleet)
+  for (fl in seq_len(nFleet)) {
+    Target        <- methods::slot(FleetList[[fl]], type)
+    Classes[[fl]] <- .FleetScheduleClasses(Target, 'MeanAtLength', Length@Classes)
+    select        <- if (is.list(AdviceSlot)) AdviceSlot[[fl]] else AdviceSlot
+    if (is.null(select)) next
+    if (!is.null(select@MeanAtLength)) {
+      select <- .MapScheduleClasses(select, Classes[[fl]], 'MeanAtLength')
+    } else if (methods::.hasSlot(select, 'MeanAtWeight') && !is.null(select@MeanAtWeight)) {
+      select <- .MapScheduleClasses(select, .FleetScheduleClasses(Target, 'MeanAtWeight', Weight@Classes),
+                                    'MeanAtWeight')
+    } else {
+      select@Classes <- Classes[[fl]]
+    }
+    Out[[fl]] <- select
+  }
+  list(Advice = Out, Classes = Classes)
 }

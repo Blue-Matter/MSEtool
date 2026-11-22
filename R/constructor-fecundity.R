@@ -51,8 +51,9 @@
 #'   vector is also accepted and converted to a `1 × nClass × 1` array
 #'   automatically, using `Classes` if supplied or the [weight-class]
 #'   object's own `Classes` otherwise. Default `NULL`.
-#' @param Classes `numeric` or `NULL`. Age or length class midpoints
-#'   corresponding to the `MeanAt*` array in use. Default `NULL`.
+#' @param Classes `numeric` or `NULL`. Age classes, or lower bounds of the
+#'   length bins, corresponding to the `MeanAt*` array in use. For length bins,
+#'   Bin `k` spans `[Classes[k], Classes[k+1])`; the final bin is open-ended. Default `NULL`.
 #' @param Timing `array` or `NULL`. Not used. Spawning time within the time
 #'   step is set by `SRR@SpawnTimeFrac` (see [SRR()]). Default `NULL`.
 #' @param Misc `list`. Used internally. Default `list()`.

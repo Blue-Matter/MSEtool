@@ -304,7 +304,8 @@ The allocation does not depend on the number of areas: splitting an area
 into identical parts leaves the effort and fishing mortality in it
 unchanged. Areas with no exploitable biomass receive no effort when
 \code{Targeting > 0}. Areas closed to the fleet for every stock (\code{Closure = 0})
-receive no effort.
+receive no effort, including under a user-specified \code{Distribution}, whose
+share for a closed area goes to the fleet's open areas.
 }
 
 \subsection{Effort-to-Trips Conversion and Angler Scaling}{

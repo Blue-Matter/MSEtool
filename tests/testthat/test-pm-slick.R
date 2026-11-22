@@ -100,6 +100,38 @@ test_that("PM_MinStatus is the lowest annual SB/SBMSY or SB/SB0 per simulation",
   expect_equal(unname(PM_MinStatus(mse, 'Unfished')@Stat[, 1, colnames(Min0)]), unname(Min0))
 })
 
+test_that("unfished-based PMs use annual SB/SB0 or SB/dSB0 per year", {
+  skip_on_cran()
+  mse <- .PMSeasonalMSE()
+  yrs <- PMYears(mse)
+  for (ty in c('Equilibrium', 'Dynamic')) {
+    dep <- SB_SB0(mse, type = ty, Reduce = FALSE)
+    dep <- dep[dep$Period == 'Projection', ]
+    W <- .RefSeasonWeightDF(mse@OM, sort(unique(dep$Year)))
+    dep$.Key <- round(dep$Year, 6)
+    dep <- merge(dep, W, by = c('Sim', 'Stock', '.Key'))
+    dep$Cal <- floor(dep$Year + 1e-8)
+    dep <- dep[dep$Cal %in% yrs, ]
+    Annual <- stats::aggregate(list(Value = dep$Value * dep$.W),
+                               list(Sim = dep$Sim, MP = dep$MP, Cal = dep$Cal), sum)
+    Mean <- tapply(Annual$Value, list(Annual$Sim, Annual$MP), mean)
+    P <- tapply(Annual$Value > 0.3, list(Annual$Sim, Annual$MP), mean)
+    Safe <- tapply(Annual$Value > 0.3, list(Annual$Sim, Annual$MP), all)
+
+    pm <- PM_SBSB0(mse, 0.3, type = ty)
+    expect_equal(unname(pm@Stat[, 1, colnames(Mean)]), unname(Mean))
+    expect_equal(unname(pm@Prob[, 1, colnames(P)]), unname(P))
+    expect_equal(pm@Years, yrs)
+    expect_equal(PM_SBSBlim(mse, 0.3, 'Unfished', ty)@Prob, pm@Prob)
+    expect_equal(unname(PM_Safety(mse, 0.3, Reference = 'Unfished', type = ty)@Prob[, 1, colnames(Safe)]),
+                 unname(Safe) * 1)
+    expect_true(all(is.na(PM_SBSB0(mse, NULL, type = ty)@Prob)))
+  }
+  expect_equal(PM_SBSB0(mse, type = 'Dynamic')@Name, 'SB_dSB0')
+  expect_equal(PM_SBSBlim(mse, 0.5)@Name, 'SB_SBlim')
+  expect_error(PM_Rebuild(mse, max(yrs), Reference = 'Unfished'), 'Target')
+})
+
 test_that(".MPDeltaLimit reads the MP limits and applies overrides", {
   f <- function(Data, DeltaDown = c(0.01, 0.3), DeltaUp = c(0.01, 0.15)) NULL
   x <- list(A = f, B = SetMPArgs(f, DeltaDown = c(0, 0.2)), C = function(Data) NULL)

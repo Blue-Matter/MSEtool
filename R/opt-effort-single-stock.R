@@ -30,15 +30,13 @@
 #'   start from the previous time step's effort. Supplies a warm start when this
 #'   solve is nested inside an outer optimiser that re-solves a nearly identical
 #'   problem each call - see `.OptEffortChoke()`.
-#' @param reltol Numeric, or `NULL` (default). When supplied, convergence is
-#'   judged relative to each fleet's TAC rather than against the absolute `tol`,
-#'   making the criterion invariant to the units catch is measured in.
+#' @param reltol Numeric. Convergence tolerance relative to each fleet's TAC:
+#'   the solve has converged when `|TAC - catch| < reltol * TAC` for every active
+#'   fleet, which does not depend on the units catch is measured in. `NULL`
+#'   uses the default `1e-5`.
 #' @param minEffort Numeric scalar. Floor substituted for near-zero effort
 #'   values throughout; prevents log-scale arithmetic from collapsing to
 #'   `-Inf`. Default `1e-8`.
-#' @param tol Numeric scalar. Convergence tolerance: Newton-Raphson is
-#'   considered converged when all active-fleet residuals satisfy
-#'   `|TAC - catch| < tol`. Default `1e-3`.
 #' @param maxIter Integer. Maximum Newton-Raphson iterations before the BFGS
 #'   fallback is attempted. Default `100`.
 #' @param max_log_step Numeric scalar. Maximum permitted log-scale step size
@@ -131,7 +129,7 @@
 #'     per fleet. Fleets with no TAC (`NA`) keep the effort already set for
 #'     this time step in `Proj@Effort`: their effort advice, else last year's
 #'     effort. A fleet that cannot reach its TAC is at its effort ceiling.
-#'   * `converged` - `TRUE` if the solve met `tol`/`reltol`, `FALSE` if not,
+#'   * `converged` - `TRUE` if the solve met `reltol`, `FALSE` if not,
 #'     `NA` if there was no active TAC to solve for.
 #'   * `saturated` - `TRUE` if the TAC was unachievable within the effort
 #'     ceiling (see "Saturation vs. stall" above) — `FALSE` for an
@@ -162,14 +160,14 @@
                                   cx            = 1L,
                                   Effort_start  = NULL,
                                   minEffort     = 1e-8,
-                                  tol           = 1e-3,
-                                  reltol        = NULL,
+                                  reltol        = 1e-5,
                                   maxIter       = 100,
                                   max_log_step  = log(10),
                                   maxEffort = 1e6,
                                   max_backtrack = 6) {
 
   nFleet   <- nFleet(Proj)
+  if (is.null(reltol)) reltol <- 1e-5
 
   if (is.null(MaxFleetEffort))
     MaxFleetEffort <- rep(NA_real_, nFleet)
@@ -255,24 +253,33 @@
       }
     }
 
-    opt <- optimize(
-      function(ls) (catch_fl(ls) - tac)^2,
-      interval = c(log_lo, log_hi),
-      tol = if (is.null(reltol)) 1e-8 else reltol
-    )
-    Effort_curr[fl] <- min(Effort_base[fl] * exp(opt$minimum), maxEffort_fl[fl])
+    Resid <- function(ls) (catch_fl(ls) - tac) / tac
+    f_lo  <- Resid(log_lo)
+    f_hi  <- Resid(log_hi)
+
+    log_best <- NA_real_
+    if (is.finite(f_lo) && is.finite(f_hi) && f_lo <= 0 && f_hi >= 0) {
+      root <- tryCatch(stats::uniroot(Resid, c(log_lo, log_hi), f.lower = f_lo, f.upper = f_hi,
+                                      tol = 1e-10, maxiter = 200),
+                       error = function(e) NULL)
+      if (!is.null(root)) log_best <- root$root
+    }
+
+    if (!is.finite(log_best) || abs(Resid(log_best)) > reltol) {
+      opt <- optimize(function(ls) Resid(ls)^2, interval = c(log_lo, log_hi), tol = 1e-8)
+      if (!is.finite(log_best) || abs(Resid(opt$minimum)) < abs(Resid(log_best)))
+        log_best <- opt$minimum
+    }
+    Effort_curr[fl] <- min(Effort_base[fl] * exp(log_best), maxEffort_fl[fl])
 
     Catch_out <- rep(NA_real_, nFleet); Catch_out[fl] <- catch_fl(log(Effort_curr[fl] / Effort_base[fl]))
-    return(list(Effort = Effort_curr, converged = TRUE, saturated = FALSE,
+    converged <- is.finite(Catch_out[fl]) && abs(Catch_out[fl] - tac) <= reltol * tac
+    return(list(Effort = Effort_curr, converged = converged, saturated = FALSE,
                 TAC = TAC_out, Catch = Catch_out,
                 AtCeiling = AtCeilingOut(Effort_curr, fl)))
   }
 
-  tol_vec <- if (is.null(reltol)) {
-    rep(tol, length(pos_idx))
-  } else {
-    pmax(reltol * abs(BindingTAC[pos_idx]), .Machine$double.eps)
-  }
+  tol_vec <- pmax(reltol * abs(BindingTAC[pos_idx]), .Machine$double.eps)
 
   clamp_effort <- function(e, idx) pmin(pmax(e, minEffort), maxEffort_fl[idx])
   clamp_step   <- function(s) pmax(pmin(s, max_log_step), -max_log_step)
