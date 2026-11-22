@@ -139,7 +139,11 @@
 
 # [Year, Fleet, Area] TRUE where the fleet is closed for every stock it can catch (q > 0)
 .ClosedFleetAreas <- function(Closure, q, sim, Years) {
-  Ind <- \(x, n) { i <- match(as.character(Years), dimnames(x)$Year); i[is.na(i)] <- n; i }
+  Ind <- \(x, n) {
+    i <- match(as.character(Years), dimnames(x)$Year)
+    i[is.na(i)] <- n
+    i
+  }
   cl <- Closure[min(sim, dim(Closure)[1]), , Ind(Closure, dim(Closure)[3]), , , drop = FALSE]
   qq <- q[min(sim, dim(q)[1]), , Ind(q, dim(q)[3]), , drop = FALSE]
   dd <- dim(cl)[3:5]
