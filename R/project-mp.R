@@ -136,8 +136,10 @@
     # Get previous advice; interim advice is never carried forward
     LastAdviceSimList      <- .GetLastMPAdvice(Proj)
     LastAggBagLimitSimList <- .GetLastMPAggBagLimit(Proj)
-    if (IsInterim[ts] || (ts > 1 && IsInterim[ts - 1]))
-      LastAdviceSimList <- NULL
+    if (IsInterim[ts] || (ts > 1 && IsInterim[ts - 1])) {
+      LastAdviceSimList      <- NULL
+      Proj@Misc$EffortRecord <- NULL
+    }
     # interim advice is already per timestep, so no seasonal re-split
     EverySeasonTS <- EverySeason || IsInterim[ts]
 

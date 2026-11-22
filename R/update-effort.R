@@ -351,8 +351,7 @@
   Proj
 }
 
-# Effort for this time step before any control applies: the last historical year's effort in the
-# same season, capped at `Effort@Maximum`; no fleet has an effort control yet
+# last historical year's same-season effort, capped at `Effort@Maximum`
 .SetCarryForwardEffort <- function(Proj, TSIndex, nHistTS) {
   nSim    <- Proj@OM@nSim
   nFleet  <- dim(Proj@Effort)[3]
@@ -365,8 +364,7 @@
   Proj
 }
 
-# Last advised effort per sim, complex and fleet (absolute, before implementation error), its
-# EffType, area split (NA: engine) and whether it was an annual total split across seasons
+# last advised absolute effort, EffType, area split and annual flag per sim, complex and fleet
 .EffortRecord <- function(Proj, nComplex, FleetNames, nArea) {
   Rec <- Proj@Misc$EffortRecord
   if (!is.null(Rec))

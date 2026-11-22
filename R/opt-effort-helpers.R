@@ -373,7 +373,7 @@
 
 .CheckComplexTACAttainment <- function(Proj, sim, TSIndex, Year, Effort_final, Delta_final,
                                        TAC_by_Complex, TACType_by_Complex, TACUnit_by_Complex,
-                                       EbyC_final, Ceiling = NULL) {
+                                       EbyC_final, Ceiling = NULL, tol = 1e-3) {
 
   ComplexNames <- names(TAC_by_Complex)
   nComplex     <- length(TAC_by_Complex)
@@ -395,15 +395,17 @@
   if (is.null(saturated_cx))
     saturated_cx <- rep(NA, nComplex)
 
-  choke_ok   <- !hit & !is.na(converged_cx) & converged_cx
-  cap_ok     <- !hit & !is.na(saturated_cx) & saturated_cx
-  unresolved <- !hit & !choke_ok & !cap_ok
-
-  converged <- all(hit)
-  saturated <- if (converged) NA else !any(unresolved)
-
   TACMat <- do.call(rbind, lapply(TAC_by_Complex, function(x)
     if (is.null(x)) rep(NA_real_, ncol(CatchMat)) else as.numeric(x)))
+  OverTAC <- rowSums(CatchMat > TACMat * (1 + tol) + 1e-8, na.rm = TRUE) > 0
+
+  choke_ok   <- !hit & !is.na(converged_cx) & converged_cx
+  cap_ok     <- !hit & !is.na(saturated_cx) & saturated_cx
+  unresolved <- (!hit & !choke_ok & !cap_ok) | OverTAC
+
+  converged <- all(hit) && !any(OverTAC)
+  saturated <- if (converged) NA else !any(unresolved)
+
   AtCeiling <- if (is.null(Ceiling)) rep(FALSE, ncol(CatchMat)) else Effort_final >= Ceiling * 0.99
 
   list(converged = converged, saturated = saturated, TAC = TAC_vec, Catch = Catch_vec,
@@ -420,9 +422,7 @@
   ProjTmp     <- .WriteStateToProj(Proj, sim, TSIndex,
                                    Effort = Effort_curr, Delta = Delta)
 
-  # Each complex solves only the fleets it binds; the other fleets fish their combined effort
-  # (a fleet without a TAC in the complex, or one bound by another complex), so the solves
-  # are repeated until the combined effort settles
+  # each complex solves only the fleets it binds, repeated until the combined effort settles
   HasTAC <- do.call(rbind, lapply(TAC_by_Complex, \(x) if (is.null(x)) NULL else is.finite(x)))
   Mixed  <- if (is.null(HasTAC)) logical(0) else apply(HasTAC, 2, any) & !apply(HasTAC, 2, all)
 

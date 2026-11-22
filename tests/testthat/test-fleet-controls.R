@@ -332,6 +332,28 @@ test_that("empty advice after interim TACs is not a repeat of the interim TAC", 
     expect_equal(unname(Eff[, as.character(PY[3:4]), fl, 1]), matrix(LastEff[, fl], 2, 2), tolerance = 1e-8)
 })
 
+test_that("empty advice after an interim effort is not a repeat of the interim effort", {
+  skip_on_cran()
+  om <- TwoFleetOM
+  nSim(om) <- 2
+  pYear(om) <- 4
+  Hist  <- Simulate(om, silent = TRUE)
+  nHist <- dim(Hist@Effort)[2]
+  LastEff <- ExtendSims(Hist@Effort, 2)[, nHist, ]
+  PY <- Years(Hist@OM, 'Projection')
+  Hist@OM@MPStartYear   <- PY[3]
+  Hist@OM@InterimAdvice <- data.frame(Year = PY[1:2], Type = 'Effort', Mean = 0.5, EffType = 'Rel')
+  Empty <- function(Data) Advice()
+  class(Empty) <- 'mp'
+  MSE <- suppressMessages(Project(Hist, MPs = list(A = Empty), parallel = FALSE, silent = TRUE))
+  expect_length(MSE@Log$error, 0)
+  Eff <- ExtendSims(MSE@Effort, 2)
+  for (fl in 1:2) {
+    expect_equal(unname(Eff[, as.character(PY[1:2]), fl, 1]), matrix(0.5 * LastEff[, fl], 2, 2), tolerance = 1e-8)
+    expect_equal(unname(Eff[, as.character(PY[3:4]), fl, 1]), matrix(LastEff[, fl], 2, 2), tolerance = 1e-8)
+  }
+})
+
 test_that("effort compliance blends the efforts advised by several complexes, per sim and year", {
   skip_on_cran()
   om <- MultiStockOM
