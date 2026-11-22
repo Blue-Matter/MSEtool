@@ -373,7 +373,8 @@
 
 .CheckComplexTACAttainment <- function(Proj, sim, TSIndex, Year, Effort_final, Delta_final,
                                        TAC_by_Complex, TACType_by_Complex, TACUnit_by_Complex,
-                                       EbyC_final, Ceiling = NULL, tol = 1e-3) {
+                                       EbyC_final, Ceiling = NULL, tol = 1e-3,
+                                       Compliance = NULL, Binding = NULL) {
 
   ComplexNames <- names(TAC_by_Complex)
   nComplex     <- length(TAC_by_Complex)
@@ -397,9 +398,12 @@
 
   TACMat <- do.call(rbind, lapply(TAC_by_Complex, function(x)
     if (is.null(x)) rep(NA_real_, ncol(CatchMat)) else as.numeric(x)))
-  OverTAC <- rowSums(CatchMat > TACMat * (1 + tol) + 1e-8, na.rm = TRUE) > 0
+  # a fleet with compliance below 1 is allowed to catch more than a complex's TAC
+  Strict  <- if (is.null(Compliance)) TRUE else t(!is.finite(Compliance) | Compliance >= 1)
+  OverTAC <- rowSums(CatchMat > TACMat * (1 + tol) + 1e-8 & Strict, na.rm = TRUE) > 0
 
-  choke_ok   <- !hit & !is.na(converged_cx) & converged_cx
+  # converged is NA for a complex with no fleet left to solve (all bound by other complexes)
+  choke_ok   <- !hit & !OverTAC & (is.na(converged_cx) | converged_cx)
   cap_ok     <- !hit & !is.na(saturated_cx) & saturated_cx
   unresolved <- (!hit & !choke_ok & !cap_ok) | OverTAC
 
@@ -409,7 +413,8 @@
   AtCeiling <- if (is.null(Ceiling)) rep(FALSE, ncol(CatchMat)) else Effort_final >= Ceiling * 0.99
 
   list(converged = converged, saturated = saturated, TAC = TAC_vec, Catch = Catch_vec,
-       TACMatrix = TACMat, CatchMatrix = CatchMat, AtCeiling = AtCeiling)
+       TACMatrix = TACMat, CatchMatrix = CatchMat, AtCeiling = AtCeiling,
+       Unresolved = unresolved, Binding = Binding)
 }
 
 .ResolveChokeEffort <- function(Proj, sim, TSIndex, Year, Delta,
@@ -490,7 +495,7 @@
   ProjTmp <- .WriteStateToProj(ProjTmp, sim, TSIndex,
                                Effort = Effort, Delta = Delta)
 
-  list(Effort = Effort, Proj = ProjTmp, EffortByComplex = EbyC)
+  list(Effort = Effort, Proj = ProjTmp, EffortByComplex = EbyC, Binding = Blend$Binding)
 }
 
 

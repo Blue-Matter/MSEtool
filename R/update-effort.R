@@ -37,6 +37,7 @@
   TSIndex <- match(Year, c(YearsHist, YearsProj))
 
   Proj <- .SetCarryForwardEffort(Proj, TSIndex, length(YearsHist))
+  Proj <- .ClearEffortAttainment(Proj, TSIndex - length(YearsHist))
 
   # effort set by TAC advice takes the engine's area split
   if (.AllAdviceNull(AdviceSimList, 'Effort') && !.AnyEffortRecord(Proj)) {
@@ -154,6 +155,8 @@
   EffTypeMat <- matrix('Abs', nrow = nFleet, ncol = nComplex)
   StatusQuoDist <- NULL
   Rec <- .EffortRecord(Proj, nComplex, FleetNames, nArea)
+  PreImp <- vector('list', nComplex)
+  TACAny <- rep(FALSE, nFleet)
 
   for (i in seq_len(nComplex)) {
     Advice       <- AdviceList[[i]]
@@ -163,6 +166,7 @@
 
     # an advised effort stays in place for a fleet until a TAC or new effort replaces it
     TACFleet <- .AdviceTACFleets(Advice, nFleet)
+    TACAny   <- TACAny | TACFleet
     Recorded <- !is.na(Rec$Effort[sim, i, ]) & Rec$Annual[sim, i, ] == SplitAnnual & !TACFleet
     Rec$Effort[sim, i, TACFleet] <- NA
     if (is.null(Advice@Effort)) {
@@ -235,7 +239,7 @@
                                                        FleetNames, nArea))
     }
     EffTypeMat[, i] <- EffTypeFleet
-
+    PreImp[[i]]     <- as.numeric(Advice@Effort)
 
     wrapped <- .ApplyImplementationError(
       setNames(list(Advice@Effort), complex_name),
@@ -295,25 +299,36 @@
                       ncol  = nFleet,
                       byrow = TRUE)
 
+  ShapeMat <- matrix(1, nrow = length(ProjInd), ncol = nFleet)
   if (SplitAnnual) {
-    seas     <- ((ProjInd - 1L) %% nSeason) + 1L
-    ShapeMat <- matrix(1, nrow = length(ProjInd), ncol = nFleet)
+    seas <- ((ProjInd - 1L) %% nSeason) + 1L
     for (fl in which(Set))
       ShapeMat[, fl] <- SeasonalEffortAllocation[[MinEffortInd[fl]]][sim, seas, fl]
-    EffortMat <- EffortMat * ShapeMat
   } else if (nSeason > 1L) {
     RelFleet <- vapply(seq_len(nFleet),
                        \(fl) Set[fl] && identical(EffTypeMat[fl, MinEffortInd[fl]], 'Rel'),
                        logical(1))
     if (any(RelFleet)) {
       seas <- ((ProjInd - 1L) %% nSeason) + 1L
-      EffortMat[, RelFleet] <- EffortMat[, RelFleet, drop = FALSE] *
-        LastEffort$shape[seas, RelFleet, drop = FALSE]
+      ShapeMat[, RelFleet] <- LastEffort$shape[seas, RelFleet, drop = FALSE]
     }
   }
+  EffortMat <- EffortMat * ShapeMat
+
+  # effort advised by each fleet's binding complex, before implementation error
+  PreImpMat <- do.call(rbind, PreImp[effort_idx])
+  AdvisedValues <- rep(NA_real_, nFleet)
+  AdvisedValues[Set] <- PreImpMat[cbind(Blend$Binding[Set], which(Set))]
+  Implemented <- EffortMat
 
   EffortMat <- .CapEffortAtMaximum(Proj, sim, ProjInd, EffortMat)
   Proj@Effort[sim, ProjInd, Set] <- EffortMat[, Set]
+  Proj <- .RecordEffortAttainment(Proj, sim, ProjInd - length(YearsHist),
+                                  Advised     = matrix(AdvisedValues, length(ProjInd), nFleet,
+                                                       byrow = TRUE) * ShapeMat,
+                                  Implemented = Implemented,
+                                  Capped      = EffortMat,
+                                  Controlled  = Set & !TACAny)
 
   # Each fleet takes the area distribution of its binding complex, if one was specified
   for (fl in which(Set)) {

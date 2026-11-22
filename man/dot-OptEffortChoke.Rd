@@ -79,7 +79,9 @@ allowed across the BFGS and Nelder-Mead phases combined.}
 \value{
 A named list with \code{Effort}, \code{Delta} (\verb{[nFleet x nStock]}, broadcast
 from the underlying per-complex solution), \code{converged}, \code{saturated},
-\code{TAC}/\code{Catch} (per complex), \code{TACMatrix}/\code{CatchMatrix} (\verb{[nComplex x nFleet]}), \code{AtCeiling} (per fleet) and \code{ActiveComplex}.
+\code{TAC}/\code{Catch} (per complex), \code{TACMatrix}/\code{CatchMatrix} (\verb{[nComplex x nFleet]}), \code{AtCeiling} (per fleet), \code{Unresolved} (per complex), \code{Binding}
+(per fleet, the index of the complex whose TAC sets its effort) and
+\code{ActiveComplex}.
 }
 \description{
 Solves fleet effort under TAC management in a multi-complex model.

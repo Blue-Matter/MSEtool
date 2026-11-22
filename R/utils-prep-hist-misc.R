@@ -296,7 +296,7 @@
 
 
 .RestoreHistMisc <- function(Hist) {
-  preserved_names <- c('Advice', 'TACAttainment', 'BagLimit', 'MaxF', 'Interval', 'Selectivity', 'Retention', 'DiscardMortality')
+  preserved_names <- c('Advice', 'TACAttainment', 'BagLimit', 'MaxF', 'EffortAttainment', 'Interval', 'Selectivity', 'Retention', 'DiscardMortality')
   saved <- purrr::map(
     c('SAVE', preserved_names),
     \(nm) Hist@Misc[[nm]]

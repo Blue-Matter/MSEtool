@@ -24,7 +24,7 @@
 #'   - `EffortFraction`: the fleet's effort as a fraction of the effort it
 #'     would have fished without the cap.
 #'
-#' @seealso [TACAttainment()], [BagLimitEffect()]
+#' @seealso [TACAttainment()], [EffortAttainment()], [BagLimitEffect()]
 #' @export
 MaxFEffect <- function(MSE) {
   .CheckClass(MSE, 'mse', 'MSE')

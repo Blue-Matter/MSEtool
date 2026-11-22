@@ -23,7 +23,8 @@
 #'   `PctAchieved` are `NA` for log entries recorded before this per-
 #'   fleet/complex detail was captured.
 #'
-#' @seealso [Project()], [runMSE()], [MPFailureRate()], [TACAttainment()]
+#' @seealso [Project()], [runMSE()], [MPFailureRate()], [TACAttainment()],
+#'   [EffortAttainment()]
 #' @export
 SummarizeConvergence <- function(MSE, silent = FALSE) {
   .CheckClass(MSE, 'mse', 'MSE')

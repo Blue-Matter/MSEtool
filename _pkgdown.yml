@@ -272,6 +272,8 @@ reference:
   - Recruits
   - TACs
   - TACAttainment
+  - EffortAttainment
+  - MaxFEffect
   - BagLimitEffect
   - PPD
   - timeseries-class

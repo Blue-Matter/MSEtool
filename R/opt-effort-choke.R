@@ -25,7 +25,9 @@
 #' @return A named list with `Effort`, `Delta` (`[nFleet x nStock]`, broadcast
 #'   from the underlying per-complex solution), `converged`, `saturated`,
 #'   `TAC`/`Catch` (per complex), `TACMatrix`/`CatchMatrix` (`[nComplex x
-#'   nFleet]`), `AtCeiling` (per fleet) and `ActiveComplex`.
+#'   nFleet]`), `AtCeiling` (per fleet), `Unresolved` (per complex), `Binding`
+#'   (per fleet, the index of the complex whose TAC sets its effort) and
+#'   `ActiveComplex`.
 #' @keywords internal
 .OptEffortChoke <- function(Proj,
                             Year,
@@ -79,7 +81,8 @@
                                              TAC_by_Complex, TACType_by_Complex, TACUnit_by_Complex,
                                              res$EffortByComplex,
                                              Ceiling = .EffortCeiling(res$Proj, sim, TSIndex,
-                                                                      MaxFleetEffort, EffortMax))
+                                                                      MaxFleetEffort, EffortMax),
+                                             Compliance = Compliance, Binding = res$Binding)
     list(Effort = res$Effort, Attainment = Attainment)
   }
 
@@ -98,6 +101,8 @@
                 TACMatrix     = Final$Attainment$TACMatrix,
                 CatchMatrix   = Final$Attainment$CatchMatrix,
                 AtCeiling     = Final$Attainment$AtCeiling,
+                Unresolved    = Final$Attainment$Unresolved,
+                Binding       = Final$Attainment$Binding,
                 ActiveComplex = state$active_complex))
   }
 
@@ -139,5 +144,7 @@
        TACMatrix     = Final$Attainment$TACMatrix,
        CatchMatrix   = Final$Attainment$CatchMatrix,
        AtCeiling     = Final$Attainment$AtCeiling,
+       Unresolved    = Final$Attainment$Unresolved,
+       Binding       = Final$Attainment$Binding,
        ActiveComplex = state$active_complex)
 }

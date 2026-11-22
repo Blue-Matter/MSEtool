@@ -21,16 +21,21 @@ step, and fleet with a TAC:
 \item \code{TAC}: the fleet's TAC in this time step, after fleet and seasonal
 allocation and implementation error, in the units and catch type
 (removals or landings) of the advice.
-\item \code{Catch}: the fleet's catch of the complex, in the same units and catch
-type.
+\item \code{Catch}: the fleet's catch of the complex in this time step of the
+projection, in the same units and catch type.
 \item \code{Attained}: \code{Catch / TAC}; \code{NA} where the TAC is zero.
 \item \code{Limit}: \code{"None"} where the TAC was caught; \code{"Ceiling"} where the fleet
-was at its effort ceiling; \code{"Choke"} where the fleet stopped because
-the TAC of another complex was reached first (multi-complex operating
-models, see \code{Imp@TAC@Compliance}); \code{"Solver"} where, in a
-single-complex model, the fleet was below its ceiling because the
-effort solver did not converge (also reported by
-\code{\link[=SummarizeConvergence]{SummarizeConvergence()}}).
+was at its effort ceiling; \code{"MaxF"} where the fishing mortality cap
+(\code{OM@maxF}) reduced the fleet's effort (see \code{\link[=MaxFEffect]{MaxFEffect()}}); \code{"Choke"}
+where the fleet stopped because the TAC of another complex was reached
+first (multi-complex operating models, see \code{Imp@TAC@Compliance});
+\code{"Solver"} where the fleet was below its ceiling because the effort
+solver did not converge (also reported by \code{\link[=SummarizeConvergence]{SummarizeConvergence()}}).
+\item \code{Advised}: the fleet's TAC from the MP in this time step, after fleet
+and seasonal allocation and before implementation error.
+\item \code{Binding}: the stock complex whose TAC set the fleet's effort. In
+multi-complex operating models, a fleet with \code{Limit = "Choke"} stopped
+at this complex's TAC.
 }
 }
 \description{
@@ -51,5 +56,6 @@ the annual TAC (\code{OM@SeasonalAllocation}). A share that is not caught in its
 season is not carried over to later seasons.
 }
 \seealso{
-\code{\link[=TACs]{TACs()}}, \code{\link[=PM_TACAttained]{PM_TACAttained()}}, \code{\link[=SummarizeConvergence]{SummarizeConvergence()}}
+\code{\link[=TACs]{TACs()}}, \code{\link[=PM_TACAttained]{PM_TACAttained()}}, \code{\link[=SummarizeConvergence]{SummarizeConvergence()}},
+\code{\link[=EffortAttainment]{EffortAttainment()}}, \code{\link[=MaxFEffect]{MaxFEffect()}}
 }

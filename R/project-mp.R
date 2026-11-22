@@ -56,7 +56,7 @@
 .CompactMPProj <- function(Proj, YearsProj) {
   for (sl in setdiff(methods::slotNames('timeseries'), 'Misc'))
     methods::slot(Proj, sl) <- .SubsetYear(methods::slot(Proj, sl), YearsProj)
-  Proj@Misc      <- Proj@Misc[intersect(names(Proj@Misc), c('MPAdvice', 'MPAggBagLimit', 'TACAttainment', 'BagLimit', 'MaxF'))]
+  Proj@Misc      <- Proj@Misc[intersect(names(Proj@Misc), c('MPAdvice', 'MPAggBagLimit', 'TACAttainment', 'BagLimit', 'MaxF', 'EffortAttainment'))]
   Proj@OM@Stock  <- NULL
   Proj@OM@Obs    <- NULL
   Proj@OM@Imp    <- NULL
@@ -93,6 +93,7 @@
   Proj@Misc$TACAttainment <- .InitTACAttainment(Proj, YearsProj)
   Proj@Misc$BagLimit      <- .InitBagLimitRecord(Proj, YearsProj)
   Proj@Misc$MaxF          <- .InitMaxFRecord(Proj, YearsProj)
+  Proj@Misc$EffortAttainment <- .InitEffortAttainment(Proj, YearsProj)
   Proj@Misc$EffortRecord  <- NULL
 
   # initialise for debugging convenience
@@ -245,6 +246,7 @@
     Proj <- .CalcFisheryDynamics(Proj, Year, InPlace = TRUE, DoBackCalcEffort = BackCalc)
     if (BackCalc)
       Proj <- .RecordMaxF(Proj, ts, TSIndex, Requested)
+    Proj <- .RecordRealisedCatch(Proj, ts, TSIndex)
 
     # Compute Catch & Discards at Size for this Time Step
     Proj <- .CalcCatchAtSize(Proj, Years = Year, needed = CatchAtSizeNeeded,
@@ -281,7 +283,13 @@
     Proj <- .MaskFailedSims(Proj, .FailedSims(Proj@Log$error), YearsProj)
 
   if (!Error)
+    Proj <- .LogRealisedCatch(Proj, Proj@Misc$TACAttainment, Proj@OM@Seasons)
+
+  if (!Error)
     Proj <- .LogTACAttainment(Proj, Proj@Misc$TACAttainment, Proj@OM@Seasons)
+
+  if (!Error)
+    Proj <- .LogEffortAttainment(Proj, Proj@OM@Seasons)
 
   if (!Error)
     Proj <- .LogMaxF(Proj, Proj@OM@Seasons)
@@ -332,27 +340,62 @@
   )
 }
 
-# One log warning per MP: sim-time steps where a fleet did not catch its TAC
+# One log warning per MP: sim-time steps where a fleet did not catch its TAC, by cause
 .LogTACAttainment <- function(Proj, Rec, Seasons = 1) {
   if (is.null(Rec) || !length(Rec$TAC)) return(Proj)
-  Short <- HasTAC <- FALSE
-  for (cx in seq_along(Rec$TAC)) {
-    TAC   <- Rec$TAC[[cx]]
-    Catch <- Rec$Catch[[cx]]
-    HasTAC <- HasTAC | (is.finite(TAC) & is.finite(Catch))
-    Short  <- Short | (is.finite(TAC) & is.finite(Catch) & TAC - Catch > .TACShortfallTol(TAC))
-  }
+  Multi     <- length(Rec$TAC) > 1
   AtCeiling <- !is.na(Rec$AtCeiling) & Rec$AtCeiling
+  MaxFHit   <- if (is.null(Proj@Misc$MaxF)) FALSE else .MaxFHit(Proj@Misc$MaxF)
+  Causes    <- c('Ceiling', 'MaxF', 'Choke', 'Solver')
+  Short <- HasTAC <- FALSE
+  ByCause <- stats::setNames(rep(list(FALSE), length(Causes)), Causes)
+  for (cx in seq_along(Rec$TAC)) {
+    TAC     <- Rec$TAC[[cx]]
+    Catch   <- .TACRecordCatch(Rec, cx)
+    Has     <- is.finite(TAC) & is.finite(Catch)
+    ShortCx <- Has & TAC - Catch > .TACShortfallTol(TAC)
+    Unresolved <- if (is.null(Rec$Unresolved)) NA else Rec$Unresolved[[cx]]
+    Limit <- .TACLimit(ShortCx, AtCeiling & ShortCx, MaxFHit & ShortCx,
+                       Unresolved & ShortCx, Multi)
+    Limit  <- array(Limit, dim(TAC))
+    HasTAC <- HasTAC | Has
+    Short  <- Short | ShortCx
+    for (cs in Causes)
+      ByCause[[cs]] <- ByCause[[cs]] | (ShortCx & Limit == cs)
+  }
   AnyStep <- \(x) apply(x, c(1, 2), any)
-  nTotal   <- sum(AnyStep(HasTAC))
-  nShort   <- sum(AnyStep(Short))
+  nTotal  <- sum(AnyStep(HasTAC))
+  nShort  <- sum(AnyStep(Short))
   if (!nShort) return(Proj)
-  nCeiling <- sum(AnyStep(Short & AtCeiling))
-  nOther   <- sum(AnyStep(Short & !AtCeiling))
-  Other    <- if (length(Rec$TAC) > 1) 'choke' else 'solver'
-  Unit     <- if (Seasons > 1) 'sim-time steps' else 'sim-years'
-  msg <- paste0("TAC not caught in ", nShort, " of ", nTotal, " ", Unit,
-                " (effort ceiling ", nCeiling, ", ", Other, " ", nOther,
+  nCause <- vapply(ByCause, \(x) sum(AnyStep(x)), numeric(1))
+  Shown  <- Causes[Causes %in% c('Ceiling', if (Multi) 'Choke' else 'Solver') | nCause > 0]
+  Label  <- c(Ceiling = 'effort ceiling', MaxF = 'maxF', Choke = 'choke', Solver = 'solver')
+  Unit   <- if (Seasons > 1) 'sim-time steps' else 'sim-years'
+  msg <- paste0("TAC not caught in ", nShort, " of ", nTotal, " ", Unit, " (",
+                paste(Label[Shown], nCause[Shown], collapse = ', '),
                 "); see `TACAttainment()`")
   .CaptureLog(Proj, msg, name = 'TACAttainment', type = 'warning')
+}
+
+# One log warning per MP where the catch after the time step's dynamics differs from the
+# catch at the solved effort
+.LogRealisedCatch <- function(Proj, Rec, Seasons = 1) {
+  if (is.null(Rec$Realised)) return(Proj)
+  Diff  <- FALSE
+  Worst <- 0
+  for (cx in seq_along(Rec$TAC)) {
+    TAC <- Rec$TAC[[cx]]
+    Gap <- abs(Rec$Realised[[cx]] - Rec$Catch[[cx]])
+    Off <- is.finite(Gap) & is.finite(TAC) & Gap > .TACShortfallTol(TAC)
+    if (!any(Off)) next
+    Diff  <- Diff | Off
+    Worst <- max(Worst, Gap[Off] / pmax(abs(TAC[Off]), 1e-8))
+  }
+  if (!any(Diff)) return(Proj)
+  nOff <- sum(apply(Diff, c(1, 2), any))
+  Unit <- if (Seasons > 1) 'sim-time steps' else 'sim-years'
+  msg  <- paste0("Catch in the projection differs from the catch of the TAC effort solve in ",
+                 nOff, " ", Unit, " (up to ", signif(100 * Worst, 3),
+                 "% of the TAC); `TACAttainment()` reports the projection catch")
+  .CaptureLog(Proj, msg, name = 'TACRealised', type = 'warning')
 }

@@ -102,14 +102,17 @@
 
   TAC_by_Complex     <- .ResolveTACByComplex(AdviceList, Complexes, Proj, sim, FleetNames)
   if (all(vapply(TAC_by_Complex, is.null, logical(1)))) return(Proj)
+  TAC_Advised        <- TAC_by_Complex
   TAC_by_Complex     <- .ApplyImplementationError(TAC_by_Complex, Proj, FleetNames,
                                                  names(Complexes), sim, Year, 'TAC')
 
   if (!EverySeason && !is.null(Season)) {
     for (i in seq_len(nComplex)) {
       SA <- Proj@OM@SeasonalAllocation[[i]]
-      if (!is.null(SA) && !is.null(TAC_by_Complex[[i]]))
+      if (!is.null(SA) && !is.null(TAC_by_Complex[[i]])) {
         TAC_by_Complex[[i]] <- TAC_by_Complex[[i]] * SA[sim, Season, ]
+        TAC_Advised[[i]]    <- TAC_Advised[[i]] * SA[sim, Season, ]
+      }
     }
   }
 
@@ -198,10 +201,16 @@
 
   if (nComplex == 1) {
     Res <- Solved$Res
+    Unresolved <- isFALSE(Res$converged) && !isTRUE(Res$saturated)
     Proj <- .RecordTACAttainment(Proj, sim, YearIndex,
-                                 TAC       = matrix(Res$TAC, nrow = 1),
-                                 Catch     = matrix(Res$Catch, nrow = 1),
-                                 AtCeiling = Res$AtCeiling)
+                                 TAC        = matrix(Res$TAC, nrow = 1),
+                                 Catch      = matrix(Res$Catch, nrow = 1),
+                                 AtCeiling  = Res$AtCeiling,
+                                 Advised    = .TACListMatrix(TAC_Advised, nFleet_loc),
+                                 Unresolved = matrix(Unresolved, 1, nFleet_loc),
+                                 Binding    = ifelse(is.finite(Res$TAC), 1L, NA_integer_),
+                                 Type       = do.call(rbind, TACType_by_Complex),
+                                 Unit       = do.call(rbind, TACUnit_by_Complex))
     Proj <- .LogEffortConvergence(Proj, Res$converged, Res$saturated, sim, Year,
                                   TAC = Res$TAC, Catch = Res$Catch, FleetNames = FleetNames)
     return(Proj)
@@ -211,10 +220,16 @@
   for (fl in seq_len(nFleet_loc))
     Proj@Misc$StockTargeting[sim, , fl, TSIndex] <- result$Delta[fl, ]
 
+  nCx <- length(result$TAC)
   Proj <- .RecordTACAttainment(Proj, sim, YearIndex,
-                               TAC       = result$TACMatrix,
-                               Catch     = result$CatchMatrix,
-                               AtCeiling = result$AtCeiling)
+                               TAC        = result$TACMatrix,
+                               Catch      = result$CatchMatrix,
+                               AtCeiling  = result$AtCeiling,
+                               Advised    = .TACListMatrix(TAC_Advised, nFleet_loc),
+                               Unresolved = matrix(result$Unresolved, nCx, nFleet_loc),
+                               Binding    = result$Binding,
+                               Type       = do.call(rbind, TACType_by_Complex),
+                               Unit       = do.call(rbind, TACUnit_by_Complex))
 
   Proj <- .LogEffortConvergence(Proj, result$converged, result$saturated, sim, Year,
                                 TAC = result$TAC, Catch = result$Catch)
@@ -222,27 +237,75 @@
   Proj
 }
 
-# Empty TAC attainment record for a projection: per complex, the effective
-# TAC and the catch at the solved effort ([Sim, Year, Fleet]), and whether
-# each fleet's effort is at its ceiling
-.InitTACAttainment <- function(Proj, YearsProj) {
-  DN  <- list(Sim = seq_len(Proj@OM@nSim), Year = YearsProj, Fleet = FleetNames(Proj))
-  arr <- array(NA_real_, unname(lengths(DN)), dimnames = DN)
-  Cx  <- names(Proj@OM@Complexes)
-  list(TAC       = stats::setNames(rep(list(arr), length(Cx)), Cx),
-       Catch     = stats::setNames(rep(list(arr), length(Cx)), Cx),
-       AtCeiling = array(NA, unname(lengths(DN)), dimnames = DN))
+# [nComplex x nFleet] matrix of a per-complex list of fleet TACs; NA for a complex without one
+.TACListMatrix <- function(TAC_by_Complex, nFleet) {
+  do.call(rbind, lapply(TAC_by_Complex, \(x) if (is.null(x)) rep(NA_real_, nFleet) else as.numeric(x)))
 }
 
-# TAC and Catch are [nComplex x nFleet]
-.RecordTACAttainment <- function(Proj, sim, YearIndex, TAC, Catch, AtCeiling) {
+# Empty TAC attainment record ([Sim, Year, Fleet] arrays, per complex except AtCeiling/Binding);
+# Advised is before implementation error, Catch is the solver's catch, Realised the engine's
+.InitTACAttainment <- function(Proj, YearsProj) {
+  DN  <- list(Sim = seq_len(Proj@OM@nSim), Year = YearsProj, Fleet = FleetNames(Proj))
+  Cx  <- names(Proj@OM@Complexes)
+  PerComplex <- function(value)
+    stats::setNames(rep(list(array(value, unname(lengths(DN)), dimnames = DN)), length(Cx)), Cx)
+  list(TAC        = PerComplex(NA_real_),
+       Catch      = PerComplex(NA_real_),
+       AtCeiling  = array(NA, unname(lengths(DN)), dimnames = DN),
+       Advised    = PerComplex(NA_real_),
+       Realised   = PerComplex(NA_real_),
+       Type       = PerComplex(NA_character_),
+       Unit       = PerComplex(NA_character_),
+       Unresolved = PerComplex(NA),
+       Binding    = array(NA_integer_, unname(lengths(DN)), dimnames = DN))
+}
+
+# TAC, Catch, Advised, Unresolved, Type and Unit are [nComplex x nFleet]; AtCeiling and Binding per fleet
+.RecordTACAttainment <- function(Proj, sim, YearIndex, TAC, Catch, AtCeiling, Advised = NULL,
+                                 Unresolved = NULL, Binding = NULL, Type = NULL, Unit = NULL) {
   Rec <- Proj@Misc$TACAttainment
   if (is.null(Rec) || is.na(YearIndex) || is.null(TAC)) return(Proj)
-  for (cx in seq_along(Rec$TAC)) {
-    Rec$TAC[[cx]][sim, YearIndex, ]   <- TAC[cx, ]
-    Rec$Catch[[cx]][sim, YearIndex, ] <- Catch[cx, ]
+  PerComplex <- list(TAC = TAC, Catch = Catch, Advised = Advised, Unresolved = Unresolved,
+                     Type = Type, Unit = Unit)
+  for (nm in names(PerComplex)) {
+    if (is.null(PerComplex[[nm]]) || is.null(Rec[[nm]])) next
+    for (cx in seq_along(Rec$TAC))
+      Rec[[nm]][[cx]][sim, YearIndex, ] <- PerComplex[[nm]][cx, ]
   }
   Rec$AtCeiling[sim, YearIndex, ] <- AtCeiling
+  if (!is.null(Binding) && !is.null(Rec$Binding))
+    Rec$Binding[sim, YearIndex, ] <- as.integer(Binding)
+  Proj@Misc$TACAttainment <- Rec
+  Proj
+}
+
+# Catch of each complex by fleet after the time step's dynamics, in the catch type and unit of its TAC
+.RecordRealisedCatch <- function(Proj, YearIndex, TSIndex) {
+  Rec <- Proj@Misc$TACAttainment
+  if (is.null(Rec$Realised) || is.na(YearIndex) || is.na(TSIndex)) return(Proj)
+  Complexes <- Proj@OM@Complexes
+  nSim      <- Proj@OM@nSim
+  nFleet    <- dim(Proj@Landings)[4]
+  SumStocks <- \(x) matrix(apply(x, c(1, 4), sum), nSim, nFleet)
+  AtAge     <- \(Slot, stocks) Reduce(`+`, lapply(Slot[stocks], \(x)
+    matrix(apply(x[, , TSIndex, , , drop = FALSE], c(1, 4), sum), nSim, nFleet)))
+  for (cx in seq_along(Rec$TAC)) {
+    Has <- matrix(is.finite(Rec$TAC[[cx]][, YearIndex, ]), nSim, nFleet)
+    if (!any(Has)) next
+    stocks  <- Complexes[[cx]]
+    Unit    <- matrix(Rec$Unit[[cx]][, YearIndex, ], nSim, nFleet)
+    Removal <- matrix(Rec$Type[[cx]][, YearIndex, ], nSim, nFleet) == 'Removals'
+    Removal[is.na(Removal)] <- TRUE
+    Value <- SumStocks(Proj@Landings[, stocks, TSIndex, , drop = FALSE]) +
+      Removal * SumStocks(Proj@Discards[, stocks, TSIndex, , drop = FALSE])
+    Number <- Has & !is.na(Unit) & Unit == 'Number'
+    if (any(Number)) {
+      ValueN <- AtAge(Proj@LandingsAtAge, stocks) + Removal * AtAge(Proj@DiscardsAtAge, stocks)
+      Value[Number] <- ValueN[Number]
+    }
+    Value[!Has] <- NA
+    Rec$Realised[[cx]][, YearIndex, ] <- Value
+  }
   Proj@Misc$TACAttainment <- Rec
   Proj
 }

@@ -37,5 +37,5 @@ accordingly. A warning in the MSE log (\code{Log(MSE)}) reports how often this
 happened for each MP.
 }
 \seealso{
-\code{\link[=TACAttainment]{TACAttainment()}}, \code{\link[=BagLimitEffect]{BagLimitEffect()}}
+\code{\link[=TACAttainment]{TACAttainment()}}, \code{\link[=EffortAttainment]{EffortAttainment()}}, \code{\link[=BagLimitEffect]{BagLimitEffect()}}
 }
