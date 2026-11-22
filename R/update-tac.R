@@ -100,8 +100,7 @@
   chk <- vapply(AdviceList, function(a) inherits(a, 'advice'), logical(1))
   if (any(!chk)) return(Proj)
 
-  TAC_by_Complex     <- .ResolveTACByComplex(AdviceList, LastAdviceList,
-                                            Complexes, Proj, sim, FleetNames)
+  TAC_by_Complex     <- .ResolveTACByComplex(AdviceList, Complexes, Proj, sim, FleetNames)
   if (all(vapply(TAC_by_Complex, is.null, logical(1)))) return(Proj)
   TAC_by_Complex     <- .ApplyImplementationError(TAC_by_Complex, Proj, FleetNames,
                                                  names(Complexes), sim, Year, 'TAC')
@@ -109,7 +108,7 @@
   if (!EverySeason && !is.null(Season)) {
     for (i in seq_len(nComplex)) {
       SA <- Proj@OM@SeasonalAllocation[[i]]
-      if (!is.null(SA))
+      if (!is.null(SA) && !is.null(TAC_by_Complex[[i]]))
         TAC_by_Complex[[i]] <- TAC_by_Complex[[i]] * SA[sim, Season, ]
     }
   }

@@ -105,8 +105,8 @@ forms:
 for a given fleet position means no limit applies to that fleet.
 }
 
-The bag limit regulation persists across time steps until a new
-\code{\link[=Advice]{Advice()}} object is returned by the MP. See Details.
+The bag limit stays in place until the MP returns another \code{BagLimit};
+\code{NA} removes the limit for that fleet. See Details.
 
 An aggregate bag limit pooling catch across several stocks for one
 fleet is declared separately via \code{AggregateBagLimit()}, available to
@@ -233,6 +233,31 @@ is unnamed, the values are taken in fleet order.
 Must have \code{nFleet} rows and \code{nArea} columns. Rows named by fleet are
 matched to the fleets by name.
 }
+
+Effort given as a single value or a fleet vector is distributed across
+areas by the operating model in every time step.
+}
+
+\subsection{TAC and Effort in later time steps}{
+
+A \code{TAC} or \code{Effort} advised for a fleet stays in place until the MP
+replaces it:
+\itemize{
+\item An \code{Advice} object with neither \code{TAC} nor \code{Effort} repeats the previous
+\code{TAC} (with its \code{TACType}, \code{TACUnit} and any \code{Effort} cap) and the
+previous \code{Effort}.
+\item A fleet with no \code{TAC} (\code{NULL} or \code{NA}) and no \code{Effort} keeps the last
+\code{Effort} advised for it, including its split across areas when \code{Effort}
+was a fleet x area matrix. If no \code{Effort} has been advised for the fleet,
+or a \code{TAC} replaced it, the fleet fishes the effort of the same season in
+the last historical year.
+\item A \code{TAC} for a fleet replaces that fleet's earlier \code{Effort} (an \code{Effort}
+returned with the \code{TAC} is a cap on the effort used to catch it). An
+\code{Effort} without a \code{TAC} replaces the earlier \code{TAC}.
+}
+
+Implementation error is applied to a repeated \code{TAC} or \code{Effort} in each
+year. A \code{TAC} from interim advice is not repeated.
 }
 
 \subsection{Closure}{

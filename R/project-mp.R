@@ -93,6 +93,7 @@
   Proj@Misc$TACAttainment <- .InitTACAttainment(Proj, YearsProj)
   Proj@Misc$BagLimit      <- .InitBagLimitRecord(Proj, YearsProj)
   Proj@Misc$MaxF          <- .InitMaxFRecord(Proj, YearsProj)
+  Proj@Misc$EffortRecord  <- NULL
 
   # initialise for debugging convenience
   Year <- YearsProj[1]; ts <- 1

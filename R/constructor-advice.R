@@ -44,8 +44,8 @@
 #'   - Numeric vector of length `nFleet`: fleet-specific bag limits. `NA`
 #'     for a given fleet position means no limit applies to that fleet.
 #'
-#'   The bag limit regulation persists across time steps until a new
-#'   [Advice()] object is returned by the MP. See Details.
+#'   The bag limit stays in place until the MP returns another `BagLimit`;
+#'   `NA` removes the limit for that fleet. See Details.
 #'
 #'   An aggregate bag limit pooling catch across several stocks for one
 #'   fleet is declared separately via `AggregateBagLimit()`, available to
@@ -145,6 +145,29 @@
 #' * numeric matrix: Fleet- and Area-specific absolute Effort.
 #' Must have `nFleet` rows and `nArea` columns. Rows named by fleet are
 #' matched to the fleets by name.
+#'
+#' Effort given as a single value or a fleet vector is distributed across
+#' areas by the operating model in every time step.
+#'
+#' ## TAC and Effort in later time steps
+#'
+#' A `TAC` or `Effort` advised for a fleet stays in place until the MP
+#' replaces it:
+#'
+#' * An `Advice` object with neither `TAC` nor `Effort` repeats the previous
+#'   `TAC` (with its `TACType`, `TACUnit` and any `Effort` cap) and the
+#'   previous `Effort`.
+#' * A fleet with no `TAC` (`NULL` or `NA`) and no `Effort` keeps the last
+#'   `Effort` advised for it, including its split across areas when `Effort`
+#'   was a fleet x area matrix. If no `Effort` has been advised for the fleet,
+#'   or a `TAC` replaced it, the fleet fishes the effort of the same season in
+#'   the last historical year.
+#' * A `TAC` for a fleet replaces that fleet's earlier `Effort` (an `Effort`
+#'   returned with the `TAC` is a cap on the effort used to catch it). An
+#'   `Effort` without a `TAC` replaces the earlier `TAC`.
+#'
+#' Implementation error is applied to a repeated `TAC` or `Effort` in each
+#' year. A `TAC` from interim advice is not repeated.
 #' 
 #' ## Closure
 #' 

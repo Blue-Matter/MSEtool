@@ -10,8 +10,9 @@
 #' @param SD Numeric array or list of arrays, or `NULL` (default). Standard
 #'   deviation of implementation error around `Mean`. When `NULL`, the slot is
 #'   left at its class default.
-#' @param Compliance Scalar, length-2 uniform bounds `c(lower, upper)`, a
-#'   `[Sim x Year]` array, or `NULL` (default). Meaning depends on which
+#' @param Compliance Scalar, length-2 uniform bounds `c(lower, upper)` (one
+#'   draw per simulation, used in every year), a `[Sim x Year]` array, or
+#'   `NULL` (default). Meaning depends on which
 #'   control (`TAC`, `Effort`, or `Size`) this `impslot` is attached to (see
 #'   Details). Values should be in \eqn{[0, 1]}. 
 #' @param Error Numeric array or list of arrays, or `NULL` (default). Realised

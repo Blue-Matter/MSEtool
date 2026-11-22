@@ -17,10 +17,8 @@
 #'   regulation takes effect for the whole fleet in the year it changes.
 #'
 #' @details
-#' Because this is behaviourally identical to leaving `Imp` unspecified
-#' (`NULL`) on an [om-class] object -- a missing `Imp` entry is already
-#' treated as full compliance throughout the simulation -- attaching
-#' `FullComplianceImp` makes that default explicit rather than implicit. See
+#' An [om-class] object with an empty `Imp` slot gives the same results as one
+#' with `FullComplianceImp` for every stock and fleet. See
 #' [OverageImp] and [UnderageImp] for TAC/effort implementation error
 #' examples, and [PartialSizeComplianceImp] for an example with
 #' `Size@Compliance` below 1.

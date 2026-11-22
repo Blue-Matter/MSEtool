@@ -474,8 +474,8 @@
 
 
 
-# Empty advice is status quo: no effort control, so each fleet keeps last year's effort
-# (`.SetCarryForwardEffort()`), with the status-quo area split
+# Empty advice with nothing to carry forward: fleets without a recorded effort fish the last
+# historical year's effort (`.SetCarryForwardEffort()`), with the status-quo area split
 .CheckTACEffort <- function(AdviceSimList, FleetNames) {
   purrr::map(AdviceSimList, \(AdviceSim) {
     purrr::map(AdviceSim, \(Advice) {

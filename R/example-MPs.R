@@ -34,14 +34,14 @@
 #' historical baseline that does not depend on when the MP is called, so
 #' each carries an `EverySeason` attribute of `TRUE`, forcing the framework
 #' to call them at every timestep of the operating model regardless
-#' of `Interval`. This is required so that, in a seasonal model (`Seasons > 1`),
-#' each call can return the value for the specific season it is advising,
-#' rather than the same figure being reapplied to every season of the year.
+#' of `Interval`. In a seasonal model (`Seasons > 1`), each call returns the
+#' value for the season it is advising.
 #'
-#' `CurrentEffort` returns an empty [Advice()]. Any MP that returns neither
-#' `TAC` nor `Effort` keeps status-quo effort: each fleet's effort in each
-#' season equals its effort in the same season of the last historical year,
-#' so this year's Q1 repeats last year's Q1. `CurrentEffort` also carries the
+#' `CurrentEffort` returns an empty [Advice()]. When no `TAC` or `Effort` has
+#' been advised for a fleet, its effort in each season equals its effort in
+#' the same season of the last historical year, so each projection year's Q1
+#' repeats the last historical Q1. An empty [Advice()] returned after a `TAC`
+#' or `Effort` keeps that control in place (see [Advice()]). `CurrentEffort` also carries the
 #' `EverySeason` attribute, although its advice is the same whichever
 #' timestep it is called in.
 #'

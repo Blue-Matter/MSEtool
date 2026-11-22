@@ -123,7 +123,7 @@ for (Name in .MatrixOMs) local({
       HasTAC <- grepl('^TAC', sub('_mmp$', '', mp))
       if (HasTAC) {
         expect_gt(nrow(Rows), 0)
-        expect_true(all(Rows$Catch <= Rows$TAC * (1 + 5e-3) + 1e-8, na.rm = TRUE), label = mp)
+        expect_true(all(Rows$Catch <= Rows$TAC * (1 + 1e-3) + 1e-8, na.rm = TRUE), label = mp)
       } else {
         expect_equal(nrow(Rows), 0, label = mp)
       }
@@ -230,13 +230,13 @@ for (Name in c('TwoFleetOM', 'MultiStockOM', 'ComplexOM')) local({
 })
 
 # management advised in the first year only stays in place until changed
-for (Name in c('SingleStockOM', 'TwoFleetOM')) local({
+for (Name in c('SingleStockOM', 'TwoFleetOM', 'MultiStockOM', 'SeasonalSpatialOM')) local({
   Name <- Name
   test_that(paste(Name, ": management advised once stays in place"), {
     Ctx  <- .MatrixCtx(Name)
     Hist <- Ctx$Hist
     Ctx$Hist <- NULL
-    Ctrls <- c('EffAbsFleet', 'EffClose', 'EffSize', 'TACFleet', 'TACLandings', 'TACClose', 'TACSizeDM', 'TACAll', 'TACEffortCap')
+    Ctrls <- c('EffRel', 'EffAbsFleet', 'EffFleetArea', 'EffClose', 'EffSize', 'TACFleet', 'TACLandings', 'TACClose', 'TACSizeDM', 'TACAll', 'TACEffortCap')
     Every <- lapply(Ctrls, \(ct) {
       f <- function(Data) .MatrixAdvice(ct, Ctx, Data@Misc$StockName)
       class(f) <- 'mp'
@@ -255,6 +255,12 @@ for (Name in c('SingleStockOM', 'TwoFleetOM')) local({
       for (ct in Ctrls)
         expect_equal(x$Value[x$MP == paste0(ct, '_once')], x$Value[x$MP == paste0(ct, '_every')],
                      tolerance = 1e-8, label = paste(fn, ct))
+    }
+    for (ct in Ctrls) {
+      expect_equal(MSE@Effort[, , , paste0(ct, '_once')], MSE@Effort[, , , paste0(ct, '_every')],
+                   tolerance = 1e-8, label = paste('Effort', ct))
+      expect_equal(MSE@Distribution[, , , , paste0(ct, '_once')], MSE@Distribution[, , , , paste0(ct, '_every')],
+                   tolerance = 1e-8, label = paste('Distribution', ct))
     }
   })
 })

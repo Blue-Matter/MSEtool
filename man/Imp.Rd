@@ -39,7 +39,7 @@ created via \code{\link[=ImpSlot]{ImpSlot()}}.}
 
 \item{Size}{An \link[=impslot-class]{impslot} object, or \code{NULL} (default). Implementation
 of size-based regulations (e.g. minimum landing size). Size-based
-regulations are currently always applied in full (see Details). When
+regulations are always applied in full (see Details). When
 \code{NULL}, an empty \link[=impslot-class]{impslot} is created via \code{\link[=ImpSlot]{ImpSlot()}}.}
 
 \item{Misc}{List. Miscellaneous additional objects. Default \code{list()}.}
@@ -123,7 +123,7 @@ stops when the first control is reached.
 Unset compliance is treated as \code{1}. A complex that sets no control for a
 fleet is not included.
 
-\code{Size@Compliance} is currently not applied: size-based regulations
+\code{Size@Compliance} is not applied: size-based regulations
 (\code{Advice@Retention} and \code{Advice@Selectivity}) are always adopted in full by
 the whole fleet in the year they change. A value other than \code{1} is ignored
 and recorded in the log. \code{Size@Mean}/\code{SD}/\code{Error} are not used.

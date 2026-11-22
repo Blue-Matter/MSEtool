@@ -175,6 +175,10 @@ corresponding slot of an \link[=obs-class]{obs} or \link[=data-class]{data} obje
 When \code{byAge = FALSE} or \code{bySize = FALSE} for \link[=hist-class]{hist} or \link[=mse-class]{mse}
 objects, the catch data are in units of biomass (\verb{N x Weight}), where
 \code{Weight} is the fleet-specific weight-at-age schedule from \code{\link[=Fleet]{Fleet()}}.
+\code{Biomass()} uses the stock's mean weight-at-age from \code{\link[=Stock]{Stock()}}. A fleet
+that selects the larger fish within an age class has a higher
+weight-at-age than the stock mean, so at high fishing mortality the
+removals in a time step can exceed the biomass at the start of that step.
 When \code{byAge = TRUE} or \code{bySize = TRUE} the values are in units of numbers.
 When \code{byArea = TRUE} the values are always in units of numbers.
 

@@ -22,8 +22,9 @@ default.}
 deviation of implementation error around \code{Mean}. When \code{NULL}, the slot is
 left at its class default.}
 
-\item{Compliance}{Scalar, length-2 uniform bounds \code{c(lower, upper)}, a
-\verb{[Sim x Year]} array, or \code{NULL} (default). Meaning depends on which
+\item{Compliance}{Scalar, length-2 uniform bounds \code{c(lower, upper)} (one
+draw per simulation, used in every year), a \verb{[Sim x Year]} array, or
+\code{NULL} (default). Meaning depends on which
 control (\code{TAC}, \code{Effort}, or \code{Size}) this \code{impslot} is attached to (see
 Details). Values should be in \eqn{[0, 1]}.}
 

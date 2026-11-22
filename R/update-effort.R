@@ -36,10 +36,10 @@
   Season  <- SeasonOfYear(c(YearsHist, YearsProj), Proj@OM@Seasons, Year)$SeasonInd
   TSIndex <- match(Year, c(YearsHist, YearsProj))
 
-  Proj <- .SetCarryForwardEffort(Proj, TSIndex, c(YearsHist, YearsProj))
+  Proj <- .SetCarryForwardEffort(Proj, TSIndex, length(YearsHist))
 
   # effort set by TAC advice takes the engine's area split
-  if (.AllAdviceNull(AdviceSimList, 'Effort')) {
+  if (.AllAdviceNull(AdviceSimList, 'Effort') && !.AnyEffortRecord(Proj)) {
     Proj@Distribution[, TSIndex:dim(Proj@Distribution)[2], , ] <- NA
     return(Proj)
   }
@@ -91,8 +91,10 @@
 #' has no area matrix. Status-quo effort (empty advice, flagged by
 #' `.CheckTACEffort()`) is relative effort 1 with the last historical year's
 #' seasonal pattern; fleets with a user-specified historical distribution keep
-#' their last historical distribution. Skips complexes where effort is `NULL`
-#' or the advice object is not of class `"advice"`. For multi-stock OMs, also
+#' their last historical distribution. A fleet whose advice sets neither a TAC
+#' nor an effort keeps the last effort its complex advised for it, with that
+#' advice's area split (`Proj@Misc$EffortRecord`); a TAC clears the record.
+#' Skips advice objects not of class `"advice"`. For multi-stock OMs, also
 #' (re)optimises each fleet's stock-specific targeting weights for the
 #' current year at this fixed effort - see `.OptTargetingMultiStock()`.
 #'
@@ -151,14 +153,23 @@
   # EffType per fleet per complex, to identify which fleets take the shape
   EffTypeMat <- matrix('Abs', nrow = nFleet, ncol = nComplex)
   StatusQuoDist <- NULL
+  Rec <- .EffortRecord(Proj, nComplex, FleetNames, nArea)
 
   for (i in seq_len(nComplex)) {
-    Advice         <- AdviceList[[i]]
-    AdvicePrevious <- LastAdviceList[[i]]
-    complex_name   <- names(Complexes)[i]
+    Advice       <- AdviceList[[i]]
+    complex_name <- names(Complexes)[i]
 
-    if (!inherits(Advice, "advice"))                              next
-    if (is.null(Advice@Effort))                                   next
+    if (!inherits(Advice, "advice")) next
+
+    # an advised effort stays in place for a fleet until a TAC or new effort replaces it
+    TACFleet <- .AdviceTACFleets(Advice, nFleet)
+    Recorded <- !is.na(Rec$Effort[sim, i, ]) & Rec$Annual[sim, i, ] == SplitAnnual & !TACFleet
+    Rec$Effort[sim, i, TACFleet] <- NA
+    if (is.null(Advice@Effort)) {
+      if (!any(Recorded)) next
+      Advice@Effort  <- array(NA_real_, nFleet, dimnames = list(Fleet = FleetNames))
+      Advice@EffType <- 'Abs'
+    }
 
     EffType <- Advice@EffType
     if (!length(EffType)) EffType <- 'Rel'
@@ -188,8 +199,6 @@
       Advice@Effort <- rep(as.numeric(Advice@Effort), nFleet)[seq_len(nFleet)]
     }
 
-    EffTypeMat[, i] <- .RecycleToFleets(EffType, nFleet, 'EffType')
-
     # Convert relative fleets to absolute
     Advice <- .ConvertEffortAbs(Proj, sim, Advice, YearsHist, nFleet,
                                 LastEffortLevel = LastEffortLevel)
@@ -200,13 +209,32 @@
     Distribution[i] <- list(temp$Distribution)
     Advice          <- temp$Advice
 
+    EffTypeFleet <- .RecycleToFleets(EffType, nFleet, 'EffType')
+    Advised      <- is.finite(as.numeric(Advice@Effort))
+    Carry        <- !Advised & Recorded
+
+    Rec$Effort[sim, i, Advised] <- Advice@Effort[Advised]
+    Rec$Type[sim, i, Advised]   <- EffTypeFleet[Advised]
+    Rec$Annual[sim, i, Advised] <- SplitAnnual
+    Rec$Dist[sim, i, Advised, ] <- if (is.null(Distribution[[i]])) NA else
+      Distribution[[i]][1, 1, Advised, ]
+
     if (IsStatusQuo) {
       if (SplitAnnual)
-        SeasonalEffortAllocation[[i]][sim, , ] <- LastEffort$shape / nSeason
+        SeasonalEffortAllocation[[i]][sim, , !Carry] <- LastEffort$shape[, !Carry] / nSeason
       Distribution[i] <- list(.StatusQuoDistribution(Proj, sim, ProjInd, length(YearsHist),
                                                      nSeason, FleetNames, Areas))
       StatusQuoDist <- Distribution[[i]]
     }
+
+    if (any(Carry)) {
+      Advice@Effort[Carry] <- Rec$Effort[sim, i, Carry]
+      EffTypeFleet[Carry]  <- Rec$Type[sim, i, Carry]
+      Distribution[i] <- list(.CarryEffortDistribution(Distribution[[i]], Rec$Dist[sim, i, , ],
+                                                       Carry, sim, ProjInd, AllYears,
+                                                       FleetNames, nArea))
+    }
+    EffTypeMat[, i] <- EffTypeFleet
 
 
     wrapped <- .ApplyImplementationError(
@@ -217,7 +245,8 @@
 
     AdviceList[[i]] <- Advice
   }
-  
+  Proj@Misc$EffortRecord <- Rec
+
   # area split of future time steps is reset each step; NA leaves it to the engine
   Proj@Distribution[sim, ProjInd, , ] <- NA
 
@@ -322,17 +351,63 @@
   Proj
 }
 
-# Effort for this time step before any control applies: last year's nominal effort in the same
-# season, capped at `Effort@Maximum`; no fleet has an effort control yet
-.SetCarryForwardEffort <- function(Proj, TSIndex, AllYears) {
-  nSim   <- Proj@OM@nSim
-  nFleet <- dim(Proj@Effort)[3]
-  Prev   <- max(1L, TSIndex - max(1L, as.integer(Proj@OM@Seasons)))
-  Effort <- matrix(Proj@Effort[, Prev, ], nSim, nFleet) / .BagTimeFraction(Proj, AllYears[Prev])
+# Effort for this time step before any control applies: the last historical year's effort in the
+# same season, capped at `Effort@Maximum`; no fleet has an effort control yet
+.SetCarryForwardEffort <- function(Proj, TSIndex, nHistTS) {
+  nSim    <- Proj@OM@nSim
+  nFleet  <- dim(Proj@Effort)[3]
+  nSeason <- max(1L, as.integer(Proj@OM@Seasons))
+  HistInd <- max(1L, nHistTS - nSeason + ((TSIndex - 1L) %% nSeason) + 1L)
+  Effort  <- matrix(Proj@Effort[, HistInd, ], nSim, nFleet)
   for (sim in seq_len(nSim))
     Proj@Effort[sim, TSIndex, ] <- .ApplyEffortCeiling(Effort[sim, ], .FleetMaximumEffort(Proj, sim, TSIndex))
   Proj@Misc$EffortSet <- matrix(FALSE, nSim, nFleet)
   Proj
+}
+
+# Last advised effort per sim, complex and fleet (absolute, before implementation error), its
+# EffType, area split (NA: engine) and whether it was an annual total split across seasons
+.EffortRecord <- function(Proj, nComplex, FleetNames, nArea) {
+  Rec <- Proj@Misc$EffortRecord
+  if (!is.null(Rec))
+    return(Rec)
+  nSim   <- Proj@OM@nSim
+  nFleet <- length(FleetNames)
+  list(Effort = array(NA_real_, c(nSim, nComplex, nFleet)),
+       Type   = array(NA_character_, c(nSim, nComplex, nFleet)),
+       Annual = array(FALSE, c(nSim, nComplex, nFleet)),
+       Dist   = array(NA_real_, c(nSim, nComplex, nFleet, nArea)))
+}
+
+.AnyEffortRecord <- function(Proj) {
+  Rec <- Proj@Misc$EffortRecord
+  !is.null(Rec) && any(!is.na(Rec$Effort))
+}
+
+# fleets the advice sets a TAC for; a scalar TAC applies to every fleet
+.AdviceTACFleets <- function(Advice, nFleet) {
+  TAC <- Advice@TAC
+  if (!length(TAC))
+    return(rep(FALSE, nFleet))
+  if (length(TAC) == 1)
+    return(rep(!is.na(TAC), nFleet))
+  !is.na(as.numeric(TAC))
+}
+
+# Sets the area split of carried fleets to their recorded split (NA: engine)
+.CarryEffortDistribution <- function(Distribution, RecDist, Carry, sim, ProjInd, AllYears,
+                                     FleetNames, nArea) {
+  RecDist <- matrix(RecDist, length(FleetNames), nArea)
+  if (is.null(Distribution)) {
+    if (all(is.na(RecDist[Carry, ])))
+      return(NULL)
+    Distribution <- array(NA_real_, c(1L, length(ProjInd), length(FleetNames), nArea),
+                          dimnames = list(Sim = sim, Year = AllYears[ProjInd],
+                                          Fleet = FleetNames, Area = seq_len(nArea)))
+  }
+  for (fl in which(Carry))
+    Distribution[1, , fl, ] <- rep(RecDist[fl, ], each = length(ProjInd))
+  Distribution
 }
 
 # Caps an [time step x fleet] effort matrix at each fleet's `Effort@Maximum`

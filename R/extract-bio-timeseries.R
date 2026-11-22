@@ -5,6 +5,10 @@
 #' [hist-class] or [mse-class] object. `VBiomass()` extracts vulnerable
 #' biomass (biomass weighted by fleet selectivity/retention).
 #'
+#' `Biomass()` uses the stock's mean weight-at-age. Catches use each fleet's
+#' weight-at-age (see [Removals()]), so removals in a time step can exceed
+#' `Biomass()` at high fishing mortality.
+#'
 #' When applied to an [mse-class] object the historical and projection
 #' periods are row-bound and labelled via the `Period` column; historical
 #' rows carry `MP = "Historical"`.

@@ -27,10 +27,8 @@ the \link[=imp-class]{imp} object assigned to every built-in example \link[=om-c
 object (e.g. \link{SingleStockOM}, \link{TwoFleetOM}).
 }
 \details{
-Because this is behaviourally identical to leaving \code{Imp} unspecified
-(\code{NULL}) on an \link[=om-class]{om} object -- a missing \code{Imp} entry is already
-treated as full compliance throughout the simulation -- attaching
-\code{FullComplianceImp} makes that default explicit rather than implicit. See
+An \link[=om-class]{om} object with an empty \code{Imp} slot gives the same results as one
+with \code{FullComplianceImp} for every stock and fleet. See
 \link{OverageImp} and \link{UnderageImp} for TAC/effort implementation error
 examples, and \link{PartialSizeComplianceImp} for an example with
 \code{Size@Compliance} below 1.

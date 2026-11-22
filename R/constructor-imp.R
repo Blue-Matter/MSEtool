@@ -18,7 +18,7 @@
 #'   created via [ImpSlot()].
 #' @param Size An [impslot-class] object, or `NULL` (default). Implementation
 #'   of size-based regulations (e.g. minimum landing size). Size-based
-#'   regulations are currently always applied in full (see Details). When
+#'   regulations are always applied in full (see Details). When
 #'   `NULL`, an empty [impslot-class] is created via [ImpSlot()].
 #' @param Misc List. Miscellaneous additional objects. Default `list()`.
 #'
@@ -66,7 +66,7 @@
 #' Unset compliance is treated as `1`. A complex that sets no control for a
 #' fleet is not included.
 #'
-#' `Size@Compliance` is currently not applied: size-based regulations
+#' `Size@Compliance` is not applied: size-based regulations
 #' (`Advice@Retention` and `Advice@Selectivity`) are always adopted in full by
 #' the whole fleet in the year they change. A value other than `1` is ignored
 #' and recorded in the log. `Size@Mean`/`SD`/`Error` are not used.

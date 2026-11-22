@@ -6,9 +6,9 @@
 #' same units as each other. Missing `Discards` alone is not a problem: TACs
 #' are then set from `Landings`.
 #'
-#' If no catch data are available, and a finite TAC value cannot be produced,
-#' the MP will likely fall back to setting effort to last historical effort -
-#' ie same as [CurrentEffort()] (the default for empty [Advice()] objects).
+#' If no catch data are available and the MP cannot produce a finite TAC,
+#' fleets with no `TAC` or `Effort` advised fish the effort of the last
+#' historical year, as under [CurrentEffort()].
 #'
 #' If `Landings` and `Discards` are not in the same units (e.g. one in
 #' `Biomass` and the other in `Number`, or one in `"t"` and the other in

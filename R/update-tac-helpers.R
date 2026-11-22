@@ -1,4 +1,4 @@
-.ResolveTACByComplex <- function(AdviceList, LastAdviceList, Complexes,
+.ResolveTACByComplex <- function(AdviceList, Complexes,
                                 Proj, sim, FleetNames) {
   
   nFleet <- length(FleetNames)
@@ -9,14 +9,8 @@
   for (i in seq_len(nComplex)) {
     Advice <- AdviceList[[i]]
     
-    if (EmptyObject(Advice@TAC)) {
-      prev <- LastAdviceList[[i]]
-      if (!is.null(prev) && !EmptyObject(prev@TAC)) {
-        Advice@TAC <- prev@TAC
-      } else {
-        next  
-      }
-    }
+    if (EmptyObject(Advice@TAC))
+      next
     
     TAC <- Advice@TAC
     dd  <- dim(TAC)

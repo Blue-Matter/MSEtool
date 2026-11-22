@@ -63,8 +63,10 @@ complex, or to \code{NA} (area split computed by the engine) when that advice
 has no area matrix. Status-quo effort (empty advice, flagged by
 \code{.CheckTACEffort()}) is relative effort 1 with the last historical year's
 seasonal pattern; fleets with a user-specified historical distribution keep
-their last historical distribution. Skips complexes where effort is \code{NULL}
-or the advice object is not of class \code{"advice"}. For multi-stock OMs, also
+their last historical distribution. A fleet whose advice sets neither a TAC
+nor an effort keeps the last effort its complex advised for it, with that
+advice's area split (\code{Proj@Misc$EffortRecord}); a TAC clears the record.
+Skips advice objects not of class \code{"advice"}. For multi-stock OMs, also
 (re)optimises each fleet's stock-specific targeting weights for the
 current year at this fixed effort - see \code{.OptTargetingMultiStock()}.
 }

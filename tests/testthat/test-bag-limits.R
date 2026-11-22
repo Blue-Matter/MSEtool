@@ -797,3 +797,20 @@ test_that("a bag limit advised once stays in place until changed", {
     expect_equal(x$Value[x$MP == 'Once'], x$Value[x$MP == 'Every'], tolerance = 1e-8, label = fn)
   }
 })
+
+test_that("an NA bag limit removes the limit that was in place", {
+  skip_on_cran()
+  om   <- .BagOM(SingleStockOM, nsim = 2, py = 3, DM = 0.5)
+  Hist <- .BagHist('persist', om)
+  Off <- function(Data)
+    if (isTRUE(Data@Misc$FirstAdvice)) Advice(BagLimit = 2, LimitType = 'boat') else Advice(BagLimit = NA_real_)
+  class(Off) <- 'mp'
+  MSE <- .BagProject(Hist, list(Off = Off, Bag = .BagMP(BagLimit = 2, LimitType = 'boat'), None = .BagMP()))
+  D  <- Discards(MSE)
+  D  <- D[D$Period == 'Projection', ]
+  y1 <- min(D$Year)
+  Sum <- \(mp, later) sum(D$Value[D$MP == mp & (D$Year > y1) == later])
+  expect_equal(Sum('Off', FALSE), Sum('Bag', FALSE), tolerance = 1e-8)
+  expect_gt(Sum('Bag', TRUE), Sum('None', TRUE) + 1e-6)
+  expect_equal(Sum('Off', TRUE), Sum('None', TRUE), tolerance = 1e-8)
+})

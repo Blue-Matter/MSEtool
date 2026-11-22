@@ -30,6 +30,10 @@
 #' When `byAge = FALSE` or `bySize = FALSE` for [hist-class] or [mse-class]
 #' objects, the catch data are in units of biomass (`N x Weight`), where
 #' `Weight` is the fleet-specific weight-at-age schedule from [Fleet()].
+#' `Biomass()` uses the stock's mean weight-at-age from [Stock()]. A fleet
+#' that selects the larger fish within an age class has a higher
+#' weight-at-age than the stock mean, so at high fishing mortality the
+#' removals in a time step can exceed the biomass at the start of that step.
 #' When `byAge = TRUE` or `bySize = TRUE` the values are in units of numbers.
 #' When `byArea = TRUE` the values are always in units of numbers.
 #'
