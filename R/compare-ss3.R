@@ -10,6 +10,15 @@
 #' a problem with the OM import process or a mismatch in the population dynamics
 #' models.
 #'
+#' [ImportSS()] generates the recruitment deviations for the years after the
+#' SS3 bias-adjustment plateau (they are not informed by data), so the OM
+#' simulations differ from SS3, and from each other, in those years and in the
+#' numbers, biomass, and catches that follow. When all simulations come from
+#' a single SS3 run, the plots show the range of the simulations (5th to 95th
+#' percentiles) as a shaded ribbon, with the simulation `sim` as the line. In
+#' years where the simulations differ, the absolute relative error is the
+#' distance of the SS3 value outside this range (zero inside it).
+#'
 #' @param SSDir Character string giving the path to a directory containing SS3
 #'   output files, or a list returned by [ImportSSReport()].
 #' @param Hist A `hist-class` or `om-class` object. If an `om-class` object is
@@ -149,10 +158,11 @@ CompareSS_Discards <- function(SSDir, Hist, sim = 1, silent = FALSE, ...) {
     ggplot2::aes(x = .data$Year, y = .data$Value, color = .data$Model,
                 shape = .data$Model, linetype = .data$Model)
   ) +
+    .CompareSimRibbon(df) +
     ggplot2::geom_line() +
     ggplot2::geom_point() +
     ggplot2::expand_limits(y = 0) +
-    ggplot2::labs(y = y_label) +
+    ggplot2::labs(y = y_label, caption = .CompareSimRibbonCaption(df)) +
     theme_bw()
 
   if (has_fleet) p <- p + ggplot2::facet_wrap(~Fleet, scales = 'free_y')
@@ -200,11 +210,7 @@ CompareSS_Discards <- function(SSDir, Hist, sim = 1, silent = FALSE, ...) {
 
   if (catch_type == 'landings') {
     SS_Value <- retain_df
-    OM_Value <- Landings(Hist, byFleet = TRUE) |>
-      dplyr::filter(Sim == sim) |>
-      dplyr::group_by(Year, Fleet) |>
-      dplyr::summarise(Value = sum(Value), .groups = 'drop') |>
-      dplyr::mutate(Model = 'OM')
+    OM_All <- Landings(Hist, byFleet = TRUE)
   } else {
     SS_Value <- dplyr::left_join(dead_df, retain_df,
                                  by = c('Year', 'Fleet'),
@@ -215,12 +221,17 @@ CompareSS_Discards <- function(SSDir, Hist, sim = 1, silent = FALSE, ...) {
     if (all(SS_Value$Value == 0, na.rm = TRUE))
       return(invisible(NULL))
 
-    OM_Value <- Discards(Hist, byFleet = TRUE) |>
-      dplyr::filter(Sim == sim) |>
-      dplyr::group_by(Year, Fleet) |>
-      dplyr::summarise(Value = sum(Value), .groups = 'drop') |>
-      dplyr::mutate(Model = 'OM')
+    OM_All <- Discards(Hist, byFleet = TRUE)
   }
+
+  OM_All <- OM_All |>
+    dplyr::group_by(Sim, Year, Fleet) |>
+    dplyr::summarise(Value = sum(Value), .groups = 'drop')
+  OM_Value <- OM_All |>
+    dplyr::filter(Sim == sim) |>
+    dplyr::select(Year, Fleet, Value) |>
+    dplyr::mutate(Model = 'OM') |>
+    .AddSimRange(.CompareSSSimRange(OM_All, c('Year', 'Fleet'), RepList), c('Year', 'Fleet'))
 
   SS_Value <- SS_Value |>
     dplyr::left_join(unit_map, by = 'Fleet') |>
@@ -239,7 +250,8 @@ CompareSS_Discards <- function(SSDir, Hist, sim = 1, silent = FALSE, ...) {
   HistYears  <- Years(Hist@OM, 'H')
   AgeClasses <- .GetSSAgeClasses(replist)
   
-  OM_Value <- om_fn(Hist, df = TRUE) |>
+  OM_All <- om_fn(Hist, df = TRUE)
+  OM_Value <- OM_All |>
     dplyr::mutate(Model = 'OM') |>
     dplyr::filter(Sim == sim) |>
     dplyr::arrange(Stock, Year) |>
@@ -261,8 +273,10 @@ CompareSS_Discards <- function(SSDir, Hist, sim = 1, silent = FALSE, ...) {
       Stock = OM_Value$Stock
     )
   
+  OM_Value <- .AddSimRange(OM_Value, .CompareSSSimRange(OM_All, c('Year', 'Stock'), RepList),
+                           c('Year', 'Stock'))
   df <- dplyr::bind_rows(OM_Value, SS_Value) |>
-    dplyr::select(Year, Value, Stock, Model) |>
+    dplyr::select(dplyr::any_of(c('Year', 'Value', 'Stock', 'Model', 'Lower', 'Upper'))) |>
     dplyr::arrange(Year)
 
   .CompareMare(df, 'SS3')
@@ -272,10 +286,12 @@ CompareSS_Discards <- function(SSDir, Hist, sim = 1, silent = FALSE, ...) {
   replist   <- RepList[[sim]]
   HistYears <- Years(Hist@OM, 'H')
 
-  OM_Value <- Number(Hist, df = TRUE, byAge = TRUE) |>
-    dplyr::filter(.data$Sim == sim, .data$Age == min(.data$Age)) |>
-    dplyr::group_by(Year) |>
-    dplyr::summarise(Value = sum(Value)) |>
+  OM_All <- Number(Hist, df = TRUE, byAge = TRUE) |>
+    dplyr::filter(.data$Age == min(.data$Age)) |>
+    dplyr::group_by(.data$Sim, .data$Year) |>
+    dplyr::summarise(Value = sum(.data$Value), .groups = 'drop')
+  OM_Value <- OM_All |>
+    dplyr::filter(.data$Sim == sim) |>
     dplyr::mutate(Model = 'OM') |>
     dplyr::select('Year', 'Value', 'Model')
 
@@ -300,8 +316,30 @@ CompareSS_Discards <- function(SSDir, Hist, sim = 1, silent = FALSE, ...) {
     ) |>
     dplyr::select('Year', 'Value', 'Model')
 
+  OM_Value <- .AddSimRange(OM_Value, .CompareSSSimRange(OM_All, 'Year', RepList), 'Year')
   df <- dplyr::bind_rows(OM_Value, SS_Value) |>
     dplyr::arrange(.data$Year)
 
   .CompareMare(df, 'SS3')
+}
+
+# OM 5th and 95th percentiles over simulations, by `group_vars`, when all
+# simulations come from the same SS3 run: the simulations differ where the OM
+# generates recruitment deviations that SS3 did not estimate (the years after
+# the bias-adjustment plateau). NULL when the simulations are different SS3
+# runs or there is one simulation.
+.CompareSSSimRange <- function(df, group_vars, RepList) {
+  if (length(RepList) != 1 || length(unique(df$Sim)) < 2)
+    return(NULL)
+  df |>
+    dplyr::group_by(dplyr::across(dplyr::all_of(group_vars))) |>
+    dplyr::summarise(
+      Lower = stats::quantile(.data$Value, 0.05, names = FALSE, na.rm = TRUE),
+      Upper = stats::quantile(.data$Value, 0.95, names = FALSE, na.rm = TRUE),
+      .groups = 'drop')
+}
+
+.AddSimRange <- function(OM_Value, Range, by) {
+  if (is.null(Range)) return(OM_Value)
+  dplyr::left_join(OM_Value, Range, by = by)
 }
