@@ -12,8 +12,9 @@
 #'   matching is supported.
 #'
 #'   - `'Equilibrium'`: unfished values assuming equilibrium conditions — no
-#'     recruitment deviations and all life-history parameters constant over
-#'     time.
+#'     recruitment deviations, and the life-history parameters of each year
+#'     held constant. Calculated for each year (historical and projection)
+#'     in which those parameters change.
 #'   - `'Dynamic'`: unfished values calculated by running the full population
 #'     dynamics model with no fishing, including recruitment deviations and any
 #'     time-varying parameters, over the historical and projection years. The
@@ -22,6 +23,11 @@
 #'   collapse any `Sim`, `Year`, or `Age` dimensions where values are
 #'   identical across that dimension, reducing array size. If `FALSE`, the
 #'   slot contents are returned as-is with all dimensions intact.
+#' @param Fill Logical. Equilibrium unfished values only. The values are
+#'   stored for the years in which their inputs change (see
+#'   [RefChangeYears()]). If `TRUE` (default), they are filled to every
+#'   historical and projection year (each year takes the value of the most
+#'   recent stored year). If `FALSE`, only the stored years are returned.
 #' @param value The value to assign to the slot of a [refpointsMSY-class] or
 #'   [referencedata-class] object, e.g. `Data@Reference`.
 #'
@@ -232,7 +238,7 @@ SPR0 <- function(Hist) .AccessRefSlot(Hist, 'SPR0')
 #' @export
 MGT <- function(Hist) .AccessRefSlot(Hist, 'MGT')
 
-.UnfishedSlot <- function(Hist, type, slot_name, Reduce) {
+.UnfishedSlot <- function(Hist, type, slot_name, Reduce, Fill = TRUE) {
   .CheckClass(Hist, c('hist', 'mse'), 'Hist')
   type <- match.arg(type, c('Equilibrium', 'Dynamic'))
 
@@ -242,25 +248,32 @@ MGT <- function(Hist) .AccessRefSlot(Hist, 'MGT')
     slot(Hist@Unfished@Dynamic, slot_name)
   }
 
+  # equilibrium values are stored for the change-point years of their inputs
+  if (Fill && type == 'Equilibrium' && length(obj)) {
+    AllYears <- c(Years(Hist@OM, 'Historical'), Years(Hist@OM, 'Projection'))
+    obj <- if (is.list(obj)) lapply(obj, .SubsetYearIfAny, AllYears) else
+      .SubsetYearIfAny(obj, AllYears)
+  }
+
   if (Reduce) ReduceDims(obj, IncYear = FALSE) else obj
 }
 
 #' @rdname RefPoint-accessors
 #' @export
-B0 <- function(Hist, type = c('Equilibrium', 'Dynamic'), Reduce = TRUE)
-  .UnfishedSlot(Hist, type, 'Biomass', Reduce)
+B0 <- function(Hist, type = c('Equilibrium', 'Dynamic'), Reduce = TRUE, Fill = TRUE)
+  .UnfishedSlot(Hist, type, 'Biomass', Reduce, Fill)
 
 #' @rdname RefPoint-accessors
 #' @export
-SB0 <- function(Hist, type = c('Equilibrium', 'Dynamic'), Reduce = TRUE)
-  .UnfishedSlot(Hist, type, 'SBiomass', Reduce)
+SB0 <- function(Hist, type = c('Equilibrium', 'Dynamic'), Reduce = TRUE, Fill = TRUE)
+  .UnfishedSlot(Hist, type, 'SBiomass', Reduce, Fill)
 
 #' @rdname RefPoint-accessors
 #' @export
-SP0 <- function(Hist, type = c('Equilibrium', 'Dynamic'), Reduce = TRUE)
-  .UnfishedSlot(Hist, type, 'SProduction', Reduce)
+SP0 <- function(Hist, type = c('Equilibrium', 'Dynamic'), Reduce = TRUE, Fill = TRUE)
+  .UnfishedSlot(Hist, type, 'SProduction', Reduce, Fill)
 
 #' @rdname RefPoint-accessors
 #' @export
-N0 <- function(Hist, type = c('Equilibrium', 'Dynamic'), Reduce = TRUE)
-  .UnfishedSlot(Hist, type, 'Number', Reduce)
+N0 <- function(Hist, type = c('Equilibrium', 'Dynamic'), Reduce = TRUE, Fill = TRUE)
+  .UnfishedSlot(Hist, type, 'Number', Reduce, Fill)
