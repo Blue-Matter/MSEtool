@@ -196,6 +196,12 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
   }) |>
     List2Array('Fleet', pos=3)
 
+  # no effort in the requested year(s) (e.g. the first historical year): the
+  # relative fishing mortality among fleets is undefined, so use the effort in
+  # the nearest calendar year with effort
+  if (is.null(EffortYears))
+    EffortYears <- .NearestEffortYear(FleetList, Years, .BuildFDistribution)
+
   if (is.null(EffortYears)) {
     FDistribution <- .BuildFDistribution(Years)
   } else {
@@ -225,6 +231,22 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
     dimnames(FDistributionTotal)[['Fleet']] <- names(FleetList)
     ArrayDivide(FDistribution, FDistributionTotal)
   }
+}
+
+# NULL if there is effort in the calendar years of `Years`; otherwise the
+# nearest calendar year with effort (the later on ties), or NULL if there is
+# none
+.NearestEffortYear <- function(FleetList, Years, BuildFDistribution) {
+  if (sum(BuildFDistribution(Years), na.rm = TRUE) > 0) return(NULL)
+  AllTS <- as.numeric(dimnames(FleetList[[1]]@Effort@Effort)[['Year']])
+  if (!length(AllTS)) return(NULL)
+  Cal <- unique(floor(AllTS))
+  Positive <- Cal[vapply(Cal, \(cy) sum(BuildFDistribution(AllTS[floor(AllTS) == cy]), na.rm = TRUE) > 0,
+                         logical(1))]
+  if (!length(Positive)) return(NULL)
+  Target <- mean(floor(Years))
+  Dist <- abs(Positive - Target)
+  max(Positive[Dist == min(Dist)])
 }
 
 # Seasonal per-recruit helpers
@@ -374,7 +396,11 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
 .CalcNPRHermAnnual <- function(comp, Herm, ZList, SemelparousList, SpawnTimeFracList,
                                PlusGroupList) {
   Z <- purrr::map(ZList[comp], \(x) .Aperm(x, c('Sim', 'Age', 'Year')))
-  nSim  <- max(purrr::map_int(Z, \(x) dim(x)[1]))
+  pairs <- which(Herm$From %in% comp & Herm$To %in% comp)
+  # mortality can be reduced to one sim when identical across sims, while the
+  # hazard keeps all sims (and vice versa)
+  nSim  <- max(c(purrr::map_int(Z, \(x) dim(x)[1]),
+                 purrr::map_int(Herm$Hazard[pairs], \(h) dim(h)[1])))
   Z     <- purrr::map(Z, \(x) ExtendSims(x, nSim))
   dn    <- dimnames(Z[[1]])
   Years <- as.numeric(dn$Year)
@@ -387,7 +413,6 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
   STF <- purrr::map(SpawnTimeFracList[comp], \(x) rep(x, nSim)[seq_len(nSim)])
   PG  <- purrr::map_lgl(PlusGroupList[comp], \(x) isTRUE(as.logical(x)))
 
-  pairs  <- which(Herm$From %in% comp & Herm$To %in% comp)
   Hazard <- purrr::map(Herm$Hazard[pairs], \(h)
     .ArraySubsetYear(h, Years) |> ExtendSims(nSim) |> .Aperm(c('Sim', 'Age', 'Year')))
 
@@ -631,16 +656,15 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
       PRList[[i]] <- .CalcPerRecruitFScalar(apicalF = apicalF[i], ...,
                                             NPR0List = NPR0List,
                                             NPR0_SPList = NPR0_SPList)
-      if (!is.null(PRList[[i]]@SPR) && min(PRList[[i]]@SPR, na.rm=TRUE) < spr_threshold)
+      if (.PerRecruitCollapsed(PRList[[i]], spr_threshold))
         collapsed <- TRUE
     }
   }
-  
+
   zero_fill <- \(arr) { arr[] <- 0; arr }
   if (collapsed) {
     first_collapsed <- which(
-      purrr::map_lgl(PRList, \(pr) 
-                     !is.null(pr@SPR) && min(pr@SPR, na.rm=TRUE) < spr_threshold)
+      purrr::map_lgl(PRList, \(pr) .PerRecruitCollapsed(pr, spr_threshold))
     )[1]
     for (i in seq(first_collapsed, length(apicalF))) {
       pr <- PRList[[i]]
@@ -682,6 +706,28 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
   PerRecruit@Misc        <- PRList[[1]]@Misc
   PerRecruit@Misc$HermCross <- .BindHermCrossF(PRList)
   PerRecruit
+}
+
+# SPR below `threshold` for any stock, ignoring stocks that receive individuals
+# recruited into another stock via Herm: their SPR is spawning production per
+# own recruit relative to an SPR0 that includes the Herm inflow, so it is near
+# zero when nearly all of the stock arrives by transition (e.g. males of a
+# protogynous species)
+.PerRecruitCollapsed <- function(pr, threshold) {
+  SPR <- pr@SPR
+  if (is.null(SPR) || !length(SPR)) return(FALSE)
+  HermCross <- pr@Misc$HermCross
+  if (length(HermCross) && 'Stock' %in% names(dimnames(SPR))) {
+    Recv <- purrr::map(HermCross, \(x) {
+      a  <- x$NPRF
+      st <- which(names(dimnames(a)) == 'Stock')
+      dimnames(a)$Stock[apply(a, st, \(v) any(v > 0, na.rm = TRUE))]
+    }) |> unlist() |> unique()
+    Keep <- setdiff(dimnames(SPR)$Stock, Recv)
+    if (!length(Keep)) return(FALSE)
+    SPR <- abind::asub(SPR, Keep, which(names(dimnames(SPR)) == 'Stock'), drop = FALSE)
+  }
+  min(SPR, na.rm = TRUE) < threshold
 }
 
 # Herm cross per-recruit terms bound over the F grid (SPR0 is F-invariant)
@@ -905,6 +951,9 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
   SelfOnly    <- .SPFromSelfOnly(SPFrom, StockNamesOrdered)
   SPR <- purrr::map(StockNamesOrdered, \(stock_name) {
     w <- SPFrom[[stock_name]]
+    HermSPR <- .HermLinkedSPR(stock_name, w, StockNamesOrdered, SPRFList, SPR0OwnList,
+                              HermCrossNPR, FecundityList, Years)
+    if (!is.null(HermSPR)) return(HermSPR)
     Reduce(`+`, purrr::map2(w$from, w$weight, \(idx, wt) {
       src <- StockNamesOrdered[idx]
       SPR0src <- if (SelfOnly[[src]]) SPR0List[[src]] else SPR0OwnList[[src]]
@@ -1056,6 +1105,42 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
   })
   names(out) <- names(NPR0_SPList)
   out
+}
+
+# SPR of a stock whose recruitment comes from stocks its own recruits
+# transition into via Herm (e.g. females of a protogynous species recruiting
+# from female and male spawning production): spawning production per recruit
+# summed over the sources, including the production of its recruits after
+# transition, relative to the same sum without fishing:
+# SPR_i = sum_k w_k SPRF_{k<-i} / sum_k w_k SPR0_{k<-i}.
+# NULL when the stock recruits only from itself, or from a source that its
+# recruits do not reach via Herm (the default SPFrom calculation applies).
+.HermLinkedSPR <- function(st, w, StockNames, SPRFList, SPR0OwnList, HermCrossNPR,
+                           FecundityList, Years) {
+  Cross <- HermCrossNPR[[st]]
+  if (is.null(Cross)) return(NULL)
+  Src <- StockNames[w$from]
+  if (!st %in% Src || all(Src == st) || !all(Src == st | Src %in% names(Cross$NPRF_SP)))
+    return(NULL)
+
+  SumSP <- \(NPR, s) ArrayMultiply(NPR, FecundityList[[s]]) |> SumOverAge()
+  # recruits of `st` must reach every other source via Herm
+  Reached <- purrr::map_lgl(setdiff(Src, st), \(s) any(SumSP(Cross$NPR0_SP[[s]], s) > 0, na.rm = TRUE))
+  if (!all(Reached)) return(NULL)
+  Add   <- \(a, b) if (is.null(a)) b else ArraySubtract(a, -1 * b)
+  Num <- Den <- NULL
+  for (k in seq_along(Src)) {
+    s  <- Src[k]
+    wt <- w$weight[k]
+    if (s == st) {
+      Num <- Add(Num, wt * SPRFList[[st]])
+      Den <- Add(Den, wt * .ArraySubsetYear(SPR0OwnList[[st]], Years))
+    } else {
+      Num <- Add(Num, wt * SumSP(Cross$NPRF_SP[[s]], s))
+      Den <- Add(Den, wt * SumSP(Cross$NPR0_SP[[s]], s))
+    }
+  }
+  ArrayDivide(Num, Den)
 }
 
 .SPFromSelfOnly <- function(SPFrom, StockNames) {
