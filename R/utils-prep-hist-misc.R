@@ -101,7 +101,7 @@
   Hist@Misc$RecLag <- .RecLag(Hist@OM@Stock)
   
   # SRR parameters
-  Hist@Misc$SRR_Pars <- purrr::map(Hist@OM@Stock, \(stock) stock@SRR@Pars)
+  Hist@Misc$SRR_Pars <- purrr::map(.AddSurvivalRecFrac(Hist@OM@Stock), \(stock) stock@SRR@Pars)
   
   # SRR rec devs
   LastHistYear <- max(as.numeric(Years(Hist, 'Historical')))
@@ -131,7 +131,8 @@
     Hist@Misc$SRR_Model[i] <- switch( Hist@Misc$SRR_Model[i],
                                       "BevertonHolt"=0,
                                       "Ricker"=1,
-                                      "HockeyStick"=2)
+                                      "HockeyStick"=2,
+                                      "SurvivalSRR"=3)
   }
   Hist@Misc$SRR_Model <- as.numeric(Hist@Misc$SRR_Model)
 

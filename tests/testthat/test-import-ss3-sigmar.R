@@ -25,7 +25,7 @@ MockSSSigmaRReplist <- function() {
 
 .LocalSS2SRRMocks <- function(env = parent.frame()) {
   local_mocked_bindings(.GetSSR0 = function(...) array(1, 1, dimnames = list(Year = 1990)),
-                        .GetSSSRRPars = function(...) matrix(0.8, dimnames = list(NULL, "h")),
+                        .GetSSSRRPars = function(...) list(h = 0.8),
                         .GetSSRecDevsEarly = function(...) array(1, 1, dimnames = list(Age = 1)),
                         .GetSSRecDevs = function(...) array(1, 1, dimnames = list(Year = 1990)),
                         .package = "MSEtool", .env = env)

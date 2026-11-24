@@ -50,6 +50,24 @@ test_that("a user-supplied RecDevHist is kept while the other deviations are sha
   expect_identical(Dep@Pars, Src@Pars)
 })
 
+test_that("NA years of a supplied RecDevHist take the source's deviations", {
+  om <- .share_om()
+  nHist <- length(Years(om, 'Historical'))
+  Supplied <- matrix(exp(seq(-0.5, 0.5, length.out = nHist)), nrow = 1, ncol = nHist)
+  Supplied[, nHist - 0:1] <- NA
+  om@Stock[[1]]@SRR@RecDevHist <- Supplied
+  om@Stock[[2]]@SRR@RecDevHist <- Supplied
+  om  <- PopulateOM(om, silent = TRUE)
+  Src <- om@Stock[[1]]@SRR@RecDevHist
+  Dep <- om@Stock[[2]]@SRR@RecDevHist
+  expect_equal(unname(Dep), unname(Src))
+  expect_equal(unname(Dep[1, 1:(nHist - 2)]), as.numeric(Supplied[1, 1:(nHist - 2)]))
+  expect_true(all(is.finite(Dep)))
+
+  om2 <- PopulateOM(om, silent = TRUE)
+  expect_equal(unname(om2@Stock[[2]]@SRR@RecDevHist), unname(Src))
+})
+
 test_that("weighted SPFrom blends are not shared", {
   om  <- .share_om(SPFrom = c("Example Albacore Stock" = 0.5, Male = 0.5))
   om  <- PopulateOM(om, silent = TRUE)

@@ -81,13 +81,15 @@ RelRecFun(x) <- value
 SRR(x) <- value
 }
 \arguments{
-\item{Pars}{\code{list}. Named list containing the steepness parameter for the
+\item{Pars}{\code{list}. Named list containing the parameters for the
 chosen SRR model. \code{R0} is never placed in \code{Pars} — it has its own
 dedicated slot. The required name depends on \code{Model}:
 \itemize{
 \item \code{BevertonHolt}: \code{list(h = ...)} where \verb{0.2 < h < 1}.
 \item \code{Ricker}: \code{list(hR = ...)}.
 \item \code{HockeyStick}: \code{list(Shinge = ...)} where \verb{0 < Shinge <= 1}.
+\item \code{SurvivalSRR}: \code{list(zfrac = ..., Beta = ...)} where \verb{0 <= zfrac <= 1}
+and \code{Beta > 0} (default 1). See \code{\link[=SRRModels]{SRRModels()}}.
 \code{BevertonHolt} and \code{Ricker} also accept \code{list(alpha = ..., beta = ...)}
 (see \code{\link[=SRRSteepness]{SRRSteepness()}}), in which case \code{R0} must be \code{NULL}. During
 \code{\link[=Populate]{Populate()}} these are converted to steepness and \code{R0} using the
@@ -145,7 +147,8 @@ each source and do not scale recruitment, which is set by \code{R0}. See
 
 \item{ShareSPFrom}{\code{logical(1)}. When \code{SPFrom} names a single other stock,
 copy that stock's \code{Pars}, \code{SD}, \code{AC}, and recruitment deviations into this
-stock during \code{\link[=Populate]{Populate()}} (a user-supplied \code{RecDevHist} is kept). Set to
+stock during \code{\link[=Populate]{Populate()}} (the supplied values of this stock's
+\code{RecDevHist} are kept; its \code{NA} years take the source's values). Set to
 \code{FALSE} for an independent stock-recruitment curve and recruitment
 deviations. See \link[=srr-class]{srr}. Default \code{TRUE}.}
 

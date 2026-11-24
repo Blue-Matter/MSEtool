@@ -538,6 +538,22 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// SurvivalSRR_cpp
+NumericVector SurvivalSRR_cpp(const NumericVector& S, const double S0, const double R0, const double zfrac, const double Beta, const double RecFrac);
+RcppExport SEXP _MSEtool_SurvivalSRR_cpp(SEXP SSEXP, SEXP S0SEXP, SEXP R0SEXP, SEXP zfracSEXP, SEXP BetaSEXP, SEXP RecFracSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type S(SSEXP);
+    Rcpp::traits::input_parameter< const double >::type S0(S0SEXP);
+    Rcpp::traits::input_parameter< const double >::type R0(R0SEXP);
+    Rcpp::traits::input_parameter< const double >::type zfrac(zfracSEXP);
+    Rcpp::traits::input_parameter< const double >::type Beta(BetaSEXP);
+    Rcpp::traits::input_parameter< const double >::type RecFrac(RecFracSEXP);
+    rcpp_result_gen = Rcpp::wrap(SurvivalSRR_cpp(S, S0, R0, zfrac, Beta, RecFrac));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_MSEtool_LinInterp_cpp", (DL_FUNC) &_MSEtool_LinInterp_cpp, 3},
@@ -567,6 +583,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MSEtool_BevertonHolt_cpp", (DL_FUNC) &_MSEtool_BevertonHolt_cpp, 4},
     {"_MSEtool_Ricker_cpp", (DL_FUNC) &_MSEtool_Ricker_cpp, 4},
     {"_MSEtool_HockeyStick_cpp", (DL_FUNC) &_MSEtool_HockeyStick_cpp, 4},
+    {"_MSEtool_SurvivalSRR_cpp", (DL_FUNC) &_MSEtool_SurvivalSRR_cpp, 6},
     {NULL, NULL, 0}
 };
 

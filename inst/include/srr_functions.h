@@ -58,10 +58,28 @@ inline double HockeyStick_kernel(
   return expR > 0.0 ? expR : 0.0;
 } 
 
+inline double SurvivalSRR_kernel(
+    double S,
+    double S0,
+    double R0,
+    double zfrac,
+    double Beta,
+    double RecFrac) {
+  
+  if (S <= 0.0 || S0 <= 0.0 || R0 <= 0.0)
+    return 0.0;
+  
+  const double z0   = std::log(R0 / (RecFrac * S0));
+  const double zmin = z0 * (1.0 - zfrac);
+  const double z    = z0 + (zmin - z0) * (1.0 - std::pow(S / S0, Beta));
+  return RecFrac * S * std::exp(z);
+} 
+
 // SRR model codes
 constexpr int SRR_BEVERTON_HOLT = 0;
 constexpr int SRR_RICKER        = 1;
 constexpr int SRR_HOCKEY_STICK  = 2;
+constexpr int SRR_SURVIVAL      = 3;
 
 
 inline double EvalSRR(
@@ -107,6 +125,20 @@ inline double EvalSRR(
       S0,
       R0,
       pars_st[0](sim_Sh, y) // Shinge
+    );
+  }
+
+  case SRR_SURVIVAL: {
+    const int sim_z = sim_index<2>(sim, pars_st[0]);
+    const int sim_b = sim_index<2>(sim, pars_st[1]);
+    const int sim_f = sim_index<2>(sim, pars_st[2]);
+    return SurvivalSRR_kernel(
+      S,
+      S0,
+      R0,
+      pars_st[0](sim_z, y), // zfrac
+      pars_st[1](sim_b, y), // Beta
+      pars_st[2](sim_f, y)  // RecFrac
     );
   }
  

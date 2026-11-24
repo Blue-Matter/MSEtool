@@ -926,15 +926,25 @@ PopulateOM <- function(OM,
     New@RecDevInit <- Src@RecDevInit
     New@RecDevProj <- Src@RecDevProj
     if (ShareHist) New@RecDevHist <- Src@RecDevHist
+    GenHist <- !ShareHist && any(SRR@Misc$RecDevHistNA)
+    if (GenHist) {
+      nSimDev <- max(nrow(New@RecDevHist), nrow(Src@RecDevHist))
+      New@RecDevHist <- ExtendSims(New@RecDevHist, nSimDev)
+      New@RecDevHist[, SRR@Misc$RecDevHistNA] <-
+        ExtendSims(Src@RecDevHist, nSimDev)[, SRR@Misc$RecDevHistNA, drop = FALSE]
+    }
 
     if (identical(New, SRR)) next
     # copied values are derived: reset to this stock's own inputs and copied
     # again on re-population (e.g. not kept if ShareSPFrom is later FALSE)
     New <- .MarkCopied(New, SRR, c('Pars', 'SD', 'AC', 'RecDevInit', 'RecDevProj',
-                                   if (ShareHist) 'RecDevHist'))
+                                   if (ShareHist || GenHist) 'RecDevHist'))
     OM@Stock[[i]]@SRR <- New
+    Shared <- if (ShareHist) 'recruitment deviations' else if (GenHist)
+      'initial, projection, and unsupplied historical recruitment deviations' else
+      'initial and projection recruitment deviations'
     Msg <- cli::format_inline(
-      "Stock {.val {st}} uses the stock-recruitment parameters and {if (ShareHist) 'recruitment deviations' else 'initial and projection recruitment deviations'} of {.val {src}} ({.field SRR@ShareSPFrom}).")
+      "Stock {.val {st}} uses the stock-recruitment parameters and {Shared} of {.val {src}} ({.field SRR@ShareSPFrom}).")
     # copied again on each population: log once
     Logged <- purrr::map_chr(OM@Log$assumption %||% list(), .LogEntryMessage)
     if (!Msg %in% Logged)

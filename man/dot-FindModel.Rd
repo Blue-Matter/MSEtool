@@ -7,7 +7,7 @@
 .FindModel(
   object,
   ignore = c("Ages", "MeanLength", "Length", "Weight", "nage", "AtAge", "MaxLen", "S0",
-    "S", "R0"),
+    "S", "R0", "RecFrac"),
   doCheck = TRUE
 )
 }

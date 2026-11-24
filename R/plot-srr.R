@@ -66,11 +66,12 @@ PlotSRRCurve <- function(object, Sim = NULL, byStock = NULL, Stocks = NULL,
     stockNames <- if (is.null(stockNames)) StockNames(OM) else stockNames
     allStocks  <- StockNames(OM)
 
-    SPR0 <- .ResolveSPR0(object)
+    SPR0   <- .ResolveSPR0(object)
+    Stocks <- .AddSurvivalRecFrac(OM@Stock)
 
     df <- purrr::map(seq_along(allStocks), \(st) {
       if (!allStocks[st] %in% stockNames) return(NULL)
-      .SRRCurveDF(OM@Stock[[st]], SPR0[, allStocks[st], , drop = FALSE], nPoints) |>
+      .SRRCurveDF(Stocks[[st]], SPR0[, allStocks[st], , drop = FALSE], nPoints) |>
         dplyr::mutate(Stock = allStocks[st])
     }) |> dplyr::bind_rows()
     ylab <- 'Recruitment'
@@ -113,10 +114,18 @@ PlotSRRCurve <- function(object, Sim = NULL, byStock = NULL, Stocks = NULL,
   SRRFun <- if (is.character(SRR@Model)) get(SRR@Model) else SRR@Model
   nSim   <- max(Stock@nSim, 1L)
   SPRvec <- seq(0, 1, length.out = nPoints)
+  # the survival curve's shape depends on the unfished spawning production per recruit
+  Phi0 <- NULL
+  if (identical(SRR@Model, 'SurvivalSRR')) {
+    Unfished <- Stock
+    Unfished@SRR <- SRR()
+    Phi0 <- CalcSPR0(Unfished, silent = TRUE)
+  }
 
   purrr::map(seq_len(nSim), \(sim) {
     Pars <- purrr::map(SRR@Pars, .LastSimYearVal, sim = sim)
-    Rvec <- do.call(SRRFun, c(list(S = SPRvec, S0 = 1, R0 = 1), Pars))
+    S0   <- if (is.null(Phi0)) 1 else Phi0[min(dim(Phi0)[1], sim), 1, dim(Phi0)[3]]
+    Rvec <- do.call(SRRFun, c(list(S = SPRvec * S0, S0 = S0, R0 = 1), Pars))
     data.frame(Sim = sim, S = SPRvec, Value = Rvec, Year = 'relative')
   }) |> dplyr::bind_rows()
 }

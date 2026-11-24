@@ -1527,6 +1527,7 @@ CalcPerRecruit <- function(OM, apicalF=0.1, Years=NULL, Complex=NULL) {
 .PrepPerRecruitInputs <- function(StockList, FleetList, SPR0List, Years, EffortYears = NULL,
                                   RefSeason = NULL, Herm = NULL, Phi0Ref = NULL) {
 
+  StockList  <- .AddSurvivalRecFrac(StockList)
   FleetNames <- names(FleetList[[1]])
 
   M_ref  <- StockList[[1]]@NaturalMortality@MeanAtAge

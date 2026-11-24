@@ -101,9 +101,19 @@ PopulateSRR <- function(SRR,
   # recorded on first population so later ShareSPFrom copies aren't mistaken for user input
   if (is.null(SRR@Misc$RecDevHistSupplied))
     SRR@Misc$RecDevHistSupplied <- !EmptyObject(SRR@RecDevHist)
+  # historical years left NA in a supplied RecDevHist (generated, so shareable with ShareSPFrom)
+  if (is.null(SRR@Misc$RecDevHistNA) && isTRUE(SRR@Misc$RecDevHistSupplied)) {
+    NAs <- is.na(SRR@RecDevHist)
+    SRR@Misc$RecDevHistNA <- if (is.null(dim(NAs))) NAs else apply(NAs, length(dim(NAs)), any)
+  }
 
-  SRR@Pars  <- .StructurePars(Pars = SRR@Pars, nSim, Years)
+  SRR@Pars  <- .StructurePars(Pars = .AddDefaultPars(SRR), nSim, Years)
   Model     <- .FindModel(SRR)
+  # the engine reads parameters by position
+  if (is.character(Model) && length(Model) == 1) {
+    Formals  <- .ModelFormals(Model, c('S', 'S0', 'R0', 'RecFrac'))$Names
+    SRR@Pars <- SRR@Pars[c(intersect(Formals, names(SRR@Pars)), setdiff(names(SRR@Pars), Formals))]
+  }
   # a stock sharing its SPFrom source's SRR may omit Pars; they are copied in PopulateOM()
   if (is.null(Model) && .SharesSPFromSRR(SRR) && is.character(SRR@Model))
     Model <- SRR@Model
@@ -300,4 +310,32 @@ PopulateSRR <- function(SRR,
                      call = NULL)
   }
   OM
+}
+
+# Share of each stock in the unfished recruitment of the stocks recruiting
+# from the same spawning production (same resolved SPFrom); Sim x Year arrays
+.SRRRecFrac <- function(StockList) {
+  Names <- purrr::map_chr(StockList, \(s) s@Name)
+  Key <- purrr::map_chr(seq_along(StockList), \(i) {
+    w <- .ResolveSPFromWeights(StockList[[i]]@SRR@SPFrom, Names, i)
+    paste(Names[w$from], signif(w$weight, 10), collapse = ';')
+  })
+  nSim <- max(purrr::map_int(StockList, \(s) nrow(s@SRR@R0)))
+  R0 <- purrr::map(StockList, \(s) ExtendSims(s@SRR@R0, nSim))
+  purrr::map(seq_along(StockList), \(i) {
+    Out <- R0[[i]] / Reduce(`+`, R0[Key == Key[i]])
+    Out[!is.finite(Out)] <- 1
+    Out
+  }) |> stats::setNames(Names)
+}
+
+# adds the derived `RecFrac` to the Pars of SurvivalSRR stocks
+.AddSurvivalRecFrac <- function(StockList) {
+  IsSurvival <- purrr::map_lgl(StockList, \(s) identical(s@SRR@Model, 'SurvivalSRR'))
+  if (!any(IsSurvival))
+    return(StockList)
+  RecFrac <- .SRRRecFrac(StockList)
+  for (i in which(IsSurvival))
+    StockList[[i]]@SRR@Pars$RecFrac <- RecFrac[[i]]
+  StockList
 }
