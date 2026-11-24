@@ -144,7 +144,7 @@
     List2Array('Stock', pos=2)
 
   UnfishedSP <- Hist@Unfished@Equilibrium@SProduction |> ExtendSims(nSim = nSim(Hist))
-  AllYears   <- as.numeric(dimnames(UnfishedSP)[['Year']])
+  AllYears   <- Years(Hist@OM, 'Historical')
   R0Shifted  <- .R0Shifted(Hist@Misc$R0, Hist@Misc$RecLag)
 
   Phi0RefFull <- .Phi0RefSeed(UnfishedSP, Hist@Misc$R0, Hist@Misc$RecLag) |>
