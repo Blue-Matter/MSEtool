@@ -138,8 +138,9 @@
 #' MSE <- Project(Hist, 'IndexRate')
 #' R <- ReplayMP(MSE, 'IndexRate', Sim = 1)
 #' R$Table
-#' if (requireNamespace('gganimate', quietly = TRUE))
-#'   gganimate::animate(R$Animations$HCR, nframes = nrow(R$Table), fps = 2)
+#' if (requireNamespace('gganimate', quietly = TRUE) && requireNamespace('gifski', quietly = TRUE))
+#'   gganimate::animate(R$Animations$HCR, nframes = nrow(R$Table), fps = 2,
+#'                      renderer = gganimate::gifski_renderer())
 #' }
 #'
 #' @seealso [RecordMP()], [ReplayPlot()], [ReplayAnimate()], [ReplayPanels()], [IndexRate()],
