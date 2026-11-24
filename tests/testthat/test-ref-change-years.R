@@ -36,6 +36,33 @@ test_that("RefChangeYears() finds historical and projection change points", {
   expect_equal(as.numeric(RefChangeYears(SingleStockOM)), min(Years(SingleStockOM, "H")))
 })
 
+test_that("RefChangeYears() prints a summary by parameter", {
+  skip_on_cran()
+  cy <- RefChangeYears(.TimeVaryingMOM())
+  expect_s3_class(cy, "RefChangeYears")
+  expect_true(is.numeric(cy))
+  expect_identical(as.numeric(cy), c(2007, 2015, 2035))
+  out <- paste(cli::cli_fmt(print(cy)), collapse = "\n")
+  expect_match(out, "MSY reference point change-point years (historical and projection)", fixed = TRUE)
+  expect_match(out, "3 change-point years: 2007, 2015, 2035", fixed = TRUE)
+  expect_match(out, "natural mortality: 2015, 2035", fixed = TRUE)
+  expect_no_match(out, "attr(", fixed = TRUE)
+  expect_invisible(suppressMessages(print(cy)))
+
+  none <- paste(cli::cli_fmt(print(RefChangeYears(SingleStockOM))), collapse = "\n")
+  expect_match(none, "No changes", fixed = TRUE)
+
+  shares <- structure(c(2007, 2008, 2009, 2010), Type = "MSY", Period = "Historical",
+                      Parameters = list(`2008` = "relative fishing mortality among fleets",
+                                        `2009` = "relative fishing mortality among fleets",
+                                        `2010` = c("relative fishing mortality among fleets", "selectivity")),
+                      class = c("RefChangeYears", "numeric"))
+  out <- paste(cli::cli_fmt(print(shares)), collapse = "\n")
+  expect_match(out, "relative fishing mortality among fleets: 2008-2010", fixed = TRUE)
+  expect_match(out, "selectivity: 2010", fixed = TRUE)
+  expect_match(out, "OM@RefEffortYears", fixed = TRUE)
+})
+
 test_that("unfished values are stored at the change points and filled by the accessors", {
   skip_on_cran()
   om <- .TimeVaryingMOM()

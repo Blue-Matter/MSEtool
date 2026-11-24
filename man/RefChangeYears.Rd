@@ -2,6 +2,7 @@
 % Please edit documentation in R/calc-change-years.R
 \name{RefChangeYears}
 \alias{RefChangeYears}
+\alias{print.RefChangeYears}
 \title{Years Where Reference Point Inputs Change}
 \usage{
 RefChangeYears(
@@ -9,6 +10,8 @@ RefChangeYears(
   Type = c("MSY", "Unfished"),
   Period = c("All", "Historical", "Projection")
 )
+
+\method{print}{RefChangeYears}(x, ...)
 }
 \arguments{
 \item{x}{An \link[=om-class]{om} or \link[=hist-class]{hist} object. An \code{om} is populated first.}
@@ -24,11 +27,15 @@ unfished spatial distribution, and sex change.}
 
 \item{Period}{Years to search: \code{'All'} (default; historical and
 projection), \code{'Historical'}, or \code{'Projection'}.}
+
+\item{...}{Not used.}
 }
 \value{
 A numeric vector of calendar years, always including the first year
 of \code{Period}. Attribute \code{Parameters} is a named list (by year) of the
-parameters that change in each year after the first.
+parameters that change in each year after the first. The object has class
+\code{RefChangeYears} (attributes \code{Type} and \code{Period}), which prints a summary
+by parameter; use \code{as.numeric()} for a plain vector.
 }
 \description{
 Finds the years in which the parameters that determine the equilibrium
@@ -63,6 +70,12 @@ retention) are not.
 For seasonal models, a change-point year is a calendar year whose seasonal
 values differ from those of the previous year.
 }
+\section{Methods (by generic)}{
+\itemize{
+\item \code{print(RefChangeYears)}: Print the change-point years and, for each
+parameter, the years in which it changes.
+
+}}
 \seealso{
 \code{\link[=CalcMSY]{CalcMSY()}}, \code{\link[=CalcUnfished_Equilibrium]{CalcUnfished_Equilibrium()}}
 }
