@@ -6,8 +6,8 @@
 #' @param SD Numeric vector of standard deviations for the log recruitment
 #'   deviations. This is the marginal standard deviation of the generated
 #'   series, after autocorrelation and truncation.
-#' @param AC Numeric vector of autocorrelation coefficients (0 = no autocorr).
-#'   Must be within -1 and 1, exclusive.
+#' @param AC Numeric vector of lag-1 (annual) autocorrelation coefficients
+#'   (0 = no autocorrelation). Must be within -1 and 1, exclusive.
 #' @param TruncSD Numeric. Number of standard deviations at which the log
 #'   deviations are bounded. Because the latent spread is widened to preserve
 #'   the marginal standard deviation, the realised bound is somewhat wider than
@@ -35,7 +35,16 @@
 #' as-is. Individual `NA` entries (e.g. recent historical years not yet
 #' supported by data in an imported assessment) are generated in their place,
 #' chained via the same AR(1)/truncation process off the nearest known
-#' deviation. 
+#' deviation.
+#'
+#' For seasonal models (more than one time step per year), one deviation is
+#' generated per calendar year and applied to every time step in that year, so
+#' `SD` and `AC` describe the annual deviations. The initial-age deviations
+#' are likewise shared by the cohorts that entered the population in the same
+#' calendar year (`HistYears[1] - (Age - min(Ages@Classes))`). Supplied non-`NA` values are kept, and `NA` time
+#' steps in a year with supplied values take that year's supplied deviation
+#' (the geometric mean of its positive values; zeros mark non-recruiting time
+#' steps).
 #'
 #' @return A list with three elements:
 #' * `RecDevInit`: Array of recruitment deviations for initial ages.
@@ -104,10 +113,6 @@ GenRecDevs <- function(SD = 0.2,
   genHist <- is.null(RecDevHist) || any(histReq)
   genProj <- is.null(RecDevProj) || any(projReq)
 
-  if (!is.null(RecDevInit)) logRecDevInit <- log(RecDevInit)
-  if (!is.null(RecDevHist)) logRecDevHist <- log(RecDevHist)
-  if (!is.null(RecDevProj)) logRecDevProj <- log(RecDevProj)
-
   if (!genInit && !genHist && !genProj) {
     dimnames(RecDevInit) <- list(Sim = 1:nrow(RecDevInit),
                                  Age = Ages@Classes[-1])
@@ -130,7 +135,23 @@ GenRecDevs <- function(SD = 0.2,
   if (!is.numeric(TruncSD) || length(TruncSD) != 1 || TruncSD <= 0)
     cli::cli_abort("{.arg TruncSD} must be a positive scalar")
 
-  nAll <- c(Init = nInitRecDev, Hist = nHistTS, Proj = nProjTS)
+  # One deviation per calendar year: seasonal time steps (and, for the initial
+  # ages, cohorts born in the same calendar year) share a deviation, so `SD`
+  # and `AC` describe the annual deviations. Annual models: one per column.
+  # initial ages: a cohort of age class `a` entered the population (at the
+  # youngest class) at HistYears[1] - (a - min(Ages@Classes))
+  Blk <- list(Init = .RecDevYearBlocks(HistYears[1] - (Ages@Classes[-1] - Ages@Classes[1])),
+              Hist = .RecDevYearBlocks(HistYears),
+              Proj = .RecDevYearBlocks(ProjYears))
+  nAll <- vapply(Blk, \(b) length(unique(b)), integer(1))
+
+  BlkInit <- .CollapseRecDevBlocks(RecDevInit, Blk$Init)
+  BlkHist <- .CollapseRecDevBlocks(RecDevHist, Blk$Hist)
+  BlkProj <- .CollapseRecDevBlocks(RecDevProj, Blk$Proj)
+  BlkInitReq <- .ColRequired(BlkInit, nAll[['Init']])
+  BlkHistReq <- .ColRequired(BlkHist, nAll[['Hist']])
+  BlkProjReq <- .ColRequired(BlkProj, nAll[['Proj']])
+
   Seed <- Seed %||% .NextDrawKey()
   Z <- if (is.null(Seed)) {
     All <- .SimDraws(\(i, n) stats::rnorm(n), nSim, sum(nAll), Key = NULL)
@@ -151,36 +172,37 @@ GenRecDevs <- function(SD = 0.2,
     }
     mat
   }
-  if (genInit) logRecDevInit <- .SeedBlock(RecDevInit, initReq, nInitRecDev, Z$Init)
-  if (genHist) logRecDevHist <- .SeedBlock(RecDevHist, histReq, nHistTS, Z$Hist)
-  if (genProj) logRecDevProj <- .SeedBlock(RecDevProj, projReq, nProjTS, Z$Proj)
+  logInit <- if (genInit) .SeedBlock(BlkInit, BlkInitReq, nAll[['Init']], Z$Init) else log(BlkInit)
+  logHist <- if (genHist) .SeedBlock(BlkHist, BlkHistReq, nAll[['Hist']], Z$Hist) else log(BlkHist)
+  logProj <- if (genProj) .SeedBlock(BlkProj, BlkProjReq, nAll[['Proj']], Z$Proj) else log(BlkProj)
 
-  period <- c(rep('Init', nInitRecDev), rep('Hist', nHistTS),
-              rep('Proj', nProjTS))
-  required <- c(initReq, histReq, projReq)
+  nInitBlk <- nAll[['Init']]
+  period <- c(rep('Init', nInitBlk), rep('Hist', nAll[['Hist']]),
+              rep('Proj', nAll[['Proj']]))
+  required <- c(BlkInitReq, BlkHistReq, BlkProjReq)
   YearsSeq <- which(required)
-  firstHistPos   <- nInitRecDev + 1
-  
+  firstHistPos   <- nInitBlk + 1
+
   # RecDevInit is stored in ascending-age order (see calc-initial-timestep.R):
   # column 1 is `Ages@Classes[2]`, the age one year before HistYears[1] and so
   # the chronologically nearest Init deviation to Hist. The last column is
   # the oldest age, i.e. the furthest deviation in the past.
-  nearestInitPos <- if (nInitRecDev > 0) 1L else NA_integer_
-  histSeedsFromLastInit <- nInitRecDev > 0 && required[firstHistPos - 1]
+  nearestInitPos <- if (nInitBlk > 0) 1L else NA_integer_
+  histSeedsFromLastInit <- nInitBlk > 0 && required[firstHistPos - 1]
 
-  init_sim <- if (genInit) seq_len(nSim) else pmin(nrow(logRecDevInit), seq_len(nSim))
-  hist_sim <- if (genHist) seq_len(nSim) else pmin(nrow(logRecDevHist), seq_len(nSim))
-  proj_sim <- if (genProj) seq_len(nSim) else pmin(nrow(logRecDevProj), seq_len(nSim))
+  init_sim <- if (genInit) seq_len(nSim) else pmin(nrow(logInit), seq_len(nSim))
+  hist_sim <- if (genHist) seq_len(nSim) else pmin(nrow(logHist), seq_len(nSim))
+  proj_sim <- if (genProj) seq_len(nSim) else pmin(nrow(logProj), seq_len(nSim))
 
   for (i in seq_len(nSim)) {
-    logRecDevs <- c(logRecDevInit[init_sim[i], ],
-                    logRecDevHist[hist_sim[i], ],
-                    logRecDevProj[proj_sim[i], ])
+    logRecDevs <- c(logInit[init_sim[i], ],
+                    logHist[hist_sim[i], ],
+                    logProj[proj_sim[i], ])
 
     for (t in seq_along(YearsSeq)) {
       pos <- YearsSeq[t]
 
-      if (pos == firstHistPos && nInitRecDev > 0 && !histSeedsFromLastInit) {
+      if (pos == firstHistPos && nInitBlk > 0 && !histSeedsFromLastInit) {
         prevVal <- .DevToLatent(logRecDevs[nearestInitPos], SD[i], TruncSD)
         logRecDevs[pos] <- AC[i] * prevVal + logRecDevs[pos] * sqrt(1 - AC[i]^2)
         next
@@ -196,14 +218,14 @@ GenRecDevs <- function(SD = 0.2,
 
     logRecDevs[required] <- .LatentToDev(logRecDevs[required], SD[i], TruncSD)
 
-    if (genInit) logRecDevInit[i, ] <- logRecDevs[period == 'Init']
-    if (genHist) logRecDevHist[i, ] <- logRecDevs[period == 'Hist']
-    if (genProj) logRecDevProj[i, ] <- logRecDevs[period == 'Proj']
+    if (genInit) logInit[i, ] <- logRecDevs[period == 'Init']
+    if (genHist) logHist[i, ] <- logRecDevs[period == 'Hist']
+    if (genProj) logProj[i, ] <- logRecDevs[period == 'Proj']
   }
 
-  RecDevInit <- exp(logRecDevInit)
-  RecDevHist <- exp(logRecDevHist)
-  RecDevProj <- exp(logRecDevProj)
+  RecDevInit <- if (genInit) .ExpandRecDevBlocks(logInit, RecDevInit, initReq, Blk$Init) else RecDevInit
+  RecDevHist <- if (genHist) .ExpandRecDevBlocks(logHist, RecDevHist, histReq, Blk$Hist) else RecDevHist
+  RecDevProj <- if (genProj) .ExpandRecDevBlocks(logProj, RecDevProj, projReq, Blk$Proj) else RecDevProj
   
   dimnames(RecDevInit) <- list(Sim = 1:nrow(RecDevInit),
                                Age = Ages@Classes[-1])
@@ -215,4 +237,35 @@ GenRecDevs <- function(SD = 0.2,
   list(RecDevInit = RecDevInit,
        RecDevHist = RecDevHist,
        RecDevProj = RecDevProj)
+}
+
+# block ids (in order of appearance) of the calendar years of `x`
+.RecDevYearBlocks <- function(x) {
+  yr <- floor(as.numeric(x) + 1e-8)
+  match(yr, unique(yr))
+}
+
+# supplied deviations [Sim, step] -> one per block: the geometric mean of the
+# positive values in each block (zeros mark non-recruiting time steps; NA if
+# the block has none)
+.CollapseRecDevBlocks <- function(x, blk) {
+  if (is.null(x) || !length(blk) || !anyDuplicated(blk)) return(x)
+  x <- as.matrix(x)
+  out <- vapply(seq_len(max(blk)), \(b) {
+    v <- x[, blk == b, drop = FALSE]
+    v[!is.na(v) & v <= 0] <- NA
+    v <- log(v)
+    apply(v, 1, \(r) if (all(is.na(r))) NA_real_ else exp(mean(r, na.rm = TRUE)))
+  }, numeric(nrow(x)))
+  matrix(out, nrow = nrow(x))
+}
+
+# block log-deviations [Sim, block] -> deviations [Sim, step], keeping the
+# supplied values of the steps that did not need generating
+.ExpandRecDevBlocks <- function(logB, x, req, blk) {
+  out <- exp(logB[, blk, drop = FALSE])
+  known <- which(!req)
+  if (!is.null(x) && length(known))
+    for (i in seq_len(nrow(out))) out[i, known] <- x[min(nrow(x), i), known]
+  out
 }
