@@ -403,25 +403,25 @@ CombineOMs <- function(
   
   RecDevHist <- Extend(RecDevHist, nSim = nSim, Years=forward_years, default=NA)
   
-  logrecdev <- array(
+  # one deviation per calendar year, shared by its seasonal time steps (as in
+  # GenRecDevs()), so `sd` and `ac` are annual
+  blk <- .RecDevYearBlocks(forward_years)
+  nBlk <- max(blk)
+  logrecdev <- matrix(
     .SimDraws(\(i, n) .Rtnorm(n, mu = mu[i], sigma = sd[i], lower = lower[i], upper = upper[i]),
-              nSim, n_forward),
-    dim = c(nSim, n_forward),
-    dimnames = list(Sim=seq_len(nSim), Year=forward_years)
+              nSim, nBlk),
+    nrow = nSim, ncol = nBlk
   )
-  
-  RecDevHist[, years_ind] <- exp(logrecdev)
-  
+
   # Apply AR1 structure
   for (i in seq_len(nSim)) {
-    for (t in years_ind) {
-      RecDevHist[i, t] <- exp(
-        ac[i] * max(log(RecDevHist[i, t - 1]), lower[i]) +
-          log(RecDevHist[i, t]) * sqrt(1 - ac[i]^2)
-      )
+    prev <- log(RecDevHist[i, years_ind[1] - 1])
+    for (b in seq_len(nBlk)) {
+      prev <- ac[i] * max(prev, lower[i]) + logrecdev[i, b] * sqrt(1 - ac[i]^2)
+      RecDevHist[i, years_ind[blk == b]] <- exp(prev)
     }
   }
-  
+
   RecDevHist
 }
 
