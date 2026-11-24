@@ -258,9 +258,14 @@ test_that("force re-populates Selectivity", {
   )
   Sel <- do.call(PopulateSelectivity, c(list(OM@Fleet[[1]][[1]]@Selectivity), Args))
   expect_identical(do.call(PopulateSelectivity, c(list(Sel), Args)), Sel)
+  # count calls with a mocked binding rather than trace(): trace()/untrace()
+  # fail on covr's instrumented namespace
   Calls <- 0
-  trace(.StructurePars, function() Calls <<- Calls + 1, print = FALSE, where = asNamespace('MSEtool'))
-  on.exit(untrace(.StructurePars, where = asNamespace('MSEtool')))
+  StructurePars <- .StructurePars
+  local_mocked_bindings(.StructurePars = function(...) {
+    Calls <<- Calls + 1
+    StructurePars(...)
+  })
   do.call(PopulateSelectivity, c(list(Sel), Args))
   expect_equal(Calls, 0)
   do.call(PopulateSelectivity, c(list(Sel), Args, force = TRUE))
