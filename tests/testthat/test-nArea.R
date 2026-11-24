@@ -39,6 +39,9 @@ test_that("nArea errors on inconsistent Area dimensions", {
   expect_equal(nArea(sp), 1)
   sp@Movement <- Mov2
   expect_error(nArea(sp), "Inconsistent number of areas")
+  # slots derived by Populate() are recalculated from the new Movement; treat
+  # them as supplied so the 1-area values conflict with the 2-area Movement
+  sp@Misc$Derived <- NULL
   expect_error(Populate(sp, silent = TRUE), "Inconsistent number of areas")
 
   expect_error(nArea(Spatial(Movement = Mov2, RelativeSize = array(1/3, c(1, 3)))),

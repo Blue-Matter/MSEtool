@@ -52,9 +52,9 @@ test_that("Herm fished per-recruit reproduces the unfished equilibrium at F = 0"
   pr <- CalcPerRecruit(hist, apicalF = 1e-10, Years = yr)
   expect_equal(as.numeric(pr@SPR), rep(1, length(pr@SPR)), tolerance = 1e-6)
   eq <- CalcEquilibrium(hist, apicalF = 1e-10, Years = yr)
-  ue <- hist@Unfished@Equilibrium
-  expect_equal(as.numeric(drop(eq@SBiomass)), as.numeric(ue@SBiomass[, , as.character(yr)]), tolerance = 1e-6)
-  expect_equal(as.numeric(drop(eq@Biomass)), as.numeric(ue@Biomass[, , as.character(yr)]), tolerance = 1e-6)
+  ue <- list(SBiomass = SB0(hist, Reduce = FALSE), Biomass = B0(hist, Reduce = FALSE))
+  expect_equal(as.numeric(drop(eq@SBiomass)), as.numeric(ue$SBiomass[, , as.character(yr)]), tolerance = 1e-6)
+  expect_equal(as.numeric(drop(eq@Biomass)), as.numeric(ue$Biomass[, , as.character(yr)]), tolerance = 1e-6)
 })
 
 test_that("Herm equilibrium matches long-run dynamics (all males from sex change)", {

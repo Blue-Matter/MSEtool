@@ -127,7 +127,7 @@ test_that("an SPFrom-linked group's aggregate B0 depletion matches its source's 
     nStock(Hist@OM), nFleet(Hist@OM), nArea(Hist), DoCalcCatch = 1)
 
   AggDep <- (PopDyn@Biomass[, 1, TermInd] + PopDyn@Biomass[, 2, TermInd]) /
-    (Hist@Unfished@Equilibrium@Biomass[, 1, TermInd] + Hist@Unfished@Equilibrium@Biomass[, 2, TermInd])
+    (B0(Hist, Reduce = FALSE)[, 1, TermInd] + B0(Hist, Reduce = FALSE)[, 2, TermInd])
 
   expect_equal(unname(AggDep), rep(0.3, nSim(Hist)), tolerance = 1e-3)
 })
@@ -162,7 +162,7 @@ test_that("an unrelated independent stock is unaffected by a separate SPFrom-lin
     AllYears = Years(Hist@OM, 'Historical'), Sims = 1, nSim = 1,
     nStock(Hist@OM), nFleet(Hist@OM), nArea(Hist), DoCalcCatch = 1)
 
-  DepC <- PopDyn@Biomass[1, 3, TermInd] / Hist@Unfished@Equilibrium@Biomass[1, 3, TermInd]
+  DepC <- PopDyn@Biomass[1, 3, TermInd] / B0(Hist, Reduce = FALSE)[1, 3, TermInd]
   expect_equal(DepC, 0.5, tolerance = 1e-3)
 })
 
@@ -180,7 +180,7 @@ test_that("an unrelated independent stock is unaffected by a separate SPFrom-lin
 
 .terminal_depletion <- function(hist) {
   nYear <- length(Years(hist, 'H'))
-  as.numeric(hist@Biomass[, 1, nYear] / hist@Unfished@Equilibrium@Biomass[, 1, nYear])
+  as.numeric(hist@Biomass[, 1, nYear] / B0(hist, Reduce = FALSE)[, 1, nYear])
 }
 
 .terminal_q <- function(hist, fl) {

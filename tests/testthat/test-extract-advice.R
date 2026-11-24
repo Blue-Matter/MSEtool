@@ -53,7 +53,9 @@ test_that("TACs() carries a TAC forward through years the MP leaves it unchanged
   Odd <- function(Data) if (Data@Misc$AdviceYear %% 2 == 1) CurrentCatch(Data) else Advice()
   class(Odd) <- "mp"
   mse <- Project(hist, MPs = list(Odd = Odd), parallel = FALSE, silent = TRUE)
-  expect_lt(nrow(mse@PPD$Odd[[1]][[1]]@Advice@TAC), length(Years(mse, "P")))
+  # the TAC in force (carried forward when the MP leaves it unset) is recorded
+  # in the data every projection year
+  expect_equal(unname(nrow(mse@PPD$Odd[[1]][[1]]@Advice@TAC)), length(Years(mse, "P")))
 
   tac <- TACs(mse)
   expect_setequal(tac$Year, Years(mse, "P"))

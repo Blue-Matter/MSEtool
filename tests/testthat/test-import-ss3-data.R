@@ -93,6 +93,30 @@ test_that(".ImportSSDataIndex converts the SS3 log-scale SE to a CV", {
   expect_equal(unname(Survey@Value[, 1]), c(1, NA, 3))
 })
 
+test_that(".ImportSSDataIndex keeps observations after endyr (forecast years)", {
+  replist <- MockSSCatchReplist()
+  replist$IsFishFleet <- c(TRUE, FALSE, FALSE)
+  replist$FleetNames <- c("F1", "S1", "S2")
+  replist$survey_units <- c(1, 1, 1)
+  # S1 is observed in 2004, two years after endyr (2002); S2 ends at endyr
+  replist$cpue <- data.frame(Fleet = c(rep(2, 4), rep(3, 3)),
+                             Fleet_name = c(rep("S1", 4), rep("S2", 3)),
+                             Yr = c(2000:2002, 2004, 2000:2002), Seas = 1,
+                             Obs = 1:7, SE = 0.2, Use = c(1, 1, 1, -1, 1, 1, 1))
+  expect_equal(.GetSSDataYears(replist, .GetSSYears(replist, 1)), 2000:2004)
+
+  Survey <- .ImportSSDataIndex(replist, "Survey")
+  expect_equal(dimnames(Survey@Value)[[1]], as.character(2000:2004))
+  expect_equal(unname(Survey@Value[, "S1"]), c(1, 2, 3, NA, 4))
+  expect_equal(unname(Survey@Value[, "S2"]), c(5, 6, 7, NA, NA))
+
+  # a non-finite observation after endyr does not extend the data years
+  replist$cpue$Obs[4] <- NA
+  expect_equal(.GetSSDataYears(replist, .GetSSYears(replist, 1)), 2000:2002)
+  Survey <- .ImportSSDataIndex(replist, "Survey")
+  expect_equal(dimnames(Survey@Value)[[1]], as.character(2000:2002))
+})
+
 test_that("ImportSSData rejects unknown CatchUnits", {
   expect_error(ImportSSData(list(), CatchUnits = 'Numbers'), "should be one of")
 })

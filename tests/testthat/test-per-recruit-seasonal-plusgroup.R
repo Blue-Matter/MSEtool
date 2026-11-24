@@ -15,7 +15,7 @@ test_that("Seasonal per-recruit equilibrium with a plus group matches the determ
   nSeason  <- om@Seasons
   LastProj <- tail(seq_len(dim(mse@SProduction)[3]), nSeason)
   LastHist <- tail(seq_len(dim(hist@SProduction)[3]), nSeason)
-  SP0 <- ExtendSims(hist@Unfished@Equilibrium@SProduction, 2)
+  SP0 <- ExtendSims(SP0(hist, Reduce = FALSE), 2)
   R0  <- ExtendSims(hist@OM@Stock[[1]]@SRR@R0, 2)
   FTot <- SumOverFleet(mse@FDead)
 
