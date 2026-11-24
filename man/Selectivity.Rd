@@ -58,14 +58,14 @@ A custom function takes the size argument \code{Ages}, \code{Length}, or \code{W
 
 \item{MeanAtAge}{Numeric array or \code{NULL}. Mean selectivity-at-age with
 dimensions \verb{Sim x Age x Year} (area dimension added during population).
-Used directly when \code{Pars} is empty and \code{MeanAtLength} is not supplied.
+Used directly when \code{Pars} is empty.
 See \href{https://docs.openmse.com/concept-schedules.html}{Specifying Biological and Fleet Schedules} for
-accepted array formats. \strong{Note:} if \code{Pars} and \code{Model} are both
-provided, any values supplied here will be overwritten during population.}
+accepted array formats. \strong{Note:} if \code{Pars} holds a resolvable model,
+any values supplied here are overwritten during population.}
 
 \item{MeanAtLength}{Numeric array or \code{NULL}. Mean selectivity-at-length
-with dimensions \verb{Sim x Class x Year}. If provided and \code{Pars} is empty,
-takes precedence over \code{MeanAtAge}; \code{MeanAtAge} is derived from it via the
+with dimensions \verb{Sim x Class x Year}. If provided, \code{Pars} is empty, and
+\code{MeanAtAge} is not supplied, \code{MeanAtAge} is derived from it via the
 age-length key. A numeric vector is also accepted and converted to a
 \verb{1 x nClass x 1} array automatically, using \code{Classes} if supplied or the
 \link[=length-class]{length} object's own \code{Classes} otherwise; if \code{Classes} differs
@@ -140,12 +140,16 @@ At-length and at-weight schedules are converted to at-age internally using
 the age-length or age-weight key.
 
 \strong{Direct array}: leave \code{Pars = list()} and supply \code{MeanAtAge},
-\code{MeanAtLength}, or \code{MeanAtWeight} directly. If \code{MeanAtLength} is provided,
-it takes precedence and \code{MeanAtAge} is derived from it. If only \code{MeanAtAge}
-is provided, \code{MeanAtLength} is calculated from it unless already populated.
+\code{MeanAtLength}, or \code{MeanAtWeight} directly. A supplied \code{MeanAtAge} is used
+as is; otherwise \code{MeanAtAge} is derived from \code{MeanAtLength}, then
+\code{MeanAtWeight}. \code{MeanAtLength} is calculated from \code{MeanAtAge} when it is
+not supplied.
 
 These two approaches are mutually exclusive: if \code{Pars} is non-empty and
-\code{Model} can be resolved, any values in \code{MeanAtAge} will be overwritten.
+\code{Model} can be resolved, any values in \code{MeanAtAge}, \code{MeanAtLength}, and
+\code{MeanAtWeight} are overwritten. Values calculated by \code{\link[=Populate]{Populate()}} (rather
+than supplied) are recalculated when the object is populated again, e.g.
+after \code{Pars} or the \link[=length-class]{length} object change.
 }
 
 \subsection{Relative Parameters}{
@@ -158,7 +162,11 @@ parameters use these names. \code{isRel = TRUE} with an at-age or at-weight
 model is an error. This allows selectivity to be expressed as a fraction of
 the length at 50\% maturity rather than an absolute length, which is useful
 when the same fleet configuration is applied across stocks with different
-growth characteristics.
+growth characteristics. \code{L50} is the maturity \code{L50} parameter, or is
+interpolated from maturity-at-length (calculated from maturity-at-age with
+the age-length key when maturity is supplied at age). The relative values
+are kept, so selectivity is re-scaled when the object is populated again
+after maturity changes.
 }
 
 \subsection{Attaching to a Fleet}{

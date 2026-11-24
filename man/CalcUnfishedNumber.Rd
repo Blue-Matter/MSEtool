@@ -4,13 +4,17 @@
 \alias{CalcUnfishedNumber}
 \title{Calculate Equilibrium Unfished Number-at-Age}
 \usage{
-CalcUnfishedNumber(OM, SP = FALSE)
+CalcUnfishedNumber(OM, SP = FALSE, Years = NULL)
 }
 \arguments{
 \item{OM}{An \code{\link[=OM]{OM()}} object}
 
 \item{SP}{Logical. Account for \code{SpawnTimeFrac}? Accounts for spawning timing within a time step to
 calculate the number-at-age at the time of spawning}
+
+\item{Years}{Numeric vector of years (time steps) to calculate. \code{NULL}
+(default) uses the historical years. For seasonal models, all time steps
+of each calendar year must be included.}
 }
 \value{
 A named list of length \code{\link[=nStock]{nStock()}} with each element an array with dimensions

@@ -130,19 +130,20 @@ parameter names uniquely match a model, the model is resolved
 automatically. \code{MeanAtAge} is then populated by \code{\link[=Populate]{Populate()}} when the stock
 is added to an \code{\link[=OM]{OM()}}:
 
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{# Egg production proportional to weight — model inferred from Pars names
-fec <- Fecundity(Pars = list(a = 1000, b = 3.0))
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{# Logistic fecundity-at-length (FecundityAtLength) — model inferred from Pars names
+fec <- Fecundity(Pars = list(L50 = 60, L50_95 = 10, MaxFec = 1000))
 
-# Stochastic a across simulations
-fec <- Fecundity(Pars = list(a = c(800, 1200), b = 3.0))
+# Stochastic L50 across simulations
+fec <- Fecundity(Pars = list(L50 = c(55, 65), L50_95 = 10, MaxFec = 1000))
 
-# Time-varying a (increases in 2010; Extend() fills the rest)
-a_arr <- array(c(1000, 1200), dim = c(1, 2),
-               dimnames = list(Sim = 1, Year = c(1990, 2010)))
-fec <- Fecundity(Pars = list(a = a_arr, b = 3.0))
+# Time-varying MaxFec (increases in 2010; Extend() fills the rest)
+MaxFec_arr <- array(c(1000, 1200), dim = c(1, 2),
+                    dimnames = list(Sim = 1, Year = c(1990, 2010)))
+fec <- Fecundity(Pars = list(L50 = 60, L50_95 = 10, MaxFec = MaxFec_arr))
 
-# Inter-annual random walk on a (log-normal, SD = 0.1)
-fec <- Fecundity(Pars = list(a = c(800, 1200), aSD = 0.1, b = 3.0))
+# Inter-annual random walk on MaxFec (log-normal, SD = 0.1)
+fec <- Fecundity(Pars = list(L50 = 60, L50_95 = 10, MaxFec = c(800, 1200),
+                             MaxFecSD = 0.1))
 }\if{html}{\out{</div>}}
 
 \strong{Direct array}: supply \code{MeanAtAge} (or \code{MeanAtLength}) with
@@ -171,8 +172,8 @@ be passed to \code{\link[=Populate]{Populate()}}.
 Individual slots can be read or replaced using generic functions matching
 their names. All replacement functions re-validate the object:
 
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{Pars(fec)          <- list(a = 1000, b = 3.0)
-Model(fec)         <- "EggProduction"
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{Pars(fec)          <- list(L50 = 60, L50_95 = 10, MaxFec = 1000)
+Model(fec)         <- "FecundityAtLength"
 Units(fec)         <- "eggs"
 MeanAtAge(fec)     <- my_array
 MeanAtLength(fec)  <- my_length_array

@@ -83,13 +83,13 @@ SPR0(Hist)
 
 MGT(Hist)
 
-B0(Hist, type = c("Equilibrium", "Dynamic"), Reduce = TRUE)
+B0(Hist, type = c("Equilibrium", "Dynamic"), Reduce = TRUE, Fill = TRUE)
 
-SB0(Hist, type = c("Equilibrium", "Dynamic"), Reduce = TRUE)
+SB0(Hist, type = c("Equilibrium", "Dynamic"), Reduce = TRUE, Fill = TRUE)
 
-SP0(Hist, type = c("Equilibrium", "Dynamic"), Reduce = TRUE)
+SP0(Hist, type = c("Equilibrium", "Dynamic"), Reduce = TRUE, Fill = TRUE)
 
-N0(Hist, type = c("Equilibrium", "Dynamic"), Reduce = TRUE)
+N0(Hist, type = c("Equilibrium", "Dynamic"), Reduce = TRUE, Fill = TRUE)
 }
 \arguments{
 \item{Hist}{A \link[=hist-class]{hist} object (the output of \code{\link[=Simulate]{Simulate()}}) or an
@@ -105,8 +105,9 @@ accessors also accept a \link[=reference-class]{reference} object, e.g.
 matching is supported.
 \itemize{
 \item \code{'Equilibrium'}: unfished values assuming equilibrium conditions — no
-recruitment deviations and all life-history parameters constant over
-time.
+recruitment deviations, and the life-history parameters of each year
+held constant. Calculated for each year (historical and projection)
+in which those parameters change.
 \item \code{'Dynamic'}: unfished values calculated by running the full population
 dynamics model with no fishing, including recruitment deviations and any
 time-varying parameters, over the historical and projection years. The
@@ -117,6 +118,12 @@ projection-year values are the same for all management procedures.
 collapse any \code{Sim}, \code{Year}, or \code{Age} dimensions where values are
 identical across that dimension, reducing array size. If \code{FALSE}, the
 slot contents are returned as-is with all dimensions intact.}
+
+\item{Fill}{Logical. Equilibrium unfished values only. The values are
+stored for the years in which their inputs change (see
+\code{\link[=RefChangeYears]{RefChangeYears()}}). If \code{TRUE} (default), they are filled to every
+historical and projection year (each year takes the value of the most
+recent stored year). If \code{FALSE}, only the stored years are returned.}
 }
 \value{
 \itemize{
