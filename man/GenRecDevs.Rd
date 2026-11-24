@@ -23,8 +23,8 @@ GenRecDevs(
 deviations. This is the marginal standard deviation of the generated
 series, after autocorrelation and truncation.}
 
-\item{AC}{Numeric vector of autocorrelation coefficients (0 = no autocorr).
-Must be within -1 and 1, exclusive.}
+\item{AC}{Numeric vector of lag-1 (annual) autocorrelation coefficients
+(0 = no autocorrelation). Must be within -1 and 1, exclusive.}
 
 \item{TruncSD}{Numeric. Number of standard deviations at which the log
 deviations are bounded. Because the latent spread is widened to preserve
@@ -60,7 +60,16 @@ arrays, their non-\code{NA} entries will not be overwritten and are returned
 as-is. Individual \code{NA} entries (e.g. recent historical years not yet
 supported by data in an imported assessment) are generated in their place,
 chained via the same AR(1)/truncation process off the nearest known
-deviation.}
+deviation.
+
+For seasonal models (more than one time step per year), one deviation is
+generated per calendar year and applied to every time step in that year, so
+\code{SD} and \code{AC} describe the annual deviations. The initial-age deviations
+are likewise shared by the cohorts that entered the population in the same
+calendar year (\code{HistYears[1] - (Age - min(Ages@Classes))}). Supplied non-\code{NA} values are kept, and \code{NA} time
+steps in a year with supplied values take that year's supplied deviation
+(the geometric mean of its positive values; zeros mark non-recruiting time
+steps).}
 }
 \value{
 A list with three elements:

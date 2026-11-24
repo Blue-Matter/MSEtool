@@ -59,6 +59,18 @@
 #'   is imported in the time step of its row with a positive fleet number.
 #'   The dummy observations (negative fleet number) are imported as `NA`,
 #'   value and CV.
+#' * SS3 age-specific hermaphroditism (`Hermaphro_Option` 1, female to male,
+#'   or -1, male to female; read from `echoinput.sso`) is imported as
+#'   `OM@Herm`, with `Frac` the SS3 cumulative fraction remaining in the
+#'   original sex (`Herma_Cum`). When SS3 includes males in the spawning
+#'   biomass (`Hermaphro_maleSPB = 1`), the males are given the female
+#'   fecundity-at-age and the sex that receives the recruits recruits from the
+#'   combined female and male spawning production (`SRR@SPFrom`). The other
+#'   sex recruits its SS3 share of recruitment (e.g. `1 - FracFemale`) from its
+#'   own spawning production.
+#' * Index and composition observations after the last historical year (SS3
+#'   observations in forecast years) are kept in `OM@Data`, and are used in
+#'   place of simulated data in the projection.
 #' * In projection years, the CV reported with the simulated catch and index
 #'   data is the observation-error CV conditioned on the SS3 data
 #'   (`CV` of the [CatchObs()] and [IndicesObs()] objects), unless set with
@@ -277,6 +289,9 @@ ImportSS <- function(SSDir,
   ))
   
   names(OM@Stock) <- StockName
+
+  # Hermaphroditism
+  OM <- .ProcessSSHerm(OM, RepList, silent = silent)
 
   # Fleet
   OM@Fleet <- MakeNamedList(StockName, list())
@@ -1120,30 +1135,37 @@ ImportSS <- function(SSDir,
     dimnames = list(Year = YearsHist[match(Rec_main$Yr, YearsHist)])
   )
 
-  lag <- round(min(Ages@Classes) * YearsList$Seasons)
-  if (lag > 0) {
-    # R0_virgin: total recruitment across all sexes at virgin unfished state.
-    # Sum over sexes (Sex dimension) to match pred_recr which is sex-combined.
-    AgeClasses <- .GetSSAgeClasses(replist)
-    birthseas  <- .GetSSBirthSeas(replist)
-    R0_virgin  <- dplyr::filter(
-        replist$natage,
-        `Beg/Mid` == "B",
-        Era == "VIRG",
-        Seas == birthseas
-      ) |>
-      tidyr::pivot_longer(as.character(AgeClasses),
-        names_to  = "Age",
-        values_to = "Number"
-      ) |>
-      dplyr::mutate(Age = as.numeric(Age)) |>
-      dplyr::filter(Age == min(Age)) |>
-      dplyr::summarise(Number = sum(Number)) |>
-      dplyr::pull(Number)
+  # The OM sets the recruitment of the initial time steps (the first, and the
+  # next `RecLag - 1` for seasonal models; see .CalcDynamicInitial()) to
+  # R0 * RecDevHist, not to the SRR prediction at initial spawning biomass as
+  # SS3 does. Where the first-year births fall in those time steps, express
+  # the first deviation relative to virgin R0 so first-year recruitment equals
+  # SS3's pred_recr when the model starts from a fished state (exp_recr != R0).
+  # Later births (seasonal models with a birth season after the lag) come from
+  # the SRR, so the deviation stays relative to exp_recr.
+  # R0_virgin: total recruitment across all sexes at virgin unfished state.
+  # Sum over sexes (Sex dimension) to match pred_recr which is sex-combined.
+  if (is.null(replist$natage) || !.SSFirstBirthsFromR0(replist))
+    return(dev)
+  AgeClasses <- .GetSSAgeClasses(replist)
+  birthseas  <- .GetSSBirthSeas(replist)
+  R0_virgin  <- dplyr::filter(
+      replist$natage,
+      `Beg/Mid` == "B",
+      Era == "VIRG",
+      Seas == birthseas
+    ) |>
+    tidyr::pivot_longer(as.character(AgeClasses),
+      names_to  = "Age",
+      values_to = "Number"
+    ) |>
+    dplyr::mutate(Age = as.numeric(Age)) |>
+    dplyr::filter(Age == min(Age)) |>
+    dplyr::summarise(Number = sum(Number)) |>
+    dplyr::pull(Number)
 
-    if (length(R0_virgin) > 0 && is.finite(R0_virgin[1]) && R0_virgin[1] > 0) {
-      dev[1] <- Rec_main$pred_recr[1] / R0_virgin[1]
-    }
+  if (length(R0_virgin) > 0 && is.finite(R0_virgin[1]) && R0_virgin[1] > 0) {
+    dev[1] <- Rec_main$pred_recr[1] / R0_virgin[1]
   }
 
   dev
@@ -1248,6 +1270,32 @@ ImportSS <- function(SSDir,
   )
 }
 
+# Seasonal models: SpawnLag, the time steps between SSB evaluation
+# (spawn_month) and the first appearance of recruits (birthseas). NULL when it
+# equals the lag implied by min(Ages@Classes), `birthseas - 1`
+# (which(seq(0, by = 1/Seasons, to = MaxAge) == min(Classes)) - 1), or the
+# spawning month is not available.
+.GetSSSpawnLag <- function(replist) {
+  Seasons <- replist$nseasons
+  if (is.null(Seasons) || Seasons <= 1 || is.null(replist$Spawn_month))
+    return(NULL)
+  spawn_season <- ceiling(replist$Spawn_month / (12 / Seasons))
+  birthseas    <- .GetSSBirthSeas(replist)
+  computed_lag <- (birthseas - spawn_season) %% Seasons
+  if (computed_lag != birthseas - 1L) computed_lag else NULL
+}
+
+# Do the first-year births fall in the initial time steps, where the OM sets
+# recruitment to R0 * RecDevHist (the first time step and the next RecLag - 1)?
+# Otherwise they come from the SRR.
+.SSFirstBirthsFromR0 <- function(replist) {
+  Seasons <- replist$nseasons
+  if (is.null(Seasons) || Seasons <= 1) return(TRUE)
+  birthseas <- .GetSSBirthSeas(replist)
+  RecLag <- .GetSSSpawnLag(replist) %||% (birthseas - 1L)
+  birthseas == 1L || birthseas <= RecLag
+}
+
 .GetSSBirthSeas <- function(replist) {
   # birthseas can be a vector (e.g. c(2,3) for NPSWO) but represents a single
   # shared spawning event; using the last (latest) season as the birth season.
@@ -1326,20 +1374,7 @@ ImportSS <- function(SSDir,
   SpawnTimeFrac <- ifelse(is.na(RepList[[1]]$Spawn_timing_in_season), 0,
                           RepList[[1]]$Spawn_timing_in_season)
 
-  # Compute SpawnLag: timesteps between SSB evaluation (spawn_month) and
-  # first appearance of recruits (birthseas). When these differ, the lag
-  # implied by min(Ages@Classes) is wrong and must be overridden.
-  spawn_lag <- NULL
-  if (Seasons > 1 && !is.null(RepList[[1]]$Spawn_month)) {
-    spawn_season <- ceiling(RepList[[1]]$Spawn_month / (12 / Seasons))
-    birthseas    <- .GetSSBirthSeas(RepList[[1]])
-    computed_lag <- (birthseas - spawn_season) %% Seasons
-    # Default lag derived from min(Ages@Classes): Ages@MinAge / Seasons * Seasons = Ages@MinAge
-    # which(seq(0,by=1/Seasons,to=MaxAge) == min(Classes)) - 1 == birthseas - 1
-    default_lag  <- birthseas - 1L
-    if (computed_lag != default_lag)
-      spawn_lag <- computed_lag
-  }
+  spawn_lag <- if (Seasons > 1) .GetSSSpawnLag(RepList[[1]]) else NULL
 
   SRR <- SRR(SD = SD, R0 = R0, SpawnTimeFrac = SpawnTimeFrac, SpawnLag = spawn_lag, Units = R0Units)
 
@@ -1364,6 +1399,127 @@ ImportSS <- function(SSDir,
   }
 
   SRR
+}
+
+
+## Hermaphroditism ----
+
+# SS3 hermaphroditism settings from `echoinput.sso`: `Option` (0 none, 1
+# female to male, -1 male to female), `Season` (-1 all seasons), and `MaleSPB`
+# (1 = males included in spawning biomass). NULL if the file is not available.
+.ReadSSHermSettings <- function(replist) {
+  dir <- replist$inputs$dir
+  if (is.null(dir)) return(NULL)
+  file <- file.path(dir, 'echoinput.sso')
+  if (!file.exists(file)) return(NULL)
+  Lines <- readLines(file, warn = FALSE)
+  Value <- function(pattern) {
+    line <- grep(pattern, Lines, value = TRUE)[1]
+    if (is.na(line)) return(NA_real_)
+    suppressWarnings(as.numeric(strsplit(trimws(line), '\\s+')[[1]][1]))
+  }
+  Out <- list(Option  = Value('Hermaphro_Option'),
+              Season  = Value('Hermaphro_season'),
+              MaleSPB = Value('Hermaphro_maleSPB'))
+  if (is.na(Out$Option)) return(NULL)
+  Out
+}
+
+# Spawning biomass with or without males: the candidate closer to the SS3
+# virgin spawning biomass, with male numbers weighted by female fecundity
+.InferSSHermMaleSPB <- function(replist) {
+  Ages <- as.character(.GetSSAgeClasses(replist))
+  Virg <- dplyr::filter(replist$natage, Era == 'VIRG', `Beg/Mid` == 'B', Seas == 1)
+  NF <- colSums(Virg[Virg$Sex == 1, Ages, drop = FALSE])
+  NM <- colSums(Virg[Virg$Sex == 2, Ages, drop = FALSE])
+  eg  <- replist$endgrowth[replist$endgrowth$Sex == 1, ]
+  Fec <- eg$`Mat*Fecund`[match(as.numeric(Ages), eg$Real_Age)]
+  Fec[!is.finite(Fec)] <- 0
+  SB0 <- sum(replist$timeseries$SpawnBio[replist$timeseries$Era == 'VIRG'], na.rm = TRUE)
+  Female <- sum(NF * Fec)
+  Both   <- sum((NF + NM) * Fec)
+  as.numeric(abs(Both - SB0) < abs(Female - SB0))
+}
+
+# fraction remaining in the `From` sex by age (SS3 `Herma_Cum`)
+.GetSSHermFrac <- function(replist, FromSex, Ages) {
+  eg <- replist$endgrowth
+  if (is.null(eg[['Herma_Cum']]))
+    cli::cli_abort("SS3 report has no {.field Herma_Cum} column in the biology table; cannot import hermaphroditism.",
+                   call = NULL)
+  eg <- eg[eg$Sex == FromSex & eg$Morph == min(eg$Morph[eg$Sex == FromSex]), ]
+  Cum <- eg$Herma_Cum[match(Ages@Classes, eg$Real_Age)]
+  if (anyNA(Cum))
+    cli::cli_abort("SS3 {.field Herma_Cum} is missing for some age classes.", call = NULL)
+  Frac <- Cum / Cum[1]
+  array(pmin(pmax(Frac, 0), 1), dim = length(Frac), dimnames = list(Age = Ages@Classes))
+}
+
+#' Import SS3 hermaphroditism into an OM
+#'
+#' Sets `OM@Herm` from the SS3 age-specific sex change (`Hermaphro_Option`
+#' 1, female to male, or -1, male to female), with `Frac` the SS3 cumulative
+#' fraction remaining in the original sex (`Herma_Cum`). When SS3 includes
+#' males in the spawning biomass (`Hermaphro_maleSPB = 1`), the males are
+#' given the female fecundity-at-age and the stock receiving the recruits
+#' recruits from the combined female and male spawning production.
+#'
+#' @param OM An [om-class] object with two imported stocks (female, male).
+#' @param RepList List of SS3 report lists.
+#' @return `OM`, with `Herm`, `Fecundity` and `SRR@SPFrom` updated.
+#' @keywords internal
+#' @noRd
+.ProcessSSHerm <- function(OM, RepList, silent = FALSE) {
+  replist <- RepList[[1]]
+  if (replist$nsexes != 2) return(OM)
+  HasHermPars <- any(grepl('^Herm_', replist$parameters$Label))
+  Settings <- .ReadSSHermSettings(replist)
+  if (is.null(Settings)) {
+    if (!HasHermPars) return(OM)
+    Settings <- list(Option = 1, Season = -1, MaleSPB = .InferSSHermMaleSPB(replist))
+    OM <- .CaptureLog(OM,
+      string = cli::format_inline(
+        "{.file echoinput.sso} not found: assuming SS3 female-to-male hermaphroditism, with males {if (Settings$MaleSPB == 1) '' else 'not '}included in spawning biomass (closer to the SS3 virgin spawning biomass)."),
+      name = 'Herm', type = 'assumption')
+  }
+  if (!Settings$Option %in% c(1, -1)) return(OM)
+
+  StockNames <- names(OM@Stock)
+  FromSex <- if (Settings$Option == 1) 1L else 2L
+  ToSex   <- 3L - FromSex
+
+  if (OM@Seasons > 1)
+    cli::cli_warn(c(
+      "!" = "SS3 hermaphroditism imported for a seasonal model (SS3 {.field Hermaphro_season} = {.val {Settings$Season}}).",
+      "i" = "Sex change in the OM is applied as fish age; check the numbers by sex with {.fn CompareSS}."
+    ))
+
+  Frac <- purrr::map(RepList, \(rep) .GetSSHermFrac(rep, FromSex, OM@Stock[[FromSex]]@Ages)) |>
+    List2Array('Sim', pos = 1)
+  OM@Herm <- list(Herm(From = StockNames[FromSex], To = StockNames[ToSex], Frac = Frac))
+
+  MaleSPB <- isTRUE(Settings$MaleSPB >= 1)
+  if (MaleSPB) {
+    # SS3 adds male numbers-at-age weighted by female fecundity to the spawning biomass
+    OM@Stock[[2]]@Fecundity <- OM@Stock[[1]]@Fecundity
+    # equal weights: recruitment depends on (SP_F + SP_M) / (SP0_F + SP0_M)
+    SPFrom <- stats::setNames(c(0.5, 0.5), StockNames)
+  } else {
+    SPFrom <- StockNames[1]
+  }
+  # recruits enter the `From` sex; the `To` sex recruits only its (negligible)
+  # SS3 share of recruitment from its own spawning production
+  OM@Stock[[FromSex]]@SRR@SPFrom <- if (identical(SPFrom, StockNames[FromSex])) NULL else SPFrom
+  OM@Stock[[ToSex]]@SRR@SPFrom      <- NULL
+  OM@Stock[[ToSex]]@SRR@ShareSPFrom <- FALSE
+
+  OM <- .CaptureLog(OM,
+    string = cli::format_inline(
+      "SS3 hermaphroditism: {.val {StockNames[FromSex]}} change to {.val {StockNames[ToSex]}} with age ({.field OM@Herm}, SS3 {.field Herma_Cum}); recruitment from {if (MaleSPB) 'female and male' else 'female'} spawning production."),
+    name = 'Herm', type = 'assumption')
+  if (!silent)
+    cli::cli_alert_info("Imported SS3 hermaphroditism ({.val {StockNames[FromSex]}} -> {.val {StockNames[ToSex]}}){if (MaleSPB) ', males included in spawning biomass' else ''}.")
+  OM
 }
 
 
@@ -1697,6 +1853,18 @@ ImportSS <- function(SSDir,
     ind1 <- year_to_ind[[yr]]
     col_ind <- ind1 + seas - 1L
     MeanAtAge[cbind(age_ind, col_ind)] <- vals
+  }
+
+  # The plus group occupies the oldest class in every season, not only the
+  # season whose age it matches: classes above SS3's maximum age take that
+  # age's selectivity for the season.
+  plus_rows <- which(AgeClasses >= max(age_vals) - 1e-8)
+  if (length(plus_rows) > 1) {
+    for (j in seq_len(ncol(MeanAtAge))) {
+      v <- MeanAtAge[plus_rows, j]
+      known <- which(!is.na(v))
+      if (length(known)) MeanAtAge[plus_rows[-seq_len(max(known))], j] <- v[max(known)]
+    }
   }
 
   MeanAtAge[is.na(MeanAtAge)] <- 0

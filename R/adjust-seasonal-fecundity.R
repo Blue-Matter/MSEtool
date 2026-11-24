@@ -126,6 +126,8 @@ AdjustSeasonalFecundity <- function(OM, silent = FALSE) {
       }
     }
 
+    # fecundity derived by PopulateFecundity() stays derived after the adjustment
+    Stock@Fecundity <- .RefreshDerived(Stock@Fecundity, 'MeanAtAge')
     OM@Stock[[st]] <- Stock
   }
 

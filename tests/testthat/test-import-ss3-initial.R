@@ -70,3 +70,113 @@ test_that("ImportSS dynamic SB/SB_F=0 matches SS3 in the first year (NP swordfis
   OMRatio <- SB_SB0(Hist, type = "Dynamic", df = FALSE)[1, 1, 1]
   expect_equal(OMRatio, SS3Ratio, tolerance = 0.02)
 })
+
+test_that("ImportSS first-year recruitment matches SS3 pred_recr when starting fished (SA albacore, annual)", {
+  skip_on_cran()
+  SSDir <- file.path("../../..", "iccatSALB", "data-raw", "assessment", "S05") |>
+    testthat::test_path()
+  skip_if_not(file.exists(file.path(SSDir, "Report.sso")))
+  skip_if_not_installed("r4ss", "1.52.1")
+
+  OM <- suppressMessages(ImportSS(SSDir, nSim = 2, pYear = 2, silent = TRUE))
+  Hist <- Simulate(OM, control = SimControl(ConditionObs = FALSE, GenerateData = FALSE,
+                                            MSYRefs = FALSE, RefPoints = FALSE, MGT = FALSE),
+                   silent = TRUE)
+  replist <- suppressMessages(r4ss::SS_output(SSDir, verbose = FALSE, printstats = FALSE,
+                                              covar = FALSE, forecast = FALSE))
+  rec1 <- replist$recruit[replist$recruit$Yr == min(Years(Hist, "H")), ]
+  # starts from a fished state, so SS3 expected recruitment differs from R0
+  expect_false(isTRUE(all.equal(rec1$exp_recr, OM@Stock[[1]]@SRR@R0[1, 1])))
+
+  OMRec1 <- sum(Hist@Number[[1]][1, 1, 1, ])
+  expect_equal(OMRec1, rec1$pred_recr, tolerance = 1e-4)
+})
+
+test_that("first-year births after the recruitment lag stay relative to SS3 exp_recr (seasonal)", {
+  Mock <- function(birthseas, Spawn_month = 1) list(nseasons = 4, birthseas = birthseas, Spawn_month = Spawn_month)
+  expect_true(.SSFirstBirthsFromR0(list(nseasons = 1)))
+  expect_true(.SSFirstBirthsFromR0(Mock(1)))
+  # default lag birthseas - 1: births come from the SRR
+  expect_false(.SSFirstBirthsFromR0(Mock(3)))
+  # spawning in season 1, births in season 3: lag 2 = birthseas - 1
+  expect_null(.GetSSSpawnLag(Mock(3, Spawn_month = 1)))
+  # spawning in season 2 (month 5), births in season 3: lag 1
+  expect_equal(.GetSSSpawnLag(Mock(c(2, 3), Spawn_month = 5)), 1)
+  expect_false(.SSFirstBirthsFromR0(Mock(c(2, 3), Spawn_month = 5)))
+})
+
+test_that("ImportSS first-year recruitment matches SS3 when births follow the recruitment lag (NP swordfish, seasonal)", {
+  skip_on_cran()
+  SSDir <- file.path("../../..", "WCNPOSWO-2023", "Final Base-case") |>
+    testthat::test_path()
+  skip_if_not(file.exists(file.path(SSDir, "Report.sso")))
+  skip_if_not_installed("r4ss", "1.52.1")
+
+  OM <- suppressMessages(ImportSS(SSDir, nSim = 2, pYear = 2, silent = TRUE))
+  Hist <- Simulate(OM, control = SimControl(ConditionObs = FALSE, GenerateData = FALSE,
+                                            MSYRefs = FALSE, RefPoints = FALSE, MGT = FALSE,
+                                            DynamicUnfished = FALSE),
+                   silent = TRUE)
+  replist <- suppressMessages(r4ss::SS_output(SSDir, verbose = FALSE, printstats = FALSE,
+                                              covar = FALSE, forecast = FALSE))
+  birthseas <- max(replist$birthseas)
+  FirstYear <- min(floor(Years(Hist, "H")))
+  SS3Rec1 <- replist$natage[replist$natage$Yr == FirstYear & replist$natage$Seas == birthseas &
+                              replist$natage$`Beg/Mid` == "B" & replist$natage$Sex == 1, "0"]
+  OMRec1 <- sum(Hist@Number[[1]][1, 1, birthseas, ])
+  expect_equal(OMRec1, SS3Rec1, tolerance = 0.01)
+})
+
+test_that("ImportSS imports SS3 hermaphroditism and matches SS3 by sex (Gag, protogynous)", {
+  skip_on_cran()
+  SSDir <- file.path("../../..", "NOAA Workshop 2027", "SS3 Assessments", "Gag Gulf") |>
+    testthat::test_path()
+  skip_if_not(file.exists(file.path(SSDir, "Report.sso")))
+  skip_if_not_installed("r4ss", "1.52.1")
+
+  OM <- suppressMessages(ImportSS(SSDir, nSim = 2, pYear = 2, silent = TRUE))
+  expect_length(OM@Herm, 1)
+  expect_equal(OM@Herm[[1]]@From, "Female")
+  expect_equal(OM@Herm[[1]]@To, "Male")
+  # males in spawning biomass (Hermaphro_maleSPB = 1): female fecundity, blended SPFrom
+  expect_equal(OM@Stock[[2]]@Fecundity@MeanAtAge, OM@Stock[[1]]@Fecundity@MeanAtAge)
+  expect_equal(OM@Stock[[1]]@SRR@SPFrom, c(Female = 0.5, Male = 0.5))
+
+  Hist <- Simulate(OM, silent = TRUE)
+  Out <- suppressMessages(CompareSS(SSDir, Hist, thresh = Inf, silent = TRUE))
+  # trailing recruitment deviations (2018-2019) are generated, not imported
+  for (nm in c("Number", "Biomass", "Landings")) {
+    MARE <- Out[[nm]]$MARE
+    expect_lt(max(MARE$MARE[MARE$Year <= 2017], na.rm = TRUE), 0.1)
+  }
+
+  # MSY reference points are finite and close to SS3
+  R <- Hist@Reference@MSY
+  expect_lt(R@FMSY[1], OM@maxF)
+  replist <- suppressMessages(r4ss::SS_output(SSDir, verbose = FALSE, printstats = FALSE,
+                                              covar = FALSE, forecast = FALSE))
+  dq <- replist$derived_quants
+  expect_equal(sum(R@SBMSY[1, , 1]), dq$Value[dq$Label == "SSB_MSY"], tolerance = 0.05)
+  expect_equal(R@SPRMSY[1, 1, 1], dq$Value[dq$Label == "SPR_MSY"], tolerance = 0.05)
+})
+
+test_that("Herm per-recruit SPR includes production after sex change when recruiting from both sexes", {
+  OM <- HermOM
+  OM@nSim <- 1
+  StockNms <- names(OM@Stock)
+  OM@Stock[[1]]@SRR@SPFrom <- stats::setNames(c(0.5, 0.5), StockNms)
+  OM@Stock[[2]]@SRR@SPFrom <- NULL
+  OM@Stock[[2]]@SRR@ShareSPFrom <- FALSE
+  OM@Stock[[2]]@SRR@R0 <- 1e-6
+  OM@Stock[[2]]@SRR@Pars <- OM@Stock[[1]]@SRR@Pars
+  yr <- max(Years(OM, "Hist"))
+  pr <- suppressWarnings(CalcPerRecruit(OM, apicalF = c(1e-10, 0.2), Years = yr))
+  SPR <- .Aperm(pr@SPR, c("Sim", "Stock", "Year", "F"))
+  expect_equal(SPR[1, 1, 1, 1], 1, tolerance = 1e-6)
+  expect_gt(SPR[1, 1, 1, 2], 0)
+  expect_lt(SPR[1, 1, 1, 2], 1)
+
+  # males (nearly all from sex change) do not trigger the collapse shortcut
+  eq <- suppressWarnings(CalcEquilibrium(OM, apicalF = c(0, 0.1), Years = yr))
+  expect_true(all(eq@Recruits[, 1, , ] > 0))
+})

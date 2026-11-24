@@ -15,7 +15,8 @@ CalcUnfished_Equilibrium(OM, silent = FALSE)
 A \link[=popdynamics-class]{popdynamics} object. \code{Number} is a list of length \code{nStock},
 each element an array with dimensions \verb{Sim × Age × Year × Area}. \code{Biomass},
 \code{SBiomass}, and \code{SProduction} are arrays with dimensions \verb{Sim × Stock × Year}
-(summed over ages and areas).
+(summed over ages and areas). \code{Year} holds the change-point years only
+(for seasonal models, all time steps of each change-point year).
 }
 \description{
 Calculate equilibrium unfished population quantities for all \code{\link[=Stock]{Stock()}}
@@ -34,6 +35,12 @@ multiplied by mean weight-at-age.
 reassigned across stocks using the \code{SPFrom} slot of the stocks \code{\link[=SRR]{SRR()}}
 objects.
 }
+
+The values are the equilibrium for the parameters of each year. They are
+calculated and stored only for the years (historical and projection) in
+which the parameters affecting them change (see \code{\link[=RefChangeYears]{RefChangeYears()}}, with
+\code{Type = 'Unfished'}); they are constant in between. Accessors such as
+\code{\link[=SB0]{SB0()}} fill the remaining years from the most recent stored year.
 }
 \seealso{
 \code{\link[=CalcUnfished_Dynamic]{CalcUnfished_Dynamic()}}

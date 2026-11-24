@@ -29,13 +29,13 @@
 #'   `Pars`. Arguments with a default value are optional.
 #' @param MeanAtAge Numeric array or `NULL`. Mean selectivity-at-age with
 #'   dimensions `Sim x Age x Year` (area dimension added during population).
-#'   Used directly when `Pars` is empty and `MeanAtLength` is not supplied.
+#'   Used directly when `Pars` is empty.
 #'   See [Specifying Biological and Fleet Schedules](https://docs.openmse.com/concept-schedules.html) for
-#'   accepted array formats. **Note:** if `Pars` and `Model` are both
-#'   provided, any values supplied here will be overwritten during population.
+#'   accepted array formats. **Note:** if `Pars` holds a resolvable model,
+#'   any values supplied here are overwritten during population.
 #' @param MeanAtLength Numeric array or `NULL`. Mean selectivity-at-length
-#'   with dimensions `Sim x Class x Year`. If provided and `Pars` is empty,
-#'   takes precedence over `MeanAtAge`; `MeanAtAge` is derived from it via the
+#'   with dimensions `Sim x Class x Year`. If provided, `Pars` is empty, and
+#'   `MeanAtAge` is not supplied, `MeanAtAge` is derived from it via the
 #'   age-length key. A numeric vector is also accepted and converted to a
 #'   `1 x nClass x 1` array automatically, using `Classes` if supplied or the
 #'   [length-class] object's own `Classes` otherwise; if `Classes` differs
@@ -88,12 +88,16 @@
 #' the age-length or age-weight key.
 #'
 #' **Direct array**: leave `Pars = list()` and supply `MeanAtAge`,
-#' `MeanAtLength`, or `MeanAtWeight` directly. If `MeanAtLength` is provided,
-#' it takes precedence and `MeanAtAge` is derived from it. If only `MeanAtAge`
-#' is provided, `MeanAtLength` is calculated from it unless already populated.
+#' `MeanAtLength`, or `MeanAtWeight` directly. A supplied `MeanAtAge` is used
+#' as is; otherwise `MeanAtAge` is derived from `MeanAtLength`, then
+#' `MeanAtWeight`. `MeanAtLength` is calculated from `MeanAtAge` when it is
+#' not supplied.
 #'
 #' These two approaches are mutually exclusive: if `Pars` is non-empty and
-#' `Model` can be resolved, any values in `MeanAtAge` will be overwritten.
+#' `Model` can be resolved, any values in `MeanAtAge`, `MeanAtLength`, and
+#' `MeanAtWeight` are overwritten. Values calculated by [Populate()] (rather
+#' than supplied) are recalculated when the object is populated again, e.g.
+#' after `Pars` or the [length-class] object change.
 #'
 #' ## Relative Parameters
 #'
@@ -105,7 +109,11 @@
 #' model is an error. This allows selectivity to be expressed as a fraction of
 #' the length at 50% maturity rather than an absolute length, which is useful
 #' when the same fleet configuration is applied across stocks with different
-#' growth characteristics.
+#' growth characteristics. `L50` is the maturity `L50` parameter, or is
+#' interpolated from maturity-at-length (calculated from maturity-at-age with
+#' the age-length key when maturity is supplied at age). The relative values
+#' are kept, so selectivity is re-scaled when the object is populated again
+#' after maturity changes.
 #'
 #' ## Attaching to a Fleet
 #'

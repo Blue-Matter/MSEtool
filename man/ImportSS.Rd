@@ -194,6 +194,18 @@ or \code{0}) and for observations excluded from the discard likelihood.
 is imported in the time step of its row with a positive fleet number.
 The dummy observations (negative fleet number) are imported as \code{NA},
 value and CV.
+\item SS3 age-specific hermaphroditism (\code{Hermaphro_Option} 1, female to male,
+or -1, male to female; read from \code{echoinput.sso}) is imported as
+\code{OM@Herm}, with \code{Frac} the SS3 cumulative fraction remaining in the
+original sex (\code{Herma_Cum}). When SS3 includes males in the spawning
+biomass (\code{Hermaphro_maleSPB = 1}), the males are given the female
+fecundity-at-age and the sex that receives the recruits recruits from the
+combined female and male spawning production (\code{SRR@SPFrom}). The other
+sex recruits its SS3 share of recruitment (e.g. \code{1 - FracFemale}) from its
+own spawning production.
+\item Index and composition observations after the last historical year (SS3
+observations in forecast years) are kept in \code{OM@Data}, and are used in
+place of simulated data in the projection.
 \item In projection years, the CV reported with the simulated catch and index
 data is the observation-error CV conditioned on the SS3 data
 (\code{CV} of the \code{\link[=CatchObs]{CatchObs()}} and \code{\link[=IndicesObs]{IndicesObs()}} objects), unless set with

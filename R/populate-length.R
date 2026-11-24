@@ -70,6 +70,9 @@ PopulateLength <- function(Length,
   if (.CheckDigest(Length, argList) & !force) 
     return(Length)
   
+  Length <- .ResetDerived(Length)
+  Input <- Length
+
   .CheckInputs(Length)
   .CheckSimsNotIncreased(Length, nSim)
   Length@MeanAtAge <- .NameAtAge(Length@MeanAtAge, Ages, Years, cl = 'length')
@@ -106,7 +109,7 @@ PopulateLength <- function(Length,
                           silent = silent)
   }
     
-  .SetDigest(.CheckOutput(.SetAgeDimnames(Length, Ages), nSim, Ages, Years), argList)
+  .FinishPopulate(.CheckOutput(.SetAgeDimnames(Length, Ages), nSim, Ages, Years), Input, argList)
 }
 
 

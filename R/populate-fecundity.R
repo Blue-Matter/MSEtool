@@ -76,16 +76,20 @@ PopulateFecundity <- function(Fecundity,
   nSim  <- .GetNSim(Fecundity, nSim)
   
   argList <- list(Ages, Length, Weight, Maturity, nSim, Years, CalcAtLength, seed)
-  
-  if (EmptyObject(Fecundity)) {
+
+  if (.CheckDigest(Fecundity, argList) & !force)
+    return(Fecundity)
+
+  # fecundity derived from weight x maturity is recalculated when these change
+  Fecundity <- .ResetDerived(Fecundity)
+  Input <- Fecundity
+
+  # no fecundity model or values: weight x maturity, which then follows the
+  # same steps (CalcAtLength, dimnames) as supplied values
+  if (EmptyObject(Fecundity))
     Fecundity@MeanAtAge <- .FecundityFromWeightMaturity(Ages, Length, Weight, Maturity,
                                                         Years, nSim, seed)
-    return(.SetDigest(.CheckOutput(Fecundity, nSim, Ages, Years), argList))
-  }
-  
-  if (.CheckDigest(Fecundity, argList) & !force) 
-    return(Fecundity)
-  
+
   .CheckInputs(Fecundity)
   .CheckSimsNotIncreased(Fecundity, nSim)
   Fecundity@MeanAtAge <- .NameAtAge(Fecundity@MeanAtAge, Ages, Years, cl = 'fecundity')
@@ -96,13 +100,11 @@ PopulateFecundity <- function(Fecundity,
   Fecundity@Pars <- .StructurePars(Pars = .AddDefaultPars(Fecundity), nSim, Years)
   Fecundity@Model <- .FindModel(Fecundity)
   
-  if (is.null(Fecundity@Model) | all(is.na(Fecundity@Pars))) {
-    if (is.null(Fecundity@MeanAtAge)) {
-      Fecundity@MeanAtAge <- .FecundityFromWeightMaturity(Ages, Length, Weight, Maturity,
-                                                          Years, nSim, seed)
-      return(.SetDigest(.CheckOutput(Fecundity, nSim, Ages, Years), argList))
-    }
-  }
+  if ((is.null(Fecundity@Model) || all(is.na(Fecundity@Pars))) &&
+      is.null(Fecundity@MeanAtAge) && is.null(Fecundity@MeanAtLength) &&
+      is.null(Fecundity@MeanAtWeight))
+    Fecundity@MeanAtAge <- .FecundityFromWeightMaturity(Ages, Length, Weight, Maturity,
+                                                        Years, nSim, seed)
   
   ModelClass <- .SizeModelClass(Fecundity@Model, what = 'Fecundity')
   if (!is.null(ModelClass)) {
@@ -145,7 +147,7 @@ PopulateFecundity <- function(Fecundity,
   
   Fecundity <- .AddAtLengthDimnames(Fecundity, Years, 'Fecundity')
   
-  .SetDigest(.CheckOutput(.SetAgeDimnames(Fecundity, Ages), nSim, Ages, Years), argList)
+  .FinishPopulate(.CheckOutput(.SetAgeDimnames(Fecundity, Ages), nSim, Ages, Years), Input, argList)
 }
 
 .FecundityFromWeightMaturity <- function(Ages, Length, Weight, Maturity, Years, nSim, seed) {

@@ -77,8 +77,12 @@ coefficients (\code{SRR@AC}) and \eqn{\Sigma_\epsilon} is derived by
 \code{\link[=CalcInnovationCov]{CalcInnovationCov()}} from the cross-stock correlation matrix. The latent
 series is transformed to log deviations with standard deviation \code{SRR@SD}.
 
-In seasonal operating models, seasons in which a stock's historical
-deviations are all zero (no recruitment) have zero projection deviations.
+In seasonal operating models, one deviation is generated per calendar year
+and applied to every recruiting time step in that year, so \code{SRR@SD},
+\code{SRR@AC}, and the cross-stock correlation (estimated from the annual
+geometric means of the historical deviations) describe the annual
+deviations. Seasons in which a stock's historical deviations are all zero
+(no recruitment) have zero projection deviations.
 }
 \seealso{
 \code{\link[=GenRecDevs]{GenRecDevs()}}, \code{\link[=CalcInnovationCov]{CalcInnovationCov()}}, \link{OMControl}

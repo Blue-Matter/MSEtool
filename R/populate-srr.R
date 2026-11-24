@@ -92,6 +92,8 @@ PopulateSRR <- function(SRR,
   if ((.CheckDigest(SRR, argList) && !force) | EmptyObject(SRR))
     return(SRR)
   
+  SRR <- .ResetDerived(SRR)
+  Input <- SRR
   .CheckInputs(SRR)
   .CheckSimsNotIncreased(SRR, nSim)
   .SetSeed(seed)
@@ -161,7 +163,7 @@ PopulateSRR <- function(SRR,
       Sim = 1:dd[1],
       Year = ProjTS
     )
-    return(.SetDigest(.CheckOutput(SRR, nSim, Ages, Years), argList))
+    return(.FinishPopulate(.CheckOutput(SRR, nSim, Ages, Years), Input, argList))
   }
   
   RecDeviations <- GenRecDevs(
@@ -195,7 +197,7 @@ PopulateSRR <- function(SRR,
     Sim = 1:nrow(SRR@RecDevProj),
     Year = ProjTS
   )
-  .SetDigest(.CheckOutput(SRR, nSim, Ages, Years), argList)
+  .FinishPopulate(.CheckOutput(SRR, nSim, Ages, Years), Input, argList)
 }
 
 

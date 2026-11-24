@@ -37,9 +37,9 @@ support model-based population via \code{Pars} and \code{Model}. Values must be
 supplied directly as arrays or derived from \code{MeanAtLength}.}
 
 \item{MeanAtLength}{Numeric array or \code{NULL}. Mean discard mortality at
-length with dimensions \verb{Sim x Class x Year}. If provided, takes
-precedence over \code{MeanAtAge}; \code{MeanAtAge} is derived from it via the
-age-length key during \code{\link[=PopulateDiscardMortality]{PopulateDiscardMortality()}}. A numeric vector is
+length with dimensions \verb{Sim x Class x Year}. If provided and \code{MeanAtAge}
+is not supplied, \code{MeanAtAge} is derived from it via the age-length key
+during \code{\link[=PopulateDiscardMortality]{PopulateDiscardMortality()}}. A numeric vector is
 also accepted and converted to a \verb{1 x nClass x 1} array automatically,
 using \code{Classes} if supplied or the \link[=length-class]{length} object's own \code{Classes}
 otherwise; if \code{Classes} differs from the \link[=length-class]{length} object's, the
@@ -90,9 +90,10 @@ for all age and length classes.
 \code{MeanAtAge} may be a scalar, a vector of length \code{nAge}, or a full
 \verb{Sim x Age x Year} array. Scalars and vectors are wrapped internally to
 arrays with a single simulation and year, then extended to cover all
-simulations and years during population. If \code{MeanAtLength} is supplied, it
-takes precedence and \code{MeanAtAge} is derived from it using the age-length
-key.
+simulations and years during population. If \code{MeanAtAge} is not supplied,
+it is derived from \code{MeanAtLength} using the age-length key. Values
+calculated by \code{\link[=Populate]{Populate()}} (rather than supplied) are recalculated when the
+object is populated again.
 }
 
 \subsection{Attaching to a Fleet}{

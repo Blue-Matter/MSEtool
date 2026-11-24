@@ -78,6 +78,9 @@ PopulateNaturalMortality <- function(NaturalMortality,
     return(NaturalMortality)
   }
   
+  NaturalMortality <- .ResetDerived(NaturalMortality)
+  Input <- NaturalMortality
+
   .CheckInputs(NaturalMortality)
   .CheckSimsNotIncreased(NaturalMortality, nSim)
   NaturalMortality@MeanAtAge <- .NameAtAge(NaturalMortality@MeanAtAge, Ages, Years, cl = 'naturalmortality')
@@ -128,6 +131,6 @@ PopulateNaturalMortality <- function(NaturalMortality,
   
   
   
-  .SetDigest(.CheckOutput(.SetAgeDimnames(NaturalMortality, Ages), nSim, Ages, Years), argList)
+  .FinishPopulate(.CheckOutput(.SetAgeDimnames(NaturalMortality, Ages), nSim, Ages, Years), Input, argList)
   
 }

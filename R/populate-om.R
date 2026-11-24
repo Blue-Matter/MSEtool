@@ -928,14 +928,17 @@ PopulateOM <- function(OM,
     if (ShareHist) New@RecDevHist <- Src@RecDevHist
 
     if (identical(New, SRR)) next
+    # copied values are derived: reset to this stock's own inputs and copied
+    # again on re-population (e.g. not kept if ShareSPFrom is later FALSE)
+    New <- .MarkCopied(New, SRR, c('Pars', 'SD', 'AC', 'RecDevInit', 'RecDevProj',
+                                   if (ShareHist) 'RecDevHist'))
     OM@Stock[[i]]@SRR <- New
-    OM <- .CaptureLog(
-      OM,
-      string = cli::format_inline(
-        "Stock {.val {st}} uses the stock-recruitment parameters and {if (ShareHist) 'recruitment deviations' else 'initial and projection recruitment deviations'} of {.val {src}} ({.field SRR@ShareSPFrom})."),
-      name = 'ShareSPFrom',
-      type = 'assumption'
-    )
+    Msg <- cli::format_inline(
+      "Stock {.val {st}} uses the stock-recruitment parameters and {if (ShareHist) 'recruitment deviations' else 'initial and projection recruitment deviations'} of {.val {src}} ({.field SRR@ShareSPFrom}).")
+    # copied again on each population: log once
+    Logged <- purrr::map_chr(OM@Log$assumption %||% list(), .LogEntryMessage)
+    if (!Msg %in% Logged)
+      OM <- .CaptureLog(OM, string = Msg, name = 'ShareSPFrom', type = 'assumption')
   }
 
   for (i in seq_len(nStock(OM))) {

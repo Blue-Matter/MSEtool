@@ -64,6 +64,8 @@ PopulateSpatial <- function(Spatial,
   if (.CheckDigest(Spatial, argList) && !force)
     return(Spatial)
 
+  Spatial <- .ResetDerived(Spatial)
+  Input <- Spatial
   Spatial <- .DropStaleUnfishedDist(Spatial)
   Spatial <- .NameSpatial(Spatial, Ages, Years)
   .SpatialNArea(Spatial)
@@ -73,7 +75,7 @@ PopulateSpatial <- function(Spatial,
   
   if (EmptyObject(Spatial)) {
     Spatial <- .DefaultSpatial(Ages, Years)
-    return(.SetDigest(.CheckOutput(Spatial, nSim, Ages, Years), argList))
+    return(.FinishPopulate(.CheckOutput(Spatial, nSim, Ages, Years), Input, argList))
   }
   
   hasMovement <- !is.null(Spatial@Movement)
@@ -85,7 +87,7 @@ PopulateSpatial <- function(Spatial,
     Spatial@ProbStaying <- .ProbStayingFromMovement(Spatial@Movement)
     Spatial <- .ProcessRelativeSize(Spatial, nSim)
 
-    return(.SetDigest(.CheckOutput(Spatial, nSim, Ages, Years), argList))
+    return(.FinishPopulate(.CheckOutput(Spatial, nSim, Ages, Years), Input, argList))
   }
   
 
@@ -94,7 +96,11 @@ PopulateSpatial <- function(Spatial,
     .ProcessUnfishedDist(Ages, Years, nSim) |>
     .ProcessProbStaying(Ages, Years, nSim) |>
     .InitMovementMatrix(Ages, Years, nSim)
-  
+
+  # target distribution (sampled), replaced below by the equilibrium of the
+  # fitted movement; restored on re-population so the fit is repeated exactly
+  Spatial@Misc$Restore$UnfishedDist <- Spatial@UnfishedDist
+
   Spatial <- .CheckFracArea(Spatial, Ages, Years, nSim)
   
   Mov_dim <- dim(Spatial@Movement)
@@ -123,7 +129,7 @@ PopulateSpatial <- function(Spatial,
   Spatial <- CalcUnfishedDist(Spatial, Ages, Years)
   Spatial <- .ProcessRelativeSize(Spatial, nSim)
   
-  .SetDigest(.CheckOutput(.SetAgeDimnames(Spatial, Ages), nSim, Ages, Years), argList)
+  .FinishPopulate(.CheckOutput(.SetAgeDimnames(Spatial, Ages), nSim, Ages, Years), Input, argList)
 }
 
 # probability of staying in each area: the diagonal of a named Sim x FromArea x ToArea x Age x Year

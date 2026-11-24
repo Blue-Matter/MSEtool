@@ -388,14 +388,20 @@ F_FMSY <- function(object,
   denom_nums  <- as.numeric(denom_years)
   target_nums <- as.numeric(target_years)
 
-  last_idx  <- which(floor(denom_nums) == floor(denom_nums[length(denom_nums)]))
-  last_frac <- denom_nums[last_idx] %% 1
+  # denominators stored for their change-point years only (e.g. unfished
+  # values, MSY reference points for several years) are step-filled: the most
+  # recent denominator year (matching the season of seasonal time steps) at or
+  # before the target year, or the first for earlier years
+  denom_frac <- round(denom_nums %% 1, 6)
 
   year_idx <- vapply(target_nums, function(ty) {
     m <- which(denom_nums == ty)
     if (length(m)) return(m[1])
     if (!fill && length(denom_nums) > 1) return(NA_integer_)
-    last_idx[which.min(abs(last_frac - ty %% 1))]
+    fr   <- denom_frac[which.min(abs(denom_frac - round(ty %% 1, 6)))]
+    cand <- which(denom_frac == fr)
+    prev <- cand[floor(denom_nums[cand]) <= floor(ty)]
+    if (length(prev)) prev[length(prev)] else cand[1]
   }, integer(1))
 
   nd  <- length(dim(denom_arr))

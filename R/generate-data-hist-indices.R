@@ -155,7 +155,7 @@
       } else {
         # do B0
         Ref_Dep <- 0.5 # hard coded for now
-        B0 <- Hist@Unfished@Equilibrium@Biomass
+        B0 <- Hist@Unfished@Equilibrium@Biomass |> .ArraySubsetYear(Years(Hist@OM, 'Historical'))
         B0 <- .SumStocksByYear(B0, min(sim, dim(B0)[1]), stocks)
         B0 <- if (all(names(Bhist) %in% names(B0))) B0[names(Bhist)] else B0[pmin(seq_along(Bhist), length(B0))]
         B_B0 <- Bhist/B0

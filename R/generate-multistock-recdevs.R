@@ -59,8 +59,12 @@
 #' [CalcInnovationCov()] from the cross-stock correlation matrix. The latent
 #' series is transformed to log deviations with standard deviation `SRR@SD`.
 #'
-#' In seasonal operating models, seasons in which a stock's historical
-#' deviations are all zero (no recruitment) have zero projection deviations.
+#' In seasonal operating models, one deviation is generated per calendar year
+#' and applied to every recruiting time step in that year, so `SRR@SD`,
+#' `SRR@AC`, and the cross-stock correlation (estimated from the annual
+#' geometric means of the historical deviations) describe the annual
+#' deviations. Seasons in which a stock's historical deviations are all zero
+#' (no recruitment) have zero projection deviations.
 #'
 #' @seealso [GenRecDevs()], [CalcInnovationCov()], [OMControl]
 #' @export
@@ -79,6 +83,8 @@ GenMultiStockRecDevs <- function(OM, TruncSD = NULL, silent = FALSE, overwrite =
   ProjYears <- Years(OM, "P")
   pYear     <- length(ProjYears)
   nSeason   <- max(1L, as.integer(OM@Seasons %||NA% 1))
+  HistBlk   <- .RecDevYearBlocks(Years(OM, "H"))
+  ProjBlk   <- .RecDevYearBlocks(ProjYears)
 
   if (n_stock < 2) return(OM)
 
@@ -144,6 +150,19 @@ GenMultiStockRecDevs <- function(OM, TruncSD = NULL, silent = FALSE, overwrite =
     sd_grp <- RecDevStatsGrp$sd
     phi    <- RecDevStatsGrp$ac
 
+    # seasonal: one deviation per calendar year (geometric mean of the
+    # recruiting seasons), shared by its recruiting time steps, so `SD`, `AC`,
+    # and the cross-stock correlation are annual
+    StepActiveProj <- ActiveProj
+    if (nSeason > 1) {
+      H <- as.matrix(RecDevHistGrp)
+      H[!ActiveHist] <- NA
+      RecDevHistGrp <- .CollapseRecDevBlocks(H, HistBlk)
+      ActiveHist <- matrix(TRUE, nrow = n_grp, ncol = ncol(RecDevHistGrp))
+      ActiveProj <- matrix(TRUE, nrow = n_grp, ncol = max(ProjBlk))
+    }
+    nProj <- ncol(ActiveProj)
+
     for (g in seq_len(n_grp)) {
       inactive_na <- which(!ActiveHist[g, ] & is.na(RecDevHistGrp[g, ]))
       if (length(inactive_na)) RecDevHistGrp[g, inactive_na] <- 0
@@ -180,21 +199,22 @@ GenMultiStockRecDevs <- function(OM, TruncSD = NULL, silent = FALSE, overwrite =
       .DevToLatent(z_last, sd_grp[g], TruncGrp[g])
     }, numeric(1))
 
-    Zl_proj <- matrix(NA_real_, nrow = n_grp, ncol = pYear)
+    Zl_proj <- matrix(NA_real_, nrow = n_grp, ncol = nProj)
 
     # Sample latent innovations
     if (all(abs(Sigma_eps) < 1e-12)) {
-      eps_mat <- matrix(0, nrow = pYear, ncol = n_grp)
+      eps_mat <- matrix(0, nrow = nProj, ncol = n_grp)
     } else {
       eig <- eigen(Sigma_eps, symmetric = TRUE)
       if (any(eig$values <= 1e-10))
         Sigma_eps <- Sigma_eps + diag(1e-8, nrow(Sigma_eps))
 
-      eps_mat <- MASS::mvrnorm(pYear, mu = rep(0, n_grp), Sigma = Sigma_eps)
+      eps_mat <- MASS::mvrnorm(nProj, mu = rep(0, n_grp), Sigma = Sigma_eps)
       if (n_grp == 1) eps_mat <- matrix(eps_mat, ncol = 1)
     }
+    if (!is.matrix(eps_mat)) eps_mat <- matrix(eps_mat, nrow = nProj)
 
-    for (t in seq_len(pYear)) {
+    for (t in seq_len(nProj)) {
       active_t <- ActiveProj[, t]
       Zl_prev[active_t] <- phi[active_t] * Zl_prev[active_t] + eps_mat[t, active_t]
       Zl_proj[, t] <- Zl_prev
@@ -206,8 +226,9 @@ GenMultiStockRecDevs <- function(OM, TruncSD = NULL, silent = FALSE, overwrite =
         .HasRecDevProj(OM@Stock[[m]]@SRR, sim, pYear)
       if (keep) next
       proj_dev  <- rep(0, pYear)
-      active_t  <- ActiveProj[g, ]
-      proj_dev[active_t] <- exp(.LatentToDev(Zl_proj[g, active_t], sd_grp[g], TruncGrp[g]))
+      active_t  <- StepActiveProj[g, ]
+      z_step    <- Zl_proj[g, ProjBlk]
+      proj_dev[active_t] <- exp(.LatentToDev(z_step[active_t], sd_grp[g], TruncGrp[g]))
       for (st in m) {
         if (!overwrite[st]) next
         OM@Stock[[st]]@SRR@RecDevProj[sim, ] <- proj_dev

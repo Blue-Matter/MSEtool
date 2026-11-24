@@ -129,7 +129,7 @@ test_that("multi-fleet initial equilibrium uses the optimized relative catchabil
   Hist <- Simulate(OM, silent = TRUE)
   nYear <- length(Years(Hist, "H"))
   expect_equal(.InitialDepletion(Hist), rep(0.4, 3), tolerance = 1e-8)
-  SB0 <- ExtendSims(Hist@Unfished@Equilibrium@SBiomass, 3)[, 1, nYear]
+  SB0 <- ExtendSims(SB0(Hist, Reduce = FALSE), 3)[, 1, nYear]
   expect_equal(unname(Hist@SBiomass[, 1, nYear] / SB0), rep(0.3, 3), tolerance = 1e-3)
   Landings <- Hist@Landings[, 1, nYear, ]
   expect_equal(unname(Landings[, 1] / rowSums(Landings)), rep(0.7, 3), tolerance = 1e-3)

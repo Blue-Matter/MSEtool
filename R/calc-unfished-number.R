@@ -13,22 +13,28 @@
 #' @param OM An [OM()] object
 #' @param SP Logical. Account for `SpawnTimeFrac`? Accounts for spawning timing within a time step to 
 #' calculate the number-at-age at the time of spawning
-#' 
+#' @param Years Numeric vector of years (time steps) to calculate. `NULL`
+#'   (default) uses the historical years. For seasonal models, all time steps
+#'   of each calendar year must be included.
+#'
 #' @return A named list of length [nStock()] with each element an array with dimensions
 #' Sim, Age, and Year
-#' 
+#'
 #' @export
-CalcUnfishedNumber <- function(OM, SP = FALSE) {
-  
+CalcUnfishedNumber <- function(OM, SP = FALSE, Years = NULL) {
+
   if (OM@Seasons > 1)
-    return(.CalcUnfishedNumberSeasonal(OM, SP))
+    return(.CalcUnfishedNumberSeasonal(OM, SP, Years))
+
+  if (is.null(Years)) Years <- Years(OM, 'Hist')
 
   # Unfished survival by Sim, Age, and Year for each Stock
-  UnfishedSurvival_List <- CalcUnfishedSurvival(OM, SP, Years=Years(OM,'Hist'))
+  UnfishedSurvival_List <- CalcUnfishedSurvival(OM, SP, Years = Years)
 
   # R0 for each Stock
   R0List <- purrr::map(OM@Stock, \(Stock) {
     Stock@SRR@R0 |>
+      .SubsetYearIfAny(Years) |>
       AddDimension("Age", val =  min(Stock@Ages@Classes)) |>
       .Aperm(c("Sim", "Age", "Year"))
   })
@@ -46,7 +52,9 @@ CalcUnfishedNumber <- function(OM, SP = FALSE) {
 .CalcUnfishedNumberHerm <- function(OM, N_independent, SP = FALSE,
                                     tol = 1e-10, max_iter = 5000) {
 
-  Years  <- Years(OM, 'Hist')
+  # years of N_independent: can extend past the historical years when an input
+  # (e.g. SRR@R0) covers projection years
+  Years  <- as.numeric(dimnames(N_independent[[1]])[['Year']])
   nYear  <- length(Years)
   nSim   <- OM@nSim
   nStock <- nStock(OM)
@@ -75,16 +83,16 @@ CalcUnfishedNumber <- function(OM, SP = FALSE) {
     # per-stock full-year (SpawnTimeFrac = 0) inputs, extended to full nSim/Years
     Z <- purrr::map(comp, \(s) {
       Extend(OM@Stock[[s]]@NaturalMortality@MeanAtAge, nSim = nSim,
-            AgeClasses = AgeClasses, Years = Years) |> .ArraySubsetYear(Years)
+            AgeClasses = AgeClasses, Years = Years) |> .SubsetYearIfAny(Years)
     }) |> stats::setNames(comp)
 
     Semel <- purrr::map(comp, \(s) {
       Extend(OM@Stock[[s]]@Maturity@Semelparous, nSim = nSim,
-            AgeClasses = AgeClasses, Years = Years) |> .ArraySubsetYear(Years)
+            AgeClasses = AgeClasses, Years = Years) |> .SubsetYearIfAny(Years)
     }) |> stats::setNames(comp)
 
     R0 <- purrr::map(comp, \(s) {
-      Extend(OM@Stock[[s]]@SRR@R0, nSim = nSim, Years = Years) |> .ArraySubsetYear(Years)
+      Extend(OM@Stock[[s]]@SRR@R0, nSim = nSim, Years = Years) |> .SubsetYearIfAny(Years)
     }) |> stats::setNames(comp)
 
     PlusGroupFlag <- purrr::map_lgl(comp, \(s) isTRUE(OM@Stock[[s]]@Ages@PlusGroup)) |>
@@ -206,10 +214,12 @@ CalcUnfishedNumber <- function(OM, SP = FALSE) {
   dim(R0Array)[[3]] > 1
 }
 
-.CalcUnfishedNumberSeasonal <- function(OM, SP = FALSE) {
+# `Years`: all time steps of the calendar years to calculate (default: the
+# historical years)
+.CalcUnfishedNumberSeasonal <- function(OM, SP = FALSE, Years = NULL) {
   OM        <- .PopulateForUnfished(OM, adjust_fecundity = FALSE)
-  Years     <- Years(OM,'Hist')
-  nYear     <- OM@nYear
+  if (is.null(Years)) Years <- Years(OM,'Hist')
+  nYear     <- length(unique(floor(Years)))
   nSeason   <- OM@Seasons
   StockList <- MakeNamedList(StockNames(OM))
 
@@ -241,13 +251,13 @@ CalcUnfishedNumber <- function(OM, SP = FALSE) {
                    dimnames=list(Sim=1:nSim, Age=AgeClasses, Year=Years))
 
   # R0 Sim by Year
-  R0 <- Extend(Stock@SRR@R0, nSim = nSim,Years = Years)
+  R0 <- Extend(Stock@SRR@R0, nSim = nSim,Years = Years) |> .SubsetYearIfAny(Years)
 
   # Sim, Age, Year
   NaturalMortality <- Extend(Stock@NaturalMortality@MeanAtAge,
                              nSim = nSim,
                              AgeClasses = AgeClasses,
-                             Years = Years)
+                             Years = Years) |> .SubsetYearIfAny(Years)
 
   PlusGroup     <- Stock@Ages@PlusGroup
   SpawnTimeFrac <- ifelse(SP, Stock@SRR@SpawnTimeFrac, 0)
@@ -255,7 +265,7 @@ CalcUnfishedNumber <- function(OM, SP = FALSE) {
   Semelparous   <- Extend(Stock@Maturity@Semelparous,
                           nSim = nSim,
                           AgeClasses = AgeClasses,
-                          Years = Years)
+                          Years = Years) |> .SubsetYearIfAny(Years)
 
   # Check if seasonal values vary over years
   GetSeasonBlock2d <- function(x, y, nSeason) {
@@ -269,7 +279,7 @@ CalcUnfishedNumber <- function(OM, SP = FALSE) {
   }
 
   identical_years <- all(
-    purrr::map_lgl(2:nYear, ~
+    purrr::map_lgl(seq_len(nYear)[-1], ~
               isTRUE(all.equal(GetSeasonBlock2d(R0, 1, nSeason),
                                GetSeasonBlock2d(R0, .x, nSeason),
                                check.attributes = FALSE)) &&
@@ -335,13 +345,13 @@ CalcUnfishedNumber <- function(OM, SP = FALSE) {
   nSim <- OM@nSim
 
   R0List    <- stats::setNames(purrr::map(comp, \(s)
-    Extend(OM@Stock[[s]]@SRR@R0, nSim = nSim, Years = Years)), comp)
+    Extend(OM@Stock[[s]]@SRR@R0, nSim = nSim, Years = Years) |> .SubsetYearIfAny(Years)), comp)
   MList     <- stats::setNames(purrr::map(comp, \(s)
     Extend(OM@Stock[[s]]@NaturalMortality@MeanAtAge, nSim = nSim,
-          AgeClasses = AgeClasses, Years = Years)), comp)
+          AgeClasses = AgeClasses, Years = Years) |> .SubsetYearIfAny(Years)), comp)
   SemelList <- stats::setNames(purrr::map(comp, \(s)
     Extend(OM@Stock[[s]]@Maturity@Semelparous, nSim = nSim,
-          AgeClasses = AgeClasses, Years = Years)), comp)
+          AgeClasses = AgeClasses, Years = Years) |> .SubsetYearIfAny(Years)), comp)
   PlusGroupFlag <- stats::setNames(purrr::map_lgl(comp, \(s)
     isTRUE(OM@Stock[[s]]@Ages@PlusGroup)), comp)
   SpawnTimeFracList <- stats::setNames(purrr::map(comp, \(s) {

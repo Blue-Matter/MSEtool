@@ -83,6 +83,9 @@ PopulateWeight <- function(Weight,
     return(Weight)
   }
   
+  Weight <- .ResetDerived(Weight)
+  Input <- Weight
+
   .CheckInputs(Weight)
   .CheckSimsNotIncreased(Weight, nSim)
   Weight@MeanAtAge <- .NameAtAge(Weight@MeanAtAge, Ages, Years, cl = 'weight')
@@ -157,7 +160,7 @@ PopulateWeight <- function(Weight,
     Weight <- .PopulateASK(Weight, Ages, silent, type = "Weight")
   }
   
-  .SetDigest(.CheckOutput(.SetAgeDimnames(Weight, Ages), nSim, Ages, Years), argList)
+  .FinishPopulate(.CheckOutput(.SetAgeDimnames(Weight, Ages), nSim, Ages, Years), Input, argList)
 }
 
 # weight at the top of the length classes bounds weight-at-age for models of weight at length

@@ -123,7 +123,7 @@ PlotDepletion <- function(object, byStock = NULL, Stocks = NULL, bins = 15, tol 
         "!" = "{length(unique(failed$Sim))} simulation{?s} missed {?its/their} target depletion by more than {tol*100}%:",
         stats::setNames(msg, rep('*', length(msg))),
         if (length(unreach))
-          c("i" = "Target is above the unfished depletion ({.code Unfished@Dynamic}) and cannot be reached at any catchability:",
+          c("i" = "Target is above the depletion reachable with no fishing (unfished biomass with the simulation's recruitment, relative to equilibrium unfished), so it cannot be reached at any catchability:",
             stats::setNames(unreach, rep('*', length(unreach))))
       ))
     }
@@ -252,14 +252,14 @@ PlotDepletion <- function(object, byStock = NULL, Stocks = NULL, bins = 15, tol 
     )
     if (nUnreach > 0)
       msg <- paste(msg, cli::format_inline(
-        "In {nUnreach} simulation{?s} the target is above the unfished {ratio} ({.code Unfished@Dynamic}), so it cannot be reached at any catchability."
+        "In {nUnreach} simulation{?s} the target is above the {ratio} reachable with no fishing (unfished biomass with the simulation's recruitment, relative to equilibrium unfished), so it cannot be reached at any catchability."
       ))
     msg <- paste(msg, cli::format_inline("See {.code PlotDepletion(hist)}."))
     Hist <- .CaptureLog(Hist, msg, name = paste0('Depletion - ', st), type = 'warning')
     for (i in seq_len(n)) {
       detail <- sprintf("Achieved %s, target %s", round(rows$Achieved[i], 3), round(rows$Target[i], 3))
       if (rows$Unreachable[i])
-        detail <- sprintf("%s; unfished %s %s (unreachable)", detail, ratio, round(rows$Unfished[i], 3))
+        detail <- sprintf("%s; %s with no fishing %s (unreachable)", detail, ratio, round(rows$Unfished[i], 3))
       Hist <- .CaptureLog(Hist, detail, type = 'warning', sim = rows$Sim[i])
     }
   }
