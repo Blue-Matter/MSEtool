@@ -25,9 +25,9 @@
 #'   supplied directly as arrays or derived from `MeanAtLength`.
 #'
 #' @param MeanAtLength Numeric array or `NULL`. Mean discard mortality at
-#'   length with dimensions `Sim x Class x Year`. If provided, takes
-#'   precedence over `MeanAtAge`; `MeanAtAge` is derived from it via the
-#'   age-length key during [PopulateDiscardMortality()]. A numeric vector is
+#'   length with dimensions `Sim x Class x Year`. If provided and `MeanAtAge`
+#'   is not supplied, `MeanAtAge` is derived from it via the age-length key
+#'   during [PopulateDiscardMortality()]. A numeric vector is
 #'   also accepted and converted to a `1 x nClass x 1` array automatically,
 #'   using `Classes` if supplied or the [length-class] object's own `Classes`
 #'   otherwise; if `Classes` differs from the [length-class] object's, the
@@ -60,9 +60,10 @@
 #' `MeanAtAge` may be a scalar, a vector of length `nAge`, or a full
 #' `Sim x Age x Year` array. Scalars and vectors are wrapped internally to
 #' arrays with a single simulation and year, then extended to cover all
-#' simulations and years during population. If `MeanAtLength` is supplied, it
-#' takes precedence and `MeanAtAge` is derived from it using the age-length
-#' key.
+#' simulations and years during population. If `MeanAtAge` is not supplied,
+#' it is derived from `MeanAtLength` using the age-length key. Values
+#' calculated by [Populate()] (rather than supplied) are recalculated when the
+#' object is populated again.
 #'
 #' ## Attaching to a Fleet
 #'
