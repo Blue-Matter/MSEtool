@@ -86,6 +86,9 @@
                                  parallel = parallel,
                                  silent   = silent)
     Hist <- .LogFMSYAtMaxF(Hist)
+    # default (last historical year only): note when the inputs change over time
+    if (is.null(OM@Control$RefYears))
+      Hist <- .LogMSYChangeYears(Hist, MSYYears)
   }
 
   if (control$MGT)
