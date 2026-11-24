@@ -350,15 +350,17 @@
 
   # Depletion objective: once per SPFrom-connected group
   TermInd <- length(YearsHist)
+  # unfished values are stored for their change-point years only
+  TermRef <- \(x) .ArraySubsetYear(x, YearsHist[TermInd])[1, , 1]
 
   depOBJ <- 0
   for (g in ActiveInfo$groups) {
     if (g$reference == 'B0') {
       predNum <- sum(PopDynamicsHistorical@Biomass[1, g$members, TermInd])
-      refNum  <- sum(HistSim@Unfished@Equilibrium@Biomass[1, g$members, TermInd])
+      refNum  <- sum(TermRef(HistSim@Unfished@Equilibrium@Biomass)[g$members])
     } else if (g$reference == 'SB0') {
       predNum <- sum(PopDynamicsHistorical@SBiomass[1, g$sources, TermInd])
-      refNum  <- sum(HistSim@Unfished@Equilibrium@SBiomass[1, g$sources, TermInd])
+      refNum  <- sum(TermRef(HistSim@Unfished@Equilibrium@SBiomass)[g$sources])
     } else {
       cli::cli_abort("Currently only accepts `Depletion@Reference = 'B0' or 'SB0'")
     }
