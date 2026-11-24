@@ -45,8 +45,10 @@ CalcUnfishedSurvival <- function(OM, SP = FALSE, Years = NULL, silent = FALSE, E
 .CalcUnfishedSurvivalStock <- function(Stock, SP = FALSE, Years = NULL, Extend = TRUE) {
   
   NaturalMortality <- Stock@NaturalMortality@MeanAtAge |>
-    Extend(nSim=Stock@nSim, AgeClasses=Stock@Ages@Classes, Years = Years) |>
-    .ArraySubsetYear(Years)
+    Extend(nSim=Stock@nSim, AgeClasses=Stock@Ages@Classes) |>
+    .SubsetYearIfAny(Years)
+
+  Semelparous <- .SubsetYearIfAny(Stock@Maturity@Semelparous, Years)
   
   PlusGroup <- Stock@Ages@PlusGroup
   SpawnTimeFrac <- ifelse(SP, Stock@SRR@SpawnTimeFrac, 0)
@@ -55,7 +57,7 @@ CalcUnfishedSurvival <- function(OM, SP = FALSE, Years = NULL, silent = FALSE, E
                            FishingMortality=NULL, 
                            PlusGroup=Stock@Ages@PlusGroup,
                            SpawnTimeFrac=ifelse(SP, Stock@SRR@SpawnTimeFrac, 0),
-                           Semelparous=Stock@Maturity@Semelparous)
+                           Semelparous=Semelparous)
   
 
   if (Extend) {
