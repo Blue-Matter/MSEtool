@@ -76,7 +76,8 @@ PopulateSelectivity <- function(Selectivity,
                                 force = FALSE) {
   
   argList <- list(
-    Ages, Length, Weight, Years, nArea, nSim, CalcAtLength, seed
+    Ages, Length, Weight, Years, nArea, nSim, CalcAtLength, seed,
+    if (.IsRelativePars(Selectivity)) Maturity # relative Pars scaled by maturity L50
   )
   
   nSim  <- .GetNSim(Selectivity, nSim)
@@ -87,6 +88,9 @@ PopulateSelectivity <- function(Selectivity,
 
   if (.CheckDigest(Selectivity, argList) & !force) return(Selectivity)
   
+  Selectivity <- .ResetDerived(Selectivity)
+  Input <- Selectivity
+
   .CheckInputs(Selectivity)
   .CheckSimsNotIncreased(Selectivity, nSim)
   Selectivity@MeanAtAge <- .NameAtAge(Selectivity@MeanAtAge, Ages, Years, nArea, cl = 'selectivity')
@@ -178,7 +182,7 @@ PopulateSelectivity <- function(Selectivity,
   Selectivity <- .AddAtWeightDimnames(Selectivity, Years)
 
   
-  .SetDigest(.CheckOutput(.SetAgeDimnames(Selectivity, Ages), nSim, Ages, Years, nArea), argList)
+  .FinishPopulate(.CheckOutput(.SetAgeDimnames(Selectivity, Ages), nSim, Ages, Years, nArea), Input, argList)
 }
 
 .RelLengthPars <- c('L5', 'LFS', 'SL50', 'SL50_95', 'SL',
@@ -202,8 +206,15 @@ PopulateSelectivity <- function(Selectivity,
   .CheckRequiredObject(Maturity, "maturity", "Maturity")
   Maturity <- PopulateMaturity(Maturity, Ages, Length, Weight, Years, nSim)
   .CheckDependency(Maturity, "MeanAtAge", "Maturity", what)
+  # maturity supplied at age only: L50 from maturity-at-length via the ALK
+  if (is.null(Maturity@Pars$L50) && is.null(Maturity@MeanAtLength) &&
+      !is.null(Length) && !is.null(Length@ALK))
+    Maturity <- .MeanAtAge2MeanAtLength(Maturity, Length)
   L50 <- .FindL50(Maturity)
 
+  # sampled relative values, restored by .ResetDerived() to re-scale when
+  # maturity changes
+  object@Misc$Restore$Pars <- object@Pars
   for (p in RelPars) {
     L50p <- if (!is.null(dimnames(object@Pars[[p]])$Area)) AddDimension(L50, 'Area') else L50
     object@Pars[[p]] <- ArrayMultiply(object@Pars[[p]], L50p)

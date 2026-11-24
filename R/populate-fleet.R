@@ -205,7 +205,8 @@ PopulateFleet <- function(Fleet,
     CurrentYear = Stock@CurrentYear,
     Seasons = Stock@Seasons
   )
-  list(Stock@Ages, Stock@Length, Stock@Weight, Stock@Spatial@RelativeSize, Stock@nSim, Years, seed)
+  # maturity: relative (`isRel`) selectivity and retention Pars are scaled by maturity L50
+  list(Stock@Ages, Stock@Length, Stock@Weight, Stock@Maturity, Stock@Spatial@RelativeSize, Stock@nSim, Years, seed)
 }
 
 

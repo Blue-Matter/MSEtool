@@ -75,15 +75,19 @@ PopulateRetention <- function(Retention,
                               replace = FALSE,
                               ASKOverride = NULL) {
 
-  argList <- list(Ages, Length, Years, nSim, CalcAtLength, seed, Selectivity)
+  argList <- list(Ages, Length, Years, nSim, CalcAtLength, seed, Selectivity,
+                  if (.IsRelativePars(Retention)) Maturity) # relative Pars scaled by maturity L50
   
   Ages  <- DefaultAges(Ages)
   Years <- DefaultYears(Years)
   nSim  <- .GetNSim(Retention, nSim)
   
-  if (.CheckDigest(Retention, argList) & !force) 
+  if (.CheckDigest(Retention, argList) & !force)
     return(Retention)
-  
+
+  Retention <- .ResetDerived(Retention)
+  Input <- Retention
+
   # Default: fully retained if object is empty
   if (EmptyObject(Retention)) {
     Retention@MeanAtAge <- array(1, dim = c(1, length(Ages@Classes), 1, 1))
@@ -103,7 +107,7 @@ PopulateRetention <- function(Retention,
       Area = 1
     )
     
-    return(.SetDigest(.CheckOutput(Retention, nSim, Ages, Years, nArea), argList))
+    return(.FinishPopulate(.CheckOutput(Retention, nSim, Ages, Years, nArea), Input, argList))
   }
   
   .CheckInputs(Retention)
@@ -185,7 +189,7 @@ PopulateRetention <- function(Retention,
   Retention <- .AddAtLengthDimnames(Retention, Years)
   Retention <- .AddAtWeightDimnames(Retention, Years)
   
-  .SetDigest(.CheckOutput(.SetAgeDimnames(Retention, Ages), nSim, Ages, Years, nArea), argList)
+  .FinishPopulate(.CheckOutput(.SetAgeDimnames(Retention, Ages), nSim, Ages, Years, nArea), Input, argList)
 }
 
 # schedule supplied only at age or at weight: no Pars, Model, or at-length values

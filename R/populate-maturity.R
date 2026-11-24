@@ -77,6 +77,9 @@ PopulateMaturity <- function(Maturity,
   if (.CheckDigest(Maturity, argList) & !force) 
     return(Maturity)
   
+  Maturity <- .ResetDerived(Maturity)
+  Input <- Maturity
+
   .CheckInputs(Maturity)
   .CheckSimsNotIncreased(Maturity, nSim)
   Maturity@MeanAtAge <- .NameAtAge(Maturity@MeanAtAge, Ages, Years, cl = 'maturity')
@@ -137,7 +140,7 @@ PopulateMaturity <- function(Maturity,
   if (inherits(Maturity@Semelparous, "array")) {
     
   } else {
-    if (Maturity@Semelparous) {
+    if (isTRUE(as.logical(Maturity@Semelparous))) {
       Maturity@Semelparous <- Maturity@MeanAtAge
     } else {
       Maturity@Semelparous <- Maturity@MeanAtAge
@@ -154,5 +157,5 @@ PopulateMaturity <- function(Maturity,
     )
   }
   
-  .SetDigest(.CheckOutput(.SetAgeDimnames(Maturity, Ages), nSim, Ages, Years), argList)
+  .FinishPopulate(.CheckOutput(.SetAgeDimnames(Maturity, Ages), nSim, Ages, Years), Input, argList)
 }

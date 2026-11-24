@@ -66,9 +66,12 @@ PopulateDiscardMortality <- function(DiscardMortality,
   Years <- DefaultYears(Years)
   nSim  <- .GetNSim(DiscardMortality, nSim)
   
-  if (.CheckDigest(DiscardMortality, argList) & !force) 
+  if (.CheckDigest(DiscardMortality, argList) & !force)
     return(DiscardMortality)
-  
+
+  DiscardMortality <- .ResetDerived(DiscardMortality)
+  Input <- DiscardMortality
+
   # Default: no discard mortality if object is empty
   if (EmptyObject(DiscardMortality)) {
     DiscardMortality@MeanAtAge <- array(0, dim = c(1, length(Ages@Classes), 1, 1)) 
@@ -87,7 +90,7 @@ PopulateDiscardMortality <- function(DiscardMortality,
       Year = Years[1],
       Area = 1
     )
-    return(.SetDigest(.CheckOutput(DiscardMortality, nSim, Ages, Years, nArea), argList))
+    return(.FinishPopulate(.CheckOutput(DiscardMortality, nSim, Ages, Years, nArea), Input, argList))
   }
   
   .CheckInputs(DiscardMortality)
@@ -134,5 +137,5 @@ PopulateDiscardMortality <- function(DiscardMortality,
   DiscardMortality <- .AddAtAgeDimnames(DiscardMortality, Ages, Years)
   DiscardMortality <- .AddAtLengthDimnames(DiscardMortality, Years)
   
-  .SetDigest(.CheckOutput(.SetAgeDimnames(DiscardMortality, Ages), nSim, Ages, Years, nArea), argList)
+  .FinishPopulate(.CheckOutput(.SetAgeDimnames(DiscardMortality, Ages), nSim, Ages, Years, nArea), Input, argList)
 }
