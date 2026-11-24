@@ -48,7 +48,7 @@ ImportSSData <- function(SSDir,
   # TODO: Data@Agency, @Author, @Email, @Region, @Latitude, @Longitude
   #       Data@LifeHistory, Data@Exploitation
   
-  Data@Years   <- YearsList$YearsHist
+  Data@Years   <- .GetSSDataYears(replist, YearsList)
   Data@YearLH  <- YearsList$CurrentYear
   Data@Seasons <- YearsList$Seasons
   Data@nArea   <- 1
@@ -238,12 +238,34 @@ ImportSSData <- function(SSDir,
   cv
 }
 
+# Time steps of the SS3 data: the historical time steps, extended past endyr
+# through the last year with a finite index or composition observation (SS3
+# reports observations in forecast years with Use = -1). `YearLH` stays at
+# endyr, so these years are observed data for the projection period; the
+# projection uses them in place of simulated data (see `.OMDataRow()`).
+# Catch is not extended: SS3 reports forecast catch in `timeseries`, not as
+# observations.
+.GetSSDataYears <- function(replist, YearsList) {
+  YearsHist <- YearsList$YearsHist
+  ObsYr <- purrr::map(c('cpue', 'agebase', 'lendbase'), \(tb) {
+    x <- replist[[tb]]
+    if (!is.data.frame(x) || !all(c('Yr', 'Obs') %in% names(x))) return(NULL)
+    x$Yr[is.finite(x$Obs)]
+  }) |> unlist()
+  ObsYr <- ObsYr[is.finite(ObsYr)]
+  if (!length(ObsYr) || max(ObsYr) <= YearsList$CurrentYear)
+    return(YearsHist)
+  nExtra <- max(ObsYr) - YearsList$CurrentYear
+  c(YearsHist, CalcYears(YearsList$nYear, nExtra, YearsList$CurrentYear,
+                         YearsList$Seasons, "Projection"))
+}
+
 .ImportSSDataIndex <- function(replist, Type = c("CPUE", "Survey"), FleetNames = NULL) {
   Type <- match.arg(Type, c("CPUE", "Survey"))
   
   YearsList <- .GetSSYears(replist, pYear = 1)
-  YearsHist <- YearsList$YearsHist
-  nTS <- length(YearsHist)
+  DataYears <- .GetSSDataYears(replist, YearsList)
+  nTS <- length(DataYears)
   
   Indices <- new("indicesdata")
   CPUE <- replist$cpue
@@ -263,7 +285,12 @@ ImportSSData <- function(SSDir,
   }
   
   CPUE <- CPUE |> dplyr::filter(Fleet %in% IndFleets)
-  
+
+  # drop observations outside the data time steps (e.g. before startyr, or
+  # a non-finite observation after endyr)
+  TSInd <- match(CPUE$Yr, DataYears) + CPUE$Seas - 1
+  CPUE  <- CPUE[!is.na(TSInd) & TSInd >= 1 & TSInd <= nTS, , drop = FALSE]
+
   if (!nrow(CPUE)) {
     return(Indices)
   }
@@ -290,8 +317,8 @@ ImportSSData <- function(SSDir,
   nIndex <- length(CPUENames)
   
   Value <- purrr::imap(CPUE_Split, \(cpue, idx) {
-    ind <- match(cpue$Yr, YearsHist) + cpue$Seas - 1
-    Years <- YearsHist[ind]
+    ind <- match(cpue$Yr, DataYears) + cpue$Seas - 1
+    Years <- DataYears[ind]
     index <- array(ifelse(.SSSuperPeriodDummy(cpue), NA_real_, cpue$Obs), c(length(Years), 1),
                    dimnames = list(
                      Year = Years,
@@ -302,8 +329,8 @@ ImportSSData <- function(SSDir,
   })
   
   CV <- purrr::imap(CPUE_Split, \(cpue, idx) {
-    ind <- match(cpue$Yr, YearsHist) + cpue$Seas - 1
-    Years <- YearsHist[ind]
+    ind <- match(cpue$Yr, DataYears) + cpue$Seas - 1
+    Years <- DataYears[ind]
     index <- array(.SSIndexCV(cpue, replist), c(length(Years), 1),
                    dimnames = list(
                      Year = Years,
@@ -316,7 +343,7 @@ ImportSSData <- function(SSDir,
   Indices@Value <- Indices@CV <- array(NA,
                                        dim = c(nTS, nIndex),
                                        dimnames = list(
-                                         Year = YearsHist,
+                                         Year = DataYears,
                                          Fleet = as.character(CPUENames)
                                        )
   )
@@ -371,8 +398,8 @@ ImportSSData <- function(SSDir,
 .ImportSSDataAtAge <- function(replist, silent = FALSE, FleetNames = NULL) {
 
   YearsList     <- .GetSSYears(replist, pYear = 1)
-  YearsHist     <- YearsList$YearsHist
-  nTS           <- length(YearsHist)
+  DataYears     <- .GetSSDataYears(replist, YearsList)
+  nTS           <- length(DataYears)
   FishFleets    <- .SSFishFleets(replist)$SS
   FleetNames    <- FleetNames %||% .SSFishFleets(replist)$SSName
   nFleet        <- length(FishFleets)
@@ -395,14 +422,14 @@ ImportSSData <- function(SSDir,
       NA_real_,
       nrow     = nTS,
       ncol     = nAge,
-      dimnames = list(Year = YearsHist, Age = AgeClasses)
+      dimnames = list(Year = DataYears, Age = AgeClasses)
     )
     if (!nrow(df)) return(mat)
 
     agg <- df |>
       dplyr::summarise(Count = sum(Count), .by = c(Yr, Seas, Bin))
 
-    yr_ind <- match(agg$Yr, YearsHist) + agg$Seas - 1
+    yr_ind <- match(agg$Yr, DataYears) + agg$Seas - 1
     yr_ind[!is.na(yr_ind) & (yr_ind < 1 | yr_ind > nTS)] <- NA
 
     age_ind <- match(agg$Bin, AgeClasses)
@@ -417,7 +444,7 @@ ImportSSData <- function(SSDir,
     NA_real_,
     dim      = c(nTS, nFleet, nAge),
     dimnames = list(
-      Year   = YearsHist,
+      Year   = DataYears,
       Fleet  = FleetNames,
       Age    = AgeClasses
     )
@@ -427,7 +454,7 @@ ImportSSData <- function(SSDir,
     fleet_idx <- FishFleets[fl]
 
     fleet_db <- AgeDB |>
-      dplyr::filter(Fleet == fleet_idx, Yr %in% YearsHist)
+      dplyr::filter(Fleet == fleet_idx, Yr %in% DataYears)
 
     if (!nrow(fleet_db)) next
 
@@ -466,8 +493,8 @@ ImportSSData <- function(SSDir,
 .ImportSSDataAtSize <- function(replist, silent = FALSE, LengthUnits = "cm", FleetNames = NULL) {
   
   YearsList     <- .GetSSYears(replist, pYear = 1)
-  YearsHist     <- YearsList$YearsHist
-  nTS           <- length(YearsHist)
+  DataYears     <- .GetSSDataYears(replist, YearsList)
+  nTS           <- length(DataYears)
   FishFleets    <- .SSFishFleets(replist)$SS
   FleetNames    <- FleetNames %||% .SSFishFleets(replist)$SSName
   nFleet        <- length(FishFleets)
@@ -491,14 +518,14 @@ ImportSSData <- function(SSDir,
       NA_real_,
       nrow     = nTS,
       ncol     = nLength,
-      dimnames = list(Year = YearsHist, Class = LengthClasses)
+      dimnames = list(Year = DataYears, Class = LengthClasses)
     )
     if (!nrow(df)) return(mat)
 
     agg <- df |>
       dplyr::summarise(Count = sum(Count), .by = c(Yr, Seas, BinMid))
 
-    yr_ind <- match(agg$Yr, YearsHist) + agg$Seas - 1
+    yr_ind <- match(agg$Yr, DataYears) + agg$Seas - 1
     yr_ind[!is.na(yr_ind) & (yr_ind < 1 | yr_ind > nTS)] <- NA
 
     bin_ind <- findInterval(agg$BinMid, LengthClasses)
@@ -514,7 +541,7 @@ ImportSSData <- function(SSDir,
     NA_real_,
     dim      = c(nTS, nFleet, nLength),
     dimnames = list(
-      Year   = YearsHist,
+      Year   = DataYears,
       Fleet  = FleetNames,
       Class = LengthClasses
     )
@@ -524,7 +551,7 @@ ImportSSData <- function(SSDir,
     fleet_idx <- FishFleets[fl]
     
     fleet_db <- LenDB |>
-      dplyr::filter(Fleet == fleet_idx, Yr %in% YearsHist)
+      dplyr::filter(Fleet == fleet_idx, Yr %in% DataYears)
     
     if (!nrow(fleet_db)) next
     
