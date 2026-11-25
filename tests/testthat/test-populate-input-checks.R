@@ -207,7 +207,7 @@ test_that("unnamed arrays are read by position with one simulation and the first
   o@Fleet[[1]][[1]]@Selectivity@MeanAtAge <- array(1, nA)
   o@Obs[[1]][[1]]@Survey@Selectivity <- array(1, nA)
   o@Fleet[[1]][[1]]@Effort@Effort <- array(1, nH)
-  o@Fleet[[1]][[1]]@Effort@Distribution <- array(0.5, 2)
+  o@Fleet[[1]][[1]]@Effort@Distribution <- array(c(1, 0), 2)
   o@Fleet[[1]][[1]]@Closure <- array(c(1, 0), 2)
   o@Obs[[1]][[1]]@Landings@Error <- array(1, nH + OM@pYear)
   expect_no_error(Simulate(o, silent = TRUE))
