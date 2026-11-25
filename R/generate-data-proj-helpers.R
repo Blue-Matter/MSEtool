@@ -42,7 +42,13 @@
 # row of `OM@Data` `slotname@what` for calendar year `DataYear`; NA if absent
 .OMDataRow <- function(omData, slotname, DataYear, what = "Value") {
   if (is.null(omData)) return(NA_integer_)
-  arr <- slot(slot(omData, slotname), what)
+  .ObjectYearRow(slot(omData, slotname), DataYear, what)
+}
+
+# row of `object@what` for calendar year `DataYear`; NA if absent
+.ObjectYearRow <- function(object, DataYear, what = "Value") {
+  if (is.null(object) || is.list(object)) return(NA_integer_)
+  arr <- slot(object, what)
   if (is.null(arr) || is.null(dimnames(arr)[[1]])) return(NA_integer_)
   match(round(DataYear, 6), round(as.numeric(dimnames(arr)[[1]]), 6))
 }

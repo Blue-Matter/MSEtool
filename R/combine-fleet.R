@@ -445,40 +445,45 @@ CombineFleets <- function(OM, FleetList = NULL, silent = FALSE) {
   type <- match.arg(type)
 
   for (st in seq_along(OM@Data)) {
-    data <- slot(OM@Data[[st]], type)
+    Elements <- .SlotElements(slot(OM@Data[[st]], type), "")
+    for (el in names(Elements)) {
+      data <- Elements[[el]]
 
-    if (is.null(data@Value)) next
+      if (is.null(data@Value)) next
 
-    drop_ind <- integer(0)
+      drop_ind <- integer(0)
 
-    for (fl in seq_along(FleetList)) {
-      combine_fleets <- FleetList[[fl]]
-      new_name <- names(FleetList)[fl]
+      for (fl in seq_along(FleetList)) {
+        combine_fleets <- FleetList[[fl]]
+        new_name <- names(FleetList)[fl]
 
-      ind <- match(combine_fleets, data@Name)
-      if (all(is.na(ind))) next
+        ind <- match(combine_fleets, data@Name)
+        if (all(is.na(ind))) next
 
-      if (anyNA(ind)) {
-        OM <- .LogCombineFleetsDrop(OM, st, type, new_name,
-                                    .MissingFleetsReason(combine_fleets[is.na(ind)]), silent)
-        drop_ind <- c(drop_ind, ind[!is.na(ind)])
-        next
+        if (anyNA(ind)) {
+          OM <- .LogCombineFleetsDrop(OM, st, type, new_name,
+                                      .MissingFleetsReason(combine_fleets[is.na(ind)]), silent)
+          drop_ind <- c(drop_ind, ind[!is.na(ind)])
+          next
+        }
+
+        data@Value[,ind[1],] <- .SumCompOrNA(data@Value[,ind,, drop=FALSE])
+
+        dimnames(data@Value)$Fleet[ind[1]] <- new_name
+        data@Name[ind[1]] <- new_name
+        drop_ind <- c(drop_ind, ind[-1])
+      }
+      # drop fleet columns
+      if (length(drop_ind)) {
+        drop_ind   <- sort(unique(drop_ind))
+        data@Value <- data@Value[,-drop_ind,, drop=FALSE]
+        data@Name  <- data@Name[-drop_ind]
       }
 
-      data@Value[,ind[1],] <- .SumCompOrNA(data@Value[,ind,, drop=FALSE])
-
-      dimnames(data@Value)$Fleet[ind[1]] <- new_name
-      data@Name[ind[1]] <- new_name
-      drop_ind <- c(drop_ind, ind[-1])
+      data@Joint <- .CombineFleetsJoint(data@Joint, FleetList, data@Name)
+      Elements[[el]] <- data
     }
-    # drop fleet columns
-    if (length(drop_ind)) {
-      drop_ind   <- sort(unique(drop_ind))
-      data@Value <- data@Value[,-drop_ind,, drop=FALSE]
-      data@Name  <- data@Name[-drop_ind]
-    }
-
-    slot(OM@Data[[st]], type) <- data
+    slot(OM@Data[[st]], type) <- if (is.list(slot(OM@Data[[st]], type))) Elements else Elements[[1]]
   }
   OM
 }
@@ -489,58 +494,71 @@ CombineFleets <- function(OM, FleetList = NULL, silent = FALSE) {
   type <- match.arg(type)
 
   for (st in seq_along(OM@Data)) {
-    data <- slot(OM@Data[[st]], type)
+    Elements <- .SlotElements(slot(OM@Data[[st]], type), "")
+    for (el in names(Elements)) {
+      data <- Elements[[el]]
 
-    if (is.null(data@Value)) next
+      if (is.null(data@Value)) next
 
-    drop_ind <- integer(0)
+      drop_ind <- integer(0)
 
-    for (fl in seq_along(FleetList)) {
-      combine_fleets <- FleetList[[fl]]
-      new_name <- names(FleetList)[fl]
+      for (fl in seq_along(FleetList)) {
+        combine_fleets <- FleetList[[fl]]
+        new_name <- names(FleetList)[fl]
 
-      ind <- match(combine_fleets, data@Name)
-      if (all(is.na(ind))) next
+        ind <- match(combine_fleets, data@Name)
+        if (all(is.na(ind))) next
 
-      if (anyNA(ind)) {
-        OM <- .LogCombineFleetsDrop(OM, st, type, new_name,
-                                    .MissingFleetsReason(combine_fleets[is.na(ind)]), silent)
-        drop_ind <- c(drop_ind, ind[!is.na(ind)])
-        next
+        if (anyNA(ind)) {
+          OM <- .LogCombineFleetsDrop(OM, st, type, new_name,
+                                      .MissingFleetsReason(combine_fleets[is.na(ind)]), silent)
+          drop_ind <- c(drop_ind, ind[!is.na(ind)])
+          next
+        }
+
+        classes_ind <- purrr::map(ind, \(i) .CompdataClasses(data, i))
+        same_bins   <- length(classes_ind) < 2 ||
+          all(purrr::map_lgl(classes_ind[-1], \(cl) isTRUE(all.equal(cl, classes_ind[[1]]))))
+
+        if (same_bins) {
+          nC <- length(classes_ind[[1]])
+          data@Value[,ind[1], seq_len(nC)] <- .SumCompOrNA(data@Value[,ind, seq_len(nC), drop=FALSE])
+          dimnames(data@Value)$Fleet[ind[1]] <- new_name
+          data@Name[ind[1]] <- new_name
+          if (is.list(data@Classes))
+            names(data@Classes)[ind[1]] <- new_name
+          drop_ind <- c(drop_ind, ind[-1])
+        } else {
+          OM <- .LogCombineFleetsDrop(OM, st, type, new_name,
+                                      cli::format_inline("fleets {.val {combine_fleets}} use different size-class bins."),
+                                      silent)
+          # drop all fleets in this group - no combined column is created
+          drop_ind <- c(drop_ind, ind)
+        }
       }
-
-      classes_ind <- purrr::map(ind, \(i) .CompdataClasses(data, i))
-      same_bins   <- length(classes_ind) < 2 ||
-        all(purrr::map_lgl(classes_ind[-1], \(cl) isTRUE(all.equal(cl, classes_ind[[1]]))))
-
-      if (same_bins) {
-        nC <- length(classes_ind[[1]])
-        data@Value[,ind[1], seq_len(nC)] <- .SumCompOrNA(data@Value[,ind, seq_len(nC), drop=FALSE])
-        dimnames(data@Value)$Fleet[ind[1]] <- new_name
-        data@Name[ind[1]] <- new_name
+      # drop fleet columns
+      if (length(drop_ind)) {
+        drop_ind     <- sort(unique(drop_ind))
+        data@Value   <- data@Value[,-drop_ind,, drop=FALSE]
+        data@Name    <- data@Name[-drop_ind]
         if (is.list(data@Classes))
-          names(data@Classes)[ind[1]] <- new_name
-        drop_ind <- c(drop_ind, ind[-1])
-      } else {
-        OM <- .LogCombineFleetsDrop(OM, st, type, new_name,
-                                    cli::format_inline("fleets {.val {combine_fleets}} use different size-class bins."),
-                                    silent)
-        # drop all fleets in this group - no combined column is created
-        drop_ind <- c(drop_ind, ind)
+          data@Classes <- data@Classes[-drop_ind]
       }
-    }
-    # drop fleet columns
-    if (length(drop_ind)) {
-      drop_ind     <- sort(unique(drop_ind))
-      data@Value   <- data@Value[,-drop_ind,, drop=FALSE]
-      data@Name    <- data@Name[-drop_ind]
-      if (is.list(data@Classes))
-        data@Classes <- data@Classes[-drop_ind]
-    }
 
-    slot(OM@Data[[st]], type) <- data
+      data@Joint <- .CombineFleetsJoint(data@Joint, FleetList, data@Name)
+      Elements[[el]] <- data
+    }
+    slot(OM@Data[[st]], type) <- if (is.list(slot(OM@Data[[st]], type))) Elements else Elements[[1]]
   }
   OM
+}
+
+# Joint flags of a composition after fleets are combined: a combined fleet is Joint if any of its fleets was
+.CombineFleetsJoint <- function(Joint, FleetList, Names) {
+  if (!length(Joint)) return(Joint)
+  for (nm in names(FleetList))
+    if (any(Joint[FleetList[[nm]]] %in% TRUE)) Joint[nm] <- TRUE
+  Joint[names(Joint) %in% Names]
 }
 
 .CombineFleetsData <- function(OM, FleetList, silent=FALSE) {

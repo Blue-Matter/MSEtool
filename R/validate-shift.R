@@ -132,7 +132,7 @@ PlotCompShift <- function(Hist,
 
   # --- expected composition: true q tilted by exp(Shift), i.e. the mean of
   # the Dirichlet concentration vector actually used to draw the observed
-  # data (see .GenHistDataSizeComp() / .GenHistDataAgeComp()) ---
+  # data (see .GenHistDataComp()) ---
   ExpectedDF <- purrr::imap(TrueByFleet, \(mat, fl) {
     fl_idx    <- match(fl, FleetNames)
     CompObsFl <- slot(Hist@OM@Obs[[i]][[fl_idx]], type)

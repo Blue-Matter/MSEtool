@@ -180,12 +180,15 @@ PlotDiscardsAtSize <- function(object, byStock = NULL, byFleet = NULL, Sim = NUL
   comp     <- slot(object, what)
   isAtSize <- grepl('AtSize$', what)
   classCol <- if (isAtSize) 'Class' else 'Age'
-  fn       <- if (grepl('^Landings', what)) 'Landings' else 'Discards'
+  fn       <- sub('At(Age|Size)$', '', what)
+  byStock  <- is.list(comp)
+  HasValue <- any(vapply(.SlotElements(comp, ""), \(cd)
+    !EmptyObject(cd) && any(!is.na(cd@Value) & cd@Value > 0), logical(1)))
 
   # all-NA or all-zero compositions have no proportions to plot
-  if (EmptyObject(comp) || !any(!is.na(comp@Value) & comp@Value > 0)) {
+  if (.EmptySlot(comp) || !HasValue) {
     if (!silent) {
-      if (EmptyObject(comp))
+      if (.EmptySlot(comp))
         cli::cli_alert_info("No {.field {what}} data found in this `data` object; nothing to plot.")
       else
         cli::cli_alert_info("Every {.field {what}} value is zero or missing; nothing to plot.")
@@ -198,7 +201,7 @@ PlotDiscardsAtSize <- function(object, byStock = NULL, byFleet = NULL, Sim = NUL
 
   byFleetRes  <- if (is.null(byFleet)) nFleet(object) > 1 else byFleet
   extract <- function(byFleet) {
-    extractArgs <- list(object = object, byFleet = byFleet)
+    extractArgs <- list(object, byFleet = byFleet, byStock = byStock)
     extractArgs[[if (isAtSize) 'bySize' else 'byAge']] <- TRUE
     do.call(fn, extractArgs)
   }
@@ -210,7 +213,7 @@ PlotDiscardsAtSize <- function(object, byStock = NULL, byFleet = NULL, Sim = NUL
     })
   } else extract(byFleetRes)
 
-  propGroupVars <- intersect(c('Fleet', 'Year'), colnames(df))
+  propGroupVars <- intersect(c('Stock', 'Fleet', 'Year'), colnames(df))
   df <- df |>
     dplyr::group_by(dplyr::across(dplyr::all_of(propGroupVars))) |>
     dplyr::mutate(Proportion = .data$Value / sum(.data$Value, na.rm = TRUE)) |>
@@ -218,7 +221,7 @@ PlotDiscardsAtSize <- function(object, byStock = NULL, byFleet = NULL, Sim = NUL
     # years (per fleet) with no catch sampled have no proportions
     dplyr::filter(is.finite(.data$Proportion))
 
-  units <- unique(stats::na.omit(comp@Units))
+  units <- unique(stats::na.omit(unlist(lapply(.SlotElements(comp, ""), \(cd) cd@Units))))
   if (length(units) == 1) ylab <- .AppendUnits(ylab, units)
   title <- paste(fn, if (isAtSize) 'at Size' else 'at Age')
 

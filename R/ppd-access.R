@@ -49,7 +49,8 @@ PPD <- function(MSE) {
 
 
 .PPDObsSlots <- c('Effort', 'Landings', 'Discards', 'CPUE', 'Survey',
-                  'LandingsAtAge', 'DiscardsAtAge', 'LandingsAtSize', 'DiscardsAtSize')
+                  'LandingsAtAge', 'DiscardsAtAge', 'LandingsAtSize', 'DiscardsAtSize',
+                  'SurveyAtAge', 'SurveyAtSize')
 
 # observation rows after max(Data@Years) are forward-filled copies, not observed data
 .DropPaddedPPDYears <- function(PPDList) {
@@ -64,8 +65,7 @@ PPD <- function(MSE) {
   if (!methods::is(Data, 'data') || !length(Data@Years))
     return(Data)
   LastYear <- max(Data@Years)
-  for (sl in .PPDObsSlots) {
-    obj <- methods::slot(Data, sl)
+  DropPadded <- function(obj) {
     for (s in methods::slotNames(obj)) {
       val <- methods::slot(obj, s)
       if (!is.array(val)) next
@@ -77,7 +77,11 @@ PPD <- function(MSE) {
       methods::slot(obj, s) <- do.call(`[`, c(list(val), .MakeDimIndex(idx, val, TSind),
                                              list(drop = FALSE)))
     }
-    methods::slot(Data, sl) <- obj
+    obj
+  }
+  for (sl in .PPDObsSlots) {
+    obj <- methods::slot(Data, sl)
+    methods::slot(Data, sl) <- if (is.list(obj)) lapply(obj, DropPadded) else DropPadded(obj)
   }
   Data
 }

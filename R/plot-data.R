@@ -157,6 +157,7 @@ PlotSurvey <- function(object, byFleet = NULL, Season = NULL, units = TRUE,
 PlotData <- function(object, byFleet = NULL, AggregateYear = NULL, Season = NULL, units = TRUE,
                      showDiscards = FALSE, IncCV = TRUE, IncComp = TRUE) {
   .CheckClass(object, 'data', 'object')
+  object <- .CombineDataSeries(object)
 
   # aggregate once here so the seasonal notes print once, not once per panel;
   # panels then get the resolved per-index seasons
@@ -194,7 +195,8 @@ PlotData <- function(object, byFleet = NULL, AggregateYear = NULL, Season = NULL
   compPanels <- list()
   if (isTRUE(IncComp)) {
     compSpecs  <- c(LandingsAtAge = 'Age', DiscardsAtAge = 'Age',
-                    LandingsAtSize = 'Size Class', DiscardsAtSize = 'Size Class')
+                    LandingsAtSize = 'Size Class', DiscardsAtSize = 'Size Class',
+                    SurveyAtAge = 'Age', SurveyAtSize = 'Size Class')
     compPanels <- purrr::imap(compSpecs, \(ylab, what)
       .PlotDataCompBubble(object, what, ylab, byFleet = byFleet, AggregateYear = FALSE,
                           silent = TRUE, gridFallback = TRUE)) |>
@@ -249,6 +251,7 @@ setMethod('plot', 'data', function(x, y, ...) {
 .PlotDataTs <- function(object, slot_name, ylab, byFleet = NULL,
                          AggregateYear = NULL, Season = NULL, units = FALSE,
                          silent = FALSE, colors = NULL, IncCV = TRUE) {
+  object  <- .CombineDataSeries(object)
   isIndex <- slot_name %in% .IndexSlots
   # indices are never summed: different indices have different scales/units
   if (isIndex && isFALSE(byFleet)) byFleet <- NULL
@@ -291,6 +294,7 @@ setMethod('plot', 'data', function(x, y, ...) {
 
 .PlotDataRemovals <- function(object, byFleet = NULL, AggregateYear = NULL,
                                units = TRUE, silent = FALSE, IncCV = TRUE) {
+  object <- .CombineDataSeries(object)
   object <- .SeasonalPlotData(object, AggregateYear, silent = silent ||
                                 (is.null(object@Landings@Value) && is.null(object@Discards@Value)),
                               sources = character(0))$object

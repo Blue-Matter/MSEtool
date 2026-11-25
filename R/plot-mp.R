@@ -334,7 +334,7 @@
     data.frame(From = CalibYrs[1], To = CalibYrs[2], Value = Calc$RefCatch, Label = 'Reference')
   }
   p3 <- .PlotTACPanel(CatchDF, AdviceYear, Calc$PrevTAC, Calc$TrialTAC, Calc$TAC,
-                      ylab = .CatchLabel(Calc$TACType, Calc$Data@Landings@Units),
+                      ylab = .CatchLabel(Calc$TACType, Landings(Calc$Data)@Units),
                       Shade = CalibYrs, Ref = RefDF) +
     ggplot2::scale_colour_manual(values = 'grey20') +
     ggplot2::scale_linetype_manual(values = 'solid') +

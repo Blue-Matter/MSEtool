@@ -75,7 +75,7 @@
                                          Observed))
   }
   names(SimDataList) <- seq_len(nSim)
-  
+
   # Check if all `nSim` data objects are identical and if so, only return sim 1
   identical <- rep(TRUE, nSim)
   if (nSim>1) {
@@ -89,55 +89,41 @@
   } else {
     Hist@Data <- SimDataList
   }
-  
-  # update Index Obs 
-  Survey_Efficiency <- purrr::map(SimDataList, \(DataList) {
-    purrr::map(DataList, \(Data) {
-      purrr::map(Data@Survey@Misc$IndexObs, \(fl) {
-        fl@Efficiency
-      })    
-    }) 
-  }) |> .ReverseList() |>
-    purrr::map(.ReverseList)
-  
-  CPUE_Efficiency <- purrr::map(SimDataList, \(DataList) {
-    purrr::map(DataList, \(Data) {
-      purrr::map(Data@CPUE@Misc$IndexObs, \(fl) {
-        fl@Efficiency
-      })    
-    }) 
-  }) |> .ReverseList() |>
-    purrr::map(.ReverseList)
 
-
-  for (i in seq_along(SimDataList)) {
-    for (st in seq_along(SimDataList[[i]])) {
-      # Survey
-      IndexObs <- SimDataList[[i]][[st]]@Survey@Misc$IndexObs
-      if (!is.null(IndexObs)) {
-        for (fl in seq_along(IndexObs)) {
-          fl_ind <- names(IndexObs)[fl]
-          Hist@OM@Obs[[st]][[fl_ind]]@Survey <- IndexObs[[fl]]
-          Hist@OM@Obs[[st]][[fl_ind]]@Survey@Efficiency <- .NameSims(unlist(Survey_Efficiency[[st]][[fl]], use.names = FALSE), nSim)
+  # update Index Obs: the indicesobs used for each index, with Efficiency of every simulation
+  for (type in c('Survey', 'CPUE')) {
+    for (st in seq_along(SimDataList[[1]])) {
+      Complex  <- names(Hist@OM@Complexes)[st]
+      isList   <- is.list(slot(SimDataList[[1]][[st]], type))
+      for (el in names(.SlotElements(slot(SimDataList[[1]][[st]], type), Complex))) {
+        BySim <- purrr::map(SimDataList, \(DataList)
+          .SlotElements(slot(DataList[[st]], type), Complex)[[el]]@Misc$IndexObs)
+        if (is.null(BySim[[1]])) next
+        for (nm in names(BySim[[1]])) {
+          IndexObs <- BySim[[1]][[nm]]
+          IndexObs@Efficiency <- .NameSims(unlist(purrr::map(BySim, \(x) x[[nm]]@Efficiency),
+                                                  use.names = FALSE), nSim)
+          if (isList) {
+            Current <- slot(Hist@OM@Obs[[st]][[nm]], type)
+            if (!is.list(Current)) Current <- list()
+            Current[[el]] <- IndexObs
+            IndexObs <- Current
+          }
+          slot(Hist@OM@Obs[[st]][[nm]], type) <- IndexObs
         }
-        Hist@Data[[i]][[st]]@Survey@Misc$IndexObs <- NULL
       }
-  
-      # CPUE
-      IndexObs <- SimDataList[[i]][[st]]@CPUE@Misc$IndexObs
-      if (!is.null(IndexObs)) {
-        for (fl in seq_along(IndexObs)) {
-          fl_ind <- names(IndexObs)[fl]
-          Hist@OM@Obs[[st]][[fl_ind]]@CPUE <- IndexObs[[fl]]
-          Hist@OM@Obs[[st]][[fl_ind]]@CPUE@Efficiency <- .NameSims(unlist(CPUE_Efficiency[[st]][[fl]], use.names = FALSE), nSim)
-          
+      for (x in seq_along(Hist@Data)) {
+        Slot <- slot(Hist@Data[[x]][[st]], type)
+        if (isList) {
+          for (el in names(Slot)) Slot[[el]]@Misc$IndexObs <- NULL
+        } else {
+          Slot@Misc$IndexObs <- NULL
         }
-        Hist@Data[[i]][[st]]@CPUE@Misc$IndexObs <- NULL
+        slot(Hist@Data[[x]][[st]], type) <- Slot
       }
     }
-    
   }
-  
+
   Hist
 }
 
@@ -148,7 +134,7 @@
 #' Applies the appropriate observation bias, error, and selectivity for
 #' each data type and updates metadata such as names, years, and seasons.
 #'
-#' @param sim Integer index of the simulation 
+#' @param sim Integer index of the simulation
 #' @param Hist Operating model history object
 #' @param HistYears Numeric vector of historical years
 #' @param nArea Integer number of spatial areas
@@ -163,13 +149,13 @@
 #'   simulated historical values for effort, catch, and indices
 #'
 #' @keywords internal
-.GenerateHistoricalDataSim <- function(sim, 
-                                       Hist, 
-                                       HistYears, 
+.GenerateHistoricalDataSim <- function(sim,
+                                       Hist,
+                                       HistYears,
                                        nArea,
                                        FleetNames,
-                                       StockNames, 
-                                       silent=FALSE, 
+                                       StockNames,
+                                       silent=FALSE,
                                        id=NULL,
                                        Observed=NULL) {
 
@@ -178,69 +164,49 @@
   .SetRNG(.SeedInt(Hist@OM@Seed %||% 101, 'HistData', .GlobalSim(Hist@OM, sim)))
 
   Complexes <- Hist@OM@Complexes
-  
+
   if (!is.null(Hist@OM@Data)) {
     # real data exists
    DataList <- Hist@OM@Data
   } else {
     # make Data object for each stock complex
-    DataList <- MakeNamedList(names(Complexes), new('data'))  
+    DataList <- MakeNamedList(names(Complexes), new('data'))
   }
-  
+
   nStockData <- length(DataList)
-  
+
   for (i in seq_len(nStockData)) {
-    
+
     if (!silent) cli::cli_progress_update(id=id)
 
     stocks <- Complexes[[i]]
     Data <- DataList[[i]]
     Data@nArea <- nArea
-    
+
     nSim <- Hist@OM@nSim
     Data@LifeHistory  <- .GenHistDataLifeHistory(sim, Data, Observed$LH[[i]], StockNames[stocks], nSim)
     Data@Exploitation <- .GenHistDataExploitation(sim, Data, Observed$Ex[[i]], StockNames[stocks],
                                                   FleetNames, nSim)
-    
-    Data@Effort         <- .GenHistDataEffort(sim, Data, Hist, HistYears, i, 
+
+    Data@Effort         <- .GenHistDataEffort(sim, Data, Hist, HistYears, i,
                                               stocks, FleetNames)
 
-    Data@Landings       <- .GenHistDataCatch(sim, Data, Hist, HistYears, i,
-                                             stocks, FleetNames,
-                                             type = 'Landings')
-    
-    Data@Discards       <- .GenHistDataCatch(sim, Data, Hist, HistYears, i, 
-                                             stocks, FleetNames, 
-                                             type = 'Discards')
-    
-    Data@CPUE           <- .GenHistDataIndices(sim, Data, Hist, HistYears, i, 
-                                               stocks, StockNames, nArea,
-                                               type = 'CPUE')
-    
-    Data@Survey         <- .GenHistDataIndices(sim, Data, Hist, HistYears, i, 
-                                                stocks, StockNames, nArea, 
-                                                type = 'Survey')
-    
-    Data@LandingsAtAge  <- .GenHistDataAgeComp(sim, Data, Hist, HistYears, i,
-                                               stocks, FleetNames,
-                                               type = 'LandingsAtAge')
-    
-    Data@DiscardsAtAge  <- .GenHistDataAgeComp(sim, Data, Hist, HistYears, i,
-                                              stocks, FleetNames,
-                                              type = 'DiscardsAtAge')
-    
-    Data@LandingsAtSize <- .GenHistDataSizeComp(sim, Data, Hist, HistYears, i,
-                                               stocks, FleetNames,
-                                               type = 'LandingsAtSize')
-    
-    Data@DiscardsAtSize <- .GenHistDataSizeComp(sim, Data, Hist, HistYears, i,
-                                                stocks, FleetNames,
-                                                type = 'DiscardsAtSize')
-    
+    for (type in c('Landings', 'Discards'))
+      slot(Data, type) <- .GenHistByElement(Data, Hist, i, stocks, type, \(D, H, st)
+        .GenHistDataCatch(sim, D, H, HistYears, i, st, FleetNames, type = type))
+
+    for (type in c('CPUE', 'Survey'))
+      slot(Data, type) <- .GenHistByElement(Data, Hist, i, stocks, type, \(D, H, st)
+        .GenHistDataIndices(sim, D, H, HistYears, i, st, StockNames, nArea, type = type))
+
+    for (type in c('LandingsAtAge', 'DiscardsAtAge', 'LandingsAtSize', 'DiscardsAtSize',
+                   'SurveyAtAge', 'SurveyAtSize'))
+      slot(Data, type) <- .GenHistDataComp(sim, Data, Hist, HistYears, i, stocks, type)
+
     # Metadata
-    if (is.null(Data@Name)) 
+    if (is.null(Data@Name))
       Data@Name <- purrr::map(Hist@OM@Stock[stocks], slot, 'Name') |> unlist() |> paste(collapse='-')
-    
+
     if (is.null(Data@Years))
       Data@Years <- HistYears
 
@@ -248,17 +214,17 @@
     Data@Years <- Data@Years[Data@Years <= max(HistYears)]
     Data <- .DropDataYearsAfter(Data, max(HistYears))
 
-    if (is.null(Data@Seasons)) 
+    if (is.null(Data@Seasons))
       Data@Seasons <- Hist@OM@Seasons
-    
+
     if (is.null(Data@YearLH) || Data@YearLH > max(HistYears))
       Data@YearLH <- floor(Data@Years[length(Data@Years)])
-    
+
     # Add Pop Dyn if specified
     Data <- .AddPopDyn(Data, Hist, sim, DataOM = .ResolveDataOM(Hist@OM@Control$DataOM))
-    
+
     DataList[[i]] <- Data
   }
-  
+
   DataList
 }

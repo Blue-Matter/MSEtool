@@ -273,7 +273,7 @@ IndexRate <- function(Data,
   TAC <- .ApplyAllocation(Calc$TAC, Allocation, Calc$Data)
   .RecordIndexMP(Calc)
   Plots <- .MPPlot(plot, \() .PlotIndexMP(Calc, 'IndexRate', Data))
-  .AddPlots(Advice(TAC = TAC, TACType = TACType, TACUnit = Calc$Data@Landings@Units), Plots)
+  .AddPlots(Advice(TAC = TAC, TACType = TACType, TACUnit = Landings(Calc$Data)@Units), Plots)
 }
 class(IndexRate) <- 'mp'
 
@@ -316,7 +316,7 @@ IndexTarget <- function(Data,
   TAC <- .ApplyAllocation(Calc$TAC, Allocation, Calc$Data)
   .RecordIndexMP(Calc)
   Plots <- .MPPlot(plot, \() .PlotIndexMP(Calc, 'IndexTarget', Data))
-  .AddPlots(Advice(TAC = TAC, TACType = TACType, TACUnit = Calc$Data@Landings@Units), Plots)
+  .AddPlots(Advice(TAC = TAC, TACType = TACType, TACUnit = Landings(Calc$Data)@Units), Plots)
 }
 class(IndexTarget) <- 'mp'
 
@@ -437,9 +437,9 @@ class(IndexTarget) <- 'mp'
 #' @return Numeric vector, one value per `Data@@Years`.
 #' @keywords internal
 .AnnualCatchByType <- function(Data, TACType) {
-  Catch <- rowSums(Data@Landings@Value, na.rm = TRUE)
-  if (TACType == 'Removals' && !is.null(Data@Discards@Value))
-    Catch <- Catch + rowSums(Data@Discards@Value, na.rm = TRUE)
+  Catch <- rowSums(Landings(Data)@Value, na.rm = TRUE)
+  if (TACType == 'Removals' && !is.null(Discards(Data)@Value))
+    Catch <- Catch + rowSums(Discards(Data)@Value, na.rm = TRUE)
   Catch
 }
 
@@ -457,11 +457,11 @@ class(IndexTarget) <- 'mp'
   if (length(IndexSource) > 1)
     cli::cli_abort("{.arg IndexSource} {.val auto} cannot be combined with other sources.")
   HasData <- function(src) {
-    x <- slot(Data, src)@Value
+    x <- .CombineIndexElements(slot(Data, src))@Value
     !is.null(x) && any(is.finite(x) & x > 0)
   }
   LastYear <- function(src) {
-    x <- slot(Data, src)@Value
+    x <- .CombineIndexElements(slot(Data, src))@Value
     Years <- suppressWarnings(as.numeric(rownames(x) %||% Data@Years[seq_len(nrow(x))]))
     max(Years[apply(is.finite(x) & x > 0, 1, any)], -Inf, na.rm = TRUE)
   }
@@ -492,7 +492,7 @@ class(IndexTarget) <- 'mp'
 #' @keywords internal
 .SelectIndices <- function(Data, IndexSource, Indices) {
   Sources <- lapply(IndexSource, function(src) {
-    IndexData <- slot(Data, src)
+    IndexData <- .CombineIndexElements(slot(Data, src))
     if (is.null(IndexData@Value))
       cli::cli_abort("No index data available in {.code Data@{src}}.")
     nIndex <- ncol(IndexData@Value)
@@ -561,7 +561,7 @@ class(IndexTarget) <- 'mp'
 
   Out <- list()
   for (src in unique(Selected$Source)) {
-    BySlot <- vector('list', ncol(slot(Data, src)@Value))
+    BySlot <- vector('list', ncol(.CombineIndexElements(slot(Data, src))@Value))
     Ind <- which(Selected$Source == src)
     BySlot[Selected$Column[Ind]] <- IndexSeasons[Ind]
     Out[[src]] <- BySlot
@@ -707,7 +707,7 @@ class(IndexTarget) <- 'mp'
 .ApplyAllocation <- function(TAC, Allocation, Data) {
   if (is.null(Allocation)) return(TAC)
 
-  nFleet <- ncol(Data@Landings@Value)
+  nFleet <- ncol(Landings(Data)@Value)
   if (length(Allocation) != nFleet)
     cli::cli_abort("{.arg Allocation} must have length {.val {nFleet}} (one per fleet).")
   if (any(Allocation < 0) || !any(Allocation > 0))

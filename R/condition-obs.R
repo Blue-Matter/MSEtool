@@ -18,7 +18,7 @@
 #'
 #' @keywords internal
 .ConditionObs <- function(Hist, silent=FALSE, EstimateBeta=TRUE) {
-  
+
   HistYears <- Years(Hist,'H')
   ProjYears <- Years(Hist,'P')
   nSim <- Hist@OM@nSim
@@ -29,11 +29,11 @@
 
   FisheryDataList <- Hist@OM@Data
   nData <- length(FisheryDataList)
-  
+
   if (nData < 1) return(Hist)
-  
+
   Complexes <- Hist@OM@Complexes
-  
+
   .MsgStep("Conditioning observation error to fishery data",
            "Conditioned observation error to fishery data for {.complex {names(FisheryDataList)}}", silent)
 
@@ -46,46 +46,33 @@
     )
 
   for (i in seq_along(FisheryDataList)) {
-    
+
     nms         <- names(FisheryDataList)[i]
     stocks      <- Complexes[[i]]
     FisheryData <- FisheryDataList[[i]]
-    
+
     Hist <- .ConditionObsLifeHistory(Hist, FisheryData, HistYears, stocks, i)
     Hist <- .ConditionObsExploitation(Hist, FisheryData, HistYears, stocks, i)
 
     Hist <- .ConditionObsEffort(Hist, FisheryData, HistYears, ProjYears, stocks, i)
 
-    Hist <- .ConditionObsCatch(Hist, FisheryData, HistYears, ProjYears, stocks,
-                               i, type = 'Landings')
-    
-    Hist <- .ConditionObsCatch(Hist, FisheryData, HistYears, ProjYears, stocks, i,
-                               type = 'Discards')
-    
-    Hist <- .ConditionObsIndex(Hist, FisheryData, HistYears, ProjYears, stocks,
-                               i, type = 'CPUE', EstimateBeta = EstimateBeta,
-                               silent = silent)
+    for (type in c('Landings', 'Discards'))
+      Hist <- .ConditionByElement(Hist, FisheryData, i, stocks, type, \(H, D, st)
+        .ConditionObsCatch(H, D, HistYears, ProjYears, st, i, type = type))
 
-    Hist <- .ConditionObsIndex(Hist, FisheryData, HistYears, ProjYears,  stocks,
-                               i, type = 'Survey', EstimateBeta = EstimateBeta,
-                               silent = silent)
-    
-    Hist <- .ConditionObsComp(Hist, FisheryData, HistYears, ProjYears,  stocks, 
-                              i, type = 'LandingsAtAge')
-    
-    Hist <- .ConditionObsComp(Hist, FisheryData, HistYears, ProjYears,  stocks, 
-                              i, type = 'DiscardsAtAge')
-    
-    Hist <- .ConditionObsComp(Hist, FisheryData, HistYears, ProjYears,  stocks, 
-                              i, type = 'LandingsAtSize')
-    
-    Hist <- .ConditionObsComp(Hist, FisheryData, HistYears, ProjYears,  stocks, 
-                              i, type = 'DiscardsAtSize')
-    
+    for (type in c('CPUE', 'Survey'))
+      Hist <- .ConditionByElement(Hist, FisheryData, i, stocks, type, \(H, D, st)
+        .ConditionObsIndex(H, D, HistYears, ProjYears, st, i, type = type,
+                           EstimateBeta = EstimateBeta, silent = silent))
+
+    for (type in c('LandingsAtAge', 'DiscardsAtAge', 'LandingsAtSize', 'DiscardsAtSize',
+                   'SurveyAtAge', 'SurveyAtSize'))
+      Hist <- .ConditionObsComp(Hist, FisheryData, HistYears, ProjYears, stocks, i, type)
+
     if (show)
       cli::cli_progress_update(id=id)
   }
 
   Hist
-  
+
 }

@@ -123,15 +123,20 @@
   NewValueAll <- matrix(NA_real_, nSim, nFleet)
   NewCVAll    <- matrix(NA_real_, nSim, nFleet)
   omData      <- Proj@OM@Data[[i]]
+  # data columns may be a subset of the OM fleets (e.g. stock-specific catch)
+  OMFleet <- match(FleetNames, FleetNames(Proj@OM))
+  OMFleet[is.na(OMFleet)] <- seq_len(nFleet)[is.na(OMFleet)]
+  omCol   <- if (!is.null(omData) && !is.null(slot(omData, type)@Value))
+    match(FleetNames, .ResolveFleetNames(slot(omData, type)))
 
   for (fl in seq_len(nFleet)) {
-    Obs <- slot(Proj@OM@Obs[[i]][[fl]], type)
+    Obs <- slot(Proj@OM@Obs[[i]][[OMFleet[fl]]], type)
     if (EmptyObject(Obs) || length(Obs@Error) < 1) next
 
     omRow <- .OMDataRow(omData, type, DataYear)
 
-    if (!is.na(omRow)) {
-      NewValueAll[, fl] <- slot(omData, type)@Value[omRow, fl]
+    if (!is.na(omRow) && !is.null(omCol) && !is.na(omCol[fl])) {
+      NewValueAll[, fl] <- slot(omData, type)@Value[omRow, omCol[fl]]
     } else {
       error   <- .ArraySubsetYear(Obs@Error, DataYear)
       sim_ind <- pmin(seq_len(nSim), nrow(error))
@@ -141,14 +146,15 @@
       bias         <- Obs@Bias[sim_ind_bias]
 
       NewValueAll[, fl] <- switch(.CatchUnitType(CatchData1@Units[fl]),
-        Number  = .ResolveCatchNumber(Real_Catch_Number_All, fl, nSim) * error * bias,
-        Biomass = .ResolveCatchBiomass(Real_Catch_Biomass_All, fl, nSim) * error * bias
+        Number  = .ResolveCatchNumber(Real_Catch_Number_All, OMFleet[fl], nSim) * error * bias,
+        Biomass = .ResolveCatchBiomass(Real_Catch_Biomass_All, OMFleet[fl], nSim) * error * bias
       )
     }
 
     for (x in seq_len(nSim))
       NewCVAll[x, fl] <- .ResolveCV(Proj, type, i, fl, TSIndex,
-                                    slot(Proj@Data[[x]][[i]], type), DataYear, Obs, sim = x)
+                                    slot(Proj@Data[[x]][[i]], type), DataYear, Obs,
+                                    omCol = if (is.null(omCol)) fl else omCol[fl], sim = x)
   }
 
   purrr::map(seq_len(nSim), \(x) {

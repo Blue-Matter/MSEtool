@@ -97,15 +97,21 @@
       if (show) {
         cli::cli_progress_update(id=id)
       }
-      IndexSel <- .GetIndexSelectivity(OM@Obs[[st]])
+      IndexSel  <- .GetIndexSelectivity(OM@Obs[[st]])
+      CompLists <- .GetCompObsLists(OM@Obs[[st]])
       # Obs arrays are ReduceDims() output of full-length arrays; step-fill inverts it
-      OM@Obs[[st]] <- Extend(.SetIndexSelectivity(OM@Obs[[st]]),
+      OM@Obs[[st]] <- Extend(.SetCompObsLists(.SetIndexSelectivity(OM@Obs[[st]])),
                              nSim = nSim,
                              AgeClasses = AgeClasses,
                              Years = Years,
                              Areas = Areas,
                              maintain_seasonal_pattern = FALSE)
       OM@Obs[[st]] <- .SetIndexSelectivity(OM@Obs[[st]], IndexSel, Years)
+      # composition obs held by stock use the age classes of each element's stock
+      CompLists <- lapply(CompLists, \(ByType) lapply(ByType, \(x) purrr::imap(x, \(obs, el)
+        Extend(obs, nSim = nSim, AgeClasses = if (el %in% names(OM@Stock)) OM@Stock[[el]]@Ages@Classes else AgeClasses,
+               Years = Years, Areas = Areas, maintain_seasonal_pattern = FALSE))))
+      OM@Obs[[st]] <- .SetCompObsLists(OM@Obs[[st]], CompLists)
     }
 
 
@@ -129,16 +135,54 @@
 .GetIndexSelectivity <- function(ObsList) {
   lapply(ObsList, \(obs) {
     if (!methods::is(obs, 'obs')) return(NULL)
-    list(CPUE = obs@CPUE@Selectivity, Survey = obs@Survey@Selectivity)
+    lapply(c(CPUE = 'CPUE', Survey = 'Survey'), \(type) {
+      x <- slot(obs, type)
+      if (is.list(x)) lapply(x, \(el) el@Selectivity) else x@Selectivity
+    })
   })
+}
+
+.CompObsSlots <- c('LandingsAtAge', 'DiscardsAtAge', 'LandingsAtSize', 'DiscardsAtSize',
+                   'SurveyAtAge', 'SurveyAtSize')
+
+# composition obs slots held as lists by stock, for each obs object
+.GetCompObsLists <- function(ObsList) {
+  lapply(ObsList, \(obs) {
+    if (!methods::is(obs, 'obs')) return(NULL)
+    Lists <- lapply(.CompObsSlots, \(sl) slot(obs, sl)) |> stats::setNames(.CompObsSlots)
+    Filter(is.list, Lists)
+  })
+}
+
+# sets composition obs slots from `Lists` (NULL empties the list slots)
+.SetCompObsLists <- function(ObsList, Lists = NULL) {
+  for (fl in seq_along(ObsList)) {
+    if (!methods::is(ObsList[[fl]], 'obs')) next
+    for (sl in .CompObsSlots) {
+      if (!is.null(Lists)) {
+        if (!is.null(Lists[[fl]][[sl]])) slot(ObsList[[fl]], sl) <- Lists[[fl]][[sl]]
+      } else if (is.list(slot(ObsList[[fl]], sl))) {
+        slot(ObsList[[fl]], sl) <- new('compobs')
+      }
+    }
+  }
+  ObsList
 }
 
 # sets index Selectivity from `Sel` (NULL clears it)
 .SetIndexSelectivity <- function(ObsList, Sel = NULL, Years = NULL) {
   for (fl in seq_along(ObsList)) {
     if (!methods::is(ObsList[[fl]], 'obs')) next
-    for (type in c('CPUE', 'Survey'))
-      slot(ObsList[[fl]], type)@Selectivity <- .ExtendIndexSelectivityYears(Sel[[fl]][[type]], Years)
+    for (type in c('CPUE', 'Survey')) {
+      x <- slot(ObsList[[fl]], type)
+      if (is.list(x)) {
+        for (el in names(x))
+          x[[el]]@Selectivity <- .ExtendIndexSelectivityYears(Sel[[fl]][[type]][[el]], Years)
+      } else {
+        x@Selectivity <- .ExtendIndexSelectivityYears(Sel[[fl]][[type]], Years)
+      }
+      slot(ObsList[[fl]], type) <- x
+    }
   }
   ObsList
 }

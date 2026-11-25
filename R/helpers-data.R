@@ -32,9 +32,9 @@ LastTAC <- function(Data, TACType = c('Removals', 'Landings')) {
   if (length(LastTAC) < 1) {
     Annual <- AnnualData(Data)
     LastRow <- function(x) if (is.null(x@Value)) NULL else utils::tail(x@Value, 1)
-    LastTAC <- LastRow(Annual@Landings)
+    LastTAC <- LastRow(Landings(Annual))
     if (TACType == 'Removals')
-      LastTAC <- c(LastTAC, LastRow(Annual@Discards))
+      LastTAC <- c(LastTAC, LastRow(Discards(Annual)))
   }
   sum(LastTAC, na.rm = TRUE)
 }
@@ -151,9 +151,8 @@ AnnualData <- function(Data, IndexSeasons = NULL, CompleteYears = TRUE) {
   if (CompleteYears)
     AnnualYears <- AnnualYears[as.integer(nPerYear) >= Seasons]
 
-  for (sl in c('Landings', 'Discards', 'Effort')) {
-    obj <- slot(Data, sl)
-    if (is.null(obj@Value)) next
+  AnnualCatch <- function(obj) {
+    if (is.null(obj@Value)) return(obj)
     RowYears <- .AnnualRowYears(obj@Value, Data@Years)
     if (!is.null(obj@CV)) {
       obj@CV <- if (.SameDim(obj@CV, obj@Value)) {
@@ -164,19 +163,26 @@ AnnualData <- function(Data, IndexSeasons = NULL, CompleteYears = TRUE) {
       }
     }
     obj@Value <- .AnnualSum(obj@Value, RowYears, AnnualYears)
-    slot(Data, sl) <- obj
+    obj
+  }
+  for (sl in c('Landings', 'Discards', 'Effort')) {
+    obj <- slot(Data, sl)
+    slot(Data, sl) <- if (is.list(obj)) lapply(obj, AnnualCatch) else AnnualCatch(obj)
   }
 
-  for (sl in c('LandingsAtAge', 'DiscardsAtAge', 'LandingsAtSize', 'DiscardsAtSize')) {
-    obj <- slot(Data, sl)
-    if (is.null(obj@Value)) next
+  AnnualComp <- function(obj) {
+    if (is.null(obj@Value)) return(obj)
     obj@Value <- .AnnualSum(obj@Value, .AnnualRowYears(obj@Value, Data@Years), AnnualYears)
-    slot(Data, sl) <- obj
+    obj
+  }
+  for (sl in c('LandingsAtAge', 'DiscardsAtAge', 'LandingsAtSize', 'DiscardsAtSize',
+               'SurveyAtAge', 'SurveyAtSize')) {
+    obj <- slot(Data, sl)
+    slot(Data, sl) <- if (is.list(obj)) lapply(obj, AnnualComp) else AnnualComp(obj)
   }
 
-  for (sl in c('Survey', 'CPUE')) {
-    obj <- slot(Data, sl)
-    if (is.null(obj@Value)) next
+  AnnualIndex <- function(obj, sl) {
+    if (is.null(obj@Value)) return(obj)
     SeasonsList <- .ResolveIndexSeasons(IndexSeasons, sl, ncol(obj@Value), Seasons)
     Value <- obj@Value
     Value[!is.na(Value) & Value < 0] <- NA
@@ -185,7 +191,11 @@ AnnualData <- function(Data, IndexSeasons = NULL, CompleteYears = TRUE) {
     if (!is.null(obj@CV))
       obj@CV <- .AnnualIndexMean(obj@CV, .AnnualRowYears(obj@CV, Data@Years), AnnualYears,
                                  Seasons, SeasonsList)
-    slot(Data, sl) <- obj
+    obj
+  }
+  for (sl in c('Survey', 'CPUE')) {
+    obj <- slot(Data, sl)
+    slot(Data, sl) <- if (is.list(obj)) lapply(obj, AnnualIndex, sl = sl) else AnnualIndex(obj, sl)
   }
 
   Data@Years   <- AnnualYears

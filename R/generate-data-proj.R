@@ -2,7 +2,7 @@
 #'
 #' Internal wrapper function to generate projection fishery data
 #' for a single timestep. Existing data will not be replaced with simulated data
-#' 
+#'
 #'
 #' @param Proj A `hist` object populated with fishery dynamics up to `Year`
 #' @param Year The 'current' year when the function is being called
@@ -10,9 +10,9 @@
 #' @param YearsProj Numeric vector of projection years
 #' @param DataYear The year to generate data for. Defaults to the time-step
 #'   before `Year`.
-#' 
+#'
 #' By default, generates data up to the time-step before `Year`:
-#' 
+#'
 #'  * `YearsAll <- c(YearsHist, YearsProj)`
 #'  * `TSIndex <- match(Year, YearsAll) - 1`
 #'  * `DataYear <- YearsAll[TSIndex]`
@@ -52,14 +52,18 @@
     NewYear <- !DataYear %in% Data1@Years
 
     EffortAll         <- .GenProjDataEffort(Proj, DataYear, YearsAll, i, nSim)
-    LandingsAll       <- .GenProjDataCatch(Proj, DataYear, YearsAll, i, stocks, nSim, type = 'Landings')
-    DiscardsAll       <- .GenProjDataCatch(Proj, DataYear, YearsAll, i, stocks, nSim, type = 'Discards')
-    CPUEAll           <- .GenProjDataIndex(Proj, DataYear, YearsAll, i, stocks, StockNames, FleetNames, nSim, type = 'CPUE')
-    SurveyAll         <- .GenProjDataIndex(Proj, DataYear, YearsAll, i, stocks, StockNames, FleetNames, nSim, type = 'Survey')
-    LandingsAtAgeAll  <- .GenProjDataAgeComp(Proj, DataYear, YearsAll, i, stocks, nSim, type = 'LandingsAtAge')
-    DiscardsAtAgeAll  <- .GenProjDataAgeComp(Proj, DataYear, YearsAll, i, stocks, nSim, type = 'DiscardsAtAge')
-    LandingsAtSizeAll <- .GenProjDataSizeComp(Proj, DataYear, YearsAll, i, stocks, nSim, type = 'LandingsAtSize')
-    DiscardsAtSizeAll <- .GenProjDataSizeComp(Proj, DataYear, YearsAll, i, stocks, nSim, type = 'DiscardsAtSize')
+    LandingsAll <- .GenProjByElement(Proj, i, stocks, 'Landings', \(P, st)
+      .GenProjDataCatch(P, DataYear, YearsAll, i, st, nSim, type = 'Landings'))
+    DiscardsAll <- .GenProjByElement(Proj, i, stocks, 'Discards', \(P, st)
+      .GenProjDataCatch(P, DataYear, YearsAll, i, st, nSim, type = 'Discards'))
+    CPUEAll     <- .GenProjByElement(Proj, i, stocks, 'CPUE', \(P, st)
+      .GenProjDataIndex(P, DataYear, YearsAll, i, st, StockNames, FleetNames, nSim, type = 'CPUE'))
+    SurveyAll   <- .GenProjByElement(Proj, i, stocks, 'Survey', \(P, st)
+      .GenProjDataIndex(P, DataYear, YearsAll, i, st, StockNames, FleetNames, nSim, type = 'Survey'))
+    CompTypes <- c('LandingsAtAge', 'DiscardsAtAge', 'LandingsAtSize', 'DiscardsAtSize',
+                   'SurveyAtAge', 'SurveyAtSize')
+    CompAll   <- purrr::map(CompTypes, \(type) .GenProjDataComp(Proj, DataYear, YearsAll, i, stocks, nSim, type)) |>
+      stats::setNames(CompTypes)
 
     for (x in seq_len(nSim)) {
       Data <- Proj@Data[[x]][[i]]
@@ -71,10 +75,8 @@
       Data@Discards       <- DiscardsAll[[x]]
       Data@CPUE           <- CPUEAll[[x]]
       Data@Survey         <- SurveyAll[[x]]
-      Data@LandingsAtAge  <- LandingsAtAgeAll[[x]]
-      Data@DiscardsAtAge  <- DiscardsAtAgeAll[[x]]
-      Data@LandingsAtSize <- LandingsAtSizeAll[[x]]
-      Data@DiscardsAtSize <- DiscardsAtSizeAll[[x]]
+      for (type in CompTypes)
+        slot(Data, type) <- CompAll[[type]][[x]]
 
       Proj@Data[[x]][[i]] <- Data
     }
