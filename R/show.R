@@ -613,12 +613,17 @@ setMethod('show', 'obs', function(object) {
     LandingsAtAge  = 'CompObs',
     DiscardsAtAge  = 'CompObs',
     LandingsAtSize = 'CompObs',
-    DiscardsAtSize = 'CompObs'
+    DiscardsAtSize = 'CompObs',
+    SurveyAtAge    = 'CompObs',
+    SurveyAtSize   = 'CompObs'
   )
   
   for (name in names(slot_constructor)) {
     constructor <- slot_constructor[[name]]
-    if (isNewObject(slot(object, name))) {
+    x <- slot(object, name)
+    if (is.list(x)) {
+      cli::cli_text("`{name}`: a list of {.help {HelpTopic('MSEtool', constructor)}} Objects ({.val {names(x)}})")
+    } else if (isNewObject(x)) {
       cli::cli_text("`{name}`: {.emph not specified}")
     } else {
       cli::cli_text("`{name}`: {AOrAn(constructor)} {.help {HelpTopic('MSEtool', constructor)}} Object")
