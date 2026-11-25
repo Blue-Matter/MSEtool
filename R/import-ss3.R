@@ -1009,19 +1009,8 @@ ImportSS <- function(SSDir,
     h_out <- 0.2 * exp(0.8 * par$Value)
     return(list(hR = h_out))
   } else if (replist$SRRtype == 7) {
-    cli::cli_abort(
-      "SS3 `SRRtype == 7` currently not supported"
-    )
-    
-    s_frac <- replist$parameters$Value[replist$parameters$Label == "SR_surv_Sfrac"]
-    Beta <- replist$parameters$Value[replist$parameters$Label == "SR_surv_Beta"]
-    s0 <- 1 / SpR0
-    z0 <- -log(s0)
-    z_min <- z0 * (1 - s_frac)
-    h_out <- 0.2 * exp(z0 * s_frac * (1 - 0.2^Beta))
-    h_out[h_out < 0.2] <- 0.2
-    h_out[h_out > 0.999] <- 0.999
-    return(list(h = h_out))
+    Value <- \(label) replist$parameters$Value[replist$parameters$Label == label]
+    return(list(zfrac = Value("SR_surv_zfrac"), Beta = Value("SR_surv_Beta")))
   } else {
     mainyrs <- replist$startyr:replist$endyr
     if (length(replist$SRRtype) && nchar(replist$SRRtype)<=1) {
@@ -1379,10 +1368,7 @@ ImportSS <- function(SSDir,
   SRR <- SRR(SD = SD, R0 = R0, SpawnTimeFrac = SpawnTimeFrac, SpawnLag = spawn_lag, Units = R0Units)
 
   Pars <- purrr::map(RepList, \(replist) .GetSSSRRPars(replist))
-  Pars <- do.call("rbind", Pars)
-  ParsList <- list(as.numeric(Pars))
-  names(ParsList) <- colnames(Pars)
-  SRR@Pars <- ParsList
+  SRR@Pars <- purrr::map(purrr::set_names(names(Pars[[1]])), \(nm) purrr::map_dbl(Pars, nm))
 
   SRR@RecDevInit <- purrr::map(RepList, \(replist)
   .GetSSRecDevsEarly(replist, YearsList, Ages)) |>

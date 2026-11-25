@@ -186,8 +186,10 @@
                                nSeasons=nSeasons)
     
     Index_Obs@Stats <- Stats
+    EstAC <- Stats$AC
+    EstAC[!is.finite(EstAC)] <- 0
     if (!.UserSupplied(Index_Obs, "AC"))
-      Index_Obs@AC <- .NameSims(Stats$AC, nSim)
+      Index_Obs@AC <- .NameSims(EstAC, nSim)
     if (!.UserSupplied(Index_Obs, "CV"))
       Index_Obs@CV <- .NameSims(sqrt(exp(Stats$SD^2) - 1), nSim)
 
@@ -195,7 +197,7 @@
       Index_Obs@TruncSD <- 2
 
     ProjSD <- if (.UserSupplied(Index_Obs, "CV")) sdconv(1, .SimValues(Index_Obs@CV, nSim)) else Stats$SD
-    ProjAC <- if (.UserSupplied(Index_Obs, "AC")) .SimValues(Index_Obs@AC, nSim) else Stats$AC
+    ProjAC <- if (.UserSupplied(Index_Obs, "AC")) .SimValues(Index_Obs@AC, nSim) else EstAC
 
     ResidualsProjection <- if (.UserSupplied(Index_Obs, "Error")) {
       .ProjYearValues(Index_Obs@Error, nSim, ProjYears)

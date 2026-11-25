@@ -10,6 +10,14 @@
 #' @param h Beverton–Holt steepness. A named argument in `Pars`. 0.2 < h < 1
 #' @param hR Ricker steepness. A named argument in `Pars`. 
 #' @param Shinge Hockey-stick hinge point **relative to `S0`**. A named argument in `Pars`.0 < Shinge <= 1
+#' @param zfrac Survival-based SRR: reduction in the log-scale pre-recruit
+#'   mortality at very low spawning production, as a fraction of the unfished
+#'   value. A named argument in `Pars`. 0 <= zfrac <= 1
+#' @param Beta Survival-based SRR: shape of the density-dependent survival
+#'   curve. A named argument in `Pars`. Beta > 0. Default 1.
+#' @param RecFrac Survival-based SRR: fraction of the recruits from `S` that
+#'   enter this stock. 0 < RecFrac <= 1. Default 1. In an operating model it
+#'   is calculated from `R0` and is not part of `Pars`.
 
 #' @param SPR Spawning-per-recruit multiplier. Numeric scalar.
 #'
@@ -69,8 +77,36 @@
 #' * `HockeyStick_RelRec()` evaluates relative equilibrium recruitment as a
 #' function of SPR.
 #'
+#' ## SurvivalSRR
+#'
+#' * `SurvivalSRR()` evaluates the survival-based relationship of Taylor et al.
+#' (2013) for low-fecundity species, where `S` is the number of offspring
+#' (e.g., pups) and recruitment is offspring times pre-recruit survival:
+#' \deqn{R = S e^{z}, \quad z = z_0 + (z_{min} - z_0)\left(1 - (S/S_0)^{\beta}\right)}
+#' where \eqn{z_0 = \log(R_0 / S_0) = -\log\phi_0} and
+#' \eqn{z_{min} = z_0 (1 - z_{frac})}. Recruitment cannot exceed `S`
+#' when \eqn{\phi_0 > 1}. When several stocks recruit from the same
+#' spawning production (e.g., the sexes of a two-sex model), each stock
+#' receives a fraction `RecFrac` of the recruits, and \eqn{\phi_0} is the
+#' spawning production per total recruit: \eqn{R = RecFrac\, S e^{z}} with
+#' \eqn{z_0 = \log(R_0 / (RecFrac\, S_0))}, where `R0` is the stock's own
+#' unfished recruitment. In an operating model, `RecFrac` is the stock's
+#' share of the summed `R0` of all stocks with the same `SPFrom` source(s)
+#' and weights.
+#'
+#' * `SurvivalSRR_RelRec()` evaluates equilibrium relative recruitment as a
+#' function of SPR. It requires `Pars$SPR0`, the unfished spawning production
+#' per recruit of the stock; \eqn{\phi_0} is `RecFrac * SPR0`:
+#' \deqn{R/R_0 = \frac{1}{SPR}\left(1 + \frac{\log SPR}{z_{frac}\log\phi_0}\right)^{1/\beta}}
+#' and 0 when the term in brackets is not positive.
+#'
+#' @references
+#' Taylor, I.G., Gertseva, V., Methot, R.D., Maunder, M.N. 2013. A
+#' stock-recruitment relationship based on pre-recruit survival, illustrated
+#' with application to spiny dogfish shark. Fisheries Research 142: 15-21.
+#'
 #' @return 
-#' For stock–recruitment functions (`BevertonHolt()`, `Ricker()`, `HockeyStick()`):
+#' For stock–recruitment functions (`BevertonHolt()`, `Ricker()`, `HockeyStick()`, `SurvivalSRR()`):
 #' A numeric scalar giving expected recruitment for the specified spawning production.
 #' 
 #' For relative-recruitment functions (`*_RelRec()`):
@@ -91,7 +127,7 @@ NULL
 
 # NOTE: these built-in SRR models have C++ equivalents in src/srr_models.cpp
 # (called internally via inst/include/calc_recruitment.h); any change here
-# should be matched in inst/include/srr_models.h
+# should be matched in inst/include/srr_functions.h
 
 
 # ---- Beverton-Holt ----
@@ -187,6 +223,46 @@ HockeyStick_RelRec <- function(Pars, SPR) {
   ifelse(SPR >= Pars$Shinge, 1, 0)
 }
 
+# ---- SurvivalSRR (Taylor et al. 2013) ----
+#' @rdname SRRModels
+#' @export
+SurvivalSRR <- function(S, S0, R0, zfrac, Beta = 1, RecFrac = 1) {
+  .CheckSArg(S)
+  .IsScalarNumeric(S0, 'S0')
+  .IsScalarNumeric(R0, 'R0')
+  .IsScalarNumeric(zfrac, 'zfrac')
+  .IsScalarNumeric(Beta, 'Beta')
+  .IsScalarNumeric(RecFrac, 'RecFrac')
+  .CheckSurvivalPars(zfrac, Beta, RecFrac)
+  SurvivalSRR_cpp(S, S0, R0, zfrac, Beta, RecFrac)
+}
+class(SurvivalSRR) <- "SRR-Model"
+
+#' @rdname SRRModels
+#' @export
+SurvivalSRR_RelRec <- function(Pars, SPR) {
+  RecFrac <- Pars$RecFrac %||% 1
+  .CheckParsScalarNumeric(Pars, c('zfrac', 'Beta', 'SPR0'))
+  .IsScalarNumeric(SPR, 'SPR')
+  .IsScalarNumeric(RecFrac, 'Pars$RecFrac')
+  .CheckSurvivalPars(Pars$zfrac, Pars$Beta, RecFrac)
+  if (SPR <= 0)
+    return(0)
+  base <- 1 + log(SPR) / (Pars$zfrac * log(RecFrac * Pars$SPR0))
+  if (!is.finite(base) || base <= 0)
+    return(0)
+  base^(1 / Pars$Beta) / SPR
+}
+
+.CheckSurvivalPars <- function(zfrac, Beta, RecFrac = 1) {
+  if (zfrac < 0 || zfrac > 1)
+    cli::cli_abort(c("x" = "{.val zfrac} must be in [0, 1]", "i" = "Currently: {.val {zfrac}}"), call = NULL)
+  if (Beta <= 0)
+    cli::cli_abort(c("x" = "{.val Beta} must be > 0", "i" = "Currently: {.val {Beta}}"), call = NULL)
+  if (RecFrac <= 0 || RecFrac > 1)
+    cli::cli_abort(c("x" = "{.val RecFrac} must be in (0, 1]", "i" = "Currently: {.val {RecFrac}}"), call = NULL)
+}
+
 
 
 # ---- Alpha-Beta ----
@@ -257,7 +333,7 @@ SRRAlphaBeta <- function(h, R0, phi0, Model = c("BevertonHolt", "Ricker")) {
 #' @export
 SRRModels <- function(full=TRUE, print=TRUE) {
   .ReturnModels(ModelClass=c('SRR-Model'),
-               full, print, Independent=c('S', 'S0', 'R0'))
+               full, print, Independent=c('S', 'S0', 'R0', 'RecFrac'))
   
 }
 

@@ -5,9 +5,10 @@
 #' documents all parameters and validates inputs. An `srr` object is required
 #' for all [stock-class] objects.
 #'
-#' @slot Pars `list`. Named list containing the steepness parameter for the
+#' @slot Pars `list`. Named list containing the parameters for the
 #'   chosen SRR model. For `BevertonHolt`: `list(h = ...)`. For `Ricker`:
-#'   `list(hR = ...)`. For `HockeyStick`: `list(Shinge = ...)`. `R0` is never
+#'   `list(hR = ...)`. For `HockeyStick`: `list(Shinge = ...)`. For
+#'   `SurvivalSRR`: `list(zfrac = ..., Beta = ...)`. `R0` is never
 #'   placed in `Pars`; it has its own dedicated slot. `BevertonHolt` and
 #'   `Ricker` also accept `list(alpha = ..., beta = ...)` with `R0 = NULL`;
 #'   [Populate()] converts these to steepness and `R0` and stores the supplied
@@ -61,8 +62,9 @@
 #'   stock. If `TRUE` (default), [Populate()] copies the source stock's `Pars`,
 #'   `SD`, `AC`, `RecDevInit`, `RecDevProj`, and `RecDevHist` into this stock,
 #'   so its recruitment follows the source's stock-recruitment curve and
-#'   recruitment deviations (e.g. males and females of one population). A
-#'   user-supplied `RecDevHist` for this stock is kept. `R0` is not copied.
+#'   recruitment deviations (e.g. males and females of one population). The
+#'   supplied values of this stock's `RecDevHist` are kept; its `NA` years
+#'   take the source's values. `R0` is not copied.
 #'   The source and this stock must use the same SRR `Model` and age classes.
 #'   Set to `FALSE` for an independent stock-recruitment curve and recruitment
 #'   deviations (e.g. a spatially separate sink population). Ignored when

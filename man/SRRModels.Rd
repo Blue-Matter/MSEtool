@@ -8,6 +8,8 @@
 \alias{Ricker_RelRec}
 \alias{HockeyStick}
 \alias{HockeyStick_RelRec}
+\alias{SurvivalSRR}
+\alias{SurvivalSRR_RelRec}
 \title{Stock–Recruitment Relationships (SRR)}
 \usage{
 BevertonHolt(S, S0, R0, h)
@@ -21,6 +23,10 @@ Ricker_RelRec(Pars, SPR)
 HockeyStick(S, S0, R0, Shinge)
 
 HockeyStick_RelRec(Pars, SPR)
+
+SurvivalSRR(S, S0, R0, zfrac, Beta = 1, RecFrac = 1)
+
+SurvivalSRR_RelRec(Pars, SPR)
 
 SRRModels(full = TRUE, print = TRUE)
 }
@@ -41,12 +47,23 @@ SRRModels(full = TRUE, print = TRUE)
 
 \item{Shinge}{Hockey-stick hinge point \strong{relative to \code{S0}}. A named argument in \code{Pars}.0 < Shinge <= 1}
 
+\item{zfrac}{Survival-based SRR: reduction in the log-scale pre-recruit
+mortality at very low spawning production, as a fraction of the unfished
+value. A named argument in \code{Pars}. 0 <= zfrac <= 1}
+
+\item{Beta}{Survival-based SRR: shape of the density-dependent survival
+curve. A named argument in \code{Pars}. Beta > 0. Default 1.}
+
+\item{RecFrac}{Survival-based SRR: fraction of the recruits from \code{S} that
+enter this stock. 0 < RecFrac <= 1. Default 1. In an operating model it
+is calculated from \code{R0} and is not part of \code{Pars}.}
+
 \item{full}{Logical. Provide a complete table (TRUE) or just the model names (FALSE)?}
 
 \item{print}{Logical. Print out the results (TRUE) or just return the data.frame (FALSE)?}
 }
 \value{
-For stock–recruitment functions (\code{BevertonHolt()}, \code{Ricker()}, \code{HockeyStick()}):
+For stock–recruitment functions (\code{BevertonHolt()}, \code{Ricker()}, \code{HockeyStick()}, \code{SurvivalSRR()}):
 A numeric scalar giving expected recruitment for the specified spawning production.
 
 For relative-recruitment functions (\verb{*_RelRec()}):
@@ -121,6 +138,30 @@ R0, & S \ge Shinge
 function of SPR.
 }
 }
+
+\subsection{SurvivalSRR}{
+\itemize{
+\item \code{SurvivalSRR()} evaluates the survival-based relationship of Taylor et al.
+(2013) for low-fecundity species, where \code{S} is the number of offspring
+(e.g., pups) and recruitment is offspring times pre-recruit survival:
+\deqn{R = S e^{z}, \quad z = z_0 + (z_{min} - z_0)\left(1 - (S/S_0)^{\beta}\right)}
+where \eqn{z_0 = \log(R_0 / S_0) = -\log\phi_0} and
+\eqn{z_{min} = z_0 (1 - z_{frac})}. Recruitment cannot exceed \code{S}
+when \eqn{\phi_0 > 1}. When several stocks recruit from the same
+spawning production (e.g., the sexes of a two-sex model), each stock
+receives a fraction \code{RecFrac} of the recruits, and \eqn{\phi_0} is the
+spawning production per total recruit: \eqn{R = RecFrac\, S e^{z}} with
+\eqn{z_0 = \log(R_0 / (RecFrac\, S_0))}, where \code{R0} is the stock's own
+unfished recruitment. In an operating model, \code{RecFrac} is the stock's
+share of the summed \code{R0} of all stocks with the same \code{SPFrom} source(s)
+and weights.
+\item \code{SurvivalSRR_RelRec()} evaluates equilibrium relative recruitment as a
+function of SPR. It requires \code{Pars$SPR0}, the unfished spawning production
+per recruit of the stock; \eqn{\phi_0} is \code{RecFrac * SPR0}:
+\deqn{R/R_0 = \frac{1}{SPR}\left(1 + \frac{\log SPR}{z_{frac}\log\phi_0}\right)^{1/\beta}}
+and 0 when the term in brackets is not positive.
+}
+}
 }
 \examples{
 
@@ -169,6 +210,11 @@ legend("bottomright",
        lty = c(1, 2, 3), lwd = 2, bty = "n")
 
 
+}
+\references{
+Taylor, I.G., Gertseva, V., Methot, R.D., Maunder, M.N. 2013. A
+stock-recruitment relationship based on pre-recruit survival, illustrated
+with application to spiny dogfish shark. Fisheries Research 142: 15-21.
 }
 \seealso{
 \code{\link[=SRR]{SRR()}}, \code{\link[=SRRSteepness]{SRRSteepness()}}

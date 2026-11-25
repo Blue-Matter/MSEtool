@@ -63,5 +63,24 @@ NumericVector HockeyStick_cpp(
   } 
   
   return out;
-} 
+}
 
+
+// [[Rcpp::export]]
+NumericVector SurvivalSRR_cpp(
+    const NumericVector& S,
+    const double S0,
+    const double R0,
+    const double zfrac,
+    const double Beta,
+    const double RecFrac) {
+  
+  const int n = S.size();
+  NumericVector out(n);
+  
+  for (int i = 0; i < n; ++i) {
+    out[i] = SurvivalSRR_kernel(S[i], S0, R0, zfrac, Beta, RecFrac);
+  } 
+  
+  return out;
+} 

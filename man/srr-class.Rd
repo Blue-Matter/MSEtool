@@ -25,9 +25,10 @@ the operating model on observed recruitment indices.
 \section{Slots}{
 
 \describe{
-\item{\code{Pars}}{\code{list}. Named list containing the steepness parameter for the
+\item{\code{Pars}}{\code{list}. Named list containing the parameters for the
 chosen SRR model. For \code{BevertonHolt}: \code{list(h = ...)}. For \code{Ricker}:
-\code{list(hR = ...)}. For \code{HockeyStick}: \code{list(Shinge = ...)}. \code{R0} is never
+\code{list(hR = ...)}. For \code{HockeyStick}: \code{list(Shinge = ...)}. For
+\code{SurvivalSRR}: \code{list(zfrac = ..., Beta = ...)}. \code{R0} is never
 placed in \code{Pars}; it has its own dedicated slot. \code{BevertonHolt} and
 \code{Ricker} also accept \code{list(alpha = ..., beta = ...)} with \code{R0 = NULL};
 \code{\link[=Populate]{Populate()}} converts these to steepness and \code{R0} and stores the supplied
@@ -89,8 +90,9 @@ exported to this stock is not removed from the source stock.}
 stock. If \code{TRUE} (default), \code{\link[=Populate]{Populate()}} copies the source stock's \code{Pars},
 \code{SD}, \code{AC}, \code{RecDevInit}, \code{RecDevProj}, and \code{RecDevHist} into this stock,
 so its recruitment follows the source's stock-recruitment curve and
-recruitment deviations (e.g. males and females of one population). A
-user-supplied \code{RecDevHist} for this stock is kept. \code{R0} is not copied.
+recruitment deviations (e.g. males and females of one population). The
+supplied values of this stock's \code{RecDevHist} are kept; its \code{NA} years
+take the source's values. \code{R0} is not copied.
 The source and this stock must use the same SRR \code{Model} and age classes.
 Set to \code{FALSE} for an independent stock-recruitment curve and recruitment
 deviations (e.g. a spatially separate sink population). Ignored when

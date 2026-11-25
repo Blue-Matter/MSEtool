@@ -73,7 +73,7 @@ which the index is generated in projection years. \code{NULL} is \code{5}. See
 
 \item{\code{Stats}}{\code{data.frame} or \code{NULL}. Residual statistics computed during
 conditioning by \code{\link[=CalcResidualStats]{CalcResidualStats()}}. Contains columns \code{Sim}, \code{AC}
-(weighted lag-1 autocorrelation), \code{SD} (standard deviation), and
+(lag-1 autocorrelation), \code{SD} (standard deviation), and
 \code{NA_Season} (a list-column of seasons with no observations). Populated
 internally; not set by the user.}
 

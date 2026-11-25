@@ -5,12 +5,14 @@
 #' `SRR` slot of a [stock-class] and its individual slots. An `SRR` object is
 #' required for all [stock-class] objects.
 #'
-#' @param Pars `list`. Named list containing the steepness parameter for the
+#' @param Pars `list`. Named list containing the parameters for the
 #'   chosen SRR model. `R0` is never placed in `Pars` — it has its own
 #'   dedicated slot. The required name depends on `Model`:
 #'   - `BevertonHolt`: `list(h = ...)` where `0.2 < h < 1`.
 #'   - `Ricker`: `list(hR = ...)`.
 #'   - `HockeyStick`: `list(Shinge = ...)` where `0 < Shinge <= 1`.
+#'   - `SurvivalSRR`: `list(zfrac = ..., Beta = ...)` where `0 <= zfrac <= 1`
+#'     and `Beta > 0` (default 1). See [SRRModels()].
 #'   `BevertonHolt` and `Ricker` also accept `list(alpha = ..., beta = ...)`
 #'   (see [SRRSteepness()]), in which case `R0` must be `NULL`. During
 #'   [Populate()] these are converted to steepness and `R0` using the
@@ -59,7 +61,8 @@
 #'   `NULL`.
 #' @param ShareSPFrom `logical(1)`. When `SPFrom` names a single other stock,
 #'   copy that stock's `Pars`, `SD`, `AC`, and recruitment deviations into this
-#'   stock during [Populate()] (a user-supplied `RecDevHist` is kept). Set to
+#'   stock during [Populate()] (the supplied values of this stock's
+#'   `RecDevHist` are kept; its `NA` years take the source's values). Set to
 #'   `FALSE` for an independent stock-recruitment curve and recruitment
 #'   deviations. See [srr-class]. Default `TRUE`.
 #' @param TruncSD `numeric(1)`. Number of standard deviations at which the

@@ -42,7 +42,7 @@
 #' @keywords internal
 .FindModel <- function(object, 
                       ignore=c('Ages', 'MeanLength', 'Length', 'Weight', 'nage',
-                               'AtAge', 'MaxLen', 'S0', 'S', 'R0'),
+                               'AtAge', 'MaxLen', 'S0', 'S', 'R0', 'RecFrac'),
                       doCheck=TRUE) {
 
   
@@ -125,7 +125,7 @@
 #' @keywords internal
 .AddDefaultPars <- function(object,
                             ignore = c('Ages', 'MeanLength', 'Length', 'Weight', 'nage',
-                                       'AtAge', 'MaxLen', 'S0', 'S', 'R0')) {
+                                       'AtAge', 'MaxLen', 'S0', 'S', 'R0', 'RecFrac')) {
   Pars <- object@Pars
   if (length(Pars) < 1 || any(is.na(Pars)))
     return(Pars)

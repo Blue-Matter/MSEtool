@@ -271,7 +271,7 @@ setValidity("catchobs", function(object) {
 #'   [IndicesObs()].
 #' @slot Stats `data.frame` or `NULL`. Residual statistics computed during
 #'   conditioning by [CalcResidualStats()]. Contains columns `Sim`, `AC`
-#'   (weighted lag-1 autocorrelation), `SD` (standard deviation), and
+#'   (lag-1 autocorrelation), `SD` (standard deviation), and
 #'   `NA_Season` (a list-column of seasons with no observations). Populated
 #'   internally; not set by the user.
 #' @slot Misc `list`. Miscellaneous additional objects. When `Beta` is

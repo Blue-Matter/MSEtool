@@ -193,16 +193,16 @@
   if (is.numeric(Misc$RecLag) && any(Misc$RecLag < 0, na.rm = TRUE))
     add_err("Hist@Misc$RecLag: negative lag(s) not allowed")
   
-  # SRR_Model: length nStock, values in {0, 1, 2}
+  # SRR_Model: length nStock, values in {0, 1, 2, 3}
   if (!is.numeric(Misc$SRR_Model) || length(Misc$SRR_Model) != nStock)
     add_err("Hist@Misc$SRR_Model: must be numeric of length nStock (", nStock,
             "), got length ", length(Misc$SRR_Model))
   if (is.numeric(Misc$SRR_Model)) {
-    bad_models <- which(!Misc$SRR_Model %in% c(0, 1, 2))
+    bad_models <- which(!Misc$SRR_Model %in% c(0, 1, 2, 3))
     if (length(bad_models) > 0)
       add_err("Hist@Misc$SRR_Model: invalid code(s) for stock(s) ",
               paste(bad_models, collapse = ","),
-              "; must be 0 (BH), 1 (Ricker), 2 (HockeyStick)")
+              "; must be 0 (BH), 1 (Ricker), 2 (HockeyStick), 3 (SurvivalSRR)")
   }
   
   # Mode: length nFleet, values 0/1 (UseDensity flags)
@@ -423,6 +423,15 @@
         if (n > 0)
           add_err(nm_base, ": Hockey-stick hinge must be positive; ",
                   n, " value(s) at or below zero (min ", signif(min(shape), 6), ")")
+      } else if (model == 3) {    # SurvivalSRR: zfrac, Beta, RecFrac
+        n <- bad(\(z) z < 0 | z > 1)
+        if (n > 0)
+          add_err(nm_base, ": SurvivalSRR zfrac must be in [0, 1]; ",
+                  n, " value(s) outside (range ", signif(min(shape), 6), " to ",
+                  signif(max(shape), 6), ")")
+        if (length(pars_st) < 3L || sum(pars_st[[2L]] <= 0, na.rm = TRUE) > 0 ||
+            sum(pars_st[[3L]] <= 0 | pars_st[[3L]] > 1, na.rm = TRUE) > 0)
+          add_err(nm_base, ": SurvivalSRR requires Beta > 0 and the derived RecFrac in (0, 1] as the second and third parameters")
       }
     }
   })

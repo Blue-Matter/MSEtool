@@ -265,3 +265,7 @@ HockeyStick_cpp <- function(S, S0, R0, Shinge) {
     .Call(`_MSEtool_HockeyStick_cpp`, S, S0, R0, Shinge)
 }
 
+SurvivalSRR_cpp <- function(S, S0, R0, zfrac, Beta, RecFrac) {
+    .Call(`_MSEtool_SurvivalSRR_cpp`, S, S0, R0, zfrac, Beta, RecFrac)
+}
+
