@@ -35,8 +35,8 @@ template to fill in.
 
 One row per observation, with columns:\tabular{lll}{
    Column \tab Required \tab Description \cr
-   \code{Slot} \tab yes \tab The \link[=data-class]{data} slot: \code{Landings}, \code{Discards}, \code{Effort}, \code{CPUE}, \code{Survey}, \code{LandingsAtAge}, \code{DiscardsAtAge}, \code{LandingsAtSize}, \code{DiscardsAtSize}, or \code{Metadata} \cr
-   \code{Name} \tab yes \tab Fleet name (catch, effort and composition slots) or index name (\code{CPUE}, \code{Survey}). For \code{Metadata}, the field name \cr
+   \code{Slot} \tab yes \tab The \link[=data-class]{data} slot: \code{Landings}, \code{Discards}, \code{Effort}, \code{CPUE}, \code{Survey}, \code{LandingsAtAge}, \code{DiscardsAtAge}, \code{LandingsAtSize}, \code{DiscardsAtSize}, \code{SurveyAtAge}, \code{SurveyAtSize}, or \code{Metadata} \cr
+   \code{Name} \tab yes \tab Fleet name (catch, effort and fleet composition slots) or index name (\code{CPUE}, \code{Survey}, \code{SurveyAtAge}, \code{SurveyAtSize}). For \code{Metadata}, the field name \cr
    \code{Year} \tab yes \tab Calendar year of the observation. Empty for \code{Metadata} \cr
    \code{Season} \tab seasonal \tab Season within the year, from 1 to \code{Seasons}. Only used when \code{Seasons > 1} \cr
    \code{Class} \tab comps \tab Age class (\verb{*AtAge}) or length-bin midpoint (\verb{*AtSize}). Empty for other slots \cr
@@ -44,6 +44,8 @@ One row per observation, with columns:\tabular{lll}{
    \code{CV} \tab no \tab Coefficient of variation of \code{Value} (catch, effort and index slots) \cr
    \code{Units} \tab no \tab Units of the series, e.g. \code{Biomass} or \code{Number} for catch and indices, \code{cm} for length compositions. One value per \code{Slot} and \code{Name} \cr
    \code{Timing} \tab no \tab Fraction of the time step when an index is observed (\code{CPUE}, \code{Survey}). Default 0 \cr
+   \code{Stock} \tab no \tab The stock, or the complex, the catch, index or composition belongs to (see \link[=data-class]{data}). Empty for data of all stocks combined. Not used for \code{Effort} \cr
+   \code{Joint} \tab no \tab Composition slots: \code{TRUE} when the compositions of the stocks of a fleet in a year are one sample (see \link[=compdata-class]{compdata}). One value per \code{Slot}, \code{Stock} and \code{Name} \cr
 }
 
 
@@ -54,7 +56,10 @@ per year with \code{Seasons} (default 1).
 Fleets are ordered by their first appearance in any catch, effort or composition slot, and every one of these
 slots has the same fleets in that order; a fleet with no rows in a slot is \code{NA} there. Indices are ordered by
 their first appearance within each index slot. Years without rows are \code{NA}. For the
-composition slots, a class with no row in a year and fleet that has other rows is 0, so only non-zero counts
+catch, index and composition slots, rows with a \code{Stock} give stock-specific data, held in a list named by
+\code{Stock}; in a slot with any \code{Stock} values, every row must give its \code{Stock} (the complex name for data of all
+stocks combined). In the composition slots, a class with no row in a year and fleet that has other rows is 0,
+so only non-zero counts
 need to be listed. All fleets in a composition slot share one set of classes, the sorted classes in the file,
 so a class must appear in at least one row (with value 0 if need be) to be included. \code{WriteDataCSV()} writes
 every class, including zeros, in each year with data.

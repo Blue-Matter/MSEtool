@@ -18,6 +18,10 @@
 \alias{DiscardsAtAge<-}
 \alias{DiscardsAtSize}
 \alias{DiscardsAtSize<-}
+\alias{SurveyAtAge}
+\alias{SurveyAtAge<-}
+\alias{SurveyAtSize}
+\alias{SurveyAtSize<-}
 \alias{Value}
 \alias{Value<-}
 \alias{Ref}
@@ -28,11 +32,11 @@
 \alias{Reference<-}
 \title{Data Slot Accessors}
 \usage{
-CPUE(x)
+CPUE(x, byStock = FALSE)
 
 CPUE(x) <- value
 
-Survey(x)
+Survey(x, byAge = FALSE, bySize = FALSE, byFleet = TRUE, byStock = FALSE)
 
 Survey(x) <- value
 
@@ -60,6 +64,14 @@ DiscardsAtSize(x)
 
 DiscardsAtSize(x) <- value
 
+SurveyAtAge(x)
+
+SurveyAtAge(x) <- value
+
+SurveyAtSize(x)
+
+SurveyAtSize(x) <- value
+
 Value(x)
 
 Value(x) <- value
@@ -79,7 +91,18 @@ Reference(x) <- value
 \arguments{
 \item{x}{An S4 object with the corresponding slot.}
 
+\item{byStock}{For \code{CPUE()} and \code{Survey()} of a \link[=data-class]{data} object: \code{TRUE}
+returns the slot as stored, with indices or compositions held by stock
+kept separate (see \link[=data-class]{data}); \code{FALSE} (default) returns the indices
+of every element in one object, or compositions summed over stocks.}
+
 \item{value}{The value to assign to the slot.}
+
+\item{byAge, bySize}{For \code{Survey()} of a \link[=data-class]{data} object: \code{TRUE}
+returns the survey age (\code{SurveyAtAge}) or size (\code{SurveyAtSize})
+compositions as a tidy \code{data.frame} (see \code{\link[=Landings]{Landings()}}).}
+
+\item{byFleet}{For \code{Survey()} compositions: \code{FALSE} sums over surveys.}
 }
 \value{
 \itemize{
@@ -98,7 +121,7 @@ on any S4 object that contains the corresponding slot, and on a list of
 \tabular{ll}{
    Function \tab Slot of \cr
    \code{CPUE()}, \code{Survey()}, \code{LifeHistory()}, \code{Exploitation()} \tab \code{data}, \code{obs} \cr
-   \code{LandingsAtAge()}, \code{LandingsAtSize()}, \code{DiscardsAtAge()}, \code{DiscardsAtSize()} \tab \code{data}, \code{obs}, \link[=hist-class]{hist}, \link[=mse-class]{mse}, \link[=timeseries-class]{timeseries} \cr
+   \code{LandingsAtAge()}, \code{LandingsAtSize()}, \code{DiscardsAtAge()}, \code{DiscardsAtSize()}, \code{SurveyAtAge()}, \code{SurveyAtSize()} \tab \code{data}, \code{obs}, \link[=hist-class]{hist}, \link[=mse-class]{mse}, \link[=timeseries-class]{timeseries} \cr
    \code{Reference()} \tab \code{data}, \code{hist}, \code{mse}, \link[=depletion-class]{depletion} \cr
    \code{Value()} \tab the data components \cr
    \code{Ref()} \tab \code{catchdata}, \code{indicesdata}; also the observation components and \link[=pm-class]{pm} \cr

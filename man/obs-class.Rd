@@ -33,6 +33,13 @@ are populated with empty sub-objects by \code{\link[=Obs]{Obs()}} when not suppl
 \code{Data@Exploitation} when they are set; see \code{\link[=LifeHistoryObs]{LifeHistoryObs()}} and
 \code{\link[=ExploitationObs]{ExploitationObs()}}.
 
+The \code{Landings}, \code{Discards}, \code{CPUE}, \code{Survey}, and composition slots also
+accept a list of objects named by the complex name and/or stock names,
+matching stock-specific data in \code{OM@Data} (see \link[=data-class]{data}). With real
+data, the observation model of each element is conditioned on that
+element. Without real data, a list named by stock generates stock-specific
+data and a single object generates data for all stocks combined.
+
 Direct construction via \code{\link[methods:new]{methods::new()}} is not recommended; use \code{\link[=Obs]{Obs()}}
 instead, which initialises all sub-objects automatically.
 }
@@ -76,6 +83,13 @@ landed catch-at-length composition. See \code{\link[=CompObs]{CompObs()}}.}
 
 \item{\code{DiscardsAtSize}}{A \link[=compobs-class]{compobs} object. Observation error on
 discarded catch-at-length composition. See \code{\link[=CompObs]{CompObs()}}.}
+
+\item{\code{SurveyAtAge}}{A \link[=compobs-class]{compobs} object. Observation error on survey
+age composition. Used in the \code{obs} object of a survey. See \code{\link[=CompObs]{CompObs()}}.}
+
+\item{\code{SurveyAtSize}}{A \link[=compobs-class]{compobs} object. Observation error on survey
+length composition. Used in the \code{obs} object of a survey. See
+\code{\link[=CompObs]{CompObs()}}.}
 
 \item{\code{Misc}}{\code{list}. Miscellaneous additional objects.}
 }}

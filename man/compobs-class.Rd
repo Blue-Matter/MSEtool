@@ -81,6 +81,12 @@ between the fleet's last historical observation and the last historical
 year for which compositions are generated in projection years. \code{NULL} is
 \code{5}. See \code{\link[=CompObs]{CompObs()}}.}
 
+\item{\code{Joint}}{\code{logical(1)}. \code{TRUE} when the compositions this object
+generates for one stock are drawn as one sample with those of the other
+stocks of the complex whose objects are also \code{Joint} (for example,
+female and male compositions sampled together). Applies when the slot of
+the \link[=obs-class]{obs} object is a list named by stock. Default \code{FALSE}.}
+
 \item{\code{Misc}}{\code{list}. Reserved for internal use. \code{Misc$UserSupplied} names
 the slots set by the user before population.}
 }}

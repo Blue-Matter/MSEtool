@@ -36,6 +36,12 @@ tail of that fleet's slice in \code{Value}). See \code{\link[=CompData]{CompData
 (e.g., \code{"years"}, \code{"cm"}, \code{"mm"}), shared by every fleet. See
 \code{\link[=CompData]{CompData()}}.}
 
+\item{\code{Joint}}{\code{logical}, named by fleet. \code{TRUE} for a fleet whose
+compositions in this object and in the other stock-specific objects of
+the same slot (see \link[=data-class]{data}) are one sample per year: the counts of
+all those objects for that fleet and year share one sample size. Fleets
+not named are \code{FALSE}. See \code{\link[=CompData]{CompData()}}.}
+
 \item{\code{Log}}{\code{list}. Internal named list storing diagnostics, warnings, and
 assumptions recorded during processing. See \code{\link[=Log]{Log()}}. Not intended for
 direct user access.}
