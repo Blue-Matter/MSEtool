@@ -191,7 +191,7 @@ CompareSS_Discards <- function(SSDir, Hist, sim = 1, silent = FALSE, ...) {
   HistYears  <- Years(Hist@OM, 'H')
 
   FishFleets   <- which(replist$IsFishFleet)
-  SSFleetNames <- unique(replist$catch$Fleet_Name)[FishFleets]
+  SSFleetNames <- replist$FleetNames[FishFleets]
 
   catch_units <- replist$catch_units[FishFleets]  # "1" = biomass, "2" = numbers
 

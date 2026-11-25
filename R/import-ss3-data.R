@@ -247,7 +247,7 @@ ImportSSData <- function(SSDir,
 # observations.
 .GetSSDataYears <- function(replist, YearsList) {
   YearsHist <- YearsList$YearsHist
-  ObsYr <- purrr::map(c('cpue', 'agebase', 'lendbase'), \(tb) {
+  ObsYr <- purrr::map(c('cpue', 'agedbase', 'lendbase'), \(tb) {
     x <- replist[[tb]]
     if (!is.data.frame(x) || !all(c('Yr', 'Obs') %in% names(x))) return(NULL)
     x$Yr[is.finite(x$Obs)]
@@ -406,7 +406,7 @@ ImportSSData <- function(SSDir,
   AgeClasses    <- .GetSSAgeClasses(replist)
   nAge          <- length(AgeClasses)
 
-  AgeDB <- replist$agebase
+  AgeDB <- replist$agedbase
 
   if (is.null(AgeDB) || !nrow(AgeDB))
     return(list(Landings = new("compdata"), Discards = new("compdata")))

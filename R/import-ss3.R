@@ -503,7 +503,16 @@ ImportSS <- function(SSDir,
 
 .GetSSAgeClasses <- function(replist) {
   AgeClasses <- suppressWarnings(as.numeric(colnames(replist$natage)))
-  AgeClasses[!is.na(AgeClasses)]
+  AgeClasses <- AgeClasses[!is.na(AgeClasses)]
+  AgeClasses[AgeClasses >= .GetSSSettleAge(replist)]
+}
+
+# youngest settlement age (years); SS3 age classes below it are always empty
+.GetSSSettleAge <- function(replist) {
+  SettleAge <- replist$recruitment_dist$recruit_dist$Age
+  if (!length(SettleAge))
+    return(0)
+  floor(min(as.numeric(SettleAge)))
 }
 
 .GetSSLengthClasses <- function(replist) {
@@ -640,10 +649,32 @@ ImportSS <- function(SSDir,
        dimnames = list(Class = LengthClasses, Year = YearsList$YearsHist[1]))
 }
 
-.GetSSWeightAtAge <- function(st, replist, YearsList) {
-  
+# empirical weight-at-age (wtatage.ss) for SS3 fleet `fleet` (0 population,
+# -2 spawning output, > 0 fleet catch); NULL when not used or not reported
+.GetSSWtAtAge <- function(st, replist, YearsList, fleet, Ages) {
+  wtatage <- replist[["wtatage"]]
+  if (!isTRUE(replist[["wtatage_switch"]]) || is.null(wtatage) || YearsList$Seasons != 1)
+    return(NULL)
+  rows <- wtatage[wtatage$fleet == fleet & wtatage$sex == st & wtatage$seas == 1, , drop = FALSE]
+  if (!nrow(rows))
+    return(NULL)
+  rows <- rows[order(abs(rows$year)), , drop = FALSE]
+  YearsHist <- YearsList$YearsHist
+  # SS3 carries the latest earlier row forward to years without one
+  ind <- pmax(findInterval(YearsHist, abs(rows$year)), 1)
+  Value <- t(as.matrix(rows[ind, as.character(Ages@Classes), drop = FALSE]))
+  array(as.numeric(Value), dim = dim(Value),
+        dimnames = list(Age = Ages@Classes, Year = YearsHist))
+}
+
+.GetSSWeightAtAge <- function(st, replist, YearsList, Ages) {
+
   Age_Beg <- NULL
-  
+
+  WtAtAge <- .GetSSWtAtAge(st, replist, YearsList, 0, Ages)
+  if (!is.null(WtAtAge))
+    return(WtAtAge)
+
   if (!is.null(replist$mean_body_wt)) {
     cli::cli_abort("`replist$mean_body_wt` not currently supported.")
     # TODO - update
@@ -667,7 +698,7 @@ ImportSS <- function(SSDir,
   Weight@Units <- Units
 
   Weight@MeanAtAge <- purrr::map(RepList, \(replist) {
-    .GetSSWeightAtAge(st, replist, YearsList)
+    .GetSSWeightAtAge(st, replist, YearsList, Ages)
   }) |>
     List2Array("Sim", pos = 1) |>
     .ArraySubsetAge(Ages = Ages@Classes) |>
@@ -788,7 +819,7 @@ ImportSS <- function(SSDir,
 
   if (all(is.na(M_at_age[nrow(M_at_age), ]))) {
     endgrowth <- replist$endgrowth |> dplyr::filter(Sex == st)
-    M_at_age[nrow(M_at_age), ] <- endgrowth$M[length(AgeClasses)]
+    M_at_age[nrow(M_at_age), ] <- endgrowth$M[match(max(AgeClasses), endgrowth$Age_Beg)]
   }
 
   if (YearsList$TimeUnits == "year") {
@@ -819,6 +850,7 @@ ImportSS <- function(SSDir,
 
   if (any(endgrowth$Age_Mat < 0)) endgrowth$Age_Mat <- abs(endgrowth$Age_Mat) # Should all be 1's
   if (any(endgrowth$Len_Mat < 0)) endgrowth$Len_Mat <- abs(endgrowth$Len_Mat)
+  endgrowth <- endgrowth[endgrowth$Age_Beg %in% Ages@Classes, ]
   Mat_age <- endgrowth$Len_Mat * endgrowth$Age_Mat
   array(Mat_age,
     dim = c(length(Ages@Classes), 1),
@@ -878,7 +910,11 @@ ImportSS <- function(SSDir,
   }
 
   # Mat*Fecund is the SS3 spawning output per fish in either units; Age_Mat can be a -1 placeholder
-  endgrowth <- replist$endgrowth |> dplyr::filter(Morph == 1, Sex == st)
+  WtAtAge <- .GetSSWtAtAge(st, replist, YearsList, -2, Ages)
+  if (!is.null(WtAtAge))
+    return(WtAtAge)
+
+  endgrowth <- replist$endgrowth |> dplyr::filter(Morph == 1, Sex == st, Age_Beg %in% Ages@Classes)
   if (!is.null(endgrowth[["Mat*Fecund"]])) {
     fec_age <- endgrowth |> dplyr::mutate(Fecundity = `Mat*Fecund`)
   } else if (!is.null(endgrowth$Mat_F_wtatage)) {
@@ -1104,7 +1140,7 @@ ImportSS <- function(SSDir,
 }
 
 .SSAgeToAgeClasses <- function(x, replist, Ages) {
-  FullAgeClasses <- seq(0, by = 1 / CalcSeasons(Ages@Units), to = max(Ages@Classes))
+  FullAgeClasses <- seq(min(.GetSSAgeClasses(replist)), by = 1 / CalcSeasons(Ages@Units), to = max(Ages@Classes))
   array(rep(x, each = replist$nseasons),
     dim = length(FullAgeClasses),
     dimnames = list(Age = FullAgeClasses)
@@ -1115,13 +1151,15 @@ ImportSS <- function(SSDir,
 .GetSSRecDevsRaw <- function(replist, YearsList, Ages) {
   YearsHist <- YearsList$YearsHist
   recruit   <- replist$recruit
+  # SS3 keys deviations by spawn year; the OM by the year recruits first appear
+  SettleAge <- .GetSSSettleAge(replist)
 
-  Rec_main <- recruit[recruit$Yr %in% YearsHist, ]
+  Rec_main <- recruit[recruit$Yr %in% (YearsHist - SettleAge), ]
 
   dev <- Rec_main$pred_recr / Rec_main$exp_recr
   dev <- array(dev,
     dim = length(dev),
-    dimnames = list(Year = YearsHist[match(Rec_main$Yr, YearsHist)])
+    dimnames = list(Year = YearsHist[match(Rec_main$Yr + SettleAge, YearsHist)])
   )
 
   # The OM sets the recruitment of the initial time steps (the first, and the
@@ -1180,8 +1218,11 @@ ImportSS <- function(SSDir,
 
   bp <- replist$breakpoints_for_bias_adjustment_ramp
   if (!is.null(bp) && nrow(bp) >= 1) {
-    first_full <- ceiling(as.numeric(bp$first_yr_full[1]))
-    last_full  <- floor(as.numeric(bp$last_yr_full[1]))
+    bpYears    <- suppressWarnings(as.numeric(unlist(bp[1, ])))
+    # some r4ss versions read the row label into the first column, shifting the names
+    Shifted    <- is.na(bpYears[1])
+    first_full <- ceiling(if (Shifted) bpYears[3] else as.numeric(bp$first_yr_full[1]))
+    last_full  <- floor(if (Shifted) bpYears[4] else as.numeric(bp$last_yr_full[1]))
   } else {
     onPlateau  <- !is.na(rec$biasadjuster) & rec$biasadjuster >= 0.99 * maxBA
     plateauYrs <- rec$Yr[onPlateau]
@@ -1212,7 +1253,7 @@ ImportSS <- function(SSDir,
   AnnualYearsHist <- unique(floor(YearsList$YearsHist))
   plateau <- .GetSSPlateauYears(replist, AnnualYearsHist)$plateau
 
-  logdev <- log(dev[as.character(plateau)])
+  logdev <- log(dev[as.character(plateau + .GetSSSettleAge(replist))])
   logdev <- logdev[is.finite(logdev)]
   AC <- if (length(logdev) < 2) 0 else stats::acf(logdev, lag.max = 1, plot = FALSE)$acf[2]
 
@@ -1246,6 +1287,7 @@ ImportSS <- function(SSDir,
 
   AnnualYearsHist <- unique(floor(YearsHist))
   trailing <- .GetSSPlateauYears(replist, AnnualYearsHist)$trailing_unsupported
+  trailing <- intersect(trailing + .GetSSSettleAge(replist), AnnualYearsHist)
   if (length(trailing)) dev[as.character(trailing)] <- NA_real_
 
   if (Seasons == 1)
@@ -1330,6 +1372,20 @@ ImportSS <- function(SSDir,
   array(R0, length(R0), dimnames = list(Year = YearsAll))
 }
 
+# fraction of the spawning season elapsed at spawning; r4ss leaves
+# Spawn_timing_in_season NA for recent SS3 versions
+.GetSSSpawnTimeFrac <- function(replist) {
+  Frac <- replist$Spawn_timing_in_season
+  if (length(Frac) && !is.na(Frac[1]))
+    return(Frac[1])
+  Month <- replist$Spawn_month
+  if (!length(Month) || is.na(Month[1]))
+    return(0)
+  Seasons   <- replist$nseasons %||% 1
+  SpawnSeas <- replist$spawnseas %||% 1
+  (Month[1] - 1) / 12 * Seasons - (SpawnSeas[1] - 1)
+}
+
 .SS2SRR <- function(st, RepList, YearsList, Ages, nSim, R0Units = 1) {
   RecDevStats <- purrr::map(RepList, \(replist) .GetSSRecDevStats(replist, YearsList, Ages))
   SD <- purrr::map_dbl(RecDevStats, "SD")
@@ -1360,8 +1416,7 @@ ImportSS <- function(SSDir,
     List2Array("Sim", pos = 1)
 
   Seasons <- YearsList$Seasons
-  SpawnTimeFrac <- ifelse(is.na(RepList[[1]]$Spawn_timing_in_season), 0,
-                          RepList[[1]]$Spawn_timing_in_season)
+  SpawnTimeFrac <- .GetSSSpawnTimeFrac(RepList[[1]])
 
   spawn_lag <- if (Seasons > 1) .GetSSSpawnLag(RepList[[1]]) else NULL
 
@@ -1525,6 +1580,14 @@ ImportSS <- function(SSDir,
                                                        Selectivity = Fleet@Selectivity,
                                                        Retention = Fleet@Retention,
                                                        Stock)
+
+  FleetWtAtAge <- purrr::map(RepList, \(replist)
+    .GetSSWtAtAge(st, replist, YearsList, SSFleet, Stock@Ages))
+  if (!any(purrr::map_lgl(FleetWtAtAge, is.null))) {
+    Fleet@WeightFleetSelected <- List2Array(FleetWtAtAge, "Sim", pos = 1)
+    Fleet@WeightFleetRetained <- Fleet@WeightFleetSelected
+    return(Fleet)
+  }
 
   Fleet@WeightFleetSelected <- .CalcFleetWeightAtAge(
     Selectivity = Fleet@Selectivity,
@@ -1736,6 +1799,8 @@ ImportSS <- function(SSDir,
 
 .SS2DiscardMortality <- function(st, fl, RepList, YearsList, Selectivity, Retention, Stock) {
   DiscardMortality <- DiscardMortality()
+  if (is.null(RepList[[1]]$sizeselex))
+    return(.SS2AgeRatio(DiscardMortality, "DiscardMortality", st, fl, RepList, YearsList, Stock))
 
   DiscardMortality@MeanAtLength <- purrr::map(RepList, \(replist)
   .GetSSDiscardMortalityAtLength(st, fl, replist, YearsList, Stock)) |>
@@ -1888,6 +1953,19 @@ ImportSS <- function(SSDir,
   # TODO - ideally import SS3 selectivity models and parameters
 
   Selectivity <- Selectivity(Pars = list())
+  Selectivity@MeanAtAge <- purrr::map(RepList, \(replist)
+  .GetSSSelectivityAtAge(
+    st, fl, replist,
+    YearsList, Stock
+  )) |>
+    List2Array("Sim", pos = 1)
+
+  # LEN_SELEX report turned off in starter/control: at-age schedules only
+  if (is.null(RepList[[1]]$sizeselex)) {
+    Selectivity@isAtLength <- FALSE
+    return(Selectivity)
+  }
+
   Selectivity@MeanAtLength <- purrr::map(RepList, \(replist)
   .GetSSSelectivityAtLength(
     st, fl, replist,
@@ -1895,15 +1973,47 @@ ImportSS <- function(SSDir,
   )) |>
     List2Array("Sim", pos = 1) 
   Selectivity@Classes <- as.numeric(dimnames(Selectivity@MeanAtLength)$Class)
-
-  Selectivity@MeanAtAge <- purrr::map(RepList, \(replist)
-  .GetSSSelectivityAtAge(
-    st, fl, replist,
-    YearsList, Stock
-  )) |>
-    List2Array("Sim", pos = 1) 
-
   Selectivity
+}
+
+# end-year retention or discard mortality at age from ageselex's sel/ret/dead numbers
+.GetSSAgeRatio <- function(st, fl, replist, YearsList, Stock,
+                           type = c("Retention", "DiscardMortality")) {
+  Factor <- Fleet <- NULL # CRAN checks
+  type <- match.arg(type)
+  AgeClasses <- Stock@Ages@Classes
+  SSAgeCols  <- as.character(.GetSSAgeClasses(replist))
+  ageselex   <- dplyr::filter(replist$ageselex, Fleet == fl, Sex == st)
+
+  GetFactor <- function(fac) {
+    rows <- dplyr::filter(ageselex, Factor == fac)
+    if (!nrow(rows))
+      return(rep(0, length(SSAgeCols)))
+    as.numeric(rows[which.max(rows$Yr), SSAgeCols])
+  }
+  Sel  <- GetFactor("sel_nums")
+  Ret  <- GetFactor("sel*ret_nums")
+  Dead <- GetFactor("dead_nums")
+
+  Ratio <- rep(1, length(SSAgeCols))
+  if (type == "Retention") {
+    ok <- Sel > 1e-12
+    Ratio[ok] <- Ret[ok] / Sel[ok]
+  } else {
+    ok <- Sel - Ret > 1e-12
+    Ratio[ok] <- (Dead[ok] - Ret[ok]) / (Sel[ok] - Ret[ok])
+  }
+  Ratio <- pmin(pmax(Ratio, 0), 1)[match(floor(AgeClasses + 1e-8), as.numeric(SSAgeCols))]
+
+  array(Ratio, c(length(AgeClasses), length(YearsList$YearsHist)),
+        dimnames = list(Age = AgeClasses, Year = YearsList$YearsHist))
+}
+
+.SS2AgeRatio <- function(object, type, st, fl, RepList, YearsList, Stock) {
+  object@MeanAtAge <- purrr::map(RepList, \(replist)
+    .GetSSAgeRatio(st, fl, replist, YearsList, Stock, type = type)) |>
+    List2Array("Sim", pos = 1)
+  object
 }
 
 .GetSSRetentionAtLength <- function(st, fl, replist, YearsList) {
@@ -1928,6 +2038,10 @@ ImportSS <- function(SSDir,
 
 .SS2Retention <- function(st, fl, RepList, YearsList, Selectivity, Stock) {
   Retention                    <- Retention(Pars = list())
+  if (is.null(RepList[[1]]$sizeselex)) {
+    Retention@isAtLength <- FALSE
+    return(.SS2AgeRatio(Retention, "Retention", st, fl, RepList, YearsList, Stock))
+  }
   Retention@MeanAtLength       <- purrr::map(RepList, \(replist)
                                              .GetSSRetentionAtLength(st, fl, replist,
                                                                      YearsList)) |>
