@@ -363,71 +363,75 @@ CombineFleets <- function(OM, FleetList = NULL, silent = FALSE) {
   type <- match.arg(type)
 
   for (st in seq_along(OM@Data)) {
-    data <- slot(OM@Data[[st]], type)
+    Elements <- .SlotElements(slot(OM@Data[[st]], type), "")
+    for (el in seq_along(Elements)) {
+      data <- Elements[[el]]
 
-    if (is.null(data@Value)) next
+      if (is.null(data@Value)) next
 
-    nFleet   <- length(data@Name)
-    hasRef   <- methods::.hasSlot(data, "Ref")
-    drop_ind <- integer(0)
+      nFleet   <- length(data@Name)
+      hasRef   <- methods::.hasSlot(data, "Ref")
+      drop_ind <- integer(0)
 
-    for (fl in seq_along(FleetList)) {
-      combine_fleets <- FleetList[[fl]]
-      new_name <- names(FleetList)[fl]
+      for (fl in seq_along(FleetList)) {
+        combine_fleets <- FleetList[[fl]]
+        new_name <- names(FleetList)[fl]
 
-      ind <- match(combine_fleets, data@Name)
-      if (all(is.na(ind))) next
+        ind <- match(combine_fleets, data@Name)
+        if (all(is.na(ind))) next
 
-      if (anyNA(ind)) {
-        OM <- .LogCombineFleetsDrop(OM, st, type, new_name,
-                                    .MissingFleetsReason(combine_fleets[is.na(ind)]), silent)
-        drop_ind <- c(drop_ind, ind[!is.na(ind)])
-        next
+        if (anyNA(ind)) {
+          OM <- .LogCombineFleetsDrop(OM, st, type, new_name,
+                                      .MissingFleetsReason(combine_fleets[is.na(ind)]), silent)
+          drop_ind <- c(drop_ind, ind[!is.na(ind)])
+          next
+        }
+
+        units <- if (length(data@Units) == nFleet) data@Units[ind] else NULL
+        # fleets with no data for this type have NA units
+        units <- unique(units[!is.na(units)])
+        if (length(units) > 1) {
+          if (type != 'Effort')
+            cli::cli_abort(c('x'='{.val {type}}: Units must be the same for all combined fleets',
+                             'i'='Units for Fleets {.val {combine_fleets}}: {.val {units}}'))
+          OM <- .LogCombineFleetsDrop(OM, st, type, new_name,
+                                      cli::format_inline("fleets {.val {combine_fleets}} record effort in different units ({.val {units}})."),
+                                      silent)
+          drop_ind <- c(drop_ind, ind)
+          next
+        }
+
+        values <- data@Value[, ind, drop = FALSE]
+        if (.HasFleetColumns(data@CV, nFleet))
+          data@CV[, ind[1]] <- .SumCV(values, data@CV[, ind, drop = FALSE])
+        data@Value[, ind[1]] <- .SumOrNA(values)
+        if (length(units)) data@Units[ind[1]] <- units
+
+        if (hasRef && .HasFleetColumns(data@Ref, nFleet)) {
+          refs <- data@Ref[, ind, drop = FALSE]
+          if (.HasFleetColumns(data@RefCV, nFleet))
+            data@RefCV[, ind[1]] <- .SumCV(refs, data@RefCV[, ind, drop = FALSE])
+          data@Ref[, ind[1]] <- .SumOrNA(refs)
+        }
+
+        for (sl in c("Value", "CV", if (hasRef) c("Ref", "RefCV")))
+          if (.HasFleetColumns(slot(data, sl), nFleet))
+            slot(data, sl) <- .RenameColumn(slot(data, sl), ind[1], new_name)
+        data@Name[ind[1]] <- new_name
+        drop_ind <- c(drop_ind, ind[-1])
       }
 
-      units <- if (length(data@Units) == nFleet) data@Units[ind] else NULL
-      # fleets with no data for this type have NA units
-      units <- unique(units[!is.na(units)])
-      if (length(units) > 1) {
-        if (type != 'Effort')
-          cli::cli_abort(c('x'='{.val {type}}: Units must be the same for all combined fleets',
-                           'i'='Units for Fleets {.val {combine_fleets}}: {.val {units}}'))
-        OM <- .LogCombineFleetsDrop(OM, st, type, new_name,
-                                    cli::format_inline("fleets {.val {combine_fleets}} record effort in different units ({.val {units}})."),
-                                    silent)
-        drop_ind <- c(drop_ind, ind)
-        next
+      if (length(drop_ind)) {
+        drop_ind   <- sort(unique(drop_ind))
+        data@Value <- data@Value[, -drop_ind, drop = FALSE]
+        data@Name  <- data@Name[-drop_ind]
+        for (sl in c("CV", "Units", if (hasRef) c("Ref", "RefCV")))
+          slot(data, sl) <- .DropIndexEntries(slot(data, sl), drop_ind, nFleet)
       }
 
-      values <- data@Value[, ind, drop = FALSE]
-      if (.HasFleetColumns(data@CV, nFleet))
-        data@CV[, ind[1]] <- .SumCV(values, data@CV[, ind, drop = FALSE])
-      data@Value[, ind[1]] <- .SumOrNA(values)
-      if (length(units)) data@Units[ind[1]] <- units
-
-      if (hasRef && .HasFleetColumns(data@Ref, nFleet)) {
-        refs <- data@Ref[, ind, drop = FALSE]
-        if (.HasFleetColumns(data@RefCV, nFleet))
-          data@RefCV[, ind[1]] <- .SumCV(refs, data@RefCV[, ind, drop = FALSE])
-        data@Ref[, ind[1]] <- .SumOrNA(refs)
-      }
-
-      for (sl in c("Value", "CV", if (hasRef) c("Ref", "RefCV")))
-        if (.HasFleetColumns(slot(data, sl), nFleet))
-          slot(data, sl) <- .RenameColumn(slot(data, sl), ind[1], new_name)
-      data@Name[ind[1]] <- new_name
-      drop_ind <- c(drop_ind, ind[-1])
+      Elements[[el]] <- data
     }
-
-    if (length(drop_ind)) {
-      drop_ind   <- sort(unique(drop_ind))
-      data@Value <- data@Value[, -drop_ind, drop = FALSE]
-      data@Name  <- data@Name[-drop_ind]
-      for (sl in c("CV", "Units", if (hasRef) c("Ref", "RefCV")))
-        slot(data, sl) <- .DropIndexEntries(slot(data, sl), drop_ind, nFleet)
-    }
-
-    slot(OM@Data[[st]], type) <- data
+    slot(OM@Data[[st]], type) <- if (is.list(slot(OM@Data[[st]], type))) Elements else Elements[[1]]
   }
   OM
 }
@@ -446,7 +450,7 @@ CombineFleets <- function(OM, FleetList = NULL, silent = FALSE) {
 
   for (st in seq_along(OM@Data)) {
     Elements <- .SlotElements(slot(OM@Data[[st]], type), "")
-    for (el in names(Elements)) {
+    for (el in seq_along(Elements)) {
       data <- Elements[[el]]
 
       if (is.null(data@Value)) next
@@ -495,7 +499,7 @@ CombineFleets <- function(OM, FleetList = NULL, silent = FALSE) {
 
   for (st in seq_along(OM@Data)) {
     Elements <- .SlotElements(slot(OM@Data[[st]], type), "")
-    for (el in names(Elements)) {
+    for (el in seq_along(Elements)) {
       data <- Elements[[el]]
 
       if (is.null(data@Value)) next
