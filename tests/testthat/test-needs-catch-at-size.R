@@ -30,7 +30,7 @@ test_that(".NeedsCatchAtSize() auto-detects per stock from Obs configuration", {
   expect_true(any(needed))
   expect_true(any(!needed))
 
-  # Matches the underlying no_obs check .GenHistDataSizeComp() uses itself
+  # Matches the underlying no_obs check .GenHistDataComp() uses itself
   complexes <- Complexes(om)
   for (i in seq_along(complexes)) {
     no_obs <- all(vapply(c('LandingsAtSize', 'DiscardsAtSize'), \(type) {
