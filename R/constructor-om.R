@@ -49,8 +49,8 @@
 #' @param Imp A hierarchical named list of [imp-class] objects indexed by
 #'   stock and fleet. Default `NULL`. See [Imp()] for construction and
 #'   pass-through access.
-#' @param Data A [data-class] object or list of [data-class] objects
-#'   associated with the operating model. Default `NULL`. See [Data()] for
+#' @param Data A [data-class] object, or a list of [data-class] objects with
+#'   one per stock complex, named by complex. Default `NULL`. See [Data()] for
 #'   construction and pass-through access.
 #' @param DataLag Integer. Number of years that data are lagged relative
 #'   to management implementation. Default `0`. See [DataLag()].

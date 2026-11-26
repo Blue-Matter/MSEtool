@@ -10,6 +10,13 @@ The \code{data} class stores observed or simulated fishery data used by an
 patterns, catches, indices, age and size compositions, and management advice.
 }
 \details{
+A \code{data} object holds the data of one stock complex. \code{OM@Data} is a list
+with one \code{data} object per complex, named by complex (see the \code{Complexes}
+argument of \code{\link[=OM]{OM()}}); when no complexes are defined, each stock is its own
+complex. The catch, effort, index, and composition slots hold data for all
+stocks in the complex combined. \code{LifeHistory} and \code{Exploitation} hold values
+for each stock in the complex.
+
 Objects should be created with the \code{\link[=Data]{Data()}} constructor, which initialises
 all sub-object slots to empty objects of the appropriate class when not
 supplied.

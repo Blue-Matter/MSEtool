@@ -123,8 +123,8 @@ related advice.}
 object or a list of them, for \code{YearLH()} and \verb{YearLH<-}.}
 
 \item{value}{For \verb{Data<-}: a \link[=data-class]{data} object, or a list of
-\link[=data-class]{data} objects for multi-stock operating models, to assign to the
-\code{Data} slot. For \verb{YearLH<-}: the last historical year.}
+\link[=data-class]{data} objects with one per stock complex, named by complex, to
+assign to the \code{Data} slot. For \verb{YearLH<-}: the last historical year.}
 }
 \value{
 A \link[=data-class]{data} object, or when \code{Name} is an \link[=mse-class]{mse} object, a list
@@ -159,6 +159,16 @@ the appropriate class is initialised automatically:
 \item \code{LandingsAtAge}, \code{DiscardsAtAge}, \code{LandingsAtSize}, \code{DiscardsAtSize} → \link[=compdata-class]{compdata}
 \item \code{Advice} → \link[=advicedata-class]{advicedata}
 }
+\subsection{Stock Complexes}{
+
+A \link[=data-class]{data} object holds the data of one stock complex. \code{OM@Data} is a
+list with one object per complex, named by complex (see the \code{Complexes}
+argument of \code{\link[=OM]{OM()}}); when no complexes are defined, each stock is its own
+complex. A single object assigned to \code{OM@Data} is the data of the first
+complex. The catch, effort, index, and composition data are for all stocks
+in the complex combined.
+}
+
 \subsection{Life History and Exploitation}{
 
 \code{LifeHistory} holds one \link[=lifehistorydata-class]{lifehistorydata} object per stock and

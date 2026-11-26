@@ -435,6 +435,13 @@ AdviceData <- function() {
 #' [OM()] object. Data may include life-history information, exploitation
 #' patterns, catches, indices, age and size compositions, and management advice.
 #'
+#' A `data` object holds the data of one stock complex. `OM@@Data` is a list
+#' with one `data` object per complex, named by complex (see the `Complexes`
+#' argument of [OM()]); when no complexes are defined, each stock is its own
+#' complex. The catch, effort, index, and composition slots hold data for all
+#' stocks in the complex combined. `LifeHistory` and `Exploitation` hold values
+#' for each stock in the complex.
+#'
 #' Objects should be created with the [Data()] constructor, which initialises
 #' all sub-object slots to empty objects of the appropriate class when not
 #' supplied.

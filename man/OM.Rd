@@ -115,8 +115,8 @@ pass-through access.}
 stock and fleet. Default \code{NULL}. See \code{\link[=Imp]{Imp()}} for construction and
 pass-through access.}
 
-\item{Data}{A \link[=data-class]{data} object or list of \link[=data-class]{data} objects
-associated with the operating model. Default \code{NULL}. See \code{\link[=Data]{Data()}} for
+\item{Data}{A \link[=data-class]{data} object, or a list of \link[=data-class]{data} objects with
+one per stock complex, named by complex. Default \code{NULL}. See \code{\link[=Data]{Data()}} for
 construction and pass-through access.}
 
 \item{DataLag}{Integer. Number of years that data are lagged relative

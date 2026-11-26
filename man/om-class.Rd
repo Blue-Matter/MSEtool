@@ -87,8 +87,8 @@ and fleet. See \code{\link[=Obs]{Obs()}}.}
 \item{\code{Imp}}{A hierarchical named list of \link[=imp-class]{imp} objects indexed by stock
 and fleet. See \code{\link[=Imp]{Imp()}}.}
 
-\item{\code{Data}}{A \link[=data-class]{data} object or list of \link[=data-class]{data} objects associated
-with the operating model. See \code{\link[=Data]{Data()}}.}
+\item{\code{Data}}{A \link[=data-class]{data} object, or a list of \link[=data-class]{data} objects with
+one per stock complex, named by complex. See \code{\link[=Data]{Data()}}.}
 
 \item{\code{DataLag}}{Integer. Number of years that data are lagged relative
 to management implementation. See \code{\link[=DataLag]{DataLag()}}.}
