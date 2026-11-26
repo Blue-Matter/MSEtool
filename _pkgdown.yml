@@ -330,6 +330,7 @@ reference:
 
 - subtitle: Operating Model Components
   contents:
+  - PlotOM
   - PlotStock
   - PlotFleet
   - print.PlotStockList
@@ -342,6 +343,7 @@ reference:
   - PlotSRR
   - PlotRecDevs
   - PlotSpatial
+  - PlotHerm
   - PlotDepletion
   - PlotALK
   - PlotAWK
@@ -363,6 +365,12 @@ reference:
   - plot_comp
   - PlotIndexFit
   - PlotCompShift
+
+- subtitle: MSE Performance
+  desc: >
+    Plot management procedure performance with the Slick plotting functions.
+  contents:
+  - plot_performance
 
 
 - title: Models

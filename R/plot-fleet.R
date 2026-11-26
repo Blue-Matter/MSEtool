@@ -10,9 +10,9 @@
 #' @param Stock A [stock-class] object supplying the biology needed to
 #'   populate a bare [fleet-class] `Fleet`. Ignored otherwise. Default
 #'   `NULL` uses an example stock, with a message noting this.
-#' @param byStock Logical. Facet by stock? Passed to each `Plot*()`
-#'   function. Default `NULL` facets automatically when `Fleet` has more
-#'   than one stock.
+#' @param byStock Logical. Passed to each `Plot*()` function. `FALSE`
+#'   (default) draws each stock as its own colored line; `TRUE` facets by
+#'   stock. The closure plot always facets by stock.
 #' @param byFleet Logical. Facet by fleet? Passed to each `Plot*()`
 #'   function. Default `NULL` facets automatically when `Fleet` has more
 #'   than one fleet.
@@ -35,7 +35,7 @@
 #'   [PlotDiscardMortality()], [PlotEffort()], [PlotCatchability()],
 #'   [PlotClosure()]
 #' @export
-PlotFleet <- function(Fleet, Stock = NULL, byStock = NULL, byFleet = NULL, Stocks = NULL,
+PlotFleet <- function(Fleet, Stock = NULL, byStock = FALSE, byFleet = NULL, Stocks = NULL,
                       Years = NULL, probs = c(0.05, 0.95), silent = FALSE) {
   .CheckClass(Fleet, c('fleet', 'om', 'hist', 'mse'), 'Fleet')
 
@@ -57,10 +57,20 @@ PlotFleet <- function(Fleet, Stock = NULL, byStock = NULL, byFleet = NULL, Stock
                                   Stocks = Stocks, Years = Years, probs = probs),
     Catchability     = PlotCatchability(Fleet, Stock = Stock, byStock = byStock, byFleet = byFleet,
                                         Stocks = Stocks, Years = Years, probs = probs),
-    Closure          = PlotClosure(Fleet, Stock = Stock, byStock = byStock, Stocks = Stocks, Years = Years)
+    Closure          = PlotClosure(Fleet, Stock = Stock, byStock = if (isTRUE(byStock)) TRUE else NULL, Stocks = Stocks, Years = Years)
   )) |> purrr::compact()
 
   class(result) <- c('PlotFleetList', class(result))
   attr(result, 'silent') <- silent
   result
 }
+
+#' @param x A [fleet-class] object.
+#' @param y Unused.
+#' @param ... Additional arguments passed to `PlotFleet()`.
+#' @rdname PlotFleet
+#' @aliases plot,fleet,ANY-method
+#' @export
+setMethod('plot', 'fleet', function(x, y, ...) {
+  PlotFleet(x, ...)
+})

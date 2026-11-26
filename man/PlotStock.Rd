@@ -2,6 +2,7 @@
 % Please edit documentation in R/plot-stock.R
 \name{PlotStock}
 \alias{PlotStock}
+\alias{plot,stock,ANY-method}
 \title{Plot All Biological Schedules for a Stock}
 \usage{
 PlotStock(
@@ -19,6 +20,8 @@ PlotStock(
   CalcAtLength = FALSE,
   silent = FALSE
 )
+
+\S4method{plot}{stock,ANY}(x, y, ...)
 }
 \arguments{
 \item{Stock}{A \code{\link[=Stock]{Stock()}} object (populated or not), or an \link[=om-class]{om},
@@ -41,6 +44,12 @@ explicitly set, in which case it's re-populated with these values.}
 \item{silent}{Logical. If \code{TRUE}, the returned list doesn't announce what
 it contains when printed at the console (see \code{\link[=print.PlotStockList]{print.PlotStockList()}}).
 Default \code{FALSE}.}
+
+\item{x}{A \link[=stock-class]{stock} object.}
+
+\item{y}{Unused.}
+
+\item{...}{Additional arguments passed to \code{PlotStock()}.}
 }
 \value{
 A named list of \code{ggplot}/\code{patchwork} objects: \code{Length}, \code{Weight},

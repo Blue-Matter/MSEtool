@@ -16,8 +16,9 @@
 #'   quantile ribbon (unless `nSim == 1`).
 #' @param probs Numeric vector of length 2. Lower and upper quantiles of the
 #'   across-simulation ribbon drawn when `Sim = NULL`. Default `c(0.05, 0.95)`.
-#' @param byStock One of `TRUE`, `FALSE`, or `NULL` (default, facets
-#'   automatically when `object` has more than one stock).
+#' @param byStock Logical. `FALSE` (default) draws each stock as its own
+#'   colored line, with the period shown by linetype; `TRUE` facets by
+#'   `Stock`.
 #' @param Stocks Character or numeric vector. Restrict the plot to specific
 #'   stocks, either by name (matching [StockNames()]) or by index. Default
 #'   `NULL` (all stocks).
@@ -26,7 +27,7 @@
 #' @export
 #'
 #' @seealso [PlotSRR()], [PlotSRRCurve()], [GenRecDevs()], [srr-class]
-PlotRecDevs <- function(object, Sim = NULL, byStock = NULL, Stocks = NULL, probs = c(0.05, 0.95)) {
+PlotRecDevs <- function(object, Sim = NULL, byStock = FALSE, Stocks = NULL, probs = c(0.05, 0.95)) {
   .CheckClass(object, c('stock', 'hist', 'mse', 'om'), 'object')
   if (inherits(object, 'stock')) object <- .StockToShellHist(object)
   OM         <- .ResolveOM(object)
@@ -71,7 +72,13 @@ PlotRecDevs <- function(object, Sim = NULL, byStock = NULL, Stocks = NULL, probs
       .groups = 'drop'
     )
 
-  p <- ggplot2::ggplot(summ, ggplot2::aes(x = .data$Year, y = .data$Value, color = .data$Period, fill = .data$Period))
+  facet    <- !isFALSE(byStock) && length(unique(summ$Stock)) > 1
+  colorVar <- if (!facet && length(unique(summ$Stock)) > 1) 'Stock' else 'Period'
+  summ$.group <- interaction(summ$Stock, summ$Period, drop = TRUE)
+  p <- ggplot2::ggplot(summ, ggplot2::aes(x = .data$Year, y = .data$Value, color = .data[[colorVar]],
+                                          fill = .data[[colorVar]], group = .data$.group))
+  if (colorVar == 'Stock')
+    p <- p + ggplot2::aes(linetype = .data$Period)
 
   if (showRibbon)
     p <- p + ggplot2::geom_ribbon(ggplot2::aes(ymin = .data$Lower, ymax = .data$Upper), alpha = 0.2, color = NA)
@@ -81,12 +88,12 @@ PlotRecDevs <- function(object, Sim = NULL, byStock = NULL, Stocks = NULL, probs
     ggplot2::geom_vline(data = boundaries, ggplot2::aes(xintercept = .data$HistProj), linetype = 'dashed', color = 'grey30', inherit.aes = FALSE) +
     ggplot2::geom_line() +
     ggplot2::theme_bw() +
-    ggplot2::labs(x = 'Year', y = 'log Recruitment Deviation', color = NULL, fill = NULL)
+    ggplot2::labs(x = 'Year', y = 'log Recruitment Deviation', color = NULL, fill = NULL, linetype = NULL)
 
   if (any(is.finite(boundaries$InitHist)))
     p <- p + ggplot2::geom_vline(data = boundaries, ggplot2::aes(xintercept = .data$InitHist), linetype = 'dotted', color = 'grey30', inherit.aes = FALSE)
 
-  if (!isFALSE(byStock) && length(unique(summ$Stock)) > 1)
+  if (facet)
     p <- p + ggplot2::facet_wrap('Stock', scales = 'free_x')
 
   p

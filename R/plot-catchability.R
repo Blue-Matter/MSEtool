@@ -11,8 +11,9 @@
 #' @param Stock A [stock-class] object supplying the biology needed to
 #'   populate a bare [fleet-class] `object`. Ignored otherwise. Default
 #'   `NULL` uses an example stock, with a message noting this.
-#' @param byStock,byFleet One of `TRUE`, `FALSE`, or `NULL` (default,
-#'   facets automatically when `object` has more than one stock/fleet).
+#' @param byStock,byFleet `TRUE` facets by stock/fleet; `FALSE` draws each
+#'   as its own colored line. `byStock` defaults to `FALSE`; `byFleet`
+#'   defaults to `NULL`, which facets when `object` has more than one fleet.
 #' @param Stocks Character or numeric vector. Restrict the plot to specific
 #'   stocks, either by name (matching [StockNames()]) or by index. Default
 #'   `NULL` (all stocks).
@@ -27,7 +28,7 @@
 #'
 #' @seealso [Catchability()], [PlotEffort()], [Fleet()]
 #' @export
-PlotCatchability <- function(object, Stock = NULL, byStock = NULL, byFleet = NULL, Stocks = NULL,
+PlotCatchability <- function(object, Stock = NULL, byStock = FALSE, byFleet = NULL, Stocks = NULL,
                              Years = NULL, probs = c(0.05, 0.95), nsim = 0) {
   .CheckClass(object, c('fleet', 'om', 'hist', 'mse'), 'object')
   if (inherits(object, 'fleet')) object <- .FleetToShellHist(object, Stock)

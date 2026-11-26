@@ -5,6 +5,7 @@
 \alias{plot,hist,ANY-method}
 \alias{plot,mse,ANY-method}
 \alias{PlotNumber}
+\alias{PlotRecruits}
 \alias{PlotBiomass}
 \alias{PlotSBiomass}
 \alias{PlotSProduction}
@@ -14,12 +15,13 @@
 \alias{PlotDiscards}
 \alias{PlotInteractions}
 \alias{PlotRemovals}
+\alias{PlotCatch}
 \alias{PlotDynamics}
 \title{Plot Historical and Projected Dynamics}
 \usage{
 PlotNumber(
   object,
-  byStock = NULL,
+  byStock = FALSE,
   probs = c(0.05, 0.95),
   nsim = 0,
   Years = NULL,
@@ -31,9 +33,23 @@ PlotNumber(
   Stocks = NULL
 )
 
+PlotRecruits(
+  object,
+  byStock = FALSE,
+  probs = c(0.05, 0.95),
+  nsim = 0,
+  Years = NULL,
+  free_y = NULL,
+  IncHist = TRUE,
+  byMP = FALSE,
+  AggregateYear = FALSE,
+  units = TRUE,
+  Stocks = NULL
+)
+
 PlotBiomass(
   object,
-  byStock = NULL,
+  byStock = FALSE,
   probs = c(0.05, 0.95),
   nsim = 0,
   Years = NULL,
@@ -49,7 +65,7 @@ PlotBiomass(
 
 PlotSBiomass(
   object,
-  byStock = NULL,
+  byStock = FALSE,
   byFemale = TRUE,
   probs = c(0.05, 0.95),
   nsim = 0,
@@ -66,7 +82,7 @@ PlotSBiomass(
 
 PlotSProduction(
   object,
-  byStock = NULL,
+  byStock = FALSE,
   byFemale = TRUE,
   probs = c(0.05, 0.95),
   nsim = 0,
@@ -84,7 +100,7 @@ PlotSProduction(
 PlotF(
   object,
   what = c("FDead", "FInteract", "FRetain"),
-  byStock = NULL,
+  byStock = FALSE,
   byFleet = NULL,
   probs = c(0.05, 0.95),
   nsim = 0,
@@ -99,7 +115,7 @@ PlotF(
 
 PlotVBiomass(
   object,
-  byStock = NULL,
+  byStock = FALSE,
   byFleet = NULL,
   probs = c(0.05, 0.95),
   nsim = 0,
@@ -115,7 +131,7 @@ PlotVBiomass(
 
 PlotLandings(
   object,
-  byStock = NULL,
+  byStock = FALSE,
   byFleet = NULL,
   probs = c(0.05, 0.95),
   nsim = 0,
@@ -131,7 +147,7 @@ PlotLandings(
 
 PlotDiscards(
   object,
-  byStock = NULL,
+  byStock = FALSE,
   byFleet = NULL,
   probs = c(0.05, 0.95),
   nsim = 0,
@@ -147,7 +163,7 @@ PlotDiscards(
 
 PlotInteractions(
   object,
-  byStock = NULL,
+  byStock = FALSE,
   byFleet = NULL,
   probs = c(0.05, 0.95),
   nsim = 0,
@@ -161,7 +177,23 @@ PlotInteractions(
 
 PlotRemovals(
   object,
-  byStock = NULL,
+  byStock = FALSE,
+  byFleet = NULL,
+  probs = c(0.05, 0.95),
+  nsim = 0,
+  Years = NULL,
+  free_y = NULL,
+  IncHist = TRUE,
+  byMP = FALSE,
+  AggregateYear = NULL,
+  units = TRUE,
+  Stocks = NULL,
+  IncCV = TRUE
+)
+
+PlotCatch(
+  object,
+  byStock = FALSE,
   byFleet = NULL,
   probs = c(0.05, 0.95),
   nsim = 0,
@@ -177,7 +209,7 @@ PlotRemovals(
 
 PlotDynamics(
   object,
-  byStock = NULL,
+  byStock = FALSE,
   byFleet = FALSE,
   byFemale = TRUE,
   byMP = FALSE,
@@ -197,24 +229,21 @@ PlotDynamics(
 \arguments{
 \item{object}{A \link[=hist-class]{hist} or \link[=mse-class]{mse} object. \code{PlotLandings()},
 \code{PlotDiscards()}, \code{PlotRemovals()}, and \code{PlotEffort()} also accept a
-\link[=data-class]{data} object (e.g. \code{Hist@Data[[1]][[1]]}), in which case a single
-observed timeseries (no ribbon) is plotted, with \code{byFleet} and
-\code{AggregateYear} applied as described in \link{plot_data}; other arguments
-(\code{byStock}, \code{probs}, \code{nsim}, \code{Years}, \code{free_y}, \code{IncHist}, \code{byMP}) have
-no effect in that case. For \code{PlotRemovals()}, the \code{data}-class series is
+\link[=data-class]{data} object (e.g. \code{Hist@Data[[1]][[1]]}) or a list of them (see
+\link{plot_data}), in which case the observed timeseries (no ribbon) is
+plotted, with \code{byFleet}, \code{byStock}, and \code{AggregateYear} applied as
+described in \link{plot_data}; other arguments (\code{probs}, \code{nsim}, \code{Years},
+\code{free_y}, \code{IncHist}, \code{byMP}) have no effect in that case. For \code{PlotRemovals()}, the \code{data}-class series is
 \code{Landings + Discards} summed together.}
 
-\item{byStock}{One of \code{TRUE}, \code{FALSE}, \code{'sum'}, or \code{NULL} (default).
-\code{TRUE} facets by stock. \code{FALSE} colors each stock as its own line on a
-single panel, without summing. \code{'sum'} sums across stocks into a single
-line; for relative time series (\code{relative != 'none'}, see \code{relative})
-the numerator and denominator are summed across stocks separately
-before dividing, giving an aggregate ratio (e.g. overall depletion)
-rather than a sum of per-stock ratios.
-\code{NULL} (default) resolves to \code{TRUE} when \code{object} has more than one
-(selected) stock, otherwise \code{FALSE}. When \code{FALSE} and \code{object} has more
-than one MP, MP is faceted instead of colored, since stock now occupies
-the color channel.}
+\item{byStock}{One of \code{FALSE} (default), \code{TRUE}, or \code{'sum'}. \code{FALSE}
+draws each stock as its own colored line on a single panel. \code{TRUE}
+facets by stock. \code{'sum'} sums across stocks into a single line; for
+relative time series (\code{relative != 'none'}, see \code{relative}) the
+numerator and denominator are summed across stocks separately before
+dividing, giving an aggregate ratio (e.g. overall depletion). With
+\code{FALSE} and more than one MP, MPs are faceted, since stock uses the
+color channel.}
 
 \item{probs}{Numeric vector of length 2. Lower and upper quantiles of the
 shaded ribbon across simulations. Default \code{c(0.05, 0.95)}.}
@@ -293,6 +322,15 @@ plots that one stock's series under its own name, without needing
 the automatic \code{byFemale} complex-matching logic (\code{byStock = 'sum'} then
 sums exactly the stocks selected, instead of guessing the female one).}
 
+\item{AggregateYear}{Logical. For seasonal models, sum
+\code{PlotLandings()}/\code{PlotDiscards()}/\code{PlotInteractions()}/
+\code{PlotRemovals()}/\code{PlotEffort()} sub-annual values into whole-year
+totals. Default
+\code{NULL} (treated as \code{FALSE}) plots every seasonal time step for
+\link[=hist-class]{hist}/\link[=mse-class]{mse} objects. For a seasonal \link[=data-class]{data} object,
+\code{NULL} instead aggregates to calendar years and prints a note on
+plotting by season; see \link{plot_data}. Ignored for non-seasonal models.}
+
 \item{relative}{Character. For \code{PlotBiomass()}, \code{PlotSBiomass()}, and
 \code{PlotSProduction()}: plot absolute values (\code{"none"}, default), or
 relative to unfished (\code{"B0"}, via \code{\link[=B_B0]{B_B0()}}/\code{\link[=SB_SB0]{SB_SB0()}}/\code{\link[=SP_SP0]{SP_SP0()}}) or to
@@ -331,16 +369,6 @@ weights biomass by fish that die from the encounter, landed or
 discarded) or \code{"Landings"} (weights by landed fish only); see
 \code{\link[=VBiomass]{VBiomass()}}.}
 
-\item{AggregateYear}{Logical. For seasonal models, sum
-\code{PlotLandings()}/\code{PlotDiscards()}/\code{PlotInteractions()}/
-\code{PlotRemovals()}/\code{PlotEffort()} sub-annual values into whole-year
-totals, unlike \code{Season} above (these are flows, so summing across a
-year is valid, unlike the point-in-time state variables). Default
-\code{NULL} (treated as \code{FALSE}) plots every seasonal time step for
-\link[=hist-class]{hist}/\link[=mse-class]{mse} objects. For a seasonal \link[=data-class]{data} object,
-\code{NULL} instead aggregates to calendar years and prints a note on
-plotting by season; see \link{plot_data}. Ignored for non-seasonal models.}
-
 \item{IncCV}{Logical. For a \link[=data-class]{data} \code{object} only, draw a shaded
 band showing the observation uncertainty from the slot's \code{CV}; see
 \link{plot_data}. Default \code{TRUE}. Ignored for \link[=hist-class]{hist}/\link[=mse-class]{mse}
@@ -372,8 +400,7 @@ for plotting \code{F/FMSY} instead.
 \code{PlotInteractions()} plots \code{\link[=Interactions]{Interactions()}} (total fish encountered,
 before discard mortality is applied), following the same \code{byStock}/
 \code{byFleet}/\code{AggregateYear} behavior as \code{PlotLandings()}/\code{PlotDiscards()}.
-Unlike those two, it has no \link[=data-class]{data} counterpart -- \code{Interactions} is
-not an observed quantity.
+It does not accept a \link[=data-class]{data} object.
 
 \code{PlotVBiomass()} plots \code{\link[=VBiomass]{VBiomass()}} -- biomass weighted by the fraction
 of it actually exposed to each fleet's gear; see \code{VBType} above (it has
@@ -431,19 +458,17 @@ absolute values; see \code{relative} and \code{type} above. For \code{PlotBiomas
 \code{PlotSBiomass()}, and \code{PlotSProduction()}, \code{byStock = 'sum'} with
 \code{relative != 'none'} sums the numerator (e.g. \code{Biomass}) and denominator
 (e.g. \code{B0}/\code{BMSY}) across stocks separately before dividing, giving a
-true aggregate ratio (e.g. overall depletion) rather than summing the
-per-stock ratios themselves (which would not be meaningful).
+true aggregate ratio (e.g. overall depletion).
 
 \code{PlotDynamics()} arranges \code{PlotNumber()}, \code{PlotBiomass()},
 \code{PlotSBiomass()}, and \code{PlotRemovals()} into a single, terse figure with
 \code{\link[patchwork:wrap_plots]{patchwork::wrap_plots()}} -- one panel per row/column of a \verb{2 x 2} grid.
-\code{PlotSProduction()} and the separate \code{PlotLandings()}/\code{PlotDiscards()}
-panels are deliberately left out of this default overview (call them
-directly for that level of detail). Its own \code{byFleet} argument (and
-\code{plot()}'s, which dispatches to it) defaults to \code{FALSE}, unlike the
-individual \verb{Plot*()} functions; each argument is only forwarded to the
-panels that accept it. \code{byStock} is forwarded as-is, including the
-\code{'sum'} option described above.
+Its \code{byFleet} argument (and that of \code{plot()}, which calls it) defaults
+to \code{FALSE}. Each argument is forwarded to the panels that accept it.
+
+\code{PlotRecruits()} plots \code{\link[=Recruits]{Recruits()}}, the number of fish entering the
+youngest age class; \code{AggregateYear = TRUE} sums them over the seasons of
+each calendar year. \code{PlotCatch()} is the same as \code{PlotRemovals()}.
 }
 \examples{
 Hist <- Simulate(SingleStockOM, nSim = 2)

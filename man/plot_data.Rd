@@ -14,7 +14,10 @@ PlotCPUE(
   Season = NULL,
   units = TRUE,
   AggregateYear = NULL,
-  IncCV = TRUE
+  IncCV = TRUE,
+  Sim = NULL,
+  Complex = NULL,
+  byStock = FALSE
 )
 
 PlotSurvey(
@@ -23,7 +26,10 @@ PlotSurvey(
   Season = NULL,
   units = TRUE,
   AggregateYear = NULL,
-  IncCV = TRUE
+  IncCV = TRUE,
+  Sim = NULL,
+  Complex = NULL,
+  byStock = FALSE
 )
 
 PlotData(
@@ -34,13 +40,17 @@ PlotData(
   units = TRUE,
   showDiscards = FALSE,
   IncCV = TRUE,
-  IncComp = TRUE
+  IncComp = TRUE,
+  Sim = NULL,
+  Complex = NULL,
+  byStock = FALSE
 )
 
 \S4method{plot}{data,ANY}(x, y, ...)
 }
 \arguments{
-\item{object}{A \link[=data-class]{data} object.}
+\item{object}{A \link[=data-class]{data}, \link[=om-class]{om}, or \link[=hist-class]{hist} object, or a
+list of \link[=data-class]{data} objects. See Details.}
 
 \item{byFleet}{Logical. Controls how multiple fleets (or indices) are
 displayed. Default (\code{NULL}) draws every fleet as its own colored line
@@ -100,6 +110,20 @@ seasonal time step. Ignored for non-seasonal data.}
 \item{IncCV}{Logical. Draw the observation uncertainty from the slot's
 \code{CV} as a shaded band (see Details)? Default \code{TRUE}.}
 
+\item{Sim}{Integer, or \code{NULL} (default: the first). The simulation to
+plot when \code{object} holds data for more than one simulation.}
+
+\item{Complex}{Integer or character, or \code{NULL} (default: the first). The
+complex (by position or name) to plot when \code{object} holds data for more
+than one complex.}
+
+\item{byStock}{One of \code{FALSE} (default), \code{TRUE}, or \code{'sum'}. For a slot
+holding a list of objects named by the complex and/or its stocks (see
+\link[=data-class]{data}), \code{FALSE} draws each element as its own line colored by
+stock (or complex), with a panel per fleet or index; \code{TRUE} facets by
+stock and colors by fleet; \code{'sum'} combines the elements into one
+series per fleet or index. No effect on a slot holding one object.}
+
 \item{showDiscards}{Logical. \code{PlotData()} only. By default (\code{FALSE}),
 the \code{Discards} panel is omitted when it's populated but every value
 (across sims/years/fleets) is zero. Set \code{TRUE} to always show it.}
@@ -119,14 +143,22 @@ A \code{ggplot} object (a \code{patchwork} object for \code{PlotData()}), or
 \code{NULL} invisibly if the relevant slot isn't populated.
 }
 \description{
-Plotting functions for \link[=data-class]{data} objects: the observed (or simulated,
-with observation error) fishery timeseries, as opposed to the underlying
-simulated dynamics plotted by \link{plot_hist}. A \link[=data-class]{data} object holds a
-single simulation/stock realization (no \code{Sim} dimension), so these
-functions draw a single line per fleet or index rather than a
-median/ribbon summary.
+Plotting functions for the observed (or simulated, with observation
+error) fishery data in \link[=data-class]{data} objects. A \link[=data-class]{data} object holds
+one realization of the data for one stock complex, so these functions
+draw a single line per fleet or index.
 }
 \details{
+\code{object} can be a \link[=data-class]{data} object, an \link[=om-class]{om} object (its \code{Data}
+slot, one \link[=data-class]{data} object per complex), a \link[=hist-class]{hist} object (its
+simulated \code{Data}, one \link[=data-class]{data} object per simulation and complex), or
+a list of \link[=data-class]{data} objects named by complex, or a list of such lists
+(one per simulation). When more than one simulation or complex is
+available, the first is plotted, with a message; select another with
+\code{Sim} and \code{Complex}.
+
+Fleets and indices with no non-zero values are not drawn.
+
 \code{PlotCPUE()} and \code{PlotSurvey()} plot the \code{CPUE} and \code{Survey} slots
 respectively. \code{PlotLandings()}, \code{PlotDiscards()}, \code{PlotRemovals()}, and
 \code{PlotEffort()} (see \link{plot_hist}) also accept a \link[=data-class]{data} object and are
@@ -154,8 +186,7 @@ Set \code{IncCV = FALSE} to omit it.
 \code{PlotData()} arranges whichever of \code{Landings}, \code{Discards}, \code{Effort},
 \code{CPUE}, and \code{Survey} are populated into a single figure with
 \code{\link[patchwork:wrap_plots]{patchwork::wrap_plots()}}, silently omitting panels for slots that
-aren't; unlike the individual \verb{Plot*()} functions it does not print a
-message for missing slots. Below them (with \code{IncComp = TRUE}, the
+aren't, without a message for missing slots. Below them (with \code{IncComp = TRUE}, the
 default), it adds a bubble plot for each populated composition slot
 (\code{LandingsAtAge}, \code{DiscardsAtAge}, \code{LandingsAtSize}, \code{DiscardsAtSize};
 see \link{plot_comp}), omitting any whose values are all zero or missing.

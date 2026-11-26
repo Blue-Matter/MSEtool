@@ -35,13 +35,13 @@
 #' @param probs Numeric vector of length 2. Lower and upper quantiles of the
 #'   across-simulation ribbon drawn when `Sim = NULL`. Default `c(0.05, 0.95)`.
 #'   Ignored when `Sim` is a specific replicate.
-#' @param byStock,byFleet One of `TRUE`, `FALSE`, or `NULL` (default,
-#'   facets automatically when `object` has more than one stock/fleet).
-#'   These plots never sum or average a curve across stocks/fleets -- that
-#'   isn't a meaningful operation the way summing catch is -- so every
-#'   stock/fleet is always distinguishable somehow. `TRUE`/`NULL` facets by
-#'   `Stock`/`Fleet`. `FALSE` instead colors by that
-#'   variable; 
+#' @param byStock,byFleet `TRUE`, `FALSE`, or `NULL`. Curves are never
+#'   summed or averaged across stocks or fleets. `TRUE` facets by
+#'   `Stock`/`Fleet`; `FALSE` draws each stock/fleet as its own colored line
+#'   on the same panel. `byStock` defaults to `FALSE`. `byFleet` defaults to
+#'   `NULL`, which facets when `object` has more than one fleet. When both
+#'   stocks and fleets would need a color, the second variable is drawn with
+#'   linetype, or faceted when linetype is used for year.
 #' @param Years Optional numeric vector, or `"all"`. Default `NULL` shows
 #'   each independent curve's own last calendar year, labelled by year in
 #'   the legend (legend dropped if the curve is constant over that year).
@@ -108,6 +108,12 @@ NULL
 #'   `PlotSelectivity()` returns a `patchwork` object (or a plain `ggplot`
 #'   when only the age-based curve is available).
 #'
+#' @param IncRetention,IncMaturity Logical. Add the fleet's retention curve
+#'   (dashed, in the fleet's color) and the stock's maturity curve (dotted,
+#'   grey) to the selectivity curve (solid)? Default `FALSE`. With either
+#'   set, each curve is shown for its last year (or the last of `Years`),
+#'   colored by fleet and faceted by stock (and by MP for [mse-class]
+#'   objects). In `PlotSelectivity()`, the curves are added to every panel.
 #' @param x `PlotSelectivityCurve()` only; see [plot_schedule]. Also accepts
 #'   `"Weight"`, projecting the curve through the stock's `[Weight()]`
 #'   age-weight key (`@AWK`) onto a weight axis; requires
@@ -115,23 +121,27 @@ NULL
 #'
 #' @seealso [plot_schedule]
 #' @export
-PlotSelectivity <- function(object, Sim = NULL, byStock = NULL, byFleet = NULL, Years = NULL,
-                            units = TRUE, Stocks = NULL, Stock = NULL, probs = c(0.05, 0.95)) {
+PlotSelectivity <- function(object, Sim = NULL, byStock = FALSE, byFleet = NULL, Years = NULL,
+                            units = TRUE, Stocks = NULL, Stock = NULL, probs = c(0.05, 0.95),
+                            IncRetention = FALSE, IncMaturity = FALSE) {
   .CheckClass(object, c('fleet', 'hist', 'mse', 'om'), 'object')
   if (inherits(object, 'fleet')) object <- .FleetToShellHist(object, Stock)
   .PlotGearScheduleCombined(object, 'Selectivity', hasWeight = TRUE, Sim, byStock, byFleet,
-                            Years, units, Stocks, probs)
+                            Years, units, Stocks, probs,
+                            Overlay = c(Retention = IncRetention, Maturity = IncMaturity))
 }
 
 #' @rdname PlotSelectivity
 #' @export
-PlotSelectivityCurve <- function(object, Sim = NULL, byStock = NULL, byFleet = NULL, Years = NULL,
+PlotSelectivityCurve <- function(object, Sim = NULL, byStock = FALSE, byFleet = NULL, Years = NULL,
                                  units = TRUE, Stocks = NULL, Stock = NULL,
-                                 x = c('Age', 'Length', 'Weight'), probs = c(0.05, 0.95)) {
+                                 x = c('Age', 'Length', 'Weight'), probs = c(0.05, 0.95),
+                                 IncRetention = FALSE, IncMaturity = FALSE) {
   x <- match.arg(x)
   .CheckClass(object, c('fleet', 'hist', 'mse', 'om'), 'object')
   if (inherits(object, 'fleet')) object <- .FleetToShellHist(object, Stock)
-  .PlotGearSchedule(object, 'Selectivity', Sim, byStock, byFleet, Years, units, Stocks, x, probs)
+  .PlotGearSchedule(object, 'Selectivity', Sim, byStock, byFleet, Years, units, Stocks, x, probs,
+                    Overlay = c(Retention = IncRetention, Maturity = IncMaturity))
 }
 
 #' Plot the Retention Schedule
@@ -157,7 +167,7 @@ PlotSelectivityCurve <- function(object, Sim = NULL, byStock = NULL, byFleet = N
 #'
 #' @seealso [plot_schedule]
 #' @export
-PlotRetention <- function(object, Sim = NULL, byStock = NULL, byFleet = NULL, Years = NULL,
+PlotRetention <- function(object, Sim = NULL, byStock = FALSE, byFleet = NULL, Years = NULL,
                           units = TRUE, Stocks = NULL, Stock = NULL, probs = c(0.05, 0.95)) {
   .CheckClass(object, c('fleet', 'hist', 'mse', 'om'), 'object')
   if (inherits(object, 'fleet')) object <- .FleetToShellHist(object, Stock)
@@ -167,7 +177,7 @@ PlotRetention <- function(object, Sim = NULL, byStock = NULL, byFleet = NULL, Ye
 
 #' @rdname PlotRetention
 #' @export
-PlotRetentionCurve <- function(object, Sim = NULL, byStock = NULL, byFleet = NULL, Years = NULL,
+PlotRetentionCurve <- function(object, Sim = NULL, byStock = FALSE, byFleet = NULL, Years = NULL,
                                units = TRUE, Stocks = NULL, Stock = NULL,
                                x = c('Age', 'Length', 'Weight'), probs = c(0.05, 0.95)) {
   x <- match.arg(x)
@@ -197,7 +207,7 @@ PlotRetentionCurve <- function(object, Sim = NULL, byStock = NULL, byFleet = NUL
 #'
 #' @seealso [plot_schedule]
 #' @export
-PlotDiscardMortality <- function(object, Sim = NULL, byStock = NULL, byFleet = NULL, Years = NULL,
+PlotDiscardMortality <- function(object, Sim = NULL, byStock = FALSE, byFleet = NULL, Years = NULL,
                                  units = TRUE, Stocks = NULL, Stock = NULL, probs = c(0.05, 0.95)) {
   .CheckClass(object, c('fleet', 'hist', 'mse', 'om'), 'object')
   if (inherits(object, 'fleet')) object <- .FleetToShellHist(object, Stock)
@@ -207,7 +217,7 @@ PlotDiscardMortality <- function(object, Sim = NULL, byStock = NULL, byFleet = N
 
 #' @rdname PlotDiscardMortality
 #' @export
-PlotDiscardMortalityCurve <- function(object, Sim = NULL, byStock = NULL, byFleet = NULL, Years = NULL,
+PlotDiscardMortalityCurve <- function(object, Sim = NULL, byStock = FALSE, byFleet = NULL, Years = NULL,
                                       units = TRUE, Stocks = NULL, Stock = NULL,
                                       x = c('Age', 'Length'), probs = c(0.05, 0.95)) {
   x <- match.arg(x)
@@ -225,9 +235,8 @@ PlotDiscardMortalityCurve <- function(object, Sim = NULL, byStock = NULL, byFlee
 #' stock's `Length@CVatAge` isn't set (so `ALK` was not populated).
 #'
 #' @inheritParams plot_schedule
-#' @param byStock One of `TRUE`, `FALSE`, or `NULL` (default, facets
-#'   automatically when `object` has more than one stock). `TRUE`/`NULL`
-#'   facets by `Stock`; `FALSE` colors by `Stock`.
+#' @param byStock Logical. `FALSE` (default) draws each stock as its own
+#'   colored line; `TRUE` facets by `Stock`.
 #' @param object An [om-class], [hist-class], [mse-class], or
 #'   [stock-class] object.
 #'
@@ -240,7 +249,7 @@ PlotDiscardMortalityCurve <- function(object, Sim = NULL, byStock = NULL, byFlee
 #'
 #' @seealso [PlotALK()], [plot_schedule]
 #' @export
-PlotLength <- function(object, Sim = NULL, byStock = NULL, Years = NULL, units = TRUE, Stocks = NULL,
+PlotLength <- function(object, Sim = NULL, byStock = FALSE, Years = NULL, units = TRUE, Stocks = NULL,
                        probs = c(0.05, 0.95)) {
   panels <- purrr::compact(list(
     Curve = PlotLengthCurve(object, Sim = Sim, byStock = byStock, Years = Years, units = units,
@@ -252,7 +261,7 @@ PlotLength <- function(object, Sim = NULL, byStock = NULL, Years = NULL, units =
 
 #' @rdname PlotLength
 #' @export
-PlotLengthCurve <- function(object, Sim = NULL, byStock = NULL, Years = NULL, units = TRUE, Stocks = NULL,
+PlotLengthCurve <- function(object, Sim = NULL, byStock = FALSE, Years = NULL, units = TRUE, Stocks = NULL,
                             x = c('Age', 'Length'), probs = c(0.05, 0.95)) {
   x <- match.arg(x)
   .PlotStockSchedule(object, 'Length', Sim, byStock, Years, units, Stocks, x, probs)
@@ -267,9 +276,8 @@ PlotLengthCurve <- function(object, Sim = NULL, byStock = NULL, Years = NULL, un
 #' single figure with [patchwork::wrap_plots()].
 #'
 #' @inheritParams plot_schedule
-#' @param byStock One of `TRUE`, `FALSE`, or `NULL` (default, facets
-#'   automatically when `object` has more than one stock). `TRUE`/`NULL`
-#'   facets by `Stock`; `FALSE` colors by `Stock`.
+#' @param byStock Logical. `FALSE` (default) draws each stock as its own
+#'   colored line; `TRUE` facets by `Stock`.
 #' @param object An [om-class], [hist-class], [mse-class], or
 #'   [stock-class] object.
 #'
@@ -281,14 +289,14 @@ PlotLengthCurve <- function(object, Sim = NULL, byStock = NULL, Years = NULL, un
 #'
 #' @seealso [PlotAWK()], [plot_schedule]
 #' @export
-PlotWeight <- function(object, Sim = NULL, byStock = NULL, Years = NULL, units = TRUE, Stocks = NULL,
+PlotWeight <- function(object, Sim = NULL, byStock = FALSE, Years = NULL, units = TRUE, Stocks = NULL,
                        probs = c(0.05, 0.95)) {
   .PlotScheduleCombined(object, 'Weight', PlotAWK, Sim, byStock, Years, units, Stocks, probs)
 }
 
 #' @rdname PlotWeight
 #' @export
-PlotWeightCurve <- function(object, Sim = NULL, byStock = NULL, Years = NULL, units = TRUE, Stocks = NULL,
+PlotWeightCurve <- function(object, Sim = NULL, byStock = FALSE, Years = NULL, units = TRUE, Stocks = NULL,
                             x = c('Age', 'Length'), probs = c(0.05, 0.95)) {
   x <- match.arg(x)
   .PlotStockSchedule(object, 'Weight', Sim, byStock, Years, units, Stocks, x, probs)
@@ -304,9 +312,8 @@ PlotWeightCurve <- function(object, Sim = NULL, byStock = NULL, Years = NULL, un
 #' [patchwork::wrap_plots()].
 #'
 #' @inheritParams plot_schedule
-#' @param byStock One of `TRUE`, `FALSE`, or `NULL` (default, facets
-#'   automatically when `object` has more than one stock). `TRUE`/`NULL`
-#'   facets by `Stock`; `FALSE` colors by `Stock`.
+#' @param byStock Logical. `FALSE` (default) draws each stock as its own
+#'   colored line; `TRUE` facets by `Stock`.
 #' @param object An [om-class], [hist-class], [mse-class], or
 #'   [stock-class] object.
 #'
@@ -321,14 +328,14 @@ PlotWeightCurve <- function(object, Sim = NULL, byStock = NULL, Years = NULL, un
 #'
 #' @seealso [plot_schedule]
 #' @export
-PlotMaturity <- function(object, Sim = NULL, byStock = NULL, Years = NULL, units = TRUE, Stocks = NULL,
+PlotMaturity <- function(object, Sim = NULL, byStock = FALSE, Years = NULL, units = TRUE, Stocks = NULL,
                          probs = c(0.05, 0.95)) {
   .PlotScheduleCombined(object, 'Maturity', NULL, Sim, byStock, Years, units, Stocks, probs)
 }
 
 #' @rdname PlotMaturity
 #' @export
-PlotMaturityCurve <- function(object, Sim = NULL, byStock = NULL, Years = NULL, units = TRUE, Stocks = NULL,
+PlotMaturityCurve <- function(object, Sim = NULL, byStock = FALSE, Years = NULL, units = TRUE, Stocks = NULL,
                               x = c('Age', 'Length', 'Weight'), probs = c(0.05, 0.95)) {
   x <- match.arg(x)
   .PlotStockSchedule(object, 'Maturity', Sim, byStock, Years, units, Stocks, x, probs)
@@ -343,9 +350,8 @@ PlotMaturityCurve <- function(object, Sim = NULL, byStock = NULL, Years = NULL, 
 #' single figure with [patchwork::wrap_plots()].
 #'
 #' @inheritParams plot_schedule
-#' @param byStock One of `TRUE`, `FALSE`, or `NULL` (default, facets
-#'   automatically when `object` has more than one stock). `TRUE`/`NULL`
-#'   facets by `Stock`; `FALSE` colors by `Stock`.
+#' @param byStock Logical. `FALSE` (default) draws each stock as its own
+#'   colored line; `TRUE` facets by `Stock`.
 #' @param object An [om-class], [hist-class], [mse-class], or
 #'   [stock-class] object.
 #'
@@ -357,14 +363,14 @@ PlotMaturityCurve <- function(object, Sim = NULL, byStock = NULL, Years = NULL, 
 #'
 #' @seealso [plot_schedule]
 #' @export
-PlotNaturalMortality <- function(object, Sim = NULL, byStock = NULL, Years = NULL, units = TRUE, Stocks = NULL,
+PlotNaturalMortality <- function(object, Sim = NULL, byStock = FALSE, Years = NULL, units = TRUE, Stocks = NULL,
                                  probs = c(0.05, 0.95)) {
   .PlotScheduleCombined(object, 'NaturalMortality', NULL, Sim, byStock, Years, units, Stocks, probs)
 }
 
 #' @rdname PlotNaturalMortality
 #' @export
-PlotNaturalMortalityCurve <- function(object, Sim = NULL, byStock = NULL, Years = NULL, units = TRUE, Stocks = NULL,
+PlotNaturalMortalityCurve <- function(object, Sim = NULL, byStock = FALSE, Years = NULL, units = TRUE, Stocks = NULL,
                                       x = c('Age', 'Length'), probs = c(0.05, 0.95)) {
   x <- match.arg(x)
   .PlotStockSchedule(object, 'NaturalMortality', Sim, byStock, Years, units, Stocks, x, probs)
@@ -379,9 +385,8 @@ PlotNaturalMortalityCurve <- function(object, Sim = NULL, byStock = NULL, Years 
 #' [patchwork::wrap_plots()].
 #'
 #' @inheritParams plot_schedule
-#' @param byStock One of `TRUE`, `FALSE`, or `NULL` (default, facets
-#'   automatically when `object` has more than one stock). `TRUE`/`NULL`
-#'   facets by `Stock`; `FALSE` colors by `Stock`.
+#' @param byStock Logical. `FALSE` (default) draws each stock as its own
+#'   colored line; `TRUE` facets by `Stock`.
 #' @param object An [om-class], [hist-class], [mse-class], or
 #'   [stock-class] object.
 #'
@@ -393,14 +398,14 @@ PlotNaturalMortalityCurve <- function(object, Sim = NULL, byStock = NULL, Years 
 #'
 #' @seealso [plot_schedule]
 #' @export
-PlotFecundity <- function(object, Sim = NULL, byStock = NULL, Years = NULL, units = TRUE, Stocks = NULL,
+PlotFecundity <- function(object, Sim = NULL, byStock = FALSE, Years = NULL, units = TRUE, Stocks = NULL,
                           probs = c(0.05, 0.95)) {
   .PlotScheduleCombined(object, 'Fecundity', NULL, Sim, byStock, Years, units, Stocks, probs)
 }
 
 #' @rdname PlotFecundity
 #' @export
-PlotFecundityCurve <- function(object, Sim = NULL, byStock = NULL, Years = NULL, units = TRUE, Stocks = NULL,
+PlotFecundityCurve <- function(object, Sim = NULL, byStock = FALSE, Years = NULL, units = TRUE, Stocks = NULL,
                                x = c('Age', 'Length'), probs = c(0.05, 0.95)) {
   x <- match.arg(x)
   .PlotStockSchedule(object, 'Fecundity', Sim, byStock, Years, units, Stocks, x, probs)
@@ -529,14 +534,17 @@ PlotFecundityCurve <- function(object, Sim = NULL, byStock = NULL, Years = NULL,
 }
 
 .PlotGearScheduleCombined <- function(object, what, hasWeight, Sim, byStock, byFleet, Years, units,
-                                       Stocks, probs) {
+                                       Stocks, probs, Overlay = NULL) {
   panels <- list(
-    AtAge = .PlotGearSchedule(object, what, Sim, byStock, byFleet, Years, units, Stocks, 'Age', probs)
+    AtAge = .PlotGearSchedule(object, what, Sim, byStock, byFleet, Years, units, Stocks, 'Age', probs,
+                              Overlay)
   )
   if (.HasGearMeanAtLength(object, what, Stocks))
-    panels$AtLength <- .PlotGearSchedule(object, what, Sim, byStock, byFleet, Years, units, Stocks, 'Length', probs)
+    panels$AtLength <- .PlotGearSchedule(object, what, Sim, byStock, byFleet, Years, units, Stocks,
+                                         'Length', probs, Overlay)
   if (hasWeight && .HasGearMeanAtWeight(object, what, Stocks))
-    panels$AtWeight <- .PlotGearSchedule(object, what, Sim, byStock, byFleet, Years, units, Stocks, 'Weight', probs)
+    panels$AtWeight <- .PlotGearSchedule(object, what, Sim, byStock, byFleet, Years, units, Stocks,
+                                         'Weight', probs, Overlay)
 
   panels <- purrr::compact(panels)
   if (length(panels) == 1) return(panels[[1]])
@@ -544,7 +552,7 @@ PlotFecundityCurve <- function(object, Sim = NULL, byStock = NULL, Years = NULL,
 }
 
 .PlotGearSchedule <- function(object, what, Sim, byStock, byFleet, Years, units, Stocks, x = 'Age',
-                                probs = c(0.05, 0.95)) {
+                                probs = c(0.05, 0.95), Overlay = NULL) {
   .CheckClass(object, c('hist', 'mse', 'om'), 'object')
   OM         <- .ResolveOM(object)
   isMSE      <- inherits(object, 'mse')
@@ -555,23 +563,29 @@ PlotFecundityCurve <- function(object, Sim = NULL, byStock = NULL, Years = NULL,
   histYears <- Years(object, 'Historical')
   projYears <- if (isMSE) Years(object, 'Projection') else NULL
 
-  histDF <- .ExtractGearSchedule(object, OM, what, stockNames, fleetNames, histYears, MPName = NULL, x = x) |>
-    dplyr::mutate(MP = 'Historical')
-
-  if (isMSE) {
-    mpNames <- names(object@MPs)
-    projDF <- purrr::map(mpNames, \(mp)
+  gearDF <- function(what) {
+    histDF <- .ExtractGearSchedule(object, OM, what, stockNames, fleetNames, histYears, MPName = NULL, x = x) |>
+      dplyr::mutate(MP = 'Historical')
+    if (!isMSE)
+      return(histDF)
+    projDF <- purrr::map(names(object@MPs), \(mp)
       .ExtractGearSchedule(object, OM, what, stockNames, fleetNames, projYears, MPName = mp, x = x) |>
         dplyr::mutate(MP = mp)
     ) |> dplyr::bind_rows()
-    df <- dplyr::bind_rows(histDF, projDF)
-  } else {
-    df <- histDF
+    dplyr::bind_rows(histDF, projDF)
   }
-
-  df <- df |> .FilterYears(Years)
-
+  df   <- gearDF(what) |> .FilterYears(Years)
   xlab <- .XAxisLabel(OM, stockNames, units, x)
+
+  if (any(Overlay)) {
+    df$Curve <- what
+    if (isTRUE(Overlay[['Retention']]))
+      df <- dplyr::bind_rows(df, gearDF('Retention') |> .FilterYears(Years) |> dplyr::mutate(Curve = 'Retention'))
+    if (isTRUE(Overlay[['Maturity']]))
+      df <- dplyr::bind_rows(df, .ExtractStockSchedule(OM, 'Maturity', stockNames, c(histYears, projYears), x) |>
+                               .FilterYears(Years) |> dplyr::mutate(Curve = 'Maturity'))
+    return(.BuildOverlayPlot(df, Sim, byFleet, xlab, probs, curves = c(what, 'Retention', 'Maturity')))
+  }
   .BuildSchedulePlot(df, Sim = Sim, byStock = byStock, byFleet = byFleet, ylab = what, xlab = xlab,
                        defaultYears = is.null(Years), breakpointYears = is.null(Years) || identical(Years, 'all'),
                        probs = probs)
@@ -605,27 +619,7 @@ PlotFecundityCurve <- function(object, Sim = NULL, byStock = NULL, Years = NULL,
   allYears <- Years(object, 'Historical')
   if (isMSE) allYears <- c(allYears, Years(object, 'Projection'))
 
-  df <- purrr::map(seq_along(allStocks), \(st) {
-    if (!allStocks[st] %in% stockNames) return(NULL)
-    schedObj <- slot(OM@Stock[[st]], what)
-    if (x == 'Length') {
-      schedObj <- .MeanAtAge2MeanAtLength(schedObj, OM@Stock[[st]]@Length, replace = TRUE, Years = allYears)
-      arr      <- schedObj@MeanAtLength |> .SubsetYear(allYears)
-      names(dimnames(arr))[names(dimnames(arr)) == 'Class'] <- 'Age'
-    } else if (x == 'Weight') {
-      schedObj <- .MeanAtAge2MeanAtWeight(schedObj, OM@Stock[[st]]@Weight, replace = TRUE, Years = allYears)
-      if (is.null(schedObj@MeanAtWeight))
-        cli::cli_abort(c(
-          "x" = "{.arg x = \"Weight\"} requires a populated age-weight key for stock {.val {allStocks[st]}}.",
-          "i" = "Set {.field Weight@CVatAge} (so {.field AWK} is populated) or supply {.field {what}@MeanAtWeight} directly."
-        ))
-      arr <- schedObj@MeanAtWeight |> .SubsetYear(allYears)
-      names(dimnames(arr))[names(dimnames(arr)) == 'Class'] <- 'Age'
-    } else {
-      arr <- schedObj@MeanAtAge |> .SubsetYear(allYears)
-    }
-    Array2DF(arr) |> dplyr::mutate(Stock = allStocks[st])
-  }) |> dplyr::bind_rows() |> .FilterYears(Years)
+  df <- .ExtractStockSchedule(OM, what, stockNames, allYears, x) |> .FilterYears(Years)
 
   ylab   <- what
   factor <- 1
@@ -649,6 +643,31 @@ PlotFecundityCurve <- function(object, Sim = NULL, byStock = NULL, Years = NULL,
   .BuildSchedulePlot(df, Sim = Sim, byStock = byStock, byFleet = FALSE, ylab = ylab, xlab = xlab,
                        defaultYears = is.null(Years), breakpointYears = is.null(Years) || identical(Years, 'all'),
                        probs = probs)
+}
+
+.ExtractStockSchedule <- function(OM, what, stockNames, allYears, x = 'Age') {
+  allStocks <- StockNames(OM)
+  purrr::map(seq_along(allStocks), \(st) {
+    if (!allStocks[st] %in% stockNames) return(NULL)
+    schedObj <- slot(OM@Stock[[st]], what)
+    if (x == 'Length') {
+      schedObj <- .MeanAtAge2MeanAtLength(schedObj, OM@Stock[[st]]@Length, replace = TRUE, Years = allYears)
+      arr      <- schedObj@MeanAtLength |> .SubsetYear(allYears)
+      names(dimnames(arr))[names(dimnames(arr)) == 'Class'] <- 'Age'
+    } else if (x == 'Weight') {
+      schedObj <- .MeanAtAge2MeanAtWeight(schedObj, OM@Stock[[st]]@Weight, replace = TRUE, Years = allYears)
+      if (is.null(schedObj@MeanAtWeight))
+        cli::cli_abort(c(
+          "x" = "{.arg x = \"Weight\"} requires a populated age-weight key for stock {.val {allStocks[st]}}.",
+          "i" = "Set {.field Weight@CVatAge} (so {.field AWK} is populated) or supply {.field {what}@MeanAtWeight} directly."
+        ))
+      arr <- schedObj@MeanAtWeight |> .SubsetYear(allYears)
+      names(dimnames(arr))[names(dimnames(arr)) == 'Class'] <- 'Age'
+    } else {
+      arr <- schedObj@MeanAtAge |> .SubsetYear(allYears)
+    }
+    Array2DF(arr) |> dplyr::mutate(Stock = allStocks[st])
+  }) |> dplyr::bind_rows()
 }
 
 .XAxisLabel <- function(OM, stockNames, units, x) {
@@ -742,6 +761,80 @@ PlotFecundityCurve <- function(object, Sim = NULL, byStock = NULL, Years = NULL,
 
 .DiscreteColorValues <- function(levels) {
   stats::setNames(.GgHuePal(length(levels)), levels)
+}
+
+# one year per curve (the last available), linetype by curve, colour by fleet, facet by stock/MP
+.BuildOverlayPlot <- function(df, Sim, byFleet, xlab, probs, curves) {
+  if (!is.null(Sim))
+    df <- .DFSubsetSim(df, Sim, keep_sim_name = TRUE)
+  df <- df |>
+    dplyr::group_by(.data$Curve, .data$Stock, .data$Fleet, .data$MP) |>
+    dplyr::filter(.data$Year == max(.data$Year)) |>
+    dplyr::ungroup()
+
+  nSim <- length(unique(df$Sim))
+  df <- df |>
+    dplyr::group_by(.data$Curve, .data$Stock, .data$Fleet, .data$MP, .data$Year, .data$Age) |>
+    dplyr::summarise(Lower = stats::quantile(.data$Value, min(probs), na.rm = TRUE),
+                     Upper = stats::quantile(.data$Value, max(probs), na.rm = TRUE),
+                     Value = stats::median(.data$Value, na.rm = TRUE), .groups = 'drop')
+  showRibbon <- nSim > 1 && any(round(df$Upper - df$Lower, 4) > 0)
+
+  gear <- dplyr::filter(df, .data$Curve != 'Maturity')
+  mat  <- dplyr::filter(df, .data$Curve == 'Maturity') |> dplyr::select(-'Fleet', -'MP')
+  if (nrow(mat))
+    mat <- dplyr::cross_join(mat, dplyr::distinct(gear, .data$MP))
+  facetFleet <- isTRUE(byFleet) && length(unique(gear$Fleet)) > 1
+  if (nrow(mat) && facetFleet)
+    mat <- dplyr::cross_join(mat, dplyr::distinct(gear, .data$Fleet))
+
+  levels   <- intersect(curves, unique(df$Curve))
+  linetype <- stats::setNames(c('solid', 'dashed', 'dotted')[match(levels, curves)], levels)
+  gear$Curve <- factor(gear$Curve, levels = levels)
+  if (nrow(mat)) mat$Curve <- factor(mat$Curve, levels = levels)
+  gear$.group <- interaction(gear$Curve, gear$Fleet, gear$MP, drop = TRUE)
+  mpLevels    <- union(intersect('Historical', gear$MP), unique(gear$MP))
+  gear$MP     <- factor(gear$MP, levels = mpLevels)
+  if (nrow(mat)) mat$MP <- factor(mat$MP, levels = mpLevels)
+
+  p <- ggplot2::ggplot(gear, ggplot2::aes(x = .data$Age, y = .data$Value))
+  if (showRibbon) {
+    p <- p + ggplot2::geom_ribbon(ggplot2::aes(ymin = .data$Lower, ymax = .data$Upper,
+                                               fill = .data$Fleet, group = .data$.group),
+                                  alpha = 0.2, color = NA)
+    if (nrow(mat))
+      p <- p + ggplot2::geom_ribbon(data = mat, ggplot2::aes(ymin = .data$Lower, ymax = .data$Upper),
+                                    fill = 'grey50', alpha = 0.2, color = NA)
+  }
+  p <- p + ggplot2::geom_line(ggplot2::aes(color = .data$Fleet, linetype = .data$Curve,
+                                           group = .data$.group), na.rm = TRUE)
+  if (nrow(mat))
+    p <- p + ggplot2::geom_line(data = mat, ggplot2::aes(linetype = .data$Curve), color = 'grey30',
+                                na.rm = TRUE)
+
+  fleets <- sort(unique(gear$Fleet))
+  p <- p +
+    ggplot2::scale_color_manual(values = .DiscreteColorValues(fleets)) +
+    ggplot2::scale_fill_manual(values = .DiscreteColorValues(fleets), guide = 'none') +
+    ggplot2::scale_linetype_manual(values = linetype) +
+    ggplot2::expand_limits(y = 0) +
+    ggplot2::scale_x_continuous(expand = ggplot2::expansion(mult = c(0.02, 0.05))) +
+    ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0.02, 0.05))) +
+    ggplot2::theme_bw() +
+    ggplot2::labs(x = xlab, y = 'Proportion', color = 'Fleet', linetype = NULL)
+
+  years <- unique(df$Year)
+  if (length(years) == 1)
+    p <- p + ggplot2::labs(subtitle = years)
+
+  rows <- if (length(unique(gear$Stock)) > 1) 'Stock'
+  cols <- c(if (facetFleet) 'Fleet', if (length(unique(gear$MP)) > 1) 'MP')
+  if (length(rows) && length(cols))
+    p <- p + ggplot2::facet_grid(rows = ggplot2::vars(!!!rlang::syms(rows)),
+                                 cols = ggplot2::vars(!!!rlang::syms(cols)))
+  else if (length(c(rows, cols)))
+    p <- p + ggplot2::facet_wrap(c(rows, cols))
+  p
 }
 
 .BuildSchedulePlot <- function(df, Sim, byStock, byFleet, ylab, xlab = 'Age', defaultYears = TRUE,

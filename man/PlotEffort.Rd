@@ -9,7 +9,7 @@ PlotEffort(
   object,
   Stock = NULL,
   units = NULL,
-  byStock = NULL,
+  byStock = FALSE,
   byFleet = NULL,
   Stocks = NULL,
   probs = c(0.05, 0.95),
@@ -26,7 +26,7 @@ PlotEffortCurve(
   object,
   Stock = NULL,
   units = NULL,
-  byStock = NULL,
+  byStock = FALSE,
   byFleet = NULL,
   Stocks = NULL,
   probs = c(0.05, 0.95),
@@ -50,9 +50,9 @@ unit common to every plotted fleet (\code{"Effort"}, \code{"Trips"}, or
 supplies). Set explicitly to force one; requesting a unit some fleet
 lacks the data for is an error.}
 
-\item{byStock, byFleet}{One of \code{TRUE}, \code{FALSE}, or \code{NULL} (default,
-facets automatically when \code{object} has more than one stock/fleet).
-\code{FALSE} sums effort across fleets instead of faceting/coloring by
+\item{byStock, byFleet}{\code{TRUE} facets by stock/fleet. \code{byStock} defaults
+to \code{FALSE} (a line per stock); \code{byFleet} defaults to \code{NULL}, which
+facets when \code{object} has more than one fleet. \code{byFleet = FALSE} sums effort across fleets instead of faceting/coloring by
 fleet (only when every summed fleet shares the same \code{units}).}
 
 \item{Stocks}{Character or numeric vector. Restrict the plot to specific

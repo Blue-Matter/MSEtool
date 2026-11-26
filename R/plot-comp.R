@@ -122,9 +122,9 @@ PlotDiscardsAtSize <- function(object, byStock = NULL, byFleet = NULL, Sim = NUL
 
 .PlotCompBubble <- function(object, what, ylab, byStock, byFleet, Sim,
                              Years, IncHist, Stocks, AggregateYear = NULL) {
+  if (inherits(object, c('data', 'list')))
+    return(.PlotDataCompBubble(UpdateObject(.ResolvePlotData(object)), what, ylab, byFleet, AggregateYear))
   object <- UpdateObject(object)
-  if (inherits(object, 'data'))
-    return(.PlotDataCompBubble(object, what, ylab, byFleet, AggregateYear))
 
   .CheckClass(object, c('hist', 'mse'), 'object')
   isAtSize <- grepl('AtSize$', what)
@@ -132,7 +132,7 @@ PlotDiscardsAtSize <- function(object, byStock = NULL, byFleet = NULL, Sim = NUL
   fn       <- if (grepl('^Landings', what)) 'Landings' else 'Discards'
 
   stockNames <- .ResolveStocks(object, Stocks)
-  byStockRes <- .ResolveByStock(byStock, .NSelStock(object, stockNames))
+  byStockRes <- .ResolveByStock(byStock %||% (.NSelStock(object, stockNames) > 1), 1)
   if (identical(byStockRes, 'sum')) byStockRes <- FALSE
   byFleetRes <- if (is.null(byFleet)) nFleet(object) > 1 else byFleet
 
@@ -267,12 +267,29 @@ PlotDiscardsAtSize <- function(object, byStock = NULL, byFleet = NULL, Sim = NUL
                         alpha = 0.7, stroke = 0.2, na.rm = TRUE) +
     ggplot2::scale_size_area(max_size = 8) +
     ggplot2::scale_x_continuous(expand = ggplot2::expansion(mult = c(0.02, 0.05)),
-                                labels = .YearLabels) +
+                                breaks = .YearBreaks, labels = .YearLabels) +
     ggplot2::theme_bw() +
     ggplot2::labs(x = 'Year', y = ylab, size = 'Proportion', title = title)
 
-  if (length(facetVars))
+  if (length(facetVars) == 1)
     p <- p + ggplot2::facet_wrap(facetVars)
-
+  if (length(facetVars) > 1) {
+    rows <- if ('Fleet' %in% facetVars) 'Fleet' else facetVars[1]
+    cols <- setdiff(facetVars, rows)
+    p <- p +
+      ggplot2::facet_grid(rows = ggplot2::vars(!!!rlang::syms(rows)),
+                          cols = ggplot2::vars(!!!rlang::syms(cols)),
+                          labeller = ggplot2::as_labeller(.WrapStripLabel)) +
+      ggplot2::theme(strip.text.y = ggplot2::element_text(angle = 0))
+  }
   p
+}
+
+# wraps long facet labels at spaces and underscores
+.WrapStripLabel <- function(x, width = 15) {
+  vapply(x, \(v) {
+    if (nchar(v) <= width) return(v)
+    lines <- strwrap(gsub('_', '_ ', v, fixed = TRUE), width = width)
+    gsub('_ ', '_', paste(lines, collapse = '\n'), fixed = TRUE)
+  }, character(1), USE.NAMES = FALSE)
 }
