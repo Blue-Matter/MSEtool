@@ -222,7 +222,10 @@
     Data@Misc$AdviceYear <- Year
     Data@Misc$Interval   <- Interval
     Result <- .TryMP(.WithMPSeed(MPfunction(Data=Data), Proj@OM@Seed, .GlobalSim(Proj@OM, sim), Year, nms[i]))
+    Warnings <- attr(Result, 'MPWarnings')
+    attr(Result, 'MPWarnings') <- NULL
     Advice <- .CheckAdvice(Result, Proj, FleetNames, Areas, sim, name=nms[i])
+    Advice <- .LogMPWarnings(list(Advice), Warnings)[[1]]
     Advice <- .LogMPError(Advice, MPName, Data, Sim=sim, Year)
     if (!inherits(Advice, 'advice'))
       attr(Advice, 'Debug') <- .MPDebugRecord(MPName, MPfunction, Data, nms[i], Proj, sim, Year,
@@ -280,6 +283,8 @@
   })
 
   result <- .TryMP(.WithMPSeed(MPfunction(DataList = DataList), Proj@OM@Seed, .GlobalSim(Proj@OM, sim), Year, "mmp"))
+  Warnings <- attr(result, 'MPWarnings')
+  attr(result, 'MPWarnings') <- NULL
   Debug  <- \(Stock = '') .MPDebugRecord(MPName, MPfunction, DataList, Stock, Proj, sim, Year,
                                          Key = "mmp", Result = result)
   if (inherits(result, 'try-error'))
@@ -299,7 +304,7 @@
     Advice
   })
 
-  list(AdviceList = AdviceList, AggBagLimit = AggBagLimit)
+  list(AdviceList = .LogMPWarnings(AdviceList, Warnings), AggBagLimit = AggBagLimit)
 }
 
 # splits an mmp result into its Advice list and aggregate bag limits
