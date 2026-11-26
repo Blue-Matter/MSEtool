@@ -272,6 +272,7 @@ ReadDataCSV <- function(file, Years = NULL, silent = FALSE) {
 WriteDataCSV <- function(Data, file, overwrite = FALSE, silent = FALSE) {
   if (!inherits(Data, "data")) cli::cli_abort("{.arg Data} must be a {.cls data} object.")
   if (file.exists(file) && !overwrite) cli::cli_abort("{.file {file}} exists. Use {.code overwrite = TRUE}.")
+  Data <- UpdateObject(Data)
   Seasons <- Seasons(Data)
   if (!length(Seasons)) Seasons <- 1
   Years <- Years(Data)
