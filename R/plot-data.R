@@ -139,6 +139,7 @@ NULL
 PlotCPUE <- function(object, byFleet = NULL, Season = NULL, units = TRUE,
                      AggregateYear = NULL, IncCV = TRUE) {
   .CheckClass(object, 'data', 'object')
+  object <- UpdateObject(object)
   .PlotDataTs(object, 'CPUE', 'CPUE', byFleet = byFleet, AggregateYear = AggregateYear,
               Season = .SlotSeason(Season, 'CPUE'), units = units, IncCV = IncCV)
 }
@@ -148,6 +149,7 @@ PlotCPUE <- function(object, byFleet = NULL, Season = NULL, units = TRUE,
 PlotSurvey <- function(object, byFleet = NULL, Season = NULL, units = TRUE,
                        AggregateYear = NULL, IncCV = TRUE) {
   .CheckClass(object, 'data', 'object')
+  object <- UpdateObject(object)
   .PlotDataTs(object, 'Survey', 'Survey', byFleet = byFleet, AggregateYear = AggregateYear,
               Season = .SlotSeason(Season, 'Survey'), units = units, IncCV = IncCV)
 }
@@ -157,7 +159,7 @@ PlotSurvey <- function(object, byFleet = NULL, Season = NULL, units = TRUE,
 PlotData <- function(object, byFleet = NULL, AggregateYear = NULL, Season = NULL, units = TRUE,
                      showDiscards = FALSE, IncCV = TRUE, IncComp = TRUE) {
   .CheckClass(object, 'data', 'object')
-  object <- .CombineDataSeries(object)
+  object <- UpdateObject(object) |> .CombineDataSeries()
 
   # aggregate once here so the seasonal notes print once, not once per panel;
   # panels then get the resolved per-index seasons

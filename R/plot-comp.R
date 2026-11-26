@@ -122,6 +122,7 @@ PlotDiscardsAtSize <- function(object, byStock = NULL, byFleet = NULL, Sim = NUL
 
 .PlotCompBubble <- function(object, what, ylab, byStock, byFleet, Sim,
                              Years, IncHist, Stocks, AggregateYear = NULL) {
+  object <- UpdateObject(object)
   if (inherits(object, 'data'))
     return(.PlotDataCompBubble(object, what, ylab, byFleet, AggregateYear))
 
