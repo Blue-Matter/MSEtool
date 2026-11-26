@@ -17,6 +17,18 @@
   .MsgTheme()
   .MsgStart('Simulate', OM, nSim, silent)
 
+  Caught <- .CollectWarnings(.SimulateHist(OM, parallel, silent, nSim, control, Reduce, refpointsMSY))
+  Hist   <- .LogWarnings(Caught$Value, Caught$Warnings)
+
+  .MsgDone('Simulate', StartTime, silent)
+
+  if (!silent)
+    .CheckLog(Hist, 'hist')
+
+  .SetDigest(Hist)
+}
+
+.SimulateHist <- function(OM, parallel, silent, nSim, control, Reduce, refpointsMSY) {
   OM <- .StartUp(OM, nSim, silent=silent)
   .CheckZeroEffort(OM)
 
@@ -164,14 +176,7 @@
   Hist <- .CheckEffortAllocation(Hist)
   Hist <- .LogDepletionAchievement(Hist)
   Hist <- .ReduceHist(Hist, Reduce)
-
-  .MsgDone('Simulate', StartTime, silent)
-
   Hist@Log <- .JoinLog(OM@Log, Hist@Log)
-
-  if (!silent)
-    .CheckLog(Hist, 'hist')
-
-  .SetDigest(Hist) 
+  Hist
 }
 

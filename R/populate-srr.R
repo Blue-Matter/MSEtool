@@ -225,7 +225,9 @@ PopulateSRR <- function(SRR,
 .CheckSRRPars <- function(SRR, name='R0', default=1000, warn = TRUE) {
   val <- slot(SRR, name)
   if (is.null(val)) {
-    if (name !='AC' && warn)
+    if (name == 'R0')
+      SRR@Misc$DefaultR0 <- default
+    else if (name != 'AC' && warn)
       cli::cli_warn('{.val {name}} is missing in {.val SRR}; using default value {.val {default}}.')
     slot(SRR, name) <- default
   }

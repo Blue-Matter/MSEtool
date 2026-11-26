@@ -21,7 +21,12 @@ the \code{Bin} dimension of populated age-composition arrays. Required when
 
 \item{SizeBins}{Numeric vector. Lower bounds of the length bins, used to name the
 \code{Bin} dimension of populated size-composition arrays. Required when
-\code{Obs@LandingsAtSize} or \code{Obs@DiscardsAtSize} is non-empty.}
+\code{Obs@LandingsAtSize}, \code{Obs@DiscardsAtSize}, or \code{Obs@SurveyAtSize} is
+non-empty.
+
+\code{AgeBins} and \code{SizeBins} may also be lists named by the complex and/or
+stocks, giving the classes of each element of a composition slot that is a
+list named by stock (see \link[=obs-class]{obs}).}
 }
 \value{
 A populated \link[=obs-class]{obs} object.
@@ -46,6 +51,7 @@ of an \link[=obs-class]{obs} object, calling a dedicated sub-function for each s
 \item Discarded catch-at-age composition error via \code{\link[=PopulateCompObs]{PopulateCompObs()}}
 \item Landed catch-at-size composition error via \code{\link[=PopulateCompObs]{PopulateCompObs()}}
 \item Discarded catch-at-size composition error via \code{\link[=PopulateCompObs]{PopulateCompObs()}}
+\item Survey age and size composition error via \code{\link[=PopulateCompObs]{PopulateCompObs()}}
 }
 
 The \code{LifeHistory} and \code{Exploitation} specifications are validated and kept

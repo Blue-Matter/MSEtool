@@ -186,7 +186,7 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
   #### Composition data -------------------------
 
   #### CAA
-  if(!is.null(replist$agebase) && nrow(replist$agedbase) > 0) {
+  if(!is.null(replist$agedbase) && nrow(replist$agedbase) > 0) {
     CAA <- SS2Data_get_comps(replist, mainyrs, maxage, season_as_years, nseas, comp_gender, comp_fleet, comp_partition, comp_season,
                              type = "age", silent=silent) %>% as.matrix()
     if(!is.null(CAA)) {

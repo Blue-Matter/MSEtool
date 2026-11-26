@@ -796,7 +796,8 @@ test_that("a Selectivity attribute left on an older indicesdata object is ignore
   attr(Survey, 'Selectivity') <- 'Biomass'
   Data(om) <- Data(Name = 'x', Years = yrs, Survey = Survey)
   om@Obs[[1]][['Acoustic']] <- Obs('Acoustic', Survey = IndicesObs(Selectivity = 'SBiomass'))
-  expect_warning(hist <- Simulate(om, silent = TRUE), "no longer used")
+  expect_no_warning(hist <- Simulate(om, silent = TRUE))
+  expect_true(any(grepl("no longer used", vapply(hist@Log$warning, \(e) e$message, character(1)))))
   expect_equal(hist@OM@Obs[[1]][['Acoustic']]@Survey@Selectivity, 'SBiomass')
 })
 

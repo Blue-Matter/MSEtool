@@ -223,6 +223,10 @@ CatchObs <- function(CV    = NULL,
 #'   no historical observations are generated whenever `SampleSize` is set. Also get
 #'   or set with [MaxGap()] and `MaxGap<-`.
 #'
+#' @param Joint `logical(1)` or `NULL`. `TRUE` when this object is one of the
+#'   stock-specific objects of a composition slot (a list named by stock) and
+#'   its compositions are drawn as one sample with those of the other `Joint`
+#'   stocks. Default `NULL` (`FALSE`).
 #' @param Misc `list`. Reserved for internal use. Default `list()`.
 #'
 #' @details
@@ -324,6 +328,7 @@ CompObs <- function(SampleSize = NULL,
                     Years      = NULL,
                     Shift      = NULL,
                     MaxGap     = NULL,
+                    Joint      = NULL,
                     Misc       = list()) {
   .Object <- methods::new("compobs")
   if (!is.null(SampleSize)) .Object@SampleSize <- SampleSize
@@ -332,6 +337,7 @@ CompObs <- function(SampleSize = NULL,
   if (!is.null(Years))      .Object@Years      <- Years
   if (!is.null(Shift))      .Object@Shift      <- Shift
   if (!is.null(MaxGap))     .Object@MaxGap     <- as.numeric(MaxGap)
+  if (!is.null(Joint))      .Object@Joint      <- as.logical(Joint)
   .Object@Misc <- Misc
   methods::validObject(.Object)
   .Object
@@ -1049,6 +1055,10 @@ LifeHistoryObs <- function(Ages             = list(),
 #'   `NULL`, an empty [compobs-class] is created via [CompObs()]. Defines
 #'   observation error for discarded catch-at-length composition.
 #'
+#' @param SurveyAtAge,SurveyAtSize [compobs-class] objects, or `NULL`
+#'   (default). Observation error for survey age and length composition, set
+#'   in the `obs` object of a survey.
+#'
 #' @param Misc `list`. Miscellaneous additional objects. Default `list()`.
 #'
 #' @details
@@ -1118,6 +1128,8 @@ Obs <- function(Name           = NULL,
                 DiscardsAtAge  = NULL,
                 LandingsAtSize = NULL,
                 DiscardsAtSize = NULL,
+                SurveyAtAge    = NULL,
+                SurveyAtSize   = NULL,
                 Misc           = list()) {
 
   if (inherits(Name, "om"))
@@ -1137,6 +1149,8 @@ Obs <- function(Name           = NULL,
   if (is.null(DiscardsAtAge))  DiscardsAtAge  <- new("compobs")
   if (is.null(LandingsAtSize)) LandingsAtSize <- new("compobs")
   if (is.null(DiscardsAtSize)) DiscardsAtSize <- new("compobs")
+  if (is.null(SurveyAtAge))    SurveyAtAge    <- new("compobs")
+  if (is.null(SurveyAtSize))   SurveyAtSize   <- new("compobs")
 
   .Object <- methods::new("obs")
 
@@ -1154,6 +1168,8 @@ Obs <- function(Name           = NULL,
   .Object@DiscardsAtAge  <- DiscardsAtAge
   .Object@LandingsAtSize <- LandingsAtSize
   .Object@DiscardsAtSize <- DiscardsAtSize
+  .Object@SurveyAtAge    <- SurveyAtAge
+  .Object@SurveyAtSize   <- SurveyAtSize
   .Object@Misc           <- Misc
 
   methods::validObject(.Object)

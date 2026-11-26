@@ -86,3 +86,21 @@ test_that("ReduceDims keeps the Sim dimension when only some sims are NA", {
   y <- array(NA_real_, dim = c(3, 1), dimnames = list(Sim = 1:3, Year = 2027))
   expect_true(MSEtool:::.IdenticalSims(y))
 })
+
+test_that("warnings raised inside an MP are logged with the MP and simulation, not printed", {
+  skip_on_cran()
+  WarnMP <- function(Data) {
+    warning("deliberate MP warning")
+    Advice(Effort = 1)
+  }
+  class(WarnMP) <- 'mp'
+  OM <- SingleStockOM
+  nSim(OM)  <- 2
+  pYear(OM) <- 3
+  Hist <- Simulate(OM, silent = TRUE)
+  expect_no_warning(MSE <- Project(Hist, MPs = list(WarnMP = WarnMP), silent = TRUE))
+  Entries <- Filter(\(e) grepl("deliberate MP warning", e$message), MSE@Log$warning)
+  expect_true(length(Entries) > 0)
+  expect_true(all(vapply(Entries, \(e) identical(e$mp, 'WarnMP'), logical(1))))
+  expect_setequal(unlist(lapply(Entries, `[[`, 'sim')), 1:2)
+})

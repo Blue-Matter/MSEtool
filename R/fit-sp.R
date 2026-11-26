@@ -293,9 +293,9 @@ SPControl <- function(nSubStep   = 4,
   Annual  <- AnnualData(Data, .IndexSeasonsBySource(Data, IndexSource, Indices, IndexSeasons))
   Years   <- Annual@Years
 
-  if (is.null(Annual@Landings@Value))
+  if (is.null(Landings(Annual)@Value))
     cli::cli_abort("No landings data in {.code Data@Landings}.")
-  CatchUnits <- Annual@Landings@Units
+  CatchUnits <- Landings(Annual)@Units
   if (length(CatchUnits) && any(.CatchUnitType(CatchUnits) == 'Number'))
     cli::cli_abort("A surplus production model needs catch in biomass; {.code Data@Landings@Units} is {.val {CatchUnits}}.")
 
@@ -305,8 +305,8 @@ SPControl <- function(nSubStep   = 4,
     Tot[rowSums(!is.na(x)) == 0] <- NA
     Tot
   }
-  Landings <- RowTotal(Annual@Landings@Value)
-  Discards <- RowTotal(Annual@Discards@Value)
+  Landings <- RowTotal(Landings(Annual)@Value)
+  Discards <- RowTotal(Discards(Annual)@Value)
   Catch    <- if (CatchType == 'Landings') Landings else {
     Tot <- ifelse(is.na(Landings), 0, Landings) + ifelse(is.na(Discards), 0, Discards)
     Tot[is.na(Landings) & is.na(Discards)] <- NA
@@ -405,11 +405,11 @@ SPControl <- function(nSubStep   = 4,
     Tot[rowSums(!is.na(x)) == 0] <- NA
     Tot
   }
-  L <- Total(Data@Landings@Value)
+  L <- Total(Landings(Data)@Value)
   if (is.null(L)) return(NULL)
   Catch <- L
   if (CatchType == 'Removals') {
-    D <- Total(Data@Discards@Value)
+    D <- Total(Discards(Data)@Value)
     if (!is.null(D)) Catch <- ifelse(is.na(L), 0, L) + ifelse(is.na(D), 0, D)
   }
   Keep <- .CalendarYear(Data@Years) %in% FitYears & !is.na(Catch)

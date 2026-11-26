@@ -463,11 +463,34 @@
                           recruitment_years = NULL) {
 
   Years <- as.numeric(Years)
-  nArea_ <- nArea(object)
-  Areas <- IndexObs@Areas %||NA% seq_len(nArea_)
-  nSeasons <- Seasons(object)
-
+  Areas <- IndexObs@Areas %||NA% seq_len(nArea(object))
   if (is.null(Units)) Units <- IndexObs@Units %||NA% 'Biomass'
+
+  SimNumberSelectedList <- .CalcSurveySelectedN(Number_List, object, stocks, fleet, IndexObs,
+                                                Years, sim, timing, TSIndex, apply_timing)
+
+  SimulatedIndexList <- .ApplyIndexUnits(
+    SimNumberSelectedList = SimNumberSelectedList,
+    object                = object,
+    stocks                = stocks,
+    Units                 = Units,
+    Years                 = Years,
+    sim                   = sim,
+    nSeasons              = Seasons(object),
+    recruitment_years     = recruitment_years
+  )
+
+  .AggregateNomIndex(SimulatedIndexList, Areas = Areas, sim = sim)
+}
+
+# numbers-at-age selected by an index: decayed to `timing` and multiplied by the
+# index selectivity; list by stock of arrays shaped as `Number_List` after
+# subsetting `Years` (and `sim`)
+.CalcSurveySelectedN <- function(Number_List, object, stocks, fleet, IndexObs, Years,
+                                 sim = NULL, timing = NA_real_, TSIndex = NULL,
+                                 apply_timing = TRUE) {
+  Years <- as.numeric(Years)
+  nArea_ <- nArea(object)
 
   if (is.null(TSIndex)) {
     year_names <- dimnames(Number_List[[1]])[['Year']]
@@ -515,20 +538,7 @@
     nArea         = nArea_
   )
 
-  SimNumberSelectedList <- purrr::map2(Number_List, SelectivityAtAgeList, function(num, sel) {
+  purrr::map2(Number_List, SelectivityAtAgeList, function(num, sel) {
     ArrayMultiply(num, .AlignDimsTo(num, sel))
   })
-
-  SimulatedIndexList <- .ApplyIndexUnits(
-    SimNumberSelectedList = SimNumberSelectedList,
-    object                = object,
-    stocks                = stocks,
-    Units                 = Units,
-    Years                 = Years,
-    sim                   = sim,
-    nSeasons              = nSeasons,
-    recruitment_years     = recruitment_years
-  )
-
-  .AggregateNomIndex(SimulatedIndexList, Areas = Areas, sim = sim)
 }

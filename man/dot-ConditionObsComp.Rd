@@ -11,7 +11,8 @@
   ProjYears,
   stocks,
   i,
-  type = c("LandingsAtAge", "DiscardsAtAge", "LandingsAtSize", "DiscardsAtSize")
+  type = c("LandingsAtAge", "DiscardsAtAge", "LandingsAtSize", "DiscardsAtSize",
+    "SurveyAtAge", "SurveyAtSize")
 )
 }
 \arguments{
@@ -29,40 +30,45 @@ data.}
 \item{i}{Integer index of the observed data set.}
 
 \item{type}{Character; one of \code{"LandingsAtAge"}, \code{"DiscardsAtAge"},
-\code{"LandingsAtSize"}, or \code{"DiscardsAtSize"}.}
+\code{"LandingsAtSize"}, \code{"DiscardsAtSize"}, \code{"SurveyAtAge"}, or
+\code{"SurveyAtSize"}.}
 }
 \value{
 \code{Hist} with \code{SampleSize}, \code{Shift}, and \code{ESS} populated in the
-relevant \link[=compobs-class]{compobs} slots of \code{Hist@OM@Obs[[i]]} for each fleet
-where observed composition data are available.
+relevant \link[=compobs-class]{compobs} slots of \code{Hist@OM@Obs[[i]]} for each fleet or
+survey where observed composition data are available.
 }
 \description{
 Internal function to condition \link[=compobs-class]{compobs} observation error parameters
 from observed age or size composition data. Populates \code{Shift} (per-bin
 log-concentration residual), \code{ESS} (effective sample size), and
-\code{SampleSize} for each fleet where observed composition data are available.
+\code{SampleSize} for each fleet or survey where observed composition data are
+available.
 }
 \details{
 \subsection{OM-Predicted Compositions}{
 
-True catch-at-age or catch-at-size is aggregated over stocks within the
-complex and over areas:
-\itemize{
-\item \strong{\verb{*AtAge}}: extracted from \code{Hist@LandingsAtAge} or \code{Hist@DiscardsAtAge}
-(list over stocks, each \verb{[nSim x nAge x nYear x nFleet x nArea]}), summed
-over areas and stocks.
-\item \strong{\verb{*AtSize}}: extracted from \code{Hist@LandingsAtSize} or
-\code{Hist@DiscardsAtSize} (nested list \verb{[stock][fleet]}, each
-\verb{[nSim x nClass x nYear x nArea]}), summed over areas and stocks,
-computed independently for each fleet since fleets are not required to
-share a size-class grid (see \link[=compdata-class]{compdata}). If a fleet's observed
-and OM-predicted size classes don't have matching counts, this is
-treated as a mismatch between \code{FisheryData} and the operating model and
-raises an error rather than silently comparing mismatched bins.
-}
+True catch-at-age or catch-at-size is aggregated over the stocks of the
+data element and over areas (see \link{GenDataComp}); survey compositions are
+predicted from the survey's selected numbers. Fleets are not required to
+share a size-class grid (see \link[=compdata-class]{compdata}). If observed and
+OM-predicted size classes don't have matching counts, this is treated as a
+mismatch between \code{FisheryData} and the operating model and raises an error
+rather than silently comparing mismatched bins.
 
 Predicted proportions \eqn{\hat{p}_{s,t,b}} are computed by normalising
 within each simulation and year.
+}
+
+\subsection{Stock-specific data}{
+
+When the composition slot of \code{FisheryData} is a list named by the complex
+and/or stocks (see \link[=data-class]{data}), each element is conditioned against the
+predicted composition of its stocks, and the \link[=compobs-class]{compobs} slot of the
+\code{obs} object becomes a list with the same names. A fleet that is \code{Joint} in
+several stock elements is conditioned as one sample over the classes of all
+those elements: \code{SampleSize} and \code{ESS} are shared, and \code{Shift} is split back
+to each element.
 }
 }
 \keyword{internal}

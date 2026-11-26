@@ -94,11 +94,13 @@ CatchData <- function(Name  = NULL,
 #'   share a size-class grid -- see [compdata-class]. Default `NULL`.
 #' @param Units `character` or `NULL`. Units of the class variable
 #'   (e.g., `"years"`, `"cm"`, `"mm"`). Default `NULL`.
+#' @param Joint `logical` named by fleet, or `NULL`. Fleets whose
+#'   compositions in the stock-specific objects of a slot are one sample per
+#'   year (e.g. female and male compositions with a shared sample size); see
+#'   [compdata-class]. Default `NULL` (no fleet joint).
 #' @param Log `list`. Named list for diagnostic and audit logging.
 #'   Default `list()`.
 #' @param Misc `list`. Named list for additional metadata. Default `list()`.
-#'
-#' @include generate-data-hist-sizecomp.R
 #'
 #' @details
 #' ## Usage
@@ -159,6 +161,7 @@ CompData <- function(Name    = NULL,
                      Value   = NULL,
                      Classes = NULL,
                      Units   = NULL,
+                     Joint   = NULL,
                      Log     = list(),
                      Misc    = list()) {
   .Object <- methods::new("compdata")
@@ -166,6 +169,7 @@ CompData <- function(Name    = NULL,
   if (!is.null(Value))   .Object@Value   <- Value
   if (!is.null(Classes)) .Object@Classes <- Classes
   if (!is.null(Units))   .Object@Units   <- Units
+  if (!is.null(Joint))   .Object@Joint   <- Joint
   .Object@Log  <- Log
   .Object@Misc <- Misc
   methods::validObject(.Object)
@@ -347,7 +351,8 @@ IndicesData <- function(Name        = NULL,
 #' - `Effort` → [effortdata-class]
 #' - `Landings`, `Discards` → [catchdata-class]
 #' - `CPUE`, `Survey` → [indicesdata-class]
-#' - `LandingsAtAge`, `DiscardsAtAge`, `LandingsAtSize`, `DiscardsAtSize` → [compdata-class]
+#' - `LandingsAtAge`, `DiscardsAtAge`, `LandingsAtSize`, `DiscardsAtSize`,
+#'   `SurveyAtAge`, `SurveyAtSize` → [compdata-class]
 #' - `Advice` → [advicedata-class]
 #'
 #' @param Name Either a character string naming the new [data-class] object, or an
@@ -394,6 +399,10 @@ IndicesData <- function(Name        = NULL,
 #'   composition of landings.
 #' @param DiscardsAtSize Optional. An object of class [compdata-class] for size
 #'   composition of discards.
+#' @param SurveyAtAge Optional. An object of class [compdata-class] for age
+#'   composition of survey samples, named by survey.
+#' @param SurveyAtSize Optional. An object of class [compdata-class] for size
+#'   composition of survey samples, named by survey.
 #' @param Advice Optional. An object of class [advicedata-class] containing TAC and
 #'   related advice.
 #' @param Misc A named list for any additional user-defined data. Defaults to
@@ -459,6 +468,8 @@ Data <- function(Name = 'New Data Object',
                  DiscardsAtAge = NULL,
                  LandingsAtSize = NULL,
                  DiscardsAtSize = NULL,
+                 SurveyAtAge = NULL,
+                 SurveyAtSize = NULL,
                  Advice = NULL,
                  Misc = list()
 ) {
@@ -510,6 +521,12 @@ Data <- function(Name = 'New Data Object',
   if (is.null(DiscardsAtSize))
     DiscardsAtSize <- new('compdata')
 
+  if (is.null(SurveyAtAge))
+    SurveyAtAge <- new('compdata')
+
+  if (is.null(SurveyAtSize))
+    SurveyAtSize <- new('compdata')
+
   if (is.null(Advice))
     Advice <- new('advicedata')
 
@@ -548,6 +565,8 @@ Data <- function(Name = 'New Data Object',
 
     LandingsAtSize = LandingsAtSize,
     DiscardsAtSize = DiscardsAtSize,
+    SurveyAtAge = SurveyAtAge,
+    SurveyAtSize = SurveyAtSize,
 
     Advice = Advice,
 

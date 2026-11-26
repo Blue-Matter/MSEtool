@@ -163,6 +163,11 @@ setValidity("indicesdata", function(object) {
 #' @slot Units `character` or `NULL`. Units of the class variable
 #'   (e.g., `"years"`, `"cm"`, `"mm"`), shared by every fleet. See
 #'   [CompData()].
+#' @slot Joint `logical`, named by fleet. `TRUE` for a fleet whose
+#'   compositions in this object and in the other stock-specific objects of
+#'   the same slot (see [data-class]) are one sample per year: the counts of
+#'   all those objects for that fleet and year share one sample size. Fleets
+#'   not named are `FALSE`. See [CompData()].
 #' @slot Log `list`. Internal named list storing diagnostics, warnings, and
 #'   assumptions recorded during processing. See [Log()]. Not intended for
 #'   direct user access.
@@ -185,6 +190,7 @@ setClass(
     Value   = "array.null",
     Classes = "num.list.null",
     Units   = "char.null",
+    Joint   = "logical",
     Log     = "list",
     Misc    = "list"
   )
@@ -297,6 +303,9 @@ LifeHistoryData <- function() {
 }
 
 methods::setClassUnion("LifeHistoryList", c("lifehistorydata", "list"))
+methods::setClassUnion("CatchDataList", c("catchdata", "list"))
+methods::setClassUnion("IndicesDataList", c("indicesdata", "list"))
+methods::setClassUnion("CompDataList", c("compdata", "list"))
 
 
 #' `exploitationdata` Class
@@ -492,6 +501,23 @@ AdviceData <- function() {
 #'   composition of landed catch.
 #' @slot DiscardsAtSize An object of class [compdata-class] containing size
 #'   composition of discarded catch.
+#' @slot SurveyAtAge An object of class [compdata-class] containing age
+#'   composition of survey samples, named by survey (matching `Survey`).
+#' @slot SurveyAtSize An object of class [compdata-class] containing size
+#'   composition of survey samples, named by survey.
+#'
+#' @section Stock-specific data:
+#' `Landings`, `Discards`, `CPUE`, `Survey`, and the composition slots each
+#' hold one object, with data for all stocks of the complex combined, or a
+#' list of objects named by the complex name and/or the names of stocks in the
+#' complex. An element named by a stock holds data for that stock only; an
+#' element named by the complex holds data for all its stocks combined. Each
+#' element may hold a subset of the fleets or indices, and covers `Years`.
+#' Catch and index values for a fleet or index in a year are held at one level
+#' only. Compositions of the complex and of its stocks for the same fleet and
+#' year are independent samples; compositions of several stocks for the same
+#' fleet and year are one sample when the fleet is `Joint` in those elements
+#' (see [compdata-class]).
 #'
 #' @slot Advice An object of class [advicedata-class] containing TAC recommendations
 #'   and related management advice.
@@ -529,17 +555,19 @@ setClass(
 
     Effort = "effortdata",
 
-    Landings = "catchdata",
-    Discards = "catchdata",
+    Landings = "CatchDataList",
+    Discards = "CatchDataList",
 
-    CPUE = "indicesdata",
-    Survey = "indicesdata",
+    CPUE = "IndicesDataList",
+    Survey = "IndicesDataList",
 
-    LandingsAtAge = "compdata",
-    DiscardsAtAge = "compdata",
+    LandingsAtAge = "CompDataList",
+    DiscardsAtAge = "CompDataList",
 
-    LandingsAtSize = "compdata",
-    DiscardsAtSize = 'compdata',
+    LandingsAtSize = "CompDataList",
+    DiscardsAtSize = "CompDataList",
+    SurveyAtAge = "CompDataList",
+    SurveyAtSize = "CompDataList",
 
     Advice = "advicedata",
     Log = "list",
@@ -547,6 +575,16 @@ setClass(
   ),
   prototype = list(
     LifeHistory = new("lifehistorydata"),
-    Exploitation = new("exploitationdata")
+    Exploitation = new("exploitationdata"),
+    Landings = new("catchdata"),
+    Discards = new("catchdata"),
+    CPUE = new("indicesdata"),
+    Survey = new("indicesdata"),
+    LandingsAtAge = new("compdata"),
+    DiscardsAtAge = new("compdata"),
+    LandingsAtSize = new("compdata"),
+    DiscardsAtSize = new("compdata"),
+    SurveyAtAge = new("compdata"),
+    SurveyAtSize = new("compdata")
   )
 )

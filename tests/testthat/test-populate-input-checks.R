@@ -207,7 +207,7 @@ test_that("unnamed arrays are read by position with one simulation and the first
   o@Fleet[[1]][[1]]@Selectivity@MeanAtAge <- array(1, nA)
   o@Obs[[1]][[1]]@Survey@Selectivity <- array(1, nA)
   o@Fleet[[1]][[1]]@Effort@Effort <- array(1, nH)
-  o@Fleet[[1]][[1]]@Effort@Distribution <- array(0.5, 2)
+  o@Fleet[[1]][[1]]@Effort@Distribution <- array(c(1, 0), 2)
   o@Fleet[[1]][[1]]@Closure <- array(c(1, 0), 2)
   o@Obs[[1]][[1]]@Landings@Error <- array(1, nH + OM@pYear)
   expect_no_error(Simulate(o, silent = TRUE))
@@ -270,4 +270,18 @@ test_that("force re-populates Selectivity", {
   expect_equal(Calls, 0)
   do.call(PopulateSelectivity, c(list(Sel), Args, force = TRUE))
   expect_gt(Calls, 0)
+})
+
+test_that("a missing SRR@R0 is logged once as an assumption; a missing SD is a warning", {
+  OM <- SingleStockOM
+  nSim(OM) <- 2
+  OM@Stock[[1]]@SRR@R0 <- NULL
+  OM@Stock[[1]]@SRR@SD <- NULL
+  expect_no_warning(P <- Populate(OM, silent = TRUE))
+  expect_equal(unique(c(P@Stock[[1]]@SRR@R0)), 1000)
+  Msgs <- \(type, obj = P) vapply(obj@Log[[type]], \(e) e$message, character(1))
+  expect_equal(sum(grepl("SRR@R0", Msgs('assumption'))), 1)
+  expect_true(any(grepl("SD", Msgs('warning'))))
+  P2 <- Populate(P, silent = TRUE, force = TRUE)
+  expect_equal(sum(grepl("SRR@R0", Msgs('assumption', P2))), 1)
 })

@@ -9,7 +9,7 @@
 #' | Function | Slot of |
 #' |---|---|
 #' | `CPUE()`, `Survey()`, `LifeHistory()`, `Exploitation()` | `data`, `obs` |
-#' | `LandingsAtAge()`, `LandingsAtSize()`, `DiscardsAtAge()`, `DiscardsAtSize()` | `data`, `obs`, [hist-class], [mse-class], [timeseries-class] |
+#' | `LandingsAtAge()`, `LandingsAtSize()`, `DiscardsAtAge()`, `DiscardsAtSize()`, `SurveyAtAge()`, `SurveyAtSize()` | `data`, `obs`, [hist-class], [mse-class], [timeseries-class] |
 #' | `Reference()` | `data`, `hist`, `mse`, [depletion-class] |
 #' | `Value()` | the data components |
 #' | `Ref()` | `catchdata`, `indicesdata`; also the observation components and [pm-class] |
@@ -36,7 +36,9 @@ NULL
 
 #' @rdname Data-accessors
 #' @export
-CPUE <- function(x) {
+CPUE <- function(x, byStock = FALSE) {
+  if (inherits(x, 'data') && !byStock)
+    return(.CombineIndexElements(x@CPUE))
   .AccessSlot(x, 'CPUE')
 }
 
@@ -47,8 +49,21 @@ CPUE <- function(x) {
 }
 
 #' @rdname Data-accessors
+#' @param byAge,bySize For `Survey()` of a [data-class] object: `TRUE`
+#'   returns the survey age (`SurveyAtAge`) or size (`SurveyAtSize`)
+#'   compositions as a tidy `data.frame` (see [Landings()]).
+#' @param byFleet For `Survey()` compositions: `FALSE` sums over surveys.
+#' @param byStock For `CPUE()` and `Survey()` of a [data-class] object: `TRUE`
+#'   returns the slot as stored, with indices or compositions held by stock
+#'   kept separate (see [data-class]); `FALSE` (default) returns the indices
+#'   of every element in one object, or compositions summed over stocks.
 #' @export
-Survey <- function(x) {
+Survey <- function(x, byAge = FALSE, bySize = FALSE, byFleet = TRUE, byStock = FALSE) {
+  if (inherits(x, 'data') && (byAge || bySize))
+    return(.ExtractDataCompTimeseries(x, if (byAge) 'SurveyAtAge' else 'SurveyAtSize',
+                                      byFleet = byFleet, byStock = byStock))
+  if (inherits(x, 'data') && !byStock)
+    return(.CombineIndexElements(x@Survey))
   .AccessSlot(x, 'Survey')
 }
 
@@ -128,6 +143,30 @@ DiscardsAtSize <- function(x) {
 #' @export
 `DiscardsAtSize<-` <- function(x, value) {
   .AssignSlot(x, value, 'DiscardsAtSize')
+}
+
+#' @rdname Data-accessors
+#' @export
+SurveyAtAge <- function(x) {
+  .AccessSlot(x, 'SurveyAtAge')
+}
+
+#' @rdname Data-accessors
+#' @export
+`SurveyAtAge<-` <- function(x, value) {
+  .AssignSlot(x, value, 'SurveyAtAge')
+}
+
+#' @rdname Data-accessors
+#' @export
+SurveyAtSize <- function(x) {
+  .AccessSlot(x, 'SurveyAtSize')
+}
+
+#' @rdname Data-accessors
+#' @export
+`SurveyAtSize<-` <- function(x, value) {
+  .AssignSlot(x, value, 'SurveyAtSize')
 }
 
 #' @rdname Data-accessors

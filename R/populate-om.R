@@ -88,7 +88,7 @@ PopulateOM <- function(OM,
   StockListRaw <- if (inherits(OM@Stock, 'stock')) list(OM@Stock) else OM@Stock
   auto_proj <- purrr::map_lgl(StockListRaw, \(st) EmptyObject(st@SRR@RecDevProj))
 
-  OM <- OM |>
+  Caught <- .CollectWarnings(OM |>
     .PopulateStockList(silent = silent, force = force) |>
     .GenerateMultiStockRecDevs(overwrite = auto_proj, silent = silent) |>
     .PopulateFleetList(silent = silent, force = force) |>
@@ -102,7 +102,8 @@ PopulateOM <- function(OM,
     .ShareSPFromSRR() |>
     .PopulateHerm(silent = silent) |>
     .CheckAlphaBetaSRR() |>
-    .RepairSimDimnames()
+    .RepairSimDimnames())
+  OM <- .LogWarnings(Caught$Value, Caught$Warnings, name = 'PopulateOM')
 
   .CheckOMReady(OM)
 
@@ -189,23 +190,39 @@ PopulateOM <- function(OM,
 
 .ProcessDataNames <- function(OM) {
   if (is.null(OM@Data)) return(OM)
-  FleetNms  <- FleetNames(OM)
+  FleetNms   <- FleetNames(OM)
+  StockNms   <- StockNames(OM)
+  Complexes  <- OM@Complexes
+  CompSlots  <- c("LandingsAtAge", "DiscardsAtAge", "LandingsAtSize", "DiscardsAtSize",
+                  "SurveyAtAge", "SurveyAtSize")
 
   # CPUE/Survey names and rows are resolved by .AlignIndicesData() during conditioning
   for (i in seq_along(OM@Data)) {
     Data <- OM@Data[[i]]
     if (!isS4(Data)) next
-    Slots <- c("Effort", "Landings", "Discards", "LandingsAtAge", "DiscardsAtAge",
-               "LandingsAtSize", "DiscardsAtSize")
-    HasValue <- vapply(Slots, \(sl) !is.null(slot(Data, sl)@Value), logical(1))
+    Complex <- names(Complexes)[i] %||% names(OM@Data)[i]
+    Stocks  <- StockNms[Complexes[[i]] %||% seq_along(StockNms)]
+    Slots   <- c("Effort", "Landings", "Discards", CompSlots)
+    HasValue <- vapply(Slots, \(sl)
+      any(purrr::map_lgl(.SlotElements(slot(Data, sl), Complex), \(x) !is.null(x@Value))), logical(1))
     if (any(HasValue) && !length(Data@Years))
       cli::cli_abort(c(
         "x" = "{.code OM@Data[[{i}]]@Years} is not set.",
         "i" = "Set {.code Years} in {.fn Data} to the calendar years covered by the data."
       ))
     .CheckDataYearsComplete(Data@Years, Years(OM, 'H'), i)
-    for (sl in Slots[HasValue])
-      slot(Data, sl) <- .ResolveDataNames(slot(Data, sl), Data@Years, FleetNms, sl, i)
+    for (sl in Slots[HasValue]) {
+      x <- slot(Data, sl)
+      .CheckSlotElements(x, Complex, Stocks, paste0("OM@Data[[", i, "]]@", sl))
+      Valid   <- if (startsWith(sl, "Survey")) NULL else FleetNms
+      Resolve <- function(obj, el) {
+        Where <- if (is.null(el)) sl else paste0(sl, "[[\"", el, "\"]]")
+        .ResolveDataNames(obj, Data@Years, Valid, Where, i, AllNames = !sl %in% CompSlots && !is.list(x))
+      }
+      slot(Data, sl) <- if (is.list(x)) purrr::imap(x, Resolve) else Resolve(x, NULL)
+      if (sl %in% c("Landings", "Discards"))
+        .CheckOneLevel(slot(Data, sl), Complex, paste0("OM@Data[[", i, "]]@", sl))
+    }
     OM@Data[[i]] <- Data
   }
   OM
@@ -225,7 +242,7 @@ PopulateOM <- function(OM,
   invisible(TRUE)
 }
 
-.ResolveDataNames <- function(obj, Years, FleetNms, slotName, i) {
+.ResolveDataNames <- function(obj, Years, FleetNms, slotName, i, AllNames = TRUE) {
   if (is.null(obj@Value)) return(obj)
   Where    <- paste0("OM@Data[[", i, "]]@", slotName)
   Value    <- .AddDataYearDimnames(obj@Value, Years, paste0(Where, "@Value"))
@@ -233,7 +250,7 @@ PopulateOM <- function(OM,
   ColNames <- dimnames(Value)[[2]]
 
   Name <- obj@Name %||% ColNames
-  if (is.null(Name) && nCol == length(FleetNms)) Name <- FleetNms
+  if (is.null(Name) && !is.null(FleetNms) && nCol == length(FleetNms)) Name <- FleetNms
   if (is.null(Name))
     cli::cli_abort("{.code {Where}} has no names: set {.code {Where}@Name} or the column names of {.code {Where}@Value}.")
   if (length(Name) != nCol)
@@ -246,6 +263,12 @@ PopulateOM <- function(OM,
   if (anyDuplicated(Name))
     cli::cli_abort("{.code {Where}@Name} has duplicated name{?s} {.val {unique(Name[duplicated(Name)])}}.")
 
+  if (is.null(FleetNms)) {
+    obj@Name <- Name
+    dimnames(Value)[[2]] <- Name
+    obj@Value <- Value
+    return(obj)
+  }
   Unknown <- setdiff(Name, FleetNms)
   if (length(Unknown))
     cli::cli_abort(c(
@@ -253,12 +276,12 @@ PopulateOM <- function(OM,
       "i" = "Fleet names: {.val {FleetNms}}."
     ))
   Missing <- setdiff(FleetNms, Name)
-  if (length(Missing))
+  if (AllNames && length(Missing))
     cli::cli_abort(c(
       "x" = "{.code {Where}} has no column for fleet{?s} {.val {Missing}}.",
       "i" = "Supply a column for every fleet in {.code FleetNames(OM)}, with {.code NA} where there are no data."
     ))
-  ord <- match(FleetNms, Name)
+  ord <- match(intersect(FleetNms, Name), Name)
 
   # projection reads fleet columns by position, so store them in FleetNames(OM) order
   obj@Name <- Name[ord]
@@ -344,7 +367,8 @@ PopulateOM <- function(OM,
   if (show) cli::cli_progress_done()
 
   OM@Stock <- StockList
-  .LogUnusedRandom(OM)
+  OM <- .LogUnusedRandom(OM)
+  .LogDefaultR0(OM)
 }
 
 
@@ -724,18 +748,24 @@ PopulateOM <- function(OM,
     nObs                 <- length(obs_names)
     ObsList[[st]]        <- vector("list", nObs)
     names(ObsList[[st]]) <- obs_names
-    AgeClasses           <- OM@Stock[[st]]@Ages@Classes
-    
+    Stocks               <- Complexes[[st]]
+    ElStocks             <- stats::setNames(c(Stocks[1], Stocks),
+                                            c(ComplexNames[st], StockNames(OM)[Stocks]))
+    AgeClasses           <- purrr::map(ElStocks, \(s) OM@Stock[[s]]@Ages@Classes)
+
     for (fl in seq_len(nObs)) {
       .SetSeed(paste(OM@Seed %||% 101, 'Obs', st, fl, sep = '_'))
-      
-      # Fleet obs use fleet-specific size classes; survey obs use NULL
-      SizeClasses <- if (fl <= nFleet) {
-        OM@Fleet[[st]][[fl]]@Selectivity@Classes
-      } else {
-        NULL
-      }
-      
+
+      # Fleet obs use fleet-specific size classes; survey obs use the stock's length classes
+      SizeClasses <- purrr::map(ElStocks, \(s) {
+        if (fl <= nFleet) OM@Fleet[[s]][[fl]]@Selectivity@Classes else OM@Stock[[s]]@Length@Classes
+      })
+
+      for (sl in c("Landings", "Discards", "CPUE", "Survey", "LandingsAtAge", "DiscardsAtAge",
+                   "LandingsAtSize", "DiscardsAtSize", "SurveyAtAge", "SurveyAtSize"))
+        .CheckSlotElements(slot(OM@Obs[[st]][[fl]], sl), ComplexNames[st], names(ElStocks)[-1],
+                           paste0("OM@Obs[[", st, "]][[\"", obs_names[fl], "\"]]@", sl))
+
       nm <- cli::format_inline("Complex {.val {ComplexNames[st]}}, obs {.val {obs_names[fl]}}")
       ObsList[[st]][[fl]] <- .SafePopulate(\() PopulateObs(
         Obs       = OM@Obs[[st]][[fl]],

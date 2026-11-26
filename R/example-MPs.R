@@ -95,16 +95,16 @@ CurrentCatch <- function(Data) {
   Season <- si$SeasonInd %% si$Seasons + 1L # managed season follows the last data time step
   TargetRow <- LastHistYearInd(Data) - si$Seasons + Season
 
-  LastHistLandings <- Data@Landings@Value[TargetRow, , drop=FALSE]
+  LastHistLandings <- Landings(Data)@Value[TargetRow, , drop=FALSE]
 
   if (is.null(LastHistLandings) || !length(LastHistLandings))
     return(Advice())
 
-  LastHistDiscards <- Data@Discards@Value[TargetRow, , drop=FALSE] %||% 0
+  LastHistDiscards <- Discards(Data)@Value[TargetRow, , drop=FALSE] %||% 0
 
   LastHistRemovals <- as.vector(replace(LastHistLandings, is.na(LastHistLandings), 0) +
                                   replace(LastHistDiscards,  is.na(LastHistDiscards),  0))
-  Advice(TAC = LastHistRemovals, TACUnit = Data@Landings@Units)
+  Advice(TAC = LastHistRemovals, TACUnit = Landings(Data)@Units)
 }
 class(CurrentCatch) <- 'mp'
 attr(CurrentCatch, 'EverySeason') <- TRUE
@@ -119,14 +119,14 @@ CurrentLandings <- function(Data) {
   Season <- si$SeasonInd %% si$Seasons + 1L # managed season follows the last data time step
   TargetRow <- LastHistYearInd(Data) - si$Seasons + Season
 
-  LastHistLandings <- Data@Landings@Value[TargetRow, , drop=FALSE]
+  LastHistLandings <- Landings(Data)@Value[TargetRow, , drop=FALSE]
 
   if (is.null(LastHistLandings) || !length(LastHistLandings))
     return(Advice())
 
   Advice(TAC=colSums(LastHistLandings, na.rm=TRUE),
          TACType = 'Landings',
-         TACUnit = Data@Landings@Units)
+         TACUnit = Landings(Data)@Units)
 }
 class(CurrentLandings) <- 'mp'
 attr(CurrentLandings, 'EverySeason') <- TRUE
@@ -141,17 +141,17 @@ AverageCatch <- function(Data) {
   Season <- si$SeasonInd %% si$Seasons + 1L # managed season follows the last data time step
   HistRows <- seq(Season, LastHistYearInd(Data), by = si$Seasons)
 
-  HistLandings <- Data@Landings@Value[HistRows, , drop=FALSE]
+  HistLandings <- Landings(Data)@Value[HistRows, , drop=FALSE]
   if (is.null(HistLandings) || !length(HistLandings))
     return(Advice())
 
-  HistDiscards <- Data@Discards@Value[HistRows, , drop=FALSE]
+  HistDiscards <- Discards(Data)@Value[HistRows, , drop=FALSE]
 
   TotalHistLandings <- rowSums(HistLandings, na.rm=TRUE)
   TotalHistDiscards <- if (is.null(HistDiscards)) 0 else rowSums(HistDiscards, na.rm=TRUE)
   TotalHistRemovals <- TotalHistLandings + TotalHistDiscards
   Advice(TAC=mean(TotalHistRemovals[TotalHistRemovals!=0]),
-         TACUnit = Data@Landings@Units)
+         TACUnit = Landings(Data)@Units)
 }
 class(AverageCatch) <- 'mp'
 attr(AverageCatch, 'EverySeason') <- TRUE

@@ -62,6 +62,7 @@ PlotIndexFit <- function(object,
                          free_y  = TRUE) {
   type <- match.arg(type)
   .CheckClass(object, c('hist', 'mse'), 'object')
+  object <- UpdateObject(object)
 
   df <- .BuildIndexFitDF(object, type, Fleets = Fleets, Stocks = Stocks)
 
@@ -118,6 +119,7 @@ IndexFitTable <- function(object,
                           print  = TRUE) {
   type <- match.arg(type)
   .CheckClass(object, c('hist', 'mse'), 'object')
+  object <- UpdateObject(object)
 
   OM <- object@OM
   Complexes <- .ResolveComplexes(OM)

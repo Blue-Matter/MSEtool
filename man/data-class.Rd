@@ -89,6 +89,12 @@ composition of landed catch.}
 \item{\code{DiscardsAtSize}}{An object of class \link[=compdata-class]{compdata} containing size
 composition of discarded catch.}
 
+\item{\code{SurveyAtAge}}{An object of class \link[=compdata-class]{compdata} containing age
+composition of survey samples, named by survey (matching \code{Survey}).}
+
+\item{\code{SurveyAtSize}}{An object of class \link[=compdata-class]{compdata} containing size
+composition of survey samples, named by survey.}
+
 \item{\code{Advice}}{An object of class \link[=advicedata-class]{advicedata} containing TAC recommendations
 and related management advice.}
 
@@ -99,6 +105,21 @@ and related management advice.}
 assumptions recorded during processing. See \code{\link[=Log]{Log()}}. Not intended for
 direct user access.}
 }}
+
+\section{Stock-specific data}{
+
+\code{Landings}, \code{Discards}, \code{CPUE}, \code{Survey}, and the composition slots each
+hold one object, with data for all stocks of the complex combined, or a
+list of objects named by the complex name and/or the names of stocks in the
+complex. An element named by a stock holds data for that stock only; an
+element named by the complex holds data for all its stocks combined. Each
+element may hold a subset of the fleets or indices, and covers \code{Years}.
+Catch and index values for a fleet or index in a year are held at one level
+only. Compositions of the complex and of its stocks for the same fleet and
+year are independent samples; compositions of several stocks for the same
+fleet and year are one sample when the fleet is \code{Joint} in those elements
+(see \link[=compdata-class]{compdata}).
+}
 
 \seealso{
 \code{\link[=Data]{Data()}}

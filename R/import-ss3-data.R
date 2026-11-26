@@ -3,6 +3,14 @@
 #' Reads a parsed SS3 report and populates a [data-class] object with catch,
 #' index, and composition data.
 #'
+#' Compositions of fishing fleets go to `LandingsAtAge`, `DiscardsAtAge`,
+#' `LandingsAtSize`, and `DiscardsAtSize`, and compositions of survey fleets
+#' to `SurveyAtAge` and `SurveyAtSize`. For a two-sex model, compositions
+#' reported by sex are stored in a list named by stock (see [data-class]):
+#' SS3 `Sexes = 0` compositions are held under the complex name, `Sexes = 1`
+#' and `2` under the female or male stock, and `Sexes = 3` under both stocks
+#' with the fleet `Joint`.
+#'
 #' @param SSDir Character vector of SS3 report directories, or a pre-parsed
 #'   `r4ss::SS_output` list or `RepList` object returned by [ImportSSReport()].
 #' @param Name Character; name for the `Data` object
@@ -18,6 +26,9 @@
 #' @param FleetNames Optional character vector of names for the SS3 fishing
 #'   fleets, in SS3 fleet order, used for their catch, CPUE, and composition
 #'   data. If `NULL`, the SS3 fleet names are used.
+#' @param StockName Optional character vector of stock names (see
+#'   [ImportSS()]), used to name sex-specific composition data. If `NULL`,
+#'   `"Female"` and `"Male"` for a two-sex model.
 #' @param silent Logical; suppress progress messages (default FALSE)
 #' @param ... Additional arguments passed to `ImportSSReport`
 #'
@@ -30,6 +41,7 @@ ImportSSData <- function(SSDir,
                          LengthUnits = "cm",
                          CatchUnits = c('SS3', 'Biomass'),
                          FleetNames = NULL,
+                         StockName  = NULL,
                          silent     = FALSE,
                          ...) {
   .OnExit()
@@ -61,13 +73,15 @@ ImportSSData <- function(SSDir,
   Data@CPUE   <- .ImportSSDataIndex(replist, "CPUE", FleetNames = FleetNames)
   Data@Survey <- .ImportSSDataIndex(replist, "Survey")
   
-  AtAge              <- .ImportSSDataAtAge(replist, silent, FleetNames = FleetNames)
-  Data@LandingsAtAge <- AtAge$Landings
-  Data@DiscardsAtAge <- AtAge$Discards
-  
-  AtSize              <- .ImportSSDataAtSize(replist, silent, LengthUnits = LengthUnits, FleetNames = FleetNames)
+  StockName <- .ProcessSSStockName(StockName, nStock)
+  AtAge  <- .ImportSSDataComp(replist, "Age", FleetNames, StockName = StockName)
+  AtSize <- .ImportSSDataComp(replist, "Size", FleetNames, LengthUnits, StockName = StockName)
+  Data@LandingsAtAge  <- AtAge$Landings
+  Data@DiscardsAtAge  <- AtAge$Discards
+  Data@SurveyAtAge    <- AtAge$Survey
   Data@LandingsAtSize <- AtSize$Landings
   Data@DiscardsAtSize <- AtSize$Discards
+  Data@SurveyAtSize   <- AtSize$Survey
   
   Data
 }
@@ -247,7 +261,7 @@ ImportSSData <- function(SSDir,
 # observations.
 .GetSSDataYears <- function(replist, YearsList) {
   YearsHist <- YearsList$YearsHist
-  ObsYr <- purrr::map(c('cpue', 'agebase', 'lendbase'), \(tb) {
+  ObsYr <- purrr::map(c('cpue', 'agedbase', 'lendbase'), \(tb) {
     x <- replist[[tb]]
     if (!is.data.frame(x) || !all(c('Yr', 'Obs') %in% names(x))) return(NULL)
     x$Yr[is.finite(x$Obs)]
@@ -395,210 +409,82 @@ ImportSSData <- function(SSDir,
 }
 
 
-.ImportSSDataAtAge <- function(replist, silent = FALSE, FleetNames = NULL) {
+# Age or length compositions of SS3 fishing fleets (`Landings`, `Discards`) and
+# survey fleets (`Survey`). Each slot is a `compdata`, or a list named by the
+# complex and/or stocks when SS3 reports sex-specific compositions: `Sexes = 0`
+# goes to the complex element, `1` and `2` to that sex's stock, and `3` to both
+# stocks with the fleet `Joint`.
+.ImportSSDataComp <- function(replist, Type = c("Age", "Size"), FleetNames = NULL,
+                              LengthUnits = "cm", StockName = NULL, ComplexName = NULL) {
+  Type      <- match.arg(Type)
+  isAge     <- Type == "Age"
+  Empty     <- list(Landings = new("compdata"), Discards = new("compdata"), Survey = new("compdata"))
+  DB        <- replist[[if (isAge) "agedbase" else "lendbase"]]
+  if (is.null(DB) || !nrow(DB))
+    return(Empty)
 
-  YearsList     <- .GetSSYears(replist, pYear = 1)
-  DataYears     <- .GetSSDataYears(replist, YearsList)
-  nTS           <- length(DataYears)
-  FishFleets    <- .SSFishFleets(replist)$SS
-  FleetNames    <- FleetNames %||% .SSFishFleets(replist)$SSName
-  nFleet        <- length(FishFleets)
-  AgeClasses    <- .GetSSAgeClasses(replist)
-  nAge          <- length(AgeClasses)
+  StockName   <- StockName %||% .ProcessSSStockName(NULL, replist$nsexes)
+  ComplexName <- ComplexName %||% paste(StockName, collapse = " ")
+  DataYears   <- .GetSSDataYears(replist, .GetSSYears(replist, pYear = 1))
+  nTS         <- length(DataYears)
+  Classes     <- if (isAge) .GetSSAgeClasses(replist) else .GetSSLengthClasses(replist)
+  nClass      <- length(Classes)
+  Fish        <- .SSFishFleets(replist)
+  FleetNames  <- FleetNames %||% Fish$SSName
+  SurveyFl    <- which(!replist$IsFishFleet)
 
-  AgeDB <- replist$agebase
+  nsamp_in_valid <- !is.null(DB$Nsamp_in) && any(DB$Nsamp_in > 1, na.rm = TRUE)
+  DB$Count   <- DB$Obs * (if (nsamp_in_valid) DB$Nsamp_in else DB$Nsamp_adj)
+  Sexed      <- replist$nsexes > 1 && !is.null(DB$Sexes)
+  DB$Element <- if (Sexed) ifelse(DB$Sexes == 0, ComplexName, StockName[DB$Sex]) else ComplexName
+  DB$Joint   <- Sexed & DB$Sexes == 3
+  DB$TS      <- match(DB$Yr, DataYears) + DB$Seas - 1
+  DB$Class   <- if (isAge) match(DB$Bin, Classes) else findInterval(DB$Bin, Classes)
+  DB <- DB[!is.na(DB$TS) & DB$TS >= 1 & DB$TS <= nTS & !is.na(DB$Class) & DB$Class >= 1, , drop = FALSE]
 
-  if (is.null(AgeDB) || !nrow(AgeDB))
-    return(list(Landings = new("compdata"), Discards = new("compdata")))
-
-  nsamp_in_valid <- !is.null(AgeDB$Nsamp_in) &&
-    any(AgeDB$Nsamp_in > 1, na.rm = TRUE)
-
-  AgeDB$N     <- if (nsamp_in_valid) AgeDB$Nsamp_in else AgeDB$Nsamp_adj
-  AgeDB$Count <- AgeDB$Obs * AgeDB$N
-
-  make_age_matrix <- function(df) {
-    mat <- matrix(
-      NA_real_,
-      nrow     = nTS,
-      ncol     = nAge,
-      dimnames = list(Year = DataYears, Age = AgeClasses)
-    )
+  CompMatrix <- function(df) {
+    mat <- matrix(NA_real_, nTS, nClass)
     if (!nrow(df)) return(mat)
-
-    agg <- df |>
-      dplyr::summarise(Count = sum(Count), .by = c(Yr, Seas, Bin))
-
-    yr_ind <- match(agg$Yr, DataYears) + agg$Seas - 1
-    yr_ind[!is.na(yr_ind) & (yr_ind < 1 | yr_ind > nTS)] <- NA
-
-    age_ind <- match(agg$Bin, AgeClasses)
-
-    valid <- !is.na(yr_ind) & !is.na(age_ind)
-
-    mat[cbind(yr_ind[valid], age_ind[valid])] <- agg$Count[valid]
+    agg <- stats::aggregate(Count ~ TS + Class, data = df, FUN = sum)
+    mat[cbind(agg$TS, agg$Class)] <- agg$Count
     mat
   }
 
-  LandingsArr <- DiscardsArr <- array(
-    NA_real_,
-    dim      = c(nTS, nFleet, nAge),
-    dimnames = list(
-      Year   = DataYears,
-      Fleet  = FleetNames,
-      Age    = AgeClasses
-    )
-  )
-
-  for (fl in seq_along(FishFleets)) {
-    fleet_idx <- FishFleets[fl]
-
-    fleet_db <- AgeDB |>
-      dplyr::filter(Fleet == fleet_idx, Yr %in% DataYears)
-
-    if (!nrow(fleet_db)) next
-
-    parts <- unique(fleet_db$Part)
-
-    if (any(parts %in% c(0, 1))) {
-      LandingsArr[, fl, ] <- make_age_matrix(
-        df = dplyr::filter(fleet_db, Part == 0)
-      )
-      DiscardsArr[, fl, ] <- make_age_matrix(
-        dplyr::filter(fleet_db, Part == 1)
-      )
-    } else if (any(parts == 2)) {
-      LandingsArr[, fl, ] <- make_age_matrix(
-        dplyr::filter(fleet_db, Part == 2)
-      )
-    }
+  # rows of each fleet in each slot
+  Rows <- list(Landings = list(), Discards = list(), Survey = list())
+  for (fl in seq_len(nrow(Fish))) {
+    db    <- DB[DB$Fleet == Fish$SS[fl], , drop = FALSE]
+    Parts <- unique(db$Part)
+    Rows$Landings[[FleetNames[fl]]] <- db[db$Part == (if (any(Parts %in% c(0, 1))) 0 else 2), , drop = FALSE]
+    Rows$Discards[[FleetNames[fl]]] <- db[db$Part == 1, , drop = FALSE]
   }
+  for (fl in SurveyFl)
+    Rows$Survey[[replist$FleetNames[fl]]] <- DB[DB$Fleet == fl, , drop = FALSE]
 
-  Landings         <- new("compdata")
-  Landings@Name    <- FleetNames
-  Landings@Value   <- LandingsArr
-  Landings@Classes <- as.numeric(AgeClasses)
-  Landings@Units   <- "years"
-
-  Discards         <- new("compdata")
-  Discards@Name    <- FleetNames
-  Discards@Value   <- DiscardsArr
-  Discards@Classes <- as.numeric(AgeClasses)
-  Discards@Units   <- "years"
-
-  list(Landings = Landings, Discards = Discards)
-}
-
-
-.ImportSSDataAtSize <- function(replist, silent = FALSE, LengthUnits = "cm", FleetNames = NULL) {
-  
-  YearsList     <- .GetSSYears(replist, pYear = 1)
-  DataYears     <- .GetSSDataYears(replist, YearsList)
-  nTS           <- length(DataYears)
-  FishFleets    <- .SSFishFleets(replist)$SS
-  FleetNames    <- FleetNames %||% .SSFishFleets(replist)$SSName
-  nFleet        <- length(FishFleets)
-  LengthClasses <- .GetSSLengthClasses(replist) 
-  nLength       <- length(LengthClasses)
-  
-  LenDB <- replist$lendbase
-  
-  if (is.null(LenDB) || !nrow(LenDB))
-    return(list(Landings = new("compdata"), Discards = new("compdata")))
-  
-  nsamp_in_valid <- !is.null(LenDB$Nsamp_in) && 
-    any(LenDB$Nsamp_in > 1, na.rm = TRUE)
-  
-  LenDB$N     <- if (nsamp_in_valid) LenDB$Nsamp_in else LenDB$Nsamp_adj
-  LenDB$Count <- LenDB$Obs * LenDB$N
-  LenDB$BinMid <- LenDB$Bin
-
-  make_length_matrix <- function(df) {
-    mat <- matrix(
-      NA_real_,
-      nrow     = nTS,
-      ncol     = nLength,
-      dimnames = list(Year = DataYears, Class = LengthClasses)
-    )
-    if (!nrow(df)) return(mat)
-
-    agg <- df |>
-      dplyr::summarise(Count = sum(Count), .by = c(Yr, Seas, BinMid))
-
-    yr_ind <- match(agg$Yr, DataYears) + agg$Seas - 1
-    yr_ind[!is.na(yr_ind) & (yr_ind < 1 | yr_ind > nTS)] <- NA
-
-    bin_ind <- findInterval(agg$BinMid, LengthClasses)
-    bin_ind[bin_ind < 1 | bin_ind > nLength] <- NA
-
-    valid <- !is.na(yr_ind) & !is.na(bin_ind)
-
-    mat[cbind(yr_ind[valid], bin_ind[valid])] <- agg$Count[valid]
-    mat
-  }
-  
-  LandingsArr <- DiscardsArr <- array(
-    NA_real_,
-    dim      = c(nTS, nFleet, nLength),
-    dimnames = list(
-      Year   = DataYears,
-      Fleet  = FleetNames,
-      Class = LengthClasses
-    )
-  )
-    
-  for (fl in seq_along(FishFleets)) {
-    fleet_idx <- FishFleets[fl]
-    
-    fleet_db <- LenDB |>
-      dplyr::filter(Fleet == fleet_idx, Yr %in% DataYears)
-    
-    if (!nrow(fleet_db)) next
-    
-    parts <- unique(fleet_db$Part)
-    
-    if (any(parts %in% c(0, 1))) {
-      LandingsArr[, fl, ] <- make_length_matrix(
-        df = dplyr::filter(fleet_db, Part == 0)
-      )
-      DiscardsArr[, fl, ] <- make_length_matrix(
-        dplyr::filter(fleet_db, Part == 1)
-      )
-    } else if (any(parts == 2)) {
-      LandingsArr[, fl, ] <- make_length_matrix(
-        dplyr::filter(fleet_db, Part == 2)
-      )
-    }
-  }
-  
-  
-  # SS3/`r4ss` does not report the physical unit of length bins; `LengthUnits`
-  # (passed in from `ImportSSData()`/`ImportSS()`) is the caller's assumption.
-  units_label <- LengthUnits
-
-  # `Classes` is a named list, one vector per fleet (see compdata-class),
-  # even though every fleet gets the same grid here: SS3 reports length
-  # composition data against one model-wide population length-bin
-  # structure (`lbinspop`), not a fleet-specific one, so `LengthClasses` is
-  # already the shared bin grid for every fleet. Storing it as a per-fleet
-  # list rather than a flat vector keeps this consistent with
-  # `LandingsAtSize`/`DiscardsAtSize` built elsewhere (e.g.
-  # `.GenHistDataSizeComp()`), where fleets are not required to share a
-  # grid.
-  ClassesList <- stats::setNames(rep(list(as.numeric(LengthClasses)), nFleet), FleetNames)
-
-  Landings         <- new("compdata")
-  Landings@Name    <- FleetNames
-  Landings@Value   <- LandingsArr
-  Landings@Classes <- ClassesList
-  Landings@Units   <- units_label
-
-  Discards         <- new("compdata")
-  Discards@Name    <- FleetNames
-  Discards@Value   <- DiscardsArr
-  Discards@Classes <- ClassesList
-  Discards@Units   <- units_label
-
-  list(Landings = Landings, Discards = Discards)
-
+  purrr::imap(Rows, \(ByFleet, Slot) {
+    Elements <- unique(unlist(purrr::map(ByFleet, \(db) db$Element)))
+    if (!length(Elements)) return(new("compdata"))
+    Out <- purrr::map(Elements, \(el) {
+      Names <- names(ByFleet)[purrr::map_lgl(ByFleet, \(db) any(db$Element == el))]
+      if (el == ComplexName && Slot != "Survey") Names <- names(ByFleet)
+      Value <- array(NA_real_, c(nTS, length(Names), nClass),
+                     stats::setNames(list(DataYears, Names, Classes),
+                                     c("Year", "Fleet", if (isAge) "Age" else "Class")))
+      Joint <- logical(0)
+      for (nm in Names) {
+        db <- ByFleet[[nm]][ByFleet[[nm]]$Element == el, , drop = FALSE]
+        Value[, nm, ] <- CompMatrix(db)
+        if (any(db$Joint)) Joint[nm] <- TRUE
+      }
+      CompData <- new("compdata")
+      CompData@Name    <- Names
+      CompData@Value   <- Value
+      CompData@Classes <- if (isAge) as.numeric(Classes) else
+        stats::setNames(rep(list(as.numeric(Classes)), length(Names)), Names)
+      CompData@Units   <- if (isAge) "years" else LengthUnits
+      CompData@Joint   <- Joint
+      CompData
+    }) |> stats::setNames(Elements)
+    .ElementsToSlot(Out, ComplexName)
+  })
 }

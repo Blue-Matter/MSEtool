@@ -67,6 +67,12 @@
 #'   size-class grid (see [compdata-class]); `byFleet = FALSE` raises an
 #'   error if a stock's fleets don't all share the exact same classes,
 #'   rather than silently summing incompatible bins.
+#' @param byStock Logical. For [data-class] objects. If `TRUE`, data held by
+#'   stock (see [data-class]) are returned separately: the catch slot as a
+#'   list named by stock, or compositions with a `Stock` column. If `FALSE`
+#'   (default), the catch of the complex and its stocks is summed by fleet,
+#'   and composition counts are summed (age compositions by age; a fleet's
+#'   size compositions must have the same classes in every element).
 #' @param Reduce Logical. If `TRUE` (default) simulation dimensions are
 #'   reduced using [ReduceDims()] before conversion to a data frame. Applies
 #'   to [hist-class] and [mse-class] objects only.
@@ -136,6 +142,7 @@ Landings <- function(object,
                      bySize  = FALSE,
                      byArea  = FALSE,
                      byFleet = TRUE,
+                     byStock = FALSE,
                      Reduce  = TRUE,
                      IncYear = FALSE,
                      Extend  = FALSE,
@@ -145,17 +152,18 @@ Landings <- function(object,
     return(object@Landings)
 
   if (.IsDataList(object))
-    return(purrr::map(object, \(d) Landings(d, byAge = byAge, bySize = bySize, byFleet = byFleet)))
+    return(purrr::map(object, \(d) Landings(d, byAge = byAge, bySize = bySize, byFleet = byFleet,
+                                         byStock = byStock)))
 
   if (byAge)  bySize <- FALSE
   if (bySize) byAge  <- FALSE
 
   if (inherits(object, 'data')) {
     if (!byAge && !bySize)
-      return(object@Landings)
+      return(if (byStock) object@Landings else .CombineCatchElements(object@Landings))
     return(.ExtractDataCompTimeseries(
       object, slot_name = if (byAge) 'LandingsAtAge' else 'LandingsAtSize',
-      byFleet = byFleet
+      byFleet = byFleet, byStock = byStock
     ))
   }
 
@@ -192,6 +200,7 @@ Discards <- function(object,
                      bySize  = FALSE,
                      byArea  = FALSE,
                      byFleet = TRUE,
+                     byStock = FALSE,
                      Reduce  = TRUE,
                      IncYear = FALSE,
                      Extend  = FALSE,
@@ -201,17 +210,18 @@ Discards <- function(object,
     return(object@Discards)
 
   if (.IsDataList(object))
-    return(purrr::map(object, \(d) Discards(d, byAge = byAge, bySize = bySize, byFleet = byFleet)))
+    return(purrr::map(object, \(d) Discards(d, byAge = byAge, bySize = bySize, byFleet = byFleet,
+                                         byStock = byStock)))
 
   if (byAge)  bySize <- FALSE
   if (bySize) byAge  <- FALSE
 
   if (inherits(object, 'data')) {
     if (!byAge && !bySize)
-      return(object@Discards)
+      return(if (byStock) object@Discards else .CombineCatchElements(object@Discards))
     return(.ExtractDataCompTimeseries(
       object, slot_name = if (byAge) 'DiscardsAtAge' else 'DiscardsAtSize',
-      byFleet = byFleet
+      byFleet = byFleet, byStock = byStock
     ))
   }
 

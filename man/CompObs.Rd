@@ -17,6 +17,7 @@ CompObs(
   Years = NULL,
   Shift = NULL,
   MaxGap = NULL,
+  Joint = NULL,
   Misc = list()
 )
 
@@ -98,6 +99,11 @@ historical year for which compositions are generated in projection years.
 the last historical year; \code{Inf} or \code{NA} always generates them. Fleets with
 no historical observations are generated whenever \code{SampleSize} is set. Also get
 or set with \code{\link[=MaxGap]{MaxGap()}} and \verb{MaxGap<-}.}
+
+\item{Joint}{\code{logical(1)} or \code{NULL}. \code{TRUE} when this object is one of the
+stock-specific objects of a composition slot (a list named by stock) and
+its compositions are drawn as one sample with those of the other \code{Joint}
+stocks. Default \code{NULL} (\code{FALSE}).}
 
 \item{Misc}{\code{list}. Reserved for internal use. Default \code{list()}.}
 

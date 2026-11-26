@@ -96,6 +96,8 @@ FleetNames <- function(object, IncSurvey = FALSE) {
 }
 
 .DataFleetNames <- function(DataSlot) {
+  if (is.list(DataSlot))
+    return(unique(unlist(lapply(DataSlot, .DataFleetNames))))
   if (!is.null(DataSlot@Name))
     return(DataSlot@Name)
   Value <- DataSlot@Value

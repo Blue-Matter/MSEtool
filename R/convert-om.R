@@ -232,7 +232,7 @@ ConvertOM <- function(OM,
     MatAge <- Extend(Maturity@MeanAtAge, nSim, Years = Years)
     LenAge <- Extend(Stock@Length@MeanAtAge, nSim, Years = Years)
     yr <- Stock@nYear
-    L50 <- vapply(seq_len(nSim), \(s) .LinInterp(MatAge[s, , yr], LenAge[s, , yr], 0.5), numeric(1))
+    L50 <- vapply(seq_len(nSim), \(s) .LinInterp(MatAge[s, , yr], LenAge[s, , yr], 0.5, Label = "Maturity-at-age used to find L50"), numeric(1))
   }
   array(rep(L50, length(Years)), c(nSim, length(Years)),
         dimnames = list(Sim = seq_len(nSim), Year = Years))

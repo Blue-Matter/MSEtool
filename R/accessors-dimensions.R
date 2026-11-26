@@ -192,10 +192,11 @@ LengthClasses <- function(x, st = NULL) {
     return(x@Ages@Classes)
 
   for (sl in c('LandingsAtAge', 'DiscardsAtAge')) {
-    Comp <- methods::slot(x, sl)
-    Classes <- Comp@Classes %||% dimnames(Comp@Value)[['Age']]
-    if (length(Classes))
-      return(as.numeric(Classes))
+    for (Comp in .SlotElements(methods::slot(x, sl), "")) {
+      Classes <- Comp@Classes %||% dimnames(Comp@Value)[['Age']]
+      if (length(Classes))
+        return(as.numeric(Classes))
+    }
   }
   .DataLifeHistoryClasses(x, 'Ages')
 }
@@ -206,15 +207,17 @@ LengthClasses <- function(x, st = NULL) {
     return(x@Length@Classes)
 
   for (sl in c('LandingsAtSize', 'DiscardsAtSize')) {
-    Classes <- methods::slot(x, sl)@Classes
-    if (!length(Classes))
-      next
-    if (!is.list(Classes))
+    for (Comp in .SlotElements(methods::slot(x, sl), "")) {
+      Classes <- Comp@Classes
+      if (!length(Classes))
+        next
+      if (!is.list(Classes))
+        return(Classes)
+      Unique <- unique(Classes)
+      if (length(Unique) == 1)
+        return(Unique[[1]])
       return(Classes)
-    Classes <- unique(Classes)
-    if (length(Classes) == 1)
-      return(Classes[[1]])
-    return(methods::slot(x, sl)@Classes)
+    }
   }
   .DataLifeHistoryClasses(x, 'Length')
 }
