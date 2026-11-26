@@ -27,6 +27,7 @@
 #' @export
 DataTrim <- function(Data, Year) {
   .CheckClass(Data, 'data', 'Data')
+  Data <- UpdateObject(Data)
 
   if (!is.numeric(Year))
     cli::cli_abort("`Year` must be a numeric value")
