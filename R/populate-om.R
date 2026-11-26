@@ -88,7 +88,7 @@ PopulateOM <- function(OM,
   StockListRaw <- if (inherits(OM@Stock, 'stock')) list(OM@Stock) else OM@Stock
   auto_proj <- purrr::map_lgl(StockListRaw, \(st) EmptyObject(st@SRR@RecDevProj))
 
-  OM <- OM |>
+  Caught <- .CollectWarnings(OM |>
     .PopulateStockList(silent = silent, force = force) |>
     .GenerateMultiStockRecDevs(overwrite = auto_proj, silent = silent) |>
     .PopulateFleetList(silent = silent, force = force) |>
@@ -102,7 +102,8 @@ PopulateOM <- function(OM,
     .ShareSPFromSRR() |>
     .PopulateHerm(silent = silent) |>
     .CheckAlphaBetaSRR() |>
-    .RepairSimDimnames()
+    .RepairSimDimnames())
+  OM <- .LogWarnings(Caught$Value, Caught$Warnings, name = 'PopulateOM')
 
   .CheckOMReady(OM)
 
@@ -366,7 +367,8 @@ PopulateOM <- function(OM,
   if (show) cli::cli_progress_done()
 
   OM@Stock <- StockList
-  .LogUnusedRandom(OM)
+  OM <- .LogUnusedRandom(OM)
+  .LogDefaultR0(OM)
 }
 
 
