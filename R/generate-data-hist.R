@@ -34,13 +34,9 @@
 
   parallel <- CheckParallel(parallel)
 
-  Observed <- withCallingHandlers(
-    .GenerateObservedBiology(Hist, HistYears),
-    warning = function(w) {
-      Hist <<- .CaptureLog(Hist, cli::ansi_strip(conditionMessage(w)),
-                           name = "Observed biology", type = "warning")
-      invokeRestart("muffleWarning")
-    })
+  Caught   <- .CollectWarnings(.GenerateObservedBiology(Hist, HistYears))
+  Observed <- Caught$Value
+  Hist     <- .LogWarnings(Hist, Caught$Warnings, name = "Observed biology")
 
   SimDataList <- if (parallel) {
     CheckPackage('furrr')
