@@ -225,7 +225,7 @@ PopulateSelectivity <- function(Selectivity,
 
 .FindL50Vec <- function(prob_vec) {
   classes <- names(prob_vec) |> as.numeric()
-  .LinInterp(prob_vec, y=classes, 0.5)
+  .LinInterp(prob_vec, y=classes, 0.5, Label = "Maturity-at-length used to find L50 for relative selectivity")
 }
 
 .FindL50 <- function(Maturity) {
