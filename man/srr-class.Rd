@@ -55,8 +55,10 @@ immediately rescales the stock-recruitment curve from that year on.}
 
 \item{\code{SD}}{\code{array} or \code{numeric}. Log-space standard deviation of recruitment
 deviations. May be a scalar, length-2 bounds vector, or length-\code{nSim}
-vector. Fixed across years. When \code{NULL},
-recruitment is deterministic.}
+vector. Fixed across years. When \code{NULL}, it is calculated from the
+supplied recruitment deviations, taken from a shared \code{SPFrom} source, or
+set to \code{0.4} with a warning (see \code{\link[=SRR]{SRR()}}). \code{SD = 0} gives deterministic
+recruitment.}
 
 \item{\code{AC}}{\code{array} or \code{numeric}. Lag-1 autocorrelation of log-space
 recruitment deviations. Follows the same length conventions as \code{SD}.
