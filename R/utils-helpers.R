@@ -355,7 +355,7 @@ CalcSeasons <- function(Units) {
 #' Numeric vector of interpolated y values corresponding to `xlev`.
 #'
 #' @keywords internal
-.LinInterp <- function(x, y, xlev, ascending = FALSE, zeroint = FALSE) {
+.LinInterp <- function(x, y, xlev, ascending = FALSE, zeroint = FALSE, Label = NULL) {
 
   if (!is.numeric(x) || !is.numeric(y)) {
     cli::cli_abort("`x` and `y` must be numeric vectors.")
@@ -384,19 +384,12 @@ CalcSeasons <- function(Units) {
   if (length(x_out) == 1)
     return(y_out)
   
-  # Warn if xlev is outside the range
-  if (any(xlev < min(x_out))) {
-    cli::cli_warn(c("Some `xlev` values are less than min(x).",
-                    '`xlev: {.val {xlev}}',
-                    '`min(x): {.val {min(x)}}')
-                  )
-  }
-  if (any(xlev > max(x_out))) {
-    cli::cli_warn(c("Some `xlev` values are greater than max(x).",
-                    '`xlev: {.val {xlev}}',
-                    '`max(x): {.val {max(x)}}')
-    )
-  }
+  Outside <- xlev[xlev < min(x_out) | xlev > max(x_out)]
+  if (length(Outside) && !is.null(Label))
+    cli::cli_warn("{Label} does not include {.val {Outside}}; the value at the nearest end is used.")
+  if (length(Outside) && is.null(Label))
+    cli::cli_warn(c("Some `xlev` values are outside the range of `x`; the value at the nearest end is used.",
+                    "i" = "`xlev`: {.val {Outside}}; range of `x`: {.val {range(x_out)}}"))
   
   stats::approx(x = x_out, y = y_out, xout = xlev, rule = 2,
                 ties = "ordered")$y
