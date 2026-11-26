@@ -19,6 +19,7 @@
 #' @export
 PPD <- function(MSE) {
   .CheckClass(MSE, 'mse', 'MSE')
+  MSE <- UpdateObject(MSE)
 
   MSE@PPD <- .DropPaddedPPDYears(MSE@PPD)
 
