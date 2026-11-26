@@ -53,8 +53,8 @@
 #' @slot Imp A hierarchical named list of [imp-class] objects indexed by stock
 #'   and fleet. See [Imp()].
 #'
-#' @slot Data A [data-class] object or list of [data-class] objects associated
-#'   with the operating model. See [Data()].
+#' @slot Data A [data-class] object, or a list of [data-class] objects with
+#'   one per stock complex, named by complex. See [Data()].
 #' @slot DataLag Integer. Number of years that data are lagged relative
 #'   to management implementation. See [DataLag()].
 #'

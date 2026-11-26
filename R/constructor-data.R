@@ -410,10 +410,19 @@ IndicesData <- function(Name        = NULL,
 #' @param x An [om-class] object, for use with `Data<-`; a [data-class]
 #'   object or a list of them, for `YearLH()` and `YearLH<-`.
 #' @param value For `Data<-`: a [data-class] object, or a list of
-#'   [data-class] objects for multi-stock operating models, to assign to the
-#'   `Data` slot. For `YearLH<-`: the last historical year.
+#'   [data-class] objects with one per stock complex, named by complex, to
+#'   assign to the `Data` slot. For `YearLH<-`: the last historical year.
 #'
 #' @details
+#' ## Stock Complexes
+#'
+#' A [data-class] object holds the data of one stock complex. `OM@@Data` is a
+#' list with one object per complex, named by complex (see the `Complexes`
+#' argument of [OM()]); when no complexes are defined, each stock is its own
+#' complex. A single object assigned to `OM@@Data` is the data of the first
+#' complex. The catch, effort, index, and composition data are for all stocks
+#' in the complex combined.
+#'
 #' ## Life History and Exploitation
 #'
 #' `LifeHistory` holds one [lifehistorydata-class] object per stock and
