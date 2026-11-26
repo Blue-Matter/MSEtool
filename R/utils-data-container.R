@@ -160,3 +160,211 @@
   }
   new("exploitationdata")
 }
+
+# Stock-specific data slots: one object, or a list named by the complex and/or its stocks
+
+# Elements of a data or obs slot as a named list; a single object is the complex element
+.SlotElements <- function(x, ComplexName) {
+  if (is.list(x)) return(x)
+  stats::setNames(list(x), ComplexName)
+}
+
+# A list holding only the complex element is returned as a single object
+.ElementsToSlot <- function(x, ComplexName) {
+  if (length(x) == 1 && identical(names(x), ComplexName)) return(x[[1]])
+  x
+}
+
+# Stocks (indices) covered by element `Name` of complex `stocks`
+.ElementStocks <- function(Name, ComplexName, StockNms, stocks) {
+  if (identical(Name, ComplexName)) return(stocks)
+  stocks[match(Name, StockNms[stocks])]
+}
+
+# Obs object of element `Name`; a single obs object applies to every element
+.ElementObs <- function(x, Name) {
+  if (!is.list(x)) return(x)
+  x[[Name]]
+}
+
+.EmptySlot <- function(x) {
+  if (is.list(x)) return(all(vapply(x, EmptyObject, logical(1))))
+  EmptyObject(x)
+}
+
+.IsJointData <- function(x, Name) methods::.hasSlot(x, "Joint") && isTRUE(x@Joint[Name])
+
+.IsJointObs <- function(x) methods::.hasSlot(x, "Joint") && isTRUE(x@Joint)
+
+# Validates element names of a stock-specific data slot against the complex and its stocks
+.CheckSlotElements <- function(x, ComplexName, StockNms, Where) {
+  if (!is.list(x)) return(invisible(x))
+  if (is.null(names(x)) || any(!nzchar(names(x))))
+    cli::cli_abort(c(
+      "x" = "{.code {Where}} is a list but its elements are not named.",
+      "i" = "Name the elements by the complex ({.val {ComplexName}}) and/or its stocks ({.val {StockNms}})."
+    ), call = NULL)
+  .NameByLevel(x, unique(c(ComplexName, StockNms)), "complex or stock", Where)
+  invisible(x)
+}
+
+.DataSlotClass <- function(type) {
+  switch(type, Landings = , Discards = "catchdata", CPUE = , Survey = "indicesdata", "compdata")
+}
+
+# Element names of a data slot: those of the real data, else those of the obs
+# (lists name their elements; a specified single obs object is the complex)
+.SlotElementNames <- function(Current, ObsSlots, ComplexName) {
+  if (!.EmptySlot(Current)) return(names(.SlotElements(Current, ComplexName)))
+  Names <- unique(unlist(lapply(ObsSlots, \(o) if (is.list(o)) names(o) else if (!isNewObject(o)) ComplexName)))
+  if (length(Names)) Names else ComplexName
+}
+
+# Hist (or Proj) with the `type` obs of element `El` for every fleet and index of complex `i`
+.ElementHist <- function(Hist, i, type, El) {
+  for (nm in names(Hist@OM@Obs[[i]])) {
+    x <- slot(Hist@OM@Obs[[i]][[nm]], type)
+    if (is.list(x))
+      slot(Hist@OM@Obs[[i]][[nm]], type) <- x[[El]] %||% new(class(x[[1]])[1])
+  }
+  Hist
+}
+
+# Applies `Generate(Data, Hist, stocks)` to each element of a stock-specific data slot
+.GenHistByElement <- function(Data, Hist, i, stocks, type, Generate) {
+  Current  <- slot(Data, type)
+  ObsSlots <- lapply(Hist@OM@Obs[[i]], slot, type)
+  if (!is.list(Current) && !any(vapply(ObsSlots, is.list, logical(1))))
+    return(Generate(Data, Hist, stocks))
+  Complex  <- names(Hist@OM@Complexes)[i]
+  Elements <- .SlotElementNames(Current, ObsSlots, Complex)
+  Out <- lapply(Elements, \(el) {
+    slot(Data, type) <- .SlotElements(Current, Complex)[[el]] %||% new(.DataSlotClass(type))
+    Generate(Data, .ElementHist(Hist, i, type, el),
+             .ElementStocks(el, Complex, StockNames(Hist@OM), stocks))
+  }) |> stats::setNames(Elements)
+  .ElementsToSlot(Out, Complex)
+}
+
+# Applies `Generate(Proj, stocks)`, returning a list by simulation, to each element of a data slot
+.GenProjByElement <- function(Proj, i, stocks, type, Generate) {
+  Slot1 <- slot(Proj@Data[[1]][[i]], type)
+  if (!is.list(Slot1))
+    return(Generate(Proj, stocks))
+  Complex <- names(Proj@OM@Complexes)[i]
+  BySim <- lapply(names(Slot1), \(el) {
+    P <- .ElementHist(Proj, i, type, el)
+    for (x in seq_along(P@Data))
+      slot(P@Data[[x]][[i]], type) <- slot(P@Data[[x]][[i]], type)[[el]]
+    if (length(P@OM@Data) >= i && is.list(slot(P@OM@Data[[i]], type)))
+      slot(P@OM@Data[[i]], type) <- slot(P@OM@Data[[i]], type)[[el]] %||% new(.DataSlotClass(type))
+    Generate(P, .ElementStocks(el, Complex, StockNames(Proj@OM), stocks))
+  }) |> stats::setNames(names(Slot1))
+  lapply(seq_along(BySim[[1]]), \(x) lapply(BySim, `[[`, x))
+}
+
+# Applies `Condition(Hist, FisheryData, stocks)` to each element of a stock-specific data slot;
+# the obs of each fleet and index become lists named by element
+.ConditionByElement <- function(Hist, FisheryData, i, stocks, type, Condition) {
+  Current <- slot(FisheryData, type)
+  if (!is.list(Current))
+    return(Condition(Hist, FisheryData, stocks))
+  Complex <- names(Hist@OM@Complexes)[i]
+  Result  <- list()
+  for (el in names(Current)) {
+    slot(FisheryData, type) <- Current[[el]]
+    H <- Condition(.ElementHist(Hist, i, type, el), FisheryData,
+                   .ElementStocks(el, Complex, StockNames(Hist@OM), stocks))
+    Hist@Log <- H@Log
+    for (nm in names(H@OM@Obs[[i]]))
+      Result[[nm]][[el]] <- slot(H@OM@Obs[[i]][[nm]], type)
+  }
+  for (nm in names(Result))
+    slot(Hist@OM@Obs[[i]][[nm]], type) <- Result[[nm]]
+  Hist
+}
+
+# One catchdata from a stock-specific catch slot: values summed by fleet and year
+.CombineCatchElements <- function(x) {
+  if (!is.list(x)) return(x)
+  x <- x[!vapply(x, EmptyObject, logical(1))]
+  if (!length(x)) return(new("catchdata"))
+  if (length(x) == 1) return(x[[1]])
+  Names <- unique(unlist(lapply(x, \(el) colnames(el@Value) %||% el@Name)))
+  Years <- rownames(x[[1]]@Value)
+  Value <- Var <- array(NA_real_, c(length(Years), length(Names)), list(Year = Years, Fleet = Names))
+  Units <- stats::setNames(rep(NA_character_, length(Names)), Names)
+  for (el in x) {
+    nms <- colnames(el@Value) %||% el@Name
+    v   <- el@Value[match(Years, rownames(el@Value)), , drop = FALSE]
+    cv  <- if (is.null(el@CV)) v * NA else el@CV[match(Years, rownames(el@CV)), , drop = FALSE]
+    Value[, nms] <- ifelse(is.na(Value[, nms]) & is.na(v), NA, rowSums(cbind(c(Value[, nms]), c(v)), na.rm = TRUE))
+    Var[, nms]   <- ifelse(is.na(Var[, nms]) & is.na(cv), NA,
+                           rowSums(cbind(c(Var[, nms]), c((cv * v)^2)), na.rm = TRUE))
+    if (length(el@Units)) Units[nms][is.na(Units[nms])] <- rep(el@Units, length.out = length(nms))[is.na(Units[nms])]
+  }
+  Out <- new("catchdata")
+  Out@Name  <- Names
+  Out@Value <- Value
+  Out@CV    <- if (all(is.na(Var))) NULL else sqrt(Var) / Value
+  Out@Units <- if (all(is.na(Units))) NULL else unname(Units)
+  Out
+}
+
+# One indicesdata from a stock-specific index slot: the indices of every element
+.CombineIndexElements <- function(x) {
+  if (!is.list(x)) return(x)
+  x <- x[!vapply(x, EmptyObject, logical(1))]
+  if (!length(x)) return(new("indicesdata"))
+  if (length(x) == 1) return(x[[1]])
+  Names <- unique(unlist(lapply(x, \(el) el@Name %||% colnames(el@Value))))
+  Years <- rownames(x[[1]]@Value)
+  Value <- CV <- array(NA_real_, c(length(Years), length(Names)), list(Year = Years, Fleet = Names))
+  Out <- new("indicesdata")
+  Units <- Timing <- Ref <- stats::setNames(rep(NA, length(Names)), Names)
+  for (el in x) {
+    nms <- el@Name %||% colnames(el@Value)
+    for (k in seq_along(nms)) {
+      Row <- match(Years, rownames(el@Value))
+      Fill <- is.na(Value[, nms[k]])
+      Value[Fill, nms[k]] <- el@Value[Row, k][Fill]
+      if (!is.null(el@CV)) CV[Fill, nms[k]] <- el@CV[Row, k][Fill]
+      if (is.na(Units[nms[k]]) && length(el@Units) >= k) Units[nms[k]] <- el@Units[k]
+      if (is.na(Timing[nms[k]]) && length(el@Timing) >= k) Timing[nms[k]] <- el@Timing[k]
+      if (is.na(Ref[nms[k]]) && length(el@Ref) >= k) Ref[nms[k]] <- el@Ref[k]
+    }
+  }
+  Out@Name   <- Names
+  Out@Value  <- Value
+  Out@CV     <- if (all(is.na(CV))) NULL else CV
+  Out@Units  <- if (all(is.na(Units))) NULL else unname(as.character(Units))
+  Out@Timing <- as.numeric(ifelse(is.na(Timing), 0, Timing))
+  if (!all(is.na(Ref))) Out@Ref <- unname(as.numeric(Ref))
+  Out
+}
+
+# Catch or index values of a name and year are held for the complex or for its stocks, not both
+.CheckOneLevel <- function(x, ComplexName, Where) {
+  if (!is.list(x) || !ComplexName %in% names(x)) return(invisible(x))
+  Keys <- function(el) {
+    if (is.null(el@Value)) return(character(0))
+    Obs <- which(!is.na(el@Value), arr.ind = TRUE)
+    paste(rownames(el@Value)[Obs[, 1]], (colnames(el@Value) %||% el@Name)[Obs[, 2]])
+  }
+  Dup <- intersect(Keys(x[[ComplexName]]), unlist(lapply(x[names(x) != ComplexName], Keys)))
+  if (length(Dup))
+    cli::cli_abort(c(
+      "x" = "{.code {Where}} has values for both the complex and its stocks for the same name and year.",
+      "i" = "Hold each value for the complex or for the stocks, not both. Duplicated: {.val {utils::head(Dup, 5)}}."
+    ), call = NULL)
+  invisible(x)
+}
+
+# catch and index slots held by stock combined into one object each
+.CombineDataSeries <- function(object) {
+  for (sl in c('Landings', 'Discards'))
+    slot(object, sl) <- .CombineCatchElements(slot(object, sl))
+  for (sl in c('CPUE', 'Survey'))
+    slot(object, sl) <- .CombineIndexElements(slot(object, sl))
+  object
+}

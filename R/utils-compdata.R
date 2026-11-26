@@ -59,8 +59,18 @@
   Value
 }
 
-.ExtractDataCompTimeseries <- function(object, slot_name, byFleet = TRUE) {
-  compdata <- slot(object, slot_name)
+.ExtractDataCompTimeseries <- function(object, slot_name, byFleet = TRUE, byStock = FALSE) {
+  x <- slot(object, slot_name)
+  if (!byStock || !is.list(x))
+    return(.CompDataToDF(.CombineCompElements(x, paste0("`", slot_name, "`")), slot_name, byFleet))
+  x <- x[!vapply(x, EmptyObject, logical(1))]
+  if (!length(x))
+    return(.CompDataToDF(new("compdata"), slot_name, byFleet) |> dplyr::mutate(Stock = character(0)))
+  purrr::imap(x, \(cd, el) .CompDataToDF(cd, slot_name, byFleet) |> dplyr::mutate(Stock = el)) |>
+    dplyr::bind_rows()
+}
+
+.CompDataToDF <- function(compdata, slot_name, byFleet = TRUE) {
   isAtSize <- grepl('AtSize$', slot_name)
   varName  <- sub('At(Age|Size)$', '', slot_name)
   classCol <- if (isAtSize) 'Class' else 'Age'
@@ -109,4 +119,62 @@
       dplyr::mutate(Fleet = 'Total')
 
   df
+}
+
+# One compdata from a composition slot: the counts of the complex and stock
+# elements are summed by fleet. Age compositions are matched by age; a fleet's
+# size compositions must have the same classes in every element.
+.CombineCompElements <- function(x, Where = "composition data") {
+  if (!is.list(x)) return(x)
+  x <- x[!vapply(x, EmptyObject, logical(1))]
+  if (!length(x)) return(new("compdata"))
+  if (length(x) == 1) {
+    Out <- x[[1]]
+    Out@Joint <- logical(0)
+    return(Out)
+  }
+  isAge <- !is.list(x[[1]]@Classes)
+  ClassesOf <- function(cd, nm) if (is.list(cd@Classes)) cd@Classes[[nm]] else cd@Classes
+  Names <- unique(unlist(lapply(x, \(cd) dimnames(cd@Value)[[2]])))
+  Years <- dimnames(x[[1]]@Value)[[1]]
+  Classes <- lapply(Names, \(nm) {
+    Grids <- lapply(Filter(\(cd) nm %in% dimnames(cd@Value)[[2]], x), ClassesOf, nm = nm)
+    if (isAge) return(sort(unique(unlist(Grids))))
+    if (!all(vapply(Grids, identical, logical(1), Grids[[1]])))
+      cli::cli_abort(c(
+        "x" = "{.val {nm}} has different classes in the stock-specific elements of the {Where}.",
+        "i" = "Use {.code byStock = TRUE} to keep the stocks separate."
+      ), call = NULL)
+    Grids[[1]]
+  }) |> stats::setNames(Names)
+  if (isAge) Classes <- lapply(Classes, \(cl) sort(unique(unlist(Classes))))
+  nBin  <- max(lengths(Classes))
+  Value <- array(NA_real_, c(length(Years), length(Names), nBin),
+                 list(Year = Years, Fleet = Names, Class = seq_len(nBin)))
+  for (cd in x) {
+    for (nm in dimnames(cd@Value)[[2]]) {
+      Own <- ClassesOf(cd, nm)
+      b   <- match(Own, Classes[[nm]])
+      Add <- cd@Value[match(Years, dimnames(cd@Value)[[1]]), nm, seq_along(Own), drop = FALSE]
+      Old <- Value[, nm, b, drop = FALSE]
+      Value[, nm, b] <- ifelse(is.na(Old) & is.na(Add), NA, rowSums(cbind(c(Old), c(Add)), na.rm = TRUE))
+    }
+  }
+  if (isAge) dimnames(Value)[[3]] <- Classes[[1]]
+  names(dimnames(Value))[3] <- names(dimnames(x[[1]]@Value))[3] %||% "Class"
+  Out <- new("compdata")
+  Out@Name    <- Names
+  Out@Value   <- Value
+  Out@Classes <- if (isAge) as.numeric(Classes[[1]]) else Classes
+  Out@Units   <- x[[1]]@Units
+  Out
+}
+
+# A data object with every stock-specific slot combined
+.CombineDataElements <- function(Data) {
+  for (sl in c("LandingsAtAge", "DiscardsAtAge", "LandingsAtSize", "DiscardsAtSize",
+               "SurveyAtAge", "SurveyAtSize"))
+    if (methods::.hasSlot(Data, sl))
+      slot(Data, sl) <- .CombineCompElements(slot(Data, sl), paste0("`", sl, "`"))
+  .CombineDataSeries(Data)
 }

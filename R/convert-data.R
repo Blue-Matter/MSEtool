@@ -445,6 +445,7 @@ ConvertData <- function(x, Seasons = 1, sim = 1, silent = FALSE) {
 }
 
 .ConvertOneData <- function(data, silent = FALSE) {
+  data <- .CombineDataElements(data)
   if (!silent)
     cli::cli_alert("Converting object of class {.cls data} to class {.cls Data} (nsim = 1).")
 

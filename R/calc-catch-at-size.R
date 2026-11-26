@@ -14,12 +14,13 @@
 
     needs_gen <- isTRUE(control$GenerateData) && i <= length(OM@Obs) &&
       any(vapply(c('LandingsAtSize', 'DiscardsAtSize'), \(type) {
-        !all(vapply(OM@Obs[[i]], \(o) isNewObject(slot(o, type)), logical(1)))
+        !all(vapply(OM@Obs[[i]], \(o) all(vapply(.SlotElements(slot(o, type), ""), isNewObject, logical(1))),
+                    logical(1)))
       }, logical(1)))
 
     needs_cond <- isTRUE(control$ConditionObs) && i <= length(OM@Data) &&
       any(vapply(c('LandingsAtSize', 'DiscardsAtSize'), \(type) {
-        !EmptyObject(slot(OM@Data[[i]], type))
+        !.EmptySlot(slot(OM@Data[[i]], type))
       }, logical(1)))
 
     needed[stocks] <- needs_gen || needs_cond

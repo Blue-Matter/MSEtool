@@ -391,6 +391,12 @@ setValidity("indicesobs", function(object) {
 #'   year for which compositions are generated in projection years. `NULL` is
 #'   `5`. See [CompObs()].
 #'
+#' @slot Joint `logical(1)`. `TRUE` when the compositions this object
+#'   generates for one stock are drawn as one sample with those of the other
+#'   stocks of the complex whose objects are also `Joint` (for example,
+#'   female and male compositions sampled together). Applies when the slot of
+#'   the [obs-class] object is a list named by stock. Default `FALSE`.
+#'
 #' @slot Misc `list`. Reserved for internal use. `Misc$UserSupplied` names
 #'   the slots set by the user before population.
 #'
@@ -439,8 +445,10 @@ setClass(
     Years      = "num.null",
     Shift      = "num.array.null",
     MaxGap     = "num.null",
+    Joint      = "logical",
     Misc       = "list"
-  )
+  ),
+  prototype = list(Joint = FALSE)
 )
 
 .CheckDataCV <- function(DataCV) {
@@ -478,6 +486,9 @@ setClass("CompObs", contains = "compobs")
 
 
 methods::setClassUnion(name="compobs.CompObs", members=c('compobs', 'CompObs'))
+methods::setClassUnion("CatchObsList", c("catchobs", "list"))
+methods::setClassUnion("IndicesObsList", c("indicesobs", "list"))
+methods::setClassUnion("CompObsList", c("compobs", "list"))
 
 #' The `obs` S4 Class
 #'
@@ -513,6 +524,11 @@ methods::setClassUnion(name="compobs.CompObs", members=c('compobs', 'CompObs'))
 #'   landed catch-at-length composition. See [CompObs()].
 #' @slot DiscardsAtSize A [compobs-class] object. Observation error on
 #'   discarded catch-at-length composition. See [CompObs()].
+#' @slot SurveyAtAge A [compobs-class] object. Observation error on survey
+#'   age composition. Used in the `obs` object of a survey. See [CompObs()].
+#' @slot SurveyAtSize A [compobs-class] object. Observation error on survey
+#'   length composition. Used in the `obs` object of a survey. See
+#'   [CompObs()].
 #' @slot Misc `list`. Miscellaneous additional objects.
 #'
 #' @details
@@ -535,6 +551,13 @@ methods::setClassUnion(name="compobs.CompObs", members=c('compobs', 'CompObs'))
 #' `LifeHistory` and `Exploitation` slots generate `Data@LifeHistory` and
 #' `Data@Exploitation` when they are set; see [LifeHistoryObs()] and
 #' [ExploitationObs()].
+#'
+#' The `Landings`, `Discards`, `CPUE`, `Survey`, and composition slots also
+#' accept a list of objects named by the complex name and/or stock names,
+#' matching stock-specific data in `OM@Data` (see [data-class]). With real
+#' data, the observation model of each element is conditioned on that
+#' element. Without real data, a list named by stock generates stock-specific
+#' data and a single object generates data for all stocks combined.
 #'
 #' Direct construction via [methods::new()] is not recommended; use [Obs()]
 #' instead, which initialises all sub-objects automatically.
@@ -560,15 +583,29 @@ setClass(
     LifeHistory    = "lifehistoryobs",
     Exploitation   = "exploitationobs",
     Effort         = "effortobs",
-    Landings       = "catchobs",
-    Discards       = "catchobs",
-    CPUE           = "indicesobs",
-    Survey         = "indicesobs",
-    LandingsAtAge  = "compobs.CompObs",
-    DiscardsAtAge  = "compobs.CompObs",
-    LandingsAtSize = "compobs.CompObs",
-    DiscardsAtSize = "compobs.CompObs",
+    Landings       = "CatchObsList",
+    Discards       = "CatchObsList",
+    CPUE           = "IndicesObsList",
+    Survey         = "IndicesObsList",
+    LandingsAtAge  = "CompObsList",
+    DiscardsAtAge  = "CompObsList",
+    LandingsAtSize = "CompObsList",
+    DiscardsAtSize = "CompObsList",
+    SurveyAtAge    = "CompObsList",
+    SurveyAtSize   = "CompObsList",
     Misc           = "list"
+  ),
+  prototype = list(
+    Landings       = new("catchobs"),
+    Discards       = new("catchobs"),
+    CPUE           = new("indicesobs"),
+    Survey         = new("indicesobs"),
+    LandingsAtAge  = new("compobs"),
+    DiscardsAtAge  = new("compobs"),
+    LandingsAtSize = new("compobs"),
+    DiscardsAtSize = new("compobs"),
+    SurveyAtAge    = new("compobs"),
+    SurveyAtSize   = new("compobs")
   )
 )
 

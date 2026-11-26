@@ -121,13 +121,17 @@ simulation. When \code{nSim = 2}, it is one value per simulation instead.
 regime shift in carrying capacity. See \link[=srr-class]{srr} for how this
 differs from a constant \code{R0}.
 Interpreted in units of \code{Units}. Must be \code{NULL} when \code{Pars} contains
-\code{alpha} and \code{beta}. Default \code{NULL}.
+\code{alpha} and \code{beta}, in which case it is calculated from them. Otherwise,
+when \code{NULL}, \code{1000} is used and recorded as an assumption in the OM log.
+Default \code{NULL}.
 }}
 
 \item{SD}{\code{numeric} or \code{NULL}. Log-space standard deviation of recruitment
 deviations. Follows the same length conventions as \code{R0}. Fixed across
-years. When \code{NULL},
-recruitment is deterministic (no process error). Default \code{NULL}.}
+years. When \code{NULL}, it is calculated from \code{RecDevHist} and \code{RecDevProj}
+if both are fully supplied, or taken from the \code{SPFrom} source when this
+stock shares its source's SRR (\code{ShareSPFrom}); otherwise \code{0.4} is used,
+with a warning. Set \code{SD = 0} for deterministic recruitment. Default \code{NULL}.}
 
 \item{AC}{\code{numeric} or \code{NULL}. Lag-1 autocorrelation of log-space
 recruitment deviations. Follows the same length conventions as \code{R0}.

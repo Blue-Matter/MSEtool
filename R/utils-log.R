@@ -2,11 +2,7 @@
 #' Display Log Messages
 #'
 #' Prints any messages stored in the `Log` slot of an S4 object to the
-#' console using `cli` formatting. Messages are grouped into assumption,
-#' warning, and error sections; within each section, entries are further
-#' grouped by the name of the function that recorded them. Identical messages
-#' recorded for several MPs, years, or simulations are printed once, with the
-#' MPs, years, and simulations listed after the message.
+#' console.
 #'
 #' Log entries fall into three types:
 #' \itemize{
@@ -183,6 +179,21 @@ Log <- function(object, type = NULL) {
     object@Misc[[type]] <- c(object@Misc[[type]], list(entry))
   }
 
+  object
+}
+
+.CollectWarnings <- function(expr) {
+  Warnings <- character(0)
+  Value <- withCallingHandlers(expr, warning = function(w) {
+    Warnings <<- c(Warnings, cli::ansi_strip(conditionMessage(w)))
+    invokeRestart("muffleWarning")
+  })
+  list(Value = Value, Warnings = unique(Warnings))
+}
+
+.LogWarnings <- function(object, Warnings, name = '', ...) {
+  for (w in Warnings)
+    object <- .CaptureLog(object, w, name = name, type = 'warning', ...)
   object
 }
 

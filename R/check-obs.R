@@ -34,11 +34,12 @@
   MissingSel <- purrr::map(names(Obs), function(st) {
     purrr::map(setdiff(names(Obs[[st]]), FleetNms), function(idx) {
       obs_idx <- Obs[[st]][[idx]]
-      purrr::map_chr(c('CPUE', 'Survey'), function(type) {
-        IndexObs <- slot(obs_idx, type)
-        if (EmptyObject(IndexObs) || !is.null(IndexObs@Selectivity)) return(NA_character_)
-        cli::format_inline("Stock: {.val {st}}, Index: {.val {idx}} ({type})")
-      })
+      purrr::map(c('CPUE', 'Survey'), function(type) {
+        purrr::map_chr(.SlotElements(slot(obs_idx, type), ""), function(IndexObs) {
+          if (EmptyObject(IndexObs) || !is.null(IndexObs@Selectivity)) return(NA_character_)
+          cli::format_inline("Stock: {.val {st}}, Index: {.val {idx}} ({type})")
+        })
+      }) |> unlist()
     }) |> unlist()
   }) |> unlist()
   MissingSel <- MissingSel[!is.na(MissingSel)]

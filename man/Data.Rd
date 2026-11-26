@@ -33,6 +33,8 @@ Data(
   DiscardsAtAge = NULL,
   LandingsAtSize = NULL,
   DiscardsAtSize = NULL,
+  SurveyAtAge = NULL,
+  SurveyAtSize = NULL,
   Advice = NULL,
   Misc = list()
 )
@@ -113,6 +115,12 @@ composition of landings.}
 \item{DiscardsAtSize}{Optional. An object of class \link[=compdata-class]{compdata} for size
 composition of discards.}
 
+\item{SurveyAtAge}{Optional. An object of class \link[=compdata-class]{compdata} for age
+composition of survey samples, named by survey.}
+
+\item{SurveyAtSize}{Optional. An object of class \link[=compdata-class]{compdata} for size
+composition of survey samples, named by survey.}
+
 \item{Advice}{Optional. An object of class \link[=advicedata-class]{advicedata} containing TAC and
 related advice.}
 
@@ -156,7 +164,8 @@ the appropriate class is initialised automatically:
 \item \code{Effort} → \link[=effortdata-class]{effortdata}
 \item \code{Landings}, \code{Discards} → \link[=catchdata-class]{catchdata}
 \item \code{CPUE}, \code{Survey} → \link[=indicesdata-class]{indicesdata}
-\item \code{LandingsAtAge}, \code{DiscardsAtAge}, \code{LandingsAtSize}, \code{DiscardsAtSize} → \link[=compdata-class]{compdata}
+\item \code{LandingsAtAge}, \code{DiscardsAtAge}, \code{LandingsAtSize}, \code{DiscardsAtSize},
+\code{SurveyAtAge}, \code{SurveyAtSize} → \link[=compdata-class]{compdata}
 \item \code{Advice} → \link[=advicedata-class]{advicedata}
 }
 \subsection{Stock Complexes}{

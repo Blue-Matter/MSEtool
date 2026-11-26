@@ -40,11 +40,15 @@
 #'     regime shift in carrying capacity. See [srr-class] for how this
 #'     differs from a constant `R0`.
 #'   Interpreted in units of `Units`. Must be `NULL` when `Pars` contains
-#'   `alpha` and `beta`. Default `NULL`.
+#'   `alpha` and `beta`, in which case it is calculated from them. Otherwise,
+#'   when `NULL`, `1000` is used and recorded as an assumption in the OM log.
+#'   Default `NULL`.
 #' @param SD `numeric` or `NULL`. Log-space standard deviation of recruitment
 #'   deviations. Follows the same length conventions as `R0`. Fixed across
-#'   years. When `NULL`,
-#'   recruitment is deterministic (no process error). Default `NULL`.
+#'   years. When `NULL`, it is calculated from `RecDevHist` and `RecDevProj`
+#'   if both are fully supplied, or taken from the `SPFrom` source when this
+#'   stock shares its source's SRR (`ShareSPFrom`); otherwise `0.4` is used,
+#'   with a warning. Set `SD = 0` for deterministic recruitment. Default `NULL`.
 #' @param AC `numeric` or `NULL`. Lag-1 autocorrelation of log-space
 #'   recruitment deviations. Follows the same length conventions as `R0`.
 #'   Currently fixed across years. Defaults to `0` (no autocorrelation) when

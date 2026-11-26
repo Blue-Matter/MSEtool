@@ -179,9 +179,10 @@
     Before <- Hist@Distribution
     for (sim in seq_len(dim(Before)[1]))
       Hist <- .MaskClosedDistribution(Hist, sim, seq_len(dim(Before)[2]))
-    if (!identical(Before, Hist@Distribution))
-      cli::cli_warn(c("!" = "{.code Effort@Distribution} puts effort in areas closed to the fleet.",
-                      "i" = "That effort is moved to the fleet's open areas."), call = NULL)
+    Msg <- "`Effort@Distribution` puts effort in areas closed to the fleet; that effort is moved to the fleet's open areas."
+    if (!identical(Before, Hist@Distribution) &&
+        !Msg %in% vapply(Hist@Log$warning, \(e) e$message, character(1)))
+      Hist <- .CaptureLog(Hist, string = Msg, type = 'warning')
   }
 
   # 3D Array: Sim, Year, Fleet

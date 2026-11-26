@@ -9,6 +9,7 @@ CompData(
   Value = NULL,
   Classes = NULL,
   Units = NULL,
+  Joint = NULL,
   Log = list(),
   Misc = list()
 )
@@ -30,6 +31,11 @@ share a size-class grid -- see \link[=compdata-class]{compdata}. Default \code{N
 
 \item{Units}{\code{character} or \code{NULL}. Units of the class variable
 (e.g., \code{"years"}, \code{"cm"}, \code{"mm"}). Default \code{NULL}.}
+
+\item{Joint}{\code{logical} named by fleet, or \code{NULL}. Fleets whose
+compositions in the stock-specific objects of a slot are one sample per
+year (e.g. female and male compositions with a shared sample size); see
+\link[=compdata-class]{compdata}. Default \code{NULL} (no fleet joint).}
 
 \item{Log}{\code{list}. Named list for diagnostic and audit logging.
 Default \code{list()}.}

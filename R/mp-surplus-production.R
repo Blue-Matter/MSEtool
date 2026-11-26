@@ -446,7 +446,7 @@ class(SurplusProduction) <- 'mp'
 }
 
 .SPTACUnit <- function(Data) {
-  Units <- Data@Landings@Units
+  Units <- Landings(Data)@Units
   if (!length(Units) || all(is.na(Units))) 'Biomass' else Units[1]
 }
 

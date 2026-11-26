@@ -4,13 +4,18 @@
   Catch   = c("Landings", "Discards"),
   Effort  = "Effort",
   Index   = c("CPUE", "Survey"),
-  Comp    = c("LandingsAtAge", "DiscardsAtAge", "LandingsAtSize", "DiscardsAtSize")
+  Comp    = c("LandingsAtAge", "DiscardsAtAge", "LandingsAtSize", "DiscardsAtSize",
+              "SurveyAtAge", "SurveyAtSize")
 )
+
+# slots whose names are indices or surveys rather than fleets
+.DataCSVSurveySlots <- c("CPUE", "Survey", "SurveyAtAge", "SurveyAtSize")
 
 .DataCSVMeta <- c("Name", "CommonName", "Species", "Agency", "Author", "Email", "Region",
                   "Latitude", "Longitude", "FirstYear", "LastYear", "Seasons")
 
-.DataCSVColumns <- c("Slot", "Name", "Year", "Season", "Class", "Value", "CV", "Units", "Timing")
+.DataCSVColumns <- c("Slot", "Name", "Year", "Season", "Class", "Value", "CV", "Units", "Timing",
+                     "Stock", "Joint")
 
 # accessor for a data slot, by slot name
 .DataCSVGet <- function(Data, sl) {
@@ -40,8 +45,8 @@
 #'
 #' | Column | Required | Description |
 #' |---|---|---|
-#' | `Slot` | yes | The [data-class] slot: `Landings`, `Discards`, `Effort`, `CPUE`, `Survey`, `LandingsAtAge`, `DiscardsAtAge`, `LandingsAtSize`, `DiscardsAtSize`, or `Metadata` |
-#' | `Name` | yes | Fleet name (catch, effort and composition slots) or index name (`CPUE`, `Survey`). For `Metadata`, the field name |
+#' | `Slot` | yes | The [data-class] slot: `Landings`, `Discards`, `Effort`, `CPUE`, `Survey`, `LandingsAtAge`, `DiscardsAtAge`, `LandingsAtSize`, `DiscardsAtSize`, `SurveyAtAge`, `SurveyAtSize`, or `Metadata` |
+#' | `Name` | yes | Fleet name (catch, effort and fleet composition slots) or index name (`CPUE`, `Survey`, `SurveyAtAge`, `SurveyAtSize`). For `Metadata`, the field name |
 #' | `Year` | yes | Calendar year of the observation. Empty for `Metadata` |
 #' | `Season` | seasonal | Season within the year, from 1 to `Seasons`. Only used when `Seasons > 1` |
 #' | `Class` | comps | Age class (`*AtAge`) or length-bin midpoint (`*AtSize`). Empty for other slots |
@@ -49,6 +54,8 @@
 #' | `CV` | no | Coefficient of variation of `Value` (catch, effort and index slots) |
 #' | `Units` | no | Units of the series, e.g. `Biomass` or `Number` for catch and indices, `cm` for length compositions. One value per `Slot` and `Name` |
 #' | `Timing` | no | Fraction of the time step when an index is observed (`CPUE`, `Survey`). Default 0 |
+#' | `Stock` | no | The stock, or the complex, the catch, index or composition belongs to (see [data-class]). Empty for data of all stocks combined. Not used for `Effort` |
+#' | `Joint` | no | Composition slots: `TRUE` when the compositions of the stocks of a fleet in a year are one sample (see [compdata-class]). One value per `Slot`, `Stock` and `Name` |
 #'
 #' `Metadata` rows set the `data` slots `Name`, `CommonName`, `Species`, `Agency`, `Author`, `Email`, `Region`,
 #' `Latitude` and `Longitude`, the historical years with `FirstYear` and `LastYear`, and the number of seasons
@@ -57,7 +64,10 @@
 #' Fleets are ordered by their first appearance in any catch, effort or composition slot, and every one of these
 #' slots has the same fleets in that order; a fleet with no rows in a slot is `NA` there. Indices are ordered by
 #' their first appearance within each index slot. Years without rows are `NA`. For the
-#' composition slots, a class with no row in a year and fleet that has other rows is 0, so only non-zero counts
+#' catch, index and composition slots, rows with a `Stock` give stock-specific data, held in a list named by
+#' `Stock`; in a slot with any `Stock` values, every row must give its `Stock` (the complex name for data of all
+#' stocks combined). In the composition slots, a class with no row in a year and fleet that has other rows is 0,
+#' so only non-zero counts
 #' need to be listed. All fleets in a composition slot share one set of classes, the sorted classes in the file,
 #' so a class must appear in at least one row (with value 0 if need be) to be included. `WriteDataCSV()` writes
 #' every class, including zeros, in each year with data.
@@ -162,7 +172,8 @@ ReadDataCSV <- function(file, Years = NULL, silent = FALSE) {
 
   is_comp <- obs$Slot %in% .DataCSVSlots$Comp
   if (any(is_comp & is.na(obs$Class))) cli::cli_abort("{.field Class} is missing in {sum(is_comp & is.na(obs$Class))} composition row{?s}.")
-  key <- paste(obs$Slot, obs$Name, obs$Year, ifelse(is_comp, obs$Class, ""))
+  obs$Joint <- toupper(trimws(obs$Joint)) %in% c("TRUE", "T", "1")
+  key <- paste(obs$Slot, obs$Stock, obs$Name, obs$Year, ifelse(is_comp, obs$Class, ""))
   if (anyDuplicated(key)) {
     cli::cli_abort("Duplicated observation{?s}: {.val {unique(key[duplicated(key)])}}.")
   }
@@ -173,14 +184,21 @@ ReadDataCSV <- function(file, Years = NULL, silent = FALSE) {
   }
   for (fld in intersect(names(meta), c("Latitude", "Longitude"))) args[[fld]] <- num(meta[[fld]], fld)
 
-  Fleets <- unique(obs$Name[!obs$Slot %in% .DataCSVSlots$Index])
+  Fleets <- unique(obs$Name[!obs$Slot %in% .DataCSVSurveySlots])
   for (sl in unique(obs$Slot)) {
     d <- obs[obs$Slot == sl, , drop = FALSE]
-    nms <- if (sl %in% .DataCSVSlots$Index) unique(d$Name) else Fleets
-    args[[sl]] <- if (sl %in% .DataCSVSlots$Comp) {
-      .CSV2CompData(d, sl, Years, nms)
+    nms <- if (sl %in% .DataCSVSurveySlots) unique(d$Name) else Fleets
+    Convert <- function(ds, nms) {
+      if (sl %in% .DataCSVSlots$Comp) .CSV2CompData(ds, sl, Years, nms) else .CSV2SeriesData(ds, sl, Years, nms)
+    }
+    if (sl == "Effort") d$Stock <- NA
+    args[[sl]] <- if (all(is.na(d$Stock))) {
+      Convert(d, nms)
     } else {
-      .CSV2SeriesData(d, sl, Years, nms)
+      if (anyNA(d$Stock))
+        cli::cli_abort("{.field Stock} is missing in {sum(is.na(d$Stock))} {.field {sl}} row{?s}; give the complex name for data of all stocks combined.")
+      purrr::map(split(d, factor(d$Stock, unique(d$Stock))), \(ds)
+        Convert(ds, if (sl %in% .DataCSVSurveySlots) unique(ds$Name) else intersect(nms, ds$Name)))
     }
   }
 
@@ -242,7 +260,9 @@ ReadDataCSV <- function(file, Years = NULL, silent = FALSE) {
   else if (length(unique(stats::na.omit(Units))) == 1) Units <- unique(stats::na.omit(Units))
   # Age classes as one vector; length classes as a list by fleet, as elsewhere in MSEtool
   Classes <- if (at_age) as.numeric(cls) else stats::setNames(rep(list(as.numeric(cls)), length(nms)), nms)
-  CompData(Name = nms, Value = Value, Classes = Classes, Units = Units)
+  Joint   <- nms[vapply(nms, \(nm) any(d$Joint[d$Name == nm]), logical(1))]
+  CompData(Name = nms, Value = Value, Classes = Classes, Units = Units,
+           Joint = if (length(Joint)) stats::setNames(rep(TRUE, length(Joint)), Joint))
 }
 
 #' @rdname ReadDataCSV
@@ -252,6 +272,7 @@ ReadDataCSV <- function(file, Years = NULL, silent = FALSE) {
 WriteDataCSV <- function(Data, file, overwrite = FALSE, silent = FALSE) {
   if (!inherits(Data, "data")) cli::cli_abort("{.arg Data} must be a {.cls data} object.")
   if (file.exists(file) && !overwrite) cli::cli_abort("{.file {file}} exists. Use {.code overwrite = TRUE}.")
+  Data <- UpdateObject(Data)
   Seasons <- Seasons(Data)
   if (!length(Seasons)) Seasons <- 1
   Years <- Years(Data)
@@ -279,51 +300,60 @@ WriteDataCSV <- function(Data, file, overwrite = FALSE, silent = FALSE) {
   if (Seasons > 1) meta$Seasons <- as.character(Seasons)
   if (length(meta)) {
     rows$meta <- data.frame(Slot = "Metadata", Name = names(meta), Year = NA, Season = NA, Class = NA,
-                            Value = unlist(meta), CV = NA, Units = NA, Timing = NA, stringsAsFactors = FALSE)
+                            Value = unlist(meta), CV = NA, Units = NA, Timing = NA, Stock = NA, Joint = NA,
+                            stringsAsFactors = FALSE)
   }
 
   for (sl in c(.DataCSVSlots$Catch, .DataCSVSlots$Effort, .DataCSVSlots$Index)) {
-    obj <- .DataCSVGet(Data, sl)
-    if (!length(Value(obj))) next
-    Value <- as.matrix(Value(obj))
-    yrs <- if (length(rownames(Value))) as.numeric(rownames(Value)) else Years
-    nms <- if (length(Name(obj))) Name(obj) else paste0(sl, seq_len(ncol(Value)))
-    CV <- if (length(CV(obj))) as.matrix(CV(obj)) else NULL
-    for (j in seq_len(ncol(Value))) {
-      keep <- !is.na(Value[, j])
-      if (!any(keep)) next
-      units <- if (length(Units(obj))) rep(Units(obj), length.out = ncol(Value))[j] else NA
-      timing <- if (!sl %in% .DataCSVSlots$Index) NA else if (length(Timing(obj))) rep(Timing(obj), length.out = ncol(Value))[j] else 0
-      ys <- steps(yrs[keep])
-      rows[[paste(sl, j)]] <- data.frame(
-        Slot = sl, Name = nms[j], Year = ys$Year, Season = ys$Season, Class = NA, Value = Value[keep, j],
-        CV = if (is.null(CV)) NA else CV[keep, j], Units = units, Timing = timing, stringsAsFactors = FALSE
-      )
+    Slot <- slot(Data, sl)
+    for (el in names(.SlotElements(Slot, ""))) {
+      obj <- if (is.list(Slot)) Slot[[el]] else Slot
+      if (!length(Value(obj))) next
+      Value <- as.matrix(Value(obj))
+      yrs <- if (length(rownames(Value))) as.numeric(rownames(Value)) else Years
+      nms <- if (length(Name(obj))) Name(obj) else paste0(sl, seq_len(ncol(Value)))
+      CV <- if (length(CV(obj))) as.matrix(CV(obj)) else NULL
+      for (j in seq_len(ncol(Value))) {
+        keep <- !is.na(Value[, j])
+        if (!any(keep)) next
+        units <- if (length(Units(obj))) rep(Units(obj), length.out = ncol(Value))[j] else NA
+        timing <- if (!sl %in% .DataCSVSlots$Index) NA else if (length(Timing(obj))) rep(Timing(obj), length.out = ncol(Value))[j] else 0
+        ys <- steps(yrs[keep])
+        rows[[paste(sl, el, j)]] <- data.frame(
+          Slot = sl, Name = nms[j], Year = ys$Year, Season = ys$Season, Class = NA, Value = Value[keep, j],
+          CV = if (is.null(CV)) NA else CV[keep, j], Units = units, Timing = timing,
+          Stock = if (is.list(Slot)) el else NA, Joint = NA, stringsAsFactors = FALSE
+        )
+      }
     }
   }
 
   for (sl in .DataCSVSlots$Comp) {
-    obj <- .DataCSVGet(Data, sl)
-    if (!length(Value(obj))) next
-    Value <- Value(obj)
-    if (length(dim(Value)) != 3) cli::cli_abort("{.code Data@{sl}@Value} must be an array [Year, Fleet, Class].")
-    yrs <- if (length(dimnames(Value)[[1]])) as.numeric(dimnames(Value)[[1]]) else Years
-    nms <- if (length(Name(obj))) Name(obj) else paste0("Fleet", seq_len(dim(Value)[2]))
-    for (j in seq_len(dim(Value)[2])) {
-      cls <- Classes(obj)
-      if (is.list(cls)) cls <- if (!is.null(names(cls)) && nms[j] %in% names(cls)) cls[[nms[j]]] else cls[[j]]
-      if (!length(cls)) cls <- as.numeric(dimnames(Value)[[3]])
-      units <- if (length(Units(obj))) rep(Units(obj), length.out = dim(Value)[2])[j] else NA
-      for (i in seq_len(dim(Value)[1])) {
-        v <- Value[i, j, ]
-        if (all(is.na(v))) next
-        # Zeros are written so that the full set of classes is kept
-        keep <- !is.na(v)
-        ys <- steps(yrs[i])
-        rows[[paste(sl, j, i)]] <- data.frame(
-          Slot = sl, Name = nms[j], Year = ys$Year, Season = ys$Season, Class = cls[keep], Value = v[keep],
-          CV = NA, Units = units, Timing = NA, stringsAsFactors = FALSE
-        )
+    Slot <- slot(Data, sl)
+    for (el in names(.SlotElements(Slot, ""))) {
+      obj <- if (is.list(Slot)) Slot[[el]] else Slot
+      if (!length(Value(obj))) next
+      Value <- Value(obj)
+      if (length(dim(Value)) != 3) cli::cli_abort("{.code Data@{sl}@Value} must be an array [Year, Fleet, Class].")
+      yrs <- if (length(dimnames(Value)[[1]])) as.numeric(dimnames(Value)[[1]]) else Years
+      nms <- if (length(Name(obj))) Name(obj) else paste0("Fleet", seq_len(dim(Value)[2]))
+      for (j in seq_len(dim(Value)[2])) {
+        cls <- Classes(obj)
+        if (is.list(cls)) cls <- if (!is.null(names(cls)) && nms[j] %in% names(cls)) cls[[nms[j]]] else cls[[j]]
+        if (!length(cls)) cls <- as.numeric(dimnames(Value)[[3]])
+        units <- if (length(Units(obj))) rep(Units(obj), length.out = dim(Value)[2])[j] else NA
+        for (i in seq_len(dim(Value)[1])) {
+          v <- Value[i, j, seq_along(cls)]
+          if (all(is.na(v))) next
+          # Zeros are written so that the full set of classes is kept
+          keep <- !is.na(v)
+          ys <- steps(yrs[i])
+          rows[[paste(sl, el, j, i)]] <- data.frame(
+            Slot = sl, Name = nms[j], Year = ys$Year, Season = ys$Season, Class = cls[keep], Value = v[keep],
+            CV = NA, Units = units, Timing = NA, Stock = if (is.list(Slot)) el else NA,
+            Joint = if (is.list(Slot)) .IsJointData(obj, nms[j]) else NA, stringsAsFactors = FALSE
+          )
+        }
       }
     }
   }
@@ -331,6 +361,7 @@ WriteDataCSV <- function(Data, file, overwrite = FALSE, silent = FALSE) {
   out <- do.call(rbind, unname(rows))
   rownames(out) <- NULL
   if (Seasons == 1) out$Season <- NULL
+  if (all(is.na(out$Stock))) out$Stock <- out$Joint <- NULL
   utils::write.csv(out, file, row.names = FALSE, na = "")
   if (!silent) cli::cli_alert_success("Wrote {nrow(out)} row{?s} to {.file {file}}.")
   invisible(out)

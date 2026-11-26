@@ -32,12 +32,12 @@ CheckCatch <- function(Data, incUnits = TRUE, slot_names = c('Landings', 'Discar
   if (isTRUE(Data@Misc$Sim > 1) || isFALSE(Data@Misc$FirstAdvice))
     return(invisible(NULL))
 
-  no_data <- all(vapply(slot_names, function(s) is.null(slot(Data, s)@Value), logical(1)))
+  no_data <- all(vapply(slot_names, function(s) is.null(.CombineCatchElements(slot(Data, s))@Value), logical(1)))
 
   unit_mismatch <- FALSE
   if (incUnits && all(c('Landings', 'Discards') %in% slot_names)) {
-    LandingsUnits <- Data@Landings@Units
-    DiscardsUnits <- Data@Discards@Units
+    LandingsUnits <- Landings(Data)@Units
+    DiscardsUnits <- Discards(Data)@Units
     if (!is.null(LandingsUnits) && !is.null(DiscardsUnits)) {
       generic <- c('biomass', 'number')
       specific <- !tolower(LandingsUnits) %in% generic & !tolower(DiscardsUnits) %in% generic

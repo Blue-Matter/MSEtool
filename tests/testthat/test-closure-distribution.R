@@ -70,7 +70,8 @@ test_that("a historical area split into a closed area is moved to the open area"
   Yr <- Years(OM, 'H')[1]
   OM@Fleet[[1]][[1]]@Effort@Distribution <- array(c(0.4, 0.6), c(1, 1, 2), dimnames = list(Sim = 1, Year = Yr, Area = 1:2))
   OM@Fleet[[1]][[1]]@Closure <- array(c(1, 0), c(1, 1, 2), dimnames = list(Sim = 1, Year = Yr, Area = 1:2))
-  expect_warning(Hist <- Simulate(OM, silent = TRUE), "closed to the fleet")
+  expect_no_warning(Hist <- Simulate(OM, silent = TRUE))
+  expect_true(any(grepl("closed to the fleet", vapply(Hist@Log$warning, \(e) e$message, character(1)))))
   expect_true(all(Hist@Distribution[, , 1, 2] == 0))
   expect_true(all(Hist@Distribution[, , 1, 1] == 1))
   expect_true(all(Hist@FInteractArea[[1]][, , , 1, 2] == 0))

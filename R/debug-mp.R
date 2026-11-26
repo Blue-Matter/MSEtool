@@ -68,6 +68,7 @@
 DebugMP <- function(MSE, MP = NULL, Sim = NULL, Year = NULL, run = FALSE) {
   if (!'Log' %in% methods::slotNames(MSE))
     cli::cli_abort("{.arg MSE} must be an object returned by {.fn Project}.")
+  MSE <- UpdateObject(MSE)
 
   Errors <- Filter(.IsLogEntry, MSE@Log$error)
   if (!length(Errors))
@@ -145,10 +146,22 @@ print.mpdebug <- function(x, ...) {
 # try() that also records the call stack where the error was raised
 .TryMP <- function(expr) {
   Calls <- NULL
-  out <- try(withCallingHandlers(expr, error = \(e) Calls <<- sys.calls()), silent = TRUE)
-  if (inherits(out, 'try-error'))
+  out <- try(withCallingHandlers(.CollectWarnings(expr), error = \(e) Calls <<- sys.calls()), silent = TRUE)
+  if (inherits(out, 'try-error')) {
     attr(out, 'Calls') <- .MPCallStack(Calls)
-  out
+    return(out)
+  }
+  if (is.null(out$Value) || !length(out$Warnings)) return(out$Value)
+  structure(out$Value, MPWarnings = out$Warnings)
+}
+
+# move warnings raised by the MP into the Log of its first Advice object
+.LogMPWarnings <- function(AdviceList, Warnings) {
+  if (!length(Warnings)) return(AdviceList)
+  Ind <- which(vapply(AdviceList, inherits, logical(1), what = 'advice'))
+  if (length(Ind))
+    AdviceList[[Ind[1]]] <- .LogWarnings(AdviceList[[Ind[1]]], Warnings)
+  AdviceList
 }
 
 # calls from the MP down to the error, without the handler frames

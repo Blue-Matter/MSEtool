@@ -66,6 +66,8 @@
 #' @export
 rDirichletMultinomial <- function(n, alpha) {
   p <- stats::rgamma(length(alpha), shape = alpha, rate = 1)
+  # every gamma draw underflows to zero when all alpha are tiny
+  if (!sum(p) > 0) p <- alpha
   p <- p / sum(p)
   as.integer(rmultinom(1, size = n, prob = p))
 }

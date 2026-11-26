@@ -32,8 +32,10 @@
 #'   immediately rescales the stock-recruitment curve from that year on.
 #' @slot SD `array` or `numeric`. Log-space standard deviation of recruitment
 #'   deviations. May be a scalar, length-2 bounds vector, or length-`nSim`
-#'   vector. Fixed across years. When `NULL`,
-#'   recruitment is deterministic.
+#'   vector. Fixed across years. When `NULL`, it is calculated from the
+#'   supplied recruitment deviations, taken from a shared `SPFrom` source, or
+#'   set to `0.4` with a warning (see [SRR()]). `SD = 0` gives deterministic
+#'   recruitment.
 #' @slot AC `array` or `numeric`. Lag-1 autocorrelation of log-space
 #'   recruitment deviations. Follows the same length conventions as `SD`.
 #'   Fixed across years. Defaults to `0`

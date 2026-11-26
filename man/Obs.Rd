@@ -18,6 +18,8 @@ Obs(
   DiscardsAtAge = NULL,
   LandingsAtSize = NULL,
   DiscardsAtSize = NULL,
+  SurveyAtAge = NULL,
+  SurveyAtSize = NULL,
   Misc = list()
 )
 
@@ -77,6 +79,10 @@ observation error for landed catch-at-length composition.}
 \item{DiscardsAtSize}{A \link[=compobs-class]{compobs} object, or \code{NULL} (default). When
 \code{NULL}, an empty \link[=compobs-class]{compobs} is created via \code{\link[=CompObs]{CompObs()}}. Defines
 observation error for discarded catch-at-length composition.}
+
+\item{SurveyAtAge, SurveyAtSize}{\link[=compobs-class]{compobs} objects, or \code{NULL}
+(default). Observation error for survey age and length composition, set
+in the \code{obs} object of a survey.}
 
 \item{Misc}{\code{list}. Miscellaneous additional objects. Default \code{list()}.}
 

@@ -12,6 +12,7 @@ ImportSSData(
   LengthUnits = "cm",
   CatchUnits = c("SS3", "Biomass"),
   FleetNames = NULL,
+  StockName = NULL,
   silent = FALSE,
   ...
 )
@@ -39,6 +40,10 @@ fleet in biomass. See \code{\link[=ImportSS]{ImportSS()}}.}
 fleets, in SS3 fleet order, used for their catch, CPUE, and composition
 data. If \code{NULL}, the SS3 fleet names are used.}
 
+\item{StockName}{Optional character vector of stock names (see
+\code{\link[=ImportSS]{ImportSS()}}), used to name sex-specific composition data. If \code{NULL},
+\code{"Female"} and \code{"Male"} for a two-sex model.}
+
 \item{silent}{Logical; suppress progress messages (default FALSE)}
 
 \item{...}{Additional arguments passed to \code{ImportSSReport}}
@@ -49,4 +54,13 @@ A populated \code{\link[=Data]{Data()}} object
 \description{
 Reads a parsed SS3 report and populates a \link[=data-class]{data} object with catch,
 index, and composition data.
+}
+\details{
+Compositions of fishing fleets go to \code{LandingsAtAge}, \code{DiscardsAtAge},
+\code{LandingsAtSize}, and \code{DiscardsAtSize}, and compositions of survey fleets
+to \code{SurveyAtAge} and \code{SurveyAtSize}. For a two-sex model, compositions
+reported by sex are stored in a list named by stock (see \link[=data-class]{data}):
+SS3 \code{Sexes = 0} compositions are held under the complex name, \code{Sexes = 1}
+and \code{2} under the female or male stock, and \code{Sexes = 3} under both stocks
+with the fleet \code{Joint}.
 }

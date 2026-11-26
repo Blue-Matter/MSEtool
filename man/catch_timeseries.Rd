@@ -29,6 +29,7 @@ Landings(
   bySize = FALSE,
   byArea = FALSE,
   byFleet = TRUE,
+  byStock = FALSE,
   Reduce = TRUE,
   IncYear = FALSE,
   Extend = FALSE,
@@ -44,6 +45,7 @@ Discards(
   bySize = FALSE,
   byArea = FALSE,
   byFleet = TRUE,
+  byStock = FALSE,
   Reduce = TRUE,
   IncYear = FALSE,
   Extend = FALSE,
@@ -116,6 +118,13 @@ simulation, pointing at \code{Extend = TRUE}. Default \code{TRUE}. Applies to
 summed over size classes. Mutually exclusive with \code{byAge}. Not available
 for \code{Interactions()}. Applies to \link[=hist-class]{hist} and \link[=mse-class]{mse} objects
 only.}
+
+\item{byStock}{Logical. For \link[=data-class]{data} objects. If \code{TRUE}, data held by
+stock (see \link[=data-class]{data}) are returned separately: the catch slot as a
+list named by stock, or compositions with a \code{Stock} column. If \code{FALSE}
+(default), the catch of the complex and its stocks is summed by fleet,
+and composition counts are summed (age compositions by age; a fleet's
+size compositions must have the same classes in every element).}
 
 \item{x}{An \link[=obs-class]{obs} or \link[=data-class]{data} object.}
 

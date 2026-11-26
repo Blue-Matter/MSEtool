@@ -1,11 +1,11 @@
-# Regression coverage for .GenProjDataSizeComp()
-# (R/generate-data-proj-sizecomp.R): true catch-at-size for a fleet must only
+# Regression coverage for .GenProjDataComp()
+# (R/generate-data-comp.R): true catch-at-size for a fleet must only
 # be aggregated from `Proj@LandingsAtSize`/`Proj@DiscardsAtSize` lazily, when
 # it is actually going to be used. Previously this was computed unconditionally
 # for every fleet up front, which crashed once a stock's true catch-at-size
 # was unavailable (e.g. `SimControl(CalcCatchAtSize = FALSE)`) while real
 # historical composition data and a configured Obs model meant the function
-# didn't exit early. See generate-data-proj-sizecomp.R for details.
+# didn't exit early. See generate-data-comp.R for details.
 
 skip_on_cran()
 
@@ -27,7 +27,7 @@ skip_on_cran()
 
   # Real historical composition data (e.g. conditioned from supplied
   # `OM@Data`), independent of the (skipped) true catch-at-size calculation --
-  # this is what stops `.GenProjDataSizeComp()`'s "no composition data"
+  # this is what stops `.GenProjDataComp()`'s "no composition data"
   # early exit from firing.
   val <- array(0, dim = c(length(HistYears), 1, nBin),
               dimnames = list(Year = HistYears, Fleet = FleetNms, Class = seq_len(nBin)))
@@ -53,10 +53,10 @@ skip_on_cran()
   list(Proj = Proj, YearsAll = YearsAll, DataYear = ProjYears[1], nSim = nSim)
 }
 
-test_that(".GenProjDataSizeComp() does not error when true catch-at-size is unavailable for a stock", {
+test_that(".GenProjDataComp() does not error when true catch-at-size is unavailable for a stock", {
   built <- .BuildProjWithUnavailableTrueCatchAtSize()
 
-  result <- MSEtool:::.GenProjDataSizeComp(built$Proj, built$DataYear, built$YearsAll,
+  result <- MSEtool:::.GenProjDataComp(built$Proj, built$DataYear, built$YearsAll,
                                            i = 1, stocks = 1, nSim = built$nSim,
                                            type = 'LandingsAtSize')
 

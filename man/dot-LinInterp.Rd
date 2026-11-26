@@ -4,7 +4,7 @@
 \alias{.LinInterp}
 \title{Linear interpolation of y at specified x values}
 \usage{
-.LinInterp(x, y, xlev, ascending = FALSE, zeroint = FALSE)
+.LinInterp(x, y, xlev, ascending = FALSE, zeroint = FALSE, Label = NULL)
 }
 \arguments{
 \item{x}{Numeric vector of x values.}

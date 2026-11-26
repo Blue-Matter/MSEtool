@@ -61,7 +61,8 @@
   # Fleet Units 
   FleetUnits <- slot(FisheryData,type)@Units
   if (is.null(FleetUnits)) FleetUnits <- 'Biomass'
-  if (length(FleetUnits)!=nFleet) FleetUnits <- rep(FleetUnits, nFleet)[1:nFleet]
+  nCol <- NCOL(ObservedCatch_Fleet)
+  if (length(FleetUnits) != nCol) FleetUnits <- rep(FleetUnits, nCol)[seq_len(nCol)]
   
   # Loop over fleets and assign values to `Obs`
   for (fl in 1:nFleet) {
@@ -73,7 +74,7 @@
     if (all(is.na(ObservedCatch))) next
     CatchObs <- slot(Hist@OM@Obs[[i]][[fleet_name]], type)
    
-    Units <- FleetUnits[fl]
+    Units <- FleetUnits[fl_ind]
     if (is.na(Units))
       Units <- 'Biomass'
     CatchObs@Units <- Units
