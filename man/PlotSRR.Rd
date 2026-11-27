@@ -8,7 +8,7 @@
 PlotSRR(
   object,
   Sim = NULL,
-  byStock = NULL,
+  byStock = FALSE,
   Stocks = NULL,
   nPoints = 50,
   probs = c(0.05, 0.95)
@@ -17,7 +17,7 @@ PlotSRR(
 PlotSRRCurve(
   object,
   Sim = NULL,
-  byStock = NULL,
+  byStock = FALSE,
   Stocks = NULL,
   nPoints = 50,
   probs = c(0.05, 0.95)
@@ -30,8 +30,8 @@ PlotSRRCurve(
 plot. \code{NULL} takes the median across all simulations and adds a \code{probs}
 quantile ribbon (unless \code{nSim == 1}).}
 
-\item{byStock}{One of \code{TRUE}, \code{FALSE}, or \code{NULL} (default, facets
-automatically when \code{object} has more than one stock). Ignored for a
+\item{byStock}{Logical. \code{FALSE} (default) draws each stock as its own
+colored line; \code{TRUE} facets by \code{Stock}. Ignored for a
 bare \code{Stock} (always a single curve).}
 
 \item{Stocks}{Character or numeric vector. Restrict the plot to specific

@@ -7,23 +7,20 @@
 #'
 #' @param object A [hist-class] or [mse-class] object. `PlotLandings()`,
 #'   `PlotDiscards()`, `PlotRemovals()`, and `PlotEffort()` also accept a
-#'   [data-class] object (e.g. `Hist@Data[[1]][[1]]`), in which case a single
-#'   observed timeseries (no ribbon) is plotted, with `byFleet` and
-#'   `AggregateYear` applied as described in [plot_data]; other arguments
-#'   (`byStock`, `probs`, `nsim`, `Years`, `free_y`, `IncHist`, `byMP`) have
-#'   no effect in that case. For `PlotRemovals()`, the `data`-class series is
+#'   [data-class] object (e.g. `Hist@Data[[1]][[1]]`) or a list of them (see
+#'   [plot_data]), in which case the observed timeseries (no ribbon) is
+#'   plotted, with `byFleet`, `byStock`, and `AggregateYear` applied as
+#'   described in [plot_data]; other arguments (`probs`, `nsim`, `Years`,
+#'   `free_y`, `IncHist`, `byMP`) have no effect in that case. For `PlotRemovals()`, the `data`-class series is
 #'   `Landings + Discards` summed together.
-#' @param byStock One of `TRUE`, `FALSE`, `'sum'`, or `NULL` (default).
-#'   `TRUE` facets by stock. `FALSE` colors each stock as its own line on a
-#'   single panel, without summing. `'sum'` sums across stocks into a single
-#'   line; for relative time series (`relative != 'none'`, see `relative`)
-#'   the numerator and denominator are summed across stocks separately
-#'   before dividing, giving an aggregate ratio (e.g. overall depletion)
-#'   rather than a sum of per-stock ratios.
-#'   `NULL` (default) resolves to `TRUE` when `object` has more than one
-#'   (selected) stock, otherwise `FALSE`. When `FALSE` and `object` has more
-#'   than one MP, MP is faceted instead of colored, since stock now occupies
-#'   the color channel.
+#' @param byStock One of `FALSE` (default), `TRUE`, or `'sum'`. `FALSE`
+#'   draws each stock as its own colored line on a single panel. `TRUE`
+#'   facets by stock. `'sum'` sums across stocks into a single line; for
+#'   relative time series (`relative != 'none'`, see `relative`) the
+#'   numerator and denominator are summed across stocks separately before
+#'   dividing, giving an aggregate ratio (e.g. overall depletion). With
+#'   `FALSE` and more than one MP, MPs are faceted, since stock uses the
+#'   color channel.
 #' @param byFleet Logical. Facet by fleet? Default (`NULL`) facets
 #'   automatically when `object` has more than one fleet, except in
 #'   `PlotDynamics()`/`plot()` where it defaults to `FALSE`. Only applies to
@@ -117,8 +114,7 @@
 #' @param AggregateYear Logical. For seasonal models, sum
 #'   `PlotLandings()`/`PlotDiscards()`/`PlotInteractions()`/
 #'   `PlotRemovals()`/`PlotEffort()` sub-annual values into whole-year
-#'   totals, unlike `Season` above (these are flows, so summing across a
-#'   year is valid, unlike the point-in-time state variables). Default
+#'   totals. Default
 #'   `NULL` (treated as `FALSE`) plots every seasonal time step for
 #'   [hist-class]/[mse-class] objects. For a seasonal [data-class] object,
 #'   `NULL` instead aggregates to calendar years and prints a note on
@@ -155,8 +151,7 @@
 #' `PlotInteractions()` plots [Interactions()] (total fish encountered,
 #' before discard mortality is applied), following the same `byStock`/
 #' `byFleet`/`AggregateYear` behavior as `PlotLandings()`/`PlotDiscards()`.
-#' Unlike those two, it has no [data-class] counterpart -- `Interactions` is
-#' not an observed quantity.
+#' It does not accept a [data-class] object.
 #'
 #' `PlotVBiomass()` plots [VBiomass()] -- biomass weighted by the fraction
 #' of it actually exposed to each fleet's gear; see `VBType` above (it has
@@ -214,19 +209,17 @@
 #' `PlotSBiomass()`, and `PlotSProduction()`, `byStock = 'sum'` with
 #' `relative != 'none'` sums the numerator (e.g. `Biomass`) and denominator
 #' (e.g. `B0`/`BMSY`) across stocks separately before dividing, giving a
-#' true aggregate ratio (e.g. overall depletion) rather than summing the
-#' per-stock ratios themselves (which would not be meaningful).
+#' true aggregate ratio (e.g. overall depletion).
 #'
 #' `PlotDynamics()` arranges `PlotNumber()`, `PlotBiomass()`,
 #' `PlotSBiomass()`, and `PlotRemovals()` into a single, terse figure with
 #' [patchwork::wrap_plots()] -- one panel per row/column of a `2 x 2` grid.
-#' `PlotSProduction()` and the separate `PlotLandings()`/`PlotDiscards()`
-#' panels are deliberately left out of this default overview (call them
-#' directly for that level of detail). Its own `byFleet` argument (and
-#' `plot()`'s, which dispatches to it) defaults to `FALSE`, unlike the
-#' individual `Plot*()` functions; each argument is only forwarded to the
-#' panels that accept it. `byStock` is forwarded as-is, including the
-#' `'sum'` option described above.
+#' Its `byFleet` argument (and that of `plot()`, which calls it) defaults
+#' to `FALSE`. Each argument is forwarded to the panels that accept it.
+#'
+#' `PlotRecruits()` plots [Recruits()], the number of fish entering the
+#' youngest age class; `AggregateYear = TRUE` sums them over the seasons of
+#' each calendar year. `PlotCatch()` is the same as `PlotRemovals()`.
 #'
 #' @return A `ggplot` object (a `patchwork` object for `PlotDynamics()`).
 #'
@@ -245,7 +238,7 @@ NULL
 #' @rdname plot_hist
 #' @export
 PlotNumber <- function(object,
-                       byStock = NULL,
+                       byStock = FALSE,
                        probs   = c(0.05, 0.95),
                        nsim    = 0,
                        Years   = NULL,
@@ -282,8 +275,45 @@ PlotNumber <- function(object,
 
 #' @rdname plot_hist
 #' @export
+PlotRecruits <- function(object,
+                         byStock       = FALSE,
+                         probs         = c(0.05, 0.95),
+                         nsim          = 0,
+                         Years         = NULL,
+                         free_y        = NULL,
+                         IncHist       = TRUE,
+                         byMP          = FALSE,
+                         AggregateYear = FALSE,
+                         units         = TRUE,
+                         Stocks        = NULL) {
+  .CheckClass(object, c('hist', 'mse'), 'object')
+  stockNames <- .ResolveStocks(object, Stocks)
+  byStock <- .ResolveByStock(byStock, .NSelStock(object, stockNames))
+  if (is.null(free_y))  free_y  <- TRUE
+
+  df <- Recruits(object, df = TRUE, Annual = isTRUE(AggregateYear)) |>
+    .FilterStock(stockNames) |>
+    .BridgeMpGap() |>
+    .DropHistorical(IncHist) |>
+    .FilterYears(Years)
+  if (identical(byStock, 'sum'))
+    df <- .SumOverStock(df)
+
+  ylab <- 'Recruits'
+  if (!isFALSE(units)) {
+    scale <- .GetStockUnits(object@OM, 'SRR', stockNames)
+    ylab  <- .AppendUnits(ylab, .CountScaleLabel(scale))
+  }
+
+  .BuildTsPlot(df, byStock = byStock, byFleet = FALSE,
+               ylab = ylab, probs = probs, nsim = nsim, free_y = free_y,
+               colorVar = 'MP', byMP = byMP)
+}
+
+#' @rdname plot_hist
+#' @export
 PlotBiomass <- function(object,
-                        byStock  = NULL,
+                        byStock  = FALSE,
                         probs    = c(0.05, 0.95),
                         nsim     = 0,
                         Years    = NULL,
@@ -344,7 +374,7 @@ PlotBiomass <- function(object,
 #' @rdname plot_hist
 #' @export
 PlotSBiomass <- function(object,
-                         byStock  = NULL,
+                         byStock  = FALSE,
                          byFemale = TRUE,
                          probs    = c(0.05, 0.95),
                          nsim     = 0,
@@ -371,7 +401,7 @@ PlotSBiomass <- function(object,
 #' @rdname plot_hist
 #' @export
 PlotSProduction <- function(object,
-                            byStock  = NULL,
+                            byStock  = FALSE,
                             byFemale = TRUE,
                             probs    = c(0.05, 0.95),
                             nsim     = 0,
@@ -399,7 +429,7 @@ PlotSProduction <- function(object,
 #' @export
 PlotF <- function(object,
                   what     = c('FDead', 'FInteract', 'FRetain'),
-                  byStock  = NULL,
+                  byStock  = FALSE,
                   byFleet  = NULL,
                   probs    = c(0.05, 0.95),
                   nsim     = 0,
@@ -451,7 +481,7 @@ PlotF <- function(object,
 #' @rdname plot_hist
 #' @export
 PlotVBiomass <- function(object,
-                         byStock = NULL,
+                         byStock = FALSE,
                          byFleet = NULL,
                          probs   = c(0.05, 0.95),
                          nsim    = 0,
@@ -495,7 +525,7 @@ PlotVBiomass <- function(object,
 #' @rdname plot_hist
 #' @export
 PlotLandings <- function(object,
-                         byStock       = NULL,
+                         byStock       = FALSE,
                          byFleet       = NULL,
                          probs         = c(0.05, 0.95),
                          nsim          = 0,
@@ -507,9 +537,10 @@ PlotLandings <- function(object,
                          units         = TRUE,
                          Stocks        = NULL,
                          IncCV         = TRUE) {
-  if (inherits(object, 'data'))
-    return(.PlotDataTs(object, 'Landings', 'Landings', byFleet = byFleet,
-                         AggregateYear = AggregateYear, units = units, IncCV = IncCV))
+  if (inherits(object, c('data', 'list')))
+    return(.PlotDataTs(.ResolvePlotData(object), 'Landings', 'Landings', byFleet = byFleet,
+                         AggregateYear = AggregateYear, units = units, IncCV = IncCV,
+                         byStock = byStock))
 
   if (is.null(free_y)) free_y <- TRUE
   .PlotCatch(object, slot_name = 'Landings', ylab = 'Landings',
@@ -522,7 +553,7 @@ PlotLandings <- function(object,
 #' @rdname plot_hist
 #' @export
 PlotDiscards <- function(object,
-                         byStock       = NULL,
+                         byStock       = FALSE,
                          byFleet       = NULL,
                          probs         = c(0.05, 0.95),
                          nsim          = 0,
@@ -534,9 +565,10 @@ PlotDiscards <- function(object,
                          units         = TRUE,
                          Stocks        = NULL,
                          IncCV         = TRUE) {
-  if (inherits(object, 'data'))
-    return(.PlotDataTs(object, 'Discards', 'Discards', byFleet = byFleet,
-                         AggregateYear = AggregateYear, units = units, IncCV = IncCV))
+  if (inherits(object, c('data', 'list')))
+    return(.PlotDataTs(.ResolvePlotData(object), 'Discards', 'Discards', byFleet = byFleet,
+                         AggregateYear = AggregateYear, units = units, IncCV = IncCV,
+                         byStock = byStock))
 
   if (is.null(free_y)) free_y <- TRUE
   .PlotCatch(object, slot_name = 'Discards', ylab = 'Discards',
@@ -549,7 +581,7 @@ PlotDiscards <- function(object,
 #' @rdname plot_hist
 #' @export
 PlotInteractions <- function(object,
-                             byStock       = NULL,
+                             byStock       = FALSE,
                              byFleet       = NULL,
                              probs         = c(0.05, 0.95),
                              nsim          = 0,
@@ -570,7 +602,7 @@ PlotInteractions <- function(object,
 #' @rdname plot_hist
 #' @export
 PlotRemovals <- function(object,
-                         byStock       = NULL,
+                         byStock       = FALSE,
                          byFleet       = NULL,
                          probs         = c(0.05, 0.95),
                          nsim          = 0,
@@ -582,9 +614,10 @@ PlotRemovals <- function(object,
                          units         = TRUE,
                          Stocks        = NULL,
                          IncCV         = TRUE) {
-  if (inherits(object, 'data'))
-    return(.PlotDataRemovals(object, byFleet = byFleet,
-                               AggregateYear = AggregateYear, units = units, IncCV = IncCV))
+  if (inherits(object, c('data', 'list')))
+    return(.PlotDataRemovals(.ResolvePlotData(object), byFleet = byFleet,
+                               AggregateYear = AggregateYear, units = units, IncCV = IncCV,
+                               byStock = byStock))
 
   .CheckClass(object, c('hist', 'mse'), 'object')
   stockNames <- .ResolveStocks(object, Stocks)
@@ -646,9 +679,9 @@ PlotRemovals <- function(object,
 #'   `"Anglers"`, depending on what each fleet's [Effort()] object
 #'   supplies). Set explicitly to force one; requesting a unit some fleet
 #'   lacks the data for is an error.
-#' @param byStock,byFleet One of `TRUE`, `FALSE`, or `NULL` (default,
-#'   facets automatically when `object` has more than one stock/fleet).
-#'   `FALSE` sums effort across fleets instead of faceting/coloring by
+#' @param byStock,byFleet `TRUE` facets by stock/fleet. `byStock` defaults
+#'   to `FALSE` (a line per stock); `byFleet` defaults to `NULL`, which
+#'   facets when `object` has more than one fleet. `byFleet = FALSE` sums effort across fleets instead of faceting/coloring by
 #'   fleet (only when every summed fleet shares the same `units`).
 #' @param Stocks Character or numeric vector. Restrict the plot to specific
 #'   stocks, either by name (matching [StockNames()]) or by index. Default
@@ -677,7 +710,7 @@ PlotRemovals <- function(object,
 PlotEffort <- function(object,
                        Stock         = NULL,
                        units         = NULL,
-                       byStock       = NULL,
+                       byStock       = FALSE,
                        byFleet       = NULL,
                        Stocks        = NULL,
                        probs         = c(0.05, 0.95),
@@ -688,8 +721,8 @@ PlotEffort <- function(object,
                        byMP          = FALSE,
                        AggregateYear = NULL,
                        IncCV         = TRUE) {
-  if (inherits(object, 'data'))
-    return(.PlotDataTs(object, 'Effort', 'Effort', byFleet = byFleet,
+  if (inherits(object, c('data', 'list')))
+    return(.PlotDataTs(.ResolvePlotData(object), 'Effort', 'Effort', byFleet = byFleet,
                          AggregateYear = AggregateYear, IncCV = IncCV))
 
   .CheckClass(object, c('fleet', 'om', 'hist', 'mse'), 'object')
@@ -708,7 +741,7 @@ PlotEffort <- function(object,
 
 #' @rdname PlotEffort
 #' @export
-PlotEffortCurve <- function(object, Stock = NULL, units = NULL, byStock = NULL, byFleet = NULL,
+PlotEffortCurve <- function(object, Stock = NULL, units = NULL, byStock = FALSE, byFleet = NULL,
                             Stocks = NULL, probs = c(0.05, 0.95), nsim = 0, Years = NULL,
                             free_y = NULL) {
   .CheckClass(object, c('fleet', 'om', 'hist', 'mse'), 'object')
@@ -783,8 +816,28 @@ PlotEffortCurve <- function(object, Stock = NULL, units = NULL, byStock = NULL, 
 
 #' @rdname plot_hist
 #' @export
+PlotCatch <- function(object,
+                      byStock       = FALSE,
+                      byFleet       = NULL,
+                      probs         = c(0.05, 0.95),
+                      nsim          = 0,
+                      Years         = NULL,
+                      free_y        = NULL,
+                      IncHist       = TRUE,
+                      byMP          = FALSE,
+                      AggregateYear = NULL,
+                      units         = TRUE,
+                      Stocks        = NULL,
+                      IncCV         = TRUE) {
+  PlotRemovals(object, byStock = byStock, byFleet = byFleet, probs = probs, nsim = nsim,
+               Years = Years, free_y = free_y, IncHist = IncHist, byMP = byMP,
+               AggregateYear = AggregateYear, units = units, Stocks = Stocks, IncCV = IncCV)
+}
+
+#' @rdname plot_hist
+#' @export
 PlotDynamics <- function(object,
-                         byStock       = NULL,
+                         byStock       = FALSE,
                          byFleet       = FALSE,
                          byFemale      = TRUE,
                          byMP          = FALSE,
@@ -1003,7 +1056,7 @@ setMethod('plot', 'mse', function(x, y, ...) {
 
 .ResolveByStock <- function(byStock, nSel) {
   if (is.null(byStock))
-    return(nSel > 1)
+    return(FALSE)
 
   if (!identical(byStock, TRUE) && !identical(byStock, FALSE) && !identical(byStock, 'sum'))
     cli::cli_abort("`byStock` must be `TRUE`, `FALSE`, `'sum'`, or `NULL`.")
@@ -1199,6 +1252,18 @@ setMethod('plot', 'mse', function(x, y, ...) {
   dplyr::bind_rows(hist_dup, proj_rows)
 }
 
+# whole-year axis breaks with a step of 1, 2, 5, 10, 20, 25, 50, ... years
+.YearBreaks <- function(limits, n = 6) {
+  limits <- range(limits, na.rm = TRUE)
+  if (!all(is.finite(limits)))
+    return(numeric(0))
+  span  <- max(diff(limits), 1)
+  steps <- c(1, 2, 5) * rep(10^(0:4), each = 3)
+  steps <- sort(c(steps, 25, 250))
+  step  <- steps[which(span / steps <= n)[1]]
+  seq(ceiling(limits[1] / step) * step, floor(limits[2]), by = step)
+}
+
 .YearLabels <- function(breaks) {
   labels <- rep(NA_character_, length(breaks))
   ok     <- !is.na(breaks)
@@ -1384,7 +1449,7 @@ setMethod('plot', 'mse', function(x, y, ...) {
   p <- p +
     ggplot2::expand_limits(y = if (relative) c(0, 1) else 0) +
     ggplot2::scale_x_continuous(expand = ggplot2::expansion(mult = c(0.02, 0.05)),
-                                labels = .YearLabels) +
+                                breaks = .YearBreaks, labels = .YearLabels) +
     ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0.02, 0.05))) +
     ggplot2::theme_bw() +
     ggplot2::labs(x = 'Year', y = ylab,

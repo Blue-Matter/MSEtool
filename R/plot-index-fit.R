@@ -615,7 +615,7 @@ IndexFitTable <- function(object,
   p <- p +
     ggplot2::expand_limits(y = 0) +
     ggplot2::scale_x_continuous(expand = ggplot2::expansion(mult = c(0.02, 0.05)),
-                                labels = .YearLabels) +
+                                breaks = .YearBreaks, labels = .YearLabels) +
     ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0.02, 0.05))) +
     ggplot2::theme_bw() +
     ggplot2::labs(x = 'Year', y = 'Index value (True on Index scale)',

@@ -7,7 +7,7 @@
 PlotCatchability(
   object,
   Stock = NULL,
-  byStock = NULL,
+  byStock = FALSE,
   byFleet = NULL,
   Stocks = NULL,
   Years = NULL,
@@ -23,8 +23,9 @@ PlotCatchability(
 populate a bare \link[=fleet-class]{fleet} \code{object}. Ignored otherwise. Default
 \code{NULL} uses an example stock, with a message noting this.}
 
-\item{byStock, byFleet}{One of \code{TRUE}, \code{FALSE}, or \code{NULL} (default,
-facets automatically when \code{object} has more than one stock/fleet).}
+\item{byStock, byFleet}{\code{TRUE} facets by stock/fleet; \code{FALSE} draws each
+as its own colored line. \code{byStock} defaults to \code{FALSE}; \code{byFleet}
+defaults to \code{NULL}, which facets when \code{object} has more than one fleet.}
 
 \item{Stocks}{Character or numeric vector. Restrict the plot to specific
 stocks, either by name (matching \code{\link[=StockNames]{StockNames()}}) or by index. Default

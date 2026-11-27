@@ -7,7 +7,7 @@
 PlotRecDevs(
   object,
   Sim = NULL,
-  byStock = NULL,
+  byStock = FALSE,
   Stocks = NULL,
   probs = c(0.05, 0.95)
 )
@@ -19,8 +19,9 @@ PlotRecDevs(
 plot. \code{NULL} takes the median across all simulations and adds a \code{probs}
 quantile ribbon (unless \code{nSim == 1}).}
 
-\item{byStock}{One of \code{TRUE}, \code{FALSE}, or \code{NULL} (default, facets
-automatically when \code{object} has more than one stock).}
+\item{byStock}{Logical. \code{FALSE} (default) draws each stock as its own
+colored line, with the period shown by linetype; \code{TRUE} facets by
+\code{Stock}.}
 
 \item{Stocks}{Character or numeric vector. Restrict the plot to specific
 stocks, either by name (matching \code{\link[=StockNames]{StockNames()}}) or by index. Default

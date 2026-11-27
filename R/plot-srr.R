@@ -22,8 +22,8 @@
 #'   quantile ribbon (unless `nSim == 1`).
 #' @param probs Numeric vector of length 2. Lower and upper quantiles of the
 #'   across-simulation ribbon drawn when `Sim = NULL`. Default `c(0.05, 0.95)`.
-#' @param byStock One of `TRUE`, `FALSE`, or `NULL` (default, facets
-#'   automatically when `object` has more than one stock). Ignored for a
+#' @param byStock Logical. `FALSE` (default) draws each stock as its own
+#'   colored line; `TRUE` facets by `Stock`. Ignored for a
 #'   bare `Stock` (always a single curve).
 #' @param Stocks Character or numeric vector. Restrict the plot to specific
 #'   stocks, either by name (matching [StockNames()]) or by index. Default
@@ -36,7 +36,7 @@
 #'
 #' @seealso [SRR()], [PlotRecDevs], [PlotDepletion()], [Stock()]
 #' @export
-PlotSRR <- function(object, Sim = NULL, byStock = NULL, Stocks = NULL,
+PlotSRR <- function(object, Sim = NULL, byStock = FALSE, Stocks = NULL,
                     nPoints = 50, probs = c(0.05, 0.95)) {
   .CheckClass(object, c('stock', 'hist', 'mse', 'om'), 'object')
 
@@ -51,7 +51,7 @@ PlotSRR <- function(object, Sim = NULL, byStock = NULL, Stocks = NULL,
 
 #' @rdname PlotSRR
 #' @export
-PlotSRRCurve <- function(object, Sim = NULL, byStock = NULL, Stocks = NULL,
+PlotSRRCurve <- function(object, Sim = NULL, byStock = FALSE, Stocks = NULL,
                          nPoints = 50, probs = c(0.05, 0.95)) {
   .CheckClass(object, c('stock', 'hist', 'mse', 'om'), 'object')
 

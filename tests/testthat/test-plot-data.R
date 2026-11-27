@@ -136,3 +136,69 @@ test_that(".YearLabels labels decimal years by month", {
   expect_equal(.YearLabels(c(2020, 2020.25, 2020.5, 2020.75, NA)),
                c('2020', '2020-04', '2020-07', '2020-10', NA))
 })
+
+.StockTestData <- function() {
+  Years <- 2001:2005
+  n     <- length(Years)
+  catch <- function(scale) {
+    v <- array(scale * seq_len(n * 2), c(n, 2), list(Year = Years, Fleet = c('F1', 'F2')))
+    CatchData(Name = c('F1', 'F2'), Value = v, CV = array(0.2, dim(v), dimnames(v)), Units = 't')
+  }
+  index <- function(scale) {
+    v <- array(scale * seq_len(n), c(n, 1), list(Year = Years, Fleet = 'S1'))
+    IndicesData(Name = 'S1', Value = v)
+  }
+  Data(Years = Years, Landings = list(Female = catch(2), Male = catch(1)),
+       Survey = list(Female = index(2), Male = index(1)))
+}
+
+.LineData <- function(p)
+  ggplot2::layer_data(p, which(purrr::map_lgl(p$layers, \(l) inherits(l$geom, 'GeomLine')))[1])
+
+test_that("stock elements are drawn as a line per stock, faceted by fleet", {
+  D <- .StockTestData()
+  p <- PlotLandings(D)
+  expect_match(rlang::as_label(p$mapping$colour), 'Stock')
+  expect_s3_class(p$facet, 'FacetWrap')
+  ld <- .LineData(p)
+  expect_equal(nrow(ld), 5 * 2 * 2)
+  expect_equal(max(ld$y), 2 * 10)
+
+  summed <- .LineData(PlotLandings(D, byFleet = FALSE))
+  expect_equal(max(summed$y), 2 * (5 + 10))
+
+  expect_match(rlang::as_label(PlotLandings(D, byStock = TRUE)$mapping$colour), 'Fleet')
+  combined <- PlotLandings(D, byStock = 'sum')
+  expect_equal(max(.LineData(combined)$y), 3 * 10)
+  expect_match(rlang::as_label(PlotSurvey(D)$mapping$colour), 'Stock')
+  expect_s3_class(PlotData(D), 'patchwork')
+  expect_true(inherits(PlotRemovals(D), 'ggplot'))
+})
+
+test_that("year axis breaks are whole years", {
+  expect_equal(.YearBreaks(c(2001, 2010)), seq(2002, 2010, by = 2))
+  expect_equal(.YearBreaks(c(1937, 2023)), seq(1940, 2020, by = 20))
+  expect_true(all(.YearBreaks(c(2001, 2003.75)) %% 1 == 0))
+  b <- ggplot2::ggplot_build(PlotLandings(.PlotTestData()))$layout$panel_params[[1]]$x$breaks
+  expect_true(all(stats::na.omit(b) %% 1 == 0))
+})
+
+test_that("fleets with no non-zero values are not plotted", {
+  D <- .PlotTestData()
+  D@Landings@Value[, 'F2'] <- 0
+  expect_equal(unique(as.character(.LineData(PlotLandings(D))$group)), '-1')
+  D@Landings@Value[] <- 0
+  expect_true(inherits(PlotLandings(D), 'ggplot'))
+})
+
+test_that("compositions of several stocks and fleets use a fleet x stock grid", {
+  Years <- 2001:2003
+  comp <- \(scale) CompData(Name = c('F1', 'F2'), Units = 'years', Classes = 0:2,
+                            Value = array(scale, c(3, 2, 3), list(Year = Years, Fleet = c('F1', 'F2'), Age = 0:2)))
+  D <- Data(Years = Years, LandingsAtAge = list(Female = comp(1), Male = comp(2)))
+  p <- PlotLandingsAtAge(D)
+  expect_s3_class(p$facet, 'FacetGrid')
+  expect_equal(names(p$facet$params$rows), 'Fleet')
+  expect_equal(names(p$facet$params$cols), 'Stock')
+  expect_equal(.WrapStripLabel('Bottom_Trawl_Landings'), 'Bottom_Trawl_\nLandings')
+})

@@ -8,26 +8,30 @@
 PlotSelectivity(
   object,
   Sim = NULL,
-  byStock = NULL,
+  byStock = FALSE,
   byFleet = NULL,
   Years = NULL,
   units = TRUE,
   Stocks = NULL,
   Stock = NULL,
-  probs = c(0.05, 0.95)
+  probs = c(0.05, 0.95),
+  IncRetention = FALSE,
+  IncMaturity = FALSE
 )
 
 PlotSelectivityCurve(
   object,
   Sim = NULL,
-  byStock = NULL,
+  byStock = FALSE,
   byFleet = NULL,
   Years = NULL,
   units = TRUE,
   Stocks = NULL,
   Stock = NULL,
   x = c("Age", "Length", "Weight"),
-  probs = c(0.05, 0.95)
+  probs = c(0.05, 0.95),
+  IncRetention = FALSE,
+  IncMaturity = FALSE
 )
 }
 \arguments{
@@ -39,13 +43,13 @@ plot. \code{NULL} takes the median across all simulations, cell by cell, and
 adds a \code{probs} quantile ribbon behind it (unless \code{nSim == 1} or values
 constant across simulations.}
 
-\item{byStock, byFleet}{One of \code{TRUE}, \code{FALSE}, or \code{NULL} (default,
-facets automatically when \code{object} has more than one stock/fleet).
-These plots never sum or average a curve across stocks/fleets -- that
-isn't a meaningful operation the way summing catch is -- so every
-stock/fleet is always distinguishable somehow. \code{TRUE}/\code{NULL} facets by
-\code{Stock}/\code{Fleet}. \code{FALSE} instead colors by that
-variable;}
+\item{byStock, byFleet}{\code{TRUE}, \code{FALSE}, or \code{NULL}. Curves are never
+summed or averaged across stocks or fleets. \code{TRUE} facets by
+\code{Stock}/\code{Fleet}; \code{FALSE} draws each stock/fleet as its own colored line
+on the same panel. \code{byStock} defaults to \code{FALSE}. \code{byFleet} defaults to
+\code{NULL}, which facets when \code{object} has more than one fleet. When both
+stocks and fleets would need a color, the second variable is drawn with
+linetype, or faceted when linetype is used for year.}
 
 \item{Years}{Optional numeric vector, or \code{"all"}. Default \code{NULL} shows
 each independent curve's own last calendar year, labelled by year in
@@ -76,6 +80,13 @@ uses an example stock, with a message noting this.}
 \item{probs}{Numeric vector of length 2. Lower and upper quantiles of the
 across-simulation ribbon drawn when \code{Sim = NULL}. Default \code{c(0.05, 0.95)}.
 Ignored when \code{Sim} is a specific replicate.}
+
+\item{IncRetention, IncMaturity}{Logical. Add the fleet's retention curve
+(dashed, in the fleet's color) and the stock's maturity curve (dotted,
+grey) to the selectivity curve (solid)? Default \code{FALSE}. With either
+set, each curve is shown for its last year (or the last of \code{Years}),
+colored by fleet and faceted by stock (and by MP for \link[=mse-class]{mse}
+objects). In \code{PlotSelectivity()}, the curves are added to every panel.}
 
 \item{x}{\code{PlotSelectivityCurve()} only; see \link{plot_schedule}. Also accepts
 \code{"Weight"}, projecting the curve through the stock's \verb{[Weight()]}

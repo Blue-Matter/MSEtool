@@ -93,3 +93,13 @@ PlotStock <- function(Stock,
   attr(result, 'silent') <- silent
   result
 }
+
+#' @param x A [stock-class] object.
+#' @param y Unused.
+#' @param ... Additional arguments passed to `PlotStock()`.
+#' @rdname PlotStock
+#' @aliases plot,stock,ANY-method
+#' @export
+setMethod('plot', 'stock', function(x, y, ...) {
+  PlotStock(x, ...)
+})

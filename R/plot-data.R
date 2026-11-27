@@ -1,11 +1,19 @@
 #' Plot Observed Fishery Data
 #'
-#' Plotting functions for [data-class] objects: the observed (or simulated,
-#' with observation error) fishery timeseries, as opposed to the underlying
-#' simulated dynamics plotted by [plot_hist]. A [data-class] object holds a
-#' single simulation/stock realization (no `Sim` dimension), so these
-#' functions draw a single line per fleet or index rather than a
-#' median/ribbon summary.
+#' Plotting functions for the observed (or simulated, with observation
+#' error) fishery data in [data-class] objects. A [data-class] object holds
+#' one realization of the data for one stock complex, so these functions
+#' draw a single line per fleet or index.
+#'
+#' `object` can be a [data-class] object, an [om-class] object (its `Data`
+#' slot, one [data-class] object per complex), a [hist-class] object (its
+#' simulated `Data`, one [data-class] object per simulation and complex), or
+#' a list of [data-class] objects named by complex, or a list of such lists
+#' (one per simulation). When more than one simulation or complex is
+#' available, the first is plotted, with a message; select another with
+#' `Sim` and `Complex`.
+#'
+#' Fleets and indices with no non-zero values are not drawn.
 #'
 #' `PlotCPUE()` and `PlotSurvey()` plot the `CPUE` and `Survey` slots
 #' respectively. `PlotLandings()`, `PlotDiscards()`, `PlotRemovals()`, and
@@ -34,8 +42,7 @@
 #' `PlotData()` arranges whichever of `Landings`, `Discards`, `Effort`,
 #' `CPUE`, and `Survey` are populated into a single figure with
 #' [patchwork::wrap_plots()], silently omitting panels for slots that
-#' aren't; unlike the individual `Plot*()` functions it does not print a
-#' message for missing slots. Below them (with `IncComp = TRUE`, the
+#' aren't, without a message for missing slots. Below them (with `IncComp = TRUE`, the
 #' default), it adds a bubble plot for each populated composition slot
 #' (`LandingsAtAge`, `DiscardsAtAge`, `LandingsAtSize`, `DiscardsAtSize`;
 #' see [plot_comp]), omitting any whose values are all zero or missing.
@@ -52,7 +59,8 @@
 #' omitted whenever it's populated but every value (across sims/years/
 #' fleets) is zero, unless `showDiscards = TRUE`.
 #'
-#' @param object A [data-class] object.
+#' @param object A [data-class], [om-class], or [hist-class] object, or a
+#'   list of [data-class] objects. See Details.
 #' @param byFleet Logical. Controls how multiple fleets (or indices) are
 #'   displayed. Default (`NULL`) draws every fleet as its own colored line
 #'   in a single panel. `TRUE` facets by fleet instead (one panel per
@@ -111,6 +119,17 @@
 #' @param IncComp Logical. `PlotData()` only. Add bubble plots of the
 #'   populated composition slots below the timeseries panels? Default
 #'   `TRUE`.
+#' @param Sim Integer, or `NULL` (default: the first). The simulation to
+#'   plot when `object` holds data for more than one simulation.
+#' @param byStock One of `FALSE` (default), `TRUE`, or `'sum'`. For a slot
+#'   holding a list of objects named by the complex and/or its stocks (see
+#'   [data-class]), `FALSE` draws each element as its own line colored by
+#'   stock (or complex), with a panel per fleet or index; `TRUE` facets by
+#'   stock and colors by fleet; `'sum'` combines the elements into one
+#'   series per fleet or index. No effect on a slot holding one object.
+#' @param Complex Integer or character, or `NULL` (default: the first). The
+#'   complex (by position or name) to plot when `object` holds data for more
+#'   than one complex.
 #'
 #' @return A `ggplot` object (a `patchwork` object for `PlotData()`), or
 #'   `NULL` invisibly if the relevant slot isn't populated.
@@ -137,34 +156,47 @@ NULL
 #' @rdname plot_data
 #' @export
 PlotCPUE <- function(object, byFleet = NULL, Season = NULL, units = TRUE,
-                     AggregateYear = NULL, IncCV = TRUE) {
-  .CheckClass(object, 'data', 'object')
-  object <- UpdateObject(object)
+                     AggregateYear = NULL, IncCV = TRUE, Sim = NULL, Complex = NULL,
+                     byStock = FALSE) {
+  object <- .ResolvePlotData(object, Sim, Complex) |> UpdateObject()
   .PlotDataTs(object, 'CPUE', 'CPUE', byFleet = byFleet, AggregateYear = AggregateYear,
-              Season = .SlotSeason(Season, 'CPUE'), units = units, IncCV = IncCV)
+              Season = .SlotSeason(Season, 'CPUE'), units = units, IncCV = IncCV,
+              byStock = byStock)
 }
 
 #' @rdname plot_data
 #' @export
 PlotSurvey <- function(object, byFleet = NULL, Season = NULL, units = TRUE,
-                       AggregateYear = NULL, IncCV = TRUE) {
-  .CheckClass(object, 'data', 'object')
-  object <- UpdateObject(object)
+                       AggregateYear = NULL, IncCV = TRUE, Sim = NULL, Complex = NULL,
+                       byStock = FALSE) {
+  object <- .ResolvePlotData(object, Sim, Complex) |> UpdateObject()
   .PlotDataTs(object, 'Survey', 'Survey', byFleet = byFleet, AggregateYear = AggregateYear,
-              Season = .SlotSeason(Season, 'Survey'), units = units, IncCV = IncCV)
+              Season = .SlotSeason(Season, 'Survey'), units = units, IncCV = IncCV,
+              byStock = byStock)
 }
 
 #' @rdname plot_data
 #' @export
 PlotData <- function(object, byFleet = NULL, AggregateYear = NULL, Season = NULL, units = TRUE,
-                     showDiscards = FALSE, IncCV = TRUE, IncComp = TRUE) {
-  .CheckClass(object, 'data', 'object')
-  object <- UpdateObject(object) |> .CombineDataSeries()
+                     showDiscards = FALSE, IncCV = TRUE, IncComp = TRUE,
+                     Sim = NULL, Complex = NULL, byStock = FALSE) {
+  object   <- .ResolvePlotData(object, Sim, Complex) |> UpdateObject()
+  elements <- purrr::map(c(Landings = 'Landings', Discards = 'Discards', CPUE = 'CPUE', Survey = 'Survey'),
+                         \(sl) names(.PlotStockElements(slot(object, sl), byStock))) |>
+    purrr::keep(\(x) length(x) > 1)
+  stockColors <- unique(unlist(elements))
+  stockColors <- if (length(stockColors)) stats::setNames(.GgHuePal(length(stockColors)), stockColors)
 
   # aggregate once here so the seasonal notes print once, not once per panel;
-  # panels then get the resolved per-index seasons
-  sp     <- .SeasonalPlotData(object, AggregateYear, Season)
+  # panels then get the resolved per-index seasons. Stock elements are
+  # aggregated one at a time by their panels.
+  raw    <- object
+  sp     <- .SeasonalPlotData(.CombineDataSeries(object), AggregateYear, Season)
   object <- sp$object
+  byElement   <- length(elements) > 0
+  panelObject <- if (byElement) raw else object
+  panelAgg    <- byElement && !isFALSE(AggregateYear)
+  panelSeason <- if (byElement) Season else sp$Season
 
   discardsVal      <- object@Discards@Value
   discardsAllZero  <- !is.null(discardsVal) &&
@@ -186,9 +218,10 @@ PlotData <- function(object, byFleet = NULL, AggregateYear = NULL, Season = NULL
   fleetColors <- if (length(allNames)) stats::setNames(.GgHuePal(length(allNames)), allNames)
 
   panels <- purrr::map(specs, function(s) {
-    .PlotDataTs(object, s$slot, s$ylab, byFleet = byFleet, AggregateYear = FALSE,
-                 Season = sp$Season, units = s$units %||NA% FALSE, silent = TRUE,
-                 colors = fleetColors, IncCV = IncCV)
+    .PlotDataTs(panelObject, s$slot, s$ylab, byFleet = byFleet, AggregateYear = panelAgg,
+                 Season = panelSeason, units = s$units %||NA% FALSE, silent = TRUE,
+                 colors = fleetColors, IncCV = IncCV, byStock = byStock,
+                 stockColors = stockColors)
   })
   panels <- purrr::compact(panels)
 
@@ -213,7 +246,11 @@ PlotData <- function(object, byFleet = NULL, AggregateYear = NULL, Season = NULL
 
   tsBlock <- NULL
   if (length(panels)) {
-    legendFleets <- purrr::map(specs, \(s) .ColorLegendFleets(object, s$slot, byFleet))
+    legendFleets <- purrr::map(specs, \(s) {
+      if (is.null(elements[[s$slot]])) .ColorLegendFleets(object, s$slot, byFleet)
+      else if (isTRUE(byStock)) .DataSeriesNames(object, s$slot)
+      else elements[[s$slot]]
+    })
     legendFleets <- purrr::compact(legendFleets)
     collectGuides <- length(legendFleets) <= 1 ||
       all(purrr::map_lgl(legendFleets[-1], setequal, legendFleets[[1]]))
@@ -225,16 +262,26 @@ PlotData <- function(object, byFleet = NULL, AggregateYear = NULL, Season = NULL
   if (!length(compPanels))
     return(tsBlock)
 
-  # bubble plots faceted by fleet need the full width
+  # bubble plots faceted by fleet need the full width, and a height per facet row
   faceted   <- purrr::map_lgl(compPanels, \(p) !inherits(p$facet, 'FacetNull'))
   compCols  <- if (any(faceted) || length(compPanels) == 1) 1 else 2
-  compBlock <- patchwork::wrap_plots(compPanels, ncol = compCols)
+  panelRows <- purrr::map_dbl(compPanels, .FacetRows)
+  compBlock <- if (compCols == 1)
+    patchwork::wrap_plots(compPanels, ncol = 1, heights = panelRows)
+  else patchwork::wrap_plots(compPanels, ncol = compCols)
   if (is.null(tsBlock))
     return(compBlock)
 
   tsRows   <- ceiling(length(panels) / 2)
-  compRows <- ceiling(length(compPanels) / compCols)
+  compRows <- if (compCols == 1) sum(panelRows) else ceiling(length(compPanels) / compCols)
   patchwork::wrap_plots(tsBlock, compBlock, ncol = 1, heights = c(tsRows, compRows))
+}
+
+# relative height of a ggplot: 1 for one panel row, 0.5 for each further facet row
+.FacetRows <- function(p) {
+  if (inherits(p$facet, 'FacetNull'))
+    return(1)
+  1 + 0.5 * (max(ggplot2::ggplot_build(p)$layout$layout$ROW) - 1)
 }
 
 #' @param x A [data-class] object.
@@ -248,16 +295,76 @@ setMethod('plot', 'data', function(x, y, ...) {
 
 # ---- internal helpers ----
 
+# one `data` object from a data object, an om (`OM@Data`), a hist
+# (`Hist@Data[[sim]][[complex]]`), or a list of them by complex or sim/complex
+.ResolvePlotData <- function(object, Sim = NULL, Complex = NULL) {
+  .CheckClass(object, c('data', 'om', 'hist', 'list'), 'object')
+  if (inherits(object, c('om', 'hist')))
+    object <- object@Data
+  if (inherits(object, 'data'))
+    return(object)
+  if (!length(object))
+    cli::cli_abort("No {.cls data} objects found in {.arg object}.", call = NULL)
+
+  if (all(purrr::map_lgl(object, \(x) is.list(x) && !isS4(x)))) {
+    object <- .SelectPlotDataElement(object, Sim, 'Sim', 'simulation')
+  }
+  object <- .SelectPlotDataElement(object, Complex, 'Complex', 'complex')
+  .CheckClass(object, 'data', 'object')
+  object
+}
+
+.SelectPlotDataElement <- function(x, ind, arg, label) {
+  n <- length(x)
+  if (n == 1)
+    return(x[[1]])
+  if (is.null(ind)) {
+    first <- if (!is.null(names(x)) && nzchar(names(x)[1])) names(x)[1] else 1
+    cli::cli_alert_info("Plotting data for {label} {.val {first}} of {n}; use {.arg {arg}} to choose another.")
+    return(x[[1]])
+  }
+  valid <- length(ind) == 1 &&
+    ((is.character(ind) && ind %in% names(x)) || (is.numeric(ind) && ind >= 1 && ind <= n))
+  if (!valid)
+    cli::cli_abort(c("x" = "{.arg {arg}} must be a single index (1 to {n}) or name.",
+                     "i" = "Available: {.val {names(x) %||% seq_len(n)}}."), call = NULL)
+  x[[ind]]
+}
+
 .IndexSlots <- c('CPUE', 'Survey')
 
 .PlotDataTs <- function(object, slot_name, ylab, byFleet = NULL,
                          AggregateYear = NULL, Season = NULL, units = FALSE,
-                         silent = FALSE, colors = NULL, IncCV = TRUE) {
-  object  <- .CombineDataSeries(object)
-  isIndex <- slot_name %in% .IndexSlots
+                         silent = FALSE, colors = NULL, IncCV = TRUE, byStock = FALSE,
+                         stockColors = NULL) {
+  isIndex  <- slot_name %in% .IndexSlots
+  colorLab <- if (isIndex) 'Index' else 'Fleet'
   # indices are never summed: different indices have different scales/units
   if (isIndex && isFALSE(byFleet)) byFleet <- NULL
 
+  elements <- .PlotStockElements(slot(object, slot_name), byStock)
+  if (length(elements) > 1) {
+    series <- purrr::imap(elements, \(el, nm) {
+      obj <- object
+      slot(obj, slot_name) <- el
+      .DataTsSeries(obj, slot_name, ylab, AggregateYear, Season, units,
+                    silent = silent || nm != names(elements)[1], IncCV = IncCV)
+    })
+    return(.BuildStockDataTsPlot(series, byFleet, byStock, stockColors, colorLab))
+  }
+
+  series <- .DataTsSeries(object, slot_name, ylab, AggregateYear, Season, units, silent, IncCV)
+  if (is.null(series))
+    return(invisible(NULL))
+  .BuildDataTsPlot(series$value, series$ylab, object = series$object, byFleet = byFleet,
+                   seasons = series$seasons, colors = colors, colorLab = colorLab,
+                   cv_arr = series$cv)
+}
+
+# value and CV arrays of one slot, aggregated to calendar years when requested
+.DataTsSeries <- function(object, slot_name, ylab, AggregateYear = NULL, Season = NULL,
+                          units = FALSE, silent = FALSE, IncCV = TRUE) {
+  object <- .CombineDataSeries(object)
   # skip the seasonal notes when there's nothing to plot
   sp <- .SeasonalPlotData(object, AggregateYear, Season,
                           silent  = silent || is.null(slot(object, slot_name)@Value),
@@ -287,15 +394,59 @@ setMethod('plot', 'data', function(x, y, ...) {
     }
   }
 
-  cv_arr <- if (isTRUE(IncCV)) slot(object, slot_name)@CV
+  list(value = value_arr, cv = if (isTRUE(IncCV)) slot(object, slot_name)@CV, ylab = ylab,
+       seasons = sp$Season[[slot_name]], object = object) |>
+    .KeepFleetsWithData()
+}
 
-  .BuildDataTsPlot(value_arr, ylab, object = object, byFleet = byFleet,
-                   seasons = sp$Season[[slot_name]], colors = colors,
-                   colorLab = if (isIndex) 'Index' else 'Fleet', cv_arr = cv_arr)
+# drops fleets/indices with no non-zero values, unless none has any
+.KeepFleetsWithData <- function(series) {
+  value <- series$value
+  if (length(dim(value)) != 2)
+    return(series)
+  keep <- .HasSeriesData(value)
+  if (!any(keep) || all(keep))
+    return(series)
+  series$value <- value[, keep, drop = FALSE]
+  if (.SameDim(series$cv, value))
+    series$cv <- series$cv[, keep, drop = FALSE]
+  series
+}
+
+.HasSeriesData <- function(value) apply(value, 2, \(x) any(!is.na(x) & x != 0))
+
+# non-empty elements of a stock-specific slot, unless stocks are summed
+.PlotStockElements <- function(x, byStock) {
+  if (!is.list(x) || identical(byStock, 'sum'))
+    return(NULL)
+  x[!vapply(x, EmptyObject, logical(1))]
 }
 
 .PlotDataRemovals <- function(object, byFleet = NULL, AggregateYear = NULL,
-                               units = TRUE, silent = FALSE, IncCV = TRUE) {
+                               units = TRUE, silent = FALSE, IncCV = TRUE, byStock = FALSE,
+                               stockColors = NULL) {
+  L <- .PlotStockElements(object@Landings, byStock)
+  D <- .PlotStockElements(object@Discards, byStock)
+  elementNames <- union(names(L), names(D))
+  if (length(elementNames) > 1) {
+    series <- purrr::map(stats::setNames(nm = elementNames), \(nm) {
+      obj <- object
+      obj@Landings <- L[[nm]] %||% new('catchdata')
+      obj@Discards <- D[[nm]] %||% new('catchdata')
+      .DataRemovalsSeries(obj, AggregateYear, units, silent = silent || nm != elementNames[1], IncCV)
+    })
+    return(.BuildStockDataTsPlot(series, byFleet, byStock, stockColors, 'Fleet'))
+  }
+
+  series <- .DataRemovalsSeries(object, AggregateYear, units, silent, IncCV)
+  if (is.null(series))
+    return(invisible(NULL))
+  .BuildDataTsPlot(series$value, series$ylab, object = series$object, byFleet = byFleet,
+                   cv_arr = series$cv)
+}
+
+.DataRemovalsSeries <- function(object, AggregateYear = NULL, units = TRUE, silent = FALSE,
+                                IncCV = TRUE) {
   object <- .CombineDataSeries(object)
   object <- .SeasonalPlotData(object, AggregateYear, silent = silent ||
                                 (is.null(object@Landings@Value) && is.null(object@Discards@Value)),
@@ -340,7 +491,8 @@ setMethod('plot', 'data', function(x, y, ...) {
     value_arr <- value_arr * uinfo$factor
   }
 
-  .BuildDataTsPlot(value_arr, ylab, object = object, byFleet = byFleet, cv_arr = cv_arr)
+  list(value = value_arr, cv = cv_arr, ylab = ylab, seasons = NULL, object = object) |>
+    .KeepFleetsWithData()
 }
 
 # Handles seasonal data (`object@Seasons > 1`) for the data plots. Returns
@@ -475,7 +627,11 @@ setMethod('plot', 'data', function(x, y, ...) {
 .ColorLegendFleets <- function(object, slot_name, byFleet) {
   if (slot_name %in% .IndexSlots && isFALSE(byFleet)) byFleet <- NULL
   if (!is.null(byFleet)) return(NULL)
-  fleets <- unique(.DataSeriesNames(object, slot_name))
+  fleets <- .DataSeriesNames(object, slot_name)
+  value  <- slot(object, slot_name)@Value
+  if (length(dim(value)) == 2 && any(.HasSeriesData(value)))
+    fleets <- fleets[.HasSeriesData(value)]
+  fleets <- unique(fleets)
   if (length(fleets) <= 1) return(NULL)
   fleets
 }
@@ -498,10 +654,10 @@ setMethod('plot', 'data', function(x, y, ...) {
 }
 
 .IsolatedRows <- function(df) {
-  groupCol <- if ('Fleet' %in% colnames(df)) 'Fleet' else NULL
+  groupCol <- intersect(c('Stock', 'Fleet'), colnames(df))
 
   df <- df |> dplyr::arrange(dplyr::across(dplyr::any_of(c(groupCol, 'Year'))))
-  if (!is.null(groupCol))
+  if (length(groupCol))
     df <- df |> dplyr::group_by(dplyr::across(dplyr::all_of(groupCol)))
 
   df |>
@@ -535,9 +691,8 @@ setMethod('plot', 'data', function(x, y, ...) {
   df
 }
 
-.BuildDataTsPlot <- function(value_arr, ylab, object = NULL, byFleet = NULL,
-                               seasons = NULL, colors = NULL, colorLab = 'Fleet',
-                               cv_arr = NULL) {
+# long data frame of a value array, with a `CV` column when the CVs are usable
+.DataTsDF <- function(value_arr, cv_arr = NULL, object = NULL, seasons = NULL) {
   value_arr <- .NormalizeSeriesDim(value_arr)
   df <- Array2DF(value_arr)
 
@@ -551,6 +706,14 @@ setMethod('plot', 'data', function(x, y, ...) {
 
   if (!is.null(object))
     df <- .FilterSeasonData(df, seasons, object)
+  df
+}
+
+.BuildDataTsPlot <- function(value_arr, ylab, object = NULL, byFleet = NULL,
+                               seasons = NULL, colors = NULL, colorLab = 'Fleet',
+                               cv_arr = NULL) {
+  df    <- .DataTsDF(value_arr, cv_arr, object, seasons)
+  hasCV <- 'CV' %in% colnames(df)
 
   multiFleet <- 'Fleet' %in% colnames(df) && length(unique(df$Fleet)) > 1
   mode <- if (!multiFleet) 'single'
@@ -612,7 +775,7 @@ setMethod('plot', 'data', function(x, y, ...) {
     ggplot2::geom_point(data = isolated, size = 1.2, na.rm = TRUE) +
     ggplot2::expand_limits(y = 0) +
     ggplot2::scale_x_continuous(expand = ggplot2::expansion(mult = c(0.02, 0.05)),
-                                labels = .YearLabels) +
+                                breaks = .YearBreaks, labels = .YearLabels) +
     ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0.02, 0.05))) +
     ggplot2::theme_bw() +
     ggplot2::labs(x = 'Year', y = ylab, color = if (hasColor) colorLab else NULL)
@@ -623,5 +786,74 @@ setMethod('plot', 'data', function(x, y, ...) {
   if (mode == 'facet')
     p <- p + ggplot2::facet_wrap(~Fleet, scales = 'free_y')
 
+  p
+}
+
+# one series per stock element: colored by stock and faceted by fleet, or
+# faceted by stock and colored by fleet with `byStock = TRUE`
+.BuildStockDataTsPlot <- function(series, byFleet, byStock, colors = NULL, colorLab = 'Fleet') {
+  series <- purrr::compact(series)
+  if (!length(series))
+    return(invisible(NULL))
+  ylab <- series[[1]]$ylab
+  df <- purrr::imap(series, \(s, nm)
+    .DataTsDF(s$value, s$cv, s$object, s$seasons) |> dplyr::mutate(Stock = nm)
+  ) |> dplyr::bind_rows()
+  df$Stock <- factor(df$Stock, levels = names(series))
+  if (!'Fleet' %in% colnames(df))
+    df$Fleet <- colorLab
+  if (!'CV' %in% colnames(df))
+    df$CV <- NA_real_
+
+  if (isFALSE(byFleet) && length(unique(df$Fleet)) > 1) {
+    df <- df |>
+      dplyr::group_by(.data$Year, .data$Stock) |>
+      dplyr::summarise(Var   = sum((.data$CV * .data$Value)^2),
+                       Value = sum(.data$Value), .groups = 'drop') |>
+      dplyr::mutate(CV = sqrt(.data$Var) / .data$Value, Fleet = 'Total') |>
+      dplyr::select(-'Var')
+  }
+  hasCV <- any(!is.na(df$CV) & df$CV > 0)
+  if (hasCV) df <- .CVBounds(df)
+
+  facetStock <- isTRUE(byStock)
+  multiFleet <- length(unique(df$Fleet)) > 1
+  facetFleet <- multiFleet && if (facetStock) isTRUE(byFleet) else TRUE
+  colorVar   <- if (facetStock) 'Fleet' else 'Stock'
+  levels     <- if (colorVar == 'Stock') levels(df$Stock) else unique(as.character(df$Fleet))
+  values     <- if (colorVar == 'Stock' && !is.null(colors) && all(levels %in% names(colors)))
+                  colors[levels]
+                else stats::setNames(.GgHuePal(length(levels)), levels)
+  df$.group  <- interaction(df$Stock, df$Fleet, drop = TRUE)
+  isolated   <- .IsolatedRows(df)
+
+  p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$Year, y = .data$Value,
+                                        color = .data[[colorVar]], group = .data$.group))
+  if (hasCV)
+    p <- p +
+      ggplot2::geom_ribbon(ggplot2::aes(ymin = .data$Lower, ymax = .data$Upper, fill = .data[[colorVar]]),
+                           alpha = 0.2, colour = NA, na.rm = TRUE) +
+      ggplot2::geom_linerange(data = isolated, ggplot2::aes(ymin = .data$Lower, ymax = .data$Upper),
+                              linewidth = 0.5, na.rm = TRUE, show.legend = FALSE) +
+      ggplot2::scale_fill_manual(values = values, guide = 'none')
+
+  p <- p +
+    ggplot2::geom_line(linewidth = 0.7, na.rm = TRUE) +
+    ggplot2::geom_point(data = isolated, size = 1.2, na.rm = TRUE) +
+    ggplot2::scale_color_manual(values = values) +
+    ggplot2::expand_limits(y = 0) +
+    ggplot2::scale_x_continuous(expand = ggplot2::expansion(mult = c(0.02, 0.05)),
+                                breaks = .YearBreaks, labels = .YearLabels) +
+    ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0.02, 0.05))) +
+    ggplot2::theme_bw() +
+    ggplot2::labs(x = 'Year', y = ylab, color = if (colorVar == 'Stock') 'Stock' else colorLab)
+
+  if (facetStock && facetFleet)
+    p <- p + ggplot2::facet_grid(rows = ggplot2::vars(.data$Stock), cols = ggplot2::vars(.data$Fleet),
+                                 scales = 'free_y')
+  else if (facetStock)
+    p <- p + ggplot2::facet_wrap(~Stock, scales = 'free_y')
+  else if (facetFleet)
+    p <- p + ggplot2::facet_wrap(~Fleet, scales = 'free_y')
   p
 }

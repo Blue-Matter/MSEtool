@@ -2,18 +2,21 @@
 % Please edit documentation in R/plot-fleet.R
 \name{PlotFleet}
 \alias{PlotFleet}
+\alias{plot,fleet,ANY-method}
 \title{Plot All Fishery Schedules for a Fleet}
 \usage{
 PlotFleet(
   Fleet,
   Stock = NULL,
-  byStock = NULL,
+  byStock = FALSE,
   byFleet = NULL,
   Stocks = NULL,
   Years = NULL,
   probs = c(0.05, 0.95),
   silent = FALSE
 )
+
+\S4method{plot}{fleet,ANY}(x, y, ...)
 }
 \arguments{
 \item{Fleet}{A \link[=fleet-class]{fleet} object, or an \link[=om-class]{om}, \link[=hist-class]{hist}, or
@@ -23,9 +26,9 @@ PlotFleet(
 populate a bare \link[=fleet-class]{fleet} \code{Fleet}. Ignored otherwise. Default
 \code{NULL} uses an example stock, with a message noting this.}
 
-\item{byStock}{Logical. Facet by stock? Passed to each \verb{Plot*()}
-function. Default \code{NULL} facets automatically when \code{Fleet} has more
-than one stock.}
+\item{byStock}{Logical. Passed to each \verb{Plot*()} function. \code{FALSE}
+(default) draws each stock as its own colored line; \code{TRUE} facets by
+stock. The closure plot always facets by stock.}
 
 \item{byFleet}{Logical. Facet by fleet? Passed to each \verb{Plot*()}
 function. Default \code{NULL} facets automatically when \code{Fleet} has more
@@ -44,6 +47,12 @@ simulation envelopes. Default \code{c(0.05, 0.95)}.}
 \item{silent}{Logical. If \code{TRUE}, the returned list doesn't announce what
 it contains when printed at the console (see \code{\link[=print.PlotFleetList]{print.PlotFleetList()}}).
 Default \code{FALSE}.}
+
+\item{x}{A \link[=fleet-class]{fleet} object.}
+
+\item{y}{Unused.}
+
+\item{...}{Additional arguments passed to \code{PlotFleet()}.}
 }
 \value{
 A named list of \code{ggplot}/\code{patchwork} objects: \code{Selectivity},

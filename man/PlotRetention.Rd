@@ -8,7 +8,7 @@
 PlotRetention(
   object,
   Sim = NULL,
-  byStock = NULL,
+  byStock = FALSE,
   byFleet = NULL,
   Years = NULL,
   units = TRUE,
@@ -20,7 +20,7 @@ PlotRetention(
 PlotRetentionCurve(
   object,
   Sim = NULL,
-  byStock = NULL,
+  byStock = FALSE,
   byFleet = NULL,
   Years = NULL,
   units = TRUE,
@@ -39,13 +39,13 @@ plot. \code{NULL} takes the median across all simulations, cell by cell, and
 adds a \code{probs} quantile ribbon behind it (unless \code{nSim == 1} or values
 constant across simulations.}
 
-\item{byStock, byFleet}{One of \code{TRUE}, \code{FALSE}, or \code{NULL} (default,
-facets automatically when \code{object} has more than one stock/fleet).
-These plots never sum or average a curve across stocks/fleets -- that
-isn't a meaningful operation the way summing catch is -- so every
-stock/fleet is always distinguishable somehow. \code{TRUE}/\code{NULL} facets by
-\code{Stock}/\code{Fleet}. \code{FALSE} instead colors by that
-variable;}
+\item{byStock, byFleet}{\code{TRUE}, \code{FALSE}, or \code{NULL}. Curves are never
+summed or averaged across stocks or fleets. \code{TRUE} facets by
+\code{Stock}/\code{Fleet}; \code{FALSE} draws each stock/fleet as its own colored line
+on the same panel. \code{byStock} defaults to \code{FALSE}. \code{byFleet} defaults to
+\code{NULL}, which facets when \code{object} has more than one fleet. When both
+stocks and fleets would need a color, the second variable is drawn with
+linetype, or faceted when linetype is used for year.}
 
 \item{Years}{Optional numeric vector, or \code{"all"}. Default \code{NULL} shows
 each independent curve's own last calendar year, labelled by year in
