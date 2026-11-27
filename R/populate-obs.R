@@ -80,25 +80,25 @@ PopulateObs <- function(Obs,
   ), "Effort")
   
   for (type in c("Landings", "Discards")) {
-    PopulateEl <- function(Catch) .SafePopulate(function() PopulateCatchObs(
+    PopulateCatchEl <- function(Catch) .SafePopulate(function() PopulateCatchObs(
       Catch     = Catch,
       nSim      = nSim,
       HistYears = HistYears,
       ProjYears = ProjYears
     ), type)
     x <- slot(Obs, type)
-    slot(Obs, type) <- if (is.list(x)) lapply(x, PopulateEl) else PopulateEl(x)
+    slot(Obs, type) <- if (is.list(x)) lapply(x, PopulateCatchEl) else PopulateCatchEl(x)
   }
 
   for (type in c("CPUE", "Survey")) {
-    PopulateEl <- function(Index) .SafePopulate(function() PopulateIndexObs(
+    PopulateIndexEl <- function(Index) .SafePopulate(function() PopulateIndexObs(
       Index     = Index,
       nSim      = nSim,
       HistYears = HistYears,
       ProjYears = ProjYears
     ), type)
     x <- slot(Obs, type)
-    slot(Obs, type) <- if (is.list(x)) lapply(x, PopulateEl) else PopulateEl(x)
+    slot(Obs, type) <- if (is.list(x)) lapply(x, PopulateIndexEl) else PopulateIndexEl(x)
   }
 
   for (type in c("LandingsAtAge", "DiscardsAtAge", "LandingsAtSize", "DiscardsAtSize",
@@ -106,7 +106,7 @@ PopulateObs <- function(Obs,
     isAge   <- endsWith(type, "AtAge")
     Bins    <- CompBins[[type]] %||% if (isAge) AgeBins else SizeBins
     BinName <- if (isAge) "Age" else "Class"
-    PopulateEl <- function(Comp, El) .SafePopulate(function() PopulateCompObs(
+    PopulateCompEl <- function(Comp, El) .SafePopulate(function() PopulateCompObs(
       Comp      = Comp,
       nSim      = nSim,
       HistYears = HistYears,
@@ -115,7 +115,7 @@ PopulateObs <- function(Obs,
       BinName   = BinName
     ), type)
     Comp <- slot(Obs, type)
-    slot(Obs, type) <- if (is.list(Comp)) purrr::imap(Comp, PopulateEl) else PopulateEl(Comp, NULL)
+    slot(Obs, type) <- if (is.list(Comp)) purrr::imap(Comp, PopulateCompEl) else PopulateCompEl(Comp, NULL)
   }
 
   ReduceDims(Obs, IncYear = TRUE)

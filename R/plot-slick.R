@@ -48,11 +48,13 @@
 #' @examples
 #' \donttest{
 #' if (requireNamespace('Slick', quietly = TRUE)) {
-#'   MSE <- runMSE(SingleStockOM, MPs = ExampleMPs(), nSim = 4)
+#'   MSE <- runMSE(SingleStockOM, MPs = c('CurrentCatch', 'AverageCatch'), nSim = 4)
 #'   PlotKobe(MSE)
-#'   PlotTradeoff(MSE)
+#'   if (requireNamespace('cowplot', quietly = TRUE))
+#'     PlotTradeoff(MSE)
 #'   PlotPMBoxplot(MSE)
-#'   PlotQuilt(MSE)
+#'   if (requireNamespace('flextable', quietly = TRUE))
+#'     PlotQuilt(MSE)
 #'   PlotPMTimeseries(MSE, PI = 'F_FMSY')
 #' }
 #' }
