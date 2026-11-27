@@ -23,11 +23,14 @@ Default \code{NULL}.}
 \code{SampleSize} within each year and fleet — see \code{\link[=CompObs]{CompObs()}} for the
 simulation model. Default \code{NULL}.}
 
-\item{Classes}{\code{numeric}, \code{list}, or \code{NULL}. For age compositions, a
-numeric vector of class values shared by every fleet, length matching
-\code{dim(Value)[3]}. For size compositions, a \code{list} of numeric vectors,
-one per fleet (named to match \code{Name}), since fleets are not required to
-share a size-class grid -- see \link[=compdata-class]{compdata}. Default \code{NULL}.}
+\item{Classes}{\code{numeric}, \code{list}, or \code{NULL}. The bins of the data, given
+by their lower bounds. For age compositions, a numeric vector shared by
+every fleet, length matching \code{dim(Value)[3]}. For size compositions, a
+\code{list} of numeric vectors, one per fleet (named to match \code{Name}), since
+fleets are not required to share a size-class grid -- see
+\link[=compdata-class]{compdata}. The bins need not match the age or length classes of
+the operating model: the first bin also holds the classes below it and
+the last bin those above it (see Details). Default \code{NULL}.}
 
 \item{Units}{\code{character} or \code{NULL}. Units of the class variable
 (e.g., \code{"years"}, \code{"cm"}, \code{"mm"}). Default \code{NULL}.}
@@ -62,6 +65,31 @@ historical data).
 \code{Value} stores counts, compositions are normalised
 to sum to \code{SampleSize} within each year-fleet combination. The
 simulation model that generates \code{Value} is defined in \code{\link[=CompObs]{CompObs()}}.
+}
+
+\subsection{Bins}{
+
+Observed compositions are conditioned on, and projected compositions
+generated in, the bins given by \code{Classes}. The operating model's
+composition (on its age classes, or the length classes of the fleet's
+selectivity or of the stock) is summed into these bins: bin \code{k} holds the
+classes from \code{Classes[k]} up to \code{Classes[k+1]}, the first bin also holds
+the classes below \code{Classes[1]}, and the last bin all classes from its lower
+bound up. A length class that spans two bins is split between them in
+proportion to its overlap with each. For example, age bins
+\code{c(1:15, 20, 25)} hold ages 0 and 1 in bin \code{1}, single ages 2 to 14 in
+their own bins, ages 15 to 19 in bin \code{15}, ages 20 to 24 in bin \code{20}, and
+ages 25 and older in bin \code{25}.
+
+Age classes must be ages of the stock (\code{Ages@Classes}), though they need
+not cover every age.
+
+In each year, the first and last bins with observations (non-\code{NA}) hold
+the tails: the classes below the first are added to it and those above
+the last to it, so the reported range can differ by year and fleet (e.g.
+SS3 compositions with accumulated tails). \code{NA} bins between them have no
+fish. Projected compositions are generated over the bins reported in the
+last year with observations.
 }
 
 \subsection{Attaching to a Data Object}{

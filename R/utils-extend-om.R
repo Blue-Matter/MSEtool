@@ -107,10 +107,9 @@
                              Areas = Areas,
                              maintain_seasonal_pattern = FALSE)
       OM@Obs[[st]] <- .SetIndexSelectivity(OM@Obs[[st]], IndexSel, Years)
-      # composition obs held by stock use the age classes of each element's stock
-      CompLists <- lapply(CompLists, \(ByType) lapply(ByType, \(x) purrr::imap(x, \(obs, el)
-        Extend(obs, nSim = nSim, AgeClasses = if (el %in% names(OM@Stock)) OM@Stock[[el]]@Ages@Classes else AgeClasses,
-               Years = Years, Areas = Areas, maintain_seasonal_pattern = FALSE))))
+      # composition bins are the data's (populated in full), not the OM ages
+      CompLists <- lapply(CompLists, \(ByType) lapply(ByType, \(x)
+        Extend(x, nSim = nSim, Years = Years, Areas = Areas, maintain_seasonal_pattern = FALSE)))
       OM@Obs[[st]] <- .SetCompObsLists(OM@Obs[[st]], CompLists)
     }
 
@@ -145,26 +144,20 @@
 .CompObsSlots <- c('LandingsAtAge', 'DiscardsAtAge', 'LandingsAtSize', 'DiscardsAtSize',
                    'SurveyAtAge', 'SurveyAtSize')
 
-# composition obs slots held as lists by stock, for each obs object
+# composition obs slots of each obs object
 .GetCompObsLists <- function(ObsList) {
   lapply(ObsList, \(obs) {
     if (!methods::is(obs, 'obs')) return(NULL)
-    Lists <- lapply(.CompObsSlots, \(sl) slot(obs, sl)) |> stats::setNames(.CompObsSlots)
-    Filter(is.list, Lists)
+    lapply(.CompObsSlots, \(sl) slot(obs, sl)) |> stats::setNames(.CompObsSlots)
   })
 }
 
-# sets composition obs slots from `Lists` (NULL empties the list slots)
+# sets composition obs slots from `Lists` (NULL empties them)
 .SetCompObsLists <- function(ObsList, Lists = NULL) {
   for (fl in seq_along(ObsList)) {
     if (!methods::is(ObsList[[fl]], 'obs')) next
-    for (sl in .CompObsSlots) {
-      if (!is.null(Lists)) {
-        if (!is.null(Lists[[fl]][[sl]])) slot(ObsList[[fl]], sl) <- Lists[[fl]][[sl]]
-      } else if (is.list(slot(ObsList[[fl]], sl))) {
-        slot(ObsList[[fl]], sl) <- new('compobs')
-      }
-    }
+    for (sl in .CompObsSlots)
+      slot(ObsList[[fl]], sl) <- if (is.null(Lists)) new('compobs') else Lists[[fl]][[sl]]
   }
   ObsList
 }

@@ -19,6 +19,10 @@
 #' `AgeBins` and `SizeBins` may also be lists named by the complex and/or
 #' stocks, giving the classes of each element of a composition slot that is a
 #' list named by stock (see [obs-class]).
+#' @param CompBins Optional list named by composition slot (e.g.
+#'   `SurveyAtAge`), each a numeric vector of bins or a list of them named by
+#'   the complex and/or stocks. Used in place of `AgeBins`/`SizeBins` for that
+#'   slot, e.g. the bins of the observed composition data.
 #'
 #' @details
 #' `PopulateObs()` coordinates population of all observation error components
@@ -60,7 +64,8 @@ PopulateObs <- function(Obs,
                         ProjYears,
                         nSim,
                         AgeBins  = NULL,
-                        SizeBins = NULL) {
+                        SizeBins = NULL,
+                        CompBins = NULL) {
   
   .CheckClass(Obs, "obs", "Obs")
   
@@ -99,7 +104,7 @@ PopulateObs <- function(Obs,
   for (type in c("LandingsAtAge", "DiscardsAtAge", "LandingsAtSize", "DiscardsAtSize",
                  "SurveyAtAge", "SurveyAtSize")) {
     isAge   <- endsWith(type, "AtAge")
-    Bins    <- if (isAge) AgeBins else SizeBins
+    Bins    <- CompBins[[type]] %||% if (isAge) AgeBins else SizeBins
     BinName <- if (isAge) "Age" else "Class"
     PopulateEl <- function(Comp, El) .SafePopulate(function() PopulateCompObs(
       Comp      = Comp,

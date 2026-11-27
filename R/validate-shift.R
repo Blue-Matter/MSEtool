@@ -90,34 +90,10 @@ PlotCompShift <- function(Hist,
     cli::cli_abort("None of `fleets` have a non-`NULL` `Shift` slot for `{type}`.")
 
   # --- true composition: sum over stocks/areas within the complex ---
-  if (isSize) {
-    TrueByFleet <- purrr::map(shiftFleets, \(fl) {
-      fl_idx <- match(fl, FleetNames)
-      purrr::map(slot(Hist, type)[stocks], \(stock_level) {
-        catch_n <- stock_level[[fl_idx]]
-        sim_x   <- min(sim, dim(catch_n)[1])
-        catch_n[sim_x,,,,drop=FALSE] |>
-          SumOverArea() |>
-          DropDimension("Sim")
-      }) |> List2Array("Stock") |>
-        SumOverStock() |>
-        .SubsetYear(HistYears)
-    }) |> stats::setNames(shiftFleets)
-  } else {
-    CatchAtAge <- purrr::map(slot(Hist, type)[stocks], \(catch_n) {
-      sim_x <- min(sim, dim(catch_n)[1])
-      catch_n[sim_x,,,,,drop=FALSE] |>
-        SumOverArea() |>
-        DropDimension("Sim")
-    }) |> List2Array("Stock") |>
-      SumOverStock() |>
-      .SubsetYear(HistYears)  # [Age x Year x Fleet]
-
-    TrueByFleet <- purrr::map(shiftFleets, \(fl) {
-      fl_idx <- match(fl, FleetNames)
-      CatchAtAge[, , fl_idx]  # [Age x Year]
-    }) |> stats::setNames(shiftFleets)
-  }
+  TrueByFleet <- purrr::map(shiftFleets, \(fl) {
+    Tr <- .TrueComp(Hist, type, stocks, fl, HistYears, sim, Classes = .CompClasses(ObsComp, fl))
+    abind::adrop(Tr, 1)  # [Bin x Year]
+  }) |> stats::setNames(shiftFleets)
 
   BinName <- if (isSize) "Class" else "Age"
 

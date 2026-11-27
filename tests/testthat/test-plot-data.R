@@ -115,6 +115,26 @@ test_that("composition plots: units label, title, and empty or all-zero slots", 
   expect_null(r)
 })
 
+test_that("survey compositions are plotted, titled by a single survey, and added by PlotData", {
+  D <- .PlotTestData()
+  n <- length(D@Years)
+  SAA <- array(c(rep(1, n), rep(2, n), rep(3, n)), c(n, 1, 3),
+               list(Year = as.character(D@Years), Fleet = 'S1', Age = 0:2))
+  D@SurveyAtAge <- CompData(Name = 'S1', Value = SAA, Classes = 0:2, Units = 'years')
+
+  p <- PlotSurveyAtAge(D)
+  expect_equal(p$labels$title, 'Survey at Age: S1')
+  expect_equal(p$labels$y, 'Age (years)')
+  expect_equal(p$data$Proportion[p$data$Year == 2001 & p$data$Age == 2], 0.5)
+  expect_message(r <- PlotSurveyAtSize(D), "No .*SurveyAtSize")
+  expect_null(r)
+  expect_equal(PlotSurveyAtAge(list(Complex = D))$labels$title, 'Survey at Age: S1')
+
+  comp   <- PlotData(D)[[2]]
+  titles <- purrr::map_chr(seq_along(comp), \(i) comp[[i]]$labels$title %||% NA_character_)
+  expect_true('Survey at Age: S1' %in% titles)
+})
+
 test_that("composition years with no sampled catch are dropped", {
   D <- .PlotTestData()
   D@LandingsAtAge@Value["2002", "F1", ] <- 0

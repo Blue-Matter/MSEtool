@@ -188,8 +188,9 @@ Set \code{IncCV = FALSE} to omit it.
 \code{\link[patchwork:wrap_plots]{patchwork::wrap_plots()}}, silently omitting panels for slots that
 aren't, without a message for missing slots. Below them (with \code{IncComp = TRUE}, the
 default), it adds a bubble plot for each populated composition slot
-(\code{LandingsAtAge}, \code{DiscardsAtAge}, \code{LandingsAtSize}, \code{DiscardsAtSize};
-see \link{plot_comp}), omitting any whose values are all zero or missing.
+(\code{LandingsAtAge}, \code{DiscardsAtAge}, \code{LandingsAtSize}, \code{DiscardsAtSize},
+\code{SurveyAtAge}, \code{SurveyAtSize}; see \link{plot_comp}), omitting any whose values
+are all zero or missing.
 With \code{byFleet = FALSE}, size compositions whose fleets use different
 size-class grids are shown by fleet instead of summed, with a message.
 Fleet color legends are collected into a
