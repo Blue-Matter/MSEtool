@@ -152,7 +152,9 @@ setValidity("indicesdata", function(object) {
 #'   `nClass` is the largest class count among the object's fleets, and a
 #'   fleet with fewer classes has unused (`NA`) cells at the end of its
 #'   slice. See [CompData()].
-#' @slot Classes `numeric`, `list`, or `NULL`. For age compositions, a
+#' @slot Classes `numeric`, `list`, or `NULL`. Lower bounds of the bins of
+#'   the data, which need not match the classes of the operating model (see
+#'   the Bins section of [CompData()]). For age compositions, a
 #'   numeric vector of class values (ages in years) shared by every fleet,
 #'   length matching `dim(Value)[3]`. For size compositions, a `list` of
 #'   numeric vectors, one per fleet (named to match `Name`), each giving

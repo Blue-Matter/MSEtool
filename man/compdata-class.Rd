@@ -23,7 +23,9 @@ shared bin: fleets are not required to use the same size-class grid, so
 fleet with fewer classes has unused (\code{NA}) cells at the end of its
 slice. See \code{\link[=CompData]{CompData()}}.}
 
-\item{\code{Classes}}{\code{numeric}, \code{list}, or \code{NULL}. For age compositions, a
+\item{\code{Classes}}{\code{numeric}, \code{list}, or \code{NULL}. Lower bounds of the bins of
+the data, which need not match the classes of the operating model (see
+the Bins section of \code{\link[=CompData]{CompData()}}). For age compositions, a
 numeric vector of class values (ages in years) shared by every fleet,
 length matching \code{dim(Value)[3]}. For size compositions, a \code{list} of
 numeric vectors, one per fleet (named to match \code{Name}), each giving

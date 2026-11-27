@@ -21,7 +21,9 @@
 #'   [ConvertObs()], [ConvertImp()], [PopulateOM()]
 #'
 #' @examples
+#' \donttest{
 #' om_new <- ConvertMOM(Albacore_TwoFleet)
+#' }
 #'
 #' @export
 ConvertMOM <- function(MOM, 

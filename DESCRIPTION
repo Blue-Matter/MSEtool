@@ -44,6 +44,8 @@ Suggests:
     furrr,
     future,
     fmsb,
+    cowplot,
+    flextable,
     gganimate,
     gifski,
     kableExtra,

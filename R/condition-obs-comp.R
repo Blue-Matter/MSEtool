@@ -23,11 +23,13 @@
 #'
 #' True catch-at-age or catch-at-size is aggregated over the stocks of the
 #' data element and over areas (see [GenDataComp]); survey compositions are
-#' predicted from the survey's selected numbers. Fleets are not required to
-#' share a size-class grid (see [compdata-class]). If observed and
-#' OM-predicted size classes don't have matching counts, this is treated as a
-#' mismatch between `FisheryData` and the operating model and raises an error
-#' rather than silently comparing mismatched bins.
+#' predicted from the survey's selected numbers. The prediction is summed
+#' into the bins of the data (`Classes`; see the Bins section of
+#' [CompData()]). In each year, the first and last bins with observations
+#' (non-`NA`) hold the tails: the predicted classes below the first are added
+#' to it and those above the last to it, as for compositions with
+#' accumulated tails (e.g. SS3 tail compression). Bins with `NA` between them
+#' have no fish.
 #'
 #' Predicted proportions \eqn{\hat{p}_{s,t,b}} are computed by normalising
 #' within each simulation and year.
@@ -88,23 +90,20 @@
 
       Pred <- purrr::map(Unit, \(el) {
         elStocks <- .ElementStocks(el, Complex, StockNms, stocks)
-        .TrueComp(Hist, type, elStocks, nm, CondYears, seq_len(nSim))
+        .TrueComp(Hist, type, elStocks, nm, CondYears, seq_len(nSim),
+                  Classes = .CompClasses(DataEls[[el]], nm))
       }) |> stats::setNames(Unit)
       if (any(purrr::map_lgl(Pred, is.null))) next
       nBin <- purrr::map_int(Pred, \(p) dim(p)[2])
 
       ObsCounts <- purrr::map(Unit, \(el) {
-        Value   <- DataEls[[el]]@Value
-        nObsBin <- length(.CompClasses(DataEls[[el]], nm))
-        if (!isAge && nObsBin != nBin[[el]])
-          cli::cli_abort(c(
-            "{.val {nm}}: observed and OM-predicted {.field {type}} have different numbers of size classes ({nObsBin} vs {nBin[[el]]}).",
-            "i" = "This indicates a mismatch between the operating model's size classes and the supplied `FisheryData`."
-          ), call = NULL)
+        Value <- DataEls[[el]]@Value
         yr <- match(as.character(CondYears), dimnames(Value)[[1]])
         matrix(Value[yr, match(nm, ElNames[[el]]), seq_len(nBin[[el]])], nrow = length(CondYears))
-      })
-      ObsCounts <- do.call(cbind, ObsCounts)
+      }) |> stats::setNames(Unit)
+      # the first and last reported bins of a year hold the tails (e.g. SS3 tail compression)
+      Pred <- purrr::imap(Pred, \(p, el) .LumpCompTails(p, .CompTailRange(ObsCounts[[el]])))
+      ObsCounts <- do.call(cbind, unname(ObsCounts))
       PredAll   <- abind::abind(Pred, along = 2, use.dnns = TRUE)
       BinNames  <- unlist(purrr::map(Pred, \(p) dimnames(p)[[2]]), use.names = FALSE)
       dimnames(ObsCounts) <- list(Year = CondYears, Bin = BinNames)
@@ -201,8 +200,7 @@
   }, numeric(nBin)))
   fill_ind <- setdiff(seq_len(nYearsAll), yr_ind_all)
   if (length(fill_ind) > 0)
-    ShiftArray[, fill_ind, ] <- array(rep(last_shift, length(fill_ind)),
-                                      dim = c(nSim, length(fill_ind), nBin))
+    ShiftArray[, fill_ind, ] <- aperm(array(last_shift, c(nSim, nBin, length(fill_ind))), c(1, 3, 2))
 
   ProjInd <- match(as.character(ProjYears), as.character(YearsAll))
   if (!is.null(UserShift))

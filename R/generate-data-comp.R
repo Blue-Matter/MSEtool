@@ -71,8 +71,94 @@ NULL
 
 .CompUnitsName <- function(type) if (.CompIsAge(type)) "years" else NULL
 
-# true composition of `Name` summed over `stocks` and areas: [Sim x Bin x Year]
-.TrueComp <- function(Hist, type, stocks, Name, Years, Sims) {
+# Matrix [From x To] assigning the OM classes `From` to the composition bins
+# `To` (lower bounds). The first bin also holds the classes below it and the
+# last bin the classes above it. Ages go to the bin they fall in; a size class
+# is split across bins in proportion to its overlap with each.
+.CompBinMap <- function(From, To, isAge) {
+  From <- as.numeric(From)
+  To   <- as.numeric(To)
+  nTo  <- length(To)
+  Map  <- matrix(0, length(From), nTo)
+  if (isAge) {
+    Map[cbind(seq_along(From), pmax(findInterval(From + 1e-8, To), 1))] <- 1
+    return(Map)
+  }
+  Width <- if (length(From) > 1) diff(From) else 1
+  Upper <- From + c(Width, Width[length(Width)])
+  Lo    <- c(-Inf, To[-1])
+  Hi    <- c(To[-1], Inf)
+  for (b in seq_len(nTo))
+    Map[, b] <- pmax(0, pmin(Upper, Hi[b]) - pmax(From, Lo[b])) / (Upper - From)
+  Map
+}
+
+# composition [Sim x Bin x Year] on the OM classes mapped to the bins `To`
+.MapCompBins <- function(Comp, To, isAge) {
+  From <- as.numeric(dimnames(Comp)[[2]])
+  if (is.null(To) || (length(From) == length(To) && all(abs(From - as.numeric(To)) < 1e-8)))
+    return(Comp)
+  Map <- .CompBinMap(From, To, isAge)
+  d   <- dim(Comp)
+  dn  <- dimnames(Comp)
+  Out <- matrix(aperm(Comp, c(1, 3, 2)), d[1] * d[3], d[2]) %*% Map
+  Out <- aperm(array(Out, c(d[1], d[3], length(To))), c(1, 3, 2))
+  dn[[2]] <- as.character(To)
+  dimnames(Out) <- dn
+  Out
+}
+
+# first and last reported bin of each year of observed counts [Year x Bin]; NA
+# for years with none
+.CompTailRange <- function(Counts) {
+  t(apply(Counts, 1, \(x) {
+    Reported <- which(!is.na(x))
+    if (!length(Reported)) return(c(NA_integer_, NA_integer_))
+    range(Reported)
+  }))
+}
+
+# first and last reported bin of the last year with observations of column
+# `Col`; all bins when there are none
+.CompLastRange <- function(CompData, Col, nBin) {
+  Value  <- CompData@Value[, Col, seq_len(nBin), drop = FALSE]
+  Range  <- .CompTailRange(matrix(Value, dim(Value)[1], nBin))
+  Last   <- which(!is.na(Range[, 1]))
+  if (!length(Last)) return(c(1L, nBin))
+  Range[max(Last), ]
+}
+
+# composition [Sim x Bin x Year] with the classes below (above) each year's
+# reported range `Range` [Year x 2] added to its first (last) bin, and zero outside
+.LumpCompTails <- function(Comp, Range) {
+  n <- dim(Comp)[2]
+  for (y in seq_len(dim(Comp)[3])) {
+    r <- Range[y, ]
+    if (anyNA(r)) next
+    if (r[1] > 1) {
+      Below <- seq_len(r[1] - 1)
+      Comp[, r[1], y] <- Comp[, r[1], y] + rowSums(Comp[, Below, y, drop = FALSE])
+      Comp[, Below, y] <- 0
+    }
+    if (r[2] < n) {
+      Above <- (r[2] + 1):n
+      Comp[, r[2], y] <- Comp[, r[2], y] + rowSums(Comp[, Above, y, drop = FALSE])
+      Comp[, Above, y] <- 0
+    }
+  }
+  Comp
+}
+
+# true composition of `Name` summed over `stocks` and areas: [Sim x Bin x Year],
+# on the OM classes or, with `Classes`, on those composition bins
+.TrueComp <- function(Hist, type, stocks, Name, Years, Sims, Classes = NULL) {
+  Comp <- .TrueCompOM(Hist, type, stocks, Name, Years, Sims)
+  if (is.null(Comp))
+    return(NULL)
+  .MapCompBins(Comp, Classes, .CompIsAge(type))
+}
+
+.TrueCompOM <- function(Hist, type, stocks, Name, Years, Sims) {
   if (.CompIsSurvey(type))
     return(.TrueSurveyComp(Hist, type, stocks, Name, Years, Sims))
   fl <- match(Name, FleetNames(Hist@OM))
@@ -320,27 +406,34 @@ NULL
       SampleSize <- .CompObsYears(Obs1@SampleSize, DataYear, seq_len(nSim), NA)[, 1]
       ESS   <- if (is.null(Obs1@ESS)) SampleSize else .CompObsYears(Obs1@ESS, DataYear, seq_len(nSim), NA)[, 1]
       Theta <- .CompObsYears(Obs1@Theta, DataYear, seq_len(nSim), 1)[, 1]
+      # reported bins of the last observed year; its first and last hold the tails
+      Range <- purrr::map(Unit, \(el) .CompLastRange(Slot1[[el]], Col[[el]], nBin[[el]])) |>
+        stats::setNames(Unit)
+      InRange <- purrr::map(Range, \(r) seq(r[1], r[2]))
       True  <- purrr::map(Unit, \(el) {
         elStocks <- .ElementStocks(el, Complex, StockNms, stocks)
-        Tr <- .TrueComp(Proj, type, elStocks, nm, DataYear, seq_len(nSim))
-        if (!is.null(Tr)) abind::adrop(Tr, 3)[, seq_len(nBin[[el]]), drop = FALSE]
+        Tr <- .TrueComp(Proj, type, elStocks, nm, DataYear, seq_len(nSim),
+                        Classes = .CompClasses(Slot1[[el]], nm))
+        if (is.null(Tr)) return(NULL)
+        Tr <- .LumpCompTails(Tr[, seq_len(nBin[[el]]), , drop = FALSE], matrix(Range[[el]], 1))
+        matrix(Tr[, InRange[[el]], 1], nSim)
       }) |> stats::setNames(Unit)
       if (any(purrr::map_lgl(True, is.null))) next
-      Split <- rep(Unit, nBin)
+      Split <- rep(Unit, lengths(InRange))
 
       for (x in seq_len(nSim)) {
         if (is.na(SampleSize[x]) || SampleSize[x] == 0) next
         SimEl <- .SlotElements(slot(Proj@Data[[x]][[i]], type), Complex)[[Unit[1]]]
         if (.CompExceedsMaxGap(SimEl, Col[[Unit[1]]], Obs1, LastHistYear)) next
         TrueX  <- unlist(purrr::map(Unit, \(el) True[[el]][x, ]), use.names = FALSE)
-        ShiftX <- unlist(purrr::map(Unit, \(el) .CompShiftAt(ElObs[[el]]@Shift, x, DataYear, nBin[[el]])),
-                         use.names = FALSE)
+        ShiftX <- unlist(purrr::map(Unit, \(el)
+          .CompShiftAt(ElObs[[el]]@Shift, x, DataYear, nBin[[el]])[InRange[[el]]]), use.names = FALSE)
         Key <- paste(Proj@OM@Seed, DataYear, i, Col[[Unit[1]]], type, .GlobalSim(Proj@OM, x), sep = "_")
         if (KeyEl) Key <- paste(Key, paste(Unit, collapse = "+"), sep = "_")
         Draw <- .SampleComp(TrueX, SampleSize[x], ESS[x], Theta[x], ShiftX, Key)
         if (is.null(Draw)) next
         for (el in Unit)
-          New[[el]][x, Col[[el]], seq_len(nBin[[el]])] <- Draw[Split == el]
+          New[[el]][x, Col[[el]], InRange[[el]]] <- Draw[Split == el]
       }
     }
   }

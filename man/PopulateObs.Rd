@@ -4,7 +4,15 @@
 \alias{PopulateObs}
 \title{Populate an Obs Object}
 \usage{
-PopulateObs(Obs, HistYears, ProjYears, nSim, AgeBins = NULL, SizeBins = NULL)
+PopulateObs(
+  Obs,
+  HistYears,
+  ProjYears,
+  nSim,
+  AgeBins = NULL,
+  SizeBins = NULL,
+  CompBins = NULL
+)
 }
 \arguments{
 \item{Obs}{An \link[=obs-class]{obs} object to populate.}
@@ -27,6 +35,11 @@ non-empty.
 \code{AgeBins} and \code{SizeBins} may also be lists named by the complex and/or
 stocks, giving the classes of each element of a composition slot that is a
 list named by stock (see \link[=obs-class]{obs}).}
+
+\item{CompBins}{Optional list named by composition slot (e.g.
+\code{SurveyAtAge}), each a numeric vector of bins or a list of them named by
+the complex and/or stocks. Used in place of \code{AgeBins}/\code{SizeBins} for that
+slot, e.g. the bins of the observed composition data.}
 }
 \value{
 A populated \link[=obs-class]{obs} object.

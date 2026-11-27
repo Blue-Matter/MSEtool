@@ -6,6 +6,8 @@
 \alias{PlotDiscardsAtAge}
 \alias{PlotLandingsAtSize}
 \alias{PlotDiscardsAtSize}
+\alias{PlotSurveyAtAge}
+\alias{PlotSurveyAtSize}
 \title{Plot Age and Size Composition Data}
 \usage{
 PlotLandingsAtAge(
@@ -51,9 +53,27 @@ PlotDiscardsAtSize(
   Stocks = NULL,
   AggregateYear = NULL
 )
+
+PlotSurveyAtAge(
+  object,
+  byFleet = NULL,
+  Sim = NULL,
+  Complex = NULL,
+  AggregateYear = NULL
+)
+
+PlotSurveyAtSize(
+  object,
+  byFleet = NULL,
+  Sim = NULL,
+  Complex = NULL,
+  AggregateYear = NULL
+)
 }
 \arguments{
-\item{object}{A \link[=hist-class]{hist}, \link[=mse-class]{mse}, or \link[=data-class]{data} object.
+\item{object}{A \link[=hist-class]{hist}, \link[=mse-class]{mse}, or \link[=data-class]{data} object (also
+an \link[=om-class]{om} object or a list of \link[=data-class]{data} objects for
+\code{PlotSurveyAtAge()}/\code{PlotSurveyAtSize()}).
 \code{Sim}, \code{Years}, \code{IncHist}, and \code{Stocks} have no effect for \link[=data-class]{data}
 objects, which hold a single (stock-complex, simulation) realization.}
 
@@ -74,7 +94,9 @@ facets automatically when \code{object} has more than one fleet.}
 \item{Sim}{Integer or \code{NULL} (default). For \link[=hist-class]{hist}/\link[=mse-class]{mse}
 objects, which simulation replicate to plot. \code{NULL} takes the median
 proportion across all simulations (computed per simulation, then
-summarised), rather than the median of raw counts.}
+summarised), rather than the median of raw counts. For
+\code{PlotSurveyAtAge()}/\code{PlotSurveyAtSize()}, the simulation whose data are
+plotted; \code{NULL} takes the first.}
 
 \item{Years}{Optional numeric vector. Subset the time series to these
 years before plotting.}
@@ -93,6 +115,10 @@ computing proportions. \code{NULL} (default) aggregates and prints a note on
 how to plot by season instead; \code{TRUE} aggregates without the note;
 \code{FALSE} plots every seasonal time step. No effect for non-seasonal data
 or for \link[=hist-class]{hist}/\link[=mse-class]{mse} objects.}
+
+\item{Complex}{Integer or character, or \code{NULL} (default: the first).
+\code{PlotSurveyAtAge()}/\code{PlotSurveyAtSize()} only. The complex (by position
+or name) to plot when \code{object} holds data for more than one complex.}
 }
 \value{
 A \code{ggplot} object, or \code{NULL} invisibly if the relevant
@@ -107,6 +133,14 @@ plot the \code{\link[=Landings]{Landings()}}/\code{\link[=Discards]{Discards()}}
 \link[=hist-class]{hist}, \link[=mse-class]{mse}, or \link[=data-class]{data} object.
 }
 \details{
+\code{PlotSurveyAtAge()} and \code{PlotSurveyAtSize()} plot the \code{SurveyAtAge} and
+\code{SurveyAtSize} slots of a \link[=data-class]{data} object: the survey age or size
+compositions. \code{object} can also be an \link[=om-class]{om} object (its \code{Data}), a
+\link[=hist-class]{hist} object (its simulated \code{Data}), or a list of \link[=data-class]{data}
+objects, as for \code{\link[=PlotSurvey]{PlotSurvey()}}; one simulation and complex is plotted (the
+first by default, with a message; see \code{Sim} and \code{Complex}). A slot holding
+a list named by stock is faceted by stock.
+
 Proportions are computed within each \code{Year} (and \code{Stock}/\code{Fleet}/\code{MP}
 panel), i.e. each year's bubbles sum to 1 within a panel, making years
 with very different total catch comparable and cohorts easier to track
@@ -125,8 +159,9 @@ If the relevant \verb{*AtAge}/\verb{*AtSize} data is not populated for a
 prints an informational message and returns \code{NULL} invisibly rather than
 plotting an empty panel. Years (per fleet) with no catch sampled are
 omitted. For a \link[=data-class]{data} object the plot is titled with the slot
-(e.g. "Landings at Age"), and the y-axis label includes the slot's
-\code{Units} (e.g. "Age (years)") when set.
+(e.g. "Landings at Age", followed by the fleet or survey name when only
+one is plotted), and the y-axis label includes the slot's \code{Units} (e.g.
+"Age (years)") when set.
 }
 \examples{
 Hist <- Simulate(SingleStockOM, nSim = 2, control = SimControl(CalcCatchAtSize = TRUE))

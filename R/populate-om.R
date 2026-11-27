@@ -95,6 +95,7 @@ PopulateOM <- function(OM,
     .PopulateComplexes() |>
     .PopulateImpList(silent = silent) |>
     .ProcessData() |>
+    .CheckDataAgeBins() |>
     .PopulateObsList(silent = silent) |>
     .ProcessDataNames() |>
     .UpdateSPFrom() |>
@@ -186,6 +187,40 @@ PopulateOM <- function(OM,
     OM@Data[[i]] <- Data
   }
   OM
+}
+
+# age compositions in OM@Data: classes must be ages of the element's stocks
+.CheckDataAgeBins <- function(OM) {
+  if (is.null(OM@Data)) return(OM)
+  StockNms <- StockNames(OM)
+  for (i in seq_along(OM@Data)) {
+    Data <- OM@Data[[i]]
+    if (!isS4(Data) || i > length(OM@Complexes)) next
+    Complex <- names(OM@Complexes)[i]
+    Stocks  <- OM@Complexes[[i]]
+    for (sl in c("LandingsAtAge", "DiscardsAtAge", "SurveyAtAge")) {
+      x <- slot(Data, sl)
+      for (el in names(.SlotElements(x, Complex))) {
+        cd <- .SlotElements(x, Complex)[[el]]
+        if (EmptyObject(cd) || is.null(cd@Value)) next
+        Where <- paste0("OM@Data[[", i, "]]@", sl, if (is.list(x)) paste0("[[\"", el, "\"]]"))
+        Ages  <- unique(unlist(lapply(.ElementStocks(el, Complex, StockNms, Stocks), \(st)
+          OM@Stock[[st]]@Ages@Classes)))
+        .CheckCompAgeBins(.AgeCompArray(cd), Ages, Where)
+      }
+    }
+  }
+  OM
+}
+
+.CheckCompAgeBins <- function(Value, Ages, Where) {
+  Classes <- as.numeric(dimnames(Value)[[3]])
+  Bad <- Classes[!vapply(Classes, \(a) any(abs(a - Ages) < 1e-6), logical(1))]
+  if (length(Bad))
+    cli::cli_abort(c(
+      "x" = "{.code {Where}} has age class{?es} {.val {Bad}} that {?is/are} not in {.code Ages@Classes} of the stock.",
+      "i" = "Age compositions with classes other than the operating model's ages are not currently supported."
+    ), call = NULL)
 }
 
 .ProcessDataNames <- function(OM) {
@@ -773,13 +808,31 @@ PopulateOM <- function(OM,
         ProjYears = Years(OM, "P"),
         nSim      = OM@nSim,
         AgeBins   = AgeClasses,
-        SizeBins  = SizeClasses
+        SizeBins  = SizeClasses,
+        CompBins  = .DataCompBins(OM, st, obs_names[fl], AgeClasses, SizeClasses)
       ), "Obs", nm)
     }
   }
   
   OM@Obs <- ObsList
   OM
+}
+
+# bins of each composition slot for fleet or survey `Name` in complex `st`, by
+# element: those of `OM@Data` when it holds compositions of `Name`, otherwise
+# the OM classes
+.DataCompBins <- function(OM, st, Name, AgeClasses, SizeClasses) {
+  Data    <- if (length(OM@Data) >= st) OM@Data[[st]]
+  Complex <- names(OM@Complexes)[st]
+  purrr::map(stats::setNames(nm = .CompObsSlots), \(type) {
+    Default <- if (endsWith(type, "AtAge")) AgeClasses else SizeClasses
+    DataEls <- if (inherits(Data, "data")) .SlotElements(slot(Data, type), Complex) else list()
+    purrr::imap(Default, \(def, el) {
+      cd <- DataEls[[el]]
+      if (is.null(cd) || EmptyObject(cd) || !Name %in% .ResolveFleetNames(cd)) return(def)
+      .CompClasses(cd, Name) %||% def
+    })
+  })
 }
 
 .UpdateSPFrom <- function(OM) {

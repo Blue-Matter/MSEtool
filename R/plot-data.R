@@ -44,8 +44,9 @@
 #' [patchwork::wrap_plots()], silently omitting panels for slots that
 #' aren't, without a message for missing slots. Below them (with `IncComp = TRUE`, the
 #' default), it adds a bubble plot for each populated composition slot
-#' (`LandingsAtAge`, `DiscardsAtAge`, `LandingsAtSize`, `DiscardsAtSize`;
-#' see [plot_comp]), omitting any whose values are all zero or missing.
+#' (`LandingsAtAge`, `DiscardsAtAge`, `LandingsAtSize`, `DiscardsAtSize`,
+#' `SurveyAtAge`, `SurveyAtSize`; see [plot_comp]), omitting any whose values
+#' are all zero or missing.
 #' With `byFleet = FALSE`, size compositions whose fleets use different
 #' size-class grids are shown by fleet instead of summed, with a message.
 #' Fleet color legends are collected into a

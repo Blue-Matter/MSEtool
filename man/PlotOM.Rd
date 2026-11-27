@@ -68,8 +68,10 @@ detail on the stocks, fleets, and data.
 }
 \examples{
 PlotOM(SingleStockOM)
+\donttest{
 plot(MultiStockOM)
 plot(HermOM)
+}
 }
 \seealso{
 \code{\link[=PlotStock]{PlotStock()}}, \code{\link[=PlotFleet]{PlotFleet()}}, \code{\link[=PlotData]{PlotData()}}, \link{plot_schedule}
