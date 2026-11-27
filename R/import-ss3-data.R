@@ -5,7 +5,9 @@
 #'
 #' Compositions of fishing fleets go to `LandingsAtAge`, `DiscardsAtAge`,
 #' `LandingsAtSize`, and `DiscardsAtSize`, and compositions of survey fleets
-#' to `SurveyAtAge` and `SurveyAtSize`. For a two-sex model, compositions
+#' to `SurveyAtAge` and `SurveyAtSize`, in the SS3 data bins (the age and
+#' length bins of the data file, not the population bins; see the Bins
+#' section of [CompData()]). For a two-sex model, compositions
 #' reported by sex are stored in a list named by stock (see [data-class]):
 #' SS3 `Sexes = 0` compositions are held under the complex name, `Sexes = 1`
 #' and `2` under the female or male stock, and `Sexes = 3` under both stocks
@@ -409,6 +411,15 @@ ImportSSData <- function(SSDir,
 }
 
 
+# SS3 data bins (lower bounds) of age or length compositions; the population
+# classes when the report has none
+.GetSSDataBins <- function(replist, isAge) {
+  Bins <- as.numeric(replist[[if (isAge) "agebins" else "lbins"]])
+  if (length(Bins) && all(is.finite(Bins)))
+    return(Bins)
+  if (isAge) .GetSSAgeClasses(replist) else .GetSSLengthClasses(replist)
+}
+
 # Age or length compositions of SS3 fishing fleets (`Landings`, `Discards`) and
 # survey fleets (`Survey`). Each slot is a `compdata`, or a list named by the
 # complex and/or stocks when SS3 reports sex-specific compositions: `Sexes = 0`
@@ -427,7 +438,7 @@ ImportSSData <- function(SSDir,
   ComplexName <- ComplexName %||% paste(StockName, collapse = " ")
   DataYears   <- .GetSSDataYears(replist, .GetSSYears(replist, pYear = 1))
   nTS         <- length(DataYears)
-  Classes     <- if (isAge) .GetSSAgeClasses(replist) else .GetSSLengthClasses(replist)
+  Classes     <- .GetSSDataBins(replist, isAge)
   nClass      <- length(Classes)
   Fish        <- .SSFishFleets(replist)
   FleetNames  <- FleetNames %||% Fish$SSName
@@ -439,7 +450,7 @@ ImportSSData <- function(SSDir,
   DB$Element <- if (Sexed) ifelse(DB$Sexes == 0, ComplexName, StockName[DB$Sex]) else ComplexName
   DB$Joint   <- Sexed & DB$Sexes == 3
   DB$TS      <- match(DB$Yr, DataYears) + DB$Seas - 1
-  DB$Class   <- if (isAge) match(DB$Bin, Classes) else findInterval(DB$Bin, Classes)
+  DB$Class   <- findInterval(DB$Bin + 1e-8, Classes)
   DB <- DB[!is.na(DB$TS) & DB$TS >= 1 & DB$TS <= nTS & !is.na(DB$Class) & DB$Class >= 1, , drop = FALSE]
 
   CompMatrix <- function(df) {

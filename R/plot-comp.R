@@ -7,7 +7,17 @@
 #' plot the [Landings()]/[Discards()] `byAge`/`bySize` composition data for a
 #' [hist-class], [mse-class], or [data-class] object.
 #'
-#' @param object A [hist-class], [mse-class], or [data-class] object.
+#' `PlotSurveyAtAge()` and `PlotSurveyAtSize()` plot the `SurveyAtAge` and
+#' `SurveyAtSize` slots of a [data-class] object: the survey age or size
+#' compositions. `object` can also be an [om-class] object (its `Data`), a
+#' [hist-class] object (its simulated `Data`), or a list of [data-class]
+#' objects, as for [PlotSurvey()]; one simulation and complex is plotted (the
+#' first by default, with a message; see `Sim` and `Complex`). A slot holding
+#' a list named by stock is faceted by stock.
+#'
+#' @param object A [hist-class], [mse-class], or [data-class] object (also
+#'   an [om-class] object or a list of [data-class] objects for
+#'   `PlotSurveyAtAge()`/`PlotSurveyAtSize()`).
 #'   `Sim`, `Years`, `IncHist`, and `Stocks` have no effect for [data-class]
 #'   objects, which hold a single (stock-complex, simulation) realization.
 #' @param byStock One of `TRUE`, `FALSE`, or `NULL` (default). `TRUE` facets
@@ -25,7 +35,12 @@
 #' @param Sim Integer or `NULL` (default). For [hist-class]/[mse-class]
 #'   objects, which simulation replicate to plot. `NULL` takes the median
 #'   proportion across all simulations (computed per simulation, then
-#'   summarised), rather than the median of raw counts.
+#'   summarised), rather than the median of raw counts. For
+#'   `PlotSurveyAtAge()`/`PlotSurveyAtSize()`, the simulation whose data are
+#'   plotted; `NULL` takes the first.
+#' @param Complex Integer or character, or `NULL` (default: the first).
+#'   `PlotSurveyAtAge()`/`PlotSurveyAtSize()` only. The complex (by position
+#'   or name) to plot when `object` holds data for more than one complex.
 #' @param Years Optional numeric vector. Subset the time series to these
 #'   years before plotting.
 #' @param IncHist Logical. For [mse-class] objects, include the historical
@@ -60,8 +75,9 @@
 #' prints an informational message and returns `NULL` invisibly rather than
 #' plotting an empty panel. Years (per fleet) with no catch sampled are
 #' omitted. For a [data-class] object the plot is titled with the slot
-#' (e.g. "Landings at Age"), and the y-axis label includes the slot's
-#' `Units` (e.g. "Age (years)") when set.
+#' (e.g. "Landings at Age", followed by the fleet or survey name when only
+#' one is plotted), and the y-axis label includes the slot's `Units` (e.g.
+#' "Age (years)") when set.
 #'
 #' @return A `ggplot` object, or `NULL` invisibly if the relevant
 #'   [data-class] slot isn't populated.
@@ -116,6 +132,22 @@ PlotDiscardsAtSize <- function(object, byStock = NULL, byFleet = NULL, Sim = NUL
                                AggregateYear = NULL) {
   .PlotCompBubble(object, 'DiscardsAtSize', 'Size Class',
                     byStock, byFleet, Sim, Years, IncHist, Stocks, AggregateYear)
+}
+
+#' @rdname plot_comp
+#' @export
+PlotSurveyAtAge <- function(object, byFleet = NULL, Sim = NULL, Complex = NULL,
+                            AggregateYear = NULL) {
+  .PlotDataCompBubble(UpdateObject(.ResolvePlotData(object, Sim, Complex)),
+                      'SurveyAtAge', 'Age', byFleet, AggregateYear)
+}
+
+#' @rdname plot_comp
+#' @export
+PlotSurveyAtSize <- function(object, byFleet = NULL, Sim = NULL, Complex = NULL,
+                             AggregateYear = NULL) {
+  .PlotDataCompBubble(UpdateObject(.ResolvePlotData(object, Sim, Complex)),
+                      'SurveyAtSize', 'Size Class', byFleet, AggregateYear)
 }
 
 # ---- internal helpers ----
@@ -200,7 +232,8 @@ PlotDiscardsAtSize <- function(object, byStock = NULL, byFleet = NULL, Sim = NUL
   object <- .SeasonalPlotData(object, AggregateYear, silent = silent,
                               sources = character(0))$object
 
-  byFleetRes  <- if (is.null(byFleet)) nFleet(object) > 1 else byFleet
+  # a single fleet is not faceted, so NULL keeps fleets separate
+  byFleetRes <- byFleet %||% TRUE
   extract <- function(byFleet) {
     extractArgs <- list(object, byFleet = byFleet, byStock = byStock)
     extractArgs[[if (isAtSize) 'bySize' else 'byAge']] <- TRUE
@@ -225,6 +258,8 @@ PlotDiscardsAtSize <- function(object, byStock = NULL, byFleet = NULL, Sim = NUL
   units <- unique(stats::na.omit(unlist(lapply(.SlotElements(comp, ""), \(cd) cd@Units))))
   if (length(units) == 1) ylab <- .AppendUnits(ylab, units)
   title <- paste(fn, if (isAtSize) 'at Size' else 'at Age')
+  if ('Fleet' %in% colnames(df) && length(unique(df$Fleet)) == 1)
+    title <- paste0(title, ': ', unique(df$Fleet))
 
   .BuildCompBubblePlot(df, classCol, ylab, title = title)
 }

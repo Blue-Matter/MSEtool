@@ -39,7 +39,9 @@ attributes, updating year vectors, and optionally populating the object
 via \code{\link[=PopulateOM]{PopulateOM()}}.
 }
 \examples{
+\donttest{
 om_new <- ConvertMOM(Albacore_TwoFleet)
+}
 
 }
 \seealso{

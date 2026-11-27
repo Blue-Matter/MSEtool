@@ -58,7 +58,9 @@ index, and composition data.
 \details{
 Compositions of fishing fleets go to \code{LandingsAtAge}, \code{DiscardsAtAge},
 \code{LandingsAtSize}, and \code{DiscardsAtSize}, and compositions of survey fleets
-to \code{SurveyAtAge} and \code{SurveyAtSize}. For a two-sex model, compositions
+to \code{SurveyAtAge} and \code{SurveyAtSize}, in the SS3 data bins (the age and
+length bins of the data file, not the population bins; see the Bins
+section of \code{\link[=CompData]{CompData()}}). For a two-sex model, compositions
 reported by sex are stored in a list named by stock (see \link[=data-class]{data}):
 SS3 \code{Sexes = 0} compositions are held under the complex name, \code{Sexes = 1}
 and \code{2} under the female or male stock, and \code{Sexes = 3} under both stocks

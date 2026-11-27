@@ -23,8 +23,10 @@
 #' @return A `patchwork` object.
 #' @examples
 #' PlotOM(SingleStockOM)
+#' \donttest{
 #' plot(MultiStockOM)
 #' plot(HermOM)
+#' }
 #' @seealso [PlotStock()], [PlotFleet()], [PlotData()], [plot_schedule]
 #' @export
 PlotOM <- function(object, Sim = NULL, byStock = FALSE, byFleet = NULL, Stocks = NULL,

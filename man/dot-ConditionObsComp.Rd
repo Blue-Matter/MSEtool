@@ -50,11 +50,13 @@ available.
 
 True catch-at-age or catch-at-size is aggregated over the stocks of the
 data element and over areas (see \link{GenDataComp}); survey compositions are
-predicted from the survey's selected numbers. Fleets are not required to
-share a size-class grid (see \link[=compdata-class]{compdata}). If observed and
-OM-predicted size classes don't have matching counts, this is treated as a
-mismatch between \code{FisheryData} and the operating model and raises an error
-rather than silently comparing mismatched bins.
+predicted from the survey's selected numbers. The prediction is summed
+into the bins of the data (\code{Classes}; see the Bins section of
+\code{\link[=CompData]{CompData()}}). In each year, the first and last bins with observations
+(non-\code{NA}) hold the tails: the predicted classes below the first are added
+to it and those above the last to it, as for compositions with
+accumulated tails (e.g. SS3 tail compression). Bins with \code{NA} between them
+have no fish.
 
 Predicted proportions \eqn{\hat{p}_{s,t,b}} are computed by normalising
 within each simulation and year.
